@@ -649,7 +649,7 @@ db_init(DB *__restrict self, size_t argc, DeeObject *const *argv) {
 	char const *utf8_filename;
 	DREF struct db_string_fini_hook *sf_hook;
 	DREF struct db_thread_interrupt_hook *ti_hook;
-	_DeeArg_Unpack1(err, argc, argv, "DB", &filename);
+	DeeArg_Unpack1(err, argc, argv, "DB", &filename);
 	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
 		goto err;
 	utf8_filename = DeeString_AsUtf8(filename);
@@ -880,7 +880,7 @@ PRIVATE NONNULL((1)) DREF Query *DCALL
 db_query(DB *__restrict self, size_t argc, DeeObject *const *argv) {
 	DREF Query *result;
 	DeeObject *sql, *params = Dee_EmptyTuple;
-	_DeeArg_Unpack1Or2(err, argc, argv, "query", &sql, &params);
+	DeeArg_Unpack1Or2(err, argc, argv, "query", &sql, &params);
 	if (DeeObject_AssertTypeExact(sql, &DeeString_Type))
 		goto err;
 	result = DB_NewQuery(self, (DeeStringObject *)sql, NULL);
@@ -917,7 +917,7 @@ db_exec(DB *__restrict self, size_t argc, DeeObject *const *argv) {
 	Dee_ssize_t bind_status;
 	int rc;
 	uint64_t changes;
-	_DeeArg_Unpack1Or2(err, argc, argv, "exec", &sql, &params);
+	DeeArg_Unpack1Or2(err, argc, argv, "exec", &sql, &params);
 	if (DeeObject_AssertTypeExact(sql, &DeeString_Type))
 		goto err;
 	utf8_sql = DeeString_AsUtf8((DeeObject *)sql);

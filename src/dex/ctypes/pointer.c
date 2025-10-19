@@ -167,7 +167,7 @@ pointer_init(DeePointerTypeObject *tp_self,
              size_t argc, DeeObject *const *argv) {
 	DeeObject *arg;
 	union pointer value;
-	_DeeArg_Unpack1(err, argc, argv, "Pointer", &arg);
+	DeeArg_Unpack1(err, argc, argv, "Pointer", &arg);
 	if (DeeNone_Check(arg)) {
 		/* none is the NULL pointer. */
 		value.ptr = NULL;
@@ -299,7 +299,7 @@ PRIVATE struct type_member tpconst pointer_members[] = {
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_deref_func(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__deref__");
+	DeeArg_Unpack0(err, argc, argv, "__deref__");
 	return (DREF DeeObject *)pointer_get_deref((struct pointer_object *)self);
 err:
 	return NULL;

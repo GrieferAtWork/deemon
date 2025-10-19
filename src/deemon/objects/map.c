@@ -98,7 +98,7 @@ map_get(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		DeeObject *def;
 	} args;
 	args.def = Dee_None;
-	_DeeArg_Unpack1Or2(err, argc, argv, "get", &args.key, &args.def);
+	DeeArg_Unpack1Or2(err, argc, argv, "get", &args.key, &args.def);
 /*[[[end]]]*/
 	result = DeeObject_InvokeMethodHint(map_operator_trygetitem, self, args.key);
 	if (result == ITER_DONE) {
@@ -639,7 +639,7 @@ map_fromattr(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *ob;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "fromattr", &args.ob);
+	DeeArg_Unpack1(err, argc, argv, "fromattr", &args.ob);
 /*[[[end]]]*/
 	(void)self;
 	return MapFromAttr_New(args.ob);

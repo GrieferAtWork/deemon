@@ -1166,7 +1166,7 @@ do_with_paren:
 			                    "o:__import__", &module_name))
 				goto err_args_kwds;
 		} else {
-			_DeeArg_Unpack1(err_args_kwds,
+			DeeArg_Unpack1(err_args_kwds,
 							DeeTuple_SIZE(args),
 			                DeeTuple_ELEM(args),
 			                "__import__",

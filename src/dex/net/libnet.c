@@ -58,7 +58,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getafof_f(size_t argc, DeeObject *const *argv) {
 	DeeObject *afob;
 	int afid;
-	_DeeArg_Unpack1(err, argc, argv, "getafof", &afob);
+	DeeArg_Unpack1(err, argc, argv, "getafof", &afob);
 	if (sock_getafof(afob, &afid))
 		goto err;
 	return DeeInt_NewInt(afid);
@@ -80,7 +80,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_gettypeof_f(size_t argc, DeeObject *const *argv) {
 	DeeObject *afob;
 	int afid;
-	_DeeArg_Unpack1(err, argc, argv, "gettypeof", &afob);
+	DeeArg_Unpack1(err, argc, argv, "gettypeof", &afob);
 	if (sock_gettypeof(afob, &afid))
 		goto err;
 	return DeeInt_NewInt(afid);
@@ -102,7 +102,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getprotoof_f(size_t argc, DeeObject *const *argv) {
 	DeeObject *afob;
 	int afid;
-	_DeeArg_Unpack1(err, argc, argv, "getprotoof", &afob);
+	DeeArg_Unpack1(err, argc, argv, "getprotoof", &afob);
 	if (sock_getprotoof(afob, &afid))
 		goto err;
 	return DeeInt_NewInt(afid);
@@ -124,7 +124,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getmsgflagsof_f(size_t argc, DeeObject *const *argv) {
 	DeeObject *afob;
 	int afid;
-	_DeeArg_Unpack1(err, argc, argv, "getmsgflags", &afob);
+	DeeArg_Unpack1(err, argc, argv, "getmsgflags", &afob);
 	if (sock_getmsgflagsof(afob, &afid))
 		goto err;
 	return DeeInt_NewInt(afid);

@@ -242,7 +242,7 @@ PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 sew_docall(SeqEnumerateWrapper *self, size_t argc, DeeObject *const *argv) {
 	Dee_ssize_t result;
 	DeeObject *key, *value = NULL;
-	_DeeArg_Unpack1Or2(err, argc, argv, "SeqEnumerateWrapper.__call__", &key, &value);
+	DeeArg_Unpack1Or2(err, argc, argv, "SeqEnumerateWrapper.__call__", &key, &value);
 	if (Dee_TYPE(self) == &SeqEnumerateWrapper_Type) {
 		result = (*self->sew_cb.cb_enumerate)(self->sew_arg, key, value);
 	} else {

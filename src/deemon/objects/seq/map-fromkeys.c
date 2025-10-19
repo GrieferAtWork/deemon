@@ -94,7 +94,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mfkvi_init(MapFromKeysIterator *__restrict self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_MapFromKeysAndValueIterator", &self->mfki_base);
+	DeeArg_Unpack1(err, argc, argv, "_MapFromKeysAndValueIterator", &self->mfki_base);
 	if (DeeObject_AssertTypeExact(self->mfki_base, &MapFromKeysAndValue_Type))
 		goto err;
 	self->mfki_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->mfki_base->mfk_keys);
@@ -108,7 +108,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mfkci_init(MapFromKeysIterator *__restrict self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_MapFromKeysAndCallbackIterator", &self->mfki_base);
+	DeeArg_Unpack1(err, argc, argv, "_MapFromKeysAndCallbackIterator", &self->mfki_base);
 	if (DeeObject_AssertTypeExact(self->mfki_base, &MapFromKeysAndCallback_Type))
 		goto err;
 	self->mfki_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->mfki_base->mfk_keys);

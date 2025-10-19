@@ -92,7 +92,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 udictiterator_init(UDictIterator *__restrict self,
                    size_t argc, DeeObject *const *argv) {
 	UDict *dict;
-	_DeeArg_Unpack1(err, argc, argv, "_UniqueDictIterator", &dict);
+	DeeArg_Unpack1(err, argc, argv, "_UniqueDictIterator", &dict);
 	if (DeeObject_AssertType(dict, &UDict_Type))
 		goto err;
 	self->udi_dict = dict;
@@ -558,7 +558,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 udict_init(UDict *__restrict self,
            size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
-	_DeeArg_Unpack1(err, argc, argv, "UniqueDict", &seq);
+	DeeArg_Unpack1(err, argc, argv, "UniqueDict", &seq);
 	return udict_init_sequence(self, seq);
 err:
 	return -1;
@@ -1444,7 +1444,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 urodictiterator_init(URoDictIterator *__restrict self,
                      size_t argc, DeeObject *const *argv) {
 	URoDict *dict;
-	_DeeArg_Unpack1(err, argc, argv, "_UniqueRoDictIterator", &dict);
+	DeeArg_Unpack1(err, argc, argv, "_UniqueRoDictIterator", &dict);
 	if (DeeObject_AssertTypeExact(dict, &URoDict_Type))
 		goto err;
 	self->urdi_dict = dict;
@@ -1789,7 +1789,7 @@ err:
 PRIVATE WUNUSED DREF URoDict *DCALL
 urodict_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
-	_DeeArg_Unpack1(err, argc, argv, "_UniqueRoDict", &seq);
+	DeeArg_Unpack1(err, argc, argv, "_UniqueRoDict", &seq);
 	return URoDict_FromSequence(seq);
 err:
 	return NULL;

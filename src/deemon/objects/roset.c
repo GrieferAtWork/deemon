@@ -84,7 +84,7 @@ rosetiterator_init(RoSetIterator *__restrict self,
 	struct {
 		DeeRoSetObject *set;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "_RoSetIterator", &args.set);
+	DeeArg_Unpack1(err, argc, argv, "_RoSetIterator", &args.set);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.set, &DeeRoSet_Type))
 		goto err;
@@ -666,7 +666,7 @@ roset_init(size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *seq;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "_RoSet", &args.seq);
+	DeeArg_Unpack1(err, argc, argv, "_RoSet", &args.seq);
 /*[[[end]]]*/
 	return (DREF RoSet *)DeeRoSet_FromSequence(args.seq);
 err:

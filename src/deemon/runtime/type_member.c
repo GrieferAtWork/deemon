@@ -519,7 +519,7 @@ type_obprop_call(DeeTypeObject *cls_type,
 	DeeObject *thisarg;
 	if unlikely(!desc->gs_get)
 		goto err_unbound;
-	_DeeArg_Unpack1(err, argc, argv, "get", &thisarg);
+	DeeArg_Unpack1(err, argc, argv, "get", &thisarg);
 	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
 		goto err;
 	return (*desc->gs_get)(thisarg);
@@ -578,7 +578,7 @@ type_obmemb_call(DeeTypeObject *cls_type,
                  struct type_member const *desc,
                  size_t argc, DeeObject *const *argv) {
 	DeeObject *thisarg;
-	_DeeArg_Unpack1(err, argc, argv, "get", &thisarg);
+	DeeArg_Unpack1(err, argc, argv, "get", &thisarg);
 	/* Allow non-instance objects for generic types. */
 	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
 		goto err;

@@ -125,7 +125,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 bytesiter_init(BytesIterator *__restrict self,
                size_t argc, DeeObject *const *argv) {
 	Bytes *bytes;
-	_DeeArg_Unpack1(err, argc, argv, "_BytesIterator", &bytes);
+	DeeArg_Unpack1(err, argc, argv, "_BytesIterator", &bytes);
 	if (DeeObject_AssertTypeExact(bytes, &DeeBytes_Type))
 		goto err;
 	self->bi_bytes = bytes;
@@ -1664,7 +1664,7 @@ PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_fromseq(DeeTypeObject *__restrict UNUSED(self),
               size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
-	_DeeArg_Unpack1(err, argc, argv, "fromseq", &seq);
+	DeeArg_Unpack1(err, argc, argv, "fromseq", &seq);
 	return (DREF Bytes *)DeeBytes_FromSequence(seq);
 err:
 	return NULL;
@@ -1678,7 +1678,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 	byte_t *dst;
 	union dcharptr_const iter, end;
 	size_t length;
-	_DeeArg_Unpack1(err, argc, argv, "fromhex", &hex_str);
+	DeeArg_Unpack1(err, argc, argv, "fromhex", &hex_str);
 	if (DeeObject_AssertTypeExact(hex_str, &DeeString_Type))
 		goto err;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(hex_str)) {

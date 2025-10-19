@@ -4801,7 +4801,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 int_forcecopy(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeIntObject *result;
 	size_t int_size;
-	_DeeArg_Unpack0(err, argc, argv, "__forcecopy__");
+	DeeArg_Unpack0(err, argc, argv, "__forcecopy__");
 	int_size = (size_t)self->ob_size;
 	if ((Dee_ssize_t)int_size < 0)
 		int_size = (size_t)(-(Dee_ssize_t)int_size);
@@ -4824,7 +4824,7 @@ int_divmod_f(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeIntObject *div, *rem;
 	DREF DeeIntObject *y;
 	int error;
-	_DeeArg_Unpack1(err, argc, argv, "o:divmod", &y);
+	DeeArg_Unpack1(err, argc, argv, "o:divmod", &y);
 	y = (DeeIntObject *)DeeObject_Int((DeeObject *)y);
 	if unlikely(!y)
 		goto err;
@@ -4849,7 +4849,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 int_nextafter(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeIntObject *y;
 	Dee_ssize_t diff;
-	_DeeArg_Unpack1(err, argc, argv, "o:nextafter", &y);
+	DeeArg_Unpack1(err, argc, argv, "o:nextafter", &y);
 	y = (DREF DeeIntObject *)DeeObject_Int((DeeObject *)y);
 	if unlikely(!y)
 		goto err;
@@ -4875,7 +4875,7 @@ err:
 	int_##name(DeeIntObject *self, size_t argc, DeeObject *const *argv) { \
 		DREF DeeIntObject *y;                                             \
 		Dee_ssize_t diff;                                                 \
-		_DeeArg_Unpack1(err, argc, argv, #name, &y);                      \
+		DeeArg_Unpack1(err, argc, argv, #name, &y);                      \
 		y = (DREF DeeIntObject *)DeeObject_Int((DeeObject *)y);           \
 		if unlikely(!y)                                                   \
 			goto err;                                                     \
@@ -4896,7 +4896,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_isunordered(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *y;
 	(void)self;
-	_DeeArg_Unpack1(err, argc, argv, "isunordered", &y);
+	DeeArg_Unpack1(err, argc, argv, "isunordered", &y);
 	return DeeObject_GetAttrString(y, "isnan");
 err:
 	return NULL;
@@ -4905,7 +4905,7 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 int_pext_f(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeIntObject *result, *mask;
-	_DeeArg_Unpack1(err, argc, argv, "pext", &mask);
+	DeeArg_Unpack1(err, argc, argv, "pext", &mask);
 #ifndef __OPTIMIZE_SIZE__
 	if likely(DeeInt_Check(mask))
 		return int_pext(self, mask);
@@ -4923,7 +4923,7 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 int_pdep_f(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeIntObject *result, *mask;
-	_DeeArg_Unpack1(err, argc, argv, "pdep", &mask);
+	DeeArg_Unpack1(err, argc, argv, "pdep", &mask);
 #ifndef __OPTIMIZE_SIZE__
 	if likely(DeeInt_Check(mask))
 		return int_pdep(self, mask);

@@ -1630,7 +1630,7 @@ module_class_open(DeeObject *UNUSED(self),
 	 * The only reason it exist is to be a deprecated alias for backwards
 	 * compatibility with the old deemon. */
 	DeeObject *module_name;
-	_DeeArg_Unpack1(err, argc, argv, "open", &module_name);
+	DeeArg_Unpack1(err, argc, argv, "open", &module_name);
 	if (DeeObject_AssertTypeExact(module_name, &DeeString_Type))
 		goto err;
 	return module_import_with_frame_base(module_name);

@@ -138,9 +138,9 @@ F(floatinit)(DeeSTypeObject *__restrict UNUSED(tp_self),
 	double value;
 	DeeObject *arg;
 #ifdef NAME
-	_DeeArg_Unpack1(err, argc, argv, NAME, &arg);
+	DeeArg_Unpack1(err, argc, argv, NAME, &arg);
 #else /* NAME */
-	_DeeArg_Unpack1(err, argc, argv, PP_STR(T), &arg);
+	DeeArg_Unpack1(err, argc, argv, PP_STR(T), &arg);
 #endif /* !NAME */
 	if (DeeObject_AsDouble(arg, &value))
 		goto err;

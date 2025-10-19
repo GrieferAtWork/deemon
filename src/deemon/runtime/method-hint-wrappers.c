@@ -43,7 +43,7 @@ DECL_BEGIN
 /*[[[deemon (printMethodAttributeImpls from "..method-hints.method-hints")();]]]*/
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_bool__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__seq_bool__");
+	DeeArg_Unpack0(err, argc, argv, "__seq_bool__");
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_bool))(self);
 	if unlikely(result < 0)
@@ -55,7 +55,7 @@ err:
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_size__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__seq_size__");
+	DeeArg_Unpack0(err, argc, argv, "__seq_size__");
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_sizeob))(self);
 err:
@@ -64,7 +64,7 @@ err:
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_iter__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__seq_iter__");
+	DeeArg_Unpack0(err, argc, argv, "__seq_iter__");
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_iter))(self);
 err:
@@ -76,7 +76,7 @@ DeeMA___seq_getitem__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	struct {
 		DeeObject *index;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__seq_getitem__", &args.index);
+	DeeArg_Unpack1(err, argc, argv, "__seq_getitem__", &args.index);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem))(self, args.index);
 err:
@@ -88,7 +88,7 @@ DeeMA___seq_delitem__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	struct {
 		DeeObject *index;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__seq_delitem__", &args.index);
+	DeeArg_Unpack1(err, argc, argv, "__seq_delitem__", &args.index);
 {
 	if ((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_delitem))(self, args.index))
 		goto err;
@@ -103,7 +103,7 @@ DeeMA___seq_setitem__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 		DeeObject *index;
 		DeeObject *value;
 	} args;
-	_DeeArg_Unpack2(err, argc, argv, "__seq_setitem__", &args.index, &args.value);
+	DeeArg_Unpack2(err, argc, argv, "__seq_setitem__", &args.index, &args.value);
 {
 	if ((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_setitem))(self, args.index, args.value))
 		goto err;
@@ -168,7 +168,7 @@ DeeMA___seq_assign__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	struct {
 		DeeObject *items;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__seq_assign__", &args.items);
+	DeeArg_Unpack1(err, argc, argv, "__seq_assign__", &args.items);
 {
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_assign))(self, args.items))
 		goto err;
@@ -179,7 +179,7 @@ err:
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_hash__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__seq_hash__");
+	DeeArg_Unpack0(err, argc, argv, "__seq_hash__");
 {
 	Dee_hash_t result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_hash))(self);
 	return DeeInt_NewHash(result);
@@ -192,7 +192,7 @@ DeeMA___seq_compare__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__seq_compare__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__seq_compare__", &args.rhs);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_compare))(self, args.rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
@@ -207,7 +207,7 @@ DeeMA___seq_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *con
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__seq_compare_eq__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__seq_compare_eq__", &args.rhs);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_compare_eq))(self, args.rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
@@ -223,7 +223,7 @@ DeeMA___seq_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__seq_eq__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__seq_eq__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_eq))(self, args.rhs);
 err:
@@ -235,7 +235,7 @@ DeeMA___seq_ne__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__seq_ne__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__seq_ne__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_ne))(self, args.rhs);
 err:
@@ -247,7 +247,7 @@ DeeMA___seq_lo__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__seq_lo__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__seq_lo__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_lo))(self, args.rhs);
 err:
@@ -259,7 +259,7 @@ DeeMA___seq_le__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__seq_le__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__seq_le__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_le))(self, args.rhs);
 err:
@@ -271,7 +271,7 @@ DeeMA___seq_gr__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__seq_gr__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__seq_gr__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_gr))(self, args.rhs);
 err:
@@ -283,7 +283,7 @@ DeeMA___seq_ge__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__seq_ge__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__seq_ge__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_ge))(self, args.rhs);
 err:
@@ -295,7 +295,7 @@ DeeMA___seq_add__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__seq_add__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__seq_add__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_add))(self, args.rhs);
 err:
@@ -307,7 +307,7 @@ DeeMA___seq_mul__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	struct {
 		DeeObject *repeat;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__seq_mul__", &args.repeat);
+	DeeArg_Unpack1(err, argc, argv, "__seq_mul__", &args.repeat);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_mul))(self, args.repeat);
 err:
@@ -319,7 +319,7 @@ DeeMA___seq_inplace_add__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__seq_inplace_add__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__seq_inplace_add__", &args.rhs);
 {
 	Dee_Incref(self);
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_inplace_add))((DeeObject **)&self, args.rhs))
@@ -336,7 +336,7 @@ DeeMA___seq_inplace_mul__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	struct {
 		DeeObject *repeat;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__seq_inplace_mul__", &args.repeat);
+	DeeArg_Unpack1(err, argc, argv, "__seq_inplace_mul__", &args.repeat);
 {
 	Dee_Incref(self);
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_inplace_mul))((DeeObject **)&self, args.repeat))
@@ -389,7 +389,7 @@ DeeMA___seq_enumerate_items__(DeeObject *__restrict self, size_t argc, DeeObject
 	args.end = NULL;
 	args.start = NULL;
 	args.end = NULL;
-	_DeeArg_Unpack0Or1Or2(err, argc, argv, "__seq_enumerate_items__", &args.start, &args.end);
+	DeeArg_Unpack0Or1Or2(err, argc, argv, "__seq_enumerate_items__", &args.start, &args.end);
 {
 	size_t start_index, end_index;
 	if (args.end) {
@@ -1103,7 +1103,7 @@ DeeMA___seq_pushfront__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	struct {
 		DeeObject *item;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__seq_pushfront__", &args.item);
+	DeeArg_Unpack1(err, argc, argv, "__seq_pushfront__", &args.item);
 {
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_pushfront))(self, args.item))
 		goto err;
@@ -1117,7 +1117,7 @@ DeeMA___seq_append__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	struct {
 		DeeObject *item;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__seq_append__", &args.item);
+	DeeArg_Unpack1(err, argc, argv, "__seq_append__", &args.item);
 {
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_append))(self, args.item))
 		goto err;
@@ -1131,7 +1131,7 @@ DeeMA___seq_extend__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	struct {
 		DeeObject *items;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__seq_extend__", &args.items);
+	DeeArg_Unpack1(err, argc, argv, "__seq_extend__", &args.items);
 {
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_extend))(self, args.items))
 		goto err;
@@ -1156,7 +1156,7 @@ err:
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_clear__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__seq_clear__");
+	DeeArg_Unpack0(err, argc, argv, "__seq_clear__");
 {
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_clear))(self))
 		goto err;
@@ -1538,7 +1538,7 @@ err:
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___set_iter__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__set_iter__");
+	DeeArg_Unpack0(err, argc, argv, "__set_iter__");
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_iter))(self);
 err:
@@ -1547,7 +1547,7 @@ err:
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___set_size__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__set_size__");
+	DeeArg_Unpack0(err, argc, argv, "__set_size__");
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_sizeob))(self);
 err:
@@ -1556,7 +1556,7 @@ err:
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___set_hash__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__set_hash__");
+	DeeArg_Unpack0(err, argc, argv, "__set_hash__");
 {
 	Dee_hash_t result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_hash))(self);
 	return DeeInt_NewHash(result);
@@ -1569,7 +1569,7 @@ DeeMA___set_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *con
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_compare_eq__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__set_compare_eq__", &args.rhs);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_compare_eq))(self, args.rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
@@ -1585,7 +1585,7 @@ DeeMA___set_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_eq__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__set_eq__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_eq))(self, args.rhs);
 err:
@@ -1597,7 +1597,7 @@ DeeMA___set_ne__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_ne__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__set_ne__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_ne))(self, args.rhs);
 err:
@@ -1609,7 +1609,7 @@ DeeMA___set_lo__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_lo__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__set_lo__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_lo))(self, args.rhs);
 err:
@@ -1621,7 +1621,7 @@ DeeMA___set_le__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_le__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__set_le__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_le))(self, args.rhs);
 err:
@@ -1633,7 +1633,7 @@ DeeMA___set_gr__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_gr__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__set_gr__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_gr))(self, args.rhs);
 err:
@@ -1645,7 +1645,7 @@ DeeMA___set_ge__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_ge__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__set_ge__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_ge))(self, args.rhs);
 err:
@@ -1654,7 +1654,7 @@ err:
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___set_inv__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__set_inv__");
+	DeeArg_Unpack0(err, argc, argv, "__set_inv__");
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inv))(self);
 err:
@@ -1666,7 +1666,7 @@ DeeMA___set_add__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_add__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__set_add__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_add))(self, args.rhs);
 err:
@@ -1678,7 +1678,7 @@ DeeMA___set_sub__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_sub__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__set_sub__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_sub))(self, args.rhs);
 err:
@@ -1690,7 +1690,7 @@ DeeMA___set_and__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_and__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__set_and__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_and))(self, args.rhs);
 err:
@@ -1702,7 +1702,7 @@ DeeMA___set_xor__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_xor__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__set_xor__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_xor))(self, args.rhs);
 err:
@@ -1714,7 +1714,7 @@ DeeMA___set_inplace_add__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_inplace_add__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__set_inplace_add__", &args.rhs);
 {
 	Dee_Incref(self);
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_add))((DeeObject **)&self, args.rhs))
@@ -1731,7 +1731,7 @@ DeeMA___set_inplace_sub__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_inplace_sub__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__set_inplace_sub__", &args.rhs);
 {
 	Dee_Incref(self);
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_sub))((DeeObject **)&self, args.rhs))
@@ -1748,7 +1748,7 @@ DeeMA___set_inplace_and__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_inplace_and__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__set_inplace_and__", &args.rhs);
 {
 	Dee_Incref(self);
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_and))((DeeObject **)&self, args.rhs))
@@ -1765,7 +1765,7 @@ DeeMA___set_inplace_xor__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_inplace_xor__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__set_inplace_xor__", &args.rhs);
 {
 	Dee_Incref(self);
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_xor))((DeeObject **)&self, args.rhs))
@@ -1782,7 +1782,7 @@ DeeMA___set_unify__(DeeObject *__restrict self, size_t argc, DeeObject *const *a
 	struct {
 		DeeObject *key;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_unify__", &args.key);
+	DeeArg_Unpack1(err, argc, argv, "__set_unify__", &args.key);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_unify))(self, args.key);
 err:
@@ -1794,7 +1794,7 @@ DeeMA___set_insert__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	struct {
 		DeeObject *key;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_insert__", &args.key);
+	DeeArg_Unpack1(err, argc, argv, "__set_insert__", &args.key);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_insert))(self, args.key);
 	if unlikely(result < 0)
@@ -1809,7 +1809,7 @@ DeeMA___set_insertall__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	struct {
 		DeeObject *keys;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_insertall__", &args.keys);
+	DeeArg_Unpack1(err, argc, argv, "__set_insertall__", &args.keys);
 {
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_insertall))(self, args.keys))
 		goto err;
@@ -1823,7 +1823,7 @@ DeeMA___set_remove__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	struct {
 		DeeObject *key;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_remove__", &args.key);
+	DeeArg_Unpack1(err, argc, argv, "__set_remove__", &args.key);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_remove))(self, args.key);
 	if unlikely(result < 0)
@@ -1838,7 +1838,7 @@ DeeMA___set_removeall__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	struct {
 		DeeObject *keys;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__set_removeall__", &args.keys);
+	DeeArg_Unpack1(err, argc, argv, "__set_removeall__", &args.keys);
 {
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_removeall))(self, args.keys))
 		goto err;
@@ -1854,7 +1854,7 @@ DeeMA___set_pop__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	} args;
 	args.def = NULL;
 	args.def = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "__set_pop__", &args.def);
+	DeeArg_Unpack0Or1(err, argc, argv, "__set_pop__", &args.def);
 {
 	return args.def ? (*DeeType_RequireMethodHint(Dee_TYPE(self), set_pop_with_default))(self, args.def)
 	           : (*DeeType_RequireMethodHint(Dee_TYPE(self), set_pop))(self);
@@ -1864,7 +1864,7 @@ err:
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___map_iter__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__map_iter__");
+	DeeArg_Unpack0(err, argc, argv, "__map_iter__");
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_iter))(self);
 err:
@@ -1873,7 +1873,7 @@ err:
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___map_size__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__map_size__");
+	DeeArg_Unpack0(err, argc, argv, "__map_size__");
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_sizeob))(self);
 err:
@@ -1882,7 +1882,7 @@ err:
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___map_hash__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__map_hash__");
+	DeeArg_Unpack0(err, argc, argv, "__map_hash__");
 {
 	Dee_hash_t result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_hash))(self);
 	return DeeInt_NewHash(result);
@@ -1895,7 +1895,7 @@ DeeMA___map_getitem__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	struct {
 		DeeObject *key;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_getitem__", &args.key);
+	DeeArg_Unpack1(err, argc, argv, "__map_getitem__", &args.key);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_getitem))(self, args.key);
 err:
@@ -1907,7 +1907,7 @@ DeeMA___map_delitem__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	struct {
 		DeeObject *key;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_delitem__", &args.key);
+	DeeArg_Unpack1(err, argc, argv, "__map_delitem__", &args.key);
 {
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_delitem))(self, args.key))
 		goto err;
@@ -1922,7 +1922,7 @@ DeeMA___map_setitem__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 		DeeObject *key;
 		DeeObject *value;
 	} args;
-	_DeeArg_Unpack2(err, argc, argv, "__map_setitem__", &args.key, &args.value);
+	DeeArg_Unpack2(err, argc, argv, "__map_setitem__", &args.key, &args.value);
 {
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_setitem))(self, args.key, args.value))
 		goto err;
@@ -1936,7 +1936,7 @@ DeeMA___map_contains__(DeeObject *__restrict self, size_t argc, DeeObject *const
 	struct {
 		DeeObject *key;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_contains__", &args.key);
+	DeeArg_Unpack1(err, argc, argv, "__map_contains__", &args.key);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_contains))(self, args.key);
 err:
@@ -1981,7 +1981,7 @@ DeeMA___map_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *con
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_compare_eq__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__map_compare_eq__", &args.rhs);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_compare_eq))(self, args.rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
@@ -1997,7 +1997,7 @@ DeeMA___map_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_eq__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__map_eq__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_eq))(self, args.rhs);
 err:
@@ -2009,7 +2009,7 @@ DeeMA___map_ne__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_ne__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__map_ne__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_ne))(self, args.rhs);
 err:
@@ -2021,7 +2021,7 @@ DeeMA___map_lo__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_lo__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__map_lo__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_lo))(self, args.rhs);
 err:
@@ -2033,7 +2033,7 @@ DeeMA___map_le__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_le__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__map_le__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_le))(self, args.rhs);
 err:
@@ -2045,7 +2045,7 @@ DeeMA___map_gr__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_gr__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__map_gr__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_gr))(self, args.rhs);
 err:
@@ -2057,7 +2057,7 @@ DeeMA___map_ge__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_ge__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__map_ge__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_ge))(self, args.rhs);
 err:
@@ -2069,7 +2069,7 @@ DeeMA___map_add__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_add__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__map_add__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_add))(self, args.rhs);
 err:
@@ -2081,7 +2081,7 @@ DeeMA___map_sub__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	struct {
 		DeeObject *keys;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_sub__", &args.keys);
+	DeeArg_Unpack1(err, argc, argv, "__map_sub__", &args.keys);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_sub))(self, args.keys);
 err:
@@ -2093,7 +2093,7 @@ DeeMA___map_and__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	struct {
 		DeeObject *keys;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_and__", &args.keys);
+	DeeArg_Unpack1(err, argc, argv, "__map_and__", &args.keys);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_and))(self, args.keys);
 err:
@@ -2105,7 +2105,7 @@ DeeMA___map_xor__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_xor__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__map_xor__", &args.rhs);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_xor))(self, args.rhs);
 err:
@@ -2117,7 +2117,7 @@ DeeMA___map_inplace_add__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	struct {
 		DeeObject *items;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_inplace_add__", &args.items);
+	DeeArg_Unpack1(err, argc, argv, "__map_inplace_add__", &args.items);
 {
 	Dee_Incref(self);
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_add))((DeeObject **)&self, args.items))
@@ -2134,7 +2134,7 @@ DeeMA___map_inplace_sub__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	struct {
 		DeeObject *keys;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_inplace_sub__", &args.keys);
+	DeeArg_Unpack1(err, argc, argv, "__map_inplace_sub__", &args.keys);
 {
 	Dee_Incref(self);
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_sub))((DeeObject **)&self, args.keys))
@@ -2151,7 +2151,7 @@ DeeMA___map_inplace_and__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	struct {
 		DeeObject *keys;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_inplace_and__", &args.keys);
+	DeeArg_Unpack1(err, argc, argv, "__map_inplace_and__", &args.keys);
 {
 	Dee_Incref(self);
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_and))((DeeObject **)&self, args.keys))
@@ -2168,7 +2168,7 @@ DeeMA___map_inplace_xor__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_inplace_xor__", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "__map_inplace_xor__", &args.rhs);
 {
 	Dee_Incref(self);
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_xor))((DeeObject **)&self, args.rhs))
@@ -2186,7 +2186,7 @@ DeeMA___map_setold__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 		DeeObject *key;
 		DeeObject *value;
 	} args;
-	_DeeArg_Unpack2(err, argc, argv, "__map_setold__", &args.key, &args.value);
+	DeeArg_Unpack2(err, argc, argv, "__map_setold__", &args.key, &args.value);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setold))(self, args.key, args.value);
 	if unlikely(result < 0)
@@ -2202,7 +2202,7 @@ DeeMA___map_setold_ex__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 		DeeObject *key;
 		DeeObject *value;
 	} args;
-	_DeeArg_Unpack2(err, argc, argv, "__map_setold_ex__", &args.key, &args.value);
+	DeeArg_Unpack2(err, argc, argv, "__map_setold_ex__", &args.key, &args.value);
 {
 	PRIVATE DEFINE_TUPLE(setold_failed_result, 2, { Dee_False, Dee_None });
 	DREF DeeTupleObject *result;
@@ -2231,7 +2231,7 @@ DeeMA___map_setnew__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 		DeeObject *key;
 		DeeObject *value;
 	} args;
-	_DeeArg_Unpack2(err, argc, argv, "__map_setnew__", &args.key, &args.value);
+	DeeArg_Unpack2(err, argc, argv, "__map_setnew__", &args.key, &args.value);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setnew))(self, args.key, args.value);
 	if unlikely(result < 0)
@@ -2247,7 +2247,7 @@ DeeMA___map_setnew_ex__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 		DeeObject *key;
 		DeeObject *value;
 	} args;
-	_DeeArg_Unpack2(err, argc, argv, "__map_setnew_ex__", &args.key, &args.value);
+	DeeArg_Unpack2(err, argc, argv, "__map_setnew_ex__", &args.key, &args.value);
 {
 	PRIVATE DEFINE_TUPLE(setnew_success_result, 2, { Dee_True, Dee_None });
 	DREF DeeTupleObject *result;
@@ -2276,7 +2276,7 @@ DeeMA___map_setdefault__(DeeObject *__restrict self, size_t argc, DeeObject *con
 		DeeObject *key;
 		DeeObject *value;
 	} args;
-	_DeeArg_Unpack2(err, argc, argv, "__map_setdefault__", &args.key, &args.value);
+	DeeArg_Unpack2(err, argc, argv, "__map_setdefault__", &args.key, &args.value);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setdefault))(self, args.key, args.value);
 err:
@@ -2288,7 +2288,7 @@ DeeMA___map_update__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	struct {
 		DeeObject *items;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_update__", &args.items);
+	DeeArg_Unpack1(err, argc, argv, "__map_update__", &args.items);
 {
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_update))(self, args.items))
 		goto err;
@@ -2302,7 +2302,7 @@ DeeMA___map_remove__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	struct {
 		DeeObject *key;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_remove__", &args.key);
+	DeeArg_Unpack1(err, argc, argv, "__map_remove__", &args.key);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_remove))(self, args.key);
 	if unlikely(result < 0)
@@ -2317,7 +2317,7 @@ DeeMA___map_removekeys__(DeeObject *__restrict self, size_t argc, DeeObject *con
 	struct {
 		DeeObject *keys;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "__map_removekeys__", &args.keys);
+	DeeArg_Unpack1(err, argc, argv, "__map_removekeys__", &args.keys);
 {
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_removekeys))(self, args.keys))
 		goto err;
@@ -2334,7 +2334,7 @@ DeeMA___map_pop__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	} args;
 	args.def = NULL;
 	args.def = NULL;
-	_DeeArg_Unpack1Or2(err, argc, argv, "__map_pop__", &args.key, &args.def);
+	DeeArg_Unpack1Or2(err, argc, argv, "__map_pop__", &args.key, &args.def);
 {
 	return args.def ? (*DeeType_RequireMethodHint(Dee_TYPE(self), map_pop_with_default))(self, args.key, args.def)
 	           : (*DeeType_RequireMethodHint(Dee_TYPE(self), map_pop))(self, args.key);
@@ -2344,7 +2344,7 @@ err:
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___map_popitem__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__map_popitem__");
+	DeeArg_Unpack0(err, argc, argv, "__map_popitem__");
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_popitem))(self);
 err:

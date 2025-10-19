@@ -150,7 +150,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 jseqiter_init(DeeJsonIteratorObject *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	DeeJsonSequenceObject *seq;
-	_DeeArg_Unpack1(err, argc, argv, "_JsonSequenceIterator", &seq);
+	DeeArg_Unpack1(err, argc, argv, "_JsonSequenceIterator", &seq);
 	if (DeeObject_AssertTypeExact(seq, &DeeJsonSequence_Type))
 		goto err;
 	self->ji_owner = seq->js_owner;
@@ -171,7 +171,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 jmapiter_init(DeeJsonIteratorObject *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	DeeJsonMappingObject *seq;
-	_DeeArg_Unpack1(err, argc, argv, "_JsonMappingIterator", &seq);
+	DeeArg_Unpack1(err, argc, argv, "_JsonMappingIterator", &seq);
 	if (DeeObject_AssertTypeExact(seq, &DeeJsonMapping_Type))
 		goto err;
 	self->ji_owner = seq->jm_owner;
@@ -779,7 +779,7 @@ PRIVATE NONNULL((1)) int DCALL
 jseq_init(DeeJsonSequenceObject *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	DeeObject *data;
-	_DeeArg_Unpack1(err, argc, argv, "_JsonSequence", &data);
+	DeeArg_Unpack1(err, argc, argv, "_JsonSequence", &data);
 	if unlikely(jseq_or_map_init_parser(self, data))
 		goto err;
 
@@ -802,7 +802,7 @@ PRIVATE NONNULL((1)) int DCALL
 jmap_init(DeeJsonMappingObject *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	DeeObject *data;
-	_DeeArg_Unpack1(err, argc, argv, "_JsonMapping", &data);
+	DeeArg_Unpack1(err, argc, argv, "_JsonMapping", &data);
 	if unlikely(jseq_or_map_init_parser((DeeJsonSequenceObject *)self, data))
 		goto err;
 

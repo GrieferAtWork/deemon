@@ -969,7 +969,7 @@ bytes_format(Bytes *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *args;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "format", &args.args);
+	DeeArg_Unpack1(err, argc, argv, "format", &args.args);
 /*[[[end]]]*/
 	bytes_printer_init(&printer);
 	if unlikely(DeeString_FormatPrinter((char const *)DeeBytes_DATA(self), DeeBytes_SIZE(self), args.args,
@@ -1141,7 +1141,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_makereadonly(Bytes *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("makereadonly", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "makereadonly");
+	DeeArg_Unpack0(err, argc, argv, "makereadonly");
 /*[[[end]]]*/
 	if (!DeeBytes_WRITABLE(self))
 		return_reference_(self);
@@ -1155,7 +1155,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_makewritable(Bytes *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("makewritable", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "makewritable");
+	DeeArg_Unpack0(err, argc, argv, "makewritable");
 /*[[[end]]]*/
 	if (DeeBytes_WRITABLE(self))
 		return_reference_(self);
@@ -1243,7 +1243,7 @@ bytes_scanf(Bytes *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeStringObject *format;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "scanf", &args.format);
+	DeeArg_Unpack1(err, argc, argv, "scanf", &args.format);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.format, &DeeString_Type))
 		goto err;
@@ -2300,7 +2300,7 @@ bytes_join(Bytes *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *seq;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "join", &args.seq);
+	DeeArg_Unpack1(err, argc, argv, "join", &args.seq);
 /*[[[end]]]*/
 	bytes_printer_init(&data.bjd_out);
 	data.bjd_sep   = self;
@@ -2324,7 +2324,7 @@ bytes_split(Bytes *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *sep;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "split", &args.sep);
+	DeeArg_Unpack1(err, argc, argv, "split", &args.sep);
 /*[[[end]]]*/
 	if (DeeString_Check(args.sep) || DeeBytes_Check(args.sep))
 		return DeeBytes_Split(self, args.sep);
@@ -2345,7 +2345,7 @@ bytes_casesplit(Bytes *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *sep;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "casesplit", &args.sep);
+	DeeArg_Unpack1(err, argc, argv, "casesplit", &args.sep);
 /*[[[end]]]*/
 	if (DeeString_Check(args.sep) || DeeBytes_Check(args.sep))
 		return DeeBytes_CaseSplit(self, args.sep);
@@ -3485,7 +3485,7 @@ bytes_unifylines(Bytes *self, size_t argc, DeeObject *const *argv) {
 		DeeObject *replacement;
 	} args;
 	args.replacement = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "unifylines", &args.replacement);
+	DeeArg_Unpack0Or1(err, argc, argv, "unifylines", &args.replacement);
 /*[[[end]]]*/
 	if (args.replacement) {
 		if (get_needle(&replace, args.replacement))
@@ -3551,7 +3551,7 @@ bytes_indent(Bytes *self, size_t argc, DeeObject *const *argv) {
 		DeeObject *filler;
 	} args;
 	args.filler = (DeeObject *)&str_tab;
-	_DeeArg_Unpack0Or1(err, argc, argv, "indent", &args.filler);
+	DeeArg_Unpack0Or1(err, argc, argv, "indent", &args.filler);
 /*[[[end]]]*/
 	if (args.filler) {
 		if (get_needle(&filler, args.filler))

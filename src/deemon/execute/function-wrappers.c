@@ -160,7 +160,7 @@ funcstaticsiter_copy(FunctionStaticsIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 funcstaticsiter_init(FunctionStaticsIterator *__restrict self,
                      size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "FunctionStaticsIterator", &self->fsi_func);
+	DeeArg_Unpack1(err, argc, argv, "FunctionStaticsIterator", &self->fsi_func);
 	if (!DeeFunction_Check(self->fsi_func)) {
 		if (DeeObject_AssertTypeExact(self->fsi_func, &FunctionStatics_Type))
 			goto err;
@@ -470,7 +470,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 funcstatics_init(FunctionStatics *__restrict self,
                  size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "FunctionStatics", &self->fs_func);
+	DeeArg_Unpack1(err, argc, argv, "FunctionStatics", &self->fs_func);
 	if (DeeObject_AssertTypeExact(self->fs_func, &DeeFunction_Type))
 		goto err;
 	Dee_Incref(self->fs_func);
@@ -738,7 +738,7 @@ funcsymbolsbynameiter_copy(FunctionSymbolsByNameIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 funcsymbolsbynameiter_init(FunctionSymbolsByNameIterator *__restrict self,
                            size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "FunctionSymbolsByNameIterator", &self->fsbni_seq);
+	DeeArg_Unpack1(err, argc, argv, "FunctionSymbolsByNameIterator", &self->fsbni_seq);
 	if (DeeObject_AssertTypeExact(self->fsbni_seq, &FunctionSymbolsByName_Type))
 		goto err;
 	Dee_Incref(self->fsbni_seq);
@@ -1926,7 +1926,7 @@ yfuncsymbolsbynameiter_copy(YieldFunctionSymbolsByNameIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 yfuncsymbolsbynameiter_init(YieldFunctionSymbolsByNameIterator *__restrict self,
                             size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "YieldFunctionSymbolsByNameIterator", &self->yfsbni_seq);
+	DeeArg_Unpack1(err, argc, argv, "YieldFunctionSymbolsByNameIterator", &self->yfsbni_seq);
 	if (DeeObject_AssertTypeExact(self->yfsbni_seq, &YieldFunctionSymbolsByName_Type))
 		goto err;
 	Dee_Incref(self->yfsbni_seq);
@@ -3046,7 +3046,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 frameargs_init(FrameArgs *__restrict self,
                  size_t argc, DeeObject *const *argv) {
 	struct code_frame const *frame;
-	_DeeArg_Unpack1(err, argc, argv, "FrameArgs", &self->fa_frame);
+	DeeArg_Unpack1(err, argc, argv, "FrameArgs", &self->fa_frame);
 	if (DeeObject_AssertTypeExact(self->fa_frame, &DeeFrame_Type))
 		goto err;
 	frame = DeeFrame_LockRead((DeeObject *)self->fa_frame);
@@ -3381,7 +3381,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 framelocals_init(FrameLocals *__restrict self,
                  size_t argc, DeeObject *const *argv) {
 	struct code_frame const *frame;
-	_DeeArg_Unpack1(err, argc, argv, "FrameLocals", &self->fl_frame);
+	DeeArg_Unpack1(err, argc, argv, "FrameLocals", &self->fl_frame);
 	if (DeeObject_AssertTypeExact(self->fl_frame, &DeeFrame_Type))
 		goto err;
 	frame = DeeFrame_LockRead((DeeObject *)self->fl_frame);
@@ -3661,7 +3661,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 framestack_init(FrameStack *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "FrameStack", &self->fs_frame);
+	DeeArg_Unpack1(err, argc, argv, "FrameStack", &self->fs_frame);
 	if (DeeObject_AssertTypeExact(self->fs_frame, &DeeFrame_Type))
 		goto err;
 	Dee_Incref(self->fs_frame);
@@ -4121,7 +4121,7 @@ framesymbolsbynameiter_copy(FrameSymbolsByNameIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 framesymbolsbynameiter_init(FrameSymbolsByNameIterator *__restrict self,
                             size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "FrameSymbolsByNameIterator", &self->frsbni_seq);
+	DeeArg_Unpack1(err, argc, argv, "FrameSymbolsByNameIterator", &self->frsbni_seq);
 	if (DeeObject_AssertTypeExact(self->frsbni_seq, &FrameSymbolsByName_Type))
 		goto err;
 	Dee_Incref(self->frsbni_seq);

@@ -1125,7 +1125,7 @@ LOCAL_seX(copy)(LOCAL_SeqEach *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_seX(init)(LOCAL_SeqEach *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack2(err, argc, argv, "_" LOCAL_SeqEach_Type_NAME,
+	DeeArg_Unpack2(err, argc, argv, "_" LOCAL_SeqEach_Type_NAME,
 	                &self->se_seq, &self->sg_attr);
 	if (DeeObject_AssertTypeExact(self->sg_attr, &DeeString_Type))
 		goto err;
@@ -1417,7 +1417,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_seXi(init)(SeqEachIterator *__restrict self,
                  size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_" LOCAL_SeqEach_Type_NAME "Iterator", &self->ei_each);
+	DeeArg_Unpack1(err, argc, argv, "_" LOCAL_SeqEach_Type_NAME "Iterator", &self->ei_each);
 	if (DeeObject_AssertTypeExact(self->ei_each, &LOCAL_SeqEach_Type))
 		goto err;
 	self->ei_iter = DeeObject_InvokeMethodHint(seq_operator_iter, self->ei_each->se_seq);

@@ -522,7 +522,7 @@ DEFINE_OPERATOR_INVOKE(operator_sync, &instance_sync, NULL /*&filetype_inherit_s
 	(void)p_self;
 	(void)opname;
 	ASSERT(tp_self->ft_sync);
-	_DeeArg_Unpack0(err, argc, argv, OPNAME("sync"));
+	DeeArg_Unpack0(err, argc, argv, OPNAME("sync"));
 	if (DeeFileType_invoke_ft_sync(tp_self, tp_self->ft_sync, self))
 		goto err;
 	return_none;
@@ -561,7 +561,7 @@ DEFINE_OPERATOR_INVOKE(operator_close, &instance_close, NULL /*&filetype_inherit
 	(void)p_self;
 	(void)opname;
 	ASSERT(tp_self->ft_close);
-	_DeeArg_Unpack0(err, argc, argv, OPNAME("close"));
+	DeeArg_Unpack0(err, argc, argv, OPNAME("close"));
 	if (DeeFileType_invoke_ft_close(tp_self, tp_self->ft_close, self))
 		goto err;
 	return_none;

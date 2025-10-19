@@ -180,7 +180,7 @@ once_init(DeeOnceObject *__restrict self,
 #ifndef CONFIG_NO_THREADS
 	self->o_inuse = 0;
 #endif /* !CONFIG_NO_THREADS */
-	_DeeArg_Unpack0Or1(err, argc, argv, "Once", &self->o_value);
+	DeeArg_Unpack0Or1(err, argc, argv, "Once", &self->o_value);
 	Dee_XIncref(self->o_value);
 	return 0;
 err:

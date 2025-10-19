@@ -77,7 +77,7 @@ gcsetiterator_copy(GCSetIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 gcsetiterator_init(GCSetIterator *__restrict self,
                    size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_GCSetIterator", &self->gsi_set);
+	DeeArg_Unpack1(err, argc, argv, "_GCSetIterator", &self->gsi_set);
 	if (DeeObject_AssertTypeExact(self->gsi_set, &DeeGCSet_Type))
 		goto err;
 	Dee_Incref(self->gsi_set);

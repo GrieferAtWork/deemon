@@ -485,7 +485,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 array_init(DeeArrayTypeObject *tp_self, void *base,
            size_t argc, DeeObject *const *argv) {
 	DeeObject *arg;
-	_DeeArg_Unpack1(err, argc, argv, "array", &arg);
+	DeeArg_Unpack1(err, argc, argv, "array", &arg);
 	return array_assign(tp_self, base, arg);
 err:
 	return -1;

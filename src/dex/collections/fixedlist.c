@@ -136,7 +136,7 @@ PRIVATE WUNUSED DREF FixedList *DCALL
 fl_init(size_t argc, DeeObject *const *argv) {
 	DREF FixedList *result;
 	DeeObject *sizeob_or_seq, *init = NULL;
-	_DeeArg_Unpack1Or2(err, argc, argv, "FixedList", &sizeob_or_seq, &init);
+	DeeArg_Unpack1Or2(err, argc, argv, "FixedList", &sizeob_or_seq, &init);
 	if (init) {
 		size_t size;
 		if (DeeObject_AsSize(sizeob_or_seq, &size))

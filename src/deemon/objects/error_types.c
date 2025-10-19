@@ -652,7 +652,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 appexit_class_atexit(DeeTypeObject *UNUSED(self),
                      size_t argc, DeeObject *const *argv) {
 	DeeObject *callback, *args = Dee_EmptyTuple;
-	_DeeArg_Unpack1Or2(err, argc, argv, "atexit", &callback, &args);
+	DeeArg_Unpack1Or2(err, argc, argv, "atexit", &callback, &args);
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err;
 	if (Dee_AtExit(callback, args))

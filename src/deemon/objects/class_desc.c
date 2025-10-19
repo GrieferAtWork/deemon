@@ -232,7 +232,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 coti_init(ClassOperatorTableIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	ClassOperatorTable *tab;
-	_DeeArg_Unpack1(err, argc, argv, "_ClassOperatorTableIterator", &tab);
+	DeeArg_Unpack1(err, argc, argv, "_ClassOperatorTableIterator", &tab);
 	if (DeeObject_AssertTypeExact(tab, &ClassOperatorTableIterator_Type))
 		goto err;
 	self->co_desc = tab->co_desc;
@@ -362,7 +362,7 @@ STATIC_ASSERT(offsetof(ClassOperatorTable, co_desc) == offsetof(ProxyObject, po_
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cot_init(ClassOperatorTable *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_ClassOperatorTable", &self->co_desc);
+	DeeArg_Unpack1(err, argc, argv, "_ClassOperatorTable", &self->co_desc);
 	if (DeeObject_AssertTypeExact(self->co_desc, &DeeClassDescriptor_Type))
 		goto err;
 	Dee_Incref(self->co_desc);
@@ -681,7 +681,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 cati_iter(ClassAttributeTableIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	ClassAttributeTable *tab;
-	_DeeArg_Unpack1(err, argc, argv, "_ClassAttributeTableIterator", &tab);
+	DeeArg_Unpack1(err, argc, argv, "_ClassAttributeTableIterator", &tab);
 	if (DeeObject_AssertTypeExact(tab, &ClassAttributeTable_Type))
 		goto err;
 	self->ca_desc = tab->ca_desc;
@@ -2751,7 +2751,7 @@ ot_init(ObjectTable *__restrict self,
 	DeeObject *ob;
 	DeeTypeObject *type = NULL;
 	struct class_desc *desc;
-	_DeeArg_Unpack1Or2(err, argc, argv, "_ObjectTable", &ob, &type);
+	DeeArg_Unpack1Or2(err, argc, argv, "_ObjectTable", &ob, &type);
 	if (type) {
 		if (DeeObject_AssertImplements(ob, type))
 			goto err;
@@ -4055,7 +4055,7 @@ DeeClass_VCallInstanceAttributef(DeeTypeObject *class_type,
 		args_tuple = DeeTuple_VNewf(format, args);
 		if unlikely(!args_tuple)
 			goto err;
-		_DeeArg_Unpack1(err_args_tuple,
+		DeeArg_Unpack1(err_args_tuple,
 		                DeeTuple_SIZE(args_tuple),
 		                DeeTuple_ELEM(args_tuple),
 		                "get", &thisarg);

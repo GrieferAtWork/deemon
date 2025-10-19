@@ -309,7 +309,7 @@ splititer_init(StringSplitIterator *__restrict self,
                size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *split_type;
 	StringSplit *split;
-	_DeeArg_Unpack1(err, argc, argv, "_StringSplitIterator", &split);
+	DeeArg_Unpack1(err, argc, argv, "_StringSplitIterator", &split);
 	split_type = &StringSplit_Type;
 	if (Dee_TYPE(self) == &StringCaseSplitIterator_Type)
 		split_type = &StringCaseSplit_Type;
@@ -617,7 +617,7 @@ split_copy(StringSplit *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 split_init(StringSplit *__restrict self,
            size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack2(err, argc, argv, "_StringSplit", &self->s_str, &self->s_sep);
+	DeeArg_Unpack2(err, argc, argv, "_StringSplit", &self->s_str, &self->s_sep);
 	if (DeeObject_AssertTypeExact(self->s_str, &DeeString_Type))
 		goto err;
 	if (DeeObject_AssertTypeExact(self->s_sep, &DeeString_Type))
@@ -949,7 +949,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 lineiter_init(LineSplitIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	LineSplit *split;
-	_DeeArg_Unpack1(err, argc, argv, "_StringLineSplitIterator", &split);
+	DeeArg_Unpack1(err, argc, argv, "_StringLineSplitIterator", &split);
 	if (DeeObject_AssertTypeExact(split, &StringLineSplit_Type))
 		goto err;
 	lineiter_setup(self, split);

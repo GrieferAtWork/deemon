@@ -1840,7 +1840,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_copy(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__copy__");
+	DeeArg_Unpack0(err, argc, argv, "__copy__");
 	return DeeObject_Copy(self);
 err:
 	return NULL;
@@ -1848,7 +1848,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_deepcopy(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__deepcopy__");
+	DeeArg_Unpack0(err, argc, argv, "__deepcopy__");
 	return DeeObject_DeepCopy(self);
 err:
 	return NULL;
@@ -1857,7 +1857,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_assign(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__assign__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__assign__", &other);
 	if (DeeObject_Assign(self, other))
 		goto err;
 	return_reference_(self);
@@ -1868,7 +1868,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_moveassign(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__moveassign__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__moveassign__", &other);
 	if (DeeObject_AssertType(other, Dee_TYPE(self)))
 		goto err;
 	if (DeeObject_MoveAssign(self, other))
@@ -1880,7 +1880,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_dostr(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__str__");
+	DeeArg_Unpack0(err, argc, argv, "__str__");
 	return DeeObject_Str(self);
 err:
 	return NULL;
@@ -1888,7 +1888,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_dorepr(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__repr__");
+	DeeArg_Unpack0(err, argc, argv, "__repr__");
 	return DeeObject_Repr(self);
 err:
 	return NULL;
@@ -1896,7 +1896,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_bool(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__bool__");
+	DeeArg_Unpack0(err, argc, argv, "__bool__");
 	return DeeObject_BoolOb(self);
 err:
 	return NULL;
@@ -1905,7 +1905,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_call(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *args_tuple;
-	_DeeArg_Unpack1(err, argc, argv, "__call__", &args_tuple);
+	DeeArg_Unpack1(err, argc, argv, "__call__", &args_tuple);
 	if (DeeObject_AssertTypeExact(args_tuple, &DeeTuple_Type))
 		goto err;
 	return DeeObject_Call(self,
@@ -1919,7 +1919,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_thiscall(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *this_arg;
 	DeeObject *args_tuple = Dee_EmptyTuple;
-	_DeeArg_Unpack1Or2(err, argc, argv, "__thiscall__", &this_arg, &args_tuple);
+	DeeArg_Unpack1Or2(err, argc, argv, "__thiscall__", &this_arg, &args_tuple);
 	if (DeeObject_AssertTypeExact(args_tuple, &DeeTuple_Type))
 		goto err;
 	return DeeObject_ThisCall(self, this_arg,
@@ -1931,7 +1931,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_hash(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__hash__");
+	DeeArg_Unpack0(err, argc, argv, "__hash__");
 	return DeeInt_NewSize(DeeObject_Hash(self));
 err:
 	return NULL;
@@ -1939,7 +1939,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_int(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__int__");
+	DeeArg_Unpack0(err, argc, argv, "__int__");
 	return DeeObject_Int(self);
 err:
 	return NULL;
@@ -1947,7 +1947,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_inv(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__inv__");
+	DeeArg_Unpack0(err, argc, argv, "__inv__");
 	return DeeObject_Inv(self);
 err:
 	return NULL;
@@ -1955,7 +1955,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_pos(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__pos__");
+	DeeArg_Unpack0(err, argc, argv, "__pos__");
 	return DeeObject_Pos(self);
 err:
 	return NULL;
@@ -1963,7 +1963,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_neg(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__neg__");
+	DeeArg_Unpack0(err, argc, argv, "__neg__");
 	return DeeObject_Neg(self);
 err:
 	return NULL;
@@ -1972,7 +1972,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_add(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__add__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__add__", &other);
 	return DeeObject_Add(self, other);
 err:
 	return NULL;
@@ -1981,7 +1981,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_sub(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__sub__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__sub__", &other);
 	return DeeObject_Sub(self, other);
 err:
 	return NULL;
@@ -1990,7 +1990,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_mul(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__mul__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__mul__", &other);
 	return DeeObject_Mul(self, other);
 err:
 	return NULL;
@@ -1999,7 +1999,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_div(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__div__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__div__", &other);
 	return DeeObject_Div(self, other);
 err:
 	return NULL;
@@ -2008,7 +2008,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_mod(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__mod__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__mod__", &other);
 	return DeeObject_Mod(self, other);
 err:
 	return NULL;
@@ -2017,7 +2017,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_shl(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__shl__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__shl__", &other);
 	return DeeObject_Shl(self, other);
 err:
 	return NULL;
@@ -2026,7 +2026,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_shr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__shr__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__shr__", &other);
 	return DeeObject_Shr(self, other);
 err:
 	return NULL;
@@ -2035,7 +2035,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_and(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__and__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__and__", &other);
 	return DeeObject_And(self, other);
 err:
 	return NULL;
@@ -2044,7 +2044,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_or(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__or__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__or__", &other);
 	return DeeObject_Or(self, other);
 err:
 	return NULL;
@@ -2053,7 +2053,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_xor(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__xor__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__xor__", &other);
 	return DeeObject_Xor(self, other);
 err:
 	return NULL;
@@ -2062,7 +2062,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_pow(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__pow__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__pow__", &other);
 	return DeeObject_Pow(self, other);
 err:
 	return NULL;
@@ -2071,7 +2071,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_eq(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__eq__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__eq__", &other);
 	return DeeObject_CmpEq(self, other);
 err:
 	return NULL;
@@ -2080,7 +2080,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_ne(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__ne__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__ne__", &other);
 	return DeeObject_CmpNe(self, other);
 err:
 	return NULL;
@@ -2089,7 +2089,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_lo(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__lo__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__lo__", &other);
 	return DeeObject_CmpLo(self, other);
 err:
 	return NULL;
@@ -2098,7 +2098,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_le(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__le__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__le__", &other);
 	return DeeObject_CmpLe(self, other);
 err:
 	return NULL;
@@ -2107,7 +2107,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_gr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__gr__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__gr__", &other);
 	return DeeObject_CmpGr(self, other);
 err:
 	return NULL;
@@ -2116,7 +2116,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_ge(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__ge__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__ge__", &other);
 	return DeeObject_CmpGe(self, other);
 err:
 	return NULL;
@@ -2124,7 +2124,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_size(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__size__");
+	DeeArg_Unpack0(err, argc, argv, "__size__");
 	return DeeObject_SizeOb(self);
 err:
 	return NULL;
@@ -2133,7 +2133,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_contains(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__contains__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__contains__", &other);
 	return DeeObject_Contains(self, other);
 err:
 	return NULL;
@@ -2142,7 +2142,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_getitem(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__getitem__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__getitem__", &other);
 	return DeeObject_GetItem(self, other);
 err:
 	return NULL;
@@ -2151,7 +2151,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_delitem(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "__delitem__", &other);
+	DeeArg_Unpack1(err, argc, argv, "__delitem__", &other);
 	if (DeeObject_DelItem(self, other))
 		goto err;
 	return_none;
@@ -2162,7 +2162,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_setitem(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other, *value;
-	_DeeArg_Unpack2(err, argc, argv, "__setitem__", &other, &value);
+	DeeArg_Unpack2(err, argc, argv, "__setitem__", &other, &value);
 	if (DeeObject_SetItem(self, other, value))
 		goto err;
 	return_reference_(value);
@@ -2173,7 +2173,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_getrange(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *begin_index, *end_index;
-	_DeeArg_Unpack2(err, argc, argv, "__getrange__", &begin_index, &end_index);
+	DeeArg_Unpack2(err, argc, argv, "__getrange__", &begin_index, &end_index);
 	return DeeObject_GetRange(self, begin_index, end_index);
 err:
 	return NULL;
@@ -2182,7 +2182,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_delrange(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *begin_index, *end_index;
-	_DeeArg_Unpack2(err, argc, argv, "__delrange__", &begin_index, &end_index);
+	DeeArg_Unpack2(err, argc, argv, "__delrange__", &begin_index, &end_index);
 	if (DeeObject_DelRange(self, begin_index, end_index))
 		goto err;
 	return_none;
@@ -2193,7 +2193,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_setrange(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *begin_index, *end_index, *value;
-	_DeeArg_Unpack3(err, argc, argv, "__setrange__", &begin_index, &end_index, &value);
+	DeeArg_Unpack3(err, argc, argv, "__setrange__", &begin_index, &end_index, &value);
 	if (DeeObject_SetRange(self, begin_index, end_index, value))
 		goto err;
 	return_reference_(value);
@@ -2203,7 +2203,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_iterself(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__iter__");
+	DeeArg_Unpack0(err, argc, argv, "__iter__");
 	return DeeObject_Iter(self);
 err:
 	return NULL;
@@ -2212,7 +2212,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_iternext(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
-	_DeeArg_Unpack0(err, argc, argv, "__next__");
+	DeeArg_Unpack0(err, argc, argv, "__next__");
 	result = DeeObject_IterNext(self);
 	if (result == ITER_DONE) {
 		DeeError_Throw(&DeeError_StopIteration_instance);
@@ -2226,7 +2226,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_getattr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *name;
-	_DeeArg_Unpack1(err, argc, argv, "__getattr__", &name);
+	DeeArg_Unpack1(err, argc, argv, "__getattr__", &name);
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	return DeeObject_GetAttr(self, name);
@@ -2251,7 +2251,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_hasattr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *name;
 	int result;
-	_DeeArg_Unpack1(err, argc, argv, "__hasattr__", &name);
+	DeeArg_Unpack1(err, argc, argv, "__hasattr__", &name);
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	result = DeeObject_HasAttr(self, name);
@@ -2265,7 +2265,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_delattr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *name;
-	_DeeArg_Unpack1(err, argc, argv, "__delattr__", &name);
+	DeeArg_Unpack1(err, argc, argv, "__delattr__", &name);
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	if (DeeObject_DelAttr(self, name))
@@ -2278,7 +2278,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_setattr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *name, *value;
-	_DeeArg_Unpack2(err, argc, argv, "__setattr__", &name, &value);
+	DeeArg_Unpack2(err, argc, argv, "__setattr__", &name, &value);
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	if (DeeObject_SetAttr(self, name, value))
@@ -2290,7 +2290,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_enumattr(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__enumattr__");
+	DeeArg_Unpack0(err, argc, argv, "__enumattr__");
 	return DeeObject_New(&DeeEnumAttr_Type, 1, (DeeObject **)&self);
 err:
 	return NULL;
@@ -2306,7 +2306,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_format_method(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *format_str;
 	char const *format_utf8;
-	_DeeArg_Unpack1(err, argc, argv, "__format__", &format_str);
+	DeeArg_Unpack1(err, argc, argv, "__format__", &format_str);
 	if (DeeObject_AssertTypeExact(format_str, &DeeString_Type))
 		goto err;
 	if unlikely((format_utf8 = DeeString_AsUtf8(format_str)) == NULL)
@@ -2332,7 +2332,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_not(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int temp;
-	_DeeArg_Unpack0(err, argc, argv, "__not__");
+	DeeArg_Unpack0(err, argc, argv, "__not__");
 	temp = DeeObject_Bool(self);
 	if unlikely(temp < 0)
 		goto err;
@@ -2345,7 +2345,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_is(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	unsigned int is_instance;
 	DeeTypeObject *tp;
-	_DeeArg_Unpack1(err, argc, argv, "__is__", &tp);
+	DeeArg_Unpack1(err, argc, argv, "__is__", &tp);
 	if (DeeNone_Check((DeeObject *)tp)) {
 		is_instance = DeeNone_Check(self) ? 1 : 0;
 	} else if (DeeSuper_Check(self)) {
@@ -2362,7 +2362,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_inc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *selfref;
 	int error;
-	_DeeArg_Unpack0(err, argc, argv, "__inc__");
+	DeeArg_Unpack0(err, argc, argv, "__inc__");
 	selfref = self;
 	Dee_Incref(selfref);
 	error = DeeObject_Inc(&selfref);
@@ -2382,7 +2382,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_dec(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *selfref;
 	int error;
-	_DeeArg_Unpack0(err, argc, argv, "__dec__");
+	DeeArg_Unpack0(err, argc, argv, "__dec__");
 	selfref = self;
 	Dee_Incref(selfref);
 	error = DeeObject_Dec(&selfref);
@@ -2402,7 +2402,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_incpost(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *selfref, *result;
 	int error;
-	_DeeArg_Unpack0(err, argc, argv, "__incpost__");
+	DeeArg_Unpack0(err, argc, argv, "__incpost__");
 	result = DeeObject_Copy(self);
 	if unlikely(!result)
 		goto err;
@@ -2425,7 +2425,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_decpost(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *selfref, *result;
 	int error;
-	_DeeArg_Unpack0(err, argc, argv, "__decpost__");
+	DeeArg_Unpack0(err, argc, argv, "__decpost__");
 	result = DeeObject_Copy(self);
 	if unlikely(!result)
 		goto err;
@@ -2451,7 +2451,7 @@ err:
 		DREF DeeObject *selfref;                                   \
 		int error;                                                 \
 		DeeObject *other;                                          \
-		_DeeArg_Unpack1(err, argc, argv, "__" #name "__", &other); \
+		DeeArg_Unpack1(err, argc, argv, "__" #name "__", &other); \
 		selfref = self;                                            \
 		Dee_Incref(selfref);                                       \
 		error = func(&selfref, other);                             \
@@ -3806,7 +3806,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 type_extends_not_same(DeeTypeObject *self, size_t argc,
                           DeeObject *const *argv) {
 	DeeTypeObject *other;
-	_DeeArg_Unpack1(err, argc, argv, "derived_from", &other);
+	DeeArg_Unpack1(err, argc, argv, "derived_from", &other);
 	return_bool(self != other && DeeType_Extends(self, other));
 err:
 	return NULL;
@@ -3815,7 +3815,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_vartype(DeeTypeObject *self, size_t argc,
                 DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "is_vartype");
+	DeeArg_Unpack0(err, argc, argv, "is_vartype");
 	return_bool(DeeType_IsVariable(self));
 err:
 	return NULL;
@@ -3824,7 +3824,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_heaptype(DeeTypeObject *self, size_t argc,
                  DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "is_heaptype");
+	DeeArg_Unpack0(err, argc, argv, "is_heaptype");
 	return_bool(DeeType_IsCustom(self));
 err:
 	return NULL;
@@ -3833,7 +3833,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_gctype(DeeTypeObject *self, size_t argc,
                DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "is_gctype");
+	DeeArg_Unpack0(err, argc, argv, "is_gctype");
 	return_bool(DeeType_IsGC(self));
 err:
 	return NULL;
@@ -3842,7 +3842,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_final(DeeTypeObject *self, size_t argc,
               DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "is_final");
+	DeeArg_Unpack0(err, argc, argv, "is_final");
 	return_bool(DeeType_IsFinal(self));
 err:
 	return NULL;
@@ -3851,7 +3851,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_class(DeeTypeObject *self, size_t argc,
               DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "is_class");
+	DeeArg_Unpack0(err, argc, argv, "is_class");
 	return_bool(DeeType_IsClass(self));
 err:
 	return NULL;
@@ -3860,7 +3860,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_complete(DeeTypeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "is_complete");
+	DeeArg_Unpack0(err, argc, argv, "is_complete");
 	return_true;
 err:
 	return NULL;
@@ -3869,7 +3869,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_classtype(DeeTypeObject *__restrict UNUSED(self),
                   size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "is_class_type");
+	DeeArg_Unpack0(err, argc, argv, "is_class_type");
 	return_false;
 err:
 	return NULL;
@@ -3906,7 +3906,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_pointer(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "is_pointer");
+	DeeArg_Unpack0(err, argc, argv, "is_pointer");
 	return type_is_ctypes_class(self, "ispointer");
 err:
 	return NULL;
@@ -3914,7 +3914,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_lvalue(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "is_pointer");
+	DeeArg_Unpack0(err, argc, argv, "is_pointer");
 	return type_is_ctypes_class(self, "islvalue");
 err:
 	return NULL;
@@ -3922,7 +3922,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_structured(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "is_structured");
+	DeeArg_Unpack0(err, argc, argv, "is_structured");
 	return DeeObject_GetAttrString((DeeObject *)self, "isstructured");
 err:
 	return NULL;
@@ -3930,7 +3930,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_struct(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "is_struct");
+	DeeArg_Unpack0(err, argc, argv, "is_struct");
 	return type_is_ctypes_class(self, "isstruct");
 err:
 	return NULL;
@@ -3938,7 +3938,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_array(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "is_array");
+	DeeArg_Unpack0(err, argc, argv, "is_array");
 	return type_is_ctypes_class(self, "isarray");
 err:
 	return NULL;
@@ -3946,7 +3946,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_foreign_function(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "is_foreign_function");
+	DeeArg_Unpack0(err, argc, argv, "is_foreign_function");
 	return type_is_ctypes_class(self, "isfunction");
 err:
 	return NULL;
@@ -3955,7 +3955,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_filetype(DeeTypeObject *self, size_t argc,
                  DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "is_file");
+	DeeArg_Unpack0(err, argc, argv, "is_file");
 	return_bool(Dee_TYPE(self) == &DeeFileType_Type);
 err:
 	return NULL;
@@ -3964,7 +3964,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_superbase(DeeTypeObject *self, size_t argc,
                   DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "is_super_base");
+	DeeArg_Unpack0(err, argc, argv, "is_super_base");
 	return_bool(DeeType_Base(self) == NULL);
 err:
 	return NULL;

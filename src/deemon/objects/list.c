@@ -1004,7 +1004,7 @@ list_init(List *__restrict self, size_t argc, DeeObject *const *argv) {
 		DeeObject *filler;
 	} args;
 	args.filler = NULL;
-	_DeeArg_Unpack1Or2(err, argc, argv, "List", &args.sequence_or_length, &args.filler);
+	DeeArg_Unpack1Or2(err, argc, argv, "List", &args.sequence_or_length, &args.filler);
 /*[[[end]]]*/
 	weakref_support_init(self);
 	Dee_atomic_rwlock_init(&self->l_lock);
@@ -3393,7 +3393,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_shrink(List *me, size_t argc, DeeObject *const *argv) {
 	bool result;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("shrink", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "shrink");
+	DeeArg_Unpack0(err, argc, argv, "shrink");
 /*[[[end]]]*/
 	result = list_do_shrink(me);
 	return_bool(result);

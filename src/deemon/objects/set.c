@@ -58,7 +58,7 @@ set_isdisjoint(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *rhs;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "isdisjoint", &args.rhs);
+	DeeArg_Unpack1(err, argc, argv, "isdisjoint", &args.rhs);
 /*[[[end]]]*/
 	result = SetIntersection_NonEmpty(self, args.rhs);
 	if unlikely(result < 0)

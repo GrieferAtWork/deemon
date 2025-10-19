@@ -325,7 +325,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_empty_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("empty", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "empty");
+	DeeArg_Unpack0(err, argc, argv, "empty");
 /*[[[end]]]*/
 	result = DeeObject_InvokeMethodHint(seq_operator_bool, self);
 	if unlikely(result < 0)
@@ -338,7 +338,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_front_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("front", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "front");
+	DeeArg_Unpack0(err, argc, argv, "front");
 /*[[[end]]]*/
 	return DeeObject_InvokeMethodHint(seq_getfirst, self);
 err:
@@ -348,7 +348,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_back_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("back", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "back");
+	DeeArg_Unpack0(err, argc, argv, "back");
 /*[[[end]]]*/
 	return DeeObject_InvokeMethodHint(seq_getlast, self);
 err:
@@ -365,7 +365,7 @@ seq_filter(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *keep;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "filter", &args.keep);
+	DeeArg_Unpack1(err, argc, argv, "filter", &args.keep);
 /*[[[end]]]*/
 	return DeeSeq_Filter(self, args.keep);
 err:
@@ -381,7 +381,7 @@ seq_ubfilter(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *keep;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "ubfilter", &args.keep);
+	DeeArg_Unpack1(err, argc, argv, "ubfilter", &args.keep);
 /*[[[end]]]*/
 	return DeeSeq_FilterAsUnbound(self, args.keep);
 err:
@@ -397,7 +397,7 @@ seq_map(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *mapper;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "map", &args.mapper);
+	DeeArg_Unpack1(err, argc, argv, "map", &args.mapper);
 /*[[[end]]]*/
 	return DeeSeq_Map(self, args.mapper);
 err:
@@ -808,7 +808,7 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because aliased by `List.pop_front' */
 seq_popfront(DeeObject *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("popfront", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "popfront");
+	DeeArg_Unpack0(err, argc, argv, "popfront");
 /*[[[end]]]*/
 	return DeeObject_InvokeMethodHint(seq_pop, self, 0);
 err:
@@ -818,7 +818,7 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because aliased by `List.pop_back' */
 seq_popback(DeeObject *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("popback", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "popback");
+	DeeArg_Unpack0(err, argc, argv, "popback");
 /*[[[end]]]*/
 	return DeeObject_InvokeMethodHint(seq_pop, self, -1);
 err:
@@ -3188,7 +3188,7 @@ seq_class_range(DeeObject *UNUSED(self),
 	 *  behavior from a core function (since `Sequence' is a
 	 *  builtin type like `List', `Tuple', etc.). */
 	DeeObject *start, *end = NULL, *step = NULL, *result;
-	_DeeArg_Unpack1Or2Or3(err, argc, argv, "range", &start, &end, &step);
+	DeeArg_Unpack1Or2Or3(err, argc, argv, "range", &start, &end, &step);
 	if (end)
 		return DeeRange_New(start, end, step);
 	/* Use a default-constructed instance of `type(start)' for the real start. */

@@ -348,7 +348,7 @@ scope_newanon(DeeCompilerScopeObject *self, size_t argc, DeeObject *const *argv)
 	struct symbol *sym;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
-	_DeeArg_Unpack0(done_compiler_end, argc, argv, "newanon");
+	DeeArg_Unpack0(done_compiler_end, argc, argv, "newanon");
 	sym = new_unnamed_symbol_in_scope(self->ci_value);
 	if unlikely(!sym)
 		goto done_compiler_end;

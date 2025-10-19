@@ -117,7 +117,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatiter_init(RepeatIterator *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_SeqRepeatIterator", &self->rpi_rep);
+	DeeArg_Unpack1(err, argc, argv, "_SeqRepeatIterator", &self->rpi_rep);
 	if (DeeObject_AssertTypeExact(self->rpi_rep, &SeqRepeat_Type))
 		goto err;
 	self->rpi_iter = DeeObject_Iter(self->rpi_rep->rp_seq);
@@ -747,7 +747,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitemiter_init(RepeatItemIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_SeqItemRepeatIterator", &self->rii_rep);
+	DeeArg_Unpack1(err, argc, argv, "_SeqItemRepeatIterator", &self->rii_rep);
 	if (DeeObject_AssertTypeExact(self->rii_rep, &SeqItemRepeat_Type))
 		goto err;
 	self->rii_obj = self->rii_rep->rpit_obj;

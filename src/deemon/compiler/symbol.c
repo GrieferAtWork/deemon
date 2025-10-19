@@ -827,7 +827,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 root_scope_init(DeeRootScopeObject *__restrict self,
                 size_t argc, DeeObject *const *argv) {
 	DeeModuleObject *module;
-	_DeeArg_Unpack1(err, argc, argv, "root_scope", &module);
+	DeeArg_Unpack1(err, argc, argv, "root_scope", &module);
 	if (DeeObject_AssertType(module, &DeeModule_Type))
 		goto err;
 	bzero((uint8_t *)self + offsetof(DeeScopeObject, s_prev),

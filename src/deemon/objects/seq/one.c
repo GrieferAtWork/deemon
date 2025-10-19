@@ -127,7 +127,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 soi_init(SeqOneIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	SeqOne *so;
-	_DeeArg_Unpack1(err, argc, argv, "_SeqOneIterator", &so);
+	DeeArg_Unpack1(err, argc, argv, "_SeqOneIterator", &so);
 	if (DeeObject_AssertTypeExact(so, &DeeSeqOne_Type))
 		goto err;
 	self->soi_item = so->so_item;

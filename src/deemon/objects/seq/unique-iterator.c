@@ -75,7 +75,7 @@ err_encountered:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_init(DistinctIterator *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp;
-	_DeeArg_Unpack1(err, argc, argv, "_DistinctIterator", &self->di_iter);
+	DeeArg_Unpack1(err, argc, argv, "_DistinctIterator", &self->di_iter);
 	itertyp = Dee_TYPE(self->di_iter);
 	self->di_tp_next = DeeType_RequireSupportedNativeOperator(itertyp, iter_next);
 	if unlikely(!self->di_tp_next)
@@ -248,7 +248,7 @@ uqiwk_copy(DistinctIteratorWithKey *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 uqiwk_init(DistinctIteratorWithKey *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp;
-	_DeeArg_Unpack2(err, argc, argv, "_DistinctIteratorWithKey",
+	DeeArg_Unpack2(err, argc, argv, "_DistinctIteratorWithKey",
 	                &self->diwk_iter, &self->diwk_key);
 	itertyp = Dee_TYPE(self->diwk_iter);
 	self->diwk_tp_next = DeeType_RequireSupportedNativeOperator(itertyp, iter_next);
@@ -556,7 +556,7 @@ STATIC_ASSERT(offsetof(DistinctMappingIterator, dmi_iter) == offsetof(ProxyObjec
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dmi_init(DistinctMappingIterator *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp;
-	_DeeArg_Unpack1(err, argc, argv, "_DistinctMappingIterator", &self->dmi_iter);
+	DeeArg_Unpack1(err, argc, argv, "_DistinctMappingIterator", &self->dmi_iter);
 	itertyp = Dee_TYPE(self->dmi_iter);
 	self->dmi_tp_nextpair = DeeType_RequireSupportedNativeOperator(itertyp, nextpair);
 	if unlikely(!self->dmi_tp_nextpair)

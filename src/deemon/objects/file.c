@@ -2121,7 +2121,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_tell(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	Dee_pos_t result;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("tell", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "tell");
+	DeeArg_Unpack0(err, argc, argv, "tell");
 /*[[[end]]]*/
 	result = DeeFile_Tell(self);
 	if unlikely(result == (Dee_pos_t)-1)
@@ -2134,7 +2134,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_rewind(DeeObject *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rewind", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "rewind");
+	DeeArg_Unpack0(err, argc, argv, "rewind");
 /*[[[end]]]*/
 	if (DeeFile_Rewind(self) == (Dee_pos_t)-1)
 		goto err;
@@ -2167,7 +2167,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_sync(DeeObject *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("sync", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "sync");
+	DeeArg_Unpack0(err, argc, argv, "sync");
 /*[[[end]]]*/
 	if (DeeFile_Sync(self))
 		goto err;
@@ -2179,7 +2179,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_close(DeeObject *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("close", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "close");
+	DeeArg_Unpack0(err, argc, argv, "close");
 /*[[[end]]]*/
 	if (DeeFile_Close(self))
 		goto err;
@@ -2192,7 +2192,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getc", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "getc");
+	DeeArg_Unpack0(err, argc, argv, "getc");
 /*[[[end]]]*/
 	result = DeeFile_Getc(self);
 	if unlikely(result == GETC_ERR)
@@ -2252,7 +2252,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getutf8(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	uint32_t result;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getutf8", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "getutf8");
+	DeeArg_Unpack0(err, argc, argv, "getutf8");
 /*[[[end]]]*/
 	result = DeeFile_GetUtf8(self);
 	if unlikely(result == (uint32_t)GETC_ERR)
@@ -2290,7 +2290,7 @@ file_pututf8(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *str;
 	char const *utf8;
 	size_t written;
-	_DeeArg_Unpack1(err, argc, argv, "pututf8", &str);
+	DeeArg_Unpack1(err, argc, argv, "pututf8", &str);
 	if (DeeObject_AssertTypeExact(str, &DeeString_Type))
 		goto err;
 	utf8 = DeeString_AsUtf8(str);
@@ -2309,7 +2309,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_size(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	Dee_pos_t old_pos, result;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("size", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "size");
+	DeeArg_Unpack0(err, argc, argv, "size");
 /*[[[end]]]*/
 	old_pos = DeeFile_Seek(self, 0, SEEK_CUR);
 	if unlikely(old_pos == (Dee_pos_t)-1)

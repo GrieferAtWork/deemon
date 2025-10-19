@@ -3939,7 +3939,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seoi_init(SeqEachIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_SeqEachOperatorIterator", &self->ei_each);
+	DeeArg_Unpack1(err, argc, argv, "_SeqEachOperatorIterator", &self->ei_each);
 	if (DeeObject_AssertTypeExact(self->ei_each, &SeqEachOperator_Type))
 		goto err;
 	self->ei_iter = DeeObject_Iter(self->ei_each->se_seq);

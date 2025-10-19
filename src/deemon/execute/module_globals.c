@@ -85,7 +85,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 modexportsiter_init(ModuleExportsIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
 	ModuleExports *exports_map;
-	_DeeArg_Unpack1(err, argc, argv, "_ModuleExportsIterator", &exports_map);
+	DeeArg_Unpack1(err, argc, argv, "_ModuleExportsIterator", &exports_map);
 	if (DeeObject_AssertTypeExact(exports_map, &ModuleExports_Type))
 		goto err;
 	self->mei_index  = 0;
@@ -299,7 +299,7 @@ modexports_ctor(ModuleExports *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 modexports_init(ModuleExports *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_ModuleExports", &self->me_module);
+	DeeArg_Unpack1(err, argc, argv, "_ModuleExports", &self->me_module);
 	if (DeeObject_AssertType(self->me_module, &DeeModule_Type))
 		goto err;
 	Dee_Incref(&DeeModule_Empty);
@@ -1213,7 +1213,7 @@ typedef struct {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 modglobals_init(ModuleGlobals *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_ModuleGlobals", &self->mg_module);
+	DeeArg_Unpack1(err, argc, argv, "_ModuleGlobals", &self->mg_module);
 	if (DeeObject_AssertType(self->mg_module, &DeeModule_Type))
 		goto err;
 	Dee_Incref(&DeeModule_Empty);

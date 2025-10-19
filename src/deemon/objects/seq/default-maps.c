@@ -2471,7 +2471,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 msditer_init(MapSymmetricDifferenceIterator *__restrict self,
              size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_MapSymmetricDifferenceIterator", &self->msdi_symdiff);
+	DeeArg_Unpack1(err, argc, argv, "_MapSymmetricDifferenceIterator", &self->msdi_symdiff);
 	if (DeeObject_AssertTypeExact(self->msdi_symdiff, &MapSymmetricDifference_Type))
 		goto err;
 	if ((self->msdi_iter = DeeObject_InvokeMethodHint(map_operator_iter, self->msdi_symdiff->msd_a)) == NULL)

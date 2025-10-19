@@ -1118,7 +1118,7 @@ tuple_init(size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *items;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "Tuple", &args.items);
+	DeeArg_Unpack1(err, argc, argv, "Tuple", &args.items);
 /*[[[end]]]*/
 	return (DREF Tuple *)DeeTuple_FromSequence(args.items);
 err:
@@ -2400,7 +2400,7 @@ nullable_tuple_init(size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *items;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "NullableTuple", &args.items);
+	DeeArg_Unpack1(err, argc, argv, "NullableTuple", &args.items);
 /*[[[end]]]*/
 	result = (DREF Tuple *)DeeTuple_FromSequence(args.items);
 	if likely(result)

@@ -4673,7 +4673,7 @@ string_join(String *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *seq;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "join", &args.seq);
+	DeeArg_Unpack1(err, argc, argv, "join", &args.seq);
 /*[[[end]]]*/
 	unicode_printer_init(&data.sjd_out);
 	data.sjd_sep   = self;
@@ -4697,7 +4697,7 @@ string_unifylines(String *self, size_t argc, DeeObject *const *argv) {
 		DeeStringObject *replacement;
 	} args;
 	args.replacement = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "unifylines", &args.replacement);
+	DeeArg_Unpack0Or1(err, argc, argv, "unifylines", &args.replacement);
 /*[[[end]]]*/
 	if likely(!args.replacement)
 		return DeeString_UnifyLinesLf(self);
@@ -5498,7 +5498,7 @@ string_strip(String *self, size_t argc, DeeObject *const *argv) {
 		DeeStringObject *mask;
 	} args;
 	args.mask = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "strip", &args.mask);
+	DeeArg_Unpack0Or1(err, argc, argv, "strip", &args.mask);
 /*[[[end]]]*/
 	if (!args.mask)
 		return DeeString_StripSpc(self);
@@ -5569,7 +5569,7 @@ string_casestrip(String *self, size_t argc, DeeObject *const *argv) {
 		DeeStringObject *mask;
 	} args;
 	args.mask = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "casestrip", &args.mask);
+	DeeArg_Unpack0Or1(err, argc, argv, "casestrip", &args.mask);
 /*[[[end]]]*/
 	if (!args.mask)
 		return DeeString_StripSpc(self);
@@ -5639,7 +5639,7 @@ string_sstrip(String *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeStringObject *needle;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "sstrip", &args.needle);
+	DeeArg_Unpack1(err, argc, argv, "sstrip", &args.needle);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -5701,7 +5701,7 @@ string_casesstrip(String *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeStringObject *needle;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "casesstrip", &args.needle);
+	DeeArg_Unpack1(err, argc, argv, "casesstrip", &args.needle);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -5764,7 +5764,7 @@ string_striplines(String *self, size_t argc, DeeObject *const *argv) {
 		DeeStringObject *mask;
 	} args;
 	args.mask = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "striplines", &args.mask);
+	DeeArg_Unpack0Or1(err, argc, argv, "striplines", &args.mask);
 /*[[[end]]]*/
 	if (!args.mask)
 		return DeeString_StripLinesSpc(self);
@@ -5785,7 +5785,7 @@ string_lstriplines(String *self, size_t argc, DeeObject *const *argv) {
 		DeeStringObject *mask;
 	} args;
 	args.mask = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "lstriplines", &args.mask);
+	DeeArg_Unpack0Or1(err, argc, argv, "lstriplines", &args.mask);
 /*[[[end]]]*/
 	if (!args.mask)
 		return DeeString_LStripLinesSpc(self);
@@ -5806,7 +5806,7 @@ string_rstriplines(String *self, size_t argc, DeeObject *const *argv) {
 		DeeStringObject *mask;
 	} args;
 	args.mask = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "rstriplines", &args.mask);
+	DeeArg_Unpack0Or1(err, argc, argv, "rstriplines", &args.mask);
 /*[[[end]]]*/
 	if (!args.mask)
 		return DeeString_RStripLinesSpc(self);
@@ -5827,7 +5827,7 @@ string_casestriplines(String *self, size_t argc, DeeObject *const *argv) {
 		DeeStringObject *mask;
 	} args;
 	args.mask = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "casestriplines", &args.mask);
+	DeeArg_Unpack0Or1(err, argc, argv, "casestriplines", &args.mask);
 /*[[[end]]]*/
 	if (!args.mask)
 		return DeeString_StripLinesSpc(self);
@@ -5848,7 +5848,7 @@ string_caselstriplines(String *self, size_t argc, DeeObject *const *argv) {
 		DeeStringObject *mask;
 	} args;
 	args.mask = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "caselstriplines", &args.mask);
+	DeeArg_Unpack0Or1(err, argc, argv, "caselstriplines", &args.mask);
 /*[[[end]]]*/
 	if (!args.mask)
 		return DeeString_LStripLinesSpc(self);
@@ -5869,7 +5869,7 @@ string_caserstriplines(String *self, size_t argc, DeeObject *const *argv) {
 		DeeStringObject *mask;
 	} args;
 	args.mask = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "caserstriplines", &args.mask);
+	DeeArg_Unpack0Or1(err, argc, argv, "caserstriplines", &args.mask);
 /*[[[end]]]*/
 	if (!args.mask)
 		return DeeString_RStripLinesSpc(self);
@@ -5889,7 +5889,7 @@ string_sstriplines(String *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeStringObject *needle;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "sstriplines", &args.needle);
+	DeeArg_Unpack1(err, argc, argv, "sstriplines", &args.needle);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -5907,7 +5907,7 @@ string_lsstriplines(String *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeStringObject *needle;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "lsstriplines", &args.needle);
+	DeeArg_Unpack1(err, argc, argv, "lsstriplines", &args.needle);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -5925,7 +5925,7 @@ string_rsstriplines(String *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeStringObject *needle;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "rsstriplines", &args.needle);
+	DeeArg_Unpack1(err, argc, argv, "rsstriplines", &args.needle);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -5943,7 +5943,7 @@ string_casesstriplines(String *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeStringObject *needle;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "casesstriplines", &args.needle);
+	DeeArg_Unpack1(err, argc, argv, "casesstriplines", &args.needle);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -5961,7 +5961,7 @@ string_caselsstriplines(String *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeStringObject *needle;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "caselsstriplines", &args.needle);
+	DeeArg_Unpack1(err, argc, argv, "caselsstriplines", &args.needle);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -5979,7 +5979,7 @@ string_casersstriplines(String *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeStringObject *needle;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "casersstriplines", &args.needle);
+	DeeArg_Unpack1(err, argc, argv, "casersstriplines", &args.needle);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -7502,7 +7502,7 @@ string_split(String *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeStringObject *sep;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "split", &args.sep);
+	DeeArg_Unpack1(err, argc, argv, "split", &args.sep);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.sep, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -7520,7 +7520,7 @@ string_casesplit(String *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeStringObject *sep;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "casesplit", &args.sep);
+	DeeArg_Unpack1(err, argc, argv, "casesplit", &args.sep);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.sep, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
@@ -7560,7 +7560,7 @@ string_indent(String *self, size_t argc, DeeObject *const *argv) {
 		DeeStringObject *filler;
 	} args;
 	args.filler = &str_tab;
-	_DeeArg_Unpack0Or1(err, argc, argv, "indent", &args.filler);
+	DeeArg_Unpack0Or1(err, argc, argv, "indent", &args.filler);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.filler, &DeeString_Type))
 		goto err;
@@ -7604,7 +7604,7 @@ string_format(String *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *args;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "format", &args.args);
+	DeeArg_Unpack1(err, argc, argv, "format", &args.args);
 /*[[[end]]]*/
 	return (DREF String *)DeeString_Format((DeeObject *)self, args.args);
 err:
@@ -7623,7 +7623,7 @@ string_scanf(String *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeStringObject *format;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "scanf", &args.format);
+	DeeArg_Unpack1(err, argc, argv, "scanf", &args.format);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.format, &DeeString_Type))
 		goto err;
@@ -10265,7 +10265,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_forcecopy(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const wstr;
 	size_t wlen;
-	_DeeArg_Unpack0(err, argc, argv, "__forcecopy__");
+	DeeArg_Unpack0(err, argc, argv, "__forcecopy__");
 	wstr.ptr = DeeString_WSTR(self);
 	wlen     = WSTR_LENGTH(wstr.ptr);
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {

@@ -106,7 +106,7 @@ user_string_fini_hook_onfini(struct Dee_string_fini_hook *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sfh_init(StringFiniHook *__restrict self, size_t argc, DeeObject *const *argv) {
 	DREF struct user_string_fini_hook *hook;
-	_DeeArg_Unpack1(err, argc, argv, "_StringFiniHook", &self->sfh_cb);
+	DeeArg_Unpack1(err, argc, argv, "_StringFiniHook", &self->sfh_cb);
 	hook = user_string_fini_hook_alloc();
 	if unlikely(!hook)
 		goto err;

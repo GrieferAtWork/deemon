@@ -68,7 +68,7 @@ qiter_init(QueryIterator *__restrict self,
 	struct {
 		Query *query;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "QueryIterator", &args.query);
+	DeeArg_Unpack1(err, argc, argv, "QueryIterator", &args.query);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.query, &Query_Type))
 		goto err;
@@ -730,7 +730,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 query_exec(Query *__restrict self, size_t argc, DeeObject *const *argv) {
 	uint64_t rows;
-	_DeeArg_Unpack0(err, argc, argv, "exec");
+	DeeArg_Unpack0(err, argc, argv, "exec");
 	rows = Query_Exec(self);
 	if unlikely(rows == (uint64_t)-1)
 		goto err;
@@ -742,7 +742,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 query_step(Query *__restrict self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
-	_DeeArg_Unpack0(err, argc, argv, "step");
+	DeeArg_Unpack0(err, argc, argv, "step");
 	result = (DREF DeeObject *)Query_Step(self);
 	if (result == ITER_DONE)
 		result = DeeNone_NewRef();

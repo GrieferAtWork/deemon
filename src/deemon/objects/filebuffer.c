@@ -1698,7 +1698,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_flush(Buffer *self, size_t argc, DeeObject *const *argv) {
 	int error;
-	_DeeArg_Unpack0(err, argc, argv, "flush");
+	DeeArg_Unpack0(err, argc, argv, "flush");
 	if (DeeFileBuffer_LockWrite(self))
 		goto err;
 	/* Synchronize the buffer, but don't synchronize its file. */
@@ -1885,7 +1885,7 @@ PRIVATE struct type_getset tpconst buffer_getsets[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_class_sync(DeeObject *UNUSED(self),
                   size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "sync");
+	DeeArg_Unpack0(err, argc, argv, "sync");
 	if (DeeFileBuffer_SyncTTYs(NULL) < 0)
 		goto err;
 #ifdef DEESYSTEM_FILE_USE_STDIO

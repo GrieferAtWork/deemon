@@ -1033,7 +1033,7 @@ lstat_init(DeeStatObject *__restrict self,
            size_t argc, DeeObject *const *argv) {
 #ifdef posix_stat_HAVE_lstat
 	DeeObject *dfd, *path_or_file = NULL;
-	_DeeArg_Unpack1Or2(err, argc, argv, "lstat", &dfd, &path_or_file);
+	DeeArg_Unpack1Or2(err, argc, argv, "lstat", &dfd, &path_or_file);
 	if (!path_or_file) {
 		path_or_file = dfd;
 		dfd          = NULL;

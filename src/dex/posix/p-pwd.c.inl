@@ -178,7 +178,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_getcwd_f(size_t argc, DeeObject *con
 #define POSIX_GETCWD_DEF_DOC(doc) { "getcwd", (DeeObject *)&posix_getcwd, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
 PRIVATE DEFINE_CMETHOD(posix_getcwd, &posix_getcwd_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getcwd_f(size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "getcwd");
+	DeeArg_Unpack0(err, argc, argv, "getcwd");
 	return posix_getcwd_f_impl();
 err:
 	return NULL;
@@ -204,7 +204,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_gettmp_f(size_t argc, DeeObject *con
 #define POSIX_GETTMP_DEF_DOC(doc) { "gettmp", (DeeObject *)&posix_gettmp, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
 PRIVATE DEFINE_CMETHOD(posix_gettmp, &posix_gettmp_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_gettmp_f(size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "gettmp");
+	DeeArg_Unpack0(err, argc, argv, "gettmp");
 	return posix_gettmp_f_impl();
 err:
 	return NULL;
@@ -244,7 +244,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_gethostname_f(size_t argc, DeeObject
 #define POSIX_GETHOSTNAME_DEF_DOC(doc) { "gethostname", (DeeObject *)&posix_gethostname, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
 PRIVATE DEFINE_CMETHOD(posix_gethostname, &posix_gethostname_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_gethostname_f(size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "gethostname");
+	DeeArg_Unpack0(err, argc, argv, "gethostname");
 	return posix_gethostname_f_impl();
 err:
 	return NULL;

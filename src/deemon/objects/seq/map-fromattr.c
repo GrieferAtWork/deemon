@@ -181,7 +181,7 @@ PRIVATE WUNUSED DREF MapFromAttrIterator *DCALL mfaki_ctor(void) {
 PRIVATE WUNUSED DREF MapFromAttrIterator *DCALL
 mfaki_init(size_t argc, DeeObject *const *argv) {
 	MapFromAttr *map;
-	_DeeArg_Unpack1(err, argc, argv, "_MapFromAttrKeysIterator", &map);
+	DeeArg_Unpack1(err, argc, argv, "_MapFromAttrKeysIterator", &map);
 	if (DeeObject_AssertTypeExact(map, &MapFromAttr_Type))
 		goto err;
 	return mfaki_ofobj(map->mfa_ob);
@@ -192,7 +192,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF MapFromAttrIterator *DCALL
 mfaki_class_of(DeeTypeObject *UNUSED(tp_self), size_t argc, DeeObject *const *argv) {
 	DeeObject *ob;
-	_DeeArg_Unpack1(err, argc, argv, "of", &ob);
+	DeeArg_Unpack1(err, argc, argv, "of", &ob);
 	return mfaki_ofobj(ob);
 err:
 	return NULL;

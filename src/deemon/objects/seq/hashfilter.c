@@ -57,7 +57,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 seq_filteriterator_init(HashFilterIterator *__restrict self,
                         size_t argc, DeeObject *const *argv) {
 	HashFilter *filter;
-	_DeeArg_Unpack1(err, argc, argv, "_SeqHashFilterIterator", &filter);
+	DeeArg_Unpack1(err, argc, argv, "_SeqHashFilterIterator", &filter);
 	if (DeeObject_AssertTypeExact(filter, &SeqHashFilter_Type))
 		goto err;
 	self->fi_iter = DeeObject_Iter(filter->f_seq);
@@ -73,7 +73,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 map_filteriterator_init(HashFilterIterator *__restrict self,
                         size_t argc, DeeObject *const *argv) {
 	HashFilter *filter;
-	_DeeArg_Unpack1(err, argc, argv, "_MapHashFilterIterator", &filter);
+	DeeArg_Unpack1(err, argc, argv, "_MapHashFilterIterator", &filter);
 	if (DeeObject_AssertTypeExact(filter, &MapHashFilter_Type))
 		goto err;
 	self->fi_iter = DeeObject_Iter(filter->f_seq);

@@ -555,7 +555,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 suiter_init(SetUnionIterator *__restrict self,
             size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_SetUnionIterator", &self->sui_union);
+	DeeArg_Unpack1(err, argc, argv, "_SetUnionIterator", &self->sui_union);
 	if (DeeObject_AssertTypeExact(self->sui_union, &SetUnion_Type))
 		goto err;
 	if ((self->sui_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->sui_union->su_a)) == NULL)
@@ -1426,7 +1426,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 siiter_init(SetIntersectionIterator *__restrict self,
             size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_SetIntersectionIterator", &self->sii_intersect);
+	DeeArg_Unpack1(err, argc, argv, "_SetIntersectionIterator", &self->sii_intersect);
 	if (DeeObject_AssertTypeExact(self->sii_intersect, &SetIntersection_Type))
 		goto err;
 	self->sii_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->sii_intersect->si_a);

@@ -160,7 +160,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cswi_init(CachedSeq_WithIter *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_CachedSeqWithIter", &self->cswi_iter);
+	DeeArg_Unpack1(err, argc, argv, "_CachedSeqWithIter", &self->cswi_iter);
 	Dee_Incref(self->cswi_iter);
 	Dee_atomic_lock_init(&self->cswi_lock);
 	objectlist_init(&self->cswi_cache);

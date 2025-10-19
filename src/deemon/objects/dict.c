@@ -141,7 +141,7 @@ diter_init(DictIterator *__restrict self,
 	struct {
 		DeeDictObject *dict;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "_DictIterator", &args.dict);
+	DeeArg_Unpack1(err, argc, argv, "_DictIterator", &args.dict);
 /*[[[end]]]*/
 	if (DeeObject_AssertType(args.dict, &DeeDict_Type))
 		goto err;

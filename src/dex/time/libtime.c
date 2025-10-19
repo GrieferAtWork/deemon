@@ -2435,7 +2435,7 @@ PRIVATE struct type_math time_math = {
 PRIVATE WUNUSED DREF DeeTimeObject *DCALL
 f_libtime_gmtime(size_t argc, DeeObject *const *argv) {
 	DREF DeeTimeObject *result;
-	_DeeArg_Unpack0(err, argc, argv, "gmtime");
+	DeeArg_Unpack0(err, argc, argv, "gmtime");
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto err;
@@ -2450,7 +2450,7 @@ err:
 PRIVATE WUNUSED DREF DeeTimeObject *DCALL
 f_libtime_localtime(size_t argc, DeeObject *const *argv) {
 	DREF DeeTimeObject *result;
-	_DeeArg_Unpack0(err, argc, argv, "localtime");
+	DeeArg_Unpack0(err, argc, argv, "localtime");
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto err;
@@ -2466,7 +2466,7 @@ PRIVATE WUNUSED DREF DeeTimeObject *DCALL
 f_libtime_tick(size_t argc, DeeObject *const *argv) {
 	uint64_t tick;
 	DREF DeeTimeObject *result;
-	_DeeArg_Unpack0(err, argc, argv, "tick");
+	DeeArg_Unpack0(err, argc, argv, "tick");
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto err;
@@ -2973,7 +2973,7 @@ err_r:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 time_class_freq(DeeObject *UNUSED(self),
                 size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "freq");
+	DeeArg_Unpack0(err, argc, argv, "freq");
 	return DeeInt_NewInt(NANOSECONDS_PER_SECOND);
 err:
 	return NULL;

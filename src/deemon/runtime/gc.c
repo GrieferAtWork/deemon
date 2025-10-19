@@ -1798,7 +1798,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcenum_referred(DeeObject *UNUSED(self),
                 size_t argc, DeeObject *const *argv) {
 	DeeObject *start;
-	_DeeArg_Unpack1(err, argc, argv, "referred", &start);
+	DeeArg_Unpack1(err, argc, argv, "referred", &start);
 	return (DREF DeeObject *)DeeGC_NewReferred(start);
 err:
 	return NULL;
@@ -1808,7 +1808,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcenum_referredgc(DeeObject *UNUSED(self),
                   size_t argc, DeeObject *const *argv) {
 	DeeObject *start;
-	_DeeArg_Unpack1(err, argc, argv, "referredgc", &start);
+	DeeArg_Unpack1(err, argc, argv, "referredgc", &start);
 	return (DREF DeeObject *)DeeGC_NewReferredGC(start);
 err:
 	return NULL;
@@ -1818,7 +1818,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcenum_reachable(DeeObject *UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
 	DeeObject *start;
-	_DeeArg_Unpack1(err, argc, argv, "reachable", &start);
+	DeeArg_Unpack1(err, argc, argv, "reachable", &start);
 	return (DREF DeeObject *)DeeGC_NewReachable(start);
 err:
 	return NULL;
@@ -1828,7 +1828,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcenum_reachablegc(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
 	DeeObject *start;
-	_DeeArg_Unpack1(err, argc, argv, "reachablegc", &start);
+	DeeArg_Unpack1(err, argc, argv, "reachablegc", &start);
 	return (DREF DeeObject *)DeeGC_NewReachableGC(start);
 err:
 	return NULL;
@@ -1838,7 +1838,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcenum_referring(DeeObject *UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
 	DeeObject *to;
-	_DeeArg_Unpack1(err, argc, argv, "referring", &to);
+	DeeArg_Unpack1(err, argc, argv, "referring", &to);
 	return (DREF DeeObject *)DeeGC_NewGCReferred(to);
 err:
 	return NULL;
@@ -1848,7 +1848,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcenum_isreferring(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
 	DeeObject *from, *to;
-	_DeeArg_Unpack2(err, argc, argv, "isreferring", &from, &to);
+	DeeArg_Unpack2(err, argc, argv, "isreferring", &from, &to);
 	return_bool(DeeGC_ReferredBy(from, to));
 err:
 	return NULL;

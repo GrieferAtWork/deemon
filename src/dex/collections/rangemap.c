@@ -259,7 +259,7 @@ err_m1:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rangemap_popfront(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result, *front_key;
-	_DeeArg_Unpack0(err, argc, argv, "popfront");
+	DeeArg_Unpack0(err, argc, argv, "popfront");
 	result = DeeObject_GetAttrStringHash(self, "first", Dee_HashStr__first);
 	if unlikely(!result)
 		goto err;
@@ -281,7 +281,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rangemap_popback(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result, *front_key;
-	_DeeArg_Unpack0(err, argc, argv, "popback");
+	DeeArg_Unpack0(err, argc, argv, "popback");
 	result = DeeObject_GetAttrStringHash(self, "last", Dee_HashStr__last);
 	if unlikely(!result)
 		goto err;
@@ -317,7 +317,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rangemap_clear(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "clear");
+	DeeArg_Unpack0(err, argc, argv, "clear");
 	for (;;) {
 		int temp;
 		DREF DeeObject *elem, *iter;
@@ -350,7 +350,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rangemap_update(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeObject *items;
-	_DeeArg_Unpack1(err, argc, argv, "update", &items);
+	DeeArg_Unpack1(err, argc, argv, "update", &items);
 	if unlikely(DeeObject_Foreach(items, &rangemap_insert_range, self) < 0)
 		goto err;
 	return_none;
@@ -837,7 +837,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_init(RangeMapProxy *__restrict self, size_t argc,
            DeeObject *const *argv) {
 	self->rmp_rmap = Dee_EmptyRangeMap;
-	_DeeArg_Unpack0Or1(err, argc, argv, "_RangeMapProxy", &self->rmp_rmap);
+	DeeArg_Unpack0Or1(err, argc, argv, "_RangeMapProxy", &self->rmp_rmap);
 	Dee_Incref(self->rmp_rmap);
 	return 0;
 err:
@@ -2191,7 +2191,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_iterator_init(RangeMapProxyIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_RangeMapProxyIterator", &self->rmpi_rmap);
+	DeeArg_Unpack1(err, argc, argv, "_RangeMapProxyIterator", &self->rmpi_rmap);
 	self->rmpi_iter = DeeObject_Iter(self->rmpi_rmap);
 	if unlikely(!self->rmpi_iter)
 		goto err;
@@ -2263,7 +2263,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_items_iterator_init(RangeMapProxyItemsIterator *__restrict self,
                           size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_RangeMapItemsIterator", &self->rmpii_base.rmpi_rmap);
+	DeeArg_Unpack1(err, argc, argv, "_RangeMapItemsIterator", &self->rmpii_base.rmpi_rmap);
 	self->rmpii_base.rmpi_iter = DeeObject_Iter(self->rmpii_base.rmpi_rmap);
 	if unlikely(!self->rmpii_base.rmpi_iter)
 		goto err;
@@ -2656,7 +2656,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_keys_iterator_init(RangeMapProxyKeysIterator *__restrict self,
                          size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_RangeMapKeysIterator",
+	DeeArg_Unpack1(err, argc, argv, "_RangeMapKeysIterator",
 	                  &self->rmpki_base.rmpii_base.rmpi_rmap);
 	self->rmpki_base.rmpii_base.rmpi_iter = DeeObject_Iter(self->rmpki_base.rmpii_base.rmpi_rmap);
 	if unlikely(!self->rmpki_base.rmpii_base.rmpi_iter)
@@ -2760,7 +2760,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_mapitems_iterator_init(RangeMapProxyKeysIterator *__restrict self,
                          size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_RangeMapMapItemsIterator",
+	DeeArg_Unpack1(err, argc, argv, "_RangeMapMapItemsIterator",
 	                  &self->rmpki_base.rmpii_base.rmpi_rmap);
 	self->rmpki_base.rmpii_base.rmpi_iter = DeeObject_Iter(self->rmpki_base.rmpii_base.rmpi_rmap);
 	if unlikely(!self->rmpki_base.rmpii_base.rmpi_iter)

@@ -441,7 +441,7 @@ print "/" "**" "/";
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_errno_get_f(size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "errno.getter");
+	DeeArg_Unpack0(err, argc, argv, "errno.getter");
 #ifdef CONFIG_HAVE_errno
 	return DeeInt_NewInt(DeeSystem_GetErrno());
 #else /* CONFIG_HAVE_errno */
@@ -454,7 +454,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_errno_del_f(size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "errno.delete");
+	DeeArg_Unpack0(err, argc, argv, "errno.delete");
 #ifdef CONFIG_HAVE_errno
 	DeeSystem_SetErrno(EOK);
 	return_none;

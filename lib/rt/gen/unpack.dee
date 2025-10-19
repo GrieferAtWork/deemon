@@ -1014,14 +1014,14 @@ function print_DeeArg_Unpack(name: string = "",
 		local simpleFormat = getUnpackFormat(params: params);
 		local argsPointerList = ", ".join(for (local x: params) f"&{args}.{x.cName}");
 		local dedicatedUnpackFunction: string | none = {
-			'""': "_DeeArg_Unpack0",
-			'"o"': "_DeeArg_Unpack1",
-			'"oo"': "_DeeArg_Unpack2",
-			'"ooo"': "_DeeArg_Unpack3",
-			'"|o"': "_DeeArg_Unpack0Or1",
-			'"o|o"': "_DeeArg_Unpack1Or2",
-			'"|oo"': "_DeeArg_Unpack0Or1Or2",
-			'"o|oo"': "_DeeArg_Unpack1Or2Or3",
+			'""': "DeeArg_Unpack0",
+			'"o"': "DeeArg_Unpack1",
+			'"oo"': "DeeArg_Unpack2",
+			'"ooo"': "DeeArg_Unpack3",
+			'"|o"': "DeeArg_Unpack0Or1",
+			'"o|o"': "DeeArg_Unpack1Or2",
+			'"|oo"': "DeeArg_Unpack0Or1Or2",
+			'"o|oo"': "DeeArg_Unpack1Or2Or3",
 		}.get(simpleFormat);
 		if (dedicatedUnpackFunction !is none) {
 			print(f"	{dedicatedUnpackFunction}({err}, {argc}, {argv}, {
@@ -1039,7 +1039,7 @@ function print_DeeArg_Unpack(name: string = "",
 			}
 		}
 	} else {
-		print(f"	_DeeArg_Unpack0({err}, {argc}, {argv}, {nameRepr});");
+		print(f"	DeeArg_Unpack0({err}, {argc}, {argv}, {nameRepr});");
 	}
 }
 

@@ -177,7 +177,7 @@ super_init(Super *self, size_t argc, DeeObject *const *argv) {
 		DeeTypeObject *tp;
 	} args;
 	args.tp = NULL;
-	_DeeArg_Unpack1Or2(err, argc, argv, "Super", &args.ob, &args.tp);
+	DeeArg_Unpack1Or2(err, argc, argv, "Super", &args.ob, &args.tp);
 /*[[[end]]]*/
 
 	/* Special handling when the base-object is another super-object. */
@@ -1133,7 +1133,7 @@ super_typeof(DeeObject *UNUSED(self),
 	struct {
 		DeeSuperObject *ob;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "typeof", &args.ob);
+	DeeArg_Unpack1(err, argc, argv, "typeof", &args.ob);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.ob, &DeeSuper_Type))
 		goto err;
@@ -1152,7 +1152,7 @@ super_selfof(DeeObject *UNUSED(self),
 	struct {
 		DeeSuperObject *ob;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "selfof", &args.ob);
+	DeeArg_Unpack1(err, argc, argv, "selfof", &args.ob);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.ob, &DeeSuper_Type))
 		goto err;

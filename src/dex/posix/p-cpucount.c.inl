@@ -86,7 +86,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_cpu_count_f(size_t argc, DeeObject *
 #define POSIX_CPU_COUNT_DEF_DOC(doc) { "cpu_count", (DeeObject *)&posix_cpu_count, MODSYM_FREADONLY, DOC("->?Dint\n" doc) },
 PRIVATE DEFINE_CMETHOD(posix_cpu_count, &posix_cpu_count_f, METHOD_FPURECALL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_cpu_count_f(size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "cpu_count");
+	DeeArg_Unpack0(err, argc, argv, "cpu_count");
 	return posix_cpu_count_f_impl();
 err:
 	return NULL;

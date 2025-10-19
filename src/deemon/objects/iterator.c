@@ -293,7 +293,7 @@ PRIVATE struct type_cmp iterator_cmp = {
 DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_next(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result, *defl = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "next", &defl);
+	DeeArg_Unpack0Or1(err, argc, argv, "next", &defl);
 	result = DeeObject_IterNext(self);
 	if (result == ITER_DONE) {
 		if (defl)
@@ -323,7 +323,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_prev(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
-	_DeeArg_Unpack0(err, argc, argv, "prev");
+	DeeArg_Unpack0(err, argc, argv, "prev");
 	error = DeeIterator_Prev(self);
 	if unlikely(error < 0)
 		goto err;
@@ -334,7 +334,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_rewind(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "rewind");
+	DeeArg_Unpack0(err, argc, argv, "rewind");
 	if (DeeIterator_Rewind(self))
 		goto err;
 	return_none;
@@ -885,7 +885,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_peek(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DeeObject *defl = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, "peek", &defl);
+	DeeArg_Unpack0Or1(err, argc, argv, "peek", &defl);
 	result = DeeIterator_Peek(self);
 	if (result == ITER_DONE) {
 		if (!defl)
@@ -2739,7 +2739,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 if_init(IteratorFuture *__restrict self,
         size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_IteratorFuture", &self->if_iter);
+	DeeArg_Unpack1(err, argc, argv, "_IteratorFuture", &self->if_iter);
 	Dee_Incref(self->if_iter);
 	return 0;
 err:
@@ -2912,7 +2912,7 @@ ip_copy(IteratorPending *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ip_init(IteratorPending *__restrict self,
         size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "_IteratorPending", &self->ip_iter);
+	DeeArg_Unpack1(err, argc, argv, "_IteratorPending", &self->ip_iter);
 	Dee_Incref(self->ip_iter);
 	return 0;
 err:

@@ -284,7 +284,7 @@ error_init(DeeObject *__restrict self,
 	DeeErrorObject *me = (DeeErrorObject *)self;
 	me->e_message = NULL;
 	me->e_inner   = NULL;
-	_DeeArg_Unpack0Or1Or2(err, argc, argv, DeeType_GetName(Dee_TYPE(me)),
+	DeeArg_Unpack0Or1Or2(err, argc, argv, DeeType_GetName(Dee_TYPE(me)),
 	                      &me->e_message, &me->e_inner);
 	if (me->e_message) {
 		if (DeeObject_AssertTypeExact(me->e_message, &DeeString_Type))

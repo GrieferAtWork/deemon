@@ -61,7 +61,7 @@ f_builtin_hasattr(size_t argc, DeeObject *const *argv) {
 		DeeObject *ob;
 		DeeStringObject *attr;
 	} args;
-	_DeeArg_Unpack2(err, argc, argv, "hasattr", &args.ob, &args.attr);
+	DeeArg_Unpack2(err, argc, argv, "hasattr", &args.ob, &args.attr);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.attr, &DeeString_Type))
 		goto err;
@@ -84,7 +84,7 @@ f_builtin_hasitem(size_t argc, DeeObject *const *argv) {
 		DeeObject *ob;
 		DeeObject *key;
 	} args;
-	_DeeArg_Unpack2(err, argc, argv, "hasitem", &args.ob, &args.key);
+	DeeArg_Unpack2(err, argc, argv, "hasitem", &args.ob, &args.key);
 /*[[[end]]]*/
 	result = DeeObject_HasItem(args.ob, args.key);
 	if unlikely(result < 0)
@@ -195,7 +195,7 @@ f_builtin_equals(size_t argc, DeeObject *const *argv) {
 		DeeObject *a;
 		DeeObject *b;
 	} args;
-	_DeeArg_Unpack2(err, argc, argv, "equals", &args.a, &args.b);
+	DeeArg_Unpack2(err, argc, argv, "equals", &args.a, &args.b);
 /*[[[end]]]*/
 	diff = DeeObject_TryCompareEq(args.a, args.b);
 	if unlikely(diff == Dee_COMPARE_ERR)

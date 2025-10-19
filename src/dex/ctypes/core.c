@@ -1386,7 +1386,7 @@ err_not_writable:
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_ref_func(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "__ref__");
+	DeeArg_Unpack0(err, argc, argv, "__ref__");
 	return struct_ref(self);
 err:
 	return NULL;

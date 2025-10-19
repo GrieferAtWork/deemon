@@ -899,7 +899,7 @@ process_init(Process *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	DeeObject *exe_or_cmdline_or_pid, *proc_argv = NULL;
 	self->p_envp = NULL;
-	_DeeArg_Unpack1Or2Or3(err, argc, argv, "Process",
+	DeeArg_Unpack1Or2Or3(err, argc, argv, "Process",
 	                      &exe_or_cmdline_or_pid,
 	                      &proc_argv, &self->p_envp);
 	if (proc_argv) {
@@ -3903,7 +3903,7 @@ process_getpid_or_unlock(Process *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_start(Process *self, size_t argc, DeeObject *const *argv) {
 	int error;
-	_DeeArg_Unpack0(err, argc, argv, "start");
+	DeeArg_Unpack0(err, argc, argv, "start");
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	error = process_start_impl(self);
@@ -3939,7 +3939,7 @@ ipc_throw_process_already_joined(Process *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_join(Process *self, size_t argc, DeeObject *const *argv) {
 	int error, status;
-	_DeeArg_Unpack0(err, argc, argv, "join");
+	DeeArg_Unpack0(err, argc, argv, "join");
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	error = process_join_impl(self, (uint64_t)-1, &status);
@@ -3957,7 +3957,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_tryjoin(Process *self, size_t argc, DeeObject *const *argv) {
 	int error, status;
-	_DeeArg_Unpack0(err, argc, argv, "tryjoin");
+	DeeArg_Unpack0(err, argc, argv, "tryjoin");
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	error = process_join_impl(self, 0, &status);
@@ -4001,7 +4001,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_detach(Process *self, size_t argc, DeeObject *const *argv) {
 	int error;
-	_DeeArg_Unpack0(err, argc, argv, "detach");
+	DeeArg_Unpack0(err, argc, argv, "detach");
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	error = process_detach_impl(self);
@@ -5237,7 +5237,7 @@ PRIVATE struct type_member tpconst process_members[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_class_self(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "self");
+	DeeArg_Unpack0(err, argc, argv, "self");
 	Dee_Incref(&this_process);
 	return (DeeObject *)&this_process;
 err:

@@ -1178,7 +1178,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bs_bytes(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "bytes");
+	DeeArg_Unpack0(err, argc, argv, "bytes");
 	return DeeBytes_NewView((DeeObject *)self,
 	                        self->bs_bitset,
 	                        BITSET_SIZEOF(self->bs_nbits),
@@ -1241,7 +1241,7 @@ bs_init(size_t argc, DeeObject *const *argv) {
 	DREF Bitset *result;
 	DeeObject *seq_or_nbits;
 	DeeObject *init_or_minbits = NULL;
-	_DeeArg_Unpack1Or2(err, argc, argv, "Bitset", &seq_or_nbits, &init_or_minbits);
+	DeeArg_Unpack1Or2(err, argc, argv, "Bitset", &seq_or_nbits, &init_or_minbits);
 	if (!DeeInt_Check(seq_or_nbits))
 		return bs_init_fromseq_or_bitset(seq_or_nbits, init_or_minbits);
 	/* Initialize fixed-length bitset. */
@@ -2114,7 +2114,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 robs_bytes(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "bytes");
+	DeeArg_Unpack0(err, argc, argv, "bytes");
 	return DeeBytes_NewView((DeeObject *)self,
 	                        self->bs_bitset,
 	                        BITSET_SIZEOF(self->bs_nbits),
@@ -2139,7 +2139,7 @@ err:
 PRIVATE WUNUSED DREF Bitset *DCALL
 robs_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
-	_DeeArg_Unpack1(err, argc, argv, "Bitset.Frozen", &seq);
+	DeeArg_Unpack1(err, argc, argv, "Bitset.Frozen", &seq);
 	return robs_init_fromseq_or_bitset(seq);
 err:
 	return NULL;
@@ -3350,7 +3350,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bsv_bytes(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 	struct bitset_ref ref;
 	DeeObject *owner;
-	_DeeArg_Unpack0(err, argc, argv, "bytes");
+	DeeArg_Unpack0(err, argc, argv, "bytes");
 	bitset_ref_fromview(&ref, self);
 	owner = (DeeObject *)self;
 #ifndef __INTELLISENSE__
@@ -4436,7 +4436,7 @@ bsiter_copy(BitsetIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsiter_init(BitsetIterator *__restrict self,
             size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack1(err, argc, argv, "BitsetIterator", &self->bsi_owner);
+	DeeArg_Unpack1(err, argc, argv, "BitsetIterator", &self->bsi_owner);
 	if (BitsetView_Check(self->bsi_owner)) {
 		BitsetView *o = (BitsetView *)self->bsi_owner;
 		self->bsi_bitset = BitsetView_GetBitset(o);

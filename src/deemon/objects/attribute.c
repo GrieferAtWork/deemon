@@ -487,7 +487,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_callget(Attr *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeObject *thisarg;
-	_DeeArg_Unpack1(err, argc, argv, "callget", &thisarg);
+	DeeArg_Unpack1(err, argc, argv, "callget", &thisarg);
 	return Dee_attrdesc_callget(&self->a_desc, thisarg);
 err:
 	return NULL;
@@ -497,7 +497,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_callbound(Attr *__restrict self, size_t argc, DeeObject *const *argv) {
 	int result;
 	DeeObject *thisarg;
-	_DeeArg_Unpack1(err, argc, argv, "callbound", &thisarg);
+	DeeArg_Unpack1(err, argc, argv, "callbound", &thisarg);
 	result = Dee_attrdesc_callbound(&self->a_desc, thisarg);
 	if unlikely(Dee_BOUND_ISERR(result))
 		goto err;
@@ -509,7 +509,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_calldel(Attr *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeObject *thisarg;
-	_DeeArg_Unpack1(err, argc, argv, "calldel", &thisarg);
+	DeeArg_Unpack1(err, argc, argv, "calldel", &thisarg);
 	if unlikely(Dee_attrdesc_calldel(&self->a_desc, thisarg))
 		goto err;
 	return_none;
@@ -520,7 +520,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_callset(Attr *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeObject *thisarg, *value;
-	_DeeArg_Unpack2(err, argc, argv, "callset", &thisarg, &value);
+	DeeArg_Unpack2(err, argc, argv, "callset", &thisarg, &value);
 	if unlikely(Dee_attrdesc_callset(&self->a_desc, thisarg, value))
 		goto err;
 	return_none;
@@ -990,7 +990,7 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 PRIVATE WUNUSED DREF EnumAttrIter *DCALL
 enumattriter_init(size_t argc, DeeObject *const *argv) {
 	EnumAttr *ea;
-	_DeeArg_Unpack1(err, argc, argv, "_EnumAttrIterator", &ea);
+	DeeArg_Unpack1(err, argc, argv, "_EnumAttrIterator", &ea);
 	if (DeeObject_AssertTypeExact(ea, &DeeEnumAttr_Type)) /* DeeEnumAttr_Type is final, so *Exact is OK */
 		goto err;
 	return enumattr_iter(ea);

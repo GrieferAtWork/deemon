@@ -521,7 +521,7 @@ string_new(size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *ob;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "string", &args.ob);
+	DeeArg_Unpack1(err, argc, argv, "string", &args.ob);
 /*[[[end]]]*/
 	return DeeObject_Str(args.ob);
 err:
@@ -1408,7 +1408,7 @@ stringiter_init(StringIterator *__restrict self,
 	struct {
 		DeeStringObject *s;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "_StringIterator", &args.s);
+	DeeArg_Unpack1(err, argc, argv, "_StringIterator", &args.s);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.s, &DeeString_Type))
 		goto err;
@@ -2247,7 +2247,7 @@ string_class_fromseq(DeeObject *UNUSED(self),
 	struct {
 		DeeObject *ordinals;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "fromseq", &args.ordinals);
+	DeeArg_Unpack1(err, argc, argv, "fromseq", &args.ordinals);
 /*[[[end]]]*/
 	unicode_printer_init(&printer);
 #ifndef __OPTIMIZE_SIZE__

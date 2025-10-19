@@ -81,7 +81,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_sync_f(size_t argc, DeeObject *const
 #define POSIX_SYNC_DEF_DOC(doc) { "sync", (DeeObject *)&posix_sync, MODSYM_FREADONLY, DOC("()\n" doc) },
 PRIVATE DEFINE_CMETHOD(posix_sync, &posix_sync_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_sync_f(size_t argc, DeeObject *const *argv) {
-	_DeeArg_Unpack0(err, argc, argv, "sync");
+	DeeArg_Unpack0(err, argc, argv, "sync");
 	return posix_sync_f_impl();
 err:
 	return NULL;

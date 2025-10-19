@@ -55,7 +55,7 @@ INTERN WUNUSED DREF DeeObject *DCALL
 capi_free(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *uptr;
 	union pointer ptr;
-	_DeeArg_Unpack1(err, argc, argv, "free", &uptr);
+	DeeArg_Unpack1(err, argc, argv, "free", &uptr);
 	if (DeeObject_AsPointer(uptr, &DeeCVoid_Type, &ptr))
 		goto err;
 	CTYPES_FAULTPROTECT(Dee_Free(ptr.ptr),

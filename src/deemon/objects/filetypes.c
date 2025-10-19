@@ -906,7 +906,7 @@ writer_init(Writer *__restrict self, size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeStringObject *init;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "_FileWriter", &args.init);
+	DeeArg_Unpack1(err, argc, argv, "_FileWriter", &args.init);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.init, &DeeString_Type))
 		goto err;
@@ -1153,7 +1153,7 @@ PRIVATE struct type_getset tpconst writer_getsets[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 writer_get(Writer *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("get", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "get");
+	DeeArg_Unpack0(err, argc, argv, "get");
 /*[[[end]]]*/
 	return (DREF DeeStringObject *)DeeFileWriter_GetString((DeeObject *)self);
 err:
@@ -1164,7 +1164,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 writer_size(Writer *self, size_t argc, DeeObject *const *argv) {
 	size_t result;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("size", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "size");
+	DeeArg_Unpack0(err, argc, argv, "size");
 /*[[[end]]]*/
 	result = Dee_atomic_read_with_atomic_rwlock(&self->w_printer.up_length,
 	                                            &self->w_lock);
@@ -1177,7 +1177,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 writer_allocated(Writer *self, size_t argc, DeeObject *const *argv) {
 	size_t result;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("allocated", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "allocated");
+	DeeArg_Unpack0(err, argc, argv, "allocated");
 /*[[[end]]]*/
 	DeeFileWriter_LockRead(self);
 	result = self->w_printer.up_buffer
@@ -2063,7 +2063,7 @@ mapfile_getbuf(DeeMapFileObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapfile_bytes(DeeMapFileObject *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("bytes", params: "");]]]*/
-	_DeeArg_Unpack0(err, argc, argv, "bytes");
+	DeeArg_Unpack0(err, argc, argv, "bytes");
 /*[[[end]]]*/
 	return DeeBytes_NewView((DeeObject *)self,
 	                        (void *)DeeMapFile_GetBase(&self->mf_map),

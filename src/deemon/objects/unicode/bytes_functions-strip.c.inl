@@ -321,10 +321,10 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 #endif /* !LOCAL_IS_SSTRIP */
 #else /* LOCAL_HAVE_max_count */
 #ifdef LOCAL_IS_SSTRIP
-	_DeeArg_Unpack1(err, argc, argv, LOCAL_bytes_strip_NAME, &mask);
+	DeeArg_Unpack1(err, argc, argv, LOCAL_bytes_strip_NAME, &mask);
 #else /* LOCAL_IS_SSTRIP */
 	mask = NULL;
-	_DeeArg_Unpack0Or1(err, argc, argv, LOCAL_bytes_strip_NAME, &mask);
+	DeeArg_Unpack0Or1(err, argc, argv, LOCAL_bytes_strip_NAME, &mask);
 #endif /* !LOCAL_IS_SSTRIP */
 #endif /* !LOCAL_HAVE_max_count */
 

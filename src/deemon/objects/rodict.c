@@ -892,7 +892,7 @@ rodict_init(size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *seq;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "_RoDict", &args.seq);
+	DeeArg_Unpack1(err, argc, argv, "_RoDict", &args.seq);
 /*[[[end]]]*/
 	return (DREF RoDict *)DeeRoDict_FromSequence(args.seq);
 err:

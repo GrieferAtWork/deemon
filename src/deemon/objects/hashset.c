@@ -1167,7 +1167,7 @@ hashsetiterator_init(HashSetIterator *__restrict self,
 	struct {
 		DeeHashSetObject *set;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "_HashSetIterator", &args.set);
+	DeeArg_Unpack1(err, argc, argv, "_HashSetIterator", &args.set);
 /*[[[end]]]*/
 	if (DeeObject_AssertType(args.set, &DeeHashSet_Type))
 		goto err;
@@ -1665,7 +1665,7 @@ hashset_init(HashSet *__restrict self,
 	struct {
 		DeeObject *seq;
 	} args;
-	_DeeArg_Unpack1(err, argc, argv, "HashSet", &args.seq);
+	DeeArg_Unpack1(err, argc, argv, "HashSet", &args.seq);
 /*[[[end]]]*/
 	return hashset_init_sequence(self, args.seq);
 err:
