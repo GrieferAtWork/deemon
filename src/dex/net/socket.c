@@ -30,6 +30,7 @@
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/error.h>
+#include <deemon/file.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
@@ -2521,15 +2522,12 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_fileno(Socket *self, size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack0(err, argc, argv, "fileno");
+socket_osfhandle(Socket *__restrict self) {
 #ifdef CONFIG_HOST_WINDOWS
 	return DeeInt_NewUIntptr((uintptr_t)self->s_socket);
 #else /* CONFIG_HOST_WINDOWS */
 	return DeeInt_NewInt((int)self->s_socket);
 #endif /* !CONFIG_HOST_WINDOWS */
-err:
-	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2734,9 +2732,6 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	              "(how=!?rw)->?Dbool\n"
 	              "Returns ?t if @this socket has been ?#shutdown according to @how (inclusive when multiple modes are specified)\n"
 	              "See ?#shutdown for possible values that may be passed to @how"),
-	TYPE_METHOD_F("fileno", &socket_fileno, METHOD_FNOREFESCAPE,
-	              "->?Dint\n" /* TODO: Use Dee_fd_fileno_GETSET / Dee_fd_osfhandle_GETSET for this! */
-	              "Returns the underlying file descriptor/handle associated @this socket"),
 	TYPE_METHOD_END
 };
 
@@ -2757,6 +2752,9 @@ PRIVATE struct type_getset tpconst socket_getsets[] = {
 	TYPE_GETTER_F("wasclosed", &socket_wasclosed, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this socket has been ?#{close}ed"),
+	TYPE_GETTER_F(Dee_fd_osfhandle_GETSET, &socket_osfhandle, METHOD_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Returns the underlying file descriptor/handle associated @this socket"),
 	TYPE_GETSET_END
 };
 
