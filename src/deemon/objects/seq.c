@@ -3185,16 +3185,29 @@ seq_class_range(DeeObject *UNUSED(self),
 	 * `Sequence.range()' is the new builtin way of getting this
 	 *  behavior from a core function (since `Sequence' is a
 	 *  builtin type like `List', `Tuple', etc.). */
-	DeeObject *start, *end = NULL, *step = NULL, *result;
-	DeeArg_Unpack1Or2Or3(err, argc, argv, "range", &start, &end, &step);
-	if (end)
-		return DeeRange_New(start, end, step);
+	DeeObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("range", params: """
+	DeeObject *start;
+	DeeObject *end = NULL;
+	DeeObject *step = NULL;
+""");]]]*/
+	struct {
+		DeeObject *start;
+		DeeObject *end;
+		DeeObject *step;
+	} args;
+	args.end = NULL;
+	args.step = NULL;
+	DeeArg_UnpackStruct1Or2Or3(err, argc, argv, "range", &args, &args.start, &args.end, &args.step);
+/*[[[end]]]*/
+	if (args.end)
+		return DeeRange_New(args.start, args.end, args.step);
 	/* Use a default-constructed instance of `type(start)' for the real start. */
-	end = DeeObject_NewDefault(Dee_TYPE(start));
-	if unlikely(!end)
+	args.end = DeeObject_NewDefault(Dee_TYPE(args.start));
+	if unlikely(!args.end)
 		goto err;
-	result = DeeRange_New(end, start, step);
-	Dee_Decref(end);
+	result = DeeRange_New(args.end, args.start, NULL);
+	Dee_Decref(args.end);
 	return result;
 err:
 	return NULL;

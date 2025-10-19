@@ -1938,10 +1938,17 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_listen(Socket *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("listen", params: """
 	int max_backlog = -1;
-	if (DeeArg_Unpack(argc, argv, "|d:listen", &max_backlog))
-		goto err;
-	if unlikely(DeeSocket_Listen(self, max_backlog))
+""", docStringPrefix: "socket");]]]*/
+#define socket_listen_params "max_backlog=!-1"
+	struct {
+		int max_backlog;
+	} args;
+	args.max_backlog = -1;
+	DeeArg_Unpack0Or1X(err, argc, argv, "listen", &args.max_backlog, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	if unlikely(DeeSocket_Listen(self, args.max_backlog))
 		goto err;
 	return_none;
 err:
@@ -1949,13 +1956,13 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_doaccept(Socket *__restrict self, uint64_t timeout) {
+socket_doaccept(Socket *__restrict self, uint64_t timeout_nanoseconds) {
 	DREF Socket *result;
 	int error;
 	result = DeeObject_MALLOC(Socket);
 	if unlikely(!result)
 		goto err;
-	error = DeeSocket_Accept(self, timeout,
+	error = DeeSocket_Accept(self, timeout_nanoseconds,
 	                         &result->s_socket,
 	                         &result->s_sockaddr);
 	if unlikely(error < 0)
@@ -1980,17 +1987,25 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_accept(Socket *self, size_t argc, DeeObject *const *argv) {
-	uint64_t timeout = (uint64_t)-1;
-	if (DeeArg_Unpack(argc, argv, "|" UNPu64 ":accept", &timeout))
-		goto err;
-	return socket_doaccept(self, timeout);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("accept", params: """
+	uint64_t timeout_nanoseconds = (uint64_t)-1;
+""");]]]*/
+	struct {
+		uint64_t timeout_nanoseconds;
+	} args;
+	args.timeout_nanoseconds = (uint64_t)-1;
+	DeeArg_Unpack0Or1X(err, argc, argv, "accept", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
+/*[[[end]]]*/
+	return socket_doaccept(self, args.timeout_nanoseconds);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_tryaccept(Socket *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("tryaccept");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "tryaccept");
+/*[[[end]]]*/
 	return socket_doaccept(self, 0);
 err:
 	return NULL;
@@ -2001,48 +2016,61 @@ socket_recv(Socket *self, size_t argc, DeeObject *const *argv) {
 	size_t max_size;
 	uint64_t timeout;
 	int flags;
-	DeeObject *arg_0 = NULL, *arg_1 = NULL, *arg_2 = NULL;
 	DREF DeeObject *result;
-	if (DeeArg_Unpack(argc, argv, "|ooo:recv", &arg_0, &arg_1, &arg_2))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("recv", params: """
+	DeeObject *arg1 = NULL;
+	DeeObject *arg2 = NULL;
+	DeeObject *arg3 = NULL;
+""");]]]*/
+	struct {
+		DeeObject *arg1;
+		DeeObject *arg2;
+		DeeObject *arg3;
+	} args;
+	args.arg1 = NULL;
+	args.arg2 = NULL;
+	args.arg3 = NULL;
+	if (DeeArg_UnpackStruct(argc, argv, "|ooo:recv", &args))
 		goto err;
-	if (!arg_1) {
+/*[[[end]]]*/
+	if (!args.arg2) {
 		max_size = (size_t)-1;
 		timeout  = (uint64_t)-1;
 		flags    = 0;
-		if (arg_0) {
-			if (DeeString_Check(arg_0)) {
+		if (args.arg1) {
+			if (DeeString_Check(args.arg1)) {
 				/* "(flags:?Dstring)->?Dstring\n" */
-				if (sock_getmsgflagsof(arg_0, &flags))
+				if (sock_getmsgflagsof(args.arg1, &flags))
 					goto err;
 			} else {
 				/* "(max_size=!-1,int flags=!P{})->?Dstring\n" */
 				/* "(max_size=!-1,timeout_nanoseconds=!-1)->?Dstring\n" */
-				if (DeeObject_AsSSize(arg_0, (Dee_ssize_t *)&max_size))
+				if (DeeObject_AsSSize(args.arg1, (Dee_ssize_t *)&max_size))
 					goto err;
 			}
 		}
-	} else if (!arg_2) {
+	} else if (!args.arg3) {
 		/* "(max_size=!-1,int flags=!P{})->?Dstring\n" */
 		/* "(max_size=!-1,timeout_nanoseconds=!-1)->?Dstring\n" */
-		if (DeeObject_AsSSize(arg_0, (Dee_ssize_t *)&max_size))
+		if (DeeObject_AsSSize(args.arg1, (Dee_ssize_t *)&max_size))
 			goto err;
-		if (DeeString_Check(arg_1)) {
-			if (sock_getmsgflagsof(arg_1, &flags))
+		if (DeeString_Check(args.arg2)) {
+			if (sock_getmsgflagsof(args.arg2, &flags))
 				goto err;
 			timeout = (uint64_t)-1;
 		} else {
 			flags = 0;
-			if (DeeObject_AsInt64(arg_1, (int64_t *)&timeout))
+			if (DeeObject_AsInt64(args.arg2, (int64_t *)&timeout))
 				goto err;
 		}
 	} else {
 		/* "(max_size=!-1,timeout_nanoseconds=!-1,flags=!P{})->?Dstring\n" */
 		/* "(max_size=!-1,timeout_nanoseconds=!-1,flags=!0)->?Dstring\n" */
-		if (DeeObject_AsSSize(arg_0, (Dee_ssize_t *)&max_size))
+		if (DeeObject_AsSSize(args.arg1, (Dee_ssize_t *)&max_size))
 			goto err;
-		if (DeeObject_AsInt64(arg_1, (int64_t *)&timeout))
+		if (DeeObject_AsInt64(args.arg2, (int64_t *)&timeout))
 			goto err;
-		if (sock_getmsgflagsof(arg_2, &flags))
+		if (sock_getmsgflagsof(args.arg3, &flags))
 			goto err;
 	}
 	result = DeeSocket_RecvData(self, timeout, max_size, flags, NULL);
@@ -2059,44 +2087,55 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_recvinto(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeBuffer buffer;
-	DeeObject *data;
-	DeeObject *arg1 = NULL, *arg2 = NULL;
 	uint64_t timeout;
 	int flags;
 	Dee_ssize_t result;
-	DeeArg_Unpack1Or2Or3(err, argc, argv, "recvinto", &data, &arg1, &arg2);
-	if (!arg1) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("recvinto", params: """
+	DeeObject *data;
+	DeeObject *arg1 = NULL;
+	DeeObject *arg2 = NULL;
+""");]]]*/
+	struct {
+		DeeObject *data;
+		DeeObject *arg1;
+		DeeObject *arg2;
+	} args;
+	args.arg1 = NULL;
+	args.arg2 = NULL;
+	DeeArg_UnpackStruct1Or2Or3(err, argc, argv, "recvinto", &args, &args.data, &args.arg1, &args.arg2);
+/*[[[end]]]*/
+	if (!args.arg1) {
 		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
 		timeout = (uint64_t)-1;
 		flags   = 0;
-	} else if (!arg2) {
+	} else if (!args.arg2) {
 		//"(dst:?DBytes,flags=!P{})->?Dint\n"
 		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
-		if (DeeString_Check(arg1)) {
-			if (sock_getmsgflagsof(arg1, &flags))
+		if (DeeString_Check(args.arg1)) {
+			if (sock_getmsgflagsof(args.arg1, &flags))
 				goto err;
 			timeout = (uint64_t)-1;
 		} else {
-			if (DeeObject_AsInt64(arg1, (int64_t *)&timeout))
+			if (DeeObject_AsInt64(args.arg1, (int64_t *)&timeout))
 				goto err;
 			flags = 0;
 		}
 	} else {
 		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!P{})->?Dint\n"
 		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
-		if (DeeObject_AsInt64(arg1, (int64_t *)&timeout))
+		if (DeeObject_AsInt64(args.arg1, (int64_t *)&timeout))
 			goto err;
-		if (sock_getmsgflagsof(arg2, &flags))
+		if (sock_getmsgflagsof(args.arg2, &flags))
 			goto err;
 	}
-	if (DeeObject_GetBuf(data, &buffer, Dee_BUFFER_FWRITABLE))
+	if (DeeObject_GetBuf(args.data, &buffer, Dee_BUFFER_FWRITABLE))
 		goto err;
 	result = DeeSocket_Recv(self,
 	                        timeout,
 	                        buffer.bb_base,
 	                        buffer.bb_size,
 	                        flags);
-	DeeObject_PutBuf(data, &buffer, Dee_BUFFER_FWRITABLE);
+	DeeObject_PutBuf(args.data, &buffer, Dee_BUFFER_FWRITABLE);
 	if unlikely(result < 0)
 		goto err;
 	return DeeInt_NewSize((size_t)result);
@@ -2112,47 +2151,60 @@ socket_recvfrom(Socket *self, size_t argc, DeeObject *const *argv) {
 	size_t max_size;
 	uint64_t timeout;
 	int flags;
-	DeeObject *arg_0 = NULL, *arg_1 = NULL, *arg_2 = NULL;
-	if (DeeArg_Unpack(argc, argv, "|ooo:recvfrom", &arg_0, &arg_1, &arg_2))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("recvfrom", params: """
+	DeeObject *arg1 = NULL;
+	DeeObject *arg2 = NULL;
+	DeeObject *arg3 = NULL;
+""");]]]*/
+	struct {
+		DeeObject *arg1;
+		DeeObject *arg2;
+		DeeObject *arg3;
+	} args;
+	args.arg1 = NULL;
+	args.arg2 = NULL;
+	args.arg3 = NULL;
+	if (DeeArg_UnpackStruct(argc, argv, "|ooo:recvfrom", &args))
 		goto err;
-	if (!arg_1) {
+/*[[[end]]]*/
+	if (!args.arg2) {
 		max_size = (size_t)-1;
 		timeout  = (uint64_t)-1;
 		flags    = 0;
-		if (arg_0) {
-			if (DeeString_Check(arg_0)) {
+		if (args.arg1) {
+			if (DeeString_Check(args.arg1)) {
 				/* "(flags:?Dstring)->(sockaddr,string)\n" */
-				if (sock_getmsgflagsof(arg_0, &flags))
+				if (sock_getmsgflagsof(args.arg1, &flags))
 					goto err;
 			} else {
 				/* "(max_size=!-1,int flags=!P{})->(sockaddr,string)\n" */
 				/* "(max_size=!-1,timeout_nanoseconds=!-1)->(sockaddr,string)\n" */
-				if (DeeObject_AsSSize(arg_0, (Dee_ssize_t *)&max_size))
+				if (DeeObject_AsSSize(args.arg1, (Dee_ssize_t *)&max_size))
 					goto err;
 			}
 		}
-	} else if (!arg_2) {
+	} else if (!args.arg3) {
 		/* "(max_size=!-1,int flags=!P{})->(sockaddr,string)\n" */
 		/* "(max_size=!-1,timeout_nanoseconds=!-1)->(sockaddr,string)\n" */
-		if (DeeObject_AsSSize(arg_0, (Dee_ssize_t *)&max_size))
+		if (DeeObject_AsSSize(args.arg1, (Dee_ssize_t *)&max_size))
 			goto err;
-		if (DeeString_Check(arg_1)) {
-			if (sock_getmsgflagsof(arg_1, &flags))
+		if (DeeString_Check(args.arg2)) {
+			if (sock_getmsgflagsof(args.arg2, &flags))
 				goto err;
 			timeout = (uint64_t)-1;
 		} else {
 			flags = 0;
-			if (DeeObject_AsInt64(arg_1, (int64_t *)&timeout))
+			if (DeeObject_AsInt64(args.arg2, (int64_t *)&timeout))
 				goto err;
 		}
 	} else {
 		/* "(max_size=!-1,timeout_nanoseconds=!-1,flags=!P{})->(sockaddr,string)\n" */
 		/* "(max_size=!-1,timeout_nanoseconds=!-1,flags=!0)->(sockaddr,string)\n" */
-		if (DeeObject_AsSSize(arg_0, (Dee_ssize_t *)&max_size))
+		if (DeeObject_AsSSize(args.arg1, (Dee_ssize_t *)&max_size))
 			goto err;
-		if (DeeObject_AsInt64(arg_1, (int64_t *)&timeout))
+		if (DeeObject_AsInt64(args.arg2, (int64_t *)&timeout))
 			goto err;
-		if (sock_getmsgflagsof(arg_2, &flags))
+		if (sock_getmsgflagsof(args.arg3, &flags))
 			goto err;
 	}
 
@@ -2195,36 +2247,47 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeBuffer buffer;
-	DeeObject *data;
-	DeeObject *arg1 = NULL, *arg2 = NULL;
 	uint64_t timeout;
 	int flags;
 	Dee_ssize_t result_size;
 	DREF DeeSockAddrObject *result_addr;
 	DREF DeeTupleObject *result;
-	DeeArg_Unpack1Or2Or3(err, argc, argv, "recvfrominto", &data, &arg1, &arg2);
-	if (!arg1) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("recvfrominto", params: """
+	DeeObject *data;
+	DeeObject *arg1 = NULL;
+	DeeObject *arg2 = NULL;
+""");]]]*/
+	struct {
+		DeeObject *data;
+		DeeObject *arg1;
+		DeeObject *arg2;
+	} args;
+	args.arg1 = NULL;
+	args.arg2 = NULL;
+	DeeArg_UnpackStruct1Or2Or3(err, argc, argv, "recvfrominto", &args, &args.data, &args.arg1, &args.arg2);
+/*[[[end]]]*/
+	if (!args.arg1) {
 		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
 		timeout = (uint64_t)-1;
 		flags   = 0;
-	} else if (!arg2) {
+	} else if (!args.arg2) {
 		//"(dst:?DBytes,flags=!P{})->?Dint\n"
 		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
-		if (DeeString_Check(arg1)) {
-			if (sock_getmsgflagsof(arg1, &flags))
+		if (DeeString_Check(args.arg1)) {
+			if (sock_getmsgflagsof(args.arg1, &flags))
 				goto err;
 			timeout = (uint64_t)-1;
 		} else {
-			if (DeeObject_AsInt64(arg1, (int64_t *)&timeout))
+			if (DeeObject_AsInt64(args.arg1, (int64_t *)&timeout))
 				goto err;
 			flags = 0;
 		}
 	} else {
 		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!P{})->?Dint\n"
 		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
-		if (DeeObject_AsInt64(arg1, (int64_t *)&timeout))
+		if (DeeObject_AsInt64(args.arg1, (int64_t *)&timeout))
 			goto err;
-		if (sock_getmsgflagsof(arg2, &flags))
+		if (sock_getmsgflagsof(args.arg2, &flags))
 			goto err;
 	}
 
@@ -2232,7 +2295,7 @@ socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 	result_addr = DeeObject_MALLOC(DeeSockAddrObject);
 	if unlikely(!result_addr)
 		goto err;
-	if (DeeObject_GetBuf(data, &buffer, Dee_BUFFER_FWRITABLE))
+	if (DeeObject_GetBuf(args.data, &buffer, Dee_BUFFER_FWRITABLE))
 		goto err_addr;
 	result_size = DeeSocket_RecvFrom(self,
 	                                 timeout,
@@ -2240,7 +2303,7 @@ socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 	                                 buffer.bb_size,
 	                                 flags,
 	                                 &result_addr->sa_addr);
-	DeeObject_PutBuf(data, &buffer, Dee_BUFFER_FWRITABLE);
+	DeeObject_PutBuf(args.data, &buffer, Dee_BUFFER_FWRITABLE);
 	if unlikely(result_size < 0)
 		goto err_addr;
 
@@ -2276,43 +2339,55 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_send(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeBuffer buffer;
-	DeeObject *data, *arg_0 = NULL, *arg_1 = NULL;
 	uint64_t timeout;
 	int flags;
 	Dee_ssize_t result;
-	DeeArg_Unpack1Or2Or3(err, argc, argv, "send", &data, &arg_0, &arg_1);
-	if (!arg_0) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("send", params: """
+	DeeObject *data;
+	DeeObject *arg1 = NULL;
+	DeeObject *arg2 = NULL;
+""");]]]*/
+	struct {
+		DeeObject *data;
+		DeeObject *arg1;
+		DeeObject *arg2;
+	} args;
+	args.arg1 = NULL;
+	args.arg2 = NULL;
+	DeeArg_UnpackStruct1Or2Or3(err, argc, argv, "send", &args, &args.data, &args.arg1, &args.arg2);
+/*[[[end]]]*/
+	if (!args.arg1) {
 		/* "(data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n" */
 		timeout = (uint64_t)-1;
 		flags   = 0;
-	} else if (!arg_1) {
+	} else if (!args.arg2) {
 		/* "(data:?DBytes,flags=!P{})->?Dint\n" */
 		/* "(data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n" */
-		if (DeeString_Check(arg_0)) {
-			if (sock_getmsgflagsof(arg_0, &flags))
+		if (DeeString_Check(args.arg1)) {
+			if (sock_getmsgflagsof(args.arg1, &flags))
 				goto err;
 			timeout = (uint64_t)-1;
 		} else {
-			if (DeeObject_AsInt64(arg_0, (int64_t *)&timeout))
+			if (DeeObject_AsInt64(args.arg1, (int64_t *)&timeout))
 				goto err;
 			flags = 0;
 		}
 	} else {
 		/* "(data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n" */
 		/* "(data:?DBytes,timeout_nanoseconds=!-1,flags=!P{})->?Dint\n" */
-		if (DeeObject_AsInt64(arg_0, (int64_t *)&timeout))
+		if (DeeObject_AsInt64(args.arg1, (int64_t *)&timeout))
 			goto err;
-		if (sock_getmsgflagsof(arg_1, &flags))
+		if (sock_getmsgflagsof(args.arg2, &flags))
 			goto err;
 	}
-	if (DeeObject_GetBuf(data, &buffer, Dee_BUFFER_FREADONLY))
+	if (DeeObject_GetBuf(args.data, &buffer, Dee_BUFFER_FREADONLY))
 		goto err;
 	result = DeeSocket_Send(self,
 	                        timeout,
 	                        buffer.bb_base,
 	                        buffer.bb_size,
 	                        flags);
-	DeeObject_PutBuf(data, &buffer, Dee_BUFFER_FREADONLY);
+	DeeObject_PutBuf(args.data, &buffer, Dee_BUFFER_FREADONLY);
 	if unlikely(result < 0) {
 		if (result != -2)
 			goto err;
@@ -2327,20 +2402,34 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_sendto(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeBuffer buffer;
 	SockAddr target_addr;
-	DeeObject *target, *data, *arg_0 = NULL, *arg_1 = NULL;
 	uint64_t timeout;
 	int flags;
 	Dee_ssize_t result;
-	if (DeeArg_Unpack(argc, argv, "oo|oo:sendto", &target, &data, &arg_0, &arg_1))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("sendto", params: """
+	DeeObject *target;
+	DeeObject *data;
+	DeeObject *arg1 = NULL;
+	DeeObject *arg2 = NULL;
+""");]]]*/
+	struct {
+		DeeObject *target;
+		DeeObject *data;
+		DeeObject *arg1;
+		DeeObject *arg2;
+	} args;
+	args.arg1 = NULL;
+	args.arg2 = NULL;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|oo:sendto", &args))
 		goto err;
+/*[[[end]]]*/
 	/* Construct the target address. */
-	if (DeeTuple_Check(target)) {
+	if (DeeTuple_Check(args.target)) {
 		if (SockAddr_FromArgv(&target_addr,
 		                      self->s_sockaddr.sa.sa_family,
 		                      self->s_proto,
 		                      self->s_type,
-		                      DeeTuple_SIZE(target),
-		                      DeeTuple_ELEM(target)))
+		                      DeeTuple_SIZE(args.target),
+		                      DeeTuple_ELEM(args.target)))
 			goto err;
 	} else {
 		if (SockAddr_FromArgv(&target_addr,
@@ -2348,35 +2437,35 @@ socket_sendto(Socket *self, size_t argc, DeeObject *const *argv) {
 		                      self->s_proto,
 		                      self->s_type,
 		                      1,
-		                      &target))
+		                      &args.target))
 			goto err;
 	}
 	DBG_ALIGNMENT_ENABLE();
-	if (!arg_0) {
+	if (!args.arg1) {
 		/* "(data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n" */
 		timeout = (uint64_t)-1;
 		flags   = 0;
-	} else if (!arg_1) {
+	} else if (!args.arg2) {
 		/* "(data:?DBytes,flags=!P{})->?Dint\n" */
 		/* "(data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n" */
-		if (DeeString_Check(arg_0)) {
-			if (sock_getmsgflagsof(arg_0, &flags))
+		if (DeeString_Check(args.arg1)) {
+			if (sock_getmsgflagsof(args.arg1, &flags))
 				goto err;
 			timeout = (uint64_t)-1;
 		} else {
-			if (DeeObject_AsInt64(arg_0, (int64_t *)&timeout))
+			if (DeeObject_AsInt64(args.arg1, (int64_t *)&timeout))
 				goto err;
 			flags = 0;
 		}
 	} else {
 		/* "(data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n" */
 		/* "(data:?DBytes,timeout_nanoseconds=!-1,flags=!P{})->?Dint\n" */
-		if (DeeObject_AsInt64(arg_0, (int64_t *)&timeout))
+		if (DeeObject_AsInt64(args.arg1, (int64_t *)&timeout))
 			goto err;
-		if (sock_getmsgflagsof(arg_1, &flags))
+		if (sock_getmsgflagsof(args.arg2, &flags))
 			goto err;
 	}
-	if (DeeObject_GetBuf(data, &buffer, Dee_BUFFER_FREADONLY))
+	if (DeeObject_GetBuf(args.data, &buffer, Dee_BUFFER_FREADONLY))
 		goto err;
 	result = DeeSocket_SendTo(self,
 	                          timeout,
@@ -2384,7 +2473,7 @@ socket_sendto(Socket *self, size_t argc, DeeObject *const *argv) {
 	                          buffer.bb_size,
 	                          flags,
 	                          &target_addr);
-	DeeObject_PutBuf(data, &buffer, Dee_BUFFER_FREADONLY);
+	DeeObject_PutBuf(args.data, &buffer, Dee_BUFFER_FREADONLY);
 	if unlikely(result < 0) {
 		if (result != -2)
 			goto err;
@@ -2400,13 +2489,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_wasshutdown(Socket *self, size_t argc, DeeObject *const *argv) {
 	int mode;
-	DeeObject *shutdown_mode = (DeeObject *)&shutdown_all;
 	uint16_t state = self->s_state;
-	DeeArg_Unpack0Or1(err, argc, argv, "wasshutdown", &shutdown_mode);
-	if (DeeString_Check(shutdown_mode) &&
-	    DeeString_IsEmpty(shutdown_mode))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("wasshutdown", params: """
+	DeeObject *shutdown_mode=!Prw = (DeeObject *)&shutdown_all;
+""");]]]*/
+	struct {
+		DeeObject *shutdown_mode;
+	} args;
+	args.shutdown_mode = (DeeObject *)&shutdown_all;
+	DeeArg_Unpack0Or1(err, argc, argv, "wasshutdown", &args.shutdown_mode);
+/*[[[end]]]*/
+	if (DeeString_Check(args.shutdown_mode) &&
+	    DeeString_IsEmpty(args.shutdown_mode))
 		return_bool(!(state & SOCKET_FOPENED));
-	if unlikely(get_shutdown_modeof(shutdown_mode, &mode))
+	if unlikely(get_shutdown_modeof(args.shutdown_mode, &mode))
 		goto err;
 	if (mode == SHUT_RD) {
 		mode = state & SOCKET_FSHUTDOWN_R;
@@ -2491,7 +2587,7 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	              "Connect @this socket with a given address.\n"
 	              "Accepted arguments are the same as ${sockaddr(this.sock_af, args...)} when creating ?Gsockaddr"),
 	TYPE_METHOD_F("listen", &socket_listen, METHOD_FNOREFESCAPE,
-	              "(max_backlog=!-1)\n"
+	              "(" socket_listen_params ")\n"
 	              "#t{:Interrupt}"
 	              "#t{?ANotBound?GNetError}{@this socket has not been bound and the protocol does not allow listening on an unbound address}"
 	              "#t{?ANoSupport?GNetError}{The protocol of @this socket does not allow listening}"

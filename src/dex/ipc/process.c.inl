@@ -900,8 +900,8 @@ process_init(Process *__restrict self,
 	DeeObject *exe_or_cmdline_or_pid, *proc_argv = NULL;
 	self->p_envp = NULL;
 	DeeArg_Unpack1Or2Or3(err, argc, argv, "Process",
-	                      &exe_or_cmdline_or_pid,
-	                      &proc_argv, &self->p_envp);
+	                     &exe_or_cmdline_or_pid,
+	                     &proc_argv, &self->p_envp);
 	if (proc_argv) {
 #ifdef ipc_Process_USE_CreateProcessW
 		self->p_cmdline = ipc_argv2cmdline(proc_argv);

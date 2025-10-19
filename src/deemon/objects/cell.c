@@ -476,18 +476,31 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 cell_cmpxch(DeeCellObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *oldval, *newval = NULL, *def = NULL, *result;
-	DeeArg_Unpack1Or2Or3(err, argc, argv, "o|oo:cmpxch", &oldval, &newval, &def);
-	if (newval) {
-		result = DeeCell_CmpXch((DeeObject *)self, oldval, newval);
+	DeeObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("cmpxch", params: """
+	DeeObject *oldval;
+	DeeObject *newval = NULL;
+	DeeObject *def = NULL;
+""");]]]*/
+	struct {
+		DeeObject *oldval;
+		DeeObject *newval;
+		DeeObject *def;
+	} args;
+	args.newval = NULL;
+	args.def = NULL;
+	DeeArg_UnpackStruct1Or2Or3(err, argc, argv, "cmpxch", &args, &args.oldval, &args.newval, &args.def);
+/*[[[end]]]*/
+	if (args.newval) {
+		result = DeeCell_CmpXch((DeeObject *)self, args.oldval, args.newval);
 		if (!result) {
-			if (!def)
+			if (!args.def)
 				goto err_empty;
-			Dee_Incref(def);
-			result = def;
+			Dee_Incref(args.def);
+			result = args.def;
 		}
 	} else {
-		result = DeeCell_CmpXch((DeeObject *)self, NULL, oldval);
+		result = DeeCell_CmpXch((DeeObject *)self, NULL, args.oldval);
 		if (!result)
 			return_true;
 		Dee_Decref(result);
