@@ -1000,10 +1000,6 @@ function print_DeeArg_Unpack(name: string = "",
 			if (init !is none)
 				print("	", init, ";");
 		}
-		for (local param: params) {
-			if (param.cInit !is none && param.cInit != "?")
-				print(f"	{args}.{param.cName} = {param.cInit};");
-		}
 		local simpleFormat = getUnpackFormat(params: params);
 		local argsPointerList = ", ".join(for (local x: params) f"&{args}.{x.cName}");
 		local dedicatedUnpackFunction: string | none = {

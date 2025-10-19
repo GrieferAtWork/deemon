@@ -52,12 +52,20 @@ DECL_BEGIN
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_hasattr(size_t argc, DeeObject *const *argv) {
-	DeeObject *self, *attr;
 	int result;
-	_DeeArg_Unpack2(err, argc, argv, "hasattr", &self, &attr);
-	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("hasattr", params: "
+	DeeObject *ob;
+	DeeStringObject *attr;
+");]]]*/
+	struct {
+		DeeObject *ob;
+		DeeStringObject *attr;
+	} args;
+	_DeeArg_Unpack2(err, argc, argv, "hasattr", &args.ob, &args.attr);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.attr, &DeeString_Type))
 		goto err;
-	result = DeeObject_HasAttr(self, attr);
+	result = DeeObject_HasAttr(args.ob, (DeeObject *)args.attr);
 	if unlikely(result < 0)
 		goto err;
 	return_bool(result);
@@ -67,10 +75,18 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_hasitem(size_t argc, DeeObject *const *argv) {
-	DeeObject *self, *key;
 	int result;
-	_DeeArg_Unpack2(err, argc, argv, "hasitem", &self, &key);
-	result = DeeObject_HasItem(self, key);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("hasitem", params: "
+	DeeObject *ob;
+	DeeObject *key;
+");]]]*/
+	struct {
+		DeeObject *ob;
+		DeeObject *key;
+	} args;
+	_DeeArg_Unpack2(err, argc, argv, "hasitem", &args.ob, &args.key);
+/*[[[end]]]*/
+	result = DeeObject_HasItem(args.ob, args.key);
 	if unlikely(result < 0)
 		goto err;
 	return_bool(result);
@@ -80,16 +96,26 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_boundattr(size_t argc, DeeObject *const *argv) {
-	DeeObject *self, *attr;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("boundattr", params: "
+	DeeObject *ob;
+	DeeStringObject *attr;
 	bool allow_missing = true;
-	if (DeeArg_Unpack(argc, argv, "oo|b:boundattr", &self, &attr, &allow_missing))
+");]]]*/
+	struct {
+		DeeObject *ob;
+		DeeStringObject *attr;
+		bool allow_missing;
+	} args;
+	args.allow_missing = true;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|b:boundattr", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.attr, &DeeString_Type))
 		goto err;
-	switch (DeeObject_BoundAttr(self, attr)) {
+	switch (DeeObject_BoundAttr(args.ob, (DeeObject *)args.attr)) {
 	default:
-		if unlikely(!allow_missing) {
-			DeeRT_ErrUnknownAttr(self, attr, DeeRT_ATTRIBUTE_ACCESS_BOUND);
+		if unlikely(!args.allow_missing) {
+			DeeRT_ErrUnknownAttr(args.ob, args.attr, DeeRT_ATTRIBUTE_ACCESS_BOUND);
 			goto err;
 		}
 		ATTR_FALLTHROUGH
@@ -107,14 +133,24 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_bounditem(size_t argc, DeeObject *const *argv) {
-	DeeObject *self, *key;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("bounditem", params: "
+	DeeObject *ob;
+	DeeObject *key;
 	bool allow_missing = true;
-	if (DeeArg_Unpack(argc, argv, "oo|b:bounditem", &self, &key, &allow_missing))
+");]]]*/
+	struct {
+		DeeObject *ob;
+		DeeObject *key;
+		bool allow_missing;
+	} args;
+	args.allow_missing = true;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|b:bounditem", &args))
 		goto err;
-	switch (DeeObject_BoundItem(self, key)) {
+/*[[[end]]]*/
+	switch (DeeObject_BoundItem(args.ob, args.key)) {
 	default:
-		if unlikely(!allow_missing) {
-			DeeRT_ErrUnknownKey(self, key);
+		if unlikely(!args.allow_missing) {
+			DeeRT_ErrUnknownKey(args.ob, args.key);
 			goto err;
 		}
 		ATTR_FALLTHROUGH
@@ -132,11 +168,16 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_compare(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *result;
-	DeeObject *lhs, *rhs;
 	int diff;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__lhs_rhs, "oo:compare", &lhs, &rhs))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("compare", params: "lhs,rhs");]]]*/
+	struct {
+		DeeObject *lhs;
+		DeeObject *rhs;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__lhs_rhs, "oo:compare", &args))
 		goto err;
-	diff = DeeObject_Compare(lhs, rhs);
+/*[[[end]]]*/
+	diff = DeeObject_Compare(args.lhs, args.rhs);
 	if unlikely(diff == Dee_COMPARE_ERR)
 		goto err;
 	ASSERT(diff == -1 || diff == 0 || diff == 1);
@@ -149,9 +190,14 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_equals(size_t argc, DeeObject *const *argv) {
 	int diff;
-	DeeObject *a, *b;
-	_DeeArg_Unpack2(err, argc, argv, "equals", &a, &b);
-	diff = DeeObject_TryCompareEq(a, b);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("equals", params: "a,b");]]]*/
+	struct {
+		DeeObject *a;
+		DeeObject *b;
+	} args;
+	_DeeArg_Unpack2(err, argc, argv, "equals", &args.a, &args.b);
+/*[[[end]]]*/
+	diff = DeeObject_TryCompareEq(args.a, args.b);
 	if unlikely(diff == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(diff == 0);
@@ -162,15 +208,23 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_import(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
-	DeeObject *module_name, *base = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__base_name,
-	                    "oo:__import__", &base, &module_name))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__import__", params: "
+	DeeModuleObject *base;
+	DeeStringObject *name;
+");]]]*/
+	struct {
+		DeeModuleObject *base;
+		DeeStringObject *name;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__base_name, "oo:__import__", &args))
 		goto err;
-	if (DeeObject_AssertType(base, &DeeModule_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertType(args.base, &DeeModule_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(module_name, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
 		goto err;
-	result = DeeModule_ImportRel(base, module_name);
+	result = DeeModule_ImportRel((DeeObject *)args.base,
+	                             (DeeObject *)args.name);
 	return result;
 err:
 	return NULL;
@@ -187,28 +241,36 @@ builtin_exec_fallback(size_t argc,
                       DeeObject *const *argv,
                       DeeObject *kw) {
 	DREF DeeObject *result;
-	DeeObject *expr, *globals = NULL;
 	char const *usertext;
 	size_t usersize;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__expr_globals,
-	                    "o|o:exec", &expr, &globals))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("exec", params: "
+	DeeObject *expr;
+	DeeObject *globals = NULL;
+");]]]*/
+	struct {
+		DeeObject *expr;
+		DeeObject *globals;
+	} args;
+	args.globals = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__expr_globals, "o|o:exec", &args))
 		goto err;
-	if (DeeString_Check(expr)) {
-		usertext = DeeString_AsUtf8(expr);
+/*[[[end]]]*/
+	if (DeeString_Check(args.expr)) {
+		usertext = DeeString_AsUtf8(args.expr);
 		if unlikely(!usertext)
 			goto err;
 		usersize = WSTR_LENGTH(usertext);
-		Dee_Incref(expr);
-	} else if (DeeBytes_Check(expr)) {
-		usertext = (char const *)DeeBytes_DATA(expr);
-		usersize = DeeBytes_SIZE(expr);
-		Dee_Incref(expr);
+		Dee_Incref(args.expr);
+	} else if (DeeBytes_Check(args.expr)) {
+		usertext = (char const *)DeeBytes_DATA(args.expr);
+		usersize = DeeBytes_SIZE(args.expr);
+		Dee_Incref(args.expr);
 	} else {
-		expr = DeeFile_ReadBytes(expr, (size_t)-1, true);
-		if unlikely(!expr)
+		args.expr = DeeFile_ReadBytes(args.expr, (size_t)-1, true);
+		if unlikely(!args.expr)
 			goto err;
-		usertext = (char const *)DeeBytes_DATA(expr);
-		usersize = DeeBytes_SIZE(expr);
+		usertext = (char const *)DeeBytes_DATA(args.expr);
+		usersize = DeeBytes_SIZE(args.expr);
 	}
 	result = DeeExec_RunMemory(usertext,
 	                           usersize,
@@ -218,10 +280,10 @@ builtin_exec_fallback(size_t argc,
 	                           0,
 	                           0,
 	                           NULL,
-	                           globals,
+	                           args.globals,
 	                           NULL,
 	                           NULL);
-	Dee_Decref_unlikely(expr);
+	Dee_Decref_unlikely(args.expr);
 	return result;
 err:
 	return NULL;
@@ -525,12 +587,17 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_rt_badcall(size_t argc, DeeObject *const *argv) {
 	DeeThreadObject *ts;
-	size_t argc_cur, argc_min = 0, argc_max;
 	char const *function_name = NULL;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":__badcall", &argc_max))
-		goto done;
+	size_t argc_cur, argc_min = 0;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("__badcall", params: "size_t argc_max");]]]*/
+	struct {
+		size_t argc_max;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ ":__badcall", &args))
+		goto err;
+/*[[[end]]]*/
 	ts       = DeeThread_Self();
-	argc_cur = argc_max;
+	argc_cur = args.argc_max;
 	if likely(ts->t_execsz) {
 		struct code_frame *frame = ts->t_exec;
 		DeeCodeObject *code      = frame->cf_func->fo_code;
@@ -542,8 +609,8 @@ f_rt_badcall(size_t argc, DeeObject *const *argv) {
 	err_invalid_argc(function_name,
 	                 argc_cur,
 	                 argc_min,
-	                 argc_max);
-done:
+	                 args.argc_max);
+err:
 	return NULL;
 }
 
@@ -551,20 +618,24 @@ done:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_rt_roloc(size_t argc, DeeObject *const *argv) {
 	DeeThreadObject *ts;
-	uint16_t lid;
-	if (DeeArg_Unpack(argc, argv, UNPu16 ":__roloc", &lid))
-		goto done;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("__roloc", params: "uint16_t lid");]]]*/
+	struct {
+		uint16_t lid;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, UNPu16 ":__roloc", &args))
+		goto err;
+/*[[[end]]]*/
 	ts = DeeThread_Self();
 	if likely(ts->t_execsz) {
 		struct code_frame *frame = ts->t_exec;
 		DeeCodeObject *code      = frame->cf_func->fo_code;
-		err_readonly_local(code, frame->cf_ip, lid);
+		err_readonly_local(code, frame->cf_ip, args.lid);
 	} else {
 		DeeError_Throwf(&DeeError_RuntimeError,
 		                "Cannot modify read-only local variable %" PRFu16,
-		                lid);
+		                args.lid);
 	}
-done:
+err:
 	return NULL;
 }
 
