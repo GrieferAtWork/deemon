@@ -861,6 +861,9 @@ local function printDocStringWithPrefix(prefix: string, name: string, params: {U
 	case "set":
 		docstring = docstring.replace("?DSet", "?.");
 		break;
+	case "type":
+		docstring = docstring.replace("?DType", "?.");
+		break;
 	default: break;
 	}
 	print("#define ", prefix, "_", makeIdentifier(name), '_params "', docstring, '"');

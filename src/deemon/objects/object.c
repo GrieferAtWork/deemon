@@ -2992,23 +2992,37 @@ type_pclear(DeeTypeObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_baseof(DeeTypeObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("baseof", params: "
 	DeeTypeObject *other;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__other, "o:baseof", &other))
+", docStringPrefix: "type");]]]*/
+#define type_baseof_params "other:?."
+	struct {
+		DeeTypeObject *other;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__other, "o:baseof", &args))
 		goto err;
-	if (!DeeType_Check((DeeObject *)other))
+/*[[[end]]]*/
+	if (!DeeType_Check(args.other))
 		return_false;
-	return_bool01(DeeType_Extends(other, self));
+	return_bool01(DeeType_Extends(args.other, self));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_extends(DeeTypeObject *self, size_t argc,
-                 DeeObject *const *argv, DeeObject *kw) {
+             DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("extends", params: "
 	DeeTypeObject *other;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__other, "o:extends", &other))
+", docStringPrefix: "type");]]]*/
+#define type_extends_params "other:?."
+	struct {
+		DeeTypeObject *other;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__other, "o:extends", &args))
 		goto err;
-	return_bool01(DeeType_Extends(self, other));
+/*[[[end]]]*/
+	return_bool01(DeeType_Extends(self, args.other));
 err:
 	return NULL;
 }
@@ -3016,10 +3030,17 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_implements(DeeTypeObject *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("implements", params: "
 	DeeTypeObject *other;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__other, "o:implements", &other))
+", docStringPrefix: "type");]]]*/
+#define type_implements_params "other:?."
+	struct {
+		DeeTypeObject *other;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__other, "o:implements", &args))
 		goto err;
-	return_bool01(DeeType_Implements(self, other));
+/*[[[end]]]*/
+	return_bool01(DeeType_Implements(self, args.other));
 err:
 	return NULL;
 }
@@ -3484,29 +3505,22 @@ err:
 	return NULL;
 }
 
-PRIVATE char const meth_getinstanceattr[]   = "o:getinstanceattr";
-PRIVATE char const meth_callinstanceattr[]  = "callinstanceattr";
-PRIVATE char const meth_hasinstanceattr[]   = "o:hasinstanceattr";
-PRIVATE char const meth_boundinstanceattr[] = "o|b:boundinstanceattr";
-PRIVATE char const meth_delinstanceattr[]   = "o:delinstanceattr";
-PRIVATE char const meth_setinstanceattr[]   = "oo:setinstanceattr";
-
-#define STR_getinstanceattr   (meth_getinstanceattr + 2)
-#define STR_callinstanceattr  (meth_callinstanceattr + 0)
-#define STR_hasinstanceattr   (meth_hasinstanceattr + 2)
-#define STR_boundinstanceattr (meth_boundinstanceattr + 4)
-#define STR_delinstanceattr   (meth_delinstanceattr + 2)
-#define STR_setinstanceattr   (meth_setinstanceattr + 3)
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_getinstanceattr(DeeTypeObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *name;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__attr, meth_getinstanceattr, &name))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("getinstanceattr", params: "
+	DeeStringObject *attr;
+", docStringPrefix: "type");]]]*/
+#define type_getinstanceattr_params "attr:?Dstring"
+	struct {
+		DeeStringObject *attr;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__attr, "o:getinstanceattr", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.attr, &DeeString_Type))
 		goto err;
-	return DeeType_GetInstanceAttr(self, name);
+	return DeeType_GetInstanceAttr(self, (DeeObject *)args.attr);
 err:
 	return NULL;
 }
@@ -3515,7 +3529,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_callinstanceattr(DeeTypeObject *self, size_t argc,
                       DeeObject *const *argv, DeeObject *kw) {
 	if unlikely(!argc) {
-		err_invalid_argc_va(meth_callinstanceattr, argc, 1);
+		err_invalid_argc_va("callinstanceattr", argc, 1);
 		goto err;
 	}
 	if (DeeObject_AssertTypeExact(argv[0], &DeeString_Type))
@@ -3528,14 +3542,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_hasinstanceattr(DeeTypeObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *name;
 	int result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__attr,
-	                    meth_hasinstanceattr, &name))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("hasinstanceattr", params: "
+	DeeStringObject *attr;
+", docStringPrefix: "type");]]]*/
+#define type_hasinstanceattr_params "attr:?Dstring"
+	struct {
+		DeeStringObject *attr;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__attr, "o:hasinstanceattr", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.attr, &DeeString_Type))
 		goto err;
-	result = DeeType_HasInstanceAttr(self, name);
+	result = DeeType_HasInstanceAttr(self, (DeeObject *)args.attr);
 	if unlikely(result < 0)
 		goto err;
 	return_bool(result);
@@ -3546,19 +3566,27 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_boundinstanceattr(DeeTypeObject *self, size_t argc,
                        DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *name;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("boundinstanceattr", params: "
+	DeeStringObject *attr;
 	bool allow_missing = true;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__attr_allow_missing,
-	                    meth_boundinstanceattr, &name, &allow_missing))
+", docStringPrefix: "type");]]]*/
+#define type_boundinstanceattr_params "attr:?Dstring,allow_missing=!t"
+	struct {
+		DeeStringObject *attr;
+		bool allow_missing;
+	} args;
+	args.allow_missing = true;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__attr_allow_missing, "o|b:boundinstanceattr", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.attr, &DeeString_Type))
 		goto err;
 
 	/* Instance attributes of types are always bound (because they're all wrappers) */
-	switch (DeeType_BoundInstanceAttr(self, name)) {
+	switch (DeeType_BoundInstanceAttr(self, (DeeObject *)args.attr)) {
 	default:
-		if unlikely(!allow_missing) {
-			DeeRT_ErrUnknownTypeInstanceAttr(self, name, DeeRT_ATTRIBUTE_ACCESS_BOUND);
+		if unlikely(!args.allow_missing) {
+			DeeRT_ErrUnknownTypeInstanceAttr(self, args.attr, DeeRT_ATTRIBUTE_ACCESS_BOUND);
 			goto err;
 		}
 		ATTR_FALLTHROUGH
@@ -3577,13 +3605,19 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_delinstanceattr(DeeTypeObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *name;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__attr,
-	                    meth_delinstanceattr, &name))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("delinstanceattr", params: "
+	DeeStringObject *attr;
+", docStringPrefix: "type");]]]*/
+#define type_delinstanceattr_params "attr:?Dstring"
+	struct {
+		DeeStringObject *attr;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__attr, "o:delinstanceattr", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.attr, &DeeString_Type))
 		goto err;
-	if (DeeType_DelInstanceAttr(self, name))
+	if (DeeType_DelInstanceAttr(self, (DeeObject *)args.attr))
 		goto err;
 	return_none;
 err:
@@ -3593,15 +3627,23 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_setinstanceattr(DeeTypeObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *name, *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__attr_value,
-	                    meth_setinstanceattr, &name, &value))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("setinstanceattr", params: "
+	DeeStringObject *attr;
+	DeeObject *value;
+", docStringPrefix: "type");]]]*/
+#define type_setinstanceattr_params "attr:?Dstring,value"
+	struct {
+		DeeStringObject *attr;
+		DeeObject *value;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__attr_value, "oo:setinstanceattr", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.attr, &DeeString_Type))
 		goto err;
-	if (DeeType_SetInstanceAttr(self, name, value))
+	if (DeeType_SetInstanceAttr(self, (DeeObject *)args.attr, args.value))
 		goto err;
-	return_reference_(value);
+	return_reference_(args.value);
 err:
 	return NULL;
 }
@@ -3931,7 +3973,7 @@ err:
 
 PRIVATE struct type_method tpconst type_methods[] = {
 	TYPE_KWMETHOD_F("baseof", &type_baseof, METHOD_FNOREFESCAPE,
-	                "(other:?.)->?Dbool\n"
+	                "(" type_baseof_params ")->?Dbool\n"
 	                "Returns ?t if @this ?. is equal to, or a base of @other.\n"
 	                "If @other isn't a ?., ?f is returned.\n"
 	                "Using baseof, the behavior of ${x is y} can be approximated as:\n"
@@ -3939,11 +3981,11 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	                /**/ "print y.baseof(type(x)); /* aka: `print x is y;' */"
 	                "}"),
 	TYPE_KWMETHOD_F("extends", &type_extends, METHOD_FNOREFESCAPE,
-	                "(other:?.)->?Dbool\n"
+	                "(" type_extends_params ")->?Dbool\n"
 	                "Returns ?t if @this ?. is equal to, or has been derived from @other.\n"
 	                "If @other isn't a ?., ?f is returned."),
 	TYPE_KWMETHOD_F("implements", &type_implements, METHOD_FNOREFESCAPE,
-	                "(other:?.)->?Dbool\n"
+	                "(" type_implements_params ")->?Dbool\n"
 	                "Check if @other appears in ?#__mro__"),
 	TYPE_KWMETHOD("newinstance", &type_newinstance,
 	              "(fields!!)->\n"
@@ -4108,8 +4150,8 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	                /**/ "inherited operators are not included, with the exception of explicitly "
 	                /**/ "inherited constructors.\n"
 	                "For a list of operator names, see #hasoperator."),
-	TYPE_KWMETHOD(STR_getinstanceattr, &type_getinstanceattr,
-	              "(name:?Dstring)->\n"
+	TYPE_KWMETHOD("getinstanceattr", &type_getinstanceattr,
+	              "(" type_getinstanceattr_params ")->\n"
 	              "Lookup an attribute @name that is implemented by instances of @this ?.\n"
 	              "Normally, such attributes can also be accessed using regular attribute lookup, "
 	              /**/ "however in ambiguous cases where both the type, as well as instances implement an "
@@ -4133,11 +4175,21 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	              "Also note that the `*instanceattr' functions will not check for types that have overwritten "
 	              /**/ "one of the attribute-operators, but will continue search for matching attribute names, even "
 	              /**/ "if those attributes would normally have been overshadowed by attribute callbacks."),
-	TYPE_KWMETHOD(STR_callinstanceattr, &type_callinstanceattr, "(name:?Dstring,args!,kwds!!)->\ns.a. ?#getinstanceattr"),
-	TYPE_KWMETHOD(STR_hasinstanceattr, &type_hasinstanceattr, "(name:?Dstring)->?Dbool\ns.a. ?#getinstanceattr"),
-	TYPE_KWMETHOD(STR_boundinstanceattr, &type_boundinstanceattr, "(name:?Dstring,allow_missing=!t)->?Dbool\ns.a. ?#getinstanceattr"),
-	TYPE_KWMETHOD(STR_delinstanceattr, &type_delinstanceattr, "(name:?Dstring)\ns.a. ?#getinstanceattr"),
-	TYPE_KWMETHOD(STR_setinstanceattr, &type_setinstanceattr, "(name:?Dstring,value)->\ns.a. ?#getinstanceattr"),
+	TYPE_KWMETHOD("callinstanceattr", &type_callinstanceattr,
+	              "(attr:?Dstring,args!,kwds!!)->\n"
+	              "s.a. ?#getinstanceattr"),
+	TYPE_KWMETHOD("hasinstanceattr", &type_hasinstanceattr,
+	              "(" type_hasinstanceattr_params ")->?Dbool\n"
+	              "s.a. ?#getinstanceattr"),
+	TYPE_KWMETHOD("boundinstanceattr", &type_boundinstanceattr,
+	              "(" type_boundinstanceattr_params ")->?Dbool\n"
+	              "s.a. ?#getinstanceattr"),
+	TYPE_KWMETHOD("delinstanceattr", &type_delinstanceattr,
+	              "(" type_delinstanceattr_params ")\n"
+	              "s.a. ?#getinstanceattr"),
+	TYPE_KWMETHOD("setinstanceattr", &type_setinstanceattr,
+	              "(" type_setinstanceattr_params ")->\n"
+	              "s.a. ?#getinstanceattr (always re-returns @value)"),
 
 	TYPE_KWMETHOD_F("derivedfrom", &type_extends, METHOD_FNOREFESCAPE,
 	                "(other:?.)->?Dbool\n"
