@@ -1660,8 +1660,7 @@ posix_S_ISDIR(size_t argc, DeeObject *const *argv) {
 	struct {
 		unsigned int mode;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, "u:S_ISDIR", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "S_ISDIR", &args.mode, "u", DeeObject_AsUInt);
 /*[[[end]]]*/
 	return_bool(STAT_ISDIR(args.mode));
 err:
@@ -1677,8 +1676,7 @@ posix_S_ISCHR(size_t argc, DeeObject *const *argv) {
 	struct {
 		unsigned int mode;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, "u:S_ISCHR", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "S_ISCHR", &args.mode, "u", DeeObject_AsUInt);
 /*[[[end]]]*/
 	return_bool(STAT_ISCHR(args.mode));
 err:
@@ -1694,8 +1692,7 @@ posix_S_ISBLK(size_t argc, DeeObject *const *argv) {
 	struct {
 		unsigned int mode;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, "u:S_ISBLK", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "S_ISBLK", &args.mode, "u", DeeObject_AsUInt);
 /*[[[end]]]*/
 	return_bool(STAT_ISBLK(args.mode));
 err:
@@ -1711,8 +1708,7 @@ posix_S_ISDEV(size_t argc, DeeObject *const *argv) {
 	struct {
 		unsigned int mode;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, "u:S_ISDEV", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "S_ISDEV", &args.mode, "u", DeeObject_AsUInt);
 /*[[[end]]]*/
 	return_bool(STAT_ISDEV(args.mode));
 err:
@@ -1728,8 +1724,7 @@ posix_S_ISREG(size_t argc, DeeObject *const *argv) {
 	struct {
 		unsigned int mode;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, "u:S_ISREG", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "S_ISREG", &args.mode, "u", DeeObject_AsUInt);
 /*[[[end]]]*/
 	return_bool(STAT_ISREG(args.mode));
 err:
@@ -1745,8 +1740,7 @@ posix_S_ISFIFO(size_t argc, DeeObject *const *argv) {
 	struct {
 		unsigned int mode;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, "u:S_ISFIFO", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "S_ISFIFO", &args.mode, "u", DeeObject_AsUInt);
 /*[[[end]]]*/
 	return_bool(STAT_ISFIFO(args.mode));
 err:
@@ -1762,8 +1756,7 @@ posix_S_ISLNK(size_t argc, DeeObject *const *argv) {
 	struct {
 		unsigned int mode;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, "u:S_ISLNK", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "S_ISLNK", &args.mode, "u", DeeObject_AsUInt);
 /*[[[end]]]*/
 	return_bool(STAT_ISLNK(args.mode));
 err:
@@ -1779,8 +1772,7 @@ posix_S_ISSOCK(size_t argc, DeeObject *const *argv) {
 	struct {
 		unsigned int mode;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, "u:S_ISSOCK", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "S_ISSOCK", &args.mode, "u", DeeObject_AsUInt);
 /*[[[end]]]*/
 	return_bool(STAT_ISSOCK(args.mode));
 err:

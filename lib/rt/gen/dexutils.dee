@@ -298,12 +298,9 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool | no
 	if (libname is none)
 		libname = AUTOLIBNAME();
 	local print_libMethod = import(".unpack").print_libMethod;
-	local dReturnType;
-	args, none, dReturnType = args.rpartition("->")...;
-	if (!args) {
-		args = dReturnType;
-		dReturnType = "";
-	}
+	local dReturnType = "";
+	if ("->" in args)
+		args, none, dReturnType = args.rpartition("->")...;
 	return print_libMethod(
 			name: name,
 			params: args,

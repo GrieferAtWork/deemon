@@ -502,8 +502,7 @@ DEFINE_OPERATOR_INVOKE(operator_seek, &instance_seek, NULL /*&filetype_inherit_s
 		int whence;
 	} args;
 	args.whence = SEEK_SET;
-	if (DeeArg_UnpackStruct(argc, argv, UNPdN(Dee_SIZEOF_OFF_T) "|d:" OPNAME("seek"), &args))
-		goto err;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, OPNAME("seek"), &args, &args.off, UNPdN(Dee_SIZEOF_OFF_T), DeeObject_MapAsXInt(Dee_SIZEOF_OFF_T), &args.whence, "d", DeeObject_AsInt);
 /*[[[end]]]*/
 	(void)p_self;
 	(void)opname;
@@ -738,8 +737,7 @@ DEFINE_OPERATOR_INVOKE(operator_getc, &instance_getc, &filetype_inherit_getc) {
 		Dee_ioflag_t flags;
 	} args;
 	args.flags = Dee_FILEIO_FNORMAL;
-	if (DeeArg_UnpackStruct(argc, argv, "|u:" OPNAME("getc"), &args))
-		goto err;
+	DeeArg_Unpack0Or1X(err, argc, argv, OPNAME("getc"), &args.flags, "u", DeeObject_AsUInt);
 /*[[[end]]]*/
 	(void)p_self;
 	(void)opname;
@@ -760,8 +758,7 @@ DEFINE_OPERATOR_INVOKE(operator_ungetc, &instance_ungetc, &filetype_inherit_unge
 	struct {
 		int ch;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, "d:" OPNAME("ungetc"), &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, OPNAME("ungetc"), &args.ch, "d", DeeObject_AsInt);
 /*[[[end]]]*/
 	(void)p_self;
 	(void)opname;
@@ -785,8 +782,7 @@ DEFINE_OPERATOR_INVOKE(operator_putc, &instance_putc, &filetype_inherit_putc) {
 		Dee_ioflag_t flags;
 	} args;
 	args.flags = Dee_FILEIO_FNORMAL;
-	if (DeeArg_UnpackStruct(argc, argv, "d|u:" OPNAME("putc"), &args))
-		goto err;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, OPNAME("putc"), &args, &args.ch, "d", DeeObject_AsInt, &args.flags, "u", DeeObject_AsUInt);
 /*[[[end]]]*/
 	(void)p_self;
 	(void)opname;

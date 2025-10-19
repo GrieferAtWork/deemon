@@ -4560,6 +4560,12 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IntInheritedOnSucc
 #define DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED_8(self) DeeObject_AsDirectUInt64Inherited(self)
 #define DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED(size)   DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED_##size
 
+#define DeeObject_MapAsXInt(size)                 DEE_PRIVATE_OBJECT_AS_INT(size)
+#define DeeObject_MapAsXUInt(size)                DEE_PRIVATE_OBJECT_AS_UINT(size)
+#define DeeObject_MapAsXUIntM1(size)              DEE_PRIVATE_OBJECT_AS_UINTM1(size)
+#define DeeObject_MapAsXDirectUInt(size)          DEE_PRIVATE_OBJECT_AS_DIRECT_UINT(size)
+#define DeeObject_MapAsXDirectUIntInherited(size) DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED(size)
+
 /* Helper macros for converting objects to integers */
 #define DeeObject_AsXInt(size, self, result)         DEE_PRIVATE_OBJECT_AS_INT(size)(self, result)
 #define DeeObject_AsXUInt(size, self, result)        DEE_PRIVATE_OBJECT_AS_UINT(size)(self, result)
@@ -4614,6 +4620,15 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IntInheritedOnSucc
 #define DeeObject_AsByteM1(self, result)         DEE_PRIVATE_OBJECT_AS_UINTM1_1(self, Dee_REQUIRES_TYPE(__BYTE_TYPE__ *, result))
 #define DeeObject_AsDirectByte(self)             DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_1(self)
 #define DeeObject_AsDirectByteInherited(self)    DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED_1(self)
+
+/* Helper wrapper around `DeeObject_Bool()' that writes
+ * the value to `*result' rather than use the return value. */
+LOCAL WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_AsBool)(DeeObject *__restrict self, bool *__restrict result) {
+	int value = DeeObject_Bool(self);
+	*result = value != 0;
+	return unlikely(value < 0) ? value : 0;
+}
 
 
 /* Math operator invocation. */

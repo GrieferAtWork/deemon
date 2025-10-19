@@ -2215,8 +2215,7 @@ string_class_chr(DeeObject *UNUSED(self),
 	struct {
 		uint32_t ch;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu32 ":chr", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "chr", &args.ch, UNPu32, DeeObject_AsUInt32);
 /*[[[end]]]*/
 	return DeeString_Chr(args.ch);
 err:

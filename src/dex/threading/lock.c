@@ -525,8 +525,7 @@ lock_timedacquire(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu64 ":timedacquire", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "timedacquire", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	error = lock_do_tryacquire(self);
 	if unlikely(error < 0)
@@ -614,8 +613,7 @@ lock_timedwaitfor(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu64 ":timedwaitfor", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	error = lock_is_acquired(self);
 	if unlikely(error < 0)
@@ -1073,8 +1071,7 @@ rwlock_timedread(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu64 ":timedread", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "timedread", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	error = rwlock_do_timedread(self, args.timeout_nanoseconds);
 	if unlikely(error < 0)
@@ -1093,8 +1090,7 @@ rwlock_timedwrite(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu64 ":timedwrite", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "timedwrite", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	error = rwlock_do_timedwrite(self, args.timeout_nanoseconds);
 	if unlikely(error < 0)
@@ -1133,8 +1129,7 @@ rwlock_timedwaitread(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu64 ":timedwaitread", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "timedwaitread", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	error = rwlock_do_timedwaitread(self, args.timeout_nanoseconds);
 	if unlikely(error < 0)
@@ -1153,8 +1148,7 @@ rwlock_timedwaitwrite(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu64 ":timedwaitwrite", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "timedwaitwrite", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	error = rwlock_do_timedwaitwrite(self, args.timeout_nanoseconds);
 	if unlikely(error < 0)
@@ -1684,8 +1678,7 @@ semaphore_init(DeeSemaphoreObject *__restrict self,
 		size_t tickets;
 	} args;
 	args.tickets = 0;
-	if (DeeArg_UnpackStruct(argc, argv, "|" UNPuSIZ ":Semaphore", &args))
-		goto err;
+	DeeArg_Unpack0Or1X(err, argc, argv, "Semaphore", &args.tickets, UNPuSIZ, DeeObject_AsSize);
 /*[[[end]]]*/
 	Dee_semaphore_init(&self->sem_semaphore, args.tickets);
 	return 0;
@@ -1777,8 +1770,7 @@ semaphore_timedacquire(DeeSemaphoreObject *self, size_t argc, DeeObject *const *
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu64 ":timedacquire", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "timedacquire", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	error = Dee_semaphore_acquire_timed(&self->sem_semaphore, args.timeout_nanoseconds);
 	if unlikely(error < 0)
@@ -1807,8 +1799,7 @@ semaphore_timedwaitfor(DeeSemaphoreObject *self, size_t argc, DeeObject *const *
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu64 ":timedwaitfor", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	error = Dee_semaphore_waitfor_timed(&self->sem_semaphore, args.timeout_nanoseconds);
 	if unlikely(error < 0)
@@ -1998,8 +1989,7 @@ event_timedwaitfor(DeeEventObject *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu64 ":timedwaitfor", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedwaitfor", &args.timeout_nanoseconds))
 		goto err;
@@ -2770,8 +2760,7 @@ lock_union_timedacquire(LockUnion *__restrict self,
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu64 ":timedacquire", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "timedacquire", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	error = lock_union_do_acquire_timed(self, args.timeout_nanoseconds);
 	if unlikely(error < 0)
@@ -2802,8 +2791,7 @@ lock_union_timedwaitfor(LockUnion *__restrict self,
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu64 ":timedwaitfor", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	error = lock_union_do_waitfor_timed(self, args.timeout_nanoseconds);
 	if unlikely(error < 0)

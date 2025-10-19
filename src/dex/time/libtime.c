@@ -2489,8 +2489,7 @@ f_libtime_nanoseconds(size_t argc, DeeObject *const *argv) {
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu128 ":nanoseconds", &result->t_nanos))
-		goto err_r;
+	DeeArg_Unpack1X(err_r, argc, argv, "nanoseconds", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
 done:
@@ -2506,8 +2505,7 @@ f_libtime_microseconds(size_t argc, DeeObject *const *argv) {
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu128 ":microseconds", &result->t_nanos))
-		goto err_r;
+	DeeArg_Unpack1X(err_r, argc, argv, "microseconds", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
 	__hybrid_int128_mul16(result->t_nanos, NANOSECONDS_PER_MICROSECOND);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
@@ -2524,8 +2522,7 @@ f_libtime_milliseconds(size_t argc, DeeObject *const *argv) {
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu128 ":milliseconds", &result->t_nanos))
-		goto err_r;
+	DeeArg_Unpack1X(err_r, argc, argv, "milliseconds", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
 	__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_MILLISECOND);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
@@ -2542,8 +2539,7 @@ f_libtime_seconds(size_t argc, DeeObject *const *argv) {
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu128 ":seconds", &result->t_nanos))
-		goto err_r;
+	DeeArg_Unpack1X(err_r, argc, argv, "seconds", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
 	__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_SECOND);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
@@ -2560,8 +2556,7 @@ f_libtime_minutes(size_t argc, DeeObject *const *argv) {
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu128 ":minutes", &result->t_nanos))
-		goto err_r;
+	DeeArg_Unpack1X(err_r, argc, argv, "minutes", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
 	__hybrid_int128_mul64(result->t_nanos, NANOSECONDS_PER_MINUTE);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
@@ -2578,8 +2573,7 @@ f_libtime_hours(size_t argc, DeeObject *const *argv) {
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu128 ":hours", &result->t_nanos))
-		goto err_r;
+	DeeArg_Unpack1X(err_r, argc, argv, "hours", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
 	__hybrid_int128_mul64(result->t_nanos, NANOSECONDS_PER_HOUR);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
@@ -2596,8 +2590,7 @@ f_libtime_days(size_t argc, DeeObject *const *argv) {
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu128 ":days", &result->t_nanos))
-		goto err_r;
+	DeeArg_Unpack1X(err_r, argc, argv, "days", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
 	__hybrid_int128_mul64(result->t_nanos, NANOSECONDS_PER_DAY);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
@@ -2614,8 +2607,7 @@ f_libtime_weeks(size_t argc, DeeObject *const *argv) {
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu128 ":weeks", &result->t_nanos))
-		goto err_r;
+	DeeArg_Unpack1X(err_r, argc, argv, "weeks", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
 	__hybrid_int128_mul64(result->t_nanos, NANOSECONDS_PER_WEEK);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
@@ -2632,8 +2624,7 @@ f_libtime_months(size_t argc, DeeObject *const *argv) {
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu128 ":months", &result->t_months))
-		goto err_r;
+	DeeArg_Unpack1X(err_r, argc, argv, "months", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_MONTHS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
 done:
@@ -2649,8 +2640,7 @@ f_libtime_years(size_t argc, DeeObject *const *argv) {
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu128 ":years", &result->t_months))
-		goto err_r;
+	DeeArg_Unpack1X(err_r, argc, argv, "years", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
 	__hybrid_int128_mul8(result->t_months, MONTHS_PER_YEAR);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_MONTHS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
@@ -2667,8 +2657,7 @@ f_libtime_decades(size_t argc, DeeObject *const *argv) {
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu128 ":decades", &result->t_months))
-		goto err_r;
+	DeeArg_Unpack1X(err_r, argc, argv, "decades", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
 	__hybrid_int128_mul8(result->t_months, MONTHS_PER_DECADE);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_MONTHS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
@@ -2685,8 +2674,7 @@ f_libtime_centuries(size_t argc, DeeObject *const *argv) {
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu128 ":centuries", &result->t_months))
-		goto err_r;
+	DeeArg_Unpack1X(err_r, argc, argv, "centuries", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
 	__hybrid_int128_mul8(result->t_months, MONTHS_PER_CENTURY);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_MONTHS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
@@ -2703,8 +2691,7 @@ f_libtime_millennia(size_t argc, DeeObject *const *argv) {
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu128 ":millennia", &result->t_months))
-		goto err_r;
+	DeeArg_Unpack1X(err_r, argc, argv, "millennia", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
 	__hybrid_int128_mul8(result->t_months, MONTHS_PER_MILLENNIUM);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_MONTHS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
@@ -2829,8 +2816,7 @@ f_libtime__mkunix(size_t argc, DeeObject *const *argv) {
 		uint32_t nanosecond;
 	} args;
 	args.nanosecond = 0;
-	if (DeeArg_UnpackStruct(argc, argv, UNPd64 "|" UNPu32 ":_mkunix", &args))
-		goto err;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "_mkunix", &args, &args.time_t_, UNPd64, DeeObject_AsInt64, &args.nanosecond, UNPu32, DeeObject_AsUInt32);
 /*[[[end]]]*/
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
@@ -2872,8 +2858,7 @@ f_libtime__mkFILETIME(size_t argc, DeeObject *const *argv) {
 	struct {
 		uint64_t FILETIME_;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu64 ":_mkFILETIME", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "_mkFILETIME", &args.FILETIME_, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)

@@ -2321,8 +2321,7 @@ lexer_getkwdid(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *ar
 	struct {
 		unsigned int id;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, "u:getkwdid", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "getkwdid", &args.id, "u", DeeObject_AsUInt);
 /*[[[end]]]*/
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;

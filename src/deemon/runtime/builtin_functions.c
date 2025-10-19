@@ -61,7 +61,7 @@ f_builtin_hasattr(size_t argc, DeeObject *const *argv) {
 		DeeObject *ob;
 		DeeStringObject *attr;
 	} args;
-	DeeArg_Unpack2(err, argc, argv, "hasattr", &args.ob, &args.attr);
+	DeeArg_UnpackStruct2(err, argc, argv, "hasattr", &args, &args.ob, &args.attr);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.attr, &DeeString_Type))
 		goto err;
@@ -84,7 +84,7 @@ f_builtin_hasitem(size_t argc, DeeObject *const *argv) {
 		DeeObject *ob;
 		DeeObject *key;
 	} args;
-	DeeArg_Unpack2(err, argc, argv, "hasitem", &args.ob, &args.key);
+	DeeArg_UnpackStruct2(err, argc, argv, "hasitem", &args, &args.ob, &args.key);
 /*[[[end]]]*/
 	result = DeeObject_HasItem(args.ob, args.key);
 	if unlikely(result < 0)
@@ -195,7 +195,7 @@ f_builtin_equals(size_t argc, DeeObject *const *argv) {
 		DeeObject *a;
 		DeeObject *b;
 	} args;
-	DeeArg_Unpack2(err, argc, argv, "equals", &args.a, &args.b);
+	DeeArg_UnpackStruct2(err, argc, argv, "equals", &args, &args.a, &args.b);
 /*[[[end]]]*/
 	diff = DeeObject_TryCompareEq(args.a, args.b);
 	if unlikely(diff == Dee_COMPARE_ERR)
@@ -593,8 +593,7 @@ f_rt_badcall(size_t argc, DeeObject *const *argv) {
 	struct {
 		size_t argc_max;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ ":__badcall", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "__badcall", &args.argc_max, UNPuSIZ, DeeObject_AsSize);
 /*[[[end]]]*/
 	ts       = DeeThread_Self();
 	argc_cur = args.argc_max;
@@ -622,8 +621,7 @@ f_rt_roloc(size_t argc, DeeObject *const *argv) {
 	struct {
 		uint16_t lid;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu16 ":__roloc", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "__roloc", &args.lid, UNPu16, DeeObject_AsUInt16);
 /*[[[end]]]*/
 	ts = DeeThread_Self();
 	if likely(ts->t_execsz) {

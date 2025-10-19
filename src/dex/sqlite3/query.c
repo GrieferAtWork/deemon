@@ -761,8 +761,7 @@ query_skip(Query *__restrict self, size_t argc, DeeObject *const *argv) {
 	struct {
 		uint64_t count;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu64 ":skip", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "skip", &args.count, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	result = Query_Skip(self, args.count);
 	if unlikely(result == (uint64_t)-1)

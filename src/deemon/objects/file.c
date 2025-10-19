@@ -2216,8 +2216,7 @@ file_ungetc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		int ch;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, "d:ungetc", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "ungetc", &args.ch, "d", DeeObject_AsInt);
 /*[[[end]]]*/
 	result = DeeFile_Ungetc(self, args.ch);
 	if unlikely(result == GETC_ERR)
@@ -2274,8 +2273,7 @@ file_ungetutf8(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		uint32_t ch;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu32 ":ungetutf8", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "ungetutf8", &args.ch, UNPu32, DeeObject_AsUInt32);
 /*[[[end]]]*/
 	result = DeeFile_UngetUtf8(self, args.ch);
 	if unlikely(result == GETC_ERR)
@@ -2360,8 +2358,7 @@ file_readall(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		size_t maxbytes;
 	} args;
 	args.maxbytes = (size_t)-1;
-	if (DeeArg_UnpackStruct(argc, argv, "|" UNPxSIZ ":readall", &args))
-		goto err;
+	DeeArg_Unpack0Or1X(err, argc, argv, "readall", &args.maxbytes, UNPxSIZ, DeeObject_AsSizeM1);
 /*[[[end]]]*/
 	return DeeFile_ReadBytes(self, args.maxbytes, true);
 err:
@@ -2381,8 +2378,7 @@ file_preadall(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		size_t maxbytes;
 	} args;
 	args.maxbytes = (size_t)-1;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuN(Dee_SIZEOF_POS_T) "|" UNPxSIZ ":preadall", &args))
-		goto err;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "preadall", &args, &args.pos, UNPuN(Dee_SIZEOF_POS_T), DeeObject_MapAsXUInt(Dee_SIZEOF_POS_T), &args.maxbytes, UNPxSIZ, DeeObject_AsSizeM1);
 /*[[[end]]]*/
 	return DeeFile_PReadBytes(self, args.maxbytes, args.pos, true);
 err:

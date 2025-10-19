@@ -413,8 +413,7 @@ seq_segments(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		size_t segment_length;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ ":segments", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "segments", &args.segment_length, UNPuSIZ, DeeObject_AsSize);
 /*[[[end]]]*/
 	if unlikely(!args.segment_length)
 		goto err_invalid_segsize;
@@ -435,8 +434,7 @@ seq_distribute(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		size_t segment_count;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ ":distribute", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "distribute", &args.segment_count, UNPuSIZ, DeeObject_AsSize);
 /*[[[end]]]*/
 	if unlikely(!args.segment_count)
 		goto err_invalid_segment_count;
@@ -612,12 +610,12 @@ seq_byhash(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 ", docStringPrefix: "seq");]]]*/
 #define seq_byhash_params "template"
 	struct {
-		DeeObject *_template;
+		DeeObject *template_;
 	} args;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__template, "o:byhash", &args))
 		goto err;
 /*[[[end]]]*/
-	return DeeSeq_HashFilter(self, DeeObject_Hash(args._template));
+	return DeeSeq_HashFilter(self, DeeObject_Hash(args.template_));
 err:
 	return NULL;
 }
@@ -3214,8 +3212,7 @@ seq_class_repeat(DeeObject *UNUSED(self),
 		DeeObject *ob;
 		size_t count;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, "o" UNPuSIZ ":repeat", &args))
-		goto err;
+	DeeArg_UnpackStruct2X(err, argc, argv, "repeat", &args, &args.ob, "o", _DeeArg_AsObject, &args.count, UNPuSIZ, DeeObject_AsSize);
 /*[[[end]]]*/
 	return DeeSeq_RepeatItem(args.ob, args.count);
 err:

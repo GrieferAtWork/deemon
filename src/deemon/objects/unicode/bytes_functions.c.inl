@@ -1926,9 +1926,9 @@ bytes_replace(Bytes *self, size_t argc,
 	struct {
 		DeeObject *find;
 		DeeObject *replace;
-		size_t _max;
+		size_t max_;
 	} args;
-	args._max = (size_t)-1;
+	args.max_ = (size_t)-1;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__find_replace_max, "oo|" UNPxSIZ ":replace", &args))
 		goto err;
 /*[[[end]]]*/
@@ -1948,7 +1948,7 @@ bytes_replace(Bytes *self, size_t argc,
 	begin       = DeeBytes_DATA(self);
 	end         = begin + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
 	block_begin = begin;
-	if likely(args._max) {
+	if likely(args.max_) {
 		while (begin < end) {
 			if (MEMEQB(begin, find_needle.n_data, find_needle.n_size)) {
 				/* Found one */
@@ -1960,7 +1960,7 @@ bytes_replace(Bytes *self, size_t argc,
 				block_begin = begin;
 				if (begin >= end)
 					break;
-				if unlikely(!--args._max)
+				if unlikely(!--args.max_)
 					break;
 				continue;
 			}
@@ -2003,9 +2003,9 @@ bytes_casereplace(Bytes *self, size_t argc,
 	struct {
 		DeeObject *find;
 		DeeObject *replace;
-		size_t _max;
+		size_t max_;
 	} args;
-	args._max = (size_t)-1;
+	args.max_ = (size_t)-1;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__find_replace_max, "oo|" UNPxSIZ ":casereplace", &args))
 		goto err;
 /*[[[end]]]*/
@@ -2025,7 +2025,7 @@ bytes_casereplace(Bytes *self, size_t argc,
 	begin       = DeeBytes_DATA(self);
 	end         = begin + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
 	block_begin = begin;
-	if likely(args._max) {
+	if likely(args.max_) {
 		while (begin < end) {
 			if (memcasecmp(begin, find_needle.n_data, find_needle.n_size) == 0) {
 				/* Found one */
@@ -2037,7 +2037,7 @@ bytes_casereplace(Bytes *self, size_t argc,
 				block_begin = begin;
 				if (begin >= end)
 					break;
-				if unlikely(!--args._max)
+				if unlikely(!--args.max_)
 					break;
 				continue;
 			}
@@ -2080,9 +2080,9 @@ bytes_toreplace(Bytes *self, size_t argc,
 	struct {
 		DeeObject *find;
 		DeeObject *replace;
-		size_t _max;
+		size_t max_;
 	} args;
-	args._max = (size_t)-1;
+	args.max_ = (size_t)-1;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__find_replace_max, "oo|" UNPxSIZ ":toreplace", &args))
 		goto err;
 /*[[[end]]]*/
@@ -2108,7 +2108,7 @@ bytes_toreplace(Bytes *self, size_t argc,
 		goto done;
 
 	end = (begin = DeeBytes_DATA(self)) + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
-	if likely(args._max) {
+	if likely(args.max_) {
 		while (begin < end) {
 			if (MEMEQB(begin, find_needle.n_data, find_needle.n_size)) {
 				/* Found one */
@@ -2116,7 +2116,7 @@ bytes_toreplace(Bytes *self, size_t argc,
 				begin += find_needle.n_size;
 				if (begin >= end)
 					break;
-				if unlikely(!--args._max)
+				if unlikely(!--args.max_)
 					break;
 				continue;
 			}
@@ -2143,9 +2143,9 @@ bytes_tocasereplace(Bytes *self, size_t argc,
 	struct {
 		DeeObject *find;
 		DeeObject *replace;
-		size_t _max;
+		size_t max_;
 	} args;
-	args._max = (size_t)-1;
+	args.max_ = (size_t)-1;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__find_replace_max, "oo|" UNPxSIZ ":tocasereplace", &args))
 		goto err;
 /*[[[end]]]*/
@@ -2171,7 +2171,7 @@ bytes_tocasereplace(Bytes *self, size_t argc,
 		goto done;
 
 	end = (begin = DeeBytes_DATA(self)) + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
-	if likely(args._max) {
+	if likely(args.max_) {
 		while (begin < end) {
 			if (memcasecmp(begin, find_needle.n_data, find_needle.n_size) == 0) {
 				/* Found one */
@@ -2179,7 +2179,7 @@ bytes_tocasereplace(Bytes *self, size_t argc,
 				begin += find_needle.n_size;
 				if (begin >= end)
 					break;
-				if unlikely(!--args._max)
+				if unlikely(!--args.max_)
 					break;
 				continue;
 			}
@@ -2366,8 +2366,7 @@ bytes_splitlines(Bytes *self, size_t argc, DeeObject *const *argv) {
 		bool keepends;
 	} args;
 	args.keepends = false;
-	if (DeeArg_UnpackStruct(argc, argv, "|b:splitlines", &args))
-		goto err;
+	DeeArg_Unpack0Or1X(err, argc, argv, "splitlines", &args.keepends, "b", DeeObject_AsBool);
 /*[[[end]]]*/
 	return DeeBytes_SplitLines(self, args.keepends);
 err:
@@ -3231,8 +3230,7 @@ bytes_center(Bytes *self, size_t argc, DeeObject *const *argv) {
 		DeeObject *filler;
 	} args;
 	args.filler = NULL;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ "|o:center", &args))
-		goto err;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "center", &args, &args.width, UNPuSIZ, DeeObject_AsSize, &args.filler, "o", _DeeArg_AsObject);
 /*[[[end]]]*/
 	if (args.filler) {
 		if (get_needle(&filler, args.filler))
@@ -3282,8 +3280,7 @@ bytes_ljust(Bytes *self, size_t argc, DeeObject *const *argv) {
 		DeeObject *filler;
 	} args;
 	args.filler = NULL;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ "|o:ljust", &args))
-		goto err;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "ljust", &args, &args.width, UNPuSIZ, DeeObject_AsSize, &args.filler, "o", _DeeArg_AsObject);
 /*[[[end]]]*/
 	if (args.filler) {
 		if (get_needle(&filler, args.filler))
@@ -3330,8 +3327,7 @@ bytes_rjust(Bytes *self, size_t argc, DeeObject *const *argv) {
 		DeeObject *filler;
 	} args;
 	args.filler = NULL;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ "|o:rjust", &args))
-		goto err;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "rjust", &args, &args.width, UNPuSIZ, DeeObject_AsSize, &args.filler, "o", _DeeArg_AsObject);
 /*[[[end]]]*/
 	if (args.filler) {
 		if (get_needle(&filler, args.filler))
@@ -3377,8 +3373,7 @@ bytes_zfill(Bytes *self, size_t argc, DeeObject *const *argv) {
 		DeeObject *filler;
 	} args;
 	args.filler = NULL;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ "|o:zfill", &args))
-		goto err;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "zfill", &args, &args.width, UNPuSIZ, DeeObject_AsSize, &args.filler, "o", _DeeArg_AsObject);
 /*[[[end]]]*/
 	if (args.filler) {
 		if (get_needle(&filler, args.filler))
@@ -3427,8 +3422,7 @@ bytes_expandtabs(Bytes *self, size_t argc, DeeObject *const *argv) {
 		size_t tabwidth;
 	} args;
 	args.tabwidth = 8;
-	if (DeeArg_UnpackStruct(argc, argv, "|" UNPuSIZ ":expandtabs", &args))
-		goto err;
+	DeeArg_Unpack0Or1X(err, argc, argv, "expandtabs", &args.tabwidth, UNPuSIZ, DeeObject_AsSize);
 /*[[[end]]]*/
 	{
 		struct bytes_printer printer = BYTES_PRINTER_INIT;
@@ -3624,15 +3618,15 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 ", docStringPrefix: "bytes");]]]*/
 #define bytes_dedent_params "max=!1,mask?:?X3?.?Dstring?Dint"
 	struct {
-		size_t _max;
+		size_t max_;
 		DeeObject *mask;
 	} args;
-	args._max = 1;
+	args.max_ = 1;
 	args.mask = NULL;
 	if (DeeArg_UnpackStruct(argc, argv, "|" UNPuSIZ "o:dedent", &args))
 		goto err;
 /*[[[end]]]*/
-	if unlikely(!args._max)
+	if unlikely(!args.max_)
 		goto retself;
 	{
 		struct bytes_printer printer = BYTES_PRINTER_INIT;
@@ -3646,7 +3640,7 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 				goto err_printer;
 
 			/* Remove leading characters. */
-			for (i = 0; i < args._max && memchr(mask.n_data, *iter, mask.n_size); ++i)
+			for (i = 0; i < args.max_ && memchr(mask.n_data, *iter, mask.n_size); ++i)
 				++iter;
 			flush_start = iter;
 			while (iter < end) {
@@ -3661,8 +3655,8 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 					                         (size_t)(iter - flush_start)) < 0)
 						goto err;
 
-					/* Skip up to `args._max' characters after a linefeed. */
-					for (i = 0; i < args._max && memchr(mask.n_data, *iter, mask.n_size); ++i)
+					/* Skip up to `args.max_' characters after a linefeed. */
+					for (i = 0; i < args.max_ && memchr(mask.n_data, *iter, mask.n_size); ++i)
 						++iter;
 					flush_start = iter;
 					continue;
@@ -3676,7 +3670,7 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 				goto err;
 		} else {
 			/* Remove leading characters. */
-			for (i = 0; i < args._max && DeeUni_IsSpace(*iter); ++i)
+			for (i = 0; i < args.max_ && DeeUni_IsSpace(*iter); ++i)
 				++iter;
 			flush_start = iter;
 			while (iter < end) {
@@ -3691,8 +3685,8 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 					                         (size_t)(iter - flush_start)) < 0)
 						goto err;
 
-					/* Skip up to `args._max' characters after a linefeed. */
-					for (i = 0; i < args._max && DeeUni_IsSpace(*iter); ++i)
+					/* Skip up to `args.max_' characters after a linefeed. */
+					for (i = 0; i < args.max_ && DeeUni_IsSpace(*iter); ++i)
 						++iter;
 					flush_start = iter;
 					continue;
@@ -4487,8 +4481,7 @@ bytes_segments(Bytes *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		size_t substring_length;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ ":segments", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "segments", &args.substring_length, UNPuSIZ, DeeObject_AsSize);
 /*[[[end]]]*/
 	if unlikely(!args.substring_length) {
 		err_invalid_segment_size(args.substring_length);
@@ -4509,8 +4502,7 @@ bytes_distribute(Bytes *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		size_t substring_count;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ ":distribute", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "distribute", &args.substring_count, UNPuSIZ, DeeObject_AsSize);
 /*[[[end]]]*/
 	if unlikely(!args.substring_count) {
 		err_invalid_distribution_count(args.substring_count);

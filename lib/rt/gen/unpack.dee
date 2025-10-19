@@ -200,6 +200,111 @@ global final UNP_BY_CTYPE: {string: (string | (string, string))} = {
 	"Dee_uint128_t": ('" UNPu128 "', '" UNPx128 "'),
 };
 
+global final UNPFUN_BY_UNP: {string: string} = {
+	'o': "_DeeArg_AsObject",
+	'D': "DeeObject_AsDouble",
+	'b': "DeeObject_AsBool",
+
+	'hhd': "DeeObject_AsSChar",
+	'hhu': "DeeObject_AsUChar",
+	'hhx': "DeeObject_AsUCharM1",
+	'" UNPdN(__SIZEOF_CHAR__) "': "DeeObject_AsSChar",
+	'" UNPuN(__SIZEOF_CHAR__) "': "DeeObject_AsUChar",
+	'" UNPxN(__SIZEOF_CHAR__) "': "DeeObject_AsUCharM1",
+
+	'hd': "DeeObject_AsShort",
+	'hu': "DeeObject_AsUShort",
+	'hx': "DeeObject_AsUShortM1",
+	'" UNPdN(__SIZEOF_SHORT__) "': "DeeObject_AsShort",
+	'" UNPuN(__SIZEOF_SHORT__) "': "DeeObject_AsUShort",
+	'" UNPxN(__SIZEOF_SHORT__) "': "DeeObject_AsUShortM1",
+
+	'd': "DeeObject_AsInt",
+	'u': "DeeObject_AsUInt",
+	'x': "DeeObject_AsUIntM1",
+
+	'ld': "DeeObject_AsLong",
+	'lu': "DeeObject_AsULong",
+	'lx': "DeeObject_AsULongM1",
+	'" UNPdN(__SIZEOF_LONG__) "': "DeeObject_AsLong",
+	'" UNPuN(__SIZEOF_LONG__) "': "DeeObject_AsULong",
+	'" UNPxN(__SIZEOF_LONG__) "': "DeeObject_AsULongM1",
+
+	'lld': "DeeObject_AsLLong",
+	'llu': "DeeObject_AsULLong",
+	'llx': "DeeObject_AsULLongM1",
+	'" UNPdN(__SIZEOF_LONG_LONG__) "': "DeeObject_AsLLong",
+	'" UNPuN(__SIZEOF_LONG_LONG__) "': "DeeObject_AsULLong",
+	'" UNPxN(__SIZEOF_LONG_LONG__) "': "DeeObject_AsULLongM1",
+
+	'" UNPdPTR "': "DeeObject_AsIntptr",
+	'" UNPuPTR "': "DeeObject_AsUIntptr",
+	'" UNPxPTR "': "DeeObject_AsUIntptrM1",
+	'" UNPdN(__SIZEOF_POINTER__) "': "DeeObject_AsIntptr",
+	'" UNPuN(__SIZEOF_POINTER__) "': "DeeObject_AsUIntptr",
+	'" UNPxN(__SIZEOF_POINTER__) "': "DeeObject_AsUIntptrM1",
+
+	'Id': "DeeObject_AsSSize",
+	'Iu': "DeeObject_AsSize",
+	'Ix': "DeeObject_AsSizeM1",
+	'" UNPdSIZ "': "DeeObject_AsSSize",
+	'" UNPuSIZ "': "DeeObject_AsSize",
+	'" UNPxSIZ "': "DeeObject_AsSizeM1",
+	'" UNPdN(__SIZEOF_SIZE_T__) "': "DeeObject_AsSSize",
+	'" UNPuN(__SIZEOF_SIZE_T__) "': "DeeObject_AsSize",
+	'" UNPxN(__SIZEOF_SIZE_T__) "': "DeeObject_AsSizeM1",
+
+	'I8d': "DeeObject_AsInt8",
+	'I8u': "DeeObject_AsUInt8",
+	'I8x': "DeeObject_AsUInt8M1",
+	'" UNPd8 "': "DeeObject_AsInt8",
+	'" UNPu8 "': "DeeObject_AsUInt8",
+	'" UNPx8 "': "DeeObject_AsUInt8M1",
+	'" UNPdN(1) "': "DeeObject_AsInt8",
+	'" UNPuN(1) "': "DeeObject_AsUInt8",
+	'" UNPxN(1) "': "DeeObject_AsUInt8M1",
+
+	'I16d': "DeeObject_AsInt16",
+	'I16u': "DeeObject_AsUInt16",
+	'I16x': "DeeObject_AsUInt16M1",
+	'" UNPd16 "': "DeeObject_AsInt16",
+	'" UNPu16 "': "DeeObject_AsUInt16",
+	'" UNPx16 "': "DeeObject_AsUInt16M1",
+	'" UNPdN(2) "': "DeeObject_AsInt16",
+	'" UNPuN(2) "': "DeeObject_AsUInt16",
+	'" UNPxN(2) "': "DeeObject_AsUInt16M1",
+
+	'I32d': "DeeObject_AsInt32",
+	'I32u': "DeeObject_AsUInt32",
+	'I32x': "DeeObject_AsUInt32M1",
+	'" UNPd32 "': "DeeObject_AsInt32",
+	'" UNPu32 "': "DeeObject_AsUInt32",
+	'" UNPx32 "': "DeeObject_AsUInt32M1",
+	'" UNPdN(4) "': "DeeObject_AsInt32",
+	'" UNPuN(4) "': "DeeObject_AsUInt32",
+	'" UNPxN(4) "': "DeeObject_AsUInt32M1",
+
+	'I64d': "DeeObject_AsInt64",
+	'I64u': "DeeObject_AsUInt64",
+	'I64x': "DeeObject_AsUInt64M1",
+	'" UNPd64 "': "DeeObject_AsInt64",
+	'" UNPu64 "': "DeeObject_AsUInt64",
+	'" UNPx64 "': "DeeObject_AsUInt64M1",
+	'" UNPdN(8) "': "DeeObject_AsInt64",
+	'" UNPuN(8) "': "DeeObject_AsUInt64",
+	'" UNPxN(8) "': "DeeObject_AsUInt64M1",
+
+	'I128d': "DeeObject_AsInt128",
+	'I128u': "DeeObject_AsUInt128",
+	'I128x': "DeeObject_AsUInt128M1",
+	'" UNPd128 "': "DeeObject_AsInt128",
+	'" UNPu128 "': "DeeObject_AsUInt128",
+	'" UNPx128 "': "DeeObject_AsUInt128M1",
+	'" UNPdN(16) "': "DeeObject_AsInt128",
+	'" UNPuN(16) "': "DeeObject_AsUInt128",
+	'" UNPxN(16) "': "DeeObject_AsUInt128M1",
+};
+
 global final C_TYPE_QUALIFIERS: {string...} = HashSet.Frozen({
 	"const",
 	"volatile",
@@ -438,6 +543,11 @@ function hashesOf(text: string): string {
 	return f"{nameHash32.hex()}, {nameHash64.hex()}";
 }
 
+function quoteEmbeddedString(text: string): string {
+	return f'"{text}"'.replace('""', '').rereplace(r"\s{2,}", r" ").strip();
+}
+
+
 final class UnpackParam {
 	this = default;
 
@@ -464,6 +574,43 @@ final class UnpackParam {
 	@@Custom argument decoder (if used)
 	@@When used, @cType is always "DeeObject *"
 	public final member decode: UnpackParamDecoder | none;
+
+	@@Same as @UNPformat, but simplified and usable as-is
+	public property simpleUNPformat: string = {
+		get(): string {
+			return quoteEmbeddedString(UNPformat);
+		}
+	}
+
+	@@Returns the name of a 2-argument C function that can decode this parameter
+	@@from a deemon object, whilst returning @0 on success and @-1 on error.
+	public property UNPFunction: string | none = {
+		get(): string | none {
+			if (decode !is none) {
+				/* Decoding happens in a dedicated step, so unpack as object here. */
+				return "_DeeArg_AsObject";
+			}
+			local result = UNPFUN_BY_UNP.get(UNPformat);
+			if (result is none) {
+				final local PREFIX1 = '" UNPdN(';
+				final local PREFIX2 = '" UNPuN(';
+				final local PREFIX3 = '" UNPxN(';
+				final local SUFFIX = ') "';
+				if (UNPformat.endswith(SUFFIX) && (UNPformat.startswith(PREFIX1) ||
+				                                   UNPformat.startswith(PREFIX2) ||
+				                                   UNPformat.startswith(PREFIX3))) {
+					local sizeof = UNPformat[#PREFIX1:-#SUFFIX].strip();
+					return f"{({
+						"d": "DeeObject_MapAsXInt",
+						"u": "DeeObject_MapAsXUInt",
+						"x": "DeeObject_MapAsXUIntM1",
+					}[UNPformat[5]])}({sizeof})";
+				}
+			}
+			return result;
+		}
+	}
+
 
 	public property nameHash32: int = { get() -> rtHash.hash32(name); }
 	public property nameHash64: int = { get() -> rtHash.hash64(name); }
@@ -993,7 +1140,7 @@ function print_DeeArg_Unpack(name: string = "",
                              docStringPrefix: string = "") {
 	if (params is string)
 		params = parseParamSpec(params).cached;
-	local nameRepr = name ? repr name : "NULL";
+	local nameRepr = name ? quoteEmbeddedString(name) : "NULL";
 	if (docStringPrefix)
 		printDocStringWithPrefix(docStringPrefix, name, params);
 	if (params) {
@@ -1016,21 +1163,48 @@ function print_DeeArg_Unpack(name: string = "",
 		local dedicatedUnpackFunction: string | none = {
 			'""': "DeeArg_Unpack0",
 			'"o"': "DeeArg_Unpack1",
-			'"oo"': "DeeArg_Unpack2",
-			'"ooo"': "DeeArg_Unpack3",
+			'"oo"': "DeeArg_UnpackStruct2",
+			'"ooo"': "DeeArg_UnpackStruct3",
 			'"|o"': "DeeArg_Unpack0Or1",
-			'"o|o"': "DeeArg_Unpack1Or2",
-			'"|oo"': "DeeArg_Unpack0Or1Or2",
-			'"o|oo"': "DeeArg_Unpack1Or2Or3",
+			'"o|o"': "DeeArg_UnpackStruct1Or2",
+			'"|oo"': "DeeArg_UnpackStruct0Or1Or2",
+			'"o|oo"': "DeeArg_UnpackStruct1Or2Or3",
 		}.get(simpleFormat);
 		if (dedicatedUnpackFunction !is none) {
-			print(f"	{dedicatedUnpackFunction}({err}, {argc}, {argv}, {
-					nameRepr}{argsPointerList ? ", " : ""}{argsPointerList});");
+			print(f"	{dedicatedUnpackFunction}({err}, {argc}, {argv}, {nameRepr}{
+				("Struct" in dedicatedUnpackFunction ? f", &{args}" : "")
+			}{argsPointerList ? ", " : ""}{argsPointerList});");
 		} else {
+			local UNPFunctions = Sequence.frozen(params.each.UNPFunction);
+			if (!UNPFunctions.any(e -> e is none)) {
+				local patterm: string = "".join(
+					for (local x: params) (x.isOptional ? "|" : "") + "X");
+				local mapper: string | none = {
+					"X": "DeeArg_Unpack1X",
+					"XX": "DeeArg_UnpackStruct2X",
+					"XXX": "DeeArg_UnpackStruct3X",
+					"|X": "DeeArg_Unpack0Or1X",
+					"X|X": "DeeArg_UnpackStruct1XOr2X",
+					"|XX": "DeeArg_UnpackStruct0Or1XOr2X",
+					"X|XX": "DeeArg_UnpackStruct1XOr2XOr3X",
+				}.get(patterm);
+				if (mapper !is none) {
+					print(f"	{mapper}({err}, {argc}, {argv}, {nameRepr}{
+						("Struct" in mapper ? f", &{args}" : "")
+					}{"".join(
+						for (local i, x: params.enumerate())
+							f", &{args}.{x.cName}"
+							f", {x.simpleUNPformat}"
+							f", {UNPFunctions[i]}"
+					)});");
+					goto after_unpack;
+				}
+			}
 			print(f"	if (DeeArg_UnpackStruct({argc}, {argv}, {
 					getUnpackFormat(name: name, params: params)}, &{args}))");
 			print(f"		goto {err};");
 		}
+after_unpack:
 		for (local param: params) {
 			if (param.decode !is none) {
 				param.decode.printCDecodeDecl(

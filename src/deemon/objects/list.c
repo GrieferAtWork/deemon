@@ -1004,7 +1004,7 @@ list_init(List *__restrict self, size_t argc, DeeObject *const *argv) {
 		DeeObject *filler;
 	} args;
 	args.filler = NULL;
-	DeeArg_Unpack1Or2(err, argc, argv, "List", &args.sequence_or_length, &args.filler);
+	DeeArg_UnpackStruct1Or2(err, argc, argv, "List", &args, &args.sequence_or_length, &args.filler);
 /*[[[end]]]*/
 	weakref_support_init(self);
 	Dee_atomic_rwlock_init(&self->l_lock);
@@ -3664,8 +3664,7 @@ list_insertiter_deprecated(List *me, size_t argc, DeeObject *const *argv) {
 		size_t index;
 		DeeObject *iter;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ "o:insert_iter", &args))
-		goto err;
+	DeeArg_UnpackStruct2X(err, argc, argv, "insert_iter", &args, &args.index, UNPuSIZ, DeeObject_AsSize, &args.iter, "o", _DeeArg_AsObject);
 /*[[[end]]]*/
 	future = IteratorFuture_For(args.iter);
 	if unlikely(!future)
@@ -4412,8 +4411,7 @@ li_init(ListIterator *__restrict self,
 		size_t index;
 	} args;
 	args.index = 0;
-	if (DeeArg_UnpackStruct(argc, argv, "o|" UNPuSIZ ":List", &args))
-		goto err;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "List", &args, &args.list, "o", _DeeArg_AsObject, &args.index, UNPuSIZ, DeeObject_AsSize);
 /*[[[end]]]*/
 	if (DeeObject_AssertType(args.list, &DeeList_Type))
 		goto err;

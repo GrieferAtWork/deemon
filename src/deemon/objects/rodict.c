@@ -640,8 +640,7 @@ rditer_init(RoDictIterator *__restrict self, size_t argc, DeeObject *const *argv
 		Dee_dict_vidx_t index;
 	} args;
 	args.index = 0;
-	if (DeeArg_UnpackStruct(argc, argv, "o|" UNPuSIZ ":_RoDictIterator", &args))
-		goto err;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "_RoDictIterator", &args, &args.dict, "o", _DeeArg_AsObject, &args.index, UNPuSIZ, DeeObject_AsSize);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.dict, &DeeRoDict_Type))
 		goto err;

@@ -68,12 +68,12 @@ map_byhash(DeeObject *self, size_t argc,
 ", docStringPrefix: "map");]]]*/
 #define map_byhash_params "template"
 	struct {
-		DeeObject *_template;
+		DeeObject *template_;
 	} args;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__template, "o:byhash", &args))
 		goto err;
 /*[[[end]]]*/
-	return DeeMap_HashFilter(self, DeeObject_Hash(args._template));
+	return DeeMap_HashFilter(self, DeeObject_Hash(args.template_));
 err:
 	return NULL;
 }
@@ -98,7 +98,7 @@ map_get(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		DeeObject *def;
 	} args;
 	args.def = Dee_None;
-	DeeArg_Unpack1Or2(err, argc, argv, "get", &args.key, &args.def);
+	DeeArg_UnpackStruct1Or2(err, argc, argv, "get", &args, &args.key, &args.def);
 /*[[[end]]]*/
 	result = DeeObject_InvokeMethodHint(map_operator_trygetitem, self, args.key);
 	if (result == ITER_DONE) {

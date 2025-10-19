@@ -1211,9 +1211,9 @@ string_replace(String *__restrict self, size_t argc,
 	struct {
 		DeeStringObject *find;
 		DeeStringObject *replace;
-		size_t _max;
+		size_t max_;
 	} args;
-	args._max = (size_t)-1;
+	args.max_ = (size_t)-1;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__find_replace_max, "oo|" UNPxSIZ ":replace", &args))
 		goto err;
 /*[[[end]]]*/
@@ -1221,7 +1221,7 @@ string_replace(String *__restrict self, size_t argc,
 		goto err; /* TODO: Support for SeqSome */
 	if (DeeObject_AssertTypeExact(args.replace, &DeeString_Type))
 		goto err;
-	if unlikely(!args._max)
+	if unlikely(!args.max_)
 		goto retself;
 	{
 		struct unicode_printer p = UNICODE_PRINTER_INIT;
@@ -1248,7 +1248,7 @@ string_replace(String *__restrict self, size_t argc,
 					goto err_printer;
 				if unlikely(unicode_printer_printstring(&p, (DeeObject *)args.replace) < 0)
 					goto err_printer;
-				if unlikely(!--args._max)
+				if unlikely(!--args.max_)
 					break;
 				begin.cp8 = ptr.cp8 + findlen;
 			}
@@ -1282,7 +1282,7 @@ string_replace(String *__restrict self, size_t argc,
 					goto err_printer;
 				if unlikely(unicode_printer_printstring(&p, (DeeObject *)args.replace) < 0)
 					goto err_printer;
-				if unlikely(!--args._max)
+				if unlikely(!--args.max_)
 					break;
 				begin.cp16 = ptr.cp16 + findlen;
 			}
@@ -1312,7 +1312,7 @@ string_replace(String *__restrict self, size_t argc,
 					goto err_printer;
 				if unlikely(unicode_printer_printstring(&p, (DeeObject *)args.replace) < 0)
 					goto err_printer;
-				if unlikely(!--args._max)
+				if unlikely(!--args.max_)
 					break;
 				begin.cp32 = ptr.cp32 + findlen;
 			}
@@ -1346,9 +1346,9 @@ string_casereplace(String *__restrict self, size_t argc,
 	struct {
 		DeeStringObject *find;
 		DeeStringObject *replace;
-		size_t _max;
+		size_t max_;
 	} args;
-	args._max = (size_t)-1;
+	args.max_ = (size_t)-1;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__find_replace_max, "oo|" UNPxSIZ ":casereplace", &args))
 		goto err;
 /*[[[end]]]*/
@@ -1356,7 +1356,7 @@ string_casereplace(String *__restrict self, size_t argc,
 		goto err; /* TODO: Support for SeqSome */
 	if (DeeObject_AssertTypeExact(args.replace, &DeeString_Type))
 		goto err;
-	if unlikely(!args._max)
+	if unlikely(!args.max_)
 		goto retself;
 	{
 		struct unicode_printer p = UNICODE_PRINTER_INIT;
@@ -1384,7 +1384,7 @@ string_casereplace(String *__restrict self, size_t argc,
 					goto err_printer;
 				if unlikely(unicode_printer_printstring(&p, (DeeObject *)args.replace) < 0)
 					goto err_printer;
-				if unlikely(!--args._max)
+				if unlikely(!--args.max_)
 					break;
 				begin.cp8 = ptr.cp8 + match_length;
 			}
@@ -1419,7 +1419,7 @@ string_casereplace(String *__restrict self, size_t argc,
 					goto err_printer;
 				if unlikely(unicode_printer_printstring(&p, (DeeObject *)args.replace) < 0)
 					goto err_printer;
-				if unlikely(!--args._max)
+				if unlikely(!--args.max_)
 					break;
 				begin.cp16 = ptr.cp16 + match_length;
 			}
@@ -1450,7 +1450,7 @@ string_casereplace(String *__restrict self, size_t argc,
 					goto err_printer;
 				if unlikely(unicode_printer_printstring(&p, (DeeObject *)args.replace) < 0)
 					goto err_printer;
-				if unlikely(!--args._max)
+				if unlikely(!--args.max_)
 					break;
 				begin.cp32 = ptr.cp32 + match_length;
 			}
@@ -3760,8 +3760,7 @@ string_segments(String *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		size_t substring_length;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ ":segments", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "segments", &args.substring_length, UNPuSIZ, DeeObject_AsSize);
 /*[[[end]]]*/
 	if unlikely(!args.substring_length) {
 		err_invalid_segment_size(args.substring_length);
@@ -3782,8 +3781,7 @@ string_distribute(String *self, size_t argc, DeeObject *const *argv) {
 	struct {
 		size_t substring_count;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ ":distribute", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "distribute", &args.substring_count, UNPuSIZ, DeeObject_AsSize);
 /*[[[end]]]*/
 	if unlikely(!args.substring_count) {
 		err_invalid_distribution_count(args.substring_count);
@@ -3823,8 +3821,7 @@ string_center(String *self, size_t argc, DeeObject *const *argv) {
 		DeeStringObject *filler;
 	} args;
 	args.filler = NULL;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ "|o:center", &args))
-		goto err;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "center", &args, &args.width, UNPuSIZ, DeeObject_AsSize, &args.filler, "o", _DeeArg_AsObject);
 /*[[[end]]]*/
 	my_len = DeeString_WLEN(self);
 	if (args.width <= my_len)
@@ -3950,8 +3947,7 @@ string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 		DeeStringObject *filler;
 	} args;
 	args.filler = NULL;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ "|o:ljust", &args))
-		goto err;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "ljust", &args, &args.width, UNPuSIZ, DeeObject_AsSize, &args.filler, "o", _DeeArg_AsObject);
 /*[[[end]]]*/
 	my_len = DeeString_WLEN(self);
 	if (args.width <= my_len)
@@ -4069,8 +4065,7 @@ string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 		DeeStringObject *filler;
 	} args;
 	args.filler = NULL;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ "|o:rjust", &args))
-		goto err;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "rjust", &args, &args.width, UNPuSIZ, DeeObject_AsSize, &args.filler, "o", _DeeArg_AsObject);
 /*[[[end]]]*/
 	my_len = DeeString_WLEN(self);
 	if (args.width <= my_len)
@@ -4474,8 +4469,7 @@ string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 		DeeStringObject *filler;
 	} args;
 	args.filler = NULL;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ "|o:zfill", &args))
-		goto err;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "zfill", &args, &args.width, UNPuSIZ, DeeObject_AsSize, &args.filler, "o", _DeeArg_AsObject);
 /*[[[end]]]*/
 	my_len = DeeString_WLEN(self);
 	if (args.width <= my_len)
@@ -4633,8 +4627,7 @@ string_expandtabs(String *self, size_t argc, DeeObject *const *argv) {
 		size_t tabwidth;
 	} args;
 	args.tabwidth = 8;
-	if (DeeArg_UnpackStruct(argc, argv, "|" UNPuSIZ ":expandtabs", &args))
-		goto err;
+	DeeArg_Unpack0Or1X(err, argc, argv, "expandtabs", &args.tabwidth, UNPuSIZ, DeeObject_AsSize);
 /*[[[end]]]*/
 	return DeeString_ExpandTabs(self, args.tabwidth);
 err:
@@ -5518,18 +5511,18 @@ string_lstrip(String *self, size_t argc,
 #define string_lstrip_params "mask?:?.,max=!-1"
 	struct {
 		DeeStringObject *mask;
-		size_t _max;
+		size_t max_;
 	} args;
 	args.mask = NULL;
-	args._max = (size_t)-1;
+	args.max_ = (size_t)-1;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__mask_max, "|o" UNPxSIZ ":lstrip", &args))
 		goto err;
 /*[[[end]]]*/
 	if (!args.mask)
-		return DeeString_LStripSpc(self, args._max);
+		return DeeString_LStripSpc(self, args.max_);
 	if (DeeObject_AssertTypeExact(args.mask, &DeeString_Type))
 		goto err;
-	return DeeString_LStripMask(self, args.mask, args._max);
+	return DeeString_LStripMask(self, args.mask, args.max_);
 err:
 	return NULL;
 }
@@ -5543,18 +5536,18 @@ string_rstrip(String *self, size_t argc,
 #define string_rstrip_params "mask?:?.,max=!-1"
 	struct {
 		DeeStringObject *mask;
-		size_t _max;
+		size_t max_;
 	} args;
 	args.mask = NULL;
-	args._max = (size_t)-1;
+	args.max_ = (size_t)-1;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__mask_max, "|o" UNPxSIZ ":rstrip", &args))
 		goto err;
 /*[[[end]]]*/
 	if (!args.mask)
-		return DeeString_RStripSpc(self, args._max);
+		return DeeString_RStripSpc(self, args.max_);
 	if (DeeObject_AssertTypeExact(args.mask, &DeeString_Type))
 		goto err;
-	return DeeString_RStripMask(self, args.mask, args._max);
+	return DeeString_RStripMask(self, args.mask, args.max_);
 err:
 	return NULL;
 }
@@ -5589,18 +5582,18 @@ string_caselstrip(String *self, size_t argc,
 #define string_caselstrip_params "mask?:?.,max=!-1"
 	struct {
 		DeeStringObject *mask;
-		size_t _max;
+		size_t max_;
 	} args;
 	args.mask = NULL;
-	args._max = (size_t)-1;
+	args.max_ = (size_t)-1;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__mask_max, "|o" UNPxSIZ ":caselstrip", &args))
 		goto err;
 /*[[[end]]]*/
 	if (!args.mask)
-		return DeeString_LStripSpc(self, args._max);
+		return DeeString_LStripSpc(self, args.max_);
 	if (DeeObject_AssertTypeExact(args.mask, &DeeString_Type))
 		goto err;
-	return DeeString_CaseLStripMask(self, args.mask, args._max);
+	return DeeString_CaseLStripMask(self, args.mask, args.max_);
 err:
 	return NULL;
 }
@@ -5614,18 +5607,18 @@ string_caserstrip(String *self, size_t argc,
 #define string_caserstrip_params "mask?:?.,max=!-1"
 	struct {
 		DeeStringObject *mask;
-		size_t _max;
+		size_t max_;
 	} args;
 	args.mask = NULL;
-	args._max = (size_t)-1;
+	args.max_ = (size_t)-1;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__mask_max, "|o" UNPxSIZ ":caserstrip", &args))
 		goto err;
 /*[[[end]]]*/
 	if (!args.mask)
-		return DeeString_RStripSpc(self, args._max);
+		return DeeString_RStripSpc(self, args.max_);
 	if (DeeObject_AssertTypeExact(args.mask, &DeeString_Type))
 		goto err;
-	return DeeString_CaseRStripMask(self, args.mask, args._max);
+	return DeeString_CaseRStripMask(self, args.mask, args.max_);
 err:
 	return NULL;
 }
@@ -5657,15 +5650,15 @@ string_lsstrip(String *self, size_t argc,
 #define string_lsstrip_params "needle:?.,max=!-1"
 	struct {
 		DeeStringObject *needle;
-		size_t _max;
+		size_t max_;
 	} args;
-	args._max = (size_t)-1;
+	args.max_ = (size_t)-1;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_max, "o|" UNPxSIZ ":lsstrip", &args))
 		goto err;
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_LSStrip(self, args.needle, args._max);
+	return DeeString_LSStrip(self, args.needle, args.max_);
 err:
 	return NULL;
 }
@@ -5679,15 +5672,15 @@ string_rsstrip(String *self, size_t argc,
 #define string_rsstrip_params "needle:?.,max=!-1"
 	struct {
 		DeeStringObject *needle;
-		size_t _max;
+		size_t max_;
 	} args;
-	args._max = (size_t)-1;
+	args.max_ = (size_t)-1;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_max, "o|" UNPxSIZ ":rsstrip", &args))
 		goto err;
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_RSStrip(self, args.needle, args._max);
+	return DeeString_RSStrip(self, args.needle, args.max_);
 err:
 	return NULL;
 }
@@ -5719,15 +5712,15 @@ string_caselsstrip(String *self, size_t argc,
 #define string_caselsstrip_params "needle:?.,max=!-1"
 	struct {
 		DeeStringObject *needle;
-		size_t _max;
+		size_t max_;
 	} args;
-	args._max = (size_t)-1;
+	args.max_ = (size_t)-1;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_max, "o|" UNPxSIZ ":caselsstrip", &args))
 		goto err;
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_CaseLSStrip(self, args.needle, args._max);
+	return DeeString_CaseLSStrip(self, args.needle, args.max_);
 err:
 	return NULL;
 }
@@ -5741,15 +5734,15 @@ string_casersstrip(String *self, size_t argc,
 #define string_casersstrip_params "needle:?.,max=!-1"
 	struct {
 		DeeStringObject *needle;
-		size_t _max;
+		size_t max_;
 	} args;
-	args._max = (size_t)-1;
+	args.max_ = (size_t)-1;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_max, "o|" UNPxSIZ ":casersstrip", &args))
 		goto err;
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err; /* TODO: Support for SeqSome */
-	return DeeString_CaseRSStrip(self, args.needle, args._max);
+	return DeeString_CaseRSStrip(self, args.needle, args.max_);
 err:
 	return NULL;
 }
@@ -7542,8 +7535,7 @@ string_splitlines(String *self, size_t argc, DeeObject *const *argv) {
 		bool keepends;
 	} args;
 	args.keepends = false;
-	if (DeeArg_UnpackStruct(argc, argv, "|b:splitlines", &args))
-		goto err;
+	DeeArg_Unpack0Or1X(err, argc, argv, "splitlines", &args.keepends, "b", DeeObject_AsBool);
 /*[[[end]]]*/
 	return DeeString_SplitLines((DeeObject *)self, args.keepends);
 err:
@@ -7577,19 +7569,19 @@ string_dedent(String *self, size_t argc, DeeObject *const *argv) {
 ", docStringPrefix: "string");]]]*/
 #define string_dedent_params "max=!1,mask?:?."
 	struct {
-		size_t _max;
+		size_t max_;
 		DeeStringObject *mask;
 	} args;
-	args._max = 1;
+	args.max_ = 1;
 	args.mask = NULL;
 	if (DeeArg_UnpackStruct(argc, argv, "|" UNPuSIZ "o:dedent", &args))
 		goto err;
 /*[[[end]]]*/
 	if (!args.mask)
-		return DeeString_DedentSpc(self, args._max);
+		return DeeString_DedentSpc(self, args.max_);
 	if (DeeObject_AssertTypeExact(args.mask, &DeeString_Type))
 		goto err;
-	return DeeString_Dedent(self, args._max, args.mask);
+	return DeeString_Dedent(self, args.max_, args.mask);
 err:
 	return NULL;
 }

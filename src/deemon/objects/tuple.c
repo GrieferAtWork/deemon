@@ -1373,8 +1373,7 @@ tuple_unpack_method(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv
 		size_t num;
 		DeeObject *seq;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ "o:unpack", &args))
-		goto err;
+	DeeArg_UnpackStruct2X(err, argc, argv, "unpack", &args, &args.num, UNPuSIZ, DeeObject_AsSize, &args.seq, "o", _DeeArg_AsObject);
 /*[[[end]]]*/
 	result = DeeTuple_NewUninitialized(args.num);
 	if unlikely(!result)
@@ -2341,8 +2340,7 @@ nullable_tuple_unpack(DeeObject *UNUSED(self), size_t argc, DeeObject *const *ar
 		size_t num;
 		DeeObject *seq;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ "o:unpack", &args))
-		goto err;
+	DeeArg_UnpackStruct2X(err, argc, argv, "unpack", &args, &args.num, UNPuSIZ, DeeObject_AsSize, &args.seq, "o", _DeeArg_AsObject);
 /*[[[end]]]*/
 	result = DeeTuple_NewUninitialized(args.num);
 	if unlikely(!result)

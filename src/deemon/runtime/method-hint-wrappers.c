@@ -103,7 +103,7 @@ DeeMA___seq_setitem__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 		DeeObject *index;
 		DeeObject *value;
 	} args;
-	DeeArg_Unpack2(err, argc, argv, "__seq_setitem__", &args.index, &args.value);
+	DeeArg_UnpackStruct2(err, argc, argv, "__seq_setitem__", &args, &args.index, &args.value);
 {
 	if ((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_setitem))(self, args.index, args.value))
 		goto err;
@@ -357,8 +357,6 @@ DeeMA___seq_enumerate__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	} args;
 	args.start = 0;
 	args.end = (size_t)-1;
-	args.start = 0;
-	args.end = (size_t)-1;
 	if (DeeArg_UnpackStruct(argc, argv, "o|" UNPuSIZ UNPxSIZ ":__seq_enumerate__", &args))
 		goto err;
 {
@@ -387,9 +385,7 @@ DeeMA___seq_enumerate_items__(DeeObject *__restrict self, size_t argc, DeeObject
 	} args;
 	args.start = NULL;
 	args.end = NULL;
-	args.start = NULL;
-	args.end = NULL;
-	DeeArg_Unpack0Or1Or2(err, argc, argv, "__seq_enumerate_items__", &args.start, &args.end);
+	DeeArg_UnpackStruct0Or1Or2(err, argc, argv, "__seq_enumerate_items__", &args, &args.start, &args.end);
 {
 	size_t start_index, end_index;
 	if (args.end) {
@@ -1233,19 +1229,19 @@ DeeMA___seq_removeall__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 		DeeObject *item;
 		size_t start;
 		size_t end;
-		size_t _max;
+		size_t max_;
 		DeeObject *key;
 	} args;
 	args.start = 0;
 	args.end = (size_t)-1;
-	args._max = (size_t)-1;
+	args.max_ = (size_t)-1;
 	args.key = Dee_None;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_max_key, "o|" UNPuSIZ UNPxSIZ UNPxSIZ "o:__seq_removeall__", &args))
 		goto err;
 {
 	size_t result = !DeeNone_Check(args.key)
-	                ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeall_with_key))(self, args.item, args.start, args.end, args._max, args.key)
-	                : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeall))(self, args.item, args.start, args.end, args._max);
+	                ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeall_with_key))(self, args.item, args.start, args.end, args.max_, args.key)
+	                : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeall))(self, args.item, args.start, args.end, args.max_);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -1259,15 +1255,15 @@ DeeMA___seq_removeif__(DeeObject *__restrict self, size_t argc, DeeObject *const
 		DeeObject *should;
 		size_t start;
 		size_t end;
-		size_t _max;
+		size_t max_;
 	} args;
 	args.start = 0;
 	args.end = (size_t)-1;
-	args._max = (size_t)-1;
+	args.max_ = (size_t)-1;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__should_start_end_max, "o|" UNPuSIZ UNPxSIZ UNPxSIZ ":__seq_removeif__", &args))
 		goto err;
 {
-	size_t result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeif))(self, args.should, args.start, args.end, args._max);
+	size_t result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeif))(self, args.should, args.start, args.end, args.max_);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -1853,7 +1849,6 @@ DeeMA___set_pop__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 		DeeObject *def;
 	} args;
 	args.def = NULL;
-	args.def = NULL;
 	DeeArg_Unpack0Or1(err, argc, argv, "__set_pop__", &args.def);
 {
 	return args.def ? (*DeeType_RequireMethodHint(Dee_TYPE(self), set_pop_with_default))(self, args.def)
@@ -1922,7 +1917,7 @@ DeeMA___map_setitem__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 		DeeObject *key;
 		DeeObject *value;
 	} args;
-	DeeArg_Unpack2(err, argc, argv, "__map_setitem__", &args.key, &args.value);
+	DeeArg_UnpackStruct2(err, argc, argv, "__map_setitem__", &args, &args.key, &args.value);
 {
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_setitem))(self, args.key, args.value))
 		goto err;
@@ -2186,7 +2181,7 @@ DeeMA___map_setold__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 		DeeObject *key;
 		DeeObject *value;
 	} args;
-	DeeArg_Unpack2(err, argc, argv, "__map_setold__", &args.key, &args.value);
+	DeeArg_UnpackStruct2(err, argc, argv, "__map_setold__", &args, &args.key, &args.value);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setold))(self, args.key, args.value);
 	if unlikely(result < 0)
@@ -2202,7 +2197,7 @@ DeeMA___map_setold_ex__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 		DeeObject *key;
 		DeeObject *value;
 	} args;
-	DeeArg_Unpack2(err, argc, argv, "__map_setold_ex__", &args.key, &args.value);
+	DeeArg_UnpackStruct2(err, argc, argv, "__map_setold_ex__", &args, &args.key, &args.value);
 {
 	PRIVATE DEFINE_TUPLE(setold_failed_result, 2, { Dee_False, Dee_None });
 	DREF DeeTupleObject *result;
@@ -2231,7 +2226,7 @@ DeeMA___map_setnew__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 		DeeObject *key;
 		DeeObject *value;
 	} args;
-	DeeArg_Unpack2(err, argc, argv, "__map_setnew__", &args.key, &args.value);
+	DeeArg_UnpackStruct2(err, argc, argv, "__map_setnew__", &args, &args.key, &args.value);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setnew))(self, args.key, args.value);
 	if unlikely(result < 0)
@@ -2247,7 +2242,7 @@ DeeMA___map_setnew_ex__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 		DeeObject *key;
 		DeeObject *value;
 	} args;
-	DeeArg_Unpack2(err, argc, argv, "__map_setnew_ex__", &args.key, &args.value);
+	DeeArg_UnpackStruct2(err, argc, argv, "__map_setnew_ex__", &args, &args.key, &args.value);
 {
 	PRIVATE DEFINE_TUPLE(setnew_success_result, 2, { Dee_True, Dee_None });
 	DREF DeeTupleObject *result;
@@ -2276,7 +2271,7 @@ DeeMA___map_setdefault__(DeeObject *__restrict self, size_t argc, DeeObject *con
 		DeeObject *key;
 		DeeObject *value;
 	} args;
-	DeeArg_Unpack2(err, argc, argv, "__map_setdefault__", &args.key, &args.value);
+	DeeArg_UnpackStruct2(err, argc, argv, "__map_setdefault__", &args, &args.key, &args.value);
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setdefault))(self, args.key, args.value);
 err:
@@ -2333,8 +2328,7 @@ DeeMA___map_pop__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 		DeeObject *def;
 	} args;
 	args.def = NULL;
-	args.def = NULL;
-	DeeArg_Unpack1Or2(err, argc, argv, "__map_pop__", &args.key, &args.def);
+	DeeArg_UnpackStruct1Or2(err, argc, argv, "__map_pop__", &args, &args.key, &args.def);
 {
 	return args.def ? (*DeeType_RequireMethodHint(Dee_TYPE(self), map_pop_with_default))(self, args.key, args.def)
 	           : (*DeeType_RequireMethodHint(Dee_TYPE(self), map_pop))(self, args.key);

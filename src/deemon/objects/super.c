@@ -177,7 +177,7 @@ super_init(Super *self, size_t argc, DeeObject *const *argv) {
 		DeeTypeObject *tp;
 	} args;
 	args.tp = NULL;
-	DeeArg_Unpack1Or2(err, argc, argv, "Super", &args.ob, &args.tp);
+	DeeArg_UnpackStruct1Or2(err, argc, argv, "Super", &args, &args.ob, &args.tp);
 /*[[[end]]]*/
 
 	/* Special handling when the base-object is another super-object. */
