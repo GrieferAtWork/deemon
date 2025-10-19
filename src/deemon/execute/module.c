@@ -906,11 +906,11 @@ DeeModule_SetAttrStringLenHash(DeeModuleObject *self,
 }
 
 
-PRIVATE NONNULL((1)) void DCALL
+PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_module_not_loaded(DeeModuleObject *__restrict self) {
-	DeeError_Throwf(&DeeError_RuntimeError,
-	                "Cannot initialized Module `%k' that hasn't been loaded yet",
-	                self->mo_name);
+	return DeeError_Throwf(&DeeError_RuntimeError,
+	                       "Cannot initialized Module `%k' that hasn't been loaded yet",
+	                       self->mo_name);
 }
 
 
@@ -962,8 +962,7 @@ begin_init:
 #endif /* !CONFIG_HOST_WINDOWS */
 				goto begin_init;
 			}
-			err_module_not_loaded(me);
-			return -1; /* Not loaded yet. */
+			return err_module_not_loaded(me); /* Not loaded yet. */
 		}
 	} while (!atomic_cmpxch_weak(&me->mo_flags, flags,
 	                             flags | MODULE_FINITIALIZING));

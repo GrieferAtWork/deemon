@@ -37,9 +37,9 @@ import * from errors;
 @@>
 @@Note that once an old-style headers has been included, any
 @@class that doesn't declare an explicit base is automatically
-@@assembled to be deribed from `OldUserClass from rt.d200'
+@@assembled to be derived from `OldUserClass from rt.d200'
 class OldUserClass
-	/* Inherit from weakrefable, because it used to be that
+	/* Inherit from WeakRefAble, because it used to be that
 	 * any user-defined class could be weakly referenced by
 	 * default, since _any_ object was capable of sustaining
 	 * weak references. */
@@ -58,11 +58,9 @@ class OldUserClass
 	}
 
 	public operator del. (name: string) {
-		try {
-			del m_members[name];
-		} catch (KeyError) {
-			throw AttributeError(f"Cannot del unknown attribute `{type this}.{name}'");
-		}
+		/* No need for `try ... catch' here -- deemon doesn't throw
+		 * errors when deleting unknown attributes/items (any more) */
+		del m_members[name];
 	}
 
 	public operator .= (name: string, value: Object) {

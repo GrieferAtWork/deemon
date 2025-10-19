@@ -4490,7 +4490,7 @@ int_tostr(DeeIntObject *self, size_t argc,
 				flags_and_radix |= DEEINT_PRINT_FSEPS;
 			} else {
 				DeeError_Throwf(&DeeError_ValueError,
-				                "Invalid integer to flags:?Dstring %q",
+				                "Invalid integer tostr flags:?Dstring %q",
 				                flags_str);
 				goto err;
 			}
