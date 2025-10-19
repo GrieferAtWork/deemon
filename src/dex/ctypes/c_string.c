@@ -26,6 +26,7 @@
 
 #include <deemon/arg.h>
 #include <deemon/api.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
@@ -587,69 +588,97 @@ dee_basename(char const *filename) {
 }
 #endif /* !CONFIG_HAVE_basename */
 
-PRIVATE ATTR_COLD int DCALL err_overflow_on_total_size(void) {
-	return DeeError_Throwf(&DeeError_IntegerOverflow,
-	                       "Overflow in total buffer size");
-}
-
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memcpy(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst, *ob_src;
 	union pointer dst, src;
-	size_t num_bytes, elem_count = 1;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ "|" UNPuSIZ ":memcpy",
-	                  &ob_dst, &ob_src, &num_bytes, &elem_count))
+	size_t total;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memcpy", params: """
+	DeeObject *dst;
+	DeeObject *src;
+	size_t num_bytes;
+	size_t elem_count = 1;
+""");]]]*/
+	struct {
+		DeeObject *dst;
+		DeeObject *src;
+		size_t num_bytes;
+		size_t elem_count;
+	} args;
+	args.elem_count = 1;
+	if (DeeArg_UnpackStruct(argc, argv, "oo" UNPuSIZ "|" UNPuSIZ ":memcpy", &args))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.dst, &DeeCVoid_Type, &dst))
 		goto err;
-	if (DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
+	if (DeeObject_AsPointer(args.src, &DeeCVoid_Type, &src))
 		goto err;
-	if (elem_count != 1 && OVERFLOW_UMUL(num_bytes, elem_count, &num_bytes))
+	if (OVERFLOW_UMUL(args.num_bytes, args.elem_count, &total))
 		goto err_overflow;
-	CTYPES_FAULTPROTECT(memcpy(dst.ptr, src.ptr, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(memcpy(dst.ptr, src.ptr, total), goto err);
 	return DeePointer_NewVoid(dst.ptr);
 err_overflow:
-	err_overflow_on_total_size();
+	DeeRT_ErrIntegerOverflowUMul(args.num_bytes, args.elem_count);
 err:
 	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_mempcpy(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst, *ob_src;
 	union pointer dst, src;
-	size_t num_bytes, elem_count = 1;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ "|" UNPuSIZ ":mempcpy",
-	                  &ob_dst, &ob_src, &num_bytes, &elem_count))
+	size_t total;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("mempcpy", params: """
+	DeeObject *dst;
+	DeeObject *src;
+	size_t num_bytes;
+	size_t elem_count = 1;
+""");]]]*/
+	struct {
+		DeeObject *dst;
+		DeeObject *src;
+		size_t num_bytes;
+		size_t elem_count;
+	} args;
+	args.elem_count = 1;
+	if (DeeArg_UnpackStruct(argc, argv, "oo" UNPuSIZ "|" UNPuSIZ ":mempcpy", &args))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.dst, &DeeCVoid_Type, &dst))
 		goto err;
-	if (DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
+	if (DeeObject_AsPointer(args.src, &DeeCVoid_Type, &src))
 		goto err;
-	if (elem_count != 1 && OVERFLOW_UMUL(num_bytes, elem_count, &num_bytes))
+	if (OVERFLOW_UMUL(args.num_bytes, args.elem_count, &total))
 		goto err_overflow;
-	CTYPES_FAULTPROTECT(memcpy(dst.ptr, src.ptr, num_bytes), goto err);
-	return DeePointer_NewVoid((void *)(dst.uint + num_bytes));
+	CTYPES_FAULTPROTECT(memcpy(dst.ptr, src.ptr, total), goto err);
+	return DeePointer_NewVoid((void *)(dst.uint + total));
 err_overflow:
-	err_overflow_on_total_size();
+	DeeRT_ErrIntegerOverflowUMul(args.num_bytes, args.elem_count);
 err:
 	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memccpy(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst, *ob_src;
 	union pointer dst, src;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memccpy", params: """
+	DeeObject *dst;
+	DeeObject *src;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "ood" UNPuSIZ ":memccpy",
-	                  &ob_dst, &ob_src, &needle, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *dst;
+		DeeObject *src;
+		int needle;
+		size_t num_bytes;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, "ood" UNPuSIZ ":memccpy", &args))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.dst, &DeeCVoid_Type, &dst))
 		goto err;
-	if (DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
+	if (DeeObject_AsPointer(args.src, &DeeCVoid_Type, &src))
 		goto err;
-	CTYPES_FAULTPROTECT(dst.ptr = memccpy(dst.ptr, src.ptr, needle, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(dst.ptr = memccpy(dst.ptr, src.ptr, args.needle, args.num_bytes), goto err);
 	--dst.p8;
 	return DeePointer_NewVoid(dst.ptr);
 err:
@@ -658,16 +687,22 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memset(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
-	int byte;
 	union pointer dst;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memset", params: """
+	DeeObject *dst;
+	int byte;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memset",
-	                  &ob_dst, &byte, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *dst;
+		int byte;
+		size_t num_bytes;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "memset", &args, &args.dst, "o", _DeeArg_AsObject, &args.byte, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.dst, &DeeCVoid_Type, &dst))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
-		goto err;
-	CTYPES_FAULTPROTECT(memset(dst.ptr, byte, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(memset(dst.ptr, args.byte, args.num_bytes), goto err);
 	return DeePointer_NewVoid(dst.ptr);
 err:
 	return NULL;
@@ -675,17 +710,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_mempset(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
-	int byte;
 	union pointer dst;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("mempset", params: """
+	DeeObject *dst;
+	int byte;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":mempset",
-	                  &ob_dst, &byte, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *dst;
+		int byte;
+		size_t num_bytes;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "mempset", &args, &args.dst, "o", _DeeArg_AsObject, &args.byte, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.dst, &DeeCVoid_Type, &dst))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
-		goto err;
-	CTYPES_FAULTPROTECT(memset(dst.ptr, byte, num_bytes), goto err);
-	return DeePointer_NewVoid((void *)(dst.uint + num_bytes));
+	CTYPES_FAULTPROTECT(memset(dst.ptr, args.byte, args.num_bytes), goto err);
+	return DeePointer_NewVoid((void *)(dst.uint + args.num_bytes));
 err:
 	return NULL;
 }
@@ -693,20 +734,30 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_bzero(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
 	union pointer dst;
-	size_t num_bytes, elem_count = 1;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ "|" UNPuSIZ ":bzero",
-	                  &ob_dst, &num_bytes, &elem_count))
+	size_t total;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("bzero", params: """
+	DeeObject *dst;
+	size_t num_bytes;
+	size_t elem_count = 1;
+""");]]]*/
+	struct {
+		DeeObject *dst;
+		size_t num_bytes;
+		size_t elem_count;
+	} args;
+	args.elem_count = 1;
+	if (DeeArg_UnpackStruct(argc, argv, "o" UNPuSIZ "|" UNPuSIZ ":bzero", &args))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.dst, &DeeCVoid_Type, &dst))
 		goto err;
-	if (elem_count != 1 && OVERFLOW_UMUL(num_bytes, elem_count, &num_bytes))
+	if (OVERFLOW_UMUL(args.num_bytes, args.elem_count, &total))
 		goto err_overflow;
-	CTYPES_FAULTPROTECT(bzero(dst.ptr, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(bzero(dst.ptr, total), goto err);
 	return_none;
 err_overflow:
-	err_overflow_on_total_size();
+	DeeRT_ErrIntegerOverflowUMul(args.num_bytes, args.elem_count);
 err:
 	return NULL;
 }
@@ -714,44 +765,68 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memmove(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst, *ob_src;
 	union pointer dst, src;
-	size_t num_bytes, elem_count = 1;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ "|" UNPuSIZ ":memmove",
-	                  &ob_dst, &ob_src, &num_bytes, &elem_count))
+	size_t total;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memmove", params: """
+	DeeObject *dst;
+	DeeObject *src;
+	size_t num_bytes;
+	size_t elem_count = 1;
+""");]]]*/
+	struct {
+		DeeObject *dst;
+		DeeObject *src;
+		size_t num_bytes;
+		size_t elem_count;
+	} args;
+	args.elem_count = 1;
+	if (DeeArg_UnpackStruct(argc, argv, "oo" UNPuSIZ "|" UNPuSIZ ":memmove", &args))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.dst, &DeeCVoid_Type, &dst))
 		goto err;
-	if (DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
+	if (DeeObject_AsPointer(args.src, &DeeCVoid_Type, &src))
 		goto err;
-	if (elem_count != 1 && OVERFLOW_UMUL(num_bytes, elem_count, &num_bytes))
+	if (OVERFLOW_UMUL(args.num_bytes, args.elem_count, &total))
 		goto err_overflow;
-	CTYPES_FAULTPROTECT(memmove(dst.ptr, src.ptr, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(memmove(dst.ptr, src.ptr, total), goto err);
 	return DeePointer_NewVoid(dst.ptr);
 err_overflow:
-	err_overflow_on_total_size();
+	DeeRT_ErrIntegerOverflowUMul(args.num_bytes, args.elem_count);
 err:
 	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_mempmove(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst, *ob_src;
 	union pointer dst, src;
-	size_t num_bytes, elem_count = 1;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ "|" UNPuSIZ ":mempmove",
-	                  &ob_dst, &ob_src, &num_bytes, &elem_count))
+	size_t total;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memmove", params: """
+	DeeObject *dst;
+	DeeObject *src;
+	size_t num_bytes;
+	size_t elem_count = 1;
+""");]]]*/
+	struct {
+		DeeObject *dst;
+		DeeObject *src;
+		size_t num_bytes;
+		size_t elem_count;
+	} args;
+	args.elem_count = 1;
+	if (DeeArg_UnpackStruct(argc, argv, "oo" UNPuSIZ "|" UNPuSIZ ":memmove", &args))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.dst, &DeeCVoid_Type, &dst))
 		goto err;
-	if (DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
+	if (DeeObject_AsPointer(args.src, &DeeCVoid_Type, &src))
 		goto err;
-	if (elem_count != 1 && OVERFLOW_UMUL(num_bytes, elem_count, &num_bytes))
+	if (OVERFLOW_UMUL(args.num_bytes, args.elem_count, &total))
 		goto err_overflow;
-	CTYPES_FAULTPROTECT(memmove(dst.ptr, src.ptr, num_bytes), goto err);
-	return DeePointer_NewVoid(dst.p8 + num_bytes);
+	CTYPES_FAULTPROTECT(memmove(dst.ptr, src.ptr, total), goto err);
+	return DeePointer_NewVoid(dst.p8 + total);
 err_overflow:
-	err_overflow_on_total_size();
+	DeeRT_ErrIntegerOverflowUMul(args.num_bytes, args.elem_count);
 err:
 	return NULL;
 }
@@ -760,17 +835,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memchr", params: """
+	DeeObject *haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memchr",
-	                  &ob_haystack, &needle, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+		size_t num_bytes;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "memchr", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = memchr(haystack.ptr, needle, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memchr(haystack.ptr, args.needle, args.num_bytes), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -778,17 +859,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memrchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memrchr", params: """
+	DeeObject *haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memrchr",
-	                  &ob_haystack, &needle, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+		size_t num_bytes;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "memrchr", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = memrchr(haystack.ptr, needle, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memrchr(haystack.ptr, args.needle, args.num_bytes), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -796,17 +883,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memend(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memend", params: """
+	DeeObject *haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memend",
-	                  &ob_haystack, &needle, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+		size_t num_bytes;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "memend", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = memend(haystack.ptr, needle, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memend(haystack.ptr, args.needle, args.num_bytes), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -814,17 +907,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memrend(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memrend", params: """
+	DeeObject *haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memrend",
-	                  &ob_haystack, &needle, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+		size_t num_bytes;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "memrend", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = memrend(haystack.ptr, needle, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memrend(haystack.ptr, args.needle, args.num_bytes), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -832,17 +931,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memlen(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	size_t result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memlen", params: """
+	DeeObject *haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memlen",
-	                  &ob_haystack, &needle, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+		size_t num_bytes;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "memlen", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result = memlen(haystack.ptr, needle, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(result = memlen(haystack.ptr, args.needle, args.num_bytes), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -850,17 +955,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memrlen(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	size_t result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memrlen", params: """
+	DeeObject *haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memrlen",
-	                  &ob_haystack, &needle, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+		size_t num_bytes;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "memrlen", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result = memrlen(haystack.ptr, needle, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(result = memrlen(haystack.ptr, args.needle, args.num_bytes), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -868,16 +979,21 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rawmemchr", params: """
+	DeeObject *haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemchr",
-	                  &ob_haystack, &needle))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "rawmemchr", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = rawmemchr(haystack.ptr, needle), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = rawmemchr(haystack.ptr, args.needle), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -885,16 +1001,21 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemrchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rawmemrchr", params: """
+	DeeObject *haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemrchr",
-	                  &ob_haystack, &needle))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "rawmemrchr", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = rawmemrchr(haystack.ptr, needle), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = rawmemrchr(haystack.ptr, args.needle), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -902,16 +1023,21 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemlen(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	size_t result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rawmemlen", params: """
+	DeeObject *haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemlen",
-	                  &ob_haystack, &needle))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "rawmemlen", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result = rawmemlen(haystack.ptr, needle), goto err);
+	CTYPES_FAULTPROTECT(result = rawmemlen(haystack.ptr, args.needle), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -919,16 +1045,21 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemrlen(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	size_t result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rawmemrlen", params: """
+	DeeObject *haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemrlen",
-	                  &ob_haystack, &needle))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "rawmemrlen", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result = rawmemrlen(haystack.ptr, needle), goto err);
+	CTYPES_FAULTPROTECT(result = rawmemrlen(haystack.ptr, args.needle), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -937,17 +1068,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memxchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memxchr", params: """
+	DeeObject *haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memxchr",
-	                  &ob_haystack, &needle, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+		size_t num_bytes;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "memxchr", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = memxchr(haystack.ptr, needle, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memxchr(haystack.ptr, args.needle, args.num_bytes), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -955,17 +1092,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memrxchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memrxchr", params: """
+	DeeObject *haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memrxchr",
-	                  &ob_haystack, &needle, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+		size_t num_bytes;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "memrxchr", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = memrxchr(haystack.ptr, needle, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memrxchr(haystack.ptr, args.needle, args.num_bytes), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -973,17 +1116,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memxend(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memxend", params: """
+	DeeObject *haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memxend",
-	                  &ob_haystack, &needle, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+		size_t num_bytes;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "memxend", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = memxend(haystack.ptr, needle, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memxend(haystack.ptr, args.needle, args.num_bytes), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -991,17 +1140,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memrxend(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memrxend", params: """
+	DeeObject *haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memrxend",
-	                  &ob_haystack, &needle, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+		size_t num_bytes;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "memrxend", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = memrxend(haystack.ptr, needle, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memrxend(haystack.ptr, args.needle, args.num_bytes), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1009,17 +1164,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memxlen(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	size_t result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memxlen", params: """
+	DeeObject *haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memxlen",
-	                  &ob_haystack, &needle, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+		size_t num_bytes;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "memxlen", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result = memxlen(haystack.ptr, needle, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(result = memxlen(haystack.ptr, args.needle, args.num_bytes), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -1027,17 +1188,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memrxlen(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	size_t result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memrxlen", params: """
+	DeeObject *haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memrxlen",
-	                  &ob_haystack, &needle, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+		size_t num_bytes;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "memrxlen", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result = memrxlen(haystack.ptr, needle, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(result = memrxlen(haystack.ptr, args.needle, args.num_bytes), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -1045,16 +1212,21 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemxchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rawmemxchr", params: """
+	DeeObject *haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemxchr",
-	                  &ob_haystack, &needle))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "rawmemxchr", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = rawmemxchr(haystack.ptr, needle), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = rawmemxchr(haystack.ptr, args.needle), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1062,16 +1234,21 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemrxchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rawmemrxchr", params: """
+	DeeObject *haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemrxchr",
-	                  &ob_haystack, &needle))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "rawmemrxchr", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = rawmemrxchr(haystack.ptr, needle), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = rawmemrxchr(haystack.ptr, args.needle), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1079,16 +1256,21 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemxlen(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	size_t result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rawmemxlen", params: """
+	DeeObject *haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemxlen",
-	                  &ob_haystack, &needle))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "rawmemxlen", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result = rawmemxlen(haystack.ptr, needle), goto err);
+	CTYPES_FAULTPROTECT(result = rawmemxlen(haystack.ptr, args.needle), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -1096,16 +1278,21 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemrxlen(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_haystack;
 	size_t result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rawmemrxlen", params: """
+	DeeObject *haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemrxlen",
-	                  &ob_haystack, &needle))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "rawmemrxlen", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result = rawmemrxlen(haystack.ptr, needle), goto err);
+	CTYPES_FAULTPROTECT(result = rawmemrxlen(haystack.ptr, args.needle), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -1115,18 +1302,25 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_bcmp(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
 	int result;
 	union pointer a, b;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("bcmp", params: """
+	DeeObject *a;
+	DeeObject *b;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ ":bcmp",
-	                  &ob_a, &ob_b, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *a;
+		DeeObject *b;
+		size_t num_bytes;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "bcmp", &args, &args.a, "o", _DeeArg_AsObject, &args.b, "o", _DeeArg_AsObject, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.a, &DeeCVoid_Type, &a))
 		goto err;
-	if (DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a))
+	if (DeeObject_AsPointer(args.b, &DeeCVoid_Type, &b))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
-		goto err;
-	CTYPES_FAULTPROTECT(result = bcmp(a.ptr, b.ptr, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(result = bcmp(a.ptr, b.ptr, args.num_bytes), goto err);
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
@@ -1134,18 +1328,25 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_memcmp(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
 	int result;
-	union pointer a, b;
+	union pointer lhs, rhs;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memcmp", params: """
+	DeeObject *lhs;
+	DeeObject *rhs;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ ":memcmp",
-	                  &ob_a, &ob_b, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *lhs;
+		DeeObject *rhs;
+		size_t num_bytes;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "memcmp", &args, &args.lhs, "o", _DeeArg_AsObject, &args.rhs, "o", _DeeArg_AsObject, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.lhs, &DeeCVoid_Type, &lhs))
 		goto err;
-	if (DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a))
+	if (DeeObject_AsPointer(args.rhs, &DeeCVoid_Type, &rhs))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
-		goto err;
-	CTYPES_FAULTPROTECT(result = memcmp(a.ptr, b.ptr, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(result = memcmp(lhs.ptr, rhs.ptr, args.num_bytes), goto err);
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
@@ -1153,18 +1354,25 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_memcasecmp(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
 	int result;
-	union pointer a, b;
+	union pointer lhs, rhs;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memcasecmp", params: """
+	DeeObject *lhs;
+	DeeObject *rhs;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ ":memcasecmp",
-	                  &ob_a, &ob_b, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *lhs;
+		DeeObject *rhs;
+		size_t num_bytes;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "memcasecmp", &args, &args.lhs, "o", _DeeArg_AsObject, &args.rhs, "o", _DeeArg_AsObject, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.lhs, &DeeCVoid_Type, &lhs))
 		goto err;
-	if (DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a))
+	if (DeeObject_AsPointer(args.rhs, &DeeCVoid_Type, &rhs))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
-		goto err;
-	CTYPES_FAULTPROTECT(result = memcasecmp(a.ptr, b.ptr, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(result = memcasecmp(lhs.ptr, rhs.ptr, args.num_bytes), goto err);
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
@@ -1172,18 +1380,30 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_memmem(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
 	union pointer result;
-	union pointer a, b;
-	size_t haystack_len, needle_len;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ "o" UNPuSIZ ":memmem",
-	                  &ob_a, &haystack_len, &ob_b, &needle_len))
+	union pointer haystack, needle;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memmem", params: """
+	DeeObject *haystack;
+	size_t haystack_len;
+	DeeObject *needle;
+	size_t needle_len;
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		size_t haystack_len;
+		DeeObject *needle;
+		size_t needle_len;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, "o" UNPuSIZ "o" UNPuSIZ ":memmem", &args))
 		goto err;
-	if (DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a))
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
+	if (DeeObject_AsPointer(args.needle, &DeeCVoid_Type, &needle))
 		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = memmem(a.ptr, haystack_len, b.ptr, needle_len), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memmem(haystack.ptr, args.haystack_len,
+	                                        needle.ptr, args.needle_len),
+	                    goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1192,18 +1412,30 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_memcasemem(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
 	union pointer result;
-	union pointer a, b;
-	size_t haystack_len, needle_len;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ "o" UNPuSIZ ":memcasemem",
-	                  &ob_a, &haystack_len, &ob_b, &needle_len))
+	union pointer haystack, needle;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memcasemem", params: """
+	DeeObject *haystack;
+	size_t haystack_len;
+	DeeObject *needle;
+	size_t needle_len;
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		size_t haystack_len;
+		DeeObject *needle;
+		size_t needle_len;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, "o" UNPuSIZ "o" UNPuSIZ ":memcasemem", &args))
 		goto err;
-	if (DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a))
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
+	if (DeeObject_AsPointer(args.needle, &DeeCVoid_Type, &needle))
 		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = memcasemem(a.ptr, haystack_len, b.ptr, needle_len), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memcasemem(haystack.ptr, args.haystack_len,
+	                                            needle.ptr, args.needle_len),
+	                    goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1213,18 +1445,30 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_memrmem(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
 	union pointer result;
-	union pointer a, b;
-	size_t haystack_len, needle_len;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ "o" UNPuSIZ ":memrmem",
-	                  &ob_a, &haystack_len, &ob_b, &needle_len))
+	union pointer haystack, needle;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memrmem", params: """
+	DeeObject *haystack;
+	size_t haystack_len;
+	DeeObject *needle;
+	size_t needle_len;
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		size_t haystack_len;
+		DeeObject *needle;
+		size_t needle_len;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, "o" UNPuSIZ "o" UNPuSIZ ":memrmem", &args))
 		goto err;
-	if (DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a))
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
+	if (DeeObject_AsPointer(args.needle, &DeeCVoid_Type, &needle))
 		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = memrmem(a.ptr, haystack_len, b.ptr, needle_len), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memrmem(haystack.ptr, args.haystack_len,
+	                                         needle.ptr, args.needle_len),
+	                    goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1234,18 +1478,30 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_memcasermem(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
 	union pointer result;
-	union pointer a, b;
-	size_t haystack_len, needle_len;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ "o" UNPuSIZ ":memcasermem",
-	                  &ob_a, &haystack_len, &ob_b, &needle_len))
+	union pointer haystack, needle;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memcasermem", params: """
+	DeeObject *haystack;
+	size_t haystack_len;
+	DeeObject *needle;
+	size_t needle_len;
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		size_t haystack_len;
+		DeeObject *needle;
+		size_t needle_len;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, "o" UNPuSIZ "o" UNPuSIZ ":memcasermem", &args))
 		goto err;
-	if (DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a))
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
+	if (DeeObject_AsPointer(args.needle, &DeeCVoid_Type, &needle))
 		goto err;
-	CTYPES_FAULTPROTECT(result.ptr = memcasermem(a.ptr, haystack_len, b.ptr, needle_len), goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memcasermem(haystack.ptr, args.haystack_len,
+	                                             needle.ptr, args.needle_len),
+	                    goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1253,14 +1509,20 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memrev(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
 	union pointer dst;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("memrev", params: """
+	DeeObject *dst;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":memrev", &ob_dst, &num_bytes))
+""");]]]*/
+	struct {
+		DeeObject *dst;
+		size_t num_bytes;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "memrev", &args, &args.dst, "o", _DeeArg_AsObject, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.dst, &DeeCVoid_Type, &dst))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
-		goto err;
-	CTYPES_FAULTPROTECT(memrev(dst.ptr, num_bytes), goto err);
+	CTYPES_FAULTPROTECT(memrev(dst.ptr, args.num_bytes), goto err);
 	return DeePointer_NewVoid(dst.ptr);
 err:
 	return NULL;
@@ -1268,11 +1530,17 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strlen(size_t argc, DeeObject *const *argv) {
-	DeeObject *ob_str;
 	union pointer str;
 	size_t result;
-	DeeArg_Unpack1(err, argc, argv, "strlen", &ob_str);
-	if (DeeObject_AsPointer(ob_str, &DeeCChar_Type, &str))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strlen", params: """
+	DeeObject *str;
+""");]]]*/
+	struct {
+		DeeObject *str;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "strlen", &args.str);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.str, &DeeCChar_Type, &str))
 		goto err;
 	CTYPES_FAULTPROTECT(result = strlen(str.pchar), goto err);
 	return DeeInt_NewSize(result);
@@ -1282,10 +1550,16 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strend(size_t argc, DeeObject *const *argv) {
-	DeeObject *ob_str;
 	union pointer str;
-	DeeArg_Unpack1(err, argc, argv, "strend", &ob_str);
-	if (DeeObject_AsPointer(ob_str, &DeeCChar_Type, &str))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strend", params: """
+	DeeObject *str;
+""");]]]*/
+	struct {
+		DeeObject *str;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "strend", &args.str);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.str, &DeeCChar_Type, &str))
 		goto err;
 	CTYPES_FAULTPROTECT(str.pchar = strend(str.pchar), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, str.ptr);
@@ -1295,15 +1569,21 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnlen(size_t argc, DeeObject *const *argv) {
-	DeeObject *ob_str;
-	size_t maxlen;
 	union pointer str;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":strnlen", &ob_str, &maxlen))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strnlen", params: """
+	DeeObject *str;
+	size_t maxlen;
+""");]]]*/
+	struct {
+		DeeObject *str;
+		size_t maxlen;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "strnlen", &args, &args.str, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.str, &DeeCChar_Type, &str))
 		goto err;
-	if (DeeObject_AsPointer(ob_str, &DeeCChar_Type, &str))
-		goto err;
-	CTYPES_FAULTPROTECT(result = strnlen(str.pchar, maxlen), goto err);
+	CTYPES_FAULTPROTECT(result = strnlen(str.pchar, args.maxlen), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -1311,14 +1591,20 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnend(size_t argc, DeeObject *const *argv) {
-	DeeObject *ob_str;
 	union pointer str;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strnend", params: """
+	DeeObject *str;
 	size_t maxlen;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":strnend", &ob_str, &maxlen))
+""");]]]*/
+	struct {
+		DeeObject *str;
+		size_t maxlen;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "strnend", &args, &args.str, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.str, &DeeCChar_Type, &str))
 		goto err;
-	if (DeeObject_AsPointer(ob_str, &DeeCChar_Type, &str))
-		goto err;
-	CTYPES_FAULTPROTECT(str.pchar = strnend(str.pchar, maxlen), goto err);
+	CTYPES_FAULTPROTECT(str.pchar = strnend(str.pchar, args.maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, str.ptr);
 err:
 	return NULL;
@@ -1328,15 +1614,21 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strchr", params: """
+	DeeObject *haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:strchr", &ob_dst, &needle))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "strchr", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCChar_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strchr(haystack.pchar, needle), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strchr(haystack.pchar, args.needle), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1345,15 +1637,21 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strrchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strrchr", params: """
+	DeeObject *haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:strrchr", &ob_dst, &needle))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "strrchr", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCChar_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strrchr(haystack.pchar, needle), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strrchr(haystack.pchar, args.needle), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1361,16 +1659,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strnchr", params: """
+	DeeObject *haystack;
 	int needle;
 	size_t maxlen;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":strnchr", &ob_dst, &needle, &maxlen))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+		size_t maxlen;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "strnchr", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCChar_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strnchr(haystack.pchar, needle, maxlen), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strnchr(haystack.pchar, args.needle, args.maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1378,16 +1683,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnrchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strnrchr", params: """
+	DeeObject *haystack;
 	int needle;
 	size_t maxlen;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":strnrchr", &ob_dst, &needle, &maxlen))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+		size_t maxlen;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "strnrchr", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCChar_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strnrchr(haystack.pchar, needle, maxlen), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strnrchr(haystack.pchar, args.needle, args.maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1395,15 +1707,21 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_stroff(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("stroff", params: """
+	DeeObject *haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:stroff", &ob_dst, &needle))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "stroff", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCChar_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strchrnul(haystack.pchar, needle), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strchrnul(haystack.pchar, args.needle), goto err);
 	return DeeInt_NewSize((size_t)(result.pchar - haystack.pchar));
 err:
 	return NULL;
@@ -1411,15 +1729,21 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strroff(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strroff", params: """
+	DeeObject *haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:strroff", &ob_dst, &needle))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "strroff", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCChar_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strrchrnul(haystack.pchar, needle), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strrchrnul(haystack.pchar, args.needle), goto err);
 	return DeeInt_NewSize((size_t)(result.pchar - haystack.pchar));
 err:
 	return NULL;
@@ -1427,16 +1751,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnoff(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strnoff", params: """
+	DeeObject *haystack;
 	int needle;
 	size_t maxlen;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":strnoff", &ob_dst, &needle, &maxlen))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+		size_t maxlen;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "strnoff", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCChar_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strnchrnul(haystack.pchar, needle, maxlen), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strnchrnul(haystack.pchar, args.needle, args.maxlen), goto err);
 	return DeeInt_NewSize((size_t)(result.pchar - haystack.pchar));
 err:
 	return NULL;
@@ -1444,16 +1775,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnroff(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strnroff", params: """
+	DeeObject *haystack;
 	int needle;
 	size_t maxlen;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":strnroff", &ob_dst, &needle, &maxlen))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+		size_t maxlen;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "strnroff", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCChar_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strnrchrnul(haystack.pchar, needle, maxlen), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strnrchrnul(haystack.pchar, args.needle, args.maxlen), goto err);
 	return DeeInt_NewSize((size_t)(result.pchar - haystack.pchar));
 err:
 	return NULL;
@@ -1461,15 +1799,21 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strchrnul(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strchrnul", params: """
+	DeeObject *haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:strchrnul", &ob_dst, &needle))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "strchrnul", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCChar_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strchrnul(haystack.pchar, needle), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strchrnul(haystack.pchar, args.needle), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1477,15 +1821,21 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strrchrnul(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strrchrnul", params: """
+	DeeObject *haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:strrchrnul", &ob_dst, &needle))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "strrchrnul", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCChar_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strrchrnul(haystack.pchar, needle), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strrchrnul(haystack.pchar, args.needle), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1493,15 +1843,22 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnchrnul(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strnchrnul", params: """
+	DeeObject *haystack;
 	int needle;
 	size_t maxlen;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":strnchrnul", &ob_dst, &needle, &maxlen))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+		size_t maxlen;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "strnchrnul", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCChar_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(haystack.pchar = strnchrnul(haystack.pchar, needle, maxlen), goto err);
+	CTYPES_FAULTPROTECT(haystack.pchar = strnchrnul(haystack.pchar, args.needle, args.maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, haystack.pchar);
 err:
 	return NULL;
@@ -1509,16 +1866,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnrchrnul(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
 	union pointer result;
 	union pointer haystack;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strnrchrnul", params: """
+	DeeObject *haystack;
 	int needle;
 	size_t maxlen;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":strnrchrnul", &ob_dst, &needle, &maxlen))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		int needle;
+		size_t maxlen;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "strnrchrnul", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCChar_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
-		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strnrchrnul(haystack.pchar, needle, maxlen), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strnrchrnul(haystack.pchar, args.needle, args.maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1526,15 +1890,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strcmp(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
 	int result;
-	union pointer a, b;
-	DeeArg_Unpack2(err, argc, argv, "strcmp", &ob_a, &ob_b);
-	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
+	union pointer lhs, rhs;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strcmp", params: """
+	DeeObject *lhs;
+	DeeObject *rhs;
+""");]]]*/
+	struct {
+		DeeObject *lhs;
+		DeeObject *rhs;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "strcmp", &args, &args.lhs, &args.rhs);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.lhs, &DeeCChar_Type, &lhs))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
+	if (DeeObject_AsPointer(args.rhs, &DeeCChar_Type, &rhs))
 		goto err;
-	CTYPES_FAULTPROTECT(result = strcmp(a.pchar, b.pchar), goto err);
+	CTYPES_FAULTPROTECT(result = strcmp(lhs.pchar, rhs.pchar), goto err);
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
@@ -1542,18 +1914,25 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strncmp(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
 	int result;
-	union pointer a, b;
+	union pointer lhs, rhs;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strncmp", params: """
+	DeeObject *lhs;
+	DeeObject *rhs;
 	size_t maxlen;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ ":strncmp",
-	                  &ob_a, &ob_b, &maxlen))
+""");]]]*/
+	struct {
+		DeeObject *lhs;
+		DeeObject *rhs;
+		size_t maxlen;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "strncmp", &args, &args.lhs, "o", _DeeArg_AsObject, &args.rhs, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.lhs, &DeeCChar_Type, &lhs))
 		goto err;
-	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
+	if (DeeObject_AsPointer(args.rhs, &DeeCChar_Type, &rhs))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
-		goto err;
-	CTYPES_FAULTPROTECT(result = strncmp(a.pchar, b.pchar, maxlen), goto err);
+	CTYPES_FAULTPROTECT(result = strncmp(lhs.pchar, rhs.pchar, args.maxlen), goto err);
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
@@ -1561,15 +1940,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strcasecmp(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
 	int result;
-	union pointer a, b;
-	DeeArg_Unpack2(err, argc, argv, "strcasecmp", &ob_a, &ob_b);
-	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
+	union pointer lhs, rhs;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strcasecmp", params: """
+	DeeObject *lhs;
+	DeeObject *rhs;
+""");]]]*/
+	struct {
+		DeeObject *lhs;
+		DeeObject *rhs;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "strcasecmp", &args, &args.lhs, &args.rhs);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.lhs, &DeeCChar_Type, &lhs))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
+	if (DeeObject_AsPointer(args.rhs, &DeeCChar_Type, &rhs))
 		goto err;
-	CTYPES_FAULTPROTECT(result = strcasecmp(a.pchar, b.pchar), goto err);
+	CTYPES_FAULTPROTECT(result = strcasecmp(lhs.pchar, rhs.pchar), goto err);
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
@@ -1577,18 +1964,25 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strncasecmp(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
 	int result;
-	union pointer a, b;
+	union pointer lhs, rhs;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strncasecmp", params: """
+	DeeObject *lhs;
+	DeeObject *rhs;
 	size_t maxlen;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ ":strncmp",
-	                  &ob_a, &ob_b, &maxlen))
+""");]]]*/
+	struct {
+		DeeObject *lhs;
+		DeeObject *rhs;
+		size_t maxlen;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "strncasecmp", &args, &args.lhs, "o", _DeeArg_AsObject, &args.rhs, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.lhs, &DeeCChar_Type, &lhs))
 		goto err;
-	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
+	if (DeeObject_AsPointer(args.rhs, &DeeCChar_Type, &rhs))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
-		goto err;
-	CTYPES_FAULTPROTECT(result = strncasecmp(a.pchar, b.pchar, maxlen), goto err);
+	CTYPES_FAULTPROTECT(result = strncasecmp(lhs.pchar, rhs.pchar, args.maxlen), goto err);
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
@@ -1596,14 +1990,22 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strcpy(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
-	union pointer a, b, result;
-	DeeArg_Unpack2(err, argc, argv, "strcpy", &ob_a, &ob_b);
-	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
+	union pointer dst, src, result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strcpy", params: """
+	DeeObject *dst;
+	DeeObject *src;
+""");]]]*/
+	struct {
+		DeeObject *dst;
+		DeeObject *src;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "strcpy", &args, &args.dst, &args.src);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.dst, &DeeCChar_Type, &dst))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
+	if (DeeObject_AsPointer(args.src, &DeeCChar_Type, &src))
 		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strcpy(a.pchar, b.pchar), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strcpy(dst.pchar, src.pchar), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1611,16 +2013,24 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strncpy(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
-	union pointer a, b, result;
+	union pointer dst, src, result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strncpy", params: """
+	DeeObject *dst;
+	DeeObject *src;
 	size_t maxlen;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ ":strcpy", &ob_a, &ob_b, &maxlen))
+""");]]]*/
+	struct {
+		DeeObject *dst;
+		DeeObject *src;
+		size_t maxlen;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "strncpy", &args, &args.dst, "o", _DeeArg_AsObject, &args.src, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.dst, &DeeCChar_Type, &dst))
 		goto err;
-	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
+	if (DeeObject_AsPointer(args.src, &DeeCChar_Type, &src))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
-		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strncpy(a.pchar, b.pchar, maxlen), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strncpy(dst.pchar, src.pchar, args.maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1628,14 +2038,22 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strcat(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
-	union pointer a, b, result;
-	DeeArg_Unpack2(err, argc, argv, "strcat", &ob_a, &ob_b);
-	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
+	union pointer dst, src, result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strcat", params: """
+	DeeObject *dst;
+	DeeObject *src;
+""");]]]*/
+	struct {
+		DeeObject *dst;
+		DeeObject *src;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "strcat", &args, &args.dst, &args.src);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.dst, &DeeCChar_Type, &dst))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
+	if (DeeObject_AsPointer(args.src, &DeeCChar_Type, &src))
 		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strcat(a.pchar, b.pchar), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strcat(dst.pchar, src.pchar), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1643,16 +2061,24 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strncat(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
-	union pointer a, b, result;
+	union pointer dst, src, result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strncat", params: """
+	DeeObject *dst;
+	DeeObject *src;
 	size_t maxlen;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ ":strncat", &ob_a, &ob_b, &maxlen))
+""");]]]*/
+	struct {
+		DeeObject *dst;
+		DeeObject *src;
+		size_t maxlen;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "strncat", &args, &args.dst, "o", _DeeArg_AsObject, &args.src, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.dst, &DeeCChar_Type, &dst))
 		goto err;
-	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
+	if (DeeObject_AsPointer(args.src, &DeeCChar_Type, &src))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
-		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strncat(a.pchar, b.pchar, maxlen), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strncat(dst.pchar, src.pchar, args.maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1660,14 +2086,22 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_stpcpy(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
-	union pointer a, b, result;
-	DeeArg_Unpack2(err, argc, argv, "stpcpy", &ob_a, &ob_b);
-	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
+	union pointer dst, src, result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("stpcpy", params: """
+	DeeObject *dst;
+	DeeObject *src;
+""");]]]*/
+	struct {
+		DeeObject *dst;
+		DeeObject *src;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "stpcpy", &args, &args.dst, &args.src);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.dst, &DeeCChar_Type, &dst))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
+	if (DeeObject_AsPointer(args.src, &DeeCChar_Type, &src))
 		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = stpcpy(a.pchar, b.pchar), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = stpcpy(dst.pchar, src.pchar), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1675,16 +2109,24 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_stpncpy(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
-	union pointer a, b, result;
+	union pointer dst, src, result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("stpncpy", params: """
+	DeeObject *dst;
+	DeeObject *src;
 	size_t maxlen;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ ":stpncpy", &ob_a, &ob_b, &maxlen))
+""");]]]*/
+	struct {
+		DeeObject *dst;
+		DeeObject *src;
+		size_t maxlen;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "stpncpy", &args, &args.dst, "o", _DeeArg_AsObject, &args.src, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.dst, &DeeCChar_Type, &dst))
 		goto err;
-	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
+	if (DeeObject_AsPointer(args.src, &DeeCChar_Type, &src))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
-		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = stpncpy(a.pchar, b.pchar, maxlen), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = stpncpy(dst.pchar, src.pchar, args.maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1692,14 +2134,22 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strstr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
-	union pointer a, b, result;
-	DeeArg_Unpack2(err, argc, argv, "strstr", &ob_a, &ob_b);
-	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
+	union pointer haystack, needle, result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strstr", params: """
+	DeeObject *haystack;
+	DeeObject *needle;
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		DeeObject *needle;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "strstr", &args, &args.haystack, &args.needle);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCChar_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
+	if (DeeObject_AsPointer(args.needle, &DeeCChar_Type, &needle))
 		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strstr(a.pchar, b.pchar), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strstr(haystack.pchar, needle.pchar), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1707,14 +2157,22 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strcasestr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
-	union pointer a, b, result;
-	DeeArg_Unpack2(err, argc, argv, "strcasestr", &ob_a, &ob_b);
-	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
+	union pointer haystack, needle, result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strcasestr", params: """
+	DeeObject *haystack;
+	DeeObject *needle;
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		DeeObject *needle;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "strcasestr", &args, &args.haystack, &args.needle);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCChar_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
+	if (DeeObject_AsPointer(args.needle, &DeeCChar_Type, &needle))
 		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strcasestr(a.pchar, b.pchar), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strcasestr(haystack.pchar, needle.pchar), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1722,16 +2180,24 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnstr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
-	union pointer a, b, result;
+	union pointer haystack, needle, result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strnstr", params: """
+	DeeObject *haystack;
+	DeeObject *needle;
 	size_t haystack_maxlen;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ ":strnstr", &ob_a, &ob_b, &haystack_maxlen))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		DeeObject *needle;
+		size_t haystack_maxlen;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "strnstr", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "o", _DeeArg_AsObject, &args.haystack_maxlen, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCChar_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
+	if (DeeObject_AsPointer(args.needle, &DeeCChar_Type, &needle))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
-		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strnstr(a.pchar, b.pchar, haystack_maxlen), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strnstr(haystack.pchar, needle.pchar, args.haystack_maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1739,16 +2205,24 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strncasestr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
-	union pointer a, b, result;
+	union pointer haystack, needle, result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strncasestr", params: """
+	DeeObject *haystack;
+	DeeObject *needle;
 	size_t haystack_maxlen;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ ":strncasestr", &ob_a, &ob_b, &haystack_maxlen))
+""");]]]*/
+	struct {
+		DeeObject *haystack;
+		DeeObject *needle;
+		size_t haystack_maxlen;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "strncasestr", &args, &args.haystack, "o", _DeeArg_AsObject, &args.needle, "o", _DeeArg_AsObject, &args.haystack_maxlen, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.haystack, &DeeCChar_Type, &haystack))
 		goto err;
-	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
+	if (DeeObject_AsPointer(args.needle, &DeeCChar_Type, &needle))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
-		goto err;
-	CTYPES_FAULTPROTECT(result.pchar = strncasestr(a.pchar, b.pchar, haystack_maxlen), goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strncasestr(haystack.pchar, needle.pchar, args.haystack_maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1756,15 +2230,23 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strverscmp(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_a, *ob_b;
 	int result;
-	union pointer a, b;
-	DeeArg_Unpack2(err, argc, argv, "strcmp", &ob_a, &ob_b);
-	if (DeeObject_AsPointer(ob_a, &DeeCChar_Type, &a))
+	union pointer lhs, rhs;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strverscmp", params: """
+	DeeObject *lhs;
+	DeeObject *rhs;
+""");]]]*/
+	struct {
+		DeeObject *lhs;
+		DeeObject *rhs;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "strverscmp", &args, &args.lhs, &args.rhs);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.lhs, &DeeCChar_Type, &lhs))
 		goto err;
-	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
+	if (DeeObject_AsPointer(args.rhs, &DeeCChar_Type, &rhs))
 		goto err;
-	CTYPES_FAULTPROTECT(result = strverscmp(a.pchar, b.pchar), goto err);
+	CTYPES_FAULTPROTECT(result = strverscmp(lhs.pchar, rhs.pchar), goto err);
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
@@ -1925,10 +2407,16 @@ capi_strtok_r(size_t argc, DeeObject *const *argv) {
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_basename(size_t argc, DeeObject *const *argv) {
-	DeeObject *ob_str;
 	union pointer str;
-	DeeArg_Unpack1(err, argc, argv, "basename", &ob_str);
-	if (DeeObject_AsPointer(ob_str, &DeeCChar_Type, &str))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("basename", params: """
+	DeeObject *str;
+""");]]]*/
+	struct {
+		DeeObject *str;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "basename", &args.str);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.str, &DeeCChar_Type, &str))
 		goto err;
 	CTYPES_FAULTPROTECT(str.pchar = basename(str.pchar), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, str.ptr);
