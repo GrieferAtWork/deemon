@@ -305,6 +305,7 @@ again:
 		while (index < self->blkd_ckwc) {
 			Dee_hash_t hashof_str;
 			str = self->blkd_ckwv[index++];
+			ASSERT(str);
 
 			/* Remember the string by caching it within out hash-vector. */
 			hashof_str = DeeString_Hash((DeeObject *)str);
@@ -363,6 +364,7 @@ again:
 		while (index < self->blkd_ckwc) {
 			Dee_hash_t hashof_str;
 			str = self->blkd_ckwv[index++];
+			ASSERT(str);
 
 			/* Remember the string by caching it within out hash-vector. */
 			hashof_str = DeeString_Hash((DeeObject *)str);
@@ -418,6 +420,7 @@ again:
 		while (index < self->blkd_ckwc) {
 			Dee_hash_t hashof_str;
 			str = self->blkd_ckwv[index++];
+			ASSERT(str);
 
 			/* Remember the string by caching it within out hash-vector. */
 			hashof_str = DeeString_Hash((DeeObject *)str);
@@ -801,48 +804,58 @@ PRIVATE struct type_member tpconst blv_class_members[] = {
 PRIVATE WUNUSED DREF DeeBlackListKwdsObject *DCALL
 blv_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_BlackListKwds", params: """
 	DeeCodeObject *code;
+	size_t positional;
 	DeeTupleObject *kwargs;
 	DeeKwdsObject *kwds;
-	size_t positional;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__code_positional_kwargs_kwds,
-	                    "o" UNPuSIZ "oo:_BlackListKwds",
-	                    &code, &positional, &kwargs, &kwds))
+""", docStringPrefix: "blv");]]]*/
+#define blv__BlackListKwds_params "code:?Ert:Code,positional:?Dint,kwargs:?DTuple,kwds:?Ert:Kwds"
+	struct {
+		DeeCodeObject *code;
+		size_t positional;
+		DeeTupleObject *kwargs;
+		DeeKwdsObject *kwds;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__code_positional_kwargs_kwds, "o" UNPuSIZ "oo:_BlackListKwds", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(code, &DeeCode_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.code, &DeeCode_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(kwargs, &DeeTuple_Type))
+	if (DeeObject_AssertTypeExact(args.kwargs, &DeeTuple_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(kwds, &DeeKwds_Type))
+	if (DeeObject_AssertTypeExact(args.kwds, &DeeKwds_Type))
 		goto err;
 
 	/* Validate arguments. */
-	if unlikely(DeeKwds_SIZE(kwds) <= 0) {
+	if unlikely(DeeKwds_SIZE(args.kwds) <= 0) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Empty keyword list given");
 		goto err;
 	}
-	if unlikely(DeeKwds_SIZE(kwds) != DeeTuple_SIZE(kwargs)) {
+	if unlikely(DeeKwds_SIZE(args.kwds) != DeeTuple_SIZE(args.kwargs)) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "`kwargs' tuple has %" PRFuSIZ " elements when "
 		                "`kwds' map requires exactly %" PRFuSIZ " values",
-		                DeeTuple_SIZE(kwargs), DeeKwds_SIZE(kwds));
+		                DeeTuple_SIZE(args.kwargs), DeeKwds_SIZE(args.kwds));
 		goto err;
 	}
-	if unlikely(!code->co_keywords) {
+	if unlikely(!args.code->co_keywords) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Code object does not define keyword arguments");
 		goto err;
 	}
-	if unlikely(code->co_argc_max <= positional) {
+	if unlikely(args.code->co_argc_max <= args.positional) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Code object takes at most %" PRFu16 " positional "
 		                "arguments when %" PRFuSIZ " were supposedly given",
-		                code->co_argc_max, positional);
+		                args.code->co_argc_max, args.positional);
 		goto err;
 	}
 
-	result = DeeBlackListKwds_New(code, positional, DeeTuple_ELEM(kwargs), kwds);
+	result = DeeBlackListKwds_New(args.code, args.positional,
+	                              DeeTuple_ELEM(args.kwargs),
+	                              args.kwds);
 	if unlikely(!result)
 		goto err;
 	/* Force unshare (hacky, but works and doesn't require extra code) */
@@ -941,7 +954,7 @@ PUBLIC DeeTypeObject DeeBlackListKwds_Type = {
 	                         /**/ "foo(a: 10, b: 20);"
 	                         "}\n"
 	                         "\n"
-	                         "(code:?Ert:Code,positional:?Dint,kwargs:?DTuple,kwds:?Ert:Kwds)\n"
+	                         "(" blv__BlackListKwds_params ")\n"
 	                         "Construct a new ?. object that blacklists the first @positional "
 	                         /**/ "arguments from @code. Keyword argument values are then taken "
 	                         /**/ "from @kwargs and @kwds"
@@ -1257,6 +1270,8 @@ again:
 		while (index < self->blkw_ckwc) {
 			Dee_hash_t hashof_str;
 			str = self->blkw_ckwv[index++];
+			ASSERT(str);
+
 			/* Remember the string by caching it within out hash-vector. */
 			hashof_str = DeeString_Hash((DeeObject *)str);
 			i = perturb = hashof_str & self->blkw_mask;
@@ -1314,6 +1329,8 @@ again:
 		while (index < self->blkw_ckwc) {
 			Dee_hash_t hashof_str;
 			str = self->blkw_ckwv[index++];
+			ASSERT(str);
+
 			/* Remember the string by caching it within out hash-vector. */
 			hashof_str = DeeString_Hash((DeeObject *)str);
 			i = perturb = hashof_str & self->blkw_mask;
@@ -1367,6 +1384,7 @@ again:
 		while (index < self->blkw_ckwc) {
 			Dee_hash_t hashof_str;
 			str = self->blkw_ckwv[index++];
+			ASSERT(str);
 
 			/* Remember the string by caching it within out hash-vector. */
 			hashof_str = DeeString_Hash((DeeObject *)str);
@@ -1666,31 +1684,38 @@ PRIVATE struct type_seq blkw_seq = {
 PRIVATE WUNUSED DREF DeeBlackListKwObject *DCALL
 blkw_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_BlackListKw", params: """
 	DeeCodeObject *code;
-	DeeObject *kwds;
 	size_t positional;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__code_positional_kwds,
-	                    "o" UNPuSIZ "o:_BlackListKw",
-	                    &code, &positional, &kwds))
+	DeeObject *kwds:?M?Dstring?O;
+""", docStringPrefix: "blkw");]]]*/
+#define blkw__BlackListKw_params "code:?Ert:Code,positional:?Dint,kwds:?M?Dstring?O"
+	struct {
+		DeeCodeObject *code;
+		size_t positional;
+		DeeObject *kwds;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__code_positional_kwds, "o" UNPuSIZ "o:_BlackListKw", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(code, &DeeCode_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.code, &DeeCode_Type))
 		goto err;
 
 	/* Validate arguments. */
-	if unlikely(!code->co_keywords) {
+	if unlikely(!args.code->co_keywords) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Code object does not define keyword arguments");
 		goto err;
 	}
-	if unlikely(code->co_argc_max <= positional) {
+	if unlikely(args.code->co_argc_max <= args.positional) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Code object takes at most %" PRFu16 " positional "
 		                "arguments when %" PRFuSIZ " were supposedly given",
-		                code->co_argc_max, positional);
+		                args.code->co_argc_max, args.positional);
 		goto err;
 	}
 
-	result = DeeBlackListKw_New(code, positional, kwds);
+	result = DeeBlackListKw_New(args.code, args.positional, args.kwds);
 	return (DREF DeeBlackListKwObject *)result;
 err:
 	return NULL;
@@ -1830,7 +1855,7 @@ PUBLIC DeeTypeObject DeeBlackListKw_Type = {
 	                         /**/ "foo(**{ \"a\": 10, \"b\": 20});"
 	                         "}\n"
 	                         "\n"
-	                         "(code:?Ert:Code,positional:?Dint,kwds:?Ert:Kwds)\n"
+	                         "(" blkw__BlackListKw_params ")\n"
 	                         "Construct a new ?. object that blacklists the first @positional "
 	                         /**/ "arguments from @code. Keyword argument values are then taken "
 	                         /**/ "from @kwds"

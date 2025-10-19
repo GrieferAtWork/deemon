@@ -2258,7 +2258,7 @@ cd_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	args.cattr = Dee_EmptyTuple;
 	args.isize = (uint16_t)-1;
 	args.csize = (uint16_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__name_doc_flags_operators_iattr_cattr_isize_csize, "o|ooooo" UNPu16 UNPu16 ":_ClassDescriptor", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__name_doc_flags_operators_iattr_cattr_isize_csize, "o|ooooo" UNPx16 UNPx16 ":_ClassDescriptor", &args))
 		goto err;
 /*[[[end]]]*/
 	if (DeeObject_AssertType(args.name, &DeeString_Type))
@@ -2893,17 +2893,23 @@ done:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_get(DeeInstanceMemberObject *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *thisarg;
 	struct class_desc *desc;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:get", &thisarg))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("get", params: """
+	DeeObject *thisarg;
+""", docStringPrefix: "instancemember");]]]*/
+#define instancemember_get_params "thisarg"
+	struct {
+		DeeObject *thisarg;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__thisarg, "o:get", &args))
 		goto err;
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->im_type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeOrAbstract(args.thisarg, self->im_type))
 		goto err;
 	desc = DeeClass_DESC(self->im_type);
 	return DeeInstance_GetAttribute(desc,
-	                                DeeInstance_DESC(desc,
-	                                                 thisarg),
-	                                thisarg,
+	                                DeeInstance_DESC(desc, args.thisarg),
+	                                args.thisarg,
 	                                self->im_attribute);
 err:
 	return NULL;
@@ -2912,17 +2918,23 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_delete(DeeInstanceMemberObject *self, size_t argc,
                       DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *thisarg;
 	struct class_desc *desc;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:delete", &thisarg))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("delete", params: """
+	DeeObject *thisarg;
+""", docStringPrefix: "instancemember");]]]*/
+#define instancemember_delete_params "thisarg"
+	struct {
+		DeeObject *thisarg;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__thisarg, "o:delete", &args))
 		goto err;
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->im_type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeOrAbstract(args.thisarg, self->im_type))
 		goto err;
 	desc = DeeClass_DESC(self->im_type);
 	if (DeeInstance_DelAttribute(desc,
-	                             DeeInstance_DESC(desc,
-	                                              thisarg),
-	                             thisarg,
+	                             DeeInstance_DESC(desc, args.thisarg),
+	                             args.thisarg,
 	                             self->im_attribute))
 		goto err;
 	return_none;
@@ -2933,19 +2945,27 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_set(DeeInstanceMemberObject *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *thisarg, *value;
 	struct class_desc *desc;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg_value, "oo:set", &thisarg, &value))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("set", params: """
+	DeeObject *thisarg;
+	DeeObject *value;
+""", docStringPrefix: "instancemember");]]]*/
+#define instancemember_set_params "thisarg,value"
+	struct {
+		DeeObject *thisarg;
+		DeeObject *value;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__thisarg_value, "oo:set", &args))
 		goto err;
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->im_type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeOrAbstract(args.thisarg, self->im_type))
 		goto err;
 	desc = DeeClass_DESC(self->im_type);
 	if (DeeInstance_SetAttribute(desc,
-	                             DeeInstance_DESC(desc,
-	                                              thisarg),
-	                             thisarg,
+	                             DeeInstance_DESC(desc, args.thisarg),
+	                             args.thisarg,
 	                             self->im_attribute,
-	                             value))
+	                             args.value))
 		goto err;
 	return_none;
 err:
@@ -2967,13 +2987,13 @@ STATIC_ASSERT(offsetof(DeeInstanceMemberObject, im_type) == offsetof(ProxyObject
 
 PRIVATE struct type_method tpconst instancemember_methods[] = {
 	TYPE_KWMETHOD_F(STR_get, &instancemember_get, METHOD_FNOREFESCAPE,
-	                "(thisarg)->\n"
+	                "(" instancemember_get_params ")->\n"
 	                "Return the @thisarg's value of @this member"),
 	TYPE_KWMETHOD_F("delete", &instancemember_delete, METHOD_FNOREFESCAPE,
-	                "(thisarg)\n"
+	                "(" instancemember_delete_params ")\n"
 	                "Delete @thisarg's value of @this member"),
 	TYPE_KWMETHOD_F(STR_set, &instancemember_set, METHOD_FNOREFESCAPE,
-	                "(thisarg,value)\n"
+	                "(" instancemember_set_params ")\n"
 	                "Set @thisarg's value of @this member to @value"),
 	TYPE_METHOD_END
 };
@@ -3146,7 +3166,7 @@ PRIVATE struct type_callable instancemember_callable = {
 PUBLIC DeeTypeObject DeeInstanceMember_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_InstanceMember",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("call(" instancemember_get_params ")->"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -3852,14 +3872,20 @@ DeeClass_CallInstanceAttributeKw(DeeTypeObject *class_type,
 	struct class_desc *my_class = DeeClass_DESC(class_type);
 	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)) {
 		/* Simulate `operator ()' for wrappers generated by `instancemember_wrapper()'. */
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("get", params: """
+	DeeObject *thisarg;
+""");]]]*/
+	struct {
 		DeeObject *thisarg;
-		if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:get", &thisarg))
-			goto err;
-		if (DeeObject_AssertTypeOrAbstract(thisarg, class_type))
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__thisarg, "o:get", &args))
+		goto err;
+/*[[[end]]]*/
+		if (DeeObject_AssertTypeOrAbstract(args.thisarg, class_type))
 			goto err;
 		return DeeInstance_GetAttribute(my_class,
-		                                DeeInstance_DESC(my_class, thisarg),
-		                                thisarg,
+		                                DeeInstance_DESC(my_class, args.thisarg),
+		                                args.thisarg,
 		                                attr);
 	}
 	/* Simple case: direct access to unbound class-based attr. */
@@ -3897,7 +3923,7 @@ err:
 	return NULL;
 }
 
-#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+#if defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) || defined(__DEEMON__)
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeClass_CallInstanceAttributeTuple(DeeTypeObject *class_type,
                                     struct class_attribute const *__restrict attr,
@@ -3962,15 +3988,20 @@ DeeClass_CallInstanceAttributeTupleKw(DeeTypeObject *class_type,
 	struct class_desc *my_class = DeeClass_DESC(class_type);
 	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)) {
 		/* Simulate `operator ()' for wrappers generated by `instancemember_wrapper()'. */
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("get", params: """
+	DeeObject *thisarg;
+""", argc: "DeeTuple_SIZE(args)", argv: "DeeTuple_ELEM(args)", args: "u_args");]]]*/
+	struct {
 		DeeObject *thisarg;
-		if (DeeArg_UnpackKw(DeeTuple_SIZE(args), DeeTuple_ELEM(args),
-		                    kw, kwlist__thisarg, "o:get", &thisarg))
-			goto err;
-		if (DeeObject_AssertTypeOrAbstract(thisarg, class_type))
+	} u_args;
+	if (DeeArg_UnpackStructKw(DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw, kwlist__thisarg, "o:get", &u_args))
+		goto err;
+/*[[[end]]]*/
+		if (DeeObject_AssertTypeOrAbstract(u_args.thisarg, class_type))
 			goto err;
 		return DeeInstance_GetAttribute(my_class,
-		                                DeeInstance_DESC(my_class, thisarg),
-		                                thisarg,
+		                                DeeInstance_DESC(my_class, u_args.thisarg),
+		                                u_args.thisarg,
 		                                attr);
 	}
 	/* Simple case: direct access to unbound class-based attr. */

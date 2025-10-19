@@ -1250,31 +1250,40 @@ PRIVATE struct open_option const open_options[] = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-file_class_open(DeeObject *UNUSED(self),
-                size_t argc, DeeObject *const *argv,
-                DeeObject *kw) {
-	DeeObject *path;
+file_class_open(DeeObject *UNUSED(self), size_t argc,
+                DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result, *new_result;
 	uint8_t flags;
-	int oflags, mode = 0644;
-	DeeObject *oflags_ob = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw,
-	                    kwlist__path_oflags_mode,
-	                    "o|od:open", &path, &oflags_ob, &mode))
+	int oflags;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("open", params: """
+	DeeObject *path:?Dstring;
+	DeeObject *oflags:?X2?Dstring?Dint=!Pr = NULL;
+	int mode = 0644;
+""", docStringPrefix: "file_class");]]]*/
+#define file_class_open_params "path:?Dstring,oflags:?X2?Dstring?Dint=!Pr,mode=!0644"
+	struct {
+		DeeObject *path;
+		DeeObject *oflags;
+		int mode;
+	} args;
+	args.oflags = NULL;
+	args.mode = 0644;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__path_oflags_mode, "o|od:open", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.path, &DeeString_Type))
 		goto err;
-	if (!oflags_ob) {
+	if (!args.oflags) {
 		/* Default to `r' */
 		flags  = OPEN_EXFLAG_FTEXT;
 		oflags = OPEN_FRDONLY;
-	} else if (!DeeString_Check(oflags_ob)) {
+	} else if (!DeeString_Check(args.oflags)) {
 		flags = OPEN_EXFLAG_FNORMAL;
-		if (DeeObject_AsInt(oflags_ob, &oflags))
+		if (DeeObject_AsInt(args.oflags, &oflags))
 			goto err;
 	} else {
 		char const *iter;
-		iter   = DeeString_STR(oflags_ob);
+		iter   = DeeString_STR(args.oflags);
 		flags  = OPEN_EXFLAG_FNORMAL;
 		oflags = 0;
 		for (;;) {
@@ -1337,7 +1346,7 @@ found_option:
 	}
 
 	/* Actually open the file. */
-	result = DeeFile_Open(path, oflags, mode);
+	result = DeeFile_Open(args.path, oflags, args.mode);
 	if unlikely(!ITER_ISOK(result)) {
 		if unlikely(!result)
 			goto err;
@@ -1345,11 +1354,11 @@ found_option:
 		if ((oflags & (OPEN_FCREAT | OPEN_FEXCL)) == (OPEN_FCREAT | OPEN_FEXCL)) {
 			DeeError_Throwf(&DeeError_FileExists,
 			                "File %r already exists",
-			                path);
+			                args.path);
 		} else {
 			DeeError_Throwf(&DeeError_FileNotFound,
 			                "File %r could not be found",
-			                path);
+			                args.path);
 		}
 		goto err;
 	}
@@ -1372,7 +1381,7 @@ found_option:
 err_invalid_oflags:
 	DeeError_Throwf(&DeeError_ValueError,
 	                "Invalid open mode %r",
-	                oflags_ob);
+	                args.oflags);
 err:
 	return NULL;
 }
@@ -1380,8 +1389,7 @@ err:
 
 PRIVATE struct type_method tpconst file_class_methods[] = {
 	TYPE_KWMETHOD("open", &file_class_open,
-	              "(path:?Dstring,oflags=!Pr,mode=!0644)->?.\n"
-	              "(path:?Dstring,oflags:?Dint,mode=!0644)->?.\n"
+	              "(" file_class_open_params ")->?.\n"
 	              "#t{:Interrupt}"
 	              "#tFileExists{The passed @oflags contains both $\"creat\" and "
 	              /*             */ "$\"excl\", but the given @path already existed}"

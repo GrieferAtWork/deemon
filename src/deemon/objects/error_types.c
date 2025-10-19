@@ -73,52 +73,72 @@ PRIVATE struct type_member tpconst systemerror_class_members[] = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 systemerror_init_kw(DeeSystemErrorObject *__restrict self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *obj_errno = NULL;
-#ifdef CONFIG_HOST_WINDOWS
-	DeeObject *obj_nterr_np = NULL;
+#if defined(CONFIG_HOST_WINDOWS) || defined(__DEEMON__)
 	DWORD dwLastError = GetLastError();
-	self->e_inner   = NULL;
-	self->e_message = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw,
-	                    kwlist__message_inner_errno_nterr_np,
-	                    "|oooo:SystemError",
-	                    &self->e_message, &self->e_inner,
-	                    &obj_errno, &obj_nterr_np))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("SystemError", params: """
+	DeeStringObject *message:?Dstring = NULL;
+	DeeObject *inner:?DError = NULL;
+	DeeObject *errno:?X2?Dint?Dstring = NULL;
+	DeeObject *nterr_np:?Dint = NULL;
+""");]]]*/
+	struct {
+		DeeStringObject *message;
+		DeeObject *inner;
+		DeeObject *errno_;
+		DeeObject *nterr_np;
+	} args;
+	args.message = NULL;
+	args.inner = NULL;
+	args.errno_ = NULL;
+	args.nterr_np = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__message_inner_errno_nterr_np, "|oooo:SystemError", &args))
 		goto err;
-	if (obj_nterr_np) {
-		if (DeeObject_AsUInt32(obj_nterr_np, &self->se_lasterror))
+/*[[[end]]]*/
+	if (args.nterr_np) {
+		if (DeeObject_AsUInt32(args.nterr_np, &self->se_lasterror))
 			goto err;
-		if (obj_errno) {
-			if (DeeObject_AsInt(obj_errno, &self->se_errno))
+		if (args.errno_) {
+			if (DeeObject_AsInt(args.errno_, &self->se_errno))
 				goto err;
 		} else {
 			self->se_errno = DeeNTSystem_TranslateErrno(self->se_lasterror);
 		}
-	} else if (obj_errno) {
-		if (DeeObject_AsInt(obj_errno, &self->se_errno))
+	} else if (args.errno_) {
+		if (DeeObject_AsInt(args.errno_, &self->se_errno))
 			goto err;
 		self->se_lasterror = DeeNTSystem_TranslateNtError(self->se_errno);
 	} else {
 		self->se_lasterror = dwLastError;
 		self->se_errno     = DeeNTSystem_TranslateErrno(dwLastError);
 	}
-#else /* CONFIG_HOST_WINDOWS */
+#endif /* CONFIG_HOST_WINDOWS */
+#if !defined(CONFIG_HOST_WINDOWS) || defined(__DEEMON__)
 	int last_errno = DeeSystem_GetErrno();
-	self->e_inner   = NULL;
-	self->e_message = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw,
-	                    kwlist__message_inner_errno,
-	                    "|ooo:SystemError",
-	                    &self->e_message, &self->e_inner,
-	                    &obj_errno))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("SystemError", params: """
+	DeeStringObject *message:?Dstring = NULL;
+	DeeObject *inner:?DError = NULL;
+	DeeObject *errno:?X2?Dint?Dstring = NULL;
+""");]]]*/
+	struct {
+		DeeStringObject *message;
+		DeeObject *inner;
+		DeeObject *errno_;
+	} args;
+	args.message = NULL;
+	args.inner = NULL;
+	args.errno_ = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__message_inner_errno, "|ooo:SystemError", &args))
 		goto err;
-	if (obj_errno) {
-		if (DeeObject_AsInt(obj_errno, &self->se_errno))
+/*[[[end]]]*/
+	if (args.errno_) {
+		if (DeeObject_AsInt(args.errno_, &self->se_errno))
 			goto err;
 	} else {
 		self->se_errno = last_errno;
 	}
 #endif /* !CONFIG_HOST_WINDOWS */
+	self->e_message = args.message;
+	self->e_inner   = args.inner;
 	Dee_XIncref(self->e_message);
 	Dee_XIncref(self->e_inner);
 	return 0;
@@ -341,9 +361,9 @@ PRIVATE struct type_member tpconst systemerror_members[] = {
 };
 
 #ifdef CONFIG_HOST_WINDOWS
-#define SystemError_init_params "message:?Dstring,inner:?DError,errno?:?X2?Dint?Dstring,nterr_np?:?Dint"
+#define SystemError_init_params "message?:?Dstring,inner?:?DError,errno?:?X2?Dint?Dstring,nterr_np?:?Dint"
 #else /* CONFIG_HOST_WINDOWS */
-#define SystemError_init_params "message:?Dstring,inner:?DError,errno?:?X2?Dint?Dstring"
+#define SystemError_init_params "message?:?Dstring,inner?:?DError,errno?:?X2?Dint?Dstring"
 #endif /* !CONFIG_HOST_WINDOWS */
 
 PUBLIC DeeTypeObject DeeError_SystemError = {

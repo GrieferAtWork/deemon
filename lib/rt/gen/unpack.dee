@@ -37,6 +37,8 @@ global final DTYPE_BY_CTYPE: {string: string} = {
 	"DeeRoDictObject*": "?Ert:RoDict",
 	"DeeTupleObject*": "?DTuple",
 	"DeeListObject*": "?DList",
+	"DeeCodeObject*": "?Ert:Code",
+	"DeeKwdsObject*": "?Ert:Kwds",
 	"bool": "?Dbool",
 	"__BOOL": "?Dbool",
 	"int": "?Dint",
@@ -156,6 +158,9 @@ global final UNP_BY_CTYPE: {string: (string | (string, string))} = {
 	"double": 'D',
 	"long double": 'LD',
 	"__LONGDOUBLE": 'LD',
+	"char const*": 's',
+	"const char*": 's',
+	"char*": 's',
 	"signed char": '" UNPdN(__SIZEOF_CHAR__) "',
 	"unsigned char": ('" UNPuN(__SIZEOF_CHAR__) "', '" UNPxN(__SIZEOF_CHAR__) "'),
 	"short": '" UNPdN(__SIZEOF_SHORT__) "',
@@ -235,6 +240,9 @@ global final C_KEYWORDS: {string...} = HashSet.Frozen({
 	/* Now keywords, but use aliases to prevent conflict with common macros */
 	"min",
 	"max",
+	"errno",
+	"FILETIME",
+	"time_t",
 });
 
 function makeIdentifier(name: string): string {
@@ -527,7 +535,7 @@ final class UnpackParam {
 		get(): string {
 			local result: string = name;
 			if (result in C_KEYWORDS)
-				result = "_" + result;
+				result = result + "_";
 			return result;
 		}
 	}

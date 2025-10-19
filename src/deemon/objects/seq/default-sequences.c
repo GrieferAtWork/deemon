@@ -97,9 +97,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_sgi_init(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
             size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPxSIZ ":_SeqWithSizeAndGetItemIndex",
-	                  &self->dssgi_seq, &self->dssgi_start,
-	                  &self->dssgi_end))
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithSizeAndGetItemIndex",
+	                  &self->dssgi_seq, &self->dssgi_start, &self->dssgi_end))
 		goto err;
 	seqtyp = Dee_TYPE(self->dssgi_seq);
 	self->dssgi_tp_getitem_index = DeeType_RequireSupportedNativeOperator(seqtyp, getitem_index);
@@ -117,9 +116,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_sgif_init(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPxSIZ ":_SeqWithSizeAndGetItemIndexFast",
-	                  &self->dssgi_seq, &self->dssgi_start,
-	                  &self->dssgi_end))
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithSizeAndGetItemIndexFast",
+	                  &self->dssgi_seq, &self->dssgi_start, &self->dssgi_end))
 		goto err;
 	seqtyp = Dee_TYPE(self->dssgi_seq);
 	if unlikely(!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index_fast)
@@ -137,9 +135,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_stgi_init(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPxSIZ ":_SeqWithSizeAndTryGetItemIndex",
-	                  &self->dssgi_seq, &self->dssgi_start,
-	                  &self->dssgi_end))
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithSizeAndTryGetItemIndex",
+	                  &self->dssgi_seq, &self->dssgi_start, &self->dssgi_end))
 		goto err;
 	seqtyp = Dee_TYPE(self->dssgi_seq);
 	self->dssgi_tp_getitem_index = DeeType_RequireSupportedNativeOperator(seqtyp, trygetitem_index);
@@ -1944,7 +1941,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_ial_init(DefaultSequence_WithIterAndLimit *__restrict self,
             size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPxSIZ ":_SeqWithIterAndLimit",
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithIterAndLimit",
 	                  &self->dsial_seq, &self->dsial_start, &self->dsial_limit))
 		goto err;
 	itertyp = Dee_TYPE(self->dsial_seq);

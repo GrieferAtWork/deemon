@@ -4628,54 +4628,63 @@ err_underflow:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_tobytes(DeeIntObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
-	size_t length = (size_t)-1;
-	DeeObject *byteorder = Dee_None;
-	bool is_signed       = false;
 	bool encode_little;
 	DREF DeeObject *result;
-	if (DeeArg_UnpackKw(argc, argv, kw,
-	                    kwlist__length_byteorder_signed,
-	                    "|" UNPuSIZ "ob:tobytes",
-	                    &length, &byteorder, &is_signed))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("tobytes", params: """
+	size_t     length?:?.              = (size_t)-1;
+	DeeObject *byteorder:?X2?Dstring?N = Dee_None;
+	bool       $signed                 = false;
+""", docStringPrefix: "int");]]]*/
+#define int_tobytes_params "length?:?.,byteorder:?X2?Dstring?N=!N,signed=!f"
+	struct {
+		size_t length;
+		DeeObject *byteorder;
+		bool signed_;
+	} args;
+	args.length = (size_t)-1;
+	args.byteorder = Dee_None;
+	args.signed_ = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__length_byteorder_signed, "|" UNPxSIZ "ob:tobytes", &args))
 		goto err;
-	if (length == (size_t)-1) {
+/*[[[end]]]*/
+	if (args.length == (size_t)-1) {
 		/* Automatically determine. */
-		length = int_reqbits(self, is_signed);
-		if unlikely(length == (size_t)-1)
+		args.length = int_reqbits(self, args.signed_);
+		if unlikely(args.length == (size_t)-1)
 			goto err;
-
 		/* Round up to the required number of bytes. */
-		length = (length + 7) / 8;
+		args.length = (args.length + 7) / 8;
 	}
-	if (DeeNone_Check(byteorder)) {
+	if (DeeNone_Check(args.byteorder)) {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 		encode_little = true;
 #else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
 		encode_little = false;
 #endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 	} else {
-		if (DeeObject_AssertTypeExact(byteorder, &DeeString_Type))
+		if (DeeObject_AssertTypeExact(args.byteorder, &DeeString_Type))
 			goto err;
-		if (DeeString_EQUALS_ASCII(byteorder, "little")) {
+		if (DeeString_EQUALS_ASCII(args.byteorder, "little")) {
 			encode_little = true;
-		} else if (DeeString_EQUALS_ASCII(byteorder, "big")) {
+		} else if (DeeString_EQUALS_ASCII(args.byteorder, "big")) {
 			encode_little = false;
 		} else {
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Invalid byteorder %r",
-			                byteorder);
+			                args.byteorder);
 			goto err;
 		}
 	}
 
 	/* Encode integer bytes. */
-	result = DeeBytes_NewBufferUninitialized(length);
+	result = DeeBytes_NewBufferUninitialized(args.length);
 	if unlikely(!result)
 		goto err;
 	if (DeeInt_AsBytes((DeeObject *)self,
 	                   DeeBytes_DATA(result),
-	                   length, encode_little,
-	                   is_signed))
+	                   args.length,
+	                   encode_little,
+	                   args.signed_))
 		goto err_r;
 	return result;
 err_r:
@@ -4688,12 +4697,19 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_bitcount(DeeIntObject *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-	bool is_signed = false;
 	size_t result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__signed,
-	                    "|b:bitcount", &is_signed))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("bitcount", params: """
+	bool $signed = false;
+""", docStringPrefix: "int");]]]*/
+#define int_bitcount_params "signed=!f"
+	struct {
+		bool signed_;
+	} args;
+	args.signed_ = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__signed, "|b:bitcount", &args))
 		goto err;
-	result = int_reqbits(self, is_signed);
+/*[[[end]]]*/
+	result = int_reqbits(self, args.signed_);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -4717,10 +4733,10 @@ int_frombytes(DeeObject *UNUSED(self), size_t argc,
 	struct {
 		DeeObject *bytes;
 		DeeObject *byteorder;
-		bool _signed;
+		bool signed_;
 	} args;
 	args.byteorder = Dee_None;
-	args._signed = false;
+	args.signed_ = false;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__bytes_byteorder_signed, "o|ob:frombytes", &args))
 		goto err;
 /*[[[end]]]*/
@@ -4749,7 +4765,7 @@ int_frombytes(DeeObject *UNUSED(self), size_t argc,
 	result = DeeInt_FromBytes(buf.bb_base,
 	                          buf.bb_size,
 	                          encode_little,
-	                          args._signed);
+	                          args.signed_);
 	DeeObject_PutBuf(args.bytes, &buf, Dee_BUFFER_FREADONLY);
 	return result;
 err:
@@ -4955,7 +4971,7 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	TYPE_KWMETHOD_F("oct", &int_oct, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE, numeric_oct_doc),
 	TYPE_KWMETHOD_F("tobytes", &int_tobytes,
 	                METHOD_FNOREFESCAPE, /* Not CONSTCALL because returned buffer is writable */
-	                "(length?:?.,byteorder:?X2?Dstring?N=!N,signed=!f)->?DBytes\n"
+	                "(" int_tobytes_params ")->?DBytes\n"
 	                "#pbyteorder{The byteorder encoding used by the returned bytes. "
 	                /*            */ "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
 	                /*            */ "or ?N (for host-endian)}"
@@ -4968,7 +4984,7 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	                /**/ "negative integers"),
 	TYPE_KWMETHOD_F("bitcount", &int_bitcount,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(signed=!f)->?.\n"
+	                "(" int_bitcount_params ")->?.\n"
 	                "#tIntegerOverflow{@signed is ?f and @this integer is negative}"
 	                "Return the number of bits needed to represent @this integer in base-2"),
 	TYPE_METHOD_F("divmod", &int_divmod_f,

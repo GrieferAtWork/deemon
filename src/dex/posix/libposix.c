@@ -1653,80 +1653,136 @@ for (local x: names)
 /* Stat helper functions. */
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_S_ISDIR(size_t argc, DeeObject *const *argv) {
-	unsigned int arg;
-	if (DeeArg_Unpack(argc, argv, "u:S_ISDIR", &arg))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("S_ISDIR", params: """
+	unsigned int mode;
+""", docStringPrefix: "posix");]]]*/
+#define posix_S_ISDIR_params "mode:?Dint"
+	struct {
+		unsigned int mode;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, "u:S_ISDIR", &args))
 		goto err;
-	return_bool(STAT_ISDIR(arg));
+/*[[[end]]]*/
+	return_bool(STAT_ISDIR(args.mode));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_S_ISCHR(size_t argc, DeeObject *const *argv) {
-	unsigned int arg;
-	if (DeeArg_Unpack(argc, argv, "u:S_ISCHR", &arg))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("S_ISCHR", params: """
+	unsigned int mode;
+""", docStringPrefix: "posix");]]]*/
+#define posix_S_ISCHR_params "mode:?Dint"
+	struct {
+		unsigned int mode;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, "u:S_ISCHR", &args))
 		goto err;
-	return_bool(STAT_ISCHR(arg));
+/*[[[end]]]*/
+	return_bool(STAT_ISCHR(args.mode));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_S_ISBLK(size_t argc, DeeObject *const *argv) {
-	unsigned int arg;
-	if (DeeArg_Unpack(argc, argv, "u:S_ISBLK", &arg))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("S_ISBLK", params: """
+	unsigned int mode;
+""", docStringPrefix: "posix");]]]*/
+#define posix_S_ISBLK_params "mode:?Dint"
+	struct {
+		unsigned int mode;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, "u:S_ISBLK", &args))
 		goto err;
-	return_bool(STAT_ISBLK(arg));
+/*[[[end]]]*/
+	return_bool(STAT_ISBLK(args.mode));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_S_ISDEV(size_t argc, DeeObject *const *argv) {
-	unsigned int arg;
-	if (DeeArg_Unpack(argc, argv, "u:S_ISDEV", &arg))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("S_ISDEV", params: """
+	unsigned int mode;
+""", docStringPrefix: "posix");]]]*/
+#define posix_S_ISDEV_params "mode:?Dint"
+	struct {
+		unsigned int mode;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, "u:S_ISDEV", &args))
 		goto err;
-	return_bool(STAT_ISDEV(arg));
+/*[[[end]]]*/
+	return_bool(STAT_ISDEV(args.mode));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_S_ISREG(size_t argc, DeeObject *const *argv) {
-	unsigned int arg;
-	if (DeeArg_Unpack(argc, argv, "u:S_ISREG", &arg))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("S_ISREG", params: """
+	unsigned int mode;
+""", docStringPrefix: "posix");]]]*/
+#define posix_S_ISREG_params "mode:?Dint"
+	struct {
+		unsigned int mode;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, "u:S_ISREG", &args))
 		goto err;
-	return_bool(STAT_ISREG(arg));
+/*[[[end]]]*/
+	return_bool(STAT_ISREG(args.mode));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_S_ISFIFO(size_t argc, DeeObject *const *argv) {
-	unsigned int arg;
-	if (DeeArg_Unpack(argc, argv, "u:S_ISFIFO", &arg))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("S_ISFIFO", params: """
+	unsigned int mode;
+""", docStringPrefix: "posix");]]]*/
+#define posix_S_ISFIFO_params "mode:?Dint"
+	struct {
+		unsigned int mode;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, "u:S_ISFIFO", &args))
 		goto err;
-	return_bool(STAT_ISFIFO(arg));
+/*[[[end]]]*/
+	return_bool(STAT_ISFIFO(args.mode));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_S_ISLNK(size_t argc, DeeObject *const *argv) {
-	unsigned int arg;
-	if (DeeArg_Unpack(argc, argv, "u:S_ISLNK", &arg))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("S_ISLNK", params: """
+	unsigned int mode;
+""", docStringPrefix: "posix");]]]*/
+#define posix_S_ISLNK_params "mode:?Dint"
+	struct {
+		unsigned int mode;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, "u:S_ISLNK", &args))
 		goto err;
-	return_bool(STAT_ISLNK(arg));
+/*[[[end]]]*/
+	return_bool(STAT_ISLNK(args.mode));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_S_ISSOCK(size_t argc, DeeObject *const *argv) {
-	unsigned int arg;
-	if (DeeArg_Unpack(argc, argv, "u:S_ISSOCK", &arg))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("S_ISSOCK", params: """
+	unsigned int mode;
+""", docStringPrefix: "posix");]]]*/
+#define posix_S_ISSOCK_params "mode:?Dint"
+	struct {
+		unsigned int mode;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, "u:S_ISSOCK", &args))
 		goto err;
-	return_bool(STAT_ISSOCK(arg));
+/*[[[end]]]*/
+	return_bool(STAT_ISSOCK(args.mode));
 err:
 	return NULL;
 }
@@ -2062,14 +2118,14 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBPOSIX_S_IXOTH_DEF
 
 	/* stat.st_mode helper functions. */
-	{ "S_ISDIR", (DeeObject *)&libposix_S_ISDIR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
-	{ "S_ISCHR", (DeeObject *)&libposix_S_ISCHR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
-	{ "S_ISBLK", (DeeObject *)&libposix_S_ISBLK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
-	{ "S_ISDEV", (DeeObject *)&libposix_S_ISDEV, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
-	{ "S_ISREG", (DeeObject *)&libposix_S_ISREG, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
-	{ "S_ISFIFO", (DeeObject *)&libposix_S_ISFIFO, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
-	{ "S_ISLNK", (DeeObject *)&libposix_S_ISLNK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
-	{ "S_ISSOCK", (DeeObject *)&libposix_S_ISSOCK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
+	{ "S_ISDIR", (DeeObject *)&libposix_S_ISDIR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(" posix_S_ISDIR_params ")->?Dbool") },
+	{ "S_ISCHR", (DeeObject *)&libposix_S_ISCHR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(" posix_S_ISCHR_params ")->?Dbool") },
+	{ "S_ISBLK", (DeeObject *)&libposix_S_ISBLK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(" posix_S_ISBLK_params ")->?Dbool") },
+	{ "S_ISDEV", (DeeObject *)&libposix_S_ISDEV, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(" posix_S_ISDEV_params ")->?Dbool") },
+	{ "S_ISREG", (DeeObject *)&libposix_S_ISREG, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(" posix_S_ISREG_params ")->?Dbool") },
+	{ "S_ISFIFO", (DeeObject *)&libposix_S_ISFIFO, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(" posix_S_ISFIFO_params ")->?Dbool") },
+	{ "S_ISLNK", (DeeObject *)&libposix_S_ISLNK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(" posix_S_ISLNK_params ")->?Dbool") },
+	{ "S_ISSOCK", (DeeObject *)&libposix_S_ISSOCK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(" posix_S_ISSOCK_params ")->?Dbool") },
 
 	/* stat & friends */
 	D({ "stat", (DeeObject *)&DeeStat_Type, MODSYM_FREADONLY },)

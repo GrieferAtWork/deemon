@@ -1718,17 +1718,26 @@ buffer_setbuf(Buffer *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	uint16_t mode;
 	char const *mode_iter;
-	char const *mode_str;
-	size_t size = 0;
 	unsigned int i;
 	union {
 		char chrs[4];
 		uint32_t id;
 	} buf;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__mode_size,
-	                    "s|d:setbuf", &mode_str, &size))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("setbuf", params: """
+	char const *mode;
+	size_t size = 0;
+""", docStringPrefix: "buffer");]]]*/
+#define buffer_setbuf_params "mode:?Dstring,size=!0"
+	struct {
+		char const *mode;
+		size_t size;
+	} args;
+	args.size = 0;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__mode_size, "s|" UNPuSIZ ":setbuf", &args))
 		goto err;
-	mode_iter = mode_str, mode = 0;
+/*[[[end]]]*/
+	mode = 0;
+	mode_iter = args.mode;
 	/* Interpret the given mode string. */
 	for (;;) {
 		if (CASEEQ(*mode_iter, 's')) {
@@ -1766,13 +1775,13 @@ buffer_setbuf(Buffer *self, size_t argc,
 		mode |= mode_names[i].flag; /* Found it! */
 		break;
 	}
-	if (DeeFileBuffer_SetMode((DeeObject *)self, mode, size))
+	if (DeeFileBuffer_SetMode((DeeObject *)self, mode, args.size))
 		goto err;
 	return_none;
 err_invalid_mode:
 	DeeError_Throwf(&DeeError_ValueError,
 	                "Unrecognized buffer mode `%s'",
-	                mode_str);
+	                args.mode);
 err:
 	return NULL;
 }
@@ -1786,7 +1795,7 @@ PRIVATE struct type_method tpconst buffer_methods[] = {
 	              "Similar to ?#sync, but never synchronize the underlying file, regardless "
 	              /**/ "of whether or not $\"nosync\" was passed to the constructor, or ?#setbuf"),
 	TYPE_KWMETHOD_F("setbuf", &buffer_setbuf, METHOD_FNOREFESCAPE,
-	                "(mode:?Dstring,size=!0)\n"
+	                "(" buffer_setbuf_params ")\n"
 	                "#tValueError{The given @mode is malformed, or not recognized}"
 	                "Set the buffering mode of @this buffer to @mode, with a buffer size of @size\n"
 	                "When non-zero, @size dictates the initial buffer size, or a fixed buffer size when "

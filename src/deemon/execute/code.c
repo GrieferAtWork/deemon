@@ -722,15 +722,25 @@ err_code_optimization_disabled(void) {
 INTERN NONNULL((1)) DREF DeeObject *DCALL
 function_optimize(DeeFunctionObject *__restrict self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-	bool for_tuple = false;
-	bool for_kwds = false;
-	bool allow_async = false;
-	(void)self;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__tuple_kwds_async, "|bbb:optimize",
-	                    &for_tuple, &for_kwds, &allow_async))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("optimize", params: """
+	bool tuple = false;
+	bool kwds = false;
+	bool async = false;
+""", docStringPrefix: "function");]]]*/
+#define function_optimize_params "tuple=!f,kwds=!f,async=!f"
+	struct {
+		bool tuple;
+		bool kwds;
+		bool async;
+	} args;
+	args.tuple = false;
+	args.kwds = false;
+	args.async = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__tuple_kwds_async, "|bbb:optimize", &args))
 		goto err;
+/*[[[end]]]*/
 #ifndef CONFIG_CALLTUPLE_OPTIMIZATIONS
-	if (for_tuple) {
+	if (args.tuple) {
 		DeeError_Throwf(&DeeError_ValueError, "Cannot optimize function with `tuple=true'");
 		goto err;
 	}
@@ -741,13 +751,13 @@ function_optimize(DeeFunctionObject *__restrict self, size_t argc,
 		host_cc_t cc = 0;
 		if (self->fo_code->co_flags & CODE_FTHISCALL)
 			cc |= HOST_CC_F_THIS;
-		if (for_kwds)
+		if (args.kwds)
 			cc |= HOST_CC_F_KW;
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
-		if (for_tuple)
+		if (args.tuple)
 			cc |= HOST_CC_F_TUPLE;
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
-		status = DeeFunction_HostAsmRecompile(self, cc, allow_async);
+		status = DeeFunction_HostAsmRecompile(self, cc, args.async);
 		if unlikely(status < 0)
 			goto err;
 		if likely(status == 0)
@@ -762,15 +772,26 @@ err:
 INTERN NONNULL((1)) DREF DeeObject *DCALL
 code_optimize(DeeCodeObject *__restrict self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	bool for_tuple = false;
-	bool for_kwds = false;
-	bool allow_async = false;
-	(void)self;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__tuple_kwds_async, "|bbb:optimize",
-	                    &for_tuple, &for_kwds, &allow_async))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("optimize", params: """
+	bool tuple = false;
+	bool kwds = false;
+	bool async = false;
+""", docStringPrefix: "code");]]]*/
+#define code_optimize_params "tuple=!f,kwds=!f,async=!f"
+	struct {
+		bool tuple;
+		bool kwds;
+		bool async;
+	} args;
+	args.tuple = false;
+	args.kwds = false;
+	args.async = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__tuple_kwds_async, "|bbb:optimize", &args))
 		goto err;
+/*[[[end]]]*/
+	(void)self;
 #ifndef CONFIG_CALLTUPLE_OPTIMIZATIONS
-	if (for_tuple) {
+	if (args.tuple) {
 		DeeError_Throwf(&DeeError_ValueError, "Cannot optimize function with `tuple=true'");
 		goto err;
 	}
@@ -781,13 +802,13 @@ code_optimize(DeeCodeObject *__restrict self, size_t argc,
 		host_cc_t cc = HOST_CC_F_FUNC;
 		if (self->co_flags & CODE_FTHISCALL)
 			cc |= HOST_CC_F_THIS;
-		if (for_kwds)
+		if (args.kwds)
 			cc |= HOST_CC_F_KW;
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
-		if (for_tuple)
+		if (args.tuple)
 			cc |= HOST_CC_F_TUPLE;
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
-		status = DeeCode_HostAsmRecompile(self, cc, allow_async);
+		status = DeeCode_HostAsmRecompile(self, cc, args.async);
 		if unlikely(status < 0)
 			goto err;
 		if likely(status == 0)
@@ -802,20 +823,30 @@ err:
 INTERN NONNULL((1)) DREF DeeObject *DCALL
 function_optimized(DeeFunctionObject *__restrict self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
-	bool for_tuple = false;
-	bool for_kwds = false;
-	(void)self;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__tuple_kwds_async, "|bb:optimized", &for_tuple, &for_kwds))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("optimized", params: """
+	bool tuple = false;
+	bool kwds = false;
+""", docStringPrefix: "function");]]]*/
+#define function_optimized_params "tuple=!f,kwds=!f"
+	struct {
+		bool tuple;
+		bool kwds;
+	} args;
+	args.tuple = false;
+	args.kwds = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__tuple_kwds, "|bb:optimized", &args))
 		goto err;
+/*[[[end]]]*/
+	(void)self;
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
-	if (!for_tuple) {
-		if (for_kwds ? (atomic_read(&self->fo_hostasm.hafu_call_kw.c_norm) != NULL)
-		             : (atomic_read(&self->fo_hostasm.hafu_call.c_norm) != NULL))
+	if (!args.tuple) {
+		if (args.kwds ? (atomic_read(&self->fo_hostasm.hafu_call_kw.c_norm) != NULL)
+		              : (atomic_read(&self->fo_hostasm.hafu_call.c_norm) != NULL))
 			return_true;
 	} else {
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
-		if (for_kwds ? (atomic_read(&self->fo_hostasm.hafu_call_tuple_kw.c_norm) != NULL)
-		             : (atomic_read(&self->fo_hostasm.hafu_call_tuple.c_norm) != NULL))
+		if (args.kwds ? (atomic_read(&self->fo_hostasm.hafu_call_tuple_kw.c_norm) != NULL)
+		              : (atomic_read(&self->fo_hostasm.hafu_call_tuple.c_norm) != NULL))
 			return_true;
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 	}
@@ -828,20 +859,30 @@ err:
 INTERN NONNULL((1)) DREF DeeObject *DCALL
 code_optimized(DeeCodeObject *__restrict self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-	bool for_tuple = false;
-	bool for_kwds = false;
-	(void)self;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__tuple_kwds_async, "|bb:optimized", &for_tuple, &for_kwds))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("optimized", params: """
+	bool tuple = false;
+	bool kwds = false;
+""", docStringPrefix: "code");]]]*/
+#define code_optimized_params "tuple=!f,kwds=!f"
+	struct {
+		bool tuple;
+		bool kwds;
+	} args;
+	args.tuple = false;
+	args.kwds = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__tuple_kwds, "|bb:optimized", &args))
 		goto err;
+/*[[[end]]]*/
+	(void)self;
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
-	if (!for_tuple) {
-		if (for_kwds ? (atomic_read(&self->co_hostasm.haco_call_kw.c_norm) != NULL)
-		             : (atomic_read(&self->co_hostasm.haco_call.c_norm) != NULL))
+	if (!args.tuple) {
+		if (args.kwds ? (atomic_read(&self->co_hostasm.haco_call_kw.c_norm) != NULL)
+		              : (atomic_read(&self->co_hostasm.haco_call.c_norm) != NULL))
 			return_true;
 	} else {
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
-		if (for_kwds ? (atomic_read(&self->co_hostasm.haco_call_tuple_kw.c_norm) != NULL)
-		             : (atomic_read(&self->co_hostasm.haco_call_tuple.c_norm) != NULL))
+		if (args.kwds ? (atomic_read(&self->co_hostasm.haco_call_tuple_kw.c_norm) != NULL)
+		              : (atomic_read(&self->co_hostasm.haco_call_tuple.c_norm) != NULL))
 			return_true;
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 	}
@@ -1472,7 +1513,7 @@ PRIVATE struct type_member tpconst code_members[] = {
 
 #ifndef CONFIG_NO_DOC
 INTERN_CONST char const code_optimize_doc[] =
-"(tuple=!f,kwds=!f,async=!f)\n"
+"(" code_optimize_params ")\n"
 "#pasync{When !t, allow the optimization to happen asynchronously"
 #ifdef CONFIG_HAVE_CODE_METRICS
 /*   */ " (this is the default when optimization happens as a result of"
@@ -1501,7 +1542,7 @@ INTERN_CONST char const code_optimize_doc[] =
 "}";
 
 INTERN_CONST char const code_optimized_doc[] =
-"(tuple=!f,kwds=!f)->?Dbool\n"
+"(" code_optimized_params ")->?Dbool\n"
 "Check if @this ?. has been optimized for the @tuple and @kwds (s.a. ?#optimize)";
 #endif /* !CONFIG_NO_DOC */
 
@@ -2070,7 +2111,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 ");]]]*/
 	struct {
 		DeeObject *text;
-		DeeModuleObject *module;
+		DeeModuleObject *module_;
 		DeeObject *constants;
 		DeeObject *except;
 		uint16_t nlocal;
@@ -2084,7 +2125,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		DeeDDIObject *ddi;
 	} args;
 	args.text = Dee_None;
-	args.module = (DeeModuleObject *)Dee_None;
+	args.module_ = (DeeModuleObject *)Dee_None;
 	args.constants = Dee_None;
 	args.except = Dee_None;
 	args.nlocal = 0;
@@ -2207,7 +2248,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		result->co_constc = (uint16_t)constants_cnt;
 		result->co_constv = constants_vec;
 	}
-	if (DeeNone_Check(args.module)) {
+	if (DeeNone_Check(args.module_)) {
 		DeeThreadObject *ts = DeeThread_Self();
 		if unlikely(!ts->t_execsz) {
 			DeeError_Throwf(&DeeError_TypeError,
@@ -2219,11 +2260,11 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		ASSERT(ts->t_exec->cf_func);
 		ASSERT(ts->t_exec->cf_func->fo_code);
 		ASSERT(ts->t_exec->cf_func->fo_code->co_module);
-		args.module = ts->t_exec->cf_func->fo_code->co_module;
+		args.module_ = ts->t_exec->cf_func->fo_code->co_module;
 	}
 	/* NOTE: Always check this, so prevent stuff like interactive
 	 *       modules to leaking into generic code objects. */
-	if (DeeObject_AssertTypeExact(args.module, &DeeModule_Type))
+	if (DeeObject_AssertTypeExact(args.module_, &DeeModule_Type))
 		goto err_r_constv;
 
 	/* Generate exception handlers. */
@@ -2289,8 +2330,8 @@ got_flag:
 	/* Fill in remaining fields. */
 	result->co_ddi = args.ddi;
 	Dee_Incref(args.ddi);
-	result->co_module = args.module;
-	Dee_Incref(args.module);
+	result->co_module = args.module_;
+	Dee_Incref(args.module_);
 	result->co_localc = args.nlocal;
 	result->co_refc   = args.nref;
 	if (OVERFLOW_UADD(args.nref, args.nstatic, &result->co_refstaticc)) {

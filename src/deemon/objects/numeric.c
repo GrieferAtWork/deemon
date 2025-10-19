@@ -1567,7 +1567,7 @@ numeric_hex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	args[0] = (DeeObject *)&int_16;
 	args[1] = DeeInt_Zero;
 	args[2] = (DeeObject *)&str_pound;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__precision, "|o:hex", &args[1]))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__precision, "|o:hex", &args[1]))
 		goto err;
 	return DeeObject_CallAttr(self, (DeeObject *)&str_tostr, 3, args);
 err:
@@ -1580,7 +1580,7 @@ numeric_bin(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	args[0] = (DeeObject *)&int_2;
 	args[1] = DeeInt_Zero;
 	args[2] = (DeeObject *)&str_pound;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__precision, "|o:bin", &args[1]))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__precision, "|o:bin", &args[1]))
 		goto err;
 	return DeeObject_CallAttr(self, (DeeObject *)&str_tostr, 3, args);
 err:
@@ -1593,7 +1593,7 @@ numeric_oct(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	args[0] = (DeeObject *)&int_8;
 	args[1] = DeeInt_Zero;
 	args[2] = (DeeObject *)&str_pound;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__precision, "|o:oct", &args[1]))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__precision, "|o:oct", &args[1]))
 		goto err;
 	return DeeObject_CallAttr(self, (DeeObject *)&str_tostr, 3, args);
 err:
