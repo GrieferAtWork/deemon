@@ -3957,10 +3957,16 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_timedjoin(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedjoin", params: """
 	uint64_t timeout_in_nanoseconds;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedjoin", &timeout_in_nanoseconds))
-		goto err;
-	result = DeeThread_Join(self, timeout_in_nanoseconds);
+""", docStringPrefix: "thread");]]]*/
+#define thread_timedjoin_params "timeout_in_nanoseconds:?Dint"
+	struct {
+		uint64_t timeout_in_nanoseconds;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "timedjoin", &args.timeout_in_nanoseconds, UNPu64, DeeObject_AsUInt64);
+/*[[[end]]]*/
+	result = DeeThread_Join(self, args.timeout_in_nanoseconds);
 	if unlikely(result == NULL)
 		goto err;
 	if (result != ITER_DONE)
@@ -3983,10 +3989,16 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_timedwaitfor(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwaitfor", params: """
 	uint64_t timeout_in_nanoseconds;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedwaitfor", &timeout_in_nanoseconds))
-		goto err;
-	error = DeeThread_WaitFor(self, timeout_in_nanoseconds);
+""", docStringPrefix: "thread");]]]*/
+#define thread_timedwaitfor_params "timeout_in_nanoseconds:?Dint"
+	struct {
+		uint64_t timeout_in_nanoseconds;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_in_nanoseconds, UNPu64, DeeObject_AsUInt64);
+/*[[[end]]]*/
+	error = DeeThread_WaitFor(self, args.timeout_in_nanoseconds);
 	if unlikely(error < 0)
 		goto err;
 	return_bool(error == 0);
@@ -4183,7 +4195,7 @@ PRIVATE struct type_method tpconst thread_methods[] = {
 	              "#tThreadCrash{The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error}"
 	              "Same as ?#join, but don't check for interrupts and fail immediately"),
 	TYPE_METHOD_F("timedjoin", &thread_timedjoin, METHOD_FNOREFESCAPE,
-	              "(timeout_in_nanoseconds:?Dint)->?T2?Dbool?O\n"
+	              "(" thread_timedjoin_params ")->?T2?Dbool?O\n"
 	              "#tThreadCrash{The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error}"
 	              "Same as ?#join, but only attempt to join for a given @timeout_in_nanoseconds"),
 	TYPE_METHOD_F("waitfor", &thread_waitfor, METHOD_FNOREFESCAPE,
@@ -4191,7 +4203,7 @@ PRIVATE struct type_method tpconst thread_methods[] = {
 	              "#t{:Interrupt}"
 	              "Block until @this Thread ?#hasterminated"),
 	TYPE_METHOD_F("timedwaitfor", &thread_timedwaitfor, METHOD_FNOREFESCAPE,
-	              "(timeout_in_nanoseconds:?Dint)->?Dbool\n"
+	              "(" thread_timedwaitfor_params ")->?Dbool\n"
 	              "#t{:Interrupt}"
 	              "Same as ?#waitfor, but only attempt to wait at most @timeout_in_nanoseconds"),
 	TYPE_METHOD_F("interrupt", &thread_interrupt_impl, METHOD_FNOREFESCAPE,
@@ -4312,10 +4324,16 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_sleep(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("sleep", params: """
 	uint64_t timeout_in_nanoseconds;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":sleep", &timeout_in_nanoseconds))
-		goto err;
-	if (DeeThread_Sleep(timeout_in_nanoseconds / 1000))
+""", docStringPrefix: "thread");]]]*/
+#define thread_sleep_params "timeout_in_nanoseconds:?Dint"
+	struct {
+		uint64_t timeout_in_nanoseconds;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "sleep", &args.timeout_in_nanoseconds, UNPu64, DeeObject_AsUInt64);
+/*[[[end]]]*/
+	if (DeeThread_Sleep(args.timeout_in_nanoseconds / 1000))
 		goto err;
 	return_none;
 err:
@@ -4399,7 +4417,7 @@ PRIVATE struct type_method tpconst thread_class_methods[] = {
 	            "()\n"
 	            "Willingly preempt execution to another thread or process"),
 	TYPE_METHOD("sleep", &thread_sleep,
-	            "(timeout_in_nanoseconds:?Dint)\n"
+	            "(" thread_sleep_params ")\n"
 	            "#t{:Interrupt}"
 	            "Suspending execution for a total of @timeout_in_nanoseconds"),
 	TYPE_METHOD("exit", &thread_exit,

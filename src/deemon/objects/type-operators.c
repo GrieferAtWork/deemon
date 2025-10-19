@@ -296,12 +296,17 @@ err:
 }
 
 DEFINE_OPERATOR_INVOKE(operator_pclear, &instance_pclear, &do_inherit_noop) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("pclear") "', params: """
 	unsigned int gc_prio;
+""");]]]*/
+	struct {
+		unsigned int gc_prio;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, OPNAME("pclear"), &args.gc_prio, "u", DeeObject_AsUInt);
+/*[[[end]]]*/
 	(void)p_self;
 	(void)opname;
-	if (DeeArg_Unpack(argc, argv, "u:" OPNAME("pclear"), &gc_prio))
-		goto err;
-	DeeObject_TPClear(tp_self, self, gc_prio);
+	DeeObject_TPClear(tp_self, self, args.gc_prio);
 	return_none;
 err:
 	return NULL;

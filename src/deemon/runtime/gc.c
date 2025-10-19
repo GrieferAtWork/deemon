@@ -1785,61 +1785,104 @@ PRIVATE struct type_member tpconst gcenum_class_members[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcenum_collect(DeeObject *UNUSED(self),
                size_t argc, DeeObject *const *argv) {
-	size_t max = (size_t)-1, result;
-	if (DeeArg_Unpack(argc, argv, "|" UNPuSIZ ":collect", &max))
-		goto err;
-	result = DeeGC_Collect(max);
+	size_t result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("collect", params: """
+	size_t max = (size_t)-1;
+""", docStringPrefix: "gcenum");]]]*/
+#define gcenum_collect_params "max=!-1"
+	struct {
+		size_t max_;
+	} args;
+	args.max_ = (size_t)-1;
+	DeeArg_Unpack0Or1X(err, argc, argv, "collect", &args.max_, UNPxSIZ, DeeObject_AsSizeM1);
+/*[[[end]]]*/
+	result = DeeGC_Collect(args.max_);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF GCSet *DCALL
 gcenum_referred(DeeObject *UNUSED(self),
                 size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("referred", params: """
 	DeeObject *start;
-	DeeArg_Unpack1(err, argc, argv, "referred", &start);
-	return (DREF DeeObject *)DeeGC_NewReferred(start);
+""", docStringPrefix: "gcenum");]]]*/
+#define gcenum_referred_params "start"
+	struct {
+		DeeObject *start;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "referred", &args.start);
+/*[[[end]]]*/
+	return DeeGC_NewReferred(args.start);
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF GCSet *DCALL
 gcenum_referredgc(DeeObject *UNUSED(self),
                   size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("referredgc", params: """
 	DeeObject *start;
-	DeeArg_Unpack1(err, argc, argv, "referredgc", &start);
-	return (DREF DeeObject *)DeeGC_NewReferredGC(start);
+""", docStringPrefix: "gcenum");]]]*/
+#define gcenum_referredgc_params "start"
+	struct {
+		DeeObject *start;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "referredgc", &args.start);
+/*[[[end]]]*/
+	return DeeGC_NewReferredGC(args.start);
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF GCSet *DCALL
 gcenum_reachable(DeeObject *UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("reachable", params: """
 	DeeObject *start;
-	DeeArg_Unpack1(err, argc, argv, "reachable", &start);
-	return (DREF DeeObject *)DeeGC_NewReachable(start);
+""", docStringPrefix: "gcenum");]]]*/
+#define gcenum_reachable_params "start"
+	struct {
+		DeeObject *start;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "reachable", &args.start);
+/*[[[end]]]*/
+	return DeeGC_NewReachable(args.start);
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF GCSet *DCALL
 gcenum_reachablegc(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("reachablegc", params: """
 	DeeObject *start;
-	DeeArg_Unpack1(err, argc, argv, "reachablegc", &start);
-	return (DREF DeeObject *)DeeGC_NewReachableGC(start);
+""", docStringPrefix: "gcenum");]]]*/
+#define gcenum_reachablegc_params "start"
+	struct {
+		DeeObject *start;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "reachablegc", &args.start);
+/*[[[end]]]*/
+	return DeeGC_NewReachableGC(args.start);
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF GCSet *DCALL
 gcenum_referring(DeeObject *UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("referring", params: """
 	DeeObject *to;
-	DeeArg_Unpack1(err, argc, argv, "referring", &to);
-	return (DREF DeeObject *)DeeGC_NewGCReferred(to);
+""", docStringPrefix: "gcenum");]]]*/
+#define gcenum_referring_params "to"
+	struct {
+		DeeObject *to;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "referring", &args.to);
+/*[[[end]]]*/
+	return DeeGC_NewGCReferred(args.to);
 err:
 	return NULL;
 }
@@ -1847,9 +1890,18 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcenum_isreferring(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
-	DeeObject *from, *to;
-	DeeArg_Unpack2(err, argc, argv, "isreferring", &from, &to);
-	return_bool(DeeGC_ReferredBy(from, to));
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("isreferring", params: """
+	DeeObject *from;
+	DeeObject *to;
+""", docStringPrefix: "gcenum");]]]*/
+#define gcenum_isreferring_params "from,to"
+	struct {
+		DeeObject *from;
+		DeeObject *to;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "isreferring", &args, &args.from, &args.to);
+/*[[[end]]]*/
+	return_bool(DeeGC_ReferredBy(args.from, args.to));
 err:
 	return NULL;
 }
@@ -1857,26 +1909,26 @@ err:
 
 PRIVATE struct type_method tpconst gcenum_methods[] = {
 	TYPE_METHOD_F("collect", &gcenum_collect, METHOD_FNOREFESCAPE,
-	              "(max=!-1)->?Dint\n"
+	              "(" gcenum_collect_params ")->?Dint\n"
 	              "Try to collect at most @max GC objects and return the actual number collected\n"
 	              "Note that more than @max objects may be collected if sufficiently large reference cycles exist"),
 	TYPE_METHOD_F("referred", &gcenum_referred, METHOD_FNOREFESCAPE,
-	              "(start)->?DSet\n"
+	              "(" gcenum_referred_params ")->?DSet\n"
 	              "Returns a set of objects that are immediately referred to by @start"),
 	TYPE_METHOD_F("referredgc", &gcenum_referredgc, METHOD_FNOREFESCAPE,
-	              "(start)->?DSet\n"
+	              "(" gcenum_referredgc_params ")->?DSet\n"
 	              "Same as ?#referred, but only include gc-objects (s.a. :Type.__isgc__)"),
 	TYPE_METHOD_F("reachable", &gcenum_reachable, METHOD_FNOREFESCAPE,
-	              "(start)->?DSet\n"
+	              "(" gcenum_reachable_params ")->?DSet\n"
 	              "Returns a set of objects that are reachable from @start"),
 	TYPE_METHOD_F("reachablegc", &gcenum_reachablegc, METHOD_FNOREFESCAPE,
-	              "(start)->?DSet\n"
+	              "(" gcenum_reachablegc_params ")->?DSet\n"
 	              "Same as ?#reachable, but only include gc-objects (s.a. :Type.__isgc__)"),
 	TYPE_METHOD_F("referring", &gcenum_referring, METHOD_FNOREFESCAPE,
-	              "(to)->?DSet\n"
+	              "(" gcenum_referring_params ")->?DSet\n"
 	              "Returns a set of gc-objects (s.a. :Type.__isgc__) that are referring to @to"),
 	TYPE_METHOD_F("isreferring", &gcenum_isreferring, METHOD_FNOREFESCAPE,
-	              "(from,to)->?Dbool\n"
+	              "(" gcenum_isreferring_params ")->?Dbool\n"
 	              "Returns ?t if @to is referred to by @from, or ?f otherwise"),
 	TYPE_METHOD_END
 };

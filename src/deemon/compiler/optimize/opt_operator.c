@@ -68,38 +68,54 @@ emulate_object_decode(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	/* Something like `"foo".encode("UTF-8")' can still be
 	 * optimized at compile-time, however `"foo".encode("hex")'
 	 * mustn't, because the codec is implemented externally */
-	DeeObject *name;
-	char *errors            = NULL;
 	unsigned int error_mode = STRING_ERROR_FSTRICT;
-	if (DeeArg_Unpack(argc, argv, "o|s:decode", &name, &errors))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("decode", params: """
+	DeeObject *name;
+	char const *errors = NULL;
+""");]]]*/
+	struct {
+		DeeObject *name;
+		char const *errors;
+	} args;
+	args.errors = NULL;
+	if (DeeArg_UnpackStruct(argc, argv, "o|s:decode", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
 		goto err;
-	if (errors) {
-		error_mode = DeeCodec_GetErrorMode(errors);
+	if (args.errors) {
+		error_mode = DeeCodec_GetErrorMode(args.errors);
 		if unlikely(error_mode == (unsigned int)-1)
 			goto err;
 	}
-	return DeeCodec_DecodeIntern(self, name, error_mode);
+	return DeeCodec_DecodeIntern(self, args.name, error_mode);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 emulate_object_encode(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *name;
-	char *errors            = NULL;
 	unsigned int error_mode = STRING_ERROR_FSTRICT;
-	if (DeeArg_Unpack(argc, argv, "o|s:encode", &name, &errors))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("encode", params: """
+	DeeObject *name;
+	char const *errors = NULL;
+""");]]]*/
+	struct {
+		DeeObject *name;
+		char const *errors;
+	} args;
+	args.errors = NULL;
+	if (DeeArg_UnpackStruct(argc, argv, "o|s:encode", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
 		goto err;
-	if (errors) {
-		error_mode = DeeCodec_GetErrorMode(errors);
+	if (args.errors) {
+		error_mode = DeeCodec_GetErrorMode(args.errors);
 		if unlikely(error_mode == (unsigned int)-1)
 			goto err;
 	}
-	return DeeCodec_EncodeIntern(self, name, error_mode);
+	return DeeCodec_EncodeIntern(self, args.name, error_mode);
 err:
 	return NULL;
 }

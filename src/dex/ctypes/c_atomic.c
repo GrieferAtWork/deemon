@@ -140,22 +140,34 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_atomic_cmpxch(size_t argc, DeeObject *const *argv) {
-	DeeObject *ob_ptr, *ob_oldval, *ob_newval;
 	union atomic_operand oldval, newval;
 	union pointer ptr;
 	DeeSTypeObject *basetype;
-	bool result, weak = false;
-	if (DeeArg_Unpack(argc, argv, "ooo|b:atomic_cmpxch",
-	                  &ob_ptr, &ob_oldval, &ob_newval, &weak))
+	bool result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("atomic_cmpxch", params: """
+	DeeObject *ptr;
+	DeeObject *oldval;
+	DeeObject *newval;
+	bool weak = false;
+""");]]]*/
+	struct {
+		DeeObject *ptr;
+		DeeObject *oldval;
+		DeeObject *newval;
+		bool weak;
+	} args;
+	args.weak = false;
+	if (DeeArg_UnpackStruct(argc, argv, "ooo|b:atomic_cmpxch", &args))
 		goto err;
-	if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))
+/*[[[end]]]*/
+	if unlikely(DeeObject_AsGenericPointer(args.ptr, &basetype, &ptr))
 		goto err;
-	if unlikely(get_atomic_operand(ob_oldval, basetype, &oldval))
+	if unlikely(get_atomic_operand(args.oldval, basetype, &oldval))
 		goto err;
-	if unlikely(get_atomic_operand(ob_newval, basetype, &newval))
+	if unlikely(get_atomic_operand(args.newval, basetype, &newval))
 		goto err;
 	CTYPES_FAULTPROTECT({
-		if (weak) {
+		if (args.weak) {
 			switch (basetype->st_sizeof) {
 			case 1: result = atomic_cmpxch_weak(ptr.p8, oldval.ao_u8, newval.ao_u8); break;
 			case 2: result = atomic_cmpxch_weak(ptr.p16, oldval.ao_u16, newval.ao_u16); break;
@@ -180,18 +192,27 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_atomic_cmpxch_val(size_t argc, DeeObject *const *argv) {
-	DeeObject *ob_ptr, *ob_oldval, *ob_newval;
 	union atomic_operand oldval, newval;
 	union pointer ptr;
 	DeeSTypeObject *basetype;
 	DREF DeeObject *result_obj;
-	DeeArg_Unpack3(err, argc, argv, "atomic_cmpxch_val",
-	                &ob_ptr, &ob_oldval, &ob_newval);
-	if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("atomic_cmpxch_val", params: """
+	DeeObject *ptr;
+	DeeObject *oldval;
+	DeeObject *newval;
+""");]]]*/
+	struct {
+		DeeObject *ptr;
+		DeeObject *oldval;
+		DeeObject *newval;
+	} args;
+	DeeArg_UnpackStruct3(err, argc, argv, "atomic_cmpxch_val", &args, &args.ptr, &args.oldval, &args.newval);
+/*[[[end]]]*/
+	if unlikely(DeeObject_AsGenericPointer(args.ptr, &basetype, &ptr))
 		goto err;
-	if unlikely(get_atomic_operand(ob_oldval, basetype, &oldval))
+	if unlikely(get_atomic_operand(args.oldval, basetype, &oldval))
 		goto err;
-	if unlikely(get_atomic_operand(ob_newval, basetype, &newval))
+	if unlikely(get_atomic_operand(args.newval, basetype, &newval))
 		goto err;
 	/* Allocate a buffer for the result (which is the *real* old value) */
 	result_obj = (DREF DeeObject *)DeeObject_Malloc(sizeof(DeeObject) +
@@ -231,7 +252,7 @@ err:
 		union pointer ptr;                                                                                \
 		DeeSTypeObject *basetype;                                                                         \
 		DREF DeeObject *result_obj;                                                                       \
-		DeeArg_Unpack2(err, argc, argv, atomic_name, &ob_ptr, &ob_addend);                               \
+		DeeArg_Unpack2(err, argc, argv, atomic_name, &ob_ptr, &ob_addend);                                \
 		if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))                                  \
 			goto err;                                                                                     \
 		if unlikely(get_atomic_operand(ob_addend, basetype, &addend))                                     \
@@ -278,7 +299,7 @@ CYTYPES_DEFINE_ATOMIC_BINOP(capi_atomic_nandfetch, "atomic_nandfetch", atomic_na
 		union atomic_operand addend;                                                \
 		union pointer ptr;                                                          \
 		DeeSTypeObject *basetype;                                                   \
-		DeeArg_Unpack2(err, argc, argv, atomic_name, &ob_ptr, &ob_addend);         \
+		DeeArg_Unpack2(err, argc, argv, atomic_name, &ob_ptr, &ob_addend);          \
 		if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))            \
 			goto err;                                                               \
 		if unlikely(get_atomic_operand(ob_addend, basetype, &addend))               \
@@ -312,7 +333,7 @@ CTYPES_DEFINE_ATOMIC_BINOP_VOID(capi_atomic_write, "atomic_write", atomic_write)
 		union pointer ptr;                                                                 \
 		DeeSTypeObject *basetype;                                                          \
 		DREF DeeObject *result_obj;                                                        \
-		DeeArg_Unpack1(err, argc, argv, atomic_name, &ob_ptr);                            \
+		DeeArg_Unpack1(err, argc, argv, atomic_name, &ob_ptr);                             \
 		if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))                   \
 			goto err;                                                                      \
 		/* Allocate a buffer for the result (which is the *real* old value) */             \
@@ -349,7 +370,7 @@ CTYPES_DEFINE_ATOMIC_UNOP(capi_atomic_read, "atomic_read", atomic_read)
 		DeeObject *ob_ptr;                                                         \
 		union pointer ptr;                                                         \
 		DeeSTypeObject *basetype;                                                  \
-		DeeArg_Unpack1(err, argc, argv, atomic_name, &ob_ptr);                    \
+		DeeArg_Unpack1(err, argc, argv, atomic_name, &ob_ptr);                     \
 		if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))           \
 			goto err;                                                              \
 		CTYPES_FAULTPROTECT({                                                      \
@@ -373,11 +394,17 @@ CTYPES_DEFINE_ATOMIC_UNOP_VOID(capi_atomic_dec, "atomic_dec", atomic_dec)
 /* Futex API */
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_futex_wakeone(size_t argc, DeeObject *const *argv) {
-	DeeObject *ob_ptr;
 	union pointer ptr;
 	DeeSTypeObject *basetype;
-	DeeArg_Unpack1(err, argc, argv, "futex_wakeone", &ob_ptr);
-	if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("futex_wakeone", params: """
+	DeeObject *ptr;
+""");]]]*/
+	struct {
+		DeeObject *ptr;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "futex_wakeone", &args.ptr);
+/*[[[end]]]*/
+	if unlikely(DeeObject_AsGenericPointer(args.ptr, &basetype, &ptr))
 		goto err;
 	/* Because our `capi_futex_wait()' emulates 8-bit and 16-bit waits
 	 * by waiting for the relevant 32-bit word, we have to match its
@@ -391,11 +418,17 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_futex_wakeall(size_t argc, DeeObject *const *argv) {
-	DeeObject *ob_ptr;
 	union pointer ptr;
 	DeeSTypeObject *basetype;
-	DeeArg_Unpack1(err, argc, argv, "futex_wakeall", &ob_ptr);
-	if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("futex_wakeall", params: """
+	DeeObject *ptr;
+""");]]]*/
+	struct {
+		DeeObject *ptr;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "futex_wakeall", &args.ptr);
+/*[[[end]]]*/
+	if unlikely(DeeObject_AsGenericPointer(args.ptr, &basetype, &ptr))
 		goto err;
 	/* Because our `capi_futex_wait()' emulates 8-bit and 16-bit waits
 	 * by waiting for the relevant 32-bit word, we have to match its
@@ -410,14 +443,22 @@ err:
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_futex_wait(size_t argc, DeeObject *const *argv) {
 	int wait_error;
-	DeeObject *ob_ptr, *ob_expected;
 	union atomic_operand expected;
 	union pointer ptr;
 	DeeSTypeObject *basetype;
-	DeeArg_Unpack2(err, argc, argv, "futex_wait", &ob_ptr, &ob_expected);
-	if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("futex_wait", params: """
+	DeeObject *ptr;
+	DeeObject *expected;
+""");]]]*/
+	struct {
+		DeeObject *ptr;
+		DeeObject *expected;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "futex_wait", &args, &args.ptr, &args.expected);
+/*[[[end]]]*/
+	if unlikely(DeeObject_AsGenericPointer(args.ptr, &basetype, &ptr))
 		goto err;
-	if unlikely(get_atomic_operand(ob_expected, basetype, &expected))
+	if unlikely(get_atomic_operand(args.expected, basetype, &expected))
 		goto err;
 
 	/* Do the futex wait operation. */
@@ -501,17 +542,24 @@ err:
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_futex_timedwait(size_t argc, DeeObject *const *argv) {
 	int wait_error;
-	uint64_t timeout_nanoseconds;
-	DeeObject *ob_ptr, *ob_expected;
 	union atomic_operand expected;
 	union pointer ptr;
 	DeeSTypeObject *basetype;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPu64 ":futex_timedwait",
-	                  &ob_ptr, &ob_expected, &timeout_nanoseconds))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("futex_timedwait", params: """
+	DeeObject *ptr;
+	DeeObject *expected;
+	uint64_t timeout_nanoseconds;
+""");]]]*/
+	struct {
+		DeeObject *ptr;
+		DeeObject *expected;
+		uint64_t timeout_nanoseconds;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "futex_timedwait", &args, &args.ptr, "o", _DeeArg_AsObject, &args.expected, "o", _DeeArg_AsObject, &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+/*[[[end]]]*/
+	if unlikely(DeeObject_AsGenericPointer(args.ptr, &basetype, &ptr))
 		goto err;
-	if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))
-		goto err;
-	if unlikely(get_atomic_operand(ob_expected, basetype, &expected))
+	if unlikely(get_atomic_operand(args.expected, basetype, &expected))
 		goto err;
 
 	/* Do the futex wait operation. */
@@ -528,7 +576,7 @@ capi_futex_timedwait(size_t argc, DeeObject *const *argv) {
 		v8_index    = (ptr.uint & 3);
 		CTYPES_FAULTPROTECT(expected_oldval.v32 = atomic_read(aligned_ptr), goto err);
 		if (expected_oldval.v8[v8_index] == expected.ao_u8) {
-			wait_error = DeeFutex_Wait32Timed(aligned_ptr, expected_oldval.v32, timeout_nanoseconds);
+			wait_error = DeeFutex_Wait32Timed(aligned_ptr, expected_oldval.v32, args.timeout_nanoseconds);
 		} else {
 			wait_error = 0;
 		}
@@ -547,7 +595,7 @@ capi_futex_timedwait(size_t argc, DeeObject *const *argv) {
 		v16_index   = (ptr.uint & 2) >> 1;
 		CTYPES_FAULTPROTECT(expected_oldval.v32 = atomic_read(aligned_ptr), goto err);
 		if (expected_oldval.v16[v16_index] == expected.ao_u16) {
-			wait_error = DeeFutex_Wait32Timed(aligned_ptr, expected_oldval.v32, timeout_nanoseconds);
+			wait_error = DeeFutex_Wait32Timed(aligned_ptr, expected_oldval.v32, args.timeout_nanoseconds);
 		} else {
 			wait_error = 0;
 		}
@@ -559,7 +607,7 @@ capi_futex_timedwait(size_t argc, DeeObject *const *argv) {
 			goto err_unaligned;
 		CTYPES_FAULTPROTECT(true_oldval = atomic_read(ptr.p32), goto err);
 		if (true_oldval == expected.ao_u32) {
-			wait_error = DeeFutex_Wait32Timed(ptr.pvoid, expected.ao_u32, timeout_nanoseconds);
+			wait_error = DeeFutex_Wait32Timed(ptr.pvoid, expected.ao_u32, args.timeout_nanoseconds);
 		} else {
 			wait_error = 0;
 		}
@@ -572,7 +620,7 @@ capi_futex_timedwait(size_t argc, DeeObject *const *argv) {
 			goto err_unaligned;
 		CTYPES_FAULTPROTECT(true_oldval = atomic_read(ptr.p64), goto err);
 		if (true_oldval == expected.ao_u64) {
-			wait_error = DeeFutex_Wait64Timed(ptr.pvoid, expected.ao_u64, timeout_nanoseconds);
+			wait_error = DeeFutex_Wait64Timed(ptr.pvoid, expected.ao_u64, args.timeout_nanoseconds);
 		} else {
 			wait_error = 0;
 		}

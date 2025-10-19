@@ -1114,7 +1114,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 linesplit_init(LineSplit *__restrict self,
                size_t argc, DeeObject *const *argv) {
 	self->ls_keep = false;
-	if (DeeArg_Unpack(argc, argv, "o|b:_StringLineSplit", &self->ls_str, &self->ls_keep))
+	if (DeeArg_Unpack(argc, argv, "o|b:_StringLineSplit",
+	                  &self->ls_str, &self->ls_keep))
 		goto err;
 	if (DeeObject_AssertTypeExact(self->ls_str, &DeeString_Type))
 		goto err;

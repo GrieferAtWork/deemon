@@ -3954,30 +3954,37 @@ PRIVATE WUNUSED DREF DeeObject *DCALL int_return_zero(void) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 int_new(size_t argc, DeeObject *const *argv) {
-	DeeObject *val;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("int", params: """
+	DeeObject *ob;
 	uint16_t radix = 0;
-	if (DeeArg_Unpack(argc, argv, "o|" UNPu16 ":int", &val, &radix))
-		goto err;
-	if (DeeString_Check(val)) {
-		char const *utf8 = DeeString_AsUtf8(val);
+""");]]]*/
+	struct {
+		DeeObject *ob;
+		uint16_t radix;
+	} args;
+	args.radix = 0;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "int", &args, &args.ob, "o", _DeeArg_AsObject, &args.radix, UNPu16, DeeObject_AsUInt16);
+/*[[[end]]]*/
+	if (DeeString_Check(args.ob)) {
+		char const *utf8 = DeeString_AsUtf8(args.ob);
 		if unlikely(!utf8)
 			goto err;
-		if unlikely(radix == 1)
+		if unlikely(args.radix == 1)
 			goto err_bad_radix;
 		return DeeInt_FromString(utf8,
 		                         WSTR_LENGTH(utf8),
-		                         DEEINT_STRING(radix,
+		                         DEEINT_STRING(args.radix,
 		                                       DEEINT_STRING_FNORMAL));
 	}
-	if (DeeBytes_Check(val)) {
-		if unlikely(radix == 1)
+	if (DeeBytes_Check(args.ob)) {
+		if unlikely(args.radix == 1)
 			goto err_bad_radix;
-		return DeeInt_FromAscii((char const *)DeeBytes_DATA(val),
-		                        DeeBytes_SIZE(val),
-		                        DEEINT_STRING(radix,
+		return DeeInt_FromAscii((char const *)DeeBytes_DATA(args.ob),
+		                        DeeBytes_SIZE(args.ob),
+		                        DEEINT_STRING(args.radix,
 		                                      DEEINT_STRING_FNORMAL));
 	}
-	return DeeObject_Int(val);
+	return DeeObject_Int(args.ob);
 err_bad_radix:
 	DeeError_Throwf(&DeeError_ValueError, "Invalid radix = 1");
 err:

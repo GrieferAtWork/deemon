@@ -824,13 +824,16 @@ err:
 #define HAVE_float_nextafter
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_nextafter(Float *self, size_t argc, DeeObject *const *argv) {
-	double y;
-	if (DeeArg_Unpack(argc, argv, "D:nextafter", &y))
-		goto err;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("nextafter", params: "double y");]]]*/
+	struct {
+		double y;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "nextafter", &args.y, "D", DeeObject_AsDouble);
+/*[[[end]]]*/
 #ifdef CONFIG_HAVE_nextafter
-	return DeeFloat_New(nextafter(self->f_value, y));
+	return DeeFloat_New(nextafter(self->f_value, args.y));
 #else /* CONFIG_HAVE_nextafter */
-	return DeeFloat_New(nexttoward(self->f_value, (long double)y));
+	return DeeFloat_New(nexttoward(self->f_value, (long double)args.y));
 #endif /* !CONFIG_HAVE_nextafter */
 err:
 	return NULL;

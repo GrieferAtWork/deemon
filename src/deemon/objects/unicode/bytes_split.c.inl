@@ -1055,7 +1055,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 bls_init(BytesLineSplit *__restrict self, size_t argc,
          DeeObject *const *argv) {
 	self->bls_keepends = false;
-	if (DeeArg_Unpack(argc, argv, "o|b:_BytesLineSplit", &self->bls_bytes, &self->bls_keepends))
+	if (DeeArg_Unpack(argc, argv, "o|b:_BytesLineSplit",
+	                  &self->bls_bytes, &self->bls_keepends))
 		goto err;
 	if (DeeObject_AssertTypeExact(self->bls_bytes, &DeeBytes_Type))
 		goto err;

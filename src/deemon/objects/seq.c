@@ -3235,11 +3235,18 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 seq_class_repeatseq(DeeObject *__restrict UNUSED(self),
                     size_t argc, DeeObject *const *argv) {
-	DeeObject *seq;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("repeatseq", params: """
+	DeeObject *seq:?DSequence;
 	size_t count;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":repeatseq", &seq, &count))
-		goto err;
-	return DeeSeq_Repeat(seq, count);
+""", docStringPrefix: "seq");]]]*/
+#define seq_repeatseq_params "seq:?DSequence,count:?Dint"
+	struct {
+		DeeObject *seq;
+		size_t count;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "repeatseq", &args, &args.seq, "o", _DeeArg_AsObject, &args.count, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	return DeeSeq_Repeat(args.seq, args.count);
 err:
 	return NULL;
 }
@@ -3291,7 +3298,7 @@ PRIVATE struct type_method tpconst seq_class_methods[] = {
 	TYPE_METHOD("repeatseq", &seq_class_repeatseq,
 	            /* TODO: Rename to "repeat" (and change from "tp_class_methods" to "tp_methods") */
 	            /* TODO: The "count" argument should be optional, and if not given, means "infinite" */
-	            "(seq:?DSequence,count:?Dint)->?DSequence\n"
+	            "(" seq_repeatseq_params ")->?DSequence\n"
 	            "#tIntegerOverflow{@count is negative}"
 	            "Repeat all the elements from @seq a total of @count times\n"
 	            "This is the same as ${(seq as Sequence from deemon) * count}"),
