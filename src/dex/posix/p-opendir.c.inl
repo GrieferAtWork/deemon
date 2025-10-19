@@ -763,8 +763,7 @@ LOCAL unsigned int dee_DTTOIF(TYPEOF_struct_dirent_d_type dt) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_DTTOIF_f(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv) {
 	TYPEOF_struct_dirent_d_type dt;
-	if (DeeArg_Unpack(argc, argv, UNP_struct_dirent_d_type ":DTTOIF", &dt))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "DTTOIF", &dt, UNP_struct_dirent_d_type, DeeObject_AsUIntX);
 	return DeeInt_NewUInt(USED_DTTOIF(dt));
 err:
 	return NULL;
@@ -772,10 +771,13 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_IFTODT_f(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv) {
-	unsigned int if_;
-	if (DeeArg_Unpack(argc, argv, "u:IFTODT", &if_))
-		goto err;
-	return DeeInt_New_D_TYPE(USED_IFTODT(if_));
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("IFTODT", params: "unsigned int if");]]]*/
+	struct {
+		unsigned int if_;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "IFTODT", &args.if_, "u", DeeObject_AsUInt);
+/*[[[end]]]*/
+	return DeeInt_New_D_TYPE(USED_IFTODT(args.if_));
 err:
 	return NULL;
 }

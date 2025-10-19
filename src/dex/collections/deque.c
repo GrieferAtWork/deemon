@@ -1195,7 +1195,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_popfront(Deque *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("popfront");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "popfront");
+/*[[[end]]]*/
 	return Deque_PopFront(self);
 err:
 	return NULL;
@@ -1203,7 +1205,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_popback(Deque *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("popback");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "popback");
+/*[[[end]]]*/
 	return Deque_PopBack(self);
 err:
 	return NULL;
@@ -1212,10 +1216,16 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_llrot(Deque *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("llrot", params: """
 	size_t num_items;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":llrot", &num_items))
-		goto err;
-	if (Deque_llrot(self, num_items))
+""", docStringPrefix: "deq");]]]*/
+#define deq_llrot_params "num_items:?Dint"
+	struct {
+		size_t num_items;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "llrot", &args.num_items, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (Deque_llrot(self, args.num_items))
 		goto err;
 	return_none;
 err:
@@ -1224,10 +1234,16 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_lrrot(Deque *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("lrrot", params: """
 	size_t num_items;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":lrrot", &num_items))
-		goto err;
-	if (Deque_lrrot(self, num_items))
+""", docStringPrefix: "deq");]]]*/
+#define deq_lrrot_params "num_items:?Dint"
+	struct {
+		size_t num_items;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "lrrot", &args.num_items, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (Deque_lrrot(self, args.num_items))
 		goto err;
 	return_none;
 err:
@@ -1236,10 +1252,16 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_rlrot(Deque *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rlrot", params: """
 	size_t num_items;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":rlrot", &num_items))
-		goto err;
-	if (Deque_rlrot(self, num_items))
+""", docStringPrefix: "deq");]]]*/
+#define deq_rlrot_params "num_items:?Dint"
+	struct {
+		size_t num_items;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "rlrot", &args.num_items, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (Deque_rlrot(self, args.num_items))
 		goto err;
 	return_none;
 err:
@@ -1248,10 +1270,16 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_rrrot(Deque *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rrrot", params: """
 	size_t num_items;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":rrrot", &num_items))
-		goto err;
-	if (Deque_rrrot(self, num_items))
+""", docStringPrefix: "deq");]]]*/
+#define deq_rrrot_params "num_items:?Dint"
+	struct {
+		size_t num_items;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "rrrot", &args.num_items, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (Deque_rrrot(self, args.num_items))
 		goto err;
 	return_none;
 err:
@@ -1291,7 +1319,7 @@ PRIVATE struct type_method tpconst deq_methods[] = {
 	              "#tValueError{@this deque is empty}"
 	              "Pop and return an item from the back of @this deque"),
 	TYPE_METHOD_F("llrot", &deq_llrot, METHOD_FNOREFESCAPE,
-	              "(num_items:?Dint)\n"
+	              "(" deq_llrot_params ")\n"
 	              "#tIndexError{@this deque contain less than @num_items items}"
 	              "Rotate the first @num_items items left by 1:\n"
 	              "${"
@@ -1301,7 +1329,7 @@ PRIVATE struct type_method tpconst deq_methods[] = {
 	              /**/ "print repr x; /* { 20, 30, 10, 40, 50 } */"
 	              "}"),
 	TYPE_METHOD_F("lrrot", &deq_lrrot, METHOD_FNOREFESCAPE,
-	              "(num_items:?Dint)\n"
+	              "(" deq_lrrot_params ")\n"
 	              "#tIndexError{@this deque contain less than @num_items items}"
 	              "Rotate the first @num_items items right by 1:\n"
 	              "${"
@@ -1311,7 +1339,7 @@ PRIVATE struct type_method tpconst deq_methods[] = {
 	              /**/ "print repr x; /* { 30, 10, 20, 40, 50 } */"
 	              "}"),
 	TYPE_METHOD_F("rlrot", &deq_rlrot, METHOD_FNOREFESCAPE,
-	              "(num_items:?Dint)\n"
+	              "(" deq_rlrot_params ")\n"
 	              "#tIndexError{@this deque contain less than @num_items items}"
 	              "Rotate the last @num_items items left by 1:\n"
 	              "${"
@@ -1321,7 +1349,7 @@ PRIVATE struct type_method tpconst deq_methods[] = {
 	              /**/ "print repr x; /* { 10, 20, 40, 50, 30 } */"
 	              "}"),
 	TYPE_METHOD_F("rrrot", &deq_rrrot, METHOD_FNOREFESCAPE,
-	              "(num_items:?Dint)\n"
+	              "(" deq_rrrot_params ")\n"
 	              "#tIndexError{@this deque contain less than @num_items items}"
 	              "Rotate the last @num_items items right by 1:\n"
 	              "${"

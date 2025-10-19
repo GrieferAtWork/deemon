@@ -1169,6 +1169,7 @@ function print_DeeArg_Unpack(name: string = "",
 			'"o|o"': "DeeArg_UnpackStruct1Or2",
 			'"|oo"': "DeeArg_UnpackStruct0Or1Or2",
 			'"o|oo"': "DeeArg_UnpackStruct1Or2Or3",
+			'"|ooo"': "DeeArg_UnpackStruct0Or1Or2Or3",
 		}.get(simpleFormat);
 		if (dedicatedUnpackFunction !is none) {
 			print(f"	{dedicatedUnpackFunction}({err}, {argc}, {argv}, {nameRepr}{
@@ -1187,6 +1188,7 @@ function print_DeeArg_Unpack(name: string = "",
 					"X|X": "DeeArg_UnpackStruct1XOr2X",
 					"|XX": "DeeArg_UnpackStruct0Or1XOr2X",
 					"X|XX": "DeeArg_UnpackStruct1XOr2XOr3X",
+					"|XXX": "DeeArg_UnpackStruct0Or1XOr2XOr3X",
 				}.get(patterm);
 				if (mapper !is none) {
 					print(f"	{mapper}({err}, {argc}, {argv}, {nameRepr}{

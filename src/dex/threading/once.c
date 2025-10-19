@@ -363,9 +363,9 @@ once_finish(DeeOnceObject *self, size_t argc,
 #define once_finish_params "result,override=!f"
 	struct {
 		DeeObject *result;
-		bool _override;
+		bool override_;
 	} args;
-	args._override = false;
+	args.override_ = false;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, finish_kwlist, "o|b:finish", &args))
 		goto err;
 /*[[[end]]]*/
@@ -373,7 +373,7 @@ once_finish(DeeOnceObject *self, size_t argc,
 	if (status <= 0) {
 		if unlikely(status < 0)
 			goto err;
-		if (!args._override)
+		if (!args.override_)
 			goto err_already_finished;
 		Dee_Incref(args.result);
 		args.result = atomic_xch(&self->o_value, args.result);

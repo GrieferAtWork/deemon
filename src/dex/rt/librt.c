@@ -238,7 +238,9 @@ print define_Dee_HashStr("__IterWithEnumerateIndexMap__");
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_getstacklimit_f(size_t argc, DeeObject *const *argv) {
 	uint16_t result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getstacklimit");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "getstacklimit");
+/*[[[end]]]*/
 	result = atomic_read(&DeeExec_StackLimit);
 	return DeeInt_NewUInt16(result);
 err:
@@ -247,10 +249,17 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_setstacklimit_f(size_t argc, DeeObject *const *argv) {
-	uint16_t result, newval = DEE_CONFIG_DEFAULT_STACK_LIMIT;
-	if (DeeArg_Unpack(argc, argv, "|" UNPu16 ":setstacklimit", &newval))
-		goto err;
-	result = atomic_xch(&DeeExec_StackLimit, newval);
+	uint16_t result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("setstacklimit", params: """
+	uint16_t newval=!0 = DEE_CONFIG_DEFAULT_STACK_LIMIT
+""");]]]*/
+	struct {
+		uint16_t newval;
+	} args;
+	args.newval = DEE_CONFIG_DEFAULT_STACK_LIMIT;
+	DeeArg_Unpack0Or1X(err, argc, argv, "setstacklimit", &args.newval, UNPu16, DeeObject_AsUInt16);
+/*[[[end]]]*/
+	result = atomic_xch(&DeeExec_StackLimit, args.newval);
 	return DeeInt_NewUInt16(result);
 err:
 	return NULL;
@@ -259,7 +268,9 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_getcalloptimizethreshold_f(size_t argc, DeeObject *const *argv) {
 	size_t result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getcalloptimizethreshold");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "getcalloptimizethreshold");
+/*[[[end]]]*/
 	result = DeeCode_GetOptimizeCallThreshold();
 	return DeeInt_NewSize(result);
 err:
@@ -268,10 +279,16 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_setcalloptimizethreshold_f(size_t argc, DeeObject *const *argv) {
-	size_t result, newval;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":setcalloptimizethreshold", &newval))
-		goto err;
-	result = DeeCode_SetOptimizeCallThreshold(newval);
+	size_t result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("setcalloptimizethreshold", params: """
+	size_t newval;
+""");]]]*/
+	struct {
+		size_t newval;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "setcalloptimizethreshold", &args.newval, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	result = DeeCode_SetOptimizeCallThreshold(args.newval);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -289,22 +306,22 @@ librt_makeclass_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	struct {
 		DeeObject *base;
 		DeeObject *descriptor;
-		DeeModuleObject *_module;
+		DeeModuleObject *module_;
 	} args;
-	args._module = (DeeModuleObject *)Dee_None;
+	args.module_ = (DeeModuleObject *)Dee_None;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, makeclass_kwlist, "oo|o:makeclass", &args))
 		goto err;
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.descriptor, &DeeClassDescriptor_Type))
 		goto err;
-	if (DeeNone_Check(args._module)) {
+	if (DeeNone_Check(args.module_)) {
 		/* Special case: no declaring module given. */
-		args._module = NULL;
+		args.module_ = NULL;
 	} else {
-		if (DeeObject_AssertTypeExact(args._module, &DeeModule_Type))
+		if (DeeObject_AssertTypeExact(args.module_, &DeeModule_Type))
 			goto err;
 	}
-	return DeeClass_New(args.base, args.descriptor, args._module);
+	return DeeClass_New(args.base, args.descriptor, args.module_);
 err:
 	return NULL;
 }

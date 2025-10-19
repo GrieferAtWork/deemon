@@ -1689,15 +1689,15 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 semaphore_printrepr(DeeSemaphoreObject *__restrict self,
                     Dee_formatprinter_t printer, void *arg) {
-	uintptr_t tickets = atomic_read(&self->sem_semaphore.se_tickets);
+	size_t tickets = atomic_read(&self->sem_semaphore.se_tickets);
 	return DeeFormat_Printf(printer, arg, "Semaphore(%" PRFuPTR ")", tickets);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-semaphore_do_release(DeeSemaphoreObject *__restrict self, uintptr_t count) {
-	uintptr_t old_count;
+semaphore_do_release(DeeSemaphoreObject *__restrict self, size_t count) {
+	size_t old_count;
 	for (;;) {
-		uintptr_t new_count;
+		size_t new_count;
 		old_count = atomic_read(&self->sem_semaphore.se_tickets);
 		if (OVERFLOW_UADD(old_count, count, &new_count))
 			goto err_overflow;
@@ -1751,10 +1751,16 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 semaphore_release(DeeSemaphoreObject *self, size_t argc, DeeObject *const *argv) {
-	uintptr_t count = 1;
-	if (DeeArg_Unpack(argc, argv, "|" UNPuPTR ":release", &count))
-		goto err;
-	if unlikely(semaphore_do_release(self, count))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwrite", params: """
+	size_t count = 1;
+""");]]]*/
+	struct {
+		size_t count;
+	} args;
+	args.count = 1;
+	DeeArg_Unpack0Or1X(err, argc, argv, "timedwrite", &args.count, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if unlikely(semaphore_do_release(self, args.count))
 		goto err;
 	return_none;
 err:
@@ -1821,20 +1827,20 @@ semaphore_acquired_get(DeeSemaphoreObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 semaphore_tickets_get(DeeSemaphoreObject *__restrict self) {
-	uintptr_t result;
+	size_t result;
 	result = Dee_semaphore_gettickets(&self->sem_semaphore);
-	return DeeInt_NewUIntptr(result);
+	return DeeInt_NewSize(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 semaphore_tickets_set(DeeSemaphoreObject *self, DeeObject *value) {
-	uintptr_t new_tickets, old_tickets;
-	if (DeeObject_AsUIntptr(value, &new_tickets))
+	size_t new_tickets, old_tickets;
+	if (DeeObject_AsSize(value, &new_tickets))
 		goto err;
 	old_tickets = atomic_xch(&self->sem_semaphore.se_tickets, new_tickets);
 	if (new_tickets > old_tickets) {
 		if (Dee_semaphore_haswaiting(&self->sem_semaphore)) {
-			uintptr_t extra = new_tickets - old_tickets;
+			size_t extra = new_tickets - old_tickets;
 			if (extra == 1) {
 				DeeFutex_WakeOne(&self->sem_semaphore.se_tickets);
 			} else {
@@ -1991,8 +1997,6 @@ event_timedwaitfor(DeeEventObject *self, size_t argc, DeeObject *const *argv) {
 	} args;
 	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedwaitfor", &args.timeout_nanoseconds))
-		goto err;
 	error = Dee_event_waitfor_timed(&self->e_event, args.timeout_nanoseconds);
 	if unlikely(error < 0)
 		goto err;

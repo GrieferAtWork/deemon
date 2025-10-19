@@ -584,12 +584,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 muiter_init(MapUnionIterator *__restrict self,
             size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv,
-	                  Dee_TYPE(self) == &MapUnionIterator_Type
-	                  ? "o:_MapUnionIterator"
-	                  : "o:_MapSymmetricDifferenceIterator",
-	                  &self->mui_union))
-		goto err;
+	if unlikely(argc != 1)
+		goto err_argc;
+	self->mui_union = (MapUnion *)argv[0];
 	if (DeeObject_AssertTypeExact(self->mui_union,
 	                              Dee_TYPE(self) == &MapUnionIterator_Type
 	                              ? &MapUnion_Type
@@ -601,6 +598,8 @@ muiter_init(MapUnionIterator *__restrict self,
 	Dee_atomic_rwlock_init(&self->mui_lock);
 	self->mui_in2nd = false;
 	return 0;
+err_argc:
+	DeeArg_BadArgc1(DeeType_GetName(Dee_TYPE(self)), argc);
 err:
 	return -1;
 }
@@ -1221,12 +1220,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 miiter_init(MapIntersectionIterator *self,
             size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv,
-	                  Dee_TYPE(self) == &MapIntersectionIterator_Type
-	                  ? "o:_MapIntersectionIterator"
-	                  : "o:_MapDifferenceIterator",
-	                  &self->mii_intersect))
-		goto err;
+	if unlikely(argc != 1)
+		goto err_argc;
+	self->mii_intersect = (MapIntersection *)argv[0];
 	if (DeeObject_AssertType(self->mii_intersect,
 	                         Dee_TYPE(self) == &MapIntersectionIterator_Type
 	                         ? &MapIntersection_Type
@@ -1238,6 +1234,8 @@ miiter_init(MapIntersectionIterator *self,
 	Dee_Incref(self->mii_intersect);
 	self->mii_keys = self->mii_intersect->mi_keys;
 	return 0;
+err_argc:
+	DeeArg_BadArgc1(DeeType_GetName(Dee_TYPE(self)), argc);
 err:
 	return -1;
 }

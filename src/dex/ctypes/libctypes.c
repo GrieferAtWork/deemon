@@ -383,44 +383,69 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_bswap16(size_t argc, DeeObject *const *argv) {
-	uint16_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu16 ":bswap16", &i))
-		goto err;
-	return int_newu16(BSWAP16(i));
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("bswap16", params: """
+	uint16_t x:?Guint16_t
+""", docStringPrefix: "ctypes");]]]*/
+#define ctypes_bswap16_params "x:?Guint16_t"
+	struct {
+		uint16_t x;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "bswap16", &args.x, UNPu16, DeeObject_AsUInt16);
+/*[[[end]]]*/
+	return int_newu16(BSWAP16(args.x));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_bswap32(size_t argc, DeeObject *const *argv) {
-	uint32_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu32 ":bswap32", &i))
-		goto err;
-	return int_newu32(BSWAP32(i));
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("bswap32", params: """
+	uint32_t x:?Guint32_t
+""", docStringPrefix: "ctypes");]]]*/
+#define ctypes_bswap32_params "x:?Guint32_t"
+	struct {
+		uint32_t x;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "bswap32", &args.x, UNPu32, DeeObject_AsUInt32);
+/*[[[end]]]*/
+	return int_newu32(BSWAP32(args.x));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_bswap64(size_t argc, DeeObject *const *argv) {
-	uint64_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":bswap64", &i))
-		goto err;
-	return int_newu64(BSWAP64(i));
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("bswap64", params: """
+	uint64_t x:?Guint64_t
+""", docStringPrefix: "ctypes");]]]*/
+#define ctypes_bswap64_params "x:?Guint64_t"
+	struct {
+		uint64_t x;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "bswap64", &args.x, UNPu64, DeeObject_AsUInt64);
+/*[[[end]]]*/
+	return int_newu64(BSWAP64(args.x));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_bswap128(size_t argc, DeeObject *const *argv) {
-	Dee_uint128_t i, res;
-	if (DeeArg_Unpack(argc, argv, UNPu128 ":bswap128", &i))
-		goto err;
+	Dee_uint128_t res;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("bswap128", params: """
+	Dee_uint128_t x:?Guint128_t
+""", docStringPrefix: "ctypes");]]]*/
+#define ctypes_bswap128_params "x:?Guint128_t"
+	struct {
+		Dee_uint128_t x;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "bswap128", &args.x, UNPu128, DeeObject_AsUInt128);
+/*[[[end]]]*/
 #ifdef BSWAP128
-	res = BSWAP128(i);
+	res = BSWAP128(args.x);
 #else /* BSWAP128 */
-	__hybrid_uint128_setword64(res, 0, BSWAP64(__hybrid_uint128_getword64(i, 1)));
-	__hybrid_uint128_setword64(res, 1, BSWAP64(__hybrid_uint128_getword64(i, 0)));
+	__hybrid_uint128_setword64(res, 0, BSWAP64(__hybrid_uint128_getword64(args.x, 1)));
+	__hybrid_uint128_setword64(res, 1, BSWAP64(__hybrid_uint128_getword64(args.x, 0)));
 #endif /* !BSWAP128 */
 	return int_newu128(res);
 err:
@@ -740,16 +765,16 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "#tValueError{No integer matching the requirements of @size is supported}") },
 
 	{ "bswap16", (DeeObject *)&ctypes_bswap16, MODSYM_FREADONLY,
-	  DOC("(x:?Guint16_t)->?Guint16_t\n"
+	  DOC("(" ctypes_bswap16_params ")->?Guint16_t\n"
 	      "Return @x with reversed endian") },
 	{ "bswap32", (DeeObject *)&ctypes_bswap32, MODSYM_FREADONLY,
-	  DOC("(x:?Guint32_t)->?Guint32_t\n"
+	  DOC("(" ctypes_bswap32_params ")->?Guint32_t\n"
 	      "Return @x with reversed endian") },
 	{ "bswap64", (DeeObject *)&ctypes_bswap64, MODSYM_FREADONLY,
-	  DOC("(x:?Guint64_t)->?Guint64_t\n"
+	  DOC("(" ctypes_bswap64_params ")->?Guint64_t\n"
 	      "Return @x with reversed endian") },
 	{ "bswap128", (DeeObject *)&ctypes_bswap128, MODSYM_FREADONLY,
-	  DOC("(x:?Guint128_t)->?Guint128_t\n"
+	  DOC("(" ctypes_bswap128_params ")->?Guint128_t\n"
 	      "Return @x with reversed endian") },
 
 	{ "htole16", (DeeObject *)&ctypes_htole16, MODSYM_FREADONLY,
@@ -987,7 +1012,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
 	      "Same as ?Grawmemrlen, but instead of comparing bytes for being equal, compare them for being different") },
 	{ "bcmp", (DeeObject *)&ctypes_bcmp, MODSYM_FREADONLY,
-	  DOC("(lhs:?Aptr?Gvoid,rhs:?Aptr?Gvoid,size:?Dint)->?Dint\n"
+	  DOC("(a:?Aptr?Gvoid,b:?Aptr?Gvoid,size:?Dint)->?Dint\n"
 	      "Same as ?Gmemcmp, but only returns $0 when buffer are equal, and non-$0 otherwise") },
 	{ "memcmp", (DeeObject *)&ctypes_memcmp, MODSYM_FREADONLY,
 	  DOC("(lhs:?Aptr?Gvoid,rhs:?Aptr?Gvoid,size:?Dint)->?Dint\n"

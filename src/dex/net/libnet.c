@@ -46,88 +46,116 @@ DECL_BEGIN
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getafname_f(size_t argc, DeeObject *const *argv) {
-	int af_id;
-	if (DeeArg_Unpack(argc, argv, "d:getafname", &af_id))
-		goto err;
-	return sock_getafnameorid(af_id);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getafname", params: "int af");]]]*/
+	struct {
+		int af;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "getafname", &args.af, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	return sock_getafnameorid(args.af);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getafof_f(size_t argc, DeeObject *const *argv) {
-	DeeObject *afob;
-	int afid;
-	DeeArg_Unpack1(err, argc, argv, "getafof", &afob);
-	if (sock_getafof(afob, &afid))
+	int result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getafof", params: "DeeObject *af");]]]*/
+	struct {
+		DeeObject *af;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "getafof", &args.af);
+/*[[[end]]]*/
+	if unlikely(sock_getafof(args.af, &result))
 		goto err;
-	return DeeInt_NewInt(afid);
+	return DeeInt_NewInt(result);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_gettypename_f(size_t argc, DeeObject *const *argv) {
-	int af_id;
-	if (DeeArg_Unpack(argc, argv, "d:gettypename", &af_id))
-		goto err;
-	return sock_gettypenameorid(af_id);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("gettypename", params: "int typ");]]]*/
+	struct {
+		int typ;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "gettypename", &args.typ, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	return sock_gettypenameorid(args.typ);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_gettypeof_f(size_t argc, DeeObject *const *argv) {
-	DeeObject *afob;
-	int afid;
-	DeeArg_Unpack1(err, argc, argv, "gettypeof", &afob);
-	if (sock_gettypeof(afob, &afid))
+	int result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("gettypeof", params: "DeeObject *typ");]]]*/
+	struct {
+		DeeObject *typ;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "gettypeof", &args.typ);
+/*[[[end]]]*/
+	if unlikely(sock_gettypeof(args.typ, &result))
 		goto err;
-	return DeeInt_NewInt(afid);
+	return DeeInt_NewInt(result);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getprotoname_f(size_t argc, DeeObject *const *argv) {
-	int af_id;
-	if (DeeArg_Unpack(argc, argv, "d:getprotoname", &af_id))
-		goto err;
-	return sock_getprotonameorid(af_id);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getprotoname", params: "int proto");]]]*/
+	struct {
+		int proto;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "getprotoname", &args.proto, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	return sock_getprotonameorid(args.proto);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getprotoof_f(size_t argc, DeeObject *const *argv) {
-	DeeObject *afob;
-	int afid;
-	DeeArg_Unpack1(err, argc, argv, "getprotoof", &afob);
-	if (sock_getprotoof(afob, &afid))
+	int result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("gettypeof", params: "DeeObject *proto");]]]*/
+	struct {
+		DeeObject *proto;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "gettypeof", &args.proto);
+/*[[[end]]]*/
+	if (sock_getprotoof(args.proto, &result))
 		goto err;
-	return DeeInt_NewInt(afid);
+	return DeeInt_NewInt(result);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getmsgflagsname_f(size_t argc, DeeObject *const *argv) {
-	int af_id;
-	if (DeeArg_Unpack(argc, argv, "d:getmsgflagsname", &af_id))
-		goto err;
-	return sock_getmsgflagsnameorid(af_id);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getmsgflagsname", params: "int msgflags");]]]*/
+	struct {
+		int msgflags;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "getmsgflagsname", &args.msgflags, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	return sock_getmsgflagsnameorid(args.msgflags);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getmsgflagsof_f(size_t argc, DeeObject *const *argv) {
-	DeeObject *afob;
-	int afid;
-	DeeArg_Unpack1(err, argc, argv, "getmsgflags", &afob);
-	if (sock_getmsgflagsof(afob, &afid))
+	int result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getmsgflags", params: "DeeObject *msgflags");]]]*/
+	struct {
+		DeeObject *msgflags;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "getmsgflags", &args.msgflags);
+/*[[[end]]]*/
+	if (sock_getmsgflagsof(args.msgflags, &result))
 		goto err;
-	return DeeInt_NewInt(afid);
+	return DeeInt_NewInt(result);
 err:
 	return NULL;
 }
@@ -144,60 +172,78 @@ PRIVATE DEFINE_CMETHOD(lib_getmsgflagsof, &lib_getmsgflagsof_f, METHOD_FCONSTCAL
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_ntoh16_f(size_t argc, DeeObject *const *argv) {
-	uint16_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu16 ":ntoh16", &i))
-		goto err;
-	return DeeInt_NewUInt16(BETOH16(i));
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ntoh16", params: "uint16_t x");]]]*/
+	struct {
+		uint16_t x;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "ntoh16", &args.x, UNPu16, DeeObject_AsUInt16);
+/*[[[end]]]*/
+	return DeeInt_NewUInt16((uint16_t)BETOH16(args.x));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_ntoh32_f(size_t argc, DeeObject *const *argv) {
-	uint32_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu32 ":ntoh32", &i))
-		goto err;
-	return DeeInt_NewUInt32(BETOH32(i));
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ntoh32", params: "uint32_t x");]]]*/
+	struct {
+		uint32_t x;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "ntoh32", &args.x, UNPu32, DeeObject_AsUInt32);
+/*[[[end]]]*/
+	return DeeInt_NewUInt32((uint32_t)BETOH32(args.x));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_ntoh64_f(size_t argc, DeeObject *const *argv) {
-	uint64_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":ntoh64", &i))
-		goto err;
-	return DeeInt_NewUInt64(BETOH64(i));
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ntoh64", params: "uint64_t x");]]]*/
+	struct {
+		uint64_t x;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "ntoh64", &args.x, UNPu64, DeeObject_AsUInt64);
+/*[[[end]]]*/
+	return DeeInt_NewUInt64((uint64_t)BETOH64(args.x));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_hton16_f(size_t argc, DeeObject *const *argv) {
-	uint16_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu16 ":hton16", &i))
-		goto err;
-	return DeeInt_NewUInt16(HTOBE16(i));
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("hton16", params: "uint16_t x");]]]*/
+	struct {
+		uint16_t x;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "hton16", &args.x, UNPu16, DeeObject_AsUInt16);
+/*[[[end]]]*/
+	return DeeInt_NewUInt16((uint16_t)HTOBE16(args.x));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_hton32_f(size_t argc, DeeObject *const *argv) {
-	uint32_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu32 ":hton32", &i))
-		goto err;
-	return DeeInt_NewUInt32(HTOBE32(i));
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("hton32", params: "uint32_t x");]]]*/
+	struct {
+		uint32_t x;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "hton32", &args.x, UNPu32, DeeObject_AsUInt32);
+/*[[[end]]]*/
+	return DeeInt_NewUInt32((uint32_t)HTOBE32(args.x));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_hton64_f(size_t argc, DeeObject *const *argv) {
-	uint64_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":hton64", &i))
-		goto err;
-	return DeeInt_NewUInt64(HTOBE64(i));
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("hton64", params: "uint64_t x");]]]*/
+	struct {
+		uint64_t x;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "hton64", &args.x, UNPu64, DeeObject_AsUInt64);
+/*[[[end]]]*/
+	return DeeInt_NewUInt64((uint64_t)HTOBE64(args.x));
 err:
 	return NULL;
 }

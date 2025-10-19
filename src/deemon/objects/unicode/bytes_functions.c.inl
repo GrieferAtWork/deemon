@@ -1040,9 +1040,11 @@ bytes_resized(Bytes *self, size_t argc, DeeObject *const *argv) {
 		} else {
 			memcpy(result->b_data, DeeBytes_DATA(self), new_size);
 		}
-	} else {
+	} else if (argc == 2) {
 		byte_t init;
-		if (DeeArg_Unpack(argc, argv, UNPuSIZ "|" UNPuB ":resized", &new_size, &init))
+		if (DeeObject_AsSize(argv[0], &new_size))
+			goto err;
+		if (DeeObject_AsByte(argv[1], &init))
 			goto err;
 		result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(new_size);
 		if unlikely(!result)
@@ -1055,6 +1057,9 @@ bytes_resized(Bytes *self, size_t argc, DeeObject *const *argv) {
 			endptr = mempcpy(result->b_data, DeeBytes_DATA(self), old_size);
 			memset(endptr, init, new_size - old_size);
 		}
+	} else {
+		DeeArg_BadArgcEx("resized", argc, 1, 2);
+		goto err;
 	}
 	return result;
 err:
@@ -1216,8 +1221,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_ord(Bytes *self, size_t argc, DeeObject *const *argv) {
 	size_t index = 0;
 	if (argc) {
-		if (DeeArg_Unpack(argc, argv, UNPuSIZ ":ord", &index))
-			goto err;
+		DeeArg_Unpack1X(err, argc, argv, "ord", &index, UNPuSIZ, DeeObject_AsSize);
 		if (index >= DeeBytes_SIZE(self)) {
 			DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
 			                          DeeBytes_SIZE(self));
@@ -1417,33 +1421,32 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
 	return true;
 }
 
-#define DEFINE_BYTES_TRAIT(name, function, test_ch)                  \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                            \
-	bytes_##name(Bytes *self, size_t argc, DeeObject *const *argv) { \
-		size_t start = 0, end = (size_t)-1;                          \
-		if (argc == 1) {                                             \
-			byte_t ch;                                               \
-			if unlikely(DeeObject_AsSize(argv[0], &start))           \
-				goto err_maybe_overflow;                             \
-			if unlikely(start >= DeeBytes_SIZE(self)) {              \
-				DeeRT_ErrIndexOutOfBounds((DeeObject *)self, start,  \
-				                          DeeBytes_SIZE(self));      \
-				goto err;                                            \
-			}                                                        \
-			ch = DeeBytes_DATA(self)[start];                         \
-			return_bool(test_ch);                                    \
-		} else {                                                     \
-			if (DeeArg_Unpack(argc, argv,                            \
-			                  "|" UNPuSIZ UNPxSIZ ":" #name,         \
-			                  &start, &end))                         \
-				goto err;                                            \
-			return_bool(function(self, start, end));                 \
-		}                                                            \
-	err:                                                             \
-		return NULL;                                                 \
-	err_maybe_overflow:                                              \
-		DeeRT_ErrIndexOverflow(self);                                \
-		goto err;                                                    \
+#define DEFINE_BYTES_TRAIT(name, function, test_ch)                    \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                              \
+	bytes_##name(Bytes *self, size_t argc, DeeObject *const *argv) {   \
+		size_t start = 0, end = (size_t)-1;                            \
+		if (argc == 1) {                                               \
+			byte_t ch;                                                 \
+			if unlikely(DeeObject_AsSize(argv[0], &start))             \
+				goto err_maybe_overflow;                               \
+			if unlikely(start >= DeeBytes_SIZE(self)) {                \
+				DeeRT_ErrIndexOutOfBounds((DeeObject *)self, start,    \
+				                          DeeBytes_SIZE(self));        \
+				goto err;                                              \
+			}                                                          \
+			ch = DeeBytes_DATA(self)[start];                           \
+			return_bool(test_ch);                                      \
+		} else {                                                       \
+			DeeArg_Unpack0Or1XOr2X(err, argc, argv, #name,             \
+		                           &start, UNPuSIZ, DeeObject_AsSize,  \
+		                           &end, UNPxSIZ, DeeObject_AsSizeM1); \
+			return_bool(function(self, start, end));                   \
+		}                                                              \
+	err:                                                               \
+		return NULL;                                                   \
+	err_maybe_overflow:                                                \
+		DeeRT_ErrIndexOverflow(self);                                  \
+		goto err;                                                      \
 	}
 #define DEFINE_ANY_BYTES_TRAIT(name, function)                                      \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                                           \
@@ -1514,8 +1517,9 @@ bytes_asdigit(Bytes *self, size_t argc, DeeObject *const *argv) {
 		ch = DeeBytes_DATA(self)[0];
 	} else {
 		size_t index;
-		if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:asdigit", &index, &defl))
-			goto err;
+		DeeArg_Unpack1XOr2X(err, argc, argv, "asdigit",
+		                    &index, UNPuSIZ, DeeObject_AsSize,
+		                    &defl, "o", _DeeArg_AsObject);
 		if unlikely(index >= DeeBytes_SIZE(self)) {
 			DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
 			                          DeeBytes_SIZE(self));
@@ -1548,8 +1552,9 @@ bytes_asxdigit(Bytes *self, size_t argc, DeeObject *const *argv) {
 		ch = DeeBytes_DATA(self)[0];
 	} else {
 		size_t index;
-		if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:asxdigit", &index, &defl))
-			goto err;
+		DeeArg_Unpack1XOr2X(err, argc, argv, "asxdigit",
+		                    &index, UNPuSIZ, DeeObject_AsSize,
+		                    &defl, "o", _DeeArg_AsObject);
 		if unlikely(index >= DeeBytes_SIZE(self)) {
 			DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
 			                          DeeBytes_SIZE(self));

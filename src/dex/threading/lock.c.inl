@@ -756,7 +756,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_lockapi_tryacquire(LOCAL_DeeLockObject *self,
                          size_t argc, DeeObject *const *argv) {
 	bool result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("tryacquire");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "tryacquire");
+/*[[[end]]]*/
 	result = LOCAL_lock_tryacquire(&self->l_lock);
 	return_bool(result);
 err:
@@ -766,7 +768,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_lockapi_acquire(LOCAL_DeeLockObject *self,
                       size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("acquire");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "acquire");
+/*[[[end]]]*/
 	LOCAL_lock_acquire_p(&self->l_lock, err);
 	return_none;
 err:
@@ -775,10 +779,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_lockapi_timedacquire(LOCAL_DeeLockObject *self, size_t argc, DeeObject *const *argv) {
-	uint64_t timeout_nanoseconds;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedacquire", &timeout_nanoseconds))
-		goto err;
-	LOCAL_lock_acquire_timed_p(&self->l_lock, timeout_nanoseconds, err, timeout);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedacquire", params: "uint64_t timeout_nanoseconds");]]]*/
+	struct {
+		uint64_t timeout_nanoseconds;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "timedacquire", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+/*[[[end]]]*/
+	LOCAL_lock_acquire_timed_p(&self->l_lock, args.timeout_nanoseconds, err, timeout);
 	return_true;
 timeout:
 	return_false;
@@ -788,7 +795,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_lockapi_waitfor(LOCAL_DeeLockObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("waitfor");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "waitfor");
+/*[[[end]]]*/
 	LOCAL_lock_waitfor_p(&self->l_lock, err);
 	return_none;
 err:
@@ -797,10 +806,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_lockapi_timedwaitfor(LOCAL_DeeLockObject *self, size_t argc, DeeObject *const *argv) {
-	uint64_t timeout_nanoseconds;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedwaitfor", &timeout_nanoseconds))
-		goto err;
-	LOCAL_lock_waitfor_timed_p(&self->l_lock, timeout_nanoseconds, err, timeout);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwaitfor", params: "uint64_t timeout_nanoseconds");]]]*/
+	struct {
+		uint64_t timeout_nanoseconds;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+/*[[[end]]]*/
+	LOCAL_lock_waitfor_timed_p(&self->l_lock, args.timeout_nanoseconds, err, timeout);
 	return_true;
 timeout:
 	return_false;
@@ -810,7 +822,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_lockapi_release(LOCAL_DeeLockObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("release");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "release");
+/*[[[end]]]*/
 	if unlikely(LOCAL_lockapi_leave(self) != 0)
 		goto err;
 	return_none;
@@ -1058,7 +1072,9 @@ LOCAL_rwlockapi_printrepr(LOCAL_DeeRWLockObject *__restrict self,
 #ifndef LOCAL_IS_ATOMIC_AS_SHARED
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_tryread(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("tryread");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "tryread");
+/*[[[end]]]*/
 	return_bool(LOCAL_rwlock_tryread(&self->rwl_lock));
 err:
 	return NULL;
@@ -1066,7 +1082,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_trywrite(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("trywrite");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "trywrite");
+/*[[[end]]]*/
 	return_bool(LOCAL_rwlock_trywrite(&self->rwl_lock));
 err:
 	return NULL;
@@ -1074,7 +1092,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_tryupgrade(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("tryupgrade");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "tryupgrade");
+/*[[[end]]]*/
 	return_bool(LOCAL_rwlock_tryupgrade(&self->rwl_lock));
 err:
 	return NULL;
@@ -1082,7 +1102,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_endread(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("endread");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "endread");
+/*[[[end]]]*/
 	if unlikely(!LOCAL_rwlock_canendread(&self->rwl_lock))
 		goto err_no_read_lock;
 	_LOCAL_rwlock_endread_NDEBUG(&self->rwl_lock);
@@ -1095,7 +1117,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_endwrite(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("endwrite");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "endwrite");
+/*[[[end]]]*/
 	if unlikely(!LOCAL_rwlock_canendwrite(&self->rwl_lock))
 		goto err_no_write_lock;
 	_LOCAL_rwlock_endwrite_NDEBUG(&self->rwl_lock);
@@ -1108,7 +1132,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_end(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("end");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "end");
+/*[[[end]]]*/
 	if unlikely(!LOCAL_rwlock_canend(&self->rwl_lock))
 		goto err_nolock;
 	_LOCAL_rwlock_end_NDEBUG(&self->rwl_lock);
@@ -1121,7 +1147,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_downgrade(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("downgrade");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "downgrade");
+/*[[[end]]]*/
 	if unlikely(!LOCAL_rwlock_canendwrite(&self->rwl_lock))
 		goto err_no_write_lock;
 	_LOCAL_rwlock_downgrade_NDEBUG(&self->rwl_lock);
@@ -1134,7 +1162,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_read(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("read");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "read");
+/*[[[end]]]*/
 	LOCAL_rwlock_read_p(&self->rwl_lock, err);
 	return_none;
 err:
@@ -1143,7 +1173,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_write(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("write");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "write");
+/*[[[end]]]*/
 	LOCAL_rwlock_write_p(&self->rwl_lock, err);
 	return_none;
 err:
@@ -1152,7 +1184,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_upgrade(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("upgrade");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "upgrade");
+/*[[[end]]]*/
 	if (LOCAL_rwlock_tryupgrade(&self->rwl_lock))
 		return_true;
 	if unlikely(!LOCAL_rwlock_canendread(&self->rwl_lock))
@@ -1168,10 +1202,15 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_timedread(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedread", params: """
 	uint64_t timeout_nanoseconds;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedread", &timeout_nanoseconds))
-		goto err;
-	LOCAL_rwlock_read_timed_p(&self->rwl_lock, timeout_nanoseconds, err, timeout);
+""");]]]*/
+	struct {
+		uint64_t timeout_nanoseconds;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "timedread", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+/*[[[end]]]*/
+	LOCAL_rwlock_read_timed_p(&self->rwl_lock, args.timeout_nanoseconds, err, timeout);
 	return_true;
 timeout:
 	return_false;
@@ -1181,10 +1220,15 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_timedwrite(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwrite", params: """
 	uint64_t timeout_nanoseconds;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedwrite", &timeout_nanoseconds))
-		goto err;
-	LOCAL_rwlock_write_timed_p(&self->rwl_lock, timeout_nanoseconds, err, timeout);
+""");]]]*/
+	struct {
+		uint64_t timeout_nanoseconds;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "timedwrite", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+/*[[[end]]]*/
+	LOCAL_rwlock_write_timed_p(&self->rwl_lock, args.timeout_nanoseconds, err, timeout);
 	return_true;
 timeout:
 	return_false;
@@ -1194,7 +1238,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_waitread(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("waitread");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "waitread");
+/*[[[end]]]*/
 	LOCAL_rwlock_waitread_p(&self->rwl_lock, err);
 	return_none;
 err:
@@ -1203,7 +1249,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_waitwrite(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("waitwrite");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "waitwrite");
+/*[[[end]]]*/
 	LOCAL_rwlock_waitwrite_p(&self->rwl_lock, err);
 	return_none;
 err:
@@ -1212,10 +1260,15 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_timedwaitread(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwaitread", params: """
 	uint64_t timeout_nanoseconds;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedwaitread", &timeout_nanoseconds))
-		goto err;
-	LOCAL_rwlock_waitread_timed_p(&self->rwl_lock, timeout_nanoseconds, err, timeout);
+""");]]]*/
+	struct {
+		uint64_t timeout_nanoseconds;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "timedwaitread", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+/*[[[end]]]*/
+	LOCAL_rwlock_waitread_timed_p(&self->rwl_lock, args.timeout_nanoseconds, err, timeout);
 	return_true;
 timeout:
 	return_false;
@@ -1225,10 +1278,15 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_timedwaitwrite(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwaitwrite", params: """
 	uint64_t timeout_nanoseconds;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedwaitwrite", &timeout_nanoseconds))
-		goto err;
-	LOCAL_rwlock_waitwrite_timed_p(&self->rwl_lock, timeout_nanoseconds, err, timeout);
+""");]]]*/
+	struct {
+		uint64_t timeout_nanoseconds;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "timedwaitwrite", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+/*[[[end]]]*/
+	LOCAL_rwlock_waitwrite_timed_p(&self->rwl_lock, args.timeout_nanoseconds, err, timeout);
 	return_true;
 timeout:
 	return_false;

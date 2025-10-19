@@ -284,8 +284,19 @@ error_init(DeeObject *__restrict self,
 	DeeErrorObject *me = (DeeErrorObject *)self;
 	me->e_message = NULL;
 	me->e_inner   = NULL;
-	DeeArg_Unpack0Or1Or2(err, argc, argv, DeeType_GetName(Dee_TYPE(me)),
-	                      &me->e_message, &me->e_inner);
+	switch (argc) {
+	case 2:
+		me->e_inner = argv[1];
+		ATTR_FALLTHROUGH
+	case 1:
+		me->e_message = (DeeStringObject *)argv[0];
+		break;
+	case 0:
+		break;
+	default:
+		DeeArg_BadArgcEx(DeeType_GetName(Dee_TYPE(me)), argc, 0, 2);
+		goto err;
+	}
 	if (me->e_message) {
 		if (DeeObject_AssertTypeExact(me->e_message, &DeeString_Type))
 			goto err;

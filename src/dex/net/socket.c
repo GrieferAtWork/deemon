@@ -2031,8 +2031,7 @@ socket_recv(Socket *self, size_t argc, DeeObject *const *argv) {
 	args.arg1 = NULL;
 	args.arg2 = NULL;
 	args.arg3 = NULL;
-	if (DeeArg_UnpackStruct(argc, argv, "|ooo:recv", &args))
-		goto err;
+	DeeArg_UnpackStruct0Or1Or2Or3(err, argc, argv, "recv", &args, &args.arg1, &args.arg2, &args.arg3);
 /*[[[end]]]*/
 	if (!args.arg2) {
 		max_size = (size_t)-1;
@@ -2165,8 +2164,7 @@ socket_recvfrom(Socket *self, size_t argc, DeeObject *const *argv) {
 	args.arg1 = NULL;
 	args.arg2 = NULL;
 	args.arg3 = NULL;
-	if (DeeArg_UnpackStruct(argc, argv, "|ooo:recvfrom", &args))
-		goto err;
+	DeeArg_UnpackStruct0Or1Or2Or3(err, argc, argv, "recvfrom", &args, &args.arg1, &args.arg2, &args.arg3);
 /*[[[end]]]*/
 	if (!args.arg2) {
 		max_size = (size_t)-1;

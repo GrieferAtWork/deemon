@@ -715,7 +715,7 @@ parse_unsigned_int:
 				switch (length) { /* unsigned int */
 
 				case LEN_INT_IB1:
-					if (ch > UINT8_MAX) {
+					if unlikely(ch > UINT8_MAX) {
 						DeeRT_ErrIntegerOverflowU32(ch, UINT8_MAX);
 						goto err;
 					}
@@ -723,7 +723,7 @@ parse_unsigned_int:
 					break;
 
 				case LEN_INT_IB2:
-					if (ch > UINT16_MAX) {
+					if unlikely(ch > UINT16_MAX) {
 						DeeRT_ErrIntegerOverflowU32(ch, UINT16_MAX);
 						goto err;
 					}

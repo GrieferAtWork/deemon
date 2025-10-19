@@ -72,27 +72,27 @@ compiler_init(DeeCompilerObject *__restrict self,
 	DeeObject *module:?X2?N?Dstring?DModule = Dee_None;
 ");]]]*/
 	struct {
-		DeeObject *_module;
+		DeeObject *module_;
 	} args;
-	args._module = Dee_None;
+	args.module_ = Dee_None;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__module, "|o:Compiler", &args))
 		goto err;
 /*[[[end]]]*/
-	if (DeeNone_Check(args._module)) {
-		args._module = DeeModule_New(Dee_EmptyString);
-		if unlikely(!args._module)
+	if (DeeNone_Check(args.module_)) {
+		args.module_ = DeeModule_New(Dee_EmptyString);
+		if unlikely(!args.module_)
 			goto err;
-	} else if (DeeString_Check(args._module)) {
-		args._module = DeeModule_New(args._module);
-		if unlikely(!args._module)
+	} else if (DeeString_Check(args.module_)) {
+		args.module_ = DeeModule_New(args.module_);
+		if unlikely(!args.module_)
 			goto err;
 	} else {
-		Dee_Incref(args._module);
+		Dee_Incref(args.module_);
 	}
 	/* Create the new root scope object. */
 	self->cp_scope = (DREF DeeScopeObject *)DeeObject_New(&DeeRootScope_Type, 1,
-	                                                      (DeeObject **)&args._module);
-	Dee_Decref(args._module);
+	                                                      (DeeObject **)&args.module_);
+	Dee_Decref(args.module_);
 	if unlikely(!self->cp_scope)
 		goto err;
 	weakref_support_init(self);

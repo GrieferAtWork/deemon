@@ -3903,7 +3903,9 @@ process_getpid_or_unlock(Process *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_start(Process *self, size_t argc, DeeObject *const *argv) {
 	int error;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("start");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "start");
+/*[[[end]]]*/
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	error = process_start_impl(self);
@@ -3917,13 +3919,23 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_kill(Process *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int error;
-	int exitcode = 0, signo = 9;
-	PRIVATE DEFINE_KWLIST(kill_kwds, { K(exitcode), K(signo), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kill_kwds, "|dd:kill", &exitcode, &signo))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("kill", params: """
+	int exitcode = 0;
+	int signo = 9;
+""", defineKwList: true);]]]*/
+	static DEFINE_KWLIST(kill_kwlist, { KEX("exitcode", 0x79c9d863, 0x3fcba2655ec7fa85), KEX("signo", 0xa7bcef88, 0xe5690ca4216c1f3b), KEND });
+	struct {
+		int exitcode;
+		int signo;
+	} args;
+	args.exitcode = 0;
+	args.signo = 9;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kill_kwlist, "|dd:kill", &args))
 		goto err;
+/*[[[end]]]*/
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	error = process_kill_impl(self, exitcode, signo);
+	error = process_kill_impl(self, args.exitcode, args.signo);
 	if unlikely(error < 0)
 		goto err;
 	return_bool(error == 0);
@@ -3939,7 +3951,9 @@ ipc_throw_process_already_joined(Process *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_join(Process *self, size_t argc, DeeObject *const *argv) {
 	int error, status;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("join");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "join");
+/*[[[end]]]*/
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	error = process_join_impl(self, (uint64_t)-1, &status);
@@ -3957,7 +3971,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_tryjoin(Process *self, size_t argc, DeeObject *const *argv) {
 	int error, status;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("tryjoin");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "tryjoin");
+/*[[[end]]]*/
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	error = process_join_impl(self, 0, &status);
@@ -3978,12 +3994,17 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_timedjoin(Process *self, size_t argc, DeeObject *const *argv) {
 	int error, status;
-	uint64_t timeout_nanoseconds;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedjoin", &timeout_nanoseconds))
-		goto err;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedjoin", params: """
+	uint64_t timeout_nanoseconds
+""");]]]*/
+	struct {
+		uint64_t timeout_nanoseconds;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "timedjoin", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+/*[[[end]]]*/
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	error = process_join_impl(self, timeout_nanoseconds, &status);
+	error = process_join_impl(self, args.timeout_nanoseconds, &status);
 	if unlikely(error < 0)
 		goto err;
 	if (error != 0) {
@@ -4001,7 +4022,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_detach(Process *self, size_t argc, DeeObject *const *argv) {
 	int error;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("detach");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "detach");
+/*[[[end]]]*/
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	error = process_detach_impl(self);
@@ -5237,7 +5260,9 @@ PRIVATE struct type_member tpconst process_members[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_class_self(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("self");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "self");
+/*[[[end]]]*/
 	Dee_Incref(&this_process);
 	return (DeeObject *)&this_process;
 err:

@@ -79,7 +79,10 @@ print "/" "**" "/";
 /* atexit()                                                             */
 /************************************************************************/
 
-/*[[[deemon import("rt.gen.dexutils").gw("atexit", "callback:?DCallable,args:?DTuple=Dee_EmptyTuple", libname: "posix"); ]]]*/
+/*[[[deemon import("rt.gen.dexutils").gw("atexit", """
+	DeeObject *callback:?DCallable,
+	DeeObject *args:?DTuple=Dee_EmptyTuple
+""", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_atexit_f_impl(DeeObject *callback, DeeObject *args);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_atexit_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_ATEXIT_DEF { "atexit", (DeeObject *)&posix_atexit, MODSYM_FREADONLY, DOC("(callback:?DCallable,args=!T0)") },
