@@ -67,25 +67,32 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 compiler_init(DeeCompilerObject *__restrict self,
               size_t argc, DeeObject *const *argv,
               DeeObject *kw) {
-	DeeObject *module = Dee_None;
 	/* TODO: All those other arguments, like compiler options, etc. */
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__module, "|o", &module))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("Compiler", params: """
+	DeeObject *module:?X2?N?Dstring?DModule = Dee_None;
+");]]]*/
+	struct {
+		DeeObject *_module;
+	} args;
+	args._module = Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__module, "|o:Compiler", &args))
 		goto err;
-	if (DeeNone_Check(module)) {
-		module = DeeModule_New(Dee_EmptyString);
-		if unlikely(!module)
+/*[[[end]]]*/
+	if (DeeNone_Check(args._module)) {
+		args._module = DeeModule_New(Dee_EmptyString);
+		if unlikely(!args._module)
 			goto err;
-	} else if (DeeString_Check(module)) {
-		module = DeeModule_New(module);
-		if unlikely(!module)
+	} else if (DeeString_Check(args._module)) {
+		args._module = DeeModule_New(args._module);
+		if unlikely(!args._module)
 			goto err;
 	} else {
-		Dee_Incref(module);
+		Dee_Incref(args._module);
 	}
 	/* Create the new root scope object. */
 	self->cp_scope = (DREF DeeScopeObject *)DeeObject_New(&DeeRootScope_Type, 1,
-	                                                      (DeeObject **)&module);
-	Dee_Decref(module);
+	                                                      (DeeObject **)&args._module);
+	Dee_Decref(args._module);
 	if unlikely(!self->cp_scope)
 		goto err;
 	weakref_support_init(self);
@@ -316,24 +323,35 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_makeconstexpr(DeeCompilerObject *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
-	DeeObject *value;
-	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
 	DeeScopeObject *ast_scope;
-	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makeconstexpr", params: """
+	DeeObject *value;
+	DeeCompilerScopeObject *scope: ?#Scope=!N = (DeeCompilerScopeObject *)Dee_None;
+	DeeObject *loc:?T3?AFile?#Lexer?Dint?Dint = NULL;
+""", docStringPrefix: "ast", err: "done");]]]*/
+#define ast_makeconstexpr_params "value,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint"
+	struct {
+		DeeObject *value;
+		DeeCompilerScopeObject *scope;
+		DeeObject *loc;
+	} args;
+	args.scope = (DeeCompilerScopeObject *)Dee_None;
+	args.loc = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__value_scope_loc, "o|oo:makeconstexpr", &args))
+		goto done;
+/*[[[end]]]*/
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__value_scope_loc, "o|oo:makeconstexpr", &value, &scope, &loc))
-		goto done_compiler_end;
-	ast_scope = get_scope(scope);
+	ast_scope = get_scope(args.scope);
 	if unlikely(!ast_scope)
 		goto done_compiler_end;
-	result_ast = ast_new(ast_scope, loc);
+	result_ast = ast_new(ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type      = AST_CONSTEXPR;
-	result_ast->a_constexpr = value;
-	Dee_Incref(value);
+	result_ast->a_constexpr = args.value;
+	Dee_Incref(args.value);
 	result = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
 done_compiler_end:
@@ -346,38 +364,49 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_makesym(DeeCompilerObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
-	DeeCompilerSymbolObject *sym;
-	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
 	DeeScopeObject *ast_scope;
-	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makesym", params: """
+	DeeCompilerSymbolObject *sym:?#Symbol;
+	DeeCompilerScopeObject *scope:?#Scope=!N = (DeeCompilerScopeObject *)Dee_None;
+	DeeObject *loc:?T3?AFile?#Lexer?Dint?Dint = NULL;
+""", docStringPrefix: "ast", err: "done");]]]*/
+#define ast_makesym_params "sym:?#Symbol,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint"
+	struct {
+		DeeCompilerSymbolObject *sym;
+		DeeCompilerScopeObject *scope;
+		DeeObject *loc;
+	} args;
+	args.scope = (DeeCompilerScopeObject *)Dee_None;
+	args.loc = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__sym_scope_loc, "o|oo:makesym", &args))
+		goto done;
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.sym, &DeeCompilerSymbol_Type))
+		goto done;
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__sym_scope_loc, "o|oo:makesym", &sym, &scope, &loc))
-		goto done_compiler_end;
-	if (DeeObject_AssertTypeExact(sym, &DeeCompilerSymbol_Type))
-		goto done_compiler_end;
-	if unlikely(sym->ci_compiler != self) {
-		err_invalid_symbol_compiler(sym);
+	if unlikely(args.sym->ci_compiler != self) {
+		err_invalid_symbol_compiler(args.sym);
 		goto done_compiler_end;
 	}
-	if unlikely(!sym->ci_value) {
-		err_compiler_item_deleted((DeeCompilerItemObject *)sym);
+	if unlikely(!args.sym->ci_value) {
+		err_compiler_item_deleted((DeeCompilerItemObject *)args.sym);
 		goto done_compiler_end;
 	}
-	if unlikely((ast_scope = get_scope(scope)) == NULL)
+	if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 		goto done_compiler_end;
-	if unlikely(!scope_reaches_symbol(ast_scope, sym->ci_value)) {
-		err_symbol_not_reachable(ast_scope, sym->ci_value);
+	if unlikely(!scope_reaches_symbol(ast_scope, args.sym->ci_value)) {
+		err_symbol_not_reachable(ast_scope, args.sym->ci_value);
 		goto done_compiler_end;
 	}
-	result_ast = ast_new(ast_scope, loc);
+	result_ast = ast_new(ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type = AST_SYM;
 	result_ast->a_flag = AST_FNORMAL;
-	result_ast->a_sym  = sym->ci_value;
-	SYMBOL_INC_NREAD(sym->ci_value);
+	result_ast->a_sym  = args.sym->ci_value;
+	SYMBOL_INC_NREAD(args.sym->ci_value);
 	result = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
 done_compiler_end:
@@ -390,37 +419,48 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_makeunbind(DeeCompilerObject *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
-	DeeCompilerSymbolObject *sym;
-	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
 	DeeScopeObject *ast_scope;
-	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makeunbind", params: """
+	DeeCompilerSymbolObject *sym:?#Symbol;
+	DeeCompilerScopeObject *scope:?#Scope=!N = (DeeCompilerScopeObject *)Dee_None;
+	DeeObject *loc:?T3?AFile?#Lexer?Dint?Dint = NULL;
+""", docStringPrefix: "ast", err: "done");]]]*/
+#define ast_makeunbind_params "sym:?#Symbol,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint"
+	struct {
+		DeeCompilerSymbolObject *sym;
+		DeeCompilerScopeObject *scope;
+		DeeObject *loc;
+	} args;
+	args.scope = (DeeCompilerScopeObject *)Dee_None;
+	args.loc = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__sym_scope_loc, "o|oo:makeunbind", &args))
+		goto done;
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.sym, &DeeCompilerSymbol_Type))
+		goto done;
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__sym_scope_loc, "o|oo:makeunbind", &sym, &scope, &loc))
-		goto done_compiler_end;
-	if (DeeObject_AssertTypeExact(sym, &DeeCompilerSymbol_Type))
-		goto done_compiler_end;
-	if unlikely(sym->ci_compiler != self) {
-		err_invalid_symbol_compiler(sym);
+	if unlikely(args.sym->ci_compiler != self) {
+		err_invalid_symbol_compiler(args.sym);
 		goto done_compiler_end;
 	}
-	if unlikely(!sym->ci_value) {
-		err_compiler_item_deleted((DeeCompilerItemObject *)sym);
+	if unlikely(!args.sym->ci_value) {
+		err_compiler_item_deleted((DeeCompilerItemObject *)args.sym);
 		goto done_compiler_end;
 	}
-	if unlikely((ast_scope = get_scope(scope)) == NULL)
+	if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 		goto done_compiler_end;
-	if unlikely(!scope_reaches_symbol(ast_scope, sym->ci_value)) {
-		err_symbol_not_reachable(ast_scope, sym->ci_value);
+	if unlikely(!scope_reaches_symbol(ast_scope, args.sym->ci_value)) {
+		err_symbol_not_reachable(ast_scope, args.sym->ci_value);
 		goto done_compiler_end;
 	}
-	result_ast = ast_new(ast_scope, loc);
+	result_ast = ast_new(ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type   = AST_UNBIND;
-	result_ast->a_unbind = sym->ci_value;
-	SYMBOL_INC_NWRITE(sym->ci_value);
+	result_ast->a_unbind = args.sym->ci_value;
+	SYMBOL_INC_NWRITE(args.sym->ci_value);
 	result = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
 done_compiler_end:
@@ -433,37 +473,48 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_makebound(DeeCompilerObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
-	DeeCompilerSymbolObject *sym;
-	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
 	DeeScopeObject *ast_scope;
-	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makebound", params: """
+	DeeCompilerSymbolObject *sym:?#Symbol;
+	DeeCompilerScopeObject *scope:?#Scope=!N = (DeeCompilerScopeObject *)Dee_None;
+	DeeObject *loc:?T3?AFile?#Lexer?Dint?Dint = NULL;
+""", docStringPrefix: "ast", err: "done");]]]*/
+#define ast_makebound_params "sym:?#Symbol,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint"
+	struct {
+		DeeCompilerSymbolObject *sym;
+		DeeCompilerScopeObject *scope;
+		DeeObject *loc;
+	} args;
+	args.scope = (DeeCompilerScopeObject *)Dee_None;
+	args.loc = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__sym_scope_loc, "o|oo:makebound", &args))
+		goto done;
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.sym, &DeeCompilerSymbol_Type))
+		goto done;
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__sym_scope_loc, "o|oo:makebound", &sym, &scope, &loc))
-		goto done_compiler_end;
-	if (DeeObject_AssertTypeExact(sym, &DeeCompilerSymbol_Type))
-		goto done_compiler_end;
-	if unlikely(sym->ci_compiler != self) {
-		err_invalid_symbol_compiler(sym);
+	if unlikely(args.sym->ci_compiler != self) {
+		err_invalid_symbol_compiler(args.sym);
 		goto done_compiler_end;
 	}
-	if unlikely(!sym->ci_value) {
-		err_compiler_item_deleted((DeeCompilerItemObject *)sym);
+	if unlikely(!args.sym->ci_value) {
+		err_compiler_item_deleted((DeeCompilerItemObject *)args.sym);
 		goto done_compiler_end;
 	}
-	if unlikely((ast_scope = get_scope(scope)) == NULL)
+	if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 		goto done_compiler_end;
-	if unlikely(!scope_reaches_symbol(ast_scope, sym->ci_value)) {
-		err_symbol_not_reachable(ast_scope, sym->ci_value);
+	if unlikely(!scope_reaches_symbol(ast_scope, args.sym->ci_value)) {
+		err_symbol_not_reachable(ast_scope, args.sym->ci_value);
 		goto done_compiler_end;
 	}
-	result_ast = ast_new(ast_scope, loc);
+	result_ast = ast_new(ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type   = AST_BOUND;
-	result_ast->a_unbind = sym->ci_value;
-	SYMBOL_INC_NBOUND(sym->ci_value);
+	result_ast->a_unbind = args.sym->ci_value;
+	SYMBOL_INC_NBOUND(args.sym->ci_value);
 	result = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
 done_compiler_end:
@@ -506,25 +557,37 @@ ast_makemultiple(DeeCompilerObject *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
 	uint16_t flags;
-	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
 	DeeScopeObject *ast_scope;
-	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
-	DeeObject *branches;
-	DeeTypeObject *typing = (DeeTypeObject *)Dee_None;
 	DREF DeeCompilerAstObject **branch_v;
 	size_t i, branch_c;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makemultiple", params: """
+	DeeObject *branches:?S?#Ast;
+	DeeTypeObject *typing:?DType=!N = (DeeTypeObject *)Dee_None;
+	DeeCompilerScopeObject *scope:?#Scope=!N = (DeeCompilerScopeObject *)Dee_None;
+	DeeObject *loc:?T3?AFile?#Lexer?Dint?Dint = NULL;
+""", docStringPrefix: "ast", err: "done");]]]*/
+#define ast_makemultiple_params "branches:?S?#Ast,typing:?DType=!N,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint"
+	struct {
+		DeeObject *branches;
+		DeeTypeObject *typing;
+		DeeCompilerScopeObject *scope;
+		DeeObject *loc;
+	} args;
+	args.typing = (DeeTypeObject *)Dee_None;
+	args.scope = (DeeCompilerScopeObject *)Dee_None;
+	args.loc = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__branches_typing_scope_loc, "o|ooo:makemultiple", &args))
+		goto done;
+/*[[[end]]]*/
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__branches_typing_scope_loc,
-	                    "o|ooo:makemultiple", &branches, &typing, &scope, &loc))
+	if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 		goto done_compiler_end;
-	if unlikely((ast_scope = get_scope(scope)) == NULL)
-		goto done_compiler_end;
-	flags = get_ast_multiple_typing(typing);
+	flags = get_ast_multiple_typing(args.typing);
 	if unlikely(flags == (uint16_t)-1)
 		goto done_compiler_end;
-	branch_v = (DREF DeeCompilerAstObject **)DeeSeq_AsHeapVector(branches, &branch_c);
+	branch_v = (DREF DeeCompilerAstObject **)DeeSeq_AsHeapVector(args.branches, &branch_c);
 	if unlikely(!branch_v)
 		goto done_compiler_end;
 #ifdef CONFIG_AST_IS_STRUCT
@@ -549,7 +612,7 @@ ast_makemultiple(DeeCompilerObject *self, size_t argc,
 		Dee_Decref(branch_v[i]);
 		branch_v[i] = (DREF DeeCompilerAstObject *)branch_ast;
 	}
-	result_ast = ast_new(ast_scope, loc);
+	result_ast = ast_new(ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto err_branch_v;
 	result_ast->a_type            = AST_MULTIPLE;
@@ -572,38 +635,50 @@ done:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_makereturn(DeeCompilerObject *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-	DREF DeeObject *result        = NULL;
-	DeeCompilerAstObject *expr    = (DeeCompilerAstObject *)Dee_None;
-	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
+	DREF DeeObject *result = NULL;
 	DeeScopeObject *ast_scope;
-	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makereturn", params: """
+	DeeCompilerAstObject *expr:?#Ast=!N       = (DeeCompilerAstObject *)Dee_None;
+	DeeCompilerScopeObject *scope:?#Scope=!N  = (DeeCompilerScopeObject *)Dee_None;
+	DeeObject *loc:?T3?AFile?#Lexer?Dint?Dint = NULL;
+""", docStringPrefix: "ast", err: "done");]]]*/
+#define ast_makereturn_params "expr:?#Ast=!N,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint"
+	struct {
+		DeeCompilerAstObject *expr;
+		DeeCompilerScopeObject *scope;
+		DeeObject *loc;
+	} args;
+	args.expr = (DeeCompilerAstObject *)Dee_None;
+	args.scope = (DeeCompilerScopeObject *)Dee_None;
+	args.loc = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__expr_scope_loc, "|ooo:makereturn", &args))
+		goto done;
+/*[[[end]]]*/
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__expr_scope_loc, "|ooo:makereturn", &expr, &scope, &loc))
+	if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 		goto done_compiler_end;
-	if unlikely((ast_scope = get_scope(scope)) == NULL)
-		goto done_compiler_end;
-	if (!DeeNone_Check(expr)) {
-		if (DeeObject_AssertTypeExact(expr, &DeeCompilerSymbol_Type))
+	if (!DeeNone_Check(args.expr)) {
+		if (DeeObject_AssertTypeExact(args.expr, &DeeCompilerSymbol_Type))
 			goto done_compiler_end;
-		if unlikely(expr->ci_compiler != self) {
-			err_invalid_ast_compiler(expr);
+		if unlikely(args.expr->ci_compiler != self) {
+			err_invalid_ast_compiler(args.expr);
 			goto done_compiler_end;
 		}
-		if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base) {
-			err_invalid_ast_basescope(expr, ast_scope->s_base);
+		if unlikely(args.expr->ci_value->a_scope->s_base != ast_scope->s_base) {
+			err_invalid_ast_basescope(args.expr, ast_scope->s_base);
 			goto done_compiler_end;
 		}
 	}
-	result_ast = ast_new(ast_scope, loc);
+	result_ast = ast_new(ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type   = AST_RETURN;
 	result_ast->a_return = NULL;
-	if (!DeeNone_Check(expr)) {
-		result_ast->a_return = expr->ci_value;
-		ast_incref(expr->ci_value);
+	if (!DeeNone_Check(args.expr)) {
+		result_ast->a_return = args.expr->ci_value;
+		ast_incref(args.expr->ci_value);
 	}
 	result = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
@@ -616,34 +691,45 @@ done:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_makeyield(DeeCompilerObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	DREF DeeObject *result        = NULL;
-	DeeCompilerAstObject *expr    = (DeeCompilerAstObject *)Dee_None;
-	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
+	DREF DeeObject *result = NULL;
 	DeeScopeObject *ast_scope;
-	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makeyield", params: """
+	DeeCompilerAstObject *expr:?#Ast;
+	DeeCompilerScopeObject *scope:?#Scope=!N  = (DeeCompilerScopeObject *)Dee_None;
+	DeeObject *loc:?T3?AFile?#Lexer?Dint?Dint = NULL;
+""", docStringPrefix: "ast", err: "done");]]]*/
+#define ast_makeyield_params "expr:?#Ast,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint"
+	struct {
+		DeeCompilerAstObject *expr;
+		DeeCompilerScopeObject *scope;
+		DeeObject *loc;
+	} args;
+	args.scope = (DeeCompilerScopeObject *)Dee_None;
+	args.loc = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__expr_scope_loc, "o|oo:makeyield", &args))
+		goto done;
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.expr, &DeeCompilerSymbol_Type))
+		goto done;
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__expr_scope_loc, "o|oo:makeyield", &expr, &scope, &loc))
+	if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 		goto done_compiler_end;
-	if (DeeObject_AssertTypeExact(expr, &DeeCompilerSymbol_Type))
-		goto done_compiler_end;
-	if unlikely((ast_scope = get_scope(scope)) == NULL)
-		goto done_compiler_end;
-	if unlikely(expr->ci_compiler != self) {
-		err_invalid_ast_compiler(expr);
+	if unlikely(args.expr->ci_compiler != self) {
+		err_invalid_ast_compiler(args.expr);
 		goto done_compiler_end;
 	}
-	if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base) {
-		err_invalid_ast_basescope(expr, ast_scope->s_base);
+	if unlikely(args.expr->ci_value->a_scope->s_base != ast_scope->s_base) {
+		err_invalid_ast_basescope(args.expr, ast_scope->s_base);
 		goto done_compiler_end;
 	}
-	result_ast = ast_new(ast_scope, loc);
+	result_ast = ast_new(ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type  = AST_YIELD;
-	result_ast->a_throw = expr->ci_value;
-	ast_incref(expr->ci_value);
+	result_ast->a_throw = args.expr->ci_value;
+	ast_incref(args.expr->ci_value);
 	result = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
 done_compiler_end:
@@ -655,38 +741,50 @@ done:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_makethrow(DeeCompilerObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	DREF DeeObject *result        = NULL;
-	DeeCompilerAstObject *expr    = (DeeCompilerAstObject *)Dee_None;
-	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
+	DREF DeeObject *result = NULL;
 	DeeScopeObject *ast_scope;
-	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makethrow", params: """
+	DeeCompilerAstObject *expr:?#Ast=!N       = (DeeCompilerAstObject *)Dee_None;
+	DeeCompilerScopeObject *scope:?#Scope=!N  = (DeeCompilerScopeObject *)Dee_None;
+	DeeObject *loc:?T3?AFile?#Lexer?Dint?Dint = NULL;
+""", docStringPrefix: "ast", err: "done");]]]*/
+#define ast_makethrow_params "expr:?#Ast=!N,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint"
+	struct {
+		DeeCompilerAstObject *expr;
+		DeeCompilerScopeObject *scope;
+		DeeObject *loc;
+	} args;
+	args.expr = (DeeCompilerAstObject *)Dee_None;
+	args.scope = (DeeCompilerScopeObject *)Dee_None;
+	args.loc = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__expr_scope_loc, "|ooo:makethrow", &args))
+		goto done;
+/*[[[end]]]*/
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__expr_scope_loc, "|ooo:makethrow", &expr, &scope, &loc))
+	if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 		goto done_compiler_end;
-	if unlikely((ast_scope = get_scope(scope)) == NULL)
-		goto done_compiler_end;
-	if (!DeeNone_Check(expr)) {
-		if (DeeObject_AssertTypeExact(expr, &DeeCompilerSymbol_Type))
+	if (!DeeNone_Check(args.expr)) {
+		if (DeeObject_AssertTypeExact(args.expr, &DeeCompilerSymbol_Type))
 			goto done_compiler_end;
-		if unlikely(expr->ci_compiler != self) {
-			err_invalid_ast_compiler(expr);
+		if unlikely(args.expr->ci_compiler != self) {
+			err_invalid_ast_compiler(args.expr);
 			goto done_compiler_end;
 		}
-		if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base) {
-			err_invalid_ast_basescope(expr, ast_scope->s_base);
+		if unlikely(args.expr->ci_value->a_scope->s_base != ast_scope->s_base) {
+			err_invalid_ast_basescope(args.expr, ast_scope->s_base);
 			goto done_compiler_end;
 		}
 	}
-	result_ast = ast_new(ast_scope, loc);
+	result_ast = ast_new(ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type  = AST_THROW;
 	result_ast->a_throw = NULL;
-	if (!DeeNone_Check(expr)) {
-		result_ast->a_throw = expr->ci_value;
-		ast_incref(expr->ci_value);
+	if (!DeeNone_Check(args.expr)) {
+		result_ast->a_throw = args.expr->ci_value;
+		ast_incref(args.expr->ci_value);
 	}
 	result = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
@@ -697,7 +795,7 @@ done:
 }
 
 
-LOCAL int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 parse_handler_flags(char const *__restrict flags,
                     struct catch_expr *__restrict result) {
 	char const *next_flag;
@@ -732,7 +830,7 @@ parse_handler_flags(char const *__restrict flags,
 }
 
 
-LOCAL int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 unpack_catch_expression(DeeObject *__restrict triple,
                         struct catch_expr *__restrict result,
                         DeeBaseScopeObject *__restrict base_scope) {
@@ -867,34 +965,45 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_maketry(DeeCompilerObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
-	DeeCompilerAstObject *guard;
-	DeeObject *handlers;
-	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
 	DeeScopeObject *ast_scope;
-	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("maketry", params: """
+	DeeCompilerAstObject *guard:?#Ast;
+	DeeObject *handlers:?S?T3?X2?Dstring?Dint?#Ast?#Ast;
+	DeeCompilerScopeObject *scope:?#Scope=!N = (DeeCompilerScopeObject *)Dee_None;
+	DeeObject *loc:?T3?AFile?#Lexer?Dint?Dint = NULL;
+""", docStringPrefix: "ast", err: "done");]]]*/
+#define ast_maketry_params "guard:?#Ast,handlers:?S?T3?X2?Dstring?Dint?#Ast?#Ast,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint"
+	struct {
+		DeeCompilerAstObject *guard;
+		DeeObject *handlers;
+		DeeCompilerScopeObject *scope;
+		DeeObject *loc;
+	} args;
+	args.scope = (DeeCompilerScopeObject *)Dee_None;
+	args.loc = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__guard_handlers_scope_loc, "oo|oo:maketry", &args))
+		goto done;
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.guard, &DeeCompilerSymbol_Type))
+		goto done;
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__guard_handlers_scope_loc,
-	                    "oo|oo:maketry", &guard, &handlers, &scope, &loc))
+	if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 		goto done_compiler_end;
-	if unlikely((ast_scope = get_scope(scope)) == NULL)
-		goto done_compiler_end;
-	if (DeeObject_AssertTypeExact(guard, &DeeCompilerSymbol_Type))
-		goto done_compiler_end;
-	if unlikely(guard->ci_compiler != self) {
-		err_invalid_ast_compiler(guard);
+	if unlikely(args.guard->ci_compiler != self) {
+		err_invalid_ast_compiler(args.guard);
 		goto done_compiler_end;
 	}
-	if unlikely(guard->ci_value->a_scope->s_base != ast_scope->s_base) {
-		err_invalid_ast_basescope(guard, ast_scope->s_base);
+	if unlikely(args.guard->ci_value->a_scope->s_base != ast_scope->s_base) {
+		err_invalid_ast_basescope(args.guard, ast_scope->s_base);
 		goto done_compiler_end;
 	}
-	result_ast = ast_new(ast_scope, loc);
+	result_ast = ast_new(ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	/* Unpack the given handler expressions vector. */
-	result_ast->a_try.t_catchv = unpack_catch_expressions(handlers,
+	result_ast->a_try.t_catchv = unpack_catch_expressions(args.handlers,
 	                                                      &result_ast->a_try.t_catchc,
 	                                                      ast_scope->s_base);
 	if unlikely(!result_ast->a_try.t_catchv && result_ast->a_try.t_catchc) {
@@ -904,8 +1013,8 @@ ast_maketry(DeeCompilerObject *self, size_t argc,
 		goto done_compiler_end;
 	}
 	result_ast->a_type        = AST_TRY;
-	result_ast->a_try.t_guard = guard->ci_value;
-	ast_incref(guard->ci_value);
+	result_ast->a_try.t_guard = args.guard->ci_value;
+	ast_incref(args.guard->ci_value);
 	result = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
 done_compiler_end:
@@ -959,13 +1068,20 @@ ast_makeloop(DeeCompilerObject *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result        = NULL;
 	uint16_t flags                = 0;
-	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
 	DeeScopeObject *ast_scope;
-	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
-	DeeCompilerAstObject *cond = (DeeCompilerAstObject *)Dee_None;
-	DeeCompilerAstObject *next = (DeeCompilerAstObject *)Dee_None;
-	DeeCompilerAstObject *loop = (DeeCompilerAstObject *)Dee_None;
+	struct {
+		DeeCompilerAstObject *cond;
+		DeeCompilerAstObject *next;
+		DeeCompilerAstObject *loop;
+		DeeCompilerScopeObject *scope;
+		DeeObject *loc;
+	} args;
+	args.cond  = (DeeCompilerAstObject *)Dee_None;
+	args.next  = (DeeCompilerAstObject *)Dee_None;
+	args.loop  = (DeeCompilerAstObject *)Dee_None;
+	args.scope = (DeeCompilerScopeObject *)Dee_None;
+	args.loc   = NULL;
 	/* "(flags:?Dstring,elem:?#Ast=!N,iter:?#Ast,loop:?#Ast=!N,scope:?#Scope=!N)->?#Ast\n"
 	 * "(flags:?Dstring,cond:?#Ast=!N,next:?#Ast=!N,loop:?#Ast=!N,scope:?#Scope=!N)->?#Ast\n" */
 	if unlikely(!argc) {
@@ -981,61 +1097,62 @@ ast_makeloop(DeeCompilerObject *self, size_t argc,
 		if unlikely(DeeObject_AsUInt16(argv[0], &flags))
 			goto done;
 	}
-	--argc, ++argv;
+	--argc;
+	++argv;
 	if (COMPILER_BEGIN(self))
 		goto done;
 	if (flags & AST_FLOOP_FOREACH) {
-		if (DeeArg_UnpackKw(argc, argv, kw, kwlist__elem_iter_loop_scope_loc,
-		                    "|ooooo:makeloop", &cond, &next, &loop, &scope, &loc))
+		if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__elem_iter_loop_scope_loc,
+		                          "|ooooo:makeloop", &args))
 			goto done_compiler_end;
-		if unlikely((ast_scope = get_scope(scope)) == NULL)
+		if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 			goto done_compiler_end;
 check_next:
 		/* The next (iter) operand is mandatory in foreach loop branches. */
-		if unlikely(DeeObject_AssertTypeExact(next, &DeeCompilerAst_Type))
+		if unlikely(DeeObject_AssertTypeExact(args.next, &DeeCompilerAst_Type))
 			goto done_compiler_end;
-		if unlikely(next->ci_compiler != DeeCompiler_Current) {
-			err_invalid_ast_compiler(next);
+		if unlikely(args.next->ci_compiler != DeeCompiler_Current) {
+			err_invalid_ast_compiler(args.next);
 			goto done_compiler_end;
 		}
-		if unlikely(next->ci_value->a_scope->s_base != ast_scope->s_base) {
-			err_invalid_ast_basescope(next, ast_scope->s_base);
+		if unlikely(args.next->ci_value->a_scope->s_base != ast_scope->s_base) {
+			err_invalid_ast_basescope(args.next, ast_scope->s_base);
 			goto done_compiler_end;
 		}
 	} else {
-		if (DeeArg_UnpackKw(argc, argv, kw, kwlist__cond_next_loop_scope_loc,
-		                    "|ooooo:makeloop", &cond, &next, &loop, &scope, &loc))
+		if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__cond_next_loop_scope_loc,
+		                          "|ooooo:makeloop", &args))
 			goto done_compiler_end;
-		if unlikely((ast_scope = get_scope(scope)) == NULL)
+		if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 			goto done_compiler_end;
-		if (!DeeNone_Check(next))
+		if (!DeeNone_Check(args.next))
 			goto check_next;
 	}
-	if (!DeeNone_Check(cond)) {
-		if unlikely(DeeObject_AssertTypeExact(cond, &DeeCompilerAst_Type))
+	if (!DeeNone_Check(args.cond)) {
+		if unlikely(DeeObject_AssertTypeExact(args.cond, &DeeCompilerAst_Type))
 			goto done_compiler_end;
-		if unlikely(cond->ci_compiler != DeeCompiler_Current) {
-			err_invalid_ast_compiler(cond);
-			goto done_compiler_end;
-		}
-		if unlikely(cond->ci_value->a_scope->s_base != ast_scope->s_base) {
-			err_invalid_ast_basescope(cond, ast_scope->s_base);
+		if unlikely(args.cond->ci_compiler != DeeCompiler_Current) {
+			err_invalid_ast_compiler(args.cond);
 			goto done_compiler_end;
 		}
-	}
-	if (!DeeNone_Check(loop)) {
-		if unlikely(DeeObject_AssertTypeExact(loop, &DeeCompilerAst_Type))
-			goto done_compiler_end;
-		if unlikely(loop->ci_compiler != DeeCompiler_Current) {
-			err_invalid_ast_compiler(loop);
-			goto done_compiler_end;
-		}
-		if unlikely(loop->ci_value->a_scope->s_base != ast_scope->s_base) {
-			err_invalid_ast_basescope(loop, ast_scope->s_base);
+		if unlikely(args.cond->ci_value->a_scope->s_base != ast_scope->s_base) {
+			err_invalid_ast_basescope(args.cond, ast_scope->s_base);
 			goto done_compiler_end;
 		}
 	}
-	result_ast = ast_new(ast_scope, loc);
+	if (!DeeNone_Check(args.loop)) {
+		if unlikely(DeeObject_AssertTypeExact(args.loop, &DeeCompilerAst_Type))
+			goto done_compiler_end;
+		if unlikely(args.loop->ci_compiler != DeeCompiler_Current) {
+			err_invalid_ast_compiler(args.loop);
+			goto done_compiler_end;
+		}
+		if unlikely(args.loop->ci_value->a_scope->s_base != ast_scope->s_base) {
+			err_invalid_ast_basescope(args.loop, ast_scope->s_base);
+			goto done_compiler_end;
+		}
+	}
+	result_ast = ast_new(ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type        = AST_LOOP;
@@ -1043,19 +1160,18 @@ check_next:
 	result_ast->a_loop.l_cond = NULL;
 	result_ast->a_loop.l_next = NULL;
 	result_ast->a_loop.l_loop = NULL;
-	if (!DeeNone_Check(cond)) {
-		result_ast->a_loop.l_cond = cond->ci_value;
-		ast_incref(cond->ci_value);
+	if (!DeeNone_Check(args.cond)) {
+		result_ast->a_loop.l_cond = args.cond->ci_value;
+		ast_incref(args.cond->ci_value);
 	}
-	if (!DeeNone_Check(next)) {
-		result_ast->a_loop.l_next = next->ci_value;
-		ast_incref(next->ci_value);
+	if (!DeeNone_Check(args.next)) {
+		result_ast->a_loop.l_next = args.next->ci_value;
+		ast_incref(args.next->ci_value);
 	}
-	if (!DeeNone_Check(loop)) {
-		result_ast->a_loop.l_loop = loop->ci_value;
-		ast_incref(loop->ci_value);
+	if (!DeeNone_Check(args.loop)) {
+		result_ast->a_loop.l_loop = args.loop->ci_value;
+		ast_incref(args.loop->ci_value);
 	}
-
 	result = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
 done_compiler_end:
@@ -1068,24 +1184,34 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_makeloopctl(DeeCompilerObject *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
-	bool isbreak;
-	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
 	DeeScopeObject *ast_scope;
-	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makeloopctl", params: """
+	bool isbreak;
+	DeeCompilerScopeObject *scope:?#Scope=!N = (DeeCompilerScopeObject *)Dee_None;
+	DeeObject *loc:?T3?AFile?#Lexer?Dint?Dint = NULL;
+""", docStringPrefix: "ast", err: "done");]]]*/
+#define ast_makeloopctl_params "isbreak:?Dbool,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint"
+	struct {
+		bool isbreak;
+		DeeCompilerScopeObject *scope;
+		DeeObject *loc;
+	} args;
+	args.scope = (DeeCompilerScopeObject *)Dee_None;
+	args.loc = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__isbreak_scope_loc, "b|oo:makeloopctl", &args))
+		goto done;
+/*[[[end]]]*/
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__isbreak_scope_loc,
-	                    "b|oo:makeloopctl", &isbreak, &scope, &loc))
+	if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 		goto done_compiler_end;
-	if unlikely((ast_scope = get_scope(scope)) == NULL)
-		goto done_compiler_end;
-	result_ast = ast_new(ast_scope, loc);
+	result_ast = ast_new(ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type = AST_LOOPCTL;
-	result_ast->a_flag = isbreak ? AST_FLOOPCTL_BRK : AST_FLOOPCTL_CON;
-	result             = DeeCompiler_GetAst(result_ast);
+	result_ast->a_flag = args.isbreak ? AST_FLOOPCTL_BRK : AST_FLOOPCTL_CON;
+	result = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
 done_compiler_end:
 	COMPILER_END();
@@ -1136,85 +1262,100 @@ ast_makeconditional(DeeCompilerObject *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
 	uint16_t flags         = 0;
-	DeeCompilerAstObject *cond;
-	DeeCompilerAstObject *tt      = (DeeCompilerAstObject *)Dee_None;
-	DeeCompilerAstObject *ff      = (DeeCompilerAstObject *)Dee_None;
-	DeeStringObject *flags_str    = (DeeStringObject *)Dee_EmptyString;
-	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
 	DeeScopeObject *ast_scope;
-	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makeconditional", params: """
+	DeeCompilerAstObject *cond:?#Ast;
+	DeeCompilerAstObject *tt:?#Ast=!N = (DeeCompilerAstObject *)Dee_None;
+	DeeCompilerAstObject *ff:?#Ast=!N = (DeeCompilerAstObject *)Dee_None;
+	DeeStringObject *flags:?X2?Dstring?Dint=!P{} = (DeeStringObject *)Dee_EmptyString;
+	DeeCompilerScopeObject *scope:?#Scope=!N = (DeeCompilerScopeObject *)Dee_None;
+	DeeObject *loc:?T3?AFile?#Lexer?Dint?Dint = NULL;
+""", docStringPrefix: "ast", err: "done");]]]*/
+#define ast_makeconditional_params "cond:?#Ast,tt:?#Ast=!N,ff:?#Ast=!N,flags:?X2?Dstring?Dint=!P{},scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint"
+	struct {
+		DeeCompilerAstObject *cond;
+		DeeCompilerAstObject *tt;
+		DeeCompilerAstObject *ff;
+		DeeStringObject *flags;
+		DeeCompilerScopeObject *scope;
+		DeeObject *loc;
+	} args;
+	args.tt = (DeeCompilerAstObject *)Dee_None;
+	args.ff = (DeeCompilerAstObject *)Dee_None;
+	args.flags = (DeeStringObject *)Dee_EmptyString;
+	args.scope = (DeeCompilerScopeObject *)Dee_None;
+	args.loc = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__cond_tt_ff_flags_scope_loc, "o|ooooo:makeconditional", &args))
+		goto done;
+/*[[[end]]]*/
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__cond_next_loop_scope_loc,
-	                    "o|ooooo:makeconditional",
-	                    &cond, &tt, &ff, &flags_str, &scope, &loc))
+	if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 		goto done_compiler_end;
-	if unlikely((ast_scope = get_scope(scope)) == NULL)
-		goto done_compiler_end;
-	if (flags_str != (DeeStringObject *)Dee_EmptyString) {
-		if (DeeString_Check(flags_str)) {
-			if (parse_conditional_flags(DeeString_STR(flags_str), &flags))
+	if (args.flags != (DeeStringObject *)Dee_EmptyString) {
+		if (DeeString_Check(args.flags)) {
+			if (parse_conditional_flags(DeeString_STR(args.flags), &flags))
 				goto done_compiler_end;
 		} else {
-			if (DeeObject_AsUInt16((DeeObject *)flags_str, &flags))
+			if (DeeObject_AsUInt16((DeeObject *)args.flags, &flags))
 				goto done_compiler_end;
 		}
 	}
-	if unlikely(DeeObject_AssertTypeExact(cond, &DeeCompilerAst_Type))
+	if unlikely(DeeObject_AssertTypeExact(args.cond, &DeeCompilerAst_Type))
 		goto done_compiler_end;
-	if unlikely(cond->ci_compiler != self) {
-		err_invalid_ast_compiler(cond);
-		goto done_compiler_end;
-	}
-	if unlikely(cond->ci_value->a_scope->s_base != ast_scope->s_base) {
-		err_invalid_ast_basescope(cond, ast_scope->s_base);
+	if unlikely(args.cond->ci_compiler != self) {
+		err_invalid_ast_compiler(args.cond);
 		goto done_compiler_end;
 	}
-	if (!DeeNone_Check(tt)) {
-		if unlikely(DeeObject_AssertTypeExact(tt, &DeeCompilerAst_Type))
+	if unlikely(args.cond->ci_value->a_scope->s_base != ast_scope->s_base) {
+		err_invalid_ast_basescope(args.cond, ast_scope->s_base);
+		goto done_compiler_end;
+	}
+	if (!DeeNone_Check(args.tt)) {
+		if unlikely(DeeObject_AssertTypeExact(args.tt, &DeeCompilerAst_Type))
 			goto done_compiler_end;
-		if unlikely(tt->ci_compiler != self) {
-			err_invalid_ast_compiler(tt);
+		if unlikely(args.tt->ci_compiler != self) {
+			err_invalid_ast_compiler(args.tt);
 			goto done_compiler_end;
 		}
-		if unlikely(tt->ci_value->a_scope->s_base != ast_scope->s_base) {
-			err_invalid_ast_basescope(tt, ast_scope->s_base);
+		if unlikely(args.tt->ci_value->a_scope->s_base != ast_scope->s_base) {
+			err_invalid_ast_basescope(args.tt, ast_scope->s_base);
 			goto done_compiler_end;
 		}
-	} else if unlikely(DeeNone_Check(ff)) {
+	} else if unlikely(DeeNone_Check(args.ff)) {
 		DeeError_Throwf(&DeeError_TypeError,
 		                "Both the true-, as well as the false-branch have been given as `none'");
 		goto done_compiler_end;
 	}
-	if (!DeeNone_Check(ff)) {
-		if unlikely(DeeObject_AssertTypeExact(ff, &DeeCompilerAst_Type))
+	if (!DeeNone_Check(args.ff)) {
+		if unlikely(DeeObject_AssertTypeExact(args.ff, &DeeCompilerAst_Type))
 			goto done_compiler_end;
-		if unlikely(ff->ci_compiler != self) {
-			err_invalid_ast_compiler(ff);
+		if unlikely(args.ff->ci_compiler != self) {
+			err_invalid_ast_compiler(args.ff);
 			goto done_compiler_end;
 		}
-		if unlikely(ff->ci_value->a_scope->s_base != ast_scope->s_base) {
-			err_invalid_ast_basescope(ff, ast_scope->s_base);
+		if unlikely(args.ff->ci_value->a_scope->s_base != ast_scope->s_base) {
+			err_invalid_ast_basescope(args.ff, ast_scope->s_base);
 			goto done_compiler_end;
 		}
 	}
-	result_ast = ast_new(ast_scope, loc);
+	result_ast = ast_new(ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type               = AST_CONDITIONAL;
 	result_ast->a_flag               = flags;
-	result_ast->a_conditional.c_cond = cond->ci_value;
+	result_ast->a_conditional.c_cond = args.cond->ci_value;
 	result_ast->a_conditional.c_tt   = NULL;
 	result_ast->a_conditional.c_ff   = NULL;
-	ast_incref(cond->ci_value);
-	if (!DeeNone_Check(tt)) {
-		result_ast->a_conditional.c_tt = tt->ci_value;
-		ast_incref(tt->ci_value);
+	ast_incref(args.cond->ci_value);
+	if (!DeeNone_Check(args.tt)) {
+		result_ast->a_conditional.c_tt = args.tt->ci_value;
+		ast_incref(args.tt->ci_value);
 	}
-	if (!DeeNone_Check(ff)) {
-		result_ast->a_conditional.c_ff = ff->ci_value;
-		ast_incref(ff->ci_value);
+	if (!DeeNone_Check(args.ff)) {
+		result_ast->a_conditional.c_ff = args.ff->ci_value;
+		ast_incref(args.ff->ci_value);
 	}
 	result = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
@@ -1229,36 +1370,48 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_makebool(DeeCompilerObject *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
-	DeeCompilerAstObject *expr;
-	bool negate                   = false;
-	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
 	DeeScopeObject *ast_scope;
-	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makebool", params: """
+	DeeCompilerAstObject *expr:?#Ast;
+	bool negate                               = false;
+	DeeCompilerScopeObject *scope:?#Scope=!N  = (DeeCompilerScopeObject *)Dee_None;
+	DeeObject *loc:?T3?AFile?#Lexer?Dint?Dint = NULL;
+""", docStringPrefix: "ast", err: "done");]]]*/
+#define ast_makebool_params "expr:?#Ast,negate=!f,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint"
+	struct {
+		DeeCompilerAstObject *expr;
+		bool negate;
+		DeeCompilerScopeObject *scope;
+		DeeObject *loc;
+	} args;
+	args.negate = false;
+	args.scope = (DeeCompilerScopeObject *)Dee_None;
+	args.loc = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__expr_negate_scope_loc, "o|boo:makebool", &args))
+		goto done;
+/*[[[end]]]*/
+	if unlikely(DeeObject_AssertTypeExact(args.expr, &DeeCompilerAst_Type))
+		goto done;
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__expr_negate_scope_loc,
-	                    "o|boo:makebool", &expr, &negate, &scope, &loc))
+	if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 		goto done_compiler_end;
-	if unlikely((ast_scope = get_scope(scope)) == NULL)
-		goto done_compiler_end;
-	if unlikely(DeeObject_AssertTypeExact(expr, &DeeCompilerAst_Type))
-		goto done_compiler_end;
-	if unlikely(expr->ci_compiler != self) {
-		err_invalid_ast_compiler(expr);
+	if unlikely(args.expr->ci_compiler != self) {
+		err_invalid_ast_compiler(args.expr);
 		goto done_compiler_end;
 	}
-	if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base) {
-		err_invalid_ast_basescope(expr, ast_scope->s_base);
+	if unlikely(args.expr->ci_value->a_scope->s_base != ast_scope->s_base) {
+		err_invalid_ast_basescope(args.expr, ast_scope->s_base);
 		goto done_compiler_end;
 	}
-	result_ast = ast_new(ast_scope, loc);
+	result_ast = ast_new(ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type = AST_BOOL;
-	result_ast->a_flag = negate ? AST_FBOOL_NEGATE : AST_FBOOL_NORMAL;
-	result_ast->a_bool = expr->ci_value;
-	ast_incref(expr->ci_value);
+	result_ast->a_flag = args.negate ? AST_FBOOL_NEGATE : AST_FBOOL_NORMAL;
+	result_ast->a_bool = args.expr->ci_value;
+	ast_incref(args.expr->ci_value);
 	result = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
 done_compiler_end:
@@ -1271,33 +1424,44 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_makeexpand(DeeCompilerObject *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
-	DeeCompilerAstObject *expr;
-	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
 	DeeScopeObject *ast_scope;
-	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makeexpand", params: """
+	DeeCompilerAstObject *expr:?#Ast;
+	DeeCompilerScopeObject *scope:?#Scope=!N  = (DeeCompilerScopeObject *)Dee_None;
+	DeeObject *loc:?T3?AFile?#Lexer?Dint?Dint = NULL;
+""", docStringPrefix: "ast", err: "done");]]]*/
+#define ast_makeexpand_params "expr:?#Ast,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint"
+	struct {
+		DeeCompilerAstObject *expr;
+		DeeCompilerScopeObject *scope;
+		DeeObject *loc;
+	} args;
+	args.scope = (DeeCompilerScopeObject *)Dee_None;
+	args.loc = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__expr_scope_loc, "o|oo:makeexpand", &args))
+		goto done;
+/*[[[end]]]*/
+	if unlikely(DeeObject_AssertTypeExact(args.expr, &DeeCompilerAst_Type))
+		goto done;
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__expr_scope_loc, "o|oo:makeexpand", &expr, &scope, &loc))
+	if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 		goto done_compiler_end;
-	if unlikely((ast_scope = get_scope(scope)) == NULL)
-		goto done_compiler_end;
-	if unlikely(DeeObject_AssertTypeExact(expr, &DeeCompilerAst_Type))
-		goto done_compiler_end;
-	if unlikely(expr->ci_compiler != self) {
-		err_invalid_ast_compiler(expr);
+	if unlikely(args.expr->ci_compiler != self) {
+		err_invalid_ast_compiler(args.expr);
 		goto done_compiler_end;
 	}
-	if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base) {
-		err_invalid_ast_basescope(expr, ast_scope->s_base);
+	if unlikely(args.expr->ci_value->a_scope->s_base != ast_scope->s_base) {
+		err_invalid_ast_basescope(args.expr, ast_scope->s_base);
 		goto done_compiler_end;
 	}
-	result_ast = ast_new(ast_scope, loc);
+	result_ast = ast_new(ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type = AST_EXPAND;
-	result_ast->a_bool = expr->ci_value;
-	ast_incref(expr->ci_value);
+	result_ast->a_bool = args.expr->ci_value;
+	ast_incref(args.expr->ci_value);
 	result = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
 done_compiler_end:
@@ -1314,6 +1478,7 @@ check_function_code_scope(DeeBaseScopeObject *code_scope,
 		                       "Function code cannot be located in the same "
 		                       "base-scope as the function initializer");
 	}
+
 	/* Make sure that the base-scope of the function
 	 * initializer can be reached from the function itself. */
 	for (;;) {
@@ -1332,38 +1497,47 @@ check_function_code_scope(DeeBaseScopeObject *code_scope,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_makefunction(DeeCompilerObject *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
-	/* "(code:?#Ast,scope:?#Scope=!N)->?#Ast\n" */
 	DREF DeeObject *result = NULL;
-	DeeCompilerAstObject *code;
-	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
 	DeeScopeObject *ast_scope;
-	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
 	DeeBaseScopeObject *code_scope;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makefunction", params: """
+	DeeCompilerAstObject *code:?#Ast;
+	DeeCompilerScopeObject *scope:?#Scope=!N = (DeeCompilerScopeObject *)Dee_None;
+	DeeObject *loc:?T3?AFile?#Lexer?Dint?Dint = NULL;
+""", docStringPrefix: "ast", err: "done");]]]*/
+#define ast_makefunction_params "code:?#Ast,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint"
+	struct {
+		DeeCompilerAstObject *code;
+		DeeCompilerScopeObject *scope;
+		DeeObject *loc;
+	} args;
+	args.scope = (DeeCompilerScopeObject *)Dee_None;
+	args.loc = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__code_scope_loc, "o|oo:makefunction", &args))
+		goto done;
+/*[[[end]]]*/
+	if unlikely(DeeObject_AssertTypeExact(args.code, &DeeCompilerAst_Type))
+		goto done;
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__code_scope_loc,
-	                    "o|oo:makeexpand", &code, &scope, &loc))
+	if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 		goto done_compiler_end;
-	if unlikely((ast_scope = get_scope(scope)) == NULL)
-		goto done_compiler_end;
-	if unlikely(DeeObject_AssertTypeExact(code, &DeeCompilerAst_Type))
-		goto done_compiler_end;
-	if unlikely(code->ci_compiler != self) {
-		err_invalid_ast_compiler(code);
+	if unlikely(args.code->ci_compiler != self) {
+		err_invalid_ast_compiler(args.code);
 		goto done_compiler_end;
 	}
-	code_scope = code->ci_value->a_scope->s_base;
+	code_scope = args.code->ci_value->a_scope->s_base;
 	if unlikely(check_function_code_scope(code_scope, ast_scope->s_base))
 		goto done_compiler_end;
 	/* Setup a new function branch. */
-	result_ast = ast_new(ast_scope, loc);
+	result_ast = ast_new(ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type             = AST_FUNCTION;
-	result_ast->a_function.f_code  = code->ci_value;
+	result_ast->a_function.f_code  = args.code->ci_value;
 	result_ast->a_function.f_scope = code_scope;
-	ast_incref(code->ci_value);
+	ast_incref(args.code->ci_value);
 	Dee_Incref((DeeObject *)code_scope);
 	result = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
@@ -1442,42 +1616,54 @@ ast_makeoperatorfunc(DeeCompilerObject *self, size_t argc,
 	/* "(name:?Dstring,binding:?#Ast=!N,scope:?#Scope=!N)->?#Ast\n"
 	 * "(name:?Dint,binding:?#Ast=!N,scope:?#Scope=!N)->?#Ast\n" */
 	DREF DeeObject *result = NULL;
-	DeeObject *name;
-	Dee_operator_t id;
-	DeeCompilerAstObject *binding = (DeeCompilerAstObject *)Dee_None;
-	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
-	DeeScopeObject *ast_scope;
-	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
+	Dee_operator_t id;
+	DeeScopeObject *ast_scope;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makeoperatorfunc", params: """
+	DeeObject *name:?X2?Dstring?Dint;
+	DeeCompilerAstObject *binding:?#Ast=!N = (DeeCompilerAstObject *)Dee_None;
+	DeeCompilerScopeObject *scope:?#Scope=!N = (DeeCompilerScopeObject *)Dee_None;
+	DeeObject *loc:?T3?AFile?#Lexer?Dint?Dint = NULL;
+""", docStringPrefix: "ast", err: "done");]]]*/
+#define ast_makeoperatorfunc_params "name:?X2?Dstring?Dint,binding:?#Ast=!N,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint"
+	struct {
+		DeeObject *name;
+		DeeCompilerAstObject *binding;
+		DeeCompilerScopeObject *scope;
+		DeeObject *loc;
+	} args;
+	args.binding = (DeeCompilerAstObject *)Dee_None;
+	args.scope = (DeeCompilerScopeObject *)Dee_None;
+	args.loc = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__name_binding_scope_loc, "o|ooo:makeoperatorfunc", &args))
+		goto done;
+/*[[[end]]]*/
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__name_binding_scope_loc,
-	                    "o|ooo:makeoperatorfunc", &name, &binding, &scope, &loc))
+	if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 		goto done_compiler_end;
-	if unlikely((ast_scope = get_scope(scope)) == NULL)
+	if unlikely(get_operator_id(args.name, &id))
 		goto done_compiler_end;
-	if unlikely(get_operator_id(name, &id))
-		goto done_compiler_end;
-	if (!DeeNone_Check(binding)) {
-		if unlikely(DeeObject_AssertTypeExact(binding, &DeeCompilerAst_Type))
+	if (!DeeNone_Check(args.binding)) {
+		if unlikely(DeeObject_AssertTypeExact(args.binding, &DeeCompilerAst_Type))
 			goto done_compiler_end;
-		if unlikely(binding->ci_compiler != self) {
-			err_invalid_ast_compiler(binding);
+		if unlikely(args.binding->ci_compiler != self) {
+			err_invalid_ast_compiler(args.binding);
 			goto done_compiler_end;
 		}
-		if unlikely(binding->ci_value->a_scope->s_base != ast_scope->s_base) {
-			err_invalid_ast_basescope(binding, ast_scope->s_base);
+		if unlikely(args.binding->ci_value->a_scope->s_base != ast_scope->s_base) {
+			err_invalid_ast_basescope(args.binding, ast_scope->s_base);
 			goto done_compiler_end;
 		}
 	}
-	result_ast = ast_new(ast_scope, loc);
+	result_ast = ast_new(ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type = AST_OPERATOR_FUNC;
 	result_ast->a_flag = id;
-	if (!DeeNone_Check(binding)) {
-		result_ast->a_operator_func.of_binding = binding->ci_value;
-		ast_incref(binding->ci_value);
+	if (!DeeNone_Check(args.binding)) {
+		result_ast->a_operator_func.of_binding = args.binding->ci_value;
+		ast_incref(args.binding->ci_value);
 	}
 	result = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
@@ -1532,76 +1718,95 @@ ast_makeoperator(DeeCompilerObject *self, size_t argc,
 	/* "(name:?Dstring,a:?#Ast,b:?#Ast=!N,c:?#Ast=!N,d:?#Ast=!N,flags=!P{},scope=!N)->?#Ast\n"
 	 * "(name:?Dint,a:?#Ast,b:?#Ast=!N,c:?#Ast=!N,d:?#Ast=!N,flags=!P{},scope=!N)->?#Ast\n" */
 	DREF DeeObject *result = NULL;
-	DeeObject *name;
 	uint16_t id, flags = 0;
-	DeeCompilerAstObject *a;
-	DeeCompilerAstObject *b       = (DeeCompilerAstObject *)Dee_None;
-	DeeCompilerAstObject *c       = (DeeCompilerAstObject *)Dee_None;
-	DeeCompilerAstObject *d       = (DeeCompilerAstObject *)Dee_None;
-	DeeStringObject *flags_str    = (DeeStringObject *)Dee_EmptyString;
-	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
 	DeeScopeObject *ast_scope;
-	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makeoperator", params: """
+	DeeObject *name:?X2?Dstring?Dint;
+	DeeCompilerAstObject *a:?#Ast;
+	DeeCompilerAstObject *b:?#Ast=!N = (DeeCompilerAstObject *)Dee_None;
+	DeeCompilerAstObject *c:?#Ast=!N = (DeeCompilerAstObject *)Dee_None;
+	DeeCompilerAstObject *d:?#Ast=!N = (DeeCompilerAstObject *)Dee_None;
+	DeeStringObject *flags:?X2?Dstring?Dint=!P{} = (DeeStringObject *)Dee_EmptyString;
+	DeeCompilerScopeObject *scope:?#Scope=!N = (DeeCompilerScopeObject *)Dee_None;
+	DeeObject *loc:?T3?AFile?#Lexer?Dint?Dint = NULL;
+""", docStringPrefix: "ast", err: "done");]]]*/
+#define ast_makeoperator_params "name:?X2?Dstring?Dint,a:?#Ast,b:?#Ast=!N,c:?#Ast=!N,d:?#Ast=!N,flags:?X2?Dstring?Dint=!P{},scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint"
+	struct {
+		DeeObject *name;
+		DeeCompilerAstObject *a;
+		DeeCompilerAstObject *b;
+		DeeCompilerAstObject *c;
+		DeeCompilerAstObject *d;
+		DeeStringObject *flags;
+		DeeCompilerScopeObject *scope;
+		DeeObject *loc;
+	} args;
+	args.b = (DeeCompilerAstObject *)Dee_None;
+	args.c = (DeeCompilerAstObject *)Dee_None;
+	args.d = (DeeCompilerAstObject *)Dee_None;
+	args.flags = (DeeStringObject *)Dee_EmptyString;
+	args.scope = (DeeCompilerScopeObject *)Dee_None;
+	args.loc = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__name_a_b_c_d_flags_scope_loc, "oo|oooooo:makeoperator", &args))
+		goto done;
+/*[[[end]]]*/
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__name_a_b_c_d_flags_scope_loc,
-	                    "oo|oooooo:makeoperator", &name, &a, &b, &c, &d, &flags_str, &scope, &loc))
+	if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 		goto done_compiler_end;
-	if unlikely((ast_scope = get_scope(scope)) == NULL)
+	if unlikely(get_operator_id(args.name, &id))
 		goto done_compiler_end;
-	if unlikely(get_operator_id(name, &id))
-		goto done_compiler_end;
-	if (flags_str != (DeeStringObject *)Dee_EmptyString) {
-		if (DeeString_Check(flags_str)) {
-			if (parse_operator_flags(DeeString_STR(flags_str), &flags))
+	if (args.flags != (DeeStringObject *)Dee_EmptyString) {
+		if (DeeString_Check(args.flags)) {
+			if (parse_operator_flags(DeeString_STR(args.flags), &flags))
 				goto done_compiler_end;
 		} else {
-			if (DeeObject_AsUInt16((DeeObject *)flags_str, &flags))
+			if (DeeObject_AsUInt16((DeeObject *)args.flags, &flags))
 				goto done_compiler_end;
 		}
 	}
-	if unlikely(DeeObject_AssertTypeExact(a, &DeeCompilerAst_Type))
+	if unlikely(DeeObject_AssertTypeExact(args.a, &DeeCompilerAst_Type))
 		goto done_compiler_end;
-	if unlikely(a->ci_compiler != self) {
-		err_invalid_ast_compiler(a);
-		goto done_compiler_end;
-	}
-	if unlikely(a->ci_value->a_scope->s_base != ast_scope->s_base) {
-		err_invalid_ast_basescope(a, ast_scope->s_base);
+	if unlikely(args.a->ci_compiler != self) {
+		err_invalid_ast_compiler(args.a);
 		goto done_compiler_end;
 	}
-	if (!DeeNone_Check(b)) {
-		if unlikely(DeeObject_AssertTypeExact(b, &DeeCompilerAst_Type))
+	if unlikely(args.a->ci_value->a_scope->s_base != ast_scope->s_base) {
+		err_invalid_ast_basescope(args.a, ast_scope->s_base);
+		goto done_compiler_end;
+	}
+	if (!DeeNone_Check(args.b)) {
+		if unlikely(DeeObject_AssertTypeExact(args.b, &DeeCompilerAst_Type))
 			goto done_compiler_end;
-		if unlikely(b->ci_compiler != self) {
-			err_invalid_ast_compiler(b);
+		if unlikely(args.b->ci_compiler != self) {
+			err_invalid_ast_compiler(args.b);
 			goto done_compiler_end;
 		}
-		if unlikely(b->ci_value->a_scope->s_base != ast_scope->s_base) {
-			err_invalid_ast_basescope(b, ast_scope->s_base);
+		if unlikely(args.b->ci_value->a_scope->s_base != ast_scope->s_base) {
+			err_invalid_ast_basescope(args.b, ast_scope->s_base);
 			goto done_compiler_end;
 		}
-		if (!DeeNone_Check(c)) {
-			if unlikely(DeeObject_AssertTypeExact(c, &DeeCompilerAst_Type))
+		if (!DeeNone_Check(args.c)) {
+			if unlikely(DeeObject_AssertTypeExact(args.c, &DeeCompilerAst_Type))
 				goto done_compiler_end;
-			if unlikely(c->ci_compiler != self) {
-				err_invalid_ast_compiler(c);
+			if unlikely(args.c->ci_compiler != self) {
+				err_invalid_ast_compiler(args.c);
 				goto done_compiler_end;
 			}
-			if unlikely(c->ci_value->a_scope->s_base != ast_scope->s_base) {
-				err_invalid_ast_basescope(c, ast_scope->s_base);
+			if unlikely(args.c->ci_value->a_scope->s_base != ast_scope->s_base) {
+				err_invalid_ast_basescope(args.c, ast_scope->s_base);
 				goto done_compiler_end;
 			}
-			if (!DeeNone_Check(d)) {
-				if unlikely(DeeObject_AssertTypeExact(d, &DeeCompilerAst_Type))
+			if (!DeeNone_Check(args.d)) {
+				if unlikely(DeeObject_AssertTypeExact(args.d, &DeeCompilerAst_Type))
 					goto done_compiler_end;
-				if unlikely(d->ci_compiler != self) {
-					err_invalid_ast_compiler(d);
+				if unlikely(args.d->ci_compiler != self) {
+					err_invalid_ast_compiler(args.d);
 					goto done_compiler_end;
 				}
-				if unlikely(d->ci_value->a_scope->s_base != ast_scope->s_base) {
-					err_invalid_ast_basescope(d, ast_scope->s_base);
+				if unlikely(args.d->ci_value->a_scope->s_base != ast_scope->s_base) {
+					err_invalid_ast_basescope(args.d, ast_scope->s_base);
 					goto done_compiler_end;
 				}
 			}
@@ -1609,42 +1814,42 @@ ast_makeoperator(DeeCompilerObject *self, size_t argc,
 	}
 	switch (id) {
 	case AST_OPERATOR_POS_OR_ADD:
-		id = DeeNone_Check(b) ? OPERATOR_POS : OPERATOR_ADD;
+		id = DeeNone_Check(args.b) ? OPERATOR_POS : OPERATOR_ADD;
 		break;
 	case AST_OPERATOR_NEG_OR_SUB:
-		id = DeeNone_Check(b) ? OPERATOR_NEG : OPERATOR_SUB;
+		id = DeeNone_Check(args.b) ? OPERATOR_NEG : OPERATOR_SUB;
 		break;
 	case AST_OPERATOR_GETITEM_OR_SETITEM:
-		id = DeeNone_Check(c) ? OPERATOR_GETITEM : OPERATOR_SETITEM;
+		id = DeeNone_Check(args.c) ? OPERATOR_GETITEM : OPERATOR_SETITEM;
 		break;
 	case AST_OPERATOR_GETRANGE_OR_SETRANGE:
-		id = DeeNone_Check(c) ? OPERATOR_GETRANGE : OPERATOR_SETRANGE;
+		id = DeeNone_Check(args.c) ? OPERATOR_GETRANGE : OPERATOR_SETRANGE;
 		break;
 	case AST_OPERATOR_GETATTR_OR_SETATTR:
-		id = DeeNone_Check(c) ? OPERATOR_GETATTR : OPERATOR_SETATTR;
+		id = DeeNone_Check(args.c) ? OPERATOR_GETATTR : OPERATOR_SETATTR;
 		break;
 	default: break;
 	}
-	result_ast = ast_new(ast_scope, loc);
+	result_ast = ast_new(ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type              = AST_OPERATOR;
 	result_ast->a_flag              = id;
 	result_ast->a_operator.o_exflag = flags;
-	result_ast->a_operator.o_op0    = a->ci_value;
+	result_ast->a_operator.o_op0    = args.a->ci_value;
 	result_ast->a_operator.o_op1    = NULL;
 	result_ast->a_operator.o_op2    = NULL;
 	result_ast->a_operator.o_op3    = NULL;
-	ast_incref(a->ci_value);
-	if (!DeeNone_Check(b)) {
-		result_ast->a_operator.o_op1 = b->ci_value;
-		ast_incref(b->ci_value);
-		if (!DeeNone_Check(c)) {
-			result_ast->a_operator.o_op2 = c->ci_value;
-			ast_incref(c->ci_value);
-			if (!DeeNone_Check(d)) {
-				result_ast->a_operator.o_op3 = d->ci_value;
-				ast_incref(d->ci_value);
+	ast_incref(args.a->ci_value);
+	if (!DeeNone_Check(args.b)) {
+		result_ast->a_operator.o_op1 = args.b->ci_value;
+		ast_incref(args.b->ci_value);
+		if (!DeeNone_Check(args.c)) {
+			result_ast->a_operator.o_op2 = args.c->ci_value;
+			ast_incref(args.c->ci_value);
+			if (!DeeNone_Check(args.d)) {
+				result_ast->a_operator.o_op3 = args.d->ci_value;
+				ast_incref(args.d->ci_value);
 			}
 		}
 	}
@@ -1861,63 +2066,81 @@ ast_makeaction(DeeCompilerObject *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	/* "(name:?Dstring,a:?#Ast=!N,b:?#Ast=!N,c:?#Ast=!N,bool mustrun=true,scope=!N)->?#Ast\n" */
 	DREF DeeObject *result = NULL;
-	DeeObject *name;
 	int32_t id;
-	DeeCompilerAstObject *a       = (DeeCompilerAstObject *)Dee_None;
-	DeeCompilerAstObject *b       = (DeeCompilerAstObject *)Dee_None;
-	DeeCompilerAstObject *c       = (DeeCompilerAstObject *)Dee_None;
-	bool mustrun                  = true;
-	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
 	DeeScopeObject *ast_scope;
-	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
 	uint8_t opc;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makeaction", params: """
+	DeeObject *name:?Dstring;
+	DeeCompilerAstObject *a:?#Ast=!N = (DeeCompilerAstObject *)Dee_None;
+	DeeCompilerAstObject *b:?#Ast=!N = (DeeCompilerAstObject *)Dee_None;
+	DeeCompilerAstObject *c:?#Ast=!N = (DeeCompilerAstObject *)Dee_None;
+	bool mustrun                              = true;
+	DeeCompilerScopeObject *scope:?#Scope=!N  = (DeeCompilerScopeObject *)Dee_None;
+	DeeObject *loc:?T3?AFile?#Lexer?Dint?Dint = NULL;
+""", docStringPrefix: "ast", err: "done");]]]*/
+#define ast_makeaction_params "name:?Dstring,a:?#Ast=!N,b:?#Ast=!N,c:?#Ast=!N,mustrun=!t,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint"
+	struct {
+		DeeObject *name;
+		DeeCompilerAstObject *a;
+		DeeCompilerAstObject *b;
+		DeeCompilerAstObject *c;
+		bool mustrun;
+		DeeCompilerScopeObject *scope;
+		DeeObject *loc;
+	} args;
+	args.a = (DeeCompilerAstObject *)Dee_None;
+	args.b = (DeeCompilerAstObject *)Dee_None;
+	args.c = (DeeCompilerAstObject *)Dee_None;
+	args.mustrun = true;
+	args.scope = (DeeCompilerScopeObject *)Dee_None;
+	args.loc = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__name_a_b_c_mustrun_scope_loc, "o|oooboo:makeaction", &args))
+		goto done;
+/*[[[end]]]*/
+	if unlikely(DeeObject_AssertTypeExact(args.name, &DeeString_Type))
+		goto done;
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__name_a_b_c_mustrun_scope_loc,
-	                    "o|oooboo:makeaction", &name, &a, &b, &c, &mustrun, &scope, &loc))
+	if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 		goto done_compiler_end;
-	if unlikely((ast_scope = get_scope(scope)) == NULL)
-		goto done_compiler_end;
-	if unlikely(DeeObject_AssertTypeExact(name, &DeeString_Type))
-		goto done_compiler_end;
-	if unlikely((id = get_action_by_name(DeeString_STR(name))) < 0)
+	if unlikely((id = get_action_by_name(DeeString_STR(args.name))) < 0)
 		goto done_compiler_end;
 	opc = 0;
-	if (!DeeNone_Check(a)) {
+	if (!DeeNone_Check(args.a)) {
 		opc = 1;
-		if unlikely(DeeObject_AssertTypeExact(a, &DeeCompilerAst_Type))
+		if unlikely(DeeObject_AssertTypeExact(args.a, &DeeCompilerAst_Type))
 			goto done_compiler_end;
-		if unlikely(a->ci_compiler != self) {
-			err_invalid_ast_compiler(a);
-			goto done_compiler_end;
-		}
-		if unlikely(a->ci_value->a_scope->s_base != ast_scope->s_base) {
-			err_invalid_ast_basescope(a, ast_scope->s_base);
+		if unlikely(args.a->ci_compiler != self) {
+			err_invalid_ast_compiler(args.a);
 			goto done_compiler_end;
 		}
-		if (!DeeNone_Check(b)) {
+		if unlikely(args.a->ci_value->a_scope->s_base != ast_scope->s_base) {
+			err_invalid_ast_basescope(args.a, ast_scope->s_base);
+			goto done_compiler_end;
+		}
+		if (!DeeNone_Check(args.b)) {
 			opc = 2;
-			if unlikely(DeeObject_AssertTypeExact(b, &DeeCompilerAst_Type))
+			if unlikely(DeeObject_AssertTypeExact(args.b, &DeeCompilerAst_Type))
 				goto done_compiler_end;
-			if unlikely(b->ci_compiler != self) {
-				err_invalid_ast_compiler(b);
-				goto done_compiler_end;
-			}
-			if unlikely(b->ci_value->a_scope->s_base != ast_scope->s_base) {
-				err_invalid_ast_basescope(b, ast_scope->s_base);
+			if unlikely(args.b->ci_compiler != self) {
+				err_invalid_ast_compiler(args.b);
 				goto done_compiler_end;
 			}
-			if (!DeeNone_Check(c)) {
+			if unlikely(args.b->ci_value->a_scope->s_base != ast_scope->s_base) {
+				err_invalid_ast_basescope(args.b, ast_scope->s_base);
+				goto done_compiler_end;
+			}
+			if (!DeeNone_Check(args.c)) {
 				opc = 3;
-				if unlikely(DeeObject_AssertTypeExact(c, &DeeCompilerAst_Type))
+				if unlikely(DeeObject_AssertTypeExact(args.c, &DeeCompilerAst_Type))
 					goto done_compiler_end;
-				if unlikely(c->ci_compiler != self) {
-					err_invalid_ast_compiler(c);
+				if unlikely(args.c->ci_compiler != self) {
+					err_invalid_ast_compiler(args.c);
 					goto done_compiler_end;
 				}
-				if unlikely(c->ci_value->a_scope->s_base != ast_scope->s_base) {
-					err_invalid_ast_basescope(c, ast_scope->s_base);
+				if unlikely(args.c->ci_value->a_scope->s_base != ast_scope->s_base) {
+					err_invalid_ast_basescope(args.c, ast_scope->s_base);
 					goto done_compiler_end;
 				}
 			}
@@ -1929,31 +2152,31 @@ ast_makeaction(DeeCompilerObject *self, size_t argc,
 		} else {
 			DeeError_Throwf(&DeeError_TypeError,
 			                "Invalid operand count for action %k expecting %u operands when %u were given",
-			                name,
+			                args.name,
 			                (unsigned int)AST_FACTION_ARGC_GT((uint16_t)id),
 			                (unsigned int)opc);
 			goto done_compiler_end;
 		}
 	}
-	result_ast = ast_new(ast_scope, loc);
+	result_ast = ast_new(ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type = AST_ACTION;
 	result_ast->a_flag = (uint16_t)id;
-	if (!mustrun)
+	if (!args.mustrun)
 		result_ast->a_flag |= AST_FACTION_MAYBERUN;
 	result_ast->a_action.a_act0 = NULL;
 	result_ast->a_action.a_act1 = NULL;
 	result_ast->a_action.a_act2 = NULL;
-	if (!DeeNone_Check(a)) {
-		result_ast->a_action.a_act0 = a->ci_value;
-		ast_incref(a->ci_value);
-		if (!DeeNone_Check(b)) {
-			result_ast->a_action.a_act1 = b->ci_value;
-			ast_incref(b->ci_value);
-			if (!DeeNone_Check(c)) {
-				result_ast->a_action.a_act2 = c->ci_value;
-				ast_incref(c->ci_value);
+	if (!DeeNone_Check(args.a)) {
+		result_ast->a_action.a_act0 = args.a->ci_value;
+		ast_incref(args.a->ci_value);
+		if (!DeeNone_Check(args.b)) {
+			result_ast->a_action.a_act1 = args.b->ci_value;
+			ast_incref(args.b->ci_value);
+			if (!DeeNone_Check(args.c)) {
+				result_ast->a_action.a_act2 = args.c->ci_value;
+				ast_incref(args.c->ci_value);
 			}
 		}
 	}
@@ -2023,13 +2246,13 @@ ast_makeassembly(DeeCompilerObject *self, size_t argc,
 INTDEF struct type_method tpconst compiler_methods[];
 INTERN_TPCONST struct type_method tpconst compiler_methods[] = {
 	TYPE_KWMETHOD("makeconstexpr", &ast_makeconstexpr,
-	              "(value,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(" ast_makeconstexpr_params ")->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @scope doesn't match @this}"
 	              "Construct a new constant-expression ast referring to @value"),
 	TYPE_KWMETHOD("makesym", &ast_makesym,
-	              "(sym:?#Symbol,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(" ast_makesym_params ")->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @sym or @scope doesn't match @this}"
@@ -2040,21 +2263,21 @@ INTERN_TPCONST struct type_method tpconst compiler_methods[] = {
 	              /**/ "for writing instead. Similarly, special handling is done when the "
 	              /**/ "branch is used in an assembly output operand"),
 	TYPE_KWMETHOD("makeunbind", &ast_makeunbind,
-	              "(sym:?#Symbol,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(" ast_makeunbind_params ")->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @sym or @scope doesn't match @this}"
 	              "#tReferenceError{The given @sym is not reachable from the effectively used @scope}"
 	              "Construct a branch for unbinding the value of @sym at runtime"),
 	TYPE_KWMETHOD("makebound", &ast_makebound,
-	              "(sym:?#Symbol,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(" ast_makebound_params ")->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @sym or @scope doesn't match @this}"
 	              "#tReferenceError{The given @sym is not reachable from the effectively used @scope}"
 	              "Construct a branch for checking if a given symbol @sym is bound"),
 	TYPE_KWMETHOD("makemultiple", &ast_makemultiple,
-	              "(branches:?S?#Ast,typing:?DType=!N,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(" ast_makemultiple_params ")->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of one of the given @branches or @scope doesn't match @this}"
@@ -2075,29 +2298,28 @@ INTERN_TPCONST struct type_method tpconst compiler_methods[] = {
 	              "Note that in any kind of sequence branch, asts created by @makeexpand may "
 	              /**/ "appear, and will be inlined as part of the greater whole expression"),
 	TYPE_KWMETHOD("makereturn", &ast_makereturn,
-	              "(expr:?#Ast=!N,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(" ast_makereturn_params ")->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @expr or @scope doesn't match @this}"
 	              "#tReferenceError{The given @expr is not part of the basescope of the effective @scope}"
 	              "Construct a return-branch that either returns @expr, or ?N when @expr is ?N"),
 	TYPE_KWMETHOD("makeyield", &ast_makeyield,
-	              "(expr:?#Ast,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(" ast_makeyield_params ")->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @expr or @scope doesn't match @this}"
 	              "#tReferenceError{The given @expr is not part of the basescope of the effective @scope}"
 	              "Construct a yield-branch that either returns @expr, or ?N when @expr is ?N"),
 	TYPE_KWMETHOD("makethrow", &ast_makethrow,
-	              "(expr:?#Ast=!N,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(" ast_makethrow_params ")->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @expr or @scope doesn't match @this}"
 	              "#tReferenceError{The given @expr is not part of the basescope of the effective @scope}"
 	              "Construct a throw-branch that either throws @expr, or re-throws the last exception when @expr is ?N"),
 	TYPE_KWMETHOD("maketry", &ast_maketry,
-	              "(guard:?#Ast,handlers:?S?T3?Dstring?#Ast?#Ast,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
-	              "(guard:?#Ast,handlers:?S?T3?Dint?#Ast?#Ast,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(" ast_maketry_params ")->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of one of the given branches or @scope doesn't match @this}"
@@ -2136,15 +2358,14 @@ INTERN_TPCONST struct type_method tpconst compiler_methods[] = {
 	              /**/ /*         */ "should be placed in a section of code that is rarely used"
 	              "}"),
 	TYPE_KWMETHOD("makeloopctl", &ast_makeloopctl,
-	              "(isbreak:?Dbool,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(" ast_makeloopctl_params ")->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @scope doesn't match @this}"
 	              "Construct a loop control branch, that is either a $continue (when "
 	              /**/ "@isbreak is ?f), or a $break statement (when @isbreak is ?t)"),
 	TYPE_KWMETHOD("makeconditional", &ast_makeconditional,
-	              "(cond:?#Ast,tt:?#Ast=!N,ff:?#Ast=!N,flags=!P{},scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
-	              "(cond:?#Ast,tt:?#Ast=!N,ff:?#Ast=!N,flags=!0,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(" ast_makeconditional_params ")->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The given @flags contains an unrecognized, or invalid flag}"
@@ -2171,7 +2392,7 @@ INTERN_TPCONST struct type_method tpconst compiler_methods[] = {
 	              /**/ "$\"unlikely\"|When given, assembly for @tt is placed in a section of code that is rarely used"
 	              "}"),
 	TYPE_KWMETHOD("makebool", &ast_makebool,
-	              "(expr:?#Ast,negate=!f,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(" ast_makebool_params ")->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @expr or @scope doesn't match @this}"
@@ -2180,14 +2401,14 @@ INTERN_TPCONST struct type_method tpconst compiler_methods[] = {
 	              /**/ "underlying boolean logic when @negate is ?t\n"
 	              "The expression ${!!a} results in ${makebool(a, false)}, while ${!a} results in ${makebool(a, true)}"),
 	TYPE_KWMETHOD("makeexpand", &ast_makeexpand,
-	              "(expr:?#Ast,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(" ast_makeexpand_params ")->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @expr or @scope doesn't match @this}"
 	              "#tReferenceError{The given @expr is not part of the basescope of the effective @scope}"
 	              "Construct an expand-branch that will unpack a sequence expression @expr at runtime"),
 	TYPE_KWMETHOD("makefunction", &ast_makefunction,
-	              "(code:?#Ast,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(" ast_makefunction_params ")->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @code or @scope doesn't match @this}"
@@ -2197,8 +2418,7 @@ INTERN_TPCONST struct type_method tpconst compiler_methods[] = {
 	              "The base-scope of the function is set to ${code.scope.base}, while the returned "
 	              /**/ "branch will be executed in the context of @scope, or the current scope when ?N"),
 	TYPE_KWMETHOD("makeoperatorfunc", &ast_makeoperatorfunc,
-	              "(name:?Dstring,binding:?#Ast=!N,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
-	              "(name:?Dint,binding:?#Ast=!N,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(" ast_makeoperatorfunc_params ")->?#Ast\n"
 	              "#pname{The name of the operator, or one of ${[\"+\", \"-\", \"[]\", \"[:]\", \".\"]} "
 	              /*  */ "for ambiguous operators resolved at runtime}"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
@@ -2211,10 +2431,7 @@ INTERN_TPCONST struct type_method tpconst compiler_methods[] = {
 	              "For example ${operator add} results in ${makeoperatorfunc(\"add\")}, while "
 	              /**/ "${binding.operator add} results in ${makeoperatorfunc(\"add\", binding)}"),
 	TYPE_KWMETHOD("makeoperator", &ast_makeoperator,
-	              "(name:?Dstring,a:?#Ast,b:?#Ast=!N,c:?#Ast=!N,d:?#Ast=!N,flags=!P{},scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
-	              "(name:?Dint,a:?#Ast,b:?#Ast=!N,c:?#Ast=!N,d:?#Ast=!N,flags=!P{},scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
-	              "(name:?Dstring,a:?#Ast,b:?#Ast=!N,c:?#Ast=!N,d:?#Ast=!N,flags=!0,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
-	              "(name:?Dint,a:?#Ast,b:?#Ast=!N,c:?#Ast=!N,d:?#Ast=!N,flags=!0,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(" ast_makeoperator_params ")->?#Ast\n"
 	              "#pname{The name of the operator, or one of ${[\"+\", \"-\", \"[]\", \"[:]\", \".\"]} "
 	              /*  */ "for ambiguous operators resolved based on argument count}"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
@@ -2238,7 +2455,7 @@ INTERN_TPCONST struct type_method tpconst compiler_methods[] = {
 	              /**/ /*            */ "inplace operator is used when the @a operand cannot actually be written to&"
 	              /**/ "$\"dontoptimize\"|Don't perform constant optimizations within this branch during the ast-optimization pass}"),
 	TYPE_KWMETHOD("makeaction", &ast_makeaction,
-	              "(name:?Dstring,a:?#Ast=!N,b:?#Ast=!N,c:?#Ast=!N,mustrun=!t,scope:?#Scope=!N)->?#Ast\n"
+	              "(" ast_makeaction_params ")->?#Ast\n"
 	              "#pname{The name of the action (see table below)}"
 	              "#pmustrun{When ?f, ast-optimization may optimize away side-effects caused by action operands. "
 	              /*     */ "Otherwise, all operands are required to execute as required by the action (which usually means executed-in-order)}"

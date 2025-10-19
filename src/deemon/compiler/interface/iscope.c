@@ -367,17 +367,28 @@ scope_newlocal(DeeCompilerScopeObject *self, size_t argc,
 	DREF DeeObject *result = NULL;
 	struct symbol *sym;
 	struct TPPKeyword *kwd;
-	DeeObject *name, *loc = NULL;
-	bool requirenew = true;
 	char const *name_utf8;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("newlocal", params: """
+	DeeStringObject *name:?Dstring;
+	bool requirenew = true;
+	DeeObject *loc:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint = NULL;
+""", docStringPrefix: "file", err: "done");]]]*/
+#define file_newlocal_params "name:?Dstring,requirenew=!t,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint"
+	struct {
+		DeeStringObject *name;
+		bool requirenew;
+		DeeObject *loc;
+	} args;
+	args.requirenew = true;
+	args.loc = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__name_requirenew_loc, "o|bo:newlocal", &args))
+		goto done;
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
+		goto done;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__name_requirenew_loc,
-	                    "o|bo:newlocal", &name, &requirenew, &loc))
-		goto done_compiler_end;
-	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
-		goto done_compiler_end;
-	name_utf8 = DeeString_AsUtf8(name);
+	name_utf8 = DeeString_AsUtf8((DeeObject *)args.name);
 	if unlikely(!name_utf8)
 		goto done_compiler_end;
 	kwd = TPPLexer_LookupKeyword(name_utf8, WSTR_LENGTH(name_utf8), 1);
@@ -385,14 +396,14 @@ scope_newlocal(DeeCompilerScopeObject *self, size_t argc,
 		goto done_compiler_end;
 	sym = get_local_symbol_in_scope(self->ci_value, kwd);
 	if unlikely(sym) {
-		if (requirenew) {
+		if (args.requirenew) {
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Local symbol %r has already been defined");
 			goto done_compiler_end;
 		}
 	} else {
 		struct ast_loc symloc;
-		if unlikely(get_astloc_from_obj(loc, &symloc))
+		if unlikely(get_astloc_from_obj(args.loc, &symloc))
 			goto done_compiler_end;
 		sym = new_local_symbol_in_scope(self->ci_value, kwd, &symloc);
 		if unlikely(!sym)
@@ -417,7 +428,7 @@ PRIVATE struct type_method tpconst scope_methods[] = {
 	            /**/ "values, as used by $with-statements\n"
 	            "New symbols are created with $\"none\"-typing (s.a. ?Akind?#Symbol)"),
 	TYPE_KWMETHOD("newlocal", &scope_newlocal,
-	              "(name:?Dstring,requirenew=!t,loc?:?T3" DR_CFile "?Dint?Dint)->" DR_CSymbol "\n"
+	              "(" file_newlocal_params ")->" DR_CSymbol "\n"
 	              "#ploc{The declaration position of the symbol, omitted to use the current "
 	              /* */ "token position, or ?N when not available}"
 	              "#tValueError{@requirenew is ?t, and another symbol @name already exists}"

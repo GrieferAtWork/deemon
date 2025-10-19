@@ -2210,33 +2210,37 @@ err:
 }
 
 
-DOC_DEF(lexer_getkwd_doc,
-        "(name:?Dstring,create=!t)->?X2?#Keyword?N\n"
-        "Lookup the keyword associated with @name and return it, or ?N "
-        /**/ "when @create is ?f and the keyword hasn't been accessed yet");
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_getkwd(DeeCompilerWrapperObject *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	char const *name_utf8;
-	DeeObject *name;
-	bool create = true;
 	struct TPPKeyword *kwd;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__name_create, "o|b:getkwd", &name, &create))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("getkwd", params: """
+	DeeStringObject *name;
+	bool create = true;
+""", docStringPrefix: "lexer");]]]*/
+#define lexer_getkwd_params "name:?Dstring,create=!t"
+	struct {
+		DeeStringObject *name;
+		bool create;
+	} args;
+	args.create = true;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__name_create, "o|b:getkwd", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
 		goto err;
-	name_utf8 = DeeString_AsUtf8(name);
+	name_utf8 = DeeString_AsUtf8((DeeObject *)args.name);
 	if unlikely(!name_utf8)
 		goto err;
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
 	kwd = TPPLexer_LookupKeyword(name_utf8,
 	                             WSTR_LENGTH(name_utf8),
-	                             create);
+	                             args.create);
 	if unlikely(!kwd) {
-		if (create) {
+		if (args.create) {
 			result = NULL;
 		} else {
 			result = DeeNone_NewRef();
@@ -2249,34 +2253,44 @@ lexer_getkwd(DeeCompilerWrapperObject *self, size_t argc,
 err:
 	return NULL;
 }
+DOC_DEF(lexer_getkwd_doc,
+        "(" lexer_getkwd_params ")->?X2?#Keyword?N\n"
+        "Lookup the keyword associated with @name and return it, or ?N "
+        /**/ "when @create is ?f and the keyword hasn't been accessed yet");
 
-DOC_DEF(lexer_getxkwd_doc,
-        "(name:?Dstring,create=!t)->?X2?#Keyword?N\n"
-        "Same as ?#getkwd, however the given @name may contain escaped "
-        /**/ "line-feeds that are removed prior to it being used to lookup "
-        /**/ "a keyword");
+
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_getxkwd(DeeCompilerWrapperObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	char const *name_utf8;
-	DeeObject *name;
-	bool create = true;
 	struct TPPKeyword *kwd;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__name_create, "o|b:getxkwd", &name, &create))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("getxkwd", params: """
+	DeeStringObject *name;
+	bool create = true;
+""", docStringPrefix: "lexer");]]]*/
+#define lexer_getxkwd_params "name:?Dstring,create=!t"
+	struct {
+		DeeStringObject *name;
+		bool create;
+	} args;
+	args.create = true;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__name_create, "o|b:getxkwd", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
 		goto err;
-	name_utf8 = DeeString_AsUtf8(name);
+	name_utf8 = DeeString_AsUtf8((DeeObject *)args.name);
 	if unlikely(!name_utf8)
 		goto err;
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
 	kwd = TPPLexer_LookupEscapedKeyword(name_utf8,
 	                                    WSTR_LENGTH(name_utf8),
-	                                    create);
+	                                    args.create);
 	if unlikely(!kwd) {
-		if (create) {
+		if (args.create) {
 			result = NULL;
 		} else {
 			result = DeeNone_NewRef();
@@ -2289,22 +2303,30 @@ lexer_getxkwd(DeeCompilerWrapperObject *self, size_t argc,
 err:
 	return NULL;
 }
+DOC_DEF(lexer_getxkwd_doc,
+        "(" lexer_getxkwd_params ")->?X2?#Keyword?N\n"
+        "Same as ?#getkwd, however the given @name may contain escaped "
+        /**/ "line-feeds that are removed prior to it being used to lookup "
+        /**/ "a keyword");
 
-DOC_DEF(lexer_getkwdid_doc,
-        "(id:?Dint)->?X2?#Keyword?N\n"
-        "Lookup the keyword associated with the given @id, "
-        /**/ "returning it or ?N if no such keyword exists.\n"
-        "WARNING: This is an O(n) operation and should be avoided if at all possible");
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_getkwdid(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
-	unsigned int id;
 	struct TPPKeyword *kwd;
-	if (DeeArg_UnpackStruct(argc, argv, "u:getkwdid", &id))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getkwdid", params: """
+	unsigned int id;
+""", docStringPrefix: "lexer");]]]*/
+#define lexer_getkwdid_params "id:?Dint"
+	struct {
+		unsigned int id;
+	} args;
+	if (DeeArg_UnpackStruct(argc, argv, "u:getkwdid", &args))
 		goto err;
+/*[[[end]]]*/
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
-	kwd = TPPLexer_LookupKeywordID((tok_t)id);
+	kwd = TPPLexer_LookupKeywordID((tok_t)args.id);
 	if unlikely(!kwd) {
 		result = Dee_None;
 		Dee_Incref(result);
@@ -2316,17 +2338,30 @@ lexer_getkwdid(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *ar
 err:
 	return NULL;
 }
+DOC_DEF(lexer_getkwdid_doc,
+        "(" lexer_getkwdid_params ")->?X2?#Keyword?N\n"
+        "Lookup the keyword associated with the given @id, "
+        /**/ "returning it or ?N if no such keyword exists.\n"
+        "WARNING: This is an O(n) operation and should be avoided if at all possible");
+
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_undef(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *name;
 	int error;
 	char const *utf8_name;
 	uint16_t old_exceptsz;
-	_DeeArg_Unpack1(err, argc, argv, "undef", &name);
-	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("undef", params: """
+	DeeStringObject *name;
+""", docStringPrefix: "lexer");]]]*/
+#define lexer_undef_params "name:?Dstring"
+	struct {
+		DeeStringObject *name;
+	} args;
+	_DeeArg_Unpack1(err, argc, argv, "undef", &args.name);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
 		goto err;
-	utf8_name = DeeString_AsUtf8(name);
+	utf8_name = DeeString_AsUtf8((DeeObject *)args.name);
 	if unlikely(!utf8_name)
 		goto err;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
@@ -2344,22 +2379,32 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_define(DeeCompilerWrapperObject *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *name, *value;
 	int error;
 	char const *utf8_name, *utf8_value;
-	bool builtin = false;
 	uint16_t old_exceptsz;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__name_value_builtin,
-	                    "oo|b:define", &name, &value, &builtin))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("define", params: """
+	DeeStringObject *name;
+	DeeStringObject *value;
+	bool builtin = false;
+""", docStringPrefix: "lexer");]]]*/
+#define lexer_define_params "name:?Dstring,value:?Dstring,builtin=!f"
+	struct {
+		DeeStringObject *name;
+		DeeStringObject *value;
+		bool builtin;
+	} args;
+	args.builtin = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__name_value_builtin, "oo|b:define", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(value, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(args.value, &DeeString_Type))
 		goto err;
-	utf8_name = DeeString_AsUtf8(name);
+	utf8_name = DeeString_AsUtf8((DeeObject *)args.name);
 	if unlikely(!utf8_name)
 		goto err;
-	utf8_value = DeeString_AsUtf8(value);
+	utf8_value = DeeString_AsUtf8((DeeObject *)args.value);
 	if unlikely(!utf8_value)
 		goto err;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
@@ -2367,7 +2412,8 @@ lexer_define(DeeCompilerWrapperObject *self, size_t argc,
 		goto err;
 	error = TPPLexer_Define(utf8_name, WSTR_LENGTH(utf8_name),
 	                        utf8_value, WSTR_LENGTH(utf8_value),
-	                        builtin ? TPPLEXER_DEFINE_FLAG_BUILTIN : TPPLEXER_DEFINE_FLAG_NONE);
+	                        args.builtin ? TPPLEXER_DEFINE_FLAG_BUILTIN
+	                                     : TPPLEXER_DEFINE_FLAG_NONE);
 	COMPILER_END();
 	if unlikely(!error && old_exceptsz != DeeThread_Self()->t_exceptsz)
 		goto err;
@@ -2379,20 +2425,29 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_addassert(DeeCompilerWrapperObject *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *name, *value;
 	int error;
 	char const *utf8_name, *utf8_value;
 	uint16_t old_exceptsz;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__predicate_answer, "oo:addassert", &name, &value))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("addassert", params: """
+	DeeStringObject *predicate;
+	DeeStringObject *answer;
+""", docStringPrefix: "lexer");]]]*/
+#define lexer_addassert_params "predicate:?Dstring,answer:?Dstring"
+	struct {
+		DeeStringObject *predicate;
+		DeeStringObject *answer;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__predicate_answer, "oo:addassert", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.predicate, &DeeString_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(value, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(args.answer, &DeeString_Type))
 		goto err;
-	utf8_name = DeeString_AsUtf8(name);
+	utf8_name = DeeString_AsUtf8((DeeObject *)args.predicate);
 	if unlikely(!utf8_name)
 		goto err;
-	utf8_value = DeeString_AsUtf8(value);
+	utf8_value = DeeString_AsUtf8((DeeObject *)args.answer);
 	if unlikely(!utf8_value)
 		goto err;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
@@ -2411,21 +2466,31 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_delassert(DeeCompilerWrapperObject *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *name, *value = NULL;
 	int error;
 	char const *utf8_name, *utf8_value = NULL;
 	uint16_t old_exceptsz;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__predicate_answer, "o|o:delassert", &name, &value))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("delassert", params: """
+	DeeStringObject *predicate;
+	DeeStringObject *answer = NULL;
+""", docStringPrefix: "lexer");]]]*/
+#define lexer_delassert_params "predicate:?Dstring,answer?:?Dstring"
+	struct {
+		DeeStringObject *predicate;
+		DeeStringObject *answer;
+	} args;
+	args.answer = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__predicate_answer, "o|o:delassert", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.predicate, &DeeString_Type))
 		goto err;
-	utf8_name = DeeString_AsUtf8(name);
+	utf8_name = DeeString_AsUtf8((DeeObject *)args.predicate);
 	if unlikely(!utf8_name)
 		goto err;
-	if (value) {
-		if (DeeObject_AssertTypeExact(value, &DeeString_Type))
+	if (args.answer) {
+		if (DeeObject_AssertTypeExact(args.answer, &DeeString_Type))
 			goto err;
-		utf8_value = DeeString_AsUtf8(value);
+		utf8_value = DeeString_AsUtf8((DeeObject *)args.answer);
 		if unlikely(!utf8_value)
 			goto err;
 	}
@@ -2493,22 +2558,22 @@ PRIVATE struct type_method tpconst lexer_methods[] = {
 	TYPE_KWMETHOD("getxkwd", &lexer_getxkwd, DOC_GET(lexer_getxkwd_doc)),
 	TYPE_METHOD("getkwdid", &lexer_getkwdid, DOC_GET(lexer_getkwdid_doc)),
 	TYPE_METHOD("undef", &lexer_undef,
-	            "(name:?Dstring)->?Dbool\n"
+	            "(" lexer_undef_params ")->?Dbool\n"
 	            "Delete a user-defined macro definition for a macro @name, returning ?t "
 	            /**/ "if such a definition existed and got deleted, or ?f if no such definition "
 	            /**/ "existed, and therefor didn't get deleted, either"),
 	TYPE_KWMETHOD("define", &lexer_define,
-	              "(name:?Dstring,value:?Dstring,builtin=!f)\n"
+	              "(" lexer_define_params ")\n"
 	              "#pbuiltin{When ?t define the macro as builtin, meaning the "
 	              /*     */ "definition set by @value is restored when resetting macros}"
 	              "Define a new keyword-like macro @name to expand to @value"),
 	TYPE_KWMETHOD("addassert", &lexer_addassert,
-	              "(predicate:?Dstring,answer:?Dstring)\n"
+	              "(" lexer_addassert_params ")\n"
 	              "Define an assertion @answer for a given @predicate, such that "
 	              /**/ "${##if #predicate(answer)} evaluates to ?t when encountered "
 	              "within a preprocessor expression"),
 	TYPE_KWMETHOD("delassert", &lexer_delassert,
-	              "(predicate:?Dstring,answer?:?Dstring)->?Dbool\n"
+	              "(" lexer_delassert_params ")->?Dbool\n"
 	              "#r{Returns ?t when at least 1 answer got deleted for the given @predicate}"
 	              "Delete an assertion @answer, or all assertions made for a given "
 	              /**/ "@predicate, such that ${##if #predicate(answer)} no longer evaluates "
@@ -4859,19 +4924,32 @@ PRIVATE struct type_getset tpconst file_getsets[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_nextchunk(DeeCompilerItemObject *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-	bool extend = false, binary = false, nonblocking = false;
 	unsigned int flags     = 0;
 	DREF DeeObject *result = NULL;
 	int error;
 	struct TPPFile *file;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__extend_binary_nonblocking,
-	                    "|bbb", &extend, &binary, &nonblocking))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("nextchunk", params: """
+	bool extend      = false;
+	bool binary      = false;
+	bool nonblocking = false;
+""", docStringPrefix: "file", err: "done");]]]*/
+#define file_nextchunk_params "extend=!f,binary=!f,nonblocking=!f"
+	struct {
+		bool extend;
+		bool binary;
+		bool nonblocking;
+	} args;
+	args.extend = false;
+	args.binary = false;
+	args.nonblocking = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__extend_binary_nonblocking, "|bbb:nextchunk", &args))
 		goto done;
-	if (extend)
+/*[[[end]]]*/
+	if (args.extend)
 		flags |= TPPFILE_NEXTCHUNK_FLAG_EXTEND;
-	if (binary)
+	if (args.binary)
 		flags |= TPPFILE_NEXTCHUNK_FLAG_BINARY;
-	if (nonblocking)
+	if (args.nonblocking)
 		flags |= TPPFILE_NEXTCHUNK_FLAG_NOBLCK;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
@@ -4890,7 +4968,7 @@ done:
 
 PRIVATE struct type_method tpconst file_methods[] = {
 	TYPE_KWMETHOD("nextchunk", &file_nextchunk,
-	              "(extend=!f,binary=!f,nonblocking=!f)->?Dbool\n"
+	              "(" file_nextchunk_params ")->?Dbool\n"
 	              "#r{Returns ?t if data was read, or ?f if the EOF of the input stream has been reached}"
 	              "Try to load the next, or @extend the current chunk of loaded data, by reading a "
 	              /**/ "new chunk from ?#stream. When @binary is ?t, don't try to decode unicode data, "

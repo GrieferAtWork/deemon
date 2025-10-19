@@ -57,12 +57,12 @@ get_scope_lookupmode(DeeObject *__restrict value,
 		DREF DeeObject *result = NULL;                                         \
 		DeeCompilerAstObject *head;                                            \
 		DREF struct ast *result_ast;                                           \
+		if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__head, "o:" #name, &head)) \
+			goto done;                                                         \
+		if (DeeObject_AssertTypeExact(head, &DeeCompilerAst_Type))             \
+			goto done;                                                         \
 		if (COMPILER_BEGIN(self->cw_compiler))                                 \
 			goto done;                                                         \
-		if (DeeArg_UnpackKw(argc, argv, kw, kwlist__head, "o:" #name, &head))  \
-			goto done_compiler_end;                                            \
-		if (DeeObject_AssertTypeExact(head, &DeeCompilerAst_Type))             \
-			goto done_compiler_end;                                            \
 		if unlikely(head->ci_compiler != self->cw_compiler) {                  \
 			err_invalid_ast_compiler(head);                                    \
 			goto done_compiler_end;                                            \
@@ -101,10 +101,10 @@ get_scope_lookupmode(DeeObject *__restrict value,
 		unsigned int lookup_mode;                                                              \
 		DeeObject *lookup_mode_ob = Dee_EmptyString;                                           \
 		uint16_t old_exceptsz;                                                                 \
+		if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__lookupmode, "|o:" #name, &lookup_mode_ob)) \
+			goto done;                                                                         \
 		if (COMPILER_BEGIN(self->cw_compiler))                                                 \
 			goto done;                                                                         \
-		if (DeeArg_UnpackKw(argc, argv, kw, kwlist__lookupmode, "|o:" #name, &lookup_mode_ob)) \
-			goto done_compiler_end;                                                            \
 		if unlikely(get_scope_lookupmode(lookup_mode_ob, &lookup_mode))                        \
 			goto done_compiler_end;                                                            \
 		result_ast   = func(lookup_mode);                                                      \
@@ -167,15 +167,23 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 parser_parse_stmt(DeeCompilerWrapperObject *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
-	bool nonblocking       = false;
 	DREF struct ast *result_ast;
 	uint16_t old_exceptsz;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("parse_stmt", params: """
+	bool nonblocking = false;
+""", docStringPrefix: "file", err: "done");]]]*/
+#define file_parse_stmt_params "nonblocking=!f"
+	struct {
+		bool nonblocking;
+	} args;
+	args.nonblocking = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__nonblocking, "|b:parse_stmt", &args))
+		goto done;
+/*[[[end]]]*/
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__nonblocking, "|b:parse_stmt", &nonblocking))
-		goto done_compiler_end;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
-	result_ast   = ast_parse_statement(nonblocking);
+	result_ast   = ast_parse_statement(args.nonblocking);
 	if unlikely(!result_ast) {
 		if (old_exceptsz == DeeThread_Self()->t_exceptsz) {
 			result = Dee_None;
@@ -195,16 +203,24 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 parser_parse_allstmt(DeeCompilerWrapperObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
-	DeeObject *end         = Dee_EmptyString;
 	DREF struct ast *result_ast;
 	tok_t end_token = TOK_EOF;
 	uint16_t old_exceptsz;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("parse_allstmt", params: """
+	DeeStringObject *end:?X2?Dstring?Dint = (DeeStringObject *)Dee_EmptyString;
+""", docStringPrefix: "file", err: "done");]]]*/
+#define file_parse_allstmt_params "end:?X2?Dstring?Dint=!P{}"
+	struct {
+		DeeStringObject *end;
+	} args;
+	args.end = (DeeStringObject *)Dee_EmptyString;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__end, "|o:parse_allstmt", &args))
+		goto done;
+/*[[[end]]]*/
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__end, "|o:parse_allstmt", &end))
-		goto done_compiler_end;
-	if (end != Dee_EmptyString) {
-		end_token = get_token_from_obj(end, true);
+	if (args.end != (DeeStringObject *)Dee_EmptyString) {
+		end_token = get_token_from_obj((DeeObject *)args.end, true);
 		if unlikely(end_token == TOK_ERR)
 			goto done_compiler_end;
 	}
@@ -347,8 +363,7 @@ PRIVATE struct type_method tpconst parser_methods[] = {
 	              "(bool nonblocking=false)->?#Ast\n"
 	              "Parse a statement or ?#parse_comma expression"),
 	TYPE_KWMETHOD("parse_allstmt", &parser_parse_allstmt,
-	              "(end=!P{})->?#Ast\n"
-	              "(end=!0)->?#Ast\n"
+	              "(" file_parse_allstmt_params ")->?#Ast\n"
 	              "Parse statements (?#parse_stmt) and pack them togerther into "
 	              "a multiple/keep-last branch, until the input file ends, or "
 	              "a token equal to @end (s.a. :Compiler.lexer.token.op:eq) is "
