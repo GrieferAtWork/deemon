@@ -441,7 +441,9 @@ print "/" "**" "/";
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_errno_get_f(size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack0(err, argc, argv, "errno.getter");
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("errno.get");]]]*/
+	DeeArg_Unpack0(err, argc, argv, "errno.get");
+/*[[[end]]]*/
 #ifdef CONFIG_HAVE_errno
 	return DeeInt_NewInt(DeeSystem_GetErrno());
 #else /* CONFIG_HAVE_errno */
@@ -454,7 +456,9 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_errno_del_f(size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack0(err, argc, argv, "errno.delete");
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("errno.del");]]]*/
+	DeeArg_Unpack0(err, argc, argv, "errno.del");
+/*[[[end]]]*/
 #ifdef CONFIG_HAVE_errno
 	DeeSystem_SetErrno(EOK);
 	return_none;
@@ -468,11 +472,14 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_errno_set_f(size_t argc, DeeObject *const *argv) {
-	int value;
-	if (DeeArg_Unpack(argc, argv, "d:errno.setter", &value))
-		goto err;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("errno.set", params: "int value");]]]*/
+	struct {
+		int value;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "errno.set", &args.value, "d", DeeObject_AsInt);
+/*[[[end]]]*/
 #ifdef CONFIG_HAVE_errno
-	DeeSystem_SetErrno(value);
+	DeeSystem_SetErrno(args.value);
 	return_none;
 #else /* CONFIG_HAVE_errno */
 #define NEED_posix_err_unsupported

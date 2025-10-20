@@ -2199,38 +2199,48 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seo_init(SeqEachOperator *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	DeeObject *name;
-	DeeObject *args = Dee_EmptyTuple;
-	if (DeeArg_Unpack(argc, argv, "oo|o:_SeqEachOperator",
-	                  &self->se_seq, &name, &args))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqEachOperator", params: """
+	DeeObject *seq:?DSequence;
+	DeeObject *op:?X2?Dstring?Dint;
+	DeeTupleObject *args = (DeeTupleObject *)Dee_EmptyTuple;
+""", docStringPrefix: "seo");]]]*/
+#define seo__SeqEachOperator_params "seq:?DSequence,op:?X2?Dstring?Dint,args=!T0"
+	struct {
+		DeeObject *seq;
+		DeeObject *op;
+		DeeTupleObject *args;
+	} args;
+	args.args = (DeeTupleObject *)Dee_EmptyTuple;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|o:_SeqEachOperator", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.args, &DeeTuple_Type))
 		goto err;
-	if unlikely(DeeTuple_SIZE(args) > COMPILER_LENOF(self->so_opargv)) {
+	self->se_seq = args.seq;
+	if unlikely(DeeTuple_SIZE(args.args) > COMPILER_LENOF(self->so_opargv)) {
 		DeeError_Throwf(&DeeError_UnpackError,
 		                "Too many operator arguments (%" PRFuSIZ " > %" PRFuSIZ ")",
-		                (size_t)DeeTuple_SIZE(args),
+		                (size_t)DeeTuple_SIZE(args.args),
 		                (size_t)COMPILER_LENOF(self->so_opargv));
 		goto err;
 	}
-	if (DeeString_Check(name)) {
+	if (DeeString_Check(args.op)) {
 		struct opinfo const *info;
-		info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(name), (size_t)-1);
+		char const *name = DeeString_STR(args.op);
+		info = DeeTypeType_GetOperatorByName(&DeeType_Type, name, (size_t)-1);
 		if unlikely(info == NULL) {
-			/* TODO: In this case, remember the used "name" string,
+			/* TODO: In this case, remember the used "args.op" string,
 			 * and query the operator on a per-element basis */
-			DeeError_Throwf(&DeeError_ValueError,
-			                "Unknown operator %q",
-			                DeeString_STR(name));
+			DeeError_Throwf(&DeeError_ValueError, "Unknown operator %q", name);
 			goto err;
 		}
 		self->so_opname = info->oi_id;
 	} else {
-		if (DeeObject_AsUInt16(name, &self->so_opname))
+		if (DeeObject_AsUInt16(args.op, &self->so_opname))
 			goto err;
 	}
-	self->so_opargc = (uint16_t)DeeTuple_SIZE(args);
-	Dee_Movrefv(self->so_opargv, DeeTuple_ELEM(args), self->so_opargc);
+	self->so_opargc = (uint16_t)DeeTuple_SIZE(args.args);
+	Dee_Movrefv(self->so_opargv, DeeTuple_ELEM(args.args), self->so_opargc);
 	Dee_Incref(self->se_seq);
 	return 0;
 err:
@@ -3395,7 +3405,7 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqEachOperator",
 	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:?DSequence,op:?X2?Dstring?Dint,args=!T0)"),
+	                         "(" seo__SeqEachOperator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FMOVEANY,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

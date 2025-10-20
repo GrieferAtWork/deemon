@@ -234,15 +234,15 @@ typedef union {
 /* read()                                                               */
 /************************************************************************/
 #ifndef posix_read_USE_STUB
-FORCELOCAL WUNUSED Dee_ssize_t DCALL
+FORCELOCAL WUNUSED size_t DCALL
 posix_read_f_impl(int fd, void *buf, size_t count) {
 #ifdef posix_read_USE_read
-	Dee_ssize_t result_value;
+	size_t result_value;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
-	result_value = (Dee_ssize_t)read(fd, buf, count);
+	result_value = (size_t)read(fd, buf, count);
 	DBG_ALIGNMENT_ENABLE();
-	if (result_value == -1) {
+	if unlikely(result_value == (size_t)-1) {
 		int error = DeeSystem_GetErrno();
 		EINTR_HANDLE(error, again, err)
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
@@ -252,7 +252,7 @@ EINTR_LABEL(again)
 	}
 	return result_value;
 err:
-	return -1;
+	return (size_t)-1;
 #endif /* posix_read_USE_read */
 
 #ifdef posix_read_USE_STUB
@@ -265,45 +265,55 @@ err:
 }
 #endif /* !posix_read_USE_STUB */
 
-#define POSIX_READ_DEF                                                         \
-	{ "read", (DeeObject *)&posix_read, MODSYM_FNORMAL,                        \
+#define POSIX_READ_DEF                                                   \
+	{ "read", (DeeObject *)&posix_read, MODSYM_FNORMAL,                  \
 	  DOC("(fd:?X2?Dint?DFile,count:?Dint=!A!Dint!PSIZE_MAX)->?DBytes\n" \
 		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!A!Dint!PSIZE_MAX)->?Dint") },
-#define POSIX_READ_DEF_DOC(doc)                                                \
-	{ "read", (DeeObject *)&posix_read, MODSYM_FNORMAL,                        \
+#define POSIX_READ_DEF_DOC(doc)                                          \
+	{ "read", (DeeObject *)&posix_read, MODSYM_FNORMAL,                  \
 	  DOC("(fd:?X2?Dint?DFile,count:?Dint=!A!Dint!PSIZE_MAX)->?DBytes\n" \
 		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n" doc) },
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject *const *argv) {
 #ifndef posix_read_USE_STUB
 	int fd_fd;
+	size_t error;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("read", params: """
 	DeeObject *fd;
 	DeeObject *buf_or_count = DeeInt_MinusOne;
 	size_t count = (size_t)-1;
-	Dee_ssize_t error;
-	if (DeeArg_Unpack(argc, argv, "o|o" UNPuSIZ ":read", &fd, &buf_or_count, &count))
+""");]]]*/
+	struct {
+		DeeObject *fd;
+		DeeObject *buf_or_count;
+		size_t count;
+	} args;
+	args.buf_or_count = DeeInt_MinusOne;
+	args.count = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, "o|o" UNPxSIZ ":read", &args))
 		goto err;
-	fd_fd = DeeUnixSystem_GetFD(fd);
+/*[[[end]]]*/
+	fd_fd = DeeUnixSystem_GetFD(args.fd);
 	if unlikely(fd_fd == -1)
 		goto err;
-	if (argc == 3 || !DeeInt_Check(buf_or_count)) {
+	if (argc == 3 || !DeeInt_Check(args.buf_or_count)) {
 		/* Read into buffer. */
 		DeeBuffer buf;
-		if (DeeObject_GetBuf(buf_or_count, &buf, Dee_BUFFER_FWRITABLE))
+		if (DeeObject_GetBuf(args.buf_or_count, &buf, Dee_BUFFER_FWRITABLE))
 			goto err;
-		if (buf.bb_size > count)
-			buf.bb_size = count;
+		if (buf.bb_size > args.count)
+			buf.bb_size = args.count;
 		error = posix_read_f_impl(fd_fd, buf.bb_base, buf.bb_size);
-		DeeObject_PutBuf(buf_or_count, &buf, Dee_BUFFER_FWRITABLE);
-		if unlikely(error == -1)
+		DeeObject_PutBuf(args.buf_or_count, &buf, Dee_BUFFER_FWRITABLE);
+		if unlikely(error == (size_t)-1)
 			goto err;
-		return DeeInt_NewSize((size_t)error);
+		return DeeInt_NewSize(error);
 	} else {
 		DREF DeeBytesObject *result_bytes;
-		if (DeeObject_AsSSize(buf_or_count, (Dee_ssize_t *)&count))
+		if (DeeObject_AsSizeM1(args.buf_or_count, &args.count))
 			goto err;
-		if (count <= POSIX_READ_BUFSIZE) {
+		if (args.count <= POSIX_READ_BUFSIZE) {
 			/* Directly read into a Bytes object. */
-			result_bytes = (DREF DeeBytesObject *)DeeBytes_NewBufferUninitialized(count);
+			result_bytes = (DREF DeeBytesObject *)DeeBytes_NewBufferUninitialized(args.count);
 			if unlikely(!result_bytes)
 				goto err;
 			error = posix_read_f_impl(fd_fd,
@@ -313,15 +323,14 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject *const
 				Dee_Decref(result_bytes);
 				goto err;
 			}
-			result_bytes = (DREF DeeBytesObject *)DeeBytes_TruncateBuffer((DeeObject *)result_bytes,
-			                                                              (size_t)error);
+			result_bytes = (DREF DeeBytesObject *)DeeBytes_TruncateBuffer((DeeObject *)result_bytes, error);
 		} else {
 			/* Construct a new buffer that is then read into. */
 			struct bytes_printer p = BYTES_PRINTER_INIT;
 			for (;;) {
 				size_t buflen;
 				uint8_t *buf;
-				buflen = count;
+				buflen = args.count;
 				if (buflen > POSIX_READ_BUFSIZE)
 					buflen = POSIX_READ_BUFSIZE;
 				buf = bytes_printer_alloc(&p, buflen);
@@ -331,16 +340,16 @@ err_bytes_printer:
 					goto err;
 				}
 				error = posix_read_f_impl(fd_fd, buf, buflen);
-				if unlikely(error == -1)
+				if unlikely(error == (size_t)-1)
 					goto err_bytes_printer;
-				if ((size_t)error >= count)
+				if (error >= args.count)
 					break; /* Done! */
-				if ((size_t)error != buflen) {
+				if (error != buflen) {
 					/* Incomplete transfer (stop reading) */
 					bytes_printer_release(&p, buflen - (size_t)error);
 					break;
 				}
-				count -= (size_t)error;
+				args.count -= error;
 			}
 			result_bytes = (DREF DeeBytesObject *)bytes_printer_pack(&p);
 		}
@@ -473,19 +482,19 @@ err:
 /* pread()                                                              */
 /************************************************************************/
 #ifndef posix_pread_USE_STUB
-FORCELOCAL WUNUSED Dee_ssize_t DCALL
+FORCELOCAL WUNUSED size_t DCALL
 posix_pread_f_impl(int fd, void *buf, size_t count, PREAD_OFF_T offset) {
 
 #if defined(posix_pread_USE_pread64) || defined(posix_pread_USE_pread)
-	Dee_ssize_t result;
+	size_t result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_pread_USE_pread64
-	result = (Dee_ssize_t)pread64(fd, buf, count, offset);
+	result = (size_t)pread64(fd, buf, count, offset);
 #else /* posix_pread_USE_pread64 */
-	result = (Dee_ssize_t)pread(fd, buf, count, offset);
+	result = (size_t)pread(fd, buf, count, offset);
 #endif /* !posix_pread_USE_pread64 */
-	if (result == -1) {
+	if unlikely(result == (size_t)-1) {
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
 		EINTR_HANDLE(error, again, err)
@@ -499,7 +508,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	return result;
 err:
-	return -1;
+	return (size_t)-1;
 #endif /* posix_pread_USE_pread64 || posix_pread_USE_pread */
 
 #ifdef posix_pread_USE_ReadFile
@@ -509,7 +518,7 @@ err:
 	DBG_ALIGNMENT_DISABLE();
 	h = (HANDLE)get_osfhandle(fd);
 	DBG_ALIGNMENT_ENABLE();
-	if (h == INVALID_HANDLE_VALUE) {
+	if unlikely(h == INVALID_HANDLE_VALUE) {
 		DeeError_Throwf(&DeeError_FileClosed, "Invalid handle %d", fd);
 		goto err;
 	}
@@ -542,14 +551,16 @@ again_ReadFile:
 		goto err;
 	}
 	DBG_ALIGNMENT_ENABLE();
-	ASSERT((Dee_ssize_t)bytes_written != -1);
-	return (Dee_ssize_t)bytes_written;
+#if __SIZEOF_SIZE_T__ <= 4
+	ASSERT((size_t)bytes_written != (size_t)-1);
+#endif /* __SIZEOF_SIZE_T__ <= 4 */
+	return (size_t)bytes_written;
 err:
-	return -1;
+	return (size_t)-1;
 #endif /* posix_pread_USE_ReadFile */
 
 #ifdef posix_pread_USE_lseek_AND_read
-	Dee_ssize_t result;
+	size_t result;
 	PREAD_OFF_T oldpos, newpos;
 EINTR_HANDLE(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -577,7 +588,7 @@ handle_system_error:
 		goto err;
 	}
 err:
-	return -1;
+	return (size_t)-1;
 #endif /* posix_pread_USE_lseek_AND_read */
 
 #ifdef posix_pread_USE_STUB
@@ -602,19 +613,20 @@ err:
 		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint,offset:?Dint)->?Dint\n" doc) },
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pread_f(size_t argc, DeeObject *const *argv) {
 #ifndef posix_pread_USE_STUB
-	Dee_ssize_t error;
-	if (argc == 3) {
+	size_t error;
+	switch (argc) {
+
+	case 3: {
 		/* Read into a new buffer. */
 		DREF DeeBytesObject *result_bytes;
-		DeeObject *fd;
 		size_t count;
 		PREAD_OFF_T offset;
-		int fd_fd;
-		/* Read into a given buffer. */
-		if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ PREAD_PRIOFF ":pread", &fd, &count, &offset))
-			goto err;
-		fd_fd = DeeUnixSystem_GetFD(fd);
+		int fd_fd = DeeUnixSystem_GetFD(argv[0]);
 		if unlikely(fd_fd == -1)
+			goto err;
+		if (DeeObject_AsSize(argv[1], &count))
+			goto err;
+		if (DeeObject_AsUIntX(argv[2], &offset))
 			goto err;
 		if (count <= POSIX_READ_BUFSIZE) {
 			/* Directly read into a Bytes object. */
@@ -625,12 +637,11 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_pread_f(size_t argc, DeeObject *cons
 			                           DeeBytes_DATA(result_bytes),
 			                           DeeBytes_SIZE(result_bytes),
 			                           offset);
-			if unlikely(error == -1) {
+			if unlikely(error == (size_t)-1) {
 				Dee_Decref(result_bytes);
 				goto err;
 			}
-			result_bytes = (DREF DeeBytesObject *)DeeBytes_TruncateBuffer((DeeObject *)result_bytes,
-			                                                              (size_t)error);
+			result_bytes = (DREF DeeBytesObject *)DeeBytes_TruncateBuffer((DeeObject *)result_bytes, error);
 		} else {
 			/* Construct a new buffer that is then read into. */
 			struct bytes_printer p = BYTES_PRINTER_INIT;
@@ -647,42 +658,50 @@ err_bytes_printer:
 					goto err;
 				}
 				error = posix_pread_f_impl(fd_fd, buf, buflen, offset);
-				if unlikely(error == -1)
+				if unlikely(error == (size_t)-1)
 					goto err_bytes_printer;
-				if ((size_t)error >= count)
+				if (error >= count)
 					break; /* Done! */
-				if ((size_t)error != buflen) {
+				if (error != buflen) {
 					/* Incomplete transfer (stop reading) */
-					bytes_printer_release(&p, buflen - (size_t)error);
+					bytes_printer_release(&p, buflen - error);
 					break;
 				}
-				count -= (size_t)error;
-				offset += (size_t)error;
+				count -= error;
+				offset += error;
 			}
 			result_bytes = (DREF DeeBytesObject *)bytes_printer_pack(&p);
 		}
 		return (DREF DeeObject *)result_bytes;
-	} else {
-		DeeObject *fd, *buf_ob;
+	}	break;
+
+	case 4: {
 		size_t count;
 		PREAD_OFF_T offset;
 		int fd_fd;
 		DeeBuffer buf;
 		/* Read into a given buffer. */
-		if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ PREAD_PRIOFF ":pread", &fd, &buf_ob, &count, &offset))
+		if (DeeObject_AsSize(argv[2], &count))
 			goto err;
-		fd_fd = DeeUnixSystem_GetFD(fd);
+		if (DeeObject_AsUIntX(argv[3], &offset))
+			goto err;
+		fd_fd = DeeUnixSystem_GetFD(argv[0]);
 		if unlikely(fd_fd == -1)
 			goto err;
-		if (DeeObject_GetBuf(buf_ob, &buf, Dee_BUFFER_FWRITABLE))
+		if (DeeObject_GetBuf(argv[1], &buf, Dee_BUFFER_FWRITABLE))
 			goto err;
 		if (buf.bb_size > count)
 			buf.bb_size = count;
 		error = posix_pread_f_impl(fd_fd, buf.bb_base, buf.bb_size, offset);
-		DeeObject_PutBuf(buf_ob, &buf, Dee_BUFFER_FWRITABLE);
-		if unlikely(error == -1)
+		DeeObject_PutBuf(argv[1], &buf, Dee_BUFFER_FWRITABLE);
+		if unlikely(error == (size_t)-1)
 			goto err;
-		return DeeInt_NewSize((size_t)error);
+		return DeeInt_NewSize(error);
+	}	break;
+
+	default:
+		DeeArg_BadArgcEx("pread", argc, 3, 4);
+		goto err;
 	}
 err:
 	return NULL;
@@ -737,16 +756,16 @@ FORCELOCAL WUNUSED NONNULL((2))DREF DeeObject *DCALL posix_write_f_impl(int fd, 
 {
 #ifdef posix_write_USE_write
 	DeeBuffer buffer;
-	Dee_ssize_t result_value;
+	size_t result_value;
 	if (DeeObject_GetBuf(buf, &buffer, Dee_BUFFER_FREADONLY))
 		goto err;
 	if (buffer.bb_size > count)
 		buffer.bb_size = count;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
-	result_value = (Dee_ssize_t)write(fd, buffer.bb_base, buffer.bb_size);
+	result_value = (size_t)write(fd, buffer.bb_base, buffer.bb_size);
 	DBG_ALIGNMENT_ENABLE();
-	if (result_value < 0) {
+	if unlikely(result_value == (size_t)-1) {
 		int error = DeeSystem_GetErrno();
 		EINTR_HANDLE(error, again, err)
 		DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FREADONLY);
@@ -756,7 +775,7 @@ EINTR_LABEL(again)
 		goto err;
 	}
 	DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FREADONLY);
-	return DeeInt_NewSSize(result_value);
+	return DeeInt_NewSize(result_value);
 err:
 	return NULL;
 #endif /* posix_write_USE_write */
@@ -778,19 +797,19 @@ err:
 /* pwrite()                                                             */
 /************************************************************************/
 #ifndef posix_pwrite_USE_STUB
-FORCELOCAL WUNUSED Dee_ssize_t DCALL
+FORCELOCAL WUNUSED size_t DCALL
 posix_pwrite_f_impl(int fd, void const *buf, size_t count, PWRITE_OFF_T offset) {
 
 #if defined(posix_pwrite_USE_pwrite64) || defined(posix_pwrite_USE_pwrite)
-	Dee_ssize_t result;
+	size_t result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_pwrite_USE_pwrite64
-	result = (Dee_ssize_t)pwrite64(fd, buf, count, offset);
+	result = (size_t)pwrite64(fd, buf, count, offset);
 #else /* posix_pwrite_USE_pwrite64 */
-	result = (Dee_ssize_t)pwrite(fd, buf, count, offset);
+	result = (size_t)pwrite(fd, buf, count, offset);
 #endif /* !posix_pwrite_USE_pwrite64 */
-	if (result == -1) {
+	if (result == (size_t)-1) {
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
 		EINTR_HANDLE(error, again, err)
@@ -804,7 +823,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	return result;
 err:
-	return -1;
+	return (size_t)-1;
 #endif /* posix_pwrite_USE_pwrite64 || posix_pwrite_USE_pwrite */
 
 #ifdef posix_pwrite_USE_WriteFile
@@ -847,15 +866,17 @@ again_WriteFile:
 		goto err;
 	}
 	DBG_ALIGNMENT_ENABLE();
-	ASSERT((Dee_ssize_t)bytes_written != -1);
-	return (Dee_ssize_t)bytes_written;
+#if __SIZEOF_SIZE_T__ <= 4
+	ASSERT((size_t)bytes_written != (size_t)-1);
+#endif /* __SIZEOF_SIZE_T__ <= 4 */
+	return (size_t)bytes_written;
 err:
-	return -1;
+	return (size_t)-1;
 #endif /* posix_pwrite_USE_WriteFile */
 
 #ifdef posix_pwrite_USE_lseek_AND_write
 	int error;
-	Dee_ssize_t result;
+	size_t result;
 	PWRITE_OFF_T oldpos, newpos;
 EINTR_HANDLE(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -866,8 +887,8 @@ EINTR_HANDLE(again)
 	if unlikely(newpos == (PWRITE_OFF_T)-1)
 		goto handle_system_error;
 	DBG_ALIGNMENT_ENABLE();
-	result = write(fd, buf, count);
-	if unlikely(result == -1) {
+	result = (size_t)write(fd, buf, count);
+	if unlikely(result == (size_t)-1) {
 handle_system_error:
 		error = DeeSystem_GetErrno();
 		PWRITE_LSEEK(fd, oldpos, SEEK_SET);
@@ -883,7 +904,7 @@ handle_system_error:
 	PWRITE_LSEEK(fd, oldpos, SEEK_SET);
 	return result;
 err:
-	return -1;
+	return (size_t)-1;
 #endif /* posix_pwrite_USE_lseek_AND_write */
 
 #ifdef posix_pwrite_USE_STUB
@@ -892,7 +913,7 @@ err:
 	(void)buf;
 	(void)count;
 	(void)offset;
-	return posix_err_unsupported("pwrite");
+	return (size_t)posix_err_unsupported("pwrite");
 #endif /* posix_pwrite_USE_STUB */
 
 }
@@ -908,38 +929,40 @@ err:
 	      "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint,offset:?Dint)->?Dint\n" doc) },
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pwrite_f(size_t argc, DeeObject *const *argv) {
 #ifndef posix_pwrite_USE_STUB
-	Dee_ssize_t result;
-	DeeObject *fd, *buf;
 	DeeBuffer buffer;
 	int fd_fd;
+	size_t result;
+	size_t count = (size_t)-1;
 	PWRITE_OFF_T offset;
-	if (argc == 3) {
-		if (DeeArg_Unpack(argc, argv, "oo" PWRITE_PRIOFF ":pwrite", &fd, &buf, &offset))
+	switch (argc) {
+	case 3:
+		if (DeeObject_AsUIntX(argv[2], &offset))
 			goto err;
-		if (DeeObject_GetBuf(buf, &buffer, Dee_BUFFER_FREADONLY))
+		break;
+	case 4:
+		if (DeeObject_AsSize(argv[2], &count))
 			goto err;
-	} else {
-		size_t count;
-		if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ PWRITE_PRIOFF ":pwrite", &fd, &buf, &count, &offset))
+		if (DeeObject_AsUIntX(argv[3], &offset))
 			goto err;
-		if (DeeObject_GetBuf(buf, &buffer, Dee_BUFFER_FREADONLY))
-			goto err;
-		if (buffer.bb_size > count)
-			buffer.bb_size = count;
+		break;
+	default:
+		DeeArg_BadArgcEx("pwrite", argc, 3, 4);
+		goto err;
 	}
-	fd_fd = DeeUnixSystem_GetFD(fd);
+	if (DeeObject_GetBuf(argv[1], &buffer, Dee_BUFFER_FREADONLY))
+		goto err;
+	if (buffer.bb_size > count)
+		buffer.bb_size = count;
+	fd_fd = DeeUnixSystem_GetFD(argv[0]);
 	if unlikely(fd_fd == -1) {
-		DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FREADONLY);
-		goto err;
+		result = (size_t)-1;
+	} else {
+		result = posix_pwrite_f_impl(fd_fd, buffer.bb_base, buffer.bb_size, offset);
 	}
-	result = posix_pwrite_f_impl(fd_fd,
-	                             buffer.bb_base,
-	                             buffer.bb_size,
-	                             offset);
-	DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FREADONLY);
-	if unlikely(result == -1)
+	DeeObject_PutBuf(argv[1], &buffer, Dee_BUFFER_FREADONLY);
+	if unlikely(result == (size_t)-1)
 		goto err;
-	return DeeInt_NewSize((size_t)result);
+	return DeeInt_NewSize(result);
 err:
 	return NULL;
 #endif /* !posix_pwrite_USE_STUB */
