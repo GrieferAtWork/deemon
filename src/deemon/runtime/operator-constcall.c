@@ -395,8 +395,8 @@ ob_is_func_constcall(DeeObject *ob, size_t argc,
 			return true;
 		/* "Const && Atomic" would mean that the field can change, so we require "Const && !Atomic" */
 		return (me->cm_memb.m_desc.md_field.mdf_type & (STRUCT_ATOMIC | STRUCT_CONST)) == STRUCT_CONST;
-	} else if (tp == &DeeCMethod_Type ||
-	           tp == &DeeKwCMethod_Type) {
+	} else if (tp == &DeeCMethod_Type || tp == &DeeCMethod0_Type ||
+	           tp == &DeeCMethod1_Type || tp == &DeeKwCMethod_Type) {
 		DeeCMethodObject *me = (DeeCMethodObject *)ob;
 		return (me->cm_flags & METHOD_FCONSTCALL) &&
 		       DeeMethodFlags_VerifyConstCallCondition(me->cm_flags, NULL, argc, argv, kw);

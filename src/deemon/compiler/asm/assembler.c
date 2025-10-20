@@ -3264,6 +3264,8 @@ asm_bind_deemon_export(DeeObject *__restrict constval) {
 		}
 		if (DeeCMethod_Check(constval))
 			goto do_search;
+		if (DeeKwCMethod_Check(constval))
+			goto do_search;
 		goto done;
 	}
 do_search:

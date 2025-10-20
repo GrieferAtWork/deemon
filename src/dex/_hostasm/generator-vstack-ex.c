@@ -1324,6 +1324,63 @@ err:
 	return -1;
 }
 
+/* [] -> result */
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+vcall_cmethod0(struct fungen *__restrict self, Dee_cmethod0_t func,
+               struct docinfo *doc, uintptr_t func_flags) {
+	if (func_flags & METHOD_FCONSTCALL) {
+		/* Inline the c-method call. */
+		DREF DeeObject *retval;
+		retval = (*func)();
+		if likely(retval != NULL) {
+			retval = fg_inlineref(self, retval);
+			if unlikely(!retval)
+				goto err;
+			return fg_vpush_const(self, retval);
+		} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+			goto err;
+		} else {
+			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+		}
+	}
+	DO(fg_vcallapi(self, func, VCALL_CC_RAWINTPTR, 0));     /* UNCHECKED(result) */
+	return check_result_with_doc(self, 0, doc, func_flags); /* result */
+err:
+	return -1;
+}
+
+/* arg0 -> result */
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+vcall_cmethod1(struct fungen *__restrict self, Dee_cmethod1_t func,
+               struct docinfo *doc, uintptr_t func_flags) {
+	if ((func_flags & METHOD_FCONSTCALL) && fg_vallconst(self, 1)) {
+		/* Inline the c-method call. */
+		DeeObject *argv[1];
+		DREF DeeObject *retval;
+		argv[0] = memval_const_getobj(fg_vtop(self));
+		if (DeeMethodFlags_VerifyConstCallCondition(func_flags, NULL, 1, argv, NULL)) {
+			retval = (*func)(argv[0]);
+			if likely(retval != NULL) {
+				retval = fg_inlineref(self, retval);
+				if unlikely(!retval)
+					goto err;
+				DO(fg_vpop(self));
+				return fg_vpush_const(self, retval);
+			} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+				goto err;
+			} else {
+				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+			}
+		}
+	}
+
+	DO(fg_vnotoneref(self, 1));                             /* arg0 */
+	DO(fg_vcallapi(self, func, VCALL_CC_RAWINTPTR, 1));     /* UNCHECKED(result) */
+	return check_result_with_doc(self, 1, doc, func_flags); /* result */
+err:
+	return -1;
+}
+
 /* [args...], kw -> result */
 PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
 vcall_kwcmethod(struct fungen *__restrict self,
@@ -1808,6 +1865,40 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 			result = vcall_cmethod(self, func->cm_func, true_argc, &doc, func->cm_flags);
 		}
 		return result;
+	} else if (func_type == &DeeCMethod0_Type && true_argc == 0) {
+		int result;
+		struct cmethod_origin origin;
+		DeeCMethod0Object *func = (DeeCMethod0Object *)func_obj;
+		DO(vpop_empty_kwds(self)); /* func */
+		DO(fg_vpop(self));         /* - */
+		if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE) &&
+		    DeeCMethod0_GetOrigin(func, &origin)) {
+			doc.di_doc = origin.cmo_doc;
+			doc.di_mod = origin.cmo_module;
+			doc.di_typ = origin.cmo_type;
+			result = vcall_cmethod0(self, func->cm0_func, &doc, func->cm0_flags);
+			Dee_cmethod_origin_fini(&origin);
+		} else {
+			result = vcall_cmethod0(self, func->cm0_func, &doc, func->cm0_flags);
+		}
+		return result;
+	} else if (func_type == &DeeCMethod1_Type && true_argc == 1) {
+		int result;
+		struct cmethod_origin origin;
+		DeeCMethod1Object *func = (DeeCMethod1Object *)func_obj;
+		DO(vpop_empty_kwds(self)); /* func, arg0 */
+		DO(fg_vpop_at(self, 1));   /* arg0 */
+		if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE) &&
+		    DeeCMethod1_GetOrigin(func, &origin)) {
+			doc.di_doc = origin.cmo_doc;
+			doc.di_mod = origin.cmo_module;
+			doc.di_typ = origin.cmo_type;
+			result = vcall_cmethod1(self, func->cm1_func, &doc, func->cm1_flags);
+			Dee_cmethod_origin_fini(&origin);
+		} else {
+			result = vcall_cmethod1(self, func->cm1_func, &doc, func->cm1_flags);
+		}
+		return result;
 	} else if (func_type == &DeeKwCMethod_Type) {
 		int result;
 		DeeKwCMethodObject *func = (DeeKwCMethodObject *)func_obj; /* func, [args...], kw */
@@ -1816,7 +1907,7 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 			result = vcall_kwcmethod(self, func->kcm_func, true_argc, &doc, func->kcm_flags);
 		} else {
 			struct cmethod_origin origin;
-			if (DeeKwCMethod_GetOrigin(func, &origin)) {
+			if (DeeCMethod_GetOrigin(func, &origin)) {
 				doc.di_doc = origin.cmo_doc;
 				doc.di_mod = origin.cmo_module;
 				doc.di_typ = origin.cmo_type;

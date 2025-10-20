@@ -37,6 +37,8 @@ EXPORTS
 	DeeBytes_TruncateBuffer@8=_DeeBytes_TruncateBuffer@8
 	DeeBytes_TryNewBufferData@8=_DeeBytes_TryNewBufferData@8
 	DeeBytes_TryNewBufferUninitialized@4=_DeeBytes_TryNewBufferUninitialized@4
+	DeeCMethod0_New@8=_DeeCMethod0_New@8
+	DeeCMethod1_New@8=_DeeCMethod1_New@8
 	DeeCMethod_New@8=_DeeCMethod_New@8
 	DeeCMethod_VCallFuncf@12=_DeeCMethod_VCallFuncf@12
 	DeeCachedDict_New@4=_DeeCachedDict_New@4

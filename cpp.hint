@@ -1309,6 +1309,8 @@
 #define clsproperty_object             Dee_clsproperty_object
 #define clsproperty_origin             Dee_clsproperty_origin
 #define cmethod_object                 Dee_cmethod_object
+#define cmethod0_object                Dee_cmethod0_object
+#define cmethod1_object                Dee_cmethod1_object
 #define cmethod_origin                 Dee_cmethod_origin
 #define code_frame                     Dee_code_frame
 #define code_object                    Dee_code_object

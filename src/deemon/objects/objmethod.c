@@ -2135,8 +2135,8 @@ cmethod_getmodsym(DeeModuleObject *__restrict mod,
 		DeeObject *glob = mod->mo_globalv[addr];
 		if (!glob)
 			continue;
-		if (!DeeCMethod_Check(glob) &&
-		    !DeeKwCMethod_Check(glob))
+		if (!DeeCMethod_Check(glob) && !DeeCMethod0_Check(glob) &&
+		    !DeeCMethod1_Check(glob) && !DeeKwCMethod_Check(glob))
 			continue;
 		if (DeeCMethod_FUNC(glob) != func_ptr)
 			continue;
@@ -2161,6 +2161,8 @@ type_member_search_cmethod(DeeTypeObject *type,
 		if (DeeType_Check(chain->m_desc.md_const)) {
 			/* XXX: Recursively search sub-types? (would require keeping a working set to prevent recursion) */
 		} else if (DeeCMethod_Check(chain->m_desc.md_const) ||
+		           DeeCMethod0_Check(chain->m_desc.md_const) ||
+		           DeeCMethod1_Check(chain->m_desc.md_const) ||
 		           DeeKwCMethod_Check(chain->m_desc.md_const)) {
 			if (DeeCMethod_FUNC(chain->m_desc.md_const) == func_ptr)
 				goto gotit;
@@ -2282,7 +2284,7 @@ cmethod_bound_module(DeeCMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cmethod_bound_origin(DeeCMethodObject *__restrict self) {
 	struct cmethod_origin origin;
-	bool bound = DeeKwCMethod_GetOrigin(self, &origin);
+	bool bound = DeeCMethod_GetOrigin(self, &origin);
 	return Dee_BOUND_FROMBOOL(bound);
 }
 
@@ -2290,7 +2292,7 @@ cmethod_bound_origin(DeeCMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwcmethod_get_kwds(DeeCMethodObject *__restrict self) {
 	struct cmethod_origin origin;
-	if (DeeKwCMethod_GetOrigin(self, &origin)) {
+	if (DeeCMethod_GetOrigin(self, &origin)) {
 		DREF DeeObject *result;
 		if (origin.cmo_doc) {
 			DeeObject *owner = (DeeObject *)self;
@@ -2313,7 +2315,7 @@ kwcmethod_get_kwds(DeeCMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod_get_name(DeeCMethodObject *__restrict self) {
 	struct cmethod_origin origin;
-	if (DeeKwCMethod_GetOrigin(self, &origin)) {
+	if (DeeCMethod_GetOrigin(self, &origin)) {
 		DREF DeeObject *result = DeeString_NewAuto(origin.cmo_name);
 		Dee_cmethod_origin_fini(&origin);
 		return result;
@@ -2324,7 +2326,7 @@ cmethod_get_name(DeeCMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod_get_type(DeeCMethodObject *__restrict self) {
 	struct cmethod_origin origin;
-	if (DeeKwCMethod_GetOrigin(self, &origin)) {
+	if (DeeCMethod_GetOrigin(self, &origin)) {
 		Dee_XDecref(origin.cmo_module);
 		if (origin.cmo_type)
 			return (DREF DeeObject *)origin.cmo_type;
@@ -2335,7 +2337,7 @@ cmethod_get_type(DeeCMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cmethod_bound_type(DeeCMethodObject *__restrict self) {
 	struct cmethod_origin origin;
-	if (DeeKwCMethod_GetOrigin(self, &origin)) {
+	if (DeeCMethod_GetOrigin(self, &origin)) {
 		Dee_XDecref(origin.cmo_module);
 		Dee_XDecref(origin.cmo_type);
 		if (origin.cmo_type)
@@ -2347,7 +2349,7 @@ cmethod_bound_type(DeeCMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod_get_doc(DeeCMethodObject *__restrict self) {
 	struct cmethod_origin origin;
-	if (DeeKwCMethod_GetOrigin(self, &origin)) {
+	if (DeeCMethod_GetOrigin(self, &origin)) {
 		if (origin.cmo_doc) {
 			DREF DeeObject *result = DeeString_NewAutoUtf8(origin.cmo_doc);
 			Dee_cmethod_origin_fini(&origin);
@@ -2472,6 +2474,7 @@ cmethod_printrepr(DeeCMethodObject *__restrict self,
 }
 
 #define cmethod_operators clsmethod_operators
+#define cmethod_cmp       clsmethod_cmp
 
 PUBLIC DeeTypeObject DeeCMethod_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -2505,7 +2508,7 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
-	/* .tp_cmp           = */ &clsmethod_cmp,
+	/* .tp_cmp           = */ &cmethod_cmp,
 	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
 	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
 	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
@@ -2524,6 +2527,172 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ cmethod_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(cmethod_operators),
+};
+
+
+STATIC_ASSERT(offsetof(DeeCMethod0Object, cm0_func) == offsetof(DeeCMethodObject, cm_func));
+STATIC_ASSERT(offsetof(DeeCMethod0Object, cm0_flags) == offsetof(DeeCMethodObject, cm_flags));
+STATIC_ASSERT(offsetof(DeeCMethod1Object, cm1_func) == offsetof(DeeCMethodObject, cm_func));
+STATIC_ASSERT(offsetof(DeeCMethod1Object, cm1_flags) == offsetof(DeeCMethodObject, cm_flags));
+#define cmethod0_print     cmethod_print
+#define cmethod1_print     cmethod_print
+#define cmethod0_printrepr cmethod_printrepr
+#define cmethod1_printrepr cmethod_printrepr
+#define cmethod0_operators cmethod_operators
+#define cmethod1_operators cmethod_operators
+#define cmethod0_cmp       cmethod_cmp
+#define cmethod1_cmp       cmethod_cmp
+#define cmethod0_members   cmethod_members
+#define cmethod1_members   cmethod_members
+#define cmethod0_getsets   cmethod_getsets
+#define cmethod1_getsets   cmethod_getsets
+
+PRIVATE ATTR_COLD ATTR_NOINLINE NONNULL((1)) DREF DeeObject *DCALL
+cmethod0_bad_argc(DeeCMethod0Object *self, size_t argc) {
+	/* TODO: Lookup function name lazily once exception uses it */
+	struct Dee_cmethod_origin origin;
+	if likely(DeeCMethod0_GetOrigin(self, &origin)) {
+		DeeArg_BadArgc0(origin.cmo_name, argc);
+		Dee_cmethod_origin_fini(&origin);
+	} else {
+		DeeArg_BadArgc0(NULL, argc);
+	}
+	return NULL;
+}
+
+PRIVATE ATTR_COLD ATTR_NOINLINE NONNULL((1)) DREF DeeObject *DCALL
+cmethod1_bad_argc(DeeCMethod1Object *self, size_t argc) {
+	/* TODO: Lookup function name lazily once exception uses it */
+	struct Dee_cmethod_origin origin;
+	if likely(DeeCMethod1_GetOrigin(self, &origin)) {
+		DeeArg_BadArgc1(origin.cmo_name, argc);
+		Dee_cmethod_origin_fini(&origin);
+	} else {
+		DeeArg_BadArgc1(NULL, argc);
+	}
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cmethod0_call(DeeCMethod0Object *self, size_t argc, DeeObject *const *argv) {
+	(void)argv;
+	if likely(argc == 0)
+		return DeeCMethod0_CallFunc(self->cm0_func);
+	return cmethod0_bad_argc(self, argc);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cmethod1_call(DeeCMethod1Object *self, size_t argc, DeeObject *const *argv) {
+	(void)argv;
+	if likely(argc == 1)
+		return DeeCMethod1_CallFunc(self->cm1_func, argv[0]);
+	return cmethod1_bad_argc(self, argc);
+}
+
+PUBLIC DeeTypeObject DeeCMethod0_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_CMethod0",
+	/* .tp_doc      = */ DOC("call()->"),
+	/* .tp_flags    = */ TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeCallable_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(DeeCMethodObject)
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cmethod0_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cmethod0_printrepr,
+	},
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
+	/* .tp_cmp           = */ &cmethod0_cmp,
+	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
+	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
+	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ cmethod0_getsets,
+	/* .tp_members       = */ cmethod0_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cmethod0_call,
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ cmethod0_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(cmethod0_operators),
+};
+
+PUBLIC DeeTypeObject DeeCMethod1_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_CMethod1",
+	/* .tp_doc      = */ DOC("call(arg0)->"),
+	/* .tp_flags    = */ TP_FFINAL,
+	/* .tp_weakrefs = */ 1,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeCallable_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(DeeCMethodObject)
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cmethod1_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cmethod1_printrepr,
+	},
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
+	/* .tp_cmp           = */ &cmethod1_cmp,
+	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
+	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
+	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ cmethod1_getsets,
+	/* .tp_members       = */ cmethod1_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cmethod1_call,
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ cmethod1_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(cmethod1_operators),
 };
 
 
@@ -2642,6 +2811,32 @@ DeeKwCMethod_New(Dee_kwcmethod_t func, uintptr_t flags) {
 	return (DREF DeeObject *)result;
 }
 
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeCMethod0_New(Dee_cmethod0_t func, uintptr_t flags) {
+	DREF DeeCMethod0Object *result;
+	result = DeeObject_MALLOC(DeeCMethod0Object);
+	if likely(result) {
+		result->cm0_func  = func;
+		result->cm0_flags = flags;
+		DeeObject_Init(result, &DeeCMethod0_Type);
+	}
+	return (DREF DeeObject *)result;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeCMethod1_New(Dee_cmethod1_t func, uintptr_t flags) {
+	DREF DeeCMethod1Object *result;
+	result = DeeObject_MALLOC(DeeCMethod1Object);
+	if likely(result) {
+		result->cm1_func  = func;
+		result->cm1_flags = flags;
+		DeeObject_Init(result, &DeeCMethod1_Type);
+	}
+	return (DREF DeeObject *)result;
+}
+
+
+
 
 /* Invoke a given c-function callback.
  * Since this is the main way through which external functions are invoked,
@@ -2702,6 +2897,35 @@ DeeCMethod_CallFunc_d(Dee_cmethod_t funptr, size_t argc, DeeObject *const *argv)
 	caller    = DeeThread_Self();
 	old_depth = caller->t_exceptsz;
 	result    = (*funptr)(argc, argv);
+	if unlikely(result ? old_depth != caller->t_exceptsz
+	                   : old_depth + 1 != caller->t_exceptsz)
+		fatal_invalid_except(result, old_depth + !result, (void *)funptr);
+	return result;
+}
+
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeCMethod0_CallFunc_d(Dee_cmethod0_t funptr) {
+	DREF DeeObject *result;
+	DeeThreadObject *caller;
+	uint16_t old_depth;
+	caller    = DeeThread_Self();
+	old_depth = caller->t_exceptsz;
+	result    = (*funptr)();
+	if unlikely(result ? old_depth != caller->t_exceptsz
+	                   : old_depth + 1 != caller->t_exceptsz)
+		fatal_invalid_except(result, old_depth + !result, (void *)funptr);
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeCMethod1_CallFunc_d(Dee_cmethod1_t funptr, DeeObject *arg0) {
+	DREF DeeObject *result;
+	DeeThreadObject *caller;
+	uint16_t old_depth;
+	caller    = DeeThread_Self();
+	old_depth = caller->t_exceptsz;
+	result    = (*funptr)(arg0);
 	if unlikely(result ? old_depth != caller->t_exceptsz
 	                   : old_depth + 1 != caller->t_exceptsz)
 		fatal_invalid_except(result, old_depth + !result, (void *)funptr);
