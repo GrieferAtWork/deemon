@@ -1051,11 +1051,9 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("fstat", "fd:?X2?DFile?Dint->?Gstat", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_fstat_f_impl(DeeObject *fd);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_fstat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FSTAT_DEF { "fstat", (DeeObject *)&posix_fstat, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint)->?Gstat") },
 #define POSIX_FSTAT_DEF_DOC(doc) { "fstat", (DeeObject *)&posix_fstat, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint)->?Gstat\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fstat, &posix_fstat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_fstat_f_impl(DeeObject *fd);
 #ifndef DEFINED_kwlist__fd
 #define DEFINED_kwlist__fd
 PRIVATE DEFINE_KWLIST(kwlist__fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
@@ -1070,7 +1068,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fstat_f(size_t argc, DeeObject *cons
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_fstat_f_impl(DeeObject *fd)
+PRIVATE DEFINE_KWCMETHOD(posix_fstat, &posix_fstat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_fstat_f_impl(DeeObject *fd)
 /*[[[end]]]*/
 {
 	DREF DeeStatObject *result;
@@ -1092,11 +1091,9 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("fstatat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:c:uint=0->?Gstat", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fstatat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_fstatat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FSTATAT_DEF { "fstatat", (DeeObject *)&posix_fstatat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Gstat") },
 #define POSIX_FSTATAT_DEF_DOC(doc) { "fstatat", (DeeObject *)&posix_fstatat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Gstat\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fstatat, &posix_fstatat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fstatat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 #ifndef DEFINED_kwlist__dfd_path_atflags
 #define DEFINED_kwlist__dfd_path_atflags
 PRIVATE DEFINE_KWLIST(kwlist__dfd_path_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
@@ -1114,7 +1111,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fstatat_f(size_t argc, DeeObject *co
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_fstatat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags)
+PRIVATE DEFINE_KWCMETHOD(posix_fstatat, &posix_fstatat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fstatat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags)
 /*[[[end]]]*/
 {
 	DREF DeeStatObject *result;

@@ -112,11 +112,9 @@ DECL_BEGIN
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("mkdir", "path:?Dstring,mode:u=0755", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_mkdir_f_impl(DeeObject *path, unsigned int mode);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_mkdir_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_MKDIR_DEF { "mkdir", (DeeObject *)&posix_mkdir, MODSYM_FREADONLY, DOC("(path:?Dstring,mode=!0755)") },
 #define POSIX_MKDIR_DEF_DOC(doc) { "mkdir", (DeeObject *)&posix_mkdir, MODSYM_FREADONLY, DOC("(path:?Dstring,mode=!0755)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_mkdir, &posix_mkdir_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_mkdir_f_impl(DeeObject *path, unsigned int mode);
 #ifndef DEFINED_kwlist__path_mode
 #define DEFINED_kwlist__path_mode
 PRIVATE DEFINE_KWLIST(kwlist__path_mode, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
@@ -133,7 +131,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_mkdir_f(size_t argc, DeeObject *cons
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_mkdir_f_impl(DeeObject *path, unsigned int mode)
+PRIVATE DEFINE_KWCMETHOD(posix_mkdir, &posix_mkdir_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_mkdir_f_impl(DeeObject *path, unsigned int mode)
 /*[[[end]]]*/
 {
 #ifdef posix_mkdir_USE_nt_CreateDirectory
@@ -228,11 +227,9 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("fmkdirat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode:u=0755,atflags:u=0", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fmkdirat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int mode, unsigned int atflags);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_fmkdirat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FMKDIRAT_DEF { "fmkdirat", (DeeObject *)&posix_fmkdirat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode=!0755,atflags=!0)") },
 #define POSIX_FMKDIRAT_DEF_DOC(doc) { "fmkdirat", (DeeObject *)&posix_fmkdirat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode=!0755,atflags=!0)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fmkdirat, &posix_fmkdirat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fmkdirat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int mode, unsigned int atflags);
 #ifndef DEFINED_kwlist__dfd_path_mode_atflags
 #define DEFINED_kwlist__dfd_path_mode_atflags
 PRIVATE DEFINE_KWLIST(kwlist__dfd_path_mode_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
@@ -252,7 +249,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fmkdirat_f(size_t argc, DeeObject *c
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_fmkdirat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int mode, unsigned int atflags)
+PRIVATE DEFINE_KWCMETHOD(posix_fmkdirat, &posix_fmkdirat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fmkdirat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int mode, unsigned int atflags)
 /*[[[end]]]*/
 {
 #ifdef posix_fmkdirat_USE_posix_mkdir
@@ -334,11 +332,9 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("mkdirat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode:u=0755", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_mkdirat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int mode);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_mkdirat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_MKDIRAT_DEF { "mkdirat", (DeeObject *)&posix_mkdirat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode=!0755)") },
 #define POSIX_MKDIRAT_DEF_DOC(doc) { "mkdirat", (DeeObject *)&posix_mkdirat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode=!0755)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_mkdirat, &posix_mkdirat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_mkdirat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int mode);
 #ifndef DEFINED_kwlist__dfd_path_mode
 #define DEFINED_kwlist__dfd_path_mode
 PRIVATE DEFINE_KWLIST(kwlist__dfd_path_mode, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
@@ -356,7 +352,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_mkdirat_f(size_t argc, DeeObject *co
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_mkdirat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int mode)
+PRIVATE DEFINE_KWCMETHOD(posix_mkdirat, &posix_mkdirat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_mkdirat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int mode)
 /*[[[end]]]*/
 {
 #ifdef posix_mkdirat_USE_posix_fmkdirat

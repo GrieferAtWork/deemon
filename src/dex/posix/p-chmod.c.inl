@@ -288,11 +288,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lchmod_f_impl(DeeObject *path, De
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("chmod", "path:?Dstring,mode:?X2?Dstring?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_chmod_f_impl(DeeObject *path, DeeObject *mode);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_chmod_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_CHMOD_DEF { "chmod", (DeeObject *)&posix_chmod, MODSYM_FREADONLY, DOC("(path:?Dstring,mode:?X2?Dstring?Dint)") },
 #define POSIX_CHMOD_DEF_DOC(doc) { "chmod", (DeeObject *)&posix_chmod, MODSYM_FREADONLY, DOC("(path:?Dstring,mode:?X2?Dstring?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_chmod, &posix_chmod_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_chmod_f_impl(DeeObject *path, DeeObject *mode);
 #ifndef DEFINED_kwlist__path_mode
 #define DEFINED_kwlist__path_mode
 PRIVATE DEFINE_KWLIST(kwlist__path_mode, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
@@ -308,7 +306,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_chmod_f(size_t argc, DeeObject *cons
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_chmod_f_impl(DeeObject *path, DeeObject *mode)
+PRIVATE DEFINE_KWCMETHOD(posix_chmod, &posix_chmod_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_chmod_f_impl(DeeObject *path, DeeObject *mode)
 /*[[[end]]]*/
 {
 #ifdef posix_chmod_USE_posix_readlink__AND__posix_lchmod
@@ -400,11 +399,9 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("lchmod", "path:?Dstring,mode:?X2?Dstring?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_lchmod_f_impl(DeeObject *path, DeeObject *mode);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_lchmod_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_LCHMOD_DEF { "lchmod", (DeeObject *)&posix_lchmod, MODSYM_FREADONLY, DOC("(path:?Dstring,mode:?X2?Dstring?Dint)") },
 #define POSIX_LCHMOD_DEF_DOC(doc) { "lchmod", (DeeObject *)&posix_lchmod, MODSYM_FREADONLY, DOC("(path:?Dstring,mode:?X2?Dstring?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_lchmod, &posix_lchmod_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_lchmod_f_impl(DeeObject *path, DeeObject *mode);
 #ifndef DEFINED_kwlist__path_mode
 #define DEFINED_kwlist__path_mode
 PRIVATE DEFINE_KWLIST(kwlist__path_mode, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
@@ -420,7 +417,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_lchmod_f(size_t argc, DeeObject *con
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_lchmod_f_impl(DeeObject *path, DeeObject *mode)
+PRIVATE DEFINE_KWCMETHOD(posix_lchmod, &posix_lchmod_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_lchmod_f_impl(DeeObject *path, DeeObject *mode)
 /*[[[end]]]*/
 {
 #if defined(posix_lchmod_USE_lchmod) || defined(posix_lchmod_USE_wlchmod)
@@ -488,11 +486,9 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("fchmod", "fd:?X2?Dint?DFile,mode:?X2?Dstring?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fchmod_f_impl(DeeObject *fd, DeeObject *mode);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmod_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCHMOD_DEF { "fchmod", (DeeObject *)&posix_fchmod, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,mode:?X2?Dstring?Dint)") },
 #define POSIX_FCHMOD_DEF_DOC(doc) { "fchmod", (DeeObject *)&posix_fchmod, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,mode:?X2?Dstring?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fchmod, &posix_fchmod_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fchmod_f_impl(DeeObject *fd, DeeObject *mode);
 #ifndef DEFINED_kwlist__fd_mode
 #define DEFINED_kwlist__fd_mode
 PRIVATE DEFINE_KWLIST(kwlist__fd_mode, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
@@ -508,7 +504,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmod_f(size_t argc, DeeObject *con
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_fchmod_f_impl(DeeObject *fd, DeeObject *mode)
+PRIVATE DEFINE_KWCMETHOD(posix_fchmod, &posix_fchmod_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fchmod_f_impl(DeeObject *fd, DeeObject *mode)
 /*[[[end]]]*/
 {
 #ifdef posix_fchmod_USE_fchmod
@@ -572,11 +569,9 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("fchmodat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode:?X2?Dstring?Dint,atflags:u=0", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_fchmodat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *mode, unsigned int atflags);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmodat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCHMODAT_DEF { "fchmodat", (DeeObject *)&posix_fchmodat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode:?X2?Dstring?Dint,atflags=!0)") },
 #define POSIX_FCHMODAT_DEF_DOC(doc) { "fchmodat", (DeeObject *)&posix_fchmodat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode:?X2?Dstring?Dint,atflags=!0)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fchmodat, &posix_fchmodat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_fchmodat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *mode, unsigned int atflags);
 #ifndef DEFINED_kwlist__dfd_path_mode_atflags
 #define DEFINED_kwlist__dfd_path_mode_atflags
 PRIVATE DEFINE_KWLIST(kwlist__dfd_path_mode_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
@@ -595,7 +590,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmodat_f(size_t argc, DeeObject *c
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2, 3))DREF DeeObject *DCALL posix_fchmodat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *mode, unsigned int atflags)
+PRIVATE DEFINE_KWCMETHOD(posix_fchmodat, &posix_fchmodat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_fchmodat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *mode, unsigned int atflags)
 /*[[[end]]]*/
 {
 #if defined(posix_fchmodat_USE_posix_chmod) || defined(posix_fchmodat_USE_posix_lchmod)

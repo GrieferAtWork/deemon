@@ -1081,8 +1081,12 @@
 #define Dee_DEFINE_CLSPROPERTY(n,...)           DeeClsPropertyObject n={}
 #define DEFINE_CMETHOD(n,...)                   DeeCMethodObject n={}
 #define Dee_DEFINE_CMETHOD(n,...)               DeeCMethodObject n={}
-#define DEFINE_KWCMETHOD(n,...)                 DeeKwCMethodObject n={}
-#define Dee_DEFINE_KWCMETHOD(n,...)             DeeKwCMethodObject n={}
+#define DEFINE_CMETHOD0(n,...)                  DeeCMethodObject n={}
+#define Dee_DEFINE_CMETHOD0(n,...)              DeeCMethodObject n={}
+#define DEFINE_CMETHOD1(n,...)                  DeeCMethodObject n={}
+#define Dee_DEFINE_CMETHOD1(n,...)              DeeCMethodObject n={}
+#define DEFINE_KWCMETHOD(n,...)                 DeeCMethodObject n={}
+#define Dee_DEFINE_KWCMETHOD(n,...)             DeeCMethodObject n={}
 #define DEFINE_STRING_EX(n,...)                 DeeStringObject n={}
 #define Dee_DEFINE_STRING_EX(n,...)             DeeStringObject n={}
 #define DEFINE_STRING(n,...)                    DeeStringObject n={}
@@ -1309,8 +1313,6 @@
 #define clsproperty_object             Dee_clsproperty_object
 #define clsproperty_origin             Dee_clsproperty_origin
 #define cmethod_object                 Dee_cmethod_object
-#define cmethod0_object                Dee_cmethod0_object
-#define cmethod1_object                Dee_cmethod1_object
 #define cmethod_origin                 Dee_cmethod_origin
 #define code_frame                     Dee_code_frame
 #define code_object                    Dee_code_object
@@ -1355,7 +1357,6 @@
 #define instancemember_object          Dee_instancemember_object
 #define int_object                     Dee_int_object
 #define kwclsmethod_object             Dee_kwclsmethod_object
-#define kwcmethod_object               Dee_kwcmethod_object
 #define kwobjmethod_object             Dee_kwobjmethod_object
 #define list_object                    Dee_list_object
 #define memory_file_object             Dee_memory_file_object

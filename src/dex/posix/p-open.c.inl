@@ -396,11 +396,9 @@ for (local f: functions) {
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("_open", "filename:?Dstring,oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix__open_f_impl(DeeObject *filename, unsigned int oflags, unsigned int mode);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix__open_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX__OPEN_DEF { "_open", (DeeObject *)&posix__open, MODSYM_FREADONLY, DOC("(filename:?Dstring,oflags:?Dint,mode=!0644)->?Dint") },
 #define POSIX__OPEN_DEF_DOC(doc) { "_open", (DeeObject *)&posix__open, MODSYM_FREADONLY, DOC("(filename:?Dstring,oflags:?Dint,mode=!0644)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix__open, &posix__open_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix__open_f_impl(DeeObject *filename, unsigned int oflags, unsigned int mode);
 #ifndef DEFINED_kwlist__filename_oflags_mode
 #define DEFINED_kwlist__filename_oflags_mode
 PRIVATE DEFINE_KWLIST(kwlist__filename_oflags_mode, { KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("oflags", 0xbe92b5be, 0x4f84e498f7c9d171), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
@@ -418,7 +416,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix__open_f(size_t argc, DeeObject *cons
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix__open_f_impl(DeeObject *filename, unsigned int oflags, unsigned int mode)
+PRIVATE DEFINE_KWCMETHOD(posix__open, &posix__open_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix__open_f_impl(DeeObject *filename, unsigned int oflags, unsigned int mode)
 /*[[[end]]]*/
 {
 
@@ -533,11 +532,9 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("open", "filename:?Dstring,oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_open_f_impl(DeeObject *filename, unsigned int oflags, unsigned int mode);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_open_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_OPEN_DEF { "open", (DeeObject *)&posix_open, MODSYM_FREADONLY, DOC("(filename:?Dstring,oflags:?Dint,mode=!0644)->?Dint") },
 #define POSIX_OPEN_DEF_DOC(doc) { "open", (DeeObject *)&posix_open, MODSYM_FREADONLY, DOC("(filename:?Dstring,oflags:?Dint,mode=!0644)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_open, &posix_open_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_open_f_impl(DeeObject *filename, unsigned int oflags, unsigned int mode);
 #ifndef DEFINED_kwlist__filename_oflags_mode
 #define DEFINED_kwlist__filename_oflags_mode
 PRIVATE DEFINE_KWLIST(kwlist__filename_oflags_mode, { KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("oflags", 0xbe92b5be, 0x4f84e498f7c9d171), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
@@ -555,7 +552,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_open_f(size_t argc, DeeObject *const
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_open_f_impl(DeeObject *filename, unsigned int oflags, unsigned int mode)
+PRIVATE DEFINE_KWCMETHOD(posix_open, &posix_open_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_open_f_impl(DeeObject *filename, unsigned int oflags, unsigned int mode)
 /*[[[end]]]*/
 {
 #ifdef POSIX_OPEN_DEFAULT_FLAGS
@@ -572,11 +570,9 @@ FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_open_f_impl(DeeObject
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("_creat", "filename:?Dstring,mode:u=0644->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix__creat_f_impl(DeeObject *filename, unsigned int mode);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix__creat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX__CREAT_DEF { "_creat", (DeeObject *)&posix__creat, MODSYM_FREADONLY, DOC("(filename:?Dstring,mode=!0644)->?Dint") },
 #define POSIX__CREAT_DEF_DOC(doc) { "_creat", (DeeObject *)&posix__creat, MODSYM_FREADONLY, DOC("(filename:?Dstring,mode=!0644)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix__creat, &posix__creat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix__creat_f_impl(DeeObject *filename, unsigned int mode);
 #ifndef DEFINED_kwlist__filename_mode
 #define DEFINED_kwlist__filename_mode
 PRIVATE DEFINE_KWLIST(kwlist__filename_mode, { KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
@@ -593,7 +589,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix__creat_f(size_t argc, DeeObject *con
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix__creat_f_impl(DeeObject *filename, unsigned int mode)
+PRIVATE DEFINE_KWCMETHOD(posix__creat, &posix__creat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix__creat_f_impl(DeeObject *filename, unsigned int mode)
 /*[[[end]]]*/
 {
 #if defined(posix_creat_USE_wcreat) || defined(posix_creat_USE_creat)
@@ -654,11 +651,9 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("creat", "filename:?Dstring,mode:u=0644->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_creat_f_impl(DeeObject *filename, unsigned int mode);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_creat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_CREAT_DEF { "creat", (DeeObject *)&posix_creat, MODSYM_FREADONLY, DOC("(filename:?Dstring,mode=!0644)->?Dint") },
 #define POSIX_CREAT_DEF_DOC(doc) { "creat", (DeeObject *)&posix_creat, MODSYM_FREADONLY, DOC("(filename:?Dstring,mode=!0644)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_creat, &posix_creat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_creat_f_impl(DeeObject *filename, unsigned int mode);
 #ifndef DEFINED_kwlist__filename_mode
 #define DEFINED_kwlist__filename_mode
 PRIVATE DEFINE_KWLIST(kwlist__filename_mode, { KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
@@ -675,7 +670,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_creat_f(size_t argc, DeeObject *cons
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_creat_f_impl(DeeObject *filename, unsigned int mode)
+PRIVATE DEFINE_KWCMETHOD(posix_creat, &posix_creat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_creat_f_impl(DeeObject *filename, unsigned int mode)
 /*[[[end]]]*/
 {
 #if defined(POSIX_CREAT_OFLAGS) && defined(POSIX_CREAT_DEFAULT_FLAGS)
@@ -698,11 +694,9 @@ FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_creat_f_impl(DeeObjec
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("_openat", "dfd:?X3?DFile?Dint?Dstring,filename:?Dstring,oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix__openat_f_impl(DeeObject *dfd, DeeObject *filename, unsigned int oflags, unsigned int mode);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix__openat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX__OPENAT_DEF { "_openat", (DeeObject *)&posix__openat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,filename:?Dstring,oflags:?Dint,mode=!0644)->?Dint") },
 #define POSIX__OPENAT_DEF_DOC(doc) { "_openat", (DeeObject *)&posix__openat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,filename:?Dstring,oflags:?Dint,mode=!0644)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix__openat, &posix__openat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix__openat_f_impl(DeeObject *dfd, DeeObject *filename, unsigned int oflags, unsigned int mode);
 #ifndef DEFINED_kwlist__dfd_filename_oflags_mode
 #define DEFINED_kwlist__dfd_filename_oflags_mode
 PRIVATE DEFINE_KWLIST(kwlist__dfd_filename_oflags_mode, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("oflags", 0xbe92b5be, 0x4f84e498f7c9d171), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
@@ -721,7 +715,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix__openat_f(size_t argc, DeeObject *co
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix__openat_f_impl(DeeObject *dfd, DeeObject *filename, unsigned int oflags, unsigned int mode)
+PRIVATE DEFINE_KWCMETHOD(posix__openat, &posix__openat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix__openat_f_impl(DeeObject *dfd, DeeObject *filename, unsigned int oflags, unsigned int mode)
 /*[[[end]]]*/
 {
 #ifdef posix_openat_USE_posix_open
@@ -795,11 +790,9 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("openat", "dfd:?X3?DFile?Dint?Dstring,filename:?Dstring,oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_openat_f_impl(DeeObject *dfd, DeeObject *filename, unsigned int oflags, unsigned int mode);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_openat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_OPENAT_DEF { "openat", (DeeObject *)&posix_openat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,filename:?Dstring,oflags:?Dint,mode=!0644)->?Dint") },
 #define POSIX_OPENAT_DEF_DOC(doc) { "openat", (DeeObject *)&posix_openat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,filename:?Dstring,oflags:?Dint,mode=!0644)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_openat, &posix_openat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_openat_f_impl(DeeObject *dfd, DeeObject *filename, unsigned int oflags, unsigned int mode);
 #ifndef DEFINED_kwlist__dfd_filename_oflags_mode
 #define DEFINED_kwlist__dfd_filename_oflags_mode
 PRIVATE DEFINE_KWLIST(kwlist__dfd_filename_oflags_mode, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("oflags", 0xbe92b5be, 0x4f84e498f7c9d171), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
@@ -818,7 +811,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_openat_f(size_t argc, DeeObject *con
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_openat_f_impl(DeeObject *dfd, DeeObject *filename, unsigned int oflags, unsigned int mode)
+PRIVATE DEFINE_KWCMETHOD(posix_openat, &posix_openat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_openat_f_impl(DeeObject *dfd, DeeObject *filename, unsigned int oflags, unsigned int mode)
 /*[[[end]]]*/
 {
 #ifdef POSIX_OPEN_DEFAULT_FLAGS

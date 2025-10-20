@@ -80,18 +80,11 @@ DECL_BEGIN
 #endif /* posix_cpu_count_USE_get_nprocs */
 
 /*[[[deemon import("rt.gen.dexutils").gw("cpu_count", "->?Dint", libname: "posix", ispure: true); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_cpu_count_f(size_t argc, DeeObject *const *argv);
 #define POSIX_CPU_COUNT_DEF { "cpu_count", (DeeObject *)&posix_cpu_count, MODSYM_FREADONLY, DOC("->?Dint") },
 #define POSIX_CPU_COUNT_DEF_DOC(doc) { "cpu_count", (DeeObject *)&posix_cpu_count, MODSYM_FREADONLY, DOC("->?Dint\n" doc) },
-PRIVATE DEFINE_CMETHOD(posix_cpu_count, &posix_cpu_count_f, METHOD_FPURECALL);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_cpu_count_f(size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack0(err, argc, argv, "cpu_count");
-	return posix_cpu_count_f_impl();
-err:
-	return NULL;
-}
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void)
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void);
+PRIVATE DEFINE_CMETHOD0(posix_cpu_count, &posix_cpu_count_f_impl, METHOD_FPURECALL);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void)
 /*[[[end]]]*/
 {
 	/* Implementation variants taken from here:

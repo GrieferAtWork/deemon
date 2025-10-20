@@ -379,11 +379,9 @@ PRIVATE DEFINE_CMETHOD(posix_read, posix_read_f, METHOD_FNORMAL);
 
 #if defined(posix_lseek_IS64) || defined(__DEEMON__)
 /*[[[deemon import("rt.gen.dexutils").gw("lseek", "fd:unix:fd,offset:I64d,whence:d->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int64_t offset, int whence);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_LSEEK_DEF { "lseek", (DeeObject *)&posix_lseek, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint") },
 #define POSIX_LSEEK_DEF_DOC(doc) { "lseek", (DeeObject *)&posix_lseek, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_lseek, &posix_lseek_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int64_t offset, int whence);
 #ifndef DEFINED_kwlist__fd_offset_whence
 #define DEFINED_kwlist__fd_offset_whence
 PRIVATE DEFINE_KWLIST(kwlist__fd_offset_whence, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("offset", 0xa97063e7, 0x2381bd4159ebe8a7), KEX("whence", 0x41d86ee7, 0x560314d7be8806a5), KEND });
@@ -403,16 +401,15 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject *cons
 err:
 	return NULL;
 }
+PRIVATE DEFINE_KWCMETHOD(posix_lseek, &posix_lseek_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int64_t offset, int whence)
 /*[[[end]]]*/
 #endif /* posix_lseek_IS64 */
 #if !defined(posix_lseek_IS64) || defined(__DEEMON__)
 /*[[[deemon import("rt.gen.dexutils").gw("lseek", "fd:unix:fd,offset:I32d,whence:d->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int32_t offset, int whence);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_LSEEK_DEF { "lseek", (DeeObject *)&posix_lseek, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint") },
 #define POSIX_LSEEK_DEF_DOC(doc) { "lseek", (DeeObject *)&posix_lseek, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_lseek, &posix_lseek_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int32_t offset, int whence);
 #ifndef DEFINED_kwlist__fd_offset_whence
 #define DEFINED_kwlist__fd_offset_whence
 PRIVATE DEFINE_KWLIST(kwlist__fd_offset_whence, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("offset", 0xa97063e7, 0x2381bd4159ebe8a7), KEX("whence", 0x41d86ee7, 0x560314d7be8806a5), KEND });
@@ -432,6 +429,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject *cons
 err:
 	return NULL;
 }
+PRIVATE DEFINE_KWCMETHOD(posix_lseek, &posix_lseek_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int32_t offset, int whence)
 /*[[[end]]]*/
 #endif /* !posix_lseek_IS64 */
@@ -726,11 +724,9 @@ PRIVATE DEFINE_CMETHOD(posix_pread, posix_pread_f, METHOD_FNORMAL);
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("write", "fd:unix:fd,buf:obj:buffer,count:Iu=(size_t)-1->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((2)) DREF DeeObject *DCALL posix_write_f_impl(int fd, DeeObject *buf, size_t count);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_write_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_WRITE_DEF { "write", (DeeObject *)&posix_write, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,count=!-1)->?Dint") },
 #define POSIX_WRITE_DEF_DOC(doc) { "write", (DeeObject *)&posix_write, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,count=!-1)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_write, &posix_write_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((2)) DREF DeeObject *DCALL posix_write_f_impl(int fd, DeeObject *buf, size_t count);
 #ifndef DEFINED_kwlist__fd_buf_count
 #define DEFINED_kwlist__fd_buf_count
 PRIVATE DEFINE_KWLIST(kwlist__fd_buf_count, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("buf", 0x32af0e7d, 0x1b91d549e0d74603), KEX("count", 0x54eac164, 0xbd66b5980d54babb), KEND });
@@ -751,7 +747,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_write_f(size_t argc, DeeObject *cons
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((2))DREF DeeObject *DCALL posix_write_f_impl(int fd, DeeObject *buf, size_t count)
+PRIVATE DEFINE_KWCMETHOD(posix_write, &posix_write_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((2)) DREF DeeObject *DCALL posix_write_f_impl(int fd, DeeObject *buf, size_t count)
 /*[[[end]]]*/
 {
 #ifdef posix_write_USE_write

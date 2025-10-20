@@ -221,16 +221,18 @@ do_rethrow:
 #endif /* CONFIG_HAVE_CTYPES_KOS_GUARD */
 
 
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_sizeof(size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_CMethod from rt.gen.unpack)("sizeof", "ob:?X7?GStructuredType?GStructured?DType?N?Dbool?Dint?Dfloat", methodFlags: "METHOD_FCONSTCALL");]]]*/
+#define libctypes_sizeof_params "ob:?X7?GStructuredType?GStructured?DType?N?Dbool?Dint?Dfloat"
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_sizeof_f_impl(DeeObject *ob);
+PRIVATE DEFINE_CMETHOD1(libctypes_sizeof, &libctypes_sizeof_f_impl, METHOD_FCONSTCALL);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_sizeof_f_impl(DeeObject *ob)
+/*[[[end]]]*/
+{
 	DeeSTypeObject *type;
-	DeeObject *arg;
 	size_t result;
-	DeeArg_Unpack1(err, argc, argv, "sizeof", &arg);
-	if (DeeBytes_Check(arg))
-		return DeeInt_NewSize(DeeBytes_SIZE(arg));
-	type = DeeSType_GetTypeOf(arg);
+	if (DeeBytes_Check(ob))
+		return DeeInt_NewSize(DeeBytes_SIZE(ob));
+	type = DeeSType_GetTypeOf(ob);
 	if unlikely(!type)
 		goto err;
 	if (DeeLValueType_Check(type))
@@ -241,13 +243,15 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_alignof(size_t argc, DeeObject *const *argv) {
-	DeeSTypeObject *type;
-	DeeObject *arg;
+/*[[[deemon (print_CMethod from rt.gen.unpack)("alignof", "ob:?X7?GStructuredType?GStructured?DType?N?Dbool?Dint?Dfloat", methodFlags: "METHOD_FCONSTCALL");]]]*/
+#define libctypes_alignof_params "ob:?X7?GStructuredType?GStructured?DType?N?Dbool?Dint?Dfloat"
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_alignof_f_impl(DeeObject *ob);
+PRIVATE DEFINE_CMETHOD1(libctypes_alignof, &libctypes_alignof_f_impl, METHOD_FCONSTCALL);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_alignof_f_impl(DeeObject *ob)
+/*[[[end]]]*/
+{
 	size_t result;
-	DeeArg_Unpack1(err, argc, argv, "alignof", &arg);
-	type = DeeSType_GetTypeOf(arg);
+	DeeSTypeObject *type = DeeSType_GetTypeOf(ob);
 	if unlikely(!type)
 		goto err;
 	if (DeeLValueType_Check(type))
@@ -258,64 +262,81 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeSTypeObject *DCALL
-f_ctypes_typeof(size_t argc, DeeObject *const *argv) {
-	DeeObject *arg;
-	DeeSTypeObject *result;
-	DeeArg_Unpack1(err, argc, argv, "typeof", &arg);
-	result = DeeSType_GetTypeOf(arg);
+/*[[[deemon (print_CMethod from rt.gen.unpack)("typeof", "ob:?X7?GStructuredType?GStructured?DType?N?Dbool?Dint?Dfloat", methodFlags: "METHOD_FCONSTCALL");]]]*/
+#define libctypes_typeof_params "ob:?X7?GStructuredType?GStructured?DType?N?Dbool?Dint?Dfloat"
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_typeof_f_impl(DeeObject *ob);
+PRIVATE DEFINE_CMETHOD1(libctypes_typeof, &libctypes_typeof_f_impl, METHOD_FCONSTCALL);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_typeof_f_impl(DeeObject *ob)
+/*[[[end]]]*/
+{
+	DeeSTypeObject *result = DeeSType_GetTypeOf(ob);
 	if unlikely(!result)
 		goto err;
 	if (DeeLValueType_Check(result))
 		result = DeeSType_AsLValueType(result)->lt_orig;
 	Dee_Incref(DeeSType_AsType(result));
-	return result;
+	return DeeSType_AsObject(result);
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_intfor(size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_CMethod from rt.gen.unpack)("intfor", """
+	size_t size,
+	bool $signed = true
+""", methodFlags: "METHOD_FCONSTCALL");]]]*/
+#define libctypes_intfor_params "size:?Dint,signed=!t"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_intfor_f_impl(size_t size, bool signed_);
+PRIVATE WUNUSED DREF DeeObject *DCALL libctypes_intfor_f(size_t argc, DeeObject *const *argv) {
+	struct {
+		size_t size;
+		bool signed_;
+	} args;
+	args.signed_ = true;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "intfor", &args, &args.size, UNPuSIZ, DeeObject_AsSize, &args.signed_, "b", DeeObject_AsBool);
+	return libctypes_intfor_f_impl(args.size, args.signed_);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD(libctypes_intfor, &libctypes_intfor_f, METHOD_FCONSTCALL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_intfor_f_impl(size_t size, bool signed_)
+/*[[[end]]]*/
+{
 	DeeSTypeObject *result = NULL;
-	bool return_signed     = true;
-	size_t intsize;
-	if (DeeArg_Unpack(argc, argv, "o|b:intfor", &intsize, &return_signed))
-		goto err;
-	switch (intsize) {
+	switch (size) {
 
 	case 1:
-		result = return_signed
+		result = signed_
 		         ? &DeeCInt8_Type
 		         : &DeeCUInt8_Type;
 		break;
 
 	case 2:
-		result = return_signed
+		result = signed_
 		         ? &DeeCInt16_Type
 		         : &DeeCUInt16_Type;
 		break;
 
 	case 4:
-		result = return_signed
+		result = signed_
 		         ? &DeeCInt32_Type
 		         : &DeeCUInt32_Type;
 		break;
 
 	case 8:
-		result = return_signed
+		result = signed_
 		         ? &DeeCInt64_Type
 		         : &DeeCUInt64_Type;
 		break;
 
 	case 16:
-		result = return_signed
+		result = signed_
 		         ? &DeeCInt128_Type
 		         : &DeeCUInt128_Type;
 		break;
 
 #ifdef CONFIG_SUCHAR_NEEDS_OWN_TYPE
 	case CONFIG_CTYPES_SIZEOF_CHAR:
-		result = return_signed
+		result = signed_
 		         ? &DeeCSChar_Type
 		         : &DeeCUChar_Type;
 		break;
@@ -323,7 +344,7 @@ f_ctypes_intfor(size_t argc, DeeObject *const *argv) {
 
 #ifdef CONFIG_SHORT_NEEDS_OWN_TYPE
 	case CONFIG_CTYPES_SIZEOF_SHORT:
-		result = return_signed
+		result = signed_
 		         ? &DeeCShort_Type
 		         : &DeeCUShort_Type;
 		break;
@@ -331,7 +352,7 @@ f_ctypes_intfor(size_t argc, DeeObject *const *argv) {
 
 #ifdef CONFIG_INT_NEEDS_OWN_TYPE
 	case CONFIG_CTYPES_SIZEOF_INT:
-		result = return_signed
+		result = signed_
 		         ? &DeeCInt_Type
 		         : &DeeCUInt_Type;
 		break;
@@ -340,7 +361,7 @@ f_ctypes_intfor(size_t argc, DeeObject *const *argv) {
 #ifdef CONFIG_LONG_NEEDS_OWN_TYPE
 #if CONFIG_CTYPES_SIZEOF_LONG != CONFIG_CTYPES_SIZEOF_INT
 	case CONFIG_CTYPES_SIZEOF_LONG:
-		result = return_signed
+		result = signed_
 		         ? &DeeCLong_Type
 		         : &DeeCULong_Type;
 		break;
@@ -349,7 +370,7 @@ f_ctypes_intfor(size_t argc, DeeObject *const *argv) {
 
 #ifdef CONFIG_LLONG_NEEDS_OWN_TYPE
 	case CONFIG_CTYPES_SIZEOF_LLONG:
-		result = return_signed
+		result = signed_
 		         ? &DeeCLLong_Type
 		         : &DeeCULLong_Type;
 		break;
@@ -363,15 +384,33 @@ f_ctypes_intfor(size_t argc, DeeObject *const *argv) {
 	}
 	DeeError_Throwf(&DeeError_ValueError,
 	                "No C integer type with a width of `%" PRFuSIZ "' bytes exists",
-	                intsize);
-err:
+	                size);
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeStructTypeObject *DCALL
-f_ctypes_union(size_t argc, DeeObject *const *argv) {
-	DeeObject *fields_or_name, *fields = NULL;
-	DeeArg_Unpack1Or2(err, argc, argv, "union", &fields_or_name, &fields);
+
+#define libctypes_struct DeeStructType_Type
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("union", """
+	DeeObject *fields_or_name;
+	DeeObject *fields = NULL;
+""", methodFlags: "METHOD_FCONSTCALL", returnType: "DeeStructTypeObject", docStringPrefix: none);]]]*/
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeStructTypeObject *DCALL libctypes_union_f_impl(DeeObject *fields_or_name, DeeObject *fields);
+PRIVATE WUNUSED DREF DeeStructTypeObject *DCALL libctypes_union_f(size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *fields_or_name;
+		DeeObject *fields;
+	} args;
+	args.fields = NULL;
+	DeeArg_UnpackStruct1Or2(err, argc, argv, "union", &args, &args.fields_or_name, &args.fields);
+	return libctypes_union_f_impl(args.fields_or_name, args.fields);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD(libctypes_union, &libctypes_union_f, METHOD_FCONSTCALL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeStructTypeObject *DCALL libctypes_union_f_impl(DeeObject *fields_or_name, DeeObject *fields)
+/*[[[end]]]*/
+{
 	if (!fields)
 		return DeeStructType_FromSequence(NULL, fields_or_name, STRUCT_TYPE_FUNION);
 	if (DeeObject_AssertTypeExact(fields_or_name, &DeeString_Type))
@@ -381,261 +420,123 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_bswap16(size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("bswap16", params: """
-	uint16_t x:?Guint16_t
-""", docStringPrefix: "ctypes");]]]*/
-#define ctypes_bswap16_params "x:?Guint16_t"
-	struct {
-		uint16_t x;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "bswap16", &args.x, UNPu16, DeeObject_AsUInt16);
-/*[[[end]]]*/
-	return int_newu16(BSWAP16(args.x));
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("bswap16", "uint16_t x:?Guint16_t", isconst: true);]]]*/
+#define libctypes_bswap16_params "x:?Guint16_t"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap16_f_impl(uint16_t x);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_bswap16_f(DeeObject *__restrict arg0) {
+	uint16_t x;
+	if (DeeObject_AsUInt16(arg0, &x))
+		goto err;
+	return libctypes_bswap16_f_impl(x);
 err:
 	return NULL;
 }
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_bswap32(size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("bswap32", params: """
-	uint32_t x:?Guint32_t
-""", docStringPrefix: "ctypes");]]]*/
-#define ctypes_bswap32_params "x:?Guint32_t"
-	struct {
-		uint32_t x;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "bswap32", &args.x, UNPu32, DeeObject_AsUInt32);
+PRIVATE DEFINE_CMETHOD1(libctypes_bswap16, &libctypes_bswap16_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap16_f_impl(uint16_t x)
 /*[[[end]]]*/
-	return int_newu32(BSWAP32(args.x));
+{
+	return int_newu16(BSWAP16(x));
+}
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("bswap32", "uint32_t x:?Guint32_t", isconst: true);]]]*/
+#define libctypes_bswap32_params "x:?Guint32_t"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap32_f_impl(uint32_t x);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_bswap32_f(DeeObject *__restrict arg0) {
+	uint32_t x;
+	if (DeeObject_AsUInt32(arg0, &x))
+		goto err;
+	return libctypes_bswap32_f_impl(x);
 err:
 	return NULL;
 }
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_bswap64(size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("bswap64", params: """
-	uint64_t x:?Guint64_t
-""", docStringPrefix: "ctypes");]]]*/
-#define ctypes_bswap64_params "x:?Guint64_t"
-	struct {
-		uint64_t x;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "bswap64", &args.x, UNPu64, DeeObject_AsUInt64);
+PRIVATE DEFINE_CMETHOD1(libctypes_bswap32, &libctypes_bswap32_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap32_f_impl(uint32_t x)
 /*[[[end]]]*/
-	return int_newu64(BSWAP64(args.x));
+{
+	return int_newu32(BSWAP32(x));
+}
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("bswap64", "uint64_t x:?Guint64_t", isconst: true);]]]*/
+#define libctypes_bswap64_params "x:?Guint64_t"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap64_f_impl(uint64_t x);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_bswap64_f(DeeObject *__restrict arg0) {
+	uint64_t x;
+	if (DeeObject_AsUInt64(arg0, &x))
+		goto err;
+	return libctypes_bswap64_f_impl(x);
 err:
 	return NULL;
 }
+PRIVATE DEFINE_CMETHOD1(libctypes_bswap64, &libctypes_bswap64_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap64_f_impl(uint64_t x)
+/*[[[end]]]*/
+{
+	return int_newu64(BSWAP64(x));
+}
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_bswap128(size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_CMethod from rt.gen.unpack)("bswap128", "Dee_uint128_t x:?Guint128_t", isconst: true);]]]*/
+#define libctypes_bswap128_params "x:?Guint128_t"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap128_f_impl(Dee_uint128_t x);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_bswap128_f(DeeObject *__restrict arg0) {
+	Dee_uint128_t x;
+	if (DeeObject_AsUInt128(arg0, &x))
+		goto err;
+	return libctypes_bswap128_f_impl(x);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD1(libctypes_bswap128, &libctypes_bswap128_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap128_f_impl(Dee_uint128_t x)
+/*[[[end]]]*/
+{
 	Dee_uint128_t res;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("bswap128", params: """
-	Dee_uint128_t x:?Guint128_t
-""", docStringPrefix: "ctypes");]]]*/
-#define ctypes_bswap128_params "x:?Guint128_t"
-	struct {
-		Dee_uint128_t x;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "bswap128", &args.x, UNPu128, DeeObject_AsUInt128);
-/*[[[end]]]*/
 #ifdef BSWAP128
-	res = BSWAP128(args.x);
+	res = BSWAP128(x);
 #else /* BSWAP128 */
-	__hybrid_uint128_setword64(res, 0, BSWAP64(__hybrid_uint128_getword64(args.x, 1)));
-	__hybrid_uint128_setword64(res, 1, BSWAP64(__hybrid_uint128_getword64(args.x, 0)));
+	__hybrid_uint128_setword64(res, 0, BSWAP64(__hybrid_uint128_getword64(x, 1)));
+	__hybrid_uint128_setword64(res, 1, BSWAP64(__hybrid_uint128_getword64(x, 0)));
 #endif /* !BSWAP128 */
 	return int_newu128(res);
-err:
-	return NULL;
 }
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define ctypes_htole16  DeeCUInt16_Type
-#define ctypes_letoh16  DeeCUInt16_Type
-#define ctypes_htole32  DeeCUInt32_Type
-#define ctypes_letoh32  DeeCUInt32_Type
-#define ctypes_htole64  DeeCUInt64_Type
-#define ctypes_letoh64  DeeCUInt64_Type
-#define ctypes_htole128 DeeCUInt128_Type
-#define ctypes_letoh128 DeeCUInt128_Type
-#define ctypes_htobe16  ctypes_bswap16
-#define ctypes_betoh16  ctypes_bswap16
-#define ctypes_htobe32  ctypes_bswap32
-#define ctypes_betoh32  ctypes_bswap32
-#define ctypes_htobe64  ctypes_bswap64
-#define ctypes_betoh64  ctypes_bswap64
-#define ctypes_htobe128 ctypes_bswap128
-#define ctypes_betoh128 ctypes_bswap128
+#define libctypes_htole16  DeeCUInt16_Type
+#define libctypes_letoh16  DeeCUInt16_Type
+#define libctypes_htole32  DeeCUInt32_Type
+#define libctypes_letoh32  DeeCUInt32_Type
+#define libctypes_htole64  DeeCUInt64_Type
+#define libctypes_letoh64  DeeCUInt64_Type
+#define libctypes_htole128 DeeCUInt128_Type
+#define libctypes_letoh128 DeeCUInt128_Type
+#define libctypes_htobe16  libctypes_bswap16
+#define libctypes_betoh16  libctypes_bswap16
+#define libctypes_htobe32  libctypes_bswap32
+#define libctypes_betoh32  libctypes_bswap32
+#define libctypes_htobe64  libctypes_bswap64
+#define libctypes_betoh64  libctypes_bswap64
+#define libctypes_htobe128 libctypes_bswap128
+#define libctypes_betoh128 libctypes_bswap128
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#define ctypes_htole16  ctypes_bswap16
-#define ctypes_letoh16  ctypes_bswap16
-#define ctypes_htole32  ctypes_bswap32
-#define ctypes_letoh32  ctypes_bswap32
-#define ctypes_htole64  ctypes_bswap64
-#define ctypes_letoh64  ctypes_bswap64
-#define ctypes_htole128 ctypes_bswap128
-#define ctypes_letoh128 ctypes_bswap128
-#define ctypes_htobe16  DeeCUInt16_Type
-#define ctypes_betoh16  DeeCUInt16_Type
-#define ctypes_htobe32  DeeCUInt32_Type
-#define ctypes_betoh32  DeeCUInt32_Type
-#define ctypes_htobe64  DeeCUInt64_Type
-#define ctypes_betoh64  DeeCUInt64_Type
-#define ctypes_htobe128 DeeCUInt128_Type
-#define ctypes_betoh128 DeeCUInt128_Type
+#define libctypes_htole16  libctypes_bswap16
+#define libctypes_letoh16  libctypes_bswap16
+#define libctypes_htole32  libctypes_bswap32
+#define libctypes_letoh32  libctypes_bswap32
+#define libctypes_htole64  libctypes_bswap64
+#define libctypes_letoh64  libctypes_bswap64
+#define libctypes_htole128 libctypes_bswap128
+#define libctypes_letoh128 libctypes_bswap128
+#define libctypes_htobe16  DeeCUInt16_Type
+#define libctypes_betoh16  DeeCUInt16_Type
+#define libctypes_htobe32  DeeCUInt32_Type
+#define libctypes_betoh32  DeeCUInt32_Type
+#define libctypes_htobe64  DeeCUInt64_Type
+#define libctypes_betoh64  DeeCUInt64_Type
+#define libctypes_htobe128 DeeCUInt128_Type
+#define libctypes_betoh128 DeeCUInt128_Type
 #else /* __BYTE_ORDER__ == ... */
 #error "Unsupported `__BYTE_ORDER__'"
 #endif /* __BYTE_ORDER__ != ... */
-
-
-PRIVATE DEFINE_CMETHOD(ctypes_sizeof, &f_ctypes_sizeof, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(ctypes_alignof, &f_ctypes_alignof, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(ctypes_typeof, &f_ctypes_typeof, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(ctypes_intfor, &f_ctypes_intfor, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(ctypes_union, &f_ctypes_union, METHOD_FCONSTCALL);
-#define ctypes_struct DeeStructType_Type
-
-PRIVATE DEFINE_CMETHOD(ctypes_bswap16, &f_ctypes_bswap16, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_bswap32, &f_ctypes_bswap32, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_bswap64, &f_ctypes_bswap64, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_bswap128, &f_ctypes_bswap128, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-
-PRIVATE DEFINE_CMETHOD(ctypes_malloc, &capi_malloc, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_free, &capi_free, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_realloc, &capi_realloc, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_calloc, &capi_calloc, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strdup, &capi_strdup, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_trymalloc, &capi_trymalloc, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_tryrealloc, &capi_tryrealloc, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_trycalloc, &capi_trycalloc, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_trystrdup, &capi_trystrdup, METHOD_FNORMAL);
-
-PRIVATE DEFINE_CMETHOD(ctypes_memcpy, &capi_memcpy, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_mempcpy, &capi_mempcpy, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memccpy, &capi_memccpy, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memset, &capi_memset, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_mempset, &capi_mempset, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_bzero, &capi_bzero, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memmove, &capi_memmove, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_mempmove, &capi_mempmove, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memchr, &capi_memchr, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memrchr, &capi_memrchr, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memlen, &capi_memlen, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memrlen, &capi_memrlen, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memend, &capi_memend, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memrend, &capi_memrend, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_rawmemchr, &capi_rawmemchr, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_rawmemlen, &capi_rawmemlen, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_rawmemrchr, &capi_rawmemrchr, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_rawmemrlen, &capi_rawmemrlen, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memxchr, &capi_memxchr, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memxlen, &capi_memxlen, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memxend, &capi_memxend, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memrxchr, &capi_memrxchr, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memrxlen, &capi_memrxlen, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memrxend, &capi_memrxend, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_rawmemxchr, &capi_rawmemxchr, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_rawmemxlen, &capi_rawmemxlen, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_rawmemrxchr, &capi_rawmemrxchr, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_rawmemrxlen, &capi_rawmemrxlen, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_bcmp, &capi_bcmp, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memcmp, &capi_memcmp, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memcasecmp, &capi_memcasecmp, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memmem, &capi_memmem, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memcasemem, &capi_memcasemem, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memrmem, &capi_memrmem, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memcasermem, &capi_memcasermem, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memrev, &capi_memrev, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_memfrob, &capi_memfrob, METHOD_FNORMAL);
-
-PRIVATE DEFINE_CMETHOD(ctypes_strlen, &capi_strlen, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_strend, &capi_strend, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strnlen, &capi_strnlen, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_strnend, &capi_strnend, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strchr, &capi_strchr, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strrchr, &capi_strrchr, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strnchr, &capi_strnchr, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strnrchr, &capi_strnrchr, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_stroff, &capi_stroff, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_strroff, &capi_strroff, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_strnoff, &capi_strnoff, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_strnroff, &capi_strnroff, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_strchrnul, &capi_strchrnul, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strrchrnul, &capi_strrchrnul, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strnchrnul, &capi_strnchrnul, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strnrchrnul, &capi_strnrchrnul, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strcmp, &capi_strcmp, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_strncmp, &capi_strncmp, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_strcasecmp, &capi_strcasecmp, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_strncasecmp, &capi_strncasecmp, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_strcpy, &capi_strcpy, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strcat, &capi_strcat, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strncpy, &capi_strncpy, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strncat, &capi_strncat, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_stpcpy, &capi_stpcpy, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_stpncpy, &capi_stpncpy, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strstr, &capi_strstr, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_strcasestr, &capi_strcasestr, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_strnstr, &capi_strnstr, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_strncasestr, &capi_strncasestr, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_strverscmp, &capi_strverscmp, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_strspn, &capi_strspn, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_strcspn, &capi_strcspn, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(ctypes_strpbrk, &capi_strpbrk, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strrev, &capi_strrev, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strnrev, &capi_strnrev, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strlwr, &capi_strlwr, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strupr, &capi_strupr, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strnlwr, &capi_strnlwr, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strnupr, &capi_strnupr, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strset, &capi_strset, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strnset, &capi_strnset, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strfry, &capi_strfry, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strsep, &capi_strsep, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_stresep, &capi_stresep, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strtok, &capi_strtok, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_strtok_r, &capi_strtok_r, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_basename, &capi_basename, METHOD_FNORMAL);
-
-/* Atomic functions */
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_cmpxch, &capi_atomic_cmpxch, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_cmpxch_val, &capi_atomic_cmpxch_val, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchadd, &capi_atomic_fetchadd, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchsub, &capi_atomic_fetchsub, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchand, &capi_atomic_fetchand, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchor, &capi_atomic_fetchor, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchxor, &capi_atomic_fetchxor, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchnand, &capi_atomic_fetchnand, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_addfetch, &capi_atomic_addfetch, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_subfetch, &capi_atomic_subfetch, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_andfetch, &capi_atomic_andfetch, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_orfetch, &capi_atomic_orfetch, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_xorfetch, &capi_atomic_xorfetch, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_nandfetch, &capi_atomic_nandfetch, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_add, &capi_atomic_add, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_sub, &capi_atomic_sub, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_and, &capi_atomic_and, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_or, &capi_atomic_or, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_xor, &capi_atomic_xor, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_nand, &capi_atomic_nand, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_write, &capi_atomic_write, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchinc, &capi_atomic_fetchinc, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchdec, &capi_atomic_fetchdec, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_incfetch, &capi_atomic_incfetch, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_decfetch, &capi_atomic_decfetch, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_read, &capi_atomic_read, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_inc, &capi_atomic_inc, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_atomic_dec, &capi_atomic_dec, METHOD_FNORMAL);
-
-/* Futex functions */
-PRIVATE DEFINE_CMETHOD(ctypes_futex_wakeone, &capi_futex_wakeone, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_futex_wakeall, &capi_futex_wakeall, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_futex_wait, &capi_futex_wait, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(ctypes_futex_timedwait, &capi_futex_timedwait, METHOD_FNORMAL);
-
 
 PRIVATE struct dex_symbol symbols[] = {
 	/* Export the underlying type-system used by ctypes. */
@@ -651,8 +552,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "Array", DeeArrayType_AsObject(&DeeArray_Type), MODSYM_FREADONLY },
 	{ "Struct", DeeStructType_AsObject(&DeeStruct_Type), MODSYM_FREADONLY },
 	{ "Function", DeeCFunctionType_AsObject(&DeeCFunction_Type), MODSYM_FREADONLY },
-	{ "struct", (DeeObject *)&ctypes_struct, MODSYM_FREADONLY },
-	{ "union", (DeeObject *)&ctypes_union, MODSYM_FREADONLY,
+	{ "struct", (DeeObject *)&libctypes_struct, MODSYM_FREADONLY },
+	{ "union", (DeeObject *)&libctypes_union, MODSYM_FREADONLY,
 	  DOC("(fields:?X2?S?T2?Dstring?GStructuredType?M?Dstring?GStructuredType)->?GStructType\n"
 	      "(name:?Dstring,fields:?X2?S?T2?Dstring?GStructuredType?M?Dstring?GStructuredType)->?GStructType") },
 
@@ -735,106 +636,97 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "uintptr_t", DeeSType_AsObject(&CUINT_SIZED(__SIZEOF_POINTER__)), MODSYM_FREADONLY },
 
 	/* Export some helper functions */
-	{ "sizeof", (DeeObject *)&ctypes_sizeof, MODSYM_FREADONLY,
-	  DOC("(ob:?GStructuredType)->?Dint\n"
-	      "(ob:?GStructured)->?Dint\n"
-	      "(ob:?DType)->?Dint\n"
-	      "(ob:?X4?N?Dbool?Dint?Dfloat)->?Dint\n"
+	{ "sizeof", (DeeObject *)&libctypes_sizeof, MODSYM_FREADONLY,
+	  DOC("(" libctypes_sizeof_params ")->?Dint\n"
 	      "#tTypeError{The given @tp or @ob are not recognized c-types, nor aliases}"
 	      "Returns the size of a given structured type or object in bytes\n"
 	      "\n"
 
 	      "(ob:?DBytes)->?Dint\n"
 	      "Returns the size of the given ?DBytes ob, which is the same as ${##ob}") },
-	{ "alignof", (DeeObject *)&ctypes_alignof, MODSYM_FREADONLY,
-	  DOC("(ob:?GStructuredType)->?Dint\n"
-	      "(ob:?GStructured)->?Dint\n"
-	      "(ob:?DType)->?Dint\n"
-	      "(ob:?X4?N?Dbool?Dint?Dfloat)->?Dint\n"
+	{ "alignof", (DeeObject *)&libctypes_alignof, MODSYM_FREADONLY,
+	  DOC("(" libctypes_alignof_params ")->?Dint\n"
 	      "#tTypeError{The given @tp or @ob are not recognized c-types, nor aliases}"
 	      "Returns the alignment of a given structured type or object in bytes") },
-	{ "typeof", (DeeObject *)&ctypes_typeof, MODSYM_FREADONLY,
-	  DOC("(ob:?GStructuredType)->?GStructuredType\n"
-	      "(ob:?GStructured)->?GStructuredType\n"
-	      "(ob:?DType)->?GStructuredType\n"
-	      "(ob:?X4?N?Dbool?Dint?Dfloat)->?GStructuredType\n"
+	{ "typeof", (DeeObject *)&libctypes_typeof, MODSYM_FREADONLY,
+	  DOC("(ob:?X7?GStructuredType?GStructured?DType?N?Dbool?Dint?Dfloat)->?GStructuredType\n"
 	      "#tTypeError{The given @tp or @ob are not recognized c-types, nor aliases}"
 	      "Returns the type of a given structured type or object") },
-	{ "intfor", (DeeObject *)&ctypes_intfor, MODSYM_FREADONLY,
-	  DOC("(size:?Dint,signed=!t)->?GStructuredType\n"
+	{ "intfor", (DeeObject *)&libctypes_intfor, MODSYM_FREADONLY,
+	  DOC("(" libctypes_intfor_params ")->?GStructuredType\n"
 	      "#tValueError{No integer matching the requirements of @size is supported}") },
 
-	{ "bswap16", (DeeObject *)&ctypes_bswap16, MODSYM_FREADONLY,
-	  DOC("(" ctypes_bswap16_params ")->?Guint16_t\n"
+	{ "bswap16", (DeeObject *)&libctypes_bswap16, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap16_params ")->?Guint16_t\n"
 	      "Return @x with reversed endian") },
-	{ "bswap32", (DeeObject *)&ctypes_bswap32, MODSYM_FREADONLY,
-	  DOC("(" ctypes_bswap32_params ")->?Guint32_t\n"
+	{ "bswap32", (DeeObject *)&libctypes_bswap32, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap32_params ")->?Guint32_t\n"
 	      "Return @x with reversed endian") },
-	{ "bswap64", (DeeObject *)&ctypes_bswap64, MODSYM_FREADONLY,
-	  DOC("(" ctypes_bswap64_params ")->?Guint64_t\n"
+	{ "bswap64", (DeeObject *)&libctypes_bswap64, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap64_params ")->?Guint64_t\n"
 	      "Return @x with reversed endian") },
-	{ "bswap128", (DeeObject *)&ctypes_bswap128, MODSYM_FREADONLY,
-	  DOC("(" ctypes_bswap128_params ")->?Guint128_t\n"
+	{ "bswap128", (DeeObject *)&libctypes_bswap128, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap128_params ")->?Guint128_t\n"
 	      "Return @x with reversed endian") },
 
-	{ "htole16", (DeeObject *)&ctypes_htole16, MODSYM_FREADONLY,
-	  DOC("(x:?Guint16_t)->?Guint16_t\n"
+	{ "htole16", (DeeObject *)&libctypes_htole16, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap16_params ")->?Guint16_t\n"
 	      "Convert a 16-bit integer from host-endian to little-endian") },
-	{ "letoh16", (DeeObject *)&ctypes_letoh16, MODSYM_FREADONLY,
-	  DOC("(x:?Guint16_t)->?Guint16_t\n"
+	{ "letoh16", (DeeObject *)&libctypes_letoh16, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap16_params ")->?Guint16_t\n"
 	      "Convert a 16-bit integer from little-endian to host-endian") },
-	{ "htole32", (DeeObject *)&ctypes_htole32, MODSYM_FREADONLY,
-	  DOC("(x:?Guint32_t)->?Guint32_t\n"
+	{ "htole32", (DeeObject *)&libctypes_htole32, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap32_params ")->?Guint32_t\n"
 	      "Convert a 32-bit integer from host-endian to little-endian") },
-	{ "letoh32", (DeeObject *)&ctypes_letoh32, MODSYM_FREADONLY,
-	  DOC("(x:?Guint32_t)->?Guint32_t\n"
+	{ "letoh32", (DeeObject *)&libctypes_letoh32, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap32_params ")->?Guint32_t\n"
 	      "Convert a 32-bit integer from little-endian to host-endian") },
-	{ "htole64", (DeeObject *)&ctypes_htole64, MODSYM_FREADONLY,
-	  DOC("(x:?Guint64_t)->?Guint64_t\n"
+	{ "htole64", (DeeObject *)&libctypes_htole64, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap64_params ")->?Guint64_t\n"
 	      "Convert a 64-bit integer from host-endian to little-endian") },
-	{ "letoh64", (DeeObject *)&ctypes_letoh64, MODSYM_FREADONLY,
-	  DOC("(x:?Guint64_t)->?Guint64_t\n"
+	{ "letoh64", (DeeObject *)&libctypes_letoh64, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap64_params ")->?Guint64_t\n"
 	      "Convert a 64-bit integer from little-endian to host-endian") },
-	{ "htole128", (DeeObject *)&ctypes_htole128, MODSYM_FREADONLY,
-	  DOC("(x:?Guint128_t)->?Guint128_t\n"
+	{ "htole128", (DeeObject *)&libctypes_htole128, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap128_params ")->?Guint128_t\n"
 	      "Convert a 128-bit integer from host-endian to little-endian") },
-	{ "letoh128", (DeeObject *)&ctypes_letoh128, MODSYM_FREADONLY,
-	  DOC("(x:?Guint128_t)->?Guint128_t\n"
+	{ "letoh128", (DeeObject *)&libctypes_letoh128, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap128_params ")->?Guint128_t\n"
 	      "Convert a 128-bit integer from little-endian to host-endian") },
 
-	{ "htobe16", (DeeObject *)&ctypes_htobe16, MODSYM_FREADONLY,
-	  DOC("(x:?Guint16_t)->?Guint16_t\n"
+	{ "htobe16", (DeeObject *)&libctypes_htobe16, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap16_params ")->?Guint16_t\n"
 	      "Convert a 16-bit integer from host-endian to big-endian") },
-	{ "betoh16", (DeeObject *)&ctypes_betoh16, MODSYM_FREADONLY,
-	  DOC("(x:?Guint16_t)->?Guint16_t\n"
+	{ "betoh16", (DeeObject *)&libctypes_betoh16, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap16_params ")->?Guint16_t\n"
 	      "Convert a 16-bit integer from big-endian to host-endian") },
-	{ "htobe32", (DeeObject *)&ctypes_htobe32, MODSYM_FREADONLY,
-	  DOC("(x:?Guint32_t)->?Guint32_t\n"
+	{ "htobe32", (DeeObject *)&libctypes_htobe32, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap32_params ")->?Guint32_t\n"
 	      "Convert a 32-bit integer from host-endian to big-endian") },
-	{ "betoh32", (DeeObject *)&ctypes_betoh32, MODSYM_FREADONLY,
-	  DOC("(x:?Guint32_t)->?Guint32_t\n"
+	{ "betoh32", (DeeObject *)&libctypes_betoh32, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap32_params ")->?Guint32_t\n"
 	      "Convert a 32-bit integer from big-endian to host-endian") },
-	{ "htobe64", (DeeObject *)&ctypes_htobe64, MODSYM_FREADONLY,
-	  DOC("(x:?Guint64_t)->?Guint64_t\n"
+	{ "htobe64", (DeeObject *)&libctypes_htobe64, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap64_params ")->?Guint64_t\n"
 	      "Convert a 64-bit integer from host-endian to big-endian") },
-	{ "betoh64", (DeeObject *)&ctypes_betoh64, MODSYM_FREADONLY,
-	  DOC("(x:?Guint64_t)->?Guint64_t\n"
+	{ "betoh64", (DeeObject *)&libctypes_betoh64, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap64_params ")->?Guint64_t\n"
 	      "Convert a 64-bit integer from big-endian to host-endian") },
-	{ "htobe128", (DeeObject *)&ctypes_htobe128, MODSYM_FREADONLY,
-	  DOC("(x:?Guint128_t)->?Guint128_t\n"
+	{ "htobe128", (DeeObject *)&libctypes_htobe128, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap128_params ")->?Guint128_t\n"
 	      "Convert a 128-bit integer from host-endian to big-endian") },
-	{ "betoh128", (DeeObject *)&ctypes_betoh128, MODSYM_FREADONLY,
-	  DOC("(x:?Guint128_t)->?Guint128_t\n"
+	{ "betoh128", (DeeObject *)&libctypes_betoh128, MODSYM_FREADONLY,
+	  DOC("(" libctypes_bswap128_params ")->?Guint128_t\n"
 	      "Convert a 128-bit integer from big-endian to host-endian") },
 
 	/* <string.h> & <stdlib.h> - style ctypes functions */
-	{ "malloc", (DeeObject *)&ctypes_malloc, MODSYM_FREADONLY,
+	{ "malloc", (DeeObject *)&c_malloc_malloc, MODSYM_FREADONLY,
 	  DOC("(size:?Dint)->?Aptr?Gvoid\n"
 	      "#tNoMemory{Insufficient memory to allocate @size bytes}"
 	      "Allocate a raw buffer of @size bytes from a heap and return a "
 	      /**/ "pointer to its base\n"
 	      "Passing a value of $0 for @size will allocate a minimal-sized heap-block") },
-	{ "calloc", (DeeObject *)&ctypes_calloc, MODSYM_FREADONLY,
+	{ "calloc", (DeeObject *)&c_malloc_calloc, MODSYM_FREADONLY,
 	  DOC("(size:?Dint)->?Aptr?Gvoid\n"
 	      "(count:?Dint,size:?Dint)->?Aptr?Gvoid\n"
 	      "#tNoMemory{Insufficient memory to allocate ${count * size} bytes}"
@@ -844,7 +736,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "If the product of @count and @size equals ${0}, a minimal-sized heap-block is allocated, "
 	      /**/ "however the caller must still assume that the memory range they are allowed to access "
 	      /**/ "is non-existent") },
-	{ "realloc", (DeeObject *)&ctypes_realloc, MODSYM_FREADONLY,
+	{ "realloc", (DeeObject *)&c_malloc_realloc, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
 	      "#tNoMemory{Insufficient memory to allocate @size bytes}"
 	      "Given a heap-pointer previously allocated using either ?Gmalloc, ?Gcalloc or "
@@ -862,25 +754,25 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "truncated to a minimal size and a heap block is returned that is semantically "
 	      /**/ "equivalent to one returned by ${malloc(0)}\n"
 	      "In the event of failure, the pre-existing heap-block passed for @ptr will remain unchanged") },
-	{ "free", (DeeObject *)&ctypes_free, MODSYM_FREADONLY,
+	{ "free", (DeeObject *)&c_malloc_free, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?Gvoid)\n"
 	      "Release a previously allocated heap-block returned by one of ?Gmalloc, ?Gcalloc or ?Grealloc\n"
 	      "If a NULL-pointer is passed for @ptr, this function has no effect and returns immediately") },
-	{ "trymalloc", (DeeObject *)&ctypes_trymalloc, MODSYM_FREADONLY,
+	{ "trymalloc", (DeeObject *)&c_malloc_trymalloc, MODSYM_FREADONLY,
 	  DOC("(size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Gmalloc, but return a NULL-pointer if allocation isn't "
 	      /**/ "possible due to lack of memory, rather than throwing a :NoMemory error") },
-	{ "trycalloc", (DeeObject *)&ctypes_trycalloc, MODSYM_FREADONLY,
+	{ "trycalloc", (DeeObject *)&c_malloc_trycalloc, MODSYM_FREADONLY,
 	  DOC("(size:?Dint)->?Aptr?Gvoid\n"
 	      "(count:?Dint,size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Gcalloc, but return a NULL-pointer if allocation isn't "
 	      /**/ "possible due to lack of memory, rather than throwing a :NoMemory error") },
-	{ "tryrealloc", (DeeObject *)&ctypes_tryrealloc, MODSYM_FREADONLY,
+	{ "tryrealloc", (DeeObject *)&c_malloc_tryrealloc, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Grealloc, but return a NULL-pointer if allocation isn't "
 	      /**/ "possible due to lack of memory, rather than throwing a :NoMemory error\n"
 	      "In this event, the pre-existing heap-block passed for @ptr is not freed") },
-	{ "strdup", (DeeObject *)&ctypes_strdup, MODSYM_FREADONLY,
+	{ "strdup", (DeeObject *)&c_malloc_strdup, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar,maxlen:?Dint=!A!Pmax!Gsize_t)->?Aptr?Gchar\n"
 	      "#tNoMemory{Insufficient memory}"
 	      "Duplicate the given @str into a heap-allocated memory block\n"
@@ -894,7 +786,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "	return res;\n"
 	      /**/ "}"
 	      "}") },
-	{ "trystrdup", (DeeObject *)&ctypes_trystrdup, MODSYM_FREADONLY,
+	{ "trystrdup", (DeeObject *)&c_malloc_trystrdup, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar,maxlen:?Dint=!A!Pmax!Gsize_t)->?Aptr?Gchar\n"
 	      "Try to duplicate the given @str into a heap-allocated memory block\n"
 	      "${"
@@ -911,219 +803,219 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "}"
 	      "}") },
 
-	{ "memcpy", (DeeObject *)&ctypes_memcpy, MODSYM_FREADONLY,
+	{ "memcpy", (DeeObject *)&c_string_memcpy, MODSYM_FREADONLY,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint,count=!1)->?Aptr?Gvoid\n"
 	      "#r{Always re-returns @dst as a ?Aptr?Gvoid}"
 	      "Copies @size * @count bytes of memory from @src to @dst\n"
 	      "Note that the source and destination ranges may not overlap") },
-	{ "mempcpy", (DeeObject *)&ctypes_mempcpy, MODSYM_FREADONLY,
+	{ "mempcpy", (DeeObject *)&c_string_mempcpy, MODSYM_FREADONLY,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint,count=!1)->?Aptr?Gvoid\n"
 	      "#r{Always re-returns ${dst + size * count} as a ?Aptr?Gvoid}"
 	      "Same as ?Gmemcpy, but returns ${dst + size * count}") },
-	{ "memccpy", (DeeObject *)&ctypes_memccpy, MODSYM_FREADONLY,
+	{ "memccpy", (DeeObject *)&c_string_memccpy, MODSYM_FREADONLY,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,needle:?Dint,size:?Dint)->?Aptr?Gvoid\n"
 	      "#r{The last modified by in @dst}"
 	      "Same as ?Gmemcpy, but stop after a byte equal to @needle is encountered in @src") },
-	{ "memset", (DeeObject *)&ctypes_memset, MODSYM_FREADONLY,
+	{ "memset", (DeeObject *)&c_string_memset, MODSYM_FREADONLY,
 	  DOC("(dst:?Aptr?Gvoid,byte:?Dint,size:?Dint)->?Aptr?Gvoid\n"
 	      "#r{Always re-returns @dst as a ?Aptr?Gvoid}"
 	      "Set every byte in the range @dst+@size to equal @byte") },
-	{ "mempset", (DeeObject *)&ctypes_mempset, MODSYM_FREADONLY,
+	{ "mempset", (DeeObject *)&c_string_mempset, MODSYM_FREADONLY,
 	  DOC("(dst:?Aptr?Gvoid,byte:?Dint,size:?Dint)->?Aptr?Gvoid\n"
 	      "#r{Always re-returns ${dst + size} as a ?Aptr?Gvoid}"
 	      "Same as ?Gmemset, but returns ${dst + size}") },
-	{ "bzero", (DeeObject *)&ctypes_bzero, MODSYM_FREADONLY,
+	{ "bzero", (DeeObject *)&c_string_bzero, MODSYM_FREADONLY,
 	  DOC("(dst:?Aptr?Gvoid,size:?Dint)\n"
 	      "(dst:?Aptr?Gvoid,count:?Dint,size:?Dint)\n"
 	      "Same as ?Gmemset, but always fills memory with ${0}s") },
-	{ "memmove", (DeeObject *)&ctypes_memmove, MODSYM_FREADONLY,
+	{ "memmove", (DeeObject *)&c_string_memmove, MODSYM_FREADONLY,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
 	      "#r{Always re-returns @dst as a ?Aptr?Gvoid}"
 	      "Same as ?Gmemcpy, but the source and destination ranges are allowed to overlap") },
-	{ "mempmove", (DeeObject *)&ctypes_mempmove, MODSYM_FREADONLY,
+	{ "mempmove", (DeeObject *)&c_string_mempmove, MODSYM_FREADONLY,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
 	      "#r{Always re-returns ${dst + size} as a ?Aptr?Gvoid}"
 	      "Same as ?Gmemcpy, but returns ${dst + size}") },
-	{ "memchr", (DeeObject *)&ctypes_memchr, MODSYM_FREADONLY,
+	{ "memchr", (DeeObject *)&c_string_memchr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
 	      "Return a pointer to the first byte in the specified @haystack+@haystack_size "
 	      /**/ "that equals @needle, or return a NULL-pointer if not found") },
-	{ "memrchr", (DeeObject *)&ctypes_memrchr, MODSYM_FREADONLY,
+	{ "memrchr", (DeeObject *)&c_string_memrchr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as :memchr, but if @needle appears multiple times, return a pointer to the last instance") },
-	{ "memlen", (DeeObject *)&ctypes_memlen, MODSYM_FREADONLY,
+	{ "memlen", (DeeObject *)&c_string_memlen, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Dint\n"
 	      "Return the offset from @haystack of the first byte equal to @needle, or @haystack_size if now found") },
-	{ "memrlen", (DeeObject *)&ctypes_memrlen, MODSYM_FREADONLY,
+	{ "memrlen", (DeeObject *)&c_string_memrlen, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Dint\n"
 	      "Same as :memlen, but if @needle appears multiple times, return the offset of the last instance") },
-	{ "memend", (DeeObject *)&ctypes_memend, MODSYM_FREADONLY,
+	{ "memend", (DeeObject *)&c_string_memend, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
 	      "Return a pointer to the first byte in @haystack that is equal to @needle, or @haystack+@haystack_size if now found") },
-	{ "memrend", (DeeObject *)&ctypes_memrend, MODSYM_FREADONLY,
+	{ "memrend", (DeeObject *)&c_string_memrend, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Gmemend, but if @needle appears multiple times, return a pointer to the last instance\n"
 	      "If @needle doesn't appear at all, return a pointer to @haystack") },
-	{ "rawmemchr", (DeeObject *)&ctypes_rawmemchr, MODSYM_FREADONLY,
+	{ "rawmemchr", (DeeObject *)&c_string_rawmemchr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Aptr?Gvoid\n"
 	      "Search for the byte equal to @needle, starting at @haystack and only "
 	      /**/ "stopping once one is found, or unmapped memory is reached and "
 	      /**/ "the host provides support for a MMU") },
-	{ "rawmemlen", (DeeObject *)&ctypes_rawmemlen, MODSYM_FREADONLY,
+	{ "rawmemlen", (DeeObject *)&c_string_rawmemlen, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
 	      "Same as ?Grawmemchr, but return the offset from @haystack") },
-	{ "rawmemrchr", (DeeObject *)&ctypes_rawmemrchr, MODSYM_FREADONLY,
+	{ "rawmemrchr", (DeeObject *)&c_string_rawmemrchr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Aptr?Gvoid\n"
 	      "Same as :rawmemchr, but search in reverse, starting with ${haystack[-1]}\n"
 	      "You can think of this function as a variant of ?Gmemrend that operates "
 	      /**/ "on a buffer that spans the entirety of the available address space") },
-	{ "rawmemrlen", (DeeObject *)&ctypes_rawmemrlen, MODSYM_FREADONLY,
+	{ "rawmemrlen", (DeeObject *)&c_string_rawmemrlen, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
 	      "Same as ?Grawmemrchr, but return the positive (unsigned) offset of the "
 	      /**/ "matching byte, such that ${haystack + return} points to the byte in question") },
-	{ "memxchr", (DeeObject *)&ctypes_memxchr, MODSYM_FREADONLY,
+	{ "memxchr", (DeeObject *)&c_string_memxchr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Gmemchr, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "memxlen", (DeeObject *)&ctypes_memxlen, MODSYM_FREADONLY,
+	{ "memxlen", (DeeObject *)&c_string_memxlen, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Dint\n"
 	      "Same as ?Gmemlen, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "memxend", (DeeObject *)&ctypes_memxend, MODSYM_FREADONLY,
+	{ "memxend", (DeeObject *)&c_string_memxend, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Gmemend, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "memrxchr", (DeeObject *)&ctypes_memrxchr, MODSYM_FREADONLY,
+	{ "memrxchr", (DeeObject *)&c_string_memrxchr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Gmemrchr, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "memrxlen", (DeeObject *)&ctypes_memrxlen, MODSYM_FREADONLY,
+	{ "memrxlen", (DeeObject *)&c_string_memrxlen, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Dint\n"
 	      "Same as ?Gmemrlen, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "memrxend", (DeeObject *)&ctypes_memrxend, MODSYM_FREADONLY,
+	{ "memrxend", (DeeObject *)&c_string_memrxend, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Gmemrend, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "rawmemxchr", (DeeObject *)&ctypes_rawmemxchr, MODSYM_FREADONLY,
+	{ "rawmemxchr", (DeeObject *)&c_string_rawmemxchr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Grawmemchr, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "rawmemxlen", (DeeObject *)&ctypes_rawmemxlen, MODSYM_FREADONLY,
+	{ "rawmemxlen", (DeeObject *)&c_string_rawmemxlen, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
 	      "Same as ?Grawmemlen, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "rawmemrxchr", (DeeObject *)&ctypes_rawmemrxchr, MODSYM_FREADONLY,
+	{ "rawmemrxchr", (DeeObject *)&c_string_rawmemrxchr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Grawmemrchr, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "rawmemrxlen", (DeeObject *)&ctypes_rawmemrxlen, MODSYM_FREADONLY,
+	{ "rawmemrxlen", (DeeObject *)&c_string_rawmemrxlen, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
 	      "Same as ?Grawmemrlen, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "bcmp", (DeeObject *)&ctypes_bcmp, MODSYM_FREADONLY,
+	{ "bcmp", (DeeObject *)&c_string_bcmp, MODSYM_FREADONLY,
 	  DOC("(a:?Aptr?Gvoid,b:?Aptr?Gvoid,size:?Dint)->?Dint\n"
 	      "Same as ?Gmemcmp, but only returns $0 when buffer are equal, and non-$0 otherwise") },
-	{ "memcmp", (DeeObject *)&ctypes_memcmp, MODSYM_FREADONLY,
+	{ "memcmp", (DeeObject *)&c_string_memcmp, MODSYM_FREADONLY,
 	  DOC("(lhs:?Aptr?Gvoid,rhs:?Aptr?Gvoid,size:?Dint)->?Dint\n"
 	      "Compare bytes from 2 buffers in @lhs and @rhs of equal @size, and "
 	      /**/ "search for the first non-matching byte, returning ${< 0} if that byte "
 	      /**/ "in @lhs is smaller than its counterpart in @rhs, ${> 0} if the opposite "
 	      /**/ "is true, and ${== 0} no such byte exists") },
-	{ "memcasecmp", (DeeObject *)&ctypes_memcasecmp, MODSYM_FREADONLY,
+	{ "memcasecmp", (DeeObject *)&c_string_memcasecmp, MODSYM_FREADONLY,
 	  DOC("(lhs:?Aptr?Gvoid,rhs:?Aptr?Gvoid,size:?Dint)->?Dint\n"
 	      "Same as ?Gmemcmp, but bytes are casted as ASCII characters "
 	      /**/ "into a common casing prior to comparison") },
-	{ "memmem", (DeeObject *)&ctypes_memmem, MODSYM_FREADONLY,
+	{ "memmem", (DeeObject *)&c_string_memmem, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
 	      "Search for the first memory block in @haystack+@haystack_size that is equal to @needle+@needle_size "
 	      /**/ "such that ${memcmp(candidate, needle, needle_size) == 0} and return a pointer to its starting "
 	      /**/ "location in @haystack\n"
 	      "If no such memory block exists, or @needle_size is $0, return a NULL-pointer instead") },
-	{ "memcasemem", (DeeObject *)&ctypes_memcasemem, MODSYM_FREADONLY,
+	{ "memcasemem", (DeeObject *)&c_string_memcasemem, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Gmemmem, but perform case-insensitive comparisons, using ?Gmemcasecmp instead of ?Gmemcmp") },
-	{ "memrmem", (DeeObject *)&ctypes_memrmem, MODSYM_FREADONLY,
+	{ "memrmem", (DeeObject *)&c_string_memrmem, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Gmemmem, but in case more than 1 match exists, return a pointer to the last, rather than the first\n"
 	      "When @needle_size is $0, always return a NULL-pointer") },
-	{ "memcasermem", (DeeObject *)&ctypes_memcasermem, MODSYM_FREADONLY,
+	{ "memcasermem", (DeeObject *)&c_string_memcasermem, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Gmemcasemem, but in case more than 1 match exists, return a pointer to the last, rather than the first\n"
 	      "When @needle_size is $0, always return a NULL-pointer") },
-	{ "memrev", (DeeObject *)&ctypes_memrev, MODSYM_FREADONLY,
+	{ "memrev", (DeeObject *)&c_string_memrev, MODSYM_FREADONLY,
 	  DOC("(buf:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
 	      "Reverse the order of bytes in the given @buf+@size, such that upon return its first "
 	      /**/ "byte contains the old value of the last byte, and the last byte the value of the first, "
 	      /**/ "and so on.") },
-	{ "memfrob", (DeeObject *)&ctypes_memfrob, MODSYM_FREADONLY,
+	{ "memfrob", (DeeObject *)&c_string_memfrob, MODSYM_FREADONLY,
 	  DOC("(buf:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
 	      "xor all bytes within @buf with $42, implementing _very_ simplistic encryption") },
 
-	{ "strlen", (DeeObject *)&ctypes_strlen, MODSYM_FREADONLY,
+	{ "strlen", (DeeObject *)&c_string_strlen, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar)->?Dint\n"
 	      "Returns the length of a given @str in characters") },
-	{ "strend", (DeeObject *)&ctypes_strend, MODSYM_FREADONLY,
+	{ "strend", (DeeObject *)&c_string_strend, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Return a pointer to the end of a given @str") },
-	{ "strnlen", (DeeObject *)&ctypes_strnlen, MODSYM_FREADONLY,
+	{ "strnlen", (DeeObject *)&c_string_strnlen, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
 	      "Same as ?Gstrlen, but limit the max number of scanned characters to @maxlen") },
-	{ "strnend", (DeeObject *)&ctypes_strnend, MODSYM_FREADONLY,
+	{ "strnend", (DeeObject *)&c_string_strnend, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar,maxlen:?Dint)->?Aptr?Gchar\n"
 	      "Same as ?Gstrend, but limit the max number of scanned characters to @maxlen") },
-	{ "strchr", (DeeObject *)&ctypes_strchr, MODSYM_FREADONLY,
+	{ "strchr", (DeeObject *)&c_string_strchr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
 	      "Search for the first character equal to @needle within @haystack\n"
 	      "If no such character exists, return a NULL-pointer instead") },
-	{ "strrchr", (DeeObject *)&ctypes_strrchr, MODSYM_FREADONLY,
+	{ "strrchr", (DeeObject *)&c_string_strrchr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
 	      "Search for the last character equal to @needle within @haystack\n"
 	      "If no such character exists, return a NULL-pointer instead") },
-	{ "strnchr", (DeeObject *)&ctypes_strnchr, MODSYM_FREADONLY,
+	{ "strnchr", (DeeObject *)&c_string_strnchr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
 	      "Same as ?Gstrchr, but limit the max number of scanned characters to @maxlen") },
-	{ "strnrchr", (DeeObject *)&ctypes_strnrchr, MODSYM_FREADONLY,
+	{ "strnrchr", (DeeObject *)&c_string_strnrchr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
 	      "Same as ?Gstrrchr, but limit the max number of scanned characters to @maxlen") },
-	{ "stroff", (DeeObject *)&ctypes_stroff, MODSYM_FREADONLY,
+	{ "stroff", (DeeObject *)&c_string_stroff, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Dint\n"
 	      "Same ?Gstrchr, but return the offset of the found character from @haystack, "
 	      /**/ "or ${strlen(haystack)} if @needle wasn't found") },
-	{ "strroff", (DeeObject *)&ctypes_strroff, MODSYM_FREADONLY,
+	{ "strroff", (DeeObject *)&c_string_strroff, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Dint\n"
 	      "Same ?Gstrrchr, but return the offset of the found character from @haystack, "
 	      /**/ "or ${size_t.max} if @needle wasn't found") },
-	{ "strnoff", (DeeObject *)&ctypes_strnoff, MODSYM_FREADONLY,
+	{ "strnoff", (DeeObject *)&c_string_strnoff, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Dint\n"
 	      "Same ?Gstrnchr, but return the offset of the found character from @haystack, "
 	      /**/ "or ${strnlen(haystack, maxlen)} if @needle wasn't found") },
-	{ "strnroff", (DeeObject *)&ctypes_strnroff, MODSYM_FREADONLY,
+	{ "strnroff", (DeeObject *)&c_string_strnroff, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Dint\n"
 	      "Same ?Gstrnrchr, but return the offset of the found character from @haystack, "
 	      /**/ "or ${size_t.max} if @needle wasn't found") },
-	{ "strchrnul", (DeeObject *)&ctypes_strchrnul, MODSYM_FREADONLY,
+	{ "strchrnul", (DeeObject *)&c_string_strchrnul, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
 	      "Same as ?Gstrchr, but return ${strend(haystack)} if @needle wasn't found") },
-	{ "strrchrnul", (DeeObject *)&ctypes_strrchrnul, MODSYM_FREADONLY,
+	{ "strrchrnul", (DeeObject *)&c_string_strrchrnul, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
 	      "Same as ?Gstrrchr, but return ${haystack - 1} if @needle wasn't found") },
-	{ "strnchrnul", (DeeObject *)&ctypes_strnchrnul, MODSYM_FREADONLY,
+	{ "strnchrnul", (DeeObject *)&c_string_strnchrnul, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
 	      "Same as ?Gstrnchr, but return ${strnend(haystack, maxlen)} if @needle wasn't found") },
-	{ "strnrchrnul", (DeeObject *)&ctypes_strnrchrnul, MODSYM_FREADONLY,
+	{ "strnrchrnul", (DeeObject *)&c_string_strnrchrnul, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
 	      "Same as ?Gstrnrchr, but return ${haystack - 1} if @needle wasn't found") },
-	{ "strcmp", (DeeObject *)&ctypes_strcmp, MODSYM_FREADONLY,
+	{ "strcmp", (DeeObject *)&c_string_strcmp, MODSYM_FREADONLY,
 	  DOC("(lhs:?Aptr?Gchar,rhs:?Aptr?Gchar)->?Dint\n"
 	      "Compare the given strings @lhs and @rhs, returning ${<0}, "
 	      "${==0} or ${>0} indicative of their relation to one-another") },
-	{ "strncmp", (DeeObject *)&ctypes_strncmp, MODSYM_FREADONLY,
+	{ "strncmp", (DeeObject *)&c_string_strncmp, MODSYM_FREADONLY,
 	  DOC("(lhs:?Aptr?Gchar,rhs:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
 	      "Same as ?Gstrcmp, but limit the max number of compared characters to @maxlen") },
-	{ "strcasecmp", (DeeObject *)&ctypes_strcasecmp, MODSYM_FREADONLY,
+	{ "strcasecmp", (DeeObject *)&c_string_strcasecmp, MODSYM_FREADONLY,
 	  DOC("(lhs:?Aptr?Gchar,rhs:?Aptr?Gchar)->?Dint\n"
 	      "Same as ?Gstrcmp, but ignore casing") },
-	{ "strncasecmp", (DeeObject *)&ctypes_strncasecmp, MODSYM_FREADONLY,
+	{ "strncasecmp", (DeeObject *)&c_string_strncasecmp, MODSYM_FREADONLY,
 	  DOC("(lhs:?Aptr?Gchar,rhs:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
 	      "Same as ?Gstrncmp, but ignore casing") },
-	{ "strcpy", (DeeObject *)&ctypes_strcpy, MODSYM_FREADONLY,
+	{ "strcpy", (DeeObject *)&c_string_strcpy, MODSYM_FREADONLY,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Same as ${(char.ptr)memcpy(dst, src, (strlen(src) + 1) * sizeof(char))}") },
-	{ "strcat", (DeeObject *)&ctypes_strcat, MODSYM_FREADONLY,
+	{ "strcat", (DeeObject *)&c_string_strcat, MODSYM_FREADONLY,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Same as ${({ local r = dst; strcpy(strend(dst), src); (char.ptr)r; })}") },
-	{ "strncpy", (DeeObject *)&ctypes_strncpy, MODSYM_FREADONLY,
+	{ "strncpy", (DeeObject *)&c_string_strncpy, MODSYM_FREADONLY,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar,count:?Dint)->?Aptr?Gchar\n"
 	      "Implemented as:\n"
 	      "${"
@@ -1134,7 +1026,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "	return dst;\n"
 	      /**/ "}"
 	      "}") },
-	{ "strncat", (DeeObject *)&ctypes_strncat, MODSYM_FREADONLY,
+	{ "strncat", (DeeObject *)&c_string_strncat, MODSYM_FREADONLY,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar,count:?Dint)->?Aptr?Gchar\n"
 	      "Implemented as:\n"
 	      "${"
@@ -1146,10 +1038,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "	return dst;\n"
 	      /**/ "}"
 	      "}") },
-	{ "stpcpy", (DeeObject *)&ctypes_stpcpy, MODSYM_FREADONLY,
+	{ "stpcpy", (DeeObject *)&c_string_stpcpy, MODSYM_FREADONLY,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Same as ${(char.ptr)mempcpy(dst, src, (strlen(src) + 1) * sizeof(char)) - 1}") },
-	{ "stpncpy", (DeeObject *)&ctypes_stpncpy, MODSYM_FREADONLY,
+	{ "stpncpy", (DeeObject *)&c_string_stpncpy, MODSYM_FREADONLY,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar,dstsize:?Dint)->?Aptr?Gchar\n"
 	      "Implemented as:\n"
 	      "${"
@@ -1160,186 +1052,186 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "	return dst + srclen;\n"
 	      /**/ "}"
 	      "}") },
-	{ "strstr", (DeeObject *)&ctypes_strstr, MODSYM_FREADONLY,
+	{ "strstr", (DeeObject *)&c_string_strstr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Find the first instance of @needle contained within @haystack, or return a NULL-pointer if none exists") },
-	{ "strcasestr", (DeeObject *)&ctypes_strcasestr, MODSYM_FREADONLY,
+	{ "strcasestr", (DeeObject *)&c_string_strcasestr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Same as ?Gstrstr, but ignore casing") },
-	{ "strnstr", (DeeObject *)&ctypes_strnstr, MODSYM_FREADONLY,
+	{ "strnstr", (DeeObject *)&c_string_strnstr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Aptr?Gchar,haystack_maxlen:?Dint)->?Aptr?Gchar\n"
 	      "Find the first instance of @needle contained within @haystack, or return a NULL-pointer if none exists") },
-	{ "strncasestr", (DeeObject *)&ctypes_strncasestr, MODSYM_FREADONLY,
+	{ "strncasestr", (DeeObject *)&c_string_strncasestr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Aptr?Gchar,haystack_maxlen:?Dint)->?Aptr?Gchar\n"
 	      "Same as ?Gstrnstr, but ignore casing") },
-	{ "strverscmp", (DeeObject *)&ctypes_strverscmp, MODSYM_FREADONLY,
+	{ "strverscmp", (DeeObject *)&c_string_strverscmp, MODSYM_FREADONLY,
 	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar)->?Dint\n"
 	      "Same as ?Gstrcmp, but do special handling for version strings (s.a. ?Avercompare?Dstring)") },
-	{ "index", (DeeObject *)&ctypes_strchr, MODSYM_FREADONLY,
+	{ "index", (DeeObject *)&c_string_strchr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
 	      "Alias for ?Gstrchr") },
-	{ "rindex", (DeeObject *)&ctypes_strrchr, MODSYM_FREADONLY,
+	{ "rindex", (DeeObject *)&c_string_strrchr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
 	      "Alias for ?Gstrrchr") },
-	{ "strspn", (DeeObject *)&ctypes_strspn, MODSYM_FREADONLY,
+	{ "strspn", (DeeObject *)&c_string_strspn, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar,accept:?Aptr?Gchar)->?Dint\n"
 	      "Returns the offset to the first character in @str that is also "
 	      "apart of @accept, or ${strlen(str)} when no such character exists") },
-	{ "strcspn", (DeeObject *)&ctypes_strcspn, MODSYM_FREADONLY,
+	{ "strcspn", (DeeObject *)&c_string_strcspn, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar,reject:?Aptr?Gchar)->?Dint\n"
 	      "Returns the offset to the first character in @str that isn't "
 	      "apart of @accept, or ${strlen(str)} when no such character exists") },
-	{ "strpbrk", (DeeObject *)&ctypes_strpbrk, MODSYM_FREADONLY,
+	{ "strpbrk", (DeeObject *)&c_string_strpbrk, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar,accept:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Return a pointer to the first character in @str, that is also apart of @accept\n"
 	      "If no such character exists, a NULL-pointer is returned") },
-	{ "strrev", (DeeObject *)&ctypes_strrev, MODSYM_FREADONLY,
+	{ "strrev", (DeeObject *)&c_string_strrev, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Reverse the order of characters in @str and re-return the given @str") },
-	{ "strnrev", (DeeObject *)&ctypes_strnrev, MODSYM_FREADONLY,
+	{ "strnrev", (DeeObject *)&c_string_strnrev, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar,maxlen:?Dint)->?Aptr?Gchar\n"
 	      "Reverse the order of up to @maxlen characters in @str and re-return the given @str") },
-	{ "strlwr", (DeeObject *)&ctypes_strlwr, MODSYM_FREADONLY,
+	{ "strlwr", (DeeObject *)&c_string_strlwr, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Convert all characters in @str to lower-case and re-return the given @str") },
-	{ "strupr", (DeeObject *)&ctypes_strupr, MODSYM_FREADONLY,
+	{ "strupr", (DeeObject *)&c_string_strupr, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Convert all characters in @str to upper-case and re-return the given @str") },
-	{ "strnlwr", (DeeObject *)&ctypes_strnlwr, MODSYM_FREADONLY,
+	{ "strnlwr", (DeeObject *)&c_string_strnlwr, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar,maxlen:?Dint)->?Aptr?Gchar\n"
 	      "Convert all characters in @str to lower-case and re-return the given @str") },
-	{ "strnupr", (DeeObject *)&ctypes_strnupr, MODSYM_FREADONLY,
+	{ "strnupr", (DeeObject *)&c_string_strnupr, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar,maxlen:?Dint)->?Aptr?Gchar\n"
 	      "Convert all characters in @str to upper-case and re-return the given @str") },
-	{ "strset", (DeeObject *)&ctypes_strset, MODSYM_FREADONLY,
+	{ "strset", (DeeObject *)&c_string_strset, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar,chr:?Dint)->?Aptr?Gchar\n"
 	      "Set all characters in @str to @chr and re-return the given @str") },
-	{ "strnset", (DeeObject *)&ctypes_strnset, MODSYM_FREADONLY,
+	{ "strnset", (DeeObject *)&c_string_strnset, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar,chr:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
 	      "Same as ?Gstrset, but limit the operator to up to @maxlen characters") },
-	{ "strfry", (DeeObject *)&ctypes_strfry, MODSYM_FREADONLY,
+	{ "strfry", (DeeObject *)&c_string_strfry, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Randomly shuffle the order of characters in @str, creating an anagram") },
-	{ "strsep", (DeeObject *)&ctypes_strsep, MODSYM_FREADONLY,
+	{ "strsep", (DeeObject *)&c_string_strsep, MODSYM_FREADONLY,
 	  DOC("(stringp:?Aptr?Aptr?Gchar,delim:?Aptr?Gchar)->?Aptr?Gchar") },
-	{ "stresep", (DeeObject *)&ctypes_stresep, MODSYM_FREADONLY,
+	{ "stresep", (DeeObject *)&c_string_stresep, MODSYM_FREADONLY,
 	  DOC("(stringp:?Aptr?Aptr?Gchar,delim:?Aptr?Gchar,escape:?Dint)->?Aptr?Gchar") },
-	{ "strtok", (DeeObject *)&ctypes_strtok, MODSYM_FREADONLY,
+	{ "strtok", (DeeObject *)&c_string_strtok, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar,delim:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Split @str at each occurrence of @delim and return the resulting strings individually") },
-	{ "strtok_r", (DeeObject *)&ctypes_strtok_r, MODSYM_FREADONLY,
+	{ "strtok_r", (DeeObject *)&c_string_strtok_r, MODSYM_FREADONLY,
 	  DOC("(str:?Aptr?Gchar,delim:?Aptr?Gchar,save_ptr:?Aptr?Aptr?Gchar)->?Aptr?Gchar") },
-	{ "basename", (DeeObject *)&ctypes_basename, MODSYM_FREADONLY,
+	{ "basename", (DeeObject *)&c_string_basename, MODSYM_FREADONLY,
 	  DOC("(filename:?Aptr?Gchar)->?Aptr?Gchar") },
 
 	/* Atomic functions */
-	{ "atomic_cmpxch", (DeeObject *)&ctypes_atomic_cmpxch, MODSYM_FREADONLY,
+	{ "atomic_cmpxch", (DeeObject *)&c_atomic_atomic_cmpxch, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,oldval:?Q!A!Aptr!Pind],newval:?Q!A!Aptr!Pind],weak=!f)->?Dbool\n"
 	      "Do an atomic compare-and-exchange of memory at @ptr from @oldval to @newval\n"
 	      /**/ "When @weak is true, the operation is allowed to fail sporadically, even when "
 	      /**/ "memory at @ptr and @oldval are identical\n"
 	      "This is a type-generic operation, with the address-width of the atomic operation "
 	      /**/ "depending on the typing of @ptr. Supported widths are $1, $2, $4 and $8 bytes") },
-	{ "atomic_cmpxch_val", (DeeObject *)&ctypes_atomic_cmpxch_val, MODSYM_FREADONLY,
+	{ "atomic_cmpxch_val", (DeeObject *)&c_atomic_atomic_cmpxch_val, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,oldval:?Q!A!Aptr!Pind],newval:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
 	      "Same as ?Gatomic_cmpxch, except that rather than returning ?t or ?f indicative of "
 	      /**/ "the success of the exchange, the #Ireal old value read from @ptr is returned. If "
 	      /**/ "this is equal to @oldval, the operation was successful. If not, memory pointed-to "
 	      /**/ "by @ptr remains unchanged") },
-	{ "atomic_fetchadd", (DeeObject *)&ctypes_atomic_fetchadd, MODSYM_FREADONLY,
+	{ "atomic_fetchadd", (DeeObject *)&c_atomic_atomic_fetchadd, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind += addend; r; })}") },
-	{ "atomic_fetchsub", (DeeObject *)&ctypes_atomic_fetchsub, MODSYM_FREADONLY,
+	{ "atomic_fetchsub", (DeeObject *)&c_atomic_atomic_fetchsub, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind -= addend; r; })}") },
-	{ "atomic_fetchand", (DeeObject *)&ctypes_atomic_fetchand, MODSYM_FREADONLY,
+	{ "atomic_fetchand", (DeeObject *)&c_atomic_atomic_fetchand, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind &= mask; r; })}") },
-	{ "atomic_fetchor", (DeeObject *)&ctypes_atomic_fetchor, MODSYM_FREADONLY,
+	{ "atomic_fetchor", (DeeObject *)&c_atomic_atomic_fetchor, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind |= mask; r; })}") },
-	{ "atomic_fetchxor", (DeeObject *)&ctypes_atomic_fetchxor, MODSYM_FREADONLY,
+	{ "atomic_fetchxor", (DeeObject *)&c_atomic_atomic_fetchxor, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind ^= mask; r; })}") },
-	{ "atomic_fetchnand", (DeeObject *)&ctypes_atomic_fetchnand, MODSYM_FREADONLY,
+	{ "atomic_fetchnand", (DeeObject *)&c_atomic_atomic_fetchnand, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind = ~(ptr.ind & mask); r; })}") },
-	{ "atomic_addfetch", (DeeObject *)&ctypes_atomic_addfetch, MODSYM_FREADONLY,
+	{ "atomic_addfetch", (DeeObject *)&c_atomic_atomic_addfetch, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${({ ptr.ind += addend; copy ptr.ind; })}") },
-	{ "atomic_subfetch", (DeeObject *)&ctypes_atomic_subfetch, MODSYM_FREADONLY,
+	{ "atomic_subfetch", (DeeObject *)&c_atomic_atomic_subfetch, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${({ ptr.ind -= addend; copy ptr.ind; })}") },
-	{ "atomic_andfetch", (DeeObject *)&ctypes_atomic_andfetch, MODSYM_FREADONLY,
+	{ "atomic_andfetch", (DeeObject *)&c_atomic_atomic_andfetch, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${({ ptr.ind &= mask; copy ptr.ind; })}") },
-	{ "atomic_orfetch", (DeeObject *)&ctypes_atomic_orfetch, MODSYM_FREADONLY,
+	{ "atomic_orfetch", (DeeObject *)&c_atomic_atomic_orfetch, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${({ ptr.ind |= mask; copy ptr.ind; })}") },
-	{ "atomic_xorfetch", (DeeObject *)&ctypes_atomic_xorfetch, MODSYM_FREADONLY,
+	{ "atomic_xorfetch", (DeeObject *)&c_atomic_atomic_xorfetch, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${({ ptr.ind ^= mask; copy ptr.ind; })}") },
-	{ "atomic_nandfetch", (DeeObject *)&ctypes_atomic_nandfetch, MODSYM_FREADONLY,
+	{ "atomic_nandfetch", (DeeObject *)&c_atomic_atomic_nandfetch, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${({ ptr.ind = ~(ptr.ind & mask); copy ptr.ind; })}") },
-	{ "atomic_add", (DeeObject *)&ctypes_atomic_add, MODSYM_FREADONLY,
+	{ "atomic_add", (DeeObject *)&c_atomic_atomic_add, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])\n"
 	      "Atomic operation for ${ptr.ind += addend}") },
-	{ "atomic_sub", (DeeObject *)&ctypes_atomic_sub, MODSYM_FREADONLY,
+	{ "atomic_sub", (DeeObject *)&c_atomic_atomic_sub, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])\n"
 	      "Atomic operation for ${ptr.ind -= addend}") },
-	{ "atomic_and", (DeeObject *)&ctypes_atomic_and, MODSYM_FREADONLY,
+	{ "atomic_and", (DeeObject *)&c_atomic_atomic_and, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
 	      "Atomic operation for ${ptr.ind &= mask}") },
-	{ "atomic_or", (DeeObject *)&ctypes_atomic_or, MODSYM_FREADONLY,
+	{ "atomic_or", (DeeObject *)&c_atomic_atomic_or, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
 	      "Atomic operation for ${ptr.ind |= mask}") },
-	{ "atomic_xor", (DeeObject *)&ctypes_atomic_xor, MODSYM_FREADONLY,
+	{ "atomic_xor", (DeeObject *)&c_atomic_atomic_xor, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
 	      "Atomic operation for ${ptr.ind ^= mask}") },
-	{ "atomic_nand", (DeeObject *)&ctypes_atomic_nand, MODSYM_FREADONLY,
+	{ "atomic_nand", (DeeObject *)&c_atomic_atomic_nand, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
 	      "Atomic operation for ${ptr.ind = ~(ptr.ind & mask)}") },
-	{ "atomic_write", (DeeObject *)&ctypes_atomic_write, MODSYM_FREADONLY,
+	{ "atomic_write", (DeeObject *)&c_atomic_atomic_write, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,value:?Q!A!Aptr!Pind])\n"
 	      "Atomic operation for ${ptr.ind = value}") },
-	{ "atomic_fetchinc", (DeeObject *)&ctypes_atomic_fetchinc, MODSYM_FREADONLY,
+	{ "atomic_fetchinc", (DeeObject *)&c_atomic_atomic_fetchinc, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${ptr.ind++}") },
-	{ "atomic_fetchdec", (DeeObject *)&ctypes_atomic_fetchdec, MODSYM_FREADONLY,
+	{ "atomic_fetchdec", (DeeObject *)&c_atomic_atomic_fetchdec, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${ptr.ind--}") },
-	{ "atomic_incfetch", (DeeObject *)&ctypes_atomic_incfetch, MODSYM_FREADONLY,
+	{ "atomic_incfetch", (DeeObject *)&c_atomic_atomic_incfetch, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${++ptr.ind}") },
-	{ "atomic_decfetch", (DeeObject *)&ctypes_atomic_decfetch, MODSYM_FREADONLY,
+	{ "atomic_decfetch", (DeeObject *)&c_atomic_atomic_decfetch, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${--ptr.ind}") },
-	{ "atomic_read", (DeeObject *)&ctypes_atomic_read, MODSYM_FREADONLY,
+	{ "atomic_read", (DeeObject *)&c_atomic_atomic_read, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${copy ptr.ind}") },
-	{ "atomic_inc", (DeeObject *)&ctypes_atomic_inc, MODSYM_FREADONLY,
+	{ "atomic_inc", (DeeObject *)&c_atomic_atomic_inc, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured)\n"
 	      "Atomic operation for ${++ptr.ind}") },
-	{ "atomic_dec", (DeeObject *)&ctypes_atomic_dec, MODSYM_FREADONLY,
+	{ "atomic_dec", (DeeObject *)&c_atomic_atomic_dec, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured)\n"
 	      "Atomic operation for ${--ptr.ind}") },
 
 	/* Futex functions */
-	{ "futex_wakeone", (DeeObject *)&ctypes_futex_wakeone, MODSYM_FREADONLY,
+	{ "futex_wakeone", (DeeObject *)&c_atomic_futex_wakeone, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured)\n"
 	      "Wake at most 1 thread that is waiting for @ptr to change (s.a. ?Gfutex_wait)") },
-	{ "futex_wakeall", (DeeObject *)&ctypes_futex_wakeall, MODSYM_FREADONLY,
+	{ "futex_wakeall", (DeeObject *)&c_atomic_futex_wakeall, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured)\n"
 	      "Wake all threads that are waiting for @ptr to change (s.a. ?Gfutex_wait)") },
-	{ "futex_wait", (DeeObject *)&ctypes_futex_wait, MODSYM_FREADONLY,
+	{ "futex_wait", (DeeObject *)&c_atomic_futex_wait, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,expected:?Q!A!Aptr!Pind])\n"
 	      "Atomically check if ${ptr.ind == expected}. If this isn't the case, return immediately. "
 	      /**/ "Otherwise, wait until another thread makes a call to ?Gfutex_wakeone or ?Gfutex_wakeall, "
 	      /**/ "or until the #I{stars align} (by which I mean that this function might also return sporadically)\n"
 	      "This function can be used to form the basis of any other synchronization "
 	      /**/ "primitive (mutex, semaphore, condition-variable, events, #Ianything)") },
-	{ "futex_timedwait", (DeeObject *)&ctypes_futex_timedwait, MODSYM_FREADONLY,
+	{ "futex_timedwait", (DeeObject *)&c_atomic_futex_timedwait, MODSYM_FREADONLY,
 	  DOC("(ptr:?Aptr?GStructured,expected:?Q!A!Aptr!Pind],timeout_nanoseconds:?Dint)->?Dbool\n"
 	      "#r{true You were woken up, either sporadically, because the value of ${ptr.ind} differs "
 	      /*   */ "from @expected, or because another thread called ?Gfutex_wakeone or ?Gfutex_wakeall}"

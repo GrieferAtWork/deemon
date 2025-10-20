@@ -47,9 +47,6 @@ DECL_BEGIN
 #define Dee_clsmember_object   clsmember_object
 #define Dee_cmethod_origin     cmethod_origin
 #define Dee_cmethod_object     cmethod_object
-#define Dee_cmethod0_object    cmethod0_object
-#define Dee_cmethod1_object    cmethod1_object
-#define Dee_kwcmethod_object   kwcmethod_object
 #define Dee_module_object      module_object
 #define DEFINE_OBJMETHOD       Dee_DEFINE_OBJMETHOD
 #define DEFINE_KWOBJMETHOD     Dee_DEFINE_KWOBJMETHOD
@@ -57,6 +54,8 @@ DECL_BEGIN
 #define DEFINE_KWCLSMETHOD     Dee_DEFINE_KWCLSMETHOD
 #define DEFINE_CLSPROPERTY     Dee_DEFINE_CLSPROPERTY
 #define DEFINE_CMETHOD         Dee_DEFINE_CMETHOD
+#define DEFINE_CMETHOD0        Dee_DEFINE_CMETHOD0
+#define DEFINE_CMETHOD1        Dee_DEFINE_CMETHOD1
 #define DEFINE_KWCMETHOD       Dee_DEFINE_KWCMETHOD
 #endif /* DEE_SOURCE */
 
@@ -68,14 +67,11 @@ typedef struct Dee_kwclsmethod_object DeeKwClsMethodObject;
 typedef struct Dee_clsproperty_object DeeClsPropertyObject;
 typedef struct Dee_clsmember_object DeeClsMemberObject;
 typedef struct Dee_cmethod_object DeeCMethodObject;
-typedef struct Dee_kwcmethod_object DeeKwCMethodObject;
-typedef struct Dee_cmethod0_object DeeCMethod0Object;
-typedef struct Dee_cmethod1_object DeeCMethod1Object;
 
 typedef WUNUSED_T ATTR_INS_T(2, 1) DREF DeeObject *(DCALL *Dee_cmethod_t)(size_t argc, DeeObject *const *argv);
 typedef WUNUSED_T ATTR_INS_T(2, 1) DREF DeeObject *(DCALL *Dee_kwcmethod_t)(size_t argc, DeeObject *const *argv, DeeObject *kw);
 typedef WUNUSED_T                  DREF DeeObject *(DCALL *Dee_cmethod0_t)(void);
-typedef WUNUSED_T NONNULL_T((1))   DREF DeeObject *(DCALL *Dee_cmethod1_t)(DeeObject *arg0);
+typedef WUNUSED_T NONNULL_T((1))   DREF DeeObject *(DCALL *Dee_cmethod1_t)(DeeObject *__restrict arg0);
 
 #if defined(__INTELLISENSE__) && defined(__cplusplus)
 /* Highlight usage errors in IDE */
@@ -291,55 +287,37 @@ Dee_cmethod_origin_fini(struct Dee_cmethod_origin *__restrict self);
 
 struct Dee_cmethod_object {
 	Dee_OBJECT_HEAD
-	uintptr_t     cm_flags; /* [const] Method flags (set of `Dee_METHOD_F*') */
-	Dee_cmethod_t cm_func;  /* [1..1][const] Method pointer. */
+	uintptr_t cm_flags; /* [const] Method flags (set of `Dee_METHOD_F*') */
+	union {
+		Dee_cmethod_t   cb_meth;   /* [1..1][valid_if(ob_type == &DeeCMethod_Type)][const] Method pointer. */
+		Dee_kwcmethod_t cb_kwmeth; /* [1..1][valid_if(ob_type == &DeeKwCMethod_Type)][const] Method pointer. */
+		Dee_cmethod0_t  cb_meth0;  /* [1..1][valid_if(ob_type == &DeeCMethod0_Type)][const] Method pointer. */
+		Dee_cmethod1_t  cb_meth1;  /* [1..1][valid_if(ob_type == &DeeCMethod1_Type)][const] Method pointer. */
+	} cm_func;
 };
-
-struct Dee_kwcmethod_object {
-	Dee_OBJECT_HEAD
-	uintptr_t       kcm_flags; /* [const] Method flags (set of `Dee_METHOD_F*') */
-	Dee_kwcmethod_t kcm_func;  /* [1..1][const] Method pointer. */
-};
-
-struct Dee_cmethod0_object {
-	Dee_OBJECT_HEAD
-	uintptr_t      cm0_flags; /* [const] Method flags (set of `Dee_METHOD_F*') */
-	Dee_cmethod0_t cm0_func;  /* [1..1][const] Method pointer. */
-};
-
-struct Dee_cmethod1_object {
-	Dee_OBJECT_HEAD
-	uintptr_t      cm1_flags; /* [const] Method flags (set of `Dee_METHOD_F*') */
-	Dee_cmethod1_t cm1_func;  /* [1..1][const] Method pointer. */
-};
-
-
 
 DDATDEF DeeTypeObject DeeCMethod_Type;
 DDATDEF DeeTypeObject DeeKwCMethod_Type;
 DDATDEF DeeTypeObject DeeCMethod0_Type;
 DDATDEF DeeTypeObject DeeCMethod1_Type;
-#define DeeCMethod_FUNC(x)         ((DeeCMethodObject *)Dee_REQUIRES_OBJECT(x))->cm_func
+#define DeeCMethod_FUNC(x)         ((DeeCMethodObject *)Dee_REQUIRES_OBJECT(x))->cm_func.cb_meth
 #define DeeCMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeCMethod_Type) /* `_CMethod' is final. */
 #define DeeCMethod_CheckExact(x)   DeeObject_InstanceOfExact(x, &DeeCMethod_Type)
-#define DeeKwCMethod_FUNC(x)       ((DeeKwCMethodObject *)Dee_REQUIRES_OBJECT(x))->kcm_func
 #define DeeKwCMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwCMethod_Type) /* `_KwCMethod' is final. */
 #define DeeKwCMethod_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeKwCMethod_Type)
-#define DeeCMethod0_FUNC(x)        ((DeeCMethod0Object *)Dee_REQUIRES_OBJECT(x))->cm0_func
 #define DeeCMethod0_Check(x)       DeeObject_InstanceOfExact(x, &DeeCMethod0_Type) /* `_CMethod0' is final. */
 #define DeeCMethod0_CheckExact(x)  DeeObject_InstanceOfExact(x, &DeeCMethod0_Type)
-#define DeeCMethod1_FUNC(x)        ((DeeCMethod1Object *)Dee_REQUIRES_OBJECT(x))->cm1_func
 #define DeeCMethod1_Check(x)       DeeObject_InstanceOfExact(x, &DeeCMethod1_Type) /* `_CMethod1' is final. */
 #define DeeCMethod1_CheckExact(x)  DeeObject_InstanceOfExact(x, &DeeCMethod1_Type)
 
 #define Dee_DEFINE_CMETHOD(name, func, flags) \
-	DeeCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeCMethod_Type), flags, Dee_REQUIRES_CMETHOD(func) }
+	DeeCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeCMethod_Type), flags, { Dee_REQUIRES_CMETHOD(func) } }
 #define Dee_DEFINE_KWCMETHOD(name, func, flags) \
-	DeeKwCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwCMethod_Type), flags, Dee_REQUIRES_KWCMETHOD(func) }
+	DeeCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwCMethod_Type), flags, { (Dee_cmethod_t)Dee_REQUIRES_KWCMETHOD(func) } }
 #define Dee_DEFINE_CMETHOD0(name, func, flags) \
-	DeeCMethod0Object name = { Dee_OBJECT_HEAD_INIT(&DeeCMethod0_Type), flags, Dee_REQUIRES_CMETHOD0(func) }
+	DeeCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeCMethod0_Type), flags, { (Dee_cmethod_t)Dee_REQUIRES_CMETHOD0(func) } }
 #define Dee_DEFINE_CMETHOD1(name, func, flags) \
-	DeeCMethod1Object name = { Dee_OBJECT_HEAD_INIT(&DeeCMethod1_Type), flags, Dee_REQUIRES_CMETHOD1(func) }
+	DeeCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeCMethod1_Type), flags, { (Dee_cmethod_t)Dee_REQUIRES_CMETHOD1(func) } }
 
 /* Helpers for dynamically creating C method wrapper objects.
  * You really shouldn't use these (unless you *really* need to

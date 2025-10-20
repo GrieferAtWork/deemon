@@ -172,11 +172,9 @@ print "/" "**" "/";
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("isatty", "fd:unix:fd->?Dbool", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_isatty_f_impl(int fd);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_isatty_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_ISATTY_DEF { "isatty", (DeeObject *)&posix_isatty, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)->?Dbool") },
 #define POSIX_ISATTY_DEF_DOC(doc) { "isatty", (DeeObject *)&posix_isatty, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)->?Dbool\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_isatty, &posix_isatty_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_isatty_f_impl(int fd);
 #ifndef DEFINED_kwlist__fd
 #define DEFINED_kwlist__fd
 PRIVATE DEFINE_KWLIST(kwlist__fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
@@ -194,6 +192,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_isatty_f(size_t argc, DeeObject *con
 err:
 	return NULL;
 }
+PRIVATE DEFINE_KWCMETHOD(posix_isatty, &posix_isatty_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_isatty_f_impl(int fd)
 /*[[[end]]]*/
 {
@@ -241,11 +240,9 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("umask", "mask:d->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_umask_f_impl(int mask);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_umask_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_UMASK_DEF { "umask", (DeeObject *)&posix_umask, MODSYM_FREADONLY, DOC("(mask:?Dint)->?Dint") },
 #define POSIX_UMASK_DEF_DOC(doc) { "umask", (DeeObject *)&posix_umask, MODSYM_FREADONLY, DOC("(mask:?Dint)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_umask, &posix_umask_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_umask_f_impl(int mask);
 #ifndef DEFINED_kwlist__mask
 #define DEFINED_kwlist__mask
 PRIVATE DEFINE_KWLIST(kwlist__mask, { KEX("mask", 0xc3b4302b, 0x933f153b40dd4379), KEND });
@@ -260,6 +257,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_umask_f(size_t argc, DeeObject *cons
 err:
 	return NULL;
 }
+PRIVATE DEFINE_KWCMETHOD(posix_umask, &posix_umask_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_umask_f_impl(int mask)
 /*[[[end]]]*/
 {
@@ -294,11 +292,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_umask_f_impl(int mask)
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("dup", "fd:unix:fd->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup_f_impl(int fd);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_DUP_DEF { "dup", (DeeObject *)&posix_dup, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)->?Dint") },
 #define POSIX_DUP_DEF_DOC(doc) { "dup", (DeeObject *)&posix_dup, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_dup, &posix_dup_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup_f_impl(int fd);
 #ifndef DEFINED_kwlist__fd
 #define DEFINED_kwlist__fd
 PRIVATE DEFINE_KWLIST(kwlist__fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
@@ -316,6 +312,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup_f(size_t argc, DeeObject *const 
 err:
 	return NULL;
 }
+PRIVATE DEFINE_KWCMETHOD(posix_dup, &posix_dup_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup_f_impl(int fd)
 /*[[[end]]]*/
 {
@@ -355,11 +352,9 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("dup2", "oldfd:unix:fd,newfd:unix:fd->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup2_f_impl(int oldfd, int newfd);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup2_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_DUP2_DEF { "dup2", (DeeObject *)&posix_dup2, MODSYM_FREADONLY, DOC("(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile)->?Dint") },
 #define POSIX_DUP2_DEF_DOC(doc) { "dup2", (DeeObject *)&posix_dup2, MODSYM_FREADONLY, DOC("(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_dup2, &posix_dup2_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup2_f_impl(int oldfd, int newfd);
 #ifndef DEFINED_kwlist__oldfd_newfd
 #define DEFINED_kwlist__oldfd_newfd
 PRIVATE DEFINE_KWLIST(kwlist__oldfd_newfd, { KEX("oldfd", 0x5a92fcdb, 0x3de145419f68339e), KEX("newfd", 0xd4ea987d, 0xe1d56bf670fa4fe3), KEND });
@@ -381,6 +376,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup2_f(size_t argc, DeeObject *const
 err:
 	return NULL;
 }
+PRIVATE DEFINE_KWCMETHOD(posix_dup2, &posix_dup2_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup2_f_impl(int oldfd, int newfd)
 /*[[[end]]]*/
 {
@@ -422,11 +418,9 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("dup3", "oldfd:unix:fd,newfd:unix:fd,oflags:d->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup3_f_impl(int oldfd, int newfd, int oflags);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup3_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_DUP3_DEF { "dup3", (DeeObject *)&posix_dup3, MODSYM_FREADONLY, DOC("(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile,oflags:?Dint)->?Dint") },
 #define POSIX_DUP3_DEF_DOC(doc) { "dup3", (DeeObject *)&posix_dup3, MODSYM_FREADONLY, DOC("(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile,oflags:?Dint)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_dup3, &posix_dup3_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup3_f_impl(int oldfd, int newfd, int oflags);
 #ifndef DEFINED_kwlist__oldfd_newfd_oflags
 #define DEFINED_kwlist__oldfd_newfd_oflags
 PRIVATE DEFINE_KWLIST(kwlist__oldfd_newfd_oflags, { KEX("oldfd", 0x5a92fcdb, 0x3de145419f68339e), KEX("newfd", 0xd4ea987d, 0xe1d56bf670fa4fe3), KEX("oflags", 0xbe92b5be, 0x4f84e498f7c9d171), KEND });
@@ -449,6 +443,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup3_f(size_t argc, DeeObject *const
 err:
 	return NULL;
 }
+PRIVATE DEFINE_KWCMETHOD(posix_dup3, &posix_dup3_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup3_f_impl(int oldfd, int newfd, int oflags)
 /*[[[end]]]*/
 {
@@ -602,11 +597,9 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("close", "fd:unix:fd", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_close_f_impl(int fd);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_close_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_CLOSE_DEF { "close", (DeeObject *)&posix_close, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)") },
 #define POSIX_CLOSE_DEF_DOC(doc) { "close", (DeeObject *)&posix_close, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_close, &posix_close_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_close_f_impl(int fd);
 #ifndef DEFINED_kwlist__fd
 #define DEFINED_kwlist__fd
 PRIVATE DEFINE_KWLIST(kwlist__fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
@@ -624,6 +617,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_close_f(size_t argc, DeeObject *cons
 err:
 	return NULL;
 }
+PRIVATE DEFINE_KWCMETHOD(posix_close, &posix_close_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_close_f_impl(int fd)
 /*[[[end]]]*/
 {

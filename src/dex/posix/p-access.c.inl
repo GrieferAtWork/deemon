@@ -130,11 +130,9 @@ print "/" "**" "/";
 
 #if defined(posix_access_USE_waccess) || defined(__DEEMON__)
 /*[[[deemon import("rt.gen.dexutils").gw("access", "filename:c:wchar_t[],how:d->?Dbool", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_access_f_impl(Dee_wchar_t const *filename, int how);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_ACCESS_DEF { "access", (DeeObject *)&posix_access, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
 #define POSIX_ACCESS_DEF_DOC(doc) { "access", (DeeObject *)&posix_access, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_access, &posix_access_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_access_f_impl(Dee_wchar_t const *filename, int how);
 #ifndef DEFINED_kwlist__filename_how
 #define DEFINED_kwlist__filename_how
 PRIVATE DEFINE_KWLIST(kwlist__filename_how, { KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("how", 0xdb5b834b, 0x1f0671eb224f8869), KEND });
@@ -150,16 +148,15 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *con
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_access_f_impl(Dee_wchar_t const *filename, int how)
+PRIVATE DEFINE_KWCMETHOD(posix_access, &posix_access_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_access_f_impl(Dee_wchar_t const *filename, int how)
 /*[[[end]]]*/
 #endif /* posix_access_USE_waccess */
 #if !defined(posix_access_USE_waccess) || defined(__DEEMON__)
 /*[[[deemon import("rt.gen.dexutils").gw("access", "filename:c:char[],how:d->?Dbool", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_access_f_impl(char const *filename, int how);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_ACCESS_DEF { "access", (DeeObject *)&posix_access, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
 #define POSIX_ACCESS_DEF_DOC(doc) { "access", (DeeObject *)&posix_access, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_access, &posix_access_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_access_f_impl(char const *filename, int how);
 #ifndef DEFINED_kwlist__filename_how
 #define DEFINED_kwlist__filename_how
 PRIVATE DEFINE_KWLIST(kwlist__filename_how, { KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("how", 0xdb5b834b, 0x1f0671eb224f8869), KEND });
@@ -175,7 +172,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *con
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_access_f_impl(char const *filename, int how)
+PRIVATE DEFINE_KWCMETHOD(posix_access, &posix_access_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_access_f_impl(char const *filename, int how)
 /*[[[end]]]*/
 #endif /* !posix_access_USE_waccess */
 {
@@ -236,11 +234,9 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("euidaccess", "filename:c:char[],how:d->?Dbool", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_euidaccess_f_impl(char const *filename, int how);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_euidaccess_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_EUIDACCESS_DEF { "euidaccess", (DeeObject *)&posix_euidaccess, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
 #define POSIX_EUIDACCESS_DEF_DOC(doc) { "euidaccess", (DeeObject *)&posix_euidaccess, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_euidaccess, &posix_euidaccess_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_euidaccess_f_impl(char const *filename, int how);
 #ifndef DEFINED_kwlist__filename_how
 #define DEFINED_kwlist__filename_how
 PRIVATE DEFINE_KWLIST(kwlist__filename_how, { KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("how", 0xdb5b834b, 0x1f0671eb224f8869), KEND });
@@ -256,7 +252,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_euidaccess_f(size_t argc, DeeObject 
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_euidaccess_f_impl(char const *filename, int how)
+PRIVATE DEFINE_KWCMETHOD(posix_euidaccess, &posix_euidaccess_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_euidaccess_f_impl(char const *filename, int how)
 /*[[[end]]]*/
 {
 #ifdef posix_euidaccess_USE_euidaccess
@@ -303,11 +300,9 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("faccessat", "dfd:d,filename:c:char[],how:d,atflags:d->?Dbool", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((2)) DREF DeeObject *DCALL posix_faccessat_f_impl(int dfd, char const *filename, int how, int atflags);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_faccessat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FACCESSAT_DEF { "faccessat", (DeeObject *)&posix_faccessat, MODSYM_FREADONLY, DOC("(dfd:?Dint,filename:?Dstring,how:?Dint,atflags:?Dint)->?Dbool") },
 #define POSIX_FACCESSAT_DEF_DOC(doc) { "faccessat", (DeeObject *)&posix_faccessat, MODSYM_FREADONLY, DOC("(dfd:?Dint,filename:?Dstring,how:?Dint,atflags:?Dint)->?Dbool\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_faccessat, &posix_faccessat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((2)) DREF DeeObject *DCALL posix_faccessat_f_impl(int dfd, char const *filename, int how, int atflags);
 #ifndef DEFINED_kwlist__dfd_filename_how_atflags
 #define DEFINED_kwlist__dfd_filename_how_atflags
 PRIVATE DEFINE_KWLIST(kwlist__dfd_filename_how_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("how", 0xdb5b834b, 0x1f0671eb224f8869), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
@@ -325,7 +320,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_faccessat_f(size_t argc, DeeObject *
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((2))DREF DeeObject *DCALL posix_faccessat_f_impl(int dfd, char const *filename, int how, int atflags)
+PRIVATE DEFINE_KWCMETHOD(posix_faccessat, &posix_faccessat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((2)) DREF DeeObject *DCALL posix_faccessat_f_impl(int dfd, char const *filename, int how, int atflags)
 /*[[[end]]]*/
 {
 	/* TODO: Re-write this function */

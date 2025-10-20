@@ -85,18 +85,11 @@ DECL_BEGIN
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("pipe", "->?T2?Dint?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pipe_f_impl(void);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe_f(size_t argc, DeeObject *const *argv);
 #define POSIX_PIPE_DEF { "pipe", (DeeObject *)&posix_pipe, MODSYM_FREADONLY, DOC("->?T2?Dint?Dint") },
 #define POSIX_PIPE_DEF_DOC(doc) { "pipe", (DeeObject *)&posix_pipe, MODSYM_FREADONLY, DOC("->?T2?Dint?Dint\n" doc) },
-PRIVATE DEFINE_CMETHOD(posix_pipe, &posix_pipe_f, METHOD_FNORMAL);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe_f(size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack0(err, argc, argv, "pipe");
-	return posix_pipe_f_impl();
-err:
-	return NULL;
-}
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pipe_f_impl(void)
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe_f_impl(void);
+PRIVATE DEFINE_CMETHOD0(posix_pipe, &posix_pipe_f_impl, METHOD_FNORMAL);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe_f_impl(void)
 /*[[[end]]]*/
 {
 #ifdef posix_pipe_USE_pipe
@@ -208,11 +201,9 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("pipe2", "oflags:d->?T2?Dint?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pipe2_f_impl(int oflags);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe2_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_PIPE2_DEF { "pipe2", (DeeObject *)&posix_pipe2, MODSYM_FREADONLY, DOC("(oflags:?Dint)->?T2?Dint?Dint") },
 #define POSIX_PIPE2_DEF_DOC(doc) { "pipe2", (DeeObject *)&posix_pipe2, MODSYM_FREADONLY, DOC("(oflags:?Dint)->?T2?Dint?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_pipe2, &posix_pipe2_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pipe2_f_impl(int oflags);
 #ifndef DEFINED_kwlist__oflags
 #define DEFINED_kwlist__oflags
 PRIVATE DEFINE_KWLIST(kwlist__oflags, { KEX("oflags", 0xbe92b5be, 0x4f84e498f7c9d171), KEND });
@@ -227,6 +218,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe2_f(size_t argc, DeeObject *cons
 err:
 	return NULL;
 }
+PRIVATE DEFINE_KWCMETHOD(posix_pipe2, &posix_pipe2_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pipe2_f_impl(int oflags)
 /*[[[end]]]*/
 {

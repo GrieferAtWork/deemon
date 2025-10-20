@@ -637,11 +637,9 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("lrealpath", "path:?Dstring->?Dstring", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_lrealpath_f_impl(DeeObject *path);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_lrealpath_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_LREALPATH_DEF { "lrealpath", (DeeObject *)&posix_lrealpath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
 #define POSIX_LREALPATH_DEF_DOC(doc) { "lrealpath", (DeeObject *)&posix_lrealpath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_lrealpath, &posix_lrealpath_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_lrealpath_f_impl(DeeObject *path);
 #ifndef DEFINED_kwlist__path
 #define DEFINED_kwlist__path
 PRIVATE DEFINE_KWLIST(kwlist__path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
@@ -656,7 +654,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_lrealpath_f(size_t argc, DeeObject *
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_lrealpath_f_impl(DeeObject *path)
+PRIVATE DEFINE_KWCMETHOD(posix_lrealpath, &posix_lrealpath_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_lrealpath_f_impl(DeeObject *path)
 /*[[[end]]]*/
 {
 #ifdef posix_lrealpath_USE_lrealpath
@@ -824,11 +823,9 @@ err_printer:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("frealpath", "fd:?X2?DFile?Dint,atflags:u=0->?Dstring", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_frealpath_f_impl(DeeObject *fd, unsigned int atflags);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_frealpath_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FREALPATH_DEF { "frealpath", (DeeObject *)&posix_frealpath, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint,atflags=!0)->?Dstring") },
 #define POSIX_FREALPATH_DEF_DOC(doc) { "frealpath", (DeeObject *)&posix_frealpath, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint,atflags=!0)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_frealpath, &posix_frealpath_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_frealpath_f_impl(DeeObject *fd, unsigned int atflags);
 #ifndef DEFINED_kwlist__fd_atflags
 #define DEFINED_kwlist__fd_atflags
 PRIVATE DEFINE_KWLIST(kwlist__fd_atflags, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
@@ -845,7 +842,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_frealpath_f(size_t argc, DeeObject *
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_frealpath_f_impl(DeeObject *fd, unsigned int atflags)
+PRIVATE DEFINE_KWCMETHOD(posix_frealpath, &posix_frealpath_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_frealpath_f_impl(DeeObject *fd, unsigned int atflags)
 /*[[[end]]]*/
 {
 #ifdef posix_frealpath_USE_frealpath4
@@ -937,11 +935,9 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("realpath", "path:?Dstring->?Dstring", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_realpath_f_impl(DeeObject *path);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_realpath_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_REALPATH_DEF { "realpath", (DeeObject *)&posix_realpath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
 #define POSIX_REALPATH_DEF_DOC(doc) { "realpath", (DeeObject *)&posix_realpath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_realpath, &posix_realpath_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_realpath_f_impl(DeeObject *path);
 #ifndef DEFINED_kwlist__path
 #define DEFINED_kwlist__path
 PRIVATE DEFINE_KWLIST(kwlist__path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
@@ -956,7 +952,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_realpath_f(size_t argc, DeeObject *c
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_realpath_f_impl(DeeObject *path)
+PRIVATE DEFINE_KWCMETHOD(posix_realpath, &posix_realpath_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_realpath_f_impl(DeeObject *path)
 /*[[[end]]]*/
 {
 #ifdef posix_realpath_USE_realpath3
@@ -1172,11 +1169,9 @@ err_printer:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("realpathat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:u=0->?Dstring", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_realpathat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_realpathat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_REALPATHAT_DEF { "realpathat", (DeeObject *)&posix_realpathat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Dstring") },
 #define POSIX_REALPATHAT_DEF_DOC(doc) { "realpathat", (DeeObject *)&posix_realpathat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_realpathat, &posix_realpathat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_realpathat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 #ifndef DEFINED_kwlist__dfd_path_atflags
 #define DEFINED_kwlist__dfd_path_atflags
 PRIVATE DEFINE_KWLIST(kwlist__dfd_path_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
@@ -1194,7 +1189,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_realpathat_f(size_t argc, DeeObject 
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_realpathat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags)
+PRIVATE DEFINE_KWCMETHOD(posix_realpathat, &posix_realpathat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_realpathat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags)
 /*[[[end]]]*/
 {
 #if defined(posix_realpathat_USE_posix_realpath) || defined(posix_realpathat_USE_posix_lrealpath)
@@ -1328,11 +1324,9 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("lresolvepath", "path:?Dstring->?Dstring", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_lresolvepath_f_impl(DeeObject *path);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_lresolvepath_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_LRESOLVEPATH_DEF { "lresolvepath", (DeeObject *)&posix_lresolvepath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
 #define POSIX_LRESOLVEPATH_DEF_DOC(doc) { "lresolvepath", (DeeObject *)&posix_lresolvepath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_lresolvepath, &posix_lresolvepath_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_lresolvepath_f_impl(DeeObject *path);
 #ifndef DEFINED_kwlist__path
 #define DEFINED_kwlist__path
 PRIVATE DEFINE_KWLIST(kwlist__path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
@@ -1347,7 +1341,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_lresolvepath_f(size_t argc, DeeObjec
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_lresolvepath_f_impl(DeeObject *path)
+PRIVATE DEFINE_KWCMETHOD(posix_lresolvepath, &posix_lresolvepath_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_lresolvepath_f_impl(DeeObject *path)
 /*[[[end]]]*/
 {
 #ifdef posix_lresolvepath_USE_posix_print_resolved_path
@@ -1373,11 +1368,9 @@ err_printer:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("resolvepath", "path:?Dstring->?Dstring", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_resolvepath_f_impl(DeeObject *path);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_resolvepath_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_RESOLVEPATH_DEF { "resolvepath", (DeeObject *)&posix_resolvepath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
 #define POSIX_RESOLVEPATH_DEF_DOC(doc) { "resolvepath", (DeeObject *)&posix_resolvepath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_resolvepath, &posix_resolvepath_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_resolvepath_f_impl(DeeObject *path);
 #ifndef DEFINED_kwlist__path
 #define DEFINED_kwlist__path
 PRIVATE DEFINE_KWLIST(kwlist__path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
@@ -1392,7 +1385,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_resolvepath_f(size_t argc, DeeObject
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1))DREF DeeObject *DCALL posix_resolvepath_f_impl(DeeObject *path)
+PRIVATE DEFINE_KWCMETHOD(posix_resolvepath, &posix_resolvepath_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_resolvepath_f_impl(DeeObject *path)
 /*[[[end]]]*/
 {
 #ifdef posix_resolvepath_USE_posix_print_resolved_path
@@ -1417,11 +1411,9 @@ err_printer:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("resolvepathat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:u=0->?Dstring", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_resolvepathat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_resolvepathat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_RESOLVEPATHAT_DEF { "resolvepathat", (DeeObject *)&posix_resolvepathat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Dstring") },
 #define POSIX_RESOLVEPATHAT_DEF_DOC(doc) { "resolvepathat", (DeeObject *)&posix_resolvepathat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_resolvepathat, &posix_resolvepathat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_resolvepathat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 #ifndef DEFINED_kwlist__dfd_path_atflags
 #define DEFINED_kwlist__dfd_path_atflags
 PRIVATE DEFINE_KWLIST(kwlist__dfd_path_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
@@ -1439,7 +1431,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_resolvepathat_f(size_t argc, DeeObje
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_resolvepathat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags)
+PRIVATE DEFINE_KWCMETHOD(posix_resolvepathat, &posix_resolvepathat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_resolvepathat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags)
 /*[[[end]]]*/
 {
 #ifdef posix_resolvepathat_USE_posix_print_resolved_path

@@ -295,11 +295,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lchown_f_impl(DeeObject *path, De
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("chown", "path:?Dstring,uid:?X3?Dstring?Dint?N=Dee_None,gid:?X3?Dstring?Dint?N=Dee_None", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_chown_f_impl(DeeObject *path, DeeObject *uid, DeeObject *gid);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_chown_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_CHOWN_DEF { "chown", (DeeObject *)&posix_chown, MODSYM_FREADONLY, DOC("(path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)") },
 #define POSIX_CHOWN_DEF_DOC(doc) { "chown", (DeeObject *)&posix_chown, MODSYM_FREADONLY, DOC("(path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_chown, &posix_chown_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_chown_f_impl(DeeObject *path, DeeObject *uid, DeeObject *gid);
 #ifndef DEFINED_kwlist__path_uid_gid
 #define DEFINED_kwlist__path_uid_gid
 PRIVATE DEFINE_KWLIST(kwlist__path_uid_gid, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("uid", 0x4ab38c00, 0x2b7634be3d12bdca), KEX("gid", 0x2fcfb954, 0x5b22a7472448739b), KEND });
@@ -318,7 +316,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_chown_f(size_t argc, DeeObject *cons
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2, 3))DREF DeeObject *DCALL posix_chown_f_impl(DeeObject *path, DeeObject *uid, DeeObject *gid)
+PRIVATE DEFINE_KWCMETHOD(posix_chown, &posix_chown_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_chown_f_impl(DeeObject *path, DeeObject *uid, DeeObject *gid)
 /*[[[end]]]*/
 {
 #ifdef posix_chown_USE_posix_readlink__AND__posix_lchown
@@ -414,11 +413,9 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("lchown", "path:?Dstring,uid:?X3?Dstring?Dint?N=Dee_None,gid:?X3?Dstring?Dint?N=Dee_None", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_lchown_f_impl(DeeObject *path, DeeObject *uid, DeeObject *gid);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_lchown_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_LCHOWN_DEF { "lchown", (DeeObject *)&posix_lchown, MODSYM_FREADONLY, DOC("(path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)") },
 #define POSIX_LCHOWN_DEF_DOC(doc) { "lchown", (DeeObject *)&posix_lchown, MODSYM_FREADONLY, DOC("(path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_lchown, &posix_lchown_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_lchown_f_impl(DeeObject *path, DeeObject *uid, DeeObject *gid);
 #ifndef DEFINED_kwlist__path_uid_gid
 #define DEFINED_kwlist__path_uid_gid
 PRIVATE DEFINE_KWLIST(kwlist__path_uid_gid, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("uid", 0x4ab38c00, 0x2b7634be3d12bdca), KEX("gid", 0x2fcfb954, 0x5b22a7472448739b), KEND });
@@ -437,7 +434,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_lchown_f(size_t argc, DeeObject *con
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2, 3))DREF DeeObject *DCALL posix_lchown_f_impl(DeeObject *path, DeeObject *uid, DeeObject *gid)
+PRIVATE DEFINE_KWCMETHOD(posix_lchown, &posix_lchown_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_lchown_f_impl(DeeObject *path, DeeObject *uid, DeeObject *gid)
 /*[[[end]]]*/
 {
 #ifdef posix_lchown_USE_nt_SetNamedSecurityInfo
@@ -558,11 +556,9 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("fchown", "fd:?X2?Dint?DFile,uid:?X3?Dstring?Dint?N=Dee_None,gid:?X3?Dstring?Dint?N=Dee_None", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_fchown_f_impl(DeeObject *fd, DeeObject *uid, DeeObject *gid);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchown_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCHOWN_DEF { "fchown", (DeeObject *)&posix_fchown, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)") },
 #define POSIX_FCHOWN_DEF_DOC(doc) { "fchown", (DeeObject *)&posix_fchown, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fchown, &posix_fchown_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_fchown_f_impl(DeeObject *fd, DeeObject *uid, DeeObject *gid);
 #ifndef DEFINED_kwlist__fd_uid_gid
 #define DEFINED_kwlist__fd_uid_gid
 PRIVATE DEFINE_KWLIST(kwlist__fd_uid_gid, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("uid", 0x4ab38c00, 0x2b7634be3d12bdca), KEX("gid", 0x2fcfb954, 0x5b22a7472448739b), KEND });
@@ -581,7 +577,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchown_f(size_t argc, DeeObject *con
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2, 3))DREF DeeObject *DCALL posix_fchown_f_impl(DeeObject *fd, DeeObject *uid, DeeObject *gid)
+PRIVATE DEFINE_KWCMETHOD(posix_fchown, &posix_fchown_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_fchown_f_impl(DeeObject *fd, DeeObject *uid, DeeObject *gid)
 /*[[[end]]]*/
 {
 #ifdef posix_fchown_USE_nt_SetSecurityInfo
@@ -699,11 +696,9 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("fchownat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,uid:?X3?Dstring?Dint?N=Dee_None,gid:?X3?Dstring?Dint?N=Dee_None,atflags:u=0", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL posix_fchownat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *uid, DeeObject *gid, unsigned int atflags);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchownat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCHOWNAT_DEF { "fchownat", (DeeObject *)&posix_fchownat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N,atflags=!0)") },
 #define POSIX_FCHOWNAT_DEF_DOC(doc) { "fchownat", (DeeObject *)&posix_fchownat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N,atflags=!0)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fchownat, &posix_fchownat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL posix_fchownat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *uid, DeeObject *gid, unsigned int atflags);
 #ifndef DEFINED_kwlist__dfd_path_uid_gid_atflags
 #define DEFINED_kwlist__dfd_path_uid_gid_atflags
 PRIVATE DEFINE_KWLIST(kwlist__dfd_path_uid_gid_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("uid", 0x4ab38c00, 0x2b7634be3d12bdca), KEX("gid", 0x2fcfb954, 0x5b22a7472448739b), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
@@ -725,7 +720,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchownat_f(size_t argc, DeeObject *c
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4))DREF DeeObject *DCALL posix_fchownat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *uid, DeeObject *gid, unsigned int atflags)
+PRIVATE DEFINE_KWCMETHOD(posix_fchownat, &posix_fchownat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL posix_fchownat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *uid, DeeObject *gid, unsigned int atflags)
 /*[[[end]]]*/
 {
 #if defined(posix_fchownat_USE_posix_chown) || defined(posix_fchownat_USE_posix_lchown)

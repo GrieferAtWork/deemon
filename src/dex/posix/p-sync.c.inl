@@ -75,18 +75,11 @@ DECL_BEGIN
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("sync", "", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_sync_f_impl(void);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_sync_f(size_t argc, DeeObject *const *argv);
 #define POSIX_SYNC_DEF { "sync", (DeeObject *)&posix_sync, MODSYM_FREADONLY, DOC("()") },
 #define POSIX_SYNC_DEF_DOC(doc) { "sync", (DeeObject *)&posix_sync, MODSYM_FREADONLY, DOC("()\n" doc) },
-PRIVATE DEFINE_CMETHOD(posix_sync, &posix_sync_f, METHOD_FNORMAL);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_sync_f(size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack0(err, argc, argv, "sync");
-	return posix_sync_f_impl();
-err:
-	return NULL;
-}
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_sync_f_impl(void)
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_sync_f_impl(void);
+PRIVATE DEFINE_CMETHOD0(posix_sync, &posix_sync_f_impl, METHOD_FNORMAL);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_sync_f_impl(void)
 /*[[[end]]]*/
 {
 #ifdef CONFIG_HAVE_sync
@@ -108,11 +101,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_sync_f_impl(void)
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("fsync", "fd:unix:fd", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fsync_f_impl(int fd);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_fsync_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FSYNC_DEF { "fsync", (DeeObject *)&posix_fsync, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)") },
 #define POSIX_FSYNC_DEF_DOC(doc) { "fsync", (DeeObject *)&posix_fsync, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fsync, &posix_fsync_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fsync_f_impl(int fd);
 #ifndef DEFINED_kwlist__fd
 #define DEFINED_kwlist__fd
 PRIVATE DEFINE_KWLIST(kwlist__fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
@@ -130,6 +121,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fsync_f(size_t argc, DeeObject *cons
 err:
 	return NULL;
 }
+PRIVATE DEFINE_KWCMETHOD(posix_fsync, &posix_fsync_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fsync_f_impl(int fd)
 /*[[[end]]]*/
 {
@@ -170,11 +162,9 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("fdatasync", "fd:unix:fd", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fdatasync_f_impl(int fd);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_fdatasync_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FDATASYNC_DEF { "fdatasync", (DeeObject *)&posix_fdatasync, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)") },
 #define POSIX_FDATASYNC_DEF_DOC(doc) { "fdatasync", (DeeObject *)&posix_fdatasync, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fdatasync, &posix_fdatasync_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fdatasync_f_impl(int fd);
 #ifndef DEFINED_kwlist__fd
 #define DEFINED_kwlist__fd
 PRIVATE DEFINE_KWLIST(kwlist__fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
@@ -192,6 +182,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fdatasync_f(size_t argc, DeeObject *
 err:
 	return NULL;
 }
+PRIVATE DEFINE_KWCMETHOD(posix_fdatasync, &posix_fdatasync_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fdatasync_f_impl(int fd)
 /*[[[end]]]*/
 {

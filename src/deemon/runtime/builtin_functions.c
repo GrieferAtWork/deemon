@@ -584,19 +584,15 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_rt_badcall(size_t argc, DeeObject *const *argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+f_rt_badcall(DeeObject *__restrict arg) {
 	DeeThreadObject *ts;
 	char const *function_name = NULL;
-	size_t argc_cur, argc_min = 0;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("__badcall", params: "size_t argc_max");]]]*/
-	struct {
-		size_t argc_max;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "__badcall", &args.argc_max, UNPuSIZ, DeeObject_AsSize);
-/*[[[end]]]*/
+	size_t argc_max, argc_cur, argc_min = 0;
+	if (DeeObject_AsSize(arg, &argc_max))
+		goto err;
 	ts       = DeeThread_Self();
-	argc_cur = args.argc_max;
+	argc_cur = argc_max;
 	if likely(ts->t_execsz) {
 		struct code_frame *frame = ts->t_exec;
 		DeeCodeObject *code      = frame->cf_func->fo_code;
@@ -605,33 +601,27 @@ f_rt_badcall(size_t argc, DeeObject *const *argv) {
 		function_name = DeeCode_NAME(code);
 	}
 	/* Throw the invalid-argument-count error. */
-	err_invalid_argc(function_name,
-	                 argc_cur,
-	                 argc_min,
-	                 args.argc_max);
+	err_invalid_argc(function_name, argc_cur, argc_min, argc_max);
 err:
 	return NULL;
 }
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_rt_roloc(size_t argc, DeeObject *const *argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+f_rt_roloc(DeeObject *__restrict arg) {
 	DeeThreadObject *ts;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("__roloc", params: "uint16_t lid");]]]*/
-	struct {
-		uint16_t lid;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "__roloc", &args.lid, UNPu16, DeeObject_AsUInt16);
-/*[[[end]]]*/
+	uint16_t lid;
+	if unlikely(DeeObject_AsUInt16(arg, &lid))
+		goto err;
 	ts = DeeThread_Self();
 	if likely(ts->t_execsz) {
 		struct code_frame *frame = ts->t_exec;
 		DeeCodeObject *code      = frame->cf_func->fo_code;
-		err_readonly_local(code, frame->cf_ip, args.lid);
+		err_readonly_local(code, frame->cf_ip, lid);
 	} else {
 		DeeError_Throwf(&DeeError_RuntimeError,
 		                "Cannot modify read-only local variable %" PRFu16,
-		                args.lid);
+		                lid);
 	}
 err:
 	return NULL;
@@ -657,8 +647,8 @@ INTERN DEFINE_CMETHOD(rt_neosb, &f_rt_neosb, METHOD_FNORMAL);
 INTERN DEFINE_CMETHOD(rt_giosi, &f_rt_giosi, METHOD_FNORMAL);
 INTERN DEFINE_CMETHOD(rt_grosr, &f_rt_grosr, METHOD_FNORMAL);
 INTERN DEFINE_CMETHOD(rt_gaosa, &f_rt_gaosa, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(rt_badcall, &f_rt_badcall, METHOD_FNORETURN);
-INTERN DEFINE_CMETHOD(rt_roloc, &f_rt_roloc, METHOD_FNORETURN);
+INTERN DEFINE_CMETHOD1(rt_badcall, &f_rt_badcall, METHOD_FNORETURN);
+INTERN DEFINE_CMETHOD1(rt_roloc, &f_rt_roloc, METHOD_FNORETURN);
 
 DECL_END
 

@@ -168,11 +168,9 @@ DECL_BEGIN
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("rename", "oldpath:?Dstring,newpath:?Dstring", libname: "posix");]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_rename_f_impl(DeeObject *oldpath, DeeObject *newpath);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_rename_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_RENAME_DEF { "rename", (DeeObject *)&posix_rename, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?Dstring)") },
 #define POSIX_RENAME_DEF_DOC(doc) { "rename", (DeeObject *)&posix_rename, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?Dstring)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_rename, &posix_rename_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_rename_f_impl(DeeObject *oldpath, DeeObject *newpath);
 #ifndef DEFINED_kwlist__oldpath_newpath
 #define DEFINED_kwlist__oldpath_newpath
 PRIVATE DEFINE_KWLIST(kwlist__oldpath_newpath, { KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEND });
@@ -188,7 +186,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_rename_f(size_t argc, DeeObject *con
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_rename_f_impl(DeeObject *oldpath, DeeObject *newpath)
+PRIVATE DEFINE_KWCMETHOD(posix_rename, &posix_rename_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_rename_f_impl(DeeObject *oldpath, DeeObject *newpath)
 /*[[[end]]]*/
 {
 #ifdef posix_rename_USE_nt_MoveFileEx
@@ -279,11 +278,9 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("frename", "oldfd:?X2?DFile?Dint,newpath:?Dstring", libname: "posix");]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_frename_f_impl(DeeObject *oldfd, DeeObject *newpath);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_frename_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FRENAME_DEF { "frename", (DeeObject *)&posix_frename, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?Dstring)") },
 #define POSIX_FRENAME_DEF_DOC(doc) { "frename", (DeeObject *)&posix_frename, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?Dstring)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_frename, &posix_frename_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_frename_f_impl(DeeObject *oldfd, DeeObject *newpath);
 #ifndef DEFINED_kwlist__oldfd_newpath
 #define DEFINED_kwlist__oldfd_newpath
 PRIVATE DEFINE_KWLIST(kwlist__oldfd_newpath, { KEX("oldfd", 0x5a92fcdb, 0x3de145419f68339e), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEND });
@@ -299,7 +296,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_frename_f(size_t argc, DeeObject *co
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_frename_f_impl(DeeObject *oldfd, DeeObject *newpath)
+PRIVATE DEFINE_KWCMETHOD(posix_frename, &posix_frename_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_frename_f_impl(DeeObject *oldfd, DeeObject *newpath)
 /*[[[end]]]*/
 {
 #ifdef posix_frename_USE_posix_rename
@@ -329,11 +327,9 @@ err:
 	"olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,"
 	"newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,"
 	"atflags:u=0", libname: "posix");]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL posix_renameat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int atflags);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_renameat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_RENAMEAT_DEF { "renameat", (DeeObject *)&posix_renameat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags=!0)") },
 #define POSIX_RENAMEAT_DEF_DOC(doc) { "renameat", (DeeObject *)&posix_renameat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags=!0)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_renameat, &posix_renameat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL posix_renameat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int atflags);
 #ifndef DEFINED_kwlist__olddirfd_oldpath_newdirfd_newpath_atflags
 #define DEFINED_kwlist__olddirfd_oldpath_newdirfd_newpath_atflags
 PRIVATE DEFINE_KWLIST(kwlist__olddirfd_oldpath_newdirfd_newpath_atflags, { KEX("olddirfd", 0xfce5716b, 0x69852ead3adcc550), KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newdirfd", 0xcef3d13f, 0x767804c5c500a418), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
@@ -353,7 +349,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_renameat_f(size_t argc, DeeObject *c
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4))DREF DeeObject *DCALL posix_renameat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int atflags)
+PRIVATE DEFINE_KWCMETHOD(posix_renameat, &posix_renameat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL posix_renameat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int atflags)
 /*[[[end]]]*/
 {
 #ifdef posix_renameat_USE_posix_rename
@@ -428,11 +425,9 @@ err:
 	"olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,"
 	"newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,"
 	"flags:u=0,atflags:u=0", libname: "posix");]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL posix_renameat2_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int flags, unsigned int atflags);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_renameat2_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_RENAMEAT2_DEF { "renameat2", (DeeObject *)&posix_renameat2, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags=!0,atflags=!0)") },
 #define POSIX_RENAMEAT2_DEF_DOC(doc) { "renameat2", (DeeObject *)&posix_renameat2, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags=!0,atflags=!0)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_renameat2, &posix_renameat2_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL posix_renameat2_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int flags, unsigned int atflags);
 #ifndef DEFINED_kwlist__olddirfd_oldpath_newdirfd_newpath_flags_atflags
 #define DEFINED_kwlist__olddirfd_oldpath_newdirfd_newpath_flags_atflags
 PRIVATE DEFINE_KWLIST(kwlist__olddirfd_oldpath_newdirfd_newpath_flags_atflags, { KEX("olddirfd", 0xfce5716b, 0x69852ead3adcc550), KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newdirfd", 0xcef3d13f, 0x767804c5c500a418), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
@@ -454,7 +449,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_renameat2_f(size_t argc, DeeObject *
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4))DREF DeeObject *DCALL posix_renameat2_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int flags, unsigned int atflags)
+PRIVATE DEFINE_KWCMETHOD(posix_renameat2, &posix_renameat2_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL posix_renameat2_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int flags, unsigned int atflags)
 /*[[[end]]]*/
 {
 #ifdef posix_renameat2_USE_nt_MoveFileEx
@@ -634,11 +630,9 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("link", "oldpath:?Dstring,newpath:?Dstring", libname: "posix");]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_link_f_impl(DeeObject *oldpath, DeeObject *newpath);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_link_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_LINK_DEF { "link", (DeeObject *)&posix_link, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?Dstring)") },
 #define POSIX_LINK_DEF_DOC(doc) { "link", (DeeObject *)&posix_link, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?Dstring)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_link, &posix_link_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_link_f_impl(DeeObject *oldpath, DeeObject *newpath);
 #ifndef DEFINED_kwlist__oldpath_newpath
 #define DEFINED_kwlist__oldpath_newpath
 PRIVATE DEFINE_KWLIST(kwlist__oldpath_newpath, { KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEND });
@@ -654,7 +648,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_link_f(size_t argc, DeeObject *const
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_link_f_impl(DeeObject *oldpath, DeeObject *newpath)
+PRIVATE DEFINE_KWCMETHOD(posix_link, &posix_link_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_link_f_impl(DeeObject *oldpath, DeeObject *newpath)
 /*[[[end]]]*/
 {
 #ifdef posix_link_USE_nt_CreateHardLink
@@ -740,11 +735,9 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("flink", "oldfd:?X2?DFile?Dint,newpath:?Dstring", libname: "posix");]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_flink_f_impl(DeeObject *oldfd, DeeObject *newpath);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_flink_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FLINK_DEF { "flink", (DeeObject *)&posix_flink, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?Dstring)") },
 #define POSIX_FLINK_DEF_DOC(doc) { "flink", (DeeObject *)&posix_flink, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?Dstring)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_flink, &posix_flink_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_flink_f_impl(DeeObject *oldfd, DeeObject *newpath);
 #ifndef DEFINED_kwlist__oldfd_newpath
 #define DEFINED_kwlist__oldfd_newpath
 PRIVATE DEFINE_KWLIST(kwlist__oldfd_newpath, { KEX("oldfd", 0x5a92fcdb, 0x3de145419f68339e), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEND });
@@ -760,7 +753,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_flink_f(size_t argc, DeeObject *cons
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_flink_f_impl(DeeObject *oldfd, DeeObject *newpath)
+PRIVATE DEFINE_KWCMETHOD(posix_flink, &posix_flink_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_flink_f_impl(DeeObject *oldfd, DeeObject *newpath)
 /*[[[end]]]*/
 {
 #ifdef posix_flink_USE_posix_link
@@ -804,11 +798,9 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("linkat", "olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags:u=0", libname: "posix");]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL posix_linkat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int atflags);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_linkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_LINKAT_DEF { "linkat", (DeeObject *)&posix_linkat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags=!0)") },
 #define POSIX_LINKAT_DEF_DOC(doc) { "linkat", (DeeObject *)&posix_linkat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags=!0)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_linkat, &posix_linkat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL posix_linkat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int atflags);
 #ifndef DEFINED_kwlist__olddirfd_oldpath_newdirfd_newpath_atflags
 #define DEFINED_kwlist__olddirfd_oldpath_newdirfd_newpath_atflags
 PRIVATE DEFINE_KWLIST(kwlist__olddirfd_oldpath_newdirfd_newpath_atflags, { KEX("olddirfd", 0xfce5716b, 0x69852ead3adcc550), KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newdirfd", 0xcef3d13f, 0x767804c5c500a418), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
@@ -828,7 +820,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_linkat_f(size_t argc, DeeObject *con
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4))DREF DeeObject *DCALL posix_linkat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int atflags)
+PRIVATE DEFINE_KWCMETHOD(posix_linkat, &posix_linkat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL posix_linkat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int atflags)
 /*[[[end]]]*/
 {
 #ifdef posix_linkat_USE_posix_link

@@ -2825,7 +2825,6 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
  *   - here, flags describe all defined callbacks, except
  *     - Dee_METHOD_FPURECALL and Dee_METHOD_FCONSTCALL only describe "gs_get" and "gs_bound"
  * - DeeCMethodObject::cm_flags
- * - DeeKwCMethodObject::cm_flags
  */
 #define Dee_METHOD_FMASK        0xffffff00 /* Mask of portable method flags. */
 #define Dee_METHOD_FNORMAL      0x00000000 /* Normal flags */

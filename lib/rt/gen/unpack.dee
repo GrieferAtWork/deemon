@@ -391,6 +391,26 @@ final class UnpackParamDecoder {
 	@@Default initializer of the @cOutType argument
 	public final member cOutDefaultInit: string | none;
 
+
+	@@Like @cOutType, but for parameters
+	public final member cOutParamType: string | none = none;
+
+	@@When @cOutParamType differs from @cOutType, function to
+	@@extract the parameter value from the argument buffer.
+	public final member cOutParamFromCOut: (Callable with(/*data:*/ string)/*: string*/) | none = none;
+
+	public final property effectiveCOutParamType: string = {
+		get(): string {
+			return cOutParamType ?? cOutType;
+		}
+	}
+
+	public getCOutParamFromCOut(data: string): string {
+		if (cOutParamFromCOut is none)
+			return data;
+		return cOutParamFromCOut(data);
+	}
+
 	public property cOutTypeWithSpaceAfter: string = {
 		get(): string {
 			return cOutType.endswith("*") ? cOutType : f"{cOutType} ";
@@ -502,6 +522,20 @@ global final UNPACK_PARAM_DECODERS: {string: UnpackParamDecoder | UnpackTypeProx
 	"c:ptr": UnpackParamDecoder("void *", "?Aptr?Ectypes:void", (cIn, cOut, err) ->
 			f"if unlikely(DeeCTypes_GetPointer({cIn}, &{cOut}))\n"
 			f"	goto {err};\n", "NULL"),
+
+	/* These are for use **within** ctypes */
+	"ctypes:void*": UnpackParamDecoder("union pointer", "?Aptr?Gvoid", (cIn, cOut, err) ->
+			f"if unlikely(DeeObject_AsPointer({cIn}, &DeeCVoid_Type, &{cOut}))\n"
+			f"	goto {err};\n", "NULL", "void *", e -> f"{e}.pvoid"),
+	"ctypes:void_const*": UnpackParamDecoder("union pointer", "?Aptr?Gvoid", (cIn, cOut, err) ->
+			f"if unlikely(DeeObject_AsPointer({cIn}, &DeeCVoid_Type, &{cOut}))\n"
+			f"	goto {err};\n", "NULL", "void const *", e -> f"{e}.pcvoid"),
+	"ctypes:char*": UnpackParamDecoder("union pointer", "?Aptr?Gvoid", (cIn, cOut, err) ->
+			f"if unlikely(DeeObject_AsPointer({cIn}, &DeeCChar_Type, &{cOut}))\n"
+			f"	goto {err};\n", "NULL", "char *", e -> f"{e}.pchar"),
+	"ctypes:char_const*": UnpackParamDecoder("union pointer", "?Aptr?Gvoid", (cIn, cOut, err) ->
+			f"if unlikely(DeeObject_AsPointer({cIn}, &DeeCChar_Type, &{cOut}))\n"
+			f"	goto {err};\n", "NULL", "char const *", e -> f"{e}.pcchar"),
 
 	/* Unicode */
 	"c:utf8": UnpackTypeProxy("char const *", "Us", "?Dstring"),
@@ -632,9 +666,17 @@ final class UnpackParam {
 		}
 	}
 
-	public property cOutTypePretty: string = {
+	public property effectiveCOutParamType: string = {
 		get(): string {
-			return cOutType.rereplace(r"([^*\s])\*", r"\1 *");
+			if (decode !is none)
+				return decode.effectiveCOutParamType;
+			return cType;
+		}
+	}
+
+	public property effectiveCOutParamTypePretty: string = {
+		get(): string {
+			return effectiveCOutParamType.rereplace(r"([^*\s])\*", r"\1 *");
 		}
 	}
 
@@ -653,9 +695,9 @@ final class UnpackParam {
 		}
 	}
 
-	public property cOutTypePrettyWithSpaceAfter: string = {
+	public property effectiveCOutParamTypePrettyWithSpaceAfter: string = {
 		get(): string {
-			local result = cOutTypePretty;
+			local result = effectiveCOutParamTypePretty;
 			if (!result.endswith("*"))
 				result += " ";
 			return result;
@@ -688,7 +730,7 @@ final class UnpackParam {
 	}
 
 	public function cOutNameEx(args: string = "args"): string {
-		return decode is none ? f"{args}.{cOutName}" : cOutName;
+		return decode is none ? f"{args}.{cOutName}" : decode.getCOutParamFromCOut(cOutName);
 	}
 
 	@@Returns the encoded doc-string repr of @this param
@@ -1178,7 +1220,7 @@ function print_DeeArg_Unpack(name: string = "",
 		} else {
 			local UNPFunctions = Sequence.frozen(params.each.UNPFunction);
 			if (!UNPFunctions.any(e -> e is none)) {
-				local patterm: string = "".join(
+				local pattern: string = "".join(
 					for (local x: params) (x.isOptional ? "|" : "") + "X");
 				local mapper: string | none = {
 					"X": "DeeArg_Unpack1X",
@@ -1189,7 +1231,7 @@ function print_DeeArg_Unpack(name: string = "",
 					"|XX": "DeeArg_UnpackStruct0Or1XOr2X",
 					"X|XX": "DeeArg_UnpackStruct1XOr2XOr3X",
 					"|XXX": "DeeArg_UnpackStruct0Or1XOr2XOr3X",
-				}.get(patterm);
+				}.get(pattern);
 				if (mapper !is none) {
 					print(f"	{mapper}({err}, {argc}, {argv}, {nameRepr}{
 						("Struct" in mapper ? f", &{args}" : "")
@@ -1419,13 +1461,17 @@ import MODULE_NAME, getDefaultLibnameOfSourceFile from rt.gen.dexutils;
 @@>};
 function print_libMethod(name: string,
                          params: string | {UnpackParam...} = (),
+                         returnType: string = "DeeObject",
                          dReturnType: string = "",
                          kw: bool | none = none,
                          libname: string | none = none,
                          visi: string = "PRIVATE",
                          isvarying: bool = false,
                          ispure: bool = false,
-                         isconst: bool = false) {
+                         isconst: bool = false,
+                         printDefMacros: bool = true,
+                         docStringPrefix: string = "",
+                         methodFlags: string = "") {
 	if (params is string)
 		params = parseParamSpec(params).cached;
 	if (kw is none)
@@ -1443,13 +1489,18 @@ function print_libMethod(name: string,
 		if (param.cOutType.endswith("*") && (!param.isOptional || param.cInit != "NULL"))
 			nonNullPointerArgs.append(i + 1);
 	}
-	print("FORCELOCAL WUNUSED "),;
-	if (nonNullPointerArgs)
-		print(f"NONNULL(({", ".join(nonNullPointerArgs)})) "),;
-	print(f"DREF DeeObject *DCALL {libfoo_bar_f_impl}({", ".join(
-		for (local param: params)
-			f"{param.cOutTypePrettyWithSpaceAfter}{param.cOutName}"
-	) ?: "void"});");
+
+	local bar_f_impl_visi = Cell();
+	function print_bar_f_impl(usedVisi: string) {
+		bar_f_impl_visi.value = usedVisi;
+		print(usedVisi, " WUNUSED "),;
+		if (nonNullPointerArgs)
+			print(f"NONNULL(({", ".join(nonNullPointerArgs)})) "),;
+		print(f"DREF {returnType} *DCALL {libfoo_bar_f_impl}({", ".join(
+			for (local param: params)
+				f"{param.effectiveCOutParamTypePrettyWithSpaceAfter}{param.cOutName}"
+		) ?: "void"});");
+	}
 
 	local docString = f"({",".join(params.each.docParam)})";
 	if (dReturnType !in ["", "?N"]) {
@@ -1460,46 +1511,165 @@ function print_libMethod(name: string,
 			docString += dReturnType;
 	}
 
-	local symbolFlags = isvarying ? "MODSYM_FNORMAL" : "MODSYM_FREADONLY";
-	print(f"{visi == "INTERN" ? "INTDEF" : visi} WUNUSED DREF DeeObject *DCALL {libfoo_bar_f}(size_t argc, DeeObject *const *argv{kw ? ", DeeObject *kw" : ""});");
-	print('#define ', LIBFOO_BAR, '_DEF { ', repr name, ', (DeeObject *)&', libfoo_bar, ', ',
-		symbolFlags, ', DOC(', repr(docString), ') },');
-	print('#define ', LIBFOO_BAR, '_DEF_DOC(doc) { ', repr name, ', (DeeObject *)&', libfoo_bar, ', ',
-		symbolFlags, ', DOC(', repr(docString + '\n'), ' doc) },');
+	if (docStringPrefix)
+		printDocStringWithPrefix(docStringPrefix, name, params);
+	if (printDefMacros) {
+		local symbolFlags = isvarying ? "MODSYM_FNORMAL" : "MODSYM_FREADONLY";
+		print('#define ', LIBFOO_BAR, '_DEF { ', repr name, ', (DeeObject *)&', libfoo_bar, ', ',
+			symbolFlags, ', DOC(', repr(docString), ') },');
+		print('#define ', LIBFOO_BAR, '_DEF_DOC(doc) { ', repr name, ', (DeeObject *)&', libfoo_bar, ', ',
+			symbolFlags, ', DOC(', repr(docString + '\n'), ' doc) },');
+	}
 
-	local methodFlags = "";
-	if (isconst)
-		methodFlags += " | METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST";
-	if (ispure)
-		methodFlags += " | METHOD_FPURECALL";
-	methodFlags = methodFlags ? methodFlags[3:] : "METHOD_FNORMAL";
-	print(f"{visi} DEFINE_{kw ? "KW" : ""}CMETHOD({libfoo_bar}, &{libfoo_bar_f}, {methodFlags});");
-	if (kw) {
-		local kwlistName = makeIdentifier(f"kwlist__{"_".join(params.each.name)}");
-		print(f'#ifndef DEFINED_{kwlistName}');
-		print(f'#define DEFINED_{kwlistName}');
-		print(f"{visi} DEFINE_KWLIST({kwlistName}, \{ {((
-			for (local param: params)
-				f"KEX({repr param.name}, {param.nameHashes}), "
-		) + ...) ?? ""}KEND \});");
-		print(f'#endif /* !DEFINED_{kwlistName} */');
+	if (!methodFlags) {
+		if (isconst)
+			methodFlags += " | METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST";
+		if (ispure)
+			methodFlags += " | METHOD_FPURECALL";
+		methodFlags = methodFlags ? methodFlags[3:] : "METHOD_FNORMAL";
 	}
-	print(f"{visi} WUNUSED DREF DeeObject *DCALL {libfoo_bar_f}(size_t argc, DeeObject *const *argv{kw ? ", DeeObject *kw" : ""}) \{");
-	if (kw) {
-		print_DeeArg_UnpackKw(name: name, params: params, defineKwList: false);
+	if (!params) {
+		print_bar_f_impl("PRIVATE");
+		print(f"{visi} DEFINE_CMETHOD0({libfoo_bar}, &{libfoo_bar_f_impl}, {methodFlags});");
+	} else if (#params == 1 && !kw &&
+	           !params.first.isOptional &&
+	           params.first.UNPFunction !is none) {
+		local param0 = params.first;
+		local UNPFunction0 = param0.UNPFunction;
+		if (param0.UNPformat == "o" && param0.decode is none) {
+			print_bar_f_impl("PRIVATE");
+			print(f"{visi} DEFINE_CMETHOD1({libfoo_bar}, &{libfoo_bar_f_impl}, {methodFlags});");
+		} else {
+			print_bar_f_impl("FORCELOCAL");
+			local arg0 = "arg0";
+			if (param0.cName == "arg0")
+				arg0 = "_arg0";
+			print(f"PRIVATE WUNUSED NONNULL((1)) DREF {returnType} *DCALL {libfoo_bar_f}(DeeObject *__restrict {arg0}) \{");
+			if (param0.decode is none) {
+				print(f"	{param0.cTypePrettyWithSpaceAfter}{param0.cName};");
+				print(f"	if ({UNPFunction0}({arg0}, &{param0.cName}))");
+				print(f"		goto err;");
+				print(f"	return {libfoo_bar_f_impl}({param0.cName});");
+			} else if (UNPFunction0 == "_DeeArg_AsObject") {
+				param0.decode.printCOutDecl(param0.cOutName, false);
+				param0.decode.printCDecodeDecl(arg0, param0.cOutName, "err", param0.cInit);
+				print(f"	return {libfoo_bar_f_impl}({param0.cOutNameEx("args")});");
+			} else {
+				print(f"	struct \{");
+				print(f"		{param0.cTypePrettyWithSpaceAfter}{param0.cName};");
+				print(f"	\} args;");
+				param0.decode.printCOutDecl(param0.cOutName, false);
+				print(f"	if ({UNPFunction0}({arg0}, &args.{param0.cName}))");
+				print(f"		goto err;");
+				param0.decode.printCDecodeDecl(
+						f"args.{param0.cName}",
+						param0.cOutName, "err", param0.cInit);
+				print(f"	return {libfoo_bar_f_impl}({param0.cOutNameEx("args")});");
+			}
+			print(f"err:");
+			print(f"	return NULL;");
+			print(f"\}");
+			print(f"{visi} DEFINE_CMETHOD1({libfoo_bar}, &{libfoo_bar_f}, {methodFlags});");
+		}
 	} else {
-		print_DeeArg_Unpack(name, params: params);
+		print_bar_f_impl("FORCELOCAL");
+		if (kw) {
+			local kwlistName = makeIdentifier(f"kwlist__{"_".join(params.each.name)}");
+			print(f'#ifndef DEFINED_{kwlistName}');
+			print(f'#define DEFINED_{kwlistName}');
+			print(f"PRIVATE DEFINE_KWLIST({kwlistName}, \{ {((
+				for (local param: params)
+					f"KEX({repr param.name}, {param.nameHashes}), "
+			) + ...) ?? ""}KEND \});");
+			print(f'#endif /* !DEFINED_{kwlistName} */');
+		}
+		print(f"PRIVATE WUNUSED DREF {returnType} *DCALL {libfoo_bar_f}(size_t argc, DeeObject *const *argv{kw ? ", DeeObject *kw" : ""}) \{");
+		if (kw) {
+			print_DeeArg_UnpackKw(name: name, params: params, defineKwList: false);
+		} else {
+			print_DeeArg_Unpack(name, params: params);
+		}
+		print(f"	return {libfoo_bar_f_impl}({", ".join(params.each.cOutNameEx("args"))});");
+		print(f"err:");
+		print(f"	return NULL;");
+		print(f"\}");
+		print(f"{visi} DEFINE_{kw ? "KW" : ""}CMETHOD({libfoo_bar}, &{libfoo_bar_f}, {methodFlags});");
 	}
-	print(f"	return {libfoo_bar_f_impl}({", ".join(params.each.cOutNameEx("args"))});");
-	print(f"err:");
-	print(f"	return NULL;");
-	print(f"\}");
-	print("FORCELOCAL WUNUSED "),;
+
+	print(bar_f_impl_visi.value, " WUNUSED "),;
 	if (nonNullPointerArgs)
-		print(f"NONNULL(({", ".join(nonNullPointerArgs)}))"),;
-	print(f"DREF DeeObject *DCALL {libfoo_bar_f_impl}({", ".join(
+		print(f"NONNULL(({", ".join(nonNullPointerArgs)})) "),;
+	print(f"DREF {returnType} *DCALL {libfoo_bar_f_impl}({", ".join(
 		for (local param: params)
-			f"{param.cOutTypePrettyWithSpaceAfter}{param.cOutName}"
+			f"{param.effectiveCOutParamTypePrettyWithSpaceAfter}{param.cOutName}"
 	) ?: "void"})");
 }
+
+@@Wrapper around @print_libMethod for printing raw CMethod definitions
+function print_CMethod(name: string,
+                       params: string | {UnpackParam...} = (),
+                       returnType: string = "DeeObject",
+                       dReturnType: string = "",
+                       libname: string | none = none,
+                       visi: string = "PRIVATE",
+                       isvarying: bool = false,
+                       ispure: bool = false,
+                       isconst: bool = false,
+                       methodFlags: string = "",
+                       docStringPrefix: string | none = "") {
+	if (libname is none)
+		libname = AUTOLIBNAME();
+	if (docStringPrefix == "")
+		docStringPrefix = libname;
+	print_libMethod(
+			name: name,
+			params: params,
+			returnType: returnType,
+			dReturnType: dReturnType,
+			kw: false,
+			libname: libname,
+			visi: visi,
+			isvarying: isvarying,
+			ispure: ispure,
+			isconst: isconst,
+			printDefMacros: false,
+			docStringPrefix: docStringPrefix,
+			methodFlags: methodFlags,
+	);
+}
+
+
+@@Wrapper around @print_libMethod for printing raw KwCMethod definitions
+function print_KwCMethod(name: string,
+                         params: string | {UnpackParam...} = (),
+                         returnType: string = "DeeObject",
+                         dReturnType: string = "",
+                         libname: string | none = none,
+                         visi: string = "PRIVATE",
+                         isvarying: bool = false,
+                         ispure: bool = false,
+                         isconst: bool = false,
+                         methodFlags: string = "",
+                         docStringPrefix: string | none = "") {
+	if (libname is none)
+		libname = AUTOLIBNAME();
+	if (docStringPrefix == "")
+		docStringPrefix = libname;
+	print_libMethod(
+			name: name,
+			params: params,
+			returnType: returnType,
+			dReturnType: dReturnType,
+			kw: true,
+			libname: libname,
+			visi: visi,
+			isvarying: isvarying,
+			ispure: ispure,
+			isconst: isconst,
+			printDefMacros: false,
+			docStringPrefix: docStringPrefix,
+			methodFlags: methodFlags,
+	);
+}
+
 

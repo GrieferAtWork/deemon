@@ -83,11 +83,9 @@ print "/" "**" "/";
 	DeeObject *callback:?DCallable,
 	DeeObject *args:?DTuple=Dee_EmptyTuple
 """, libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_atexit_f_impl(DeeObject *callback, DeeObject *args);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_atexit_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_ATEXIT_DEF { "atexit", (DeeObject *)&posix_atexit, MODSYM_FREADONLY, DOC("(callback:?DCallable,args=!T0)") },
 #define POSIX_ATEXIT_DEF_DOC(doc) { "atexit", (DeeObject *)&posix_atexit, MODSYM_FREADONLY, DOC("(callback:?DCallable,args=!T0)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_atexit, &posix_atexit_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_atexit_f_impl(DeeObject *callback, DeeObject *args);
 #ifndef DEFINED_kwlist__callback_args
 #define DEFINED_kwlist__callback_args
 PRIVATE DEFINE_KWLIST(kwlist__callback_args, { KEX("callback", 0x3b9dd39e, 0x1e7dd8df6e98f4c6), KEX("args", 0xc6fc997f, 0x4af7cd17f976719e), KEND });
@@ -104,7 +102,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_atexit_f(size_t argc, DeeObject *con
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_atexit_f_impl(DeeObject *callback, DeeObject *args)
+PRIVATE DEFINE_KWCMETHOD(posix_atexit, &posix_atexit_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_atexit_f_impl(DeeObject *callback, DeeObject *args)
 /*[[[end]]]*/
 {
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
@@ -125,11 +124,9 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("exit", "exitcode:d", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_exit_f_impl(int exitcode);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_exit_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_EXIT_DEF { "exit", (DeeObject *)&posix_exit, MODSYM_FREADONLY, DOC("(exitcode:?Dint)") },
 #define POSIX_EXIT_DEF_DOC(doc) { "exit", (DeeObject *)&posix_exit, MODSYM_FREADONLY, DOC("(exitcode:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_exit, &posix_exit_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_exit_f_impl(int exitcode);
 #ifndef DEFINED_kwlist__exitcode
 #define DEFINED_kwlist__exitcode
 PRIVATE DEFINE_KWLIST(kwlist__exitcode, { KEX("exitcode", 0x79c9d863, 0x3fcba2655ec7fa85), KEND });
@@ -144,6 +141,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_exit_f(size_t argc, DeeObject *const
 err:
 	return NULL;
 }
+PRIVATE DEFINE_KWCMETHOD(posix_exit, &posix_exit_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_exit_f_impl(int exitcode)
 /*[[[end]]]*/
 {
@@ -160,11 +158,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_exit_f_impl(int exitcode)
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("_Exit", "exitcode:d", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__Exit_f_impl(int exitcode);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix__Exit_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX__EXIT_DEF { "_Exit", (DeeObject *)&posix__Exit, MODSYM_FREADONLY, DOC("(exitcode:?Dint)") },
 #define POSIX__EXIT_DEF_DOC(doc) { "_Exit", (DeeObject *)&posix__Exit, MODSYM_FREADONLY, DOC("(exitcode:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix__Exit, &posix__Exit_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__Exit_f_impl(int exitcode);
 #ifndef DEFINED_kwlist__exitcode
 #define DEFINED_kwlist__exitcode
 PRIVATE DEFINE_KWLIST(kwlist__exitcode, { KEX("exitcode", 0x79c9d863, 0x3fcba2655ec7fa85), KEND });
@@ -179,6 +175,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix__Exit_f(size_t argc, DeeObject *cons
 err:
 	return NULL;
 }
+PRIVATE DEFINE_KWCMETHOD(posix__Exit, &posix__Exit_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__Exit_f_impl(int exitcode)
 /*[[[end]]]*/
 {
@@ -195,18 +192,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__Exit_f_impl(int exitcode)
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("abort", "", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_abort_f_impl(void);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_abort_f(size_t argc, DeeObject *const *argv);
 #define POSIX_ABORT_DEF { "abort", (DeeObject *)&posix_abort, MODSYM_FREADONLY, DOC("()") },
 #define POSIX_ABORT_DEF_DOC(doc) { "abort", (DeeObject *)&posix_abort, MODSYM_FREADONLY, DOC("()\n" doc) },
-PRIVATE DEFINE_CMETHOD(posix_abort, &posix_abort_f, METHOD_FNORMAL);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_abort_f(size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack0(err, argc, argv, "abort");
-	return posix_abort_f_impl();
-err:
-	return NULL;
-}
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_abort_f_impl(void)
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_abort_f_impl(void);
+PRIVATE DEFINE_CMETHOD0(posix_abort, &posix_abort_f_impl, METHOD_FNORMAL);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_abort_f_impl(void)
 /*[[[end]]]*/
 {
 #ifdef EXIT_FAILURE

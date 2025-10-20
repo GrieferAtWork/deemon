@@ -297,11 +297,9 @@ PRIVATE int DCALL dee_truncate(char *filename, __ULONGPTR_TYPE__ size) {
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("truncate", "path:?Dstring,length:?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_truncate_f_impl(DeeObject *path, DeeObject *length);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_TRUNCATE_DEF { "truncate", (DeeObject *)&posix_truncate, MODSYM_FREADONLY, DOC("(path:?Dstring,length:?Dint)") },
 #define POSIX_TRUNCATE_DEF_DOC(doc) { "truncate", (DeeObject *)&posix_truncate, MODSYM_FREADONLY, DOC("(path:?Dstring,length:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_truncate, &posix_truncate_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_truncate_f_impl(DeeObject *path, DeeObject *length);
 #ifndef DEFINED_kwlist__path_length
 #define DEFINED_kwlist__path_length
 PRIVATE DEFINE_KWLIST(kwlist__path_length, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("length", 0xecef0c1, 0x2993e8eb119cab21), KEND });
@@ -317,7 +315,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *c
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_truncate_f_impl(DeeObject *path, DeeObject *length)
+PRIVATE DEFINE_KWCMETHOD(posix_truncate, &posix_truncate_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_truncate_f_impl(DeeObject *path, DeeObject *length)
 /*[[[end]]]*/
 {
 #ifndef posix_truncate_USE_STUB
@@ -388,11 +387,9 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("ftruncate", "fd:?X2?DFile?Dint,length:?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_ftruncate_f_impl(DeeObject *fd, DeeObject *length);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FTRUNCATE_DEF { "ftruncate", (DeeObject *)&posix_ftruncate, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint,length:?Dint)") },
 #define POSIX_FTRUNCATE_DEF_DOC(doc) { "ftruncate", (DeeObject *)&posix_ftruncate, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint,length:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_ftruncate, &posix_ftruncate_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_ftruncate_f_impl(DeeObject *fd, DeeObject *length);
 #ifndef DEFINED_kwlist__fd_length
 #define DEFINED_kwlist__fd_length
 PRIVATE DEFINE_KWLIST(kwlist__fd_length, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("length", 0xecef0c1, 0x2993e8eb119cab21), KEND });
@@ -408,7 +405,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject *
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2))DREF DeeObject *DCALL posix_ftruncate_f_impl(DeeObject *fd, DeeObject *length)
+PRIVATE DEFINE_KWCMETHOD(posix_ftruncate, &posix_ftruncate_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_ftruncate_f_impl(DeeObject *fd, DeeObject *length)
 /*[[[end]]]*/
 {
 #ifdef posix_ftruncate_USE_DeeFile_Trunc
@@ -481,11 +479,9 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("ftruncateat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,length:?Dint,atflags:u=0", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_ftruncateat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *length, unsigned int atflags);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncateat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FTRUNCATEAT_DEF { "ftruncateat", (DeeObject *)&posix_ftruncateat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,length:?Dint,atflags=!0)") },
 #define POSIX_FTRUNCATEAT_DEF_DOC(doc) { "ftruncateat", (DeeObject *)&posix_ftruncateat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,length:?Dint,atflags=!0)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_ftruncateat, &posix_ftruncateat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_ftruncateat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *length, unsigned int atflags);
 #ifndef DEFINED_kwlist__dfd_path_length_atflags
 #define DEFINED_kwlist__dfd_path_length_atflags
 PRIVATE DEFINE_KWLIST(kwlist__dfd_path_length_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("length", 0xecef0c1, 0x2993e8eb119cab21), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
@@ -504,7 +500,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncateat_f(size_t argc, DeeObject
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2, 3))DREF DeeObject *DCALL posix_ftruncateat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *length, unsigned int atflags)
+PRIVATE DEFINE_KWCMETHOD(posix_ftruncateat, &posix_ftruncateat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_ftruncateat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *length, unsigned int atflags)
 /*[[[end]]]*/
 {
 #ifdef posix_ftruncateat_USE_posix_truncate
@@ -540,11 +537,9 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("truncateat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,length:?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_truncateat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *length);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncateat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_TRUNCATEAT_DEF { "truncateat", (DeeObject *)&posix_truncateat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,length:?Dint)") },
 #define POSIX_TRUNCATEAT_DEF_DOC(doc) { "truncateat", (DeeObject *)&posix_truncateat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,length:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_truncateat, &posix_truncateat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_truncateat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *length);
 #ifndef DEFINED_kwlist__dfd_path_length
 #define DEFINED_kwlist__dfd_path_length
 PRIVATE DEFINE_KWLIST(kwlist__dfd_path_length, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("length", 0xecef0c1, 0x2993e8eb119cab21), KEND });
@@ -561,7 +556,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncateat_f(size_t argc, DeeObject 
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED NONNULL((1, 2, 3))DREF DeeObject *DCALL posix_truncateat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *length)
+PRIVATE DEFINE_KWCMETHOD(posix_truncateat, &posix_truncateat_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_truncateat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *length)
 /*[[[end]]]*/
 {
 #ifdef posix_truncateat_USE_posix_truncate
