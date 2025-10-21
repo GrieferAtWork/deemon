@@ -146,7 +146,7 @@ DeeNTSystem_GetHandle(DeeObject *__restrict ob) {
 /* Same as `DeeNTSystem_GetHandleEx()', but also writes to `p_fd' (when non-NULL):
  * - `-1': If `get_osfhandle()' wasn't used
  * - `*':  The file descriptor number passed to `get_osfhandle()' */
-DFUNDEF WUNUSED NONNULL((1)) /*HANDLE*/ void *DCALL
+PUBLIC WUNUSED NONNULL((1)) /*HANDLE*/ void *DCALL
 DeeNTSystem_GetHandleEx(DeeObject *__restrict ob, int *p_fd) {
 	DREF DeeObject *attr;
 #if (defined(Dee_fd_t_IS_HANDLE) || \
@@ -1824,7 +1824,7 @@ DeeNTSystem_TranslateErrno(/*DWORD*/ DeeNT_DWORD dwError) {
 
 
 /* Do the reverse of `DeeNTSystem_TranslateErrno()' */
-DFUNDEF ATTR_CONST WUNUSED /*DWORD*/ DeeNT_DWORD DCALL
+PUBLIC ATTR_CONST WUNUSED /*DWORD*/ DeeNT_DWORD DCALL
 DeeNTSystem_TranslateNtError(/*errno_t*/ int errno_value) {
 #ifdef DeeNTSystem_TranslateNtError_USE_ERRNO_KOS2NT
 	return errno_kos2nt(errno_value);
@@ -2099,14 +2099,16 @@ DeeNTSystem_CreateFileNoATime(/*String*/ DeeObject *__restrict lpFileName,
 	                                 dwCreationDisposition,
 	                                 dwFlagsAndAttributes,
 	                                 hTemplateFile);
-	if (hResult == INVALID_HANDLE_VALUE && !(dwDesiredAccess & FILE_WRITE_ATTRIBUTES)) {
-		hResult = DeeNTSystem_CreateFile(lpFileName,
-		                                 dwDesiredAccess,
-		                                 dwShareMode,
-		                                 lpSecurityAttributes,
-		                                 dwCreationDisposition,
-		                                 dwFlagsAndAttributes,
-		                                 hTemplateFile);
+	if (hResult == INVALID_HANDLE_VALUE) {
+		if (!(dwDesiredAccess & FILE_WRITE_ATTRIBUTES)) {
+			hResult = DeeNTSystem_CreateFile(lpFileName,
+			                                 dwDesiredAccess,
+			                                 dwShareMode,
+			                                 lpSecurityAttributes,
+			                                 dwCreationDisposition,
+			                                 dwFlagsAndAttributes,
+			                                 hTemplateFile);
+		}
 	} else if (hResult != NULL) {
 		BOOL bResult;
 		FILETIME ftLastAccessed;
@@ -3242,7 +3244,7 @@ err:
  * @return: * :        The formatted message.
  * @return: NULL:      A deemon callback failed and an error was thrown.
  * @return: ITER_DONE: The system call failed (s.a. `GetLastError()'). */
-DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL
+PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL
 DeeNTSystem_FormatMessage(DeeNT_DWORD dwFlags, void const *lpSource,
                           DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
                           /* va_list * */ void *Arguments) {
@@ -3250,7 +3252,7 @@ DeeNTSystem_FormatMessage(DeeNT_DWORD dwFlags, void const *lpSource,
 	DWORD dwLastError;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	error = DeeNTSystem_UPrintFormatMessage(&printer, dwFlags, lpSource,
-	                                       dwMessageId, dwLanguageId, Arguments);
+	                                        dwMessageId, dwLanguageId, Arguments);
 	if (error == 0)
 		return unicode_printer_pack(&printer);
 	/* Preserve LastError during `unicode_printer_fini()' */
@@ -3271,7 +3273,7 @@ err:
 /* @return: 1:  The system call failed (nothing was printed; s.a. `GetLastError()')
  * @return: 0:  Successfully printed the message.
  * @return: -1: A deemon callback failed and an error was thrown. */
-DFUNDEF WUNUSED NONNULL((1)) int DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeNTSystem_UPrintFormatMessage(struct unicode_printer *__restrict printer,
                                 DeeNT_DWORD dwFlags, void const *lpSource,
                                 DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
