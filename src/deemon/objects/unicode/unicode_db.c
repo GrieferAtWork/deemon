@@ -140,13 +140,11 @@ PRIVATE uint16_t const unicode_tab2[42];
 STATIC_ASSERT_MSG(UNICODE_FOLD_MAXLEN <= Dee_UNICODE_FOLDED_MAX,
                   "Dee_UNICODE_FOLDED_MAX must be increased!");
 
-PRIVATE struct unitraits const default_traits = { 0x0, 0, 0xff, 0, 0, 0 };
-
 PUBLIC ATTR_CONST ATTR_RETNONNULL WUNUSED struct unitraits const *
 (DCALL DeeUni_Descriptor)(uint32_t ch) {
 	if likely(ch < UNICODE_COUNT)
 		return &UNICODE_DESCRIPTOR(ch);
-	return &default_traits;
+	return &unicode_default_descriptor;
 }
 
 PUBLIC ATTR_CONST WUNUSED uint8_t
