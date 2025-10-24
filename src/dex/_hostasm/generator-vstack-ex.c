@@ -1292,25 +1292,25 @@ vcall_cmethod(struct fungen *__restrict self,
 	}
 
 	/* Optimizations for special C methods from the builtin deemon module. */
-	if (func == DeeBuiltin_HasAttr.cm_func.cb_meth) {
+	if (func == DeeBuiltin_HasAttr.cm_func.cmf_meth) {
 		if (argc == 2)
 			return fg_vophasattr(self);
-	} else if (func == DeeBuiltin_HasItem.cm_func.cb_meth) {
+	} else if (func == DeeBuiltin_HasItem.cm_func.cmf_meth) {
 		/*if (argc == 2) // TODO
 			return fg_vophasitem(self);*/
-	} else if (func == DeeBuiltin_BoundAttr.cm_func.cb_meth) {
+	} else if (func == DeeBuiltin_BoundAttr.cm_func.cmf_meth) {
 		if (argc == 2)
 			return fg_vopboundattr(self);
 		if (argc == 3) {
 			/* TODO: Inline call when 3rd "allow_missing" argument is given. */
 		}
-	} else if (func == DeeBuiltin_BoundItem.cm_func.cb_meth) {
+	} else if (func == DeeBuiltin_BoundItem.cm_func.cmf_meth) {
 		if (argc == 2)
 			return fg_vopbounditem(self);
 		if (argc == 3) {
 			/* TODO: Inline call when 3rd "allow_missing" argument is given. */
 		}
-	} else if (func == DeeBuiltin_Hash.cm_func.cb_meth) {
+	} else if (func == DeeBuiltin_Hash.cm_func.cmf_meth) {
 		return fg_vophash_n(self, argc);
 	}
 
@@ -1420,10 +1420,10 @@ vcall_kwcmethod(struct fungen *__restrict self,
 	DO(vinline_kwds_and_replace_with_null(self, &argc, doc, NULL, NULL)); /* [args...], kw */
 
 	/* Optimizations for special C methods from the builtin deemon module. */
-	if (func == DeeBuiltin_Compare.cm_func.cb_kwmeth) {
+	if (func == DeeBuiltin_Compare.cm_func.cmf_kwmeth) {
 		/*if (argc == 2 && memval_isnull(fg_vtop(self))) // XXX: Inline?
 			return fg_vopcompare(self);*/
-	} else if (func == DeeBuiltin_Import.cm_func.cb_kwmeth) {
+	} else if (func == DeeBuiltin_Import.cm_func.cmf_kwmeth) {
 		/*if (argc == 2 && memval_isnull(fg_vtop(self))) // XXX: Inline?
 			return fg_vopimport(self);*/
 	}
@@ -1761,10 +1761,10 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 			method_name  = origin.omo_decl->m_name;
 			method_flags = origin.omo_decl->m_flag;
 		}
-		return vcall_objmethod(self, func->om_func, true_argc,
+		return vcall_objmethod(self, func->om_func.omf_meth, true_argc,
 		                       &doc, method_name, method_flags);
 	} else if (func_type == &DeeKwObjMethod_Type) {
-		DeeKwObjMethodObject *func = (DeeKwObjMethodObject *)func_obj;
+		DeeObjMethodObject *func = (DeeObjMethodObject *)func_obj;
 		struct objmethod_origin origin;
 		uintptr_t method_flags = METHOD_FNORMAL;
 		char const *method_name = NULL;
@@ -1779,7 +1779,7 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 		DO(fg_vpop_at(self, true_argc + 2));     /* [args...], kw */
 		DO(fg_vpush_const(self, func->om_this)); /* [args...], kw, this */
 		DO(fg_vrrot(self, true_argc + 2));       /* this, [args...], kw */
-		return vcall_kwobjmethod(self, func->om_func, true_argc,
+		return vcall_kwobjmethod(self, func->om_func.omf_kwmeth, true_argc,
 		                         &doc, method_name, method_flags);
 	} else if (func_type == &DeeClsMethod_Type) {
 		DeeClsMethodObject *func = (DeeClsMethodObject *)func_obj;
@@ -1793,22 +1793,23 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 			DO(fg_vlrot(self, argc + 1));      /* [args...], this */
 			DO(fg_vcall_DeeObject_AssertTypeOrAbstract_c(self, func->ob_type)); /* [args...], this */
 			DO(fg_vrrot(self, argc + 1));      /* this, [args...] */
-			doc.di_typ = func->cm_type;
+			doc.di_typ = func->clm_type;
 			if (DeeClsMethod_GetOrigin((DeeObject *)func, &origin)) {
 				doc.di_doc   = origin.omo_decl->m_doc;
 				method_name  = origin.omo_decl->m_name;
 				method_flags = origin.omo_decl->m_flag;
 			}
-			return vcall_objmethod(self, func->cm_func, argc, &doc, method_name, method_flags);
+			return vcall_objmethod(self, func->clm_func.clmf_meth, argc,
+			                       &doc, method_name, method_flags);
 		}
 	} else if (func_type == &DeeKwClsMethod_Type) {
-		DeeKwClsMethodObject *func = (DeeKwClsMethodObject *)func_obj;
+		DeeClsMethodObject *func = (DeeClsMethodObject *)func_obj;
 		if (true_argc >= 1) {
 			vstackaddr_t argc = true_argc - 1; /* Account for "this" argument */
 			uintptr_t method_flags = METHOD_FNORMAL;
 			char const *method_name = NULL;
 			struct objmethod_origin origin;
-			doc.di_typ = func->cm_type;
+			doc.di_typ = func->clm_type;
 			if (DeeKwClsMethod_GetOrigin((DeeObject *)func, &origin)) {
 				doc.di_doc   = origin.omo_decl->m_doc;
 				method_name  = origin.omo_decl->m_name;
@@ -1820,7 +1821,8 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 			DO(fg_vlrot(self, argc + 2));                                              /* [args...], kw, this */
 			DO(fg_vcall_DeeObject_AssertTypeOrAbstract_c(self, func->ob_type));        /* [args...], kw, this */
 			DO(fg_vrrot(self, argc + 2));                                              /* this, [args...], kw */
-			return vcall_kwobjmethod(self, func->cm_func, argc, &doc, method_name, method_flags); /* result */
+			return vcall_kwobjmethod(self, func->clm_func.clmf_kwmeth, argc,
+			                         &doc, method_name, method_flags); /* result */
 		}
 	} else if (func_type == &DeeClsProperty_Type) {
 		DeeClsPropertyObject *func = (DeeClsPropertyObject *)func_obj;
@@ -1842,11 +1844,11 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 	} else if (func_type == &DeeClsMember_Type) {
 		DeeClsMemberObject *func = (DeeClsMemberObject *)func_obj;
 		if (true_argc == 1) {
-			DO(vpop_empty_kwds(self));                                          /* func, this */
-			DO(fg_vcall_DeeObject_AssertTypeOrAbstract_c(self, func->cm_type)); /* func, this */
-			DO(fg_vpop_at(self, 2));                                            /* this */
+			DO(vpop_empty_kwds(self));                                           /* func, this */
+			DO(fg_vcall_DeeObject_AssertTypeOrAbstract_c(self, func->cmb_type)); /* func, this */
+			DO(fg_vpop_at(self, 2));                                             /* this */
 			/* XXX: Look at current instruction to see if the result needs to be a reference. */
-			return fg_vpush_type_member(self, func->cm_type, &func->cm_memb, true);
+			return fg_vpush_type_member(self, func->cmb_type, &func->cmb_memb, true);
 		}
 	} else if (func_type == &DeeCMethod_Type) {
 		int result;
@@ -1859,10 +1861,10 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 			doc.di_doc = origin.cmo_doc;
 			doc.di_mod = origin.cmo_module;
 			doc.di_typ = origin.cmo_type;
-			result = vcall_cmethod(self, func->cm_func.cb_meth, true_argc, &doc, func->cm_flags);
+			result = vcall_cmethod(self, func->cm_func.cmf_meth, true_argc, &doc, func->cm_flags);
 			Dee_cmethod_origin_fini(&origin);
 		} else {
-			result = vcall_cmethod(self, func->cm_func.cb_meth, true_argc, &doc, func->cm_flags);
+			result = vcall_cmethod(self, func->cm_func.cmf_meth, true_argc, &doc, func->cm_flags);
 		}
 		return result;
 	} else if (func_type == &DeeCMethod0_Type && true_argc == 0) {
@@ -1876,10 +1878,10 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 			doc.di_doc = origin.cmo_doc;
 			doc.di_mod = origin.cmo_module;
 			doc.di_typ = origin.cmo_type;
-			result = vcall_cmethod0(self, func->cm_func.cb_meth0, &doc, func->cm_flags);
+			result = vcall_cmethod0(self, func->cm_func.cmf_meth0, &doc, func->cm_flags);
 			Dee_cmethod_origin_fini(&origin);
 		} else {
-			result = vcall_cmethod0(self, func->cm_func.cb_meth0, &doc, func->cm_flags);
+			result = vcall_cmethod0(self, func->cm_func.cmf_meth0, &doc, func->cm_flags);
 		}
 		return result;
 	} else if (func_type == &DeeCMethod1_Type && true_argc == 1) {
@@ -1893,10 +1895,10 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 			doc.di_doc = origin.cmo_doc;
 			doc.di_mod = origin.cmo_module;
 			doc.di_typ = origin.cmo_type;
-			result = vcall_cmethod1(self, func->cm_func.cb_meth1, &doc, func->cm_flags);
+			result = vcall_cmethod1(self, func->cm_func.cmf_meth1, &doc, func->cm_flags);
 			Dee_cmethod_origin_fini(&origin);
 		} else {
-			result = vcall_cmethod1(self, func->cm_func.cb_meth1, &doc, func->cm_flags);
+			result = vcall_cmethod1(self, func->cm_func.cmf_meth1, &doc, func->cm_flags);
 		}
 		return result;
 	} else if (func_type == &DeeKwCMethod_Type) {
@@ -1904,7 +1906,8 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 		DeeCMethodObject *func = (DeeCMethodObject *)func_obj; /* func, [args...], kw */
 		DO(fg_vpop_at(self, true_argc + 2));                   /* [args...], kw */
 		if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE) {
-			result = vcall_kwcmethod(self, func->cm_func.cb_kwmeth, true_argc, &doc, func->cm_flags);
+			result = vcall_kwcmethod(self, func->cm_func.cmf_kwmeth, true_argc,
+			                         &doc, func->cm_flags);
 		} else {
 			struct cmethod_origin origin;
 			if (DeeCMethod_GetOrigin(func, &origin)) {
@@ -1912,13 +1915,17 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 				doc.di_mod = origin.cmo_module;
 				doc.di_typ = origin.cmo_type;
 				result = vinline_kwds_and_replace_with_null(self, &true_argc, &doc, NULL, NULL); /* [args...], kw */
-				if likely(result == 0)
-					result = vcall_kwcmethod(self, func->cm_func.cb_kwmeth, true_argc, &doc, func->cm_flags);
+				if likely(result == 0) {
+					result = vcall_kwcmethod(self, func->cm_func.cmf_kwmeth,
+					                         true_argc, &doc, func->cm_flags);
+				}
 				Dee_cmethod_origin_fini(&origin);
 			} else {
 				result = vinline_kwds_and_replace_with_null(self, &true_argc, &doc, NULL, NULL); /* [args...], kw */
-				if likely(result == 0)
-					result = vcall_kwcmethod(self, func->cm_func.cb_kwmeth, true_argc, &doc, func->cm_flags);
+				if likely(result == 0) {
+					result = vcall_kwcmethod(self, func->cm_func.cmf_kwmeth,
+					                         true_argc, &doc, func->cm_flags);
+				}
 			}
 		}
 		return result;
@@ -2263,12 +2270,12 @@ vopcallkw_consttype(struct fungen *__restrict self,
 		DO(fg_vswap(self));                                         /* kw, [args...], argv, func, orig_func */
 		DO(fg_vrrot(self, true_argc + 4));                          /* orig_func, kw, [args...], argv, func */
 		DO(fg_vdup(self));                                          /* orig_func, kw, [args...], argv, func, func */
-		DO(fg_vind(self, offsetof(DeeKwObjMethodObject, om_this))); /* orig_func, kw, [args...], argv, func, func->om_this */
+		DO(fg_vind(self, offsetof(DeeObjMethodObject, om_this))); /* orig_func, kw, [args...], argv, func, func->om_this */
 		DO(fg_vpush_immSIZ(self, true_argc));                       /* orig_func, kw, [args...], argv, func, func->om_this, argc */
 		DO(fg_vlrot(self, 4));                                      /* orig_func, kw, [args...], func, func->om_this, argc, argv */
 		DO(fg_vlrot(self, true_argc + 5));                          /* orig_func, [args...], func, func->om_this, argc, argv, kw */
 		DO(fg_vlrot(self, 4));                                      /* orig_func, [args...], func->om_this, argc, argv, kw, func */
-		DO(fg_vind(self, offsetof(DeeKwObjMethodObject, om_func))); /* orig_func, [args...], func->om_this, argc, argv, kw, func->om_func */
+		DO(fg_vind(self, offsetof(DeeObjMethodObject, om_func))); /* orig_func, [args...], func->om_this, argc, argv, kw, func->om_func */
 		return fg_vcalldynapi_ex(self, VCALL_CC_OBJECT, 4, true_argc + 5); /* result */
 	} else if (func_type == &DeeClsMethod_Type) {
 		if (true_argc >= 1) {
@@ -2284,12 +2291,12 @@ vopcallkw_consttype(struct fungen *__restrict self,
 			DO(fg_vrrot(self, true_argc + 5));      /* orig_func, [args...], argv, func, func, this */
 			DO(fg_vdup(self));                      /* orig_func, [args...], argv, func, func, this, this */
 			DO(fg_vlrot(self, 3));                  /* orig_func, [args...], argv, func, this, this, func */
-			DO(fg_vind(self, offsetof(DeeClsMethodObject, cm_type))); /* orig_func, [args...], argv, func, this, this, func->cm_type */
-			DO(fg_vcall_DeeObject_AssertTypeOrAbstract(self));        /* orig_func, [args...], argv, func, this */
+			DO(fg_vind(self, offsetof(DeeClsMethodObject, clm_type))); /* orig_func, [args...], argv, func, this, this, func->cm_type */
+			DO(fg_vcall_DeeObject_AssertTypeOrAbstract(self));         /* orig_func, [args...], argv, func, this */
 			DO(fg_vpush_immSIZ(self, true_argc));   /* orig_func, [args...], argv, func, this, argc */
 			DO(fg_vlrot(self, 4));                  /* orig_func, [args...], func, this, argc, argv */
 			DO(fg_vlrot(self, 4));                  /* orig_func, [args...], this, argc, argv, func */
-			DO(fg_vind(self, offsetof(DeeClsMethodObject, cm_func))); /* orig_func, [args...], this, argc, argv, func->cm_func */
+			DO(fg_vind(self, offsetof(DeeClsMethodObject, clm_func))); /* orig_func, [args...], this, argc, argv, func->cm_func */
 			return fg_vcalldynapi_ex(self, VCALL_CC_OBJECT, 3, true_argc + 4); /* result */
 		}
 	} else if (func_type == &DeeKwClsMethod_Type) {
@@ -2306,13 +2313,13 @@ vopcallkw_consttype(struct fungen *__restrict self,
 			DO(fg_vrrot(self, true_argc + 6));      /* orig_func, kw, [args...], argv, func, func, this */
 			DO(fg_vdup(self));                      /* orig_func, kw, [args...], argv, func, func, this, this */
 			DO(fg_vlrot(self, 3));                  /* orig_func, kw, [args...], argv, func, this, this, func */
-			DO(fg_vind(self, offsetof(DeeKwClsMethodObject, cm_type))); /* orig_func, kw, [args...], argv, func, this, this, func->cm_type */
+			DO(fg_vind(self, offsetof(DeeClsMethodObject, clm_type))); /* orig_func, kw, [args...], argv, func, this, this, func->clm_type */
 			DO(fg_vcall_DeeObject_AssertTypeOrAbstract(self));          /* orig_func, kw, [args...], argv, func, this */
 			DO(fg_vpush_immSIZ(self, true_argc));   /* orig_func, kw, [args...], argv, func, this, argc */
 			DO(fg_vlrot(self, 4));                  /* orig_func, kw, [args...], func, this, argc, argv */
 			DO(fg_vlrot(self, true_argc + 5));      /* orig_func, [args...], func, this, argc, argv, kw */
 			DO(fg_vlrot(self, 5));                  /* orig_func, [args...], this, argc, argv, kw, func */
-			DO(fg_vind(self, offsetof(DeeKwClsMethodObject, cm_func))); /* orig_func, [args...], this, argc, argv, kw, func->cm_func */
+			DO(fg_vind(self, offsetof(DeeClsMethodObject, clm_func))); /* orig_func, [args...], this, argc, argv, kw, func->clm_func */
 			return fg_vcalldynapi_ex(self, VCALL_CC_OBJECT, 4, true_argc + 5); /* result */
 		}
 	} else if (func_type == &DeeClsMember_Type) {
@@ -2321,11 +2328,11 @@ vopcallkw_consttype(struct fungen *__restrict self,
 			DO(fg_vnotoneref_at(self, 1)); /* func, this */
 			DO(fg_vdup(self));             /* func, this, this */
 			DO(fg_vdup_at(self, 3));       /* func, this, this, func */
-			DO(fg_vind(self, offsetof(DeeClsMemberObject, cm_type))); /* func, this, this, func->cm_type */
-			DO(fg_vcall_DeeObject_AssertTypeOrAbstract(self));        /* func, this */
+			DO(fg_vind(self, offsetof(DeeClsMemberObject, cmb_type))); /* func, this, this, func->cmb_type */
+			DO(fg_vcall_DeeObject_AssertTypeOrAbstract(self));         /* func, this */
 			DO(fg_vswap(self));            /* this, func */
-			DO(fg_vdelta(self, offsetof(DeeClsMemberObject, cm_memb))); /* this, &func->cm_memb */
-			DO(fg_vswap(self));            /* &func->cm_memb, this */
+			DO(fg_vdelta(self, offsetof(DeeClsMemberObject, cmb_memb))); /* this, &func->cmb_memb */
+			DO(fg_vswap(self));            /* &func->cmb_memb, this */
 			return fg_vcallapi(self, &Dee_type_member_get, VCALL_CC_OBJECT, 2); /* result */
 		}
 	} else if (func_type == &DeeCMethod_Type) {
@@ -2345,18 +2352,18 @@ vopcallkw_consttype(struct fungen *__restrict self,
 		DO(fg_vswap(self));                    /* func, kw, [args...], argc, argv */
 		DO(fg_vlrot(self, true_argc + 3));     /* func, [args...], argc, argv, kw */
 		DO(fg_vlrot(self, true_argc + 4));     /* [args...], argc, argv, kw, func */
-		DO(fg_vind(self, offsetof(DeeCMethodObject, cm_func.cb_kwmeth))); /* [args...], argc, argv, kw, func->cm_func.cb_kwmeth */
+		DO(fg_vind(self, offsetof(DeeCMethodObject, cm_func.cmf_kwmeth))); /* [args...], argc, argv, kw, func->cm_func.cmf_kwmeth */
 		return fg_vcalldynapi_ex(self, VCALL_CC_OBJECT, 3, true_argc + 3); /* result */
 	} else if (func_type == &DeeCMethod0_Type && true_argc == 0) {
-		DO(vpop_empty_kwds(self));                                       /* func */
-		DO(fg_vind(self, offsetof(DeeCMethodObject, cm_func.cb_meth0))); /* func->cm_func.cb_meth0 */
-		return fg_vcalldynapi(self, VCALL_CC_OBJECT, 0);                 /* result */
+		DO(vpop_empty_kwds(self));                                        /* func */
+		DO(fg_vind(self, offsetof(DeeCMethodObject, cm_func.cmf_meth0))); /* func->cm_func.cmf_meth0 */
+		return fg_vcalldynapi(self, VCALL_CC_OBJECT, 0);                  /* result */
 	} else if (func_type == &DeeCMethod1_Type && true_argc == 1) {
-		DO(vpop_empty_kwds(self));                                       /* func, arg0 */
-		DO(fg_vnotoneref(self, 1));                                      /* func, arg0 */
-		DO(fg_vswap(self));                                              /* arg0, func */
-		DO(fg_vind(self, offsetof(DeeCMethodObject, cm_func.cb_meth1))); /* arg0, func->cm_func.cb_meth1 */
-		return fg_vcalldynapi(self, VCALL_CC_OBJECT, 1);                 /* result */
+		DO(vpop_empty_kwds(self));                                        /* func, arg0 */
+		DO(fg_vnotoneref(self, 1));                                       /* func, arg0 */
+		DO(fg_vswap(self));                                               /* arg0, func */
+		DO(fg_vind(self, offsetof(DeeCMethodObject, cm_func.cmf_meth1))); /* arg0, func->cm_func.cmf_meth1 */
+		return fg_vcalldynapi(self, VCALL_CC_OBJECT, 1);                  /* result */
 	} else if (func_type == &DeeNone_Type) {
 		/* Special case: call where this-argument is "none" -> pop all arguments and re-return "none" */
 		DO(fg_vpopmany(self, true_argc + 2)); /* N/A */
@@ -2591,7 +2598,7 @@ vnew_ObjMethod(struct fungen *__restrict self,
 	}
 	if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_OSIZE)) {
 		/* Inline the call to `DeeObjMethod_New()' / `DeeKwObjMethod_New()' */
-		STATIC_ASSERT(sizeof(DeeObjMethodObject) == sizeof(DeeKwObjMethodObject));
+		STATIC_ASSERT(sizeof(DeeObjMethodObject) == sizeof(DeeObjMethodObject));
 		DO(fg_vcall_DeeObject_MALLOC(self, sizeof(DeeObjMethodObject), false)); /* this, ref:result */
 		DO(fg_vswap(self));                                                     /* ref:result, this */
 		DO(fg_vref2(self, 2));                                                  /* ref:result, ref:this */

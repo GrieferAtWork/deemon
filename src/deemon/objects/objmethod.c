@@ -62,8 +62,8 @@ DeeObjMethod_New(Dee_objmethod_t func, DeeObject *__restrict self) {
 	if unlikely(!result)
 		goto done;
 	DeeObject_Init(result, &DeeObjMethod_Type);
-	result->om_func = func;
-	result->om_this = self;
+	result->om_func.omf_meth = func;
+	result->om_this          = self;
 	Dee_Incref(self);
 done:
 	return (DREF DeeObject *)result;
@@ -71,14 +71,14 @@ done:
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeKwObjMethod_New(Dee_kwobjmethod_t func, DeeObject *__restrict self) {
-	DREF DeeKwObjMethodObject *result;
+	DREF DeeObjMethodObject *result;
 	ASSERT_OBJECT(self);
-	result = DeeObject_MALLOC(DeeKwObjMethodObject);
+	result = DeeObject_MALLOC(DeeObjMethodObject);
 	if unlikely(!result)
 		goto done;
 	DeeObject_Init(result, &DeeKwObjMethod_Type);
-	result->om_func = func;
-	result->om_this = self;
+	result->om_func.omf_kwmeth = func;
+	result->om_this            = self;
 	Dee_Incref(self);
 done:
 	return (DREF DeeObject *)result;
@@ -170,12 +170,12 @@ STATIC_ASSERT(offsetof(DeeObjMethodObject, om_this) == offsetof(ProxyObject, po_
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 objmethod_call(DeeObjMethodObject *self, size_t argc, DeeObject *const *argv) {
-	return DeeObjMethod_CallFunc(self->om_func, self->om_this, argc, argv);
+	return DeeObjMethod_CallFunc(self->om_func.omf_meth, self->om_this, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 objmethod_hash(DeeObjMethodObject *__restrict self) {
-	return Dee_HashCombine(Dee_HashPointer(self->om_func),
+	return Dee_HashCombine(Dee_HashPointer(self->om_func.omf_meth),
 	                       DeeObject_Hash(self->om_this));
 }
 
@@ -183,7 +183,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 objmethod_compare_eq(DeeObjMethodObject *self, DeeObjMethodObject *other) {
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	Dee_return_compare_if_ne(self->om_func, other->om_func);
+	Dee_return_compare_if_ne(self->om_func.omf_meth, other->om_func.omf_meth);
 	return DeeObject_CompareEq(self->om_this, other->om_this);
 err:
 	return Dee_COMPARE_ERR;
@@ -215,7 +215,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 objmethod_get_func(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
 	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin))
-		return DeeClsMethod_New(origin.omo_type, self->om_func);
+		return DeeClsMethod_New(origin.omo_type, self->om_func.omf_meth);
 	return DeeRT_ErrUnboundAttrCStr(self, "__func__");
 }
 
@@ -835,34 +835,34 @@ no_kwds:
 
 
 
-STATIC_ASSERT(offsetof(DeeObjMethodObject, om_this) == offsetof(DeeKwObjMethodObject, om_this));
-STATIC_ASSERT(offsetof(DeeObjMethodObject, om_func) == offsetof(DeeKwObjMethodObject, om_func));
+STATIC_ASSERT(offsetof(DeeObjMethodObject, om_this) == offsetof(DeeObjMethodObject, om_this));
+STATIC_ASSERT(offsetof(DeeObjMethodObject, om_func) == offsetof(DeeObjMethodObject, om_func));
 #define kwobjmethod_fini  objmethod_fini
 #define kwobjmethod_visit objmethod_visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-kwobjmethod_call(DeeKwObjMethodObject *self, size_t argc, DeeObject *const *argv) {
-	return DeeKwObjMethod_CallFunc(self->om_func, self->om_this, argc, argv, NULL);
+kwobjmethod_call(DeeObjMethodObject *self, size_t argc, DeeObject *const *argv) {
+	return DeeKwObjMethod_CallFunc(self->om_func.omf_kwmeth, self->om_this, argc, argv, NULL);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-kwobjmethod_call_kw(DeeKwObjMethodObject *self, size_t argc,
+kwobjmethod_call_kw(DeeObjMethodObject *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
-	return DeeKwObjMethod_CallFunc(self->om_func, self->om_this, argc, argv, kw);
+	return DeeKwObjMethod_CallFunc(self->om_func.omf_kwmeth, self->om_this, argc, argv, kw);
 }
 #define kwobjmethod_cmp objmethod_cmp
 
 #define kwobjmethod_bound_func objmethod_bound_origin
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-kwobjmethod_get_func(DeeKwObjMethodObject *__restrict self) {
+kwobjmethod_get_func(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
 	if likely(DeeKwObjMethod_GetOrigin((DeeObject *)self, &origin))
-		return DeeKwClsMethod_New(origin.omo_type, self->om_func);
+		return DeeKwClsMethod_New(origin.omo_type, self->om_func.omf_kwmeth);
 	return DeeRT_ErrUnboundAttrCStr(self, "__func__");
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-kwobjmethod_get_kwds(DeeKwObjMethodObject *__restrict self) {
+kwobjmethod_get_kwds(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
 	if likely(DeeKwObjMethod_GetOrigin((DeeObject *)self, &origin))
 		return doc_decode_kwds((DeeObject *)self, origin.omo_decl->m_doc);
@@ -937,7 +937,7 @@ PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeKwObjMethodObject)
+				TYPE_FIXED_ALLOCATOR(DeeObjMethodObject)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kwobjmethod_fini,
@@ -986,8 +986,8 @@ DeeClsMethod_New(DeeTypeObject *__restrict type,
 	if unlikely(!result)
 		goto done;
 	DeeObject_Init(result, &DeeClsMethod_Type);
-	result->cm_type = type;
-	result->cm_func = func;
+	result->clm_type           = type;
+	result->clm_func.clmf_meth = func;
 	Dee_Incref(type);
 done:
 	return (DREF DeeObject *)result;
@@ -996,14 +996,14 @@ done:
 PUBLIC WUNUSED NONNULL((1, 2)) DREF /*KwClsMethod*/ DeeObject *DCALL
 DeeKwClsMethod_New(DeeTypeObject *__restrict type,
                    Dee_kwobjmethod_t func) {
-	DeeKwClsMethodObject *result;
+	DeeClsMethodObject *result;
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
-	result = DeeObject_MALLOC(DeeKwClsMethodObject);
+	result = DeeObject_MALLOC(DeeClsMethodObject);
 	if unlikely(!result)
 		goto done;
 	DeeObject_Init(result, &DeeKwClsMethod_Type);
-	result->cm_type = type;
-	result->cm_func = func;
+	result->clm_type             = type;
+	result->clm_func.clmf_kwmeth = func;
 	Dee_Incref(type);
 done:
 	return (DREF DeeObject *)result;
@@ -1023,11 +1023,11 @@ clsmethod_call(DeeClsMethodObject *self, size_t argc, DeeObject *const *argv) {
 		goto err_argc_zero;
 
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(argv[0], self->cm_type))
+	if (DeeObject_AssertTypeOrAbstract(argv[0], self->clm_type))
 		goto err;
 
 	/* Use the first argument as the this-argument. */
-	return (*self->cm_func)(argv[0], argc - 1, argv + 1);
+	return (*self->clm_func.clmf_meth)(argv[0], argc - 1, argv + 1);
 err_argc_zero:
 	err_classmethod_argc_zero();
 err:
@@ -1036,20 +1036,20 @@ err:
 
 
 #if 1
-STATIC_ASSERT(offsetof(DeeClsMethodObject, cm_type) == offsetof(DeeObjMethodObject, om_this));
-STATIC_ASSERT(offsetof(DeeClsMethodObject, cm_func) == offsetof(DeeObjMethodObject, om_func));
+STATIC_ASSERT(offsetof(DeeClsMethodObject, clm_type) == offsetof(DeeObjMethodObject, om_this));
+STATIC_ASSERT(offsetof(DeeClsMethodObject, clm_func) == offsetof(DeeObjMethodObject, om_func));
 #define clsmethod_fini  objmethod_fini
 #define clsmethod_visit objmethod_visit
 #else
 PRIVATE NONNULL((1)) void DCALL
 clsmethod_fini(DeeClsMethodObject *__restrict self) {
-	Dee_Decref(self->cm_type);
+	Dee_Decref(self->clm_type);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 clsmethod_visit(DeeClsMethodObject *__restrict self,
                 Dee_visit_t proc, void *arg) {
-	Dee_Visit(self->cm_type);
+	Dee_Visit(self->clm_type);
 }
 #endif
 
@@ -1067,7 +1067,7 @@ clsmethod_print(DeeClsMethodObject *__restrict self,
 	char const *name = clsmethod_getname(self);
 	return DeeFormat_Printf(printer, arg,
 	                        "<class method %k.%s>",
-	                        self->cm_type, name);
+	                        self->clm_type, name);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1075,19 +1075,19 @@ clsmethod_printrepr(DeeClsMethodObject *__restrict self,
                     Dee_formatprinter_t printer, void *arg) {
 	char const *name = clsmethod_getname(self);
 	return DeeFormat_Printf(printer, arg, "%r.%s",
-	                        self->cm_type, name);
+	                        self->clm_type, name);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 clsmethod_hash(DeeClsMethodObject *__restrict self) {
-	return Dee_HashPointer(self->cm_func);
+	return Dee_HashPointer(self->clm_func.clmf_meth);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 clsmethod_compare_eq(DeeClsMethodObject *self, DeeClsMethodObject *other) {
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	return self->cm_func == other->cm_func ? 0 : 1;
+	return self->clm_func.clmf_meth == other->clm_func.clmf_meth ? 0 : 1;
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -1141,7 +1141,7 @@ kwclsmethod_get_kwds(DeeClsMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmethod_get_module(DeeClsMethodObject *__restrict self) {
 	DREF DeeObject *result;
-	result = DeeType_GetModule(self->cm_type);
+	result = DeeType_GetModule(self->clm_type);
 	if likely(result)
 		return result;
 	return DeeRT_ErrUnboundAttr(self, &str___module__);
@@ -1150,7 +1150,7 @@ clsmethod_get_module(DeeClsMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 clsmethod_bound_module(DeeClsMethodObject *__restrict self) {
 	DREF DeeObject *result;
-	result = DeeType_GetModule(self->cm_type);
+	result = DeeType_GetModule(self->clm_type);
 	if likely(result) {
 		Dee_Decref_unlikely(result);
 		return Dee_BOUND_YES;
@@ -1187,9 +1187,9 @@ PRIVATE WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *DCALL
 clsmethod_thiscall(DeeClsMethodObject *self, DeeObject *thisarg,
                    size_t argc, DeeObject *const *argv) {
 	/* Must ensure proper typing of the this-argument. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->clm_type))
 		goto err;
-	return (*self->cm_func)(thisarg, argc, argv);
+	return (*self->clm_func.clmf_meth)(thisarg, argc, argv);
 err:
 	return NULL;
 }
@@ -1211,7 +1211,7 @@ PRIVATE struct type_callable clsmethod_callable = {
 PRIVATE struct type_member tpconst kwclsmethod_members[] = {
 	TYPE_MEMBER_CONST_DOC(STR___kwds__, Dee_EmptySeq, clsmethod_get_kwds_doc),
 #define clsmethod_members (kwclsmethod_members + 1)
-	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT, offsetof(DeeClsMethodObject, cm_type),
+	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT, offsetof(DeeClsMethodObject, clm_type),
 	                      "->?DType\n"
 	                      "The type implementing @this method"),
 	TYPE_MEMBER_END
@@ -1284,16 +1284,16 @@ PUBLIC DeeTypeObject DeeClsMethod_Type = {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-kwclsmethod_call(DeeKwClsMethodObject *self, size_t argc, DeeObject *const *argv) {
+kwclsmethod_call(DeeClsMethodObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!argc)
 		goto err_argc_zero;
 
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(argv[0], self->cm_type))
+	if (DeeObject_AssertTypeOrAbstract(argv[0], self->clm_type))
 		goto err;
 
 	/* Use the first argument as the this-argument. */
-	return (*self->cm_func)(argv[0], argc - 1, argv + 1, NULL);
+	return (*self->clm_func.clmf_kwmeth)(argv[0], argc - 1, argv + 1, NULL);
 err_argc_zero:
 	err_classmethod_argc_zero();
 err:
@@ -1301,17 +1301,17 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-kwclsmethod_call_kw(DeeKwClsMethodObject *self, size_t argc,
+kwclsmethod_call_kw(DeeClsMethodObject *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
 	if unlikely(!argc)
 		goto err_argc_zero;
 
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(argv[0], self->cm_type))
+	if (DeeObject_AssertTypeOrAbstract(argv[0], self->clm_type))
 		goto err;
 
 	/* Use the first argument as the this-argument. */
-	return (*self->cm_func)(argv[0], argc - 1, argv + 1, kw);
+	return (*self->clm_func.clmf_kwmeth)(argv[0], argc - 1, argv + 1, kw);
 err_argc_zero:
 	err_classmethod_argc_zero();
 err:
@@ -1319,31 +1319,31 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-kwclsmethod_thiscall(DeeKwClsMethodObject *self,
+kwclsmethod_thiscall(DeeClsMethodObject *self,
                      DeeObject *thisarg, size_t argc,
                      DeeObject *const *argv) {
 	/* Must ensure proper typing of the this-argument. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->clm_type))
 		goto err;
-	return (*self->cm_func)(thisarg, argc, argv, NULL);
+	return (*self->clm_func.clmf_kwmeth)(thisarg, argc, argv, NULL);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-kwclsmethod_thiscall_kw(DeeKwClsMethodObject *self,
+kwclsmethod_thiscall_kw(DeeClsMethodObject *self,
                         DeeObject *thisarg, size_t argc,
                         DeeObject *const *argv, DeeObject *kw) {
 	/* Must ensure proper typing of the this-argument. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->clm_type))
 		goto err;
-	return (*self->cm_func)(thisarg, argc, argv, kw);
+	return (*self->clm_func.clmf_kwmeth)(thisarg, argc, argv, kw);
 err:
 	return NULL;
 }
 
-STATIC_ASSERT(offsetof(DeeKwClsMethodObject, cm_func) == offsetof(DeeClsMethodObject, cm_func));
-STATIC_ASSERT(offsetof(DeeKwClsMethodObject, cm_type) == offsetof(DeeClsMethodObject, cm_type));
+STATIC_ASSERT(offsetof(DeeClsMethodObject, clm_func) == offsetof(DeeClsMethodObject, clm_func));
+STATIC_ASSERT(offsetof(DeeClsMethodObject, clm_type) == offsetof(DeeClsMethodObject, clm_type));
 #define kwclsmethod_fini      clsmethod_fini
 #define kwclsmethod_print     clsmethod_print
 #define kwclsmethod_printrepr clsmethod_printrepr
@@ -1379,7 +1379,7 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeKwClsMethodObject)
+				TYPE_FIXED_ALLOCATOR(DeeClsMethodObject)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kwclsmethod_fini,
@@ -1774,7 +1774,7 @@ PRIVATE struct type_member tpconst clsproperty_members[] = {
 
 /* Make sure that we're allowed to re-use operators from ClassMethod. */
 STATIC_ASSERT(offsetof(DeeClsPropertyObject, cp_type) ==
-              offsetof(DeeClsMethodObject, cm_type));
+              offsetof(DeeClsMethodObject, clm_type));
 
 PRIVATE struct type_callable clsproperty_callable = {
 	/* .tp_call_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&clsproperty_get_kw,
@@ -1854,14 +1854,14 @@ DeeClsMember_New(DeeTypeObject *__restrict type,
 	if unlikely(!result)
 		goto done;
 	DeeObject_Init(result, &DeeClsMember_Type);
-	result->cm_memb = *desc;
-	result->cm_type = type;
+	result->cmb_memb = *desc;
+	result->cmb_type = type;
 	Dee_Incref(type);
 done:
 	return (DREF DeeObject *)result;
 }
 
-STATIC_ASSERT(offsetof(DeeClsMemberObject, cm_type) == offsetof(ProxyObject, po_obj));
+STATIC_ASSERT(offsetof(DeeClsMemberObject, cmb_type) == offsetof(ProxyObject, po_obj));
 #define clsmember_fini  generic_proxy__fini
 #define clsmember_visit generic_proxy__visit
 
@@ -1870,16 +1870,16 @@ clsmember_print(DeeClsMemberObject *__restrict self,
                 Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg,
 	                        "<class member %k.%s>",
-	                        self->cm_type,
-	                        self->cm_memb.m_name);
+	                        self->cmb_type,
+	                        self->cmb_memb.m_name);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 clsmember_printrepr(DeeClsMemberObject *__restrict self,
                     Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "%r.%s",
-	                        self->cm_type,
-	                        self->cm_memb.m_name);
+	                        self->cmb_type,
+	                        self->cmb_memb.m_name);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1888,9 +1888,9 @@ clsmember_get(DeeClsMemberObject *self, size_t argc,
 	DeeObject *thisarg;
 	DeeArg_Unpack1(err, argc, argv, "get", &thisarg);
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cmb_type))
 		goto err;
-	return type_member_get(&self->cm_memb, thisarg);
+	return type_member_get(&self->cmb_memb, thisarg);
 err:
 	return NULL;
 }
@@ -1902,9 +1902,9 @@ clsmember_get_kw(DeeClsMemberObject *self, size_t argc,
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:get", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cmb_type))
 		goto err;
-	return type_member_get(&self->cm_memb, thisarg);
+	return type_member_get(&self->cmb_memb, thisarg);
 err:
 	return NULL;
 }
@@ -1917,9 +1917,9 @@ clsmember_isbound(DeeClsMemberObject *self, size_t argc,
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:isbound", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cmb_type))
 		goto err;
-	isbound = type_member_bound(&self->cm_memb, thisarg);
+	isbound = type_member_bound(&self->cmb_memb, thisarg);
 	return_bool(isbound);
 err:
 	return NULL;
@@ -1932,9 +1932,9 @@ clsmember_delete(DeeClsMemberObject *self, size_t argc,
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:delete", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cmb_type))
 		goto err;
-	if (type_member_del(&self->cm_memb, thisarg))
+	if (type_member_del(&self->cmb_memb, thisarg))
 		goto err;
 	return_none;
 err:
@@ -1948,9 +1948,9 @@ clsmember_set(DeeClsMemberObject *self, size_t argc,
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "oo:set", &thisarg, &value))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cmb_type))
 		goto err;
-	if (type_member_set(&self->cm_memb, thisarg, value))
+	if (type_member_set(&self->cmb_memb, thisarg, value))
 		goto err;
 	return_none;
 err:
@@ -1967,9 +1967,9 @@ PRIVATE struct type_method tpconst clsmember_methods[] = {
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 clsmember_hash(DeeClsMemberObject *__restrict self) {
-	return (Dee_HashPointer(self->cm_type) ^
-	        Dee_HashPointer(self->cm_memb.m_name) ^
-	        Dee_HashPointer(self->cm_memb.m_desc.md_const));
+	return (Dee_HashPointer(self->cmb_type) ^
+	        Dee_HashPointer(self->cmb_memb.m_name) ^
+	        Dee_HashPointer(self->cmb_memb.m_desc.md_const));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1977,9 +1977,9 @@ clsmember_compare_eq(DeeClsMemberObject *self,
                      DeeClsMemberObject *other) {
 	if (DeeObject_AssertTypeExact(other, &DeeClsMember_Type))
 		goto err;
-	return ((self->cm_type == other->cm_type) &&
-	        (self->cm_memb.m_name == other->cm_memb.m_name) &&
-	        (self->cm_memb.m_desc.md_const == other->cm_memb.m_desc.md_const))
+	return ((self->cmb_type == other->cmb_type) &&
+	        (self->cmb_memb.m_name == other->cmb_memb.m_name) &&
+	        (self->cmb_memb.m_desc.md_const == other->cmb_memb.m_desc.md_const))
 	       ? 0
 	       : 1;
 err:
@@ -2001,14 +2001,14 @@ PRIVATE struct type_cmp clsmember_cmp = {
 
 PRIVATE struct type_member tpconst clsmember_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT,
-	                      offsetof(DeeClsMemberObject, cm_type),
+	                      offsetof(DeeClsMemberObject, cmb_type),
 	                      "->?DType\n"
 	                      "The type implementing @this member"),
 	TYPE_MEMBER_FIELD_DOC(STR___name__, STRUCT_CONST | STRUCT_CSTR,
-	                      offsetof(DeeClsMemberObject, cm_memb.m_name),
+	                      offsetof(DeeClsMemberObject, cmb_memb.m_name),
 	                      "The name of @this member"),
 	TYPE_MEMBER_FIELD_DOC(STR___doc__, STRUCT_CONST | STRUCT_CSTR_OPT,
-	                      offsetof(DeeClsMemberObject, cm_memb.m_doc),
+	                      offsetof(DeeClsMemberObject, cmb_memb.m_doc),
 	                      "->?X2?Dstring?N\n"
 	                      "The documentation string of @this member, or ?N if unknown"),
 	TYPE_MEMBER_CONST_DOC("canget", Dee_True, "Always evaluates to ?t"),
@@ -2017,15 +2017,15 @@ PRIVATE struct type_member tpconst clsmember_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_canset(DeeClsMemberObject *__restrict self) {
-	if (TYPE_MEMBER_ISCONST(&self->cm_memb))
+	if (TYPE_MEMBER_ISCONST(&self->cmb_memb))
 		return_false;
-	return_bool(!(self->cm_memb.m_desc.md_field.mdf_type & STRUCT_CONST));
+	return_bool(!(self->cmb_memb.m_desc.md_field.mdf_type & STRUCT_CONST));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_get_module(DeeClsMemberObject *__restrict self) {
 	DREF DeeObject *result;
-	result = DeeType_GetModule(self->cm_type);
+	result = DeeType_GetModule(self->cmb_type);
 	if likely(result)
 		return result;
 	return DeeRT_ErrUnboundAttr(self, &str___module__);
@@ -2034,7 +2034,7 @@ clsmember_get_module(DeeClsMemberObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 clsmember_bound_module(DeeClsMemberObject *__restrict self) {
 	DREF DeeObject *result;
-	result = DeeType_GetModule(self->cm_type);
+	result = DeeType_GetModule(self->cmb_type);
 	if likely(result) {
 		Dee_Decref_unlikely(result);
 		return Dee_BOUND_YES;
@@ -2254,11 +2254,11 @@ Dee_cmethod_origin_init(struct cmethod_origin *__restrict result, Dee_cmethod_t 
 
 /* Make sure that we can re-use some functions from `ClassMethod' */
 STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func) ==
-              offsetof(DeeClsMethodObject, cm_func));
+              offsetof(DeeClsMethodObject, clm_func));
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod_call(DeeCMethodObject *self, size_t argc, DeeObject *const *argv) {
-	return DeeCMethod_CallFunc(self->cm_func.cb_meth, argc, argv);
+	return DeeCMethod_CallFunc(self->cm_func.cmf_meth, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2410,14 +2410,14 @@ cmethod_print(DeeCMethodObject *__restrict self,
 		DREF DeeTypeObject *type;
 		struct type_member const *member;
 		struct module_symbol *symbol;
-		symbol = cmethod_getmodsym(mod, self->cm_func.cb_meth);
+		symbol = cmethod_getmodsym(mod, self->cm_func.cmf_meth);
 		if (symbol != NULL) {
 			result = DeeFormat_Printf(printer, arg, "<%s %k.%s>",
 			                          type_name, mod, symbol->ss_name);
 			Dee_Decref(mod);
 			goto done;
 		}
-		member = cmethod_gettypefield(mod, &type, self->cm_func.cb_meth);
+		member = cmethod_gettypefield(mod, &type, self->cm_func.cmf_meth);
 		if (member) {
 			result = DeeFormat_Printf(printer, arg, "<%s %k.%k.%s>",
 			                          type_name, mod, type, member->m_name);
@@ -2448,14 +2448,14 @@ cmethod_printrepr(DeeCMethodObject *__restrict self,
 		struct module_symbol *symbol;
 		struct type_member const *member;
 		DREF DeeTypeObject *type;
-		symbol = cmethod_getmodsym(mod, self->cm_func.cb_meth);
+		symbol = cmethod_getmodsym(mod, self->cm_func.cmf_meth);
 		if (symbol) {
 			result = DeeFormat_Printf(printer, arg, "%r.%s",
 			                          mod, symbol->ss_name);
 			Dee_Decref(mod);
 			return result;
 		}
-		member = cmethod_gettypefield(mod, &type, self->cm_func.cb_meth);
+		member = cmethod_gettypefield(mod, &type, self->cm_func.cmf_meth);
 		if (member) {
 			result = DeeFormat_Printf(printer, arg, "%r.%k.%s",
 			                          mod, type, member->m_name);
@@ -2530,8 +2530,8 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
 };
 
 
-STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func.cb_meth0) == offsetof(DeeCMethodObject, cm_func.cb_meth));
-STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func.cb_meth1) == offsetof(DeeCMethodObject, cm_func.cb_meth));
+STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func.cmf_meth0) == offsetof(DeeCMethodObject, cm_func.cmf_meth));
+STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func.cmf_meth1) == offsetof(DeeCMethodObject, cm_func.cmf_meth));
 #define cmethod0_print     cmethod_print
 #define cmethod1_print     cmethod_print
 #define cmethod0_printrepr cmethod_printrepr
@@ -2575,7 +2575,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod0_call(DeeCMethodObject *self, size_t argc, DeeObject *const *argv) {
 	(void)argv;
 	if likely(argc == 0)
-		return DeeCMethod0_CallFunc(self->cm_func.cb_meth0);
+		return DeeCMethod0_CallFunc(self->cm_func.cmf_meth0);
 	return cmethod0_bad_argc(self, argc);
 }
 
@@ -2583,7 +2583,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod1_call(DeeCMethodObject *self, size_t argc, DeeObject *const *argv) {
 	(void)argv;
 	if likely(argc == 1)
-		return DeeCMethod1_CallFunc(self->cm_func.cb_meth1, argv[0]);
+		return DeeCMethod1_CallFunc(self->cm_func.cmf_meth1, argv[0]);
 	return cmethod1_bad_argc(self, argc);
 }
 
@@ -2696,17 +2696,18 @@ PUBLIC DeeTypeObject DeeCMethod1_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwcmethod_call(DeeCMethodObject *self, size_t argc, DeeObject *const *argv) {
-	return DeeKwCMethod_CallFunc(self->cm_func.cb_kwmeth, argc, argv, NULL);
+	return DeeKwCMethod_CallFunc(self->cm_func.cmf_kwmeth, argc, argv, NULL);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwcmethod_call_kw(DeeCMethodObject *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-	return DeeKwCMethod_CallFunc(self->cm_func.cb_kwmeth, argc, argv, kw);
+	return DeeKwCMethod_CallFunc(self->cm_func.cmf_kwmeth, argc, argv, kw);
 }
 
 /* Make sure that we can re-use some functions from `CMethod' */
-STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func.cb_kwmeth) == offsetof(DeeCMethodObject, cm_func.cb_meth));
+STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func.cmf_kwmeth) ==
+              offsetof(DeeCMethodObject, cm_func.cmf_meth));
 #define kwcmethod_print     cmethod_print
 #define kwcmethod_printrepr cmethod_printrepr
 #define kwcmethod_operators cmethod_operators
@@ -2790,8 +2791,8 @@ DeeCMethod_New(Dee_cmethod_t func, uintptr_t flags) {
 	DREF DeeCMethodObject *result;
 	result = DeeObject_MALLOC(DeeCMethodObject);
 	if likely(result) {
-		result->cm_func.cb_meth = func;
-		result->cm_flags        = flags;
+		result->cm_func.cmf_meth = func;
+		result->cm_flags         = flags;
 		DeeObject_Init(result, &DeeCMethod_Type);
 	}
 	return (DREF DeeObject *)result;
@@ -2802,8 +2803,8 @@ DeeKwCMethod_New(Dee_kwcmethod_t func, uintptr_t flags) {
 	DREF DeeCMethodObject *result;
 	result = DeeObject_MALLOC(DeeCMethodObject);
 	if likely(result) {
-		result->cm_func.cb_kwmeth = func;
-		result->cm_flags          = flags;
+		result->cm_func.cmf_kwmeth = func;
+		result->cm_flags           = flags;
 		DeeObject_Init(result, &DeeKwCMethod_Type);
 	}
 	return (DREF DeeObject *)result;
@@ -2814,8 +2815,8 @@ DeeCMethod0_New(Dee_cmethod0_t func, uintptr_t flags) {
 	DREF DeeCMethodObject *result;
 	result = DeeObject_MALLOC(DeeCMethodObject);
 	if likely(result) {
-		result->cm_func.cb_meth0 = func;
-		result->cm_flags         = flags;
+		result->cm_func.cmf_meth0 = func;
+		result->cm_flags          = flags;
 		DeeObject_Init(result, &DeeCMethod0_Type);
 	}
 	return (DREF DeeObject *)result;
@@ -2826,8 +2827,8 @@ DeeCMethod1_New(Dee_cmethod1_t func, uintptr_t flags) {
 	DREF DeeCMethodObject *result;
 	result = DeeObject_MALLOC(DeeCMethodObject);
 	if likely(result) {
-		result->cm_func.cb_meth1 = func;
-		result->cm_flags         = flags;
+		result->cm_func.cmf_meth1 = func;
+		result->cm_flags          = flags;
 		DeeObject_Init(result, &DeeCMethod1_Type);
 	}
 	return (DREF DeeObject *)result;

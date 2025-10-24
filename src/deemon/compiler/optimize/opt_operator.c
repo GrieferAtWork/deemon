@@ -141,9 +141,8 @@ emulate_method_call(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		 * However, builtin codecs are still allowed!
 		 * NOTE: Both `string' and `Bytes' use the same underlying
 		 *       function in order to implement `encode' and `decode'! */
-		Dee_objmethod_t method;
-		DeeObject *meth_self = DeeObjMethod_SELF(self);
-		method               = DeeObjMethod_FUNC(self);
+		DeeObject *meth_self   = DeeObjMethod_SELF(self);
+		Dee_objmethod_t method = DeeObjMethod_FUNC(self);
 		if (method == (Dee_objmethod_t)&string_encode)
 			return emulate_object_encode(meth_self, argc, argv);
 		if (method == (Dee_objmethod_t)&string_decode)
@@ -704,7 +703,7 @@ do_generic:
 			    args->a_multiple.m_astc == 1 &&
 			    args->a_multiple.m_astv[0]->a_type == AST_MULTIPLE &&
 			    AST_FMULTIPLE_ISSEQUENCE(args->a_multiple.m_astv[0]->a_flag) &&
-			    objmethod->om_func == (Dee_objmethod_t)&string_format) {
+			    objmethod->om_func.omf_meth == (Dee_objmethod_t)&string_format) {
 				unsigned int old_optimizer_count = optimizer_count;
 				if (DeeObject_IsShared(objmethod)) {
 					objmethod = (DeeObjMethodObject *)DeeObject_Copy((DeeObject *)objmethod);

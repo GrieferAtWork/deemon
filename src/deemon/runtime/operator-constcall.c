@@ -391,10 +391,10 @@ ob_is_func_constcall(DeeObject *ob, size_t argc,
 		                                               argv[0], argc + 1, argv - 1, kw);
 	} else if (tp == &DeeClsMember_Type) {
 		DeeClsMemberObject *me = (DeeClsMemberObject *)ob;
-		if (TYPE_MEMBER_ISCONST(&me->cm_memb))
+		if (TYPE_MEMBER_ISCONST(&me->cmb_memb))
 			return true;
 		/* "Const && Atomic" would mean that the field can change, so we require "Const && !Atomic" */
-		return (me->cm_memb.m_desc.md_field.mdf_type & (STRUCT_ATOMIC | STRUCT_CONST)) == STRUCT_CONST;
+		return (me->cmb_memb.m_desc.md_field.mdf_type & (STRUCT_ATOMIC | STRUCT_CONST)) == STRUCT_CONST;
 	} else if (tp == &DeeCMethod_Type || tp == &DeeCMethod0_Type ||
 	           tp == &DeeCMethod1_Type || tp == &DeeKwCMethod_Type) {
 		DeeCMethodObject *me = (DeeCMethodObject *)ob;

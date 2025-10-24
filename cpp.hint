@@ -1071,12 +1071,12 @@
 #define Dee_DEFINE_YIELD_FUNCTION_NOARGS(n,...) DeeYieldFunctionObject n={}
 #define DEFINE_OBJMETHOD(n,...)                 DeeObjMethodObject n={}
 #define Dee_DEFINE_OBJMETHOD(n,...)             DeeObjMethodObject n={}
-#define DEFINE_KWOBJMETHOD(n,...)               DeeKwObjMethodObject n={}
-#define Dee_DEFINE_KWOBJMETHOD(n,...)           DeeKwObjMethodObject n={}
+#define DEFINE_KWOBJMETHOD(n,...)               DeeObjMethodObject n={}
+#define Dee_DEFINE_KWOBJMETHOD(n,...)           DeeObjMethodObject n={}
 #define DEFINE_CLSMETHOD(n,...)                 DeeClsMethodObject n={}
 #define Dee_DEFINE_CLSMETHOD(n,...)             DeeClsMethodObject n={}
-#define DEFINE_KWCLSMETHOD(n,...)               DeeKwClsMethodObject n={}
-#define Dee_DEFINE_KWCLSMETHOD(n,...)           DeeKwClsMethodObject n={}
+#define DEFINE_KWCLSMETHOD(n,...)               DeeClsMethodObject n={}
+#define Dee_DEFINE_KWCLSMETHOD(n,...)           DeeClsMethodObject n={}
 #define DEFINE_CLSPROPERTY(n,...)               DeeClsPropertyObject n={}
 #define Dee_DEFINE_CLSPROPERTY(n,...)           DeeClsPropertyObject n={}
 #define DEFINE_CMETHOD(n,...)                   DeeCMethodObject n={}
@@ -1356,8 +1356,6 @@
 #define instance_method                Dee_instance_method
 #define instancemember_object          Dee_instancemember_object
 #define int_object                     Dee_int_object
-#define kwclsmethod_object             Dee_kwclsmethod_object
-#define kwobjmethod_object             Dee_kwobjmethod_object
 #define list_object                    Dee_list_object
 #define memory_file_object             Dee_memory_file_object
 #define module_object                  Dee_module_object

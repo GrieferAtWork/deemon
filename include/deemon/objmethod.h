@@ -39,9 +39,7 @@ DECL_BEGIN
 #ifdef DEE_SOURCE
 #define Dee_objmethod_origin   objmethod_origin
 #define Dee_objmethod_object   objmethod_object
-#define Dee_kwobjmethod_object kwobjmethod_object
 #define Dee_clsmethod_object   clsmethod_object
-#define Dee_kwclsmethod_object kwclsmethod_object
 #define Dee_clsproperty_origin clsproperty_origin
 #define Dee_clsproperty_object clsproperty_object
 #define Dee_clsmember_object   clsmember_object
@@ -61,9 +59,7 @@ DECL_BEGIN
 
 
 typedef struct Dee_objmethod_object DeeObjMethodObject;
-typedef struct Dee_kwobjmethod_object DeeKwObjMethodObject;
 typedef struct Dee_clsmethod_object DeeClsMethodObject;
-typedef struct Dee_kwclsmethod_object DeeKwClsMethodObject;
 typedef struct Dee_clsproperty_object DeeClsPropertyObject;
 typedef struct Dee_clsmember_object DeeClsMemberObject;
 typedef struct Dee_cmethod_object DeeCMethodObject;
@@ -108,19 +104,16 @@ struct Dee_objmethod_origin {
 struct Dee_objmethod_object {
 	Dee_OBJECT_HEAD /* Object-bound member function. */
 	DREF DeeObject   *om_this;  /* [1..1][const] The `self' argument passed to `om_func'. */
-	Dee_objmethod_t   om_func;  /* [1..1][const] C-level object function. */
-};
-
-struct Dee_kwobjmethod_object {
-	Dee_OBJECT_HEAD /* Object-bound member function. */
-	DREF DeeObject   *om_this;  /* [1..1][const] The `self' argument passed to `om_func'. */
-	Dee_kwobjmethod_t om_func;  /* [1..1][const] C-level object function. */
+	union {
+		Dee_objmethod_t   omf_meth;   /* [1..1][valid_if(ob_type == &DeeObjMethod_Type)][const] Method pointer. */
+		Dee_kwobjmethod_t omf_kwmeth; /* [1..1][valid_if(ob_type == &DeeKwObjMethod_Type)][const] Method pointer. */
+	} om_func;
 };
 
 DDATDEF DeeTypeObject DeeObjMethod_Type;
 DDATDEF DeeTypeObject DeeKwObjMethod_Type;
 #define DeeObjMethod_SELF(x)         ((DeeObjMethodObject *)Dee_REQUIRES_OBJECT(x))->om_this
-#define DeeObjMethod_FUNC(x)         ((DeeObjMethodObject *)Dee_REQUIRES_OBJECT(x))->om_func
+#define DeeObjMethod_FUNC(x)         ((DeeObjMethodObject *)Dee_REQUIRES_OBJECT(x))->om_func.omf_meth
 #define DeeObjMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeObjMethod_Type) /* `_ObjMethod' is final. */
 #define DeeObjMethod_CheckExact(x)   DeeObject_InstanceOfExact(x, &DeeObjMethod_Type)
 #define DeeKwObjMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwObjMethod_Type) /* `_KwObjMethod' is final. */
@@ -128,7 +121,7 @@ DDATDEF DeeTypeObject DeeKwObjMethod_Type;
 #define Dee_DEFINE_OBJMETHOD(name, func, self) \
 	DeeObjMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeObjMethod_Type), self, Dee_REQUIRES_OBJMETHOD(func) }
 #define Dee_DEFINE_KWOBJMETHOD(name, func, self) \
-	DeeKwObjMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwObjMethod_Type), self, Dee_REQUIRES_KWOBJMETHOD(func) }
+	DeeObjMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwObjMethod_Type), self, Dee_REQUIRES_KWOBJMETHOD(func) }
 
 /* Construct a new `_ObjMethod' object. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -147,29 +140,25 @@ DeeObjMethod_GetOrigin(DeeObject const *__restrict self,
 struct Dee_clsmethod_object {
 	/* Unbound member function (`ClassMethod') (may be invoked as a thiscall object). */
 	Dee_OBJECT_HEAD
-	DREF DeeTypeObject *cm_type; /* [1..1] The type that this-arguments must match. */
-	Dee_objmethod_t     cm_func; /* [1..1] C-level object function. */
-};
-
-struct Dee_kwclsmethod_object {
-	/* Unbound member function (`KwClassMethod') (may be invoked as a thiscall object). */
-	Dee_OBJECT_HEAD
-	DREF DeeTypeObject *cm_type; /* [1..1] The type that this-arguments must match. */
-	Dee_kwobjmethod_t   cm_func; /* [1..1] C-level object function. */
+	DREF DeeTypeObject *clm_type; /* [1..1] The type that this-arguments must match. */
+	union {
+		Dee_objmethod_t   clmf_meth;   /* [1..1][valid_if(ob_type == &DeeClsMethod_Type)][const] Method pointer. */
+		Dee_kwobjmethod_t clmf_kwmeth; /* [1..1][valid_if(ob_type == &DeeKwClsMethod_Type)][const] Method pointer. */
+	} clm_func;
 };
 
 DDATDEF DeeTypeObject DeeClsMethod_Type;
 DDATDEF DeeTypeObject DeeKwClsMethod_Type;
-#define DeeClsMethod_FUNC(x)         ((DeeClsMethodObject *)Dee_REQUIRES_OBJECT(x))->cm_func
-#define DeeClsMethod_TYPE(x)         ((DeeClsMethodObject *)Dee_REQUIRES_OBJECT(x))->cm_type
+#define DeeClsMethod_FUNC(x)         ((DeeClsMethodObject *)Dee_REQUIRES_OBJECT(x))->clm_func.clmf_meth
+#define DeeClsMethod_TYPE(x)         ((DeeClsMethodObject *)Dee_REQUIRES_OBJECT(x))->clm_type
 #define DeeClsMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeClsMethod_Type)   /* `_ClassMethod' is final. */
 #define DeeClsMethod_CheckExact(x)   DeeObject_InstanceOfExact(x, &DeeClsMethod_Type)
 #define DeeKwClsMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwClsMethod_Type) /* `_KwClassMethod' is final. */
 #define DeeKwClsMethod_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeKwClsMethod_Type)
 #define Dee_DEFINE_CLSMETHOD(name, func, type) \
-	DeeClsMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeClsMethod_Type), type, Dee_REQUIRES_OBJMETHOD(func) }
+	DeeClsMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeClsMethod_Type), type, { Dee_REQUIRES_OBJMETHOD(func) } }
 #define Dee_DEFINE_KWCLSMETHOD(name, func, type) \
-	DeeKwClsMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwClsMethod_Type), type, Dee_REQUIRES_KWOBJMETHOD(func) }
+	DeeClsMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwClsMethod_Type), type, { (Dee_objmethod_t)Dee_REQUIRES_KWOBJMETHOD(func) } }
 
 
 /* Construct a new `_ClassMethod' object. */
@@ -244,8 +233,8 @@ DeeClsProperty_GetOrigin(DeeObject const *__restrict self,
 struct Dee_clsmember_object {
 	/* Proxy descriptor for instance members to-be accessed like class properties. */
 	Dee_OBJECT_HEAD
-	DREF DeeTypeObject    *cm_type; /* [1..1] The type that this-arguments must match. */
-	struct Dee_type_member cm_memb; /* The member descriptor. */
+	DREF DeeTypeObject    *cmb_type; /* [1..1] The type that this-arguments must match. */
+	struct Dee_type_member cmb_memb; /* The member descriptor. */
 };
 DDATDEF DeeTypeObject DeeClsMember_Type;
 
@@ -289,10 +278,10 @@ struct Dee_cmethod_object {
 	Dee_OBJECT_HEAD
 	uintptr_t cm_flags; /* [const] Method flags (set of `Dee_METHOD_F*') */
 	union {
-		Dee_cmethod_t   cb_meth;   /* [1..1][valid_if(ob_type == &DeeCMethod_Type)][const] Method pointer. */
-		Dee_kwcmethod_t cb_kwmeth; /* [1..1][valid_if(ob_type == &DeeKwCMethod_Type)][const] Method pointer. */
-		Dee_cmethod0_t  cb_meth0;  /* [1..1][valid_if(ob_type == &DeeCMethod0_Type)][const] Method pointer. */
-		Dee_cmethod1_t  cb_meth1;  /* [1..1][valid_if(ob_type == &DeeCMethod1_Type)][const] Method pointer. */
+		Dee_cmethod_t   cmf_meth;   /* [1..1][valid_if(ob_type == &DeeCMethod_Type)][const] Method pointer. */
+		Dee_kwcmethod_t cmf_kwmeth; /* [1..1][valid_if(ob_type == &DeeKwCMethod_Type)][const] Method pointer. */
+		Dee_cmethod0_t  cmf_meth0;  /* [1..1][valid_if(ob_type == &DeeCMethod0_Type)][const] Method pointer. */
+		Dee_cmethod1_t  cmf_meth1;  /* [1..1][valid_if(ob_type == &DeeCMethod1_Type)][const] Method pointer. */
 	} cm_func;
 };
 
@@ -300,7 +289,7 @@ DDATDEF DeeTypeObject DeeCMethod_Type;
 DDATDEF DeeTypeObject DeeKwCMethod_Type;
 DDATDEF DeeTypeObject DeeCMethod0_Type;
 DDATDEF DeeTypeObject DeeCMethod1_Type;
-#define DeeCMethod_FUNC(x)         ((DeeCMethodObject *)Dee_REQUIRES_OBJECT(x))->cm_func.cb_meth
+#define DeeCMethod_FUNC(x)         ((DeeCMethodObject *)Dee_REQUIRES_OBJECT(x))->cm_func.cmf_meth
 #define DeeCMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeCMethod_Type) /* `_CMethod' is final. */
 #define DeeCMethod_CheckExact(x)   DeeObject_InstanceOfExact(x, &DeeCMethod_Type)
 #define DeeKwCMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwCMethod_Type) /* `_KwCMethod' is final. */
