@@ -1190,6 +1190,8 @@ func("strsep", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_MISC)", test: 'ex
 func("stresep", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_NETBSD)", test: 'extern char *str; return stresep(&str, "foo", 42) == str;');
 func("strtok", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc), test: 'extern char *str; return strtok(str, ",.-") == str;');
 func("strtok_r", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_POSIX)", test: 'extern char *str, *save; return strtok_r(str, ",.-", &save) == str;');
+func("strtok_s_3ARG", "defined(CONFIG_HAVE_STRING_H) && " + addparen(msvc), test: 'extern char *str, *save; return strtok_s(str, ",.-", &save) == str;');
+func("strtok_s_4ARG", "0", test: 'extern char *str, *save; extern rsize_t maxlen; return strtok_s(str, &maxlen, ",.-", &save) == str;');
 
 functest("tolower('!')", "defined(CONFIG_HAVE_CTYPE_H)");
 functest("toupper('!')", "defined(CONFIG_HAVE_CTYPE_H)");
@@ -8994,6 +8996,21 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_strtok_r
 #endif
 
+#ifdef CONFIG_NO_strtok_s_3ARG
+#undef CONFIG_HAVE_strtok_s_3ARG
+#elif !defined(CONFIG_HAVE_strtok_s_3ARG) && \
+      (defined(strtok_s_3ARG) || defined(__strtok_s_3ARG_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE_strtok_s_3ARG
+#endif
+
+#ifdef CONFIG_NO_strtok_s_4ARG
+#undef CONFIG_HAVE_strtok_s_4ARG
+#elif !defined(CONFIG_HAVE_strtok_s_4ARG) && \
+      (defined(strtok_s_4ARG) || defined(__strtok_s_4ARG_defined))
+#define CONFIG_HAVE_strtok_s_4ARG
+#endif
+
 #ifdef CONFIG_NO_tolower
 #undef CONFIG_HAVE_tolower
 #elif !defined(CONFIG_HAVE_tolower) && \
@@ -12541,6 +12558,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef strnset
 #define strnset _strnset
 #endif /* strnset = _strnset */
+
+#if defined(CONFIG_HAVE_strtok_s_3ARG) && !defined(CONFIG_HAVE_strtok_r)
+#define CONFIG_HAVE_strtok_r
+#undef strtok_r
+#define strtok_r strtok_s
+#endif /* strtok_r = strtok_s */
 
 #ifndef CONFIG_HAVE_tolower
 #define CONFIG_HAVE_tolower
