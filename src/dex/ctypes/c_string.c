@@ -592,6 +592,243 @@ dee_basename(char const *filename) {
 }
 #endif /* !CONFIG_HAVE_basename */
 
+#ifndef CONFIG_HAVE_strspn
+#define CONFIG_HAVE_strspn
+#undef strspn
+#define strspn dee_strspn
+LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) size_t
+dee_strspn(char const *haystack, char const *accept) {
+	char const *iter = haystack;
+	while (*iter && strchr(accept, *iter))
+		++iter;
+	return (size_t)(iter - haystack);
+}
+#endif /* !CONFIG_HAVE_strspn */
+
+#ifndef CONFIG_HAVE_strcspn
+#define CONFIG_HAVE_strcspn
+#undef strcspn
+#define strcspn dee_strcspn
+LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) size_t
+dee_strcspn(char const *haystack, char const *accept) {
+	char const *iter = haystack;
+	while (*iter && !strchr(accept, *iter))
+		++iter;
+	return (size_t)(iter - haystack);
+}
+#endif /* !CONFIG_HAVE_strcspn */
+
+#ifndef CONFIG_HAVE_strpbrk
+#define CONFIG_HAVE_strpbrk
+#undef strpbrk
+#define strpbrk dee_strpbrk
+LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) char const *
+dee_strpbrk(char const *haystack, char const *accept) {
+	return haystack + strcspn(haystack, accept);
+}
+#endif /* !CONFIG_HAVE_strpbrk */
+
+#ifndef CONFIG_HAVE_strrev
+#define CONFIG_HAVE_strrev
+#undef strrev
+#define strrev dee_strrev
+LOCAL ATTR_PURE NONNULL((1)) char *
+dee_strrev(char *str) {
+	return (char *)memrev(str, strlen(str) * sizeof(char));
+}
+#endif /* !CONFIG_HAVE_strrev */
+
+#ifndef CONFIG_HAVE_strnrev
+#define CONFIG_HAVE_strnrev
+#undef strnrev
+#define strnrev dee_strnrev
+LOCAL ATTR_PURE NONNULL((1)) char *
+dee_strnrev(char *str, size_t maxlen) {
+	return (char *)memrev(str, strnlen(str, maxlen) * sizeof(char));
+}
+#endif /* !CONFIG_HAVE_strnrev */
+
+#ifndef CONFIG_HAVE_strlwr
+#define CONFIG_HAVE_strlwr
+#undef strlwr
+#define strlwr dee_strlwr
+LOCAL ATTR_PURE NONNULL((1)) char *
+dee_strlwr(char *str) {
+	char *iter, ch;
+	for (iter = str; (ch = *iter) != '\0'; ++iter)
+		*iter = (char)tolower((unsigned char)ch);
+	return str;
+}
+#endif /* !CONFIG_HAVE_strlwr */
+
+#ifndef CONFIG_HAVE_strnlwr
+#define CONFIG_HAVE_strnlwr
+#undef strnlwr
+#define strnlwr dee_strnlwr
+LOCAL ATTR_PURE NONNULL((1)) char *
+dee_strnlwr(char *str, size_t maxlen) {
+	char *iter, ch;
+	for (iter = str; maxlen-- && (ch = *iter) != '\0'; ++iter)
+		*iter = (char)tolower((unsigned char)ch);
+	return str;
+}
+#endif /* !CONFIG_HAVE_strnlwr */
+
+#ifndef CONFIG_HAVE_strupr
+#define CONFIG_HAVE_strupr
+#undef strupr
+#define strupr dee_strupr
+LOCAL ATTR_PURE NONNULL((1)) char *
+dee_strupr(char *str) {
+	char *iter, ch;
+	for (iter = str; (ch = *iter) != '\0'; ++iter)
+		*iter = (char)toupper((unsigned char)ch);
+	return str;
+}
+#endif /* !CONFIG_HAVE_strupr */
+
+#ifndef CONFIG_HAVE_strnupr
+#define CONFIG_HAVE_strnupr
+#undef strnupr
+#define strnupr dee_strnupr
+LOCAL ATTR_PURE NONNULL((1)) char *
+dee_strnupr(char *str, size_t maxlen) {
+	char *iter, ch;
+	for (iter = str; maxlen-- && (ch = *iter) != '\0'; ++iter)
+		*iter = (char)toupper((unsigned char)ch);
+	return str;
+}
+#endif /* !CONFIG_HAVE_strnupr */
+
+#ifndef CONFIG_HAVE_strset
+#define CONFIG_HAVE_strset
+#undef strset
+#define strset dee_strset
+LOCAL ATTR_PURE NONNULL((1)) char *
+dee_strset(char *str, int ch) {
+	char *iter;
+	for (iter = str; *iter; ++iter)
+		*iter = (char)(unsigned int)ch;
+	return str;
+}
+#endif /* !CONFIG_HAVE_strset */
+
+#ifndef CONFIG_HAVE_strnset
+#define CONFIG_HAVE_strnset
+#undef strnset
+#define strnset dee_strnset
+LOCAL ATTR_PURE NONNULL((1)) char *
+dee_strnset(char *str, int ch, size_t maxlen) {
+	char *iter;
+	for (iter = str; maxlen-- && *iter; ++iter)
+		*iter = (char)(unsigned int)ch;
+	return str;
+}
+#endif /* !CONFIG_HAVE_strnset */
+
+#ifndef CONFIG_HAVE_memfrob
+#define CONFIG_HAVE_memfrob
+#undef memfrob
+#define memfrob dee_memfrob
+LOCAL ATTR_PURE NONNULL((1)) void *
+dee_memfrob(void *buf, size_t num_bytes) {
+	byte_t *iter = (byte_t *)buf;
+	while (num_bytes--)
+		*iter++ ^= 42; /* -_-   yeah... */
+	return buf;
+}
+#endif /* !CONFIG_HAVE_memfrob */
+
+#ifndef CONFIG_HAVE_strsep
+#define CONFIG_HAVE_strsep
+#undef strsep
+#define strsep dee_strsep
+LOCAL ATTR_PURE NONNULL((1, 2)) char *
+dee_strsep(char **stringp, char const *delim) {
+	char *result, *iter;
+	if ((result = *stringp) == NULL || !*result)
+		return NULL;
+	for (iter = result; *iter && !strchr(delim, *iter); ++iter)
+		;
+	if (*iter)
+		*iter++ = '\0';
+	*stringp = iter;
+	return result;
+}
+#endif /* !CONFIG_HAVE_strsep */
+
+#ifndef CONFIG_HAVE_stresep
+#define CONFIG_HAVE_stresep
+#undef stresep
+#define stresep dee_stresep
+LOCAL ATTR_PURE NONNULL((1, 2)) char *
+dee_stresep(char **stringp, char const *delim, int escape) {
+	char *result, *iter;
+	if ((result = *stringp) == NULL || !*result)
+		return NULL;
+	for (iter = result;; ++iter) {
+		char ch = *iter;
+		if (!ch)
+			break;
+		if ((int)(unsigned int)(unsigned char)ch == escape) {
+			/* Escape the next character. */
+			ch = *++iter;
+			if (!ch)
+				break;
+		}
+		if (strchr(delim, ch))
+			break;
+	}
+	if (*iter)
+		*iter++ = '\0';
+	*stringp = iter;
+	return result;
+}
+#endif /* !CONFIG_HAVE_stresep */
+
+#ifndef CONFIG_HAVE_strtok_r
+#define CONFIG_HAVE_strtok_r
+#undef strtok_r
+#define strtok_r dee_strtok_r
+LOCAL ATTR_PURE NONNULL((1, 2, 3)) char *
+dee_strtok_r(char *str, char const *delim, char **save_ptr) {
+	char *end;
+	if (!str)
+		str = *save_ptr;
+	if (!*str) {
+		*save_ptr = str;
+		return NULL;
+	}
+	str += strspn(str, delim);
+	if (!*str) {
+		*save_ptr = str;
+		return NULL;
+	}
+	end = str + strcspn(str, delim);
+	if (!*end) {
+		*save_ptr = end;
+		return str;
+	}
+	*end = '\0';
+	*save_ptr = end + 1;
+	return str;
+}
+#endif /* !CONFIG_HAVE_strtok_r */
+
+#ifndef CONFIG_HAVE_strtok
+#define CONFIG_HAVE_strtok
+#undef strtok
+#define strtok dee_strtok
+LOCAL ATTR_PURE NONNULL((1, 2)) char *
+dee_strtok(char *str, char const *delim) {
+	static char *save_ptr = NULL;
+	return strtok_r(str, delim, &save_ptr);
+}
+#endif /* !CONFIG_HAVE_strtok */
+
+
+
+
 
 /*[[[deemon
 import * from rt.gen.unpack;
@@ -1128,7 +1365,107 @@ strncasestr(haystack:ctypes:char_const*, needle:ctypes:char_const*, size_t hayst
 	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
 }
 
+@ispure
+strspn(haystack:ctypes:char_const*, accept:ctypes:char_const*) {
+	size_t result;
+	CTYPES_FAULTPROTECT(result = strspn(haystack, accept), return NULL);
+	return DeeInt_NewSize(result);
+}
+
+@ispure
+strcspn(haystack:ctypes:char_const*, accept:ctypes:char_const*) {
+	size_t result;
+	CTYPES_FAULTPROTECT(result = strcspn(haystack, accept), return NULL);
+	return DeeInt_NewSize(result);
+}
+
+@ispure
+strpbrk(haystack:ctypes:char_const*, accept:ctypes:char_const*) {
+	char const *result;
+	CTYPES_FAULTPROTECT(result = strpbrk(haystack, accept), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+}
+
+
+@ispure
+basename(str:ctypes:char_const*) {
+	CTYPES_FAULTPROTECT(str = basename(str), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+}
+
+strrev(str:ctypes:char*) {
+	CTYPES_FAULTPROTECT(str = strrev(str), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+}
+
+strnrev(str:ctypes:char*, size_t maxlen) {
+	CTYPES_FAULTPROTECT(str = strnrev(str, maxlen), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+}
+
+strlwr(str:ctypes:char*) {
+	CTYPES_FAULTPROTECT(str = strlwr(str), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+}
+
+strnlwr(str:ctypes:char*, size_t maxlen) {
+	CTYPES_FAULTPROTECT(str = strnlwr(str, maxlen), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+}
+
+strupr(str:ctypes:char*) {
+	CTYPES_FAULTPROTECT(str = strupr(str), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+}
+
+strnupr(str:ctypes:char*, size_t maxlen) {
+	CTYPES_FAULTPROTECT(str = strnupr(str, maxlen), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+}
+
+strset(str:ctypes:char*, int ch) {
+	CTYPES_FAULTPROTECT(str = strset(str, ch), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+}
+
+strnset(str:ctypes:char*, int ch, size_t maxlen) {
+	CTYPES_FAULTPROTECT(str = strnset(str, ch, maxlen), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+}
+
+memfrob(buf:ctypes:void*, size_t num_bytes) {
+	CTYPES_FAULTPROTECT(buf = memfrob(buf, num_bytes), return NULL);
+	return DeePointer_NewVoid(buf);
+}
+
+strsep(stringp:ctypes:char**, delim:ctypes:char_const*) {
+	char *result;
+	CTYPES_FAULTPROTECT(result = strsep(stringp, delim), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+}
+
+stresep(stringp:ctypes:char**, delim:ctypes:char_const*, int escape) {
+	char *result;
+	CTYPES_FAULTPROTECT(result = stresep(stringp, delim, escape), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+}
+
+strtok(str:ctypes:char*, delim:ctypes:char_const*) {
+	char *result;
+	CTYPES_FAULTPROTECT(result = strtok(str, delim), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+}
+
+strtok_r(str:ctypes:char*, delim:ctypes:char_const*, save_ptr:ctypes:char**) {
+	char *result;
+	CTYPES_FAULTPROTECT(result = strtok_r(str, delim, save_ptr), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+}
+
 """);
+
+// TODO: strfry
+
 ]]]*/
 /* memcpy */
 #define c_string_memcpy_params "dst:?Aptr?Gvoid,src:?Aptr?Gvoid,num_bytes:?Dint,elem_count=!1"
@@ -2115,7 +2452,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_memrev_f_impl(void *dst, size_
 }
 
 /* strlen */
-#define c_string_strlen_params "string:?Aptr?Gvoid"
+#define c_string_strlen_params "string:?Aptr?Gchar"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strlen_f_impl(char const *string);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_string_strlen_f(DeeObject *__restrict arg0) {
 	union pointer string;
@@ -2134,7 +2471,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strlen_f_impl(char const *stri
 }
 
 /* strend */
-#define c_string_strend_params "string:?Aptr?Gvoid"
+#define c_string_strend_params "string:?Aptr?Gchar"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strend_f_impl(char const *string);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_string_strend_f(DeeObject *__restrict arg0) {
 	union pointer string;
@@ -2153,7 +2490,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strend_f_impl(char const *stri
 }
 
 /* strnlen */
-#define c_string_strnlen_params "string:?Aptr?Gvoid,maxlen:?Dint"
+#define c_string_strnlen_params "string:?Aptr?Gchar,maxlen:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnlen_f_impl(char const *string, size_t maxlen);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnlen_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2177,7 +2514,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnlen_f_impl(char const *str
 }
 
 /* strnend */
-#define c_string_strnend_params "string:?Aptr?Gvoid,maxlen:?Dint"
+#define c_string_strnend_params "string:?Aptr?Gchar,maxlen:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnend_f_impl(char const *string, size_t maxlen);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnend_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2201,7 +2538,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnend_f_impl(char const *str
 }
 
 /* strchr */
-#define c_string_strchr_params "haystack:?Aptr?Gvoid,needle:?Dint"
+#define c_string_strchr_params "haystack:?Aptr?Gchar,needle:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strchr_f_impl(char const *haystack, int needle);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strchr_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2225,7 +2562,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strchr_f_impl(char const *hays
 }
 
 /* strrchr */
-#define c_string_strrchr_params "haystack:?Aptr?Gvoid,needle:?Dint"
+#define c_string_strrchr_params "haystack:?Aptr?Gchar,needle:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strrchr_f_impl(char const *haystack, int needle);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strrchr_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2249,7 +2586,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strrchr_f_impl(char const *hay
 }
 
 /* strnchr */
-#define c_string_strnchr_params "haystack:?Aptr?Gvoid,needle:?Dint,maxlen:?Dint"
+#define c_string_strnchr_params "haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnchr_f_impl(char const *haystack, int needle, size_t maxlen);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnchr_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2274,7 +2611,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnchr_f_impl(char const *hay
 }
 
 /* strnrchr */
-#define c_string_strnrchr_params "haystack:?Aptr?Gvoid,needle:?Dint,maxlen:?Dint"
+#define c_string_strnrchr_params "haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnrchr_f_impl(char const *haystack, int needle, size_t maxlen);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnrchr_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2299,7 +2636,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnrchr_f_impl(char const *ha
 }
 
 /* strchrnul */
-#define c_string_strchrnul_params "haystack:?Aptr?Gvoid,needle:?Dint"
+#define c_string_strchrnul_params "haystack:?Aptr?Gchar,needle:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strchrnul_f_impl(char const *haystack, int needle);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strchrnul_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2323,7 +2660,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strchrnul_f_impl(char const *h
 }
 
 /* strrchrnul */
-#define c_string_strrchrnul_params "haystack:?Aptr?Gvoid,needle:?Dint"
+#define c_string_strrchrnul_params "haystack:?Aptr?Gchar,needle:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strrchrnul_f_impl(char const *haystack, int needle);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strrchrnul_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2347,7 +2684,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strrchrnul_f_impl(char const *
 }
 
 /* strnchrnul */
-#define c_string_strnchrnul_params "haystack:?Aptr?Gvoid,needle:?Dint,maxlen:?Dint"
+#define c_string_strnchrnul_params "haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnchrnul_f_impl(char const *haystack, int needle, size_t maxlen);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnchrnul_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2372,7 +2709,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnchrnul_f_impl(char const *
 }
 
 /* strnrchrnul */
-#define c_string_strnrchrnul_params "haystack:?Aptr?Gvoid,needle:?Dint,maxlen:?Dint"
+#define c_string_strnrchrnul_params "haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnrchrnul_f_impl(char const *haystack, int needle, size_t maxlen);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnrchrnul_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2397,7 +2734,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnrchrnul_f_impl(char const 
 }
 
 /* stroff */
-#define c_string_stroff_params "haystack:?Aptr?Gvoid,needle:?Dint"
+#define c_string_stroff_params "haystack:?Aptr?Gchar,needle:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_stroff_f_impl(char const *haystack, int needle);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_stroff_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2421,7 +2758,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_stroff_f_impl(char const *hays
 }
 
 /* strroff */
-#define c_string_strroff_params "haystack:?Aptr?Gvoid,needle:?Dint"
+#define c_string_strroff_params "haystack:?Aptr?Gchar,needle:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strroff_f_impl(char const *haystack, int needle);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strroff_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2445,7 +2782,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strroff_f_impl(char const *hay
 }
 
 /* strnoff */
-#define c_string_strnoff_params "haystack:?Aptr?Gvoid,needle:?Dint,maxlen:?Dint"
+#define c_string_strnoff_params "haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnoff_f_impl(char const *haystack, int needle, size_t maxlen);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnoff_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2470,7 +2807,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnoff_f_impl(char const *hay
 }
 
 /* strnroff */
-#define c_string_strnroff_params "haystack:?Aptr?Gvoid,needle:?Dint,maxlen:?Dint"
+#define c_string_strnroff_params "haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnroff_f_impl(char const *haystack, int needle, size_t maxlen);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnroff_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2495,7 +2832,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnroff_f_impl(char const *ha
 }
 
 /* strcmp */
-#define c_string_strcmp_params "lhs:?Aptr?Gvoid,rhs:?Aptr?Gvoid"
+#define c_string_strcmp_params "lhs:?Aptr?Gchar,rhs:?Aptr?Gchar"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strcmp_f_impl(char const *lhs, char const *rhs);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strcmp_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2526,7 +2863,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strcmp_f_impl(char const *lhs,
 }
 
 /* strncmp */
-#define c_string_strncmp_params "lhs:?Aptr?Gvoid,rhs:?Aptr?Gvoid,maxlen:?Dint"
+#define c_string_strncmp_params "lhs:?Aptr?Gchar,rhs:?Aptr?Gchar,maxlen:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strncmp_f_impl(char const *lhs, char const *rhs, size_t maxlen);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strncmp_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2558,7 +2895,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strncmp_f_impl(char const *lhs
 }
 
 /* strcasecmp */
-#define c_string_strcasecmp_params "lhs:?Aptr?Gvoid,rhs:?Aptr?Gvoid"
+#define c_string_strcasecmp_params "lhs:?Aptr?Gchar,rhs:?Aptr?Gchar"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strcasecmp_f_impl(char const *lhs, char const *rhs);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strcasecmp_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2589,7 +2926,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strcasecmp_f_impl(char const *
 }
 
 /* strncasecmp */
-#define c_string_strncasecmp_params "lhs:?Aptr?Gvoid,rhs:?Aptr?Gvoid,maxlen:?Dint"
+#define c_string_strncasecmp_params "lhs:?Aptr?Gchar,rhs:?Aptr?Gchar,maxlen:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strncasecmp_f_impl(char const *lhs, char const *rhs, size_t maxlen);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strncasecmp_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2621,7 +2958,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strncasecmp_f_impl(char const 
 }
 
 /* strverscmp */
-#define c_string_strverscmp_params "lhs:?Aptr?Gvoid,rhs:?Aptr?Gvoid"
+#define c_string_strverscmp_params "lhs:?Aptr?Gchar,rhs:?Aptr?Gchar"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strverscmp_f_impl(char const *lhs, char const *rhs);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strverscmp_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2652,7 +2989,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strverscmp_f_impl(char const *
 }
 
 /* strcpy */
-#define c_string_strcpy_params "dst:?Aptr?Gvoid,src:?Aptr?Gvoid"
+#define c_string_strcpy_params "dst:?Aptr?Gchar,src:?Aptr?Gchar"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strcpy_f_impl(char *dst, char const *src);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strcpy_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2678,7 +3015,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strcpy_f_impl(char *dst, char 
 }
 
 /* strcat */
-#define c_string_strcat_params "dst:?Aptr?Gvoid,src:?Aptr?Gvoid"
+#define c_string_strcat_params "dst:?Aptr?Gchar,src:?Aptr?Gchar"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strcat_f_impl(char *dst, char const *src);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strcat_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2704,7 +3041,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strcat_f_impl(char *dst, char 
 }
 
 /* stpcpy */
-#define c_string_stpcpy_params "dst:?Aptr?Gvoid,src:?Aptr?Gvoid"
+#define c_string_stpcpy_params "dst:?Aptr?Gchar,src:?Aptr?Gchar"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_stpcpy_f_impl(char *dst, char const *src);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_stpcpy_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2730,7 +3067,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_stpcpy_f_impl(char *dst, char 
 }
 
 /* strncpy */
-#define c_string_strncpy_params "dst:?Aptr?Gvoid,src:?Aptr?Gvoid,maxlen:?Dint"
+#define c_string_strncpy_params "dst:?Aptr?Gchar,src:?Aptr?Gchar,maxlen:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strncpy_f_impl(char *dst, char const *src, size_t maxlen);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strncpy_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2757,7 +3094,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strncpy_f_impl(char *dst, char
 }
 
 /* strncat */
-#define c_string_strncat_params "dst:?Aptr?Gvoid,src:?Aptr?Gvoid,maxlen:?Dint"
+#define c_string_strncat_params "dst:?Aptr?Gchar,src:?Aptr?Gchar,maxlen:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strncat_f_impl(char *dst, char const *src, size_t maxlen);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strncat_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2784,7 +3121,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strncat_f_impl(char *dst, char
 }
 
 /* stpncpy */
-#define c_string_stpncpy_params "dst:?Aptr?Gvoid,src:?Aptr?Gvoid,maxlen:?Dint"
+#define c_string_stpncpy_params "dst:?Aptr?Gchar,src:?Aptr?Gchar,maxlen:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_stpncpy_f_impl(char *dst, char const *src, size_t maxlen);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_stpncpy_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2811,7 +3148,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_stpncpy_f_impl(char *dst, char
 }
 
 /* strstr */
-#define c_string_strstr_params "haystack:?Aptr?Gvoid,needle:?Aptr?Gvoid"
+#define c_string_strstr_params "haystack:?Aptr?Gchar,needle:?Aptr?Gchar"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strstr_f_impl(char const *haystack, char const *needle);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strstr_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2838,7 +3175,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strstr_f_impl(char const *hays
 }
 
 /* strnstr */
-#define c_string_strnstr_params "haystack:?Aptr?Gvoid,needle:?Aptr?Gvoid,haystack_maxlen:?Dint"
+#define c_string_strnstr_params "haystack:?Aptr?Gchar,needle:?Aptr?Gchar,haystack_maxlen:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnstr_f_impl(char const *haystack, char const *needle, size_t haystack_maxlen);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnstr_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2866,7 +3203,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnstr_f_impl(char const *hay
 }
 
 /* strcasestr */
-#define c_string_strcasestr_params "haystack:?Aptr?Gvoid,needle:?Aptr?Gvoid"
+#define c_string_strcasestr_params "haystack:?Aptr?Gchar,needle:?Aptr?Gchar"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strcasestr_f_impl(char const *haystack, char const *needle);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strcasestr_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2893,7 +3230,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strcasestr_f_impl(char const *
 }
 
 /* strncasestr */
-#define c_string_strncasestr_params "haystack:?Aptr?Gvoid,needle:?Aptr?Gvoid,haystack_maxlen:?Dint"
+#define c_string_strncasestr_params "haystack:?Aptr?Gchar,needle:?Aptr?Gchar,haystack_maxlen:?Dint"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strncasestr_f_impl(char const *haystack, char const *needle, size_t haystack_maxlen);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strncasestr_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -2919,106 +3256,412 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strncasestr_f_impl(char const 
 	CTYPES_FAULTPROTECT(result = strncasestr(haystack, needle, haystack_maxlen), return NULL);
 	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
 }
+
+/* strspn */
+#define c_string_strspn_params "haystack:?Aptr?Gchar,accept:?Aptr?Gchar"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strspn_f_impl(char const *haystack, char const *accept);
+PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strspn_f(size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *raw_haystack;
+		DeeObject *raw_accept;
+	} args;
+	union pointer haystack;
+	union pointer accept;
+	DeeArg_UnpackStruct2(err, argc, argv, "strspn", &args, &args.raw_haystack, &args.raw_accept);
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+		goto err;
+	if unlikely(DeeObject_AsPointer(args.raw_accept, &DeeCChar_Type, &accept))
+		goto err;
+	return c_string_strspn_f_impl(haystack.pcchar, accept.pcchar);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD(c_string_strspn, &c_string_strspn_f, METHOD_FPURECALL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strspn_f_impl(char const *haystack, char const *accept)
+{
+	size_t result;
+	CTYPES_FAULTPROTECT(result = strspn(haystack, accept), return NULL);
+	return DeeInt_NewSize(result);
+}
+
+/* strcspn */
+#define c_string_strcspn_params "haystack:?Aptr?Gchar,accept:?Aptr?Gchar"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strcspn_f_impl(char const *haystack, char const *accept);
+PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strcspn_f(size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *raw_haystack;
+		DeeObject *raw_accept;
+	} args;
+	union pointer haystack;
+	union pointer accept;
+	DeeArg_UnpackStruct2(err, argc, argv, "strcspn", &args, &args.raw_haystack, &args.raw_accept);
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+		goto err;
+	if unlikely(DeeObject_AsPointer(args.raw_accept, &DeeCChar_Type, &accept))
+		goto err;
+	return c_string_strcspn_f_impl(haystack.pcchar, accept.pcchar);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD(c_string_strcspn, &c_string_strcspn_f, METHOD_FPURECALL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strcspn_f_impl(char const *haystack, char const *accept)
+{
+	size_t result;
+	CTYPES_FAULTPROTECT(result = strcspn(haystack, accept), return NULL);
+	return DeeInt_NewSize(result);
+}
+
+/* strpbrk */
+#define c_string_strpbrk_params "haystack:?Aptr?Gchar,accept:?Aptr?Gchar"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strpbrk_f_impl(char const *haystack, char const *accept);
+PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strpbrk_f(size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *raw_haystack;
+		DeeObject *raw_accept;
+	} args;
+	union pointer haystack;
+	union pointer accept;
+	DeeArg_UnpackStruct2(err, argc, argv, "strpbrk", &args, &args.raw_haystack, &args.raw_accept);
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+		goto err;
+	if unlikely(DeeObject_AsPointer(args.raw_accept, &DeeCChar_Type, &accept))
+		goto err;
+	return c_string_strpbrk_f_impl(haystack.pcchar, accept.pcchar);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD(c_string_strpbrk, &c_string_strpbrk_f, METHOD_FPURECALL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strpbrk_f_impl(char const *haystack, char const *accept)
+{
+	char const *result;
+	CTYPES_FAULTPROTECT(result = strpbrk(haystack, accept), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+}
+
+/* basename */
+#define c_string_basename_params "str:?Aptr?Gchar"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_basename_f_impl(char const *str);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_string_basename_f(DeeObject *__restrict arg0) {
+	union pointer str;
+	if unlikely(DeeObject_AsPointer(arg0, &DeeCChar_Type, &str))
+		goto err;
+	return c_string_basename_f_impl(str.pcchar);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD1(c_string_basename, &c_string_basename_f, METHOD_FPURECALL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_basename_f_impl(char const *str)
+{
+	CTYPES_FAULTPROTECT(str = basename(str), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+}
+
+/* strrev */
+#define c_string_strrev_params "str:?Aptr?Gchar"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strrev_f_impl(char *str);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_string_strrev_f(DeeObject *__restrict arg0) {
+	union pointer str;
+	if unlikely(DeeObject_AsPointer(arg0, &DeeCChar_Type, &str))
+		goto err;
+	return c_string_strrev_f_impl(str.pchar);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD1(c_string_strrev, &c_string_strrev_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strrev_f_impl(char *str)
+{
+	CTYPES_FAULTPROTECT(str = strrev(str), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+}
+
+/* strnrev */
+#define c_string_strnrev_params "str:?Aptr?Gchar,maxlen:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnrev_f_impl(char *str, size_t maxlen);
+PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnrev_f(size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *raw_str;
+		size_t maxlen;
+	} args;
+	union pointer str;
+	DeeArg_UnpackStruct2X(err, argc, argv, "strnrev", &args, &args.raw_str, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
+	if unlikely(DeeObject_AsPointer(args.raw_str, &DeeCChar_Type, &str))
+		goto err;
+	return c_string_strnrev_f_impl(str.pchar, args.maxlen);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD(c_string_strnrev, &c_string_strnrev_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnrev_f_impl(char *str, size_t maxlen)
+{
+	CTYPES_FAULTPROTECT(str = strnrev(str, maxlen), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+}
+
+/* strlwr */
+#define c_string_strlwr_params "str:?Aptr?Gchar"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strlwr_f_impl(char *str);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_string_strlwr_f(DeeObject *__restrict arg0) {
+	union pointer str;
+	if unlikely(DeeObject_AsPointer(arg0, &DeeCChar_Type, &str))
+		goto err;
+	return c_string_strlwr_f_impl(str.pchar);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD1(c_string_strlwr, &c_string_strlwr_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strlwr_f_impl(char *str)
+{
+	CTYPES_FAULTPROTECT(str = strlwr(str), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+}
+
+/* strnlwr */
+#define c_string_strnlwr_params "str:?Aptr?Gchar,maxlen:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnlwr_f_impl(char *str, size_t maxlen);
+PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnlwr_f(size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *raw_str;
+		size_t maxlen;
+	} args;
+	union pointer str;
+	DeeArg_UnpackStruct2X(err, argc, argv, "strnlwr", &args, &args.raw_str, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
+	if unlikely(DeeObject_AsPointer(args.raw_str, &DeeCChar_Type, &str))
+		goto err;
+	return c_string_strnlwr_f_impl(str.pchar, args.maxlen);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD(c_string_strnlwr, &c_string_strnlwr_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnlwr_f_impl(char *str, size_t maxlen)
+{
+	CTYPES_FAULTPROTECT(str = strnlwr(str, maxlen), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+}
+
+/* strupr */
+#define c_string_strupr_params "str:?Aptr?Gchar"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strupr_f_impl(char *str);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_string_strupr_f(DeeObject *__restrict arg0) {
+	union pointer str;
+	if unlikely(DeeObject_AsPointer(arg0, &DeeCChar_Type, &str))
+		goto err;
+	return c_string_strupr_f_impl(str.pchar);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD1(c_string_strupr, &c_string_strupr_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strupr_f_impl(char *str)
+{
+	CTYPES_FAULTPROTECT(str = strupr(str), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+}
+
+/* strnupr */
+#define c_string_strnupr_params "str:?Aptr?Gchar,maxlen:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnupr_f_impl(char *str, size_t maxlen);
+PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnupr_f(size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *raw_str;
+		size_t maxlen;
+	} args;
+	union pointer str;
+	DeeArg_UnpackStruct2X(err, argc, argv, "strnupr", &args, &args.raw_str, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
+	if unlikely(DeeObject_AsPointer(args.raw_str, &DeeCChar_Type, &str))
+		goto err;
+	return c_string_strnupr_f_impl(str.pchar, args.maxlen);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD(c_string_strnupr, &c_string_strnupr_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnupr_f_impl(char *str, size_t maxlen)
+{
+	CTYPES_FAULTPROTECT(str = strnupr(str, maxlen), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+}
+
+/* strset */
+#define c_string_strset_params "str:?Aptr?Gchar,ch:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strset_f_impl(char *str, int ch);
+PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strset_f(size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *raw_str;
+		int ch;
+	} args;
+	union pointer str;
+	DeeArg_UnpackStruct2X(err, argc, argv, "strset", &args, &args.raw_str, "o", _DeeArg_AsObject, &args.ch, "d", DeeObject_AsInt);
+	if unlikely(DeeObject_AsPointer(args.raw_str, &DeeCChar_Type, &str))
+		goto err;
+	return c_string_strset_f_impl(str.pchar, args.ch);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD(c_string_strset, &c_string_strset_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strset_f_impl(char *str, int ch)
+{
+	CTYPES_FAULTPROTECT(str = strset(str, ch), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+}
+
+/* strnset */
+#define c_string_strnset_params "str:?Aptr?Gchar,ch:?Dint,maxlen:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnset_f_impl(char *str, int ch, size_t maxlen);
+PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnset_f(size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *raw_str;
+		int ch;
+		size_t maxlen;
+	} args;
+	union pointer str;
+	DeeArg_UnpackStruct3X(err, argc, argv, "strnset", &args, &args.raw_str, "o", _DeeArg_AsObject, &args.ch, "d", DeeObject_AsInt, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
+	if unlikely(DeeObject_AsPointer(args.raw_str, &DeeCChar_Type, &str))
+		goto err;
+	return c_string_strnset_f_impl(str.pchar, args.ch, args.maxlen);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD(c_string_strnset, &c_string_strnset_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnset_f_impl(char *str, int ch, size_t maxlen)
+{
+	CTYPES_FAULTPROTECT(str = strnset(str, ch, maxlen), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+}
+
+/* memfrob */
+#define c_string_memfrob_params "buf:?Aptr?Gvoid,num_bytes:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_memfrob_f_impl(void *buf, size_t num_bytes);
+PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memfrob_f(size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *raw_buf;
+		size_t num_bytes;
+	} args;
+	union pointer buf;
+	DeeArg_UnpackStruct2X(err, argc, argv, "memfrob", &args, &args.raw_buf, "o", _DeeArg_AsObject, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
+	if unlikely(DeeObject_AsPointer(args.raw_buf, &DeeCVoid_Type, &buf))
+		goto err;
+	return c_string_memfrob_f_impl(buf.pvoid, args.num_bytes);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD(c_string_memfrob, &c_string_memfrob_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_memfrob_f_impl(void *buf, size_t num_bytes)
+{
+	CTYPES_FAULTPROTECT(buf = memfrob(buf, num_bytes), return NULL);
+	return DeePointer_NewVoid(buf);
+}
+
+/* strsep */
+#define c_string_strsep_params "stringp:?Aptr?Aptr?Gchar,delim:?Aptr?Gchar"
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_string_strsep_f_impl(char **stringp, char const *delim);
+PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strsep_f(size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *raw_stringp;
+		DeeObject *raw_delim;
+	} args;
+	void **stringp;
+	union pointer delim;
+	DeeArg_UnpackStruct2(err, argc, argv, "strsep", &args, &args.raw_stringp, &args.raw_delim);
+	if unlikely(DeeObject_AsPPointer(args.raw_stringp, &DeeCChar_Type, &stringp))
+		goto err;
+	if unlikely(DeeObject_AsPointer(args.raw_delim, &DeeCChar_Type, &delim))
+		goto err;
+	return c_string_strsep_f_impl((char **)stringp, delim.pcchar);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD(c_string_strsep, &c_string_strsep_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_string_strsep_f_impl(char **stringp, char const *delim)
+{
+	char *result;
+	CTYPES_FAULTPROTECT(result = strsep(stringp, delim), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+}
+
+/* stresep */
+#define c_string_stresep_params "stringp:?Aptr?Aptr?Gchar,delim:?Aptr?Gchar,escape:?Dint"
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_string_stresep_f_impl(char **stringp, char const *delim, int escape);
+PRIVATE WUNUSED DREF DeeObject *DCALL c_string_stresep_f(size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *raw_stringp;
+		DeeObject *raw_delim;
+		int escape;
+	} args;
+	void **stringp;
+	union pointer delim;
+	DeeArg_UnpackStruct3X(err, argc, argv, "stresep", &args, &args.raw_stringp, "o", _DeeArg_AsObject, &args.raw_delim, "o", _DeeArg_AsObject, &args.escape, "d", DeeObject_AsInt);
+	if unlikely(DeeObject_AsPPointer(args.raw_stringp, &DeeCChar_Type, &stringp))
+		goto err;
+	if unlikely(DeeObject_AsPointer(args.raw_delim, &DeeCChar_Type, &delim))
+		goto err;
+	return c_string_stresep_f_impl((char **)stringp, delim.pcchar, args.escape);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD(c_string_stresep, &c_string_stresep_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_string_stresep_f_impl(char **stringp, char const *delim, int escape)
+{
+	char *result;
+	CTYPES_FAULTPROTECT(result = stresep(stringp, delim, escape), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+}
+
+/* strtok */
+#define c_string_strtok_params "str:?Aptr?Gchar,delim:?Aptr?Gchar"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strtok_f_impl(char *str, char const *delim);
+PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strtok_f(size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *raw_str;
+		DeeObject *raw_delim;
+	} args;
+	union pointer str;
+	union pointer delim;
+	DeeArg_UnpackStruct2(err, argc, argv, "strtok", &args, &args.raw_str, &args.raw_delim);
+	if unlikely(DeeObject_AsPointer(args.raw_str, &DeeCChar_Type, &str))
+		goto err;
+	if unlikely(DeeObject_AsPointer(args.raw_delim, &DeeCChar_Type, &delim))
+		goto err;
+	return c_string_strtok_f_impl(str.pchar, delim.pcchar);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD(c_string_strtok, &c_string_strtok_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strtok_f_impl(char *str, char const *delim)
+{
+	char *result;
+	CTYPES_FAULTPROTECT(result = strtok(str, delim), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+}
+
+/* strtok_r */
+#define c_string_strtok_r_params "str:?Aptr?Gchar,delim:?Aptr?Gchar,save_ptr:?Aptr?Aptr?Gchar"
+FORCELOCAL WUNUSED NONNULL((3)) DREF DeeObject *DCALL c_string_strtok_r_f_impl(char *str, char const *delim, char **save_ptr);
+PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strtok_r_f(size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *raw_str;
+		DeeObject *raw_delim;
+		DeeObject *raw_save_ptr;
+	} args;
+	union pointer str;
+	union pointer delim;
+	void **save_ptr;
+	DeeArg_UnpackStruct3(err, argc, argv, "strtok_r", &args, &args.raw_str, &args.raw_delim, &args.raw_save_ptr);
+	if unlikely(DeeObject_AsPointer(args.raw_str, &DeeCChar_Type, &str))
+		goto err;
+	if unlikely(DeeObject_AsPointer(args.raw_delim, &DeeCChar_Type, &delim))
+		goto err;
+	if unlikely(DeeObject_AsPPointer(args.raw_save_ptr, &DeeCChar_Type, &save_ptr))
+		goto err;
+	return c_string_strtok_r_f_impl(str.pchar, delim.pcchar, (char **)save_ptr);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD(c_string_strtok_r, &c_string_strtok_r_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((3)) DREF DeeObject *DCALL c_string_strtok_r_f_impl(char *str, char const *delim, char **save_ptr)
+{
+	char *result;
+	CTYPES_FAULTPROTECT(result = strtok_r(str, delim, save_ptr), return NULL);
+	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+}
 /*[[[end]]]*/
-
-INTERN WUNUSED DREF DeeObject *DCALL
-c_string_strspn_f(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
-INTERN WUNUSED DREF DeeObject *DCALL
-c_string_strcspn_f(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
-INTERN WUNUSED DREF DeeObject *DCALL
-c_string_strpbrk_f(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
-INTERN WUNUSED DREF DeeObject *DCALL
-c_string_strrev_f(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
-INTERN WUNUSED DREF DeeObject *DCALL
-c_string_strnrev_f(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
-INTERN WUNUSED DREF DeeObject *DCALL
-c_string_strlwr_f(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
-INTERN WUNUSED DREF DeeObject *DCALL
-c_string_strupr_f(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
-INTERN WUNUSED DREF DeeObject *DCALL
-c_string_strnlwr_f(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
-INTERN WUNUSED DREF DeeObject *DCALL
-c_string_strnupr_f(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
-INTERN WUNUSED DREF DeeObject *DCALL
-c_string_strset_f(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
-INTERN WUNUSED DREF DeeObject *DCALL
-c_string_strnset_f(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
 
 INTERN WUNUSED DREF DeeObject *DCALL
 c_string_strfry_f(size_t argc, DeeObject *const *argv) {
@@ -3029,89 +3672,7 @@ c_string_strfry_f(size_t argc, DeeObject *const *argv) {
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-c_string_memfrob_f(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
-INTERN WUNUSED DREF DeeObject *DCALL
-c_string_strsep_f(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
-INTERN WUNUSED DREF DeeObject *DCALL
-c_string_stresep_f(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
-INTERN WUNUSED DREF DeeObject *DCALL
-c_string_strtok_f(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
-INTERN WUNUSED DREF DeeObject *DCALL
-c_string_strtok_r_f(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
-INTERN WUNUSED DREF DeeObject *DCALL
-c_string_basename_f(size_t argc, DeeObject *const *argv) {
-	union pointer str;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("basename", params: """
-	DeeObject *str;
-""");]]]*/
-	struct {
-		DeeObject *str;
-	} args;
-	DeeArg_Unpack1(err, argc, argv, "basename", &args.str);
-/*[[[end]]]*/
-	if (DeeObject_AsPointer(args.str, &DeeCChar_Type, &str))
-		goto err;
-	CTYPES_FAULTPROTECT(str.pchar = basename(str.pchar), goto err);
-	return DeePointer_NewFor(&DeeCChar_Type, str.ptr);
-err:
-	return NULL;
-}
-
-
-INTERN DEFINE_CMETHOD(c_string_strspn, &c_string_strspn_f, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(c_string_strcspn, &c_string_strcspn_f, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(c_string_strpbrk, &c_string_strpbrk_f, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(c_string_strrev, &c_string_strrev_f, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(c_string_strnrev, &c_string_strnrev_f, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(c_string_strlwr, &c_string_strlwr_f, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(c_string_strupr, &c_string_strupr_f, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(c_string_strnlwr, &c_string_strnlwr_f, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(c_string_strnupr, &c_string_strnupr_f, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(c_string_strset, &c_string_strset_f, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(c_string_strnset, &c_string_strnset_f, METHOD_FNORMAL);
 INTERN DEFINE_CMETHOD(c_string_strfry, &c_string_strfry_f, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(c_string_memfrob, &c_string_memfrob_f, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(c_string_strsep, &c_string_strsep_f, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(c_string_stresep, &c_string_stresep_f, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(c_string_strtok, &c_string_strtok_f, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(c_string_strtok_r, &c_string_strtok_r_f, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(c_string_basename, &c_string_basename_f, METHOD_FNORMAL);
 
 DECL_END
 

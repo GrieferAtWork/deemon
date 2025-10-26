@@ -532,12 +532,15 @@ global final UNPACK_PARAM_DECODERS: {string: UnpackParamDecoder | UnpackTypeProx
 	"ctypes:void_const*": UnpackParamDecoder("union pointer", "?Aptr?Gvoid", (cIn, cOut, err) ->
 			f"if unlikely(DeeObject_AsPointer({cIn}, &DeeCVoid_Type, &{cOut}))\n"
 			f"	goto {err};\n", "NULL", "void const *", e -> f"{e}.pcvoid"),
-	"ctypes:char*": UnpackParamDecoder("union pointer", "?Aptr?Gvoid", (cIn, cOut, err) ->
+	"ctypes:char*": UnpackParamDecoder("union pointer", "?Aptr?Gchar", (cIn, cOut, err) ->
 			f"if unlikely(DeeObject_AsPointer({cIn}, &DeeCChar_Type, &{cOut}))\n"
 			f"	goto {err};\n", "NULL", "char *", e -> f"{e}.pchar"),
-	"ctypes:char_const*": UnpackParamDecoder("union pointer", "?Aptr?Gvoid", (cIn, cOut, err) ->
+	"ctypes:char_const*": UnpackParamDecoder("union pointer", "?Aptr?Gchar", (cIn, cOut, err) ->
 			f"if unlikely(DeeObject_AsPointer({cIn}, &DeeCChar_Type, &{cOut}))\n"
 			f"	goto {err};\n", "NULL", "char const *", e -> f"{e}.pcchar"),
+	"ctypes:char**": UnpackParamDecoder("void **", "?Aptr?Aptr?Gchar", (cIn, cOut, err) ->
+			f"if unlikely(DeeObject_AsPPointer({cIn}, &DeeCChar_Type, &{cOut}))\n"
+			f"	goto {err};\n", "NULL", "char **", e -> f"(char **){e}"),
 
 	/* Unicode */
 	"c:utf8": UnpackTypeProxy("char const *", "Us", "?Dstring"),

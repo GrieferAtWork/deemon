@@ -102,6 +102,24 @@ DeeObject_AsPointer(DeeObject *self,
 	return -1;
 }
 
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeObject_AsPPointer(DeeObject *self,
+                     DeeSTypeObject *pointer_base_base,
+                     void ***p_result) {
+	int error;
+	DREF DeePointerTypeObject *pointer_base;
+	pointer_base = DeeSType_Pointer(pointer_base_base);
+	if unlikely(!pointer_base)
+		goto err;
+	error = DeeObject_AsPointer(self, DeePointerType_AsSType(pointer_base),
+	                            (union pointer *)p_result);
+	Dee_Decref(DeePointerType_AsType(pointer_base));
+	return error;
+err:
+	return -1;
+}
+
+
 /* Same as `DeeObject_AsPointer()', but only ~try~ to interpret it. */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_TryAsPointer(DeeObject *self,

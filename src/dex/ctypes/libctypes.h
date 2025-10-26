@@ -533,6 +533,11 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_AsPointer(DeeObject *self,
                     DeeSTypeObject *pointer_base,
                     union pointer *__restrict result);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeObject_AsPPointer(DeeObject *self,
+                     DeeSTypeObject *pointer_base_base,
+                     void ***p_result);
+
 /* Same as `DeeObject_AsPointer()', but only ~try~ to interpret it.
  * @return:  1: The conversion failed.
  * @return:  0: Successfully converted `self' to a pointer.

@@ -1170,6 +1170,27 @@ func("memrxlen", test: "extern void const *buf; size_t s = memrxlen(buf, '!', 12
 func("rawmemrxchr", test: "extern void const *buf; void *p = rawmemrxchr(buf, '!'); return p == buf;");
 func("rawmemrxlen", test: "extern void const *buf; size_t s = rawmemrxlen(buf, '!'); return s == 0;");
 
+func("strspn", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc), test: 'return strspn("aaabbbccc", "ab") == 6;');
+func("strcspn", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc), test: 'return strcspn("aaabbbccc", "bc") == 3;');
+func("strpbrk", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc), test: 'char const *p = "aaabbbccc"; return strpbrk(p, "bc") == p + 3;');
+func("strrev", "defined(CONFIG_HAVE_STRING_H) && " + addparen(msvc + " || (defined(__KOS_SYSTEM_HEADERS__) && (defined(__USE_KOS) || defined(__USE_DOS)))"), test: 'extern char *str; return str == strrev(str);');
+func("_strrev", "defined(CONFIG_HAVE_STRING_H) && " + addparen(msvc + " || (defined(__KOS_SYSTEM_HEADERS__) && defined(__USE_DOS))"), test: 'extern char *str; return str == _strrev(str);');
+func("strnrev", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: 'extern char *str; return str == strnrev(str, 42);');
+func("strlwr", "defined(CONFIG_HAVE_STRING_H) && " + addparen(msvc + " || (defined(__KOS_SYSTEM_HEADERS__) && (defined(__USE_KOS) || defined(__USE_DOS)))"), test: 'extern char *str; return str == strlwr(str);');
+func("_strlwr", "defined(CONFIG_HAVE_STRING_H) && " + addparen(msvc + " || (defined(__KOS_SYSTEM_HEADERS__) && defined(__USE_DOS))"), test: 'extern char *str; return str == _strlwr(str);');
+func("strnlwr", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: 'extern char *str; return str == strnlwr(str, 42);');
+func("strupr", "defined(CONFIG_HAVE_STRING_H) && " + addparen(msvc + " || (defined(__KOS_SYSTEM_HEADERS__) && (defined(__USE_KOS) || defined(__USE_DOS)))"), test: 'extern char *str; return str == strupr(str);');
+func("_strupr", "defined(CONFIG_HAVE_STRING_H) && " + addparen(msvc + " || (defined(__KOS_SYSTEM_HEADERS__) && defined(__USE_DOS))"), test: 'extern char *str; return str == _strupr(str);');
+func("strnupr", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: 'extern char *str; return str == strnupr(str, 42);');
+func("strset", "defined(CONFIG_HAVE_STRING_H) && " + addparen(msvc + " || (defined(__KOS_SYSTEM_HEADERS__) && (defined(__USE_KOS) || defined(__USE_DOS)))"), test: "extern char *str; return str == strset(str, '-');");
+func("_strset", "defined(CONFIG_HAVE_STRING_H) && " + addparen(msvc + " || (defined(__KOS_SYSTEM_HEADERS__) && defined(__USE_DOS))"), test: "extern char *str; return str == _strset(str, '-');");
+func("strnset", "defined(CONFIG_HAVE_STRING_H) && " + addparen(msvc + " || (defined(__KOS_SYSTEM_HEADERS__) && (defined(__USE_KOS) || defined(__USE_DOS)))"), test: "extern char *str; return str == strnset(str, '-', 42);");
+func("_strnset", "defined(CONFIG_HAVE_STRING_H) && " + addparen(msvc + " || (defined(__KOS_SYSTEM_HEADERS__) && defined(__USE_DOS))"), test: "extern char *str; return str == _strnset(str, '-', 42);");
+func("strsep", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_MISC)", test: 'extern char *str; return strsep(&str, "foo") == str;');
+func("stresep", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_NETBSD)", test: 'extern char *str; return stresep(&str, "foo", 42) == str;');
+func("strtok", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc), test: 'extern char *str; return strtok(str, ",.-") == str;');
+func("strtok_r", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_POSIX)", test: 'extern char *str, *save; return strtok_r(str, ",.-", &save) == str;');
+
 functest("tolower('!')", "defined(CONFIG_HAVE_CTYPE_H)");
 functest("toupper('!')", "defined(CONFIG_HAVE_CTYPE_H)");
 functest("islower('!')", "defined(CONFIG_HAVE_CTYPE_H)");
@@ -8812,6 +8833,167 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_rawmemrxlen
 #endif
 
+#ifdef CONFIG_NO_strspn
+#undef CONFIG_HAVE_strspn
+#elif !defined(CONFIG_HAVE_strspn) && \
+      (defined(strspn) || defined(__strspn_defined) || defined(CONFIG_HAVE_STRING_H))
+#define CONFIG_HAVE_strspn
+#endif
+
+#ifdef CONFIG_NO_strcspn
+#undef CONFIG_HAVE_strcspn
+#elif !defined(CONFIG_HAVE_strcspn) && \
+      (defined(strcspn) || defined(__strcspn_defined) || defined(CONFIG_HAVE_STRING_H))
+#define CONFIG_HAVE_strcspn
+#endif
+
+#ifdef CONFIG_NO_strpbrk
+#undef CONFIG_HAVE_strpbrk
+#elif !defined(CONFIG_HAVE_strpbrk) && \
+      (defined(strpbrk) || defined(__strpbrk_defined) || defined(CONFIG_HAVE_STRING_H))
+#define CONFIG_HAVE_strpbrk
+#endif
+
+#ifdef CONFIG_NO_strrev
+#undef CONFIG_HAVE_strrev
+#elif !defined(CONFIG_HAVE_strrev) && \
+      (defined(strrev) || defined(__strrev_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       (defined(_MSC_VER) || (defined(__KOS_SYSTEM_HEADERS__) && (defined(__USE_KOS) || \
+       defined(__USE_DOS))))))
+#define CONFIG_HAVE_strrev
+#endif
+
+#ifdef CONFIG_NO__strrev
+#undef CONFIG_HAVE__strrev
+#elif !defined(CONFIG_HAVE__strrev) && \
+      (defined(_strrev) || defined(___strrev_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       (defined(_MSC_VER) || (defined(__KOS_SYSTEM_HEADERS__) && defined(__USE_DOS)))))
+#define CONFIG_HAVE__strrev
+#endif
+
+#ifdef CONFIG_NO_strnrev
+#undef CONFIG_HAVE_strnrev
+#elif !defined(CONFIG_HAVE_strnrev) && \
+      (defined(strnrev) || defined(__strnrev_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
+#define CONFIG_HAVE_strnrev
+#endif
+
+#ifdef CONFIG_NO_strlwr
+#undef CONFIG_HAVE_strlwr
+#elif !defined(CONFIG_HAVE_strlwr) && \
+      (defined(strlwr) || defined(__strlwr_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       (defined(_MSC_VER) || (defined(__KOS_SYSTEM_HEADERS__) && (defined(__USE_KOS) || \
+       defined(__USE_DOS))))))
+#define CONFIG_HAVE_strlwr
+#endif
+
+#ifdef CONFIG_NO__strlwr
+#undef CONFIG_HAVE__strlwr
+#elif !defined(CONFIG_HAVE__strlwr) && \
+      (defined(_strlwr) || defined(___strlwr_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       (defined(_MSC_VER) || (defined(__KOS_SYSTEM_HEADERS__) && defined(__USE_DOS)))))
+#define CONFIG_HAVE__strlwr
+#endif
+
+#ifdef CONFIG_NO_strnlwr
+#undef CONFIG_HAVE_strnlwr
+#elif !defined(CONFIG_HAVE_strnlwr) && \
+      (defined(strnlwr) || defined(__strnlwr_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
+#define CONFIG_HAVE_strnlwr
+#endif
+
+#ifdef CONFIG_NO_strupr
+#undef CONFIG_HAVE_strupr
+#elif !defined(CONFIG_HAVE_strupr) && \
+      (defined(strupr) || defined(__strupr_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       (defined(_MSC_VER) || (defined(__KOS_SYSTEM_HEADERS__) && (defined(__USE_KOS) || \
+       defined(__USE_DOS))))))
+#define CONFIG_HAVE_strupr
+#endif
+
+#ifdef CONFIG_NO__strupr
+#undef CONFIG_HAVE__strupr
+#elif !defined(CONFIG_HAVE__strupr) && \
+      (defined(_strupr) || defined(___strupr_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       (defined(_MSC_VER) || (defined(__KOS_SYSTEM_HEADERS__) && defined(__USE_DOS)))))
+#define CONFIG_HAVE__strupr
+#endif
+
+#ifdef CONFIG_NO_strnupr
+#undef CONFIG_HAVE_strnupr
+#elif !defined(CONFIG_HAVE_strnupr) && \
+      (defined(strnupr) || defined(__strnupr_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
+#define CONFIG_HAVE_strnupr
+#endif
+
+#ifdef CONFIG_NO_strset
+#undef CONFIG_HAVE_strset
+#elif !defined(CONFIG_HAVE_strset) && \
+      (defined(strset) || defined(__strset_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       (defined(_MSC_VER) || (defined(__KOS_SYSTEM_HEADERS__) && (defined(__USE_KOS) || \
+       defined(__USE_DOS))))))
+#define CONFIG_HAVE_strset
+#endif
+
+#ifdef CONFIG_NO__strset
+#undef CONFIG_HAVE__strset
+#elif !defined(CONFIG_HAVE__strset) && \
+      (defined(_strset) || defined(___strset_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       (defined(_MSC_VER) || (defined(__KOS_SYSTEM_HEADERS__) && defined(__USE_DOS)))))
+#define CONFIG_HAVE__strset
+#endif
+
+#ifdef CONFIG_NO_strnset
+#undef CONFIG_HAVE_strnset
+#elif !defined(CONFIG_HAVE_strnset) && \
+      (defined(strnset) || defined(__strnset_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       (defined(_MSC_VER) || (defined(__KOS_SYSTEM_HEADERS__) && (defined(__USE_KOS) || \
+       defined(__USE_DOS))))))
+#define CONFIG_HAVE_strnset
+#endif
+
+#ifdef CONFIG_NO__strnset
+#undef CONFIG_HAVE__strnset
+#elif !defined(CONFIG_HAVE__strnset) && \
+      (defined(_strnset) || defined(___strnset_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       (defined(_MSC_VER) || (defined(__KOS_SYSTEM_HEADERS__) && defined(__USE_DOS)))))
+#define CONFIG_HAVE__strnset
+#endif
+
+#ifdef CONFIG_NO_strsep
+#undef CONFIG_HAVE_strsep
+#elif !defined(CONFIG_HAVE_strsep) && \
+      (defined(strsep) || defined(__strsep_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_MISC)))
+#define CONFIG_HAVE_strsep
+#endif
+
+#ifdef CONFIG_NO_stresep
+#undef CONFIG_HAVE_stresep
+#elif !defined(CONFIG_HAVE_stresep) && \
+      (defined(stresep) || defined(__stresep_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_NETBSD)))
+#define CONFIG_HAVE_stresep
+#endif
+
+#ifdef CONFIG_NO_strtok
+#undef CONFIG_HAVE_strtok
+#elif !defined(CONFIG_HAVE_strtok) && \
+      (defined(strtok) || defined(__strtok_defined) || defined(CONFIG_HAVE_STRING_H))
+#define CONFIG_HAVE_strtok
+#endif
+
+#ifdef CONFIG_NO_strtok_r
+#undef CONFIG_HAVE_strtok_r
+#elif !defined(CONFIG_HAVE_strtok_r) && \
+      (defined(strtok_r) || defined(__strtok_r_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_POSIX)))
+#define CONFIG_HAVE_strtok_r
+#endif
+
 #ifdef CONFIG_NO_tolower
 #undef CONFIG_HAVE_tolower
 #elif !defined(CONFIG_HAVE_tolower) && \
@@ -12329,6 +12511,36 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define strcasecmp strcmpi
 #endif /* ... */
 #endif /* !CONFIG_HAVE_strcasecmp */
+
+#if defined(CONFIG_HAVE__strrev) && !defined(CONFIG_HAVE_strrev)
+#define CONFIG_HAVE_strrev
+#undef strrev
+#define strrev _strrev
+#endif /* strrev = _strrev */
+
+#if defined(CONFIG_HAVE__strlwr) && !defined(CONFIG_HAVE_strlwr)
+#define CONFIG_HAVE_strlwr
+#undef strlwr
+#define strlwr _strlwr
+#endif /* strlwr = _strlwr */
+
+#if defined(CONFIG_HAVE__strupr) && !defined(CONFIG_HAVE_strupr)
+#define CONFIG_HAVE_strupr
+#undef strupr
+#define strupr _strupr
+#endif /* strupr = _strupr */
+
+#if defined(CONFIG_HAVE__strset) && !defined(CONFIG_HAVE_strset)
+#define CONFIG_HAVE_strset
+#undef strset
+#define strset _strset
+#endif /* strset = _strset */
+
+#if defined(CONFIG_HAVE__strnset) && !defined(CONFIG_HAVE_strnset)
+#define CONFIG_HAVE_strnset
+#undef strnset
+#define strnset _strnset
+#endif /* strnset = _strnset */
 
 #ifndef CONFIG_HAVE_tolower
 #define CONFIG_HAVE_tolower

@@ -1074,15 +1074,15 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
 	      "Alias for ?Gstrrchr") },
 	{ "strspn", (DeeObject *)&c_string_strspn, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar,accept:?Aptr?Gchar)->?Dint\n"
+	  DOC("(haystack:?Aptr?Gchar,accept:?Aptr?Gchar)->?Dint\n"
 	      "Returns the offset to the first character in @str that is also "
 	      "apart of @accept, or ${strlen(str)} when no such character exists") },
 	{ "strcspn", (DeeObject *)&c_string_strcspn, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar,reject:?Aptr?Gchar)->?Dint\n"
+	  DOC("(haystack:?Aptr?Gchar,reject:?Aptr?Gchar)->?Dint\n"
 	      "Returns the offset to the first character in @str that isn't "
 	      "apart of @accept, or ${strlen(str)} when no such character exists") },
 	{ "strpbrk", (DeeObject *)&c_string_strpbrk, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar,accept:?Aptr?Gchar)->?Aptr?Gchar\n"
+	  DOC("(haystack:?Aptr?Gchar,accept:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Return a pointer to the first character in @str, that is also apart of @accept\n"
 	      "If no such character exists, a NULL-pointer is returned") },
 	{ "strrev", (DeeObject *)&c_string_strrev, MODSYM_FREADONLY,
