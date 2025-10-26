@@ -41,7 +41,7 @@
  * >> #define RBTREE_Tkey                uintptr_t
  * >> #define RBTREE_CC                  LIBCCALL
  * >> #define RBTREE_NOTHROW             NOTHROW_NCX
- * >> #define RBTREE_NOTHROW_U           NOTHROW_NCX
+ * >> #define RBTREE_NOTHROW_U           NOTHROW_NCX   // Used for functions that call `RBTREE_KEY_LO' or `RBTREE_KEY_EQ' with keys passed in through function arguments (e.g. when keys are `NCX char const *', this would be "NOTHROW_NCX", but "RBTREE_NOTHROW" could still be "NOTHROW")
  * >> #define RBTREE_SLOT__PARAMS        , int extra, int args  // If needed for accessing RBTREE_NODEFIELD or colors
  * >> #define RBTREE_SLOT__ARGS          , extra, args
  * >> #define RBTREE_KEY_LO(a, b)        ((a) < (b))    // Compare keys

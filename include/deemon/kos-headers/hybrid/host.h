@@ -346,7 +346,7 @@
 
 
 
-/* The `va_list' structure is simply a pointer into the argument list,
+/* The `va_list' structure  is simply  a pointer into  the argument  list,
  * where arguments can be indexed by alignment of at least sizeof(void *).
  * This allows one to do the following:
  *

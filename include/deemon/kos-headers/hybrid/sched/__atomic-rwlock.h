@@ -19,7 +19,7 @@
  */
 #ifndef __GUARD_HYBRID_SCHED___ATOMIC_RWLOCK_H
 #define __GUARD_HYBRID_SCHED___ATOMIC_RWLOCK_H 1
- 
+
 #include "../../__stdinc.h"
 #include "../typecore.h"
 #include "../__atomic.h"
