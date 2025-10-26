@@ -2153,8 +2153,6 @@ PRIVATE struct type_getset tpconst time_getsets[] = {
 	DEFINE_DEPRECATED_TIME_AS_FIELD("monthday", mday),
 	DEFINE_DEPRECATED_TIME_AS_FIELD("yearday", yday),
 	DEFINE_DEPRECATED_TIME_AS_FIELD("yearweek", yweek),
-	DEFINE_DEPRECATED_TIME_AS_FIELD("mweek", mweek),
-	DEFINE_DEPRECATED_TIME_AS_FIELD("yweek", yweek),
 	DEFINE_DEPRECATED_TIME_AS_FIELD("msecond", millisecond),
 	DEFINE_DEPRECATED_TIME_AS_FIELD("mseconds", milliseconds),
 	DEFINE_DEPRECATED_TIME_AS_FIELD("millenia", millennia),
@@ -2432,41 +2430,53 @@ PRIVATE struct type_math time_math = {
 };
 
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime_gmtime(size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_CMethod from rt.gen.unpack)("gmtime", "");]]]*/
+#define libtime_gmtime_params ""
+PRIVATE WUNUSED DREF DeeObject *DCALL libtime_gmtime_f_impl(void);
+PRIVATE DEFINE_CMETHOD0(libtime_gmtime, &libtime_gmtime_f_impl, METHOD_FNORMAL);
+PRIVATE WUNUSED DREF DeeObject *DCALL libtime_gmtime_f_impl(void)
+/*[[[end]]]*/
+{
 	DREF DeeTimeObject *result;
-	DeeArg_Unpack0(err, argc, argv, "gmtime");
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto err;
 	time_now_utc(&result->t_nanos);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
 	DeeObject_Init(result, &DeeTime_Type);
-	return result;
+	return (DREF DeeObject *)result;
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime_localtime(size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_CMethod from rt.gen.unpack)("localtime", "");]]]*/
+#define libtime_localtime_params ""
+PRIVATE WUNUSED DREF DeeObject *DCALL libtime_localtime_f_impl(void);
+PRIVATE DEFINE_CMETHOD0(libtime_localtime, &libtime_localtime_f_impl, METHOD_FNORMAL);
+PRIVATE WUNUSED DREF DeeObject *DCALL libtime_localtime_f_impl(void)
+/*[[[end]]]*/
+{
 	DREF DeeTimeObject *result;
-	DeeArg_Unpack0(err, argc, argv, "localtime");
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto err;
 	time_now_local(&result->t_nanos);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
 	DeeObject_Init(result, &DeeTime_Type);
-	return result;
+	return (DREF DeeObject *)result;
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime_tick(size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_CMethod from rt.gen.unpack)("tick", "");]]]*/
+#define libtime_tick_params ""
+PRIVATE WUNUSED DREF DeeObject *DCALL libtime_tick_f_impl(void);
+PRIVATE DEFINE_CMETHOD0(libtime_tick, &libtime_tick_f_impl, METHOD_FNORMAL);
+PRIVATE WUNUSED DREF DeeObject *DCALL libtime_tick_f_impl(void)
+/*[[[end]]]*/
+{
 	uint64_t tick;
 	DREF DeeTimeObject *result;
-	DeeArg_Unpack0(err, argc, argv, "tick");
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto err;
@@ -2477,242 +2487,408 @@ f_libtime_tick(size_t argc, DeeObject *const *argv) {
 	__hybrid_int128_mul16(result->t_nanos, NANOSECONDS_PER_MICROSECOND);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
-	return result;
+	return (DREF DeeObject *)result;
 err:
 	return NULL;
 }
 
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime_nanoseconds(size_t argc, DeeObject *const *argv) {
+/* NOTE: All of this stuff can't be CONSTEXPR because `Time' objects are mutable :(
+ * XXX: Maybe reconsider if Time objects really need to be mutable... The only reason
+ *      right now is due to setters like `Time.second = 42'. I feel like it would be
+ *      nicer if these weren't writable, but instead there was `Time.with(second: 42)'
+ *      in order to construct a new time object with certain fields changed to other
+ *      values. */
+
+/*[[[deemon
+import * from deemon;
+import print_CMethod from rt.gen.unpack;
+function def(what: string, where: string, mul: string) {
+	print_CMethod(what, "Dee_int128_t value");
+	print("{");
+	print("	DREF DeeTimeObject *result;");
+	print("	result = DeeObject_MALLOC(DeeTimeObject);");
+	print("	if unlikely(!result)");
+	print("		goto err;");
+	print("	result->", where, " = value;");
+	if (mul)
+		print("	", mul, ";");
+	print("	result->t_typekind = TIME_TYPEKIND(", {
+		"t_nanos": "TIME_TYPE_NANOSECONDS",
+		"t_months": "TIME_TYPE_MONTHS",
+	}[where], ", TIME_KIND_DELTA);");
+	print("	DeeObject_Init(result, &DeeTime_Type);");
+	print("	return (DREF DeeObject *)result;");
+	print("err:");
+	print("	return NULL;");
+	print("}");
+	print;
+}
+
+def("nanoseconds", "t_nanos", "");
+def("microseconds", "t_nanos", "__hybrid_int128_mul16(result->t_nanos, NANOSECONDS_PER_MICROSECOND)");
+def("milliseconds", "t_nanos", "__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_MILLISECOND)");
+def("seconds", "t_nanos", "__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_SECOND)");
+def("minutes", "t_nanos", "__hybrid_int128_mul64(result->t_nanos, NANOSECONDS_PER_MINUTE)");
+def("hours", "t_nanos", "__hybrid_int128_mul64(result->t_nanos, NANOSECONDS_PER_HOUR)");
+def("days", "t_nanos", "__hybrid_int128_mul64(result->t_nanos, NANOSECONDS_PER_DAY)");
+def("weeks", "t_nanos", "__hybrid_int128_mul64(result->t_nanos, NANOSECONDS_PER_WEEK)");
+def("months", "t_months", "");
+def("years", "t_months", "__hybrid_int128_mul8(result->t_months, MONTHS_PER_YEAR)");
+def("decades", "t_months", "__hybrid_int128_mul8(result->t_months, MONTHS_PER_DECADE)");
+def("centuries", "t_months", "__hybrid_int128_mul16(result->t_months, MONTHS_PER_CENTURY)");
+def("millennia", "t_months", "__hybrid_int128_mul16(result->t_months, MONTHS_PER_MILLENNIUM)");
+]]]*/
+#define libtime_nanoseconds_params "value:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_nanoseconds_f_impl(Dee_int128_t value);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libtime_nanoseconds_f(DeeObject *__restrict arg0) {
+	Dee_int128_t value;
+	if (DeeObject_AsInt128(arg0, &value))
+		goto err;
+	return libtime_nanoseconds_f_impl(value);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD1(libtime_nanoseconds, &libtime_nanoseconds_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_nanoseconds_f_impl(Dee_int128_t value)
+{
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
-		goto done;
-	DeeArg_Unpack1X(err_r, argc, argv, "nanoseconds", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
+		goto err;
+	result->t_nanos = value;
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime_microseconds(size_t argc, DeeObject *const *argv) {
+#define libtime_microseconds_params "value:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_microseconds_f_impl(Dee_int128_t value);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libtime_microseconds_f(DeeObject *__restrict arg0) {
+	Dee_int128_t value;
+	if (DeeObject_AsInt128(arg0, &value))
+		goto err;
+	return libtime_microseconds_f_impl(value);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD1(libtime_microseconds, &libtime_microseconds_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_microseconds_f_impl(Dee_int128_t value)
+{
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
-		goto done;
-	DeeArg_Unpack1X(err_r, argc, argv, "microseconds", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
+		goto err;
+	result->t_nanos = value;
 	__hybrid_int128_mul16(result->t_nanos, NANOSECONDS_PER_MICROSECOND);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime_milliseconds(size_t argc, DeeObject *const *argv) {
+#define libtime_milliseconds_params "value:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_milliseconds_f_impl(Dee_int128_t value);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libtime_milliseconds_f(DeeObject *__restrict arg0) {
+	Dee_int128_t value;
+	if (DeeObject_AsInt128(arg0, &value))
+		goto err;
+	return libtime_milliseconds_f_impl(value);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD1(libtime_milliseconds, &libtime_milliseconds_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_milliseconds_f_impl(Dee_int128_t value)
+{
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
-		goto done;
-	DeeArg_Unpack1X(err_r, argc, argv, "milliseconds", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
+		goto err;
+	result->t_nanos = value;
 	__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_MILLISECOND);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime_seconds(size_t argc, DeeObject *const *argv) {
+#define libtime_seconds_params "value:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_seconds_f_impl(Dee_int128_t value);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libtime_seconds_f(DeeObject *__restrict arg0) {
+	Dee_int128_t value;
+	if (DeeObject_AsInt128(arg0, &value))
+		goto err;
+	return libtime_seconds_f_impl(value);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD1(libtime_seconds, &libtime_seconds_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_seconds_f_impl(Dee_int128_t value)
+{
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
-		goto done;
-	DeeArg_Unpack1X(err_r, argc, argv, "seconds", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
+		goto err;
+	result->t_nanos = value;
 	__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_SECOND);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime_minutes(size_t argc, DeeObject *const *argv) {
+#define libtime_minutes_params "value:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_minutes_f_impl(Dee_int128_t value);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libtime_minutes_f(DeeObject *__restrict arg0) {
+	Dee_int128_t value;
+	if (DeeObject_AsInt128(arg0, &value))
+		goto err;
+	return libtime_minutes_f_impl(value);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD1(libtime_minutes, &libtime_minutes_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_minutes_f_impl(Dee_int128_t value)
+{
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
-		goto done;
-	DeeArg_Unpack1X(err_r, argc, argv, "minutes", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
+		goto err;
+	result->t_nanos = value;
 	__hybrid_int128_mul64(result->t_nanos, NANOSECONDS_PER_MINUTE);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime_hours(size_t argc, DeeObject *const *argv) {
+#define libtime_hours_params "value:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_hours_f_impl(Dee_int128_t value);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libtime_hours_f(DeeObject *__restrict arg0) {
+	Dee_int128_t value;
+	if (DeeObject_AsInt128(arg0, &value))
+		goto err;
+	return libtime_hours_f_impl(value);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD1(libtime_hours, &libtime_hours_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_hours_f_impl(Dee_int128_t value)
+{
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
-		goto done;
-	DeeArg_Unpack1X(err_r, argc, argv, "hours", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
+		goto err;
+	result->t_nanos = value;
 	__hybrid_int128_mul64(result->t_nanos, NANOSECONDS_PER_HOUR);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime_days(size_t argc, DeeObject *const *argv) {
+#define libtime_days_params "value:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_days_f_impl(Dee_int128_t value);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libtime_days_f(DeeObject *__restrict arg0) {
+	Dee_int128_t value;
+	if (DeeObject_AsInt128(arg0, &value))
+		goto err;
+	return libtime_days_f_impl(value);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD1(libtime_days, &libtime_days_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_days_f_impl(Dee_int128_t value)
+{
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
-		goto done;
-	DeeArg_Unpack1X(err_r, argc, argv, "days", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
+		goto err;
+	result->t_nanos = value;
 	__hybrid_int128_mul64(result->t_nanos, NANOSECONDS_PER_DAY);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime_weeks(size_t argc, DeeObject *const *argv) {
+#define libtime_weeks_params "value:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_weeks_f_impl(Dee_int128_t value);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libtime_weeks_f(DeeObject *__restrict arg0) {
+	Dee_int128_t value;
+	if (DeeObject_AsInt128(arg0, &value))
+		goto err;
+	return libtime_weeks_f_impl(value);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD1(libtime_weeks, &libtime_weeks_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_weeks_f_impl(Dee_int128_t value)
+{
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
-		goto done;
-	DeeArg_Unpack1X(err_r, argc, argv, "weeks", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
+		goto err;
+	result->t_nanos = value;
 	__hybrid_int128_mul64(result->t_nanos, NANOSECONDS_PER_WEEK);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime_months(size_t argc, DeeObject *const *argv) {
+#define libtime_months_params "value:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_months_f_impl(Dee_int128_t value);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libtime_months_f(DeeObject *__restrict arg0) {
+	Dee_int128_t value;
+	if (DeeObject_AsInt128(arg0, &value))
+		goto err;
+	return libtime_months_f_impl(value);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD1(libtime_months, &libtime_months_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_months_f_impl(Dee_int128_t value)
+{
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
-		goto done;
-	DeeArg_Unpack1X(err_r, argc, argv, "months", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
+		goto err;
+	result->t_months = value;
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_MONTHS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime_years(size_t argc, DeeObject *const *argv) {
+#define libtime_years_params "value:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_years_f_impl(Dee_int128_t value);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libtime_years_f(DeeObject *__restrict arg0) {
+	Dee_int128_t value;
+	if (DeeObject_AsInt128(arg0, &value))
+		goto err;
+	return libtime_years_f_impl(value);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD1(libtime_years, &libtime_years_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_years_f_impl(Dee_int128_t value)
+{
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
-		goto done;
-	DeeArg_Unpack1X(err_r, argc, argv, "years", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
+		goto err;
+	result->t_months = value;
 	__hybrid_int128_mul8(result->t_months, MONTHS_PER_YEAR);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_MONTHS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime_decades(size_t argc, DeeObject *const *argv) {
+#define libtime_decades_params "value:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_decades_f_impl(Dee_int128_t value);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libtime_decades_f(DeeObject *__restrict arg0) {
+	Dee_int128_t value;
+	if (DeeObject_AsInt128(arg0, &value))
+		goto err;
+	return libtime_decades_f_impl(value);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD1(libtime_decades, &libtime_decades_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_decades_f_impl(Dee_int128_t value)
+{
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
-		goto done;
-	DeeArg_Unpack1X(err_r, argc, argv, "decades", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
+		goto err;
+	result->t_months = value;
 	__hybrid_int128_mul8(result->t_months, MONTHS_PER_DECADE);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_MONTHS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime_centuries(size_t argc, DeeObject *const *argv) {
+#define libtime_centuries_params "value:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_centuries_f_impl(Dee_int128_t value);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libtime_centuries_f(DeeObject *__restrict arg0) {
+	Dee_int128_t value;
+	if (DeeObject_AsInt128(arg0, &value))
+		goto err;
+	return libtime_centuries_f_impl(value);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD1(libtime_centuries, &libtime_centuries_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_centuries_f_impl(Dee_int128_t value)
+{
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
-		goto done;
-	DeeArg_Unpack1X(err_r, argc, argv, "centuries", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
-	__hybrid_int128_mul8(result->t_months, MONTHS_PER_CENTURY);
+		goto err;
+	result->t_months = value;
+	__hybrid_int128_mul16(result->t_months, MONTHS_PER_CENTURY);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_MONTHS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime_millennia(size_t argc, DeeObject *const *argv) {
+#define libtime_millennia_params "value:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_millennia_f_impl(Dee_int128_t value);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libtime_millennia_f(DeeObject *__restrict arg0) {
+	Dee_int128_t value;
+	if (DeeObject_AsInt128(arg0, &value))
+		goto err;
+	return libtime_millennia_f_impl(value);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD1(libtime_millennia, &libtime_millennia_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_millennia_f_impl(Dee_int128_t value)
+{
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
-		goto done;
-	DeeArg_Unpack1X(err_r, argc, argv, "millennia", (Dee_uint128_t *)&result->t_nanos, UNPu128, DeeObject_AsUInt128);
-	__hybrid_int128_mul8(result->t_months, MONTHS_PER_MILLENNIUM);
+		goto err;
+	result->t_months = value;
+	__hybrid_int128_mul16(result->t_months, MONTHS_PER_MILLENNIUM);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_MONTHS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
+/*[[[end]]]*/
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime_maketime(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DREF DeeTimeObject *result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("maketime", params: "
+/*[[[deemon (print_KwCMethod from rt.gen.unpack)("maketime", """
 	Dee_int128_t hour = 0,
 	Dee_int128_t minute = 0,
 	Dee_int128_t second = 0,
 	Dee_int128_t nanosecond = 0,
-", docStringPrefix: "libtime", defineKwList: true);]]]*/
-	static DEFINE_KWLIST(maketime_kwlist, { KEX("hour", 0x1a9ed795, 0x10f3e1a52760b6c5), KEX("minute", 0x951f07e5, 0x841bf13791a969b), KEX("second", 0x1a084e7b, 0x3058181b9a44b68c), KEX("nanosecond", 0xe8e3c3b6, 0x16f16d5d9832d2aa), KEND });
+""");]]]*/
 #define libtime_maketime_params "hour=!0,minute=!0,second=!0,nanosecond=!0"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_maketime_f_impl(Dee_int128_t hour, Dee_int128_t minute, Dee_int128_t second, Dee_int128_t nanosecond);
+#ifndef DEFINED_kwlist__hour_minute_second_nanosecond
+#define DEFINED_kwlist__hour_minute_second_nanosecond
+PRIVATE DEFINE_KWLIST(kwlist__hour_minute_second_nanosecond, { KEX("hour", 0x1a9ed795, 0x10f3e1a52760b6c5), KEX("minute", 0x951f07e5, 0x841bf13791a969b), KEX("second", 0x1a084e7b, 0x3058181b9a44b68c), KEX("nanosecond", 0xe8e3c3b6, 0x16f16d5d9832d2aa), KEND });
+#endif /* !DEFINED_kwlist__hour_minute_second_nanosecond */
+PRIVATE WUNUSED DREF DeeObject *DCALL libtime_maketime_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	struct {
 		Dee_int128_t hour;
 		Dee_int128_t minute;
@@ -2723,35 +2899,44 @@ f_libtime_maketime(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	__hybrid_int128_setzero(args.minute);
 	__hybrid_int128_setzero(args.second);
 	__hybrid_int128_setzero(args.nanosecond);
-	if (DeeArg_UnpackStructKw(argc, argv, kw, maketime_kwlist, "|" UNPd128 UNPd128 UNPd128 UNPd128 ":maketime", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__hour_minute_second_nanosecond, "|" UNPd128 UNPd128 UNPd128 UNPd128 ":maketime", &args))
 		goto err;
+	return libtime_maketime_f_impl(args.hour, args.minute, args.second, args.nanosecond);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_KWCMETHOD(libtime_maketime, &libtime_maketime_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_maketime_f_impl(Dee_int128_t hour, Dee_int128_t minute, Dee_int128_t second, Dee_int128_t nanosecond)
 /*[[[end]]]*/
+{
+	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
-		goto done;
+		goto err;
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
 	__hybrid_int128_setzero(result->t_nanos);
-	DeeTime_SetRepr(result, &args.hour, TIME_REPR_HOUR);
-	DeeTime_SetRepr(result, &args.minute, TIME_REPR_MINUTE);
-	DeeTime_SetRepr(result, &args.second, TIME_REPR_SECOND);
-	DeeTime_SetRepr(result, &args.nanosecond, TIME_REPR_NANOSECOND);
+	DeeTime_SetRepr(result, &hour, TIME_REPR_HOUR);
+	DeeTime_SetRepr(result, &minute, TIME_REPR_MINUTE);
+	DeeTime_SetRepr(result, &second, TIME_REPR_SECOND);
+	DeeTime_SetRepr(result, &nanosecond, TIME_REPR_NANOSECOND);
 	DeeObject_Init(result, &DeeTime_Type);
-done:
-	return result;
+	return (DREF DeeObject *)result;
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime_makedate(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DREF DeeTimeObject *result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makedate", params: "
+/*[[[deemon (print_KwCMethod from rt.gen.unpack)("makedate", """
 	Dee_int128_t year = 0,
 	Dee_int128_t month = 1,
 	Dee_int128_t day = 1,
-", docStringPrefix: "libtime", defineKwList: true);]]]*/
-	static DEFINE_KWLIST(makedate_kwlist, { KEX("year", 0x310a1818, 0xa8d044c5ea490cb6), KEX("month", 0x51ca185c, 0xbe9d67504ee78acc), KEX("day", 0xe0fe498d, 0x8e12be46fd64d268), KEND });
+""");]]]*/
 #define libtime_makedate_params "year=!0,month=!1,day=!1"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_makedate_f_impl(Dee_int128_t year, Dee_int128_t month, Dee_int128_t day);
+#ifndef DEFINED_kwlist__year_month_day
+#define DEFINED_kwlist__year_month_day
+PRIVATE DEFINE_KWLIST(kwlist__year_month_day, { KEX("year", 0x310a1818, 0xa8d044c5ea490cb6), KEX("month", 0x51ca185c, 0xbe9d67504ee78acc), KEX("day", 0xe0fe498d, 0x8e12be46fd64d268), KEND });
+#endif /* !DEFINED_kwlist__year_month_day */
+PRIVATE WUNUSED DREF DeeObject *DCALL libtime_makedate_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	struct {
 		Dee_int128_t year;
 		Dee_int128_t month;
@@ -2760,20 +2945,27 @@ f_libtime_makedate(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	__hybrid_int128_setzero(args.year);
 	__hybrid_int128_setone(args.month);
 	__hybrid_int128_setone(args.day);
-	if (DeeArg_UnpackStructKw(argc, argv, kw, makedate_kwlist, "|" UNPd128 UNPd128 UNPd128 ":makedate", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__year_month_day, "|" UNPd128 UNPd128 UNPd128 ":makedate", &args))
 		goto err;
+	return libtime_makedate_f_impl(args.year, args.month, args.day);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_KWCMETHOD(libtime_makedate, &libtime_makedate_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_makedate_f_impl(Dee_int128_t year, Dee_int128_t month, Dee_int128_t day)
 /*[[[end]]]*/
+{
+	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
-		goto done;
+		goto err;
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
 	__hybrid_int128_setzero(result->t_nanos);
-	DeeTime_SetRepr(result, &args.year, TIME_REPR_YEAR);
-	DeeTime_SetRepr(result, &args.month, TIME_REPR_MONTH);
-	DeeTime_SetRepr(result, &args.day, TIME_REPR_MDAY);
+	DeeTime_SetRepr(result, &year, TIME_REPR_YEAR);
+	DeeTime_SetRepr(result, &month, TIME_REPR_MONTH);
+	DeeTime_SetRepr(result, &day, TIME_REPR_MDAY);
 	DeeObject_Init(result, &DeeTime_Type);
-done:
-	return result;
+	return (DREF DeeObject *)result;
 err:
 	return NULL;
 }
@@ -2803,31 +2995,38 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime__mkunix(size_t argc, DeeObject *const *argv) {
-	DREF DeeTimeObject *result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_mkunix", params: """
+/*[[[deemon (print_CMethod from rt.gen.unpack)("_mkunix", """
 	int64_t time_t;
 	uint32_t nanosecond = 0;
-""", docStringPrefix: "libtime");]]]*/
+""");]]]*/
 #define libtime__mkunix_params "time_t:?Dint,nanosecond=!0"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime__mkunix_f_impl(int64_t time_t_, uint32_t nanosecond);
+PRIVATE WUNUSED DREF DeeObject *DCALL libtime__mkunix_f(size_t argc, DeeObject *const *argv) {
 	struct {
 		int64_t time_t_;
 		uint32_t nanosecond;
 	} args;
 	args.nanosecond = 0;
 	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "_mkunix", &args, &args.time_t_, UNPd64, DeeObject_AsInt64, &args.nanosecond, UNPu32, DeeObject_AsUInt32);
+	return libtime__mkunix_f_impl(args.time_t_, args.nanosecond);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD(libtime__mkunix, &libtime__mkunix_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime__mkunix_f_impl(int64_t time_t_, uint32_t nanosecond)
 /*[[[end]]]*/
+{
+	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto err;
-	__hybrid_int128_set64(result->t_nanos, args.time_t_);
+	__hybrid_int128_set64(result->t_nanos, time_t_);
 	__hybrid_int128_add64(result->t_nanos, UNIX_TIME_T_BASE_SECONDS);
 	__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_SECOND);
-	__hybrid_int128_add32(result->t_nanos, args.nanosecond);
+	__hybrid_int128_add32(result->t_nanos, nanosecond);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
 	DeeObject_Init(result, &DeeTime_Type);
-	return result;
+	return (DREF DeeObject *)result;
 err:
 	return NULL;
 }
@@ -2848,92 +3047,36 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-f_libtime__mkFILETIME(size_t argc, DeeObject *const *argv) {
-	DREF DeeTimeObject *result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_mkFILETIME", params: """
-	uint64_t FILETIME;
-""", docStringPrefix: "libtime");]]]*/
+/*[[[deemon (print_CMethod from rt.gen.unpack)("_mkFILETIME", "uint64_t FILETIME");]]]*/
 #define libtime__mkFILETIME_params "FILETIME:?Dint"
-	struct {
-		uint64_t FILETIME_;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "_mkFILETIME", &args.FILETIME_, UNPu64, DeeObject_AsUInt64);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime__mkFILETIME_f_impl(uint64_t FILETIME_);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libtime__mkFILETIME_f(DeeObject *__restrict arg0) {
+	uint64_t FILETIME_;
+	if (DeeObject_AsUInt64(arg0, &FILETIME_))
+		goto err;
+	return libtime__mkFILETIME_f_impl(FILETIME_);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD1(libtime__mkFILETIME, &libtime__mkFILETIME_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime__mkFILETIME_f_impl(uint64_t FILETIME_)
 /*[[[end]]]*/
+{
+	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto err;
-	__hybrid_uint128_set64(result->t_unanos, args.FILETIME_);
+	__hybrid_uint128_set64(result->t_unanos, FILETIME_);
 	__hybrid_uint128_mul8(result->t_unanos, 100);
 	__hybrid_uint128_add128(result->t_unanos, NANOSECONDS_01_01_1601);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
 	DeeObject_Init(result, &DeeTime_Type);
-	return result;
+	return (DREF DeeObject *)result;
 err:
 	return NULL;
 }
 #endif /* CONFIG_HOST_WINDOWS */
 
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTimeObject *DCALL
-time_class_now(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
-	return f_libtime_localtime(argc, argv);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTimeObject *DCALL
-time_class_tick(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
-	return f_libtime_tick(argc, argv);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTimeObject *DCALL
-time_class_milliseconds(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
-	return f_libtime_milliseconds(argc, argv);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTimeObject *DCALL
-time_class_seconds(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
-	return f_libtime_seconds(argc, argv);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTimeObject *DCALL
-time_class_minutes(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
-	return f_libtime_minutes(argc, argv);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTimeObject *DCALL
-time_class_hours(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
-	return f_libtime_hours(argc, argv);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTimeObject *DCALL
-time_class_days(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
-	return f_libtime_days(argc, argv);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTimeObject *DCALL
-time_class_weeks(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
-	return f_libtime_weeks(argc, argv);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTimeObject *DCALL
-time_class_months(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
-	return f_libtime_months(argc, argv);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTimeObject *DCALL
-time_class_years(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
-	return f_libtime_years(argc, argv);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTimeObject *DCALL
-time_class_maketime(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	return f_libtime_maketime(argc, argv, kw);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTimeObject *DCALL
-time_class_makedate(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	return f_libtime_makedate(argc, argv, kw);
-}
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTimeObject *DCALL
 time_class_from_time_t(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
@@ -2963,32 +3106,35 @@ time_class_freq(DeeObject *UNUSED(self),
 err:
 	return NULL;
 }
-
 PRIVATE struct type_method tpconst time_class_methods[] = {
-	/* For backwards compatibility with the old deemon (which
-	 * did everything as part of the `time' builtin type) */
-	TYPE_METHOD("now", &time_class_now,
-	            "->?.\n"
-	            "Deprecated. Use ?Glocaltime instead"),
-	TYPE_METHOD("tick", &time_class_tick,
-	            "->?.\n"
-	            "Deprecated. Use ?Gtick instead"),
 	TYPE_METHOD("freq", &time_class_freq,
 	            "->?Dint\n"
 	            "Deprecated. Always returns $1000000"),
-	TYPE_KWMETHOD("time", &time_class_maketime,
-	              "(" libtime_maketime_params ")->?.\n"
-	              "Deprecated. Use ?Gmaketime or ?GTime instead"),
-	TYPE_KWMETHOD("date", &time_class_makedate,
-	              "(" libtime_makedate_params ")->?.\n"
-	              "Deprecated. Use ?Gmakedate or ?GTime instead"),
 	TYPE_METHOD("from_time_t", &time_class_from_time_t,
 	            "(time_t_value:?Dint)->?.\n"
 	            "Deprecated (use ${Time(time_t: time_t_value)} instead)"),
+	TYPE_METHOD_END,
+};
+
+PRIVATE struct type_member tpconst time_class_members[] = {
+	/* For backwards compatibility with the old deemon (which
+	 * did everything as part of the `time' builtin type) */
+	TYPE_MEMBER_CONST_DOC("now", &libtime_localtime,
+	                      "->?.\n"
+	                      "Deprecated. Use ?Glocaltime instead"),
+	TYPE_MEMBER_CONST_DOC("tick", &libtime_tick,
+	                      "->?.\n"
+	                      "Deprecated. Use ?Gtick instead"),
+	TYPE_MEMBER_CONST_DOC("time", &libtime_maketime,
+	                      "(" libtime_maketime_params ")->?.\n"
+	                      "Deprecated. Use ?Gmaketime or ?GTime instead"),
+	TYPE_MEMBER_CONST_DOC("date", &libtime_makedate,
+	                      "(" libtime_makedate_params ")->?.\n"
+	                      "Deprecated. Use ?Gmakedate or ?GTime instead"),
 #define DEFINE_DELTA_CALLBACK(name, func) \
-	TYPE_METHOD(name, &time_class_##func, \
-	            "(value:?Dint)->?.\n"     \
-	            "Deprecated. Use ?G" #func " instead")
+	TYPE_MEMBER_CONST_DOC(name, &libtime_##func, \
+	                      "(value:?Dint)->?.\n"  \
+	                      "Deprecated. Use ?G" #func " instead")
 	DEFINE_DELTA_CALLBACK("mseconds", milliseconds),
 	DEFINE_DELTA_CALLBACK("seconds", seconds),
 	DEFINE_DELTA_CALLBACK("minutes", minutes),
@@ -2998,7 +3144,7 @@ PRIVATE struct type_method tpconst time_class_methods[] = {
 	DEFINE_DELTA_CALLBACK("months", months),
 	DEFINE_DELTA_CALLBACK("years", years),
 #undef DEFINE_DELTA_CALLBACK
-	TYPE_METHOD_END
+	TYPE_MEMBER_END
 };
 
 
@@ -3553,38 +3699,9 @@ INTERN DeeTypeObject DeeTime_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ time_class_methods,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ time_class_members,
 };
 
-
-PRIVATE DEFINE_CMETHOD(libtime_gmtime, &f_libtime_gmtime, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(libtime_localtime, &f_libtime_localtime, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(libtime_tick, &f_libtime_tick, METHOD_FNORMAL);
-/* NOTE: All of this stuff can't be CONSTEXPR because `Time' objects are mutable :(
- * XXX: Maybe reconsider if Time objects really need to be mutable... The only reason
- *      right now is due to setters like `Time.second = 42'. I feel like it would be
- *      nicer if these weren't writable, but instead there was `Time.with(second: 42)'
- *      in order to construct a new time object with certain fields changed to other
- *      values. */
-PRIVATE DEFINE_CMETHOD(libtime_nanoseconds, &f_libtime_nanoseconds, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(libtime_microseconds, &f_libtime_microseconds, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(libtime_milliseconds, &f_libtime_milliseconds, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(libtime_seconds, &f_libtime_seconds, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(libtime_minutes, &f_libtime_minutes, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(libtime_hours, &f_libtime_hours, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(libtime_days, &f_libtime_days, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(libtime_weeks, &f_libtime_weeks, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(libtime_months, &f_libtime_months, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(libtime_years, &f_libtime_years, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(libtime_decades, &f_libtime_decades, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(libtime_centuries, &f_libtime_centuries, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(libtime_millennia, &f_libtime_millennia, METHOD_FNORMAL);
-PRIVATE DEFINE_KWCMETHOD(libtime_maketime, &f_libtime_maketime, METHOD_FNORMAL);
-PRIVATE DEFINE_KWCMETHOD(libtime_makedate, &f_libtime_makedate, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(libtime__mkunix, &f_libtime__mkunix, METHOD_FNORMAL);
-#ifdef CONFIG_HOST_WINDOWS
-PRIVATE DEFINE_CMETHOD(libtime__mkFILETIME, &f_libtime__mkFILETIME, METHOD_FNORMAL);
-#endif /* CONFIG_HOST_WINDOWS */
 
 PRIVATE struct dex_symbol symbols[] = {
 	{ "Time", (DeeObject *)&DeeTime_Type, MODSYM_FREADONLY },
@@ -3595,7 +3712,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("->?GTime\n"
 	      "Returns the current time in the host's local timezone (s.a. ?Ggmtime)") },
 	/* TODO: timezone()->?GTime
-	 * Returns the ?Aisdelta?GTime delta that gets added to ?Ggmtime in order to produce ?Glocaltime */
+	 * Returns the ?Aisdelta?GTime delta that gets added to ?Ggmtime in order to produce ?Glocaltime
+	 * XXX: That's not how that works -- the delta of a timezone isn't constant and can only be
+	 *      calculated when given a specific point in (UTC) time. */
 	{ "tick", (DeeObject *)&libtime_tick, MODSYM_FREADONLY,
 	  DOC("->?GTime\n"
 	      "Returns the current tick suitable for high-precision timings.\n"
@@ -3624,7 +3743,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	 *       as it is implementation-specific what's the time resolution
 	 *       that's used by functions accepting timeouts (in the GATW
 	 *       implementation it's nanoseconds, but that wasn't always the
-	 *       case, as not-too-long-ago, it was microseconds):
+	 *       case, as a one point, it was microseconds):
 	 * >> import seconds from time;
 	 * >> import Thread from deemon;
 	 * >>
