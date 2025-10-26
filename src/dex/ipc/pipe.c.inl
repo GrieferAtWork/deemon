@@ -185,10 +185,17 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 pipe_class_new(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
-	size_t pipe_size = 0;
-	if (DeeArg_Unpack(argc, argv, "|" UNPuSIZ ":new", &pipe_size))
-		goto err;
-	return pipe_new_impl(pipe_size);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("new", params: "
+	size_t size_hint = 0;
+", docStringPrefix: "pipe");]]]*/
+#define pipe_new_params "size_hint=!0"
+	struct {
+		size_t size_hint;
+	} args;
+	args.size_hint = 0;
+	DeeArg_Unpack0Or1X(err, argc, argv, "new", &args.size_hint, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	return pipe_new_impl(args.size_hint);
 err:
 	return NULL;
 }
@@ -202,7 +209,7 @@ PRIVATE struct type_member tpconst pipe_class_members[] = {
 
 PRIVATE struct type_method tpconst pipe_class_methods[] = {
 	TYPE_METHOD("new", &pipe_class_new,
-	            "(size_hint=!0)->?T2?#Reader?#Writer\n"
+	            "(" pipe_new_params ")->?T2?#Reader?#Writer\n"
 	            "Creates a new pair of linked pipe files"),
 	TYPE_METHOD_END
 };

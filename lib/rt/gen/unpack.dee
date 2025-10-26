@@ -29,6 +29,7 @@ global final DTYPE_BY_CTYPE: {string: string} = {
 	"DeeModuleObject*": "?DModule",
 	"DeeDDIObject*": "?Ert:DDI",
 	"DeeStringObject*": "?Dstring",
+	"DeeBytesObject*": "?DBytes",
 	"DeeDictObject*": "?DDict",
 	"DeeHashSetObject*": "?DHashSet",
 	"DeeTypeObject*": "?DType",
@@ -1469,9 +1470,12 @@ function print_libMethod(name: string,
                          isvarying: bool = false,
                          ispure: bool = false,
                          isconst: bool = false,
+                         noreturn: bool = false,
                          printDefMacros: bool = true,
                          docStringPrefix: string = "",
-                         methodFlags: string = "") {
+                         methodFlags: string = "",
+                         cMethodSymbolName: string = "",
+                         defineKwList: bool = true) {
 	if (params is string)
 		params = parseParamSpec(params).cached;
 	if (kw is none)
@@ -1481,7 +1485,7 @@ function print_libMethod(name: string,
 	if (libname)
 		libname = libname + "_";
 	local LIBFOO_BAR        = f"{libname.upper()}{name.upper()}";
-	local libfoo_bar        = f"{libname}{name}";
+	local libfoo_bar        = cMethodSymbolName ?: f"{libname}{name}";
 	local libfoo_bar_f      = f"{libname}{name}_f";
 	local libfoo_bar_f_impl = f"{libname}{name}_f_impl";
 	local nonNullPointerArgs = [];
@@ -1526,6 +1530,8 @@ function print_libMethod(name: string,
 			methodFlags += " | METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST";
 		if (ispure)
 			methodFlags += " | METHOD_FPURECALL";
+		if (noreturn)
+			methodFlags += " | METHOD_FNORETURN";
 		methodFlags = methodFlags ? methodFlags[3:] : "METHOD_FNORMAL";
 	}
 	if (!params) {
@@ -1573,7 +1579,7 @@ function print_libMethod(name: string,
 		}
 	} else {
 		print_bar_f_impl("FORCELOCAL");
-		if (kw) {
+		if (kw && defineKwList) {
 			local kwlistName = makeIdentifier(f"kwlist__{"_".join(params.each.name)}");
 			print(f'#ifndef DEFINED_{kwlistName}');
 			print(f'#define DEFINED_{kwlistName}');
@@ -1615,8 +1621,11 @@ function print_CMethod(name: string,
                        isvarying: bool = false,
                        ispure: bool = false,
                        isconst: bool = false,
+                       noreturn: bool = false,
                        methodFlags: string = "",
-                       docStringPrefix: string | none = "") {
+                       docStringPrefix: string | none = "",
+                       cMethodSymbolName: string = "",
+                       defineKwList: bool = true) {
 	if (libname is none)
 		libname = AUTOLIBNAME();
 	if (docStringPrefix == "")
@@ -1632,9 +1641,12 @@ function print_CMethod(name: string,
 			isvarying: isvarying,
 			ispure: ispure,
 			isconst: isconst,
+			noreturn: noreturn,
 			printDefMacros: false,
 			docStringPrefix: docStringPrefix,
 			methodFlags: methodFlags,
+			cMethodSymbolName: cMethodSymbolName,
+			defineKwList: defineKwList,
 	);
 }
 
@@ -1649,8 +1661,11 @@ function print_KwCMethod(name: string,
                          isvarying: bool = false,
                          ispure: bool = false,
                          isconst: bool = false,
+                         noreturn: bool = false,
                          methodFlags: string = "",
-                         docStringPrefix: string | none = "") {
+                         docStringPrefix: string | none = "",
+                         cMethodSymbolName: string = "",
+                         defineKwList: bool = true) {
 	if (libname is none)
 		libname = AUTOLIBNAME();
 	if (docStringPrefix == "")
@@ -1666,9 +1681,12 @@ function print_KwCMethod(name: string,
 			isvarying: isvarying,
 			ispure: ispure,
 			isconst: isconst,
+			noreturn: noreturn,
 			printDefMacros: false,
 			docStringPrefix: docStringPrefix,
 			methodFlags: methodFlags,
+			cMethodSymbolName: cMethodSymbolName,
+			defineKwList: defineKwList,
 	);
 }
 

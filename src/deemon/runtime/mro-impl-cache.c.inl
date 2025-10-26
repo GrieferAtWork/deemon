@@ -640,8 +640,12 @@ DECL_BEGIN
 	DeeInstance_CallAttributeTupleKw(desc, self, thisarg, attr, args, LOCAL_kw)
 #define LOCAL_invoke_instance_attribute(class_type, attr) \
 	DeeClass_CallInstanceAttributeTupleKw(class_type, attr, args, LOCAL_kw)
-#define LOCAL_unpack_one_for_getter(p_thisarg) \
-	DeeArg_UnpackKw(LOCAL_argc, LOCAL_argv, LOCAL_kw, kwlist__thisarg, "o:get", p_thisarg)
+#define LOCAL_unpack_one_for_getter(err, p_thisarg)                             \
+	do {                                                                        \
+		if unlikely(DeeArg_UnpackStructKw(LOCAL_argc, LOCAL_argv, LOCAL_kw,     \
+		                                  kwlist__thisarg, "o:get", p_thisarg)) \
+			goto err;                                                           \
+	}	__WHILE0
 #elif defined(LOCAL_HAS_args)
 #define LOCAL_invoke_object_thisarg(ob, thisarg)           DeeObject_ThisCallTuple(ob, thisarg, args)
 #define LOCAL_invoke_object_thisarg_inherited(ob, thisarg) DeeObject_ThisCallTupleInherited(ob, thisarg, args)
@@ -651,8 +655,8 @@ DECL_BEGIN
 	DeeInstance_CallAttributeTuple(desc, self, thisarg, attr, args)
 #define LOCAL_invoke_instance_attribute(class_type, attr) \
 	DeeClass_CallInstanceAttributeTuple(class_type, attr, args)
-#define LOCAL_unpack_one_for_getter(p_thisarg) \
-	DeeArg_Unpack(LOCAL_argc, LOCAL_argv, "o:get", p_thisarg)
+#define LOCAL_unpack_one_for_getter(err, p_thisarg) \
+	DeeArg_Unpack1(err, LOCAL_argc, LOCAL_argv, "get", p_thisarg)
 #elif defined(LOCAL_argc) && defined(LOCAL_kw)
 #define LOCAL_invoke_object_thisarg(ob, thisarg)           DeeObject_ThisCallKwInherited(ob, thisarg, LOCAL_argc, LOCAL_argv, LOCAL_kw)
 #define LOCAL_invoke_object_thisarg_inherited(ob, thisarg) DeeObject_ThisCallKw(ob, thisarg, LOCAL_argc, LOCAL_argv, LOCAL_kw)
@@ -662,8 +666,12 @@ DECL_BEGIN
 	DeeInstance_CallAttributeKw(desc, self, thisarg, attr, LOCAL_argc, LOCAL_argv, LOCAL_kw)
 #define LOCAL_invoke_instance_attribute(class_type, attr) \
 	DeeClass_CallInstanceAttributeKw(class_type, attr, LOCAL_argc, LOCAL_argv, LOCAL_kw)
-#define LOCAL_unpack_one_for_getter(p_thisarg) \
-	DeeArg_UnpackKw(LOCAL_argc, LOCAL_argv, LOCAL_kw, kwlist__thisarg, "o:get", p_thisarg)
+#define LOCAL_unpack_one_for_getter(err, p_thisarg)                             \
+	do {                                                                        \
+		if unlikely(DeeArg_UnpackStructKw(LOCAL_argc, LOCAL_argv, LOCAL_kw,     \
+		                                  kwlist__thisarg, "o:get", p_thisarg)) \
+			goto err;                                                           \
+	}	__WHILE0
 #elif defined(LOCAL_argc)
 #define LOCAL_invoke_object_thisarg(ob, thisarg)           DeeObject_ThisCall(ob, thisarg, LOCAL_argc, LOCAL_argv)
 #define LOCAL_invoke_object_thisarg_inherited(ob, thisarg) DeeObject_ThisCallInherited(ob, thisarg, LOCAL_argc, LOCAL_argv)
@@ -673,8 +681,8 @@ DECL_BEGIN
 	DeeInstance_CallAttribute(desc, self, thisarg, attr, LOCAL_argc, LOCAL_argv)
 #define LOCAL_invoke_instance_attribute(class_type, attr) \
 	DeeClass_CallInstanceAttribute(class_type, attr, LOCAL_argc, LOCAL_argv)
-#define LOCAL_unpack_one_for_getter(p_thisarg) \
-	DeeArg_Unpack(LOCAL_argc, LOCAL_argv, "o:get", p_thisarg)
+#define LOCAL_unpack_one_for_getter(err, p_thisarg) \
+	DeeArg_Unpack1(err, LOCAL_argc, LOCAL_argv, "get", p_thisarg)
 #elif defined(LOCAL_HAS_format)
 #define LOCAL_invoke_object_thisarg(ob, thisarg)           DeeObject_VThisCallf(ob, thisarg, format, args)
 #define LOCAL_invoke_object_thisarg_inherited(ob, thisarg) DeeObject_VThisCallInheritedf(ob, thisarg, format, args)
@@ -684,8 +692,11 @@ DECL_BEGIN
 	DeeInstance_VCallAttributef(desc, self, thisarg, attr, format, args)
 #define LOCAL_invoke_instance_attribute(class_type, attr) \
 	DeeClass_VCallInstanceAttributef(class_type, attr, format, args)
-#define LOCAL_unpack_one_for_getter(p_thisarg) \
-	((*(p_thisarg) = Dee_VPackf(format, args)) != NULL ? 0 : -1)
+#define LOCAL_unpack_one_for_getter(err, p_thisarg)                    \
+	do {                                                               \
+		if unlikely((*(p_thisarg) = Dee_VPackf(format, args)) == NULL) \
+			goto err;                                                  \
+	}	__WHILE0
 #define LOCAL_unpack_one_for_getter_cleanup(thisarg) Dee_Decref(thisarg)
 #endif /* ... */
 
@@ -1313,8 +1324,7 @@ check_and_invoke_callback:
 				/*maybe:DREF*/ DeeObject *thisarg;
 				decl = item->mcs_decl;
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
-				if unlikely(LOCAL_unpack_one_for_getter(&thisarg))
-					goto err;
+				LOCAL_unpack_one_for_getter(err, &thisarg);
 				if unlikely(DeeObject_AssertTypeOrAbstract(thisarg, decl)) {
 					result = NULL;
 				} else {
@@ -1367,8 +1377,7 @@ check_and_invoke_callback:
 			type_member_buffer_init(&buf, &item->mcs_member);
 			decl = item->mcs_decl;
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
-			if unlikely(LOCAL_unpack_one_for_getter(&thisarg))
-				goto err;
+			LOCAL_unpack_one_for_getter(err, &thisarg);
 #define NEED_err
 			if unlikely(DeeObject_AssertTypeOrAbstract(LOCAL_argv[0], decl)) {
 				result = NULL;
@@ -1477,8 +1486,7 @@ check_and_invoke_callback:
 				/*maybe:DREF*/ DeeObject *thisarg;
 				decl = item->mcs_decl;
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
-				if unlikely(LOCAL_unpack_one_for_getter(&thisarg))
-					goto err;
+				LOCAL_unpack_one_for_getter(err, &thisarg);
 				if unlikely(DeeObject_AssertTypeOrAbstract(thisarg, decl)) {
 					result = NULL;
 				} else {
@@ -1512,8 +1520,7 @@ check_and_invoke_callback:
 			type_member_buffer_init(&buf, &item->mcs_member);
 			decl = item->mcs_decl;
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
-			if unlikely(LOCAL_unpack_one_for_getter(&thisarg))
-				goto err;
+			LOCAL_unpack_one_for_getter(err, &thisarg);
 #define NEED_err
 			if unlikely(DeeObject_AssertTypeOrAbstract(thisarg, decl)) {
 				result = NULL;

@@ -50,22 +50,38 @@
 
 DECL_BEGIN
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_builtin_hasattr(size_t argc, DeeObject *const *argv) {
-	int result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("hasattr", params: "
+// DeeBuiltin_HasAttr   TODO: CONSTCALL_IF_HASATTR
+// DeeBuiltin_HasItem   TODO: CONSTCALL_IF_HASITEM
+// DeeBuiltin_BoundAttr TODO: CONSTCALL_IF_HASATTR
+// DeeBuiltin_BoundItem TODO: CONSTCALL_IF_HASITEM
+// DeeBuiltin_Compare   TODO: CONSTCALL_IF_COMPARE
+// DeeBuiltin_Equals    TODO: CONSTCALL_IF_COMPARE_EQ
+// DeeBuiltin_Import    TODO: CONSTCALL_IF_MODULE_ALREADY_LOADED
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("hasattr", """
 	DeeObject *ob;
 	DeeStringObject *attr;
-");]]]*/
+""", visi: "PUBLIC", cMethodSymbolName: "DeeBuiltin_HasAttr");]]]*/
+#define builtin_functions_hasattr_params "ob,attr:?Dstring"
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions_hasattr_f_impl(DeeObject *ob, DeeStringObject *attr);
+PRIVATE WUNUSED DREF DeeObject *DCALL builtin_functions_hasattr_f(size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *ob;
 		DeeStringObject *attr;
 	} args;
 	DeeArg_UnpackStruct2(err, argc, argv, "hasattr", &args, &args.ob, &args.attr);
+	return builtin_functions_hasattr_f_impl(args.ob, args.attr);
+err:
+	return NULL;
+}
+PUBLIC DEFINE_CMETHOD(DeeBuiltin_HasAttr, &builtin_functions_hasattr_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions_hasattr_f_impl(DeeObject *ob, DeeStringObject *attr)
 /*[[[end]]]*/
-	if (DeeObject_AssertTypeExact(args.attr, &DeeString_Type))
+{
+	int result;
+	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
 		goto err;
-	result = DeeObject_HasAttr(args.ob, (DeeObject *)args.attr);
+	result = DeeObject_HasAttr(ob, (DeeObject *)attr);
 	if unlikely(result < 0)
 		goto err;
 	return_bool(result);
@@ -73,20 +89,27 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_builtin_hasitem(size_t argc, DeeObject *const *argv) {
-	int result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("hasitem", params: "
+/*[[[deemon (print_CMethod from rt.gen.unpack)("hasitem", """
 	DeeObject *ob;
 	DeeObject *key;
-");]]]*/
+""", visi: "PUBLIC", cMethodSymbolName: "DeeBuiltin_HasItem");]]]*/
+#define builtin_functions_hasitem_params "ob,key"
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions_hasitem_f_impl(DeeObject *ob, DeeObject *key);
+PRIVATE WUNUSED DREF DeeObject *DCALL builtin_functions_hasitem_f(size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *ob;
 		DeeObject *key;
 	} args;
 	DeeArg_UnpackStruct2(err, argc, argv, "hasitem", &args, &args.ob, &args.key);
+	return builtin_functions_hasitem_f_impl(args.ob, args.key);
+err:
+	return NULL;
+}
+PUBLIC DEFINE_CMETHOD(DeeBuiltin_HasItem, &builtin_functions_hasitem_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions_hasitem_f_impl(DeeObject *ob, DeeObject *key)
 /*[[[end]]]*/
-	result = DeeObject_HasItem(args.ob, args.key);
+{
+	int result = DeeObject_HasItem(ob, key);
 	if unlikely(result < 0)
 		goto err;
 	return_bool(result);
@@ -94,13 +117,14 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_builtin_boundattr(size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("boundattr", params: "
+/*[[[deemon (print_CMethod from rt.gen.unpack)("boundattr", """
 	DeeObject *ob;
 	DeeStringObject *attr;
 	bool allow_missing = true;
-");]]]*/
+""", visi: "PUBLIC", cMethodSymbolName: "DeeBuiltin_BoundAttr");]]]*/
+#define builtin_functions_boundattr_params "ob,attr:?Dstring,allow_missing=!t"
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions_boundattr_f_impl(DeeObject *ob, DeeStringObject *attr, bool allow_missing);
+PRIVATE WUNUSED DREF DeeObject *DCALL builtin_functions_boundattr_f(size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *ob;
 		DeeStringObject *attr;
@@ -109,13 +133,20 @@ f_builtin_boundattr(size_t argc, DeeObject *const *argv) {
 	args.allow_missing = true;
 	if (DeeArg_UnpackStruct(argc, argv, "oo|b:boundattr", &args))
 		goto err;
+	return builtin_functions_boundattr_f_impl(args.ob, args.attr, args.allow_missing);
+err:
+	return NULL;
+}
+PUBLIC DEFINE_CMETHOD(DeeBuiltin_BoundAttr, &builtin_functions_boundattr_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions_boundattr_f_impl(DeeObject *ob, DeeStringObject *attr, bool allow_missing)
 /*[[[end]]]*/
-	if (DeeObject_AssertTypeExact(args.attr, &DeeString_Type))
+{
+	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
 		goto err;
-	switch (DeeObject_BoundAttr(args.ob, (DeeObject *)args.attr)) {
+	switch (DeeObject_BoundAttr(ob, (DeeObject *)attr)) {
 	default:
-		if unlikely(!args.allow_missing) {
-			DeeRT_ErrUnknownAttr(args.ob, args.attr, DeeRT_ATTRIBUTE_ACCESS_BOUND);
+		if unlikely(!allow_missing) {
+			DeeRT_ErrUnknownAttr(ob, attr, DeeRT_ATTRIBUTE_ACCESS_BOUND);
 			goto err;
 		}
 		ATTR_FALLTHROUGH
@@ -131,13 +162,14 @@ err:
 }
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_builtin_bounditem(size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("bounditem", params: "
+/*[[[deemon (print_CMethod from rt.gen.unpack)("bounditem", """
 	DeeObject *ob;
 	DeeObject *key;
 	bool allow_missing = true;
-");]]]*/
+""", visi: "PUBLIC", cMethodSymbolName: "DeeBuiltin_BoundItem");]]]*/
+#define builtin_functions_bounditem_params "ob,key,allow_missing=!t"
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions_bounditem_f_impl(DeeObject *ob, DeeObject *key, bool allow_missing);
+PRIVATE WUNUSED DREF DeeObject *DCALL builtin_functions_bounditem_f(size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *ob;
 		DeeObject *key;
@@ -146,11 +178,18 @@ f_builtin_bounditem(size_t argc, DeeObject *const *argv) {
 	args.allow_missing = true;
 	if (DeeArg_UnpackStruct(argc, argv, "oo|b:bounditem", &args))
 		goto err;
+	return builtin_functions_bounditem_f_impl(args.ob, args.key, args.allow_missing);
+err:
+	return NULL;
+}
+PUBLIC DEFINE_CMETHOD(DeeBuiltin_BoundItem, &builtin_functions_bounditem_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions_bounditem_f_impl(DeeObject *ob, DeeObject *key, bool allow_missing)
 /*[[[end]]]*/
-	switch (DeeObject_BoundItem(args.ob, args.key)) {
+{
+	switch (DeeObject_BoundItem(ob, key)) {
 	default:
-		if unlikely(!args.allow_missing) {
-			DeeRT_ErrUnknownKey(args.ob, args.key);
+		if unlikely(!allow_missing) {
+			DeeRT_ErrUnknownKey(ob, key);
 			goto err;
 		}
 		ATTR_FALLTHROUGH
@@ -165,19 +204,29 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_builtin_compare(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *result;
-	int diff;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("compare", params: "lhs,rhs");]]]*/
+/*[[[deemon (print_KwCMethod from rt.gen.unpack)("compare", """
+	DeeObject *lhs;
+	DeeObject *rhs;
+""", visi: "PUBLIC", cMethodSymbolName: "DeeBuiltin_Compare", defineKwList: false);]]]*/
+#define builtin_functions_compare_params "lhs,rhs"
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions_compare_f_impl(DeeObject *lhs, DeeObject *rhs);
+PRIVATE WUNUSED DREF DeeObject *DCALL builtin_functions_compare_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	struct {
 		DeeObject *lhs;
 		DeeObject *rhs;
 	} args;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__lhs_rhs, "oo:compare", &args))
 		goto err;
+	return builtin_functions_compare_f_impl(args.lhs, args.rhs);
+err:
+	return NULL;
+}
+PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Compare, &builtin_functions_compare_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions_compare_f_impl(DeeObject *lhs, DeeObject *rhs)
 /*[[[end]]]*/
-	diff = DeeObject_Compare(args.lhs, args.rhs);
+{
+	DeeObject *result;
+	int diff = DeeObject_Compare(lhs, rhs);
 	if unlikely(diff == Dee_COMPARE_ERR)
 		goto err;
 	ASSERT(diff == -1 || diff == 0 || diff == 1);
@@ -187,17 +236,27 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_builtin_equals(size_t argc, DeeObject *const *argv) {
-	int diff;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("equals", params: "a,b");]]]*/
+/*[[[deemon (print_CMethod from rt.gen.unpack)("equals", """
+	DeeObject *a;
+	DeeObject *b;
+""", visi: "PUBLIC", cMethodSymbolName: "DeeBuiltin_Equals");]]]*/
+#define builtin_functions_equals_params "a,b"
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions_equals_f_impl(DeeObject *a, DeeObject *b);
+PRIVATE WUNUSED DREF DeeObject *DCALL builtin_functions_equals_f(size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *a;
 		DeeObject *b;
 	} args;
 	DeeArg_UnpackStruct2(err, argc, argv, "equals", &args, &args.a, &args.b);
+	return builtin_functions_equals_f_impl(args.a, args.b);
+err:
+	return NULL;
+}
+PUBLIC DEFINE_CMETHOD(DeeBuiltin_Equals, &builtin_functions_equals_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions_equals_f_impl(DeeObject *a, DeeObject *b)
 /*[[[end]]]*/
-	diff = DeeObject_TryCompareEq(args.a, args.b);
+{
+	int diff = DeeObject_TryCompareEq(a, b);
 	if unlikely(diff == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(diff == 0);
@@ -205,36 +264,48 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_builtin_import(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DREF DeeObject *result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__import__", params: "
+/*[[[deemon (print_KwCMethod from rt.gen.unpack)("__import__", """
 	DeeModuleObject *base;
 	DeeStringObject *name;
-");]]]*/
+""", visi: "PUBLIC", cMethodSymbolName: "DeeBuiltin_Import", defineKwList: false);]]]*/
+#define builtin_functions___import___params "base:?DModule,name:?Dstring"
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions___import___f_impl(DeeModuleObject *base, DeeStringObject *name);
+PRIVATE WUNUSED DREF DeeObject *DCALL builtin_functions___import___f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	struct {
 		DeeModuleObject *base;
 		DeeStringObject *name;
 	} args;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__base_name, "oo:__import__", &args))
 		goto err;
+	return builtin_functions___import___f_impl(args.base, args.name);
+err:
+	return NULL;
+}
+PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Import, &builtin_functions___import___f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions___import___f_impl(DeeModuleObject *base, DeeStringObject *name)
 /*[[[end]]]*/
-	if (DeeObject_AssertType(args.base, &DeeModule_Type))
+{
+	DREF DeeObject *result;
+	if (DeeObject_AssertType(base, &DeeModule_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
-	result = DeeModule_ImportRel((DeeObject *)args.base,
-	                             (DeeObject *)args.name);
+	result = DeeModule_ImportRel((DeeObject *)base,
+	                             (DeeObject *)name);
 	return result;
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_builtin_hash(size_t argc, DeeObject *const *argv) {
+builtin_functions_f_builtin_hash(size_t argc, DeeObject *const *argv);
+PUBLIC DEFINE_CMETHOD(DeeBuiltin_Hash, &builtin_functions_f_builtin_hash, METHOD_FNORMAL); /* TODO: CONSTCALL_IF_ARGS_CONSTHASH */
+PRIVATE WUNUSED DREF DeeObject *DCALL
+builtin_functions_f_builtin_hash(size_t argc, DeeObject *const *argv) {
 	Dee_ssize_t result = DeeObject_Hashv(argv, argc);
 	return DeeInt_NewHash(result);
 }
+
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 builtin_exec_fallback(size_t argc,
@@ -369,6 +440,9 @@ again:
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
+f_builtin_exec(size_t argc, DeeObject *const *argv, DeeObject *kw);
+PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Exec, &f_builtin_exec, METHOD_FNORMAL);
+PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_exec(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *exec;
 	strexec_access_lock_read();
@@ -433,6 +507,29 @@ err:
 	return NULL;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* These CMETHOD objects are exported from `deemon' with the `rt_' prefix replaced with `__'
+ * HINT: These are exported using the `MODSYM_FHIDDEN' flag, so you won't see them in listings. */
+
 PRIVATE WUNUSED DREF DeeObject *DCALL
 get_expression_repr(Dee_operator_t operator_name,
                     size_t argc, DeeObject *const *argv) {
@@ -452,8 +549,9 @@ err:
 
 /* ASSERT(string message = "", int operator_id = -1, operator_args...) -> none;
  * NOTE: When `operator_id' is -1, ignore all remaining arguments. */
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_rt_assert(size_t argc, DeeObject *const *argv) {
+PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_assert(size_t argc, DeeObject *const *argv);
+INTERN DEFINE_CMETHOD(rt_assert, &f_rt_assert, METHOD_FNORETURN);
+PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_assert(size_t argc, DeeObject *const *argv) {
 	DeeObject *message = Dee_EmptyString;
 	DeeObject *assertion_error;
 	int operator_name = -1;
@@ -506,14 +604,19 @@ err:
 }
 
 
+
+
 /* The compiler will generate calls to these functions during explicit
  * invocation of operators when the argument count is not known at
  * compile-time:
  * >> args = pack(10, 20);
  * >> print operator + (args...);
  */
-PRIVATE WUNUSED DREF DeeObject *DCALL /* POsOrADd */
-f_rt_pooad(size_t argc, DeeObject *const *argv) {
+
+/* POsOrADd */
+PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_pooad(size_t argc, DeeObject *const *argv);
+INTERN DEFINE_CMETHOD(rt_pooad, &f_rt_pooad, METHOD_FNORMAL);
+PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_pooad(size_t argc, DeeObject *const *argv) {
 	switch (argc) {
 	case 1: return DeeObject_Pos(argv[0]);
 	case 2: return DeeObject_Add(argv[0], argv[1]);
@@ -523,8 +626,11 @@ f_rt_pooad(size_t argc, DeeObject *const *argv) {
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL /* NEgOrSuB */
-f_rt_neosb(size_t argc, DeeObject *const *argv) {
+
+/* NEgOrSuB */
+PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_neosb(size_t argc, DeeObject *const *argv);
+INTERN DEFINE_CMETHOD(rt_neosb, &f_rt_neosb, METHOD_FNORMAL);
+PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_neosb(size_t argc, DeeObject *const *argv) {
 	switch (argc) {
 	case 1: return DeeObject_Neg(argv[0]);
 	case 2: return DeeObject_Sub(argv[0], argv[1]);
@@ -534,8 +640,11 @@ f_rt_neosb(size_t argc, DeeObject *const *argv) {
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL /* GetItemOrSetItem */
-f_rt_giosi(size_t argc, DeeObject *const *argv) {
+
+/* GetItemOrSetItem */
+PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_giosi(size_t argc, DeeObject *const *argv);
+INTERN DEFINE_CMETHOD(rt_giosi, &f_rt_giosi, METHOD_FNORMAL);
+PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_giosi(size_t argc, DeeObject *const *argv) {
 	switch (argc) {
 	case 2: return DeeObject_GetItem(argv[0], argv[1]);
 	case 3:
@@ -549,8 +658,11 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL /* GetRangeOrSetRange */
-f_rt_grosr(size_t argc, DeeObject *const *argv) {
+
+/* GetRangeOrSetRange */
+PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_grosr(size_t argc, DeeObject *const *argv);
+INTERN DEFINE_CMETHOD(rt_grosr, &f_rt_grosr, METHOD_FNORMAL);
+PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_grosr(size_t argc, DeeObject *const *argv) {
 	switch (argc) {
 	case 3: return DeeObject_GetRange(argv[0], argv[1], argv[2]);
 	case 4:
@@ -564,8 +676,11 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL /* GetAttrOrSetAttr */
-f_rt_gaosa(size_t argc, DeeObject *const *argv) {
+
+/* GetAttrOrSetAttr */
+PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_gaosa(size_t argc, DeeObject *const *argv);
+INTERN DEFINE_CMETHOD(rt_gaosa, &f_rt_gaosa, METHOD_FNORMAL);
+PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_gaosa(size_t argc, DeeObject *const *argv) {
 	switch (argc) {
 	case 2:
 		if (DeeObject_AssertTypeExact(argv[1], &DeeString_Type))
@@ -584,15 +699,26 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-f_rt_badcall(DeeObject *__restrict arg) {
-	DeeThreadObject *ts;
-	char const *function_name = NULL;
-	size_t argc_max, argc_cur, argc_min = 0;
-	if (DeeObject_AsSize(arg, &argc_max))
+/*[[[deemon (print_CMethod from rt.gen.unpack)("__badcall", """
+	size_t argc_max
+""", visi: "INTERN", cMethodSymbolName: "rt_badcall", noreturn: true);]]]*/
+#define builtin_functions___badcall_params "argc_max:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL builtin_functions___badcall_f_impl(size_t argc_max);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL builtin_functions___badcall_f(DeeObject *__restrict arg0) {
+	size_t argc_max;
+	if (DeeObject_AsSize(arg0, &argc_max))
 		goto err;
-	ts       = DeeThread_Self();
-	argc_cur = argc_max;
+	return builtin_functions___badcall_f_impl(argc_max);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD1(rt_badcall, &builtin_functions___badcall_f, METHOD_FNORETURN);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL builtin_functions___badcall_f_impl(size_t argc_max)
+/*[[[end]]]*/
+{
+	char const *function_name = NULL;
+	size_t argc_cur = argc_max, argc_min = 0;
+	DeeThreadObject *ts = DeeThread_Self();
 	if likely(ts->t_execsz) {
 		struct code_frame *frame = ts->t_exec;
 		DeeCodeObject *code      = frame->cf_func->fo_code;
@@ -602,18 +728,28 @@ f_rt_badcall(DeeObject *__restrict arg) {
 	}
 	/* Throw the invalid-argument-count error. */
 	err_invalid_argc(function_name, argc_cur, argc_min, argc_max);
-err:
 	return NULL;
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-f_rt_roloc(DeeObject *__restrict arg) {
-	DeeThreadObject *ts;
+/*[[[deemon (print_CMethod from rt.gen.unpack)("__roloc", """
 	uint16_t lid;
-	if unlikely(DeeObject_AsUInt16(arg, &lid))
+""", visi: "INTERN", cMethodSymbolName: "rt_roloc", noreturn: true);]]]*/
+#define builtin_functions___roloc_params "lid:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL builtin_functions___roloc_f_impl(uint16_t lid);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL builtin_functions___roloc_f(DeeObject *__restrict arg0) {
+	uint16_t lid;
+	if (DeeObject_AsUInt16(arg0, &lid))
 		goto err;
-	ts = DeeThread_Self();
+	return builtin_functions___roloc_f_impl(lid);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD1(rt_roloc, &builtin_functions___roloc_f, METHOD_FNORETURN);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL builtin_functions___roloc_f_impl(uint16_t lid)
+/*[[[end]]]*/
+{
+	DeeThreadObject *ts = DeeThread_Self();
 	if likely(ts->t_execsz) {
 		struct code_frame *frame = ts->t_exec;
 		DeeCodeObject *code      = frame->cf_func->fo_code;
@@ -623,32 +759,9 @@ f_rt_roloc(DeeObject *__restrict arg) {
 		                "Cannot modify read-only local variable %" PRFu16,
 		                lid);
 	}
-err:
 	return NULL;
 }
 
-
-/* These functions are exported by the C api. */
-PUBLIC DEFINE_CMETHOD(DeeBuiltin_HasAttr, &f_builtin_hasattr, METHOD_FNORMAL);     /* TODO: CONSTCALL_IF_HASATTR */
-PUBLIC DEFINE_CMETHOD(DeeBuiltin_HasItem, &f_builtin_hasitem, METHOD_FNORMAL);     /* TODO: CONSTCALL_IF_HASITEM */
-PUBLIC DEFINE_CMETHOD(DeeBuiltin_BoundAttr, &f_builtin_boundattr, METHOD_FNORMAL); /* TODO: CONSTCALL_IF_HASATTR */
-PUBLIC DEFINE_CMETHOD(DeeBuiltin_BoundItem, &f_builtin_bounditem, METHOD_FNORMAL); /* TODO: CONSTCALL_IF_HASITEM */
-PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Compare, &f_builtin_compare, METHOD_FNORMAL);   /* TODO: CONSTCALL_IF_COMPARE */
-PUBLIC DEFINE_CMETHOD(DeeBuiltin_Equals, &f_builtin_equals, METHOD_FNORMAL);       /* TODO: CONSTCALL_IF_COMPARE_EQ */
-PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Import, &f_builtin_import, METHOD_FNORMAL);     /* TODO: CONSTCALL_IF_MODULE_ALREADY_LOADED */
-PUBLIC DEFINE_CMETHOD(DeeBuiltin_Hash, &f_builtin_hash, METHOD_FNORMAL);           /* TODO: CONSTCALL_IF_ARGS_CONSTHASH */
-PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Exec, &f_builtin_exec, METHOD_FNORMAL);
-
-/* These CMETHOD objects are exported from `deemon' with the `rt_' prefix replaced with `__'
- * HINT: These are exported using the `MODSYM_FHIDDEN' flag, so you won't see them in listings. */
-INTERN DEFINE_CMETHOD(rt_assert, &f_rt_assert, METHOD_FNORETURN);
-INTERN DEFINE_CMETHOD(rt_pooad, &f_rt_pooad, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(rt_neosb, &f_rt_neosb, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(rt_giosi, &f_rt_giosi, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(rt_grosr, &f_rt_grosr, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(rt_gaosa, &f_rt_gaosa, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD1(rt_badcall, &f_rt_badcall, METHOD_FNORETURN);
-INTERN DEFINE_CMETHOD1(rt_roloc, &f_rt_roloc, METHOD_FNORETURN);
 
 DECL_END
 

@@ -234,104 +234,112 @@ print define_Dee_HashStr("__IterWithEnumerateIndexMap__");
 
 #define STR_AND_HASH(s) #s, Dee_HashStr__##s
 
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_getstacklimit_f(size_t argc, DeeObject *const *argv) {
-	uint16_t result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getstacklimit");]]]*/
-	DeeArg_Unpack0(err, argc, argv, "getstacklimit");
+/*[[[deemon (print_CMethod from rt.gen.unpack)("getstacklimit", "", ispure: true);]]]*/
+#define librt_getstacklimit_params ""
+PRIVATE WUNUSED DREF DeeObject *DCALL librt_getstacklimit_f_impl(void);
+PRIVATE DEFINE_CMETHOD0(librt_getstacklimit, &librt_getstacklimit_f_impl, METHOD_FPURECALL);
+PRIVATE WUNUSED DREF DeeObject *DCALL librt_getstacklimit_f_impl(void)
 /*[[[end]]]*/
-	result = atomic_read(&DeeExec_StackLimit);
+{
+	uint16_t result = atomic_read(&DeeExec_StackLimit);
 	return DeeInt_NewUInt16(result);
-err:
-	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_setstacklimit_f(size_t argc, DeeObject *const *argv) {
-	uint16_t result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("setstacklimit", params: """
+/*[[[deemon (print_CMethod from rt.gen.unpack)("setstacklimit", """
 	uint16_t newval=!0 = DEE_CONFIG_DEFAULT_STACK_LIMIT
 """);]]]*/
+#define librt_setstacklimit_params "newval=!0"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL librt_setstacklimit_f_impl(uint16_t newval);
+PRIVATE WUNUSED DREF DeeObject *DCALL librt_setstacklimit_f(size_t argc, DeeObject *const *argv) {
 	struct {
 		uint16_t newval;
 	} args;
 	args.newval = DEE_CONFIG_DEFAULT_STACK_LIMIT;
 	DeeArg_Unpack0Or1X(err, argc, argv, "setstacklimit", &args.newval, UNPu16, DeeObject_AsUInt16);
+	return librt_setstacklimit_f_impl(args.newval);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD(librt_setstacklimit, &librt_setstacklimit_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL librt_setstacklimit_f_impl(uint16_t newval)
 /*[[[end]]]*/
-	result = atomic_xch(&DeeExec_StackLimit, args.newval);
+{
+	uint16_t result = atomic_xch(&DeeExec_StackLimit, newval);
 	return DeeInt_NewUInt16(result);
-err:
-	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_getcalloptimizethreshold_f(size_t argc, DeeObject *const *argv) {
-	size_t result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getcalloptimizethreshold");]]]*/
-	DeeArg_Unpack0(err, argc, argv, "getcalloptimizethreshold");
+/*[[[deemon (print_CMethod from rt.gen.unpack)("getcalloptimizethreshold", "");]]]*/
+#define librt_getcalloptimizethreshold_params ""
+PRIVATE WUNUSED DREF DeeObject *DCALL librt_getcalloptimizethreshold_f_impl(void);
+PRIVATE DEFINE_CMETHOD0(librt_getcalloptimizethreshold, &librt_getcalloptimizethreshold_f_impl, METHOD_FNORMAL);
+PRIVATE WUNUSED DREF DeeObject *DCALL librt_getcalloptimizethreshold_f_impl(void)
 /*[[[end]]]*/
-	result = DeeCode_GetOptimizeCallThreshold();
+{
+	size_t result = DeeCode_GetOptimizeCallThreshold();
 	return DeeInt_NewSize(result);
-err:
-	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_setcalloptimizethreshold_f(size_t argc, DeeObject *const *argv) {
-	size_t result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("setcalloptimizethreshold", params: """
+/*[[[deemon (print_CMethod from rt.gen.unpack)("setcalloptimizethreshold", "size_t newval");]]]*/
+#define librt_setcalloptimizethreshold_params "newval:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL librt_setcalloptimizethreshold_f_impl(size_t newval);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL librt_setcalloptimizethreshold_f(DeeObject *__restrict arg0) {
 	size_t newval;
-""");]]]*/
-	struct {
-		size_t newval;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "setcalloptimizethreshold", &args.newval, UNPuSIZ, DeeObject_AsSize);
-/*[[[end]]]*/
-	result = DeeCode_SetOptimizeCallThreshold(args.newval);
-	return DeeInt_NewSize(result);
+	if (DeeObject_AsSize(arg0, &newval))
+		goto err;
+	return librt_setcalloptimizethreshold_f_impl(newval);
 err:
 	return NULL;
 }
+PRIVATE DEFINE_CMETHOD1(librt_setcalloptimizethreshold, &librt_setcalloptimizethreshold_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL librt_setcalloptimizethreshold_f_impl(size_t newval)
+/*[[[end]]]*/
+{
+	size_t result = DeeCode_SetOptimizeCallThreshold(newval);
+	return DeeInt_NewSize(result);
+}
 
-PRIVATE WUNUSED DREF DeeTypeObject *DCALL
-librt_makeclass_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("makeclass", params: "
+
+/*[[[deemon (print_KwCMethod from rt.gen.unpack)("makeclass", """
 	DeeObject *base:?X3?N?DType?S?DType;
 	DeeObject *descriptor:?GClassDescriptor;
 	DeeModuleObject *module:?X2?DModule?N = (DeeModuleObject *)Dee_None;
-", docStringPrefix: "librt", defineKwList: true);]]]*/
-	static DEFINE_KWLIST(makeclass_kwlist, { KEX("base", 0xc3cb0590, 0x56fd8eccbdfdd7a7), KEX("descriptor", 0xea150d1, 0xfc445bb1317b9d67), KEX("module", 0xae3684a4, 0xbb78a82535e5801e), KEND });
+""");]]]*/
 #define librt_makeclass_params "base:?X3?N?DType?S?DType,descriptor:?GClassDescriptor,module:?X2?DModule?N=!N"
+FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL librt_makeclass_f_impl(DeeObject *base, DeeObject *descriptor, DeeModuleObject *module_);
+#ifndef DEFINED_kwlist__base_descriptor_module
+#define DEFINED_kwlist__base_descriptor_module
+PRIVATE DEFINE_KWLIST(kwlist__base_descriptor_module, { KEX("base", 0xc3cb0590, 0x56fd8eccbdfdd7a7), KEX("descriptor", 0xea150d1, 0xfc445bb1317b9d67), KEX("module", 0xae3684a4, 0xbb78a82535e5801e), KEND });
+#endif /* !DEFINED_kwlist__base_descriptor_module */
+PRIVATE WUNUSED DREF DeeObject *DCALL librt_makeclass_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	struct {
 		DeeObject *base;
 		DeeObject *descriptor;
 		DeeModuleObject *module_;
 	} args;
 	args.module_ = (DeeModuleObject *)Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, makeclass_kwlist, "oo|o:makeclass", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__base_descriptor_module, "oo|o:makeclass", &args))
 		goto err;
-/*[[[end]]]*/
-	if (DeeObject_AssertTypeExact(args.descriptor, &DeeClassDescriptor_Type))
-		goto err;
-	if (DeeNone_Check(args.module_)) {
-		/* Special case: no declaring module given. */
-		args.module_ = NULL;
-	} else {
-		if (DeeObject_AssertTypeExact(args.module_, &DeeModule_Type))
-			goto err;
-	}
-	return DeeClass_New(args.base, args.descriptor, args.module_);
+	return librt_makeclass_f_impl(args.base, args.descriptor, args.module_);
 err:
 	return NULL;
 }
-
-PRIVATE DEFINE_CMETHOD(librt_getstacklimit, &librt_getstacklimit_f, METHOD_FPURECALL);
-PRIVATE DEFINE_CMETHOD(librt_setstacklimit, &librt_setstacklimit_f, METHOD_FNORMAL);
-
-PRIVATE DEFINE_CMETHOD(librt_getcalloptimizethreshold, &librt_getcalloptimizethreshold_f, METHOD_FPURECALL);
-PRIVATE DEFINE_CMETHOD(librt_setcalloptimizethreshold, &librt_setcalloptimizethreshold_f, METHOD_FNORMAL);
 PRIVATE DEFINE_KWCMETHOD(librt_makeclass, &librt_makeclass_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL librt_makeclass_f_impl(DeeObject *base, DeeObject *descriptor, DeeModuleObject *module_)
+/*[[[end]]]*/
+{
+	if (DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type))
+		goto err;
+	if (DeeNone_Check(module_)) {
+		/* Special case: no declaring module given. */
+		module_ = NULL;
+	} else {
+		if (DeeObject_AssertTypeExact(module_, &DeeModule_Type))
+			goto err;
+	}
+	return (DREF DeeObject *)DeeClass_New(base, descriptor, module_);
+err:
+	return NULL;
+}
 
 #if 1
 #define str_Iterator (*COMPILER_CONTAINER_OF(DeeIterator_Type.tp_name, DeeStringObject, s_str))
@@ -3659,18 +3667,8 @@ PRIVATE DEFINE_CMETHOD(librt_get_FrameSymbolsByNameKeysIterator, &librt_get_Fram
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_argv_get_f(size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack0(err, argc, argv, "argv.getter");
-	return Dee_GetArgv();
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_argv_set_f(size_t argc, DeeObject *const *argv) {
-	DeeObject *new_tuple;
+librt_argv_set_f(DeeObject *new_tuple) {
 	size_t i;
-	DeeArg_Unpack1(err, argc, argv, "argv.setter", &new_tuple);
 	if (DeeObject_AssertTypeExact(new_tuple, &DeeTuple_Type))
 		goto err;
 	for (i = 0; i < DeeTuple_SIZE(new_tuple); ++i) {
@@ -3683,32 +3681,11 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_CMETHOD(librt_argv_get, &librt_argv_get_f, METHOD_FPURECALL);
-PRIVATE DEFINE_CMETHOD(librt_argv_set, &librt_argv_set_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD0(librt_argv_get, &Dee_GetArgv, METHOD_FPURECALL);
+PRIVATE DEFINE_CMETHOD1(librt_argv_set, &librt_argv_set_f, METHOD_FNORMAL);
 
-
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_kw_f(size_t argc, DeeObject *const *argv) {
-	DeeObject *kw;
-	DeeArg_Unpack1(err, argc, argv, "kw", &kw);
-	return DeeKw_Wrap(kw);
-err:
-	return NULL;
-}
-
-PRIVATE DEFINE_CMETHOD(librt_kw, &librt_kw_f, METHOD_FCONSTCALL);
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_ctypes_addrof_f(size_t argc, DeeObject *const *argv) {
-	DeeObject *ob;
-	DeeArg_Unpack1(err, argc, argv, "kw", &ob);
-	return DeeCTypes_CreateVoidPointer(ob);
-err:
-	return NULL;
-}
-
-PRIVATE DEFINE_CMETHOD(librt_ctypes_addrof, &librt_ctypes_addrof_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD1(librt_kw, &DeeKw_Wrap, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD1(librt_ctypes_addrof, &DeeCTypes_CreateVoidPointer, METHOD_FCONSTCALL);
 
 
 /* Define some magic constants that may be of interest to user-code. */

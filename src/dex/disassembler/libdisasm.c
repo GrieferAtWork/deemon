@@ -117,41 +117,60 @@ next_opt:
 
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-libdisasm_public_printcode_f(size_t argc,
-                             DeeObject *const *argv,
-                             DeeObject *kw) {
-	DeeObject *fp = NULL;
+/*[[[deemon (print_KwCMethod from rt.gen.unpack)("printcode", """
 	DeeCodeObject *code;
-	Dee_ssize_t error;
-	DeeObject *flags_ob = NULL;
-	unsigned int flags  = PCODE_FNORMAL /*|PCODE_FDDI*/;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(code), K(out), K(flags), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|oo:printcode", &code, &fp, &flags_ob))
+	DeeObject *out = NULL;
+	DeeObject *flags = NULL;
+""", libname: "libdisasm_public");]]]*/
+#define libdisasm_public_printcode_params "code:?Ert:Code,out?,flags?"
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libdisasm_public_printcode_f_impl(DeeCodeObject *code, DeeObject *out, DeeObject *flags);
+#ifndef DEFINED_kwlist__code_out_flags
+#define DEFINED_kwlist__code_out_flags
+PRIVATE DEFINE_KWLIST(kwlist__code_out_flags, { KEX("code", 0x6e753b06, 0xdb2cd7ddab7a1dec), KEX("out", 0x20bcdfe4, 0xfc801ac012e9f722), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEND });
+#endif /* !DEFINED_kwlist__code_out_flags */
+PRIVATE WUNUSED DREF DeeObject *DCALL libdisasm_public_printcode_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	struct {
+		DeeCodeObject *code;
+		DeeObject *out;
+		DeeObject *flags;
+	} args;
+	args.out = NULL;
+	args.flags = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__code_out_flags, "o|oo:printcode", &args))
 		goto err;
+	return libdisasm_public_printcode_f_impl(args.code, args.out, args.flags);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_KWCMETHOD(libdisasm_public_printcode, &libdisasm_public_printcode_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libdisasm_public_printcode_f_impl(DeeCodeObject *code, DeeObject *out, DeeObject *flags)
+/*[[[end]]]*/
+{
+	Dee_ssize_t error;
+	unsigned int flag_values = PCODE_FNORMAL /*|PCODE_FDDI*/;
 	if (DeeFunction_Check(code)) {
 		code = DeeFunction_CODE(code);
 	} else {
 		if (DeeObject_AssertTypeExact(code, &DeeCode_Type))
 			goto err;
 	}
-	if (fp && DeeString_Check(fp)) {
-		flags_ob = fp;
-		fp       = NULL;
+	if (out && DeeString_Check(out)) {
+		flags = out;
+		out      = NULL;
 	}
-	if (flags_ob) {
-		if (DeeObject_AssertTypeExact(flags_ob, &DeeString_Type))
+	if (flags) {
+		if (DeeObject_AssertTypeExact(flags, &DeeString_Type))
 			goto err;
-		if (parse_asm_flags(DeeString_STR(flags_ob), &flags))
+		if (parse_asm_flags(DeeString_STR(flags), &flag_values))
 			goto err;
 	}
-	if (!fp) {
+	if (!out) {
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
 		error = libdisasm_printcode(&unicode_printer_print,
 		                            &printer,
 		                            code->co_code,
 		                            code->co_code + code->co_codebytes,
-		                            code, NULL, flags);
+		                            code, NULL, flag_values);
 		DBG_ALIGNMENT_ENABLE();
 		if unlikely(error < 0) {
 			unicode_printer_fini(&printer);
@@ -159,10 +178,10 @@ libdisasm_public_printcode_f(size_t argc,
 		}
 		return unicode_printer_pack(&printer);
 	}
-	error = libdisasm_printcode((Dee_formatprinter_t)&DeeFile_WriteAll, fp,
+	error = libdisasm_printcode((Dee_formatprinter_t)&DeeFile_WriteAll, out,
 	                            code->co_code,
 	                            code->co_code + code->co_codebytes,
-	                            code, NULL, flags);
+	                            code, NULL, flag_values);
 	DBG_ALIGNMENT_ENABLE();
 	if unlikely(error == -1)
 		goto err;
@@ -170,10 +189,6 @@ libdisasm_public_printcode_f(size_t argc,
 err:
 	return NULL;
 }
-
-PRIVATE DEFINE_KWCMETHOD(libdisasm_public_printcode,
-                         libdisasm_public_printcode_f,
-                         METHOD_FNORMAL);
 
 PRIVATE struct dex_symbol symbols[] = {
 	{ "printcode", (DeeObject *)&libdisasm_public_printcode, MODSYM_FREADONLY,
