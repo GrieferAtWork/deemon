@@ -298,6 +298,8 @@ assertRtTypeName("Compiler");
 assertRtTypeName("ClassDescriptor");
 assertRtTypeName("InstanceMember");
 assertRtTypeName("CMethod");
+assertRtTypeName("CMethod0");
+assertRtTypeName("CMethod1");
 assertRtTypeName("KwCMethod");
 assertRtTypeName("ObjMethod");
 assertRtTypeName("KwObjMethod");
