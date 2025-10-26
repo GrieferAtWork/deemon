@@ -1311,6 +1311,9 @@
 		<ClInclude Include="..\src\deemon\objects\unicode\codec.h">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\unicode\db\Makefile">
+			<Filter>src\objects\unicode\db</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\unicode\finder.c.inl">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>

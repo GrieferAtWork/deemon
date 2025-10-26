@@ -445,6 +445,7 @@
 		<ClInclude Include="..\src\deemon\objects\unicode\bytes_segments.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\unicode\bytes_split.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\unicode\codec.h" />
+		<ClInclude Include="..\src\deemon\objects\unicode\db\Makefile" />
 		<ClInclude Include="..\src\deemon\objects\unicode\finder.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\unicode\format-expr.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\unicode\format-impl.c.inl" />

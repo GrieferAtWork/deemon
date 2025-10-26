@@ -524,7 +524,7 @@ PRIVATE struct type_method tpconst shlib_class_methods[] = {
 	TYPE_METHOD_END
 };
 
-INTERN DeeTypeObject DeeShlib_Type = {
+INTERN DeeTypeObject DeeShLib_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "ShLib",
 	/* .tp_doc      = */ NULL,

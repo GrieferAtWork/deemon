@@ -1140,7 +1140,7 @@ DeeStructType_FromSequence(DeeObject *name,
  *
  * NOTE: This type is not derived from `deemon.Sequence', but simply `deemon.Object'
  */
-INTDEF DeeTypeObject DeeShlib_Type;
+INTDEF DeeTypeObject DeeShLib_Type;
 
 
 
