@@ -422,7 +422,7 @@ bf_init(BytesFind *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(self->bf_bytes, &DeeBytes_Type))
 		goto err;
-	if (get_needle(&self->bf_needle, self->bf_other))
+	if (acquire_needle(&self->bf_needle, self->bf_other)) /* TODO: release_needle() */
 		goto err;
 	if (end > DeeBytes_SIZE(self->bf_bytes))
 		end = DeeBytes_SIZE(self->bf_bytes);
@@ -732,7 +732,7 @@ DeeBytes_FindAll(Bytes *self, DeeObject *needle,
 	result = DeeObject_MALLOC(BytesFind);
 	if unlikely(!result)
 		goto done;
-	if (get_needle(&result->bf_needle, needle))
+	if (acquire_needle(&result->bf_needle, needle)) /* TODO: release_needle() */
 		goto err_r;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
@@ -761,7 +761,7 @@ DeeBytes_CaseFindAll(Bytes *self, DeeObject *needle,
 	result = DeeObject_MALLOC(BytesFind);
 	if unlikely(!result)
 		goto done;
-	if (get_needle(&result->bf_needle, needle))
+	if (acquire_needle(&result->bf_needle, needle)) /* TODO: release_needle() */
 		goto err_r;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);

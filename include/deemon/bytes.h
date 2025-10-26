@@ -48,18 +48,60 @@ DECL_BEGIN
 typedef struct Dee_bytes_object DeeBytesObject;
 struct Dee_bytes_object {
 	Dee_OBJECT_HEAD
-	__BYTE_TYPE__                         *b_base;   /* [0..b_size][in(b_buffer.bb_base)][const] Base address of the used portion of the buffer. */
-	size_t                                 b_size;   /* [<= b_buffer.bb_size][const] Size of the used portion of the buffer */
-	DREF DeeObject                        *b_orig;   /* [1..1][const][ref_if(!= self)] The object for which this is the buffer view. */
-	DeeBuffer                              b_buffer; /* [const] The buffer being accessed. */
-	unsigned int                           b_flags;  /* [const] Buffer access flags (Set of `Dee_BUFFER_F*') */
-	COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, b_data);  /* ... Inline buffer data (Pointed to by `b_buffer.bb_base' if the Bytes object owns its own data) */
+	__BYTE_TYPE__                         *b_base;    /* [0..b_size][in(b_buffer.bb_base)][const] Base address of the used portion of the buffer. */
+#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
+	size_t                                 b_size;    /* [<= b_buffer.bb_size][const_if(*b_inuse_p > 0)] Size of the used portion of the buffer */
+#else /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
+	size_t                                 b_size;    /* [<= b_buffer.bb_size][const] Size of the used portion of the buffer */
+#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
+	DREF DeeObject                        *b_orig;    /* [1..1][const][ref_if(!= self)] The object for which this is the buffer view. */
+	DeeBuffer                              b_buffer;  /* [const] The buffer being accessed. */
+#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
+#ifndef CONFIG_NO_THREADS
+#define Dee_BYTES_HAVE_b_inuse_p
+	Dee_refcnt_t                          *b_inuse_p; /* [lock(ATOMIC)][1..1][const] Bytes are currently in-use.
+	                                                   * Used as a wait-for barrier by `DeeBytes_ReleaseRef()' to
+	                                                   * ensure that anyone still using the bytes has gone away
+	                                                   * before returning.
+	                                                   *
+	                                                   * This needs to be a pointer because sub-Bytes-views of 1
+	                                                   * Bytes object need to reference the in-use counter of the
+	                                                   * underlying (owner) Bytes. */
+#endif /* !CONFIG_NO_THREADS */
+#endif /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
+	unsigned int                           b_flags;   /* [const] Buffer access flags (Set of `Dee_BUFFER_F*') */
+	COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, b_data);   /* ... Inline buffer data (Pointed to by `b_buffer.bb_base' if the Bytes object owns its own data) */
 };
 
 
 /* Define a statically initialized Bytes object `name' */
 #define Dee_DEFINE_BYTES(name, flags, num_bytes, ...) \
 	Dee_DEFINE_BYTES_EX(name, flags, __BYTE_TYPE__, num_bytes, __VA_ARGS__)
+#ifdef Dee_BYTES_HAVE_b_inuse_p
+#define Dee_DEFINE_BYTES_EX(name, flags, Titem, num_items, ...) \
+	struct {                                                    \
+		Dee_OBJECT_HEAD                                         \
+		__BYTE_TYPE__ *b_base;                                  \
+		size_t b_size;                                          \
+		DREF DeeObject *b_orig;                                 \
+		DeeBuffer b_buffer;                                     \
+		Dee_refcnt_t *b_inuse_p;                                \
+		unsigned int b_flags;                                   \
+		Titem b_data[num_items];                                \
+		Dee_refcnt_t _b_inuse;                                  \
+	} name = {                                                  \
+		Dee_OBJECT_HEAD_INIT(&DeeBytes_Type),                   \
+		(__BYTE_TYPE__ *)name.b_data,                           \
+		(num_items) * sizeof(Titem),                            \
+		(DeeObject *)&name,                                     \
+		DeeBuffer_INIT((__BYTE_TYPE__ *)name.b_data,            \
+		               (num_items) * sizeof(Titem)),            \
+		&name._b_inuse,                                         \
+		flags,                                                  \
+		__VA_ARGS__,                                            \
+		0                                                       \
+	}
+#else /* Dee_BYTES_HAVE_b_inuse_p */
 #define Dee_DEFINE_BYTES_EX(name, flags, Titem, num_items, ...) \
 	struct {                                                    \
 		Dee_OBJECT_HEAD                                         \
@@ -79,13 +121,25 @@ struct Dee_bytes_object {
 		flags,                                                  \
 		__VA_ARGS__                                             \
 	}
+#endif /* !Dee_BYTES_HAVE_b_inuse_p */
 
 
 
 /* Data accessor helper macros for bytes objects */
-#define DeeBytes_DATA(x)       ((DeeBytesObject *)Dee_REQUIRES_OBJECT(x))->b_base
-#define DeeBytes_SIZE(x)       ((DeeBytesObject *)Dee_REQUIRES_OBJECT(x))->b_size
-#define DeeBytes_TERM(x)       (DeeBytes_DATA(x) + DeeBytes_SIZE(x))
+#ifdef Dee_BYTES_HAVE_b_inuse_p
+#define DeeBytes_IncUse(self) _DeeRefcnt_Inc(((DeeBytesObject *)Dee_REQUIRES_OBJECT(self))->b_inuse_p)
+#define DeeBytes_DecUse(self) _DeeRefcnt_Dec(((DeeBytesObject *)Dee_REQUIRES_OBJECT(self))->b_inuse_p)
+#else /* Dee_BYTES_HAVE_b_inuse_p */
+#define DeeBytes_IncUse(self) (void)0
+#define DeeBytes_DecUse(self) (void)0
+#endif /* !Dee_BYTES_HAVE_b_inuse_p */
+
+/* Access to the effect data-blob of some given "Bytes".
+ * These function should only be used after `DeeBytes_IncUse()' has been called. */
+#define DeeBytes_DATA(x) ((DeeBytesObject *)Dee_REQUIRES_OBJECT(x))->b_base
+#define DeeBytes_SIZE(x) ((DeeBytesObject *)Dee_REQUIRES_OBJECT(x))->b_size
+#define DeeBytes_END(x)  (DeeBytes_DATA(x) + DeeBytes_SIZE(x))
+
 #define DeeBytes_WRITABLE(x)   (((DeeBytesObject *)Dee_REQUIRES_OBJECT(x))->b_flags & Dee_BUFFER_FWRITABLE)
 #define DeeBytes_Check(x)      DeeObject_InstanceOfExact(x, &DeeBytes_Type) /* `Bytes' is final. */
 #define DeeBytes_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeBytes_Type)
@@ -169,6 +223,26 @@ DeeBytes_NewViewRo(DeeObject *owner, void const *base, size_t num_bytes);
 #define DeeBytes_NewViewRo(owner, base, num_bytes) \
 	DeeBytes_NewView(owner, (void *)(base), num_bytes, Dee_BUFFER_FREADONLY)
 #endif /* !__INTELLISENSE__ */
+
+
+#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
+/* Acquire/release a `Bytes' object referencing the given region of memory.
+ *
+ * For this purpose, if the returned `Bytes' are still in-use by the time
+ * a call to `DeeBytes_ReleaseRef()' is made (iow: `DeeObject_IsShared()'),
+ * then "b_size" is forceably set to `0', and the function waits until the
+ * bytes's `*b_inuse_p' counter becomes `0'.
+ *
+ * The given `DeeBytes_ReleaseRef()' should only be called from the same
+ * method that originally called `DeeBytes_AcquireRef()'. If this is not
+ * strictly adhered to, deadlocks might happen (as a result of user-code
+ * being able to trigger `DeeBytes_ReleaseRef()' in a context where the
+ * same thread has previously called `DeeBytes_IncUse()') */
+WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeBytes_AcquireRef(void *base, size_t num_bytes, unsigned int flags);
+WUNUSED NONNULL((1)) void DCALL
+DeeBytes_ReleaseRef(DREF DeeObject *self);
+#endif /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
 
 #ifdef __INTELLISENSE__
 #define DeeBytes_NewSubView(self, base, num_bytes)                                           \
@@ -275,13 +349,11 @@ struct Dee_bytes_printer {
 #define Dee_bytes_printer_release         bytes_printer_release
 #define Dee_bytes_printer_printf          bytes_printer_printf
 #define Dee_bytes_printer_vprintf         bytes_printer_vprintf
-#define Dee_bytes_printer_printbytes      bytes_printer_printbytes
 #define Dee_bytes_printer_printobject     bytes_printer_printobject
 #define Dee_bytes_printer_printobjectrepr bytes_printer_printobjectrepr
 #else /* __INTELLISENSE__ */
 #define bytes_printer_printf          Dee_bytes_printer_printf
 #define bytes_printer_vprintf         Dee_bytes_printer_vprintf
-#define bytes_printer_printbytes      Dee_bytes_printer_printbytes
 #define bytes_printer_printobject     Dee_bytes_printer_printobject
 #define bytes_printer_printobjectrepr Dee_bytes_printer_printobjectrepr
 #endif /* !__INTELLISENSE__ */
@@ -345,13 +417,11 @@ DFUNDEF NONNULL((1)) void
 #ifdef __INTELLISENSE__
 WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_bytes_printer_printf)(struct Dee_bytes_printer *__restrict self, char const *__restrict format, ...);
 WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_bytes_printer_vprintf)(struct Dee_bytes_printer *__restrict self, char const *__restrict format, va_list args);
-WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_bytes_printer_printbytes)(struct Dee_bytes_printer *__restrict self, DeeObject *__restrict ob);
 WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_bytes_printer_printobject)(struct Dee_bytes_printer *__restrict self, DeeObject *__restrict ob);
 WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_bytes_printer_printobjectrepr)(struct Dee_bytes_printer *__restrict self, DeeObject *__restrict ob);
 #else /* __INTELLISENSE__ */
 #define Dee_bytes_printer_printf(self, ...)           DeeFormat_Printf(&Dee_bytes_printer_print, self, __VA_ARGS__)
 #define Dee_bytes_printer_vprintf(self, format, args) DeeFormat_VPrintf(&Dee_bytes_printer_print, self, format, args)
-#define Dee_bytes_printer_printbytes(self, ob)        Dee_bytes_printer_append(self, DeeBytes_DATA(ob), DeeBytes_SIZE(ob))
 #define Dee_bytes_printer_printobject(self, ob)       DeeObject_Print(ob, &Dee_bytes_printer_print, self)
 #define Dee_bytes_printer_printobjectrepr(self, ob)   DeeObject_PrintRepr(ob, &Dee_bytes_printer_print, self)
 #endif /* !__INTELLISENSE__ */

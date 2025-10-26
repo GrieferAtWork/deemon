@@ -70,7 +70,7 @@ typedef struct {
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(BytesSplit, bsi_split)    /* [1..1][const] The underlying split controller. */
 	DWEAK byte_t const              *bsi_iter;     /* [0..1] Pointer to the start of the next split (When NULL, iteration is complete). */
-	byte_t const                    *bsi_end;      /* [1..1][== DeeBytes_TERM(bsi_split->bs_bytes)] Pointer to the end of input data. */
+	byte_t const                    *bsi_end;      /* [1..1][== DeeBytes_END(bsi_split->bs_bytes)] Pointer to the end of input data. */
 	Bytes                           *bsi_bytes;    /* [1..1][const][== bsi_split->bs_bytes] The Bytes object being split. */
 	byte_t const                    *bsi_sep_ptr;  /* [const][== bsi_split->bs_sep_ptr] Pointer to the effective separation sequence. */
 	size_t                           bsi_sep_len;  /* [const][== bsi_split->bs_sep_len] Length of the separation sequence (in bytes). */
@@ -126,7 +126,7 @@ bsi_deepcopy(BytesSplitIterator *__restrict self,
 		          (iterpos - DeeBytes_DATA(other->bsi_bytes));
 	}
 	self->bsi_iter    = iterpos;
-	self->bsi_end     = DeeBytes_TERM(self->bsi_split->bs_bytes);
+	self->bsi_end     = DeeBytes_END(self->bsi_split->bs_bytes);
 	self->bsi_bytes   = self->bsi_split->bs_bytes;
 	self->bsi_sep_ptr = self->bsi_split->bs_sep_ptr;
 	self->bsi_sep_len = self->bsi_split->bs_sep_len;
@@ -834,7 +834,7 @@ typedef struct {
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(Bytes, blsi_bytes)    /* [1..1][const] The Bytes object being split. */
 	DWEAK byte_t               *blsi_iter;     /* [0..1] Pointer to the start of the next split (When NULL, iteration is complete). */
-	byte_t                     *blsi_end;      /* [1..1][== DeeBytes_TERM(blsi_bytes)] Pointer to the end of input data. */
+	byte_t                     *blsi_end;      /* [1..1][== DeeBytes_END(blsi_bytes)] Pointer to the end of input data. */
 	bool                        blsi_keepends; /* [const] If true, keep line endings. */
 } BytesLineSplitIterator;
 #define READ_BLSI_ITER(x) atomic_read(&(x)->blsi_iter)
@@ -893,7 +893,7 @@ blsi_deepcopy(BytesLineSplitIterator *__restrict self,
 		            (other_pos - DeeBytes_DATA(other->blsi_bytes));
 	}
 	self->blsi_iter = other_pos;
-	self->blsi_end  = DeeBytes_TERM(self->blsi_bytes);
+	self->blsi_end  = DeeBytes_END(self->blsi_bytes);
 	Dee_Incref(self->blsi_bytes);
 	return 0;
 err:

@@ -262,7 +262,7 @@ DECL_BEGIN
 
 /* Suppress warning because compilers don't like the way we use `needle':
  * >> if (mask) {
- * >>     get_needle(&needle, mask);
+ * >>     acquire_needle(&needle, mask);
  * >> }
  * >> ...
  * >> if (mask) {
@@ -330,7 +330,7 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 
 	/* Do the actual strip at the front/back */
 #ifdef LOCAL_IS_SSTRIP
-	if (get_needle(&needle, mask))
+	if (acquire_needle(&needle, mask)) /* TODO: release_needle() */
 		goto err;
 	if unlikely(!needle.n_size)
 		goto retself_noprinter;
@@ -358,7 +358,7 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 	if (mask) {
 		/* Deal with a custom strip-character/sequence mask. */
 #ifndef LOCAL_IS_SSTRIP
-		if (get_needle(&needle, mask))
+		if (acquire_needle(&needle, mask)) /* TODO: release_needle() */
 			goto err;
 #endif /* !LOCAL_IS_SSTRIP */
 #ifdef LOCAL_IS_LSTRIP
