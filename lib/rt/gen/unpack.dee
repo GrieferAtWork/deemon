@@ -340,6 +340,7 @@ global final C_KEYWORDS: {string...} = HashSet.Frozen({
 	"typename",
 	"override",
 	"module",
+	"import",
 	"true",
 	"false",
 

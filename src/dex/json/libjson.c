@@ -3457,14 +3457,34 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_KWLIST(parse_kwlist, { K(data), K(into), KEND });
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libjson_parse(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_KwCMethod from rt.gen.unpack)("parse", """
+	DeeObject *data:?X4?DFile?DBytes?Dstring?DMapping;
+	DeeObject *into = NULL;
+""", methodFlags: "METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES");]]]*/
+#define libjson_parse_params "data:?X4?DFile?DBytes?Dstring?DMapping,into?"
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libjson_parse_f_impl(DeeObject *data, DeeObject *into);
+#ifndef DEFINED_kwlist__data_into
+#define DEFINED_kwlist__data_into
+PRIVATE DEFINE_KWLIST(kwlist__data_into, { KEX("data", 0x3af4b6d3, 0xb0164401a9853128), KEX("into", 0xc932469b, 0x46e544c708586600), KEND });
+#endif /* !DEFINED_kwlist__data_into */
+PRIVATE WUNUSED DREF DeeObject *DCALL libjson_parse_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	struct {
+		DeeObject *data;
+		DeeObject *into;
+	} args;
+	args.into = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__data_into, "o|o:parse", &args))
+		goto err;
+	return libjson_parse_f_impl(args.data, args.into);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_KWCMETHOD(libjson_parse, &libjson_parse_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libjson_parse_f_impl(DeeObject *data, DeeObject *into)
+/*[[[end]]]*/
+{
 	DREF DeeObject *result;
 	DeeJsonParser parser;
-	DeeObject *data, *into = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, parse_kwlist, "o|o:parse", &data, &into))
-		goto err;
 	if (DeeBytes_Check(data)) {
 		/* Parse raw bytes as JSON. */
 		void *start = DeeBytes_DATA(data);
@@ -3545,18 +3565,42 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_KWLIST(write_kwlist, { K(data), K(into), K(pretty), K(recursion), KEND });
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libjson_write(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_KwCMethod from rt.gen.unpack)("write", """
+	DeeObject *data:?X8?O?Dfloat?Dint?Dstring?Dbool?N?DSequence?DMapping;
+	DeeObject *into:?DFile = NULL;
+	bool pretty = false;
+	DeeObject *recursion:?X2?DCallable?N = Dee_None;
+""", methodFlags: "METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES");]]]*/
+#define libjson_write_params "data:?X8?O?Dfloat?Dint?Dstring?Dbool?N?DSequence?DMapping,into?:?DFile,pretty=!f,recursion:?X2?DCallable?N=!N"
+FORCELOCAL WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL libjson_write_f_impl(DeeObject *data, DeeObject *into, bool pretty, DeeObject *recursion);
+#ifndef DEFINED_kwlist__data_into_pretty_recursion
+#define DEFINED_kwlist__data_into_pretty_recursion
+PRIVATE DEFINE_KWLIST(kwlist__data_into_pretty_recursion, { KEX("data", 0x3af4b6d3, 0xb0164401a9853128), KEX("into", 0xc932469b, 0x46e544c708586600), KEX("pretty", 0x86358140, 0xafda632567fd2329), KEX("recursion", 0xf4d902ea, 0xf6191b6563337389), KEND });
+#endif /* !DEFINED_kwlist__data_into_pretty_recursion */
+PRIVATE WUNUSED DREF DeeObject *DCALL libjson_write_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	struct {
+		DeeObject *data;
+		DeeObject *into;
+		bool pretty;
+		DeeObject *recursion;
+	} args;
+	args.into = NULL;
+	args.pretty = false;
+	args.recursion = Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__data_into_pretty_recursion, "o|obo:write", &args))
+		goto err;
+	return libjson_write_f_impl(args.data, args.into, args.pretty, args.recursion);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_KWCMETHOD(libjson_write, &libjson_write_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES);
+FORCELOCAL WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL libjson_write_f_impl(DeeObject *data, DeeObject *into, bool pretty, DeeObject *recursion)
+/*[[[end]]]*/
+{
 	int error;
 	DeeJsonWriter writer;
-	bool pretty = false;
 	unsigned int format;
-	DeeObject *data, *into = NULL;
-	writer.djw_recursion = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, write_kwlist, "o|obo:write",
-	                    &data, &into, &pretty, &writer.djw_recursion))
-		goto err;
+	writer.djw_recursion = recursion;
 #if JSON_WRITER_FORMAT_COMPACT == 0 && JSON_WRITER_FORMAT_PRETTY == 1
 	format = (unsigned int)pretty;
 #else /* JSON_WRITER_FORMAT_COMPACT == 0 && JSON_WRITER_FORMAT_PRETTY == 1 */
@@ -3590,9 +3634,6 @@ err_ascii_printer:
 err:
 	return NULL;
 }
-
-PRIVATE DEFINE_KWCMETHOD(libjson_parse, &f_libjson_parse, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES);
-PRIVATE DEFINE_KWCMETHOD(libjson_write, &f_libjson_write, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES);
 
 
 PRIVATE struct dex_symbol symbols[] = {

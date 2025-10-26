@@ -2201,15 +2201,18 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-posix_fdopendir_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DREF DeeDirObject *result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("fdopendir", params: "
+/*[[[deemon (print_KwCMethod from rt.gen.unpack)("fdopendir", """
 	DeeObject *path:?X3?Dstring?DFile?Dint;
 	bool skipdots  = true;
 	bool inheritfd = true;
-", docStringPrefix: "posix");]]]*/
+""", libname: "posix");]]]*/
 #define posix_fdopendir_params "path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!t"
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_fdopendir_f_impl(DeeObject *path, bool skipdots, bool inheritfd);
+#ifndef DEFINED_kwlist__path_skipdots_inheritfd
+#define DEFINED_kwlist__path_skipdots_inheritfd
+PRIVATE DEFINE_KWLIST(kwlist__path_skipdots_inheritfd, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("skipdots", 0x5f2962eb, 0x59ddb5f9342c7b50), KEX("inheritfd", 0x3b58e99c, 0x17889f39738f4141), KEND });
+#endif /* !DEFINED_kwlist__path_skipdots_inheritfd */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_fdopendir_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	struct {
 		DeeObject *path;
 		bool skipdots;
@@ -2219,21 +2222,27 @@ posix_fdopendir_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	args.inheritfd = true;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__path_skipdots_inheritfd, "o|bb:fdopendir", &args))
 		goto err;
+	return posix_fdopendir_f_impl(args.path, args.skipdots, args.inheritfd);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_KWCMETHOD(posix_fdopendir, &posix_fdopendir_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_fdopendir_f_impl(DeeObject *path, bool skipdots, bool inheritfd)
 /*[[[end]]]*/
+{
+	DREF DeeDirObject *result;
 	result = DeeObject_MALLOC(DeeDirObject);
 	if unlikely(!result)
 		goto err;
 	DeeObject_Init(result, &DeeDir_Type);
-	Dee_Incref(args.path);
-	result->d_path      = args.path;
-	result->d_skipdots  = args.skipdots;
-	result->d_inheritfd = args.inheritfd;
+	Dee_Incref(path);
+	result->d_path      = path;
+	result->d_skipdots  = skipdots;
+	result->d_inheritfd = inheritfd;
 	return (DREF DeeObject *)result;
 err:
 	return NULL;
 }
-
-INTERN DEFINE_KWCMETHOD(posix_fdopendir, &posix_fdopendir_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 
 
 INTERN WUNUSED NONNULL((1)) DREF DeeDirIteratorObject *DCALL

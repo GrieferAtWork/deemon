@@ -45,26 +45,47 @@ DECL_BEGIN
  * starts with a leading underscore, indicative of this fact. */
 
 
-PRIVATE DEFINE_KWLIST(exec_kwlist, { K(expr), K(globals), K(import), K(base), KEND });
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-libjit_exec_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_KwCMethod from rt.gen.unpack)("exec", """
+	DeeObject *expr:?X3?Dstring?DBytes?DFile;
+	DeeObject *globals?:?M?Dstring?O;
+	DeeModuleObject *base?:?DModule;
+	DeeObject *import?:?DCallable;
+""");]]]*/
+#define libjit_exec_params "expr:?X3?Dstring?DBytes?DFile,globals?:?M?Dstring?O,base?:?DModule,import?:?DCallable"
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libjit_exec_f_impl(DeeObject *expr, DeeObject *globals, DeeModuleObject *base, DeeObject *import_);
+#ifndef DEFINED_kwlist__expr_globals_base_import
+#define DEFINED_kwlist__expr_globals_base_import
+PRIVATE DEFINE_KWLIST(kwlist__expr_globals_base_import, { KEX("expr", 0x391ad037, 0x9928df37efec67d5), KEX("globals", 0x98e98592, 0x188be45e73afd7e), KEX("base", 0xc3cb0590, 0x56fd8eccbdfdd7a7), KEX("import", 0x1a3f5a1f, 0x5a525def3865fbed), KEND });
+#endif /* !DEFINED_kwlist__expr_globals_base_import */
+PRIVATE WUNUSED DREF DeeObject *DCALL libjit_exec_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	struct {
+		DeeObject *expr;
+		DeeObject *globals;
+		DeeModuleObject *base;
+		DeeObject *import_;
+	} args;
+	args.globals = NULL;
+	args.base = NULL;
+	args.import_ = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__expr_globals_base_import, "o|ooo:exec", &args))
+		goto err;
+	return libjit_exec_f_impl(args.expr, args.globals, args.base, args.import_);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_KWCMETHOD(libjit_exec, &libjit_exec_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libjit_exec_f_impl(DeeObject *expr, DeeObject *globals, DeeModuleObject *base, DeeObject *import_)
+/*[[[end]]]*/
+{
 	DREF DeeObject *result;
-	DeeObject *globals;
 	JITContext context;
 	JITLexer lexer;
 	char const *usertext;
 	size_t usersize;
 	DeeThreadObject *ts;
-	globals            = NULL;
-	context.jc_import  = NULL;
-	context.jc_impbase = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, exec_kwlist, "o|ooo:exec",
-	                    &lexer.jl_text,
-	                    &globals,
-	                    &context.jc_import,
-	                    &context.jc_impbase))
-		goto err;
+	lexer.jl_text      = expr;
+	context.jc_import  = import_;
+	context.jc_impbase = base;
 	if (DeeString_Check(lexer.jl_text)) {
 		usertext = DeeString_AsUtf8(lexer.jl_text);
 		if unlikely(!usertext)
@@ -206,8 +227,6 @@ err_expr:
 err:
 	return NULL;
 }
-
-PRIVATE DEFINE_KWCMETHOD(libjit_exec, &libjit_exec_f, METHOD_FNORMAL);
 
 
 

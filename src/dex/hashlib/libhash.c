@@ -2298,15 +2298,36 @@ dhashalgo_find(char const *__restrict name) {
 }
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-dhashmain_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_KwCMethod from rt.gen.unpack)("hash", """
 	char const *name;
-	DeeObject *data, *start = NULL;
+	DeeObject *data:?X2?Dstring?DBytes;
+	DeeObject *start:?Dint = NULL;
+""", methodFlags: "METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES");]]]*/
+#define libhash_hash_params "name:?Dstring,data:?X2?Dstring?DBytes,start?:?Dint"
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL libhash_hash_f_impl(char const *name, DeeObject *data, DeeObject *start);
+#ifndef DEFINED_kwlist__name_data_start
+#define DEFINED_kwlist__name_data_start
+PRIVATE DEFINE_KWLIST(kwlist__name_data_start, { KEX("name", 0xdbaf43f0, 0x8bcdb293dc3cbddc), KEX("data", 0x3af4b6d3, 0xb0164401a9853128), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEND });
+#endif /* !DEFINED_kwlist__name_data_start */
+PRIVATE WUNUSED DREF DeeObject *DCALL libhash_hash_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	struct {
+		char const *name;
+		DeeObject *data;
+		DeeObject *start;
+	} args;
+	args.start = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__name_data_start, "so|o:hash", &args))
+		goto err;
+	return libhash_hash_f_impl(args.name, args.data, args.start);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_KWCMETHOD(libhash_hash, &libhash_hash_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL libhash_hash_f_impl(char const *name, DeeObject *data, DeeObject *start)
+/*[[[end]]]*/
+{
 	struct dhashalgo const *algo;
 	DREF DeeObject *result;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(name), K(data), K(start), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "so|o:hash", &name, &data, &start))
-		goto err;
 	algo = dhashalgo_find(name);
 	if unlikely(!algo)
 		goto err;
@@ -2329,12 +2350,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_KWCMETHOD(dhashmain, &dhashmain_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES);
-
-
 
 PRIVATE struct dex_symbol symbols[] = {
-	{ "hash", (DeeObject *)&dhashmain, MODSYM_FREADONLY,
+	{ "hash", (DeeObject *)&libhash_hash, MODSYM_FREADONLY,
 	  DOC("(name:?Dstring,data:?X2?Dstring?DBytes,start?:?Dint)->?Dint\n"
 	      "Calculate the hash of @data using the given hash function @name") },
 	{ NULL }
