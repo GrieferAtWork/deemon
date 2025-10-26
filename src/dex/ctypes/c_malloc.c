@@ -378,8 +378,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_trystrdup_f_impl(char const *s
 	DREF DeeObject *result;
 	size_t len;
 	char *resptr;
-	CTYPES_FAULTPROTECT(len = strnlen(string, maxlen),
-	                    goto err);
+	CTYPES_FAULTPROTECT(len = strnlen(string, maxlen), return NULL);
 	resptr = (char *)Dee_TryMallocc(len + 1, sizeof(char));
 	if likely(resptr) {
 		CTYPES_FAULTPROTECT(memcpyc(resptr, string, len, sizeof(char)), goto err_r);
@@ -391,7 +390,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_trystrdup_f_impl(char const *s
 	return result;
 err_r:
 	Dee_Free(resptr);
-err:
 	return NULL;
 }
 

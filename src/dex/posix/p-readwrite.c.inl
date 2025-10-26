@@ -319,7 +319,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject *const
 			error = posix_read_f_impl(fd_fd,
 			                          DeeBytes_DATA(result_bytes),
 			                          DeeBytes_SIZE(result_bytes));
-			if unlikely(error == -1) {
+			if unlikely(error == (size_t)-1) {
 				Dee_Decref(result_bytes);
 				goto err;
 			}
