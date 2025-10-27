@@ -45,6 +45,15 @@
 
 DECL_BEGIN
 
+#if __SIZEOF_SIZE_T__ > 4
+#define sqlite3_bind_textSIZ(stmt, i, text, length, dtor) sqlite3_bind_text64(stmt, i, text, (sqlite3_uint64)(length), dtor, SQLITE_UTF8)
+#define sqlite3_bind_blobSIZ(stmt, i, blob, length, dtor) sqlite3_bind_blob64(stmt, i, blob, (sqlite3_uint64)(length), dtor)
+#else /* __SIZEOF_SIZE_T__ > 4 */
+#define sqlite3_bind_textSIZ(stmt, i, text, length, dtor) sqlite3_bind_text(stmt, i, text, (int)(unsigned int)(length), dtor)
+#define sqlite3_bind_blobSIZ(stmt, i, blob, length, dtor) sqlite3_bind_blob(stmt, i, blob, (int)(unsigned int)(length), dtor)
+#endif /* __SIZEOF_SIZE_T__ <= 4 */
+
+
 PRIVATE void _dee_sqlite3_bind_string_decref(void *str) {
 	DREF DeeStringObject *string;
 	string = COMPILER_CONTAINER_OF((char *)str, DeeStringObject, s_str);
@@ -61,13 +70,9 @@ again:
 		size_t length = DeeString_SIZE(self);
 		if unlikely(DB_Lock(db))
 			goto err;
-#if __SIZEOF_SIZE_T__ > 4
-		rc = sqlite3_bind_text64(stmt, index, DeeString_STR(self), (sqlite3_uint64)length,
-		                         &_dee_sqlite3_bind_string_decref, SQLITE_UTF8);
-#else /* __SIZEOF_SIZE_T__ > 4 */
-		rc = sqlite3_bind_text(stmt, index, DeeString_STR(self), (int)length,
-		                       &_dee_sqlite3_bind_string_decref);
-#endif /* __SIZEOF_SIZE_T__ <= 4 */
+		Dee_Incref(self); /* Inherited by `sqlite3_bind_textSIZ()' */
+		rc = sqlite3_bind_textSIZ(stmt, index, DeeString_STR(self), length,
+		                          &_dee_sqlite3_bind_string_decref);
 	} else {
 		size_t length;
 		char const *utf8 = DeeString_AsUtf8((DeeObject *)self);
@@ -76,11 +81,7 @@ again:
 		length = WSTR_LENGTH(utf8);
 		if unlikely(DB_Lock(db))
 			goto err;
-#if __SIZEOF_SIZE_T__ > 4
-		rc = sqlite3_bind_text64(stmt, index, utf8, (sqlite3_uint64)length, NULL, SQLITE_UTF8);
-#else /* __SIZEOF_SIZE_T__ > 4 */
-		rc = sqlite3_bind_text(stmt, index, utf8, (int)length, NULL);
-#endif /* __SIZEOF_SIZE_T__ <= 4 */
+		rc = sqlite3_bind_textSIZ(stmt, index, utf8, length, SQLITE_TRANSIENT);
 	}
 	if unlikely(rc != SQLITE_OK)
 		goto err_rc;
@@ -95,9 +96,9 @@ err:
 	return -1;
 }
 
-PRIVATE void _dee_sqlite3_bind_bytes_decref(void *str) {
+PRIVATE void _dee_sqlite3_bind_bytes_decref(void *blob) {
 	DREF DeeBytesObject *bytes;
-	bytes = COMPILER_CONTAINER_OF((char *)str, DeeBytesObject, b_data);
+	bytes = COMPILER_CONTAINER_OF((__BYTE_TYPE__ *)blob, DeeBytesObject, b_data);
 	Dee_Decref(bytes);
 }
 
@@ -108,26 +109,20 @@ dee_sqlite3_bind_bytes(DB *__restrict db, sqlite3_stmt *stmt,
 	__BYTE_TYPE__ *data;
 	size_t size;
 again:
-	data = DeeBytes_DATA(self);
-	size = DeeBytes_SIZE(self);
 	if unlikely(DB_Lock(db))
 		goto err;
+	DeeBytes_IncUse(self);
+	data = DeeBytes_DATA(self);
+	size = DeeBytes_SIZE(self);
 	if (data == self->b_data) {
 		/* Simple case: can directly pass `data' */
-#if __SIZEOF_SIZE_T__ > 4
-		rc = sqlite3_bind_blob64(stmt, index, data, (sqlite3_uint64)size,
-		                         &_dee_sqlite3_bind_bytes_decref);
-#else /* __SIZEOF_SIZE_T__ > 4 */
-		rc = sqlite3_bind_blob(stmt, index, data, (int)size,
-		                       &_dee_sqlite3_bind_bytes_decref);
-#endif /* __SIZEOF_SIZE_T__ <= 4 */
+		Dee_Incref(self);
+		rc = sqlite3_bind_blobSIZ(stmt, index, data, size,
+		                          &_dee_sqlite3_bind_bytes_decref);
 	} else {
-#if __SIZEOF_SIZE_T__ > 4
-		rc = sqlite3_bind_blob64(stmt, index, data, (sqlite3_uint64)size, NULL);
-#else /* __SIZEOF_SIZE_T__ > 4 */
-		rc = sqlite3_bind_blob(stmt, index, data, (int)size, NULL);
-#endif /* __SIZEOF_SIZE_T__ <= 4 */
+		rc = sqlite3_bind_blobSIZ(stmt, index, data, size, SQLITE_TRANSIENT);
 	}
+	DeeBytes_DecUse(self);
 	if unlikely(rc != SQLITE_OK)
 		goto err_rc;
 	DB_Unlock(db);
