@@ -1360,7 +1360,7 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DefaultSequence_WithSizeObAndGetItem *DC
 ds_sg_getrange(DefaultSequence_WithSizeObAndGetItem *self, DeeObject *start, DeeObject *end) {
 	int temp;
 	DREF DefaultSequence_WithSizeObAndGetItem *result;
-	DREF DeeObject *clamed_start_end_and_pair[2];
+	DREF DeeObject *clamed_start_and_end_pair[2];
 	DREF DeeObject *clamed_start_and_end;
 	DREF DeeObject *sizeob = ds_sg_sizeob(self);
 	if unlikely(!sizeob)
@@ -1371,23 +1371,23 @@ ds_sg_getrange(DefaultSequence_WithSizeObAndGetItem *self, DeeObject *start, Dee
 	Dee_Decref(sizeob);
 	if unlikely(!clamed_start_and_end)
 		goto err;
-	temp = DeeSeq_Unpack(clamed_start_and_end, 2, clamed_start_end_and_pair);
+	temp = DeeSeq_Unpack(clamed_start_and_end, 2, clamed_start_and_end_pair);
 	Dee_Decref(clamed_start_and_end);
 	if unlikely(temp)
 		goto err;
 	Dee_Incref(self->dssg_seq);
 	result = DeeObject_MALLOC(DefaultSequence_WithSizeObAndGetItem);
 	if unlikely(!result)
-		goto err_clamed_start_end_and_pair;
+		goto err_clamed_start_and_end_pair;
 	result->dssg_seq        = self->dssg_seq;
-	result->dssg_start      = clamed_start_end_and_pair[0]; /* Inherit reference */
-	result->dssg_end        = clamed_start_end_and_pair[1]; /* Inherit reference */
+	result->dssg_start      = clamed_start_and_end_pair[0]; /* Inherit reference */
+	result->dssg_end        = clamed_start_and_end_pair[1]; /* Inherit reference */
 	result->dssg_tp_getitem = self->dssg_tp_getitem;
 	DeeObject_Init(result, &DefaultSequence_WithSizeObAndGetItem_Type);
 	return result;
-err_clamed_start_end_and_pair:
-	Dee_Decref(clamed_start_end_and_pair[1]);
-	Dee_Decref(clamed_start_end_and_pair[0]);
+err_clamed_start_and_end_pair:
+	Dee_Decref(clamed_start_and_end_pair[1]);
+	Dee_Decref(clamed_start_and_end_pair[0]);
 err:
 	return NULL;
 }

@@ -6120,8 +6120,13 @@ compare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
 			}
 			/* Most simple case: compare ascii/single-byte strings. */
 			result = memcmp(lhs_str, rhs->s_str + rhs_start, MIN(lhs_len, rhs_len));
-			if (result != 0)
+			if (result != 0) {
+				if (result < -1)
+					result = -1;
+				if (result > 1)
+					result = 1;
 				return result;
+			}
 		} else {
 			struct string_utf *rhs_utf = rhs->s_data;
 			switch (rhs_utf->u_width) {
@@ -6277,8 +6282,13 @@ compare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
 				}
 				common_len = MIN(lhs_len, rhs_len);
 				result = memcmpw(lhs_str, rhs_str, common_len);
-				if (result != 0)
+				if (result != 0) {
+					if (result < -1)
+						result = -1;
+					if (result > 1)
+						result = 1;
 					return result;
+				}
 			}	break;
 
 			CASE_WIDTH_4BYTE: {
@@ -6359,8 +6369,13 @@ compare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
 				}
 				common_len = MIN(lhs_len, rhs_len);
 				result = memcmpl(lhs_str, rhs_str, common_len);
-				if (result != 0)
+				if (result != 0) {
+					if (result < -1)
+						result = -1;
+					if (result > 1)
+						result = 1;
 					return result;
+				}
 			}	break;
 
 			default:
@@ -6657,7 +6672,7 @@ string_compare(String *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	result = compare_strings_ex(self, args.my_start, args.my_end,
 	                            args.other, args.ot_start, args.ot_end);
-	return DeeInt_NewInt(result);
+	return_reference(DeeInt_FromSign(result));
 err:
 	return NULL;
 }
@@ -6737,7 +6752,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casevercompare(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
-	int32_t result;
+	int result;
 	struct compare_args args;
 	if (get_compare_args(&args, argc, argv, "casevercompare"))
 		goto err;
@@ -6785,7 +6800,7 @@ string_casevercompare(String *self, size_t argc, DeeObject *const *argv) {
 		                             ot_str.cp32 + args.ot_start, ot_len);
 		break;
 	}
-	return DeeInt_NewInt32(result);
+	return_reference(DeeInt_FromSign(result));
 err:
 	return NULL;
 }
@@ -6794,7 +6809,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_fuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
-	Dee_ssize_t result;
+	size_t result;
 	struct compare_args args;
 	if (get_compare_args(&args, argc, argv, "fuzzycompare"))
 		goto err;
@@ -6842,9 +6857,9 @@ string_fuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 		                            ot_str.cp32 + args.ot_start, ot_len);
 		break;
 	}
-	if unlikely(result == (Dee_ssize_t)-1)
+	if unlikely(result == (size_t)-1)
 		goto err;
-	return DeeInt_NewSize((size_t)result);
+	return DeeInt_NewSize(result);
 err:
 	return NULL;
 }
@@ -6853,7 +6868,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casefuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
-	Dee_ssize_t result;
+	size_t result;
 	struct compare_args args;
 	if (get_compare_args(&args, argc, argv, "casefuzzycompare"))
 		goto err;
@@ -6901,9 +6916,9 @@ string_casefuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 		                                ot_str.cp32 + args.ot_start, ot_len);
 		break;
 	}
-	if unlikely(result == (Dee_ssize_t)-1)
+	if unlikely(result == (size_t)-1)
 		goto err;
-	return DeeInt_NewSize((size_t)result);
+	return DeeInt_NewSize(result);
 err:
 	return NULL;
 }
@@ -7253,7 +7268,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_wildcompare(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
-	int64_t result;
+	int result;
 	struct compare_args args;
 	if (get_compare_args(&args, argc, argv, "wildcompare"))
 		goto err;
@@ -7301,7 +7316,7 @@ string_wildcompare(String *self, size_t argc, DeeObject *const *argv) {
 		                          ot_str.cp32 + args.ot_start, ot_len);
 		break;
 	}
-	return DeeInt_NewInt64(result);
+	return_reference(DeeInt_FromSign(result));
 err:
 	return NULL;
 }
@@ -7310,7 +7325,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_wmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr_const my_str, ot_str;
 	size_t my_len, ot_len;
-	bool result;
+	int result;
 	struct compare_args args;
 	if (get_compare_args(&args, argc, argv, "wmatch"))
 		goto err;
@@ -7325,7 +7340,7 @@ string_wmatch(String *self, size_t argc, DeeObject *const *argv) {
 		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
 		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
 		result = dee_wildcompareb(my_str.cp8 + args.my_start, my_len,
-		                          ot_str.cp8 + args.ot_start, ot_len) == 0;
+		                          ot_str.cp8 + args.ot_start, ot_len);
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -7340,7 +7355,7 @@ string_wmatch(String *self, size_t argc, DeeObject *const *argv) {
 		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
 		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
 		result = dee_wildcomparew(my_str.cp16 + args.my_start, my_len,
-		                          ot_str.cp16 + args.ot_start, ot_len) == 0;
+		                          ot_str.cp16 + args.ot_start, ot_len);
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -7355,10 +7370,10 @@ string_wmatch(String *self, size_t argc, DeeObject *const *argv) {
 		CLAMP_SUBSTR_IMPLICIT(&args.my_start, &args.my_end, &my_len);
 		CLAMP_SUBSTR_IMPLICIT(&args.ot_start, &args.ot_end, &ot_len);
 		result = dee_wildcomparel(my_str.cp32 + args.my_start, my_len,
-		                          ot_str.cp32 + args.ot_start, ot_len) == 0;
+		                          ot_str.cp32 + args.ot_start, ot_len);
 		break;
 	}
-	return_bool(result);
+	return_bool(result == 0);
 err:
 	return NULL;
 }
@@ -7419,7 +7434,7 @@ string_casewildcompare(String *self, size_t argc, DeeObject *const *argv) {
 		result = dee_wildcasecomparel(&my_reader, &ot_reader);
 		break;
 	}
-	return DeeInt_NewInt64(result);
+	return_reference(DeeInt_FromSign(result));
 err:
 	return NULL;
 }

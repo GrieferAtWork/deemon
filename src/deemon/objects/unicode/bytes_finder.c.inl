@@ -137,7 +137,7 @@ bfi_copy(BytesFindIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 bfi_setup(BytesFindIterator *__restrict self,
           BytesFind *__restrict find) {
 	self->bfi_find       = find;
@@ -150,7 +150,6 @@ bfi_setup(BytesFindIterator *__restrict self,
 	if (self->bfi_find_delta == 0 || find->bf_ovrlap)
 		self->bfi_find_delta = 1;
 	Dee_Incref(find);
-	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -160,7 +159,8 @@ bfi_init(BytesFindIterator *__restrict self,
 	DeeArg_Unpack1(err, argc, argv, "_BytesFindIterator", &find);
 	if (DeeObject_AssertTypeExact(find, &BytesFind_Type))
 		goto err;
-	return bfi_setup(self, find);
+	bfi_setup(self, find);
+	return 0;
 err:
 	return -1;
 }
@@ -172,7 +172,8 @@ bcfi_init(BytesFindIterator *__restrict self,
 	DeeArg_Unpack1(err, argc, argv, "_BytesCaseFindIterator", &find);
 	if (DeeObject_AssertTypeExact(find, &BytesCaseFind_Type))
 		goto err;
-	return bfi_setup(self, find);
+	bfi_setup(self, find);
+	return 0;
 err:
 	return -1;
 }
@@ -450,14 +451,10 @@ bf_iter(BytesFind *__restrict self) {
 	result = DeeObject_MALLOC(BytesFindIterator);
 	if unlikely(!result)
 		goto done;
-	if (bfi_setup(result, self))
-		goto err_r;
+	bfi_setup(result, self);
 	DeeObject_Init(result, &BytesFindIterator_Type);
 done:
 	return result;
-err_r:
-	DeeObject_FREE(result);
-	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF BytesFindIterator *DCALL
@@ -466,14 +463,10 @@ bcf_iter(BytesFind *__restrict self) {
 	result = DeeObject_MALLOC(BytesFindIterator);
 	if unlikely(!result)
 		goto done;
-	if (bfi_setup(result, self))
-		goto err_r;
+	bfi_setup(result, self);
 	DeeObject_Init(result, &BytesCaseFindIterator_Type);
 done:
 	return result;
-err_r:
-	DeeObject_FREE(result);
-	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL

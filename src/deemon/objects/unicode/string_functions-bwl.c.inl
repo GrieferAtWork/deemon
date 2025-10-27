@@ -561,7 +561,7 @@ LOCAL_memcasecmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 
 
 #ifdef LOCAL_fuzzy_compare
-PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) Dee_ssize_t DCALL
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) size_t DCALL
 LOCAL_fuzzy_compare(LOCAL_uchar_t const *lhs, size_t lhs_len,
                     LOCAL_uchar_t const *rhs, size_t rhs_len) {
 	size_t *v0, *v1, i, j, cost, temp;
@@ -596,19 +596,19 @@ LOCAL_fuzzy_compare(LOCAL_uchar_t const *lhs, size_t lhs_len,
 	temp = v1[rhs_len];
 	Dee_Freea(v0);
 	Dee_Freea(v1);
-	if (temp > SSIZE_MAX)
-		temp = SSIZE_MAX;
+	if (temp > (size_t)-2)
+		temp = (size_t)-2;
 	return temp;
 err_v0:
 	Dee_Freea(v0);
 err:
-	return -1;
+	return (size_t)-1;
 }
 #endif /* LOCAL_fuzzy_compare */
 
 
 #ifdef LOCAL_fuzzy_casecompare
-PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) Dee_ssize_t DCALL
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) size_t DCALL
 LOCAL_fuzzy_casecompare(LOCAL_uchar_t const *lhs, size_t lhs_len,
                         LOCAL_uchar_t const *rhs, size_t rhs_len) {
 	size_t *v0, *v1, i, j, cost, temp;
@@ -653,13 +653,13 @@ LOCAL_fuzzy_casecompare(LOCAL_uchar_t const *lhs, size_t lhs_len,
 	temp = v1[folded_rhs_len];
 	Dee_Freea(v0);
 	Dee_Freea(v1);
-	if (temp > SSIZE_MAX)
-		temp = SSIZE_MAX;
+	if (temp > (size_t)-2)
+		temp = (size_t)-2;
 	return temp;
 err_v0:
 	Dee_Freea(v0);
 err:
-	return -1;
+	return (size_t)-1;
 }
 #endif /* LOCAL_fuzzy_casecompare */
 
@@ -981,19 +981,7 @@ LOCAL_rfind_casematch(LOCAL_uchar_t const *scan_str, size_t scan_size,
 
 
 #ifdef LOCAL_wildcompare
-#if LOCAL_SIZEOF_CHAR == 1
-#define LOCAL_wildcompare_return_t DEE_wildcompareb_return_t
-#elif LOCAL_SIZEOF_CHAR == 2
-#define LOCAL_wildcompare_return_t DEE_wildcomparew_return_t
-#elif LOCAL_SIZEOF_CHAR == 4
-#define LOCAL_wildcompare_return_t DEE_wildcomparel_return_t
-#elif LOCAL_SIZEOF_CHAR == 8 && defined(DEE_wildcompareq_return_t)
-#define LOCAL_wildcompare_return_t DEE_wildcompareq_return_t
-#else /* LOCAL_SIZEOF_CHAR == ... */
-#define LOCAL_wildcompare_return_t int
-#endif /* LOCAL_SIZEOF_CHAR != ... */
-
-PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) LOCAL_wildcompare_return_t DCALL
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL
 LOCAL_wildcompare(LOCAL_uchar_t const *string, size_t string_length,
                   LOCAL_uchar_t const *pattern, size_t pattern_length) {
 	LOCAL_uchar_t card_post;
@@ -1009,10 +997,10 @@ LOCAL_wildcompare(LOCAL_uchar_t const *string, size_t string_length,
 					break;
 				++pattern;
 			}
-			return -(LOCAL_wildcompare_return_t)*pattern;
+			return -1;
 		}
 		if (pattern >= pattern_end)
-			return (LOCAL_wildcompare_return_t)*string; /* Pattern end doesn't match */
+			return 1; /* Pattern end doesn't match */
 		if (*pattern == (LOCAL_uchar_t)'*') {
 			/* Skip starts */
 			do {
@@ -1034,11 +1022,11 @@ LOCAL_wildcompare(LOCAL_uchar_t const *string, size_t string_length,
 #endif /* !LOCAL_TRANSFORM_IS_NOOP */
 				    ) {
 					/* Recursively check if the rest of the string and pattern match */
-					if (!LOCAL_wildcompare(string, (size_t)(string_end - string),
-					                       pattern, (size_t)(pattern_end - pattern)))
+					if (LOCAL_wildcompare(string, (size_t)(string_end - string),
+					                      pattern, (size_t)(pattern_end - pattern)) == 0)
 						return 0;
 				} else if (string >= string_end) {
-					return -(LOCAL_wildcompare_return_t)card_post; /* Wildcard suffix not found */
+					return -1; /* Wildcard suffix not found */
 				}
 			}
 		}
@@ -1055,11 +1043,10 @@ next:
 		}
 		break; /* mismatch */
 	}
-	return (LOCAL_wildcompare_return_t)(*string) -
-	       (LOCAL_wildcompare_return_t)(*pattern);
+	if ((LOCAL_uchar_t)*string < (LOCAL_uchar_t)*pattern)
+		return -1;
+	return 1;
 }
-
-#undef LOCAL_wildcompare_return_t
 #endif /* LOCAL_wildcompare */
 
 

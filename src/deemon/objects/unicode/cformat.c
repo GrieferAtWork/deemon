@@ -102,9 +102,11 @@ print_repr_precision(DeeObject *__restrict self, size_t length,
 			goto done;
 	}
 	if (DeeBytes_Check(self)) {
+		DeeBytes_IncUse(self);
 		temp = DeeFormat_QuoteBytes(printer, arg,
 		                            DeeBytes_DATA(self),
 		                            DeeBytes_SIZE(self));
+		DeeBytes_DecUse(self);
 	} else {
 		union dcharptr_const str;
 		str.ptr = DeeString_WSTR(self);
@@ -521,7 +523,7 @@ do_length_integer:
 				in_arg = (DeeObject *)&str_lpnullrp;
 				goto do_handle_string_for_percent_s;
 			} else if (DeeBytes_Check(in_arg)) {
-				str_length = DeeBytes_SIZE(in_arg);
+				str_length = DeeBytes_SIZE(in_arg); /* TODO: b_inuse_p */
 			} else {
 				if (DeeObject_AssertTypeExact(in_arg, &DeeString_Type))
 					goto err_m1;
@@ -609,10 +611,13 @@ err_subprinter:
 				}
 				uch = DeeString_GetChar(in_arg, 0);
 			} else if (DeeBytes_Check(in_arg)) {
+				DeeBytes_IncUse(in_arg);
 				if (DeeBytes_SIZE(in_arg) != 1) {
+					DeeBytes_DecUse(in_arg);
 					err_expected_single_character_string(in_arg);
 					goto err_m1;
 				}
+				DeeBytes_DecUse(in_arg);
 				uch = DeeBytes_DATA(in_arg)[0];
 			} else {
 				if (DeeObject_AsUInt32(in_arg, &uch))

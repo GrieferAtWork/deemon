@@ -267,22 +267,6 @@ struct unicode_foldreader {
 #define unicode_foldreader_initl(self, data, len) _unicode_foldreader_init(self, cp32, data, len)
 #define unicode_foldreader_empty(self) (!(self)->ufr_datalen && ((self)->ufr_idx >= (self)->ufr_len))
 
-#if __SIZEOF_INT__ >= 2
-#define DEE_wildcompareb_return_t int
-#else /* __SIZEOF_INT__ >= 2 */
-#define DEE_wildcompareb_return_t int16_t
-#endif /* __SIZEOF_INT__ < 2 */
-#if __SIZEOF_INT__ >= 4
-#define DEE_wildcomparew_return_t int
-#else /* __SIZEOF_INT__ >= 4 */
-#define DEE_wildcomparew_return_t int32_t
-#endif /* __SIZEOF_INT__ < 4 */
-#if __SIZEOF_INT__ >= 8
-#define DEE_wildcomparel_return_t int
-#else /* __SIZEOF_INT__ >= 8 */
-#define DEE_wildcomparel_return_t int64_t
-#endif /* __SIZEOF_INT__ < 8 */
-
 /* Case-insensitive string functions. */
 #ifdef __INTELLISENSE__
 PRIVATE ATTR_OUTS(1, 2) ATTR_INS(3, 4) uint8_t *DCALL dee_mempfilb(uint8_t *__restrict dst, size_t num_bytes, uint8_t const *__restrict src, size_t src_bytes);
@@ -324,13 +308,13 @@ PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL dee_memcasecmp
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) size_t DCALL dee_memcasecntb(uint8_t const *haystack, size_t haystack_length, uint8_t const *needle, size_t needle_length);
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) size_t DCALL dee_memcasecntw(uint16_t const *haystack, size_t haystack_length, uint16_t const *needle, size_t needle_length);
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) size_t DCALL dee_memcasecntl(uint32_t const *haystack, size_t haystack_length, uint32_t const *needle, size_t needle_length);
-PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) Dee_ssize_t DCALL dee_fuzzy_compareb(uint8_t const *lhs, size_t lhs_len, uint8_t const *rhs, size_t rhs_len);
-PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) Dee_ssize_t DCALL dee_fuzzy_comparew(uint16_t const *lhs, size_t lhs_len, uint16_t const *rhs, size_t rhs_len);
-PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) Dee_ssize_t DCALL dee_fuzzy_comparel(uint32_t const *lhs, size_t lhs_len, uint32_t const *rhs, size_t rhs_len);
-PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) Dee_ssize_t DCALL dee_fuzzy_casecompare_ascii(byte_t const *lhs, size_t lhs_len, byte_t const *rhs, size_t rhs_len);
-PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) Dee_ssize_t DCALL dee_fuzzy_casecompareb(uint8_t const *lhs, size_t lhs_len, uint8_t const *rhs, size_t rhs_len);
-PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) Dee_ssize_t DCALL dee_fuzzy_casecomparew(uint16_t const *lhs, size_t lhs_len, uint16_t const *rhs, size_t rhs_len);
-PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) Dee_ssize_t DCALL dee_fuzzy_casecomparel(uint32_t const *lhs, size_t lhs_len, uint32_t const *rhs, size_t rhs_len);
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) size_t DCALL dee_fuzzy_compareb(uint8_t const *lhs, size_t lhs_len, uint8_t const *rhs, size_t rhs_len);
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) size_t DCALL dee_fuzzy_comparew(uint16_t const *lhs, size_t lhs_len, uint16_t const *rhs, size_t rhs_len);
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) size_t DCALL dee_fuzzy_comparel(uint32_t const *lhs, size_t lhs_len, uint32_t const *rhs, size_t rhs_len);
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) size_t DCALL dee_fuzzy_casecompare_ascii(byte_t const *lhs, size_t lhs_len, byte_t const *rhs, size_t rhs_len);
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) size_t DCALL dee_fuzzy_casecompareb(uint8_t const *lhs, size_t lhs_len, uint8_t const *rhs, size_t rhs_len);
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) size_t DCALL dee_fuzzy_casecomparew(uint16_t const *lhs, size_t lhs_len, uint16_t const *rhs, size_t rhs_len);
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) size_t DCALL dee_fuzzy_casecomparel(uint32_t const *lhs, size_t lhs_len, uint32_t const *rhs, size_t rhs_len);
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL dee_strverscmpb(uint8_t const *lhs, size_t lhs_size, uint8_t const *rhs, size_t rhs_size);
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL dee_strverscmpw(uint16_t const *lhs, size_t lhs_size, uint16_t const *rhs, size_t rhs_size);
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL dee_strverscmpl(uint32_t const *lhs, size_t lhs_size, uint32_t const *rhs, size_t rhs_size);
@@ -352,10 +336,10 @@ PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) ATTR_INS(5, 6) byte_t co
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) ATTR_INS(5, 6) uint8_t const *DCALL dee_rfind_casematchb(uint8_t const *scan_str, size_t scan_size, uint8_t const *open_str, size_t open_size, uint8_t const *clos_str, size_t clos_size, size_t *p_match_length);
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) ATTR_INS(5, 6) uint16_t const *DCALL dee_rfind_casematchw(uint16_t const *scan_str, size_t scan_size, uint16_t const *open_str, size_t open_size, uint16_t const *clos_str, size_t clos_size, size_t *p_match_length);
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) ATTR_INS(5, 6) uint32_t const *DCALL dee_rfind_casematchl(uint32_t const *scan_str, size_t scan_size, uint32_t const *open_str, size_t open_size, uint32_t const *clos_str, size_t clos_size, size_t *p_match_length);
-PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) DEE_wildcompareb_return_t DCALL dee_wildcompareb(uint8_t const *string, size_t string_length, uint8_t const *pattern, size_t pattern_length);
-PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) DEE_wildcomparew_return_t DCALL dee_wildcomparew(uint16_t const *string, size_t string_length, uint16_t const *pattern, size_t pattern_length);
-PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) DEE_wildcomparel_return_t DCALL dee_wildcomparel(uint32_t const *string, size_t string_length, uint32_t const *pattern, size_t pattern_length);
-PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) DEE_wildcompareb_return_t DCALL dee_wildcasecompare_ascii(uint8_t const *string, size_t string_length, uint8_t const *pattern, size_t pattern_length);
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL dee_wildcompareb(uint8_t const *string, size_t string_length, uint8_t const *pattern, size_t pattern_length);
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL dee_wildcomparew(uint16_t const *string, size_t string_length, uint16_t const *pattern, size_t pattern_length);
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL dee_wildcomparel(uint32_t const *string, size_t string_length, uint32_t const *pattern, size_t pattern_length);
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL dee_wildcasecompare_ascii(uint8_t const *string, size_t string_length, uint8_t const *pattern, size_t pattern_length);
 PRIVATE WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL dee_wildcasecompareb(struct unicode_foldreader *__restrict string, struct unicode_foldreader *__restrict pattern);
 PRIVATE WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL dee_wildcasecomparew(struct unicode_foldreader *__restrict string, struct unicode_foldreader *__restrict pattern);
 PRIVATE WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL dee_wildcasecomparel(struct unicode_foldreader *__restrict string, struct unicode_foldreader *__restrict pattern);
@@ -385,14 +369,25 @@ typedef DeeStringObject String;
  * @param: p_end:   [1..1] Pointer to the "size_t end" given by the callers (may get adjusted)
  * @param: p_mylen: [1..1][in]  Pointer to the *full* length of the associated string
  *                        [out] Size of the effective sub-range (OUT(*p_end) - OUT(*p_start))
- * @param: Lempty_len: Name of a label to jump to when OUT(*p_mylen) would end up negative */
+ * @param: Lnegative_len: Name of a label to jump to when OUT(*p_mylen) would end up negative */
 #define CLAMP_SUBSTR(/*in*/ p_start, /*in|out*/ p_end,            \
-                     /*in|out*/ p_mylen, Lempty_len)              \
+                     /*in|out*/ p_mylen, Lnegative_len)           \
 	do {                                                          \
 		if likely(*(p_end) > *(p_mylen))                          \
 			*(p_end) = *(p_mylen);                                \
 		if unlikely(OVERFLOW_USUB(*(p_end), *(p_start), p_mylen)) \
-			goto Lempty_len;                                      \
+			goto Lnegative_len;                                   \
+	}	__WHILE0
+/* Same as `CLAMP_SUBSTR()', but accepts "Lempty_len" which is
+ * jumped to when OUT(*p_mylen) would end up negative, or zero. */
+#define CLAMP_SUBSTR_NONEMPTY(/*in*/ p_start, /*in|out*/ p_end, \
+                              /*in|out*/ p_mylen, Lempty_len)   \
+	do {                                                        \
+		if likely(*(p_end) > *(p_mylen))                        \
+			*(p_end) = *(p_mylen);                              \
+		if unlikely(*(p_start) >= *(p_end))                     \
+			goto Lempty_len;                                    \
+		*(p_mylen) = *(p_end) - *(p_start);                     \
 	}	__WHILE0
 
 /* Same as `CLAMP_SUBSTR()', but set `*p_mylen = 0' when the range

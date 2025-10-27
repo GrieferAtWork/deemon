@@ -108,6 +108,7 @@ INTDEF DeeTypeObject ReSubBytes_Type;
 	       (self)->rss_baseown = (baseown),              \
 	       Dee_Incref((self)->rss_baseown),              \
 	       (self)->rss_baseptr = (__BYTE_TYPE__ const *)(baseptr))
+#define ReSubBytes_InitBytes ReSubBytes_Init /* TODO: b_inuse_p */
 
 DECL_END
 
