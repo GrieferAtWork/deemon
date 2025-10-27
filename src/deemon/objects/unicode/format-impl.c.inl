@@ -452,7 +452,7 @@ err:
 #ifdef DEFINE_DeeString_Format
 		return_reference_(pattern); /* Can just re-return "pattern" as-is. */
 #elif defined(DEFINE_DeeString_FormatWStr)
-		return DeeString_NewUtf8(LOCAL_pattern, WSTR_LENGTH(LOCAL_pattern), STRING_ERROR_FIGNORE);
+		return DeeString_NewUtf8(LOCAL_pattern, LOCAL_pattern_length, STRING_ERROR_FIGNORE);
 #elif defined(DEFINE_DeeString_FormatPrinter)
 		return (*pattern_printer)(arg, LOCAL_pattern, LOCAL_pattern_length);
 #endif /* ... */
@@ -471,7 +471,7 @@ err:
 again_handle_brace:
 #ifdef DEFINE_DeeString_FormatPrinter
 	/* Make sure there is at least 1 more char after the '{' */
-	if likely((data.sfd_parser.sfp_iter + 1) >= data.sfd_parser.sfp_wend)
+	if unlikely((data.sfd_parser.sfp_iter + 1) >= data.sfd_parser.sfp_wend)
 		return err_invalid_char_after_lbrace_in_simple("");
 #endif /* DEFINE_DeeString_FormatPrinter */
 	temp = LOCAL_string_format_data_sprint(&data, LOCAL_pattern,

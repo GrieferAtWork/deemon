@@ -76,7 +76,7 @@ DECL_BEGIN
  * >>                                 'a'   // Insert `DeeObject_Str()' of next argument
  * >>                             )) |
  * >>                             // Insert `DeeObject_PrintFormatString()' of next argument
- * >>                             // The format string used cannot include other arguments.
+ * >>                             // The format string used CANNOT include other arguments.
  * >>                             (':' [TEXT...])
  * >>                         ]
  * >>                         '}'
@@ -86,7 +86,7 @@ DECL_BEGIN
  * >> ADVANCED_TEMPLATE ::= [TEXT...]
  * >>                       [   // Start of template argument
  * >>                           '{'
- * >>                           // NOTE: Text making up "ARGUMENT_EXPR" here are always interpreted as utf-8,
+ * >>                           // NOTE: Text making up "ARGUMENT_EXPR" here is always interpreted as utf-8,
  * >>                           //       even when the rest of the template string originates from Bytes.
  * >>                           ARGUMENT_EXPR
  * >>                           [
@@ -96,7 +96,7 @@ DECL_BEGIN
  * >>                                   'a'   // Insert `DeeObject_Str()' of "ARGUMENT_EXPR"
  * >>                               )) |
  * >>                               // Insert `DeeObject_PrintFormatString()' of "ARGUMENT_EXPR"
- * >>                               // The format string used is a recursive template string!
+ * >>                               // The format string used CAN include other arguments (it is parsed as a recursive template string)
  * >>                               // NOTE: Like with ARGUMENT_EXPR, this part is always interpreted as utf-8
  * >>                               (':' [ADVANCED_TEMPLATE...])
  * >>                           ]
@@ -214,7 +214,7 @@ PRIVATE ATTR_COLD int DCALL err_unmatched_lbrace_in_simple(void) {
 
 PRIVATE ATTR_COLD int DCALL err_unmatched_lbrace_in_advanced(void) {
 	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Unmatched '{' in simple advanced pattern");
+	                       "Unmatched '{' in advanced format pattern");
 }
 
 PRIVATE ATTR_COLD int DCALL err_unmatched_rbrace_in_simple(void) {
@@ -243,14 +243,12 @@ PRIVATE ATTR_COLD int DCALL err_invalid_char_after_lbrace_in_simple(char const *
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "Invalid character %.1q following `{' in simple format pattern",
 	                       ptr);
-
 }
 
 PRIVATE ATTR_COLD int DCALL err_invalid_char_after_expr_in_advanced(char const *ptr) {
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "Invalid character %.1q following `{<expr>' in advanced format pattern",
 	                       ptr);
-
 }
 
 PRIVATE ATTR_COLD int DCALL err_invalid_char_after_lbrace_exclaim_spec_in_simple(char spec, char const *ptr) {
