@@ -1428,8 +1428,7 @@ instance_super_tctor(DeeTypeObject *tp_self,
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
-	args = DeeObject_Call(func, 0, NULL);
-	Dee_Decref(func);
+	args = DeeObject_CallInherited(func, 0, NULL);
 	if unlikely(!args)
 		goto err;
 
@@ -1503,8 +1502,7 @@ instance_kwsuper_tctor(DeeTypeObject *tp_self,
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
-	args = DeeObject_Call(func, 0, NULL);
-	Dee_Decref(func);
+	args = DeeObject_CallInherited(func, 0, NULL);
 	if unlikely(!args)
 		goto err;
 
@@ -1589,8 +1587,7 @@ instance_super_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
-	args = DeeObject_Call(func, argc, argv);
-	Dee_Decref(func);
+	args = DeeObject_CallInherited(func, argc, argv);
 	if unlikely(!args)
 		goto err;
 
@@ -1664,8 +1661,7 @@ instance_kwsuper_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
-	args = DeeObject_Call(func, argc, argv);
-	Dee_Decref(func);
+	args = DeeObject_CallInherited(func, argc, argv);
 	if unlikely(!args)
 		goto err;
 
@@ -1912,8 +1908,7 @@ instance_builtin_super_tctor(DeeTypeObject *tp_self,
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
-	args = DeeObject_Call(func, 0, NULL);
-	Dee_Decref(func);
+	args = DeeObject_CallInherited(func, 0, NULL);
 	if unlikely(!args)
 		goto err;
 
@@ -1964,8 +1959,7 @@ instance_builtin_kwsuper_tctor(DeeTypeObject *tp_self,
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
-	args = DeeObject_Call(func, 0, NULL);
-	Dee_Decref(func);
+	args = DeeObject_CallInherited(func, 0, NULL);
 	if unlikely(!args)
 		goto err;
 
@@ -2028,8 +2022,7 @@ instance_builtin_super_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
-	args = DeeObject_Call(func, argc, argv);
-	Dee_Decref(func);
+	args = DeeObject_CallInherited(func, argc, argv);
 	if unlikely(!args)
 		goto err;
 
@@ -2080,8 +2073,7 @@ instance_builtin_kwsuper_tinit(DeeTypeObject *tp_self, DeeObject *__restrict sel
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
-	args = DeeObject_Call(func, argc, argv);
-	Dee_Decref(func);
+	args = DeeObject_CallInherited(func, argc, argv);
 	if unlikely(!args)
 		goto err;
 

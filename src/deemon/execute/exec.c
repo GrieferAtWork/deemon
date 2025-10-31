@@ -81,7 +81,6 @@ DeeExec_RunStream(DeeObject *source_stream,
                   DeeObject *default_symbols,
                   DeeObject *source_pathname,
                   DeeObject *module_name) {
-	DREF DeeObject *result;
 	DREF DeeObject *function;
 	function = DeeExec_CompileFunctionStream(source_stream,
 	                                         mode,
@@ -93,9 +92,7 @@ DeeExec_RunStream(DeeObject *source_stream,
 	                                         module_name);
 	if unlikely(!function)
 		goto err;
-	result = DeeObject_Call(function, argc, argv);
-	Dee_Decref(function);
-	return result;
+	return DeeObject_CallInherited(function, argc, argv);
 err:
 	return NULL;
 }

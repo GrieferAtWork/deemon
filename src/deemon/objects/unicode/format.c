@@ -265,7 +265,7 @@ PRIVATE ATTR_COLD int DCALL err_invalid_char_after_lbrace_exclaim_spec_in_advanc
 
 /* Return a pointer to the next '{' or '}' character.
  * If not found, return `NULL' instead. */
-PRIVATE WUNUSED char const *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) char const *DCALL
 find_next_brace(char const *str, char const *end) {
 	for (; str < end; ++str) {
 		if (*str == '{' || *str == '}')

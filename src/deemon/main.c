@@ -1361,12 +1361,9 @@ int main(int argc, char *argv[]) {
 				goto err_discard_compiler_errors;
 
 			/* With the root now open, invoke it using the system argument vector. */
-			user_module_args = Dee_GetArgv();
-			user_module_result = DeeObject_Call(user_module_main,
-			                                    DeeTuple_SIZE(user_module_args),
-			                                    DeeTuple_ELEM(user_module_args));
+			user_module_args   = Dee_GetArgv();
+			user_module_result = DeeObject_CallTupleInherited(user_module_main, user_module_args);
 			Dee_Decref(user_module_args);
-			Dee_Decref(user_module_main);
 			if unlikely(!user_module_result)
 				goto err;
 #if EXIT_SUCCESS != 0
@@ -1974,16 +1971,16 @@ exec_module_and_capture_stdout(DeeModuleObject *__restrict module) {
 	/* Open the root of the module. */
 	module_root = (DeeFunctionObject *)DeeModule_GetRoot((DeeObject *)module, true);
 	if unlikely(!module_root)
-		goto out;
+		goto err;
 	/* Create a new writer and set it as target for STDOUT */
 	new_stdout = DeeFile_OpenWriter();
 	if unlikely(!new_stdout)
-		goto out_root;
+		goto err_root;
 	old_stdout = DeeFile_SetStd(DEE_STDOUT, new_stdout);
 
 	/* Execute the module root. */
 	/* XXX: Maybe pass something more interesting through arguments? */
-	temp = DeeObject_Call((DeeObject *)module_root, 0, NULL);
+	temp = DeeObject_CallInherited((DeeObject *)module_root, 0, NULL);
 	if (temp) {
 		/* Pack together the printed string. */
 		result = (DREF DeeStringObject *)DeeFileWriter_GetString(new_stdout);
@@ -1996,10 +1993,11 @@ exec_module_and_capture_stdout(DeeModuleObject *__restrict module) {
 		Dee_Decref(old_stdout);
 	if (ITER_ISOK(new_stdout))
 		Dee_Decref(new_stdout);
-out_root:
-	Dee_Decref(module_root);
-out:
 	return result;
+err_root:
+	Dee_Decref(module_root);
+err:
+	return NULL;
 }
 
 #undef byte_t

@@ -288,10 +288,10 @@ DeeModule_GetSymbolStringLenHash(DeeModuleObject const *__restrict self,
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_GetAttrSymbol(DeeModuleObject *__restrict self,
                         struct module_symbol const *__restrict symbol) {
-	DREF DeeObject *result;
 	ASSERT(symbol >= self->mo_bucketv &&
 	       symbol <= self->mo_bucketv + self->mo_bucketm);
 	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
+		DREF DeeObject *result;
 read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
 		DeeModule_LockRead(self);
@@ -316,9 +316,7 @@ read_symbol:
 		}
 
 		/* Invoke the property callback. */
-		result = DeeObject_Call(callback, 0, NULL);
-		Dee_Decref(callback);
-		return result;
+		return DeeObject_CallInherited(callback, 0, NULL);
 	}
 
 	/* External symbol. */
@@ -353,8 +351,7 @@ read_symbol:
 			return Dee_BOUND_NO;
 
 		/* Invoke the property callback. */
-		callback_result = DeeObject_Call(callback, 0, NULL);
-		Dee_Decref(callback);
+		callback_result = DeeObject_CallInherited(callback, 0, NULL);
 		if likely(callback_result) {
 			Dee_Decref(callback_result);
 			return Dee_BOUND_YES;
@@ -522,8 +519,7 @@ DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
 				return err_module_cannot_delete_property_string(self, MODULE_SYMBOL_GETNAMESTR(symbol));
 
 			/* Invoke the property callback. */
-			temp = DeeObject_Call(callback, 0, NULL);
-			Dee_Decref(callback);
+			temp = DeeObject_CallInherited(callback, 0, NULL);
 			Dee_XDecref(temp);
 			return temp ? 0 : -1;
 		}
@@ -628,8 +624,7 @@ err_is_readonly:
 			DeeModule_LockEndWrite(self);
 			if unlikely(!callback)
 				return err_module_cannot_write_property_string(self, MODULE_SYMBOL_GETNAMESTR(symbol));
-			temp = DeeObject_Call(callback, 1, (DeeObject **)&value);
-			Dee_Decref(callback);
+			temp = DeeObject_CallInherited(callback, 1, (DeeObject **)&value);
 			Dee_XDecref(temp);
 			return temp ? 0 : -1;
 		}
@@ -1058,12 +1053,9 @@ begin_init:
 			goto err;
 
 		/* Call the module's main function with globally registered argv. */
-		argv        = Dee_GetArgv();
-		init_result = DeeObject_Call(init_function,
-		                             DeeTuple_SIZE(argv),
-		                             DeeTuple_ELEM(argv));
+		argv = Dee_GetArgv();
+		init_result = DeeObject_CallTupleInherited(init_function, argv);
 		Dee_Decref(argv);
-		Dee_Decref(init_function);
 		if unlikely(!init_result)
 			goto err;
 		Dee_Decref(init_result);

@@ -135,8 +135,8 @@ PRIVATE struct type_cmp modexportsiter_cmp = {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 module_it_getattr_symbol(DeeModuleObject *__restrict self,
                          struct module_symbol *__restrict symbol) {
-	DREF DeeObject *result;
 	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
+		DREF DeeObject *result;
 read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
 		DeeModule_LockRead(self);
@@ -147,6 +147,7 @@ read_symbol:
 			result = ITER_DONE; /* Unbound */
 		return result;
 	}
+
 	/* External symbol, or property. */
 	if (symbol->ss_flags & MODSYM_FPROPERTY) {
 		DREF DeeObject *callback;
@@ -157,10 +158,9 @@ read_symbol:
 		if unlikely(!callback)
 			return ITER_DONE;
 		/* Invoke the property callback. */
-		result = DeeObject_Call(callback, 0, NULL);
-		Dee_Decref(callback);
-		return result;
+		return DeeObject_CallInherited(callback, 0, NULL);
 	}
+
 	/* External symbol. */
 	ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
 	self = self->mo_importv[symbol->ss_extern.ss_impid];
@@ -352,8 +352,8 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeModule_GetAttrSymbol_asitem(ModuleExports *exports_map,
                                DeeModuleObject *self,
                                struct module_symbol *symbol) {
-	DREF DeeObject *result;
 	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
+		DREF DeeObject *result;
 read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
 		DeeModule_LockRead(self);
@@ -372,6 +372,7 @@ read_symbol:
 		}
 		return result;
 	}
+
 	/* External symbol, or property. */
 	if (symbol->ss_flags & MODSYM_FPROPERTY) {
 		DREF DeeObject *callback;
@@ -390,11 +391,11 @@ read_symbol:
 			}
 			return NULL;
 		}
+
 		/* Invoke the property callback. */
-		result = DeeObject_Call(callback, 0, NULL);
-		Dee_Decref(callback);
-		return result;
+		return DeeObject_CallInherited(callback, 0, NULL);
 	}
+
 	/* External symbol. */
 	ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
 	self = self->mo_importv[symbol->ss_extern.ss_impid];
@@ -404,8 +405,8 @@ read_symbol:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_TryGetAttrSymbol_asitem(DeeModuleObject *self,
                                   struct module_symbol *symbol) {
-	DREF DeeObject *result;
 	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
+		DREF DeeObject *result;
 read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
 		DeeModule_LockRead(self);
@@ -416,8 +417,10 @@ read_symbol:
 			return ITER_DONE;
 		return result;
 	}
+
 	/* External symbol, or property. */
 	if (symbol->ss_flags & MODSYM_FPROPERTY) {
+		DREF DeeObject *result;
 		DREF DeeObject *callback;
 		DeeModule_LockRead(self);
 		callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_GET];
@@ -425,9 +428,9 @@ read_symbol:
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback)
 			return ITER_DONE;
+
 		/* Invoke the property callback. */
-		result = DeeObject_Call(callback, 0, NULL);
-		Dee_Decref(callback);
+		result = DeeObject_CallInherited(callback, 0, NULL);
 		if unlikely(!result) {
 			if (DeeError_Catch(&DeeError_UnboundAttribute) ||
 			    DeeError_Catch(&DeeError_UnboundLocal) ||
@@ -436,6 +439,7 @@ read_symbol:
 		}
 		return result;
 	}
+
 	/* External symbol. */
 	ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
 	self = self->mo_importv[symbol->ss_extern.ss_impid];
@@ -445,7 +449,6 @@ read_symbol:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_BoundAttrSymbol_asitem(DeeModuleObject *self,
                                  struct module_symbol *symbol) {
-	DREF DeeObject *result;
 	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
 read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
@@ -454,6 +457,7 @@ read_symbol:
 
 	/* External symbol, or property. */
 	if (symbol->ss_flags & MODSYM_FPROPERTY) {
+		DREF DeeObject *result;
 		DREF DeeObject *callback;
 		DeeModule_LockRead(self);
 		callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_GET];
@@ -461,9 +465,9 @@ read_symbol:
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback)
 			return Dee_BOUND_NO;
+
 		/* Invoke the property callback. */
-		result = DeeObject_Call(callback, 0, NULL);
-		Dee_Decref(callback);
+		result = DeeObject_CallInherited(callback, 0, NULL);
 		if (result) {
 			Dee_Decref(callback);
 			return Dee_BOUND_YES;
@@ -474,6 +478,7 @@ read_symbol:
 			return Dee_BOUND_NO;
 		return Dee_BOUND_ERR;
 	}
+
 	/* External symbol. */
 	ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
 	self = self->mo_importv[symbol->ss_extern.ss_impid];

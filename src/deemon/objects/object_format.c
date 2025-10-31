@@ -286,17 +286,17 @@ check_attribute_error:
 				goto check_attribute_error;
 call_format_function:
 			if (format_str_obj) {
-				callback_result = DeeObject_Call(format_function, 1, &format_str_obj);
+				callback_result = DeeObject_CallInherited(format_function, 1, &format_str_obj);
 			} else {
 				format_str_obj = DeeString_NewUtf8(format_str, format_len, STRING_ERROR_FIGNORE);
 				if unlikely(!format_str_obj) {
 					callback_result = NULL;
+					Dee_Decref(format_function);
 				} else {
-					callback_result = DeeObject_Call(format_function, 1, &format_str_obj);
+					callback_result = DeeObject_CallInherited(format_function, 1, &format_str_obj);
 					Dee_Decref(format_str_obj);
 				}
 			}
-			Dee_Decref(format_function);
 			if unlikely(!callback_result)
 				goto err;
 			result = DeeObject_Print(callback_result, printer, arg);

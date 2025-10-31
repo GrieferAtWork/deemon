@@ -396,10 +396,9 @@ not_a_cast:
 			/* Handle case #0 */
 			JITLexer_Yield(self);
 #ifdef JIT_EVAL
-			result = DeeObject_Call(lhs, 0, NULL);
+			result = DeeObject_CallInherited(lhs, 0, NULL);
 			if unlikely(!result)
 				JITLexer_ErrorTrace(self, pos);
-			Dee_Decref(lhs);
 #else /* JIT_EVAL */
 			result = 0;
 #endif /* JIT_EVAL */
@@ -538,9 +537,8 @@ do_a_cast:
 #ifdef JIT_EVAL
 		if (ISERR(merge))
 			goto err_lhs;
-		result = DeeObject_Call(lhs, 1, (DeeObject **)&merge);
+		result = DeeObject_CallInherited(lhs, 1, (DeeObject **)&merge);
 		Dee_Decref(merge);
-		Dee_Decref(lhs);
 #else /* JIT_EVAL */
 		result = 0;
 #endif /* !JIT_EVAL */
@@ -2232,11 +2230,10 @@ err_start_expr:
 			LOAD_LVALUE(rhs, err_r);
 			{
 				DREF DeeObject *merge;
-				merge = DeeObject_Call(lhs, 1, &rhs);
+				merge = DeeObject_CallInherited(lhs, 1, &rhs);
 				Dee_Decref(rhs);
 				if unlikely(!merge)
-					goto err_r;
-				Dee_Decref(lhs);
+					goto err;
 				lhs = merge;
 			}
 #endif /* JIT_EVAL */

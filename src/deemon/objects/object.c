@@ -1908,9 +1908,7 @@ object_call(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack1(err, argc, argv, "__call__", &args_tuple);
 	if (DeeObject_AssertTypeExact(args_tuple, &DeeTuple_Type))
 		goto err;
-	return DeeObject_Call(self,
-	                      DeeTuple_SIZE(args_tuple),
-	                      DeeTuple_ELEM(args_tuple));
+	return DeeObject_CallTuple(self, args_tuple);
 err:
 	return NULL;
 }
@@ -1922,9 +1920,7 @@ object_thiscall(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack1Or2(err, argc, argv, "__thiscall__", &this_arg, &args_tuple);
 	if (DeeObject_AssertTypeExact(args_tuple, &DeeTuple_Type))
 		goto err;
-	return DeeObject_ThisCall(self, this_arg,
-	                          DeeTuple_SIZE(args_tuple),
-	                          DeeTuple_ELEM(args_tuple));
+	return DeeObject_ThisCallTuple(self, this_arg, args_tuple);
 err:
 	return NULL;
 }
