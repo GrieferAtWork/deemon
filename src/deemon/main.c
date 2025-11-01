@@ -1160,7 +1160,7 @@ int main(int argc, char *argv[]) {
 
 	/* TODO: Make Dict and RoDict sensitive to item ordering
 	 *       -> `{ foo: "bar", bar: "foo" }' should on some level
-	 *          be destinct from `{ bar: "foo", foo: "bar" }' */
+	 *          be distinct from `{ bar: "foo", foo: "bar" }' */
 	/* TODO: Using type caches, add the ability for volatile extensions
 	 *       to available attributes, allowing user-code to extend the
 	 *       functionality available through builtin types.
@@ -1867,10 +1867,9 @@ PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2, 3)) char *DCALL
 compare_escaped_rev(char const *lf_escaped_text_end,
                     char const *other_text_end,
                     char const *other_text_start) {
-	char ch, escape_ch;
 	while (other_text_end > other_text_start) {
-		ch        = *--other_text_end;
-		escape_ch = *--lf_escaped_text_end;
+		char ch = *--other_text_end;
+		char escape_ch = *--lf_escaped_text_end;
 		if (escape_ch == ch)
 			continue;
 		/* Check for escaped line-feeds. */

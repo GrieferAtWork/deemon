@@ -790,7 +790,7 @@ dee_stresep(char **stringp, char const *delim, int escape) {
 #define CONFIG_HAVE_strtok_r
 #undef strtok_r
 #define strtok_r dee_strtok_r
-LOCAL ATTR_PURE NONNULL((1, 2, 3)) char *
+LOCAL ATTR_PURE NONNULL((2, 3)) char *
 dee_strtok_r(char *str, char const *delim, char **save_ptr) {
 	char *end;
 	if (!str)

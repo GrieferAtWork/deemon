@@ -2157,7 +2157,7 @@ typedef struct {
  * CAUTION: WILL OVERRIDE WHATEVER WAS IN "dict" BEFORE!!! */
 #define DictBuffer_IntoDict(self, dict) \
 	memcpyp(Dict_AsDictBuffer(dict), (self)->db_data, _DictBuffer_NWORDS_WITHOUT_LOCK)
-	
+
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dict_assign(Dict *self, DeeObject *seq) {

@@ -43,6 +43,7 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/types.h>
 #include <deemon/variant.h>
 
 #include <hybrid/int128.h>
