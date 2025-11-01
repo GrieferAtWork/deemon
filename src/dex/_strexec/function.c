@@ -914,8 +914,8 @@ err_argc:
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-compare_objtabs(JITObjectTable *__restrict a,
-                JITObjectTable *__restrict b) {
+compare_objtabs_eq(JITObjectTable *__restrict a,
+                   JITObjectTable *__restrict b) {
 	size_t i;
 	for (i = 0; i <= a->ot_mask; ++i) {
 		if (!ITER_ISOK(a->ot_list[i].oe_namestr)) {
@@ -937,7 +937,7 @@ compare_objtabs(JITObjectTable *__restrict a,
 				if (a->ot_list[i].oe_value != b->ot_list[i].oe_value) {
 					int temp = DeeObject_TryCompareEq(a->ot_list[i].oe_value,
 					                                  b->ot_list[i].oe_value);
-					if unlikely(temp != 0)
+					if unlikely(temp != Dee_COMPARE_EQ)
 						return temp;
 				}
 			} else {
@@ -946,9 +946,9 @@ compare_objtabs(JITObjectTable *__restrict a,
 			}
 		}
 	}
-	return 0;
+	return Dee_COMPARE_EQ;
 nope:
-	return 1;
+	return Dee_COMPARE_NE;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
@@ -959,9 +959,9 @@ jit_compare_tokens(unsigned char const *lhs_start, unsigned char const *lhs_end,
 	JITSmallLexer_Start(&rhs, rhs_start, rhs_end);
 	while (lhs.jl_tok != TOK_EOF && rhs.jl_tok != TOK_EOF) {
 		if (lhs.jl_tok > rhs.jl_tok)
-			return 1;
+			return Dee_COMPARE_GR;
 		if (lhs.jl_tok < rhs.jl_tok)
-			return -1;
+			return Dee_COMPARE_LO;
 		switch (lhs.jl_tok) {
 
 		case JIT_KEYWORD:
@@ -979,9 +979,9 @@ jit_compare_tokens(unsigned char const *lhs_start, unsigned char const *lhs_end,
 			                 JITLexer_TokPtr(&rhs),
 			                 common);
 			if (cmp != 0)
-				return cmp;
+				return Dee_CompareFromDiff(cmp);
 			if (lhs_len != rhs_len)
-				return lhs_len < rhs_len ? -1 : 1;
+				return Dee_CompareNe(lhs_len, rhs_len);
 		}	break;
 
 		default: break;
@@ -1038,7 +1038,7 @@ jf_compare_eq(JITFunction *a, JITFunction *b) {
 		if (!a->jf_globals || !b->jf_globals)
 			goto nope;
 		temp = DeeObject_TryCompareEq(a->jf_globals, b->jf_globals);
-		if (temp != 0)
+		if (temp != Dee_COMPARE_EQ)
 			goto done_temp;
 	}
 	if (a->jf_impbase != b->jf_impbase) {
@@ -1046,7 +1046,7 @@ jf_compare_eq(JITFunction *a, JITFunction *b) {
 			goto nope;
 		temp = DeeObject_TryCompareEq((DeeObject *)a->jf_impbase,
 		                              (DeeObject *)b->jf_impbase);
-		if (temp != 0)
+		if (temp != Dee_COMPARE_EQ)
 			goto done_temp;
 	}
 	if (a->jf_import != b->jf_import) {
@@ -1054,19 +1054,19 @@ jf_compare_eq(JITFunction *a, JITFunction *b) {
 			goto nope;
 		temp = DeeObject_TryCompareEq(a->jf_import,
 		                              b->jf_import);
-		if (temp != 0)
+		if (temp != Dee_COMPARE_EQ)
 			goto done_temp;
 	}
-	temp = compare_objtabs(&a->jf_args, &b->jf_args);
-	if (temp != 0)
+	temp = compare_objtabs_eq(&a->jf_args, &b->jf_args);
+	if (temp != Dee_COMPARE_EQ)
 		goto done_temp;
-	temp = compare_objtabs(&a->jf_refs, &b->jf_refs);
-	if (temp != 0)
+	temp = compare_objtabs_eq(&a->jf_refs, &b->jf_refs);
+	if (temp != Dee_COMPARE_EQ)
 		goto done_temp;
 yes:
-	return 0;
+	return Dee_COMPARE_EQ;
 nope:
-	return 1;
+	return Dee_COMPARE_NE;
 done_temp:
 	return temp;
 err:

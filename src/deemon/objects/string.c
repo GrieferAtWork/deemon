@@ -945,11 +945,7 @@ compare_string_bytes(String *__restrict lhs,
 	}
 
 	/* If string contents are identical, leave off by comparing their lengths. */
-	if (lhs_len == rhs_len)
-		return 0;
-	if (lhs_len < rhs_len)
-		return -1;
-	return 1;
+	return Dee_Compare(lhs_len, rhs_len);
 }
 
 #ifndef CONFIG_HAVE_memcmpw
@@ -1140,11 +1136,7 @@ compare_strings(String *lhs, String *rhs) {
 	}
 
 	/* If string contents are identical, leave off by comparing their lengths. */
-	if (lhs_len == rhs_len)
-		return 0;
-	if (lhs_len < rhs_len)
-		return -1;
-	return 1;
+	return Dee_Compare(lhs_len, rhs_len);
 }
 
 
@@ -1168,14 +1160,14 @@ string_compare_eq(String *lhs, DeeObject *rhs) {
 	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
 	if likely(tp_rhs == &DeeString_Type) {
 		if (lhs == (String *)rhs)
-			return 0;
+			return Dee_COMPARE_EQ;
 		if (DeeString_Hash((DeeObject *)lhs) !=
 		    DeeString_Hash((DeeObject *)rhs))
-			return 1;
+			return Dee_COMPARE_NE;
 		return compare_strings(lhs, (String *)rhs);
 	}
 	if likely(tp_rhs == &DeeBytes_Type)
-		return !string_eq_bytes(lhs, (DeeBytesObject *)rhs);
+		return Dee_COMPARE_FROMBOOL(string_eq_bytes(lhs, (DeeBytesObject *)rhs));
 	DeeObject_TypeAssertFailed2(rhs, &DeeString_Type, &DeeBytes_Type);
 	return Dee_COMPARE_ERR;
 }
@@ -1185,15 +1177,15 @@ string_trycompare_eq(String *lhs, DeeObject *rhs) {
 	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
 	if likely(tp_rhs == &DeeString_Type) {
 		if (lhs == (String *)rhs)
-			return 0;
+			return Dee_COMPARE_EQ;
 		if (DeeString_Hash((DeeObject *)lhs) !=
 		    DeeString_Hash((DeeObject *)rhs))
-			return 1;
+			return Dee_COMPARE_NE;
 		return compare_strings(lhs, (String *)rhs);
 	}
 	if likely(tp_rhs == &DeeBytes_Type)
-		return !string_eq_bytes(lhs, (DeeBytesObject *)rhs);
-	return 1;
+		return Dee_COMPARE_FROMBOOL(string_eq_bytes(lhs, (DeeBytesObject *)rhs));
+	return Dee_COMPARE_NE;
 }
 
 
@@ -1267,15 +1259,16 @@ string_compare_seq(String *lhs, DeeObject *rhs) {
 	foreach_status = DeeObject_Foreach(rhs, &string_compare_seq_cb, &data);
 	ASSERT(foreach_status == 0 || foreach_status == -1 ||
 	       foreach_status == -2 || foreach_status == -3);
-	if unlikely(foreach_status == -1)
-		goto err;
-	if unlikely(foreach_status == -2)
-		return -1; /* lhs < rhs */
-	if unlikely(foreach_status == -3)
-		return 1; /* lhs > rhs */
+	switch (foreach_status) {
+	case 0: break;
+	case -1: goto err;
+	case -2: return Dee_COMPARE_LO; /* lhs < rhs */
+	case -3: return Dee_COMPARE_GR; /* lhs > rhs */
+	default: __builtin_unreachable();
+	}
 	if (data.scsd_index < WSTR_LENGTH(data.scsd_wstr))
-		return 1; /* lhs > rhs */
-	return 0;
+		return Dee_COMPARE_GR; /* lhs > rhs */
+	return Dee_COMPARE_EQ;
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -1300,14 +1293,14 @@ string_mh_seq_compare_eq(String *lhs, DeeObject *rhs) {
 	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
 	if likely(tp_rhs == &DeeString_Type) {
 		if (lhs == (String *)rhs)
-			return 0;
+			return Dee_COMPARE_EQ;
 		if (DeeString_Hash((DeeObject *)lhs) !=
 		    DeeString_Hash((DeeObject *)rhs))
-			return 1;
+			return Dee_COMPARE_NE;
 		return compare_strings(lhs, (String *)rhs);
 	}
 	if likely(tp_rhs == &DeeBytes_Type)
-		return !string_eq_bytes(lhs, (DeeBytesObject *)rhs);
+		return Dee_COMPARE_FROMBOOL(string_eq_bytes(lhs, (DeeBytesObject *)rhs));
 	return string_compare_seq(lhs, rhs);
 }
 
@@ -1316,16 +1309,16 @@ string_mh_seq_trycompare_eq(String *lhs, DeeObject *rhs) {
 	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
 	if likely(tp_rhs == &DeeString_Type) {
 		if (lhs == (String *)rhs)
-			return 0;
+			return Dee_COMPARE_EQ;
 		if (DeeString_Hash((DeeObject *)lhs) !=
 		    DeeString_Hash((DeeObject *)rhs))
-			return 1;
+			return Dee_COMPARE_NE;
 		return compare_strings(lhs, (String *)rhs);
 	}
 	if likely(tp_rhs == &DeeBytes_Type)
-		return !string_eq_bytes(lhs, (DeeBytesObject *)rhs);
+		return Dee_COMPARE_FROMBOOL(string_eq_bytes(lhs, (DeeBytesObject *)rhs));
 	if (!DeeType_HasNativeOperator(tp_rhs, foreach))
-		return 1;
+		return Dee_COMPARE_NE;
 	return string_compare_seq(lhs, rhs);
 }
 

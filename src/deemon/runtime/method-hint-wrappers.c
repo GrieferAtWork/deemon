@@ -1568,10 +1568,10 @@ DeeMA___set_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *con
 	DeeArg_Unpack1(err, argc, argv, "__set_compare_eq__", &args.rhs);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_compare_eq))(self, args.rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if unlikely(Dee_COMPARE_ISERR(result))
 		goto err;
 	/* We always return "bool" here, but user-code is also allowed to return "int" */
-	return_bool(result == 0);
+	return_bool(Dee_COMPARE_ISEQ(result));
 err:
 	return NULL;
 }}
@@ -1979,10 +1979,10 @@ DeeMA___map_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *con
 	DeeArg_Unpack1(err, argc, argv, "__map_compare_eq__", &args.rhs);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_compare_eq))(self, args.rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if unlikely(Dee_COMPARE_ISERR(result))
 		goto err;
 	/* We always return "bool" here, but user-code is also allowed to return "int" */
-	return_bool(result == 0);
+	return_bool(Dee_COMPARE_ISEQ(result));
 err:
 	return NULL;
 }}

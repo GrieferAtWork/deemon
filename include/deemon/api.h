@@ -91,11 +91,13 @@
 #define _CRT_NONSTDC_NO_WARNINGS   1
 #define _CRT_DECLARE_NONSTDC_NAMES 1
 
+#ifndef __DEEMON__
 #include <__stdinc.h> /* __CC__ */
 
 #if defined(__CC__) && !defined(__INTELLISENSE__)
 #include <stddef.h>
 #endif /* __CC__ && !__INTELLISENSE__ */
+#endif /* !__DEEMON__ */
 
 #ifndef __has_include
 #define __NO_has_include 1
@@ -119,6 +121,7 @@
 #define DEE_VERSION_COMPILER 200
 #define DEE_VERSION_REVISION 0
 
+#ifndef __DEEMON__
 #include <hybrid/compiler.h> /* TODO: Get rid of this include (<__stdinc.h> is fine, but this one
                               *       clobbers too much of the global namespace and can break compat
                               *       with 3rd party code that uses identifiers defined here) */
@@ -134,6 +137,7 @@
 #include <crtdbg.h>
 #endif /* _CRTDBG_MAP_ALLOC && CONFIG_HAVE_CRTDBG_H && !NDEBUG */
 #endif /* __CC__ && !__INTELLISENSE__ */
+#endif /* !__DEEMON__ */
 
 
 /* Disable some problematic compiler warnings when DEE_SOURCE is defined.

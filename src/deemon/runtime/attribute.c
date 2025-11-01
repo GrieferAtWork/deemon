@@ -338,9 +338,10 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
  * that does not exist at all. This function will return `1' (true) for the former,
  * but `0' (false) for the later. During normal attribute access, this difference
  * is reflected by the type of exception: `UnboundAttribute' and `AttributeError'.
- * @return: >  0: Attribute exists
  * @return: == 0: Attribute doesn't exist
- * @return: <  0: An error was thrown. */
+ * @return: > 0:  Attribute exists
+ * @return: < 0:  An error was thrown
+ * HINT: Use `Dee_HAS_IS*' to test return value */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_HasAttrString)(DeeObject *__restrict self,
                                 char const *__restrict attr) {

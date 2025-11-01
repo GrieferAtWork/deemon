@@ -683,7 +683,7 @@ ddi_hash(DeeDDIObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ddi_compare_eq_impl(DeeDDIObject *self, DeeDDIObject *other) {
 	if (self == other)
-		return 0;
+		return Dee_COMPARE_EQ;
 	if (self->d_ddisize != other->d_ddisize)
 		goto nope;
 	if (self->d_nstring != other->d_nstring)
@@ -706,9 +706,9 @@ ddi_compare_eq_impl(DeeDDIObject *self, DeeDDIObject *other) {
 		goto nope;
 	if (bcmp(&self->d_start, &other->d_start, self->d_ddisize + sizeof(struct ddi_regs)) != 0)
 		goto nope;
-	return 0;
+	return Dee_COMPARE_EQ;
 nope:
-	return 1;
+	return Dee_COMPARE_NE;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -723,7 +723,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ddi_trycompare_eq(DeeDDIObject *self, DeeDDIObject *other) {
 	if (!DeeObject_InstanceOf(other, &DeeDDI_Type))
-		return 1;
+		return Dee_COMPARE_NE;
 	return ddi_compare_eq_impl(self, other);
 }
 

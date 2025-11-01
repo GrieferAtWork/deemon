@@ -24,10 +24,10 @@
 [[alias(Mapping.equals)]]
 __map_compare_eq__(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?X2?Dbool?Dint {
 	int result = CALL_DEPENDENCY(map_operator_compare_eq, self, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if unlikely(Dee_COMPARE_ISERR(result))
 		goto err;
 	/* We always return "bool" here, but user-code is also allowed to return "int" */
-	return_bool(result == 0);
+	return_bool(Dee_COMPARE_ISEQ(result));
 err:
 	return NULL;
 }
@@ -48,7 +48,7 @@ __map_compare_eq__.map_operator_compare_eq([[nonnull]] DeeObject *lhs,
 	result = DeeObject_BoolInherited(cmp_ob);
 	if unlikely(result < 0)
 		goto err;
-	return result ? 0 : 1;
+	return Dee_COMPARE_FROMBOOL(result);
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -60,7 +60,7 @@ err:
 	result = DeeObject_BoolInherited(cmp_ob);
 	if unlikely(result < 0)
 		goto err;
-	return result;
+	return Dee_COMPARE_FROM_NOT_EQUALS(result);
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -74,13 +74,13 @@ err:
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
-		return 1; /* "rhs" is missing some element of "lhs", or has a different value for it */
+		return Dee_COMPARE_NE; /* "rhs" is missing some element of "lhs", or has a different value for it */
 	rhs_size = DeeObject_InvokeMethodHint(set_operator_size, rhs);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status != rhs_size)
-		return 1; /* Maps have different sizes */
-	return 0;
+		return Dee_COMPARE_NE; /* Maps have different sizes */
+	return Dee_COMPARE_EQ;
 err:
 	return Dee_COMPARE_ERR;
 }} {
@@ -91,15 +91,11 @@ err:
 		goto err;
 	if (DeeBool_Check(resultob)) {
 		Dee_DecrefNokill(resultob);
-		return DeeBool_IsTrue(resultob) ? 0 : 1;
+		return Dee_COMPARE_FROMBOOL(DeeBool_IsTrue(resultob));
 	}
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
-	if (DeeInt_IsZero(resultob)) {
-		result = 0;
-	} else {
-		result = 1;
-	}
+	result = Dee_COMPARE_FROMBOOL(DeeInt_IsZero(resultob));
 	Dee_Decref(resultob);
 	return result;
 err_resultob:
@@ -130,16 +126,16 @@ map_operator_compare_eq = {
 __map_compare_eq__.map_operator_trycompare_eq([[nonnull]] DeeObject *lhs,
                                               [[nonnull]] DeeObject *rhs)
 %{unsupported({
-	return 1;
+	return Dee_COMPARE_NE;
 })}
 %{$empty = "default__seq_operator_trycompare_eq__empty"}
 %{using map_operator_compare_eq: {
 	int result = CALL_DEPENDENCY(map_operator_compare_eq, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR) {
+	if unlikely(Dee_COMPARE_ISERR(result)) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))
-			result = -1;
+			result = Dee_COMPARE_NE;
 	}
 	return result;
 }} = $with__map_operator_compare_eq;
@@ -172,9 +168,9 @@ __map_eq__.map_operator_eq([[nonnull]] DeeObject *lhs,
 %{$empty = "$with__map_operator_compare_eq"}
 %{$with__map_operator_compare_eq = {
 	int result = CALL_DEPENDENCY(map_operator_compare_eq, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if unlikely(Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result == 0);
+	return_bool(Dee_COMPARE_ISEQ(result));
 err:
 	return NULL;
 }} {
@@ -203,7 +199,7 @@ __map_ne__.map_operator_ne([[nonnull]] DeeObject *lhs,
 %{$empty = "$with__map_operator_compare_eq"}
 %{$with__map_operator_compare_eq = {
 	int result = CALL_DEPENDENCY(map_operator_compare_eq, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if unlikely(Dee_COMPARE_ISERR(result))
 		goto err;
 	return_bool(result != 0);
 err:

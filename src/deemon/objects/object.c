@@ -2251,7 +2251,7 @@ object_hasattr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	result = DeeObject_HasAttr(self, name);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -3666,9 +3666,9 @@ impl_type_hasprivateattribute_string_hash(DeeTypeObject *__restrict self,
 		    DeeType_HasMemberAttrStringHash(self, self, name_str, name_hash))
 			goto found;
 	}
-	return 0;
+	return false;
 found:
-	return 1;
+	return true;
 }
 
 
@@ -4443,11 +4443,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 type_bound_module(DeeTypeObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeType_GetModule(self);
-	if likely(result) {
-		Dee_Decref_unlikely(result);
-		return 1;
-	}
-	return 0;
+	Dee_XDecref_unlikely(result);
+	return Dee_BOUND_FROMBOOL(result != NULL);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

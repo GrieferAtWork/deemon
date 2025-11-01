@@ -1704,8 +1704,8 @@ default__seq_operator_hasitem__with__seq_operator_hasitem_index(DeeObject *self,
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_hasitem_index))(self, index_value);
 err:
 	if (DeeError_Catch(&DeeError_IntegerOverflow))
-		return 0;
-	return -1;
+		return Dee_HAS_NO;
+	return Dee_HAS_ERR;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -1713,11 +1713,11 @@ default__seq_operator_hasitem__with__seq_operator_getitem(DeeObject *self, DeeOb
 	DREF DeeObject *value = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem))(self, index);
 	if (value) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_HAS_YES;
 	}
 	if (DeeError_Catch(&DeeError_IndexError))
-		return 0;
-	return -1;
+		return Dee_HAS_NO;
+	return Dee_HAS_ERR;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -1730,7 +1730,7 @@ default__seq_operator_hasitem__with__seq_operator_sizeob(DeeObject *self, DeeObj
 	Dee_Decref(sizeob);
 	return result;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 #ifndef DEFINED_default_bounditem_with_seq_enumerate
@@ -1754,7 +1754,7 @@ default__seq_operator_hasitem__with__seq_enumerate(DeeObject *self, DeeObject *i
 	Dee_ssize_t status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate))(self, &default_bounditem_with_seq_enumerate_cb, (void *)index);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
 	if (status == -3 || status == -2)
-		return 1;
+		return Dee_HAS_YES;
 	return (int)status; /* 0 (index doesn't exist) or -1 (error) */
 }
 
@@ -1775,11 +1775,11 @@ default__seq_operator_hasitem_index__with__seq_operator_getitem_index(DeeObject 
 	DREF DeeObject *value = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem_index))(self, index);
 	if (value) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_HAS_YES;
 	}
 	if (DeeError_Catch(&DeeError_IndexError))
-		return 0;
-	return -1;
+		return Dee_HAS_NO;
+	return Dee_HAS_ERR;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -1787,9 +1787,9 @@ default__seq_operator_hasitem_index__with__seq_operator_size(DeeObject *__restri
 	size_t seqsize = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	if unlikely(seqsize == (size_t)-1)
 		goto err;
-	return index < seqsize ? 1 : 0;
+	return Dee_HAS_FROMBOOL(index < seqsize);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 #ifndef DEFINED_default_bounditem_index_with_seq_enumerate_index
@@ -1810,9 +1810,9 @@ default__seq_operator_hasitem_index__with__seq_enumerate_index(DeeObject *__rest
 	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_bounditem_index_with_seq_enumerate_index_cb, (void *)(uintptr_t)index, index, end_index);
 	ASSERT(status == -4 || status == -3 || status == -2 || status == -1 || status == 0);
 	if (status == -2)
-		return 0;
+		return Dee_HAS_NO;
 	if (status == -4 || status == -3)
-		return 1;
+		return Dee_HAS_YES;
 	return (int)status; /* 0 (empty; aka: index doesn't exist) or -1 (error) */
 }
 
@@ -1856,11 +1856,6 @@ default__seq_operator_bounditem__with__seq_operator_getitem(DeeObject *self, Dee
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_operator_bounditem__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(index)) {
-	return Dee_BOUND_MISSING;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_operator_bounditem__with__seq_enumerate(DeeObject *self, DeeObject *index) {
 	Dee_ssize_t status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate))(self, &default_bounditem_with_seq_enumerate_cb, (void *)index);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
@@ -1898,11 +1893,6 @@ default__seq_operator_bounditem_index__with__seq_operator_getitem_index(DeeObjec
 	if (DeeError_Catch(&DeeError_IndexError))
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-default__seq_operator_bounditem_index__empty(DeeObject *__restrict UNUSED(self), size_t UNUSED(index)) {
-	return Dee_BOUND_MISSING;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -3381,11 +3371,11 @@ default__seq_operator_compare__with_callattr_compare(DeeObject *lhs, DeeObject *
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
 	if (DeeInt_IsZero(resultob)) {
-		result = 0;
+		result = Dee_COMPARE_EQ;
 	} else if (DeeInt_IsNeg(resultob)) {
-		result = -1;
+		result = Dee_COMPARE_LO;
 	} else {
-		result = 1;
+		result = Dee_COMPARE_GR;
 	}
 	Dee_Decref(resultob);
 	return result;
@@ -3405,11 +3395,11 @@ default__seq_operator_compare__with_callattr___seq_compare__(DeeObject *lhs, Dee
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
 	if (DeeInt_IsZero(resultob)) {
-		result = 0;
+		result = Dee_COMPARE_EQ;
 	} else if (DeeInt_IsNeg(resultob)) {
-		result = -1;
+		result = Dee_COMPARE_LO;
 	} else {
-		result = 1;
+		result = Dee_COMPARE_GR;
 	}
 	Dee_Decref(resultob);
 	return result;
@@ -3432,11 +3422,11 @@ default__seq_operator_compare__with_callobjectcache___seq_compare__(DeeObject *l
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
 	if (DeeInt_IsZero(resultob)) {
-		result = 0;
+		result = Dee_COMPARE_EQ;
 	} else if (DeeInt_IsNeg(resultob)) {
-		result = -1;
+		result = Dee_COMPARE_LO;
 	} else {
-		result = 1;
+		result = Dee_COMPARE_GR;
 	}
 	Dee_Decref(resultob);
 	return result;
@@ -3457,7 +3447,7 @@ default__seq_operator_compare__empty(DeeObject *UNUSED(lhs), DeeObject *rhs) {
 	int rhs_nonempty = DeeObject_InvokeMethodHint(seq_operator_bool, rhs);
 	if unlikely(rhs_nonempty < 0)
 		goto err;
-	return rhs_nonempty ? -1 : 0;
+	return rhs_nonempty ? Dee_COMPARE_LO : Dee_COMPARE_EQ;
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -3473,7 +3463,7 @@ default__seq_operator_compare__with__seq_operator_eq__and__seq_operator__lo(DeeO
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return 0; /* Equal */
+		return Dee_COMPARE_EQ; /* Equal */
 	cmp_ob = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_lo))(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -3481,8 +3471,8 @@ default__seq_operator_compare__with__seq_operator_eq__and__seq_operator__lo(DeeO
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return -1; /* Less */
-	return 1;      /* Greater */
+		return Dee_COMPARE_LO; /* Less */
+	return Dee_COMPARE_GR;     /* Greater */
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -3498,7 +3488,7 @@ default__seq_operator_compare__with__seq_operator_eq__and__seq_operator__le(DeeO
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return 0; /* Equal */
+		return Dee_COMPARE_EQ; /* Equal */
 	cmp_ob = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_le))(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -3506,8 +3496,8 @@ default__seq_operator_compare__with__seq_operator_eq__and__seq_operator__le(DeeO
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return -1; /* Less */
-	return 1;      /* Greater */
+		return Dee_COMPARE_LO; /* Less */
+	return Dee_COMPARE_GR;     /* Greater */
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -3523,7 +3513,7 @@ default__seq_operator_compare__with__seq_operator_eq__and__seq_operator__gr(DeeO
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return 0; /* Equal */
+		return Dee_COMPARE_EQ; /* Equal */
 	cmp_ob = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_gr))(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -3531,8 +3521,8 @@ default__seq_operator_compare__with__seq_operator_eq__and__seq_operator__gr(DeeO
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return 1; /* Greater */
-	return -1;    /* Less */
+		return Dee_COMPARE_GR; /* Greater */
+	return Dee_COMPARE_LO;     /* Less */
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -3548,7 +3538,7 @@ default__seq_operator_compare__with__seq_operator_eq__and__seq_operator__ge(DeeO
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return 0; /* Equal */
+		return Dee_COMPARE_EQ; /* Equal */
 	cmp_ob = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_ge))(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -3556,8 +3546,8 @@ default__seq_operator_compare__with__seq_operator_eq__and__seq_operator__ge(DeeO
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return 1; /* Greater */
-	return -1;    /* Less */
+		return Dee_COMPARE_GR; /* Greater */
+	return Dee_COMPARE_LO;     /* Less */
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -3573,7 +3563,7 @@ default__seq_operator_compare__with__seq_operator_ne__and__seq_operator__lo(DeeO
 	if unlikely(temp < 0)
 		goto err;
 	if (!temp)
-		return 0; /* Equal */
+		return Dee_COMPARE_EQ; /* Equal */
 	cmp_ob = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_lo))(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -3581,8 +3571,8 @@ default__seq_operator_compare__with__seq_operator_ne__and__seq_operator__lo(DeeO
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return -1; /* Less */
-	return 1;      /* Greater */
+		return Dee_COMPARE_LO; /* Less */
+	return Dee_COMPARE_GR;     /* Greater */
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -3598,7 +3588,7 @@ default__seq_operator_compare__with__seq_operator_ne__and__seq_operator__le(DeeO
 	if unlikely(temp < 0)
 		goto err;
 	if (!temp)
-		return 0; /* Equal */
+		return Dee_COMPARE_EQ; /* Equal */
 	cmp_ob = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_le))(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -3606,8 +3596,8 @@ default__seq_operator_compare__with__seq_operator_ne__and__seq_operator__le(DeeO
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return -1; /* Less */
-	return 1;      /* Greater */
+		return Dee_COMPARE_LO; /* Less */
+	return Dee_COMPARE_GR;     /* Greater */
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -3623,7 +3613,7 @@ default__seq_operator_compare__with__seq_operator_ne__and__seq_operator__gr(DeeO
 	if unlikely(temp < 0)
 		goto err;
 	if (!temp)
-		return 0; /* Equal */
+		return Dee_COMPARE_EQ; /* Equal */
 	cmp_ob = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_gr))(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -3631,8 +3621,8 @@ default__seq_operator_compare__with__seq_operator_ne__and__seq_operator__gr(DeeO
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return 1; /* Greater */
-	return -1;    /* Less */
+		return Dee_COMPARE_GR; /* Greater */
+	return Dee_COMPARE_LO;     /* Less */
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -3648,7 +3638,7 @@ default__seq_operator_compare__with__seq_operator_ne__and__seq_operator__ge(DeeO
 	if unlikely(temp < 0)
 		goto err;
 	if (!temp)
-		return 0; /* Equal */
+		return Dee_COMPARE_EQ; /* Equal */
 	cmp_ob = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_ge))(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -3656,8 +3646,8 @@ default__seq_operator_compare__with__seq_operator_ne__and__seq_operator__ge(DeeO
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return 1; /* Greater */
-	return -1;    /* Less */
+		return Dee_COMPARE_GR; /* Greater */
+	return Dee_COMPARE_LO;     /* Less */
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -3749,10 +3739,10 @@ default__seq_operator_compare__with__seq_operator_foreach(DeeObject *lhs, DeeObj
 	if unlikely(result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
 		goto err;
 	if (result == SEQ_COMPARE_FOREACH_RESULT_LESS)
-		return -1;
+		return Dee_COMPARE_LO;
 	if (result == SEQ_COMPARE_FOREACH_RESULT_GREATER)
-		return 1;
-	return 0; /* Equal */
+		return Dee_COMPARE_GR;
+	return Dee_COMPARE_EQ; /* Equal */
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -3810,11 +3800,11 @@ default__seq_operator_compare__with__seq_operator_size__and__operator_getitem_in
 		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
 			goto err;
 		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
-			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? 0 : 1;
+			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? Dee_COMPARE_EQ : Dee_COMPARE_GR;
 		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
-			result = -1;
+			result = Dee_COMPARE_LO;
 		} else {
-			result = 1;
+			result = Dee_COMPARE_GR;
 		}
 	}
 	return result;
@@ -3875,11 +3865,11 @@ default__seq_operator_compare__with__seq_operator_size__and__seq_operator_tryget
 		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
 			goto err;
 		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
-			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? 0 : 1;
+			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? Dee_COMPARE_EQ : Dee_COMPARE_GR;
 		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
-			result = -1;
+			result = Dee_COMPARE_LO;
 		} else {
-			result = 1;
+			result = Dee_COMPARE_GR;
 		}
 	}
 	return result;
@@ -3940,11 +3930,11 @@ default__seq_operator_compare__with__seq_operator_size__and__seq_operator_getite
 		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
 			goto err;
 		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
-			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? 0 : 1;
+			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? Dee_COMPARE_EQ : Dee_COMPARE_GR;
 		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
-			result = -1;
+			result = Dee_COMPARE_LO;
 		} else {
-			result = 1;
+			result = Dee_COMPARE_GR;
 		}
 	}
 	return result;
@@ -4015,11 +4005,11 @@ default__seq_operator_compare__with__seq_operator_sizeob__and__seq_operator_geti
 		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
 			goto err_lhs_sizeob;
 		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
-			result = 0;
+			result = Dee_COMPARE_EQ;
 		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
-			result = -1;
+			result = Dee_COMPARE_LO;
 		} else {
-			result = 1;
+			result = Dee_COMPARE_GR;
 		}
 	}
 	Dee_Decref(lhs_sizeob);
@@ -4046,15 +4036,11 @@ default__seq_operator_compare_eq__with_callattr_equals(DeeObject *lhs, DeeObject
 		goto err;
 	if (DeeBool_Check(resultob)) {
 		Dee_DecrefNokill(resultob);
-		return DeeBool_IsTrue(resultob) ? 0 : 1;
+		return Dee_COMPARE_FROMBOOL(DeeBool_IsTrue(resultob));
 	}
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
-	if (DeeInt_IsZero(resultob)) {
-		result = 0;
-	} else {
-		result = 1;
-	}
+	result = Dee_COMPARE_FROMBOOL(DeeInt_IsZero(resultob));
 	Dee_Decref(resultob);
 	return result;
 err_resultob:
@@ -4072,15 +4058,11 @@ default__seq_operator_compare_eq__with_callattr___seq_compare_eq__(DeeObject *lh
 		goto err;
 	if (DeeBool_Check(resultob)) {
 		Dee_DecrefNokill(resultob);
-		return DeeBool_IsTrue(resultob) ? 0 : 1;
+		return Dee_COMPARE_FROMBOOL(DeeBool_IsTrue(resultob));
 	}
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
-	if (DeeInt_IsZero(resultob)) {
-		result = 0;
-	} else {
-		result = 1;
-	}
+	result = Dee_COMPARE_FROMBOOL(DeeInt_IsZero(resultob));
 	Dee_Decref(resultob);
 	return result;
 err_resultob:
@@ -4101,15 +4083,11 @@ default__seq_operator_compare_eq__with_callobjectcache___seq_compare_eq__(DeeObj
 		goto err;
 	if (DeeBool_Check(resultob)) {
 		Dee_DecrefNokill(resultob);
-		return DeeBool_IsTrue(resultob) ? 0 : 1;
+		return Dee_COMPARE_FROMBOOL(DeeBool_IsTrue(resultob));
 	}
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
-	if (DeeInt_IsZero(resultob)) {
-		result = 0;
-	} else {
-		result = 1;
-	}
+	result = Dee_COMPARE_FROMBOOL(DeeInt_IsZero(resultob));
 	Dee_Decref(resultob);
 	return result;
 err_resultob:
@@ -4133,7 +4111,7 @@ default__seq_operator_compare_eq__with__seq_operator_eq(DeeObject *lhs, DeeObjec
 	result = DeeObject_BoolInherited(cmp_ob);
 	if unlikely(result < 0)
 		goto err;
-	return result ? 0 : 1;
+	return Dee_COMPARE_FROMBOOL(result);
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -4147,7 +4125,7 @@ default__seq_operator_compare_eq__with__seq_operator_ne(DeeObject *lhs, DeeObjec
 	result = DeeObject_BoolInherited(cmp_ob);
 	if unlikely(result < 0)
 		goto err;
-	return result;
+	return Dee_COMPARE_FROM_NOT_EQUALS(result);
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -4162,7 +4140,7 @@ default__seq_operator_compare_eq__with__seq_operator_lo__and__seq_operator__gr(D
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return -1; /* Different */
+		return Dee_COMPARE_LO; /* Different */
 	cmp_ob = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_gr))(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -4170,8 +4148,8 @@ default__seq_operator_compare_eq__with__seq_operator_lo__and__seq_operator__gr(D
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return 1; /* Different */
-	return 0;
+		return Dee_COMPARE_GR; /* Different */
+	return Dee_COMPARE_EQ;
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -4186,7 +4164,7 @@ default__seq_operator_compare_eq__with__seq_operator_le__and__seq_operator__ge(D
 	if unlikely(temp < 0)
 		goto err;
 	if (!temp)
-		return 1; /* Different */
+		return Dee_COMPARE_GR; /* Different */
 	cmp_ob = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_gr))(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -4194,8 +4172,8 @@ default__seq_operator_compare_eq__with__seq_operator_le__and__seq_operator__ge(D
 	if unlikely(temp < 0)
 		goto err;
 	if (!temp)
-		return -1; /* Different */
-	return 0;
+		return Dee_COMPARE_LO; /* Different */
+	return Dee_COMPARE_EQ;
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -4285,9 +4263,7 @@ default__seq_operator_compare_eq__with__seq_operator_foreach(DeeObject *lhs, Dee
 	       result == SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL);
 	if unlikely(result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR)
 		goto err;
-	if (result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL)
-		return 0;
-	return 1;
+	return Dee_COMPARE_FROMBOOL(result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL);
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -4304,7 +4280,7 @@ default__seq_operator_compare_eq__with__seq_operator_size__and__operator_getitem
 if (tp_rhs->tp_seq && tp_rhs->tp_seq->tp_size_fast != NULL) {
 	size_t rhs_sizefast = (*tp_rhs->tp_seq->tp_size_fast)(rhs);
 	if (lhs_size != rhs_sizefast && rhs_sizefast != (size_t)-1)
-		return 1;
+		return Dee_COMPARE_NE;
 }
 	if (rhs_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast) {
 	    DeeNO_getitem_index_fast_t rhs_getitem_index_fast = tp_rhs->tp_seq->tp_getitem_index_fast;
@@ -4350,9 +4326,9 @@ if (tp_rhs->tp_seq && tp_rhs->tp_seq->tp_size_fast != NULL) {
 			goto err;
 		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL &&
 		    data.scf_sgi_oindex >= data.scf_sgi_osize) {
-			result = 0;
+			result = Dee_COMPARE_EQ;
 		} else {
-			result = 1;
+			result = Dee_COMPARE_NE;
 		}
 	}
 	return result;
@@ -4372,7 +4348,7 @@ default__seq_operator_compare_eq__with__seq_operator_size__and__seq_operator_try
 if (tp_rhs->tp_seq && tp_rhs->tp_seq->tp_size_fast != NULL) {
 	size_t rhs_sizefast = (*tp_rhs->tp_seq->tp_size_fast)(rhs);
 	if (lhs_size != rhs_sizefast && rhs_sizefast != (size_t)-1)
-		return 1;
+		return Dee_COMPARE_NE;
 }
 	if (rhs_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast) {
 		DeeNO_getitem_index_fast_t rhs_getitem_index_fast = tp_rhs->tp_seq->tp_getitem_index_fast;
@@ -4418,9 +4394,9 @@ if (tp_rhs->tp_seq && tp_rhs->tp_seq->tp_size_fast != NULL) {
 			goto err;
 		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL &&
 		    data.scf_sgi_oindex >= data.scf_sgi_osize) {
-			result = 0;
+			result = Dee_COMPARE_EQ;
 		} else {
-			result = 1;
+			result = Dee_COMPARE_NE;
 		}
 	}
 	return result;
@@ -4440,7 +4416,7 @@ default__seq_operator_compare_eq__with__seq_operator_size__and__seq_operator_get
 if (tp_rhs->tp_seq && tp_rhs->tp_seq->tp_size_fast != NULL) {
 	size_t rhs_sizefast = (*tp_rhs->tp_seq->tp_size_fast)(rhs);
 	if (lhs_size != rhs_sizefast && rhs_sizefast != (size_t)-1)
-		return 1;
+		return Dee_COMPARE_NE;
 }
 	if (rhs_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast) {
 	    DeeNO_getitem_index_fast_t rhs_getitem_index_fast = tp_rhs->tp_seq->tp_getitem_index_fast;
@@ -4486,9 +4462,9 @@ if (tp_rhs->tp_seq && tp_rhs->tp_seq->tp_size_fast != NULL) {
 			goto err;
 		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL &&
 		    data.scf_sgi_oindex >= data.scf_sgi_osize) {
-			result = 0;
+			result = Dee_COMPARE_EQ;
 		} else {
-			result = 1;
+			result = Dee_COMPARE_NE;
 		}
 	}
 	return result;
@@ -4557,7 +4533,7 @@ default__seq_operator_compare_eq__with__seq_operator_sizeob__and__seq_operator_g
 		       foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL);
 		if unlikely(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR)
 			goto err_lhs_sizeob;
-		result = foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL ? 0 : 1;
+		result = Dee_COMPARE_FROMBOOL(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL);
 	}
 	Dee_Decref(lhs_sizeob);
 	return result;
@@ -4581,7 +4557,7 @@ default__seq_operator_trycompare_eq__with__seq_operator_compare_eq(DeeObject *lh
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))
-			result = -1;
+			result = Dee_COMPARE_NE;
 	}
 	return result;
 }
@@ -4591,10 +4567,10 @@ default__seq_operator_trycompare_eq__empty(DeeObject *UNUSED(lhs), DeeObject *rh
 	int rhs_nonempty = DeeObject_InvokeMethodHint(seq_operator_bool, rhs);
 	if unlikely(rhs_nonempty < 0)
 		goto err;
-	return rhs_nonempty ? 1 /*or: -1*/ : 0;
+	return Dee_COMPARE_FROM_NOT_EQUALS(rhs_nonempty);
 err:
 	if (DeeError_Catch(&DeeError_NotImplemented))
-		return -1;
+		return Dee_COMPARE_NE;
 	return Dee_COMPARE_ERR;
 }
 
@@ -7007,11 +6983,6 @@ default__seq_boundfirst__with_callobjectcache___seq_first__(DeeObject *__restric
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-default__seq_boundfirst__empty(DeeObject *__restrict UNUSED(self)) {
-	return Dee_BOUND_MISSING;
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
 default__seq_boundfirst__with__seq_operator_bounditem_index(DeeObject *__restrict self) {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_bounditem_index))(self, 0);
 }
@@ -7249,11 +7220,6 @@ default__seq_boundlast__with_callobjectcache___seq_last__(DeeObject *__restrict 
 #else /* __OPTIMIZE_SIZE__ */
 	return mhcache_call_bound(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___seq_last__, 1, (DeeObject *const *)&self);
 #endif /* !__OPTIMIZE_SIZE__ */
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-default__seq_boundlast__empty(DeeObject *__restrict UNUSED(self)) {
-	return Dee_BOUND_MISSING;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -15358,15 +15324,11 @@ default__set_operator_compare_eq__with_callattr_equals(DeeObject *lhs, DeeObject
 		goto err;
 	if (DeeBool_Check(resultob)) {
 		Dee_DecrefNokill(resultob);
-		return DeeBool_IsTrue(resultob) ? 0 : 1;
+		return Dee_COMPARE_FROMBOOL(DeeBool_IsTrue(resultob));
 	}
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
-	if (DeeInt_IsZero(resultob)) {
-		result = 0;
-	} else {
-		result = 1;
-	}
+	result = Dee_COMPARE_FROMBOOL(DeeInt_IsZero(resultob));
 	Dee_Decref(resultob);
 	return result;
 err_resultob:
@@ -15384,15 +15346,11 @@ default__set_operator_compare_eq__with_callattr___set_compare_eq__(DeeObject *lh
 		goto err;
 	if (DeeBool_Check(resultob)) {
 		Dee_DecrefNokill(resultob);
-		return DeeBool_IsTrue(resultob) ? 0 : 1;
+		return Dee_COMPARE_FROMBOOL(DeeBool_IsTrue(resultob));
 	}
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
-	if (DeeInt_IsZero(resultob)) {
-		result = 0;
-	} else {
-		result = 1;
-	}
+	result = Dee_COMPARE_FROMBOOL(DeeInt_IsZero(resultob));
 	Dee_Decref(resultob);
 	return result;
 err_resultob:
@@ -15413,15 +15371,11 @@ default__set_operator_compare_eq__with_callobjectcache___set_compare_eq__(DeeObj
 		goto err;
 	if (DeeBool_Check(resultob)) {
 		Dee_DecrefNokill(resultob);
-		return DeeBool_IsTrue(resultob) ? 0 : 1;
+		return Dee_COMPARE_FROMBOOL(DeeBool_IsTrue(resultob));
 	}
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
-	if (DeeInt_IsZero(resultob)) {
-		result = 0;
-	} else {
-		result = 1;
-	}
+	result = Dee_COMPARE_FROMBOOL(DeeInt_IsZero(resultob));
 	Dee_Decref(resultob);
 	return result;
 err_resultob:
@@ -15445,7 +15399,7 @@ default__set_operator_compare_eq__with__set_operator_eq(DeeObject *lhs, DeeObjec
 	result = DeeObject_BoolInherited(cmp_ob);
 	if unlikely(result < 0)
 		goto err;
-	return result ? 0 : 1;
+	return Dee_COMPARE_FROMBOOL(result);
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -15459,7 +15413,7 @@ default__set_operator_compare_eq__with__set_operator_ne(DeeObject *lhs, DeeObjec
 	result = DeeObject_BoolInherited(cmp_ob);
 	if unlikely(result < 0)
 		goto err;
-	return result;
+	return Dee_COMPARE_FROM_NOT_EQUALS(result);
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -15476,14 +15430,14 @@ default__set_operator_compare_eq__with__set_operator_foreach(DeeObject *lhs, Dee
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
-		return 1; /* "rhs" is missing some element of "lhs" */
+		return Dee_COMPARE_NE; /* "rhs" is missing some element of "lhs" */
 	ASSERT(tp_rhs == Dee_TYPE(rhs));
 	rhs_size = DeeObject_Size(rhs);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status != rhs_size)
-		return 1; /* Sets have different sizes */
-	return 0;
+		return Dee_COMPARE_NE; /* Sets have different sizes */
+	return Dee_COMPARE_EQ;
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -15498,11 +15452,11 @@ default__set_operator_trycompare_eq(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__set_operator_trycompare_eq__with__set_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), set_operator_compare_eq))(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR) {
+	if unlikely(Dee_COMPARE_ISERR(result)) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))
-			result = -1;
+			result = Dee_COMPARE_NE;
 	}
 	return result;
 }
@@ -15537,9 +15491,9 @@ default__set_operator_eq__unsupported(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__set_operator_eq__with__set_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), set_operator_compare_eq))(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if unlikely(Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result == 0);
+	return_bool(Dee_COMPARE_ISEQ(result));
 err:
 	return NULL;
 }
@@ -15574,9 +15528,9 @@ default__set_operator_ne__unsupported(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__set_operator_ne__with__set_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), set_operator_compare_eq))(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if unlikely(Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result != 0);
+	return_bool(Dee_COMPARE_ISNE(result));
 err:
 	return NULL;
 }
@@ -17791,11 +17745,6 @@ default__map_operator_bounditem__with__map_operator_getitem(DeeObject *self, Dee
 	return Dee_BOUND_ERR;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__map_operator_bounditem__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(key)) {
-	return Dee_BOUND_MISSING;
-}
-
 #ifndef DEFINED_default_map_bounditem_with_enumerate_cb
 #define DEFINED_default_map_bounditem_with_enumerate_cb
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -17886,11 +17835,6 @@ default__map_operator_bounditem_index__with__map_operator_getitem_index(DeeObjec
 	return Dee_BOUND_ERR;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
-default__map_operator_bounditem_index__empty(DeeObject *UNUSED(self), size_t UNUSED(key)) {
-	return Dee_BOUND_MISSING;
-}
-
 
 /* map_operator_bounditem_string_hash */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -17933,11 +17877,6 @@ default__map_operator_bounditem_string_hash__with__map_operator_getitem_string_h
 	return Dee_BOUND_ERR;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__map_operator_bounditem_string_hash__empty(DeeObject *UNUSED(self), char const *UNUSED(key), Dee_hash_t UNUSED(hash)) {
-	return Dee_BOUND_MISSING;
-}
-
 
 /* map_operator_bounditem_string_len_hash */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -17978,11 +17917,6 @@ default__map_operator_bounditem_string_len_hash__with__map_operator_getitem_stri
 	if (DeeError_Catch(&DeeError_KeyError))
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-default__map_operator_bounditem_string_len_hash__empty(DeeObject *UNUSED(self), char const *UNUSED(key), size_t UNUSED(keylen), Dee_hash_t UNUSED(hash)) {
-	return Dee_BOUND_MISSING;
 }
 
 
@@ -19164,15 +19098,11 @@ default__map_operator_compare_eq__with_callattr_equals(DeeObject *lhs, DeeObject
 		goto err;
 	if (DeeBool_Check(resultob)) {
 		Dee_DecrefNokill(resultob);
-		return DeeBool_IsTrue(resultob) ? 0 : 1;
+		return Dee_COMPARE_FROMBOOL(DeeBool_IsTrue(resultob));
 	}
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
-	if (DeeInt_IsZero(resultob)) {
-		result = 0;
-	} else {
-		result = 1;
-	}
+	result = Dee_COMPARE_FROMBOOL(DeeInt_IsZero(resultob));
 	Dee_Decref(resultob);
 	return result;
 err_resultob:
@@ -19190,15 +19120,11 @@ default__map_operator_compare_eq__with_callattr___map_compare_eq__(DeeObject *lh
 		goto err;
 	if (DeeBool_Check(resultob)) {
 		Dee_DecrefNokill(resultob);
-		return DeeBool_IsTrue(resultob) ? 0 : 1;
+		return Dee_COMPARE_FROMBOOL(DeeBool_IsTrue(resultob));
 	}
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
-	if (DeeInt_IsZero(resultob)) {
-		result = 0;
-	} else {
-		result = 1;
-	}
+	result = Dee_COMPARE_FROMBOOL(DeeInt_IsZero(resultob));
 	Dee_Decref(resultob);
 	return result;
 err_resultob:
@@ -19219,15 +19145,11 @@ default__map_operator_compare_eq__with_callobjectcache___map_compare_eq__(DeeObj
 		goto err;
 	if (DeeBool_Check(resultob)) {
 		Dee_DecrefNokill(resultob);
-		return DeeBool_IsTrue(resultob) ? 0 : 1;
+		return Dee_COMPARE_FROMBOOL(DeeBool_IsTrue(resultob));
 	}
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
-	if (DeeInt_IsZero(resultob)) {
-		result = 0;
-	} else {
-		result = 1;
-	}
+	result = Dee_COMPARE_FROMBOOL(DeeInt_IsZero(resultob));
 	Dee_Decref(resultob);
 	return result;
 err_resultob:
@@ -19251,7 +19173,7 @@ default__map_operator_compare_eq__with__map_operator_eq(DeeObject *lhs, DeeObjec
 	result = DeeObject_BoolInherited(cmp_ob);
 	if unlikely(result < 0)
 		goto err;
-	return result ? 0 : 1;
+	return Dee_COMPARE_FROMBOOL(result);
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -19265,7 +19187,7 @@ default__map_operator_compare_eq__with__map_operator_ne(DeeObject *lhs, DeeObjec
 	result = DeeObject_BoolInherited(cmp_ob);
 	if unlikely(result < 0)
 		goto err;
-	return result;
+	return Dee_COMPARE_FROM_NOT_EQUALS(result);
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -19281,13 +19203,13 @@ default__map_operator_compare_eq__with__map_operator_foreach_pair(DeeObject *lhs
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
-		return 1; /* "rhs" is missing some element of "lhs", or has a different value for it */
+		return Dee_COMPARE_NE; /* "rhs" is missing some element of "lhs", or has a different value for it */
 	rhs_size = DeeObject_InvokeMethodHint(set_operator_size, rhs);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status != rhs_size)
-		return 1; /* Maps have different sizes */
-	return 0;
+		return Dee_COMPARE_NE; /* Maps have different sizes */
+	return Dee_COMPARE_EQ;
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -19302,11 +19224,11 @@ default__map_operator_trycompare_eq(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__map_operator_trycompare_eq__with__map_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), map_operator_compare_eq))(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR) {
+	if unlikely(Dee_COMPARE_ISERR(result)) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))
-			result = -1;
+			result = Dee_COMPARE_NE;
 	}
 	return result;
 }
@@ -19341,9 +19263,9 @@ default__map_operator_eq__unsupported(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__map_operator_eq__with__map_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), map_operator_compare_eq))(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if unlikely(Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result == 0);
+	return_bool(Dee_COMPARE_ISEQ(result));
 err:
 	return NULL;
 }
@@ -19378,7 +19300,7 @@ default__map_operator_ne__unsupported(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__map_operator_ne__with__map_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), map_operator_compare_eq))(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if unlikely(Dee_COMPARE_ISERR(result))
 		goto err;
 	return_bool(result != 0);
 err:
@@ -21476,11 +21398,11 @@ tdefault__seq_operator_compare__with_callobjectcache___seq_compare__(DeeTypeObje
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
 	if (DeeInt_IsZero(resultob)) {
-		result = 0;
+		result = Dee_COMPARE_EQ;
 	} else if (DeeInt_IsNeg(resultob)) {
-		result = -1;
+		result = Dee_COMPARE_LO;
 	} else {
-		result = 1;
+		result = Dee_COMPARE_GR;
 	}
 	Dee_Decref(resultob);
 	return result;
@@ -21500,15 +21422,11 @@ tdefault__seq_operator_compare_eq__with_callobjectcache___seq_compare_eq__(DeeTy
 		goto err;
 	if (DeeBool_Check(resultob)) {
 		Dee_DecrefNokill(resultob);
-		return DeeBool_IsTrue(resultob) ? 0 : 1;
+		return Dee_COMPARE_FROMBOOL(DeeBool_IsTrue(resultob));
 	}
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
-	if (DeeInt_IsZero(resultob)) {
-		result = 0;
-	} else {
-		result = 1;
-	}
+	result = Dee_COMPARE_FROMBOOL(DeeInt_IsZero(resultob));
 	Dee_Decref(resultob);
 	return result;
 err_resultob:
@@ -22798,15 +22716,11 @@ tdefault__set_operator_compare_eq__with_callobjectcache___set_compare_eq__(DeeTy
 		goto err;
 	if (DeeBool_Check(resultob)) {
 		Dee_DecrefNokill(resultob);
-		return DeeBool_IsTrue(resultob) ? 0 : 1;
+		return Dee_COMPARE_FROMBOOL(DeeBool_IsTrue(resultob));
 	}
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
-	if (DeeInt_IsZero(resultob)) {
-		result = 0;
-	} else {
-		result = 1;
-	}
+	result = Dee_COMPARE_FROMBOOL(DeeInt_IsZero(resultob));
 	Dee_Decref(resultob);
 	return result;
 err_resultob:
@@ -23172,15 +23086,11 @@ tdefault__map_operator_compare_eq__with_callobjectcache___map_compare_eq__(DeeTy
 		goto err;
 	if (DeeBool_Check(resultob)) {
 		Dee_DecrefNokill(resultob);
-		return DeeBool_IsTrue(resultob) ? 0 : 1;
+		return Dee_COMPARE_FROMBOOL(DeeBool_IsTrue(resultob));
 	}
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
-	if (DeeInt_IsZero(resultob)) {
-		result = 0;
-	} else {
-		result = 1;
-	}
+	result = Dee_COMPARE_FROMBOOL(DeeInt_IsZero(resultob));
 	Dee_Decref(resultob);
 	return result;
 err_resultob:

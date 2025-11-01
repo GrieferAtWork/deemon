@@ -687,9 +687,9 @@ blv_hasitem(DeeBlackListKwdsObject *self, DeeObject *key) {
 		goto nope;
 	if (DeeBlackListKwds_IsBlackListed(self, key))
 		goto nope;
-	return 1;
+	return Dee_HAS_YES;
 nope:
-	return 0;
+	return Dee_HAS_NO;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -699,9 +699,9 @@ blv_hasitem_string_hash(DeeBlackListKwdsObject *self, char const *key, Dee_hash_
 		goto nope;
 	if (DeeBlackListKwds_IsBlackListedStringHash(self, key, hash))
 		goto nope;
-	return 1;
+	return Dee_HAS_YES;
 nope:
-	return 0;
+	return Dee_HAS_NO;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -711,9 +711,9 @@ blv_hasitem_string_len_hash(DeeBlackListKwdsObject *self, char const *key, size_
 		goto nope;
 	if (DeeBlackListKwds_IsBlackListedStringLenHash(self, key, keylen, hash))
 		goto nope;
-	return 1;
+	return Dee_HAS_YES;
 nope:
-	return 0;
+	return Dee_HAS_NO;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1453,10 +1453,8 @@ blkw_bool_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {
 	DeeBlackListKwObject *self = (DeeBlackListKwObject *)arg;
 	(void)value;
 	if (!DeeString_Check(key) ||
-	    !DeeBlackListKw_IsBlackListed(self, key)) {
-		Dee_Decref(key);
+	    !DeeBlackListKw_IsBlackListed(self, key))
 		return -2; /* Success indicator. */
-	}
 	return 0;
 }
 
@@ -1611,7 +1609,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 blkw_hasitem(DeeBlackListKwObject *self, DeeObject *key) {
 	if likely(DeeString_Check(key) && !DeeBlackListKw_IsBlackListed(self, key))
 		return DeeObject_HasItem(DeeBlackListKw_KW(self), key);
-	return 0;
+	return Dee_HAS_NO;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1619,7 +1617,7 @@ blkw_hasitem_string_hash(DeeBlackListKwObject *__restrict self,
                          char const *__restrict name, Dee_hash_t hash) {
 	if likely(!DeeBlackListKw_IsBlackListedStringHash(self, name, hash))
 		return DeeObject_HasItemStringHash(DeeBlackListKw_KW(self), name, hash);
-	return 0;
+	return Dee_HAS_NO;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1628,7 +1626,7 @@ blkw_hasitem_string_len_hash(DeeBlackListKwObject *__restrict self,
                              size_t namelen, Dee_hash_t hash) {
 	if likely(!DeeBlackListKw_IsBlackListedStringLenHash(self, name, namelen, hash))
 		return DeeObject_HasItemStringLenHash(DeeBlackListKw_KW(self), name, namelen, hash);
-	return 0;
+	return Dee_HAS_NO;
 }
 
 

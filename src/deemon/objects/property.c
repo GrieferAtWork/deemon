@@ -155,7 +155,7 @@ property_hash(Property *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 property_compare_eq(Property *self, Property *other) {
-	int result = 0;
+	int result = Dee_COMPARE_EQ;
 	if (DeeObject_AssertType(other, &DeeProperty_Type))
 		goto err;
 
@@ -170,13 +170,13 @@ property_compare_eq(Property *self, Property *other) {
 	/* Compare individual callbacks. */
 	if (self->p_get)
 		result = DeeObject_TryCompareEq(self->p_get, other->p_get);
-	if (self->p_del && result == 0)
+	if (self->p_del && result == Dee_COMPARE_EQ)
 		result = DeeObject_TryCompareEq(self->p_del, other->p_del);
-	if (self->p_set && result == 0)
+	if (self->p_set && result == Dee_COMPARE_EQ)
 		result = DeeObject_TryCompareEq(self->p_set, other->p_set);
 	return result;
 nope:
-	return 1;
+	return Dee_COMPARE_NE;
 err:
 	return Dee_COMPARE_ERR;
 }

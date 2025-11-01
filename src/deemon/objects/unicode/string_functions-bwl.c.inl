@@ -546,14 +546,16 @@ LOCAL_memcasecmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 	LOCAL_unicode_foldreader_init(&rhs_reader, rhs, rhs_size);
 	for (;;) {
 		uint32_t lhs_ch, rhs_ch;
-		if (unicode_foldreader_empty(&lhs_reader))
-			return unicode_foldreader_empty(&rhs_reader) ? 0 : -1;
+		if (unicode_foldreader_empty(&lhs_reader)) {
+			bool rhs_empty = unicode_foldreader_empty(&rhs_reader);
+			return rhs_empty ? Dee_COMPARE_EQ : Dee_COMPARE_LO;
+		}
 		if (unicode_foldreader_empty(&rhs_reader))
-			return 1;
+			return Dee_COMPARE_GR;
 		lhs_ch = LOCAL_unicode_foldreader_getc(&lhs_reader);
 		rhs_ch = LOCAL_unicode_foldreader_getc(&rhs_reader);
 		if (lhs_ch != rhs_ch)
-			return lhs_ch < rhs_ch ? -1 : 1;
+			return Dee_CompareNe(lhs_ch, rhs_ch);
 	}
 }
 #endif /* LOCAL_memcasecmp */
@@ -694,18 +696,14 @@ LOCAL_strverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 			arec = DeeUni_Descriptor(clhs);
 			brec = DeeUni_Descriptor(crhs);
 			if (!(arec->ut_flags & UNICODE_ISDIGIT) &&
-			    !(brec->ut_flags & UNICODE_ISDIGIT)) {
-				/* Deal with leading zeros. */
-				if (clhs < crhs)
-					return -1;
-				if (clhs > crhs)
-					return 1;
-				return 0;
-			}
+			    !(brec->ut_flags & UNICODE_ISDIGIT))
+				return Dee_Compare(clhs, crhs); /* Deal with leading zeros. */
 			if ((arec->ut_flags & UNICODE_ISDIGIT) && arec->ut_digit_idx == 0)
-				return -1;
+				return Dee_COMPARE_LO;
 			if ((brec->ut_flags & UNICODE_ISDIGIT) && brec->ut_digit_idx == 0)
-				return 1; /* Compare digits. */
+				return Dee_COMPARE_GR;
+
+			/* Compare digits. */
 			vala = arec->ut_digit_idx;
 			valb = brec->ut_digit_idx;
 			while (--lhs_size) {
@@ -724,11 +722,7 @@ LOCAL_strverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 				valb *= 10;
 				valb += brec->ut_digit_idx;
 			}
-			if (vala < valb)
-				return -1;
-			if (vala > valb)
-				return 1;
-			return 0;
+			return Dee_Compare(vala, valb);
 		}
 		++lhs;
 		--lhs_size;
@@ -736,10 +730,10 @@ LOCAL_strverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 		--rhs_size;
 	}
 	if (lhs_size)
-		return 1;
+		return Dee_COMPARE_GR;
 	if (rhs_size)
-		return -1;
-	return 0;
+		return Dee_COMPARE_LO;
+	return Dee_COMPARE_EQ;
 }
 #endif /* LOCAL_strverscmp */
 
@@ -749,7 +743,7 @@ LOCAL_strverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 /* As found here: https://en.wikipedia.org/wiki/Levenshtein_distance */
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL
 LOCAL_strcaseverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
-                 LOCAL_uchar_t const *rhs, size_t rhs_size) {
+                     LOCAL_uchar_t const *rhs, size_t rhs_size) {
 	LOCAL_uchar_t clhs, crhs;
 	LOCAL_uchar_t const *lhs_start = lhs;
 	while (lhs_size && rhs_size) {
@@ -772,18 +766,12 @@ LOCAL_strcaseverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 			arec = DeeUni_Descriptor(clhs);
 			brec = DeeUni_Descriptor(crhs);
 			if (!(arec->ut_flags & UNICODE_ISDIGIT) &&
-			    !(brec->ut_flags & UNICODE_ISDIGIT)) {
-				/* Deal with leading zeros. */
-				if (clhs < crhs)
-					return -1;
-				if (clhs > crhs)
-					return 1;
-				return 0;
-			}
+			    !(brec->ut_flags & UNICODE_ISDIGIT))
+				return Dee_Compare(clhs, crhs); /* Deal with leading zeros. */
 			if ((arec->ut_flags & UNICODE_ISDIGIT) && arec->ut_digit_idx == 0)
-				return -1;
+				return Dee_COMPARE_LO;
 			if ((brec->ut_flags & UNICODE_ISDIGIT) && brec->ut_digit_idx == 0)
-				return 1; /* Compare digits. */
+				return Dee_COMPARE_GR; /* Compare digits. */
 			vala = arec->ut_digit_idx;
 			valb = brec->ut_digit_idx;
 			while (--lhs_size) {
@@ -802,11 +790,7 @@ LOCAL_strcaseverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 				valb *= 10;
 				valb += brec->ut_digit_idx;
 			}
-			if (vala < valb)
-				return -1;
-			if (vala > valb)
-				return 1;
-			return 0;
+			return Dee_Compare(vala, valb);
 		}
 		++lhs;
 		--lhs_size;
@@ -814,10 +798,10 @@ LOCAL_strcaseverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 		--rhs_size;
 	}
 	if (lhs_size)
-		return 1;
+		return Dee_COMPARE_GR;
 	if (rhs_size)
-		return -1;
-	return 0;
+		return Dee_COMPARE_LO;
+	return Dee_COMPARE_EQ;
 }
 #endif /* LOCAL_strcaseverscmp */
 
@@ -992,21 +976,21 @@ LOCAL_wildcompare(LOCAL_uchar_t const *string, size_t string_length,
 			/* End of string (if the patter is empty, or only contains '*', we have a match) */
 			for (;;) {
 				if (pattern >= pattern_end)
-					return 0;
+					return Dee_COMPARE_EQ;
 				if (*pattern != (LOCAL_uchar_t)'*')
 					break;
 				++pattern;
 			}
-			return -1;
+			return Dee_COMPARE_LO;
 		}
 		if (pattern >= pattern_end)
-			return 1; /* Pattern end doesn't match */
+			return Dee_COMPARE_GR; /* Pattern end doesn't match */
 		if (*pattern == (LOCAL_uchar_t)'*') {
 			/* Skip starts */
 			do {
 				++pattern;
 				if (pattern >= pattern_end)
-					return 0; /* Pattern ends with '*' (matches everything) */
+					return Dee_COMPARE_EQ; /* Pattern ends with '*' (matches everything) */
 			} while (*pattern == (LOCAL_uchar_t)'*');
 			card_post = *pattern++;
 			if (card_post == (LOCAL_uchar_t)'?')
@@ -1023,10 +1007,10 @@ LOCAL_wildcompare(LOCAL_uchar_t const *string, size_t string_length,
 				    ) {
 					/* Recursively check if the rest of the string and pattern match */
 					if (LOCAL_wildcompare(string, (size_t)(string_end - string),
-					                      pattern, (size_t)(pattern_end - pattern)) == 0)
-						return 0;
+					                      pattern, (size_t)(pattern_end - pattern)) == Dee_COMPARE_EQ)
+						return Dee_COMPARE_EQ;
 				} else if (string >= string_end) {
-					return -1; /* Wildcard suffix not found */
+					return Dee_COMPARE_LO; /* Wildcard suffix not found */
 				}
 			}
 		}
@@ -1043,9 +1027,8 @@ next:
 		}
 		break; /* mismatch */
 	}
-	if ((LOCAL_uchar_t)*string < (LOCAL_uchar_t)*pattern)
-		return -1;
-	return 1;
+	return Dee_CompareNe((LOCAL_uchar_t)*string,
+	                     (LOCAL_uchar_t)*pattern);
 }
 #endif /* LOCAL_wildcompare */
 
@@ -1060,21 +1043,21 @@ LOCAL_wildcasecompare(struct unicode_foldreader *__restrict string,
 			/* End of string (if the patter is empty, or only contains '*', we have a match) */
 			for (;;) {
 				if (unicode_foldreader_empty(pattern))
-					return 0;
+					return Dee_COMPARE_EQ;
 				ch = LOCAL_unicode_foldreader_getc(pattern);
 				if (ch != (uint32_t)'*')
 					break;
 			}
-			return -1;
+			return Dee_COMPARE_LO;
 		}
 		if (unicode_foldreader_empty(pattern))
-			return 1; /* Pattern end doesn't match */
+			return Dee_COMPARE_GR; /* Pattern end doesn't match */
 		pattern_ch = LOCAL_unicode_foldreader_getc(pattern);
 		if (pattern_ch == (uint32_t)'*') {
 			/* Skip starts */
 			do {
 				if (unicode_foldreader_empty(pattern))
-					return 0; /* Pattern ends with '*' (matches everything) */
+					return Dee_COMPARE_EQ; /* Pattern ends with '*' (matches everything) */
 				pattern_ch = LOCAL_unicode_foldreader_getc(pattern);
 			} while (pattern_ch == (uint32_t)'*');
 			if (pattern_ch == (uint32_t)'?')
@@ -1085,10 +1068,10 @@ LOCAL_wildcasecompare(struct unicode_foldreader *__restrict string,
 					/* Recursively check if the rest of the string and pattern match */
 					struct unicode_foldreader string_copy  = *string;
 					struct unicode_foldreader pattern_copy = *pattern;
-					if (!LOCAL_wildcasecompare(&string_copy, &pattern_copy))
-						return 0;
+					if (LOCAL_wildcasecompare(&string_copy, &pattern_copy) == Dee_COMPARE_EQ)
+						return Dee_COMPARE_EQ;
 				} else if (unicode_foldreader_empty(string)) {
-					return -1; /* Wildcard suffix not found */
+					return Dee_COMPARE_LO; /* Wildcard suffix not found */
 				}
 			}
 		}
@@ -1100,9 +1083,7 @@ LOCAL_wildcasecompare(struct unicode_foldreader *__restrict string,
 		/* mismatch */
 		break;
 	}
-	if (ch < pattern_ch)
-		return -1;
-	return 1;
+	return Dee_CompareNe(ch, pattern_ch);
 }
 #endif /* LOCAL_wildcasecompare */
 

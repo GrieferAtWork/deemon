@@ -959,7 +959,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mi_bool(MapIntersection *__restrict self) {
 	/* >> mi_map.CONTAINS_ANY(mi_keys) */
-	Dee_ssize_t status = DeeObject_InvokeMethodHint(set_operator_foreach, self->mi_keys, &map_containsany_foreach_cb, self->mi_map);
+	Dee_ssize_t status = DeeObject_InvokeMethodHint(set_operator_foreach, self->mi_keys,
+	                                                &map_containsany_foreach_cb, self->mi_map);
 	if (status == 0)
 		return 0;
 	if (status == MAP_CONTAINSANY_FOREACH__FOUND)
@@ -1824,7 +1825,7 @@ msd_getitem(MapSymmetricDifference *__restrict self, DeeObject *key) {
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem, self->msd_b, key);
 	if unlikely(exists != 0) {
-		if unlikely(exists < 0)
+		if unlikely(Dee_HAS_ISERR(exists))
 			goto err;
 		goto err_key_r;
 	}
@@ -1847,7 +1848,7 @@ msd_trygetitem(MapSymmetricDifference *__restrict self, DeeObject *key) {
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem, self->msd_b, key);
 	if unlikely(exists != 0) {
-		if unlikely(exists < 0)
+		if unlikely(Dee_HAS_ISERR(exists))
 			goto err;
 		Dee_Decref(result);
 		return ITER_DONE;
@@ -1863,17 +1864,17 @@ msd_hasitem(MapSymmetricDifference *__restrict self, DeeObject *key) {
 	result = DeeObject_InvokeMethodHint(map_operator_hasitem, self->msd_a, key);
 	if (result == 0)
 		return DeeObject_InvokeMethodHint(map_operator_hasitem, self->msd_b, key);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem, self->msd_b, key);
 	if unlikely(exists != 0) {
-		if unlikely(exists < 0)
+		if unlikely(Dee_HAS_ISERR(exists))
 			goto err;
-		return 0;
+		return Dee_HAS_NO;
 	}
-	return 1;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1913,7 +1914,7 @@ msd_getitem_index(MapSymmetricDifference *__restrict self, size_t key) {
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_index, self->msd_b, key);
 	if unlikely(exists != 0) {
-		if unlikely(exists < 0)
+		if unlikely(Dee_HAS_ISERR(exists))
 			goto err;
 		goto err_key_r;
 	}
@@ -1936,7 +1937,7 @@ msd_trygetitem_index(MapSymmetricDifference *__restrict self, size_t key) {
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_index, self->msd_b, key);
 	if unlikely(exists != 0) {
-		if unlikely(exists < 0)
+		if unlikely(Dee_HAS_ISERR(exists))
 			goto err;
 		Dee_Decref(result);
 		return ITER_DONE;
@@ -1952,17 +1953,17 @@ msd_hasitem_index(MapSymmetricDifference *__restrict self, size_t key) {
 	result = DeeObject_InvokeMethodHint(map_operator_hasitem_index, self->msd_a, key);
 	if (result == 0)
 		return DeeObject_InvokeMethodHint(map_operator_hasitem_index, self->msd_b, key);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_index, self->msd_b, key);
 	if unlikely(exists != 0) {
-		if unlikely(exists < 0)
+		if unlikely(Dee_HAS_ISERR(exists))
 			goto err;
-		return 0;
+		return Dee_HAS_NO;
 	}
-	return 1;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2003,7 +2004,7 @@ msd_getitem_string_hash(MapSymmetricDifference *__restrict self,
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->msd_b, key, hash);
 	if unlikely(exists != 0) {
-		if unlikely(exists < 0)
+		if unlikely(Dee_HAS_ISERR(exists))
 			goto err;
 		goto err_key_r;
 	}
@@ -2027,7 +2028,7 @@ msd_trygetitem_string_hash(MapSymmetricDifference *__restrict self,
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->msd_b, key, hash);
 	if unlikely(exists != 0) {
-		if unlikely(exists < 0)
+		if unlikely(Dee_HAS_ISERR(exists))
 			goto err;
 		Dee_Decref(result);
 		return ITER_DONE;
@@ -2044,17 +2045,17 @@ msd_hasitem_string_hash(MapSymmetricDifference *__restrict self,
 	result = DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->msd_a, key, hash);
 	if (result == 0)
 		return DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->msd_b, key, hash);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->msd_b, key, hash);
 	if unlikely(exists != 0) {
-		if unlikely(exists < 0)
+		if unlikely(Dee_HAS_ISERR(exists))
 			goto err;
-		return 0;
+		return Dee_HAS_ERR;
 	}
-	return 1;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2096,7 +2097,7 @@ msd_getitem_string_len_hash(MapSymmetricDifference *__restrict self,
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->msd_b, key, keylen, hash);
 	if unlikely(exists != 0) {
-		if unlikely(exists < 0)
+		if unlikely(Dee_HAS_ISERR(exists))
 			goto err;
 		goto err_key_r;
 	}
@@ -2120,7 +2121,7 @@ msd_trygetitem_string_len_hash(MapSymmetricDifference *__restrict self,
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->msd_b, key, keylen, hash);
 	if unlikely(exists != 0) {
-		if unlikely(exists < 0)
+		if unlikely(Dee_HAS_ISERR(exists))
 			goto err;
 		Dee_Decref(result);
 		return ITER_DONE;
@@ -2137,17 +2138,17 @@ msd_hasitem_string_len_hash(MapSymmetricDifference *__restrict self,
 	result = DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->msd_a, key, keylen, hash);
 	if (result == 0)
 		return DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->msd_b, key, keylen, hash);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->msd_b, key, keylen, hash);
 	if unlikely(exists != 0) {
-		if unlikely(exists < 0)
+		if unlikely(Dee_HAS_ISERR(exists))
 			goto err;
-		return 0;
+		return Dee_HAS_NO;
 	}
-	return 1;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

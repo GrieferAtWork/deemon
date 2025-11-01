@@ -4066,15 +4066,15 @@ list_compare_eq_v(List *lhs, DeeObject *const *rhsv, size_t elemc) {
 		DeeList_LockEndRead(lhs);
 		temp = DeeObject_TryCompareEq(lhs_elem, rhsv[i]);
 		Dee_Decref(lhs_elem);
-		if (temp != 0)
+		if (temp != Dee_COMPARE_EQ)
 			return temp;
 		DeeList_LockRead(lhs);
 	}
 	DeeList_LockEndRead(lhs);
-	return 0;
+	return Dee_COMPARE_EQ;
 nope:
 	DeeList_LockEndRead(lhs);
-	return 1;
+	return Dee_COMPARE_NE;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -4087,7 +4087,7 @@ list_compare_v(List *lhs, DeeObject *const *rhsv, size_t rhsc) {
 		if (i >= DeeList_SIZE(lhs)) {
 			size_t lhsc = DeeList_SIZE(lhs);
 			DeeList_LockEndRead(lhs);
-			return lhsc < rhsc ? -1 : lhsc > rhsc ? 1 : 0;
+			return Dee_Compare(lhsc, rhsc);
 		}
 		if (i >= rhsc)
 			break;
@@ -4096,12 +4096,12 @@ list_compare_v(List *lhs, DeeObject *const *rhsv, size_t rhsc) {
 		DeeList_LockEndRead(lhs);
 		diff = DeeObject_Compare(lhs_elem, rhsv[i]);
 		Dee_Decref(lhs_elem);
-		if (diff != 0)
+		if (diff != Dee_COMPARE_EQ)
 			return diff;
 		DeeList_LockRead(lhs);
 	}
 	DeeList_LockEndRead(lhs);
-	return 1; /* COUNT(lhs) > COUNT(rhs) */
+	return Dee_COMPARE_GR; /* COUNT(lhs) > COUNT(rhs) */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

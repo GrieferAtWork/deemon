@@ -25,6 +25,7 @@
 
 /* TODO: Don't generate "tdefault__size_fast__with__" (typed variants without dependencies). */
 
+#include "../../../include/deemon/api.h" /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
 import * from deemon;
 import posix;
@@ -363,8 +364,29 @@ function detectConstantReturnValue(body: string): string | int | none {
 				return -1;
 			case "Dee_BOUND_YES":
 				return 1;
-			/* TODO: Dee_BOUND_MISSING (dependent on CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS) */
-			/* TODO: Dee_BOUND_NO (dependent on CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS) */
+#if 1
+#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+			case "Dee_BOUND_MISSING":
+				return 0;
+			case "Dee_BOUND_NO":
+				return 2;
+#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
+			case "Dee_BOUND_MISSING":
+				return -2;
+			case "Dee_BOUND_NO":
+				return 0;
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
+#endif
+			case "Dee_COMPARE_ERR":
+				return -2;
+			case "Dee_COMPARE_EQ":
+				return 0;
+			case "Dee_COMPARE_NE":
+				return 1; /* or "-1" */
+			case "Dee_COMPARE_LO":
+				return -1;
+			case "Dee_COMPARE_GR":
+				return 1;
 			}
 			return try int(returnExpr) catch (...) none;
 		}	break;

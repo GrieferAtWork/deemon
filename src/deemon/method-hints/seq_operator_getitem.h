@@ -489,7 +489,7 @@ __seq_getitem__.seq_operator_hasitem([[nonnull]] DeeObject *self,
 	Dee_Decref(sizeob);
 	return result;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{using seq_operator_hasitem_index: {
 	size_t index_value;
@@ -498,18 +498,18 @@ err:
 	return CALL_DEPENDENCY(seq_operator_hasitem_index, self, index_value);
 err:
 	if (DeeError_Catch(&DeeError_IntegerOverflow))
-		return 0;
-	return -1;
+		return Dee_HAS_NO;
+	return Dee_HAS_ERR;
 }}
 %{using seq_operator_getitem: {
 	DREF DeeObject *value = CALL_DEPENDENCY(seq_operator_getitem, self, index);
 	if (value) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_HAS_YES;
 	}
 	if (DeeError_Catch(&DeeError_IndexError))
-		return 0;
-	return -1;
+		return Dee_HAS_NO;
+	return Dee_HAS_ERR;
 }}
 %{$with__seq_enumerate = [[prefix(DEFINE_default_bounditem_with_seq_enumerate)]] {
 	Dee_ssize_t status = CALL_DEPENDENCY(seq_enumerate, self,
@@ -517,7 +517,7 @@ err:
 	                                     (void *)index);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
 	if (status == -3 || status == -2)
-		return 1;
+		return Dee_HAS_YES;
 	return (int)status; /* 0 (index doesn't exist) or -1 (error) */
 }} = $with__seq_operator_getitem;
 
@@ -570,19 +570,19 @@ __seq_getitem__.seq_operator_hasitem_index([[nonnull]] DeeObject *__restrict sel
 	size_t seqsize = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(seqsize == (size_t)-1)
 		goto err;
-	return index < seqsize ? 1 : 0;
+	return Dee_HAS_FROMBOOL(index < seqsize);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{using seq_operator_getitem_index: {
 	DREF DeeObject *value = CALL_DEPENDENCY(seq_operator_getitem_index, self, index);
 	if (value) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_HAS_YES;
 	}
 	if (DeeError_Catch(&DeeError_IndexError))
-		return 0;
-	return -1;
+		return Dee_HAS_NO;
+	return Dee_HAS_ERR;
 }}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_default_bounditem_index_with_seq_enumerate_index)]] {
 	size_t end_index;
@@ -594,9 +594,9 @@ err:
 	                         (void *)(uintptr_t)index, index, end_index);
 	ASSERT(status == -4 || status == -3 || status == -2 || status == -1 || status == 0);
 	if (status == -2)
-		return 0;
+		return Dee_HAS_NO;
 	if (status == -4 || status == -3)
-		return 1;
+		return Dee_HAS_YES;
 	return (int)status; /* 0 (empty; aka: index doesn't exist) or -1 (error) */
 }} = $with__seq_operator_getitem_index;
 

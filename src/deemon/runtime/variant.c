@@ -613,15 +613,15 @@ dee_memcmp2(void const *lhs, size_t lhs_size,
             void const *rhs, size_t rhs_size) {
 	size_t common = MIN(lhs_size, rhs_size);
 	int result = memcmp(lhs, rhs, common * sizeof(char));
-	if (result < -1) {
-		result = -1;
-	} else if (result > 1) {
-		result = 1;
-	} else if (result == 0) {
+	if (result < 0) {
+		result = Dee_COMPARE_LO;
+	} else if (result > 0) {
+		result = Dee_COMPARE_GR;
+	} else /*if (result == 0)*/ {
 		if (lhs_size < rhs_size) {
-			result = -1;
+			result = Dee_COMPARE_LO;
 		} else if (lhs_size > rhs_size) {
-			result = 1;
+			result = Dee_COMPARE_GR;
 		}
 	}
 	return result;
@@ -643,8 +643,8 @@ Dee_variant_fast_compare_impl(struct Dee_variant const *__restrict lhs,
 
 	case Dee_VARIANT_UNBOUND:
 		return rhs->var_type == Dee_VARIANT_UNBOUND
-		       ? 0   /* UNBOUND == UNBOUND */
-		       : -1; /* UNBOUND < BOUND */
+		       ? Dee_COMPARE_EQ  /* UNBOUND == UNBOUND */
+		       : Dee_COMPARE_LO; /* UNBOUND < BOUND */
 
 	case Dee_VARIANT_INT32: {
 		int32_t lhs_value = _Dee_variant_get_int32(lhs);
@@ -703,10 +703,10 @@ Dee_variant_fast_compare_impl(struct Dee_variant const *__restrict lhs,
 			Dee_int128_t lhs_value = _Dee_variant_get_int128(lhs);
 			Dee_int128_t rhs_value = _Dee_variant_get_int128(rhs);
 			if (__hybrid_int128_lo128(lhs_value, rhs_value))
-				return -1;
+				return Dee_COMPARE_LO;
 			if (__hybrid_int128_gr128(lhs_value, rhs_value))
-				return 1;
-			return 0;
+				return Dee_COMPARE_GR;
+			return Dee_COMPARE_EQ;
 		}
 	}	break;
 
@@ -715,10 +715,10 @@ Dee_variant_fast_compare_impl(struct Dee_variant const *__restrict lhs,
 			Dee_uint128_t lhs_value = _Dee_variant_get_uint128(lhs);
 			Dee_uint128_t rhs_value = _Dee_variant_get_uint128(rhs);
 			if (__hybrid_uint128_lo128(lhs_value, rhs_value))
-				return -1;
+				return Dee_COMPARE_LO;
 			if (__hybrid_uint128_gr128(lhs_value, rhs_value))
-				return 1;
-			return 0;
+				return Dee_COMPARE_GR;
+			return Dee_COMPARE_EQ;
 		}
 	}	break;
 
@@ -727,11 +727,7 @@ Dee_variant_fast_compare_impl(struct Dee_variant const *__restrict lhs,
 		if (rhs->var_type == Dee_VARIANT_CSTR) {
 			char const *rhs_str = _Dee_variant_get_cstr(rhs);
 			int result = strcmp(lhs_str, rhs_str);
-			if (result < -1)
-				result = -1;
-			if (result > 1)
-				result = 1;
-			return result;
+			return Dee_CompareFromDiff(result);
 		} else if (rhs->var_type == Dee_VARIANT_CSTRLEN) {
 			char const *rhs_str = _Dee_variant_get_cstr(rhs);
 			size_t lhs_len = strlen(lhs_str);
@@ -782,15 +778,15 @@ Dee_variant_compare_impl(struct Dee_variant *__restrict lhs,
 		if unlikely(!lhs_ob)
 			goto err;
 		return Dee_variant_isbound_nonatomic(rhs)
-		       ? -1 /* UNBOUND < BOUND */
-		       : 0; /* UNBOUND == UNBOUND */
+		       ? Dee_COMPARE_LO  /* UNBOUND < BOUND */
+		       : Dee_COMPARE_EQ; /* UNBOUND == UNBOUND */
 	}
 	rhs_ob = Dee_variant_getobject(rhs);
 	if unlikely(!ITER_ISOK(rhs_ob)) {
 		Dee_Decref(lhs_ob);
 		if unlikely(!rhs_ob)
 			goto err;
-		return 1; /* BOUND > UNBOUND */
+		return Dee_COMPARE_GR; /* BOUND > UNBOUND */
 	}
 	result = DeeObject_Compare(lhs_ob, rhs_ob);
 	Dee_Decref_unlikely(rhs_ob);
@@ -813,15 +809,15 @@ Dee_variant_compare_eq_impl(struct Dee_variant *__restrict lhs,
 		if unlikely(!lhs_ob)
 			goto err;
 		return Dee_variant_isbound_nonatomic(rhs)
-		       ? -1 /* UNBOUND < BOUND */
-		       : 0; /* UNBOUND == UNBOUND */
+		       ? Dee_COMPARE_LO  /* UNBOUND < BOUND */
+		       : Dee_COMPARE_EQ; /* UNBOUND == UNBOUND */
 	}
 	rhs_ob = Dee_variant_getobject(rhs);
 	if unlikely(!ITER_ISOK(rhs_ob)) {
 		Dee_Decref(lhs_ob);
 		if unlikely(!rhs_ob)
 			goto err;
-		return 1; /* BOUND > UNBOUND */
+		return Dee_COMPARE_GR; /* BOUND > UNBOUND */
 	}
 	result = DeeObject_CompareEq(lhs_ob, rhs_ob);
 	Dee_Decref_unlikely(rhs_ob);
@@ -844,15 +840,15 @@ Dee_variant_trycompare_eq_impl(struct Dee_variant *__restrict lhs,
 		if unlikely(!lhs_ob)
 			goto err;
 		return Dee_variant_isbound_nonatomic(rhs)
-		       ? -1 /* UNBOUND < BOUND */
-		       : 0; /* UNBOUND == UNBOUND */
+		       ? Dee_COMPARE_LO  /* UNBOUND < BOUND */
+		       : Dee_COMPARE_EQ; /* UNBOUND == UNBOUND */
 	}
 	rhs_ob = Dee_variant_getobject(rhs);
 	if unlikely(!ITER_ISOK(rhs_ob)) {
 		Dee_Decref(lhs_ob);
 		if unlikely(!rhs_ob)
 			goto err;
-		return 1; /* BOUND > UNBOUND */
+		return Dee_COMPARE_GR; /* BOUND > UNBOUND */
 	}
 	result = DeeObject_TryCompareEq(lhs_ob, rhs_ob);
 	Dee_Decref_unlikely(rhs_ob);

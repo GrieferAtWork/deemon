@@ -515,7 +515,7 @@ DeeSystem_DEFINE_qsort(dee_qsort)
 #define __LIBCCALL /* nothing */
 #endif /* !__LIBCCALL */
 
-PRIVATE WUNUSED int __LIBCCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int __LIBCCALL
 bb_loclastread_compare(void const *a, void const *b) {
 	struct bb_loclastread const *lhs = (struct bb_loclastread const *)a;
 	struct bb_loclastread const *rhs = (struct bb_loclastread const *)b;

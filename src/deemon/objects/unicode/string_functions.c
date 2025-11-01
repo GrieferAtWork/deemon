@@ -6120,13 +6120,8 @@ compare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
 			}
 			/* Most simple case: compare ascii/single-byte strings. */
 			result = memcmp(lhs_str, rhs->s_str + rhs_start, MIN(lhs_len, rhs_len));
-			if (result != 0) {
-				if (result < -1)
-					result = -1;
-				if (result > 1)
-					result = 1;
-				return result;
-			}
+			if (result != 0)
+				return Dee_CompareFromDiff(result);
 		} else {
 			struct string_utf *rhs_utf = rhs->s_data;
 			switch (rhs_utf->u_width) {
@@ -6173,8 +6168,7 @@ compare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
 				}
 			}	break;
 
-			default:
-				__builtin_unreachable();
+			default: __builtin_unreachable();
 			}
 		}
 	} else if (!rhs->s_data ||
@@ -6237,8 +6231,7 @@ compare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
 			}
 		}	break;
 
-		default:
-			__builtin_unreachable();
+		default: __builtin_unreachable();
 		}
 	} else {
 		struct string_utf *lhs_utf;
@@ -6282,13 +6275,8 @@ compare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
 				}
 				common_len = MIN(lhs_len, rhs_len);
 				result = memcmpw(lhs_str, rhs_str, common_len);
-				if (result != 0) {
-					if (result < -1)
-						result = -1;
-					if (result > 1)
-						result = 1;
-					return result;
-				}
+				if (result != 0)
+					return Dee_CompareFromDiff(result);
 			}	break;
 
 			CASE_WIDTH_4BYTE: {
@@ -6313,8 +6301,7 @@ compare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
 			}
 			break;
 
-			default:
-				__builtin_unreachable();
+			default: __builtin_unreachable();
 			}
 		}	break;
 
@@ -6369,31 +6356,20 @@ compare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
 				}
 				common_len = MIN(lhs_len, rhs_len);
 				result = memcmpl(lhs_str, rhs_str, common_len);
-				if (result != 0) {
-					if (result < -1)
-						result = -1;
-					if (result > 1)
-						result = 1;
-					return result;
-				}
+				if (result != 0)
+					return Dee_CompareFromDiff(result);
 			}	break;
 
-			default:
-				__builtin_unreachable();
+			default: __builtin_unreachable();
 			}
 		}	break;
 
-		default:
-			__builtin_unreachable();
+		default: __builtin_unreachable();
 		}
 	}
 
 	/* If string contents are identical, leave off by comparing their lengths. */
-	if (lhs_len == rhs_len)
-		return 0;
-	if (lhs_len < rhs_len)
-		return -1;
-	return 1;
+	return Dee_Compare(lhs_len, rhs_len);
 }
 
 /* NOTE: Always returns within [-1,1] */
@@ -6409,14 +6385,16 @@ casecompare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
 		unicode_foldreader_init##rhs_bwl(&rhs_reader, rhs_str, rhs_len); \
 		for (;;) {                                                       \
 			uint32_t ch_lhs, ch_rhs;                                     \
-			if (unicode_foldreader_empty(&lhs_reader))                   \
-				return unicode_foldreader_empty(&rhs_reader) ? 0 : -1;   \
+			if (unicode_foldreader_empty(&lhs_reader)) {                 \
+				bool rhs_empty = unicode_foldreader_empty(&rhs_reader);  \
+				return rhs_empty ? Dee_COMPARE_EQ : Dee_COMPARE_LO;      \
+			}                                                            \
 			if (unicode_foldreader_empty(&rhs_reader))                   \
-				return 1;                                                \
+				return Dee_COMPARE_GR;                                   \
 			ch_lhs = unicode_foldreader_getc##lhs_bwl(&lhs_reader);      \
 			ch_rhs = unicode_foldreader_getc##rhs_bwl(&rhs_reader);      \
 			if (ch_lhs != ch_rhs)                                        \
-				return ch_lhs < ch_rhs ? -1 : 1;                         \
+				return Dee_CompareNe(ch_lhs, ch_rhs);                    \
 		}                                                                \
 	}
 
@@ -6483,8 +6461,7 @@ casecompare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
 				           l, rhs_str, rhs_len);
 			}	break;
 
-			default:
-				__builtin_unreachable();
+			default: __builtin_unreachable();
 			}
 		}
 	} else if (!rhs->s_data ||
@@ -6537,8 +6514,7 @@ casecompare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
 			           b, rhs_str, rhs_len);
 		}	break;
 
-		default:
-			__builtin_unreachable();
+		default: __builtin_unreachable();
 		}
 	} else {
 		struct string_utf *lhs_utf;
@@ -6598,8 +6574,7 @@ casecompare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
 				           l, rhs_str, rhs_len);
 			}	break;
 
-			default:
-				__builtin_unreachable();
+			default: __builtin_unreachable();
 			}
 		}	break;
 
@@ -6650,15 +6625,14 @@ casecompare_strings_ex(String *lhs, size_t lhs_start, size_t lhs_end,
 				           l, rhs_str, rhs_len);
 			}	break;
 
-			default:
-				__builtin_unreachable();
+			default: __builtin_unreachable();
 			}
 		}	break;
 
-		default:
-			__builtin_unreachable();
+		default: __builtin_unreachable();
 		}
 	}
+	__builtin_unreachable();
 }
 #undef DO_COMPARE
 

@@ -846,21 +846,17 @@ cachedseq_index_compare(struct cachedseq_index const *__restrict lhs,
 			return int_compareint(lhs->csi_indexob, rhs->csi_indexob);
 		rhs_asint = rhs->csi_index;
 		if (!DeeInt_TryAsSize((DeeObject *)lhs->csi_indexob, &lhs_asint))
-			return 1; /* lhs > rhs  (reason: lhs > (size_t)-1) */
+			return Dee_COMPARE_GR; /* lhs > rhs  (reason: lhs > (size_t)-1) */
 	} else {
 		lhs_asint = lhs->csi_index;
 		if (rhs->csi_indexob) {
 			if (!DeeInt_TryAsSize((DeeObject *)rhs->csi_indexob, &rhs_asint))
-				return -1; /* lhs < rhs  (reason: rhs > (size_t)-1) */
+				return Dee_COMPARE_LO; /* lhs < rhs  (reason: rhs > (size_t)-1) */
 		} else {
 			rhs_asint = rhs->csi_index;
 		}
 	}
-	if (lhs_asint < rhs_asint)
-		return -1;
-	if (lhs_asint > rhs_asint)
-		return 1;
-	return 0;
+	return Dee_Compare(lhs_asint, rhs_asint);
 }
 
 
@@ -1286,21 +1282,6 @@ cswgi_bounditem(CachedSeq_WithGetItem *self, DeeObject *index) {
 	return Dee_BOUND_YES;
 }
 
-#define cswsogi_hasitem cswgi_hasitem
-#define cswsgi_hasitem  cswgi_hasitem
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-cswgi_hasitem(CachedSeq_WithGetItem *self, DeeObject *index) {
-	DREF DeeObject *result = cswgi_getitem_object_ex(self, index);
-	if (result == CSWGI_GETITEM_UNBOUND)
-		return 0;
-	if (result == CSWGI_GETITEM_OOB)
-		return 0;
-	if (result == CSWGI_GETITEM_ERROR)
-		return -1;
-	Dee_Decref_unlikely(result);
-	return 1;
-}
-
 #define cswsogi_bounditem_index cswgi_bounditem_index
 #define cswsgi_bounditem_index  cswgi_bounditem_index
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1316,8 +1297,30 @@ cswgi_bounditem_index(CachedSeq_WithGetItem *self, size_t index) {
 	return Dee_BOUND_YES;
 }
 
+#define cswsogi_hasitem cswgi_hasitem
+#define cswsgi_hasitem  cswgi_hasitem
+#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+#define cswgi_hasitem cswgi_bounditem
+#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cswgi_hasitem(CachedSeq_WithGetItem *self, DeeObject *index) {
+	DREF DeeObject *result = cswgi_getitem_object_ex(self, index);
+	if (result == CSWGI_GETITEM_UNBOUND)
+		return Dee_HAS_NO;
+	if (result == CSWGI_GETITEM_OOB)
+		return Dee_HAS_NO;
+	if (result == CSWGI_GETITEM_ERROR)
+		return Dee_HAS_ERR;
+	Dee_Decref_unlikely(result);
+	return Dee_HAS_YES;
+}
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
+
 #define cswsogi_hasitem_index cswgi_hasitem_index
 #define cswsgi_hasitem_index  cswgi_hasitem_index
+#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+#define cswgi_hasitem_index cswgi_bounditem_index
+#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cswgi_hasitem_index(CachedSeq_WithGetItem *self, size_t index) {
 	DREF DeeObject *result = cswgi_getitem_index_ex(self, index);
@@ -1330,6 +1333,7 @@ cswgi_hasitem_index(CachedSeq_WithGetItem *self, size_t index) {
 	Dee_Decref_unlikely(result);
 	return 1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
 #define cswsogi_trygetitem cswgi_trygetitem
 #define cswsgi_trygetitem  cswgi_trygetitem

@@ -2233,7 +2233,8 @@ err:
 	((ch) == '\t' || (ch) == ' ' || \
 	 (ch) == '_' || (ch) == '/' || (ch) == '\\')
 
-PRIVATE bool DCALL dhashname_equals(char const *a, char const *b) {
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+dhashname_equals(char const *a, char const *b) {
 	char cha, chb;
 	for (;;) {
 		cha = *a++;
@@ -2255,12 +2256,12 @@ PRIVATE bool DCALL dhashname_equals(char const *a, char const *b) {
 				chb = '-';
 			}
 			if (cha != chb)
-				return 0;
+				return false;
 		}
 		if (!cha)
 			break;
 	}
-	return 1;
+	return true;
 }
 
 /* Try to find the hash algorithm associated with `name', returning

@@ -563,12 +563,12 @@ modexports_hasitem(ModuleExports *self, DeeObject *key) {
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	DeeModule_UnlockSymbols(mod);
-	return 1;
+	return Dee_HAS_YES;
 err_nokey_unlock:
 	DeeModule_UnlockSymbols(mod);
-	return 0;
+	return Dee_HAS_NO;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -716,13 +716,13 @@ modexports_hasitem_index(ModuleExports *self, size_t key) {
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	DeeModule_UnlockSymbols(mod);
-	return 1;
+	return Dee_HAS_YES;
 err_nokey_unlock:
 	DeeModule_UnlockSymbols(mod);
 err_nokey:
-	return 0;
+	return Dee_HAS_NO;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -847,12 +847,12 @@ modexports_hasitem_string_hash(ModuleExports *self, char const *key, Dee_hash_t 
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	DeeModule_UnlockSymbols(mod);
-	return 1;
+	return Dee_HAS_YES;
 err_nokey_unlock:
 	DeeModule_UnlockSymbols(mod);
-	return 0;
+	return Dee_HAS_NO;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -967,12 +967,12 @@ modexports_hasitem_string_len_hash(ModuleExports *self, char const *key, size_t 
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	DeeModule_UnlockSymbols(mod);
-	return 1;
+	return Dee_HAS_YES;
 err_nokey_unlock:
 	DeeModule_UnlockSymbols(mod);
-	return 0;
+	return Dee_HAS_NO;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

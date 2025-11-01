@@ -498,8 +498,8 @@ DECL_BEGIN
 #define LOCAL_ERROR_RESULT          NULL
 #elif defined(LOCAL_IS_HAS)
 #define LOCAL_return_t              int
-#define LOCAL_ATTR_NOT_FOUND_RESULT 0
-#define LOCAL_ERROR_RESULT          (-1)
+#define LOCAL_ATTR_NOT_FOUND_RESULT Dee_HAS_NO
+#define LOCAL_ERROR_RESULT          Dee_HAS_ERR
 #elif defined(LOCAL_IS_DEL) || defined(LOCAL_IS_SET) || defined(LOCAL_IS_FIND)
 #define LOCAL_return_t              int
 #define LOCAL_ATTR_NOT_FOUND_RESULT 1
@@ -1028,7 +1028,7 @@ continue_at_iter:
 			cattr = LOCAL_DeeType_QueryAttribute(tp_self, tp_iter);
 			if (cattr != NULL) {
 #ifdef LOCAL_IS_HAS
-				return 1;
+				return Dee_HAS_YES;
 #elif defined(LOCAL_IS_FINDINFO)
 				retinfo->ai_type = Dee_ATTRINFO_ATTR;
 				retinfo->ai_decl = (DeeObject *)tp_iter;
@@ -1351,7 +1351,7 @@ do_tp_iter_attr:
 #ifdef LOCAL_IS_BOUND
 				return Dee_BOUND_YES;
 #else /* LOCAL_IS_BOUND */
-				return 1;
+				return Dee_HAS_YES;
 #endif /* !LOCAL_IS_BOUND */
 			}
 #ifdef LOCAL_IS_BOUND
@@ -1363,7 +1363,7 @@ do_tp_iter_attr:
 #ifdef LOCAL_IS_BOUND
 				return Dee_BOUND_MISSING;
 #else /* LOCAL_IS_BOUND */
-				return 0;
+				return Dee_HAS_NO;
 #endif /* !LOCAL_IS_BOUND */
 			}
 			goto err;

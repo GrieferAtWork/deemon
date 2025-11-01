@@ -82,7 +82,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions_hasat
 	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
 		goto err;
 	result = DeeObject_HasAttr(ob, (DeeObject *)attr);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -110,7 +110,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions_hasit
 /*[[[end]]]*/
 {
 	int result = DeeObject_HasItem(ob, key);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:

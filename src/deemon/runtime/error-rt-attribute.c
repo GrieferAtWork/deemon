@@ -1264,34 +1264,34 @@ AttributeError_compare_impl(AttributeError *lhs, AttributeError *rhs,
 	int result;
 	if (lhs->e_message != rhs->e_message) {
 		if (!lhs->e_message)
-			return -1;
+			return Dee_COMPARE_LO;
 		if (!rhs->e_message)
-			return 1;
+			return Dee_COMPARE_GR;
 		result = (*cmp)((DeeObject *)lhs->e_message,
 		                (DeeObject *)rhs->e_message);
-		if (result != 0)
+		if (result != Dee_COMPARE_EQ)
 			return result;
 	}
 	if (lhs->e_inner != rhs->e_inner) {
 		if (!lhs->e_inner)
-			return -1;
+			return Dee_COMPARE_LO;
 		if (!rhs->e_inner)
-			return 1;
+			return Dee_COMPARE_GR;
 		result = (*cmp)(lhs->e_inner, rhs->e_inner);
-		if (result != 0)
+		if (result != Dee_COMPARE_EQ)
 			return result;
 	}
 	if (lhs->ae_obj != rhs->ae_obj) {
 		if (!lhs->ae_obj)
-			return -1;
+			return Dee_COMPARE_LO;
 		if (!rhs->ae_obj)
-			return 1;
+			return Dee_COMPARE_GR;
 #if 1 /* If instances differ, then then the errors aren't the same */
 		return Dee_CompareNe(DeeObject_Id(lhs->ae_obj),
 		                     DeeObject_Id(rhs->ae_obj));
 #else
 		result = (*cmp)(lhs->ae_obj, rhs->ae_obj);
-		if (result != 0)
+		if (result != Dee_COMPARE_EQ)
 			return result;
 #endif
 	}
@@ -1306,9 +1306,9 @@ AttributeError_compare_impl(AttributeError *lhs, AttributeError *rhs,
 		/* Only touch names after decls were loaded. */
 		if (lhs->ae_desc.ad_name != rhs->ae_desc.ad_name) {
 			if (!lhs->ae_desc.ad_name)
-				return -1;
+				return Dee_COMPARE_LO;
 			if (!rhs->ae_desc.ad_name)
-				return 1;
+				return Dee_COMPARE_GR;
 			if ((lhs->ae_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ) &&
 			    (rhs->ae_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ)) {
 				DeeStringObject *lhs_name = Dee_attrdesc_nameobj(&lhs->ae_desc);
@@ -1321,14 +1321,14 @@ AttributeError_compare_impl(AttributeError *lhs, AttributeError *rhs,
 				size_t rhs_len = (rhs->ae_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ) ? WSTR_LENGTH(rhs_str) : strlen(rhs_str);
 				result = dee_memcmp2(lhs_str, lhs_len, rhs_str, rhs_len);
 			}
-			if (result != 0)
+			if (result != Dee_COMPARE_EQ)
 				return result;
 		}
 		if (lhs_decl != rhs_decl) {
 			if (!lhs_decl)
-				return -1;
+				return Dee_COMPARE_LO;
 			if (!rhs_decl)
-				return 1;
+				return Dee_COMPARE_GR;
 #if 1 /* If instances differ, then then the errors aren't the same */
 			return Dee_CompareNe(DeeObject_Id(lhs_decl),
 			                     DeeObject_Id(rhs_decl));
@@ -1339,7 +1339,7 @@ AttributeError_compare_impl(AttributeError *lhs, AttributeError *rhs,
 			} else {
 				result = (*cmp)(lhs_decl,
 				                rhs_decl);
-				if (result != 0)
+				if (result != Dee_COMPARE_EQ)
 					return result;
 			}
 #endif
@@ -1354,7 +1354,7 @@ AttributeError_compare_impl(AttributeError *lhs, AttributeError *rhs,
 			return Dee_CompareNe(lhs_flags, rhs_flags);
 	}
 
-	return 0;
+	return Dee_COMPARE_EQ;
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
@@ -1403,7 +1403,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 AttributeError_trycompare_eq(AttributeError *self, AttributeError *some_object) {
 	if (!DeeObject_InstanceOfExact(some_object, Dee_TYPE(self)))
-		return 1;
+		return Dee_COMPARE_NE;
 	return AttributeError_compare_impl(self, some_object, &DeeObject_TryCompareEq);
 }
 

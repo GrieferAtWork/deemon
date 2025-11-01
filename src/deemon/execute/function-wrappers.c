@@ -1457,10 +1457,10 @@ funcsymbolsbyname_bounditem_string_len_hash(FunctionSymbolsByName *self,
 PRIVATE ATTR_CONST WUNUSED int DCALL
 _funcsymbolsbyname_hasitem_common(uint16_t rid) {
 	if unlikely(rid == RID_ERR)
-		return -1;
+		return Dee_HAS_ERR;
 	if (rid == RID_UNK)
-		return 0;
-	return 1;
+		return Dee_HAS_NO;
+	return Dee_HAS_YES;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2660,11 +2660,11 @@ yfuncsymbolsbyname_hasitem(YieldFunctionSymbolsByName *self, DeeObject *key) {
 	if (symid != YFUNCSYMBOL_INVALID) {
 		if unlikely(symid == YFUNCSYMBOL_ERROR)
 			goto err;
-		return 1;
+		return Dee_HAS_YES;
 	}
-	return 0;
+	return Dee_HAS_NO;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 #endif /* !__OPTIMIZE_SIZE__ */
 

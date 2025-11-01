@@ -1659,7 +1659,7 @@ code_hash(DeeCodeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 code_compare_eq_impl(DeeCodeObject *self, DeeCodeObject *other) {
 	if (self == other)
-		return 0;
+		return Dee_COMPARE_EQ;
 	if (self->co_flags != other->co_flags)
 		goto nope;
 	if (self->co_localc != other->co_localc)
@@ -1739,9 +1739,9 @@ code_compare_eq_impl(DeeCodeObject *self, DeeCodeObject *other) {
 	if (bcmp(self->co_code, other->co_code, self->co_codebytes) != 0)
 		goto nope;
 	return DeeObject_TryCompareEq((DeeObject *)self->co_ddi,
-	                                       (DeeObject *)other->co_ddi);
+	                              (DeeObject *)other->co_ddi);
 nope:
-	return 1;
+	return Dee_COMPARE_NE;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

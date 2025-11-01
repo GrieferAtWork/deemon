@@ -945,15 +945,16 @@ bytes_compare_seq(Bytes *lhs, DeeObject *rhs) {
 	foreach_status = DeeObject_Foreach(rhs, &bytes_compare_seq_cb, &data);
 	ASSERT(foreach_status == 0 || foreach_status == -1 ||
 	       foreach_status == -2 || foreach_status == -3);
-	if unlikely(foreach_status == -1)
-		goto err;
-	if (foreach_status == -2)
-		return -1; /* lhs < rhs */
-	if (foreach_status == -3)
-		return 1; /* lhs > rhs */
+	switch (foreach_status) {
+	case 0: break;
+	case -1: goto err;
+	case -2: return Dee_COMPARE_LO; /* lhs < rhs */
+	case -3: return Dee_COMPARE_GR; /* lhs > rhs */
+	default: __builtin_unreachable();
+	}
 	if (data.bcsd_index < data.bcsd_size)
-		return 1; /* lhs > rhs */
-	return 0;
+		return Dee_COMPARE_GR; /* lhs > rhs */
+	return Dee_COMPARE_EQ;
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -967,7 +968,7 @@ bytes_compare_eq(Bytes *lhs, DeeObject *rhs) {
 		byte_t *rhs_data = DeeBytes_DATA(rhs);
 		size_t rhs_size  = DeeBytes_SIZE(rhs);
 		if (DeeBytes_SIZE(lhs) != rhs_size)
-			return 1;
+			return Dee_COMPARE_NE;
 		return !!bcmp(DeeBytes_DATA(lhs), rhs_data, rhs_size);
 	}
 	return bytes_compare_seq(lhs, rhs);
@@ -981,11 +982,7 @@ dee_memxcmp(void const *a, size_t asiz,
 	int result = memcmp(a, b, MIN(asiz, bsiz));
 	if (result)
 		return Dee_CompareFromDiff(result);
-	if (asiz == bsiz)
-		return 0;
-	if (asiz < bsiz)
-		return -1;
-	return 1;
+	return Dee_Compare(asiz, bsiz);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1014,9 +1011,9 @@ bytes_eq(Bytes *lhs, DeeObject *rhs) {
 		return_bool(string_eq_bytes((DeeStringObject *)rhs, lhs));
 	{
 		int temp = bytes_compare_seq(lhs, rhs);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if unlikely(Dee_COMPARE_ISERR(temp))
 			goto err;
-		return_bool(temp == 0);
+		return_bool(Dee_COMPARE_ISEQ(temp));
 	}
 err:
 	return NULL;
@@ -1035,9 +1032,9 @@ bytes_ne(Bytes *lhs, DeeObject *rhs) {
 		return_bool(!string_eq_bytes((DeeStringObject *)rhs, lhs));
 	{
 		int temp = bytes_compare_seq(lhs, rhs);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if unlikely(Dee_COMPARE_ISERR(temp))
 			goto err;
-		return_bool(temp != 0);
+		return_bool(Dee_COMPARE_ISNE(temp));
 	}
 err:
 	return NULL;
@@ -1048,7 +1045,7 @@ err:
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
 	name(Bytes *self, DeeObject *other) {                 \
 		int diff = bytes_compare(self, other);            \
-		if unlikely(diff == Dee_COMPARE_ERR)              \
+		if unlikely(Dee_COMPARE_ISERR(diff))              \
 			goto err;                                     \
 		return_bool(diff op 0);                           \
 	err:                                                  \

@@ -427,7 +427,7 @@ JITObjectTable_FindImportStar(JITObjectTable *__restrict self,
 			hasattr = DeeObject_HasAttrStringLenHash(module_or_object,
 			                                         namestr, namelen, namehsh);
 			if (hasattr != 0) {
-				if unlikely(hasattr < 0)
+				if unlikely(Dee_HAS_ISERR(hasattr))
 					goto err; /* Error */
 				if (p_mod_symbol)
 					*p_mod_symbol = NULL;

@@ -69,7 +69,7 @@ invset_compare_eq(SetInversion *self, DeeObject *rhs) {
 		SetInversion *xrhs = (SetInversion *)rhs;
 		return DeeObject_InvokeMethodHint(set_operator_compare_eq, self->si_set, xrhs->si_set);
 	}
-	return 1; /* not equal */
+	return Dee_COMPARE_NE; /* not equal */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -78,7 +78,7 @@ invset_trycompare_eq(SetInversion *self, DeeObject *rhs) {
 		SetInversion *xrhs = (SetInversion *)rhs;
 		return DeeObject_InvokeMethodHint(set_operator_trycompare_eq, self->si_set, xrhs->si_set);
 	}
-	return 1; /* not equal */
+	return Dee_COMPARE_NE; /* not equal */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1986,7 +1986,9 @@ err:
 	return -1;
 }
 
-/* >> for (local key: lhs) if (key in rhs) return true;
+/* >> for (local key: lhs)
+ * >>     if (key in rhs)
+ * >>         return true;
  * >> return false; */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 set_containsany_foreach_lhs(DeeObject *lhs, DeeObject *rhs) {
@@ -2014,7 +2016,9 @@ err:
 	return -1;
 }
 
-/* >> for (local key: lhs) if (key !in rhs) return false;
+/* >> for (local key: lhs)
+ * >>     if (key !in rhs)
+ * >>         return false;
  * >> return true; */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 set_containsall_foreach_lhs(DeeObject *lhs, DeeObject *rhs) {
@@ -2082,11 +2086,13 @@ SetDifference_NonEmpty(DeeObject *a, DeeObject *b) {
 		SetInversion *xb = (SetInversion *)b;
 		return SetIntersection_NonEmpty(a, xb->si_set);
 	} else {
-		/* >> for (local key: a) if (key !in b) return true;
+		/* >> for (local key: a)
+		 * >>     if (key !in b)
+		 * >>         return true;
 		 * >> return false; */
 		int result = set_containsall_foreach_lhs(a, b);
 		if likely(result >= 0)
-			result = !result;
+			result = result ? 0 : 1;
 		return result;
 	}
 	__builtin_unreachable();

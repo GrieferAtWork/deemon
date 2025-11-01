@@ -174,7 +174,7 @@ filteriterator_compare_eq(HashFilterIterator *self, HashFilterIterator *other) {
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
 	if (self->fi_hash != other->fi_hash)
-		return 1;
+		return Dee_COMPARE_NE;
 	return DeeObject_CompareEq(self->fi_iter, other->fi_iter);
 err:
 	return Dee_COMPARE_ERR;

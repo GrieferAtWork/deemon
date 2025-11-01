@@ -72,12 +72,12 @@ has_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr) 
 			obj = (*maketyped__getattr(tp_self->tp_attr->tp_getattr))(tp_self, self, attr);
 			if (obj) {
 				Dee_Decref(obj);
-				return 1;
+				return Dee_HAS_YES;
 			}
 			if (DeeError_Catch(&DeeError_NotImplemented) ||
 			    DeeError_Catch(&DeeError_AttributeError))
-				return 0;
-			return -1;
+				return Dee_HAS_NO;
+			return Dee_HAS_ERR;
 		}
 	} else {
 		char const *name = DeeString_STR(attr);
@@ -96,9 +96,9 @@ has_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr) 
 		    DeeType_HasMemberAttrStringHash(tp_self, tp_self, name, hash))
 			goto yes;
 	}
-	return 0;
+	return Dee_HAS_NO;
 yes:
-	return 1;
+	return Dee_HAS_YES;
 }
 
 

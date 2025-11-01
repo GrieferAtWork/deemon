@@ -131,9 +131,9 @@ attr_compare_eq_impl(Attr *lhs, Attr *rhs) {
 			goto nope;
 	}
 yup:
-	return 0;
+	return Dee_COMPARE_EQ;
 nope:
-	return 1;
+	return Dee_COMPARE_NE;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -148,7 +148,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 attr_trycompare_eq(Attr *lhs, Attr *rhs) {
 	if (!DeeObject_InstanceOf(rhs, &DeeAttribute_Type))
-		return -1;
+		return Dee_COMPARE_NE;
 	return attr_compare_eq_impl(lhs, rhs);
 }
 

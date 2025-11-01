@@ -549,12 +549,12 @@ LOCAL_seX(setattr_string_len_hash)(LOCAL_SeqEach *self, char const *attr,
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_seX(boundattr)(LOCAL_SeqEach *self, DeeObject *attr) {
-	return seqeach_map_from_bound(LOCAL_seX(foreach)(self, &se_boundattr_foreach_cb, attr));
+	return seqeach_map_fe2bound(LOCAL_seX(foreach)(self, &se_boundattr_foreach_cb, attr));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_seX(hasattr)(LOCAL_SeqEach *self, DeeObject *attr) {
-	return seqeach_map_from_has(LOCAL_seX(foreach)(self, &se_hasattr_foreach_cb, attr));
+	return seqeach_map_fe2has(LOCAL_seX(foreach)(self, &se_hasattr_foreach_cb, attr));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -562,7 +562,7 @@ LOCAL_seX(boundattr_string_hash)(LOCAL_SeqEach *self, char const *attr, Dee_hash
 	struct se_boundattr_string_hash_foreach_data data;
 	data.ssbashfd_attr = attr;
 	data.ssbashfd_hash = hash;
-	return seqeach_map_from_bound(LOCAL_seX(foreach)(self, &se_boundattr_string_hash_foreach_cb, &data));
+	return seqeach_map_fe2bound(LOCAL_seX(foreach)(self, &se_boundattr_string_hash_foreach_cb, &data));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -570,7 +570,7 @@ LOCAL_seX(hasattr_string_hash)(LOCAL_SeqEach *self, char const *attr, Dee_hash_t
 	struct se_boundattr_string_hash_foreach_data data;
 	data.ssbashfd_attr = attr;
 	data.ssbashfd_hash = hash;
-	return seqeach_map_from_has(LOCAL_seX(foreach)(self, &se_hasattr_string_hash_foreach_cb, &data));
+	return seqeach_map_fe2has(LOCAL_seX(foreach)(self, &se_hasattr_string_hash_foreach_cb, &data));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -579,7 +579,7 @@ LOCAL_seX(boundattr_string_len_hash)(LOCAL_SeqEach *self, char const *attr, size
 	data.ssbaslhfd_attr    = attr;
 	data.ssbaslhfd_attrlen = attrlen;
 	data.ssbaslhfd_hash    = hash;
-	return seqeach_map_from_bound(LOCAL_seX(foreach)(self, &se_boundattr_string_len_hash_foreach_cb, &data));
+	return seqeach_map_fe2bound(LOCAL_seX(foreach)(self, &se_boundattr_string_len_hash_foreach_cb, &data));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -588,7 +588,7 @@ LOCAL_seX(hasattr_string_len_hash)(LOCAL_SeqEach *self, char const *attr, size_t
 	data.ssbaslhfd_attr    = attr;
 	data.ssbaslhfd_attrlen = attrlen;
 	data.ssbaslhfd_hash    = hash;
-	return seqeach_map_from_has(LOCAL_seX(foreach)(self, &se_hasattr_string_len_hash_foreach_cb, &data));
+	return seqeach_map_fe2has(LOCAL_seX(foreach)(self, &se_hasattr_string_len_hash_foreach_cb, &data));
 }
 
 
@@ -805,27 +805,27 @@ err:
 #define LOCAL_seX_operator_bounditem_PTR &LOCAL_seX(operator_bounditem)
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_seX(operator_bounditem)(LOCAL_SeqEach *self, DeeObject *index) {
-	return seqeach_map_from_bound(LOCAL_seX(foreach)(self, &se_bounditem_foreach_cb, index));
+	return seqeach_map_fe2bound(LOCAL_seX(foreach)(self, &se_bounditem_foreach_cb, index));
 }
 
 #define LOCAL_seX_operator_hasitem_PTR &LOCAL_seX(operator_hasitem)
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_seX(operator_hasitem)(LOCAL_SeqEach *self, DeeObject *index) {
-	return seqeach_map_from_has(LOCAL_seX(foreach)(self, &se_hasitem_foreach_cb, index));
+	return seqeach_map_fe2has(LOCAL_seX(foreach)(self, &se_hasitem_foreach_cb, index));
 }
 
 #define LOCAL_seX_operator_bounditem_index_PTR &LOCAL_seX(operator_bounditem_index)
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_seX(operator_bounditem_index)(LOCAL_SeqEach *self, size_t index) {
-	return seqeach_map_from_bound(LOCAL_seX(foreach)(self, &se_bounditem_index_foreach_cb,
-	                                                 (void *)(uintptr_t)index));
+	return seqeach_map_fe2bound(LOCAL_seX(foreach)(self, &se_bounditem_index_foreach_cb,
+	                                               (void *)(uintptr_t)index));
 }
 
 #define LOCAL_seX_operator_hasitem_index_PTR &LOCAL_seX(operator_hasitem_index)
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_seX(operator_hasitem_index)(LOCAL_SeqEach *self, size_t index) {
-	return seqeach_map_from_has(LOCAL_seX(foreach)(self, &se_hasitem_index_foreach_cb,
-	                                               (void *)(uintptr_t)index));
+	return seqeach_map_fe2has(LOCAL_seX(foreach)(self, &se_hasitem_index_foreach_cb,
+	                                             (void *)(uintptr_t)index));
 }
 
 #define LOCAL_seX_operator_bounditem_string_hash_PTR &LOCAL_seX(operator_bounditem_string_hash)
@@ -834,7 +834,7 @@ LOCAL_seX(operator_bounditem_string_hash)(LOCAL_SeqEach *self, char const *key, 
 	struct se_bounditem_string_hash_foreach_data data;
 	data.ssbishfd_key  = key;
 	data.ssbishfd_hash = hash;
-	return seqeach_map_from_bound(LOCAL_seX(foreach)(self, &se_bounditem_string_hash_foreach_cb, &data));
+	return seqeach_map_fe2bound(LOCAL_seX(foreach)(self, &se_bounditem_string_hash_foreach_cb, &data));
 }
 
 #define LOCAL_seX_operator_hasitem_string_hash_PTR &LOCAL_seX(operator_hasitem_string_hash)
@@ -843,7 +843,7 @@ LOCAL_seX(operator_hasitem_string_hash)(LOCAL_SeqEach *self, char const *key, De
 	struct se_bounditem_string_hash_foreach_data data;
 	data.ssbishfd_key  = key;
 	data.ssbishfd_hash = hash;
-	return seqeach_map_from_has(LOCAL_seX(foreach)(self, &se_hasitem_string_hash_foreach_cb, &data));
+	return seqeach_map_fe2has(LOCAL_seX(foreach)(self, &se_hasitem_string_hash_foreach_cb, &data));
 }
 
 #define LOCAL_seX_operator_bounditem_string_len_hash_PTR &LOCAL_seX(operator_bounditem_string_len_hash)
@@ -853,7 +853,7 @@ LOCAL_seX(operator_bounditem_string_len_hash)(LOCAL_SeqEach *self, char const *k
 	data.ssbislhfd_key    = key;
 	data.ssbislhfd_keylen = keylen;
 	data.ssbislhfd_hash   = hash;
-	return seqeach_map_from_bound(LOCAL_seX(foreach)(self, &se_bounditem_string_len_hash_foreach_cb, &data));
+	return seqeach_map_fe2bound(LOCAL_seX(foreach)(self, &se_bounditem_string_len_hash_foreach_cb, &data));
 }
 
 #define LOCAL_seX_operator_hasitem_string_len_hash_PTR &LOCAL_seX(operator_hasitem_string_len_hash)
@@ -863,7 +863,7 @@ LOCAL_seX(operator_hasitem_string_len_hash)(LOCAL_SeqEach *self, char const *key
 	data.ssbislhfd_key    = key;
 	data.ssbislhfd_keylen = keylen;
 	data.ssbislhfd_hash   = hash;
-	return seqeach_map_from_has(LOCAL_seX(foreach)(self, &se_hasitem_string_len_hash_foreach_cb, &data));
+	return seqeach_map_fe2has(LOCAL_seX(foreach)(self, &se_hasitem_string_len_hash_foreach_cb, &data));
 }
 
 #define LOCAL_seX_operator_sizeob_PTR                     &sew_sizeob
@@ -1588,14 +1588,18 @@ LOCAL_ssX(call_kw)(LOCAL_SeqEach *__restrict self, size_t argc, DeeObject *const
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_ssX(trycompare_eq)(LOCAL_SeqEach *self, DeeObject *other) {
 	Dee_ssize_t result = LOCAL_seX(foreach)(self, &ss_trycompare_eq_cb, other);
-	ASSERT(result == 0 || result == -1 || result == -2);
-	if (result == -2)
-		return 1;
-	if unlikely(result == -1)
-		goto err;
-	return 0;
-err:
-	return Dee_COMPARE_ERR;
+	ASSERT(result == SEQSOME_FOREACH_YES ||
+	       result == SEQSOME_FOREACH_NO ||
+	       result == SEQSOME_FOREACH_ERR);
+	switch (result) {
+	case SEQSOME_FOREACH_YES:
+		return Dee_COMPARE_EQ; /* Some item *does* compare equal */
+	case SEQSOME_FOREACH_NO:
+		return Dee_COMPARE_NE; /* No items compare equal */
+	case SEQSOME_FOREACH_ERR:
+		return Dee_COMPARE_ERR;
+	default: __builtin_unreachable();
+	}
 }
 
 PRIVATE struct type_cmp LOCAL_ssX(cmp) = {
@@ -1616,24 +1620,24 @@ STATIC_ASSERT(offsetof(SeqEachBase, se_seq) == offsetof(ProxyObject, po_obj));
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_ssX(bounditem)(LOCAL_SeqEach *self, DeeObject *index) {
-	return seqsome_map_from_bound(LOCAL_seX(foreach)(self, &ss_bounditem_foreach_cb, index));
+	return seqsome_map_fe2bound(LOCAL_seX(foreach)(self, &ss_bounditem_foreach_cb, index));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_ssX(hasitem)(LOCAL_SeqEach *self, DeeObject *index) {
-	return seqsome_map_from_has(LOCAL_seX(foreach)(self, &ss_hasitem_foreach_cb, index));
+	return seqsome_map_fe2has(LOCAL_seX(foreach)(self, &ss_hasitem_foreach_cb, index));
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_ssX(bounditem_index)(LOCAL_SeqEach *self, size_t index) {
-	return seqsome_map_from_bound(LOCAL_seX(foreach)(self, &ss_bounditem_index_foreach_cb,
-	                                                 (void *)(uintptr_t)index));
+	return seqsome_map_fe2bound(LOCAL_seX(foreach)(self, &ss_bounditem_index_foreach_cb,
+	                                               (void *)(uintptr_t)index));
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_ssX(hasitem_index)(LOCAL_SeqEach *self, size_t index) {
-	return seqsome_map_from_has(LOCAL_seX(foreach)(self, &ss_hasitem_index_foreach_cb,
-	                                               (void *)(uintptr_t)index));
+	return seqsome_map_fe2has(LOCAL_seX(foreach)(self, &ss_hasitem_index_foreach_cb,
+	                                             (void *)(uintptr_t)index));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1641,7 +1645,7 @@ LOCAL_ssX(bounditem_string_hash)(LOCAL_SeqEach *self, char const *key, Dee_hash_
 	struct ss_bounditem_string_hash_foreach_data data;
 	data.ssbishfd_key  = key;
 	data.ssbishfd_hash = hash;
-	return seqsome_map_from_bound(LOCAL_seX(foreach)(self, &ss_bounditem_string_hash_foreach_cb, &data));
+	return seqsome_map_fe2bound(LOCAL_seX(foreach)(self, &ss_bounditem_string_hash_foreach_cb, &data));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1649,7 +1653,7 @@ LOCAL_ssX(hasitem_string_hash)(LOCAL_SeqEach *self, char const *key, Dee_hash_t 
 	struct ss_bounditem_string_hash_foreach_data data;
 	data.ssbishfd_key  = key;
 	data.ssbishfd_hash = hash;
-	return seqsome_map_from_has(LOCAL_seX(foreach)(self, &ss_hasitem_string_hash_foreach_cb, &data));
+	return seqsome_map_fe2has(LOCAL_seX(foreach)(self, &ss_hasitem_string_hash_foreach_cb, &data));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1658,7 +1662,7 @@ LOCAL_ssX(bounditem_string_len_hash)(LOCAL_SeqEach *self, char const *key, size_
 	data.ssbislhfd_key    = key;
 	data.ssbislhfd_keylen = keylen;
 	data.ssbislhfd_hash   = hash;
-	return seqsome_map_from_bound(LOCAL_seX(foreach)(self, &ss_bounditem_string_len_hash_foreach_cb, &data));
+	return seqsome_map_fe2bound(LOCAL_seX(foreach)(self, &ss_bounditem_string_len_hash_foreach_cb, &data));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1667,7 +1671,7 @@ LOCAL_ssX(hasitem_string_len_hash)(LOCAL_SeqEach *self, char const *key, size_t 
 	data.ssbislhfd_key    = key;
 	data.ssbislhfd_keylen = keylen;
 	data.ssbislhfd_hash   = hash;
-	return seqsome_map_from_has(LOCAL_seX(foreach)(self, &ss_hasitem_string_len_hash_foreach_cb, &data));
+	return seqsome_map_fe2has(LOCAL_seX(foreach)(self, &ss_hasitem_string_len_hash_foreach_cb, &data));
 }
 
 PRIVATE struct type_seq LOCAL_ssX(seq) = {
@@ -1716,12 +1720,12 @@ PRIVATE struct type_seq LOCAL_ssX(seq) = {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_ssX(boundattr)(LOCAL_SeqEach *self, DeeObject *attr) {
-	return seqsome_map_from_bound(LOCAL_seX(foreach)(self, &ss_boundattr_foreach_cb, attr));
+	return seqsome_map_fe2bound(LOCAL_seX(foreach)(self, &ss_boundattr_foreach_cb, attr));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_ssX(hasattr)(LOCAL_SeqEach *self, DeeObject *attr) {
-	return seqsome_map_from_has(LOCAL_seX(foreach)(self, &ss_hasattr_foreach_cb, attr));
+	return seqsome_map_fe2has(LOCAL_seX(foreach)(self, &ss_hasattr_foreach_cb, attr));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1729,7 +1733,7 @@ LOCAL_ssX(boundattr_string_hash)(LOCAL_SeqEach *self, char const *attr, Dee_hash
 	struct ss_boundattr_string_hash_foreach_data data;
 	data.ssbashfd_attr = attr;
 	data.ssbashfd_hash = hash;
-	return seqsome_map_from_bound(LOCAL_seX(foreach)(self, &ss_boundattr_string_hash_foreach_cb, &data));
+	return seqsome_map_fe2bound(LOCAL_seX(foreach)(self, &ss_boundattr_string_hash_foreach_cb, &data));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1737,7 +1741,7 @@ LOCAL_ssX(hasattr_string_hash)(LOCAL_SeqEach *self, char const *attr, Dee_hash_t
 	struct ss_boundattr_string_hash_foreach_data data;
 	data.ssbashfd_attr = attr;
 	data.ssbashfd_hash = hash;
-	return seqsome_map_from_has(LOCAL_seX(foreach)(self, &ss_hasattr_string_hash_foreach_cb, &data));
+	return seqsome_map_fe2has(LOCAL_seX(foreach)(self, &ss_hasattr_string_hash_foreach_cb, &data));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1746,7 +1750,7 @@ LOCAL_ssX(boundattr_string_len_hash)(LOCAL_SeqEach *self, char const *attr, size
 	data.ssbaslhfd_attr    = attr;
 	data.ssbaslhfd_attrlen = attrlen;
 	data.ssbaslhfd_hash    = hash;
-	return seqsome_map_from_bound(LOCAL_seX(foreach)(self, &ss_boundattr_string_len_hash_foreach_cb, &data));
+	return seqsome_map_fe2bound(LOCAL_seX(foreach)(self, &ss_boundattr_string_len_hash_foreach_cb, &data));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1755,7 +1759,7 @@ LOCAL_ssX(hasattr_string_len_hash)(LOCAL_SeqEach *self, char const *attr, size_t
 	data.ssbaslhfd_attr    = attr;
 	data.ssbaslhfd_attrlen = attrlen;
 	data.ssbaslhfd_hash    = hash;
-	return seqsome_map_from_has(LOCAL_seX(foreach)(self, &ss_hasattr_string_len_hash_foreach_cb, &data));
+	return seqsome_map_fe2has(LOCAL_seX(foreach)(self, &ss_hasattr_string_len_hash_foreach_cb, &data));
 }
 
 PRIVATE struct type_attr LOCAL_ssX(attr) = {

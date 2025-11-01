@@ -3556,10 +3556,10 @@ time_compare(DeeTimeObject *self, DeeObject *other) {
 		goto err;
 	DeeTime_AsNano(self, &lhs);
 	if (__hybrid_int128_lo128(lhs, rhs))
-		return -1;
+		return Dee_COMPARE_LO;
 	if (__hybrid_int128_gr128(lhs, rhs))
-		return 1;
-	return 0;
+		return Dee_COMPARE_GR;
+	return Dee_COMPARE_EQ;
 err:
 	return Dee_COMPARE_ERR;
 }

@@ -4054,12 +4054,12 @@ Dee_ssize_compare_int(Dee_ssize_t lhs, DeeIntObject const *rhs) {
 	Dee_ssize_t rhs_value;
 	int error = DeeInt_TryGetSizeBit((DeeObject *)rhs, &rhs_value);
 	if (error == INT_UNSIGNED && (size_t)rhs_value > (size_t)SSIZE_MAX)
-		return -1; /* "rhs_value" is true unsigned, meaning it's always larger than "lhs" */
+		return Dee_COMPARE_LO; /* "rhs_value" is true unsigned, meaning it's always larger than "lhs" */
 	if (lhs < rhs_value)
-		return -1;
+		return Dee_COMPARE_LO;
 	if (lhs > rhs_value)
-		return 1;
-	return 0;
+		return Dee_COMPARE_GR;
+	return Dee_COMPARE_EQ;
 }
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((2)) int DCALL /* Never returns `Dee_COMPARE_ERR' */
@@ -4067,10 +4067,10 @@ Dee_ssize_compare_int_eq(Dee_ssize_t lhs, DeeIntObject const *rhs) {
 	Dee_ssize_t rhs_value;
 	int error = DeeInt_TryGetSizeBit((DeeObject *)rhs, &rhs_value);
 	if (lhs != rhs_value)
-		return 1;
+		return Dee_COMPARE_NE;
 	if unlikely(error == INT_UNSIGNED && (size_t)rhs_value > (size_t)SSIZE_MAX)
-		return 1; /* "rhs_value" isn't *actually* equal to "lhs" */
-	return 0;
+		return Dee_COMPARE_NE; /* "rhs_value" isn't *actually* equal to "lhs" */
+	return Dee_COMPARE_EQ;
 }
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((2)) int DCALL /* Never returns `Dee_COMPARE_ERR' */
@@ -4078,12 +4078,12 @@ Dee_size_compare_int(size_t lhs, DeeIntObject const *rhs) {
 	Dee_ssize_t rhs_value;
 	int error = DeeInt_TryGetSizeBit((DeeObject *)rhs, &rhs_value);
 	if (error == INT_SIGNED && rhs_value < 0)
-		return 1; /* "rhs_value" is signed+negative, meaning it's always less than any unsigned value */
+		return Dee_COMPARE_GR; /* "rhs_value" is signed+negative, meaning it's always less than any unsigned value */
 	if (lhs < (size_t)rhs_value)
-		return -1;
+		return Dee_COMPARE_LO;
 	if (lhs > (size_t)rhs_value)
-		return 1;
-	return 0;
+		return Dee_COMPARE_GR;
+	return Dee_COMPARE_EQ;
 }
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((2)) int DCALL /* Never returns `Dee_COMPARE_ERR' */
@@ -4091,10 +4091,10 @@ Dee_size_compare_int_eq(size_t lhs, DeeIntObject const *rhs) {
 	Dee_ssize_t rhs_value;
 	int error = DeeInt_TryGetSizeBit((DeeObject *)rhs, &rhs_value);
 	if (lhs != (size_t)rhs_value)
-		return 1;
+		return Dee_COMPARE_NE;
 	if unlikely(error == INT_SIGNED && rhs_value < 0)
-		return 1; /* "rhs_value" isn't *actually* equal to "lhs" */
-	return 0;
+		return Dee_COMPARE_NE; /* "rhs_value" isn't *actually* equal to "lhs" */
+	return Dee_COMPARE_EQ;
 }
 
 PUBLIC WUNUSED NONNULL((2)) int DCALL
@@ -4145,7 +4145,7 @@ DeeInt_SSize_TryCompareEq(Dee_ssize_t lhs, DeeObject *rhs) {
 			result = Dee_ssize_compare_int_eq(lhs, rhs_int);
 			Dee_Decref(rhs_int);
 		} else {
-			return 1; /* Implicit `NotImplemented' caught */
+			return Dee_COMPARE_NE; /* Implicit `NotImplemented' caught */
 		}
 	}
 	return result;
@@ -4202,7 +4202,7 @@ DeeInt_Size_TryCompareEq(size_t lhs, DeeObject *rhs) {
 			result = Dee_size_compare_int_eq(lhs, rhs_int);
 			Dee_Decref(rhs_int);
 		} else {
-			return 1; /* Implicit `NotImplemented' caught */
+			return Dee_COMPARE_NE; /* Implicit `NotImplemented' caught */
 		}
 	}
 	return result;
@@ -4325,7 +4325,7 @@ int_trycompare_eq(DeeIntObject *self, DeeObject *some_object) {
 			compare_value = int_compareint(self, rhs);
 			Dee_Decref(rhs);
 		} else {
-			return 1; /* Implicit `NotImplemented' caught */
+			return Dee_COMPARE_NE; /* Implicit `NotImplemented' caught */
 		}
 	}
 	return Dee_CompareEqFromDiff(compare_value);

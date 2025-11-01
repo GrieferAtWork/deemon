@@ -264,10 +264,10 @@ objmethod_bound_module(DeeObjMethodObject *__restrict self) {
 		DREF DeeObject *result = DeeType_GetModule(origin.omo_type);
 		if likely(result) {
 			Dee_Decref_unlikely(result);
-			return 1;
+			return Dee_BOUND_YES;
 		}
 	}
-	return 0;
+	return Dee_BOUND_NO;
 }
 
 DOC_DEF(objmethod_get_func_doc,
@@ -1715,9 +1715,9 @@ clsproperty_bound_module(DeeClsPropertyObject *__restrict self) {
 	result = DeeType_GetModule(self->cp_type);
 	if likely(result) {
 		Dee_Decref_unlikely(result);
-		return 1;
+		return Dee_BOUND_YES;
 	}
-	return 0;
+	return Dee_BOUND_NO;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

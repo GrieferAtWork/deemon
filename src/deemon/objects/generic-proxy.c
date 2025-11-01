@@ -560,7 +560,7 @@ generic_proxy__hash_recursive(ProxyObject *__restrict self) {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy__trycompare_eq_recursive(ProxyObject *self, ProxyObject *other) {
 	if unlikely(!DeeObject_InstanceOf(other, Dee_TYPE(self)))
-		return 1;
+		return Dee_COMPARE_NE;
 	return DeeObject_TryCompareEq(self->po_obj, other->po_obj);
 }
 
@@ -602,9 +602,9 @@ generic_proxy2__trycompare_eq_recursive(ProxyObject2 *self,
                                         ProxyObject2 *other) {
 	int result;
 	if (!DeeObject_InstanceOf(other, Dee_TYPE(self)))
-		return 1;
+		return Dee_COMPARE_NE;
 	result = DeeObject_TryCompareEq(self->po_obj1, other->po_obj1);
-	if (result == 0)
+	if (result == Dee_COMPARE_EQ)
 		result = DeeObject_TryCompareEq(self->po_obj2, other->po_obj2);
 	return result;
 }

@@ -3837,13 +3837,13 @@ dict_mh_seq_compare(Dict *lhs, DeeObject *rhs) {
 	if unlikely(foreach_status == DICT_COMPARE_SEQ_FOREACH_ERROR)
 		goto err;
 	if (foreach_status == DICT_COMPARE_SEQ_FOREACH_LESS)
-		return -1;
+		return Dee_COMPARE_LO;
 	if (foreach_status == DICT_COMPARE_SEQ_FOREACH_GREATER)
-		return 1;
+		return Dee_COMPARE_GR;
 	lhs_size = DeeDict_SIZE_ATOMIC(lhs);
 	if (data.dcsfd_index < lhs_size)
-		return 1;
-	return 0;
+		return Dee_COMPARE_GR;
+	return Dee_COMPARE_EQ;
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -3859,11 +3859,11 @@ dict_mh_seq_compare_eq(Dict *lhs, DeeObject *rhs) {
 	if unlikely(foreach_status == DICT_COMPARE_SEQ_FOREACH_ERROR)
 		goto err;
 	if (foreach_status == DICT_COMPARE_SEQ_FOREACH_NOTEQUAL)
-		return 1;
+		return Dee_COMPARE_NE;
 	lhs_size = DeeDict_SIZE_ATOMIC(lhs);
 	if (data.dcsfd_index < lhs_size)
-		return 1;
-	return 0;
+		return Dee_COMPARE_NE;
+	return Dee_COMPARE_EQ;
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -3871,7 +3871,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_mh_seq_trycompare_eq(Dict *lhs, DeeObject *rhs) {
 	if (!DeeType_HasNativeOperator(Dee_TYPE(rhs), iter))
-		return 1;
+		return Dee_COMPARE_NE;
 	return dict_mh_seq_compare_eq(lhs, rhs);
 }
 

@@ -223,7 +223,7 @@ illegal:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-fast_DeeInstance_BoundAttribute(struct instance_desc *__restrict self,
+fast_DeeInstance_BoundAttribute_asbool(struct instance_desc *__restrict self,
                                 DeeObject *__restrict this_arg,
                                 struct class_attribute *__restrict attr) {
 	DREF DeeObject *result;
@@ -238,23 +238,24 @@ fast_DeeInstance_BoundAttribute(struct instance_desc *__restrict self,
 		Dee_instance_desc_lock_endread(self);
 		if unlikely(!getter)
 			goto unbound;
+
 		/* Invoke the getter. */
 		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		         ? DeeObject_ThisCallInherited(getter, this_arg, 0, NULL)
 		         : DeeObject_CallInherited(getter, 0, NULL);
 		if likely(result) {
 			Dee_Decref(result);
-			return 1;
+			return 1; /* Is bound */
 		}
 		if (DeeError_Catch(&DeeError_UnboundAttribute))
-			return 0;
-		return -1;
+			goto unbound;
+		return -1; /* err */
 	} else {
 		/* Simply return the attribute as-is. */
 		return atomic_read(&self->id_vtab[attr->ca_addr]) != NULL;
 	}
 unbound:
-	return 0;
+	return 0; /* Is not bound */
 }
 
 
@@ -276,6 +277,7 @@ fast_DeeInstance_DelAttribute(struct instance_desc *__restrict self,
 		Dee_instance_desc_lock_endread(self);
 		if unlikely(!delfun)
 			goto illegal;
+
 		/* Invoke the getter. */
 		temp = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		       ? DeeObject_ThisCallInherited(delfun, this_arg, 0, NULL)
@@ -285,6 +287,7 @@ fast_DeeInstance_DelAttribute(struct instance_desc *__restrict self,
 		Dee_Decref_unlikely(temp); /* *_unlikely because it's probably "none" */
 	} else {
 		DREF DeeObject *old_value;
+
 		/* Simply unbind the field in the attr table. */
 		Dee_instance_desc_lock_write(self);
 		old_value = self->id_vtab[attr->ca_addr];
@@ -398,9 +401,9 @@ JITLValue_IsBound(JITLValue *__restrict self,
 		break;
 
 	case JIT_LVALUE_CLSATTRIB:
-		result = fast_DeeInstance_BoundAttribute(self->lv_clsattrib.lc_desc,
-		                                         self->lv_clsattrib.lc_obj,
-		                                         self->lv_clsattrib.lc_attr);
+		result = fast_DeeInstance_BoundAttribute_asbool(self->lv_clsattrib.lc_desc,
+		                                                self->lv_clsattrib.lc_obj,
+		                                                self->lv_clsattrib.lc_attr);
 		break;
 
 	case JIT_LVALUE_ATTR:
@@ -1142,7 +1145,7 @@ set_global:
 			int error;
 			error = DeeObject_HasItemStringLenHash(self->jc_globals,
 			                                   name, namelen, hash);
-			if unlikely(error < 0)
+			if unlikely(Dee_HAS_ISERR(error))
 				goto err;
 			if (error)
 				goto set_global; /* Known global */

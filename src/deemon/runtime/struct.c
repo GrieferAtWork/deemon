@@ -1049,9 +1049,9 @@ struct struct_compare_data {
  * variant-type case between "lhs" and "rhs" doesn't have a fast-
  * pass, or cannot be done without ever throwing an exception.
  *
- * @return: -1: lhs < rhs
- * @return: 0 : Equal
- * @return: 1 : lhs > rhs
+ * @return: Dee_COMPARE_LO:  lhs < rhs
+ * @return: Dee_COMPARE_EQ:  Equal
+ * @return: Dee_COMPARE_GR:  lhs > rhs
  * @return: Dee_COMPARE_ERR: Fast comparison isn't possible */
 PRIVATE WUNUSED NONNULL((2, 3)) int DCALL
 struct_compare_fast_impl(uintptr_half_t type,
@@ -1134,10 +1134,10 @@ struct_compare_fast_impl(uintptr_half_t type,
 		memcpy(&lhs_value, lhs, sizeof(lhs_value));
 		memcpy(&rhs_value, rhs, sizeof(rhs_value));
 		if (__hybrid_int128_lo128(lhs_value, rhs_value))
-			return -1;
+			return Dee_COMPARE_LO;
 		if (__hybrid_int128_gr128(lhs_value, rhs_value))
-			return 1;
-		return 0;
+			return Dee_COMPARE_GR;
+		return Dee_COMPARE_EQ;
 	}	break;
 
 	case STRUCT_UNSIGNED | STRUCT_INT128: {
@@ -1146,10 +1146,10 @@ struct_compare_fast_impl(uintptr_half_t type,
 		memcpy(&lhs_value, lhs, sizeof(lhs_value));
 		memcpy(&rhs_value, rhs, sizeof(rhs_value));
 		if (__hybrid_uint128_lo128(lhs_value, rhs_value))
-			return -1;
+			return Dee_COMPARE_LO;
 		if (__hybrid_uint128_gr128(lhs_value, rhs_value))
-			return 1;
-		return 0;
+			return Dee_COMPARE_GR;
+		return Dee_COMPARE_EQ;
 	}	break;
 
 #ifndef CONFIG_NO_FPU
@@ -1164,7 +1164,7 @@ struct_compare_fast_impl(uintptr_half_t type,
 #undef RETURN_COMPARE
 
 	case STRUCT_VOID:
-		return 0;
+		return Dee_COMPARE_EQ;
 
 	default: break;
 	}
@@ -1191,13 +1191,13 @@ struct_compare_cb_impl(struct struct_compare_data *data,
 		goto err_lhs_ob;
 	if (lhs_ob == ITER_DONE) {
 		if (rhs_ob == ITER_DONE) {
-			result = 0;
+			result = Dee_COMPARE_EQ;
 		} else {
-			result = -1; /* UNBOUND < BOUND */
+			result = Dee_COMPARE_LO; /* UNBOUND < BOUND */
 			Dee_Decref(rhs_ob);
 		}
 	} else if (rhs_ob == ITER_DONE) {
-		result = 1; /* BOUND > UNBOUND */
+		result = Dee_COMPARE_GR; /* BOUND > UNBOUND */
 		Dee_Decref(lhs_ob);
 	} else {
 		result = DeeObject_Compare(lhs_ob, rhs_ob);
@@ -1232,13 +1232,13 @@ struct_compare_eq_cb_impl(struct struct_compare_data *data,
 		goto err_lhs_ob;
 	if (lhs_ob == ITER_DONE) {
 		if (rhs_ob == ITER_DONE) {
-			result = 0;
+			result = Dee_COMPARE_EQ;
 		} else {
-			result = -1; /* UNBOUND < BOUND */
+			result = Dee_COMPARE_LO; /* UNBOUND < BOUND */
 			Dee_Decref(rhs_ob);
 		}
 	} else if (rhs_ob == ITER_DONE) {
-		result = 1; /* BOUND > UNBOUND */
+		result = Dee_COMPARE_GR; /* BOUND > UNBOUND */
 		Dee_Decref(lhs_ob);
 	} else {
 		result = DeeObject_CompareEq(lhs_ob, rhs_ob);
@@ -1273,13 +1273,13 @@ struct_trycompare_eq_cb_impl(struct struct_compare_data *data,
 		goto err_lhs_ob;
 	if (lhs_ob == ITER_DONE) {
 		if (rhs_ob == ITER_DONE) {
-			result = 0;
+			result = Dee_COMPARE_EQ;
 		} else {
-			result = -1; /* UNBOUND < BOUND */
+			result = Dee_COMPARE_LO; /* UNBOUND < BOUND */
 			Dee_Decref(rhs_ob);
 		}
 	} else if (rhs_ob == ITER_DONE) {
-		result = 1; /* BOUND > UNBOUND */
+		result = Dee_COMPARE_GR; /* BOUND > UNBOUND */
 		Dee_Decref(lhs_ob);
 	} else {
 		result = DeeObject_TryCompareEq(lhs_ob, rhs_ob);
@@ -1368,7 +1368,7 @@ DeeStructObject_TryCompareEq(DeeObject *lhs, DeeObject *rhs) {
 	DeeTypeObject *tp_lhs = Dee_TYPE(lhs);
 	struct struct_compare_data data;
 	if (!DeeObject_InstanceOfExact(rhs, tp_lhs))
-		return 1;
+		return Dee_COMPARE_NE;
 	data.scd_lhs = lhs;
 	data.scd_rhs = rhs;
 	result = DeeStructObject_ForeachField(tp_lhs, &struct_trycompare_eq_cb, NULL, &data);

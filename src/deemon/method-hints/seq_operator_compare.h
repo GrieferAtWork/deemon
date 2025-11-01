@@ -88,7 +88,7 @@ if (isEq) {
 	print('	int rhs_nonempty = DeeObject_InvokeMethodHint(seq_operator_bool, rhs);');
 	print('	if unlikely(rhs_nonempty < 0)');
 	print('		goto err;');
-	print('	return rhs_nonempty ? -1 : 0;');
+	print('	return rhs_nonempty ? Dee_COMPARE_LO : Dee_COMPARE_EQ;');
 	print('err:');
 	print('	return Dee_COMPARE_ERR;');
 	print('}}');
@@ -103,7 +103,7 @@ if (isEq) {
 	print('	result = DeeObject_BoolInherited(cmp_ob);');
 	print('	if unlikely(result < 0)');
 	print('		goto err;');
-	print('	return result ? 0 : 1;');
+	print('	return Dee_COMPARE_FROMBOOL(result);');
 	print('err:');
 	print('	return Dee_COMPARE_ERR;');
 	print('}}');
@@ -115,7 +115,7 @@ if (isEq) {
 	print('	result = DeeObject_BoolInherited(cmp_ob);');
 	print('	if unlikely(result < 0)');
 	print('		goto err;');
-	print('	return result;');
+	print('	return Dee_COMPARE_FROM_NOT_EQUALS(result);');
 	print('err:');
 	print('	return Dee_COMPARE_ERR;');
 	print('}}');
@@ -128,7 +128,7 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (temp)');
-	print('		return -1; /' '* Different *' '/');
+	print('		return Dee_COMPARE_LO; /' '* Different *' '/');
 	print('	cmp_ob = CALL_DEPENDENCY(seq_operator_gr, lhs, rhs);');
 	print('	if unlikely(!cmp_ob)');
 	print('		goto err;');
@@ -136,8 +136,8 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (temp)');
-	print('		return 1; /' '* Different *' '/');
-	print('	return 0;');
+	print('		return Dee_COMPARE_GR; /' '* Different *' '/');
+	print('	return Dee_COMPARE_EQ;');
 	print('err:');
 	print('	return Dee_COMPARE_ERR;');
 	print('}}');
@@ -150,7 +150,7 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (!temp)');
-	print('		return 1; /' '* Different *' '/');
+	print('		return Dee_COMPARE_GR; /' '* Different *' '/');
 	print('	cmp_ob = CALL_DEPENDENCY(seq_operator_gr, lhs, rhs);');
 	print('	if unlikely(!cmp_ob)');
 	print('		goto err;');
@@ -158,8 +158,8 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (!temp)');
-	print('		return -1; /' '* Different *' '/');
-	print('	return 0;');
+	print('		return Dee_COMPARE_LO; /' '* Different *' '/');
+	print('	return Dee_COMPARE_EQ;');
 	print('err:');
 	print('	return Dee_COMPARE_ERR;');
 	print('}}');
@@ -174,7 +174,7 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (temp)');
-	print('		return 0; /' '* Equal *' '/');
+	print('		return Dee_COMPARE_EQ; /' '* Equal *' '/');
 	print('	cmp_ob = CALL_DEPENDENCY(seq_operator_lo, lhs, rhs);');
 	print('	if unlikely(!cmp_ob)');
 	print('		goto err;');
@@ -182,8 +182,8 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (temp)');
-	print('		return -1; /' '* Less *' '/');
-	print('	return 1;      /' '* Greater *' '/');
+	print('		return Dee_COMPARE_LO; /' '* Less *' '/');
+	print('	return Dee_COMPARE_GR;     /' '* Greater *' '/');
 	print('err:');
 	print('	return Dee_COMPARE_ERR;');
 	print('}}');
@@ -197,7 +197,7 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (temp)');
-	print('		return 0; /' '* Equal *' '/');
+	print('		return Dee_COMPARE_EQ; /' '* Equal *' '/');
 	print('	cmp_ob = CALL_DEPENDENCY(seq_operator_le, lhs, rhs);');
 	print('	if unlikely(!cmp_ob)');
 	print('		goto err;');
@@ -205,8 +205,8 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (temp)');
-	print('		return -1; /' '* Less *' '/');
-	print('	return 1;      /' '* Greater *' '/');
+	print('		return Dee_COMPARE_LO; /' '* Less *' '/');
+	print('	return Dee_COMPARE_GR;     /' '* Greater *' '/');
 	print('err:');
 	print('	return Dee_COMPARE_ERR;');
 	print('}}');
@@ -220,7 +220,7 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (temp)');
-	print('		return 0; /' '* Equal *' '/');
+	print('		return Dee_COMPARE_EQ; /' '* Equal *' '/');
 	print('	cmp_ob = CALL_DEPENDENCY(seq_operator_gr, lhs, rhs);');
 	print('	if unlikely(!cmp_ob)');
 	print('		goto err;');
@@ -228,8 +228,8 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (temp)');
-	print('		return 1; /' '* Greater *' '/');
-	print('	return -1;    /' '* Less *' '/');
+	print('		return Dee_COMPARE_GR; /' '* Greater *' '/');
+	print('	return Dee_COMPARE_LO;     /' '* Less *' '/');
 	print('err:');
 	print('	return Dee_COMPARE_ERR;');
 	print('}}');
@@ -243,7 +243,7 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (temp)');
-	print('		return 0; /' '* Equal *' '/');
+	print('		return Dee_COMPARE_EQ; /' '* Equal *' '/');
 	print('	cmp_ob = CALL_DEPENDENCY(seq_operator_ge, lhs, rhs);');
 	print('	if unlikely(!cmp_ob)');
 	print('		goto err;');
@@ -251,8 +251,8 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (temp)');
-	print('		return 1; /' '* Greater *' '/');
-	print('	return -1;    /' '* Less *' '/');
+	print('		return Dee_COMPARE_GR; /' '* Greater *' '/');
+	print('	return Dee_COMPARE_LO;     /' '* Less *' '/');
 	print('err:');
 	print('	return Dee_COMPARE_ERR;');
 	print('}}');
@@ -266,7 +266,7 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (!temp)');
-	print('		return 0; /' '* Equal *' '/');
+	print('		return Dee_COMPARE_EQ; /' '* Equal *' '/');
 	print('	cmp_ob = CALL_DEPENDENCY(seq_operator_lo, lhs, rhs);');
 	print('	if unlikely(!cmp_ob)');
 	print('		goto err;');
@@ -274,8 +274,8 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (temp)');
-	print('		return -1; /' '* Less *' '/');
-	print('	return 1;      /' '* Greater *' '/');
+	print('		return Dee_COMPARE_LO; /' '* Less *' '/');
+	print('	return Dee_COMPARE_GR;     /' '* Greater *' '/');
 	print('err:');
 	print('	return Dee_COMPARE_ERR;');
 	print('}}');
@@ -289,7 +289,7 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (!temp)');
-	print('		return 0; /' '* Equal *' '/');
+	print('		return Dee_COMPARE_EQ; /' '* Equal *' '/');
 	print('	cmp_ob = CALL_DEPENDENCY(seq_operator_le, lhs, rhs);');
 	print('	if unlikely(!cmp_ob)');
 	print('		goto err;');
@@ -297,8 +297,8 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (temp)');
-	print('		return -1; /' '* Less *' '/');
-	print('	return 1;      /' '* Greater *' '/');
+	print('		return Dee_COMPARE_LO; /' '* Less *' '/');
+	print('	return Dee_COMPARE_GR;     /' '* Greater *' '/');
 	print('err:');
 	print('	return Dee_COMPARE_ERR;');
 	print('}}');
@@ -312,7 +312,7 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (!temp)');
-	print('		return 0; /' '* Equal *' '/');
+	print('		return Dee_COMPARE_EQ; /' '* Equal *' '/');
 	print('	cmp_ob = CALL_DEPENDENCY(seq_operator_gr, lhs, rhs);');
 	print('	if unlikely(!cmp_ob)');
 	print('		goto err;');
@@ -320,8 +320,8 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (temp)');
-	print('		return 1; /' '* Greater *' '/');
-	print('	return -1;    /' '* Less *' '/');
+	print('		return Dee_COMPARE_GR; /' '* Greater *' '/');
+	print('	return Dee_COMPARE_LO;     /' '* Less *' '/');
 	print('err:');
 	print('	return Dee_COMPARE_ERR;');
 	print('}}');
@@ -335,7 +335,7 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (!temp)');
-	print('		return 0; /' '* Equal *' '/');
+	print('		return Dee_COMPARE_EQ; /' '* Equal *' '/');
 	print('	cmp_ob = CALL_DEPENDENCY(seq_operator_ge, lhs, rhs);');
 	print('	if unlikely(!cmp_ob)');
 	print('		goto err;');
@@ -343,8 +343,8 @@ if (isEq) {
 	print('	if unlikely(temp < 0)');
 	print('		goto err;');
 	print('	if (temp)');
-	print('		return 1; /' '* Greater *' '/');
-	print('	return -1;    /' '* Less *' '/');
+	print('		return Dee_COMPARE_GR; /' '* Greater *' '/');
+	print('	return Dee_COMPARE_LO;     /' '* Less *' '/');
 	print('err:');
 	print('	return Dee_COMPARE_ERR;');
 	print('}}');
@@ -439,9 +439,7 @@ if (isEq) {
 	print('	       result == SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL);');
 	print('	if unlikely(result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR)');
 	print('		goto err;');
-	print('	if (result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL)');
-	print('		return 0;');
-	print('	return 1;');
+	print('	return Dee_COMPARE_FROMBOOL(result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL);');
 } else {
 	print('	ASSERT(result == SEQ_COMPARE_FOREACH_RESULT_EQUAL ||');
 	print('	       result == SEQ_COMPARE_FOREACH_RESULT_ERROR ||');
@@ -450,10 +448,10 @@ if (isEq) {
 	print('	if unlikely(result == SEQ_COMPARE_FOREACH_RESULT_ERROR)');
 	print('		goto err;');
 	print('	if (result == SEQ_COMPARE_FOREACH_RESULT_LESS)');
-	print('		return -1;');
+	print('		return Dee_COMPARE_LO;');
 	print('	if (result == SEQ_COMPARE_FOREACH_RESULT_GREATER)');
-	print('		return 1;');
-	print('	return 0; /' '* Equal *' '/');
+	print('		return Dee_COMPARE_GR;');
+	print('	return Dee_COMPARE_EQ; /' '* Equal *' '/');
 }
 	print('err:');
 	print('	return Dee_COMPARE_ERR;');
@@ -476,7 +474,7 @@ if (isEq) {
 	print('if (tp_rhs->tp_seq && tp_rhs->tp_seq->tp_size_fast != NULL) {');
 	print('	size_t rhs_sizefast = (*tp_rhs->tp_seq->tp_size_fast)(rhs);');
 	print('	if (lhs_size != rhs_sizefast && rhs_sizefast != (size_t)-1)');
-	print('		return 1;');
+	print('		return Dee_COMPARE_NE;');
 	print('}');
 }
 	print('	if (rhs_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast) {');
@@ -524,9 +522,9 @@ if (isEq) {
 	print('			goto err;');
 	print('		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL &&');
 	print('		    data.scf_sgi_oindex >= data.scf_sgi_osize) {');
-	print('			result = 0;');
+	print('			result = Dee_COMPARE_EQ;');
 	print('		} else {');
-	print('			result = 1;');
+	print('			result = Dee_COMPARE_NE;');
 	print('		}');
 } else {
 	print('		ASSERT(foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL ||');
@@ -536,11 +534,11 @@ if (isEq) {
 	print('		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)');
 	print('			goto err;');
 	print('		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {');
-	print('			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? 0 : 1;');
+	print('			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? Dee_COMPARE_EQ : Dee_COMPARE_GR;');
 	print('		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {');
-	print('			result = -1;');
+	print('			result = Dee_COMPARE_LO;');
 	print('		} else {');
-	print('			result = 1;');
+	print('			result = Dee_COMPARE_GR;');
 	print('		}');
 }
 	print('	}');
@@ -565,7 +563,7 @@ if (isEq) {
 	print('if (tp_rhs->tp_seq && tp_rhs->tp_seq->tp_size_fast != NULL) {');
 	print('	size_t rhs_sizefast = (*tp_rhs->tp_seq->tp_size_fast)(rhs);');
 	print('	if (lhs_size != rhs_sizefast && rhs_sizefast != (size_t)-1)');
-	print('		return 1;');
+	print('		return Dee_COMPARE_NE;');
 	print('}');
 }
 	print('	if (rhs_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast) {');
@@ -613,9 +611,9 @@ if (isEq) {
 	print('			goto err;');
 	print('		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL &&');
 	print('		    data.scf_sgi_oindex >= data.scf_sgi_osize) {');
-	print('			result = 0;');
+	print('			result = Dee_COMPARE_EQ;');
 	print('		} else {');
-	print('			result = 1;');
+	print('			result = Dee_COMPARE_NE;');
 	print('		}');
 } else {
 	print('		ASSERT(foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL ||');
@@ -625,11 +623,11 @@ if (isEq) {
 	print('		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)');
 	print('			goto err;');
 	print('		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {');
-	print('			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? 0 : 1;');
+	print('			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? Dee_COMPARE_EQ : Dee_COMPARE_GR;');
 	print('		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {');
-	print('			result = -1;');
+	print('			result = Dee_COMPARE_LO;');
 	print('		} else {');
-	print('			result = 1;');
+	print('			result = Dee_COMPARE_GR;');
 	print('		}');
 }
 	print('	}');
@@ -654,7 +652,7 @@ if (isEq) {
 	print('if (tp_rhs->tp_seq && tp_rhs->tp_seq->tp_size_fast != NULL) {');
 	print('	size_t rhs_sizefast = (*tp_rhs->tp_seq->tp_size_fast)(rhs);');
 	print('	if (lhs_size != rhs_sizefast && rhs_sizefast != (size_t)-1)');
-	print('		return 1;');
+	print('		return Dee_COMPARE_NE;');
 	print('}');
 }
 	print('	if (rhs_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast) {');
@@ -702,9 +700,9 @@ if (isEq) {
 	print('			goto err;');
 	print('		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL &&');
 	print('		    data.scf_sgi_oindex >= data.scf_sgi_osize) {');
-	print('			result = 0;');
+	print('			result = Dee_COMPARE_EQ;');
 	print('		} else {');
-	print('			result = 1;');
+	print('			result = Dee_COMPARE_NE;');
 	print('		}');
 } else {
 	print('		ASSERT(foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL ||');
@@ -714,11 +712,11 @@ if (isEq) {
 	print('		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)');
 	print('			goto err;');
 	print('		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {');
-	print('			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? 0 : 1;');
+	print('			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? Dee_COMPARE_EQ : Dee_COMPARE_GR;');
 	print('		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {');
-	print('			result = -1;');
+	print('			result = Dee_COMPARE_LO;');
 	print('		} else {');
-	print('			result = 1;');
+	print('			result = Dee_COMPARE_GR;');
 	print('		}');
 }
 	print('	}');
@@ -792,7 +790,7 @@ if (isEq) {
 	print('		       foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL);');
 	print('		if unlikely(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR)');
 	print('			goto err_lhs_sizeob;');
-	print('		result = foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL ? 0 : 1;');
+	print('		result = Dee_COMPARE_FROMBOOL(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL);');
 } else {
 	print('		ASSERT(foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL ||');
 	print('		       foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR ||');
@@ -801,11 +799,11 @@ if (isEq) {
 	print('		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)');
 	print('			goto err_lhs_sizeob;');
 	print('		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {');
-	print('			result = 0;');
+	print('			result = Dee_COMPARE_EQ;');
 	print('		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {');
-	print('			result = -1;');
+	print('			result = Dee_COMPARE_LO;');
 	print('		} else {');
-	print('			result = 1;');
+	print('			result = Dee_COMPARE_GR;');
 	print('		}');
 }
 	print('	}');
@@ -829,20 +827,22 @@ if (isEq) {
 if (isEq) {
 	print('	if (DeeBool_Check(resultob)) {');
 	print('		Dee_DecrefNokill(resultob);');
-	print('		return DeeBool_IsTrue(resultob) ? 0 : 1;');
+	print('		return Dee_COMPARE_FROMBOOL(DeeBool_IsTrue(resultob));');
 	print('	}');
 }
 	print('	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))');
 	print('		goto err_resultob;');
+if (isEq) {
+	print('	result = Dee_COMPARE_FROMBOOL(DeeInt_IsZero(resultob));');
+} else {
 	print('	if (DeeInt_IsZero(resultob)) {');
-	print('		result = 0;');
-if (!isEq) {
+	print('		result = Dee_COMPARE_EQ;');
 	print('	} else if (DeeInt_IsNeg(resultob)) {');
-	print('		result = -1;');
-}
+	print('		result = Dee_COMPARE_LO;');
 	print('	} else {');
-	print('		result = 1;');
+	print('		result = Dee_COMPARE_GR;');
 	print('	}');
+}
 	print('	Dee_Decref(resultob);');
 	print('	return result;');
 	print('err_resultob:');
@@ -868,7 +868,7 @@ __seq_compare__.seq_operator_compare([[nonnull]] DeeObject *lhs,
 	int rhs_nonempty = DeeObject_InvokeMethodHint(seq_operator_bool, rhs);
 	if unlikely(rhs_nonempty < 0)
 		goto err;
-	return rhs_nonempty ? -1 : 0;
+	return rhs_nonempty ? Dee_COMPARE_LO : Dee_COMPARE_EQ;
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -882,7 +882,7 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return 0; /* Equal */
+		return Dee_COMPARE_EQ; /* Equal */
 	cmp_ob = CALL_DEPENDENCY(seq_operator_lo, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -890,8 +890,8 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return -1; /* Less */
-	return 1;      /* Greater */
+		return Dee_COMPARE_LO; /* Less */
+	return Dee_COMPARE_GR;     /* Greater */
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -905,7 +905,7 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return 0; /* Equal */
+		return Dee_COMPARE_EQ; /* Equal */
 	cmp_ob = CALL_DEPENDENCY(seq_operator_le, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -913,8 +913,8 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return -1; /* Less */
-	return 1;      /* Greater */
+		return Dee_COMPARE_LO; /* Less */
+	return Dee_COMPARE_GR;     /* Greater */
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -928,7 +928,7 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return 0; /* Equal */
+		return Dee_COMPARE_EQ; /* Equal */
 	cmp_ob = CALL_DEPENDENCY(seq_operator_gr, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -936,8 +936,8 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return 1; /* Greater */
-	return -1;    /* Less */
+		return Dee_COMPARE_GR; /* Greater */
+	return Dee_COMPARE_LO;     /* Less */
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -951,7 +951,7 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return 0; /* Equal */
+		return Dee_COMPARE_EQ; /* Equal */
 	cmp_ob = CALL_DEPENDENCY(seq_operator_ge, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -959,8 +959,8 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return 1; /* Greater */
-	return -1;    /* Less */
+		return Dee_COMPARE_GR; /* Greater */
+	return Dee_COMPARE_LO;     /* Less */
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -974,7 +974,7 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (!temp)
-		return 0; /* Equal */
+		return Dee_COMPARE_EQ; /* Equal */
 	cmp_ob = CALL_DEPENDENCY(seq_operator_lo, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -982,8 +982,8 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return -1; /* Less */
-	return 1;      /* Greater */
+		return Dee_COMPARE_LO; /* Less */
+	return Dee_COMPARE_GR;     /* Greater */
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -997,7 +997,7 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (!temp)
-		return 0; /* Equal */
+		return Dee_COMPARE_EQ; /* Equal */
 	cmp_ob = CALL_DEPENDENCY(seq_operator_le, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -1005,8 +1005,8 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return -1; /* Less */
-	return 1;      /* Greater */
+		return Dee_COMPARE_LO; /* Less */
+	return Dee_COMPARE_GR;     /* Greater */
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -1020,7 +1020,7 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (!temp)
-		return 0; /* Equal */
+		return Dee_COMPARE_EQ; /* Equal */
 	cmp_ob = CALL_DEPENDENCY(seq_operator_gr, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -1028,8 +1028,8 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return 1; /* Greater */
-	return -1;    /* Less */
+		return Dee_COMPARE_GR; /* Greater */
+	return Dee_COMPARE_LO;     /* Less */
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -1043,7 +1043,7 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (!temp)
-		return 0; /* Equal */
+		return Dee_COMPARE_EQ; /* Equal */
 	cmp_ob = CALL_DEPENDENCY(seq_operator_ge, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -1051,8 +1051,8 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return 1; /* Greater */
-	return -1;    /* Less */
+		return Dee_COMPARE_GR; /* Greater */
+	return Dee_COMPARE_LO;     /* Less */
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -1144,10 +1144,10 @@ err:
 	if unlikely(result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
 		goto err;
 	if (result == SEQ_COMPARE_FOREACH_RESULT_LESS)
-		return -1;
+		return Dee_COMPARE_LO;
 	if (result == SEQ_COMPARE_FOREACH_RESULT_GREATER)
-		return 1;
-	return 0; /* Equal */
+		return Dee_COMPARE_GR;
+	return Dee_COMPARE_EQ; /* Equal */
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -1204,11 +1204,11 @@ err:
 		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
 			goto err;
 		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
-			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? 0 : 1;
+			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? Dee_COMPARE_EQ : Dee_COMPARE_GR;
 		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
-			result = -1;
+			result = Dee_COMPARE_LO;
 		} else {
-			result = 1;
+			result = Dee_COMPARE_GR;
 		}
 	}
 	return result;
@@ -1267,11 +1267,11 @@ err:
 		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
 			goto err;
 		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
-			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? 0 : 1;
+			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? Dee_COMPARE_EQ : Dee_COMPARE_GR;
 		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
-			result = -1;
+			result = Dee_COMPARE_LO;
 		} else {
-			result = 1;
+			result = Dee_COMPARE_GR;
 		}
 	}
 	return result;
@@ -1330,11 +1330,11 @@ err:
 		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
 			goto err;
 		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
-			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? 0 : 1;
+			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? Dee_COMPARE_EQ : Dee_COMPARE_GR;
 		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
-			result = -1;
+			result = Dee_COMPARE_LO;
 		} else {
-			result = 1;
+			result = Dee_COMPARE_GR;
 		}
 	}
 	return result;
@@ -1403,11 +1403,11 @@ err:
 		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
 			goto err_lhs_sizeob;
 		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
-			result = 0;
+			result = Dee_COMPARE_EQ;
 		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
-			result = -1;
+			result = Dee_COMPARE_LO;
 		} else {
-			result = 1;
+			result = Dee_COMPARE_GR;
 		}
 	}
 	Dee_Decref(lhs_sizeob);
@@ -1426,11 +1426,11 @@ err:
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
 	if (DeeInt_IsZero(resultob)) {
-		result = 0;
+		result = Dee_COMPARE_EQ;
 	} else if (DeeInt_IsNeg(resultob)) {
-		result = -1;
+		result = Dee_COMPARE_LO;
 	} else {
-		result = 1;
+		result = Dee_COMPARE_GR;
 	}
 	Dee_Decref(resultob);
 	return result;
@@ -1456,7 +1456,7 @@ __seq_compare_eq__.seq_operator_compare_eq([[nonnull]] DeeObject *lhs,
 	result = DeeObject_BoolInherited(cmp_ob);
 	if unlikely(result < 0)
 		goto err;
-	return result ? 0 : 1;
+	return Dee_COMPARE_FROMBOOL(result);
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -1468,7 +1468,7 @@ err:
 	result = DeeObject_BoolInherited(cmp_ob);
 	if unlikely(result < 0)
 		goto err;
-	return result;
+	return Dee_COMPARE_FROM_NOT_EQUALS(result);
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -1481,7 +1481,7 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return -1; /* Different */
+		return Dee_COMPARE_LO; /* Different */
 	cmp_ob = CALL_DEPENDENCY(seq_operator_gr, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -1489,8 +1489,8 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (temp)
-		return 1; /* Different */
-	return 0;
+		return Dee_COMPARE_GR; /* Different */
+	return Dee_COMPARE_EQ;
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -1503,7 +1503,7 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (!temp)
-		return 1; /* Different */
+		return Dee_COMPARE_GR; /* Different */
 	cmp_ob = CALL_DEPENDENCY(seq_operator_gr, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
@@ -1511,8 +1511,8 @@ err:
 	if unlikely(temp < 0)
 		goto err;
 	if (!temp)
-		return -1; /* Different */
-	return 0;
+		return Dee_COMPARE_LO; /* Different */
+	return Dee_COMPARE_EQ;
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -1600,9 +1600,7 @@ err:
 	       result == SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL);
 	if unlikely(result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR)
 		goto err;
-	if (result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL)
-		return 0;
-	return 1;
+	return Dee_COMPARE_FROMBOOL(result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL);
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -1618,7 +1616,7 @@ err:
 if (tp_rhs->tp_seq && tp_rhs->tp_seq->tp_size_fast != NULL) {
 	size_t rhs_sizefast = (*tp_rhs->tp_seq->tp_size_fast)(rhs);
 	if (lhs_size != rhs_sizefast && rhs_sizefast != (size_t)-1)
-		return 1;
+		return Dee_COMPARE_NE;
 }
 	if (rhs_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast) {
 	    DeeNO_getitem_index_fast_t rhs_getitem_index_fast = tp_rhs->tp_seq->tp_getitem_index_fast;
@@ -1664,9 +1662,9 @@ if (tp_rhs->tp_seq && tp_rhs->tp_seq->tp_size_fast != NULL) {
 			goto err;
 		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL &&
 		    data.scf_sgi_oindex >= data.scf_sgi_osize) {
-			result = 0;
+			result = Dee_COMPARE_EQ;
 		} else {
-			result = 1;
+			result = Dee_COMPARE_NE;
 		}
 	}
 	return result;
@@ -1684,7 +1682,7 @@ err:
 if (tp_rhs->tp_seq && tp_rhs->tp_seq->tp_size_fast != NULL) {
 	size_t rhs_sizefast = (*tp_rhs->tp_seq->tp_size_fast)(rhs);
 	if (lhs_size != rhs_sizefast && rhs_sizefast != (size_t)-1)
-		return 1;
+		return Dee_COMPARE_NE;
 }
 	if (rhs_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast) {
 		DeeNO_getitem_index_fast_t rhs_getitem_index_fast = tp_rhs->tp_seq->tp_getitem_index_fast;
@@ -1730,9 +1728,9 @@ if (tp_rhs->tp_seq && tp_rhs->tp_seq->tp_size_fast != NULL) {
 			goto err;
 		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL &&
 		    data.scf_sgi_oindex >= data.scf_sgi_osize) {
-			result = 0;
+			result = Dee_COMPARE_EQ;
 		} else {
-			result = 1;
+			result = Dee_COMPARE_NE;
 		}
 	}
 	return result;
@@ -1750,7 +1748,7 @@ err:
 if (tp_rhs->tp_seq && tp_rhs->tp_seq->tp_size_fast != NULL) {
 	size_t rhs_sizefast = (*tp_rhs->tp_seq->tp_size_fast)(rhs);
 	if (lhs_size != rhs_sizefast && rhs_sizefast != (size_t)-1)
-		return 1;
+		return Dee_COMPARE_NE;
 }
 	if (rhs_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast) {
 	    DeeNO_getitem_index_fast_t rhs_getitem_index_fast = tp_rhs->tp_seq->tp_getitem_index_fast;
@@ -1796,9 +1794,9 @@ if (tp_rhs->tp_seq && tp_rhs->tp_seq->tp_size_fast != NULL) {
 			goto err;
 		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL &&
 		    data.scf_sgi_oindex >= data.scf_sgi_osize) {
-			result = 0;
+			result = Dee_COMPARE_EQ;
 		} else {
-			result = 1;
+			result = Dee_COMPARE_NE;
 		}
 	}
 	return result;
@@ -1865,7 +1863,7 @@ err:
 		       foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL);
 		if unlikely(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR)
 			goto err_lhs_sizeob;
-		result = foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL ? 0 : 1;
+		result = Dee_COMPARE_FROMBOOL(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL);
 	}
 	Dee_Decref(lhs_sizeob);
 	return result;
@@ -1882,15 +1880,11 @@ err:
 		goto err;
 	if (DeeBool_Check(resultob)) {
 		Dee_DecrefNokill(resultob);
-		return DeeBool_IsTrue(resultob) ? 0 : 1;
+		return Dee_COMPARE_FROMBOOL(DeeBool_IsTrue(resultob));
 	}
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
-	if (DeeInt_IsZero(resultob)) {
-		result = 0;
-	} else {
-		result = 1;
-	}
+	result = Dee_COMPARE_FROMBOOL(DeeInt_IsZero(resultob));
 	Dee_Decref(resultob);
 	return result;
 err_resultob:
@@ -2001,16 +1995,16 @@ seq_operator_compare_eq = {
 __seq_compare_eq__.seq_operator_trycompare_eq([[nonnull]] DeeObject *lhs,
                                               [[nonnull]] DeeObject *rhs)
 %{unsupported({
-	return 1;
+	return Dee_COMPARE_NE;
 })}
 %{$empty = {
 	int rhs_nonempty = DeeObject_InvokeMethodHint(seq_operator_bool, rhs);
 	if unlikely(rhs_nonempty < 0)
 		goto err;
-	return rhs_nonempty ? 1 /*or: -1*/ : 0;
+	return Dee_COMPARE_FROM_NOT_EQUALS(rhs_nonempty);
 err:
 	if (DeeError_Catch(&DeeError_NotImplemented))
-		return -1;
+		return Dee_COMPARE_NE;
 	return Dee_COMPARE_ERR;
 }}
 %{using seq_operator_compare_eq: {
@@ -2019,7 +2013,7 @@ err:
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))
-			result = -1;
+			result = Dee_COMPARE_NE;
 	}
 	return result;
 }} = $with__seq_operator_compare_eq;

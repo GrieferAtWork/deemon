@@ -670,10 +670,10 @@ restart:
 
 		/* Invoke the compare operator outside of any lock. */
 		error = DeeObject_TryCompareEq(key, item_key);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if unlikely(Dee_COMPARE_ISERR(error))
 			goto err; /* Error in compare operator. */
-		if (error == 0)
-			return 1; /* Found the item. */
+		if (Dee_COMPARE_ISEQ(error))
+			return Dee_HAS_YES; /* Found the item. */
 		DeeCachedDict_LockRead(self);
 
 		/* Check if the CachedDict was modified. */
@@ -683,9 +683,9 @@ restart:
 			goto restart;
 	}
 	DeeCachedDict_LockEndRead(self);
-	return 0;
+	return Dee_HAS_NO;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
@@ -887,7 +887,7 @@ cdict_bounditem(CachedDict *self, DeeObject *key) {
 	DREF DeeObject *value;
 	Dee_hash_t hash = DeeObject_Hash(key);
 	int result = cdict_iscached(self, key, hash);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	if (result)
 		return Dee_BOUND_YES;

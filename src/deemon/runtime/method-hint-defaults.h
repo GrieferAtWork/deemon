@@ -205,7 +205,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_bounditem__unsupp
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_bounditem__with__seq_operator_bounditem_index(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_bounditem__with__seq_operator_getitem(DeeObject *self, DeeObject *index);
 #define default__seq_operator_bounditem__none (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti1_2)
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_bounditem__empty(DeeObject *self, DeeObject *index);
+#define default__seq_operator_bounditem__empty (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti0_2)
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_bounditem__with__seq_enumerate(DeeObject *self, DeeObject *index);
 
 /* seq_operator_bounditem_index */
@@ -215,7 +215,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_operator_bounditem_index(DeeO
 INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_operator_bounditem_index__unsupported(DeeObject *__restrict self, size_t index);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_operator_bounditem_index__with__seq_operator_getitem_index(DeeObject *__restrict self, size_t index);
 #define default__seq_operator_bounditem_index__none (*(int (DCALL *)(DeeObject *__restrict, size_t))&_DeeNone_reti1_2)
-INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_operator_bounditem_index__empty(DeeObject *__restrict self, size_t index);
+#define default__seq_operator_bounditem_index__empty (*(int (DCALL *)(DeeObject *__restrict, size_t))&_DeeNone_reti0_2)
 INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_operator_bounditem_index__with__map_enumerate(DeeObject *__restrict self, size_t index);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_operator_bounditem_index__with__seq_enumerate_index(DeeObject *__restrict self, size_t index);
 
@@ -701,7 +701,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_boundfirst__with_callobjectca
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__seq_boundfirst__with_callobjectcache___seq_first__(DeeTypeObject *tp_self, DeeObject *self);
 #define default__seq_boundfirst__unsupported (*(int (DCALL *)(DeeObject *__restrict))&default__seq_boundfirst__empty)
 #define default__seq_boundfirst__none (*(int (DCALL *)(DeeObject *__restrict))&_DeeNone_reti1_1)
-INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_boundfirst__empty(DeeObject *__restrict self);
+#define default__seq_boundfirst__empty (*(int (DCALL *)(DeeObject *__restrict))&_DeeNone_reti0_1)
 INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_boundfirst__with__seq_operator_bounditem_index(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_boundfirst__with__seq_trygetfirst(DeeObject *__restrict self);
 
@@ -759,7 +759,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_boundlast__with_callobjectcac
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__seq_boundlast__with_callobjectcache___seq_last__(DeeTypeObject *tp_self, DeeObject *self);
 #define default__seq_boundlast__unsupported (*(int (DCALL *)(DeeObject *__restrict))&default__seq_boundlast__empty)
 #define default__seq_boundlast__none (*(int (DCALL *)(DeeObject *__restrict))&_DeeNone_reti1_1)
-INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_boundlast__empty(DeeObject *__restrict self);
+#define default__seq_boundlast__empty (*(int (DCALL *)(DeeObject *__restrict))&_DeeNone_reti0_1)
 INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_boundlast__with__seq_operator_size__and__seq_operator_bounditem_index(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_boundlast__with__seq_trygetlast(DeeObject *__restrict self);
 
@@ -2097,7 +2097,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_bounditem(DeeObje
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_bounditem__unsupported(DeeObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_bounditem__with__map_operator_getitem(DeeObject *self, DeeObject *key);
 #define default__map_operator_bounditem__none (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti1_2)
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_bounditem__empty(DeeObject *self, DeeObject *key);
+#define default__map_operator_bounditem__empty (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti0_2)
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_bounditem__with__map_enumerate(DeeObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_bounditem__with__map_operator_contains(DeeObject *self, DeeObject *key);
 
@@ -2109,7 +2109,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL default__map_operator_bounditem_index__uns
 INTDEF WUNUSED NONNULL((1)) int DCALL default__map_operator_bounditem_index__with__map_operator_bounditem(DeeObject *self, size_t key);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__map_operator_bounditem_index__with__map_operator_getitem_index(DeeObject *self, size_t key);
 #define default__map_operator_bounditem_index__none (*(int (DCALL *)(DeeObject *, size_t))&_DeeNone_reti1_2)
-INTDEF WUNUSED NONNULL((1)) int DCALL default__map_operator_bounditem_index__empty(DeeObject *self, size_t key);
+#define default__map_operator_bounditem_index__empty (*(int (DCALL *)(DeeObject *, size_t))&_DeeNone_reti0_2)
 
 /* map_operator_bounditem_string_hash */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_bounditem_string_hash(DeeObject *self, char const *key, Dee_hash_t hash);
@@ -2119,7 +2119,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_bounditem_string_
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_bounditem_string_hash__with__map_operator_bounditem(DeeObject *self, char const *key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_bounditem_string_hash__with__map_operator_getitem_string_hash(DeeObject *self, char const *key, Dee_hash_t hash);
 #define default__map_operator_bounditem_string_hash__none (*(int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&_DeeNone_reti1_3)
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_bounditem_string_hash__empty(DeeObject *self, char const *key, Dee_hash_t hash);
+#define default__map_operator_bounditem_string_hash__empty (*(int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&_DeeNone_reti0_3)
 
 /* map_operator_bounditem_string_len_hash */
 INTDEF WUNUSED NONNULL((1)) int DCALL default__map_operator_bounditem_string_len_hash(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
@@ -2129,7 +2129,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL default__map_operator_bounditem_string_len
 INTDEF WUNUSED NONNULL((1)) int DCALL default__map_operator_bounditem_string_len_hash__with__map_operator_bounditem(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__map_operator_bounditem_string_len_hash__with__map_operator_getitem_string_len_hash(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 #define default__map_operator_bounditem_string_len_hash__none (*(int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&_DeeNone_reti1_4)
-INTDEF WUNUSED NONNULL((1)) int DCALL default__map_operator_bounditem_string_len_hash__empty(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+#define default__map_operator_bounditem_string_len_hash__empty (*(int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&_DeeNone_reti0_4)
 
 /* map_operator_hasitem */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__map_operator_hasitem(DeeObject *self, DeeObject *key);

@@ -292,7 +292,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 accu_trycompare_eq(AccuObject *lhs, AccuObject *rhs) {
 	if (!DeeObject_InstanceOf(rhs, &Accu_Type))
-		return 1;
+		return Dee_COMPARE_NE;
 	return accu_compare_impl(lhs, rhs, &DeeObject_TryCompareEq);
 }
 

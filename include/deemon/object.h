@@ -155,13 +155,33 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase4Byte)(ui
 #define DeeObject_Id(ob)          ((uintptr_t)(ob))
 
 
-/* Error return value for compare "tp_compare_eq", "tp_compare" and "tp_trycompare_eq". */
+/* Return value for compare "tp_compare_eq", "tp_compare" and "tp_trycompare_eq". */
 #define Dee_COMPARE_ERR (-2)
+#define Dee_COMPARE_EQ  0
+#define Dee_COMPARE_NE  1 /* or "-1" */
+#define Dee_COMPARE_LO  (-1)
+#define Dee_COMPARE_GR  1
+
+#define Dee_COMPARE_ISERR(x) ((x) == Dee_COMPARE_ERR)
+#define Dee_COMPARE_ISEQ(x)  ((x) == 0)
+#define Dee_COMPARE_ISNE(x)  ((x) != 0)
+#define Dee_COMPARE_ISLO(x)  ((x) < 0)
+#define Dee_COMPARE_ISGR(x)  ((x) > 0)
+
+/* #define Dee_COMPARE_FROMBOOL(is_equal)            ((is_equal) ? Dee_COMPARE_EQ : Dee_COMPARE_NE)
+ * #define Dee_COMPARE_FROM_NOT_EQUALS(is_not_equal) ((is_not_equal) ? Dee_COMPARE_NE : Dee_COMPARE_EQ) */
+#if Dee_COMPARE_EQ == 0 && Dee_COMPARE_ERR < 0
+#define Dee_COMPARE_FROMBOOL(is_equal)            (!(is_equal))
+#define Dee_COMPARE_FROM_NOT_EQUALS(is_not_equal) (is_not_equal) /* @assume(is_not_equal >= 0) */
+#else /* Dee_COMPARE_EQ == 0 && Dee_COMPARE_ERR < 0 */
+#define Dee_COMPARE_FROMBOOL(is_equal)            ((is_equal) ? Dee_COMPARE_EQ : Dee_COMPARE_NE)
+#define Dee_COMPARE_FROM_NOT_EQUALS(is_not_equal) ((is_equal) ? Dee_COMPARE_NE : Dee_COMPARE_EQ)
+#endif /* Dee_COMPARE_EQ != 0 || Dee_COMPARE_ERR >= 0 */
 
 /* Helper macros for implementing compare operators. */
-#define Dee_CompareNe(a, b)         ((a) < (b) ? -1 : 1)
-#define Dee_Compare(a, b)           ((a) == (b) ? 0 : Dee_CompareNe(a, b))
-#define Dee_CompareFromDiff(diff)   ((diff) == 0 ? 0 : (diff) < 0 ? -1 : 1)
+#define Dee_CompareNe(a, b)         ((a) < (b) ? Dee_COMPARE_LO : Dee_COMPARE_GR)
+#define Dee_Compare(a, b)           ((a) == (b) ? Dee_COMPARE_EQ : Dee_CompareNe(a, b))
+#define Dee_CompareFromDiff(diff)   ((diff) == 0 ? Dee_COMPARE_EQ : (diff) < 0 ? Dee_COMPARE_LO : Dee_COMPARE_GR)
 #define Dee_CompareEqFromDiff(diff) ((int)!!(diff)) /* diff == 0 ? 0 : 1 */
 
 #define Dee_return_compare_if_ne(a, b)  \
@@ -1813,11 +1833,34 @@ struct Dee_type_cmp {
 	struct Dee_type_nii Dee_tpconst *tp_nii; /* TODO: Deprecated */
 };
 
-/* Possible values returned by C-API isbound checking functions. */
-#define Dee_BOUND_ERR      (-1)
+/* Suggested return values for `DeeObject_HasItem()' and `DeeObject_HasAttr()'
+ * In actuality:
+ * @return: < 0:  Error
+ * @return: == 0: No (item/attr does not exist)
+ * @return: > 0:  Yes (item/attr does exist) */
+#define Dee_HAS_ERR (-1)
+#define Dee_HAS_NO  0
+#define Dee_HAS_YES 1
+
+/* Helper methods for testing return values of `DeeObject_HasItem()' and `DeeObject_HasAttr()' */
+#define Dee_HAS_ISERR(x) unlikely((x) < 0)
+#define Dee_HAS_ISNO(x)  ((x) == 0)
+#define Dee_HAS_ISYES(x) ((x) > 0)
+
+/* >> #define Dee_HAS_FROMBOOL(has_item) ((has_item) ? Dee_HAS_YES : Dee_HAS_NO) */
+#if Dee_HAS_YES > 0 && Dee_HAS_NO == 0
+#define Dee_HAS_FROMBOOL(has_item) (has_item)
+#else /* Dee_HAS_YES > 0 && Dee_HAS_NO == 0 */
+#define Dee_HAS_FROMBOOL(has_item) ((has_item) ? Dee_HAS_YES : Dee_HAS_NO)
+#endif /* Dee_HAS_YES <= 0 || Dee_HAS_NO != 0 */
+
+/* Possible values returned by C-API isbound checking functions.
+ * These values have been intentionally chosen so-as to be binary-
+ * compatible with `DeeObject_HasItem()' and `DeeObject_HasAttr()' */
+#define Dee_BOUND_ERR      Dee_HAS_ERR
 #ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
-#define Dee_BOUND_MISSING  0
-#define Dee_BOUND_YES      1
+#define Dee_BOUND_MISSING  Dee_HAS_NO
+#define Dee_BOUND_YES      Dee_HAS_YES
 #define Dee_BOUND_NO       2
 #else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 #define Dee_BOUND_MISSING  (-2)
@@ -1832,10 +1875,16 @@ struct Dee_type_cmp {
 #define Dee_BOUND_ISUNBOUND(x) ((x) == Dee_BOUND_NO)
 
 /* #define Dee_BOUND_ISMISSING(x) ((x) == Dee_BOUND_MISSING) */
+#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+#define Dee_BOUND_ISMISSING(x) Dee_HAS_ISNO(x)
+#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 #define Dee_BOUND_ISMISSING(x) ((x) == Dee_BOUND_MISSING)
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
 /* #define Dee_BOUND_ISERR(x) ((x) == Dee_BOUND_ERR) */
-#if Dee_BOUND_ERR < 0 && Dee_BOUND_NO >= 0 && Dee_BOUND_YES >= 0 && Dee_BOUND_MISSING >= 0
+#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+#define Dee_BOUND_ISERR(x) Dee_HAS_ISERR(x)
+#elif Dee_BOUND_ERR < 0 && Dee_BOUND_NO >= 0 && Dee_BOUND_YES >= 0 && Dee_BOUND_MISSING >= 0
 #define Dee_BOUND_ISERR(x) ((x) < 0)
 #else /* Dee_BOUND_ERR < 0 && Dee_BOUND_NO >= 0 && Dee_BOUND_YES >= 0 && Dee_BOUND_MISSING >= 0 */
 #define Dee_BOUND_ISERR(x) ((x) == Dee_BOUND_ERR)
@@ -1907,11 +1956,11 @@ struct Dee_type_cmp {
 
 /* Considers has_value == true as bound */
 #define Dee_BOUND_FROMHAS_BOUND(has_value) \
-	(unlikely(has_value) < 0 ? Dee_BOUND_ERR : Dee_BOUND_FROMPRESENT_BOUND(has_value))
+	(Dee_HAS_ISERR(has_value) ? Dee_BOUND_ERR : Dee_BOUND_FROMPRESENT_BOUND(has_value))
 
 /* Considers has_value == true as unbound */
 #define Dee_BOUND_FROMHAS_UNBOUND(has_value) \
-	(unlikely(has_value) < 0 ? Dee_BOUND_ERR : Dee_BOUND_FROMPRESENT_UNBOUND(has_value))
+	(Dee_HAS_ISERR(has_value) ? Dee_BOUND_ERR : Dee_BOUND_FROMPRESENT_UNBOUND(has_value))
 
 struct Dee_type_seq {
 	/* Sequence operators. */
@@ -2644,7 +2693,7 @@ struct Dee_type_attr {
 	 *                  Note that in case of `Dee_ATTRINFO_CUSTOM', accessing the
 	 *                  attribute can still fail for any number of reasons at runtime.
 	 * @return: false:  Attribute information could not be found, and `*retinfo' is undefined.
-	 *                  This has the same meaning as `DeeObject_HasAttr(...) == false'. */
+	 *                  This has the same meaning as `Dee_HAS_ISYES(DeeObject_HasAttr(...))'. */
 	WUNUSED_T NONNULL_T((1, 2, 3, 6)) bool (DCALL *tp_findattr_info_string_len_hash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
 
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
@@ -4829,9 +4878,10 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #define DeeObject_SetItemStringLen(self, key, keylen, value)  DeeObject_SetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen), value)
 
 /* Check if a given item exists (`deemon.hasitem(self, index)')
- * @return: == 0:  Doesn't exist;
- * @return: > 0: Does exists;
- * @return: < 0: Error. */
+ * @return: == 0: Item doesn't exist
+ * @return: > 0:  Item exists
+ * @return: < 0:  An error was thrown
+ * HINT: Use `Dee_HAS_IS*' to test return value */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasItem)(DeeObject *self, DeeObject *index);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_HasItemIndex)(DeeObject *__restrict self, size_t index);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasItemStringHash)(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
@@ -5022,9 +5072,10 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_CallAttrTupl
  * that does not exist at all. This function will return `1' (true) for the former,
  * but `0' (false) for the later. During normal attribute access, this difference
  * is reflected by the type of exception: `UnboundAttribute' and `AttributeError'.
- * @return: >  0: Attribute exists
  * @return: == 0: Attribute doesn't exist
- * @return: <  0: An error was thrown. */
+ * @return: > 0:  Attribute exists
+ * @return: < 0:  An error was thrown
+ * HINT: Use `Dee_HAS_IS*' to test return value */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttr)(DeeObject *self, /*String*/ DeeObject *attr);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttrString)(DeeObject *__restrict self, char const *__restrict attr);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);

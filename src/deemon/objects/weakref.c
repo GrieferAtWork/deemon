@@ -246,11 +246,11 @@ ob_weakref_trycompare_eq(WeakRef *self, WeakRef *other) {
 	if (DeeNone_Check(other))
 		return Dee_weakref_getaddr(&self->wr_ref) ? 1 : 0;
 	if (DeeObject_AssertTypeExact(other, &DeeWeakRef_Type))
-		return 1;
+		return Dee_COMPARE_NE;
 	return (Dee_weakref_getaddr(&self->wr_ref) ==
 	        Dee_weakref_getaddr(&other->wr_ref))
-	       ? 0
-	       : 1;
+	       ? Dee_COMPARE_EQ
+	       : Dee_COMPARE_NE;
 }
 
 PRIVATE struct type_cmp ob_weakref_cmp = {

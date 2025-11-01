@@ -418,7 +418,7 @@ rs_gii_bounditem_index(DefaultReversed_WithGetItemIndex *__restrict self, size_t
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rs_gii_hasitem_index(DefaultReversed_WithGetItemIndex *__restrict self, size_t index) {
 	if unlikely(index >= self->drwgii_size)
-		return 0;
+		return Dee_HAS_NO;
 	return DeeObject_HasItemIndex(self->drwgii_seq, self->drwgii_max - index);
 }
 

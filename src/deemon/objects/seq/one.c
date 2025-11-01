@@ -500,7 +500,7 @@ so_compare(SeqOne *lhs, DeeObject *rhs) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 so_trycompare_eq(SeqOne *lhs, DeeObject *rhs) {
 	if (!DeeType_HasNativeOperator(Dee_TYPE(rhs), foreach))
-		return 1;
+		return Dee_COMPARE_NE;
 	return so_compare_eq(lhs, rhs);
 }
 

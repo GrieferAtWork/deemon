@@ -203,7 +203,7 @@ repeatiter_compare_eq(RepeatIterator *self, RepeatIterator *other) {
 	my_len = REPEATITER_READ_NUM(self);
 	ot_len = REPEATITER_READ_NUM(other);
 	if (my_len != ot_len)
-		return 1;
+		return Dee_COMPARE_NE;
 	RepeatIterator_LockRead(self);
 	my_iter = self->rpi_iter;
 	Dee_Incref(my_iter);

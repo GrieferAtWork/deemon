@@ -1395,60 +1395,60 @@ nope:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-cd_compare_eq(ClassDescriptor *self, ClassDescriptor *other) {
+cd_compare_eq(ClassDescriptor *lhs, ClassDescriptor *rhs) {
 	size_t i;
-	if (DeeObject_AssertTypeExact(other, &DeeClassDescriptor_Type))
+	if (DeeObject_AssertTypeExact(rhs, &DeeClassDescriptor_Type))
 		goto err;
-	if (self->cd_flags != other->cd_flags)
+	if (lhs->cd_flags != rhs->cd_flags)
 		goto nope;
-	if (self->cd_cmemb_size != other->cd_cmemb_size)
+	if (lhs->cd_cmemb_size != rhs->cd_cmemb_size)
 		goto nope;
-	if (self->cd_imemb_size != other->cd_imemb_size)
+	if (lhs->cd_imemb_size != rhs->cd_imemb_size)
 		goto nope;
 	/* FIXME: hash vectors cannot be binary-compared. That leads to false negatives.
 	 *        -> s.a. `/util/test/rt-classdescriptor-reprcopy.dee' */
-	if (self->cd_clsop_mask != other->cd_clsop_mask)
+	if (lhs->cd_clsop_mask != rhs->cd_clsop_mask)
 		goto nope;
-	if (self->cd_cattr_mask != other->cd_cattr_mask)
+	if (lhs->cd_cattr_mask != rhs->cd_cattr_mask)
 		goto nope;
-	if (self->cd_iattr_mask != other->cd_iattr_mask)
+	if (lhs->cd_iattr_mask != rhs->cd_iattr_mask)
 		goto nope;
-	if (self->cd_name) {
-		if (!other->cd_name)
+	if (lhs->cd_name) {
+		if (!rhs->cd_name)
 			goto nope;
-		if (!DeeString_EqualsSTR(self->cd_name, other->cd_name))
+		if (!DeeString_EqualsSTR(lhs->cd_name, rhs->cd_name))
 			goto nope;
 	} else {
-		if (other->cd_name)
+		if (rhs->cd_name)
 			goto nope;
 	}
-	if (self->cd_doc) {
-		if (!other->cd_doc)
+	if (lhs->cd_doc) {
+		if (!rhs->cd_doc)
 			goto nope;
-		if (!DeeString_EqualsSTR(self->cd_doc, other->cd_doc))
+		if (!DeeString_EqualsSTR(lhs->cd_doc, rhs->cd_doc))
 			goto nope;
 	} else {
-		if (other->cd_doc)
+		if (rhs->cd_doc)
 			goto nope;
 	}
-	if (bcmpc(self->cd_clsop_list,
-	          other->cd_clsop_list,
-	          self->cd_clsop_mask + 1,
+	if (bcmpc(lhs->cd_clsop_list,
+	          rhs->cd_clsop_list,
+	          lhs->cd_clsop_mask + 1,
 	          sizeof(struct class_operator)) != 0)
 		goto nope;
-	for (i = 0; i <= self->cd_cattr_mask; ++i) {
-		if (!class_attribute_eq(&self->cd_cattr_list[i],
-		                        &other->cd_cattr_list[i]))
+	for (i = 0; i <= lhs->cd_cattr_mask; ++i) {
+		if (!class_attribute_eq(&lhs->cd_cattr_list[i],
+		                        &rhs->cd_cattr_list[i]))
 			goto nope;
 	}
-	for (i = 0; i <= self->cd_iattr_mask; ++i) {
-		if (!class_attribute_eq(&self->cd_iattr_list[i],
-		                        &other->cd_iattr_list[i]))
+	for (i = 0; i <= lhs->cd_iattr_mask; ++i) {
+		if (!class_attribute_eq(&lhs->cd_iattr_list[i],
+		                        &rhs->cd_iattr_list[i]))
 			goto nope;
 	}
-	return 0;
+	return Dee_COMPARE_EQ;
 nope:
-	return 1;
+	return Dee_COMPARE_NE;
 err:
 	return Dee_COMPARE_ERR;
 }

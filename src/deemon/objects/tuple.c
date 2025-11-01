@@ -2115,7 +2115,7 @@ tuple_compare_eq(Tuple *self, DeeObject *other) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 tuple_trycompare_eq(Tuple *self, DeeObject *other) {
 	if (!DeeType_HasNativeOperator(Dee_TYPE(other), foreach))
-		return 1;
+		return Dee_COMPARE_NE;
 	return tuple_compare_eq(self, other);
 }
 
@@ -2618,7 +2618,7 @@ nullable_tuple_compare_eq(Tuple *self, DeeObject *other) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 nullable_tuple_trycompare_eq(Tuple *self, DeeObject *other) {
 	if (!DeeType_HasNativeOperator(Dee_TYPE(other), foreach))
-		return 1;
+		return Dee_COMPARE_NE;
 	return nullable_tuple_compare_eq(self, other);
 }
 

@@ -100,7 +100,7 @@ mappediter_compare_eq(SeqMappedIterator *self, SeqMappedIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &SeqMappedIterator_Type))
 		goto err;
 	if (self->smi_mapper != other->smi_mapper)
-		return 1;
+		return Dee_COMPARE_NE;
 	return DeeObject_CompareEq(self->smi_iter, other->smi_iter);
 err:
 	return Dee_COMPARE_ERR;
