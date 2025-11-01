@@ -663,6 +663,9 @@
 		<ClInclude Include="..\include\deemon\util\lock.h">
 			<Filter>include\util</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\util\nrlock.h">
+			<Filter>include\util</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\util\objectlist.h">
 			<Filter>include\util</Filter>
 		</ClInclude>

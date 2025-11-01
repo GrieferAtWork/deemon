@@ -229,6 +229,7 @@
 		<ClInclude Include="..\include\deemon\util\kos-compat.h" />
 		<ClInclude Include="..\include\deemon\util\lock-utils.h" />
 		<ClInclude Include="..\include\deemon\util\lock.h" />
+		<ClInclude Include="..\include\deemon\util\nrlock.h" />
 		<ClInclude Include="..\include\deemon\util\objectlist.h" />
 		<ClInclude Include="..\include\deemon\util\once.h" />
 		<ClInclude Include="..\include\deemon\util\rlock-utils.h" />

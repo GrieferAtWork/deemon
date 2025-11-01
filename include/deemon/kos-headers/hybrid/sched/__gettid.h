@@ -216,6 +216,7 @@ __STATIC_ASSERT_MSG(sizeof(pthread_t) == __HYBRID_SIZEOF_TID__, "Please adjust")
 #define __HYBRID_GETTID_INVALID_IS_ZERO /* Not always, but good enough? */
 #define __HYBRID_GETTID_INVALID (__CCAST(pthread_t) 0)
 #define __hybrid_gettid_equal   pthread_equal
+#define __hybrid_tid_t_IS_NUMERIC
 #elif (__has_include(<threads.h>) ||                                  \
        (defined(__NO_has_include) && !defined(__STDC_NO_THREADS__) && \
         defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L))
@@ -239,6 +240,7 @@ __STATIC_ASSERT_MSG(sizeof(thrd_t) == __HYBRID_SIZEOF_TID__, "Please adjust");
 #define __HYBRID_GETTID_INVALID_IS_ZERO /* Not always, but good enough? */
 #define __HYBRID_GETTID_INVALID (__CCAST(thrd_t)0)
 #define __hybrid_gettid_equal   thrd_equal
+#define __hybrid_tid_t_IS_NUMERIC
 #else /* ... */
 /* Fallback: Assume single-threaded and assign  TID=0
  * for <invalid-tid> and TID=1 for the main() thread. */
@@ -250,6 +252,7 @@ __STATIC_ASSERT_MSG(sizeof(thrd_t) == __HYBRID_SIZEOF_TID__, "Please adjust");
 #define __HYBRID_GETTID_PRINTF_ARG(x) (unsigned int)(x)
 #define __hybrid_tid_t                int
 #define __hybrid_gettid()             1
+#define __hybrid_tid_t_IS_NUMERIC
 #endif /* !... */
 #endif /* !__hybrid_gettid */
 
@@ -275,6 +278,7 @@ __STATIC_ASSERT_MSG(sizeof(thrd_t) == __HYBRID_SIZEOF_TID__, "Please adjust");
 
 
 #ifndef __hybrid_gettid_equal
+#define __hybrid_tid_t_IS_NUMERIC
 #define __hybrid_gettid_equal(a, b) ((a) == (b))
 #endif /* !__hybrid_gettid_equal */
 
