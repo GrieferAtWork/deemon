@@ -419,7 +419,7 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
  * When enabled, "hasitem"/"hasattr" can be implemented by aliasing "bounditem"/"boundattr" */
 #if (!defined(CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS) && \
      !defined(CONFIG_NO_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS))
-#if 0 /* TODO: Implementation is incomplete */
+#if 1
 #define CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 #else
 #define CONFIG_NO_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
