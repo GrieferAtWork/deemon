@@ -96,15 +96,19 @@ struct Dee_accu {
 /* Finalize the accumulator and dispose any previously calculated results. */
 DFUNDEF NONNULL((1)) void DCALL
 Dee_accu_fini(struct Dee_accu *__restrict self);
+DFUNDEF NONNULL((1, 2)) void DCALL
+Dee_accu_visit(struct Dee_accu *__restrict self, Dee_visit_t proc, void *arg);
 
 /* Pack the accumulator and return its final result as an object.
  * This function may only be called once, as it does an implicit
  * `Dee_accu_fini()'. Returns `NULL' if an error was thrown.
  *
  * Hint: if you want `self' to remain valid, you can just re-init it
- *       after the call using `Dee_accu_init_with_first_inherited()' */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Dee_accu_pack(struct Dee_accu *__restrict self);
+ *       after the call using `Dee_accu_init_with_first_inherited()'
+ * @param: empty: What to return if the accumulator is empty. You may
+ *                not pass "NULL" here, but you may pass "ITER_DONE" */
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+Dee_accu_pack(struct Dee_accu *__restrict self, DeeObject *empty);
 
 /* Add `item' into the accumulator.
  * HINT: This function is `Dee_foreach_t'-compatible. */

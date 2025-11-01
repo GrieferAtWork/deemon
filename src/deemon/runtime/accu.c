@@ -87,16 +87,50 @@ Dee_accu_fini(struct Dee_accu *__restrict self) {
 	}
 }
 
+PUBLIC NONNULL((1, 2)) void DCALL
+Dee_accu_visit(struct Dee_accu *__restrict self,
+               Dee_visit_t proc, void *arg) {
+	switch (self->acu_mode) {
+	case Dee_ACCU_FIRST:
+	case Dee_ACCU_NONE:
+	case Dee_ACCU_INT:
+#ifdef HAVE_Dee_ACCU_INT64
+	case Dee_ACCU_INT64:
+#endif /* HAVE_Dee_ACCU_INT64 */
+#ifdef HAVE_Dee_ACCU_FLOAT
+	case Dee_ACCU_FLOAT:
+#endif /* HAVE_Dee_ACCU_FLOAT */
+	case Dee_ACCU_STRING:
+	case Dee_ACCU_BYTES:
+		break;
+	case Dee_ACCU_SECOND:
+	case Dee_ACCU_OBJECT:
+	case Dee_ACCU_LIST:
+		Dee_Visit(self->acu_value.v_object);
+		break;
+	case Dee_ACCU_TUPLE:
+		Dee_tuple_builder_visit(&self->acu_value.v_tuple);
+		break;
+	default: __builtin_unreachable();
+	}
+}
+
+
 /* Pack the accumulator and return its final result as an object.
  * This function may only be called once, as it does an implicit
  * `Dee_accu_fini()'. Returns `NULL' if an error was thrown.
  *
  * Hint: if you want `self' to remain valid, you can just re-init it
- *       after the call using `Dee_accu_init_with_first_inherited()' */
+ *       after the call using `Dee_accu_init_with_first_inherited()'
+ * @param: empty: What to return if the accumulator is empty. You may
+ *                not pass "NULL" here, but you may pass "ITER_DONE" */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Dee_accu_pack(struct Dee_accu *__restrict self) {
+Dee_accu_pack(struct Dee_accu *__restrict self, DeeObject *empty) {
 	switch (self->acu_mode) {
 	case Dee_ACCU_FIRST:
+		if (empty != ITER_DONE)
+			Dee_Incref(empty);
+		return empty;
 	case Dee_ACCU_NONE:
 		return_none;
 	case Dee_ACCU_SECOND:
@@ -274,7 +308,7 @@ Dee_accu_add(/*struct Dee_accu*/ void *self, DeeObject *item) {
 		return 0;
 
 	case Dee_ACCU_LIST:
-		return DeeList_Append((DeeObject *)me->acu_value.v_list, item);
+		return DeeList_AppendSequence((DeeObject *)me->acu_value.v_list, item);
 
 	case Dee_ACCU_STRING:
 		return unicode_printer_printobject(&me->acu_value.v_string, item);
@@ -350,7 +384,7 @@ convert_int64_to_object:
 #endif /* !HAVE_Dee_ACCU_FLOAT */
 
 	case Dee_ACCU_TUPLE:
-		return Dee_tuple_builder_append(&me->acu_value.v_tuple, item);
+		return Dee_tuple_builder_appenditems(&me->acu_value.v_tuple, item);
 
 	case Dee_ACCU_OBJECT: {
 		DeeObject *first;
@@ -375,19 +409,8 @@ err:
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 Dee_accu_addall(/*struct Dee_accu*/ void *self, DeeObject *items) {
 	struct Dee_accu *me = (struct Dee_accu *)self;
-	switch (me->acu_mode) {
-
-	case Dee_ACCU_NONE:
+	if (me->acu_mode == Dee_ACCU_NONE)
 		return 0;
-
-	case Dee_ACCU_TUPLE:
-		return Dee_tuple_builder_appenditems(&me->acu_value.v_tuple, items);
-
-	case Dee_ACCU_LIST:
-		return DeeList_AppendSequence((DeeObject *)me->acu_value.v_list, items);
-
-	default: break;
-	}
 	return DeeObject_Foreach(items, &Dee_accu_add, me);
 }
 

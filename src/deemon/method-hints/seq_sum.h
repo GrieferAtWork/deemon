@@ -46,7 +46,7 @@ __seq_sum__.seq_sum([[nonnull]] DeeObject *__restrict self)
 	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &Dee_accu_add, &accu);
 	if unlikely(foreach_status < 0)
 		goto err;
-	return Dee_accu_pack(&accu);
+	return Dee_accu_pack(&accu, Dee_None);
 err:
 	Dee_accu_fini(&accu);
 	return NULL;
@@ -82,7 +82,7 @@ __seq_sum__.seq_sum_with_range([[nonnull]] DeeObject *__restrict self,
 	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_sum_enumerate_cb, &accu, start, end);
 	if unlikely(foreach_status < 0)
 		goto err;
-	return Dee_accu_pack(&accu);
+	return Dee_accu_pack(&accu, Dee_None);
 err:
 	Dee_accu_fini(&accu);
 	return NULL;

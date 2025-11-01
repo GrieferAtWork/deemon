@@ -1,0 +1,68 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2025 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import Accu from collections;
+
+function assertAccuImpl(expected: Object, accu: Accu) {
+	local actual = accu.value;
+	assert equals(expected, actual);
+	assert expected == actual;
+	assert expected == actual;
+	assert type(expected) === type(actual);
+}
+
+function assertAccu(expected: Object, values: {Object...}) {
+	assertAccuImpl(expected, Accu().addall(values));
+	assertAccuImpl(expected, Accu(values.first).addall(values[1:]));
+	assertAccuImpl(expected, Accu().add(values.first).addall(values[1:]));
+	assertAccuImpl(expected, Accu(values.sum())); /* Sequence.sum() actually does the same as Accu */
+	local a = Accu();
+	for (local v: values)
+		a.add(v);
+	assertAccuImpl(expected, a);
+}
+
+assert Accu().value !is bound;
+assertAccu(42, {42});
+assertAccu(30, {10, 20});
+assertAccu(0, {10, 20, -30});
+assertAccu("foobarfoobar", {"foo", "bar", "foobar"});
+assertAccu("foobarfoobar".bytes(), {"foo".bytes(), "bar".bytes(), "foobar".bytes()});
+assertAccu("foobarfoobar".bytes(), {"foo".bytes(), "bar", "foobar"});
+assertAccu("foo1020", {"foo", 10, 20});
+assertAccu([10, 20, 30, 40], {[], {10, 20}, {30, 40}});
+assertAccu((10, 20, 30, 40), {(), {10, 20}, {30, 40}});
+assertAccu(none, {none, [], {10, 20}, {30, 40}});
+
+class MyAdder {
+	this = default;
+	public member opcount = 1;
+	operator + (other: MyAdder): MyAdder {
+		return MyAdder(opcount: this.opcount + other.opcount);
+	}
+}
+
+assertAccu(MyAdder(1), {MyAdder()});
+assertAccu(MyAdder(3), {MyAdder(), MyAdder(), MyAdder()});
+assertAccu(MyAdder(6), {MyAdder(), MyAdder(), MyAdder(4)});
+assertAccu(MyAdder(2), {MyAdder(), MyAdder(), MyAdder(0)});
+

@@ -210,6 +210,11 @@ struct Dee_tuple_builder {
 	(void)(!(self)->tb_tuple ||                                     \
 	       (Dee_Decrefv((self)->tb_tuple->t_elem, (self)->tb_size), \
 	        DeeTuple_FreeUninitialized((self)->tb_tuple), 0))
+#define Dee_tuple_builder_visit(self)                              \
+	do {                                                           \
+		if ((self)->tb_tuple)                                      \
+			Dee_Visitv((self)->tb_tuple->t_elem, (self)->tb_size); \
+	}	__WHILE0
 DFUNDEF ATTR_RETNONNULL WUNUSED DREF /*Tuple*/DeeObject *DCALL
 Dee_tuple_builder_pack(struct Dee_tuple_builder *__restrict self);
 DFUNDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL

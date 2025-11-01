@@ -9541,7 +9541,7 @@ default__seq_sum__with__seq_operator_foreach(DeeObject *__restrict self) {
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &Dee_accu_add, &accu);
 	if unlikely(foreach_status < 0)
 		goto err;
-	return Dee_accu_pack(&accu);
+	return Dee_accu_pack(&accu, Dee_None);
 err:
 	Dee_accu_fini(&accu);
 	return NULL;
@@ -9592,7 +9592,7 @@ default__seq_sum_with_range__with__seq_enumerate_index(DeeObject *__restrict sel
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_sum_enumerate_cb, &accu, start, end);
 	if unlikely(foreach_status < 0)
 		goto err;
-	return Dee_accu_pack(&accu);
+	return Dee_accu_pack(&accu, Dee_None);
 err:
 	Dee_accu_fini(&accu);
 	return NULL;
@@ -17543,8 +17543,15 @@ PRIVATE WUNUSED NONNULL((1, 3)) bool DCALL
 string_hash_equals_object(char const *lhs, Dee_hash_t lhs_hash, DeeObject *rhs) {
 	if (DeeString_Check(rhs))
 		return (DeeString_Hash(rhs) == lhs_hash && strcmp(lhs, DeeString_STR(rhs)) == 0);
-	if (DeeBytes_Check(rhs))
-		return (strlen(lhs) == DeeBytes_SIZE(rhs) && bcmp(lhs, DeeBytes_DATA(rhs), DeeBytes_SIZE(rhs)) == 0);
+	if (DeeBytes_Check(rhs)) {
+		bool result;
+		size_t lhs_len = strlen(lhs);
+		DeeBytes_IncUse(rhs);
+		result = lhs_len == DeeBytes_SIZE(rhs) &&
+		         bcmp(lhs, DeeBytes_DATA(rhs), DeeBytes_SIZE(rhs)) == 0;
+		DeeBytes_DecUse(rhs);
+		return result;
+	}
 	/* `string.operator ==' isn't implemented for any other types. */
 	return false;
 }
@@ -17669,8 +17676,14 @@ PRIVATE WUNUSED NONNULL((1, 4)) bool DCALL
 string_len_hash_equals_object(char const *lhs, size_t lhs_len, Dee_hash_t lhs_hash, DeeObject *rhs) {
 	if (DeeString_Check(rhs))
 		return (DeeString_Hash(rhs) == lhs_hash && DeeString_EqualsBuf(rhs, lhs, lhs_len));
-	if (DeeBytes_Check(rhs))
-		return (lhs_len == DeeBytes_SIZE(rhs) && bcmp(lhs, DeeBytes_DATA(rhs), lhs_len) == 0);
+	if (DeeBytes_Check(rhs)) {
+		bool result;
+		DeeBytes_IncUse(rhs);
+		result = lhs_len == DeeBytes_SIZE(rhs) &&
+		         bcmp(lhs, DeeBytes_DATA(rhs), lhs_len) == 0;
+		DeeBytes_DecUse(rhs);
+		return result;
+	}
 	/* `string.operator ==' isn't implemented for any other types. */
 	return false;
 }
