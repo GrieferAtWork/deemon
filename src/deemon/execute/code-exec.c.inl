@@ -1623,9 +1623,7 @@ do_operator:
 			imm_val = READ_imm8();
 do_operator_tuple:
 			ASSERT_TUPLE(FIRST);
-			call_result = DeeObject_InvokeOperator(SECOND, imm_val,
-			                                       DeeTuple_SIZE(FIRST),
-			                                       DeeTuple_ELEM(FIRST));
+			call_result = DeeObject_InvokeOperatorTuple(SECOND, imm_val, FIRST);
 			if unlikely(!call_result)
 				HANDLE_EXCEPT();
 			POPREF();          /* Pop the argument tuple. */
@@ -6147,10 +6145,7 @@ do_prefix_operator_tuple:
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
 						if unlikely(!prefix_pointer)
 							HANDLE_EXCEPT();
-						call_result = DeeObject_PInvokeOperator(prefix_pointer,
-						                                        imm_val,
-						                                        DeeTuple_SIZE(TOP),
-						                                        DeeTuple_ELEM(TOP));
+						call_result = DeeObject_PInvokeOperatorTuple(prefix_pointer, imm_val, TOP);
 						if unlikely(!call_result)
 							HANDLE_EXCEPT();
 						Dee_Decref(TOP);
@@ -6160,10 +6155,7 @@ do_prefix_operator_tuple:
 						prefix_ob = get_prefix_object();
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
-						call_result = DeeObject_PInvokeOperator(&prefix_ob,
-						                                        imm_val,
-						                                        DeeTuple_SIZE(TOP),
-						                                        DeeTuple_ELEM(TOP));
+						call_result = DeeObject_PInvokeOperatorTuple(&prefix_ob, imm_val, TOP);
 						if unlikely(!call_result) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
