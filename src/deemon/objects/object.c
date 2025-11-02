@@ -4216,6 +4216,37 @@ PRIVATE struct type_method tpconst type_methods[] = {
 };
 
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+type_getname_impl(DeeTypeObject *__restrict self) {
+	DREF DeeStringObject *result;
+	ASSERT(self->tp_name);
+	if (self->tp_flags & TP_FNAMEOBJECT) {
+		result = COMPILER_CONTAINER_OF(self->tp_name, DeeStringObject, s_str);
+		Dee_Incref(result);
+	} else {
+		result = (DREF DeeStringObject *)DeeString_New(self->tp_name);
+	}
+	return result;
+}
+
+PRIVATE DEFINE_STRING(str_anonymous_type, "<anonymous type>");
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+type_getname(DeeTypeObject *__restrict self) {
+	ASSERT_OBJECT_TYPE(self, &DeeType_Type);
+	if (self->tp_name == NULL)
+		return_reference(&str_anonymous_type);
+	return (DREF DeeObject *)type_getname_impl(self);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+type_get__name__(DeeTypeObject *__restrict self) {
+	ASSERT_OBJECT_TYPE(self, &DeeType_Type);
+	if unlikely(self->tp_name == NULL)
+		return DeeRT_ErrTUnboundAttrCStr(&DeeType_Type, self, STR___name__);
+	return (DREF DeeObject *)type_getname_impl(self);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_isbuffer(DeeTypeObject *__restrict self) {
 	do {
@@ -4227,12 +4258,8 @@ type_isbuffer(DeeTypeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_get_classdesc(DeeTypeObject *__restrict self) {
-	if (!DeeType_IsClass(self)) {
-		DeeError_Throwf(&DeeError_AttributeError,
-		                "Can't access `__class__' of non-user-defined Type `%k'",
-		                self);
-		return NULL;
-	}
+	if (!DeeType_IsClass(self))
+		return DeeRT_ErrTUnboundAttrCStr(&DeeType_Type, self, "__class__");
 	return_reference_((DeeObject *)self->tp_class->cd_desc);
 }
 
@@ -4425,7 +4452,7 @@ DeeType_GetName(DeeTypeObject const *__restrict self) {
 	ASSERT_OBJECT_TYPE(self, &DeeType_Type);
 	result = self->tp_name;
 	if (result == NULL)
-		result = "<anonymous type>";
+		result = DeeString_STR(&str_anonymous_type);
 	return result;
 }
 
@@ -4559,10 +4586,6 @@ type_gcpriority(DeeTypeObject *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst type_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR___name__, STRUCT_CONST | STRUCT_CSTR, offsetof(DeeTypeObject, tp_name),
-	                      "->?Dstring\n"
-	                      "#t{UnboundAttribute}"
-	                      "Name of this type"),
 	TYPE_MEMBER_FIELD_DOC(STR___doc__, STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeTypeObject, tp_doc),
 	                      "->?X2?Dstring?N\n"
 	                      "Doc string for this type, including documentation on operators, or ?N if it has none"),
@@ -4583,16 +4606,8 @@ PRIVATE struct type_member tpconst type_members[] = {
 	TYPE_MEMBER_BITFIELD("__isgc__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FGC),
 	TYPE_MEMBER_FIELD_DOC("__isclass__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_class),
 	                      "True if this type is a user-defined class (s.a. ?#__class__)"),
-	TYPE_MEMBER_FIELD_DOC("__isarithmetic__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_math),
-	                      "True if this type implements math-related operators"),
-	TYPE_MEMBER_FIELD_DOC("__iscomparable__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_cmp),
-	                      "True if this type implements compare-related operators"),
-	TYPE_MEMBER_FIELD_DOC("__issequence__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_seq),
-	                      "True if this type implements sequence-related operators"),
 	TYPE_MEMBER_BITFIELD("__isinttruncated__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FTRUNCATE),
 	TYPE_MEMBER_BITFIELD("__hasmoveany__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FMOVEANY),
-	TYPE_MEMBER_FIELD_DOC("__isiterator__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_iter_next),
-	                      "True if this type implements the ${operator iter} operator"),
 	TYPE_MEMBER_BITFIELD_DOC("__iscustom__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FHEAP,
 	                         "True if this type was dynamically allocated on the heap"),
 	TYPE_MEMBER_BITFIELD("__issuperconstructible__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FINHERITCTOR),
@@ -4607,6 +4622,15 @@ PRIVATE struct type_member tpconst type_members[] = {
 };
 
 PRIVATE struct type_getset tpconst type_getsets[] = {
+	TYPE_GETTER_AB_F("name", &type_getname,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dstring\n"
+	                 "Same as ?#__name__, but returns $\"<anonymous type>\" if the type is unnamed"),
+	TYPE_GETTER_F(STR___name__, &type_get__name__,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?Dstring\n"
+	              "#t{UnboundAttribute}"
+	              "Name of this type"),
 	TYPE_GETTER_AB_F("isbuffer", &type_isbuffer,
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                 "->?Dbool\n"
@@ -4623,7 +4647,7 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	TYPE_GETTER_AB_F("__class__", &type_get_classdesc,
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                 "->?Ert:ClassDescriptor\n"
-	                 "#tAttributeError{@this typeType is a user-defined class (s.a. ?#__isclass__)}"
+	                 "#tUnboundAttribute{@this typeType is a user-defined class (s.a. ?#__isclass__)}"
 	                 "Returns the internal class-descriptor descriptor for a user-defined class"),
 	TYPE_GETTER_AB_F("__seqclass__", &type_get_seqclass,
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
