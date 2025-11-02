@@ -366,7 +366,17 @@ _store_cache(DeeObject **p_cache, DREF DeeObject *result) {
 			/* Objects statically allocated within the deemon core can never
 			 * be destroyed. - As such, we can store a non-referencing pointer
 			 * to them that will allow us to skip object calculation the next
-			 * time the relevant function is called. */
+			 * time the relevant function is called.
+			 *
+			 * The reason we never want to store a reference is simple:
+			 * - If we *did* store a reference, then "rt" would also need
+			 *   a finalizer that decref's any cached reference, and that
+			 *   would just add a whole bunch of overhead, given that all
+			 *   the objects we're actually interested in would always be
+			 *   static and originate from the deemon core (meaning they
+			 *   should always fit the criteria where we don't actually
+			 *   need to keep around references)
+			 */
 			atomic_cmpxch(p_cache, NULL, result);
 			Dee_DecrefNokill(result_module);
 		} else if (result_module) {
