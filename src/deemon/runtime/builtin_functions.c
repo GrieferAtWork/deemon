@@ -24,6 +24,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
+#include <deemon/callable.h>
 #include <deemon/code.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
@@ -557,12 +558,25 @@ PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_assert(size_t argc, DeeObject *const 
 	int operator_name = -1;
 	if (argc) {
 		message = argv[0];
-		if (DeeNone_Check(message))
+		if (DeeCallable_Check(message)) {
+			message = DeeObject_Call(message, 0, NULL);
+			if unlikely(!message)
+				goto err;
+		} else {
+			Dee_Incref(message);
+		}
+		if (DeeNone_Check(message)) {
+			Dee_DecrefNokill(message);
 			message = Dee_EmptyString;
-		if (DeeObject_AssertTypeExact(message, &DeeString_Type))
-			goto err;
+			Dee_Incref(message);
+		} else {
+			if (DeeObject_AssertTypeExact(message, &DeeString_Type))
+				goto err_message;
+		}
 		++argv;
 		--argc;
+	} else {
+		Dee_Incref(message);
 	}
 	if (argc) {
 		if (DeeObject_AsInt(argv[0], &operator_name))
@@ -601,6 +615,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_assert(size_t argc, DeeObject *const 
 	DeeError_ThrowInherited(assertion_error);
 err:
 	return NULL;
+err_message:
+	Dee_Decref(message);
+	goto err;
 }
 
 
