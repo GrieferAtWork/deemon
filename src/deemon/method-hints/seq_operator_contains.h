@@ -98,6 +98,7 @@ err:
 		goto err;
 	}
 	result = DeeObject_TryCompareEq(key_and_value[1], real_value);
+	Dee_Decref(real_value);
 	Dee_Decref(key_and_value[1]);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
