@@ -333,9 +333,15 @@ bool_le(DeeObject *self, DeeObject *other) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_gr(DeeObject *self, DeeObject *other) {
+	int other_bool;
 	if (!DeeBool_IsTrue(self))
 		return_false; /* false > X --> false */
-	return DeeObject_BoolOb(other); /* true > X --> X */
+	other_bool = DeeObject_Bool(other); /* true > X --> !X */
+	if unlikely(other_bool < 0)
+		goto err;
+	return_bool(!other_bool);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
