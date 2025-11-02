@@ -21,13 +21,11 @@
 
 import * from deemon;
 import Accu from collections;
+import .common.test;
 
 function assertAccuImpl(expected: Object, accu: Accu) {
 	local actual = accu.value;
-	assert equals(expected, actual);
-	assert expected == actual;
-	assert expected == actual;
-	assert type(expected) === type(actual);
+	test.assertEqualsTyped(expected, actual);
 }
 
 function assertAccu(expected: Object, values: {Object...}) {

@@ -1,0 +1,385 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2025 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+import deemon;
+import * from deemon;
+import * from errors;
+
+#define TRY(x) (try x catch (e...) e)
+
+@@Set of types know to be only ==/!= comparable, but not </<=/>/>= comparable
+final local CANNOT_COMPARE = Set.frozen({
+	Type,
+	Module,
+	Function,
+});
+
+function safeRepr(x: Object): string {
+	try {
+		return repr x;
+	} catch (NotImplemented) {
+		return f"<{Object.id(x)}@{type x}>";
+	}
+}
+
+function canCompare(expected: Object, actual: Object): bool {
+	local Texpected = type expected;
+	local Tactual = type actual;
+	if (Texpected in CANNOT_COMPARE || Tactual in CANNOT_COMPARE)
+		return false;
+	if (Texpected is Callable || Tactual is Callable)
+		return false;
+	if (Texpected is Set || Tactual is Set)
+		return false;
+	if (Texpected.extends(Sequence) && Tactual.extends(Sequence)) {
+		if (Texpected == string || Tactual == string)
+			return Texpected === Tactual;
+		local common = { #expected, #actual } < ...;
+		for (local i: [:common]) {
+			if (!canCompare(expected[i], actual[i]))
+				return false;
+		}
+		return true;
+	}
+	if (Texpected !== Tactual)
+		return false;
+	return true;
+}
+
+function concatMessage(base: string, message: Callable | string | none = none): string {
+	if (message is Callable)
+		message = message();
+	if (message is none)
+		return base;
+	assert message is string;
+	return f"{base}: {message}";
+}
+
+function assertEquals(expected: Object, actual: Object,
+                      message: Callable | string | none = none,
+                      compare: bool | none = none) {
+	assert deemon.equals(expected, actual), message;
+	assert expected == actual, message;
+	assert actual == expected, message;
+	assert !(expected != actual), concatMessage(f"!({safeRepr(expected)} != {safeRepr(actual)})", message);
+	assert !(actual != expected), concatMessage(f"!({safeRepr(actual)} != {safeRepr(expected)})", message);
+	if (compare ?? canCompare(expected, actual)) {
+		assert !(expected < actual), concatMessage(f"!({safeRepr(expected)} < {safeRepr(actual)})", message);
+		assert !(actual < expected), concatMessage(f"!({safeRepr(actual)} < {safeRepr(expected)})", message);
+		assert expected <= actual, message;
+		assert actual <= expected, message;
+		assert !(expected > actual), concatMessage(f"!({safeRepr(expected)} > {safeRepr(actual)})", message);
+		assert !(actual > expected), concatMessage(f"!({safeRepr(actual)} > {safeRepr(expected)})", message);
+		assert expected >= actual, message;
+		assert actual >= expected, message;
+		assert deemon.compare(expected, actual) == 0, message;
+	}
+}
+
+@@Same as @assertEquals, but also assert identical typing
+function assertEqualsTyped(expected: Object, actual: Object,
+                          message: Callable | string | none = none,
+                          compare: bool | none = none) {
+	assertEquals(expected, actual, message, compare);
+	assert type(expected) == type(actual), f"type({safeRepr(expected)}) == type({safeRepr(actual)})";
+}
+
+function assertNotEquals(unexpected: Object, actual: Object,
+                         message: Callable | string | none = none,
+                         compare: bool | none = none) {
+	assert !deemon.equals(unexpected, actual),
+		concatMessage(f"!deemon.equals({safeRepr(unexpected)}, {safeRepr(actual)})", message);
+	assert unexpected != actual, message;
+	assert actual != unexpected, message;
+	assert !(unexpected == actual), concatMessage(f"!({safeRepr(unexpected)} == {safeRepr(actual)})", message);
+	assert !(actual == unexpected), concatMessage(f"!({safeRepr(actual)} == {safeRepr(unexpected)})", message);
+	if (compare ?? canCompare(unexpected, actual)) {
+		assert !(unexpected <= actual), concatMessage(f"!({safeRepr(unexpected)} <= {safeRepr(actual)})", message);
+		assert !(actual <= unexpected), concatMessage(f"!({safeRepr(actual)} <= {safeRepr(unexpected)})", message);
+		assert !(unexpected >= actual), concatMessage(f"!({safeRepr(unexpected)} >= {safeRepr(actual)})", message);
+		assert !(actual >= unexpected), concatMessage(f"!({safeRepr(actual)} >= {safeRepr(unexpected)})", message);
+		assert actual < unexpected || actual > unexpected, concatMessage(f"!({safeRepr(actual)} <||> {safeRepr(unexpected)})", message);
+		assert unexpected < actual || unexpected > actual, concatMessage(f"!({safeRepr(unexpected)} <||> {safeRepr(actual)})", message);
+		assert deemon.compare(unexpected, actual) != 0, message;
+	}
+}
+
+function assertNotEqualsTyped(unexpected: Object, actual: Object,
+                              message: Callable | string | none = none,
+                              compare: bool | none = none) {
+	if (type(unexpected) == type(actual))
+		assertNotEquals(unexpected, actual, message, compare);
+}
+
+
+function assertAttributes(ob: Type, attributes: {string: Object}, typ: Type | none = none) {
+	if (typ !is none)
+		assert ob is typ;
+	for (local name, expected: attributes) {
+		local actual = ob.operator . (name);
+		assertEquals(expected, actual, () -> f"assertAttributes({
+			safeRepr(ob)}, \{ ..., {safeRepr(name)}: {safeRepr(expected)} \})");
+	}
+}
+
+
+@@Assert that @x is a generic sequence in every way, shape, and form
+function assertSequence(x: Sequence, expected: {Object...} | none = none) {
+	assert x is Sequence;
+	assert x !is Set;
+	assert x !is Mapping;
+	local len = #x;
+	assert len is int;
+	if (expected !is none) {
+		assertEquals(expected, x);
+		assert #expected == len;
+		for (local i, v: expected.enumerate()) {
+			assertEquals(v, x[i], () -> f"{safeRepr(v)} == {safeRepr(x)}[{safeRepr(i)}]");
+		}
+	}
+	assert x.length == len;
+	assertAttributes(TRY(x[len]), {
+		"seq": x,
+		"index": len,
+		"length": len,
+	}, IndexError);
+	if (len) {
+		assert x;
+		local iterated1 = List(x);
+		local iterated2 = Tuple(x);
+		local iterated3 = [];
+		local iterated4 = [];
+		local iterated5 = [];
+		local iterated6 = x.cached;
+		local iterated7 = x.frozen;
+		iterated3.extend(x);
+		for (local it: x)
+			iterated4.append(it);
+		for (local i: [:len])
+			iterated5.append(x[i]);
+		assertEquals(x, iterated1);
+		assertEquals(x, iterated2);
+		assertEquals(x, iterated3);
+		assertEquals(x, iterated4);
+		assertEquals(x, iterated5);
+		assertEquals(x, iterated6);
+		assertEquals(x, iterated7);
+		local first = x[0];
+		local last = x[len - 1];
+		assertEquals(first, x.first);
+		assertEquals(last, x.last);
+		assertEquals(x.find(first), 0);
+		assertEquals(x.index(first), 0);
+		assertEquals(x.rfind(last), len - 1);
+		assertEquals(x.rindex(last), len - 1);
+
+		local it = x.operator iter();
+		assert it;
+		local it2 = x.operator iter();
+		assertEqualsTyped(it, it2);
+		assertEquals(first, it2.operator next());
+		assert it2 > it;
+		assert it < it2;
+
+		for (local i, v: iterated1.enumerate()) {
+			assert it;
+			assertEquals(v, it.operator next());
+			assertEquals(v, x[i]);
+		}
+		assert !it;
+
+		for (local it: iterated1)
+			assert it in x;
+	} else {
+		assert !x;
+
+		local it = x.operator iter();
+		assert !it;
+		assert TRY(it.operator next()) == StopIteration();
+
+		assert none !in x;
+	}
+}
+
+
+function assertSet(x: Set, expected: {Object...} | none = none) {
+	assert x is Sequence;
+	assert x is Set;
+	assert x !is Mapping;
+	local len = #x;
+	assert len is int;
+	if (expected !is none) {
+		assertEquals(expected, x);
+		assert #expected == len;
+		for (local k: expected)
+			assert k in x;
+		for (local k: x)
+			assert k in expected;
+	}
+	assert x.length == len;
+	if (len) {
+		assert x;
+		local iterated1 = List(x);
+		local iterated2 = Tuple(x);
+		local iterated3 = [];
+		local iterated4 = [];
+		local iterated5 = HashSet(x);
+		local iterated6 = HashSet.Frozen(x);
+		local iterated7 = x.frozen;
+//		local iterated8 = x.cached; // TODO
+		assert iterated7 is Set;
+//		assert iterated8 is Set; // TODO
+		iterated3.extend(x);
+		for (local it: x)
+			iterated4.append(it);
+		assertEquals(x, iterated1);
+		assertEquals(x, iterated2);
+		assertEquals(x, iterated3);
+		assertEquals(x, iterated4);
+		assertEquals(x, iterated5);
+		assertEquals(x, iterated6);
+		assertEquals(x, iterated7);
+//		assertEquals(x, iterated8); // TODO
+
+		local first = x.first;
+		assert first in x;
+		assert x.last in x;
+
+		local it = x.operator iter();
+		assert it;
+		local it2 = x.operator iter();
+		assertEqualsTyped(it, it2);
+		assertEquals(first, it2.operator next());
+		assert it2 > it;
+		assert it < it2;
+
+		for (local v: iterated1) {
+			assert it;
+			assertEquals(v, it.operator next());
+		}
+		assert !it;
+
+		for (local it: iterated1)
+			assert it in x;
+	} else {
+		assert !x;
+
+		local it = x.operator iter();
+		assert !it;
+		assert TRY(it.operator next()) == StopIteration();
+
+		assert none !in x;
+	}
+}
+
+function assertMapping(x: Mapping, expected: {Object: Object} | none = none) {
+	assert x is Sequence;
+	assert x !is Set;
+	assert x is Mapping;
+	local len = #x;
+	if (expected !is none) {
+		assertEquals(expected, x);
+		assert #expected == len;
+		for (local key, value: expected)
+			assertEquals(value, x[key], () -> f"{safeRepr(value)} == {safeRepr(x)}[{safeRepr(key)}]");
+		for (local key, value: x)
+			assertEquals(expected[key], value, () -> f"{safeRepr(expected)}[{safeRepr(key)}] == {safeRepr(value)}");
+	}
+	assert x.length == len;
+	local badKey = -4405742047502975340;
+	assert badKey !in x;
+	assert TRY(x[badKey]) == UnknownKey(seq: x, key: badKey);
+	assert len is int;
+
+	local keys = x.keys;
+	local values = x.values;
+	local items = x.items;
+	assert len == #keys;
+	assert len == #values;
+	assert len == #items;
+
+	assertSet(keys, expected.keys);
+	assertSequence(values, expected.values);
+	assertSet(items, expected.items);
+
+	if (len) {
+		assert x;
+		local iterated1 = Dict(x);
+		local iterated2 = Dict.Frozen(x);
+		local iterated3 = Dict();
+		local iterated4 = Dict();
+		local iterated5 = Dict();
+		local iterated6 = Dict();
+		local iterated7 = Dict();
+		local iterated8 = x.frozen;
+		iterated3.update(x);
+		for (local k, v: x)
+			iterated4[k] = v;
+		for (local k, v: items)
+			iterated5[k] = v;
+		for (local pair: x) {
+			local k, v = pair...;
+			iterated6[k] = v;
+		}
+		for (local k: x.keys)
+			iterated7[k] = x[k];
+		assertEquals(x, iterated1);
+		assertEquals(x, iterated2);
+		assertEquals(x, iterated3);
+		assertEquals(x, iterated4);
+		assertEquals(x, iterated5);
+		assertEquals(x, iterated6);
+		assertEquals(x, iterated7);
+		assertEquals(x, iterated8);
+
+		for (local i, k: keys.enumerate()) {
+			local item = Sequence.__getitem__(items, i);
+			local v = x[k];
+			assertEquals(v, values[i]);
+			assertEquals((k, v), item);
+		}
+
+		local it = x.operator iter();
+		assert it;
+		local it2 = x.operator iter();
+		assertEqualsTyped(it, it2);
+		assertEquals(x.first, it2.operator next());
+		assert it2 > it;
+		assert it < it2;
+
+		for (local k, v: iterated1) {
+			assert it;
+			assertEquals((k, v), it.operator next());
+		}
+		assert !it;
+
+		for (local k, none: iterated1)
+			assert k in x;
+	} else {
+		assert !x;
+
+		local it = x.operator iter();
+		assert !it;
+		assert TRY(it.operator next()) == StopIteration();
+
+		assert none !in x;
+	}
+}
+

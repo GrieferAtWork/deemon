@@ -21,8 +21,9 @@
 
 import * from deemon;
 import * from time;
+import .common.test;
 
-function getYMD(t: Time): (int, int, int) {
+function YMD(t: Time): (int, int, int) {
 	return (t.year, t.month, t.mday);
 }
 
@@ -31,21 +32,21 @@ function getYMD(t: Time): (int, int, int) {
  *
  * Before, there was an off-by-one error, where setting the
  * month of certain leap-years would subtract 1 year. */
-assert getYMD(Time(year: 103, month: 2, day: 29)) == (103, 3, 1);
-assert getYMD(Time(year: 104, month: 2, day: 29)) == (104, 2, 29);
-assert getYMD(Time(year: 105, month: 2, day: 29)) == (105, 3, 1);
-assert getYMD(Time(year: 1975, month: 2, day: 29)) == (1975, 3, 1);
-assert getYMD(Time(year: 1976, month: 2, day: 29)) == (1976, 2, 29);
-assert getYMD(Time(year: 1977, month: 2, day: 29)) == (1977, 3, 1);
+test.assertEquals((103, 3, 1),   YMD(Time(year: 103, month: 2, day: 29)));
+test.assertEquals((104, 2, 29),  YMD(Time(year: 104, month: 2, day: 29)));
+test.assertEquals((105, 3, 1),   YMD(Time(year: 105, month: 2, day: 29)));
+test.assertEquals((1975, 3, 1),  YMD(Time(year: 1975, month: 2, day: 29)));
+test.assertEquals((1976, 2, 29), YMD(Time(year: 1976, month: 2, day: 29)));
+test.assertEquals((1977, 3, 1),  YMD(Time(year: 1977, month: 2, day: 29)));
 
 /* Assert that sub-month times are properly clamped when setting a
  * month while the sub-month time would not fit into the new month. */
 local t = Time(year: 1977, month: 1, day: 31);
 t.month = 2;
-assert t == Time(year: 1977, month: 2, day: 28, hour: 23, minute: 59, second: 59, nanosecond: 999999999);
+test.assertEquals(Time(year: 1977, month: 2, day: 28, hour: 23, minute: 59, second: 59, nanosecond: 999999999), t);
 
 /* Also make sure that month-day clamping correctly makes use of leap days. */
 local t = Time(year: 1976, month: 1, day: 31);
 t.month = 2;
-assert t == Time(year: 1976, month: 2, day: 29, hour: 23, minute: 59, second: 59, nanosecond: 999999999);
+test.assertEquals(Time(year: 1976, month: 2, day: 29, hour: 23, minute: 59, second: 59, nanosecond: 999999999), t);
 

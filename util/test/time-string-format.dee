@@ -20,21 +20,16 @@
  */
 import * from deemon;
 import * from time;
+import .common.test;
 
 function strtime(t: Time): string {
 	return t.format("%A, the %[n:mday] of %B %Y, %H:%M:%S");
 }
 
 /* Assert that string-formatting of Time works. */
-assert "Sunday, the 29th of February 1976, 00:00:00" ==
-	strtime(Time(year: 1976, month: 2, day: 29));
-assert "Monday, the 1st of March 1976, 00:00:00" ==
-	strtime(Time(year: 1976, month: 3, day: 1));
-assert "Tuesday, the 2nd of March 1976, 00:00:00" ==
-	strtime(Time(year: 1976, month: 3, day: 2));
-assert "Wednesday, the 3rd of March 1976, 00:00:00" ==
-	strtime(Time(year: 1976, month: 3, day: 3));
-assert "Thursday, the 4th of March 1976, 00:00:00" ==
-	strtime(Time(year: 1976, month: 3, day: 4));
-assert "Friday, the 5th of March 1976, 00:00:00" ==
-	strtime(Time(year: 1976, month: 3, day: 5));
+test.assertEquals("Sunday, the 29th of February 1976, 00:00:00", strtime(Time(year: 1976, month: 2, day: 29)));
+test.assertEquals("Monday, the 1st of March 1976, 00:00:00",     strtime(Time(year: 1976, month: 3, day: 1)));
+test.assertEquals("Tuesday, the 2nd of March 1976, 00:00:00",    strtime(Time(year: 1976, month: 3, day: 2)));
+test.assertEquals("Wednesday, the 3rd of March 1976, 00:00:00",  strtime(Time(year: 1976, month: 3, day: 3)));
+test.assertEquals("Thursday, the 4th of March 1976, 00:00:00",   strtime(Time(year: 1976, month: 3, day: 4)));
+test.assertEquals("Friday, the 5th of March 1976, 00:00:00",     strtime(Time(year: 1976, month: 3, day: 5)));

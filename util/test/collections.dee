@@ -21,6 +21,7 @@
 
 import * from deemon;
 import * from collections;
+import .common.test;
 
 global final KEY1 = "_1";
 global final KEY2 = "_2";
@@ -33,12 +34,8 @@ global final KEY8 = "_8";
 global final KEY9 = "_9";
 global final KEYA = "_A";
 
-function identical(a, b): bool {
-	return type(a) == type(b) && a == b;
-}
-
 function assertSet(s) {
-	assert identical(#s, 9);
+	test.assertEquals(#s, 9);
 	assert KEY1 in s;
 	assert KEY2 in s;
 	assert KEY3 in s;
@@ -52,25 +49,25 @@ function assertSet(s) {
 }
 
 function assertMap(m) {
-	assert identical(#m, 9);
-	assert identical(m[KEY1], 1);
-	assert identical(m[KEY2], 2);
-	assert identical(m[KEY3], 3);
-	assert identical(m[KEY4], 4);
-	assert identical(m[KEY5], 5);
-	assert identical(m[KEY6], 6);
-	assert identical(m[KEY7], 7);
-	assert identical(m[KEY8], 8);
-	assert identical(m[KEY9], 9);
-	assert identical(m.get(KEY1), 1);
-	assert identical(m.get(KEY2), 2);
-	assert identical(m.get(KEY3), 3);
-	assert identical(m.get(KEY4), 4);
-	assert identical(m.get(KEY5), 5);
-	assert identical(m.get(KEY6), 6);
-	assert identical(m.get(KEY7), 7);
-	assert identical(m.get(KEY8), 8);
-	assert identical(m.get(KEY9), 9);
+	test.assertEquals(#m, 9);
+	test.assertEquals(m[KEY1], 1);
+	test.assertEquals(m[KEY2], 2);
+	test.assertEquals(m[KEY3], 3);
+	test.assertEquals(m[KEY4], 4);
+	test.assertEquals(m[KEY5], 5);
+	test.assertEquals(m[KEY6], 6);
+	test.assertEquals(m[KEY7], 7);
+	test.assertEquals(m[KEY8], 8);
+	test.assertEquals(m[KEY9], 9);
+	test.assertEquals(m.get(KEY1), 1);
+	test.assertEquals(m.get(KEY2), 2);
+	test.assertEquals(m.get(KEY3), 3);
+	test.assertEquals(m.get(KEY4), 4);
+	test.assertEquals(m.get(KEY5), 5);
+	test.assertEquals(m.get(KEY6), 6);
+	test.assertEquals(m.get(KEY7), 7);
+	test.assertEquals(m.get(KEY8), 8);
+	test.assertEquals(m.get(KEY9), 9);
 	assert m[KEYA] !is bound;
 }
 

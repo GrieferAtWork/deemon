@@ -24,15 +24,7 @@
 import deemon;
 import * from deemon;
 import * from errors;
-
-function assert_identical(a, b) {
-	/* Make sure that the comparison works in every way */
-	assert type a === type b;
-	assert a == b;
-	assert b == a;
-	assert !(a != b);
-	assert !(b != a);
-}
+import .common.test;
 
 /* Make sure that trying to execute an empty piece of
  * code causes a SyntaxError exception to be thrown. */
@@ -45,113 +37,113 @@ assert (try ({ exec('// empty'); none; }) catch (e...) e) is SyntaxError;
 assert (try ({ exec('// empty\n'); none; }) catch (e...) e) is SyntaxError;
 
 /* Basic literal / constant parsing. */
-assert_identical(exec(r'1'),          1);
-assert_identical(exec(r'1.0'),        1.0);
-assert_identical(exec(r'"foo"'),      "foo");
-assert_identical(exec(r"'foo'"),      "foo");
-assert_identical(exec(r'true'),       true);
-assert_identical(exec(r'false'),      false);
-assert_identical(exec(r'none'),       none);
-assert_identical(exec(r'1;'),         1);
-assert_identical(exec(r'1.0;'),       1.0);
-assert_identical(exec(r'"foo";'),     "foo");
-assert_identical(exec(r"'foo';"),     "foo");
-assert_identical(exec(r'true;'),      true);
-assert_identical(exec(r'false;'),     false);
-assert_identical(exec(r'none;'),      none);
+test.assertEqualsTyped(exec(r'1'),          1);
+test.assertEqualsTyped(exec(r'1.0'),        1.0);
+test.assertEqualsTyped(exec(r'"foo"'),      "foo");
+test.assertEqualsTyped(exec(r"'foo'"),      "foo");
+test.assertEqualsTyped(exec(r'true'),       true);
+test.assertEqualsTyped(exec(r'false'),      false);
+test.assertEqualsTyped(exec(r'none'),       none);
+test.assertEqualsTyped(exec(r'1;'),         1);
+test.assertEqualsTyped(exec(r'1.0;'),       1.0);
+test.assertEqualsTyped(exec(r'"foo";'),     "foo");
+test.assertEqualsTyped(exec(r"'foo';"),     "foo");
+test.assertEqualsTyped(exec(r'true;'),      true);
+test.assertEqualsTyped(exec(r'false;'),     false);
+test.assertEqualsTyped(exec(r'none;'),      none);
 
 /* Simple arithmetic. */
-assert_identical(exec(r'10*2 + 11*3'),  53);
-assert_identical(exec(r'10/2*5'),       25);
-assert_identical(exec(r'10/(2*5)'),     1);
-assert_identical(exec(r'10*2 + 11*3;'), 53);
-assert_identical(exec(r'10/2*5;'),      25);
-assert_identical(exec(r'10/(2*5);'),    1);
+test.assertEqualsTyped(exec(r'10*2 + 11*3'),  53);
+test.assertEqualsTyped(exec(r'10/2*5'),       25);
+test.assertEqualsTyped(exec(r'10/(2*5)'),     1);
+test.assertEqualsTyped(exec(r'10*2 + 11*3;'), 53);
+test.assertEqualsTyped(exec(r'10/2*5;'),      25);
+test.assertEqualsTyped(exec(r'10/(2*5);'),    1);
 
 /* Simple unary instructions */
-assert_identical(exec(r'str 1'),       "1");
-assert_identical(exec(r'str 1.0'),     "1.0");
-assert_identical(exec(r'type true'),   bool);
-assert_identical(exec(r'type(true)'),  bool);
-assert_identical(exec(r'str(true)'),   "true");
-assert_identical(exec(r'str 1;'),      "1");
-assert_identical(exec(r'str 1.0;'),    "1.0");
-assert_identical(exec(r'type true;'),  bool);
-assert_identical(exec(r'type(true);'), bool);
-assert_identical(exec(r'str(true);'),  "true");
+test.assertEqualsTyped(exec(r'str 1'),       "1");
+test.assertEqualsTyped(exec(r'str 1.0'),     "1.0");
+test.assertEqualsTyped(exec(r'type true'),   bool);
+test.assertEqualsTyped(exec(r'type(true)'),  bool);
+test.assertEqualsTyped(exec(r'str(true)'),   "true");
+test.assertEqualsTyped(exec(r'str 1;'),      "1");
+test.assertEqualsTyped(exec(r'str 1.0;'),    "1.0");
+test.assertEqualsTyped(exec(r'type true;'),  bool);
+test.assertEqualsTyped(exec(r'type(true);'), bool);
+test.assertEqualsTyped(exec(r'str(true);'),  "true");
 
 /* Parenthesis vs. tuples, as well as expand-Sequence casting. */
-assert_identical(exec(r'(1)'),          1);
-assert_identical(exec(r'(1,)'),         Tuple { 1 });
-assert_identical(exec(r'(1, 2)'),       Tuple { 1, 2 });
-assert_identical(exec(r'()'),           Tuple { });
-assert_identical(exec(r'([]...)'),      Tuple { });
-assert_identical(exec(r'([]...,)'),     Tuple { });
-assert_identical(exec(r'([1]...)'),     Tuple { 1 });
-assert_identical(exec(r'([1]...,)'),    Tuple { 1 });
-assert_identical(exec(r'([1, 2]...)'),  Tuple { 1, 2 });
-assert_identical(exec(r'([1, 2]...,)'), Tuple { 1, 2 });
-assert_identical(exec(r'[]'),           List { });
-assert_identical(exec(r'[1]'),          List { 1 });
-assert_identical(exec(r'[1,]'),         List { 1 });
-assert_identical(exec(r'[1, 2]'),       List { 1, 2 });
-assert_identical(exec(r'[()...]'),      List { });
-assert_identical(exec(r'[()...,]'),     List { });
-assert_identical(exec(r'[(1,)...]'),    List { 1 });
-assert_identical(exec(r'[(1,)...,]'),   List { 1 });
-assert_identical(exec(r'[(1, 2)...]'),  List { 1, 2 });
-assert_identical(exec(r'[(1, 2)...,]'), List { 1, 2 });
-assert_identical(exec(r'(Tuple from deemon)([:5])'), Tuple { 0, 1, 2, 3, 4 });
-assert_identical(exec(r'Tuple from deemon([:5])'), Tuple { 0, 1, 2, 3, 4 });
+test.assertEqualsTyped(exec(r'(1)'),          1);
+test.assertEqualsTyped(exec(r'(1,)'),         Tuple { 1 });
+test.assertEqualsTyped(exec(r'(1, 2)'),       Tuple { 1, 2 });
+test.assertEqualsTyped(exec(r'()'),           Tuple { });
+test.assertEqualsTyped(exec(r'([]...)'),      Tuple { });
+test.assertEqualsTyped(exec(r'([]...,)'),     Tuple { });
+test.assertEqualsTyped(exec(r'([1]...)'),     Tuple { 1 });
+test.assertEqualsTyped(exec(r'([1]...,)'),    Tuple { 1 });
+test.assertEqualsTyped(exec(r'([1, 2]...)'),  Tuple { 1, 2 });
+test.assertEqualsTyped(exec(r'([1, 2]...,)'), Tuple { 1, 2 });
+test.assertEqualsTyped(exec(r'[]'),           List { });
+test.assertEqualsTyped(exec(r'[1]'),          List { 1 });
+test.assertEqualsTyped(exec(r'[1,]'),         List { 1 });
+test.assertEqualsTyped(exec(r'[1, 2]'),       List { 1, 2 });
+test.assertEqualsTyped(exec(r'[()...]'),      List { });
+test.assertEqualsTyped(exec(r'[()...,]'),     List { });
+test.assertEqualsTyped(exec(r'[(1,)...]'),    List { 1 });
+test.assertEqualsTyped(exec(r'[(1,)...,]'),   List { 1 });
+test.assertEqualsTyped(exec(r'[(1, 2)...]'),  List { 1, 2 });
+test.assertEqualsTyped(exec(r'[(1, 2)...,]'), List { 1, 2 });
+test.assertEqualsTyped(exec(r'(Tuple from deemon)([:5])'), Tuple { 0, 1, 2, 3, 4 });
+test.assertEqualsTyped(exec(r'Tuple from deemon([:5])'), Tuple { 0, 1, 2, 3, 4 });
 
 /* Range expressions. */
-assert_identical(exec(r'[:20]'),      Sequence.range(0, 20));
-assert_identical(exec(r'[:20, 2]'),   Sequence.range(0, 20, 2));
-assert_identical(exec(r'[10:20]'),    Sequence.range(10, 20));
-assert_identical(exec(r'[10:20, 2]'), Sequence.range(10, 20, 2));
+test.assertEqualsTyped(exec(r'[:20]'),      Sequence.range(0, 20));
+test.assertEqualsTyped(exec(r'[:20, 2]'),   Sequence.range(0, 20, 2));
+test.assertEqualsTyped(exec(r'[10:20]'),    Sequence.range(10, 20));
+test.assertEqualsTyped(exec(r'[10:20, 2]'), Sequence.range(10, 20, 2));
 
 /* Attribute lookup. */
-assert_identical(exec(r'(string from deemon).center'), string.center);
+test.assertEqualsTyped(exec(r'(string from deemon).center'), string.center);
 
 /* The builtin import() function. */
 assert exec(r'import("deemon")') === deemon;
 
 /* Bound expressions. */
-assert_identical(exec(r'"foo".find is bound'), true);
-assert_identical(exec(r'"foo".nonexisting_symbols is bound'), false);
-assert_identical(exec(r'"foo".find !is bound'), false);
-assert_identical(exec(r'"foo".nonexisting_symbols !is bound'), true);
-assert_identical(exec(r'"foo".find !!is bound'), true);
-assert_identical(exec(r'"foo".nonexisting_symbols !!is bound'), false);
-assert_identical(exec(r'bound("foo".find)'), true);
-assert_identical(exec(r'bound("foo".nonexisting_symbols)'), false);
-assert_identical(exec(r'bound("foo".nonexisting_symbols);'), false);
+test.assertEqualsTyped(exec(r'"foo".find is bound'), true);
+test.assertEqualsTyped(exec(r'"foo".nonexisting_symbols is bound'), false);
+test.assertEqualsTyped(exec(r'"foo".find !is bound'), false);
+test.assertEqualsTyped(exec(r'"foo".nonexisting_symbols !is bound'), true);
+test.assertEqualsTyped(exec(r'"foo".find !!is bound'), true);
+test.assertEqualsTyped(exec(r'"foo".nonexisting_symbols !!is bound'), false);
+test.assertEqualsTyped(exec(r'bound("foo".find)'), true);
+test.assertEqualsTyped(exec(r'bound("foo".nonexisting_symbols)'), false);
+test.assertEqualsTyped(exec(r'bound("foo".nonexisting_symbols);'), false);
 
-assert_identical(exec(r'10'), 10);
-assert_identical(exec(r'10;'), 10);
-assert_identical(exec(r'return 10;'), 10);
-assert_identical(exec(r'[10, 20, "foo", false, none]'), [10, 20, "foo", false, none]);
-assert_identical(exec(r'[10, 20, "foo", false, none];'), [10, 20, "foo", false, none]);
-assert_identical(#exec(r'[10, 20, "foo", false, none]'), #[10, 20, "foo", false, none]);
-assert_identical(#exec(r'[10, 20, "foo", false, none];'), #[10, 20, "foo", false, none]);
-assert_identical(exec(r'#[10, 20, "foo", false, none]'), #[10, 20, "foo", false, none]);
-assert_identical(exec(r'#[10, 20, "foo", false, none];'), #[10, 20, "foo", false, none]);
-assert_identical(exec(r'({ 10; })'), 10);
-assert_identical(exec(r'({ 10; });'), 10);
-assert_identical(exec(r'({ return 10; })'), 10);
-assert_identical(exec(r'({ return 10; });'), 10);
-assert_identical(exec(r'{ 10; }'), 10);
-assert_identical(exec(r'{ 10; };'), none);
-assert_identical(exec(r'{ return 10; }'), 10);
-assert_identical(exec(r'{ return 10; };'), 10);
-assert exec(r'{ 10 }') == { 10 };
-assert exec(r'{ 10 };') == { 10 };
-assert exec(r'{ 10, }') == { 10 };
-assert exec(r'{ 10, };') == { 10 };
-assert_identical(exec(r'{ 10, 20, "foo", false, none; }'), none);
-assert_identical(exec(r'({ 10, 20, "foo", false, none; })'), none);
-assert_identical(exec(r'{ 10, 20, "foo", false, none; }'), ({ 10, 20, "foo", false, none; }));
-assert_identical(exec(r'({ 10, 20, "foo", false, none; })'), ({ 10, 20, "foo", false, none; }));
+test.assertEqualsTyped(exec(r'10'), 10);
+test.assertEqualsTyped(exec(r'10;'), 10);
+test.assertEqualsTyped(exec(r'return 10;'), 10);
+test.assertEqualsTyped(exec(r'[10, 20, "foo", false, none]'), [10, 20, "foo", false, none]);
+test.assertEqualsTyped(exec(r'[10, 20, "foo", false, none];'), [10, 20, "foo", false, none]);
+test.assertEqualsTyped(#exec(r'[10, 20, "foo", false, none]'), #[10, 20, "foo", false, none]);
+test.assertEqualsTyped(#exec(r'[10, 20, "foo", false, none];'), #[10, 20, "foo", false, none]);
+test.assertEqualsTyped(exec(r'#[10, 20, "foo", false, none]'), #[10, 20, "foo", false, none]);
+test.assertEqualsTyped(exec(r'#[10, 20, "foo", false, none];'), #[10, 20, "foo", false, none]);
+test.assertEqualsTyped(exec(r'({ 10; })'), 10);
+test.assertEqualsTyped(exec(r'({ 10; });'), 10);
+test.assertEqualsTyped(exec(r'({ return 10; })'), 10);
+test.assertEqualsTyped(exec(r'({ return 10; });'), 10);
+test.assertEqualsTyped(exec(r'{ 10; }'), 10);
+test.assertEqualsTyped(exec(r'{ 10; };'), none);
+test.assertEqualsTyped(exec(r'{ return 10; }'), 10);
+test.assertEqualsTyped(exec(r'{ return 10; };'), 10);
+test.assertEquals(exec(r'{ 10 }'), { 10 });
+test.assertEquals(exec(r'{ 10 };'), { 10 });
+test.assertEquals(exec(r'{ 10, }'), { 10 });
+test.assertEquals(exec(r'{ 10, };'), { 10 });
+test.assertEqualsTyped(exec(r'{ 10, 20, "foo", false, none; }'), none);
+test.assertEqualsTyped(exec(r'({ 10, 20, "foo", false, none; })'), none);
+test.assertEquals(exec(r'{ 10, 20, "foo", false, none; }'), ({ 10, 20, "foo", false, none; }));
+test.assertEquals(exec(r'({ 10, 20, "foo", false, none; })'), ({ 10, 20, "foo", false, none; }));
 
 for (local code: {
 	r'{ 10, 20, "foo", false, none }',
@@ -160,8 +152,7 @@ for (local code: {
 	r'({ 10, 20, "foo", false, none });',
 }) {
 	local seq = exec(code);
-	assert seq is Sequence;
-	assert seq == { 10, 20, "foo", false, none };
+	test.assertSequence(seq, { 10, 20, "foo", false, none });
 }
 
 for (local code: {
@@ -170,14 +161,7 @@ for (local code: {
 	r'({ 10: 20, 20: 30, "foo": "bar" });',
 }) {
 	local map = exec(code);
-	assert map is Mapping;
-	assert_identical(#map, 3);
-	assert_identical(map.get(10), 20);
-	assert_identical(map.get(20), 30);
-	assert_identical(map.get("foo"), "bar");
-	assert_identical(map[10], 20);
-	assert_identical(map[20], 30);
-	assert_identical(map["foo"], "bar");
+	test.assertMapping(map, { 10: 20, 20: 30, "foo": "bar" });
 }
 
 for (local code: {
@@ -186,8 +170,7 @@ for (local code: {
 	r'x = { 10, 20, 30 };x;',
 }) {
 	local val = exec(code);
-	assert val is Sequence;
-	assert val == { 10, 20, 30 };
+	test.assertSequence(val, { 10, 20, 30 });
 }
 
 for (local code: {
@@ -198,7 +181,7 @@ for (local code: {
 }) {
 	local glob = Dict();
 	exec(code, globals: glob);
-	assert_identical(glob["x"], 42);
+	test.assertMapping(glob, { "x": 42});
 }
 
 for (local code: {
@@ -209,13 +192,12 @@ for (local code: {
 }) {
 	local glob = Dict();
 	exec(code, globals: glob);
-	assert glob["x"] is Sequence;
-	assert glob["x"] == { 10, 20, 30 };
+	test.assertSequence(glob["x"], { 10, 20, 30 });
 }
 
 
 /* Conditional execution containing an errorous dead branch. */
-assert_identical(exec(r'true ? "ok" : "foo".bar.baz.bim'), "ok");
+test.assertEqualsTyped(exec(r'true ? "ok" : "foo".bar.baz.bim'), "ok");
 
 {
 	local glob = Dict {
@@ -223,52 +205,52 @@ assert_identical(exec(r'true ? "ok" : "foo".bar.baz.bim'), "ok");
 		"y" : 20,
 	};
 	exec(r'result = x.center(y - 5)', globals: glob);
-	assert_identical(glob["result"], "foo".center(15));
+	test.assertEqualsTyped(glob["result"], "foo".center(15));
 }
 
-assert_identical(exec(r'x = 2'), 2);
-assert_identical(exec(r'x = 2;'), 2);
-assert_identical(exec(r'global x = 2'), 2);
-assert_identical(exec(r'global x = 2;'), 2);
-assert_identical(exec(r'local x = 2'), 2);
-assert_identical(exec(r'local x = 2;'), 2);
+test.assertEqualsTyped(exec(r'x = 2'), 2);
+test.assertEqualsTyped(exec(r'x = 2;'), 2);
+test.assertEqualsTyped(exec(r'global x = 2'), 2);
+test.assertEqualsTyped(exec(r'global x = 2;'), 2);
+test.assertEqualsTyped(exec(r'local x = 2'), 2);
+test.assertEqualsTyped(exec(r'local x = 2;'), 2);
 
-assert_identical(exec(r'function foo(x) -> x * 2')(7), 14);
-assert_identical(exec(r'function foo(x) -> x * 2;')(7), 14);
-assert_identical(exec(r'function foo(x) { return x * 2; }')(7), 14);
-assert_identical(exec(r'function foo(x) { return x * 2; };')(7), none);
-assert_identical(exec(r'global function foo(x) -> x * 2')(7), 14);
-assert_identical(exec(r'global function foo(x) -> x * 2;')(7), 14);
-assert_identical(exec(r'global function foo(x) { return x * 2; }')(7), 14);
-assert_identical(exec(r'global function foo(x) { return x * 2; };')(7), none);
-assert_identical(exec(r'local function foo(x) -> x * 2')(7), 14);
-assert_identical(exec(r'local function foo(x) -> x * 2;')(7), 14);
-assert_identical(exec(r'local function foo(x) { return x * 2; }')(7), 14);
-assert_identical(exec(r'local function foo(x) { return x * 2; };')(7), none);
-assert_identical(exec(r'function(x) -> x * 2')(7), 14);
-assert_identical(exec(r'function(x) -> x * 2;')(7), 14);
-assert_identical(exec(r'function(x) { return x * 2; }')(7), 14);
-assert_identical(exec(r'function(x) { return x * 2; };'), none);
-assert_identical(exec(r'function(x) { return x * 2; };')(7), none);
-assert_identical(exec(r'[](x) -> x * 2')(7), 14);
-assert_identical(exec(r'(x) -> x * 2')(7), 14);
-assert_identical(exec(r'x -> x * 2')(7), 14);
-assert_identical(exec(r'[](x) -> x * 2;')(7), 14);
-assert_identical(exec(r'(x) -> x * 2;')(7), 14);
-assert_identical(exec(r'x -> x * 2;')(7), 14);
-assert_identical(exec(r'[](x) { return x * 2; }')(7), 14);
-assert_identical(exec(r'(x) -> { return x * 2; }')(7), 14);
-assert_identical(exec(r'x -> { return x * 2; }')(7), 14);
-assert exec(r'(x) -> { x * 2 }')(7) == {14};
-assert exec(r'x -> { x * 2 }')(7) == {14};
+test.assertEqualsTyped(exec(r'function foo(x) -> x * 2')(7), 14);
+test.assertEqualsTyped(exec(r'function foo(x) -> x * 2;')(7), 14);
+test.assertEqualsTyped(exec(r'function foo(x) { return x * 2; }')(7), 14);
+test.assertEqualsTyped(exec(r'function foo(x) { return x * 2; };')(7), none);
+test.assertEqualsTyped(exec(r'global function foo(x) -> x * 2')(7), 14);
+test.assertEqualsTyped(exec(r'global function foo(x) -> x * 2;')(7), 14);
+test.assertEqualsTyped(exec(r'global function foo(x) { return x * 2; }')(7), 14);
+test.assertEqualsTyped(exec(r'global function foo(x) { return x * 2; };')(7), none);
+test.assertEqualsTyped(exec(r'local function foo(x) -> x * 2')(7), 14);
+test.assertEqualsTyped(exec(r'local function foo(x) -> x * 2;')(7), 14);
+test.assertEqualsTyped(exec(r'local function foo(x) { return x * 2; }')(7), 14);
+test.assertEqualsTyped(exec(r'local function foo(x) { return x * 2; };')(7), none);
+test.assertEqualsTyped(exec(r'function(x) -> x * 2')(7), 14);
+test.assertEqualsTyped(exec(r'function(x) -> x * 2;')(7), 14);
+test.assertEqualsTyped(exec(r'function(x) { return x * 2; }')(7), 14);
+test.assertEqualsTyped(exec(r'function(x) { return x * 2; };'), none);
+test.assertEqualsTyped(exec(r'function(x) { return x * 2; };')(7), none);
+test.assertEqualsTyped(exec(r'[](x) -> x * 2')(7), 14);
+test.assertEqualsTyped(exec(r'(x) -> x * 2')(7), 14);
+test.assertEqualsTyped(exec(r'x -> x * 2')(7), 14);
+test.assertEqualsTyped(exec(r'[](x) -> x * 2;')(7), 14);
+test.assertEqualsTyped(exec(r'(x) -> x * 2;')(7), 14);
+test.assertEqualsTyped(exec(r'x -> x * 2;')(7), 14);
+test.assertEqualsTyped(exec(r'[](x) { return x * 2; }')(7), 14);
+test.assertEqualsTyped(exec(r'(x) -> { return x * 2; }')(7), 14);
+test.assertEqualsTyped(exec(r'x -> { return x * 2; }')(7), 14);
+test.assertSequence(exec(r'(x) -> { x * 2 }')(7), {14});
+test.assertSequence(exec(r'x -> { x * 2 }')(7), {14});
 /* Syntactic difference: `[]() { }' is an expression, so `[]() { };' still
  * evaluates to that same expression. `function() { }' is a pseudo-statement
  * that doesn't expect a trailing `;'-character, so `function() { };' are
  * actually 2 statements `function() { }' and `;', with the later (`;')
  * evaluating to `none'! */
-assert_identical(exec(r'[](x) { return x * 2; };')(7), 14);
-assert_identical(exec(r'(x) -> { return x * 2; };')(7), 14);
-assert_identical(exec(r'x -> { return x * 2; };')(7), 14);
+test.assertEqualsTyped(exec(r'[](x) { return x * 2; };')(7), 14);
+test.assertEqualsTyped(exec(r'(x) -> { return x * 2; };')(7), 14);
+test.assertEqualsTyped(exec(r'x -> { return x * 2; };')(7), 14);
 
 
 /* Test simple lambda expressions */
@@ -305,28 +287,28 @@ assert_identical(exec(r'x -> { return x * 2; };')(7), 14);
 
 	/* Ensure that invocations of the function behave properly */
 	assert x() === glob["bar"];
-	assert_identical(x(10), 13);
-	assert_identical(x(10, 20), 30);
+	test.assertEqualsTyped(x(10), 13);
+	test.assertEqualsTyped(x(10, 20), 30);
 
 	/* Ensure that the correct meta-data is available for the function */
-	assert_identical(x.__name__, "foo");
+	test.assertEqualsTyped(x.__name__, "foo");
 	assert x.__kwds__ == { "x", "y" };
-	assert_identical(x.__argc_min__, 0);
-	assert_identical(x.__argc_max__, 2);
+	test.assertEqualsTyped(x.__argc_min__, 0);
+	test.assertEqualsTyped(x.__argc_max__, 2);
 	assert x.__globals__ === glob;
 
 	/* Modifying globals will affect the jit function,
 	 * because `bar' was linked as a global variable. */
-	assert_identical(x(), "foobar");
+	test.assertEqualsTyped(x(), "foobar");
 	glob["bar"] = 1234;
-	assert_identical(x(), 1234);
+	test.assertEqualsTyped(x(), 1234);
 
 }
 
 /* C-style cast expressions */
-assert_identical(exec(r'(import("deemon").int)"42"'), 42);
-assert_identical(exec(r'(import("deemon").int)42'), 42);
-assert_identical(exec(r'(import("deemon").List){ 10, 20, 30 }'), [10, 20, 30]);
+test.assertEqualsTyped(exec(r'(import("deemon").int)"42"'), 42);
+test.assertEqualsTyped(exec(r'(import("deemon").int)42'), 42);
+test.assertEqualsTyped(exec(r'(import("deemon").List){ 10, 20, 30 }'), [10, 20, 30]);
 
 
 for (local typ: { Tuple, List, Dict, HashSet }) {
@@ -359,38 +341,38 @@ for (local typ: { Tuple, List, Dict, HashSet }) {
 //TODO:		r'import("deemon").{typ} pack();',
 	}) {
 		code = code.format({ "typ" : typ });
-		assert_identical(exec(code), typ(()));
-		assert_identical(exec(code), typ());
+		test.assertEqualsTyped(exec(code), typ(()));
+		test.assertEqualsTyped(exec(code), typ());
 	}
 }
 
-assert_identical(exec(r'"{{foo{bar}}}".format({ "bar" : 42 })'), "{foo42}");
-assert_identical(exec(r'"{{{bar}foo{bar}}}".format({ "bar" : 42 })'), "{42foo42}");
-assert_identical(exec(r'"{{{baz}foo{bar}}}".format({ "bar" : 42, "baz" : 43 })'), "{43foo42}");
+test.assertEqualsTyped(exec(r'"{{foo{bar}}}".format({ "bar" : 42 })'), "{foo42}");
+test.assertEqualsTyped(exec(r'"{{{bar}foo{bar}}}".format({ "bar" : 42 })'), "{42foo42}");
+test.assertEqualsTyped(exec(r'"{{{baz}foo{bar}}}".format({ "bar" : 42, "baz" : 43 })'), "{43foo42}");
 
 /* Test return in JIT expressions */
-assert_identical(exec(r'if (10 < 20) "OK"; else "ERROR";'), "OK");  /* Statement */
-assert_identical(exec(r'if (10 < 20) "OK" else "ERROR"'), "OK");    /* Expression */
-assert_identical(exec(r'if (10 < 20) "OK" else "ERROR";'), "OK");   /* Expression in Statement */
-assert_identical(exec(r'(if (10 < 20) "OK" else "ERROR")'), "OK");  /* Expression */
-assert_identical(exec(r'(if (10 < 20) "OK" else "ERROR");'), "OK"); /* Expression in Statement */
-assert_identical(exec(r'return if (10 < 20) "OK" else "ERROR";'), "OK"); /* Return Expression in Statement */
-assert_identical(exec(r'return (if (10 < 20) "OK" else "ERROR");'), "OK"); /* Return Expression in Statement */
-assert_identical(exec(r'if (10 < 20) return "OK"; return "ERROR";'), "OK"); /* Statement */
-assert_identical(exec(r'if (10 < 20) return "OK"; else return "ERROR";'), "OK"); /* Statement */
+test.assertEqualsTyped(exec(r'if (10 < 20) "OK"; else "ERROR";'), "OK");  /* Statement */
+test.assertEqualsTyped(exec(r'if (10 < 20) "OK" else "ERROR"'), "OK");    /* Expression */
+test.assertEqualsTyped(exec(r'if (10 < 20) "OK" else "ERROR";'), "OK");   /* Expression in Statement */
+test.assertEqualsTyped(exec(r'(if (10 < 20) "OK" else "ERROR")'), "OK");  /* Expression */
+test.assertEqualsTyped(exec(r'(if (10 < 20) "OK" else "ERROR");'), "OK"); /* Expression in Statement */
+test.assertEqualsTyped(exec(r'return if (10 < 20) "OK" else "ERROR";'), "OK"); /* Return Expression in Statement */
+test.assertEqualsTyped(exec(r'return (if (10 < 20) "OK" else "ERROR");'), "OK"); /* Return Expression in Statement */
+test.assertEqualsTyped(exec(r'if (10 < 20) return "OK"; return "ERROR";'), "OK"); /* Statement */
+test.assertEqualsTyped(exec(r'if (10 < 20) return "OK"; else return "ERROR";'), "OK"); /* Statement */
 
 /* Make sure that exec() re-throws an unhandled exception from within */
-assert_identical(try ({ exec(r'throw "foobar";'); none; }) catch (e...) e, "foobar");
-assert_identical(try ({ exec(r'"foobar";'); none; }) catch (e...) e, none);
-assert_identical(try ({ exec(r'"foobar";'); }) catch (e...) e, "foobar");
+test.assertEqualsTyped(try ({ exec(r'throw "foobar";'); none; }) catch (e...) e, "foobar");
+test.assertEqualsTyped(try ({ exec(r'"foobar";'); none; }) catch (e...) e, none);
+test.assertEqualsTyped(try ({ exec(r'"foobar";'); }) catch (e...) e, "foobar");
 
 /* Test the different types of try-blocks in JIT */
-assert_identical(exec(r'try ({ throw "Error"; }) catch (...) "OK"'), "OK");
-assert_identical(exec(r'try ({ throw "Error"; }) catch (...) "OK";'), "OK");
-assert_identical(exec(r'(try ({ throw "Error"; }) catch (...) "OK")'), "OK");
-assert_identical(exec(r'(try ({ throw "Error"; }) catch (...) "OK");'), "OK");
-assert_identical(exec(r'try { throw "Error"; } catch (...) { "OK"; }'), "OK");
-assert_identical(try ({ exec(r'try { throw "1"; } catch (...) { throw "2"; }'); none; }) catch (e...) e, "2");
+test.assertEqualsTyped(exec(r'try ({ throw "Error"; }) catch (...) "OK"'), "OK");
+test.assertEqualsTyped(exec(r'try ({ throw "Error"; }) catch (...) "OK";'), "OK");
+test.assertEqualsTyped(exec(r'(try ({ throw "Error"; }) catch (...) "OK")'), "OK");
+test.assertEqualsTyped(exec(r'(try ({ throw "Error"; }) catch (...) "OK");'), "OK");
+test.assertEqualsTyped(exec(r'try { throw "Error"; } catch (...) { "OK"; }'), "OK");
+test.assertEqualsTyped(try ({ exec(r'try { throw "1"; } catch (...) { throw "2"; }'); none; }) catch (e...) e, "2");
 {
 	local glob = Dict({ "in_finally" : false });
 	local res = try exec(r"
@@ -405,53 +387,53 @@ assert_identical(try ({ exec(r'try { throw "1"; } catch (...) { throw "2"; }'); 
 		}", globals: glob)
 	catch (e...) e;
 	/* Ensure that the finally-block was executed correctly */
-	assert_identical(glob["in_finally"], true);
+	test.assertEqualsTyped(glob["in_finally"], true);
 	/* Ensure that the outer catch() overwrote the `return "OK"' */
-	assert_identical(res, "Error");
+	test.assertEqualsTyped(res, "Error");
 }
 
 /* Make sure that return-in-catch causes the exception to be handled */
-assert_identical(exec(r'try { ; } catch (...) { return "OK"; }'), none);
-assert_identical(exec(r'try { throw "Error"; } catch (...) { return "OK"; }'), "OK");
+test.assertEqualsTyped(exec(r'try { ; } catch (...) { return "OK"; }'), none);
+test.assertEqualsTyped(exec(r'try { throw "Error"; } catch (...) { return "OK"; }'), "OK");
 
 /* Assert exception nesting behavior in the core compiler. */
-assert_identical(({ try { "1"; } finally { "2"; } }), "1");
-assert_identical((() -> ({ try { "1"; } finally { "2"; } }))(), "1");
-assert_identical((() -> ({ try { "1"; } finally { return "2"; } }))(), "2");
-assert_identical((() -> ({ try { return "1"; } finally { "2"; } }))(), "1");
-assert_identical((() -> ({ try { return "1"; } finally { return "2"; } }))(), "1");
+test.assertEqualsTyped(({ try { "1"; } finally { "2"; } }), "1");
+test.assertEqualsTyped((() -> ({ try { "1"; } finally { "2"; } }))(), "1");
+test.assertEqualsTyped((() -> ({ try { "1"; } finally { return "2"; } }))(), "2");
+test.assertEqualsTyped((() -> ({ try { return "1"; } finally { "2"; } }))(), "1");
+test.assertEqualsTyped((() -> ({ try { return "1"; } finally { return "2"; } }))(), "1");
 
 /* Assert that catch/finally work correctly with return and implicit ast results. */
-assert_identical(exec(r'try { return "1"; } catch (...) { return "2"; }'), "1");
-assert_identical(exec(r'try { return "1"; } finally { "2"; }'), "1");
-assert_identical(exec(r'try { return "1"; } finally { return "2"; }'), "1");
-assert_identical(try ({ exec(r'try { return "1"; } finally { throw "ERROR"; }'); none; }) catch (e...) e, "ERROR");
-assert_identical(exec(r'try { "1"; } finally { "2"; }'), "1");
-assert_identical(exec(r'try { "1"; } finally { return "2"; }'), "2");
+test.assertEqualsTyped(exec(r'try { return "1"; } catch (...) { return "2"; }'), "1");
+test.assertEqualsTyped(exec(r'try { return "1"; } finally { "2"; }'), "1");
+test.assertEqualsTyped(exec(r'try { return "1"; } finally { return "2"; }'), "1");
+test.assertEqualsTyped(try ({ exec(r'try { return "1"; } finally { throw "ERROR"; }'); none; }) catch (e...) e, "ERROR");
+test.assertEqualsTyped(exec(r'try { "1"; } finally { "2"; }'), "1");
+test.assertEqualsTyped(exec(r'try { "1"; } finally { return "2"; }'), "2");
 
-assert_identical(exec(r'; if (true) { } else { 42; }'), none);
-assert_identical(exec(r'({ ; if (true) { } else { 42; } })'), none);
-assert_identical(exec(r'; if (false) { } else { return 42; }'), 42);
-assert_identical(exec(r'if (false) { } else { return 42; }'), 42);
-assert_identical(exec(r'if (false) ; else { return 42; }'), 42);
-assert_identical(exec(r'({ ; if (false) { } else { return 42; } })'), 42);
-assert_identical(exec(r'({ ; if (false) ; else { return 42; } })'), 42);
-assert_identical(exec(r'({ ; if (false) { } else return 42; })'), 42);
-assert_identical(exec(r'({ ; if (false) ; else return 42; })'), 42);
-assert_identical(exec(r'({ if (false) { } else { return 42; } })'), 42);
-assert_identical(exec(r'({ if (false) ; else { return 42; } })'), 42);
-assert_identical(exec(r'({ if (false) { } else return 42; })'), 42);
-assert_identical(exec(r'({ if (false) ; else return 42; })'), 42);
-//assert_identical(exec(r'if (true) { } else { return 42; }'), none); // Returns '{}' instead of 'none'
-assert_identical(exec(r'if (true) ; else { return 42; }'), none);
-assert_identical(exec(r'({ ; if (true) { } else { return 42; } })'), none);
-assert_identical(exec(r'({ ; if (true) ; else { return 42; } })'), none);
-assert_identical(exec(r'({ ; if (true) { } else return 42; })'), none);
-assert_identical(exec(r'({ ; if (true) ; else return 42; })'), none);
-//assert_identical(exec(r'({ if (true) { } else { return 42; } })'), none); // Returns '{}' instead of 'none'
-assert_identical(exec(r'({ if (true) ; else { return 42; } })'), none);
-//assert_identical(exec(r'({ if (true) { } else return 42; })'), none); // Returns '{}' instead of 'none'
-assert_identical(exec(r'({ if (true) ; else return 42; })'), none);
+test.assertEqualsTyped(exec(r'; if (true) { } else { 42; }'), none);
+test.assertEqualsTyped(exec(r'({ ; if (true) { } else { 42; } })'), none);
+test.assertEqualsTyped(exec(r'; if (false) { } else { return 42; }'), 42);
+test.assertEqualsTyped(exec(r'if (false) { } else { return 42; }'), 42);
+test.assertEqualsTyped(exec(r'if (false) ; else { return 42; }'), 42);
+test.assertEqualsTyped(exec(r'({ ; if (false) { } else { return 42; } })'), 42);
+test.assertEqualsTyped(exec(r'({ ; if (false) ; else { return 42; } })'), 42);
+test.assertEqualsTyped(exec(r'({ ; if (false) { } else return 42; })'), 42);
+test.assertEqualsTyped(exec(r'({ ; if (false) ; else return 42; })'), 42);
+test.assertEqualsTyped(exec(r'({ if (false) { } else { return 42; } })'), 42);
+test.assertEqualsTyped(exec(r'({ if (false) ; else { return 42; } })'), 42);
+test.assertEqualsTyped(exec(r'({ if (false) { } else return 42; })'), 42);
+test.assertEqualsTyped(exec(r'({ if (false) ; else return 42; })'), 42);
+//test.assertEqualsTyped(exec(r'if (true) { } else { return 42; }'), none); // Returns '{}' instead of 'none'
+test.assertEqualsTyped(exec(r'if (true) ; else { return 42; }'), none);
+test.assertEqualsTyped(exec(r'({ ; if (true) { } else { return 42; } })'), none);
+test.assertEqualsTyped(exec(r'({ ; if (true) ; else { return 42; } })'), none);
+test.assertEqualsTyped(exec(r'({ ; if (true) { } else return 42; })'), none);
+test.assertEqualsTyped(exec(r'({ ; if (true) ; else return 42; })'), none);
+//test.assertEqualsTyped(exec(r'({ if (true) { } else { return 42; } })'), none); // Returns '{}' instead of 'none'
+test.assertEqualsTyped(exec(r'({ if (true) ; else { return 42; } })'), none);
+//test.assertEqualsTyped(exec(r'({ if (true) { } else return 42; })'), none); // Returns '{}' instead of 'none'
+test.assertEqualsTyped(exec(r'({ if (true) ; else return 42; })'), none);
 
 /* Make sure that `{}' as an expression is an empty sequence,
  * but when encountered in the context of a statement, it evaluates
@@ -488,10 +470,10 @@ assert exec(r'(10) !!!is none');
 assert exec(r'(10) !!!in [11]');
 {
 	local tenasint = 10 as int;
-	assert_identical(10 as int, tenasint);
-	assert_identical((10) as int, tenasint);
-	assert_identical(exec(r'10 as int', globals: deemon.__exports__), tenasint);
-	assert_identical(exec(r'(10) as int', globals: deemon.__exports__), tenasint);
+	test.assertEqualsTyped(10 as int, tenasint);
+	test.assertEqualsTyped((10) as int, tenasint);
+	test.assertEqualsTyped(exec(r'10 as int', globals: deemon.__exports__), tenasint);
+	test.assertEqualsTyped(exec(r'(10) as int', globals: deemon.__exports__), tenasint);
 }
 
 
@@ -572,7 +554,7 @@ assert exec(r'(10) !!!in [11]');
 	local a = ({ if (true) { } else { 42; } });
 	local b = exec(r'({ if (true) { } else { 42; } })');
 	local c = exec(r'if (true) { } else { 42; }');
-	assert_identical(b, c);
+	test.assertEqualsTyped(b, c);
 	if (a is none) {
 		/* This would be correct */
 		assert b is none;
@@ -582,7 +564,7 @@ assert exec(r'(10) !!!in [11]');
 		 * and the JIT compiler. */
 		a = Tuple(a);
 		b = Tuple(b);
-		assert_identical(a, b);
+		test.assertEqualsTyped(a, b);
 		/* assert false; */
 	}
 }
@@ -602,54 +584,54 @@ assert exec(r'(10) !!!in [11]');
 
 /* Ensure that catch-masks work with JIT expression. */
 local CATCHSOME = r'catch (int) { "1int"; } catch (string) { "2string"; } catch (...) { "?"; }';
-assert_identical(exec(r'try { throw 42; }' + CATCHSOME, globals: deemon.__exports__), "1int");
-assert_identical(exec(r'try { throw "foo"; }' + CATCHSOME, globals: deemon.__exports__), "2string");
-assert_identical(exec(r'try { throw none; }' + CATCHSOME, globals: deemon.__exports__), "?");
-assert_identical(exec(r'try { throw false; }' + CATCHSOME, globals: deemon.__exports__), "?");
+test.assertEqualsTyped(exec(r'try { throw 42; }' + CATCHSOME, globals: deemon.__exports__), "1int");
+test.assertEqualsTyped(exec(r'try { throw "foo"; }' + CATCHSOME, globals: deemon.__exports__), "2string");
+test.assertEqualsTyped(exec(r'try { throw none; }' + CATCHSOME, globals: deemon.__exports__), "?");
+test.assertEqualsTyped(exec(r'try { throw false; }' + CATCHSOME, globals: deemon.__exports__), "?");
 
 /* Ensure that multi-catch masks work in JIT */
 local CATCHSOME = r'catch (int | string as s) { "int_or_string(" + s + ")"; } catch (...) { "?"; }';
-assert_identical(exec(r'try { throw 42; }' + CATCHSOME, globals: deemon.__exports__), "int_or_string(42)");
-assert_identical(exec(r'try { throw "foo"; }' + CATCHSOME, globals: deemon.__exports__), "int_or_string(foo)");
-assert_identical(exec(r'try { throw none; }' + CATCHSOME, globals: deemon.__exports__), "?");
-assert_identical(exec(r'try { throw false; }' + CATCHSOME, globals: deemon.__exports__), "?");
+test.assertEqualsTyped(exec(r'try { throw 42; }' + CATCHSOME, globals: deemon.__exports__), "int_or_string(42)");
+test.assertEqualsTyped(exec(r'try { throw "foo"; }' + CATCHSOME, globals: deemon.__exports__), "int_or_string(foo)");
+test.assertEqualsTyped(exec(r'try { throw none; }' + CATCHSOME, globals: deemon.__exports__), "?");
+test.assertEqualsTyped(exec(r'try { throw false; }' + CATCHSOME, globals: deemon.__exports__), "?");
 local CATCHSOME = r'catch (int | string | bool as s) { "int_or_string_or_bool(" + s + ")"; } catch (...) { "?"; }';
-assert_identical(exec(r'try { throw 42; }' + CATCHSOME, globals: deemon.__exports__), "int_or_string_or_bool(42)");
-assert_identical(exec(r'try { throw "foo"; }' + CATCHSOME, globals: deemon.__exports__), "int_or_string_or_bool(foo)");
-assert_identical(exec(r'try { throw none; }' + CATCHSOME, globals: deemon.__exports__), "?");
-assert_identical(exec(r'try { throw false; }' + CATCHSOME, globals: deemon.__exports__), "int_or_string_or_bool(false)");
+test.assertEqualsTyped(exec(r'try { throw 42; }' + CATCHSOME, globals: deemon.__exports__), "int_or_string_or_bool(42)");
+test.assertEqualsTyped(exec(r'try { throw "foo"; }' + CATCHSOME, globals: deemon.__exports__), "int_or_string_or_bool(foo)");
+test.assertEqualsTyped(exec(r'try { throw none; }' + CATCHSOME, globals: deemon.__exports__), "?");
+test.assertEqualsTyped(exec(r'try { throw false; }' + CATCHSOME, globals: deemon.__exports__), "int_or_string_or_bool(false)");
 
 /* Also make sure that catch-as works */
-assert_identical(exec(r'try { throw "foo"; } catch (string as s) { s + "bar"; }', globals: deemon.__exports__), "foobar");
-assert_identical(exec(r'try { throw "foo"; } catch (string s) { s + "bar"; }', globals: deemon.__exports__), "foobar");
-assert_identical(exec(r'try { throw "foo"; } catch (s...) { s + "bar"; }', globals: deemon.__exports__), "foobar");
-assert_identical(exec(r'try { throw "foo"; } catch (...s) { s + "bar"; }', globals: deemon.__exports__), "foobar");
-assert_identical(exec(r'try { throw "foo"; } catch (...) { 42; }', globals: deemon.__exports__), 42);
+test.assertEqualsTyped(exec(r'try { throw "foo"; } catch (string as s) { s + "bar"; }', globals: deemon.__exports__), "foobar");
+test.assertEqualsTyped(exec(r'try { throw "foo"; } catch (string s) { s + "bar"; }', globals: deemon.__exports__), "foobar");
+test.assertEqualsTyped(exec(r'try { throw "foo"; } catch (s...) { s + "bar"; }', globals: deemon.__exports__), "foobar");
+test.assertEqualsTyped(exec(r'try { throw "foo"; } catch (...s) { s + "bar"; }', globals: deemon.__exports__), "foobar");
+test.assertEqualsTyped(exec(r'try { throw "foo"; } catch (...) { 42; }', globals: deemon.__exports__), 42);
 
 /* Make sure that the JIT compiler can call into itself recursively */
-assert_identical(exec(r'exec("\"inner\"")', globals: deemon.__exports__), "inner");
-assert_identical(exec(r'exec("\"inner\";")', globals: deemon.__exports__), "inner");
-assert_identical(exec(r'exec("\"inner\"");', globals: deemon.__exports__), "inner");
-assert_identical(exec(r'exec("\"inner\";");', globals: deemon.__exports__), "inner");
-assert_identical(exec(r'exec("\"inner\";;");', globals: deemon.__exports__), none);
-assert_identical(exec(r'exec("\"inner\";");;', globals: deemon.__exports__), none);
+test.assertEqualsTyped(exec(r'exec("\"inner\"")', globals: deemon.__exports__), "inner");
+test.assertEqualsTyped(exec(r'exec("\"inner\";")', globals: deemon.__exports__), "inner");
+test.assertEqualsTyped(exec(r'exec("\"inner\"");', globals: deemon.__exports__), "inner");
+test.assertEqualsTyped(exec(r'exec("\"inner\";");', globals: deemon.__exports__), "inner");
+test.assertEqualsTyped(exec(r'exec("\"inner\";;");', globals: deemon.__exports__), none);
+test.assertEqualsTyped(exec(r'exec("\"inner\";");;', globals: deemon.__exports__), none);
 
 
 /* Check various forms of expand expressions in JIT */
-assert_identical(exec(r'["foobar"]'), ["foobar"]);
-assert_identical(exec(r'("foobar")'), "foobar");
-assert_identical(exec(r'("foobar",)'), Tuple({ "foobar" }));
-assert_identical(exec(r'()'), Tuple({ }));
-assert_identical(exec(r'["f"]'), ["f"]);
-assert_identical(exec(r'["f"...]'), ["f"]);
-assert_identical(exec(r'["foobar"...]'), ["f", "o", "o", "b", "a", "r"]);
-assert_identical(exec(r'["foobar"..., 10]'), ["f", "o", "o", "b", "a", "r", 10]);
-assert_identical(exec(r'[20, "foobar"..., 10]'), [20, "f", "o", "o", "b", "a", "r", 10]);
-assert_identical(exec(r'("f")'), "f");
-assert_identical(exec(r'("f"...)'), Tuple({ "f" })); /* Despite only being 1 element, this must still result in a Tuple */
-assert_identical(exec(r'("foobar"...)'), Tuple({ "f", "o", "o", "b", "a", "r" }));
-assert_identical(exec(r'("foobar"..., 10)'), Tuple({ "f", "o", "o", "b", "a", "r", 10 }));
-assert_identical(exec(r'(20, "foobar"..., 10)'), Tuple({ 20, "f", "o", "o", "b", "a", "r", 10 }));
+test.assertEqualsTyped(exec(r'["foobar"]'), ["foobar"]);
+test.assertEqualsTyped(exec(r'("foobar")'), "foobar");
+test.assertEqualsTyped(exec(r'("foobar",)'), Tuple({ "foobar" }));
+test.assertEqualsTyped(exec(r'()'), Tuple({ }));
+test.assertEqualsTyped(exec(r'["f"]'), ["f"]);
+test.assertEqualsTyped(exec(r'["f"...]'), ["f"]);
+test.assertEqualsTyped(exec(r'["foobar"...]'), ["f", "o", "o", "b", "a", "r"]);
+test.assertEqualsTyped(exec(r'["foobar"..., 10]'), ["f", "o", "o", "b", "a", "r", 10]);
+test.assertEqualsTyped(exec(r'[20, "foobar"..., 10]'), [20, "f", "o", "o", "b", "a", "r", 10]);
+test.assertEqualsTyped(exec(r'("f")'), "f");
+test.assertEqualsTyped(exec(r'("f"...)'), Tuple({ "f" })); /* Despite only being 1 element, this must still result in a Tuple */
+test.assertEqualsTyped(exec(r'("foobar"...)'), Tuple({ "f", "o", "o", "b", "a", "r" }));
+test.assertEqualsTyped(exec(r'("foobar"..., 10)'), Tuple({ "f", "o", "o", "b", "a", "r", 10 }));
+test.assertEqualsTyped(exec(r'(20, "foobar"..., 10)'), Tuple({ 20, "f", "o", "o", "b", "a", "r", 10 }));
 {
 	local seq = { [10], [20] };
 	/* Without a forced expand, this should be a no-op */
@@ -664,11 +646,11 @@ assert_identical(exec(r'(20, "foobar"..., 10)'), Tuple({ 20, "f", "o", "o", "b",
 {
 	function getArgv(args...) -> args;
 	function r(s) -> exec(s, globals: { "getArgv" : getArgv });
-	assert_identical(r(r'getArgv("f")'), Tuple({ "f" }));
-	assert_identical(r(r'getArgv("f"...)'), Tuple({ "f" }));
-	assert_identical(r(r'getArgv("foobar"...)'), Tuple({ "f", "o", "o", "b", "a", "r" }));
-	assert_identical(r(r'getArgv("foobar"..., 10)'), Tuple({ "f", "o", "o", "b", "a", "r", 10 }));
-	assert_identical(r(r'getArgv(20, "foobar"..., 10)'), Tuple({ 20, "f", "o", "o", "b", "a", "r", 10 }));
+	test.assertEqualsTyped(r(r'getArgv("f")'), Tuple({ "f" }));
+	test.assertEqualsTyped(r(r'getArgv("f"...)'), Tuple({ "f" }));
+	test.assertEqualsTyped(r(r'getArgv("foobar"...)'), Tuple({ "f", "o", "o", "b", "a", "r" }));
+	test.assertEqualsTyped(r(r'getArgv("foobar"..., 10)'), Tuple({ "f", "o", "o", "b", "a", "r", 10 }));
+	test.assertEqualsTyped(r(r'getArgv(20, "foobar"..., 10)'), Tuple({ 20, "f", "o", "o", "b", "a", "r", 10 }));
 }
 
 
@@ -712,21 +694,21 @@ assert exec("({10, 20, 30}) + ...") == 60;
 assert exec("(({10, 20, 30}) + ...)") == 60;
 
 
-assert_identical(42, exec(r'local outer: int from deemon = 42; x -> outer;')(none));
-assert_identical(42, exec(r'local outer: int from deemon = 42; x -> x -> outer;')(none)(none));
-assert_identical(42, exec(r'local outer: int from deemon = 42; x -> { return outer; };')(none));
-assert_identical(42, exec(r'local outer: int from deemon = 42; x -> { return x -> outer; };')(none)(none));
-assert_identical(42, exec(r'local outer: int from deemon = 42; x -> { return x -> { return outer; }; };')(none)(none));
-assert_identical(42, exec(r'local outer: int from deemon = 42; (x) -> outer;')(none));
-assert_identical(42, exec(r'local outer: int from deemon = 42; (x) -> (x) -> outer;')(none)(none));
-assert_identical(42, exec(r'local outer: int from deemon = 42; (x) -> { return outer; };')(none));
-assert_identical(42, exec(r'local outer: int from deemon = 42; (x) -> { return (x) -> outer; };')(none)(none));
-assert_identical(42, exec(r'local outer: int from deemon = 42; (x) -> { return (x) -> { return outer; }; };')(none)(none));
-assert_identical(42, exec(r'local outer: int from deemon = 42; () -> outer;')());
-assert_identical(42, exec(r'local outer: int from deemon = 42; () -> () -> outer;')()());
-assert_identical(42, exec(r'local outer: int from deemon = 42; () -> { return outer; };')());
-assert_identical(42, exec(r'local outer: int from deemon = 42; () -> { return () -> outer; };')()());
-assert_identical(42, exec(r'local outer: int from deemon = 42; () -> { return () -> { return outer; }; };')()());
+test.assertEqualsTyped(42, exec(r'local outer: int from deemon = 42; x -> outer;')(none));
+test.assertEqualsTyped(42, exec(r'local outer: int from deemon = 42; x -> x -> outer;')(none)(none));
+test.assertEqualsTyped(42, exec(r'local outer: int from deemon = 42; x -> { return outer; };')(none));
+test.assertEqualsTyped(42, exec(r'local outer: int from deemon = 42; x -> { return x -> outer; };')(none)(none));
+test.assertEqualsTyped(42, exec(r'local outer: int from deemon = 42; x -> { return x -> { return outer; }; };')(none)(none));
+test.assertEqualsTyped(42, exec(r'local outer: int from deemon = 42; (x) -> outer;')(none));
+test.assertEqualsTyped(42, exec(r'local outer: int from deemon = 42; (x) -> (x) -> outer;')(none)(none));
+test.assertEqualsTyped(42, exec(r'local outer: int from deemon = 42; (x) -> { return outer; };')(none));
+test.assertEqualsTyped(42, exec(r'local outer: int from deemon = 42; (x) -> { return (x) -> outer; };')(none)(none));
+test.assertEqualsTyped(42, exec(r'local outer: int from deemon = 42; (x) -> { return (x) -> { return outer; }; };')(none)(none));
+test.assertEqualsTyped(42, exec(r'local outer: int from deemon = 42; () -> outer;')());
+test.assertEqualsTyped(42, exec(r'local outer: int from deemon = 42; () -> () -> outer;')()());
+test.assertEqualsTyped(42, exec(r'local outer: int from deemon = 42; () -> { return outer; };')());
+test.assertEqualsTyped(42, exec(r'local outer: int from deemon = 42; () -> { return () -> outer; };')()());
+test.assertEqualsTyped(42, exec(r'local outer: int from deemon = 42; () -> { return () -> { return outer; }; };')()());
 
 
 /* Bracket-style lambdas with immediate return type annotation
@@ -737,21 +719,21 @@ local v = true ? [] : int -> 42;    /* true ? ([](): int { return 42 }) : none *
 local w = true ? ([]) : int -> 42;  /* true ? List({}) : ([](int) { return 42 }) */
 assert v is Callable;
 assert w !is Callable;
-assert_identical(v(), 42);
-assert_identical(w, []);
+test.assertEqualsTyped(v(), 42);
+test.assertEqualsTyped(w, []);
 
 local v = exec(r'true ? [] : int -> 42');
 //FIXME:local w = exec(r'true ? ([]) : int -> 42');
 assert v is Callable;
 assert w !is Callable;
-assert_identical(v(), 42);
-assert_identical(w, []);
+test.assertEqualsTyped(v(), 42);
+test.assertEqualsTyped(w, []);
 
 
 /* Assert that the JIT compiler correctly handles
  * expression vs. statement in comma lists. */
 assert exec(r'({ 10, 20, 30 })') == {10,20,30};
-assert_identical(exec(r'({ 10, 20, 30; })'), 30);
+test.assertEqualsTyped(exec(r'({ 10, 20, 30; })'), 30);
 
 
 

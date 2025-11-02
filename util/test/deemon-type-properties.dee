@@ -1,0 +1,82 @@
+/* Copyright (c) 2018-2025 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+
+import deemon;
+import * from deemon;
+import * from errors;
+import .common.test;
+
+#define TRY(x) (try x catch (e...) e)
+assert TRY(string.__class__) == UnboundAttribute(
+	decl: Type, ob: string, attr: "__class__", isget: true);
+
+test.assertAttributes(string, {
+	"isfinal": true,
+	"isinterrupt": false,
+	"isabstract": false,
+	"isbuffer": true,
+	"name": "string",
+	"__bases__": {Sequence},
+	"__mro__": {string, Sequence, Object},
+	"__name__": "string",
+	"__base__": Sequence,
+	"__isvariable__": true,
+	"__isclass__": false,
+	"__isinttruncated__": false,
+	"__hasmoveany__": false,
+	"__iscustom__": false,
+	"__issuperconstructible__": false,
+	"__iskw__": false,
+	"__isnoargconstructible__": true,
+	"__seqclass__": Sequence,
+	"__issingleton__": false,
+	"__module__": deemon,
+	"__ctable__": {},
+	"__istypetype__": false,
+	"__isvarargconstructible__": true,
+	"__isconstructible__": true,
+	"__iscopyable__": true,
+	"__isnamespace__": false,
+	"__isconstcastable__": true,
+	"__gcpriority__": 0,
+});
+
+test.assertSequence(Type.__bases__(Type), {Object, Callable});
+test.assertSequence(Type.__bases__(Object), {});
+test.assertSequence(Type.__bases__(string), {Sequence});
+test.assertSequence(Type.__mro__(Type), {Type, Object, Callable});
+test.assertSequence(Type.__mro__(Object), {Object});
+test.assertSequence(Type.__mro__(string), {string, Sequence, Object});
+
+assert string.extends(Sequence);
+assert string.extends(Object);
+assert !string.extends(int);
+
+assert Type.implements(Type, Type);
+assert Type.extends(Type, Type);
+assert Type.baseof(Type, Type);
+assert Type.implements(Type, Object);
+assert Type.extends(Type, Object);
+assert Type.baseof(Object, Type);
+assert Type.implements(Type, Callable);
+assert !Type.extends(Type, Callable);
+assert !Type.baseof(Callable, Type);
+
