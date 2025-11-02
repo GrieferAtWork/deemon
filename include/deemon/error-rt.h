@@ -209,6 +209,28 @@ INTDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrVaIndexOutOfBounds)(struct Dee
 	Dee_ASSUMED_VALUE((DeeRT_ErrVaIndexOutOfBounds)(frame, index), -1)
 #endif /* CONFIG_BUILDING_DEEMON */
 
+/* Check if the most-recently-thrown exception is one ... and wrap it
+ * using another exception for the purposes to mapping sequence errors
+ * from a nested sequence object as belonging to a surrounding sequence:
+ * - DeeError_SequenceError
+ * - DeeError_KeyError
+ * - DeeError_IndexError
+ * - DeeError_EmptySequence
+ * - DeeError_UnboundItem
+ * - DeeError_UnknownKey
+ * - DeeError_ReadOnlyKey
+ * - DeeError_ItemNotFound
+ * - DeeError_UnpackError
+ * @param: from: The expected inner sequence ("SequenceError.seq").
+ *               If the current error isn't derived from "SequenceError",
+ *               isn't one of the above types, or is for a sequence other
+ *               than "from", this function does nothing.
+ * @param: to: The surrounding sequence to map to. */
+DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrNestSequenceError)(DeeObject *from, DeeObject *to);
+#define DeeRT_ErrNestSequenceError(from, to) \
+	Dee_ASSUMED_VALUE((DeeRT_ErrNestSequenceError)((DeeObject *)Dee_REQUIRES_OBJECT(from), (DeeObject *)Dee_REQUIRES_OBJECT(to)), -1)
+
+
 
 /* Throws an `DeeError_UnpackError' indicating that a sequence `seq'
  * of `actual_size' elements cannot be unpacked to `expected_size'. */

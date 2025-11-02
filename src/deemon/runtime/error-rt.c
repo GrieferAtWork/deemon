@@ -30,6 +30,7 @@
 #include <deemon/error.h>
 #include <deemon/error_types.h>
 #include <deemon/format.h>
+#include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
 #include <deemon/method-hints.h>
@@ -2201,6 +2202,88 @@ done:
 	return -1;
 }
 
+
+PRIVATE DeeTypeObject *tpconst sequence_error_types[] = {
+	&DeeError_SequenceError,
+	&DeeError_KeyError,
+	&DeeError_IndexError,
+	&DeeError_EmptySequence,
+	&DeeError_UnboundItem,
+	&DeeError_UnknownKey,
+	&DeeError_ReadOnlyKey,
+	&DeeError_ItemNotFound,
+	&DeeError_UnpackError
+};
+
+PRIVATE ATTR_CONST WUNUSED bool DCALL
+is_sequence_error(DeeTypeObject *error_type) {
+	unsigned int i;
+	for (i = 0; i < COMPILER_LENOF(sequence_error_types); ++i) {
+		if (sequence_error_types[i] == error_type)
+			return true;
+	}
+	return false;
+}
+
+/* Check if the most-recently-thrown exception is one ... and wrap it
+ * using another exception for the purposes to mapping sequence errors
+ * from a nested sequence object as belonging to a surrounding sequence:
+ * - DeeError_SequenceError
+ * - DeeError_KeyError
+ * - DeeError_IndexError
+ * - DeeError_EmptySequence
+ * - DeeError_UnboundItem
+ * - DeeError_UnknownKey
+ * - DeeError_ReadOnlyKey
+ * - DeeError_ItemNotFound
+ * - DeeError_UnpackError
+ * @param: from: The expected inner sequence ("SequenceError.seq").
+ *               If the current error isn't derived from "SequenceError",
+ *               isn't one of the above types, or is for a sequence other
+ *               than "from", this function does nothing.
+ * @param: to: The surrounding sequence to map to. */
+PUBLIC ATTR_COLD NONNULL((1)) int
+(DCALL DeeRT_ErrNestSequenceError)(DeeObject *from, DeeObject *to) {
+	DREF DeeThreadObject *me = DeeThread_Self();
+	struct except_frame *error = me->t_except;
+	ASSERT(error != NULL);
+	ASSERT(me->t_exceptsz > 0);
+	if (is_sequence_error(Dee_TYPE(error->ef_error)) &&
+	    likely(!(atomic_read(&me->t_state) & Dee_THREAD_STATE_TERMINATED))) {
+		SequenceError *current = (SequenceError *)error->ef_error;
+		struct Dee_variant current_seq;
+		bool current_seq_is_from;
+		Dee_variant_init_copy(&current_seq, &current->ve_value);
+		current_seq_is_from = Dee_variant_gettype_nonatomic(&current_seq) == Dee_VARIANT_OBJECT &&
+		                      current_seq.var_data.d_object == from;
+		Dee_variant_fini(&current_seq);
+		if (current_seq_is_from) {
+			DREF SequenceError *nested;
+			nested = (DREF SequenceError *)DeeObject_Copy((DeeObject *)current);
+			if unlikely(!nested) {
+				struct except_frame *oom = me->t_except;
+				if likely(oom != error) {
+					ASSERT(me->t_exceptsz >= 2);
+					ASSERT(oom->ef_prev == error);
+					oom->ef_prev = error->ef_prev;
+					error->ef_prev = oom;
+					me->t_except = error;
+					/* Handle the original IntegerOverflow error so only the OOM error remains */
+					DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+				}
+				goto done;
+			}
+			ASSERT(!DeeObject_IsShared(nested));
+			Dee_variant_fini(&nested->ve_value);
+			Dee_variant_init_object(&nested->ve_value, to);
+			Dee_XDecref(nested->e_inner);
+			nested->e_inner = (DREF DeeObject *)current; /* Inherit reference */
+			error->ef_error = (DREF DeeObject *)nested; /* Inherit reference */
+		}
+	}
+done:
+	return -1;
+}
 
 
 

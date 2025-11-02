@@ -158,13 +158,15 @@ ds_mv_getitem(DefaultSequence_MapProxy *self, DeeObject *index) {
 	DREF DeeObject *key_and_value[2];
 	item = DeeObject_InvokeMethodHint(seq_operator_getitem, self->dsmp_map, index);
 	if unlikely(!item)
-		goto err;
+		goto err_maybe_nest;
 	temp = DeeSeq_Unpack(item, 2, key_and_value);
 	Dee_Decref(item);
 	if unlikely(temp)
 		goto err;
 	Dee_Decref(key_and_value[0]);
 	return key_and_value[1];
+err_maybe_nest:
+	DeeRT_ErrNestSequenceError(self->dsmp_map, self);
 err:
 	return NULL;
 }
@@ -175,14 +177,19 @@ ds_mv_trygetitem(DefaultSequence_MapProxy *self, DeeObject *index) {
 	DREF DeeObject *item;
 	DREF DeeObject *key_and_value[2];
 	item = DeeObject_InvokeMethodHint(seq_operator_trygetitem, self->dsmp_map, index);
-	if unlikely(!ITER_ISOK(item))
+	if unlikely(!ITER_ISOK(item)) {
+		if unlikely(!item)
+			goto err_maybe_nest;
 		return item;
+	}
 	temp = DeeSeq_Unpack(item, 2, key_and_value);
 	Dee_Decref(item);
 	if unlikely(temp)
 		goto err;
 	Dee_Decref(key_and_value[0]);
 	return key_and_value[1];
+err_maybe_nest:
+	DeeRT_ErrNestSequenceError(self->dsmp_map, self);
 err:
 	return NULL;
 }
@@ -194,13 +201,15 @@ ds_mv_getitem_index(DefaultSequence_MapProxy *self, size_t index) {
 	DREF DeeObject *key_and_value[2];
 	item = DeeObject_InvokeMethodHint(seq_operator_getitem_index, self->dsmp_map, index);
 	if unlikely(!item)
-		goto err;
+		goto err_maybe_nest;
 	temp = DeeSeq_Unpack(item, 2, key_and_value);
 	Dee_Decref(item);
 	if unlikely(temp)
 		goto err;
 	Dee_Decref(key_and_value[0]);
 	return key_and_value[1];
+err_maybe_nest:
+	DeeRT_ErrNestSequenceError(self->dsmp_map, self);
 err:
 	return NULL;
 }
@@ -211,14 +220,19 @@ ds_mv_trygetitem_index(DefaultSequence_MapProxy *self, size_t index) {
 	DREF DeeObject *item;
 	DREF DeeObject *key_and_value[2];
 	item = DeeObject_InvokeMethodHint(seq_operator_trygetitem_index, self->dsmp_map, index);
-	if unlikely(!ITER_ISOK(item))
+	if unlikely(!ITER_ISOK(item)) {
+		if unlikely(!item)
+			goto err_maybe_nest;
 		return item;
+	}
 	temp = DeeSeq_Unpack(item, 2, key_and_value);
 	Dee_Decref(item);
 	if unlikely(temp)
 		goto err;
 	Dee_Decref(key_and_value[0]);
 	return key_and_value[1];
+err_maybe_nest:
+	DeeRT_ErrNestSequenceError(self->dsmp_map, self);
 err:
 	return NULL;
 }
@@ -231,7 +245,7 @@ ds_mv_setitem(DefaultSequence_MapProxy *self, DeeObject *index, DeeObject *value
 	DREF DeeObject *key;
 	item = DeeObject_InvokeMethodHint(seq_operator_getitem, self->dsmp_map, index);
 	if unlikely(!item)
-		goto err;
+		goto err_maybe_nest;
 	key = DeeObject_InvokeMethodHint(seq_getfirst, item);
 	Dee_Decref(item);
 	if unlikely(!key)
@@ -239,6 +253,8 @@ ds_mv_setitem(DefaultSequence_MapProxy *self, DeeObject *index, DeeObject *value
 	result = DeeObject_InvokeMethodHint(map_operator_setitem, self->dsmp_map, key, value);
 	Dee_Decref(key);
 	return result;
+err_maybe_nest:
+	DeeRT_ErrNestSequenceError(self->dsmp_map, self);
 err:
 	return -1;
 }
@@ -250,7 +266,7 @@ ds_mv_setitem_index(DefaultSequence_MapProxy *self, size_t index, DeeObject *val
 	DREF DeeObject *key;
 	item = DeeObject_InvokeMethodHint(seq_operator_getitem_index, self->dsmp_map, index);
 	if unlikely(!item)
-		goto err;
+		goto err_maybe_nest;
 	key = DeeObject_InvokeMethodHint(seq_getfirst, item);
 	Dee_Decref(item);
 	if unlikely(!key)
@@ -258,6 +274,8 @@ ds_mv_setitem_index(DefaultSequence_MapProxy *self, size_t index, DeeObject *val
 	result = DeeObject_InvokeMethodHint(map_operator_setitem, self->dsmp_map, key, value);
 	Dee_Decref(key);
 	return result;
+err_maybe_nest:
+	DeeRT_ErrNestSequenceError(self->dsmp_map, self);
 err:
 	return -1;
 }
