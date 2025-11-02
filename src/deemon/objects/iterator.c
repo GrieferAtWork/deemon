@@ -2036,14 +2036,14 @@ DeeIterator_GetSeq(DeeObject *__restrict self) {
 		return DeeSeq_NewEmpty();
 	while (tp_self != &DeeIterator_Type) {
 		struct type_nii const *nii;
-		if (tp_self->tp_cmp &&
-		    (nii = tp_self->tp_cmp->tp_nii) != NULL) {
+		if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
 			if (nii->nii_common.nii_getseq)
 				return (*nii->nii_common.nii_getseq)(self);
 		}
 		result = get_generic_attribute(tp_self, self, (DeeObject *)&str_seq);
 		if (result != ITER_DONE)
 			return result;
+		tp_self = DeeType_Base(tp_self);
 	}
 /*err_noseq:*/
 	DeeRT_ErrUnknownAttr(self, &str_seq, DeeRT_ATTRIBUTE_ACCESS_GET);

@@ -258,14 +258,14 @@ test.assertEqualsTyped(exec(r'x -> { return x * 2; };')(7), 14);
 	local lmb = exec(r'[](x) -> x.startswith("foo")');
 	local items = ["foz", "foo", "bar", "foobar"];
 	items.removeif(lmb);
-	assert items == ["foz", "bar"];
+	test.assertEqualsTyped(["foz", "bar"], items);
 }
 /* Also re-try the test with a block-lambda */
 {
 	local lmb = exec(r'[](x) { return x.startswith("foo"); }');
 	local items = ["foz", "foo", "bar", "foobar"];
 	items.removeif(lmb);
-	assert items == ["foz", "bar"];
+	test.assertEqualsTyped(["foz", "bar"], items);
 }
 
 {
@@ -439,7 +439,7 @@ test.assertEqualsTyped(exec(r'({ if (true) ; else return 42; })'), none);
  * but when encountered in the context of a statement, it evaluates
  * to `none' the same way an empty statement would */
 assert exec(r';') is none;
-assert exec(r'{}') == [];
+assert exec(r'{}') == {};
 assert exec(r';{}') is none;
 
 /* Make sure that both the deemon core compiler, as well

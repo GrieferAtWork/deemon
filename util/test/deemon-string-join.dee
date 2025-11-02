@@ -19,6 +19,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 import * from deemon;
+import .common.test;
 
 function tryAsBytes(x) {
 	for (local y: x) {
@@ -30,29 +31,19 @@ function tryAsBytes(x) {
 	}
 }
 
-function identical(a, b) {
-	assert a == b;
-	assert a <= b;
-	assert a >= b;
-	assert !(a != b);
-	assert !(a < b);
-	assert !(a > b);
-	assert type(a) === type(b);
-}
-
 function assertJoin(expected, sep, seq) {
-	identical(expected, sep.join(seq));
-	identical(expected, sep.join(Tuple(seq)));
-	identical(expected, sep.join(List(seq)));
-	assert expected == sep.bytes().join(seq);
-	assert expected == sep.bytes().join(Tuple(seq));
-	assert expected == sep.bytes().join(List(seq));
-	identical(expected.bytes(), sep.bytes().join(seq));
-	identical(expected.bytes(), sep.bytes().join(Tuple(seq)));
-	identical(expected.bytes(), sep.bytes().join(List(seq)));
-	identical(expected, sep.join(tryAsBytes(seq)));
-	assert expected == sep.bytes().join(tryAsBytes(seq));
-	identical(expected.bytes(), sep.bytes().join(tryAsBytes(seq)));
+	test.assertEqualsTyped(expected, sep.join(seq));
+	test.assertEqualsTyped(expected, sep.join(Tuple(seq)));
+	test.assertEqualsTyped(expected, sep.join(List(seq)));
+	test.assertEquals(expected, sep.bytes().join(seq));
+	test.assertEquals(expected, sep.bytes().join(Tuple(seq)));
+	test.assertEquals(expected, sep.bytes().join(List(seq)));
+	test.assertEqualsTyped(expected.bytes(), sep.bytes().join(seq));
+	test.assertEqualsTyped(expected.bytes(), sep.bytes().join(Tuple(seq)));
+	test.assertEqualsTyped(expected.bytes(), sep.bytes().join(List(seq)));
+	test.assertEqualsTyped(expected, sep.join(tryAsBytes(seq)));
+	test.assertEquals(expected, sep.bytes().join(tryAsBytes(seq)));
+	test.assertEqualsTyped(expected.bytes(), sep.bytes().join(tryAsBytes(seq)));
 }
 
 assertJoin("", "", {});

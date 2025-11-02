@@ -95,8 +95,8 @@ function assertEquals(expected: Object, actual: Object,
 
 @@Same as @assertEquals, but also assert identical typing
 function assertEqualsTyped(expected: Object, actual: Object,
-                          message: Callable | string | none = none,
-                          compare: bool | none = none) {
+                           message: Callable | string | none = none,
+                           compare: bool | none = none) {
 	assertEquals(expected, actual, message, compare);
 	assert type(expected) == type(actual), f"type({safeRepr(expected)}) == type({safeRepr(actual)})";
 }
@@ -154,6 +154,12 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 			assertEquals(v, x[i], () -> f"{safeRepr(v)} == {safeRepr(x)}[{safeRepr(i)}]");
 		}
 	}
+	assertEqualsTyped(x, x);
+	if (type(x) !== Super) {
+		/* FIXME: See "assertSet" */
+		assertEqualsTyped(x, copy x);
+		assertEqualsTyped(x, deepcopy x);
+	}
 	assert x.length == len;
 	assertAttributes(TRY(x[len]), {
 		"seq": x,
@@ -195,6 +201,14 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 		local it2 = x.operator iter();
 		assertEqualsTyped(it, it2);
 		assertEquals(first, it2.operator next());
+		it.operator hash(); /* Only here for coverage */
+		local itSeq = it.seq;
+		/* This here is needed because "Dict.items.operator iter().seq"
+		 * returns "Dict" instead of "Dict.Items" (since the 2 share the
+		 * same iterator type for the sake of simplicity) */
+		if (type(x) === Super)
+			itSeq = itSeq as Super.typeof(x);
+		assertEquals(x, itSeq);
 		assert it2 > it;
 		assert it < it2;
 
@@ -233,6 +247,19 @@ function assertSet(x: Set, expected: {Object...} | none = none) {
 		for (local k: x)
 			assert k in expected;
 	}
+	assertEqualsTyped(x, x);
+	if (type(x) !== Super) {
+		/* FIXME: "copy(x as Set)" doesn't work as expected (it just returns "Set()")
+		 *        Expected behavior would be alias for "Set.frozen(x)", but that would
+		 *        require a re-write of how copy operators are invoked. (currently,
+		 *        only TP_FVARIABLE types are able to allocate objects with custom
+		 *        typing to-be returned by "copy", but "Set" cannot be made variable)
+		 * Solution: all types should provide "tp_var" constructors, with types that
+		 *           don't explicitly define them being given default impls (similar
+		 *           to what was done with "tp_destroy") */
+		assertEqualsTyped(x, copy x);
+		assertEqualsTyped(x, deepcopy x);
+	}
 	assert x.length == len;
 	if (len) {
 		assert x;
@@ -267,6 +294,14 @@ function assertSet(x: Set, expected: {Object...} | none = none) {
 		local it2 = x.operator iter();
 		assertEqualsTyped(it, it2);
 		assertEquals(first, it2.operator next());
+		it.operator hash(); /* Only here for coverage */
+		local itSeq = it.seq;
+		/* This here is needed because "Dict.items.operator iter().seq"
+		 * returns "Dict" instead of "Dict.Items" (since the 2 share the
+		 * same iterator type for the sake of simplicity) */
+		if (type(x) === Super)
+			itSeq = itSeq as Super.typeof(x);
+		assertEquals(x, itSeq);
 		assert it2 > it;
 		assert it < it2;
 
@@ -301,6 +336,12 @@ function assertMapping(x: Mapping, expected: {Object: Object} | none = none) {
 			assertEquals(value, x[key], () -> f"{safeRepr(value)} == {safeRepr(x)}[{safeRepr(key)}]");
 		for (local key, value: x)
 			assertEquals(expected[key], value, () -> f"{safeRepr(expected)}[{safeRepr(key)}] == {safeRepr(value)}");
+	}
+	assertEqualsTyped(x, x);
+	if (type(x) !== Super) {
+		/* FIXME: See "assertSet" */
+		assertEqualsTyped(x, copy x);
+		assertEqualsTyped(x, deepcopy x);
 	}
 	assert x.length == len;
 	local badKey = -4405742047502975340;
@@ -361,6 +402,14 @@ function assertMapping(x: Mapping, expected: {Object: Object} | none = none) {
 		local it2 = x.operator iter();
 		assertEqualsTyped(it, it2);
 		assertEquals(x.first, it2.operator next());
+		it.operator hash(); /* Only here for coverage */
+		local itSeq = it.seq;
+		/* This here is needed because "Dict.items.operator iter().seq"
+		 * returns "Dict" instead of "Dict.Items" (since the 2 share the
+		 * same iterator type for the sake of simplicity) */
+		if (type(x) === Super)
+			itSeq = itSeq as Super.typeof(x);
+		assertEquals(x, itSeq);
 		assert it2 > it;
 		assert it < it2;
 

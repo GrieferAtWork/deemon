@@ -340,6 +340,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{2360
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-FB49-40D4-B684-00007A1732AC}"
 	ProjectSection(SolutionItems) = preProject
+		..\util\test\collections-accu.dee = ..\util\test\collections-accu.dee
 		..\util\test\collections-bitset.dee = ..\util\test\collections-bitset.dee
 		..\util\test\collections-rbtree.dee = ..\util\test\collections-rbtree.dee
 		..\util\test\collections.dee = ..\util\test\collections.dee
@@ -471,6 +472,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\deemon-string.dee = ..\util\test\deemon-string.dee
 		..\util\test\deemon-type-mro.dee = ..\util\test\deemon-type-mro.dee
 		..\util\test\deemon-type-newinstance.dee = ..\util\test\deemon-type-newinstance.dee
+		..\util\test\deemon-type-properties.dee = ..\util\test\deemon-type-properties.dee
 		..\util\test\deemon-unified-method-hints.dee = ..\util\test\deemon-unified-method-hints.dee
 		..\util\test\deemon-yield-function-ddi-symbols.dee = ..\util\test\deemon-yield-function-ddi-symbols.dee
 		..\util\test\deemon-yield-function-manual-stack-push.dee = ..\util\test\deemon-yield-function-manual-stack-push.dee
@@ -497,6 +499,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\time-string-format.dee = ..\util\test\time-string-format.dee
 		..\util\test\time-time.dee = ..\util\test\time-time.dee
 		..\util\test\util-clamprange.dee = ..\util\test\util-clamprange.dee
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{2360741E-FB49-40D4-B684-56C8318BC973}"
+	ProjectSection(SolutionItems) = preProject
+		..\util\test\common\test.dee = ..\util\test\common\test.dee
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tut", "tut", "{2360741E-FB49-40D4-B684-00000F42E6DC}"
@@ -883,6 +890,7 @@ Global
 		{2360741E-FB49-40D4-B684-00F42E7A6DD3} = {2360741E-FB49-40D4-B684-00000000F424}
 		{2360741E-FB49-40D4-B684-00007A1732AC} = {2360741E-FB49-40D4-B684-00000000F424}
 		{2360741E-FB49-40D4-B684-00000F42E6DC} = {2360741E-FB49-40D4-B684-00000000F424}
+		{2360741E-FB49-40D4-B684-56C8318BC973} = {2360741E-FB49-40D4-B684-00007A1732AC}
 		{2360741E-FB49-40D4-B684-C63EFA43917B} = {2360741E-FB49-40D4-B684-00000F42E6DC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

@@ -38,8 +38,10 @@
 /**/
 
 #include "../../runtime/runtime_error.h"
+#include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "default-iterators.h"
+#include "default-map-proxy.h"
 /**/
 
 #include <stddef.h> /* size_t */
@@ -454,18 +456,18 @@ PRIVATE struct type_cmp di_gi_cmp = {
 	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
 };
 
-#define di_stgi_members di_sgi_members
 PRIVATE struct type_member tpconst di_sgi_members[] = {
+#define di_stgi_members di_sgi_members
 	TYPE_MEMBER_FIELD("__end__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DefaultIterator_WithSizeAndGetItemIndex, disgi_end)),
 #define di_gi_members (di_sgi_members + 1)
 	TYPE_MEMBER_FIELD("__index__", STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(DefaultIterator_WithGetItemIndex, digi_index)),
-	TYPE_MEMBER_FIELD("__seq__", STRUCT_OBJECT, offsetof(DefaultIterator_WithGetItemIndex, digi_seq)),
+	TYPE_MEMBER_FIELD(STR_seq, STRUCT_OBJECT, offsetof(DefaultIterator_WithGetItemIndex, digi_seq)),
 	TYPE_MEMBER_END,
 };
 
 PRIVATE struct type_member tpconst di_sgif_members[] = {
 	TYPE_MEMBER_FIELD("__end__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DefaultIterator_WithSizeAndGetItemIndex, disgi_end)),
-	TYPE_MEMBER_FIELD("__seq__", STRUCT_OBJECT, offsetof(DefaultIterator_WithGetItemIndex, digi_seq)),
+	TYPE_MEMBER_FIELD(STR_seq, STRUCT_OBJECT, offsetof(DefaultIterator_WithGetItemIndex, digi_seq)),
 	TYPE_MEMBER_END,
 };
 
@@ -1169,7 +1171,7 @@ PRIVATE struct type_gc tpconst di_g_gc = {
 };
 
 PRIVATE struct type_member tpconst di_g_members[] = {
-	TYPE_MEMBER_FIELD("__seq__", STRUCT_OBJECT, offsetof(DefaultIterator_WithGetItem, dig_seq)),
+	TYPE_MEMBER_FIELD(STR_seq, STRUCT_OBJECT, offsetof(DefaultIterator_WithGetItem, dig_seq)),
 	TYPE_MEMBER_END,
 };
 
@@ -1770,6 +1772,21 @@ PRIVATE struct type_member tpconst di_nl_members[] = {
 	TYPE_MEMBER_END,
 };
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+di_nl_getseq(DefaultIterator_WithNextAndLimit *__restrict self) {
+	return DeeObject_GetAttr(self->dinl_iter, (DeeObject *)&str_seq);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+di_nl_boundseq(DefaultIterator_WithNextAndLimit *__restrict self) {
+	return DeeObject_BoundAttr(self->dinl_iter, (DeeObject *)&str_seq);
+}
+
+PRIVATE struct type_getset tpconst di_nl_getsets[] = {
+	TYPE_GETTER_BOUND(STR_seq, &di_nl_getseq, &di_nl_boundseq, "Alias for ${this.__iter__.seq}"),
+	TYPE_GETSET_END
+};
+
 INTERN DeeTypeObject DefaultIterator_WithNextAndLimit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithNextAndLimit",
@@ -1810,7 +1827,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndLimit_Type = {
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ di_nl_getsets,
 	/* .tp_members       = */ di_nl_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
@@ -1968,7 +1985,7 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == o
 
 PRIVATE struct type_member tpconst di_ikgim_members[] = {
 #define di_iktrgim_members di_ikgim_members
-	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD_DOC("__iterkeys__", STRUCT_OBJECT, offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };
@@ -3054,6 +3071,48 @@ PRIVATE struct type_iterator di_nk_iterator = {
 	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&di_nk_advance,
 };
 
+PRIVATE WUNUSED NONNULL((1)) DREF DefaultSequence_MapProxy *DCALL
+di_nX_getseq(DefaultIterator_WithNextAndLimit *__restrict self,
+             DeeTypeObject *__restrict map_proxy_type) {
+	DREF DefaultSequence_MapProxy *result;
+	DREF DeeObject *map = di_nl_getseq(self);
+	if unlikely(!map)
+		goto err;
+	result = DeeObject_MALLOC(DefaultSequence_MapProxy);
+	if unlikely(!result)
+		goto err_map;
+	result->dsmp_map = map;
+	DeeObject_Init(result, map_proxy_type);
+	return result;
+err_map:
+	Dee_Decref(map);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DefaultSequence_MapProxy *DCALL
+di_nk_getseq(DefaultIterator_WithNextAndLimit *__restrict self) {
+	return di_nX_getseq(self, &DefaultSequence_MapKeys_Type);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DefaultSequence_MapProxy *DCALL
+di_nv_getseq(DefaultIterator_WithNextAndLimit *__restrict self) {
+	return di_nX_getseq(self, &DefaultSequence_MapValues_Type);
+}
+
+#define di_nk_boundseq di_nl_boundseq
+#define di_nv_boundseq di_nl_boundseq
+
+PRIVATE struct type_getset tpconst di_nk_getsets[] = {
+	TYPE_GETTER_BOUND(STR_seq, &di_nk_getseq, &di_nk_boundseq, "Alias for ${rt.MapKeys(this.__iter__.seq)}"),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_getset tpconst di_nv_getsets[] = {
+	TYPE_GETTER_BOUND(STR_seq, &di_nv_getseq, &di_nv_boundseq, "Alias for ${rt.MapValues(this.__iter__.seq)}"),
+	TYPE_GETSET_END
+};
+
 
 INTERN DeeTypeObject DefaultIterator_WithNextKey = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -3095,7 +3154,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextKey = {
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ di_nk_getsets,
 	/* .tp_members       = */ di_nk_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
@@ -3145,7 +3204,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextValue = {
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ di_nv_getsets,
 	/* .tp_members       = */ di_nv_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
@@ -3154,7 +3213,6 @@ INTERN DeeTypeObject DefaultIterator_WithNextValue = {
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
-
 
 DECL_END
 

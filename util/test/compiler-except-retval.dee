@@ -20,15 +20,7 @@
  */
 
 import * from deemon;
-
-function assert_identical(a, b) {
-	/* Make sure that the comparison works in every way */
-	assert type a === type b;
-	assert a == b;
-	assert b == a;
-	assert !(a != b);
-	assert !(b != a);
-}
+import .common.test;
 
 function foo() {
 	try {
@@ -37,8 +29,8 @@ function foo() {
 		return "b";
 	}
 }
-assert_identical(foo(), "a");
-assert_identical(exec(r'
+test.assertEqualsTyped(foo(), "a");
+test.assertEqualsTyped(exec(r'
 	try {
 		return "a";
 	} finally {
@@ -61,8 +53,8 @@ local x = ({
 	}
 });
 
-assert_identical(didRunFinally, true);
-assert_identical(x, "geta");
+test.assertEqualsTyped(didRunFinally, true);
+test.assertEqualsTyped(x, "geta");
 
 local didRunFinally = false;
 local x = ({
@@ -78,7 +70,7 @@ local x = ({
 
 /* FIXME: Finally doesn't run if an exception was thrown that was already caught. */
 //TODO:BROKEN:assert didRunFinally;
-assert_identical(x, "getc");
+test.assertEqualsTyped(x, "getc");
 
 /* FIXME: When finally re-throws, a follow-up catch fails to catch the exception */
 //TODO:BROKEN:local didRunFinally = false;
@@ -115,8 +107,8 @@ local x = exec(r"
 		getb();
 	}
 ", globals: globals);
-assert_identical(globals["didRunFinally"], true);
-assert_identical(x, "geta");
+test.assertEqualsTyped(globals["didRunFinally"], true);
+test.assertEqualsTyped(x, "geta");
 
 
 globals["didRunFinally"] = false;
@@ -130,8 +122,8 @@ local x = exec(r"
 		getb();
 	}
 ", globals: globals);
-assert_identical(globals["didRunFinally"], true);
-assert_identical(x, "getc");
+test.assertEqualsTyped(globals["didRunFinally"], true);
+test.assertEqualsTyped(x, "getc");
 
 
 globals["didRunFinally"] = false;
@@ -145,8 +137,8 @@ local x = exec(r"
 		e;
 	}
 ", globals: globals);
-assert_identical(globals["didRunFinally"], true);
-assert_identical(x, "getc");
+test.assertEqualsTyped(globals["didRunFinally"], true);
+test.assertEqualsTyped(x, "getc");
 
 
 

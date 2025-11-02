@@ -433,25 +433,17 @@ INTERN DeeTypeObject TypeBasesIterator_Type = {
 
 
 
-
+#define typebases_init typemro_init
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 typemro_init(TypeMRO *__restrict self,
              size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_TypeMRO", &self->tm_type);
-	if (DeeObject_AssertType(self->tm_type, &DeeType_Type))
+	if unlikely(generic_proxy__init((ProxyObject *)self, argc, argv))
 		goto err;
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-typebases_init(TypeMRO *__restrict self,
-               size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_TypeBases", &self->tm_type);
 	if (DeeObject_AssertType(self->tm_type, &DeeType_Type))
-		goto err;
+		goto err_type;
 	return 0;
+err_type:
+	Dee_Decref(self->tm_type);
 err:
 	return -1;
 }
@@ -462,6 +454,10 @@ STATIC_ASSERT(offsetof(TypeMRO, tm_type) == offsetof(ProxyObject, po_obj));
 #define typemro_fini    generic_proxy__fini_unlikely /* Unlikely because types are usually referenced elsewhere */
 #define typebases_visit generic_proxy__visit
 #define typemro_visit   generic_proxy__visit
+#define typemro_copy    generic_proxy__copy_alias
+#define typemro_deep    generic_proxy__copy_alias
+#define typebases_copy  generic_proxy__copy_alias
+#define typebases_deep  generic_proxy__copy_alias
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 typemro_bool(TypeMRO *__restrict self) {
@@ -765,8 +761,8 @@ INTERN DeeTypeObject TypeMRO_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&typemro_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&typemro_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&typemro_init,
 				TYPE_FIXED_ALLOCATOR(TypeMRO)
 			}
@@ -815,8 +811,8 @@ INTERN DeeTypeObject TypeBases_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&typebases_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&typebases_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&typebases_init,
 				TYPE_FIXED_ALLOCATOR(TypeMRO)
 			}

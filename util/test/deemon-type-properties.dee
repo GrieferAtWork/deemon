@@ -19,7 +19,7 @@
  */
 
 
-import deemon;
+import deemon, rt;
 import * from deemon;
 import * from errors;
 import .common.test;
@@ -65,6 +65,14 @@ test.assertSequence(Type.__bases__(string), {Sequence});
 test.assertSequence(Type.__mro__(Type), {Type, Object, Callable});
 test.assertSequence(Type.__mro__(Object), {Object});
 test.assertSequence(Type.__mro__(string), {string, Sequence, Object});
+test.assertSequence(rt.TypeBases(Type), {Object, Callable});
+test.assertSequence(rt.TypeBases(Object), {});
+test.assertSequence(rt.TypeBases(string), {Sequence});
+test.assertSequence(rt.TypeMRO(Type), {Type, Object, Callable});
+test.assertSequence(rt.TypeMRO(Object), {Object});
+test.assertSequence(rt.TypeMRO(string), {string, Sequence, Object});
+assert TRY(rt.TypeBases(42)) is TypeError;
+assert TRY(rt.TypeMRO(42)) is TypeError;
 
 assert string.extends(Sequence);
 assert string.extends(Object);

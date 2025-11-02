@@ -20,37 +20,28 @@
  */
 
 import * from deemon;
-
-function identical(a, b) {
-	return type a === type b
-		/* Make sure that the comparison works in every way */
-		&& (a == b)
-		&& (b == a)
-		&& !(a != b)
-		&& !(b != a)
-		;
-}
+import .common.test;
 
 local x = [10, 20, 30];
 local globals = { .x = x };
 
 /* Sequence(x).operator getitem(0) */
-assert identical({ x }[0], x);
-assert identical(exec(r'{ x }[0]', globals: globals), x);
+test.assertEqualsTyped({ x }[0], x);
+test.assertEqualsTyped(exec(r'{ x }[0]', globals: globals), x);
 
 /* <Parenthesis>(Sequence(x).operator getitem(0)) */
-assert identical(({ x }[0]), x);
-assert identical(exec(r'({ x }[0])', globals: globals), x);
+test.assertEqualsTyped(({ x }[0]), x);
+test.assertEqualsTyped(exec(r'({ x }[0])', globals: globals), x);
 
 /* <Parenthesis>(Sequence(x)).operator getitem(0) */
-assert identical(({ x })[0], x);
-assert identical(exec(r'({ x })[0]', globals: globals), x);
+test.assertEqualsTyped(({ x })[0], x);
+test.assertEqualsTyped(exec(r'({ x })[0]', globals: globals), x);
 
 /* <Statement-Expression>(Statement(Variable(x))).operator getitem(0)
  * Yes: this is valid! (same as x.operator getitem(0)) */
-assert identical(({ x; })[0], x[0]);
-assert identical(exec(r'({ x; })[0]', globals: globals), x[0]);
+test.assertEqualsTyped(({ x; })[0], x[0]);
+test.assertEqualsTyped(exec(r'({ x; })[0]', globals: globals), x[0]);
 
-//sert identical({ x; }[0], ?);       /* Illegal syntax */
-//sert identical(({ x; }[0]), ?);     /* Illegal syntax */
+//test.assertEqualsTyped({ x; }[0], ?);       /* Illegal syntax */
+//test.assertEqualsTyped(({ x; }[0]), ?);     /* Illegal syntax */
 
