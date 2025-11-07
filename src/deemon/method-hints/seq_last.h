@@ -102,7 +102,7 @@ err:
 __seq_last__.seq_getlast([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("last"))}
 %{$none = return_none}
-%{$empty = DeeRT_ErrUnboundAttrCStr(self, "last")}
+%{$empty = DeeRT_ErrTUnboundAttrCStr(&DeeSeq_Type, self, "last")}
 %{$with__seq_operator_size__and__seq_operator_getitem_index = {
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)

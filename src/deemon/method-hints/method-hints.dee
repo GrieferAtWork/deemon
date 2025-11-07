@@ -61,6 +61,14 @@ function encode_DeeRT_ErrUnboundAttr(tpSelfExpr: string, self: string, encodedNa
 	}
 }
 
+function encode_DeeRT_ErrTUnboundAttr(decl: string, self: string, encodedName: string): string {
+	local decodedName = encodedName.decode("c-escape");
+	local isKnownAttribute = decodedName in getAllMethodHintAttributes();
+	return isKnownAttribute
+		? f"DeeRT_ErrTUnboundAttr({decl}, {self}, &str_{decodedName})"
+		: f"DeeRT_ErrTUnboundAttrCStr({decl}, {self}, {encodedName})";
+}
+
 
 
 class PPCondPrinter {
@@ -893,6 +901,8 @@ final class NativeMethod {
 				},
 				"DeeRT_ErrUnboundAttrCStr": (self, name) ->
 					encode_DeeRT_ErrUnboundAttr(tpSelfExpr, self, name),
+				"DeeRT_ErrTUnboundAttrCStr": (decl, self, name) ->
+					encode_DeeRT_ErrTUnboundAttr(decl, self, name),
 			};
 		}
 		for (local dependencies, impl: usingImpls) {
@@ -1163,6 +1173,8 @@ final class MethodHint: WeakRefAble {
 			},
 			"DeeRT_ErrUnboundAttrCStr": (self, name) ->
 				encode_DeeRT_ErrUnboundAttr(tpSelfExpr, self, name),
+			"DeeRT_ErrTUnboundAttrCStr": (decl, self, name) ->
+				encode_DeeRT_ErrTUnboundAttr(decl, self, name),
 		});
 		print("PUBLIC "),;
 		call2native.printDecl(f"DeeMA_{name}",
@@ -1591,6 +1603,8 @@ final class NativeOperator {
 					typedName is none ? ifTyped : ifNotTyped,
 				"DeeRT_ErrUnboundAttrCStr": (self, name) ->
 					encode_DeeRT_ErrUnboundAttr(tpSelfExpr, self, name),
+				"DeeRT_ErrTUnboundAttrCStr": (decl, self, name) ->
+					encode_DeeRT_ErrTUnboundAttr(decl, self, name),
 			});
 			result.append(symName);
 		}

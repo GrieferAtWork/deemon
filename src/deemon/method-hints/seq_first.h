@@ -94,7 +94,7 @@ err:
 __seq_first__.seq_getfirst([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("first"))}
 %{$none = return_none}
-%{$empty = DeeRT_ErrUnboundAttrCStr(self, "first")}
+%{$empty = DeeRT_ErrTUnboundAttrCStr(&DeeSeq_Type, self, "first")}
 %{$with__seq_operator_getitem_index = {
 	return CALL_DEPENDENCY(seq_operator_getitem_index, self, 0);
 }}

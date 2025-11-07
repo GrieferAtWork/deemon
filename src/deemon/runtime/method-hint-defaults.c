@@ -6940,7 +6940,7 @@ default__seq_getfirst__unsupported(DeeObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_getfirst__empty(DeeObject *__restrict self) {
-	return DeeRT_ErrUnboundAttr(self, &str_first);
+	return DeeRT_ErrTUnboundAttr(&DeeSeq_Type, self, &str_first);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -7173,7 +7173,7 @@ default__seq_getlast__unsupported(DeeObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_getlast__empty(DeeObject *__restrict self) {
-	return DeeRT_ErrUnboundAttr(self, &str_last);
+	return DeeRT_ErrTUnboundAttr(&DeeSeq_Type, self, &str_last);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -11181,13 +11181,17 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_endswith_with_range__with__seq_operator_size__and__operator_trygetitem_index(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	int result;
 	DREF DeeObject *selfitem;
-	size_t selfsize = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
-	if unlikely(selfsize == (size_t)-1)
-		goto err;
-	if (end > selfsize)
-		end = selfsize;
+	size_t selfsize;
 	if (start >= end)
 		return 0;
+	selfsize = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
+	if unlikely(selfsize == (size_t)-1)
+		goto err;
+	if (end > selfsize) {
+		end = selfsize;
+		if (start >= end)
+			return 0;
+	}
 	selfitem = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_trygetitem_index))(self, end - 1);
 	if unlikely(!selfitem)
 		goto err;

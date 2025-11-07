@@ -167,13 +167,17 @@ __seq_endswith__.seq_endswith_with_range([[nonnull]] DeeObject *self,
 %{$with__seq_operator_size__and__operator_trygetitem_index = {
 	int result;
 	DREF DeeObject *selfitem;
-	size_t selfsize = CALL_DEPENDENCY(seq_operator_size, self);
-	if unlikely(selfsize == (size_t)-1)
-		goto err;
-	if (end > selfsize)
-		end = selfsize;
+	size_t selfsize;
 	if (start >= end)
 		return 0;
+	selfsize = CALL_DEPENDENCY(seq_operator_size, self);
+	if unlikely(selfsize == (size_t)-1)
+		goto err;
+	if (end > selfsize) {
+		end = selfsize;
+		if (start >= end)
+			return 0;
+	}
 	selfitem = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, end - 1);
 	if unlikely(!selfitem)
 		goto err;
