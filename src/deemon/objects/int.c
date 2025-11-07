@@ -75,6 +75,10 @@
 #include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
 
+#ifndef SIZE_MAX
+#define SIZE_MAX __SIZE_MAX__
+#endif /* !SIZE_MAX */
+
 #ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h> /* CHAR_BIT */
 #endif /* CONFIG_HAVE_LIMITS_H */
@@ -5418,27 +5422,28 @@ PRIVATE struct type_member tpconst int_members[] = {
 /* The max sequence size is the signed value of SIZE_MAX,
  * because negative values are reserved to indicate error
  * states. */
-#if SSIZE_MAX <= UINT32_MAX
-INTERN DEFINE_UINT32(int_SIZE_MAX, SSIZE_MAX);
-#else /* SSIZE_MAX > UINT32_MAX */
-INTERN DEFINE_UINT64(int_SIZE_MAX, SSIZE_MAX);
-#endif /* SSIZE_MAX < UINT32_MAX */
+#if SIZE_MAX <= UINT32_MAX
+INTERN DEFINE_UINT32(int_SIZE_MAX, SIZE_MAX);
+#else /* SIZE_MAX > UINT32_MAX */
+INTERN DEFINE_UINT64(int_SIZE_MAX, SIZE_MAX);
+#endif /* SIZE_MAX < UINT32_MAX */
 
 PRIVATE struct type_member tpconst int_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("SIZE_MAX", &int_SIZE_MAX,
 	                      "The max value acceptable for sequence sizes, or indices\n"
-	                      "Note that despite its name, this constant is not necessarily "
-	                      /**/ "equal to the well-known C-constant of the same name, accessible "
+	                      "As may be read from its name, implementations usually set this value "
+	                      /**/ "to the well-known C-constant of the same name, also accessible "
 	                      /**/ "in deemon as ${(size_t from ctypes).max}\n"
 	                      "Note that this value is guarantied to be sufficiently great, such that "
-	                      /**/ "a sequence consisting of SIZE_MAX elements, each addressed as its own "
+	                      /**/ "a sequence consisting of #CSIZE_MAX elements, each addressed as its own "
 	                      /**/ "member, or modifiable index in some array, is impossible to achieve due "
 	                      /**/ "to memory constraints.\n"
-	                      "In this implementation, $SIZE_MAX is ${2**31} on 32-bit hosts, and ${2**63} on 64-bit hosts\n"
-	                      "Custom, mutable sequences with sizes greater than this may experience inaccuracies "
-	                      /**/ "with the default implementation of function such as ?Ainsert?DSequence's index-argument "
-	                      /**/ "potentially not being able to correctly determine if a negative or positive number was given\n"
-	                      "Such behavior may be considered a bug, however it falls under the category of doesn't-matter-wont-fix\n"),
+	                      "In this implementation, $SIZE_MAX is $4294967295 (${2**32}) on 32-bit "
+	                      /**/ "hosts, and $18446744073709551615 (${2**64}) on 64-bit hosts\n"
+	                      "Exceeding this value in calls to the builtin/default version of certain "
+	                      /**/ "standard functions may result in :IntegerOverflow errors. For example, "
+	                      /**/ "passing ${int.SIZE_MAX + 1} as #Cindex argument to the default "
+	                      /**/ "implementation of ?Ainsert?DSequence's will throw :IntegerOverflow."),
 	TYPE_MEMBER_CONST(STR_isfloat, Dee_False),
 	TYPE_MEMBER_END
 };

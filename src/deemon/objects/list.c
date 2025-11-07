@@ -3788,7 +3788,7 @@ PRIVATE struct type_method tpconst list_methods[] = {
 	/* Deprecated aliases / functions. */
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	TYPE_KWMETHOD_F("remove_if", &DeeMA_Sequence_removeif, METHOD_FNOREFESCAPE,
-	                "(should:?DCallable,start=!0,end=!A!Dint!PSIZE_MAX)->?Dint\n"
+	                "(should:?DCallable,start=!0,end=!-1)->?Dint\n"
 	                "Deprecated alias for ?#removeif"),
 	TYPE_KWMETHOD_F("insert_list", &DeeMA_Sequence_insertall, METHOD_FNOREFESCAPE,
 	                "(index:?Dint,items:?S?O)\n"
@@ -3813,7 +3813,7 @@ PRIVATE struct type_method tpconst list_methods[] = {
 	              "Deprecated alias for ?#shrink"),
 
 	TYPE_KWMETHOD("sorted_insert", &seq_binsert,
-	              "(item,start=!0,end=!A!Dint!PSIZE_MAX)\n"
+	              "(item,start=!0,end=!-1)\n"
 	              "Deprecated alias for ?Abinsert?DSequence present only in ?."),
 	TYPE_KWMETHOD("tounique", &seq_distinct,
 	              "(key?:?DCallable)->?DSet\n"

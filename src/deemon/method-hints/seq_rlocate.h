@@ -23,7 +23,7 @@
 /************************************************************************/
 
 [[kw, alias(Sequence.rlocate)]]
-__seq_rlocate__(match, size_t start = 0, size_t end = (size_t)-1, def=!N)->?X2?O?Q!Adef] {
+__seq_rlocate__(match:?DCallable, size_t start = 0, size_t end = (size_t)-1, def=!N)->?X2?O?Q!Adef] {
 	if (start == 0 && end == (size_t)-1)
 		return CALL_DEPENDENCY(seq_rlocate, self, match, def);
 	return CALL_DEPENDENCY(seq_rlocate_with_range, self, match, start, end, def);

@@ -1139,7 +1139,7 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_contains__(DeeObject *__r
 
 #define DeeMA___seq_locate___flags Dee_TYPE_METHOD_FKWDS
 #define DeeMA___seq_locate___name  _DeeMA_ATTRSTR(__seq_locate__)
-#define DeeMA___seq_locate___doc   "(match,start=!0,end=!-1,def=!N)->?X2?O?Q!Adef]"
+#define DeeMA___seq_locate___doc   "(match:?DCallable,start=!0,end=!-1,def=!N)->?X2?O?Q!Adef]"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_locate__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_locate_flags DeeMA___seq_locate___flags
 #define DeeMA_Sequence_locate_name  _DeeMA_ATTRSTR(locate)
@@ -1148,7 +1148,7 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_locate__(DeeObject *__res
 
 #define DeeMA___seq_rlocate___flags Dee_TYPE_METHOD_FKWDS
 #define DeeMA___seq_rlocate___name  _DeeMA_ATTRSTR(__seq_rlocate__)
-#define DeeMA___seq_rlocate___doc   "(match,start=!0,end=!-1,def=!N)->?X2?O?Q!Adef]"
+#define DeeMA___seq_rlocate___doc   "(match:?DCallable,start=!0,end=!-1,def=!N)->?X2?O?Q!Adef]"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_rlocate__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_rlocate_flags DeeMA___seq_rlocate___flags
 #define DeeMA_Sequence_rlocate_name  _DeeMA_ATTRSTR(rlocate)

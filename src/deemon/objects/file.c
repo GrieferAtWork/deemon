@@ -2558,7 +2558,7 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	            "Returns the size (in bytes) of the file stream."),
 	TYPE_METHOD("readline", &file_readline,
 	            "(keeplf:?Dbool)->?X2?DBytes?N\n"
-	            "(maxbytes=!A!Dint!PSIZE_MAX,keeplf=!t)->?X2?DBytes?N\n"
+	            "(maxbytes=!-1,keeplf=!t)->?X2?DBytes?N\n"
 	            "Read one line from the file stream, but read at most @maxbytes bytes.\n"
 	            "When @keeplf is ?f, strip the trailing linefeed from the returned ?DBytes object.\n"
 	            "Once EOF is reached, return ?N instead."),

@@ -265,14 +265,14 @@ err:
 }
 #endif /* !posix_read_USE_STUB */
 
-#define POSIX_READ_DEF                                                   \
-	{ "read", (DeeObject *)&posix_read, MODSYM_FNORMAL,                  \
-	  DOC("(fd:?X2?Dint?DFile,count:?Dint=!A!Dint!PSIZE_MAX)->?DBytes\n" \
-		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!A!Dint!PSIZE_MAX)->?Dint") },
-#define POSIX_READ_DEF_DOC(doc)                                          \
-	{ "read", (DeeObject *)&posix_read, MODSYM_FNORMAL,                  \
-	  DOC("(fd:?X2?Dint?DFile,count:?Dint=!A!Dint!PSIZE_MAX)->?DBytes\n" \
-		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n" doc) },
+#define POSIX_READ_DEF                                     \
+	{ "read", (DeeObject *)&posix_read, MODSYM_FNORMAL,    \
+	  DOC("(fd:?X2?Dint?DFile,count:?Dint=!-1)->?DBytes\n" \
+		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!-1)->?Dint") },
+#define POSIX_READ_DEF_DOC(doc)                            \
+	{ "read", (DeeObject *)&posix_read, MODSYM_FNORMAL,    \
+	  DOC("(fd:?X2?Dint?DFile,count:?Dint=!-1)->?DBytes\n" \
+		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!-1)->?Dint\n" doc) },
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject *const *argv) {
 #ifndef posix_read_USE_STUB
 	int fd_fd;
@@ -622,7 +622,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_pread_f(size_t argc, DeeObject *cons
 		int fd_fd = DeeUnixSystem_GetFD(argv[0]);
 		if unlikely(fd_fd == -1)
 			goto err;
-		if (DeeObject_AsSize(argv[1], &count))
+		if (DeeObject_AsSizeM1(argv[1], &count))
 			goto err;
 		if (DeeObject_AsUIntX(argv[2], &offset))
 			goto err;
@@ -679,7 +679,7 @@ err_bytes_printer:
 		int fd_fd;
 		DeeBuffer buf;
 		/* Read into a given buffer. */
-		if (DeeObject_AsSize(argv[2], &count))
+		if (DeeObject_AsSizeM1(argv[2], &count))
 			goto err;
 		if (DeeObject_AsUIntX(argv[3], &offset))
 			goto err;
@@ -723,7 +723,7 @@ PRIVATE DEFINE_CMETHOD(posix_pread, posix_pread_f, METHOD_FNORMAL);
 /* write()                                                              */
 /************************************************************************/
 
-/*[[[deemon import("rt.gen.dexutils").gw("write", "fd:unix:fd,buf:obj:buffer,count:Iu=(size_t)-1->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt.gen.dexutils").gw("write", "fd:unix:fd,buf:obj:buffer,size_t count=(size_t)-1->?Dint", libname: "posix"); ]]]*/
 #define POSIX_WRITE_DEF { "write", (DeeObject *)&posix_write, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,count=!-1)->?Dint") },
 #define POSIX_WRITE_DEF_DOC(doc) { "write", (DeeObject *)&posix_write, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,count=!-1)->?Dint\n" doc) },
 FORCELOCAL WUNUSED NONNULL((2)) DREF DeeObject *DCALL posix_write_f_impl(int fd, DeeObject *buf, size_t count);
@@ -739,7 +739,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_write_f(size_t argc, DeeObject *cons
 	} args;
 	int fd;
 	args.count = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__fd_buf_count, "oo|" UNPuSIZ ":write", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__fd_buf_count, "oo|" UNPxSIZ ":write", &args))
 		goto err;
 	if unlikely((fd = DeeUnixSystem_GetFD(args.raw_fd)) == -1)
 		goto err;
@@ -937,7 +937,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_pwrite_f(size_t argc, DeeObject *con
 			goto err;
 		break;
 	case 4:
-		if (DeeObject_AsSize(argv[2], &count))
+		if (DeeObject_AsSizeM1(argv[2], &count))
 			goto err;
 		if (DeeObject_AsUIntX(argv[3], &offset))
 			goto err;

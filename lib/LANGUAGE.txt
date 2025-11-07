@@ -227,8 +227,8 @@
  *        repartition(pattern: string, rules: string, start: int = 0, end: int = -1): (string, string, string)
  *      - rerpartition(pattern: string, start: int = 0, end: int = -1, rules: string = ""): (string, string, string)
  *        rerpartition(pattern: string, rules: string, start: int = 0, end: int = -1): (string, string, string)
- *      - rereplace(pattern: string, replace_str: string, max_count: int = int.SIZE_MAX, rules: string = ""): string
- *        rereplace(pattern: string, replace_str: string, rules: string = "", max_count: int = int.SIZE_MAX): string
+ *      - rereplace(pattern: string, replace_str: string, max_count: int = -1, rules: string = ""): string
+ *        rereplace(pattern: string, replace_str: string, rules: string = "", max_count: int = -1): string
  *      - refindall(pattern: string, start: int = 0, end: int = -1, rules: string = ""): {(int, int)...}
  *        refindall(pattern: string, rules: string, start: int = 0, end: int = -1): {(int, int)...}
  *      - relocateall(pattern: string, start: int = 0, end: int = -1, rules: string = ""): {string...}

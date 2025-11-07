@@ -685,22 +685,22 @@ bytes_init(size_t argc, DeeObject *const *argv) {
 				goto err_invalid_mode;
 			}
 			if (argc >= 3) {
-				if (DeeObject_AsSSize(argv[2], (Dee_ssize_t *)&start))
+				if (DeeObject_AsSize(argv[2], &start))
 					goto err;
 				if (argc >= 4) {
 					if unlikely(argc > 4)
 						goto err_args;
-					if (DeeObject_AsSSize(argv[3], (Dee_ssize_t *)&end))
+					if (DeeObject_AsSizeM1(argv[3], &end))
 						goto err;
 				}
 			}
 		} else {
-			if (DeeObject_AsSSize(argv[1], (Dee_ssize_t *)&start))
+			if (DeeObject_AsSize(argv[1], &start))
 				goto err;
 			if (argc >= 3) {
 				if unlikely(argc > 3)
 					goto err_args;
-				if (DeeObject_AsSSize(argv[2], (Dee_ssize_t *)&end))
+				if (DeeObject_AsSizeM1(argv[2], &end))
 					goto err;
 			}
 		}
@@ -1887,8 +1887,8 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "Construct an empty ?. object\n"
 	                         "\n"
 
-	                         "(ob:?O,start=!0,end=!A!Dint!PSIZE_MAX)\n"
-	                         "(ob:?O,mode=!Pr,start=!0,end=!A!Dint!PSIZE_MAX)\n"
+	                         "(ob:?O,start=!0,end=!-1)\n"
+	                         "(ob:?O,mode=!Pr,start=!0,end=!-1)\n"
 	                         "#tNotImplemented{The given @ob does not implement the buffer protocol}"
 	                         "Construct a ?. object for viewing the memory of @ob, either as read-only "
 	                         /**/ "when @mode is set to $\"r\" or omitted, or as read-write when set to "

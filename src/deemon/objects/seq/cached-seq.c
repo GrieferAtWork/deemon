@@ -519,7 +519,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cswi_populate(CachedSeq_WithIter *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	size_t count = (size_t)-1;
-	if (DeeArg_UnpackStruct(argc, argv, "|" UNPuSIZ ":populate", &count))
+	if (DeeArg_UnpackStruct(argc, argv, "|" UNPxSIZ ":populate", &count))
 		goto err;
 	if likely(count) {
 		--count;
@@ -534,7 +534,7 @@ err:
 
 PRIVATE struct type_method tpconst cswi_methods[] = {
 	TYPE_METHOD("populate", &cswi_populate,
-	            "(count:?Dint=!ASIZE_MAX?Dint)\n"
+	            "(count:?Dint=!-1)\n"
 	            "Ensure that the first @count elements of ?#__seq__ have been cached"),
 	TYPE_METHOD_END
 };
