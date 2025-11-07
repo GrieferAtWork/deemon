@@ -157,6 +157,22 @@ type_members_contains(struct type_member const *chain,
 	return attr < iter;
 }
 
+PRIVATE ATTR_PURE WUNUSED struct type_getset const *DCALL
+type_getsets_find(struct type_getset const *chain,
+                  Dee_getmethod_t cb_getter,
+                  Dee_delmethod_t cb_delete,
+                  Dee_setmethod_t cb_setter) {
+	if (!chain)
+		return false;
+	for (; chain->gs_name; ++chain) {
+		if (chain->gs_get == cb_getter &&
+		    chain->gs_del == cb_delete &&
+		    chain->gs_set == cb_setter)
+			return chain;
+	}
+	return NULL;
+}
+
 struct type_member_buffer {
 	char const                *mb_name;
 	union Dee_type_member_desc mb_desc;
@@ -204,6 +220,7 @@ typedef struct {
 #define Dee_ATTRINFO_ATTRIBUTEERROR_CLASS_SLOT    (Dee_ATTRINFO_COUNT + 0) /* Special type for "AttributeError_F_LAZYDECL": "v_any" is a "uint16_t" and an instance object address ("ai_decl" is unused; "ae_obj" is the relevant class-"DeeTypeObject") */
 #define Dee_ATTRINFO_ATTRIBUTEERROR_INSTANCE_SLOT (Dee_ATTRINFO_COUNT + 1) /* Special type for "AttributeError_F_LAZYDECL": "v_any" is a "uint16_t" and an instance object address ("ai_decl" is the relevant class-"DeeTypeObject"; "ae_obj" is the instance with the unbound member) */
 #define Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_MEMBER   (Dee_ATTRINFO_COUNT + 2) /* Special type for "AttributeError_F_LAZYDECL": like "Dee_ATTRINFO_MEMBER", but the relevant decl is already pre-set */
+#define Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_GETSET   (Dee_ATTRINFO_COUNT + 3) /* Special type for "AttributeError_F_LAZYDECL": Similar to "Dee_ATTRINFO_GETSET", but with custom decl already pre-set */
 #define Dee_ATTRINFO_ATTRIBUTEERROR_HASDECLREF(x) ((x) >= Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_MEMBER) /* True if "ae_desc.ad_info.ai_decl" contains a reference */
 	struct Dee_attrdesc ae_desc;  /* [valid_if(ae_obj != NULL)] Attribute descriptor. Fields in here are loaded when:
 	                               * - ad_name:          [1..1][valid_if(ae_obj != NULL && !AttributeError_F_LAZYDECL)]
@@ -318,7 +335,24 @@ typedef struct {
 	 *   "Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_MEMBER" is changed to "Dee_ATTRINFO_MEMBER".
 	 *   Also allows for use of "Dee_attrdesc__type_member_buffer", like "Dee_ATTRINFO_MEMBER" does.
 	 *
+	 * - Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_GETSET:
+	 *   - DREF DeeObject           *ae_obj = <Accessed Object or Type>;
+	 *   - DREF DeeObject           *ae_desc.ad_info.ai_decl = <Type (or sub-type thereof) declaring `v_member'>;
+	 *   - uintptr_t                 ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_GETSET;
+	 *   - AttributeError_LazyGetSet_SetGetter(., <getter callback>);
+	 *   - AttributeError_LazyGetSet_SetDelete(., <delete callback>);
+	 *   - AttributeError_LazyGetSet_SetSetter(., <setter callback>);
+	 *   "Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_GETSET" is changed to "Dee_ATTRINFO_GETSET".
+	 *
 	 */
+
+	/* Accessors for "Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_GETSET" */
+#define AttributeError_LazyGetSet_GetGetter(self)    ((Dee_getmethod_t)(void *)(self)->ae_desc.ad_info.ai_value.v_any)
+#define AttributeError_LazyGetSet_SetGetter(self, v) ((self)->ae_desc.ad_info.ai_value.v_any = (void *)(Dee_getmethod_t)(v))
+#define AttributeError_LazyGetSet_GetDelete(self)    ((Dee_delmethod_t)(void *)(self)->ae_desc.ad_name)
+#define AttributeError_LazyGetSet_SetDelete(self, v) ((self)->ae_desc.ad_name = (char const *)(void *)(Dee_delmethod_t)(v))
+#define AttributeError_LazyGetSet_GetSetter(self)    ((Dee_setmethod_t)(void *)(self)->ae_desc.ad_doc)
+#define AttributeError_LazyGetSet_SetSetter(self, v) ((self)->ae_desc.ad_doc = (char const *)(void *)(Dee_setmethod_t)(v))
 } AttributeError;
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) struct class_attribute const *DCALL
@@ -584,6 +618,30 @@ got_member_from_buffer:
 			if ((member = type_members_findbuffer(decl_type->tp_members, buffer)) != NULL) {
 				self->ae_desc.ad_info.ai_type = Dee_ATTRINFO_MEMBER;
 				self->ae_desc.ad_info.ai_value.v_member = member;
+				Dee_Incref(decl_type);
+				Dee_Decref_unlikely(decl_start);
+				goto return_decl_type;
+			}
+		} while ((decl_type = DeeTypeMRO_Next(&mro, decl_type)) != NULL);
+		Dee_Decref_unlikely(decl_start);
+		goto fail_clear_name;
+	}	break;
+
+	case Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_GETSET: {
+		DeeTypeMRO mro;
+		DeeTypeObject *decl_start;
+		Dee_getmethod_t cb_getter = AttributeError_LazyGetSet_GetGetter(self);
+		Dee_delmethod_t cb_delete = AttributeError_LazyGetSet_GetDelete(self);
+		Dee_setmethod_t cb_setter = AttributeError_LazyGetSet_GetSetter(self);
+		decl_start = (DeeTypeObject *)self->ae_desc.ad_info.ai_decl;
+		decl_type = DeeTypeMRO_Init(&mro, decl_start);
+		do {
+			struct type_getset const *getset;
+			if ((getset = type_getsets_find(decl_type->tp_getsets, cb_getter, cb_delete, cb_setter)) != NULL) {
+				self->ae_desc.ad_name = getset->gs_name;
+				self->ae_desc.ad_perm = 0;
+				self->ae_desc.ad_info.ai_type = Dee_ATTRINFO_GETSET;
+				self->ae_desc.ad_info.ai_value.v_getset = getset;
 				Dee_Incref(decl_type);
 				Dee_Decref_unlikely(decl_start);
 				goto return_decl_type;
@@ -1002,7 +1060,7 @@ AttributeError_init_kw(AttributeError *__restrict self, size_t argc,
 			}                               \
 		}                                   \
 	}	__WHILE0
-#define DOC_attr_types "?X3?Dstring?DAttribute?Ert:ClsMember"
+#define DOC_attr_types "?X4?Dstring?DAttribute?Ert:ClsMember?Ert:ClsProperty"
 #define AttributeError_init_params   Error_init_params ",ob?,attr?:" DOC_attr_types ",decl?:?X3?DType?DModule?O,isget=!f,isdel=!f,isset=!f"
 #define UnboundAttribute_init_params Error_init_params ",ob?,attr?:" DOC_attr_types ",decl?:?X3?DType?DModule?O,isget=!t,isdel=!f,isset=!f"
 	LOADARG(DeeStringObject, &self->e_message, 0, message);
@@ -1056,8 +1114,16 @@ AttributeError_init_kw(AttributeError *__restrict self, size_t argc,
 //		           DeeObject_InstanceOfExact(attr, &DeeKwClsMethod_Type)) {
 //			/* TODO: DeeClsMethod_Type     (use "clm_type" as decl; lazily determine name from "clm_func.clmf_meth") */
 //			/* TODO: DeeKwClsMethod_Type   (use "clm_type" as decl; lazily determine name from "clm_func.clmf_kwmeth") */
-//		} else if (DeeObject_InstanceOfExact(attr, &DeeClsProperty_Type)) {
-//			/* TODO: DeeClsProperty_Type   (use "cp_type" as decl; lazily determine name from "cp_get" / "cp_del" / "cp_set" / "cp_bound") */
+		} else if (DeeObject_InstanceOfExact(attr, &DeeClsProperty_Type)) {
+			DeeClsPropertyObject *prop = (DeeClsPropertyObject *)attr;
+			Dee_Incref(prop->cp_type);
+			self->ae_desc.ad_info.ai_decl = (DeeObject *)prop->cp_type;
+			self->ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_GETSET;
+			self->ae_flags |= (AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL);
+			AttributeError_LazyGetSet_SetGetter(self, prop->cp_get);
+			AttributeError_LazyGetSet_SetDelete(self, prop->cp_del);
+			AttributeError_LazyGetSet_SetSetter(self, prop->cp_set);
+			goto done_incref_obj;
 		} else if (DeeObject_InstanceOfExact(attr, &DeeClsMember_Type)) {
 			struct type_member_buffer *buffer;
 			DeeClsMemberObject *member = (DeeClsMemberObject *)attr;
