@@ -144,9 +144,9 @@ print define_Dee_HashStr("regfindall");
 print define_Dee_HashStr("reglocateall");
 print define_Dee_HashStr("regmatch");
 print define_Dee_HashStr("relocateall");
-print define_Dee_HashStr("repeat");
+print define_Dee_HashStr("repeatitem");
 print define_Dee_HashStr("repeatcombinations");
-print define_Dee_HashStr("repeatseq");
+print define_Dee_HashStr("repeat");
 print define_Dee_HashStr("rescanf");
 print define_Dee_HashStr("resplit");
 print define_Dee_HashStr("scanf");
@@ -208,9 +208,9 @@ print define_Dee_HashStr("__IterWithEnumerateIndexMap__");
 #define Dee_HashStr__reglocateall _Dee_HashSelectC(0x6848908c, 0x45c3cc62f38d8d0d)
 #define Dee_HashStr__regmatch _Dee_HashSelectC(0x29e07576, 0xf95c79aef53a2c4f)
 #define Dee_HashStr__relocateall _Dee_HashSelectC(0xe2b79628, 0x188da1195d4b6ae9)
-#define Dee_HashStr__repeat _Dee_HashSelectC(0x26374320, 0x5a5a8c53402eacfe)
+#define Dee_HashStr__repeatitem _Dee_HashSelectC(0xcb1e563e, 0x31adee38a2a91a52)
 #define Dee_HashStr__repeatcombinations _Dee_HashSelectC(0xa3bc4ae1, 0x7ef1d21507ad27f5)
-#define Dee_HashStr__repeatseq _Dee_HashSelectC(0xb271fb0, 0x2045cc35458ec0da)
+#define Dee_HashStr__repeat _Dee_HashSelectC(0x26374320, 0x5a5a8c53402eacfe)
 #define Dee_HashStr__rescanf _Dee_HashSelectC(0x18d32308, 0xbf03693953b5fdbb)
 #define Dee_HashStr__resplit _Dee_HashSelectC(0x8147c0a0, 0xb0ae6734658c0c4f)
 #define Dee_HashStr__scanf _Dee_HashSelectC(0x1369b612, 0x86d0b7e2f8b4b546)
@@ -1063,7 +1063,7 @@ librt_get_SeqIntRangeIterator_f(void) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqRepeat_uncached_f(void) {
 	DeeObject *argv[] = { &object_with_size_and_getitem_index, DeeInt_One };
-	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&DeeSeq_Type, STR_AND_HASH(repeatseq), 2, argv));
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&DeeSeq_Type, STR_AND_HASH(repeat), 2, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1079,7 +1079,7 @@ librt_get_SeqRepeatIterator_f(void) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqItemRepeat_uncached_f(void) {
 	DeeObject *argv[] = { Dee_None, DeeInt_One };
-	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&DeeSeq_Type, STR_AND_HASH(repeat), 2, argv));
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&DeeSeq_Type, STR_AND_HASH(repeatitem), 2, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL

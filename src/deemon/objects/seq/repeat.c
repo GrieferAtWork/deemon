@@ -1184,12 +1184,16 @@ done:
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_RepeatForever(DeeObject *__restrict self) {
+	/* TODO: Dedicated sequence-proxy type */
+	return DeeSeq_Repeat(self, (size_t)-1);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_RepeatItemForever(DeeObject *__restrict item) {
 	/* TODO: Dedicated sequence-proxy type */
 	return DeeSeq_RepeatItem(item, (size_t)-1);
 }
-
-
 
 DECL_END
 
