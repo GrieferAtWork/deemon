@@ -1243,50 +1243,50 @@ functest("atan(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
 functest("sinh(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
 functest("cosh(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
 functest("tanh(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("asinh(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("acosh(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("atanh(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
+functest("asinh(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
+functest("acosh(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
+functest("atanh(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
 functest("copysign(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
 functest("atan2(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
 functest("exp(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("exp2(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("expm1(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("erf(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("erfc(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
+functest("exp2(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
+functest("expm1(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
+functest("erf(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
+functest("erfc(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
 functest("fabs(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
 functest("sqrt(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
 functest("log(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("log2(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("logb(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("log1p(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
+functest("log2(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
+functest("logb(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
+functest("log1p(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
 functest("log10(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("cbrt(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("tgamma(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("lgamma(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
+functest("cbrt(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
+functest("tgamma(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
+functest("lgamma(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
 functest("pow(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
 functest("ceil(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("trunc(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
+functest("trunc(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
 functest("floor(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("round(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
+functest("round(1.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
 functest("fmod(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
 functest("hypot(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("remainder(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("nextafter(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("nexttoward(1.0, 2.0L)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest("fdim(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-functest('nan("")', "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)");
-func("isnan", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)", test: "return isnan(1.0) != 0;");
-func("isinf", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)", test: "return isinf(1.0) != 0;");
-func("isfinite", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)", test: "return isfinite(1.0) != 0;");
-func("isnormal", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)", test: "return isnormal(1.0) != 0;");
-func("signbit", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)", test: "return signbit(1.0) != 0;");
-func("isgreater", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)", test: "return isgreater(1.0, 2.0) != 0;");
-func("isgreaterequal", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)", test: "return isgreaterequal(1.0, 2.0) != 0;");
-func("isless", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)", test: "return isless(1.0, 2.0) != 0;");
-func("islessequal", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)", test: "return islessequal(1.0, 2.0) != 0;");
-func("islessgreater", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)", test: "return islessgreater(1.0, 2.0) != 0;");
-func("isunordered", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)", test: "return isunordered(1.0, 2.0) != 0;");
-func("ilogb", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)", test: "return ilogb(1.0) != 0;");
+functest("remainder(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
+functest("nextafter(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
+functest("nexttoward(1.0, 2.0L)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
+functest("fdim(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
+functest('nan("")', "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)");
+func("isnan", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)", test: "return isnan(1.0) != 0;");
+func("isinf", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)", test: "return isinf(1.0) != 0;");
+func("isfinite", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)", test: "return isfinite(1.0) != 0;");
+func("isnormal", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)", test: "return isnormal(1.0) != 0;");
+func("signbit", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)", test: "return signbit(1.0) != 0;");
+func("isgreater", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)", test: "return isgreater(1.0, 2.0) != 0;");
+func("isgreaterequal", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)", test: "return isgreaterequal(1.0, 2.0) != 0;");
+func("isless", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)", test: "return isless(1.0, 2.0) != 0;");
+func("islessequal", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)", test: "return islessequal(1.0, 2.0) != 0;");
+func("islessgreater", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)", test: "return islessgreater(1.0, 2.0) != 0;");
+func("isunordered", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)", test: "return isunordered(1.0, 2.0) != 0;");
+func("ilogb", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)", test: "return ilogb(1.0) != 0;");
 func("frexp", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)", test: "extern int ex; return frexp(1.0, &ex) != 0.0;");
 func("modf", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)", test: "extern double y; return modf(1.0, &y) != 0.0;");
 func("ldexp", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)", test: "return ldexp(1.0, 1) != 0.0;");
@@ -1294,9 +1294,9 @@ func("sincos", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && define
 func("asincos", "", test: "extern double x, y, z; asincos(x, &y, &z); return 0;");
 func("sincosh", "", test: "extern double x, y, z; sincosh(x, &y, &z); return 0;");
 func("asincosh", "", test: "extern double x, y, z; asincosh(x, &y, &z); return 0;");
-func("scalbn", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)", test: "return scalbn(1.0, 1) != 0.0;");
-func("scalbln", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)", test: "return scalbln(1.0, 1L) != 0.0;");
-func("remquo", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU)", test: "extern double x, y; extern int z; return remquo(x, y, &z) != 0.0;");
+func("scalbn", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)", test: "return scalbn(1.0, 1) != 0.0;");
+func("scalbln", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)", test: "return scalbln(1.0, 1L) != 0.0;");
+func("remquo", "defined(CONFIG_HAVE_MATH_H) && !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)", test: "extern double x, y; extern int z; return remquo(x, y, &z) != 0.0;");
 
 sizeof("off_t");
 
@@ -9323,7 +9323,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_asinh
 #elif !defined(CONFIG_HAVE_asinh) && \
       (defined(asinh) || defined(__asinh_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_asinh
 #endif
 
@@ -9331,7 +9331,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_acosh
 #elif !defined(CONFIG_HAVE_acosh) && \
       (defined(acosh) || defined(__acosh_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_acosh
 #endif
 
@@ -9339,7 +9339,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_atanh
 #elif !defined(CONFIG_HAVE_atanh) && \
       (defined(atanh) || defined(__atanh_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_atanh
 #endif
 
@@ -9371,7 +9371,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_exp2
 #elif !defined(CONFIG_HAVE_exp2) && \
       (defined(exp2) || defined(__exp2_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_exp2
 #endif
 
@@ -9379,7 +9379,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_expm1
 #elif !defined(CONFIG_HAVE_expm1) && \
       (defined(expm1) || defined(__expm1_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_expm1
 #endif
 
@@ -9387,7 +9387,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_erf
 #elif !defined(CONFIG_HAVE_erf) && \
       (defined(erf) || defined(__erf_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_erf
 #endif
 
@@ -9395,7 +9395,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_erfc
 #elif !defined(CONFIG_HAVE_erfc) && \
       (defined(erfc) || defined(__erfc_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_erfc
 #endif
 
@@ -9427,7 +9427,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_log2
 #elif !defined(CONFIG_HAVE_log2) && \
       (defined(log2) || defined(__log2_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_log2
 #endif
 
@@ -9435,7 +9435,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_logb
 #elif !defined(CONFIG_HAVE_logb) && \
       (defined(logb) || defined(__logb_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_logb
 #endif
 
@@ -9443,7 +9443,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_log1p
 #elif !defined(CONFIG_HAVE_log1p) && \
       (defined(log1p) || defined(__log1p_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_log1p
 #endif
 
@@ -9459,7 +9459,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_cbrt
 #elif !defined(CONFIG_HAVE_cbrt) && \
       (defined(cbrt) || defined(__cbrt_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_cbrt
 #endif
 
@@ -9467,7 +9467,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_tgamma
 #elif !defined(CONFIG_HAVE_tgamma) && \
       (defined(tgamma) || defined(__tgamma_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_tgamma
 #endif
 
@@ -9475,7 +9475,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_lgamma
 #elif !defined(CONFIG_HAVE_lgamma) && \
       (defined(lgamma) || defined(__lgamma_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_lgamma
 #endif
 
@@ -9499,7 +9499,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_trunc
 #elif !defined(CONFIG_HAVE_trunc) && \
       (defined(trunc) || defined(__trunc_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_trunc
 #endif
 
@@ -9515,7 +9515,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_round
 #elif !defined(CONFIG_HAVE_round) && \
       (defined(round) || defined(__round_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_round
 #endif
 
@@ -9539,7 +9539,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_remainder
 #elif !defined(CONFIG_HAVE_remainder) && \
       (defined(remainder) || defined(__remainder_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_remainder
 #endif
 
@@ -9547,7 +9547,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_nextafter
 #elif !defined(CONFIG_HAVE_nextafter) && \
       (defined(nextafter) || defined(__nextafter_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_nextafter
 #endif
 
@@ -9555,7 +9555,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_nexttoward
 #elif !defined(CONFIG_HAVE_nexttoward) && \
       (defined(nexttoward) || defined(__nexttoward_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_nexttoward
 #endif
 
@@ -9563,7 +9563,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_fdim
 #elif !defined(CONFIG_HAVE_fdim) && \
       (defined(fdim) || defined(__fdim_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_fdim
 #endif
 
@@ -9571,7 +9571,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_nan
 #elif !defined(CONFIG_HAVE_nan) && \
       (defined(nan) || defined(__nan_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_nan
 #endif
 
@@ -9579,7 +9579,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_isnan
 #elif !defined(CONFIG_HAVE_isnan) && \
       (defined(isnan) || defined(__isnan_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_isnan
 #endif
 
@@ -9587,7 +9587,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_isinf
 #elif !defined(CONFIG_HAVE_isinf) && \
       (defined(isinf) || defined(__isinf_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_isinf
 #endif
 
@@ -9595,7 +9595,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_isfinite
 #elif !defined(CONFIG_HAVE_isfinite) && \
       (defined(isfinite) || defined(__isfinite_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_isfinite
 #endif
 
@@ -9603,7 +9603,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_isnormal
 #elif !defined(CONFIG_HAVE_isnormal) && \
       (defined(isnormal) || defined(__isnormal_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_isnormal
 #endif
 
@@ -9611,7 +9611,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_signbit
 #elif !defined(CONFIG_HAVE_signbit) && \
       (defined(signbit) || defined(__signbit_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_signbit
 #endif
 
@@ -9619,7 +9619,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_isgreater
 #elif !defined(CONFIG_HAVE_isgreater) && \
       (defined(isgreater) || defined(__isgreater_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_isgreater
 #endif
 
@@ -9627,7 +9627,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_isgreaterequal
 #elif !defined(CONFIG_HAVE_isgreaterequal) && \
       (defined(isgreaterequal) || defined(__isgreaterequal_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_isgreaterequal
 #endif
 
@@ -9635,7 +9635,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_isless
 #elif !defined(CONFIG_HAVE_isless) && \
       (defined(isless) || defined(__isless_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_isless
 #endif
 
@@ -9643,7 +9643,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_islessequal
 #elif !defined(CONFIG_HAVE_islessequal) && \
       (defined(islessequal) || defined(__islessequal_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_islessequal
 #endif
 
@@ -9651,7 +9651,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_islessgreater
 #elif !defined(CONFIG_HAVE_islessgreater) && \
       (defined(islessgreater) || defined(__islessgreater_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_islessgreater
 #endif
 
@@ -9659,7 +9659,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_isunordered
 #elif !defined(CONFIG_HAVE_isunordered) && \
       (defined(isunordered) || defined(__isunordered_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_isunordered
 #endif
 
@@ -9667,7 +9667,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_ilogb
 #elif !defined(CONFIG_HAVE_ilogb) && \
       (defined(ilogb) || defined(__ilogb_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_ilogb
 #endif
 
@@ -9728,7 +9728,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_scalbn
 #elif !defined(CONFIG_HAVE_scalbn) && \
       (defined(scalbn) || defined(__scalbn_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_scalbn
 #endif
 
@@ -9736,7 +9736,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_scalbln
 #elif !defined(CONFIG_HAVE_scalbln) && \
       (defined(scalbln) || defined(__scalbln_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_scalbln
 #endif
 
@@ -9744,7 +9744,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_remquo
 #elif !defined(CONFIG_HAVE_remquo) && \
       (defined(remquo) || defined(__remquo_defined) || (defined(CONFIG_HAVE_MATH_H) && \
-       !defined(CONFIG_NO_FPU)))
+       !defined(CONFIG_NO_FPU) && (!defined(_MSC_VER) || _MSC_VER >= 1800)))
 #define CONFIG_HAVE_remquo
 #endif
 
