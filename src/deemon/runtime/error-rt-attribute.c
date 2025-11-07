@@ -33,6 +33,7 @@
 #include <deemon/module.h>
 #include <deemon/mro.h>
 #include <deemon/object.h>
+#include <deemon/objmethod.h>
 #include <deemon/string.h>
 #include <deemon/struct.h>
 #include <deemon/super.h>
@@ -202,6 +203,8 @@ typedef struct {
 	DREF DeeObject     *ae_obj;   /* [0..1][const] Object whose attributes were accessed */
 #define Dee_ATTRINFO_ATTRIBUTEERROR_CLASS_SLOT    (Dee_ATTRINFO_COUNT + 0) /* Special type for "AttributeError_F_LAZYDECL": "v_any" is a "uint16_t" and an instance object address ("ai_decl" is unused; "ae_obj" is the relevant class-"DeeTypeObject") */
 #define Dee_ATTRINFO_ATTRIBUTEERROR_INSTANCE_SLOT (Dee_ATTRINFO_COUNT + 1) /* Special type for "AttributeError_F_LAZYDECL": "v_any" is a "uint16_t" and an instance object address ("ai_decl" is the relevant class-"DeeTypeObject"; "ae_obj" is the instance with the unbound member) */
+#define Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_MEMBER   (Dee_ATTRINFO_COUNT + 2) /* Special type for "AttributeError_F_LAZYDECL": like "Dee_ATTRINFO_MEMBER", but the relevant decl is already pre-set */
+#define Dee_ATTRINFO_ATTRIBUTEERROR_HASDECLREF(x) ((x) >= Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_MEMBER) /* True if "ae_desc.ad_info.ai_decl" contains a reference */
 	struct Dee_attrdesc ae_desc;  /* [valid_if(ae_obj != NULL)] Attribute descriptor. Fields in here are loaded when:
 	                               * - ad_name:          [1..1][valid_if(ae_obj != NULL && !AttributeError_F_LAZYDECL)]
 	                               * - ad_info.ai_decl:  [0..1][valid_if(!AttributeError_F_LAZYDECL)][DREF]
@@ -229,6 +232,7 @@ typedef struct {
 #define AttributeError_F_NODEFAULT  0x0800 /* Set if "ae_desc" isn't the result of "DeeObject_FindAttrInfoStringLenHash" */
 #define AttributeError_F_LAZYDECL   0x1000 /* Set if "ad_info.ai_decl" and "ad_name" (except when "Dee_ATTRINFO_CUSTOM" is used) must be
                                             * determined lazily (based on "ae_obj", "ae_desc.ad_info.ai_type" and "ae_desc.ad_info.ai_value"). */
+
 #ifndef CONFIG_NO_THREADS
 #define AttributeError_F_LOADLOCK 0x8000 /* Lock to ensure only 1 thread does the loading */
 #endif /* !CONFIG_NO_THREADS */
@@ -305,6 +309,15 @@ typedef struct {
 	 *   - uintptr_t       ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_INSTANCE_SLOT;
 	 *   - uint16_t        ae_desc.ad_info.ai_value.v_any = <Index into `struct instance_desc::id_vtab'>;
 	 *   "Dee_ATTRINFO_ATTRIBUTEERROR_INSTANCE_SLOT" is changed to "Dee_ATTRINFO_ATTR".
+	 *
+	 * - Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_MEMBER:
+	 *   - DREF DeeObject           *ae_obj = <Accessed Object or Type>;
+	 *   - DREF DeeObject           *ae_desc.ad_info.ai_decl = <Type (or sub-type thereof) declaring `v_member'>;
+	 *   - uintptr_t                 ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_MEMBER;
+	 *   - struct type_member const *ae_desc.ad_info.ai_value.v_member = <accessed member>;
+	 *   "Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_MEMBER" is changed to "Dee_ATTRINFO_MEMBER".
+	 *   Also allows for use of "Dee_attrdesc__type_member_buffer", like "Dee_ATTRINFO_MEMBER" does.
+	 *
 	 */
 } AttributeError;
 
@@ -352,7 +365,7 @@ ClassDescriptor_ClassAttrAt(DeeClassDescriptorObject const *__restrict self, uin
 	return NULL;
 }
 
-PRIVATE NONNULL((1)) DeeObject *DCALL
+PRIVATE NONNULL((1)) DREF DeeObject *DCALL
 AttributeError_GetDecl_impl(AttributeError *__restrict self) {
 	DeeTypeObject *decl_type;
 	DeeObject *ob = self->ae_obj;
@@ -366,13 +379,13 @@ AttributeError_GetDecl_impl(AttributeError *__restrict self) {
 		decl_type = DeeTypeMRO_Init(&mro, Dee_TYPE(ob));
 		do {
 			if (decl_type->tp_attr == custom)
-				goto return_decl_type;
+				goto return_decl_type_ref;
 		} while ((decl_type = DeeTypeMRO_Next(&mro, decl_type)) != NULL);
 		if (DeeType_Check(ob)) {
 			decl_type = DeeTypeMRO_Init(&mro, (DeeTypeObject *)ob);
 			do {
 				if (decl_type->tp_attr == custom)
-					goto return_decl_type;
+					goto return_decl_type_ref;
 			} while ((decl_type = DeeTypeMRO_Next(&mro, decl_type)) != NULL);
 		}
 		goto fail_no_clear_name;
@@ -390,6 +403,7 @@ AttributeError_GetDecl_impl(AttributeError *__restrict self) {
 			DeeModuleObject *mod = (DeeModuleObject *)ob;
 			if likely(sym >= (mod->mo_bucketv) &&
 			          sym <= (mod->mo_bucketv + mod->mo_bucketm)) {
+				Dee_Incref(mod);
 				return (DeeObject *)mod;
 			}
 		}
@@ -408,22 +422,24 @@ AttributeError_GetDecl_impl(AttributeError *__restrict self) {
 		do {
 			if (DeeType_IsClass(decl_type) &&
 			    ClassDescriptor_IsInstanceAttr(DeeClass_DESC(decl_type)->cd_desc, attr))
-				goto return_decl_type;
+				goto return_decl_type_ref;
 		} while ((decl_type = DeeTypeMRO_Next(&mro, decl_type)) != NULL);
 		if (DeeType_Check(ob)) {
 			decl_type = DeeTypeMRO_Init(&mro, (DeeTypeObject *)ob);
 			do {
 				if (DeeType_IsClass(decl_type) &&
 				    ClassDescriptor_IsClassAttr(DeeClass_DESC(decl_type)->cd_desc, attr))
-					goto return_decl_type;
+					goto return_decl_type_ref;
 				if (DeeType_IsClass(decl_type) &&
 				    ClassDescriptor_IsInstanceAttr(DeeClass_DESC(decl_type)->cd_desc, attr)) {
 					self->ae_desc.ad_info.ai_type = Dee_ATTRINFO_INSTANCE_ATTR;
-					goto return_decl_type;
+					goto return_decl_type_ref;
 				}
 			} while ((decl_type = DeeTypeMRO_Next(&mro, decl_type)) != NULL);
 		}
 		goto fail_no_clear_name;
+return_decl_type_ref:
+		Dee_Incref(decl_type);
 return_decl_type:
 		return (DeeObject *)decl_type;
 	}	break;
@@ -438,16 +454,16 @@ return_decl_type:
 		decl_type = DeeTypeMRO_Init(&mro, Dee_TYPE(ob));
 		do {
 			if (type_methods_contains(decl_type->tp_methods, method))
-				goto return_decl_type;
+				goto return_decl_type_ref;
 		} while ((decl_type = DeeTypeMRO_Next(&mro, decl_type)) != NULL);
 		if (DeeType_Check(ob)) {
 			decl_type = DeeTypeMRO_Init(&mro, (DeeTypeObject *)ob);
 			do {
 				if (type_methods_contains(decl_type->tp_class_methods, method))
-					goto return_decl_type;
+					goto return_decl_type_ref;
 				if (type_methods_contains(decl_type->tp_methods, method)) {
 					self->ae_desc.ad_info.ai_type = Dee_ATTRINFO_INSTANCE_METHOD;
-					goto return_decl_type;
+					goto return_decl_type_ref;
 				}
 			} while ((decl_type = DeeTypeMRO_Next(&mro, decl_type)) != NULL);
 		}
@@ -464,16 +480,16 @@ return_decl_type:
 		decl_type = DeeTypeMRO_Init(&mro, Dee_TYPE(ob));
 		do {
 			if (type_getsets_contains(decl_type->tp_getsets, getset))
-				goto return_decl_type;
+				goto return_decl_type_ref;
 		} while ((decl_type = DeeTypeMRO_Next(&mro, decl_type)) != NULL);
 		if (DeeType_Check(ob)) {
 			decl_type = DeeTypeMRO_Init(&mro, (DeeTypeObject *)ob);
 			do {
 				if (type_getsets_contains(decl_type->tp_class_getsets, getset))
-					goto return_decl_type;
+					goto return_decl_type_ref;
 				if (type_getsets_contains(decl_type->tp_getsets, getset)) {
 					self->ae_desc.ad_info.ai_type = Dee_ATTRINFO_INSTANCE_GETSET;
-					goto return_decl_type;
+					goto return_decl_type_ref;
 				}
 			} while ((decl_type = DeeTypeMRO_Next(&mro, decl_type)) != NULL);
 		}
@@ -508,7 +524,7 @@ return_decl_type:
 		goto fail_no_clear_name;
 got_member_from_buffer:
 		self->ae_desc.ad_info.ai_value.v_member = member;
-		goto return_decl_type;
+		goto return_decl_type_ref;
 	}	break;
 
 	case Dee_ATTRINFO_ATTRIBUTEERROR_CLASS_SLOT: {
@@ -528,6 +544,7 @@ got_member_from_buffer:
 			self->ae_desc.ad_name = DeeString_STR(attr->ca_name);
 			Dee_Incref(Dee_attrdesc_nameobj(&self->ae_desc));
 			self->ae_desc.ad_perm = Dee_ATTRPERM_F_NAMEOBJ;
+			Dee_Incref(class_type);
 			return (DeeObject *)class_type;
 		}
 		goto fail_clear_name;
@@ -546,8 +563,33 @@ got_member_from_buffer:
 			self->ae_desc.ad_name = DeeString_STR(attr->ca_name);
 			Dee_Incref(Dee_attrdesc_nameobj(&self->ae_desc));
 			self->ae_desc.ad_perm = Dee_ATTRPERM_F_NAMEOBJ;
+			Dee_Incref(class_type);
 			return (DeeObject *)class_type;
 		}
+		goto fail_clear_name;
+	}	break;
+
+	case Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_MEMBER: {
+		DeeTypeMRO mro;
+		DeeTypeObject *decl_start;
+		struct type_member const *member;
+		struct type_member_buffer const *buffer;
+		decl_start = (DeeTypeObject *)self->ae_desc.ad_info.ai_decl;
+		member = self->ae_desc.ad_info.ai_value.v_member;
+		buffer = type_member_asmember_buffer(member);
+		self->ae_desc.ad_name = buffer->mb_name;
+		self->ae_desc.ad_perm = 0;
+		decl_type = DeeTypeMRO_Init(&mro, decl_start);
+		do {
+			if ((member = type_members_findbuffer(decl_type->tp_members, buffer)) != NULL) {
+				self->ae_desc.ad_info.ai_type = Dee_ATTRINFO_MEMBER;
+				self->ae_desc.ad_info.ai_value.v_member = member;
+				Dee_Incref(decl_type);
+				Dee_Decref_unlikely(decl_start);
+				goto return_decl_type;
+			}
+		} while ((decl_type = DeeTypeMRO_Next(&mro, decl_type)) != NULL);
+		Dee_Decref_unlikely(decl_start);
 		goto fail_clear_name;
 	}	break;
 
@@ -585,7 +627,6 @@ AttributeError_GetDecl(AttributeError *__restrict self) {
 		atomic_write(&self->ae_flags, 0);
 		return NULL;
 	}
-	Dee_Incref(result);
 	atomic_write(&self->ae_desc.ad_info.ai_decl, result);
 #ifdef AttributeError_F_LOADLOCK
 	atomic_and(&self->ae_flags, ~(AttributeError_F_LAZYDECL | AttributeError_F_LOADLOCK));
@@ -961,8 +1002,9 @@ AttributeError_init_kw(AttributeError *__restrict self, size_t argc,
 			}                               \
 		}                                   \
 	}	__WHILE0
-#define AttributeError_init_params   Error_init_params ",ob?,attr?:?X2?Dstring?DAttribute,decl?:?X3?DType?DModule?O,isget=!f,isdel=!f,isset=!f"
-#define UnboundAttribute_init_params Error_init_params ",ob?,attr?:?X2?Dstring?DAttribute,decl?:?X3?DType?DModule?O,isget=!t,isdel=!f,isset=!f"
+#define DOC_attr_types "?X3?Dstring?DAttribute?Ert:ClsMember"
+#define AttributeError_init_params   Error_init_params ",ob?,attr?:" DOC_attr_types ",decl?:?X3?DType?DModule?O,isget=!f,isdel=!f,isset=!f"
+#define UnboundAttribute_init_params Error_init_params ",ob?,attr?:" DOC_attr_types ",decl?:?X3?DType?DModule?O,isget=!t,isdel=!f,isset=!f"
 	LOADARG(DeeStringObject, &self->e_message, 0, message);
 	LOADARG(DeeObject, &self->e_inner, 1, inner);
 	LOADARG(DeeObject, &self->ae_obj, 2, ob);
@@ -1006,11 +1048,40 @@ AttributeError_init_kw(AttributeError *__restrict self, size_t argc,
 			Dee_Incref(attr);
 			self->ae_desc.ad_name = DeeString_STR(attr);
 			self->ae_desc.ad_perm = Dee_ATTRPERM_F_NAMEOBJ;
+//		} else if (DeeObject_InstanceOfExact(attr, &DeeObjMethod_Type) ||
+//		           DeeObject_InstanceOfExact(attr, &DeeKwObjMethod_Type)) {
+//			/* TODO: DeeObjMethod_Type     (use "om_this" as decl; lazily determine name from "om_func.omf_meth") */
+//			/* TODO: DeeKwObjMethod_Type   (use "om_this" as decl; lazily determine name from "om_func.omf_kwmeth") */
+//		} else if (DeeObject_InstanceOfExact(attr, &DeeClsMethod_Type) ||
+//		           DeeObject_InstanceOfExact(attr, &DeeKwClsMethod_Type)) {
+//			/* TODO: DeeClsMethod_Type     (use "clm_type" as decl; lazily determine name from "clm_func.clmf_meth") */
+//			/* TODO: DeeKwClsMethod_Type   (use "clm_type" as decl; lazily determine name from "clm_func.clmf_kwmeth") */
+//		} else if (DeeObject_InstanceOfExact(attr, &DeeClsProperty_Type)) {
+//			/* TODO: DeeClsProperty_Type   (use "cp_type" as decl; lazily determine name from "cp_get" / "cp_del" / "cp_set" / "cp_bound") */
+		} else if (DeeObject_InstanceOfExact(attr, &DeeClsMember_Type)) {
+			struct type_member_buffer *buffer;
+			DeeClsMemberObject *member = (DeeClsMemberObject *)attr;
+			buffer = Dee_attrdesc__type_member_buffer(&self->ae_desc);
+			Dee_Incref(member->cmb_type);
+			self->ae_desc.ad_info.ai_decl = (DeeObject *)member->cmb_type;
+			self->ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_MEMBER;
+			self->ae_flags |= (AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL);
+			self->ae_desc.ad_info.ai_value.v_member = type_member_buffer_asmember(buffer);
+			type_member_buffer_init(buffer, &member->cmb_memb);
+			goto done_incref_obj;
 		} else {
+			/* TODO: DeeCMethod_Type       (Lazily use "__type__" / "__module__" as decl and "__name__" as name) */
+			/* TODO: DeeKwCMethod_Type     (Lazily use "__type__" / "__module__" as decl and "__name__" as name) */
+			/* TODO: DeeCMethod0_Type      (Lazily use "__type__" / "__module__" as decl and "__name__" as name) */
+			/* TODO: DeeCMethod1_Type      (Lazily use "__type__" / "__module__" as decl and "__name__" as name) */
+			/* TODO: DeeProperty_Type      (Lazily use "__type__" / "__module__" as decl and "__name__" as name) */
+			/* TODO: DeeFunction_Type      (Lazily use "__type__" / "__module__" as decl and "__name__" as name) */
+
 			DeeObject_TypeAssertFailed2(attr, &DeeAttribute_Type, &DeeString_Type);
 			goto err;
 		}
 		Dee_XIncref(self->ae_desc.ad_info.ai_decl);
+done_incref_obj:
 		Dee_Incref(self->ae_obj);
 	} else {
 		if unlikely(self->ae_desc.ad_info.ai_decl) {
@@ -1074,6 +1145,8 @@ AttributeError_fini(AttributeError *__restrict self) {
 					Dee_Decref(Dee_attrdesc_docobj(&self->ae_desc));
 				Dee_XDecref(self->ae_desc.ad_type);
 			}
+		} else if (Dee_ATTRINFO_ATTRIBUTEERROR_HASDECLREF(self->ae_desc.ad_info.ai_type)) {
+			Dee_Decref(self->ae_desc.ad_info.ai_decl);
 		}
 		Dee_Decref(self->ae_obj);
 	}
@@ -1101,9 +1174,12 @@ AttributeError_visit(AttributeError *__restrict self, Dee_visit_t proc, void *ar
 		unsigned int flags = atomic_read(&self->ae_flags);
 		if (!(flags & AttributeError_F_LAZYDECL)) {
 			DeeObject *decl = atomic_read(&self->ae_desc.ad_info.ai_decl);
+			Dee_XVisit(decl);
+		} else if (Dee_ATTRINFO_ATTRIBUTEERROR_HASDECLREF(self->ae_desc.ad_info.ai_type)) {
+			DeeObject *decl = atomic_read(&self->ae_desc.ad_info.ai_decl);
 			Dee_Visit(decl);
 		}
-		if (self->ae_flags & AttributeError_F_DESCLOADED)
+		if (flags & AttributeError_F_DESCLOADED)
 			Dee_XVisit(self->ae_desc.ad_type);
 		Dee_Visit(self->ae_obj);
 	}
