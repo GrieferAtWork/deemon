@@ -313,14 +313,16 @@ DFUNDEF size_t DCALL Dee_Shutdown(void);
  *     where for every `Code' object that we encounter, we
  *     simply do an `atomic_write' of the first instruction byte
  *     (unless the code is empty?), to set it to `ASM_RET_NONE'
- *   - `Code' objects are also GC objects, meaning that we can
+ *   - `Code' objects (when in use) are referenced by `Function'
+ *     objects, which are also GC objects, meaning that we can
  *     be sure that every existing piece of user-code can be
  *     reached by simply iterating all GC objects and filtering
- *     instances of `DeeCode_Type'.
+ *     instances of `DeeFunction_Type'.
  *     >> import deemon, rt;
  *     >> for (local x: deemon.gc) {
- *     >>     if (x !is rt.Code)
+ *     >>     if (x !is rt.Function)
  *     >>         continue;
+ *     >>     local code = x.__code__;
  *     >>     ...
  *     >> }
  *   - That might seem dangerous, but consider the implications:

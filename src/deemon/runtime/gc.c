@@ -1179,14 +1179,16 @@ is_nonempty:
  *     where for every `Code' object that we encounter, we
  *     simply do an atomic_write of the first instruction byte
  *     (unless the code is empty?), to set it to `ASM_RET_NONE'
- *   - `Code' objects are also GC objects, meaning that we can
+ *   - `Code' objects (when in use) are referenced by `Function'
+ *     objects, which are also GC objects, meaning that we can
  *     be sure that every existing piece of user-code can be
  *     reached by simply iterating all GC objects and filtering
- *     instances of `DeeCode_Type'.
+ *     instances of `DeeFunction_Type'.
  *     >> import deemon, rt;
  *     >> for (local x: deemon.gc) {
- *     >>     if (x !is rt.Code)
+ *     >>     if (x !is rt.Function)
  *     >>         continue;
+ *     >>     local code = x.__code__;
  *     >>     ...
  *     >> }
  *   - That might seem dangerous, but consider the implications:
@@ -1226,13 +1228,15 @@ collect_restart_with_pending_hint:
 		instruction_t old_instr;
 		uint16_t old_flags;
 		DeeCodeObject *iter_code;
+		DeeFunctionObject *iter_function;
 		ASSERT_OBJECT(&iter->gc_object);
 		ASSERT(iter != iter->gc_next);
 		if unlikely(!iter->gc_object.ob_refcnt)
 			continue; /* Object is currently being destroyed. */
-		if (!DeeCode_Check(&iter->gc_object))
-			continue; /* Not a code object. */
-		iter_code = (DeeCodeObject *)&iter->gc_object;
+		if (!DeeFunction_Check(&iter->gc_object))
+			continue; /* Not a function object. */
+		iter_function = (DeeFunctionObject *)&iter->gc_object;
+		iter_code     = iter_function->fo_code;
 		if (!iter_code->co_codebytes)
 			continue; /* Empty code? */
 
@@ -1263,6 +1267,9 @@ collect_restart_with_pending_hint:
 /* GC object alloc/free. */
 LOCAL void *gc_initob(void *ptr) {
 	if likely(ptr) {
+		/* NOTE: This `DBG_memset()' is important for `GCHEAD_ISTRACKED()' to work properly!
+		 * The 0xcc pattern set here is checked for by `GCHEAD_ISTRACKED()', and if found:
+		 * treated as meaning that the associated object isn't being tracked. */
 		DBG_memset(ptr, 0xcc, DEE_GC_HEAD_SIZE);
 		ptr = DeeGC_Object((struct gc_head *)ptr);
 	}
