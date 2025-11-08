@@ -208,7 +208,7 @@ struct Dee_string_object;
 #define Dee_ERROR_OBJECT_HEAD                                            \
 	Dee_OBJECT_HEAD                                                      \
 	DREF DeeObject *e_message; /* [0..1][const] Error message string. */ \
-	DREF DeeObject *e_inner;   /* [0..1][const] Inner error object. */
+	DREF DeeObject *e_cause;   /* [0..1][const] Causal error object. */
 struct Dee_error_object {
 	Dee_ERROR_OBJECT_HEAD
 };
@@ -226,7 +226,7 @@ DDATDEF DeeObject DeeError_Interrupt_instance;
  * Upon success, the actual error object thrown is discarded during this process. */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL DeeError_Catch(DeeTypeObject *__restrict type);
 /* TODO: Go through all uses of "DeeError_Catch()" and adjust code
- *       such that the original exception becomes the "inner" of
+ *       such that the original exception becomes the "cause" of
  *       the new exception wherever a different error is thrown */
 
 /* Same as `DeeError_Catch()', but returns the actual, caught

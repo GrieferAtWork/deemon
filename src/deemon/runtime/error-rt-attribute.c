@@ -75,7 +75,7 @@ DECL_BEGIN
 /*[[[deemon
 import define_Dee_HashStr from rt.gen.hash;
 print define_Dee_HashStr("message");
-print define_Dee_HashStr("inner");
+print define_Dee_HashStr("cause");
 print define_Dee_HashStr("ob");
 print define_Dee_HashStr("attr");
 print define_Dee_HashStr("decl");
@@ -84,7 +84,7 @@ print define_Dee_HashStr("isdel");
 print define_Dee_HashStr("isset");
 ]]]*/
 #define Dee_HashStr__message _Dee_HashSelectC(0x14820755, 0xbeaa4b97155366df)
-#define Dee_HashStr__inner _Dee_HashSelectC(0x20e82985, 0x4f20d07bb803c1fe)
+#define Dee_HashStr__cause _Dee_HashSelectC(0xae5dd7b9, 0xa89258f772b2957d)
 #define Dee_HashStr__ob _Dee_HashSelectC(0xdfa5fee2, 0x80a90888850ad043)
 #define Dee_HashStr__attr _Dee_HashSelectC(0x55cfee3, 0xe4311a2c8443755d)
 #define Dee_HashStr__decl _Dee_HashSelectC(0x95fe81e2, 0xdc35fdc1dce5cffc)
@@ -93,7 +93,7 @@ print define_Dee_HashStr("isset");
 #define Dee_HashStr__isset _Dee_HashSelectC(0xbc9a78a1, 0x5b60f653e62d5e87)
 /*[[[end]]]*/
 
-#define Error_init_params "message:?X2?Dstring?N=!N,inner:?X3?DError?O?N=!N"
+#define Error_init_params "message:?X2?Dstring?N=!N,cause:?X3?DError?O?N=!N"
 
 
 
@@ -1125,7 +1125,7 @@ AttributeError_init_kw(AttributeError *__restrict self, size_t argc,
 #define AttributeError_init_params   Error_init_params ",ob?,attr?:" DOC_attr_types ",decl?:?X3?DType?DModule?O,isget=!f,isdel=!f,isset=!f"
 #define UnboundAttribute_init_params Error_init_params ",ob?,attr?:" DOC_attr_types ",decl?:?X3?DType?DModule?O,isget=!t,isdel=!f,isset=!f"
 	LOADARG(DeeObject, &self->e_message, 0, message);
-	LOADARG(DeeObject, &self->e_inner, 1, inner);
+	LOADARG(DeeObject, &self->e_cause, 1, cause);
 	LOADARG(DeeObject, &self->ae_obj, 2, ob);
 	LOADARG(DeeObject, &attr, 3, attr);
 	LOADARG(DeeObject, &self->ae_desc.ad_info.ai_decl, 4, decl);
@@ -1245,7 +1245,7 @@ done_incref_obj:
 		DBG_memset(&self->ae_desc, 0xcc ^ (uint8_t)Dee_HashPointer(self), sizeof(self->ae_desc));
 	}
 	Dee_XIncref(self->e_message);
-	Dee_XIncref(self->e_inner);
+	Dee_XIncref(self->e_cause);
 	return 0;
 err:
 	return -1;
@@ -1256,8 +1256,8 @@ AttributeError_copy(AttributeError *__restrict self,
                     AttributeError *__restrict other) {
 	self->e_message = other->e_message;
 	Dee_XIncref(self->e_message);
-	self->e_inner = other->e_inner;
-	Dee_XIncref(self->e_inner);
+	self->e_cause = other->e_cause;
+	Dee_XIncref(self->e_cause);
 	(void)AttributeError_LoadDesc(other); /* Make sure that "other" is stable. */
 	(void)AttributeError_LoadDesc(other); /* ... */
 	self->ae_obj = other->ae_obj;
@@ -1301,7 +1301,7 @@ AttributeError_deep(AttributeError *__restrict self,
                     AttributeError *__restrict other) {
 	if unlikely(AttributeError_copy(self, other))
 		goto err;
-	if unlikely(DeeObject_XInplaceDeepCopy((DeeObject **)&self->e_inner))
+	if unlikely(DeeObject_XInplaceDeepCopy((DeeObject **)&self->e_cause))
 		goto err_self;
 	if unlikely(DeeObject_XInplaceDeepCopy((DeeObject **)&self->ae_obj))
 		goto err_self;
@@ -1425,8 +1425,8 @@ AttributeError_printrepr(AttributeError *__restrict self,
 		DO(err_temp, DeeFormat_Printf(printer, arg, "message: %r", self->e_message));
 		prefix = ", ";
 	}
-	if (self->e_inner) {
-		DO(err_temp, DeeFormat_Printf(printer, arg, "%sinner: %r", prefix, self->e_inner));
+	if (self->e_cause) {
+		DO(err_temp, DeeFormat_Printf(printer, arg, "%scause: %r", prefix, self->e_cause));
 		prefix = ", ";
 	}
 	if (self->ae_obj) {
@@ -1491,12 +1491,12 @@ AttributeError_compare_impl(AttributeError *lhs, AttributeError *rhs,
 		if (result != Dee_COMPARE_EQ)
 			return result;
 	}
-	if (lhs->e_inner != rhs->e_inner) {
-		if (!lhs->e_inner)
+	if (lhs->e_cause != rhs->e_cause) {
+		if (!lhs->e_cause)
 			return Dee_COMPARE_LO;
-		if (!rhs->e_inner)
+		if (!rhs->e_cause)
 			return Dee_COMPARE_GR;
-		result = (*cmp)(lhs->e_inner, rhs->e_inner);
+		result = (*cmp)(lhs->e_cause, rhs->e_cause);
 		if (result != Dee_COMPARE_EQ)
 			return result;
 	}
@@ -1581,8 +1581,8 @@ AttributeError_hash(AttributeError *__restrict self) {
 	Dee_hash_t result = DeeObject_HashGeneric(Dee_TYPE(self));
 	if (self->e_message)
 		result = Dee_HashCombine(result, DeeObject_Hash(self->e_message));
-	if (self->e_inner)
-		result = Dee_HashCombine(result, DeeObject_Hash(self->e_inner));
+	if (self->e_cause)
+		result = Dee_HashCombine(result, DeeObject_Hash(self->e_cause));
 	if (self->ae_obj) {
 		DeeObject *decl;
 		result = Dee_HashCombine(result, DeeObject_Hash(self->ae_obj));
@@ -1863,7 +1863,7 @@ DeeRT_ErrAttributeError_impl(DeeTypeObject *error_type, DeeObject *decl,
 	        "Only these flags may be specified");
 	ASSERT_OBJECT_TYPE_EXACT(attr, &DeeString_Type);
 	result->e_message = NULL;
-	result->e_inner   = NULL;
+	result->e_cause   = NULL;
 	Dee_Incref(ob);
 	result->ae_obj = ob;
 	Dee_Incref(attr);
@@ -1892,7 +1892,7 @@ DeeRT_ErrAttributeErrorCStr_impl(DeeTypeObject *error_type, DeeObject *decl,
 	                   AttributeError_F_SET)) == 0,
 	        "Only these flags may be specified");
 	result->e_message = NULL;
-	result->e_inner   = NULL;
+	result->e_cause   = NULL;
 	Dee_Incref(ob);
 	result->ae_obj = ob;
 	result->ae_desc.ad_name = attr;
@@ -1919,7 +1919,7 @@ DeeRT_ErrAttributeErrorEx_impl(DeeTypeObject *error_type, DeeObject *ob,
 	        "Only these flags may be specified");
 	DBG_memset(result, 0xcc, sizeof(*result));
 	result->e_message = NULL;
-	result->e_inner   = NULL;
+	result->e_cause   = NULL;
 	Dee_Incref(ob);
 	result->ae_obj = ob;
 	Dee_attrdesc_init_copy(&result->ae_desc, attr);
@@ -1943,7 +1943,7 @@ DeeRT_ErrAttributeErrorCA_impl(DeeTypeObject *error_type, DeeObject *ob,
 	        "Only these flags may be specified");
 	DBG_memset(result, 0xcc, sizeof(*result));
 	result->e_message = NULL;
-	result->e_inner   = NULL;
+	result->e_cause   = NULL;
 	Dee_Incref(ob);
 	result->ae_obj = ob;
 	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTR; /* Changed to "Dee_ATTRINFO_INSTANCE_ATTR" if appropriate */
@@ -1967,7 +1967,7 @@ DeeRT_ErrAttributeErrorMethod_impl(DeeTypeObject *error_type, DeeObject *ob,
 	        "Only these flags may be specified");
 	DBG_memset(result, 0xcc, sizeof(*result));
 	result->e_message = NULL;
-	result->e_inner   = NULL;
+	result->e_cause   = NULL;
 	Dee_Incref(ob);
 	result->ae_obj = ob;
 	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_METHOD; /* Changed to "Dee_ATTRINFO_INSTANCE_METHOD" if appropriate */
@@ -1991,7 +1991,7 @@ DeeRT_ErrAttributeErrorGetSet_impl(DeeTypeObject *error_type, DeeObject *ob,
 	        "Only these flags may be specified");
 	DBG_memset(result, 0xcc, sizeof(*result));
 	result->e_message = NULL;
-	result->e_inner   = NULL;
+	result->e_cause   = NULL;
 	Dee_Incref(ob);
 	result->ae_obj = ob;
 	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_GETSET; /* Changed to "Dee_ATTRINFO_INSTANCE_GETSET" if appropriate */
@@ -2016,7 +2016,7 @@ DeeRT_ErrAttributeErrorMember_impl(DeeTypeObject *error_type, DeeObject *ob,
 	        "Only these flags may be specified");
 	DBG_memset(result, 0xcc, sizeof(*result));
 	result->e_message = NULL;
-	result->e_inner   = NULL;
+	result->e_cause   = NULL;
 	Dee_Incref(ob);
 	result->ae_obj = ob;
 	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_MEMBER; /* Changed to "Dee_ATTRINFO_INSTANCE_MEMBER" if appropriate */
@@ -2124,7 +2124,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
 	ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
 	ASSERT(DeeType_IsClass(class_type));
 	result->e_message = NULL;
-	result->e_inner   = NULL;
+	result->e_cause   = NULL;
 	Dee_Incref(instance);
 	result->ae_obj = instance;
 	result->ae_desc.ad_info.ai_decl = (DeeObject *)class_type;
@@ -2146,7 +2146,7 @@ PUBLIC ATTR_COLD NONNULL((1)) DeeObject *
 	ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
 	ASSERT(DeeType_IsClass(class_type));
 	result->e_message = NULL;
-	result->e_inner   = NULL;
+	result->e_cause   = NULL;
 	Dee_Incref(class_type);
 	result->ae_obj = (DeeObject *)class_type;
 	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_CLASS_SLOT;
@@ -2333,7 +2333,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
 	ASSERT(DeeType_IsClass(class_type));
 	result->e_message = NULL;
-	result->e_inner   = NULL;
+	result->e_cause   = NULL;
 	Dee_Incref(instance);
 	result->ae_obj = instance;
 	result->ae_desc.ad_info.ai_decl = (DeeObject *)class_type;

@@ -993,7 +993,7 @@ function clientThreadMain(con: socket) {
 					if (e !is Error)
 						break;
 					try {
-						e = Error.inner(e);
+						e = Error.cause(e);
 					} catch (UnboundAttribute) {
 						break;
 					}

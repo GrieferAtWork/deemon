@@ -134,9 +134,9 @@ sqlerror_printrepr(SQLError *__restrict self,
 			goto err;
 		result += temp;
 	}
-	if (self->sqe_system.e_inner) {
-		temp = DeeFormat_Printf(printer, arg, ", inner: %r",
-		                        self->sqe_system.e_inner);
+	if (self->sqe_system.e_cause) {
+		temp = DeeFormat_Printf(printer, arg, ", cause: %r",
+		                        self->sqe_system.e_cause);
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;
@@ -161,11 +161,11 @@ PRIVATE struct type_member tpconst sqlerror_members[] = {
 INTERN DeeTypeObject SQLError_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "SQLError",
-	/* .tp_doc      = */ DOC("(ecode:?Dint,sql?:?Dstring,sqloff?:?Dint,message?:?Dstring,errno?:?Dint,inner?:?DError)\n"
+	/* .tp_doc      = */ DOC("(message?:?X2?Dstring?O,cause?:?X2?DError?O,ecode:?Dint,sql?:?Dstring,sqloff?:?Dint,errmsg?:?Dstring,errno?:?Dint)\n"
 	                         "#pecode{SQLite error code}"
 	                         "#psql{SQL code causing the exception (if there is any)}"
 	                         "#psqloff{Offset into @sql where error happened}"
-	                         "#pmessage{SQL error message}"
+	                         "#perrmsg{SQL error message}"
 	                         "#perrno{System error code (if relevant)}"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
@@ -415,7 +415,7 @@ handle_nomem:
 		if unlikely(!error)
 			goto err;
 		DeeObject_Init(&error->sqe_system, type);
-		error->sqe_system.e_inner   = NULL;
+		error->sqe_system.e_cause   = NULL;
 		error->sqe_system.e_message = (DeeObject *)errmsg_ob; /* Inherit reference */
 #ifdef CONFIG_HOST_WINDOWS
 		error->sqe_system.se_lasterror = system_errno;

@@ -758,7 +758,7 @@ err_args:
 			tp_iter = Dee_TYPE(argv[0]);
 			if (tp_iter == &DeeSuper_Type)
 				tp_iter = DeeSuper_TYPE(argv[0]);
-			err_unimplemented_operator(tp_iter, OPERATOR_GETBUF); /* TODO: Pass orig error as "inner" */
+			err_unimplemented_operator(tp_iter, OPERATOR_GETBUF); /* TODO: Pass orig error as "cause" */
 		}
 		goto err;
 err_r:

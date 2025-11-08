@@ -211,7 +211,7 @@ DeeError_DisplayImpl(char const *reason, DeeObject *error, DeeObject *traceback,
 
 		/* Special handling for "error":
 		 * - If the error has a custom "message", print that instead
-		 * - If the error has a custom "inner", print that afterwards */
+		 * - If the error has a custom "cause", print that afterwards */
 		is_error = DeeObject_InstanceOf(error, &DeeError_Error);
 		message_obj = error;
 		if (is_error && ((DeeErrorObject *)error)->e_message)
@@ -234,8 +234,8 @@ DeeError_DisplayImpl(char const *reason, DeeObject *error, DeeObject *traceback,
 		if (!is_error)
 			break;
 
-		/* Special handling for "error": also print inner errors */
-		error = ((DeeErrorObject *)error)->e_inner;
+		/* Special handling for "error": also print causal errors */
+		error = ((DeeErrorObject *)error)->e_cause;
 		if (!error)
 			break;
 		reason = "Caused by";

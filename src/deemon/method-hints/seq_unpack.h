@@ -198,7 +198,7 @@ err:
 			/* This can only mean that the size changed, because we're
 			 * allowed to assume "__seq_getitem_always_bound__" */
 			if (DeeError_Catch(&DeeError_IndexError))
-				return DeeRT_ErrUnpackError(self, count, i); /* TODO: Pass orig error as "inner" */
+				return DeeRT_ErrUnpackError(self, count, i); /* TODO: Pass orig error as "cause" */
 			goto err;
 		}
 		result[i] = item; /* Inherit reference */
@@ -382,7 +382,7 @@ err:
 			if (DeeError_Catch(&DeeError_IndexError)) {
 				if (i >= min_count)
 					return i;
-				return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, i); /* TODO: Pass orig error as "inner" */
+				return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, i); /* TODO: Pass orig error as "cause" */
 			}
 			goto err;
 		}

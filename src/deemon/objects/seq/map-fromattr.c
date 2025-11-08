@@ -321,9 +321,9 @@ mfa_getitem(MapFromAttr *self, DeeObject *key) {
 	if unlikely(!result) {
 		DREF DeeObject *error;
 		if ((error = DeeError_CatchError(&DeeError_UnboundAttribute)) != NULL) {
-			DeeRT_ErrUnboundKeyWithInner((DeeObject *)self, key, error);
+			DeeRT_ErrUnboundKeyWithCause((DeeObject *)self, key, error);
 		} else if ((error = DeeError_CatchError(&DeeError_AttributeError)) != NULL) {
-			DeeRT_ErrUnknownKeyWithInner((DeeObject *)self, key, error);
+			DeeRT_ErrUnknownKeyWithCause((DeeObject *)self, key, error);
 		}
 	}
 	return result;
@@ -351,7 +351,7 @@ mfa_setitem(MapFromAttr *self, DeeObject *key, DeeObject *value) {
 	if unlikely(result) {
 		DREF DeeObject *error;
 		if ((error = DeeError_CatchError(&DeeError_AttributeError)) != NULL)
-			DeeRT_ErrUnknownKeyWithInner((DeeObject *)self, key, error);
+			DeeRT_ErrUnknownKeyWithCause((DeeObject *)self, key, error);
 	}
 	return result;
 err:
@@ -389,9 +389,9 @@ mfa_getitem_string_hash(MapFromAttr *self, char const *key, Dee_hash_t hash) {
 	if unlikely(!result) {
 		DREF DeeObject *error;
 		if ((error = DeeError_CatchError(&DeeError_UnboundAttribute)) != NULL) {
-			DeeRT_ErrUnboundKeyStrWithInner((DeeObject *)self, key, error);
+			DeeRT_ErrUnboundKeyStrWithCause((DeeObject *)self, key, error);
 		} else if ((error = DeeError_CatchError(&DeeError_AttributeError)) != NULL) {
-			DeeRT_ErrUnknownKeyStrWithInner((DeeObject *)self, key, error);
+			DeeRT_ErrUnknownKeyStrWithCause((DeeObject *)self, key, error);
 		}
 	}
 	return result;
@@ -411,7 +411,7 @@ mfa_setitem_string_hash(MapFromAttr *self, char const *key, Dee_hash_t hash, Dee
 	if unlikely(result) {
 		DREF DeeObject *error;
 		if ((error = DeeError_CatchError(&DeeError_AttributeError)) != NULL)
-			DeeRT_ErrUnboundKeyStrWithInner((DeeObject *)self, key, error);
+			DeeRT_ErrUnboundKeyStrWithCause((DeeObject *)self, key, error);
 	}
 	return result;
 }
@@ -427,9 +427,9 @@ mfa_getitem_string_len_hash(MapFromAttr *self, char const *key, size_t keylen, D
 	if unlikely(!result) {
 		DREF DeeObject *error;
 		if ((error = DeeError_CatchError(&DeeError_UnboundAttribute)) != NULL) {
-			DeeRT_ErrUnboundKeyStrLenWithInner((DeeObject *)self, key, keylen, error);
+			DeeRT_ErrUnboundKeyStrLenWithCause((DeeObject *)self, key, keylen, error);
 		} else if ((error = DeeError_CatchError(&DeeError_AttributeError)) != NULL) {
-			DeeRT_ErrUnknownKeyStrLenWithInner((DeeObject *)self, key, keylen, error);
+			DeeRT_ErrUnknownKeyStrLenWithCause((DeeObject *)self, key, keylen, error);
 		}
 	}
 	return result;
@@ -450,7 +450,7 @@ mfa_setitem_string_len_hash(MapFromAttr *self, char const *key, size_t keylen,
 	if unlikely(result) {
 		DREF DeeObject *error;
 		if ((error = DeeError_CatchError(&DeeError_AttributeError)) != NULL)
-			DeeRT_ErrUnknownKeyStrLenWithInner((DeeObject *)self, key, keylen, error);
+			DeeRT_ErrUnknownKeyStrLenWithCause((DeeObject *)self, key, keylen, error);
 	}
 	return result;
 }

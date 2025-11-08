@@ -1901,7 +1901,7 @@ PUBLIC ATTR_COLD NONNULL((3)) int
 			goto err;
 		}
 		error->e_message    = (DeeObject *)message; /* Inherit reference */
-		error->e_inner      = NULL;
+		error->e_cause      = NULL;
 		error->se_errno     = DeeNTSystem_TranslateErrno(dwError);
 		error->se_lasterror = dwError;
 		DeeObject_Init(error, tp);

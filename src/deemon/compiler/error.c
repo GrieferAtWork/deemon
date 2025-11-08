@@ -623,7 +623,7 @@ handle_compiler_warning(struct ast_loc *loc,
 
 	/* Initializer other members of the error object. */
 	weakref_support_init(error);
-	error->e_inner   = NULL;
+	error->e_cause   = NULL;
 	error->ce_errorc = 0;
 	error->ce_errorv = NULL;
 	error->ce_mode   = mode;

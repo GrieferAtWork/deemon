@@ -37,7 +37,7 @@ import rt.hash as rtHash;
 local kw_lists = {
 	{"thisarg"},
 	{"thisarg", "value"},
-	{"message", "inner"},
+	{"message", "cause"},
 	{"radix", "precision", "mode"},
 	{"precision"},
 	{"length", "byteorder", "signed"},
@@ -142,8 +142,8 @@ local kw_lists = {
 	// For runtime errors...
 	{"value", "minval", "maxval", "positive"},
 
-	{"#ifdef CONFIG_HOST_WINDOWS", "message", "inner", "errno", "nterr_np"},
-	{"#ifndef CONFIG_HOST_WINDOWS", "message", "inner", "errno"},
+	{"#ifdef CONFIG_HOST_WINDOWS", "message", "cause", "errno", "nterr_np"},
+	{"#ifndef CONFIG_HOST_WINDOWS", "message", "cause", "errno"},
 };
 
 local conditional = HashSet(for (local x: kw_lists) if (x.first.startswith("#")) x);
@@ -223,7 +223,7 @@ DECLARE_KWLIST(kwlist__lookupmode, { KEX("lookupmode", 0x5919ca40, 0x2f6c38dd63e
 DECLARE_KWLIST(kwlist__mask_max, { KEX("mask", 0xc3b4302b, 0x933f153b40dd4379), KEX("max", 0xc293979b, 0x822bd5c706bd9850), KEND });
 DECLARE_KWLIST(kwlist__match_start_end_def, { KEX("match", 0x69faa058, 0xb0704984f0078f40), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("def", 0xf5797de2, 0x6cea9b604fa07583), KEND });
 DECLARE_KWLIST(kwlist__maxbytes_readall, { KEX("maxbytes", 0x3b196fc0, 0x93d3b3615fcacd4a), KEX("readall", 0x331ceae8, 0x8ad608764266c76d), KEND });
-DECLARE_KWLIST(kwlist__message_inner, { KEX("message", 0x14820755, 0xbeaa4b97155366df), KEX("inner", 0x20e82985, 0x4f20d07bb803c1fe), KEND });
+DECLARE_KWLIST(kwlist__message_cause, { KEX("message", 0x14820755, 0xbeaa4b97155366df), KEX("cause", 0xae5dd7b9, 0xa89258f772b2957d), KEND });
 DECLARE_KWLIST(kwlist__minbytes_maxbytes_offset_nulbytes_readall_mustmmap_mapshared, { KEX("minbytes", 0xa6327ad1, 0x36d31d85046534af), KEX("maxbytes", 0x3b196fc0, 0x93d3b3615fcacd4a), KEX("offset", 0xa97063e7, 0x2381bd4159ebe8a7), KEX("nulbytes", 0xf6256f, 0x164a29d88f8ebaa3), KEX("readall", 0x331ceae8, 0x8ad608764266c76d), KEX("mustmmap", 0x720e751d, 0x10d9f32721af9f8d), KEX("mapshared", 0xcb3dd03e, 0xc9af3c3e0ad0fc85), KEND });
 DECLARE_KWLIST(kwlist__mode_size, { KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEX("size", 0xed8917fa, 0x3fe8023bdf261c0f), KEND });
 DECLARE_KWLIST(kwlist__module, { KEX("module", 0xae3684a4, 0xbb78a82535e5801e), KEND });
@@ -275,10 +275,10 @@ DECLARE_KWLIST(kwlist__value_minval_maxval_positive, { KEX("value", 0xd9093f6e, 
 DECLARE_KWLIST(kwlist__value_scope_loc, { KEX("value", 0xd9093f6e, 0x69e7413ae0c88471), KEX("scope", 0x8b65b2f8, 0x52824a24d6447e5), KEX("loc", 0x4f1e6896, 0xc8a6c6e417ce00f9), KEND });
 DECLARE_KWLIST(kwlist__yfunc_argc_ridstart_ridend, { KEX("yfunc", 0xdedea038, 0xc47ce4fa3cfab784), KEX("argc", 0xe5c6c120, 0xd96a642eb89eed13), KEX("ridstart", 0x1948fbda, 0xf5df625781b6632b), KEX("ridend", 0x815ea972, 0x9fd191cbcc2b1731), KEND });
 #ifdef CONFIG_HOST_WINDOWS
-DECLARE_KWLIST(kwlist__message_inner_errno_nterr_np, { KEX("message", 0x14820755, 0xbeaa4b97155366df), KEX("inner", 0x20e82985, 0x4f20d07bb803c1fe), KEX("errno", 0x6df11216, 0x9ded64cf31236f55), KEX("nterr_np", 0x4766570c, 0xd41540e86b5d9a0a), KEND });
+DECLARE_KWLIST(kwlist__message_cause_errno_nterr_np, { KEX("message", 0x14820755, 0xbeaa4b97155366df), KEX("cause", 0xae5dd7b9, 0xa89258f772b2957d), KEX("errno", 0x6df11216, 0x9ded64cf31236f55), KEX("nterr_np", 0x4766570c, 0xd41540e86b5d9a0a), KEND });
 #endif /* ... */
 #ifndef CONFIG_HOST_WINDOWS
-DECLARE_KWLIST(kwlist__message_inner_errno, { KEX("message", 0x14820755, 0xbeaa4b97155366df), KEX("inner", 0x20e82985, 0x4f20d07bb803c1fe), KEX("errno", 0x6df11216, 0x9ded64cf31236f55), KEND });
+DECLARE_KWLIST(kwlist__message_cause_errno, { KEX("message", 0x14820755, 0xbeaa4b97155366df), KEX("cause", 0xae5dd7b9, 0xa89258f772b2957d), KEX("errno", 0x6df11216, 0x9ded64cf31236f55), KEND });
 #endif /* ... */
 /*[[[end]]]*/
 

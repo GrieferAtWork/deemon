@@ -359,7 +359,6 @@ gen_guard:
 					 * >>         try {
 					 * >>             if (should_break())
 					 * >>                 break; // push addrof(Loop_end); jmp addrof(Inner_finally)
-					 * >>             
 					 * >>             print "Entering inner finally normally";
 					 * >>         } finally { // push addrof(Leaving_inner_finally);
 					 * >>             print "Inner_finally";

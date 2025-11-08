@@ -59,7 +59,7 @@ PUBLIC ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes) {
 	}
 	DeeObject_Init(nomem_error, &DeeError_NoMemory);
 	nomem_error->e_message    = NULL;
-	nomem_error->e_inner      = NULL;
+	nomem_error->e_cause      = NULL;
 	nomem_error->nm_allocsize = req_bytes;
 	/* Throw the no-memory error. */
 	return DeeError_ThrowInherited((DeeObject *)nomem_error);

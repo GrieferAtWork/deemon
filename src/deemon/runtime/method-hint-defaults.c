@@ -6339,7 +6339,7 @@ default__seq_unpack__with__seq_operator_size__and__seq_operator_getitem_index(De
 			/* This can only mean that the size changed, because we're
 			 * allowed to assume "__seq_getitem_always_bound__" */
 			if (DeeError_Catch(&DeeError_IndexError))
-				return DeeRT_ErrUnpackError(self, count, i); /* TODO: Pass orig error as "inner" */
+				return DeeRT_ErrUnpackError(self, count, i); /* TODO: Pass orig error as "cause" */
 			goto err;
 		}
 		result[i] = item; /* Inherit reference */
@@ -6602,7 +6602,7 @@ default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_getitem_index
 			if (DeeError_Catch(&DeeError_IndexError)) {
 				if (i >= min_count)
 					return i;
-				return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, i); /* TODO: Pass orig error as "inner" */
+				return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, i); /* TODO: Pass orig error as "cause" */
 			}
 			goto err;
 		}
@@ -6838,7 +6838,7 @@ default__seq_unpack_ub__with__seq_operator_size__and__seq_operator_getitem_index
 				/* Early sequence end (sequence may have been truncated) */
 				if (i >= min_count)
 					return i;
-				DeeRT_ErrUnpackErrorEx(self, min_count, max_count, i); /* TODO: Pass orig error as "inner" */
+				DeeRT_ErrUnpackErrorEx(self, min_count, max_count, i); /* TODO: Pass orig error as "cause" */
 				goto err_result_i;
 			} else {
 				goto err_result_i;

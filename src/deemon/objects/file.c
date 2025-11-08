@@ -1868,7 +1868,7 @@ DeeFile_GetSize(DeeObject *__restrict self) {
 	if (DeeFileType_CheckExact(Dee_TYPE(self)) &&
 	    DeeError_Catch(&DeeError_AttributeError)) {
 		/* Translate missing size() attributes to doesnt-implement-seek errors. */
-		err_unimplemented_operator(Dee_TYPE(self), /* TODO: Pass orig error as "inner" */
+		err_unimplemented_operator(Dee_TYPE(self), /* TODO: Pass orig error as "cause" */
 		                           FILE_OPERATOR_SEEK);
 	}
 	return (Dee_pos_t)-1;

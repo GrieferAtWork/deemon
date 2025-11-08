@@ -89,10 +89,10 @@ DECL_BEGIN
 /*[[[deemon
 import define_Dee_HashStr from rt.gen.hash;
 print define_Dee_HashStr("message");
-print define_Dee_HashStr("inner");
+print define_Dee_HashStr("cause");
 ]]]*/
 #define Dee_HashStr__message _Dee_HashSelectC(0x14820755, 0xbeaa4b97155366df)
-#define Dee_HashStr__inner _Dee_HashSelectC(0x20e82985, 0x4f20d07bb803c1fe)
+#define Dee_HashStr__cause _Dee_HashSelectC(0xae5dd7b9, 0xa89258f772b2957d)
 /*[[[end]]]*/
 
 
@@ -215,21 +215,21 @@ PRIVATE NONNULL((1)) void DCALL
 error_fini(DeeObject *__restrict self) {
 	DeeErrorObject *me = (DeeErrorObject *)self;
 	Dee_XDecref(me->e_message);
-	Dee_XDecref(me->e_inner);
+	Dee_XDecref(me->e_cause);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 error_visit(DeeObject *__restrict self, Dee_visit_t proc, void *arg) {
 	DeeErrorObject *me = (DeeErrorObject *)self;
 	Dee_XVisit(me->e_message);
-	Dee_XVisit(me->e_inner);
+	Dee_XVisit(me->e_cause);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 error_ctor(DeeObject *__restrict self) {
 	DeeErrorObject *me = (DeeErrorObject *)self;
 	me->e_message = NULL;
-	me->e_inner   = NULL;
+	me->e_cause   = NULL;
 	return 0;
 }
 
@@ -238,9 +238,9 @@ error_copy(DeeObject *__restrict self, DeeObject *__restrict other_ob) {
 	DeeErrorObject *me = (DeeErrorObject *)self;
 	DeeErrorObject *other = (DeeErrorObject *)other_ob;
 	me->e_message = other->e_message;
-	me->e_inner   = other->e_inner;
+	me->e_cause   = other->e_cause;
 	Dee_XIncref(me->e_message);
-	Dee_XIncref(me->e_inner);
+	Dee_XIncref(me->e_cause);
 	return 0;
 }
 
@@ -248,10 +248,10 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 error_deep(DeeObject *__restrict self, DeeObject *__restrict other_ob) {
 	DeeErrorObject *me = (DeeErrorObject *)self;
 	DeeErrorObject *other = (DeeErrorObject *)other_ob;
-	me->e_inner = NULL;
-	if (other->e_inner) {
-		me->e_inner = DeeObject_DeepCopy(other->e_inner);
-		if unlikely(!me->e_inner)
+	me->e_cause = NULL;
+	if (other->e_cause) {
+		me->e_cause = DeeObject_DeepCopy(other->e_cause);
+		if unlikely(!me->e_cause)
 			goto err;
 	}
 	me->e_message = other->e_message;
@@ -266,11 +266,11 @@ error_init(DeeObject *__restrict self,
            size_t argc, DeeObject *const *argv) {
 	DeeErrorObject *me = (DeeErrorObject *)self;
 	me->e_message = NULL;
-	me->e_inner   = NULL;
+	me->e_cause   = NULL;
 	switch (argc) {
 	case 2:
-		me->e_inner = argv[1];
-		Dee_Incref(me->e_inner);
+		me->e_cause = argv[1];
+		Dee_Incref(me->e_cause);
 		ATTR_FALLTHROUGH
 	case 1:
 		me->e_message = argv[0];
@@ -307,26 +307,26 @@ error_init_kw(DeeObject *__restrict self, size_t argc,
 	case 1:
 			me->e_message = argv[0];
 		}
-		me->e_inner = DeeKwArgs_TryGetItemNRStringHash(&kwds, "inner", Dee_HashStr__inner);
-		if unlikely(!me->e_inner)
+		me->e_cause = DeeKwArgs_TryGetItemNRStringHash(&kwds, "cause", Dee_HashStr__cause);
+		if unlikely(!me->e_cause)
 			goto err;
-		if (me->e_inner == ITER_DONE)
-			me->e_inner = NULL;
+		if (me->e_cause == ITER_DONE)
+			me->e_cause = NULL;
 		break;
 	case 2:
 		me->e_message = argv[0];
-		me->e_inner   = argv[1];
+		me->e_cause   = argv[1];
 		break;
 	default:
 		return DeeArg_BadArgcEx(DeeType_GetName(Dee_TYPE(me)), argc, 0, 2);
 	}
 	Dee_XIncref(me->e_message);
-	Dee_XIncref(me->e_inner);
+	Dee_XIncref(me->e_cause);
 	if unlikely(DeeKwArgs_Done(&kwds, argc, DeeType_GetName(Dee_TYPE(me))))
 		goto err_self;
 	return 0;
 err_self:
-	Dee_XDecref_unlikely(me->e_inner);
+	Dee_XDecref_unlikely(me->e_cause);
 	Dee_XDecref_unlikely(me->e_message);
 err:
 	return -1;
@@ -572,7 +572,7 @@ PRIVATE struct type_method tpconst error_class_methods[] = {
 	              /**/ "		if (error !is Error)\n"
 	              /**/ "			break;\n"
 	              /**/ "		try {\n"
-	              /**/ "			error = Error.inner(error);\n"
+	              /**/ "			error = Error.cause(error);\n"
 	              /**/ "		} catch (UnboundAttribute) {\n"
 	              /**/ "			break;\n"
 	              /**/ "		}\n"
@@ -611,13 +611,13 @@ PRIVATE struct type_getset tpconst error_class_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst error_members[] = {
-#define Error_init_params "message:?X2?Dstring?N=!N,inner:?X3?DError?O?N=!N"
+#define Error_init_params "message:?X2?Dstring?N=!N,cause:?X3?DError?O?N=!N"
 	TYPE_MEMBER_FIELD_DOC("message", STRUCT_OBJECT, offsetof(DeeErrorObject, e_message),
 	                      "->?X2?Dstring?O\n"
 	                      "The error message associated with this Error object"),
-	TYPE_MEMBER_FIELD_DOC("inner", STRUCT_OBJECT, offsetof(DeeErrorObject, e_inner),
-	                      "->?X3?DError?O\n"
-	                      "An optional inner error object"),
+	TYPE_MEMBER_FIELD_DOC("cause", STRUCT_OBJECT, offsetof(DeeErrorObject, e_cause),
+	                      "->?X2?DError?O\n"
+	                      "The cause of @this error (unbound if @this error doesn't have a cause)"),
 	TYPE_MEMBER_END
 };
 
@@ -628,7 +628,7 @@ PUBLIC DeeTypeObject DeeError_Error = {
 	                         "\n"
 
 	                         "(" Error_init_params ")\n"
-	                         "Create a new error object with the given @message and @inner error"),
+	                         "Create a new error object with the given @message and @cause"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ error_tp_features,
@@ -877,7 +877,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 		goto err;
 	DeeObject_Init(&result->dbz_base, &DeeError_DivideByZero);
 	result->dbz_base.e_message = NULL;
-	result->dbz_base.e_inner   = NULL;
+	result->dbz_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->dbz_base.ve_value, lhs);
 	Dee_variant_init_object(&result->dbz_rhs, rhs);
 	return DeeError_ThrowInherited((DeeObject *)result);
@@ -892,7 +892,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 		goto err;
 	DeeObject_Init(&result->dbz_base, &DeeError_DivideByZero);
 	result->dbz_base.e_message = NULL;
-	result->dbz_base.e_inner   = NULL;
+	result->dbz_base.e_cause   = NULL;
 	Dee_variant_init_copy(&result->dbz_base.ve_value, lhs);
 	Dee_variant_init_copy(&result->dbz_rhs, rhs);
 	return DeeError_ThrowInherited((DeeObject *)result);
@@ -1079,7 +1079,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 		goto err;
 	DeeObject_Init(&result->ie_base.ke_base, &DeeError_IndexError);
 	result->ie_base.ke_base.e_message = NULL;
-	result->ie_base.ke_base.e_inner   = NULL;
+	result->ie_base.ke_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->ie_base.ke_base.ve_value, seq);
 	Dee_variant_init_size(&result->ie_base.ke_key, index);
 	Dee_variant_init_size(&result->ie_length, length);
@@ -1095,7 +1095,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 		goto err;
 	DeeObject_Init(&result->ie_base.ke_base, &DeeError_IndexError);
 	result->ie_base.ke_base.e_message = NULL;
-	result->ie_base.ke_base.e_inner   = NULL;
+	result->ie_base.ke_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->ie_base.ke_base.ve_value, seq);
 	Dee_variant_init_object(&result->ie_base.ke_key, index);
 	Dee_variant_init_object_or_unbound(&result->ie_length, length);
@@ -1156,7 +1156,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 		goto err;
 	DeeObject_Init(&result->ie_base.ke_base, &DeeError_EmptySequence);
 	result->ie_base.ke_base.e_message = NULL;
-	result->ie_base.ke_base.e_inner   = NULL;
+	result->ie_base.ke_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->ie_base.ke_base.ve_value, seq);
 	Dee_variant_init_unbound(&result->ie_base.ke_key);
 	Dee_variant_init_unbound(&result->ie_length);
@@ -1195,7 +1195,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	if unlikely(!result)
 		goto err;
 	result->ke_base.e_message = NULL;
-	result->ke_base.e_inner   = NULL;
+	result->ke_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	Dee_variant_init_object(&result->ke_key, key);
 	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
@@ -1205,19 +1205,19 @@ err:
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
-(DCALL DeeRT_ErrUnknownKeyWithInner)(DeeObject *map, DeeObject *key,
-                                     /*inherit(always)*/ DREF DeeObject *inner) {
+(DCALL DeeRT_ErrUnknownKeyWithCause)(DeeObject *map, DeeObject *key,
+                                     /*inherit(always)*/ DREF DeeObject *cause) {
 	DREF UnknownKey *result = DeeObject_MALLOC(UnknownKey);
 	if unlikely(!result)
 		goto err;
 	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
 	result->ke_base.e_message = NULL;
-	result->ke_base.e_inner   = inner; /* Inherit reference */
+	result->ke_base.e_cause   = cause; /* Inherit reference */
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	Dee_variant_init_object(&result->ke_key, key);
 	return DeeError_ThrowInherited((DeeObject *)result);
 err:
-	Dee_Decref(inner); /* Always inherited */
+	Dee_Decref(cause); /* Always inherited */
 	return -1;
 }
 
@@ -1228,7 +1228,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 		goto err;
 	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
 	result->ke_base.e_message = NULL;
-	result->ke_base.e_inner   = NULL;
+	result->ke_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	Dee_variant_init_size(&result->ke_key, key);
 	return DeeError_ThrowInherited((DeeObject *)result);
@@ -1244,7 +1244,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	if unlikely(Dee_variant_init_cstr_maybe(&result->ke_key, key))
 		goto err_r;
 	result->ke_base.e_message = NULL;
-	result->ke_base.e_inner   = NULL;
+	result->ke_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
 	return DeeError_ThrowInherited((DeeObject *)result);
@@ -1255,22 +1255,22 @@ err:
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
-(DCALL DeeRT_ErrUnknownKeyStrWithInner)(DeeObject *map, char const *key,
-                                        /*inherit(always)*/ DREF DeeObject *inner) {
+(DCALL DeeRT_ErrUnknownKeyStrWithCause)(DeeObject *map, char const *key,
+                                        /*inherit(always)*/ DREF DeeObject *cause) {
 	DREF UnknownKey *result = DeeObject_MALLOC(UnknownKey);
 	if unlikely(!result)
 		goto err;
 	if unlikely(Dee_variant_init_cstr_maybe(&result->ke_key, key))
 		goto err_r;
 	result->ke_base.e_message = NULL;
-	result->ke_base.e_inner   = inner; /* Inherit reference */
+	result->ke_base.e_cause   = cause; /* Inherit reference */
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
 	return DeeError_ThrowInherited((DeeObject *)result);
 err_r:
 	DeeObject_FREE(result);
 err:
-	Dee_Decref(inner); /* Always inherited */
+	Dee_Decref(cause); /* Always inherited */
 	return -1;
 }
 
@@ -1282,7 +1282,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	if unlikely(Dee_variant_init_cstrlen_maybe(&result->ke_key, key, keylen))
 		goto err_r;
 	result->ke_base.e_message = NULL;
-	result->ke_base.e_inner   = NULL;
+	result->ke_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
 	return DeeError_ThrowInherited((DeeObject *)result);
@@ -1293,22 +1293,22 @@ err:
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2, 4)) int
-(DCALL DeeRT_ErrUnknownKeyStrLenWithInner)(DeeObject *map, char const *key, size_t keylen,
-                                           /*inherit(always)*/ DREF DeeObject *inner) {
+(DCALL DeeRT_ErrUnknownKeyStrLenWithCause)(DeeObject *map, char const *key, size_t keylen,
+                                           /*inherit(always)*/ DREF DeeObject *cause) {
 	DREF UnknownKey *result = DeeObject_MALLOC(UnknownKey);
 	if unlikely(!result)
 		goto err;
 	if unlikely(Dee_variant_init_cstrlen_maybe(&result->ke_key, key, keylen))
 		goto err_r;
 	result->ke_base.e_message = NULL;
-	result->ke_base.e_inner   = inner; /* Inherit reference */
+	result->ke_base.e_cause   = cause; /* Inherit reference */
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
 	return DeeError_ThrowInherited((DeeObject *)result);
 err_r:
 	DeeObject_FREE(result);
 err:
-	Dee_Decref(inner); /* Always inherited */
+	Dee_Decref(cause); /* Always inherited */
 	return -1;
 }
 
@@ -1341,7 +1341,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	if unlikely(!result)
 		goto err;
 	result->ke_base.e_message = NULL;
-	result->ke_base.e_inner   = NULL;
+	result->ke_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	Dee_variant_init_object(&result->ke_key, key);
 	DeeObject_Init(&result->ke_base, &DeeError_ReadOnlyKey);
@@ -1356,7 +1356,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	if unlikely(!result)
 		goto err;
 	result->ke_base.e_message = NULL;
-	result->ke_base.e_inner   = NULL;
+	result->ke_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	Dee_variant_init_size(&result->ke_key, key);
 	DeeObject_Init(&result->ke_base, &DeeError_ReadOnlyKey);
@@ -1373,7 +1373,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	if unlikely(Dee_variant_init_cstr_maybe(&result->ke_key, key))
 		goto err_r;
 	result->ke_base.e_message = NULL;
-	result->ke_base.e_inner   = NULL;
+	result->ke_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	DeeObject_Init(&result->ke_base, &DeeError_ReadOnlyKey);
 	return DeeError_ThrowInherited((DeeObject *)result);
@@ -1391,7 +1391,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	if unlikely(Dee_variant_init_cstrlen_maybe(&result->ke_key, key, keylen))
 		goto err_r;
 	result->ke_base.e_message = NULL;
-	result->ke_base.e_inner   = NULL;
+	result->ke_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	DeeObject_Init(&result->ke_base, &DeeError_ReadOnlyKey);
 	return DeeError_ThrowInherited((DeeObject *)result);
@@ -1448,7 +1448,7 @@ DeeRT_ErrUnboundItemImpl(DeeObject *seq, DeeObject *key_or_index, bool is_key) {
 		goto err;
 	DeeObject_Init(&result->ui_base.ke_base, &DeeError_UnboundItem);
 	result->ui_base.ke_base.e_message = NULL;
-	result->ui_base.ke_base.e_inner   = NULL;
+	result->ui_base.ke_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
 	Dee_variant_init_object(&result->ui_base.ke_key, key_or_index);
 	result->ui_iskey = is_key;
@@ -1464,7 +1464,7 @@ PRIVATE ATTR_COLD NONNULL((1)) int
 		goto err;
 	DeeObject_Init(&result->ui_base.ke_base, &DeeError_UnboundItem);
 	result->ui_base.ke_base.e_message = NULL;
-	result->ui_base.ke_base.e_inner   = NULL;
+	result->ui_base.ke_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
 	Dee_variant_init_size(&result->ui_base.ke_key, key_or_index);
 	result->ui_iskey = is_key;
@@ -1479,20 +1479,20 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
-(DCALL DeeRT_ErrUnboundKeyWithInner)(DeeObject *seq, DeeObject *key,
-                                     /*inherit(always)*/ DREF DeeObject *inner) {
+(DCALL DeeRT_ErrUnboundKeyWithCause)(DeeObject *seq, DeeObject *key,
+                                     /*inherit(always)*/ DREF DeeObject *cause) {
 	DREF UnboundItem *result = DeeObject_MALLOC(UnboundItem);
 	if unlikely(!result)
 		goto err;
 	DeeObject_Init(&result->ui_base.ke_base, &DeeError_UnboundItem);
 	result->ui_base.ke_base.e_message = NULL;
-	result->ui_base.ke_base.e_inner   = inner; /* Inherit reference */
+	result->ui_base.ke_base.e_cause   = cause; /* Inherit reference */
 	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
 	Dee_variant_init_object(&result->ui_base.ke_key, key);
 	result->ui_iskey = true;
 	return DeeError_ThrowInherited((DeeObject *)result);
 err:
-	Dee_Decref(inner); /* Always inherited */
+	Dee_Decref(cause); /* Always inherited */
 	return -1;
 }
 
@@ -1504,7 +1504,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	if unlikely(Dee_variant_init_cstr_maybe(&result->ui_base.ke_key, key))
 		goto err_r;
 	result->ui_base.ke_base.e_message = NULL;
-	result->ui_base.ke_base.e_inner   = NULL;
+	result->ui_base.ke_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
 	result->ui_iskey = true;
 	DeeObject_Init(&result->ui_base.ke_base, &DeeError_UnboundItem);
@@ -1516,15 +1516,15 @@ err:
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
-(DCALL DeeRT_ErrUnboundKeyStrWithInner)(DeeObject *seq, char const *key,
-                                        /*inherit(always)*/ DREF DeeObject *inner) {
+(DCALL DeeRT_ErrUnboundKeyStrWithCause)(DeeObject *seq, char const *key,
+                                        /*inherit(always)*/ DREF DeeObject *cause) {
 	DREF UnboundItem *result = DeeObject_MALLOC(UnboundItem);
 	if unlikely(!result)
 		goto err;
 	if unlikely(Dee_variant_init_cstr_maybe(&result->ui_base.ke_key, key))
 		goto err_r;
 	result->ui_base.ke_base.e_message = NULL;
-	result->ui_base.ke_base.e_inner   = inner; /* Inherit reference */
+	result->ui_base.ke_base.e_cause   = cause; /* Inherit reference */
 	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
 	result->ui_iskey = true;
 	DeeObject_Init(&result->ui_base.ke_base, &DeeError_UnboundItem);
@@ -1532,7 +1532,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
 err_r:
 	DeeObject_FREE(result);
 err:
-	Dee_Decref(inner); /* Always inherited */
+	Dee_Decref(cause); /* Always inherited */
 	return -1;
 }
 
@@ -1545,7 +1545,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	if unlikely(Dee_variant_init_cstrlen_maybe(&result->ui_base.ke_key, key, keylen))
 		goto err_r;
 	result->ui_base.ke_base.e_message = NULL;
-	result->ui_base.ke_base.e_inner   = NULL;
+	result->ui_base.ke_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
 	result->ui_iskey = true;
 	DeeObject_Init(&result->ui_base.ke_base, &DeeError_UnboundItem);
@@ -1557,15 +1557,15 @@ err:
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2, 4)) int
-(DCALL DeeRT_ErrUnboundKeyStrLenWithInner)(DeeObject *seq, char const *key, size_t keylen,
-                                           /*inherit(always)*/ DREF DeeObject *inner) {
+(DCALL DeeRT_ErrUnboundKeyStrLenWithCause)(DeeObject *seq, char const *key, size_t keylen,
+                                           /*inherit(always)*/ DREF DeeObject *cause) {
 	DREF UnboundItem *result = DeeObject_MALLOC(UnboundItem);
 	if unlikely(!result)
 		goto err;
 	if unlikely(Dee_variant_init_cstrlen_maybe(&result->ui_base.ke_key, key, keylen))
 		goto err_r;
 	result->ui_base.ke_base.e_message = NULL;
-	result->ui_base.ke_base.e_inner   = inner; /* Inherit reference */
+	result->ui_base.ke_base.e_cause   = cause; /* Inherit reference */
 	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
 	result->ui_iskey = true;
 	DeeObject_Init(&result->ui_base.ke_base, &DeeError_UnboundItem);
@@ -1573,7 +1573,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 4)) int
 err_r:
 	DeeObject_FREE(result);
 err:
-	Dee_Decref(inner); /* Always inherited */
+	Dee_Decref(cause); /* Always inherited */
 	return -1;
 }
 
@@ -1669,7 +1669,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	if (key && DeeNone_Check(key))
 		key = NULL;
 	result->inf_base.e_message = NULL;
-	result->inf_base.e_inner   = NULL;
+	result->inf_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->inf_base.ve_value, seq);
 	Dee_Incref(item);
 	result->inf_item = item;
@@ -1770,7 +1770,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	if (rules == NULL)
 		rules = Dee_EmptyString;
 	result->rnf_base.inf_base.e_message = NULL;
-	result->rnf_base.inf_base.e_inner   = NULL;
+	result->rnf_base.inf_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->rnf_base.inf_base.ve_value, data);
 	Dee_Incref(regex);
 	result->rnf_base.inf_item  = regex;
@@ -1884,7 +1884,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	if unlikely(!result)
 		goto err;
 	result->ue_base.e_message = NULL;
-	result->ue_base.e_inner   = NULL;
+	result->ue_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->ue_base.ve_value, seq);
 	Dee_variant_init_size(&result->ue_mincount, expected_size);
 	Dee_variant_init_size(&result->ue_maxcount, expected_size);
@@ -1903,7 +1903,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	if unlikely(!result)
 		goto err;
 	result->ue_base.e_message = NULL;
-	result->ue_base.e_inner   = NULL;
+	result->ue_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->ue_base.ve_value, seq);
 	Dee_variant_init_size(&result->ue_mincount, expected_size_min);
 	Dee_variant_init_size(&result->ue_maxcount, expected_size_max);
@@ -2083,7 +2083,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	if unlikely(!result)
 		goto err;
 	result->io_base.e_message = NULL;
-	result->io_base.e_inner   = NULL;
+	result->io_base.e_cause   = NULL;
 	Dee_variant_init_object(&result->io_base.ve_value, value);
 	Dee_variant_init_object_or_unbound(&result->io_minval, minval);
 	Dee_variant_init_object_or_unbound(&result->io_maxval, maxval);
@@ -2107,7 +2107,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	if unlikely(!result)
 		goto err;
 	result->io_base.e_message = NULL;
-	result->io_base.e_inner   = NULL;
+	result->io_base.e_cause   = NULL;
 	max_bits = num_bits;
 	if (flags & DeeRT_ErrIntegerOverflowEx_F_SIGNED)
 		--max_bits;
@@ -2191,7 +2191,7 @@ PRIVATE ATTR_COLD int
 	if unlikely(!result)
 		goto err;
 	result->io_base.e_message = NULL;
-	result->io_base.e_inner   = NULL;
+	result->io_base.e_cause   = NULL;
 	Dee_variant_init_int32(&result->io_base.ve_value, value);
 	Dee_variant_init_int32(&result->io_minval, minval);
 	Dee_variant_init_int32(&result->io_maxval, maxval);
@@ -2218,7 +2218,7 @@ PRIVATE ATTR_COLD int
 	if unlikely(!result)
 		goto err;
 	result->io_base.e_message = NULL;
-	result->io_base.e_inner   = NULL;
+	result->io_base.e_cause   = NULL;
 	Dee_variant_init_int64(&result->io_base.ve_value, value);
 	Dee_variant_init_int64(&result->io_minval, minval);
 	Dee_variant_init_int64(&result->io_maxval, maxval);
@@ -2244,7 +2244,7 @@ PRIVATE ATTR_COLD int
 	if unlikely(!result)
 		goto err;
 	result->io_base.e_message = NULL;
-	result->io_base.e_inner   = NULL;
+	result->io_base.e_cause   = NULL;
 	Dee_variant_init_int128(&result->io_base.ve_value, value);
 	Dee_variant_init_int128(&result->io_minval, minval);
 	Dee_variant_init_int128(&result->io_maxval, maxval);
@@ -2352,7 +2352,7 @@ PUBLIC ATTR_COLD int
 
 
 /* Check if the currently-thrown exception is an `IntegerOverflow'. If so, wrap that
- * error within an `IndexError' (setting it as the `IndexError's "inner"), and using
+ * error within an `IndexError' (setting it as the `IndexError's "cause"), and using
  * `seq' as the accompanying sequence.
  *
  * If the currently-thrown exception isn't an `IntegerOverflow', do nothing.
@@ -2390,7 +2390,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 		Dee_variant_init_copy(&result->ie_base.ke_key, &overflow->io_base.ve_value);
 		Dee_variant_init_unbound(&result->ie_length);
 		result->ie_base.ke_base.e_message = NULL;
-		result->ie_base.ke_base.e_inner   = (DREF DeeObject *)overflow; /* Inherit reference */
+		result->ie_base.ke_base.e_cause   = (DREF DeeObject *)overflow; /* Inherit reference */
 		DeeObject_Init(&result->ie_base.ke_base, &DeeError_IndexError);
 		error->ef_error = (DREF DeeObject *)result; /* Inherit reference */
 	}
@@ -2400,7 +2400,7 @@ done:
 
 
 /* Check if the currently-thrown exception is an `IntegerOverflow'. If so, wrap that
- * error within a `NegativeShift' (setting it as the `NegativeShift's "inner"), and
+ * error within a `NegativeShift' (setting it as the `NegativeShift's "cause"), and
  * using `lhs' as the shift's left-hand-side expression.
  *
  * If the currently-thrown exception isn't an `IntegerOverflow', do nothing.
@@ -2438,7 +2438,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 		Dee_variant_init_copy(&result->nsf_rhs, &overflow->io_base.ve_value);
 		result->nsf_left = is_left_shift;
 		result->nsf_base.e_message = NULL;
-		result->nsf_base.e_inner   = (DREF DeeObject *)overflow; /* Inherit reference */
+		result->nsf_base.e_cause   = (DREF DeeObject *)overflow; /* Inherit reference */
 		DeeObject_Init(&result->nsf_base, &DeeError_NegativeShift);
 		error->ef_error = (DREF DeeObject *)result; /* Inherit reference */
 	}
@@ -2520,8 +2520,8 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 			ASSERT(!DeeObject_IsShared(nested));
 			Dee_variant_fini(&nested->ve_value);
 			Dee_variant_init_object(&nested->ve_value, to);
-			Dee_XDecref(nested->e_inner);
-			nested->e_inner = (DREF DeeObject *)current; /* Inherit reference */
+			Dee_XDecref(nested->e_cause);
+			nested->e_cause = (DREF DeeObject *)current; /* Inherit reference */
 			error->ef_error = (DREF DeeObject *)nested; /* Inherit reference */
 		}
 	}
@@ -2536,7 +2536,7 @@ done:
 PRIVATE DeeErrorObject RT_ErrNoActiveException = {
 	OBJECT_HEAD_INIT(&DeeError_RuntimeError),
 	/* .e_message = */ (DeeObject *)&str_No_active_exception,
-	/* .e_inner   = */ NULL,
+	/* .e_cause   = */ NULL,
 };
 
 PUBLIC ATTR_COLD int (DCALL DeeRT_ErrNoActiveException)(void) {
