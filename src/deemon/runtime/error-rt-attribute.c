@@ -93,7 +93,7 @@ print define_Dee_HashStr("isset");
 #define Dee_HashStr__isset _Dee_HashSelectC(0xbc9a78a1, 0x5b60f653e62d5e87)
 /*[[[end]]]*/
 
-#define Error_init_params "msg:?X2?Dstring?N=!N,cause:?X3?DError?O?N=!N"
+#define Error_init_params "msg?:?X2?Dstring?O,cause?:?X2?DError?O"
 
 
 
@@ -1865,8 +1865,8 @@ DeeRT_ErrAttributeError_impl(DeeTypeObject *error_type, DeeObject *decl,
 	ASSERTF((flags & ~AttributeError_F_ACCESS) == 0,
 	        "Only these flags may be specified");
 	ASSERT_OBJECT_TYPE_EXACT(attr, &DeeString_Type);
-	result->e_msg = NULL;
-	result->e_cause   = NULL;
+	result->e_msg   = NULL;
+	result->e_cause = NULL;
 	Dee_Incref(ob);
 	result->ae_obj = ob;
 	Dee_Incref(attr);
@@ -1894,8 +1894,8 @@ DeeRT_ErrAttributeErrorCStr_impl(DeeTypeObject *error_type, DeeObject *decl,
 	                   AttributeError_F_DEL |
 	                   AttributeError_F_SET)) == 0,
 	        "Only these flags may be specified");
-	result->e_msg = NULL;
-	result->e_cause   = NULL;
+	result->e_msg   = NULL;
+	result->e_cause = NULL;
 	Dee_Incref(ob);
 	result->ae_obj = ob;
 	result->ae_desc.ad_name = attr;
@@ -1921,8 +1921,8 @@ DeeRT_ErrAttributeErrorEx_impl(DeeTypeObject *error_type, DeeObject *ob,
 	                   AttributeError_F_SET)) == 0,
 	        "Only these flags may be specified");
 	DBG_memset(result, 0xcc, sizeof(*result));
-	result->e_msg = NULL;
-	result->e_cause   = NULL;
+	result->e_msg   = NULL;
+	result->e_cause = NULL;
 	Dee_Incref(ob);
 	result->ae_obj = ob;
 	Dee_attrdesc_init_copy(&result->ae_desc, attr);
@@ -1945,8 +1945,8 @@ DeeRT_ErrAttributeErrorCA_impl(DeeTypeObject *error_type, DeeObject *ob,
 	                   AttributeError_F_SET)) == 0,
 	        "Only these flags may be specified");
 	DBG_memset(result, 0xcc, sizeof(*result));
-	result->e_msg = NULL;
-	result->e_cause   = NULL;
+	result->e_msg   = NULL;
+	result->e_cause = NULL;
 	Dee_Incref(ob);
 	result->ae_obj = ob;
 	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTR; /* Changed to "Dee_ATTRINFO_INSTANCE_ATTR" if appropriate */
@@ -1969,8 +1969,8 @@ DeeRT_ErrAttributeErrorMethod_impl(DeeTypeObject *error_type, DeeObject *ob,
 	                   AttributeError_F_SET)) == 0,
 	        "Only these flags may be specified");
 	DBG_memset(result, 0xcc, sizeof(*result));
-	result->e_msg = NULL;
-	result->e_cause   = NULL;
+	result->e_msg   = NULL;
+	result->e_cause = NULL;
 	Dee_Incref(ob);
 	result->ae_obj = ob;
 	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_METHOD; /* Changed to "Dee_ATTRINFO_INSTANCE_METHOD" if appropriate */
@@ -1993,8 +1993,8 @@ DeeRT_ErrAttributeErrorGetSet_impl(DeeTypeObject *error_type, DeeObject *ob,
 	                   AttributeError_F_SET)) == 0,
 	        "Only these flags may be specified");
 	DBG_memset(result, 0xcc, sizeof(*result));
-	result->e_msg = NULL;
-	result->e_cause   = NULL;
+	result->e_msg   = NULL;
+	result->e_cause = NULL;
 	Dee_Incref(ob);
 	result->ae_obj = ob;
 	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_GETSET; /* Changed to "Dee_ATTRINFO_INSTANCE_GETSET" if appropriate */
@@ -2018,8 +2018,8 @@ DeeRT_ErrAttributeErrorMember_impl(DeeTypeObject *error_type, DeeObject *ob,
 	                   AttributeError_F_SET)) == 0,
 	        "Only these flags may be specified");
 	DBG_memset(result, 0xcc, sizeof(*result));
-	result->e_msg = NULL;
-	result->e_cause   = NULL;
+	result->e_msg   = NULL;
+	result->e_cause = NULL;
 	Dee_Incref(ob);
 	result->ae_obj = ob;
 	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_MEMBER; /* Changed to "Dee_ATTRINFO_INSTANCE_MEMBER" if appropriate */
@@ -2126,8 +2126,8 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
 	ASSERT_OBJECT_TYPE_A(instance, class_type);
 	ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
 	ASSERT(DeeType_IsClass(class_type));
-	result->e_msg = NULL;
-	result->e_cause   = NULL;
+	result->e_msg   = NULL;
+	result->e_cause = NULL;
 	Dee_Incref(instance);
 	result->ae_obj = instance;
 	result->ae_desc.ad_info.ai_decl = (DeeObject *)class_type;
@@ -2148,8 +2148,8 @@ PUBLIC ATTR_COLD NONNULL((1)) DeeObject *
 	DBG_memset(result, 0xcc, sizeof(*result));
 	ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
 	ASSERT(DeeType_IsClass(class_type));
-	result->e_msg = NULL;
-	result->e_cause   = NULL;
+	result->e_msg   = NULL;
+	result->e_cause = NULL;
 	Dee_Incref(class_type);
 	result->ae_obj = (DeeObject *)class_type;
 	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_CLASS_SLOT;
@@ -2335,8 +2335,8 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	ASSERT_OBJECT_TYPE_A(instance, class_type);
 	ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
 	ASSERT(DeeType_IsClass(class_type));
-	result->e_msg = NULL;
-	result->e_cause   = NULL;
+	result->e_msg   = NULL;
+	result->e_cause = NULL;
 	Dee_Incref(instance);
 	result->ae_obj = instance;
 	result->ae_desc.ad_info.ai_decl = (DeeObject *)class_type;

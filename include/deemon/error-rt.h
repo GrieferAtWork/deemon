@@ -237,10 +237,15 @@ DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrNestSequenceError)(DeeObject 
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrUnpackError)(DeeObject *seq, size_t expected_size, size_t actual_size);
 DFUNDEF ATTR_COLD NONNULL((1, 4)) int (DCALL DeeRT_ErrUnpackErrorWithCause)(DeeObject *seq, size_t expected_size, size_t actual_size, /*inherit(always)*/ DREF DeeObject *cause);
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrUnpackErrorEx)(DeeObject *seq, size_t expected_size_min, size_t expected_size_max, size_t actual_size);
+DFUNDEF ATTR_COLD NONNULL((1, 5)) int (DCALL DeeRT_ErrUnpackErrorExWithCause)(DeeObject *seq, size_t expected_size_min, size_t expected_size_max, size_t actual_size, /*inherit(always)*/ DREF DeeObject *cause);
 #define DeeRT_ErrUnpackError(seq, expected_size, actual_size) \
 	Dee_ASSUMED_VALUE((DeeRT_ErrUnpackError)((DeeObject *)Dee_REQUIRES_OBJECT(seq), expected_size, actual_size), -1)
+#define DeeRT_ErrUnpackErrorWithCause(seq, expected_size, actual_size, cause) \
+	Dee_ASSUMED_VALUE((DeeRT_ErrUnpackErrorWithCause)((DeeObject *)Dee_REQUIRES_OBJECT(seq), expected_size, actual_size, (DeeObject *)Dee_REQUIRES_OBJECT(cause)), -1)
 #define DeeRT_ErrUnpackErrorEx(seq, expected_size_min, expected_size_max, actual_size) \
 	Dee_ASSUMED_VALUE((DeeRT_ErrUnpackErrorEx)((DeeObject *)Dee_REQUIRES_OBJECT(seq), expected_size_min, expected_size_max, actual_size), -1)
+#define DeeRT_ErrUnpackErrorExWithCause(seq, expected_size_min, expected_size_max, actual_size, cause) \
+	Dee_ASSUMED_VALUE((DeeRT_ErrUnpackErrorExWithCause)((DeeObject *)Dee_REQUIRES_OBJECT(seq), expected_size_min, expected_size_max, actual_size, (DeeObject *)Dee_REQUIRES_OBJECT(cause)), -1)
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrVaUnpackError)(struct Dee_code_frame const *__restrict frame, size_t expected_size);
 #define DeeRT_ErrVaUnpackError(frame, expected_size) \

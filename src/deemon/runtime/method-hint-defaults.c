@@ -6335,11 +6335,12 @@ default__seq_unpack__with__seq_operator_size__and__seq_operator_getitem_index(De
 	for (i = 0; i < real_count; ++i) {
 		DREF DeeObject *item = (*cached_seq_operator_getitem_index)(self, i);
 		if unlikely(!item) {
+			DREF DeeObject *error;
 			Dee_Decrefv(result, i);
 			/* This can only mean that the size changed, because we're
 			 * allowed to assume "__seq_getitem_always_bound__" */
-			if (DeeError_Catch(&DeeError_IndexError))
-				return DeeRT_ErrUnpackError(self, count, i); /* TODO: Pass orig error as "cause" */
+			if ((error = DeeError_CatchError(&DeeError_IndexError)) != NULL)
+				return DeeRT_ErrUnpackErrorWithCause(self, count, i, error);
 			goto err;
 		}
 		result[i] = item; /* Inherit reference */
@@ -6596,13 +6597,14 @@ default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_getitem_index
 	for (i = 0; i < real_count; ++i) {
 		DREF DeeObject *item = (*cached_seq_operator_getitem_index)(self, i);
 		if unlikely(!item) {
+			DREF DeeObject *error;
 			Dee_Decrefv(result, i);
 			/* This can only mean that the size changed, because we're
 			 * allowed to assume "__seq_getitem_always_bound__" */
-			if (DeeError_Catch(&DeeError_IndexError)) {
+			if ((error = DeeError_CatchError(&DeeError_IndexError)) != NULL) {
 				if (i >= min_count)
 					return i;
-				return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, i); /* TODO: Pass orig error as "cause" */
+				return (size_t)DeeRT_ErrUnpackErrorExWithCause(self, min_count, max_count, i, error);
 			}
 			goto err;
 		}
@@ -6834,14 +6836,17 @@ default__seq_unpack_ub__with__seq_operator_size__and__seq_operator_getitem_index
 		if unlikely(!item) {
 			if (DeeError_Catch(&DeeError_UnboundItem)) {
 				/* It's just unbound (which is allowed) */
-			} else if (DeeError_Catch(&DeeError_IndexError)) {
-				/* Early sequence end (sequence may have been truncated) */
-				if (i >= min_count)
-					return i;
-				DeeRT_ErrUnpackErrorEx(self, min_count, max_count, i); /* TODO: Pass orig error as "cause" */
-				goto err_result_i;
 			} else {
-				goto err_result_i;
+				DREF DeeObject *error;
+				if ((error = DeeError_CatchError(&DeeError_IndexError)) != NULL) {
+					/* Early sequence end (sequence may have been truncated) */
+					if (i >= min_count)
+						return i;
+					DeeRT_ErrUnpackErrorExWithCause(self, min_count, max_count, i, error);
+					goto err_result_i;
+				} else {
+					goto err_result_i;
+				}
 			}
 		}
 		result[i] = item; /* Inherit reference */

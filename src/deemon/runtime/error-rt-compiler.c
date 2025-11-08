@@ -36,7 +36,7 @@
 
 DECL_BEGIN
 
-#define Error_init_params "msg:?X2?Dstring?N=!N,cause:?X3?DError?O?N=!N"
+#define Error_init_params "msg?:?X2?Dstring?O,cause?:?X2?DError?O"
 #define error_print_common(self, printer, arg, custom_printer)                    \
 	error_print_common((DeeErrorObject *)Dee_REQUIRES_OBJECT(self), printer, arg, \
 	                   (DeeNO_print_t)(custom_printer))

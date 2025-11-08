@@ -198,6 +198,9 @@ DeeStructObject_ForeachField(DeeTypeObject *__restrict type,
                              Dee_struct_object_foreach_field_cb_t cb,
                              Dee_struct_object_foreach_field_undo_t undo,
                              void *arg) {
+	/* TODO: Have a field in "type->tp_mhcache" that caches the order of fields here
+	 * Reason: enumeration of struct fields is slow because of the field rename rules,
+	 *         which results in a **lot** of nested loops slowing stuff down! */
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	return struct_foreach_field_at_step(type, type, cb, undo, arg);
 }
@@ -586,16 +589,6 @@ done:
 	return result;
 err_temp:
 	return temp;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-Dee_type_member_tryget(struct Dee_type_member const *desc, DeeObject *__restrict self) {
-	DREF DeeObject *result = Dee_type_member_get(desc, self);
-	if unlikely(!result) {
-		if (DeeError_Catch(&DeeError_UnboundAttribute))
-			result = ITER_DONE; /* Unbound */
-	}
-	return result;
 }
 
 PRIVATE NONNULL((2, 3)) Dee_ssize_t DCALL

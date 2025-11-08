@@ -176,6 +176,7 @@ EXPORTS
 	DeeError_Current@0=_DeeError_Current@0
 	DeeError_CurrentIs@4=_DeeError_CurrentIs@4
 	DeeError_Display@12=_DeeError_Display@12
+	DeeError_DisplayImpl@20=_DeeError_DisplayImpl@20
 	DeeError_Handled@4=_DeeError_Handled@4
 	DeeError_Print@8=_DeeError_Print@8
 	DeeError_Throw@4=_DeeError_Throw@4
@@ -1156,6 +1157,7 @@ EXPORTS
 	DeeRT_ErrItemNotFound@8=_DeeRT_ErrItemNotFound@8
 	DeeRT_ErrItemNotFoundEx@20=_DeeRT_ErrItemNotFoundEx@20
 	DeeRT_ErrNegativeShiftOverflow@8=_DeeRT_ErrNegativeShiftOverflow@8
+	DeeRT_ErrNestSequenceError@8=_DeeRT_ErrNestSequenceError@8
 	DeeRT_ErrNoActiveException@0=_DeeRT_ErrNoActiveException@0
 	DeeRT_ErrReadOnlyKey@8=_DeeRT_ErrReadOnlyKey@8
 	DeeRT_ErrReadOnlyKeyInt@8=_DeeRT_ErrReadOnlyKeyInt@8
@@ -1195,6 +1197,8 @@ EXPORTS
 	DeeRT_ErrUnknownKeyWithCause@12=_DeeRT_ErrUnknownKeyWithCause@12
 	DeeRT_ErrUnpackError@12=_DeeRT_ErrUnpackError@12
 	DeeRT_ErrUnpackErrorEx@16=_DeeRT_ErrUnpackErrorEx@16
+	DeeRT_ErrUnpackErrorExWithCause@20=_DeeRT_ErrUnpackErrorExWithCause@20
+	DeeRT_ErrUnpackErrorWithCause@16=_DeeRT_ErrUnpackErrorWithCause@16
 	DeeRange_New@12=_DeeRange_New@12
 	DeeRange_NewInt@12=_DeeRange_NewInt@12
 	DeeRefVector_New@16=_DeeRefVector_New@16
@@ -1579,6 +1583,7 @@ EXPORTS
 	Dee_type_member_del@8=_Dee_type_member_del@8
 	Dee_type_member_get@8=_Dee_type_member_get@8
 	Dee_type_member_set@12=_Dee_type_member_set@12
+	Dee_type_member_tryget@8=_Dee_type_member_tryget@8
 	Dee_unicode_printer_alloc_utf16@8=_Dee_unicode_printer_alloc_utf16@8
 	Dee_unicode_printer_alloc_utf32@8=_Dee_unicode_printer_alloc_utf32@8
 	Dee_unicode_printer_alloc_utf8@8=_Dee_unicode_printer_alloc_utf8@8

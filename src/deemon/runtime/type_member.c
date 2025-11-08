@@ -773,6 +773,90 @@ is_unbound:
 	return DeeRT_ErrUnboundMember(self, desc);
 }
 
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+Dee_type_member_tryget(struct type_member const *desc,
+                       DeeObject *__restrict self) {
+	if (TYPE_MEMBER_ISCONST(desc)) {
+		ASSERT_OBJECT(desc->m_desc.md_const);
+		return_reference_(desc->m_desc.md_const);
+	}
+	switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
+#define CASE(x) case (x) & ~(STRUCT_CONST | STRUCT_ATOMIC)
+
+	CASE(STRUCT_WOBJECT): {
+		DeeObject *ob;
+		ob = Dee_weakref_lock(&FIELD(struct weakref));
+		if unlikely(!ob)
+			goto handle_null_ob;
+		return ob;
+	}	break;
+
+	CASE(STRUCT_OBJECT): {
+		DeeObject *ob;
+		ob = FIELD(DeeObject *);
+		if unlikely(!ob) {
+handle_null_ob:
+			ob = Dee_None;
+		}
+		Dee_Incref(ob);
+		return ob;
+	}	break;
+
+	CASE(STRUCT_CSTR): {
+		char const *cstr = FIELD(char const *);
+		if unlikely(!cstr)
+			goto is_unbound;
+		return DeeString_NewAutoUtf8(cstr);
+	}	break;
+
+	CASE(STRUCT_VARIANT): {
+		DREF DeeObject *result = Dee_variant_getobject(&FIELD(struct Dee_variant));
+		if unlikely(result == ITER_DONE)
+			goto is_unbound;
+		return result;
+	}	break;
+
+	CASE(STRUCT_NONE):
+	CASE(STRUCT_OBJECT_OPT):
+	CASE(STRUCT_WOBJECT_OPT):
+	CASE(STRUCT_CSTR_OPT):
+	CASE(STRUCT_CSTR_EMPTY):
+	CASE(STRUCT_STRING):
+	CASE(STRUCT_CHAR):
+	CASE(STRUCT_BOOL8):
+	CASE(STRUCT_BOOL16):
+	CASE(STRUCT_BOOL32):
+	CASE(STRUCT_BOOL64):
+	CASE(STRUCT_BOOLBIT0):
+	CASE(STRUCT_BOOLBIT1):
+	CASE(STRUCT_BOOLBIT2):
+	CASE(STRUCT_BOOLBIT3):
+	CASE(STRUCT_BOOLBIT4):
+	CASE(STRUCT_BOOLBIT5):
+	CASE(STRUCT_BOOLBIT6):
+	CASE(STRUCT_BOOLBIT7):
+	CASE(STRUCT_FLOAT):
+	CASE(STRUCT_DOUBLE):
+	CASE(STRUCT_LDOUBLE):
+	CASE(STRUCT_INT8):
+	CASE(STRUCT_UNSIGNED | STRUCT_INT8):
+	CASE(STRUCT_INT16):
+	CASE(STRUCT_UNSIGNED | STRUCT_INT16):
+	CASE(STRUCT_INT32):
+	CASE(STRUCT_UNSIGNED | STRUCT_INT32):
+	CASE(STRUCT_INT64):
+	CASE(STRUCT_UNSIGNED | STRUCT_INT64):
+	CASE(STRUCT_INT128):
+	CASE(STRUCT_UNSIGNED | STRUCT_INT128):
+		return Dee_type_member_get(desc, self);
+
+#undef CASE
+	default: break;
+	}
+is_unbound:
+	return ITER_DONE;
+}
+
 PUBLIC WUNUSED NONNULL((1, 2)) bool DCALL
 Dee_type_member_bound(struct type_member const *desc,
                       DeeObject *__restrict self) {

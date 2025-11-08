@@ -502,6 +502,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 4)) size_t DCALL DeeObject_TGenericIterAttr(DeeTy
 
 /* Interact with type member definitions. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL Dee_type_member_get(struct Dee_type_member const *desc, DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL Dee_type_member_tryget(struct Dee_type_member const *desc, DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL Dee_type_member_bound(struct Dee_type_member const *desc, DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_type_member_set(struct Dee_type_member const *desc, DeeObject *self, DeeObject *value);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_type_member_del(struct Dee_type_member const *desc, DeeObject *self);
