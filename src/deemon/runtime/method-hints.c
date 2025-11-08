@@ -406,8 +406,13 @@ INTERN WUNUSED NONNULL((1)) struct Dee_type_mh_cache *
 	if unlikely(!result) {
 		result = Dee_type_mh_cache_alloc();
 		if likely(result) {
-			if unlikely(!atomic_cmpxch(&self->tp_mhcache, NULL, result)) {
-				Dee_Free(result);
+			if likely(atomic_cmpxch(&self->tp_mhcache, NULL, result)) {
+#ifndef NDEBUG
+				if (!(self->tp_flags & TP_FHEAP))
+					Dee_UntrackAlloc(result);
+#endif /* !NDEBUG */
+			} else {
+				Dee_type_mh_cache_free(result);
 				result = atomic_read(&self->tp_mhcache);
 				ASSERT(result);
 			}

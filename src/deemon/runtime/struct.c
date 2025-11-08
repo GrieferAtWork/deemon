@@ -34,10 +34,12 @@
 #include <deemon/system-features.h>
 #include <deemon/variant.h>
 
+#include <hybrid/host.h> /* __pic__ */
 #include <hybrid/int128.h>
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
+#include "method-hints.h"
 #include "runtime_error.h"
 
 DECL_BEGIN
@@ -178,6 +180,215 @@ struct_foreach_field_at_step(DeeTypeObject *type,
 	return result;
 }
 
+#ifdef CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE
+struct struct_field_cache_builder {
+	struct Dee_type_struct_field *sfcb_fieldv; /* [0..sfcb_fieldc|ALLOC(sfcb_fielda)][owned] Vector of fields */
+	size_t                        sfcb_fieldc; /* # of fields */
+	size_t                        sfcb_fielda; /* Allocated # of fields */
+};
+
+PRIVATE NONNULL_T((2, 3)) Dee_ssize_t DCALL
+struct_field_cache_builder_append(void *arg, DeeTypeObject *declaring_type,
+                                  struct Dee_type_member const *field) {
+	struct Dee_type_struct_field *entry;
+	struct struct_field_cache_builder *me;
+	me = (struct struct_field_cache_builder *)arg;
+	ASSERT(me->sfcb_fieldc <= me->sfcb_fielda);
+	if (me->sfcb_fieldc >= me->sfcb_fielda) {
+		struct Dee_type_struct_field *new_fieldv;
+		size_t new_fielda = me->sfcb_fielda * 2;
+		if (new_fielda < 8)
+			new_fielda = 8;
+		new_fieldv = (struct Dee_type_struct_field *)Dee_TryReallocc(me->sfcb_fieldv, new_fielda,
+		                                                             sizeof(struct Dee_type_struct_field));
+		if unlikely(!new_fieldv) {
+			new_fielda = me->sfcb_fieldc + 1;
+			new_fieldv = (struct Dee_type_struct_field *)Dee_TryReallocc(me->sfcb_fieldv, new_fielda,
+			                                                             sizeof(struct Dee_type_struct_field));
+			if unlikely(!new_fieldv)
+				goto err;
+		}
+		me->sfcb_fieldv = new_fieldv;
+		me->sfcb_fielda = new_fielda;
+	}
+	entry = &me->sfcb_fieldv[me->sfcb_fieldc++];
+	entry->tsf_member   = field;
+	entry->tsf_decltype = declaring_type;
+	return 0;
+err:
+	return -1;
+}
+
+
+/* Allocate a new cache for "struct Dee_type_struct_cache::tsc_allfields" */
+PRIVATE WUNUSED NONNULL((1)) struct Dee_type_struct_field *DCALL
+Dee_type_struct_getallfields_uncached(DeeTypeObject *__restrict self) {
+	Dee_ssize_t status;
+	struct Dee_type_struct_field *result;
+	struct struct_field_cache_builder builder;
+	bzero(&builder, sizeof(builder));
+	status = struct_foreach_field_at_step(self, self, &struct_field_cache_builder_append,
+	                                      NULL, &builder);
+	if unlikely(status < 0)
+		goto err;
+	result = (struct Dee_type_struct_field *)Dee_TryReallocc(builder.sfcb_fieldv,
+	                                                         builder.sfcb_fieldc + 1,
+	                                                         sizeof(struct Dee_type_struct_field));
+	if unlikely(!result)
+		goto err;
+	result[builder.sfcb_fieldc].tsf_decltype = NULL;
+	result[builder.sfcb_fieldc].tsf_member   = NULL;
+	return result;
+err:
+	Dee_Free(builder.sfcb_fieldv);
+	return NULL;
+}
+
+/* Allocate a new cache for "struct Dee_type_struct_cache::tsc_locfields" */
+PRIVATE WUNUSED NONNULL((1)) struct Dee_type_member const **DCALL
+Dee_type_struct_getlocfields_uncached(DeeTypeObject *__restrict self) {
+	struct Dee_type_member const **result;
+	struct Dee_type_member const **result_v = NULL;
+	size_t result_a = 0, result_c = 0;
+	struct type_member const *member;
+	if ((member = self->tp_members) != NULL) {
+		/* Enumerate struct fields that are local, and
+		 * relevant (need to be called during visit/fini) */
+		DeeTypeObject *tp_base = DeeType_Base(self);
+		for (; member->m_name; ++member) {
+			if (!TYPE_MEMBER_ISFIELD(member))
+				continue;
+			if (struct_offset_exists_r(tp_base, member->m_desc.md_field.mdf_offset))
+				continue;
+			switch (member->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
+			case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
+			case STRUCT_OBJECT & ~STRUCT_CONST:
+			case STRUCT_WOBJECT_OPT:
+			case STRUCT_WOBJECT:
+			case STRUCT_VARIANT:
+				ASSERT(result_c <= result_a);
+				if (result_c >= result_a) {
+					struct Dee_type_member const * *new_fieldv;
+					size_t new_fielda = result_a * 2;
+					if (new_fielda < 8)
+						new_fielda = 8;
+					new_fieldv = (struct Dee_type_member const **)Dee_TryReallocc(result_v, new_fielda,
+					                                                              sizeof(struct Dee_type_member const *));
+					if unlikely(!new_fieldv) {
+						new_fielda = result_c + 1;
+						new_fieldv = (struct Dee_type_member const **)Dee_TryReallocc(result_v, new_fielda,
+						                                                              sizeof(struct Dee_type_member const *));
+						if unlikely(!new_fieldv)
+							goto err;
+					}
+					result_v = new_fieldv;
+					result_a = new_fielda;
+				}
+				result_v[result_c++] = member;
+				break;
+			default: break;
+			}
+		}
+	}
+	result = (struct Dee_type_member const **)Dee_TryReallocc(result_v, result_c + 1,
+	                                                          sizeof(struct Dee_type_member const *));
+	if unlikely(!result)
+		goto err;
+	result[result_c] = NULL;
+	return result;
+err:
+	Dee_Free(result_v);
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) struct Dee_type_struct_cache *DCALL
+Dee_type_struct_cache_of(DeeTypeObject *__restrict self) {
+	struct Dee_type_struct_cache *result;
+	struct Dee_type_mh_cache *mhc = Dee_type_mh_cache_of(self);
+	if unlikely(!mhc)
+		goto err;
+	result = atomic_read(&mhc->mhc_structcache);
+	if unlikely(!result) {
+		result = Dee_type_struct_cache_alloc();
+		if likely(result) {
+			if likely(atomic_cmpxch(&mhc->mhc_structcache, NULL, result)) {
+#ifndef NDEBUG
+				if (!(self->tp_flags & TP_FHEAP))
+					Dee_UntrackAlloc(result);
+#endif /* !NDEBUG */
+			} else {
+				Dee_type_struct_cache_free(result);
+				result = atomic_read(&mhc->mhc_structcache);
+				ASSERT(result);
+			}
+		}
+	}
+	return result;
+err:
+	return NULL;
+}
+
+/* Return cache for "struct Dee_type_struct_cache::tsc_allfields" */
+PRIVATE WUNUSED NONNULL((1)) struct Dee_type_struct_field const *DCALL
+Dee_type_struct_getallfields(DeeTypeObject *__restrict self) {
+	struct Dee_type_struct_field *result;
+	struct Dee_type_struct_cache *tsc = Dee_type_struct_cache_of(self);
+	if unlikely(!tsc)
+		goto err;
+	result = atomic_read(&tsc->tsc_allfields);
+	if unlikely(!result) {
+		result = Dee_type_struct_getallfields_uncached(self);
+		if likely(result) {
+			result = (struct Dee_type_struct_field *)Dee_UntrackAlloc(result);
+			if likely(atomic_cmpxch(&tsc->tsc_allfields, NULL, result)) {
+#ifndef NDEBUG
+				if (!(self->tp_flags & TP_FHEAP))
+					Dee_UntrackAlloc(result);
+#endif /* !NDEBUG */
+			} else {
+				Dee_type_struct_cache_free(result);
+				result = atomic_read(&tsc->tsc_allfields);
+				ASSERT(result);
+			}
+		}
+	}
+	return result;
+err:
+	return NULL;
+}
+
+/* Return cache for "struct Dee_type_struct_cache::tsc_locfields" */
+PRIVATE WUNUSED NONNULL((1)) struct Dee_type_member const *const *DCALL
+Dee_type_struct_getlocfields(DeeTypeObject *__restrict self) {
+	struct Dee_type_member const **result;
+	struct Dee_type_struct_cache *tsc = Dee_type_struct_cache_of(self);
+	if unlikely(!tsc)
+		goto err;
+	result = atomic_read(&tsc->tsc_locfields);
+	if unlikely(!result) {
+		result = Dee_type_struct_getlocfields_uncached(self);
+		if likely(result) {
+			result = (struct Dee_type_member const **)Dee_UntrackAlloc(result);
+			if likely(atomic_cmpxch(&tsc->tsc_locfields, NULL, result)) {
+#ifndef NDEBUG
+				if (!(self->tp_flags & TP_FHEAP))
+					Dee_UntrackAlloc(result);
+#endif /* !NDEBUG */
+			} else {
+				Dee_type_struct_cache_free(result);
+				result = atomic_read(&tsc->tsc_locfields);
+				ASSERT(result);
+			}
+		}
+	}
+	return result;
+err:
+	return NULL;
+}
+#endif /* CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE */
+
+
+
 /* Enumerate struct object fields in order as they should be accepted
  * by constructors, and are printed by "DeeStructObject_PrintRepr()".
  *
@@ -198,10 +409,35 @@ DeeStructObject_ForeachField(DeeTypeObject *__restrict type,
                              Dee_struct_object_foreach_field_cb_t cb,
                              Dee_struct_object_foreach_field_undo_t undo,
                              void *arg) {
-	/* TODO: Have a field in "type->tp_mhcache" that caches the order of fields here
+#ifdef CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE
+	struct Dee_type_struct_field const *fields;
+#endif /* CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE */
+	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
+
+	/* Have a field in "type->tp_mhcache" that caches the order of fields here
 	 * Reason: enumeration of struct fields is slow because of the field rename rules,
 	 *         which results in a **lot** of nested loops slowing stuff down! */
-	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
+#ifdef CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE
+	if likely((fields = Dee_type_struct_getallfields(type)) != NULL) {
+		size_t i;
+		Dee_ssize_t temp, result = 0;
+		for (i = 0; fields[i].tsf_member; ++i) {
+			temp = (*cb)(arg, fields[i].tsf_decltype, fields[i].tsf_member);
+			if unlikely(temp < 0) {
+				if (undo) {
+					while (i--)
+						(*undo)(arg, fields[i].tsf_decltype, fields[i].tsf_member);
+				}
+				result = temp;
+				break;
+			}
+			result += temp;
+		}
+		return result;
+	}
+#endif /* CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE */
+
+	/* Fallback: enumerate fields on-the-fly (slow) */
 	return struct_foreach_field_at_step(type, type, cb, undo, arg);
 }
 
@@ -517,9 +753,28 @@ DeeStructObject_Ctor(DeeObject *__restrict self) {
 PUBLIC NONNULL((1)) void DCALL /* Remember to set "Dee_TF_TPVISIT" */
 DeeStructObject_Visit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                       Dee_visit_t proc, void *arg) {
-	struct type_member const *member = tp_self->tp_members;
-	DeeTypeObject *tp_base = DeeType_Base(tp_self);
-	if (member) {
+	struct type_member const *member;
+#ifdef CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE
+	struct Dee_type_member const *const *fields;
+	if likely((fields = Dee_type_struct_getlocfields(tp_self)) != NULL) {
+		while ((member = *fields++) != NULL) {
+			byte_t *dst = (byte_t *)self + member->m_desc.md_field.mdf_offset;
+			switch (member->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
+			case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
+			case STRUCT_OBJECT & ~STRUCT_CONST:
+				Dee_XVisit(*(DREF DeeObject **)dst);
+				break;
+			case STRUCT_VARIANT:
+				Dee_variant_visit((struct Dee_variant *)dst, proc, arg);
+				break;
+			default: break;
+			}
+		}
+		return;
+	}
+#endif /* CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE */
+	if ((member = tp_self->tp_members) != NULL) {
+		DeeTypeObject *tp_base = DeeType_Base(tp_self);
 		for (; member->m_name; ++member) {
 			byte_t *dst;
 			if (!TYPE_MEMBER_ISFIELD(member))
@@ -544,9 +799,17 @@ DeeStructObject_Visit(DeeTypeObject *tp_self, DeeObject *__restrict self,
 PUBLIC NONNULL((1)) void DCALL /* Only finalizes fields defined by "Dee_TYPE(self)" */
 DeeStructObject_Fini(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	DeeTypeObject *tp_base = DeeType_Base(tp_self);
-	struct type_member const *member = tp_self->tp_members;
-	if (member) {
+	struct type_member const *member;
+#ifdef CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE
+	struct Dee_type_member const *const *fields;
+	if likely((fields = Dee_type_struct_getlocfields(tp_self)) != NULL) {
+		while ((member = *fields++) != NULL)
+			struct_fini_cb(self, tp_self, member);
+		return;
+	}
+#endif /* CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE */
+	if ((member = tp_self->tp_members) != NULL) {
+		DeeTypeObject *tp_base = DeeType_Base(tp_self);
 		for (; member->m_name; ++member) {
 			if (!TYPE_MEMBER_ISFIELD(member))
 				continue;

@@ -582,7 +582,7 @@ PRIVATE struct type_method tpconst error_class_methods[] = {
 	              /**/ "		traceback = Traceback.ofthrow(error);\n"
 	              /**/ "	if (reason !is string)\n"
 	              /**/ "		throw TypeError(...);\n"
-	              /**/ "	if (traceback !is Traceback)\n"
+	              /**/ "	if (traceback !is Traceback && traceback !is none)\n"
 	              /**/ "		throw TypeError(...);\n"
 	              /**/ "	for (;;) {\n"
 	              /**/ "		print fp: (reason, \": \", type error),;\n"
@@ -609,17 +609,14 @@ PRIVATE struct type_method tpconst error_class_methods[] = {
 	            "Returns the effective message for @error\n"
 	            "${"
 	            /**/ "function message(error: Error | Object): string {\n"
+	            /**/ "	local msg = this;\n"
 	            /**/ "	if (error is Error) {\n"
-	            /**/ "		local message;\n"
 	            /**/ "		try {\n"
-	            /**/ "			message = Error.msg(error);\n"
+	            /**/ "			msg = Error.msg(error);\n"
 	            /**/ "		} catch (UnboundAttribute) {\n"
-	            /**/ "			goto fallback;\n"
 	            /**/ "		}\n"
-	            /**/ "		return str message;\n"
 	            /**/ "	}\n"
-	            /**/ "fallback:\n"
-	            /**/ "	return str error;\n"
+	            /**/ "	return str msg;\n"
 	            /**/ "}"
 	            "}"),
 	TYPE_METHOD_END
@@ -628,7 +625,23 @@ PRIVATE struct type_method tpconst error_class_methods[] = {
 PRIVATE struct type_getset tpconst error_class_getsets[] = {
 	TYPE_GETTER("current", &error_class_getcurrent,
 	            "Returns the currently thrown object (which "
-	            "isn't necessarily an instance of ?.)"),
+	            /**/ "isn't necessarily an instance of ?.)\n"
+	            "${"
+	            /**/ "try {\n"
+	            /**/ "	...\n"
+	            /**/ "} catch (e...) {\n"
+	            /**/ "	assert Error.current === e;\n"
+	            /**/ "}\n"
+	            "}\n"
+	            "${"
+	            /**/ "class property current: Object = {\n"
+	            /**/ "	get(): Object {\n"
+	            /**/ "		local result;\n"
+	            /**/ "		__asm__(\"push except\" : \"=s\" (result));\n"
+	            /**/ "		return result;\n"
+	            /**/ "	}\n"
+	            /**/ "}"
+	            "}"),
 	TYPE_GETSET_END
 };
 

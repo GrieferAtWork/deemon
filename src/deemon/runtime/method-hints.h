@@ -30,6 +30,40 @@
 
 DECL_BEGIN
 
+#if (!defined(CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE) && \
+     !defined(CONFIG_NO_STRUCT_OBJECT_FIELD_CACHE))
+#if defined(__OPTIMIZE_SIZE__)
+#define CONFIG_NO_STRUCT_OBJECT_FIELD_CACHE
+#else /* __OPTIMIZE_SIZE__ */
+#define CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE
+#endif /* !__OPTIMIZE_SIZE__ */
+#endif /* ... */
+
+/* Cache for "DeeStructObject_ForeachField()" & friends */
+#ifdef CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE
+struct Dee_type_struct_field {
+	struct Dee_type_member const *tsf_member;   /* [1..1] Field in question ("NULL" here is used as sentinel) */
+	DeeTypeObject                *tsf_decltype; /* [1..1] Declaring type */
+};
+struct Dee_type_struct_cache {
+	struct Dee_type_struct_field  *tsc_allfields; /* [0..N][lock(WRITE_ONCE)][owned] Cache for fields enumerated by `DeeStructObject_ForeachField()' */
+	struct Dee_type_member const **tsc_locfields; /* [0..N][lock(WRITE_ONCE)][owned] Cache for fields enumerated by `DeeStructObject_Visit()' / `DeeStructObject_Fini()' */
+};
+
+#define Dee_type_struct_cache_alloc() \
+	((struct Dee_type_struct_cache *)Dee_UntrackAlloc(Dee_TryCalloc(sizeof(struct Dee_type_struct_cache))))
+#define Dee_type_struct_cache_free(self) Dee_Free(self)
+LOCAL NONNULL((1)) void DCALL
+Dee_type_struct_cache_destroy(struct Dee_type_struct_cache *__restrict self) {
+	Dee_Free(self->tsc_allfields);
+	Dee_Free(self->tsc_locfields);
+	Dee_type_struct_cache_free(self);
+}
+#endif /* CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE */
+
+
+
+
 /* Address in `:tp_class->cb_members'.
  *
  * Q: Why do we store class member address here, and not the actual
@@ -462,13 +496,25 @@ struct Dee_type_mh_cache {
 #define MHC_LAST mhc___map_popitem__
 /*[[[end]]]*/
 	/* clang-format on */
+
+	/* Other non-generated type cache data goes here... */
+#ifdef CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE
+	struct Dee_type_struct_cache *mhc_structcache; /* [0..1][lock(WRITE_ONCE)][owned] Struct enumeration cache */
+#define _Dee_type_mh_cache_fini_structcache_(self) \
+	likely(!(self)->mhc_structcache) ||            \
+	(Dee_type_struct_cache_destroy((self)->mhc_structcache), 0),
+#else /* CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE */
+#define _Dee_type_mh_cache_fini_structcache_(self) /* nothing */
+#endif /* !CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE */
 };
+
 
 #define Dee_type_mh_cache_alloc() \
 	((struct Dee_type_mh_cache *)Dee_TryCalloc(sizeof(struct Dee_type_mh_cache)))
 #define Dee_type_mh_cache_free(self) Dee_Free(self)
-#define Dee_type_mh_cache_destroy(self) \
-	Dee_type_mh_cache_free(self)
+#define Dee_type_mh_cache_destroy(self)         \
+	(_Dee_type_mh_cache_fini_structcache_(self) \
+	 Dee_type_mh_cache_free(self))
 
 INTDEF WUNUSED NONNULL((1)) struct Dee_type_mh_cache *DCALL
 Dee_type_mh_cache_of(DeeTypeObject *__restrict self);
