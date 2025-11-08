@@ -32,11 +32,13 @@ for (local ErrorType: Mapping.fromattr(errors).values) {
 		local empty = ErrorType();
 		assert empty == ErrorType();
 		assert empty.msg !is bound;
+		assert empty.message != "";
 		assert empty.cause !is bound;
 
 		local withCause = ErrorType(cause: empty);
 		assert withCause == ErrorType(cause: empty);
 		assert withCause.msg !is bound;
+		assert withCause.message != "";
 		assert withCause.cause === empty;
 
 		local withMsg = ErrorType(msg: "My Message");

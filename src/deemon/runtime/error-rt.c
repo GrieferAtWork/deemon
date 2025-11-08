@@ -923,7 +923,7 @@ NegativeShift_print(NegativeShift *__restrict self,
 	Dee_variant_init_copy(&lhs, &self->nsf_base.ve_value);
 	Dee_variant_init_copy(&rhs, &self->nsf_rhs);
 	result = DeeFormat_Printf(printer, arg,
-	                          "Negative %s shift: `%k %s %k'",
+	                          "Negative %s shift: `%Vk %s %Vk'",
 	                          self->nsf_left ? "left" : "right", &lhs,
 	                          self->nsf_left ? "<<" : ">>", &rhs);
 	Dee_variant_fini(&rhs);
@@ -1020,7 +1020,9 @@ IndexError_GetLength(IndexError *__restrict self,
 	Dee_variant_init_copy(p_length, &self->ie_length);
 	if (!Dee_variant_isbound_nonatomic(p_length)) {
 		DREF DeeObject *seq = Dee_variant_getobject(&self->ie_base.ke_base.ve_value);
-		if (seq) {
+		if unlikely(!seq)
+			goto err;
+		if (seq != ITER_DONE) {
 			size_t seq_length;
 			seq_length = DeeObject_InvokeMethodHint(seq_operator_size, seq);
 			Dee_Decref_unlikely(seq);
@@ -1719,7 +1721,7 @@ RegexNotFound_print(RegexNotFound *__restrict self,
 		return DeeObject_Print(self->rnf_base.inf_base.e_msg, printer, arg);
 	result = DeeFormat_Printf(printer, arg,
 	                          "Could not locate regex pattern %r in %Vr",
-	                          self->rnf_base.inf_item,
+	                          self->rnf_base.inf_item ? self->rnf_base.inf_item : Dee_EmptyString,
 	                          &self->rnf_base.inf_base.ve_value);
 	if unlikely(result < 0)
 		return result;
@@ -1813,17 +1815,20 @@ UnpackError_GetCount(UnpackError *__restrict self,
 		seq = Dee_variant_getobject(&self->ue_base.ve_value);
 		if unlikely(!seq)
 			goto err;
-		size_fast = DeeObject_SizeFast(seq);
-		if (size_fast != (size_t)-1) {
-			Dee_variant_init_size(result, size_fast);
-			Dee_variant_setsize_if_unbound(&self->ue_count, size_fast);
-		} else {
-			DREF DeeObject *sizeob;
-			sizeob = DeeObject_InvokeMethodHint(seq_operator_sizeob, seq);
-			if unlikely(!sizeob)
-				goto err_seq;
-			Dee_variant_init_object_inherited(result, sizeob); /* Inherit reference */
-			Dee_variant_setobject_if_unbound(&self->ue_count, sizeob);
+		if (seq != ITER_DONE) {
+			size_fast = DeeObject_SizeFast(seq);
+			if (size_fast != (size_t)-1) {
+				Dee_variant_init_size(result, size_fast);
+				Dee_variant_setsize_if_unbound(&self->ue_count, size_fast);
+			} else {
+				DREF DeeObject *sizeob;
+				sizeob = DeeObject_InvokeMethodHint(seq_operator_sizeob, seq);
+				if unlikely(!sizeob)
+					goto err_seq;
+				Dee_variant_init_object_inherited(result, sizeob); /* Inherit reference */
+				Dee_variant_setobject_if_unbound(&self->ue_count, sizeob);
+			}
+			Dee_Decref(seq);
 		}
 	}
 	return 0;
