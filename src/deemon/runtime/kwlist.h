@@ -136,6 +136,8 @@ local kw_lists = {
 	{"keys", "value", "valuefor"},
 	{"total", "more"},
 	{"total", "more", "weak"},
+	{"reason", "fp", "traceback"},
+	{"error", "reason", "fp", "traceback"},
 
 	// For runtime errors...
 	{"value", "minval", "maxval", "positive"},
@@ -190,6 +192,7 @@ DECLARE_KWLIST(kwlist__dst_pos_readall, { KEX("dst", 0x2c96daf8, 0xb9f356c1d6fac
 DECLARE_KWLIST(kwlist__dst_readall, { KEX("dst", 0x2c96daf8, 0xb9f356c1d6facfce), KEX("readall", 0x331ceae8, 0x8ad608764266c76d), KEND });
 DECLARE_KWLIST(kwlist__elem_iter_loop_scope_loc, { KEX("elem", 0x1aacf22d, 0x705652c4aed9308a), KEX("iter", 0xa249e6cd, 0xcad5071f49906e5f), KEX("loop", 0xe44e70af, 0xadc137e48b7293ee), KEX("scope", 0x8b65b2f8, 0x52824a24d6447e5), KEX("loc", 0x4f1e6896, 0xc8a6c6e417ce00f9), KEND });
 DECLARE_KWLIST(kwlist__end, { KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEND });
+DECLARE_KWLIST(kwlist__error_reason_fp_traceback, { KEX("error", 0x640990d2, 0x7cf1cb319e5158a7), KEX("reason", 0x659496b2, 0x950acbd97c259031), KEX("fp", 0x30fb35c7, 0x5b0c0c547374d530), KEX("traceback", 0x757083f2, 0xce0ed514a0a52ca2), KEND });
 DECLARE_KWLIST(kwlist__expr_globals, { KEX("expr", 0x391ad037, 0x9928df37efec67d5), KEX("globals", 0x98e98592, 0x188be45e73afd7e), KEND });
 DECLARE_KWLIST(kwlist__expr_negate_scope_loc, { KEX("expr", 0x391ad037, 0x9928df37efec67d5), KEX("negate", 0x2fa02a47, 0x141c7912ed8219b0), KEX("scope", 0x8b65b2f8, 0x52824a24d6447e5), KEX("loc", 0x4f1e6896, 0xc8a6c6e417ce00f9), KEND });
 DECLARE_KWLIST(kwlist__expr_scope_loc, { KEX("expr", 0x391ad037, 0x9928df37efec67d5), KEX("scope", 0x8b65b2f8, 0x52824a24d6447e5), KEX("loc", 0x4f1e6896, 0xc8a6c6e417ce00f9), KEND });
@@ -251,6 +254,7 @@ DECLARE_KWLIST(kwlist__precision, { KEX("precision", 0xb3c93bdd, 0x3d6866f78be60
 DECLARE_KWLIST(kwlist__predicate_answer, { KEX("predicate", 0x3c672fb4, 0xb5f52435e811385), KEX("answer", 0x63c165df, 0x76fd5eeb2e58020), KEND });
 DECLARE_KWLIST(kwlist__r_cached, { KEX("r", 0x5c9373f1, 0x6ece84440d42ecf6), KEX("cached", 0x915e175e, 0xddfd408a14eae4b4), KEND });
 DECLARE_KWLIST(kwlist__radix_precision_mode, { KEX("radix", 0xb10d4185, 0xbf2dcb32c6415f32), KEX("precision", 0xb3c93bdd, 0x3d6866f78be60b), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
+DECLARE_KWLIST(kwlist__reason_fp_traceback, { KEX("reason", 0x659496b2, 0x950acbd97c259031), KEX("fp", 0x30fb35c7, 0x5b0c0c547374d530), KEX("traceback", 0x757083f2, 0xce0ed514a0a52ca2), KEND });
 DECLARE_KWLIST(kwlist__should_start_end_max, { KEX("should", 0x28877b82, 0xbb3cb749df0a8b51), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("max", 0xc293979b, 0x822bd5c706bd9850), KEND });
 DECLARE_KWLIST(kwlist__signed, { KEX("signed", 0x17a15883, 0x58a245b6f802625f), KEND });
 DECLARE_KWLIST(kwlist__size_filler, { KEX("size", 0xed8917fa, 0x3fe8023bdf261c0f), KEX("filler", 0xb990988f, 0x6067d27b1e35cd17), KEND });

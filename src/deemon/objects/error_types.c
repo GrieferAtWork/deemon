@@ -76,13 +76,13 @@ systemerror_init_kw(DeeSystemErrorObject *__restrict self, size_t argc,
 #if defined(CONFIG_HOST_WINDOWS) || defined(__DEEMON__)
 	DWORD dwLastError = GetLastError();
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("SystemError", params: """
-	DeeStringObject *message:?Dstring = NULL;
+	DeeObject *message:?Dstring = NULL;
 	DeeObject *inner:?DError = NULL;
 	DeeObject *errno:?X2?Dint?Dstring = NULL;
 	DeeObject *nterr_np:?Dint = NULL;
 """);]]]*/
 	struct {
-		DeeStringObject *message;
+		DeeObject *message;
 		DeeObject *inner;
 		DeeObject *errno_;
 		DeeObject *nterr_np;
@@ -115,12 +115,12 @@ systemerror_init_kw(DeeSystemErrorObject *__restrict self, size_t argc,
 #if !defined(CONFIG_HOST_WINDOWS) || defined(__DEEMON__)
 	int last_errno = DeeSystem_GetErrno();
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("SystemError", params: """
-	DeeStringObject *message:?Dstring = NULL;
+	DeeObject *message:?Dstring = NULL;
 	DeeObject *inner:?DError = NULL;
 	DeeObject *errno:?X2?Dint?Dstring = NULL;
 """);]]]*/
 	struct {
-		DeeStringObject *message;
+		DeeObject *message;
 		DeeObject *inner;
 		DeeObject *errno_;
 	} args;
@@ -188,7 +188,7 @@ systemerror_print(DeeSystemErrorObject *__restrict self, Dee_formatprinter_t pri
 	Dee_ssize_t temp, result;
 	DREF DeeObject *errno_name, *errno_desc;
 	result = DeeObject_Print(self->e_message
-	                         ? (DeeObject *)self->e_message
+	                         ? self->e_message
 	                         : (DeeObject *)Dee_TYPE(self),
 	                         printer, arg);
 	if unlikely(result < 0)
@@ -283,7 +283,7 @@ systemerror_printrepr(DeeSystemErrorObject *__restrict self, Dee_formatprinter_t
 	if unlikely(result < 0)
 		goto done;
 	if (self->e_message) {
-		DO(err, DeeString_PrintRepr((DeeObject *)self->e_message, printer, arg));
+		DO(err, DeeString_PrintRepr(self->e_message, printer, arg));
 		is_first = false;
 	}
 	if (self->e_inner) {
@@ -822,7 +822,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 /* Fallback instance when throwing no-memory errors with an unknown size. */
 PUBLIC DeeNoMemoryErrorObject DeeError_NoMemory_instance = {
 	OBJECT_HEAD_INIT(&DeeError_NoMemory),
-	/* .e_message    = */ (DREF DeeStringObject *)&str_nomemory,
+	/* .e_message    = */ (DREF DeeObject *)&str_nomemory,
 	/* .e_inner      = */ NULL,
 	/* .nm_allocsize = */ (size_t)-1
 };

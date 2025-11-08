@@ -771,7 +771,7 @@ instance_destructor(DeeObject *__restrict self) {
 				if likely(result) {
 					Dee_Decref(result);
 				} else {
-					DeeError_Print("Unhandled error in destructor\n",
+					DeeError_Print("Unhandled error in destructor",
 					               ERROR_PRINT_DOHANDLE);
 				}
 				return;
@@ -783,7 +783,7 @@ instance_destructor(DeeObject *__restrict self) {
 	if likely(result) {
 		Dee_Decref(result);
 	} else {
-		DeeError_Print("Unhandled error in destructor\n",
+		DeeError_Print("Unhandled error in destructor",
 		               ERROR_PRINT_DOHANDLE);
 	}
 
@@ -957,7 +957,7 @@ instance_initsuper_as_copy(DeeTypeObject *tp_super,
 
 
 
-PRIVATE char const str_shared_ctor_failed[] = "Constructor of shared object failed\n";
+PRIVATE char const str_shared_ctor_failed[] = "Constructor of shared object failed";
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_tcopy(DeeTypeObject *tp_self,
                DeeObject *__restrict self,

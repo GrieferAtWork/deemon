@@ -3063,7 +3063,7 @@ default__seq_operator_hash(DeeObject *__restrict self) {
 #define DEFINED_seq_handle_hash_error
 PRIVATE NONNULL((1)) Dee_hash_t DCALL
 seq_handle_hash_error(DeeObject *self) {
-	DeeError_Print("Unhandled error in `Sequence.operator hash'\n",
+	DeeError_Print("Unhandled error in `Sequence.operator hash'",
 	               ERROR_PRINT_DOHANDLE);
 	return DeeObject_HashGeneric(self);
 }
@@ -15252,7 +15252,7 @@ default__set_operator_hash(DeeObject *__restrict self) {
 #define DEFINED_set_handle_hash_error
 PRIVATE NONNULL((1)) Dee_hash_t DCALL
 set_handle_hash_error(DeeObject *self) {
-	DeeError_Print("Unhandled error in `Set.operator hash'\n",
+	DeeError_Print("Unhandled error in `Set.operator hash'",
 	               ERROR_PRINT_DOHANDLE);
 	return DeeObject_HashGeneric(self);
 }
@@ -17148,7 +17148,7 @@ default__map_operator_hash(DeeObject *__restrict self) {
 #define DEFINED_map_handle_hash_error
 PRIVATE NONNULL((1)) Dee_hash_t DCALL
 map_handle_hash_error(DeeObject *self) {
-	DeeError_Print("Unhandled error in `Mapping.operator hash'\n",
+	DeeError_Print("Unhandled error in `Mapping.operator hash'",
 	               ERROR_PRINT_DOHANDLE);
 	return DeeObject_HashGeneric(self);
 }
@@ -21370,7 +21370,7 @@ err:
 #define DEFINED_seq_handle_hash_error
 PRIVATE NONNULL((1)) Dee_hash_t DCALL
 seq_handle_hash_error(DeeObject *self) {
-	DeeError_Print("Unhandled error in `Sequence.operator hash'\n",
+	DeeError_Print("Unhandled error in `Sequence.operator hash'",
 	               ERROR_PRINT_DOHANDLE);
 	return DeeObject_HashGeneric(self);
 }
@@ -22689,7 +22689,7 @@ tdefault__set_operator_sizeob__with_callobjectcache___set_size__(DeeTypeObject *
 #define DEFINED_set_handle_hash_error
 PRIVATE NONNULL((1)) Dee_hash_t DCALL
 set_handle_hash_error(DeeObject *self) {
-	DeeError_Print("Unhandled error in `Set.operator hash'\n",
+	DeeError_Print("Unhandled error in `Set.operator hash'",
 	               ERROR_PRINT_DOHANDLE);
 	return DeeObject_HashGeneric(self);
 }
@@ -22947,7 +22947,7 @@ tdefault__map_operator_sizeob__with_callobjectcache___map_size__(DeeTypeObject *
 #define DEFINED_map_handle_hash_error
 PRIVATE NONNULL((1)) Dee_hash_t DCALL
 map_handle_hash_error(DeeObject *self) {
-	DeeError_Print("Unhandled error in `Mapping.operator hash'\n",
+	DeeError_Print("Unhandled error in `Mapping.operator hash'",
 	               ERROR_PRINT_DOHANDLE);
 	return DeeObject_HashGeneric(self);
 }

@@ -2356,7 +2356,7 @@ err:
 PRIVATE NONNULL((1)) void DCALL
 lock_do_release_nx(DeeObject *__restrict self) {
 	if unlikely(lock_do_release(self))
-		DeeError_Print("Failed to release lock after acquire error\n", ERROR_PRINT_DOHANDLE);
+		DeeError_Print("Failed to release lock after acquire error", ERROR_PRINT_DOHANDLE);
 }
 
 PRIVATE NONNULL((1)) void DCALL

@@ -31,7 +31,7 @@ __map_hash__()->?Dint {
 #define DEFINED_map_handle_hash_error
 PRIVATE NONNULL((1)) Dee_hash_t DCALL
 map_handle_hash_error(DeeObject *self) {
-	DeeError_Print("Unhandled error in `Mapping.operator hash'\n",
+	DeeError_Print("Unhandled error in `Mapping.operator hash'",
 	               ERROR_PRINT_DOHANDLE);
 	return DeeObject_HashGeneric(self);
 }

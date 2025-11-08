@@ -129,7 +129,7 @@ PRIVATE void atexit_flushall(void) {
 		error = buffer_sync_nolock(buffer, BUFFER_SYNC_FNORMAL);
 		DeeFileBuffer_LockEndWrite(buffer);
 		if unlikely(error) {
-			DeeError_Print("Failed to synchronize tty during exit\n",
+			DeeError_Print("Failed to synchronize tty during exit",
 			               ERROR_PRINT_HANDLEINTR);
 		}
 		Dee_Decref(buffer);
@@ -1606,7 +1606,7 @@ PRIVATE NONNULL((1)) void DCALL
 buffer_fini(Buffer *__restrict self) {
 	/* Synchronize the buffer one last time. */
 	if unlikely(buffer_sync_nolock(self, BUFFER_SYNC_FNORMAL)) {
-		DeeError_Print("Discarding error in buffer synchronization in finalization\n",
+		DeeError_Print("Discarding error in buffer synchronization in finalization",
 		               ERROR_PRINT_DOHANDLE);
 	}
 

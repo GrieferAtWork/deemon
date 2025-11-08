@@ -42,7 +42,7 @@ default_set_hash_with_foreach_cb(void *arg, DeeObject *elem) {
 #define DEFINED_set_handle_hash_error
 PRIVATE NONNULL((1)) Dee_hash_t DCALL
 set_handle_hash_error(DeeObject *self) {
-	DeeError_Print("Unhandled error in `Set.operator hash'\n",
+	DeeError_Print("Unhandled error in `Set.operator hash'",
 	               ERROR_PRINT_DOHANDLE);
 	return DeeObject_HashGeneric(self);
 }

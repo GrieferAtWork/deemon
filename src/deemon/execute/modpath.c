@@ -3529,7 +3529,7 @@ PRIVATE void DCALL do_init_module_path(void) {
 #endif /* !CONFIG_DEEMON_PATH */
 	return;
 init_error:
-	DeeError_Print("Failed to initialize module path\n",
+	DeeError_Print("Failed to initialize module path",
 	               ERROR_PRINT_DOHANDLE);
 }
 

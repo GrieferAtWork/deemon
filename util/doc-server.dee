@@ -976,15 +976,31 @@ function clientThreadMain(con: socket) {
 				File.Writer outputFp;
 				File.Writer errorFp;
 				writePageHeader(errorFp, e);
-				errorFp <<
-					"<main>\r\n"
-					"<h2>DOC Server crashed (" << errorCode << ")</h2><br/>"
-					"<hr/>";
-				if (e !is string)
-					errorFp << "<b>" << str(type e) << "</b>: ";
+				errorFp << "<main>\r\n<h2>DOC Server crashed (" << errorCode << ")</h2><hr/>\r\n";
+				for (;;) {
+					local msg;
+					if (e is string) {
+						msg = e;
+					} else {
+						errorFp << "<b>" << str(type e) << "</b>";
+						msg = Error.msg(e);
+						if (msg)
+							errorFp << ": ";
+					}
+					errorFp << escapeSpecialHtmlCharacters(msg);
+					if (!msg || !msg.last.islf())
+						errorFp << "<br/>\r\n";
+					if (e !is Error)
+						break;
+					try {
+						e = Error.inner(e);
+					} catch (UnboundAttribute) {
+						break;
+					}
+					errorFp << "<small>Caused by</small><br/>\r\n";
+				}
+				errorFp << "<hr/>\r\n";
 				errorFp
-					<< escapeSpecialHtmlCharacters(e is string ? e : repr e)
-					<< "<hr/>"
 					<< escapeSpecialHtmlCharacters(str(Traceback.current))
 					<< "<hr/></main>\r\n";
 				writePageFooter(errorFp);
@@ -1006,8 +1022,7 @@ function clientThreadMain(con: socket) {
 			print "Disconnected:", con;
 		}
 	} catch (e...) {
-		print "Client thread crashed:";
-		print repr e;
+		print "Client thread crashed:", e;
 		print Traceback.current;
 	}
 

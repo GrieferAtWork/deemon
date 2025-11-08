@@ -27,6 +27,7 @@
 #include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* fprintf(stderr, ...) */
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
@@ -128,30 +129,128 @@ stderr_printer(void *__restrict self,
 
 /* Display (print to stderr) an error, as well as an optional traceback. */
 PUBLIC NONNULL((2)) void DCALL
-DeeError_Display(char const *reason,
-                 DeeObject *error,
-                 DeeObject *traceback) {
+DeeError_Display(/*utf-8*/ char const *reason,
+                 DeeObject *error, DeeObject *traceback) {
 	Dee_ssize_t status;
+	status = DeeError_DisplayImpl(reason, error, traceback,
+	                              &stderr_printer, NULL);
+	if unlikely(status < 0) {
+		DeeError_Handled(ERROR_HANDLED_RESTORE);
+		if (stderr_printer(NULL, "Failed to print error", 21) < 0)
+			DeeError_Handled(ERROR_HANDLED_RESTORE);
+	}
+}
+
+
+
+struct prefix_printer {
+	Dee_formatprinter_t pp_printer; /* [1..1] Underlying printer */
+	void               *pp_arg;     /* [?..?] Cookie for `pp_printer' */
+	unsigned int        pp_state;   /* Printer state (one of `PREFIX_PRINTER_STATE__*') */
+#define PREFIX_PRINTER_STATE__INITIAL  0 /* Initial state */
+#define PREFIX_PRINTER_STATE__PASSTHRU 1 /* Input passthru state */
+#define PREFIX_PRINTER_STATE__ATSOL    2 /* At start-of-line */
+};
+
+PRIVATE WUNUSED Dee_ssize_t DCALL
+prefix_printer_print(void *arg, char const *__restrict data, size_t datalen) {
+	struct prefix_printer *me = (struct prefix_printer *)arg;
+	if unlikely(!datalen)
+		return 0;
+	switch (me->pp_state) {
+	case PREFIX_PRINTER_STATE__INITIAL: {
+		Dee_ssize_t result, temp;
+		me->pp_state = PREFIX_PRINTER_STATE__PASSTHRU;
+		result = (*me->pp_printer)(me->pp_arg, ": ", 2);
+		if unlikely(result < 0)
+			return result;
+		temp = prefix_printer_print(me, data, datalen);
+		result = likely(temp >= 0) ? result + temp : temp;
+		return result;
+	}	break;
+
+	case PREFIX_PRINTER_STATE__PASSTHRU:
+	case PREFIX_PRINTER_STATE__ATSOL: {
+		Dee_ssize_t result = (*me->pp_printer)(me->pp_arg, data, datalen);
+		if likely(result >= 0) {
+			char const *data_end = data + datalen;
+			uint32_t last_ch = unicode_readutf8_rev_n(&data, data_end);
+			if (DeeUni_IsLF(last_ch)) {
+				me->pp_state = PREFIX_PRINTER_STATE__ATSOL;
+			} else {
+				me->pp_state = PREFIX_PRINTER_STATE__PASSTHRU;
+			}
+		}
+		return result;
+	}	break;
+
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+/* Underlying function used to implement "DeeError_Display()" and `Error.display()'
+ * This function handles all the formatting / wrapping of errors and-the-like...
+ * CAUTION: This function is itself allowed to throw errors! */
+PUBLIC WUNUSED NONNULL((2, 4)) Dee_ssize_t DCALL
+DeeError_DisplayImpl(char const *reason, DeeObject *error, DeeObject *traceback,
+                     Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t temp, result = 0;
 	ASSERT_OBJECT(error);
 	ASSERT_OBJECT_TYPE_OPT(traceback, &DeeTraceback_Type);
 	if (reason == NULL)
-		reason = "Unhandled exception\n";
-	status = DeeFormat_Printf(&stderr_printer, NULL,
-	                          "%s>> %k: %k\n",
-	                          reason, Dee_TYPE(error), error);
-	if unlikely(status < 0)
-		goto handle_print_error;
-	if (traceback) {
-		status = DeeObject_Print(traceback, &stderr_printer, NULL);
-		if unlikely(status < 0)
-			goto handle_print_error;
+		reason = "Unhandled exception";
+	for (;;) {
+		bool is_error;
+		DeeObject *message_obj;
+		struct prefix_printer prefixed;
+		temp = DeeFormat_Printf(printer, arg, "%s: %k", reason, Dee_TYPE(error));
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+
+		/* Special handling for "error":
+		 * - If the error has a custom "message", print that instead
+		 * - If the error has a custom "inner", print that afterwards */
+		is_error = DeeObject_InstanceOf(error, &DeeError_Error);
+		message_obj = error;
+		if (is_error && ((DeeErrorObject *)error)->e_message)
+			message_obj = ((DeeErrorObject *)error)->e_message;
+		prefixed.pp_printer = printer;
+		prefixed.pp_arg     = arg;
+		prefixed.pp_state   = PREFIX_PRINTER_STATE__INITIAL;
+		temp = DeeObject_Print(message_obj, &prefix_printer_print, &prefixed);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+
+		/* If the error message didn't end with a line-feed, print one now */
+		if (prefixed.pp_state != PREFIX_PRINTER_STATE__ATSOL) {
+			temp = (*printer)(arg, "\n", 1);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+		if (!is_error)
+			break;
+
+		/* Special handling for "error": also print inner errors */
+		error = ((DeeErrorObject *)error)->e_inner;
+		if (!error)
+			break;
+		reason = "Caused by";
 	}
-	return;
-handle_print_error:
-	DeeError_Handled(ERROR_HANDLED_RESTORE);
-	if (stderr_printer(NULL, "Failed to print error", 21) < 0)
-		DeeError_Handled(ERROR_HANDLED_RESTORE);
+	if (traceback) {
+		temp = DeeObject_Print(traceback, &stderr_printer, NULL);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
 }
+
 
 /* Throw a given object `error' as an error.
  * @return: -1: Always returns `-1' */

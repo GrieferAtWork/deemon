@@ -81,7 +81,7 @@ default_seq_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *valu
 #define DEFINED_seq_handle_hash_error
 PRIVATE NONNULL((1)) Dee_hash_t DCALL
 seq_handle_hash_error(DeeObject *self) {
-	DeeError_Print("Unhandled error in `Sequence.operator hash'\n",
+	DeeError_Print("Unhandled error in `Sequence.operator hash'",
 	               ERROR_PRINT_DOHANDLE);
 	return DeeObject_HashGeneric(self);
 }

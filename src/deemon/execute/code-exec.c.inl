@@ -7293,7 +7293,7 @@ end_nounhook:
 				 *      of the I/O code used to print the error message,
 				 *      thus causing an infinite loop? */
 				do {
-					DeeError_Print("Discarding secondary error\n", ERROR_PRINT_DOHANDLE);
+					DeeError_Print("Discarding secondary error", ERROR_PRINT_DOHANDLE);
 				} while (--num_discard);
 			}
 		}

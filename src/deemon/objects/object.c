@@ -3056,7 +3056,7 @@ err_missing_mandatory_init(DeeTypeObject *__restrict self) {
 	                       self);
 }
 
-PRIVATE char const str_shared_ctor_failed[] = "Constructor of shared object failed\n";
+PRIVATE char const str_shared_ctor_failed[] = "Constructor of shared object failed";
 INTDEF NONNULL((1)) void DCALL
 instance_clear_members(struct instance_desc *__restrict self, uint16_t size);
 

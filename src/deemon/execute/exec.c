@@ -489,7 +489,7 @@ Dee_RunAtExit(uint16_t flags) {
 				/* An error occurred. */
 				if (flags & DEE_RUNATEXIT_FRUNALL) {
 					/* Just dump the error (including interrupts). */
-					DeeError_Print("Unhandled error in atexit() callback\n",
+					DeeError_Print("Unhandled error in atexit() callback",
 					               ERROR_PRINT_HANDLEINTR);
 				} else {
 					/* Restore the list (Since we've already set `ATEXIT_FDIDRUN'

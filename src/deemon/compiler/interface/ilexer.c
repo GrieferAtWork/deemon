@@ -3386,7 +3386,7 @@ token_hash(DeeCompilerWrapperObject *__restrict self) {
 	COMPILER_END();
 	return result;
 err:
-	DeeError_Print("Error hashing token\n", Dee_ERROR_PRINT_DOHANDLE);
+	DeeError_Print("Error hashing token", Dee_ERROR_PRINT_DOHANDLE);
 	return (Dee_hash_t)-1;
 }
 

@@ -1016,7 +1016,7 @@ delete_exceptions:
 	jae   .end_load_result /* if (except_recursion+1 >= this_thread->t_exceptsz) return NULL; */
 	movzwl %cx, %ecx
 	/* NOTE: `%ecx' is the number of errors to discard. */
-1:	/* DeeError_Print("Discarding secondary error\n"); */
+1:	/* DeeError_Print("Discarding secondary error"); */
 	pushl  $(ERROR_PRINT_DOHANDLE)
 	ADJUST_CFA_OFFSET(4)
 	pushl  $99f
@@ -1027,7 +1027,7 @@ delete_exceptions:
 	jmp    .end_load_result
 
 .section .rodata
-99: .string "Discarding secondary error\n"
+99: .string "Discarding secondary error"
 .text
 
 

@@ -2045,7 +2045,7 @@ tusrtype__hash__with__HASH(DeeTypeObject *tp_self, DeeObject *self) {
 		goto fallback_handled;
 	return result_value;
 fallback_handled:
-	DeeError_Print("Unhandled error in `operator hash'\n",
+	DeeError_Print("Unhandled error in `operator hash'",
 	               ERROR_PRINT_DOHANDLE);
 fallback:
 	return DeeObject_HashGeneric(self);
@@ -2098,7 +2098,7 @@ usrtype__hash__with__HASH(DeeObject *__restrict self) {
 		goto fallback_handled;
 	return result_value;
 fallback_handled:
-	DeeError_Print("Unhandled error in `operator hash'\n",
+	DeeError_Print("Unhandled error in `operator hash'",
 	               ERROR_PRINT_DOHANDLE);
 fallback:
 	return DeeObject_HashGeneric(self);

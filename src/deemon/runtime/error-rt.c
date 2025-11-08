@@ -43,6 +43,7 @@
 #include <deemon/struct.h>
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
+#include <deemon/traceback.h>
 #include <deemon/tuple.h>
 #include <deemon/types.h>
 #include <deemon/variant.h>
@@ -53,6 +54,7 @@
 /**/
 
 #include "strings.h"
+#include "kwlist.h"
 /**/
 
 #include <stddef.h>
@@ -198,27 +200,6 @@ PRIVATE struct type_member tpconst error_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-error_str(DeeErrorObject *__restrict self) {
-	if (self->e_message)
-		return_reference_((DeeObject *)self->e_message);
-	if (self->e_inner)
-		return DeeString_Newf("%k -> %k", Dee_TYPE(self), self->e_inner);
-	return DeeObject_Str((DeeObject *)Dee_TYPE(self));
-}
-
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-type_print(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
-
-INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-error_print(DeeErrorObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
-	if (self->e_message)
-		return DeeString_PrintUtf8((DeeObject *)self->e_message, printer, arg);
-	if (self->e_inner)
-		return DeeFormat_Printf(printer, arg, "%k -> %k", Dee_TYPE(self), self->e_inner);
-	return type_print((DeeObject *)Dee_TYPE(self), printer, arg);
-}
-
 #ifdef __OPTIMIZE_SIZE__
 #define error_fini        DeeStructObject_Fini
 #define error_visit       DeeStructObject_Visit
@@ -289,9 +270,11 @@ error_init(DeeObject *__restrict self,
 	switch (argc) {
 	case 2:
 		me->e_inner = argv[1];
+		Dee_Incref(me->e_inner);
 		ATTR_FALLTHROUGH
 	case 1:
-		me->e_message = (DeeStringObject *)argv[0];
+		me->e_message = argv[0];
+		Dee_Incref(me->e_message);
 		break;
 	case 0:
 		break;
@@ -299,12 +282,6 @@ error_init(DeeObject *__restrict self,
 		DeeArg_BadArgcEx(DeeType_GetName(Dee_TYPE(me)), argc, 0, 2);
 		goto err;
 	}
-	if (me->e_message) {
-		if (DeeObject_AssertTypeExact(me->e_message, &DeeString_Type))
-			goto err;
-		Dee_Incref(me->e_message);
-	}
-	Dee_XIncref(me->e_inner);
 	return 0;
 err:
 	return -1;
@@ -321,14 +298,14 @@ error_init_kw(DeeObject *__restrict self, size_t argc,
 		goto err;
 	switch (argc) {
 	case 0:
-		me->e_message = (DeeStringObject *)DeeKwArgs_TryGetItemNRStringHash(&kwds, "message", Dee_HashStr__message);
+		me->e_message = DeeKwArgs_TryGetItemNRStringHash(&kwds, "message", Dee_HashStr__message);
 		if unlikely(!me->e_message)
 			goto err;
-		if (me->e_message == (DeeStringObject *)ITER_DONE)
-			me->e_message = (DeeStringObject *)NULL;
+		if (me->e_message == ITER_DONE)
+			me->e_message = NULL;
 		__IF0 {
 	case 1:
-			me->e_message = (DeeStringObject *)argv[0];
+			me->e_message = argv[0];
 		}
 		me->e_inner = DeeKwArgs_TryGetItemNRStringHash(&kwds, "inner", Dee_HashStr__inner);
 		if unlikely(!me->e_inner)
@@ -337,7 +314,7 @@ error_init_kw(DeeObject *__restrict self, size_t argc,
 			me->e_inner = NULL;
 		break;
 	case 2:
-		me->e_message = (DeeStringObject *)argv[0];
+		me->e_message = argv[0];
 		me->e_inner   = argv[1];
 		break;
 	default:
@@ -356,15 +333,291 @@ err:
 }
 #endif /* !__OPTIMIZE_SIZE__ */
 
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+type_print(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+error_print(DeeErrorObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	if (self->e_message)
+		return DeeObject_Print(self->e_message, printer, arg);
+	return type_print((DeeObject *)Dee_TYPE(self), printer, arg);
+}
+
+
+
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+error_display_impl2(DeeObject *error, char const *reason_utf8,
+                    DeeObject *fp, DeeTracebackObject *traceback) {
+	Dee_ssize_t status;
+	status = DeeError_DisplayImpl(reason_utf8, error, (DeeObject *)traceback,
+	                              (Dee_formatprinter_t)&DeeFile_WriteAll, fp);
+	if unlikely(status < 0)
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+INTDEF WUNUSED NONNULL((1)) DeeTracebackObject *DCALL
+traceback_ofthrow_impl(DeeObject *__restrict error);
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+error_display_impl(DeeObject *error, DeeObject *reason,
+                   DeeObject *fp, DeeObject *traceback) {
+	DREF DeeObject *result;
+	char const *reason_utf8;
+	if (DeeNone_Check(reason)) {
+		reason_utf8 = NULL;
+	} else {
+		if (DeeObject_AssertTypeExact(reason, &DeeString_Type))
+			goto err;
+		reason_utf8 = DeeString_AsUtf8(reason);
+		if unlikely(!reason_utf8)
+			goto err;
+	}
+	if (DeeNone_Check(traceback)) {
+		traceback = (DeeObject *)traceback_ofthrow_impl(error);
+	} else {
+		if (DeeObject_AssertTypeExact(traceback, &DeeTraceback_Type))
+			goto err;
+	}
+	if (DeeNone_Check(fp)) {
+		fp = DeeFile_GetStd(DEE_STDERR);
+	} else {
+		Dee_Incref(fp);
+	}
+	result = error_display_impl2(error, reason_utf8, fp,
+	                             (DeeTracebackObject *)traceback);
+	Dee_Decref(fp);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+error_display(DeeErrorObject *__restrict self, size_t argc,
+              DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("display", params: """
+	reason:?X2?Dstring?N=!P{Unhandled exception} = Dee_None,
+	fp:?X2?DFile?N=!N,
+	traceback:?X2?DTraceback?N=!N
+", docStringPrefix: "error");]]]*/
+#define error_display_params "reason:?X2?Dstring?N=!P{Unhandled exception},fp:?X2?DFile?N=!N,traceback:?X2?DTraceback?N=!N"
+	struct {
+		DeeObject *reason;
+		DeeObject *fp;
+		DeeObject *traceback;
+	} args;
+	args.reason = Dee_None;
+	args.fp = Dee_None;
+	args.traceback = Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__reason_fp_traceback, "|ooo:display", &args))
+		goto err;
+/*[[[end]]]*/
+	return error_display_impl((DeeObject *)self, args.reason, args.fp, args.traceback);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+error_class_display(DeeTypeObject *__restrict UNUSED(self), size_t argc,
+                    DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("display", params: """
+	error?:?X2?DError?O,
+	reason:?X2?Dstring?N=!P{Unhandled exception} = Dee_None,
+	fp:?X2?DFile?N=!N,
+	traceback:?X2?DTraceback?N=!N
+", docStringPrefix: "error_class");]]]*/
+#define error_class_display_params "error?:?X2?DError?O,reason:?X2?Dstring?N=!P{Unhandled exception},fp:?X2?DFile?N=!N,traceback:?X2?DTraceback?N=!N"
+	struct {
+		DeeObject *error;
+		DeeObject *reason;
+		DeeObject *fp;
+		DeeObject *traceback;
+	} args;
+	args.error = NULL;
+	args.reason = Dee_None;
+	args.fp = Dee_None;
+	args.traceback = Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__error_reason_fp_traceback, "|oooo:display", &args))
+		goto err;
+/*[[[end]]]*/
+	if (args.error == NULL) {
+		args.error = DeeError_Current();
+		if (args.error == NULL)
+			goto err_no_exception;
+	}
+	return error_display_impl(args.error, args.reason, args.fp, args.traceback);
+err_no_exception:
+	DeeRT_ErrNoActiveException();
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+error_class_getmsg(DeeTypeObject *__restrict UNUSED(self),
+                   size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("msg", params: """
+	error:?X2?.?O
+", docStringPrefix: "error_class");]]]*/
+#define error_class_msg_params "error:?X2?.?O"
+	struct {
+		DeeObject *error;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "msg", &args.error);
+/*[[[end]]]*/
+	if (DeeObject_InstanceOf(args.error, &DeeError_Error) &&
+	    ((DeeErrorObject *)args.error)->e_message)
+		args.error = ((DeeErrorObject *)args.error)->e_message;
+	return DeeObject_Str(args.error);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+error_class_getcurrent(DeeTypeObject *__restrict UNUSED(self)) {
+	DeeObject *current = DeeError_Current();
+	if unlikely(!current)
+		goto err_no_current;
+	return_reference_(current);
+err_no_current:
+	return DeeRT_ErrUnboundAttrCStr(&DeeError_Error, "current");
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+error_getmsg(DeeErrorObject *__restrict self) {
+	if (self->e_message)
+		return DeeObject_Str(self->e_message);
+	return DeeObject_Str((DeeObject *)self);
+}
+
+PRIVATE struct type_method tpconst error_methods[] = {
+	TYPE_KWMETHOD("display", &error_display,
+	              "(" error_display_params ")\n"
+	              "Display a description of the error by printing it to @fp (which defaults to ?Astderr?DFile), "
+	              /**/ "prefixed by @reason and suffixed by @traceback. If no @traceback is given, check if @this "
+	              /**/ "error was thrown in the calling thread, and if so: use the traceback stored there\n"
+	              "This is also the default handler for unhandled exceptions when deemon's main thread exits "
+	              /**/ "while there are still unhandled exceptions. As such, you can imagine the runtime passing "
+	              /**/ "control to your script in a context similar to:\n"
+	              "${"
+	              /**/ "try {\n"
+	              /**/ "	INVOKE_CMDLINE_SPECIFIED_MODULE();\n"
+	              /**/ "} catch (...) {\n"
+	              /**/ "	Error.display();\n"
+	              /**/ "}"
+	              "}\n"
+	              "For implementation, see ?#{c:display}\n"
+	              "${"
+	              /**/ "function display(reason: string | none = \"Unhandled exception\",\n"
+	              /**/ "                 fp: File | none = none, traceback: Traceback | none = none) {\n"
+	              /**/ "	Error.display(this, reason, fp, traceback);\n"
+	              /**/ "}"
+	              "}"),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_getset tpconst error_getsets[] = {
+	TYPE_GETTER_AB("msg", &error_getmsg,
+	               "->?Dstring\n"
+	               "Returns the error's effective message\n"
+	               "${"
+	               /**/ "property msg: string = {\n"
+	               /**/ "	get(): string {\n"
+	               /**/ "		local message;\n"
+	               /**/ "		try {\n"
+	               /**/ "			message = Error.message(this);\n"
+	               /**/ "		} catch (UnboundAttribute) {\n"
+	               /**/ "			message = this;\n"
+	               /**/ "		}\n"
+	               /**/ "		return str message;\n"
+	               /**/ "	}\n"
+	               /**/ "}"
+	               "}"),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_method tpconst error_class_methods[] = {
+	TYPE_KWMETHOD("display", &error_class_display,
+	              "(" error_class_display_params ")\n"
+	              "#tRuntimeException{No exception is being handled and no @error given}"
+	              "Same as calling ?#{i:display} with ?#current, but the error is explicitly given, "
+	              /**/ "allowing for printing of thrown objects that aren't derived from ?.\n"
+	              "${"
+	              /**/ "function display(error?: Error | Object, reason: string | none = \"Unhandled exception\",\n"
+	              /**/ "                 fp: File | none = none, traceback: Traceback | none = none) {\n"
+	              /**/ "	if (error !is bound) {\n"
+	              /**/ "		try {\n"
+	              /**/ "			error = Error.current;\n"
+	              /**/ "		} catch (UnboundAttribute) {\n"
+	              /**/ "			throw RuntimeError(\"No active exception\");\n"
+	              /**/ "		}\n"
+	              /**/ "	}\n"
+	              /**/ "	if (reason is none)\n"
+	              /**/ "		reason = \"Unhandled exception\";\n"
+	              /**/ "	if (fp is none)\n"
+	              /**/ "		fp = File.stderr;\n"
+	              /**/ "	if (traceback is none)\n"
+	              /**/ "		traceback = Traceback.ofthrow(error);\n"
+	              /**/ "	if (reason !is string)\n"
+	              /**/ "		throw TypeError(...);\n"
+	              /**/ "	if (traceback !is Traceback)\n"
+	              /**/ "		throw TypeError(...);\n"
+	              /**/ "	for (;;) {\n"
+	              /**/ "		print fp: (reason, \": \", type error),;\n"
+	              /**/ "		local msg = Error.msg(error);\n"
+	              /**/ "		if (msg)\n"
+	              /**/ "			print fp: (\": \", msg),;\n"
+	              /**/ "		if (!msg || !msg.last.islf())\n"
+	              /**/ "			print fp:;\n"
+	              /**/ "		if (error !is Error)\n"
+	              /**/ "			break;\n"
+	              /**/ "		try {\n"
+	              /**/ "			error = Error.inner(error);\n"
+	              /**/ "		} catch (UnboundAttribute) {\n"
+	              /**/ "			break;\n"
+	              /**/ "		}\n"
+	              /**/ "		reason = \"Caused by\"\n"
+	              /**/ "	}\n"
+	              /**/ "	if (traceback !is none)\n"
+	              /**/ "		print fp: traceback,;\n"
+	              /**/ "}"
+	              "}"),
+	TYPE_METHOD("msg", &error_class_getmsg,
+	            "(error:?X2?.?O)->?Dstring\n"
+	            "Returns the effective message for @error\n"
+	            "${"
+	            /**/ "function msg(error: Error | Object): string {\n"
+	            /**/ "	if (error is Error) {\n"
+	            /**/ "		local message;\n"
+	            /**/ "		try {\n"
+	            /**/ "			message = Error.message(error);\n"
+	            /**/ "		} catch (UnboundAttribute) {\n"
+	            /**/ "			goto fallback;\n"
+	            /**/ "		}\n"
+	            /**/ "		return str message;\n"
+	            /**/ "	}\n"
+	            /**/ "fallback:\n"
+	            /**/ "	return str error;\n"
+	            /**/ "}"
+	            "}"),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_getset tpconst error_class_getsets[] = {
+	TYPE_GETTER("current", &error_class_getcurrent,
+	            "Returns the currently thrown object (which "
+	            "isn't necessarily an instance of ?.)"),
+	TYPE_GETSET_END
+};
 
 PRIVATE struct type_member tpconst error_members[] = {
 #define Error_init_params "message:?X2?Dstring?N=!N,inner:?X3?DError?O?N=!N"
-	TYPE_MEMBER_FIELD_DOC("message", STRUCT_OBJECT_OPT, offsetof(DeeErrorObject, e_message),
-	                      "->?X2?Dstring?N\n"
-	                      "The error message associated with this Error object, or ?N when not set"),
-	TYPE_MEMBER_FIELD_DOC("inner", STRUCT_OBJECT_OPT, offsetof(DeeErrorObject, e_inner),
-	                      "->?X3?DError?O?N\n"
-	                      "An optional inner error object, or ?N when not set"),
+	TYPE_MEMBER_FIELD_DOC("message", STRUCT_OBJECT, offsetof(DeeErrorObject, e_message),
+	                      "->?X2?Dstring?O\n"
+	                      "The error message associated with this Error object"),
+	TYPE_MEMBER_FIELD_DOC("inner", STRUCT_OBJECT, offsetof(DeeErrorObject, e_inner),
+	                      "->?X3?DError?O\n"
+	                      "An optional inner error object"),
 	TYPE_MEMBER_END
 };
 
@@ -396,7 +649,7 @@ PUBLIC DeeTypeObject DeeError_Error = {
 		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&error_str,
+		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&error_print,
@@ -412,11 +665,11 @@ PUBLIC DeeTypeObject DeeError_Error = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_methods       = */ error_methods,
+	/* .tp_getsets       = */ error_getsets,
 	/* .tp_members       = */ error_members,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_methods = */ error_class_methods,
+	/* .tp_class_getsets = */ error_class_getsets,
 	/* .tp_class_members = */ error_class_members,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
@@ -440,19 +693,11 @@ INIT_LIKE_ERROR("ThreadCrash", "(" ThreadCrash_init_params ")",
 
 
 /* BEGIN::NoMemory */
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-nomemory_str(DeeNoMemoryErrorObject *__restrict self) {
-	if (self->e_message)
-		return error_str((DeeErrorObject *)self);
-	return DeeString_Newf("Failed to allocated %" PRFuSIZ " bytes",
-	                      self->nm_allocsize);
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 nomemory_print(DeeNoMemoryErrorObject *__restrict self,
                Dee_formatprinter_t printer, void *arg) {
 	if (self->e_message)
-		return error_print((DeeErrorObject *)self, printer, arg);
+		return DeeObject_Print(self->e_message, printer, arg);
 	return DeeFormat_Printf(printer, arg,
 	                        "Failed to allocated %" PRFuSIZ " bytes",
 	                        self->nm_allocsize);
@@ -466,8 +711,7 @@ PRIVATE struct type_member tpconst nomemory_members[] = {
 PUBLIC DeeTypeObject DeeError_NoMemory =
 INIT_CUSTOM_ERROR("NoMemory", "(" NoMemory_init_params ")",
                   TP_FNORMAL, &DeeError_Error, DeeNoMemoryErrorObject,
-                  &nomemory_str, &nomemory_print,
-                  NULL, NULL, nomemory_members, NULL);
+                  NULL, &nomemory_print, NULL, NULL, nomemory_members, NULL);
 /* END::NoMemory */
 
 
@@ -595,7 +839,7 @@ DivideByZero_print(DivideByZero *__restrict self,
 	Dee_ssize_t result;
 	struct Dee_variant lhs, rhs;
 	if (self->dbz_base.e_message)
-		return error_print((DeeErrorObject *)self, printer, arg);
+		return DeeObject_Print(self->dbz_base.e_message, printer, arg);
 	Dee_variant_init_copy(&lhs, &self->dbz_base.ve_value);
 	Dee_variant_init_copy(&rhs, &self->dbz_rhs);
 	if (!Dee_variant_isbound_nonatomic(&rhs)) {
@@ -670,11 +914,11 @@ typedef struct {
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 NegativeShift_print(NegativeShift *__restrict self,
-                   Dee_formatprinter_t printer, void *arg) {
+                    Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t result;
 	struct Dee_variant lhs, rhs;
 	if (self->nsf_base.e_message)
-		return error_print((DeeErrorObject *)self, printer, arg);
+		return DeeObject_Print(self->nsf_base.e_message, printer, arg);
 	Dee_variant_init_copy(&lhs, &self->nsf_base.ve_value);
 	Dee_variant_init_copy(&rhs, &self->nsf_rhs);
 	result = DeeFormat_Printf(printer, arg,
@@ -804,7 +1048,7 @@ IndexError_print(IndexError *__restrict self,
 	Dee_ssize_t result;
 	struct Dee_variant length;
 	if (self->ie_base.ke_base.e_message)
-		return error_print((DeeErrorObject *)self, printer, arg);
+		return DeeObject_Print(self->ie_base.ke_base.e_message, printer, arg);
 	if unlikely(IndexError_GetLength(self, &length))
 		goto err;
 	result = DeeFormat_Printf(printer, arg,
@@ -893,7 +1137,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 EmptySequence_print(IndexError *__restrict self,
                     Dee_formatprinter_t printer, void *arg) {
 	if (self->ie_base.ke_base.e_message)
-		return error_print((DeeErrorObject *)self, printer, arg);
+		return DeeObject_Print(self->ie_base.ke_base.e_message, printer, arg);
 	return DeeFormat_Printf(printer, arg,
 	                        "Empty sequence of type `%K' encountered",
 	                        SequenceError_GetSeqType(&self->ie_base.ke_base));
@@ -932,7 +1176,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 UnknownKey_print(UnknownKey *__restrict self,
                  Dee_formatprinter_t printer, void *arg) {
 	if (self->ke_base.e_message)
-		return error_print((DeeErrorObject *)self, printer, arg);
+		return DeeObject_Print(self->ke_base.e_message, printer, arg);
 	return DeeFormat_Printf(printer, arg,
 	                        "Could not find key %Vr in %K: %Vk",
 	                        &self->ke_key, SequenceError_GetSeqType(&self->ke_base),
@@ -1078,7 +1322,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ReadOnlyKey_print(ReadOnlyKey *__restrict self,
                  Dee_formatprinter_t printer, void *arg) {
 	if (self->ke_base.e_message)
-		return error_print((DeeErrorObject *)self, printer, arg);
+		return DeeObject_Print(self->ke_base.e_message, printer, arg);
 	return DeeFormat_Printf(printer, arg,
 	                        "Key %Vr of instance of %K: %Vk is read-only and cannot be modified",
 	                        &self->ke_key, SequenceError_GetSeqType(&self->ke_base),
@@ -1172,7 +1416,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 UnboundItem_print(UnboundItem *__restrict self,
                   Dee_formatprinter_t printer, void *arg) {
 	if (self->ui_base.ke_base.e_message)
-		return error_print((DeeErrorObject *)self, printer, arg);
+		return DeeObject_Print(self->ui_base.ke_base.e_message, printer, arg);
 	return DeeFormat_Printf(printer, arg,
 	                        "%s `%Vr' of instance of `%K': %Vk has not been bound",
 	                        self->ui_iskey ? "Key" : "Index",
@@ -1380,7 +1624,7 @@ ItemNotFound_print(ItemNotFound *__restrict self,
 	Dee_ssize_t result;
 	struct Dee_variant active_end;
 	if (self->inf_base.e_message)
-		return error_print((DeeErrorObject *)self, printer, arg);
+		return DeeObject_Print(self->inf_base.e_message, printer, arg);
 	Dee_variant_init_copy(&active_end, &self->inf_end);
 	if ((Dee_variant_isbound_nonatomic(&active_end) || self->inf_start) && self->inf_key) {
 		result = DeeFormat_Printf(printer, arg,
@@ -1471,7 +1715,7 @@ RegexNotFound_print(RegexNotFound *__restrict self,
 	Dee_ssize_t result, temp;
 	struct Dee_variant active_end;
 	if (self->rnf_base.inf_base.e_message)
-		return error_print((DeeErrorObject *)self, printer, arg);
+		return DeeObject_Print(self->rnf_base.inf_base.e_message, printer, arg);
 	result = DeeFormat_Printf(printer, arg,
 	                          "Could not locate regex pattern %r in %Vr",
 	                          self->rnf_base.inf_item,
@@ -1595,7 +1839,7 @@ UnpackError_print(UnpackError *__restrict self,
 	Dee_ssize_t result;
 	struct Dee_variant count;
 	if (self->ue_base.e_message)
-		return error_print((DeeErrorObject *)self, printer, arg);
+		return DeeObject_Print(self->ue_base.e_message, printer, arg);
 	bounds_equal = Dee_variant_trycompare_eq(&self->ue_mincount, &self->ue_maxcount);
 	if unlikely(bounds_equal == Dee_BOUND_ERR)
 		goto err;
@@ -1774,27 +2018,27 @@ typedef struct {
 } IntegerOverflow;
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-integer_overflow_print(IntegerOverflow *__restrict self,
-                       Dee_formatprinter_t printer, void *arg) {
+IntegerOverflow_print(IntegerOverflow *__restrict self,
+                      Dee_formatprinter_t printer, void *arg) {
 	if (self->io_base.e_message)
-		return error_print((DeeErrorObject *)self, printer, arg);
+		return DeeObject_Print(self->io_base.e_message, printer, arg);
 	if (!self->io_positive && !Dee_variant_isbound(&self->io_maxval)) {
 		return DeeFormat_Printf(printer, arg,
 		                        "Unexpected value %Vk is not greater than or equal to %Vk",
 		                        &self->io_base.ve_value, &self->io_minval);
-	} else if (self->io_positive && !Dee_variant_isbound(&self->io_minval)) {
+	}
+	if (self->io_positive && !Dee_variant_isbound(&self->io_minval)) {
 		return DeeFormat_Printf(printer, arg,
 		                        "Unexpected value %Vk is not less than or equal to %Vk",
 		                        &self->io_base.ve_value, &self->io_maxval);
-	} else {
-		return DeeFormat_Printf(printer, arg,
-		                        "%s integer overflow: %Vk exceeds range of valid values [%Vk,%Vk]",
-		                        self->io_positive ? "positive" : "negative",
-		                        &self->io_base.ve_value, &self->io_minval, &self->io_maxval);
 	}
+	return DeeFormat_Printf(printer, arg,
+	                        "%s integer overflow: %Vk exceeds range of valid values [%Vk,%Vk]",
+	                        self->io_positive ? "positive" : "negative",
+	                        &self->io_base.ve_value, &self->io_minval, &self->io_maxval);
 }
 
-PRIVATE struct type_member tpconst integer_overflow_members[] = {
+PRIVATE struct type_member tpconst IntegerOverflow_members[] = {
 	/*TYPE_MEMBER_FIELD_DOC("value", STRUCT_VARIANT | STRUCT_CONST,
 	                      offsetof(IntegerOverflow, io_base.ve_value),
 	                      "->?DNumeric\n"
@@ -1817,8 +2061,8 @@ PUBLIC DeeTypeObject DeeError_IntegerOverflow =
 INIT_CUSTOM_ERROR("IntegerOverflow",
                   "(" ArithmeticError_init_params ",minval?:?DNumeric,maxval?:?DNumeric,positive=!f)",
                   TP_FNORMAL, &DeeError_ArithmeticError,
-                  IntegerOverflow, NULL, &integer_overflow_print,
-                  NULL, NULL, integer_overflow_members, NULL);
+                  IntegerOverflow, NULL, &IntegerOverflow_print,
+                  NULL, NULL, IntegerOverflow_members, NULL);
 
 /* Throws a `DeeError_IntegerOverflow' indicating that some an integer
  * object or native (C) value cannot be used/processed because its value
@@ -2291,7 +2535,7 @@ done:
 
 PRIVATE DeeErrorObject RT_ErrNoActiveException = {
 	OBJECT_HEAD_INIT(&DeeError_RuntimeError),
-	/* .e_message = */ (DeeStringObject *)&str_No_active_exception,
+	/* .e_message = */ (DeeObject *)&str_No_active_exception,
 	/* .e_inner   = */ NULL,
 };
 

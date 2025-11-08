@@ -22,42 +22,28 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/arg.h>
-#include <deemon/attribute.h>
-#include <deemon/class.h>
-#include <deemon/code.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/kwds.h>
-#include <deemon/mro.h>
-#include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
+#include <deemon/operator-hints.h>
 #include <deemon/struct.h>
-#include <deemon/system-features.h>
-#include <deemon/variant.h>
-
-#include <hybrid/int128.h>
-#include <hybrid/typecore.h>
-/**/
-
-#include "strings.h"
 /**/
 
 #include <stddef.h>
-#include <stdint.h>
 
 DECL_BEGIN
 
 #define Error_init_params "message:?X2?Dstring?N=!N,inner:?X3?DError?O?N=!N"
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-error_print(DeeErrorObject *__restrict self, Dee_formatprinter_t printer, void *arg);
+#define error_print_common(self, printer, arg, custom_printer)                    \
+	error_print_common((DeeErrorObject *)Dee_REQUIRES_OBJECT(self), printer, arg, \
+	                   (DeeNO_print_t)(custom_printer))
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
+(DCALL error_print_common)(DeeErrorObject *__restrict self,
+                           Dee_formatprinter_t printer, void *arg,
+                           DeeNO_print_t custom_printer);
 
 
 
@@ -149,7 +135,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 comerr_print(DeeCompilerErrorObject *__restrict self,
              Dee_formatprinter_t printer, void *arg) {
 	if (self->e_message)
-		return error_print((DeeErrorObject *)self, printer, arg);
+		return DeeObject_Print(self->e_message, printer, arg);
 	return DeeCompilerError_Print((DeeObject *)self, printer, arg);
 }
 

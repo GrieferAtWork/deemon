@@ -213,7 +213,7 @@ JITLexer_ParseDefaultValue(JITLexer *__restrict self,
 		}
 		Dee_XClear(result);
 		while (ts->t_exceptsz > ctx.jc_except + 1) {
-			DeeError_Print("Discarding secondary error\n",
+			DeeError_Print("Discarding secondary error",
 			               ERROR_PRINT_DOHANDLE);
 		}
 	}
@@ -880,7 +880,7 @@ do_return_none:
 		}
 		Dee_XClear(result);
 		while (ts->t_exceptsz > context.jc_except + 1) {
-			DeeError_Print("Discarding secondary error\n",
+			DeeError_Print("Discarding secondary error",
 			               ERROR_PRINT_DOHANDLE);
 		}
 	}

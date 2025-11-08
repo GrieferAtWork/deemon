@@ -77,7 +77,7 @@ StringFiniHook_OnFini(StringFiniHook *__restrict self,
                       DeeStringObject const *__restrict string) {
 	int error = StringFiniHook_OnFini_impl(self, string);
 	if unlikely(error) {
-		DeeError_Print("Unhandled exception in string finalization hook\n",
+		DeeError_Print("Unhandled exception in string finalization hook",
 		               Dee_ERROR_PRINT_DOHANDLE);
 	}
 }

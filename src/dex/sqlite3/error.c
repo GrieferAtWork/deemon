@@ -416,7 +416,7 @@ handle_nomem:
 			goto err;
 		DeeObject_Init(&error->sqe_system, type);
 		error->sqe_system.e_inner   = NULL;
-		error->sqe_system.e_message = errmsg_ob; /* Inherit reference */
+		error->sqe_system.e_message = (DeeObject *)errmsg_ob; /* Inherit reference */
 #ifdef CONFIG_HOST_WINDOWS
 		error->sqe_system.se_lasterror = system_errno;
 		error->sqe_system.se_errno = DeeNTSystem_TranslateErrno(system_errno);

@@ -741,7 +741,7 @@ PRIVATE struct type_seq traceback_seq = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-traceback_current(DeeObject *__restrict self) {
+traceback_current(DeeTypeObject *__restrict self) {
 	DREF DeeThreadObject *thread;
 	DREF DeeObject *result;
 	thread = DeeThread_Self();
@@ -756,10 +756,58 @@ err_no_except:
 	return DeeRT_ErrUnboundAttrCStr(self, "current");
 }
 
+/* @return: NULL: No traceback for `error' (does not cause another error to be thrown) */
+INTERN WUNUSED NONNULL((1)) DeeTracebackObject *DCALL
+traceback_ofthrow_impl(DeeObject *__restrict error) {
+	DeeTracebackObject *result;
+	DeeThreadObject *me = DeeThread_Self();
+	struct except_frame *except = me->t_except;
+	while (except && except->ef_error != error)
+		except = except->ef_prev;
+	if (!except) {
+		result = NULL;
+	} else {
+		result = except_frame_gettb(except);
+		if unlikely(result == NULL)
+			result = (DeeTracebackObject *)&DeeTraceback_Empty;
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+traceback_ofthrow(DeeTypeObject *__restrict UNUSED(self),
+                  size_t argc, DeeObject *const *argv) {
+	DREF DeeTracebackObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ofthrow", params: """
+	error:?X2?DError?O
+", docStringPrefix: "traceback");]]]*/
+#define traceback_ofthrow_params "error:?X2?DError?O"
+	struct {
+		DeeObject *error;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "ofthrow", &args.error);
+/*[[[end]]]*/
+	result = traceback_ofthrow_impl(args.error);
+	if (!result)
+		return_none;
+	Dee_Incref(result);
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
+}
+
+PRIVATE struct type_method tpconst traceback_class_methods[] = {
+	TYPE_METHOD("ofthrow", &traceback_ofthrow,
+	            "(" traceback_ofthrow_params ")->?X2?.?N\n"
+	            "Returns the traceback belonging to a current thrown object @error. "
+	            /**/ "If @error is not being thrown at the moment, return ?N instead"),
+	TYPE_METHOD_END
+};
+
 PRIVATE struct type_getset tpconst traceback_class_getsets[] = {
 	TYPE_GETTER("current", &traceback_current,
 	            "->?.\n"
-	            "#tRuntimeError{No exception was being handled}"
+	            "#tUnboundAttribute{No exception is being handled}"
 	            "Returns the traceback associated with the current exception"),
 	TYPE_GETSET_END
 };
@@ -838,7 +886,7 @@ PUBLIC DeeTypeObject DeeTraceback_Type = {
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ traceback_getsets,
 	/* .tp_members       = */ NULL,
-	/* .tp_class_methods = */ NULL,
+	/* .tp_class_methods = */ traceback_class_methods,
 	/* .tp_class_getsets = */ traceback_class_getsets,
 	/* .tp_class_members = */ traceback_class_members,
 	/* .tp_method_hints  = */ NULL,

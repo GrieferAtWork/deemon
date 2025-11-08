@@ -1762,7 +1762,7 @@ handle_error:
 			Dee_Decref(result);
 		result = NULL;
 		while (ts->t_exceptsz > self->ji_ctx.jc_except + 1) {
-			DeeError_Print("Discarding secondary error\n",
+			DeeError_Print("Discarding secondary error",
 			               ERROR_PRINT_DOHANDLE);
 		}
 	}

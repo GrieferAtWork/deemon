@@ -205,12 +205,10 @@ struct Dee_string_object;
 /* Object header for types derived from `DeeError_Error'
  * Note that types derived from `DeeError_Signal' don't have any special header.
  * Special object heads for other error types can be found in `error_types.h' */
-#define Dee_ERROR_OBJECT_HEAD                                                                      \
-	Dee_OBJECT_HEAD                                                                                \
-	DREF struct Dee_string_object *e_message; /* [0..1][const] Error message string.               \
-	                                           * NOTE: May be substituted with, or extended by     \
-	                                           *       the `__str__' operators of sub-classes). */ \
-	DREF DeeObject                *e_inner;   /* [0..1][const] Inner error object. */
+#define Dee_ERROR_OBJECT_HEAD                                            \
+	Dee_OBJECT_HEAD                                                      \
+	DREF DeeObject *e_message; /* [0..1][const] Error message string. */ \
+	DREF DeeObject *e_inner;   /* [0..1][const] Inner error object. */
 struct Dee_error_object {
 	Dee_ERROR_OBJECT_HEAD
 };
@@ -283,9 +281,16 @@ DeeError_Print(char const *reason, unsigned int handle_errors);
 
 /* Display (print to stderr) an error, as well as an optional traceback. */
 DFUNDEF NONNULL((2)) void DCALL
-DeeError_Display(char const *reason,
-                 DeeObject *error,
-                 DeeObject *traceback);
+DeeError_Display(/*utf-8*/ char const *reason,
+                 DeeObject *error, DeeObject *traceback);
+
+/* Underlying function used to implement "DeeError_Display()" and `Error.display()'
+ * This function handles all the formatting / wrapping of errors and-the-like...
+ * CAUTION: This function is itself allowed to throw errors! */
+DFUNDEF WUNUSED NONNULL((2, 4)) Dee_ssize_t DCALL
+DeeError_DisplayImpl(/*utf-8*/ char const *reason,
+                     DeeObject *error, DeeObject *traceback,
+                     Dee_formatprinter_t printer, void *arg);
 
 /* Handle the current error, discarding it in the process.
  * @param: mode:   One of `ERROR_HANDLED_*'

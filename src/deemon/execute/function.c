@@ -1888,7 +1888,7 @@ exec_finally:
 			/* Most likely, this is still the `none' from above */
 			Dee_Decref(result);
 		} else {
-			DeeError_Print("Unhandled exception in YieldFunction.Iterator destructor\n",
+			DeeError_Print("Unhandled exception in YieldFunction.Iterator destructor",
 			               ERROR_PRINT_DOHANDLE);
 		}
 		goto exec_finally;

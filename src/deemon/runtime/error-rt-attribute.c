@@ -34,6 +34,7 @@
 #include <deemon/mro.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
+#include <deemon/operator-hints.h>
 #include <deemon/string.h>
 #include <deemon/struct.h>
 #include <deemon/super.h>
@@ -93,8 +94,6 @@ print define_Dee_HashStr("isset");
 /*[[[end]]]*/
 
 #define Error_init_params "message:?X2?Dstring?N=!N,inner:?X3?DError?O?N=!N"
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-error_print(DeeErrorObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 
 
 
@@ -1125,7 +1124,7 @@ AttributeError_init_kw(AttributeError *__restrict self, size_t argc,
 	""
 #define AttributeError_init_params   Error_init_params ",ob?,attr?:" DOC_attr_types ",decl?:?X3?DType?DModule?O,isget=!f,isdel=!f,isset=!f"
 #define UnboundAttribute_init_params Error_init_params ",ob?,attr?:" DOC_attr_types ",decl?:?X3?DType?DModule?O,isget=!t,isdel=!f,isset=!f"
-	LOADARG(DeeStringObject, &self->e_message, 0, message);
+	LOADARG(DeeObject, &self->e_message, 0, message);
 	LOADARG(DeeObject, &self->e_inner, 1, inner);
 	LOADARG(DeeObject, &self->ae_obj, 2, ob);
 	LOADARG(DeeObject, &attr, 3, attr);
@@ -1395,7 +1394,7 @@ AttributeError_print(AttributeError *__restrict self,
                      Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t temp, result;
 	if (self->e_message)
-		return error_print((DeeErrorObject *)self, printer, arg);
+		return DeeObject_Print(self->e_message, printer, arg);
 	result = DeeFormat_Printf(printer, arg, "<%s", DeeType_GetName(Dee_TYPE(self)));
 	if unlikely(result < 0)
 		goto done;
@@ -1488,8 +1487,7 @@ AttributeError_compare_impl(AttributeError *lhs, AttributeError *rhs,
 			return Dee_COMPARE_LO;
 		if (!rhs->e_message)
 			return Dee_COMPARE_GR;
-		result = (*cmp)((DeeObject *)lhs->e_message,
-		                (DeeObject *)rhs->e_message);
+		result = (*cmp)(lhs->e_message, rhs->e_message);
 		if (result != Dee_COMPARE_EQ)
 			return result;
 	}
@@ -1582,7 +1580,7 @@ PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 AttributeError_hash(AttributeError *__restrict self) {
 	Dee_hash_t result = DeeObject_HashGeneric(Dee_TYPE(self));
 	if (self->e_message)
-		result = Dee_HashCombine(result, DeeObject_Hash((DeeObject *)self->e_message));
+		result = Dee_HashCombine(result, DeeObject_Hash(self->e_message));
 	if (self->e_inner)
 		result = Dee_HashCombine(result, DeeObject_Hash(self->e_inner));
 	if (self->ae_obj) {
@@ -2049,14 +2047,12 @@ UnboundAttribute_print(AttributeError *__restrict self,
                        Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t temp, result;
 	if (self->e_message)
-		return error_print((DeeErrorObject *)self, printer, arg);
+		return DeeObject_Print(self->e_message, printer, arg);
 	result = DeeFormat_PRINT(printer, arg, "Unbound attribute ");
-	if likely(result >= 0) {
-		temp = AttributeError_print_attr_str(self, printer, arg);
-		if unlikely(temp < 0)
-			goto err_temp;
-		result += temp;
-	}
+	if unlikely(result < 0)
+		goto done;
+	DO(err_temp, AttributeError_print_attr_str(self, printer, arg));
+done:
 	return result;
 err_temp:
 	return temp;
@@ -2173,7 +2169,7 @@ UnknownAttribute_print(AttributeError *__restrict self,
                        Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t temp, result;
 	if (self->e_message)
-		return error_print((DeeErrorObject *)self, printer, arg);
+		return DeeObject_Print(self->e_message, printer, arg);
 	result = DeeFormat_PRINT(printer, arg, "Cannot ");
 	if unlikely(result < 0)
 		goto done;
@@ -2256,7 +2252,7 @@ RestrictedAttribute_print(AttributeError *__restrict self,
 	char const *what;
 	Dee_ssize_t temp, result;
 	if (self->e_message)
-		return error_print((DeeErrorObject *)self, printer, arg);
+		return DeeObject_Print(self->e_message, printer, arg);
 	result = DeeFormat_PRINT(printer, arg, "Cannot ");
 	if unlikely(result < 0)
 		goto done;

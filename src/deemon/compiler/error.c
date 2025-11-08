@@ -313,7 +313,7 @@ INTERN int DCALL parser_rethrow(bool must_fail) {
 		if (caller->t_exceptsz != current_parser_errors.pe_except) {
 			/* There are additional errors. -> Discard all but the last. */
 			while (caller->t_exceptsz != current_parser_errors.pe_except + 1) {
-				if (!DeeError_Print("Secondary error during compilation\n", ERROR_PRINT_DOHANDLE))
+				if (!DeeError_Print("Secondary error during compilation", ERROR_PRINT_DOHANDLE))
 					break;
 			}
 			goto err;
@@ -617,7 +617,7 @@ handle_compiler_warning(struct ast_loc *loc,
 		goto err;
 
 	/* Generate an error message. */
-	error->e_message = (DREF DeeStringObject *)get_warning_message(wnum, args);
+	error->e_message = get_warning_message(wnum, args);
 	if unlikely(!error->e_message)
 		goto err_error;
 
