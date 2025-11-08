@@ -1017,8 +1017,8 @@
 #define Dee_OBJECT_HEAD           Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;
 #define OBJECT_HEAD_EX(Ttype)     Dee_refcnt_t ob_refcnt;Ttype*ob_type;
 #define Dee_OBJECT_HEAD_EX(Ttype) Dee_refcnt_t ob_refcnt;Ttype*ob_type;
-#define ERROR_OBJECT_HEAD         Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;DeeObject*e_message,*e_cause;
-#define Dee_ERROR_OBJECT_HEAD     Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;DeeObject*e_message,*e_cause;
+#define ERROR_OBJECT_HEAD         Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;DeeObject*e_msg,*e_cause;
+#define Dee_ERROR_OBJECT_HEAD     Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;DeeObject*e_msg,*e_cause;
 #define FILE_OBJECT_HEAD          Dee_refcnt_t ob_refcnt;DeeFileTypeObject*ob_type;
 #define Dee_FILE_OBJECT_HEAD      Dee_refcnt_t ob_refcnt;DeeFileTypeObject*ob_type;
 

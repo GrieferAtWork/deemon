@@ -617,8 +617,8 @@ handle_compiler_warning(struct ast_loc *loc,
 		goto err;
 
 	/* Generate an error message. */
-	error->e_message = get_warning_message(wnum, args);
-	if unlikely(!error->e_message)
+	error->e_msg = get_warning_message(wnum, args);
+	if unlikely(!error->e_msg)
 		goto err_error;
 
 	/* Initializer other members of the error object. */
@@ -705,7 +705,7 @@ handle_compiler_warning(struct ast_loc *loc,
 done_nonfatal:
 	return 0;
 err_message:
-	Dee_Decref(error->e_message);
+	Dee_Decref(error->e_msg);
 err_error:
 	DeeObject_FREE(error);
 err:

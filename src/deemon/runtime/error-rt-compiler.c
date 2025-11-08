@@ -36,7 +36,7 @@
 
 DECL_BEGIN
 
-#define Error_init_params "message:?X2?Dstring?N=!N,cause:?X3?DError?O?N=!N"
+#define Error_init_params "msg:?X2?Dstring?N=!N,cause:?X3?DError?O?N=!N"
 #define error_print_common(self, printer, arg, custom_printer)                    \
 	error_print_common((DeeErrorObject *)Dee_REQUIRES_OBJECT(self), printer, arg, \
 	                   (DeeNO_print_t)(custom_printer))
@@ -134,8 +134,8 @@ comerr_visit(DeeCompilerErrorObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 comerr_print(DeeCompilerErrorObject *__restrict self,
              Dee_formatprinter_t printer, void *arg) {
-	if (self->e_message)
-		return DeeObject_Print(self->e_message, printer, arg);
+	if (self->e_msg)
+		return DeeObject_Print(self->e_msg, printer, arg);
 	return DeeCompilerError_Print((DeeObject *)self, printer, arg);
 }
 

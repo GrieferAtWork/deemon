@@ -214,8 +214,8 @@ DeeError_DisplayImpl(char const *reason, DeeObject *error, DeeObject *traceback,
 		 * - If the error has a custom "cause", print that afterwards */
 		is_error = DeeObject_InstanceOf(error, &DeeError_Error);
 		message_obj = error;
-		if (is_error && ((DeeErrorObject *)error)->e_message)
-			message_obj = ((DeeErrorObject *)error)->e_message;
+		if (is_error && ((DeeErrorObject *)error)->e_msg)
+			message_obj = ((DeeErrorObject *)error)->e_msg;
 		prefixed.pp_printer = printer;
 		prefixed.pp_arg     = arg;
 		prefixed.pp_state   = PREFIX_PRINTER_STATE__INITIAL;

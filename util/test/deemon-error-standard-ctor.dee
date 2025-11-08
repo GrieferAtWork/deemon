@@ -31,22 +31,24 @@ for (local ErrorType: Mapping.fromattr(errors).values) {
 	if (ErrorType.extends(Error)) {
 		local empty = ErrorType();
 		assert empty == ErrorType();
-		assert empty.message !is bound;
+		assert empty.msg !is bound;
 		assert empty.cause !is bound;
 
-		local withInner = ErrorType(cause: empty);
-		assert withInner == ErrorType(cause: empty);
-		assert withInner.message !is bound;
-		assert withInner.cause === empty;
+		local withCause = ErrorType(cause: empty);
+		assert withCause == ErrorType(cause: empty);
+		assert withCause.msg !is bound;
+		assert withCause.cause === empty;
 
-		local withMessage = ErrorType(message: "My Message");
-		assert withMessage == ErrorType("My Message");
-		assert withMessage.message == "My Message";
-		assert withMessage.cause !is bound;
+		local withMsg = ErrorType(msg: "My Message");
+		assert withMsg == ErrorType("My Message");
+		assert withMsg.msg == "My Message";
+		assert withMsg.message == "My Message";
+		assert withMsg.cause !is bound;
 
-		local withMessageAndInner = ErrorType(message: "My Message 2", cause: withInner);
-		assert withMessageAndInner == ErrorType("My Message 2", withInner);
-		assert withMessageAndInner.message == "My Message 2";
-		assert withMessageAndInner.cause === withInner;
+		local withMsgAndCause = ErrorType(msg: "My Message 2", cause: withCause);
+		assert withMsgAndCause == ErrorType("My Message 2", withCause);
+		assert withMsgAndCause.msg == "My Message 2";
+		assert withMsgAndCause.message == "My Message 2";
+		assert withMsgAndCause.cause === withCause;
 	}
 }

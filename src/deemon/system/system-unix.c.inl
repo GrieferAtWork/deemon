@@ -97,7 +97,7 @@ got_tp:
 			DeeObject_FREE(error);
 			goto err;
 		}
-		error->e_message = (DeeObject *)message; /* Inherit reference */
+		error->e_msg = (DeeObject *)message; /* Inherit reference */
 		error->e_cause   = NULL;
 		error->se_errno  = errno_value;
 #ifdef CONFIG_HOST_WINDOWS

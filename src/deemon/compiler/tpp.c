@@ -590,8 +590,8 @@ DeeCompilerError_Print(DeeObject *__restrict self,
 		}
 		PRINT("): ");
 	}
-	if likely(me->e_message)
-		printob(me->e_message);
+	if likely(me->e_msg)
+		printob(me->e_msg);
 	if (main_loc) {
 		for (iter = &me->ce_locs; iter != main_loc;
 		     iter = iter->cl_prev) {

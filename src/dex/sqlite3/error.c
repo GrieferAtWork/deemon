@@ -83,22 +83,23 @@ sqlerror_init_kw(SQLError *__restrict self, size_t argc,
 
 PRIVATE NONNULL((1)) void DCALL
 sqlerror_fini(SQLError *__restrict self) {
+	Dee_XDecref(self->sqe_errmsg);
 	Dee_XDecref(self->sqe_sql);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 sqlerror_print(SQLError *__restrict self,
                Dee_formatprinter_t printer, void *arg) {
-	if (self->sqe_sql && self->sqe_system.e_message) {
+	if (self->sqe_sql && self->sqe_errmsg) {
 		return DeeFormat_Printf(printer, arg, "%k [error %#x] [at offset %d in %r]",
-		                        self->sqe_system.e_message, self->sqe_ecode,
+		                        self->sqe_errmsg, self->sqe_ecode,
 		                        self->sqe_sqloffutf8, self->sqe_sql);
 	} else if (self->sqe_sql) {
 		return DeeFormat_Printf(printer, arg, "error %#x [at offset %d in %r]",
 		                        self->sqe_ecode, self->sqe_sqloffutf8, self->sqe_sql);
-	} else if (self->sqe_system.e_message) {
+	} else if (self->sqe_errmsg) {
 		return DeeFormat_Printf(printer, arg, "%k [error %#x]",
-		                        self->sqe_system.e_message, self->sqe_ecode);
+		                        self->sqe_errmsg, self->sqe_ecode);
 	} else {
 		return DeeFormat_Printf(printer, arg, "error %#x",
 		                        self->sqe_ecode);
@@ -109,10 +110,28 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 sqlerror_printrepr(SQLError *__restrict self,
                    Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t result, temp;
-	result = DeeFormat_Printf(printer, arg, "%r(ecode: %d",
-	                          Dee_TYPE(&self->sqe_system), self->sqe_ecode);
+	result = DeeFormat_Printf(printer, arg, "%r(", Dee_TYPE(&self->sqe_system));
 	if unlikely(result < 0)
 		goto done;
+	if (self->sqe_system.e_msg) {
+		temp = DeeFormat_Printf(printer, arg, "msg: %r, ",
+		                        self->sqe_system.e_msg);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+	}
+	if (self->sqe_system.e_cause) {
+		temp = DeeFormat_Printf(printer, arg, "cause: %r, ",
+		                        self->sqe_system.e_cause);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+	}
+	temp = DeeFormat_Printf(printer, arg, "ecode: %d",
+	                        self->sqe_ecode);
+	if unlikely(temp < 0)
+		goto done;
+	result += temp;
 	if (self->sqe_sql) {
 		temp = DeeFormat_Printf(printer, arg, ", sql: %r, sqloff: %d",
 		                        self->sqe_sql, self->sqe_sqloffutf8);
@@ -120,9 +139,9 @@ sqlerror_printrepr(SQLError *__restrict self,
 			goto err;
 		result += temp;
 	}
-	if (self->sqe_system.e_message) {
-		temp = DeeFormat_Printf(printer, arg, ", message: %r",
-		                        self->sqe_system.e_message);
+	if (self->sqe_errmsg) {
+		temp = DeeFormat_Printf(printer, arg, ", errmsg: %r",
+		                        self->sqe_errmsg);
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;
@@ -134,14 +153,6 @@ sqlerror_printrepr(SQLError *__restrict self,
 			goto err;
 		result += temp;
 	}
-	if (self->sqe_system.e_cause) {
-		temp = DeeFormat_Printf(printer, arg, ", cause: %r",
-		                        self->sqe_system.e_cause);
-		if unlikely(temp < 0)
-			goto err;
-		result += temp;
-	}
-
 	temp = DeeFormat_PRINT(printer, arg, ")");
 	if unlikely (temp < 0)
 		goto err;
@@ -161,7 +172,7 @@ PRIVATE struct type_member tpconst sqlerror_members[] = {
 INTERN DeeTypeObject SQLError_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "SQLError",
-	/* .tp_doc      = */ DOC("(message?:?X2?Dstring?O,cause?:?X2?DError?O,ecode:?Dint,sql?:?Dstring,sqloff?:?Dint,errmsg?:?Dstring,errno?:?Dint)\n"
+	/* .tp_doc      = */ DOC("(msg?:?X2?Dstring?O,cause?:?X2?DError?O,ecode:?Dint,sql?:?Dstring,sqloff?:?Dint,errmsg?:?Dstring,errno?:?Dint)\n"
 	                         "#pecode{SQLite error code}"
 	                         "#psql{SQL code causing the exception (if there is any)}"
 	                         "#psqloff{Offset into @sql where error happened}"
@@ -415,15 +426,16 @@ handle_nomem:
 		if unlikely(!error)
 			goto err;
 		DeeObject_Init(&error->sqe_system, type);
-		error->sqe_system.e_cause   = NULL;
-		error->sqe_system.e_message = (DeeObject *)errmsg_ob; /* Inherit reference */
+		error->sqe_system.e_cause = NULL;
+		error->sqe_system.e_msg   = NULL;
 #ifdef CONFIG_HOST_WINDOWS
 		error->sqe_system.se_lasterror = system_errno;
 		error->sqe_system.se_errno = DeeNTSystem_TranslateErrno(system_errno);
 #else /* CONFIG_HOST_WINDOWS */
 		error->sqe_system.se_errno = system_errno;
 #endif /* !CONFIG_HOST_WINDOWS */
-		error->sqe_sql = sql;
+		error->sqe_errmsg = errmsg_ob; /* Inherit reference */
+		error->sqe_sql    = sql;
 		Dee_XIncref(sql);
 		error->sqe_sqloffutf8 = erroffs;
 		error->sqe_ecode      = errcode;

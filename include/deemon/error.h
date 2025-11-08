@@ -205,10 +205,10 @@ struct Dee_string_object;
 /* Object header for types derived from `DeeError_Error'
  * Note that types derived from `DeeError_Signal' don't have any special header.
  * Special object heads for other error types can be found in `error_types.h' */
-#define Dee_ERROR_OBJECT_HEAD                                            \
-	Dee_OBJECT_HEAD                                                      \
-	DREF DeeObject *e_message; /* [0..1][const] Error message string. */ \
-	DREF DeeObject *e_cause;   /* [0..1][const] Causal error object. */
+#define Dee_ERROR_OBJECT_HEAD                                          \
+	Dee_OBJECT_HEAD                                                    \
+	DREF DeeObject *e_msg;   /* [0..1][const] Error message string. */ \
+	DREF DeeObject *e_cause; /* [0..1][const] Causal error object. */
 struct Dee_error_object {
 	Dee_ERROR_OBJECT_HEAD
 };

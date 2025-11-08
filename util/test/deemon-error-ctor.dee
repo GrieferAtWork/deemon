@@ -26,19 +26,19 @@ import * from errors;
 
 
 assert IntegerOverflow() == IntegerOverflow();
-assert IntegerOverflow("foo").message == "foo";
-assert IntegerOverflow("foo", Error("foo")).message == "foo";
+assert IntegerOverflow("foo").msg == "foo";
+assert IntegerOverflow("foo", Error("foo")).msg == "foo";
 assert IntegerOverflow("foo", Error("foo")).cause == Error("foo");
-assert IntegerOverflow(message: "foo").message == "foo";
+assert IntegerOverflow(msg: "foo").msg == "foo";
 assert IntegerOverflow(cause: Error("foo")).cause == Error("foo");
 assert IntegerOverflow(cause: Error("foo")).cause != Error("bar");
-assert IntegerOverflow().message !is bound;
+assert IntegerOverflow().msg !is bound;
 assert IntegerOverflow().cause !is bound;
 assert IntegerOverflow().value !is bound;
 assert IntegerOverflow().minval !is bound;
 assert IntegerOverflow().maxval !is bound;
 assert IntegerOverflow().positive == false;
-assert IntegerOverflow(value: 42).message !is bound;
+assert IntegerOverflow(value: 42).msg !is bound;
 assert IntegerOverflow(value: 42).cause !is bound;
 assert IntegerOverflow(value: 42).value == 42;
 assert IntegerOverflow(value: 42).minval !is bound;

@@ -530,6 +530,7 @@ dee_sqlite3_bind_params(DB *__restrict db, sqlite3_stmt *stmt,
 typedef struct {
 	DeeSystemErrorObject  sqe_system;     /* Underlying system error (set to `sqlite3_system_errno()')
 	                                       * Underlying message is set to `sqlite3_errmsg()' / `sqlite3_errstr()' */
+	DREF DeeStringObject *sqe_errmsg;     /* [0..1][const] SQL error message */
 	DREF DeeStringObject *sqe_sql;        /* [0..1][const] The failing SQL source code */
 	int                   sqe_sqloffutf8; /* [valid_if(sqe_sql != NULL)][const] Byte offset into utf8-repr of "sqe_sql"
 	                                       * where the error happened (when `sqlite3_error_offset()' would return `-1',

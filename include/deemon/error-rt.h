@@ -235,6 +235,7 @@ DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrNestSequenceError)(DeeObject 
 /* Throws an `DeeError_UnpackError' indicating that a sequence `seq'
  * of `actual_size' elements cannot be unpacked to `expected_size'. */
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrUnpackError)(DeeObject *seq, size_t expected_size, size_t actual_size);
+DFUNDEF ATTR_COLD NONNULL((1, 4)) int (DCALL DeeRT_ErrUnpackErrorWithCause)(DeeObject *seq, size_t expected_size, size_t actual_size, /*inherit(always)*/ DREF DeeObject *cause);
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrUnpackErrorEx)(DeeObject *seq, size_t expected_size_min, size_t expected_size_max, size_t actual_size);
 #define DeeRT_ErrUnpackError(seq, expected_size, actual_size) \
 	Dee_ASSUMED_VALUE((DeeRT_ErrUnpackError)((DeeObject *)Dee_REQUIRES_OBJECT(seq), expected_size, actual_size), -1)

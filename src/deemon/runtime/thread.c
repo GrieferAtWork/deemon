@@ -3245,7 +3245,7 @@ except_frame_copy_for_rethrow_or_unlock(struct except_frame *__restrict self,
 
 	/* Duplicate exception tracebacks and package errors in `Error.ThreadCrash'. */
 	DeeObject_Init(thread_crash, &DeeError_ThreadCrash);
-	thread_crash->e_message = NULL;
+	thread_crash->e_msg = NULL;
 	thread_crash->e_cause   = self->ef_error;
 	result->ef_trace = self->ef_trace;
 	result->ef_error = (DREF DeeObject *)thread_crash;

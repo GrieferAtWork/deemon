@@ -76,22 +76,22 @@ systemerror_init_kw(DeeSystemErrorObject *__restrict self, size_t argc,
 #if defined(CONFIG_HOST_WINDOWS) || defined(__DEEMON__)
 	DWORD dwLastError = GetLastError();
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("SystemError", params: """
-	DeeObject *message:?Dstring = NULL;
+	DeeObject *msg:?Dstring = NULL;
 	DeeObject *cause:?DError = NULL;
 	DeeObject *errno:?X2?Dint?Dstring = NULL;
 	DeeObject *nterr_np:?Dint = NULL;
 """);]]]*/
 	struct {
-		DeeObject *message;
+		DeeObject *msg;
 		DeeObject *cause;
 		DeeObject *errno_;
 		DeeObject *nterr_np;
 	} args;
-	args.message = NULL;
+	args.msg = NULL;
 	args.cause = NULL;
 	args.errno_ = NULL;
 	args.nterr_np = NULL;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__message_cause_errno_nterr_np, "|oooo:SystemError", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__msg_cause_errno_nterr_np, "|oooo:SystemError", &args))
 		goto err;
 /*[[[end]]]*/
 	if (args.nterr_np) {
@@ -115,19 +115,19 @@ systemerror_init_kw(DeeSystemErrorObject *__restrict self, size_t argc,
 #if !defined(CONFIG_HOST_WINDOWS) || defined(__DEEMON__)
 	int last_errno = DeeSystem_GetErrno();
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("SystemError", params: """
-	DeeObject *message:?Dstring = NULL;
+	DeeObject *msg:?Dstring = NULL;
 	DeeObject *cause:?DError = NULL;
 	DeeObject *errno:?X2?Dint?Dstring = NULL;
 """);]]]*/
 	struct {
-		DeeObject *message;
+		DeeObject *msg;
 		DeeObject *cause;
 		DeeObject *errno_;
 	} args;
-	args.message = NULL;
+	args.msg = NULL;
 	args.cause = NULL;
 	args.errno_ = NULL;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__message_cause_errno, "|ooo:SystemError", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__msg_cause_errno, "|ooo:SystemError", &args))
 		goto err;
 /*[[[end]]]*/
 	if (args.errno_) {
@@ -137,9 +137,9 @@ systemerror_init_kw(DeeSystemErrorObject *__restrict self, size_t argc,
 		self->se_errno = last_errno;
 	}
 #endif /* !CONFIG_HOST_WINDOWS */
-	self->e_message = args.message;
+	self->e_msg = args.msg;
 	self->e_cause   = args.cause;
-	Dee_XIncref(self->e_message);
+	Dee_XIncref(self->e_msg);
 	Dee_XIncref(self->e_cause);
 	return 0;
 err:
@@ -187,8 +187,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 systemerror_print(DeeSystemErrorObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t temp, result;
 	DREF DeeObject *errno_name, *errno_desc;
-	result = DeeObject_Print(self->e_message
-	                         ? self->e_message
+	result = DeeObject_Print(self->e_msg
+	                         ? self->e_msg
 	                         : (DeeObject *)Dee_TYPE(self),
 	                         printer, arg);
 	if unlikely(result < 0)
@@ -260,7 +260,7 @@ systemerror_print(DeeSystemErrorObject *__restrict self, Dee_formatprinter_t pri
 		                                       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		                                       NULL, &success));
 		if unlikely(!success) {
-			/* No message string printed... */
+			/* No msg string printed... */
 			DO(err, DeeFormat_PRINT(printer, arg, "?"));
 		}
 	}
@@ -282,8 +282,8 @@ systemerror_printrepr(DeeSystemErrorObject *__restrict self, Dee_formatprinter_t
 	result = DeeFormat_Printf(printer, arg, "%k(", Dee_TYPE(self));
 	if unlikely(result < 0)
 		goto done;
-	if (self->e_message) {
-		DO(err, DeeString_PrintRepr(self->e_message, printer, arg));
+	if (self->e_msg) {
+		DO(err, DeeString_PrintRepr(self->e_msg, printer, arg));
 		is_first = false;
 	}
 	if (self->e_cause) {
@@ -343,7 +343,7 @@ PRIVATE struct type_getset tpconst systemerror_getsets[] = {
 	TYPE_GETTER_AB_F("nterrmsg_np", &systemerror_getnterrmsg_np, METHOD_FNOREFESCAPE,
 	                 "->?X2?Dstring?N\n"
 	                 "A description of the associated ?#nterr_np (s.a. ?Ewin32:FormatErrorMessage)\n"
-	                 "Returns ?N if no message description is available"),
+	                 "Returns ?N if no msg description is available"),
 #endif /* CONFIG_HOST_WINDOWS */
 	TYPE_GETSET_END
 };
@@ -361,9 +361,9 @@ PRIVATE struct type_member tpconst systemerror_members[] = {
 };
 
 #ifdef CONFIG_HOST_WINDOWS
-#define SystemError_init_params "message?:?Dstring,cause?:?DError,errno?:?X2?Dint?Dstring,nterr_np?:?Dint"
+#define SystemError_init_params "msg?:?Dstring,cause?:?DError,errno?:?X2?Dint?Dstring,nterr_np?:?Dint"
 #else /* CONFIG_HOST_WINDOWS */
-#define SystemError_init_params "message?:?Dstring,cause?:?DError,errno?:?X2?Dint?Dstring"
+#define SystemError_init_params "msg?:?Dstring,cause?:?DError,errno?:?X2?Dint?Dstring"
 #endif /* !CONFIG_HOST_WINDOWS */
 
 PUBLIC DeeTypeObject DeeError_SystemError = {
@@ -822,7 +822,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 /* Fallback instance when throwing no-memory errors with an unknown size. */
 PUBLIC DeeNoMemoryErrorObject DeeError_NoMemory_instance = {
 	OBJECT_HEAD_INIT(&DeeError_NoMemory),
-	/* .e_message    = */ (DREF DeeObject *)&str_nomemory,
+	/* .e_msg    = */ (DREF DeeObject *)&str_nomemory,
 	/* .e_cause      = */ NULL,
 	/* .nm_allocsize = */ (size_t)-1
 };
