@@ -5,10 +5,14 @@
 
 shopt -s extglob
 
-BLD_ROOT="$(readlink -f "$(pwd)")"
+# OUT_ROOT: Directory where "./configure" is run from, and "config.mk" goes
+# BLD_ROOT: Directory where object files go
+OUT_ROOT="$(readlink -f "$(pwd)")"
+BLD_ROOT="$OUT_ROOT/build/deemon"
+
+# SRC_ROOT: Directory where "./configure" actually lies (root of deemon's .git)
 SRC_ROOT="$(dirname "$(readlink -f "$0")")"
-BIN_PATH=""
-BLD_PATH=""
+BIN_ROOT=""
 
 CONFIG_CROSS_PREFIX=""
 CONFIG_CC=""
@@ -285,8 +289,7 @@ print_help() {
 	echo "    --target=*                 Specify the target name (e.g. 'i386-kos', 'x86_64-linux-gnu' or 'x86_64-pc-cygwin')"
 	echo "                               When not specified, the target will be automatically determined through 'cc -v'"
 	echo "    --libffi-target=*          The target name to use for libffi (defaults to the same as --target)"
-	echo "    --build-root=*             The root directory where build files should be generated ($BLD_ROOT)"
-	echo "    --source-root=*            The directory where deemon source files are found ($SRC_ROOT)"
+	echo "    --source-path=*            The directory where deemon source files are found ($SRC_ROOT)"
 	echo "    --bin-path=*               The path where the deemon core and its lib file should be placed"
 	echo "    --build-path=*             The path where object files should be placed"
 	echo "Options (extended build options):"
@@ -329,10 +332,8 @@ while [[ $# -gt 0 ]]; do
 	--libffi-target=*)
 		LIBFFI_TARGET="$(echo "$1" | cut -d '=' -f 2)"
 		;;
-	--build-root=*)           BLD_ROOT="$(echo "$1" | cut -d '=' -f 2)" ;;
-	--source-root=*)          SRC_ROOT="$(echo "$1" | cut -d '=' -f 2)" ;;
-	--bin-path=*)             BIN_PATH="$(echo "$1" | cut -d '=' -f 2)" ;;
-	--build-path=*)           BLD_PATH="$(echo "$1" | cut -d '=' -f 2)" ;;
+	--source-path=*)          SRC_ROOT="$(echo "$1" | cut -d '=' -f 2)" ;;
+	--bin-path=*)             BIN_ROOT="$(echo "$1" | cut -d '=' -f 2)" ;;
 	--cross-prefix=*)         CONFIG_CROSS_PREFIX="$(echo "$1" | cut -d '=' -f 2)" ;;
 	--config-exe-extension=*) CONFIG_EXE="$(echo "$1" | cut -d '=' -f 2)" ;;
 	--config-dll-extension=*) CONFIG_DLL="$(echo "$1" | cut -d '=' -f 2)" ;;
@@ -377,8 +378,7 @@ done
 ########################################################################################
 ## Automatically configure options
 ########################################################################################
-if [ -z "$BIN_PATH" ]; then BIN_PATH="$BLD_ROOT"; fi
-if [ -z "$BLD_PATH" ]; then BLD_PATH="$BLD_ROOT/build/deemon"; fi
+if [ -z "$BIN_ROOT" ]; then BIN_ROOT="$OUT_ROOT"; fi
 if [ -z "$CONFIG_CC" ]; then CONFIG_CC="${CONFIG_CROSS_PREFIX}gcc"; fi
 if [ -z "$CONFIG_CXX" ]; then CONFIG_CXX="${CONFIG_CROSS_PREFIX}g++"; fi
 if [ -z "$WITH_DEBUG" ]; then WITH_DEBUG="1"; fi
@@ -390,7 +390,7 @@ if [ -z "$WITH_SYSTEM_LIBFFI" ]; then WITH_SYSTEM_LIBFFI="0"; fi
 ########################################################################################
 ## Setup configure logging
 ########################################################################################
-CONFIG_LOG="$BLD_PATH/config.log"
+CONFIG_LOG="$BLD_ROOT/config.log"
 cmd() {
 	echo "exec: $*" >> "$CONFIG_LOG"
 	$* | tee -a "$CONFIG_LOG"
@@ -409,7 +409,7 @@ trycmd() {
 	fi
 	return $error
 }
-mkdir -p "$BLD_PATH"
+mkdir -p "$BLD_ROOT"
 unlink "$CONFIG_LOG" > /dev/null 2>&1
 
 
@@ -479,23 +479,23 @@ if [ -z "$WITH_ASSEMBLY_INTERPRETER" ]; then
 	case "$TARGET_CPU" in
 	i?86)
 		printf "checking if one can compile an AT&T assembly source file..."
-		unlink "$BLD_ROOT/test.o" > /dev/null 2>&1
-		unlink "$BLD_ROOT/test.S" > /dev/null 2>&1
-		cat > "$BLD_ROOT/test.S" <<EOF
+		unlink "$OUT_ROOT/test.o" > /dev/null 2>&1
+		unlink "$OUT_ROOT/test.S" > /dev/null 2>&1
+		cat > "$OUT_ROOT/test.S" <<EOF
 foo:
 	movl  $42, %eax
 	lodsl
 	stosl
 	ret $8
 EOF
-		if "$CONFIG_CC" -c -o "$BLD_ROOT/test.o" "$BLD_ROOT/test.S" > /dev/null 2>&1; then
+		if "$CONFIG_CC" -c -o "$OUT_ROOT/test.o" "$OUT_ROOT/test.S" > /dev/null 2>&1; then
 			printf " yes\n"
 			WITH_ASSEMBLY_INTERPRETER="1"
 		else
 			printf " no\n"
 		fi
-		unlink "$BLD_ROOT/test.o" > /dev/null 2>&1
-		unlink "$BLD_ROOT/test.S" > /dev/null 2>&1
+		unlink "$OUT_ROOT/test.o" > /dev/null 2>&1
+		unlink "$OUT_ROOT/test.S" > /dev/null 2>&1
 		;;
 	*)
 		;;
@@ -508,7 +508,7 @@ fi
 if [[ "$WITH_ASSEMBLY_INTERPRETER" == "1" ]]; then
 	case "$TARGET_CPU" in
 	i?86)
-		WITH_ASSEMBLY_INTERPRETER="$BLD_PATH/core/src/deemon/execute/asm/exec.gas-386.o"
+		WITH_ASSEMBLY_INTERPRETER="$BLD_ROOT/core/src/deemon/execute/asm/exec.gas-386.o"
 		;;
 	*)
 		echo "Error: No assembly interpreter exists for this platform" | tee -a "$CONFIG_LOG"
@@ -544,10 +544,10 @@ fi
 if ! [ -z "$TARGET_IS_AUTO" ]; then
 	case "$TARGET" in
 	*CYGWIN* | *Cygwin* | *cygwin*)
-		CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,--out-implib=${BIN_PATH}/libdeemon.dll.a"
+		CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,--out-implib=$(realpath -s --relative-to="$OUT_ROOT" "${BIN_ROOT}/libdeemon.dll.a")"
 		case "$TARGET_CPU" in
 		i?86)
-			CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,${SRC_ROOT}/src/deemon/linker-scripts/link-deemon-gcc-i386-cygwin.def"
+			CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,$(realpath -s --relative-to="$OUT_ROOT" "${SRC_ROOT}/src/deemon/linker-scripts/link-deemon-gcc-i386-cygwin.def")"
 			CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,--stack,4194304"
 			;;
 		*x86_64* | *x86-64*)
@@ -615,7 +615,7 @@ case "$TARGET" in
 	CONFIG_EXE=".exe"
 	CONFIG_DLL=".dll"
 	if [[ "$WITH_DEX" == "1" ]]; then
-		CONFIG_DEX_LDFLAGS="$CONFIG_DEX_LDFLAGS -L${BIN_PATH}"
+		CONFIG_DEX_LDFLAGS="$CONFIG_DEX_LDFLAGS -L$(realpath -s --relative-to="$OUT_ROOT" "${BIN_ROOT}")"
 		CONFIG_DEX_LIBS="$CONFIG_DEX_LIBS -ldeemon"
 	fi
 	;;
@@ -632,18 +632,19 @@ esac
 
 
 
-cmd mkdir -p "$BLD_ROOT/build"
-cmd mkdir -p "$BLD_ROOT/lib"
-
-if [ "$BLD_ROOT" != "$SRC_ROOT" ]; then
-	unlink "$BLD_ROOT/Makefile" > /dev/null 2>&1
-	cmd cp "$SRC_ROOT/Makefile" "$BLD_ROOT/Makefile"
+cmd mkdir -p "$BLD_ROOT"
+cmd mkdir -p "$BIN_ROOT/lib"
+if [ "$OUT_ROOT" != "$SRC_ROOT" ]; then
+	unlink "$OUT_ROOT/Makefile" > /dev/null 2>&1
+	cat > "$OUT_ROOT/Makefile" <<EOF
+include $(realpath -s --relative-to="$OUT_ROOT" "$SRC_ROOT/Makefile")
+EOF
 fi
 
-mv "$BLD_ROOT/include/deemon/config.h" "$BLD_ROOT/include/deemon/config.h.old" > /dev/null 2>&1
+mv "$OUT_ROOT/include/deemon/config.h" "$OUT_ROOT/include/deemon/config.h.old" > /dev/null 2>&1
 if ! [ -z "$FEATURES" ]; then
-	cmd mkdir -p "$BLD_ROOT/include/deemon"
-	cat > "$BLD_ROOT/include/deemon/config.h" <<EOF
+	cmd mkdir -p "$OUT_ROOT/include/deemon"
+	cat > "$OUT_ROOT/include/deemon/config.h" <<EOF
 /* Automatically generated file (by ./configure). - Do not edit! */
 EOF
 	for feat in $FEATURES; do
@@ -652,12 +653,12 @@ EOF
 			N="$(echo "$feat" | cut -d '=' -f 1)"
 			V="$(echo "$feat" | cut -d '=' -f 2)"
 			if [[ "$V" == "("* ]]; then
-				echo "#define $N$V" >> "$BLD_ROOT/include/deemon/config.h"
+				echo "#define $N$V" >> "$OUT_ROOT/include/deemon/config.h"
 			else
-				echo "#define $N $V" >> "$BLD_ROOT/include/deemon/config.h"
+				echo "#define $N $V" >> "$OUT_ROOT/include/deemon/config.h"
 			fi
 		elif ! [ -z "$feat" ]; then
-			echo "#define $feat" >> "$BLD_ROOT/include/deemon/config.h"
+			echo "#define $feat" >> "$OUT_ROOT/include/deemon/config.h"
 		fi
 	done
 fi
@@ -666,18 +667,18 @@ fi
 
 ########################################################################################
 ## Probe system features
-CONFINC="$BLD_ROOT/include/deemon/config.h"
+CONFINC="$OUT_ROOT/include/deemon/config.h"
 if ! [ -f "$CONFINC" ]; then
-	cmd mkdir -p "$BLD_ROOT/include/deemon"
+	cmd mkdir -p "$OUT_ROOT/include/deemon"
 	cat > "$CONFINC" <<EOF
 /* Automatically generated file (by ./configure). - Do not edit! */
 EOF
 fi
 
-CONFTEST_H="$BLD_ROOT/conftest.h"
-CONFTEST="$BLD_ROOT/conftest.c"
-CONFTEST_OUT="$BLD_ROOT/conftest.o"
-CONFTEST_EXE="$BLD_ROOT/conftest"
+CONFTEST_H="$OUT_ROOT/conftest.h"
+CONFTEST="$OUT_ROOT/conftest.c"
+CONFTEST_OUT="$OUT_ROOT/conftest.o"
+CONFTEST_EXE="$OUT_ROOT/conftest"
 CONFTEST_MAIN="int main()"
 
 cat > "$CONFTEST_H" <<EOF
@@ -897,11 +898,11 @@ else
 		CONFIG_DEX_CTYPES_LIBS="-lffi"
 	else
 		_STATIC_LIBFFY_BUILD_ERROR=""
-		if ! [ -f "$BLD_PATH/libffi/include/ffi.h" ]; then
+		if ! [ -f "$BLD_ROOT/libffi/include/ffi.h" ]; then
 			echo "Configuring libffi (for dex.ctypes)..." | tee -a "$CONFIG_LOG"
-			rm -rf "$BLD_PATH/libffi" > /dev/null 2>&1
-			cmd mkdir -p "$BLD_PATH/libffi"
-			cd "$BLD_PATH/libffi"
+			rm -rf "$BLD_ROOT/libffi" > /dev/null 2>&1
+			cmd mkdir -p "$BLD_ROOT/libffi"
+			cd "$BLD_ROOT/libffi"
 			if [ -z "$LIBFFI_TARGET" ]; then
 				case "$TARGET" in
 				*-kos | *-kos-*)
@@ -943,14 +944,14 @@ else
 					--host="$LIBFFI_TARGET" \
 					--target="$LIBFFI_TARGET" \
 					--enable-static \
-					--prefix "$BLD_PATH/libffi"
+					--prefix "$BLD_ROOT/libffi"
 			) || {
 				_STATIC_LIBFFY_BUILD_ERROR="$?"
 			}
 		fi
-		if test -z "$_STATIC_LIBFFY_BUILD_ERROR" && ! [ -f "${BLD_PATH}/libffi/.libs/libffi.a" ]; then
+		if test -z "$_STATIC_LIBFFY_BUILD_ERROR" && ! [ -f "${BLD_ROOT}/libffi/.libs/libffi.a" ]; then
 			echo "Building libffi (for dex.ctypes)..." | tee -a "$CONFIG_LOG"
-			cd "$BLD_PATH/libffi"
+			cd "$BLD_ROOT/libffi"
 			trycmd make -j $(grep -c ^processor /proc/cpuinfo) || {
 				_STATIC_LIBFFY_BUILD_ERROR=$?
 				# libffi relies on libtool, which in turn contains some bashism,
@@ -977,11 +978,11 @@ else
 				fi
 			}
 		fi
-		cd "$BLD_PATH"
+		cd "$BLD_ROOT"
 		if test -z "$_STATIC_LIBFFY_BUILD_ERROR"; then
-			CONFIG_DEX_CTYPES_CFLAGS="-I${BLD_PATH}/libffi/include"
+			CONFIG_DEX_CTYPES_CFLAGS="-I$(realpath -s --relative-to="$OUT_ROOT" "${BLD_ROOT}/libffi/include")"
 			CONFIG_DEX_CTYPES_LDFLAGS=""
-			CONFIG_DEX_CTYPES_LIBS="${BLD_PATH}/libffi/.libs/libffi.a"
+			CONFIG_DEX_CTYPES_LIBS="$(realpath -s --relative-to="$OUT_ROOT" "${BLD_ROOT}/libffi/.libs/libffi.a")"
 		else
 			echo "" | tee -a "$CONFIG_LOG"
 			echo "" | tee -a "$CONFIG_LOG"
@@ -1237,23 +1238,23 @@ unlink "$CONFTEST_OUT" > /dev/null 2>&1
 
 
 
-if [ -f "$BLD_ROOT/include/deemon/config.h.old" ]; then
-	if [ -f "$BLD_ROOT/include/deemon/config.h" ]; then
-		if cmp --silent "$BLD_ROOT/include/deemon/config.h.old" "$BLD_ROOT/include/deemon/config.h"; then
+if [ -f "$OUT_ROOT/include/deemon/config.h.old" ]; then
+	if [ -f "$OUT_ROOT/include/deemon/config.h" ]; then
+		if cmp --silent "$OUT_ROOT/include/deemon/config.h.old" "$OUT_ROOT/include/deemon/config.h"; then
 			# Unchanged
-			unlink "$BLD_ROOT/include/deemon/config.h"
-			mv "$BLD_ROOT/include/deemon/config.h.old" "$BLD_ROOT/include/deemon/config.h"
+			unlink "$OUT_ROOT/include/deemon/config.h"
+			mv "$OUT_ROOT/include/deemon/config.h.old" "$OUT_ROOT/include/deemon/config.h"
 		else
 			# Changed
-			unlink "$BLD_ROOT/include/deemon/config.h.old"
+			unlink "$OUT_ROOT/include/deemon/config.h.old"
 		fi
 	else
-		unlink "$BLD_ROOT/include/deemon/config.h.old"
+		unlink "$OUT_ROOT/include/deemon/config.h.old"
 	fi
 fi
 
-if [ -f "$BLD_ROOT/include/deemon/config.h" ]; then
-	CONFIG_CFLAGS="$CONFIG_CFLAGS -include $BLD_ROOT/include/deemon/config.h"
+if [ -f "$OUT_ROOT/include/deemon/config.h" ]; then
+	CONFIG_CFLAGS="$CONFIG_CFLAGS -include include/deemon/config.h"
 fi
 
 
@@ -1263,10 +1264,10 @@ fi
 ## Print the used configuration
 ########################################################################################
 #echo "Paths:"
-#echo "    BLD_ROOT: '$BLD_ROOT'"
+#echo "    OUT_ROOT: '$OUT_ROOT'"
 #echo "    SRC_ROOT: '$SRC_ROOT'"
-#echo "    BIN_PATH: '$BIN_PATH'"
-#echo "    BLD_PATH: '$BLD_PATH'"
+#echo "    BIN_ROOT: '$BIN_ROOT'"
+#echo "    BLD_ROOT: '$BLD_ROOT'"
 #echo "Toolchain:"
 #echo "    CONFIG_CC:     '$CONFIG_CC'"
 #echo "    CONFIG_DEX_CC: '$CONFIG_DEX_CC'"
@@ -1303,13 +1304,12 @@ fi
 #echo "    WITH_KOS_SYSTEM_HEADERS:   '$WITH_KOS_SYSTEM_HEADERS'"
 
 
-unlink "$BLD_ROOT/config.mk" > /dev/null 2>&1
-cat > "$BLD_ROOT/config.mk" <<EOF
+unlink "$OUT_ROOT/config.mk" > /dev/null 2>&1
+cat > "$OUT_ROOT/config.mk" <<EOF
 # Automatically generated file (by ./configure). - Do not edit!
-BLD_ROOT := $BLD_ROOT
 SRC_ROOT := $SRC_ROOT
-BIN_PATH := $BIN_PATH
-BLD_PATH := $BLD_PATH
+BIN_ROOT := $BIN_ROOT
+BLD_ROOT := $BLD_ROOT
 
 CC := $CONFIG_CC
 CXX := $CONFIG_CXX
@@ -1332,30 +1332,30 @@ CORE_LIBS := $CONFIG_CORE_LIBS
 EOF
 
 if ! [ -z "$WITH_ASSEMBLY_INTERPRETER" ]; then
-	echo "DEEMON_CORE_OBJECTS += $WITH_ASSEMBLY_INTERPRETER" >> "$BLD_ROOT/config.mk"
+	echo "DEEMON_CORE_OBJECTS += $WITH_ASSEMBLY_INTERPRETER" >> "$OUT_ROOT/config.mk"
 fi
 if [[ "$WITH_KOS_SYSTEM_HEADERS" == "1" ]]; then
-	echo "CFLAGS += -I${SRC_ROOT}/include/deemon/kos-headers" >> "$BLD_ROOT/config.mk"
+	echo "CFLAGS += -I$(realpath -s --relative-to="$OUT_ROOT" "${SRC_ROOT}/include/deemon/kos-headers")" >> "$OUT_ROOT/config.mk"
 fi
 if [[ "$WITH_DEX" == "0" ]]; then
-	echo "CONFIG_WITHOUT_DEX :=" >> "$BLD_ROOT/config.mk"
+	echo "CONFIG_WITHOUT_DEX :=" >> "$OUT_ROOT/config.mk"
 fi
 if ! [ -z "$WITHOUT_DEX_SPECIFIC" ]; then
 	for name in $WITHOUT_DEX_SPECIFIC; do
-		echo "CONFIG_WITHOUT_DEX_$name :=" >> "$BLD_ROOT/config.mk"
+		echo "CONFIG_WITHOUT_DEX_$name :=" >> "$OUT_ROOT/config.mk"
 	done
 fi
 if ! [ -z "$CONFIG_DEX_CTYPES_CC" ]; then
-	echo "DEX_CTYPES_CC := $CONFIG_DEX_CTYPES_CC" >> "$BLD_ROOT/config.mk"
+	echo "DEX_CTYPES_CC := $CONFIG_DEX_CTYPES_CC" >> "$OUT_ROOT/config.mk"
 fi
 if ! [ -z "$CONFIG_DEX_CTYPES_CFLAGS" ]; then
-	echo "DEX_CTYPES_CFLAGS := $CONFIG_DEX_CTYPES_CFLAGS" >> "$BLD_ROOT/config.mk"
+	echo "DEX_CTYPES_CFLAGS := $CONFIG_DEX_CTYPES_CFLAGS" >> "$OUT_ROOT/config.mk"
 fi
 if ! [ -z "$CONFIG_DEX_CTYPES_LDFLAGS" ]; then
-	echo "DEX_CTYPES_LDFLAGS := $CONFIG_DEX_CTYPES_LDFLAGS" >> "$BLD_ROOT/config.mk"
+	echo "DEX_CTYPES_LDFLAGS := $CONFIG_DEX_CTYPES_LDFLAGS" >> "$OUT_ROOT/config.mk"
 fi
 if ! [ -z "$CONFIG_DEX_CTYPES_LIBS" ]; then
-	echo "DEX_CTYPES_LIBS := $CONFIG_DEX_CTYPES_LIBS" >> "$BLD_ROOT/config.mk"
+	echo "DEX_CTYPES_LIBS := $CONFIG_DEX_CTYPES_LIBS" >> "$OUT_ROOT/config.mk"
 fi
 
 # Check if `date -u +%s` works
@@ -1364,6 +1364,6 @@ if date -u +%s > /dev/null 2>&1; then
 	log_checking_yes
 else
 	log_checking_no
-	echo "CONFIG_SH_NO_DATE_TIMESTAMP := true" >> "$BLD_ROOT/config.mk"
+	echo "CONFIG_SH_NO_DATE_TIMESTAMP := true" >> "$OUT_ROOT/config.mk"
 fi
 

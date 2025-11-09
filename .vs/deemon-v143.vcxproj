@@ -237,7 +237,6 @@
 		<ClInclude Include="..\include\deemon\util\simple-hashset.h" />
 		<ClInclude Include="..\include\deemon\variant.h" />
 		<ClInclude Include="..\include\deemon\weakref.h" />
-		<ClInclude Include="..\src\deemon\Makefile" />
 		<ClInclude Include="..\src\deemon\cmdline.h" />
 		<ClInclude Include="..\src\deemon\compiler\asm\genasm-yield.c.inl" />
 		<ClInclude Include="..\src\deemon\compiler\asm\genstore-setup.c.inl" />

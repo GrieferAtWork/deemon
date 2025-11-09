@@ -814,7 +814,7 @@ err:
 
 
 /* Construct a new `struct memobjs' with an uninitialized `mos_objv'. */
-INTERN WUNUSED NONNULL((1)) struct memobjs *DCALL
+INTERN WUNUSED struct memobjs *DCALL
 memobjs_new(size_t objc) {
 	struct memobjs *result;
 	result = (struct memobjs *)Dee_Mallococ(offsetof(struct memobjs, mos_objv),

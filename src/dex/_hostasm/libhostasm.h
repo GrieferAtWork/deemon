@@ -994,7 +994,7 @@ struct memobjs {
 };
 
 /* Construct a new `struct memobjs' with an uninitialized `mos_objv'. */
-INTDEF WUNUSED NONNULL((1)) struct memobjs *DCALL memobjs_new(size_t objc);
+INTDEF WUNUSED struct memobjs *DCALL memobjs_new(size_t objc);
 
 INTDEF NONNULL((1)) void DCALL memobjs_destroy(struct memobjs *__restrict self);
 #define memobjs_incref(self)        (void)(++(self)->mos_refcnt)
@@ -1949,7 +1949,7 @@ jump_descriptors_insert(struct jump_descriptors *__restrict self,
                         struct jump_descriptor *__restrict descriptor);
 
 /* Remove `descriptor' from `self' (said descriptor *must* be part of `self') */
-INTDEF WUNUSED NONNULL((1, 2)) void DCALL
+INTDEF NONNULL((1, 2)) void DCALL
 jump_descriptors_remove(struct jump_descriptors *__restrict self,
                         struct jump_descriptor *__restrict descriptor);
 

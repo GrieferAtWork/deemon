@@ -687,9 +687,6 @@
 		<ClInclude Include="..\include\deemon\weakref.h">
 			<Filter>include</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\deemon\Makefile">
-			<Filter>src</Filter>
-		</ClInclude>
 		<ClInclude Include="..\src\deemon\cmdline.h">
 			<Filter>src</Filter>
 		</ClInclude>
