@@ -237,15 +237,13 @@ asm_gcall_func(struct ast *__restrict func,
 		Dee_Decref(code);
 		if unlikely(!function)
 			goto err_refargv;
-		cid = asm_newconst((DeeObject *)function);
-		Dee_Decref(function);
+		cid = asm_newconst_inherited(function);
 		if unlikely(cid < 0)
 			goto err_refargv;
 		if (asm_gpush_const((uint16_t)cid))
 			goto err_refargv;
 	} else {
-		cid = asm_newconst((DeeObject *)code);
-		Dee_Decref(code);
+		cid = asm_newconst_inherited(code);
 		if unlikely(cid < 0)
 			goto err_refv;
 		/* Push referenced symbols. */
@@ -483,7 +481,7 @@ invoke_cattr_funsym_small:
 					DO(asm_check_thiscall(funsym, func));
 					SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
 					if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
-						symid = asm_newconst((DeeObject *)attr->ca_name);
+						symid = asm_newconst(attr->ca_name);
 						if unlikely(symid < 0)
 							goto err;
 						if (this_sym->s_type == SYMBOL_TYPE_THIS &&
@@ -604,8 +602,7 @@ got_small_method:
 					name_ob = DeeString_NewAuto(origin.omo_decl->m_name);
 					if unlikely(!name_ob)
 						goto err;
-					attrid = asm_newconst(name_ob);
-					Dee_Decref(name_ob);
+					attrid = asm_newconst_inherited(name_ob);
 					if unlikely(attrid < 0)
 						goto err;
 					DO(asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr)));
@@ -728,7 +725,7 @@ check_getattr_base_symbol_class_small:
 do_perform_supercallattr_small:
 							if unlikely(type_rid < 0)
 								goto err;
-							attrid = asm_newconst((DeeObject *)function_attr->a_constexpr);
+							attrid = asm_newconst(function_attr->a_constexpr);
 							if unlikely(attrid < 0)
 								goto err;
 							DO(push_tuple_items(args->a_constexpr, args));
@@ -835,7 +832,7 @@ invoke_cattr_funsym_tuple:
 				DO(asm_check_thiscall(funsym, func));
 				SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
 				if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
-					symid = asm_newconst((DeeObject *)attr->ca_name);
+					symid = asm_newconst(attr->ca_name);
 					if unlikely(symid < 0)
 						goto err;
 					if (this_sym->s_type == SYMBOL_TYPE_THIS &&
@@ -916,8 +913,7 @@ invoke_cattr_funsym_tuple:
 				name_ob = DeeString_NewAuto(origin.omo_decl->m_name);
 				if unlikely(!name_ob)
 					goto err;
-				attrid = asm_newconst(name_ob);
-				Dee_Decref(name_ob);
+				attrid = asm_newconst_inherited(name_ob);
 				if unlikely(attrid < 0)
 					goto err;
 				DO(asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr)));
@@ -1026,8 +1022,7 @@ check_getattr_base_symbol_class_tuple:
 						name_ob = DeeString_NewAuto(origin.omo_decl->m_name);
 						if unlikely(!name_ob)
 							goto err;
-						attrid = asm_newconst(name_ob);
-						Dee_Decref(name_ob);
+						attrid = asm_newconst_inherited(name_ob);
 						if unlikely(attrid < 0)
 							goto err;
 						/* callattr with sequence argument. */
@@ -1260,7 +1255,7 @@ invoke_cattr_funsym_argv:
 			DO(asm_check_thiscall(funsym, func));
 			SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
 			if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
-				symid = asm_newconst((DeeObject *)attr->ca_name);
+				symid = asm_newconst(attr->ca_name);
 				if unlikely(symid < 0)
 					goto err;
 				if (this_sym->s_type == SYMBOL_TYPE_THIS &&
@@ -1389,8 +1384,7 @@ got_method:
 			name_ob = DeeString_NewAuto(origin.omo_decl->m_name);
 			if unlikely(!name_ob)
 				goto err;
-			attrid = asm_newconst(name_ob);
-			Dee_Decref(name_ob);
+			attrid = asm_newconst_inherited(name_ob);
 			if unlikely(attrid < 0)
 				goto err;
 			/* call to some other object. */
@@ -1499,7 +1493,7 @@ check_getattr_base_symbol_class_argv:
 do_perform_supercallattr_argv:
 					if unlikely(type_rid < 0)
 						goto err;
-					attrid = asm_newconst((DeeObject *)function_attr->a_constexpr);
+					attrid = asm_newconst(function_attr->a_constexpr);
 					if unlikely(attrid < 0)
 						goto err;
 					DO(asm_gargv(argc, argv));
@@ -1580,8 +1574,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 			name_ob = DeeString_NewAuto(origin.omo_decl->m_name);
 			if unlikely(!name_ob)
 				goto err;
-			attrid = asm_newconst(name_ob);
-			Dee_Decref(name_ob);
+			attrid = asm_newconst_inherited(name_ob);
 			if unlikely(attrid < 0)
 				goto err;
 			if (kwds->a_type == AST_CONSTEXPR &&

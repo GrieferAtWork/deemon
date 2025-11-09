@@ -3956,10 +3956,10 @@ target_concat_extend__Lexcept_SP4:
 
 /* Object control operators. */
 define_unary_op target_cast_tuple, fSYM(DeeTuple_FromSequence,4)
-define_unary_inherited_op target_cast_list, fSYM(DeeList_FromSequenceInherited,4)
-define_unary_inherited_op target_cast_hashset, fSYM(DeeHashSet_FromSequenceInherited,4)
-define_unary_inherited_op target_cast_dict, fSYM(DeeDict_FromSequenceInherited,4)
-define_unary_inherited_op target_cast_varkwds, fSYM(DeeKw_WrapInherited,4)
+define_unary_inherited_op target_cast_list, fSYM(DeeList_FromSequenceInheritedOnSuccess,4)
+define_unary_inherited_op target_cast_hashset, fSYM(DeeHashSet_FromSequenceInheritedOnSuccess,4)
+define_unary_inherited_op target_cast_dict, fSYM(DeeDict_FromSequenceInheritedOnSuccess,4)
+define_unary_inherited_op target_cast_varkwds, fSYM(DeeKw_WrapInheritedOnSuccess,4)
 define_unary_op target_str, fSYM(DeeObject_Str,4)
 define_unary_op target_copy, fSYM(DeeObject_Copy,4)
 define_unary_op target_deepcopy, fSYM(DeeObject_DeepCopy,4)

@@ -219,7 +219,7 @@ check_getattr_sym:
 				goto check_getattr_sym;
 
 			case SYMBOL_TYPE_THIS:
-				attrid = asm_newconst((DeeObject *)attrname);
+				attrid = asm_newconst(attrname);
 				if unlikely(attrid < 0)
 					goto err;
 				DO(asm_putddi(ddi_ast));
@@ -296,7 +296,7 @@ check_getattr_sym:
 do_perform_supergetattr:
 				if unlikely(type_rid < 0)
 					goto err;
-				attrid = asm_newconst((DeeObject *)attrname);
+				attrid = asm_newconst(attrname);
 				if unlikely(attrid < 0)
 					goto err;
 				DO(asm_putddi(ddi_ast));
@@ -320,7 +320,7 @@ do_perform_supergetattr:
 			}
 		}
 		DO(ast_genasm(base, ASM_G_FPUSHRES));
-		attrid = asm_newconst((DeeObject *)attrname);
+		attrid = asm_newconst(attrname);
 		if unlikely(attrid < 0)
 			goto err;
 		DO(asm_putddi(ddi_ast));
@@ -623,7 +623,7 @@ set_class_attribute:
 	SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
 	if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
 do_virtual_access:
-		symid = asm_newconst((DeeObject *)attr->ca_name);
+		symid = asm_newconst(attr->ca_name);
 		if unlikely(symid < 0)
 			goto err;
 		if (this_sym->s_type == SYMBOL_TYPE_THIS &&
@@ -1831,8 +1831,8 @@ asm_gpop_expr(struct ast *__restrict self) {
 				break;
 			if (attr->a_type == AST_CONSTEXPR &&
 			    DeeString_Check(attr->a_constexpr)) {
-				int32_t cid      = asm_newconst(attr->a_constexpr);
 				struct ast *base = self->a_operator.o_op0;
+				int32_t cid = asm_newconst(attr->a_constexpr);
 				if unlikely(cid < 0)
 					goto err;
 				if (base->a_type == AST_SYM) {

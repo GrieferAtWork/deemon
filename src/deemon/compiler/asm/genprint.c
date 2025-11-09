@@ -169,8 +169,7 @@ ast_genprint_utf8_string(instruction_t mode, char const *str,
 	ob = DeeString_NewUtf8(str, num_bytes, STRING_ERROR_FSTRICT);
 	if unlikely(!ob)
 		goto err;
-	cid = asm_newconst(ob);
-	Dee_Decref(ob);
+	cid = asm_newconst_inherited(ob);
 	if unlikely(cid < 0)
 		goto err;
 	DO(asm_putddi(ddi_ast));

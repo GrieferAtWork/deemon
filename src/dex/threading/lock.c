@@ -469,7 +469,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_do_acquire(DeeObject *__restrict self) {
 	DeeObject *result;
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_acquire, 0, NULL);
-	Dee_XDecref(result);
+	Dee_XDecref_unlikely(result);
 	return likely(result) ? 0 : -1;
 }
 
@@ -477,7 +477,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_do_release(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_release, 0, NULL);
-	Dee_XDecref(result);
+	Dee_XDecref_unlikely(result);
 	return likely(result) ? 0 : -1;
 }
 

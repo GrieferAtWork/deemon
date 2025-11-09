@@ -498,7 +498,7 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL DeeArg_TryGetKwNRSt
  * are queried, but then caches returned references such that the keyword consumer
  * doesn't need to keep track of them. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKw_Wrap(DeeObject *__restrict kwds);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKw_WrapInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict kwds);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKw_WrapInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict kwds);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKw_ForceWrap(DeeObject *__restrict kwds);
 
 /* Lookup keyword arguments. These functions may be used to extract keyword arguments

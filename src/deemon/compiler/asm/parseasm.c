@@ -1009,7 +1009,6 @@ err:
 PRIVATE WUNUSED int32_t DFCALL do_parse_constexpr(void) {
 	DREF struct ast *imm_const;
 	DREF DeeObject *const_val;
-	int32_t cid;
 	if unlikely(scope_push())
 		goto err;
 	imm_const = ast_parse_expr(LOOKUP_SYM_NORMAL);
@@ -1031,9 +1030,7 @@ err_imm_const:
 			goto err_imm_const;
 		const_val = Dee_None;
 	}
-	cid = asm_newconst(const_val);
-	ast_decref(imm_const);
-	return cid;
+	return asm_newconst_inherited(const_val);
 err:
 	return -1;
 }

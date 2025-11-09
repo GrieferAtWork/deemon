@@ -1157,7 +1157,7 @@ do_with_paren:
 		} else if (kwds) {
 			PRIVATE DEFINE_KWLIST(kwlist, { K(name), KEND });
 			DREF DeeObject *temp;
-			temp = DeeKw_WrapInherited(kwds);
+			temp = DeeKw_WrapInheritedOnSuccess(kwds);
 			if unlikely(!temp)
 				goto err_args_kwds;
 			kwds = temp;

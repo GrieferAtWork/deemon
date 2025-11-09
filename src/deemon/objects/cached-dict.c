@@ -1126,7 +1126,7 @@ done:
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeCachedDict_NewInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict mapping) {
+DeeCachedDict_NewInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict mapping) {
 	DREF CachedDict *result;
 	result = DeeGCObject_MALLOC(CachedDict);
 	if unlikely(!result)

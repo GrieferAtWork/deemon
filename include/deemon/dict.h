@@ -290,7 +290,7 @@ DFUNDEF WUNUSED DREF DeeObject *DCALL DeeDict_TryNewWithWeakHint(size_t num_item
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeDict_NewWithHint(size_t num_items);
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeDict_NewWithWeakHint(size_t num_items);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_FromSequence(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_FromSequenceInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_FromSequenceInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_FromRoDict(DeeObject *__restrict self);
 
 

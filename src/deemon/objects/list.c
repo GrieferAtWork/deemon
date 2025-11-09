@@ -305,7 +305,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeList_FromSequenceInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self) {
+DeeList_FromSequenceInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	if (DeeList_CheckExact(self)) {
 		if (!DeeObject_IsShared(self))

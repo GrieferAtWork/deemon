@@ -100,14 +100,12 @@ asm_gpush_function(struct ast *__restrict function_ast) {
 		Dee_Decref(code);
 		if unlikely(!function)
 			goto err;
-		cid = asm_newconst((DeeObject *)function);
-		Dee_Decref(function);
+		cid = asm_newconst_inherited(function);
 		if unlikely(cid < 0)
 			goto err;
 		return asm_gpush_const((uint16_t)cid);
 	}
-	cid = asm_newconst((DeeObject *)code);
-	Dee_Decref(code);
+	cid = asm_newconst_inherited(code);
 	if unlikely(cid < 0)
 		goto err_refv;
 	/* Push referenced symbols. */
@@ -148,15 +146,13 @@ asm_gmov_function(struct symbol *__restrict dst,
 		Dee_Decref(code);
 		if unlikely(!function)
 			goto err;
-		cid = asm_newconst((DeeObject *)function);
-		Dee_Decref(function);
+		cid = asm_newconst_inherited(function);
 		if unlikely(cid < 0)
 			goto err;
 		DO(asm_gprefix_symbol(dst, dst_warn_ast));
 		return asm_gpush_const_p((uint16_t)cid);
 	}
-	cid = asm_newconst((DeeObject *)code);
-	Dee_Decref(code);
+	cid = asm_newconst_inherited(code);
 	if unlikely(cid < 0)
 		goto err_refv;
 	/* Push referenced symbols. */

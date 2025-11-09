@@ -354,7 +354,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeHashSet_FromSequenceInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self) {
+DeeHashSet_FromSequenceInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	if (DeeHashSet_CheckExact(self)) {
 		if (!DeeObject_IsShared(self))

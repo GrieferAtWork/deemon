@@ -123,8 +123,7 @@ asm_gpush_u32(uint32_t value) {
 	obj = DeeInt_NewUInt32(value);
 	if unlikely(!obj)
 		goto err;
-	cid = asm_newconst(obj);
-	Dee_Decref(obj);
+	cid = asm_newconst_inherited(obj);
 	if unlikely(cid < 0)
 		goto err;
 	return asm_gpush_const((uint16_t)cid);
@@ -139,8 +138,7 @@ asm_gpush_s32(int32_t value) {
 	obj = DeeInt_NewInt32(value);
 	if unlikely(!obj)
 		goto err;
-	cid = asm_newconst(obj);
-	Dee_Decref(obj);
+	cid = asm_newconst_inherited(obj);
 	if unlikely(cid < 0)
 		goto err;
 	return asm_gpush_const((uint16_t)cid);
@@ -269,198 +267,457 @@ tuple_getrange_index(DeeTupleObject *__restrict self,
 
 
 #define STACK_PACK_THRESHOLD 16
-INTERN WUNUSED NONNULL((1)) int
-(DCALL asm_gpush_constexpr)(DeeObject *__restrict value) {
-	int32_t cid;
-	ASSERT_OBJECT(value);
-	if (DeeBool_Check(value)) {
-		/* Push a boolean builtin singleton. */
-		return asm_gpush_bool(DeeBool_IsTrue(value));
+
+#define asm_gpush_constexpr_generic_inherited(value) \
+	asm_gpush_constexpr_generic_inherited((DREF DeeObject *)Dee_REQUIRES_OBJECT(value))
+PRIVATE WUNUSED NONNULL((1)) int
+(DCALL asm_gpush_constexpr_generic_inherited)(/*inherit(always)*/ DREF DeeObject *__restrict value) {
+	/* Fallback: Push a constant variable  */
+	int32_t cid = asm_newconst_inherited(value);
+	if unlikely(cid < 0)
+		goto err;
+	return asm_gpush_const((uint16_t)cid);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int
+(DCALL asm_gpush_constexpr_bool_inherited)(/*inherit(always)*/ DREF DeeBoolObject *__restrict value) {
+	Dee_DecrefNokill(value);
+	return asm_gpush_bool(DeeBool_IsTrue(value));
+}
+
+PRIVATE WUNUSED NONNULL((1)) int
+(DCALL asm_gpush_constexpr_none_inherited)(/*inherit(always)*/ DREF DeeNoneObject *__restrict value) {
+	Dee_DecrefNokill(value);
+	return asm_gpush_none();
+}
+
+PRIVATE WUNUSED NONNULL((1)) int
+(DCALL asm_gpush_constexpr_super_inherited)(/*inherit(always)*/ DREF DeeSuperObject *__restrict value) {
+	/* Construct a super-wrapper. */
+	if (asm_gpush_constexpr(DeeSuper_SELF(value)))
+		goto err_value;
+	if (asm_gpush_constexpr(DeeSuper_TYPE(value)))
+		goto err_value;
+	Dee_Decref(value);
+	return asm_gsuper();
+err_value:
+	Dee_Decref(value);
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int
+(DCALL asm_gpush_constexpr_tuple_inherited)(/*inherit(always)*/ DREF DeeTupleObject *__restrict value) {
+	/* Special case for tuples: If only constant expressions are
+	 * contained, then we can push the tuple as a constant expression, too. */
+	size_t start, end;
+	bool is_first_part;
+	size_t len = DeeTuple_SIZE(value);
+
+	/* Special case: empty tuple. */
+	if (!len) {
+		Dee_Decref_unlikely(value);
+		return asm_gpack_tuple(0);
 	}
-	if (DeeNone_Check(value))
-		return asm_gpush_none();
-	if (DeeSuper_Check(value)) {
-		/* Construct a super-wrapper. */
-		if (asm_gpush_constexpr((DeeObject *)DeeSuper_SELF(value)))
-			goto err;
-		if (asm_gpush_constexpr((DeeObject *)DeeSuper_TYPE(value)))
-			goto err;
-		return asm_gsuper();
+
+	/* Check if the tuple can be pushed as a constant expression. */
+	for (start = 0; start < len; ++start) {
+		if (!asm_allowconst(DeeTuple_GET(value, start)))
+			goto push_tuple_parts;
 	}
+	return asm_gpush_constexpr_generic_inherited(value);
 
-	if (DeeTuple_Check(value)) {
-		/* Special case for tuples: If only constant expressions are
-		 * contained, then we can push the tuple as a constant expression, too. */
-		size_t start, end, len;
-		bool is_first_part;
-		DeeTupleObject *val;
-		val = (DeeTupleObject *)value;
-		len = DeeTuple_SIZE(val);
-
-		/* Special case: empty tuple. */
-		if (!len)
-			return asm_gpack_tuple(0);
-
-		/* Check if the tuple can be pushed as a constant expression. */
-		for (start = 0; start < len; ++start) {
-			if (!asm_allowconst(DeeTuple_GET(val, start)))
-				goto push_tuple_parts;
-		}
-		goto push_constexpr;
 push_tuple_parts:
-		/* If not, push constant parts as individual segments. */
-		end = start, start = 0;
-		is_first_part = start == end;
-		if (!is_first_part) {
-			DREF DeeObject *subrange;
-			subrange = tuple_getrange_index(val, (Dee_ssize_t)start, (Dee_ssize_t)end);
-			if unlikely(!subrange)
-				goto err;
-			cid = asm_newconst(subrange);
-			Dee_Decref(subrange);
-			if unlikely(cid < 0)
-				goto err;
-			if (asm_gpush_const((uint16_t)cid))
-				goto err;
-		}
-		while (end < len) {
-			uint16_t pack_length = 0;
-			while (end < len && pack_length < STACK_PACK_THRESHOLD &&
-			       !asm_allowconst(DeeTuple_GET(val, end))) {
-				if (asm_gpush_constexpr(DeeTuple_GET(val, end)))
-					goto err;
-				++pack_length, ++end;
-			}
-			ASSERT(pack_length != 0);
-			ASSERT(pack_length <= STACK_PACK_THRESHOLD);
-			if (is_first_part) {
-				is_first_part = false;
-				if (asm_gpack_tuple(pack_length))
-					goto err;
-			} else {
-				if (asm_gextend(pack_length))
-					goto err;
-			}
-			start = end;
-			/* Collect constant parts. */
-			while (end < len && asm_allowconst(DeeTuple_GET(val, end)))
-				++end;
-			if (end > start) {
-				DREF DeeObject *subrange;
-				if (end == start + 1) {
-					if (asm_gpush_constexpr(DeeTuple_GET(val, start)))
-						goto err;
-					if (asm_gextend(1))
-						goto err;
-				} else {
-					subrange = tuple_getrange_index(val, (Dee_ssize_t)start, (Dee_ssize_t)end);
-					if unlikely(!subrange)
-						goto err;
-					cid = asm_newconst(subrange);
-					Dee_Decref(subrange);
-					if unlikely(cid < 0)
-						goto err;
-					if (asm_gpush_const((uint16_t)cid))
-						goto err;
-					if (asm_gconcat())
-						goto err;
-				}
-			}
-		}
-		return 0;
+	/* If not, push constant parts as individual segments. */
+	end = start, start = 0;
+	is_first_part = start == end;
+	if (!is_first_part) {
+		int32_t part_cid;
+		DREF DeeObject *subrange;
+		subrange = tuple_getrange_index(value, (Dee_ssize_t)start, (Dee_ssize_t)end);
+		if unlikely(!subrange)
+			goto err_value;
+		part_cid = asm_newconst_inherited(subrange);
+		if unlikely(part_cid < 0)
+			goto err_value;
+		if (asm_gpush_const((uint16_t)part_cid))
+			goto err_value;
 	}
-	if (DeeList_CheckExact(value)) {
-		size_t start, end;
-		int temp;
-		bool is_first_part = true;
-		DeeListObject *val;
-		val = (DeeListObject *)value;
-		DeeList_LockRead(val);
-		/* Special case: empty list. */
-		if (!DeeList_SIZE(val)) {
-			DeeList_LockEndRead(val);
-			return asm_gpack_list(0);
+	while (end < len) {
+		uint16_t pack_length = 0;
+		while (end < len && pack_length < STACK_PACK_THRESHOLD &&
+		       !asm_allowconst(DeeTuple_GET(value, end))) {
+			if (asm_gpush_constexpr(DeeTuple_GET(value, end)))
+				goto err_value;
+			++pack_length, ++end;
 		}
-		end = 0;
-		while (end < DeeList_SIZE(val)) {
-			uint16_t pack_length = 0;
-			while (end < DeeList_SIZE(val) &&
-			       pack_length < STACK_PACK_THRESHOLD) {
-				DeeObject *item = DeeList_GET(val, end);
-				if (asm_allowconst(item))
-					break;
-				Dee_Incref(item);
-				DeeList_LockEndRead(val);
-				temp = asm_gpush_constexpr(item);
-				Dee_Decref(item);
-				if unlikely(temp)
-					goto err;
-				DeeList_LockRead(val);
-				++pack_length, ++end;
+		ASSERT(pack_length != 0);
+		ASSERT(pack_length <= STACK_PACK_THRESHOLD);
+		if (is_first_part) {
+			is_first_part = false;
+			if (asm_gpack_tuple(pack_length))
+				goto err_value;
+		} else {
+			if (asm_gextend(pack_length))
+				goto err_value;
+		}
+		start = end;
+		/* Collect constant parts. */
+		while (end < len && asm_allowconst(DeeTuple_GET(value, end)))
+			++end;
+		if (end > start) {
+			DREF DeeObject *subrange;
+			if (end == start + 1) {
+				if (asm_gpush_constexpr(DeeTuple_GET(value, start)))
+					goto err_value;
+				if (asm_gextend(1))
+					goto err_value;
+			} else {
+				int32_t part_cid;
+				subrange = tuple_getrange_index(value, (Dee_ssize_t)start, (Dee_ssize_t)end);
+				if unlikely(!subrange)
+					goto err_value;
+				part_cid = asm_newconst_inherited(subrange);
+				if unlikely(part_cid < 0)
+					goto err_value;
+				if (asm_gpush_const((uint16_t)part_cid))
+					goto err_value;
+				if (asm_gconcat())
+					goto err_value;
 			}
-			if (pack_length) {
-				ASSERT(pack_length <= STACK_PACK_THRESHOLD);
-				DeeList_LockEndRead(val);
+		}
+	}
+	Dee_Decref(value);
+	return 0;
+err_value:
+	Dee_Decref(value);
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int
+(DCALL asm_gpush_constexpr_list_inherited)(/*inherit(always)*/ DREF DeeListObject *__restrict value) {
+	size_t start, end;
+	bool is_first_part = true;
+	DeeList_LockRead(value);
+	/* Special case: empty list. */
+	if (!DeeList_SIZE(value)) {
+		DeeList_LockEndRead(value);
+		Dee_Decref(value);
+		return asm_gpack_list(0);
+	}
+	end = 0;
+	while (end < DeeList_SIZE(value)) {
+		uint16_t pack_length = 0;
+		while (end < DeeList_SIZE(value) &&
+		       pack_length < STACK_PACK_THRESHOLD) {
+			DeeObject *item = DeeList_GET(value, end);
+			if (asm_allowconst(item))
+				break;
+			Dee_Incref(item);
+			DeeList_LockEndRead(value);
+			if unlikely(asm_gpush_constexpr_inherited(item))
+				goto err_value;
+			DeeList_LockRead(value);
+			++pack_length, ++end;
+		}
+		if (pack_length) {
+			ASSERT(pack_length <= STACK_PACK_THRESHOLD);
+			DeeList_LockEndRead(value);
+			if (is_first_part) {
+				if (asm_gpack_list(pack_length))
+					goto err_value;
+				is_first_part = false;
+			} else {
+				/* Append this part to the previous portion. */
+				if (asm_gextend(pack_length))
+					goto err_value;
+			}
+			DeeList_LockRead(value);
+		}
+
+		/* Collect constant parts. */
+		start = end;
+		while (end < DeeList_SIZE(value) &&
+		       asm_allowconst(DeeList_GET(value, end)))
+			++end;
+		if (end > start) {
+			DREF DeeObject *subrange;
+			if (end == start + 1) {
+				/* Special case: encode as  `pack List, #1' */
+				subrange = DeeList_GET(value, start);
+				Dee_Incref(subrange);
+				DeeList_LockEndRead(value);
+				if unlikely(asm_gpush_constexpr_inherited(subrange))
+					goto err_value;
 				if (is_first_part) {
-					if (asm_gpack_list(pack_length))
-						goto err;
+					if (asm_gpack_list(1))
+						goto err_value;
 					is_first_part = false;
 				} else {
-					/* Append this part to the previous portion. */
-					if (asm_gextend(pack_length))
-						goto err;
+					if (asm_gextend(1))
+						goto err_value;
 				}
-				DeeList_LockRead(val);
-			}
-			/* Collect constant parts. */
-			start = end;
-			while (end < DeeList_SIZE(val) &&
-			       asm_allowconst(DeeList_GET(val, end)))
-				++end;
-			if (end > start) {
-				DREF DeeObject *subrange;
-				if (end == start + 1) {
-					/* Special case: encode as  `pack List, #1' */
-					subrange = DeeList_GET(val, start);
-					Dee_Incref(subrange);
-					DeeList_LockEndRead(val);
-					temp = asm_gpush_constexpr(subrange);
-					Dee_Decref(subrange);
-					if unlikely(temp)
-						goto err;
-					if (is_first_part) {
-						if (asm_gpack_list(1))
-							goto err;
-						is_first_part = false;
-					} else {
-						if (asm_gextend(1))
-							goto err;
-					}
+			} else {
+				int32_t part_cid;
+				DeeList_LockEndRead(value);
+				subrange = list_getrange_as_tuple(value, (Dee_ssize_t)start, (Dee_ssize_t)end);
+				if unlikely(!subrange)
+					goto err_value;
+				part_cid = asm_newconst_inherited(subrange);
+				if unlikely(part_cid < 0)
+					goto err_value;
+				if (asm_gpush_const((uint16_t)part_cid))
+					goto err_value;
+				if (is_first_part) {
+					if (asm_gcast_list())
+						goto err_value;
+					is_first_part = false;
 				} else {
-					DeeList_LockEndRead(val);
-					subrange = list_getrange_as_tuple(val, (Dee_ssize_t)start, (Dee_ssize_t)end);
-					if unlikely(!subrange)
-						goto err;
-					cid = asm_newconst(subrange);
-					Dee_Decref(subrange);
-					if unlikely(cid < 0)
-						goto err;
-					if (asm_gpush_const((uint16_t)cid))
-						goto err;
-					if (is_first_part) {
-						if (asm_gcast_list())
-							goto err;
-						is_first_part = false;
-					} else {
-						if (asm_gconcat())
-							goto err;
-					}
+					if (asm_gconcat())
+						goto err_value;
 				}
-				DeeList_LockRead(val);
 			}
+			DeeList_LockRead(value);
 		}
-		return 0;
 	}
+	Dee_Decref(value);
+	return 0;
+err_value:
+	Dee_Decref(value);
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int
+(DCALL asm_gpush_constexpr_dict_inherited)(/*inherit(always)*/ DREF DeeDictObject *__restrict value) {
+	/* Construct dicts in one of 2 ways:
+	 *   #1: If all Dict elements are allocated as constants,
+	 *       push as a read-only Dict, then cast to a regular
+	 *       Dict.
+	 *   #2: Otherwise, push all Dict key/item pairs manually,
+	 *       before packing everything together as a Dict. */
+	int32_t cid;
+	size_t i, num_items;
+	DREF DeeRoDictObject *rodict;
+check_dict_again:
+	DeeDict_LockRead(value);
+	if (!DeeDict_SIZE(value)) {
+		/* Simple case: The Dict is empty, so we can just pack an empty Dict at runtime. */
+unlock_and_push_empty_dict:
+		DeeDict_LockEndRead(value);
+		Dee_Decref(value);
+		return asm_gpack_dict(0);
+	}
+
+	/* Ensure that "val" is optimized */
+	if unlikely(_DeeDict_CanOptimizeVTab(value)) {
+		bool atomic_upgrade = DeeDict_LockUpgrade(value);
+		if (atomic_upgrade || _DeeDict_CanOptimizeVTab(value))
+			dict_optimize_vtab(value);
+		DeeDict_LockDowngrade(value);
+		if unlikely(!atomic_upgrade && !DeeDict_SIZE(value))
+			goto unlock_and_push_empty_dict;
+	}
+
+	/* Verify constants */
+	for (i = Dee_dict_vidx_tovirt(0);
+	     Dee_dict_vidx_virt_lt_real(i, value->d_vsize); ++i) {
+		struct Dee_dict_item *item;
+		item = &_DeeDict_GetVirtVTab(value)[i];
+		if (!asm_allowconst(item->di_key) ||
+		    !asm_allowconst(item->di_value)) {
+			DeeDict_LockEndRead(value);
+			goto push_dict_parts;
+		}
+	}
+
+	/* After verifying constants, directly cast into an RoDict */
+	rodict = rodict_fromdict_locked_or_unlock(value);
+	if unlikely(!ITER_ISOK(rodict)) {
+		if (rodict)
+			goto check_dict_again;
+		goto err_value;
+	}
+	Dee_Decref(value);
+
+	/* All right! we've got the ro-Dict all packed together!
+	 * -> Register it as a constant. */
+	cid = asm_newconst_inherited(rodict);
+	if unlikely(cid < 0)
+		goto err;
+
+	/* Now push the ro-Dict, then cast it to a regular one. */
+	if (asm_gpush_const((uint16_t)cid))
+		goto err;
+	if (asm_gcast_dict())
+		goto err;
+	return 0;
+
+push_dict_parts:
+	/* Construct a Dict by pushing its individual parts. */
+	num_items = 0;
+	DeeDict_LockRead(value);
+	for (i = Dee_dict_vidx_tovirt(0);
+	     Dee_dict_vidx_virt_lt_real(i, value->d_vsize); ++i) {
+		int error;
+		struct dict_item *item;
+		DREF DeeObject *item_key, *item_value;
+		item     = &_DeeDict_GetVirtVTab(value)[i];
+		item_key = item->di_key;
+		if (!item_key)
+			continue;
+		item_value = item->di_value;
+		Dee_Incref(item_key);
+		Dee_Incref(item_value);
+		DeeDict_LockEndRead(value);
+
+		/* Push the key & item. */
+		error = asm_gpush_constexpr_inherited(item_key);
+		if likely(error == 0) {
+			error = asm_gpush_constexpr_inherited(item_value);
+		} else {
+			Dee_Decref(item_value);
+		}
+		if unlikely(error)
+			goto err_value;
+		++num_items;
+		DeeDict_LockRead(value);
+	}
+	DeeDict_LockEndRead(value);
+	Dee_Decref(value);
+
+	/* With everything pushed, pack together the Dict. */
+	return asm_gpack_dict((uint16_t)num_items);
+err_value:
+	Dee_Decref(value);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int
+(DCALL asm_gpush_constexpr_hashset_inherited)(/*inherit(always)*/ DREF DeeHashSetObject *__restrict value) {
+	/* Construct hash-sets in one of 2 ways:
+	 *   #1: If all set elements are allocated as constants,
+	 *       push as a read-only set, then cast to a regular
+	 *       set.
+	 *   #2: Otherwise, push all set keys manually, before
+	 *       packing everything together as a set. */
+	int32_t cid;
+	size_t i, mask, ro_mask, num_items;
+	struct hashset_item *elem;
+	DREF DeeRoSetObject *roset;
+check_set_again:
+	DeeHashSet_LockRead(value);
+	if (!value->hs_used) {
+		/* Simple case: The set is empty, so we can just pack an empty HashSet at runtime. */
+		DeeHashSet_LockRead(value);
+		Dee_Decref(value);
+		return asm_gpack_hashset(0);
+	}
+	mask = value->hs_mask;
+	elem = value->hs_elem;
+	for (i = 0; i <= mask; ++i) {
+		if (!elem[i].hsi_key)
+			continue;
+		if (elem[i].hsi_key == dummy)
+			continue;
+		if (!asm_allowconst(elem[i].hsi_key)) {
+			DeeHashSet_LockEndRead(value);
+			goto push_set_parts;
+		}
+	}
+	num_items = value->hs_used;
+	ro_mask   = ROSET_INITIAL_MASK;
+	while (ro_mask <= num_items)
+		ro_mask = (ro_mask << 1) | 1;
+	ro_mask = (ro_mask << 1) | 1;
+	roset   = (DREF DeeRoSetObject *)DeeObject_TryCalloc(SIZEOF_ROSET(ro_mask));
+	if unlikely(!roset) {
+		DeeHashSet_LockEndRead(value);
+		if (Dee_CollectMemory(SIZEOF_ROSET(ro_mask)))
+			goto check_set_again;
+		goto err_value;
+	}
+	roset->rs_size = num_items;
+	roset->rs_mask = ro_mask;
+
+	/* Pack all values into the ro-set. */
+	for (i = 0; i <= mask; ++i) {
+		if (!elem[i].hsi_key)
+			continue;
+		if (elem[i].hsi_key == dummy)
+			continue;
+		Dee_Incref(elem[i].hsi_key); /* Inherited by `roset_insert_nocheck()' */
+		roset_insert_nocheck(roset,
+		                     elem[i].hsi_hash,
+		                     elem[i].hsi_key);
+	}
+	DeeHashSet_LockEndRead(value);
+	Dee_Decref(value);
+	DeeObject_Init(roset, &DeeRoSet_Type);
+
+	/* All right! we've got the ro-set all packed together!
+	 * -> Register it as a constant. */
+	cid = asm_newconst_inherited(roset);
+	if unlikely(cid < 0)
+		goto err;
+
+	/* Now push the ro-set, then cast it to a regular one. */
+	if (asm_gpush_const((uint16_t)cid))
+		goto err;
+	if (asm_gcast_hashset())
+		goto err;
+	return 0;
+
+push_set_parts:
+	/* Construct a set by pushing its individual parts. */
+	num_items = 0;
+	DeeHashSet_LockRead(value);
+	for (i = 0; i <= value->hs_mask; ++i) {
+		struct hashset_item *item;
+		DREF DeeObject *item_key;
+		item     = &value->hs_elem[i];
+		item_key = item->hsi_key;
+		if (!item_key || item_key == dummy)
+			continue;
+		Dee_Incref(item_key);
+		DeeHashSet_LockEndRead(value);
+		/* Push the key & item. */
+		if unlikely(asm_gpush_constexpr_inherited(item_key))
+			goto err_value;
+		++num_items;
+		DeeHashSet_LockRead(value);
+	}
+	DeeHashSet_LockEndRead(value);
+	Dee_Decref(value);
+
+	/* With everything pushed, pack together the set. */
+	return asm_gpack_hashset((uint16_t)num_items);
+err_value:
+	Dee_Decref(value);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int
+(DCALL asm_gpush_constexpr)(DeeObject *__restrict value) {
+	Dee_Incref(value);
+	return asm_gpush_constexpr_inherited(value);
+}
+
+INTERN WUNUSED NONNULL((1)) int
+(DCALL asm_gpush_constexpr_inherited)(/*inherit(always)*/ DREF DeeObject *__restrict value) {
+	ASSERT_OBJECT(value);
+	if (DeeBool_Check(value))
+		return asm_gpush_constexpr_bool_inherited((DREF DeeBoolObject *)value);
+	if (DeeNone_Check(value))
+		return asm_gpush_constexpr_none_inherited((DREF DeeNoneObject *)value);
+	if (DeeSuper_Check(value))
+		return asm_gpush_constexpr_super_inherited((DREF DeeSuperObject *)value);
+	if (DeeTuple_Check(value))
+		return asm_gpush_constexpr_tuple_inherited((DREF DeeTupleObject *)value);
+	if (DeeList_CheckExact(value))
+		return asm_gpush_constexpr_list_inherited((DREF DeeListObject *)value);
 #if 0 /* There's not really an intended way of creating these at runtime anyways, \
        * and these types of sequence objects should only really be created when   \
        * all contained items qualify as constants anyways, so we might as well    \
@@ -472,216 +729,11 @@ push_tuple_parts:
 		/* TO-DO: Check if all contained keys are allocated as constants. */
 	}
 #endif
-
-	if (DeeDict_Check(value)) {
-		/* Construct dicts in one of 2 ways:
-		 *   #1: If all Dict elements are allocated as constants,
-		 *       push as a read-only Dict, then cast to a regular
-		 *       Dict.
-		 *   #2: Otherwise, push all Dict key/item pairs manually,
-		 *       before packing everything together as a Dict. */
-		size_t i, num_items;
-		DREF DeeRoDictObject *rodict;
-		DeeDictObject *val;
-		val = (DeeDictObject *)value;
-check_dict_again:
-		DeeDict_LockRead(val);
-		if (!DeeDict_SIZE(val)) {
-			/* Simple case: The Dict is empty, so we can just pack an empty Dict at runtime. */
-unlock_and_push_empty_dict:
-			DeeDict_LockEndRead(val);
-			return asm_gpack_dict(0);
-		}
-
-		/* Ensure that "val" is optimized */
-		if unlikely(_DeeDict_CanOptimizeVTab(val)) {
-			bool atomic_upgrade = DeeDict_LockUpgrade(val);
-			if (atomic_upgrade || _DeeDict_CanOptimizeVTab(val))
-				dict_optimize_vtab(val);
-			DeeDict_LockDowngrade(val);
-			if unlikely(!atomic_upgrade && !DeeDict_SIZE(val))
-				goto unlock_and_push_empty_dict;
-		}
-
-		/* Verify constants */
-		for (i = Dee_dict_vidx_tovirt(0);
-		     Dee_dict_vidx_virt_lt_real(i, val->d_vsize); ++i) {
-			struct Dee_dict_item *item;
-			item = &_DeeDict_GetVirtVTab(val)[i];
-			if (!asm_allowconst(item->di_key) ||
-			    !asm_allowconst(item->di_value)) {
-				DeeDict_LockEndRead(val);
-				goto push_dict_parts;
-			}
-		}
-
-		/* After verifying constants, directly cast into an RoDict */
-		rodict = rodict_fromdict_locked_or_unlock(val);
-		if unlikely(!ITER_ISOK(rodict)) {
-			if (rodict)
-				goto check_dict_again;
-			goto err;
-		}
-
-		/* All right! we've got the ro-Dict all packed together!
-		 * -> Register it as a constant. */
-		cid = asm_newconst((DeeObject *)rodict);
-		Dee_Decref(rodict);
-		if unlikely(cid < 0)
-			goto err;
-
-		/* Now push the ro-Dict, then cast it to a regular one. */
-		if (asm_gpush_const((uint16_t)cid))
-			goto err;
-		if (asm_gcast_dict())
-			goto err;
-		return 0;
-
-push_dict_parts:
-		/* Construct a Dict by pushing its individual parts. */
-		num_items = 0;
-		DeeDict_LockRead(val);
-		for (i = Dee_dict_vidx_tovirt(0);
-		     Dee_dict_vidx_virt_lt_real(i, val->d_vsize); ++i) {
-			int error;
-			struct dict_item *item;
-			DREF DeeObject *item_key, *item_value;
-			item     = &_DeeDict_GetVirtVTab(val)[i];
-			item_key = item->di_key;
-			if (!item_key)
-				continue;
-			item_value = item->di_value;
-			Dee_Incref(item_key);
-			Dee_Incref(item_value);
-			DeeDict_LockEndRead(val);
-
-			/* Push the key & item. */
-			error = asm_gpush_constexpr(item_key);
-			if likely(!error)
-				error = asm_gpush_constexpr(item_value);
-			Dee_Decref(item_value);
-			Dee_Decref(item_key);
-			if unlikely(error)
-				goto err;
-			++num_items;
-			DeeDict_LockRead(val);
-		}
-		DeeDict_LockEndRead(val);
-
-		/* With everything pushed, pack together the Dict. */
-		return asm_gpack_dict((uint16_t)num_items);
-	}
-
-	if (DeeHashSet_Check(value)) {
-		/* Construct hash-sets in one of 2 ways:
-		 *   #1: If all set elements are allocated as constants,
-		 *       push as a read-only set, then cast to a regular
-		 *       set.
-		 *   #2: Otherwise, push all set keys manually, before
-		 *       packing everything together as a set. */
-		size_t i, mask, ro_mask, num_items;
-		struct hashset_item *elem;
-		DREF DeeRoSetObject *roset;
-		DeeHashSetObject *val;
-		val = (DeeHashSetObject *)value;
-check_set_again:
-		DeeHashSet_LockRead(val);
-		if (!val->hs_used) {
-			/* Simple case: The set is empty, so we can just pack an empty HashSet at runtime. */
-			DeeHashSet_LockRead(val);
-			return asm_gpack_hashset(0);
-		}
-		mask = val->hs_mask;
-		elem = val->hs_elem;
-		for (i = 0; i <= mask; ++i) {
-			if (!elem[i].hsi_key)
-				continue;
-			if (elem[i].hsi_key == dummy)
-				continue;
-			if (!asm_allowconst(elem[i].hsi_key)) {
-				DeeHashSet_LockEndRead(val);
-				goto push_set_parts;
-			}
-		}
-		num_items = val->hs_used;
-		ro_mask   = ROSET_INITIAL_MASK;
-		while (ro_mask <= num_items)
-			ro_mask = (ro_mask << 1) | 1;
-		ro_mask = (ro_mask << 1) | 1;
-		roset   = (DREF DeeRoSetObject *)DeeObject_TryCalloc(SIZEOF_ROSET(ro_mask));
-		if unlikely(!roset) {
-			DeeHashSet_LockEndRead(val);
-			if (Dee_CollectMemory(SIZEOF_ROSET(ro_mask)))
-				goto check_set_again;
-			goto err;
-		}
-		roset->rs_size = num_items;
-		roset->rs_mask = ro_mask;
-
-		/* Pack all values into the ro-set. */
-		for (i = 0; i <= mask; ++i) {
-			if (!elem[i].hsi_key)
-				continue;
-			if (elem[i].hsi_key == dummy)
-				continue;
-			Dee_Incref(elem[i].hsi_key); /* Inherited by `roset_insert_nocheck()' */
-			roset_insert_nocheck(roset,
-			                     elem[i].hsi_hash,
-			                     elem[i].hsi_key);
-		}
-		DeeHashSet_LockEndRead(val);
-		DeeObject_Init(roset, &DeeRoSet_Type);
-
-		/* All right! we've got the ro-set all packed together!
-		 * -> Register it as a constant. */
-		cid = asm_newconst((DeeObject *)roset);
-		Dee_Decref(roset);
-		if unlikely(cid < 0)
-			goto err;
-
-		/* Now push the ro-set, then cast it to a regular one. */
-		if (asm_gpush_const((uint16_t)cid))
-			goto err;
-		if (asm_gcast_hashset())
-			goto err;
-		return 0;
-
-push_set_parts:
-		/* Construct a set by pushing its individual parts. */
-		num_items = 0;
-		DeeHashSet_LockRead(val);
-		for (i = 0; i <= val->hs_mask; ++i) {
-			struct hashset_item *item;
-			int error;
-			DREF DeeObject *item_key;
-			item     = &val->hs_elem[i];
-			item_key = item->hsi_key;
-			if (!item_key || item_key == dummy)
-				continue;
-			Dee_Incref(item_key);
-			DeeHashSet_LockEndRead(val);
-			/* Push the key & item. */
-			error = asm_gpush_constexpr(item_key);
-			Dee_Decref(item_key);
-			if unlikely(error)
-				goto err;
-			++num_items;
-			DeeHashSet_LockRead(val);
-		}
-		DeeHashSet_LockEndRead(val);
-
-		/* With everything pushed, pack together the set. */
-		return asm_gpack_hashset((uint16_t)num_items);
-	}
-
-push_constexpr:
-	/* Fallback: Push a constant variable  */
-	cid = asm_newconst(value);
-	if unlikely(cid < 0)
-		goto err;
-	return asm_gpush_const((uint16_t)cid);
-err:
-	return -1;
+	if (DeeDict_Check(value))
+		return asm_gpush_constexpr_dict_inherited((DREF DeeDictObject *)value);
+	if (DeeHashSet_Check(value))
+		return asm_gpush_constexpr_hashset_inherited((DREF DeeHashSetObject *)value);
+	return asm_gpush_constexpr_generic_inherited(value);
 }
 
 
@@ -820,7 +872,7 @@ check_function_class:
 				goto err;
 			SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
 			if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
-				symid2 = asm_newconst((DeeObject *)attr->ca_name);
+				symid2 = asm_newconst(attr->ca_name);
 				if unlikely(symid2 < 0)
 					goto err;
 				if (this_sym->s_type == SYMBOL_TYPE_THIS &&
@@ -1075,7 +1127,7 @@ check_sym_class:
 			goto err;
 		SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
 		if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
-			symid2 = asm_newconst((DeeObject *)attr->ca_name);
+			symid2 = asm_newconst(attr->ca_name);
 			if unlikely(symid2 < 0)
 				goto err;
 			if (this_sym->s_type == SYMBOL_TYPE_THIS &&
@@ -1514,7 +1566,7 @@ check_sym_class:
 test_class_attribute:
 			if (asm_gpush_symbol(class_sym, warn_ast))
 				goto err;
-			if (asm_gpush_constexpr((DeeObject *)attr->ca_name))
+			if (asm_gpush_constexpr(attr->ca_name))
 				goto err;
 			return asm_gboundattr();
 		}
@@ -1530,7 +1582,7 @@ test_class_attribute:
 		    ) {
 			if (asm_gpush_symbol(this_sym, warn_ast))
 				goto err;
-			if (asm_gpush_constexpr((DeeObject *)attr->ca_name))
+			if (asm_gpush_constexpr(attr->ca_name))
 				goto err;
 			return asm_gboundattr();
 		}
@@ -1763,8 +1815,7 @@ check_sym_class:
 				name_obj = module_symbol_getnameobj(modsym);
 				if unlikely(!name_obj)
 					goto err;
-				cid = asm_newconst((DeeObject *)name_obj);
-				Dee_Decref(name_obj);
+				cid = asm_newconst_inherited(name_obj);
 				if unlikely(cid < 0)
 					goto err;
 				if (asm_gpush_module((uint16_t)mid))
@@ -1843,7 +1894,7 @@ del_class_attribute:
 				/* Because there is no ASM_DELCMEMBER instruction, we simply
 				 * encode this as a delattr, which, while not static, still
 				 * does exactly what we want it to do! */
-				symid = asm_newconst((DeeObject *)attr->ca_name);
+				symid = asm_newconst(attr->ca_name);
 				if unlikely(symid < 0)
 					goto err;
 				if (asm_gpush_symbol(class_sym, warn_ast))
@@ -1856,8 +1907,7 @@ del_class_attribute:
 				goto err;
 			SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
 			if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
-				int32_t symid2;
-				symid2 = asm_newconst((DeeObject *)attr->ca_name);
+				int32_t symid2 = asm_newconst(attr->ca_name);
 				if unlikely(symid2 < 0)
 					goto err;
 				if (this_sym->s_type == SYMBOL_TYPE_THIS &&
@@ -2180,7 +2230,7 @@ set_class_attribute:
 			SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
 			if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
 do_virtual_access:
-				symid = asm_newconst((DeeObject *)attr->ca_name);
+				symid = asm_newconst(attr->ca_name);
 				if unlikely(symid < 0)
 					goto err;
 				if (this_sym->s_type == SYMBOL_TYPE_THIS &&
@@ -2416,8 +2466,7 @@ asm_gcheck_final_local_bound(uint16_t lid) {
 	constlid = DeeInt_NewUInt16(lid);
 	if unlikely(!constlid)
 		goto err;
-	temp_id = asm_newconst(constlid);
-	Dee_Decref(constlid);
+	temp_id = asm_newconst_inherited(constlid);
 	if unlikely(temp_id < 0)
 		goto err;
 	if (asm_gpush_const((uint16_t)temp_id))

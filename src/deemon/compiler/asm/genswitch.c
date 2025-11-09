@@ -353,19 +353,15 @@ err_jump_table_builder:
 		 * >>    jmp      pop, #pop                       // ... */
 		jump_table = Dee_rodict_builder_pack(&jump_table_builder);
 		if (asm_allowconst((DeeObject *)jump_table)) {
-			jumptable_cid = asm_newconst((DeeObject *)jump_table);
-			if unlikely(jumptable_cid < 0) {
-err_jump_table:
-				Dee_Decref_likely(jump_table);
+			jumptable_cid = asm_newconst_inherited(jump_table);
+			if unlikely(jumptable_cid < 0)
 				goto err;
-			}
 			if (asm_gpush_const((uint16_t)jumptable_cid))
-				goto err_jump_table;
+				goto err;
 		} else {
-			if (asm_gpush_constexpr((DeeObject *)jump_table))
-				goto err_jump_table;
+			if (asm_gpush_constexpr_inherited((DeeObject *)jump_table))
+				goto err;
 		}
-		Dee_Decref_unlikely(jump_table);
 		if (!has_expression) {
 			/* Assemble text for the switch expression. */
 			/* NOTE: Enforcing single-value mode here is _very_ important,
@@ -382,12 +378,11 @@ err_jump_table:
 		default_target = pack_target_tuple(default_sym);
 		if unlikely(!default_target)
 			goto err;
-		default_cid = asm_newconst(default_target);
-		Dee_Decref_unlikely(default_target);
+		default_cid = asm_newconst_inherited(default_target);
 		if unlikely(default_cid < 0)
 			goto err;
 		DO(asm_gpush_const((uint16_t)default_cid)); /* jump_table, expr, default */
-		get_cid = asm_newconst((DeeObject *)&str_get);
+		get_cid = asm_newconst(&str_get);
 		if unlikely(get_cid < 0)
 			goto err;
 		DO(asm_gcallattr_const((uint16_t)get_cid, 2)); /* target */

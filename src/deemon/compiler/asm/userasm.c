@@ -1797,11 +1797,12 @@ write_regular_local:
 				Dee_Incref(key);
 				Dee_Incref(value);
 				DeeDict_LockEndRead(d);
-				error = asm_gpush_constexpr(key);
-				if likely(!error)
-					error = asm_gpush_constexpr(value);
-				Dee_Decref(key);
-				Dee_Decref(value);
+				error = asm_gpush_constexpr_inherited(key);
+				if likely(error == 0) {
+					error = asm_gpush_constexpr_inherited(value);
+				} else {
+					Dee_Decref(value);
+				}
 				if unlikely(error)
 					goto err;
 				++length;

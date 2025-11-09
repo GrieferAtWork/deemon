@@ -1147,7 +1147,7 @@ do_check_encode_cmpxch_for_sameobj_condition:
 					}
 					DO(asm_putddi(self));
 					if (self->a_flag & AST_FCOND_BOOL) {
-						DO(asm_gpush_constexpr(Dee_False));
+						DO(asm_gpush_false());
 					} else {
 						DO(asm_gpush_none());
 					}
@@ -1824,8 +1824,7 @@ push_a_if_used:
 					Dee_Decref_likely(push_seq);
 					goto action_in_without_const;
 				}
-				cid = asm_newconst(push_seq);
-				Dee_Decref_unlikely(push_seq);
+				cid = asm_newconst_inherited(push_seq);
 				if unlikely(cid < 0)
 					goto err;
 				DO(ast_genasm(self->a_operator.o_op1, ASM_G_FPUSHRES));
@@ -2291,8 +2290,7 @@ do_this_as_typesym_ref:
 						Dee_Decref_likely(push_seq);
 						goto action_in_without_const;
 					}
-					cid = asm_newconst(push_seq);
-					Dee_Decref_unlikely(push_seq);
+					cid = asm_newconst_inherited(push_seq);
 					if unlikely(cid < 0)
 						goto err;
 					DO(ast_genasm(self->a_action.a_act0, ASM_G_FPUSHRES));

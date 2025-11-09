@@ -2063,7 +2063,6 @@ INTERN WUNUSED int32_t DCALL
 asm_newrelint(struct asm_sym *sym,
               tint_t addend, uint16_t mode) {
 	DREF DeeObject *obj;
-	int32_t result;
 	if likely(sym) {
 		obj = DeeRelInt_New(sym, addend, mode);
 	} else {
@@ -2071,9 +2070,7 @@ asm_newrelint(struct asm_sym *sym,
 	}
 	if unlikely(!obj)
 		goto err;
-	result = asm_newconst(obj);
-	Dee_Decref_unlikely(obj);
-	return result;
+	return asm_newconst_inherited(obj);
 err:
 	return -1;
 }
@@ -2632,8 +2629,14 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int32_t DCALL
-asm_newconst(DeeObject *__restrict constvalue) {
+INTERN WUNUSED NONNULL((1)) int32_t
+(DCALL asm_newconst)(DeeObject *__restrict constvalue) {
+	Dee_Incref(constvalue);
+	return asm_newconst_inherited(constvalue);
+}
+
+INTERN WUNUSED NONNULL((1)) int32_t
+(DCALL asm_newconst_inherited)(/*inherit(always)*/ DREF DeeObject *__restrict constvalue) {
 	int32_t result;
 	DREF DeeObject *elem;
 	ASSERT_OBJECT(constvalue);
@@ -2647,22 +2650,25 @@ asm_newconst(DeeObject *__restrict constvalue) {
 			elem = vec[i];
 			if (Dee_TYPE(elem) == Dee_TYPE(constvalue)) {
 				int error = DeeObject_TryCompareEq(constvalue, elem);
-				if unlikely(error == Dee_COMPARE_ERR)
+				if unlikely(Dee_COMPARE_ISERR(error))
 					goto err;
-				if (error == 0)
+				if (Dee_COMPARE_ISEQ(error)) {
+					Dee_Decref_unlikely(constvalue);
 					return (int32_t)i; /* Got a match for an existing instance! */
+				}
 			}
 		}
 	}
 	if unlikely(check_resize_constants())
 		goto err;
 	result = current_assembler.a_constc;
-	current_assembler.a_constv[current_assembler.a_constc++] = constvalue;
-	Dee_Incref(constvalue);
+	current_assembler.a_constv[current_assembler.a_constc++] = constvalue; /* Inherit reference */
 	return result;
 err:
+	Dee_Decref(constvalue);
 	return -1;
 }
+
 
 /* Create a new static variable ID and return it.
  * @param: sym: The symbol with which to associated the static variable, or NULL if anonymous.

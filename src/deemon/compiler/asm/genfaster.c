@@ -143,7 +143,6 @@ INTERN WUNUSED NONNULL((1)) int
 		/* The inner sequence is a constant expression.
 		 * -> Compile it as a _RoSet object. */
 		DREF DeeObject *inner_set;
-		int result;
 		inner_set = DeeRoSet_FromSequenceOrMappingForContains(self->a_constexpr);
 		if unlikely(!inner_set) {
 restore_error:
@@ -152,9 +151,7 @@ restore_error:
 		}
 		if (asm_allowconst(inner_set)) {
 			/* Push the inner-set expression. */
-			result = asm_gpush_constexpr(inner_set);
-			Dee_Decref_unlikely(inner_set);
-			return result;
+			return asm_gpush_constexpr_inherited(inner_set);
 		}
 
 		/* The inner set-expression isn't allowed as a constant.
@@ -163,9 +160,7 @@ restore_error:
 		inner_set = DeeHashSet_FromSequence(self->a_constexpr);
 		if unlikely(!inner_set)
 			goto restore_error;
-		result = asm_gpush_constexpr(inner_set);
-		Dee_Decref_unlikely(inner_set);
-		return result;
+		return asm_gpush_constexpr_inherited(inner_set);
 	}
 	/* Generate the expression. */
 push_generic:

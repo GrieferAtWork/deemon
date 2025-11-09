@@ -2075,7 +2075,7 @@ do_unpack:
 
 		TARGET(ASM_CAST_LIST, -1, +1) {
 			DREF DeeObject *temp;
-			temp = DeeList_FromSequenceInherited(TOP);
+			temp = DeeList_FromSequenceInheritedOnSuccess(TOP);
 			if unlikely(!temp)
 				HANDLE_EXCEPT();
 			TOP = temp; /* Inherit reference. */
@@ -2084,7 +2084,7 @@ do_unpack:
 
 		TARGET(ASM_CAST_VARKWDS, -1, +1) {
 			DREF DeeObject *temp;
-			temp = DeeKw_WrapInherited(TOP);
+			temp = DeeKw_WrapInheritedOnSuccess(TOP);
 			if unlikely(!temp)
 				HANDLE_EXCEPT();
 			TOP = temp; /* Inherit reference. */
@@ -5243,7 +5243,7 @@ do_pack_dict:
 				RAW_TARGET(ASM_CAST_DICT) {
 					DREF DeeObject *dict_cast;
 					ASSERT_USAGE(-1, +1);
-					dict_cast = DeeDict_FromSequenceInherited(TOP);
+					dict_cast = DeeDict_FromSequenceInheritedOnSuccess(TOP);
 					if unlikely(!dict_cast)
 						HANDLE_EXCEPT();
 					TOP = dict_cast; /* Inherit reference. */
@@ -5252,7 +5252,7 @@ do_pack_dict:
 
 				TARGET(ASM_CAST_HASHSET, -1, +1) {
 					DREF DeeObject *set_cast;
-					set_cast = DeeHashSet_FromSequenceInherited(TOP);
+					set_cast = DeeHashSet_FromSequenceInheritedOnSuccess(TOP);
 					if unlikely(!set_cast)
 						HANDLE_EXCEPT();
 					TOP = set_cast; /* Inherit reference */
