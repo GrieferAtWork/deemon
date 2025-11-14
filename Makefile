@@ -322,9 +322,9 @@ ifeq (,$(DRYRUN))
 	$(eval is_mandatory := $(or $(if $(filter $(obj),$(OBJ_OPTIONAL)),,y),$(filter $@,$(MAKECMDGOALS))))
 	$(eval cmd_suffix := $(if $(is_mandatory),, || { \
 		rm -f $(obj) $(dep); \
-		echo -e "\033[33m⚠️\033[m  Failed to compile optional source file \033[97m$<\033[m"; \
+		echo "[33m⚠️[m  Failed to compile optional source file [97m$<[m"; \
 	}))
-	@echo -e "$(if $(is_mandatory),,\033[94mopt\033[m )$(cc) -c $(filter-out $(CFLAGS_src),$(cflags)) $(src)"
+	@echo "$(if $(is_mandatory),,[94mopt[m )$(cc) -c $(filter-out $(CFLAGS_src),$(cflags)) $(src)"
 	@mkdir -p $(dir $@)
 	@$(cc) -c -o $(obj) -MMD -MP -MF $(dep) $(cflags) $(src) $(cmd_suffix)
 else
@@ -376,7 +376,7 @@ $(BIN_ROOT)/$(1) $(BIN_RELPATH)/$(1): $(call bin_objects,$(1)) $(foreach c,$(can
 		mkdir -p $$(BLD_RELPATH) \
 	,))
 	$$(eval maybe_export_objects2 := $$(if $$(maybe_export_objects1), \
-		echo -en "$$(foreach o,$$(objs),$$(subst \\,\\\\,$$(o))\\n)" > $$(BLD_RELPATH)/$(1).args \
+		echo "$$(foreach o,$$(objs),$$(subst \\,\\\\,$$(o))\\n)" > $$(BLD_RELPATH)/$(1).args \
 	,))
 	$$(eval objs := $$(if $$(maybe_export_objects1), @$$(BLD_RELPATH)/$(1).args, $$(objs)))
 ifeq (,$(DRYRUN))
@@ -404,10 +404,10 @@ ifeq (,$(is_mandatory))
 	$$(eval present_objs := $$(foreach o,$$(objs),$$(wildcard $$(o))))
 	$$(eval missing_objs := $$(sort $$(filter-out $$(present_objs),$$(objs))))
 	$$(eval final_link_cmd := $$(if $$(missing_objs), \
-		echo -e "\033[33m⚠️\033[m  Missing \033[97m$$(firstword $$(missing_objs))\033[m$$(if $$(word 2,$$(missing_objs)), and $$(words $$(filter-out $$(firstword $$(missing_objs)),$$(missing_objs))) more,): skipping \033[97m$$@\033[m (see log for details)"; \
+		echo "[33m⚠️[m  Missing [97m$$(firstword $$(missing_objs))[m$$(if $$(word 2,$$(missing_objs)), and $$(words $$(filter-out $$(firstword $$(missing_objs)),$$(missing_objs))) more,): skipping [97m$$@[m (see log for details)"; \
 		rm -f $$(bin); \
 	, \
-		echo -e "\033[94mopt\033[m $(ld) $(ldflags) -o $$(bin) ... $(libs)"; \
+		echo "[94mopt[m $(ld) $(ldflags) -o $$(bin) ... $(libs)"; \
 		$$(link_cmd) || rm -f $$(bin) \
 	))
 	@$$(final_link_cmd)
@@ -446,8 +446,8 @@ _print_optional_module_summary: $(BIN_ALL)
 		echo ""; \
 		echo ""; \
 		echo "Some binaries could not be built (see log for details):"; \
-		$(foreach b,$(present_bins), echo -e "\033[92m✅\033[m  Built $(b)";) \
-		$(foreach b,$(missing_bins), echo -e "\033[91m❌\033[m  Failed $(b)";) \
+		$(foreach b,$(present_bins), echo "[92m✅[m  Built $(b)";) \
+		$(foreach b,$(missing_bins), echo "[91m❌[m  Failed $(b)";) \
 	, \
 		true \
 	))
@@ -501,10 +501,9 @@ install:
 	$(if $(filter-out $(abs_destdir),$(SRC_ROOT)), \
 		$(foreach d,$(install_src_files),cp "$(SRC_RELPATH)/$(d)" "$(destdir)/$(d)" $(LF)) \
 	,)
-	@echo -e -n "\
-If you want \033[97mdeemon\033[m to be part of you \$$PATH, run:\n\
-\033[97msudo ln -s "$(abs_destdir)/deemon" /usr/bin/deemon\033[m\n\
-"
+	@echo "\
+If you want [97mdeemon[m to be part of you \$$PATH, run:\n\
+[97msudo ln -s "$(abs_destdir)/deemon" /usr/bin/deemon[m"
 
 
 
@@ -516,32 +515,31 @@ If you want \033[97mdeemon\033[m to be part of you \$$PATH, run:\n\
 ## =======================================================================
 
 help:
-	@echo -e -n "\
+	@echo "\
 Build commands\n\
-\t\033[97mmake\033[m                     Same as \033[97mmake all\033[m\n\
-\t\033[97mmake all\033[m                 Build deemon and (try to) build dex modules. Failure\n\
-\t\033[97m\033[m                         to build dex modules does not constitute an error, but\n\
-\t\033[97m\033[m                         all binaries that could not be built are summarized at\n\
-\t\033[97m\033[m                         the end.\n\
-\t\033[97mmake FILE\033[m                Build a specific file. Failure while building any of\n\
-\t\033[97m\033[m                         these files constitutes an error\n\
-\t\033[97mmake install [DESTDIR=.]\033[m Install binaries and modules to DESTDIR. Unless\n\
-\t\033[97m\033[m                         \033[97mCONFIG_DEEMON_HOME\033[m was used, deemon doesn't need to\n\
-\t\033[97m\033[m                         know its install location during building. If you want\n\
-\t\033[97m\033[m                         to have deemon as part of your \$$PATH, use\n\
-\t\033[97m\033[m                         \033[97msudo ln -s \$$DESTDIR/deemon /usr/bin/deemon\033[m\n\
-\t\033[97mmake clean\033[m               Delete all object files/binaries (includes \033[97mrmdec\033[m)\n\
+\t[97mmake[m                     Same as [97mmake all[m\n\
+\t[97mmake all[m                 Build deemon and (try to) build dex modules. Failure\n\
+\t[97m[m                         to build dex modules does not constitute an error, but\n\
+\t[97m[m                         all binaries that could not be built are summarized at\n\
+\t[97m[m                         the end.\n\
+\t[97mmake FILE[m                Build a specific file. Failure while building any of\n\
+\t[97m[m                         these files constitutes an error\n\
+\t[97mmake install [DESTDIR=.][m Install binaries and modules to DESTDIR. Unless\n\
+\t[97m[m                         [97mCONFIG_DEEMON_HOME[m was used, deemon doesn't need to\n\
+\t[97m[m                         know its install location during building. If you want\n\
+\t[97m[m                         to have deemon as part of your \$$PATH, use\n\
+\t[97m[m                         [97msudo ln -s \$$DESTDIR/deemon /usr/bin/deemon[m\n\
+\t[97mmake clean[m               Delete all object files/binaries (includes [97mrmdec[m)\n\
 \n\
 Maintainer commands\n\
-\t\033[97mmake vs-proj\033[m             Generate Visual Studio project files (\033[97m.vs/deemon-vNNN.sln\033[m)\n\
-\t\033[97mmake method-hints\033[m        Re-build generated source code for method hints\n\
-\t\033[97mmake computed-operators\033[m  Re-build generated source code for computed operators\n\
-\t\033[97m\033[m                         Set \033[97mCONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS\033[m first\n\
-\t\033[97mmake cxx-generated\033[m       Re-build generated source code for c++ headers\n\
-\t\033[97mmake rmdec\033[m               Removed pre-compiled deemon modules (\033[97m*.dec\033[m files)\n\
+\t[97mmake vs-proj[m             Generate Visual Studio project files ([97m.vs/deemon-vNNN.sln[m)\n\
+\t[97mmake method-hints[m        Re-build generated source code for method hints\n\
+\t[97mmake computed-operators[m  Re-build generated source code for computed operators\n\
+\t[97m[m                         Set [97mCONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS[m first\n\
+\t[97mmake cxx-generated[m       Re-build generated source code for c++ headers\n\
+\t[97mmake rmdec[m               Removed pre-compiled deemon modules ([97m*.dec[m files)\n\
 \n\
-Special care has been taken so \033[97mmake -j\033[m and \033[97mmake -n\033[m work as intended for all make commands\n\
-"
+Special care has been taken so [97mmake -j[m and [97mmake -n[m work as intended for all make commands"
 .PHONY: help
 
 
