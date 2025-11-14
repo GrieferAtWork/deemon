@@ -34,9 +34,13 @@ endef
 override define relpath
 $(or $(call relpath_1,$1,$2,$(call prefix,$1,$2)),.)
 endef
+define LF
+
+
+endef
 
 # $(call if_list_longer_than,list,N,YES,NO)
-# Expands to $(YES) if $(word $(list)) is greater >= $(N); else expands to $(NO)
+# Expands to $(YES) if $(words $(list)) is greater-or-equal >= $(N); else expands to $(NO)
 define if_list_longer_than
 $(if $(wordlist $(2),$(words $(1)),$(1)),$(3),$(4))
 endef
@@ -268,8 +272,8 @@ endef
 OBJ_OPTIONAL  := $(foreach lib,$(BIN_OPTIONAL),$(call bin_objects,$(lib)))
 OBJ_MANDATORY := $(foreach lib,$(BIN_MANDATORY),$(call bin_objects,$(lib)))
 OBJ_ALL := $(OBJ_OPTIONAL) $(OBJ_MANDATORY)
-DEP_ALL := $(OBJ_ALL:.o=.MF)
-BIN_ALL := $(BIN_MANDATORY) $(BIN_OPTIONAL)
+_BIN_ALL := $(BIN_MANDATORY) $(BIN_OPTIONAL)            # Raw filenames
+BIN_ALL := $(foreach b,$(_BIN_ALL),$(BIN_RELPATH)/$(b)) # Relative (resolvable) filenames
 DRYRUN := $(findstring n,$(MAKEFLAGS))
 
 
@@ -417,10 +421,10 @@ endif
 endef
 
 # Generate rules for building binaries (both mandatory-, and optional ones)
-$(foreach lib,$(BIN_ALL),$(eval $(call LINK_RECIPE,$(lib))))
+$(foreach lib,$(_BIN_ALL),$(eval $(call LINK_RECIPE,$(lib))))
 
 # Auto-include dependency files
--include $(DEP_ALL)
+-include $(OBJ_ALL:.o=.MF)
 
 
 ## =======================================================================
@@ -430,16 +434,12 @@ $(foreach lib,$(BIN_ALL),$(eval $(call LINK_RECIPE,$(lib))))
 all: $(BIN_ALL) _print_optional_module_summary
 .DEFAULT_GOAL := all
 
-# TODO: make clean
-# TODO: make install
-# TODO: make install DESTDIR=...
-
 ## =======================================================================
 ## Summary of failed, optional binaries
 ## =======================================================================
 ifeq (,$(DRYRUN))
 _print_optional_module_summary: $(BIN_ALL)
-	$(eval bins := $(foreach b,$(BIN_ALL),$(call relpath,$(BIN_RELPATH)/$(b),$(PWD))))
+	$(eval bins := $(foreach b,$(BIN_ALL),$(call relpath,$(b),$(PWD))))
 	$(eval present_bins := $(foreach b,$(bins),$(wildcard $(b))))
 	$(eval missing_bins := $(sort $(filter-out $(present_bins),$(bins))))
 	$(eval body := $(if $(missing_bins), \
@@ -457,6 +457,57 @@ _print_optional_module_summary:
 endif
 
 
+## =======================================================================
+## Misc. convenience make commands
+## =======================================================================
+clean: rmdec
+	rm -rf $(BLD_RELPATH)/src
+	rm -f $(BLD_RELPATH)/deemon.exe.args $(SRC_RELPATH)/LastCoverageResults.log $(BIN_RELPATH)/libdeemon.dll.a
+	rm -f $(BIN_ALL)
+	rm -f $(BIN_ALL:$(EXE)=.exp)
+	rm -f $(BIN_ALL:$(EXE)=.lib)
+	rm -f $(BIN_ALL:$(EXE)=.pdb)
+	rm -f $(BIN_ALL:$(DLL)=.exp)
+	rm -f $(BIN_ALL:$(DLL)=.lib)
+	rm -f $(BIN_ALL:$(DLL)=.pdb)
+
+install:
+	$(eval destdir := $(or $(DESTDIR),$(PWD)))
+	$(eval abs_destdir := $(realpath $(destdir)))
+	$(eval install_src_files := $(wildcard $(SRC_RELPATH)/lib/***.dee))
+	$(eval install_src_files += $(wildcard $(SRC_RELPATH)/lib/**/*.dee))
+	$(eval install_src_files += $(wildcard $(SRC_RELPATH)/lib/**/**/*.dee))
+	$(eval install_src_files += $(wildcard $(SRC_RELPATH)/lib/**/**/**/*.dee))
+	$(eval install_src_files += $(wildcard $(SRC_RELPATH)/lib/**/**/**/**/*.dee))
+	$(eval install_src_files += $(wildcard $(SRC_RELPATH)/lib/include/*))
+	$(eval install_src_files += $(wildcard $(SRC_RELPATH)/lib/include/**/*))
+	$(eval install_src_files += $(wildcard $(SRC_RELPATH)/lib/include/**/**/*))
+	$(eval install_src_files += $(wildcard $(SRC_RELPATH)/lib/include/**/**/**/*))
+	$(eval install_src_files := $(foreach f,$(install_src_files),$(call relpath,$(f),$(SRC_RELPATH))))
+	$(eval install_src_files := $(filter-out $(foreach f,$(install_src_files),$(patsubst %/,%,$(dir $(f)))),$(install_src_files)))
+	$(eval install_src_files := $(filter-out %.dec,$(install_src_files)))
+	$(eval install_src_files := $(filter-out %.txt,$(install_src_files)))
+	$(eval install_src_files := $(sort $(install_src_files)))
+	$(eval install_bin_files := $(foreach b,$(BIN_ALL),$(wildcard $(b))))
+	$(eval install_bin_files := $(foreach f,$(install_bin_files),$(call relpath,$(f),$(BIN_RELPATH))))
+	$(eval install_bin_files := $(filter-out $(foreach f,$(install_bin_files),$(patsubst %/,%,$(dir $(f)))),$(install_bin_files)))
+	$(eval install_bin_files := $(sort $(install_bin_files)))
+	$(eval install_dirs := $(filter-out ./,$(sort $(foreach f,$(install_src_files) $(install_bin_files),$(dir $(f))))))
+#	$(foreach d,$(install_dirs),mkdir -p "$(destdir)/$(d)"$(LF))
+	$(foreach d,$(install_dirs),$(if $(wildcard $(destdir)/$(d)),,mkdir -p "$(destdir)/$(d)"$(LF)))
+	$(if $(filter-out $(abs_destdir),$(BIN_ROOT)), \
+		$(foreach d,$(install_bin_files),cp "$(BIN_RELPATH)/$(d)" "$(destdir)/$(d)"$(LF)) \
+	,)
+	$(if $(filter-out $(abs_destdir),$(SRC_ROOT)), \
+		$(foreach d,$(install_src_files),cp "$(SRC_RELPATH)/$(d)" "$(destdir)/$(d)" $(LF)) \
+	,)
+	@echo -e -n "\
+If you want \033[97mdeemon\033[m to be part of you \$$PATH, run:\n\
+\033[97msudo ln -s "$(abs_destdir)/deemon" /usr/bin/deemon\033[m\n\
+"
+
+
+
 
 
 
@@ -468,23 +519,39 @@ help:
 	@echo -e -n "\
 Build commands\n\
 \t\033[97mmake\033[m                     Same as \033[97mmake all\033[m\n\
-\t\033[97mmake all\033[m                 Build deemon and (try to) build dex modules. Failure to build dex modules does not constitute an error\n\
-\t\033[97mmake FILE\033[m                Build a specific file. Failure while building any of these files constitutes an error\n\
+\t\033[97mmake all\033[m                 Build deemon and (try to) build dex modules. Failure\n\
+\t\033[97m\033[m                         to build dex modules does not constitute an error, but\n\
+\t\033[97m\033[m                         all binaries that could not be built are summarized at\n\
+\t\033[97m\033[m                         the end.\n\
+\t\033[97mmake FILE\033[m                Build a specific file. Failure while building any of\n\
+\t\033[97m\033[m                         these files constitutes an error\n\
+\t\033[97mmake install [DESTDIR=.]\033[m Install binaries and modules to DESTDIR. Unless\n\
+\t\033[97m\033[m                         \033[97mCONFIG_DEEMON_HOME\033[m was used, deemon doesn't need to\n\
+\t\033[97m\033[m                         know its install location during building. If you want\n\
+\t\033[97m\033[m                         to have deemon as part of your \$$PATH, use\n\
+\t\033[97m\033[m                         \033[97msudo ln -s \$$DESTDIR/deemon /usr/bin/deemon\033[m\n\
+\t\033[97mmake clean\033[m               Delete all object files/binaries (includes \033[97mrmdec\033[m)\n\
 \n\
-Special case has been taken that \033[97mmake -j\033[m and \033[97mmake -n\033[m work as intended for all of the above commands\n\
-\n\
-Developer commands\n\
-\t\033[97mmake vs-proj\033[m             Generate visual studio project files (\033[97m.vs/deemon-vNNN.sln\033[m)\n\
+Maintainer commands\n\
+\t\033[97mmake vs-proj\033[m             Generate Visual Studio project files (\033[97m.vs/deemon-vNNN.sln\033[m)\n\
 \t\033[97mmake method-hints\033[m        Re-build generated source code for method hints\n\
 \t\033[97mmake computed-operators\033[m  Re-build generated source code for computed operators\n\
+\t\033[97m\033[m                         Set \033[97mCONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS\033[m first\n\
 \t\033[97mmake cxx-generated\033[m       Re-build generated source code for c++ headers\n\
+\t\033[97mmake rmdec\033[m               Removed pre-compiled deemon modules (\033[97m*.dec\033[m files)\n\
+\n\
+Special care has been taken so \033[97mmake -j\033[m and \033[97mmake -n\033[m work as intended for all make commands\n\
 "
 .PHONY: help
 
 
 ifndef DEEMON
-DEEMON := ./deemon$(EXE)
+DEEMON := $(BIN_RELPATH)/deemon$(EXE)
 endif
+
+rmdec:
+	find -name '*.dec' -delete
+.PHONY: rmdec
 
 vs-proj:
 	$(DEEMON) util/make-vs-proj.dee
