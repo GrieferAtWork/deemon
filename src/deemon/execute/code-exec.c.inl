@@ -31,6 +31,7 @@
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
+#include <deemon/format.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
@@ -1232,9 +1233,6 @@ inc_execsz_start:
 
 next_instr:
 #if 0
-	Dee_CHECKMEMORY();
-#endif
-#if 0
 	if (_Dee_dprint_enabled) {
 		struct ddi_state state;
 		code_addr_t ip_addr = (code_addr_t)(ip.ptr - code->co_code);
@@ -1273,6 +1271,9 @@ next_instr:
 			Dee_ddi_state_fini(&state);
 		}
 	}
+#endif
+#if 0
+	Dee_CHECKMEMORY();
 #endif
 	frame->cf_ip = ip.ptr;
 

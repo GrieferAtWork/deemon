@@ -108,6 +108,7 @@ di_gi_init(DefaultIterator_WithGetItemIndex *__restrict self,
 	self->digi_tp_getitem_index = DeeType_RequireSupportedNativeOperator(seqtyp, getitem_index);
 	if unlikely(!self->digi_tp_getitem_index)
 		goto err_no_getitem;
+	Dee_Incref(self->digi_seq);
 	return 0;
 err_no_getitem:
 	err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
@@ -126,6 +127,7 @@ di_sgi_init(DefaultIterator_WithSizeAndGetItemIndex *__restrict self,
 	self->disgi_tp_getitem_index = DeeType_RequireSupportedNativeOperator(seqtyp, getitem_index);
 	if unlikely(!self->disgi_tp_getitem_index)
 		goto err_no_getitem;
+	Dee_Incref(self->disgi_seq);
 	return 0;
 err_no_getitem:
 	err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
@@ -144,6 +146,7 @@ di_sgif_init(DefaultIterator_WithSizeAndGetItemIndex *__restrict self,
 	if (!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index_fast)
 		goto err_no_getitem;
 	self->disgi_tp_getitem_index = seqtyp->tp_seq->tp_getitem_index_fast;
+	Dee_Incref(self->disgi_seq);
 	return 0;
 err_no_getitem:
 	err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
@@ -162,6 +165,7 @@ di_stgi_init(DefaultIterator_WithSizeAndGetItemIndex *__restrict self,
 	self->disgi_tp_getitem_index = DeeType_RequireSupportedNativeOperator(seqtyp, trygetitem_index);
 	if unlikely(!self->disgi_tp_getitem_index)
 		goto err_no_getitem;
+	Dee_Incref(self->disgi_seq);
 	return 0;
 err_no_getitem:
 	err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
