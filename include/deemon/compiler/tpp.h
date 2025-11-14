@@ -23,6 +23,7 @@
 #include "../api.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
+#include "../alloc.h"
 
 /**/
 #include <stdarg.h>  /* va_list */
@@ -112,6 +113,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
                  struct TPPKeyword **p_keyword_entry);
 
 /* TPP isn't exported by deemon, so we configure it to only be used internally. */
+#define TPPString_Free(x)                       Dee_Free(x)
 #define TPP_assert                              Dee_ASSERT
 #define TPPFUN                                  INTDEF
 #define TPP(x)                                  x
