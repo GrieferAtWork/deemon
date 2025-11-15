@@ -1862,7 +1862,7 @@ DeeFile_GetSize(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_size, 0, NULL);
 	if likely(result)
-		return (Dee_pos_t)DeeObject_AsDirectUInt64Inherited(result);
+		return (Dee_pos_t)DeeObject_AsUInt64DirectInherited(result);
 
 	/* Failed to call the size() member function. */
 	if (DeeFileType_CheckExact(Dee_TYPE(self)) &&

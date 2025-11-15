@@ -294,7 +294,9 @@ PRIVATE DEFINE_CMETHOD1(librt_setcalloptimizethreshold, &librt_setcalloptimizeth
 FORCELOCAL WUNUSED DREF DeeObject *DCALL librt_setcalloptimizethreshold_f_impl(size_t newThreshold)
 /*[[[end]]]*/
 {
-	size_t result = DeeCode_SetOptimizeCallThreshold(newThreshold);
+	size_t result;
+	(void)newThreshold;
+	result = DeeCode_SetOptimizeCallThreshold(newThreshold);
 	return DeeInt_NewSize(result);
 }
 

@@ -672,7 +672,7 @@ ddi_hash(DeeDDIObject *__restrict self) {
 	result = Dee_HashCombine(result, Dee_HashPtr(self->d_strings,
 	                                             self->d_nstring *
 	                                             sizeof(*self->d_strings)));
-	result = Dee_HashCombine(result, DeeString_Hash((DeeObject *)self->d_strtab));
+	result = Dee_HashCombine(result, DeeString_Hash(self->d_strtab));
 	if (self->d_exdat != NULL) {
 		result = Dee_HashCombine(result, Dee_HashPtr(self->d_exdat->dx_data,
 		                                             self->d_exdat->dx_size));

@@ -5443,7 +5443,10 @@ PRIVATE struct type_member tpconst int_class_members[] = {
 	                      "Exceeding this value in calls to the builtin/default version of certain "
 	                      /**/ "standard functions may result in :IntegerOverflow errors. For example, "
 	                      /**/ "passing ${int.SIZE_MAX + 1} as #Cindex argument to the default "
-	                      /**/ "implementation of ?Ainsert?DSequence's will throw :IntegerOverflow."),
+	                      /**/ "implementation of ?Ainsert?DSequence's will throw :IntegerOverflow.\n"
+	                      "In some cases, :IntegerOverflow will start being thrown for values less "
+	                      /**/ "than this. All of the following limits may be applicable to certain APIs: "
+	                      /**/ "${? > int.SIZE_MAX}, ${? >= int.SIZE_MAX}, ${? > (int.SIZE_MAX >> 1)}"),
 	TYPE_MEMBER_CONST(STR_isfloat, Dee_False),
 	TYPE_MEMBER_END
 };

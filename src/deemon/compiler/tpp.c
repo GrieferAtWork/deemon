@@ -766,7 +766,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 
 		/* Initialize the buffer string.
 		 * NOTE: The reference to `DeeString_Type' is added if we succeed in opening the file. */
-		DeeObject_InitNoref(buffer, &DeeString_Type);
+		DeeObject_InitInherited(buffer, &DeeString_Type);
 		buffer->s_len = req_length;
 
 		/* Try to truncate the used portion of the buffer. */

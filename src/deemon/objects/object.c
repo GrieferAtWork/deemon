@@ -2936,7 +2936,7 @@ type_fini(DeeTypeObject *__restrict self) {
 	Dee_Free(self->tp_with);
 	Dee_Free(self->tp_attr);
 /*[[[end]]]*/
-	/* clang-format off */
+	/* clang-format on */
 
 	/* Finalize the type's member caches. */
 	Dee_membercache_fini(&self->tp_cache);
@@ -3146,14 +3146,12 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-set_basic_member(DeeTypeObject *__restrict tp_self,
-                 DeeObject *__restrict self,
-                 DeeStringObject *__restrict member_name,
-                 DeeObject *__restrict value) {
+set_basic_member(DeeTypeObject *tp_self, DeeObject *self,
+                 DeeStringObject *member_name, DeeObject *value) {
 	int temp;
 	DeeTypeObject *iter   = tp_self;
 	char const *attr_name = DeeString_STR(member_name);
-	Dee_hash_t attr_hash  = DeeString_Hash((DeeObject *)member_name);
+	Dee_hash_t attr_hash  = DeeString_Hash(member_name);
 	if ((temp = DeeType_SetBasicCachedAttrStringHash(tp_self, self, attr_name, attr_hash, value)) <= 0)
 		goto done_temp;
 	do {
@@ -3195,13 +3193,11 @@ done_temp:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-set_private_basic_member(DeeTypeObject *__restrict tp_self,
-                         DeeObject *__restrict self,
-                         DeeStringObject *__restrict member_name,
-                         DeeObject *__restrict value) {
+set_private_basic_member(DeeTypeObject *tp_self, DeeObject *self,
+                         DeeStringObject *member_name, DeeObject *value) {
 	int temp;
 	char const *attr_name = DeeString_STR(member_name);
-	Dee_hash_t attr_hash  = DeeString_Hash((DeeObject *)member_name);
+	Dee_hash_t attr_hash  = DeeString_Hash(member_name);
 	if (DeeType_IsClass(tp_self)) {
 		struct class_attribute *attr;
 		struct instance_desc *instance;
@@ -3287,9 +3283,9 @@ err:
 }
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-type_invoke_base_constructor(DeeTypeObject *__restrict tp_self,
-                             DeeObject *__restrict self, size_t argc,
-                             DeeObject *const *argv, DeeObject *kw);
+type_invoke_base_constructor(DeeTypeObject *tp_self, DeeObject *self,
+                             size_t argc, DeeObject *const *argv,
+                             DeeObject *kw);
 
 struct assign_init_fields_data {
 	DeeTypeObject *aifd_tp_self;
@@ -3307,9 +3303,7 @@ assign_init_fields_foreach(void *arg, DeeObject *key, DeeObject *value) {
 	return result;
 }
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-assign_init_fields(DeeTypeObject *__restrict tp_self,
-                   DeeObject *__restrict self,
-                   DeeObject *__restrict fields) {
+assign_init_fields(DeeTypeObject *tp_self, DeeObject *self, DeeObject *fields) {
 	struct assign_init_fields_data data;
 	data.aifd_tp_self = tp_self;
 	data.aifd_self    = self;
@@ -3317,8 +3311,7 @@ assign_init_fields(DeeTypeObject *__restrict tp_self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-type_new_extended(DeeTypeObject *self,
-                  DeeObject *initializer) {
+type_new_extended(DeeTypeObject *self, DeeObject *initializer) {
 	DREF DeeObject *result, *init_info;
 	int temp;
 	DREF DeeObject *init_fields, *init_args, *init_kw;
@@ -3446,9 +3439,7 @@ assign_private_basic_members_foreach(void *arg, DeeObject *key, DeeObject *value
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-assign_private_basic_members(DeeTypeObject *__restrict tp_self,
-                             DeeObject *__restrict self,
-                             DeeObject *__restrict fields) {
+assign_private_basic_members(DeeTypeObject *tp_self, DeeObject *self, DeeObject *fields) {
 	struct assign_private_basic_members_data data;
 	data.apbmd_tp_self = tp_self;
 	data.apbmd_self    = self;
@@ -3469,12 +3460,13 @@ type_newinstance(DeeTypeObject *self, size_t argc,
 			size_t i;
 			DeeKwdsObject *kwds = (DeeKwdsObject *)kw;
 			for (i = 0; i <= kwds->kw_mask; ++i) {
-				if (!kwds->kw_map[i].ke_name)
+				struct kwds_entry *ke = &kwds->kw_map[i];
+				if (!ke->ke_name)
 					continue;
-				ASSERT(kwds->kw_map[i].ke_index < argc);
+				ASSERT(ke->ke_index < argc);
 				if unlikely(set_private_basic_member(self, result,
-				                                     kwds->kw_map[i].ke_name,
-				                                     argv[kwds->kw_map[i].ke_index]))
+				                                     ke->ke_name,
+				                                     argv[ke->ke_index]))
 					goto err_r;
 			}
 		} else {

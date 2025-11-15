@@ -104,13 +104,13 @@ DECL_BEGIN
 print("#if 1");
 print("#define HASHOF_str_deemon ", (_Dee_HashSelect from rt.gen.hash)("deemon"));
 print("#else");
-print("#define HASHOF_str_deemon DeeString_Hash((DeeObject *)&str_deemon)");
+print("#define HASHOF_str_deemon DeeString_Hash(&str_deemon)");
 print("#endif");
 ]]]*/
 #if 1
 #define HASHOF_str_deemon _Dee_HashSelectC(0x4579666d, 0xeb3bb684d0ec756)
 #else
-#define HASHOF_str_deemon DeeString_Hash((DeeObject *)&str_deemon)
+#define HASHOF_str_deemon DeeString_Hash(&str_deemon)
 #endif
 /*[[[end]]]*/
 
@@ -133,7 +133,7 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #ifdef DEE_SYSTEM_FS_ICASE
 #define fs_memcmp                        memcasecmp
 #define fs_bcmp                          memcasecmp
-#define fs_hashobj(ob)                   DeeString_HashCase((DeeObject *)Dee_REQUIRES_OBJECT(ob))
+#define fs_hashobj(ob)                   DeeString_HashCase(Dee_REQUIRES_OBJECT(ob))
 #define fs_hashstr(s)                    Dee_HashCaseStr(s)
 #define fs_hashutf8(s, n)                Dee_HashCaseUtf8(s, n)
 #define fs_hashmodname_equals(mod, hash) 1
@@ -142,10 +142,10 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #else /* DEE_SYSTEM_FS_ICASE */
 #define fs_memcmp                        memcmp
 #define fs_bcmp                          bcmp
-#define fs_hashobj(ob)                   DeeString_Hash((DeeObject *)Dee_REQUIRES_OBJECT(ob))
+#define fs_hashobj(ob)                   DeeString_Hash(Dee_REQUIRES_OBJECT(ob))
 #define fs_hashstr(s)                    Dee_HashStr(s)
 #define fs_hashutf8(s, n)                Dee_HashUtf8(s, n)
-#define fs_hashmodpath(mod)              DeeString_HASH((DeeObject *)(mod)->mo_path)
+#define fs_hashmodpath(mod)              DeeString_HASH((mod)->mo_path)
 #define fs_hashmodname_equals(mod, hash) (DeeString_HASH((mod)->mo_name) == (hash))
 #define fs_hashmodpath_equals(mod, hash) (DeeString_HASH((mod)->mo_path) == (hash))
 #endif /* !DEE_SYSTEM_FS_ICASE */
@@ -1593,7 +1593,7 @@ err_buf_name_dec_stream:
 #ifdef DEE_SYSTEM_FS_ICASE
 				result->mo_pathihash = hash;
 #else /* DEE_SYSTEM_FS_ICASE */
-				ASSERT(DeeString_Hash((DeeObject *)module_path_ob) == hash);
+				ASSERT(DeeString_Hash(module_path_ob) == hash);
 				DeeString_HASH(module_path_ob) = hash;
 #endif /* !DEE_SYSTEM_FS_ICASE */
 
@@ -2764,7 +2764,7 @@ module_import_symbol(void *arg, DeeObject *name, DeeObject *value) {
 		Dee_Incref(value);
 
 		/* Insert the new object into the symbol table. */
-		hash    = DeeString_Hash((DeeObject *)name);
+		hash    = DeeString_Hash(name);
 		perturb = i = MODULE_HASHST(self, hash);
 		for (;; MODULE_HASHNX(i, perturb)) {
 			struct module_symbol *item = MODULE_HASHIT(self, i);

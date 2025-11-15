@@ -1149,13 +1149,10 @@ struct_hashof_field(DeeObject *self, struct type_member const *field) {
 	}	break;
 	case STRUCT_WOBJECT_OPT:
 	case STRUCT_WOBJECT: {
-		Dee_hash_t result;
 		DREF DeeObject *obj = Dee_weakref_lock((struct weakref *)src);
 		if (obj == NULL)
 			return DEE_HASHOF_UNBOUND_ITEM;
-		result = DeeObject_Hash(obj);
-		Dee_Decref_unlikely(obj);
-		return result;
+		return DeeObject_HashInherited(obj);
 	}	break;
 
 	case STRUCT_VARIANT:

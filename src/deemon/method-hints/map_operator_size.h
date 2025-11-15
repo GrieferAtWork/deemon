@@ -68,7 +68,7 @@ err:
 	sizeob = CALL_DEPENDENCY(map_operator_sizeob, self);
 	if unlikely(!sizeob)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(sizeob);
+	return DeeObject_AsSizeDirectInherited(sizeob);
 err:
 	return (size_t)-1;
 }} = $with__map_operator_sizeob;

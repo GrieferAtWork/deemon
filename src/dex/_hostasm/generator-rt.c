@@ -37,6 +37,7 @@
 #include <deemon/hashset.h>
 #include <deemon/kwds.h>
 #include <deemon/module.h>
+#include <deemon/operator-hints.h>
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
 #include <deemon/string.h>
@@ -330,39 +331,23 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 libhostasm_rt_DeeObject_ShlRepr(DeeObject *lhs, DeeObject *rhs) {
-	DeeTypeMRO mro;
 	DREF DeeObject *result;
-	DeeTypeObject *tp_temp;
-	tp_temp = DeeTypeMRO_Init(&mro, Dee_TYPE(rhs));
-	for (;;) {
-		DREF DeeObject *(DCALL *tp_shl)(DeeObject *, DeeObject *);
-		if (!tp_temp->tp_math ||
-		    (tp_shl = tp_temp->tp_math->tp_shl) == NULL) {
-			tp_temp = DeeTypeMRO_Next(&mro, tp_temp);
-			if (!tp_temp)
-				break;
-			continue;
-		}
-		if (tp_shl == DeeFile_Type.ft_base.tp_math->tp_shl) {
-			/* Special case: `fp << repr foo'
-			 * In this case, we can do a special optimization
-			 * to directly print the repr to the file. */
-			if (DeeObject_PrintRepr(rhs, (Dee_formatprinter_t)&DeeFile_WriteAll, lhs) < 0)
-				return NULL;
-			return_reference_(lhs);
-		}
+	DeeNO_shl_t tp_shl = DeeType_RequireNativeOperator(Dee_TYPE(rhs), shl);
+	if (tp_shl == DeeFile_Type.ft_base.tp_math->tp_shl) {
+		/* Special case: `fp << repr foo'
+		 * In this case, we can do a special optimization
+		 * to directly print the repr to the file. */
+		if (DeeObject_PrintRepr(rhs, (Dee_formatprinter_t)&DeeFile_WriteAll, lhs) < 0)
+			return NULL;
+		Dee_Incref(lhs);
+		result = lhs;
+	} else {
 		rhs = DeeObject_Repr(rhs);
 		if unlikely(!rhs)
 			return NULL;
 		result = (*tp_shl)(lhs, rhs);
 		Dee_Decref(rhs);
-		return result;
 	}
-	rhs = DeeObject_Repr(rhs);
-	if unlikely(!rhs)
-		return NULL;
-	result = DeeObject_Shl(lhs, rhs);
-	Dee_Decref(rhs);
 	return result;
 }
 

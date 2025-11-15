@@ -948,7 +948,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 module_import_symbol(DeeModuleObject *self,
                      DeeStringObject *name,
                      DeeObject *value) {
@@ -970,7 +970,7 @@ module_import_symbol(DeeModuleObject *self,
 	Dee_Incref(value);
 
 	/* Insert the new object into the symbol table. */
-	hash    = DeeString_Hash((DeeObject *)name);
+	hash    = DeeString_Hash(name);
 	perturb = i = MODULE_HASHST(self, hash);
 	for (;; MODULE_HASHNX(i, perturb)) {
 		struct module_symbol *item = MODULE_HASHIT(self, i);

@@ -687,14 +687,9 @@ done_y1:
 		if (ISERR(result))
 			goto done;
 		LOAD_LVALUE(result, err);
-		{
-			DREF DeeObject *new_result;
-			new_result = DeeObject_SizeOb(result);
-			if unlikely(!new_result)
-				goto err_r_invoke;
-			Dee_Decref(result);
-			result = new_result;
-		}
+		result = DeeObject_SizeObInherited(result);
+		if unlikely(!result)
+			goto err_invoke;
 #endif /* JIT_EVAL */
 		goto done;
 
@@ -801,10 +796,9 @@ done_y1:
 		LOAD_LVALUE(result, err);
 		{
 			int new_result;
-			new_result = DeeObject_Bool(result);
+			new_result = DeeObject_BoolInherited(result);
 			if unlikely(new_result < 0)
-				goto err_r_invoke;
-			Dee_Decref(result);
+				goto err_invoke;
 			result = DeeBool_For(!new_result);
 			Dee_Incref(result);
 		}
@@ -1434,14 +1428,9 @@ skip_rbrck_and_done:
 				if (ISERR(result))
 					goto done;
 				LOAD_LVALUE(result, err);
-				{
-					DREF DeeObject *new_result;
-					new_result = DeeObject_Str(result);
-					if unlikely(!new_result)
-						goto err_r_invoke;
-					Dee_Decref(result);
-					result = new_result;
-				}
+				result = DeeObject_StrInherited(result);
+				if unlikely(!result)
+					goto err_invoke;
 #endif /* JIT_EVAL */
 				goto done;
 			}
@@ -1484,14 +1473,9 @@ skip_rbrck_and_done:
 				if (ISERR(result))
 					goto done;
 				LOAD_LVALUE(result, err);
-				{
-					DREF DeeObject *new_result;
-					new_result = DeeObject_Repr(result);
-					if unlikely(!new_result)
-						goto err_r_invoke;
-					Dee_Decref(result);
-					result = new_result;
-				}
+				result = DeeObject_ReprInherited(result);
+				if unlikely(!result)
+					goto err_invoke;
 #endif /* JIT_EVAL */
 				goto done;
 			}
@@ -1502,14 +1486,9 @@ skip_rbrck_and_done:
 				if (ISERR(result))
 					goto done;
 				LOAD_LVALUE(result, err);
-				{
-					DREF DeeObject *new_result;
-					new_result = DeeObject_Copy(result);
-					if unlikely(!new_result)
-						goto err_r_invoke;
-					Dee_Decref(result);
-					result = new_result;
-				}
+				result = DeeObject_CopyInherited(result);
+				if unlikely(!result)
+					goto err_invoke;
 #endif /* JIT_EVAL */
 				goto done;
 			}
@@ -1769,14 +1748,9 @@ err_oo_class_reinit_lvalue:
 				if (ISERR(result))
 					goto done;
 				LOAD_LVALUE(result, err);
-				{
-					DREF DeeObject *new_result;
-					new_result = DeeObject_DeepCopy(result);
-					if unlikely(!new_result)
-						goto err_r_invoke;
-					Dee_Decref(result);
-					result = new_result;
-				}
+				result = DeeObject_DeepCopyInherited(result);
+				if unlikely(!result)
+					goto err_invoke;
 #endif /* JIT_EVAL */
 				goto done;
 			}
@@ -1921,6 +1895,9 @@ err_oo_class_reinit_lvalue:
 done:
 	return result;
 #ifdef JIT_EVAL
+err_invoke:
+	JITLexer_ErrorTrace(self, pos);
+	goto err;
 err_r_invoke:
 	JITLexer_ErrorTrace(self, pos);
 #endif /* JIT_EVAL */

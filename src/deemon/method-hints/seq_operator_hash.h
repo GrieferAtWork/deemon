@@ -136,8 +136,7 @@ err:
 	if unlikely(!elem) {
 		result = DEE_HASHOF_UNBOUND_ITEM;
 	} else {
-		result = DeeObject_Hash(elem);
-		Dee_Decref(elem);
+		result = DeeObject_HashInherited(elem);
 	}
 	for (i = 1; i < size; ++i) {
 		Dee_hash_t elem_hash;
@@ -145,8 +144,7 @@ err:
 		if unlikely(!elem) {
 			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
 		} else {
-			elem_hash = DeeObject_Hash(elem);
-			Dee_Decref(elem);
+			elem_hash = DeeObject_HashInherited(elem);
 		}
 		result = Dee_HashCombine(result, elem_hash);
 	}
@@ -169,8 +167,7 @@ err:
 	if unlikely(elem == ITER_DONE) {
 		result = DEE_HASHOF_UNBOUND_ITEM;
 	} else {
-		result = DeeObject_Hash(elem);
-		Dee_Decref(elem);
+		result = DeeObject_HashInherited(elem);
 	}
 	for (i = 1; i < size; ++i) {
 		Dee_hash_t elem_hash;
@@ -180,8 +177,7 @@ err:
 		if unlikely(elem == ITER_DONE) {
 			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
 		} else {
-			elem_hash = DeeObject_Hash(elem);
-			Dee_Decref(elem);
+			elem_hash = DeeObject_HashInherited(elem);
 		}
 		result = Dee_HashCombine(result, elem_hash);
 		if (DeeThread_CheckInterrupt())
@@ -206,8 +202,7 @@ err:
 			goto err;
 		result = DEE_HASHOF_UNBOUND_ITEM;
 	} else {
-		result = DeeObject_Hash(elem);
-		Dee_Decref(elem);
+		result = DeeObject_HashInherited(elem);
 	}
 	for (i = 1; i < size; ++i) {
 		Dee_hash_t elem_hash;
@@ -217,8 +212,7 @@ err:
 				goto err;
 			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
 		} else {
-			elem_hash = DeeObject_Hash(elem);
-			Dee_Decref(elem);
+			elem_hash = DeeObject_HashInherited(elem);
 		}
 		result = Dee_HashCombine(result, elem_hash);
 		if (DeeThread_CheckInterrupt())
@@ -253,8 +247,7 @@ err:
 			goto err_sizeob_indexob;
 		result = DEE_HASHOF_UNBOUND_ITEM;
 	} else {
-		result = DeeObject_Hash(elem);
-		Dee_Decref(elem);
+		result = DeeObject_HashInherited(elem);
 	}
 	for (;;) {
 		Dee_hash_t elem_hash;
@@ -272,8 +265,7 @@ err:
 				goto err_sizeob_indexob;
 			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
 		} else {
-			elem_hash = DeeObject_Hash(elem);
-			Dee_Decref(elem);
+			elem_hash = DeeObject_HashInherited(elem);
 		}
 		result = Dee_HashCombine(result, elem_hash);
 		if (DeeThread_CheckInterrupt())

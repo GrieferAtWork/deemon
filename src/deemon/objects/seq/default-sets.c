@@ -426,7 +426,7 @@ PRIVATE NONNULL((1)) void DCALL
 suiter_clear(SetUnionIterator *__restrict self) {
 	DREF DeeObject *iter;
 	SetUnionIterator_LockWrite(self);
-	iter           = self->sui_iter;
+	iter = self->sui_iter; /* Inherit reference */
 	self->sui_iter = DeeNone_NewRef();
 	SetUnionIterator_LockEndWrite(self);
 	Dee_Decref(iter);
@@ -452,8 +452,8 @@ suiter_set_iter(SetUnionIterator *__restrict self,
 	DREF DeeObject *old_iter;
 	Dee_Incref(iter);
 	SetUnionIterator_LockRead(self);
-	old_iter = self->sui_iter;
-	self->sui_iter = iter;
+	old_iter = self->sui_iter; /* Inherit reference */
+	self->sui_iter = iter;     /* Inherit reference */
 	SetUnionIterator_LockEndRead(self);
 	Dee_Decref(old_iter);
 	return 0;
@@ -493,14 +493,14 @@ suiter_copy(SetUnionIterator *__restrict self,
             SetUnionIterator *__restrict other) {
 	DREF DeeObject *iter;
 	SetUnionIterator_LockRead(other);
-	iter            = other->sui_iter;
-	self->sui_in2nd = other->sui_in2nd;
+	iter = other->sui_iter;
 	Dee_Incref(iter);
+	self->sui_in2nd = other->sui_in2nd;
 	SetUnionIterator_LockEndRead(other);
-	self->sui_iter = DeeObject_Copy(iter);
-	Dee_Decref(iter);
-	if unlikely(!self->sui_iter)
+	iter = DeeObject_CopyInherited(iter);
+	if unlikely(!iter)
 		goto err;
+	self->sui_iter = iter;
 	Dee_atomic_rwlock_init(&self->sui_lock);
 	self->sui_union = other->sui_union;
 	Dee_Incref(self->sui_union);
@@ -514,21 +514,21 @@ suiter_deep(SetUnionIterator *__restrict self,
             SetUnionIterator *__restrict other) {
 	DREF DeeObject *iter;
 	SetUnionIterator_LockRead(other);
-	iter            = other->sui_iter;
-	self->sui_in2nd = other->sui_in2nd;
+	iter = other->sui_iter;
 	Dee_Incref(iter);
+	self->sui_in2nd = other->sui_in2nd;
 	SetUnionIterator_LockEndRead(other);
-	self->sui_iter = DeeObject_DeepCopy(iter);
-	Dee_Decref(iter);
-	if unlikely(!self->sui_iter)
+	iter = DeeObject_DeepCopyInherited(iter);
+	if unlikely(!iter)
 		goto err;
+	self->sui_iter = iter;
 	Dee_atomic_rwlock_init(&self->sui_lock);
 	self->sui_union = (DREF SetUnion *)DeeObject_DeepCopy((DeeObject *)other->sui_union);
 	if unlikely(!self->sui_union)
 		goto err_iter;
 	return 0;
 err_iter:
-	Dee_Decref(self->sui_iter);
+	Dee_Decref(iter);
 err:
 	return -1;
 }
@@ -558,7 +558,8 @@ suiter_init(SetUnionIterator *__restrict self,
 	DeeArg_Unpack1(err, argc, argv, "_SetUnionIterator", &self->sui_union);
 	if (DeeObject_AssertTypeExact(self->sui_union, &SetUnion_Type))
 		goto err;
-	if ((self->sui_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->sui_union->su_a)) == NULL)
+	self->sui_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->sui_union->su_a);
+	if (self->sui_iter == NULL)
 		goto err;
 	Dee_Incref(self->sui_union);
 	Dee_atomic_rwlock_init(&self->sui_lock);
@@ -575,9 +576,9 @@ suiter_next(SetUnionIterator *__restrict self) {
 	bool is_second;
 again:
 	SetUnionIterator_LockRead(self);
-	iter      = self->sui_iter;
-	is_second = self->sui_in2nd;
+	iter = self->sui_iter;
 	Dee_Incref(iter);
+	is_second = self->sui_in2nd;
 	SetUnionIterator_LockEndRead(self);
 read_from_iter:
 	result = DeeObject_IterNext(iter);
@@ -648,16 +649,14 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 suiter_hash(SetUnionIterator *self) {
-	Dee_hash_t result;
 	bool my_2nd;
 	DREF DeeObject *my_iter;
 	SetUnionIterator_LockRead(self);
 	my_iter = self->sui_iter;
-	my_2nd  = self->sui_in2nd;
+	Dee_Incref(my_iter);
+	my_2nd = self->sui_in2nd;
 	SetUnionIterator_LockEndRead(self);
-	result = Dee_HashCombine(my_2nd ? 1 : 0, DeeObject_Hash(my_iter));
-	Dee_Decref(my_iter);
-	return result;
+	return Dee_HashCombine(my_2nd ? 1 : 0, DeeObject_HashInherited(my_iter));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -670,11 +669,13 @@ suiter_compare(SetUnionIterator *self,
 		goto err;
 	SetUnionIterator_LockRead(self);
 	my_iter = self->sui_iter;
-	my_2nd  = self->sui_in2nd;
+	Dee_Incref(my_iter);
+	my_2nd = self->sui_in2nd;
 	SetUnionIterator_LockEndRead(self);
 	SetUnionIterator_LockRead(other);
 	ot_iter = other->sui_iter;
-	ot_2nd  = other->sui_in2nd;
+	Dee_Incref(ot_iter);
+	ot_2nd = other->sui_in2nd;
 	SetUnionIterator_LockEndRead(other);
 	if (my_2nd != ot_2nd) {
 		result = Dee_CompareNe(my_2nd, ot_2nd);
@@ -698,11 +699,13 @@ suiter_compare_eq(SetUnionIterator *self,
 		goto err;
 	SetUnionIterator_LockRead(self);
 	my_iter = self->sui_iter;
-	my_2nd  = self->sui_in2nd;
+	Dee_Incref(my_iter);
+	my_2nd = self->sui_in2nd;
 	SetUnionIterator_LockEndRead(self);
 	SetUnionIterator_LockRead(other);
 	ot_iter = other->sui_iter;
-	ot_2nd  = other->sui_in2nd;
+	Dee_Incref(ot_iter);
+	ot_2nd = other->sui_in2nd;
 	SetUnionIterator_LockEndRead(other);
 	if (my_2nd != ot_2nd) {
 		result = 1;

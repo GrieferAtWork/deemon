@@ -42,6 +42,9 @@
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uintptr_t */
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
 #ifdef VARARGS
 INTERN WUNUSED DREF DeeObject *DCALL
 cfunction_call_v(DeeCFunctionTypeObject *__restrict tp_self,
@@ -87,9 +90,9 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 	         sizeof(void *) +         /* Pointer to argument data. */   \
 	         sizeof(ffi_type *) /* Pointer to argument types. */))
 	/* Pointer the memory used for the argument types */
-#define va_argmem_mem   (union argument *)((uintptr_t)wbuf + tp_self->ft_woff_argmem)
-#define va_argptr_mem   (void **)((uintptr_t)wbuf + tp_self->ft_woff_argmem + (argc * sizeof(union argument)))
-#define va_argtypes_mem (ffi_type **)((uintptr_t)wbuf + tp_self->ft_woff_argmem + (argc * (sizeof(union argument) + sizeof(void *))))
+#define va_argmem_mem   (union argument *)((byte_t *)wbuf + tp_self->ft_woff_argmem)
+#define va_argptr_mem   (void **)((byte_t *)wbuf + tp_self->ft_woff_argmem + (argc * sizeof(union argument)))
+#define va_argtypes_mem (ffi_type **)((byte_t *)wbuf + tp_self->ft_woff_argmem + (argc * (sizeof(union argument) + sizeof(void *))))
 #endif /* VARARGS */
 
 #ifdef VARARGS
@@ -101,14 +104,14 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 		goto err;
 
 	/* Initialize arguments */
-	iter = (union argument *)((void *)((uintptr_t)wbuf + tp_self->ft_woff_argmem));
+	iter = (union argument *)((byte_t *)wbuf + tp_self->ft_woff_argmem);
 #ifdef VARARGS
-	end       = (union argument *)((void *)((uintptr_t)wbuf + tp_self->ft_woff_variadic_argmem));
-	argp_iter = (void **)((uintptr_t)iter + argc * sizeof(union argument));
+	end       = (union argument *)((byte_t *)wbuf + tp_self->ft_woff_variadic_argmem);
+	argp_iter = (void **)((byte_t *)iter + argc * sizeof(union argument));
 	ASSERT(iter == va_argmem_mem);
 	ASSERT(argp_iter == va_argptr_mem);
 #else /* VARARGS */
-	end  = (union argument *)((void *)((uintptr_t)wbuf + tp_self->ft_woff_argptr));
+	end  = (union argument *)((byte_t *)wbuf + tp_self->ft_woff_argptr);
 	ASSERTF(end == iter + tp_self->ft_argc, "Invalid wbuf cache");
 	argp_iter = (void **)end;
 #endif /* !VARARGS */
@@ -372,7 +375,7 @@ def_var_data:
 #endif /* VARARGS */
 		{
 			ffi_call(&tp_self->ft_ffi_cif, self, ret_mem,
-			         (void **)((uintptr_t)wbuf + tp_self->ft_woff_argptr));
+			         (void **)((byte_t *)wbuf + tp_self->ft_woff_argptr));
 		}
 	}
 #ifdef CONFIG_HAVE_CTYPES_SEH_GUARD

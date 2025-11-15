@@ -562,39 +562,46 @@ string_nonempty_asbound(String *__restrict self) {
 	return Dee_BOUND_FROMBOOL(nonempty);
 }
 
-INTERN ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-DeeString_Hash(DeeObject *__restrict self) {
+PRIVATE ATTR_NOINLINE ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t
+(DCALL DeeString_Hash_uncached)(DeeObject *__restrict self) {
 	Dee_hash_t result;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
-	result = DeeString_HASH(self);
-	if (result == (Dee_hash_t)-1) {
-		SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
+	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
-		CASE_WIDTH_1BYTE:
-			result = Dee_HashPtr(DeeString_STR(self),
-			                     DeeString_SIZE(self));
-			break;
+	CASE_WIDTH_1BYTE:
+		result = Dee_HashPtr(DeeString_STR(self),
+		                     DeeString_SIZE(self));
+		break;
 
-		CASE_WIDTH_2BYTE: {
-			uint16_t const *str;
-			str    = DeeString_Get2Byte(self);
-			result = Dee_Hash2Byte(str, WSTR_LENGTH(str));
-		}	break;
+	CASE_WIDTH_2BYTE: {
+		uint16_t const *str;
+		str    = DeeString_Get2Byte(self);
+		result = Dee_Hash2Byte(str, WSTR_LENGTH(str));
+	}	break;
 
-		CASE_WIDTH_4BYTE: {
-			uint32_t const *str;
-			str    = DeeString_Get4Byte(self);
-			result = Dee_Hash4Byte(str, WSTR_LENGTH(str));
-		}	break;
+	CASE_WIDTH_4BYTE: {
+		uint32_t const *str;
+		str    = DeeString_Get4Byte(self);
+		result = Dee_Hash4Byte(str, WSTR_LENGTH(str));
+	}	break;
 
-		}
-		DeeString_HASH(self) = result;
 	}
+	DeeString_HASH(self) = result;
 	return result;
 }
 
-PUBLIC ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-DeeString_HashCase(DeeObject *__restrict self) {
+INTERN ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t
+(DCALL DeeString_Hash)(DeeObject *__restrict self) {
+	Dee_hash_t result;
+	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
+	result = DeeString_HASH(self);
+	/* Unlikely, because hash would only be missing the first time around */
+	if unlikely(result == (Dee_hash_t)-1)
+		result = DeeString_Hash_uncached(self);
+	return result;
+}
+
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t
+(DCALL DeeString_HashCase)(DeeObject *__restrict self) {
 	Dee_hash_t result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
@@ -1161,8 +1168,7 @@ string_compare_eq(String *lhs, DeeObject *rhs) {
 	if likely(tp_rhs == &DeeString_Type) {
 		if (lhs == (String *)rhs)
 			return Dee_COMPARE_EQ;
-		if (DeeString_Hash((DeeObject *)lhs) !=
-		    DeeString_Hash((DeeObject *)rhs))
+		if (DeeString_Hash(lhs) != DeeString_Hash(rhs))
 			return Dee_COMPARE_NE;
 		return compare_strings(lhs, (String *)rhs);
 	}
@@ -1178,8 +1184,7 @@ string_trycompare_eq(String *lhs, DeeObject *rhs) {
 	if likely(tp_rhs == &DeeString_Type) {
 		if (lhs == (String *)rhs)
 			return Dee_COMPARE_EQ;
-		if (DeeString_Hash((DeeObject *)lhs) !=
-		    DeeString_Hash((DeeObject *)rhs))
+		if (DeeString_Hash(lhs) != DeeString_Hash(rhs))
 			return Dee_COMPARE_NE;
 		return compare_strings(lhs, (String *)rhs);
 	}
@@ -1294,8 +1299,7 @@ string_mh_seq_compare_eq(String *lhs, DeeObject *rhs) {
 	if likely(tp_rhs == &DeeString_Type) {
 		if (lhs == (String *)rhs)
 			return Dee_COMPARE_EQ;
-		if (DeeString_Hash((DeeObject *)lhs) !=
-		    DeeString_Hash((DeeObject *)rhs))
+		if (DeeString_Hash(lhs) != DeeString_Hash(rhs))
 			return Dee_COMPARE_NE;
 		return compare_strings(lhs, (String *)rhs);
 	}
@@ -1310,8 +1314,7 @@ string_mh_seq_trycompare_eq(String *lhs, DeeObject *rhs) {
 	if likely(tp_rhs == &DeeString_Type) {
 		if (lhs == (String *)rhs)
 			return Dee_COMPARE_EQ;
-		if (DeeString_Hash((DeeObject *)lhs) !=
-		    DeeString_Hash((DeeObject *)rhs))
+		if (DeeString_Hash(lhs) != DeeString_Hash(rhs))
 			return Dee_COMPARE_NE;
 		return compare_strings(lhs, (String *)rhs);
 	}

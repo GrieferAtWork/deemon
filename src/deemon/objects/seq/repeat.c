@@ -72,13 +72,11 @@ repeatiter_copy(RepeatIterator *__restrict self,
                 RepeatIterator *__restrict other) {
 	DREF DeeObject *copy;
 	RepeatIterator_LockRead(other);
-	self->rpi_num  = other->rpi_num;
-	self->rpi_iter = other->rpi_iter;
-	Dee_Incref(self->rpi_iter);
+	copy = other->rpi_iter;
+	Dee_Incref(copy);
+	self->rpi_num = other->rpi_num;
 	RepeatIterator_LockEndRead(other);
-	copy = DeeObject_Copy(self->rpi_iter);
-	Dee_Decref(self->rpi_iter);
-	if unlikely(!copy)
+	if unlikely((copy = DeeObject_CopyInherited(copy)) == NULL)
 		goto err;
 	self->rpi_iter = copy;
 	self->rpi_rep  = other->rpi_rep;
@@ -94,22 +92,20 @@ repeatiter_deep(RepeatIterator *__restrict self,
                 RepeatIterator *__restrict other) {
 	DREF DeeObject *copy;
 	RepeatIterator_LockRead(other);
-	self->rpi_num  = other->rpi_num;
-	self->rpi_iter = other->rpi_iter;
-	Dee_Incref(self->rpi_iter);
+	copy = other->rpi_iter;
+	Dee_Incref(copy);
+	self->rpi_num = other->rpi_num;
 	RepeatIterator_LockEndRead(other);
-	copy = DeeObject_DeepCopy(self->rpi_iter);
-	Dee_Decref(self->rpi_iter);
-	if unlikely(!copy)
+	if unlikely((copy = DeeObject_DeepCopyInherited(copy)) == NULL)
 		goto err;
 	self->rpi_iter = copy;
 	self->rpi_rep  = (DREF Repeat *)DeeObject_DeepCopy((DeeObject *)other->rpi_rep);
 	if unlikely(!self->rpi_rep)
-		goto err_iter;
+		goto err_copy;
 	Dee_atomic_rwlock_init(&self->rpi_lock);
 	return 0;
-err_iter:
-	Dee_Decref(self->rpi_iter);
+err_copy:
+	Dee_Decref(copy);
 err:
 	return -1;
 }
@@ -142,7 +138,7 @@ PRIVATE NONNULL((1)) void DCALL
 repeatiter_clear(RepeatIterator *__restrict self) {
 	DREF DeeObject *iter;
 	RepeatIterator_LockWrite(self);
-	iter           = self->rpi_iter;
+	iter = self->rpi_iter; /* Inherit reference */
 	self->rpi_iter = DeeNone_NewRef();
 	RepeatIterator_LockEndWrite(self);
 	Dee_Decref(iter);
@@ -154,16 +150,13 @@ PRIVATE struct type_gc tpconst repeatiter_gc = {
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 repeatiter_hash(RepeatIterator *__restrict self) {
-	Dee_hash_t result;
 	DREF DeeObject *my_iter;
-	result = REPEATITER_READ_NUM(self);
+	Dee_hash_t result = REPEATITER_READ_NUM(self);
 	RepeatIterator_LockRead(self);
 	my_iter = self->rpi_iter;
 	Dee_Incref(my_iter);
 	RepeatIterator_LockEndRead(self);
-	result = Dee_HashCombine(result, DeeObject_Hash(my_iter));
-	Dee_Decref(my_iter);
-	return result;
+	return Dee_HashCombine(result, DeeObject_HashInherited(my_iter));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -289,8 +282,8 @@ repeatiter_set_iter(RepeatIterator *self, DeeObject *value) {
 	DREF DeeObject *oldvalue;
 	Dee_Incref(value);
 	RepeatIterator_LockWrite(self);
-	oldvalue = self->rpi_iter;
-	self->rpi_iter = value;
+	oldvalue = self->rpi_iter; /* Inherit reference */
+	self->rpi_iter = value;    /* Inherit reference */
 	RepeatIterator_LockEndWrite(self);
 	Dee_Decref(oldvalue);
 	return 0;

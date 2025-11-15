@@ -979,10 +979,9 @@ sfi_copy(SeqFlatIterator *__restrict self,
 	other_curriter = other->sfi_curriter;
 	Dee_Incref(other_curriter);
 	SeqFlatIterator_LockRelease(self);
-	self->sfi_curriter = DeeObject_Copy(other_curriter);
-	Dee_Decref(other_curriter);
-	if unlikely(!self->sfi_curriter)
+	if unlikely((other_curriter = DeeObject_CopyInherited(other_curriter)) == NULL)
 		goto err;
+	self->sfi_curriter = other_curriter;
 	Dee_Incref(other->sfi_baseiter);
 	self->sfi_baseiter = other->sfi_baseiter;
 	Dee_atomic_lock_init(&self->sfi_currlock);
@@ -999,17 +998,16 @@ sfi_deep(SeqFlatIterator *__restrict self,
 	other_curriter = other->sfi_curriter;
 	Dee_Incref(other_curriter);
 	SeqFlatIterator_LockRelease(self);
-	self->sfi_curriter = DeeObject_DeepCopy(other_curriter);
-	Dee_Decref(other_curriter);
-	if unlikely(!self->sfi_curriter)
+	if unlikely((other_curriter = DeeObject_DeepCopyInherited(other_curriter)) == NULL)
 		goto err;
+	self->sfi_curriter = other_curriter;
 	self->sfi_baseiter = DeeObject_DeepCopy(other->sfi_baseiter);
 	if unlikely(!self->sfi_baseiter)
 		goto err_curriter;
 	Dee_atomic_lock_init(&self->sfi_currlock);
 	return 0;
 err_curriter:
-	Dee_Decref(self->sfi_curriter);
+	Dee_Decref(other_curriter);
 err:
 	return -1;
 }

@@ -2277,14 +2277,12 @@ again_deepload_at_i:
 		Dee_Incref(old_item_value);
 		old_key_hash = item->di_hash;
 		DeeDict_LockEndRead(self);
-		new_item_key = DeeObject_DeepCopy(old_item_key);
-		Dee_Decref_unlikely(old_item_key);
+		new_item_key = DeeObject_DeepCopyInherited(old_item_key);
 		if unlikely(!new_item_key) {
 			Dee_Decref_unlikely(old_item_value);
 			goto err;
 		}
-		new_item_value = DeeObject_DeepCopy(old_item_value);
-		Dee_Decref_unlikely(old_item_value);
+		new_item_value = DeeObject_DeepCopyInherited(old_item_value);
 		if unlikely(!new_item_value) {
 			Dee_Decref_unlikely(new_item_key);
 			goto err;
@@ -2352,9 +2350,7 @@ dict_printrepr(Dict *__restrict self,
 		Dee_Incref(value);
 		DeeDict_LockEndRead(self);
 		/* Print this key/value pair. */
-		temp = DeeFormat_Printf(printer, arg, "%s%r: %r", is_first ? "" : ", ", key, value);
-		Dee_Decref_unlikely(value);
-		Dee_Decref_unlikely(key);
+		temp = DeeFormat_Printf(printer, arg, "%s%R: %R", is_first ? "" : ", ", key, value);
 		if unlikely(temp < 0)
 			goto err_temp;
 		result += temp;

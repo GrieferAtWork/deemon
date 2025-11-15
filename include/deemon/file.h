@@ -104,7 +104,7 @@ struct Dee_file_object {
  * @param: DeeTypeoObject *type: The type to assign to the object */
 #define DeeFileObject_Init(self, type) \
 	(Dee_Incref(&(type)->ft_base),     \
-	 DeeObject_InitNoref(self, (DeeFileTypeObject *)(type)))
+	 DeeObject_InitInherited(self, (DeeFileTypeObject *)(type)))
 
 
 /* The underlying system file descriptor type. */

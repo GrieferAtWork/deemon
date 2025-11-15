@@ -463,7 +463,7 @@ do_handle_filetype:
 	                                            PCKd64 "d", (int64_t)off, whence);
 	if unlikely(!result_ob)
 		goto err;
-	return DeeObject_AsXDirectUIntInherited(Dee_SIZEOF_POS_T, result_ob);
+	return DeeObject_AsXUIntDirectInherited(Dee_SIZEOF_POS_T, result_ob);
 err:
 	return (Dee_pos_t)-1;
 }

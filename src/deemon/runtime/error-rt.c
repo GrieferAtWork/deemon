@@ -2604,6 +2604,117 @@ done:
 
 
 
+/* Same as functions above, but check if the currently thrown error is `IntegerOverflow'
+ * If so, wrap it in another nested `IntegerOverflow' that uses the specified minval/maxval
+ * values, rather than those of the underlying `IntegerOverflow'
+ *
+ * These are needed to properly implement error handling for (e.g.) `DeeObject_AsUInt8',
+ * which is implemented in terms of `DeeObject_Get32Bit()'. Now if `DeeObject_Get32Bit()'
+ * already fails with an `IntegerOverflow', that error will list 2^32 as its upper limit,
+ * when the caller's limit would have actually been 2^8. */
+PRIVATE ATTR_COLD NONNULL((1, 2)) int
+(DCALL DeeRT_ErrNestedOverflow_impl)(struct Dee_variant *__restrict minval,
+                                     struct Dee_variant *__restrict maxval) {
+	DREF DeeThreadObject *me = DeeThread_Self();
+	struct except_frame *error = me->t_except;
+	ASSERT(error != NULL);
+	ASSERT(me->t_exceptsz > 0);
+	if (DeeObject_InstanceOf(error->ef_error, &DeeError_IntegerOverflow) &&
+	    likely(!(atomic_read(&me->t_state) & Dee_THREAD_STATE_TERMINATED))) {
+		IntegerOverflow *overflow = (IntegerOverflow *)error->ef_error;
+		DREF IntegerOverflow *result = DeeObject_MALLOC(IntegerOverflow);
+		if unlikely(!result) {
+			struct except_frame *oom = me->t_except;
+			if likely(oom != error) {
+				ASSERT(me->t_exceptsz >= 2);
+				ASSERT(oom->ef_prev == error);
+				oom->ef_prev = error->ef_prev;
+				error->ef_prev = oom;
+				me->t_except = error;
+				/* Handle the original IntegerOverflow error so only the OOM error remains */
+				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+			}
+			goto done;
+		}
+
+		/* Set IntegerOverflow parameters */
+		Dee_variant_init_copy(&result->io_base.ve_value, &overflow->io_base.ve_value);
+		Dee_variant_init_copy(&result->io_minval, minval);
+		Dee_variant_init_copy(&result->io_maxval, maxval);
+		result->io_positive = overflow->io_positive;
+		result->io_base.e_msg   = NULL;
+		result->io_base.e_cause = (DREF DeeObject *)overflow; /* Inherit reference */
+		DeeObject_Init(&result->io_base, &DeeError_IntegerOverflow);
+		error->ef_error = (DREF DeeObject *)result; /* Inherit reference */
+	}
+done:
+	return -1;
+}
+
+PUBLIC ATTR_COLD int
+(DCALL DeeRT_ErrNestedOverflow)(/*Numeric*/ /*0..1*/ DeeObject *minval,
+                                /*Numeric*/ /*0..1*/ DeeObject *maxval) {
+	struct Dee_variant v_minval, v_maxval;
+	Dee_variant_init_object_inherited_or_unbound(&v_minval, minval); /* Not really inherited; we just never fini */
+	Dee_variant_init_object_inherited_or_unbound(&v_maxval, maxval); /* Not really inherited; we just never fini */
+	return DeeRT_ErrNestedOverflow_impl(&v_minval, &v_maxval);
+}
+
+#if __SIZEOF_SIZE_T__ < 8
+PUBLIC ATTR_COLD int
+(DCALL DeeRT_ErrNestedOverflowS)(Dee_ssize_t minval, Dee_ssize_t maxval) {
+	return DeeRT_ErrNestedOverflowS64(minval, maxval);
+}
+PUBLIC ATTR_COLD int
+(DCALL DeeRT_ErrNestedOverflowS64)(int64_t minval, int64_t maxval)
+#else /* __SIZEOF_SIZE_T__ < 8 */
+PUBLIC ATTR_COLD int
+(DCALL DeeRT_ErrNestedOverflowS)(Dee_ssize_t minval, Dee_ssize_t maxval)
+#endif /* __SIZEOF_SIZE_T__ >= 8 */
+{
+	struct Dee_variant v_minval, v_maxval;
+	Dee_variant_init_int64(&v_minval, minval);
+	Dee_variant_init_int64(&v_maxval, maxval);
+	return DeeRT_ErrNestedOverflow_impl(&v_minval, &v_maxval);
+}
+
+#if __SIZEOF_SIZE_T__ < 8
+PUBLIC ATTR_COLD int
+(DCALL DeeRT_ErrNestedOverflowU)(size_t maxval) {
+	return DeeRT_ErrNestedOverflowU64(maxval);
+}
+PUBLIC ATTR_COLD int
+(DCALL DeeRT_ErrNestedOverflowU64)(uint64_t maxval)
+#else /* __SIZEOF_SIZE_T__ < 8 */
+PUBLIC ATTR_COLD int
+(DCALL DeeRT_ErrNestedOverflowU)(size_t maxval)
+#endif /* __SIZEOF_SIZE_T__ >= 8 */
+{
+	struct Dee_variant v_minval, v_maxval;
+	Dee_variant_init_uint32(&v_minval, 0);
+	Dee_variant_init_uint64(&v_maxval, maxval);
+	return DeeRT_ErrNestedOverflow_impl(&v_minval, &v_maxval);
+}
+
+PUBLIC ATTR_COLD int
+(DCALL DeeRT_ErrNestedOverflowS128)(Dee_int128_t minval, Dee_int128_t maxval) {
+	struct Dee_variant v_minval, v_maxval;
+	Dee_variant_init_int128(&v_minval, minval);
+	Dee_variant_init_int128(&v_maxval, maxval);
+	return DeeRT_ErrNestedOverflow_impl(&v_minval, &v_maxval);
+}
+
+PUBLIC ATTR_COLD int
+(DCALL DeeRT_ErrNestedOverflowU128)(Dee_uint128_t maxval) {
+	struct Dee_variant v_minval, v_maxval;
+	Dee_variant_init_uint32(&v_minval, 0);
+	Dee_variant_init_uint128(&v_maxval, maxval);
+	return DeeRT_ErrNestedOverflow_impl(&v_minval, &v_maxval);
+}
+
+
+
+
 
 PRIVATE DeeErrorObject RT_ErrNoActiveException = {
 	OBJECT_HEAD_INIT(&DeeError_RuntimeError),

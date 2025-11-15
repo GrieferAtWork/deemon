@@ -938,16 +938,14 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_g_copy(DefaultIterator_WithGetItem *__restrict self,
           DefaultIterator_WithGetItem *__restrict other) {
-	DREF DeeObject *index, *index_copy;
+	DREF DeeObject *index;
 	DefaultIterator_WithGetItem_LockAcquire(other);
 	index = other->dig_index;
 	Dee_Incref(index);
 	DefaultIterator_WithGetItem_LockRelease(other);
-	index_copy = DeeObject_Copy(index);
-	Dee_Decref_unlikely(index);
-	if unlikely(!index_copy)
+	if unlikely((index = DeeObject_CopyInherited(index)) == NULL)
 		goto err;
-	self->dig_index = index_copy;
+	self->dig_index = index;
 	Dee_atomic_lock_init(&self->dig_lock);
 	self->dig_tp_getitem = other->dig_tp_getitem;
 	self->dig_seq        = other->dig_seq;
@@ -1036,8 +1034,7 @@ di_g_hash(DefaultIterator_WithGetItem *self) {
 	index = self->dig_index;
 	Dee_Incref(index);
 	DefaultIterator_WithGetItem_LockRelease(self);
-	result = Dee_HashCombine(result, DeeObject_Hash(index));
-	Dee_Decref(index);
+	result = Dee_HashCombine(result, DeeObject_HashInherited(index));
 	return result;
 }
 
@@ -1321,16 +1318,14 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_lock) == offse
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_sg_copy(DefaultIterator_WithSizeObAndGetItem *__restrict self,
            DefaultIterator_WithSizeObAndGetItem *__restrict other) {
-	DREF DeeObject *index, *index_copy;
+	DREF DeeObject *index;
 	DefaultIterator_WithSizeAndGetItem_LockAcquire(other);
 	index = other->disg_index;
 	Dee_Incref(index);
 	DefaultIterator_WithSizeAndGetItem_LockRelease(other);
-	index_copy = DeeObject_Copy(index);
-	Dee_Decref_unlikely(index);
-	if unlikely(!index_copy)
+	if unlikely((index = DeeObject_CopyInherited(index)) == NULL)
 		goto err;
-	self->disg_index = index_copy;
+	self->disg_index = index;
 	Dee_atomic_lock_init(&self->disg_lock);
 	self->disg_tp_getitem = other->disg_tp_getitem;
 	self->disg_seq        = other->disg_seq;
@@ -1347,7 +1342,7 @@ di_sg_init(DefaultIterator_WithSizeObAndGetItem *__restrict self,
            size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
 	DeeArg_Unpack3(err, argc, argv, "_IterWithSizeObAndGetItem",
-	                &self->disg_seq, &self->disg_index, &self->disg_end);
+	               &self->disg_seq, &self->disg_index, &self->disg_end);
 	seqtyp = Dee_TYPE(self->disg_seq);
 	self->disg_tp_getitem = DeeType_RequireSupportedNativeOperator(seqtyp, getitem);
 	if unlikely(!self->disg_tp_getitem)

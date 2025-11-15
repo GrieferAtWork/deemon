@@ -190,19 +190,18 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_deepload(List *__restrict me) {
-	DREF DeeObject *temp, *item;
+	DREF DeeObject *new_item, *old_item;
 	size_t i = 0;
 	weakref_support_init(me);
 	DeeList_LockRead(me);
 	for (; i < me->l_list.ol_elemc; ++i) {
-		item = me->l_list.ol_elemv[i];
-		Dee_Incref(item);
+		old_item = me->l_list.ol_elemv[i];
+		Dee_Incref(old_item);
 		DeeList_LockEndRead(me);
 
 		/* Create the deep copy. */
-		temp = DeeObject_DeepCopy(item);
-		Dee_Decref(item);
-		if unlikely(!temp)
+		new_item = DeeObject_DeepCopyInherited(old_item);
+		if unlikely(!new_item)
 			goto err;
 		DeeList_LockWrite(me);
 
@@ -211,12 +210,12 @@ list_deepload(List *__restrict me) {
 			goto stop_on_end;
 
 		/* Write the duplicated object back into the list's vector. */
-		item = me->l_list.ol_elemv[i]; /* Inherit */
-		me->l_list.ol_elemv[i] = temp; /* Inherit */
+		old_item = me->l_list.ol_elemv[i]; /* Inherit */
+		me->l_list.ol_elemv[i] = new_item; /* Inherit */
 		DeeList_LockEndWrite(me);
 
 		/* Drop the old object. */
-		Dee_Decref(item);
+		Dee_Decref(old_item);
 		DeeList_LockRead(me);
 	}
 	DeeList_LockEndRead(me);
@@ -226,7 +225,7 @@ err:
 	return -1;
 stop_on_end:
 	DeeList_LockEndWrite(me);
-	Dee_Decref(temp);
+	Dee_Decref(new_item);
 	goto done;
 }
 
@@ -4137,15 +4136,13 @@ list_hash(List *__restrict me) {
 	elem = me->l_list.ol_elemv[0];
 	Dee_Incref(elem);
 	DeeList_LockEndRead(me);
-	result = DeeObject_Hash(elem);
-	Dee_Decref(elem);
+	result = DeeObject_HashInherited(elem);
 	DeeList_LockRead(me);
 	for (i = 1; i < me->l_list.ol_elemc; ++i) {
 		elem = me->l_list.ol_elemv[i];
 		Dee_Incref(elem);
 		DeeList_LockEndRead(me);
-		result = Dee_HashCombine(result, DeeObject_Hash(elem));
-		Dee_Decref(elem);
+		result = Dee_HashCombine(result, DeeObject_HashInherited(elem));
 		DeeList_LockRead(me);
 	}
 	DeeList_LockEndRead(me);

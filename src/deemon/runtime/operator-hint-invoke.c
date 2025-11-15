@@ -2306,34 +2306,79 @@ DeeObject_ThisCallKwInherited(/*inherit(always)*/ DREF DeeObject *self,
 }
 
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeObject_CallTupleInherited)(/*inherit(always)*/ DREF DeeObject *self, /*Tuple*/ DeeObject *args) {
 	DREF DeeObject *result = DeeObject_CallTuple(self, args);
 	Dee_Decref_unlikely(self); /* *_unlikely because functions usually live until the module dies */
 	return result;
 }
 
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeObject_CallTupleKwInherited)(/*inherit(always)*/ DREF DeeObject *self, /*Tuple*/ DeeObject *args, DeeObject *kw) {
 	DREF DeeObject *result = DeeObject_CallTupleKw(self, args, kw);
 	Dee_Decref_unlikely(self); /* *_unlikely because functions usually live until the module dies */
 	return result;
 }
 
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 (DCALL DeeObject_ThisCallTupleInherited)(/*inherit(always)*/ DREF DeeObject *self, DeeObject *thisarg, /*Tuple*/ DeeObject *args) {
 	DREF DeeObject *result = DeeObject_ThisCallTuple(self, thisarg, args);
 	Dee_Decref_unlikely(self); /* *_unlikely because functions usually live until the module dies */
 	return result;
 }
 
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 (DCALL DeeObject_ThisCallTupleKwInherited)(/*inherit(always)*/ DREF DeeObject *self, DeeObject *thisarg, /*Tuple*/ DeeObject *args, DeeObject *kw) {
 	DREF DeeObject *result = DeeObject_ThisCallTupleKw(self, thisarg, args, kw);
 	Dee_Decref_unlikely(self); /* *_unlikely because functions usually live until the module dies */
 	return result;
 }
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+
+PUBLIC WUNUSED /*ATTR_PURE*/ NONNULL((1)) Dee_hash_t
+(DCALL DeeObject_HashInherited)(/*inherit(always)*/ DREF DeeObject *__restrict self) {
+	Dee_hash_t result = DeeObject_Hash(self);
+	/* *_unlikely because you usually compute the hash for something that
+	 * is/gets stored elsewhere, rather than some temporary object. */
+	Dee_Decref_unlikely(self);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeObject_CopyInherited)(/*inherit(always)*/ DREF DeeObject *__restrict self) {
+	DREF DeeObject *result = DeeObject_Copy(self);
+	Dee_Decref_unlikely(self); /* You usually copy something because someone will continue to use the source */
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeObject_DeepCopyInherited)(/*inherit(always)*/ DREF DeeObject *__restrict self) {
+	DREF DeeObject *result = DeeObject_DeepCopy(self);
+	Dee_Decref_unlikely(self); /* You usually copy something because someone will continue to use the source */
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeObject_SizeObInherited)(/*inherit(always)*/ DREF DeeObject *__restrict self) {
+	DREF DeeObject *result = DeeObject_SizeOb(self);
+	Dee_Decref_unlikely(self); /* You usually take the size of something because you indent to keep working with that something */
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeObject_StrInherited)(/*inherit(always)*/ DREF DeeObject *__restrict self) {
+	DREF DeeObject *result = DeeObject_Str(self);
+	Dee_Decref(self);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeObject_ReprInherited)(/*inherit(always)*/ DREF DeeObject *__restrict self) {
+	DREF DeeObject *result = DeeObject_Repr(self);
+	Dee_Decref(self);
+	return result;
+}
+
 
 
 

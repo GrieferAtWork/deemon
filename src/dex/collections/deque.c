@@ -717,8 +717,7 @@ deq_deepload(Deque *__restrict self) {
 			Dee_Incref(orig_ob);
 			Deque_LockEndRead(self);
 			/* Create a deep copy of this item. */
-			copy = DeeObject_DeepCopy(orig_ob);
-			Dee_Decref(orig_ob);
+			copy = DeeObject_DeepCopyInherited(orig_ob);
 			if unlikely(!copy)
 				goto err;
 			Deque_LockWrite(self);

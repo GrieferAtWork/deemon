@@ -331,7 +331,7 @@ typedef struct {
 
 #define DeeJsonWriter_Init(self, printer, arg, format)            \
 	(json_writer_init(&(self)->djw_writer, printer, arg, format), \
-	 DeeObject_InitNoref(&(self)->djw_active, &DeeHashSet_Type),  \
+	 DeeObject_InitInherited(&(self)->djw_active, &DeeHashSet_Type),  \
 	 (*DeeHashSet_Type.tp_init.tp_alloc.tp_ctor)((DeeObject *)&(self)->djw_active))
 #define DeeJsonWriter_Fini(self)                                           \
 	((*DeeHashSet_Type.tp_init.tp_dtor)((DeeObject *)&(self)->djw_active), \

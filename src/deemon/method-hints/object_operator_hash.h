@@ -62,8 +62,7 @@ fallback:
 			continue;
 		Dee_Incref(member);
 		Dee_instance_desc_lock_endread(instance);
-		result = Dee_HashCombine(result, DeeObject_Hash(member));
-		Dee_Decref(member);
+		result = Dee_HashCombine(result, DeeObject_HashInherited(member));
 		Dee_instance_desc_lock_read(instance);
 	}
 	Dee_instance_desc_lock_endread(instance);

@@ -227,7 +227,7 @@ DeeModule_GetSymbol(DeeModuleObject const *__restrict self,
 	Dee_hash_t hash;
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
-	hash = DeeString_Hash((DeeObject *)name);
+	hash = DeeString_Hash(name);
 	perturb = i = MODULE_HASHST(self, hash);
 	for (;; MODULE_HASHNX(i, perturb)) {
 		struct module_symbol *item = MODULE_HASHIT(self, i);

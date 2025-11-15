@@ -124,6 +124,45 @@ DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowU128)(Dee_uint128_t value, 
 #define DeeRT_ErrIntegerOverflowU32(value, maxval)         DeeRT_ErrIntegerOverflowU64(value, maxval)
 #endif /* __SIZEOF_SIZE_T__ < 4 */
 
+/* Same as functions above, but check if the currently thrown error is `IntegerOverflow'
+ * If so, wrap it in another nested `IntegerOverflow' that uses the specified minval/maxval
+ * values, rather than those of the underlying `IntegerOverflow'
+ *
+ * These are needed to properly implement error handling for (e.g.) `DeeObject_AsUInt8',
+ * which is implemented in terms of `DeeObject_Get32Bit()'. Now if `DeeObject_Get32Bit()'
+ * already fails with an `IntegerOverflow', that error will list 2^32 as its upper limit,
+ * when the caller's limit would have actually been 2^8. */
+DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNestedOverflow)(/*Numeric*/ /*0..1*/ DeeObject *minval, /*Numeric*/ /*0..1*/ DeeObject *maxval);
+DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNestedOverflowS)(Dee_ssize_t minval, Dee_ssize_t maxval);
+DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNestedOverflowU)(size_t maxval);
+#if __SIZEOF_SIZE_T__ >= 8
+#define DeeRT_ErrNestedOverflowS64(minval, maxval) DeeRT_ErrNestedOverflowS(minval, maxval)
+#define DeeRT_ErrNestedOverflowU64(maxval)         DeeRT_ErrNestedOverflowU(maxval)
+#else  /* __SIZEOF_SIZE_T__ >= 8 */
+DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNestedOverflowS64)(int64_t minval, int64_t maxval);
+DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNestedOverflowU64)(uint64_t maxval);
+#define DeeRT_ErrNestedOverflowS64(minval, maxval) Dee_ASSUMED_VALUE((DeeRT_ErrNestedOverflowS64)(minval, maxval), -1)
+#define DeeRT_ErrNestedOverflowU64(maxval)         Dee_ASSUMED_VALUE((DeeRT_ErrNestedOverflowU64)(maxval), -1)
+#endif /* __SIZEOF_SIZE_T__ < 8 */
+DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNestedOverflowS128)(Dee_int128_t minval, Dee_int128_t maxval);
+DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNestedOverflowU128)(Dee_uint128_t maxval);
+#define DeeRT_ErrNestedOverflowS8(minval, maxval) DeeRT_ErrNestedOverflowS(minval, maxval)
+#define DeeRT_ErrNestedOverflowU8(maxval)         DeeRT_ErrNestedOverflowU(maxval)
+#if __SIZEOF_SIZE_T__ >= 2
+#define DeeRT_ErrNestedOverflowS16(minval, maxval) DeeRT_ErrNestedOverflowS(minval, maxval)
+#define DeeRT_ErrNestedOverflowU16(maxval)         DeeRT_ErrNestedOverflowU(maxval)
+#else /* __SIZEOF_SIZE_T__ >= 2 */
+#define DeeRT_ErrNestedOverflowS16(minval, maxval) DeeRT_ErrNestedOverflowS64(minval, maxval)
+#define DeeRT_ErrNestedOverflowU16(maxval)         DeeRT_ErrNestedOverflowU64(maxval)
+#endif /* __SIZEOF_SIZE_T__ < 2 */
+#if __SIZEOF_SIZE_T__ >= 4
+#define DeeRT_ErrNestedOverflowS32(minval, maxval) DeeRT_ErrNestedOverflowS(minval, maxval)
+#define DeeRT_ErrNestedOverflowU32(maxval)         DeeRT_ErrNestedOverflowU(maxval)
+#else /* __SIZEOF_SIZE_T__ >= 4 */
+#define DeeRT_ErrNestedOverflowS32(minval, maxval) DeeRT_ErrNestedOverflowS64(minval, maxval)
+#define DeeRT_ErrNestedOverflowU32(maxval)         DeeRT_ErrNestedOverflowU64(maxval)
+#endif /* __SIZEOF_SIZE_T__ < 4 */
+
 
 
 /* Throws an `DeeError_DivideByZero' indicating that a zero-division attempt has taken place. */

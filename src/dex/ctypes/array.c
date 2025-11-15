@@ -196,7 +196,7 @@ array_iter(DeeArrayTypeObject *tp_self, void *base) {
 	result->ai_begin.ptr = base;
 	result->ai_pos.ptr   = base;
 	result->ai_siz       = DeeSType_Sizeof(tp_self->at_orig);
-	result->ai_end.uint  = (uintptr_t)base + result->ai_siz * tp_self->at_count;
+	result->ai_end.ptr   = (byte_t *)base + (result->ai_siz * tp_self->at_count);
 	DeeObject_Init(result, &ArrayIterator_Type);
 done:
 	return result;
@@ -361,7 +361,7 @@ array_delrange(DeeArrayTypeObject *tp_self, void *base,
 		/* Simply zero out the described memory range. */
 		item_size = DeeSType_Sizeof(tp_self->at_orig);
 		del_size  = range_size * item_size;
-		del_begin = (byte_t *)((uintptr_t)base + (range.sr_start * item_size));
+		del_begin = (byte_t *)base + (range.sr_start * item_size);
 		CTYPES_FAULTPROTECT(bzero(del_begin, del_size), goto err);
 	}
 	return 0;

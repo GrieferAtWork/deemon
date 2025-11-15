@@ -1326,7 +1326,7 @@ JITContext_DoImportSymbol(JITContext *__restrict self,
 			if unlikely(!source_name)
 				goto err;
 			source_size = WSTR_LENGTH(source_name);
-			source_hash = DeeString_Hash((DeeObject *)spec->ii_import_name);
+			source_hash = DeeString_Hash(spec->ii_import_name);
 		} else {
 			source_name = spec->ii_symbol_name;
 			source_size = spec->ii_symbol_size;

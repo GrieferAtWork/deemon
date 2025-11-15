@@ -743,13 +743,15 @@ _DeeString_WSiz(DeeStringObject const *__restrict self) {
 
 /* Return the hash of `self', or calculate it if it wasn't already. */
 #ifdef CONFIG_BUILDING_DEEMON
-INTDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-DeeString_Hash(DeeObject *__restrict self);
+INTDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t
+(DCALL DeeString_Hash)(DeeObject *__restrict self);
+#define DeeString_Hash(self) DeeString_Hash((DeeObject *)Dee_REQUIRES_OBJECT(self))
 #else /* CONFIG_BUILDING_DEEMON */
 #define DeeString_Hash(self) DeeObject_Hash(self)
 #endif /* !CONFIG_BUILDING_DEEMON */
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-DeeString_HashCase(DeeObject *__restrict self);
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t
+(DCALL DeeString_HashCase)(DeeObject *__restrict self);
+#define DeeString_HashCase(self) DeeString_HashCase((DeeObject *)Dee_REQUIRES_OBJECT(self))
 
 /* Delete cached buffer encodings from a given 1-byte string. */
 PUBLIC NONNULL((1)) void DCALL DeeString_FreeWidth(DeeObject *__restrict self);

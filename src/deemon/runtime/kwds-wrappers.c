@@ -308,7 +308,7 @@ again:
 			ASSERT(str);
 
 			/* Remember the string by caching it within out hash-vector. */
-			hashof_str = DeeString_Hash((DeeObject *)str);
+			hashof_str = DeeString_Hash(str);
 			i = perturb = hashof_str & self->blkd_mask;
 			for (;; DeeBlackListKwds_BLCKNEXT(i, perturb)) {
 				DeeBlackListKwdsEntry *ent;
@@ -367,7 +367,7 @@ again:
 			ASSERT(str);
 
 			/* Remember the string by caching it within out hash-vector. */
-			hashof_str = DeeString_Hash((DeeObject *)str);
+			hashof_str = DeeString_Hash(str);
 			i = perturb = hashof_str & self->blkd_mask;
 			for (;; DeeBlackListKwds_BLCKNEXT(i, perturb)) {
 				DeeBlackListKwdsEntry *ent;
@@ -423,7 +423,7 @@ again:
 			ASSERT(str);
 
 			/* Remember the string by caching it within out hash-vector. */
-			hashof_str = DeeString_Hash((DeeObject *)str);
+			hashof_str = DeeString_Hash(str);
 			i = perturb = hashof_str & self->blkd_mask;
 			for (;; DeeBlackListKwds_BLCKNEXT(i, perturb)) {
 				DeeBlackListKwdsEntry *ent;
@@ -1273,7 +1273,7 @@ again:
 			ASSERT(str);
 
 			/* Remember the string by caching it within out hash-vector. */
-			hashof_str = DeeString_Hash((DeeObject *)str);
+			hashof_str = DeeString_Hash(str);
 			i = perturb = hashof_str & self->blkw_mask;
 			for (;; DeeBlackListKw_BLCKNEXT(i, perturb)) {
 				DeeBlackListKwdsEntry *ent;
@@ -1332,7 +1332,7 @@ again:
 			ASSERT(str);
 
 			/* Remember the string by caching it within out hash-vector. */
-			hashof_str = DeeString_Hash((DeeObject *)str);
+			hashof_str = DeeString_Hash(str);
 			i = perturb = hashof_str & self->blkw_mask;
 			for (;; DeeBlackListKw_BLCKNEXT(i, perturb)) {
 				DeeBlackListKwdsEntry *ent;
@@ -1387,7 +1387,7 @@ again:
 			ASSERT(str);
 
 			/* Remember the string by caching it within out hash-vector. */
-			hashof_str = DeeString_Hash((DeeObject *)str);
+			hashof_str = DeeString_Hash(str);
 			i = perturb = hashof_str & self->blkw_mask;
 			for (;; DeeBlackListKw_BLCKNEXT(i, perturb)) {
 				DeeBlackListKwdsEntry *ent;

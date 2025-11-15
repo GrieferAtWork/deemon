@@ -765,7 +765,7 @@ AttributeError_LoadInfo_impl(AttributeError *__restrict self,
 		DeeStringObject *name_ob;
 		name_ob  = COMPILER_CONTAINER_OF(name, DeeStringObject, s_str);
 		namelen  = DeeString_SIZE(name_ob);
-		namehash = DeeString_Hash((DeeObject *)name_ob);
+		namehash = DeeString_Hash(name_ob);
 	} else {
 		namelen  = strlen(name);
 		namehash = Dee_HashPtr(name, namelen);
@@ -1593,7 +1593,8 @@ AttributeError_hash(AttributeError *__restrict self) {
 		decl = AttributeError_GetDecl(self);
 		/* Only touch names after decls were loaded. */
 		if (self->ae_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ) {
-			result = Dee_HashCombine(result, DeeString_Hash((DeeObject *)Dee_attrdesc_nameobj(&self->ae_desc)));
+			DeeStringObject *name = Dee_attrdesc_nameobj(&self->ae_desc);
+			result = Dee_HashCombine(result, DeeString_Hash(name));
 		} else {
 			result = Dee_HashCombine(result, Dee_HashStr(self->ae_desc.ad_name));
 		}

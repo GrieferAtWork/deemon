@@ -544,7 +544,7 @@ default__seq_operator_size__with__seq_operator_sizeob(DeeObject *__restrict self
 	sizeob = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_sizeob))(self);
 	if unlikely(!sizeob)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(sizeob);
+	return DeeObject_AsSizeDirectInherited(sizeob);
 err:
 	return (size_t)-1;
 }
@@ -584,7 +584,7 @@ default__seq_operator_size__with__set_operator_sizeob(DeeObject *__restrict self
 	sizeob = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_sizeob))(self);
 	if unlikely(!sizeob)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(sizeob);
+	return DeeObject_AsSizeDirectInherited(sizeob);
 err:
 	return (size_t)-1;
 }
@@ -595,7 +595,7 @@ default__seq_operator_size__with__map_operator_sizeob(DeeObject *__restrict self
 	sizeob = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_sizeob))(self);
 	if unlikely(!sizeob)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(sizeob);
+	return DeeObject_AsSizeDirectInherited(sizeob);
 err:
 	return (size_t)-1;
 }
@@ -3194,8 +3194,7 @@ default__seq_operator_hash__with__seq_operator_size__and__operator_getitem_index
 	if unlikely(!elem) {
 		result = DEE_HASHOF_UNBOUND_ITEM;
 	} else {
-		result = DeeObject_Hash(elem);
-		Dee_Decref(elem);
+		result = DeeObject_HashInherited(elem);
 	}
 	for (i = 1; i < size; ++i) {
 		Dee_hash_t elem_hash;
@@ -3203,8 +3202,7 @@ default__seq_operator_hash__with__seq_operator_size__and__operator_getitem_index
 		if unlikely(!elem) {
 			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
 		} else {
-			elem_hash = DeeObject_Hash(elem);
-			Dee_Decref(elem);
+			elem_hash = DeeObject_HashInherited(elem);
 		}
 		result = Dee_HashCombine(result, elem_hash);
 	}
@@ -3229,8 +3227,7 @@ default__seq_operator_hash__with__seq_operator_size__and__seq_operator_trygetite
 	if unlikely(elem == ITER_DONE) {
 		result = DEE_HASHOF_UNBOUND_ITEM;
 	} else {
-		result = DeeObject_Hash(elem);
-		Dee_Decref(elem);
+		result = DeeObject_HashInherited(elem);
 	}
 	for (i = 1; i < size; ++i) {
 		Dee_hash_t elem_hash;
@@ -3240,8 +3237,7 @@ default__seq_operator_hash__with__seq_operator_size__and__seq_operator_trygetite
 		if unlikely(elem == ITER_DONE) {
 			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
 		} else {
-			elem_hash = DeeObject_Hash(elem);
-			Dee_Decref(elem);
+			elem_hash = DeeObject_HashInherited(elem);
 		}
 		result = Dee_HashCombine(result, elem_hash);
 		if (DeeThread_CheckInterrupt())
@@ -3268,8 +3264,7 @@ default__seq_operator_hash__with__seq_operator_size__and__seq_operator_getitem_i
 			goto err;
 		result = DEE_HASHOF_UNBOUND_ITEM;
 	} else {
-		result = DeeObject_Hash(elem);
-		Dee_Decref(elem);
+		result = DeeObject_HashInherited(elem);
 	}
 	for (i = 1; i < size; ++i) {
 		Dee_hash_t elem_hash;
@@ -3279,8 +3274,7 @@ default__seq_operator_hash__with__seq_operator_size__and__seq_operator_getitem_i
 				goto err;
 			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
 		} else {
-			elem_hash = DeeObject_Hash(elem);
-			Dee_Decref(elem);
+			elem_hash = DeeObject_HashInherited(elem);
 		}
 		result = Dee_HashCombine(result, elem_hash);
 		if (DeeThread_CheckInterrupt())
@@ -3317,8 +3311,7 @@ default__seq_operator_hash__with__seq_operator_sizeob__and__seq_operator_getitem
 			goto err_sizeob_indexob;
 		result = DEE_HASHOF_UNBOUND_ITEM;
 	} else {
-		result = DeeObject_Hash(elem);
-		Dee_Decref(elem);
+		result = DeeObject_HashInherited(elem);
 	}
 	for (;;) {
 		Dee_hash_t elem_hash;
@@ -3336,8 +3329,7 @@ default__seq_operator_hash__with__seq_operator_sizeob__and__seq_operator_getitem
 				goto err_sizeob_indexob;
 			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
 		} else {
-			elem_hash = DeeObject_Hash(elem);
-			Dee_Decref(elem);
+			elem_hash = DeeObject_HashInherited(elem);
 		}
 		result = Dee_HashCombine(result, elem_hash);
 		if (DeeThread_CheckInterrupt())
@@ -9577,7 +9569,7 @@ default__seq_count__with_callattr_count(DeeObject *self, DeeObject *item) {
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_count, 1, &item);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -9588,7 +9580,7 @@ default__seq_count__with_callattr___seq_count__(DeeObject *self, DeeObject *item
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___seq_count__, 1, &item);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -9602,7 +9594,7 @@ default__seq_count__with_callobjectcache___seq_count__(DeeObject *self, DeeObjec
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_count__, self, 1, &item);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -9656,7 +9648,7 @@ default__seq_count_with_key__with_callattr_count(DeeObject *self, DeeObject *ite
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_count, 4, args);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -9672,7 +9664,7 @@ default__seq_count_with_key__with_callattr___seq_count__(DeeObject *self, DeeObj
 	result = DeeObject_CallAttr(self, (DeeObject *)&str___seq_count__, 4, args);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -9691,7 +9683,7 @@ default__seq_count_with_key__with_callobjectcache___seq_count__(DeeObject *self,
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_count__, self, 4, args);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -9748,7 +9740,7 @@ default__seq_count_with_range__with_callattr_count(DeeObject *self, DeeObject *i
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_count, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -9759,7 +9751,7 @@ default__seq_count_with_range__with_callattr___seq_count__(DeeObject *self, DeeO
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_count__, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -9773,7 +9765,7 @@ default__seq_count_with_range__with_callobjectcache___seq_count__(DeeObject *sel
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_count__, self, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -9837,7 +9829,7 @@ default__seq_count_with_range_and_key__with_callattr_count(DeeObject *self, DeeO
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_count, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -9848,7 +9840,7 @@ default__seq_count_with_range_and_key__with_callattr___seq_count__(DeeObject *se
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_count__, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -9862,7 +9854,7 @@ default__seq_count_with_range_and_key__with_callobjectcache___seq_count__(DeeObj
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_count__, self, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -12786,7 +12778,7 @@ default__seq_removeall__with_callattr_removeall(DeeObject *self, DeeObject *item
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_removeall, "o" PCKuSIZ PCKuSIZ PCKuSIZ, item, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -12797,7 +12789,7 @@ default__seq_removeall__with_callattr___seq_removeall__(DeeObject *self, DeeObje
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_removeall__, "o" PCKuSIZ PCKuSIZ PCKuSIZ, item, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -12811,7 +12803,7 @@ default__seq_removeall__with_callobjectcache___seq_removeall__(DeeObject *self, 
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_removeall__, self, "o" PCKuSIZ PCKuSIZ PCKuSIZ, item, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -12951,7 +12943,7 @@ default__seq_removeall_with_key__with_callattr_removeall(DeeObject *self, DeeObj
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_removeall, "o" PCKuSIZ PCKuSIZ PCKuSIZ "o", item, start, end, max, key);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -12962,7 +12954,7 @@ default__seq_removeall_with_key__with_callattr___seq_removeall__(DeeObject *self
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_removeall__, "o" PCKuSIZ PCKuSIZ PCKuSIZ "o", item, start, end, max, key);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -12976,7 +12968,7 @@ default__seq_removeall_with_key__with_callobjectcache___seq_removeall__(DeeObjec
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_removeall__, self, "o" PCKuSIZ PCKuSIZ PCKuSIZ "o", item, start, end, max, key);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -13130,7 +13122,7 @@ default__seq_removeif__with_callattr_removeif(DeeObject *self, DeeObject *should
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_removeif, "o" PCKuSIZ PCKuSIZ PCKuSIZ, should, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -13141,7 +13133,7 @@ default__seq_removeif__with_callattr___seq_removeif__(DeeObject *self, DeeObject
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_removeif__, "o" PCKuSIZ PCKuSIZ PCKuSIZ, should, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -13155,7 +13147,7 @@ default__seq_removeif__with_callobjectcache___seq_removeif__(DeeObject *self, De
 	result = mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_removeif__, self, "o" PCKuSIZ PCKuSIZ PCKuSIZ, should, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -15223,7 +15215,7 @@ default__set_operator_size__with__set_operator_sizeob(DeeObject *__restrict self
 	sizeob = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_sizeob))(self);
 	if unlikely(!sizeob)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(sizeob);
+	return DeeObject_AsSizeDirectInherited(sizeob);
 err:
 	return (size_t)-1;
 }
@@ -17119,7 +17111,7 @@ default__map_operator_size__with__map_operator_sizeob(DeeObject *__restrict self
 	sizeob = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_sizeob))(self);
 	if unlikely(!sizeob)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(sizeob);
+	return DeeObject_AsSizeDirectInherited(sizeob);
 err:
 	return (size_t)-1;
 }
@@ -21954,7 +21946,7 @@ tdefault__seq_count__with_callobjectcache___seq_count__(DeeTypeObject *tp_self, 
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_count__, self, 1, &item);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -21971,7 +21963,7 @@ tdefault__seq_count_with_key__with_callobjectcache___seq_count__(DeeTypeObject *
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_count__, self, 4, args);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -21983,7 +21975,7 @@ tdefault__seq_count_with_range__with_callobjectcache___seq_count__(DeeTypeObject
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_count__, self, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -21995,7 +21987,7 @@ tdefault__seq_count_with_range_and_key__with_callobjectcache___seq_count__(DeeTy
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_count__, self, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -22427,7 +22419,7 @@ tdefault__seq_removeall__with_callobjectcache___seq_removeall__(DeeTypeObject *t
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_removeall__, self, "o" PCKuSIZ PCKuSIZ PCKuSIZ, item, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -22439,7 +22431,7 @@ tdefault__seq_removeall_with_key__with_callobjectcache___seq_removeall__(DeeType
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_removeall__, self, "o" PCKuSIZ PCKuSIZ PCKuSIZ "o", item, start, end, max, key);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -22451,7 +22443,7 @@ tdefault__seq_removeif__with_callobjectcache___seq_removeif__(DeeTypeObject *tp_
 	result = mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_removeif__, self, "o" PCKuSIZ PCKuSIZ PCKuSIZ, should, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }

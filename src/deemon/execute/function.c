@@ -1123,7 +1123,7 @@ PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 function_hash(Function *__restrict self) {
 	DeeCodeObject *code = self->fo_code;
 	Dee_hash_t result;
-	result = DeeObject_Hash((DeeObject *)code);
+	result = DeeObject_Hash(code);
 	result = Dee_HashCombine(result, DeeObject_Hashv(self->fo_refv, code->co_refc));
 	if unlikely(code->co_refstaticc > code->co_refc) {
 		uint16_t i;
@@ -1137,8 +1137,7 @@ function_hash(Function *__restrict self) {
 			} else {
 				Dee_Incref(ob);
 				DeeFunction_RefLockEndRead(self);
-				result = Dee_HashCombine(result, DeeObject_Hash(ob));
-				Dee_Decref_unlikely(ob);
+				result = Dee_HashCombine(result, DeeObject_HashInherited(ob));
 			}
 		}
 	}
@@ -1177,10 +1176,8 @@ function_compare_eq(Function *self, Function *other) {
 			Dee_Incref(rhs);
 		DeeFunction_RefLockEndRead(other);
 		if (lhs == rhs) {
-			if (ITER_ISOK(lhs)) {
-				Dee_DecrefNokill(lhs);
-				Dee_Decref_unlikely(lhs);
-			}
+			if (ITER_ISOK(lhs))
+				Dee_Decref_n(lhs, 2);
 		} else if (!ITER_ISOK(lhs) || !ITER_ISOK(rhs)) {
 			if (ITER_ISOK(lhs))
 				Dee_Decref_unlikely(lhs);
@@ -1188,8 +1185,7 @@ function_compare_eq(Function *self, Function *other) {
 				Dee_Decref_unlikely(rhs);
 			goto not_equal;
 		} else {
-			result = DeeObject_TryCompareEq(self->fo_refv[i],
-			                                other->fo_refv[i]);
+			result = DeeObject_TryCompareEq(lhs, rhs);
 			Dee_Decref_unlikely(lhs);
 			Dee_Decref_unlikely(rhs);
 			if (result != Dee_COMPARE_EQ)
@@ -2518,7 +2514,7 @@ yfi_get_frame_locals(YFIterator *__restrict self) {
 	DREF DeeFrameObject *frame = yfi_get_frame(self);
 	if unlikely(!frame)
 		goto err;
-	result = DeeFrame_GetLocalsWrapper(frame);
+	result = DeeFrame_GetLocalsWrapper(frame); /* TODO: Inherited */
 	Dee_Decref_unlikely(frame);
 	return result;
 err:
@@ -2531,7 +2527,7 @@ yfi_get_frame_stack(YFIterator *__restrict self) {
 	DREF DeeFrameObject *frame = yfi_get_frame(self);
 	if unlikely(!frame)
 		goto err;
-	result = DeeFrame_GetStackWrapper(frame);
+	result = DeeFrame_GetStackWrapper(frame); /* TODO: Inherited */
 	Dee_Decref_unlikely(frame);
 	return result;
 err:
@@ -2544,7 +2540,7 @@ yfi_get_frame_localsbyname(YFIterator *__restrict self) {
 	DREF DeeFrameObject *frame = yfi_get_frame(self);
 	if unlikely(!frame)
 		goto err;
-	result = DeeFrame_GetLocalsByNameWrapper(frame);
+	result = DeeFrame_GetLocalsByNameWrapper(frame); /* TODO: Inherited */
 	Dee_Decref_unlikely(frame);
 	return result;
 err:
@@ -2557,7 +2553,7 @@ yfi_get_frame_stackbyname(YFIterator *__restrict self) {
 	DREF DeeFrameObject *frame = yfi_get_frame(self);
 	if unlikely(!frame)
 		goto err;
-	result = DeeFrame_GetStackByNameWrapper(frame);
+	result = DeeFrame_GetStackByNameWrapper(frame); /* TODO: Inherited */
 	Dee_Decref_unlikely(frame);
 	return result;
 err:
@@ -2570,7 +2566,7 @@ yfi_get_frame_variablesbyname(YFIterator *__restrict self) {
 	DREF DeeFrameObject *frame = yfi_get_frame(self);
 	if unlikely(!frame)
 		goto err;
-	result = DeeFrame_GetVariablesByNameWrapper(frame);
+	result = DeeFrame_GetVariablesByNameWrapper(frame); /* TODO: Inherited */
 	Dee_Decref_unlikely(frame);
 	return result;
 err:
@@ -2583,7 +2579,7 @@ yfi_get_frame_symbols(YFIterator *__restrict self) {
 	DREF DeeFrameObject *frame = yfi_get_frame(self);
 	if unlikely(!frame)
 		goto err;
-	result = DeeFrame_GetSymbolsByNameWrapper(frame);
+	result = DeeFrame_GetSymbolsByNameWrapper(frame); /* TODO: Inherited */
 	Dee_Decref_unlikely(frame);
 	return result;
 err:

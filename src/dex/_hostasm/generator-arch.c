@@ -198,11 +198,15 @@ gen86_addrname(void const *addr) {
 	if (addr == (void const *)&func) \
 		return gen86_format_symname(#func, n)
 	CASE(DeeObject_Copy, 4);
+	CASE(DeeObject_CopyInherited, 4);
 	CASE(DeeObject_DeepCopy, 4);
+	CASE(DeeObject_DeepCopyInherited, 4);
 	CASE(DeeObject_Assign, 8);
 	CASE(DeeObject_MoveAssign, 8);
 	CASE(DeeObject_Str, 4);
+	CASE(DeeObject_StrInherited, 4);
 	CASE(DeeObject_Repr, 4);
+	CASE(DeeObject_ReprInherited, 4);
 	CASE(DeeObject_Bool, 4);
 	CASE(DeeObject_BoolInherited, 4);
 	CASE(DeeObject_IterNext, 4);
@@ -271,6 +275,7 @@ gen86_addrname(void const *addr) {
 	CASE(DeeObject_InplaceOrUInt32, 8);
 	CASE(DeeObject_InplaceXorUInt32, 8);
 	CASE(DeeObject_Hash, 4);
+	CASE(DeeObject_HashInherited, 4);
 	CASE(DeeObject_Compare, 8);
 	CASE(DeeObject_CompareEq, 8);
 	CASE(DeeObject_TryCompareEq, 8);

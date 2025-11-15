@@ -137,7 +137,7 @@ size_t __seq_size__.seq_operator_size([[nonnull]] DeeObject *__restrict self)
 	sizeob = CALL_DEPENDENCY(seq_operator_sizeob, self);
 	if unlikely(!sizeob)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(sizeob);
+	return DeeObject_AsSizeDirectInherited(sizeob);
 err:
 	return (size_t)-1;
 }}
@@ -146,7 +146,7 @@ err:
 	sizeob = CALL_DEPENDENCY(set_operator_sizeob, self);
 	if unlikely(!sizeob)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(sizeob);
+	return DeeObject_AsSizeDirectInherited(sizeob);
 err:
 	return (size_t)-1;
 }}
@@ -155,7 +155,7 @@ err:
 	sizeob = CALL_DEPENDENCY(map_operator_sizeob, self);
 	if unlikely(!sizeob)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(sizeob);
+	return DeeObject_AsSizeDirectInherited(sizeob);
 err:
 	return (size_t)-1;
 }}

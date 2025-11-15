@@ -128,14 +128,13 @@ ri_copy(RangeIterator *__restrict self,
 	DREF DeeObject *new_index, *old_index;
 again:
 	RangeIterator_LockRead(other);
-	old_index      = other->ri_index;
-	self->ri_first = other->ri_first;
+	old_index = other->ri_index;
 	Dee_Incref(old_index);
+	self->ri_first = other->ri_first;
 	RangeIterator_LockEndRead(other);
 
 	/* Create a copy of the index (may not be correct if it already changed) */
-	new_index = DeeObject_Copy(old_index);
-	Dee_Decref(old_index);
+	new_index = DeeObject_CopyInherited(old_index);
 	if unlikely(!new_index)
 		goto err;
 	COMPILER_READ_BARRIER();

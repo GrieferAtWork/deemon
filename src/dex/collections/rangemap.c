@@ -2759,7 +2759,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_mapitems_iterator_init(RangeMapProxyKeysIterator *__restrict self,
-                         size_t argc, DeeObject *const *argv) {
+                             size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack1(err, argc, argv, "_RangeMapMapItemsIterator",
 	                  &self->rmpki_base.rmpii_base.rmpi_rmap);
 	self->rmpki_base.rmpii_base.rmpi_iter = DeeObject_Iter(self->rmpki_base.rmpii_base.rmpi_rmap);
@@ -2779,7 +2779,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 proxy_mapitems_iterator_copy(RangeMapProxyKeysIterator *__restrict self,
-                         RangeMapProxyKeysIterator *__restrict other) {
+                             RangeMapProxyKeysIterator *__restrict other) {
 	self->rmpki_base.rmpii_base.rmpi_iter = DeeObject_Copy(other->rmpki_base.rmpii_base.rmpi_iter);
 	if unlikely(!self->rmpki_base.rmpii_base.rmpi_iter)
 		goto err;
@@ -2845,7 +2845,8 @@ proxy_mapitems_iterator_fini(RangeMapProxyKeysIterator *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-proxy_mapitems_iterator_visit(RangeMapProxyKeysIterator *__restrict self, Dee_visit_t proc, void *arg) {
+proxy_mapitems_iterator_visit(RangeMapProxyKeysIterator *__restrict self,
+                              Dee_visit_t proc, void *arg) {
 	RangeMapProxyKeysIterator_LockAcquire(self);
 	Dee_Visit(self->rmpki_base.rmpii_value);
 	Dee_Visit(self->rmpki_prvkey);
@@ -2894,12 +2895,9 @@ again:
 	if (error) {
 		maxkey = prvkey;
 		if (first) {
-			DREF DeeObject *copy;
-			copy = DeeObject_Copy(prvkey);
-			Dee_Decref(prvkey);
-			if unlikely(!copy)
+			prvkey = DeeObject_CopyInherited(prvkey);
+			if unlikely(!prvkey)
 				goto err;
-			prvkey = copy;
 		}
 		if unlikely(DeeObject_Inc(&prvkey))
 			goto err_prvkey;
@@ -2968,12 +2966,9 @@ again:
 	if (error) {
 		maxkey = prvkey;
 		if (first) {
-			DREF DeeObject *copy;
-			copy = DeeObject_Copy(prvkey);
-			Dee_Decref(prvkey);
-			if unlikely(!copy)
+			prvkey = DeeObject_CopyInherited(prvkey);
+			if unlikely(!prvkey)
 				goto err;
-			prvkey = copy;
 		}
 		if unlikely(DeeObject_Inc(&prvkey))
 			goto err_prvkey;
@@ -3050,12 +3045,9 @@ again:
 	if (error) {
 		maxkey = prvkey;
 		if (first) {
-			DREF DeeObject *copy;
-			copy = DeeObject_Copy(prvkey);
-			Dee_Decref(prvkey);
-			if unlikely(!copy)
+			prvkey = DeeObject_CopyInherited(prvkey);
+			if unlikely(!prvkey)
 				goto err;
-			prvkey = copy;
 		}
 		if unlikely(DeeObject_Inc(&prvkey))
 			goto err_prvkey;
@@ -3130,12 +3122,9 @@ again:
 	if (error) {
 		maxkey = prvkey;
 		if (first) {
-			DREF DeeObject *copy;
-			copy = DeeObject_Copy(prvkey);
-			Dee_Decref(prvkey);
-			if unlikely(!copy)
+			prvkey = DeeObject_CopyInherited(prvkey);
+			if unlikely(!prvkey)
 				goto err;
-			prvkey = copy;
 		}
 		if unlikely(DeeObject_Inc(&prvkey))
 			goto err_prvkey;

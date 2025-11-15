@@ -4153,7 +4153,7 @@ DeeClass_SetInstanceAttribute(DeeTypeObject *class_type,
 	if unlikely(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
 		goto err_noaccess;
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-		DREF DeeObject *old_value[3];
+		DREF DeeObject *old_values[3];
 		if (DeeObject_AssertType(value, &DeeProperty_Type))
 			goto err;
 		/* Unpack and assign a property wrapper.
@@ -4164,18 +4164,18 @@ DeeClass_SetInstanceAttribute(DeeTypeObject *class_type,
 		Dee_XIncref(((DeePropertyObject *)value)->p_del);
 		Dee_XIncref(((DeePropertyObject *)value)->p_set);
 		Dee_class_desc_lock_write(my_class);
-		old_value[0] = my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET];
-		old_value[1] = my_class->cd_members[attr->ca_addr + CLASS_GETSET_DEL];
-		old_value[2] = my_class->cd_members[attr->ca_addr + CLASS_GETSET_SET];
+		old_values[0] = my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET];
+		old_values[1] = my_class->cd_members[attr->ca_addr + CLASS_GETSET_DEL];
+		old_values[2] = my_class->cd_members[attr->ca_addr + CLASS_GETSET_SET];
 		my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET] = ((DeePropertyObject *)value)->p_get;
 		my_class->cd_members[attr->ca_addr + CLASS_GETSET_DEL] = ((DeePropertyObject *)value)->p_del;
 		my_class->cd_members[attr->ca_addr + CLASS_GETSET_SET] = ((DeePropertyObject *)value)->p_set;
 		Dee_class_desc_lock_endwrite(my_class);
 
 		/* Drop references from the old callbacks. */
-		Dee_XDecref(old_value[2]);
-		Dee_XDecref(old_value[1]);
-		Dee_XDecref(old_value[0]);
+		Dee_XDecref(old_values[2]);
+		Dee_XDecref(old_values[1]);
+		Dee_XDecref(old_values[0]);
 	} else {
 		/* Simple case: direct overwrite an unbound class-based attr. */
 		DREF DeeObject *old_value;
@@ -4667,12 +4667,8 @@ INTERN WUNUSED NONNULL((1, 2, 3, 4)) int
 	}
 #endif
 	self->id_vtab[attr->ca_addr] = value;
-	if unlikely(old_value) {
-		Dee_instance_desc_lock_endwrite(self);
-		Dee_Decref_unlikely(old_value);
-		return 0;
-	}
 	Dee_instance_desc_lock_endwrite(self);
+	Dee_XDecref(old_value);
 	return 0;
 	{
 		DeeObject *instance;
@@ -4905,7 +4901,7 @@ PUBLIC NONNULL((1, 2, 4)) void
 	/* Lock and extract the member. */
 	Dee_Incref(value);
 	Dee_instance_desc_lock_write(inst);
-	old_value           = inst->id_vtab[addr];
+	old_value = inst->id_vtab[addr];
 	inst->id_vtab[addr] = value;
 	Dee_instance_desc_lock_endwrite(inst);
 	Dee_XDecref(old_value);

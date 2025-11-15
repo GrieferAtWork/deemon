@@ -28,15 +28,15 @@ __seq_unpackub__(min:?Dint,max?:?Dint)->?Ert:NullableTuple {{
 	DREF DeeTupleObject *result;
 	size_t min_count, max_count;
 	if (argc == 1) {
-		min_count = DeeObject_AsDirectSize(argv[0]);
+		min_count = DeeObject_AsSizeDirect(argv[0]);
 		if unlikely(min_count == (size_t)-1)
 			goto err;
 		max_count = min_count;
 	} else if (argc == 2) {
-		min_count = DeeObject_AsDirectSize(argv[0]);
+		min_count = DeeObject_AsSizeDirect(argv[0]);
 		if unlikely(min_count == (size_t)-1)
 			goto err;
-		max_count = DeeObject_AsDirectSize(argv[1]);
+		max_count = DeeObject_AsSizeDirect(argv[1]);
 		if unlikely(max_count == (size_t)-1)
 			goto err;
 		if unlikely(min_count > max_count) {

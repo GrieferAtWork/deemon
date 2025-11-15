@@ -2421,7 +2421,7 @@ YieldFunctionSymbolsByName_TryLookupSymByObject(YieldFunctionSymbolsByName const
 		                                                          DeeString_STR(key),
 		                                                          DeeString_SIZE(key));
 	}
-	index = DeeObject_AsDirectSize(key);
+	index = DeeObject_AsSizeDirect(key);
 	if unlikely(index == (size_t)-1)
 		goto err;
 	return YieldFunctionSymbolsByName_TryLookupSymByIndex(self, index);

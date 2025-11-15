@@ -102,7 +102,7 @@ attr_hash(Attr *__restrict self) {
 	if (self->a_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ) {
 		DeeStringObject *string;
 		string = COMPILER_CONTAINER_OF(self->a_desc.ad_name, DeeStringObject, s_str);
-		result = Dee_HashCombine(result, DeeString_Hash((DeeObject *)string));
+		result = Dee_HashCombine(result, DeeString_Hash(string));
 	} else {
 		result = Dee_HashCombine(result, Dee_HashStr(self->a_desc.ad_name));
 	}
@@ -122,7 +122,7 @@ attr_compare_eq_impl(Attr *lhs, Attr *rhs) {
 	    (rhs->a_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ)) {
 		DeeStringObject *lhs_name = COMPILER_CONTAINER_OF(lhs->a_desc.ad_name, DeeStringObject, s_str);
 		DeeStringObject *rhs_name = COMPILER_CONTAINER_OF(rhs->a_desc.ad_name, DeeStringObject, s_str);
-		if (DeeString_Hash((DeeObject *)lhs_name) != DeeString_Hash((DeeObject *)rhs_name))
+		if (DeeString_Hash(lhs_name) != DeeString_Hash(rhs_name))
 			goto nope;
 		if (!DeeString_EqualsSTR(lhs_name, rhs_name))
 			goto nope;
@@ -391,7 +391,7 @@ attribute_exists(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
 		goto err;
 	specs.as_name = DeeString_STR(args.name);
-	specs.as_hash = DeeString_Hash((DeeObject *)args.name);
+	specs.as_hash = DeeString_Hash(args.name);
 	specs.as_decl = args.decl;
 	if (DeeNone_Check(args.perm)) {
 		specs.as_perm_mask = 0;
@@ -444,7 +444,7 @@ attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
 		goto err;
 	specs.as_name = DeeString_STR(args.name);
-	specs.as_hash = DeeString_Hash((DeeObject *)args.name);
+	specs.as_hash = DeeString_Hash(args.name);
 	specs.as_decl = args.decl;
 	if (DeeNone_Check(args.perm)) {
 		specs.as_perm_mask = 0;

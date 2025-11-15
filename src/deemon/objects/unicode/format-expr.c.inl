@@ -411,32 +411,29 @@ LOCAL_sfa_evalunary_base(struct string_format_advanced *__restrict self) {
 		}
 		sfa_yield(self);
 #ifndef DEFINE_sfa_skipexpr
-		{
-			DREF DeeObject *final_result;
-			switch (tok) {
-			case SFA_TOK_D_STR:
-				final_result = DeeObject_Str(result);
-				break;
-			case SFA_TOK_D_REPR:
-				final_result = DeeObject_Repr(result);
-				break;
-			case SFA_TOK_D_COPY:
-				final_result = DeeObject_Copy(result);
-				break;
-			case SFA_TOK_D_DEEPCOPY:
-				final_result = DeeObject_DeepCopy(result);
-				break;
-			case SFA_TOK_D_TYPE:
-				final_result = (DREF DeeObject *)Dee_TYPE(result);
-				Dee_Incref(final_result);
-				break;
-			default: __builtin_unreachable();
-			}
+		switch (tok) {
+		case SFA_TOK_D_STR:
+			result = DeeObject_StrInherited(result);
+			break;
+		case SFA_TOK_D_REPR:
+			result = DeeObject_ReprInherited(result);
+			break;
+		case SFA_TOK_D_COPY:
+			result = DeeObject_CopyInherited(result);
+			break;
+		case SFA_TOK_D_DEEPCOPY:
+			result = DeeObject_DeepCopyInherited(result);
+			break;
+		case SFA_TOK_D_TYPE: {
+			DREF DeeTypeObject *tp = Dee_TYPE(result);
+			Dee_Incref(tp);
 			Dee_Decref(result);
-			/*if unlikely(!final_result)
-				goto err;*/
-			result = final_result;
+			result = (DeeObject *)tp;
+		}	break;
+		default: __builtin_unreachable();
 		}
+		/*if unlikely(!result)
+			goto err;*/
 #endif /* !DEFINE_sfa_skipexpr */
 	}	break;
 

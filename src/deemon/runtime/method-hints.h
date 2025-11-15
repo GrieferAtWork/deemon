@@ -500,9 +500,10 @@ struct Dee_type_mh_cache {
 	/* Other non-generated type cache data goes here... */
 #ifdef CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE
 	struct Dee_type_struct_cache *mhc_structcache; /* [0..1][lock(WRITE_ONCE)][owned] Struct enumeration cache */
-#define _Dee_type_mh_cache_fini_structcache_(self) \
-	likely(!(self)->mhc_structcache) ||            \
-	(Dee_type_struct_cache_destroy((self)->mhc_structcache), 0),
+#define _Dee_type_mh_cache_fini_structcache_(self)           \
+	unlikely((self)->mhc_structcache)                        \
+	? Dee_type_struct_cache_destroy((self)->mhc_structcache) \
+	: (void)0,
 #else /* CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE */
 #define _Dee_type_mh_cache_fini_structcache_(self) /* nothing */
 #endif /* !CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE */

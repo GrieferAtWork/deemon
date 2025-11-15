@@ -2065,8 +2065,7 @@ tusrtype__hash__with__(DeeTypeObject *tp_self, DeeObject *self) {
 			continue;
 		Dee_Incref(member);
 		Dee_instance_desc_lock_endread(instance);
-		result = Dee_HashCombine(result, DeeObject_Hash(member));
-		Dee_Decref(member);
+		result = Dee_HashCombine(result, DeeObject_HashInherited(member));
 		Dee_instance_desc_lock_read(instance);
 	}
 	Dee_instance_desc_lock_endread(instance);
@@ -2122,8 +2121,7 @@ usrtype__hash__with__(DeeObject *__restrict self) {
 			continue;
 		Dee_Incref(member);
 		Dee_instance_desc_lock_endread(instance);
-		result = Dee_HashCombine(result, DeeObject_Hash(member));
-		Dee_Decref(member);
+		result = Dee_HashCombine(result, DeeObject_HashInherited(member));
 		Dee_instance_desc_lock_read(instance);
 	}
 	Dee_instance_desc_lock_endread(instance);
@@ -3642,7 +3640,7 @@ tdefault__size__with__sizeob(DeeTypeObject *tp_self, DeeObject *self) {
 	DREF DeeObject *result = (*(tp_self->tp_seq->tp_sizeob == &usrtype__sizeob__with__SIZE ? &tusrtype__sizeob__with__SIZE : &tdefault__sizeob))(tp_self, self);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -3660,7 +3658,7 @@ default__size__with__sizeob(DeeObject *__restrict self) {
 	DREF DeeObject *result = (*Dee_TYPE(self)->tp_seq->tp_sizeob)(self);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 #endif /* __OPTIMIZE_SIZE__ */

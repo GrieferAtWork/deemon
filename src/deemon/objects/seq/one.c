@@ -114,12 +114,13 @@ soi_deep(SeqOneIterator *__restrict self,
          SeqOneIterator *__restrict other) {
 	DREF DeeObject *item;
 	item = soi_trygetitemref(other);
-	self->soi_item = DeeObject_DeepCopy(item);
-	if unlikely(!self->soi_item)
-		goto err_item;
+	if (item != ITER_DONE) {
+		if unlikely((item = DeeObject_DeepCopy(item)) == NULL)
+			goto err;
+	}
+	self->soi_item = item;
 	return 0;
-err_item:
-	Dee_Decref_unlikely(item);
+err:
 	return -1;
 }
 

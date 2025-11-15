@@ -193,7 +193,7 @@ do_invoke_alloc_any_ctor_kw:
 			result = DeeType_AllocInstance(object_type);
 			if unlikely(!result)
 				goto err_object_type;
-			DeeObject_InitNoref(result, object_type);
+			DeeObject_InitInherited(result, object_type);
 			if (object_type->tp_init.tp_alloc.tp_ctor)
 				goto do_invoke_alloc_ctor;
 			if (object_type->tp_init.tp_alloc.tp_any_ctor)
@@ -285,7 +285,7 @@ do_invoke_alloc_copy:
 			result = DeeType_AllocInstance(object_type);
 			if unlikely(!result)
 				goto err_object_type;
-			DeeObject_InitNoref(result, object_type);
+			DeeObject_InitInherited(result, object_type);
 			if (object_type->tp_init.tp_alloc.tp_ctor && argc == 0)
 				goto do_invoke_alloc_ctor;
 			if (object_type->tp_init.tp_alloc.tp_any_ctor)
@@ -460,7 +460,7 @@ do_invoke_alloc_copy:
 			result = DeeType_AllocInstance(object_type);
 			if unlikely(!result)
 				goto err_object_type;
-			DeeObject_InitNoref(result, object_type);
+			DeeObject_InitInherited(result, object_type);
 			if (object_type->tp_init.tp_alloc.tp_any_ctor_kw)
 				goto do_invoke_alloc_any_ctor_kw;
 			if (object_type->tp_init.tp_alloc.tp_any_ctor)
@@ -813,7 +813,7 @@ do_invoke_alloc_any_ctor_kw:
 			result = DeeType_AllocInstance(tp_self);
 			if unlikely(!result)
 				goto err_object_type;
-			DeeObject_InitNoref(result, tp_self);
+			DeeObject_InitInherited(result, tp_self);
 			if (tp_self->tp_init.tp_alloc.tp_any_ctor)
 				goto do_invoke_alloc_any_ctor;
 			if (tp_self->tp_init.tp_alloc.tp_any_ctor_kw)

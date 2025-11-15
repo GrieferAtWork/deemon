@@ -477,7 +477,7 @@ PRIVATE NONNULL((1)) void DCALL
 muiter_clear(MapUnionIterator *__restrict self) {
 	DREF DeeObject *iter;
 	MapUnionIterator_LockWrite(self);
-	iter           = self->mui_iter;
+	iter = self->mui_iter; /* Inherit reference */
 	self->mui_iter = DeeNone_NewRef();
 	MapUnionIterator_LockEndWrite(self);
 	Dee_Decref(iter);
@@ -499,8 +499,8 @@ muiter_set_iter(MapUnionIterator *__restrict self,
 	DREF DeeObject *old_iter;
 	Dee_Incref(iter);
 	MapUnionIterator_LockRead(self);
-	old_iter       = self->mui_iter;
-	self->mui_iter = iter;
+	old_iter = self->mui_iter; /* Inherit reference */
+	self->mui_iter = iter;     /* Inherit reference */
 	MapUnionIterator_LockEndRead(self);
 	Dee_Decref(old_iter);
 	return 0;
@@ -540,14 +540,14 @@ muiter_copy(MapUnionIterator *__restrict self,
             MapUnionIterator *__restrict other) {
 	DREF DeeObject *iter;
 	MapUnionIterator_LockRead(other);
-	iter            = other->mui_iter;
-	self->mui_in2nd = other->mui_in2nd;
+	iter = other->mui_iter;
 	Dee_Incref(iter);
+	self->mui_in2nd = other->mui_in2nd;
 	MapUnionIterator_LockEndRead(other);
-	self->mui_iter = DeeObject_Copy(iter);
-	Dee_Decref(iter);
-	if unlikely(!self->mui_iter)
+	iter = DeeObject_CopyInherited(iter);
+	if unlikely(!iter)
 		goto err;
+	self->mui_iter = iter;
 	Dee_atomic_rwlock_init(&self->mui_lock);
 	self->mui_union = other->mui_union;
 	Dee_Incref(self->mui_union);
@@ -561,21 +561,21 @@ muiter_deep(MapUnionIterator *__restrict self,
             MapUnionIterator *__restrict other) {
 	DREF DeeObject *iter;
 	MapUnionIterator_LockRead(other);
-	iter            = other->mui_iter;
-	self->mui_in2nd = other->mui_in2nd;
+	iter = other->mui_iter;
 	Dee_Incref(iter);
+	self->mui_in2nd = other->mui_in2nd;
 	MapUnionIterator_LockEndRead(other);
-	self->mui_iter = DeeObject_DeepCopy(iter);
-	Dee_Decref(iter);
-	if unlikely(!self->mui_iter)
+	iter = DeeObject_DeepCopyInherited(iter);
+	if unlikely(!iter)
 		goto err;
+	self->mui_iter = iter;
 	Dee_atomic_rwlock_init(&self->mui_lock);
 	self->mui_union = (DREF MapUnion *)DeeObject_DeepCopy((DeeObject *)other->mui_union);
 	if unlikely(!self->mui_union)
 		goto err_iter;
 	return 0;
 err_iter:
-	Dee_Decref(self->mui_iter);
+	Dee_Decref(iter);
 err:
 	return -1;
 }
@@ -612,9 +612,9 @@ muiter_nextpair(MapUnionIterator *__restrict self,
 	DREF DeeObject *iter;
 again:
 	MapUnionIterator_LockRead(self);
-	iter      = self->mui_iter;
-	is_second = self->mui_in2nd;
+	iter = self->mui_iter;
 	Dee_Incref(iter);
+	is_second = self->mui_in2nd;
 	MapUnionIterator_LockEndRead(self);
 read_from_iter:
 	result = DeeObject_IterNextPair(iter, key_and_value);
@@ -650,10 +650,10 @@ read_from_iter:
 			Dee_Decref(iter2);
 			goto again;
 		}
-		iter = self->mui_iter;
+		iter = self->mui_iter; /* Inherit reference */
+		Dee_Incref(iter2);
 		self->mui_iter  = iter2;
 		self->mui_in2nd = true;
-		Dee_Incref(iter2);
 		MapUnionIterator_LockEndWrite(self);
 		Dee_Decref(iter);
 		iter = iter2;
@@ -672,9 +672,9 @@ muiter_nextkey(MapUnionIterator *__restrict self) {
 	DREF DeeObject *iter;
 again:
 	MapUnionIterator_LockRead(self);
-	iter      = self->mui_iter;
-	is_second = self->mui_in2nd;
+	iter = self->mui_iter;
 	Dee_Incref(iter);
+	is_second = self->mui_in2nd;
 	MapUnionIterator_LockEndRead(self);
 read_from_iter:
 	result = DeeObject_IterNextKey(iter);
@@ -708,10 +708,10 @@ read_from_iter:
 			Dee_Decref(iter2);
 			goto again;
 		}
-		iter = self->mui_iter;
+		iter = self->mui_iter; /* Inherit reference */
+		Dee_Incref(iter2);
 		self->mui_iter  = iter2;
 		self->mui_in2nd = true;
-		Dee_Incref(iter2);
 		MapUnionIterator_LockEndWrite(self);
 		Dee_Decref(iter);
 		iter = iter2;
@@ -750,16 +750,14 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 muiter_hash(MapUnionIterator *self) {
-	Dee_hash_t result;
 	bool my_2nd;
 	DREF DeeObject *my_iter;
 	MapUnionIterator_LockRead(self);
 	my_iter = self->mui_iter;
-	my_2nd  = self->mui_in2nd;
+	Dee_Incref(my_iter);
+	my_2nd = self->mui_in2nd;
 	MapUnionIterator_LockEndRead(self);
-	result = Dee_HashCombine(my_2nd ? 1 : 0, DeeObject_Hash(my_iter));
-	Dee_Decref(my_iter);
-	return result;
+	return Dee_HashCombine(my_2nd ? 1 : 0, DeeObject_HashInherited(my_iter));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -772,11 +770,13 @@ muiter_compare(MapUnionIterator *self,
 		goto err;
 	MapUnionIterator_LockRead(self);
 	my_iter = self->mui_iter;
-	my_2nd  = self->mui_in2nd;
+	Dee_Incref(my_iter);
+	my_2nd = self->mui_in2nd;
 	MapUnionIterator_LockEndRead(self);
 	MapUnionIterator_LockRead(other);
 	ot_iter = other->mui_iter;
-	ot_2nd  = other->mui_in2nd;
+	Dee_Incref(ot_iter);
+	ot_2nd = other->mui_in2nd;
 	MapUnionIterator_LockEndRead(other);
 	if (my_2nd != ot_2nd) {
 		result = Dee_CompareNe(my_2nd, ot_2nd);
@@ -800,11 +800,13 @@ muiter_compare_eq(MapUnionIterator *self,
 		goto err;
 	MapUnionIterator_LockRead(self);
 	my_iter = self->mui_iter;
-	my_2nd  = self->mui_in2nd;
+	Dee_Incref(my_iter);
+	my_2nd = self->mui_in2nd;
 	MapUnionIterator_LockEndRead(self);
 	MapUnionIterator_LockRead(other);
 	ot_iter = other->mui_iter;
-	ot_2nd  = other->mui_in2nd;
+	Dee_Incref(ot_iter);
+	ot_2nd = other->mui_in2nd;
 	MapUnionIterator_LockEndRead(other);
 	if (my_2nd != ot_2nd) {
 		result = 1;
@@ -848,12 +850,11 @@ muiter_bool(MapUnionIterator *__restrict self) {
 	int result;
 	DREF DeeObject *iter;
 	MapUnionIterator_LockRead(self);
-	iter      = self->mui_iter;
-	is_second = self->mui_in2nd;
+	iter = self->mui_iter;
 	Dee_Incref(iter);
+	is_second = self->mui_in2nd;
 	MapUnionIterator_LockEndRead(self);
-	result = DeeObject_Bool(iter);
-	Dee_Decref(iter);
+	result = DeeObject_BoolInherited(iter);
 	if (result != 0)
 		return result;
 	if (is_second)
@@ -2323,7 +2324,7 @@ PRIVATE NONNULL((1)) void DCALL
 msditer_clear(MapSymmetricDifferenceIterator *__restrict self) {
 	DREF DeeObject *iter;
 	MapSymmetricDifferenceIterator_LockWrite(self);
-	iter            = self->msdi_iter;
+	iter = self->msdi_iter; /* Inherit reference */
 	self->msdi_iter = DeeNone_NewRef();
 	MapSymmetricDifferenceIterator_LockEndWrite(self);
 	Dee_Decref(iter);
@@ -2345,8 +2346,8 @@ msditer_set_iter(MapSymmetricDifferenceIterator *__restrict self,
 	DREF DeeObject *old_iter;
 	Dee_Incref(iter);
 	MapSymmetricDifferenceIterator_LockRead(self);
-	old_iter       = self->msdi_iter;
-	self->msdi_iter = iter;
+	old_iter = self->msdi_iter; /* Inherit reference */
+	self->msdi_iter = iter;     /* Inherit reference */
 	MapSymmetricDifferenceIterator_LockEndRead(self);
 	Dee_Decref(old_iter);
 	return 0;
@@ -2410,14 +2411,13 @@ msditer_copy(MapSymmetricDifferenceIterator *__restrict self,
              MapSymmetricDifferenceIterator *__restrict other) {
 	DREF DeeObject *iter;
 	MapSymmetricDifferenceIterator_LockRead(other);
-	iter             = other->msdi_iter;
-	self->msdi_in2nd = other->msdi_in2nd;
+	iter = other->msdi_iter;
 	Dee_Incref(iter);
+	self->msdi_in2nd = other->msdi_in2nd;
 	MapSymmetricDifferenceIterator_LockEndRead(other);
-	self->msdi_iter = DeeObject_Copy(iter);
-	Dee_Decref(iter);
-	if unlikely(!self->msdi_iter)
+	if unlikely((iter = DeeObject_CopyInherited(iter)) == NULL)
 		goto err;
+	self->msdi_iter = iter;
 	Dee_atomic_rwlock_init(&self->msdi_lock);
 	self->msdi_symdiff = other->msdi_symdiff;
 	Dee_Incref(self->msdi_symdiff);
@@ -2431,21 +2431,20 @@ msditer_deep(MapSymmetricDifferenceIterator *__restrict self,
              MapSymmetricDifferenceIterator *__restrict other) {
 	DREF DeeObject *iter;
 	MapSymmetricDifferenceIterator_LockRead(other);
-	iter            = other->msdi_iter;
-	self->msdi_in2nd = other->msdi_in2nd;
+	iter = other->msdi_iter;
 	Dee_Incref(iter);
+	self->msdi_in2nd = other->msdi_in2nd;
 	MapSymmetricDifferenceIterator_LockEndRead(other);
-	self->msdi_iter = DeeObject_DeepCopy(iter);
-	Dee_Decref(iter);
-	if unlikely(!self->msdi_iter)
+	if unlikely((iter = DeeObject_DeepCopyInherited(iter)) == NULL)
 		goto err;
+	self->msdi_iter = iter;
 	Dee_atomic_rwlock_init(&self->msdi_lock);
 	self->msdi_symdiff = (DREF MapSymmetricDifference *)DeeObject_DeepCopy((DeeObject *)other->msdi_symdiff);
 	if unlikely(!self->msdi_symdiff)
 		goto err_iter;
 	return 0;
 err_iter:
-	Dee_Decref(self->msdi_iter);
+	Dee_Decref(iter);
 err:
 	return -1;
 }
@@ -2495,16 +2494,14 @@ STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_in2nd) == offsetof(M
 #else
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 msditer_hash(MapSymmetricDifferenceIterator *self) {
-	Dee_hash_t result;
 	bool my_2nd;
 	DREF DeeObject *my_iter;
 	MapSymmetricDifferenceIterator_LockRead(self);
 	my_iter = self->msdi_iter;
-	my_2nd  = self->msdi_in2nd;
+	Dee_Incref(my_iter);
+	my_2nd = self->msdi_in2nd;
 	MapSymmetricDifferenceIterator_LockEndRead(self);
-	result = Dee_HashCombine(my_2nd ? 1 : 0, DeeObject_Hash(my_iter));
-	Dee_Decref(my_iter);
-	return result;
+	return Dee_HashCombine(my_2nd ? 1 : 0, DeeObject_HashInherited(my_iter));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2517,11 +2514,13 @@ msditer_compare(MapSymmetricDifferenceIterator *self,
 		goto err;
 	MapSymmetricDifferenceIterator_LockRead(self);
 	my_iter = self->msdi_iter;
-	my_2nd  = self->msdi_in2nd;
+	Dee_Incref(my_iter);
+	my_2nd = self->msdi_in2nd;
 	MapSymmetricDifferenceIterator_LockEndRead(self);
 	MapSymmetricDifferenceIterator_LockRead(other);
 	ot_iter = other->msdi_iter;
-	ot_2nd  = other->msdi_in2nd;
+	Dee_Incref(ot_iter);
+	ot_2nd = other->msdi_in2nd;
 	MapSymmetricDifferenceIterator_LockEndRead(other);
 	if (my_2nd != ot_2nd) {
 		result = Dee_CompareNe(my_2nd, ot_2nd);
@@ -2545,14 +2544,16 @@ msditer_compare_eq(MapSymmetricDifferenceIterator *self,
 		goto err;
 	MapSymmetricDifferenceIterator_LockRead(self);
 	my_iter = self->msdi_iter;
-	my_2nd  = self->msdi_in2nd;
+	Dee_Incref(my_iter);
+	my_2nd = self->msdi_in2nd;
 	MapSymmetricDifferenceIterator_LockEndRead(self);
 	MapSymmetricDifferenceIterator_LockRead(other);
 	ot_iter = other->msdi_iter;
-	ot_2nd  = other->msdi_in2nd;
+	Dee_Incref(ot_iter);
+	ot_2nd = other->msdi_in2nd;
 	MapSymmetricDifferenceIterator_LockEndRead(other);
 	if (my_2nd != ot_2nd) {
-		result = 1;
+		result = Dee_COMPARE_NE;
 	} else {
 		result = DeeObject_CompareEq(my_iter, ot_iter);
 	}
@@ -2585,9 +2586,9 @@ msditer_nextpair(MapSymmetricDifferenceIterator *__restrict self,
 	DREF DeeObject *iter;
 again:
 	MapSymmetricDifferenceIterator_LockRead(self);
-	iter      = self->msdi_iter;
-	is_second = self->msdi_in2nd;
+	iter = self->msdi_iter;
 	Dee_Incref(iter);
+	is_second = self->msdi_in2nd;
 	MapSymmetricDifferenceIterator_LockEndRead(self);
 read_from_iter:
 	result = DeeObject_IterNextPair(iter, key_and_value);
@@ -2644,9 +2645,9 @@ msditer_nextkey(MapSymmetricDifferenceIterator *__restrict self) {
 	DREF DeeObject *iter;
 again:
 	MapSymmetricDifferenceIterator_LockRead(self);
-	iter      = self->msdi_iter;
-	is_second = self->msdi_in2nd;
+	iter = self->msdi_iter;
 	Dee_Incref(iter);
+	is_second = self->msdi_in2nd;
 	MapSymmetricDifferenceIterator_LockEndRead(self);
 read_from_iter:
 	result = DeeObject_IterNextKey(iter);

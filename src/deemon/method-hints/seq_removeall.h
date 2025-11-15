@@ -162,7 +162,7 @@ err:
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ PCKuSIZ, item, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }
@@ -310,7 +310,7 @@ err:
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ PCKuSIZ "o", item, start, end, max, key);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }

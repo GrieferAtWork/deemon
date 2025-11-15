@@ -28,7 +28,7 @@ __seq_unpack__(size_t min, size_t max?)->?DTuple {{
 	DREF DeeTupleObject *result;
 	size_t min_count, max_count;
 	if (argc == 1) {
-		min_count = DeeObject_AsDirectSize(argv[0]);
+		min_count = DeeObject_AsSizeDirect(argv[0]);
 		if unlikely(min_count == (size_t)-1)
 			goto err;
 handle_single_count:
@@ -38,10 +38,10 @@ handle_single_count:
 		if unlikely(CALL_DEPENDENCY(seq_unpack, self, min_count, result->t_elem))
 			goto err_r;
 	} else if (argc == 2) {
-		min_count = DeeObject_AsDirectSize(argv[0]);
+		min_count = DeeObject_AsSizeDirect(argv[0]);
 		if unlikely(min_count == (size_t)-1)
 			goto err;
-		max_count = DeeObject_AsDirectSize(argv[1]);
+		max_count = DeeObject_AsSizeDirect(argv[1]);
 		if unlikely(max_count == (size_t)-1)
 			goto err;
 		if unlikely(min_count >= max_count) {

@@ -82,11 +82,11 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #endif /* !CONFIG_HAVE_memcasecmp */
 #define fs_memcmp      memcasecmp
 #define fs_bcmp        memcasecmp
-#define fs_hashobj(ob) DeeString_HashCase((DeeObject *)Dee_REQUIRES_OBJECT(ob))
+#define fs_hashobj(ob) DeeString_HashCase(Dee_REQUIRES_OBJECT(ob))
 #else /* DEE_SYSTEM_FS_ICASE */
 #define fs_memcmp      memcmp
 #define fs_bcmp        bcmp
-#define fs_hashobj(ob) DeeString_Hash((DeeObject *)Dee_REQUIRES_OBJECT(ob))
+#define fs_hashobj(ob) DeeString_Hash(Dee_REQUIRES_OBJECT(ob))
 #endif /* !DEE_SYSTEM_FS_ICASE */
 
 
@@ -1130,10 +1130,7 @@ stop:
 	return result;
 stop_imports:
 	if (importv) {
-		while (moditer > importv) {
-			--moditer;
-			Dee_Decref(*moditer);
-		}
+		Dee_Decrefv(importv, (size_t)(moditer - importv));
 		Dee_Free(importv);
 	}
 	goto stop;
@@ -1597,7 +1594,7 @@ err_function_code:
 				name_ob = (DREF DeeStringObject *)DeeString_New(name);
 				if unlikely(!name_ob)
 					goto err_r;
-				hash = DeeString_Hash((DeeObject *)name_ob);
+				hash = DeeString_Hash(name_ob);
 				j = perturb = hash & cattr_mask;
 				for (;; DeeClassDescriptor_CATTRNEXT(j, perturb)) {
 					entry = &cattr_list[j & cattr_mask];
@@ -1642,7 +1639,7 @@ err_function_code:
 			name_ob = (DREF DeeStringObject *)DeeString_New(name);
 			if unlikely(!name_ob)
 				goto err_r;
-			hash = DeeString_Hash((DeeObject *)name_ob);
+			hash = DeeString_Hash(name_ob);
 			j = perturb = hash & iattr_mask;
 			for (;; DeeClassDescriptor_IATTRNEXT(j, perturb)) {
 				entry = &descriptor->cd_iattr_list[j & iattr_mask];
@@ -1979,7 +1976,7 @@ err_function_code:
 					name_ob = (DREF DeeStringObject *)DeeString_New(name);
 					if unlikely(!name_ob)
 						goto err_r;
-					hash = DeeString_Hash((DeeObject *)name_ob);
+					hash = DeeString_Hash(name_ob);
 					j = perturb = hash & cattr_mask;
 					for (;; DeeClassDescriptor_CATTRNEXT(j, perturb)) {
 						entry = &cattr_list[j & cattr_mask];
@@ -2024,7 +2021,7 @@ err_function_code:
 				name_ob = (DREF DeeStringObject *)DeeString_New(name);
 				if unlikely(!name_ob)
 					goto err_r;
-				hash = DeeString_Hash((DeeObject *)name_ob);
+				hash = DeeString_Hash(name_ob);
 				j = perturb = hash & iattr_mask;
 				for (;; DeeClassDescriptor_IATTRNEXT(j, perturb)) {
 					entry = &descriptor->cd_iattr_list[j & iattr_mask];

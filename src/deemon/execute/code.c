@@ -739,6 +739,7 @@ function_optimize(DeeFunctionObject *__restrict self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__tuple_kwds_async, "|bbb:optimize", &args))
 		goto err;
 /*[[[end]]]*/
+	(void)self;
 #ifndef CONFIG_CALLTUPLE_OPTIMIZATIONS
 	if (args.tuple) {
 		DeeError_Throwf(&DeeError_ValueError, "Cannot optimize function with `tuple=true'");
@@ -1624,17 +1625,20 @@ code_hash(DeeCodeObject *__restrict self) {
 	                     COMPILER_OFFSETAFTER(DeeCodeObject, co_codebytes) -
 	                     sizeof(DeeObject));
 	if (self->co_module)
-		result = Dee_HashCombine(result, DeeObject_Hash((DeeObject *)self->co_module));
+		result = Dee_HashCombine(result, DeeObject_Hash(self->co_module));
 	if (self->co_keywords) {
 		uint16_t i;
-		for (i = 0; i < self->co_argc_max; ++i)
-			result = Dee_HashCombine(result, DeeString_Hash((DeeObject *)self->co_keywords[i]));
+		for (i = 0; i < self->co_argc_max; ++i) {
+			DeeStringObject *kwd = self->co_keywords[i];
+			result = Dee_HashCombine(result, DeeString_Hash(kwd));
+		}
 	}
 	if (self->co_defaultv) {
 		uint16_t i;
 		for (i = 0; i < (self->co_argc_max - self->co_argc_min); ++i) {
-			if ((DeeObject *)self->co_defaultv[i])
-				result = Dee_HashCombine(result, DeeObject_Hash((DeeObject *)self->co_defaultv[i]));
+			DeeObject *def = self->co_defaultv[i];
+			if (def != NULL)
+				result = Dee_HashCombine(result, DeeObject_Hash(def));
 		}
 	}
 	if (self->co_constv)
@@ -1643,15 +1647,17 @@ code_hash(DeeCodeObject *__restrict self) {
 		uint16_t i;
 		for (i = 0; i < self->co_exceptc; ++i) {
 			Dee_hash_t spec;
+			DeeTypeObject *mask;
 			spec = Dee_HashPtr(&self->co_exceptv[i].eh_start,
 			                   sizeof(struct except_handler) -
 			                   offsetof(struct except_handler, eh_start));
 			result = Dee_HashCombine(result, spec);
-			if (self->co_exceptv[i].eh_mask)
-				result = Dee_HashCombine(result, DeeObject_Hash((DeeObject *)self->co_exceptv[i].eh_mask));
+			mask   = self->co_exceptv[i].eh_mask;
+			if (mask != NULL)
+				result = Dee_HashCombine(result, DeeObject_Hash(mask));
 		}
 	}
-	result = Dee_HashCombine(result, DeeObject_Hash((DeeObject *)self->co_ddi));
+	result = Dee_HashCombine(result, DeeObject_Hash(self->co_ddi));
 	result = Dee_HashCombine(result, Dee_HashPtr(self->co_code, self->co_codebytes));
 	return result;
 }

@@ -81,7 +81,7 @@ has_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr) 
 		}
 	} else {
 		char const *name = DeeString_STR(attr);
-		Dee_hash_t hash     = DeeString_Hash(attr);
+		Dee_hash_t hash  = DeeString_Hash(attr);
 		/* TODO: Search the type's instance-attribute cache and check
 		 *       if the attribute is implemented by the type itself. */
 		if (DeeType_IsClass(tp_self))

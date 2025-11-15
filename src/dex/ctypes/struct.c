@@ -45,7 +45,6 @@
 /**/
 
 #include <stddef.h> /* size_t, offsetof */
-#include <stdint.h> /* uintptr_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -136,14 +135,13 @@ struct_type_alloc_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {
 			field->sf_offset = data->staf_sizeof;
 			data->staf_sizeof += DeeSType_Sizeof(value);
 		}
-		field->sf_hash = DeeString_Hash(key);
-		field->sf_name = (DREF DeeStringObject *)key;
 		field->sf_type = DeeSType_LValue((DeeSTypeObject *)value);
 		if unlikely(!field->sf_type) {
-			Dee_Decref(key);
 			field->sf_name = NULL;
 			goto err;
 		}
+		field->sf_hash = hash;
+		field->sf_name = (DREF DeeStringObject *)key;
 		Dee_Incref(key);
 		break;
 	}
@@ -439,7 +437,7 @@ struct_getattr(DeeStructTypeObject *tp_self,
 		if unlikely(!result)
 			goto err;
 		DeeObject_Init(result, DeeLValueType_AsType(field->sf_type));
-		result->l_ptr.uint = (uintptr_t)self + field->sf_offset;
+		result->l_ptr.ptr = (byte_t *)self + field->sf_offset;
 		return result;
 	}
 	ctypes_err_unknown_attr(DeeStructType_AsSType(tp_self), self,
@@ -456,7 +454,7 @@ struct_delattr(DeeStructTypeObject *tp_self,
 	i = perturb = STRUCT_TYPE_HASHST(tp_self, hash);
 	for (;; STRUCT_TYPE_HASHNX(i, perturb)) {
 		struct struct_field *field;
-		byte_t *dst;
+		byte_t *addr;
 		size_t size;
 		field = STRUCT_TYPE_HASHIT(tp_self, i);
 		if (!field->sf_name)
@@ -467,9 +465,9 @@ struct_delattr(DeeStructTypeObject *tp_self,
 			continue;
 
 		/* Found it! (clear out the memory of this object) */
-		dst  = (byte_t *)((uintptr_t)self + field->sf_offset);
+		addr = (byte_t *)self + field->sf_offset;
 		size = DeeSType_Sizeof(field->sf_type->lt_orig);
-		CTYPES_FAULTPROTECT(bzero(dst, size), return -1);
+		CTYPES_FAULTPROTECT(bzero(addr, size), return -1);
 		return 0;
 	}
 	return ctypes_err_unknown_attr(DeeStructType_AsSType(tp_self), self,
@@ -494,7 +492,7 @@ struct_setattr(DeeStructTypeObject *tp_self,
 			continue;
 		/* Found it! (Assign the value to this field) */
 		return DeeStruct_Assign(field->sf_type->lt_orig,
-		                        (void *)((uintptr_t)self + field->sf_offset),
+		                        (byte_t *)self + field->sf_offset,
 		                        value);
 	}
 	return ctypes_err_unknown_attr(DeeStructType_AsSType(tp_self), self,

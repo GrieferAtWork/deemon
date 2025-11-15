@@ -315,7 +315,7 @@ class_maker_newcattr(struct class_maker *__restrict self,
 	     (self->cm_cattr_size > (desc->cd_cattr_mask / 3) * 2)) &&
 	    unlikely(rehash_class_attributes(desc)))
 		goto err;
-	hash = DeeString_Hash((DeeObject *)name);
+	hash = DeeString_Hash(name);
 	i = perturb = hash & desc->cd_cattr_mask;
 
 	/* Search for a pre-existing matching attribute, or create a new one. */
@@ -368,7 +368,7 @@ class_maker_newiattr(struct class_maker *__restrict self,
 			goto err;
 		self->cm_desc = desc; /* Replace reference. */
 	}
-	hash = DeeString_Hash((DeeObject *)name);
+	hash = DeeString_Hash(name);
 	i = perturb = hash & desc->cd_iattr_mask;
 
 	/* Search for a pre-existing matching attribute, or create a new one. */

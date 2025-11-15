@@ -48,7 +48,7 @@ tp_seq->tp_size([[nonnull]] DeeObject *__restrict self)
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_sizeob, self);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_AsDirectSizeInherited(result);
+	return DeeObject_AsSizeDirectInherited(result);
 err:
 	return (size_t)-1;
 }} = OPERATOR_SIZE;

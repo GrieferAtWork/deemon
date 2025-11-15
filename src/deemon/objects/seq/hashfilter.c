@@ -147,8 +147,7 @@ again:
 	if (DeeSeq_Unpack(result, 2, key_and_value))
 		goto err_r;
 	Dee_Decref(key_and_value[1]);
-	key_hash = DeeObject_Hash(key_and_value[0]);
-	Dee_Decref(key_and_value[0]);
+	key_hash = DeeObject_HashInherited(key_and_value[0]);
 	/* Check if the hash matches. */
 	if (key_hash != self->fi_hash) {
 		Dee_Decref(result);

@@ -98,16 +98,12 @@ cswi_copy(CachedSeq_WithIter *__restrict self,
 	if unlikely(cswi_copycache(self, other))
 		goto err;
 	if (self->cswi_iter) {
-		DREF DeeObject *iter_copy;
-		iter_copy = DeeObject_Copy(self->cswi_iter);
-		if unlikely(!iter_copy)
-			goto err_cache_iter;
-		Dee_Decref_unlikely(self->cswi_iter);
-		self->cswi_iter = iter_copy;
+		self->cswi_iter = DeeObject_CopyInherited(self->cswi_iter);
+		if unlikely(!self->cswi_iter)
+			goto err_cache;
 	}
 	return 0;
-err_cache_iter:
-	Dee_Decref(self->cswi_iter);
+err_cache:
 	objectlist_fini(&self->cswi_cache);
 err:
 	return -1;
@@ -133,8 +129,7 @@ again_copy_at_i:
 		oldval = self->cswi_cache.ol_elemv[i];
 		Dee_Incref(oldval);
 		CachedSeq_WithIter_LockRelease(self);
-		newval = DeeObject_DeepCopy(oldval);
-		Dee_Decref_unlikely(oldval);
+		newval = DeeObject_DeepCopyInherited(oldval);
 		if unlikely(!newval)
 			goto err;
 		CachedSeq_WithIter_LockAcquire(self);
@@ -1040,8 +1035,7 @@ cswgi_deepload(CachedSeq_WithGetItem *__restrict self) {
 		if (!old_vector_elem)
 			continue;
 		CachedSeq_WithGetItem_LockRelease(self);
-		new_vector_elem = DeeObject_DeepCopy(old_vector_elem);
-		Dee_Decref_unlikely(old_vector_elem);
+		new_vector_elem = DeeObject_DeepCopyInherited(old_vector_elem);
 		if unlikely(!new_vector_elem)
 			goto err;
 		CachedSeq_WithGetItem_LockAcquire(self);
@@ -1059,8 +1053,7 @@ cswgi_deepload(CachedSeq_WithGetItem *__restrict self) {
 			continue;
 		Dee_Incref(old_indexbtab_elem);
 		CachedSeq_WithGetItem_LockRelease(self);
-		new_indexbtab_elem = DeeObject_DeepCopy(old_indexbtab_elem);
-		Dee_Decref_unlikely(old_indexbtab_elem);
+		new_indexbtab_elem = DeeObject_DeepCopyInherited(old_indexbtab_elem);
 		if unlikely(!new_indexbtab_elem)
 			goto err;
 		CachedSeq_WithGetItem_LockAcquire(self);
