@@ -151,7 +151,7 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) bool
 	result = DeeType_HasExplicitTrait_uncached(self, trait);
 	extra  = trait;
 	if (result)
-		extra |= trait << ((sizeof(uintptr_t) / 2) * __CHAR_BIT__);
+		extra |= (uintptr_t)trait << ((sizeof(uintptr_t) / 2) * __CHAR_BIT__);
 	atomic_or(&cache->mh_explicit_traits.mht_word, extra);
 	return result;
 }
@@ -321,7 +321,7 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) bool
 	result = DeeType_HasTrait_uncached(self, trait);
 	extra  = trait;
 	if (result)
-		extra |= trait << ((sizeof(uintptr_t) / 2) * __CHAR_BIT__);
+		extra |= (uintptr_t)trait << ((sizeof(uintptr_t) / 2) * __CHAR_BIT__);
 	atomic_or(&cache->mh_traits.mht_word, extra);
 	return result;
 }
