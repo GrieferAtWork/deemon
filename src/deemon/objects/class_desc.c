@@ -2452,20 +2452,31 @@ STATIC_ASSERT(offsetof(ObjectTable, ot_owner) == offsetof(ProxyObject, po_obj));
 #define ot_fini  generic_proxy__fini
 #define ot_visit generic_proxy__visit
 
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+ot_type(ObjectTable *__restrict self) {
+	DeeTypeObject *result;
+	result = DeeType_Check(self->ot_owner)
+	         ? (DeeTypeObject *)self->ot_owner
+	         : Dee_TYPE(self->ot_owner);
+	if (result == &DeeSuper_Type)
+		result = DeeSuper_TYPE(self->ot_owner);
+	return result;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ot_print(ObjectTable *__restrict self, Dee_formatprinter_t printer, void *arg) {
-	DeeTypeObject *tp = DeeObject_Class(self->ot_owner);
-	if (DeeType_IsTypeType(tp))
+	DeeTypeObject *tp = ot_type(self);
+	if (DeeType_Check(self->ot_owner))
 		return DeeFormat_Printf(printer, arg, "<class object table for %k>", tp);
 	return DeeFormat_Printf(printer, arg, "<object table for instance of %k>", tp);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ot_printrepr(ObjectTable *__restrict self, Dee_formatprinter_t printer, void *arg) {
-	DeeTypeObject *tp = DeeObject_Class(self->ot_owner);
-	if (DeeType_IsTypeType(tp))
+	DeeTypeObject *tp = ot_type(self);
+	if (DeeType_Check(self->ot_owner))
 		return DeeFormat_Printf(printer, arg, "%r.__ctable__", tp);
-	return DeeFormat_Printf(printer, arg, "%r.__itable__", self->ot_owner);
+	return DeeFormat_Printf(printer, arg, "%r.__itable__", tp);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2492,10 +2503,10 @@ ot_getitem_index(ObjectTable *__restrict self, size_t index) {
 	return result;
 err_unbound:
 	Dee_instance_desc_lock_endread(self->ot_desc);
-	DeeRT_ErrUnboundIndex((DeeObject *)self, index);
+	DeeRT_ErrUnboundIndex(self, index);
 	return NULL;
 err_index:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->ot_size);
+	DeeRT_ErrIndexOutOfBounds(self, index, self->ot_size);
 	return NULL;
 }
 
@@ -2522,7 +2533,7 @@ ot_delitem_index(ObjectTable *__restrict self, size_t index) {
 	Dee_XDecref(oldval);
 	return 0;
 err_index:
-	return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->ot_size);
+	return DeeRT_ErrIndexOutOfBounds(self, index, self->ot_size);
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
@@ -2538,7 +2549,7 @@ ot_setitem_index(ObjectTable *self, size_t index, DeeObject *value) {
 	Dee_XDecref(oldval);
 	return 0;
 err_index:
-	return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->ot_size);
+	return DeeRT_ErrIndexOutOfBounds(self, index, self->ot_size);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2566,37 +2577,12 @@ ot_mh_seq_xchitem_index(ObjectTable *self, size_t index, DeeObject *newval) {
 	return oldval;
 err_unbound:
 	Dee_instance_desc_lock_endwrite(self->ot_desc);
-	DeeRT_ErrUnboundIndex((DeeObject *)self, index);
+	DeeRT_ErrUnboundIndex(self, index);
 	goto err;
 err_index:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->ot_size);
+	DeeRT_ErrIndexOutOfBounds(self, index, self->ot_size);
 err:
 	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-ot_foreach(ObjectTable *self, Dee_foreach_t proc, void *arg) {
-	size_t i;
-	Dee_ssize_t temp, result = 0;
-	for (i = 0; i < self->ot_size; ++i) {
-		DREF DeeObject *elem;
-		Dee_instance_desc_lock_read(self->ot_desc);
-		elem = self->ot_desc->id_vtab[i];
-		if (!elem) {
-			Dee_instance_desc_lock_endread(self->ot_desc);
-			continue;
-		}
-		Dee_Incref(elem);
-		Dee_instance_desc_lock_endread(self->ot_desc);
-		temp = (*proc)(arg, elem);
-		Dee_Decref_unlikely(elem);
-		if unlikely(temp < 0)
-			goto err_temp;
-		result += temp;
-	}
-	return result;
-err_temp:
-	return temp;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -2640,7 +2626,7 @@ PRIVATE struct type_method_hint tpconst ot_method_hints[] = {
 };
 
 PRIVATE struct type_seq ot_seq = {
-	/* .tp_iter                       = */ DEFIMPL(&default__iter__with__foreach),
+	/* .tp_iter                       = */ DEFIMPL(&default__seq_operator_iter__with__seq_operator_size__and__operator_getitem_index_fast),
 	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
 	/* .tp_contains                   = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains),
 	/* .tp_getitem                    = */ DEFIMPL(&default__getitem__with__getitem_index),
@@ -2649,8 +2635,8 @@ PRIVATE struct type_seq ot_seq = {
 	/* .tp_getrange                   = */ DEFIMPL(&default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n),
 	/* .tp_delrange                   = */ DEFIMPL(&default__seq_operator_delrange__unsupported),
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
-	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ot_foreach,
-	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
+	/* .tp_foreach                    = */ DEFIMPL(&default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast),
+	/* .tp_foreach_pair               = */ DEFIMPL(&default__seq_operator_foreach_pair__with__seq_operator_foreach),
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__size__and__getitem_index_fast),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__size__and__getitem_index_fast),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&ot_size,
@@ -2686,36 +2672,25 @@ PRIVATE struct type_seq ot_seq = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 ot_gettype(ObjectTable *__restrict self) {
-	DREF DeeTypeObject *result;
-	result = DeeType_Check(self->ot_owner)
-	         ? (DeeTypeObject *)self->ot_owner
-	         : Dee_TYPE(self->ot_owner);
-	if (result == &DeeSuper_Type)
-		result = DeeSuper_TYPE(self->ot_owner);
+	DREF DeeTypeObject *result = ot_type(self);
 	return_reference_(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF ClassDescriptor *DCALL
 ot_getclass(ObjectTable *__restrict self) {
-	DREF ClassDescriptor *result;
-	DREF DeeTypeObject *type;
-	type = DeeType_Check(self->ot_owner)
-	       ? (DeeTypeObject *)self->ot_owner
-	       : Dee_TYPE(self->ot_owner);
-	if (type == &DeeSuper_Type)
-		type = DeeSuper_TYPE(self->ot_owner);
-	result = DeeClass_DESC(type)->cd_desc;
+	DeeTypeObject *type = ot_type(self);
+	ClassDescriptor *result = DeeClass_DESC(type)->cd_desc;
 	return_reference_(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ot_isctable(ObjectTable *__restrict self) {
-	return_bool(DeeType_Check(self->ot_owner));
+	return_bool(DeeType_Check(self->ot_owner)); /* ot_type(self) == self->ot_owner */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ot_isitable(ObjectTable *__restrict self) {
-	return_bool(!DeeType_Check(self->ot_owner));
+	return_bool(!DeeType_Check(self->ot_owner)); /* ot_type(self) != self->ot_owner */
 }
 
 PRIVATE struct type_getset tpconst ot_getsets[] = {
@@ -2789,6 +2764,32 @@ err:
 }
 
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ot_copy(ObjectTable *__restrict self, ObjectTable *__restrict other) {
+	self->ot_owner = other->ot_owner;
+	self->ot_desc  = other->ot_desc;
+	self->ot_size  = other->ot_size;
+	Dee_Incref(self->ot_owner);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ot_deepcopy(ObjectTable *__restrict self, ObjectTable *__restrict other) {
+	ptrdiff_t offset;
+	if (DeeType_Check(other->ot_owner))
+		return ot_copy(self, other);
+	self->ot_owner = DeeObject_DeepCopy(other->ot_owner);
+	if unlikely(!self->ot_owner)
+		goto err;
+	offset = (byte_t *)other->ot_desc - (byte_t *)other->ot_owner;
+	self->ot_desc = (struct instance_desc *)((byte_t *)self->ot_owner + offset);
+	self->ot_size = other->ot_size;
+	return 0;
+err:
+	return -1;
+}
+
+
 INTERN DeeTypeObject ObjectTable_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ObjectTable",
@@ -2803,8 +2804,8 @@ INTERN DeeTypeObject ObjectTable_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&ot_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&ot_deepcopy,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&ot_init,
 				TYPE_FIXED_ALLOCATOR(ObjectTable)
 			}
@@ -3004,8 +3005,7 @@ instancemember_get_module(DeeInstanceMemberObject *__restrict self) {
 	result = DeeType_GetModule(self->im_type);
 	if (result)
 		return result;
-	DeeRT_ErrTUnboundAttr(&DeeInstanceMember_Type, (DeeObject *)self,
-	                      (DeeObject *)&str___module__);
+	DeeRT_ErrTUnboundAttr(&DeeInstanceMember_Type, self, &str___module__);
 	return NULL;
 }
 

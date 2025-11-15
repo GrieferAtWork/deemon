@@ -179,30 +179,72 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 		iterated3.extend(x);
 		for (local it: x)
 			iterated4.append(it);
-		for (local i: [:len])
-			iterated5.append(x[i]);
-		assertEquals(x, iterated1);
-		assertEquals(x, iterated2);
-		assertEquals(x, iterated3);
-		assertEquals(x, iterated4);
-		assertEquals(x, iterated5);
-		assertEquals(x, iterated6);
+		local numUnboundItems = 0;
+		for (local i: [:len]) {
+			local v;
+			try {
+				v = x[i];
+			} catch (UnboundItem) {
+				++numUnboundItems;
+				continue;
+			}
+			iterated5.append(v);
+		}
+		assert #iterated1 == (len - numUnboundItems);
+		if (numUnboundItems) {
+			assertEquals(iterated1, iterated2);
+			assertEquals(iterated1, iterated3);
+			assertEquals(iterated1, iterated4);
+			assertEquals(iterated1, iterated5);
+		} else {
+			assertEquals(x, iterated1);
+			assertEquals(x, iterated2);
+			assertEquals(x, iterated3);
+			assertEquals(x, iterated4);
+			assertEquals(x, iterated5);
+			assertEquals(x, iterated6); // TODO: Doesn't work with unbound items, yet...
+		}
 		assertEquals(x, iterated7);
-		local first = x[0];
-		local last = x[len - 1];
-		assertEquals(first, x.first);
-		assertEquals(last, x.last);
-		assertEquals(x.find(first), 0);
-		assertEquals(x.index(first), 0);
-		assertEquals(x.rfind(last), len - 1);
-		assertEquals(x.rindex(last), len - 1);
+
+		local first = Cell();
+		try {
+			first.value = x[0];
+		} catch (UnboundItem) {
+		}
+		if (first) {
+			assertEquals(first.value, x.first);
+			assertEquals(x.find(first.value), 0);
+			assertEquals(x.index(first.value), 0);
+		} else {
+			assert TRY(x.first) == UnboundAttribute(ob: x, attr: "first");
+		}
+
+		local last = Cell();
+		try {
+			last.value = x[len - 1];
+		} catch (UnboundItem) {
+		}
+		if (last) {
+			assertEquals(last.value, x.last);
+			assertEquals(x.rfind(last.value), len - 1);
+			assertEquals(x.rindex(last.value), len - 1);
+		}
 
 		local it = x.operator iter();
-		assert it;
+		if (iterated1) {
+			assert it;
+		} else {
+			assert !it;
+		}
 		local it2 = x.operator iter();
 		assertEqualsTyped(it, it2);
-		assertEquals(first, it2.operator next());
-		it.operator hash(); /* Only here for coverage */
+		if (iterated1) {
+			local it2First = it2.operator next();
+			if (first)
+				assertEquals(first.value, it2First);
+		}
+		it.operator hash();  /* Only here for coverage */
+		it2.operator hash(); /* Only here for coverage */
 		local itSeq = it.seq;
 		/* This here is needed because "Dict.items.operator iter().seq"
 		 * returns "Dict" instead of "Dict.Items" (since the 2 share the
@@ -210,13 +252,25 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 		if (type(x) === Super)
 			itSeq = itSeq as Super.typeof(x);
 		assertEquals(x, itSeq);
-		assert it2 > it;
-		assert it < it2;
+		if (iterated1) {
+			assert it2 > it;
+			assert it < it2;
+			assert compare(it2, it) > 0;
+			assert compare(it, it2) < 0;
+		}
 
-		for (local i, v: iterated1.enumerate()) {
+		for (local i, v: iterated7.enumerate()) {
 			assert it;
 			assertEquals(v, it.operator next());
 			assertEquals(v, x[i]);
+		}
+		assert !it;
+
+		local it = x.operator iter();
+		for (local i, v: x.enumerate()) {
+			assert it;
+			assertEquals(v, it.operator next());
+			assertEquals(v, iterated7[i]);
 		}
 		assert !it;
 
@@ -306,6 +360,8 @@ function assertSet(x: Set, expected: {Object...} | none = none) {
 		assertEquals(x, itSeq);
 		assert it2 > it;
 		assert it < it2;
+		assert compare(it2, it) > 0;
+		assert compare(it, it2) < 0;
 
 		for (local v: iterated1) {
 			assert it;
@@ -415,6 +471,8 @@ function assertMapping(x: Mapping, expected: {Object: Object} | none = none) {
 		assertEquals(x, itSeq);
 		assert it2 > it;
 		assert it < it2;
+		assert compare(it2, it) > 0;
+		assert compare(it, it2) < 0;
 
 		for (local k, v: iterated1) {
 			assert it;

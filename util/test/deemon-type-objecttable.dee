@@ -23,10 +23,31 @@ import .common.test;
 
 class MyClass {
 	public member instanceMember: int;
+	public member instanceMember2: int;
+
 	public static member classMember: string;
+	public static member classMember2: string = "foo";
 	function instanceFunction() {}
 	static function classFunction() {}
 }
 
-print repr(MyClass.__ctable__ as Sequence);
-//test.assertSequence(MyClass.__ctable__);
+assert MyClass.__ctable__[0] !is bound;
+assert MyClass.__ctable__[1] == "foo";
+assert MyClass.__ctable__[2] == MyClass.instanceFunction;
+assert MyClass.__ctable__[3] == MyClass.classFunction;
+assert #MyClass.__ctable__ == 4;
+test.assertSequence(MyClass.__ctable__);
+
+local inst = MyClass();
+inst.instanceMember2 = 42;
+assert inst.__itable__[0] !is bound;
+assert inst.__itable__[1] == 42;
+test.assertSequence(inst.__itable__);
+
+
+
+class MyEmptyClass {
+}
+
+assert !MyEmptyClass.__ctable__;
+test.assertSequence(MyEmptyClass.__ctable__);
