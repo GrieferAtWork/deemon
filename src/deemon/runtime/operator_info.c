@@ -1214,9 +1214,19 @@ invoke_operator(DeeTypeObject *tp_self, DeeObject *self, DREF DeeObject **p_self
 			           name != OPERATOR_GETATTR &&
 			           name != OPERATOR_DELATTR &&
 			           name != OPERATOR_SETATTR)) {
-				if unlikely(!DeeType_InheritOperator(tp_self, name))
-					goto err_not_implemented;
-				ASSERT(DeeType_GetOpPointer(tp_self, info) != NULL);
+				if unlikely(!DeeType_InheritOperator(tp_self, name)) {
+					/* Special case for operators with custom *__unsupported impls (like "operator hash")
+					 * For those, we might get here if deemon was built without computed operators, in
+					 * which case we must still invoke the *__unsupported impl like we normally would. */
+					enum Dee_tno_id tno_id;
+					if (name >= Dee_OPERATOR_USERCOUNT)
+						goto err_not_implemented;
+					tno_id = DeeType_GetTnoOfOperator(name);
+					if ((unsigned int)tno_id >= (unsigned int)Dee_TNO_COUNT)
+						goto err_not_implemented;
+					if (DeeType_GetNativeOperatorUnsupported(tno_id) == NULL)
+						goto err_not_implemented;
+				}
 			}
 			return (*info->oi_invoke->opi_invoke)(tp_self, self, p_self, argc, argv, name);
 err_not_implemented:
