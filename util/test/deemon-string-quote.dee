@@ -32,7 +32,7 @@ function assertCEscape(data: string) {
  * This works hand-in-hand with `string.bytes()` returning the string's latin-1 repr
  * as bytes (such that "\xAB" once again turn into bytes).
  *
- * However, when re-encoding strings/bytes as c-escape, strings always ahve to use
+ * However, when re-encoding strings/bytes as c-escape, strings always have to use
  * "\u00AB", and Bytes always have to use "\xAB". */
 assert "\xAB" == "\u00AB";
 assert "\xAB" == "\U000000AB";

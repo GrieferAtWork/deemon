@@ -20,12 +20,13 @@
  */
 
 import * from deemon;
+import .common.test;
 
 function cformat(expected: string, format: string, args: Tuple | Object) {
-	assert format % args == expected;
-	assert format % args == expected.bytes();
-	assert format.bytes() % args == expected;
-	assert format.bytes() % args == expected.bytes();
+	test.assertEquals(format % args, expected);
+	test.assertEquals(format % args, expected.bytes());
+	test.assertEquals(format.bytes() % args, expected);
+	test.assertEquals(format.bytes() % args, expected.bytes());
 	if (args !is Sequence)
 		cformat(expected, format, (args,));
 }

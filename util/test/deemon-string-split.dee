@@ -25,3 +25,4 @@ test.assertSequence("foo,bar,foobar".split(","), { "foo", "bar", "foobar" });
 test.assertSequence("foo,bar,foobar".split(",f"), { "foo,bar", "oobar" });
 test.assertSequence("foo,bar,foobar".split(",F"), { "foo,bar,foobar" });
 test.assertSequence("foo,bar,foobar".casesplit(",f"), { "foo,bar", "oobar" });
+test.assertSequence("foo,bar,foobar".casesplit(",F"), { "foo,bar", "oobar" });

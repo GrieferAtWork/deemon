@@ -50,10 +50,7 @@ PRIVATE WUNUSED DREF ReGroups *DCALL rg_ctor(void) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-rg_bool(ReGroups *__restrict UNUSED(self)) {
-	return 1; /* Always non-empty */
-}
+#define rg_bool _DeeNone_reti1_1 /* Always non-empty (iow: return "1") */
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 rg_size(ReGroups *__restrict self) {
@@ -285,7 +282,7 @@ INTERN DeeTypeObject ReGroups_Type = {
 				/* .tp_ctor      = */ (Dee_funptr_t)&rg_ctor,
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL, /* TODO */
 				/* .tp_free      = */ (Dee_funptr_t)NULL
 			}
 		},
@@ -335,7 +332,7 @@ INTERN DeeTypeObject ReSubStrings_Type = {
 				/* .tp_ctor      = */ (Dee_funptr_t)&rss_ctor,
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL, /* TODO */
 				/* .tp_free      = */ (Dee_funptr_t)NULL
 			}
 		},
@@ -385,7 +382,7 @@ INTERN DeeTypeObject ReSubBytes_Type = {
 				/* .tp_ctor      = */ (Dee_funptr_t)&rsb_ctor,
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL, /* TODO */
 				/* .tp_free      = */ (Dee_funptr_t)NULL
 			}
 		},

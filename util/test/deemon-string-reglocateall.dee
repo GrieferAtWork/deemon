@@ -21,6 +21,7 @@
 
 import * from deemon;
 import * from errors;
+import .common.test;
 
 function assertReglocateAll(f: Callable with string) {
 	local tpGetsets = f(r'Dfoo
@@ -35,7 +36,7 @@ function assertReglocateAll(f: Callable with string) {
 	');
 
 	/* reglocateall */
-	assert {
+	test.assertSequence(tpGetsets.reglocateall(r'(Dee_)?TYPE_GET[A-Z_]+\s*\(\s*([^)]*)\s*\)'), {
 		{
 			r'TYPE_GETTER_BOUND_F_NODOC(STR_first, &tuple_getfirst, &tuple_nonempty_as_bound, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL)',
 			none,
@@ -57,21 +58,21 @@ function assertReglocateAll(f: Callable with string) {
 			none,
 			r'"__sizeof__", &tuple_sizeof, METHOD_FNOREFESCAPE, "->?Dint"'
 		}
-	} == tpGetsets.reglocateall(r'(Dee_)?TYPE_GET[A-Z_]+\s*\(\s*([^)]*)\s*\)');
+	});
 
 	/* reglocate */
-	assert {
+	test.assertSequence(tpGetsets.reglocate(r'(Dee_)?TYPE_GET[A-Z_]+\s*\(\s*([^)]*)\s*\)'), {
 		r'TYPE_GETTER_BOUND_F_NODOC(STR_first, &tuple_getfirst, &tuple_nonempty_as_bound, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL)',
 		none,
 		r'STR_first, &tuple_getfirst, &tuple_nonempty_as_bound, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL'
-	} == tpGetsets.reglocate(r'(Dee_)?TYPE_GET[A-Z_]+\s*\(\s*([^)]*)\s*\)');
+	});
 
 	/* regrlocate */
-	assert {
+	test.assertSequence(tpGetsets.regrlocate(r'(Dee_)?TYPE_GET[A-Z_]+\s*\(\s*([^)]*)\s*\)'), {
 		r'TYPE_GETTER_F("__sizeof__", &tuple_sizeof, METHOD_FNOREFESCAPE, "->?Dint")',
 		none,
 		r'"__sizeof__", &tuple_sizeof, METHOD_FNOREFESCAPE, "->?Dint"'
-	} == tpGetsets.regrlocate(r'(Dee_)?TYPE_GET[A-Z_]+\s*\(\s*([^)]*)\s*\)');
+	});
 
 	/* reglocateall (used with a sequence each-expression) */
 	assert {

@@ -18,32 +18,29 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+import .common.test;
 
-function idential(a, b) {
-	return type(a) === type(b) && a == b && !(a != b);
-}
+test.assertEqualsTyped("x" * 4, "xxxx");
+test.assertEqualsTyped("y" * 4, "yyyy");
+test.assertEqualsTyped("z" * 4, "zzzz");
 
-assert idential("x" * 4, "xxxx");
-assert idential("y" * 4, "yyyy");
-assert idential("z" * 4, "zzzz");
+test.assertEqualsTyped("x" * 1, "x");
+test.assertEqualsTyped("y" * 1, "y");
+test.assertEqualsTyped("z" * 1, "z");
 
-assert idential("x" * 1, "x");
-assert idential("y" * 1, "y");
-assert idential("z" * 1, "z");
+test.assertEqualsTyped("x" * 0, "");
+test.assertEqualsTyped("y" * 0, "");
+test.assertEqualsTyped("z" * 0, "");
 
-assert idential("x" * 0, "");
-assert idential("y" * 0, "");
-assert idential("z" * 0, "");
+test.assertEqualsTyped("x".bytes() * 4, "xxxx".bytes());
+test.assertEqualsTyped("y".bytes() * 4, "yyyy".bytes());
+test.assertEqualsTyped("z".bytes() * 4, "zzzz".bytes());
 
-assert idential("x".bytes() * 4, "xxxx".bytes());
-assert idential("y".bytes() * 4, "yyyy".bytes());
-assert idential("z".bytes() * 4, "zzzz".bytes());
+test.assertEqualsTyped("x".bytes() * 1, "x".bytes());
+test.assertEqualsTyped("y".bytes() * 1, "y".bytes());
+test.assertEqualsTyped("z".bytes() * 1, "z".bytes());
 
-assert idential("x".bytes() * 1, "x".bytes());
-assert idential("y".bytes() * 1, "y".bytes());
-assert idential("z".bytes() * 1, "z".bytes());
-
-assert idential("x".bytes() * 0, "".bytes());
-assert idential("y".bytes() * 0, "".bytes());
-assert idential("z".bytes() * 0, "".bytes());
+test.assertEqualsTyped("x".bytes() * 0, "".bytes());
+test.assertEqualsTyped("y".bytes() * 0, "".bytes());
+test.assertEqualsTyped("z".bytes() * 0, "".bytes());
 

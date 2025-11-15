@@ -34,3 +34,4 @@ assert "Straßße".casecompare("Strassse")  != 0;
 assert "Straßße".casecompare("Strasssse") == 0;
 assert "Straßße".casecompare("Strassße")  == 0;
 assert "Straßße".casecompare("Straßsse")  == 0;
+assert "Straße".casefold() in ["strasse", "STRASSE"];

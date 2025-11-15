@@ -21,6 +21,7 @@
 
 import * from deemon;
 import * from errors;
+import .common.test;
 
 #define re_match_unicode(pattern, input) (input).rematch(pattern)
 function re_match(pattern: string, input: string | Bytes): int {
@@ -199,32 +200,34 @@ assert "foo bar".rereplace(r"[[:lower:]]+", r"(&)") == "(foo) (bar)";
 assert "foo bar".bytes().rereplace(r"[[:lower:]]", r"(&)") == "(f)(o)(o) (b)(a)(r)".bytes();
 assert "foo bar".bytes().rereplace(r"[[:lower:]]*", r"(&)") == "(foo) (bar)".bytes();
 assert "foo bar".bytes().rereplace(r"[[:lower:]]+", r"(&)") == "(foo) (bar)".bytes();
-assert "foo bar".refindall(r"[[:lower:]]*") == { (0, 3), (4, 7) };
-assert "foo bar".refindall(r"[[:lower:]]+") == { (0, 3), (4, 7) };
-assert "foo bar".bytes().refindall(r"[[:lower:]]*") == { (0, 3), (4, 7) };
-assert "foo bar".bytes().refindall(r"[[:lower:]]+") == { (0, 3), (4, 7) };
+test.assertSequence("foo bar".refindall(r"[[:lower:]]*"), { (0, 3), (4, 7) });
+test.assertSequence("foo bar".refindall(r"[[:lower:]]+"), { (0, 3), (4, 7) });
+test.assertSequence("foo bar".bytes().refindall(r"[[:lower:]]*"), { (0, 3), (4, 7) });
+test.assertSequence("foo bar".bytes().refindall(r"[[:lower:]]+"), { (0, 3), (4, 7) });
 
-assert "10 , 20,30 40, 50".resplit(r"[[:space:],]+") == { "10", "20", "30", "40", "50" };
-assert "10 , 20,30 40, 50".resplit(r"[[:space:],]*") == { "10", "20", "30", "40", "50" };
-assert "10 , 20,30 40, 50".bytes().resplit(r"[[:space:],]+") ==
-	{ "10".bytes(), "20".bytes(), "30".bytes(), "40".bytes(), "50".bytes() };
-assert "10 , 20,30 40, 50".bytes().resplit(r"[[:space:],]*") ==
-	{ "10".bytes(), "20".bytes(), "30".bytes(), "40".bytes(), "50".bytes() };
+test.assertSequence("10 , 20,30 40, 50".resplit(r"[[:space:],]+"),
+	{ "10", "20", "30", "40", "50" });
+test.assertSequence("10 , 20,30 40, 50".resplit(r"[[:space:],]*"),
+	{ "10", "20", "30", "40", "50" });
+test.assertSequence("10 , 20,30 40, 50".bytes().resplit(r"[[:space:],]+"),
+	{ "10".bytes(), "20".bytes(), "30".bytes(), "40".bytes(), "50".bytes() });
+test.assertSequence("10 , 20,30 40, 50".bytes().resplit(r"[[:space:],]*"),
+	{ "10".bytes(), "20".bytes(), "30".bytes(), "40".bytes(), "50".bytes() });
 
-assert "foo bar foobar".regmatch(r"fo(o) (b(x)r|bar) fo(o?bar)") == {
+test.assertSequence("foo bar foobar".regmatch(r"fo(o) (b(x)r|bar) fo(o?bar)"), {
 	{0, 14},  /* Whole match */
 	{2, 3},   /* "o" */
 	{4, 7},   /* "bar" */
 	none,     /* never matched: "x" */
 	{10, 14}, /* "obar" */
-};
-assert "foo bar foobar".bytes().regmatch(r"fo(o) (b(x)r|bar) fo(o?bar)") == {
+});
+test.assertSequence("foo bar foobar".bytes().regmatch(r"fo(o) (b(x)r|bar) fo(o?bar)"), {
 	{0, 14},  /* Whole match */
 	{2, 3},   /* "o" */
 	{4, 7},   /* "bar" */
 	none,     /* never matched: "x" */
 	{10, 14}, /* "obar" */
-};
+});
 
 
 /* Assert that regex matching works in ignore-case mode */
@@ -235,8 +238,8 @@ assert "ä".rematch("Ä", rules: "i");
 
 /* Assert that the `rescanf()' function works. */
 function assertReScanf(input, pattern, expected) {
-	assert input.rescanf(pattern) == expected;
-	assert input.bytes().rescanf(pattern) == expected.each.bytes();
+	test.assertSequence(input.rescanf(pattern), expected);
+	test.assertSequence(input.bytes().rescanf(pattern), expected.each.bytes() as Sequence);
 }
 
 assertReScanf("#define FOO 42", r"#\s*define\s+(\w+)\s+(\w+)", { "FOO", "42" });

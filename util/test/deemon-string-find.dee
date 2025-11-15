@@ -20,6 +20,7 @@
  */
 
 import * from errors;
+import .common.test;
 
 
 function t(x, w) {
@@ -118,6 +119,11 @@ function t(x, w) {
 	assert x.caserpartition(w("xxx"))[0] == "";
 	assert x.caserpartition(w("xxx"))[1] == "";
 	assert x.caserpartition(w("xxx"))[2] === x;
+	// TODO: "NotImplemented: Operator `deemon.Bytes.operator deepcopy' is not implemented"
+//TODO:	test.assertSequence(x.split(w("xxx")), { x });
+//TODO:	test.assertSequence(x.casesplit(w("xxx")), { x });
+//TODO:	test.assertSequence(x.findall(w("xxx")), { });
+//TODO:	test.assertSequence(x.casefindall(w("xxx")), { });
 	assert x.split(w("xxx")) == { x };
 	assert x.casesplit(w("xxx")) == { x };
 	assert x.findall(w("xxx")) == { };
