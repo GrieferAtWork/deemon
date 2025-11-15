@@ -23,6 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/bool.h>
 #include <deemon/callable.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
@@ -672,6 +673,12 @@ PRIVATE struct type_method tpconst map_class_methods[] = {
 	TYPE_METHOD_END
 };
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_get___map_getitem_always_bound__(DeeTypeObject *__restrict self) {
+	bool has = DeeType_HasTrait(self, DeeType_TRAIT___map_getitem_always_bound__);
+	return_bool(has);
+}
+
 PRIVATE struct type_getset tpconst map_class_getsets[] = {
 	TYPE_GETTER(STR_Iterator, &map_Iterator_get,
 	            "->?DType\n"
@@ -692,6 +699,9 @@ PRIVATE struct type_getset tpconst map_class_getsets[] = {
 	TYPE_GETTER(STR_IterValues, &map_IterValues_get,
 	            "->?DType\n"
 	            "Returns the type of sequence returned by the ?#itervalues property"),
+	TYPE_GETTER("__map_getitem_always_bound__", &map_get___map_getitem_always_bound__,
+	            "->?Dbool\n"
+	            "Evaluates to ?t if ?#{op:getitem} never throws :UnboundItem"),
 	TYPE_GETSET_END
 };
 
@@ -828,6 +838,17 @@ PRIVATE char const map_doc[] =
 "[:]->!D\n" /* TODO: Doc could auto-detect this since the impls are *__unsupported, but are implemented by Mapping.__mro__.first */
 "[:]=->!D\n"
 "del[:]->!D\n"
+"\n"
+
+"#->\n"
+"The number of keys within this mapping (including unbound keys). Same as ${#this.keys}\n"
+"\n"
+
+"[]->\n"
+"#tUnboundItem{Specified @key exists (i.e. ${key in this.keys}), but isn't bound. "
+/*         */ "Can only happen when ?#__map_getitem_always_bound__ evaluates to ?f}"
+"#tUnknownKey{Specified @key does not exists (i.e. ${key !in this.keys})}"
+"Lookup and return the value associated with a given @key\n"
 "\n"
 
 "iter->\n"

@@ -190,7 +190,7 @@ err:
 
 seq_unpack_ub = {
 	DeeMH_seq_operator_foreach_t seq_operator_foreach;
-	if (DeeType_HasTraitHint(THIS_TYPE, __seq_getitem_always_bound__))
+	if (HAS_TRAIT(__seq_getitem_always_bound__))
 		return REQUIRE(seq_unpack_ex); /* Can just re-use the regular `seq_unpack_ex' */
 	seq_operator_foreach = REQUIRE(seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)

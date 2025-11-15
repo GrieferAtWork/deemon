@@ -307,6 +307,12 @@ seq_Frozen_get(DeeTypeObject *__restrict self) {
 	return_reference_(result);
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_get___seq_getitem_always_bound__(DeeTypeObject *__restrict self) {
+	bool has = DeeType_HasTrait(self, DeeType_TRAIT___seq_getitem_always_bound__);
+	return_bool(has);
+}
+
 PRIVATE struct type_getset tpconst seq_class_getsets[] = {
 	TYPE_GETTER(STR_Iterator, &seqtype_get_Iterator,
 	            "->?DType\n"
@@ -315,6 +321,9 @@ PRIVATE struct type_getset tpconst seq_class_getsets[] = {
 	TYPE_GETTER(STR_Frozen, &seq_Frozen_get,
 	            "->?DType\n"
 	            "Returns the type of Sequence returned by the #i:frozen property"),
+	TYPE_GETTER("__seq_getitem_always_bound__", &seq_get___seq_getitem_always_bound__,
+	            "->?Dbool\n"
+	            "Evaluates to ?t if ?#{op:getitem} never throws :UnboundItem"),
 	TYPE_GETSET_END
 };
 

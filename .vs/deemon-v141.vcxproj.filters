@@ -1985,6 +1985,9 @@
 		<ClCompile Include="..\src\deemon\runtime\method-hint-super.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\method-hint-traits.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\method-hint-wrappers.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>

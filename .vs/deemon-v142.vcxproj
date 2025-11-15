@@ -671,6 +671,7 @@
 		<ClCompile Include="..\src\deemon\runtime\method-hint-select.c" />
 		<ClCompile Include="..\src\deemon\runtime\method-hint-super-invoke.c" />
 		<ClCompile Include="..\src\deemon\runtime\method-hint-super.c" />
+		<ClCompile Include="..\src\deemon\runtime\method-hint-traits.c" />
 		<ClCompile Include="..\src\deemon\runtime\method-hint-wrappers.c" />
 		<ClCompile Include="..\src\deemon\runtime\method-hints.c" />
 		<ClCompile Include="..\src\deemon\runtime\misc.c" />

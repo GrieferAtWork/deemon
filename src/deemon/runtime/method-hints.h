@@ -20,10 +20,12 @@
 #ifndef GUARD_DEEMON_RUNTIME_METHOD_HINTS_H
 #define GUARD_DEEMON_RUNTIME_METHOD_HINTS_H 1
 
-#include <deemon/api.h>
 #include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
+
+#include <hybrid/byteorder.h>
 /**/
 
 #include <stdint.h> /* uint16_t */
@@ -91,6 +93,20 @@ Dee_type_struct_cache_destroy(struct Dee_type_struct_cache *__restrict self) {
  *    type's class member table.
  */
 typedef uint16_t Dee_mhc_slot_t;
+
+union Dee_mhc_traits {
+	uintptr_t            mht_word; /* Status word */
+	struct {
+		/* Make it so "tt_load" is always the lower half of "mht_word" */
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+		Dee_type_trait_t tt_load;  /* Set of loaded traits */
+		Dee_type_trait_t tt_have;  /* Set of supported traits */
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
+		Dee_type_trait_t tt_have;  /* Set of supported traits */
+		Dee_type_trait_t tt_load;  /* Set of loaded traits */
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
+	} mht_traits;
+};
 
 struct Dee_type_mh_cache {
 	/* Method hint function pointer caches.
@@ -347,10 +363,8 @@ struct Dee_type_mh_cache {
 /*[[[end]]]*/
 	/* clang-format on */
 
-#define _DeeType_HasTraitHint___seq_getitem_always_bound__(self) 0 /* TODO: "public static final __seq_getitem_always_bound__: bool = true;" (__seq_getitem__ never throws UnboundItem) */
-#define _DeeType_HasTraitHint___map_getitem_always_bound__(self) 0 /* TODO: "public static final __map_getitem_always_bound__: bool = true;" (__map_getitem__ never throws UnboundItem) */
-
-#define DeeType_HasTraitHint(self, name) _DeeType_HasTraitHint_##name(self)
+	union Dee_mhc_traits mh_explicit_traits; /* Explicitly defined type traits */
+	union Dee_mhc_traits mh_traits;          /* All type traits (including implicit ones) */
 
 	/* clang-format off */
 /*[[[deemon (printMhCacheAttributeMembers from "..method-hints.method-hints")();]]]*/

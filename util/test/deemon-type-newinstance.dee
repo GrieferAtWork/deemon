@@ -51,7 +51,7 @@ class MyList: List {
 }
 
 /* Extended version of Type.newinstance: Can be used to specify
- * field initializers, as well as  */
+ * field initializers, as well as constructor arguments. */
 local x = MyList.newinstance({
 	MyList: ({ "mylist_member" : "abc" }, none),
 	List:   ({ }, ({10, 20, 30},)),

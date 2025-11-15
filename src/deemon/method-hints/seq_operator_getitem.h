@@ -603,7 +603,7 @@ err:
 seq_operator_hasitem_index = {
 	DeeMH_seq_operator_size_t seq_operator_size = REQUIRE(seq_operator_size);
 	DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index;
-	if (DeeType_HasTraitHint(THIS_TYPE, __seq_getitem_always_bound__)) {
+	if (HAS_TRAIT(__seq_getitem_always_bound__)) {
 		if (REQUIRE_ANY(seq_operator_size) != &default__seq_operator_size__unsupported)
 			return &$with__seq_operator_size;
 	}
@@ -674,7 +674,7 @@ err:
 
 seq_operator_bounditem = {
 	DeeMH_seq_operator_bounditem_index_t seq_operator_bounditem_index;
-	if (DeeType_HasTraitHint(THIS_TYPE, __seq_getitem_always_bound__)) {
+	if (HAS_TRAIT(__seq_getitem_always_bound__)) {
 		/* TODO: Optimizations */
 	}
 	seq_operator_bounditem_index = REQUIRE(seq_operator_bounditem_index);
@@ -757,7 +757,7 @@ err:
 
 seq_operator_bounditem_index = {
 	DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index;
-	if (DeeType_HasTraitHint(THIS_TYPE, __seq_getitem_always_bound__)) {
+	if (HAS_TRAIT(__seq_getitem_always_bound__)) {
 		/* TODO: Optimizations */
 	}
 	seq_operator_getitem_index = REQUIRE(seq_operator_getitem_index);

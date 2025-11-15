@@ -1164,6 +1164,13 @@ EXPORTS
 	DeeRT_ErrItemNotFoundEx@20=_DeeRT_ErrItemNotFoundEx@20
 	DeeRT_ErrNegativeShiftOverflow@8=_DeeRT_ErrNegativeShiftOverflow@8
 	DeeRT_ErrNestSequenceError@8=_DeeRT_ErrNestSequenceError@8
+	DeeRT_ErrNestedOverflow@8=_DeeRT_ErrNestedOverflow@8
+	DeeRT_ErrNestedOverflowS128@32=_DeeRT_ErrNestedOverflowS128@32
+	DeeRT_ErrNestedOverflowS64@16=_DeeRT_ErrNestedOverflowS64@16
+	DeeRT_ErrNestedOverflowS@8=_DeeRT_ErrNestedOverflowS@8
+	DeeRT_ErrNestedOverflowU128@16=_DeeRT_ErrNestedOverflowU128@16
+	DeeRT_ErrNestedOverflowU64@8=_DeeRT_ErrNestedOverflowU64@8
+	DeeRT_ErrNestedOverflowU@4=_DeeRT_ErrNestedOverflowU@4
 	DeeRT_ErrNoActiveException@0=_DeeRT_ErrNoActiveException@0
 	DeeRT_ErrReadOnlyKey@8=_DeeRT_ErrReadOnlyKey@8
 	DeeRT_ErrReadOnlyKeyInt@8=_DeeRT_ErrReadOnlyKeyInt@8
@@ -1409,7 +1416,9 @@ EXPORTS
 	DeeType_GetSeqClass@4=_DeeType_GetSeqClass@4
 	DeeType_GetUncachedMethodHint@8=_DeeType_GetUncachedMethodHint@8
 	DeeType_GetUnsupportedMethodHint@4=_DeeType_GetUnsupportedMethodHint@4
+	DeeType_HasExplicitTrait@8=_DeeType_HasExplicitTrait@8
 	DeeType_HasPrivateOperator@8=_DeeType_HasPrivateOperator@8
+	DeeType_HasTrait@8=_DeeType_HasTrait@8
 	DeeType_Implements@8=_DeeType_Implements@8
 	DeeType_InheritOperator@8=_DeeType_InheritOperator@8
 	DeeType_IsConstCastable@4=_DeeType_IsConstCastable@4
@@ -1534,6 +1543,8 @@ EXPORTS
 	Dee_dict_sethidx8@12=_Dee_dict_sethidx8@12
 	Dee_event_waitfor@4=_Dee_event_waitfor@4
 	Dee_event_waitfor_timed@12=_Dee_event_waitfor_timed@12
+	Dee_nullable_tuple_builder_pack@4=_Dee_nullable_tuple_builder_pack@4
+	Dee_nullable_tuple_builder_setitem_index@12=_Dee_nullable_tuple_builder_setitem_index@12
 	Dee_once_abort@4=_Dee_once_abort@4
 	Dee_once_begin@4=_Dee_once_begin@4
 	Dee_once_begin_noint@4=_Dee_once_begin_noint@4

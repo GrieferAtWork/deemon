@@ -2002,6 +2002,22 @@ template<class RT1, class... TARGS1> struct __PRIVATE_match_method_hint<RT1(DCAL
 #define TYPE_METHOD_HINTREF_DOC Dee_TYPE_METHOD_HINTREF_DOC
 #endif /* DEE_SOURCE */
 
+
+/* Method-hint-related type traits API */
+#define DeeType_TRAIT___seq_getitem_always_bound__ 0x0001 /* "public static final __seq_getitem_always_bound__: bool = true;" (__seq_getitem__ never throws UnboundItem) */
+#define DeeType_TRAIT___map_getitem_always_bound__ 0x0002 /* "public static final __map_getitem_always_bound__: bool = true;" (__map_getitem__ never throws UnboundItem) */
+typedef __UINTPTR_HALF_TYPE__ Dee_type_trait_t;
+
+/* Check if a given type `self' supports the specified trait */
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool
+(DCALL DeeType_HasTrait)(DeeTypeObject *__restrict self, Dee_type_trait_t trait);
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool
+(DCALL DeeType_HasExplicitTrait)(DeeTypeObject *__restrict self, Dee_type_trait_t trait);
+#ifdef CONFIG_BUILDING_DEEMON
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool
+(DCALL DeeType_HasPrivateTrait)(DeeTypeObject *self, DeeTypeObject *orig_type, Dee_type_trait_t trait);
+#endif /* CONFIG_BUILDING_DEEMON */
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_METHOD_HINTS_H */

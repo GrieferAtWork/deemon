@@ -444,7 +444,9 @@ function assertMapping(x: Mapping, expected: {Object: Object} | none = none) {
 	local len = #x;
 	if (expected !is none) {
 		assertEquals(expected, x);
-		assert #expected == len;
+		/* May be less if "x" contains unbound items, in
+		 * which case mappings may still compare equal. */
+		assert #expected <= len;
 		for (local key, value: expected)
 			assertEquals(value, x[key], () -> f"{safeRepr(value)} == {safeRepr(x)}[{safeRepr(key)}]");
 		for (local key, value: x)
