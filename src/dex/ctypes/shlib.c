@@ -220,7 +220,7 @@ shlib_getitem(Shlib *self, DeeObject *name) {
 	result = DeeObject_MALLOC(struct pointer_object);
 	if unlikely(!result)
 		goto err_type;
-	DeeObject_InitNoref(result, DeeSType_AsType(result_type));
+	DeeObject_InitInherited(result, DeeSType_AsType(result_type));
 	result->p_ptr.ptr = symaddr;
 	return (DREF DeeObject *)result;
 err_type:
@@ -277,7 +277,7 @@ shlib_getattr(Shlib *self,
 		Dee_Decref(DeeSType_AsType(result_type));
 		goto err;
 	}
-	DeeObject_InitNoref(result, DeeSType_AsType(result_type));
+	DeeObject_InitInherited(result, DeeSType_AsType(result_type));
 #else /* CONFIG_NO_CFUNCTION */
 	result_type = self->sh_vfunptr;
 	if (!result_type) {
@@ -336,7 +336,7 @@ shlib_base(Shlib *self, size_t argc,
 	result = DeeObject_MALLOC(struct pointer_object);
 	if unlikely(!result)
 		goto err_type;
-	DeeObject_InitNoref(result, DeeSType_AsType(result_type));
+	DeeObject_InitInherited(result, DeeSType_AsType(result_type));
 	/* Return the base address of the shared library. */
 	result->p_ptr.ptr = (void *)self->sh_lib;
 

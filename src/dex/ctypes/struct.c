@@ -28,6 +28,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
@@ -403,13 +404,16 @@ INTERN DeeTypeObject DeeStructType_Type = {
 };
 
 
-
-PRIVATE ATTR_COLD NONNULL((1, 2, 3)) int DCALL
-err_unknown_attribute_with_reason(DeeTypeObject *tp, DeeObject *name,
-                                  char const *__restrict reason) {
-	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot %s unknown attribute `%k.%k'",
-	                       reason, tp, name);
+PRIVATE ATTR_COLD NONNULL((1, 3)) int DCALL
+ctypes_err_unknown_attr(DeeSTypeObject *tp, void *self,
+                        DeeObject *attr, unsigned int access) {
+	DREF DeeObject *lv = DeeLValue_NewFor(tp, self);
+	if unlikely(!lv)
+		goto err;
+	DeeRT_ErrUnknownAttr(lv, attr, access);
+	Dee_Decref(lv);
+err:
+	return -1;
 }
 
 
@@ -438,7 +442,8 @@ struct_getattr(DeeStructTypeObject *tp_self,
 		result->l_ptr.uint = (uintptr_t)self + field->sf_offset;
 		return result;
 	}
-	err_unknown_attribute_with_reason(DeeStructType_AsType(tp_self), name, "get");
+	ctypes_err_unknown_attr(DeeStructType_AsSType(tp_self), self,
+	                        name, DeeRT_ATTRIBUTE_ACCESS_GET);
 err:
 	return NULL;
 }
@@ -467,7 +472,8 @@ struct_delattr(DeeStructTypeObject *tp_self,
 		CTYPES_FAULTPROTECT(bzero(dst, size), return -1);
 		return 0;
 	}
-	return err_unknown_attribute_with_reason(DeeStructType_AsType(tp_self), name, "delete");
+	return ctypes_err_unknown_attr(DeeStructType_AsSType(tp_self), self,
+	                               name, DeeRT_ATTRIBUTE_ACCESS_DEL);
 }
 
 PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
@@ -491,7 +497,8 @@ struct_setattr(DeeStructTypeObject *tp_self,
 		                        (void *)((uintptr_t)self + field->sf_offset),
 		                        value);
 	}
-	return err_unknown_attribute_with_reason(DeeStructType_AsType(tp_self), name, "set");
+	return ctypes_err_unknown_attr(DeeStructType_AsSType(tp_self), self,
+	                               name, DeeRT_ATTRIBUTE_ACCESS_SET);
 }
 
 struct ctypes_struct_attriter {

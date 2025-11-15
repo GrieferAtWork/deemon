@@ -41,6 +41,9 @@
 #include <stddef.h> /* NULL */
 #include <stdint.h> /* uintptr_t */
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
 DECL_BEGIN
 
 #if N == 1
@@ -211,31 +214,15 @@ err:
 PRIVATE WUNUSED NONNULL((1, 3)) DREF struct lvalue_object *DCALL
 F(pointer_getitem)(DeePointerTypeObject *tp_self, union pointer *self,
                    DeeObject *index_ob) {
+	byte_t *result;
 	ptrdiff_t index;
-	DREF struct lvalue_object *result;
-	DREF DeeLValueTypeObject *type;
 	if (DeeObject_AsPtrdiff(index_ob, &index))
 		goto err;
 #if N != 1
 	index *= tp_self->pt_size;
 #endif /* N != 1 */
-	result = DeeObject_MALLOC(struct lvalue_object);
-	if unlikely(!result)
-		goto done;
-
-	/* Lookup the l-value version of the base-type. */
-	type = DeeSType_LValue(tp_self->pt_orig);
-	if unlikely(!type)
-		goto err_r;
-
-	/* Initialize the new l-value object. */
-	DeeObject_InitNoref(result, DeeLValueType_AsType(type));
-	CTYPES_FAULTPROTECT(result->l_ptr.ptr = (__BYTE_TYPE__ *)self->ptr + index,
-	                    goto err_r);
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
+	CTYPES_FAULTPROTECT(result = (__BYTE_TYPE__ *)self->ptr + index, goto err);
+	return (DREF struct lvalue_object *)DeeLValue_NewFor(tp_self->pt_orig, result);
 err:
 	return NULL;
 }

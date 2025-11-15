@@ -246,32 +246,15 @@ pointer_call(DeePointerTypeObject *tp_self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF struct lvalue_object *DCALL
 pointer_get_deref(struct pointer_object *__restrict self) {
-	DREF struct lvalue_object *result;
-	DREF DeeLValueTypeObject *type;
-	result = DeeObject_MALLOC(struct lvalue_object);
-	if unlikely(!result)
-		goto done;
-
-	/* Lookup the l-value version of the base-type. */
-	type = DeeSType_LValue(((DeePointerTypeObject *)Dee_TYPE(self))->pt_orig);
-	if unlikely(!type)
-		goto err_r;
-
-	/* Initialize the new l-value object. */
-	DeeObject_InitNoref(result, DeeLValueType_AsType(type));
-	result->l_ptr.ptr = self->p_ptr.ptr;
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
-	return NULL;
+	DeePointerTypeObject *tp = (DeePointerTypeObject *)Dee_TYPE(self);
+	return (DREF struct lvalue_object *)DeeLValue_NewFor(tp->pt_orig, self->p_ptr.ptr);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 pointer_set_deref(struct pointer_object *self,
                   DeeObject *value) {
-	return DeeStruct_Assign(((DeePointerTypeObject *)Dee_TYPE(self))->pt_orig,
-	                        self->p_ptr.ptr, value);
+	DeePointerTypeObject *tp = (DeePointerTypeObject *)Dee_TYPE(self);
+	return DeeStruct_Assign(tp->pt_orig, self->p_ptr.ptr, value);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -581,20 +564,9 @@ PRIVATE struct stype_attr lvalue_attr = {
 
 PRIVATE WUNUSED DREF struct pointer_object *DCALL
 lvalue_ref(struct lvalue_object *__restrict self) {
-	DREF struct pointer_object *result;
-	DREF DeePointerTypeObject *pointer_type;
-	pointer_type = DeeSType_Pointer(DeeType_AsLValueType(Dee_TYPE(self))->lt_orig);
-	if unlikely(!pointer_type)
-		goto err;
-	result = DeeObject_MALLOC(struct pointer_object);
-	if unlikely(!result)
-		goto err;
 	/* Construct a new pointer with the same data-value as our l-value. */
-	DeeObject_InitNoref(result, (DREF DeeTypeObject *)pointer_type); /* Inherit reference: pointer_type */
-	result->p_ptr.ptr = self->l_ptr.ptr;
-	return result;
-err:
-	return NULL;
+	DeeLValueTypeObject *tp = DeeType_AsLValueType(Dee_TYPE(self));
+	return (DREF struct pointer_object *)DeePointer_NewFor(tp->lt_orig, self->l_ptr.ptr);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

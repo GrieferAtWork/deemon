@@ -566,15 +566,20 @@ DeeObject_AsGenericPointer(DeeObject *self,
                            union pointer *__restrict result);
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeePointer_New(DeePointerTypeObject *pointer_type,
-               void *pointer_value);
+DeePointer_New(DeePointerTypeObject *pointer_type, void *pointer_value);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeePointer_NewFor(DeeSTypeObject *pointer_type,
-                  void *pointer_value);
-#define DeePointer_NewVoid(pointer_value) \
-	DeePointer_NewFor(&DeeCVoid_Type, pointer_value)
-#define DeePointer_NewChar(pointer_value) \
-	DeePointer_NewFor(&DeeCChar_Type, pointer_value)
+DeePointer_NewInherited(/*inherit(always)*/ DREF DeePointerTypeObject *pointer_type, void *pointer_value);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeePointer_NewFor(DeeSTypeObject *pointer_base_type, void *pointer_value);
+#define DeePointer_NewVoid(pointer_value) DeePointer_NewFor(&DeeCVoid_Type, pointer_value)
+#define DeePointer_NewChar(pointer_value) DeePointer_NewFor(&DeeCChar_Type, pointer_value)
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeLValue_NewInherited(/*inherit(always)*/ DREF DeeLValueTypeObject *lvalue_type, void *pointer_value);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeLValue_NewFor(DeeSTypeObject *lvalue_base_type, void *pointer_value);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeLValue_NewForInherited(/*inherit(always)*/ DREF DeeSTypeObject *lvalue_base_type, void *pointer_value);
 
 
 /* The main functions for the new `ref' (`&self') and `ind' (`*self')

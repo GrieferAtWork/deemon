@@ -1345,20 +1345,9 @@ struct_alignof(DeeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_ref(DeeObject *__restrict self) {
-	DREF struct pointer_object *result;
-	DREF DeePointerTypeObject *pointer_type;
-	pointer_type = DeeSType_Pointer(DeeType_AsSType(Dee_TYPE(self)));
-	if unlikely(!pointer_type)
-		goto err;
-	result = DeeObject_MALLOC(struct pointer_object);
-	if unlikely(!result)
-		goto err;
 	/* Construct a new pointer directed at the data of this structured object. */
-	DeeObject_InitNoref(result, (DREF DeeTypeObject *)pointer_type); /* Inherit reference: pointer_type */
-	result->p_ptr.ptr = DeeStruct_Data(self);
-	return (DREF DeeObject *)result;
-err:
-	return NULL;
+	return DeePointer_NewFor(DeeType_AsSType(Dee_TYPE(self)),
+	                         DeeStruct_Data(self));
 }
 
 
@@ -1538,124 +1527,142 @@ INTERN DeeSTypeObject DeeStructured_Type = {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_Ref(DeeObject *__restrict self) {
-	DREF struct pointer_object *result;
-	DREF DeePointerTypeObject *tp_result;
 	if (DeeObject_AssertType(self, DeeSType_AsType(&DeeStructured_Type)))
 		goto err;
 	if (DeeLValue_Check(self)) {
 		/* Special case: Must reference the data originally designated through the l-value. */
-		/* Lookup the required pointer type. */
-		tp_result = DeeSType_Pointer(DeeType_AsLValueType(Dee_TYPE(self))->lt_orig);
-		if unlikely(!tp_result)
-			goto err;
-
-		/* Create the new pointer object. */
-		result = (DREF struct pointer_object *)DeeObject_MALLOC(struct pointer_object);
-		if unlikely(!result)
-			goto err_tpres;
-		DeeObject_InitNoref(result, DeePointerType_AsType(tp_result)); /* Inherit reference: result_type */
-
-		/* Copy the l-value pointer into the regular pointer. */
-		result->p_ptr.ptr = ((struct lvalue_object *)self)->l_ptr.ptr;
-		goto done;
+		struct lvalue_object *me = (struct lvalue_object *)self;
+		DeeLValueTypeObject *tp = DeeType_AsLValueType(Dee_TYPE(me));
+		return DeePointer_NewFor(tp->lt_orig, me->l_ptr.ptr);
 	}
 
 	/* Lookup the required pointer type. */
-	tp_result = DeeSType_Pointer(DeeType_AsSType(Dee_TYPE(self)));
-	if unlikely(!tp_result)
-		goto err;
-
-	/* Create the new pointer object. */
-	result = (DREF struct pointer_object *)DeeObject_MALLOC(struct pointer_object);
-	if unlikely(!result)
-		goto err_tpres;
-	DeeObject_InitNoref(result, DeePointerType_AsType(tp_result)); /* Inherit reference: result_type */
-	result->p_ptr.ptr = DeeStruct_Data(self);
-done:
-	return (DREF DeeObject *)result;
-err_tpres:
-	Dee_Decref((DeeObject *)tp_result);
+	return DeePointer_NewFor(DeeType_AsSType(Dee_TYPE(self)), DeeStruct_Data(self));
 err:
 	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_Deref(DeeObject *__restrict self) {
-	struct lvalue_object *result;
-	DREF DeeLValueTypeObject *tp_result;
 	if (DeePointer_Check(self)) {
 		/* Regular pointer. */
-		tp_result = DeeSType_LValue(DeeType_AsPointerType(Dee_TYPE(self))->pt_orig);
-		if unlikely(!tp_result)
-			goto err;
-		result = DeeObject_MALLOC(struct lvalue_object);
-		if unlikely(!result)
-			goto err_tpres;
-		DeeObject_InitNoref(result, DeeLValueType_AsType(tp_result)); /* Inherit reference: result_type */
-		result->l_ptr.ptr = ((struct pointer_object *)self)->p_ptr.ptr;
-		return (DREF DeeObject *)result;
+		struct pointer_object *me = (struct pointer_object *)self;
+		DeePointerTypeObject *tp = DeeType_AsPointerType(Dee_TYPE(me));
+		return DeeLValue_NewFor(tp->pt_orig, me->p_ptr.ptr);
 	}
 	if (DeeLValue_Check(self)) {
-		DREF DeePointerTypeObject *tp_base;
-		tp_base = DeeSType_AsPointerType(DeeType_AsLValueType(Dee_TYPE(self))->lt_orig);
+		/* Check for LValue-to-pointer */
+		struct lvalue_object *me = (struct lvalue_object *)self;
+		DeeLValueTypeObject *tp = DeeType_AsLValueType(Dee_TYPE(me));
+		DeePointerTypeObject *tp_base = DeeSType_AsPointerType(tp->lt_orig);
 		if (DeePointerType_Check(tp_base)) {
-			/* LValue-to-pointer. */
-			tp_result = DeeSType_LValue(tp_base->pt_orig);
-			if unlikely(!tp_result)
-				goto err;
-			result = DeeObject_MALLOC(struct lvalue_object);
-			if unlikely(!result)
-				goto err_tpres;
-			DeeObject_InitNoref(result, DeeLValueType_AsType(tp_result)); /* Inherit reference: result_type */
+			void *resaddr, **p_resaddr = (void **)me->l_ptr.ptr;
 			/* Dereference this pointer. */
-			CTYPES_FAULTPROTECT(result->l_ptr.ptr = *(void **)((struct lvalue_object *)self)->l_ptr.ptr,
-			                    goto err_tpres_r);
-			return (DREF DeeObject *)result;
+			CTYPES_FAULTPROTECT(resaddr = *p_resaddr, return NULL);
+			return DeeLValue_NewFor(tp_base->pt_orig, resaddr);
 		}
 	}
+
 	/* Throw an error. */
 	DeeObject_TypeAssertFailed(self, DeePointerType_AsType(&DeePointer_Type));
-err:
 	return NULL;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-err_tpres_r:
-	DeeObject_FREE(result);
-#endif /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-err_tpres:
-	Dee_Decref(DeeLValueType_AsType(tp_result));
-	goto err;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeePointer_New(DeePointerTypeObject *pointer_type,
                void *pointer_value) {
+#ifdef __OPTIMIZE_SIZE__
+	Dee_Incref(DeePointerType_AsType(pointer_type));
+	return DeePointer_NewInherited(pointer_type, pointer_value);
+#else /* __OPTIMIZE_SIZE__ */
 	struct pointer_object *result;
 	ASSERT(DeePointerType_Check(pointer_type));
+
 	/* Allocate a new pointer object. */
 	result = DeeObject_MALLOC(struct pointer_object);
 	if unlikely(!result)
 		goto done;
+
 	/* Initialize the new pointer object. */
 	DeeObject_Init(result, DeePointerType_AsType(pointer_type));
 	result->p_ptr.ptr = pointer_value;
 done:
 	return (DREF DeeObject *)result;
+#endif /* !__OPTIMIZE_SIZE__ */
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeePointer_NewFor(DeeSTypeObject *pointer_type,
+DeePointer_NewInherited(/*inherit(always)*/ DREF DeePointerTypeObject *pointer_type,
+                        void *pointer_value) {
+	struct pointer_object *result;
+	ASSERT(DeePointerType_Check(pointer_type));
+
+	/* Allocate a new pointer object. */
+	result = DeeObject_MALLOC(struct pointer_object);
+	if unlikely(!result)
+		goto err;
+
+	/* Initialize the new pointer object. */
+	DeeObject_InitInherited(result, DeePointerType_AsType(pointer_type));
+	result->p_ptr.ptr = pointer_value;
+	return (DREF DeeObject *)result;
+err:
+	Dee_Decref(DeePointerType_AsType(pointer_type));
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeePointer_NewFor(DeeSTypeObject *pointer_base_type,
                   void *pointer_value) {
-	DREF DeeObject *result;
 	DREF DeePointerTypeObject *ptr_type;
-	ptr_type = DeeSType_Pointer(pointer_type);
+	ptr_type = DeeSType_Pointer(pointer_base_type);
 	if unlikely(!ptr_type)
 		goto err;
-	result = DeePointer_New(ptr_type, pointer_value);
-	Dee_Decref(DeePointerType_AsType(ptr_type));
-	return result;
+	return DeePointer_NewInherited(ptr_type, pointer_value);
 err:
 	return NULL;
 }
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeLValue_NewInherited(/*inherit(always)*/ DREF DeeLValueTypeObject *lvalue_type,
+                       void *pointer_value) {
+	struct lvalue_object *result;
+	ASSERT(DeeLValueType_Check(lvalue_type));
+
+	/* Allocate a new lvalue object. */
+	result = DeeObject_MALLOC(struct lvalue_object);
+	if unlikely(!result)
+		goto err;
+
+	/* Initialize the new lvalue object. */
+	DeeObject_InitInherited(result, DeeLValueType_AsType(lvalue_type));
+	result->l_ptr.ptr = pointer_value;
+	return (DREF DeeObject *)result;
+err:
+	Dee_Decref(DeeLValueType_AsType(lvalue_type));
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeLValue_NewFor(DeeSTypeObject *lvalue_base_type, void *pointer_value) {
+	DREF DeeLValueTypeObject *lval_type;
+	lval_type = DeeSType_LValue(lvalue_base_type);
+	if unlikely(!lval_type)
+		goto err;
+	return DeeLValue_NewInherited(lval_type, pointer_value);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeLValue_NewForInherited(/*inherit(always)*/ DREF DeeSTypeObject *lvalue_base_type, void *pointer_value) {
+	DREF DeeObject *result = DeeLValue_NewFor(lvalue_base_type, pointer_value);
+	Dee_Decref(DeeSType_AsType(lvalue_base_type));
+	return result;
+}
+
+
+
 
 
 

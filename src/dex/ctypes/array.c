@@ -108,11 +108,9 @@ aiter_bool(ArrayIterator *__restrict self) {
 	return atomic_read(&self->ai_pos.ptr) >= self->ai_end.ptr;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF struct lvalue_object *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 aiter_getseq(ArrayIterator *__restrict self) {
-	DREF struct lvalue_object *result;
 	DREF DeeArrayTypeObject *atype;
-	DREF DeeLValueTypeObject *ltype;
 	size_t count = (self->ai_end.uint - self->ai_begin.uint);
 	if unlikely(!self->ai_siz) {
 		count = 0;
@@ -124,20 +122,8 @@ aiter_getseq(ArrayIterator *__restrict self) {
 	atype = DeeSType_Array(self->ai_type->lt_orig, count);
 	if unlikely(!atype)
 		goto err;
-	ltype = DeeSType_LValue(DeeArrayType_AsSType(atype));
-	Dee_Decref(DeeArrayType_AsType(atype));
-	if unlikely(!ltype)
-		goto err;
-
-	/* Construct an l-value object for the array base address. */
-	result = DeeObject_MALLOC(struct lvalue_object);
-	if unlikely(!result)
-		goto err_ltype;
-	DeeObject_InitNoref(result, DeeLValueType_AsType(ltype)); /* Inherit reference: ltype */
-	result->l_ptr.ptr = self->ai_begin.ptr;
-	return result;
-err_ltype:
-	Dee_Decref(DeeLValueType_AsType(ltype));
+	return DeeLValue_NewForInherited(DeeArrayType_AsSType(atype),
+	                                 self->ai_begin.ptr);
 err:
 	return NULL;
 }
@@ -271,48 +257,32 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 array_get(DeeArrayTypeObject *tp_self, void *base, DeeObject *index_ob) {
-	DREF struct lvalue_object *result;
-	DREF DeeLValueTypeObject *lval_type;
+	byte_t *addr;
 	size_t index;
+	DREF DeeObject *self;
 	if (DeeObject_AsSize(index_ob, &index))
 		goto err_maybe_overflow;
 
 	/* Check bounds. */
 	if unlikely(index >= tp_self->at_count) {
-		DREF DeeLValueTypeObject *lv_type;
-		lv_type = DeeSType_LValue(DeeArrayType_AsSType(tp_self));
-		if unlikely(!lv_type)
-			goto err;
-		result = DeeObject_MALLOC(struct lvalue_object);
-		if unlikely(!result) {
-			Dee_Decref_unlikely(DeeLValueType_AsType(lv_type));
-			goto err;
+		self = DeeLValue_NewFor(DeeArrayType_AsSType(tp_self), base);
+		if likely(self) {
+			DeeRT_ErrIndexOutOfBounds(self, index, tp_self->at_count);
+			Dee_Decref_unlikely(self);
 		}
-		result->l_ptr.ptr = base;
-		DeeObject_InitNoref(result, DeeLValueType_AsType(lv_type));
-		DeeRT_ErrIndexOutOfBounds((DeeObject *)result, index, tp_self->at_count);
-		Dee_Decref_unlikely(result);
 		goto err;
 	}
-	lval_type = DeeSType_LValue(tp_self->at_orig);
-	if unlikely(!lval_type)
-		goto err;
 
-	/* Construct an l-value object to-be returned. */
-	result = DeeObject_MALLOC(struct lvalue_object);
-	if unlikely(!result)
-		goto err_lval_type;
-	DeeObject_InitNoref(result, DeeLValueType_AsType(lval_type)); /* Inherit reference: lval_type */
-
-	/* Calculate the resulting item address. */
-	result->l_ptr.uint = (uintptr_t)base + index * DeeSType_Sizeof(tp_self->at_orig);
-	return (DREF DeeObject *)result;
-err_lval_type:
-	Dee_Decref(DeeLValueType_AsType(lval_type));
+	addr = (byte_t *)base + (index * DeeSType_Sizeof(tp_self->at_orig));
+	return DeeLValue_NewFor(tp_self->at_orig, addr);
 err:
 	return NULL;
 err_maybe_overflow:
-	/*TODO:DeeRT_ErrIndexOverflow();*/
+	self = DeeLValue_NewFor(DeeArrayType_AsSType(tp_self), base);
+	if likely(self) {
+		DeeRT_ErrIndexOverflow(self);
+		Dee_Decref_unlikely(self);
+	}
 	goto err;
 }
 
@@ -341,8 +311,7 @@ array_del(DeeArrayTypeObject *tp_self, void *base, DeeObject *index_ob) {
 PRIVATE WUNUSED NONNULL((1, 3, 4)) DREF DeeObject *DCALL
 array_getrange(DeeArrayTypeObject *tp_self, void *base,
                DeeObject *begin_ob, DeeObject *end_ob) {
-	DREF struct lvalue_object *result;
-	DREF DeeLValueTypeObject *lval_type;
+	byte_t *addr;
 	DREF DeeArrayTypeObject *array_type;
 	Dee_ssize_t i_begin, i_end = (Dee_ssize_t)tp_self->at_count;
 	struct Dee_seq_range range;
@@ -362,21 +331,8 @@ array_getrange(DeeArrayTypeObject *tp_self, void *base,
 		goto err;
 
 	/* Create the associated l-value type. */
-	lval_type = DeeSType_LValue(DeeArrayType_AsSType(array_type));
-	Dee_Decref(DeeArrayType_AsType(array_type));
-	if unlikely(!lval_type)
-		goto err;
-	result = DeeObject_MALLOC(struct lvalue_object);
-	if unlikely(!result)
-		goto err_lval_type;
-	DeeObject_InitNoref(result, DeeLValueType_AsType(lval_type)); /* Inherit reference: lval_type */
-
-	/* Set the base pointer to the start of the requested sub-range. */
-	result->l_ptr.uint = ((uintptr_t)base) +
-	                     (range.sr_start * DeeSType_Sizeof(tp_self->at_orig));
-	return (DREF DeeObject *)result;
-err_lval_type:
-	Dee_Decref(DeeLValueType_AsType(lval_type));
+	addr = (byte_t *)base + (range.sr_start * DeeSType_Sizeof(tp_self->at_orig));
+	return DeeLValue_NewForInherited(DeeArrayType_AsSType(array_type), addr);
 err:
 	return NULL;
 }
@@ -495,27 +451,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF struct pointer_object *DCALL
 array_adddiff(DeeArrayTypeObject *tp_self,
               void *base, ptrdiff_t diff) {
 	/* Follow C-conventions and return a pointer to the `diff's element. */
-	DREF struct pointer_object *result;
-	DREF DeePointerTypeObject *ptr_type;
-	ptr_type = DeeSType_Pointer(tp_self->at_orig);
-	if unlikely(!ptr_type)
-		goto err;
-
-	/* Construct a new pointer object. */
-	result = DeeObject_MALLOC(struct pointer_object);
-	if unlikely(!result)
-		goto err_ptr_type;
-	DeeObject_InitNoref(result, DeePointerType_AsType(ptr_type)); /* Inherit reference: ptr_type */
-
-	/* Calculate the effect address of the `diff's element. */
-	result->p_ptr.ptr = base;
-	result->p_ptr.uint += diff * DeeSType_Sizeof(tp_self->at_orig);
-
-	return result;
-err_ptr_type:
-	Dee_Decref(DeePointerType_AsType(ptr_type));
-err:
-	return NULL;
+	byte_t *addr = (byte_t *)base + (diff * DeeSType_Sizeof(tp_self->at_orig));
+	return (DREF struct pointer_object *)DeePointer_NewFor(tp_self->at_orig, addr);
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF struct pointer_object *DCALL
