@@ -37,6 +37,92 @@
 #include <stdint.h> /* uintX_t */
 
 
+/*
+ * TODO: Complete re-write dec files from scratch to allow for
+ *       faster (but less efficient) object encode/decode:
+ * - General idea is still that only specific objects can be dec-encoded
+ * - However:
+ *   - Give a file mapping of a ".dec" file, that mapping already contains
+ *     fully functional objects (with reference counters, type headers, and
+ *     everything already allocated)
+ *   - While the associated module is still loaded, a mapped ".dec" file always
+ *     holds 1 reference to every object it contains.
+ *   - When the module is unloaded, decref all objects within the file mapping
+ *   - Objects that can be dec-encoded need a special free-function that uses
+ *     a custom heap that is able to function correctly, even if the pointer
+ *     is part of a file mapping
+ *     - If this heap needs extra headers for "allocated" pointers, then those
+ *       headers are also present within the file mapping
+ *
+ *
+ * Example: "Tuple { "foo", 42 }"
+ * >> ...
+ * >>              HEAP_HEADER,           // DeeTupleObject
+ * >>my_tuple:     1,                     // ob_refcnt
+ * >>              DREL(&DeeType_Type),   // ob_type    (relocated)
+ * >>              2,                     // t_size
+ * >>              IREL(&tuple_elem_1),   // t_elem[0]  (relocated)
+ * >>              IREL(&tuple_elem_2),   // t_elem[1]  (relocated)
+ * >>
+ * >>              HEAP_HEADER,           // DeeStringObject
+ * >>tuple_elem_1: 2,                     // ob_refcnt  (2: +1: my_tuple, +1: file mapping)
+ * >>              DREL(&DeeString_Type), // ob_type    (relocated)
+ * >>              NULL,                  // s_data
+ * >>              1234,                  // s_hash
+ * >>              3,                     // s_len
+ * >>              "foo\0",               // s_str
+ * >>
+ * >>              HEAP_HEADER,           // DeeIntObject
+ * >>tuple_elem_2: 2,                     // ob_refcnt  (2: +1: my_tuple, +1: file mapping)
+ * >>              DREL(&DeeInt_Type),    // ob_type    (relocated)
+ * >>              1,                     // ob_size
+ * >>              42,                    // ob_digit
+ *
+ * After the file was mapped into memory:
+ * - Parse the header, which contains (at least):
+ *   - An exact identification for the deemon build used to create the file
+ *   - The address of the root "DeeModule_Type" object of the associated module
+ *   - Offsets to D/I-relocation tables
+ *   - Offset to a table of all objects within the mapping (for decref on module unload)
+ *   - Offset to a table of all HEAP_HEADER within the mapping (so the custom heap knows
+ *     it can only free the file mapping once **all** of these have been freed).
+ *     - This table should also come in a format where the custom heap can directly
+ *       inherit it, without the table needing to be re-parsed/re-interpreted in some
+ *       way, shape, or form.
+ *     - For this purpose, the custom heap needs a O(1) function "gift_allocations":
+ *       >> // @param allocs:    "table of all HEAP_HEADER within the mapping"
+ *       >> //                   After all of these are free()'d, `free_fmap(fmap_base, fmap_size)' is called
+ *       >> // @param fmap_base: Base address of file mapping
+ *       >> // @param fmap_size: Size of file mapping
+ *       >> // @param free_fmap: Nested free function to invoke once everything from "allocs" was freed
+ *       >> void gift_allocations(struct alloc_list *allocs, void *fmap_base, size_t fmap_size,
+ *       >>                       void (*free_fmap)(void *fmap_base, size_t fmap_size));
+ *     - Note that "struct alloc_list" can either be:
+ *       - An in-place vector with offsets to every "HEAP_HEADER"
+ *       - The head of an intrusive linked list with elements embedded within "HEAP_HEADER"
+ *       (It'll probably be the later, though...)
+ *     - Using this, it would even be possible to implement "DeeModule_FromStaticPointer"
+ *       for user-defined modules, just like it's already implemented for dex modules!
+ * - Verify that the file was created by the hosting build of deemon
+ * - Execute relocations
+ *   - DREL: *(uintptr_t *)LOC += (uintptr_t)&DeeModule_Type; // Or some other global symbol in the deemon code
+ *   - IREL: *(uintptr_t *)LOC += (uintptr_t)FMAP_ADDR;       // Start address of file mapping
+ * - return the now-fully-valid root "DeeModule_Type" object
+ *
+ *
+ * Advantages:
+ * - **any** type from the deemon core can be stored in a .dec file
+ * - Loading of .dec file becomes much faster, because no additional heap allocations are necessary
+ *
+ * Disadvantages:
+ * - Objects need a custom heap that can work with file mappings as though they were heap memory
+ * - No validation during module loading means HARD CRASHES (i.e. SIGSEGV) if file was corrupt
+ *   - Because of this, .dec files should at least have a simple checksum that is validated during load
+ * - .dec files become **much** larger
+ * - Requires its own, custom heap
+ *
+ */
+
 DECL_BEGIN
 
 #ifdef __COMPILER_HAVE_PRAGMA_PACK

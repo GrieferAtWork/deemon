@@ -19,6 +19,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 import * from deemon;
+import .common.test;
 
 function outer() {
 	function foo(arg1, arg2) {
@@ -37,12 +38,15 @@ assert foo.__symbols__.keys == { "static1", "arg1", "arg2", "outer" };
 assert (foo.__symbols__.items.each.first as Set) == { "arg1", "arg2", "outer" },
 	"Because 'static1' is unbound, it only appears in `keys', but not `items'";
 
+//TODO:test.assertMapping(foo.__symbols__, { "arg1": 7, "arg2": 8, "outer": outer });
 assert foo.__symbols__ == { "arg1": 7, "arg2": 8, "outer": outer };
 foo...;
+//TODO:test.assertMapping(foo.__symbols__, { "arg1": 7, "arg2": 8, "outer": outer, "static1": 8 });
 assert foo.__symbols__ == { "arg1": 7, "arg2": 8, "outer": outer, "static1": 8 };
 assert foo.__symbols__.keys == { "static1", "arg1", "arg2", "outer" };
 
 local x = foo.operator iter();
+//TODO:test.assertSequence(x.__frame__.__args__, {7,8});
 assert x.__frame__.__args__ == {7,8};
 assert #x.__frame__.__args__ == 2;
 assert x.__frame__.__args__[0] == 7;
