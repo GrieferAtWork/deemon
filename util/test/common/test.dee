@@ -18,7 +18,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-import deemon;
+import deemon, rt;
 import * from deemon;
 import * from errors;
 
@@ -137,6 +137,34 @@ function assertAttributes(ob: Type, attributes: {string: Object}, typ: Type | no
 		assertEquals(expected, actual, () -> f"assertAttributes({
 			safeRepr(ob)}, \{ ..., {safeRepr(name)}: {safeRepr(expected)} \})");
 	}
+}
+
+function _assertIteratorConstructor(iterType: Type, x: Sequence) {
+	/* The construct-from-sequence feature isn't actually mandatory for
+	 * iterators. As such, don't assert it working for certain types. */
+	if (iterType !in {
+		rt.IterWithNextValue,
+		rt.IterWithNextKey,
+		rt.IterWithNextAndUnpackFilter,
+		rt.IterWithNextAndCounterAndLimitPair,
+		rt.IterWithNextAndCounterPair,
+		rt.IterWithIterKeysAndTryGetItemForMap,
+		rt.IterWithIterKeysAndGetItemForMap,
+		rt.IterWithNextAndLimit,
+	}) {
+		if (type(x) === Super)
+			x = Super.selfof(x);
+		local altIter = iterType(x);
+		assertEquals(x.operator iter(), altIter);
+		assert TRY(iterType(Object())) is Error,
+			"When called with something weird, an error should be thrown. "
+			"Usually, that would be a TypeError, but generic iterators may "
+			"also throw other errors (like NotImplemented)";
+	}
+
+	/* The the sake of coverage, also invoke the no-args constructor (if defined) */
+	if (iterType.__isnoargconstructible__)
+		iterType();
 }
 
 
@@ -276,6 +304,8 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 
 		for (local it: iterated1)
 			assert it in x;
+
+		_assertIteratorConstructor(type it, x);
 	} else {
 		assert !x;
 
@@ -371,6 +401,7 @@ function assertSet(x: Set, expected: {Object...} | none = none) {
 
 		for (local it: iterated1)
 			assert it in x;
+		_assertIteratorConstructor(type it, x);
 	} else {
 		assert !x;
 
@@ -482,6 +513,7 @@ function assertMapping(x: Mapping, expected: {Object: Object} | none = none) {
 
 		for (local k, none: iterated1)
 			assert k in x;
+		_assertIteratorConstructor(type it, x);
 	} else {
 		assert !x;
 

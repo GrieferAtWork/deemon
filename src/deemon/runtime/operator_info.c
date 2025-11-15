@@ -22,6 +22,7 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
+#include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/cached-dict.h>
 #include <deemon/computed-operators.h>
@@ -1869,6 +1870,22 @@ toi_copy(TypeOperatorsIterator *__restrict self,
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+toi_init(TypeOperatorsIterator *__restrict self,
+         size_t argc, DeeObject *const *argv) {
+	TypeOperators *ops;
+	DeeArg_Unpack1(err, argc, argv, "_TypeOperatorsIterator", &ops);
+	if (DeeObject_AssertTypeExact(ops, &TypeOperators_Type))
+		goto err;
+	self->toi_type = ops->to_type;
+	self->toi_opid = 0;
+	self->toi_name = ops->to_name;
+	Dee_Incref(ops->to_type);
+	return 0;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 toi_hash(TypeOperatorsIterator *self) {
 	return (Dee_hash_t)TOI_GETOPID(self);
@@ -1965,7 +1982,9 @@ PRIVATE struct type_getset tpconst toi_getset[] = {
 INTERN DeeTypeObject TypeOperatorsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_TypeOperatorsIterator",
-	/* .tp_doc      = */ DOC("next->?X2?Dstring?Dint"),
+	/* .tp_doc      = */ DOC("(ops:?Ert:TypeOperators)\n"
+	                         "\n"
+	                         "next->?X2?Dstring?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1976,7 +1995,7 @@ INTERN DeeTypeObject TypeOperatorsIterator_Type = {
 				/* .tp_ctor        = */ (Dee_funptr_t)NULL,
 				/* .tp_copy_ctor   = */ (Dee_funptr_t)&toi_copy,
 				/* .tp_deep_ctor   = */ (Dee_funptr_t)&toi_copy,
-				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor    = */ (Dee_funptr_t)&toi_init,
 				TYPE_FIXED_ALLOCATOR(TypeOperatorsIterator)
 			}
 		},

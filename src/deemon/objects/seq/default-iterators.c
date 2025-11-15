@@ -120,9 +120,17 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_sgi_init(DefaultIterator_WithSizeAndGetItemIndex *__restrict self,
             size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPdSIZ ":_IterWithSizeAndGetItemIndex",
+	self->disgi_index = 0;
+	self->disgi_end   = (size_t)-1;
+#define di_sgi_init_params "objWithGetItem,index=!0,end?:?Dint"
+	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ UNPuSIZ ":_IterWithSizeAndGetItemIndex",
 	                  &self->disgi_seq, &self->disgi_index, &self->disgi_end))
 		goto err;
+	if (self->disgi_end == (size_t)-1) {
+		self->disgi_end = DeeObject_Size(self->disgi_seq);
+		if unlikely(self->disgi_end == (size_t)-1)
+			goto err;
+	}
 	seqtyp = Dee_TYPE(self->disgi_seq);
 	self->disgi_tp_getitem_index = DeeType_RequireSupportedNativeOperator(seqtyp, getitem_index);
 	if unlikely(!self->disgi_tp_getitem_index)
@@ -139,9 +147,17 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_sgif_init(DefaultIterator_WithSizeAndGetItemIndex *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPdSIZ ":_IterWithSizeAndGetItemIndexFast",
+	self->disgi_index = 0;
+	self->disgi_end   = (size_t)-1;
+#define di_sgif_init_params "objWithGetItemIndexFast,index=!0,end?:?Dint"
+	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ UNPuSIZ ":_IterWithSizeAndGetItemIndexFast",
 	                  &self->disgi_seq, &self->disgi_index, &self->disgi_end))
 		goto err;
+	if (self->disgi_end == (size_t)-1) {
+		self->disgi_end = DeeObject_Size(self->disgi_seq);
+		if unlikely(self->disgi_end == (size_t)-1)
+			goto err;
+	}
 	seqtyp = Dee_TYPE(self->disgi_seq);
 	if (!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index_fast)
 		goto err_no_getitem;
@@ -158,7 +174,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_stgi_init(DefaultIterator_WithSizeAndGetItemIndex *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPdSIZ ":_IterWithSizeAndTryGetItemIndex",
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_IterWithSizeAndTryGetItemIndex",
 	                  &self->disgi_seq, &self->disgi_index, &self->disgi_end))
 		goto err;
 	seqtyp = Dee_TYPE(self->disgi_seq);
@@ -585,7 +601,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemIndexPair_Type = {
 INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndex_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithSizeAndGetItemIndex",
-	/* .tp_doc      = */ DOC("(objWithGetItem,index:?Dint,end:?Dint)"),
+	/* .tp_doc      = */ DOC("(" di_sgi_init_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -635,7 +651,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndex_Type = {
 INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexPair_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithSizeAndGetItemIndexPair",
-	/* .tp_doc      = */ DOC("(objWithGetItem,index:?Dint,end:?Dint)\n"
+	/* .tp_doc      = */ DOC("(" di_sgi_init_params ")\n"
 	                         "\n"
 	                         "next->?T2?Dint?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -687,7 +703,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexPair_Type = {
 INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFast_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithSizeAndGetItemIndexFast",
-	/* .tp_doc      = */ DOC("(objWithGetItemIndexFast,index:?Dint,end:?Dint)"),
+	/* .tp_doc      = */ DOC("(" di_sgif_init_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -737,7 +753,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFast_Type = {
 INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFastPair_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithSizeAndGetItemIndexFastPair",
-	/* .tp_doc      = */ DOC("(objWithGetItemIndexFast,index:?Dint,end:?Dint)\n"
+	/* .tp_doc      = */ DOC("(" di_sgif_init_params ")\n"
 	                         "\n"
 	                         "next->?T2?Dint?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -2496,7 +2512,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_ncpl_init(DefaultIterator_WithNextAndCounterAndLimit *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPdSIZ ":_IterWithNextAndCounterAndLimit",
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_IterWithNextAndCounterAndLimit",
 	                  &self->dincl_iter, &self->dincl_counter, &self->dincl_limit))
 		goto err;
 	itertyp = Dee_TYPE(self->dincl_iter);
