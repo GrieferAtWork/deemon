@@ -118,7 +118,6 @@ err_api_vunsupportedf(char const *api, DeeObject *self, char const *method_forma
 	if unlikely(!message)
 		goto err;
 	error = DeeObject_New(&DeeError_NotImplemented, 1, &message);
-	/*error = DeeObject_New(&DeeError_SequenceError, 1, &message);*/
 	Dee_Decref_unlikely(message);
 	if unlikely(!error)
 		goto err;

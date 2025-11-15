@@ -1455,8 +1455,8 @@ PRIVATE struct type_member tpconst UnboundItem_members[] = {
 	TYPE_MEMBER_FIELD_DOC("index", STRUCT_VARIANT | STRUCT_CONST, offsetof(UnboundItem, ui_base.ke_key),
 	                      "->?X2?DNumeric?Dint"),
 	TYPE_MEMBER_FIELD_DOC("iskey", STRUCT_BOOL(__SIZEOF_BOOL__) | STRUCT_CONST, offsetof(UnboundItem, ui_iskey),
-	                      "!t if this is about an unbound key (like in mappings). "
-	                      "!f if this is about an unbound index (like in sequences)"),
+	                      "?t if this is about an unbound key (like in mappings). "
+	                      "?f if this is about an unbound index (like in sequences)"),
 	TYPE_MEMBER_END
 };
 

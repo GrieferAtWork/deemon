@@ -174,25 +174,46 @@ DeeType_HasImplicitTrait_uncached___seq_getitem_always_bound__(DeeTypeObject *__
 		return true;
 	} else if (seq_enumerate_index == &default__seq_enumerate_index__with__seq_operator_foreach__and__counter) {
 		return true;
+	} else if (seq_enumerate_index == &default__seq_enumerate_index__unsupported) {
+		/* Definition is: can it thrown UnboundItem() -- if enumeration isn't supported, it
+		 *                can't throw that error because it always throws NotImplemented()! */
+		return true;
 	}
 	return false;
 }
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasImplicitTrait_uncached___map_getitem_always_bound__(DeeTypeObject *__restrict self) {
-	DeeMH_map_enumerate_t map_enumerate;
-	map_enumerate = DeeType_RequireMethodHint(self, map_enumerate);
-	if (map_enumerate == &default__map_enumerate__with__map_enumerate_range) {
-		DeeMH_map_enumerate_range_t map_enumerate_range;
-		map_enumerate_range = DeeType_RequireMethodHint(self, map_enumerate_range);
-		if (map_enumerate_range == &default__map_enumerate_range__empty)
+	DeeMH_map_operator_getitem_t map_operator_getitem;
+	map_operator_getitem = DeeType_RequireMethodHint(self, map_operator_getitem);
+	if (map_operator_getitem == &default__map_operator_getitem__unsupported) {
+		/* Definition is: can it thrown UnboundItem() -- if enumeration isn't supported, it
+		 *                can't throw that error because it always throws NotImplemented()! */
+		return true;
+	} else if (map_operator_getitem == &default__map_operator_getitem__empty) {
+		return true;
+	} else if (map_operator_getitem == &default__map_operator_getitem__with__map_enumerate) {
+		DeeMH_map_enumerate_t map_enumerate;
+		map_enumerate = DeeType_RequireMethodHint(self, map_enumerate);
+		if (map_enumerate == &default__map_enumerate__with__map_enumerate_range) {
+			DeeMH_map_enumerate_range_t map_enumerate_range;
+			map_enumerate_range = DeeType_RequireMethodHint(self, map_enumerate_range);
+			if (map_enumerate_range == &default__map_enumerate_range__empty)
+				return true;
+		} else if (map_enumerate == &default__map_enumerate__empty) {
 			return true;
-	} else if (map_enumerate == &default__map_enumerate__empty) {
-		return true;
-	} else if (map_enumerate == &default__map_enumerate__with__seq_operator_foreach_pair) {
-		return true;
-	} else if (map_enumerate == &default__map_enumerate__with__map_operator_iter) {
-		return true;
+		} else if (map_enumerate == &default__map_enumerate__with__seq_operator_foreach_pair) {
+			return true;
+		} else if (map_enumerate == &default__map_enumerate__with__map_operator_iter) {
+			return true;
+		} else if (map_enumerate == &default__map_enumerate__unsupported) {
+			/* Definition is: can it thrown UnboundItem() -- if enumeration isn't supported, it
+			 *                can't throw that error because it always throws NotImplemented()! */
+			return true;
+		} else if (map_enumerate == DeeType_RequireMethodHint(self, map_operator_foreach_pair))  {
+			/* "map_enumerate" impl is stolen from "map_operator_foreach_pair" -- items can't be unbound */
+			return true;
+		}
 	}
 	return false;
 }

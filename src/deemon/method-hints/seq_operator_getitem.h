@@ -288,9 +288,22 @@ seq_operator_getitem_index = {
 	    seq_operator_foreach == &default__seq_operator_foreach__with__seq_enumerate_index)
 		return &$with__seq_enumerate_index;
 	if (seq_operator_foreach) {
-		/* Using "seq_operator_foreach" works, but is inefficient -> try to use other operators. */
 		if (REQUIRE_NODEFAULT(seq_operator_getitem))
 			return &$with__seq_operator_getitem;
+		/* Check if "seq_operator_foreach" may possibly be skipping unbound items. */
+		if (REQUIRE_NODEFAULT(seq_enumerate) ||
+		    REQUIRE_NODEFAULT(seq_enumerate_index)) {
+			if (!HAS_TRAIT(__seq_getitem_always_bound__))
+				return &$with__seq_enumerate_index;
+		} else {
+			DeeMH_map_enumerate_t map_enumerate = REQUIRE_NODEFAULT(map_enumerate);
+			if ((map_enumerate && map_enumerate != REQUIRE(map_operator_foreach_pair)) ||
+			    REQUIRE_NODEFAULT(map_keys) ||
+			    REQUIRE_NODEFAULT(map_iterkeys)) {
+				if (!HAS_TRAIT(__map_getitem_always_bound__))
+					return &$with__map_enumerate;
+			}
+		}
 		return &$with__seq_operator_foreach;
 	}
 };

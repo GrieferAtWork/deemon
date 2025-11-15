@@ -741,11 +741,13 @@ PRIVATE struct type_member tpconst typemro_members[] = {
 
 PRIVATE struct type_member tpconst typemro_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &TypeMROIterator_Type),
+	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst typebases_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &TypeBasesIterator_Type),
+	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END
 };
 

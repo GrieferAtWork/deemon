@@ -520,6 +520,7 @@ PRIVATE struct type_member tpconst mfa_members[] = {
 
 PRIVATE struct type_member tpconst mfa_class_members[] = {
 	TYPE_MEMBER_CONST(STR_KeysIterator, &MapFromAttrKeysIterator_Type),
+	TYPE_MEMBER_CONST("__map_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END
 };
 

@@ -1399,6 +1399,7 @@ PRIVATE struct type_method tpconst tuple_class_methods[] = {
 PRIVATE struct type_member tpconst tuple_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DeeTupleIterator_Type),
 	TYPE_MEMBER_CONST(STR_Frozen, &DeeTuple_Type),
+	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END
 };
 

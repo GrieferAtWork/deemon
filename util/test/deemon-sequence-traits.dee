@@ -1,0 +1,233 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2025 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+function assertTraits(
+		t: Type,
+		seq_getitem?: bool,
+		map_getitem?: bool
+) {
+	if (seq_getitem is bound) {
+		assert t.__seq_getitem_always_bound__ == seq_getitem,
+			f"{repr t}.__seq_getitem_always_bound__";
+	} else {
+		assert !Type.extends(t, Sequence);
+	}
+	if (map_getitem is bound) {
+		assert t.__map_getitem_always_bound__ == map_getitem,
+			f"{repr t}.__map_getitem_always_bound__";
+	} else {
+		assert !Type.extends(t, Mapping);
+	}
+}
+
+
+/* Traits are always set for these because default-constructed,
+ * they're all empty (meaning they can't have unbound items) */
+assertTraits(Sequence, seq_getitem: true);
+assertTraits(Set, seq_getitem: true);
+assertTraits(Mapping, seq_getitem: true, map_getitem: true);
+
+assertTraits(List, seq_getitem: true);
+assertTraits(Tuple, seq_getitem: true);
+
+assertTraits(Dict, seq_getitem: true, map_getitem: true);
+assertTraits(Dict.Frozen, seq_getitem: true, map_getitem: true);
+assertTraits(HashSet, seq_getitem: true);
+assertTraits(HashSet.Frozen, seq_getitem: true);
+
+
+/* Extended, standard sequence types from "collections" */
+import collections;
+assertTraits(collections.Deque, seq_getitem: true);
+assertTraits(collections.FixedList, seq_getitem: false);
+assertTraits(collections.UniqueDict, seq_getitem: true, map_getitem: true);
+assertTraits(collections.UniqueSet, seq_getitem: true);
+assertTraits(collections.RangeMap, seq_getitem: true, map_getitem: true);
+assertTraits(collections.RBTree, seq_getitem: true, map_getitem: true);
+assertTraits(collections.CachedDict, seq_getitem: true, map_getitem: false);
+assertTraits(collections.Bitset, seq_getitem: true);
+assertTraits(collections.BitsetView, seq_getitem: true);
+
+
+/* Builtin, implementation-specific sequence-proxy types */
+#if __DEEMON_VARIANT__ == "gatw"
+import rt;
+
+assertTraits(rt.SeqCombinations, seq_getitem: true);
+assertTraits(rt.SeqRepeatCombinations, seq_getitem: true);
+assertTraits(rt.SeqPermutations, seq_getitem: true);
+assertTraits(rt.SeqSegments, seq_getitem: true);
+assertTraits(rt.SeqConcat, seq_getitem: false);
+assertTraits(rt.SeqFilter, seq_getitem: true);
+assertTraits(rt.SeqFilterAsUnbound, seq_getitem: false);
+assertTraits(rt.SeqHashFilter, seq_getitem: true);
+assertTraits(rt.SeqMapped, seq_getitem: false);
+assertTraits(rt.SeqRange, seq_getitem: false);
+assertTraits(rt.SeqIntRange, seq_getitem: false);
+assertTraits(rt.SeqRepeat, seq_getitem: false);
+assertTraits(rt.SeqRepeatItem, seq_getitem: true);
+assertTraits(rt.SeqIds, seq_getitem: false);
+assertTraits(rt.SeqTypes, seq_getitem: false);
+assertTraits(rt.SeqClasses, seq_getitem: false);
+assertTraits(rt.SeqFlat, seq_getitem: false);
+
+assertTraits(rt.SeqEnumWithSeqOperatorSizeAndGetItemIndexFast, seq_getitem: true);
+assertTraits(rt.SeqEnumWithIntFilterAndSeqOperatorSizeAndGetItemIndexFast, seq_getitem: true);
+assertTraits(rt.SeqEnumWithSeqOperatorSizeAndSeqOperatorTryGetItemIndex, seq_getitem: true);
+assertTraits(rt.SeqEnumWithIntFilterAndSeqOperatorSizeAndSeqOperatorTryGetItemIndex, seq_getitem: true);
+assertTraits(rt.SeqEnumWithSeqOperatorSizeAndSeqOperatorGetItemIndex, seq_getitem: true);
+assertTraits(rt.SeqEnumWithIntFilterAndSeqOperatorSizeAndSeqOperatorGetItemIndex, seq_getitem: true);
+assertTraits(rt.SeqEnumWithSeqOperatorSizeobAndSeqOperatorGetItem, seq_getitem: true);
+assertTraits(rt.SeqEnumWithSeqOperatorGetItemIndex, seq_getitem: true);
+assertTraits(rt.SeqEnumWithIntFilterAndSeqOperatorGetItemIndex, seq_getitem: true);
+assertTraits(rt.SeqEnumWithFilterAndSeqOperatorSizeobAndSeqOperatorGetItem, seq_getitem: true);
+assertTraits(rt.SeqEnumWithSeqOperatorGetItem, seq_getitem: true);
+assertTraits(rt.SeqEnumWithFilterAndSeqOperatorGetItem, seq_getitem: true);
+assertTraits(rt.SeqEnumWithSeqOperatorIterAndCounter, seq_getitem: true);
+assertTraits(rt.SeqEnumWithIntFilterAndSeqOperatorIterAndCounter, seq_getitem: true);
+assertTraits(rt.SeqEnumWithSeqEnumerate, seq_getitem: true);
+assertTraits(rt.SeqEnumWithIntFilterAndSeqEnumerateIndex, seq_getitem: true);
+assertTraits(rt.SeqEnumWithFilterAndMapOperatorIterAndUnpack, seq_getitem: true);
+assertTraits(rt.SeqEnumWithMapIterkeysAndMapOperatorGetItem, seq_getitem: true);
+assertTraits(rt.SeqEnumWithFilterAndMapIterkeysAndMapOperatorGetItem, seq_getitem: true);
+assertTraits(rt.SeqEnumWithMapIterkeysAndMapOperatorTryGetItem, seq_getitem: true);
+assertTraits(rt.SeqEnumWithFilterAndMapIterkeysAndMapOperatorTryGetItem, seq_getitem: true);
+assertTraits(rt.SeqEnumWithMapEnumerate, seq_getitem: true);
+assertTraits(rt.SeqEnumWithFilterAndMapEnumerateRange, seq_getitem: true);
+
+assertTraits(rt.SeqWithSizeAndGetItemIndex, seq_getitem: false);
+assertTraits(rt.SeqWithSizeAndGetItemIndexFast, seq_getitem: false);
+assertTraits(rt.SeqWithSizeAndTryGetItemIndex, seq_getitem: false);
+assertTraits(rt.SeqWithSizeObAndGetItem, seq_getitem: false);
+assertTraits(rt.SeqWithIter, seq_getitem: true);
+assertTraits(rt.SeqWithIterAndLimit, seq_getitem: true);
+
+assertTraits(rt.SeqOne, seq_getitem: true);
+
+assertTraits(rt.SeqReversedWithGetItemIndex, seq_getitem: false);
+assertTraits(rt.SeqReversedWithGetItemIndexFast, seq_getitem: false);
+assertTraits(rt.SeqReversedWithTryGetItemIndex, seq_getitem: false);
+
+assertTraits(rt.DistinctSetWithKey, seq_getitem: true);
+
+assertTraits(rt.CachedSeqWithIter, seq_getitem: true);
+
+assertTraits(rt.SetInversion, seq_getitem: true);
+assertTraits(rt.SetUnion, seq_getitem: true);
+assertTraits(rt.SetSymmetricDifference, seq_getitem: true);
+assertTraits(rt.SetIntersection, seq_getitem: true);
+assertTraits(rt.SetDifference, seq_getitem: true);
+
+/* TODO: These 4 mapping types should be "seq_getitem: false", but
+ *       their current impls cause unbound keys to be discarded... */
+assertTraits(rt.MapUnion, seq_getitem: true, map_getitem: false);
+assertTraits(rt.MapSymmetricDifference, seq_getitem: true, map_getitem: false);
+assertTraits(rt.MapIntersection, seq_getitem: true, map_getitem: false);
+assertTraits(rt.MapDifference, seq_getitem: true, map_getitem: false);
+
+assertTraits(rt.MapHashFilter, seq_getitem: true);
+assertTraits(rt.MapKeys, seq_getitem: true);
+assertTraits(rt.MapValues, seq_getitem: false);
+
+assertTraits(rt.MapFromKeysAndValue, seq_getitem: true, map_getitem: true);
+assertTraits(rt.MapFromKeysAndCallback, seq_getitem: true, map_getitem: true);
+
+assertTraits(rt.MapFromAttr, seq_getitem: true, map_getitem: true);
+
+assertTraits(rt.NullableTuple, seq_getitem: false);
+
+assertTraits(rt.SharedVector, seq_getitem: true);
+assertTraits(rt.SharedMap, seq_getitem: true, map_getitem: true);
+assertTraits(rt.RefVector, seq_getitem: false);
+
+assertTraits(rt.BytesFind, seq_getitem: true);
+assertTraits(rt.BytesCaseFind, seq_getitem: true);
+assertTraits(rt.BytesSegments, seq_getitem: true);
+assertTraits(rt.BytesSplit, seq_getitem: true);
+assertTraits(rt.BytesCaseSplit, seq_getitem: true);
+assertTraits(rt.BytesLineSplit, seq_getitem: true);
+
+assertTraits(rt.StringScan, seq_getitem: true);
+assertTraits(rt.StringFind, seq_getitem: true);
+assertTraits(rt.StringCaseFind, seq_getitem: true);
+assertTraits(rt.StringOrdinals, seq_getitem: true);
+assertTraits(rt.StringSegments, seq_getitem: true);
+assertTraits(rt.StringSplit, seq_getitem: true);
+assertTraits(rt.StringCaseSplit, seq_getitem: true);
+assertTraits(rt.StringLineSplit, seq_getitem: true);
+
+assertTraits(rt.ReFindAll, seq_getitem: true);
+assertTraits(rt.RegFindAll, seq_getitem: true);
+assertTraits(rt.ReLocateAll, seq_getitem: true);
+assertTraits(rt.RegLocateAll, seq_getitem: true);
+assertTraits(rt.ReSplit, seq_getitem: true);
+assertTraits(rt.ReGroups, seq_getitem: true);
+assertTraits(rt.ReSubStrings, seq_getitem: true);
+assertTraits(rt.ReSubBytes, seq_getitem: true);
+assertTraits(rt.ReBytesFindAll, seq_getitem: true);
+assertTraits(rt.RegBytesFindAll, seq_getitem: true);
+assertTraits(rt.ReBytesLocateAll, seq_getitem: true);
+assertTraits(rt.RegBytesLocateAll, seq_getitem: true);
+assertTraits(rt.ReBytesSplit, seq_getitem: true);
+
+assertTraits(rt.ModuleExports, seq_getitem: false, map_getitem: false);
+assertTraits(rt.ModuleGlobals, seq_getitem: false);
+
+assertTraits(rt.ClassOperatorTable, seq_getitem: true, map_getitem: true);
+assertTraits(rt.ClassAttributeTable, seq_getitem: true, map_getitem: true);
+assertTraits(rt.ObjectTable, seq_getitem: false);
+assertTraits(rt.TypeMRO, seq_getitem: true);
+assertTraits(rt.TypeBases, seq_getitem: true);
+
+assertTraits(rt.TypeOperators, seq_getitem: true);
+
+assertTraits(rt.GCSet, seq_getitem: true);
+
+assertTraits(rt.BlackListKwds, seq_getitem: true, map_getitem: true);
+/* TODO: BlackListKw should should be "seq_getitem: false", but
+ *       its current impl causes unbound keys to be discarded...  */
+assertTraits(rt.BlackListKw, seq_getitem: true, map_getitem: false);
+assertTraits(rt.CachedDict, seq_getitem: true, map_getitem: false);
+
+assertTraits(rt.DocKwds, seq_getitem: true);
+
+assertTraits(rt.YieldFunction, seq_getitem: true);
+assertTraits(rt.RoDict, seq_getitem: true, map_getitem: true);
+assertTraits(rt.RoSet, seq_getitem: true);
+
+assertTraits(rt.Kwds, seq_getitem: true, map_getitem: true);
+assertTraits(rt.KwdsMapping, seq_getitem: true, map_getitem: true);
+assertTraits(rt.IteratorPending, seq_getitem: true);
+assertTraits(rt.IteratorFuture, seq_getitem: true);
+
+assertTraits(rt.EnumAttr, seq_getitem: true);
+
+assertTraits(rt.FunctionStatics, seq_getitem: false);
+assertTraits(rt.FunctionSymbolsByName, seq_getitem: false, map_getitem: false);
+assertTraits(rt.YieldFunctionSymbolsByName, seq_getitem: false, map_getitem: false);
+assertTraits(rt.FrameArgs, seq_getitem: false);
+assertTraits(rt.FrameLocals, seq_getitem: false);
+assertTraits(rt.FrameStack, seq_getitem: true);
+assertTraits(rt.FrameSymbolsByName, seq_getitem: false, map_getitem: false);
+
+#endif /* __DEEMON_VARIANT__ == gatw */

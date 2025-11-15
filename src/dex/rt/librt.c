@@ -1079,19 +1079,19 @@ librt_get_SeqRepeatIterator_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqItemRepeat_uncached_f(void) {
+librt_get_SeqRepeatItem_uncached_f(void) {
 	DeeObject *argv[] = { Dee_None, DeeInt_One };
 	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&DeeSeq_Type, STR_AND_HASH(repeatitem), 2, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqItemRepeat_f(void) {
-	return_cached(librt_get_SeqItemRepeat_uncached_f());
+librt_get_SeqRepeatItem_f(void) {
+	return_cached(librt_get_SeqRepeatItem_uncached_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqItemRepeatIterator_f(void) {
-	return_cached(get_Iterator_of(librt_get_SeqItemRepeat_f()));
+librt_get_SeqRepeatItemIterator_f(void) {
+	return_cached(get_Iterator_of(librt_get_SeqRepeatItem_f()));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -2792,8 +2792,8 @@ PRIVATE DEFINE_CMETHOD0(librt_get_SeqIntRange, &librt_get_SeqIntRange_f, METHOD_
 PRIVATE DEFINE_CMETHOD0(librt_get_SeqIntRangeIterator, &librt_get_SeqIntRangeIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_SeqRepeat, &librt_get_SeqRepeat_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_SeqRepeatIterator, &librt_get_SeqRepeatIterator_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD0(librt_get_SeqItemRepeat, &librt_get_SeqItemRepeat_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD0(librt_get_SeqItemRepeatIterator, &librt_get_SeqItemRepeatIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD0(librt_get_SeqRepeatItem, &librt_get_SeqRepeatItem_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD0(librt_get_SeqRepeatItemIterator, &librt_get_SeqRepeatItemIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_SeqIds, &librt_get_SeqIds_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_SeqIdsIterator, &librt_get_SeqIdsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_SeqTypes, &librt_get_SeqTypes_f, METHOD_FCONSTCALL);
@@ -3158,8 +3158,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqIntRangeIterator", (DeeObject *)&librt_get_SeqIntRangeIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* SeqIntRangeIterator_Type */
 	{ "SeqRepeat", (DeeObject *)&librt_get_SeqRepeat, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                         /* SeqRepeat_Type */
 	{ "SeqRepeatIterator", (DeeObject *)&librt_get_SeqRepeatIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqRepeatIterator_Type */
-	{ "SeqItemRepeat", (DeeObject *)&librt_get_SeqItemRepeat, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* SeqItemRepeat_Type */
-	{ "SeqItemRepeatIterator", (DeeObject *)&librt_get_SeqItemRepeatIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* SeqItemRepeatIterator_Type */
+	{ "SeqRepeatItem", (DeeObject *)&librt_get_SeqRepeatItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* SeqRepeatItem_Type */
+	{ "SeqRepeatItemIterator", (DeeObject *)&librt_get_SeqRepeatItemIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* SeqRepeatItemIterator_Type */
 	{ "SeqIds", (DeeObject *)&librt_get_SeqIds, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                               /* SeqIds_Type */
 	{ "SeqIdsIterator", (DeeObject *)&librt_get_SeqIdsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                               /* SeqIdsIterator_Type */
 	{ "SeqTypes", (DeeObject *)&librt_get_SeqTypes, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                           /* SeqTypes_Type */

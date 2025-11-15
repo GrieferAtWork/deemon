@@ -1378,6 +1378,7 @@ PRIVATE struct type_getset tpconst deq_getsets[] = {
 
 PRIVATE struct type_member tpconst deq_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DequeIterator_Type),
+	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END
 };
 

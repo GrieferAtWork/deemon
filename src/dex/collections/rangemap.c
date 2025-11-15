@@ -763,6 +763,16 @@ PRIVATE struct type_member tpconst rangemap_class_members[] = {
 	TYPE_MEMBER_CONST("Proxy", &RangeMapProxy_Type),
 	TYPE_MEMBER_CONST("MapItems", &RangeMapMapItems_Type),
 	TYPE_MEMBER_CONST("AsMap", &RangeMapAsMap_Type),
+
+	/* This hint right here is actually mandatory. Without it, the method hint system
+	 * would (rightfully so) try to make use of `keys' in order to implement stuff like
+	 * `seq_operator_size', since it'd think that that's the only way to get access to
+	 * unbound keys.
+	 *
+	 * In turn, that would lead to `seq_operator_foreach' being implemented to yield
+	 * tuples like "([lo:hi], value)", rather than "(lo, hi, value)", which would then
+	 * break a whole bunch of other stuff down the line... */
+	TYPE_MEMBER_CONST("__map_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END
 };
 

@@ -23,6 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/bool.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
 #include <deemon/none.h>
@@ -551,6 +552,7 @@ PRIVATE struct type_member tpconst cswi_members[] = {
 
 PRIVATE struct type_member tpconst cswi_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &CachedSeq_WithIter_Iterator_Type),
+	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END
 };
 

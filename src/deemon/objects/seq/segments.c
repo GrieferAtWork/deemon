@@ -23,6 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/bool.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
@@ -410,6 +411,7 @@ PRIVATE struct type_getset tpconst seg_getsets[] = {
 PRIVATE struct type_member tpconst seg_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqSegmentsIterator_Type),
 	TYPE_MEMBER_CONST(STR_Frozen, &SeqSegments_Type),
+	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END
 };
 

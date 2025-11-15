@@ -3958,6 +3958,11 @@ PRIVATE struct type_member tpconst framestack_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE struct type_member tpconst framestack_class_members[] = {
+	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
+	TYPE_MEMBER_END
+};
+
 INTERN DeeTypeObject FrameStack_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_FrameStack",
@@ -4002,7 +4007,7 @@ INTERN DeeTypeObject FrameStack_Type = {
 	/* .tp_members       = */ framestack_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL,
+	/* .tp_class_members = */ framestack_class_members,
 	/* .tp_method_hints  = */ framestack_method_hints,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),

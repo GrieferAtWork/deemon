@@ -420,7 +420,7 @@ function assertSet(x: Set, expected: {Object...} | none = none) {
 			assert it;
 			assertEquals(v, it.operator next());
 		}
-		assert !it;
+		assert !it, str type it;
 
 		for (local it: iterated1)
 			assert it in x;
@@ -472,11 +472,25 @@ function assertMapping(x: Mapping, expected: {Object: Object} | none = none) {
 	local items = x.items;
 	assert len == #keys;
 	assert len == #values;
-	assert len == #items;
 
-	assertSet(keys, expected.keys);
-	assertSequence(values, expected.values);
-	assertSet(items, expected.items);
+	/* "items" does not include unbound items, so may be smaller */
+	assert len >= #items;
+	assert #(x as Set) == #items;
+	if (expected !is none) {
+		assert #expected == #items;
+		assertSet(items, expected.items);
+		if (len == #expected) {
+			assertSet(keys, expected.keys);
+			assertSequence(values, expected.values);
+		} else {
+			assertSet(keys);
+			assertSequence(values);
+		}
+	} else {
+		assertSet(items);
+		assertSet(keys);
+		assertSequence(values);
+	}
 
 	if (len) {
 		assert x;

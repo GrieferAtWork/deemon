@@ -4046,6 +4046,7 @@ PRIVATE struct type_math list_math = {
 PRIVATE struct type_member tpconst list_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DeeListIterator_Type),
 	TYPE_MEMBER_CONST(STR_Frozen, &DeeTuple_Type),
+	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END
 };
 

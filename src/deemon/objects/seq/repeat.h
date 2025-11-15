@@ -75,9 +75,9 @@ typedef struct {
 } RepeatItemIterator;
 
 INTDEF DeeTypeObject SeqRepeat_Type;
-INTDEF DeeTypeObject SeqItemRepeat_Type;
+INTDEF DeeTypeObject SeqRepeatItem_Type;
 INTDEF DeeTypeObject SeqRepeatIterator_Type;
-INTDEF DeeTypeObject SeqItemRepeatIterator_Type;
+INTDEF DeeTypeObject SeqRepeatItemIterator_Type;
 
 /* Construct new repetition-proxy-sequence objects. */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Repeat(DeeObject *__restrict self, size_t count);

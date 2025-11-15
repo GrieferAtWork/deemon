@@ -23,6 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/bool.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
 #include <deemon/map.h>
@@ -374,14 +375,15 @@ mfkc_values(MapFromKeys *__restrict self) {
 PRIVATE struct type_member tpconst mfkv_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &MapFromKeysAndValueIterator_Type),
 	TYPE_MEMBER_CONST(STR_Keys, &DeeSet_Type),
-	TYPE_MEMBER_CONST(STR_Values, &SeqItemRepeat_Type),
-	TYPE_MEMBER_CONST(STR_IterValues, &SeqItemRepeatIterator_Type),
+	TYPE_MEMBER_CONST(STR_Values, &SeqRepeatItem_Type),
+	TYPE_MEMBER_CONST(STR_IterValues, &SeqRepeatItemIterator_Type),
+	TYPE_MEMBER_CONST("__map_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_getset tpconst mfkv_getsets[] = {
 	TYPE_GETTER_AB(STR_keys, &mfkv_keys, "->?DSet"),
-	TYPE_GETTER_AB(STR_values, &mfkv_values, "->?Ert:SeqItemRepeat"),
+	TYPE_GETTER_AB(STR_values, &mfkv_values, "->?Ert:SeqRepeatItem"),
 	TYPE_GETTER_AB(STR_iterkeys, &mfkv_iterkeys, "->?DIterator"),
 	TYPE_GETSET_END
 };
@@ -391,6 +393,7 @@ PRIVATE struct type_member tpconst mfkc_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Keys, &DeeSet_Type),
 	TYPE_MEMBER_CONST(STR_Values, &SeqMapped_Type),
 	TYPE_MEMBER_CONST(STR_IterValues, &SeqMappedIterator_Type),
+	TYPE_MEMBER_CONST("__map_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END
 };
 

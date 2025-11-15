@@ -23,6 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/bool.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
@@ -2283,12 +2284,8 @@ PRIVATE struct type_member tpconst ds_ial_members[] = {
 };
 
 PRIVATE struct type_member tpconst ds_ial_class_members[] = {
-#if 1 /* Not always true, but is generally the case. */
-#define ds_tial_class_members ds_ial_class_members
 	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithNextAndLimit_Type),
-#else
-#define ds_tial_class_members NULL
-#endif
+	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END
 };
 

@@ -1274,6 +1274,7 @@ PRIVATE struct type_member tpconst udict_members[] = {
 PRIVATE struct type_member tpconst udict_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &UDictIterator_Type),
 	TYPE_MEMBER_CONST("Frozen", &URoDict_Type),
+	TYPE_MEMBER_CONST("__map_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END
 };
 

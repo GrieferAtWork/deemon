@@ -2104,8 +2104,8 @@ PRIVATE struct type_member tpconst rodict_members[] = {
 PRIVATE struct type_member tpconst rodict_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &RoDictIterator_Type),
 	TYPE_MEMBER_CONST(STR_Frozen, &DeeRoDict_Type),
-	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_CONST("__map_getitem_always_bound__", Dee_True),
+	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True), /* Must be sepecified because we also define "__seq_getitem__" */
 	TYPE_MEMBER_END
 };
 

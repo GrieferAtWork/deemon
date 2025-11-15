@@ -501,6 +501,8 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 	TYPE_GETTER_AB("asseq", &map_asseq, "->?DSequence\nOptimized version of ${this as Sequence}"),
 	TYPE_GETTER_AB("asset", &map_asset, "->?DSet\nOptimized version of ${this as Set}"),
 	TYPE_GETTER_AB("asmap", &map_asmap, "->?.\nOptimized version of ${this as Mapping}"),
+	TYPE_GETTER("length", &default__map_operator_sizeob,
+	            "->?Dint\nAlias for ${##(this as Mapping)}"),
 
 	/* TODO: KeyType->?DType
 	 *       Check if the type of @this overrides the ?#KeyType class attribute.

@@ -87,36 +87,6 @@
 
 %[include("seq_enumerate_reverse.h")]
 
-/* TODO: __seq_getitem_always_bound__
- * Not actually a method hint, but rather a behavioral hint:
- * >> public static final member __seq_getitem_always_bound__: bool;
- *
- * When defined as a class member of a type, and evaluating to
- * "true", __seq_getitem__ (or "operator []" when the type
- * classifies as "Sequence") will never throw UnboundItem; it
- * may only ever throw IndexError (if UnboundItem is still
- * thrown, behavior is weak undefined, meaning no crash, but
- * probably incorrect semantics)
- *
- *
- * To facilitate this property, add a way for method hint magic
- * to define type trait hints. These trait hints should also be
- * able to define more than just boolean-traits!
- *
- * XXX: What should happen when the trait is implemented as a
- *      property, and trying to access that property throws an
- *      error?
- *      >> public static property __seq_getitem_always_bound__: bool = {
- *      >>     get(): bool {
- *      >>         throw Error("Uh'oh");
- *      >>     }
- *      >> };
- *      Should property traits just be ignored? (meaning that
- *      only "final member" and "TYPE_MEMBER_CONST" be allowed?
- *      It would make sense in a way, and prevent this whole
- *      problem)
- */
-
 %[include("seq_unpack.h")]
 %[include("seq_unpack_ub.h")]
 

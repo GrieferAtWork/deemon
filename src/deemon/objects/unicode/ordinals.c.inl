@@ -183,6 +183,10 @@ PRIVATE struct type_member tpconst stringordinals_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE struct type_member tpconst stringordinals_class_members[] = {
+	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
+	TYPE_MEMBER_END
+};
 
 INTERN DeeTypeObject StringOrdinals_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -228,7 +232,7 @@ INTERN DeeTypeObject StringOrdinals_Type = {
 	/* .tp_members       = */ stringordinals_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL,
+	/* .tp_class_members = */ stringordinals_class_members,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),

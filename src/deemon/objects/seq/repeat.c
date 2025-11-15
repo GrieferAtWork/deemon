@@ -23,6 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/bool.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
 #include <deemon/gc.h>
@@ -741,8 +742,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitemiter_init(RepeatItemIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_SeqItemRepeatIterator", &self->rii_rep);
-	if (DeeObject_AssertTypeExact(self->rii_rep, &SeqItemRepeat_Type))
+	DeeArg_Unpack1(err, argc, argv, "_SeqRepeatItemIterator", &self->rii_rep);
+	if (DeeObject_AssertTypeExact(self->rii_rep, &SeqRepeatItem_Type))
 		goto err;
 	self->rii_obj = self->rii_rep->rpit_obj;
 	self->rii_num = self->rii_rep->rpit_num;
@@ -765,7 +766,7 @@ repeatitemiter_hash(RepeatItemIterator *self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 repeatitemiter_compare(RepeatItemIterator *lhs,
                        RepeatItemIterator *rhs) {
-	if (DeeObject_AssertTypeExact(rhs, &SeqItemRepeatIterator_Type))
+	if (DeeObject_AssertTypeExact(rhs, &SeqRepeatItemIterator_Type))
 		goto err;
 	Dee_return_compare_if_ne(lhs->rii_obj, rhs->rii_obj);
 	Dee_return_compareT(size_t, REPEATITEMPITER_READ_NUM(lhs),
@@ -799,16 +800,16 @@ repeatitemiter_next(RepeatItemIterator *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst repeatitemiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(RepeatItemIterator, rii_rep), "->?Ert:SeqItemRepeat"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(RepeatItemIterator, rii_rep), "->?Ert:SeqRepeatItem"),
 	TYPE_MEMBER_FIELD("__obj__", STRUCT_OBJECT, offsetof(RepeatItemIterator, rii_obj)),
 	TYPE_MEMBER_FIELD("__num__", STRUCT_SIZE_T, offsetof(RepeatItemIterator, rii_num)),
 	TYPE_MEMBER_END
 };
 
-INTERN DeeTypeObject SeqItemRepeatIterator_Type = {
+INTERN DeeTypeObject SeqRepeatItemIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_SeqItemRepeatIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqItemRepeat)"),
+	/* .tp_name     = */ "_SeqRepeatItemIterator",
+	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqRepeatItem)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -887,7 +888,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitem_init(RepeatItem *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_SeqItemRepeat",
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_SeqRepeatItem",
 	                  &self->rpit_obj, &self->rpit_num))
 		goto err;
 	Dee_Incref(self->rpit_obj);
@@ -915,7 +916,7 @@ repeatitem_iter(RepeatItem *__restrict self) {
 	result->rii_obj = self->rpit_obj;
 	result->rii_num = self->rpit_num;
 	Dee_Incref(self);
-	DeeObject_Init(result, &SeqItemRepeatIterator_Type);
+	DeeObject_Init(result, &SeqRepeatItemIterator_Type);
 done:
 	return result;
 }
@@ -1085,14 +1086,15 @@ PRIVATE struct type_getset tpconst repeatitem_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst repeatitem_class_members[] = {
-	TYPE_MEMBER_CONST(STR_Iterator, &SeqItemRepeatIterator_Type),
-	TYPE_MEMBER_CONST(STR_Frozen, &SeqItemRepeat_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqRepeatItemIterator_Type),
+	TYPE_MEMBER_CONST(STR_Frozen, &SeqRepeatItem_Type),
+	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END
 };
 
-INTERN DeeTypeObject SeqItemRepeat_Type = {
+INTERN DeeTypeObject SeqRepeatItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_SeqItemRepeat",
+	/* .tp_name     = */ "_SeqRepeatItem",
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(obj,num:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -1171,7 +1173,7 @@ DeeSeq_RepeatItem(DeeObject *__restrict item, size_t count) {
 	Dee_Incref(item);
 	result->rpit_obj = item;
 	result->rpit_num = count;
-	DeeObject_Init(result, &SeqItemRepeat_Type);
+	DeeObject_Init(result, &SeqRepeatItem_Type);
 done:
 	return (DREF DeeObject *)result;
 }

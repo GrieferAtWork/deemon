@@ -169,6 +169,8 @@ INTERN_TPCONST struct type_getset tpconst set_getsets[] = {
 	TYPE_GETTER_AB("asseq", &set_asseq, "->?DSequence\nOptimized version of ${this as Sequence}"),
 	TYPE_GETTER_AB("asset", &set_asset, "->?.\nOptimized version of ${this as Set}"),
 	TYPE_GETTER_AB("asmap", &set_asmap, "->?DMapping\nOptimized version of ${this as Mapping}"),
+	TYPE_GETTER("length", &default__set_operator_sizeob,
+	            "->?Dint\nAlias for ${##(this as Set)}"),
 	TYPE_GETSET_END
 };
 

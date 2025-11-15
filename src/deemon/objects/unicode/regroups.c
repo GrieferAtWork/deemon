@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_OBJECTS_UNICODE_REGROUPS_C 1
 
 #include <deemon/api.h>
+#include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
@@ -268,6 +269,13 @@ PRIVATE struct type_member tpconst rsb_members[] = {
 };
 #endif /* !CONFIG_NO_DOC */
 
+PRIVATE struct type_member tpconst rg_class_members[] = {
+#define rss_class_members rg_class_members
+#define rsb_class_members rg_class_members
+	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
+	TYPE_MEMBER_END
+};
+
 INTERN DeeTypeObject ReGroups_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ReGroups",
@@ -312,7 +320,7 @@ INTERN DeeTypeObject ReGroups_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL,
+	/* .tp_class_members = */ rg_class_members,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
@@ -362,7 +370,7 @@ INTERN DeeTypeObject ReSubStrings_Type = {
 	/* .tp_members       = */ rss_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL,
+	/* .tp_class_members = */ rss_class_members,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
@@ -412,7 +420,7 @@ INTERN DeeTypeObject ReSubBytes_Type = {
 	/* .tp_members       = */ rsb_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL,
+	/* .tp_class_members = */ rsb_class_members,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),

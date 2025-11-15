@@ -346,122 +346,6 @@ filterub_mh_seq_enumerate_index(Filter *self, Dee_seq_enumerate_index_t proc,
 	return DeeObject_InvokeMethodHint(seq_enumerate_index, self->f_seq, &filterub_mh_seq_enumerate_index_cb, &data, start, end);
 }
 
-#define filter_mh_seq_enumerate_index_cb_MAGIC_EARLY_STOP \
-	(__SSIZE_MIN__ + 99) /* Shhht. We don't talk about this one... */
-struct filter_mh_seq_enumerate_index_data {
-	DeeObject                *feid_fun;   /* [1..1] Function used for filtering. */
-	Dee_seq_enumerate_index_t feid_cb;    /* [1..1] Underlying callback. */
-	void                     *feid_arg;   /* [?..?] Cookie for `pfd_proc' */
-	size_t                    feid_index; /* Next index */
-	size_t                    feid_start; /* Start index */
-	size_t                    feid_end;   /* End index */
-};
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-filter_mh_seq_enumerate_index_cb(void *arg, DeeObject *value) {
-	int pred_bool;
-	struct filter_mh_seq_enumerate_index_data *data;
-	size_t index;
-	data = (struct filter_mh_seq_enumerate_index_data *)arg;
-	if unlikely(data->feid_index >= data->feid_end)
-		return filter_mh_seq_enumerate_index_cb_MAGIC_EARLY_STOP;
-	pred_bool = invoke_filter(data->feid_fun, value);
-	if (pred_bool <= 0)
-		return pred_bool; /* Error or ignored */
-	index = data->feid_index++;
-	if (index < data->feid_start)
-		return 0;
-	return (*data->feid_cb)(data->feid_arg, index, value);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-filter_mh_seq_enumerate_index(Filter *self, Dee_seq_enumerate_index_t proc,
-                              void *arg, size_t start, size_t end) {
-	Dee_ssize_t result;
-	struct filter_mh_seq_enumerate_index_data data;
-	data.feid_fun   = self->f_fun;
-	data.feid_cb    = proc;
-	data.feid_arg   = arg;
-	data.feid_start = start;
-	data.feid_end   = end;
-	result = DeeObject_InvokeMethodHint(seq_operator_foreach, self->f_seq, &filter_mh_seq_enumerate_index_cb, &data);
-	if unlikely(result == filter_mh_seq_enumerate_index_cb_MAGIC_EARLY_STOP)
-		result = 0;
-	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-filter_size_cb(void *arg, DeeObject *value) {
-	return invoke_filter((DeeObject *)arg, value);
-}
-
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-filter_size(Filter *self) {
-	return (size_t)DeeObject_InvokeMethodHint(seq_operator_foreach, self->f_seq, &filter_size_cb, self->f_fun);
-}
-
-struct filter_getitem_index_data {
-	DeeObject      *fgid_fun;    /* [1..1] Function used for filtering. */
-	DREF DeeObject *fgid_result; /* [?..1] Index value, or undefined if not yet discovered. */
-	size_t          fgid_skip;   /* Number of items still needing to be skipped. */
-};
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-filter_getitem_index_cb(void *arg, DeeObject *value) {
-	int pred_bool;
-	struct filter_getitem_index_data *data;
-	data = (struct filter_getitem_index_data *)arg;
-	pred_bool = invoke_filter(data->fgid_fun, value);
-	if (pred_bool <= 0)
-		return pred_bool; /* Error or ignored */
-	if (data->fgid_skip) {
-		--data->fgid_skip;
-		return 0;
-	}
-	Dee_Incref(value);
-	data->fgid_result = value;
-	return -2;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-filter_getitem_index(Filter *self, size_t index) {
-	Dee_ssize_t foreach_status;
-	struct filter_getitem_index_data data;
-	data.fgid_fun  = self->f_fun;
-	data.fgid_skip = index;
-	foreach_status = DeeObject_InvokeMethodHint(seq_operator_foreach, self->f_seq, &filter_getitem_index_cb, &data);
-	if likely(foreach_status == -2)
-		return data.fgid_result;
-	if unlikely(foreach_status == -1)
-		goto err;
-	/* Index out-of-bounds */
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
-	                          index - data.fgid_skip);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-filter_bounditem_index(Filter *self, size_t index) {
-	size_t size = filter_size(self);
-	if unlikely(size == (size_t)-1)
-		goto err;
-	return Dee_BOUND_FROMPRESENT_BOUND(index < size);
-err:
-	return Dee_BOUND_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-filter_hasitem_index(Filter *self, size_t index) {
-	size_t size = filter_size(self);
-	if unlikely(size == (size_t)-1)
-		goto err;
-	return index < size ? 1 : 0;
-err:
-	return -1;
-}
-
-
 #define filterub_contains filter_contains
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 filter_contains(Filter *self, DeeObject *elem) {
@@ -731,14 +615,14 @@ PRIVATE struct type_seq filter_seq = {
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__bounditem_index),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__hasitem_index),
-	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&filter_size,
+	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach),
 	/* .tp_size_fast                  = */ NULL,
-	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&filter_getitem_index,
+	/* .tp_getitem_index              = */ DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach),
 	/* .tp_getitem_index_fast         = */ NULL,
 	/* .tp_delitem_index              = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported),
 	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
-	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&filter_bounditem_index,
-	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&filter_hasitem_index,
+	/* .tp_bounditem_index            = */ DEFIMPL(&default__seq_operator_bounditem_index__with__seq_operator_getitem_index),
+	/* .tp_hasitem_index              = */ DEFIMPL(&default__seq_operator_hasitem_index__with__seq_operator_getitem_index),
 	/* .tp_getrange_index             = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_getitem_index),
 	/* .tp_delrange_index             = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
 	/* .tp_setrange_index             = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),
@@ -886,8 +770,7 @@ PRIVATE struct type_getset tpconst filter_getsets[] = {
 	TYPE_GETSET_END
 };
 
-PRIVATE struct type_method tpconst filter_methods[] = {
-#define filterub_methods filter_methods
+PRIVATE struct type_method tpconst filterub_methods[] = {
 	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_END
 };
@@ -895,8 +778,6 @@ PRIVATE struct type_method tpconst filter_methods[] = {
 PRIVATE struct type_method_hint tpconst filter_method_hints[] = {
 	TYPE_METHOD_HINT(seq_trygetfirst, &filter_trygetfirst),
 	TYPE_METHOD_HINT(seq_trygetlast, &filter_trygetlast),
-	TYPE_METHOD_HINT(seq_enumerate_index, &filter_mh_seq_enumerate_index),
-
 	/* TODO: any() -> Sequence.any(__seq__, e -> __filter__(e) && e) */
 	/* TODO: all() -> Sequence.all(__seq__, e -> !__filter__(e) || e) */
 	/* TODO: parity() -> Sequence.parity(__seq__, e -> __filter__(e) && e) */
@@ -949,7 +830,7 @@ INTERN DeeTypeObject SeqFilter_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ filter_methods,
+	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ filter_getsets,
 	/* .tp_members       = */ filter_members,
 	/* .tp_class_methods = */ NULL,

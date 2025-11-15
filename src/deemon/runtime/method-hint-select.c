@@ -119,6 +119,7 @@ mh_select_seq_operator_size(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_foreach_t seq_operator_foreach;
 	DeeMH_set_operator_size_t set_operator_size;
 	DeeMH_map_operator_size_t map_operator_size;
+	DeeMH_map_enumerate_t map_enumerate;
 	if ((set_operator_size = (DeeMH_set_operator_size_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_operator_size)) != NULL)
 		return set_operator_size;
 	if ((map_operator_size = (DeeMH_map_operator_size_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_operator_size)) != NULL)
@@ -129,6 +130,13 @@ mh_select_seq_operator_size(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		return &default__seq_operator_size__with__set_operator_sizeob;
 	if ((DeeMH_map_operator_sizeob_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_operator_sizeob))
 		return &default__seq_operator_size__with__map_operator_sizeob;
+
+	/* Check for special case: is actually a map, and map items may be unbound */
+	map_enumerate = (DeeMH_map_enumerate_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_enumerate);
+	if (((map_enumerate && map_enumerate != (DeeMH_map_operator_foreach_pair_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_foreach_pair)) ||
+	     (DeeMH_map_keys_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_keys) || (DeeMH_map_iterkeys_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_iterkeys)) &&
+	    !DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT___map_getitem_always_bound__))
+		return &default__seq_operator_size__with__map_enumerate;
 
 	seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
@@ -302,9 +310,22 @@ mh_select_seq_operator_getitem_index(DeeTypeObject *self, DeeTypeObject *orig_ty
 	    seq_operator_foreach == &default__seq_operator_foreach__with__seq_enumerate_index)
 		return &default__seq_operator_getitem_index__with__seq_enumerate_index;
 	if (seq_operator_foreach) {
-		/* Using "seq_operator_foreach" works, but is inefficient -> try to use other operators. */
 		if ((DeeMH_seq_operator_getitem_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_operator_getitem))
 			return &default__seq_operator_getitem_index__with__seq_operator_getitem;
+		/* Check if "seq_operator_foreach" may possibly be skipping unbound items. */
+		if ((DeeMH_seq_enumerate_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_enumerate) ||
+		    (DeeMH_seq_enumerate_index_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_enumerate_index)) {
+			if (!DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT___seq_getitem_always_bound__))
+				return &default__seq_operator_getitem_index__with__seq_enumerate_index;
+		} else {
+			DeeMH_map_enumerate_t map_enumerate = (DeeMH_map_enumerate_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_enumerate);
+			if ((map_enumerate && map_enumerate != (DeeMH_map_operator_foreach_pair_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_foreach_pair)) ||
+			    (DeeMH_map_keys_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_keys) ||
+			    (DeeMH_map_iterkeys_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_iterkeys)) {
+				if (!DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT___map_getitem_always_bound__))
+					return &default__seq_operator_getitem_index__with__map_enumerate;
+			}
+		}
 		return &default__seq_operator_getitem_index__with__seq_operator_foreach;
 	}
 	return NULL;

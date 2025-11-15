@@ -1190,6 +1190,7 @@ PRIVATE struct type_member tpconst so_members[] = {
 
 PRIVATE struct type_member tpconst so_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqOneIterator_Type),
+	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END
 };
 
