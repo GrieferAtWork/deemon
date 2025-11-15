@@ -25,6 +25,7 @@
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
+#include <deemon/none-operator.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
