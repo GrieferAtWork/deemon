@@ -573,6 +573,19 @@ sf_ctor(StringFind *__restrict self) {
 	return 0;
 }
 
+#define scf_copy sf_copy
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+sf_copy(StringFind *__restrict self,
+        StringFind *__restrict other) {
+	self->sf_str    = other->sf_str;
+	self->sf_needle = other->sf_needle;
+	self->sf_start  = other->sf_start;
+	self->sf_end    = other->sf_end;
+	Dee_Incref(self->sf_str);
+	Dee_Incref(self->sf_needle);
+	return 0;
+}
+
 #define scf_init sf_init
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sf_init(StringFind *__restrict self,
@@ -598,8 +611,10 @@ STATIC_ASSERT(offsetof(StringFind, sf_str) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(StringFind, sf_str) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(StringFind, sf_needle) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(StringFind, sf_needle) == offsetof(ProxyObject2, po_obj2));
-#define sf_fini  generic_proxy2__fini
-#define sf_visit generic_proxy2__visit
+#define sf_fini   generic_proxy2__fini
+#define scf_fini  generic_proxy2__fini
+#define sf_visit  generic_proxy2__visit
+#define scf_visit generic_proxy2__visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF StringFindIterator *DCALL
 sf_iter(StringFind *__restrict self) {
@@ -743,6 +758,7 @@ PRIVATE struct type_seq scf_seq = {
 
 
 PRIVATE struct type_member tpconst sf_members[] = {
+#define scf_members sf_members
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(StringFind, sf_str), "->?Dstring"),
 	TYPE_MEMBER_FIELD_DOC("__needle__", STRUCT_OBJECT, offsetof(StringFind, sf_needle), "->?Dstring"),
 	TYPE_MEMBER_FIELD("__start__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(StringFind, sf_start)),
@@ -772,8 +788,8 @@ INTERN DeeTypeObject StringFind_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (Dee_funptr_t)&sf_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&sf_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&sf_copy,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&sf_init,
 				TYPE_FIXED_ALLOCATOR(StringFind)
 			}
@@ -821,14 +837,14 @@ INTERN DeeTypeObject StringCaseFind_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&sf_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&sf_init,
+				/* .tp_ctor      = */ (Dee_funptr_t)&scf_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&scf_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&scf_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&scf_init,
 				TYPE_FIXED_ALLOCATOR(StringFind)
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sf_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&scf_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 	},
@@ -839,7 +855,7 @@ INTERN DeeTypeObject StringCaseFind_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&sf_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&scf_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__B8EC3298B952DF3A),
@@ -851,7 +867,7 @@ INTERN DeeTypeObject StringCaseFind_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ sf_members,
+	/* .tp_members       = */ scf_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ scf_class_members,

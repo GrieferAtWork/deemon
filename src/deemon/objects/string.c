@@ -2546,7 +2546,7 @@ PRIVATE struct type_method_hint tpconst string_method_hints[] = {
 	TYPE_METHOD_HINT(seq_sum, &string_mh_seq_sum),
 	TYPE_METHOD_HINT(seq_sum_with_range, &string_mh_seq_sum_with_range),
 
-	/* seq.all() is true if no sequence element evaluations to false.
+	/* seq.all() is true if no sequence element evaluates to false.
 	 * Since the elements of strings are all 1-char strings, there can
 	 * never be an empty string (meaning all elements are always true) */
 	TYPE_METHOD_HINT_F(seq_all, (int (DCALL *)(DeeObject *))&_DeeNone_reti1_1, METHOD_FNOREFESCAPE),
@@ -2576,6 +2576,7 @@ PRIVATE struct type_method_hint tpconst string_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_contains_with_key, &default__seq_contains_with_key__with__seq_operator_foreach, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_contains_with_range, &default__seq_contains_with_range__with__seq_enumerate_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_contains_with_range_and_key, &default__seq_contains_with_range_and_key__with__seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_contains, &string_contains, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_startswith, &default__seq_startswith__with__seq_trygetfirst, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_startswith_with_key, &default__seq_startswith_with_key__with__seq_trygetfirst, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_startswith_with_range, &default__seq_startswith_with_range__with__seq_operator_trygetitem_index, METHOD_FNOREFESCAPE),

@@ -751,10 +751,12 @@ do_invoke_var_deep:
 		}
 		if (tp_self->tp_init.tp_var.tp_any_ctor) {
 do_invoke_var_any_ctor:
+			/* TODO: If this returns a TypeError, wrap that error as NotImplemented */
 			return (*tp_self->tp_init.tp_var.tp_any_ctor)(1, (DeeObject **)&self);
 		}
 		if (tp_self->tp_init.tp_var.tp_any_ctor_kw) {
 do_invoke_var_any_ctor_kw:
+			/* TODO: If this returns a TypeError, wrap that error as NotImplemented */
 			return (*tp_self->tp_init.tp_var.tp_any_ctor_kw)(1, (DeeObject **)&self, NULL);
 		}
 		if (DeeType_InheritConstructors(tp_self)) {
@@ -793,9 +795,11 @@ do_invoke_alloc_copy:
 		DeeObject_Init(result, tp_self);
 		if (tp_self->tp_init.tp_alloc.tp_any_ctor) {
 do_invoke_alloc_any_ctor:
+			/* TODO: If this returns a TypeError, wrap that error as NotImplemented */
 			error = (*tp_self->tp_init.tp_alloc.tp_any_ctor)(result, 1, (DeeObject **)&self);
 		} else if (tp_self->tp_init.tp_alloc.tp_any_ctor_kw) {
 do_invoke_alloc_any_ctor_kw:
+			/* TODO: If this returns a TypeError, wrap that error as NotImplemented */
 			error = (*tp_self->tp_init.tp_alloc.tp_any_ctor_kw)(result, 1, (DeeObject **)&self, NULL);
 		} else {
 			DeeObject_FreeTracker(result);

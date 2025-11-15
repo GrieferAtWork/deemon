@@ -21,6 +21,7 @@
 
 import * from deemon;
 import * from errors;
+import .common.test;
 
 function assertFindFunction(expected, s: string, find: string, args: Tuple) {
 	local index = find.replace("find", "index");
@@ -80,8 +81,8 @@ assertFindFunction((6, 6), "foobar", "rfindany", ({ "b", "" },));
 assertFindFunction((6, 6), "foobar", "rfindany", ({ "" },));
 
 
-assert {0, 1, 2, 3, 4, 5, 6} == "foobar".findall("");
-assert {(0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6)} == "foobar".casefindall("");
-assert {"f", "o", "o", "b", "a", "r"} == "foobar".split("");
-assert {"f", "o", "o", "b", "a", "r"} == "foobar".casesplit("");
+test.assertSequence("foobar".findall(""), {0, 1, 2, 3, 4, 5, 6});
+test.assertSequence("foobar".casefindall(""), {(0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6)});
+test.assertSequence("foobar".split(""), {"f", "o", "o", "b", "a", "r"});
+test.assertSequence("foobar".casesplit(""), {"f", "o", "o", "b", "a", "r"});
 

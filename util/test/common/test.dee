@@ -129,7 +129,7 @@ function assertNotEqualsTyped(unexpected: Object, actual: Object,
 }
 
 
-function assertAttributes(ob: Type, attributes: {string: Object}, typ: Type | none = none) {
+function assertAttributes(ob: Object, attributes: {string: Object}, typ: Type | none = none) {
 	if (typ !is none)
 		assert ob is typ;
 	for (local name, expected: attributes) {
@@ -190,8 +190,31 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 		assertEqualsTyped(x, deepcopy x);
 	}
 	assert x.length == len;
-	assertAttributes(TRY(x[len]), {
-		"seq": x,
+	local err = TRY(x[len]);
+	assertAttributes(err, {
+		/* Special case: when "x" is Super, then the "seq" of an IndexError is
+		 * allowed to be either the Super wrapper, or the self-object being
+		 * wrapped (with either being allowed)
+		 *
+		 * For most types, `x == (x as Sequence)' works as you would expect,
+		 * however there is a special case where it doesn't when `x is string',
+		 * since "string" (intentionally) doesn't implement `operator == (Sequence)',
+		 * since doing so would mean `"foo" == { "f", "o", "o" }', which doesn't
+		 * feel right to me...
+		 *
+		 * Note however that `{ "f", "o", "o" } == "foo"' **does** work (and
+		 * correctly returns "true"), but that is because here the Sequence
+		 * is in charge of implementing `operator ==', which it does in the
+		 * most generic way possible.
+		 *
+		 * Additionally, `("foo" as Sequence) == { "f", "o", "o" }' also works,
+		 * since in this case Sequence is (once again) in charge of implementing
+		 * `operator =='.
+		 */
+		"seq": (type(x) === Super && err is IndexError &&
+		        err.seq is bound && type(err.seq) !== Super)
+			? Super.selfof(x)
+			: x,
 		"index": len,
 		"length": len,
 	}, IndexError);
@@ -436,7 +459,10 @@ function assertMapping(x: Mapping, expected: {Object: Object} | none = none) {
 	assert x.length == len;
 	local badKey = -4405742047502975340;
 	assert badKey !in x;
-	assert TRY(x[badKey]) == UnknownKey(seq: x, key: badKey);
+	assertAttributes(TRY(x[badKey]), {
+		"seq": x,
+		"key": badKey,
+	}, UnknownKey);
 	assert len is int;
 
 	local keys = x.keys;
