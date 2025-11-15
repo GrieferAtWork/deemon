@@ -1828,6 +1828,7 @@ PRIVATE struct type_method tpconst bytes_class_methods[] = {
 
 PRIVATE struct type_member tpconst bytes_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &BytesIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &DeeInt_Type),
 	TYPE_MEMBER_END
 };
 

@@ -921,6 +921,7 @@ PRIVATE struct type_member tpconst enumattr_members[] = {
 
 PRIVATE struct type_member tpconst enumattr_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DeeEnumAttrIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &DeeAttribute_Type),
 	TYPE_MEMBER_END
 };
 

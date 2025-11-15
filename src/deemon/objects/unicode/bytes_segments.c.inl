@@ -400,6 +400,7 @@ PRIVATE struct type_member tpconst bseg_members[] = {
 
 PRIVATE struct type_member tpconst bseg_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &BytesSegmentsIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &DeeBytes_Type),
 	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END
 };

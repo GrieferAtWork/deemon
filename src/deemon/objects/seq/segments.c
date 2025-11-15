@@ -172,7 +172,9 @@ STATIC_ASSERT(offsetof(SegmentsIterator, si_iter) == offsetof(ProxyObject, po_ob
 INTERN DeeTypeObject SeqSegmentsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqSegmentsIterator",
-	/* .tp_doc      = */ DOC("(iter?:?DIterator,len=!1)"),
+	/* .tp_doc      = */ DOC("(iter?:?DIterator,len=!1)\n"
+	                         "\n"
+	                         "next->?DSequence"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -411,6 +413,7 @@ PRIVATE struct type_getset tpconst seg_getsets[] = {
 PRIVATE struct type_member tpconst seg_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqSegmentsIterator_Type),
 	TYPE_MEMBER_CONST(STR_Frozen, &SeqSegments_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &DeeTuple_Type), /* s.a. `DeeTuple_NewUninitialized()' calls above */
 	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END
 };
@@ -418,7 +421,9 @@ PRIVATE struct type_member tpconst seg_class_members[] = {
 INTERN DeeTypeObject SeqSegments_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqSegments",
-	/* .tp_doc      = */ DOC("(seq?:?DSequence,len=!1)"),
+	/* .tp_doc      = */ DOC("(seq?:?DSequence,len=!1)\n"
+	                         "\n"
+	                         "[](index:?Dint)->?DSequence"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

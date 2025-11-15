@@ -356,6 +356,8 @@ INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
 
 
 STATIC_ASSERT(offsetof(ClassOperatorTable, co_desc) == offsetof(ProxyObject, po_obj));
+#define cot_copy  generic_proxy__copy_alias
+#define cot_deep  generic_proxy__copy_alias
 #define cot_fini  generic_proxy__fini
 #define cot_visit generic_proxy__visit
 
@@ -574,8 +576,8 @@ INTERN DeeTypeObject ClassOperatorTable_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&cot_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&cot_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&cot_init,
 				TYPE_FIXED_ALLOCATOR(ClassOperatorTable)
 			}

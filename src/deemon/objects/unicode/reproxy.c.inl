@@ -431,7 +431,7 @@ INTERN DeeTypeObject ReFindAllIterator_Type = {
 	/* .tp_name     = */ "_ReFindAllIterator",
 	/* .tp_doc      = */ DOC("(reseq:?Ert:ReFindAll)\n"
 	                         "\n"
-	                         "iter->?X2T2?Dint?Dint?N"),
+	                         "next->?X2?T2?Dint?Dint?N"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -483,7 +483,7 @@ INTERN DeeTypeObject ReBytesFindAllIterator_Type = {
 	/* .tp_name     = */ "_ReBytesFindAllIterator",
 	/* .tp_doc      = */ DOC("(reseq:?Ert:ReBytesFindAll)\n"
 	                         "\n"
-	                         "iter->?X2T2?Dint?Dint?N"),
+	                         "next->?X2?T2?Dint?Dint?N"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -674,7 +674,7 @@ INTERN DeeTypeObject RegFindAllIterator_Type = {
 	/* .tp_name     = */ "_RegFindAllIterator",
 	/* .tp_doc      = */ DOC("(reseq:?Ert:ReFindAll)\n"
 	                         "\n"
-	                         "iter->?Ert:ReGroups"),
+	                         "next->?Ert:ReGroups"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -726,7 +726,7 @@ INTERN DeeTypeObject RegBytesFindAllIterator_Type = {
 	/* .tp_name     = */ "_RegBytesFindAllIterator",
 	/* .tp_doc      = */ DOC("(reseq:?Ert:ReBytesFindAll)\n"
 	                         "\n"
-	                         "iter->?Ert:ReGroups"),
+	                         "next->?Ert:ReGroups"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -919,7 +919,7 @@ INTERN DeeTypeObject RegLocateAllIterator_Type = {
 	/* .tp_name     = */ "_RegLocateAllIterator",
 	/* .tp_doc      = */ DOC("(reseq:?Ert:ReLocateAll)\n"
 	                         "\n"
-	                         "iter->?Ert:ReGroups"),
+	                         "next->?Ert:ReSubStrings"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -971,7 +971,7 @@ INTERN DeeTypeObject RegBytesLocateAllIterator_Type = {
 	/* .tp_name     = */ "_RegBytesLocateAllIterator",
 	/* .tp_doc      = */ DOC("(reseq:?Ert:ReBytesLocateAll)\n"
 	                         "\n"
-	                         "iter->?Ert:ReGroups"),
+	                         "next->?Ert:ReSubBytes"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -1130,7 +1130,7 @@ INTERN DeeTypeObject ReLocateAllIterator_Type = {
 	/* .tp_name     = */ "_ReLocateAllIterator",
 	/* .tp_doc      = */ DOC("(reseq:?Ert:ReLocateAll)\n"
 	                         "\n"
-	                         "iter->?Dstring"),
+	                         "next->?Dstring"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -1182,7 +1182,7 @@ INTERN DeeTypeObject ReBytesLocateAllIterator_Type = {
 	/* .tp_name     = */ "_ReBytesLocateAllIterator",
 	/* .tp_doc      = */ DOC("(reseq:?Ert:ReBytesLocateAll)\n"
 	                         "\n"
-	                         "iter->?DBytes"),
+	                         "next->?DBytes"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -1367,7 +1367,7 @@ INTERN DeeTypeObject ReSplitIterator_Type = {
 	/* .tp_name     = */ "_ReSplitIterator",
 	/* .tp_doc      = */ DOC("(reseq:?Ert:ReSplit)\n"
 	                         "\n"
-	                         "iter->?Dstring"),
+	                         "next->?Dstring"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -1419,7 +1419,7 @@ INTERN DeeTypeObject ReBytesSplitIterator_Type = {
 	/* .tp_name     = */ "_ReBytesSplitIterator",
 	/* .tp_doc      = */ DOC("(reseq:?Ert:ReBytesSplit)\n"
 	                         "\n"
-	                         "iter->?DBytes"),
+	                         "next->?DBytes"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -1687,7 +1687,7 @@ PRIVATE struct type_member tpconst rebfa_class_members[] = {
 INTERN DeeTypeObject ReFindAll_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ReFindAll",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("[](index:?Dint)->?X2?T2?Dint?Dint?N"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -1737,7 +1737,7 @@ INTERN DeeTypeObject ReFindAll_Type = {
 INTERN DeeTypeObject ReBytesFindAll_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ReBytesFindAll",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("[](index:?Dint)->?X2?T2?Dint?Dint?N"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -1925,11 +1925,13 @@ PRIVATE struct type_seq regbfa_seq = {
 
 PRIVATE struct type_member tpconst regfa_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &RegFindAllIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &ReGroups_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst regbfa_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &RegBytesFindAllIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &ReGroups_Type),
 	TYPE_MEMBER_END
 };
 
@@ -2177,11 +2179,13 @@ PRIVATE struct type_seq regbla_seq = {
 
 PRIVATE struct type_member tpconst regla_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &RegLocateAllIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &ReSubStrings_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst regbla_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &RegBytesLocateAllIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &ReSubBytes_Type),
 	TYPE_MEMBER_END
 };
 
@@ -2426,11 +2430,13 @@ PRIVATE struct type_seq rebla_seq = {
 
 PRIVATE struct type_member tpconst rela_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &ReLocateAllIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &DeeString_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst rebla_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &ReBytesLocateAllIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &DeeBytes_Type),
 	TYPE_MEMBER_END
 };
 
@@ -2697,11 +2703,13 @@ PRIVATE struct type_seq rebsp_seq = {
 
 PRIVATE struct type_member tpconst resp_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &ReSplitIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &DeeString_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst rebsp_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &ReBytesSplitIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &DeeBytes_Type),
 	TYPE_MEMBER_END
 };
 

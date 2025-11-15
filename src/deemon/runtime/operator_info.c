@@ -1855,6 +1855,8 @@ PRIVATE struct type_seq to_seq = {
 
 PRIVATE struct type_member tpconst to_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &TypeOperatorsIterator_Type),
+	TYPE_MEMBER_CONST(STR_KeyType, &DeeString_Type),
+	TYPE_MEMBER_CONST(STR_ValueType, &DeeInt_Type),
 	TYPE_MEMBER_END
 };
 

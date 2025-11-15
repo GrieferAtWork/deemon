@@ -1570,6 +1570,11 @@ PRIVATE struct type_getset tpconst pst_class_getsets[] = {
 	TYPE_GETSET_END
 };
 
+PRIVATE struct type_member tpconst pst_class_members[] = {
+	TYPE_MEMBER_CONST("KeyType", &DeeString_Type),
+	TYPE_MEMBER_END
+};
+
 
 PRIVATE DeeTypeObject PosixStubsList_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1613,7 +1618,7 @@ PRIVATE DeeTypeObject PosixStubsList_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ pst_class_getsets,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ pst_class_members
 };
 
 PRIVATE DeeObject PosixStubsList_Singleton = { OBJECT_HEAD_INIT(&PosixStubsList_Type) };

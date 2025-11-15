@@ -2198,6 +2198,7 @@ PRIVATE struct type_seq string_seq = {
 
 PRIVATE struct type_member tpconst string_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &StringIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &DeeString_Type),
 	TYPE_MEMBER_END
 };
 

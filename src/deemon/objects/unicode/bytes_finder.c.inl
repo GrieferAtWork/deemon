@@ -349,7 +349,7 @@ INTERN DeeTypeObject BytesCaseFindIterator_Type = {
 	/* .tp_name     = */ "_BytesCaseFindIterator",
 	/* .tp_doc      = */ DOC("(find:?Ert:BytesCaseFind)\n"
 	                         "\n"
-	                         "next->?Dint"),
+	                         "next->?T2?Dint?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -596,6 +596,7 @@ PRIVATE struct type_member tpconst bf_members[] = {
 
 PRIVATE struct type_member tpconst bf_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &BytesFindIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &DeeInt_Type),
 	TYPE_MEMBER_END
 };
 
@@ -665,11 +666,13 @@ INTERN DeeTypeObject BytesCaseFind_Type = {
 	/* .tp_name     = */ "_BytesCaseFind",
 	/* .tp_doc      = */ DOC("(bytes:?DBytes,needle:?DBytes,start=!0,end=!-1)\n"
 	                         "\n"
-	                         "size->\n"
+	                         "#->\n"
 	                         "Same as ${this.__str__.casecount(this.__needle__, this.__start__, this.__end__)}\n"
 	                         "\n"
 	                         "bool->\n"
-	                         "Same as ${this.__str__.casecontains(this.__needle__, this.__start__, this.__end__)}"),
+	                         "Same as ${this.__str__.casecontains(this.__needle__, this.__start__, this.__end__)}\n"
+	                         "\n"
+	                         "[](index:?Dint)->?T2?Dint?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

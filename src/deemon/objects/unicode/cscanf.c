@@ -823,7 +823,9 @@ INTERN DeeTypeObject StringScan_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringScan",
 	/* .tp_doc      = */ DOC("()\n"
-	                         "(data:?X2?Dstring?DBytes,format:?X2?Dstring?DBytes)"),
+	                         "(data:?X2?Dstring?DBytes,format:?X2?Dstring?DBytes)\n"
+	                         "\n"
+	                         "[](index:?Dint)->?X2?Dstring?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,

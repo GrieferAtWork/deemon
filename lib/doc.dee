@@ -1084,7 +1084,7 @@ again:
 	if (result >= len)
 		return result;
 	if (s[result] != "?") {
-		result = s.find("?");
+		result = s.find("?", result);
 		if (result < 0)
 			result = len;
 		return result;

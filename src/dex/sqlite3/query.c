@@ -847,6 +847,7 @@ PRIVATE struct type_member tpconst query_members[] = {
 
 PRIVATE struct type_member tpconst query_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &QueryIterator_Type),
+	TYPE_MEMBER_CONST("ItemType", &Row_Type),
 	TYPE_MEMBER_END
 };
 

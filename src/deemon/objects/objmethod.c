@@ -709,6 +709,7 @@ PRIVATE struct type_member tpconst dockwds_members[] = {
 
 PRIVATE struct type_member tpconst dockwds_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DocKwdsIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &DeeString_Type),
 	TYPE_MEMBER_END
 };
 

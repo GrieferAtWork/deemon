@@ -1717,7 +1717,9 @@ INTERN DeeTypeObject FunctionSymbolsByName_Type = {
 	                         /**/ "doesn't have a name for some reason, its merged RID/SID can be used "
 	                         /**/ "instead (depending on which ID-range is being referenced).\n"
 	                         "\n"
-	                         "(func:?DFunction,ridstart=!0,ridend?:?Dint)"),
+	                         "(func:?DFunction,ridstart=!0,ridend?:?Dint)\n"
+	                         "\n"
+	                         "[](key:?X2?Dstring?Dint)->"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2929,7 +2931,9 @@ INTERN DeeTypeObject YieldFunctionSymbolsByName_Type = {
 	/* .tp_name     = */ "_YieldFunctionSymbolsByName",
 	/* .tp_doc      = */ DOC("A ${{(int | string): Object}}-like mapping for references, statics, and arguments.\n"
 	                         "\n"
-	                         "(yfunc:?Ert:YieldFunction,argc?:?Dint,ridstart=!0,ridend?:?Dint)"),
+	                         "(yfunc:?Ert:YieldFunction,argc?:?Dint,ridstart=!0,ridend?:?Dint)\n"
+	                         "\n"
+	                         "[](key:?X2?Dstring?Dint)->"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -5554,7 +5558,9 @@ INTERN DeeTypeObject FrameSymbolsByName_Type = {
 	/* .tp_doc      = */ DOC("A ${{(int | string): Object}}-like mapping for currently relevant "
 	                         /**/ "named symbols within a given code-frame.\n"
 	                         "\n"
-	                         "(frame:?Ert:Frame,argc?:?Dint,ridstart=!0,ridend?:?Dint,localc?:?Dint,stackc?:?Dint)"),
+	                         "(frame:?Ert:Frame,argc?:?Dint,ridstart=!0,ridend?:?Dint,localc?:?Dint,stackc?:?Dint)\n"
+	                         "\n"
+	                         "[](key:?X2?Dstring?Dint)->"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

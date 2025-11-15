@@ -64,7 +64,7 @@ function canCompare(expected: Object, actual: Object): bool {
 }
 
 function concatMessage(base: string, message: Callable | string | none = none): string {
-	if (message is Callable)
+	if (message is Callable && message !is Type)
 		message = message();
 	if (message is none)
 		return base;
@@ -189,12 +189,19 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 		assertEqualsTyped(x, copy x);
 		assertEqualsTyped(x, deepcopy x);
 	}
+
+	local ItemType = try x.class.ItemType catch (...) Object;
+	if (ItemType !== Object) {
+		for (local it: x)
+			assert it is ItemType, type x;
+	}
+
 	assert x.length == len;
 	local err = TRY(x[len]);
 	assertAttributes(err, {
-		/* Special case: when "x" is Super, then the "seq" of an IndexError is
-		 * allowed to be either the Super wrapper, or the self-object being
-		 * wrapped (with either being allowed)
+		/* Special case: when "x" is Super, then the "seq" of an IndexError
+		 * can be either the Super wrapper, or the self-object being wrapped
+		 * (with either being allowed)
 		 *
 		 * For most types, `x == (x as Sequence)' works as you would expect,
 		 * however there is a special case where it doesn't when `x is string',
@@ -369,6 +376,13 @@ function assertSet(x: Set, expected: {Object...} | none = none) {
 		assertEqualsTyped(x, copy x);
 		assertEqualsTyped(x, deepcopy x);
 	}
+
+	local ItemType = try x.class.ItemType catch (...) Object;
+	if (ItemType !== Object) {
+		for (local it: x)
+			assert it is ItemType, type x;
+	}
+
 	assert x.length == len;
 	if (len) {
 		assert x;
@@ -420,7 +434,7 @@ function assertSet(x: Set, expected: {Object...} | none = none) {
 			assert it;
 			assertEquals(v, it.operator next());
 		}
-		assert !it, str type it;
+		assert !it, type it;
 
 		for (local it: iterated1)
 			assert it in x;
@@ -458,6 +472,7 @@ function assertMapping(x: Mapping, expected: {Object: Object} | none = none) {
 		assertEqualsTyped(x, copy x);
 		assertEqualsTyped(x, deepcopy x);
 	}
+
 	assert x.length == len;
 	local badKey = -4405742047502975340;
 	assert badKey !in x;
@@ -490,6 +505,18 @@ function assertMapping(x: Mapping, expected: {Object: Object} | none = none) {
 		assertSet(items);
 		assertSet(keys);
 		assertSequence(values);
+	}
+
+	local KeyType = try x.class.KeyType catch (...) Object;
+	if (KeyType !== Object) {
+		for (local k: keys)
+			assert k is KeyType, type x;
+	}
+
+	local ValueType = try x.class.ValueType catch (...) Object;
+	if (ValueType !== Object) {
+		for (local v: values)
+			assert v is ValueType, type x;
 	}
 
 	if (len) {

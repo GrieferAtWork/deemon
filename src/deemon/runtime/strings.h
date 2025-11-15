@@ -1289,8 +1289,14 @@ DEF_STRING(str_this_function, "this_function", 0xe2b69fa3, 0xdf2ba17d58877ece)
 #define STR_this_function "this_function"
 #endif /* !STR_this_function */
 #ifndef STR_ItemType
-#define STR_ItemType "ItemType"
+#define STR_ItemType "ItemType" /* Sequence.operator [](index: int): ItemType */
 #endif /* !STR_ItemType */
+#ifndef STR_KeyType
+#define STR_KeyType "KeyType" /* Mapping.operator [](key: KeyType): ValueType */
+#endif /* !STR_KeyType */
+#ifndef STR_ValueType
+#define STR_ValueType "ValueType" /* Mapping.operator [](key: KeyType): ValueType */
+#endif /* !STR_ValueType */
 #ifndef STR_Frozen
 #define STR_Frozen "Frozen"
 #endif /* !STR_Frozen */

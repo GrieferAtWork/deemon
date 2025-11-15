@@ -3150,6 +3150,8 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	               "->?S?DType\n"
 	               "Returns a special proxy object for accessing the classes of Sequence elements\n"
 	               "This is equivalent to ${this.transform(x -\\> x.class)}"),
+	/* TODO: hashes = this.map(e => e.operator hash());
+	 * Needs special case because "this.each.operator hash()" wouldn't work */
 	TYPE_GETTER("isempty", &seq_get_isempty,
 	            "->?Dbool\n"
 	            "Returns ?t if @this Sequence is empty\n"

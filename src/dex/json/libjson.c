@@ -1292,6 +1292,7 @@ PRIVATE struct type_member tpconst jseq_class_members[] = {
 
 PRIVATE struct type_member tpconst jmap_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DeeJsonMappingIterator_Type),
+	TYPE_MEMBER_CONST("KeyType", &DeeString_Type),
 	TYPE_MEMBER_END
 };
 

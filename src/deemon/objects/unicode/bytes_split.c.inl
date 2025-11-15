@@ -609,11 +609,13 @@ PRIVATE struct type_member tpconst bs_members[] = {
 
 PRIVATE struct type_member tpconst bs_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &BytesSplitIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &DeeBytes_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst bcs_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &BytesCaseSplitIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &DeeBytes_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1143,6 +1145,7 @@ PRIVATE struct type_member tpconst bls_members[] = {
 
 PRIVATE struct type_member tpconst bls_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &BytesLineSplitIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &DeeBytes_Type),
 	TYPE_MEMBER_END
 };
 

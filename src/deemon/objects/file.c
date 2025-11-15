@@ -1836,12 +1836,12 @@ PRIVATE DEFINE_UINT32(file_SEEK_END, SEEK_END);
 
 
 PRIVATE struct type_member tpconst file_class_members[] = {
-	TYPE_MEMBER_CONST(STR_Iterator, (DeeObject *)&DeeFile_Type),
-	TYPE_MEMBER_CONST("Reader", (DeeObject *)&DeeFileReader_Type),
-	TYPE_MEMBER_CONST("Writer", (DeeObject *)&DeeFileWriter_Type),
-	TYPE_MEMBER_CONST("Buffer", (DeeObject *)&DeeFileBuffer_Type),
-	TYPE_MEMBER_CONST("System", (DeeObject *)&DeeSystemFile_Type),
-	TYPE_MEMBER_CONST_DOC("io", (DeeObject *)&DeeFile_Type,
+	TYPE_MEMBER_CONST(STR_Iterator, &DeeFile_Type.ft_base),
+	TYPE_MEMBER_CONST("Reader", &DeeFileReader_Type.ft_base),
+	TYPE_MEMBER_CONST("Writer", &DeeFileWriter_Type.ft_base),
+	TYPE_MEMBER_CONST("Buffer", &DeeFileBuffer_Type.ft_base),
+	TYPE_MEMBER_CONST("System", &DeeSystemFile_Type.ft_base),
+	TYPE_MEMBER_CONST_DOC("io", &DeeFile_Type.ft_base,
 	                      "Deprecated alias for backwards-compatible access to "
 	                      /**/ "std-streams that used to be located in ${File.io.stdxxx}\n"
 	                      /**/ "Starting with deemon v200, these streams can now be found "

@@ -1145,7 +1145,10 @@ PRIVATE struct type_member tpconst modexports_class_members[] = {
 INTERN DeeTypeObject ModuleExports_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ModuleExports",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(mod:?DModule)\n"
+	                         "\n"
+	                         "[](key:?X2?Dstring?Dint)->"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

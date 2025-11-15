@@ -558,7 +558,16 @@ PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_assert(size_t argc, DeeObject *const 
 	int operator_name = -1;
 	if (argc) {
 		message = argv[0];
-		if (DeeCallable_Check(message)) {
+		/* Do not invoke the "message" callback if it's a type:
+		 * >> assert x != y, type x;
+		 *
+		 * Here, even though "type x" is callable, the user wouldn't want
+		 * us to invoke it. -- Instead, use the type's name as message */
+		if (DeeType_Check(message)) {
+			message = DeeObject_Str(message);
+			if unlikely(!message)
+				goto err;
+		} else if (DeeCallable_Check(message)) {
 			message = DeeObject_Call(message, 0, NULL);
 			if unlikely(!message)
 				goto err;

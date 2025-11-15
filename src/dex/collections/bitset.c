@@ -1801,6 +1801,7 @@ PRIVATE struct type_member tpconst bs_class_members[] = {
 	TYPE_MEMBER_CONST("Frozen", &RoBitset_Type),
 #define bsv_class_members (bs_class_members + 1)
 	TYPE_MEMBER_CONST("Iterator", &BitsetIterator_Type),
+	TYPE_MEMBER_CONST("ItemType", &DeeInt_Type),
 	TYPE_MEMBER_END
 };
 
@@ -4520,7 +4521,9 @@ PRIVATE struct type_member tpconst bsiter_members[] = {
 INTERN DeeTypeObject BitsetIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "BitsetIterator",
-	/* .tp_doc      = */ DOC("(seq?:?GBitset)"),
+	/* .tp_doc      = */ DOC("(seq?:?GBitset)\n"
+	                         "\n"
+	                         "next->?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

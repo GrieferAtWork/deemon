@@ -2086,7 +2086,9 @@ PRIVATE struct type_member tpconst diriter_members[] = {
 INTERN DeeTypeObject DeeDirIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DirIterator",
-	/* .tp_doc      = */ DOC("(" posix__DirIterator_params ")"),
+	/* .tp_doc      = */ DOC("(" posix__DirIterator_params ")\n"
+	                         "\n"
+	                         "next->?."),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2279,6 +2281,7 @@ PRIVATE struct type_seq dir_seq = {
 
 PRIVATE struct type_member tpconst dir_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DeeDirIterator_Type),
+	TYPE_MEMBER_CONST("ItemType", &DeeDirIterator_Type),
 	TYPE_MEMBER_END
 };
 

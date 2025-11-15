@@ -2076,7 +2076,7 @@ PRIVATE struct type_member tpconst environ_iterator_members[] = {
 INTERN DeeTypeObject DeeEnvironIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_EnvironIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?T2?Dstring?Dstring"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2260,6 +2260,8 @@ PRIVATE struct type_seq environ_seq = {
 
 PRIVATE struct type_member tpconst environ_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DeeEnvironIterator_Type),
+	TYPE_MEMBER_CONST("KeyType", &DeeString_Type),
+	TYPE_MEMBER_CONST("ValueType", &DeeString_Type),
 	TYPE_MEMBER_END
 };
 
