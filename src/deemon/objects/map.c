@@ -703,7 +703,18 @@ PRIVATE struct type_getset tpconst map_class_getsets[] = {
 	            "Returns the type of sequence returned by the ?#itervalues property"),
 	TYPE_GETTER("__map_getitem_always_bound__", &map_get___map_getitem_always_bound__,
 	            "->?Dbool\n"
-	            "Evaluates to ?t if ?#{op:getitem} never throws :UnboundItem"),
+	            "Evaluates to ?t if ?#{op:getitem} never throws :UnboundItem\n"
+	            "\n"
+	            "Sub-classes that implement ${Mapping.operator []} (or unrelated classes "
+	            /**/ "that define ${__map_getitem__}), such that it never throws "
+	            /**/ ":UnboundItem errors should override this property like: "
+	            /**/ "${public static final __map_getitem_always_bound__ = true}. "
+	            /**/ "Doing so allows the deemon runtime to implement generated "
+	            /**/ "mapping functions more efficiently in some cases. In order "
+	            /**/ "for deemon to see and understand the attribute, it #Bmust be "
+	            /**/ "written exactly as seen in the example. It may not be a static "
+	            /**/ "property, or evaluate to something other than ?t. Otherwise, "
+	            /**/ "the hint is ignored and may as well not be present at all."),
 	TYPE_GETSET_END
 };
 

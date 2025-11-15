@@ -77,6 +77,8 @@ DeeType_HasExplicitTrait_uncached(DeeTypeObject *__restrict self,
 #undef CASE
 	default: return false;
 	}
+
+	/* Lookup the attribute used to configure the requested trait. */
 	if (!DeeType_FindAttrInfoStringLenHash(self,
 	                                       name->tn_name,
 	                                       name->tn_size,
@@ -124,7 +126,7 @@ DeeType_HasExplicitTrait_uncached(DeeTypeObject *__restrict self,
 		if (DeeBool_Check(value)) {
 			result = DeeBool_IsTrue(value);
 		} else if (DeeInt_Check(value)) {
-			result = !DeeInt_IsZero(value);
+			result = !DeeInt_IsZero(value); /* XXX: Use of integers is not documented (maybe just remove this eventually?) */
 		} else {
 			result = false;
 		}
