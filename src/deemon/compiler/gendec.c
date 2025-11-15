@@ -1186,6 +1186,15 @@ INTERN WUNUSED int (DCALL dec_putobj)(/*nullable*/ DeeObject *self) {
 		return 0;
 	}
 
+	/* Emit a one-element sequence object (as a tuple) */
+	if (tp_self == &DeeSeqOne_Type) {
+		if (dec_putb(DTYPE_TUPLE))
+			goto err;
+		if (dec_putptr(1))
+			goto err;
+		return dec_putobj(((DeeSeqOneObject *)self)->so_item);
+	}
+
 	/* Fallback: try to encode a builtin object. */
 	builtin_id = Dec_BuiltinID(self);
 	if unlikely(builtin_id == DEC_BUILTINID_UNKNOWN)
