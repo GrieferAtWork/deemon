@@ -47,6 +47,7 @@
 
 /**/
 #include "../objects/generic-proxy.h"
+#include "../objects/seq/default-map-proxy.h"
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -1121,7 +1122,7 @@ FunctionSymbolsByName_TryGetRefIdByObject(FunctionSymbolsByName const *self, Dee
 			goto err_no_such_key;
 	} else {
 		if unlikely(DeeObject_AsUInt16(key, &rid))
-			goto err;
+			goto err_maybe_overflow;
 		if unlikely(OVERFLOW_UADD(rid, self->fsbn_rid_start, &rid))
 			goto err_no_such_key;
 	}
@@ -1130,7 +1131,9 @@ FunctionSymbolsByName_TryGetRefIdByObject(FunctionSymbolsByName const *self, Dee
 	return rid;
 err_no_such_key:
 	return RID_UNK;
-err:
+err_maybe_overflow:
+	if (DeeError_Catch(&DeeError_IntegerOverflow))
+		return RID_UNK;
 	return RID_ERR;
 }
 
@@ -1914,6 +1917,11 @@ yfuncsymbolsbynameiter_get_func(YieldFunctionSymbolsByNameIterator *__restrict s
 	return_reference_(self->yfsbni_seq->yfsbn_yfunc->yf_func);
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfuncsymbolsbynamekeysiter_get_seq(YieldFunctionSymbolsByNameIterator *__restrict self) {
+	return DeeObject_InvokeMethodHint(map_keys, (DeeObject *)self->yfsbni_seq);
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 yfuncsymbolsbynameiter_copy(YieldFunctionSymbolsByNameIterator *__restrict self,
                             YieldFunctionSymbolsByNameIterator *__restrict other) {
@@ -1927,6 +1935,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 yfuncsymbolsbynameiter_init(YieldFunctionSymbolsByNameIterator *__restrict self,
                             size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack1(err, argc, argv, "YieldFunctionSymbolsByNameIterator", &self->yfsbni_seq);
+	if (Dee_TYPE(self->yfsbni_seq) == &DefaultSequence_MapKeys_Type)
+		self->yfsbni_seq = (YieldFunctionSymbolsByName *)((DefaultSequence_MapProxy *)self->yfsbni_seq)->dsmp_map;
 	if (DeeObject_AssertTypeExact(self->yfsbni_seq, &YieldFunctionSymbolsByName_Type))
 		goto err;
 	Dee_Incref(self->yfsbni_seq);
@@ -1940,17 +1950,6 @@ err:
 STATIC_ASSERT(offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_seq) == offsetof(ProxyObject, po_obj));
 #define yfuncsymbolsbynameiter_fini  generic_proxy__fini
 #define yfuncsymbolsbynameiter_visit generic_proxy__visit
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-yfuncsymbolsbynameiter_bool(YieldFunctionSymbolsByNameIterator *__restrict self) {
-	bool result;
-	YieldFunctionSymbolsByName *sym = self->yfsbni_seq;
-	YieldFunctionSymbolsByNameIteratorIndex idx;
-	idx.yfsbnii_word = atomic_read(&self->yfsbni_idx.yfsbnii_word);
-	result = (idx.yfsbnii_idx.i_aid < sym->yfsbn_nargs) ||
-	         (idx.yfsbnii_idx.i_rid < sym->yfsbn_rid_end);
-	return result ? 1 : 0;
-}
 
 /* Returns `NULL' if the arg isn't bound. */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) DeeObject *DCALL
@@ -1970,6 +1969,43 @@ use_default:
 		result = code->co_defaultv[aid - code->co_argc_min];
 	}
 	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yfuncsymbolsbynameiter_bool(YieldFunctionSymbolsByNameIterator *__restrict self) {
+	YieldFunctionSymbolsByName *sym = self->yfsbni_seq;
+	YieldFunctionSymbolsByNameIteratorIndex idx;
+	idx.yfsbnii_word = atomic_read(&self->yfsbni_idx.yfsbnii_word);
+	for (;;) {
+		if (idx.yfsbnii_idx.i_aid < sym->yfsbn_nargs) {
+			if (YieldFunction_GetArg(sym->yfsbn_yfunc, idx.yfsbnii_idx.i_aid))
+				return 1;
+			++idx.yfsbnii_idx.i_aid;
+			continue;
+		}
+		if (idx.yfsbnii_idx.i_rid < sym->yfsbn_rid_end) {
+			DeeFunctionObject *func = sym->yfsbn_yfunc->yf_func;
+			DeeObject *value;
+			value = atomic_read(&func->fo_refv[idx.yfsbnii_idx.i_rid]);
+			if (!ITER_ISOK(value)) {
+				++idx.yfsbnii_idx.i_rid;
+				continue;
+			}
+			return 1;
+		}
+		return 0;
+	}
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yfuncsymbolsbynamekeysiter_bool(YieldFunctionSymbolsByNameIterator *__restrict self) {
+	bool result;
+	YieldFunctionSymbolsByName *sym = self->yfsbni_seq;
+	YieldFunctionSymbolsByNameIteratorIndex idx;
+	idx.yfsbnii_word = atomic_read(&self->yfsbni_idx.yfsbnii_word);
+	result = (idx.yfsbnii_idx.i_aid < sym->yfsbn_nargs) ||
+	         (idx.yfsbnii_idx.i_rid < sym->yfsbn_rid_end);
+	return result ? 1 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2240,10 +2276,25 @@ PRIVATE struct type_member tpconst yfuncsymbolsbynameiter_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE struct type_getset tpconst yfuncsymbolsbynamekeysiter_getsets[] = {
+	TYPE_GETTER_AB("__yfunc__", &yfuncsymbolsbynameiter_get_yfunc, "->?Ert:YieldFunction"),
+	TYPE_GETTER_AB("__func__", &yfuncsymbolsbynameiter_get_func, "->?DFunction"),
+	TYPE_GETTER_AB(STR_seq, &yfuncsymbolsbynamekeysiter_get_seq, "->?Ert:MapKeys"),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst yfuncsymbolsbynamekeysiter_members[] = {
+	TYPE_MEMBER_FIELD("__aid__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_idx.yfsbnii_idx.i_aid)),
+	TYPE_MEMBER_FIELD("__rid__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_idx.yfsbnii_idx.i_rid)),
+	TYPE_MEMBER_END
+};
+
 INTERN DeeTypeObject YieldFunctionSymbolsByNameIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_YieldFunctionSymbolsByNameIterator",
-	/* .tp_doc      = */ DOC("next->?T2?X2?Dstring?Dint?O"),
+	/* .tp_doc      = */ DOC("(symbols:?X2?Ert:YieldFunctionSymbolsByName?C?Ert:MapKeys?Ert:YieldFunctionSymbolsByName)\n"
+	                         "\n"
+	                         "next->?T2?X2?Dstring?Dint?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2294,7 +2345,9 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameIterator_Type = {
 INTERN DeeTypeObject YieldFunctionSymbolsByNameKeysIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_YieldFunctionSymbolsByNameKeysIterator",
-	/* .tp_doc      = */ DOC("next->?X2?Dstring?Dint"),
+	/* .tp_doc      = */ DOC("(symbols:?X2?Ert:YieldFunctionSymbolsByName?C?Ert:MapKeys?Ert:YieldFunctionSymbolsByName)\n"
+	                         "\n"
+	                         "next->?X2?Dstring?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2316,7 +2369,7 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameKeysIterator_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbynameiter_bool,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbynamekeysiter_bool,
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -2331,8 +2384,8 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameKeysIterator_Type = {
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ yfuncsymbolsbynameiter_getsets,
-	/* .tp_members       = */ yfuncsymbolsbynameiter_members,
+	/* .tp_getsets       = */ yfuncsymbolsbynamekeysiter_getsets,
+	/* .tp_members       = */ yfuncsymbolsbynamekeysiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
@@ -2423,9 +2476,11 @@ YieldFunctionSymbolsByName_TryLookupSymByObject(YieldFunctionSymbolsByName const
 	}
 	index = DeeObject_AsSizeDirect(key);
 	if unlikely(index == (size_t)-1)
-		goto err;
+		goto err_maybe_overflow;
 	return YieldFunctionSymbolsByName_TryLookupSymByIndex(self, index);
-err:
+err_maybe_overflow:
+	if (DeeError_Catch(&DeeError_IntegerOverflow))
+		return YFUNCSYMBOL_INVALID;
 	return YFUNCSYMBOL_ERROR;
 }
 
@@ -2739,6 +2794,20 @@ yfuncsymbolsbyname_copy(YieldFunctionSymbolsByName *__restrict self,
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+yfuncsymbolsbyname_deep(YieldFunctionSymbolsByName *__restrict self,
+                        YieldFunctionSymbolsByName *__restrict other) {
+	self->yfsbn_yfunc = (DREF DeeYieldFunctionObject *)DeeObject_DeepCopy((DeeObject *)other->yfsbn_yfunc);
+	if unlikely(!self->yfsbn_yfunc)
+		goto err;
+	self->yfsbn_nargs     = other->yfsbn_nargs;
+	self->yfsbn_rid_start = other->yfsbn_rid_start;
+	self->yfsbn_rid_end   = other->yfsbn_rid_end;
+	return 0;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 yfuncsymbolsbyname_init_kw(YieldFunctionSymbolsByName *__restrict self,
                            size_t argc, DeeObject *const *argv,
@@ -2870,7 +2939,7 @@ INTERN DeeTypeObject YieldFunctionSymbolsByName_Type = {
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&yfuncsymbolsbyname_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&yfuncsymbolsbyname_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(YieldFunctionSymbolsByName),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&yfuncsymbolsbyname_init_kw
@@ -4886,11 +4955,13 @@ FrameSymbolsByName_TryKey2LocId(FrameSymbolsByName *self, DeeObject *key) {
 		                                          DeeString_SIZE(key));
 	} else {
 		if (DeeObject_AsUIntX(key, &result))
-			goto err;
+			goto err_maybe_overflow;
 		result = FrameSymbolsByName_TryVerifyLocId(self, result);
 	}
 	return result;
-err:
+err_maybe_overflow:
+	if (DeeError_Catch(&DeeError_IntegerOverflow))
+		return (canonical_lid_t)-2;
 	return (canonical_lid_t)-1;
 }
 
