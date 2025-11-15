@@ -1649,6 +1649,18 @@ err:
 }}
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_bool__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+	DeeArg_Unpack0(err, argc, argv, "__set_bool__");
+{
+	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_bool))(self);
+	if unlikely(result < 0)
+		goto err;
+	return_bool(result);
+err:
+	return NULL;
+}}
+
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___set_inv__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack0(err, argc, argv, "__set_inv__");
 {

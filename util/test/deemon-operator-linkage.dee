@@ -374,6 +374,7 @@ Type_assert(deemon.List, {
 	"mh_set_operator_le":                         "default__set_operator_le__with__set_operator_foreach",
 	"mh_set_operator_gr":                         "default__set_operator_gr__with__set_operator_foreach",
 	"mh_set_operator_ge":                         "default__set_operator_ge__with__set_operator_foreach",
+	"mh_set_operator_bool":                       "list_bool",
 	"mh_set_operator_inv":                        "default__set_operator_inv__unsupported",
 	"mh_set_operator_add":                        "default__set_operator_add__unsupported",
 	"mh_set_operator_sub":                        "default__set_operator_sub__unsupported",
@@ -561,13 +562,13 @@ Type_assert(deemon.HashSet, {
 	"mh_seq_unpack_ub":                           "default__seq_unpack_ex__with__tp_asvector",
 	"mh_seq_trygetfirst":                         "default__seq_trygetfirst__with__seq_operator_foreach", // TODO: Optimized impl in HashSet
 	"mh_seq_getfirst":                            "default__seq_getfirst__with__seq_trygetfirst", // TODO: Optimized impl in HashSet
-	"mh_seq_boundfirst":                          "default__seq_boundfirst__with__seq_trygetfirst", // TODO: Optimized impl in HashSet
-	"mh_seq_delfirst":                            "default__seq_delfirst__unsupported", // TODO: Shouldn't be *__unsupported
+	"mh_seq_boundfirst":                          "default__seq_boundfirst__with__set_operator_bool",
+	"mh_seq_delfirst":                            "default__seq_delfirst__with__seq_trygetfirst__set_remove",
 	"mh_seq_setfirst":                            "default__seq_setfirst__unsupported",
 	"mh_seq_trygetlast":                          "default__seq_trygetlast__with__seq_operator_foreach", // TODO: Optimized impl in HashSet
 	"mh_seq_getlast":                             "default__seq_getlast__with__seq_trygetlast", // TODO: Optimized impl in HashSet
-	"mh_seq_boundlast":                           "default__seq_boundlast__with__seq_trygetlast", // TODO: Optimized impl in HashSet
-	"mh_seq_dellast":                             "default__seq_dellast__unsupported", // TODO: Shouldn't be *__unsupported
+	"mh_seq_boundlast":                           "default__seq_boundfirst__with__set_operator_bool",
+	"mh_seq_dellast":                             "default__seq_dellast__with__seq_trygetlast__set_remove",
 	"mh_seq_setlast":                             "default__seq_setlast__unsupported",
 	"mh_seq_cached":                              "default__seq_cached__with__seq_operator_iter",
 	"mh_seq_frozen":                              "default__seq_frozen__with__set_frozen",
@@ -665,6 +666,7 @@ Type_assert(deemon.HashSet, {
 	"mh_set_operator_le":                         "default__set_operator_le__with__set_operator_foreach",
 	"mh_set_operator_gr":                         "default__set_operator_gr__with__set_operator_foreach",
 	"mh_set_operator_ge":                         "default__set_operator_ge__with__set_operator_foreach",
+	"mh_set_operator_bool":                       "hashset_bool",
 	"mh_set_operator_inv":                        "default__set_operator_inv__unsupported",
 	"mh_set_operator_add":                        "default__set_operator_add__unsupported",
 	"mh_set_operator_sub":                        "default__set_operator_sub__unsupported",
@@ -682,6 +684,16 @@ Type_assert(deemon.HashSet, {
 	"mh_set_removeall":                           "default__set_removeall__with__set_remove",
 	"mh_set_pop":                                 "hashset_mh_pop",
 	"mh_set_pop_with_default":                    "hashset_mh_pop_with_default",
+	"mh_set_trygetfirst":                         "default__seq_trygetfirst__with__seq_operator_foreach", // TODO: Optimized impl in HashSet
+	"mh_set_getfirst":                            "default__set_getfirst__with__set_trygetfirst", // TODO: Optimized impl in HashSet
+	"mh_set_boundfirst":                          "default__seq_boundfirst__with__set_operator_bool",
+	"mh_set_delfirst":                            "default__set_delfirst__with__set_trygetfirst__set_remove",
+	"mh_set_setfirst":                            "default__set_setfirst__unsupported",
+	"mh_set_trygetlast":                          "default__seq_trygetlast__with__seq_operator_foreach", // TODO: Optimized impl in HashSet
+	"mh_set_getlast":                             "default__set_getlast__with__set_trygetlast", // TODO: Optimized impl in HashSet
+	"mh_set_boundlast":                           "default__seq_boundfirst__with__set_operator_bool",
+	"mh_set_dellast":                             "default__set_dellast__with__set_trygetlast__set_remove",
+	"mh_set_setlast":                             "default__set_setlast__unsupported",
 	"mh_map_operator_iter":                       "default__map_operator_iter__with__seq_operator_iter",
 	"mh_map_operator_foreach_pair":               "default__map_operator_foreach_pair__with__seq_operator_foreach_pair",
 	"mh_map_operator_sizeob":                     "default__map_operator_sizeob__with__map_operator_size",
@@ -970,6 +982,7 @@ Type_assert(deemon.Dict, {
 	"mh_set_operator_le":                         "default__set_operator_le__with__set_operator_foreach",
 	"mh_set_operator_gr":                         "default__set_operator_gr__with__set_operator_foreach",
 	"mh_set_operator_ge":                         "default__set_operator_ge__with__set_operator_foreach",
+	"mh_set_operator_bool":                       "dict_bool",
 	"mh_set_operator_inv":                        "default__set_operator_inv__unsupported",
 	"mh_set_operator_add":                        "default__set_operator_add__unsupported",
 	"mh_set_operator_sub":                        "default__set_operator_sub__unsupported",
@@ -987,6 +1000,16 @@ Type_assert(deemon.Dict, {
 	"mh_set_removeall":                           "default__set_removeall__with__set_remove",
 	"mh_set_pop":                                 "default__set_pop__with__map_popitem",
 	"mh_set_pop_with_default":                    "default__set_pop_with_default__with__map_popitem",
+	"mh_set_trygetfirst":                         "dict_trygetfirst",
+	"mh_set_getfirst":                            "dict_getfirst",
+	"mh_set_boundfirst":                          "dict_nonempty_as_bound",
+	"mh_set_delfirst":                            "dict_delfirst",
+	"mh_set_setfirst":                            "dict_setfirst",
+	"mh_set_trygetlast":                          "dict_trygetlast",
+	"mh_set_getlast":                             "dict_getlast",
+	"mh_set_boundlast":                           "dict_nonempty_as_bound",
+	"mh_set_dellast":                             "dict_dellast",
+	"mh_set_setlast":                             "dict_setlast",
 	"mh_map_operator_iter":                       "dict_iter",
 	"mh_map_operator_foreach_pair":               "dict_foreach_pair",
 	"mh_map_operator_sizeob":                     "dict_sizeob",
@@ -1267,6 +1290,7 @@ Type_assert(deemon.Tuple, {
 	"mh_set_operator_le":                         "default__set_operator_le__with__set_operator_foreach",
 	"mh_set_operator_gr":                         "default__set_operator_gr__with__set_operator_foreach",
 	"mh_set_operator_ge":                         "default__set_operator_ge__with__set_operator_foreach",
+	"mh_set_operator_bool":                       "tuple_bool",
 	"mh_set_operator_inv":                        "default__set_operator_inv__unsupported",
 	"mh_set_operator_add":                        "default__set_operator_add__unsupported",
 	"mh_set_operator_sub":                        "default__set_operator_sub__unsupported",
@@ -1284,6 +1308,16 @@ Type_assert(deemon.Tuple, {
 	"mh_set_removeall":                           "default__set_removeall__unsupported",
 	"mh_set_pop":                                 "default__set_pop__unsupported",
 	"mh_set_pop_with_default":                    "default__set_pop_with_default__unsupported",
+	"mh_set_trygetfirst":                         "tuple_trygetfirst",
+	"mh_set_getfirst":                            "tuple_getfirst",
+	"mh_set_boundfirst":                          "tuple_nonempty_as_bound",
+	"mh_set_delfirst":                            "default__seq_delfirst__unsupported",
+	"mh_set_setfirst":                            "default__seq_setfirst__unsupported",
+	"mh_set_trygetlast":                          "tuple_trygetlast",
+	"mh_set_getlast":                             "tuple_getlast",
+	"mh_set_boundlast":                           "tuple_nonempty_as_bound",
+	"mh_set_dellast":                             "default__seq_dellast__unsupported",
+	"mh_set_setlast":                             "default__seq_setlast__unsupported",
 	"mh_map_operator_iter":                       "default__map_operator_iter__with__seq_operator_iter",
 	"mh_map_operator_foreach_pair":               "default__map_operator_foreach_pair__with__seq_operator_foreach_pair",
 	"mh_map_operator_sizeob":                     "default__map_operator_sizeob__with__map_operator_size",

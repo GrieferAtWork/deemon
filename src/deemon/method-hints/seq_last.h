@@ -83,6 +83,21 @@ err:
 err:
 	return NULL;
 }}
+%{$with__seq_operator_sizeob__and__seq_operator_trygetitem = {
+	DREF DeeObject *result;
+	DREF DeeObject *size = CALL_DEPENDENCY(seq_operator_sizeob, self);
+	if unlikely(!size)
+		goto err;
+	if unlikely(DeeObject_Dec(&size))
+		goto err_size;
+	result = CALL_DEPENDENCY(seq_operator_trygetitem, self, size);
+	Dee_Decref(size);
+	return result;
+err_size:
+	Dee_Decref(size);
+err:
+	return NULL;
+}}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_default_getlast_with_foreach_cb)]] {
 	DREF DeeObject *result;
 	Dee_ssize_t foreach_status;
@@ -113,6 +128,21 @@ __seq_last__.seq_getlast([[nonnull]] DeeObject *__restrict self)
 err:
 	return NULL;
 }}
+%{$with__seq_operator_sizeob__and__seq_operator_getitem = {
+	DREF DeeObject *result;
+	DREF DeeObject *size = CALL_DEPENDENCY(seq_operator_sizeob, self);
+	if unlikely(!size)
+		goto err;
+	if unlikely(DeeObject_Dec(&size))
+		goto err_size;
+	result = CALL_DEPENDENCY(seq_operator_getitem, self, size);
+	Dee_Decref(size);
+	return result;
+err_size:
+	Dee_Decref(size);
+err:
+	return NULL;
+}}
 %{$with__seq_trygetlast = {
 	DREF DeeObject *result = CALL_DEPENDENCY(seq_trygetlast, self);
 	if unlikely(result == ITER_DONE)
@@ -137,7 +167,22 @@ __seq_last__.seq_boundlast([[nonnull]] DeeObject *__restrict self)
 		return Dee_BOUND_MISSING;
 	return CALL_DEPENDENCY(seq_operator_bounditem_index, self, size - 1);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
+}}
+%{$with__seq_operator_sizeob__and__seq_operator_bounditem = {
+	int result;
+	DREF DeeObject *size = CALL_DEPENDENCY(seq_operator_sizeob, self);
+	if unlikely(!size)
+		goto err;
+	if unlikely(DeeObject_Dec(&size))
+		goto err_size;
+	result = CALL_DEPENDENCY(seq_operator_bounditem, self, size);
+	Dee_Decref(size);
+	return result;
+err_size:
+	Dee_Decref(size);
+err:
+	return Dee_BOUND_ERR;
 }}
 %{$with__seq_trygetlast = {
 	DREF DeeObject *result = CALL_DEPENDENCY(seq_trygetlast, self);
@@ -147,7 +192,9 @@ err:
 		return Dee_BOUND_ERR;
 	Dee_Decref(result);
 	return Dee_BOUND_YES;
-}} {
+}}
+%{$with__set_operator_bool = "default__seq_boundfirst__with__set_operator_bool"}
+{
 	return LOCAL_BOUNDATTR(self);
 }
 
@@ -165,6 +212,34 @@ __seq_last__.seq_dellast([[nonnull]] DeeObject *__restrict self)
 	if unlikely(!size)
 		return 0;
 	return CALL_DEPENDENCY(seq_operator_delitem_index, self, size - 1);
+err:
+	return -1;
+}}
+%{$with__seq_operator_sizeob__and__seq_operator_delitem = {
+	int result;
+	DREF DeeObject *size = CALL_DEPENDENCY(seq_operator_sizeob, self);
+	if unlikely(!size)
+		goto err;
+	if unlikely(DeeObject_Dec(&size))
+		goto err_size;
+	result = CALL_DEPENDENCY(seq_operator_delitem, self, size);
+	Dee_Decref(size);
+	return result;
+err_size:
+	Dee_Decref(size);
+err:
+	return -1;
+}}
+%{$with__seq_trygetlast__set_remove = {
+	int remove_status;
+	DREF DeeObject *last = CALL_DEPENDENCY(seq_trygetlast, self);
+	if (!ITER_ISOK(last))
+		return last == ITER_DONE ? 0 : -1;
+	remove_status = CALL_DEPENDENCY(set_remove, self, last);
+	Dee_Decref(last);
+	if unlikely(remove_status < 0)
+		goto err;
+	return 0;
 err:
 	return -1;
 }} {
@@ -192,6 +267,21 @@ err_empty:
 	return DeeRT_ErrEmptySequence(self);
 err:
 	return -1;
+}}
+%{$with__seq_operator_sizeob__and__seq_operator_setitem = {
+	int result;
+	DREF DeeObject *size = CALL_DEPENDENCY(seq_operator_sizeob, self);
+	if unlikely(!size)
+		goto err;
+	if unlikely(DeeObject_Dec(&size))
+		goto err_size;
+	result = CALL_DEPENDENCY(seq_operator_setitem, self, size, value);
+	Dee_Decref(size);
+	return result;
+err_size:
+	Dee_Decref(size);
+err:
+	return -1;
 }} {
 	return LOCAL_SETATTR(self, value);
 }
@@ -204,18 +294,34 @@ seq_trygetlast = {
 	DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
 	if (REQUIRE_NODEFAULT(seq_getlast))
 		return &$with__seq_getlast;
-	if (THIS_TYPE->tp_seq &&
-	    THIS_TYPE->tp_seq->tp_getitem_index_fast &&
-	    THIS_TYPE->tp_seq->tp_size)
+	if (THIS_TYPE->tp_seq && THIS_TYPE->tp_seq->tp_getitem_index_fast &&
+	    REQUIRE_ANY(seq_operator_size) != &default__seq_operator_size__unsupported)
 		return &$with__seq_operator_size__and__operator_getitem_index_fast;
+	if (HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__)) {
+		DeeMH_set_trygetlast_t set_trygetlast = REQUIRE_NODEFAULT(set_trygetlast);
+		if (set_trygetlast)
+			return set_trygetlast;
+	}
 	seq_operator_trygetitem_index = REQUIRE(seq_operator_trygetitem_index);
 	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__empty)
 		return &$empty;
 	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__with__seq_operator_foreach)
 		return &$with__seq_operator_foreach;
-	if (seq_operator_trygetitem_index &&
-	    REQUIRE_ANY(seq_operator_size) != &default__seq_operator_size__unsupported)
-		return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
+	if (seq_operator_trygetitem_index) {
+		DeeMH_seq_operator_size_t seq_operator_size = REQUIRE_ANY(seq_operator_size);
+		if (seq_operator_size != &default__seq_operator_size__unsupported) {
+			if (seq_operator_size == &default__seq_operator_size__with__seq_operator_sizeob)
+				return $with__seq_operator_sizeob__and__seq_operator_trygetitem;
+			if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__with__seq_operator_getitem_index) {
+				DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index = REQUIRE(seq_operator_getitem_index);
+				if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_getitem)
+					return $with__seq_operator_sizeob__and__seq_operator_trygetitem;
+			}
+			return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
+		}
+	}
+	if (REQUIRE(seq_operator_foreach))
+		return &$with__seq_operator_foreach;
 };
 
 seq_getlast = {
@@ -224,18 +330,41 @@ seq_getlast = {
 		return &$empty;
 	if (seq_trygetlast == &default__seq_trygetlast__with__seq_operator_size__and__seq_operator_trygetitem_index)
 		return &$with__seq_operator_size__and__seq_operator_getitem_index;
-	if (seq_trygetlast)
+	if (seq_trygetlast == &default__seq_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem)
+		return &$with__seq_operator_sizeob__and__seq_operator_getitem;
+	if (seq_trygetlast) {
+		if (seq_trygetlast == REQUIRE_NODEFAULT(set_trygetlast)) {
+			DeeMH_set_getlast_t set_getlast = REQUIRE_NODEFAULT(set_getlast);
+			if (set_getlast)
+				return set_getlast;
+		}
 		return &$with__seq_trygetlast;
+	}
 };
 
 seq_boundlast = {
 	DeeMH_seq_trygetlast_t seq_trygetlast = REQUIRE(seq_trygetlast);
 	if (seq_trygetlast == &default__seq_trygetlast__empty)
 		return &$empty;
+	if (seq_trygetlast == &default__seq_trygetlast__with__seq_operator_foreach)
+		return &$with__set_operator_bool;
+	if ((seq_trygetlast == &default__seq_trygetlast__with__seq_operator_size__and__operator_getitem_index_fast ||
+	     seq_trygetlast == &default__seq_trygetlast__with__seq_operator_size__and__seq_operator_trygetitem_index ||
+	     seq_trygetlast == &default__seq_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem) &&
+	    HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__))
+		return &$with__set_operator_bool;
 	if (seq_trygetlast == &default__seq_trygetlast__with__seq_operator_size__and__seq_operator_trygetitem_index)
 		return &$with__seq_operator_size__and__seq_operator_bounditem_index;
-	if (seq_trygetlast)
+	if (seq_trygetlast == &default__seq_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem)
+		return &$with__seq_operator_sizeob__and__seq_operator_bounditem;
+	if (seq_trygetlast) {
+		if (seq_trygetlast == REQUIRE_NODEFAULT(set_trygetlast)) {
+			DeeMH_set_boundlast_t set_boundlast = REQUIRE_NODEFAULT(set_boundlast);
+			if (set_boundlast)
+				return set_boundlast;
+		}
 		return &$with__seq_trygetlast;
+	}
 };
 
 seq_dellast = {
@@ -246,8 +375,20 @@ seq_dellast = {
 		if (REQUIRE(seq_operator_delitem_index))
 			return &$with__seq_operator_size__and__seq_operator_delitem_index;
 	}
-	if (seq_trygetlast)
+	if (seq_trygetlast == &default__seq_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem) {
+		if (REQUIRE(seq_operator_delitem))
+			return &$with__seq_operator_sizeob__and__seq_operator_delitem;
+	}
+	if (seq_trygetlast) {
+		if (seq_trygetlast == REQUIRE_NODEFAULT(set_trygetlast)) {
+			DeeMH_set_dellast_t set_dellast = REQUIRE_NODEFAULT(set_dellast);
+			if (set_dellast)
+				return set_dellast;
+		}
+		if (REQUIRE_NODEFAULT(set_remove))
+			return &$with__seq_trygetlast__set_remove;
 		return &$unsupported;
+	}
 };
 
 seq_setlast = {
@@ -258,6 +399,16 @@ seq_setlast = {
 		if (REQUIRE(seq_operator_setitem_index))
 			return &$with__seq_operator_size__and__seq_operator_setitem_index;
 	}
-	if (seq_trygetlast)
+	if (seq_trygetlast == &default__seq_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem) {
+		if (REQUIRE(seq_operator_setitem))
+			return &$with__seq_operator_sizeob__and__seq_operator_setitem;
+	}
+	if (seq_trygetlast) {
+		if (seq_trygetlast == REQUIRE_NODEFAULT(set_trygetlast)) {
+			DeeMH_set_setlast_t set_setlast = REQUIRE_NODEFAULT(set_setlast);
+			if (set_setlast)
+				return set_setlast;
+		}
 		return &$unsupported;
+	}
 };

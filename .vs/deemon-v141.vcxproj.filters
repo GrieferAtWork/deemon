@@ -1068,6 +1068,9 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_xchitem.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_first.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\set_frozen.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
@@ -1077,10 +1080,16 @@
 		<ClInclude Include="..\src\deemon\method-hints\set_insertall.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_last.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\set_operator_add.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\set_operator_and.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_operator_bool.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\set_operator_cmp.h">

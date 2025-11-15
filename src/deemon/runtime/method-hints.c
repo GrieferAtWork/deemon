@@ -312,6 +312,7 @@ INTERN_TPCONST Dee_funptr_t tpconst mh_unsupported_impls[Dee_TMH_COUNT] = {
 	(Dee_funptr_t)&default__set_operator_le__unsupported,
 	(Dee_funptr_t)&default__set_operator_gr__unsupported,
 	(Dee_funptr_t)&default__set_operator_ge__unsupported,
+	(Dee_funptr_t)&default__set_operator_bool__unsupported,
 	(Dee_funptr_t)&default__set_operator_inv__unsupported,
 	(Dee_funptr_t)&default__set_operator_add__unsupported,
 	(Dee_funptr_t)&default__set_operator_sub__unsupported,
@@ -329,6 +330,16 @@ INTERN_TPCONST Dee_funptr_t tpconst mh_unsupported_impls[Dee_TMH_COUNT] = {
 	(Dee_funptr_t)&default__set_removeall__unsupported,
 	(Dee_funptr_t)&default__set_pop__unsupported,
 	(Dee_funptr_t)&default__set_pop_with_default__unsupported,
+	(Dee_funptr_t)&default__set_trygetfirst__unsupported,
+	(Dee_funptr_t)&default__set_getfirst__unsupported,
+	(Dee_funptr_t)&default__set_boundfirst__unsupported,
+	(Dee_funptr_t)&default__set_delfirst__unsupported,
+	(Dee_funptr_t)&default__set_setfirst__unsupported,
+	(Dee_funptr_t)&default__set_trygetlast__unsupported,
+	(Dee_funptr_t)&default__set_getlast__unsupported,
+	(Dee_funptr_t)&default__set_boundlast__unsupported,
+	(Dee_funptr_t)&default__set_dellast__unsupported,
+	(Dee_funptr_t)&default__set_setlast__unsupported,
 	(Dee_funptr_t)&default__map_operator_iter__unsupported,
 	(Dee_funptr_t)&default__map_operator_foreach_pair__unsupported,
 	(Dee_funptr_t)&default__map_operator_sizeob__unsupported,
@@ -1318,6 +1329,10 @@ PRIVATE struct mh_init_spec_operator tpconst mh_operators_set_operator_ge[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_ge, NULL, Dee_SEQCLASS_SET),
 	MH_INIT_SPEC_OPERATOR_END
 };
+PRIVATE struct mh_init_spec_operator tpconst mh_operators_set_operator_bool[2] = {
+	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bool, NULL, Dee_SEQCLASS_SET),
+	MH_INIT_SPEC_OPERATOR_END
+};
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_set_operator_inv[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_inv, NULL, Dee_SEQCLASS_SET),
 	MH_INIT_SPEC_OPERATOR_END
@@ -1402,6 +1417,56 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_pop[2] = {
 };
 PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_pop_with_default[2] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_pop, NULL, Dee_SEQCLASS_SET, &default__set_pop_with_default__with_callattr_pop),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_trygetfirst[3] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_SET, &default__set_trygetfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_MAP, &default__set_trygetfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_getfirst[3] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_SET, &default__set_getfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_MAP, &default__set_getfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_boundfirst[3] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_SET, &default__set_boundfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_MAP, &default__set_boundfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_delfirst[3] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_SET, &default__set_delfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_MAP, &default__set_delfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_setfirst[3] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_SET, &default__set_setfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_first, NULL, Dee_SEQCLASS_MAP, &default__set_setfirst__with_callattr_first),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_trygetlast[3] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_SET, &default__set_trygetlast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_MAP, &default__set_trygetlast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_getlast[3] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_SET, &default__set_getlast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_MAP, &default__set_getlast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_boundlast[3] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_SET, &default__set_boundlast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_MAP, &default__set_boundlast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_dellast[3] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_SET, &default__set_dellast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_MAP, &default__set_dellast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_setlast[3] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_SET, &default__set_setlast__with_callattr_last),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_last, NULL, Dee_SEQCLASS_MAP, &default__set_setlast__with_callattr_last),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_iter[2] = {
@@ -1822,7 +1887,7 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_map_popitem[2]
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_popitem, NULL, Dee_SEQCLASS_MAP, &default__map_popitem__with_callattr_popitem),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[241] = {
+INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[252] = {
 	MH_INIT_SPEC_INIT(&str___seq_bool__, NULL, NULL, mh_operators_seq_operator_bool, &default__seq_operator_bool__with_callattr___seq_bool__, offsetof(struct Dee_type_mh_cache, mhc___seq_bool__), MH_KIND_METHOD, &default__seq_operator_bool__with_callobjectcache___seq_bool__, &mh_select_seq_operator_bool),
 	MH_INIT_SPEC_INIT(&str___seq_size__, NULL, mh_using_seq_operator_sizeob, mh_operators_seq_operator_sizeob, &default__seq_operator_sizeob__with_callattr___seq_size__, offsetof(struct Dee_type_mh_cache, mhc___seq_size__), MH_KIND_METHOD, &default__seq_operator_sizeob__with_callobjectcache___seq_size__, &mh_select_seq_operator_sizeob),
 	MH_INIT_SPEC_INIT(&str___seq_size__, NULL, mh_using_seq_operator_size, mh_operators_seq_operator_size, &default__seq_operator_size__with_callattr___seq_size__, offsetof(struct Dee_type_mh_cache, mhc___seq_size__), MH_KIND_METHOD, &default__seq_operator_size__with_callobjectcache___seq_size__, &mh_select_seq_operator_size),
@@ -1981,6 +2046,7 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[241] = {
 	MH_INIT_SPEC_INIT(&str___set_le__, mh_secondary_set_operator_le, NULL, mh_operators_set_operator_le, &default__set_operator_le__with_callattr___set_le__, offsetof(struct Dee_type_mh_cache, mhc___set_le__), MH_KIND_METHOD, &default__set_operator_le__with_callobjectcache___set_le__, &mh_select_set_operator_le),
 	MH_INIT_SPEC_INIT(&str___set_gr__, NULL, NULL, mh_operators_set_operator_gr, &default__set_operator_gr__with_callattr___set_gr__, offsetof(struct Dee_type_mh_cache, mhc___set_gr__), MH_KIND_METHOD, &default__set_operator_gr__with_callobjectcache___set_gr__, &mh_select_set_operator_gr),
 	MH_INIT_SPEC_INIT(&str___set_ge__, mh_secondary_set_operator_ge, NULL, mh_operators_set_operator_ge, &default__set_operator_ge__with_callattr___set_ge__, offsetof(struct Dee_type_mh_cache, mhc___set_ge__), MH_KIND_METHOD, &default__set_operator_ge__with_callobjectcache___set_ge__, &mh_select_set_operator_ge),
+	MH_INIT_SPEC_INIT(&str___set_bool__, NULL, NULL, mh_operators_set_operator_bool, &default__set_operator_bool__with_callattr___set_bool__, offsetof(struct Dee_type_mh_cache, mhc___set_bool__), MH_KIND_METHOD, &default__set_operator_bool__with_callobjectcache___set_bool__, &mh_select_set_operator_bool),
 	MH_INIT_SPEC_INIT(&str___set_inv__, NULL, NULL, mh_operators_set_operator_inv, &default__set_operator_inv__with_callattr___set_inv__, offsetof(struct Dee_type_mh_cache, mhc___set_inv__), MH_KIND_METHOD, &default__set_operator_inv__with_callobjectcache___set_inv__, NULL),
 	MH_INIT_SPEC_INIT(&str___set_add__, mh_secondary_set_operator_add, NULL, mh_operators_set_operator_add, &default__set_operator_add__with_callattr___set_add__, offsetof(struct Dee_type_mh_cache, mhc___set_add__), MH_KIND_METHOD, &default__set_operator_add__with_callobjectcache___set_add__, NULL),
 	MH_INIT_SPEC_INIT(&str___set_sub__, mh_secondary_set_operator_sub, NULL, mh_operators_set_operator_sub, &default__set_operator_sub__with_callattr___set_sub__, offsetof(struct Dee_type_mh_cache, mhc___set_sub__), MH_KIND_METHOD, &default__set_operator_sub__with_callobjectcache___set_sub__, NULL),
@@ -1998,6 +2064,16 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[241] = {
 	MH_INIT_SPEC_INIT(&str___set_removeall__, mh_secondary_set_removeall, NULL, NULL, &default__set_removeall__with_callattr___set_removeall__, offsetof(struct Dee_type_mh_cache, mhc___set_removeall__), MH_KIND_METHOD, &default__set_removeall__with_callobjectcache___set_removeall__, &mh_select_set_removeall),
 	MH_INIT_SPEC_INIT(&str___set_pop__, mh_secondary_set_pop, NULL, NULL, &default__set_pop__with_callattr___set_pop__, offsetof(struct Dee_type_mh_cache, mhc___set_pop__), MH_KIND_METHOD, &default__set_pop__with_callobjectcache___set_pop__, &mh_select_set_pop),
 	MH_INIT_SPEC_INIT(&str___set_pop__, mh_secondary_set_pop_with_default, NULL, NULL, &default__set_pop_with_default__with_callattr___set_pop__, offsetof(struct Dee_type_mh_cache, mhc___set_pop__), MH_KIND_METHOD, &default__set_pop_with_default__with_callobjectcache___set_pop__, &mh_select_set_pop_with_default),
+	MH_INIT_SPEC_INIT(&str___set_first__, mh_secondary_set_trygetfirst, NULL, NULL, &default__set_trygetfirst__with_callattr___set_first__, offsetof(struct Dee_type_mh_cache, mhc_get___set_first__), MH_KIND_GETSET_TRYGET, &default__set_trygetfirst__with_callobjectcache___set_first__, &mh_select_set_trygetfirst),
+	MH_INIT_SPEC_INIT(&str___set_first__, mh_secondary_set_getfirst, NULL, NULL, &default__set_getfirst__with_callattr___set_first__, offsetof(struct Dee_type_mh_cache, mhc_get___set_first__), MH_KIND_GETSET_GET, &default__set_getfirst__with_callobjectcache___set_first__, &mh_select_set_getfirst),
+	MH_INIT_SPEC_INIT(&str___set_first__, mh_secondary_set_boundfirst, NULL, NULL, &default__set_boundfirst__with_callattr___set_first__, offsetof(struct Dee_type_mh_cache, mhc_get___set_first__), MH_KIND_GETSET_BOUND, &default__set_boundfirst__with_callobjectcache___set_first__, &mh_select_set_boundfirst),
+	MH_INIT_SPEC_INIT(&str___set_first__, mh_secondary_set_delfirst, NULL, NULL, &default__set_delfirst__with_callattr___set_first__, offsetof(struct Dee_type_mh_cache, mhc_del___set_first__), MH_KIND_GETSET_DEL, &default__set_delfirst__with_callobjectcache___set_first__, &mh_select_set_delfirst),
+	MH_INIT_SPEC_INIT(&str___set_first__, mh_secondary_set_setfirst, NULL, NULL, &default__set_setfirst__with_callattr___set_first__, offsetof(struct Dee_type_mh_cache, mhc_set___set_first__), MH_KIND_GETSET_SET, &default__set_setfirst__with_callobjectcache___set_first__, &mh_select_set_setfirst),
+	MH_INIT_SPEC_INIT(&str___set_last__, mh_secondary_set_trygetlast, NULL, NULL, &default__set_trygetlast__with_callattr___set_last__, offsetof(struct Dee_type_mh_cache, mhc_get___set_last__), MH_KIND_GETSET_TRYGET, &default__set_trygetlast__with_callobjectcache___set_last__, &mh_select_set_trygetlast),
+	MH_INIT_SPEC_INIT(&str___set_last__, mh_secondary_set_getlast, NULL, NULL, &default__set_getlast__with_callattr___set_last__, offsetof(struct Dee_type_mh_cache, mhc_get___set_last__), MH_KIND_GETSET_GET, &default__set_getlast__with_callobjectcache___set_last__, &mh_select_set_getlast),
+	MH_INIT_SPEC_INIT(&str___set_last__, mh_secondary_set_boundlast, NULL, NULL, &default__set_boundlast__with_callattr___set_last__, offsetof(struct Dee_type_mh_cache, mhc_get___set_last__), MH_KIND_GETSET_BOUND, &default__set_boundlast__with_callobjectcache___set_last__, &mh_select_set_boundlast),
+	MH_INIT_SPEC_INIT(&str___set_last__, mh_secondary_set_dellast, NULL, NULL, &default__set_dellast__with_callattr___set_last__, offsetof(struct Dee_type_mh_cache, mhc_del___set_last__), MH_KIND_GETSET_DEL, &default__set_dellast__with_callobjectcache___set_last__, &mh_select_set_dellast),
+	MH_INIT_SPEC_INIT(&str___set_last__, mh_secondary_set_setlast, NULL, NULL, &default__set_setlast__with_callattr___set_last__, offsetof(struct Dee_type_mh_cache, mhc_set___set_last__), MH_KIND_GETSET_SET, &default__set_setlast__with_callobjectcache___set_last__, &mh_select_set_setlast),
 	MH_INIT_SPEC_INIT(&str___map_iter__, NULL, NULL, mh_operators_map_operator_iter, &default__map_operator_iter__with_callattr___map_iter__, offsetof(struct Dee_type_mh_cache, mhc___map_iter__), MH_KIND_METHOD, &default__map_operator_iter__with_callobjectcache___map_iter__, &mh_select_map_operator_iter),
 	MH_INIT_SPEC_INIT(&str___map_iter__, NULL, mh_using_map_operator_foreach_pair, mh_operators_map_operator_foreach_pair, &default__map_operator_foreach_pair__with_callattr___map_iter__, offsetof(struct Dee_type_mh_cache, mhc___map_iter__), MH_KIND_METHOD, &default__map_operator_foreach_pair__with_callobjectcache___map_iter__, &mh_select_map_operator_foreach_pair),
 	MH_INIT_SPEC_INIT(&str___map_size__, NULL, mh_using_map_operator_sizeob, mh_operators_map_operator_sizeob, &default__map_operator_sizeob__with_callattr___map_size__, offsetof(struct Dee_type_mh_cache, mhc___map_size__), MH_KIND_METHOD, &default__map_operator_sizeob__with_callobjectcache___map_size__, &mh_select_map_operator_sizeob),
@@ -2752,6 +2828,7 @@ INTERN struct Dee_type_mh_cache mh_cache_empty = {
 	/* .mh_set_operator_le                         = */ &default__set_operator_le__empty,
 	/* .mh_set_operator_gr                         = */ &default__set_operator_gr__empty,
 	/* .mh_set_operator_ge                         = */ &default__set_operator_ge__empty,
+	/* .mh_set_operator_bool                       = */ &default__set_operator_bool__empty,
 	/* .mh_set_operator_inv                        = */ &default__set_operator_inv__empty,
 	/* .mh_set_operator_add                        = */ &default__set_operator_add__empty,
 	/* .mh_set_operator_sub                        = */ &default__set_operator_sub__empty,
@@ -2769,6 +2846,16 @@ INTERN struct Dee_type_mh_cache mh_cache_empty = {
 	/* .mh_set_removeall                           = */ &default__set_removeall__empty,
 	/* .mh_set_pop                                 = */ &default__set_pop__empty,
 	/* .mh_set_pop_with_default                    = */ &default__set_pop_with_default__empty,
+	/* .mh_set_trygetfirst                         = */ &default__set_trygetfirst__empty,
+	/* .mh_set_getfirst                            = */ &default__set_getfirst__empty,
+	/* .mh_set_boundfirst                          = */ &default__set_boundfirst__empty,
+	/* .mh_set_delfirst                            = */ &default__set_delfirst__empty,
+	/* .mh_set_setfirst                            = */ &default__set_setfirst__empty,
+	/* .mh_set_trygetlast                          = */ &default__set_trygetlast__empty,
+	/* .mh_set_getlast                             = */ &default__set_getlast__empty,
+	/* .mh_set_boundlast                           = */ &default__set_boundlast__empty,
+	/* .mh_set_dellast                             = */ &default__set_dellast__empty,
+	/* .mh_set_setlast                             = */ &default__set_setlast__empty,
 	/* .mh_map_operator_iter                       = */ &default__map_operator_iter__empty,
 	/* .mh_map_operator_foreach_pair               = */ &default__map_operator_foreach_pair__empty,
 	/* .mh_map_operator_sizeob                     = */ &default__map_operator_sizeob__empty,

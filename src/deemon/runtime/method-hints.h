@@ -277,6 +277,7 @@ struct Dee_type_mh_cache {
 	DeeMH_set_operator_le_t mh_set_operator_le;
 	DeeMH_set_operator_gr_t mh_set_operator_gr;
 	DeeMH_set_operator_ge_t mh_set_operator_ge;
+	DeeMH_set_operator_bool_t mh_set_operator_bool;
 	DeeMH_set_operator_inv_t mh_set_operator_inv;
 	DeeMH_set_operator_add_t mh_set_operator_add;
 	DeeMH_set_operator_sub_t mh_set_operator_sub;
@@ -294,6 +295,16 @@ struct Dee_type_mh_cache {
 	DeeMH_set_removeall_t mh_set_removeall;
 	DeeMH_set_pop_t mh_set_pop;
 	DeeMH_set_pop_with_default_t mh_set_pop_with_default;
+	DeeMH_set_trygetfirst_t mh_set_trygetfirst;
+	DeeMH_set_getfirst_t mh_set_getfirst;
+	DeeMH_set_boundfirst_t mh_set_boundfirst;
+	DeeMH_set_delfirst_t mh_set_delfirst;
+	DeeMH_set_setfirst_t mh_set_setfirst;
+	DeeMH_set_trygetlast_t mh_set_trygetlast;
+	DeeMH_set_getlast_t mh_set_getlast;
+	DeeMH_set_boundlast_t mh_set_boundlast;
+	DeeMH_set_dellast_t mh_set_dellast;
+	DeeMH_set_setlast_t mh_set_setlast;
 	DeeMH_map_operator_iter_t mh_map_operator_iter;
 	DeeMH_map_operator_foreach_pair_t mh_map_operator_foreach_pair;
 	DeeMH_map_operator_sizeob_t mh_map_operator_sizeob;
@@ -368,7 +379,7 @@ struct Dee_type_mh_cache {
 
 	/* clang-format off */
 /*[[[deemon (printMhCacheAttributeMembers from "..method-hints.method-hints")();]]]*/
-#define MHC_COUNT 137
+#define MHC_COUNT 144
 #define MHC_FIRST mhc___seq_bool__
 	Dee_mhc_slot_t mhc___seq_bool__;
 	Dee_mhc_slot_t mhc___seq_size__;
@@ -452,6 +463,7 @@ struct Dee_type_mh_cache {
 	Dee_mhc_slot_t mhc___set_le__;
 	Dee_mhc_slot_t mhc___set_gr__;
 	Dee_mhc_slot_t mhc___set_ge__;
+	Dee_mhc_slot_t mhc___set_bool__;
 	Dee_mhc_slot_t mhc___set_inv__;
 	Dee_mhc_slot_t mhc___set_add__;
 	Dee_mhc_slot_t mhc___set_sub__;
@@ -468,6 +480,12 @@ struct Dee_type_mh_cache {
 	Dee_mhc_slot_t mhc___set_remove__;
 	Dee_mhc_slot_t mhc___set_removeall__;
 	Dee_mhc_slot_t mhc___set_pop__;
+	Dee_mhc_slot_t mhc_get___set_first__;
+	Dee_mhc_slot_t mhc_del___set_first__;
+	Dee_mhc_slot_t mhc_set___set_first__;
+	Dee_mhc_slot_t mhc_get___set_last__;
+	Dee_mhc_slot_t mhc_del___set_last__;
+	Dee_mhc_slot_t mhc_set___set_last__;
 	Dee_mhc_slot_t mhc___map_iter__;
 	Dee_mhc_slot_t mhc___map_size__;
 	Dee_mhc_slot_t mhc___map_hash__;

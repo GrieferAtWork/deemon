@@ -215,13 +215,15 @@ seq_operator_size = {
 	DeeMH_set_operator_size_t set_operator_size;
 	DeeMH_map_operator_size_t map_operator_size;
 	DeeMH_map_enumerate_t map_enumerate;
-	if ((set_operator_size = REQUIRE_NODEFAULT(set_operator_size)) != NULL)
+	if ((set_operator_size = REQUIRE_NODEFAULT(set_operator_size)) != NULL &&
+	    HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__))
 		return set_operator_size;
 	if ((map_operator_size = REQUIRE_NODEFAULT(map_operator_size)) != NULL)
 		return map_operator_size;
 	if (REQUIRE_NODEFAULT(seq_operator_sizeob))
 		return &$with__seq_operator_sizeob;
-	if (REQUIRE_NODEFAULT(set_operator_sizeob))
+	if (REQUIRE_NODEFAULT(set_operator_sizeob) &&
+	    HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__))
 		return &$with__set_operator_sizeob;
 	if (REQUIRE_NODEFAULT(map_operator_sizeob))
 		return &$with__map_operator_sizeob;
@@ -230,7 +232,7 @@ seq_operator_size = {
 	map_enumerate = REQUIRE_NODEFAULT(map_enumerate);
 	if (((map_enumerate && map_enumerate != REQUIRE(map_operator_foreach_pair)) ||
 	     REQUIRE_NODEFAULT(map_keys) || REQUIRE_NODEFAULT(map_iterkeys)) &&
-	    !HAS_TRAIT(__map_getitem_always_bound__))
+	    !HAS_TRAIT_NODEFAULT(__map_getitem_always_bound__))
 		return &$with__map_enumerate;
 
 	seq_operator_foreach = REQUIRE(seq_operator_foreach);

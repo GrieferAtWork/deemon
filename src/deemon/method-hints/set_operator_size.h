@@ -77,7 +77,7 @@ err:
 
 set_operator_sizeob = {
 	DeeMH_set_operator_size_t set_operator_size;
-	if (HAS_TRAIT(__map_getitem_always_bound__)) {
+	if (HAS_TRAIT_NODEFAULT(__map_getitem_always_bound__)) {
 		/* Method hint "map_operator_sizeob" includes */
 		DeeMH_map_operator_sizeob_t map_operator_sizeob = REQUIRE_NODEFAULT(map_operator_sizeob);
 		if (map_operator_sizeob) {
@@ -102,7 +102,7 @@ set_operator_size = {
 		if (map_operator_size == &default__map_operator_size__empty ||
 		    map_operator_size == &default__map_operator_size__with__map_operator_foreach_pair ||
 		    map_operator_size == &default__map_operator_size__with__map_operator_iter ||
-		    HAS_TRAIT(__map_getitem_always_bound__))
+		    HAS_TRAIT_NODEFAULT(__map_getitem_always_bound__))
 			return map_operator_size;
 	}
 	if (REQUIRE_NODEFAULT(set_operator_sizeob))

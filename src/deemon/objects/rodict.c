@@ -2126,6 +2126,8 @@ PRIVATE struct type_method_hint tpconst rodict_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &rodict_mh_seq_enumerate_index_reverse, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS | METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetfirst, &rodict_trygetfirst, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
 	TYPE_METHOD_HINT_F(seq_trygetlast, &rodict_trygetlast, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
+	TYPE_METHOD_HINT_F(set_trygetfirst, &rodict_trygetfirst, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL), /* Must also be set because the "first" getset defines __seq_first__ and __set_first__ */
+	TYPE_METHOD_HINT_F(set_trygetlast, &rodict_trygetlast, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),   /* Must also be set because the "last" getset defines __seq_last__ and __set_last__ */
 	TYPE_METHOD_HINT_F(seq_enumerate_index, &rodict_mh_seq_enumerate_index, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS | METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_iter, &rodict_iter, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
 	TYPE_METHOD_HINT_F(seq_operator_foreach, &rodict_mh_seq_foreach, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),

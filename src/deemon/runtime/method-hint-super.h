@@ -188,6 +188,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__set_operator_lo(D
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__set_operator_le(DeeSuperObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__set_operator_gr(DeeSuperObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__set_operator_ge(DeeSuperObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1)) int DCALL super_mh__set_operator_bool(DeeSuperObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__set_operator_inv(DeeSuperObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__set_operator_add(DeeSuperObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__set_operator_sub(DeeSuperObject *lhs, DeeObject *rhs);
@@ -205,6 +206,16 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_mh__set_remove(DeeSuperObject *se
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_mh__set_removeall(DeeSuperObject *self, DeeObject *keys);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__set_pop(DeeSuperObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__set_pop_with_default(DeeSuperObject *self, DeeObject *default_);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__set_trygetfirst(DeeSuperObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__set_getfirst(DeeSuperObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL super_mh__set_boundfirst(DeeSuperObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL super_mh__set_delfirst(DeeSuperObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_mh__set_setfirst(DeeSuperObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__set_trygetlast(DeeSuperObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__set_getlast(DeeSuperObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL super_mh__set_boundlast(DeeSuperObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL super_mh__set_dellast(DeeSuperObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_mh__set_setlast(DeeSuperObject *self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__map_operator_iter(DeeSuperObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL super_mh__map_operator_foreach_pair(DeeSuperObject *__restrict self, Dee_foreach_pair_t cb, void *arg);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__map_operator_sizeob(DeeSuperObject *__restrict self);

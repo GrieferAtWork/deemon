@@ -1147,6 +1147,8 @@ PRIVATE struct type_method_hint tpconst so_method_hints[] = {
 	TYPE_METHOD_HINT_F(set_operator_sizeob, &so_mh_set_operator_sizeob, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(set_operator_size, &so_mh_set_operator_size, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(set_operator_hash, &so_mh_set_operator_hash, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_trygetfirst, &so_mh_seq_trygetfirst, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_trygetlast, &so_mh_seq_trygetlast, METHOD_FNOREFESCAPE),
 	/* TODO: */
 //	TYPE_METHOD_HINT_F(set_operator_compare_eq, &so_mh_set_operator_compare_eq, METHOD_FNOREFESCAPE),
 //	TYPE_METHOD_HINT_F(set_operator_trycompare_eq, &so_mh_set_operator_trycompare_eq, METHOD_FNOREFESCAPE),

@@ -639,6 +639,8 @@ PRIVATE struct type_method_hint tpconst mapped_method_hints[] = {
 	TYPE_METHOD_HINT(seq_enumerate_index, &mapped_mh_seq_enumerate_index),
 	TYPE_METHOD_HINT(seq_trygetfirst, &mapped_trygetfirst),
 	TYPE_METHOD_HINT(seq_trygetlast, &mapped_trygetlast),
+	TYPE_METHOD_HINT(set_trygetfirst, &mapped_trygetfirst), /* Must also be set because the "first" getset defines __seq_first__ and __set_first__ */
+	TYPE_METHOD_HINT(set_trygetlast, &mapped_trygetlast),   /* Must also be set because the "last" getset defines __seq_last__ and __set_last__ */
 	TYPE_METHOD_HINT(seq_any, &mapped_mh_seq_any),
 	TYPE_METHOD_HINT(seq_any_with_range, &mapped_mh_seq_any_with_range),
 	TYPE_METHOD_HINT(seq_all, &mapped_mh_seq_all),

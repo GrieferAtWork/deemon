@@ -4029,6 +4029,8 @@ PRIVATE struct type_method_hint tpconst dict_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &dict_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetfirst, &dict_trygetfirst, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetlast, &dict_trygetlast, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_trygetfirst, &dict_trygetfirst, METHOD_FNOREFESCAPE), /* Must also be set because the "first" getset defines __seq_first__ and __set_first__ */
+	TYPE_METHOD_HINT_F(set_trygetlast, &dict_trygetlast, METHOD_FNOREFESCAPE),   /* Must also be set because the "last" getset defines __seq_last__ and __set_last__ */
 	TYPE_METHOD_HINT_F(seq_enumerate_index, &dict_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_iter, &dict_iter, METHOD_FNORMAL),
 	TYPE_METHOD_HINT_F(seq_operator_foreach, &dict_mh_seq_foreach, METHOD_FNOREFESCAPE),

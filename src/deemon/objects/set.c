@@ -132,6 +132,7 @@ PRIVATE struct type_method tpconst set_methods[] = {
 	/* Method hint operator invocation. */
 	TYPE_METHOD("__iter__", &DeeMA___set_iter__, "->?#Iterator\nAlias for ${(this as Set).operator iter()} (s.a. ?#{op:iter})"),
 	TYPE_METHOD("__size__", &DeeMA___set_size__, DeeMA___set_size___doc "\nAlias for ${##(this as Set)} (s.a. ?#{op:size})"),
+	TYPE_METHOD("__bool__", &DeeMA___set_bool__, DeeMA___set_bool___doc "\nAlias for ${!!(this as Set)} (s.a. ?#{op:bool})"),
 	TYPE_METHOD("__hash__", &DeeMA___set_hash__, DeeMA___set_hash___doc "\nAlias for ${(this as Set).operator hash()} (s.a. ?#{op:hash})"),
 	TYPE_METHOD("__compare_eq__", &DeeMA___set_compare_eq__, "(rhs:?X2?DSet?S?O)->?Dbool\nAlias for ${Set.equals(this, rhs)} (s.a. ?#equals)"),
 	TYPE_METHOD("__eq__", &DeeMA___set_eq__, DeeMA___set_eq___doc "\nAlias for ${(this as Set) == rhs} (s.a. ?#{op:eq})"),
@@ -160,6 +161,170 @@ PRIVATE struct type_method tpconst set_methods[] = {
 
 INTDEF struct type_getset tpconst set_getsets[];
 INTERN_TPCONST struct type_getset tpconst set_getsets[] = {
+	TYPE_GETSET_BOUND(STR_first,
+	                  &default__set_getfirst,
+	                  &default__set_delfirst,
+	                  &default__set_setfirst,
+	                  &default__set_boundfirst,
+	                  "->\n"
+	                  "Access the first item of the Set\n"
+
+	                  "When reading the attribute (as in ${x = Set.first(mySeq)}):\n"
+	                  "#T{Requirements|Implementation~"
+	                  /**/ "${property __set_first__: Object}" /*                                         */ "|${return this.__set_first__;}&"
+	                  /**/ "${property __seq_first__: Object} (when ?A__seq_getitem_always_bound__?DSequence)" /**/ "|${return this.__seq_first__;}&"
+	                  /**/ "${function first: Object} (?A__seqclass__?DType is ?., ?DSet or ?DMapping)" /**/ "|${return this.first;}&"
+	                  /**/ "?A{op:iter}?DSequence" /**/ "|${"
+	                  /**/ /**/ "local iter = Sequence.__iter__(this);\n"
+	                  /**/ /**/ "foreach (local item: iter)\n"
+	                  /**/ /**/ "	return item;\n"
+	                  /**/ /**/ "throw UnboundAttribute(ob: this, attr: Set.first);"
+	                  /**/ "}"
+	                  "}\n"
+
+	                  "When deleting the attribute (as in ${Set.first.delete(mySeq)}):\n"
+	                  "#T{Requirements|Implementation~"
+	                  /**/ "${property __set_first__: Object}" /*                     */ "|${del this.__set_first__;}&"
+	                  /**/ "${property __seq_first__: Object} (when ?A__seq_getitem_always_bound__?DSequence)" /**/ "|${del this.__seq_first__;}&"
+	                  /**/ "${function first: Object} (?A__seqclass__?DType is ?.)" /**/ "|${del this.first;}&"
+	                  /**/ "?A{op:size}?DSequence, ?A{op:getitem}?DSequence, ?A{op:delitem}?DSequence" /**/ "|${"
+	                  /**/ /**/ "local size = Sequence.__size__(this);\n"
+	                  /**/ /**/ "for (local i: [:size]) {\n"
+	                  /**/ /**/ "	local isBound;\n"
+	                  /**/ /**/ "	try {\n"
+	                  /**/ /**/ "		isBound = Sequence.__bounditem__(this, i, false);\n"
+	                  /**/ /**/ "	} catch (IndexError) {\n"
+	                  /**/ /**/ "		break;\n"
+	                  /**/ /**/ "	}\n"
+	                  /**/ /**/ "	if (isBound) {\n"
+	                  /**/ /**/ "		Sequence.__delitem__(this, i);\n"
+	                  /**/ /**/ "		break;\n"
+	                  /**/ /**/ "	}\n"
+	                  /**/ /**/ "}"
+	                  /**/ "}&"
+	                  /**/ "?A{op:getitem}?DSequence, ?A{op:delitem}?DSequence" /**/ "|${"
+	                  /**/ /**/ "for (local i = 0;; ++i) {\n"
+	                  /**/ /**/ "	local isBound;\n"
+	                  /**/ /**/ "	try {\n"
+	                  /**/ /**/ "		isBound = Sequence.__bounditem__(this, i, false);\n"
+	                  /**/ /**/ "	} catch (IndexError) {\n"
+	                  /**/ /**/ "		break;\n"
+	                  /**/ /**/ "	}\n"
+	                  /**/ /**/ "	if (isBound) {\n"
+	                  /**/ /**/ "		Sequence.__delitem__(this, i);\n"
+	                  /**/ /**/ "		break;\n"
+	                  /**/ /**/ "	}\n"
+	                  /**/ /**/ "}"
+	                  /**/ "}"
+	                  "}\n"
+
+	                  "When setting the attribute (as in ${Set.first.set(mySeq, value)}):\n"
+	                  "#T{Requirements|Implementation~"
+	                  /**/ "${property __set_first__: Object}" /*                     */ "|${this.__set_first__ = value;}&"
+	                  /**/ "${property __seq_first__: Object} (when ?A__seq_getitem_always_bound__?DSequence)" /**/ "|${this.__seq_first__ = value;}&"
+	                  /**/ "${function first: Object} (?A__seqclass__?DType is ?.)" /**/ "|${this.first = value;}&"
+	                  /**/ "?A{op:size}?DSequence, ?A{op:getitem}?DSequence, ?A{op:setitem}?DSequence" /**/ "|${"
+	                  /**/ /**/ "local size = Sequence.__size__(this);\n"
+	                  /**/ /**/ "for (local i: [:size]) {\n"
+	                  /**/ /**/ "	local isBound;\n"
+	                  /**/ /**/ "	try {\n"
+	                  /**/ /**/ "		isBound = Sequence.__bounditem__(this, i, false);\n"
+	                  /**/ /**/ "	} catch (IndexError) {\n"
+	                  /**/ /**/ "		break;\n"
+	                  /**/ /**/ "	}\n"
+	                  /**/ /**/ "	if (isBound) {\n"
+	                  /**/ /**/ "		Sequence.__setitem__(this, i, value);\n"
+	                  /**/ /**/ "		return;\n"
+	                  /**/ /**/ "	}\n"
+	                  /**/ /**/ "}\n"
+	                  /**/ /**/ "throw EmptySequence(seq: this);"
+	                  /**/ "}&"
+	                  /**/ "?A{op:getitem}?DSequence, ?A{op:setitem}?DSequence" /**/ "|${"
+	                  /**/ /**/ "for (local i = 0;; ++i) {\n"
+	                  /**/ /**/ "	local isBound;\n"
+	                  /**/ /**/ "	try {\n"
+	                  /**/ /**/ "		isBound = Sequence.__bounditem__(this, i, false);\n"
+	                  /**/ /**/ "	} catch (IndexError) {\n"
+	                  /**/ /**/ "		break;\n"
+	                  /**/ /**/ "	}\n"
+	                  /**/ /**/ "	if (isBound) {\n"
+	                  /**/ /**/ "		Sequence.__setitem__(this, i, value);\n"
+	                  /**/ /**/ "		break;\n"
+	                  /**/ /**/ "	}\n"
+	                  /**/ /**/ "}\n"
+	                  /**/ /**/ "throw EmptySequence(seq: this);"
+	                  /**/ "}"
+	                  "}"),
+	TYPE_GETSET_BOUND(STR_last,
+	                  &default__set_getlast,
+	                  &default__set_dellast,
+	                  &default__set_setlast,
+	                  &default__set_boundlast,
+	                  "->\n"
+	                  "Access the last item of the Set\n"
+
+	                  "When reading the attribute (as in ${x = Set.last(mySeq)}):\n"
+	                  "#T{Requirements|Implementation~"
+	                  /**/ "${property __set_last__: Object}" /*                     */ "|${return this.__set_last__;}&"
+	                  /**/ "${property __seq_last__: Object} (when ?A__seq_getitem_always_bound__?DSequence)" /**/ "|${return this.__seq_last__;}&"
+	                  /**/ "${function last: Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.last;}&"
+	                  /**/ "?A{op:size}?DSequence, ?A{op:getitem}?DSequence" /**/ "|${"
+	                  /**/ /**/ "local size = Sequence.__size__(this);\n"
+	                  /**/ /**/ "while (size--) {\n"
+	                  /**/ /**/ "	try {\n"
+	                  /**/ /**/ "		return Sequence.__getitem__(this, size);\n"
+	                  /**/ /**/ "	} catch (IndexError) {\n"
+	                  /**/ /**/ "		break;\n"
+	                  /**/ /**/ "	} catch (UnboundItem) {\n"
+	                  /**/ /**/ "	}\n"
+	                  /**/ /**/ "}\n"
+	                  /**/ /**/ "throw UnboundAttribute(ob: this, attr: Set.last);"
+	                  /**/ "}"
+	                  /**/ "?A{op:iter}?DSequence" /**/ "|${"
+	                  /**/ /**/ "local iter = Sequence.__iter__(this);\n"
+	                  /**/ /**/ "local item;\n"
+	                  /**/ /**/ "foreach (item: iter) {\n"
+	                  /**/ /**/ "	foreach (item: iter)\n"
+	                  /**/ /**/ "		;\n"
+	                  /**/ /**/ "	return item;\n"
+	                  /**/ /**/ "}\n"
+	                  /**/ /**/ "throw UnboundAttribute(ob: this, attr: Set.last);"
+	                  /**/ "}"
+	                  "}\n"
+
+	                  "When deleting the attribute (as in ${Set.last.delete(mySeq)}):\n"
+	                  "#T{Requirements|Implementation~"
+	                  /**/ "${property __set_last__: Object}" /*                     */ "|${del this.__set_last__;}&"
+	                  /**/ "${property __seq_last__: Object} (when ?A__seq_getitem_always_bound__?DSequence)" /**/ "|${del this.__seq_last__;}&"
+	                  /**/ "${function last: Object} (?A__seqclass__?DType is ?.)" /**/ "|${del this.last;}&"
+	                  /**/ "?A{op:size}?DSequence, ?A{op:getitem}?DSequence, ?A{op:delitem}?DSequence" /**/ "|${"
+	                  /**/ /**/ "local size = Sequence.__size__(this);\n"
+	                  /**/ /**/ "while (size--) {\n"
+	                  /**/ /**/ "	if (Sequence.__bounditem__(this, size, true)) {\n"
+	                  /**/ /**/ "		Sequence.__delitem__(this, size);\n"
+	                  /**/ /**/ "		break;\n"
+	                  /**/ /**/ "	}\n"
+	                  /**/ /**/ "}"
+	                  /**/ "}"
+	                  "}\n"
+
+	                  "When setting the attribute (as in ${Set.last.set(mySeq, value)}):\n"
+	                  "#T{Requirements|Implementation~"
+	                  /**/ "${property __set_last__: Object}" /*                     */ "|${this.__set_last__ = value;}&"
+	                  /**/ "${property __seq_last__: Object} (when ?A__seq_getitem_always_bound__?DSequence)" /**/ "|${this.__seq_last__ = value;}&"
+	                  /**/ "${function last: Object} (?A__seqclass__?DType is ?.)" /**/ "|${this.last = value;}&"
+	                  /**/ "?A{op:size}?DSequence, ?A{op:getitem}?DSequence, ?A{op:delitem}?DSequence" /**/ "|${"
+	                  /**/ /**/ "local size = Sequence.__size__(this);\n"
+	                  /**/ /**/ "while (size--) {\n"
+	                  /**/ /**/ "	if (Sequence.__bounditem__(this, size, true)) {\n"
+	                  /**/ /**/ "		Sequence.__setitem__(this, size, value);\n"
+	                  /**/ /**/ "		return;\n"
+	                  /**/ /**/ "	}\n"
+	                  /**/ /**/ "}\n"
+	                  /**/ /**/ "throw EmptySequence(seq: this);"
+	                  /**/ "}"
+	                  "}"),
+
 	TYPE_GETTER(STR_frozen, &default__set_frozen,
 	            "->?#Frozen\n"
 	            "Returns a copy of @this ?., with all of its current elements frozen in place, "
@@ -357,7 +522,10 @@ PRIVATE char const set_doc[] =
 "\n"
 
 "bool->\n"
-"Returns ?t if @this ?. is non-empty\n"
+"Returns ?t if @this ?. is non-empty. Note that because sets cannot "
+/**/ "contain unbound items, a non-empty ?DSequence consisting of only "
+/**/ "unbound items would evaluate to ?t in ?A{op:bool}?DSequence, but "
+/**/ "when interpreted as ?., will evaluate to ?f\n"
 "\n"
 
 "iter->\n"
@@ -451,7 +619,7 @@ PUBLIC DeeTypeObject DeeSet_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str       = */ DEFIMPL(&object_str),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool      = */ &default__seq_operator_bool,
+		/* .tp_bool      = */ &default__set_operator_bool,
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ &default_set_printrepr,
 	},

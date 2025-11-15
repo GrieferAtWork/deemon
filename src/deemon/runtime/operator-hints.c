@@ -232,10 +232,11 @@ PRIVATE struct oh_init_spec_class tpconst oh_class_bool[2] = {
 	OH_INIT_SPEC_CLASS_INIT(&usrtype__bool__with__BOOL, OPERATOR_BOOL, OPERATOR_USERCOUNT),
 	OH_INIT_SPEC_CLASS_END
 };
-PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_bool[4] = {
+PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_bool[5] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_bool, NULL, Dee_SEQCLASS_SEQ),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_bool, NULL, Dee_SEQCLASS_SET),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_bool, NULL, Dee_SEQCLASS_MAP),
+	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_bool, NULL, Dee_SEQCLASS_SET),
 	OH_INIT_SPEC_MHINT_END
 };
 PRIVATE struct oh_init_spec_class tpconst oh_class_call[2] = {

@@ -1000,6 +1000,8 @@ final class NativeMethod {
 				f"(DeeMH_{mhName}_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_{mhName})",
 			"HAS_TRAIT": (trait) ->
 				f"DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT_{trait})",
+			"HAS_TRAIT_NODEFAULT": (trait) ->
+				f"DeeType_HasExplicitTrait(self, DeeType_TRAIT_{trait})",
 			"REQUIRE_ANY": (mhName) ->
 				f"(DeeMH_{mhName}_t)DeeType_GetMethodHint(orig_type, Dee_TMH_{mhName})",
 			"Dee_type_seq_has_custom_tp_size":

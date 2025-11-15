@@ -1,0 +1,114 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2025 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from collections;
+
+local l = FixedList(10);
+
+/* All items are currently unbound, meaning "l" has to be an empty set */
+assert l;
+assert #l == 10;
+assert Sequence.__bool__(l);
+assert Sequence.__size__(l) == 10;
+assert (l as Sequence);
+assert #(l as Sequence) == 10;
+assert !Set.__bool__(l);
+assert !(l as Set);
+assert Set.__size__(l) == 0;
+assert #(l as Set) == 0;
+assert (l as Set) == {};
+//TODO:Broken:assert {} == (l as Set);
+
+
+l[3] = "foo";
+
+
+/* "l" now contains 1 bound item, meaning it must be a set containing 1 item */
+assert l;
+assert #l == 10;
+assert Sequence.__bool__(l);
+assert Sequence.__size__(l) == 10;
+assert (l as Sequence);
+assert #(l as Sequence) == 10;
+assert Set.__bool__(l);
+assert (l as Set);
+assert Set.__size__(l) == 1;
+assert #(l as Set) == 1;
+assert (l as Set) == {"foo"};
+assert {"foo"} == (l as Set);
+
+
+l[4] = "foo";
+
+
+/* Since the second item is equal to the previous once, the set size must still be "1" */
+assert l;
+assert #l == 10;
+assert Sequence.__bool__(l);
+assert Sequence.__size__(l) == 10;
+assert (l as Sequence);
+assert #(l as Sequence) == 10;
+assert Set.__bool__(l);
+assert (l as Set);
+assert Set.__size__(l) == 1;
+assert #(l as Set) == 1;
+assert (l as Set) == {"foo"};
+assert {"foo"} == (l as Set);
+
+
+l[4] = "bar";
+
+
+/* Now that the items differ, the set size must be 2 */
+assert l;
+assert #l == 10;
+assert Sequence.__bool__(l);
+assert Sequence.__size__(l) == 10;
+assert (l as Sequence);
+assert #(l as Sequence) == 10;
+assert Set.__bool__(l);
+assert (l as Set);
+assert Set.__size__(l) == 2;
+assert #(l as Set) == 2;
+assert (l as Set) == {"foo", "bar"};
+assert (l as Set) == {"bar", "foo"};
+assert {"foo", "bar"} == (l as Set);
+assert {"bar", "foo"} != (l as Set);
+
+
+del l[3];
+del l[4];
+
+
+/* After all present item were unbound, "l" must once again be an empty set */
+assert l;
+assert #l == 10;
+assert Sequence.__bool__(l);
+assert Sequence.__size__(l) == 10;
+assert (l as Sequence);
+assert #(l as Sequence) == 10;
+assert !Set.__bool__(l);
+assert !(l as Set);
+assert Set.__size__(l) == 0;
+assert #(l as Set) == 0;
+assert (l as Set) == {};
+//TODO:Broken:assert {} == (l as Set);

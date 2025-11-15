@@ -133,6 +133,32 @@ err:
 	return result == 0 ? 1 : 0;
 err:
 	return -1;
+}}
+%{$with__set_trygetfirst = {
+	DREF DeeObject *result = CALL_DEPENDENCY(set_trygetfirst, self);
+	if (result == ITER_DONE)
+		return 0;
+	if unlikely(!result)
+		return -1;
+	Dee_Decref(result);
+	return 1;
+}}
+%{$with__set_trygetlast = {
+	DREF DeeObject *result = CALL_DEPENDENCY(set_trygetlast, self);
+	if (result == ITER_DONE)
+		return 0;
+	if unlikely(!result)
+		return -1;
+	Dee_Decref(result);
+	return 1;
+}}
+%{$with__set_boundfirst = {
+	int status = CALL_DEPENDENCY(set_boundfirst, self);
+	return Dee_BOUND_ISERR(status) ? -1 : Dee_BOUND_ISBOUND(status);
+}}
+%{$with__set_boundlast = {
+	int status = CALL_DEPENDENCY(set_boundlast, self);
+	return Dee_BOUND_ISERR(status) ? -1 : Dee_BOUND_ISBOUND(status);
 }} {
 	DREF DeeObject *result = LOCAL_CALLATTR(self, 0, NULL);
 	if unlikely(!result)
@@ -152,6 +178,12 @@ seq_operator_bool = {
 	DeeMH_seq_operator_compare_eq_t seq_operator_compare_eq;
 	DeeMH_set_operator_compare_eq_t set_operator_compare_eq;
 	DeeMH_map_operator_compare_eq_t map_operator_compare_eq;
+	unsigned int seq_class = SEQ_CLASS;
+	if (seq_class == Dee_SEQCLASS_SET) {
+		DeeMH_set_operator_bool_t set_operator_bool;
+		if ((set_operator_bool = REQUIRE_NODEFAULT(set_operator_bool)) != NULL)
+			return set_operator_bool;
+	}
 
 	seq_operator_compare_eq = REQUIRE(seq_operator_compare_eq);
 	if (seq_operator_compare_eq) {
@@ -190,14 +222,27 @@ use_size:
 	seq_operator_size = REQUIRE(seq_operator_size);
 	if (seq_operator_size == &default__seq_operator_size__empty)
 		return &$empty;
+	if (seq_operator_size == &default__seq_operator_size__with__seq_operator_sizeob)
+		return &$with__seq_operator_sizeob;
+	if ((seq_operator_size == &default__seq_operator_size__with__seq_operator_iter ||
+	     seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach ||
+	     seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach_pair) &&
+	    (seq_class == Dee_SEQCLASS_SET || HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__))) {
+		if (REQUIRE_NODEFAULT(set_boundfirst))
+			return &$with__set_boundfirst;
+		if (REQUIRE_NODEFAULT(set_boundlast))
+			return &$with__set_boundlast;
+		if (REQUIRE_NODEFAULT(set_trygetfirst))
+			return &$with__set_trygetfirst;
+		if (REQUIRE_NODEFAULT(set_trygetlast))
+			return &$with__set_trygetlast;
+	}
 	if (seq_operator_size == &default__seq_operator_size__with__seq_operator_iter)
 		return &$with__seq_operator_iter;
 	if (seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach)
 		return &$with__seq_operator_foreach;
 	if (seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach_pair)
 		return &$with__seq_operator_foreach_pair;
-	if (seq_operator_size == &default__seq_operator_size__with__seq_operator_sizeob)
-		return &$with__seq_operator_sizeob;
 	if (seq_operator_size)
 		return &$with__seq_operator_size;
 };

@@ -2531,6 +2531,8 @@ PRIVATE struct type_method_hint tpconst string_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &string_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetfirst, &string_trygetfirst, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetlast, &string_trygetlast, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_trygetfirst, &string_trygetfirst, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_trygetlast, &string_trygetlast, METHOD_FNOREFESCAPE),
 
 	/* This stuff here is needed so that `("foo" as Sequence) <=> ["f", "o", "o"]' works. */
 	TYPE_METHOD_HINT_F(seq_operator_compare_eq, &string_mh_seq_compare_eq, METHOD_FNOREFESCAPE),

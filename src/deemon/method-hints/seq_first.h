@@ -125,6 +125,14 @@ __seq_first__.seq_boundfirst([[nonnull]] DeeObject *__restrict self)
 		return Dee_BOUND_ERR;
 	Dee_Decref(result);
 	return Dee_BOUND_YES;
+}}
+%{$with__set_operator_bool = {
+	int result = CALL_DEPENDENCY(set_operator_bool, self);
+	if unlikely(result < 0)
+		goto err;
+	return Dee_BOUND_FROMBOOL(result);
+err:
+	return Dee_BOUND_ERR;
 }} {
 	return LOCAL_BOUNDATTR(self);
 }
@@ -141,6 +149,19 @@ __seq_first__.seq_delfirst([[nonnull]] DeeObject *__restrict self)
 	if (result < 0 && DeeError_Catch(&DeeError_IndexError))
 		result = 0;
 	return result;
+}}
+%{$with__seq_trygetfirst__set_remove = {
+	int remove_status;
+	DREF DeeObject *first = CALL_DEPENDENCY(seq_trygetfirst, self);
+	if (!ITER_ISOK(first))
+		return first == ITER_DONE ? 0 : -1;
+	remove_status = CALL_DEPENDENCY(set_remove, self, first);
+	Dee_Decref(first);
+	if unlikely(remove_status < 0)
+		goto err;
+	return 0;
+err:
+	return -1;
 }} {
 	return LOCAL_DELATTR(self);
 }
@@ -166,9 +187,13 @@ __seq_first__.seq_setfirst([[nonnull]] DeeObject *self,
 
 
 seq_trygetfirst = {
+	DeeMH_set_trygetfirst_t set_trygetfirst;
 	DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
 	if (REQUIRE_NODEFAULT(seq_getfirst))
 		return &$with__seq_getfirst;
+	if (HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__) &&
+	    (set_trygetfirst = REQUIRE_NODEFAULT(set_trygetfirst)) != NULL)
+		return set_trygetfirst;
 	if (THIS_TYPE->tp_seq && THIS_TYPE->tp_seq->tp_getitem_index_fast &&
 	    REQUIRE_ANY(seq_operator_size) != &default__seq_operator_size__unsupported)
 		return &$with__seq_operator_size__and__operator_getitem_index_fast;
@@ -187,18 +212,38 @@ seq_getfirst = {
 		return &$empty;
 	if (seq_trygetfirst == &default__seq_trygetfirst__with__seq_operator_trygetitem_index)
 		return &$with__seq_operator_getitem_index;
-	if (seq_trygetfirst)
+	if (seq_trygetfirst == &default__seq_trygetfirst__with__seq_operator_size__and__operator_getitem_index_fast)
 		return &$with__seq_trygetfirst;
+	if (seq_trygetfirst) {
+		if (seq_trygetfirst == REQUIRE_NODEFAULT(set_trygetfirst)) {
+			DeeMH_set_getfirst_t set_getfirst = REQUIRE_NODEFAULT(set_getfirst);
+			if (set_getfirst)
+				return set_getfirst;
+		}
+		return &$with__seq_trygetfirst;
+	}
 };
 
 seq_boundfirst = {
 	DeeMH_seq_trygetfirst_t seq_trygetfirst = REQUIRE(seq_trygetfirst);
 	if (seq_trygetfirst == &default__seq_trygetfirst__empty)
 		return &$empty;
+	if (seq_trygetfirst == &default__seq_trygetfirst__with__seq_operator_foreach)
+		return &$with__set_operator_bool;
+	if ((seq_trygetfirst == &default__seq_trygetfirst__with__seq_operator_size__and__operator_getitem_index_fast ||
+	     seq_trygetfirst == &default__seq_trygetfirst__with__seq_operator_trygetitem_index) &&
+	    HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__))
+		return &$with__set_operator_bool;
 	if (seq_trygetfirst == &default__seq_trygetfirst__with__seq_operator_trygetitem_index)
 		return &$with__seq_operator_bounditem_index;
-	if (seq_trygetfirst)
+	if (seq_trygetfirst) {
+		if (seq_trygetfirst == REQUIRE_NODEFAULT(set_trygetfirst)) {
+			DeeMH_set_boundfirst_t set_boundfirst = REQUIRE_NODEFAULT(set_boundfirst);
+			if (set_boundfirst)
+				return set_boundfirst;
+		}
 		return &$with__seq_trygetfirst;
+	}
 };
 
 seq_delfirst = {
@@ -209,8 +254,16 @@ seq_delfirst = {
 		if (REQUIRE(seq_operator_delitem_index))
 			return &$with__seq_operator_delitem_index;
 	}
-	if (seq_trygetfirst)
+	if (seq_trygetfirst) {
+		if (seq_trygetfirst == REQUIRE_NODEFAULT(set_trygetfirst)) {
+			DeeMH_set_delfirst_t set_delfirst = REQUIRE_NODEFAULT(set_delfirst);
+			if (set_delfirst)
+				return set_delfirst;
+		}
+		if (REQUIRE_NODEFAULT(set_remove))
+			return &$with__seq_trygetfirst__set_remove;
 		return &$unsupported;
+	}
 };
 
 seq_setfirst = {
@@ -221,6 +274,12 @@ seq_setfirst = {
 		if (REQUIRE(seq_operator_setitem_index))
 			return &$with__seq_operator_setitem_index;
 	}
-	if (seq_trygetfirst)
+	if (seq_trygetfirst) {
+		if (seq_trygetfirst == REQUIRE_NODEFAULT(set_trygetfirst)) {
+			DeeMH_set_setfirst_t set_setfirst = REQUIRE_NODEFAULT(set_setfirst);
+			if (set_setfirst)
+				return set_setfirst;
+		}
 		return &$unsupported;
+	}
 };

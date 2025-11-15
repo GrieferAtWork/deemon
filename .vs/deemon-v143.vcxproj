@@ -364,11 +364,14 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_unpack.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_unpack_ub.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_xchitem.h" />
+		<ClInclude Include="..\src\deemon\method-hints\set_first.h" />
 		<ClInclude Include="..\src\deemon\method-hints\set_frozen.h" />
 		<ClInclude Include="..\src\deemon\method-hints\set_insert.h" />
 		<ClInclude Include="..\src\deemon\method-hints\set_insertall.h" />
+		<ClInclude Include="..\src\deemon\method-hints\set_last.h" />
 		<ClInclude Include="..\src\deemon\method-hints\set_operator_add.h" />
 		<ClInclude Include="..\src\deemon\method-hints\set_operator_and.h" />
+		<ClInclude Include="..\src\deemon\method-hints\set_operator_bool.h" />
 		<ClInclude Include="..\src\deemon\method-hints\set_operator_cmp.h" />
 		<ClInclude Include="..\src\deemon\method-hints\set_operator_compare_eq.h" />
 		<ClInclude Include="..\src\deemon\method-hints\set_operator_hash.h" />

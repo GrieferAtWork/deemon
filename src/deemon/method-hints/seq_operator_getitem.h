@@ -293,14 +293,14 @@ seq_operator_getitem_index = {
 		/* Check if "seq_operator_foreach" may possibly be skipping unbound items. */
 		if (REQUIRE_NODEFAULT(seq_enumerate) ||
 		    REQUIRE_NODEFAULT(seq_enumerate_index)) {
-			if (!HAS_TRAIT(__seq_getitem_always_bound__))
+			if (!HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__))
 				return &$with__seq_enumerate_index;
 		} else {
 			DeeMH_map_enumerate_t map_enumerate = REQUIRE_NODEFAULT(map_enumerate);
 			if ((map_enumerate && map_enumerate != REQUIRE(map_operator_foreach_pair)) ||
 			    REQUIRE_NODEFAULT(map_keys) ||
 			    REQUIRE_NODEFAULT(map_iterkeys)) {
-				if (!HAS_TRAIT(__map_getitem_always_bound__))
+				if (!HAS_TRAIT_NODEFAULT(__map_getitem_always_bound__))
 					return &$with__map_enumerate;
 			}
 		}
@@ -616,7 +616,7 @@ err:
 seq_operator_hasitem_index = {
 	DeeMH_seq_operator_size_t seq_operator_size = REQUIRE(seq_operator_size);
 	DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index;
-	if (HAS_TRAIT(__seq_getitem_always_bound__)) {
+	if (HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__)) {
 		if (REQUIRE_ANY(seq_operator_size) != &default__seq_operator_size__unsupported)
 			return &$with__seq_operator_size;
 	}
@@ -687,7 +687,7 @@ err:
 
 seq_operator_bounditem = {
 	DeeMH_seq_operator_bounditem_index_t seq_operator_bounditem_index;
-	if (HAS_TRAIT(__seq_getitem_always_bound__)) {
+	if (HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__)) {
 		/* TODO: Optimizations */
 	}
 	seq_operator_bounditem_index = REQUIRE(seq_operator_bounditem_index);
@@ -770,7 +770,7 @@ err:
 
 seq_operator_bounditem_index = {
 	DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index;
-	if (HAS_TRAIT(__seq_getitem_always_bound__)) {
+	if (HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__)) {
 		/* TODO: Optimizations */
 	}
 	seq_operator_getitem_index = REQUIRE(seq_operator_getitem_index);

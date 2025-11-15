@@ -159,6 +159,7 @@
 %[include("set_operator_hash.h")]
 %[include("set_operator_compare_eq.h")]
 %[include("set_operator_cmp.h")]
+%[include("set_operator_bool.h")]
 
 %[include("set_operator_inv.h")]
 %[include("set_operator_add.h")]
@@ -182,6 +183,12 @@
 %[include("set_removeall.h")]
 
 %[include("set_pop.h")]
+
+/* first/last for sets -- because sets can't have unbound members, if the sequence's
+ * implementation of first/last can thrown UnboundItem, then a different implementation
+ * must be used that skips ahead/back to the first/last **bound** item. */
+%[include("set_first.h")]
+%[include("set_last.h")]
 
 
 

@@ -111,7 +111,7 @@ seq_frozen = {
 			return &$with__seq_operator_foreach;
 	}
 	if (seq_enumerate_index) {
-		if (HAS_TRAIT(__seq_getitem_always_bound__))
+		if (HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__))
 			return &$with__seq_operator_foreach;
 		return &$with__seq_enumerate_index;
 	}

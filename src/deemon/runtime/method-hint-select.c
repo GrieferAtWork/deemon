@@ -42,6 +42,12 @@ mh_select_seq_operator_bool(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_compare_eq_t seq_operator_compare_eq;
 	DeeMH_set_operator_compare_eq_t set_operator_compare_eq;
 	DeeMH_map_operator_compare_eq_t map_operator_compare_eq;
+	unsigned int seq_class = DeeType_GetSeqClass(self);
+	if (seq_class == Dee_SEQCLASS_SET) {
+		DeeMH_set_operator_bool_t set_operator_bool;
+		if ((set_operator_bool = (DeeMH_set_operator_bool_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_operator_bool)) != NULL)
+			return set_operator_bool;
+	}
 
 	seq_operator_compare_eq = (DeeMH_seq_operator_compare_eq_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_compare_eq);
 	if (seq_operator_compare_eq) {
@@ -80,14 +86,27 @@ use_size:
 	seq_operator_size = (DeeMH_seq_operator_size_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_size);
 	if (seq_operator_size == &default__seq_operator_size__empty)
 		return &default__seq_operator_bool__empty;
+	if (seq_operator_size == &default__seq_operator_size__with__seq_operator_sizeob)
+		return &default__seq_operator_bool__with__seq_operator_sizeob;
+	if ((seq_operator_size == &default__seq_operator_size__with__seq_operator_iter ||
+	     seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach ||
+	     seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach_pair) &&
+	    (seq_class == Dee_SEQCLASS_SET || DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))) {
+		if ((DeeMH_set_boundfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_boundfirst))
+			return &default__seq_operator_bool__with__set_boundfirst;
+		if ((DeeMH_set_boundlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_boundlast))
+			return &default__seq_operator_bool__with__set_boundlast;
+		if ((DeeMH_set_trygetfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_trygetfirst))
+			return &default__seq_operator_bool__with__set_trygetfirst;
+		if ((DeeMH_set_trygetlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_trygetlast))
+			return &default__seq_operator_bool__with__set_trygetlast;
+	}
 	if (seq_operator_size == &default__seq_operator_size__with__seq_operator_iter)
 		return &default__seq_operator_bool__with__seq_operator_iter;
 	if (seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach)
 		return &default__seq_operator_bool__with__seq_operator_foreach;
 	if (seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach_pair)
 		return &default__seq_operator_bool__with__seq_operator_foreach_pair;
-	if (seq_operator_size == &default__seq_operator_size__with__seq_operator_sizeob)
-		return &default__seq_operator_bool__with__seq_operator_sizeob;
 	if (seq_operator_size)
 		return &default__seq_operator_bool__with__seq_operator_size;
 	return NULL;
@@ -120,13 +139,15 @@ mh_select_seq_operator_size(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_set_operator_size_t set_operator_size;
 	DeeMH_map_operator_size_t map_operator_size;
 	DeeMH_map_enumerate_t map_enumerate;
-	if ((set_operator_size = (DeeMH_set_operator_size_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_operator_size)) != NULL)
+	if ((set_operator_size = (DeeMH_set_operator_size_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_operator_size)) != NULL &&
+	    DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
 		return set_operator_size;
 	if ((map_operator_size = (DeeMH_map_operator_size_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_operator_size)) != NULL)
 		return map_operator_size;
 	if ((DeeMH_seq_operator_sizeob_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_operator_sizeob))
 		return &default__seq_operator_size__with__seq_operator_sizeob;
-	if ((DeeMH_set_operator_sizeob_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_operator_sizeob))
+	if ((DeeMH_set_operator_sizeob_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_operator_sizeob) &&
+	    DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
 		return &default__seq_operator_size__with__set_operator_sizeob;
 	if ((DeeMH_map_operator_sizeob_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_operator_sizeob))
 		return &default__seq_operator_size__with__map_operator_sizeob;
@@ -135,7 +156,7 @@ mh_select_seq_operator_size(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	map_enumerate = (DeeMH_map_enumerate_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_enumerate);
 	if (((map_enumerate && map_enumerate != (DeeMH_map_operator_foreach_pair_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_foreach_pair)) ||
 	     (DeeMH_map_keys_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_keys) || (DeeMH_map_iterkeys_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_iterkeys)) &&
-	    !DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT___map_getitem_always_bound__))
+	    !DeeType_HasExplicitTrait(self, DeeType_TRAIT___map_getitem_always_bound__))
 		return &default__seq_operator_size__with__map_enumerate;
 
 	seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
@@ -315,14 +336,14 @@ mh_select_seq_operator_getitem_index(DeeTypeObject *self, DeeTypeObject *orig_ty
 		/* Check if "seq_operator_foreach" may possibly be skipping unbound items. */
 		if ((DeeMH_seq_enumerate_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_enumerate) ||
 		    (DeeMH_seq_enumerate_index_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_enumerate_index)) {
-			if (!DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT___seq_getitem_always_bound__))
+			if (!DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
 				return &default__seq_operator_getitem_index__with__seq_enumerate_index;
 		} else {
 			DeeMH_map_enumerate_t map_enumerate = (DeeMH_map_enumerate_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_enumerate);
 			if ((map_enumerate && map_enumerate != (DeeMH_map_operator_foreach_pair_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_foreach_pair)) ||
 			    (DeeMH_map_keys_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_keys) ||
 			    (DeeMH_map_iterkeys_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_iterkeys)) {
-				if (!DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT___map_getitem_always_bound__))
+				if (!DeeType_HasExplicitTrait(self, DeeType_TRAIT___map_getitem_always_bound__))
 					return &default__seq_operator_getitem_index__with__map_enumerate;
 			}
 		}
@@ -391,7 +412,7 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_hasitem_index_t DCAL
 mh_select_seq_operator_hasitem_index(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_size_t seq_operator_size = (DeeMH_seq_operator_size_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_size);
 	DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index;
-	if (DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT___seq_getitem_always_bound__)) {
+	if (DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__)) {
 		if ((DeeMH_seq_operator_size_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_operator_size) != &default__seq_operator_size__unsupported)
 			return &default__seq_operator_hasitem_index__with__seq_operator_size;
 	}
@@ -415,7 +436,7 @@ mh_select_seq_operator_hasitem_index(DeeTypeObject *self, DeeTypeObject *orig_ty
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_bounditem_t DCALL
 mh_select_seq_operator_bounditem(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_bounditem_index_t seq_operator_bounditem_index;
-	if (DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT___seq_getitem_always_bound__)) {
+	if (DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__)) {
 		/* TODO: Optimizations */
 	}
 	seq_operator_bounditem_index = (DeeMH_seq_operator_bounditem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_bounditem_index);
@@ -435,7 +456,7 @@ mh_select_seq_operator_bounditem(DeeTypeObject *self, DeeTypeObject *orig_type) 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_bounditem_index_t DCALL
 mh_select_seq_operator_bounditem_index(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index;
-	if (DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT___seq_getitem_always_bound__)) {
+	if (DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__)) {
 		/* TODO: Optimizations */
 	}
 	seq_operator_getitem_index = (DeeMH_seq_operator_getitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_getitem_index);
@@ -1161,13 +1182,13 @@ mh_select_seq_unpack_ex(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &default__seq_unpack_ex__empty;
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast &&
-	    DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT___seq_getitem_always_bound__))
+	    DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
 		return &default__seq_unpack_ex__with__seq_operator_size__and__operator_getitem_index_fast;
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index &&
-	    DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT___seq_getitem_always_bound__))
+	    DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
 		return &default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_trygetitem_index;
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index &&
-	    DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT___seq_getitem_always_bound__))
+	    DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
 		return &default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_getitem_index;
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_iter)
 		return &default__seq_unpack_ex__with__seq_operator_iter;
@@ -1179,7 +1200,7 @@ mh_select_seq_unpack_ex(DeeTypeObject *self, DeeTypeObject *orig_type) {
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_unpack_ub_t DCALL
 mh_select_seq_unpack_ub(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_foreach_t seq_operator_foreach;
-	if (DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT___seq_getitem_always_bound__))
+	if (DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
 		return (DeeMH_seq_unpack_ex_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_unpack_ex); /* Can just re-use the regular `seq_unpack_ex' */
 	seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
@@ -1197,9 +1218,13 @@ mh_select_seq_unpack_ub(DeeTypeObject *self, DeeTypeObject *orig_type) {
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_trygetfirst_t DCALL
 mh_select_seq_trygetfirst(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_set_trygetfirst_t set_trygetfirst;
 	DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
 	if ((DeeMH_seq_getfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_getfirst))
 		return &default__seq_trygetfirst__with__seq_getfirst;
+	if (DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__) &&
+	    (set_trygetfirst = (DeeMH_set_trygetfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_trygetfirst)) != NULL)
+		return set_trygetfirst;
 	if (self->tp_seq && self->tp_seq->tp_getitem_index_fast &&
 	    (DeeMH_seq_operator_size_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_operator_size) != &default__seq_operator_size__unsupported)
 		return &default__seq_trygetfirst__with__seq_operator_size__and__operator_getitem_index_fast;
@@ -1220,8 +1245,16 @@ mh_select_seq_getfirst(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		return &default__seq_getfirst__empty;
 	if (seq_trygetfirst == &default__seq_trygetfirst__with__seq_operator_trygetitem_index)
 		return &default__seq_getfirst__with__seq_operator_getitem_index;
-	if (seq_trygetfirst)
+	if (seq_trygetfirst == &default__seq_trygetfirst__with__seq_operator_size__and__operator_getitem_index_fast)
 		return &default__seq_getfirst__with__seq_trygetfirst;
+	if (seq_trygetfirst) {
+		if (seq_trygetfirst == (DeeMH_set_trygetfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_trygetfirst)) {
+			DeeMH_set_getfirst_t set_getfirst = (DeeMH_set_getfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_getfirst);
+			if (set_getfirst)
+				return set_getfirst;
+		}
+		return &default__seq_getfirst__with__seq_trygetfirst;
+	}
 	return NULL;
 }
 
@@ -1230,10 +1263,22 @@ mh_select_seq_boundfirst(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_trygetfirst_t seq_trygetfirst = (DeeMH_seq_trygetfirst_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_trygetfirst);
 	if (seq_trygetfirst == &default__seq_trygetfirst__empty)
 		return &default__seq_boundfirst__empty;
+	if (seq_trygetfirst == &default__seq_trygetfirst__with__seq_operator_foreach)
+		return &default__seq_boundfirst__with__set_operator_bool;
+	if ((seq_trygetfirst == &default__seq_trygetfirst__with__seq_operator_size__and__operator_getitem_index_fast ||
+	     seq_trygetfirst == &default__seq_trygetfirst__with__seq_operator_trygetitem_index) &&
+	    DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
+		return &default__seq_boundfirst__with__set_operator_bool;
 	if (seq_trygetfirst == &default__seq_trygetfirst__with__seq_operator_trygetitem_index)
 		return &default__seq_boundfirst__with__seq_operator_bounditem_index;
-	if (seq_trygetfirst)
+	if (seq_trygetfirst) {
+		if (seq_trygetfirst == (DeeMH_set_trygetfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_trygetfirst)) {
+			DeeMH_set_boundfirst_t set_boundfirst = (DeeMH_set_boundfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_boundfirst);
+			if (set_boundfirst)
+				return set_boundfirst;
+		}
 		return &default__seq_boundfirst__with__seq_trygetfirst;
+	}
 	return NULL;
 }
 
@@ -1246,8 +1291,16 @@ mh_select_seq_delfirst(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		if ((DeeMH_seq_operator_delitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_delitem_index))
 			return &default__seq_delfirst__with__seq_operator_delitem_index;
 	}
-	if (seq_trygetfirst)
+	if (seq_trygetfirst) {
+		if (seq_trygetfirst == (DeeMH_set_trygetfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_trygetfirst)) {
+			DeeMH_set_delfirst_t set_delfirst = (DeeMH_set_delfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_delfirst);
+			if (set_delfirst)
+				return set_delfirst;
+		}
+		if ((DeeMH_set_remove_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_remove))
+			return &default__seq_delfirst__with__seq_trygetfirst__set_remove;
 		return &default__seq_delfirst__unsupported;
+	}
 	return NULL;
 }
 
@@ -1260,8 +1313,14 @@ mh_select_seq_setfirst(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		if ((DeeMH_seq_operator_setitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_setitem_index))
 			return &default__seq_setfirst__with__seq_operator_setitem_index;
 	}
-	if (seq_trygetfirst)
+	if (seq_trygetfirst) {
+		if (seq_trygetfirst == (DeeMH_set_trygetfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_trygetfirst)) {
+			DeeMH_set_setfirst_t set_setfirst = (DeeMH_set_setfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_setfirst);
+			if (set_setfirst)
+				return set_setfirst;
+		}
 		return &default__seq_setfirst__unsupported;
+	}
 	return NULL;
 }
 
@@ -1270,18 +1329,34 @@ mh_select_seq_trygetlast(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
 	if ((DeeMH_seq_getlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_getlast))
 		return &default__seq_trygetlast__with__seq_getlast;
-	if (self->tp_seq &&
-	    self->tp_seq->tp_getitem_index_fast &&
-	    self->tp_seq->tp_size)
+	if (self->tp_seq && self->tp_seq->tp_getitem_index_fast &&
+	    (DeeMH_seq_operator_size_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_operator_size) != &default__seq_operator_size__unsupported)
 		return &default__seq_trygetlast__with__seq_operator_size__and__operator_getitem_index_fast;
+	if (DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__)) {
+		DeeMH_set_trygetlast_t set_trygetlast = (DeeMH_set_trygetlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_trygetlast);
+		if (set_trygetlast)
+			return set_trygetlast;
+	}
 	seq_operator_trygetitem_index = (DeeMH_seq_operator_trygetitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_trygetitem_index);
 	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__empty)
 		return &default__seq_trygetlast__empty;
 	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__with__seq_operator_foreach)
 		return &default__seq_trygetlast__with__seq_operator_foreach;
-	if (seq_operator_trygetitem_index &&
-	    (DeeMH_seq_operator_size_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_operator_size) != &default__seq_operator_size__unsupported)
-		return &default__seq_trygetlast__with__seq_operator_size__and__seq_operator_trygetitem_index;
+	if (seq_operator_trygetitem_index) {
+		DeeMH_seq_operator_size_t seq_operator_size = (DeeMH_seq_operator_size_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_operator_size);
+		if (seq_operator_size != &default__seq_operator_size__unsupported) {
+			if (seq_operator_size == &default__seq_operator_size__with__seq_operator_sizeob)
+				return default__seq_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem;
+			if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__with__seq_operator_getitem_index) {
+				DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index = (DeeMH_seq_operator_getitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_getitem_index);
+				if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_getitem)
+					return default__seq_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem;
+			}
+			return &default__seq_trygetlast__with__seq_operator_size__and__seq_operator_trygetitem_index;
+		}
+	}
+	if ((DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach))
+		return &default__seq_trygetlast__with__seq_operator_foreach;
 	return NULL;
 }
 
@@ -1292,8 +1367,16 @@ mh_select_seq_getlast(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		return &default__seq_getlast__empty;
 	if (seq_trygetlast == &default__seq_trygetlast__with__seq_operator_size__and__seq_operator_trygetitem_index)
 		return &default__seq_getlast__with__seq_operator_size__and__seq_operator_getitem_index;
-	if (seq_trygetlast)
+	if (seq_trygetlast == &default__seq_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem)
+		return &default__seq_getlast__with__seq_operator_sizeob__and__seq_operator_getitem;
+	if (seq_trygetlast) {
+		if (seq_trygetlast == (DeeMH_set_trygetlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_trygetlast)) {
+			DeeMH_set_getlast_t set_getlast = (DeeMH_set_getlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_getlast);
+			if (set_getlast)
+				return set_getlast;
+		}
 		return &default__seq_getlast__with__seq_trygetlast;
+	}
 	return NULL;
 }
 
@@ -1302,10 +1385,25 @@ mh_select_seq_boundlast(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_trygetlast_t seq_trygetlast = (DeeMH_seq_trygetlast_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_trygetlast);
 	if (seq_trygetlast == &default__seq_trygetlast__empty)
 		return &default__seq_boundlast__empty;
+	if (seq_trygetlast == &default__seq_trygetlast__with__seq_operator_foreach)
+		return &default__seq_boundlast__with__set_operator_bool;
+	if ((seq_trygetlast == &default__seq_trygetlast__with__seq_operator_size__and__operator_getitem_index_fast ||
+	     seq_trygetlast == &default__seq_trygetlast__with__seq_operator_size__and__seq_operator_trygetitem_index ||
+	     seq_trygetlast == &default__seq_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem) &&
+	    DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
+		return &default__seq_boundlast__with__set_operator_bool;
 	if (seq_trygetlast == &default__seq_trygetlast__with__seq_operator_size__and__seq_operator_trygetitem_index)
 		return &default__seq_boundlast__with__seq_operator_size__and__seq_operator_bounditem_index;
-	if (seq_trygetlast)
+	if (seq_trygetlast == &default__seq_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem)
+		return &default__seq_boundlast__with__seq_operator_sizeob__and__seq_operator_bounditem;
+	if (seq_trygetlast) {
+		if (seq_trygetlast == (DeeMH_set_trygetlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_trygetlast)) {
+			DeeMH_set_boundlast_t set_boundlast = (DeeMH_set_boundlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_boundlast);
+			if (set_boundlast)
+				return set_boundlast;
+		}
 		return &default__seq_boundlast__with__seq_trygetlast;
+	}
 	return NULL;
 }
 
@@ -1318,8 +1416,20 @@ mh_select_seq_dellast(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		if ((DeeMH_seq_operator_delitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_delitem_index))
 			return &default__seq_dellast__with__seq_operator_size__and__seq_operator_delitem_index;
 	}
-	if (seq_trygetlast)
+	if (seq_trygetlast == &default__seq_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem) {
+		if ((DeeMH_seq_operator_delitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_delitem))
+			return &default__seq_dellast__with__seq_operator_sizeob__and__seq_operator_delitem;
+	}
+	if (seq_trygetlast) {
+		if (seq_trygetlast == (DeeMH_set_trygetlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_trygetlast)) {
+			DeeMH_set_dellast_t set_dellast = (DeeMH_set_dellast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_dellast);
+			if (set_dellast)
+				return set_dellast;
+		}
+		if ((DeeMH_set_remove_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_remove))
+			return &default__seq_dellast__with__seq_trygetlast__set_remove;
 		return &default__seq_dellast__unsupported;
+	}
 	return NULL;
 }
 
@@ -1332,8 +1442,18 @@ mh_select_seq_setlast(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		if ((DeeMH_seq_operator_setitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_setitem_index))
 			return &default__seq_setlast__with__seq_operator_size__and__seq_operator_setitem_index;
 	}
-	if (seq_trygetlast)
+	if (seq_trygetlast == &default__seq_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem) {
+		if ((DeeMH_seq_operator_setitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_setitem))
+			return &default__seq_setlast__with__seq_operator_sizeob__and__seq_operator_setitem;
+	}
+	if (seq_trygetlast) {
+		if (seq_trygetlast == (DeeMH_set_trygetlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_trygetlast)) {
+			DeeMH_set_setlast_t set_setlast = (DeeMH_set_setlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_setlast);
+			if (set_setlast)
+				return set_setlast;
+		}
 		return &default__seq_setlast__unsupported;
+	}
 	return NULL;
 }
 
@@ -1393,7 +1513,7 @@ use_seq_operator_iter:
 	if (seq_enumerate) {
 		DeeMH_seq_operator_size_t seq_operator_size;
 		DeeMH_seq_operator_getitem_t seq_operator_getitem;
-		if (DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT___seq_getitem_always_bound__))
+		if (DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
 			goto use_seq_operator_iter;
 		seq_operator_size = (DeeMH_seq_operator_size_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_size);
 		if (seq_operator_size == &default__seq_operator_size__empty)
@@ -1456,7 +1576,7 @@ mh_select_seq_frozen(DeeTypeObject *self, DeeTypeObject *orig_type) {
 			return &default__seq_frozen__with__seq_operator_foreach;
 	}
 	if (seq_enumerate_index) {
-		if (DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT___seq_getitem_always_bound__))
+		if (DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
 			return &default__seq_frozen__with__seq_operator_foreach;
 		return &default__seq_frozen__with__seq_enumerate_index;
 	}
@@ -2686,7 +2806,7 @@ mh_select_set_operator_foreach(DeeTypeObject *self, DeeTypeObject *orig_type) {
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_sizeob_t DCALL
 mh_select_set_operator_sizeob(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_set_operator_size_t set_operator_size;
-	if (DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT___map_getitem_always_bound__)) {
+	if (DeeType_HasExplicitTrait(self, DeeType_TRAIT___map_getitem_always_bound__)) {
 		/* Method hint "map_operator_sizeob" includes */
 		DeeMH_map_operator_sizeob_t map_operator_sizeob = (DeeMH_map_operator_sizeob_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_operator_sizeob);
 		if (map_operator_sizeob) {
@@ -2713,7 +2833,7 @@ mh_select_set_operator_size(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		if (map_operator_size == &default__map_operator_size__empty ||
 		    map_operator_size == &default__map_operator_size__with__map_operator_foreach_pair ||
 		    map_operator_size == &default__map_operator_size__with__map_operator_iter ||
-		    DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT___map_getitem_always_bound__))
+		    DeeType_HasExplicitTrait(self, DeeType_TRAIT___map_getitem_always_bound__))
 			return map_operator_size;
 	}
 	if ((DeeMH_set_operator_sizeob_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_operator_sizeob))
@@ -2844,6 +2964,97 @@ mh_select_set_operator_ge(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		return &default__set_operator_ge__empty;
 	if (set_operator_foreach)
 		return &default__set_operator_ge__with__set_operator_foreach;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_bool_t DCALL
+mh_select_set_operator_bool(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_bool_t seq_operator_bool = (DeeMH_seq_operator_bool_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_bool);
+	DeeMH_set_operator_size_t set_operator_size;
+
+	/* Try to inherit from "Sequence.operator bool()" */
+	if (seq_operator_bool == &default__seq_operator_bool__with__seq_operator_foreach ||
+	    seq_operator_bool == &default__seq_operator_bool__with__seq_operator_foreach_pair ||
+	    seq_operator_bool == &default__seq_operator_bool__with__seq_operator_iter ||
+		seq_operator_bool == &default__seq_operator_bool__with__set_trygetfirst ||
+		seq_operator_bool == &default__seq_operator_bool__with__set_trygetlast ||
+		seq_operator_bool == &default__seq_operator_bool__with__set_boundfirst ||
+		seq_operator_bool == &default__seq_operator_bool__with__set_boundlast) {
+		return seq_operator_bool;
+	} else if (DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__)) {
+		if (seq_operator_bool == &default__seq_operator_bool__with__seq_operator_size ||
+		    seq_operator_bool == &default__seq_operator_bool__with__seq_operator_sizeob ||
+		    seq_operator_bool == &default__seq_operator_bool__with__seq_operator_compare_eq ||
+		    seq_operator_bool == &default__seq_operator_bool__with__set_operator_compare_eq ||
+		    seq_operator_bool == &default__seq_operator_bool__with__map_operator_compare_eq)
+		    return seq_operator_bool;
+
+		/* A user-defined "Sequence.operator bool()" can also always be
+		 * used when "__seq_getitem_always_bound__" is explicitly enabled. */
+		seq_operator_bool = (DeeMH_seq_operator_bool_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_operator_bool);
+		if (seq_operator_bool)
+			return seq_operator_bool;
+	}
+
+	/* Try to implement using "Seq.first" / "Seq.last" */
+	if ((DeeMH_set_boundfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_boundfirst))
+		return &default__set_operator_bool__with__set_boundfirst;
+	if ((DeeMH_set_boundlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_boundlast))
+		return &default__set_operator_bool__with__set_boundlast;
+	if ((DeeMH_set_trygetfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_trygetfirst))
+		return &default__set_operator_bool__with__set_trygetfirst;
+	if ((DeeMH_set_trygetlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_trygetlast))
+		return &default__set_operator_bool__with__set_trygetlast;
+
+	/* Fallback: wrap around "Set.operator size()" */
+	set_operator_size = (DeeMH_set_operator_size_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_operator_size);
+	if (set_operator_size == &default__set_operator_size__empty)
+		return &default__set_operator_bool__empty;
+	if (set_operator_size == &default__set_operator_size__with__set_operator_sizeob)
+		return &default__set_operator_bool__with__set_operator_sizeob;
+	if (set_operator_size == &default__set_operator_size__with__set_operator_iter ||
+	    set_operator_size == &default__set_operator_size__with__set_operator_foreach) {
+		DeeMH_set_operator_foreach_t set_operator_foreach = (DeeMH_set_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_operator_foreach);
+		if (set_operator_foreach == &default__set_operator_foreach__empty) {
+			return &default__set_operator_bool__empty;
+		} else if (set_operator_foreach == &default__set_operator_foreach__with__seq_operator_foreach) {
+			DeeMH_seq_operator_foreach_t seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
+			if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+				return &default__set_operator_bool__empty;
+			if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_foreach_pair ||
+			    seq_operator_foreach == &default__seq_operator_foreach__with__map_enumerate)
+				return &default__set_operator_bool__with__seq_operator_foreach_pair;
+			if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_iter)
+				goto use__seq_operator_iter;
+			return &default__set_operator_bool__with__seq_operator_foreach;
+		} else if (set_operator_foreach == &default__set_operator_foreach__with__set_operator_iter ||
+		           set_operator_size == &default__set_operator_size__with__set_operator_iter) {
+			DeeMH_set_operator_iter_t set_operator_iter = (DeeMH_set_operator_iter_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_operator_iter);
+			if (set_operator_iter == &default__set_operator_iter__with__seq_operator_iter) {
+				DeeMH_seq_operator_iter_t seq_operator_iter;
+use__seq_operator_iter:
+				seq_operator_iter = (DeeMH_seq_operator_iter_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_iter);
+				if (seq_operator_iter == &default__seq_operator_iter__empty)
+					return &default__set_operator_bool__empty;
+				if (seq_operator_iter == &default__seq_operator_iter__with__seq_operator_size__and__operator_getitem_index_fast ||
+				    seq_operator_iter == &default__seq_operator_iter__with__seq_operator_size__and__seq_operator_trygetitem_index ||
+				    seq_operator_iter == &default__seq_operator_iter__with__seq_operator_size__and__seq_operator_getitem_index ||
+				    seq_operator_iter == &default__seq_operator_iter__with__seq_operator_getitem_index ||
+				    seq_operator_iter == &default__seq_operator_iter__with__seq_operator_sizeob__and__seq_operator_getitem ||
+				    seq_operator_iter == &default__seq_operator_iter__with__seq_operator_getitem ||
+				    seq_operator_iter == &default__seq_operator_iter__with__map_enumerate ||
+				    seq_operator_iter == &default__seq_operator_iter__with__seq_enumerate ||
+				    seq_operator_iter == &default__seq_operator_iter__with__seq_enumerate_index ||
+				    seq_operator_iter == &default__seq_operator_iter__with__map_iterkeys__and__map_operator_trygetitem ||
+				    seq_operator_iter == &default__seq_operator_iter__with__map_iterkeys__and__map_operator_getitem)
+					return &default__set_operator_bool__with__seq_operator_foreach;
+				return &default__set_operator_bool__with__seq_operator_iter;
+			}
+		}
+		return &default__set_operator_bool__with__set_operator_foreach;
+	}
+	if (set_operator_size)
+		return &default__set_operator_bool__with__set_operator_size;
 	return NULL;
 }
 
@@ -2982,6 +3193,285 @@ mh_select_set_pop_with_default(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		return &default__set_pop_with_default__empty;
 	if (seq_pop)
 		return &default__set_pop_with_default__with__seq_pop;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_trygetfirst_t DCALL
+mh_select_set_trygetfirst(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_trygetfirst_t seq_trygetfirst;
+	DeeMH_seq_operator_foreach_t seq_operator_foreach;
+	if ((DeeMH_set_getfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_getfirst))
+		return &default__set_trygetfirst__with__set_getfirst;
+	if (DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__) &&
+	    (seq_trygetfirst = (DeeMH_seq_trygetfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_trygetfirst)) != NULL)
+		return seq_trygetfirst;
+	seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
+	if (seq_operator_foreach) {
+		if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+			return &default__set_trygetfirst__empty;
+		if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast &&
+		    DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
+			return &default__set_trygetfirst__with__seq_operator_size__and__operator_getitem_index_fast_ab;
+		if ((seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index ||
+		     seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index ||
+		     seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_sizeob__and__seq_operator_getitem ||
+		     seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_getitem_index ||
+		     seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_getitem) &&
+		    DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
+			return &default__set_trygetfirst__with__seq_operator_trygetitem_index_ab;
+		return &default__set_trygetfirst__with__seq_operator_foreach;
+	}
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_getfirst_t DCALL
+mh_select_set_getfirst(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_set_trygetfirst_t set_trygetfirst = (DeeMH_set_trygetfirst_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_trygetfirst);
+	if (set_trygetfirst == &default__set_trygetfirst__empty)
+		return &default__set_getfirst__empty;
+	if (set_trygetfirst == &default__set_trygetfirst__with__seq_operator_trygetitem_index_ab)
+		return &default__set_getfirst__with__seq_operator_getitem_index_ab;
+	if (set_trygetfirst == &default__set_trygetfirst__with__seq_operator_size__and__operator_getitem_index_fast_ab)
+		return &default__set_getfirst__with__set_trygetfirst;
+	if (set_trygetfirst) {
+		if (set_trygetfirst == (DeeMH_seq_trygetfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_trygetfirst)) {
+			DeeMH_seq_getfirst_t seq_getfirst = (DeeMH_seq_getfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_getfirst);
+			if (seq_getfirst)
+				return seq_getfirst;
+		}
+		return &default__set_getfirst__with__set_trygetfirst;
+	}
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_boundfirst_t DCALL
+mh_select_set_boundfirst(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_set_operator_bool_t set_operator_bool;
+	DeeMH_set_boundlast_t set_boundlast;
+	if (DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__)) {
+		DeeMH_seq_boundfirst_t seq_boundfirst;
+		DeeMH_seq_boundlast_t seq_boundlast;
+		if ((seq_boundfirst = (DeeMH_seq_boundfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_boundfirst)) != NULL)
+			return seq_boundfirst;
+		if ((seq_boundlast = (DeeMH_seq_boundlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_boundlast)) != NULL)
+			return seq_boundlast;
+	}
+	if ((set_boundlast = (DeeMH_set_boundlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_boundlast)) != NULL)
+		return set_boundlast;
+	set_operator_bool = (DeeMH_set_operator_bool_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_operator_bool);
+	if (set_operator_bool) {
+		if (set_operator_bool == &default__set_operator_bool__empty)
+			return &default__set_boundfirst__empty;
+		return &default__set_boundfirst__with__set_operator_bool;
+	}
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_delfirst_t DCALL
+mh_select_set_delfirst(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_set_trygetfirst_t set_trygetfirst = (DeeMH_set_trygetfirst_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_trygetfirst);
+	if (set_trygetfirst == &default__set_trygetfirst__empty)
+		return &default__set_delfirst__empty;
+	if (set_trygetfirst == &default__set_trygetfirst__with__seq_operator_trygetitem_index_ab ||
+	    set_trygetfirst == &default__set_trygetfirst__with__seq_operator_size__and__operator_getitem_index_fast_ab) {
+		if ((DeeMH_seq_operator_delitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_delitem_index))
+			return &default__set_delfirst__with__seq_operator_delitem_index;
+	} else if (set_trygetfirst) {
+		if (set_trygetfirst == (DeeMH_seq_trygetfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_trygetfirst)) {
+			DeeMH_seq_delfirst_t seq_delfirst = (DeeMH_seq_delfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_delfirst);
+			if (seq_delfirst)
+				return seq_delfirst;
+		}
+		if ((DeeMH_set_remove_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_remove))
+			return &default__set_delfirst__with__set_trygetfirst__set_remove;
+		if ((DeeMH_seq_operator_bounditem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_bounditem_index) &&
+		    (DeeMH_seq_operator_delitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_delitem_index)) {
+			DeeMH_seq_operator_size_t seq_operator_size = (DeeMH_seq_operator_size_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_size);
+			if (seq_operator_size) {
+				if (seq_operator_size == &default__seq_operator_size__empty)
+					return &default__set_delfirst__empty;
+				if (seq_operator_size != &default__seq_operator_size__with__seq_operator_foreach &&
+				    seq_operator_size != &default__seq_operator_size__with__seq_operator_foreach_pair &&
+				    seq_operator_size != &default__seq_operator_size__with__map_enumerate &&
+				    seq_operator_size != &default__seq_operator_size__with__seq_operator_iter &&
+				    seq_operator_size != &default__seq_operator_size__with__seq_enumerate_index)
+					return &default__set_delfirst__with__seq_operator_size__and__seq_operator_bounditem_index__seq_operator_delitem_index;
+			}
+			return &default__set_delfirst__with__seq_operator_bounditem_index__seq_operator_delitem_index;
+		}
+	}
+	if (set_trygetfirst)
+		return &default__set_delfirst__unsupported;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_setfirst_t DCALL
+mh_select_set_setfirst(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_set_trygetfirst_t set_trygetfirst = (DeeMH_set_trygetfirst_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_trygetfirst);
+	if (set_trygetfirst == &default__set_trygetfirst__empty)
+		return &default__set_setfirst__empty;
+	if (set_trygetfirst == &default__set_trygetfirst__with__seq_operator_trygetitem_index_ab ||
+	    set_trygetfirst == &default__set_trygetfirst__with__seq_operator_size__and__operator_getitem_index_fast_ab) {
+		if ((DeeMH_seq_operator_setitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_setitem_index))
+			return &default__set_setfirst__with__seq_operator_setitem_index;
+	} else if (set_trygetfirst) {
+		if (set_trygetfirst == (DeeMH_seq_trygetfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_trygetfirst)) {
+			DeeMH_seq_setfirst_t seq_setfirst = (DeeMH_seq_setfirst_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_setfirst);
+			if (seq_setfirst)
+				return seq_setfirst;
+		}
+		if ((DeeMH_seq_operator_bounditem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_bounditem_index) &&
+		    (DeeMH_seq_operator_setitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_setitem_index)) {
+			DeeMH_seq_operator_size_t seq_operator_size = (DeeMH_seq_operator_size_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_size);
+			if (seq_operator_size) {
+				if (seq_operator_size == &default__seq_operator_size__empty)
+					return &default__set_setfirst__empty;
+				if (seq_operator_size != &default__seq_operator_size__with__seq_operator_foreach &&
+				    seq_operator_size != &default__seq_operator_size__with__seq_operator_foreach_pair &&
+				    seq_operator_size != &default__seq_operator_size__with__map_enumerate &&
+				    seq_operator_size != &default__seq_operator_size__with__seq_operator_iter &&
+				    seq_operator_size != &default__seq_operator_size__with__seq_enumerate_index)
+					return &default__set_setfirst__with__seq_operator_size__and__seq_operator_bounditem_index__seq_operator_setitem_index;
+			}
+			return &default__set_setfirst__with__seq_operator_bounditem_index__seq_operator_setitem_index;
+		}
+	}
+	if (set_trygetfirst)
+		return &default__set_setfirst__unsupported;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_trygetlast_t DCALL
+mh_select_set_trygetlast(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
+	DeeMH_seq_trygetlast_t seq_trygetlast;
+	if ((DeeMH_set_getlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_getlast))
+		return &default__set_trygetlast__with__set_getlast;
+	if ((seq_trygetlast = (DeeMH_seq_trygetlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_trygetlast)) != NULL &&
+	    DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
+		return seq_trygetlast;
+	if (self->tp_seq && self->tp_seq->tp_getitem_index_fast &&
+	    (DeeMH_seq_operator_size_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_operator_size) != &default__seq_operator_size__unsupported) {
+		if (DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
+			return &default__set_trygetlast__with__seq_operator_size__and__operator_getitem_index_fast_ab;
+		return &default__set_trygetlast__with__seq_operator_size__and__operator_getitem_index_fast;
+	}
+	seq_operator_trygetitem_index = (DeeMH_seq_operator_trygetitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_trygetitem_index);
+	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__empty)
+		return &default__set_trygetlast__empty;
+	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__with__seq_operator_foreach)
+		return &default__set_trygetlast__with__seq_operator_foreach;
+	if (seq_operator_trygetitem_index) {
+		DeeMH_seq_operator_size_t seq_operator_size = (DeeMH_seq_operator_size_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_operator_size);
+		if (seq_operator_size != &default__seq_operator_size__unsupported) {
+			if (seq_operator_size == &default__seq_operator_size__with__seq_operator_sizeob) {
+				if (DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
+					return default__set_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem_ab;
+				return default__set_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem;
+			}
+			if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__with__seq_operator_getitem_index) {
+				DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index = (DeeMH_seq_operator_getitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_getitem_index);
+				if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_getitem) {
+					if (DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
+						return default__set_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem_ab;
+					return default__set_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem;
+				}
+			}
+			if (DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
+				return &default__set_trygetlast__with__seq_operator_size__and__seq_operator_trygetitem_index_ab;
+			return &default__set_trygetlast__with__seq_operator_size__and__seq_operator_trygetitem_index;
+		}
+	}
+	if ((DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach))
+		return &default__set_trygetlast__with__seq_operator_foreach;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_getlast_t DCALL
+mh_select_set_getlast(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_set_trygetlast_t set_trygetlast = (DeeMH_set_trygetlast_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_trygetlast);
+	if (set_trygetlast == &default__set_trygetlast__empty)
+		return &default__set_getlast__empty;
+	if (set_trygetlast == &default__set_trygetlast__with__seq_operator_size__and__seq_operator_trygetitem_index_ab)
+		return &default__set_getlast__with__seq_operator_size__and__seq_operator_getitem_index_ab;
+	if (set_trygetlast == &default__set_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem_ab)
+		return &default__set_getlast__with__seq_operator_sizeob__and__seq_operator_getitem_ab;
+	if (set_trygetlast) {
+		if (set_trygetlast == (DeeMH_seq_trygetlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_trygetlast)) {
+			DeeMH_seq_getlast_t seq_getlast = (DeeMH_seq_getlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_getlast);
+			if (seq_getlast)
+				return seq_getlast;
+		}
+		return &default__set_getlast__with__set_trygetlast;
+	}
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_boundlast_t DCALL
+mh_select_set_boundlast(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_set_boundfirst_t set_boundfirst = (DeeMH_set_boundfirst_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_boundfirst);
+	if (set_boundfirst)
+		return set_boundfirst;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_dellast_t DCALL
+mh_select_set_dellast(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_set_trygetlast_t set_trygetlast = (DeeMH_set_trygetlast_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_trygetlast);
+	if (set_trygetlast == &default__set_trygetlast__empty)
+		return &default__set_dellast__empty;
+	if (set_trygetlast == &default__set_trygetlast__with__seq_operator_size__and__seq_operator_trygetitem_index_ab) {
+		if ((DeeMH_seq_operator_delitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_delitem_index))
+			return &default__set_dellast__with__seq_operator_size__and__seq_operator_delitem_index_ab;
+	} else if (set_trygetlast == &default__set_trygetlast__with__seq_operator_size__and__seq_operator_trygetitem_index) {
+		if ((DeeMH_seq_operator_bounditem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_bounditem_index) && (DeeMH_seq_operator_delitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_delitem_index))
+			return &default__set_dellast__with__seq_operator_size__and__seq_operator_bounditem_index__and__seq_operator_delitem_index;
+	} else if (set_trygetlast == &default__set_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem_ab) {
+		if ((DeeMH_seq_operator_delitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_delitem))
+			return &default__set_dellast__with__seq_operator_sizeob__and__seq_operator_delitem_ab;
+	} else if (set_trygetlast == &default__set_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem) {
+		if ((DeeMH_seq_operator_bounditem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_bounditem) && (DeeMH_seq_operator_delitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_delitem))
+			return &default__set_dellast__with__seq_operator_sizeob__and__seq_operator_bounditem__and__seq_operator_delitem;
+	}
+	if (set_trygetlast) {
+		if (set_trygetlast == (DeeMH_seq_trygetlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_trygetlast)) {
+			DeeMH_seq_dellast_t seq_dellast = (DeeMH_seq_dellast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_dellast);
+			if (seq_dellast)
+				return seq_dellast;
+		}
+		if ((DeeMH_set_remove_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_remove))
+			return &default__set_dellast__with__set_trygetlast__set_remove;
+		return &default__set_dellast__unsupported;
+	}
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_setlast_t DCALL
+mh_select_set_setlast(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_set_trygetlast_t set_trygetlast = (DeeMH_set_trygetlast_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_trygetlast);
+	if (set_trygetlast == &default__set_trygetlast__empty)
+		return &default__set_setlast__empty;
+	if (set_trygetlast == &default__set_trygetlast__with__seq_operator_size__and__seq_operator_trygetitem_index_ab) {
+		if ((DeeMH_seq_operator_setitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_setitem_index))
+			return &default__set_setlast__with__seq_operator_size__and__seq_operator_setitem_index_ab;
+	} else if (set_trygetlast == &default__set_trygetlast__with__seq_operator_size__and__seq_operator_trygetitem_index) {
+		if ((DeeMH_seq_operator_bounditem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_bounditem_index) && (DeeMH_seq_operator_setitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_setitem_index))
+			return &default__set_setlast__with__seq_operator_size__and__seq_operator_bounditem_index__and__seq_operator_setitem_index;
+	} else if (set_trygetlast == &default__set_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem_ab) {
+		if ((DeeMH_seq_operator_setitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_setitem))
+			return &default__set_setlast__with__seq_operator_sizeob__and__seq_operator_setitem_ab;
+	} else if (set_trygetlast == &default__set_trygetlast__with__seq_operator_sizeob__and__seq_operator_trygetitem) {
+		if ((DeeMH_seq_operator_bounditem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_bounditem) && (DeeMH_seq_operator_setitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_setitem))
+			return &default__set_setlast__with__seq_operator_sizeob__and__seq_operator_bounditem__and__seq_operator_setitem;
+	}
+	if (set_trygetlast) {
+		if (set_trygetlast == (DeeMH_seq_trygetlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_trygetlast)) {
+			DeeMH_seq_setlast_t seq_setlast = (DeeMH_seq_setlast_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_setlast);
+			if (seq_setlast)
+				return seq_setlast;
+		}
+		return &default__set_setlast__unsupported;
+	}
 	return NULL;
 }
 
@@ -3454,7 +3944,7 @@ mh_select_map_iterkeys(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	map_enumerate = (DeeMH_map_enumerate_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_enumerate);
 	if (map_enumerate == &default__map_enumerate__empty)
 		return &default__map_iterkeys__empty;
-	if (DeeType_HasPrivateTrait(self, orig_type, DeeType_TRAIT___map_getitem_always_bound__) ||
+	if (DeeType_HasExplicitTrait(self, DeeType_TRAIT___map_getitem_always_bound__) ||
 	    (map_enumerate && map_enumerate == (DeeMH_map_operator_foreach_pair_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_foreach_pair))) {
 		DeeMH_map_operator_iter_t map_operator_iter = (DeeMH_map_operator_iter_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_iter);
 		if (map_operator_iter == &default__map_operator_iter__empty)

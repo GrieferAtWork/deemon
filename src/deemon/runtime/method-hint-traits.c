@@ -182,6 +182,36 @@ DeeType_HasImplicitTrait_uncached___seq_getitem_always_bound__(DeeTypeObject *__
 	return false;
 }
 
+#define DeeType_RequirePrivateMethodHint(self, orig_type, hint) \
+	(DeeMH_##hint##_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_##hint)
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+DeeType_HasPrivateTrait_uncached___seq_getitem_always_bound__(DeeTypeObject *self,
+                                                              DeeTypeObject *orig_type) {
+	DeeMH_seq_enumerate_index_t seq_enumerate_index;
+	seq_enumerate_index = DeeType_RequirePrivateMethodHint(self, orig_type, seq_enumerate_index);
+	if (seq_enumerate_index == &default__seq_enumerate_index__with__seq_enumerate) {
+		DeeMH_seq_enumerate_t seq_enumerate;
+		seq_enumerate = DeeType_RequirePrivateMethodHint(self, orig_type, seq_enumerate);
+		if (seq_enumerate == &default__seq_enumerate__empty) {
+			return true;
+		} else if (seq_enumerate == &default__seq_enumerate__with__seq_operator_foreach__and__counter) {
+			return true;
+		}
+	} else if (seq_enumerate_index == &default__seq_enumerate_index__empty) {
+		return true;
+	} else if (seq_enumerate_index == &default__seq_enumerate_index__with__seq_operator_iter) {
+		return true;
+	} else if (seq_enumerate_index == &default__seq_enumerate_index__with__seq_operator_foreach__and__counter) {
+		return true;
+	} else if (seq_enumerate_index == &default__seq_enumerate_index__unsupported) {
+		/* Definition is: can it thrown UnboundItem() -- if enumeration isn't supported, it
+		 *                can't throw that error because it always throws NotImplemented()! */
+		return true;
+	}
+	return false;
+}
+
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasImplicitTrait_uncached___map_getitem_always_bound__(DeeTypeObject *__restrict self) {
 	DeeMH_map_operator_getitem_t map_operator_getitem;
@@ -211,6 +241,43 @@ DeeType_HasImplicitTrait_uncached___map_getitem_always_bound__(DeeTypeObject *__
 			 *                can't throw that error because it always throws NotImplemented()! */
 			return true;
 		} else if (map_enumerate == DeeType_RequireMethodHint(self, map_operator_foreach_pair))  {
+			/* "map_enumerate" impl is stolen from "map_operator_foreach_pair" -- items can't be unbound */
+			return true;
+		}
+	}
+	return false;
+}
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+DeeType_HasPrivateTrait_uncached___map_getitem_always_bound__(DeeTypeObject *self,
+                                                              DeeTypeObject *orig_type) {
+	DeeMH_map_operator_getitem_t map_operator_getitem;
+	map_operator_getitem = DeeType_RequirePrivateMethodHint(self, orig_type, map_operator_getitem);
+	if (map_operator_getitem == &default__map_operator_getitem__unsupported) {
+		/* Definition is: can it thrown UnboundItem() -- if enumeration isn't supported, it
+		 *                can't throw that error because it always throws NotImplemented()! */
+		return true;
+	} else if (map_operator_getitem == &default__map_operator_getitem__empty) {
+		return true;
+	} else if (map_operator_getitem == &default__map_operator_getitem__with__map_enumerate) {
+		DeeMH_map_enumerate_t map_enumerate;
+		map_enumerate = DeeType_RequirePrivateMethodHint(self, orig_type, map_enumerate);
+		if (map_enumerate == &default__map_enumerate__with__map_enumerate_range) {
+			DeeMH_map_enumerate_range_t map_enumerate_range;
+			map_enumerate_range = DeeType_RequirePrivateMethodHint(self, orig_type, map_enumerate_range);
+			if (map_enumerate_range == &default__map_enumerate_range__empty)
+				return true;
+		} else if (map_enumerate == &default__map_enumerate__empty) {
+			return true;
+		} else if (map_enumerate == &default__map_enumerate__with__seq_operator_foreach_pair) {
+			return true;
+		} else if (map_enumerate == &default__map_enumerate__with__map_operator_iter) {
+			return true;
+		} else if (map_enumerate == &default__map_enumerate__unsupported) {
+			/* Definition is: can it thrown UnboundItem() -- if enumeration isn't supported, it
+			 *                can't throw that error because it always throws NotImplemented()! */
+			return true;
+		} else if (map_enumerate == DeeType_RequirePrivateMethodHint(self, orig_type, map_operator_foreach_pair))  {
 			/* "map_enumerate" impl is stolen from "map_operator_foreach_pair" -- items can't be unbound */
 			return true;
 		}
@@ -258,12 +325,28 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) bool
 }
 
 
+PRIVATE ATTR_NOINLINE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+DeeType_HasPrivateTrait_uncached(DeeTypeObject *self,
+                                 DeeTypeObject *orig_type,
+                                 Dee_type_trait_t trait) {
+	switch (trait) {
+	case DeeType_TRAIT___seq_getitem_always_bound__:
+		return DeeType_HasPrivateTrait_uncached___seq_getitem_always_bound__(self, orig_type);
+	case DeeType_TRAIT___map_getitem_always_bound__:
+		return DeeType_HasPrivateTrait_uncached___map_getitem_always_bound__(self, orig_type);
+	default: break;
+	}
+	return false;
+}
+
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool
 (DCALL DeeType_HasPrivateTrait)(DeeTypeObject *self,
                                 DeeTypeObject *orig_type,
                                 Dee_type_trait_t trait) {
-	(void)orig_type;
-	return DeeType_HasExplicitTrait(self, trait);
+	bool result = DeeType_HasExplicitTrait(self, trait);
+	if (!result)
+		result = DeeType_HasPrivateTrait_uncached(self, orig_type, trait);
+	return result;
 }
 
 

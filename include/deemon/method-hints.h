@@ -293,6 +293,7 @@ enum Dee_tmh_id {
 	Dee_TMH_set_operator_le,
 	Dee_TMH_set_operator_gr,
 	Dee_TMH_set_operator_ge,
+	Dee_TMH_set_operator_bool,
 	Dee_TMH_set_operator_inv,
 	Dee_TMH_set_operator_add,
 	Dee_TMH_set_operator_sub,
@@ -310,6 +311,16 @@ enum Dee_tmh_id {
 	Dee_TMH_set_removeall,
 	Dee_TMH_set_pop,
 	Dee_TMH_set_pop_with_default,
+	Dee_TMH_set_trygetfirst,
+	Dee_TMH_set_getfirst,
+	Dee_TMH_set_boundfirst,
+	Dee_TMH_set_delfirst,
+	Dee_TMH_set_setfirst,
+	Dee_TMH_set_trygetlast,
+	Dee_TMH_set_getlast,
+	Dee_TMH_set_boundlast,
+	Dee_TMH_set_dellast,
+	Dee_TMH_set_setlast,
 	Dee_TMH_map_operator_iter,
 	Dee_TMH_map_operator_foreach_pair,
 	Dee_TMH_map_operator_sizeob,
@@ -693,6 +704,9 @@ typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_set_operator_g
 /* Set_issuperset, __set_ge__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_set_operator_ge_t)(DeeObject *lhs, DeeObject *rhs);
 
+/* __set_bool__ */
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_set_operator_bool_t)(DeeObject *__restrict self);
+
 /* __set_inv__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_set_operator_inv_t)(DeeObject *__restrict self);
 
@@ -741,6 +755,20 @@ typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_set_removeall_t)(DeeObject
 /* Set_pop, __set_pop__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_set_pop_t)(DeeObject *self);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_set_pop_with_default_t)(DeeObject *self, DeeObject *default_);
+
+/* Set_first, Mapping_first, __set_first__ */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_set_trygetfirst_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_set_getfirst_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_set_boundfirst_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_set_delfirst_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_set_setfirst_t)(DeeObject *self, DeeObject *value);
+
+/* Set_last, Mapping_last, __set_last__ */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_set_trygetlast_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_set_getlast_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_set_boundlast_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_set_dellast_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_set_setlast_t)(DeeObject *self, DeeObject *value);
 
 /* __map_iter__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_map_operator_iter_t)(DeeObject *__restrict self);
@@ -1462,6 +1490,11 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_ge__(DeeObject *__restric
 #define DeeMA_Set_issuperset_name  _DeeMA_ATTRSTR(issuperset)
 #define DeeMA_Set_issuperset_doc   DeeMA___set_ge___doc
 #define DeeMA_Set_issuperset       DeeMA___set_ge__
+
+#define DeeMA___set_bool___flags Dee_TYPE_METHOD_FNORMAL
+#define DeeMA___set_bool___name  _DeeMA_ATTRSTR(__set_bool__)
+#define DeeMA___set_bool___doc   "->?Dbool"
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_bool__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___set_inv___flags Dee_TYPE_METHOD_FNORMAL
 #define DeeMA___set_inv___name  _DeeMA_ATTRSTR(__set_inv__)

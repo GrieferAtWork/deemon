@@ -118,7 +118,7 @@ use_seq_operator_iter:
 	if (seq_enumerate) {
 		DeeMH_seq_operator_size_t seq_operator_size;
 		DeeMH_seq_operator_getitem_t seq_operator_getitem;
-		if (HAS_TRAIT(__seq_getitem_always_bound__))
+		if (HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__))
 			goto use_seq_operator_iter;
 		seq_operator_size = REQUIRE(seq_operator_size);
 		if (seq_operator_size == &default__seq_operator_size__empty)

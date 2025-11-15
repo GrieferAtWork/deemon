@@ -184,6 +184,7 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_lo_t DCALL mh_select
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_le_t DCALL mh_select_set_operator_le(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_gr_t DCALL mh_select_set_operator_gr(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_ge_t DCALL mh_select_set_operator_ge(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_bool_t DCALL mh_select_set_operator_bool(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_inplace_add_t DCALL mh_select_set_operator_inplace_add(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_inplace_sub_t DCALL mh_select_set_operator_inplace_sub(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_inplace_and_t DCALL mh_select_set_operator_inplace_and(DeeTypeObject *self, DeeTypeObject *orig_type);
@@ -196,6 +197,16 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_remove_t DCALL mh_select_set_
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_removeall_t DCALL mh_select_set_removeall(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_pop_t DCALL mh_select_set_pop(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_pop_with_default_t DCALL mh_select_set_pop_with_default(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_trygetfirst_t DCALL mh_select_set_trygetfirst(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_getfirst_t DCALL mh_select_set_getfirst(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_boundfirst_t DCALL mh_select_set_boundfirst(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_delfirst_t DCALL mh_select_set_delfirst(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_setfirst_t DCALL mh_select_set_setfirst(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_trygetlast_t DCALL mh_select_set_trygetlast(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_getlast_t DCALL mh_select_set_getlast(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_boundlast_t DCALL mh_select_set_boundlast(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_dellast_t DCALL mh_select_set_dellast(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_setlast_t DCALL mh_select_set_setlast(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_iter_t DCALL mh_select_map_operator_iter(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_foreach_pair_t DCALL mh_select_map_operator_foreach_pair(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_sizeob_t DCALL mh_select_map_operator_sizeob(DeeTypeObject *self, DeeTypeObject *orig_type);

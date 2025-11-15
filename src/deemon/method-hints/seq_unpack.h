@@ -502,13 +502,13 @@ seq_unpack_ex = {
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast &&
-	    HAS_TRAIT(__seq_getitem_always_bound__))
+	    HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__))
 		return &$with__seq_operator_size__and__operator_getitem_index_fast;
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index &&
-	    HAS_TRAIT(__seq_getitem_always_bound__))
+	    HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__))
 		return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index &&
-	    HAS_TRAIT(__seq_getitem_always_bound__))
+	    HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__))
 		return &$with__seq_operator_size__and__seq_operator_getitem_index;
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_iter)
 		return &$with__seq_operator_iter;
