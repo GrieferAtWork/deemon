@@ -924,23 +924,35 @@ increment_i:
 
 PRIVATE WUNUSED NONNULL((1)) DREF SeqCombinationsView *DCALL
 sci_next(SeqCombinationsIterator *__restrict self) {
+	if unlikely(sci_unshare_view(self))
+		goto err;
 	if (!sci_inc(self))
 		return (DREF SeqCombinationsView *)ITER_DONE;
 	return sci_getview(self);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF SeqCombinationsView *DCALL
 srci_next(SeqCombinationsIterator *__restrict self) {
+	if unlikely(sci_unshare_view(self))
+		goto err;
 	if (!srci_inc(self))
 		return (DREF SeqCombinationsView *)ITER_DONE;
 	return srci_getview(self);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF SeqCombinationsView *DCALL
 spi_next(SeqCombinationsIterator *__restrict self) {
+	if unlikely(sci_unshare_view(self))
+		goto err;
 	if (!spi_inc(self))
 		return (DREF SeqCombinationsView *)ITER_DONE;
 	return spi_getview(self);
+err:
+	return NULL;
 }
 
 #define srci_compare sci_compare
@@ -995,14 +1007,26 @@ PRIVATE struct type_getset tpconst sci_getsets[] = {
 	TYPE_GETSET_END
 };
 
-#define srci_members sci_members
-#define spi_members  sci_members
 PRIVATE struct type_member tpconst sci_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__wview__", STRUCT_WOBJECT,
-	                      offsetof(SeqCombinationsIterator, sci_view),
-	                      "->?Ert:SeqCombinationsView"),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SeqCombinationsIterator, sci_com), "->?Ert:SeqCombinations"),
+	TYPE_MEMBER_FIELD_DOC("__wview__", STRUCT_WOBJECT, offsetof(SeqCombinationsIterator, sci_view), "->?Ert:SeqCombinationsView"),
 	TYPE_MEMBER_END
 };
+#ifdef CONFIG_NO_DOC
+#define srci_members sci_members
+#define spi_members  sci_members
+#else /* CONFIG_NO_DOC */
+PRIVATE struct type_member tpconst srci_members[] = {
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SeqCombinationsIterator, sci_com), "->?Ert:SeqRepeatCombinations"),
+	TYPE_MEMBER_FIELD_DOC("__wview__", STRUCT_WOBJECT, offsetof(SeqCombinationsIterator, sci_view), "->?Ert:SeqCombinationsView"),
+	TYPE_MEMBER_END
+};
+PRIVATE struct type_member tpconst spi_members[] = {
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SeqCombinationsIterator, sci_com), "->?Ert:SeqPermutations"),
+	TYPE_MEMBER_FIELD_DOC("__wview__", STRUCT_WOBJECT, offsetof(SeqCombinationsIterator, sci_view), "->?Ert:SeqCombinationsView"),
+	TYPE_MEMBER_END
+};
+#endif /* !CONFIG_NO_DOC */
 
 INTERN DeeTypeObject SeqCombinationsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),

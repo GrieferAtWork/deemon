@@ -21,21 +21,31 @@
 
 import * from deemon;
 
-local d = Dict({ "foo" : 42 });
+local d = Dict({ "foo": 42 });
 local a = d.byattr;
+assert repr(a).rereplace(r'\s', '').replace("'", '"') == 'Dict({"foo":42}).byattr';
 
 assert d;
 assert a.foo == 42;
+assert {"foo"} == (d.keys as Sequence);
+assert {"foo"} == enumattr(a).each.name;
 
 a.bar = 10;
 assert d;
 assert d == { "bar": 10, "foo": 42 };
+/* Order is guarantied because Dict remembers insertion order */
+assert {"foo", "bar"} == (d.keys as Sequence);
+assert {"foo", "bar"} == enumattr(a).each.name;
 
 del a.foo;
 assert d;
-assert d == { "bar" : 10 };
+assert d == { "bar": 10 };
+assert {"bar"} == (d.keys as Sequence);
+assert {"bar"} == enumattr(a).each.name;
 
 del a.bar;
 assert !d;
 assert d == {};
+assert {} == (d.keys as Sequence);
+assert {} == enumattr(a).each.name;
 

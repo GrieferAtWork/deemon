@@ -20,35 +20,43 @@
  */
 
 import * from deemon;
+import .common.test;
 
 function n(x: {{string...}...}): (int, string) {
+	test.assertSequence(x);
 	return (#x, " ".join(x.each.sum()));
 }
 
-assert {{}} == "ABCD".combinations(0);
-assert {{}} == "ABCD".repeatcombinations(0);
-assert {{}} == "ABCD".permutations(0);
+function runTest(cached: bool) {
+	test.assertSequence("ABCD".combinations(0, cached: cached), {{}});
+	test.assertSequence("ABCD".repeatcombinations(0, cached: cached), {{}});
+	test.assertSequence("ABCD".permutations(0, cached: cached), {{}});
 
-assert (0, "") == n("ABCD".combinations(1));
-assert (4, "A B C D") == n("ABCD".repeatcombinations(1));
-assert (4, "A B C D") == n("ABCD".permutations(1));
+	assert (0, "") == n("ABCD".combinations(1, cached: cached));
+	assert (4, "A B C D") == n("ABCD".repeatcombinations(1, cached: cached));
+	assert (4, "A B C D") == n("ABCD".permutations(1, cached: cached));
 
-assert (6, "AB AC AD BC BD CD") == n("ABCD".combinations(2));
-assert (10, "AA AB AC AD BB BC BD CC CD DD")
-	== n("ABCD".repeatcombinations(2));
-assert (12, "AB AC AD BA BC BD CA CB CD DA DB DC")
-	== n("ABCD".permutations(2));
+	assert (6, "AB AC AD BC BD CD") == n("ABCD".combinations(2, cached: cached));
+	assert (10, "AA AB AC AD BB BC BD CC CD DD")
+		== n("ABCD".repeatcombinations(2, cached: cached));
+	assert (12, "AB AC AD BA BC BD CA CB CD DA DB DC")
+		== n("ABCD".permutations(2, cached: cached));
 
-assert (4, "ABC ABD ACD BCD") == n("ABCD".combinations(3));
-assert (20, "AAA AAB AAC AAD ABB ABC ABD ACC ACD ADD BBB BBC BBD BCC BCD BDD CCC CCD CDD DDD")
-	== n("ABCD".repeatcombinations(3));
-assert (29, "ABC ABD ACA ACB ACD ADA ADB ADC BAA BAC BAD BCA BCD BDA BDC CAA CAB CAD CBA CBD CDA CDB DAA DAB DAC DBA DBC DCA DCB")
-	== n("ABCD".permutations(3));
+	assert (4, "ABC ABD ACD BCD") == n("ABCD".combinations(3, cached: cached));
+	assert (20, "AAA AAB AAC AAD ABB ABC ABD ACC ACD ADD BBB BBC BBD BCC BCD BDD CCC CCD CDD DDD")
+		== n("ABCD".repeatcombinations(3, cached: cached));
+	assert (29, "ABC ABD ACA ACB ACD ADA ADB ADC BAA BAC BAD BCA BCD BDA BDC CAA CAB CAD CBA CBD CDA CDB DAA DAB DAC DBA DBC DCA DCB")
+		== n("ABCD".permutations(3, cached: cached));
 
-assert (1, "ABCD") == n("ABCD".combinations(4));
-assert (35, "AAAA AAAB AAAC AAAD AABB AABC AABD AACC AACD AADD ABBB ABBC ABBD ABCC ABCD ABDD ACCC ACCD ACDD ADDD BBBB BBBC BBBD BBCC BBCD BBDD BCCC BCCD BCDD BDDD CCCC CCCD CCDD CDDD DDDD")
-	== n("ABCD".repeatcombinations(4));
-assert (56, "ABCD ABDA ABDC ACAA ACAB ACAD ACBA ACBD ACDA ACDB ADAA ADAB ADAC ADBA ADBC ADCA ADCB BAAA BAAC BAAD BACA BACD BADA BADC BCAA BCAD BCDA BDAA BDAC BDCA CAAA CAAB CAAD CABA CABD CADA CADB CBAA CBAD CBDA CDAA CDAB CDBA DAAA DAAB DAAC DABA DABC DACA DACB DBAA DBAC DBCA DCAA DCAB DCBA")
-	== n("ABCD".permutations(4));
-assert n("ABCD".permutations(4)) == n("ABCD".permutations());
+	assert (1, "ABCD") == n("ABCD".combinations(4, cached: cached));
+	assert (35, "AAAA AAAB AAAC AAAD AABB AABC AABD AACC AACD AADD ABBB ABBC ABBD ABCC ABCD ABDD ACCC ACCD ACDD ADDD BBBB BBBC BBBD BBCC BBCD BBDD BCCC BCCD BCDD BDDD CCCC CCCD CCDD CDDD DDDD")
+		== n("ABCD".repeatcombinations(4, cached: cached));
+	assert (56, "ABCD ABDA ABDC ACAA ACAB ACAD ACBA ACBD ACDA ACDB ADAA ADAB ADAC ADBA ADBC ADCA ADCB BAAA BAAC BAAD BACA BACD BADA BADC BCAA BCAD BCDA BDAA BDAC BDCA CAAA CAAB CAAD CABA CABD CADA CADB CBAA CBAD CBDA CDAA CDAB CDBA DAAA DAAB DAAC DABA DABC DACA DACB DBAA DBAC DBCA DCAA DCAB DCBA")
+		== n("ABCD".permutations(4, cached: cached));
+	assert n("ABCD".permutations(4, cached: cached)) ==
+	       n("ABCD".permutations(cached: cached));
+}
+
+runTest(false);
+runTest(true);
 

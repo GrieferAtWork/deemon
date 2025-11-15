@@ -87,6 +87,7 @@ again:
 	CachedSeq_WithIter_LockRelease(other);
 	self->cswi_cache.ol_elemc = cache_size;
 	self->cswi_cache.ol_elemv = cache_copy;
+	Dee_atomic_lock_init(&self->cswi_lock);
 	return 0;
 err:
 	return -1;
@@ -147,7 +148,8 @@ again_copy_at_i:
 		CachedSeq_WithIter_LockRelease(self);
 		Dee_Decref(oldval);
 	}
-	return DeeObject_InplaceDeepCopyWithLock(&self->cswi_iter, &self->cswi_lock);
+	return DeeObject_XInplaceDeepCopyWithLock(&self->cswi_iter,
+	                                          &self->cswi_lock);
 err:
 	return -1;
 }
