@@ -474,12 +474,13 @@ DeeList_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *seq
 	result = (DREF DeeObject *)DeeList_Copy((List *)self);
 	Dee_Decref_unlikely(self);
 	if unlikely(!result)
-		goto err_self;
+		goto err;
 	if unlikely(DeeList_AppendSequence(result, sequence))
 		Dee_Clear(result);
 	return result;
 err_self:
 	Dee_Decref_unlikely(self);
+err:
 	return NULL;
 }
 

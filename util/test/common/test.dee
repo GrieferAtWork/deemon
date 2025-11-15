@@ -145,6 +145,7 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 	assert x is Sequence;
 	assert x !is Set;
 	assert x !is Mapping;
+	assert x.class.__seqclass__ === Sequence;
 	local len = #x;
 	assert len is int;
 	if (expected !is none) {
@@ -237,6 +238,7 @@ function assertSet(x: Set, expected: {Object...} | none = none) {
 	assert x is Sequence;
 	assert x is Set;
 	assert x !is Mapping;
+	assert x.class.__seqclass__ === Set;
 	local len = #x;
 	assert len is int;
 	if (expected !is none) {
@@ -328,6 +330,7 @@ function assertMapping(x: Mapping, expected: {Object: Object} | none = none) {
 	assert x is Sequence;
 	assert x !is Set;
 	assert x is Mapping;
+	assert x.class.__seqclass__ === Mapping;
 	local len = #x;
 	if (expected !is none) {
 		assertEquals(expected, x);

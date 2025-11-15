@@ -985,8 +985,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 	if (!DeeType_HasOperator(self, name))
 		return NULL;
 
-	/* Special cases for magic operator groups. */
-
+	/* Special cases for certain operators. */
 	switch (name) {
 	case OPERATOR_CONSTRUCTOR:
 	case OPERATOR_COPY:
@@ -1730,49 +1729,47 @@ __pragma_GCC_diagnostic_pop_ignored(Wmaybe_uninitialized)
 
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeTypeObject  *to_type; /* [1..1][const] The type who's operators should be enumerated. */
-	DWEAK Dee_operator_t to_opid; /* Next operator ID to check. */
-	bool                 to_name; /* [const] When true, try to assign human-readable names to operators. */
+	PROXY_OBJECT_HEAD_EX(DeeTypeObject, toi_type); /* [1..1][const] The type who's operators should be enumerated. */
+	DWEAK Dee_operator_t                toi_opid;  /* Next operator ID to check. */
+	bool                                toi_name;  /* [const] When true, try to assign human-readable names to operators. */
 } TypeOperatorsIterator;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeTypeObject *to_type; /* [1..1][const] The type who's operators should be enumerated. */
-	bool                to_name; /* [const] When true, try to assign human-readable names to operators. */
+	PROXY_OBJECT_HEAD_EX(DeeTypeObject, to_type); /* [1..1][const] The type who's operators should be enumerated. */
+	bool                                to_name;  /* [const] When true, try to assign human-readable names to operators. */
 } TypeOperators;
 
 INTDEF DeeTypeObject TypeOperators_Type;
 INTDEF DeeTypeObject TypeOperatorsIterator_Type;
 
+STATIC_ASSERT(offsetof(TypeOperators, to_type) == offsetof(ProxyObject, po_obj));
+#define to_fini  generic_proxy__fini_unlikely
+#define to_visit generic_proxy__visit
 
-PRIVATE NONNULL((1)) void DCALL
-to_fini(TypeOperators *__restrict self) {
-	Dee_Decref_unlikely(self->to_type);
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+to_copy(TypeOperators *__restrict self, TypeOperators *__restrict other) {
+	self->to_type = other->to_type;
+	Dee_Incref(self->to_type);
+	self->to_name = other->to_name;
+	return 0;
 }
 
-PRIVATE NONNULL((1, 2)) void DCALL
-to_visit(TypeOperators *__restrict self, Dee_visit_t proc, void *arg) {
-	Dee_Visit(self->to_type);
+STATIC_ASSERT(offsetof(TypeOperatorsIterator, toi_type) == offsetof(ProxyObject, po_obj));
+#define toi_fini  generic_proxy__fini_unlikely
+#define toi_visit generic_proxy__visit
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+to_print(TypeOperators *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "Operator %ss for %k",
+	                        self->to_name ? "name" : "id",
+	                        self->to_type);
 }
 
-STATIC_ASSERT(offsetof(TypeOperatorsIterator, to_type) ==
-              offsetof(TypeOperators, to_type));
-#define toi_fini  to_fini
-#define toi_visit to_visit
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-to_str(TypeOperators *__restrict self) {
-	return DeeString_Newf("Operator %ss for %k",
-	                      self->to_name ? "name" : "id",
-	                      self->to_type);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-to_repr(TypeOperators *__restrict self) {
-	return DeeString_Newf("%r.__operator%ss__",
-	                      self->to_type,
-	                      self->to_name ? "" : "id");
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+to_printrepr(TypeOperators *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "%r.__operator%ss__",
+	                        self->to_type,
+	                        self->to_name ? "" : "id");
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF TypeOperatorsIterator *DCALL
@@ -1781,9 +1778,9 @@ to_iter(TypeOperators *__restrict self) {
 	result = DeeObject_MALLOC(TypeOperatorsIterator);
 	if unlikely(!result)
 		goto done;
-	result->to_type = self->to_type;
-	result->to_opid = 0;
-	result->to_name = self->to_name;
+	result->toi_type = self->to_type;
+	result->toi_opid = 0;
+	result->toi_name = self->to_name;
 	Dee_Incref(self->to_type);
 	DeeObject_Init(result, &TypeOperatorsIterator_Type);
 done:
@@ -1860,15 +1857,15 @@ PRIVATE struct type_member tpconst to_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-#define TOI_GETOPID(x) atomic_read(&(x)->to_opid)
+#define TOI_GETOPID(x) atomic_read(&(x)->toi_opid)
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 toi_copy(TypeOperatorsIterator *__restrict self,
          TypeOperatorsIterator *__restrict other) {
-	self->to_type = other->to_type;
-	self->to_opid = TOI_GETOPID(other);
-	self->to_name = other->to_name;
-	Dee_Incref(self->to_type);
+	self->toi_type = other->toi_type;
+	self->toi_opid = TOI_GETOPID(other);
+	self->toi_name = other->toi_name;
+	Dee_Incref(self->toi_type);
 	return 0;
 }
 
@@ -1903,16 +1900,14 @@ PRIVATE struct type_cmp toi_cmp = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 toi_next(TypeOperatorsIterator *__restrict self) {
-	DeeTypeObject *tp = self->to_type;
+	DeeTypeObject *tp = self->toi_type;
 	struct opinfo const *info;
 	Dee_operator_t result;
 	Dee_operator_t start;
 	for (;;) {
-		start  = atomic_read(&self->to_opid);
+		start  = atomic_read(&self->toi_opid);
 		result = start;
 		for (;; ++result) {
-			void const *my_ptr;
-
 			/* Query information about the given operator. */
 			info = DeeTypeType_GetOperatorById(Dee_TYPE(tp), result);
 			if (result == OPERATOR_CONSTRUCTOR) {
@@ -1937,18 +1932,35 @@ toi_next(TypeOperatorsIterator *__restrict self) {
 			}
 
 			/* Check if this operator is implemented (though isn't inherited). */
-			if ((my_ptr = DeeType_GetOpPointer(tp, info)) != NULL &&
-			    (!tp->tp_base || my_ptr != DeeType_GetOpPointer(tp->tp_base, info)))
+			if (DeeType_HasPrivateOperator(tp, result))
 				break;
 		}
-		if (atomic_cmpxch_weak_or_write(&self->to_opid, start, result + 1))
+		if (atomic_cmpxch_weak_or_write(&self->toi_opid, start, result + 1))
 			break;
 	}
-	if (self->to_name && *info->oi_sname)
+	if (self->toi_name && *info->oi_sname)
 		return DeeString_New(info->oi_sname);
 	return DeeInt_NewUInt16(result);
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF TypeOperators *DCALL
+toi_getseq(TypeOperatorsIterator *__restrict self) {
+	DREF TypeOperators *result;
+	result = DeeObject_MALLOC(TypeOperators);
+	if unlikely(!result)
+		goto done;
+	result->to_type = self->toi_type;
+	result->to_name = self->toi_name;
+	Dee_Incref(result->to_type);
+	DeeObject_Init(result, &TypeOperators_Type);
+done:
+	return result;
+}
+
+PRIVATE struct type_getset tpconst toi_getset[] = {
+	TYPE_GETTER_AB(STR_seq, &toi_getseq, "->?Ert:TypeOperators"),
+	TYPE_GETSET_END
+};
 
 INTERN DeeTypeObject TypeOperatorsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1963,7 +1975,7 @@ INTERN DeeTypeObject TypeOperatorsIterator_Type = {
 			/* .tp_alloc = */ {
 				/* .tp_ctor        = */ (Dee_funptr_t)NULL,
 				/* .tp_copy_ctor   = */ (Dee_funptr_t)&toi_copy,
-				/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor   = */ (Dee_funptr_t)&toi_copy,
 				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(TypeOperatorsIterator)
 			}
@@ -1990,7 +2002,7 @@ INTERN DeeTypeObject TypeOperatorsIterator_Type = {
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ toi_getset,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
@@ -2012,8 +2024,8 @@ INTERN DeeTypeObject TypeOperators_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor        = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor   = */ (Dee_funptr_t)&to_copy,
+				/* .tp_deep_ctor   = */ (Dee_funptr_t)&to_copy,
 				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(TypeOperators)
 			}
@@ -2023,11 +2035,11 @@ INTERN DeeTypeObject TypeOperators_Type = {
 		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&to_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&to_repr,
-		/* .tp_bool = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_iter),
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ DEFIMPL(&default__printrepr__with__repr),
+		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool      = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_iter),
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&to_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&to_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&to_visit,
 	/* .tp_gc            = */ NULL,

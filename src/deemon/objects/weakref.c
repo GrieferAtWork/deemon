@@ -188,8 +188,7 @@ ob_weakref_print(WeakRef *__restrict self,
 	DREF DeeObject *refobj;
 	refobj = Dee_weakref_lock(&self->wr_ref);
 	if (refobj) {
-		result = DeeFormat_Printf(printer, arg, "<weakref to %k>", refobj);
-		Dee_Decref_unlikely(refobj);
+		result = DeeFormat_Printf(printer, arg, "<weakref to %K>", refobj);
 	} else {
 		result = DeeFormat_PRINT(printer, arg, "<empty weakref>");
 	}
@@ -203,8 +202,7 @@ ob_weakref_printrepr(WeakRef *__restrict self,
 	DREF DeeObject *refobj;
 	refobj = Dee_weakref_lock(&self->wr_ref);
 	if (refobj) {
-		result = DeeFormat_Printf(printer, arg, "WeakRef(%r)", refobj);
-		Dee_Decref_unlikely(refobj);
+		result = DeeFormat_Printf(printer, arg, "WeakRef(%R)", refobj);
 	} else {
 		result = DeeFormat_PRINT(printer, arg, "WeakRef()");
 	}

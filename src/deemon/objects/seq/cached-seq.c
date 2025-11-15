@@ -1318,13 +1318,13 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 cswgi_hasitem_index(CachedSeq_WithGetItem *self, size_t index) {
 	DREF DeeObject *result = cswgi_getitem_index_ex(self, index);
 	if (result == CSWGI_GETITEM_UNBOUND)
-		return 0;
+		return Dee_HAS_NO;
 	if (result == CSWGI_GETITEM_OOB)
-		return 0;
+		return Dee_HAS_NO;
 	if (result == CSWGI_GETITEM_ERROR)
-		return -1;
+		return Dee_HAS_ERR;
 	Dee_Decref_unlikely(result);
-	return 1;
+	return Dee_HAS_YES;
 }
 #endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
