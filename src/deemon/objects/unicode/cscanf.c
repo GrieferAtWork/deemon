@@ -22,6 +22,7 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
+#include <deemon/arg.h>
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
@@ -578,6 +579,65 @@ PRIVATE struct type_member tpconst ssi_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ssi_ctor(StringScanIterator *__restrict self) {
+	self->si_scanner = (DREF StringScanner *)DeeObject_NewDefault(&StringScan_Type);
+	if unlikely(!self->si_scanner)
+		goto err;
+	self->si_datend = DeeString_STR(Dee_EmptyString);
+	self->si_fmtend = self->si_datend;
+	Dee_atomic_lock_init(&self->si_lock);
+	self->si_datiter = self->si_datend;
+	self->si_fmtiter = self->si_datend;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ssi_setup(StringScanIterator *__restrict self,
+          StringScanner *__restrict scanner) {
+	/* Universally use UTF-8 for string scanning to prevent
+	 * any problems related to unicode text processing. */
+	if (DeeString_Check(scanner->ss_data)) {
+		self->si_datiter = DeeString_AsUtf8((DeeObject *)scanner->ss_data);
+		if unlikely(!self->si_datiter)
+			goto err;
+		self->si_datend = self->si_datiter + WSTR_LENGTH(self->si_datiter);
+	} else {
+		ASSERT(DeeBytes_Check(scanner->ss_data));
+		self->si_datiter = (char const *)DeeBytes_DATA(scanner->ss_data);
+		self->si_datend  = self->si_datiter + DeeBytes_SIZE(scanner->ss_data);
+	}
+	if (DeeString_Check(scanner->ss_format)) {
+		self->si_fmtiter = DeeString_AsUtf8((DeeObject *)scanner->ss_format);
+		if unlikely(!self->si_fmtiter)
+			goto err;
+		self->si_fmtend = self->si_fmtiter + WSTR_LENGTH(self->si_fmtiter);
+	} else {
+		ASSERT(DeeBytes_Check(scanner->ss_format));
+		self->si_fmtiter = (char const *)DeeBytes_DATA(scanner->ss_format);
+		self->si_fmtend  = self->si_fmtiter + DeeBytes_SIZE(scanner->ss_format);
+	}
+	self->si_scanner = scanner;
+	Dee_Incref(scanner);
+	Dee_atomic_lock_init(&self->si_lock);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ssi_init(StringScanIterator *__restrict self, size_t argc, DeeObject *const *argv) {
+	StringScanner *scanner;
+	DeeArg_Unpack1(err, argc, argv, "_StringScanIterator", &scanner);
+	if (DeeObject_AssertTypeExact(scanner, &StringScan_Type))
+		goto err;
+	return ssi_setup(self, scanner);
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ssi_copy(StringScanIterator *__restrict self,
          StringScanIterator *__restrict other) {
@@ -597,7 +657,10 @@ ssi_copy(StringScanIterator *__restrict self,
 INTERN DeeTypeObject StringScanIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringScanIterator",
-	/* .tp_doc      = */ DOC("next->?X2?Dstring?Dint"),
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(scanner:?Ert:StringScan)\n"
+	                         "\n"
+	                         "next->?X2?Dstring?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -605,10 +668,10 @@ INTERN DeeTypeObject StringScanIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL, /* TODO */
+				/* .tp_ctor      = */ (Dee_funptr_t)&ssi_ctor,
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&ssi_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL, /* TODO */
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&ssi_copy,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&ssi_init,
 				TYPE_FIXED_ALLOCATOR(StringScanIterator)
 			}
 		},
@@ -653,45 +716,50 @@ STATIC_ASSERT(offsetof(StringScanner, ss_data) == offsetof(ProxyObject2, po_obj1
               offsetof(StringScanner, ss_data) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(StringScanner, ss_format) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(StringScanner, ss_format) == offsetof(ProxyObject2, po_obj2));
+#define ss_copy  generic_proxy2__copy_alias12
+#define ss_deep  generic_proxy2__copy_alias12
 #define ss_fini  generic_proxy2__fini_normal_unlikely /* unlikely: it's probably a string constant */
 #define ss_visit generic_proxy2__visit
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ss_ctor(StringScanner *__restrict self) {
+	self->ss_data   = Dee_EmptyString;
+	self->ss_format = Dee_EmptyString;
+	Dee_Incref_n(Dee_EmptyString, 2);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ss_init(StringScanner *__restrict self, size_t argc, DeeObject *const *argv) {
+	DeeArg_Unpack2(err, argc, argv, "_StringScan", &self->ss_data, &self->ss_format);
+	if unlikely(!DeeString_Check(self->ss_data) && !DeeBytes_Check(self->ss_data)) {
+		DeeObject_TypeAssertFailed2(self->ss_data, &DeeString_Type, &DeeBytes_Type);
+		goto err;
+	}
+	if unlikely(!DeeString_Check(self->ss_format) && !DeeBytes_Check(self->ss_format)) {
+		DeeObject_TypeAssertFailed2(self->ss_format, &DeeString_Type, &DeeBytes_Type);
+		goto err;
+	}
+	Dee_Incref(self->ss_data);
+	Dee_Incref(self->ss_format);
+	return 0;
+err:
+	return -1;
+}
 
 PRIVATE WUNUSED NONNULL((1)) DREF StringScanIterator *DCALL
 ss_iter(StringScanner *__restrict self) {
 	DREF StringScanIterator *result;
 	result = DeeObject_MALLOC(StringScanIterator);
 	if unlikely(!result)
-		goto done;
-	/* Universally use UTF-8 for string scanning to prevent
-	 * any problems related to unicode text processing. */
-	if (DeeString_Check(self->ss_data)) {
-		result->si_datiter = DeeString_AsUtf8((DeeObject *)self->ss_data);
-		if unlikely(!result->si_datiter)
-			goto err_r;
-		result->si_datend = result->si_datiter + WSTR_LENGTH(result->si_datiter);
-	} else {
-		ASSERT(DeeBytes_Check(self->ss_data));
-		result->si_datiter = (char const *)DeeBytes_DATA(self->ss_data);
-		result->si_datend  = result->si_datiter + DeeBytes_SIZE(self->ss_data);
-	}
-	if (DeeString_Check(self->ss_format)) {
-		result->si_fmtiter = DeeString_AsUtf8((DeeObject *)self->ss_format);
-		if unlikely(!result->si_fmtiter)
-			goto err_r;
-		result->si_fmtend = result->si_fmtiter + WSTR_LENGTH(result->si_fmtiter);
-	} else {
-		ASSERT(DeeBytes_Check(self->ss_format));
-		result->si_fmtiter = (char const *)DeeBytes_DATA(self->ss_format);
-		result->si_fmtend  = result->si_fmtiter + DeeBytes_SIZE(self->ss_format);
-	}
-	Dee_atomic_lock_init(&result->si_lock);
-	result->si_scanner = self;
-	Dee_Incref(self);
+		goto err;
+	if unlikely(ssi_setup(result, self))
+		goto err_r;
 	DeeObject_Init(result, &StringScanIterator_Type);
-done:
 	return result;
 err_r:
 	DeeObject_FREE(result);
+err:
 	return NULL;
 }
 
@@ -754,7 +822,8 @@ PRIVATE struct type_member tpconst ss_class_members[] = {
 INTERN DeeTypeObject StringScan_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringScan",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(data:?X2?Dstring?DBytes,format:?X2?Dstring?DBytes)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -762,10 +831,10 @@ INTERN DeeTypeObject StringScan_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)&ss_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)&ss_copy,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)&ss_deep,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&ss_init,
 				TYPE_FIXED_ALLOCATOR(StringScanner)
 			}
 		},

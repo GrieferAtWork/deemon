@@ -18,13 +18,16 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-
+import .common.test;
 
 function doScanfTest1(data) {
-	local a, b, c = data.scanf("%d %d %d")...;
+	local scan = data.scanf("%d %d %d");
+	local a, b, c = scan...;
 	assert a == 100;
 	assert b == 20;
 	assert c == 10;
+	test.assertSequence(scan, {100, 20, 10});
+	test.assertSequence(data.scanf("%d %d %d"), {100, 20, 10});
 }
 doScanfTest1("000100  \t 20\n10");
 doScanfTest1("000100  \t 20\n10".bytes());
@@ -32,9 +35,12 @@ doScanfTest1("000100  \t 20\n10".bytes());
 // A more advanced example, using character ranges
 // NOTE: '%[^0-9]' means: scan a string until a digit is encountered
 function doScanfTest2(data) {
-	local a, b = data.scanf("%[^0-9]%d")...;
+	local scan = data.scanf("%[^0-9]%d");
+	local a, b = scan...;
 	assert a == "ab-cd";
 	assert b == 42;
+	test.assertSequence(scan, {"ab-cd", 42});
+	test.assertSequence(data.scanf("%[^0-9]%d"), {"ab-cd", 42});
 }
 
 doScanfTest2("ab-cd42");
