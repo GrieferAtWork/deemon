@@ -810,7 +810,8 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__seq_frozen__with_
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_frozen__unsupported(DeeObject *__restrict self);
 #define default__seq_frozen__none (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&_DeeNone_NewRef1)
 #define default__seq_frozen__empty (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeObject_NewRef)
-#define default__seq_frozen__with__seq_operator_foreach (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeTuple_FromSequence)
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_frozen__with__seq_operator_foreach(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_frozen__with__seq_enumerate_index(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_frozen__with__set_frozen(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_frozen__with__map_frozen(DeeObject *__restrict self);
 

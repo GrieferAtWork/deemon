@@ -594,7 +594,7 @@ DeeTuple_FromSequence(DeeObject *__restrict self) {
 		} else {
 			Dee_tuple_builder_init(&builder);
 		}
-		if unlikely(Dee_tuple_builder_appenditems(&builder, self))
+		if unlikely(DeeObject_Foreach(self, &Dee_tuple_builder_append, &builder))
 			goto err_builder;
 		return Dee_tuple_builder_pack(&builder);
 err_builder:
@@ -2307,14 +2307,10 @@ PUBLIC struct Dee_empty_tuple_struct DeeTuple_Empty = {
 	0
 };
 
-
-
-
-PRIVATE struct Dee_empty_tuple_struct DeeNullableTuple_Empty = {
+PUBLIC struct Dee_empty_tuple_struct DeeNullableTuple_Empty = {
 	OBJECT_HEAD_INIT(&DeeNullableTuple_Type),
 	0
 };
-
 
 LOCAL ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 make_nullable(DREF DeeTupleObject *__restrict self) {
@@ -2871,6 +2867,64 @@ Dee_tuple_builder_reserve(struct Dee_tuple_builder *__restrict self, size_t n) {
 	self->tb_tuple = tuple;
 	ASSERT(tuple->t_size >= self->tb_size + n);
 	return true;
+}
+
+
+PUBLIC ATTR_RETNONNULL WUNUSED DREF /*NullableTuple*/DeeObject *DCALL
+Dee_nullable_tuple_builder_pack(struct Dee_tuple_builder *__restrict self) {
+	DeeTupleObject *result = self->tb_tuple;
+	if unlikely(!result) {
+		ASSERT(self->tb_size == 0);
+		return DeeNullableTuple_NewEmpty();
+	}
+	result = DeeTuple_TruncateUninitialized(result, self->tb_size);
+	if likely(result)
+		result = make_nullable(result);
+	return (DREF DeeObject *)result;
+}
+
+/* Ensure that at least "index + 1" elements are allocated (default-initializing
+ * previously unallocated items to "NULL"; iow: unbound), and set the index'th
+ * element to "item" (which is also allowed to be "NULL")
+ *
+ * HINT: This function is binary-compatible with `Dee_seq_enumerate_index_t'
+ *
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+PUBLIC WUNUSED Dee_ssize_t DCALL
+Dee_nullable_tuple_builder_setitem_index(/*struct Dee_nullable_tuple_builder **/void *self,
+                                         size_t index, /*0..1*/ DeeObject *item) {
+	DeeTupleObject *tuple;
+	struct Dee_nullable_tuple_builder *me;
+	me = (struct Dee_nullable_tuple_builder *)self;
+	if (index >= me->tb_size) {
+		if (!me->tb_tuple || index >= me->tb_tuple->t_size) {
+			size_t req = index - me->tb_size;
+			if (OVERFLOW_UADD(req, 1, &req))
+				req = (size_t)-1;
+			if unlikely(!Dee_nullable_tuple_builder_alloc(me, req))
+				goto err;
+		}
+	}
+	tuple = me->tb_tuple;
+	ASSERT(tuple);
+	ASSERT(index < tuple->t_size);
+	if likely(index >= me->tb_size) {
+		bzeroc(tuple->t_elem + me->tb_size,
+		       (index + 1) - me->tb_size,
+		       sizeof(DeeObject *));
+		me->tb_size = index + 1;
+	} else {
+		DeeObject *old_item;
+		old_item = tuple->t_elem[index];
+		if unlikely(old_item)
+			Dee_Decref(old_item);
+	}
+	tuple->t_elem[index] = item;
+	Dee_XIncref(item);
+	return 0;
+err:
+	return -1;
 }
 
 

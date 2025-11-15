@@ -88,11 +88,15 @@ struct Dee_empty_tuple_struct {
 	size_t t_size;
 };
 DDATDEF struct Dee_empty_tuple_struct DeeTuple_Empty;
-#define Dee_EmptyTuple      ((DeeObject *)&DeeTuple_Empty)
+DDATDEF struct Dee_empty_tuple_struct DeeNullableTuple_Empty;
+#define Dee_EmptyTuple         ((DeeObject *)&DeeTuple_Empty)
+#define Dee_EmptyNullableTuple ((DeeObject *)&DeeNullableTuple_Empty)
 #ifdef __INTELLISENSE__
-#define DeeTuple_NewEmpty() Dee_EmptyTuple
+#define DeeTuple_NewEmpty()         Dee_EmptyTuple
+#define DeeNullableTuple_NewEmpty() Dee_EmptyNullableTuple
 #else /* __INTELLISENSE__ */
-#define DeeTuple_NewEmpty() (Dee_Incref(&DeeTuple_Empty), (DeeObject *)&DeeTuple_Empty)
+#define DeeTuple_NewEmpty()         (Dee_Incref(&DeeTuple_Empty), (DeeObject *)&DeeTuple_Empty)
+#define DeeNullableTuple_NewEmpty() (Dee_Incref(&DeeNullableTuple_Empty), (DeeObject *)&DeeNullableTuple_Empty)
 #endif /* !__INTELLISENSE__ */
 
 DDATDEF DeeTypeObject DeeTuple_Type;
@@ -260,6 +264,50 @@ Dee_tuple_builder_reserve(struct Dee_tuple_builder *__restrict self, size_t n);
 #define Dee_tuple_builder_pack_symbolic   Dee_tuple_builder_pack
 #define Dee_tuple_builder_append_symbolic Dee_tuple_builder_append_inherited
 #define Dee_tuple_builder_extend_symbolic Dee_tuple_builder_extend_inherited
+
+
+/* Builder for nullable tuples */
+#define Dee_nullable_tuple_builder                 Dee_tuple_builder
+#define Dee_nullable_tuple_builder_init            Dee_tuple_builder_init
+#define Dee_nullable_tuple_builder_cinit           Dee_tuple_builder_cinit
+#define Dee_nullable_tuple_builder_init_with_hint  Dee_tuple_builder_init_with_hint
+#define Dee_nullable_tuple_builder_cinit_with_hint Dee_tuple_builder_cinit_with_hint
+#define Dee_nullable_tuple_builder_fini(self)                        \
+	(void)(!(self)->tb_tuple ||                                      \
+	       (Dee_XDecrefv((self)->tb_tuple->t_elem, (self)->tb_size), \
+	        DeeTuple_FreeUninitialized((self)->tb_tuple), 0))
+#define Dee_nullable_tuple_builder_visit(self)                      \
+	do {                                                            \
+		if ((self)->tb_tuple)                                       \
+			Dee_XVisitv((self)->tb_tuple->t_elem, (self)->tb_size); \
+	}	__WHILE0
+DFUNDEF ATTR_RETNONNULL WUNUSED DREF /*NullableTuple*/DeeObject *DCALL
+Dee_nullable_tuple_builder_pack(struct Dee_tuple_builder *__restrict self);
+
+/* Ensure that at least "index + 1" elements are allocated (default-initializing
+ * previously unallocated items to "NULL"; iow: unbound), and set the index'th
+ * element to "item" (which is also allowed to be "NULL")
+ *
+ * HINT: This function is binary-compatible with `Dee_seq_enumerate_index_t'
+ *
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+DFUNDEF WUNUSED Dee_ssize_t DCALL
+Dee_nullable_tuple_builder_setitem_index(/*struct Dee_nullable_tuple_builder **/void *self,
+                                         size_t index, /*0..1*/ DeeObject *item);
+
+/* Ensure that space for at least `n' items is allocated, and return
+ * a pointer to a buffer where those `n' items can be written. Once
+ * written, commit the write using `Dee_nullable_tuple_builder_commit' */
+#define Dee_nullable_tuple_builder_alloc   Dee_tuple_builder_alloc
+#define Dee_nullable_tuple_builder_alloc1  Dee_tuple_builder_alloc1
+#define Dee_nullable_tuple_builder_commit  Dee_tuple_builder_commit
+#define Dee_nullable_tuple_builder_commit1 Dee_tuple_builder_commit1
+
+/* Try to ensure that space for at least `n' extra items is available.
+ * Returns indicate of that much space now being pre-allocated. */
+#define Dee_nullable_tuple_builder_reserve Dee_tuple_builder_reserve
+
 
 DECL_END
 

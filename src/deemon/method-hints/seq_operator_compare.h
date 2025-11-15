@@ -352,6 +352,19 @@ if (isEq) {
 	print('%{$with__seq_operator_le__and__seq_operator__ge = "default__seq_operator_compare_eq__with__seq_operator_le__and__seq_operator__ge"}');
 }
 
+	// FIXME: Instead of working with "rhs_foreach" below, we'd need to work with "rhs_enumerate_index",
+	//        which is an operator that doesn't exist (but would be for the standard "foreach" operator
+	//        what "seq_operator_enumerate_index" is for "seq_operator_foreach")
+	//
+	// - Given a type "tp_rhs" that implements a custom "tp_foreach" operator
+	// - "tp_rhs->tp_seq->tp_foreach != &default__seq_operator_foreach__with__*"
+	// - None of the special-case branches get used below
+	// - The fallback branch is used, which always calls "tp_foreach" or "tp_iter" on "rhs"
+	// - Neither "tp_foreach" nor "tp_iter" keep track of unbound items
+	// - As such, comparing sequences that support unbound items breaks
+	//   if "tp_foreach" is defined by tp_rhs
+	//
+
 
 	// With "seq_operator_foreach"
 	print('%{$with__seq_operator_foreach = {');

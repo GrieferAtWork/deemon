@@ -1416,16 +1416,29 @@ use_seq_operator_iter:
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_frozen_t DCALL
 mh_select_seq_frozen(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach;
+	DeeMH_seq_enumerate_index_t seq_enumerate_index;
 	if ((DeeMH_set_frozen_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_frozen))
 		return &default__seq_frozen__with__set_frozen;
 	if ((DeeMH_map_frozen_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_frozen))
 		return &default__seq_frozen__with__map_frozen;
-	seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
-	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+	seq_enumerate_index = (DeeMH_seq_enumerate_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_enumerate_index);
+	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &default__seq_frozen__empty;
-	if (seq_operator_foreach)
+	if (seq_enumerate_index == &default__seq_enumerate_index__with__seq_operator_iter ||
+	    seq_enumerate_index == &default__seq_enumerate_index__with__seq_operator_foreach__and__counter)
 		return &default__seq_frozen__with__seq_operator_foreach;
+	if (seq_enumerate_index == &default__seq_enumerate_index__with__seq_enumerate) {
+		DeeMH_seq_enumerate_t seq_enumerate = (DeeMH_seq_enumerate_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_enumerate);
+		if (seq_enumerate == &default__seq_enumerate__empty)
+			return &default__seq_frozen__empty;
+		if (seq_enumerate == &default__seq_enumerate__with__seq_operator_foreach__and__counter)
+			return &default__seq_frozen__with__seq_operator_foreach;
+	}
+	if (seq_enumerate_index) {
+		if (DeeType_HasTraitHint(self, __seq_getitem_always_bound__))
+			return &default__seq_frozen__with__seq_operator_foreach;
+		return &default__seq_frozen__with__seq_enumerate_index;
+	}
 	return NULL;
 }
 

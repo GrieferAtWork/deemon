@@ -7432,6 +7432,40 @@ default__seq_frozen__unsupported(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_frozen__with__seq_operator_foreach(DeeObject *__restrict self) {
+	struct Dee_tuple_builder builder;
+	size_t hint = DeeObject_SizeFast(self);
+	if (hint != (size_t)-1) {
+		Dee_tuple_builder_init_with_hint(&builder, hint);
+	} else {
+		Dee_tuple_builder_init(&builder);
+	}
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &Dee_tuple_builder_append, &builder))
+		goto err_builder;
+	return Dee_tuple_builder_pack(&builder);
+err_builder:
+	Dee_tuple_builder_fini(&builder);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_frozen__with__seq_enumerate_index(DeeObject *__restrict self) {
+	struct Dee_nullable_tuple_builder builder;
+	size_t hint = DeeObject_SizeFast(self);
+	if (hint != (size_t)-1) {
+		Dee_nullable_tuple_builder_init_with_hint(&builder, hint);
+	} else {
+		Dee_nullable_tuple_builder_init(&builder);
+	}
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &Dee_nullable_tuple_builder_setitem_index, &builder, 0, (size_t)-1))
+		goto err_builder;
+	return Dee_nullable_tuple_builder_pack(&builder);
+err_builder:
+	Dee_tuple_builder_fini(&builder);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_frozen__with__set_frozen(DeeObject *__restrict self) {
 	/* return Set.frozen(this) as Sequence */
 	DREF DeeObject *result;

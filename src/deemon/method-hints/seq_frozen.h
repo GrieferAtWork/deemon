@@ -31,7 +31,38 @@ __seq_frozen__.seq_frozen([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
 %{$none = return_none}
 %{$empty = "DeeObject_NewRef"}
-%{$with__seq_operator_foreach = "DeeTuple_FromSequence"}
+%{$with__seq_operator_foreach = {
+	struct Dee_tuple_builder builder;
+	size_t hint = DeeObject_SizeFast(self);
+	if (hint != (size_t)-1) {
+		Dee_tuple_builder_init_with_hint(&builder, hint);
+	} else {
+		Dee_tuple_builder_init(&builder);
+	}
+	if unlikely(CALL_DEPENDENCY(seq_operator_foreach, self, &Dee_tuple_builder_append, &builder))
+		goto err_builder;
+	return Dee_tuple_builder_pack(&builder);
+err_builder:
+	Dee_tuple_builder_fini(&builder);
+	return NULL;
+}}
+%{$with__seq_enumerate_index = {
+	struct Dee_nullable_tuple_builder builder;
+	size_t hint = DeeObject_SizeFast(self);
+	if (hint != (size_t)-1) {
+		Dee_nullable_tuple_builder_init_with_hint(&builder, hint);
+	} else {
+		Dee_nullable_tuple_builder_init(&builder);
+	}
+	if unlikely(CALL_DEPENDENCY(seq_enumerate_index, self,
+	                            &Dee_nullable_tuple_builder_setitem_index,
+	                            &builder, 0, (size_t)-1))
+		goto err_builder;
+	return Dee_nullable_tuple_builder_pack(&builder);
+err_builder:
+	Dee_tuple_builder_fini(&builder);
+	return NULL;
+}}
 %{$with__set_frozen = {
 	/* return Set.frozen(this) as Sequence */
 	DREF DeeObject *result;
@@ -61,14 +92,27 @@ err:
 
 
 seq_frozen = {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach;
+	DeeMH_seq_enumerate_index_t seq_enumerate_index;
 	if (REQUIRE_NODEFAULT(set_frozen))
 		return &$with__set_frozen;
 	if (REQUIRE_NODEFAULT(map_frozen))
 		return &$with__map_frozen;
-	seq_operator_foreach = REQUIRE(seq_operator_foreach);
-	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+	seq_enumerate_index = REQUIRE(seq_enumerate_index);
+	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &$empty;
-	if (seq_operator_foreach)
+	if (seq_enumerate_index == &default__seq_enumerate_index__with__seq_operator_iter ||
+	    seq_enumerate_index == &default__seq_enumerate_index__with__seq_operator_foreach__and__counter)
 		return &$with__seq_operator_foreach;
+	if (seq_enumerate_index == &default__seq_enumerate_index__with__seq_enumerate) {
+		DeeMH_seq_enumerate_t seq_enumerate = REQUIRE(seq_enumerate);
+		if (seq_enumerate == &default__seq_enumerate__empty)
+			return &$empty;
+		if (seq_enumerate == &default__seq_enumerate__with__seq_operator_foreach__and__counter)
+			return &$with__seq_operator_foreach;
+	}
+	if (seq_enumerate_index) {
+		if (DeeType_HasTraitHint(THIS_TYPE, __seq_getitem_always_bound__))
+			return &$with__seq_operator_foreach;
+		return &$with__seq_enumerate_index;
+	}
 };

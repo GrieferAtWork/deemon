@@ -1174,7 +1174,7 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_cached[2] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__seq_cached__with_callobjectcache___seq_cached__, &tdefault__seq_cached__with_callobjectcache___seq_cached__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__seq_frozen[10] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__seq_frozen[11] = {
 	(Dee_funptr_t)&default__seq_frozen,
 	(Dee_funptr_t)&default__seq_frozen__with_callattr_frozen,
 	(Dee_funptr_t)&default__seq_frozen__with_callattr___seq_frozen__,
@@ -1182,6 +1182,7 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__seq_frozen[10] = {
 	(Dee_funptr_t)&default__seq_frozen__none,
 	(Dee_funptr_t)&default__seq_frozen__empty,
 	(Dee_funptr_t)&default__seq_frozen__with__seq_operator_foreach,
+	(Dee_funptr_t)&default__seq_frozen__with__seq_enumerate_index,
 	(Dee_funptr_t)&default__seq_frozen__with__set_frozen,
 	(Dee_funptr_t)&default__seq_frozen__with__map_frozen,
 	NULL
