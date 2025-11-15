@@ -20,26 +20,31 @@
  */
 
 import * from deemon;
-import rt;
-import ctypes;
-import .common.test;
+import collections;
 
-/* Instance-attributes of `Type' are unbound (aka. instance-wrappers)
- * when accessed as attributes of `Type' itself. */
-assert Type.baseof(Type, Type);
-assert Type.baseof(Type, type(File));
+/* Assert that the abstract bases all have the correct sequence class */
+assert Type.__seqclass__(Sequence) === Sequence;
+assert Type.__seqclass__(Set) === Set;
+assert Type.__seqclass__(Mapping) === Mapping;
 
-/* Assert the MRO/Bases of all type-types */
-test.assertSequence(Type.__mro__(Type), { Type, Object, Callable });
-test.assertSequence(Type.__bases__(Type), { Object, Callable });
-test.assertSequence(Type.__mro__(rt.FileType), { rt.FileType, Type, Object, Callable });
-test.assertSequence(Type.__bases__(rt.FileType), { Type });
-test.assertSequence(Type.__mro__(ctypes.StructuredType), { ctypes.StructuredType, Type, Object, Callable });
-test.assertSequence(Type.__bases__(ctypes.StructuredType), { Type });
+/* Assert that built-in types all have the correct sequence class */
+assert Type.__seqclass__(List) === Sequence;
+assert Type.__seqclass__(Tuple) === Sequence;
+#if __DEEMON_VARIANT__ == "gatw"
+assert Type.__seqclass__(NullableTuple from rt) === Sequence;
+#endif /* __DEEMON_VARIANT__ == "gatw" */
+assert Type.__seqclass__(HashSet) === Set;
+assert Type.__seqclass__(HashSet.Frozen) === Set;
+assert Type.__seqclass__(Dict) === Mapping;
+assert Type.__seqclass__(Dict.Frozen) === Mapping;
 
-
-/* Assert the MRO/Bases of some misc. other types */
-test.assertSequence(Type.__mro__(File), { File, Object });
-test.assertSequence(Type.__bases__(File), { Object });
-test.assertSequence(Type.__mro__(Dict), { Dict, Mapping, Sequence, Object });
-test.assertSequence(Type.__bases__(Dict), { Mapping });
+/* Assert that types from "collections" all have the correct sequence class */
+assert Type.__seqclass__(collections.Deque) === Sequence;
+assert Type.__seqclass__(collections.FixedList) === Sequence;
+assert Type.__seqclass__(collections.UniqueDict) === Mapping;
+assert Type.__seqclass__(collections.UniqueSet) === Set;
+assert Type.__seqclass__(collections.RangeMap) === Mapping;
+assert Type.__seqclass__(collections.RBTree) === Mapping;
+assert Type.__seqclass__(collections.CachedDict) === Mapping;
+assert Type.__seqclass__(collections.Bitset) === Set;
+assert Type.__seqclass__(collections.BitsetView) === Set;

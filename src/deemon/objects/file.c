@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
+#include <deemon/callable.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
@@ -1109,6 +1110,13 @@ filetype_ctor(DeeFileTypeObject *__restrict self) {
 	return type_ctor(&self->ft_base);
 }
 
+PRIVATE DeeTypeObject *tpconst filetype_mro[] = {
+	&DeeType_Type,
+	&DeeObject_Type,
+	&DeeCallable_Type, /* Types can be called to invoke their constructor, so have them implement deemon.Callable. */
+	NULL,
+};
+
 PUBLIC DeeTypeObject DeeFileType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_FileType",
@@ -1157,7 +1165,7 @@ PUBLIC DeeTypeObject DeeFileType_Type = {
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL((DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&DeeObject_New),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__97D8C6894F54F5E3),
-	/* .tp_mro           = */ NULL,
+	/* .tp_mro           = */ filetype_mro,
 	/* .tp_operators     = */ file_type_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(file_type_operators),
 };

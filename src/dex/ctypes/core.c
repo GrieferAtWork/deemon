@@ -29,6 +29,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
+#include <deemon/callable.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
 #include <deemon/format.h>
@@ -515,6 +516,14 @@ create_inst:
 
 
 INTDEF struct type_operator tpconst stype_operator_decls[(OPERATOR_STYPE_MAX - OPERATOR_STYPE_MIN) + 1];
+
+PRIVATE DeeTypeObject *tpconst stype_mro[] = {
+	&DeeType_Type,
+	&DeeObject_Type,
+	&DeeCallable_Type, /* Types can be called to invoke their constructor, so have them implement deemon.Callable. */
+	NULL,
+};
+
 INTERN DeeTypeObject DeeSType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "StructuredType",
@@ -569,7 +578,7 @@ INTERN DeeTypeObject DeeSType_Type = {
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&stype_call,
 	/* .tp_callable      = */ NULL,
-	/* .tp_mro           = */ NULL,
+	/* .tp_mro           = */ stype_mro,
 	/* .tp_operators     = */ stype_operator_decls,
 	/* .tp_operators_size= */ COMPILER_LENOF(stype_operator_decls)
 };
