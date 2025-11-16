@@ -530,6 +530,20 @@ FORCELOCAL int win32munmap(void *ptr, size_t size) {
 #define DL_MUNMAP(a, s)   win32munmap((a), (s))
 #define DL_DIRECT_MMAP(s) win32direct_mmap(s)
 #elif defined(HAVE_MMAP_IS_malloc)
+
+/* >>  NO_SEGMENT_TRAVERSAL       default: 0
+ * >>    If non-zero, suppresses traversals of memory segments
+ * >>    returned by either MORECORE or CALL_MMAP. This disables
+ * >>    merging of segments that are contiguous, and selectively
+ * >>    releasing them to the OS if unused, but bounds execution times.
+ *
+ * In this case, we **actually** want to disable merging of segments.
+ * Because segments originate from another malloc() impl, we have to
+ * free() every segment one-at-a-time, so merging segments would just
+ * be counter-productive! */
+#undef NO_SEGMENT_TRAVERSAL
+#define NO_SEGMENT_TRAVERSAL 1
+
 /* Use native malloc() to simulate mmap() */
 #define DL_MMAP(s) native_malloc_mmap(s)
 FORCELOCAL void *native_malloc_mmap(size_t size) {
