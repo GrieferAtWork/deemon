@@ -170,6 +170,48 @@ DFUNDEF size_t DCALL DeeHeap_SetAllocBreakpoint(size_t id);
  * @return: NULL: Given `ptr' is `NULL' or does not belong to a custom heap region */
 DFUNDEF ATTR_PURE WUNUSED struct Dee_heapregion *DCALL
 DeeHeap_GetRegionOf(void *ptr);
+
+
+
+struct Dee_heap_mallinfo {
+	size_t hmi_arena;    /* non-mmapped space allocated from system */
+	size_t hmi_ordblks;  /* number of free chunks */
+	size_t hmi_hblkhd;   /* space in mmapped regions */
+	size_t hmi_usmblks;  /* maximum total allocated space */
+	size_t hmi_uordblks; /* total allocated space */
+	size_t hmi_fordblks; /* total free space */
+	size_t hmi_keepcost; /* releasable (via malloc_trim) space */
+};
+
+/* Expose information returned by dlmalloc's internal `dlmallinfo()' */
+DFUNDEF ATTR_PURE WUNUSED struct Dee_heap_mallinfo DCALL DeeHeap_MallInfo(void);
+
+/* Expose controls for dlmalloc's internal "footprint" mechanism. */
+DFUNDEF ATTR_PURE WUNUSED size_t DCALL DeeHeap_Footprint(void);
+DFUNDEF ATTR_PURE WUNUSED size_t DCALL DeeHeap_MaxFootprint(void);
+DFUNDEF ATTR_PURE WUNUSED size_t DCALL DeeHeap_GetFootprintLimit(void);
+/* @param: bytes: [== 0]        Use minimal size
+ * @param: bytes: [== SIZE_MAX] Disable limit
+ * @param: bytes: [== *]        Limit (in bytes)
+ * @return: * : Old footprint limit */
+DFUNDEF size_t DCALL DeeHeap_SetFootprintLimit(size_t bytes);
+
+
+/* Possible values for `DeeHeap_SetOpt()' */
+#define Dee_HEAP_M_TRIM_THRESHOLD (-1)
+#define Dee_HEAP_M_GRANULARITY    (-2)
+#define Dee_HEAP_M_MMAP_THRESHOLD (-3)
+
+/* Set heap configuration `option' to `value'
+ * @return: 0 : Failure (bad `option' or `value')
+ * @return: 1 : Success */
+DFUNDEF int DCALL DeeHeap_SetOpt(int option, size_t value);
+
+/* Trim pre-allocated heap buffers, but keep at least `pad' bytes allocated (if already allocated)
+ * @return: * : The # of bytes released back to the system. */
+DFUNDEF size_t DCALL DeeHeap_Trim(size_t pad);
+
+
 #endif /* __CC__ */
 
 DECL_END
