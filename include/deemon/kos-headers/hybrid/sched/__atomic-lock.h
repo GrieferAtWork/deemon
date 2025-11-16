@@ -76,25 +76,18 @@ struct __hybrid_atomic_lock {
 	__hybrid_atomic_store(&(self)->a_lock, 0, __ATOMIC_RELEASE)
 
 
+#ifdef __INTELLISENSE__
 /* Acquire an exclusive lock. */
 __LOCAL __NOPREEMPT __ATTR_NONNULL((1)) void __NOTHROW(__hybrid_atomic_lock_acquire_nopr)(struct __hybrid_atomic_lock *__restrict __self);
 __LOCAL __NOPREEMPT __ATTR_NONNULL((1)) void __NOTHROW(__hybrid_atomic_lock_waitfor_nopr)(struct __hybrid_atomic_lock *__restrict __self);
-#ifdef __HYBRID_PREEMPTION_TRYYIELD_IS_HYBRID_YIELD
-/* No need to have duplicate code -- if `__hybrid_preemption_tryyield_nopr()'
- * is  the same as `__hybrid_yield()', the `*_nopr' variant behaves just like
- * the normal variant! */
-#define __hybrid_atomic_lock_acquire(self) __hybrid_atomic_lock_acquire_nopr(self)
-#define __hybrid_atomic_lock_waitfor(self) __hybrid_atomic_lock_waitfor_nopr(self)
-#else /* __HYBRID_PREEMPTION_TRYYIELD_IS_HYBRID_YIELD */
 __LOCAL __ATTR_NONNULL((1)) void (__hybrid_atomic_lock_acquire)(struct __hybrid_atomic_lock *__restrict __self) __THROWS(E_WOULDBLOCK_PREEMPTED);
 __LOCAL __ATTR_NONNULL((1)) void (__hybrid_atomic_lock_waitfor)(struct __hybrid_atomic_lock *__restrict __self) __THROWS(E_WOULDBLOCK_PREEMPTED);
-#endif /* !__HYBRID_PREEMPTION_TRYYIELD_IS_HYBRID_YIELD */
-
-#define __hybrid_atomic_lock_release_nopr __hybrid_atomic_lock_release
 #if defined(__KERNEL__) && defined(__KOS_VERSION__) && __KOS_VERSION__ >= 400
 __LOCAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL __NOTHROW(__hybrid_atomic_lock_acquire_nx)(struct __hybrid_atomic_lock *__restrict __self);
 __LOCAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL __NOTHROW(__hybrid_atomic_lock_waitfor_nx)(struct __hybrid_atomic_lock *__restrict __self);
 #endif /* __KERNEL__ && __KOS_VERSION__ >= 400 */
+#endif /* __INTELLISENSE__ */
+#define __hybrid_atomic_lock_release_nopr __hybrid_atomic_lock_release
 
 /* Acquire/release a given __hybrid_atomic_lock as an smp-lock
  * @param: __hybrid_preemption_flag_t *p_flag: preemption control flag. */
@@ -107,43 +100,94 @@ __LOCAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL __NOTHROW(__hybrid_atomic_lock
 
 
 #ifndef __INTELLISENSE__
-#ifndef __HYBRID_PREEMPTION_TRYYIELD_IS_HYBRID_YIELD
+#ifdef __HYBRID_PREEMPTION_TRYYIELD_IS_HYBRID_YIELD
+/* No need to have duplicate code -- if `__hybrid_preemption_tryyield_nopr()'
+ * is  the same as `__hybrid_yield()', the `*_nopr' variant behaves just like
+ * the normal variant! */
+#define __hybrid_atomic_lock_acquire(self) __hybrid_atomic_lock_acquire_nopr(self)
+#define __hybrid_atomic_lock_waitfor(self) __hybrid_atomic_lock_waitfor_nopr(self)
+#else /* __HYBRID_PREEMPTION_TRYYIELD_IS_HYBRID_YIELD */
+#ifdef __OPTIMIZE_SIZE__
 __LOCAL __ATTR_NONNULL((1)) void
-(__hybrid_atomic_lock_acquire)(struct __hybrid_atomic_lock *__restrict __self)
+(__ATTR_FASTCALL __hybrid_atomic_lock_acquire)(struct __hybrid_atomic_lock *__restrict __self)
 		__THROWS(E_WOULDBLOCK_PREEMPTED) {
 	while (!__hybrid_atomic_lock_tryacquire(__self))
 		__hybrid_yield();
 	__COMPILER_READ_BARRIER();
 }
 __LOCAL __ATTR_NONNULL((1)) void
-(__hybrid_atomic_lock_waitfor)(struct __hybrid_atomic_lock *__restrict __self)
+(__ATTR_FASTCALL __hybrid_atomic_lock_waitfor)(struct __hybrid_atomic_lock *__restrict __self)
 		__THROWS(E_WOULDBLOCK_PREEMPTED) {
 	while (!__hybrid_atomic_lock_available(__self))
 		__hybrid_yield();
 	__COMPILER_READ_BARRIER();
 }
+#else /* __OPTIMIZE_SIZE__ */
+#define __hybrid_atomic_lock_acquire(self) \
+	(void)(__likely(__hybrid_atomic_lock_tryacquire(self)) || (__PRIVATE_hybrid_atomic_lock_acquire(self), 1))
+#define __hybrid_atomic_lock_waitfor(self) \
+	(void)(__likely(__hybrid_atomic_lock_available(self)) || (__PRIVATE_hybrid_atomic_lock_waitfor(self), 1))
+__LOCAL __ATTR_COLD __ATTR_NONNULL((1)) void
+(__ATTR_FASTCALL __PRIVATE_hybrid_atomic_lock_acquire)(struct __hybrid_atomic_lock *__restrict __self)
+		__THROWS(E_WOULDBLOCK_PREEMPTED) {
+	do {
+		__hybrid_yield();
+	} while (!__hybrid_atomic_lock_tryacquire(__self));
+	__COMPILER_READ_BARRIER();
+}
+__LOCAL __ATTR_COLD __ATTR_NONNULL((1)) void
+(__ATTR_FASTCALL __PRIVATE_hybrid_atomic_lock_waitfor)(struct __hybrid_atomic_lock *__restrict __self)
+		__THROWS(E_WOULDBLOCK_PREEMPTED) {
+	do {
+		__hybrid_yield();
+	} while (!__hybrid_atomic_lock_available(__self));
+	__COMPILER_READ_BARRIER();
+}
+#endif /* !__OPTIMIZE_SIZE__ */
 #endif /* !__HYBRID_PREEMPTION_TRYYIELD_IS_HYBRID_YIELD */
 
+#ifdef __OPTIMIZE_SIZE__
 __LOCAL __NOPREEMPT __ATTR_NONNULL((1)) void
-__NOTHROW(__hybrid_atomic_lock_acquire_nopr)(struct __hybrid_atomic_lock *__restrict __self) {
+__NOTHROW(__ATTR_FASTCALL __hybrid_atomic_lock_acquire_nopr)(struct __hybrid_atomic_lock *__restrict __self) {
 	while (!__hybrid_atomic_lock_tryacquire(__self))
 		__hybrid_preemption_tryyield_nopr();
 	__COMPILER_READ_BARRIER();
 }
 __LOCAL __NOPREEMPT __ATTR_NONNULL((1)) void
-__NOTHROW(__hybrid_atomic_lock_waitfor_nopr)(struct __hybrid_atomic_lock *__restrict __self) {
+__NOTHROW(__ATTR_FASTCALL __hybrid_atomic_lock_waitfor_nopr)(struct __hybrid_atomic_lock *__restrict __self) {
 	while (!__hybrid_atomic_lock_available(__self))
 		__hybrid_preemption_tryyield_nopr();
 	__COMPILER_READ_BARRIER();
 }
+#else /* __OPTIMIZE_SIZE__ */
+#define __hybrid_atomic_lock_acquire_nopr(self) \
+	(void)(__likely(__hybrid_atomic_lock_tryacquire(self)) || (__PRIVATE_hybrid_atomic_lock_acquire_nopr(self), 1))
+#define __hybrid_atomic_lock_waitfor_nopr(self) \
+	(void)(__likely(__hybrid_atomic_lock_available(self)) || (__PRIVATE_hybrid_atomic_lock_waitfor_nopr(self), 1))
+__LOCAL __NOPREEMPT __ATTR_COLD __ATTR_NONNULL((1)) void
+__NOTHROW(__ATTR_FASTCALL __PRIVATE_hybrid_atomic_lock_acquire_nopr)(struct __hybrid_atomic_lock *__restrict __self) {
+	do {
+		__hybrid_preemption_tryyield_nopr();
+	} while (!__hybrid_atomic_lock_tryacquire(__self));
+	__COMPILER_READ_BARRIER();
+}
+__LOCAL __NOPREEMPT __ATTR_COLD __ATTR_NONNULL((1)) void
+__NOTHROW(__ATTR_FASTCALL __PRIVATE_hybrid_atomic_lock_waitfor_nopr)(struct __hybrid_atomic_lock *__restrict __self) {
+	do {
+		__hybrid_preemption_tryyield_nopr();
+	} while (!__hybrid_atomic_lock_available(__self));
+	__COMPILER_READ_BARRIER();
+}
+#endif /* !__OPTIMIZE_SIZE__ */
 
 #if defined(__KERNEL__) && defined(__KOS_VERSION__) && __KOS_VERSION__ >= 400
 #ifndef __NO_builtin_expect
 #define __hybrid_atomic_lock_acquire_nx(self) __builtin_expect(__hybrid_atomic_lock_acquire_nx(self), 1)
 #define __hybrid_atomic_lock_waitfor_nx(self) __builtin_expect(__hybrid_atomic_lock_waitfor_nx(self), 1)
 #endif /* !__NO_builtin_expect */
+#ifdef __OPTIMIZE_SIZE__
 __LOCAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL
-__NOTHROW(__hybrid_atomic_lock_acquire_nx)(struct __hybrid_atomic_lock *__restrict __self) {
+__NOTHROW(__ATTR_FASTCALL __hybrid_atomic_lock_acquire_nx)(struct __hybrid_atomic_lock *__restrict __self) {
 	while (!__hybrid_atomic_lock_tryacquire(__self)) {
 		if __unlikely(!__hybrid_yield_nx())
 			return 0;
@@ -152,7 +196,7 @@ __NOTHROW(__hybrid_atomic_lock_acquire_nx)(struct __hybrid_atomic_lock *__restri
 	return 1;
 }
 __LOCAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL
-__NOTHROW(__hybrid_atomic_lock_waitfor_nx)(struct __hybrid_atomic_lock *__restrict __self) {
+__NOTHROW(__ATTR_FASTCALL __hybrid_atomic_lock_waitfor_nx)(struct __hybrid_atomic_lock *__restrict __self) {
 	while (!__hybrid_atomic_lock_available(__self)) {
 		if __unlikely(!__hybrid_yield_nx())
 			return 0;
@@ -160,6 +204,30 @@ __NOTHROW(__hybrid_atomic_lock_waitfor_nx)(struct __hybrid_atomic_lock *__restri
 	__COMPILER_READ_BARRIER();
 	return 1;
 }
+#else /* __OPTIMIZE_SIZE__ */
+#define __hybrid_atomic_lock_acquire_nx(self) \
+	(__likely(__hybrid_atomic_lock_tryacquire(__self)) || __PRIVATE_hybrid_atomic_lock_acquire_nx(self))
+__LOCAL __ATTR_COLD __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL
+__NOTHROW(__ATTR_FASTCALL __PRIVATE_hybrid_atomic_lock_acquire_nx)(struct __hybrid_atomic_lock *__restrict __self) {
+	do {
+		if __unlikely(!__hybrid_yield_nx())
+			return 0;
+	} while (!__hybrid_atomic_lock_tryacquire(__self));
+	__COMPILER_READ_BARRIER();
+	return 1;
+}
+#define __hybrid_atomic_lock_waitfor_nx(self) \
+	(__likely(__hybrid_atomic_lock_available(__self)) || __PRIVATE_hybrid_atomic_lock_waitfor_nx(self))
+__LOCAL __ATTR_COLD __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL
+__NOTHROW(__ATTR_FASTCALL __PRIVATE_hybrid_atomic_lock_waitfor_nx)(struct __hybrid_atomic_lock *__restrict __self) {
+	do {
+		if __unlikely(!__hybrid_yield_nx())
+			return 0;
+	} while (!__hybrid_atomic_lock_available(__self));
+	__COMPILER_READ_BARRIER();
+	return 1;
+}
+#endif /* !__OPTIMIZE_SIZE__ */
 #endif /* __KERNEL__ && __KOS_VERSION__ >= 400 */
 #endif /* !__INTELLISENSE__ */
 
