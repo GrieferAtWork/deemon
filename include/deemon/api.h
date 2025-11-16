@@ -491,7 +491,7 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 /* Experimental feature switch: Use custom heap implementation */
 #if (!defined(CONFIG_EXPERIMENTAL_CUSTOM_HEAP) && \
      !defined(CONFIG_NO_EXPERIMENTAL_CUSTOM_HEAP))
-#if 0 /* TODO: Enable by default */
+#if 1 /* TODO: Enable by default */
 #define CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 #else
 #define CONFIG_NO_EXPERIMENTAL_CUSTOM_HEAP
