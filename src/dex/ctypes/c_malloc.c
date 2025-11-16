@@ -72,6 +72,9 @@ INTERN DEFINE_CMETHOD1(c_malloc_free, &c_malloc_free_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_free_f_impl(void *ptr)
 /*[[[end]]]*/
 {
+	/* TODO: This (and the other APIs) should use the system's native
+	 *       malloc()+free() (if available) for the sake of compatibility
+	 *       with other dynamically loaded shared, native libraries. */
 	CTYPES_FAULTPROTECT(Dee_Free(ptr), return NULL);
 	return_none;
 }

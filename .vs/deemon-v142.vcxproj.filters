@@ -285,6 +285,9 @@
 		<ClInclude Include="..\include\deemon\hashset.h">
 			<Filter>include</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\heap.h">
+			<Filter>include</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\instancemethod.h">
 			<Filter>include</Filter>
 		</ClInclude>
@@ -1968,6 +1971,9 @@
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\gc.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\heap.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\kwds-wrappers.c">

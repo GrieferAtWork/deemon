@@ -103,6 +103,7 @@
 		<ClInclude Include="..\include\deemon\format.h" />
 		<ClInclude Include="..\include\deemon\gc.h" />
 		<ClInclude Include="..\include\deemon\hashset.h" />
+		<ClInclude Include="..\include\deemon\heap.h" />
 		<ClInclude Include="..\include\deemon\instancemethod.h" />
 		<ClInclude Include="..\include\deemon\int.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\__stdcxx.h" />
@@ -666,6 +667,7 @@
 		<ClCompile Include="..\src\deemon\runtime\error.c" />
 		<ClCompile Include="..\src\deemon\runtime\format.c" />
 		<ClCompile Include="..\src\deemon\runtime\gc.c" />
+		<ClCompile Include="..\src\deemon\runtime\heap.c" />
 		<ClCompile Include="..\src\deemon\runtime\kwds-wrappers.c" />
 		<ClCompile Include="..\src\deemon\runtime\kwds.c" />
 		<ClCompile Include="..\src\deemon\runtime\kwlist.c" />

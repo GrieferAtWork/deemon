@@ -30,8 +30,6 @@
 #include <hybrid/host.h>
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
-#include "misc.c"
-
 #ifdef CONFIG_HAVE_PATHS_H
 #include <paths.h> /* _PATH_DEVNULL */
 #endif /* CONFIG_HAVE_PATHS_H */

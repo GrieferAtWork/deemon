@@ -1511,8 +1511,14 @@ create_std_buffer(unsigned int id) {
 #else /* CONFIG_NATIVE_STD_FILES_ARE_BUFFERED */
 	result = DeeFileBuffer_New(DeeFile_DefaultStd(id),
 	                           std_buffer_modes[id], 0);
-	if unlikely(!result)
-		goto done;
+	if unlikely(!result) {
+		/* If the system is **extremely** memory starved,
+		 * then don't bother wrapping the buffer... */
+		if (!DeeError_Catch(&DeeError_NoMemory))
+			goto done;
+		result = DeeFile_DefaultStd(id);
+		Dee_Incref(result);
+	}
 #endif /* !CONFIG_NATIVE_STD_FILES_ARE_BUFFERED */
 	dee_std_lock_write();
 	/* Save the newly created buffer in the standard stream vector. */

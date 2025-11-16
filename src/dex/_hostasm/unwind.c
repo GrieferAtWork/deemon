@@ -36,6 +36,7 @@
 #include <deemon/format.h>
 
 #include <hybrid/align.h>
+#include <hybrid/debug-alignment.h>
 
 DECL_BEGIN
 

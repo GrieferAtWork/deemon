@@ -46,9 +46,24 @@ DECL_BEGIN
 
 /* Configure libregex */
 #undef LIBREGEX_WANT_PROTOTYPES
-#ifndef CONFIG_HAVE_malloc_usable_size
-#define LIBREGEX_NO_MALLOC_USABLE_SIZE         /* Tell the library if we're unable to provide it with a working `malloc_usable_size(3)' function */
-#endif /* !CONFIG_HAVE_malloc_usable_size */
+
+/* Tell the library if we're unable to provide it with a working `malloc_usable_size(3)' function */
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+#undef LIBREGEX_NO_MALLOC_USABLE_SIZE
+#undef malloc_usable_size
+#define malloc_usable_size(m) Dee_MallocUsableSize(m)
+#else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
+#ifdef CONFIG_HAVE_malloc_usable_size
+#undef LIBREGEX_NO_MALLOC_USABLE_SIZE
+#elif defined(CONFIG_HAVE__msize)
+#undef LIBREGEX_NO_MALLOC_USABLE_SIZE
+#undef malloc_usable_size
+#define malloc_usable_size(ptr) (likely(ptr) ? _msize(ptr) : 0)
+#else /* ... */
+#define LIBREGEX_NO_MALLOC_USABLE_SIZE
+#endif /* !... */
+#endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
+
 #define LIBREGEX_NO_RE_CODE_DISASM             /* Don't need debug functions to disassemble regex byte code. */
 #define LIBREGEX_NO_SYSTEM_INCLUDES            /* We're providing all of the system includes (so don't try to include any KOS headers) */
 #define LIBREGEX_DECL                   INTDEF /* Declare the normally public API as INTERN (which we override again below) */

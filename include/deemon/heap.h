@@ -1,0 +1,156 @@
+/* Copyright (c) 2018-2025 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_DEEMON_HEAP_H
+#define GUARD_DEEMON_HEAP_H 1
+
+#include "api.h"
+/**/
+
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+#include <stddef.h>  /* size_t */
+
+DECL_BEGIN
+
+/* Disclaimer:
+ * The internal data-layout seen here is heavily inspired by dlmalloc (Doug Lea's malloc)
+ * dlmalloc is public domain, but I feel like it's just a matter of respect to state this
+ * inspiration, and give credit where credit is due ;)
+ *
+ * ==============================================================================
+ *
+ * Deemon heap regions define a binary format that can be used to read/write file mappings
+ * in such a way that specific pointers into those mappings can be passed to Dee_Free(),
+ * Dee_Realloc() and Dee_MallocUsableSize(), with the deemon heap system then managing
+ * which chunks of your file mapping are still allocated, and once *all* chunks have been
+ * free'd, a custom callback within the associated "struct Dee_heapregion" is invoked.
+ *
+ * ==============================================================================
+ * === EXAMPLE
+ * ==============================================================================
+ *
+ * The following is an example of how the binary data of a deemon heap region may
+ * look like. Note that the existing of data formatted like this is enough for you
+ * to be able to pass pointers to the user-data areas of chunks to Dee_Free(). --
+ * There is no need to register heap regions before they can be used in APIs.
+ *
+ * Assuming: sizeof(size_t) == sizeof(void *) == 4 && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+ *
+ *    0000   38 10 00 00   struct Dee_heapregion::hr_size                 size = 312 (0x138)
+ *    0004   87 65 43 21   struct Dee_heapregion::hr_destroy              (void (DCALL *)(struct Dee_heapregion *))0x87654321
+ *
+ *    0008   00 00 00 00   struct Dee_heapregion::hr_first.hc_prevsize    Must always be "0" for first chunk
+ *    000c   0c 01 00 00   struct Dee_heapregion::hr_first.hc_head        Dee_HEAPCHUNK_HEAD(256)
+ *    0010   ?? ?? ?? ??                                                  User data
+ *    ...
+ *    0108   ?? ?? ?? ??                                                  User data
+ *
+ *    0110   08 01 00 00   struct Dee_heapchunk::hc_prevsize              Dee_HEAPCHUNK_PREV(256)
+ *    0114   14 00 00 00   struct Dee_heapchunk::hc_head                  Dee_HEAPCHUNK_HEAD(8)
+ *    0118   ?? ?? ?? ??                                                  User data
+ *    011c   ?? ?? ?? ??                                                  User data
+ *
+ *    0120   10 00 00 00   struct Dee_heapchunk::hc_prevsize              Dee_HEAPCHUNK_PREV(8)
+ *    0124   14 00 00 00   struct Dee_heapchunk::hc_head                  Dee_HEAPCHUNK_HEAD(8)
+ *    0128   ?? ?? ?? ??                                                  User data
+ *    012c   ?? ?? ?? ??                                                  User data
+ *
+ *    0130   10 00 00 00   struct Dee_heaptail::ht_prevsize               Dee_HEAPCHUNK_PREV(8)
+ *    0134   00 00 00 00   struct Dee_heaptail::ht_zero                   Must always be "0" in last chunk
+ *
+ * The above region features 3 addresses for heap chunks with associated user-data.
+ * Once both those chunks are free'd (order of Dee_Free() operations doesn't matter),
+ * then the destructor callback at "0x87654321" will be invoked during the last free.
+ * >> Dee_MallocUsableSize(REGION_BASE + 0x10);  // 256
+ * >> Dee_MallocUsableSize(REGION_BASE + 0x118); // 16
+ * >> Dee_MallocUsableSize(REGION_BASE + 0x128); // 16
+ * >> Dee_Free(REGION_BASE + 0x10);
+ * >> Dee_Free(REGION_BASE + 0x118);
+ * >> Dee_Free(REGION_BASE + 0x128);             // This (last) free will invoke destructor at "0x87654321"
+ *
+ *
+ * Of additional note should be:
+ * - When read-from, or written-to a file, this format requires only a single
+ *   relocation per region (specifically: for "hr_destroy"). No additional
+ *   relocations are required for individual heap chunks.
+ * - Trying to call `Dee_Realloc()' on a heap pointer from a custom heap region
+ *   will always see the call emulated as `Dee_Malloc()+memcpy()+Dee_Free()',
+ *   meaning a new chunk is allocated on the regular heap, and the old custom-
+ *   region chunk is free'd.
+ *
+ */
+
+
+/* Special flag values needed for chunks in different positions */
+#define Dee_HEAPCHUNK_ALIGN         (2 * __SIZEOF_POINTER__)
+#define Dee_HEAPCHUNK_PREV(n_bytes) (((n_bytes) + (2 * __SIZEOF_POINTER__)))
+#define Dee_HEAPCHUNK_HEAD(n_bytes) (((n_bytes) + (2 * __SIZEOF_POINTER__)) | 4)
+
+
+#ifdef __CC__
+struct Dee_heapchunk {
+	size_t hc_prevsize; /* Size of previous chunk, or "0" if this is the first chunk; must be multiple of "Dee_HEAPCHUNK_ALIGN" */
+	size_t hc_head;     /* Size of this chunk (including this header), but least significant
+	                     * 3 bits have special meaning and (when the chunk is allocated, which
+	                     * is the only mode explicitly defined by this binary format), must be
+	                     * initialized to 0b100 (aka. "4") */
+};
+
+struct Dee_heaptail {
+	size_t ht_lastsize; /* Size of the last *real* chunk within the region (in bytes); must be multiple of "Dee_HEAPCHUNK_ALIGN" */
+	size_t ht_zero;     /* Always zero */
+};
+
+struct Dee_heapregion {
+	size_t               hr_size;  /* [const] Total region size (in bytes, including this header, and the tail) */
+	/* [1..1][const] Destructor invoked once the region's last chunk is Dee_Free()'d */
+	void (DCALL         *hr_destroy)(struct Dee_heapregion *__restrict self);
+	struct Dee_heapchunk hr_first;                                /* First chunk of region */
+//	byte_t               hr_data[hr_size - (6 * sizeof(void *))]; /* Region payload (containing more chunks...) */
+//	struct Dee_heaptail  hr_tail;                                 /* Region tail (see above) */
+};
+
+
+/* TODO: Expose dlmalloc's configuration/stats functions here */
+
+/* Validate heap memory. */
+DFUNDEF void DCALL DeeHeap_CheckMemory(void);
+
+/* Given a heap pointer (as could also be passed to `Dee_Free()' or
+ * `Dee_MallocUsableSize()'), check if that pointer belongs to a custom
+ * heap region, and if so: return a pointer to said heap region.
+ * - If `ptr' is a `NULL' or a heap pointer that does not belong
+ *   to a custom heap region, `NULL' is returned instead.
+ * - If `ptr' isn't a heap pointer, behavior is undefined.
+ * - Unlike `Dee_MallocUsableSize()', this function has another special
+ *   case where behavior is also well-defined: if deemon was built with
+ *   object slabs enabled (!CONFIG_NO_OBJECT_SLABS), and the given `ptr'
+ *   points into the special slab-heap, then `NULL' is always returned.
+ *
+ * @return: * :   The heap region belonging to `ptr'
+ * @return: NULL: Given `ptr' is `NULL' or does not belong to a custom heap region */
+DFUNDEF ATTR_PURE WUNUSED struct Dee_heapregion *DCALL
+DeeHeap_GetRegionOf(void *ptr);
+#endif /* __CC__ */
+
+
+DECL_END
+#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
+
+#endif /* !GUARD_DEEMON_HEAP_H */

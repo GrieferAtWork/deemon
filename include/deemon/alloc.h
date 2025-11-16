@@ -165,6 +165,11 @@ DFUNDEF WUNUSED void *(DCALL DeeDbg_TryRealloc)(void *ptr, size_t n_bytes, char 
 DFUNDEF void (DCALL DeeDbg_Free)(void *ptr, char const *file, int line);
 DFUNDEF void *(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line);
 
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+DFUNDEF ATTR_PURE WUNUSED size_t (DCALL Dee_MallocUsableSize)(void *ptr);
+#define Dee_MallocUsableSize(ptr)        Dee_MallocUsableSize(ptr)
+#define Dee_MallocUsableSizeNonNull(ptr) Dee_MallocUsableSize(ptr)
+#else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 /* If supported by the OS, provide a way to determine the allocated size of an malloc-pointer. */
 #undef Dee_MallocUsableSize
 #ifdef CONFIG_HAVE_malloc_usable_size
@@ -174,6 +179,7 @@ DFUNDEF void *(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line)
 #define Dee_MallocUsableSize(ptr)        (likely(ptr) ? _msize(ptr) : 0)
 #define Dee_MallocUsableSizeNonNull(ptr) _msize(ptr)
 #endif /* ... */
+#endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
 #ifndef NDEBUG
 #define Dee_Malloc(n_bytes)          DeeDbg_Malloc(n_bytes, __FILE__, __LINE__)

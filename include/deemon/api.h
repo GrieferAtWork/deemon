@@ -483,6 +483,16 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #define CONFIG_NO_EXPERIMENTAL_MODULE_DIRECTORIES
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_MODULE_DIRECTORIES */
+
+/* Experimental feature switch: Use custom heap implementation */
+#if (!defined(CONFIG_EXPERIMENTAL_CUSTOM_HEAP) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_CUSTOM_HEAP))
+#if 1 /* TODO: Implementation is incomplete */
+#define CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+#else
+#define CONFIG_NO_EXPERIMENTAL_CUSTOM_HEAP
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_CUSTOM_HEAP */
 /************************************************************************/
 
 
@@ -629,6 +639,12 @@ DECL_END
 #endif /* !DWEAK */
 
 #if !defined(NDEBUG) && !defined(CONFIG_NO_CHECKMEMORY) && defined(_DEBUG)
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+DECL_BEGIN
+DFUNDEF void DCALL DeeHeap_CheckMemory(void);
+#define Dee_CHECKMEMORY() DeeHeap_CheckMemory()
+DECL_END
+#else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 #if defined(CONFIG_HOST_WINDOWS) && defined(_MSC_VER)
 #ifdef __INTELLISENSE__
 #define Dee_CHECKMEMORY() Dee_ASSERT((_CrtCheckMemory)())
@@ -644,6 +660,7 @@ extern int (ATTR_CDECL _CrtCheckMemory)(void);
 #endif /* _MSC_VER && !_DLL */
 DECL_END
 #endif /* CONFIG_HOST_WINDOWS && _MSC_VER */
+#endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 #endif /* !NDEBUG */
 
 DECL_BEGIN
