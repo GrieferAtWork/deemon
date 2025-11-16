@@ -376,7 +376,7 @@ $(BIN_ROOT)/$(1) $(BIN_RELPATH)/$(1): $(call bin_objects,$(1)) $(foreach c,$(can
 		mkdir -p $$(BLD_RELPATH) \
 	,))
 	$$(eval maybe_export_objects2 := $$(if $$(maybe_export_objects1), \
-		echo "$$(foreach o,$$(objs),$$(subst \\,\\\\,$$(o))\\n)" > $$(BLD_RELPATH)/$(1).args \
+		printf "$$(foreach o,$$(objs),$$(subst \\,\\\\,$$(o))\\n)" > $$(BLD_RELPATH)/$(1).args \
 	,))
 	$$(eval objs := $$(if $$(maybe_export_objects1), @$$(BLD_RELPATH)/$(1).args, $$(objs)))
 ifeq (,$(DRYRUN))
@@ -515,7 +515,7 @@ If you want [97mdeemon[m to be part of you \$$PATH, run:\n\
 ## =======================================================================
 
 help:
-	@echo "\
+	@printf "\
 Build commands\n\
 \t[97mmake[m                     Same as [97mmake all[m\n\
 \t[97mmake all[m                 Build deemon and (try to) build dex modules. Failure\n\

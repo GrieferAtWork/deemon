@@ -190,7 +190,7 @@ DECL_BEGIN
 #endif
 
 
-#if defined(CONFIG_HAVE_mmap) && !defined(CONFIG_HAVE_mmap64)
+#if !defined(CONFIG_HAVE_mmap) && defined(CONFIG_HAVE_mmap64)
 #define CONFIG_HAVE_mmap 1
 #undef mmap
 #define mmap mmap64
@@ -704,7 +704,14 @@ struct malloc_tree_chunk {
 
 	struct malloc_tree_chunk *child[2];
 	struct malloc_tree_chunk *parent;
+#ifdef DL_DEBUG_MEMSET_FREE
+	union {
+		bindex_t              index;
+		size_t                index_word;
+	};
+#else /* DL_DEBUG_MEMSET_FREE */
 	bindex_t                  index;
+#endif /* !DL_DEBUG_MEMSET_FREE */
 };
 
 typedef struct malloc_tree_chunk tchunk;
@@ -1122,7 +1129,9 @@ static void do_check_top_chunk(PARAM_mstate_m_ mchunkptr p);
 static void do_check_mmapped_chunk(PARAM_mstate_m_ mchunkptr p);
 static void do_check_inuse_chunk(PARAM_mstate_m_ mchunkptr p);
 static void do_check_free_chunk(PARAM_mstate_m_ mchunkptr p);
+#if DL_DEBUG_INTERNAL
 static void do_check_malloced_chunk(PARAM_mstate_m_ void *mem, size_t s);
+#endif /* DL_DEBUG_INTERNAL */
 static void do_check_tree(PARAM_mstate_m_ tchunkptr t);
 static void do_check_treebin(PARAM_mstate_m_ bindex_t i);
 static void do_check_smallbin(PARAM_mstate_m_ bindex_t i);
@@ -1996,7 +2005,7 @@ static void internal_malloc_stats(PARAM_mstate_m) {
 		dl_setfree_word(X->child[0], struct malloc_tree_chunk *);        \
 		dl_setfree_word(X->child[1], struct malloc_tree_chunk *);        \
 		dl_setfree_word(X->parent, struct malloc_tree_chunk *);          \
-		dl_setfree_word(*(size_t *)(void *)&X->index, size_t);           \
+		dl_setfree_word(X->index_word, size_t);                          \
 	}
 
 /* Relays to large vs small bin operations */
@@ -2315,7 +2324,7 @@ static void *sys_alloc(PARAM_mstate_m_ size_t nb) {
 	if (!use_noncontiguous(m)) {
 		char *br       = CMFAIL;
 		size_t ssize   = asize; /* sbrk call size */
-		msegmentptr ss = (mstate_top(m) == 0) ? 0 : segment_holding(m, (char *)mstate_top(m));
+		msegmentptr ss = (mstate_top(m) == 0) ? 0 : segment_holding(ARG_mstate_m_ (char *)mstate_top(m));
 		ACQUIRE_MALLOC_GLOBAL_LOCK();
 
 		if (ss == 0) { /* First time through or recovery */
