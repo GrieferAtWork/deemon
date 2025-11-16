@@ -129,8 +129,31 @@ struct Dee_heapregion {
 
 /* TODO: Expose dlmalloc's configuration/stats functions here */
 
-/* Validate heap memory. */
+/* Validate heap memory, asserting the absence of corruptions from
+ * various common heap mistakes (write-past-end, use-after-free, etc.).
+ *
+ * When deemon was not built for debugging, this is a no-op. */
 DFUNDEF void DCALL DeeHeap_CheckMemory(void);
+
+/* Dump info about all heap allocations that were allocated, but
+ * never Dee_Free()'d, nor untracked using `Dee_UntrackAlloc()'.
+ * Information about leaks is printed using `Dee_DPRINTF()'.
+ *
+ * @return: * : The total amount of memory leaked */
+DFUNDEF size_t DCALL DeeHeap_DumpMemoryLeaks(void);
+
+/* Get/set the memory allocation breakpoint.
+ * - When the deemon heap was built to track memory leaks, an optional
+ *   allocation breakpoint can be defined which, when reached, causes
+ *   an attached debugger to break, allowing you to inspect the stack
+ *   at the point where the `id'the allocation happened
+ * - Allocation IDs are assigned in ascending order during every call
+ *   to Dee_Malloc(), Dee_Calloc() and Dee_Realloc() (when ptr==NULL)
+ * - When the deemon heap was not built with this feature, this API
+ *   is a no-op, and always returns `0'
+ * @return: * : The previously set allocation breakpoint */
+DFUNDEF ATTR_PURE WUNUSED size_t DCALL DeeHeap_GetAllocBreakpoint(void);
+DFUNDEF size_t DCALL DeeHeap_SetAllocBreakpoint(size_t id);
 
 /* Given a heap pointer (as could also be passed to `Dee_Free()' or
  * `Dee_MallocUsableSize()'), check if that pointer belongs to a custom
@@ -148,7 +171,6 @@ DFUNDEF void DCALL DeeHeap_CheckMemory(void);
 DFUNDEF ATTR_PURE WUNUSED struct Dee_heapregion *DCALL
 DeeHeap_GetRegionOf(void *ptr);
 #endif /* __CC__ */
-
 
 DECL_END
 #endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */

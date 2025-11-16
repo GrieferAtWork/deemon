@@ -104,6 +104,7 @@
 #define __has_include(x) 0
 #endif /* !__has_include */
 
+#if 1 /* TODO: Remove this block once "CONFIG_EXPERIMENTAL_CUSTOM_HEAP" becomes mandatory */
 #ifdef CONFIG_NO_CRTDBG_H
 #undef CONFIG_HAVE_CRTDBG_H
 #elif (!defined(CONFIG_HAVE_CRTDBG_H) && \
@@ -116,6 +117,7 @@
 #if defined(CONFIG_HAVE_CRTDBG_H) && !defined(NDEBUG)
 #define _CRTDBG_MAP_ALLOC 1 /* Enable debug-malloc */
 #endif /* CONFIG_HAVE_CRTDBG_H && !NDEBUG */
+#endif
 
 #define DEE_VERSION_API      200
 #define DEE_VERSION_COMPILER 200
@@ -132,10 +134,12 @@
 #if defined(__CC__) && !defined(__INTELLISENSE__)
 #include <stdarg.h>
 
+#if 1 /* TODO: Remove this block once "CONFIG_EXPERIMENTAL_CUSTOM_HEAP" becomes mandatory */
 #if (defined(_CRTDBG_MAP_ALLOC) && \
      defined(CONFIG_HAVE_CRTDBG_H) && !defined(NDEBUG))
 #include <crtdbg.h>
 #endif /* _CRTDBG_MAP_ALLOC && CONFIG_HAVE_CRTDBG_H && !NDEBUG */
+#endif
 #endif /* __CC__ && !__INTELLISENSE__ */
 #endif /* !__DEEMON__ */
 
@@ -487,7 +491,7 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 /* Experimental feature switch: Use custom heap implementation */
 #if (!defined(CONFIG_EXPERIMENTAL_CUSTOM_HEAP) && \
      !defined(CONFIG_NO_EXPERIMENTAL_CUSTOM_HEAP))
-#if 1 /* TODO: Implementation is incomplete */
+#if 0 /* TODO: Enable by default */
 #define CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 #else
 #define CONFIG_NO_EXPERIMENTAL_CUSTOM_HEAP

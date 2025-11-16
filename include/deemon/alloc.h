@@ -166,7 +166,13 @@ DFUNDEF void (DCALL DeeDbg_Free)(void *ptr, char const *file, int line);
 DFUNDEF void *(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line);
 
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+DFUNDEF WUNUSED void *(DCALL Dee_TryReallocInPlace)(void *ptr, size_t n_bytes);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL Dee_Memalign)(size_t min_alignment, size_t n_bytes);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL Dee_TryMemalign)(size_t min_alignment, size_t n_bytes);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbg_Memalign)(size_t min_alignment, size_t n_bytes, char const *file, int line);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbg_TryMemalign)(size_t min_alignment, size_t n_bytes, char const *file, int line);
 DFUNDEF ATTR_PURE WUNUSED size_t (DCALL Dee_MallocUsableSize)(void *ptr);
+#define DeeDbg_TryReallocInPlace(ptr, n_bytes, file, line) Dee_TryReallocInPlace(ptr, n_bytes)
 #define Dee_MallocUsableSize(ptr)        Dee_MallocUsableSize(ptr)
 #define Dee_MallocUsableSizeNonNull(ptr) Dee_MallocUsableSize(ptr)
 #else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
@@ -190,6 +196,10 @@ DFUNDEF ATTR_PURE WUNUSED size_t (DCALL Dee_MallocUsableSize)(void *ptr);
 #define Dee_TryRealloc(ptr, n_bytes) DeeDbg_TryRealloc(ptr, n_bytes, __FILE__, __LINE__)
 #define Dee_Free(ptr)                DeeDbg_Free(ptr, __FILE__, __LINE__)
 #define Dee_UntrackAlloc(ptr)        DeeDbg_UntrackAlloc(ptr, __FILE__, __LINE__)
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+#define Dee_Memalign(min_alignment, n_bytes)    DeeDbg_Memalign(min_alignment, n_bytes, __FILE__, __LINE__)
+#define Dee_TryMemalign(min_alignment, n_bytes) DeeDbg_TryMemalign(min_alignment, n_bytes, __FILE__, __LINE__)
+#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 #else /* !NDEBUG */
 #define DeeDbg_Malloc(n_bytes, file, line)          Dee_Malloc(n_bytes)
 #define DeeDbg_Calloc(n_bytes, file, line)          Dee_Calloc(n_bytes)
@@ -199,6 +209,10 @@ DFUNDEF ATTR_PURE WUNUSED size_t (DCALL Dee_MallocUsableSize)(void *ptr);
 #define DeeDbg_TryRealloc(ptr, n_bytes, file, line) Dee_TryRealloc(ptr, n_bytes)
 #define DeeDbg_Free(ptr, file, line)                Dee_Free(ptr)
 #define Dee_UntrackAlloc(ptr)                       (ptr)
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+#define DeeDbg_Memalign(min_alignment, n_bytes, file, line)    Dee_Memalign(min_alignment, n_bytes)
+#define DeeDbg_TryMemalign(min_alignment, n_bytes, file, line) Dee_TryMemalign(min_alignment, n_bytes)
+#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 #endif /* NDEBUG */
 
 /* Debug version of malloc buffer size calculation functions.

@@ -47,6 +47,7 @@
 #include <deemon/filetypes.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
+#include <deemon/heap.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/module.h>
@@ -1156,7 +1157,11 @@ int main(int argc, char *argv[]) {
 
 	DBG_ALIGNMENT_ENABLE();
 
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+	/*DeeHeap_SetAllocBreakpoint(280);*/
+#else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	/*_CrtSetBreakAlloc(280);*/
+#endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
 	/* TODO: Make Dict and RoDict sensitive to item ordering
 	 *       -> `{ foo: "bar", bar: "foo" }' should on some level
@@ -1435,6 +1440,11 @@ done:
 #ifdef CONFIG_TRACE_REFCHANGES
 		Dee_DumpReferenceLeaks();
 #endif /* CONFIG_TRACE_REFCHANGES */
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+		DeeHeap_CheckMemory();
+		if (DeeHeap_DumpMemoryLeaks())
+			_DeeAssert_Fail("!DeeHeap_DumpMemoryLeaks()", __FILE__, __LINE__);
+#else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 		DBG_ALIGNMENT_DISABLE();
 #if (defined(_CRTDBG_MAP_ALLOC) && \
      defined(CONFIG_HAVE_CRTDBG_H) && !defined(NDEBUG))
@@ -1450,11 +1460,12 @@ done:
 			_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
 			_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
 		}
+		Dee_CHECKMEMORY();
 		if ((_CrtDumpMemoryLeaks)())
 			_DeeAssert_Fail("!_CrtDumpMemoryLeaks()", __FILE__, __LINE__);
-		Dee_CHECKMEMORY();
 #endif /* _DEBUG */
 #endif /* _CRTDBG_MAP_ALLOC && CONFIG_HAVE_CRTDBG_H && !NDEBUG */
+#endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	}
 	return result;
 err_no_input:
