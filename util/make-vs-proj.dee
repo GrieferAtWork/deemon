@@ -320,11 +320,13 @@ function printVcxprojSourceFileGroups(fp: File, pathPrefix: string, sourceFiles:
 			continue;
 		local props = sourceFile.properties;
 		local clCompileOptions = [];
-		local ClCompile_CompileAs = props.get("ClCompile.CompileAs");
-		if (ClCompile_CompileAs !is none) {
-			clCompileOptions.append(f"<CompileAs>{ClCompile_CompileAs}</CompileAs>");
+		/* e.g. "ClCompile.CompileAs = CompileAsC" */
+		for (local name, value: props) {
+			if (name.startswith("ClCompile.")) {
+				name = name[10:];
+				clCompileOptions.append(f"<{name}>{value}</{name}>");
+			}
 		}
-		
 		if (clCompileOptions) {
 			fp << '		<ClCompile Include="' << pathPrefix << sourceFile.path << '">\r\n';
 			for (local opt: clCompileOptions)

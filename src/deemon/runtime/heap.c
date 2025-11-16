@@ -1,3 +1,10 @@
+/*[[[vs
+ClCompile.Optimization = MaxSpeed
+ClCompile.InlineFunctionExpansion = AnySuitable
+ClCompile.FavorSizeOrSpeed = Speed
+ClCompile.OmitFramePointers = true
+ClCompile.BasicRuntimeChecks = Default
+]]]*/
 /* Copyright (c) 2018-2025 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
@@ -1156,6 +1163,7 @@ PRIVATE void DCALL dl_setalloc_data(void *p, size_t n) {
 #define check_malloced_chunk(M, P, N)
 #define check_mmapped_chunk(M, P)
 #define check_malloc_state(M)
+#define check_memset_use_after_free(M, P)
 #else /* !DL_DEBUG_EXTERNAL && !DL_DEBUG_INTERNAL */
 #if DL_DEBUG_INTERNAL
 #define check_free_chunk(M, P)        do_check_free_chunk(ARG_mstate_X_(M) P)
@@ -1199,7 +1207,7 @@ static void do_check_smallbin(PARAM_mstate_m_ bindex_t i);
 static void do_check_malloc_state(PARAM_mstate_m);
 static int bin_find(PARAM_mstate_m_ mchunkptr x);
 static size_t traverse_and_check(PARAM_mstate_m);
-#endif /* DL_DEBUG_EXTERNAL */
+#endif /* DL_DEBUG_EXTERNAL || DL_DEBUG_INTERNAL */
 
 /* ---------------------------- Indexing Bins ---------------------------- */
 
@@ -1471,7 +1479,7 @@ DFUNDEF int DCALL DeeHeap_SetOpt(int param_number, size_t val)
 }
 #endif /* !NO_MALLOPT */
 
-#if DL_DEBUG_EXTERNAL
+#if DL_DEBUG_EXTERNAL || DL_DEBUG_INTERNAL
 /* ------------------------- Debugging Support --------------------------- */
 
 #ifdef DL_DEBUG_MEMSET_FREE
@@ -1764,7 +1772,7 @@ static void do_check_malloc_state(PARAM_mstate_m) {
 	ASSERT(total <= mstate_footprint(m));
 	ASSERT(mstate_footprint(m) <= mstate_max_footprint(m));
 }
-#endif /* DL_DEBUG_EXTERNAL */
+#endif /* DL_DEBUG_EXTERNAL || DL_DEBUG_INTERNAL */
 
 /* ----------------------------- statistics ------------------------------ */
 
