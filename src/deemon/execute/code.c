@@ -1046,8 +1046,7 @@ DeeCode_GetDDIString(DeeObject const *__restrict self, uint16_t id) {
 
 
 /* Define the special `DeeCode_Empty' object. */
-#define DeeCode_Empty_head DeeCode_Empty
-INTERN DEFINE_CODE(DeeCode_Empty_head,
+INTERN DEFINE_CODE(DeeCode_Empty,
                    /* co_flags:      */ CODE_FCOPYABLE,
                    /* co_localc:     */ 0,
                    /* co_constc:     */ 0,
@@ -1762,7 +1761,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 code_trycompare_eq(DeeCodeObject *self, DeeCodeObject *other) {
 	if (!DeeCode_Check(other))
-		return -1;
+		return Dee_COMPARE_NE;
 	return code_compare_eq_impl(self, other);
 }
 
@@ -1779,8 +1778,8 @@ PRIVATE struct type_cmp code_cmp = {
 	/* .tp_ge            = */ DEFIMPL_UNSUPPORTED(&default__ge__unsupported),
 };
 
-PRIVATE WUNUSED DREF DeeObject *DCALL code_ctor(void) {
-	return_reference_((DeeObject *)&DeeCode_Empty);
+PRIVATE WUNUSED DREF DeeCodeObject *DCALL code_ctor(void) {
+	return_reference_((DeeCodeObject *)&DeeCode_Empty);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL

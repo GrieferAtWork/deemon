@@ -3543,7 +3543,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("The empty nullable-tuple singleton") },
 	{ "Code_empty", (DeeObject *)&librt_get_Code_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("->?GCode\n"
-	      "Special instance of ?GCode that immediately returns ?N") }, /* DeeCode_Empty_head.c_code */
+	      "Special instance of ?GCode that immediately returns ?N") }, /* DeeCode_Empty */
 	{ "GCSet_empty", (DeeObject *)&librt_get_GCSet_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("->?GGCSet\n"
 	      "Special instance of ?GGCSet that is used to describe an empty set of objects") }, /* DeeGCSet_Empty */
