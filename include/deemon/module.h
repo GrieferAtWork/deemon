@@ -587,6 +587,7 @@ struct Dee_compiler_options {
 	uint16_t                      co_assembler;         /* Set of `ASM_F*'      from `<deemon/compiler/assembler.h>' */
 #define Dee_DEC_FNORMAL           0x0000                /* Normal DEC operations mode. */
 #define Dee_DEC_FDISABLE          0x0001                /* Do not load DEC files. */
+#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
 #define Dee_DEC_FLOADOUTDATED     0x0002                /* Don't check dependencies and imported modules for having changed
 	                                                     * since the dec file has been created (can lead to inconsistencies
 	                                                     * and invalid global variable indices).
@@ -602,6 +603,7 @@ struct Dee_compiler_options {
 	                                                     * own text segment which would otherwise pose a security risk when
 	                                                     * untrusted code was able to start executing random instruction
 	                                                     * based on unrelated, arbitrary data in host memory (HeartBleed anyone?) */
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	uint16_t                      co_decloader;         /* Set of `DEC_F*' (unused when deemon was built with `CONFIG_NO_DEC') */
 	uint16_t                      co_decwriter;         /* Set of `DEC_WRITE_F*' from `<deemon/compiler/dec.h>' (unused when deemon was built with `CONFIG_NO_DEC') */
 	DeeObject                    *co_decoutput;         /* [0..1] Dec output location (ignored when `ASM_FNODEC' is set)

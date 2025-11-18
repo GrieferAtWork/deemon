@@ -497,6 +497,20 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #define CONFIG_NO_EXPERIMENTAL_CUSTOM_HEAP
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_CUSTOM_HEAP */
+
+/* Experimental feature switch: Use a new (mmap-able) file format for dec files */
+#ifndef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+#undef CONFIG_EXPERIMENTAL_MMAP_DEC
+#undef CONFIG_NO_EXPERIMENTAL_MMAP_DEC
+#define CONFIG_NO_EXPERIMENTAL_MMAP_DEC
+#elif (!defined(CONFIG_EXPERIMENTAL_MMAP_DEC) && \
+       !defined(CONFIG_NO_EXPERIMENTAL_MMAP_DEC))
+#if 0 /* TODO: Implementation is incomplete */
+#define CONFIG_EXPERIMENTAL_MMAP_DEC
+#else
+#define CONFIG_NO_EXPERIMENTAL_MMAP_DEC
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_MMAP_DEC */
 /************************************************************************/
 
 

@@ -25,6 +25,735 @@
 #include <deemon/object.h>
 
 #ifndef CONFIG_NO_DEC
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+#include <deemon/alloc.h>
+#include <deemon/dex.h>
+#include <deemon/error.h>
+#include <deemon/exec.h>
+#include <deemon/gc.h>
+#include <deemon/heap.h>
+#include <deemon/module.h>
+#include <deemon/string.h>
+
+#include <hybrid/align.h>
+#include <hybrid/overflow.h>
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+#undef container_of
+#define container_of COMPILER_CONTAINER_OF
+
+DECL_BEGIN
+
+/* Destructor linked into `struct Dee_heapregion' for dec file mappings. */
+PRIVATE NONNULL((1)) void DCALL
+DeeDec_heapregion_destroy(struct Dee_heapregion *__restrict self) {
+	Dec_Ehdr *ehdr = container_of(self, Dec_Ehdr, e_heap);
+	/* Finalize the dec file's file mapping (which will cause the mapping to be unloaded) */
+	DeeMapFile_Fini(&ehdr->e_mapping);
+}
+
+
+/* Must relocate all symbols from the deemon core against the
+ * address of the deemon module itself (since that one's also
+ * allocated statically) */
+#define DeeDeemonModule_GetRelBase() \
+	(uintptr_t)DeeModule_GetDeemon()
+
+
+PRIVATE WUNUSED NONNULL((1)) uintptr_t DCALL
+DeeNativeModule_GetRelBase(DeeModuleObject *__restrict self) {
+	struct Dee_heapregion *region;
+#ifndef CONFIG_NO_DEX
+	if (DeeDex_Check(self)) {
+		DeeDexObject *me = (DeeDexObject *)self;
+		return (uintptr_t)me->d_dex;
+	}
+#endif /* !CONFIG_NO_DEX */
+	ASSERT(self == DeeModule_GetDeemon());
+	return DeeDeemonModule_GetRelBase();
+}
+
+PRIVATE WUNUSED NONNULL((1)) uintptr_t DCALL
+DeeModule_GetRelBase(DeeModuleObject *__restrict self) {
+	struct Dee_heapregion *region;
+	struct gc_head *self_gc_head;
+	Dec_Ehdr *ehdr;
+	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
+
+#ifndef CONFIG_NO_DEX
+	if (DeeDex_Check(self)) {
+		DeeDexObject *me = (DeeDexObject *)self;
+		return (uintptr_t)me->d_dex;
+	}
+#endif /* !CONFIG_NO_DEX */
+	if (self == DeeModule_GetDeemon())
+		return DeeDeemonModule_GetRelBase();
+
+	/* Dynamically allocated (user) module */
+	ASSERT(DeeType_IsGC(Dee_TYPE(self)));
+	self_gc_head = DeeGC_Head(self);
+	region = DeeHeap_GetRegionOf(self_gc_head);
+	ASSERT(region);
+	ASSERT(region->hr_destroy == &DeeDec_heapregion_destroy);
+	ehdr = container_of(self, Dec_Ehdr, e_heap);
+	return (uintptr_t)ehdr;
+}
+
+
+/* Initialize/finalize a dec writer. Note that unlike usual, `DeeDecWriter_Init()'
+ * already needs to allocate a small amount of heap memory, meaning it can actually
+ * fail due to OOM and do so by returning `-1'
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeDecWriter_Init(DeeDecWriter *__restrict self) {
+	self->dw_ehdr = (Dec_Ehdr *)Dee_TryMalloc(sizeof(Dec_Ehdr) + (64 * 1024));
+	if unlikely(!self->dw_ehdr) {
+		self->dw_ehdr = (Dec_Ehdr *)Dee_Malloc(sizeof(Dec_Ehdr));
+		if unlikely(!self->dw_ehdr)
+			goto err;
+	}
+	self->dw_alloc = Dee_MallocUsableSize(self->dw_ehdr);
+	/* The header struct ends at the start of the first heap chunk's user-area */
+	self->dw_used = sizeof(Dec_Ehdr);
+	self->dw_srel.drlt_relv  = NULL;
+	self->dw_srel.drlt_relc  = 0;
+	self->dw_srel.drlt_rela  = 0;
+	self->dw_drel.drlt_relv  = NULL;
+	self->dw_drel.drlt_relc  = 0;
+	self->dw_drel.drlt_rela  = 0;
+	self->dw_drrel.drlt_relv = NULL;
+	self->dw_drrel.drlt_relc = 0;
+	self->dw_drrel.drlt_rela = 0;
+	self->dw_deps.ddpt_depv  = NULL;
+	self->dw_deps.ddpt_depc  = 0;
+	self->dw_deps.ddpt_depa  = 0;
+	self->dw_gchead = 0;
+	self->dw_gctail = 0;
+
+	/* Allocate an empty table for the used-object map */
+	self->dw_known.dot_list = (struct Dee_dec_objtab_entry *)Dee_Calloc(sizeof(struct Dee_dec_objtab_entry));
+	if unlikely(!self->dw_known.dot_list)
+		goto err_ehdr;
+	self->dw_known.dot_mask = 0;
+	self->dw_known.dot_size = 0;
+	return 0;
+err_ehdr:
+	Dee_Free(self->dw_ehdr);
+err:
+	return -1;
+}
+
+PUBLIC NONNULL((1)) void DCALL
+DeeDecWriter_Fini(DeeDecWriter *__restrict self) {
+	size_t i;
+	for (i = 0; i < self->dw_deps.ddpt_depc; ++i) {
+		struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[i];
+		Dee_Decref_unlikely(dep->ddm_mod);
+		Dee_Free(dep->ddm_rel.drlt_relv);
+		Dee_Free(dep->ddm_rrel.drlt_relv);
+	}
+	Dee_Free(self->dw_base);
+	Dee_Free(self->dw_srel.drlt_relv);
+	Dee_Free(self->dw_drrel.drlt_relv);
+	Dee_Free(self->dw_drel.drlt_relv);
+	Dee_Free(self->dw_deps.ddpt_depv);
+	Dee_Free(self->dw_known.dot_list);
+}
+
+
+
+/* Pack the dec file into a format where it can easily be written to a file:
+ * >> DeeDec_Ehdr *ehdr = DeeDecWriter_PackMapping(&writer);
+ * >> DeeFile_WriteAll(fp, ehdr, ehdr->e_offsetof_eof);
+ * >> Dee_Free(e_offsetof_eof);
+ *
+ * The returned pointer should either:
+ * - be free'd using `Dee_Free(return)'
+ * - be passed to `DeeDecWriter_PackModule()'
+ *   to turn it into a `DeeModuleObject'
+ *
+ * @return: * :   The not-yet-relocated dec file (header + contents)
+ * @return: NULL: An error was thrown */
+PUBLIC WUNUSED NONNULL((1)) DeeDec_Ehdr *DCALL
+DeeDecWriter_PackMapping(/*inherit(on_success)*/ DeeDecWriter *__restrict self) {
+	/* TODO: Figure out total mapping size (by summing up buffers that come after the main heap-buffer) */
+	/* TODO: Resize the main buffer to fit */
+	/* TODO: Initialize the "e_heap" as a generic heap buffer */
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+/* Slightly more efficient convenience wrapper for:
+ * >> DeeDec_Relocate(DeeDecWriter_PackMapping(self)) */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+DeeDecWriter_PackModule(/*inherit(on_success)*/ DeeDecWriter *__restrict self) {
+	/* TODO */
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+
+/* Append a relocation to "self" */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+Dee_dec_reltab_append(struct Dee_dec_reltab *__restrict self, Dee_dec_addr_t addr) {
+
+	/* TODO */
+	return DeeError_NOTIMPLEMENTED();
+}
+
+/* Add an entry for `ref' to `self->dw_known' */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeDecWriter_AddKnown(DeeDecWriter *__restrict self,
+                      DeeObject *__restrict ref, Dee_dec_addr_t addr) {
+	/* TODO */
+	return DeeError_NOTIMPLEMENTED();
+}
+
+/* Check if `ref' was already written to "self". If so,
+ * return the address where it resides. If not, return "0" */
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
+DeeDecWriter_GetKnown(DeeDecWriter *__restrict self,
+                      DeeObject *__restrict ref) {
+	/* TODO */
+	return 0;
+}
+
+/* Find an existing dependency on "mod", and if none exists, add one.
+ * @return: * :   The dependent module descriptor for `mod'
+ * @return: NULL: An error was thrown */
+PRIVATE WUNUSED NONNULL((1, 2)) struct Dee_dec_depmod *DCALL
+DeeDecWriter_GetDep(DeeDecWriter *__restrict self,
+                    DeeModuleObject *__restrict mod) {
+	/* TODO */
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+/* Allocate heap memory within the dec file for:
+ * - DeeDecWriter_Malloc:          Regular heap memory (as per `Dee_Malloc()')
+ * - DeeDecWriter_Object_Malloc:   Object heap memory (as per `DeeObject_Malloc()')
+ * - DeeDecWriter_GCObject_Malloc: GC Object heap memory (as per `DeeGCObject_Malloc()')
+ * After calls to these functions, the caller is responsible for writing
+ * to the newly allocated memory (s.a. `DeeDecWriter_Put*' functions below)
+ *
+ * NOTE: The Object-allocator functions will auto-initialize "ob_refcnt" and "ob_type"
+ *       of the newly allocated object (alongside any other standard headers that may
+ *       be present based on other CONFIG_* options)
+ *
+ * @param: ref: The object that's about to be written to `DeeDecWriter_Addr2Mem(self, return, DeeObject)'
+ *              Needed for the sake of self-recursion such that any additional
+ *              calls to `DeeDecWriter_PutObject()' for the same object "ref"
+ *              will simply encode a self-referencing relocation against the
+ *              already-written object, and to encode relocation for "ob_type".
+ * @return: 0 : Allocation failed (an error was thrown)
+ * @return: * : base address of user-area of new heap chunk */
+PUBLIC WUNUSED NONNULL((1)) Dee_dec_addr_t DCALL
+DeeDecWriter_Malloc(DeeDecWriter *__restrict self, size_t num_bytes) {
+	Dee_dec_addr_t result;
+	size_t avail = self->dw_alloc - self->dw_used;
+	if likely(avail < num_bytes) {
+		byte_t *new_base;
+		size_t min_alloc = (self->dw_used + num_bytes);
+		size_t new_alloc = min_alloc * 2;
+		if (new_alloc < min_alloc)
+			new_alloc = min_alloc;
+		new_base = (byte_t *)Dee_TryRealloc(self->dw_base, new_alloc);
+		if unlikely(!new_base) {
+			new_alloc = min_alloc;
+			new_base = (byte_t *)Dee_Realloc(self->dw_base, new_alloc);
+			if unlikely(!new_base)
+				goto err;
+		}
+		self->dw_base  = new_base;
+		self->dw_alloc = new_alloc;
+	}
+	result = (Dee_dec_addr_t)self->dw_used;
+	self->dw_used += num_bytes;
+	return result;
+err:
+	return 0;
+}
+
+PUBLIC WUNUSED NONNULL((1, 3)) Dee_dec_addr_t DCALL
+DeeDecWriter_Object_Malloc(DeeDecWriter *__restrict self,
+                           size_t num_bytes,
+                           DeeObject *__restrict ref) {
+	DeeObject *copy;
+	Dee_dec_addr_t result = DeeDecWriter_Malloc(self, num_bytes);
+	if unlikely(!result)
+		goto err;
+	if unlikely(DeeDecWriter_AddKnown(self, ref, result))
+		goto err;
+
+	/* Initialize "ob_refcnt" and "ob_type" of the newly allocated object */
+	copy = DeeDecWriter_Addr2Mem(self, result, DeeObject);
+	copy->ob_refcnt = 1;
+	if unlikely(DeeDecWriter_PutObject(self, result + offsetof(DeeObject, ob_type),
+	                                   (DeeObject *)Dee_TYPE(ref)))
+		goto err;
+	/* TODO: Initialize `DEE_PRIVATE_REFCHANGE_PRIVATE_DATA' */
+	return result;
+err:
+	return 0;
+}
+
+PUBLIC WUNUSED NONNULL((1, 3)) Dee_dec_addr_t DCALL
+DeeDecWriter_GCObject_Malloc(DeeDecWriter *__restrict self,
+                             size_t num_bytes,
+                             DeeObject *__restrict ref) {
+	size_t total;
+	Dee_dec_addr_t result;
+	DeeObject *copy;
+	if (OVERFLOW_UADD(num_bytes, sizeof(struct gc_head_link), &total))
+		total = (size_t)-1;
+	result = DeeDecWriter_Malloc(self, num_bytes);
+	if unlikely(!result)
+		goto err;
+	/* Initialize GC head/tail link pointers */
+	ASSERT((self->dw_gchead == 0) ==
+	       (self->dw_gctail == 0));
+	if (self->dw_gctail == 0) {
+		/* First GC object... */
+		struct gc_head_link *link;
+		self->dw_gchead = result;
+		link = DeeDecWriter_Addr2Mem(self, result, struct gc_head_link);
+		link->gc_next  = NULL;
+		link->gc_pself = NULL;
+	} else {
+		/* Append to end of GC list. */
+		if (DeeDecWriter_PutRel(self, self->dw_gctail + offsetof(struct gc_head_link, gc_next), result))
+			goto err;
+		if (DeeDecWriter_PutRel(self, result + offsetof(struct gc_head_link, gc_pself),
+		                        self->dw_gctail + offsetof(struct gc_head_link, gc_next)))
+			goto err;
+	}
+	self->dw_gctail = result;
+	result += sizeof(struct gc_head_link);
+
+	/* Initialize "ob_refcnt" and "ob_type" of the newly allocated object */
+	copy = DeeDecWriter_Addr2Mem(self, result, DeeObject);
+	copy->ob_refcnt = 1;
+	if unlikely(DeeDecWriter_PutObject(self, result + offsetof(DeeObject, ob_type),
+	                                   (DeeObject *)Dee_TYPE(ref)))
+		goto err;
+	/* TODO: Initialize `DEE_PRIVATE_REFCHANGE_PRIVATE_DATA' */
+	return result;
+err:
+	return 0;
+}
+
+/* Emit a relocation:
+ * >> *DeeDecWriter_Addr2Mem(self, addrof_pointer, void *) =
+ * >>     DeeDecWriter_Addr2Mem(self, addrof_target, void);
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeDecWriter_PutRel(DeeDecWriter *__restrict self,
+                    Dee_dec_addr_t addrof_pointer,
+                    Dee_dec_addr_t addrof_target) {
+	void **pointer;
+	pointer = DeeDecWriter_Addr2Mem(self, addrof_pointer, void *);
+	*pointer = (void *)(uintptr_t)addrof_target;
+	return Dee_dec_reltab_append(&self->dw_srel, addrof_pointer);
+}
+
+/* Append a copy of `obj' to self and return the address of the written `DeeObject'
+ * @return: * : Address of the written `DeeObject'
+ * @return: 0 : An error was thrown */
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
+DeeDecWriter_AppendObject(DeeDecWriter *__restrict self,
+                          DeeObject *__restrict obj) {
+	/* TODO: To implement this function, there needs to
+	 * be a new operator `tp_writedec' in `DeeTypeObject'
+	 *
+	 * Objects must then implement this operator in terms of:
+	 * - DeeDecWriter_Malloc()          // To allocate a generic heap buffer
+	 * - DeeDecWriter_Object_Malloc()   // To allocate an object buffer
+	 * - DeeDecWriter_GCObject_Malloc() // To allocate a GC object buffer
+	 * - DeeDecWriter_Addr2Mem()        // To write to buffers allocated by *_Malloc above
+	 * - DeeDecWriter_PutRel()          // To encode pointers to secondary heap block (like "DeeStringObject::s_utf")
+	 * - DeeDecWriter_PutObject()       // To encode references to other objects in buffers allocated by *_Malloc above
+	 */
+	DeeError_NOTIMPLEMENTED();
+	return 0;
+}
+
+/* Encode a reference to `obj' at `DeeDecWriter_Addr2Mem(self, addr, DeeObject)'
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+PUBLIC WUNUSED NONNULL((1, 3)) int DCALL
+DeeDecWriter_PutObject(DeeDecWriter *__restrict self,
+                       Dee_dec_addr_t addr,
+                       DeeObject *__restrict obj) {
+	struct Dee_heapregion *region;
+	DREF DeeModuleObject *mod;
+	Dee_dec_addr_t known;
+	Dee_dec_addr_t copy;
+	void **pointer;
+	void *obj_base;
+
+	/* Check if "obj" has already been written */
+	known = DeeDecWriter_GetKnown(self, obj);
+	if (known != 0) {
+		DeeObject *known_obj = DeeDecWriter_Addr2Mem(self, known, DeeObject);
+		++known_obj->ob_refcnt; /* Because now there is another reference to this known object! */
+		return DeeDecWriter_PutRel(self, addr, known);
+	}
+
+	/* Check if "obj" points into a dex module, or the deemon core */
+	mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(obj);
+	if (mod) {
+		struct Dee_dec_depmod *dep;
+		uintptr_t relbase;
+		dep = DeeDecWriter_GetDep(self, mod);
+		Dee_Decref_unlikely(mod);
+		if unlikely(!dep)
+			goto err;
+		relbase = DeeNativeModule_GetRelBase(mod);
+		pointer = DeeDecWriter_Addr2Mem(self, addr, void *);
+		*pointer = (void *)((uintptr_t)obj - relbase);
+		return Dee_dec_reltab_append(&dep->ddm_rrel, addr);
+	}
+
+	/* If "obj" is neither known, nor a native static symbol, then
+	 * it **must** be a dynamically allocated object. Now there are
+	 * only 2 sub-cases left:
+	 * - It points into a custom heap region (meaning it's part of
+	 *   another dec file mapping)
+	 * - It is heap-allocated
+	 *
+	 * In either case: it *must* be a heap object! */
+	obj_base = obj;
+	if (DeeType_IsGC(Dee_TYPE(obj)))
+		obj_base = DeeGC_Head(obj);
+	region = DeeHeap_GetRegionOf(obj_base);
+	if (region && region->hr_destroy == &DeeDec_heapregion_destroy) {
+		/* Yes: the object belongs to a custom heap region, and that heap
+		 *      region uses the custom dec-file-heap-region destructor,
+		 *      meaning this object **DOES** belong to another dec file!
+		 *
+		 * But: if the module has already been destroyed, then we cannot
+		 *      reference it! */
+		Dec_Ehdr *ehdr = container_of(self, Dec_Ehdr, e_heap);
+		struct gc_head *mod_gc_head = (struct gc_head *)(&ehdr->e_heap.hr_first + 1);
+		mod = (DeeModuleObject *)DeeGC_Object(mod_gc_head);
+		ASSERT(Dee_TYPE(mod) == &DeeModule_Type);
+		if (Dee_IncrefIfNotZero(mod)) {
+			struct Dee_dec_depmod *dep;
+			ASSERT(DeeModule_GetRelBase(mod) == (uintptr_t)ehdr);
+			dep = DeeDecWriter_GetDep(self, mod);
+			Dee_Decref_unlikely(mod);
+			if unlikely(!dep)
+				goto err;
+			pointer = DeeDecWriter_Addr2Mem(self, addr, void *);
+			*pointer = (void *)((uintptr_t)obj - (uintptr_t)ehdr);
+			return Dee_dec_reltab_append(&dep->ddm_rrel, addr);
+		}
+	}
+
+	/* Fallback: must embed a copy of the object within the dec file. */
+	copy = DeeDecWriter_AppendObject(self, obj);
+	if unlikely(copy == 0)
+		goto err;
+	return DeeDecWriter_PutRel(self, addr, copy);
+err:
+	return -1;
+}
+
+/* Write the given module `mod' to the dec file. This function should
+ * only ever be called once, and only on a freshly initialized dec
+ * writer. This function will also recursively write all objects
+ * referenced/reachable by `mod' into `self', and emit relocations.
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeDecWriter_AppendModule(DeeDecWriter *__restrict self,
+                          DeeModuleObject *__restrict mod) {
+	/* TODO: In order to module life-time to work properly, modules
+	 *       need to have a custom tp_free() method that asserts that
+	 *       the module itself lives as a heap-chunk within a custom
+	 *       heap region, and must then do the same as Dee_Free()
+	 *       does, but **NEVER** clobber the `ob_refcnt' field of the
+	 *       module (which must stay set to `0' so that any other
+	 *       object allocated within the module is able to query its
+	 *       containing module and notice the 0 reference counter as
+	 *       indicative of the module having been unloaded, but some
+	 *       objects originating from that module still being alive) */
+	Dee_dec_addr_t addr;
+	ASSERT_OBJECT_TYPE_EXACT(mod, &DeeModule_Type); /* *_EXACT because it mustn't be a Dex module */
+	addr = DeeDecWriter_AppendObject(self, (DeeObject *)mod);
+	if unlikely(addr == 0)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+/* Execute relocations on `self' and return a pointer to the
+ * first object of the dec file's heap (which is always the
+ * `DeeModuleObject' describing the dec file itself).
+ *
+ * On success, `self' is inherited by `return', such that rather
+ * than calling `Dee_Free(self)', you must `Dee_Decref(return)'
+ *
+ * @return: * :   The module object described by `self'
+ * @return: NULL: An error was thrown
+ * @return: ITER_DONE: The DEC file was out of date or had been corrupted */
+PUBLIC WUNUSED NONNULL((1, 2)) DREF struct Dee_module_object *DCALL
+DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
+                /*utf-8*/ char const *dec_dirname, size_t dec_dirname_len,
+                struct Dee_compiler_options *options) {
+	DREF DeeModuleObject *result;
+	DREF DeeModuleObject **dependencies;
+	Dec_Dhdr *dhdr = (Dec_Dhdr *)((byte_t *)self + self->e_offsetof_deps);
+	size_t dep_count = 0;
+	while (dhdr[dep_count].d_offsetof_modname)
+		++dep_count;
+	if (dep_count == 0) {
+		dependencies = NULL;
+	} else {
+		dependencies = (DREF DeeModuleObject **)Dee_Mallocc(dep_count, sizeof(DREF DeeModuleObject *));
+		if unlikely(!dependencies)
+			goto err;
+		for (dep_count = 0; dhdr->d_offsetof_modname; ++dep_count, ++dhdr) {
+			DREF DeeObject *dep;
+			Dec_Dstr *name = (Dec_Dstr *)((byte_t *)self + dhdr->d_offsetof_modname);
+			dep = DeeModule_OpenRelativeString(name->ds_string, name->ds_length,
+			                                   dec_dirname, dec_dirname_len,
+			                                   options, true);
+			if unlikely(!dep)
+				goto err_dependencies_count;
+			dependencies[dep_count] = (DREF DeeModuleObject *)dep;
+		}
+	}
+	result = DeeDec_RelocateEx(self, dependencies);
+	Dee_Decrefv(dependencies, dep_count);
+	Dee_Free(dependencies);
+	return result;
+err_dependencies_count:
+	Dee_Decrefv(dependencies, dep_count);
+	Dee_Free(dependencies);
+err:
+	return NULL;
+}
+
+
+PRIVATE NONNULL((1)) void DCALL
+apply_relocations(DeeDec_Ehdr *__restrict self,
+                  Dee_dec_addr_t offsetof_reltab,
+                  uintptr_t relbase) {
+	Dee_dec_addr_t reladdr, *reltab;
+	reltab = (Dee_dec_addr_t *)((byte_t *)self + offsetof_reltab);
+	while ((reladdr = *reltab++) != 0) {
+		byte_t **pointer = (byte_t **)((byte_t *)self + reladdr);
+		*pointer += relbase;
+	}
+}
+
+PRIVATE NONNULL((1)) void DCALL
+apply_relocations_with_incref(DeeDec_Ehdr *__restrict self,
+                              Dee_dec_addr_t offsetof_reltab,
+                              uintptr_t relbase) {
+	Dee_dec_addr_t reladdr, *reltab;
+	reltab = (Dee_dec_addr_t *)((byte_t *)self + offsetof_reltab);
+	while ((reladdr = *reltab++) != 0) {
+		DeeObject *obj;
+		byte_t **pointer = (byte_t **)((byte_t *)self + reladdr);
+		obj = (DeeObject *)(*pointer += relbase);
+		Dee_Incref(obj);
+	}
+}
+
+/* Same as `DeeDec_Relocate()', but takes the list of dependent
+ * modules as an already-populated array given by the caller.
+ * @param: dependencies: Already-loaded array of dependent modules,
+ *                       matching `self->e_offsetof_deps'
+ *
+ * @return: * :   The module object described by `self'
+ * @return: NULL: An error was thrown
+ * @return: ITER_DONE: The DEC file was out of date or had been corrupted */
+PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+DeeDec_RelocateEx(/*inherit(always)*/ DeeDec_Ehdr *__restrict self,
+                  DeeModuleObject *const *dependencies) {
+	size_t i;
+	Dec_Dhdr *dhdr;
+	DeeModuleObject *result;
+	struct gc_head *first_gc;
+
+	/* Self-relocations... */
+	apply_relocations(self, self->e_offsetof_srel, (uintptr_t)self);
+
+	/* Deemon-relocations... */
+	apply_relocations(self, self->e_offsetof_drel, DeeDeemonModule_GetRelBase());
+	apply_relocations_with_incref(self, self->e_offsetof_drrel, DeeDeemonModule_GetRelBase());
+
+	/* Dependent-module-relocations... */
+	dhdr = (Dec_Dhdr *)((byte_t *)self + self->e_offsetof_deps);
+	for (i = 0; dhdr[i].d_offsetof_modname; ++i) {
+		DeeModuleObject *mod = dependencies[i];
+		uintptr_t mod_base = DeeModule_GetRelBase(mod);
+		apply_relocations(self, dhdr[i].d_offsetof_mrel, mod_base);
+		apply_relocations_with_incref(self, dhdr[i].d_offsetof_mrrel, mod_base);
+	}
+
+	/* At this point, the dec file should be fully initialized, and the
+	 * first contained object should be the relevant DeeModuleObject! */
+	first_gc = (struct gc_head *)(&self->e_heap.hr_first + 1);
+	result = (DeeModuleObject *)DeeGC_Object(first_gc);
+	if (Dee_TYPE(result) != &DeeModule_Type)
+		goto fail;
+	if (result->ob_refcnt == 0)
+		goto fail;
+
+	/* Link in GC objects (if there are any) */
+	if (self->e_offsetof_gchead) {
+		struct gc_head_link *gc_head = (struct gc_head_link *)((byte_t *)self + self->e_offsetof_gchead);
+		struct gc_head_link *gc_tail = (struct gc_head_link *)((byte_t *)self + self->e_offsetof_gctail);
+		/* TODO: DeeGC_TrackAll(gc_head, gc_tail); */
+	}
+
+	return result;
+fail:
+	return (DeeModuleObject *)ITER_DONE;
+}
+
+/* Map the contents of `input_stream' into memory, validate them, and
+ * relocate them. This function is actually a convenience wrapper around
+ * `DeeDec_OpenFileEx()'
+ * @return: * :        Successfully loaded the given DEC file.
+ * @return: ITER_DONE: The DEC file was out of date or had been corrupted.
+ * @return: NULL:      An error occurred. */
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DCALL
+DeeDec_OpenFile(DeeObject *__restrict input_stream,
+                struct Dee_compiler_options *options) {
+	char const *dec_dirname;
+	size_t dec_dirname_len;
+	struct DeeMapFile fmap;
+	DREF DeeObject *filename;
+	DREF DeeModuleObject *result;
+
+	/* Load stream filename. */
+	filename = DeeFile_Filename(input_stream);
+	if unlikely(!filename)
+		goto err;
+	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
+
+	/* Load UTF-8 version of filename. */
+	dec_dirname = DeeString_AsUtf8(filename);
+	if unlikely(!dec_dirname)
+		goto err_filename;
+	dec_dirname_len = WSTR_LENGTH(dec_dirname);
+
+	/* Extract directory part of stream filename. */
+	while (dec_dirname_len && !DeeSystem_IsSep(dec_dirname[dec_dirname_len - 1]))
+		--dec_dirname_len;
+	while (dec_dirname_len && DeeSystem_IsSep(dec_dirname[dec_dirname_len - 1]))
+		--dec_dirname_len;
+
+	/* Map file into memory */
+	if unlikely(DeeMapFile_InitFile(&fmap, input_stream, 0, 0, DFILE_LIMIT, 0, DEE_MAPFILE_F_READALL))
+		goto err_filename;
+
+	/* Open file mapping as a dec file */
+	result = DeeDec_OpenFileEx(&fmap, dec_dirname, dec_dirname_len, options);
+
+	/* On success, the returned module inherits the file mapping */
+	if unlikely(!result)
+		DeeMapFile_Fini(&fmap);
+
+	/* Cleanup... */
+	Dee_Decref(filename);
+	return result;
+err_filename:
+	Dee_Decref(filename);
+err:
+	return NULL;
+}
+
+
+/* Extended version of `DeeDec_OpenFile()' that can be used to load a
+ * dec file that has already been mapped into memory.
+ * @return: * :        Successfully loaded the given DEC file.
+ * @return: ITER_DONE: The DEC file was out of date or had been corrupted.
+ * @return: NULL:      An error occurred. */
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DCALL
+DeeDec_OpenFileEx(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
+                  /*utf-8*/ char const *dec_dirname, size_t dec_dirname_len,
+                  struct Dee_compiler_options *options) {
+	DREF DeeModuleObject *result;
+	Dec_Ehdr *ehdr = (Dec_Ehdr *)DeeMapFile_GetBase(fmap);
+	if unlikely(DeeMapFile_GetSize(fmap) < sizeof(Dec_Ehdr))
+		goto fail;
+
+	/* Validate dec file header... */
+	if (ehdr->e_deemon_timestamp != DeeExec_GetTimestamp())
+		goto fail;
+	/* TODO: verify "ehdr->e_deemon_build_id" */
+	/* TODO: verify "ehdr->e_deemon_host_id" */
+	if unlikely(ehdr->e_ident[DI_MAG0] != DECMAG0)
+		goto fail;
+	if unlikely(ehdr->e_ident[DI_MAG1] != DECMAG1)
+		goto fail;
+	if unlikely(ehdr->e_ident[DI_MAG2] != DECMAG2)
+		goto fail;
+	if unlikely(ehdr->e_ident[DI_MAG3] != DECMAG3)
+		goto fail;
+	if unlikely(ehdr->e_mach != Dee_DEC_MACH)
+		goto fail;
+	if unlikely(ehdr->e_heapoff != offsetof(Dec_Ehdr, e_heap))
+		goto fail;
+	if unlikely(ehdr->e_version != DVERSION_CUR)
+		goto fail;
+	if unlikely(ehdr->e_offsetof_eof != DeeMapFile_GetSize(fmap))
+		goto fail;
+	if unlikely(ehdr->e_offsetof_eof > DFILE_LIMIT)
+		goto fail;
+	if unlikely(ehdr->e_offsetof_srel >= ehdr->e_offsetof_eof)
+		goto fail;
+	if unlikely(ehdr->e_offsetof_drel >= ehdr->e_offsetof_eof)
+		goto fail;
+	if unlikely(ehdr->e_offsetof_drrel >= ehdr->e_offsetof_eof)
+		goto fail;
+	if unlikely(ehdr->e_offsetof_deps >= ehdr->e_offsetof_eof)
+		goto fail;
+	if unlikely(ehdr->e_offsetof_files && ehdr->e_offsetof_files >= ehdr->e_offsetof_eof)
+		goto fail;
+	if unlikely(ehdr->e_offsetof_gchead && ehdr->e_offsetof_gchead >= ehdr->e_offsetof_eof)
+		goto fail;
+	if unlikely(ehdr->e_offsetof_gctail && ehdr->e_offsetof_gctail >= ehdr->e_offsetof_eof)
+		goto fail;
+	if unlikely((ehdr->e_offsetof_gchead != 0) != (ehdr->e_offsetof_gctail != 0))
+		goto fail;
+	if unlikely(ehdr->e_heap.hr_size >= (ehdr->e_offsetof_eof - offsetof(Dec_Ehdr, e_heap)))
+		goto fail;
+
+	/* Check if additionally dependent files have been modified since the dec file was created... */
+	if (ehdr->e_offsetof_files) {
+		Dec_Dstr *dep_files = (Dec_Dstr *)((byte_t *)ehdr + ehdr->e_offsetof_files);
+		while (dep_files->ds_length) {
+			Dee_DPRINTF("[dec] TODO: Checking timestamp of dependent file %$q\n",
+			            dep_files->ds_length, dep_files->ds_string);
+			/* TODO: Check timestamp of dependent file */
+			dep_files = (Dec_Dstr *)(dep_files->ds_string + dep_files->ds_length);
+			dep_files = (Dec_Dstr *)CEIL_ALIGN((uintptr_t)dep_files, __ALIGNOF_SIZE_T__);
+		}
+	}
+
+	/* Configure the runtime portion of the ehdr */
+	ehdr->e_mapping         = *fmap;
+	ehdr->e_heap.hr_destroy = &DeeDec_heapregion_destroy;
+
+	/* Relocate the dec file to turn it into the embedded module object. */
+	return DeeDec_Relocate(ehdr, dec_dirname, dec_dirname_len, options);
+fail:
+	return (DREF DeeModuleObject *)ITER_DONE;
+}
+
+DECL_END
+
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 #include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/bool.h>
@@ -3159,6 +3888,7 @@ DecTime_Lookup(DeeObject *__restrict filename) {
 
 
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 #endif /* !CONFIG_NO_DEC */
 
 #endif /* !GUARD_DEEMON_EXECUTE_DEC_C */

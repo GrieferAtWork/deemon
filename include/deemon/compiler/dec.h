@@ -24,6 +24,7 @@
 
 #ifdef CONFIG_BUILDING_DEEMON
 #ifndef CONFIG_NO_DEC
+#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
 #include "../code.h"
 #include "../module.h"
 #include "../object.h"
@@ -322,6 +323,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int
 
 DECL_END
 
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 #endif /* !CONFIG_NO_DEC */
 #endif /* CONFIG_BUILDING_DEEMON */
 
