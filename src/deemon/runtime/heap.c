@@ -641,7 +641,7 @@ static int dev_zero_fd = -1; /* Cached file descriptor for /dev/zero. */
 #define ACQUIRE_MALLOC_GLOBAL_LOCK() (void)0
 #define RELEASE_MALLOC_GLOBAL_LOCK() (void)0
 #else /* GM_ONLY || !USE_LOCKS */
-static Dee_atomic_lock_t malloc_global_lock = DEE_ATOMIC_LOCK_INIT;
+static Dee_atomic_lock_t malloc_global_lock = Dee_ATOMIC_LOCK_INIT;
 #define ACQUIRE_MALLOC_GLOBAL_LOCK() Dee_atomic_lock_acquire(&malloc_global_lock)
 #define RELEASE_MALLOC_GLOBAL_LOCK() Dee_atomic_lock_release(&malloc_global_lock)
 #endif /* !GM_ONLY && USE_LOCKS */
@@ -834,7 +834,7 @@ PRIVATE size_t /*   */ dl_gm_footprint_limit = 0; /* zero means no limit */
 PRIVATE flag_t /*   */ dl_gm_mflags = 0;
 PRIVATE msegment /* */ dl_gm_seg = {};
 #if USE_LOCKS
-PRIVATE Dee_atomic_lock_t dl_gm_mutex = DEE_ATOMIC_LOCK_INIT;
+PRIVATE Dee_atomic_lock_t dl_gm_mutex = Dee_ATOMIC_LOCK_INIT;
 #endif /* USE_LOCKS */
 #define GM_STATIC_INIT_MUTEX 1 /* Static initialization is enough for locking to work */
 
@@ -4653,7 +4653,7 @@ DECL_BEGIN
  * at application exit. */
 PRIVATE LLRBTREE_ROOT(leaknode) leak_nodes = NULL;
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_lock_t leak_lock = DEE_ATOMIC_LOCK_INIT;
+PRIVATE Dee_atomic_lock_t leak_lock = Dee_ATOMIC_LOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define leak_lock_available()  Dee_atomic_lock_available(&leak_lock)
 #define leak_lock_acquired()   Dee_atomic_lock_acquired(&leak_lock)

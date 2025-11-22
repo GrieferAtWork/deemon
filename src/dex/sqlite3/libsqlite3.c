@@ -35,7 +35,7 @@
 DECL_BEGIN
 
 PRIVATE Dee_refcnt_t libsqlite3_initialized = 0;
-PRIVATE Dee_shared_lock_t libsqlite3_initialized_lock = DEE_SHARED_LOCK_INIT;
+PRIVATE Dee_shared_lock_t libsqlite3_initialized_lock = Dee_SHARED_LOCK_INIT;
 
 PRIVATE WUNUSED int DCALL libsqlite3_init_impl(void) {
 	int result;

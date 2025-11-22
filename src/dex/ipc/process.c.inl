@@ -671,7 +671,7 @@ typedef struct {
 PRIVATE Process this_process = {
 	OBJECT_HEAD_INIT(&DeeProcess_Type),
 #ifndef CONFIG_NO_THREADS
-	/* .p_lock    = */ DEE_ATOMIC_RWLOCK_INIT,
+	/* .p_lock    = */ Dee_ATOMIC_RWLOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 	/* .p_exe     = */ NULL,
 #ifdef ipc_Process_USE_cmdline
@@ -1278,7 +1278,7 @@ struct reaped_childproc {
 
 /* [0..n][lock(reaped_childprocs_lock)] List of reaped child processes */
 PRIVATE struct reaped_childproc_slist reaped_childprocs = SLIST_HEAD_INITIALIZER(reaped_childprocs);
-PRIVATE Dee_shared_rwlock_t reaped_childprocs_lock      = DEE_SHARED_RWLOCK_INIT;
+PRIVATE Dee_shared_rwlock_t reaped_childprocs_lock      = Dee_SHARED_RWLOCK_INIT;
 #define reaped_childprocs_lock_reading()    Dee_shared_rwlock_reading(&reaped_childprocs_lock)
 #define reaped_childprocs_lock_writing()    Dee_shared_rwlock_writing(&reaped_childprocs_lock)
 #define reaped_childprocs_lock_tryread()    Dee_shared_rwlock_tryread(&reaped_childprocs_lock)

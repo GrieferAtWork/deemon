@@ -1357,7 +1357,7 @@ INTERN DeeSTypeObject TYPE_NAME = {
 		/* .tp_mro           = */ ctypes_numeric_mro,
 	},
 #ifndef CONFIG_NO_THREADS
-	/* .st_cachelock = */ DEE_ATOMIC_RWLOCK_INIT,
+	/* .st_cachelock = */ Dee_ATOMIC_RWLOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 	/* .st_pointer  = */ NULL,
 	/* .st_lvalue   = */ NULL,

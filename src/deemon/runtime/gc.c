@@ -98,7 +98,7 @@ DECL_BEGIN
 /* _Must_ use a recursive lock for this because untracking objects
  * while they're being collected requires acquisition of the GC-lock. */
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_rshared_lock_t gc_lock = DEE_RSHARED_LOCK_INIT;
+PRIVATE Dee_rshared_lock_t gc_lock = Dee_RSHARED_LOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define GCLOCK_TRYACQUIRE()         Dee_rshared_lock_tryacquire(&gc_lock)
 #define GCLOCK_ACQUIRE_NOINT()      Dee_rshared_lock_acquire_noint(&gc_lock)

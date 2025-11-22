@@ -1199,7 +1199,7 @@ locate_type_member(struct type_member const *__restrict chain, char const *name_
 
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_lock_t membercache_list_lock = DEE_ATOMIC_LOCK_INIT;
+PRIVATE Dee_atomic_lock_t membercache_list_lock = Dee_ATOMIC_LOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 #define membercache_list_lock_available()  Dee_atomic_lock_available(&membercache_list_lock)

@@ -1469,7 +1469,7 @@ PRIVATE DREF DeeObject *dee_std[DEE_STDCNT] = { ITER_DONE, ITER_DONE, ITER_DONE 
 #endif /* !DEE_STDDBG_IS_UNIQUE */
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t dee_std_lock = DEE_ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t dee_std_lock = Dee_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define dee_std_lock_reading()    Dee_atomic_rwlock_reading(&dee_std_lock)
 #define dee_std_lock_writing()    Dee_atomic_rwlock_writing(&dee_std_lock)
@@ -1610,7 +1610,7 @@ DeeFile_SetStd(unsigned int id, DeeObject *file) {
 /* [0..1][lock(WRITE_ONCE)] The `files' module. */
 PRIVATE DREF DeeObject *files_module = NULL;
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t files_module_lock = DEE_ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t files_module_lock = Dee_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define files_module_lock_reading()    Dee_atomic_rwlock_reading(&files_module_lock)
 #define files_module_lock_writing()    Dee_atomic_rwlock_writing(&files_module_lock)

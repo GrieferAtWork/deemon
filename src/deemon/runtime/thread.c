@@ -1124,7 +1124,7 @@ PRIVATE HANDLE DCALL DeeThread_GetCurrentHThread(void) {
 
 /* Lock for the global list of threads */
 #ifndef DeeThread_USE_SINGLE_THREADED
-PRIVATE Dee_shared_lock_t thread_list_lock = DEE_SHARED_LOCK_INIT;
+PRIVATE Dee_shared_lock_t thread_list_lock = Dee_SHARED_LOCK_INIT;
 #define thread_list_lock_available()     Dee_shared_lock_available(&thread_list_lock)
 #define thread_list_lock_acquired()      Dee_shared_lock_acquired(&thread_list_lock)
 #define thread_list_lock_tryacquire()    Dee_shared_lock_tryacquire(&thread_list_lock)
@@ -5292,7 +5292,7 @@ except_frame_gettb(struct except_frame *__restrict self) {
 
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t thread_interrupt_hooks_lock = DEE_ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t thread_interrupt_hooks_lock = Dee_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define thread_interrupt_hooks_lock_reading()    Dee_atomic_rwlock_reading(&thread_interrupt_hooks_lock)
 #define thread_interrupt_hooks_lock_writing()    Dee_atomic_rwlock_writing(&thread_interrupt_hooks_lock)

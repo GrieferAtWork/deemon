@@ -35,8 +35,8 @@
 DECL_BEGIN
 
 typedef char Dee_atomic_lock_t;
-#define DEE_ATOMIC_LOCK_INIT                  0
-#define DEE_ATOMIC_LOCK_INIT_ACQUIRED         0
+#define Dee_ATOMIC_LOCK_INIT                  0
+#define Dee_ATOMIC_LOCK_INIT_ACQUIRED         0
 #define Dee_atomic_lock_init(self)            (void)0
 #define Dee_atomic_lock_init_acquired(self)   (void)0
 #define Dee_atomic_lock_cinit(self)           (void)0
@@ -51,10 +51,10 @@ typedef char Dee_atomic_lock_t;
 #define Dee_atomic_read_with_atomic_lock(p, self) (*(p))
 
 typedef char Dee_atomic_rwlock_t;
-#define DEE_ATOMIC_RWLOCK_MAX_READERS              1
-#define DEE_ATOMIC_RWLOCK_INIT                     0
-#define DEE_ATOMIC_RWLOCK_INIT_READ(n)             0
-#define DEE_ATOMIC_RWLOCK_INIT_WRITE               0
+#define Dee_ATOMIC_RWLOCK_MAX_READERS              1
+#define Dee_ATOMIC_RWLOCK_INIT                     0
+#define Dee_ATOMIC_RWLOCK_INIT_READ(n)             0
+#define Dee_ATOMIC_RWLOCK_INIT_WRITE               0
 #define Dee_atomic_rwlock_cinit(self)              (void)0
 #define Dee_atomic_rwlock_cinit_read(self, n)      (void)0
 #define Dee_atomic_rwlock_cinit_write(self)        (void)0
@@ -91,8 +91,8 @@ typedef char Dee_atomic_rwlock_t;
 #define Dee_atomic_read_with_atomic_rwlock(p, self) (*(p))
 
 typedef char Dee_shared_lock_t;
-#define DEE_SHARED_LOCK_INIT                                     0
-#define DEE_SHARED_LOCK_INIT_ACQUIRED                            0
+#define Dee_SHARED_LOCK_INIT                                     0
+#define Dee_SHARED_LOCK_INIT_ACQUIRED                            0
 #define Dee_shared_lock_cinit(self)                              (void)0
 #define Dee_shared_lock_init(self)                               (void)0
 #define Dee_shared_lock_cinit_acquired(self)                     (void)0
@@ -110,10 +110,10 @@ typedef char Dee_shared_lock_t;
 #define Dee_shared_lock_waitfor_timed(self, timeout_nanoseconds) 0
 
 typedef char Dee_shared_rwlock_t;
-#define DEE_SHARED_RWLOCK_MAX_READERS                                1
-#define DEE_SHARED_RWLOCK_INIT                                       0
-#define DEE_SHARED_RWLOCK_INIT_READ(n)                               0
-#define DEE_SHARED_RWLOCK_INIT_WRITE                                 0
+#define Dee_SHARED_RWLOCK_MAX_READERS                                1
+#define Dee_SHARED_RWLOCK_INIT                                       0
+#define Dee_SHARED_RWLOCK_INIT_READ(n)                               0
+#define Dee_SHARED_RWLOCK_INIT_WRITE                                 0
 #define Dee_shared_rwlock_init(self)                                 (void)0
 #define Dee_shared_rwlock_init_read(self, n)                         (void)0
 #define Dee_shared_rwlock_init_write(self)                           (void)0
@@ -160,7 +160,7 @@ typedef char Dee_shared_rwlock_t;
 #define Dee_shared_rwlock_waitwrite_timed(self, timeout_nanoseconds) 0
 
 typedef char Dee_semaphore_t;
-#define DEE_SEMAPHORE_INIT(n_tickets)                          0
+#define Dee_SEMAPHORE_INIT(n_tickets)                          0
 #define Dee_semaphore_init(self, n_tickets)                    (void)0
 #define Dee_semaphore_cinit(self, n_tickets)                   (void)0
 #define Dee_semaphore_haswaiting(self)                         0
@@ -176,8 +176,9 @@ typedef char Dee_semaphore_t;
 #define Dee_semaphore_acquire_noint(self)                      (void)0
 
 typedef char Dee_event_t;
-#define DEE_EVENT_INIT_SET                                 0
-#define DEE_EVENT_INIT                                     0
+#define Dee_EVENT_INIT_SET                                 0
+#define Dee_EVENT_INIT                                     0
+#define Dee_EVENT_INIT_EX(set)                             0
 #define Dee_event_init_set(self)                           (void)0
 #define Dee_event_init(self)                               (void)0
 #define Dee_event_cinit_set(self)                          (void)0
@@ -219,8 +220,8 @@ DECL_BEGIN
 /* Simply implement atomic locks using the hybrid-API */
 #define Dee_SIZEOF_ATOMIC_LOCK __SIZEOF_HYBRID_ATOMIC_LOCK
 typedef struct __hybrid_atomic_lock Dee_atomic_lock_t;
-#define DEE_ATOMIC_LOCK_INIT            __HYBRID_ATOMIC_LOCK_INIT
-#define DEE_ATOMIC_LOCK_INIT_ACQUIRED   __HYBRID_ATOMIC_LOCK_INIT_ACQUIRED
+#define Dee_ATOMIC_LOCK_INIT            __HYBRID_ATOMIC_LOCK_INIT
+#define Dee_ATOMIC_LOCK_INIT_ACQUIRED   __HYBRID_ATOMIC_LOCK_INIT_ACQUIRED
 #define Dee_atomic_lock_init            __hybrid_atomic_lock_init
 #define Dee_atomic_lock_init_acquired   __hybrid_atomic_lock_init_acquired
 #define Dee_atomic_lock_cinit           __hybrid_atomic_lock_cinit
@@ -238,10 +239,10 @@ typedef struct __hybrid_atomic_lock Dee_atomic_lock_t;
 /* Simply implement atomic R/W-locks using the hybrid-API */
 #define Dee_SIZEOF_ATOMIC_RWLOCK __SIZEOF_HYBRID_ATOMIC_RWLOCK
 typedef struct __hybrid_atomic_rwlock Dee_atomic_rwlock_t;
-#define DEE_ATOMIC_RWLOCK_MAX_READERS        __HYBRID_ATOMIC_RWLOCK_MAX_READERS
-#define DEE_ATOMIC_RWLOCK_INIT               __HYBRID_ATOMIC_RWLOCK_INIT
-#define DEE_ATOMIC_RWLOCK_INIT_READ          __HYBRID_ATOMIC_RWLOCK_INIT_READ
-#define DEE_ATOMIC_RWLOCK_INIT_WRITE         __HYBRID_ATOMIC_RWLOCK_INIT_WRITE
+#define Dee_ATOMIC_RWLOCK_MAX_READERS        __HYBRID_ATOMIC_RWLOCK_MAX_READERS
+#define Dee_ATOMIC_RWLOCK_INIT               __HYBRID_ATOMIC_RWLOCK_INIT
+#define Dee_ATOMIC_RWLOCK_INIT_READ          __HYBRID_ATOMIC_RWLOCK_INIT_READ
+#define Dee_ATOMIC_RWLOCK_INIT_WRITE         __HYBRID_ATOMIC_RWLOCK_INIT_WRITE
 #define Dee_atomic_rwlock_cinit              __hybrid_atomic_rwlock_cinit
 #define Dee_atomic_rwlock_cinit_read         __hybrid_atomic_rwlock_cinit_read
 #define Dee_atomic_rwlock_cinit_write        __hybrid_atomic_rwlock_cinit_write
@@ -294,8 +295,8 @@ typedef struct {
 	 ? DeeFutex_WakeOne(&(self)->s_lock)                        \
 	 : (void)0)
 
-#define DEE_SHARED_LOCK_INIT                 { DEE_ATOMIC_LOCK_INIT, 0 }
-#define DEE_SHARED_LOCK_INIT_ACQUIRED        { DEE_ATOMIC_LOCK_INIT_ACQUIRED, 0 }
+#define Dee_SHARED_LOCK_INIT                 { Dee_ATOMIC_LOCK_INIT, 0 }
+#define Dee_SHARED_LOCK_INIT_ACQUIRED        { Dee_ATOMIC_LOCK_INIT_ACQUIRED, 0 }
 #define Dee_shared_lock_cinit(self)          (void)(Dee_atomic_lock_cinit(&(self)->s_lock), Dee_ASSERT((self)->s_waiting == 0))
 #define Dee_shared_lock_init(self)           (void)(Dee_atomic_lock_init(&(self)->s_lock), (self)->s_waiting = 0)
 #define Dee_shared_lock_cinit_acquired(self) (void)(Dee_atomic_lock_cinit_acquired(&(self)->s_lock), Dee_ASSERT((self)->s_waiting == 0))
@@ -378,10 +379,10 @@ typedef struct {
 	    DeeFutex_WakeAll(&(self)->srw_lock.arw_lock))                     \
 	 : (void)0)
 
-#define DEE_SHARED_RWLOCK_MAX_READERS        DEE_ATOMIC_RWLOCK_MAX_READERS
-#define DEE_SHARED_RWLOCK_INIT               { DEE_ATOMIC_RWLOCK_INIT, 0 }
-#define DEE_SHARED_RWLOCK_INIT_READ(n)       { DEE_ATOMIC_RWLOCK_INIT_READ(n), 0 }
-#define DEE_SHARED_RWLOCK_INIT_WRITE         { DEE_ATOMIC_RWLOCK_INIT_WRITE, 0 }
+#define Dee_SHARED_RWLOCK_MAX_READERS        Dee_ATOMIC_RWLOCK_MAX_READERS
+#define Dee_SHARED_RWLOCK_INIT               { Dee_ATOMIC_RWLOCK_INIT, 0 }
+#define Dee_SHARED_RWLOCK_INIT_READ(n)       { Dee_ATOMIC_RWLOCK_INIT_READ(n), 0 }
+#define Dee_SHARED_RWLOCK_INIT_WRITE         { Dee_ATOMIC_RWLOCK_INIT_WRITE, 0 }
 #define Dee_shared_rwlock_init(self)         (void)(Dee_atomic_rwlock_init(&(self)->srw_lock), (self)->srw_waiting = 0)
 #define Dee_shared_rwlock_init_read(self, n) (void)(Dee_atomic_rwlock_init_read(&(self)->srw_lock, n), (self)->srw_waiting = 0)
 #define Dee_shared_rwlock_init_write(self)   (void)(Dee_atomic_rwlock_init_write(&(self)->srw_lock), (self)->srw_waiting = 0)
@@ -528,7 +529,7 @@ typedef struct {
 #define _Dee_semaphore_waiting_start(self) __hybrid_atomic_inc(&(self)->se_waiting, __ATOMIC_ACQUIRE)
 #define _Dee_semaphore_waiting_end(self)   __hybrid_atomic_dec(&(self)->se_waiting, __ATOMIC_RELEASE)
 
-#define DEE_SEMAPHORE_INIT(n_tickets)        { n_tickets, 0 }
+#define Dee_SEMAPHORE_INIT(n_tickets)        { n_tickets, 0 }
 #define Dee_semaphore_init(self, n_tickets)  (void)((self)->se_tickets = n_tickets, (self)->se_waiting = 0)
 #define Dee_semaphore_cinit(self, n_tickets) (void)((self)->se_tickets = n_tickets, Dee_ASSERT((self)->se_waiting == 0))
 #define Dee_semaphore_haswaiting(self)       (__hybrid_atomic_load(&(self)->se_waiting, __ATOMIC_ACQUIRE) != 0)
@@ -604,8 +605,9 @@ typedef struct {
 	                        * 2: event has NOT been triggered, and there may be waiting threads */
 } Dee_event_t;
 
-#define DEE_EVENT_INIT_SET        { 0 }
-#define DEE_EVENT_INIT            { 1 }
+#define Dee_EVENT_INIT_SET        { 0 }
+#define Dee_EVENT_INIT            { 1 }
+#define Dee_EVENT_INIT_EX(set)    { (set) ? 0 : 1 }
 #define Dee_event_init_set(self)  (void)((self)->ev_state = 0)
 #define Dee_event_init(self)      (void)((self)->ev_state = 1)
 #define Dee_event_cinit_set(self) (void)(Dee_ASSERT((self)->ev_state == 0))

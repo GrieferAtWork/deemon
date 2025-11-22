@@ -636,7 +636,7 @@ INTERN DeeArrayTypeObject DeeArray_Type = {
 			/* .tp_mro           = */ array_mro,
 		},
 #ifndef CONFIG_NO_THREADS
-		/* .st_cachelock = */ DEE_ATOMIC_RWLOCK_INIT,
+		/* .st_cachelock = */ Dee_ATOMIC_RWLOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 		/* .st_pointer  = */ &DeePointer_Type,
 		/* .st_lvalue   = */ &DeeLValue_Type,

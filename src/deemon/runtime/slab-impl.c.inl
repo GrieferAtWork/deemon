@@ -102,7 +102,7 @@ typedef struct {
 
 PRIVATE FUNC(Slab) FUNC(slab) = {
 #ifndef CONFIG_NO_THREADS
-	/* .s_lock = */ DEE_ATOMIC_LOCK_INIT,
+	/* .s_lock = */ Dee_ATOMIC_LOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 	/* .s_free = */ SLAB_PAGE_INVALID,
 	/* .s_full = */ SLAB_PAGE_INVALID,

@@ -33,7 +33,7 @@
 DECL_BEGIN
 
 typedef char Dee_ratomic_lock_t;
-#define DEE_RATOMIC_LOCK_INIT                     0
+#define Dee_RATOMIC_LOCK_INIT                     0
 #define Dee_ratomic_lock_init(self)               (void)0
 #define Dee_ratomic_lock_cinit(self)              (void)0
 #define Dee_ratomic_lock_available(self)          1
@@ -47,7 +47,7 @@ typedef char Dee_ratomic_lock_t;
 #define Dee_ratomic_lock_release_ex(self)         1
 
 typedef char Dee_rshared_lock_t;
-#define DEE_RSHARED_LOCK_INIT                                     0
+#define Dee_RSHARED_LOCK_INIT                                     0
 #define Dee_rshared_lock_init(self)                               (void)0
 #define Dee_rshared_lock_cinit(self)                              (void)0
 #define Dee_rshared_lock_available(self)                          1
@@ -65,7 +65,7 @@ typedef char Dee_rshared_lock_t;
 #define Dee_rshared_lock_release_ex(self)                         1
 
 typedef char Dee_ratomic_rwlock_t;
-#define DEE_RATOMIC_RWLOCK_INIT                      0
+#define Dee_RATOMIC_RWLOCK_INIT                      0
 #define Dee_ratomic_rwlock_init(self)                (void)0
 #define Dee_ratomic_rwlock_cinit(self)               (void)0
 #define Dee_ratomic_rwlock_tryread(self)             1
@@ -99,7 +99,7 @@ typedef char Dee_ratomic_rwlock_t;
 #define _Dee_ratomic_rwlock_end_ex_NDEBUG(self)      1
 
 typedef char Dee_rshared_rwlock_t;
-#define DEE_RSHARED_RWLOCK_INIT                                       0
+#define Dee_RSHARED_RWLOCK_INIT                                       0
 #define Dee_rshared_rwlock_init(self)                                 (void)0
 #define Dee_rshared_rwlock_cinit(self)                                (void)0
 #define Dee_rshared_rwlock_reading(self)                              1
@@ -168,7 +168,7 @@ typedef struct {
 	__hybrid_tid_t ra_tid;  /* [valid_if(ra_lock > 0)] Lock owner (set to `__HYBRID_GETTID_INVALID' after fully releasing lock) */
 } Dee_ratomic_lock_t;
 
-#define DEE_RATOMIC_LOCK_INIT        { 0, __HYBRID_GETTID_INVALID }
+#define Dee_RATOMIC_LOCK_INIT        { 0, __HYBRID_GETTID_INVALID }
 #define Dee_ratomic_lock_init(self)  (void)((self)->ra_lock = 0, (self)->ra_tid = __HYBRID_GETTID_INVALID)
 #ifdef __HYBRID_GETTID_INVALID_IS_ZERO
 #define Dee_ratomic_lock_cinit(self) (void)(Dee_ASSERT((self)->ra_lock == 0), Dee_ASSERT((self)->ra_tid == __HYBRID_GETTID_INVALID))
@@ -265,7 +265,7 @@ typedef struct {
 #define _Dee_rshared_lock_waiting_start(self) __hybrid_atomic_inc(&(self)->rs_waiting, __ATOMIC_ACQUIRE)
 #define _Dee_rshared_lock_waiting_end(self)   __hybrid_atomic_dec(&(self)->rs_waiting, __ATOMIC_RELEASE)
 
-#define DEE_RSHARED_LOCK_INIT             { DEE_RATOMIC_LOCK_INIT, 0 }
+#define Dee_RSHARED_LOCK_INIT             { Dee_RATOMIC_LOCK_INIT, 0 }
 #define Dee_rshared_lock_init(self)       (void)(Dee_ratomic_lock_init(&(self)->rs_lock), (self)->rs_waiting = 0)
 #define Dee_rshared_lock_cinit(self)      (void)(Dee_ratomic_lock_cinit(&(self)->rs_lock), Dee_ASSERT((self)->rs_waiting == 0))
 #define Dee_rshared_lock_available(self)  Dee_ratomic_lock_available(&(self)->rs_lock)
@@ -364,8 +364,8 @@ typedef struct {
 	__hybrid_tid_t      rarw_tid;    /* [valid_if(rarw_lock.arw_lock == (uintptr_t)-1)] Write-lock owner (set to `__HYBRID_GETTID_INVALID' after fully releasing lock) */
 	unsigned int        rarw_nwrite; /* [valid_if(rarw_lock.arw_lock == (uintptr_t)-1)] Number of extra write-locks (`0' means that the next `endwrite()' will release the primary write-lock) */
 } Dee_ratomic_rwlock_t;
-#define DEE_RATOMIC_RWLOCK_INIT \
-	{ DEE_ATOMIC_RWLOCK_INIT, __HYBRID_GETTID_INVALID, 0 }
+#define Dee_RATOMIC_RWLOCK_INIT \
+	{ Dee_ATOMIC_RWLOCK_INIT, __HYBRID_GETTID_INVALID, 0 }
 #define Dee_ratomic_rwlock_init(self)                     \
 	(void)(Dee_atomic_rwlock_init(&(self)->rarw_lock),    \
 	       (self)->rarw_tid    = __HYBRID_GETTID_INVALID, \
@@ -739,7 +739,7 @@ typedef struct {
 	 ? (__hybrid_atomic_store(&(self)->rsrw_waiting, 0, __ATOMIC_RELEASE), \
 	    DeeFutex_WakeAll(&(self)->rsrw_lock.rarw_lock.arw_lock))           \
 	 : (void)0)
-#define DEE_RSHARED_RWLOCK_INIT        { DEE_RATOMIC_RWLOCK_INIT, 0 }
+#define Dee_RSHARED_RWLOCK_INIT        { Dee_RATOMIC_RWLOCK_INIT, 0 }
 #define Dee_rshared_rwlock_init(self)  (void)(Dee_ratomic_rwlock_init(&(self)->rsrw_lock), (self)->rsrw_waiting = 0)
 #define Dee_rshared_rwlock_cinit(self) (void)(Dee_ratomic_rwlock_cinit(&(self)->rsrw_lock), Dee_ASSERT((self)->rsrw_waiting == 0))
 #define Dee_rshared_rwlock_reading(self)             Dee_ratomic_rwlock_reading(&(self)->rsrw_lock)

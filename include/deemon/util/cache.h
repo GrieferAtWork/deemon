@@ -97,7 +97,7 @@ struct Dee_cache_object {
 		return result;                                                                \
 	}
 #define DEE_DEFINE_STRUCT_CACHE_EX(name, ALLOC_TYPE, object_size, limit)              \
-	INTERN Dee_atomic_lock_t structcache_##name##_lock        = DEE_ATOMIC_LOCK_INIT; \
+	INTERN Dee_atomic_lock_t structcache_##name##_lock        = Dee_ATOMIC_LOCK_INIT; \
 	INTERN struct Dee_cache_struct *structcache_##name##_list = NULL;                 \
 	INTERN size_t structcache_##name##_size                   = 0;                    \
 	INTERN size_t DCALL name##_clear(size_t max_clear) {                              \
@@ -162,7 +162,7 @@ struct Dee_cache_object {
 		return result;                                                                \
 	})
 #define DEE_DEFINE_OBJECT_CACHE_EX(name, ALLOC_TYPE, object_size, limit)          \
-	INTERN Dee_atomic_lock_t obcache_##name##_lock        = DEE_ATOMIC_LOCK_INIT; \
+	INTERN Dee_atomic_lock_t obcache_##name##_lock        = Dee_ATOMIC_LOCK_INIT; \
 	INTERN struct Dee_cache_object *obcache_##name##_list = NULL;                 \
 	INTERN size_t obcache_##name##_size                   = 0;                    \
 	INTERN size_t DCALL name##_clear(size_t max_clear) {                          \

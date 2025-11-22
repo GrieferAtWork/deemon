@@ -1061,7 +1061,7 @@ struct Dee_function_object {
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 #ifndef CONFIG_NO_THREADS
 #define _DEE_FUNCTION_FO_REFLOCK_FIELD Dee_atomic_rwlock_t fo_reflock;
-#define _DEE_FUNCTION_FO_REFLOCK_INIT  DEE_ATOMIC_RWLOCK_INIT,
+#define _DEE_FUNCTION_FO_REFLOCK_INIT  Dee_ATOMIC_RWLOCK_INIT,
 #else /* !CONFIG_NO_THREADS */
 #define _DEE_FUNCTION_FO_REFLOCK_FIELD /* nothing */
 #define _DEE_FUNCTION_FO_REFLOCK_INIT  /* nothing */

@@ -440,7 +440,7 @@ DECL_BEGIN
 
 
 /* Lock for the Futex tree controls below. */
-PRIVATE Dee_atomic_rwlock_t fcont_lock = DEE_ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t fcont_lock = Dee_ATOMIC_RWLOCK_INIT;
 #define fcont_lock_reading()    Dee_atomic_rwlock_reading(&fcont_lock)
 #define fcont_lock_writing()    Dee_atomic_rwlock_writing(&fcont_lock)
 #define fcont_lock_tryread()    Dee_atomic_rwlock_tryread(&fcont_lock)
@@ -642,7 +642,7 @@ struct os_futex_wait_entry {
 
 /* [lock(os_futex_wait_lock)][0..n] List of threads that are currently waiting on futex addresses. */
 PRIVATE struct os_futex_wait_list_struct os_futex_wait_list = LIST_HEAD_INITIALIZER(os_futex_wait_list);
-PRIVATE Dee_atomic_lock_t /*          */ os_futex_wait_lock = DEE_ATOMIC_LOCK_INIT;
+PRIVATE Dee_atomic_lock_t /*          */ os_futex_wait_lock = Dee_ATOMIC_LOCK_INIT;
 
 #define os_futex_wait_begin(addr)                                       \
 	do {                                                                \

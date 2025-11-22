@@ -2553,7 +2553,7 @@ PRIVATE struct {
 			/* .cf_flags   = */ CODE_FCOPYABLE | CODE_FYIELDING,
 		},
 #ifndef CONFIG_NO_THREADS
-		/* .yi_lock = */ DEE_RSHARED_RWLOCK_INIT,
+		/* .yi_lock = */ Dee_RSHARED_RWLOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 	}
 };
@@ -2564,7 +2564,7 @@ PRIVATE DeeFrameObject DeeFrame_Empty = {
 	/* .f_frame = */ &DeeYieldFunctionIterator_Empty.ob.yi_frame,
 #ifndef CONFIG_NO_THREADS
 	{ (Dee_atomic_rwlock_t *)&DeeYieldFunctionIterator_Empty.ob.yi_lock },
-	/* .f_lock  = */ DEE_ATOMIC_RWLOCK_INIT,
+	/* .f_lock  = */ Dee_ATOMIC_RWLOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 	/* .f_flags = */ DEEFRAME_FREADONLY | DEEFRAME_FSHRLOCK | DEEFRAME_FRECLOCK,
 	/* .f_revsp = */ 0,

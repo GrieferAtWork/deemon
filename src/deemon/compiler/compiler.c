@@ -52,7 +52,7 @@ DECL_BEGIN
 #endif /* NDEBUG */
 
 #if !defined(CONFIG_NO_THREADS) || 1 /* Always needs to be defined for binary compat */
-PUBLIC Dee_rshared_rwlock_t DeeCompiler_Lock = DEE_RSHARED_RWLOCK_INIT;
+PUBLIC Dee_rshared_rwlock_t DeeCompiler_Lock = Dee_RSHARED_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 PUBLIC struct weakref DeeCompiler_Active   = WEAKREF_INIT;

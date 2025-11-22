@@ -109,7 +109,7 @@ PRIVATE struct notify_entry const empty_notifications[1] = {
 };
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t notify_lock = DEE_ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t notify_lock = Dee_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define notify_lock_reading()    Dee_atomic_rwlock_reading(&notify_lock)
 #define notify_lock_writing()    Dee_atomic_rwlock_writing(&notify_lock)

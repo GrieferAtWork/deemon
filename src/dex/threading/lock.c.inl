@@ -246,7 +246,7 @@ DECL_BEGIN
 #define LOCAL_DeeRWLockReadLock_Type    DeeSharedRWLockReadLock_Type
 #define LOCAL_DeeRWLockWriteLock_Type   DeeSharedRWLockWriteLock_Type
 #define LOCAL_rwlock_t                  Dee_shared_rwlock_t
-#define LOCAL_RWLOCK_MAX_READERS        DEE_SHARED_RWLOCK_MAX_READERS
+#define LOCAL_RWLOCK_MAX_READERS        Dee_SHARED_RWLOCK_MAX_READERS
 #define LOCAL_rwlock_cinit              Dee_shared_rwlock_cinit
 #define LOCAL_rwlock_cinit_read         Dee_shared_rwlock_cinit_read
 #define LOCAL_rwlock_cinit_write        Dee_shared_rwlock_cinit_write
@@ -319,7 +319,7 @@ DECL_BEGIN
 #define LOCAL_DeeRWLockReadLock_Type    DeeAtomicRWLockReadLock_Type
 #define LOCAL_DeeRWLockWriteLock_Type   DeeAtomicRWLockWriteLock_Type
 #define LOCAL_rwlock_t                  Dee_atomic_rwlock_t
-#define LOCAL_RWLOCK_MAX_READERS        DEE_ATOMIC_RWLOCK_MAX_READERS
+#define LOCAL_RWLOCK_MAX_READERS        Dee_ATOMIC_RWLOCK_MAX_READERS
 #define LOCAL_rwlock_cinit              Dee_atomic_rwlock_cinit
 #define LOCAL_rwlock_cinit_read         Dee_atomic_rwlock_cinit_read
 #define LOCAL_rwlock_cinit_write        Dee_atomic_rwlock_cinit_write

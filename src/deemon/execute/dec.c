@@ -3704,7 +3704,7 @@ PRIVATE struct mtime_cache mtime_cache = {
 	/* .mc_list = */ empty_mtime_items
 #ifndef CONFIG_NO_THREADS
 	,
-	/* .mc_lock = */ DEE_ATOMIC_RWLOCK_INIT
+	/* .mc_lock = */ Dee_ATOMIC_RWLOCK_INIT
 #endif /* !CONFIG_NO_THREADS */
 };
 

@@ -365,7 +365,7 @@ PRIVATE DREF DeeObject *strexec_module = NULL; /* import("_strexec") */
 PRIVATE DREF DeeObject *strexec_exec = NULL;   /* _strexec.exec */
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t strexec_access_lock = DEE_ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t strexec_access_lock = Dee_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 #define strexec_access_lock_reading()    Dee_atomic_rwlock_reading(&strexec_access_lock)

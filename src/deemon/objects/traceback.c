@@ -53,7 +53,7 @@ INTERN struct empty_traceback_object DeeTraceback_Empty = {
 	OBJECT_HEAD_INIT(&DeeTraceback_Type),
 	/* .tb_thread    = */ &DeeThread_Main,
 #ifndef CONFIG_NO_THREADS
-	/* .tb_lock      = */ DEE_ATOMIC_LOCK_INIT,
+	/* .tb_lock      = */ Dee_ATOMIC_LOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 	/* .tb_numframes = */ 0,
 	/* .tb_padding   = */ { 0, 0, 0 }

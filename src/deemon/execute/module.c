@@ -1846,7 +1846,7 @@ INTERN struct Dee_static_module_struct DeeModule_Empty =
 		/* .mo_globalv   = */ NULL,
 		/* .mo_root      = */ &DeeCode_Empty,
 #ifndef CONFIG_NO_THREADS
-		/* .mo_lock      = */ DEE_ATOMIC_RWLOCK_INIT,
+		/* .mo_lock      = */ Dee_ATOMIC_RWLOCK_INIT,
 		/* .mo_loader    = */ NULL,
 #endif /* !CONFIG_NO_THREADS */
 #ifndef CONFIG_NO_DEC

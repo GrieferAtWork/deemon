@@ -134,7 +134,7 @@ shlib_visit(Shlib *__restrict self, Dee_visit_t proc, void *arg) {
 
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t static_type_lock = DEE_ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t static_type_lock = Dee_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define static_type_lock_reading()    Dee_atomic_rwlock_reading(&static_type_lock)
 #define static_type_lock_writing()    Dee_atomic_rwlock_writing(&static_type_lock)
@@ -446,7 +446,7 @@ PRIVATE bool DCALL init_Dbghelp_dll(void) {
 PRIVATE DREF DeeObject *DCALL
 shlib_addr2name_impl(void const *addr) {
 #ifdef shlib_addr2name_impl_USE_Dbghelp_dll
-	static Dee_shared_lock_t lock = DEE_SHARED_LOCK_INIT;
+	static Dee_shared_lock_t lock = Dee_SHARED_LOCK_INIT;
 	if unlikely(Dee_shared_lock_acquire(&lock))
 		goto err;
 	if (init_Dbghelp_dll()) {

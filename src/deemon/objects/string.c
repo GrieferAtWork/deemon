@@ -641,7 +641,7 @@ err:
 
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t string_fini_hooks_lock = DEE_ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t string_fini_hooks_lock = Dee_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define string_fini_hooks_lock_reading()    Dee_atomic_rwlock_reading(&string_fini_hooks_lock)
 #define string_fini_hooks_lock_writing()    Dee_atomic_rwlock_writing(&string_fini_hooks_lock)

@@ -152,7 +152,7 @@ DDATDEF __BYTE_TYPE__ const _DeeDict_EmptyTab[];
 #ifdef CONFIG_NO_THREADS
 #define _Dee_DICT_INIT_LOCK /* nothing */
 #else /* CONFIG_NO_THREADS */
-#define _Dee_DICT_INIT_LOCK , DEE_ATOMIC_RWLOCK_INIT
+#define _Dee_DICT_INIT_LOCK , Dee_ATOMIC_RWLOCK_INIT
 #endif /* !CONFIG_NO_THREADS */
 #define Dee_DICT_INIT                          \
 	{                                          \

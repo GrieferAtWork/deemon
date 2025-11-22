@@ -38,8 +38,8 @@ DECL_BEGIN
 
 /* Delete definitions */
 #undef Dee_atomic_lock_t
-#undef DEE_ATOMIC_LOCK_INIT
-#undef DEE_ATOMIC_LOCK_INIT_ACQUIRED
+#undef Dee_ATOMIC_LOCK_INIT
+#undef Dee_ATOMIC_LOCK_INIT_ACQUIRED
 #undef Dee_atomic_lock_init
 #undef Dee_atomic_lock_init_acquired
 #undef Dee_atomic_lock_cinit
@@ -53,10 +53,10 @@ DECL_BEGIN
 #undef _Dee_atomic_lock_release_NDEBUG
 
 #undef Dee_atomic_rwlock_t
-#undef DEE_ATOMIC_RWLOCK_MAX_READERS
-#undef DEE_ATOMIC_RWLOCK_INIT
-#undef DEE_ATOMIC_RWLOCK_INIT_READ
-#undef DEE_ATOMIC_RWLOCK_INIT_WRITE
+#undef Dee_ATOMIC_RWLOCK_MAX_READERS
+#undef Dee_ATOMIC_RWLOCK_INIT
+#undef Dee_ATOMIC_RWLOCK_INIT_READ
+#undef Dee_ATOMIC_RWLOCK_INIT_WRITE
 #undef Dee_atomic_rwlock_cinit
 #undef Dee_atomic_rwlock_cinit_read
 #undef Dee_atomic_rwlock_cinit_write
@@ -92,8 +92,8 @@ DECL_BEGIN
 #undef _Dee_atomic_rwlock_end_ex_NDEBUG
 
 #undef Dee_shared_lock_t
-#undef DEE_SHARED_LOCK_INIT
-#undef DEE_SHARED_LOCK_INIT_ACQUIRED
+#undef Dee_SHARED_LOCK_INIT
+#undef Dee_SHARED_LOCK_INIT_ACQUIRED
 #undef Dee_shared_lock_cinit
 #undef Dee_shared_lock_init
 #undef Dee_shared_lock_cinit_acquired
@@ -113,10 +113,10 @@ DECL_BEGIN
 #undef Dee_shared_lock_waitfor_noint_timed
 
 #undef Dee_shared_rwlock_t
-#undef DEE_SHARED_RWLOCK_MAX_READERS
-#undef DEE_SHARED_RWLOCK_INIT
-#undef DEE_SHARED_RWLOCK_INIT_READ
-#undef DEE_SHARED_RWLOCK_INIT_WRITE
+#undef Dee_SHARED_RWLOCK_MAX_READERS
+#undef Dee_SHARED_RWLOCK_INIT
+#undef Dee_SHARED_RWLOCK_INIT_READ
+#undef Dee_SHARED_RWLOCK_INIT_WRITE
 #undef Dee_shared_rwlock_init
 #undef Dee_shared_rwlock_init_read
 #undef Dee_shared_rwlock_init_write
@@ -167,7 +167,7 @@ DECL_BEGIN
 #undef Dee_shared_rwlock_waitwrite_noint_timed
 
 #undef Dee_semaphore_t
-#undef DEE_SEMAPHORE_INIT
+#undef Dee_SEMAPHORE_INIT
 #undef Dee_semaphore_init
 #undef Dee_semaphore_cinit
 #undef Dee_semaphore_haswaiting
@@ -185,8 +185,8 @@ DECL_BEGIN
 #undef Dee_semaphore_acquire_noint_timed
 
 #undef Dee_event_t
-#undef DEE_EVENT_INIT_SET
-#undef DEE_EVENT_INIT
+#undef Dee_EVENT_INIT_SET
+#undef Dee_EVENT_INIT
 #undef Dee_event_init_set
 #undef Dee_event_init
 #undef Dee_event_cinit_set
@@ -202,7 +202,7 @@ DECL_BEGIN
 #undef Dee_event_waitfor_noint_timed
 
 #undef Dee_ratomic_lock_t
-#undef DEE_RATOMIC_LOCK_INIT
+#undef Dee_RATOMIC_LOCK_INIT
 #undef Dee_ratomic_lock_init
 #undef Dee_ratomic_lock_cinit
 #undef Dee_ratomic_lock_available
@@ -216,7 +216,7 @@ DECL_BEGIN
 #undef Dee_ratomic_lock_release_ex
 
 #undef Dee_rshared_lock_t
-#undef DEE_RSHARED_LOCK_INIT
+#undef Dee_RSHARED_LOCK_INIT
 #undef Dee_rshared_lock_init
 #undef Dee_rshared_lock_cinit
 #undef Dee_rshared_lock_available
@@ -236,7 +236,7 @@ DECL_BEGIN
 #undef Dee_rshared_lock_release_ex
 
 #undef Dee_ratomic_rwlock_t
-#undef DEE_RATOMIC_RWLOCK_INIT
+#undef Dee_RATOMIC_RWLOCK_INIT
 #undef Dee_ratomic_rwlock_init
 #undef Dee_ratomic_rwlock_cinit
 #undef Dee_ratomic_rwlock_tryread
@@ -270,7 +270,7 @@ DECL_BEGIN
 #undef _Dee_ratomic_rwlock_end_ex_NDEBUG
 
 #undef Dee_rshared_rwlock_t
-#undef DEE_RSHARED_RWLOCK_INIT
+#undef Dee_RSHARED_RWLOCK_INIT
 #undef Dee_rshared_rwlock_init
 #undef Dee_rshared_rwlock_cinit
 #undef Dee_rshared_rwlock_reading
@@ -359,7 +359,7 @@ DECL_BEGIN
 #define Dee_atomic_lock_init_acquired                            Dee_shared_lock_init_acquired
 
 #define Dee_shared_rwlock_t                                          uintptr_t
-#define DEE_SHARED_RWLOCK_MAX_READERS                                ((uintptr_t)-2)
+#define Dee_SHARED_RWLOCK_MAX_READERS                                ((uintptr_t)-2)
 #define _DEE_SHARED_RWLOCK_WRITING                                   ((uintptr_t)-1)
 #define Dee_shared_rwlock_init(self)                                 (void)(*(self) = 0)
 #define Dee_shared_rwlock_init_read(self, n)                         (void)(*(self) = (n))
@@ -392,7 +392,7 @@ DECL_BEGIN
 #define Dee_shared_rwlock_waitread_timed(self, timeout_nanoseconds)  (Dee_shared_rwlock_canread(self) ? 0 : _DeeLock_SleepFor(timeout_nanoseconds))
 #define Dee_shared_rwlock_waitwrite_timed(self, timeout_nanoseconds) (Dee_shared_rwlock_canwrite(self) ? 0 : _DeeLock_SleepFor(timeout_nanoseconds))
 /* Aliases */
-#define DEE_ATOMIC_RWLOCK_MAX_READERS                                DEE_SHARED_RWLOCK_MAX_READERS
+#define Dee_ATOMIC_RWLOCK_MAX_READERS                                Dee_SHARED_RWLOCK_MAX_READERS
 #define Dee_atomic_rwlock_init                                       Dee_shared_rwlock_init
 #define Dee_atomic_rwlock_init_read                                  Dee_shared_rwlock_init_read
 #define Dee_atomic_rwlock_init_write                                 Dee_shared_rwlock_init_write

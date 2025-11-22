@@ -339,7 +339,7 @@ err:
 }
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t dex_lock = DEE_ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t dex_lock = Dee_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define dex_lock_reading()    Dee_atomic_rwlock_reading(&dex_lock)
 #define dex_lock_writing()    Dee_atomic_rwlock_writing(&dex_lock)

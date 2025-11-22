@@ -449,7 +449,7 @@ PUBLIC struct Dee_static_module_struct DeeModule_Deemon =
 		/* .mo_globalv   = */ builtin_object_vector,
 		/* .mo_root      = */ &DeeCode_Empty,
 #ifndef CONFIG_NO_THREADS
-		/* .mo_lock      = */ DEE_ATOMIC_RWLOCK_INIT,
+		/* .mo_lock      = */ Dee_ATOMIC_RWLOCK_INIT,
 		/* .mo_loader    = */ NULL,
 #endif /* !CONFIG_NO_THREADS */
 #ifndef CONFIG_NO_DEC

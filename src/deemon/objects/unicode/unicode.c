@@ -158,7 +158,7 @@ PRIVATE DREF String *latin1_chars[256] = {
 };
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t latin1_chars_lock = DEE_ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t latin1_chars_lock = Dee_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define latin1_chars_lock_reading()    Dee_atomic_rwlock_reading(&latin1_chars_lock)
 #define latin1_chars_lock_writing()    Dee_atomic_rwlock_writing(&latin1_chars_lock)

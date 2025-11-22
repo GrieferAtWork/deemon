@@ -430,7 +430,7 @@ err:
 
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_lock_t atexit_lock = DEE_ATOMIC_LOCK_INIT;
+PRIVATE Dee_atomic_lock_t atexit_lock = Dee_ATOMIC_LOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define atexit_lock_available()  Dee_atomic_lock_available(&atexit_lock)
 #define atexit_lock_acquired()   Dee_atomic_lock_acquired(&atexit_lock)

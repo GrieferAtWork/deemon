@@ -348,7 +348,7 @@ INTERN DeePointerTypeObject DeePointer_Type = {
 			/* .tp_class_members = */ NULL
 		},
 #ifndef CONFIG_NO_THREADS
-		/* .st_cachelock = */ DEE_ATOMIC_RWLOCK_INIT,
+		/* .st_cachelock = */ Dee_ATOMIC_RWLOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 		/* .st_pointer  = */ &DeePointer_Type,
 		/* .st_lvalue   = */ &DeeLValue_Type,
@@ -782,7 +782,7 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
 			/* .tp_class_members = */ NULL
 		},
 #ifndef CONFIG_NO_THREADS
-		/* .st_cachelock = */ DEE_ATOMIC_RWLOCK_INIT,
+		/* .st_cachelock = */ Dee_ATOMIC_RWLOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 		/* .st_pointer  = */ &DeePointer_Type,
 		/* .st_lvalue   = */ &DeeLValue_Type,

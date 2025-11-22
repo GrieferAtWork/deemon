@@ -372,7 +372,7 @@ PRIVATE size_t /*              */ regex_cache_mask = 0;
 PRIVATE size_t /*              */ regex_cache_size = 0;
 PRIVATE size_t /*              */ regex_cache_used = 0;
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t regex_cache_lock = DEE_ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t regex_cache_lock = Dee_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define regex_cache_lock_reading()    Dee_atomic_rwlock_reading(&regex_cache_lock)
 #define regex_cache_lock_writing()    Dee_atomic_rwlock_writing(&regex_cache_lock)

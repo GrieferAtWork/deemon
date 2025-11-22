@@ -4956,7 +4956,7 @@ vpack_map_or_set_at_runtime(struct fungen *__restrict self,
 	 * >> if (!chain_d) HANDLE_EXCEPT();
 	 * >> [...] // Repeat for all non-constant keys
 	 * >>
-	 * >> d->d_lock = DEE_ATOMIC_RWLOCK_INIT;
+	 * >> d->d_lock = Dee_ATOMIC_RWLOCK_INIT;
 	 * >> d->ob_weakrefs = Dee_WEAKREF_SUPPORT_INIT;
 	 * >> DeeObject_Init(d, &DeeDict_Type);
 	 * >> RESULT = DeeGC_Track(d);
