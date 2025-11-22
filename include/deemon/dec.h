@@ -225,6 +225,7 @@ typedef struct ATTR_PACKED {
 	Dee_dec_addr_t        e_offsetof_files;      /* [0..1] Offset to array of `Dec_Dstr[]' (terminated by a ds_length==0-entry, each aligned to __ALIGNOF_SIZE_T__) of extra filenames relative to the directory containing the .dec-file. If any of these files is newer than `e_build_timestamp', don't load dec file */
 	Dee_dec_addr_t        e_offsetof_gchead;     /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
 	Dee_dec_addr_t        e_offsetof_gctail;     /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `e_offsetof_srel') */
+	/* TODO: e_mapping can overlap the relocation-only fields above! */
 	struct DeeMapFile     e_mapping;             /* Uninitialized/unused in file mappings; when mapped into memory, populated with the dec file's own file map descriptor. */
 	struct Dee_heapregion e_heap;                /* Heap region descriptor for objects embedded within this dec file. The first chunk of
 	                                              * this heap is assumed to point at the `DeeModuleObject' describing the dec file itself. */
@@ -298,6 +299,7 @@ typedef struct {
 #endif /* !DEE_SOURCE */
 	size_t                dw_alloc;  /* Allocated buffer size for `dw_base' */
 	size_t                dw_used;   /* [<= dw_alloc] Used buffer size for `dw_base' */
+	size_t                dw_hlast;  /* Chunk size during the previous call to `DeeDecWriter_Malloc()' */
 	struct Dee_dec_reltab dw_srel;   /* Table of self-relocations */
 	struct Dee_dec_reltab dw_drel;   /* Table of relocations against deemon-core objects */
 	struct Dee_dec_reltab dw_drrel;  /* Table of incref-relocations against deemon-core objects */

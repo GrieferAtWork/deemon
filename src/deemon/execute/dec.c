@@ -110,13 +110,14 @@ PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeDecWriter_Init(DeeDecWriter *__restrict self) {
 	self->dw_ehdr = (Dec_Ehdr *)Dee_TryMalloc(sizeof(Dec_Ehdr) + (64 * 1024));
 	if unlikely(!self->dw_ehdr) {
-		self->dw_ehdr = (Dec_Ehdr *)Dee_Malloc(sizeof(Dec_Ehdr));
+		self->dw_ehdr = (Dec_Ehdr *)Dee_Malloc(sizeof(Dec_Ehdr) + sizeof(struct Dee_heaptail));
 		if unlikely(!self->dw_ehdr)
 			goto err;
 	}
 	self->dw_alloc = Dee_MallocUsableSize(self->dw_ehdr);
 	/* The header struct ends at the start of the first heap chunk's user-area */
-	self->dw_used = sizeof(Dec_Ehdr);
+	self->dw_used  = sizeof(Dec_Ehdr);
+	self->dw_hlast = 0;
 	self->dw_srel.drlt_relv  = NULL;
 	self->dw_srel.drlt_relc  = 0;
 	self->dw_srel.drlt_rela  = 0;
@@ -178,6 +179,7 @@ DeeDecWriter_Fini(DeeDecWriter *__restrict self) {
  * @return: NULL: An error was thrown */
 PUBLIC WUNUSED NONNULL((1)) DeeDec_Ehdr *DCALL
 DeeDecWriter_PackMapping(/*inherit(on_success)*/ DeeDecWriter *__restrict self) {
+	/* TODO: Append trailing `struct Dee_heaptail' to heap */
 	/* TODO: Figure out total mapping size (by summing up buffers that come after the main heap-buffer) */
 	/* TODO: Resize the main buffer to fit */
 	/* TODO: Initialize the "e_heap" as a generic heap buffer */
@@ -252,10 +254,24 @@ DeeDecWriter_GetDep(DeeDecWriter *__restrict self,
 PUBLIC WUNUSED NONNULL((1)) Dee_dec_addr_t DCALL
 DeeDecWriter_Malloc(DeeDecWriter *__restrict self, size_t num_bytes) {
 	Dee_dec_addr_t result;
-	size_t avail = self->dw_alloc - self->dw_used;
-	if likely(avail < num_bytes) {
+	struct Dee_heapchunk *chunk;
+	size_t avail, used, nb, req;
+	nb = num_bytes + sizeof(struct Dee_heapchunk);
+
+	/* Force alignment of new chunk size */
+	num_bytes = CEIL_ALIGN(num_bytes, Dee_HEAPCHUNK_ALIGN);
+
+	/* Force alignment of new chunk addr */
+	used = CEIL_ALIGN(self->dw_used, Dee_HEAPCHUNK_ALIGN);
+
+	/* Ensure that enough space has been allocated.
+	 * Always include space for the eventual `struct Dee_heaptail'! */
+	if (OVERFLOW_USUB(self->dw_alloc, used, &avail))
+		avail = 0;
+	req = nb + sizeof(struct Dee_heaptail);
+	if likely(avail < req) {
 		byte_t *new_base;
-		size_t min_alloc = (self->dw_used + num_bytes);
+		size_t min_alloc = (self->dw_used + req);
 		size_t new_alloc = min_alloc * 2;
 		if (new_alloc < min_alloc)
 			new_alloc = min_alloc;
@@ -267,10 +283,18 @@ DeeDecWriter_Malloc(DeeDecWriter *__restrict self, size_t num_bytes) {
 				goto err;
 		}
 		self->dw_base  = new_base;
-		self->dw_alloc = new_alloc;
+		self->dw_alloc = Dee_MallocUsableSize(new_base);
+		ASSERT(self->dw_alloc >= new_alloc);
 	}
-	result = (Dee_dec_addr_t)self->dw_used;
-	self->dw_used += num_bytes;
+
+	/* Initialize the heap chunk for the newly made allocation */
+	result = (Dee_dec_addr_t)used;
+	chunk  = DeeDecWriter_Addr2Mem(self, result, struct Dee_heapchunk);
+	chunk->hc_prevsize = self->dw_hlast; /* Must be 0 the first time around */
+	chunk->hc_head     = Dee_HEAPCHUNK_HEAD(nb);
+	result += sizeof(struct Dee_heapchunk);
+	self->dw_used  = used + nb;
+	self->dw_hlast = Dee_HEAPCHUNK_PREV(nb); /* Override with whatever the next chunk will need */
 	return result;
 err:
 	return 0;

@@ -3099,10 +3099,10 @@ pack_code_in_return:
 
 	{
 		DREF DeeCodeObject *iter, *next;
-		iter                       = current_rootscope->rs_code;
+		iter = current_rootscope->rs_code;
 		current_rootscope->rs_code = NULL;
 		while (iter) {
-			next            = iter->co_next;
+			next = iter->co_next;
 			iter->co_module = result;
 			Dee_Incref(result); /* Create the new module-reference now stored in `iter->co_module'. */
 			Dee_Decref(iter);   /* This reference was owned by the chain before. */
@@ -3393,7 +3393,7 @@ PRIVATE Dee_atomic_rwlock_t deemon_home_lock = DEE_ATOMIC_RWLOCK_INIT;
 #define deemon_home_lock_endread()    Dee_atomic_rwlock_endread(&deemon_home_lock)
 #define deemon_home_lock_end()        Dee_atomic_rwlock_end(&deemon_home_lock)
 
-PRIVATE DREF DeeStringObject *deemon_home = NULL;
+PRIVATE DREF DeeStringObject *deemon_home = NULL; /* TODO: "Dee_atomic_ref" (object ref w/ in-use counter) */
 
 /* Get/Set deemon's home path.
  * The home path is used to locate builtin libraries, as well as extensions.

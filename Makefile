@@ -186,6 +186,7 @@ endif
 ifndef CONFIG_WITHOUT_DEX_MATH
 BIN_OPTIONAL += lib/math$(DLL)
 SRC_lib_math$(DLL) := src/dex/math/*.c
+OPTLIBS_lib_math$(DLL) := $(LIBM)
 endif
 
 
@@ -310,6 +311,7 @@ $(BLD_ROOT)/%.o $(BLD_RELPATH)/%.o: $(SRC_RELPATH)/%.c
 #		- CFLAGS_src_deemon
 #		- CFLAGS_src                     (this one gets set to $(CFLAGS) above)
 	$(eval cflags := $(foreach c,$(canon_names_dsc),$(CFLAGS_$(c))))
+	$(eval cflags := $(filter-out ,$(cflags)))
 #	echo canon_src=$(canon_src)
 #	echo canon_names_asc=$(canon_names_asc)
 #	echo canon_names_dsc=$(canon_names_dsc)
@@ -375,6 +377,10 @@ $(BIN_ROOT)/$(1) $(BIN_RELPATH)/$(1): $(call bin_objects,$(1)) $(foreach c,$(can
 	$$(eval maybe_export_objects1 := $$(call if_list_longer_than,$$(objs),$(cli_objs_limit), \
 		mkdir -p $$(BLD_RELPATH) \
 	,))
+# TODO: Don't use printf here to print everything all at once -- the whole point of dumping
+#       object file names into a separate file is to work around cmdline length limits, and
+#       if we just repeat all object names on a singular printf-call, we just hit the same
+#       limit but with "printf" instead of "gcc"!
 	$$(eval maybe_export_objects2 := $$(if $$(maybe_export_objects1), \
 		printf "$$(foreach o,$$(objs),$$(subst \\,\\\\,$$(o))\\n)" > $$(BLD_RELPATH)/$(1).args \
 	,))
@@ -387,6 +393,7 @@ endif
 # Build the linker CLI that will need to be called
 	$$(eval link_cmd_base := $(ld) $(ldflags) -o $$(bin) $$(objs) $(libs))
 	$$(eval link_cmd := $$(if $(optlibs),$$(link_cmd_base) || $$(link_cmd_base) $(optlibs),$$(link_cmd_base)))
+	$$(eval link_cmd := $$(filter-out ,$$(link_cmd)))
 
 #	echo bin=$$(bin)
 #	echo objs=$$(objs)
