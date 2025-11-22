@@ -22,8 +22,8 @@
 
 #include <__stdinc.h>
 
-#include <hybrid/host.h>
-#include <hybrid/typecore.h>
+#include "../host.h"
+#include "../typecore.h"
 
 #ifdef __CC__
 #ifndef __hybrid_yield

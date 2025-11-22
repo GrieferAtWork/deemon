@@ -35,6 +35,7 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/thread.h>
+#include <deemon/util/atomic-ref.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
@@ -3373,27 +3374,7 @@ err:
 }
 
 
-#ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t deemon_home_lock = DEE_ATOMIC_RWLOCK_INIT;
-#endif /* !CONFIG_NO_THREADS */
-#define deemon_home_lock_reading()    Dee_atomic_rwlock_reading(&deemon_home_lock)
-#define deemon_home_lock_writing()    Dee_atomic_rwlock_writing(&deemon_home_lock)
-#define deemon_home_lock_tryread()    Dee_atomic_rwlock_tryread(&deemon_home_lock)
-#define deemon_home_lock_trywrite()   Dee_atomic_rwlock_trywrite(&deemon_home_lock)
-#define deemon_home_lock_canread()    Dee_atomic_rwlock_canread(&deemon_home_lock)
-#define deemon_home_lock_canwrite()   Dee_atomic_rwlock_canwrite(&deemon_home_lock)
-#define deemon_home_lock_waitread()   Dee_atomic_rwlock_waitread(&deemon_home_lock)
-#define deemon_home_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&deemon_home_lock)
-#define deemon_home_lock_read()       Dee_atomic_rwlock_read(&deemon_home_lock)
-#define deemon_home_lock_write()      Dee_atomic_rwlock_write(&deemon_home_lock)
-#define deemon_home_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&deemon_home_lock)
-#define deemon_home_lock_upgrade()    Dee_atomic_rwlock_upgrade(&deemon_home_lock)
-#define deemon_home_lock_downgrade()  Dee_atomic_rwlock_downgrade(&deemon_home_lock)
-#define deemon_home_lock_endwrite()   Dee_atomic_rwlock_endwrite(&deemon_home_lock)
-#define deemon_home_lock_endread()    Dee_atomic_rwlock_endread(&deemon_home_lock)
-#define deemon_home_lock_end()        Dee_atomic_rwlock_end(&deemon_home_lock)
-
-PRIVATE DREF DeeStringObject *deemon_home = NULL; /* TODO: "Dee_atomic_ref" (object ref w/ in-use counter) */
+PRIVATE Dee_ATOMIC_REF(DeeStringObject) deemon_home = Dee_ATOMIC_REF_INIT(NULL);
 
 /* Get/Set deemon's home path.
  * The home path is used to locate builtin libraries, as well as extensions.
@@ -3405,6 +3386,7 @@ PRIVATE DREF DeeStringObject *deemon_home = NULL; /* TODO: "Dee_atomic_ref" (obj
  * >>#ifdef CONFIG_DEEMON_HOME
  * >>     deemon_home = CONFIG_DEEMON_HOME;
  * >>#else
+ * >>     // Some other os-specific shenanigans here...
  * >>     deemon_home = fs.headof(fs.readlink("/proc/self/exe"));
  * >>#endif
  * >> }
@@ -3421,31 +3403,25 @@ PRIVATE DREF DeeStringObject *deemon_home = NULL; /* TODO: "Dee_atomic_ref" (obj
 PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL
 DeeExec_GetHome(void) {
 	DREF DeeStringObject *result;
-	deemon_home_lock_read();
-	result = deemon_home;
-	if (result) {
-		Dee_Incref(result);
-		deemon_home_lock_endread();
+	result = (DREF DeeStringObject *)Dee_atomic_ref_xget(&deemon_home);
+	if (result)
 		return (DREF DeeObject *)result;
-	}
-	deemon_home_lock_endread();
+
 	/* Re-create the default home path. */
 	result = get_default_home();
 
 	/* Save the generated path in the global variable. */
 	if likely(result) {
-		DREF DeeStringObject *other;
-		deemon_home_lock_write();
-		other = deemon_home;
-		if unlikely(other) {
-			Dee_Incref(other);
-			deemon_home_lock_endwrite();
-			Dee_Decref(result);
-			return (DREF DeeObject *)other;
-		}
 		Dee_Incref(result);
-		deemon_home = result;
-		deemon_home_lock_endwrite();
+		while (!Dee_atomic_ref_xcmpxch_inherited(&deemon_home, NULL, (DeeObject *)result)) {
+			DREF DeeStringObject *other;
+			other = (DREF DeeStringObject *)Dee_atomic_ref_xget(&deemon_home);
+			if (other) {
+				Dee_Decref(result);
+				result = other;
+				break;
+			}
+		}
 	}
 	return (DREF DeeObject *)result;
 }
@@ -3454,14 +3430,8 @@ DeeExec_GetHome(void) {
  * HINT: You may pass `NULL' to cause the default home path to be re-created. */
 PUBLIC void DCALL
 DeeExec_SetHome(/*String*/ DeeObject *new_home) {
-	DREF DeeStringObject *old_home;
 	ASSERT_OBJECT_TYPE_EXACT_OPT(new_home, &DeeString_Type);
-	Dee_XIncref(new_home);
-	deemon_home_lock_write();
-	old_home    = deemon_home;
-	deemon_home = (DREF DeeStringObject *)new_home;
-	deemon_home_lock_endwrite();
-	Dee_XDecref(old_home);
+	Dee_atomic_ref_xset(&deemon_home, new_home);
 }
 
 

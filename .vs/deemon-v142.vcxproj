@@ -223,6 +223,7 @@
 		<ClInclude Include="..\include\deemon\traceback.h" />
 		<ClInclude Include="..\include\deemon\tuple.h" />
 		<ClInclude Include="..\include\deemon\types.h" />
+		<ClInclude Include="..\include\deemon\util\atomic-ref.h" />
 		<ClInclude Include="..\include\deemon\util\atomic.h" />
 		<ClInclude Include="..\include\deemon\util\bytewriter.h" />
 		<ClInclude Include="..\include\deemon\util\cache.h" />

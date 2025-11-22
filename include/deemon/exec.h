@@ -46,6 +46,7 @@ DECL_BEGIN
  * >>#ifdef CONFIG_DEEMON_HOME
  * >>     deemon_home = CONFIG_DEEMON_HOME;
  * >>#else
+ * >>     // Some other os-specific shenanigans here...
  * >>     deemon_home = fs.headof(fs.readlink("/proc/self/exe"));
  * >>#endif
  * >> }
