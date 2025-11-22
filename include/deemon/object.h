@@ -1432,6 +1432,23 @@ LOCAL ATTR_ARTIFICIAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 
 
 
+#ifndef Dee_dec_addr_t_DEFINED
+#define Dee_dec_addr_t_DEFINED
+typedef uintptr_t Dee_dec_addr_t; /* Offset from start of `Dec_Ehdr' to some other structure. */
+#endif /* !Dee_dec_addr_t_DEFINED */
+struct Dee_dec_writer;
+
+#if 0
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+myobject_writedec(DeeDecWriter *__restrict writer,
+                  MyObject *__restrict self, Dee_dec_addr_t addr) {
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
+myobject_writedec(DeeDecWriter *__restrict writer,
+                  MyObject *__restrict self) {
+}
+#endif
 
 #undef tp_alloc
 struct Dee_type_constructor {
@@ -1446,6 +1463,7 @@ struct Dee_type_constructor {
 			Dee_funptr_t _tp_init4_; /* tp_free */
 			struct { Dee_funptr_t _tp_init5_; } _tp_init6_;
 			Dee_funptr_t _tp_init7_; /* tp_any_ctor_kw */
+			Dee_funptr_t _tp_init8_; /* tp_writedec */
 		} _tp_init_;
 
 		struct {
@@ -1474,6 +1492,23 @@ struct Dee_type_constructor {
 			WUNUSED_T NONNULL_T((1)) ATTR_INS_T(3, 2)
 			int (DCALL *tp_any_ctor_kw)(DeeObject *__restrict self, size_t argc,
 			                            DeeObject *const *argv, DeeObject *kw);
+
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+			/* [0..1] Serialize the binary data of `self' into `writer'.
+			 * The caller has already pre-allocated the necessary amount
+			 * of storage needed as per `tp_instance_size' (or `tp_alloc')
+			 * at `addr', leaving it to this operator to stream the data
+			 * of `self' into `writer'
+			 *
+			 * Standard fields like `ob_refcnt' and `ob_type' will have
+			 * already been initialized at the time this operator is called.
+			 *
+			 * @return: 0 : Success
+			 * @return: -1: Error */
+			WUNUSED_T NONNULL_T((1, 2))
+			int (DCALL *tp_writedec)(struct Dee_dec_writer *__restrict writer,
+			                         DeeObject *__restrict self, Dee_dec_addr_t addr);
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 		} tp_alloc; /* [valid_if(!TP_FVARIABLE)] */
 
 		struct {
@@ -1499,6 +1534,15 @@ struct Dee_type_constructor {
 			/* WARNING: `tp_any_ctor_kw' may be invoked with `argc == 0 && kw == NULL',
 			 *          even when `tp_ctor' or `tp_any_ctor' has been defined as non-NULL! */
 			WUNUSED_T ATTR_INS_T(2, 1) DREF DeeObject *(DCALL *tp_any_ctor_kw)(size_t argc, DeeObject *const *argv, DeeObject *kw);
+
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+			/* [0..1] Serialize the binary data of `self' into `writer'.
+			 * @return: 0 : Error
+			 * @return: * : Address where data for `self' was written to. */
+			WUNUSED_T NONNULL_T((1, 2))
+			Dee_dec_addr_t (DCALL *tp_writedec)(struct Dee_dec_writer *__restrict writer,
+			                                    DeeObject *__restrict self);
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 		} tp_var; /* [valid_if(TP_FVARIABLE)] */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION

@@ -140,10 +140,10 @@ DECL_BEGIN
 
 
 #ifdef DEE_SOURCE
-#define dee_kwds_entry    kwds_entry
+#define Dee_kwds_entry    kwds_entry
 #define Dee_string_object string_object
 #define Dee_kwds_object   kwds_object
-#define dee_kwargs        kwds_args
+#define Dee_kwargs        kwargs
 #define DEFINE_KWDS       Dee_DEFINE_KWDS
 #define Dee_code_object   code_object
 #endif /* DEE_SOURCE */
@@ -151,7 +151,7 @@ DECL_BEGIN
 struct Dee_string_object;
 struct Dee_code_object;
 
-struct dee_kwds_entry {
+struct Dee_kwds_entry {
 	DREF struct Dee_string_object *ke_name;  /* [1..1][SENTINAL(NULL)] Keyword name. */
 	Dee_hash_t                     ke_hash;  /* [== Dee_HashStr(ke_name)][valid_if(ke_name)] Hash of this keyword. */
 	size_t                         ke_index; /* [< kw_size:][valid_if(ke_name)]
@@ -203,7 +203,7 @@ struct Dee_kwds_object {
 	Dee_OBJECT_HEAD
 	size_t                                         kw_size; /* [const] The number of valid entries in `kw_map'. */
 	size_t                                         kw_mask; /* [const] Mask for keyword names. */
-	COMPILER_FLEXIBLE_ARRAY(struct dee_kwds_entry, kw_map); /* [const] Keyword name->index map. */
+	COMPILER_FLEXIBLE_ARRAY(struct Dee_kwds_entry, kw_map); /* [kw_mask+1][const] Keyword name->index map. */
 };
 #define DeeKwds_MAPNEXT(i, perturb) \
 	((i) = (((i) << 2) + (i) + (perturb) + 1), (perturb) >>= 5)
@@ -213,7 +213,7 @@ struct Dee_kwds_object {
 		Dee_OBJECT_HEAD                                \
 		size_t kw_size;                                \
 		size_t kw_mask;                                \
-		struct dee_kwds_entry kw_map[(kw_mask_) + 1];  \
+		struct Dee_kwds_entry kw_map[(kw_mask_) + 1];  \
 	} name = {                                         \
 		Dee_OBJECT_HEAD_INIT(&DeeKwds_Type),           \
 		kw_size_,                                      \
@@ -256,7 +256,7 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* Dee_foreach_t-compatible! */
 
 /* Return the keyword-entry associated with `keyword_index'
  * The caller must ensure that `keyword_index < DeeKwds_SIZE(self)' */
-INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) struct dee_kwds_entry *DCALL
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) struct Dee_kwds_entry *DCALL
 DeeKwds_GetByIndex(DeeObject *__restrict self, size_t keyword_index);
 
 #ifndef __INTELLISENSE__
@@ -385,8 +385,8 @@ DFUNDEF ATTR_INS(2, 1) NONNULL((3)) void DCALL
 DeeKwMapping_Decref(size_t argc, DeeObject *const *argv, DREF DeeObject *kw);
 
 
-typedef struct dee_kwargs DeeKwArgs;
-struct dee_kwargs {
+typedef struct Dee_kwargs DeeKwArgs;
+struct Dee_kwargs {
 	size_t            kwa_kwused; /* # of used keyword arguments (assuming that any argument is loaded 1 time at most) */
 	DeeObject *const *kwa_kwargv; /* [0..1] Positional arguments to supplement `kwa_kw' (or NULL if unused). */
 	DeeObject        *kwa_kw;     /* [0..1] Keyword arguments descriptor / mapping (supports `DeeObject_IsKw()') */

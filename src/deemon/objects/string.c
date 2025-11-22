@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
+#include <deemon/dec.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -526,6 +527,103 @@ string_new(size_t argc, DeeObject *const *argv) {
 	return DeeObject_Str(args.ob);
 err:
 	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
+string_writedec(DeeDecWriter *__restrict writer,
+                String *__restrict self) {
+	String *out;
+	size_t sizeof_string = offsetof(String, s_str) + (self->s_len + 1) * sizeof(char);
+	Dee_dec_addr_t addr = DeeDecWriter_Object_Malloc(writer, sizeof_string, self);
+	if unlikely(!addr)
+		goto err;
+	out = DeeDecWriter_Addr2Mem(writer, addr, String);
+#ifdef __OPTIMIZE_SIZE__
+	out->s_hash = self->s_hash;
+#else /* __OPTIMIZE_SIZE__ */
+	/* **always** write with hash-value already loaded */
+	out->s_hash = DeeString_Hash((DeeObject *)self);
+#endif /* !__OPTIMIZE_SIZE__ */
+	out->s_len = self->s_len;
+	memcpyc(out->s_str, self->s_str, self->s_len + 1, sizeof(char));
+
+	/* Only generate the "data"-block if it is needed to correctly represent the string.
+	 * That is the case iff DeeString_STR does not represent the LATIN1 (or ASCII) data. */
+	if (DeeString_STR_ISLATIN1(self)) {
+		out->s_data = NULL;
+	} else {
+		Dee_dec_addr_t addrof_data;
+		struct string_utf *out_data;
+		struct string_utf const *in_data;
+		addrof_data = DeeDecWriter_Malloc(writer, sizeof(struct string_utf));
+		if unlikely(!addrof_data)
+			goto err;
+		if unlikely(DeeDecWriter_PutRel(writer, addr + offsetof(String, s_data), addrof_data))
+			goto err;
+		out_data = DeeDecWriter_Addr2Mem(writer, addrof_data, struct string_utf);
+		in_data  = self->s_data;
+		out_data->u_width = in_data->u_width;
+		out_data->u_flags = in_data->u_flags;
+		/* Individual strings are written as-needed */
+		out_data->u_data[STRING_WIDTH_1BYTE] = NULL;
+		out_data->u_data[STRING_WIDTH_2BYTE] = NULL;
+		out_data->u_data[STRING_WIDTH_4BYTE] = NULL;
+		out_data->u_utf8  = NULL;
+		out_data->u_utf16 = NULL;
+#define addrin_data(field) (addrof_data + offsetof(struct string_utf, field))
+		if (in_data->u_data[STRING_WIDTH_1BYTE] == (void *)self->s_str) {
+			if unlikely(DeeDecWriter_PutRel(writer, addrin_data(u_data[STRING_WIDTH_1BYTE]), addr + offsetof(String, s_str)))
+				goto err;
+		}
+		if (in_data->u_utf8 == self->s_str) {
+			if unlikely(DeeDecWriter_PutRel(writer, addrin_data(u_utf8), addr + offsetof(String, s_str)))
+				goto err;
+		}
+
+		/* If it's a multi-byte string, then we **have** to write the native width-string */
+		SWITCH_SIZEOF_WIDTH(in_data->u_width) {
+
+		CASE_WIDTH_1BYTE:
+			ASSERT(in_data->u_data[STRING_WIDTH_1BYTE] == (void *)self->s_str);
+			/* In this case, "out_data->u_data[STRING_WIDTH_1BYTE]" was already written by
+			 * the "in_data->u_data[STRING_WIDTH_1BYTE] == (void *)self->s_str" check above! */
+			break;
+
+		CASE_WIDTH_2BYTE: {
+			void *wstr = in_data->u_data[STRING_WIDTH_2BYTE];
+			size_t lengthof_wstr = WSTR_LENGTH(wstr);
+			size_t sizeof_wstr = sizeof(size_t) + ((lengthof_wstr + 1) * 2);
+			Dee_dec_addr_t addrof_wstr = DeeDecWriter_Malloc(writer, sizeof_wstr);
+			if unlikely(!addrof_wstr)
+				goto err;
+			memcpy(DeeDecWriter_Addr2Mem(writer, addrof_wstr, uint16_t),
+			       (uint16_t *)((size_t *)wstr - 1), sizeof_wstr);
+			addrof_wstr += sizeof(size_t);
+			if unlikely(DeeDecWriter_PutRel(writer, addrin_data(u_data[STRING_WIDTH_2BYTE]), addrof_wstr))
+				goto err;
+		}	break;
+
+		CASE_WIDTH_4BYTE: {
+			void *wstr = in_data->u_data[STRING_WIDTH_4BYTE];
+			size_t lengthof_wstr = WSTR_LENGTH(wstr);
+			size_t sizeof_wstr = sizeof(size_t) + ((lengthof_wstr + 1) * 4);
+			Dee_dec_addr_t addrof_wstr = DeeDecWriter_Malloc(writer, sizeof_wstr);
+			if unlikely(!addrof_wstr)
+				goto err;
+			memcpy(DeeDecWriter_Addr2Mem(writer, addrof_wstr, uint32_t),
+			       (uint32_t *)((size_t *)wstr - 1), sizeof_wstr);
+			addrof_wstr += sizeof(size_t);
+			if unlikely(DeeDecWriter_PutRel(writer, addrin_data(u_data[STRING_WIDTH_4BYTE]), addrof_wstr))
+				goto err;
+		}	break;
+
+		}
+#undef addrin_data
+	}
+	return addr;
+err:
+	return 0;
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2843,7 +2941,10 @@ PUBLIC DeeTypeObject DeeString_Type = {
 				/* .tp_ctor      = */ (Dee_funptr_t)&string_new_empty,
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&string_new
+				/* .tp_any_ctor  = */ (Dee_funptr_t)&string_new,
+				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&string_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&string_fini,

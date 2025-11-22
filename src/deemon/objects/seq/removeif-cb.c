@@ -292,9 +292,10 @@ INTERN DeeObject SeqRemoveIfWithRemoveAllItem_DummyInstance = {
 };
 
 STATIC_ASSERT(offsetof(SeqRemoveIfWithRemoveAllKey, sriwrak_should) == offsetof(ProxyObject, po_obj));
-#define seq_removeif_with_removeall_key_init  generic_proxy__init
-#define seq_removeif_with_removeall_key_fini  generic_proxy__fini
-#define seq_removeif_with_removeall_key_visit generic_proxy__visit
+#define seq_removeif_with_removeall_key_init     generic_proxy__init
+#define seq_removeif_with_removeall_key_writedec generic_proxy__writedec
+#define seq_removeif_with_removeall_key_fini     generic_proxy__fini
+#define seq_removeif_with_removeall_key_visit    generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 seq_removeif_with_removeall_key_printrepr(SeqRemoveIfWithRemoveAllKey *__restrict self,
@@ -329,7 +330,9 @@ INTERN DeeTypeObject SeqRemoveIfWithRemoveAllKey_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&seq_removeif_with_removeall_key_init,
-				TYPE_FIXED_ALLOCATOR(SeqRemoveIfWithRemoveAllKey)
+				TYPE_FIXED_ALLOCATOR(SeqRemoveIfWithRemoveAllKey),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&seq_removeif_with_removeall_key_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *))&seq_removeif_with_removeall_key_fini,

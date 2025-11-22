@@ -27,6 +27,7 @@
 #include <deemon/cached-dict.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
+#include <deemon/dec.h>
 #include <deemon/error-rt.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -442,7 +443,7 @@ err:
 
 /* Return the keyword-entry associated with `keyword_index'
  * The caller must ensure that `keyword_index < DeeKwds_SIZE(self)' */
-INTERN ATTR_RETNONNULL WUNUSED NONNULL((1)) struct dee_kwds_entry *DCALL
+INTERN ATTR_RETNONNULL WUNUSED NONNULL((1)) struct Dee_kwds_entry *DCALL
 DeeKwds_GetByIndex(DeeObject *__restrict self, size_t keyword_index) {
 	DeeKwdsObject *me = (DeeKwdsObject *)self;
 	size_t i;
@@ -503,6 +504,32 @@ kwds_visit(Kwds *__restrict self, Dee_visit_t proc, void *arg) {
 	size_t i;
 	for (i = 0; i <= self->kw_mask; ++i)
 		Dee_XVisit(self->kw_map[i].ke_name);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
+kwds_writedec(DeeDecWriter *__restrict writer, Kwds *__restrict self) {
+	Kwds *out;
+	size_t i, sizeof_kwds = offsetof(Kwds, kw_map) + (self->kw_mask + 1) * sizeof(struct kwds_entry);
+	Dee_dec_addr_t addr = DeeDecWriter_Object_Malloc(writer, sizeof_kwds, self);
+	if unlikely(!addr)
+		goto err;
+	out = DeeDecWriter_Addr2Mem(writer, addr, Kwds);
+	out->kw_size = self->kw_size;
+	out->kw_mask = self->kw_mask;
+	memcpyc(out->kw_map, self->kw_map, self->kw_mask + 1, sizeof(struct kwds_entry));
+	for (i = 0; i <= self->kw_mask; ++i) {
+		if (self->kw_map[i].ke_name) {
+			Dee_dec_addr_t addrof_out_entry_name;
+			addrof_out_entry_name = addr + offsetof(Kwds, kw_map) +
+			                        i * sizeof(struct kwds_entry);
+			if unlikely(DeeDecWriter_PutObject(writer, addrof_out_entry_name,
+			                                   self->kw_map[i].ke_name))
+				goto err;
+		}
+	}
+	return addr;
+err:
+	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -777,7 +804,9 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&kwds_init,
-				/* .tp_free      = */ (Dee_funptr_t)NULL
+				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&kwds_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kwds_fini,

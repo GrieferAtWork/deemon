@@ -23,6 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/dec.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
 #include <deemon/format.h>
@@ -736,6 +737,95 @@ DeeStructObject_Init(DeeObject *__restrict self,
 	return DeeStructObject_InitKw(self, argc, argv, NULL);
 }
 
+struct struct_writedec_data {
+	DeeObject     *scd_src;
+	DeeDecWriter  *scd_dst_writer;
+	Dee_dec_addr_t scd_dst_addr;
+};
+
+
+PRIVATE NONNULL((2, 3)) Dee_ssize_t DCALL
+struct_writedec_cb(void *arg, DeeTypeObject *declaring_type,
+                   struct type_member const *field) {
+	struct struct_writedec_data *data = (struct struct_writedec_data *)arg;
+	Dee_dec_addr_t dst_addr = data->scd_dst_addr + field->m_desc.md_field.mdf_offset;
+	byte_t *src = (byte_t *)data->scd_src + field->m_desc.md_field.mdf_offset;
+	byte_t *dst = DeeDecWriter_Addr2Mem(data->scd_dst_writer, dst_addr, byte_t);
+	ASSERT(TYPE_MEMBER_ISFIELD(field));
+	(void)declaring_type;
+	switch (field->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
+	case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
+	case STRUCT_OBJECT & ~STRUCT_CONST: {
+		DeeObject *obj = *(DeeObject *const *)src;
+		return DeeDecWriter_XPutObject(data->scd_dst_writer, dst_addr, obj);
+	}	break;
+	//TODO:case STRUCT_WOBJECT_OPT:
+	//TODO:case STRUCT_WOBJECT:
+	//TODO:	break;
+	case STRUCT_VARIANT:
+		return Dee_variant_writedec(data->scd_dst_writer, (struct Dee_variant *)src, dst_addr);
+	case STRUCT_CHAR:
+	case STRUCT_BOOLBIT0:
+	case STRUCT_BOOLBIT1:
+	case STRUCT_BOOLBIT2:
+	case STRUCT_BOOLBIT3:
+	case STRUCT_BOOLBIT4:
+	case STRUCT_BOOLBIT5:
+	case STRUCT_BOOLBIT6:
+	case STRUCT_BOOLBIT7:
+	case STRUCT_BOOL8:
+	case STRUCT_INT8:
+	case STRUCT_UNSIGNED | STRUCT_INT8:
+		*dst = *src;
+		break;
+	case STRUCT_BOOL16:
+	case STRUCT_INT16:
+	case STRUCT_UNSIGNED | STRUCT_INT16:
+		memcpy(dst, src, 2);
+		break;
+	case STRUCT_BOOL32:
+	case STRUCT_INT32:
+	case STRUCT_UNSIGNED | STRUCT_INT32:
+		memcpy(dst, src, 4);
+		break;
+	case STRUCT_BOOL64:
+	case STRUCT_INT64:
+	case STRUCT_UNSIGNED | STRUCT_INT64:
+		memcpy(dst, src, 8);
+		break;
+	case STRUCT_INT128:
+	case STRUCT_UNSIGNED | STRUCT_INT128:
+		memcpy(dst, src, 16);
+		break;
+	case STRUCT_FLOAT:
+		memcpy(dst, src, __SIZEOF_FLOAT__);
+		break;
+	case STRUCT_DOUBLE:
+		memcpy(dst, src, __SIZEOF_DOUBLE__);
+		break;
+	case STRUCT_LDOUBLE:
+		memcpy(dst, src, __SIZEOF_LONG_DOUBLE__);
+		break;
+	case STRUCT_VOID:
+		break;
+	default: return DeeError_NOTIMPLEMENTED();
+	}
+	return 0;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeStructObject_WriteDec(struct Dee_dec_writer *__restrict writer,
+                         DeeObject *self, Dee_dec_addr_t addr) {
+	struct struct_writedec_data data;
+	data.scd_dst_addr   = addr;
+	data.scd_dst_writer = writer;
+	data.scd_src        = self;
+	return (int)DeeStructObject_ForeachField(Dee_TYPE(self),
+	                                         &struct_writedec_cb,
+	                                         NULL, &data);
+}
+
+
 PRIVATE NONNULL((2, 3)) Dee_ssize_t DCALL
 struct_init_unbound_cb(void *arg, DeeTypeObject *declaring_type,
                        struct type_member const *field) {
@@ -746,7 +836,8 @@ struct_init_unbound_cb(void *arg, DeeTypeObject *declaring_type,
 
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeStructObject_Ctor(DeeObject *__restrict self) {
-	return (int)DeeStructObject_ForeachField(Dee_TYPE(self), &struct_init_unbound_cb,
+	return (int)DeeStructObject_ForeachField(Dee_TYPE(self),
+	                                         &struct_init_unbound_cb,
 	                                         &struct_fini_cb, self);
 }
 

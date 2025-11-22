@@ -710,6 +710,18 @@ iter_modules_callback(struct dl_phdr_info *info,
  *                the caller must decide on how to handle this. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeModule_FromStaticPointer(void const *ptr) {
+	/* TODO: This function should cache the address ranges of
+	 *       native modules in order to speed up operations.
+	 *
+	 * CONFIG_EXPERIMENTAL_MMAP_DEC needs to call this function once
+	 * for **EVERY** object written to a .dec file (to figure out if
+	 * the object/function-pointer/etc. is statically allocated by the
+	 * deemon core or some external dex module, as opposed to being a
+	 * heap pointer)
+	 *
+	 * This cache should take the form of a R/B-tree where nodes use
+	 * the min/max addresses of module segments, whilst pointing to
+	 * the relevant DeeModuleObject associated with the address. */
 
 #ifdef DeeModule_FromStaticPointer_USE_GetModuleHandleExW
 	HMODULE hTypeModule;

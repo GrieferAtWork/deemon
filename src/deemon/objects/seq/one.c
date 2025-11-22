@@ -289,12 +289,13 @@ INTERN DeeTypeObject SeqOneIterator_Type = {
 /* SeqOne                                                               */
 /************************************************************************/
 STATIC_ASSERT(offsetof(SeqOne, so_item) == offsetof(ProxyObject, po_obj));
-#define so_copy  generic_proxy__copy_alias
-#define so_deep  generic_proxy__deepcopy
-#define so_init  generic_proxy__init
-#define so_fini  generic_proxy__fini
-#define so_bool  _DeeNone_reti1_1
-#define so_visit generic_proxy__visit
+#define so_copy     generic_proxy__copy_alias
+#define so_deep     generic_proxy__deepcopy
+#define so_init     generic_proxy__init
+#define so_writedec generic_proxy__writedec
+#define so_fini     generic_proxy__fini
+#define so_bool     _DeeNone_reti1_1
+#define so_visit    generic_proxy__visit
 
 #define so_size      _DeeNone_rets1_1
 #define so_size_fast _DeeNone_rets1_1
@@ -1214,7 +1215,9 @@ PUBLIC DeeTypeObject DeeSeqOne_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&so_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&so_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&so_init,
-				TYPE_FIXED_ALLOCATOR(SeqOne)
+				TYPE_FIXED_ALLOCATOR(SeqOne),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&so_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&so_fini,

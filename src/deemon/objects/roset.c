@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/dec.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/object.h>
@@ -674,6 +675,42 @@ err:
 }
 
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
+roset_writedec(DeeDecWriter *__restrict writer,
+               RoSet *__restrict self) {
+	RoSet *out;
+	Dee_dec_addr_t addr;
+	size_t i, sizeof_set;
+	sizeof_set = offsetof(RoSet, rs_elem) + (self->rs_mask + 1) * sizeof(struct roset_item);
+	addr = DeeDecWriter_Object_Malloc(writer, sizeof_set, self);
+	if unlikely(!addr)
+		goto err;
+	out = DeeDecWriter_Addr2Mem(writer, addr, RoSet);
+	out->rs_mask = self->rs_mask;
+	out->rs_size = self->rs_size;
+	for (i = 0; i <= self->rs_mask; ++i) {
+		struct roset_item *in_item;
+		struct roset_item *out_item;
+		Dee_dec_addr_t addrof_item;
+		in_item  = &self->rs_elem[i];
+		addrof_item = addr + offsetof(RoSet, rs_elem) + i * sizeof(struct roset_item);
+		out_item    = DeeDecWriter_Addr2Mem(writer, addrof_item, struct roset_item);
+		if (in_item->rsi_key) {
+			out_item->rsi_hash = in_item->rsi_hash;
+			if (DeeDecWriter_PutObject(writer,
+			                           addrof_item + offsetof(struct roset_item, rsi_key),
+			                           in_item->rsi_key))
+				goto err;
+		} else {
+			out_item->rsi_key = NULL;
+		}
+	}
+	return addr;
+err:
+	return 0;
+}
+
+
 
 PRIVATE struct type_operator const roset_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST),
@@ -710,7 +747,9 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&roset_deepcopy,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&roset_init,
-				/* .tp_free      = */ (Dee_funptr_t)NULL
+				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&roset_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&roset_fini,

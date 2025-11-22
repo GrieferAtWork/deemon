@@ -25,6 +25,7 @@
 #include <deemon/asm.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
+#include <deemon/dec.h>
 #include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
@@ -640,6 +641,42 @@ PUBLIC DEFINE_DDI(DeeDDI_Empty,
                   },
                   /* d_ddi:     */ { DDI_STOP });
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
+ddi_writedec(DeeDecWriter *__restrict writer,
+             DeeDDIObject *__restrict self) {
+	DeeDDIObject *out;
+	size_t sizeof_ddi = offsetof(DeeDDIObject, d_ddi) + self->d_ddisize;
+	Dee_dec_addr_t addr = DeeDecWriter_Object_Malloc(writer, sizeof_ddi, self);
+	ASSERT(self != (DeeDDIObject *)&DeeDDI_Empty);
+	if unlikely(!addr)
+		goto err;
+	out = DeeDecWriter_Addr2Mem(writer, addr, DeeDDIObject);
+	out->d_ddisize = self->d_ddisize;
+	out->d_nstring = self->d_nstring;
+	out->d_ddiinit = self->d_ddiinit;
+	out->d_start   = self->d_start;
+	memcpy(out->d_ddi, self->d_ddi, self->d_ddisize);
+	out->d_strings = NULL; /* Overwritten below if defined by "self" */
+	out->d_exdat   = NULL; /* Overwritten below if defined by "self" */
+	if (self->d_nstring) {
+		ASSERT(self->d_strings);
+		if (!DeeDecWriter_PutMemDup(writer, addr + offsetof(DeeDDIObject, d_strings),
+		                            self->d_strings, self->d_nstring * sizeof(uint32_t)))
+			goto err;
+	}
+	if (self->d_exdat) {
+		size_t sizeof_exdat = offsetof(struct ddi_exdat, dx_data) + self->d_exdat->dx_size;
+		if (!DeeDecWriter_PutMemDup(writer, addr + offsetof(DeeDDIObject, d_exdat),
+		                            self->d_exdat, sizeof_exdat))
+			goto err;
+	}
+	if (DeeDecWriter_PutObject(writer, addr + offsetof(DeeDDIObject, d_strtab), self->d_strtab))
+		goto err;
+	return addr;
+err:
+	return 0;
+}
+
 PRIVATE NONNULL((1)) void DCALL
 ddi_fini(DeeDDIObject *__restrict self) {
 	ASSERT(self != (DeeDDIObject *)&DeeDDI_Empty);
@@ -763,7 +800,9 @@ PUBLIC DeeTypeObject DeeDDI_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_free      = */ (Dee_funptr_t)NULL
+				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&ddi_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ddi_fini,

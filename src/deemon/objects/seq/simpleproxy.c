@@ -51,6 +51,7 @@ STATIC_ASSERT(offsetof(SeqSimpleProxy, sp_seq) == offsetof(ProxyObject, po_obj))
 #define proxy_copy            generic_proxy__copy_alias
 #define proxy_deep            generic_proxy__deepcopy
 #define proxy_init            generic_proxy__init
+#define proxy_writedec        generic_proxy__writedec
 #define proxy_fini            generic_proxy__fini
 #define proxy_visit           generic_proxy__visit
 #define proxy_size_fast       generic_proxy__size_fast
@@ -728,7 +729,9 @@ INTERN DeeTypeObject SeqIds_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_init,
-				TYPE_FIXED_ALLOCATOR(SeqSimpleProxy)
+				TYPE_FIXED_ALLOCATOR(SeqSimpleProxy),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&proxy_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_fini,
@@ -778,7 +781,9 @@ INTERN DeeTypeObject SeqTypes_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_init,
-				TYPE_FIXED_ALLOCATOR(SeqSimpleProxy)
+				TYPE_FIXED_ALLOCATOR(SeqSimpleProxy),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&proxy_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_fini,
@@ -828,7 +833,9 @@ INTERN DeeTypeObject SeqClasses_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&proxy_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&proxy_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&proxy_init,
-				TYPE_FIXED_ALLOCATOR(SeqSimpleProxy)
+				TYPE_FIXED_ALLOCATOR(SeqSimpleProxy),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&proxy_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_fini,

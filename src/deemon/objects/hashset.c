@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/dec.h>
 #include <deemon/dict.h>
 #include <deemon/error-rt.h>
 #include <deemon/float.h>
@@ -1672,6 +1673,73 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+hashset_writedec(DeeDecWriter *__restrict writer,
+                 HashSet *self, Dee_dec_addr_t addr) {
+	HashSet *out;
+	size_t i, sizeof_elem, out__hs_mask;
+	size_t addrof_out__hs_elem;
+	struct hashset_item *out__hs_elem;
+	struct hashset_item *in__hs_elem;
+again:
+	out = DeeDecWriter_Addr2Mem(writer, addr, HashSet);
+	Dee_atomic_rwlock_init(&out->hs_lock);
+	DeeHashSet_LockRead(self);
+	out->hs_mask = self->hs_mask;
+	out->hs_size = self->hs_size;
+	out->hs_used = self->hs_used;
+	if (self->hs_elem == DeeHashSet_EmptyItems) {
+		DeeHashSet_LockEndRead(self);
+		return DeeDecWriter_PutDeemonPointer(writer, addr + offsetof(HashSet, hs_elem),
+		                                     DeeHashSet_EmptyItems);
+	}
+	sizeof_elem = (out->hs_mask + 1) * sizeof(struct hashset_item);
+	addrof_out__hs_elem = DeeDecWriter_TryMalloc(writer, sizeof_elem);
+	if unlikely(!addrof_out__hs_elem) {
+		DeeHashSet_LockEndRead(self);
+		addrof_out__hs_elem = DeeDecWriter_Malloc(writer, sizeof_elem);
+		if unlikely(!addrof_out__hs_elem)
+			goto err;
+		DeeHashSet_LockRead(self);
+		out = DeeDecWriter_Addr2Mem(writer, addr, HashSet);
+		if unlikely(out->hs_mask != self->hs_mask) {
+free_out_hs_elem__and__again:
+			DeeHashSet_LockEndRead(self);
+			DeeDecWriter_Free(writer, addrof_out__hs_elem);
+			goto again;
+		}
+		if unlikely(out->hs_size != self->hs_size)
+			goto free_out_hs_elem__and__again;
+		if unlikely(out->hs_used != self->hs_used)
+			goto free_out_hs_elem__and__again;
+		if unlikely(self->hs_elem == DeeHashSet_EmptyItems)
+			goto free_out_hs_elem__and__again;
+	}
+	out = DeeDecWriter_Addr2Mem(writer, addr, HashSet);
+	out__hs_elem = DeeDecWriter_Addr2Mem(writer, addrof_out__hs_elem, struct hashset_item);
+	in__hs_elem  = self->hs_elem;
+	out__hs_mask = out->hs_mask;
+	memcpyc(out__hs_elem, in__hs_elem, out__hs_mask + 1, sizeof(struct hashset_item));
+	for (i = 0; i <= out__hs_mask; ++i)
+		Dee_XIncref(out__hs_elem[i].hsi_key);
+	DeeHashSet_LockEndRead(self);
+	for (i = 0; i <= out__hs_mask; ++i) {
+		if (DeeDecWriter_InplacePutObject(writer,
+		                                  addrof_out__hs_elem +
+		                                  i * sizeof(struct hashset_item) +
+		                                  offsetof(struct hashset_item, hsi_key))) {
+			out__hs_elem = DeeDecWriter_Addr2Mem(writer, addrof_out__hs_elem, struct hashset_item);
+			while (++i <= out__hs_mask)
+				Dee_XDecref(out__hs_elem[i].hsi_key);
+			goto err;
+		}
+	}
+	return DeeDecWriter_PutRel(writer, addr + offsetof(HashSet, hs_elem),
+	                           addrof_out__hs_elem);
+err:
+	return -1;
+}
+
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 hashset_mh_pop(HashSet *self) {
@@ -1894,7 +1962,9 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&hashset_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&hashset_copy,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&hashset_init,
-				TYPE_FIXED_ALLOCATOR_GC(HashSet)
+				TYPE_FIXED_ALLOCATOR_GC(HashSet),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&hashset_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&hashset_fini,

@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/cached-dict.h>
 #include <deemon/computed-operators.h>
+#include <deemon/dec.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -52,7 +53,7 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 
 typedef DeeCachedDictObject CachedDict;
 
-#define empty_cdict_items ((struct Dee_cached_dict_item *)DeeCachedDict_EmptyItems)
+#define empty_cdict_items ((struct cached_dict_item *)DeeCachedDict_EmptyItems)
 
 
 
@@ -1036,6 +1037,98 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cdict_writedec(DeeDecWriter *__restrict writer,
+               CachedDict *__restrict self, Dee_dec_addr_t addr) {
+	CachedDict *out;
+	size_t used_mask, used_size;
+	Dee_dec_addr_t addrof_elem;
+	size_t sizeof_elem;
+again:
+	DeeCachedDict_LockRead(self);
+	used_mask = self->cd_mask;
+	used_size = self->cd_size;
+	if (self->cd_elem == DeeCachedDict_EmptyItems) {
+		DeeCachedDict_LockEndRead(self);
+		if (DeeDecWriter_PutDeemonPointer(writer,
+		                                  addr + offsetof(CachedDict, cd_elem),
+		                                  DeeCachedDict_EmptyItems))
+			goto err;
+	} else {
+		size_t i;
+		struct cached_dict_item *out_elem;
+		struct cached_dict_item const *in_elem;
+		sizeof_elem = (used_mask + 1) * sizeof(struct cached_dict_item);
+		addrof_elem = DeeDecWriter_TryMalloc(writer, sizeof_elem);
+		if unlikely(!addrof_elem) {
+			DeeCachedDict_LockEndRead(self);
+			addrof_elem = DeeDecWriter_Malloc(writer, sizeof_elem);
+			DeeCachedDict_LockRead(self);
+			if unlikely(used_mask != self->cd_mask ||
+			            used_size != self->cd_size) {
+				DeeCachedDict_LockEndRead(self);
+				DeeDecWriter_Free(writer, addrof_elem);
+				goto again;
+			}
+		}
+		out_elem = DeeDecWriter_Addr2Mem(writer, addrof_elem, struct cached_dict_item);
+		in_elem  = self->cd_elem;
+		for (i = 0; i <= used_mask; ++i) {
+			*out_elem = *in_elem;
+			if (out_elem->cdi_key) {
+				Dee_Incref(out_elem->cdi_key);
+				Dee_Incref(out_elem->cdi_value);
+			}
+			++out_elem;
+			++in_elem;
+		}
+		DeeCachedDict_LockEndRead(self);
+		if (DeeDecWriter_PutRel(writer,
+		                        addr + offsetof(CachedDict, cd_elem),
+		                        addrof_elem))
+			goto err;
+
+		/* Serialize cached items. */
+		for (i = 0; i <= used_mask; ++i) {
+			Dee_dec_addr_t addrof_out_elem;
+			addrof_out_elem = addrof_elem + i * sizeof(struct cached_dict_item);
+			out_elem = DeeDecWriter_Addr2Mem(writer, addrof_out_elem, struct cached_dict_item);
+			if (out_elem->cdi_key) {
+				DREF DeeObject *key   = out_elem->cdi_key;
+				DREF DeeObject *value = out_elem->cdi_value;
+				int error;
+				error = DeeDecWriter_PutObject(writer, addrof_out_elem + offsetof(struct cached_dict_item, cdi_key), key);
+				if likely(error == 0)
+					error = DeeDecWriter_PutObject(writer, addrof_out_elem + offsetof(struct cached_dict_item, cdi_value), value);
+				Dee_Decref_unlikely(value);
+				Dee_Decref_unlikely(key);
+				if unlikely(error) {
+					for (; i <= used_mask; ++i) {
+						addrof_out_elem = addrof_elem + i * sizeof(struct cached_dict_item);
+						out_elem = DeeDecWriter_Addr2Mem(writer, addrof_out_elem, struct cached_dict_item);
+						if (out_elem->cdi_key) {
+							Dee_Decref_unlikely(out_elem->cdi_value);
+							Dee_Decref_unlikely(out_elem->cdi_key);
+						}
+					}
+					goto err;
+				}
+			}
+		}
+	}
+
+	/* Fill in non-pointer fields. */
+	out = DeeDecWriter_Addr2Mem(writer, addr, CachedDict);
+	out->cd_mask = used_mask;
+	out->cd_size = used_size;
+	Dee_atomic_rwlock_init(&out->cd_lock);
+	return DeeDecWriter_PutObject(writer,
+	                              addr + offsetof(CachedDict, cd_map),
+	                              self->cd_map);
+err:
+	return -1;
+}
+
 PRIVATE struct type_gc tpconst cdict_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&cdict_clear
 };
@@ -1065,7 +1158,9 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&cdict_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&cdict_copy,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&cdict_init,
-				TYPE_FIXED_ALLOCATOR_GC(CachedDict)
+				TYPE_FIXED_ALLOCATOR_GC(CachedDict),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&cdict_writedec,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cdict_fini,
@@ -1102,7 +1197,7 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 };
 
 
-PUBLIC_CONST struct Dee_cached_dict_item const DeeCachedDict_EmptyItems[1] = {
+PUBLIC_CONST struct cached_dict_item const DeeCachedDict_EmptyItems[1] = {
 	{ NULL, NULL, 0 }
 };
 

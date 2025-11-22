@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/dec.h>
 #include <deemon/error-rt.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -69,6 +70,20 @@
 #undef CONFIG_TUPLE_CACHE_MAXCOUNT
 #define CONFIG_TUPLE_CACHE_MAXCOUNT 0
 #endif /* CONFIG_NO_CACHES || CONFIG_NO_TUPLE_CACHES */
+
+/* In order for it to be possible to write "Tuple" to a dec file,
+ * there mustn't be a custom "tp_free" operator. Since the whole
+ * point of mmap-able .dec files is to use pointers into a file
+ * mapping of the .dec file as the actual DeeObject, that object
+ * must not use a custom allocation mechanism (since it _needs_
+ * to be able to live within a `struct Dee_heapregion') */
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+#undef CONFIG_TUPLE_CACHE_MAXSIZE
+#define CONFIG_TUPLE_CACHE_MAXSIZE 0
+#undef CONFIG_TUPLE_CACHE_MAXCOUNT
+#define CONFIG_TUPLE_CACHE_MAXCOUNT 0
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+
 
 /* The max amount of tuples per cache */
 #ifndef CONFIG_TUPLE_CACHE_MAXSIZE
@@ -1123,6 +1138,27 @@ tuple_init(size_t argc, DeeObject *const *argv) {
 	return (DREF Tuple *)DeeTuple_FromSequence(args.items);
 err:
 	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
+tuple_writedec(DeeDecWriter *__restrict writer,
+               Tuple *__restrict self) {
+	Tuple *out;
+	size_t i, sizeof_tuple = offsetof(Tuple, t_elem) + (self->t_size * sizeof(DREF DeeObject *));
+	Dee_dec_addr_t addr = DeeDecWriter_Object_Malloc(writer, sizeof_tuple, self);
+	if unlikely(!addr)
+		goto err;
+	out = DeeDecWriter_Addr2Mem(writer, addr, Tuple);
+	out->t_size = self->t_size;
+	for (i = 0; i < self->t_size; ++i) {
+		DeeObject *item = self->t_elem[i];
+		Dee_dec_addr_t addrof_item = addr + offsetof(Tuple, t_elem) + (i * sizeof(DREF DeeObject *));
+		if (DeeDecWriter_PutObject(writer, addrof_item, item))
+			goto err;
+	}
+	return addr;
+err:
+	return 0;
 }
 
 INTERN NONNULL((1)) void DCALL
@@ -2260,7 +2296,9 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&tuple_deepcopy,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&tuple_init,
-				/* .tp_free      = */ (Dee_funptr_t)tuple_tp_free_PTR
+				/* .tp_free      = */ (Dee_funptr_t)tuple_tp_free_PTR, { NULL },
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&tuple_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&tuple_fini,
@@ -2403,6 +2441,27 @@ nullable_tuple_init(size_t argc, DeeObject *const *argv) {
 	return result;
 err:
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
+nullable_tuple_writedec(DeeDecWriter *__restrict writer,
+                        Tuple *__restrict self) {
+	Tuple *out;
+	size_t i, sizeof_tuple = offsetof(Tuple, t_elem) + (self->t_size * sizeof(DREF DeeObject *));
+	Dee_dec_addr_t addr = DeeDecWriter_Object_Malloc(writer, sizeof_tuple, self);
+	if unlikely(!addr)
+		goto err;
+	out = DeeDecWriter_Addr2Mem(writer, addr, Tuple);
+	out->t_size = self->t_size;
+	for (i = 0; i < self->t_size; ++i) {
+		DeeObject *item = self->t_elem[i];
+		Dee_dec_addr_t addrof_item = addr + offsetof(Tuple, t_elem) + (i * sizeof(DREF DeeObject *));
+		if (DeeDecWriter_XPutObject(writer, addrof_item, item))
+			goto err;
+	}
+	return addr;
+err:
+	return 0;
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -2666,7 +2725,9 @@ PUBLIC DeeTypeObject DeeNullableTuple_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&nullable_tuple_deepcopy,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&nullable_tuple_init,
-				/* .tp_free      = */ (Dee_funptr_t)tuple_tp_free_PTR
+				/* .tp_free      = */ (Dee_funptr_t)tuple_tp_free_PTR, { NULL },
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&nullable_tuple_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&nullable_tuple_fini,

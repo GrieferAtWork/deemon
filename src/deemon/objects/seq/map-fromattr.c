@@ -294,11 +294,12 @@ INTERN DeeTypeObject MapFromAttrKeysIterator_Type = {
 /************************************************************************/
 
 STATIC_ASSERT(offsetof(MapFromAttr, mfa_ob) == offsetof(ProxyObject, po_obj));
-#define mfa_copy  generic_proxy__copy_alias
-#define mfa_deep  generic_proxy__deepcopy
-#define mfa_init  generic_proxy__init
-#define mfa_fini  generic_proxy__fini
-#define mfa_visit generic_proxy__visit
+#define mfa_copy     generic_proxy__copy_alias
+#define mfa_deep     generic_proxy__deepcopy
+#define mfa_init     generic_proxy__init
+#define mfa_writedec generic_proxy__writedec
+#define mfa_fini     generic_proxy__fini
+#define mfa_visit    generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mfa_ctor(MapFromAttr *__restrict self) {
@@ -539,7 +540,9 @@ INTERN DeeTypeObject MapFromAttr_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&mfa_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&mfa_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&mfa_init,
-				TYPE_FIXED_ALLOCATOR(MapFromAttr)
+				TYPE_FIXED_ALLOCATOR(MapFromAttr),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&mfa_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mfa_fini,

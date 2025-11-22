@@ -45,6 +45,8 @@ STATIC_ASSERT(offsetof(DefaultSequence_MapProxy, dsmp_map) ==
               offsetof(ProxyObject, po_obj));
 #define ds_mk_init             generic_proxy__init
 #define ds_mv_init             generic_proxy__init
+#define ds_mk_writedec         generic_proxy__writedec
+#define ds_mv_writedec         generic_proxy__writedec
 #define ds_mk_copy             generic_proxy__copy_alias
 #define ds_mv_copy             generic_proxy__copy_alias
 #define ds_mv_deepcopy         generic_proxy__deepcopy
@@ -417,7 +419,9 @@ INTERN DeeTypeObject DefaultSequence_MapKeys_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&ds_mk_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&ds_mk_deepcopy,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&ds_mk_init,
-				TYPE_FIXED_ALLOCATOR(DefaultSequence_MapProxy)
+				TYPE_FIXED_ALLOCATOR(DefaultSequence_MapProxy),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&ds_mk_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_mk_fini,
@@ -467,7 +471,9 @@ INTERN DeeTypeObject DefaultSequence_MapValues_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&ds_mv_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&ds_mv_deepcopy,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&ds_mv_init,
-				TYPE_FIXED_ALLOCATOR(DefaultSequence_MapProxy)
+				TYPE_FIXED_ALLOCATOR(DefaultSequence_MapProxy),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&ds_mv_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_mv_fini,

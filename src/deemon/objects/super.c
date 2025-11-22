@@ -23,7 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/attribute.h>
+#include <deemon/dec.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -1121,6 +1121,19 @@ PRIVATE struct type_buffer super_buffer = {
 };
 
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+super_writedec(DeeDecWriter *__restrict writer,
+               Super *self, Dee_dec_addr_t addr) {
+	/* Unlike all other operators provided by "Super", this one does **NOT**
+	 * invoke the relevant operator (tp_writedec) in the context of some other
+	 * type. -- Instead, it literally does what you'd think it does: it writes
+	 * the Super-object to the dec file! */
+	int result = DeeDecWriter_PutObject(writer, addr + offsetof(Super, s_type), self->s_type);
+	if likely(result == 0)
+		result = DeeDecWriter_PutObject(writer, addr + offsetof(Super, s_self), self->s_self);
+	return result;
+}
+
 /* Helper functions for extracting the type
  * and self fields of a super object. */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1278,7 +1291,9 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&super_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&super_deepcopy,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&super_init,
-				TYPE_FIXED_ALLOCATOR(Super)
+				TYPE_FIXED_ALLOCATOR(Super),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&super_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&super_fini,

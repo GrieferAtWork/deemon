@@ -793,7 +793,9 @@ INTERN DeeTypeObject RangeMap_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeNone_OperatorCopy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeNone_OperatorCopy,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeObject)
+				TYPE_FIXED_ALLOCATOR(DeeObject),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&DeeNone_OperatorWriteDec
 			}
 		},
 		/* .tp_dtor        = */ NULL,

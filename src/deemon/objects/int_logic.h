@@ -86,6 +86,17 @@ DECL_BEGIN
 #define CONFIG_INT_CACHE_MAXCOUNT 0
 #endif /* !CONFIG_INT_CACHE_MAXSIZE */
 
+/* In order for it to be possible to write "int" to a dec file,
+ * there mustn't be a custom "tp_free" operator. Since the whole
+ * point of mmap-able .dec files is to use pointers into a file
+ * mapping of the .dec file as the actual DeeObject, that object
+ * must not use a custom allocation mechanism (since it _needs_
+ * to be able to live within a `struct Dee_heapregion') */
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+#undef CONFIG_INT_CACHE_MAXCOUNT
+#define CONFIG_INT_CACHE_MAXCOUNT 0
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+
 
 #ifdef NDEBUG
 INTDEF WUNUSED DREF DeeIntObject *DCALL DeeInt_Alloc(size_t n_digits);

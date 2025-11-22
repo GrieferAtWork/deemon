@@ -128,7 +128,11 @@
 DECL_BEGIN
 
 
-typedef uint32_t Dee_dec_addr_t; /* Offset from start of `Dec_Ehdr' to some other structure. */
+#ifndef Dee_dec_addr_t_DEFINED
+#define Dee_dec_addr_t_DEFINED
+typedef uintptr_t Dee_dec_addr_t; /* Offset from start of `Dec_Ehdr' to some other structure. */
+#endif /* !Dee_dec_addr_t_DEFINED */
+struct Dee_dec_writer;
 
 
 #ifdef DEE_SOURCE
@@ -182,6 +186,7 @@ struct Dee_compiler_options;
 #pragma pack(push, 1)
 #endif /* __COMPILER_HAVE_PRAGMA_PACK */
 
+typedef uintptr_t Dee_dec_addr32_t; /* Offset from start of `Dec_Ehdr' to some other structure. */
 
 /*
  * NOTES:
@@ -217,14 +222,14 @@ typedef struct ATTR_PACKED {
 	uint64_t              e_deemon_timestamp;    /* Microseconds since `01-01-1970', when deemon was compiled. */
 	uint8_t               e_deemon_build_id[16]; /* Deemon build ID (a random UUID generated when compiling deemon) */
 	uint8_t               e_deemon_host_id[16];  /* Deemon host ID (a random UUID generated when installing deemon / starting deemon for the first time) */
-	Dee_dec_addr_t        e_offsetof_eof;        /* [1..1] Offset to EOF of file mapping (should also equal the dec file's size) */
-	Dee_dec_addr_t        e_offsetof_srel;       /* [1..1] Offset to array of `Dee_dec_addr_t[]' (terminated by a 0-entry) of offsets where "char*"-pointers needs to be relocated via `+=(uintptr_t)&e_ident[0]' (iow: `+=DeeModule_GetRelBase(AT(e_offsetof_module))') */
-	Dee_dec_addr_t        e_offsetof_drel;       /* [1..1] Offset to array of `Dee_dec_addr_t[]' (terminated by a 0-entry) of offsets where "char*"-pointers needs to be relocated via `+=DeeModule_GetRelBase(DeeModule_GetDeemon())' */
-	Dee_dec_addr_t        e_offsetof_drrel;      /* [1..1] Same as `e_offsetof_drel', but `Dee_Incref()' during relocation */
-	Dee_dec_addr_t        e_offsetof_deps;       /* [1..1] Offset to array of `Dec_Dhdr[]' (terminated by a d_offsetof_modname==0-entry) of other dependent deemon modules */
-	Dee_dec_addr_t        e_offsetof_files;      /* [0..1] Offset to array of `Dec_Dstr[]' (terminated by a ds_length==0-entry, each aligned to __ALIGNOF_SIZE_T__) of extra filenames relative to the directory containing the .dec-file. If any of these files is newer than `e_build_timestamp', don't load dec file */
-	Dee_dec_addr_t        e_offsetof_gchead;     /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
-	Dee_dec_addr_t        e_offsetof_gctail;     /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `e_offsetof_srel') */
+	Dee_dec_addr32_t      e_offsetof_eof;        /* [1..1] Offset to EOF of file mapping (should also equal the dec file's size) */
+	Dee_dec_addr32_t      e_offsetof_srel;       /* [1..1] Offset to array of `Dee_dec_addr32_t[]' (terminated by a 0-entry) of offsets where "char*"-pointers needs to be relocated via `+=(uintptr_t)&e_ident[0]' (iow: `+=DeeModule_GetRelBase(AT(e_offsetof_module))') */
+	Dee_dec_addr32_t      e_offsetof_drel;       /* [1..1] Offset to array of `Dee_dec_addr32_t[]' (terminated by a 0-entry) of offsets where "char*"-pointers needs to be relocated via `+=DeeModule_GetRelBase(DeeModule_GetDeemon())' */
+	Dee_dec_addr32_t      e_offsetof_drrel;      /* [1..1] Same as `e_offsetof_drel', but `Dee_Incref()' during relocation */
+	Dee_dec_addr32_t      e_offsetof_deps;       /* [1..1] Offset to array of `Dec_Dhdr[]' (terminated by a d_offsetof_modname==0-entry) of other dependent deemon modules */
+	Dee_dec_addr32_t      e_offsetof_files;      /* [0..1] Offset to array of `Dec_Dstr[]' (terminated by a ds_length==0-entry, each aligned to __ALIGNOF_SIZE_T__) of extra filenames relative to the directory containing the .dec-file. If any of these files is newer than `e_build_timestamp', don't load dec file */
+	Dee_dec_addr32_t      e_offsetof_gchead;     /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
+	Dee_dec_addr32_t      e_offsetof_gctail;     /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `e_offsetof_srel') */
 	/* TODO: e_mapping can overlap the relocation-only fields above! */
 	struct DeeMapFile     e_mapping;             /* Uninitialized/unused in file mappings; when mapped into memory, populated with the dec file's own file map descriptor. */
 	struct Dee_heapregion e_heap;                /* Heap region descriptor for objects embedded within this dec file. The first chunk of
@@ -232,9 +237,9 @@ typedef struct ATTR_PACKED {
 } Dec_Ehdr;
 
 typedef struct ATTR_PACKED {
-	Dee_dec_addr_t d_offsetof_modname; /* [1..1] Offset to `(Dec_Dstr *)' to pass to `DeeModule_OpenRelative()' in order to load this dependency. The dependency must not be newer than this file! */
-	Dee_dec_addr_t d_offsetof_mrel;    /* [1..1] Offset to array of `Dee_dec_addr_t[]' (terminated by a 0-entry) of offsets where "char*"-pointers needs to be relocated via `+=DeeModule_GetRelBase(DEPENDENCY)' */
-	Dee_dec_addr_t d_offsetof_mrrel;   /* [1..1] Same as `d_offsetof_mrel', but `Dee_Incref()' during relocation */
+	Dee_dec_addr32_t d_offsetof_modname; /* [1..1] Offset to `(Dec_Dstr *)' to pass to `DeeModule_OpenRelative()' in order to load this dependency. The dependency must not be newer than this file! */
+	Dee_dec_addr32_t d_offsetof_mrel;    /* [1..1] Offset to array of `Dee_dec_addr32_t[]' (terminated by a 0-entry) of offsets where "char*"-pointers needs to be relocated via `+=DeeModule_GetRelBase(DEPENDENCY)' */
+	Dee_dec_addr32_t d_offsetof_mrrel;   /* [1..1] Same as `d_offsetof_mrel', but `Dee_Incref()' during relocation */
 } Dec_Dhdr;
 
 typedef struct ATTR_PACKED {
@@ -258,9 +263,9 @@ typedef char DeeDec_Ehdr;
 
 
 struct Dee_dec_reltab {
-	Dee_dec_addr_t *drlt_relv; /* [0..drlt_relc][owned] Vector of relocations */
-	size_t          drlt_relc; /* # of relocations already written */
-	size_t          drlt_rela; /* Allocated # of entries in `drlt_relv' */
+	Dee_dec_addr32_t *drlt_relv; /* [0..drlt_relc][owned] Vector of relocations */
+	size_t            drlt_relc; /* # of relocations already written */
+	size_t            drlt_rela; /* Allocated # of entries in `drlt_relv' */
 };
 
 struct Dee_dec_depmod {
@@ -276,8 +281,8 @@ struct Dee_dec_deptab {
 };
 
 struct Dee_dec_objtab_entry {
-	DeeObject     *dote_obj; /* [0..1] Address of some object that was already encoded (NULL means unused/sentinal entry) */
-	Dee_dec_addr_t dote_off; /* [1..1] Offset from `dw_base' to the `(DeeObject *)' where the object is written */
+	DeeObject       *dote_obj; /* [0..1] Address of some object that was already encoded (NULL means unused/sentinal entry) */
+	Dee_dec_addr32_t dote_off; /* [1..1] Offset from `dw_base' to the `(DeeObject *)' where the object is written */
 };
 
 struct Dee_dec_objtab {
@@ -286,7 +291,7 @@ struct Dee_dec_objtab {
 	struct Dee_dec_objtab_entry *dot_list; /* [1..dot_mask+1][owned] Table of already-encoded objects. */
 };
 
-typedef struct {
+typedef struct Dee_dec_writer {
 #ifdef DEE_SOURCE
 	union {
 		__BYTE_TYPE__    *dw_base;   /* [1..1][owned] Base address of memory block of dec file being built */
@@ -304,8 +309,8 @@ typedef struct {
 	struct Dee_dec_reltab dw_drel;   /* Table of relocations against deemon-core objects */
 	struct Dee_dec_reltab dw_drrel;  /* Table of incref-relocations against deemon-core objects */
 	struct Dee_dec_deptab dw_deps;   /* Table of dependent modules */
-	Dee_dec_addr_t        dw_gchead; /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
-	Dee_dec_addr_t        dw_gctail; /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `dw_srel') */
+	Dee_dec_addr32_t      dw_gchead; /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
+	Dee_dec_addr32_t      dw_gctail; /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `dw_srel') */
 	struct Dee_dec_objtab dw_known;  /* Table of known, already-encoded objects */
 } DeeDecWriter;
 
@@ -360,12 +365,16 @@ DeeDecWriter_PackModule(/*inherit(on_success)*/ DeeDecWriter *__restrict self);
  *              already-written object, and to encode relocation for "ob_type".
  * @return: 0 : Allocation failed (an error was thrown)
  * @return: * : base address of user-area of new heap chunk */
-DFUNDEF WUNUSED NONNULL((1)) Dee_dec_addr_t DCALL
-DeeDecWriter_Malloc(DeeDecWriter *__restrict self, size_t num_bytes);
-DFUNDEF WUNUSED NONNULL((1, 3)) Dee_dec_addr_t DCALL
-DeeDecWriter_Object_Malloc(DeeDecWriter *__restrict self, size_t num_bytes, DeeObject *__restrict ref);
-DFUNDEF WUNUSED NONNULL((1, 3)) Dee_dec_addr_t DCALL
-DeeDecWriter_GCObject_Malloc(DeeDecWriter *__restrict self, size_t num_bytes, DeeObject *__restrict ref);
+DFUNDEF WUNUSED NONNULL((1)) Dee_dec_addr_t (DCALL DeeDecWriter_TryMalloc)(DeeDecWriter *__restrict self, size_t num_bytes);
+DFUNDEF WUNUSED NONNULL((1)) Dee_dec_addr_t (DCALL DeeDecWriter_Malloc)(DeeDecWriter *__restrict self, size_t num_bytes);
+DFUNDEF WUNUSED NONNULL((1, 3)) Dee_dec_addr_t (DCALL DeeDecWriter_Object_Malloc)(DeeDecWriter *__restrict self, size_t num_bytes, DeeObject *__restrict ref);
+DFUNDEF WUNUSED NONNULL((1, 3)) Dee_dec_addr_t (DCALL DeeDecWriter_GCObject_Malloc)(DeeDecWriter *__restrict self, size_t num_bytes, DeeObject *__restrict ref);
+#define DeeDecWriter_Object_Malloc(self, num_bytes, ref)      DeeDecWriter_Object_Malloc(self, num_bytes, (DeeObject *)Dee_REQUIRES_OBJECT(ref))
+#define DeeDecWriter_GCObject_Malloc(self, num_bytes, ref)    DeeDecWriter_GCObject_Malloc(self, num_bytes, (DeeObject *)Dee_REQUIRES_OBJECT(ref))
+/* Free a heap pointer
+ * CAUTION: Only the most-recent pointer can *actually* be free'd!
+ *          If you pass anything else, this function is a no-op! */
+DFUNDEF NONNULL((1)) void (DCALL DeeDecWriter_Free)(DeeDecWriter *__restrict self, Dee_dec_addr_t addr);
 
 /* Return a pointer to the internal buffer at `addr'. The returned pointer
  * **ONLY** remains valid until the next time any of the DeeDecWriter_Malloc
@@ -387,10 +396,66 @@ DeeDecWriter_PutRel(DeeDecWriter *__restrict self,
 /* Encode a reference to `obj' at `DeeDecWriter_Addr2Mem(self, addr, DeeObject)'
  * @return: 0 : Success
  * @return: -1: An error was thrown */
-DFUNDEF WUNUSED NONNULL((1, 3)) int DCALL
-DeeDecWriter_PutObject(DeeDecWriter *__restrict self,
-                       Dee_dec_addr_t addr,
-                       DeeObject *__restrict obj);
+DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeDecWriter_PutObject)(DeeDecWriter *__restrict self, Dee_dec_addr_t addr, DeeObject *__restrict obj);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeDecWriter_XPutObject)(DeeDecWriter *__restrict self, Dee_dec_addr_t addr, /*0..1*/ DeeObject *obj);
+DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeDecWriter_PutObjectInherited)(DeeDecWriter *__restrict self, Dee_dec_addr_t addr, /*inherit(always)*/ DREF DeeObject *__restrict obj);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeDecWriter_XPutObjectInherited)(DeeDecWriter *__restrict self, Dee_dec_addr_t addr, /*0..1*/ /*inherit(always)*/ DREF DeeObject *obj);
+#define DeeDecWriter_PutObject(self, addr, obj)           DeeDecWriter_PutObject(self, addr, (DeeObject *)Dee_REQUIRES_OBJECT(obj))
+#define DeeDecWriter_XPutObject(self, addr, obj)          DeeDecWriter_XPutObject(self, addr, (DeeObject *)Dee_REQUIRES_OBJECT(obj))
+#define DeeDecWriter_PutObjectInherited(self, addr, obj)  DeeDecWriter_PutObjectInherited(self, addr, (DeeObject *)Dee_REQUIRES_OBJECT(obj))
+#define DeeDecWriter_XPutObjectInherited(self, addr, obj) DeeDecWriter_XPutObjectInherited(self, addr, (DeeObject *)Dee_REQUIRES_OBJECT(obj))
+
+/* Create a duplicate of memory `data...+=num_bytes' and put an address to
+ * this newly allocated copy at `DeeDecWriter_Addr2Mem(self, addr, void *)'
+ * @return: * : Address of the duplicated memory (as also stored at `addr')
+ * @return: 0 : An error was thrown */
+DFUNDEF WUNUSED ATTR_INS(3, 4) NONNULL((1)) Dee_dec_addr_t
+(DCALL DeeDecWriter_PutMemDup)(DeeDecWriter *__restrict self, Dee_dec_addr_t addr,
+                               void const *data, size_t num_bytes);
+
+/* Inplace-replace a object references with dec-encoded object references:
+ * >> DREF DeeObject *obj = *DeeDecWriter_Addr2Mem(self, addr, DREF DeeObject *);
+ * >> int result = DeeDecWriter_PutObject(self, addr, obj);
+ * >> Dee_Decref(obj);
+ * >> return result; */
+DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeDecWriter_InplacePutObject)(DeeDecWriter *__restrict self, Dee_dec_addr_t addr);
+DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeDecWriter_XInplacePutObject)(DeeDecWriter *__restrict self, Dee_dec_addr_t addr);
+
+/* Inplace-replace an array object references with dec-encoded object
+ * references. Said array of object references is **ALWAYS** inherited:
+ * >> size_t i;
+ * >> for (i = 0; i < objc; ++i) {
+ * >>     if (DeeDecWriter_InplacePutObject(self, addr)) {
+ * >>         for (; i < objc; ++i) {
+ * >>             Dee_Decref(*DeeDecWriter_Addr2Mem(self, addr, DREF DeeObject *));
+ * >>             addr += sizeof(DREF DeeObject *);
+ * >>         }
+ * >>         return -1;
+ * >>     }
+ * >>     addr += sizeof(DREF DeeObject *);
+ * >> }
+ * >> return 0; */
+DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeDecWriter_InplacePutObjectv)(DeeDecWriter *__restrict self, Dee_dec_addr_t addr, size_t objc);
+DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeDecWriter_XInplacePutObjectv)(DeeDecWriter *__restrict self, Dee_dec_addr_t addr, size_t objc);
+
+/* Encode static pointers.
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+DFUNDEF WUNUSED NONNULL((1, 3)) int
+(DCALL DeeDecWriter_PutStaticPointer)(DeeDecWriter *__restrict self,
+                                      Dee_dec_addr_t addr, void const *value);
+DFUNDEF WUNUSED NONNULL((1)) int
+(DCALL DeeDecWriter_XPutStaticPointer)(DeeDecWriter *__restrict self,
+                                       Dee_dec_addr_t addr, void const *value);
+#ifdef CONFIG_BUILDING_DEEMON
+INTDEF WUNUSED NONNULL((1, 3)) int
+(DCALL DeeDecWriter_PutDeemonPointer)(DeeDecWriter *__restrict self,
+                                      Dee_dec_addr_t addr, void const *value);
+INTDEF WUNUSED NONNULL((1)) int
+(DCALL DeeDecWriter_XPutDeemonPointer)(DeeDecWriter *__restrict self,
+                                       Dee_dec_addr_t addr, void const *value);
+#endif /* CONFIG_BUILDING_DEEMON */
+
 
 /* Write the given module `mod' to the dec file. This function should
  * only ever be called once, and only on a freshly initialized dec
@@ -1026,6 +1091,61 @@ INTDEF size_t DCALL DecTime_ClearCache(size_t max_clear);
 
 #endif /* !CONFIG_NO_DEC */
 #endif /* CONFIG_BUILDING_DEEMON */
+
+
+#if 1 /* Dummy macros for forward-compatibility */
+#ifndef Dee_dec_addr_t_DEFINED
+#define Dee_dec_addr_t_DEFINED
+typedef uintptr_t Dee_dec_addr_t; /* Offset from start of `Dec_Ehdr' to some other structure. */
+#endif /* !Dee_dec_addr_t_DEFINED */
+#ifdef DEE_SOURCE
+#define Dee_module_object module_object
+#endif /* DEE_SOURCE */
+struct Dee_module_object;
+
+typedef char DeeDec_Ehdr;
+typedef struct Dee_dec_writer {
+	int placeholder;
+} DeeDecWriter;
+
+#define DeeDecWriter_Init(self)                                  ((void)(self), 0)
+#define DeeDecWriter_Fini(self)                                  (void)(self)
+#define DeeDecWriter_PackMapping(self)                           ((DeeDec_Ehdr *)(self))
+#define DeeDecWriter_PackModule(self)                            ((DREF struct Dee_module_object *)(self))
+#define DeeDecWriter_Malloc(self, num_bytes)                     ((void)(self), (void)(num_bytes), 0)
+#define DeeDecWriter_TryMalloc(self, num_bytes)                  ((void)(self), (void)(num_bytes), 0)
+#define DeeDecWriter_Free(self, addr)                            ((void)(self), (void)(addr))
+#define DeeDecWriter_Object_Malloc(self, num_bytes, ref)         ((void)(self), (void)(num_bytes), (void)(ref), 0)
+#define DeeDecWriter_GCObject_Malloc(self, num_bytes, ref)       ((void)(self), (void)(num_bytes), (void)(ref), 0)
+#define DeeDecWriter_Addr2Mem(self, addr, T)                     ((T *)((self) + (addr)))
+#define DeeDecWriter_PutRel(self, addrof_pointer, addrof_target) ((void)(self), (void)(addrof_pointer), (void)(addrof_target), 0)
+#define DeeDecWriter_PutObject(self, addr, obj)                  ((void)(self), (void)(addr), (void)(obj), 0)
+#define DeeDecWriter_XPutObject(self, addr, obj)                 ((void)(self), (void)(addr), (void)(obj), 0)
+#define DeeDecWriter_PutObjectInherited(self, addr, obj)         ((void)(self), (void)(addr), (void)(obj), 0)
+#define DeeDecWriter_XPutObjectInherited(self, addr, obj)        ((void)(self), (void)(addr), (void)(obj), 0)
+#define DeeDecWriter_PutMemDup(self, addr, data, num_bytes)      ((void)(self), (void)(addr), (void)(data), (void)(num_bytes), 0)
+#define DeeDecWriter_InplacePutObject(self, addr)                ((void)(self), (void)(addr), 0)
+#define DeeDecWriter_XInplacePutObject(self, addr)               ((void)(self), (void)(addr), 0)
+#define DeeDecWriter_InplacePutObjectv(self, addr, objc)         ((void)(self), (void)(addr), (void)(objc), 0)
+#define DeeDecWriter_XInplacePutObjectv(self, addr, objc)        ((void)(self), (void)(addr), (void)(objc), 0)
+#define DeeDecWriter_PutStaticPointer(self, addr, value)         ((void)(self), (void)(addr), (void)(value), 0)
+#define DeeDecWriter_XPutStaticPointer(self, addr, value)        ((void)(self), (void)(addr), (void)(value), 0)
+#ifdef CONFIG_BUILDING_DEEMON
+#define DeeDecWriter_PutDeemonPointer(self, addr, value)  ((void)(self), (void)(addr), (void)(value), 0)
+#define DeeDecWriter_XPutDeemonPointer(self, addr, value) ((void)(self), (void)(addr), (void)(value), 0)
+#endif /* CONFIG_BUILDING_DEEMON */
+#define DeeDecWriter_AppendModule(self, mod) ((void)(self), (void)(mod), 0)
+#define DeeDec_Relocate(self, dec_dirname, dec_dirname_len, options)              \
+	((void)(self), (void)(dec_dirname), (void)(dec_dirname_len), (void)(options), \
+	 (DREF struct Dee_module_object *)NULL)
+#define DeeDec_RelocateEx(self, dependencies) \
+	((void)(self), (void)(dependencies), (DREF struct Dee_module_object *)NULL)
+#define DeeDec_OpenFile(input_stream, options) \
+	((void)(input_stream), (void)(options), (DREF struct Dee_module_object *)NULL)
+#define DeeDec_OpenFileEx(fmap, dec_dirname, dec_dirname_len, options)   \
+	((void)(input_stream), (void)(dec_dirname), (void)(dec_dirname_len), \
+	 (void)(options), (DREF struct Dee_module_object *)NULL)
+#endif /* Dummy macros for forward-compatibility */
 
 DECL_END
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */

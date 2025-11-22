@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
+#include <deemon/dec.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -125,6 +126,17 @@ property_init_kw(Property *__restrict self, size_t argc,
 	return 0;
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+property_writedec(DeeDecWriter *__restrict writer,
+                  Property *self, Dee_dec_addr_t addr) {
+	int result = DeeDecWriter_XPutObject(writer, addr + offsetof(Property, p_get), self->p_get);
+	if likely(result == 0)
+		result = DeeDecWriter_XPutObject(writer, addr + offsetof(Property, p_del), self->p_del);
+	if likely(result == 0)
+		result = DeeDecWriter_XPutObject(writer, addr + offsetof(Property, p_set), self->p_set);
+	return result;
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -590,6 +602,7 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
 				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(Property),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&property_init_kw,
+				/* .tp_writedec    = */ (Dee_funptr_t)&property_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&property_fini,

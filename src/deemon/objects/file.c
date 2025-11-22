@@ -2876,7 +2876,9 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 					/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
 					/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
 					/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-					TYPE_FIXED_ALLOCATOR(DeeFileObject)
+					TYPE_FIXED_ALLOCATOR(DeeFileObject),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&DeeNone_OperatorWriteDec
 				}
 			},
 			/* .tp_dtor        = */ NULL,

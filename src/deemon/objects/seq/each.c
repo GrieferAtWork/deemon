@@ -115,11 +115,12 @@ se_ctor(SeqEachBase *__restrict self) {
 	return 0;
 }
 
-#define se_copy  generic_proxy__copy_alias
-#define se_deep  generic_proxy__deepcopy
-#define se_init  generic_proxy__init
-#define se_fini  generic_proxy__fini
-#define se_visit generic_proxy__visit
+#define se_copy     generic_proxy__copy_alias
+#define se_deep     generic_proxy__deepcopy
+#define se_init     generic_proxy__init
+#define se_writedec generic_proxy__writedec
+#define se_fini     generic_proxy__fini
+#define se_visit    generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 se_foreach_assign_cb(void *arg, DeeObject *elem) {
@@ -1327,7 +1328,9 @@ INTERN DeeTypeObject SeqEach_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&se_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&se_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&se_init,
-				TYPE_FIXED_ALLOCATOR(SeqEachBase)
+				TYPE_FIXED_ALLOCATOR(SeqEachBase),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&se_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&se_fini,

@@ -837,7 +837,7 @@ PUBLIC DeeNoMemoryErrorObject DeeError_NoMemory_instance = {
 /* ==== Signal type subsystem ==== */
 #define INIT_CUSTOM_SIGNAL(tp_name, tp_doc, tp_flags, tp_base,           \
                            tp_ctor, tp_copy, tp_deep, tp_init,           \
-                           tp_init_kw, tp_visit, T,                      \
+                           tp_init_kw, tp_writedec, tp_visit, T,         \
                            tp_str, tp_print, tp_repr, tp_printrepr,      \
                            tp_methods, tp_getsets, tp_members,           \
                            tp_class_members)                             \
@@ -857,7 +857,8 @@ PUBLIC DeeNoMemoryErrorObject DeeError_NoMemory_instance = {
 					/* .tp_deep_ctor = */ (Dee_funptr_t)(tp_deep),       \
 					/* .tp_any_ctor  = */ (Dee_funptr_t)(tp_init),       \
 					TYPE_FIXED_ALLOCATOR(T),                             \
-					/* .tp_any_ctor_kw = */ (Dee_funptr_t)(tp_init_kw)   \
+					/* .tp_any_ctor_kw = */ (Dee_funptr_t)(tp_init_kw),  \
+					/* .tp_writedec    = */ (Dee_funptr_t)(tp_writedec)  \
 				}                                                        \
 			},                                                           \
 			/* .tp_dtor        = */ NULL,                                \
@@ -902,7 +903,7 @@ signal_printrepr(DeeSignalObject *__restrict self,
 PUBLIC DeeTypeObject DeeError_StopIteration =
 INIT_CUSTOM_SIGNAL("StopIteration", NULL, TP_FNORMAL, &DeeError_Signal,
                    &DeeNone_OperatorCtor, &DeeNone_OperatorCopy, &DeeNone_OperatorCopy, NULL,
-                   NULL, NULL, DeeSignalObject,
+                   NULL, &DeeNone_OperatorWriteDec, NULL, DeeSignalObject,
                    NULL, NULL, NULL, &signal_printrepr,
                    NULL, NULL, NULL, NULL);
 
@@ -917,7 +918,7 @@ PRIVATE struct type_member tpconst interrupt_class_members[] = {
 PUBLIC DeeTypeObject DeeError_Interrupt =
 INIT_CUSTOM_SIGNAL("Interrupt", NULL, TP_FNORMAL | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Signal,
                    &DeeNone_OperatorCtor, &DeeNone_OperatorCopy, &DeeNone_OperatorCopy, NULL,
-                   NULL, NULL, DeeSignalObject,
+                   NULL, &DeeNone_OperatorWriteDec, NULL, DeeSignalObject,
                    NULL, NULL, NULL, &signal_printrepr,
                    NULL, NULL, NULL, interrupt_class_members);
 
@@ -932,7 +933,8 @@ PRIVATE struct type_member tpconst threadexit_members[] = {
 PUBLIC DeeTypeObject DeeError_ThreadExit =
 INIT_CUSTOM_SIGNAL("ThreadExit", NULL, TP_FNORMAL | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Interrupt,
                    NULL, &DeeStructObject_Copy, &DeeStructObject_Deep, &DeeStructObject_Init,
-                   &DeeStructObject_InitKw, &DeeStructObject_Visit, struct threadexit_object,
+                   &DeeStructObject_InitKw, &DeeStructObject_WriteDec,
+                   &DeeStructObject_Visit, struct threadexit_object,
                    NULL, NULL, NULL, &DeeStructObject_PrintRepr,
                    NULL, NULL, threadexit_members, interrupt_class_members);
 
@@ -943,7 +945,7 @@ INIT_CUSTOM_SIGNAL("ThreadExit", NULL, TP_FNORMAL | TP_FINTERRUPT /* Interrupt t
 PUBLIC DeeTypeObject DeeError_KeyboardInterrupt =
 INIT_CUSTOM_SIGNAL("KeyboardInterrupt", NULL, TP_FNORMAL | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Interrupt,
                    &DeeNone_OperatorCtor, &DeeNone_OperatorCopy, &DeeNone_OperatorCopy, NULL,
-                   NULL, NULL, DeeSignalObject,
+                   NULL, &DeeNone_OperatorWriteDec, NULL, DeeSignalObject,
                    NULL, NULL, NULL, &signal_printrepr,
                    NULL, NULL, NULL, NULL);
 
@@ -974,7 +976,9 @@ PUBLIC DeeTypeObject DeeError_Signal = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeNone_OperatorCopy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeNone_OperatorCopy,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeSignalObject)
+				TYPE_FIXED_ALLOCATOR(DeeSignalObject),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&DeeNone_OperatorWriteDec
 			}
 		},
 		/* .tp_dtor        = */ NULL,

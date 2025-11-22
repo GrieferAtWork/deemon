@@ -121,12 +121,13 @@ DECL_BEGIN
  * - "STRUCT_CSTR_EMPTY"  (owner wouldn't be reference; use "STRUCT_OBJECT" instead)
  * - "STRUCT_STRING"      (impossible to know max-length; use "STRUCT_OBJECT" instead)
  */
-
+struct Dee_dec_writer;
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeStructObject_Ctor(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeStructObject_Copy(DeeObject *__restrict self, DeeObject *__restrict other);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeStructObject_Deep(DeeObject *__restrict self, DeeObject *__restrict other);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeStructObject_Init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeStructObject_InitKw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeStructObject_WriteDec(struct Dee_dec_writer *__restrict writer, DeeObject *self, Dee_dec_addr_t addr);
 DFUNDEF NONNULL((1)) void DCALL DeeStructObject_Fini(DeeObject *__restrict self); /* Only finalizes fields defined by "Dee_TYPE(self)" */
 DFUNDEF NONNULL((1)) void DCALL DeeStructObject_Visit(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_visit_t proc, void *arg); /* Remember to set "Dee_TF_TPVISIT" */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeStructObject_PrintRepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);

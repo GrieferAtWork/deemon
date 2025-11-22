@@ -246,6 +246,10 @@ Dee_variant_init_deepcopy(struct Dee_variant *__restrict self,
 DFUNDEF NONNULL((1, 2)) void DCALL
 Dee_variant_visit(struct Dee_variant *__restrict self,
                   Dee_visit_t proc, void *arg);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+Dee_variant_writedec(struct Dee_dec_writer *__restrict writer,
+                     struct Dee_variant *__restrict self,
+                     Dee_dec_addr_t addr);
 
 
 /* Get the value of a variant in the form of a deemon object.

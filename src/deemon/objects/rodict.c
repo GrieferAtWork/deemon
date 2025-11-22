@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/dec.h>
 #include <deemon/dict.h>
 #include <deemon/error-rt.h>
 #include <deemon/format.h>
@@ -918,6 +919,54 @@ rodict_visit(RoDict *__restrict self, Dee_visit_t proc, void *arg) {
 		Dee_Visit(item->di_key);
 		Dee_Visit(item->di_value);
 	}
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
+rodict_writedec(DeeDecWriter *__restrict writer,
+                RoDict *__restrict self) {
+	RoDict *out;
+	size_t i, sizeof_dict = _RoDict_SizeOf(self->rd_vsize, self->rd_hmask);
+	Dee_dec_addr_t addr = DeeDecWriter_Object_Malloc(writer, sizeof_dict, self);
+	if unlikely(!addr)
+		goto err;
+	out = DeeDecWriter_Addr2Mem(writer, addr, RoDict);
+	out->rd_vsize = self->rd_vsize;
+	out->rd_hmask = self->rd_hmask;
+	for (i = 0; i <= self->rd_hmask; ++i) {
+		struct Dee_dict_item *out_item;
+		struct Dee_dict_item *in_item;
+		Dee_dec_addr_t addrof_item;
+		addrof_item = addr + offsetof(RoDict, rd_vtab) +
+		              i * sizeof(struct Dee_dict_item);
+		out_item = DeeDecWriter_Addr2Mem(writer, addrof_item, struct Dee_dict_item);
+		in_item  = &self->rd_vtab[i];
+		if (in_item->di_key) {
+			out_item->di_hash = in_item->di_hash;
+			if (DeeDecWriter_PutObject(writer,
+			                           addrof_item + offsetof(struct Dee_dict_item, di_key),
+			                           in_item->di_key))
+				goto err;
+			if (DeeDecWriter_PutObject(writer,
+			                           addrof_item + offsetof(struct Dee_dict_item, di_value),
+			                           in_item->di_value))
+				goto err;
+		} else {
+			out_item->di_key = NULL;
+		}
+	}
+	if (DeeDecWriter_PutDeemonPointer(writer,
+	                                  addr + offsetof(RoDict, rd_hidxget),
+	                                  (void *)self->rd_hidxget))
+		goto err;
+	if (DeeDecWriter_PutRel(writer,
+	                        addr + offsetof(RoDict, rd_htab),
+	                        /* _DeeRoDict_GetRealVTab(addr) + rd_vsize */
+	                        offsetof(RoDict, rd_vtab) +
+	                        self->rd_vsize * sizeof(struct Dee_dict_item)))
+		goto err;
+	return addr;
+err:
+	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2191,7 +2240,9 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&rodict_deepcopy,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&rodict_init,
-				/* .tp_free      = */ (Dee_funptr_t)NULL
+				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&rodict_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rodict_fini,

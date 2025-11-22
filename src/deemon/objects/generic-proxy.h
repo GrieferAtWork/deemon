@@ -69,6 +69,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__copy_alias(ProxyObject *
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__copy_recursive(ProxyObject *__restrict self, ProxyObject *__restrict other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__deepcopy(ProxyObject *__restrict self, ProxyObject *__restrict other);
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__init(ProxyObject *__restrict self, size_t argc, DeeObject *const *argv); /* (obj) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__writedec(struct Dee_dec_writer *__restrict writer, ProxyObject *self, Dee_dec_addr_t addr);
 
 INTDEF NONNULL((1, 2)) void DCALL generic_proxy__visit(ProxyObject *__restrict self, Dee_visit_t proc, void *arg);
 INTDEF NONNULL((1)) void DCALL generic_proxy__fini(ProxyObject *__restrict self);
@@ -81,6 +82,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__copy_alias12(ProxyObjec
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__copy_recursive1_alias2(ProxyObject2 *__restrict self, ProxyObject2 *__restrict other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__deepcopy(ProxyObject2 *__restrict self, ProxyObject2 *__restrict other);
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy2__init(ProxyObject2 *__restrict self, size_t argc, DeeObject *const *argv); /* (obj1,obj2) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__writedec(struct Dee_dec_writer *__restrict writer, ProxyObject2 *self, Dee_dec_addr_t addr);
 
 INTDEF NONNULL((1, 2)) void DCALL generic_proxy2__visit(ProxyObject2 *__restrict self, Dee_visit_t proc, void *arg);
 INTDEF NONNULL((1)) void DCALL generic_proxy2__fini(ProxyObject2 *__restrict self);
@@ -96,6 +98,7 @@ INTDEF NONNULL((1)) void DCALL generic_proxy2__fini(ProxyObject2 *__restrict sel
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy3__copy_alias123(ProxyObject3 *__restrict self, ProxyObject3 *__restrict other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy3__deepcopy(ProxyObject3 *__restrict self, ProxyObject3 *__restrict other);
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy3__init(ProxyObject3 *__restrict self, size_t argc, DeeObject *const *argv); /* (obj1,obj2,obj3) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy3__writedec(struct Dee_dec_writer *__restrict writer, ProxyObject3 *self, Dee_dec_addr_t addr);
 
 INTDEF NONNULL((1, 2)) void DCALL generic_proxy3__visit(ProxyObject3 *__restrict self, Dee_visit_t proc, void *arg);
 INTDEF NONNULL((1)) void DCALL generic_proxy3__fini(ProxyObject3 *__restrict self);

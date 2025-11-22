@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/dec.h>
 #include <deemon/error-rt.h>
 #include <deemon/gc.h>
 #include <deemon/method-hints.h>
@@ -399,8 +400,10 @@ INTERN DeeTypeObject SeqConcatIterator_Type = {
 
 INTDEF NONNULL((1)) void DCALL tuple_fini(DeeTupleObject *__restrict self);
 INTDEF NONNULL((1, 2)) void DCALL tuple_visit(DeeTupleObject *__restrict self, Dee_visit_t proc, void *arg);
-#define cat_fini   tuple_fini
-#define cat_visit  tuple_visit
+INTERN WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL tuple_writedec(DeeDecWriter *__restrict writer, DeeTupleObject *__restrict self);
+#define cat_writedec tuple_writedec
+#define cat_fini     tuple_fini
+#define cat_visit    tuple_visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF CatIterator *DCALL
 cat_iter(Cat *__restrict self) {
@@ -677,8 +680,12 @@ PRIVATE struct type_seq cat_seq = {
 };
 
 
+#if defined(CONFIG_NO_CACHES) || defined(CONFIG_NO_TUPLE_CACHES) || defined(CONFIG_EXPERIMENTAL_MMAP_DEC)
+#define cat_tp_free_PTR NULL
+#else /* CONFIG_NO_CACHES || CONFIG_NO_TUPLE_CACHES || CONFIG_EXPERIMENTAL_MMAP_DEC */
 INTDEF NONNULL((1)) void DCALL tuple_tp_free(void *__restrict ob);
-#define cat_tp_free  tuple_tp_free
+#define cat_tp_free_PTR &tuple_tp_free
+#endif /* !CONFIG_NO_CACHES && !CONFIG_NO_TUPLE_CACHES && !CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cat_bool(Cat *__restrict self) {
@@ -727,7 +734,9 @@ INTERN DeeTypeObject SeqConcat_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&cat_deepcopy,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_free      = */ (Dee_funptr_t)&cat_tp_free,
+				/* .tp_free      = */ (Dee_funptr_t)cat_tp_free_PTR, { NULL },
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&cat_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cat_fini,

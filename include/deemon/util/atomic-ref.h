@@ -70,7 +70,7 @@ DECL_BEGIN
  *   be implemented analogous to regular writes.
  */
 
-typedef struct {
+typedef struct Dee_atomic_ref {
 #ifndef CONFIG_NO_THREADS
 	Dee_refcnt_t    ar_use; /* [lock(ATOMIC)] In-use counter for atomic reference */
 #endif /* !CONFIG_NO_THREADS */

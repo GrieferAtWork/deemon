@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/cell.h>
 #include <deemon/computed-operators.h>
+#include <deemon/dec.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
@@ -90,6 +91,16 @@ err:
 PRIVATE NONNULL((1)) void DCALL
 cell_fini(DeeCellObject *__restrict self) {
 	Dee_XDecref(self->c_item);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cell_writedec(DeeDecWriter *__restrict writer,
+              DeeCellObject *__restrict self,
+              Dee_dec_addr_t addr) {
+	DREF DeeObject *value = DeeCell_TryGet((DeeObject *)self);
+	DeeCellObject *out = DeeDecWriter_Addr2Mem(writer, addr, DeeCellObject);
+	Dee_atomic_rwlock_init(&out->c_lock);
+	return DeeDecWriter_XPutObjectInherited(writer, addr + offsetof(DeeCellObject, c_item), value);
 }
 
 PRIVATE NONNULL((1, 2)) int DCALL
@@ -628,7 +639,9 @@ PUBLIC DeeTypeObject DeeCell_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&cell_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&cell_copy,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&cell_init,
-				TYPE_FIXED_ALLOCATOR_GC(DeeCellObject)
+				TYPE_FIXED_ALLOCATOR_GC(DeeCellObject),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&cell_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cell_fini,

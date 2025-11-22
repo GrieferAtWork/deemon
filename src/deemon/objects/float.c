@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
+#include <deemon/dec.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
 #include <deemon/int.h>
@@ -121,6 +122,15 @@ float_init(Float *__restrict self,
 err:
 	return -1;
 }
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+float_writedec(DeeDecWriter *__restrict writer,
+               Float *self, Dee_dec_addr_t addr) {
+	Float *out = DeeDecWriter_Addr2Mem(writer, addr, Float);
+	out->f_value = self->f_value;
+	return 0;
+}
+
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 float_bool(Float *__restrict self) {
@@ -918,7 +928,9 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&float_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&float_copy,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&float_init,
-				TYPE_FIXED_ALLOCATOR(Float)
+				TYPE_FIXED_ALLOCATOR(Float),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&float_writedec
 			}
 		},
 		/* .tp_dtor        = */ NULL,

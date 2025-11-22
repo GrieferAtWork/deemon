@@ -136,11 +136,12 @@ err:
 /* SeqFlat                                                              */
 /************************************************************************/
 STATIC_ASSERT(offsetof(SeqFlat, sf_seq) == offsetof(ProxyObject, po_obj));
-#define sf_copy  generic_proxy__copy_alias
-#define sf_deep  generic_proxy__deepcopy
-#define sf_init  generic_proxy__init
-#define sf_fini  generic_proxy__fini
-#define sf_visit generic_proxy__visit
+#define sf_copy     generic_proxy__copy_alias
+#define sf_deep     generic_proxy__deepcopy
+#define sf_init     generic_proxy__init
+#define sf_writedec generic_proxy__writedec
+#define sf_fini     generic_proxy__fini
+#define sf_visit    generic_proxy__visit
 
 #define sf_foreachseq(self, cb, arg)         DeeObject_InvokeMethodHint(seq_operator_foreach, (self)->sf_seq, cb, arg)
 #define sf_foreachseq_reverse(self, cb, arg) DeeSeq_InvokeForeachReverse((self)->sf_seq, cb, arg)
@@ -914,7 +915,9 @@ INTERN DeeTypeObject SeqFlat_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&sf_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&sf_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&sf_init,
-				TYPE_FIXED_ALLOCATOR(SeqFlat)
+				TYPE_FIXED_ALLOCATOR(SeqFlat),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&sf_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sf_fini,

@@ -35,6 +35,7 @@
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
+#include <deemon/dec.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -307,7 +308,7 @@ DeeInt_Free(DeeIntObject *__restrict self) {
 		COMPILER_READ_BARRIER();
 		if (set->fis_size < CONFIG_INT_CACHE_MAXSIZE) {
 			((struct free_int *)self)->fi_next = set->fis_head;
-			set->fis_head                      = (struct free_int *)self;
+			set->fis_head = (struct free_int *)self;
 			++set->fis_size;
 			free_int_set_release(set);
 			return;
@@ -4000,6 +4001,24 @@ int_bool(DeeIntObject *__restrict self) {
 	return self->ob_size != 0;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
+int_writedec(DeeDecWriter *__restrict writer,
+             DeeIntObject *__restrict self) {
+	Dee_dec_addr_t result;
+	size_t int_size, obj_size;
+	int_size = (size_t)self->ob_size;
+	if ((Dee_ssize_t)int_size < 0)
+		int_size = (size_t)(-(Dee_ssize_t)int_size);
+	obj_size = _Dee_MallococBufsize(offsetof(DeeIntObject, ob_digit),
+	                                int_size, sizeof(digit));
+	result = DeeDecWriter_Object_Malloc(writer, obj_size, self);
+	if likely(result) {
+		DeeIntObject *ret = DeeDecWriter_Addr2Mem(writer, result, DeeIntObject);
+		memcpy(DeeObject_DATA(ret), DeeObject_DATA(self), obj_size - sizeof(DeeObject));
+	}
+	return result;
+}
+
 
 
 
@@ -5606,7 +5625,9 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef, /* No need to actually copy. - Integers are immutable! */
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&int_new,
-				/* .tp_free      = */ (Dee_funptr_t)int_free_PTR
+				/* .tp_free      = */ (Dee_funptr_t)int_free_PTR, { NULL },
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&int_writedec,
 			}
 		},
 		/* .tp_dtor        = */ NULL,

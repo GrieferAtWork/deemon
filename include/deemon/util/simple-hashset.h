@@ -51,7 +51,7 @@ struct Dee_simple_hashset {
 
 LOCAL WUNUSED NONNULL((1, 2)) int DCALL
 Dee_simple_hashset_copy(struct Dee_simple_hashset *__restrict self,
-                        struct Dee_simple_hashset *__restrict other) {
+                        struct Dee_simple_hashset const *__restrict other) {
 	self->shs_mask = other->shs_mask;
 	self->shs_size = other->shs_size;
 	self->shs_elem = other->shs_elem;

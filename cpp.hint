@@ -1414,7 +1414,7 @@
 #define yield_function_iterator_object Dee_yield_function_iterator_object
 #define yield_function_object          Dee_yield_function_object
 #define keyword                        Dee_keyword
-#define kwds_entry                     dee_kwds_entry
+#define kwds_entry                     Dee_kwds_entry
 #define kwds_mapping_object            dee_kwds_mapping_object
 #define kwds_object                    Dee_kwds_object
 

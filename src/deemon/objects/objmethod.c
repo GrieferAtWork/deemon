@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/callable.h>
 #include <deemon/computed-operators.h>
+#include <deemon/dec.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -167,6 +168,18 @@ DeeClsMethod_GetOrigin(DeeObject const *__restrict self,
 STATIC_ASSERT(offsetof(DeeObjMethodObject, om_this) == offsetof(ProxyObject, po_obj));
 #define objmethod_fini  generic_proxy__fini
 #define objmethod_visit generic_proxy__visit
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+objmethod_writedec(DeeDecWriter *__restrict writer,
+                   DeeObjMethodObject *self, Dee_dec_addr_t addr) {
+	int result = DeeDecWriter_PutObject(writer, addr + offsetof(DeeObjMethodObject, om_this), self->om_this);
+	if likely(result == 0) {
+		result = DeeDecWriter_PutStaticPointer(writer,
+		                                       addr + offsetof(DeeObjMethodObject, om_func.omf_meth),
+		                                       (void *)self->om_func.omf_kwmeth);
+	}
+	return result;
+}
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 objmethod_call(DeeObjMethodObject *self, size_t argc, DeeObject *const *argv) {
@@ -376,7 +389,9 @@ PUBLIC DeeTypeObject DeeObjMethod_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeObjMethodObject)
+				TYPE_FIXED_ALLOCATOR(DeeObjMethodObject),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&objmethod_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&objmethod_fini,
@@ -834,12 +849,9 @@ no_kwds:
 }
 
 
-
-
-STATIC_ASSERT(offsetof(DeeObjMethodObject, om_this) == offsetof(DeeObjMethodObject, om_this));
-STATIC_ASSERT(offsetof(DeeObjMethodObject, om_func) == offsetof(DeeObjMethodObject, om_func));
-#define kwobjmethod_fini  objmethod_fini
-#define kwobjmethod_visit objmethod_visit
+#define kwobjmethod_fini     objmethod_fini
+#define kwobjmethod_visit    objmethod_visit
+#define kwobjmethod_writedec objmethod_writedec
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwobjmethod_call(DeeObjMethodObject *self, size_t argc, DeeObject *const *argv) {
@@ -938,7 +950,9 @@ PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeObjMethodObject)
+				TYPE_FIXED_ALLOCATOR(DeeObjMethodObject),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&kwobjmethod_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kwobjmethod_fini,
@@ -1039,8 +1053,9 @@ err:
 #if 1
 STATIC_ASSERT(offsetof(DeeClsMethodObject, clm_type) == offsetof(DeeObjMethodObject, om_this));
 STATIC_ASSERT(offsetof(DeeClsMethodObject, clm_func) == offsetof(DeeObjMethodObject, om_func));
-#define clsmethod_fini  objmethod_fini
-#define clsmethod_visit objmethod_visit
+#define clsmethod_fini     objmethod_fini
+#define clsmethod_visit    objmethod_visit
+#define clsmethod_writedec objmethod_writedec
 #else
 PRIVATE NONNULL((1)) void DCALL
 clsmethod_fini(DeeClsMethodObject *__restrict self) {
@@ -1052,7 +1067,21 @@ clsmethod_visit(DeeClsMethodObject *__restrict self,
                 Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->clm_type);
 }
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+clsmethod_writedec(DeeDecWriter *__restrict writer,
+                   DeeClsMethodObject *self, Dee_dec_addr_t addr) {
+	int result = DeeDecWriter_PutObject(writer, addr + offsetof(DeeClsMethodObject, clm_type), self->clm_type);
+	if likely(result == 0) {
+		result = DeeDecWriter_PutStaticPointer(writer,
+		                                       addr + offsetof(DeeClsMethodObject, clm_func.clmf_meth),
+		                                       (void *)self->clm_func.clmf_meth);
+	}
+	return result;
+}
 #endif
+
+
 
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) char const *DCALL
 clsmethod_getname(DeeClsMethodObject *__restrict self) {
@@ -1245,7 +1274,9 @@ PUBLIC DeeTypeObject DeeClsMethod_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeClsMethodObject)
+				TYPE_FIXED_ALLOCATOR(DeeClsMethodObject),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&clsmethod_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&clsmethod_fini,
@@ -1346,6 +1377,7 @@ err:
 STATIC_ASSERT(offsetof(DeeClsMethodObject, clm_func) == offsetof(DeeClsMethodObject, clm_func));
 STATIC_ASSERT(offsetof(DeeClsMethodObject, clm_type) == offsetof(DeeClsMethodObject, clm_type));
 #define kwclsmethod_fini      clsmethod_fini
+#define kwclsmethod_writedec  clsmethod_writedec
 #define kwclsmethod_print     clsmethod_print
 #define kwclsmethod_printrepr clsmethod_printrepr
 #define kwclsmethod_visit     clsmethod_visit
@@ -1380,7 +1412,9 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeClsMethodObject)
+				TYPE_FIXED_ALLOCATOR(DeeClsMethodObject),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&kwclsmethod_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kwclsmethod_fini,
@@ -1473,6 +1507,25 @@ DeeClsProperty_NewEx(DeeTypeObject *__restrict type,
 done:
 	return (DREF DeeObject *)result;
 }
+
+#define clsproperty_fini  clsmethod_fini
+#define clsproperty_visit clsmethod_visit
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+clsproperty_writedec(DeeDecWriter *__restrict writer,
+                     DeeClsPropertyObject *self, Dee_dec_addr_t addr) {
+	int result = DeeDecWriter_PutObject(writer, addr + offsetof(DeeClsPropertyObject, cp_type), self->cp_type);
+	if likely(result == 0)
+		result = DeeDecWriter_XPutStaticPointer(writer, addr + offsetof(DeeClsPropertyObject, cp_get), (void *)self->cp_get);
+	if likely(result == 0)
+		result = DeeDecWriter_XPutStaticPointer(writer, addr + offsetof(DeeClsPropertyObject, cp_del), (void *)self->cp_del);
+	if likely(result == 0)
+		result = DeeDecWriter_XPutStaticPointer(writer, addr + offsetof(DeeClsPropertyObject, cp_set), (void *)self->cp_set);
+	if likely(result == 0)
+		result = DeeDecWriter_XPutStaticPointer(writer, addr + offsetof(DeeClsPropertyObject, cp_bound), (void *)self->cp_bound);
+	return result;
+}
+
+
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 clsproperty_hash(DeeClsPropertyObject *__restrict self) {
@@ -1805,10 +1858,12 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeClsPropertyObject)
+				TYPE_FIXED_ALLOCATOR(DeeClsPropertyObject),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&clsproperty_writedec
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&clsmethod_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&clsproperty_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 	},
@@ -1819,7 +1874,7 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&clsproperty_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&clsproperty_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&clsmethod_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&clsproperty_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ &clsproperty_cmp,
@@ -1865,6 +1920,28 @@ done:
 STATIC_ASSERT(offsetof(DeeClsMemberObject, cmb_type) == offsetof(ProxyObject, po_obj));
 #define clsmember_fini  generic_proxy__fini
 #define clsmember_visit generic_proxy__visit
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+clsmember_writedec(DeeDecWriter *__restrict writer,
+                   DeeClsMemberObject *self, Dee_dec_addr_t addr) {
+	int result = DeeDecWriter_PutObject(writer, addr + offsetof(DeeClsMemberObject, cmb_type), self->cmb_type);
+	if likely(result == 0)
+		result = DeeDecWriter_PutStaticPointer(writer, addr + offsetof(DeeClsMemberObject, cmb_memb.m_name), (void *)self->cmb_memb.m_name);
+	if likely(result == 0) {
+		if (Dee_TYPE_MEMBER_ISCONST(&self->cmb_memb)) {
+			result = DeeDecWriter_PutObject(writer,
+			                                addr + offsetof(DeeClsMemberObject, cmb_memb.m_desc.md_const),
+			                                self->cmb_memb.m_desc.md_const);
+		} else {
+			DeeClsMemberObject *out;
+			out = DeeDecWriter_Addr2Mem(writer, addr, DeeClsMemberObject);
+			out->cmb_memb.m_desc = self->cmb_memb.m_desc;
+		}
+	}
+	if likely(result == 0)
+		result = DeeDecWriter_XPutStaticPointer(writer, addr + offsetof(DeeClsMemberObject, cmb_memb.m_doc), (void *)self->cmb_memb.m_doc);
+	return result;
+}
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 clsmember_print(DeeClsMemberObject *__restrict self,
@@ -2088,7 +2165,9 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeClsMemberObject)
+				TYPE_FIXED_ALLOCATOR(DeeClsMemberObject),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&clsmember_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&clsmember_fini,
@@ -2256,6 +2335,16 @@ Dee_cmethod_origin_init(struct cmethod_origin *__restrict result, Dee_cmethod_t 
 /* Make sure that we can re-use some functions from `ClassMethod' */
 STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func) ==
               offsetof(DeeClsMethodObject, clm_func));
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cmethod_writedec(DeeDecWriter *__restrict writer,
+                 DeeCMethodObject *self, Dee_dec_addr_t addr) {
+	DeeCMethodObject *out = DeeDecWriter_Addr2Mem(writer, addr, DeeCMethodObject);
+	out->cm_flags = self->cm_flags;
+	return DeeDecWriter_PutStaticPointer(writer,
+	                                     addr + offsetof(DeeCMethodObject, cm_func.cmf_meth),
+	                                     (void *)self->cm_func.cmf_meth);
+}
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod_call(DeeCMethodObject *self, size_t argc, DeeObject *const *argv) {
@@ -2492,7 +2581,9 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeCMethodObject)
+				TYPE_FIXED_ALLOCATOR(DeeCMethodObject),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&cmethod_writedec
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -2533,6 +2624,8 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
 
 STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func.cmf_meth0) == offsetof(DeeCMethodObject, cm_func.cmf_meth));
 STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func.cmf_meth1) == offsetof(DeeCMethodObject, cm_func.cmf_meth));
+#define cmethod0_writedec  cmethod_writedec
+#define cmethod1_writedec  cmethod_writedec
 #define cmethod0_print     cmethod_print
 #define cmethod1_print     cmethod_print
 #define cmethod0_printrepr cmethod_printrepr
@@ -2603,7 +2696,9 @@ PUBLIC DeeTypeObject DeeCMethod0_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeCMethodObject)
+				TYPE_FIXED_ALLOCATOR(DeeCMethodObject),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&cmethod0_writedec
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -2656,7 +2751,9 @@ PUBLIC DeeTypeObject DeeCMethod1_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeCMethodObject)
+				TYPE_FIXED_ALLOCATOR(DeeCMethodObject),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&cmethod1_writedec
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -2709,6 +2806,7 @@ kwcmethod_call_kw(DeeCMethodObject *self, size_t argc,
 /* Make sure that we can re-use some functions from `CMethod' */
 STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func.cmf_kwmeth) ==
               offsetof(DeeCMethodObject, cm_func.cmf_meth));
+#define kwcmethod_writedec  cmethod_writedec
 #define kwcmethod_print     cmethod_print
 #define kwcmethod_printrepr cmethod_printrepr
 #define kwcmethod_operators cmethod_operators
@@ -2740,7 +2838,9 @@ PUBLIC DeeTypeObject DeeKwCMethod_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeCMethodObject)
+				TYPE_FIXED_ALLOCATOR(DeeCMethodObject),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&kwcmethod_writedec
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -3095,8 +3195,6 @@ DeeKwObjMethod_VCallFuncf(Dee_kwobjmethod_t funptr, DeeObject *thisarg,
 err:
 	return NULL;
 }
-
-
 
 DECL_END
 

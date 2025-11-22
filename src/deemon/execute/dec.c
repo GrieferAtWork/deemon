@@ -28,6 +28,7 @@
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 #include <deemon/alloc.h>
 #include <deemon/dex.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/exec.h>
 #include <deemon/gc.h>
@@ -199,7 +200,7 @@ DeeDecWriter_PackModule(/*inherit(on_success)*/ DeeDecWriter *__restrict self) {
 
 /* Append a relocation to "self" */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-Dee_dec_reltab_append(struct Dee_dec_reltab *__restrict self, Dee_dec_addr_t addr) {
+Dee_dec_reltab_append(struct Dee_dec_reltab *__restrict self, Dee_dec_addr32_t addr) {
 
 	/* TODO */
 	return DeeError_NOTIMPLEMENTED();
@@ -208,14 +209,15 @@ Dee_dec_reltab_append(struct Dee_dec_reltab *__restrict self, Dee_dec_addr_t add
 /* Add an entry for `ref' to `self->dw_known' */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 DeeDecWriter_AddKnown(DeeDecWriter *__restrict self,
-                      DeeObject *__restrict ref, Dee_dec_addr_t addr) {
+                      DeeObject *__restrict ref,
+                      Dee_dec_addr32_t addr) {
 	/* TODO */
 	return DeeError_NOTIMPLEMENTED();
 }
 
 /* Check if `ref' was already written to "self". If so,
  * return the address where it resides. If not, return "0" */
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr32_t DCALL
 DeeDecWriter_GetKnown(DeeDecWriter *__restrict self,
                       DeeObject *__restrict ref) {
 	/* TODO */
@@ -232,6 +234,80 @@ DeeDecWriter_GetDep(DeeDecWriter *__restrict self,
 	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
+
+PRIVATE WUNUSED NONNULL((1)) Dee_dec_addr_t
+(DCALL DeeDecWriter_Malloc_impl)(DeeDecWriter *__restrict self,
+                                 size_t num_bytes, bool try_malloc) {
+	Dee_dec_addr_t result;
+	struct Dee_heapchunk *chunk;
+	size_t avail, used, nb, req;
+	if unlikely(num_bytes > DFILE_LIMIT)
+		goto err_too_much;
+
+	/* Force alignment of new chunk size */
+	num_bytes = CEIL_ALIGN(num_bytes, Dee_HEAPCHUNK_ALIGN);
+	nb = num_bytes + sizeof(struct Dee_heapchunk);
+
+	/* Force alignment of new chunk addr */
+	used = CEIL_ALIGN(self->dw_used, Dee_HEAPCHUNK_ALIGN);
+
+	/* Ensure that enough space has been allocated.
+	 * Always include space for the eventual `struct Dee_heaptail'! */
+	if (OVERFLOW_USUB(self->dw_alloc, used, &avail))
+		avail = 0;
+	req = nb + sizeof(struct Dee_heaptail);
+	if likely(avail < req) {
+		byte_t *new_base;
+		size_t min_alloc = (self->dw_used + req);
+		size_t new_alloc = min_alloc * 2;
+		if (new_alloc < min_alloc)
+			new_alloc = min_alloc;
+		new_base = (byte_t *)Dee_TryRealloc(self->dw_base, new_alloc);
+		if unlikely(!new_base) {
+			new_alloc = min_alloc;
+			new_base = try_malloc ? (byte_t *)Dee_TryRealloc(self->dw_base, new_alloc)
+			                      : (byte_t *)Dee_Realloc(self->dw_base, new_alloc);
+			if unlikely(!new_base)
+				goto err;
+		}
+		self->dw_base  = new_base;
+		self->dw_alloc = Dee_MallocUsableSize(new_base);
+		ASSERT(self->dw_alloc >= new_alloc);
+	}
+
+	/* Initialize the heap chunk for the newly made allocation */
+	result = (Dee_dec_addr_t)used;
+	chunk  = DeeDecWriter_Addr2Mem(self, result, struct Dee_heapchunk);
+	chunk->hc_prevsize = self->dw_hlast; /* Must be 0 the first time around */
+	chunk->hc_head     = Dee_HEAPCHUNK_HEAD(num_bytes);
+	result += sizeof(struct Dee_heapchunk);
+	self->dw_used  = used + num_bytes;
+	self->dw_hlast = Dee_HEAPCHUNK_PREV(num_bytes); /* Override with whatever the next chunk will need */
+	return result;
+err_too_much:
+	if (!try_malloc)
+		Dee_BadAlloc(num_bytes);
+err:
+	return 0;
+}
+
+/* Free a heap pointer
+ * CAUTION: Only the most-recent pointer can *actually* be free'd!
+ *          If you pass anything else, this function is a no-op! */
+PUBLIC NONNULL((1)) void
+(DCALL DeeDecWriter_Free)(DeeDecWriter *__restrict self, Dee_dec_addr_t addr) {
+	size_t last_bytes = self->dw_hlast - Dee_HEAPCHUNK_PREV(0);
+	Dee_dec_addr_t last = self->dw_used - last_bytes;
+	struct Dee_heapchunk *p;
+	if (last != addr)
+		return; /* Cannot free... */
+	/* Undo state changes made by allocation */
+	addr -= sizeof(struct Dee_heapchunk);
+	p = DeeDecWriter_Addr2Mem(self, addr, struct Dee_heapchunk);
+	self->dw_used  = addr;
+	self->dw_hlast = p->hc_prevsize;
+}
+
 
 /* Allocate heap memory within the dec file for:
  * - DeeDecWriter_Malloc:          Regular heap memory (as per `Dee_Malloc()')
@@ -251,61 +327,24 @@ DeeDecWriter_GetDep(DeeDecWriter *__restrict self,
  *              already-written object, and to encode relocation for "ob_type".
  * @return: 0 : Allocation failed (an error was thrown)
  * @return: * : base address of user-area of new heap chunk */
-PUBLIC WUNUSED NONNULL((1)) Dee_dec_addr_t DCALL
-DeeDecWriter_Malloc(DeeDecWriter *__restrict self, size_t num_bytes) {
-	Dee_dec_addr_t result;
-	struct Dee_heapchunk *chunk;
-	size_t avail, used, nb, req;
-	nb = num_bytes + sizeof(struct Dee_heapchunk);
-
-	/* Force alignment of new chunk size */
-	num_bytes = CEIL_ALIGN(num_bytes, Dee_HEAPCHUNK_ALIGN);
-
-	/* Force alignment of new chunk addr */
-	used = CEIL_ALIGN(self->dw_used, Dee_HEAPCHUNK_ALIGN);
-
-	/* Ensure that enough space has been allocated.
-	 * Always include space for the eventual `struct Dee_heaptail'! */
-	if (OVERFLOW_USUB(self->dw_alloc, used, &avail))
-		avail = 0;
-	req = nb + sizeof(struct Dee_heaptail);
-	if likely(avail < req) {
-		byte_t *new_base;
-		size_t min_alloc = (self->dw_used + req);
-		size_t new_alloc = min_alloc * 2;
-		if (new_alloc < min_alloc)
-			new_alloc = min_alloc;
-		new_base = (byte_t *)Dee_TryRealloc(self->dw_base, new_alloc);
-		if unlikely(!new_base) {
-			new_alloc = min_alloc;
-			new_base = (byte_t *)Dee_Realloc(self->dw_base, new_alloc);
-			if unlikely(!new_base)
-				goto err;
-		}
-		self->dw_base  = new_base;
-		self->dw_alloc = Dee_MallocUsableSize(new_base);
-		ASSERT(self->dw_alloc >= new_alloc);
-	}
-
-	/* Initialize the heap chunk for the newly made allocation */
-	result = (Dee_dec_addr_t)used;
-	chunk  = DeeDecWriter_Addr2Mem(self, result, struct Dee_heapchunk);
-	chunk->hc_prevsize = self->dw_hlast; /* Must be 0 the first time around */
-	chunk->hc_head     = Dee_HEAPCHUNK_HEAD(nb);
-	result += sizeof(struct Dee_heapchunk);
-	self->dw_used  = used + nb;
-	self->dw_hlast = Dee_HEAPCHUNK_PREV(nb); /* Override with whatever the next chunk will need */
-	return result;
-err:
-	return 0;
+PUBLIC WUNUSED NONNULL((1)) Dee_dec_addr_t
+(DCALL DeeDecWriter_Malloc)(DeeDecWriter *__restrict self, size_t num_bytes) {
+	return DeeDecWriter_Malloc_impl(self, num_bytes, false);
 }
 
-PUBLIC WUNUSED NONNULL((1, 3)) Dee_dec_addr_t DCALL
-DeeDecWriter_Object_Malloc(DeeDecWriter *__restrict self,
-                           size_t num_bytes,
-                           DeeObject *__restrict ref) {
+PUBLIC WUNUSED NONNULL((1)) Dee_dec_addr_t
+(DCALL DeeDecWriter_TryMalloc)(DeeDecWriter *__restrict self, size_t num_bytes) {
+	return DeeDecWriter_Malloc_impl(self, num_bytes, true);
+}
+
+PUBLIC WUNUSED NONNULL((1, 3)) Dee_dec_addr_t
+(DCALL DeeDecWriter_Object_Malloc)(DeeDecWriter *__restrict self,
+                                   size_t num_bytes,
+                                   DeeObject *__restrict ref) {
 	DeeObject *copy;
-	Dee_dec_addr_t result = DeeDecWriter_Malloc(self, num_bytes);
+	Dee_dec_addr_t result;
+	ASSERTF(!DeeType_IsGC(Dee_TYPE(self)), "Use DeeDecWriter_GCObject_Malloc()");
+	result = DeeDecWriter_Malloc(self, num_bytes);
 	if unlikely(!result)
 		goto err;
 	if unlikely(DeeDecWriter_AddKnown(self, ref, result))
@@ -323,13 +362,14 @@ err:
 	return 0;
 }
 
-PUBLIC WUNUSED NONNULL((1, 3)) Dee_dec_addr_t DCALL
-DeeDecWriter_GCObject_Malloc(DeeDecWriter *__restrict self,
-                             size_t num_bytes,
-                             DeeObject *__restrict ref) {
+PUBLIC WUNUSED NONNULL((1, 3)) Dee_dec_addr_t
+(DCALL DeeDecWriter_GCObject_Malloc)(DeeDecWriter *__restrict self,
+                                     size_t num_bytes,
+                                     DeeObject *__restrict ref) {
 	size_t total;
 	Dee_dec_addr_t result;
 	DeeObject *copy;
+	ASSERTF(DeeType_IsGC(Dee_TYPE(self)), "Use DeeDecWriter_Object_Malloc()");
 	if (OVERFLOW_UADD(num_bytes, sizeof(struct gc_head_link), &total))
 		total = (size_t)-1;
 	result = DeeDecWriter_Malloc(self, num_bytes);
@@ -380,7 +420,7 @@ DeeDecWriter_PutRel(DeeDecWriter *__restrict self,
 	void **pointer;
 	pointer = DeeDecWriter_Addr2Mem(self, addrof_pointer, void *);
 	*pointer = (void *)(uintptr_t)addrof_target;
-	return Dee_dec_reltab_append(&self->dw_srel, addrof_pointer);
+	return Dee_dec_reltab_append(&self->dw_srel, (Dee_dec_addr32_t)addrof_pointer);
 }
 
 /* Append a copy of `obj' to self and return the address of the written `DeeObject'
@@ -389,28 +429,70 @@ DeeDecWriter_PutRel(DeeDecWriter *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
 DeeDecWriter_AppendObject(DeeDecWriter *__restrict self,
                           DeeObject *__restrict obj) {
-	/* TODO: To implement this function, there needs to
-	 * be a new operator `tp_writedec' in `DeeTypeObject'
-	 *
-	 * Objects must then implement this operator in terms of:
-	 * - DeeDecWriter_Malloc()          // To allocate a generic heap buffer
-	 * - DeeDecWriter_Object_Malloc()   // To allocate an object buffer
-	 * - DeeDecWriter_GCObject_Malloc() // To allocate a GC object buffer
-	 * - DeeDecWriter_Addr2Mem()        // To write to buffers allocated by *_Malloc above
-	 * - DeeDecWriter_PutRel()          // To encode pointers to secondary heap block (like "DeeStringObject::s_utf")
-	 * - DeeDecWriter_PutObject()       // To encode references to other objects in buffers allocated by *_Malloc above
-	 */
-	DeeError_NOTIMPLEMENTED();
+	int status;
+	Dee_dec_addr_t addr;
+	size_t instance_size;
+	DeeTypeObject *tp = Dee_TYPE(obj);
+	void (DCALL *tp_free)(void *__restrict ob);
+	/* TODO: TP_FINHERITCTOR -- should also be able to inherit "tp_writedec" */
+	if (tp->tp_flags & TP_FVARIABLE) {
+		if (!tp->tp_init.tp_var.tp_writedec)
+			goto err_cannot_serialize;
+		return (*tp->tp_init.tp_var.tp_writedec)(self, obj);
+	}
+	if (!tp->tp_init.tp_alloc.tp_writedec)
+		goto err_cannot_serialize;
+
+	/* Figure out instance size (with support for slab allocators). */
+	tp_free = tp->tp_init.tp_alloc.tp_free;
+	if (tp_free == NULL) {
+		instance_size = tp->tp_init.tp_alloc.tp_instance_size;
+	} else if (tp->tp_flags & TP_FGC) {
+#define CHECK_ALLOCATOR(index, size)                  \
+		if (tp_free == &DeeGCObject_SlabFree##size) { \
+			instance_size = size * sizeof(void *);    \
+		} else
+		DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
+#undef CHECK_ALLOCATOR
+		{
+			goto err_cannot_serialize;
+		}
+	} else {
+#define CHECK_ALLOCATOR(index, size)                \
+		if (tp_free == &DeeObject_SlabFree##size) { \
+			instance_size = size * sizeof(void *);  \
+		} else
+		DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
+#undef CHECK_ALLOCATOR
+		{
+			goto err_cannot_serialize;
+		}
+	}
+
+	/* Allocate buffer for object. */
+	addr = tp->tp_flags & TP_FGC
+	       ? DeeDecWriter_GCObject_Malloc(self, instance_size, obj)
+	       : DeeDecWriter_Object_Malloc(self, instance_size, obj);
+	if unlikely(!addr)
+		goto err;
+	/* NOTE: Standard fields have already been initialized by "DeeDecWriter_[GC]Object_Malloc" */
+	status = (*tp->tp_init.tp_alloc.tp_writedec)(self, obj, addr);
+	if unlikely(status)
+		goto err;
+	return addr;
+err_cannot_serialize:
+	DeeRT_ErrCannotDecSerialize(obj);
+err:
 	return 0;
 }
 
 /* Encode a reference to `obj' at `DeeDecWriter_Addr2Mem(self, addr, DeeObject)'
  * @return: 0 : Success
  * @return: -1: An error was thrown */
-PUBLIC WUNUSED NONNULL((1, 3)) int DCALL
-DeeDecWriter_PutObject(DeeDecWriter *__restrict self,
-                       Dee_dec_addr_t addr,
-                       DeeObject *__restrict obj) {
+PUBLIC WUNUSED NONNULL((1, 3)) int
+(DCALL DeeDecWriter_PutObject)(DeeDecWriter *__restrict self,
+                               Dee_dec_addr_t addr,
+                               DeeObject *__restrict obj) {
 	struct Dee_heapregion *region;
 	DREF DeeModuleObject *mod;
 	Dee_dec_addr_t known;
@@ -431,6 +513,13 @@ DeeDecWriter_PutObject(DeeDecWriter *__restrict self,
 	if (mod) {
 		struct Dee_dec_depmod *dep;
 		uintptr_t relbase;
+		if (mod == DeeModule_GetDeemon()) {
+			Dee_DecrefNokill(mod);
+			relbase = DeeDeemonModule_GetRelBase();
+			pointer = DeeDecWriter_Addr2Mem(self, addr, void *);
+			*pointer = (void *)((uintptr_t)obj - relbase);
+			return Dee_dec_reltab_append(&self->dw_drrel, (Dee_dec_addr32_t)addr);
+		}
 		dep = DeeDecWriter_GetDep(self, mod);
 		Dee_Decref_unlikely(mod);
 		if unlikely(!dep)
@@ -438,7 +527,7 @@ DeeDecWriter_PutObject(DeeDecWriter *__restrict self,
 		relbase = DeeNativeModule_GetRelBase(mod);
 		pointer = DeeDecWriter_Addr2Mem(self, addr, void *);
 		*pointer = (void *)((uintptr_t)obj - relbase);
-		return Dee_dec_reltab_append(&dep->ddm_rrel, addr);
+		return Dee_dec_reltab_append(&dep->ddm_rrel, (Dee_dec_addr32_t)addr);
 	}
 
 	/* If "obj" is neither known, nor a native static symbol, then
@@ -473,7 +562,7 @@ DeeDecWriter_PutObject(DeeDecWriter *__restrict self,
 				goto err;
 			pointer = DeeDecWriter_Addr2Mem(self, addr, void *);
 			*pointer = (void *)((uintptr_t)obj - (uintptr_t)ehdr);
-			return Dee_dec_reltab_append(&dep->ddm_rrel, addr);
+			return Dee_dec_reltab_append(&dep->ddm_rrel, (Dee_dec_addr32_t)addr);
 		}
 	}
 
@@ -485,6 +574,200 @@ DeeDecWriter_PutObject(DeeDecWriter *__restrict self,
 err:
 	return -1;
 }
+
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeDecWriter_PutObjectInherited)(DeeDecWriter *__restrict self,
+                                        Dee_dec_addr_t addr,
+                                        /*inherit(always)*/ DREF DeeObject *obj) {
+	int result = DeeDecWriter_PutObject(self, addr, obj);
+	Dee_Decref(obj);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeDecWriter_XPutObject)(DeeDecWriter *__restrict self,
+                                Dee_dec_addr_t addr,
+                                /*0..1*/ DeeObject *obj) {
+	if (obj == NULL) {
+		DREF DeeObject **p_obj = DeeDecWriter_Addr2Mem(self, addr, DREF DeeObject *);
+		*p_obj = NULL;
+		return 0;
+	}
+	return DeeDecWriter_PutObject(self, addr, obj);
+}
+
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeDecWriter_XPutObjectInherited)(DeeDecWriter *__restrict self,
+                                         Dee_dec_addr_t addr,
+                                         /*0..1*/ DeeObject *obj) {
+	if (obj == NULL) {
+		DREF DeeObject **p_obj = DeeDecWriter_Addr2Mem(self, addr, DREF DeeObject *);
+		*p_obj = NULL;
+		return 0;
+	}
+	return DeeDecWriter_PutObjectInherited(self, addr, obj);
+}
+
+/* Create a duplicate of memory `data...+=num_bytes' and put an address to
+ * this newly allocated copy at `DeeDecWriter_Addr2Mem(self, addr, void *)'
+ * @return: * : Address of the duplicated memory (as also stored at `addr')
+ * @return: 0 : An error was thrown */
+PUBLIC WUNUSED ATTR_INS(3, 4) NONNULL((1)) Dee_dec_addr_t
+(DCALL DeeDecWriter_PutMemDup)(DeeDecWriter *__restrict self, Dee_dec_addr_t addr,
+                               void const *data, size_t num_bytes) {
+	Dee_dec_addr_t md_addr = DeeDecWriter_Malloc(self, num_bytes);
+	if likely(md_addr) {
+		void *dst = DeeDecWriter_Addr2Mem(self, md_addr, void);
+		memcpy(dst, data, num_bytes);
+		if unlikely(DeeDecWriter_PutRel(self, addr, md_addr)) {
+			DeeDecWriter_Free(self, md_addr);
+			md_addr = 0;
+		}
+	}
+	return md_addr;
+}
+
+
+
+/* Inplace-replace a object references with dec-encoded object references:
+ * >> DREF DeeObject *obj = *DeeDecWriter_Addr2Mem(self, addr, DREF DeeObject *);
+ * >> int result = DeeDecWriter_PutObject(self, addr, obj);
+ * >> Dee_Decref(obj);
+ * >> return result; */
+PUBLIC WUNUSED NONNULL((1, 3)) int
+(DCALL DeeDecWriter_InplacePutObject)(DeeDecWriter *__restrict self,
+                                      Dee_dec_addr_t addr) {
+	int result;
+	DREF DeeObject *obj;
+	obj = *DeeDecWriter_Addr2Mem(self, addr, DREF DeeObject *);
+	ASSERT_OBJECT(obj);
+	result = DeeDecWriter_PutObject(self, addr, obj);
+	Dee_Decref_unlikely(obj);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 3)) int
+(DCALL DeeDecWriter_XInplacePutObject)(DeeDecWriter *__restrict self,
+                                       Dee_dec_addr_t addr) {
+	int result = 0;
+	DREF DeeObject *obj;
+	obj = *DeeDecWriter_Addr2Mem(self, addr, DREF DeeObject *);
+	ASSERT_OBJECT_OPT(obj);
+	if (obj) {
+		result = DeeDecWriter_PutObject(self, addr, obj);
+		Dee_Decref_unlikely(obj);
+	}
+	return result;
+}
+
+/* Inplace-replace an array object references with dec-encoded object
+ * references. Said array of object references is **ALWAYS** inherited:
+ * >> size_t i;
+ * >> for (i = 0; i < objc; ++i) {
+ * >>     if (DeeDecWriter_InplacePutObject(self, addr)) {
+ * >>         for (; i < objc; ++i) {
+ * >>             Dee_Decref(*DeeDecWriter_Addr2Mem(self, addr, DREF DeeObject *));
+ * >>             addr += sizeof(DREF DeeObject *);
+ * >>         }
+ * >>         return -1;
+ * >>     }
+ * >>     addr += sizeof(DREF DeeObject *);
+ * >> }
+ * >> return 0; */
+PUBLIC WUNUSED NONNULL((1, 3)) int
+(DCALL DeeDecWriter_InplacePutObjectv)(DeeDecWriter *__restrict self,
+                                       Dee_dec_addr_t addr, size_t objc) {
+	DREF DeeObject **objv;
+	while (objc) {
+		if (DeeDecWriter_InplacePutObject(self, addr))
+			goto err;
+		addr += sizeof(DREF DeeObject *);
+		--objc;
+	}
+	return 0;
+err:
+	objv = DeeDecWriter_Addr2Mem(self, addr, DREF DeeObject *);
+	Dee_Decrefv_unlikely(objv, objc);
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 3)) int
+(DCALL DeeDecWriter_XInplacePutObjectv)(DeeDecWriter *__restrict self,
+                                        Dee_dec_addr_t addr, size_t objc) {
+	DREF DeeObject **objv;
+	while (objc) {
+		if (DeeDecWriter_XInplacePutObject(self, addr))
+			goto err;
+		addr += sizeof(DREF DeeObject *);
+		--objc;
+	}
+	return 0;
+err:
+	objv = DeeDecWriter_Addr2Mem(self, addr, DREF DeeObject *);
+	Dee_XDecrefv_unlikely(objv, objc);
+	return -1;
+}
+
+
+
+/* Encode static pointers.
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+PUBLIC WUNUSED NONNULL((1, 3)) int
+(DCALL DeeDecWriter_PutStaticPointer)(DeeDecWriter *__restrict self,
+                                      Dee_dec_addr_t addr, void const *value) {
+	DREF DeeModuleObject *mod;
+	struct Dee_dec_depmod *dep;
+	uintptr_t relbase;
+	void **pointer;
+	mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(value);
+	if (mod == DeeModule_GetDeemon()) {
+		Dee_DecrefNokill(mod);
+		return DeeDecWriter_PutDeemonPointer(self, addr, value);
+	}
+	dep = DeeDecWriter_GetDep(self, mod);
+	Dee_Decref_unlikely(mod);
+	if unlikely(!dep)
+		goto err;
+	relbase = DeeNativeModule_GetRelBase(mod);
+	pointer = DeeDecWriter_Addr2Mem(self, addr, void *);
+	*pointer = (void *)((uintptr_t)value - relbase);
+	return Dee_dec_reltab_append(&dep->ddm_rel, (Dee_dec_addr32_t)addr);
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeDecWriter_XPutStaticPointer)(DeeDecWriter *__restrict self,
+                                       Dee_dec_addr_t addr, void const *value) {
+	if (value == NULL) {
+		void **pointer = DeeDecWriter_Addr2Mem(self, addr, void *);
+		*pointer = NULL;
+		return 0;
+	}
+	return DeeDecWriter_PutStaticPointer(self, addr, value);
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int
+(DCALL DeeDecWriter_PutDeemonPointer)(DeeDecWriter *__restrict self,
+                                      Dee_dec_addr_t addr, void const *value) {
+	uintptr_t relbase = DeeDeemonModule_GetRelBase();
+	void **pointer = DeeDecWriter_Addr2Mem(self, addr, void *);
+	*pointer = (void *)((uintptr_t)value - relbase);
+	return Dee_dec_reltab_append(&self->dw_drel, (Dee_dec_addr32_t)addr);
+}
+
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeDecWriter_XPutDeemonPointer)(DeeDecWriter *__restrict self,
+                                       Dee_dec_addr_t addr, void const *value) {
+	if (value == NULL) {
+		void **pointer = DeeDecWriter_Addr2Mem(self, addr, void *);
+		*pointer = NULL;
+		return 0;
+	}
+	return DeeDecWriter_PutDeemonPointer(self, addr, value);
+}
+
 
 /* Write the given module `mod' to the dec file. This function should
  * only ever be called once, and only on a freshly initialized dec
@@ -510,6 +793,7 @@ DeeDecWriter_AppendModule(DeeDecWriter *__restrict self,
 	addr = DeeDecWriter_AppendObject(self, (DeeObject *)mod);
 	if unlikely(addr == 0)
 		goto err;
+	/* TODO: Assert that "addr" points after the GC-payload of the dec file's first heap object */
 	return 0;
 err:
 	return -1;
@@ -566,10 +850,10 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 apply_relocations(DeeDec_Ehdr *__restrict self,
-                  Dee_dec_addr_t offsetof_reltab,
+                  Dee_dec_addr32_t offsetof_reltab,
                   uintptr_t relbase) {
-	Dee_dec_addr_t reladdr, *reltab;
-	reltab = (Dee_dec_addr_t *)((byte_t *)self + offsetof_reltab);
+	Dee_dec_addr32_t reladdr, *reltab;
+	reltab = (Dee_dec_addr32_t *)((byte_t *)self + offsetof_reltab);
 	while ((reladdr = *reltab++) != 0) {
 		byte_t **pointer = (byte_t **)((byte_t *)self + reladdr);
 		*pointer += relbase;
@@ -578,10 +862,10 @@ apply_relocations(DeeDec_Ehdr *__restrict self,
 
 PRIVATE NONNULL((1)) void DCALL
 apply_relocations_with_incref(DeeDec_Ehdr *__restrict self,
-                              Dee_dec_addr_t offsetof_reltab,
+                              Dee_dec_addr32_t offsetof_reltab,
                               uintptr_t relbase) {
-	Dee_dec_addr_t reladdr, *reltab;
-	reltab = (Dee_dec_addr_t *)((byte_t *)self + offsetof_reltab);
+	Dee_dec_addr32_t reladdr, *reltab;
+	reltab = (Dee_dec_addr32_t *)((byte_t *)self + offsetof_reltab);
 	while ((reladdr = *reltab++) != 0) {
 		DeeObject *obj;
 		byte_t **pointer = (byte_t **)((byte_t *)self + reladdr);

@@ -28,6 +28,7 @@
 #include <deemon/class.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
+#include <deemon/dec.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -76,7 +77,7 @@ typedef DeeYieldFunctionObject         YFunction;
 PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
 lookup_code_info_in_class(DeeTypeObject *type,
                           DeeCodeObject *code,
-                          DeeFunctionObject *function,
+                          Function *function,
                           struct function_info *__restrict info) {
 	struct class_desc *my_class;
 	DeeClassDescriptorObject *desc;
@@ -165,7 +166,7 @@ lookup_code_info_in_class(DeeTypeObject *type,
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 lookup_code_info(/*[in]*/ DeeCodeObject *code,
-                 /*[in]*/ DeeFunctionObject *function,
+                 /*[in]*/ Function *function,
                  /*[out]*/ struct function_info *__restrict info) {
 	DeeModuleObject *mod;
 	uint16_t addr;
@@ -281,7 +282,7 @@ DeeCode_GetInfo(/*Code*/ DeeObject *__restrict self,
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeFunction_GetInfo(/*Function*/ DeeObject *__restrict self,
                     /*[out]*/ struct function_info *__restrict info) {
-	DeeFunctionObject *me = (DeeFunctionObject *)self;
+	Function *me = (Function *)self;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeFunction_Type);
 	return lookup_code_info(me->fo_code, me, info);
 }
@@ -631,97 +632,97 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL code_getdefaults(DeeCodeObject
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL code_getconstants(DeeCodeObject *__restrict self);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_defaults(DeeFunctionObject *__restrict self) {
+function_get_code_defaults(Function *__restrict self) {
 	return code_getdefaults(self->fo_code);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_constants(DeeFunctionObject *__restrict self) {
+function_get_code_constants(Function *__restrict self) {
 	return code_getconstants(self->fo_code);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_argc_min(DeeFunctionObject *__restrict self) {
+function_get_code_argc_min(Function *__restrict self) {
 	return DeeInt_NewUInt16(self->fo_code->co_argc_min);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_argc_max(DeeFunctionObject *__restrict self) {
+function_get_code_argc_max(Function *__restrict self) {
 	return DeeInt_NewUInt16(self->fo_code->co_argc_max);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_hasvarargs(DeeFunctionObject *__restrict self) {
+function_get_code_hasvarargs(Function *__restrict self) {
 	return_bool(self->fo_code->co_flags & CODE_FVARARGS);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_hasvarkwds(DeeFunctionObject *__restrict self) {
+function_get_code_hasvarkwds(Function *__restrict self) {
 	return_bool(self->fo_code->co_flags & CODE_FVARKWDS);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_isyielding(DeeFunctionObject *__restrict self) {
+function_get_code_isyielding(Function *__restrict self) {
 	return_bool(self->fo_code->co_flags & CODE_FYIELDING);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_iscopyable(DeeFunctionObject *__restrict self) {
+function_get_code_iscopyable(Function *__restrict self) {
 	return_bool(self->fo_code->co_flags & CODE_FCOPYABLE);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_isthiscall(DeeFunctionObject *__restrict self) {
+function_get_code_isthiscall(Function *__restrict self) {
 	return_bool(self->fo_code->co_flags & CODE_FTHISCALL);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_hasassembly(DeeFunctionObject *__restrict self) {
+function_get_code_hasassembly(Function *__restrict self) {
 	return_bool(self->fo_code->co_flags & CODE_FASSEMBLY);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_islenient(DeeFunctionObject *__restrict self) {
+function_get_code_islenient(Function *__restrict self) {
 	return_bool(self->fo_code->co_flags & CODE_FLENIENT);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_hasheapframe(DeeFunctionObject *__restrict self) {
+function_get_code_hasheapframe(Function *__restrict self) {
 	return_bool(self->fo_code->co_flags & CODE_FHEAPFRAME);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_hasfinally(DeeFunctionObject *__restrict self) {
+function_get_code_hasfinally(Function *__restrict self) {
 	return_bool(self->fo_code->co_flags & CODE_FFINALLY);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_isconstructor(DeeFunctionObject *__restrict self) {
+function_get_code_isconstructor(Function *__restrict self) {
 	return_bool(self->fo_code->co_flags & CODE_FCONSTRUCTOR);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_nlocal(DeeFunctionObject *__restrict self) {
+function_get_code_nlocal(Function *__restrict self) {
 	return DeeInt_NewUInt16(self->fo_code->co_localc);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_nconst(DeeFunctionObject *__restrict self) {
+function_get_code_nconst(Function *__restrict self) {
 	return DeeInt_NewUInt16(self->fo_code->co_constc);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_nref(DeeFunctionObject *__restrict self) {
+function_get_code_nref(Function *__restrict self) {
 	return DeeInt_NewUInt16(self->fo_code->co_refc);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_nexcept(DeeFunctionObject *__restrict self) {
+function_get_code_nexcept(Function *__restrict self) {
 	return DeeInt_NewUInt16(self->fo_code->co_exceptc);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_code_nstatic(DeeFunctionObject *__restrict self) {
+function_get_code_nstatic(Function *__restrict self) {
 	DeeCodeObject *code = self->fo_code;
 	ASSERT(code->co_refstaticc >= code->co_refc);
 	return DeeInt_NewUInt16(code->co_refstaticc - code->co_refc);
@@ -1027,6 +1028,47 @@ function_visit(Function *__restrict self,
 	Dee_Visit(self->fo_code);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
+function_writedec(DeeDecWriter *__restrict writer,
+                  Function *__restrict self) {
+	Function *out;
+	size_t i, refc = self->fo_code->co_refstaticc;
+	size_t sizeof_function = offsetof(Function, fo_refv) + refc * sizeof(DREF DeeObject *);
+	Dee_dec_addr_t addr = DeeDecWriter_GCObject_Malloc(writer, sizeof_function, self);
+	if unlikely(!addr)
+		goto err;
+	out = DeeDecWriter_Addr2Mem(writer, addr, Function);
+	(void)out;
+	Dee_atomic_rwlock_init(&out->fo_reflock);
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+	bzero(&out->fo_hostasm, sizeof(out->fo_hostasm)); /* Don't serialize hostasm */
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+	if (DeeDecWriter_PutObject(writer, addr + offsetof(Function, fo_code), self->fo_code))
+		goto err;
+#define addrof_out_refv(i) (addr + offsetof(Function, fo_refv) + (i) * sizeof(DREF DeeObject *))
+	/* Constant references... */
+	for (i = 0; i < self->fo_code->co_refc; ++i) {
+		if (DeeDecWriter_PutObject(writer, addrof_out_refv(i), self->fo_refv[i]))
+			goto err;
+	}
+
+	/* Static variables... */
+	for (; i < refc; ++i) {
+		DREF DeeObject *value;
+		DeeFunction_RefLockRead(self);
+		value = self->fo_refv[i];
+		Dee_XIncref(value);
+		DeeFunction_RefLockEndRead(self);
+		if (DeeDecWriter_XPutObjectInherited(writer, addrof_out_refv(i), value))
+			goto err;
+	}
+#undef addrof_out_refv
+	return addr;
+err:
+	return 0;
+}
+
+
 #define DO(err, expr)                    \
 	do {                                 \
 		if unlikely((temp = (expr)) < 0) \
@@ -1240,7 +1282,10 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL, /* TODO */
 				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL, /* TODO */
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&function_init,
-				/* .tp_free      = */ (Dee_funptr_t)NULL, /* XXX: Use the tuple-allocator? */
+				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL }, /* XXX: Use the tuple-allocator? (if somehow still possible with "CONFIG_EXPERIMENTAL_MMAP_DEC") */
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&function_writedec
+
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&function_fini,
@@ -1498,6 +1543,32 @@ err_r:
 	DeeGCObject_FREE(result);
 err:
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
+yf_writedec(DeeDecWriter *__restrict writer, YFunction *__restrict self) {
+	YFunction *out;
+	size_t i, sizeof_yfunc = offsetof(YFunction, yf_argv) + (self->yf_argc * sizeof(DREF DeeObject *));
+	Dee_dec_addr_t addr = DeeDecWriter_Object_Malloc(writer, sizeof_yfunc, self);
+	if unlikely(!addr)
+		goto err;
+	out = DeeDecWriter_Addr2Mem(writer, addr, YFunction);
+	out->yf_pargc = self->yf_pargc;
+	out->yf_argc  = self->yf_argc;
+	if (DeeDecWriter_PutObject(writer, addr + offsetof(YFunction, yf_func), self->yf_func))
+		goto err;
+	if (DeeDecWriter_XPutObject(writer, addr + offsetof(YFunction, yf_kw), self->yf_kw))
+		goto err;
+	if (DeeDecWriter_XPutObject(writer, addr + offsetof(YFunction, yf_this), self->yf_this))
+		goto err;
+	for (i = 0; i < self->yf_argc; ++i) {
+		Dee_dec_addr_t addrof_arg = addr + offsetof(YFunction, yf_argv) + (i * sizeof(DREF DeeObject *));
+		if (DeeDecWriter_PutObject(writer, addrof_arg, self->yf_argv[i]))
+			goto err;
+	}
+	return addr;
+err:
+	return 0;
 }
 
 PRIVATE struct type_seq yf_seq = {
@@ -1779,7 +1850,9 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&yf_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&yf_deepcopy,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_free      = */ (Dee_funptr_t)NULL, /* XXX: Use the tuple-allocator? */
+				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL }, /* XXX: Use the tuple-allocator? (if somehow still possible with "CONFIG_EXPERIMENTAL_MMAP_DEC") */
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_writedec    = */ (Dee_funptr_t)&yf_writedec
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&yf_fini,

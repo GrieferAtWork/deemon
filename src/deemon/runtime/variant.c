@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 #include <deemon/bool.h>
+#include <deemon/dec.h>
 #include <deemon/float.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -105,6 +106,27 @@ Dee_variant_visit(struct Dee_variant *__restrict self,
 		(*proc)(self->var_data.d_object, arg);
 	Dee_variant_unlock(self, type);
 }
+
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+Dee_variant_writedec(DeeDecWriter *__restrict writer,
+                     struct Dee_variant *__restrict self,
+                     Dee_dec_addr_t addr) {
+	struct Dee_variant *out = DeeDecWriter_Addr2Mem(writer, addr, struct Dee_variant);
+	enum Dee_variant_type type = Dee_variant_lock(self);
+	out->var_type = type;
+	if (type == Dee_VARIANT_OBJECT) {
+		DREF DeeObject *obj = self->var_data.d_object;
+		Dee_Incref(obj);
+		Dee_variant_unlock(self, type);
+		return DeeDecWriter_PutObjectInherited(writer,
+		                                       addr + offsetof(struct Dee_variant, var_data.d_object),
+		                                       obj);
+	}
+	out->var_data = self->var_data;
+	Dee_variant_unlock(self, type);
+	return 0;
+}
+
 
 
 /* Get the value of a variant in the form of a deemon object.
