@@ -346,7 +346,7 @@ builtin_exec_fallback(size_t argc,
 	}
 	result = DeeExec_RunMemory(usertext,
 	                           usersize,
-	                           DEE_EXEC_RUNMODE_EXPR,
+	                           DeeExec_RUNMODE_EXPR,
 	                           0,
 	                           NULL,
 	                           0,

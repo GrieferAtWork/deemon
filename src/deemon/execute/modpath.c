@@ -20,13 +20,11 @@
 #ifndef GUARD_DEEMON_EXECUTE_MODPATH_C
 #define GUARD_DEEMON_EXECUTE_MODPATH_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/code.h>
+/**/
+
 #include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/filetypes.h>
-#include <deemon/gc.h>
+#include <deemon/list.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -35,13 +33,831 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/thread.h>
+#include <deemon/types.h>
 #include <deemon/util/atomic-ref.h>
+
+#include <hybrid/debug-alignment.h>
+#include <hybrid/sched/yield.h>
+
+#include <stdbool.h>
+
+#ifdef CONFIG_HOST_WINDOWS
+#include <Windows.h>
+#endif /* CONFIG_HOST_WINDOWS */
+
+#ifndef PATH_MAX
+#ifdef PATHMAX
+#   define PATH_MAX PATHMAX
+#elif defined(MAX_PATH)
+#   define PATH_MAX MAX_PATH
+#elif defined(MAXPATH)
+#   define PATH_MAX MAXPATH
+#else
+#   define PATH_MAX 260
+#endif
+#endif /* !PATH_MAX */
+
+
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#include <deemon/dec.h>
+#include <deemon/exec.h>
+#include <deemon/file.h>
+#include <deemon/mapfile.h>
+
+#include <hybrid/sequence/rbtree.h>
+
+#include "../runtime/runtime_error.h"
+
+DECL_BEGIN
+
+#ifdef __ARCH_PAGESIZE_MIN
+#define SAMEPAGE(a, b) (((uintptr_t)(a) & (__ARCH_PAGESIZE_MIN - 1)) == ((uintptr_t)(b) & (__ARCH_PAGESIZE_MIN - 1)))
+#else /* __ARCH_PAGESIZE_MIN */
+#define SAMEPAGE(a, b) false
+#endif /* !__ARCH_PAGESIZE_MIN */
+
+#ifdef DEE_SYSTEM_FS_ICASE
+#ifndef CONFIG_HAVE_strcasecmp
+#define CONFIG_HAVE_strcasecmp
+#undef strcasecmp
+#define strcasecmp dee_strcasecmp
+DeeSystem_DEFINE_strcasecmp(dee_strcasecmp)
+#endif /* !CONFIG_HAVE_strcasecmp */
+
+#ifndef CONFIG_HAVE_memcasecmp
+#define CONFIG_HAVE_memcasecmp
+#undef memcasecmp
+#define memcasecmp dee_memcasecmp
+DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
+#endif /* !CONFIG_HAVE_memcasecmp */
+
+#define fs_strcmp(a, b)    strcasecmp(a, b)
+#define fs_memcmp(a, b, n) memcasecmp(a, b, n)
+#define fs_bcmp(a, b, n)   memcasecmp(a, b, n)
+#else /* DEE_SYSTEM_FS_ICASE */
+#ifndef CONFIG_HAVE_strcmp
+#define CONFIG_HAVE_strcmp
+#undef strcmp
+#define strcmp dee_strcmp
+DeeSystem_DEFINE_strcmp(dee_strcmp)
+#endif /* !CONFIG_HAVE_strcmp */
+
+#define fs_strcmp(a, b)    strcmp(a, b)
+#define fs_memcmp(a, b, n) memcmp(a, b, n)
+#define fs_bcmp(a, b, n)   bcmp(a, b, n)
+#endif /* !DEE_SYSTEM_FS_ICASE */
+
+#define FS_DeeString_EqualsSTR(lhs, rhs)             \
+	(DeeString_SIZE(lhs) == DeeString_SIZE(rhs) &&   \
+	 fs_bcmp(DeeString_STR(lhs), DeeString_STR(rhs), \
+	         DeeString_SIZE(lhs) * sizeof(char)) == 0)
+
+#ifndef CONFIG_HAVE_memrchr
+#define CONFIG_HAVE_memrchr
+#undef memrchr
+#define memrchr dee_memrchr
+DeeSystem_DEFINE_memrchr(dee_memrchr)
+#endif /* !CONFIG_HAVE_memrchr */
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+FS_DeeString_LessSTR(DeeStringObject *lhs,
+                     DeeStringObject *rhs) {
+	size_t lhs_len = DeeString_SIZE(lhs);
+	size_t rhs_len = DeeString_SIZE(rhs);
+	size_t common = lhs_len < rhs_len ? lhs_len : rhs_len;
+	int diff = fs_memcmp(DeeString_STR(lhs), DeeString_STR(rhs), common * sizeof(char));
+	if (diff != 0)
+		return diff < 0;
+	return lhs_len < rhs_len;
+}
+
+DECL_END
+
+#define RBTREE(name)            module_abstree_##name
+#define RBTREE_T                struct module_object
+#define RBTREE_Tkey             char const *
+#define RBTREE_NODEFIELD        mo_absnode
+#define RBTREE_GETKEY(self)     (self)->mo_absname
+#define RBTREE_KEY_LO(a, b)     (fs_strcmp(a, b) < 0)
+#define RBTREE_KEY_EQ(a, b)     (fs_strcmp(a, b) == 0)
+#define RBTREE_REDFIELD         mo_flags
+#define RBTREE_REDBIT           Dee_MODULE_FABSRED
+#define RBTREE_CC               DFCALL
+#define RBTREE_NOTHROW          NOTHROW
+#define RBTREE_DECL             PRIVATE
+#define RBTREE_IMPL             PRIVATE
+#include <hybrid/sequence/rbtree-abi.h>
+
+#define RBTREE(name)            module_libtree_##name
+#define RBTREE_T                struct module_object
+#define RBTREE_Tkey             struct Dee_string_object *
+#define RBTREE_NODEFIELD        mo_libnode
+#define RBTREE_GETKEY(self)     (self)->mo_libname
+#define RBTREE_KEY_LO(a, b)     FS_DeeString_EqualsSTR(a, b)
+#define RBTREE_KEY_EQ(a, b)     FS_DeeString_LessSTR(a, b)
+#define RBTREE_REDFIELD         mo_flags
+#define RBTREE_REDBIT           Dee_MODULE_FLIBRED
+#define RBTREE_CC               DFCALL
+#define RBTREE_NOTHROW          NOTHROW
+#define RBTREE_DECL             PRIVATE
+#define RBTREE_IMPL             PRIVATE
+#include <hybrid/sequence/rbtree-abi.h>
+
+DECL_BEGIN
+
+#ifndef CONFIG_NO_THREADS
+PRIVATE Dee_atomic_rwlock_t module_abstree_lock = Dee_ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t module_libtree_lock = Dee_ATOMIC_RWLOCK_INIT;
+#endif /* !CONFIG_NO_THREADS */
+#define module_abstree_lock_reading()    Dee_atomic_rwlock_reading(&module_abstree_lock)
+#define module_abstree_lock_writing()    Dee_atomic_rwlock_writing(&module_abstree_lock)
+#define module_abstree_lock_tryread()    Dee_atomic_rwlock_tryread(&module_abstree_lock)
+#define module_abstree_lock_trywrite()   Dee_atomic_rwlock_trywrite(&module_abstree_lock)
+#define module_abstree_lock_canread()    Dee_atomic_rwlock_canread(&module_abstree_lock)
+#define module_abstree_lock_canwrite()   Dee_atomic_rwlock_canwrite(&module_abstree_lock)
+#define module_abstree_lock_waitread()   Dee_atomic_rwlock_waitread(&module_abstree_lock)
+#define module_abstree_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&module_abstree_lock)
+#define module_abstree_lock_read()       Dee_atomic_rwlock_read(&module_abstree_lock)
+#define module_abstree_lock_write()      Dee_atomic_rwlock_write(&module_abstree_lock)
+#define module_abstree_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&module_abstree_lock)
+#define module_abstree_lock_upgrade()    Dee_atomic_rwlock_upgrade(&module_abstree_lock)
+#define module_abstree_lock_downgrade()  Dee_atomic_rwlock_downgrade(&module_abstree_lock)
+#define module_abstree_lock_endwrite()   Dee_atomic_rwlock_endwrite(&module_abstree_lock)
+#define module_abstree_lock_endread()    Dee_atomic_rwlock_endread(&module_abstree_lock)
+#define module_abstree_lock_end()        Dee_atomic_rwlock_end(&module_abstree_lock)
+
+#define module_libtree_lock_reading()    Dee_atomic_rwlock_reading(&module_libtree_lock)
+#define module_libtree_lock_writing()    Dee_atomic_rwlock_writing(&module_libtree_lock)
+#define module_libtree_lock_tryread()    Dee_atomic_rwlock_tryread(&module_libtree_lock)
+#define module_libtree_lock_trywrite()   Dee_atomic_rwlock_trywrite(&module_libtree_lock)
+#define module_libtree_lock_canread()    Dee_atomic_rwlock_canread(&module_libtree_lock)
+#define module_libtree_lock_canwrite()   Dee_atomic_rwlock_canwrite(&module_libtree_lock)
+#define module_libtree_lock_waitread()   Dee_atomic_rwlock_waitread(&module_libtree_lock)
+#define module_libtree_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&module_libtree_lock)
+#define module_libtree_lock_read()       Dee_atomic_rwlock_read(&module_libtree_lock)
+#define module_libtree_lock_write()      Dee_atomic_rwlock_write(&module_libtree_lock)
+#define module_libtree_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&module_libtree_lock)
+#define module_libtree_lock_upgrade()    Dee_atomic_rwlock_upgrade(&module_libtree_lock)
+#define module_libtree_lock_downgrade()  Dee_atomic_rwlock_downgrade(&module_libtree_lock)
+#define module_libtree_lock_endwrite()   Dee_atomic_rwlock_endwrite(&module_libtree_lock)
+#define module_libtree_lock_endread()    Dee_atomic_rwlock_endread(&module_libtree_lock)
+#define module_libtree_lock_end()        Dee_atomic_rwlock_end(&module_libtree_lock)
+
+
+PRIVATE RBTREE_ROOT(module_object) module_abstree_root = NULL;
+PRIVATE RBTREE_ROOT(module_object) module_libtree_root = NULL;
+
+
+#ifndef CONFIG_NO_DEC
+/* Load+relocation a .dec file into memory.
+ * @return: * :        Success (module is anonymous "mo_absname == NULL" and non-shared "!DeeObject_IsShared()")
+ * @return: ITER_DONE: Failed to load dec file (probably corrupt)
+ * @return: NULL:      Error was thrown. */
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DCALL
+DeeModule_OpenDecFile_impl(/*inherit(always)*/ DREF DeeObject *dec_stream,
+                           /*utf-8*/ char const *__restrict dec_dirname, size_t dec_dirname_len,
+                           unsigned int flags, struct Dee_compiler_options *options) {
+	DREF DeeModuleObject *result;
+	while (dec_dirname_len && dec_dirname[dec_dirname_len - 1] == DeeSystem_SEP)
+		--dec_dirname_len;
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+	struct DeeMapFile fmap;
+	int fmap_status;
+
+	/* Map file into memory */
+	fmap_status = DeeMapFile_InitFile(&fmap, dec_stream, 0, 0, DFILE_LIMIT, 0, DEE_MAPFILE_F_READALL);
+	Dee_Decref_likely(dec_stream);
+	if unlikely(fmap_status)
+		goto err;
+
+	/* Load file mapping as a .dec file */
+	result = DeeDec_OpenFileEx(&fmap, dec_dirname, dec_dirname_len, options);
+
+	/* Cleanup on error */
+	if unlikely(!ITER_ISOK(result))
+		DeeMapFile_Fini(&fmap);
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+	/* TODO */
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
+	return result;
+err:
+	return NULL;
+}
+#endif /* !CONFIG_NO_DEC */
+
+#define _DeeModule_IMPORT_F_NO_INHERIT_FILENAME 0x1000 /* Do not inherit `abs_filename' (via `Dee_Free()') */
+#ifndef CONFIG_NO_DEC
+#define _DeeModule_IMPORT_F_IS_DEE_FILE         0x2000 /* Given "abs_filename" ends with ".dee" */
+#else /* !CONFIG_NO_DEC */
+#define _DeeModule_IMPORT_F_IS_DEE_FILE         0
+#endif /* CONFIG_NO_DEC */
+
+/* Mask of internal flags */
+#define _DeeModule_IMPORT_F_MASK \
+	(_DeeModule_IMPORT_F_NO_INHERIT_FILENAME | _DeeModule_IMPORT_F_IS_DEE_FILE)
+
+/* # of extra characters to pre-alloc in "abs_filename"
+ * (unless `_DeeModule_IMPORT_F_NO_INHERIT_FILENAME' is set) */
+#ifdef CONFIG_NO_DEC
+#define DeeModule_OpenFile_impl4_EXTRA_CHARS 0
+#else /* CONFIG_NO_DEC */
+#define DeeModule_OpenFile_impl4_EXTRA_CHARS 1 /* for the leading "." in dec filenames */
+#endif /* !CONFIG_NO_DEC */
+#define DeeModule_OpenFile_impl3_EXTRA_CHARS 4 /* extra ".dee" / ".dll" / ".so" at the end */
+
+#if DeeModule_OpenFile_impl4_EXTRA_CHARS > DeeModule_OpenFile_impl3_EXTRA_CHARS
+#define DeeModule_OpenFile_impl_EXTRA_CHARS DeeModule_OpenFile_impl4_EXTRA_CHARS
+#else /* DeeModule_OpenFile_impl4_EXTRA_CHARS > DeeModule_OpenFile_impl3_EXTRA_CHARS */
+#define DeeModule_OpenFile_impl_EXTRA_CHARS DeeModule_OpenFile_impl3_EXTRA_CHARS
+#endif /* DeeModule_OpenFile_impl4_EXTRA_CHARS <= DeeModule_OpenFile_impl3_EXTRA_CHARS */
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_filename_length,
+                         unsigned int flags, struct Dee_compiler_options *options) {
+	struct Dee_compiler_options used_options;
+	DREF DeeModuleObject *result;
+	DREF DeeObject *source_stream;
+#ifndef CONFIG_NO_DEC
+	if ((flags & (_DeeModule_IMPORT_F_IS_DEE_FILE | DeeModule_IMPORT_F_NOLDEC)) ==
+	    /*    */ (_DeeModule_IMPORT_F_IS_DEE_FILE)) {
+		DREF DeeObject *dec_stream;
+		char *basename = (char *)memrchr(abs_filename, DeeSystem_SEP, abs_filename_length);
+		size_t basesize;
+		if likely(basename) {
+			++basename;
+		} else {
+			/* Probably shouldn't ever get here... */
+			basename = abs_filename;
+		}
+		/* Form the filename for a .dec file */
+		basesize = (size_t)((abs_filename + abs_filename_length) - basename);
+
+		/* Move up "module_name.de" by 1 (don't move the
+		 * trailing "e\0", which'll be replaced with "c\0") */
+		memmoveupc(basename + 1, basename, basesize - 1, sizeof(char));
+		basename[0] = '.';
+		basename[basesize + 0] = 'c';
+		basename[basesize + 1] = '\0';
+
+		dec_stream = DeeFile_OpenString(abs_filename, OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
+		if (ITER_ISOK(dec_stream)) {
+			size_t pathsize = (size_t)(basename - abs_filename);
+			result = DeeModule_OpenDecFile_impl(dec_stream, abs_filename, pathsize, flags, options);
+//			Dee_Decref(dec_stream); /* Inherited by `DeeModule_OpenDecFile_impl()' */
+			if (result != (DREF DeeModuleObject *)ITER_DONE)
+				return result;
+		} else {
+			if unlikely(!dec_stream)
+				return NULL;
+		}
+
+		/* Restore the normal ".dee" file extension. */
+		memmovedownc(basename, basename + 1, basesize - 1, sizeof(char));
+		basename[basesize - 1] = 'e';
+		basename[basesize - 0] = '\0';
+	}
+#endif /* !CONFIG_NO_DEC */
+
+	/* Try to open the .dee file so we can compile it. */
+	source_stream = DeeFile_OpenString(abs_filename, OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
+	if (!ITER_ISOK(source_stream)) {
+		if unlikely(source_stream && (flags & DeeModule_IMPORT_F_ENOENT)) {
+			err_file_not_found_string(abs_filename);
+			source_stream = NULL;
+		}
+		return (DeeModuleObject *)source_stream;
+	}
+
+	/* Compile "source_stream" as an anonymous module. */
+	if (!options) {
+		bzero(&used_options, sizeof(used_options));
+	} else {
+		memcpy(&used_options, options, sizeof(used_options));
+	}
+	if (used_options.co_pathname == NULL)
+		used_options.co_pathname = abs_filename;
+	result = (DREF DeeModuleObject *)DeeExec_CompileModuleStream(source_stream, 0, 0,
+	                                                             DeeExec_RUNMODE_DEFAULT,
+	                                                             &used_options, NULL);
+	Dee_Decref_likely(source_stream);
+	if (!result) {
+		/* TODO: Check if "source_stream" might be a directory (should
+		 *       be possible to determine based on thrown error, which
+		 *       should be `DeeError_IsDirectory', though currently is
+		 *       just a generic "FSError: I/O Operation failed"). */
+	} else {
+#ifndef CONFIG_NO_DEC
+		if (!(flags & DeeModule_IMPORT_F_NOGDEC)) {
+			/* TODO: generate a .dec file */
+		}
+#endif /* !CONFIG_NO_DEC */
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+DeeModule_OpenFile_impl3(/*utf-8*/ char **p_abs_filename, size_t abs_filename_length,
+                         unsigned int *p_flags, struct Dee_compiler_options *options) {
+	DREF DeeModuleObject *result;
+	char *abs_filename_end;
+	if (*p_flags & (_DeeModule_IMPORT_F_IS_DEE_FILE | DeeModule_IMPORT_F_FILNAM))
+		return DeeModule_OpenFile_impl4(*p_abs_filename, abs_filename_length, *p_flags, options);
+	if (*p_flags & _DeeModule_IMPORT_F_NO_INHERIT_FILENAME) {
+		char *copy = (char *)Dee_Mallocc(abs_filename_length + DeeModule_OpenFile_impl_EXTRA_CHARS + 1, sizeof(char));
+		if unlikely(!copy)
+			goto err;
+		memcpyc(copy, *p_abs_filename, abs_filename_length + 1, sizeof(char));
+		*p_flags &= ~_DeeModule_IMPORT_F_NO_INHERIT_FILENAME;
+	}
+
+	/* Try to append a trailing ".dee" to the filename and try to open that */
+	abs_filename_end = *p_abs_filename + abs_filename_length;
+	*abs_filename_end++ = '.';
+	*abs_filename_end++ = 'd';
+	*abs_filename_end++ = 'e';
+	*abs_filename_end++ = 'e';
+	*abs_filename_end = '\0';
+	result = DeeModule_OpenFile_impl4(*p_abs_filename, abs_filename_length,
+	                                  *p_flags | _DeeModule_IMPORT_F_IS_DEE_FILE,
+	                                  options);
+	if (result == (DREF DeeModuleObject *)ITER_DONE) {
+#ifndef CONFIG_NO_DEX
+		if (!(*p_flags & DeeModule_IMPORT_F_NOLDEX)) {
+			/* Attempt to load a dex module after appending ".dll" or ".so" to `abs_filename_end' */
+		}
+#endif /* !CONFIG_NO_DEX */
+		abs_filename_end -= 4;
+		*abs_filename_end = '\0';
+		result = DeeModule_OpenFile_impl4(*p_abs_filename, abs_filename_length, *p_flags, options);
+	}
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+DeeModule_OpenFile_impl2(/*inherit_if(!(flags & _DeeModule_IMPORT_F_NO_INHERIT_FILENAME))*/
+                         /*utf-8*/ char *__restrict abs_filename, size_t abs_filename_length,
+                         unsigned int flags, struct Dee_compiler_options *options) {
+	DREF DeeModuleObject *result;
+	ASSERT(abs_filename[abs_filename_length] == '\0');
+	if (abs_filename_length >= 4 &&
+	    fs_bcmp(abs_filename + abs_filename_length - 4,
+	            ".dee", 4 * sizeof(char)) == 0)
+		flags |= _DeeModule_IMPORT_F_IS_DEE_FILE;
+#ifndef CONFIG_NO_DEC
+	if ((flags & (_DeeModule_IMPORT_F_IS_DEE_FILE | _DeeModule_IMPORT_F_NO_INHERIT_FILENAME)) ==
+	    /*    */ (_DeeModule_IMPORT_F_IS_DEE_FILE | _DeeModule_IMPORT_F_NO_INHERIT_FILENAME)) {
+		/* When "_DeeModule_IMPORT_F_IS_DEE_FILE" is the case, then we **need** to
+		 * write to "abs_filename" in order to form the relevant .dec filename. */
+		char *copy = (char *)Dee_Mallocc(abs_filename_length + DeeModule_OpenFile_impl_EXTRA_CHARS + 1, sizeof(char));
+		if unlikely(!copy)
+			goto err;
+		memcpyc(copy, abs_filename, abs_filename_length + 1, sizeof(char));
+		flags &= ~_DeeModule_IMPORT_F_NO_INHERIT_FILENAME;
+		return DeeModule_OpenFile_impl2(copy, abs_filename_length, flags, options);
+	}
+#endif /* !CONFIG_NO_DEC */
+
+	/* Skip "module_abstree_*" if the module is being imported anonymously. */
+	if (flags & DeeModule_IMPORT_F_ANONYM) {
+		result = DeeModule_OpenFile_impl3((char **)&abs_filename, abs_filename_length, &flags, options);
+		goto free_abs_filename_and_return_result;
+	}
+
+	/* Check if the file is already in-cache. */
+	module_abstree_lock_read();
+	if (flags & _DeeModule_IMPORT_F_IS_DEE_FILE) {
+		abs_filename[abs_filename_length - 4] = '\0';
+		result = module_abstree_locate(module_abstree_root, abs_filename);
+		abs_filename[abs_filename_length - 4] = '.';
+	} else {
+		result = module_abstree_locate(module_abstree_root, abs_filename);
+	}
+	if (result && Dee_IncrefIfNotZero(result)) {
+		module_abstree_lock_endread();
+		goto free_abs_filename_and_return_result;
+	}
+	module_abstree_lock_endread();
+
+	/* Load a new .dec/.dee/DT_DIR module */
+	result = DeeModule_OpenFile_impl3((char **)&abs_filename, abs_filename_length, &flags, options);
+
+	/* On success, insert the module into the "module_abstree_*" tree. */
+	if (ITER_ISOK(result)) {
+		DREF DeeModuleObject *existing;
+		ASSERT(!DeeObject_IsShared(result));
+		ASSERT(!result->mo_absname);
+		ASSERT(!result->mo_libname);
+		if (flags & _DeeModule_IMPORT_F_IS_DEE_FILE)
+			abs_filename_length -= 4; /* The trailing ".dee" isn't included in "mo_absname". */
+		if (flags & _DeeModule_IMPORT_F_NO_INHERIT_FILENAME) {
+			char *copy = (char *)Dee_Mallocc(abs_filename_length + 1, sizeof(char));
+			if unlikely(!copy)
+				goto err_r;
+			memcpyc(copy, abs_filename, abs_filename_length, sizeof(char));
+			abs_filename = copy;
+		}
+		abs_filename[abs_filename_length] = '\0'; /* Force 0-termination */
+		result->mo_absname = abs_filename; /* Inherit */
+
+		/* Insert the module into the global "module_abstree_*" tree.
+		 *
+		 * During this step, also do another check to ensure that the
+		 * module in question isn't already loaded, or if it is: that
+		 * the existing instance has already been destroyed (meaning
+		 * that we can just remove + replace it). */
+		module_abstree_lock_write();
+		existing = module_abstree_locate(module_abstree_root, abs_filename);
+		if unlikely(existing) {
+			if (Dee_IncrefIfNotZero(existing)) {
+				module_abstree_lock_endwrite();
+				Dee_DecrefDokill(result);
+				Dee_Free(abs_filename);
+				return existing;
+			}
+			module_abstree_removenode(&module_abstree_root, existing);
+		}
+		module_abstree_insert(&module_abstree_root, result);
+		module_abstree_lock_endwrite();
+	} else {
+free_abs_filename_and_return_result:
+		if (!(flags & _DeeModule_IMPORT_F_NO_INHERIT_FILENAME))
+			Dee_Free(abs_filename);
+	}
+	return result;
+err_r:
+	Dee_DecrefDokill(result);
+err:
+	if (!(flags & _DeeModule_IMPORT_F_NO_INHERIT_FILENAME))
+		Dee_Free(abs_filename);
+	return NULL;
+}
+
+/* Append "filename" to "pathname", whilst normalizing it. */
+PRIVATE WUNUSED NONNULL((1, 3, 5)) /*utf-8*/ char *DCALL
+cat_and_normalize_paths(/*utf-8*/ char const *__restrict pathname, size_t pathname_size,
+                        /*utf-8*/ char const *__restrict filename, size_t filename_size,
+                        size_t *__restrict p_result_strlen) {
+	char const *filename_end;
+	size_t final_result_size;
+	size_t result_size = pathname_size + 1 + filename_size;
+	char *dst, *result = (char *)Dee_Mallocc(result_size + DeeModule_OpenFile_impl_EXTRA_CHARS + 1, sizeof(char));
+	if unlikely(!result)
+		goto err;
+	dst = (char *)mempcpyc(result, pathname, pathname_size, sizeof(char));
+	*dst++ = DeeSystem_SEP;
+	filename_end = filename + filename_size;
+	/* Skip leading whitespace */
+	filename = unicode_skipspaceutf8_n(filename, filename_end);
+	while (filename < filename_end) {
+		char ch = *filename++;
+		switch (ch) {
+		case '.':
+			if (dst[-1] == DeeSystem_SEP) {
+				/* Deal with "." and ".." path references */
+				if ((filename >= filename_end) || DeeSystem_IsSep(*filename)) {
+					/* current-directory-reference */
+					--dst;
+					continue;
+				} else if ((size_t)(filename_end - filename) >= 1 && *filename == '.' &&
+				           ((size_t)(filename_end - filename) <= 1 || DeeSystem_IsSep(filename[1]))) {
+					/* parent-directory-reference */
+#ifdef DEE_SYSTEM_FS_DRIVES
+					char *min_base = dst + 2; /* Don't go beyond the drive-prefix */
+#else /* DEE_SYSTEM_FS_DRIVES */
+					char *min_base = dst;
+#endif /* !DEE_SYSTEM_FS_DRIVES */
+					/* Position "dst" after the previous "/" */
+					do {
+						--dst;
+					} while (dst > min_base && dst[-1] != DeeSystem_SEP);
+
+					/* Position "filename" **after** the associated "/" */
+					filename += 2;
+					continue;
+				}
+			}
+			*dst++ = '.';
+			break;
+#ifdef DeeSystem_ALTSEP
+		case DeeSystem_ALTSEP:
+			ch = DeeSystem_SEP;
+			ATTR_FALLTHROUGH
+#endif /* DeeSystem_ALTSEP */
+		case DeeSystem_SEP:
+			/* Trim already-written whitespace */
+			dst = unicode_skipspaceutf8_rev_n(dst, result);
+			/* Skip upcoming whitespace */
+			for (;;) {
+				filename = unicode_skipspaceutf8_n(filename, filename_end);
+				if (filename >= filename_end)
+					break;
+				if (!DeeSystem_IsSep(*filename))
+					break;
+				++filename;
+			}
+			ATTR_FALLTHROUGH
+		default:
+			*dst++ = ch;
+			break;
+		}
+	}
+	*dst = '\0';
+	final_result_size = (size_t)(dst - result);
+	if unlikely(final_result_size < result_size) {
+		dst = (char *)Dee_TryReallocc(result, final_result_size + DeeModule_OpenFile_impl_EXTRA_CHARS + 1, sizeof(char));
+		if likely(dst)
+			result = dst;
+	}
+	*p_result_strlen = final_result_size;
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+do_DeeModule_OpenFile(/*utf-8*/ char const *__restrict filename, size_t filename_size, DeeStringObject *filename_ob,
+                      /*utf-8*/ char const *context_absname, size_t context_absname_size, DeeStringObject *context_absname_ob,
+                      unsigned int flags, struct Dee_compiler_options *options) {
+	char *normal_filename;
+	size_t normal_filename_size;
+	DREF DeeModuleObject *result;
+	ASSERTF(!(flags & _DeeModule_IMPORT_F_MASK), "Internal flags may not be set by API");
+
+	/* Check if the given "filename" is already absolute */
+	if (DeeSystem_IsNormalAndAbsolute(filename, filename_size)) {
+		char *filename_dup;
+		if (filename_ob || (SAMEPAGE(filename, filename + filename_size) && filename[filename_size] == '\0'))
+			return DeeModule_OpenFile_impl2((char *)filename, filename_size, flags | _DeeModule_IMPORT_F_NO_INHERIT_FILENAME, options);
+		filename_dup = (char *)Dee_Mallocc(filename_size + DeeModule_OpenFile_impl_EXTRA_CHARS + 1, sizeof(char));
+		if unlikely(!filename_dup)
+			goto err;
+		*(char *)mempcpyc(filename_dup, filename, filename_size, sizeof(char)) = '\0';
+		return DeeModule_OpenFile_impl2(filename_dup, filename_size, flags, options);
+	} else if (DeeSystem_IsAbsN(filename, filename_size)) {
+		/* Don't need "context_absname" -- just need to normalize "filename" */
+use_absolute_filename:
+		if (filename_ob) {
+			filename_ob = (DeeStringObject *)DeeSystem_MakeNormalAndAbsolute((DeeObject *)filename_ob);
+		} else {
+			DREF DeeObject *raw_filename;
+			raw_filename = DeeString_NewUtf8(filename, filename_size, STRING_ERROR_FSTRICT);
+			if unlikely(!raw_filename)
+				goto err;
+			filename_ob = (DeeStringObject *)DeeSystem_MakeNormalAndAbsolute(raw_filename);
+			Dee_Decref_likely(raw_filename);
+		}
+		if unlikely(!filename_ob)
+			goto err;
+		filename = DeeString_AsUtf8((DeeObject *)filename_ob);
+		if unlikely(!filename)
+			goto err_filename_ob;
+		result = DeeModule_OpenFile_impl2((char *)filename, WSTR_LENGTH(filename),
+		                                  flags | _DeeModule_IMPORT_F_NO_INHERIT_FILENAME,
+		                                  options);
+		Dee_Decref_likely(filename_ob);
+		return result;
+	}
+
+	if (!(flags & DeeModule_IMPORT_F_CTXDIR)) {
+		/* Trim "context_absname_size" to get rid of everything after (but not including) the last slash. */
+		while (context_absname_size >= 1 && !DeeSystem_IsSep(context_absname[context_absname_size - 1]))
+			--context_absname_size;
+		while (context_absname_size >= 1 && DeeSystem_IsSep(context_absname[context_absname_size - 1]))
+			--context_absname_size;
+	}
+
+	/* Check if the given "context_absname" is just referring to the current working directory... */
+	if (context_absname_size == 0 || (context_absname_size == 1 && context_absname[0] == '.'))
+		goto use_absolute_filename;
+
+	/* Make sure that "context_absname" is absolute. If it isn't,
+	 * then it must be made so using the current working directory. */
+	if (DeeSystem_IsNormalAndAbsolute(context_absname, context_absname_size)) {
+		context_absname_ob = NULL;
+	} else {
+		if (context_absname_ob) {
+			context_absname_ob = (DeeStringObject *)DeeSystem_MakeNormalAndAbsolute((DeeObject *)context_absname_ob);
+		} else {
+			DREF DeeObject *raw_context_absname;
+			raw_context_absname = DeeString_NewUtf8(context_absname, context_absname_size, STRING_ERROR_FSTRICT);
+			if unlikely(!raw_context_absname)
+				goto err;
+			context_absname_ob = (DeeStringObject *)DeeSystem_MakeNormalAndAbsolute(raw_context_absname);
+			Dee_Decref_likely(raw_context_absname);
+		}
+		if unlikely(!context_absname_ob)
+			goto err;
+		context_absname = DeeString_AsUtf8((DeeObject *)context_absname_ob);
+		if unlikely(!context_absname)
+			goto err_context_absname_ob;
+		context_absname_size = WSTR_LENGTH(context_absname);
+	}
+
+	/* Concat the context path with the filename to get a normalized filename. */
+	normal_filename = cat_and_normalize_paths(context_absname, context_absname_size,
+	                                          filename, filename_size,
+	                                          &normal_filename_size);
+
+	/* Use the normalized filename to open a module */
+	result = DeeModule_OpenFile_impl2(normal_filename, normal_filename_size, flags, options);
+	Dee_XDecref_likely(context_absname_ob);
+	return result;
+err_context_absname_ob:
+	Dee_Decref_likely(context_absname_ob);
+	goto err;
+err_filename_ob:
+	Dee_Decref_likely(filename_ob);
+err:
+	return NULL;
+}
+
+
+
+/* Append "import_str" to "pathname", converting the ".". */
+PRIVATE WUNUSED NONNULL((1, 3, 5)) /*utf-8*/ char *DCALL
+cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathname_size,
+                         /*utf-8*/ char const *__restrict import_str, size_t import_str_size,
+                         size_t *__restrict p_result_strlen) {
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+do_DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_size, DeeStringObject *import_str_ob,
+                    /*utf-8*/ char const *context_absname, size_t context_absname_size, DeeStringObject *context_absname_ob,
+                    unsigned int flags, struct Dee_compiler_options *options) {
+	DREF DeeModuleObject *result;
+
+	/* Check if "import_str" needs to be interpreted as
+	 * a system filename, rather than a module path. */
+	if ((flags & DeeModule_IMPORT_F_FILNAM) ||
+	    memchr(import_str, DeeSystem_SEP, import_str_size)
+#ifdef DeeSystem_ALTSEP
+	    || memchr(import_str, DeeSystem_ALTSEP, import_str_size)
+#endif /* DeeSystem_ALTSEP */
+	    ) {
+		return do_DeeModule_OpenFile(import_str, import_str_size, import_str_ob,
+		                             context_absname, context_absname_size, context_absname_ob,
+		                             flags, options);
+	}
+
+	/* Check for special case: `import_str == "."' --> return the module described by "context_absname" */
+	if (import_str_size == 1 && import_str[0] == '.') {
+		return do_DeeModule_OpenFile(context_absname, context_absname_size, context_absname_ob,
+		                             NULL, 0, NULL, flags, options);
+	}
+
+	/* Check if "import_str" is a relative import-string (iow: starts with a leading `.') */
+	if (import_str_size > 1 && import_str[0] == '.') {
+		if (!(flags & DeeModule_IMPORT_F_CTXDIR)) {
+			/* Trim "context_absname_size" to get rid of everything after (but not including) the last slash. */
+			while (context_absname_size >= 1 && !DeeSystem_IsSep(context_absname[context_absname_size - 1]))
+				--context_absname_size;
+			while (context_absname_size >= 1 && DeeSystem_IsSep(context_absname[context_absname_size - 1]))
+				--context_absname_size;
+			flags |= DeeModule_IMPORT_F_CTXDIR;
+		}
+
+		/* TODO */
+		DeeError_NOTIMPLEMENTED();
+		return NULL;
+	}
+
+	/* Special case: "import_str" is "deemon" */
+	if (import_str_size == 6 && memcmp(import_str, "deemon", 6 * sizeof(char)) == 0) {
+		(void)import_str_ob;
+		(void)options;
+		(void)flags;
+		(void)context_absname;
+		(void)context_absname_size;
+		(void)context_absname_ob;
+		result = (DREF DeeModuleObject *)DeeModule_GetDeemon();
+		return_reference_(result);
+	}
+
+	/* Final case: "import_str" refers to a $LIBPATH module */
+	/* TODO */
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_size,
+                 /*utf-8*/ char const *context_absname, size_t context_absname_size,
+                 unsigned int flags, struct Dee_compiler_options *options) {
+	return (DREF DeeObject *)do_DeeModule_OpenEx(import_str, import_str_size, NULL,
+	                                             context_absname, context_absname_size, NULL,
+	                                             flags, options);
+}
+
+/* Open a module, given an import string, and another module/path used
+ * to resolve relative paths. The given "import_str" can take any of the
+ * following forms (assuming that `DeeSystem_SEP' is '/'):
+ * - "deemon"                    (DeeModule_GetDeemon())
+ * - "net.ftp"                   ("${LIBPATH}/net/ftp.dee")
+ * - "net"                       ("${LIBPATH}/net.dll")
+ * - ".some_module"              (fs.headof(context_absname) + "/some_module.dee")
+ * - ".subdir.that_module"       (fs.headof(context_absname) + "/subdir/that_module.dee")
+ * - ".subdir"                   (fs.headof(context_absname) + "/subdir")                  DeeModuleDir_Type
+ * - "."                         (DeeModule_Open(fs.abspath(context_absname), NULL))       Only allowed if "context_absname" doesn't end with a trailing "/"
+ * - "./subdir/that_module"      (fs.headof(context_absname) + "/subdir/that_module.dee")
+ * - "./subdir/that_module.dee"  (fs.headof(context_absname) + "/subdir/that_module.dee")
+ * - "/opt/deemon/file.dee"      ("/opt/deemon/file.dee")
+ * - "/opt/deemon/file"          ("/opt/deemon/file.dee")
+ * - "/opt/deemon"               ("/opt/deemon")                                           DeeModuleDir_Type
+ * 
+ * The given "context_absname" should be the mo_absname-style name of
+ * the calling file, or (at the very least) be a string ending with a
+ * trailing `DeeSystem_SEP' (in this case, import_str="." will throw
+ * an error). When this string isn't actually absolute, it will be
+ * made absolute using `DeeSystem_MakeNormalAndAbsolute()'.
+ *
+ * @return: * :        The newly opened module
+ * @return: NULL:      An error was thrown
+ * @return: ITER_DONE: `DeeModule_IMPORT_F_ENOENT' was set, and no such file exists */
+PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_Open(/*String*/ DeeObject *__restrict import_str,
+               /*Module|String*/ DeeObject *context_absname) {
+	char const *import_str_utf8 = DeeString_AsUtf8(import_str);
+	char const *context_absname_utf8;
+	size_t context_absname_size;
+	DeeStringObject *context_absname_ob = NULL;
+	if unlikely(!import_str_utf8)
+		goto err;
+	if (context_absname == NULL || DeeNone_Check(context_absname)) {
+		context_absname_utf8 = NULL;
+		context_absname_size = 0;
+	} else if (DeeModule_Check(context_absname)) {
+		DeeModuleObject *context_mod = (DeeModuleObject *)context_absname;
+		/* Special case optimization: `import(".")' -> simply re-return the context module. */
+		if (WSTR_LENGTH(import_str_utf8) == 1 && import_str_utf8[0] == '.')
+			return_reference_(context_absname);
+		context_absname_utf8 = context_mod->mo_absname;
+		context_absname_size = context_absname_utf8 ? strlen(context_absname_utf8) : 0;
+	} else if (DeeString_Check(context_absname)) {
+		context_absname_ob = (DeeStringObject *)context_absname;
+		context_absname_utf8 = DeeString_AsUtf8(context_absname);
+		if unlikely(!context_absname_utf8)
+			goto err;
+		context_absname_size = WSTR_LENGTH(context_absname_utf8);
+	} else {
+		DeeObject_TypeAssertFailed2(context_absname, &DeeModule_Type, &DeeString_Type);
+		goto err;
+	}
+	return (DREF DeeObject *)do_DeeModule_OpenEx(import_str_utf8, WSTR_LENGTH(import_str_utf8),
+	                                             (DeeStringObject *)import_str,
+	                                             context_absname_utf8, context_absname_size,
+	                                             context_absname_ob,
+	                                             DeeModule_IMPORT_F_NORMAL, NULL);
+err:
+	return NULL;
+}
+
+
+
+/* Import (DeeModule_Open() + DeeModule_Initialize()) a specific module */
+PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_Import(/*String*/ DeeObject *__restrict import_str,
+                 /*Module*/ DeeObject *context_absname) {
+	DREF DeeObject *result = DeeModule_Open(import_str, NULL);
+	if (likely(result) && unlikely(DeeModule_Initialize(result) < 0))
+		Dee_Clear(result);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_ImportEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_size,
+                   /*utf-8*/ char const *context_absname, size_t context_absname_size,
+                   unsigned int flags, struct Dee_compiler_options *options) {
+	DREF DeeObject *result = DeeModule_OpenEx(import_str, import_str_size, context_absname,
+	                                          context_absname_size, flags, options);
+	if (likely(result) && unlikely(DeeModule_Initialize(result) < 0))
+		Dee_Clear(result);
+	return result;
+}
+
+DECL_END
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
+#include <deemon/compiler/compiler.h>
+
+#include <deemon/alloc.h>
+#include <deemon/code.h>
+#include <deemon/compiler/assembler.h>
+#include <deemon/compiler/lexer.h>
+#include <deemon/compiler/optimize.h>
+#include <deemon/compiler/tpp.h>
+#include <deemon/exec.h>
+#include <deemon/file.h>
+#include <deemon/filetypes.h>
+#include <deemon/gc.h>
+#include <deemon/none.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/debug-alignment.h>
 #include <hybrid/minmax.h>
-#include <hybrid/sched/yield.h>
 
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
@@ -52,16 +868,6 @@
 #endif /* !CONFIG_NO_DEC */
 
 /**/
-#include <deemon/exec.h>
-/**/
-
-#include <deemon/compiler/compiler.h>
-
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/optimize.h>
-#include <deemon/compiler/tpp.h>
-
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
@@ -76,10 +882,6 @@
 #include <limits.h>
 #endif /* CONFIG_HAVE_LIMITS_H */
 
-#ifdef CONFIG_HOST_WINDOWS
-#include <Windows.h>
-#endif /* CONFIG_HOST_WINDOWS */
-
 #define token             TPPLexer_Global.l_token
 #define tok               TPPLexer_Global.l_token.t_id
 #define yield()           TPPLexer_Yield()
@@ -87,17 +889,6 @@
 #define yieldnbif(allow)  ((allow) ? TPPLexer_YieldNB() : TPPLexer_Yield())
 #define skip(expected_tok, ...) unlikely(likely(tok == (expected_tok)) ? (yield() < 0) : parser_skip(expected_tok, __VA_ARGS__))
 
-#ifndef PATH_MAX
-#ifdef PATHMAX
-#   define PATH_MAX PATHMAX
-#elif defined(MAX_PATH)
-#   define PATH_MAX MAX_PATH
-#elif defined(MAXPATH)
-#   define PATH_MAX MAXPATH
-#else
-#   define PATH_MAX 260
-#endif
-#endif /* !PATH_MAX */
 
 DECL_BEGIN
 
@@ -788,7 +1579,7 @@ DeeModule_OpenSourceFile(DeeObject *__restrict source_pathname,
 	Dee_hash_t hash;
 	ASSERT_OBJECT_TYPE(source_pathname, &DeeString_Type);
 	ASSERT_OBJECT_TYPE_OPT(module_global_name, &DeeString_Type);
-	module_path_ob = (DREF DeeStringObject *)DeeSystem_MakeAbsolute(source_pathname);
+	module_path_ob = (DREF DeeStringObject *)DeeSystem_MakeNormalAndAbsolute(source_pathname);
 	if unlikely(!module_path_ob)
 		goto err;
 
@@ -2644,7 +3435,7 @@ err:
 
 struct module_import_data {
 	DeeModuleObject *mid_self;    /* [1..1] The module into which to import. */
-	unsigned int     mid_mode;    /* Import mode (s.a. `DEE_EXEC_RUNMODE_*') */
+	unsigned int     mid_mode;    /* Import mode (s.a. `DeeExec_RUNMODE_*') */
 	uint16_t         mid_globala; /* Allocated vector size of `mid_self->mo_globalv' */
 };
 
@@ -2654,7 +3445,7 @@ module_import_symbol(void *arg, DeeObject *name, DeeObject *value) {
 	DeeModuleObject *self = data->mid_self;
 	if unlikely(DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
-	if (!(data->mid_mode & DEE_EXEC_RUNMODE_FDEFAULTS_ARE_GLOBALS)) {
+	if (!(data->mid_mode & DeeExec_RUNMODE_FDEFAULTS_ARE_GLOBALS)) {
 		struct TPPKeyword *kwd;
 		struct symbol *sym;
 
@@ -2854,12 +3645,14 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 	}
 	ASSERT(!current_basescope->bs_name);
 
-	if (!(mode & DEE_EXEC_RUNMODE_FHASPP)) {
+#if 0
+	if (!(mode & DeeExec_RUNMODE_FHASPP)) {
 		/* Disable preprocessor directives & macros. */
 		TPPLexer_Current->l_flags |= (TPPLEXER_FLAG_NO_DIRECTIVES |
 		                              TPPLEXER_FLAG_NO_MACROS |
 		                              TPPLEXER_FLAG_NO_BUILTIN_MACROS);
 	}
+#endif
 
 	inner_compiler_options = NULL;
 	if (options) {
@@ -2929,19 +3722,23 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 		code = NULL;
 	} else {
 		/* Parse statements until the end of the source stream. */
-		switch (mode & DEE_EXEC_RUNMODE_MASK) {
+		switch (mode & DeeExec_RUNMODE_MASK) {
 
-		case DEE_EXEC_RUNMODE_STMT:
+		default:
+			code = ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST, TOK_EOF);
+			break;
+
+		case DeeExec_RUNMODE_STMT:
 			code = ast_parse_statement(false);
 			goto pack_code_in_return;
 
-		case DEE_EXEC_RUNMODE_EXPR:
+		case DeeExec_RUNMODE_EXPR:
 			code = ast_parse_comma(AST_COMMA_NORMAL,
 			                       AST_FMULTIPLE_KEEPLAST,
 			                       NULL);
 			goto pack_code_in_return;
 
-		case DEE_EXEC_RUNMODE_FULLEXPR:
+		case DeeExec_RUNMODE_FULLEXPR:
 			code = ast_parse_comma(AST_COMMA_NORMAL |
 			                       AST_COMMA_ALLOWVARDECLS |
 			                       AST_COMMA_ALLOWTYPEDECL,
@@ -2954,10 +3751,6 @@ pack_code_in_return:
 				ast_decref(code);
 				code = return_ast;
 			}
-			break;
-
-		default:
-			code = ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST, TOK_EOF);
 			break;
 		}
 	}
@@ -3081,9 +3874,14 @@ err:
 	return NULL;
 }
 
+DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 
+
+
+DECL_BEGIN
 
 /* List of strings that should be used as base paths when searching for global modules.
  * Access to this list should go through `DeeModule_InitPath()', which will
@@ -3164,15 +3962,15 @@ PRIVATE WUNUSED DREF /*String*/ DeeStringObject *DCALL get_default_home(void) {
 		size_t len = strlen(env);
 		if (len) {
 			DREF DeeStringObject *new_result;
-			while (len && ISSEP(env[len - 1]))
+			while (len && DeeSystem_IsSep(env[len - 1]))
 				--len;
 			result = (DREF DeeStringObject *)DeeString_NewUtf8(env, len + 1,
 			                                                   STRING_ERROR_FIGNORE);
 #define get_default_home_NEED_ERR 1
 			if unlikely(!result)
 				goto err;
-			DeeString_SetChar(result, len - 1, SEP);
-			new_result = (DREF DeeStringObject *)DeeSystem_MakeAbsolute((DeeObject *)result);
+			DeeString_SetChar(result, len - 1, DeeSystem_SEP);
+			new_result = (DREF DeeStringObject *)DeeSystem_MakeNormalAndAbsolute((DeeObject *)result);
 			Dee_Decref(result);
 			return new_result;
 		}
@@ -3244,7 +4042,7 @@ do_increase_buffer:
 		result = (DREF DeeStringObject *)DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
 		if unlikely(!result)
 			goto err;
-		new_result = (DREF DeeStringObject *)DeeSystem_MakeAbsolute((DeeObject *)result);
+		new_result = (DREF DeeStringObject *)DeeSystem_MakeNormalAndAbsolute((DeeObject *)result);
 		Dee_Decref(result);
 		return new_result;
 	}
@@ -3483,8 +4281,6 @@ PUBLIC void DCALL DeeModule_InitPath(void) {
 #endif /* !CONFIG_NO_THREADS */
 	}
 }
-
-
 
 DECL_END
 

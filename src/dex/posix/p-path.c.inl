@@ -1010,7 +1010,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 posix_path_normalpath_f(DeeStringObject *__restrict path) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	/*utf-8*/ char const *iter, *begin, *end, *iter_next;
+	/*utf-8*/ char const *iter, *begin, *end;
 	/*utf-8*/ char const *flush_start, *flush_end;
 	uint32_t ch;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
@@ -1023,7 +1023,7 @@ posix_path_normalpath_f(DeeStringObject *__restrict path) {
 next:
 	ch = *iter++;
 	switch (ch) {
-		/* NOTE: The following part has been mirrored in `DeeSystem_MakeAbsolute'
+		/* NOTE: The following part has been mirrored in `DeeSystem_MakeNormalAndAbsolute'
 		 * If a bug is found in this code, it should be fixed here, as well as
 		 * within the core. */
 
@@ -1039,20 +1039,15 @@ next:
 		sep_loc = flush_end = iter - 1;
 
 		/* Skip multiple slashes and whitespace following a path separator. */
-		while (iter < end) {
-			iter_next = iter;
-			ch        = unicode_readutf8_n(&iter_next, end);
-			if (!DeeUni_IsSpace(ch) && !DeeSystem_IsSep(ch))
+		for (;;) {
+			iter = unicode_skipspaceutf8_n(iter, end);
+			if (iter >= end)
 				break;
-			iter = iter_next;
-		}
-		while (flush_end > flush_start) {
-			iter_next = flush_end;
-			ch        = unicode_readutf8_rev_n(&iter_next, flush_start);
-			if (!DeeUni_IsSpace(ch))
+			if (!DeeSystem_IsSep(*iter))
 				break;
-			flush_end = iter_next;
+			++iter;
 		}
+		flush_end = unicode_skipspaceutf8_rev_n(flush_end, flush_start);
 
 		/* Analyze the last path portion for being a special name (`.' or `..') */
 		if (flush_end[-1] == '.') {

@@ -2838,14 +2838,13 @@ PRIVATE struct dex_symbol symbols[] = {
 #undef D
 
 PUBLIC struct dex DEX = {
-	/* .d_symbols      = */ symbols,
-	/* .d_init         = */ NULL,
+	/* .d_symbols = */ symbols,
+	/* .d_init    = */ NULL,
 #ifdef HAVE_posix_dex_fini
-	/* .d_fini         = */ &posix_dex_fini,
+	/* .d_fini    = */ &posix_dex_fini
 #else /* HAVE_posix_dex_fini */
-	/* .d_fini         = */ NULL,
+	/* .d_fini    = */ NULL
 #endif /* !HAVE_posix_dex_fini */
-	/* .d_import_names = */ { NULL }
 };
 
 DECL_END

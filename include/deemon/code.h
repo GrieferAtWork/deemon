@@ -670,7 +670,7 @@ struct Dee_code_object {
 	DREF DeeObject                     *const *co_defaultv; /* [0..1][const][0..(co_argc_max-co_argc_min)][owned][const] Vector of default argument values.
 	                                                         * NOTE: NULL entries refer to optional arguments, producing an error
 	                                                         *       when attempted to be loaded without a user override. */
-	DREF DeeObject                     *const *co_constv;  /* [1..1][0..co_constc][owned] Vector of constants. */
+	DREF DeeObject                     *const *co_constv;   /* [1..1][0..co_constc][owned] Vector of constants. */
 	/* NOTE: Exception handlers are execute in order of last -> first, meaning that later handler overwrite prior ones. */
 	struct Dee_except_handler                 *co_exceptv;  /* [0..co_excptc][owned] Vector of exception handler descriptors. */
 	DREF DeeDDIObject                         *co_ddi;      /* [1..1][const] Debug line information. */

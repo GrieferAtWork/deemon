@@ -38,11 +38,13 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
+#include <deemon/system.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
+#include <hybrid/sequence/list.h>
 
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
@@ -127,6 +129,140 @@ done:
 	return result;
 }
 
+
+
+
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+DeeModule_DoInitialize(DeeModuleObject *__restrict me) {
+	DREF DeeFunctionObject *rootfunc;
+	DREF DeeObject *rootresult;
+#ifndef CONFIG_NO_DEX
+	ASSERT(Dee_TYPE(me) == &DeeModuleDee_Type ||
+	       Dee_TYPE(me) == &DeeModuleDex_Type);
+	if (Dee_TYPE(me) == &DeeModuleDex_Type) {
+		struct Dee_module_dexdata *dex;
+		dex = me->mo_moddata.mo_dexdata;
+		return dex->mdx_init ? (*dex->mdx_init)() : 0;
+	}
+#else /* !CONFIG_NO_DEX */
+	ASSERT(Dee_TYPE(me) == &DeeModuleDee_Type);
+#endif /* CONFIG_NO_DEX */
+
+	rootfunc = (DREF DeeFunctionObject *)DeeModule_GetRootFunction((DeeObject *)me);
+	if unlikely(!rootfunc)
+		goto err;
+	rootresult = DeeFunction_Call(rootfunc, 0, NULL);
+	Dee_Decref_likely(rootfunc);
+	if unlikely(!rootresult)
+		goto err;
+	Dee_Decref_unlikely(rootresult); /* *_unlikely because it's probably "none" */
+	return 0;
+err:
+	return -1;
+}
+
+/* Ensure that the initializer (aka. "mo_rootcode" code) of "self" has been run.
+ * @return: 1 : The calling thread is already in the process of initializing "self".
+ * @return: 0 : Success, or initializer was already executed.
+ * @return: -1: An error was thrown. */
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeModule_Initialize(/*Module*/ DeeObject *__restrict self) {
+	int init_status;
+	DeeModuleObject *me = (DeeModuleObject *)self;
+	DeeThreadObject *caller = DeeThread_Self();
+	DeeThreadObject *status;
+again:
+	status = Dee_atomic_cmpxch_val(&me->mo_init, Dee_MODULE_INIT_UNINITIALIZED, caller);
+	if (status == Dee_MODULE_INIT_INITIALIZED) {
+		return 0; /* Initialization already complete */
+	} else if (status == caller) {
+		return 1; /* You're already doing the init right now (nested/self dependency case) */
+	} else if (status != Dee_MODULE_INIT_UNINITIALIZED) {
+		/* Some other thread is already doing an initialization */
+		atomic_or(&me->mo_flags, Dee_MODULE_FWAITINIT);
+		if (DeeFutex_WaitPtr(&me->mo_init, (uintptr_t)status))
+			goto err;
+		goto again;
+	}
+
+	/* Initialization started */
+	init_status = DeeModule_DoInitialize(me);
+
+	/* Propagate initialization status */
+	if likely(init_status == 0) {
+		atomic_write(&me->mo_init, Dee_MODULE_INIT_INITIALIZED);
+	} else {
+		atomic_write(&me->mo_init, Dee_MODULE_INIT_UNINITIALIZED);
+	}
+	if (atomic_fetchand(&me->mo_flags, ~Dee_MODULE_FWAITINIT))
+		DeeFutex_WakeAll(&me->mo_init);
+
+	/* Return indicative of initialization succeeding */
+	ASSERT(init_status == 0 || init_status == -1);
+	return init_status;
+err:
+	return -1;
+}
+
+/* Check if the given module's current stat is `Dee_MODULE_INIT_UNINITIALIZED',
+ * and if so: change it to `Dee_MODULE_INIT_INITIALIZED' (even if the module
+ * may not have already been initialized)
+ * @return: * : One of `DeeModule_SetInitialized_*' */
+PUBLIC WUNUSED NONNULL((1)) unsigned int DCALL
+DeeModule_SetInitialized(/*Module*/ DeeObject *__restrict self) {
+	DeeModuleObject *me = (DeeModuleObject *)self;
+	DeeThreadObject *status;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeModuleDee_Type);
+	status = Dee_atomic_cmpxch_val(&me->mo_init,
+	                               Dee_MODULE_INIT_UNINITIALIZED,
+	                               Dee_MODULE_INIT_INITIALIZED);
+	if (status == Dee_MODULE_INIT_UNINITIALIZED) {
+		return DeeModule_SetInitialized_SUCCESS;
+	} else if (status == Dee_MODULE_INIT_INITIALIZED) {
+		return DeeModule_SetInitialized_ALREADY;
+	} else {
+		return DeeModule_SetInitialized_INPRGRS;
+	}
+	__builtin_unreachable();
+}
+
+
+/* Return the root code object of a given module.
+ * The caller must ensure that `self' is an instance */
+PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF /*Code*/ DeeObject *DCALL
+DeeModule_GetRootCode(/*Module*/ DeeObject *__restrict self) {
+	DeeCodeObject *result;
+	DeeModuleObject *me = (DeeModuleObject *)self;
+	Dee_refcnt_t old_code_refcnt;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeModuleDee_Type);
+	result = me->mo_moddata.mo_rootcode;
+	ASSERT(result);
+	ASSERT(result->co_module == me);
+	Dee_Incref(self); /* In case "old_code_refcnt" ends up being "0" */
+	old_code_refcnt = _DeeRefcnt_FetchInc(&result->ob_refcnt);
+	if (old_code_refcnt == 0) {
+		/* Incref above is inherited by `result->co_module' */
+	} else {
+		Dee_DecrefNokill(self);
+	}
+	return (DREF DeeObject *)result;
+}
+
+PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF /*Function*/ DeeObject *DCALL
+DeeModule_GetRootFunction(/*Module*/ DeeObject *__restrict self) {
+	DREF DeeCodeObject *rootcode;
+	DREF DeeFunctionObject *rootfunc;
+	rootcode = (DREF DeeCodeObject *)DeeModule_GetRootCode(self);
+	ASSERT_OBJECT_TYPE_EXACT(rootcode, &DeeCode_Type);
+	rootfunc = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs((DeeObject *)rootcode);
+	Dee_Decref_unlikely(rootcode);
+	return (DREF DeeObject *)rootfunc;
+}
+
+
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
 /* Initialize all modules imported by the given one.
  * @throws: Error.RuntimeError: The module has not been loaded yet. (aka. no source code was assigned)
  * @return: -1: An error occurred during initialization.
@@ -200,6 +336,7 @@ DeeModule_GetRoot(DeeObject *__restrict self,
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 INTERN struct module_symbol empty_module_buckets[] = {
@@ -213,12 +350,14 @@ DeeModule_GetSymbolID(DeeModuleObject const *__restrict self, uint16_t gid) {
 	struct module_symbol *iter, *end;
 	struct module_symbol *result = NULL;
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	/* Check if the module has actually been loaded yet.
 	 * This needs to be done to prevent a race condition
 	 * when reading the bucket fields below, as they only
 	 * become immutable once this flag has been set. */
 	if unlikely(!(self->mo_flags & Dee_MODULE_FDIDLOAD))
 		goto err;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	end = (iter = self->mo_bucketv) + (self->mo_bucketm + 1);
 	for (; iter < end; ++iter) {
 		if (!MODULE_SYMBOL_GETNAMESTR(iter))
@@ -267,7 +406,9 @@ DeeModule_GetSymbolStringHash(DeeModuleObject const *__restrict self,
                               Dee_hash_t hash) {
 	Dee_hash_t i, perturb;
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	ASSERT(!DeeInteractiveModule_Check(self));
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	perturb = i = Dee_MODULE_HASHST(self, hash);
 	for (;; Dee_MODULE_HASHNX(i, perturb)) {
 		struct module_symbol *item = Dee_MODULE_HASHIT(self, i);
@@ -713,6 +854,7 @@ module_setattr_len_impl(DeeModuleObject *__restrict self,
 }
 
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #ifndef CONFIG_NO_THREADS
 INTDEF WUNUSED NONNULL((1)) int DCALL interactivemodule_lockread(DeeModuleObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL interactivemodule_lockwrite(DeeModuleObject *__restrict self);
@@ -724,12 +866,14 @@ INTDEF NONNULL((1)) void DCALL interactivemodule_lockendwrite(DeeModuleObject *_
 #define interactivemodule_lockendread(self)  (void)0
 #define interactivemodule_lockendwrite(self) (void)0
 #endif /* CONFIG_NO_THREADS */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_GetAttrStringHash(DeeModuleObject *__restrict self,
                             char const *__restrict attr_name, Dee_hash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			DREF DeeObject *result;
@@ -742,6 +886,7 @@ DeeModule_GetAttrStringHash(DeeModuleObject *__restrict self,
 		err_module_not_loaded_attr_string(self, attr_name, ATTR_ACCESS_GET);
 		return NULL;
 	}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return module_getattr_impl(self, attr_name, hash);
 }
 
@@ -750,6 +895,7 @@ DeeModule_GetAttrStringLenHash(DeeModuleObject *__restrict self,
                                char const *__restrict attr_name,
                                size_t attrlen, Dee_hash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			DREF DeeObject *result;
@@ -762,6 +908,7 @@ DeeModule_GetAttrStringLenHash(DeeModuleObject *__restrict self,
 		err_module_not_loaded_attr_string_len(self, attr_name, attrlen, ATTR_ACCESS_GET);
 		return NULL;
 	}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return module_getattr_len_impl(self, attr_name, attrlen, hash);
 }
 
@@ -769,6 +916,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_BoundAttrStringHash(DeeModuleObject *__restrict self,
                               char const *__restrict attr_name, Dee_hash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			int result;
@@ -780,6 +928,7 @@ DeeModule_BoundAttrStringHash(DeeModuleObject *__restrict self,
 		}
 		return Dee_BOUND_MISSING;
 	}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return module_boundattr_impl(self, attr_name, hash);
 }
 
@@ -788,6 +937,7 @@ DeeModule_BoundAttrStringLenHash(DeeModuleObject *__restrict self,
                                  char const *__restrict attr_name,
                                  size_t attrlen, Dee_hash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			int result;
@@ -799,6 +949,7 @@ DeeModule_BoundAttrStringLenHash(DeeModuleObject *__restrict self,
 		}
 		return Dee_BOUND_MISSING;
 	}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return module_boundattr_len_impl(self, attr_name, attrlen, hash);
 }
 
@@ -806,6 +957,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_HasAttrStringHash(DeeModuleObject *__restrict self,
                             char const *__restrict attr_name, Dee_hash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			bool result;
@@ -817,6 +969,7 @@ DeeModule_HasAttrStringHash(DeeModuleObject *__restrict self,
 		}
 		return 0;
 	}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return module_hasattr_impl(self, attr_name, hash);
 }
 
@@ -825,6 +978,7 @@ DeeModule_HasAttrStringLenHash(DeeModuleObject *__restrict self,
                                char const *__restrict attr_name,
                                size_t attrlen, Dee_hash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			bool result;
@@ -836,6 +990,7 @@ DeeModule_HasAttrStringLenHash(DeeModuleObject *__restrict self,
 		}
 		return false;
 	}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return module_hasattr_len_impl(self, attr_name, attrlen, hash);
 }
 
@@ -843,6 +998,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_DelAttrStringHash(DeeModuleObject *__restrict self,
                             char const *__restrict attr_name, Dee_hash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			int result;
@@ -855,6 +1011,7 @@ DeeModule_DelAttrStringHash(DeeModuleObject *__restrict self,
 		}
 		return err_module_not_loaded_attr_string(self, attr_name, ATTR_ACCESS_DEL);
 	}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return module_delattr_impl(self, attr_name, hash);
 }
 
@@ -863,6 +1020,7 @@ DeeModule_DelAttrStringLenHash(DeeModuleObject *__restrict self,
                                char const *__restrict attr_name,
                                size_t attrlen, Dee_hash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			int result;
@@ -875,6 +1033,7 @@ DeeModule_DelAttrStringLenHash(DeeModuleObject *__restrict self,
 		}
 		return err_module_not_loaded_attr_string_len(self, attr_name, attrlen, ATTR_ACCESS_DEL);
 	}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return module_delattr_len_impl(self, attr_name, attrlen, hash);
 }
 
@@ -883,6 +1042,7 @@ DeeModule_SetAttrStringHash(DeeModuleObject *self,
                             char const *__restrict attr_name, Dee_hash_t hash,
                             DeeObject *value) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			int result;
@@ -895,6 +1055,7 @@ DeeModule_SetAttrStringHash(DeeModuleObject *self,
 		}
 		return err_module_not_loaded_attr_string(self, attr_name, ATTR_ACCESS_SET);
 	}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return module_setattr_impl(self, attr_name, hash, value);
 }
 
@@ -904,6 +1065,7 @@ DeeModule_SetAttrStringLenHash(DeeModuleObject *self,
                                size_t attrlen, Dee_hash_t hash,
                                DeeObject *value) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			int result;
@@ -916,10 +1078,12 @@ DeeModule_SetAttrStringLenHash(DeeModuleObject *self,
 		}
 		return err_module_not_loaded_attr_string_len(self, attr_name, attrlen, ATTR_ACCESS_SET);
 	}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return module_setattr_len_impl(self, attr_name, attrlen, hash, value);
 }
 
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_module_not_loaded(DeeModuleObject *__restrict self) {
 	return DeeError_Throwf(&DeeError_RuntimeError,
@@ -1130,6 +1294,7 @@ err_not_loaded:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 /* Return the name of a global variable in the given module.
@@ -1147,16 +1312,33 @@ DeeModule_GlobalName(DeeObject *__restrict self, uint16_t gid) {
 
 
 DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-module_str(DeeObject *__restrict self) {
+module_str(DeeObject *__restrict self) { /* TODO: Refactor to "tp_print" */
 	DeeModuleObject *me = (DeeModuleObject *)self;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	char const *name = me->mo_absname;
+	if (!name)
+		return DeeString_New("<anonymous module>");
+	name = DeeSystem_BaseName(name, strlen(name));
+	return DeeString_New(name);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return_reference_((DeeObject *)me->mo_name);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 module_printrepr(DeeObject *__restrict self,
                  Dee_formatprinter_t printer, void *arg) {
 	DeeModuleObject *me = (DeeModuleObject *)self;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	if (me == DeeModule_GetDeemon())
+		return DeeFormat_PRINT(printer, arg, "import.deemon");
+//	if (me->mo_libname) /* TODO */
+	if (!me->mo_absname)
+		return DeeFormat_PRINT(printer, arg, "Module()");
+	return DeeFormat_Printf(printer, arg, "import(%q)", me->mo_absname);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return DeeFormat_Printf(printer, arg, "import(%r)", me->mo_name);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 
@@ -1220,9 +1402,17 @@ module_attriter_next(struct module_attriter *__restrict self,
 	if (sym->ss_flags & MODSYM_FCONSTEXPR)
 #endif
 	{
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		int init_state = DeeModule_Initialize((DeeObject *)mod);
+		if unlikely(init_state < 0)
+			goto err;
+		if likely(init_state == 0)
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		if unlikely(DeeModule_RunInit((DeeObject *)mod) < 0)
 			goto err;
-		if (mod->mo_flags & Dee_MODULE_FDIDINIT) {
+		if (mod->mo_flags & Dee_MODULE_FDIDINIT)
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+		{
 			DeeModule_LockRead(mod);
 			if (sym->ss_flags & MODSYM_FPROPERTY) {
 				/* Check which property operations have been bound. */
@@ -1277,12 +1467,14 @@ module_iterattr(DeeTypeObject *UNUSED(tp_self), DeeModuleObject *self,
 	size_t temp;
 	struct Dee_attriterchain_builder builder;
 	ASSERT_OBJECT(self);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			/* TODO: Special handling for enumerating the globals of an interactive module. */
 		}
 		return 0;
 	}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	Dee_attriterchain_builder_init(&builder, iterbuf, bufsize);
 	if (Dee_attriterchain_builder_getbufsize(&builder) >= sizeof(struct module_attriter)) {
@@ -1310,12 +1502,14 @@ module_findattr_impl(DeeModuleObject *__restrict self,
                      struct Dee_attrspec const *__restrict specs,
                      struct Dee_attrdesc *__restrict result) {
 	ASSERT_OBJECT(self);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			/* TODO: Special handling for enumerating the globals of an interactive module. */
 		}
 		return 1;
 	}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if (!specs->as_decl || specs->as_decl == (DeeObject *)self) {
 		struct module_symbol *sym, *doc_sym;
 		sym = DeeModule_GetSymbolStringHash(self,
@@ -1337,9 +1531,17 @@ module_findattr_impl(DeeModuleObject *__restrict self,
 			if (sym->ss_flags & MODSYM_FCONSTEXPR)
 #endif
 			{
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+				int init_state = DeeModule_Initialize((DeeObject *)self);
+				if unlikely(init_state < 0)
+					goto err;
+				if likely(init_state == 0)
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 				if unlikely(DeeModule_RunInit((DeeObject *)self) < 0)
 					goto err;
-				if (self->mo_flags & Dee_MODULE_FDIDINIT) {
+				if (self->mo_flags & Dee_MODULE_FDIDINIT)
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+				{
 					DeeModule_LockRead(self);
 					if (sym->ss_flags & MODSYM_FPROPERTY) {
 						/* Check which property operations have been bound. */
@@ -1459,13 +1661,13 @@ PRIVATE struct type_attr module_attr = {
 	/* .tp_findattr_info_string_len_hash = */ (bool (DCALL *)(DeeTypeObject *, DeeObject *, char const *__restrict, size_t, Dee_hash_t, struct Dee_attrinfo *__restrict))&module_findattr_info_string_len_hash,
 };
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE NONNULL((1)) int DCALL
 err_module_not_fully_loaded(DeeModuleObject *__restrict self) {
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "Module %k has not been fully loaded, yet",
 	                       self->mo_name);
 }
-
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_get_code(DeeModuleObject *__restrict self) {
@@ -1496,6 +1698,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_get_haspath(DeeModuleObject *__restrict self) {
 	return_bool(DeeModule_HasPath(self));
 }
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_get_imports(DeeModuleObject *__restrict self) {
@@ -1504,9 +1707,15 @@ module_get_imports(DeeModuleObject *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst module_members[] = {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	TYPE_MEMBER_FIELD_DOC("__absname__", STRUCT_STRING, offsetof(DeeModuleObject, mo_absname),
+	                      "The absolute name of this module (as can be passed to "
+	                      /**/ "$import to access this module from any context)"),
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	TYPE_MEMBER_FIELD_DOC(STR___name__, STRUCT_OBJECT, offsetof(DeeModuleObject, mo_name),
 	                      "->?Dstring\n"
 	                      "The name of @this Module"),
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	TYPE_MEMBER_END
 };
 
@@ -1538,6 +1747,7 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 	               "Similar to ?#__exports__, however global variables are addressed using their "
 	               /**/ "internal index. Using this, anonymous global variables (such as property callbacks) "
 	               /**/ "can be accessed and modified"),
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	TYPE_GETTER_F("__code__", &module_get_code, METHOD_FNOREFESCAPE,
 	              "->?Ert:Code\n"
 	              "#tValueError{The Module hasn't been fully loaded}"
@@ -1553,6 +1763,7 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 	TYPE_GETTER_AB_F("__haspath__", &module_get_haspath, METHOD_FNOREFESCAPE,
 	                 "->?Dbool\n"
 	                 "Returns ?t if @this Module has a path found within the filesystem"),
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	TYPE_GETSET_END
 };
 
@@ -1596,6 +1807,17 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_import_with_frame_base(DeeObject *__restrict module_name) {
 	DREF DeeObject *result;
 	struct code_frame *frame = DeeThread_Self()->t_exec;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	if (frame) {
+		ASSERT_OBJECT_TYPE_EXACT(frame->cf_func, &DeeFunction_Type);
+		ASSERT_OBJECT_TYPE_EXACT(frame->cf_func->fo_code, &DeeCode_Type);
+		ASSERT_OBJECT_TYPE(frame->cf_func->fo_code->co_module, &DeeModule_Type);
+		result = DeeModule_Import(module_name, (DeeObject *)frame->cf_func->fo_code->co_module);
+	} else {
+		result = DeeModule_Import(module_name, NULL);
+	}
+	return result;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if (frame) {
 		DeeStringObject *path;
 		char const *begin, *end;
@@ -1631,6 +1853,7 @@ err_r:
 	Dee_Decref(result);
 err:
 	return NULL;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1661,16 +1884,63 @@ PRIVATE struct type_method tpconst module_class_methods[] = {
 INTDEF NONNULL((1)) void DCALL
 module_unbind(DeeModuleObject *__restrict self);
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+INTDEF NONNULL((1)) void DCALL
+code_destroy_common(DeeCodeObject *__restrict self);
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
 PRIVATE NONNULL((1)) void DCALL
 module_fini(DeeModuleObject *__restrict self) {
 	weakref_support_fini(self);
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	if (self->mo_absname) {
+		module_unbind(self);
+		Dee_Free(self->mo_absname);
+		Dee_XDecref(self->mo_libname);
+	}
+#if 1
+	if (Dee_TYPE(self) == &DeeModuleDee_Type) {
+		/* TODO: This must only happen in `DeeModuleDee_Type.tp_dtor' */
+		DeeCodeObject *root = self->mo_moddata.mo_rootcode;
+		ASSERT(root->co_module == self);
+		ASSERT(root->ob_refcnt == 0);
+		ASSERT(root->ob_type == &DeeCode_Type);
+		/* To prevent a reference loop, dee-modules literally **own** the data of their root code.
+		 * Matching this special case, there is another check in "DeeCode_Type.tp_dtor" to only do
+		 * a decref() on "co_module" if the code object is it's module's root code. */
+		code_destroy_common(root);
+	} else if (Dee_TYPE(self) == &DeeModuleDex_Type) {
+		/* TODO: This must only happen in `DeeModuleDex_Type.tp_dtor' */
+		struct Dee_module_dexdata *dex;
+		dex = self->mo_moddata.mo_dexdata;
+		ASSERT(dex->mdx_module == self);
+		/* TODO: This must happen while locking the global list of dex modules */
+		/* TODO: Also remove all nodes for memory segments mapped by this module */
+		LIST_REMOVE(dex, mdx_libraries);
+		if (dex->mdx_fini && (self->mo_init == Dee_MODULE_INIT_INITIALIZED))
+			(*dex->mdx_fini)();
+		DeeSystem_DlClose(dex->mdx_handle);
+		Dee_Free(dex);
+	}
+#endif
+	if (self->mo_dir && self->mo_dir != (struct Dee_module_directory *)&empty_module_directory) {
+		size_t i;
+		for (i = 0; i < self->mo_dir->md_count; ++i)
+			Dee_Decref_likely(self->mo_dir->md_files[i]);
+		Dee_Free(self->mo_dir);
+	}
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	module_unbind(self);
 	Dee_Decref(self->mo_name);
 	Dee_XDecref(self->mo_root);
 	Dee_XDecref(self->mo_path);
-	if (self->mo_flags & Dee_MODULE_FDIDLOAD) {
+	if (self->mo_flags & Dee_MODULE_FDIDLOAD)
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	{
 		Dee_XDecrefv(self->mo_globalv, self->mo_globalc);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		Dee_Free(self->mo_globalv);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}
 	if (self->mo_bucketv != empty_module_buckets) {
 		struct module_symbol *iter, *end;
@@ -1690,19 +1960,42 @@ module_fini(DeeModuleObject *__restrict self) {
 	Dee_Free((void *)self->mo_importv);
 }
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+INTDEF NONNULL((1, 2)) void DCALL
+code_visit_common(DeeCodeObject *__restrict self,
+                  Dee_visit_t proc, void *arg);
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
+
 PRIVATE NONNULL((1, 2)) void DCALL
 module_visit(DeeModuleObject *__restrict self,
              Dee_visit_t proc, void *arg) {
-	DeeModule_LockRead(self);
-
 	/* Visit the root-code object. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#if 1 /* TODO: This must only happen in `DeeModuleDee_Type.tp_visit' */
+	if (Dee_TYPE(self) == &DeeModuleDee_Type) {
+		DeeCodeObject *root = self->mo_moddata.mo_rootcode;
+		ASSERT(root->co_module == self);
+		ASSERT(root->ob_type == &DeeCode_Type);
+		code_visit_common(root, proc, arg);
+	}
+#endif
+	DeeModule_LockRead(self);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	DeeModule_LockRead(self);
 	Dee_XVisit(self->mo_root);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	Dee_Visit(self->mo_name);
 	Dee_XVisit(self->mo_path);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Visit global variables. */
-	if (self->mo_flags & Dee_MODULE_FDIDLOAD) {
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	if (self->mo_flags & Dee_MODULE_FDIDLOAD)
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	{
 		Dee_XVisitv(self->mo_globalv, self->mo_globalc);
 	}
 
@@ -1715,11 +2008,15 @@ module_visit(DeeModuleObject *__restrict self,
 PRIVATE NONNULL((1)) void DCALL
 module_clear(DeeModuleObject *__restrict self) {
 	DREF DeeObject *buffer[16];
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	DREF DeeCodeObject *root_code;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	size_t i, bufi = 0;
 	DeeModule_LockWrite(self);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	root_code     = self->mo_root;
 	self->mo_root = NULL;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 restart:
 	i = self->mo_globalc;
 	while (i--) {
@@ -1743,10 +2040,12 @@ restart:
 	}
 	DeeModule_LockEndWrite(self);
 	Dee_Decrefv(buffer, bufi);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	Dee_XDecref(root_code);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 module_pclear(DeeModuleObject *__restrict self,
               unsigned int priority) {
 	size_t i;
@@ -1780,6 +2079,9 @@ PRIVATE struct type_gc tpconst module_gc = {
 
 
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+/* TODO */
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 PUBLIC DeeTypeObject DeeModule_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Module),
@@ -1873,7 +2175,7 @@ INTERN struct Dee_static_module_struct DeeModule_Empty =
 		WEAKREF_SUPPORT_INIT
 	}
 };
-
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_END
 

@@ -1327,7 +1327,7 @@ DeeDec_OpenFile(DeeObject *__restrict input_stream,
 	result = DeeDec_OpenFileEx(&fmap, dec_dirname, dec_dirname_len, options);
 
 	/* On success, the returned module inherits the file mapping */
-	if unlikely(!result)
+	if unlikely(!ITER_ISOK(result))
 		DeeMapFile_Fini(&fmap);
 
 	/* Cleanup... */
@@ -4535,7 +4535,7 @@ DecTime_Lookup(DeeObject *__restrict filename) {
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
 
 	/* Ensure that we are using an absolute, fixed path. */
-	filename = DeeSystem_MakeAbsolute(filename);
+	filename = DeeSystem_MakeNormalAndAbsolute(filename);
 	if unlikely(!filename)
 		return (uint64_t)-1;
 

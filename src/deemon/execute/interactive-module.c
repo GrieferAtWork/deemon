@@ -20,10 +20,12 @@
 #ifndef GUARD_DEEMON_EXECUTE_INTERACTIVE_MODULE_C
 #define GUARD_DEEMON_EXECUTE_INTERACTIVE_MODULE_C 1
 
+#include <deemon/api.h>
+
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #include <deemon/compiler/compiler.h>
 
 #include <deemon/alloc.h>
-#include <deemon/api.h>
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/optimize.h>
@@ -2003,5 +2005,6 @@ PUBLIC DeeTypeObject DeeInteractiveModule_Type = {
 
 
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 #endif /* !GUARD_DEEMON_EXECUTE_INTERACTIVE_MODULE_C */

@@ -477,7 +477,9 @@ typedef NONNULL_T((1)) void (DCALL *LPHOSTASM_HOSTFUNC_DESTROY)(struct hostfunc 
 PRIVATE LPHOSTASM_HOSTFUNC_NEW pdyn_hostasm_hostfunc_new = NULL;
 PRIVATE LPHOSTASM_HOSTFUNC_DESTROY pdyn_hostasm_hostfunc_destroy = NULL;
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE DEFINE_STRING(str__hostasm, "_hostasm");
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 /* Load the _hostasm API
  * @return: 1 : Unable to load API. In this case, `DeeCode_OptimizeCallThreshold'
@@ -492,6 +494,14 @@ PRIVATE WUNUSED int DCALL hostasm_loadapi(void) {
 	if (pdyn_hostasm_hostfunc_new)
 		return 0;
 	COMPILER_READ_BARRIER();
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	mod_hostasm = DeeModule_ImportEx("_hostasm", 8, NULL, 0, DeeModule_IMPORT_F_ENOENT, NULL);
+	if unlikely(!ITER_ISOK(mod_hostasm)) {
+		if unlikely(mod_hostasm == NULL)
+			goto err;
+		goto not_available;
+	}
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	mod_hostasm = DeeModule_OpenGlobal((DeeObject *)&str__hostasm, NULL, false);
 	if unlikely(!ITER_ISOK(mod_hostasm)) {
 		if unlikely(mod_hostasm == NULL)
@@ -500,6 +510,7 @@ PRIVATE WUNUSED int DCALL hostasm_loadapi(void) {
 	}
 	if unlikely(DeeModule_RunInit(mod_hostasm) < 0)
 		goto err_mod_hostasm;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	*(void **)&sym_hostasm_hostfunc_new     = DeeModule_GetNativeSymbol(mod_hostasm, "hostasm_hostfunc_new");
 	*(void **)&sym_hostasm_hostfunc_destroy = DeeModule_GetNativeSymbol(mod_hostasm, "hostasm_hostfunc_destroy");
 	Dee_Decref(mod_hostasm);
@@ -1188,6 +1199,57 @@ err:
 }
 
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+INTERN NONNULL((1)) void DCALL
+code_destroy_common(DeeCodeObject *__restrict self) {
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+	if (self->co_hostasm.haco_data)
+		Dee_hostasm_code_data_destroy(self->co_hostasm.haco_data);
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+
+	ASSERT(self->co_argc_min <= self->co_argc_max);
+	/* Clear default argument objects. */
+	if (self->co_argc_max != self->co_argc_min) {
+		uint16_t count = self->co_argc_max - self->co_argc_min;
+		Dee_XDecrefv(self->co_defaultv, count);
+	}
+
+	/* Clear constants. */
+	Dee_Decrefv(self->co_constv, self->co_constc);
+
+	/* Clear exception handlers. */
+	{
+		uint16_t i;
+		for (i = 0; i < self->co_exceptc; ++i)
+			Dee_XDecref(self->co_exceptv[i].eh_mask);
+	}
+
+	/* Clear debug information. */
+	Dee_Decref(self->co_ddi);
+
+	/* Clear keyword names. */
+	if (self->co_keywords) {
+		Dee_Decrefv(self->co_keywords, self->co_argc_max);
+		Dee_Free((void *)self->co_keywords);
+	}
+
+	/* Free vectors. */
+	Dee_Free((void *)self->co_defaultv);
+	Dee_Free((void *)self->co_constv);
+	Dee_Free((void *)self->co_exceptv);
+	Dee_Free(self);
+	Dee_DecrefNokill(&DeeCode_Type);
+}
+
+PRIVATE NONNULL((1)) void DCALL
+code_destroy(DeeCodeObject *__restrict self) {
+	bool is_mod_root;
+	is_mod_root = self->co_module->mo_moddata.mo_rootcode == self;
+	Dee_Decref_unlikely(self->co_module);
+	if (!is_mod_root)
+		code_destroy_common(self);
+}
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 PRIVATE NONNULL((1)) void DCALL
 code_fini(DeeCodeObject *__restrict self) {
 	ASSERTF(!self->co_module ||
@@ -1235,11 +1297,44 @@ code_fini(DeeCodeObject *__restrict self) {
 	Dee_Free((void *)self->co_constv);
 	Dee_Free((void *)self->co_exceptv);
 }
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
+
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+INTERN NONNULL((1, 2)) void DCALL
+code_visit_common(DeeCodeObject *__restrict self,
+                  Dee_visit_t proc, void *arg) {
+	size_t i;
+
+	/* Visit default variables. */
+	Dee_XVisitv(self->co_defaultv, (uint16_t)(self->co_argc_max - self->co_argc_min));
+
+	/* Visit constants. */
+	Dee_Visitv(self->co_constv, self->co_constc);
+
+	/* Visit exception information. */
+	for (i = 0; i < self->co_exceptc; ++i)
+		Dee_XVisit(self->co_exceptv[i].eh_mask);
+
+	/* Visit debug information. */
+	Dee_Visit(self->co_ddi);
+}
 
 PRIVATE NONNULL((1, 2)) void DCALL
 code_visit(DeeCodeObject *__restrict self,
            Dee_visit_t proc, void *arg) {
+	bool is_mod_root;
+	is_mod_root = self->co_module->mo_moddata.mo_rootcode == self;
+	Dee_Visit(self->co_module);
+	if (!is_mod_root)
+		code_visit_common(self, proc, arg);
+}
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+PRIVATE NONNULL((1, 2)) void DCALL
+code_visit(DeeCodeObject *__restrict self,
+           Dee_visit_t proc, void *arg) {
 	size_t i;
+
 	/* Visit the accompanying module.
 	 * NOTE: We must use `Dee_XVisit()' here because the pointer
 	 *       may still be NULL when it still represents the next
@@ -1260,6 +1355,7 @@ code_visit(DeeCodeObject *__restrict self,
 	/* Visit debug information. */
 	Dee_Visit(self->co_ddi);
 }
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_kwds(DeeCodeObject *__restrict self) {
@@ -2723,9 +2819,17 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 				/* .tp_writedec    = */ (Dee_funptr_t)&code_writedec
 			}
 		},
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		/* .tp_dtor        = */ NULL,
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&code_fini,
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
+		/* .tp_deepload    = */ NULL,
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		/* .tp_destroy     = */ (void (DCALL *)(DeeObject *__restrict))&code_destroy
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ DEFIMPL(&default__str__with__print),

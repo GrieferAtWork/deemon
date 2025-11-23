@@ -95,6 +95,10 @@ DFUNDEF void DCALL DeeModule_InitPath(void);
 /* Initialize the module path sub-system and return its global list of path. */
 #define DeeModule_GetPath() (DeeModule_InitPath(), &DeeModule_Path)
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+/* TODO: Whenever `DeeModule_Path' changes, must clear "module_libtree_lock" */
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
 /* Return the time (in UTC milliseconds since 01-01-1970) when deemon was compiled.
  * This value is also used to initialize the `mo_ctime' value of the builtin
  * `deemon' module, automatically forcing user-code to be recompiled if the
@@ -139,33 +143,26 @@ DFUNDEF int DCALL Dee_Exit(int exitcode, bool run_atexit);
  * invoked using the Argv tuple modifiable using this pair of functions.
  * The deemon launcher should call `Dee_SetArgv()' to set the original argument tuple.
  * NOTE: By default, an empty tuple is set for argv. */
-DFUNDEF WUNUSED ATTR_RETNONNULL /*Tuple*/ DREF DeeObject *DCALL Dee_GetArgv(void);
+DFUNDEF WUNUSED ATTR_RETNONNULL DREF /*Tuple*/ DeeObject *DCALL Dee_GetArgv(void);
 DFUNDEF NONNULL((1)) void DCALL Dee_SetArgv(/*Tuple*/ DeeObject *__restrict argv);
 
 
 
 
-#define DEE_EXEC_RUNMODE_EXPR                  0x0000 /* Parse, compile and execute a basic expression (same as `DEE_EXEC_RUNMODE_EXPR',
-                                                       * but the compiler may choose not to allow function or class expressions, thus
-                                                       * restricting the set of executable to only basic expressions)
-                                                       * When this mode is chosen, and `DEE_EXEC_RUNMODE_FHASPP' isn't set (and specified
-                                                       * compiler options don't prevent it), the compiler may choose to use a simpler,
-                                                       * smaller compilation driver which doesn't include the overhead associated with
-                                                       * the normal (full) compiler.
-                                                       * NOTE: As far as comma-expressions go, simply return the last component. */
-#define DEE_EXEC_RUNMODE_FULLEXPR              0x0001 /* Parse, compile and execute a single expression (e.g. `10 + 20' or `[]{ print 42; return "foo"; }') and return the result
-                                                       * NOTE: As far as comma-expressions go, simply return the last component, but do allow assignments. */
-#define DEE_EXEC_RUNMODE_STMT                  0x0002 /* Parse, compile and execute a single statement (e.g. `if (x) y; else z;') and return the result like `return ({ ... });' */
-#define DEE_EXEC_RUNMODE_STMTS                 0x0003 /* Parse a whole module source as a sequence of statements. */
-#define DEE_EXEC_RUNMODE_MASK                  0x000f /* Mode mask */
-#define DEE_EXEC_RUNMODE_FDEFAULTS_ARE_GLOBALS 0x4000 /* FLAG: Default symbols are declared as read/write globals (otherwise, they are read-only constants) */
-#define DEE_EXEC_RUNMODE_FHASPP                0x8000 /* FLAG: Enable the preprocessor.
-                                                       *  - When not set, preprocessor directives, macros and escaped line-feeds are disabled. */
+#define DeeExec_RUNMODE_DEFAULT               0x0000 /* Default run mode: just run as-is */
+#define DeeExec_RUNMODE_STMTS                 0x0000 /* Parse a whole module source as a sequence of statements. */
+#define DeeExec_RUNMODE_STMT                  0x0001 /* Parse, compile and execute a single statement (e.g. `if (x) y; else z;') and return the result like `return ({ ... });' */
+#define DeeExec_RUNMODE_FULLEXPR              0x0002 /* Parse, compile and execute a single expression (e.g. `10 + 20' or `[]{ print 42; return "foo"; }') and return the result
+                                                      * NOTE: As far as comma-expressions go, simply return the last component, but do allow assignments. */
+#define DeeExec_RUNMODE_EXPR                  0x0003 /* Parse, compile and execute a basic expression
+                                                      * NOTE: As far as comma-expressions go, simply return the last component. */
+#define DeeExec_RUNMODE_MASK                  0x000f /* Mode mask */
+#define DeeExec_RUNMODE_FDEFAULTS_ARE_GLOBALS 0x4000 /* FLAG: Default symbols are declared as read/write globals (otherwise, they are read-only constants) */
 struct Dee_compiler_options;
 
 /* Execute source code from `source_stream' and return the result of invoking it.
  * @param: source_stream:   The input stream from which to take input arguments.
- * @param: mode:            One of `DEE_EXEC_RUNMODE_*', optionally or'd with a set of `DEE_EXEC_RUNMODE_F*'
+ * @param: mode:            One of `DeeExec_RUNMODE_*', optionally or'd with a set of `DeeExec_RUNMODE_F*'
  * @param: argv:            Variable arguments passed to user-code 
  * @param: start_line:      The starting line number when compiling code. (zero-based)
  * @param: start_col:       The starting column number when compiling code. (zero-based)
@@ -179,12 +176,20 @@ struct Dee_compiler_options;
  *                          available to the interactive source code by use of global
  *                          variables.
  *                          These are either provided as constants, or as globals,
- *                          depending on `DEE_EXEC_RUNMODE_FDEFAULTS_ARE_GLOBALS'
+ *                          depending on `DeeExec_RUNMODE_FDEFAULTS_ARE_GLOBALS'
+ * #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
  * @param: source_pathname: The name for the source file (the path of which is
  *                          then used for relative import()s and #include's)
  * @param: module_name:     The name of the internal module, or NULL to determine automatically.
  *                          Note that the internal module is never registered globally, and
- *                          only exists as an anonymous module. */
+ *                          only exists as an anonymous module.
+ * #endif // !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeExec_RunStream(DeeObject *source_stream, size_t argc, DeeObject *const *argv,
+                  int start_line, int start_col, unsigned int mode,
+                  struct Dee_compiler_options *options, DeeObject *default_symbols);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunStream(DeeObject *source_stream, unsigned int mode,
                   size_t argc, DeeObject *const *argv, int start_line, int start_col,
@@ -196,6 +201,7 @@ DeeExec_RunStreamString(DeeObject *source_stream, unsigned int mode,
                         struct Dee_compiler_options *options, DeeObject *default_symbols,
                         /*utf-8*/ char const *source_pathname, size_t source_pathsize,
                         /*utf-8*/ char const *module_name, size_t module_namesize);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 /* Similar to `DeeExec_RunStream()', but rather than directly executing it,
@@ -206,31 +212,57 @@ DeeExec_RunStreamString(DeeObject *source_stream, unsigned int mode,
  * generated, before that module's root is returned, or if the given user-code
  * is only executed when the function is called, potentially allowing for
  * JIT-like execution of simple expressions such as `10 + 20' */
-DFUNDEF WUNUSED NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeExec_CompileModuleStream(DeeObject *source_stream,
+                            int start_line, int start_col, unsigned int mode,
+                            struct Dee_compiler_options *options, DeeObject *default_symbols);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Callable*/ DeeObject *DCALL
+DeeExec_CompileFunctionStream(DeeObject *source_stream,
+                              int start_line, int start_col, unsigned int mode,
+                              struct Dee_compiler_options *options, DeeObject *default_symbols);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeExec_CompileModuleStream(DeeObject *source_stream,
                             unsigned int mode, int start_line, int start_col,
                             struct Dee_compiler_options *options, DeeObject *default_symbols,
                             DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Callable*/ DeeObject *DCALL
 DeeExec_CompileFunctionStream(DeeObject *source_stream,
                               unsigned int mode, int start_line, int start_col,
                               struct Dee_compiler_options *options, DeeObject *default_symbols,
                               DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF WUNUSED NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeExec_CompileModuleStreamString(DeeObject *source_stream,
                                   unsigned int mode, int start_line, int start_col,
                                   struct Dee_compiler_options *options, DeeObject *default_symbols,
                                   /*utf-8*/ char const *source_pathname, size_t source_pathsize,
                                   /*utf-8*/ char const *module_name, size_t module_namesize);
-DFUNDEF WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Callable*/ DeeObject *DCALL
 DeeExec_CompileFunctionStreamString(DeeObject *source_stream,
                                     unsigned int mode, int start_line, int start_col,
                                     struct Dee_compiler_options *options, DeeObject *default_symbols,
                                     /*utf-8*/ char const *source_pathname, size_t source_pathsize,
                                     /*utf-8*/ char const *module_name, size_t module_namesize);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 /* Same as the functions above, but instead take a raw memory block as input */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeExec_RunMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
+                  size_t argc, DeeObject *const *argv,
+                  int start_line, int start_col, unsigned int mode,
+                  struct Dee_compiler_options *options, DeeObject *default_symbols);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeExec_CompileModuleMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
+                            int start_line, int start_col, unsigned int mode,
+                            struct Dee_compiler_options *options, DeeObject *default_symbols);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Callable*/ DeeObject *DCALL
+DeeExec_CompileFunctionMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
+                              int start_line, int start_col, unsigned int mode,
+                              struct Dee_compiler_options *options, DeeObject *default_symbols);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                   unsigned int mode, size_t argc, DeeObject *const *argv,
@@ -244,28 +276,29 @@ DeeExec_RunMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
                         struct Dee_compiler_options *options, DeeObject *default_symbols,
                         /*utf-8*/ char const *source_pathname, size_t source_pathsize,
                         /*utf-8*/ char const *module_name, size_t module_namesize);
-DFUNDEF WUNUSED NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeExec_CompileModuleMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                             unsigned int mode, int start_line, int start_col,
                             struct Dee_compiler_options *options, DeeObject *default_symbols,
                             DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Callable*/ DeeObject *DCALL
 DeeExec_CompileFunctionMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                               unsigned int mode, int start_line, int start_col,
                               struct Dee_compiler_options *options, DeeObject *default_symbols,
                               DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF WUNUSED NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeExec_CompileModuleMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
                                   unsigned int mode, int start_line, int start_col,
                                   struct Dee_compiler_options *options, DeeObject *default_symbols,
                                   /*utf-8*/ char const *source_pathname, size_t source_pathsize,
                                   /*utf-8*/ char const *module_name, size_t module_namesize);
-DFUNDEF WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Callable*/ DeeObject *DCALL
 DeeExec_CompileFunctionMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
                                     unsigned int mode, int start_line, int start_col,
                                     struct Dee_compiler_options *options, DeeObject *default_symbols,
                                     /*utf-8*/ char const *source_pathname, size_t source_pathsize,
                                     /*utf-8*/ char const *module_name, size_t module_namesize);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 /* Initialize the deemon runtime.

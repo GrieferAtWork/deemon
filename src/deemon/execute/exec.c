@@ -49,10 +49,11 @@
 
 DECL_BEGIN
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 
 /* Execute source code from `source_stream' and return the result of invoking it.
  * @param: source_stream:   The input stream from which to take input arguments.
- * @param: mode:            One of `DEE_EXEC_RUNMODE_*', optionally or'd with a set of `DEE_EXEC_RUNMODE_F*'
+ * @param: mode:            One of `DeeExec_RUNMODE_*', optionally or'd with a set of `DeeExec_RUNMODE_F*'
  * @param: argv:            Variable arguments passed to user-code 
  * @param: start_line:      The starting line number when compiling code. (zero-based)
  * @param: start_col:       The starting column number when compiling code. (zero-based)
@@ -66,7 +67,134 @@ DECL_BEGIN
  *                          available to the interactive source code by use of global
  *                          variables.
  *                          These are either provided as constants, or as globals,
- *                          depending on `DEE_EXEC_RUNMODE_FDEFAULTS_ARE_GLOBALS'
+ *                          depending on `DeeExec_RUNMODE_FDEFAULTS_ARE_GLOBALS' */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeExec_RunStream(DeeObject *source_stream, size_t argc, DeeObject *const *argv,
+                  int start_line, int start_col, unsigned int mode,
+                  struct Dee_compiler_options *options, DeeObject *default_symbols) {
+	DREF DeeObject *result;
+	DREF /*Callable*/ DeeObject *func;
+	func = DeeExec_CompileFunctionStream(source_stream, mode, start_line, start_col, options, default_symbols);
+	if unlikely(!func)
+		goto err;
+	result = DeeFunction_Call((DeeFunctionObject *)func, argc, argv);
+	Dee_Decref_likely(func);
+	return result;
+err:
+	return NULL;
+}
+
+
+/* Similar to `DeeExec_RunStream()', but rather than directly executing it,
+ * return the module used to describe the code that is being executed, or
+ * some unspecified, callable object which (when invoked) executes the given
+ * input code in one way or another.
+ * It is up to the implementation if an associated module should simply be
+ * generated, before that module's root is returned, or if the given user-code
+ * is only executed when the function is called, potentially allowing for
+ * JIT-like execution of simple expressions such as `10 + 20' */
+PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeExec_CompileModuleStream(DeeObject *source_stream,
+                            int start_line, int start_col, unsigned int mode,
+                            struct Dee_compiler_options *options, DeeObject *default_symbols) {
+	/* TODO */
+	(void)source_stream;
+	(void)start_line;
+	(void)start_col;
+	(void)mode;
+	(void)options;
+	(void)default_symbols;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF /*Callable*/ DeeObject *DCALL
+DeeExec_CompileFunctionStream(DeeObject *source_stream,
+                              int start_line, int start_col, unsigned int mode,
+                              struct Dee_compiler_options *options, DeeObject *default_symbols) {
+	DREF /*Callable*/ DeeObject *func;
+	DREF /*Module*/ DeeObject *mod;
+	mod = DeeExec_CompileModuleStream(source_stream, mode, start_line, start_col, options, default_symbols);
+	if unlikely(!mod)
+		goto err;
+	DeeModule_SetInitialized(mod);
+	func = DeeModule_GetRootFunction(mod);
+	Dee_Decref_unlikely(mod);
+	return func;
+err:
+	return NULL;
+}
+
+
+/* Same as the functions above, but instead take a raw memory block as input */
+PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeExec_CompileModuleMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
+                            int start_line, int start_col, unsigned int mode,
+                            struct Dee_compiler_options *options, DeeObject *default_symbols) {
+	DREF DeeObject *result;
+	DREF DeeObject *stream;
+	stream = DeeFile_OpenRoMemory(data, data_size);
+	if unlikely(!stream)
+		goto err;
+	result = DeeExec_CompileModuleStream(stream, start_line, start_col, mode, options, default_symbols);
+	DeeFile_ReleaseMemory(stream);
+	return result;
+err:
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF /*Callable*/ DeeObject *DCALL
+DeeExec_CompileFunctionMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
+                              int start_line, int start_col, unsigned int mode,
+                              struct Dee_compiler_options *options, DeeObject *default_symbols) {
+	DREF /*Callable*/ DeeObject *func;
+	DREF /*Module*/ DeeObject *mod;
+	mod = DeeExec_CompileModuleMemory(data, data_size, mode, start_line, start_col, options, default_symbols);
+	if unlikely(!mod)
+		goto err;
+	DeeModule_SetInitialized(mod);
+	func = DeeModule_GetRootFunction(mod);
+	Dee_Decref_unlikely(mod);
+	return func;
+err:
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeExec_RunMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
+                  size_t argc, DeeObject *const *argv,
+                  int start_line, int start_col, unsigned int mode,
+                  struct Dee_compiler_options *options, DeeObject *default_symbols) {
+	DREF DeeObject *result;
+	DREF /*Callable*/ DeeObject *func;
+	func = DeeExec_CompileFunctionMemory(data, data_size, mode, start_line, start_col, options, default_symbols);
+	if unlikely(!func)
+		goto err;
+	result = DeeFunction_Call((DeeFunctionObject *)func, argc, argv);
+	Dee_Decref_likely(func);
+	return result;
+err:
+	return NULL;
+}
+
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+/* Execute source code from `source_stream' and return the result of invoking it.
+ * @param: source_stream:   The input stream from which to take input arguments.
+ * @param: mode:            One of `DeeExec_RUNMODE_*', optionally or'd with a set of `DeeExec_RUNMODE_F*'
+ * @param: argv:            Variable arguments passed to user-code 
+ * @param: start_line:      The starting line number when compiling code. (zero-based)
+ * @param: start_col:       The starting column number when compiling code. (zero-based)
+ * @param: options:         A set of compiler options applicable for compiled code.
+ *                          Note however that certain options have no effect, such
+ *                          as the fact that peephole and other optimizations are
+ *                          forced to be disabled, or DEC files are never generated,
+ *                          all for reasons that should be quite obvious.
+ * @param: default_symbols: A mapping-like object of type `{string: Object}', that
+ *                          contains a set of pre-defined variables that should be made
+ *                          available to the interactive source code by use of global
+ *                          variables.
+ *                          These are either provided as constants, or as globals,
+ *                          depending on `DeeExec_RUNMODE_FDEFAULTS_ARE_GLOBALS'
  * @param: source_pathname: The name for the source file (the path of which is
  *                          then used for relative import()s and #include's)
  * @param: module_name:     The name of the internal module, or NULL to determine automatically.
@@ -425,6 +553,7 @@ DeeExec_CompileFunctionMemoryString(/*utf-8*/ char const *__restrict data, size_
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 

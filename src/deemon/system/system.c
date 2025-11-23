@@ -42,6 +42,7 @@
 #include <hybrid/typecore.h>
 /**/
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef CONFIG_HOST_WINDOWS
@@ -127,13 +128,81 @@ PRIVATE ATTR_COLD int DCALL nt_err_getcwd(DWORD dwError) {
 }
 #endif /* DeeSystem_PrintPwd_USE_GetCurrentDirectoryW */
 
+#ifdef CONFIG_HOST_WINDOWS
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+nt_IsSpecialFilename(/*utf-8*/ char const *filename, size_t filename_len) {
+	switch (filename_len) {
+#ifdef DEE_SYSTEM_FS_ICASE
+#define eqfscase(a, b) ((a) == (b) || (a) == ((b) - ('A' - 'a')))
+#else /* DEE_SYSTEM_FS_ICASE */
+#define eqfscase(a, b) ((a) == (b))
+#endif /* !DEE_SYSTEM_FS_ICASE */
+
+	case 3:
+		if (eqfscase(filename[0], 'N') && eqfscase(filename[1], 'U') && eqfscase(filename[2], 'L'))
+			goto yes; /* NUL */
+		if (eqfscase(filename[0], 'C') && eqfscase(filename[1], 'O') && eqfscase(filename[2], 'N'))
+			goto yes; /* CON */
+		if (eqfscase(filename[0], 'P') && eqfscase(filename[1], 'R') && eqfscase(filename[2], 'N'))
+			goto yes; /* PRN */
+		if (eqfscase(filename[0], 'A') && eqfscase(filename[1], 'U') && eqfscase(filename[2], 'X'))
+			goto yes; /* AUX */
+		break;
+
+	case 4:
+		/* COM1, COM2, COM3, COM4, COM5, COM6, COM7, COM8, COM9,
+		 * LPT1, LPT2, LPT3, LPT4, LPT5, LPT6, LPT7, LPT8, LPT9 */
+		if (filename[3] >= '1' && filename[3] <= '9' &&
+		    ((eqfscase(filename[0], 'C') && eqfscase(filename[1], 'O') && eqfscase(filename[1], 'M')) ||
+		     (eqfscase(filename[0], 'L') && eqfscase(filename[1], 'P') && eqfscase(filename[1], 'T'))))
+			goto yes;
+		break;
+
+	case 6:
+		if (eqfscase(filename[3], 'I') && eqfscase(filename[4], 'N') && filename[5] == '$') {
+			if (eqfscase(filename[0], 'C') && eqfscase(filename[1], 'O') && eqfscase(filename[2], 'N'))
+				goto yes; /* CONIN$ */
+#ifdef CONFIG_WANT_WINDOWS_STD_FILES
+			if (eqfscase(filename[0], 'S') && eqfscase(filename[1], 'T') && eqfscase(filename[2], 'D'))
+				goto yes; /* STDIN$ */
+#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
+		}
+		break;
+
+	case 7:
+		if (eqfscase(filename[3], 'O') && eqfscase(filename[4], 'U') &&
+		    eqfscase(filename[5], 'T') && filename[6] == '$') {
+			if (eqfscase(filename[0], 'C') && eqfscase(filename[1], 'O') && eqfscase(filename[2], 'N'))
+				goto yes; /* CONOUT$ */
+#ifdef CONFIG_WANT_WINDOWS_STD_FILES
+			if (eqfscase(filename[0], 'S') && eqfscase(filename[1], 'T') && eqfscase(filename[2], 'D'))
+				goto yes; /* STDOUT$ */
+#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
+		}
+#ifdef CONFIG_WANT_WINDOWS_STD_FILES
+		if (eqfscase(filename[0], 'S') && eqfscase(filename[1], 'T') && eqfscase(filename[2], 'D') &&
+		    eqfscase(filename[3], 'E') && eqfscase(filename[4], 'R') && eqfscase(filename[5], 'R') &&
+		    filename[6] == '$')
+			goto yes; /* STDERR$ */
+#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
+		break;
+
+#undef eqfscase
+	default:
+		break;
+	}
+	return false;
+yes:
+	return true;
+}
+#endif /* CONFIG_HOST_WINDOWS */
 
 
 /* Ensure that the given `filename' describes an absolute path. */
 PUBLIC WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
-DeeSystem_MakeAbsolute(/*String*/ DeeObject *__restrict filename) {
+DeeSystem_MakeNormalAndAbsolute(/*String*/ DeeObject *__restrict filename) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	char const *iter, *begin, *end, *flush_start, *flush_end;
+	char const *iter, *after_space, *begin, *end, *flush_start, *flush_end;
 	char ch;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
 	begin = DeeString_AsUtf8(filename);
@@ -142,78 +211,20 @@ DeeSystem_MakeAbsolute(/*String*/ DeeObject *__restrict filename) {
 	end = begin + WSTR_LENGTH(begin);
 #ifdef CONFIG_HOST_WINDOWS
 	/* Don't modify special filenames such as `CON' or `NUL' */
-	switch ((size_t)(end - begin)) {
-#ifdef DEE_SYSTEM_FS_ICASE
-#define eqfscase(a, b) ((a) == (b) || (a) == ((b) - ('A' - 'a')))
-#else /* DEE_SYSTEM_FS_ICASE */
-#define eqfscase(a, b) ((a) == (b))
-#endif /* !DEE_SYSTEM_FS_ICASE */
-
-	case 3:
-		if (eqfscase(begin[0], 'N') && eqfscase(begin[1], 'U') && eqfscase(begin[2], 'L'))
-			goto return_unmodified; /* NUL */
-		if (eqfscase(begin[0], 'C') && eqfscase(begin[1], 'O') && eqfscase(begin[2], 'N'))
-			goto return_unmodified; /* CON */
-		if (eqfscase(begin[0], 'P') && eqfscase(begin[1], 'R') && eqfscase(begin[2], 'N'))
-			goto return_unmodified; /* PRN */
-		if (eqfscase(begin[0], 'A') && eqfscase(begin[1], 'U') && eqfscase(begin[2], 'X'))
-			goto return_unmodified; /* AUX */
-		break;
-
-	case 4:
-		/* COM1, COM2, COM3, COM4, COM5, COM6, COM7, COM8, COM9,
-		 * LPT1, LPT2, LPT3, LPT4, LPT5, LPT6, LPT7, LPT8, LPT9 */
-		if (begin[3] >= '1' && begin[3] <= '9' &&
-		    ((eqfscase(begin[0], 'C') && eqfscase(begin[1], 'O') && eqfscase(begin[1], 'M')) ||
-		     (eqfscase(begin[0], 'L') && eqfscase(begin[1], 'P') && eqfscase(begin[1], 'T'))))
-			goto return_unmodified;
-		break;
-
-	case 6:
-		if (eqfscase(begin[3], 'I') && eqfscase(begin[4], 'N') && begin[5] == '$') {
-			if (eqfscase(begin[0], 'C') && eqfscase(begin[1], 'O') && eqfscase(begin[2], 'N'))
-				goto return_unmodified; /* CONIN$ */
-#ifdef CONFIG_WANT_WINDOWS_STD_FILES
-			if (eqfscase(begin[0], 'S') && eqfscase(begin[1], 'T') && eqfscase(begin[2], 'D'))
-				goto return_unmodified; /* STDIN$ */
-#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
-		}
-		break;
-
-	case 7:
-		if (eqfscase(begin[3], 'O') && eqfscase(begin[4], 'U') &&
-		    eqfscase(begin[5], 'T') && begin[6] == '$') {
-			if (eqfscase(begin[0], 'C') && eqfscase(begin[1], 'O') && eqfscase(begin[2], 'N'))
-				goto return_unmodified; /* CONOUT$ */
-#ifdef CONFIG_WANT_WINDOWS_STD_FILES
-			if (eqfscase(begin[0], 'S') && eqfscase(begin[1], 'T') && eqfscase(begin[2], 'D'))
-				goto return_unmodified; /* STDOUT$ */
-#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
-		}
-#ifdef CONFIG_WANT_WINDOWS_STD_FILES
-		if (eqfscase(begin[0], 'S') && eqfscase(begin[1], 'T') && eqfscase(begin[2], 'D') &&
-		    eqfscase(begin[3], 'E') && eqfscase(begin[4], 'R') && eqfscase(begin[5], 'R') &&
-		    begin[6] == '$')
-			goto return_unmodified; /* STDERR$ */
-#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
-		break;
-
-#undef eqfscase
-	default:
-		break;
-	}
+	if (nt_IsSpecialFilename(begin, WSTR_LENGTH(begin)))
+		goto return_unmodified;
 #endif /* CONFIG_HOST_WINDOWS */
 
 	/* Strip leading space. */
-	begin = unicode_skipspaceutf8_n(begin, end);
-	if (!DeeSystem_IsAbs(begin)) {
+	iter = after_space = unicode_skipspaceutf8_n(begin, end);
+	if (!DeeSystem_IsAbs(iter)) {
 		/* Print the current working directory when the given path isn't absolute. */
 		if unlikely(DeeSystem_PrintPwd(&printer, true) < 0)
 			goto err;
 
 		/* Handle drive-relative paths. */
 #ifdef DEE_SYSTEM_FS_DRIVES
-		if (DeeSystem_IsSep(begin[0]) && UNICODE_PRINTER_LENGTH(&printer)) {
+		if (DeeSystem_IsSep(iter[0]) && UNICODE_PRINTER_LENGTH(&printer)) {
 			size_t index = 0;
 
 			/* This sep must exist because it was printed by `DeeSystem_PrintPwd()' */
@@ -223,17 +234,17 @@ DeeSystem_MakeAbsolute(/*String*/ DeeObject *__restrict filename) {
 
 			/* Strip leading slashes. */
 			for (;;) {
-				begin = unicode_skipspaceutf8_n(begin, end);
-				if (begin >= end)
+				iter = unicode_skipspaceutf8_n(iter, end);
+				if (iter >= end)
 					break;
-				if (!DeeSystem_IsSep(*begin))
+				if (!DeeSystem_IsSep(*iter))
 					break;
-				++begin;
+				++iter;
 			}
 		}
 #endif /* DEE_SYSTEM_FS_DRIVES */
 	}
-	iter = flush_start = begin;
+	flush_start = iter;
 	ASSERTF(*end == '\0',
 	        "path = %r\n"
 	        "end = %p(%q)\n",
@@ -268,14 +279,11 @@ next:
 		/* Analyze the last path portion for being a special name (`.' or `..') */
 		if (flush_end[-1] == '.') {
 			if (flush_end[-2] == '.' && flush_end - 2 == flush_start) {
-				size_t new_end;
-				size_t printer_length;
 				/* Parent-directory-reference. */
+				size_t printer_length, new_end;
 
 				/* Delete the last directory that was written. */
-				if (!printer.up_buffer)
-					goto do_flush_after_sep;
-				printer_length = printer.up_length;
+				printer_length = UNICODE_PRINTER_LENGTH(&printer);
 				if (!printer_length)
 					goto do_flush_after_sep;
 				if (UNICODE_PRINTER_GETCHAR(&printer, printer_length - 1) == DeeSystem_SEP)
@@ -291,7 +299,6 @@ next:
 				}
 
 				/* Truncate the valid length of the printer to after the previous slash. */
-				printer.up_length = new_end;
 				unicode_printer_truncate(&printer, new_end);
 				goto done_flush;
 			} else if (flush_end[-3] == DeeSystem_SEP && flush_end - 3 >= flush_start) {
@@ -369,7 +376,7 @@ done:
 
 		/* Check for special case: The printer was never used.
 		 * If this is the case, we can simply re-return the given path. */
-		if (UNICODE_PRINTER_ISEMPTY(&printer)) {
+		if (UNICODE_PRINTER_ISEMPTY(&printer) && (after_space == begin)) {
 			unicode_printer_fini(&printer);
 #ifdef CONFIG_HOST_WINDOWS
 return_unmodified:
@@ -388,6 +395,79 @@ err:
 	unicode_printer_fini(&printer);
 	return NULL;
 }
+
+/* Check if the given `filename' can be considered an absolute, normalized
+ * path, that is: isn't relative, and doesn't contain `.' or `..' segments. */
+PUBLIC WUNUSED NONNULL((1)) bool DCALL
+DeeSystem_IsNormalAndAbsolute(/*utf-8*/ char const *filename, size_t filename_len) {
+	char const *iter, *end, *flush_start, *flush_end;
+	char ch;
+	end = filename + filename_len;
+#ifdef CONFIG_HOST_WINDOWS
+	/* Don't modify special filenames such as `CON' or `NUL' */
+	if (nt_IsSpecialFilename(filename, WSTR_LENGTH(filename)))
+		goto yes;
+#endif /* CONFIG_HOST_WINDOWS */
+
+	/* Strip leading space. */
+	filename = unicode_skipspaceutf8_n(filename, end);
+	if (!DeeSystem_IsAbs(filename))
+		goto no;
+	iter = flush_start = filename;
+next:
+	if (iter >= end)
+		goto handle_eof;
+	ch = *iter++;
+	switch (ch) {
+
+	/* NOTE: The following part has been mirrored in `posix_path_normalpath_f'
+	 * If a bug is found in this code, it should be fixed here, as well as
+	 * within the DEX source file. */
+#if defined(DeeSystem_ALTSEP) && DeeSystem_ALTSEP != DeeSystem_SEP
+	case DeeSystem_ALTSEP:
+		goto no;
+#endif /* DeeSystem_ALTSEP && DeeSystem_ALTSEP != DeeSystem_SEP */
+	case DeeSystem_SEP:
+	case '\0':
+handle_eof:
+		flush_end = iter - 1;
+		/* Skip multiple slashes and whitespace following a path separator. */
+		for (;;) {
+			iter = unicode_skipspaceutf8_n(iter, end);
+			if (iter >= end)
+				break;
+			if (!DeeSystem_IsSep(*iter))
+				break;
+			++iter;
+		}
+		flush_end = unicode_skipspaceutf8_rev_n(flush_end, flush_start);
+
+		/* Analyze the last path portion for being a special name (`.' or `..') */
+		if (flush_end[-1] == '.') {
+			if (flush_end[-2] == '.' && flush_end - 2 == flush_start)
+				goto no; /* Parent-directory-reference. */
+			if (flush_end[-3] == DeeSystem_SEP && flush_end - 3 >= flush_start)
+				goto no; /* Parent-directory-reference. */
+			if (flush_end - 1 == flush_start)
+				goto no; /* Self-directory-reference. */
+			if (flush_end[-2] == DeeSystem_SEP && flush_end - 2 >= flush_start)
+				goto no; /* Self-directory-reference. */
+		}
+		/* Check if we need to fix anything */
+		if (flush_end == iter - 1) {
+			if (iter == end + 1)
+				goto yes;
+			goto next;
+		}
+		goto no;
+	default: goto next;
+	}
+yes:
+	return true;
+no:
+	return false;
+}
+
 
 
 /* Print the current working directory to the given `printer'

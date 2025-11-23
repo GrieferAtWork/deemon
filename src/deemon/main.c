@@ -148,7 +148,9 @@ PRIVATE int DCALL dee_atoi(char const *s) {
 PRIVATE char const str_usage[] =
 "Usage: deemon [options...] <infile> [args...]\n"
 "       deemon [options...] -F <sourcefiles...>\n"
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 "       deemon [options...] -i\n"
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 ;
 PRIVATE char const str_minhelp[] =
 "See `deemon --help' for more help\n"
@@ -223,7 +225,9 @@ PP_STR(TPP_PREPROCESSOR_VERSION) "  "  " - Tiny PreProcessor - "
 #define OPERATION_MODE_PRINTASM    2 /* Print deemon assembly for a user-script. */
 #define OPERATION_MODE_FORMAT      3 /* Scan for format comment blocks and expand them. */
 #define OPERATION_MODE_BUILDONLY   4 /* Only build the source file, but don't execute it. */
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #define OPERATION_MODE_INTERACTIVE 5 /* Read, compile, and execute sourcecode interactively from the stdin. */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 /* The effective operation mode (One of `OPERATION_MODE_*') */
 PRIVATE uint8_t operation_mode = OPERATION_MODE_RUNSCRIPT;
@@ -247,6 +251,11 @@ PRIVATE char const *emitasm_flags    = NULL; /* Additional flags to-be used when
 
 INTDEF struct compiler_options import_options; /* Options used to compile imported libraries. */
 INTDEF struct compiler_options script_options; /* Options used to compile the user-script. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+PRIVATE DREF DeeObject *script_output_stream = NULL;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#define script_output_stream script_options.co_decoutput
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 
@@ -256,16 +265,14 @@ PRIVATE WUNUSED int DCALL cmd_version(char *arg);
 PRIVATE WUNUSED int DCALL cmd_help(char *arg);
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_o(char *arg) {
-	Dee_XDecref(script_options.co_decoutput);
+	Dee_XDecref(script_output_stream);
 	if (strcmp(arg, "-") == 0) {
 		/* Special case: output to stdout */
-		script_options.co_decoutput = DeeFile_GetStd(DEE_STDOUT);
+		script_output_stream = DeeFile_GetStd(DEE_STDOUT);
 	} else {
-		script_options.co_decoutput = DeeFile_OpenString(arg,
-		                                                 OPEN_FWRONLY | OPEN_FCREAT,
-		                                                 644);
+		script_output_stream = DeeFile_OpenString(arg, OPEN_FWRONLY | OPEN_FCREAT, 644);
 	}
-	if unlikely(!script_options.co_decoutput)
+	if unlikely(!script_output_stream)
 		goto err;
 	return 0;
 err:
@@ -349,11 +356,13 @@ err:
 	return -1;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE WUNUSED int DCALL cmd_i(char *UNUSED(arg)) {
 	operation_mode = OPERATION_MODE_INTERACTIVE;
 	script_options.co_parser |= PARSE_FLFSTMT;
 	return 0;
 }
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 PRIVATE WUNUSED int DCALL cmd_E(char *UNUSED(arg)) {
 	operation_mode = OPERATION_MODE_PRINTPP;
@@ -639,6 +648,7 @@ PRIVATE struct compiler_flag const compiler_flags[] = {
 	{ "gendec",        1, FIELD(co_assembler), ASM_FNODEC },
 	{ "reuse-consts",  1, FIELD(co_assembler), ASM_FNOREUSECONST },
 	{ "reduce-refs",   0, FIELD(co_assembler), ASM_FREDUCEREFS },
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	{ "imp-dec",       1, FIELD(co_decloader), Dee_DEC_FDISABLE },
 	{ "imp-outdated",  0, FIELD(co_decloader), Dee_DEC_FLOADOUTDATED },
 	{ "imp-trusted",   1, FIELD(co_decloader), Dee_DEC_FUNTRUSTED },
@@ -646,6 +656,7 @@ PRIVATE struct compiler_flag const compiler_flags[] = {
 	{ "dec-ddi",       1, FIELD(co_decwriter), DEC_WRITE_FNODEBUG },
 	{ "dec-doc",       1, FIELD(co_decwriter), DEC_WRITE_FNODOC },
 	{ "dec-bigfile",   0, FIELD(co_decwriter), DEC_WRITE_FBIGFILE },
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 };
 #undef FIELD
 
@@ -705,8 +716,10 @@ PRIVATE struct cmd_option const preprocessor_options[] = {
 	{ CMD_FARG | CMD_FARGIMM | CMD_FARGEQ, "", "name", { (void *)&cmdpp_name }, " <name>\tSet the name used for `__FILE__' and debug informations by `INFILE'\nUseful when running in interactive mode" },
 	{ CMD_FJOINABLE, "E", NULL, { (void *)&cmd_E }, doc_cmdE },
 	{ CMD_FJOINABLE, "P", NULL, { (void *)&cmd_P }, doc_cmdP },
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	{ CMD_FARG | CMD_FARGIMM, "o", NULL, { (void *)&cmd_o }, doc_cmdo },
 	{ CMD_FARG | CMD_FARGIMM | CMD_FARGEQ, "", "out", { (void *)&cmd_o }, doc_cmdo },
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	{ CMD_FARG | CMD_FARGIMM | CMD_FRUNLATER, "D", NULL, { (void *)&cmd_D }, doc_cmdD },
 	{ CMD_FARG | CMD_FARGIMM | CMD_FRUNLATER, "U", NULL, { (void *)&cmd_U }, doc_cmdU },
 	{ CMD_FARG | CMD_FARGIMM | CMD_FRUNLATER, "A", NULL, { (void *)&cmd_A }, doc_cmdA },
@@ -770,10 +783,14 @@ PRIVATE struct cmd_option const cmdline_options[] = {
 
 	/* Preprocessor-specific options that are promoted into the root commandline namespace. */
 	{ CMD_FJOINABLE, "E", NULL, { (void *)&cmd_E }, doc_cmdE },
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	{ CMD_FJOINABLE, "i", NULL, { (void *)&cmd_i }, doc_cmdi },
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	{ CMD_FJOINABLE, "P", NULL, { (void *)&cmd_P }, doc_cmdP },
 	{ CMD_FJOINABLE, "c", NULL, { (void *)&cmd_c }, doc_cmdc },
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	{ CMD_FARG | CMD_FARGIMM, "o", NULL, { (void *)&cmd_o }, doc_cmdo },
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	{ CMD_FARG | CMD_FARGIMM | CMD_FRUNLATER, "D", NULL, { (void *)&cmd_D }, doc_cmdD },
 	{ CMD_FARG | CMD_FARGIMM | CMD_FRUNLATER, "U", NULL, { (void *)&cmd_U }, doc_cmdU },
 	{ CMD_FARG | CMD_FARGIMM | CMD_FRUNLATER, "A", NULL, { (void *)&cmd_A }, doc_cmdA },
@@ -1056,18 +1073,10 @@ PRIVATE WUNUSED int DCALL cmd_help(char *arg) {
 		if (display_help_query((Dee_formatprinter_t)&DeeFile_WriteAll, fp, cmdline_options, arg, ""))
 			goto err_fp;
 	} else {
-		/* `print Doc from doc(arg)' */
-		DREF DeeObject *doc_module, *doc_node;
+		/* `print import.doc.Doc(arg)' */
 		Dee_ssize_t error;
-		doc_module = DeeModule_OpenGlobalString("doc", 3, NULL, true);
-		if unlikely(!doc_module)
-			goto err_fp;
-		if unlikely(DeeModule_RunInit(doc_module)) {
-			doc_node = NULL;
-		} else {
-			doc_node = DeeObject_CallAttrStringf(doc_module, "Doc", "s", arg);
-		}
-		Dee_Decref(doc_module);
+		DREF DeeObject *doc_node;
+		doc_node = DeeModule_CallExternStringf("doc", "Doc", "s", arg);
 		if unlikely(!doc_node)
 			goto err_fp;
 		error = DeeObject_Print(doc_node, (Dee_formatprinter_t)&DeeFile_WriteAll, fp);
@@ -1243,6 +1252,7 @@ int main(int argc, char *argv[]) {
 
 		/* Set the system argument vector. */
 		Dee_SetArgv((DeeObject *)sys_argv);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		if (operation_mode == OPERATION_MODE_INTERACTIVE) {
 			DREF DeeObject *interactive_input;
 			DREF DeeObject *interactive_module;
@@ -1252,8 +1262,8 @@ int main(int argc, char *argv[]) {
 			interactive_input = DeeFile_GetStd(DEE_STDIN);
 			if unlikely(!interactive_input)
 				goto err;
-			interactive_output = script_options.co_decoutput;
-			script_options.co_decoutput = NULL;
+			interactive_output = script_output_stream;
+			script_output_stream = NULL;
 
 			/* Default to using `stderr' as output for interactive modules. */
 			if (!interactive_output &&
@@ -1310,39 +1320,63 @@ int main(int argc, char *argv[]) {
 				goto err;
 			goto done;
 		}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		Dee_Decref(sys_argv);
 		if unlikely(!argc)
 			goto err_no_input;
 
 		/* Run the module passed through argv[0] */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		user_module = (DREF DeeModuleObject *)DeeModule_OpenEx(argv[0], strlen(argv[0]), NULL, 0,
+		                                                       DeeModule_IMPORT_F_FILNAM |
+		                                                       DeeModule_IMPORT_F_NOLDEC |
+		                                                       DeeModule_IMPORT_F_NOGDEC,
+		                                                       &script_options);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		user_module = (DREF DeeModuleObject *)DeeModule_OpenSourceFileString(argv[0],
 		                                                                     strlen(argv[0]),
 		                                                                     NULL,
 		                                                                     0,
 		                                                                     &script_options,
 		                                                                     true);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		if unlikely(!user_module)
 			goto err_discard_compiler_errors;
 		if (operation_mode == OPERATION_MODE_PRINTASM) {
 			/* Print a full disassembly of the user-module. */
 			int error = -1;
-			if (!script_options.co_decoutput &&
-			    (script_options.co_decoutput = DeeFile_GetStd(DEE_STDOUT)) == NULL) {
+			if (!script_output_stream &&
+			    (script_output_stream = DeeFile_GetStd(DEE_STDOUT)) == NULL) {
 				/* ... */
 			} else {
-				PRIVATE DEFINE_STRING(str_disassembler, "disassembler");
 				DREF DeeObject *disassembler_module;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+				static char const nameof_disassembler[] = "disassembler";
+				disassembler_module = DeeModule_ImportEx(nameof_disassembler,
+				                                         COMPILER_STRLEN(nameof_disassembler),
+				                                         NULL, 0, DeeModule_IMPORT_F_NORMAL, NULL);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+				PRIVATE DEFINE_STRING(str_disassembler, "disassembler");
 				disassembler_module = DeeModule_OpenGlobal((DeeObject *)&str_disassembler, NULL, true);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 				if unlikely(!disassembler_module) {
 					/* ... */
 				} else {
 					DREF DeeObject *disasm_error;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+					DREF DeeObject *user_module_root = DeeModule_GetRootCode((DeeObject *)user_module);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+					DeeCodeObject *user_module_root = user_module->mo_root;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 					disasm_error = DeeObject_CallAttrStringf(disassembler_module,
 					                                         "printcode",
 					                                         emitasm_flags ? "oos" : "oo",
-					                                         user_module->mo_root,
-					                                         script_options.co_decoutput,
+					                                         user_module_root,
+					                                         script_output_stream,
 					                                         emitasm_flags);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+					Dee_Decref(user_module_root);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 					Dee_Decref(disassembler_module);
 					Dee_XDecref(disasm_error);
 					error = 0;
@@ -1360,7 +1394,12 @@ int main(int argc, char *argv[]) {
 			DREF DeeObject *user_module_args;
 
 			/* The user's module has been loaded. - Now load dependencies and open it's root. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+			(void)DeeModule_SetInitialized((DeeObject *)user_module);
+			user_module_main = DeeModule_GetRootFunction((DeeObject *)user_module);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			user_module_main = DeeModule_GetRoot((DeeObject *)user_module, true);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			Dee_Decref(user_module);
 			if unlikely(!user_module_main)
 				goto err_discard_compiler_errors;
@@ -1392,10 +1431,12 @@ done:
 
 	/* Clear out object-level compiler options. */
 	Dee_XDecref(emitpp_dpout);
-	Dee_XDecref(script_options.co_decoutput);
+	Dee_XDecref(script_output_stream);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	Dee_XDecref(import_options.co_decoutput);
 	Dee_XDecref(script_options.co_pathname);
 	Dee_XDecref(import_options.co_pathname);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	Dee_XDecref(script_options.co_filename);
 	Dee_XDecref(import_options.co_filename);
 	Dee_XDecref(script_options.co_rootname);
@@ -1524,6 +1565,7 @@ INTERN struct compiler_options import_options = {
 	/* .co_optimizer     = */ OPTIMIZE_FENABLED | OPTIMIZE_FCONSTSYMS,
 	/* .co_unwind_limit  = */ 0,
 	/* .co_assembler     = */ ASM_FOPTIMIZE | ASM_FPEEPHOLE | ASM_FREUSELOC | ASM_FSTACKDISP,
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	/* .co_decloader     = */ Dee_DEC_FNORMAL,
 #ifdef DEC_WRITE_FNORMAL
 	/* .co_decwriter     = */ DEC_WRITE_FNORMAL,
@@ -1531,6 +1573,7 @@ INTERN struct compiler_options import_options = {
 	/* .co_decwriter     = */ 0,
 #endif /* !DEC_WRITE_FNORMAL */
 	/* .co_decoutput     = */ NULL
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 };
 
 INTERN struct compiler_options script_options = {
@@ -1548,6 +1591,7 @@ INTERN struct compiler_options script_options = {
 	/* .co_optimizer     = */ OPTIMIZE_FDISABLED,
 	/* .co_unwind_limit  = */ 0,
 	/* .co_assembler     = */ ASM_FNORMAL | ASM_FNODEC | ASM_FOPTIMIZE,
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	/* .co_decloader     = */ Dee_DEC_FDISABLE,
 #ifdef DEC_WRITE_FNORMAL
 	/* .co_decwriter     = */ DEC_WRITE_FNORMAL,
@@ -1555,6 +1599,7 @@ INTERN struct compiler_options script_options = {
 	/* .co_decwriter     = */ 0,
 #endif /* !DEC_WRITE_FNORMAL */
 	/* .co_decoutput     = */ NULL
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 };
 
 #if defined(__SSP_FORTIFY_LEVEL) && (__SSP_FORTIFY_LEVEL + 0) > 0
@@ -1568,7 +1613,7 @@ INTERN ATTR_NORETURN void __stack_chk_fail(void) {
 
 PRIVATE NONNULL((1)) void DCALL
 emitpp_writeout(void const *__restrict p, size_t s) {
-	if (DeeFile_WriteAll(script_options.co_decoutput, p, s) == (size_t)-1)
+	if (DeeFile_WriteAll(script_output_stream, p, s) == (size_t)-1)
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
 }
 
@@ -1797,8 +1842,8 @@ operation_mode_printpp(int argc, char **argv) {
 #endif /* CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC */
 	                              TPPLEXER_FLAG_TERMINATE_STRING_LF);
 
-	if (!script_options.co_decoutput &&
-	    (script_options.co_decoutput = DeeFile_GetStd(DEE_STDOUT)) == NULL)
+	if (!script_output_stream &&
+	    (script_output_stream = DeeFile_GetStd(DEE_STDOUT)) == NULL)
 		goto err;
 
 	/* Setup the #include-stack. */
@@ -1972,16 +2017,23 @@ PRIVATE void DCALL clear_inner_tpp_state(void) {
 /* Just as the name says: execute a module's root-function
  * and capture stdout output, which is then returned. */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
-exec_module_and_capture_stdout(DeeModuleObject *__restrict module) {
+exec_module_and_capture_stdout(DeeModuleObject *__restrict mod) {
 	DREF DeeStringObject *result = NULL;
 	DREF DeeFunctionObject *module_root;
 	DREF DeeObject *old_stdout;
 	DREF DeeObject *new_stdout;
 	DREF DeeObject *temp;
+
 	/* Open the root of the module. */
-	module_root = (DeeFunctionObject *)DeeModule_GetRoot((DeeObject *)module, true);
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	(void)DeeModule_SetInitialized((DeeObject *)mod);
+	module_root = (DREF DeeFunctionObject *)DeeModule_GetRootFunction((DeeObject *)mod);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	module_root = (DREF DeeFunctionObject *)DeeModule_GetRoot((DeeObject *)mod, true);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if unlikely(!module_root)
 		goto err;
+
 	/* Create a new writer and set it as target for STDOUT */
 	new_stdout = DeeFile_OpenWriter();
 	if unlikely(!new_stdout)
@@ -2223,6 +2275,15 @@ try_exec_format_impl(DeeObject *__restrict stream,
 			script_module = NULL;
 		} else {
 			/* Compile the format-script into a module. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+			opt.co_pathname = filename;
+			script_module = (DREF DeeModuleObject *)DeeExec_CompileModuleMemory(format_code_start,
+			                                                                    (size_t)(format_code_end - format_code_start),
+			                                                                    format_code_start_line,
+			                                                                    format_code_start_col,
+			                                                                    DeeExec_RUNMODE_DEFAULT,
+			                                                                    &opt, NULL);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			script_module = (DREF DeeModuleObject *)DeeModule_OpenSourceMemoryString(format_code_start,
 			                                                                         (size_t)(format_code_end - format_code_start),
 			                                                                         format_code_start_line,
@@ -2232,6 +2293,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 			                                                                         strlen(filename),
 			                                                                         NULL,
 			                                                                         0);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			/* Remove the format-script macro again. */
 			TPPLexer_Undef("__FORMAT_SCRIPT__", 17);
 		}

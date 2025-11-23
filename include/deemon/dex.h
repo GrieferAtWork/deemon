@@ -113,6 +113,15 @@ struct Dee_dex {
 #endif /* !CONFIG_NO_NOTIFICATIONS */
 };
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+
+/* TODO: Provide macros to statically allocate the dex's DeeModuleObject!
+ *       For "CONFIG_EXPERIMENTAL_MMAP_DEC" to eventually work properly,
+ *       DeeModule_FromStaticPointer() must be able to re-return itself
+ *       when given a pointer to itself (iow: the DeeModuleObject *MUST*
+ *       be allocated statically within the external dex library) */
+
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 struct Dee_dex_object {
 	DeeModuleObject    d_module;       /* The underlying module. */
 	struct Dee_dex    *d_dex;          /* [1..1][const_if(Dee_MODULE_FDIDLOAD)] The dex definition table exported by this extension.
@@ -162,7 +171,7 @@ INTDEF bool DCALL DeeDex_Cleanup(void);
 /* Unload all loaded dex modules. */
 INTDEF void DCALL DeeDex_Finalize(void);
 #endif /* CONFIG_BUILDING_DEEMON */
-
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_END
 #endif /* !CONFIG_NO_DEX */

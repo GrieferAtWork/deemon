@@ -348,7 +348,7 @@ DeeNTSystem_FixUncPath(/*String*/ DeeObject *__restrict filename) {
 	DREF DeeObject *result;
 	size_t filename_size;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
-	filename = DeeSystem_MakeAbsolute(filename);
+	filename = DeeSystem_MakeNormalAndAbsolute(filename);
 	if unlikely(!filename)
 		goto err;
 	filename_size = DeeString_SIZE(filename);

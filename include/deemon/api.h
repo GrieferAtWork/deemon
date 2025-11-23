@@ -488,6 +488,13 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_MODULE_DIRECTORIES */
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+/* TODO: Needs to be adjusted because:
+ * - "mo_globalv" is now inlined within DeeModuleObject
+ * - various offsets within DeeModuleObject have changed */
+#undef CONFIG_HAVE_EXEC_ASM
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
 /* Experimental feature switch: Use custom heap implementation */
 #if (!defined(CONFIG_EXPERIMENTAL_CUSTOM_HEAP) && \
      !defined(CONFIG_NO_EXPERIMENTAL_CUSTOM_HEAP))
@@ -499,7 +506,8 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_CUSTOM_HEAP */
 
 /* Experimental feature switch: Use a new (mmap-able) file format for dec files */
-#ifndef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+#if (!defined(CONFIG_EXPERIMENTAL_CUSTOM_HEAP) || \
+     !defined(CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES))
 #undef CONFIG_EXPERIMENTAL_MMAP_DEC
 #undef CONFIG_NO_EXPERIMENTAL_MMAP_DEC
 #define CONFIG_NO_EXPERIMENTAL_MMAP_DEC

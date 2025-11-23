@@ -1358,7 +1358,7 @@ EXPORTS
 	_DeeSystem_GetLastModified@4=DeeSystem_GetLastModified@4
 	_DeeSystem_GetWalltime@0=DeeSystem_GetWalltime@0
 	_DeeSystem_IsStaticPointer@4=DeeSystem_IsStaticPointer@4
-	_DeeSystem_MakeAbsolute@4=DeeSystem_MakeAbsolute@4
+	_DeeSystem_MakeNormalAndAbsolute@4=DeeSystem_MakeNormalAndAbsolute@4
 	_DeeSystem_PrintFilenameOfFD@8=DeeSystem_PrintFilenameOfFD@8
 	_DeeSystem_PrintPwd@8=DeeSystem_PrintPwd@8
 	_DeeSystem_Unlink@8=DeeSystem_Unlink@8

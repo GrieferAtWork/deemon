@@ -133,9 +133,14 @@ DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL DeeSystem_PrintPwd)(struct Dee_unicode_printer *__restrict printer,
                            bool include_trailing_sep);
 
-/* Ensure that the given `filename' describes an absolute path. */
+/* Ensure that the given `filename' describes an absolute, normalized path. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
-DeeSystem_MakeAbsolute(/*String*/ DeeObject *__restrict filename);
+DeeSystem_MakeNormalAndAbsolute(/*String*/ DeeObject *__restrict filename);
+
+/* Check if the given `filename' can be considered an absolute, normalized
+ * path, that is: isn't relative, and doesn't contain `.' or `..' segments. */
+DFUNDEF WUNUSED NONNULL((1)) bool DCALL
+DeeSystem_IsNormalAndAbsolute(/*utf-8*/ char const *filename, size_t filename_len);
 
 /* Return the current UTC realtime in microseconds since 01-01-1970T00:00:00+00:00 */
 DFUNDEF WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void);
