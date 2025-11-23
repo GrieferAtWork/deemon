@@ -841,9 +841,9 @@ root_scope_init(DeeRootScopeObject *__restrict self,
 #if CODE_FNORMAL != 0
 	self->rs_scope.bs_flags = CODE_FNORMAL;
 #endif /* CODE_FNORMAL != 0 */
-#if MODULE_FNORMAL != 0
-	self->rs_flags = MODULE_FNORMAL;
-#endif /* MODULE_FNORMAL != 0 */
+#if Dee_MODULE_FNORMAL != 0
+	self->rs_flags = Dee_MODULE_FNORMAL;
+#endif /* Dee_MODULE_FNORMAL != 0 */
 	return 0;
 err:
 	return -1;

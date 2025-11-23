@@ -899,7 +899,7 @@ AttributeError_LoadDesc(AttributeError *__restrict self) {
 		}
 		mod = (DeeModuleObject *)self->ae_desc.ad_info.ai_decl;
 		ASSERT_OBJECT_TYPE(mod, &DeeModule_Type);
-		if (mod->mo_flags & MODULE_FDIDINIT) {
+		if (mod->mo_flags & Dee_MODULE_FDIDINIT) {
 			DeeModule_LockRead(mod);
 			if (sym->ss_flags & MODSYM_FPROPERTY) {
 				/* Check which property operations have been bound. */

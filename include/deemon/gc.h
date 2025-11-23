@@ -91,6 +91,11 @@ struct Dee_gc_head {
 DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL DeeGC_Track(DeeObject *__restrict ob);
 DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL DeeGC_Untrack(DeeObject *__restrict ob);
 
+/* Track all GC objects in range [first,last], all of which have
+ * already been linked together using their `struct gc_head_link' */
+DFUNDEF NONNULL((1, 2)) void DCALL
+DeeGC_TrackAll(DeeObject *first, DeeObject *last);
+
 #define DeeGC_TRACK(T, ob) ((DREF T *)DeeGC_Track((DREF DeeObject *)Dee_REQUIRES_OBJECT(ob)))
 
 /* Try to collect at most `max_objects' GC-objects,

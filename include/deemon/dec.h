@@ -178,7 +178,7 @@ struct Dee_compiler_options;
 #elif defined(__arm__)
 #define Dee_DEC_MACH Dee_DEC_MACH_ARM
 #else /* ... */
-#define Dee_DEC_MACH Dee_DEC_MACH_ARM64
+#define Dee_DEC_MACH Dee_DEC_MACH_UNKNOWN
 #endif /* !... */
 #endif /* !Dee_DEC_MACH */
 
@@ -269,9 +269,10 @@ struct Dee_dec_reltab {
 };
 
 struct Dee_dec_depmod {
-	DREF struct Dee_module_object *ddm_mod;  /* [1..1] The dependent module */
-	struct Dee_dec_reltab          ddm_rel;  /* Relocations against `ddm_mod' */
-	struct Dee_dec_reltab          ddm_rrel; /* Incref-relocations against `ddm_mod' */
+	DREF struct Dee_module_object *ddm_mod;    /* [1..1] The dependent module */
+	Dec_Dstr                      *ddm_impstr; /* [0..1][owned] Import string (lazily generated during `DeeDecWriter_PackMapping()') */
+	struct Dee_dec_reltab          ddm_rel;    /* Relocations against `ddm_mod' */
+	struct Dee_dec_reltab          ddm_rrel;   /* Incref-relocations against `ddm_mod' */
 };
 
 struct Dee_dec_deptab {
@@ -281,8 +282,8 @@ struct Dee_dec_deptab {
 };
 
 struct Dee_dec_objtab_entry {
-	DeeObject       *dote_obj; /* [0..1] Address of some object that was already encoded (NULL means unused/sentinal entry) */
-	Dee_dec_addr32_t dote_off; /* [1..1] Offset from `dw_base' to the `(DeeObject *)' where the object is written */
+	DeeObject     *dote_obj; /* [0..1] Address of some object that was already encoded (NULL means unused/sentinal entry) */
+	Dee_dec_addr_t dote_off; /* [1..1] Offset from `dw_base' to the `(DeeObject *)' where the object is written */
 };
 
 struct Dee_dec_objtab {
@@ -290,28 +291,39 @@ struct Dee_dec_objtab {
 	size_t                       dot_size; /* [< dot_mask] Amount of non-NULL key-item pairs. */
 	struct Dee_dec_objtab_entry *dot_list; /* [1..dot_mask+1][owned] Table of already-encoded objects. */
 };
+#define Dee_dec_objtab_hashst(self, hash)  ((hash) & (self)->dot_mask)
+#define Dee_dec_objtab_hashnx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define Dee_dec_objtab_hashit(self, i)     ((self)->dot_list + ((i) & (self)->dot_mask))
+
+struct Dee_dec_fdeptab {
+	__BYTE_TYPE__ *dfdt_depv; /* [0..dfdt_depc][owned] Flat array of `Dec_Dstr' (each aligned to `__ALIGNOF_SIZE_T__') */
+	size_t         dfdt_depc; /* # of bytes used in "dfdt_depv" */
+	size_t         dfdt_depa; /* Allocated # of bytes in `dfdt_depv' */
+};
+
 
 typedef struct Dee_dec_writer {
 #ifdef DEE_SOURCE
 	union {
-		__BYTE_TYPE__    *dw_base;   /* [1..1][owned] Base address of memory block of dec file being built */
-		Dec_Ehdr         *dw_ehdr;   /* [1..1][owned] Dec executable header, and subsequent object heap.
-		                              * Until the dec file is finalized, everything in here, except for
-		                              * `e_heap' is undefined */
+		__BYTE_TYPE__     *dw_base;   /* [1..1][owned] Base address of memory block of dec file being built */
+		Dec_Ehdr          *dw_ehdr;   /* [1..1][owned] Dec executable header, and subsequent object heap.
+		                               * Until the dec file is finalized, everything in here, except for
+		                               * `e_heap' is undefined */
 	};
 #else /* DEE_SOURCE */
-	__BYTE_TYPE__        *dw_base;   /* [1..1][owned] Base address of memory block of dec file being built */
+	__BYTE_TYPE__         *dw_base;   /* [1..1][owned] Base address of memory block of dec file being built */
 #endif /* !DEE_SOURCE */
-	size_t                dw_alloc;  /* Allocated buffer size for `dw_base' */
-	size_t                dw_used;   /* [<= dw_alloc] Used buffer size for `dw_base' */
-	size_t                dw_hlast;  /* Chunk size during the previous call to `DeeDecWriter_Malloc()' */
-	struct Dee_dec_reltab dw_srel;   /* Table of self-relocations */
-	struct Dee_dec_reltab dw_drel;   /* Table of relocations against deemon-core objects */
-	struct Dee_dec_reltab dw_drrel;  /* Table of incref-relocations against deemon-core objects */
-	struct Dee_dec_deptab dw_deps;   /* Table of dependent modules */
-	Dee_dec_addr32_t      dw_gchead; /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
-	Dee_dec_addr32_t      dw_gctail; /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `dw_srel') */
-	struct Dee_dec_objtab dw_known;  /* Table of known, already-encoded objects */
+	size_t                 dw_alloc;  /* Allocated buffer size for `dw_base' */
+	size_t                 dw_used;   /* [<= dw_alloc] Used buffer size for `dw_base' */
+	size_t                 dw_hlast;  /* Chunk size during the previous call to `DeeDecWriter_Malloc()' */
+	struct Dee_dec_reltab  dw_srel;   /* Table of self-relocations */
+	struct Dee_dec_reltab  dw_drel;   /* Table of relocations against deemon-core objects */
+	struct Dee_dec_reltab  dw_drrel;  /* Table of incref-relocations against deemon-core objects */
+	struct Dee_dec_deptab  dw_deps;   /* Table of dependent modules */
+	struct Dee_dec_fdeptab dw_fdeps;  /* Table of dependent files */
+	Dee_dec_addr32_t       dw_gchead; /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
+	Dee_dec_addr32_t       dw_gctail; /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `dw_srel') */
+	struct Dee_dec_objtab  dw_known;  /* Table of known, already-encoded objects */
 } DeeDecWriter;
 
 
@@ -334,18 +346,31 @@ DFUNDEF NONNULL((1)) void DCALL DeeDecWriter_Fini(DeeDecWriter *__restrict self)
  * - be passed to `DeeDecWriter_PackModule()'
  *   to turn it into a `DeeModuleObject'
  *
+ * @param: dec_dirname: Absolute directory where the `.dec' file will go.
+ *                      **MUST** end with a path separator (`DeeSystem_IsSep')
  * @return: * :   The not-yet-relocated dec file (header + contents)
  * @return: NULL: An error was thrown */
 DFUNDEF WUNUSED NONNULL((1)) DeeDec_Ehdr *DCALL
-DeeDecWriter_PackMapping(/*inherit(on_success)*/ DeeDecWriter *__restrict self);
+DeeDecWriter_PackMapping(DeeDecWriter *__restrict self,
+                         /*utf-8*/ char const *dec_dirname,
+                         size_t dec_dirname_len);
 
 /* Slightly more efficient convenience wrapper for:
  * >> DeeDec_Relocate(DeeDecWriter_PackMapping(self)) */
 DFUNDEF WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
-DeeDecWriter_PackModule(/*inherit(on_success)*/ DeeDecWriter *__restrict self);
+DeeDecWriter_PackModule(DeeDecWriter *__restrict self);
 
 
-
+/* Add an additional file dependency to `self'. The given `filename' must
+ * be relative to the directory that the `.dec' file will eventually reside
+ * within. By default, only the relevant `.dee' file will be a dependency
+ * of the produced `.dec' file.
+ * @return: 0 : Success
+ * @return: -1: Error */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
+DeeDecWriter_AddFileDep(DeeDecWriter *__restrict self,
+                        char const *filename,
+                        size_t filename_len);
 
 /* Allocate heap memory within the dec file for:
  * - DeeDecWriter_Malloc:          Regular heap memory (as per `Dee_Malloc()')

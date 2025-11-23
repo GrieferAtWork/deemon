@@ -35,9 +35,11 @@
 #include <deemon/heap.h>
 #include <deemon/module.h>
 #include <deemon/string.h>
+#include <deemon/system.h>
 
 #include <hybrid/align.h>
 #include <hybrid/overflow.h>
+#include <hybrid/sequence/bsearch.h>
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -131,6 +133,9 @@ DeeDecWriter_Init(DeeDecWriter *__restrict self) {
 	self->dw_deps.ddpt_depv  = NULL;
 	self->dw_deps.ddpt_depc  = 0;
 	self->dw_deps.ddpt_depa  = 0;
+	self->dw_fdeps.dfdt_depv = NULL;
+	self->dw_fdeps.dfdt_depc = 0;
+	self->dw_fdeps.dfdt_depa = 0;
 	self->dw_gchead = 0;
 	self->dw_gctail = 0;
 
@@ -155,15 +160,37 @@ DeeDecWriter_Fini(DeeDecWriter *__restrict self) {
 		Dee_Decref_unlikely(dep->ddm_mod);
 		Dee_Free(dep->ddm_rel.drlt_relv);
 		Dee_Free(dep->ddm_rrel.drlt_relv);
+		Dee_Free(dep->ddm_impstr);
 	}
 	Dee_Free(self->dw_base);
 	Dee_Free(self->dw_srel.drlt_relv);
 	Dee_Free(self->dw_drrel.drlt_relv);
 	Dee_Free(self->dw_drel.drlt_relv);
 	Dee_Free(self->dw_deps.ddpt_depv);
+	Dee_Free(self->dw_fdeps.dfdt_depv);
 	Dee_Free(self->dw_known.dot_list);
 }
 
+
+
+/* Generate import strings for module dependencies (s.a. `struct Dee_dec_depmod::ddm_impstr') */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+DeeDecWriter_GenImpStr(DeeDecWriter *__restrict self,
+                       /*utf-8*/ char const *dec_dirname,
+                       size_t dec_dirname_len) {
+	size_t i;
+	ASSERT(dec_dirname_len);
+	ASSERT(DeeSystem_IsSep(dec_dirname[dec_dirname_len - 1]));
+	for (i = 0; i < self->dw_deps.ddpt_depc; ++i) {
+		struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[i];
+		DeeModuleObject *mod = dep->ddm_mod;
+		ASSERT(!dep->ddm_impstr);
+//		dep->ddm_impstr = ; /* TODO */
+	}
+	return 0;
+err:
+	return -1;
+}
 
 
 /* Pack the dec file into a format where it can easily be written to a file:
@@ -176,52 +203,353 @@ DeeDecWriter_Fini(DeeDecWriter *__restrict self) {
  * - be passed to `DeeDecWriter_PackModule()'
  *   to turn it into a `DeeModuleObject'
  *
+ * @param: dec_dirname: Absolute directory where the `.dec' file will go.
+ *                      **MUST** end with a path separator (`DeeSystem_IsSep')
  * @return: * :   The not-yet-relocated dec file (header + contents)
  * @return: NULL: An error was thrown */
 PUBLIC WUNUSED NONNULL((1)) DeeDec_Ehdr *DCALL
-DeeDecWriter_PackMapping(/*inherit(on_success)*/ DeeDecWriter *__restrict self) {
-	/* TODO: Append trailing `struct Dee_heaptail' to heap */
-	/* TODO: Figure out total mapping size (by summing up buffers that come after the main heap-buffer) */
-	/* TODO: Resize the main buffer to fit */
-	/* TODO: Initialize the "e_heap" as a generic heap buffer */
-	DeeError_NOTIMPLEMENTED();
+DeeDecWriter_PackMapping(DeeDecWriter *__restrict self,
+                         /*utf-8*/ char const *dec_dirname, size_t dec_dirname_len) {
+	Dec_Ehdr *ehdr = self->dw_ehdr;
+	size_t i;
+	Dee_dec_addr32_t total_used, total_need;
+	Dee_dec_addr32_t addrof_zero;
+	Dee_dec_addr32_t addrof_modrel; /* Start address for relocation tables pointed to by "Dec_Dhdr" entries. */
+	Dee_dec_addr32_t addrof_modstr; /* Start address of `d_offsetof_modname' string table (possibly unaligned) */
+
+	/* Generate `ddm_impstr' strings for dependencies. */
+	if (DeeDecWriter_GenImpStr(self, dec_dirname, dec_dirname_len))
+		goto err;
+
+	total_used = (Dee_dec_addr32_t)self->dw_used;
+	ehdr->e_ident[DI_MAG0] = DECMAG0;
+	ehdr->e_ident[DI_MAG1] = DECMAG1;
+	ehdr->e_ident[DI_MAG2] = DECMAG2;
+	ehdr->e_ident[DI_MAG3] = DECMAG3;
+	ehdr->e_mach = Dee_DEC_MACH;
+	ehdr->e_heapoff = offsetof(Dec_Ehdr, e_heap);
+	ehdr->e_version = DVERSION_CUR;
+	ehdr->e_build_timestamp = DeeSystem_GetWalltime();
+	ehdr->e_deemon_timestamp = DeeExec_GetTimestamp();
+//	ehdr->e_deemon_build_id; /* TODO */
+//	ehdr->e_deemon_host_id; /* TODO */
+	ehdr->e_offsetof_gchead = self->dw_gchead;
+	ehdr->e_offsetof_gctail = self->dw_gctail;
+
+	/* Space for the heap tail is always pre-allocated! */
+	{
+		size_t offsetof_tail = self->dw_used;
+		struct Dee_heaptail *tail = (struct Dee_heaptail *)((byte_t *)ehdr + offsetof_tail);
+		addrof_zero = (Dee_dec_addr32_t)(offsetof_tail + offsetof(struct Dee_heaptail, ht_zero));
+		offsetof_tail += sizeof(struct Dee_heaptail);
+		tail->ht_lastsize = self->dw_hlast;
+		tail->ht_zero     = 0;
+		ehdr->e_heap.hr_size = offsetof_tail - offsetof(Dec_Ehdr, e_heap);
+	}
+
+	/* Calculate the total needed buffer size. */
+	total_need = (Dee_dec_addr32_t)self->dw_used;
+	total_need += sizeof(struct Dee_heaptail); /* Heap tail */
+
+	/* Module dependency tables. */
+	if (self->dw_deps.ddpt_depc) {
+		ehdr->e_offsetof_deps = total_need;
+		total_need += self->dw_deps.ddpt_depc * sizeof(Dec_Dhdr);
+		/* Add space for "terminated by a d_offsetof_modname==0-entry" */
+		total_need += COMPILER_OFFSETAFTER(Dec_Dhdr, d_offsetof_modname);
+	} else {
+		ehdr->e_offsetof_deps = addrof_zero - offsetof(Dec_Dhdr, d_offsetof_modname);
+	}
+
+	/* Relocations against self. */
+	if (self->dw_srel.drlt_relc) {
+		ehdr->e_offsetof_srel = total_need;
+		total_need += (self->dw_srel.drlt_relc + 1) * sizeof(Dee_dec_addr32_t);
+	} else {
+		ehdr->e_offsetof_srel = addrof_zero;
+	}
+
+	/* Relocations against deemon. */
+	if (self->dw_drel.drlt_relc) {
+		ehdr->e_offsetof_drel = total_need;
+		total_need += (self->dw_drel.drlt_relc + 1) * sizeof(Dee_dec_addr32_t);
+	} else {
+		ehdr->e_offsetof_drel = addrof_zero;
+	}
+	if (self->dw_drrel.drlt_relc) {
+		ehdr->e_offsetof_drrel = total_need;
+		total_need += (self->dw_drrel.drlt_relc + 1) * sizeof(Dee_dec_addr32_t);
+	} else {
+		ehdr->e_offsetof_drrel = addrof_zero;
+	}
+
+	/* Relocation tables for dependencies. */
+	addrof_modrel = total_need;
+	for (i = 0; i < self->dw_deps.ddpt_depc; ++i) {
+		struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[i];
+		if (dep->ddm_rel.drlt_relc)
+			total_need += (dep->ddm_rel.drlt_relc + 1) * sizeof(Dee_dec_addr32_t);
+		if (dep->ddm_rrel.drlt_relc)
+			total_need += (dep->ddm_rrel.drlt_relc + 1) * sizeof(Dee_dec_addr32_t);
+	}
+
+	/* String tables */
+	addrof_modstr = total_need;
+	for (i = 0; i < self->dw_deps.ddpt_depc; ++i) {
+		struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[i];
+		ASSERT(dep->ddm_impstr);
+		total_need = CEIL_ALIGN(total_need, __ALIGNOF_SIZE_T__);
+		total_need += offsetof(Dec_Dstr, ds_string);
+		total_need += dep->ddm_impstr->ds_length;
+	}
+
+	/* Additional file dependencies */
+	if (self->dw_fdeps.dfdt_depc) {
+		total_need = CEIL_ALIGN(total_need, __ALIGNOF_SIZE_T__);
+		ehdr->e_offsetof_files = total_need;
+		total_need += self->dw_fdeps.dfdt_depc;
+		total_need = CEIL_ALIGN(total_need, __ALIGNOF_SIZE_T__);
+		total_need += COMPILER_OFFSETAFTER(Dec_Dstr, ds_length); /* For trailing 0 */
+	} else {
+		ehdr->e_offsetof_files = 0;
+	}
+
+	/* EOF marker */
+	ehdr->e_offsetof_eof = total_need;
+
+	/* Resize the main buffer to fit. */
+	ehdr = (Dec_Ehdr *)Dee_Realloc(ehdr, total_need);
+	if unlikely(!ehdr)
+		goto err;
+	self->dw_ehdr = ehdr;
+
+	/* With the buffer resized to its final size, and offsets all determined, copy data. */
+
+	/* Module dependency tables. */
+	if (self->dw_deps.ddpt_depc) {
+		size_t i;
+		Dec_Dstr *out_name;
+		Dec_Dhdr *out_deps = (Dec_Dhdr *)((byte_t *)ehdr + ehdr->e_offsetof_deps);
+		Dee_dec_addr32_t addrof_outname = addrof_modstr;
+		Dee_dec_addr32_t addrof_outrel  = addrof_modrel;
+		for (i = 0; i < self->dw_deps.ddpt_depc; ++i, ++out_deps) {
+			struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[i];
+
+			/* Emit relocations (noref) */
+			if (dep->ddm_rel.drlt_relc) {
+				Dee_dec_addr32_t *out_rel = (Dee_dec_addr32_t *)((byte_t *)ehdr + addrof_outrel);
+				out_deps->d_offsetof_mrel = addrof_outrel;
+				out_rel = (Dee_dec_addr32_t *)mempcpyc(out_rel, dep->ddm_rel.drlt_relv,
+				                                       dep->ddm_rel.drlt_relc,
+				                                       sizeof(Dee_dec_addr32_t));
+				*out_rel = 0;
+				addrof_outrel += (dep->ddm_rel.drlt_relc + 1) * sizeof(Dee_dec_addr32_t);
+			} else {
+				out_deps->d_offsetof_mrel = addrof_zero;
+			}
+
+			/* Emit relocations (ref) */
+			if (dep->ddm_rrel.drlt_relc) {
+				Dee_dec_addr32_t *out_rel = (Dee_dec_addr32_t *)((byte_t *)ehdr + addrof_outrel);
+				out_deps->d_offsetof_mrrel = addrof_outrel;
+				out_rel = (Dee_dec_addr32_t *)mempcpyc(out_rel, dep->ddm_rrel.drlt_relv,
+				                                       dep->ddm_rrel.drlt_relc,
+				                                       sizeof(Dee_dec_addr32_t));
+				*out_rel = 0;
+				addrof_outrel += (dep->ddm_rrel.drlt_relc + 1) * sizeof(Dee_dec_addr32_t);
+			} else {
+				out_deps->d_offsetof_mrrel = addrof_zero;
+			}
+
+			/* Emit module name */
+			addrof_outname = CEIL_ALIGN(addrof_outname, __ALIGNOF_SIZE_T__);
+			out_name = (Dec_Dstr *)((byte_t *)ehdr + addrof_outname);
+			out_name->ds_length = dep->ddm_impstr->ds_length;
+			memcpy(out_name->ds_string, dep->ddm_impstr->ds_string, out_name->ds_length);
+			out_deps->d_offsetof_modname = addrof_outname;
+			addrof_outname += offsetof(Dec_Dstr, ds_string);
+			addrof_outname += out_name->ds_length;
+		}
+		addrof_outname = CEIL_ALIGN(addrof_outname, __ALIGNOF_SIZE_T__);
+		out_name = (Dec_Dstr *)((byte_t *)ehdr + addrof_outname);
+		out_name->ds_length = 0; /* "terminated by a d_offsetof_modname==0-entry" */
+	}
+
+	/* Relocations against self. */
+	if (self->dw_srel.drlt_relc) {
+		Dee_dec_addr32_t *out_rel = (Dee_dec_addr32_t *)((byte_t *)ehdr + ehdr->e_offsetof_srel);
+		out_rel = (Dee_dec_addr32_t *)mempcpyc(out_rel, self->dw_srel.drlt_relv,
+		                                       self->dw_srel.drlt_relc,
+		                                       sizeof(Dee_dec_addr32_t));
+		*out_rel = 0;
+	}
+
+	/* Relocations against deemon. */
+	if (self->dw_drel.drlt_relc) {
+		Dee_dec_addr32_t *out_rel = (Dee_dec_addr32_t *)((byte_t *)ehdr + ehdr->e_offsetof_drel);
+		out_rel = (Dee_dec_addr32_t *)mempcpyc(out_rel, self->dw_drel.drlt_relv,
+		                                       self->dw_drel.drlt_relc,
+		                                       sizeof(Dee_dec_addr32_t));
+		*out_rel = 0;
+	}
+	if (self->dw_drrel.drlt_relc) {
+		Dee_dec_addr32_t *out_rel = (Dee_dec_addr32_t *)((byte_t *)ehdr + ehdr->e_offsetof_drrel);
+		out_rel = (Dee_dec_addr32_t *)mempcpyc(out_rel, self->dw_drrel.drlt_relv,
+		                                       self->dw_drrel.drlt_relc,
+		                                       sizeof(Dee_dec_addr32_t));
+		*out_rel = 0;
+	}
+
+	/* Additional file dependencies */
+	if (self->dw_fdeps.dfdt_depc) {
+		byte_t *out_deps = (byte_t *)ehdr + ehdr->e_offsetof_files;
+		memcpy(out_deps, self->dw_fdeps.dfdt_depv, self->dw_fdeps.dfdt_depc);
+		out_deps += CEIL_ALIGN(self->dw_fdeps.dfdt_depc, __ALIGNOF_SIZE_T__);
+		((Dec_Dstr *)out_deps)->ds_length = 0; /* For trailing 0 */
+	}
+
+	/* Steal the ehdr from `self' */
+	self->dw_ehdr  = NULL;
+	self->dw_used  = 0;
+	self->dw_alloc = 0;
+	return ehdr;
+err:
 	return NULL;
 }
 
 /* Slightly more efficient convenience wrapper for:
  * >> DeeDec_Relocate(DeeDecWriter_PackMapping(self)) */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
-DeeDecWriter_PackModule(/*inherit(on_success)*/ DeeDecWriter *__restrict self) {
+DeeDecWriter_PackModule(DeeDecWriter *__restrict self) {
 	/* TODO */
 	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
 
 
+/* Add an additional file dependency to `self'. The given `filename' must
+ * be relative to the directory that the `.dec' file will eventually reside
+ * within. By default, only the relevant `.dee' file will be a dependency
+ * of the produced `.dec' file.
+ * @return: 0 : Success
+ * @return: -1: Error */
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeDecWriter_AddFileDep(DeeDecWriter *__restrict self,
+                        char const *filename,
+                        size_t filename_len) {
+	Dec_Dstr *dst;
+	size_t old_size = CEIL_ALIGN(self->dw_fdeps.dfdt_depc, __ALIGNOF_SIZE_T__);
+	size_t min_size = old_size + sizeof(size_t) + filename_len * sizeof(char);
+	ASSERTF(filename_len, "Empty string cannot be appended -- that one is used internally to indicate EOF");
+	if (self->dw_fdeps.dfdt_depa < min_size) {
+		byte_t *new_vector;
+		size_t new_alloc = self->dw_fdeps.dfdt_depa * 2;
+		if (new_alloc < min_size) {
+			new_alloc = min_size * 2;
+			if (new_alloc < min_size)
+				new_alloc = min_size;
+		}
+		new_vector = (byte_t *)Dee_TryRealloc(self->dw_fdeps.dfdt_depv, new_alloc);
+		if unlikely(!new_vector) {
+			new_alloc = min_size;
+			new_vector = (byte_t *)Dee_Realloc(self->dw_fdeps.dfdt_depv, new_alloc);
+			if unlikely(!new_vector)
+				goto err;
+		}
+		self->dw_fdeps.dfdt_depv = new_vector;
+		self->dw_fdeps.dfdt_depa = new_alloc;
+	}
+	dst = (Dec_Dstr *)(self->dw_fdeps.dfdt_depv + old_size);
+	dst->ds_length = filename_len;
+	memcpy(dst->ds_string, filename, filename_len * sizeof(char));
+	self->dw_fdeps.dfdt_depc = min_size;
+	return 0;
+err:
+	return -1;
+}
+
+
 /* Append a relocation to "self" */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 Dee_dec_reltab_append(struct Dee_dec_reltab *__restrict self, Dee_dec_addr32_t addr) {
-
-	/* TODO */
-	return DeeError_NOTIMPLEMENTED();
+	ASSERT(self->drlt_relc <= self->drlt_rela);
+	if (self->drlt_relc >= self->drlt_rela) {
+		Dee_dec_addr32_t *new_relv;
+		size_t new_alloc = self->drlt_rela * 2;
+		if (new_alloc < 16)
+			new_alloc = 16;
+		new_relv = (Dee_dec_addr32_t *)Dee_TryReallocc(self->drlt_relv, new_alloc, sizeof(Dee_dec_addr32_t));
+		if unlikely(!new_relv) {
+			new_alloc = self->drlt_relc + 1;
+			new_relv  = (Dee_dec_addr32_t *)Dee_Reallocc(self->drlt_relv, new_alloc, sizeof(Dee_dec_addr32_t));
+			if unlikely(!new_relv)
+				goto err;
+		}
+		self->drlt_relv = new_relv;
+		self->drlt_rela = new_alloc;
+	}
+	self->drlt_relv[self->drlt_relc++] = addr;
+	return 0;
+err:
+	return -1;
 }
 
 /* Add an entry for `ref' to `self->dw_known' */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 DeeDecWriter_AddKnown(DeeDecWriter *__restrict self,
                       DeeObject *__restrict ref,
-                      Dee_dec_addr32_t addr) {
+                      Dee_dec_addr_t addr) {
+	Dee_hash_t hash = DeeObject_HashGeneric(ref); /* Always hash by-addr */
+	Dee_hash_t i, perturb, hash;
+	perturb = i = Dee_dec_objtab_hashst(&self->dw_known, hash);
+	for (;; Dee_dec_objtab_hashnx(i, perturb)) {
+
+	}
+	self->dw_known;
 	/* TODO */
 	return DeeError_NOTIMPLEMENTED();
 }
 
 /* Check if `ref' was already written to "self". If so,
  * return the address where it resides. If not, return "0" */
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr32_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
 DeeDecWriter_GetKnown(DeeDecWriter *__restrict self,
                       DeeObject *__restrict ref) {
-	/* TODO */
+	Dee_hash_t hash = DeeObject_HashGeneric(ref); /* Always hash by-addr */
+	Dee_hash_t i, perturb;
+	perturb = i = Dee_dec_objtab_hashst(&self->dw_known, hash);
+	for (;; Dee_dec_objtab_hashnx(i, perturb)) {
+		struct Dee_dec_objtab_entry *item;
+		item = Dee_dec_objtab_hashit(&self->dw_known, i);
+		if (item->dote_obj == ref)
+			return item->dote_off;
+		if (!item->dote_obj)
+			break;
+	}
 	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+DeeDecWriter_ResizeDeps(DeeDecWriter *__restrict self) {
+	ASSERT(self->dw_deps.ddpt_depc <= self->dw_deps.ddpt_depa);
+	if (self->dw_deps.ddpt_depc >= self->dw_deps.ddpt_depa) {
+		struct Dee_dec_depmod *new_relv;
+		size_t new_alloc = self->dw_deps.ddpt_depa * 2;
+		if (new_alloc < 16)
+			new_alloc = 16;
+		new_relv = (struct Dee_dec_depmod *)Dee_TryReallocc(self->dw_deps.ddpt_depv, new_alloc, sizeof(struct Dee_dec_depmod));
+		if unlikely(!new_relv) {
+			new_alloc = self->dw_deps.ddpt_depc + 1;
+			new_relv  = (struct Dee_dec_depmod *)Dee_Reallocc(self->dw_deps.ddpt_depv, new_alloc, sizeof(struct Dee_dec_depmod));
+			if unlikely(!new_relv)
+				goto err;
+		}
+		self->dw_deps.ddpt_depv = new_relv;
+		self->dw_deps.ddpt_depa = new_alloc;
+	}
+	return 0;
+err:
+	return -1;
 }
 
 /* Find an existing dependency on "mod", and if none exists, add one.
@@ -230,8 +558,26 @@ DeeDecWriter_GetKnown(DeeDecWriter *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) struct Dee_dec_depmod *DCALL
 DeeDecWriter_GetDep(DeeDecWriter *__restrict self,
                     DeeModuleObject *__restrict mod) {
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
+	size_t index;
+	struct Dee_dec_depmod *dst;
+	BSEARCH (index, self->dw_deps.ddpt_depv, self->dw_deps.ddpt_depc, .ddm_mod, mod) {
+		return &self->dw_deps.ddpt_depv[index];
+	}
+	if unlikely(DeeDecWriter_ResizeDeps(self))
+		goto err;
+	dst = &self->dw_deps.ddpt_depv[index];
+	memmoveupc(dst + 1, dst, self->dw_deps.ddpt_depc - index, sizeof(*dst));
+	++self->dw_deps.ddpt_depc;
+	Dee_Incref(mod);
+	dst->ddm_mod = mod;
+	dst->ddm_rel.drlt_relv  = NULL;
+	dst->ddm_rel.drlt_relc  = 0;
+	dst->ddm_rel.drlt_rela  = 0;
+	dst->ddm_rrel.drlt_relv = NULL;
+	dst->ddm_rrel.drlt_relc = 0;
+	dst->ddm_rrel.drlt_rela = 0;
+	return dst;
+err:
 	return NULL;
 }
 
@@ -259,7 +605,7 @@ PRIVATE WUNUSED NONNULL((1)) Dee_dec_addr_t
 	if likely(avail < req) {
 		byte_t *new_base;
 		size_t min_alloc = (self->dw_used + req);
-		size_t new_alloc = min_alloc * 2;
+		size_t new_alloc = CEIL_ALIGN(min_alloc * 2, __SIZEOF_POINTER__ * 4 * 1024);
 		if (new_alloc < min_alloc)
 			new_alloc = min_alloc;
 		new_base = (byte_t *)Dee_TryRealloc(self->dw_base, new_alloc);
@@ -343,7 +689,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) Dee_dec_addr_t
                                    DeeObject *__restrict ref) {
 	DeeObject *copy;
 	Dee_dec_addr_t result;
-	ASSERTF(!DeeType_IsGC(Dee_TYPE(self)), "Use DeeDecWriter_GCObject_Malloc()");
+	ASSERTF(!DeeType_IsGC(Dee_TYPE(ref)), "Use DeeDecWriter_GCObject_Malloc()");
 	result = DeeDecWriter_Malloc(self, num_bytes);
 	if unlikely(!result)
 		goto err;
@@ -353,10 +699,12 @@ PUBLIC WUNUSED NONNULL((1, 3)) Dee_dec_addr_t
 	/* Initialize "ob_refcnt" and "ob_type" of the newly allocated object */
 	copy = DeeDecWriter_Addr2Mem(self, result, DeeObject);
 	copy->ob_refcnt = 1;
+#ifdef CONFIG_TRACE_REFCHANGES
+	copy->ob_trace = NULL;
+#endif /* CONFIG_TRACE_REFCHANGES */
 	if unlikely(DeeDecWriter_PutObject(self, result + offsetof(DeeObject, ob_type),
 	                                   (DeeObject *)Dee_TYPE(ref)))
 		goto err;
-	/* TODO: Initialize `DEE_PRIVATE_REFCHANGE_PRIVATE_DATA' */
 	return result;
 err:
 	return 0;
@@ -369,7 +717,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) Dee_dec_addr_t
 	size_t total;
 	Dee_dec_addr_t result;
 	DeeObject *copy;
-	ASSERTF(DeeType_IsGC(Dee_TYPE(self)), "Use DeeDecWriter_Object_Malloc()");
+	ASSERTF(DeeType_IsGC(Dee_TYPE(ref)), "Use DeeDecWriter_Object_Malloc()");
 	if (OVERFLOW_UADD(num_bytes, sizeof(struct gc_head_link), &total))
 		total = (size_t)-1;
 	result = DeeDecWriter_Malloc(self, num_bytes);
@@ -399,10 +747,11 @@ PUBLIC WUNUSED NONNULL((1, 3)) Dee_dec_addr_t
 	/* Initialize "ob_refcnt" and "ob_type" of the newly allocated object */
 	copy = DeeDecWriter_Addr2Mem(self, result, DeeObject);
 	copy->ob_refcnt = 1;
-	if unlikely(DeeDecWriter_PutObject(self, result + offsetof(DeeObject, ob_type),
-	                                   (DeeObject *)Dee_TYPE(ref)))
+#ifdef CONFIG_TRACE_REFCHANGES
+	copy->ob_trace = NULL;
+#endif /* CONFIG_TRACE_REFCHANGES */
+	if unlikely(DeeDecWriter_PutObject(self, result + offsetof(DeeObject, ob_type), Dee_TYPE(ref)))
 		goto err;
-	/* TODO: Initialize `DEE_PRIVATE_REFCHANGE_PRIVATE_DATA' */
 	return result;
 err:
 	return 0;
@@ -423,6 +772,14 @@ DeeDecWriter_PutRel(DeeDecWriter *__restrict self,
 	return Dee_dec_reltab_append(&self->dw_srel, (Dee_dec_addr32_t)addrof_pointer);
 }
 
+typedef WUNUSED_T NONNULL_T((1, 2)) Dee_dec_addr_t
+(DCALL *Dee_tp_writedec_var_t)(struct Dee_dec_writer *__restrict writer,
+                               DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1, 2)) int
+(DCALL *Dee_tp_writedec_obj_t)(struct Dee_dec_writer *__restrict writer,
+                               DeeObject *__restrict self,
+                               Dee_dec_addr_t addr);
+
 /* Append a copy of `obj' to self and return the address of the written `DeeObject'
  * @return: * : Address of the written `DeeObject'
  * @return: 0 : An error was thrown */
@@ -433,15 +790,13 @@ DeeDecWriter_AppendObject(DeeDecWriter *__restrict self,
 	Dee_dec_addr_t addr;
 	size_t instance_size;
 	DeeTypeObject *tp = Dee_TYPE(obj);
+	Dee_funptr_t tp_writedec;
 	void (DCALL *tp_free)(void *__restrict ob);
-	/* TODO: TP_FINHERITCTOR -- should also be able to inherit "tp_writedec" */
-	if (tp->tp_flags & TP_FVARIABLE) {
-		if (!tp->tp_init.tp_var.tp_writedec)
-			goto err_cannot_serialize;
-		return (*tp->tp_init.tp_var.tp_writedec)(self, obj);
-	}
-	if (!tp->tp_init.tp_alloc.tp_writedec)
+	tp_writedec = DeeType_GetTpWriteDec(tp);
+	if unlikely(!tp_writedec)
 		goto err_cannot_serialize;
+	if (tp->tp_flags & TP_FVARIABLE)
+		return (*(Dee_tp_writedec_var_t)tp_writedec)(self, obj);
 
 	/* Figure out instance size (with support for slab allocators). */
 	tp_free = tp->tp_init.tp_alloc.tp_free;
@@ -476,7 +831,7 @@ DeeDecWriter_AppendObject(DeeDecWriter *__restrict self,
 	if unlikely(!addr)
 		goto err;
 	/* NOTE: Standard fields have already been initialized by "DeeDecWriter_[GC]Object_Malloc" */
-	status = (*tp->tp_init.tp_alloc.tp_writedec)(self, obj, addr);
+	status = (*(Dee_tp_writedec_obj_t)tp_writedec)(self, obj, addr);
 	if unlikely(status)
 		goto err;
 	return addr;
@@ -509,6 +864,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 	}
 
 	/* Check if "obj" points into a dex module, or the deemon core */
+	/* TODO: For this to work properly, dex modules must statically allocate their own "DeeModuleObject" objects! */
 	mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(obj);
 	if (mod) {
 		struct Dee_dec_depmod *dep;
@@ -793,7 +1149,10 @@ DeeDecWriter_AppendModule(DeeDecWriter *__restrict self,
 	addr = DeeDecWriter_AppendObject(self, (DeeObject *)mod);
 	if unlikely(addr == 0)
 		goto err;
-	/* TODO: Assert that "addr" points after the GC-payload of the dec file's first heap object */
+	ASSERTF(addr == (offsetof(Dec_Ehdr, e_heap.hr_first) +
+	                 sizeof(struct Dee_heapchunk) +
+	                 DEE_GC_OBJECT_OFFSET),
+	        "Module starts at wrong offset");
 	return 0;
 err:
 	return -1;
@@ -917,9 +1276,9 @@ DeeDec_RelocateEx(/*inherit(always)*/ DeeDec_Ehdr *__restrict self,
 
 	/* Link in GC objects (if there are any) */
 	if (self->e_offsetof_gchead) {
-		struct gc_head_link *gc_head = (struct gc_head_link *)((byte_t *)self + self->e_offsetof_gchead);
-		struct gc_head_link *gc_tail = (struct gc_head_link *)((byte_t *)self + self->e_offsetof_gctail);
-		/* TODO: DeeGC_TrackAll(gc_head, gc_tail); */
+		struct gc_head *gc_head = (struct gc_head *)((byte_t *)self + self->e_offsetof_gchead);
+		struct gc_head *gc_tail = (struct gc_head *)((byte_t *)self + self->e_offsetof_gctail);
+		DeeGC_TrackAll(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
 	}
 
 	return result;
@@ -1041,8 +1400,9 @@ DeeDec_OpenFileEx(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 	if (ehdr->e_offsetof_files) {
 		Dec_Dstr *dep_files = (Dec_Dstr *)((byte_t *)ehdr + ehdr->e_offsetof_files);
 		while (dep_files->ds_length) {
-			Dee_DPRINTF("[dec] TODO: Checking timestamp of dependent file %$q\n",
-			            dep_files->ds_length, dep_files->ds_string);
+			Dee_DPRINTF("[dec] TODO: Checking timestamp of dependent file %$q in %$q\n",
+			            dep_files->ds_length, dep_files->ds_string,
+			            dec_dirname_len, dec_dirname);
 			/* TODO: Check timestamp of dependent file */
 			dep_files = (Dec_Dstr *)(dep_files->ds_string + dep_files->ds_length);
 			dep_files = (Dec_Dstr *)CEIL_ALIGN((uintptr_t)dep_files, __ALIGNOF_SIZE_T__);
@@ -2142,7 +2502,7 @@ DecFile_LoadImports(DecFile *__restrict self) {
 		}
 
 		/* Check if the module has changed. */
-		if (!self->df_options || !(self->df_options->co_decloader & DEC_FLOADOUTDATED)) {
+		if (!self->df_options || !(self->df_options->co_decloader & Dee_DEC_FLOADOUTDATED)) {
 			uint64_t modtime = DeeModule_GetCTime((DeeObject *)module);
 			if unlikely(modtime == (uint64_t)-1)
 				GOTO_CORRUPTED(reader, err_imports_module);
@@ -2267,7 +2627,7 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 		/* Figure out the proper hash for the name. */
 		name_hash = Dee_HashStr(name);
 		perturb = hash_i = name_hash & bucket_mask;
-		for (;; MODULE_HASHNX(hash_i, perturb)) {
+		for (;; Dee_MODULE_HASHNX(hash_i, perturb)) {
 			DREF DeeStringObject *temp;
 			struct module_symbol *target = &bucketv[hash_i & bucket_mask];
 			if (target->ss_name)
@@ -3465,7 +3825,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 		GOTO_CORRUPTED(reader, done);
 
 	if (self->df_options &&
-	    (self->df_options->co_decloader & DEC_FUNTRUSTED)) {
+	    (self->df_options->co_decloader & Dee_DEC_FUNTRUSTED)) {
 		/* The origin of the code cannot be trusted and we must append
 		 * a couple of trailing instruction bytes to the code object. */
 
@@ -3898,7 +4258,7 @@ DeeModule_OpenDec(DeeModuleObject *__restrict mod,
 	Dee_DPRINTF("[LD] Opened dec file for %r\n", file.df_name);
 
 	/* Check if the file is up-to-date (unless this check is being suppressed). */
-	if (!options || !(options->co_decloader & DEC_FLOADOUTDATED)) {
+	if (!options || !(options->co_decloader & Dee_DEC_FLOADOUTDATED)) {
 		result = DecFile_IsUpToDate(&file);
 		if (result != 0) {
 			Dee_DPRINTF("[LD] Dec file for %r is out-of-date\n", file.df_name);
@@ -3924,7 +4284,7 @@ DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self) {
 	uint64_t result;
 	DeeModuleObject *me = (DeeModuleObject *)self;
 	ASSERT_OBJECT_TYPE(me, &DeeModule_Type);
-	if (me->mo_flags & MODULE_FHASCTIME) {
+	if (me->mo_flags & Dee_MODULE_FHASCTIME) {
 		result = me->mo_ctime;
 		ASSERT(result != (uint64_t)-1);
 	} else if (me == &DeeModule_Deemon) {
@@ -3943,7 +4303,7 @@ DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self) {
 		}
 		/* Cache the result value in the module itself. */
 		me->mo_ctime = result;
-		atomic_or(&me->mo_flags, MODULE_FHASCTIME);
+		atomic_or(&me->mo_flags, Dee_MODULE_FHASCTIME);
 	}
 done:
 	return result;

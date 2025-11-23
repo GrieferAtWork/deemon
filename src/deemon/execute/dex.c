@@ -173,7 +173,7 @@ dex_load_handle(DeeDexObject *__restrict self,
 		        sym->ds_obj, sym->ds_name, DeeString_STR(input_file));
 		hash    = Dee_HashStr(sym->ds_name);
 		perturb = i = hash & bucket_mask;
-		for (;; MODULE_HASHNX(i, perturb)) {
+		for (;; Dee_MODULE_HASHNX(i, perturb)) {
 			struct module_symbol *target = &modsym[i & bucket_mask];
 			if (target->ss_name)
 				continue;
@@ -246,7 +246,7 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
 	void *result;
 	DeeDexObject *me = (DeeDexObject *)self;
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-	if (!DeeDex_Check(self) || !(me->d_module.mo_flags & MODULE_FDIDLOAD))
+	if (!DeeDex_Check(self) || !(me->d_module.mo_flags & Dee_MODULE_FDIDLOAD))
 		return NULL;
 	result = DeeSystem_DlSym(me->d_handle, name);
 	if (!result) {
@@ -454,14 +454,14 @@ INTDEF size_t DCALL Dee_membercache_clearall(size_t max_clear);
 PRIVATE NONNULL((1)) void DCALL
 dex_fini(DeeDexObject *__restrict self) {
 	ASSERT(!self->d_pself);
-	if (self->d_module.mo_flags & MODULE_FDIDLOAD) {
+	if (self->d_module.mo_flags & Dee_MODULE_FDIDLOAD) {
 		uint16_t i;
 		/* Clear global variables before we unload the module,
 		 * because most likely they're all still pointing inside. */
 		for (i = 0; i < self->d_module.mo_globalc; ++i)
 			Dee_XClear(self->d_module.mo_globalv[i]);
 		ASSERT(self->d_dex);
-		if (self->d_module.mo_flags & MODULE_FDIDINIT) {
+		if (self->d_module.mo_flags & Dee_MODULE_FDIDINIT) {
 #ifndef CONFIG_NO_NOTIFICATIONS
 			struct dex_notification *hooks;
 			/* Uninstall notification hooks. */
@@ -512,7 +512,7 @@ dex_fini(DeeDexObject *__restrict self) {
 PRIVATE NONNULL((1, 2)) void DCALL
 dex_visit(DeeDexObject *__restrict self,
           Dee_visit_t proc, void *arg) {
-	if (self->d_module.mo_flags & MODULE_FDIDLOAD) {
+	if (self->d_module.mo_flags & Dee_MODULE_FDIDLOAD) {
 		struct dex_symbol *iter;
 		ASSERT(self->d_dex);
 		iter = self->d_dex->d_symbols;

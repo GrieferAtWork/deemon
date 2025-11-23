@@ -2826,7 +2826,7 @@ PRIVATE bool DCALL rehash_globals(void) {
 		for (; iter < end; ++iter) {
 			Dee_hash_t i, perturb;
 			i = perturb = (iter->ss_hash & new_mask);
-			for (;; MODULE_HASHNX(i, perturb)) {
+			for (;; Dee_MODULE_HASHNX(i, perturb)) {
 				struct module_symbol *dst = &new_vector[i & new_mask];
 				if (dst->ss_name)
 					continue;
@@ -2872,7 +2872,7 @@ asm_gsymid(struct symbol *__restrict sym) {
 	 * creating a somewhat alias for a single, common global variable that can
 	 * only be expressed as a single, unsigned 16-bit integer known as the GID. */
 	perturb = i = name_hash & current_rootscope->rs_bucketm;
-	for (;; MODULE_HASHNX(i, perturb)) {
+	for (;; Dee_MODULE_HASHNX(i, perturb)) {
 		iter = &current_rootscope->rs_bucketv[i & current_rootscope->rs_bucketm];
 		if (!MODULE_SYMBOL_GETNAMESTR(iter))
 			break;
@@ -2912,7 +2912,7 @@ asm_gsymid(struct symbol *__restrict sym) {
 		goto err;
 
 	perturb = i = name_hash & current_rootscope->rs_bucketm;
-	for (;; MODULE_HASHNX(i, perturb)) {
+	for (;; Dee_MODULE_HASHNX(i, perturb)) {
 		DREF DeeObject *name_obj;
 		iter = &current_rootscope->rs_bucketv[i & current_rootscope->rs_bucketm];
 		if (MODULE_SYMBOL_GETNAMESTR(iter))

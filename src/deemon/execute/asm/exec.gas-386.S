@@ -216,8 +216,8 @@ END(_impl_assert_failed)
 #define ITER_DONE                 -1
 #define CODE_FRAME_NOT_EXECUTING  -1
 
-#define MODULE_FNORMAL        0x0000      /* Normal module flags. */
-#define MODULE_FDIDINIT       0x8000      /* The module has been initialized. */
+#define Dee_MODULE_FNORMAL        0x0000      /* Normal module flags. */
+#define Dee_MODULE_FDIDINIT       0x8000      /* The module has been initialized. */
 
 #define EXCEPTION_HANDLER_FNORMAL  0x0000
 #define EXCEPTION_HANDLER_FFINALLY 0x0001

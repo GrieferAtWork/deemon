@@ -754,10 +754,8 @@ instance_builtin_destructor(DeeObject *__restrict self) {
 PRIVATE WUNUSED bool DCALL
 instance_builtin_writedec_enabled(DeeTypeObject *base) {
 	while (base && base != &DeeObject_Type) {
-		if (!DeeType_IsClass(base)) {
-			/* TODO: TP_FINHERITCTOR -- should also be able to inherit "tp_writedec" */
-			return base->tp_init.tp_alloc.tp_writedec != NULL;
-		}
+		if (!DeeType_IsClass(base))
+			return DeeType_GetTpWriteDec(base) != NULL;
 		base = DeeType_Base(base);
 	}
 	return true;

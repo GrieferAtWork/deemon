@@ -245,6 +245,20 @@ DeeGC_Untrack(DeeObject *__restrict ob) {
 	return ob;
 }
 
+/* Track all GC objects in range [first,last], all of which have
+ * already been linked together using their `struct gc_head_link' */
+PUBLIC NONNULL((1, 2)) void DCALL
+DeeGC_TrackAll(DeeObject *first, DeeObject *last) {
+	struct gc_head *first_head = DeeGC_Head(first);
+	struct gc_head *last_head  = DeeGC_Head(last);
+	GCLOCK_ACQUIRE_S();
+	if ((last_head->gc_next = gc_root) != NULL)
+		gc_root->gc_pself = &last_head->gc_next;
+	first_head->gc_pself = &gc_root;
+	gc_root = first_head;
+	GCLOCK_RELEASE_S();
+}
+
 
 
 struct gc_dep {

@@ -78,7 +78,7 @@ struct Dee_dex {
 	/* Optional initializer/finalizer callbacks.
 	 * When non-NULL, `d_init()' is invoked after globals have been.
 	 * Extension modules are only unloaded before deemon itself terminates.
-	 * NOTE: When executed, the `MODULE_FDIDINIT' hasn't been set yet,
+	 * NOTE: When executed, the `Dee_MODULE_FDIDINIT' hasn't been set yet,
 	 *       but will be as soon as the function returns a value of ZERO(0).
 	 *       Any other return value can be used to indicate an error having
 	 *       been thrown, which in turn will cause the caller to propagate
@@ -115,9 +115,9 @@ struct Dee_dex {
 
 struct Dee_dex_object {
 	DeeModuleObject    d_module;       /* The underlying module. */
-	struct Dee_dex    *d_dex;          /* [1..1][const_if(MODULE_FDIDLOAD)] The dex definition table exported by this extension.
+	struct Dee_dex    *d_dex;          /* [1..1][const_if(Dee_MODULE_FDIDLOAD)] The dex definition table exported by this extension.
 	                                    * NOTE: This pointer is apart of the extension's static address space. */
-	void              *d_handle;       /* [?..?][const_if(MODULE_FDIDLOAD)] System-specific library handle. */
+	void              *d_handle;       /* [?..?][const_if(Dee_MODULE_FDIDLOAD)] System-specific library handle. */
 	DeeDexObject     **d_pself;        /* [1..1][== self][0..1][lock(INTERN(dex_lock))] Dex self-pointer. */
 	DREF DeeDexObject *d_next;         /* [0..1][lock(INTERN(dex_lock))] Extension initialized before this one.
 	                                    * During finalization, extensions are unloaded in reverse order. */

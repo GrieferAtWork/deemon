@@ -340,7 +340,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF Kwds *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF Kwds *DCALL
 kwds_rehash(DREF Kwds *__restrict self) {
 	DREF Kwds *result;
 	size_t i, j, perturb;
@@ -1060,7 +1060,7 @@ PRIVATE struct type_iterator kmapiter_iterator = {
 #define kmapiter_cmp     kwdsiter_cmp
 #define kmapiter_members kwdsiter_members
 
-INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
+PRIVATE DeeTypeObject DeeKwdsMappingIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_KwdsMappingIterator",
 	/* .tp_doc      = */ DOC("()\n"
@@ -2004,8 +2004,6 @@ DeeKwBlackList_Decref(DREF DeeObject *__restrict self) {
 		Dee_Decref_likely(self);
 	}
 }
-
-
 
 DECL_END
 

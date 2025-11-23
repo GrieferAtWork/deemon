@@ -639,9 +639,9 @@ PRIVATE struct compiler_flag const compiler_flags[] = {
 	{ "gendec",        1, FIELD(co_assembler), ASM_FNODEC },
 	{ "reuse-consts",  1, FIELD(co_assembler), ASM_FNOREUSECONST },
 	{ "reduce-refs",   0, FIELD(co_assembler), ASM_FREDUCEREFS },
-	{ "imp-dec",       1, FIELD(co_decloader), DEC_FDISABLE },
-	{ "imp-outdated",  0, FIELD(co_decloader), DEC_FLOADOUTDATED },
-	{ "imp-trusted",   1, FIELD(co_decloader), DEC_FUNTRUSTED },
+	{ "imp-dec",       1, FIELD(co_decloader), Dee_DEC_FDISABLE },
+	{ "imp-outdated",  0, FIELD(co_decloader), Dee_DEC_FLOADOUTDATED },
+	{ "imp-trusted",   1, FIELD(co_decloader), Dee_DEC_FUNTRUSTED },
 	{ "dec-optsiz",    0, FIELD(co_decwriter), DEC_WRITE_FREUSE_GLOBAL }, /* Optimize-for-size. */
 	{ "dec-ddi",       1, FIELD(co_decwriter), DEC_WRITE_FNODEBUG },
 	{ "dec-doc",       1, FIELD(co_decwriter), DEC_WRITE_FNODOC },
@@ -1524,7 +1524,7 @@ INTERN struct compiler_options import_options = {
 	/* .co_optimizer     = */ OPTIMIZE_FENABLED | OPTIMIZE_FCONSTSYMS,
 	/* .co_unwind_limit  = */ 0,
 	/* .co_assembler     = */ ASM_FOPTIMIZE | ASM_FPEEPHOLE | ASM_FREUSELOC | ASM_FSTACKDISP,
-	/* .co_decloader     = */ DEC_FNORMAL,
+	/* .co_decloader     = */ Dee_DEC_FNORMAL,
 #ifdef DEC_WRITE_FNORMAL
 	/* .co_decwriter     = */ DEC_WRITE_FNORMAL,
 #else /* DEC_WRITE_FNORMAL */
@@ -1548,7 +1548,7 @@ INTERN struct compiler_options script_options = {
 	/* .co_optimizer     = */ OPTIMIZE_FDISABLED,
 	/* .co_unwind_limit  = */ 0,
 	/* .co_assembler     = */ ASM_FNORMAL | ASM_FNODEC | ASM_FOPTIMIZE,
-	/* .co_decloader     = */ DEC_FDISABLE,
+	/* .co_decloader     = */ Dee_DEC_FDISABLE,
 #ifdef DEC_WRITE_FNORMAL
 	/* .co_decwriter     = */ DEC_WRITE_FNORMAL,
 #else /* DEC_WRITE_FNORMAL */

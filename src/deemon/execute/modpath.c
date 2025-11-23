@@ -174,12 +174,12 @@ DeeModule_BeginLoading(DeeModuleObject *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 begin_loading:
-	flags = atomic_fetchor(&self->mo_flags, MODULE_FLOADING);
-	if (flags & MODULE_FLOADING) {
+	flags = atomic_fetchor(&self->mo_flags, Dee_MODULE_FLOADING);
+	if (flags & Dee_MODULE_FLOADING) {
 		/* Module is already being loaded. */
 		while ((flags = atomic_read(&self->mo_flags),
-		        (flags & (MODULE_FLOADING | MODULE_FDIDLOAD)) ==
-		        MODULE_FLOADING)) {
+		        (flags & (Dee_MODULE_FLOADING | Dee_MODULE_FDIDLOAD)) ==
+		        Dee_MODULE_FLOADING)) {
 #ifdef CONFIG_NO_THREADS
 			return 2;
 #else /* CONFIG_NO_THREADS */
@@ -198,7 +198,7 @@ begin_loading:
 		}
 		/* If the module has now been marked as having finished loading,
 		 * then simply act as though it was us that did it. */
-		if (flags & MODULE_FDIDLOAD)
+		if (flags & Dee_MODULE_FDIDLOAD)
 			return 1;
 		goto begin_loading;
 	}
@@ -211,12 +211,12 @@ begin_loading:
 
 PRIVATE NONNULL((1)) void DCALL
 DeeModule_FailLoading(DeeModuleObject *__restrict self) {
-	atomic_and(&self->mo_flags, ~(MODULE_FLOADING));
+	atomic_and(&self->mo_flags, ~(Dee_MODULE_FLOADING));
 }
 
 PRIVATE NONNULL((1)) void DCALL
 DeeModule_DoneLoading(DeeModuleObject *__restrict self) {
-	atomic_or(&self->mo_flags, MODULE_FDIDLOAD);
+	atomic_or(&self->mo_flags, Dee_MODULE_FDIDLOAD);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -765,7 +765,7 @@ module_unbind(DeeModuleObject *__restrict self) {
  *       return the already-loaded instance instead.
  * NOTE: In case the module is currently being loaded in the calling
  *       thread, that same partially loaded module is returned, meaning
- *       that the caller can easily check for `MODULE_FLOADING && !MODULE_FDIDLOAD'
+ *       that the caller can easily check for `Dee_MODULE_FLOADING && !Dee_MODULE_FDIDLOAD'
  * @param: module_global_name: When non-NULL, use this as the module's actual name.
  *                             Also: register the module as a global module under this name when given.
  *                             When not given, the module isn't registered globally, and the
@@ -868,7 +868,7 @@ got_result_modulepath:
 #ifdef DEE_SYSTEM_FS_ICASE
 	result->mo_pathihash = hash;
 #endif /* DEE_SYSTEM_FS_ICASE */
-	result->mo_flags |= MODULE_FLOADING;
+	result->mo_flags |= Dee_MODULE_FLOADING;
 	COMPILER_WRITE_BARRIER();
 
 	/* Cache the new module as part of the filesystem
@@ -1276,56 +1276,6 @@ err_module_not_found(DeeObject *__restrict module_name) {
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeModule_DoGet(char const *__restrict name,
-                size_t size, Dee_hash_t hash) {
-	DREF DeeModuleObject *result = NULL;
-	/* Check if the caller requested the builtin deemon module. */
-	if (size == 6 && hash == HASHOF_str_deemon &&
-	    bcmpc(name, STR_deemon, 6, sizeof(char)) == 0) {
-		/* Yes, they did. */
-		result = DeeModule_GetDeemon();
-		Dee_Incref(result);
-		goto done;
-	}
-
-	modules_glob_lock_read();
-	if (modules_glob_a) {
-		result = LIST_FIRST(&modules_glob_v[hash % modules_glob_a]);
-		while (result) {
-			ASSERT_OBJECT_TYPE_EXACT(result->mo_name, &DeeString_Type);
-			if (DeeString_FS_EQUALS_BUF(result->mo_name, name, size)) {
-				Dee_Incref(result);
-				break; /* Found it! */
-			}
-			result = LIST_NEXT(result, mo_globlink);
-		}
-	}
-	modules_glob_lock_endread();
-done:
-	return (DREF DeeObject *)result;
-}
-
-/* Get a global module that has already been loaded, given its name.
- * If the module hasn't been loaded yet, NULL is returned.
- * NOTE: These functions never throw an error! */
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeModule_Get(DeeObject *__restrict module_name) {
-	/* TODO: Support for mixed LATIN-1/UTF-8 strings */
-	return DeeModule_DoGet(DeeString_STR(module_name),
-	                       DeeString_SIZE(module_name),
-	                       fs_hashobj(module_name));
-}
-
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeModule_GetString(/*utf-8*/ char const *__restrict module_name,
-                    size_t module_namesize) {
-	return DeeModule_DoGet(module_name,
-	                       module_namesize,
-	                       fs_hashutf8(module_name, module_namesize));
-}
-
-
 #if 0
 #define IS_VALID_MODULE_CHARACTER(ch)                \
 	(!((ch) == '/' || (ch) == '\\' || (ch) == '|' || \
@@ -1543,7 +1493,7 @@ again_find_existing_global_module:
 	/* The module hasn't been loaded, yet.
 	 * Try to load it now! */
 #ifndef CONFIG_NO_DEC
-	if (!options || !(options->co_decloader & DEC_FDISABLE)) {
+	if (!options || !(options->co_decloader & Dee_DEC_FDISABLE)) {
 		/* Step #1: Try to load the module from a pre-compiled .dec file.
 		 * By checking this before searching for trying to load a DEX extension,
 		 * we allow the user to override extensions with user-code scripts by
@@ -1598,7 +1548,7 @@ err_buf_name_dec_stream:
 				DeeString_HASH(module_path_ob) = hash;
 #endif /* !DEE_SYSTEM_FS_ICASE */
 
-				result->mo_flags |= MODULE_FLOADING;
+				result->mo_flags |= Dee_MODULE_FLOADING;
 				COMPILER_WRITE_BARRIER();
 				/* Cache the new module as part of the filesystem
 				 * module cache, as well as the global module cache. */
@@ -1780,7 +1730,7 @@ load_module_after_dec_failure:
 			/* Load the updated path hash (and also force the hash to be pre-cached) */
 			hash = fs_hashobj(module_path_ob);
 #endif /* !DEE_SYSTEM_FS_ICASE */
-			result->mo_flags |= MODULE_FLOADING;
+			result->mo_flags |= Dee_MODULE_FLOADING;
 			COMPILER_WRITE_BARRIER();
 
 			/* Register the new dex module globally. */
@@ -1894,7 +1844,7 @@ load_module_after_dex_failure:
 		ASSERT(DeeString_HASHOK(module_path_ob));
 		ASSERT(DeeString_HASH(module_path_ob) == hash);
 #endif /* !DEE_SYSTEM_FS_ICASE */
-		result->mo_flags |= MODULE_FLOADING;
+		result->mo_flags |= Dee_MODULE_FLOADING;
 		COMPILER_WRITE_BARRIER();
 
 		/* Register the new dex module globally. */
@@ -2672,7 +2622,7 @@ PRIVATE WUNUSED int DCALL module_rehash_globals(void) {
 		if (!item->ss_name)
 			continue;
 		perturb = j = item->ss_hash & new_mask;
-		for (;; MODULE_HASHNX(j, perturb)) {
+		for (;; Dee_MODULE_HASHNX(j, perturb)) {
 			struct module_symbol *new_item = &new_vec[j & new_mask];
 			if (new_item->ss_name)
 				continue;
@@ -2766,9 +2716,9 @@ module_import_symbol(void *arg, DeeObject *name, DeeObject *value) {
 
 		/* Insert the new object into the symbol table. */
 		hash    = DeeString_Hash(name);
-		perturb = i = MODULE_HASHST(self, hash);
-		for (;; MODULE_HASHNX(i, perturb)) {
-			struct module_symbol *item = MODULE_HASHIT(self, i);
+		perturb = i = Dee_MODULE_HASHST(self, hash);
+		for (;; Dee_MODULE_HASHNX(i, perturb)) {
+			struct module_symbol *item = Dee_MODULE_HASHIT(self, i);
 			if (item->ss_name)
 				continue;
 
@@ -2863,7 +2813,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 	DeeObject_Init(result, &DeeModule_Type);
 	weakref_support_init(result);
 	result = (DREF DeeModuleObject *)DeeGC_Track((DREF DeeObject *)result);
-	result->mo_flags = MODULE_FLOADING;
+	result->mo_flags = Dee_MODULE_FLOADING;
 #ifndef CONFIG_NO_THREADS
 	result->mo_loader = DeeThread_Self();
 #endif /* !CONFIG_NO_THREADS */
@@ -3113,7 +3063,7 @@ pack_code_in_return:
 
 	COMPILER_END();
 	Dee_Decref(compiler);
-	atomic_or(&result->mo_flags, MODULE_FDIDLOAD);
+	atomic_or(&result->mo_flags, Dee_MODULE_FDIDLOAD);
 	return (DREF DeeObject *)result;
 err_r_compiler_code:
 	ast_xdecref(code);
@@ -3122,7 +3072,7 @@ err_r_compiler:
 err_r_compiler_not_locked:
 	Dee_Decref(compiler);
 err_r:
-	atomic_and(&result->mo_flags, ~(MODULE_FLOADING));
+	atomic_and(&result->mo_flags, ~(Dee_MODULE_FLOADING));
 	Dee_Decref_likely(result);
 	goto err;
 err_module_name:

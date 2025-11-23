@@ -4450,6 +4450,22 @@ DeeType_GetName(DeeTypeObject const *__restrict self) {
 	return result;
 }
 
+
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+/* Returns the "tp_writedec" operator for "self". If possible, inherit from base class. */
+INTERN WUNUSED NONNULL((1)) Dee_funptr_t
+(DCALL DeeType_GetTpWriteDec)(DeeTypeObject *__restrict self) {
+	Dee_funptr_t result = self->tp_init._tp_init_._tp_init8_;
+	if (!result && (self->tp_flags & TP_FINHERITCTOR) && self->tp_base) {
+		result = DeeType_GetTpWriteDec(self->tp_base);
+		if (result)
+			self->tp_init._tp_init_._tp_init8_ = result;
+	}
+	return result;
+}
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_get_module(DeeTypeObject *__restrict self) {
 	DREF DeeObject *result;

@@ -1360,7 +1360,6 @@
 #define list_object                    Dee_list_object
 #define memory_file_object             Dee_memory_file_object
 #define module_object                  Dee_module_object
-#define module_path_object             Dee_module_path_object
 #define module_symbol                  Dee_module_symbol
 #define nomemory_error_object          Dee_nomemory_error_object
 #define none_object                    Dee_none_object

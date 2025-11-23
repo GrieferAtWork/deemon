@@ -104,7 +104,7 @@ module_compile(DeeModuleObject *__restrict mod,
 #ifndef CONFIG_NO_DEC
 	/* Save the time when compilation of the module started. */
 	mod->mo_ctime = DeeSystem_GetWalltime();
-	atomic_or(&mod->mo_flags, MODULE_FHASCTIME);
+	atomic_or(&mod->mo_flags, Dee_MODULE_FHASCTIME);
 #endif /* !CONFIG_NO_DEC */
 
 #ifndef CONFIG_NO_DEC

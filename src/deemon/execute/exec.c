@@ -589,8 +589,8 @@ PRIVATE uint64_t exec_timestamp = (uint64_t)-1;
 #define SET_EXEC_TIMESTAMP(x) (exec_timestamp = (x))
 #else /* CONFIG_NO_DEC */
 #define exec_timestamp        DeeModule_Deemon.mo_ctime
-#define HAS_EXEC_TIMESTAMP    (DeeModule_Deemon.mo_flags & MODULE_FHASCTIME)
-#define SET_EXEC_TIMESTAMP(x) (exec_timestamp = (x), atomic_or(&DeeModule_Deemon.mo_flags, MODULE_FHASCTIME))
+#define HAS_EXEC_TIMESTAMP    (DeeModule_Deemon.mo_flags & Dee_MODULE_FHASCTIME)
+#define SET_EXEC_TIMESTAMP(x) (exec_timestamp = (x), atomic_or(&DeeModule_Deemon.mo_flags, Dee_MODULE_FHASCTIME))
 #endif /* !CONFIG_NO_DEC */
 
 

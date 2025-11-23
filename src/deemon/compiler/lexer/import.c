@@ -95,7 +95,7 @@ module_opened:
 		Dee_Incref(result);
 	} else {
 		/* Check for recursive dependency. */
-		if (!(result->mo_flags & MODULE_FDIDLOAD) &&
+		if (!(result->mo_flags & Dee_MODULE_FDIDLOAD) &&
 		    result != current_rootscope->rs_module) {
 			PERRAT(loc, W_RECURSIVE_MODULE_DEPENDENCY,
 			       result->mo_name, current_rootscope->rs_module->mo_name);
@@ -113,9 +113,9 @@ import_module_symbol(DeeModuleObject *__restrict mod,
                      struct TPPKeyword *__restrict name) {
 	Dee_hash_t i, perturb;
 	Dee_hash_t hash = Dee_HashUtf8(name->k_name, name->k_size);
-	perturb = i = MODULE_HASHST(mod, hash);
-	for (;; MODULE_HASHNX(i, perturb)) {
-		struct module_symbol *item = MODULE_HASHIT(mod, i);
+	perturb = i = Dee_MODULE_HASHST(mod, hash);
+	for (;; Dee_MODULE_HASHNX(i, perturb)) {
+		struct module_symbol *item = Dee_MODULE_HASHIT(mod, i);
 		if (!item->ss_name)
 			break; /* Not found */
 		if (item->ss_hash != hash)

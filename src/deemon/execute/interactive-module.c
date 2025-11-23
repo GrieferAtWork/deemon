@@ -70,7 +70,7 @@ typedef struct {
 	                                       * [OVERRIDE(.mo_globnext, [0..0][const])]
 	                                       * [OVERRIDE(.mo_importc, [lock(:im_exec_lock)])]
 	                                       * [OVERRIDE(.mo_globalc, [lock(:im_exec_lock && :mo_lock)])]
-	                                       * [OVERRIDE(.mo_flags, [const][== MODULE_FLOADING|MODULE_FINITIALIZING])]
+	                                       * [OVERRIDE(.mo_flags, [const][== Dee_MODULE_FLOADING|Dee_MODULE_FINITIALIZING])]
 	                                       * [OVERRIDE(.mo_bucketm, [lock(:im_exec_lock)])]
 	                                       * [OVERRIDE(.mo_bucketv, [lock(:im_exec_lock)])]
 	                                       * [OVERRIDE(.mo_importv, [lock(:im_exec_lock)])]
@@ -930,7 +930,7 @@ module_rehash_globals(DeeModuleObject *__restrict self) {
 		if (!item->ss_name)
 			continue;
 		perturb = j = item->ss_hash & new_mask;
-		for (;; MODULE_HASHNX(j, perturb)) {
+		for (;; Dee_MODULE_HASHNX(j, perturb)) {
 			struct module_symbol *new_item = &new_vec[j & new_mask];
 			if (new_item->ss_name)
 				continue;
@@ -971,9 +971,9 @@ module_import_symbol(DeeModuleObject *self,
 
 	/* Insert the new object into the symbol table. */
 	hash    = DeeString_Hash(name);
-	perturb = i = MODULE_HASHST(self, hash);
-	for (;; MODULE_HASHNX(i, perturb)) {
-		struct module_symbol *item = MODULE_HASHIT(self, i);
+	perturb = i = Dee_MODULE_HASHST(self, hash);
+	for (;; Dee_MODULE_HASHNX(i, perturb)) {
+		struct module_symbol *item = Dee_MODULE_HASHIT(self, i);
 		if (item->ss_name)
 			continue;
 		/* Use this item. */
@@ -1113,7 +1113,7 @@ imod_init(InteractiveModule *__restrict self,
 	self->im_module.mo_importv = NULL;
 	self->im_module.mo_globalc = 0;
 	self->im_module.mo_globalv = NULL;
-	self->im_module.mo_flags   = MODULE_FLOADING | MODULE_FINITIALIZING;
+	self->im_module.mo_flags   = Dee_MODULE_FLOADING | Dee_MODULE_FINITIALIZING;
 	self->im_module.mo_bucketm = INTERACTIVE_MODULE_DEFAULT_GLOBAL_SYMBOL_MASK;
 	self->im_module.mo_bucketv = (struct module_symbol *)Dee_Callocc(INTERACTIVE_MODULE_DEFAULT_GLOBAL_SYMBOL_MASK + 1,
 	                                                                 sizeof(struct module_symbol));
@@ -1658,7 +1658,7 @@ err:
  *       the returned object will be a snapshot of the active assembly at the
  *       time when the access was made. This snapshot will not be updated as
  *       additional assembly is generated from new source code.
- *     - Modules of this type will never set the `MODULE_FDIDLOAD' flag, meaning
+ *     - Modules of this type will never set the `Dee_MODULE_FDIDLOAD' flag, meaning
  *       that they will never finish ~loading~ in the sense that they will
  *       relinquish their right to modify the module's `mo_importv', `mo_globalv',
  *       `mo_root', `mo_bucketv', etc... fields.
@@ -1811,7 +1811,7 @@ imod_fini(InteractiveModule *__restrict self) {
 		                   0);
 	}
 	decref_options(&self->im_options);
-	ASSERT(!(self->im_module.mo_flags & MODULE_FDIDLOAD));
+	ASSERT(!(self->im_module.mo_flags & Dee_MODULE_FDIDLOAD));
 	Dee_XDecrefv(self->im_module.mo_globalv, self->im_module.mo_globalc);
 	Dee_Free(self->im_module.mo_globalv);
 }
@@ -1848,7 +1848,7 @@ imod_clear(InteractiveModule *__restrict self) {
 	self->im_frame.cf_stacksz = 0;
 	self->im_frame.cf_flags   = 0;
 	localc = self->im_module.mo_root ? self->im_module.mo_root->co_localc : 0;
-	ASSERT(!(self->im_module.mo_flags & MODULE_FDIDLOAD));
+	ASSERT(!(self->im_module.mo_flags & Dee_MODULE_FDIDLOAD));
 	old_globalc = self->im_module.mo_globalc;
 	old_globalv = self->im_module.mo_globalv;
 	self->im_module.mo_globalc = 0;

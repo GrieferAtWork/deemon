@@ -4063,6 +4063,12 @@ struct Dee_type_object {
 #define DeeObject_GCPriority(x)          DeeType_GCPriority(Dee_TYPE(x))
 #define DeeObject_IsInterrupt(x)         DeeType_IsInterrupt(Dee_TYPE(x))
 
+#ifdef CONFIG_BUILDING_DEEMON
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+/* Returns the "tp_writedec" operator for "tp". If possible, inherit from base class. */
+INTDEF WUNUSED NONNULL((1)) Dee_funptr_t (DCALL DeeType_GetTpWriteDec)(DeeTypeObject *__restrict self);
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+#endif /* CONFIG_BUILDING_DEEMON */
 
 /* Helpers for allocating/freeing fixed-length (non-variable) type instances. */
 #define DeeType_AllocInstance(tp_self)                                                      \
