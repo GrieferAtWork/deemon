@@ -118,6 +118,8 @@ struct Dee_module_dexdata {
 	NONNULL_T((1)) void (DCALL *mdx_fini)(void);
 
 	/* Array of memory segments to which this dex is mapped (for use in an R/B-tree) */
+	/* TODO: For "DeeModule_FromStaticPointer_USE_GetModuleHandleExW", should instead
+	 *       have a single R/B-tree to translate HMODULE to `DeeModuleObject' */
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_module_dexnode, mdx_nodes);
 };
 

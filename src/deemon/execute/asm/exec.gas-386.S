@@ -204,10 +204,20 @@ END(_impl_assert_failed)
 #define ERROR_PRINT_HANDLEINTR 2
 #endif /* !CONFIG_NO_THREADS */
 
-#define Dee_BOUND_ERR     (-1)
-#define Dee_BOUND_MISSING (-2) /* TODO: Change this to "0" (for binary compat with "hasattr") */
-#define Dee_BOUND_NO      0    /* TODO: Change this to "1" (for binary compat with "hasattr") */
-#define Dee_BOUND_YES     1    /* TODO: Change this to "2" (for binary compat with "hasattr") */
+#define Dee_HAS_ERR (-1)
+#define Dee_HAS_NO  0
+#define Dee_HAS_YES 1
+
+#define Dee_BOUND_ERR      Dee_HAS_ERR
+#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+#define Dee_BOUND_MISSING  Dee_HAS_NO
+#define Dee_BOUND_YES      Dee_HAS_YES
+#define Dee_BOUND_NO       2
+#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
+#define Dee_BOUND_MISSING  (-2)
+#define Dee_BOUND_YES      1
+#define Dee_BOUND_NO       0
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
 #define DEE_STDIN  0
 #define DEE_STDOUT 1
@@ -308,25 +318,26 @@ END(_impl_assert_failed)
 #define tp_features           20 /* uint32_t tp_features; */
 #define tp_base               24 /* DeeTypeObject *tp_base; */
 #define tp_init               28 /* struct Dee_type_constructor tp_init; */
-#define tp_cast               72 /* struct Dee_type_cast tp_cast; */
-#define tp_visit              92 /* void (DCALL *tp_visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg); */
-#define tp_gc                 96 /* struct Dee_type_gc tpconst *tp_gc; */
-#define tp_math              100 /* struct Dee_type_math *tp_math; */
-#define tp_cmp               104 /* struct Dee_type_cmp *tp_cmp; */
-#define tp_seq               108 /* struct Dee_type_seq *tp_seq; */
-#define tp_iter_next         112 /* DREF DeeObject *(DCALL *tp_iter_next)(DeeObject *__restrict self); */
-#define tp_iterator          116 /* struct Dee_type_iter *tp_iterator; */
-#define tp_attr              120 /* struct Dee_type_attr *tp_attr; */
-#define tp_with              124 /* struct Dee_type_with *tp_with; */
-#define tp_buffer            128 /* struct Dee_type_buffer *tp_buffer; */
-#define tp_methods           132 /* struct Dee_type_method tpconst *tp_methods; */
-#define tp_getsets           136 /* struct Dee_type_getset tpconst *tp_getsets; */
-#define tp_members           140 /* struct Dee_type_member tpconst *tp_members; */
-#define tp_class_methods     144 /* struct Dee_type_method tpconst *tp_class_methods; */
-#define tp_class_getsets     148 /* struct Dee_type_getset tpconst *tp_class_getsets; */
-#define tp_class_members     152 /* struct Dee_type_member tpconst *tp_class_members; */
-#define tp_call              156  /* DREF DeeObject *(DCALL *tp_call)(DeeObject *self, size_t argc, DeeObject *const *argv); */
-#define tp_callable          160 /* struct Dee_type_callable *tp_callable; */
+#define tp_cast               80 /* struct Dee_type_cast tp_cast; */
+#define tp_visit             100 /* void (DCALL *tp_visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg); */
+#define tp_gc                104 /* struct Dee_type_gc tpconst *tp_gc; */
+#define tp_math              108 /* struct Dee_type_math *tp_math; */
+#define tp_cmp               112 /* struct Dee_type_cmp *tp_cmp; */
+#define tp_seq               116 /* struct Dee_type_seq *tp_seq; */
+#define tp_iter_next         120 /* DREF DeeObject *(DCALL *tp_iter_next)(DeeObject *__restrict self); */
+#define tp_iterator          124 /* struct Dee_type_iter *tp_iterator; */
+#define tp_attr              128 /* struct Dee_type_attr *tp_attr; */
+#define tp_with              132 /* struct Dee_type_with *tp_with; */
+#define tp_buffer            136 /* struct Dee_type_buffer *tp_buffer; */
+#define tp_methods           140 /* struct Dee_type_method tpconst *tp_methods; */
+#define tp_getsets           144 /* struct Dee_type_getset tpconst *tp_getsets; */
+#define tp_members           148 /* struct Dee_type_member tpconst *tp_members; */
+#define tp_class_methods     152 /* struct Dee_type_method tpconst *tp_class_methods; */
+#define tp_class_getsets     156 /* struct Dee_type_getset tpconst *tp_class_getsets; */
+#define tp_class_members     160 /* struct Dee_type_member tpconst *tp_class_members; */
+#define tp_method_hints      164 /* struct Dee_type_method_hint Dee_tpconst *tp_method_hints; */
+#define tp_call              168 /* DREF DeeObject *(DCALL *tp_call)(DeeObject *self, size_t argc, DeeObject *const *argv); */
+#define tp_callable          172 /* struct Dee_type_callable *tp_callable; */
 /* ... */
 /* }; */
 
@@ -342,6 +353,28 @@ END(_impl_assert_failed)
 
 
 /* struct module_object { */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#define mo_absname    DEE_OBJECT_OFFSETOF_DATA     /* char                          *mo_absname; */
+#define mo_absnode   (DEE_OBJECT_OFFSETOF_DATA+4)  /* struct Dee_module_treenode     mo_absnode; */
+#define mo_libname   (DEE_OBJECT_OFFSETOF_DATA+16) /* struct Dee_module_libentry     mo_libname; */
+#define mo_dir       (DEE_OBJECT_OFFSETOF_DATA+40) /* struct Dee_module_directory   *mo_dir; */
+#define mo_moddata   (DEE_OBJECT_OFFSETOF_DATA+44) /* union Dee_module_moddata       mo_moddata; */
+#define mo_init      (DEE_OBJECT_OFFSETOF_DATA+48) /* struct Dee_thread_object      *mo_init; */
+#define mo_flags     (DEE_OBJECT_OFFSETOF_DATA+52) /* uint16_t                       mo_flags; */
+#define mo_importc   (DEE_OBJECT_OFFSETOF_DATA+54) /* uint16_t                       mo_importc; */
+#define mo_globalc   (DEE_OBJECT_OFFSETOF_DATA+56) /* uint16_t                       mo_globalc; */
+#define mo_bucketm   (DEE_OBJECT_OFFSETOF_DATA+58) /* uint16_t                       mo_bucketm; */
+#define mo_bucketv   (DEE_OBJECT_OFFSETOF_DATA+60) /* struct Dee_module_symbol      *mo_bucketv; */
+#define mo_importv   (DEE_OBJECT_OFFSETOF_DATA+64) /* DREF DeeModuleObject   *const *mo_importv; */
+#ifndef CONFIG_NO_THREADS
+#define mo_lock      (DEE_OBJECT_OFFSETOF_DATA+68) /* Dee_atomic_rwlock_t            mo_lock; */
+#define _AFTER_mo_lock (DEE_OBJECT_OFFSETOF_DATA+72)
+#else /* !CONFIG_NO_THREADS */
+#define _AFTER_mo_lock (DEE_OBJECT_OFFSETOF_DATA+68)
+#endif /* CONFIG_NO_THREADS */
+#define _MODULE_ob_weakrefs _AFTER_mo_lock
+#define mo_globalv   (_MODULE_ob_weakrefs+4)
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #define mo_name         DEE_OBJECT_OFFSETOF_DATA     /* DREF struct string_object *mo_name; */
 #define mo_pself       (DEE_OBJECT_OFFSETOF_DATA+4)  /* DeeModuleObject **mo_pself; */
 #define mo_next        (DEE_OBJECT_OFFSETOF_DATA+8)  /* DeeModuleObject *mo_next; */
@@ -365,6 +398,7 @@ END(_impl_assert_failed)
 #define mo_lock        (mo_globpself+32) /* Dee_atomic_rwlock_t mo_lock; */
 #define mo_loader      (mo_globpself+36) /* struct thread_object *mo_loader; */
 #endif /* !CONFIG_NO_THREADS */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 /* }; */
 
 /* struct except_frame { */
@@ -1593,8 +1627,12 @@ target_push_bnd_extern:
 	movl   (%ecx,%eax,4), %ecx
 	/* ECX: `DeeModuleObject *' referenced_module */
 	ASSERT_BELOW(%dx,mo_globalc(%ecx))
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	movl   mo_globalv(%ecx,%edx,4), %eax
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	movl   mo_globalv(%ecx), %eax
 	movl   (%eax,%edx,4), %eax
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 .push_eax_nonnull:
 	xorl   %edx, %edx
 	testl  %eax, %eax
@@ -1624,8 +1662,12 @@ target_push_bnd_global:
 1:	LOAD_CODE(%ecx)
 	movl   co_module(CODE_OR_ECX), %ecx
 	ASSERT_BELOW(%ax,mo_globalc(%ecx))
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	movl   mo_globalv(%ecx,%eax,4), %eax
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	movl   mo_globalv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %eax
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	jmp    .push_eax_nonnull
 
 
@@ -2557,7 +2599,11 @@ target_del_global:
 	ADJUST_CFA_OFFSET(4)
 #endif /* !CONFIG_NO_THREADS */
 	ASSERT_BELOW(%ax,mo_globalc(%ecx))
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	leal   mo_globalv(%ecx), %edx
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	movl   mo_globalv(%ecx), %edx
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	xorl   %ecx, %ecx
 	xchgl  %ecx, (%edx,%eax,4) /* Exchange the variable with NULL. */
 #ifndef CONFIG_NO_THREADS
@@ -2824,8 +2870,12 @@ target_super_this_g:
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	movl   mo_globalv(%ecx,%eax,4), %edx
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	movl   mo_globalv(%ecx), %edx
 	movl   (%edx,%eax,4), %edx
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	testl  %edx, %edx
 	jz     99f
 	incref %edx
@@ -2960,8 +3010,12 @@ target_pop_global:
 	ADJUST_CFA_OFFSET(4)
 #endif /* !CONFIG_NO_THREADS */
 	sp_pop %edx /* Pop the value to-be written to globals */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	xchgl  mo_globalv(%ecx,%eax,4), %edx
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	movl   mo_globalv(%ecx), %ecx
 	xchgl  (%ecx,%eax,4), %edx
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #ifndef CONFIG_NO_THREADS
 	popl   %ecx
 	ADJUST_CFA_OFFSET(-4)
@@ -3250,8 +3304,12 @@ target_push_global:
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	movl   mo_globalv(%ecx,%eax,4), %edx
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	movl   mo_globalv(%ecx), %edx
 	movl   (%edx,%eax,4), %edx
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	testl  %edx, %edx
 	jz     99f /* Check for unbound globals. */
 	sp_push %edx, 1 /* Push the global variable. */
@@ -4194,8 +4252,12 @@ target_class_gc:
 	popl   %ecx
 	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	movl   mo_globalv(%edx,%ecx,4), %eax
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	movl   mo_globalv(%edx), %eax
 	movl   (%eax,%ecx,4), %eax
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	testl  %eax, %eax /* Check if the global variable is unbound. */
 	jz     99f
 	incref %eax
@@ -6467,8 +6529,12 @@ target_call_extern:
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	movl   mo_globalv(%ecx,%eax,4), %edx
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	movl   mo_globalv(%ecx), %edx
 	movl   (%edx,%eax,4), %edx
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	testl  %edx, %edx
 	jz     99f  /* Check if the global variable is unbound. */
 	incref %edx /* Always safe a reference because the function may delete itself. */
@@ -7477,8 +7543,12 @@ impl_cmpxch_prefix_extern:   /* 0xfc : ASM_EXTERN */
 	ADJUST_CFA_OFFSET(-4)
 	movl   0(%esp), %edx
 #endif /* ONFIG_NO_THREADS */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	leal   mo_globalv(%edx,%eax,4), %eax
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	movl   mo_globalv(%edx), %edx
 	leal   (%edx,%eax,4), %eax
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	cmpl   %ecx, (%eax)
 	jne    .Lunlock_module_and_xpopref_from_esp_and_set_FIRST_to_false
 #ifdef CONFIG_NO_THREADS
@@ -7787,8 +7857,12 @@ prefix_target_pop_global:
 	pushl  %ecx
 	ADJUST_CFA_OFFSET(4)
 #endif /* !CONFIG_NO_THREADS */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	xchgl  mo_globalv(%ecx,%eax,4), %edx
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	movl   mo_globalv(%ecx), %ecx
 	xchgl  (%ecx,%eax,4), %edx
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #ifndef CONFIG_NO_THREADS
 	popl   %ecx
 	ADJUST_CFA_OFFSET(-4)
@@ -8100,8 +8174,12 @@ prefix_target_push_global:
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	movl   mo_globalv(%ecx,%eax,4), %edx
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	movl   mo_globalv(%ecx), %edx
 	movl   (%edx,%eax,4), %edx
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	testl  %edx, %edx
 	jz     99f /* Check for unbound globals. */
 	incref %edx
@@ -8386,8 +8464,12 @@ impl_set_prefix_global:
 	popl   %edx
 	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	xchgl  mo_globalv(%ecx,%eax,4), %edx /* Exchange the global. */
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	movl   mo_globalv(%ecx), %ecx
 	xchgl  (%ecx,%eax,4), %edx /* Exchange the global. */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #ifndef CONFIG_NO_THREADS
 	popl   %ecx
 	ADJUST_CFA_OFFSET(-4)
@@ -8604,8 +8686,12 @@ impl_xch_prefix_global:
 	popl   %edx
 	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	xchgl  mo_globalv(%ecx,%eax,4), %edx /* Exchange the global. */
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	movl   mo_globalv(%ecx), %ecx
 	xchgl  (%ecx,%eax,4), %edx /* Exchange the global. */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	testl  %edx, %edx
 	jz     70f
 	popl   %ecx /* ECX = module; */
@@ -8856,8 +8942,12 @@ impl_get_prefix_global:
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	movl   mo_globalv(%ecx,%eax,4), %edx
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	movl   mo_globalv(%ecx), %edx
 	movl   (%edx,%eax,4), %edx
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	testl  %edx, %edx
 	jz     99f /* Unbound global. */
 	incref %edx
