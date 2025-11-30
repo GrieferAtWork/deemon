@@ -263,6 +263,8 @@ err:
 #else /* CONFIG_NO_DEC */
 #define DeeModule_OpenFile_impl4_EXTRA_CHARS 1 /* for the leading "." in dec filenames */
 #endif /* !CONFIG_NO_DEC */
+
+/* TODO: Must also consider `DeeSystem_SOEXT' (which can also be overwritten to be anything else) */
 #define DeeModule_OpenFile_impl3_EXTRA_CHARS 4 /* extra ".dee" / ".dll" / ".so" at the end */
 
 #if DeeModule_OpenFile_impl4_EXTRA_CHARS > DeeModule_OpenFile_impl3_EXTRA_CHARS
@@ -3923,7 +3925,7 @@ PUBLIC DeeListObject DeeModule_Path = {
 #define get_default_home_USE_dlmodulename
 #elif defined(CONFIG_HOST_WINDOWS)
 #define get_default_home_USE_GetModuleFileNameW
-#elif defined(CONFIG_HOST_UNIX)
+#elif defined(CONFIG_HAVE_PROCFS)
 #define get_default_home_USE_readlink_proc_self_exe
 #else /* ... */
 #define get_default_home_USE_readlink_proc_self_exe

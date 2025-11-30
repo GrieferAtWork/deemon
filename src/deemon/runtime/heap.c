@@ -1235,17 +1235,17 @@ static size_t traverse_and_check(PARAM_mstate_m);
 #define treebin_at(M, i)  (&(mstate_treebins(M)[i]))
 
 /* assign tree index for size S to variable I. Use x86 asm if possible  */
-#define compute_tree_index(S, I)                                                            \
-	{                                                                                       \
-		size_t X = S >> TREEBIN_SHIFT;                                                \
-		if (X == 0)                                                                         \
-			I = 0;                                                                          \
-		else if (X > 0xFFFF)                                                                \
-			I = NTREEBINS - 1;                                                              \
-		else {                                                                              \
-			unsigned int K = (unsigned)sizeof(X) * __CHAR_BIT__ - 1 - CLZ(X);               \
-			I              = (bindex_t)((K << 1) + ((S >> (K + (TREEBIN_SHIFT - 1)) & 1))); \
-		}                                                                                   \
+#define compute_tree_index(S, I)                                               \
+	{                                                                          \
+		size_t X = S >> TREEBIN_SHIFT;                                         \
+		if (X == 0)                                                            \
+			I = 0;                                                             \
+		else if (X > 0xFFFF)                                                   \
+			I = NTREEBINS - 1;                                                 \
+		else {                                                                 \
+			unsigned int K = (unsigned)sizeof(X) * __CHAR_BIT__ - 1 - CLZ(X);  \
+			I = (bindex_t)((K << 1) + ((S >> (K + (TREEBIN_SHIFT - 1)) & 1))); \
+		}                                                                      \
 	}
 
 /* Bit representing maximum resolved size in a treebin at i */
@@ -3650,7 +3650,7 @@ static size_t internal_bulk_free(PARAM_mstate_m_ void *array[], size_t nelem) {
 					++unfreed;
 					continue;
 				}
-#endif
+#endif /* FOOTERS && !GM_ONLY */
 				check_inuse_chunk(m, p);
 				*a = 0;
 				if (RTCHECK(ok_address(m, p) && ok_inuse(p))) {

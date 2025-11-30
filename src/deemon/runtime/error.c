@@ -481,7 +481,7 @@ DeeError_UninstallKeyboardInterrupt(void) {
 	SetConsoleCtrlHandler(&nt_ConsoleControlHandler, FALSE);
 }
 
-#elif defined(CONFIG_HOST_UNIX)
+#elif defined(CONFIG_HOST_UNIX) /* TODO: Use feature test macros instead */
 
 PRIVATE void sigint_handler(int UNUSED(signo)) {
 	INC_KEYBOARD_INTERRUPT_COUNTER();

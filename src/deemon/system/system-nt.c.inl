@@ -2855,7 +2855,7 @@ DeeNTSystem_ConvertNtDrivePathToDosPath(struct unicode_printer *__restrict print
 	/* Unsupported prefix :(
 	 *
 	 * -> Return as-is, even though that'll probably lead to later problems,
-	 *    but at least doing so allows us to easily see unsupported pattern
+	 *    but at least doing so allows us to easily see unsupported patterns
 	 *    and add support for them later */
 done:
 	Dee_Freea(wDeviceBuffer);
@@ -3008,7 +3008,7 @@ DeeNTSystem_ConvertNtPathToDosPath(struct unicode_printer *__restrict printer,
 	 *       https://stackoverflow.com/a/18792477/3296587 */
 
 	if (end_offset >= start_offset + 8 &&
-		unicode_printer_memcasecmp8(printer, (uint8_t const *)"\\Device\\", start_offset, 8) == 0) {
+	    unicode_printer_memcasecmp8(printer, (uint8_t const *)"\\Device\\", start_offset, 8) == 0) {
 
 		/* Check for r"\Device\Mup\<SERVER>\<SHARE>"-like prefixes. */
 		if (end_offset >= start_offset + 12 &&

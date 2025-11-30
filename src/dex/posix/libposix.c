@@ -2012,7 +2012,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* TODO: setegid() */
 	/* TODO: getuid() */ /* nt: LookupAccountName(GetUserName()) */
 	/* TODO: setuid() */
-	/* TODO: getgid() */ /* ??? */
+	/* TODO: getgid() */ /* nt: ??? */
 	/* TODO: setgid() */
 	/* TODO: setreuid() */
 	/* TODO: setregid() */

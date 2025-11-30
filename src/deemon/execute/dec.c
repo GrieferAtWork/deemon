@@ -1021,7 +1021,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
  * >> size_t i;
  * >> for (i = 0; i < objc; ++i) {
  * >>     if (DeeDecWriter_InplacePutObject(self, addr)) {
- * >>         for (; i < objc; ++i) {
+ * >>         for (++i; i < objc; ++i) {
  * >>             Dee_Decref(*DeeDecWriter_Addr2Mem(self, addr, DREF DeeObject *));
  * >>             addr += sizeof(DREF DeeObject *);
  * >>         }
@@ -1035,10 +1035,11 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
                                        Dee_dec_addr_t addr, size_t objc) {
 	DREF DeeObject **objv;
 	while (objc) {
-		if (DeeDecWriter_InplacePutObject(self, addr))
-			goto err;
+		int status = DeeDecWriter_InplacePutObject(self, addr);
 		addr += sizeof(DREF DeeObject *);
 		--objc;
+		if unlikely(status)
+			goto err;
 	}
 	return 0;
 err:

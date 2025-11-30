@@ -451,7 +451,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeDecWriter_XInplacePutObject)(DeeDe
  * >> size_t i;
  * >> for (i = 0; i < objc; ++i) {
  * >>     if (DeeDecWriter_InplacePutObject(self, addr)) {
- * >>         for (; i < objc; ++i) {
+ * >>         for (++i; i < objc; ++i) {
  * >>             Dee_Decref(*DeeDecWriter_Addr2Mem(self, addr, DREF DeeObject *));
  * >>             addr += sizeof(DREF DeeObject *);
  * >>         }
