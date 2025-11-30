@@ -1285,7 +1285,6 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL }, /* XXX: Use the tuple-allocator? (if somehow still possible with "CONFIG_EXPERIMENTAL_MMAP_DEC") */
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
 				/* .tp_writedec    = */ (Dee_funptr_t)&function_writedec
-
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&function_fini,

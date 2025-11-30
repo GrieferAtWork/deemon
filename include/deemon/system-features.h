@@ -1083,6 +1083,7 @@ func("memccpy", "defined(CONFIG_HAVE_STRING_H) && (defined(__USE_MISC) || define
 func("_memccpy", "defined(CONFIG_HAVE_STRING_H) && (defined(__USE_MISC) || defined(__USE_XOPEN) || " + addparen(msvc) + ")", test: "extern void *a; extern void const *b; return _memccpy(a, b, 7, 16) == a;");
 functest('strcmp("foo", "bar")', stdc);
 functest('strcmpz("foo", "bar", 3)', "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)");
+functest('strcasecmpz("foo", "bar", 3)', "0");
 functest('strncmp("foo", "bar", 3)', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
 func("strcpy", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc), test: 'extern char *buf; return strcpy(buf, "bar") == buf;');
 func("stpcpy", "defined(__USE_XOPEN2K8)", test: 'extern char *buf; return stpcpy(buf, "bar") == buf + 3;');
@@ -8224,6 +8225,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_strcmpz
 #endif
 
+#ifdef CONFIG_NO_strcasecmpz
+#undef CONFIG_HAVE_strcasecmpz
+#elif !defined(CONFIG_HAVE_strcasecmpz) && \
+      (defined(strcasecmpz) || defined(__strcasecmpz_defined))
+#define CONFIG_HAVE_strcasecmpz
+#endif
+
 #ifdef CONFIG_NO_strncmp
 #undef CONFIG_HAVE_strncmp
 #elif !defined(CONFIG_HAVE_strncmp) && \
@@ -13091,6 +13099,30 @@ DECL_END
 	}
 #define DeeSystem_DEFINE_strcmpz(name) \
 	_DeeSystem_DEFINE_strcmpzT(char, unsigned char, int, name)
+
+#define _DeeSystem_DEFINE_strcasecmpzT(T, Tu, Tr, name, tolower)   \
+	LOCAL WUNUSED NONNULL((1, 2)) Tr DCALL                         \
+	name(T const *lhs, T const *rhs, size_t rhs_len) {             \
+		T c1, c2;                                                  \
+		do {                                                       \
+			c1 = *lhs++;                                           \
+			if (!rhs_len--) {                                      \
+				/* Once  RHS  reaches  the end  of  the string,    \
+				 * compare the last character of LHS with `NUL' */ \
+				return (Tr)((Tu)c1 - '\0');                        \
+			}                                                      \
+			c2 = *rhs++;                                           \
+			if unlikely(c1 != c2) {                                \
+				c1 = (T)(Tu)tolower((Tu)c1);                       \
+				c2 = (T)(Tu)tolower((Tu)c2);                       \
+				if (c1 != c2)                                      \
+					return (Tr)((Tu)c1 - (Tu)c2);                  \
+			}                                                      \
+		} while (c1);                                              \
+		return 0;                                                  \
+	}
+#define DeeSystem_DEFINE_strcasecmpz(name) \
+	_DeeSystem_DEFINE_strcasecmpzT(char, unsigned char, int, name, tolower)
 
 #define _DeeSystem_DEFINE_rawmemchrT(rT, T, Tneedle, name) \
 	LOCAL ATTR_PURE WUNUSED NONNULL((1)) rT *              \

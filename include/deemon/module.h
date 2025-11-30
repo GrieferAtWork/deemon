@@ -424,32 +424,53 @@ struct Dee_compiler_options {
  */
 
 
-struct Dee_module_treenode {
-	struct Dee_module_object *rb_par;
-	struct Dee_module_object *rb_lhs;
-	struct Dee_module_object *rb_rhs;
-};
-
 struct Dee_module_directory {
 	size_t                                                   md_count;  /* [const] # of files */
 	COMPILER_FLEXIBLE_ARRAY(DREF struct Dee_string_object *, md_files); /* [1..1][const][md_count] Names of "*.dee" files (w/o extension) and sub-directories */
 };
 
-#ifndef CONFIG_NO_DEX
-struct Dee_module_dexdata {
+struct Dee_module_libentry {
+	DREF struct Dee_string_object *mle_name; /* [0..1][lock(INTERNAL(module_libtree_lock))][valid_if(mo_absname)]
+	                                          * LIBPATH-name of module (or "NULL" if not a global module, or not
+	                                          * yet accessed using the LIBPATH). Cleared for all modules (except
+	                                          * for the built-in "deemon" module) whenever the libpath is changed. */
+	union {
+		struct Dee_module_object  *mle_mod;  /* [1..1][const] The module that this entry is for (least significant bit is R/B-flag) */
+		__UINTPTR_TYPE__           mle_red;  /* Least significant bit is red/black bit */
+	}                              mle_dat;  /* [valid_if(mle_name)] Data... */
 	struct {
-		struct Dee_module_dexdata *le_next, **le_prev;
-	}                              mdx_libraries; /* [1..1][lock(INTERNAL)] Internal list of dex modules */
-	struct Dee_module_object      *mdx_module;    /* [1..1][const] Associated dex module descriptor */
-	void                          *mdx_handle;    /* [?..?][const] System-specific library handle */
-
-	/* [0..1][const] Optional initializer/finalizer callbacks. */
-	WUNUSED_T NONNULL_T((1)) int (DCALL *mdx_init)(void);
-	NONNULL_T((1)) void (DCALL *mdx_fini)(void);
-
-	/* TODO: Array of memory segments to which this dex is mapped (for use in an R/B-tree) */
+		struct Dee_module_libentry *rb_par;  /* [?..?] Parent node */
+		struct Dee_module_libentry *rb_lhs;  /* [?..?] Left node */
+		struct Dee_module_libentry *rb_rhs;  /* [?..?] Right node */
+	}                              mle_node; /* [lock(INTERNAL(module_libtree_lock))][valid_if(mo_absname && mo_libname)]
+	                                          * Node in tree of modules-by-mo_libname */
+	struct Dee_module_libentry    *mle_next; /* [0..1][valid_if(mle_name)][lock(INTERNAL(module_libtree_lock))][owned] Another name for this module */
 };
+
+#define Dee_module_libentry_getmodule(self) \
+	((DeeModuleObject *)((__UINTPTR_TYPE__)(self)->mle_dat.mle_mod & ~1))
+
+#ifndef CONFIG_NO_DEX
+struct Dee_module_dexdata;
 #endif /* !CONFIG_NO_DEX */
+
+struct Dee_module_treenode {
+	struct Dee_module_object *rb_par;       /* [?..?] Parent node */
+	struct Dee_module_object *rb_lhs;       /* [?..?] Left node */
+	struct Dee_module_object *rb_rhs;       /* [?..?] Right node */
+};
+
+union Dee_module_moddata {
+	struct Dee_code_object    *mo_rootcode; /* [1..1][valid_if(DeeModuleDee_Type)][owned] Root code object (owned)
+	                                         * Note that "owned" means that the module itself **owns** all data of
+	                                         * this code object, except for the reference in `co_module'. On top of
+	                                         * that, the tp_destroy operator of `DeeCode_Type' checks if the code
+	                                         * object is its own module's root, and if so: only decref's `co_module'
+	                                         * without clobbering any of the object's other fields. */
+#ifndef CONFIG_NO_DEX
+	struct Dee_module_dexdata *mo_dexdata;  /* [1..1][valid_if(DeeModuleDex_Type)][owned] Dex data of module (owned) */
+#endif /* !CONFIG_NO_DEX */
+};
 
 struct Dee_module_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
@@ -473,26 +494,11 @@ struct Dee_module_object {
 	                                             * but the module is also initialized to not do directory-scanning */
 	struct Dee_module_treenode     mo_absnode;  /* [lock(INTERNAL(module_abstree_lock))][valid_if(mo_absname)]
 	                                             * Node in tree of modules-by-mo_absname */
-	DREF struct Dee_string_object *mo_libname;  /* [0..1][lock(INTERNAL(module_libtree_lock))][valid_if(mo_absname)]
-	                                             * LIBPATH-name of module (or "NULL" if not a global module, or not
-	                                             * yet accessed using the LIBPATH). Cleared for all modules (except
-	                                             * for the built-in "deemon" module) whenever the libpath is changed. */
-	struct Dee_module_treenode     mo_libnode;  /* [lock(INTERNAL(module_libtree_lock))][valid_if(mo_absname && mo_libname)]
-	                                             * Node in tree of modules-by-mo_libname */
+	struct Dee_module_libentry     mo_libname;  /* [valid_if(mo_absname != NULL)] Primary lib entry for this module (unused if "mle_name" is "NULL") */
 	struct Dee_module_directory   *mo_dir;      /* [0..1][owned_if(!= empty_module_directory)][lock(WRITE_ONCE)]
 	                                             * Results of interpreting `mo_absname' as a directory and scanning
 	                                             * that directory for "*.dee" files, and more directories. */
-	union {
-		struct Dee_code_object    *mo_rootcode; /* [1..1][valid_if(DeeModuleDee_Type)][owned] Root code object (owned)
-		                                         * Note that "owned" means that the module itself **owns** all data of
-		                                         * this code object, except for the reference in `co_module'. On top of
-		                                         * that, the tp_destroy operator of `DeeCode_Type' checks if the code
-		                                         * object is its own module's root, and if so: only decref's `co_module'
-		                                         * without clobbering any of the object's other fields. */
-#ifndef CONFIG_NO_DEX
-		struct Dee_module_dexdata *mo_dexdata;  /* [1..1][valid_if(DeeModuleDex_Type)][owned] Dex data of module (owned) */
-#endif /* !CONFIG_NO_DEX */
-	} mo_moddata;
+	union Dee_module_moddata       mo_moddata;  /* Module-type-specific data */
 #define Dee_MODULE_INIT_UNINITIALIZED ((struct Dee_thread_object *)NULL)
 #define Dee_MODULE_INIT_INITIALIZED   ((struct Dee_thread_object *)ITER_DONE)
 	struct Dee_thread_object      *mo_init;     /* [0..1][lock(ATOMIC)] Module initialization state (one of `Dee_MODULE_INIT_*', or the thread doing the init)
@@ -500,8 +506,7 @@ struct Dee_module_object {
 	                                             *       this must always be `Dee_MODULE_INIT_INITIALIZED' */
 #define Dee_MODULE_FNORMAL         0x0000       /* Normal module flags. */
 #define Dee_MODULE_FABSRED         0x0001       /* is-red-bit for `mo_absnode' */
-#define Dee_MODULE_FLIBRED         0x0002       /* is-red-bit for `mo_libnode' */
-#define Dee_MODULE_FNOTDEE         0x0004       /* [DeeModuleDee_Type][const] `mo_absname' is the actual, absolute filename of this module (which doesn't end with `.dee') */
+#define Dee_MODULE_FNOTDEE         0x0002       /* [DeeModuleDee_Type][const] `mo_absname' is the actual, absolute filename of this module (which doesn't end with `.dee') */
 #define Dee_MODULE_FWAITINIT       0x8000       /* [lock(ATOMIC)] When `mo_init' is set to `Dee_MODULE_INIT_UNINITIALIZED' or `Dee_MODULE_INIT_INITIALIZED', must `DeeFutex_WakeAll(&mo_init)' */
 	uint16_t                       mo_flags;    /* Module flags (Set of `Dee_MODULE_F*') */
 	uint16_t                       mo_importc;  /* [const] The total number of other modules imported by this one.
@@ -524,6 +529,36 @@ struct Dee_module_object {
 	Dee_WEAKREF_SUPPORT
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, mo_globalv); /* [0..1][lock(mo_globalv)][mo_globalc] Globals of this module */
 };
+
+#ifndef CONFIG_NO_THREADS
+#define _Dee_MODULE_STRUCT_mo_lock Dee_atomic_rwlock_t mo_lock;
+#define _Dee_MODULE_INIT_mo_lock   Dee_ATOMIC_RWLOCK_INIT,
+#else /* !CONFIG_NO_THREADS */
+#define _Dee_MODULE_STRUCT_mo_lock /* nothing */
+#define _Dee_MODULE_INIT_mo_lock   /* nothing */
+#endif /* CONFIG_NO_THREADS */
+
+#define Dee_MODULE_STRUCT_EX(name, mo_globalv_def) \
+	struct name {                                  \
+		Dee_OBJECT_HEAD                            \
+		/*utf-8*/ char                *mo_absname; \
+		struct Dee_module_treenode     mo_absnode; \
+		struct Dee_module_libentry     mo_libname; \
+		struct Dee_module_directory   *mo_dir;     \
+		union Dee_module_moddata       mo_moddata; \
+		struct Dee_thread_object      *mo_init;    \
+		uint16_t                       mo_flags;   \
+		uint16_t                       mo_importc; \
+		uint16_t                       mo_globalc; \
+		uint16_t                       mo_bucketm; \
+		struct Dee_module_symbol      *mo_bucketv; \
+		DREF DeeModuleObject   *const *mo_importv; \
+		_Dee_MODULE_STRUCT_mo_lock                 \
+		Dee_WEAKREF_SUPPORT                        \
+		mo_globalv_def                             \
+	}
+#define Dee_MODULE_STRUCT(name, mo_globalc_) \
+	Dee_MODULE_STRUCT_EX(name, DREF DeeObject *mo_globalv[mo_globalc_];)
 
 #define DeeModule_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->mo_lock)
 #define DeeModule_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->mo_lock)
@@ -647,7 +682,7 @@ DeeModule_ImportEx(/*utf-8*/ char const *__restrict import_str, size_t import_st
  * following forms (assuming that `DeeSystem_SEP' is '/'):
  * - [m] "deemon"                    (DeeModule_GetDeemon())
  * - [m] "net.ftp"                   ("${LIBPATH}/net/ftp.dee")
- * - [m] "net"                       ("${LIBPATH}/net.dll")
+ * - [m] "net"                       ("${LIBPATH}/net.so")
  * - [m] ".some_module"              (fs.headof(context_absname) + "/some_module.dee")
  * - [m] ".subdir.that_module"       (fs.headof(context_absname) + "/subdir/that_module.dee")
  * - [m] ".subdir"                   (fs.headof(context_absname) + "/subdir")                  DeeModuleDir_Type

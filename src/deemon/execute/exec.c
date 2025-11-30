@@ -908,7 +908,7 @@ INTDEF bool DCALL clear_strexec_cache(void);
 
 PRIVATE bool DCALL shutdown_globals(void) {
 	bool result;
-	result = DeeModule_FiniPath();
+	result = DeeModule_ClearLibPath();
 	result |= libcodecs_shutdown();
 	result |= clear_strexec_cache();
 	result |= DeeFile_ResetStd();

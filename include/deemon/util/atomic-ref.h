@@ -201,6 +201,8 @@ Dee_atomic_ref_xset(Dee_atomic_ref_t *__restrict self, DeeObject *newval);
 #define Dee_atomic_ref_xset(self, newval) \
 	(Dee_XIncref(newval), Dee_atomic_ref_xset_inherited(self, newval))
 #endif /* !__INTELLISENSE__ */
+#define Dee_atomic_ref_clear(self) \
+	Dee_atomic_ref_xset_inherited(self, NULL)
 
 
 /* Set value to "newval", but only if current value is "oldval"

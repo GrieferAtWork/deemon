@@ -88,16 +88,45 @@ DFUNDEF void DCALL DeeExec_SetHome(/*String*/ DeeObject *new_home);
  * >>         if (x is string)
  * >>             yield f"{x.rstrip("/")}/include";
  * >> } */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+
+/* Return the current module path, which is a tuple of absolute,
+ * normalized directory names describing where deemon system
+ * modules can be found.
+ * @return: * :   The module path
+ * @return: NULL: Error */
+DFUNDEF WUNUSED DREF /*Tuple*/ DeeObject *DCALL DeeModule_GetLibPath(void);
+
+/* Set (or reset when "new_libpath == NULL") the module path.
+ * - Assumes that "new_libpath" is a tuple
+ * - Throws an error if any element of "new_libpath" isn't a string
+ * - Normalizes given paths using `DeeSystem_MakeNormalAndAbsolute()'
+ * - Removes duplicate paths (but retains order of distinct paths)
+ * @return: 0 : Success (always returned when "new_libpath == NULL")
+ * @return: -1: Error */
+DFUNDEF WUNUSED int DCALL DeeModule_SetLibPath(/*Tuple*/ DeeObject *new_libpath);
+
+/* Add or remove a new module path
+ * @return: 1 : Given path was added (or removed)
+ * @return: 0 : Nothing happened (path was already added, or removed)
+ * @return: -1: Error */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_AddLibPath(/*String*/ DeeObject *path);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_AddLibPathString(/*utf-8*/ char const *path);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_AddLibPathStringLen(/*utf-8*/ char const *path, size_t path_len);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_RemoveLibPath(/*String*/ DeeObject *path);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_RemoveLibPathString(/*utf-8*/ char const *path);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_RemoveLibPathStringLen(/*utf-8*/ char const *path, size_t path_len);
+#ifdef CONFIG_BUILDING_DEEMON
+INTDEF void DCALL DeeModule_ClearLibPath(void);
+#endif /* CONFIG_BUILDING_DEEMON */
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 DDATDEF struct Dee_list_object DeeModule_Path;
 DFUNDEF void DCALL DeeModule_InitPath(void);
-#define DeeModule_FiniPath() DeeList_Clear((DeeObject *)&DeeModule_Path)
+#define DeeModule_ClearLibPath() DeeList_Clear((DeeObject *)&DeeModule_Path)
 
 /* Initialize the module path sub-system and return its global list of path. */
 #define DeeModule_GetPath() (DeeModule_InitPath(), &DeeModule_Path)
-
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-/* TODO: Whenever `DeeModule_Path' changes, must clear "module_libtree_lock" */
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 /* Return the time (in UTC milliseconds since 01-01-1970) when deemon was compiled.
  * This value is also used to initialize the `mo_ctime' value of the builtin

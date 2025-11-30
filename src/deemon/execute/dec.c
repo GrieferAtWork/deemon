@@ -4236,13 +4236,26 @@ err:
 	return result;
 }
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+/* @param: dec_dirname: Absolute path of directory containing "input_stream"
+ * @return:  * :       Successfully loaded the given DEC file. The caller must still initialize:
+ *                      - return->mo_absname (Current set to "NULL")
+ *                      - return->mo_absnode
+ * @return: ITER_DONE: The DEC file was out of date or had been corrupted.
+ * @return: NULL:      An error occurred. */
+INTERN WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
+DeeModule_OpenDec(DeeObject *__restrict input_stream, struct Dee_compiler_options *options,
+                  /*utf-8*/ char const *__restrict dec_dirname, size_t dec_dirname_len)
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 /* @return:  0: Successfully loaded the given DEC file.
  * @return:  1: The DEC file was out of date or had been corrupted.
  * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeModule_OpenDec(DeeModuleObject *__restrict mod,
+DeeModule_OpenDec(struct Dee_module_object *__restrict mod,
                   DeeObject *__restrict input_stream,
-                  struct compiler_options *options) {
+                  struct Dee_compiler_options *options)
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+{
 	DecFile file;
 	struct DeeMapFile filemap;
 	int result;

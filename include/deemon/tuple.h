@@ -199,6 +199,7 @@ struct Dee_tuple_builder {
 	DREF DeeTupleObject *tb_tuple; /* [0..1][owned] Result tuple (guarantied to not be shared) */
 };
 
+#define Dee_TUPLE_BUILDER_INIT { 0, NULL }
 #define Dee_tuple_builder_init(self) \
 	(void)((self)->tb_size = 0, (self)->tb_tuple = NULL)
 #define Dee_tuple_builder_cinit(self)        \

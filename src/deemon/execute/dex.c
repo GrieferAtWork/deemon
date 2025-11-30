@@ -35,6 +35,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* DeeSystem_DlOpen_USE_LoadLibrary, memcpyc(), ... */
 #include <deemon/system.h>          /* DeeSystem_Dl* */
+#include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
 #include <hybrid/debug-alignment.h>
@@ -61,6 +62,104 @@
 
 DECL_BEGIN
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+
+#undef DeeModule_FromStaticPointer_USE_GetModuleHandleExW
+#undef DeeModule_FromStaticPointer_USE_dlgethandle
+#undef DeeModule_FromStaticPointer_USE_dl_iterate_phdr
+#undef DeeModule_FromStaticPointer_USE_xdlmodule_info
+#undef DeeModule_FromStaticPointer_USE_dladdr1__RTLD_DL_LINKMAP
+#undef DeeModule_FromStaticPointer_USE_dladdr__dli_fname
+#undef DeeModule_FromStaticPointer_USE_STUB
+#ifdef DeeSystem_DlOpen_USE_LoadLibrary
+#define DeeModule_FromStaticPointer_USE_GetModuleHandleExW /* Windows */
+#elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dlgethandle)
+#define DeeModule_FromStaticPointer_USE_dlgethandle /* KOSmk4 */
+#elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(__KOS_VERSION__) && (__KOS_VERSION__ >= 300 && __KOS_VERSION__ < 400)
+#define DeeModule_FromStaticPointer_USE_xdlmodule_info /* KOSmk3 */
+#else /* ... */
+/* Under linux, there are many different ways to do this, some of which may not work at runtime. */
+#if defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP)
+#define DeeModule_FromStaticPointer_USE_dladdr1__RTLD_DL_LINKMAP /* Linux */
+#endif /* DeeSystem_DlOpen_USE_dlopen && CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP */
+#if defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dladdr)
+#define DeeModule_FromStaticPointer_USE_dladdr__dli_fname /* Linux */
+#endif /* DeeSystem_DlOpen_USE_dlopen && CONFIG_HAVE_dladdr */
+#if defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dl_iterate_phdr)
+#define DeeModule_FromStaticPointer_USE_dl_iterate_phdr /* Linux */
+#endif /* DeeSystem_DlOpen_USE_dlopen && CONFIG_HAVE_dl_iterate_phdr */
+#define DeeModule_FromStaticPointer_USE_STUB
+#endif /* !... */
+
+
+
+
+struct Dee_module_dexnode {
+	struct Dee_module_dexnode *mdn_par; /* [?..?] Parent node */
+	struct Dee_module_dexnode *mdn_lhs; /* [?..?] Left node */
+	struct Dee_module_dexnode *mdn_rhs; /* [?..?] Right node */
+	union {
+		struct Dee_module_dexdata *mdn_dex; /* [1..1] Associated dex data */
+		__UINTPTR_TYPE__           mdn_red; /* Least significant bit is red-flag */
+	} mdn_dat;
+	__BYTE_TYPE__ *mdn_minaddr; /* Memory segment min address */
+	__BYTE_TYPE__ *mdn_maxaddr; /* Memory segment max address */
+};
+
+struct Dee_module_dexdata {
+	struct {
+		struct Dee_module_dexdata *le_next, **le_prev;
+	}                              mdx_libraries; /* [1..1][lock(INTERNAL)] Internal list of dex modules */
+	struct Dee_module_object      *mdx_module;    /* [1..1][const] Associated dex module descriptor */
+	void                          *mdx_handle;    /* [?..?][const][owned] System-specific library handle */
+
+	/* [0..1][const] Optional initializer/finalizer callbacks. */
+	WUNUSED_T NONNULL_T((1)) int (DCALL *mdx_init)(void);
+	NONNULL_T((1)) void (DCALL *mdx_fini)(void);
+
+	/* Array of memory segments to which this dex is mapped (for use in an R/B-tree) */
+	COMPILER_FLEXIBLE_ARRAY(struct Dee_module_dexnode, mdx_nodes);
+};
+
+
+INTERN NONNULL((1)) int DCALL
+module_dex_init(DeeModuleObject *__restrict self) {
+	struct Dee_module_dexdata *dex;
+	ASSERT(Dee_TYPE(self) == &DeeModuleDex_Type);
+	dex = self->mo_moddata.mo_dexdata;
+	ASSERT(dex);
+	ASSERT(dex->mdx_module == self);
+	return dex->mdx_init ? (*dex->mdx_init)() : 0;
+}
+
+
+INTERN NONNULL((1)) void DCALL
+module_dex_fini(DeeModuleObject *__restrict self) {
+	struct Dee_module_dexdata *dex;
+	ASSERT(Dee_TYPE(self) == &DeeModuleDex_Type);
+	dex = self->mo_moddata.mo_dexdata;
+	ASSERT(dex);
+	ASSERT(dex->mdx_module == self);
+
+	/* Invoke finalizer, but can't unload the module (it may be
+	 * defining static objects that are still referenced elsewhere)
+	 *
+	 * XXX: Maybe use GC visit to determine if code exists that still
+	 *      references objects statically defined by this module?
+	 * XXX: Though that wouldn't work because tp_visit is allowed
+	 *      to skip certain objects like "string" that can never
+	 *      form reference loops, when we'd need those references
+	 *      in order to detect such uses... */
+	if (dex->mdx_fini && (self->mo_init == Dee_MODULE_INIT_INITIALIZED))
+		(*dex->mdx_fini)();
+
+	/* Indicate that the dex is no longer initialized */
+	atomic_write(&self->mo_init, Dee_MODULE_INIT_UNINITIALIZED);
+}
+
+
+
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 INTDEF struct module_symbol empty_module_buckets[];
 
 /* Try to load an extension file.
@@ -940,6 +1039,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 #endif /* DeeModule_FromStaticPointer_USE_STUB */
 }
 
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_END
 
