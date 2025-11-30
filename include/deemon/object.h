@@ -1614,9 +1614,9 @@ struct Dee_type_constructor {
 	 * @return: != 0: Error was thrown */
 	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_deepload)(DeeObject *__restrict self);
 
-	/* Callback for `DeeObject_Destroy()' (usually auto-assigned by `DeeType_RequireDestroy()', but
-	 * can be overwritten with a custom implementation). When "CONFIG_HAVE_COMPUTED_OBJECT_DESTROY"
-	 * wasn't enabled while compiling deemon, this callback is unused and ignored. */
+	/* Callback for `DeeObject_Destroy()' (usually auto-assigned by
+	 * `DeeType_RequireDestroy()', but can be overwritten with a
+	 * custom implementation). */
 	Dee_tp_destroy_t tp_destroy;
 };
 

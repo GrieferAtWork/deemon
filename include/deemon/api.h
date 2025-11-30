@@ -258,17 +258,6 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif /* !CONFIG_[NO_]BADREFCNT_CHECKS */
 
 
-/* Feature flag: should the implementation of `DeeObject_Destroy'  */
-#if (!defined(CONFIG_HAVE_COMPUTED_OBJECT_DESTROY) && \
-     !defined(CONFIG_NO_COMPUTED_OBJECT_DESTROY))
-#ifdef __OPTIMIZE_SIZE__
-#define CONFIG_NO_COMPUTED_OBJECT_DESTROY
-#else /* __OPTIMIZE_SIZE__ */
-#define CONFIG_HAVE_COMPUTED_OBJECT_DESTROY
-#endif /* !__OPTIMIZE_SIZE__ */
-#endif /* !CONFIG_[NO_]HAVE_COMPUTED_OBJECT_DESTROY */
-
-
 #ifdef CONFIG_TRACE_REFCHANGES
 /* Assembly interpreters do not implement the additional
  * overhead required to properly track reference counts.

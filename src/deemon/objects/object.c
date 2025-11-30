@@ -1213,7 +1213,6 @@ restart_clear_weakrefs:
 #endif
 
 
-#ifdef CONFIG_HAVE_COMPUTED_OBJECT_DESTROY
 #ifdef __INTELLISENSE__
 PRIVATE NONNULL((1)) void DCALL DeeObject_DefaultDestroy_Dtor0_Free0_HeapType0_GC0(DeeObject *__restrict self);
 PRIVATE NONNULL((1)) void DCALL DeeObject_DefaultDestroy_Dtor0_Free0_HeapType0_GC1(DeeObject *__restrict self);
@@ -1494,21 +1493,15 @@ DeeType_RequireDestroy_uncached(DeeTypeObject *__restrict self) {
 	COMPILER_WRITE_BARRIER();
 	return result;
 }
-#endif /* CONFIG_HAVE_COMPUTED_OBJECT_DESTROY */
 
 
 /* Return a pointer to the optimized implementation of
  * object destruction called by `DeeObject_Destroy()' */
 PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tp_destroy_t DCALL
 DeeType_RequireDestroy(DeeTypeObject *__restrict self) {
-#ifdef CONFIG_HAVE_COMPUTED_OBJECT_DESTROY
 	if likely(self->tp_init.tp_destroy)
 		return self->tp_init.tp_destroy;
 	return DeeType_RequireDestroy_uncached(self);
-#else /* CONFIG_HAVE_COMPUTED_OBJECT_DESTROY */
-	(void)self;
-	return &DeeObject_Destroy;
-#endif /* !CONFIG_HAVE_COMPUTED_OBJECT_DESTROY */
 }
 
 
@@ -1536,12 +1529,6 @@ PUBLIC NONNULL((1)) void
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS */
 {
 	DeeTypeObject *type = Dee_TYPE(self);
-#ifndef CONFIG_HAVE_COMPUTED_OBJECT_DESTROY
-	DeeTypeObject *orig_type;
-#ifndef CONFIG_TRACE_REFCHANGES
-again:
-#endif /* !CONFIG_TRACE_REFCHANGES */
-#endif /* !CONFIG_HAVE_COMPUTED_OBJECT_DESTROY */
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 	if unlikely(self->ob_refcnt != 0) {
 		bad_refcnt_lock_acquire();
@@ -1572,8 +1559,6 @@ again:
 	Dee_CHECKMEMORY();
 #endif /* CONFIG_OBJECT_DESTROY_CHECK_MEMORY */
 
-
-#ifdef CONFIG_HAVE_COMPUTED_OBJECT_DESTROY
 	/* Make use of an optimized object destructor callback. */
 #ifdef __OPTIMIZE_SIZE__
 	(*DeeType_RequireDestroy(type))(self);
@@ -1582,165 +1567,6 @@ again:
 	   ? type->tp_init.tp_destroy
 	   : DeeType_RequireDestroy_uncached(type)))(self);
 #endif /* !__OPTIMIZE_SIZE__ */
-#else /* CONFIG_HAVE_COMPUTED_OBJECT_DESTROY */
-	orig_type = type;
-	if (type->tp_flags & TP_FGC) {
-		/* Special handling to track/untrack GC objects during destructor calls. */
-
-		/* Start by untracking the object in question. */
-		DeeGC_Untrack(self);
-		for (;;) {
-			ASSERT(self->ob_refcnt == 0);
-			ASSERTF(type == orig_type || !(type->tp_flags & TP_FFINAL),
-			        "Final type `%k' with sub-class `%k'",
-			        type, orig_type);
-			if (type->tp_init.tp_dtor) {
-				/* Update the object's typing to mirror what is written here.
-				 * NOTE: We're allowed to modify the type of `self' _ONLY_
-				 *       because it's reference counter is ZERO (and because
-				 *       implementors of `tp_free' are aware of its volatile
-				 *       nature that may only be interpreted as a free-hint).
-				 * NOTE: This even applies to the slab allocators used by `DeeObject_MALLOC'! */
-				self->ob_type = type;
-				COMPILER_WRITE_BARRIER();
-				(*type->tp_init.tp_dtor)(self);
-				COMPILER_READ_BARRIER();
-#ifdef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
-				Dee_CHECKMEMORY();
-#endif /* CONFIG_OBJECT_DESTROY_CHECK_MEMORY */
-
-				/* Special case: The destructor managed to revive the object. */
-				if unlikely(self->ob_refcnt != 0) {
-					Dee_Incref(type);
-					ASSERTF(type->tp_flags & TP_FGC,
-					        "This runtime does not implementing reviving "
-					        "GC-allocated objects as non-GC objects.");
-
-					/* Continue tracking the object. */
-					self = DeeGC_Track(self);
-
-					/* As part of the revival process, `tp_dtor' has us inherit a reference to `self'
-					 * in order to prevent a race condition that could otherwise occur when another
-					 * thread would have cleared the external reference after the destructor created
-					 * it, but before we were able to read out the fact that `ob_refcnt' was now
-					 * non-zero. - If that were to happen, the other thread may also attempt to destroy
-					 * the object, causing it to be destroyed in multiple threads at the same time,
-					 * which is something that's not allowed! */
-					Dee_Decref(orig_type);
-
-#ifndef CONFIG_TRACE_REFCHANGES
-					/* Same as below, but prevent recursion (after all: we're already inside of `DeeObject_Destroy()'!) */
-					{
-						Dee_refcnt_t oldref;
-						oldref = atomic_fetchdec(&self->ob_refcnt);
-						ASSERTF(oldref != 0,
-						        "Upon revival, a destructor must let the caller inherit a "
-						        "reference (which may appear like a leak, but actually isn't)");
-						if (oldref == 1)
-							goto again;
-					}
-#else /* !CONFIG_TRACE_REFCHANGES */
-					Dee_Decref(self);
-#endif /* CONFIG_TRACE_REFCHANGES */
-					return;
-				}
-			}
-
-			/* Drop the reference held by this type.
-			 * NOTE: Keep the reference to `orig_type' alive, though! */
-			if ((type = type->tp_base) == NULL)
-				break;
-		}
-#ifdef CONFIG_TRACE_REFCHANGES
-		free_reftracker(self->ob_trace);
-#endif /* CONFIG_TRACE_REFCHANGES */
-		if (orig_type->tp_init.tp_alloc.tp_free) {
-			(*orig_type->tp_init.tp_alloc.tp_free)(self);
-		} else {
-			DeeGCObject_Free(self);
-		}
-	} else {
-		for (;;) {
-			ASSERT(self->ob_refcnt == 0);
-			ASSERTF(type == orig_type || !(type->tp_flags & TP_FFINAL),
-			        "Final type `%k' with sub-class `%k'",
-			        type, orig_type);
-			ASSERTF(!(type->tp_flags & TP_FGC),
-			        "non-gc type `%k' derived from gc type `%k'",
-			        orig_type, type);
-			if (type->tp_init.tp_dtor) {
-				/* Update the object's typing to mirror what is written here.
-				 * NOTE: We're allowed to modify the type of `self' _ONLY_
-				 *       because it's reference counter is ZERO (and because
-				 *       implementors of `tp_free' are aware of its volatile
-				 *       nature that may only be interpreted as a free-hint). */
-				self->ob_type = type;
-				COMPILER_WRITE_BARRIER();
-				(*type->tp_init.tp_dtor)(self);
-				COMPILER_READ_BARRIER();
-#ifdef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
-				Dee_CHECKMEMORY();
-#endif /* CONFIG_OBJECT_DESTROY_CHECK_MEMORY */
-
-				/* Special case: The destructor managed to revive the object. */
-				if unlikely(self->ob_refcnt != 0) {
-					/* Incref() the new type that now describes this revived object.
-					 * NOTE: The fact that this type may use a different (or none at all)
-					 *       tp_free function, is the reason why no GC-able type from who's
-					 *       destruction a user-callback that can somehow get a hold of the
-					 *       instance being destroyed (which is also possible for any weakly
-					 *       referenceable type), is allowed to assume that it will actually
-					 *       be called, limiting its use to pre-allocated object caches that
-					 *       allocate their instances using `DeeObject_Malloc'. */
-					Dee_Incref(type);
-
-					/* As part of the revival process, `tp_dtor' has us inherit a reference to `self'
-					 * in order to prevent a race condition that could otherwise occur when another
-					 * thread would have cleared the external reference after the destructor created
-					 * it, but before we were able to read out the fact that `ob_refcnt' was now
-					 * non-zero. - If that were to happen, the other thread may also attempt to destroy
-					 * the object, causing it to be destroyed in multiple threads at the same time,
-					 * which is something that's not allowed! */
-					Dee_Decref(orig_type);
-
-#ifndef CONFIG_TRACE_REFCHANGES
-					/* Same as below, but prevent recursion (after all: we're already inside of `DeeObject_Destroy()'!) */
-					{
-						Dee_refcnt_t oldref;
-						oldref = atomic_fetchdec(&self->ob_refcnt);
-						ASSERTF(oldref != 0,
-						        "Upon revival, a destructor must let the caller inherit a "
-						        "reference (which may appear like a leak, but actually isn't)");
-						if (oldref == 1)
-							goto again;
-					}
-#else /* !CONFIG_TRACE_REFCHANGES */
-					Dee_Decref(self);
-#endif /* CONFIG_TRACE_REFCHANGES */
-					return;
-				}
-			}
-
-			/* Drop the reference held by this type.
-			 * NOTE: Keep the reference to `orig_type' alive, though! */
-			if ((type = type->tp_base) == NULL)
-				break;
-		}
-#ifdef CONFIG_TRACE_REFCHANGES
-		free_reftracker(self->ob_trace);
-#endif /* CONFIG_TRACE_REFCHANGES */
-
-		/* Invoke `tp_free' using the original type */
-		if (orig_type->tp_init.tp_alloc.tp_free) {
-			(*orig_type->tp_init.tp_alloc.tp_free)(self);
-		} else {
-			DeeObject_Free(self);
-		}
-	}
-/*done:*/
-	/* Drop a reference from the original type. */
-	Dee_Decref(orig_type);
-#endif /* !CONFIG_HAVE_COMPUTED_OBJECT_DESTROY */
 }
 
 
