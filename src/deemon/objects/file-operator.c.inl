@@ -43,7 +43,7 @@
 /* Trace self-optimizing operator inheritance. */
 #if 1
 #define LOG_INHERIT(base, self, what) \
-	Dee_DPRINTF("[RT] Inherit `" what "' from %k into %k\n", base, self)
+	Dee_DPRINTF("[RT] Inherit `" what "' from %s into %s\n", DeeType_GetName(base), DeeType_GetName(self))
 #else
 #define LOG_INHERIT(base, self, what) (void)0
 #endif

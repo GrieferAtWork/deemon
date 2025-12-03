@@ -2153,8 +2153,9 @@ PRIVATE WUNUSED NONNULL((1, 2, 4)) Dee_funptr_t
 			struct Dee_opinfo const *info = op < OPERATOR_USERCOUNT
 			    ? DeeTypeType_GetOperatorById(Dee_TYPE(from), op)
 			    : NULL;
-			Dee_DPRINTF("[RT] Inherit '%k.operator %s' into '%k' [tno: %u, ptr: %p]\n",
-			            from, info ? info->oi_sname : "?", into,
+			Dee_DPRINTF("[RT] Inherit '%s.operator %s' into '%s' [tno: %u, ptr: %p]\n",
+			            DeeType_GetName(from), info ? info->oi_sname : "?",
+			            DeeType_GetName(into),
 			            (unsigned int)actions[i].tnoi_id,
 			            *(void **)&actions[i].tnoi_cb);
 #endif /* !Dee_DPRINT_IS_NOOP */
