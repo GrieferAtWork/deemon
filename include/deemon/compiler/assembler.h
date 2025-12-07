@@ -43,6 +43,11 @@ DECL_BEGIN
 
 struct ascii_printer;
 
+#ifdef DEE_SOURCE
+#define Dee_module_object module_object
+#endif /* DEE_SOURCE */
+struct Dee_module_object;
+
 #define R_DMN_NONE      0 /* `// Nothing' */
 #define R_DMN_STATIC16  1 /* `u16 = u16 + a_refc;' */
 #define R_DMN_ABS8      2 /* `u8  = u8 + ar_sym->as_addr;' */
@@ -788,7 +793,9 @@ struct assembler {
                                         * >>    jmp      2b
                                         * >>1: */
 #define ASM_FNOASSERT      0x0020      /* Replace all assert statements with a compile-time constant `true'. */
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #define ASM_FNODEC         0x0040      /* Do not create a `*.dec' file once the module has been compiled. */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #define ASM_FNOREUSECONST  0x0080      /* Do not re-use constants. */
 #define ASM_FREDUCEREFS    0x0100      /* Try to minimize use of references when accessing class/instance members.
                                         * Enabling this isn't a good idea, as it slows down access to members inside
@@ -1942,10 +1949,15 @@ code_docompile(struct ast *__restrict code_ast);
  *         `current_rootscope' by the returned module object, meaning that the
  *          root scope will have been reset to an empty (or near empty) state.
  * @param: flags: Set of `ASM_F*' (Assembly flags; see above) */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+INTDEF WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
+module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code, uint16_t flags);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 module_compile(DREF struct module_object *__restrict module,
                DeeCodeObject *__restrict root_code,
                uint16_t flags);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 INTDEF WUNUSED NONNULL((1)) int DCALL

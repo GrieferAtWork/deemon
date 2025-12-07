@@ -43,14 +43,33 @@
 DECL_BEGIN
 
 INTDEF struct module_symbol empty_module_buckets[];
+
+/* Compile a new module, using `current_rootscope' for module information,
+ * and the given code object as root code executed when the module is loaded.
+ * WARNING: During this process a lot of data is directly inherited from
+ *         `current_rootscope' by the returned module object, meaning that the
+ *          root scope will have been reset to an empty (or near empty) state.
+ * @param: flags: Set of `ASM_F*' (Assembly flags; see above) */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+INTERN WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
+module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code, uint16_t flags)
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 module_compile(DeeModuleObject *__restrict mod,
                DeeCodeObject *__restrict root_code,
-               uint16_t flags) {
+               uint16_t flags)
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+{
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	DREF DeeModuleObject *mod;
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	ASSERT(DeeCompiler_LockWriting());
-	ASSERT_OBJECT(root_code);
-	ASSERT(DeeCode_Check(root_code));
+	ASSERT_OBJECT_TYPE_EXACT(root_code, &DeeCode_Type);
 	ASSERT_OBJECT_TYPE((DeeObject *)current_rootscope, &DeeRootScope_Type);
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	ASSERT(!DeeObject_IsShared(root_code));
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
 	/* Truncate some vectors before we'll be inheriting them. */
 	ASSERT(current_rootscope->rs_importc <= current_rootscope->rs_importa);
 	if (current_rootscope->rs_importa > current_rootscope->rs_importc) {
@@ -63,18 +82,30 @@ module_compile(DeeModuleObject *__restrict mod,
 	}
 
 	/* Start filling in members of the module. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	mod = (DREF DeeModuleObject *)DeeGCObject_Callocc(offsetof(DeeModuleObject, mo_globalv),
+	                                                  current_rootscope->rs_globalc,
+	                                                  sizeof(DREF DeeObject *));
+	if unlikely(!mod)
+		goto err;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	mod->mo_globalv = (DREF DeeObject **)Dee_Callocc(current_rootscope->rs_globalc,
 	                                                 sizeof(DREF DeeObject *));
 	if unlikely(!mod->mo_globalv)
 		goto err;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	mod->mo_globalc = current_rootscope->rs_globalc;
 	mod->mo_importc = current_rootscope->rs_importc;
 	atomic_or(&mod->mo_flags, current_rootscope->rs_flags);
 	mod->mo_bucketm = current_rootscope->rs_bucketm;
 	mod->mo_bucketv = current_rootscope->rs_bucketv;
 	mod->mo_importv = current_rootscope->rs_importv;
-	mod->mo_root    = root_code;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	mod->mo_moddata.mo_rootcode = root_code; /* Inherit reference */
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	mod->mo_root = root_code;
 	Dee_Incref(root_code);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Yes, we're just stealing all of these. */
 	current_rootscope->rs_importv = NULL;
@@ -85,13 +116,13 @@ module_compile(DeeModuleObject *__restrict mod,
 
 	{
 		DREF DeeCodeObject *iter, *next;
-		iter                       = current_rootscope->rs_code;
+		iter = current_rootscope->rs_code;
 		current_rootscope->rs_code = NULL;
 		while (iter) {
-			next            = iter->co_next;
+			next = iter->co_next;
 			iter->co_module = mod;
-			Dee_Incref(mod); /* Create the new module-reference now stored in `iter->co_module'. */
-			Dee_Decref(iter);   /* This reference was owned by the chain before. */
+			Dee_Incref(mod);  /* Create the new module-reference now stored in `iter->co_module'. */
+			Dee_Decref(iter); /* This reference was owned by the chain before. */
 			iter = next;
 		}
 	}
@@ -101,6 +132,7 @@ module_compile(DeeModuleObject *__restrict mod,
 	ASSERTF(root_code->co_module == mod,
 	        "The given root-code was not generated for this module");
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #ifndef CONFIG_NO_DEC
 	/* Save the time when compilation of the module started. */
 	mod->mo_ctime = DeeSystem_GetWalltime();
@@ -121,8 +153,13 @@ module_compile(DeeModuleObject *__restrict mod,
 #endif
 	}
 #endif /* !CONFIG_NO_DEC */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	return mod;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return 0;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #ifndef CONFIG_NO_DEC
 err_module:
 	/* Transfer ownership back to the compiler. */
@@ -132,6 +169,9 @@ err_module:
 	current_rootscope->rs_bucketv = mod->mo_bucketv;
 	current_rootscope->rs_bucketm = mod->mo_bucketm;
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	DeeGCObject_Free(mod);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	mod->mo_importv = NULL;
 	mod->mo_importc = 0;
 	mod->mo_bucketv = empty_module_buckets;
@@ -141,9 +181,14 @@ err_module:
 	mod->mo_globalc = 0;
 	Dee_Free((void *)mod->mo_globalv);
 	mod->mo_globalv = NULL;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #endif /* !CONFIG_NO_DEC */
 err:
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	return NULL;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 

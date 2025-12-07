@@ -711,6 +711,36 @@ INTERN WUNUSED NONNULL((1)) int
 	 * all dec data, so we don't have to concern ourselves
 	 * with deletion of the output file is generation fails. */
 	if ((dec_filename = config_filename) == NULL) {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		size_t dec_filelen, dec_pathlen;
+		char const *dec_filestr = module->mo_absname;
+		char *dst;
+		if unlikely(!dec_filestr)
+			goto cannot_create;
+		/* Generate the filename of the DEC file to-be created. */
+		dec_filelen = strlen(dec_filestr);
+		dec_pathlen = dec_filelen;
+		for (;;) {
+			if (!dec_pathlen)
+				goto cannot_create;
+			if (dec_filestr[dec_pathlen - 1] == DeeSystem_SEP)
+				break;
+			--dec_pathlen;
+		}
+		dec_filename = DeeString_NewBuffer(dec_filelen + 5);
+		if unlikely(!dec_filename)
+			goto err;
+		dst = DeeString_GetBuffer(dec_filename);
+		dst = (char *)mempcpyc(dst, dec_filestr, dec_pathlen, sizeof(char));
+		*dst++ = '.';
+		dst = (char *)mempcpyc(dst, dec_filestr + dec_pathlen,
+		                       dec_filelen - dec_pathlen, sizeof(char));
+		*dst++ = '.';
+		*dst++ = 'd';
+		*dst++ = 'e';
+		*dst++ = 'c';
+		*dst++ = '\0';
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		char const *dec_filestr = DeeString_STR(module->mo_path);
 		size_t dec_filelen      = DeeString_SIZE(module->mo_path);
 		/* Generate the filename of the DEC file to-be created. */
@@ -739,10 +769,15 @@ INTERN WUNUSED NONNULL((1)) int
 			dst     = (char *)mempcpyc(dst, dec_filestart, pathlen, sizeof(char));
 			UNALIGNED_SET32(dst, ENCODE_INT32('d', 'e', 'c', 0));
 		}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	} else {
 		Dee_Incref(dec_filename);
 	}
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	Dee_DPRINTF("DECGEN: %q -> %r\n", module->mo_absname, dec_filename);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	Dee_DPRINTF("DECGEN: %r -> %r\n", module->mo_path, dec_filename);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	ASSERT_OBJECT_TYPE_EXACT(dec_filename, &DeeString_Type);
 
 	if (DeeString_Check(dec_filename)) {

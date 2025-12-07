@@ -1207,12 +1207,6 @@ restart_clear_weakrefs:
 }
 
 
-#undef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
-#if 0 /* Enable extra (expensive) memory checks during object destruction */
-#define CONFIG_OBJECT_DESTROY_CHECK_MEMORY
-#endif
-
-
 #ifdef __INTELLISENSE__
 PRIVATE NONNULL((1)) void DCALL DeeObject_DefaultDestroy_Dtor0_Free0_HeapType0_GC0(DeeObject *__restrict self);
 PRIVATE NONNULL((1)) void DCALL DeeObject_DefaultDestroy_Dtor0_Free0_HeapType0_GC1(DeeObject *__restrict self);
@@ -1555,17 +1549,19 @@ PUBLIC NONNULL((1)) void
 #endif /* !CONFIG_NO_THREADS */
 #endif
 
-#ifdef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
+#if 0 /* Enable extra (expensive) memory checks during object destruction */
 	Dee_CHECKMEMORY();
-#endif /* CONFIG_OBJECT_DESTROY_CHECK_MEMORY */
+#endif
 
 	/* Make use of an optimized object destructor callback. */
 #ifdef __OPTIMIZE_SIZE__
 	(*DeeType_RequireDestroy(type))(self);
 #else /* __OPTIMIZE_SIZE__ */
-	(*(likely(type->tp_init.tp_destroy)
-	   ? type->tp_init.tp_destroy
-	   : DeeType_RequireDestroy_uncached(type)))(self);
+	if likely(type->tp_init.tp_destroy) {
+		(*type->tp_init.tp_destroy)(self);
+		return;
+	}
+	(*DeeType_RequireDestroy_uncached(type))(self);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 

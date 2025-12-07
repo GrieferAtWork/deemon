@@ -68,6 +68,10 @@
 
 #include "../runtime/runtime_error.h"
 
+#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
+#include <deemon/compiler/dec.h>
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
+
 DECL_BEGIN
 
 #ifdef __ARCH_PAGESIZE_MIN
@@ -487,7 +491,9 @@ DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_fil
 #ifndef CONFIG_NO_DEC
 		if ((flags & (_DeeModule_IMPORT_F_IS_DEE_FILE | DeeModule_IMPORT_F_NOGDEC)) ==
 		    /*....*/ (_DeeModule_IMPORT_F_IS_DEE_FILE)) {
-			/* TODO: generate a .dec file */
+			/* generate a .dec file */
+			if unlikely(dec_create(result))
+				Dee_Clear(result);
 		}
 #endif /* !CONFIG_NO_DEC */
 	}

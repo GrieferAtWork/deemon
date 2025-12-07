@@ -377,6 +377,8 @@ struct Dee_compiler_options {
 	                                                     * based on unrelated, arbitrary data in host memory (HeartBleed anyone?) */
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	uint16_t                      co_decloader;         /* Set of `DEC_F*' (unused when deemon was built with `CONFIG_NO_DEC') */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
 	uint16_t                      co_decwriter;         /* Set of `DEC_WRITE_F*' from `<deemon/compiler/dec.h>' (unused when deemon was built with `CONFIG_NO_DEC') */
 	DeeObject                    *co_decoutput;         /* [0..1] Dec output location (ignored when `ASM_FNODEC' is set)
 	                                                     *  - Filename (string) of the generated `.dec' file.
@@ -385,7 +387,7 @@ struct Dee_compiler_options {
 	                                                     *    quickly load module object when one of the dec-enabled `DeeModule_OpenGlobal*'
 	                                                     *    functions is used (aka. `<source_path>/.<source_file>.dec')
 	                                                     * Note that when passing a string, that file will be overwritten, should it already exists. */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 };
 
 

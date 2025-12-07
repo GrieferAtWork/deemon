@@ -172,13 +172,21 @@ again0:
 	}
 
 	/* Check for special wrapper objects. */
-	if (type == &DeeObjMethod_Type) {
+	if (type == &DeeObjMethod_Type || type == &DeeKwObjMethod_Type) {
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+		self = ((DeeObjMethodObject *)self)->om_this;
+		goto again0;
+#elif defined(CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES)
 		/* ObjMethod objects cannot be encoded in in DEC files. */
+		goto illegal;
+#else /* ... */
 		if (!DeeCompiler_Current->cp_options ||
 		    !(DeeCompiler_Current->cp_options->co_assembler & ASM_FNODEC))
 			goto illegal;
+		/* ObjMethod objects cannot be encoded in in DEC files. */
 		self = ((DeeObjMethodObject *)self)->om_this;
 		goto again0;
+#endif /* !... */
 	}
 
 	if (type == &DeeSuper_Type) {

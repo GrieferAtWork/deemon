@@ -261,8 +261,11 @@ again:
 			if (ast_optimize(stack, self->a_function.f_code, false))
 				goto err;
 		}
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		if (!DeeCompiler_Current->cp_options ||
-		    !(DeeCompiler_Current->cp_options->co_assembler & ASM_FNODEC)) {
+		    !(DeeCompiler_Current->cp_options->co_assembler & ASM_FNODEC))
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+		{
 			/* TODO: Replace initializers of function default-arguments that
 			 *       are never actually used by the function with `none'
 			 *    -> That way, we can reduce the size of a produced DEC file.

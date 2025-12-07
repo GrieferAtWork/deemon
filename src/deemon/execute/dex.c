@@ -64,6 +64,29 @@ DECL_BEGIN
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 
+/* TODO: Implementation using GCC's "__start" and "__end" symbols (dex modules
+ *       would then provide pointers to these within their control structures)
+ * XXX: Doesn't seem to work?
+ *      readelf testlib.so
+ *      >> ...
+ *      >>  4: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND __end
+ *      >> 44: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND __start
+ *      >> ...
+ *
+ * XXX: After further research:
+ * - "_end" is the name of the symbol at the end of all sections
+ * - There does not seem to be a name for the start of all sections :(
+ * - However, one can do this:  '-Wl,-defsym=__dex_start__=.'
+ *   >> INTDEF char __dex_start__[];  // Start of dex module
+ *   >> INTDEF char _end[];           // End of dex module
+ *   Here, "__dex_start__" points at the start of Elf_Ehdr
+ * NOTE: This only works for ELF -- on PE, even using _end gives you errors:
+ * >> `_end' referenced in section `.rdata$.refptr._end[.refptr._end]' of ...: defined in discarded section `.endjunk' of a.exe
+ *
+ * Support for this stuff can be tested for using the "configure" script,
+ * and if not supported, we can still fall back on "dl_iterate_phdr", which
+ * should work with glibc, and anything that emulates glibc closely enough.
+ */
 #undef DeeModule_FromStaticPointer_USE_GetModuleHandleExW
 #undef DeeModule_FromStaticPointer_USE_dlgethandle
 #undef DeeModule_FromStaticPointer_USE_dl_iterate_phdr
@@ -118,8 +141,11 @@ struct Dee_module_dexdata {
 	NONNULL_T((1)) void (DCALL *mdx_fini)(void);
 
 	/* Array of memory segments to which this dex is mapped (for use in an R/B-tree) */
-	/* TODO: For "DeeModule_FromStaticPointer_USE_GetModuleHandleExW", should instead
-	 *       have a single R/B-tree to translate HMODULE to `DeeModuleObject' */
+	/* TODO:
+	 * - For "DeeModule_FromStaticPointer_USE_GetModuleHandleExW", use GetModuleInformation()
+	 *   and MODULEINFO to retrieve the load address + image size of any loaded module,
+	 *   which appears to be the bounds of the memory mapping containing an executable.
+	 */
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_module_dexnode, mdx_nodes);
 };
 

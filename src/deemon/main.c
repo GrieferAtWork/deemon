@@ -388,7 +388,9 @@ PRIVATE WUNUSED int DCALL cmd_P(char *UNUSED(arg)) {
 
 PRIVATE WUNUSED int DCALL cmd_c(char *UNUSED(arg)) {
 	operation_mode = OPERATION_MODE_BUILDONLY;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	script_options.co_assembler &= ~ASM_FNODEC;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return 0;
 }
 
@@ -432,6 +434,9 @@ PRIVATE WUNUSED int DCALL cmd_traditional(char *UNUSED(arg)) {
 	return 0;
 }
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#define cmd_L DeeModule_AddLibPathString
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_L(char *arg) {
 	int result;
 	DREF DeeObject *path;
@@ -447,6 +452,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_L(char *arg) {
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 PRIVATE WUNUSED int DCALL cmd_pp(char *UNUSED(arg)) {
 	TPPLexer_Current->l_flags &= ~(TPPLEXER_FLAG_WANTSPACE | TPPLEXER_FLAG_WANTLF);
@@ -645,7 +651,9 @@ PRIVATE struct compiler_flag const compiler_flags[] = {
 	{ "stackdisp",     0, FIELD(co_assembler), ASM_FSTACKDISP },
 	{ "ddi",           1, FIELD(co_assembler), ASM_FNODDI },
 	{ "assert",        1, FIELD(co_assembler), ASM_FNOASSERT },
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	{ "gendec",        1, FIELD(co_assembler), ASM_FNODEC },
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	{ "reuse-consts",  1, FIELD(co_assembler), ASM_FNOREUSECONST },
 	{ "reduce-refs",   0, FIELD(co_assembler), ASM_FREDUCEREFS },
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
@@ -1590,7 +1598,11 @@ INTERN struct compiler_options script_options = {
 	/* .co_parser        = */ PARSE_FNORMAL,
 	/* .co_optimizer     = */ OPTIMIZE_FDISABLED,
 	/* .co_unwind_limit  = */ 0,
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	/* .co_assembler     = */ ASM_FNORMAL | ASM_FOPTIMIZE,
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	/* .co_assembler     = */ ASM_FNORMAL | ASM_FNODEC | ASM_FOPTIMIZE,
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	/* .co_decloader     = */ Dee_DEC_FDISABLE,
 #ifdef DEC_WRITE_FNORMAL
@@ -2223,7 +2235,9 @@ try_exec_format_impl(DeeObject *__restrict stream,
 		/* Setup compiler options for the inner script. */
 		memcpy(&opt, &script_options, sizeof(struct compiler_options));
 		opt.co_compiler |= (COMPILER_FKEEPLEXER | COMPILER_FKEEPERROR); /* Keep using the same lexer and errors! */
-		opt.co_assembler |= ASM_FNODEC;                                 /* Disable DEC file creation */
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		opt.co_assembler |= ASM_FNODEC; /* Disable DEC file creation */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		if (ddi_filename && ddi_filename != filename) {
 			opt.co_filename = (struct string_object *)DeeString_NewUtf8(ddi_filename,
 			                                                            strlen(ddi_filename),
