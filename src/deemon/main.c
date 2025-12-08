@@ -1382,9 +1382,9 @@ int main(int argc, char *argv[]) {
 					                                         user_module_root,
 					                                         script_output_stream,
 					                                         emitasm_flags);
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 					Dee_Decref(user_module_root);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 					Dee_Decref(disassembler_module);
 					Dee_XDecref(disasm_error);
 					error = 0;
