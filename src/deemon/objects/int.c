@@ -190,17 +190,44 @@
 DECL_BEGIN
 
 /* Make sure that comparison helper macros work. */
-STATIC_ASSERT(Dee_CompareNe(10, 20) == -1);
-STATIC_ASSERT(Dee_CompareNe(20, 10) == 1);
-STATIC_ASSERT(Dee_Compare(10, 10) == 0);
-STATIC_ASSERT(Dee_Compare(10, 20) == -1);
-STATIC_ASSERT(Dee_Compare(20, 10) == 1);
-STATIC_ASSERT(Dee_CompareFromDiff(-10) == -1);
-STATIC_ASSERT(Dee_CompareFromDiff(10) == 1);
-STATIC_ASSERT(Dee_CompareFromDiff(0) == 0);
-STATIC_ASSERT(Dee_CompareEqFromDiff(-10) == -1 || Dee_CompareEqFromDiff(-10) == 1);
-STATIC_ASSERT(Dee_CompareEqFromDiff(10) == -1 || Dee_CompareEqFromDiff(10) == 1);
-STATIC_ASSERT(Dee_CompareEqFromDiff(0) == 0);
+STATIC_ASSERT(Dee_CompareNe(10, 20) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_CompareNe(20, 10) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_Compare(10, 10) == Dee_COMPARE_EQ);
+STATIC_ASSERT(Dee_Compare(10, 20) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_Compare(20, 10) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareFromDiff(-10) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_CompareFromDiff(-1) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_CompareFromDiff(10) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareFromDiff(1) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareFromDiff(0) == Dee_COMPARE_EQ);
+STATIC_ASSERT(Dee_CompareEqFromDiff(-10) == Dee_COMPARE_LO ||
+              Dee_CompareEqFromDiff(-10) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareEqFromDiff(10) == Dee_COMPARE_LO ||
+              Dee_CompareEqFromDiff(10) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareEqFromDiff(0) == Dee_COMPARE_EQ);
+
+STATIC_ASSERT(Dee_COMPARE_LO != Dee_COMPARE_EQ);
+STATIC_ASSERT(Dee_COMPARE_GR != Dee_COMPARE_EQ);
+STATIC_ASSERT(Dee_COMPARE_LO != Dee_COMPARE_ERR);
+STATIC_ASSERT(Dee_COMPARE_EQ != Dee_COMPARE_ERR);
+STATIC_ASSERT(Dee_COMPARE_GR != Dee_COMPARE_ERR);
+
+STATIC_ASSERT(Dee_Compare(0, INT_MAX) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_Compare(INT_MIN, 0) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_Compare(INT_MIN, INT_MAX) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_Compare(INT_MIN, INT_MIN) == Dee_COMPARE_EQ);
+STATIC_ASSERT(Dee_Compare(0, 0) == Dee_COMPARE_EQ);
+STATIC_ASSERT(Dee_Compare(INT_MAX, INT_MAX) == Dee_COMPARE_EQ);
+STATIC_ASSERT(Dee_Compare(INT_MAX, 0) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_Compare(0, INT_MIN) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_Compare(INT_MAX, INT_MIN) == Dee_COMPARE_GR);
+
+STATIC_ASSERT(Dee_CompareNe(0, INT_MAX) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_CompareNe(INT_MIN, 0) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_CompareNe(INT_MIN, INT_MAX) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_CompareNe(INT_MAX, 0) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareNe(0, INT_MIN) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareNe(INT_MAX, INT_MIN) == Dee_COMPARE_GR);
 
 
 #ifndef CONFIG_HAVE_memend

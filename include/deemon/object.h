@@ -179,10 +179,23 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase4Byte)(ui
 #endif /* Dee_COMPARE_EQ != 0 || Dee_COMPARE_ERR >= 0 */
 
 /* Helper macros for implementing compare operators. */
-#define Dee_CompareNe(a, b)         ((a) < (b) ? Dee_COMPARE_LO : Dee_COMPARE_GR)
+#if Dee_COMPARE_LO == -1 && Dee_COMPARE_EQ == 0 && Dee_COMPARE_GR == 1
+#define Dee_Compare(a, b)           (((a) > (b)) - ((a) < (b)))
+#define Dee_CompareFromDiff(diff)   (((diff) > 0) - ((diff) < 0))
+#else /* Dee_COMPARE_LO == -1 && Dee_COMPARE_EQ == 0 && Dee_COMPARE_GR == 1 */
 #define Dee_Compare(a, b)           ((a) == (b) ? Dee_COMPARE_EQ : Dee_CompareNe(a, b))
 #define Dee_CompareFromDiff(diff)   ((diff) == 0 ? Dee_COMPARE_EQ : (diff) < 0 ? Dee_COMPARE_LO : Dee_COMPARE_GR)
-#define Dee_CompareEqFromDiff(diff) ((int)!!(diff)) /* diff == 0 ? 0 : 1 */
+#endif /* Dee_COMPARE_LO != -1 || Dee_COMPARE_EQ != 0 || Dee_COMPARE_GR != 1 */
+#if Dee_COMPARE_LO == -1 && Dee_COMPARE_GR == 1
+#define Dee_CompareNe(a, b)         ((((a) > (b)) << 1) - 1)
+#else /* Dee_COMPARE_LO == -1 && Dee_COMPARE_GR == 1 */
+#define Dee_CompareNe(a, b)         ((a) < (b) ? Dee_COMPARE_LO : Dee_COMPARE_GR)
+#endif /* Dee_COMPARE_LO != -1 || Dee_COMPARE_GR != 1 */
+#if Dee_COMPARE_EQ == 0 && Dee_COMPARE_NE != 0
+#define Dee_CompareEqFromDiff(diff) (+!!(diff)) /* Leading "+" to force promotion to "int" */
+#else /* Dee_COMPARE_EQ == 0 && Dee_COMPARE_NE != 0 */
+#define Dee_CompareEqFromDiff(diff) ((diff) ? Dee_COMPARE_NE : Dee_COMPARE_EQ)
+#endif /* Dee_COMPARE_EQ != 0 || Dee_COMPARE_NE == 0 */
 
 #define Dee_return_compare_if_ne(a, b)  \
 	do {                                \
@@ -210,21 +223,21 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase4Byte)(ui
 	do {                                                                            \
 		int _rtceqin_temp = DeeObject_Compare((DeeObject *)Dee_REQUIRES_OBJECT(a),  \
 		                                      (DeeObject *)Dee_REQUIRES_OBJECT(b)); \
-		if (_rtceqin_temp != 0)                                                     \
+		if (_rtceqin_temp != Dee_COMPARE_EQ)                                        \
 			return _rtceqin_temp;                                                   \
 	}	__WHILE0
 #define Dee_return_DeeObject_CompareEq_if_ne(a, b)                                    \
 	do {                                                                              \
 		int _rtceqin_temp = DeeObject_CompareEq((DeeObject *)Dee_REQUIRES_OBJECT(a),  \
 		                                        (DeeObject *)Dee_REQUIRES_OBJECT(b)); \
-		if (_rtceqin_temp != 0)                                                       \
+		if (_rtceqin_temp != Dee_COMPARE_EQ)                                          \
 			return _rtceqin_temp;                                                     \
 	}	__WHILE0
 #define Dee_return_DeeObject_TryCompareEq_if_ne(a, b)                                    \
 	do {                                                                                 \
 		int _rtceqin_temp = DeeObject_TryCompareEq((DeeObject *)Dee_REQUIRES_OBJECT(a),  \
 		                                           (DeeObject *)Dee_REQUIRES_OBJECT(b)); \
-		if (_rtceqin_temp != 0)                                                          \
+		if (_rtceqin_temp != Dee_COMPARE_EQ)                                             \
 			return _rtceqin_temp;                                                        \
 	}	__WHILE0
 
