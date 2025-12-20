@@ -730,28 +730,31 @@ err:
 	return -1;
 }
 
-
-#ifdef CONFIG_NO_NOTIFICATIONS
-
+PRIVATE DEFINE_STRING(str_DEEMON_MAXBACKLOG, "DEEMON_MAXBACKLOG");
 PRIVATE int DCALL get_default_backlog(void) {
-	return 5;
-}
-
-#else /* CONFIG_NO_NOTIFICATIONS */
-
-DEFINE_NOTIFY_ENVIRON_INTEGER(uint16_t, maxbacklog, 5, "DEEMON_MAXBACKLOG");
-PRIVATE int DCALL get_default_backlog(void) {
+	int status;
 	uint16_t result;
-	if (maxbacklog_get(&result))
-		goto err;
-	DBG_ALIGNMENT_DISABLE();
+	DREF DeeObject *value;
+	value = Dee_GetEnv((DeeObject *)&str_DEEMON_MAXBACKLOG);
+	if unlikely(!ITER_ISOK(value)) {
+		if (!value)
+			goto err;
+		goto def;
+	}
+	status = Dee_Atou16(DeeString_STR(value), DeeString_SIZE(value),
+	                    DEEINT_STRING(0, DEEINT_STRING_FNORMAL), &result);
+	Dee_Decref(value);
+	if (status) {
+		if (!DeeError_Handled(Dee_ERROR_HANDLED_NORMAL))
+			goto err;
+		goto def;
+	}
 	return (int)(unsigned int)result;
+def:
+	return 5;
 err:
 	return -1;
 }
-
-#endif /* !CONFIG_NO_NOTIFICATIONS */
-
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSocket_Listen(DeeSocketObject *__restrict self, int max_backlog) {
@@ -760,7 +763,6 @@ DeeSocket_Listen(DeeSocketObject *__restrict self, int max_backlog) {
 	neterrno_t error_code;
 	if (max_backlog < 0) {
 		max_backlog = get_default_backlog();
-		DBG_ALIGNMENT_ENABLE();
 		if unlikely(max_backlog < 0)
 			goto err;
 	}

@@ -362,28 +362,14 @@ libnet_fini(DeeDexObject *__restrict UNUSED(self)) {
 #endif /* CONFIG_HOST_WINDOWS */
 
 
-#ifndef CONFIG_NO_NOTIFICATIONS
-DECLARE_NOTIFY_ENVIRON_INTEGER(uint16_t, maxbacklog)
-PRIVATE struct dex_notification libnet_notifications[] = {
-	DEX_NOTIFICATION_ENVIRON(maxbacklog),
-	DEX_NOTIFICATION_END
-};
-#endif
-
 PUBLIC struct dex DEX = {
 	/* .d_symbols = */ symbols,
 	/* .d_init    = */ &libnet_init,
 #ifdef CONFIG_HOST_WINDOWS
-	/* .d_fini    = */ &libnet_fini,
+	/* .d_fini    = */ &libnet_fini
 #else /* CONFIG_HOST_WINDOWS */
-	/* .d_fini    = */ NULL,
+	/* .d_fini    = */ NULL
 #endif /* !CONFIG_HOST_WINDOWS */
-	/* .d_import_names = */ { NULL },
-	/* .d_clear   = */ NULL
-#ifndef CONFIG_NO_NOTIFICATIONS
-	,
-	/* .d_notify  =  */ libnet_notifications
-#endif /* !CONFIG_NO_NOTIFICATIONS */
 };
 
 DECL_END

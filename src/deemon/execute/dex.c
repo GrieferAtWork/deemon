@@ -202,8 +202,7 @@ dex_load_handle(DeeDexObject *__restrict self,
 	struct dex_symbol const *symbols;
 	struct dex *descriptor;
 	DREF DeeObject **globals;
-	DREF DeeModuleObject **imports;
-	size_t symcount, glbcount, impcount;
+	size_t symcount, glbcount;
 	uint16_t symi, bucket_mask;
 	descriptor = (struct dex *)DeeSystem_DlSym(handle, "DEX");
 	if (!descriptor)
@@ -217,40 +216,6 @@ dex_load_handle(DeeDexObject *__restrict self,
 	}
 	self->d_handle = handle;
 	self->d_dex    = descriptor;
-	/* Load the extension's import vector. */
-	impcount = 0, imports = NULL;
-	if (descriptor->d_import_names && *descriptor->d_import_names) {
-		size_t i;
-		char const *const *names;
-		names = descriptor->d_import_names;
-		self->d_import_names = names;
-		for (; *names; ++names)
-			++impcount;
-		if unlikely(impcount > UINT16_MAX) {
-			DeeError_Throwf(&DeeError_RuntimeError,
-			                "Dex extension %r has too many imports",
-			                input_file);
-			goto err;
-		}
-		imports = (DREF DeeModuleObject **)Dee_Mallocc(impcount,
-		                                               sizeof(DREF DeeModuleObject *));
-		if unlikely(!imports)
-			goto err;
-		names = descriptor->d_import_names;
-		/* Load import modules, using the same index as the original name. */
-		for (i = 0; i < impcount; ++i) {
-			DREF DeeObject *import;
-			import = DeeModule_OpenGlobalString(names[i],
-			                                    strlen(names[i]),
-			                                    NULL,
-			                                    true);
-			if unlikely(!import) {
-				Dee_Decrefv(imports, i);
-				goto err_imp;
-			}
-			imports[i] = (DREF DeeModuleObject *)import;
-		}
-	}
 
 	/* Load the extension's symbol table. */
 	symbols  = descriptor->d_symbols;
@@ -271,14 +236,14 @@ dex_load_handle(DeeDexObject *__restrict self,
 		DeeError_Throwf(&DeeError_RuntimeError,
 		                "Dex extension %r is too large",
 		                input_file);
-		goto err_imp_elem;
+		goto err;
 	}
 	ASSERT(glbcount >= symcount);
 	/* Generate the global variable table. */
 	symbols = descriptor->d_symbols;
 	globals = (DREF DeeObject **)Dee_Mallocc(glbcount, sizeof(DREF DeeObject *));
 	if unlikely(!globals)
-		goto err_imp_elem;
+		goto err;
 	/* Figure out how large the hash-mask should be. */
 	bucket_mask = 1;
 	while (bucket_mask < symcount)
@@ -325,21 +290,15 @@ dex_load_handle(DeeDexObject *__restrict self,
 		}
 	}
 	/* Write the tables into the module descriptor. */
-	self->d_module.mo_importc = (uint16_t)impcount;
-	self->d_module.mo_importv = imports;
+	self->d_module.mo_importc = 0;
+	self->d_module.mo_importv = NULL;
 	self->d_module.mo_globalc = (uint16_t)glbcount;
 	self->d_module.mo_globalv = globals;
 	self->d_module.mo_bucketm = bucket_mask;
 	self->d_module.mo_bucketv = modsym;
-	/* Save the import table in the descriptor. */
-	descriptor->d_imports = (DeeObject **)imports;
 	return 0;
 err_glob:
 	Dee_Free(globals);
-err_imp_elem:
-	Dee_Decrefv(imports, impcount);
-err_imp:
-	Dee_Free(imports);
 err:
 	DeeSystem_DlClose(handle);
 	return -1;
@@ -538,31 +497,7 @@ dex_initialize(DeeDexObject *__restrict self) {
 	func = self->d_dex->d_init;
 	if (func && (*func)(self))
 		goto err;
-#ifndef CONFIG_NO_NOTIFICATIONS
-	{
-		struct dex_notification *hooks;
-		/* Install notification hooks. */
-		hooks = self->d_dex->d_notify;
-		if (hooks)
-			for (; hooks->dn_name; ++hooks) {
-				if unlikely(DeeNotify_StartListen((uint16_t)hooks->dn_class,
-				                                  (DeeObject *)hooks->dn_name,
-				                                  hooks->dn_callback,
-				                                  hooks->dn_arg) < 0) {
-					while (hooks > self->d_dex->d_notify) {
-						--hooks;
-						DeeNotify_EndListen((uint16_t)hooks->dn_class,
-						                    (DeeObject *)hooks->dn_name,
-						                    hooks->dn_callback,
-						                    hooks->dn_arg);
-					}
-					if (self->d_dex->d_fini)
-						(*self->d_dex->d_fini)(self);
-					goto err;
-				}
-			}
-	}
-#endif /* !CONFIG_NO_NOTIFICATIONS */
+
 	/* Register the dex in the global chain. */
 	dex_lock_write();
 	if ((self->d_next = dex_chain) != NULL)
@@ -588,27 +523,9 @@ dex_fini(DeeDexObject *__restrict self) {
 		for (i = 0; i < self->d_module.mo_globalc; ++i)
 			Dee_XClear(self->d_module.mo_globalv[i]);
 		ASSERT(self->d_dex);
-		if (self->d_module.mo_flags & Dee_MODULE_FDIDINIT) {
-#ifndef CONFIG_NO_NOTIFICATIONS
-			struct dex_notification *hooks;
-			/* Uninstall notification hooks. */
-			hooks = self->d_dex->d_notify;
-			if (hooks) {
-				for (; hooks->dn_name; ++hooks) {
-					DeeNotify_EndListen((uint16_t)hooks->dn_class,
-					                    (DeeObject *)hooks->dn_name,
-					                    hooks->dn_callback,
-					                    hooks->dn_arg);
-				}
-			}
-#endif /* !CONFIG_NO_NOTIFICATIONS */
-			if (self->d_dex->d_fini)
-				(*self->d_dex->d_fini)(self);
-		}
-		/* Restore the import name list, thus allowing the module to be re-loaded.
-		 * FIXME: Same problem with this, as with `DeeSystem_DlClose()': There may
-		 *        still be components alive that are referencing the DEX! */
-		self->d_dex->d_import_names = self->d_import_names;
+		if ((self->d_module.mo_flags & Dee_MODULE_FDIDINIT) &&
+		    (self->d_dex->d_fini != NULL))
+			(*self->d_dex->d_fini)(self);
 
 		/* Must clear membercaches that may have been loaded by
 		 * this extension before unloading the associated library.

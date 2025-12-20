@@ -114,7 +114,6 @@ PUBLIC struct dex DEX = {
 #else /* HAVE_libipc_fini */
 	/* .d_fini         = */ NULL,
 #endif /* !HAVE_libipc_fini */
-	/* .d_import_names = */ { NULL }
 };
 
 DECL_END

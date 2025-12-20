@@ -688,6 +688,7 @@ DeeModule_ImportEx(/*utf-8*/ char const *__restrict import_str, size_t import_st
  * - [m] ".some_module"              (fs.headof(context_absname) + "/some_module.dee")
  * - [m] ".subdir.that_module"       (fs.headof(context_absname) + "/subdir/that_module.dee")
  * - [m] ".subdir"                   (fs.headof(context_absname) + "/subdir")                  DeeModuleDir_Type
+ * - [m] "..pardir.subdir"           (fs.headof(context_absname) + "/../pardir/subdir")        DeeModuleDir_Type
  * - [m] "."                         (DeeModule_Open(fs.abspath(context_absname), NULL))       Only allowed if "context_absname" doesn't end with a trailing "/"
  * - [m] "./subdir/that_module"      (fs.headof(context_absname) + "/subdir/that_module.dee")
  * - [f] "./subdir/that_module.dee"  (fs.headof(context_absname) + "/subdir/that_module.dee")

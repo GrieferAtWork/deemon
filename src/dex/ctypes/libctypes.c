@@ -1323,7 +1323,6 @@ PUBLIC struct dex DEX = {
 #else  /* !NDEBUG */
 	/* .d_fini    = */ NULL,
 #endif /* NDEBUG */
-	/* .d_imports = */ { NULL },
 	/* .d_clear   = */ &libctypes_clear
 };
 
