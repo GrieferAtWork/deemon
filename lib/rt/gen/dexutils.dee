@@ -199,12 +199,13 @@ function gi(
 	}
 	local macro_name = f"{libname.upper()}{name.upper()}_DEF";
 	print File.stderr: macro_name;
+	local flags = isvarying ? "DEXSYM_NORMAL" : "DEXSYM_READONLY | DEXSYM_CONSTEXPR";
+	local needFlags = flags != "DEXSYM_NORMAL";
+	local needDoc = doc !is none;
 	print("#define ", macro_name, " \\\n\t",
-		"{ ", repr name, ", OBJ_", libname, name, ", ",
-		isvarying ? "MODSYM_FNORMAL" : "MODSYM_FREADONLY | MODSYM_FCONSTEXPR"),;
-	if (doc !is none)
-		print(", ", repr doc),;
-	print(" },");
+		f"DEX_MEMBER{needFlags ? "_F" : ""}{needDoc ? "" : "_NODOC"}({
+		repr name}, OBJ_{libname}{name}{needFlags ? ", " + flags : ""}{
+		needDoc ? ", " + repr(doc) : ""}),");
 	local valid_bits = [15, 30, 45, 60];
 	if (value is int) {
 		/* The constant is given directly. */

@@ -454,9 +454,9 @@ DeeCode_GetRSymbolName(DeeObject const *__restrict self, uint16_t rid); /* Refer
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeCode_GetDDIString(DeeObject const *__restrict self, uint16_t id); /* DDI symbol/local/path/file */
 
-#define DeeCode_NAME(x)                                       \
-	DeeCode_GetDDIString((DeeObject *)Dee_REQUIRES_OBJECT(x), \
-	                     ((DeeCodeObject *)(x))->co_ddi->d_start.dr_name)
+#define DeeCode_NAME(x)                          \
+	DeeCode_GetDDIString((DeeObject const *)(x), \
+	                     Dee_REQUIRES_OBJECT(DeeCodeObject, x)->co_ddi->d_start.dr_name)
 
 #define DeeDDI_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeDDI_Type) /* `_DDI' is final. */
 #define DeeDDI_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeDDI_Type)
@@ -1031,8 +1031,8 @@ struct Dee_function_object {
 	                                                       * Values may be set to ITER_DONE by `ASM_CMPXCH_UB_LOCK'. */
 };
 
-#define DeeFunction_CODE(x) ((DeeFunctionObject const *)Dee_REQUIRES_OBJECT(x))->fo_code
-#define DeeFunction_REFV(x) ((DeeFunctionObject const *)Dee_REQUIRES_OBJECT(x))->fo_refv
+#define DeeFunction_CODE(x) Dee_REQUIRES_OBJECT(DeeFunctionObject const, x)->fo_code
+#define DeeFunction_REFV(x) Dee_REQUIRES_OBJECT(DeeFunctionObject const, x)->fo_refv
 
 #define DeeFunction_RefLockReading(self)    Dee_atomic_rwlock_reading(&(self)->fo_reflock)
 #define DeeFunction_RefLockWriting(self)    Dee_atomic_rwlock_writing(&(self)->fo_reflock)
@@ -1274,12 +1274,12 @@ INTDEF NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL DeeFunction_OptimizeAndThisCa
 
 #ifndef CONFIG_BUILDING_DEEMON
 #define DeeFunction_NewNoRefs(code)                            DeeFunction_New(code, 0, NULL)
-#define DeeFunction_ThisCall(self, this_arg, argc, argv)       DeeObject_ThisCall((DeeObject *)Dee_REQUIRES_OBJECT(self), this_arg, argc, argv)
-#define DeeFunction_ThisCallKw(self, this_arg, argc, argv, kw) DeeObject_ThisCallKw((DeeObject *)Dee_REQUIRES_OBJECT(self), this_arg, argc, argv, kw)
-#define DeeFunction_CallTuple(self, args)                      DeeObject_CallTuple((DeeObject *)Dee_REQUIRES_OBJECT(self), args)
-#define DeeFunction_CallTupleKw(self, args, kw)                DeeObject_CallTupleKw((DeeObject *)Dee_REQUIRES_OBJECT(self), args, kw)
-#define DeeFunction_ThisCallTuple(self, this_arg, args)        DeeObject_ThisCallTuple((DeeObject *)Dee_REQUIRES_OBJECT(self), this_arg, args)
-#define DeeFunction_ThisCallTupleKw(self, this_arg, args, kw)  DeeObject_ThisCallTupleKw((DeeObject *)Dee_REQUIRES_OBJECT(self), this_arg, args, kw)
+#define DeeFunction_ThisCall(self, this_arg, argc, argv)       DeeObject_ThisCall(Dee_REQUIRES_ANYOBJECT(self), this_arg, argc, argv)
+#define DeeFunction_ThisCallKw(self, this_arg, argc, argv, kw) DeeObject_ThisCallKw(Dee_REQUIRES_ANYOBJECT(self), this_arg, argc, argv, kw)
+#define DeeFunction_CallTuple(self, args)                      DeeObject_CallTuple(Dee_REQUIRES_ANYOBJECT(self), args)
+#define DeeFunction_CallTupleKw(self, args, kw)                DeeObject_CallTupleKw(Dee_REQUIRES_ANYOBJECT(self), args, kw)
+#define DeeFunction_ThisCallTuple(self, this_arg, args)        DeeObject_ThisCallTuple(Dee_REQUIRES_ANYOBJECT(self), this_arg, args)
+#define DeeFunction_ThisCallTupleKw(self, this_arg, args, kw)  DeeObject_ThisCallTupleKw(Dee_REQUIRES_ANYOBJECT(self), this_arg, args, kw)
 #else /* !CONFIG_BUILDING_DEEMON */
 INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeFunction_NewInherited(DeeObject *code, size_t refc,

@@ -160,8 +160,8 @@ DECL_BEGIN
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("unlink", "file:?Dstring", libname: "posix");]]]*/
-#define POSIX_UNLINK_DEF { "unlink", (DeeObject *)&posix_unlink, MODSYM_FREADONLY, DOC("(file:?Dstring)") },
-#define POSIX_UNLINK_DEF_DOC(doc) { "unlink", (DeeObject *)&posix_unlink, MODSYM_FREADONLY, DOC("(file:?Dstring)\n" doc) },
+#define POSIX_UNLINK_DEF          DEX_MEMBER_F("unlink", &posix_unlink, DEXSYM_READONLY, "(file:?Dstring)"),
+#define POSIX_UNLINK_DEF_DOC(doc) DEX_MEMBER_F("unlink", &posix_unlink, DEXSYM_READONLY, "(file:?Dstring)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_unlink_f_impl(DeeObject *file);
 #ifndef DEFINED_kwlist__file
 #define DEFINED_kwlist__file
@@ -290,8 +290,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("rmdir", "path:?Dstring", libname: "posix");]]]*/
-#define POSIX_RMDIR_DEF { "rmdir", (DeeObject *)&posix_rmdir, MODSYM_FREADONLY, DOC("(path:?Dstring)") },
-#define POSIX_RMDIR_DEF_DOC(doc) { "rmdir", (DeeObject *)&posix_rmdir, MODSYM_FREADONLY, DOC("(path:?Dstring)\n" doc) },
+#define POSIX_RMDIR_DEF          DEX_MEMBER_F("rmdir", &posix_rmdir, DEXSYM_READONLY, "(path:?Dstring)"),
+#define POSIX_RMDIR_DEF_DOC(doc) DEX_MEMBER_F("rmdir", &posix_rmdir, DEXSYM_READONLY, "(path:?Dstring)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_rmdir_f_impl(DeeObject *path);
 #ifndef DEFINED_kwlist__path
 #define DEFINED_kwlist__path
@@ -384,8 +384,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("remove", "path:?Dstring", libname: "posix");]]]*/
-#define POSIX_REMOVE_DEF { "remove", (DeeObject *)&posix_remove, MODSYM_FREADONLY, DOC("(path:?Dstring)") },
-#define POSIX_REMOVE_DEF_DOC(doc) { "remove", (DeeObject *)&posix_remove, MODSYM_FREADONLY, DOC("(path:?Dstring)\n" doc) },
+#define POSIX_REMOVE_DEF          DEX_MEMBER_F("remove", &posix_remove, DEXSYM_READONLY, "(path:?Dstring)"),
+#define POSIX_REMOVE_DEF_DOC(doc) DEX_MEMBER_F("remove", &posix_remove, DEXSYM_READONLY, "(path:?Dstring)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_remove_f_impl(DeeObject *path);
 #ifndef DEFINED_kwlist__path
 #define DEFINED_kwlist__path
@@ -600,8 +600,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("unlinkat", "dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags:u=0", libname: "posix");]]]*/
-#define POSIX_UNLINKAT_DEF { "unlinkat", (DeeObject *)&posix_unlinkat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags=!0)") },
-#define POSIX_UNLINKAT_DEF_DOC(doc) { "unlinkat", (DeeObject *)&posix_unlinkat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags=!0)\n" doc) },
+#define POSIX_UNLINKAT_DEF          DEX_MEMBER_F("unlinkat", &posix_unlinkat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags=!0)"),
+#define POSIX_UNLINKAT_DEF_DOC(doc) DEX_MEMBER_F("unlinkat", &posix_unlinkat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags=!0)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_unlinkat_f_impl(DeeObject *dfd, DeeObject *file, unsigned int atflags);
 #ifndef DEFINED_kwlist__dfd_file_atflags
 #define DEFINED_kwlist__dfd_file_atflags
@@ -680,8 +680,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("removeat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:u=0", libname: "posix");]]]*/
-#define POSIX_REMOVEAT_DEF { "removeat", (DeeObject *)&posix_removeat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)") },
-#define POSIX_REMOVEAT_DEF_DOC(doc) { "removeat", (DeeObject *)&posix_removeat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n" doc) },
+#define POSIX_REMOVEAT_DEF          DEX_MEMBER_F("removeat", &posix_removeat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)"),
+#define POSIX_REMOVEAT_DEF_DOC(doc) DEX_MEMBER_F("removeat", &posix_removeat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_removeat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 #ifndef DEFINED_kwlist__dfd_path_atflags
 #define DEFINED_kwlist__dfd_path_atflags
@@ -754,8 +754,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("rmdirat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:u=0", libname: "posix");]]]*/
-#define POSIX_RMDIRAT_DEF { "rmdirat", (DeeObject *)&posix_rmdirat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)") },
-#define POSIX_RMDIRAT_DEF_DOC(doc) { "rmdirat", (DeeObject *)&posix_rmdirat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n" doc) },
+#define POSIX_RMDIRAT_DEF          DEX_MEMBER_F("rmdirat", &posix_rmdirat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)"),
+#define POSIX_RMDIRAT_DEF_DOC(doc) DEX_MEMBER_F("rmdirat", &posix_rmdirat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_rmdirat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 #ifndef DEFINED_kwlist__dfd_path_atflags
 #define DEFINED_kwlist__dfd_path_atflags

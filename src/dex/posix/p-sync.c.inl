@@ -75,8 +75,8 @@ DECL_BEGIN
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("sync", "", libname: "posix"); ]]]*/
-#define POSIX_SYNC_DEF { "sync", (DeeObject *)&posix_sync, MODSYM_FREADONLY, DOC("()") },
-#define POSIX_SYNC_DEF_DOC(doc) { "sync", (DeeObject *)&posix_sync, MODSYM_FREADONLY, DOC("()\n" doc) },
+#define POSIX_SYNC_DEF          DEX_MEMBER_F("sync", &posix_sync, DEXSYM_READONLY, "()"),
+#define POSIX_SYNC_DEF_DOC(doc) DEX_MEMBER_F("sync", &posix_sync, DEXSYM_READONLY, "()\n" doc),
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_sync_f_impl(void);
 PRIVATE DEFINE_CMETHOD0(posix_sync, &posix_sync_f_impl, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_sync_f_impl(void)
@@ -101,8 +101,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_sync_f_impl(void)
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("fsync", "fd:unix:fd", libname: "posix"); ]]]*/
-#define POSIX_FSYNC_DEF { "fsync", (DeeObject *)&posix_fsync, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)") },
-#define POSIX_FSYNC_DEF_DOC(doc) { "fsync", (DeeObject *)&posix_fsync, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)\n" doc) },
+#define POSIX_FSYNC_DEF          DEX_MEMBER_F("fsync", &posix_fsync, DEXSYM_READONLY, "(fd:?X2?Dint?DFile)"),
+#define POSIX_FSYNC_DEF_DOC(doc) DEX_MEMBER_F("fsync", &posix_fsync, DEXSYM_READONLY, "(fd:?X2?Dint?DFile)\n" doc),
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fsync_f_impl(int fd);
 #ifndef DEFINED_kwlist__fd
 #define DEFINED_kwlist__fd
@@ -162,8 +162,8 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("fdatasync", "fd:unix:fd", libname: "posix"); ]]]*/
-#define POSIX_FDATASYNC_DEF { "fdatasync", (DeeObject *)&posix_fdatasync, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)") },
-#define POSIX_FDATASYNC_DEF_DOC(doc) { "fdatasync", (DeeObject *)&posix_fdatasync, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)\n" doc) },
+#define POSIX_FDATASYNC_DEF          DEX_MEMBER_F("fdatasync", &posix_fdatasync, DEXSYM_READONLY, "(fd:?X2?Dint?DFile)"),
+#define POSIX_FDATASYNC_DEF_DOC(doc) DEX_MEMBER_F("fdatasync", &posix_fdatasync, DEXSYM_READONLY, "(fd:?X2?Dint?DFile)\n" doc),
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fdatasync_f_impl(int fd);
 #ifndef DEFINED_kwlist__fd
 #define DEFINED_kwlist__fd

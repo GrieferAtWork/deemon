@@ -288,8 +288,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lchmod_f_impl(DeeObject *path, De
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("chmod", "path:?Dstring,mode:?X2?Dstring?Dint", libname: "posix"); ]]]*/
-#define POSIX_CHMOD_DEF { "chmod", (DeeObject *)&posix_chmod, MODSYM_FREADONLY, DOC("(path:?Dstring,mode:?X2?Dstring?Dint)") },
-#define POSIX_CHMOD_DEF_DOC(doc) { "chmod", (DeeObject *)&posix_chmod, MODSYM_FREADONLY, DOC("(path:?Dstring,mode:?X2?Dstring?Dint)\n" doc) },
+#define POSIX_CHMOD_DEF          DEX_MEMBER_F("chmod", &posix_chmod, DEXSYM_READONLY, "(path:?Dstring,mode:?X2?Dstring?Dint)"),
+#define POSIX_CHMOD_DEF_DOC(doc) DEX_MEMBER_F("chmod", &posix_chmod, DEXSYM_READONLY, "(path:?Dstring,mode:?X2?Dstring?Dint)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_chmod_f_impl(DeeObject *path, DeeObject *mode);
 #ifndef DEFINED_kwlist__path_mode
 #define DEFINED_kwlist__path_mode
@@ -399,8 +399,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("lchmod", "path:?Dstring,mode:?X2?Dstring?Dint", libname: "posix"); ]]]*/
-#define POSIX_LCHMOD_DEF { "lchmod", (DeeObject *)&posix_lchmod, MODSYM_FREADONLY, DOC("(path:?Dstring,mode:?X2?Dstring?Dint)") },
-#define POSIX_LCHMOD_DEF_DOC(doc) { "lchmod", (DeeObject *)&posix_lchmod, MODSYM_FREADONLY, DOC("(path:?Dstring,mode:?X2?Dstring?Dint)\n" doc) },
+#define POSIX_LCHMOD_DEF          DEX_MEMBER_F("lchmod", &posix_lchmod, DEXSYM_READONLY, "(path:?Dstring,mode:?X2?Dstring?Dint)"),
+#define POSIX_LCHMOD_DEF_DOC(doc) DEX_MEMBER_F("lchmod", &posix_lchmod, DEXSYM_READONLY, "(path:?Dstring,mode:?X2?Dstring?Dint)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_lchmod_f_impl(DeeObject *path, DeeObject *mode);
 #ifndef DEFINED_kwlist__path_mode
 #define DEFINED_kwlist__path_mode
@@ -486,8 +486,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("fchmod", "fd:?X2?Dint?DFile,mode:?X2?Dstring?Dint", libname: "posix"); ]]]*/
-#define POSIX_FCHMOD_DEF { "fchmod", (DeeObject *)&posix_fchmod, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,mode:?X2?Dstring?Dint)") },
-#define POSIX_FCHMOD_DEF_DOC(doc) { "fchmod", (DeeObject *)&posix_fchmod, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,mode:?X2?Dstring?Dint)\n" doc) },
+#define POSIX_FCHMOD_DEF          DEX_MEMBER_F("fchmod", &posix_fchmod, DEXSYM_READONLY, "(fd:?X2?Dint?DFile,mode:?X2?Dstring?Dint)"),
+#define POSIX_FCHMOD_DEF_DOC(doc) DEX_MEMBER_F("fchmod", &posix_fchmod, DEXSYM_READONLY, "(fd:?X2?Dint?DFile,mode:?X2?Dstring?Dint)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fchmod_f_impl(DeeObject *fd, DeeObject *mode);
 #ifndef DEFINED_kwlist__fd_mode
 #define DEFINED_kwlist__fd_mode
@@ -569,8 +569,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("fchmodat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode:?X2?Dstring?Dint,atflags:u=0", libname: "posix"); ]]]*/
-#define POSIX_FCHMODAT_DEF { "fchmodat", (DeeObject *)&posix_fchmodat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode:?X2?Dstring?Dint,atflags=!0)") },
-#define POSIX_FCHMODAT_DEF_DOC(doc) { "fchmodat", (DeeObject *)&posix_fchmodat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode:?X2?Dstring?Dint,atflags=!0)\n" doc) },
+#define POSIX_FCHMODAT_DEF          DEX_MEMBER_F("fchmodat", &posix_fchmodat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode:?X2?Dstring?Dint,atflags=!0)"),
+#define POSIX_FCHMODAT_DEF_DOC(doc) DEX_MEMBER_F("fchmodat", &posix_fchmodat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode:?X2?Dstring?Dint,atflags=!0)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_fchmodat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *mode, unsigned int atflags);
 #ifndef DEFINED_kwlist__dfd_path_mode_atflags
 #define DEFINED_kwlist__dfd_path_mode_atflags

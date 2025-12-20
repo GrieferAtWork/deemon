@@ -2317,8 +2317,8 @@ INTERN DeeTypeObject DeeEnviron_Type = {
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("getenv", "varname:?Dstring,defl:?Dstring=NULL->?Dstring", libname: "posix", ispure: true); ]]]*/
-#define POSIX_GETENV_DEF { "getenv", (DeeObject *)&posix_getenv, MODSYM_FREADONLY, DOC("(varname:?Dstring,defl?:?Dstring)->?Dstring") },
-#define POSIX_GETENV_DEF_DOC(doc) { "getenv", (DeeObject *)&posix_getenv, MODSYM_FREADONLY, DOC("(varname:?Dstring,defl?:?Dstring)->?Dstring\n" doc) },
+#define POSIX_GETENV_DEF          DEX_MEMBER_F("getenv", &posix_getenv, DEXSYM_READONLY, "(varname:?Dstring,defl?:?Dstring)->?Dstring"),
+#define POSIX_GETENV_DEF_DOC(doc) DEX_MEMBER_F("getenv", &posix_getenv, DEXSYM_READONLY, "(varname:?Dstring,defl?:?Dstring)->?Dstring\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_getenv_f_impl(DeeObject *varname, DeeObject *defl);
 #ifndef DEFINED_kwlist__varname_defl
 #define DEFINED_kwlist__varname_defl
@@ -2359,8 +2359,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("setenv", "varname:?Dstring,value:?Dstring,replace:c:bool=true", libname: "posix"); ]]]*/
-#define POSIX_SETENV_DEF { "setenv", (DeeObject *)&posix_setenv, MODSYM_FREADONLY, DOC("(varname:?Dstring,value:?Dstring,replace=!t)") },
-#define POSIX_SETENV_DEF_DOC(doc) { "setenv", (DeeObject *)&posix_setenv, MODSYM_FREADONLY, DOC("(varname:?Dstring,value:?Dstring,replace=!t)\n" doc) },
+#define POSIX_SETENV_DEF          DEX_MEMBER_F("setenv", &posix_setenv, DEXSYM_READONLY, "(varname:?Dstring,value:?Dstring,replace=!t)"),
+#define POSIX_SETENV_DEF_DOC(doc) DEX_MEMBER_F("setenv", &posix_setenv, DEXSYM_READONLY, "(varname:?Dstring,value:?Dstring,replace=!t)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_setenv_f_impl(DeeObject *varname, DeeObject *value, bool replace);
 #ifndef DEFINED_kwlist__varname_value_replace
 #define DEFINED_kwlist__varname_value_replace
@@ -2398,8 +2398,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("putenv", "envline:?Dstring", libname: "posix"); ]]]*/
-#define POSIX_PUTENV_DEF { "putenv", (DeeObject *)&posix_putenv, MODSYM_FREADONLY, DOC("(envline:?Dstring)") },
-#define POSIX_PUTENV_DEF_DOC(doc) { "putenv", (DeeObject *)&posix_putenv, MODSYM_FREADONLY, DOC("(envline:?Dstring)\n" doc) },
+#define POSIX_PUTENV_DEF          DEX_MEMBER_F("putenv", &posix_putenv, DEXSYM_READONLY, "(envline:?Dstring)"),
+#define POSIX_PUTENV_DEF_DOC(doc) DEX_MEMBER_F("putenv", &posix_putenv, DEXSYM_READONLY, "(envline:?Dstring)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_putenv_f_impl(DeeObject *envline);
 #ifndef DEFINED_kwlist__envline
 #define DEFINED_kwlist__envline
@@ -2458,8 +2458,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("unsetenv", "varname:?Dstring->?Dbool", libname: "posix"); ]]]*/
-#define POSIX_UNSETENV_DEF { "unsetenv", (DeeObject *)&posix_unsetenv, MODSYM_FREADONLY, DOC("(varname:?Dstring)->?Dbool") },
-#define POSIX_UNSETENV_DEF_DOC(doc) { "unsetenv", (DeeObject *)&posix_unsetenv, MODSYM_FREADONLY, DOC("(varname:?Dstring)->?Dbool\n" doc) },
+#define POSIX_UNSETENV_DEF          DEX_MEMBER_F("unsetenv", &posix_unsetenv, DEXSYM_READONLY, "(varname:?Dstring)->?Dbool"),
+#define POSIX_UNSETENV_DEF_DOC(doc) DEX_MEMBER_F("unsetenv", &posix_unsetenv, DEXSYM_READONLY, "(varname:?Dstring)->?Dbool\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_unsetenv_f_impl(DeeObject *varname);
 #ifndef DEFINED_kwlist__varname
 #define DEFINED_kwlist__varname
@@ -2492,8 +2492,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("clearenv", "", libname: "posix"); ]]]*/
-#define POSIX_CLEARENV_DEF { "clearenv", (DeeObject *)&posix_clearenv, MODSYM_FREADONLY, DOC("()") },
-#define POSIX_CLEARENV_DEF_DOC(doc) { "clearenv", (DeeObject *)&posix_clearenv, MODSYM_FREADONLY, DOC("()\n" doc) },
+#define POSIX_CLEARENV_DEF          DEX_MEMBER_F("clearenv", &posix_clearenv, DEXSYM_READONLY, "()"),
+#define POSIX_CLEARENV_DEF_DOC(doc) DEX_MEMBER_F("clearenv", &posix_clearenv, DEXSYM_READONLY, "()\n" doc),
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_clearenv_f_impl(void);
 PRIVATE DEFINE_CMETHOD0(posix_clearenv, &posix_clearenv_f_impl, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_clearenv_f_impl(void)

@@ -191,14 +191,14 @@ struct Dee_appexit_object {
 	int ae_exitcode;
 };
 #define DeeAppExit_Check(ob)    DeeObject_InstanceOfExact(ob, &DeeError_AppExit)
-#define DeeAppExit_Exitcode(ob) ((struct Dee_appexit_object *)Dee_REQUIRES_OBJECT(ob))->ae_exitcode
+#define DeeAppExit_Exitcode(ob) Dee_REQUIRES_OBJECT(struct Dee_appexit_object, ob)->ae_exitcode
 
 struct Dee_threadexit_object {
 	Dee_OBJECT_HEAD
 	DREF DeeObject *te_result;
 };
 #define DeeThreadExit_Check(ob)  DeeObject_InstanceOfExact(ob, &DeeError_ThreadExit)
-#define DeeThreadExit_Result(ob) ((struct Dee_threadexit_object *)Dee_REQUIRES_OBJECT(ob))->te_result
+#define DeeThreadExit_Result(ob) Dee_REQUIRES_OBJECT(struct Dee_threadexit_object, ob)->te_result
 
 struct Dee_string_object;
 

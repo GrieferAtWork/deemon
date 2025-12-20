@@ -168,8 +168,8 @@ DECL_BEGIN
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("rename", "oldpath:?Dstring,newpath:?Dstring", libname: "posix");]]]*/
-#define POSIX_RENAME_DEF { "rename", (DeeObject *)&posix_rename, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?Dstring)") },
-#define POSIX_RENAME_DEF_DOC(doc) { "rename", (DeeObject *)&posix_rename, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?Dstring)\n" doc) },
+#define POSIX_RENAME_DEF          DEX_MEMBER_F("rename", &posix_rename, DEXSYM_READONLY, "(oldpath:?Dstring,newpath:?Dstring)"),
+#define POSIX_RENAME_DEF_DOC(doc) DEX_MEMBER_F("rename", &posix_rename, DEXSYM_READONLY, "(oldpath:?Dstring,newpath:?Dstring)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_rename_f_impl(DeeObject *oldpath, DeeObject *newpath);
 #ifndef DEFINED_kwlist__oldpath_newpath
 #define DEFINED_kwlist__oldpath_newpath
@@ -278,8 +278,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("frename", "oldfd:?X2?DFile?Dint,newpath:?Dstring", libname: "posix");]]]*/
-#define POSIX_FRENAME_DEF { "frename", (DeeObject *)&posix_frename, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?Dstring)") },
-#define POSIX_FRENAME_DEF_DOC(doc) { "frename", (DeeObject *)&posix_frename, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?Dstring)\n" doc) },
+#define POSIX_FRENAME_DEF          DEX_MEMBER_F("frename", &posix_frename, DEXSYM_READONLY, "(oldfd:?X2?DFile?Dint,newpath:?Dstring)"),
+#define POSIX_FRENAME_DEF_DOC(doc) DEX_MEMBER_F("frename", &posix_frename, DEXSYM_READONLY, "(oldfd:?X2?DFile?Dint,newpath:?Dstring)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_frename_f_impl(DeeObject *oldfd, DeeObject *newpath);
 #ifndef DEFINED_kwlist__oldfd_newpath
 #define DEFINED_kwlist__oldfd_newpath
@@ -327,8 +327,8 @@ err:
 	"olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,"
 	"newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,"
 	"atflags:u=0", libname: "posix");]]]*/
-#define POSIX_RENAMEAT_DEF { "renameat", (DeeObject *)&posix_renameat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags=!0)") },
-#define POSIX_RENAMEAT_DEF_DOC(doc) { "renameat", (DeeObject *)&posix_renameat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags=!0)\n" doc) },
+#define POSIX_RENAMEAT_DEF          DEX_MEMBER_F("renameat", &posix_renameat, DEXSYM_READONLY, "(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags=!0)"),
+#define POSIX_RENAMEAT_DEF_DOC(doc) DEX_MEMBER_F("renameat", &posix_renameat, DEXSYM_READONLY, "(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags=!0)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL posix_renameat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int atflags);
 #ifndef DEFINED_kwlist__olddirfd_oldpath_newdirfd_newpath_atflags
 #define DEFINED_kwlist__olddirfd_oldpath_newdirfd_newpath_atflags
@@ -425,8 +425,8 @@ err:
 	"olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,"
 	"newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,"
 	"flags:u=0,atflags:u=0", libname: "posix");]]]*/
-#define POSIX_RENAMEAT2_DEF { "renameat2", (DeeObject *)&posix_renameat2, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags=!0,atflags=!0)") },
-#define POSIX_RENAMEAT2_DEF_DOC(doc) { "renameat2", (DeeObject *)&posix_renameat2, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags=!0,atflags=!0)\n" doc) },
+#define POSIX_RENAMEAT2_DEF          DEX_MEMBER_F("renameat2", &posix_renameat2, DEXSYM_READONLY, "(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags=!0,atflags=!0)"),
+#define POSIX_RENAMEAT2_DEF_DOC(doc) DEX_MEMBER_F("renameat2", &posix_renameat2, DEXSYM_READONLY, "(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags=!0,atflags=!0)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL posix_renameat2_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int flags, unsigned int atflags);
 #ifndef DEFINED_kwlist__olddirfd_oldpath_newdirfd_newpath_flags_atflags
 #define DEFINED_kwlist__olddirfd_oldpath_newdirfd_newpath_flags_atflags
@@ -630,8 +630,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("link", "oldpath:?Dstring,newpath:?Dstring", libname: "posix");]]]*/
-#define POSIX_LINK_DEF { "link", (DeeObject *)&posix_link, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?Dstring)") },
-#define POSIX_LINK_DEF_DOC(doc) { "link", (DeeObject *)&posix_link, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?Dstring)\n" doc) },
+#define POSIX_LINK_DEF          DEX_MEMBER_F("link", &posix_link, DEXSYM_READONLY, "(oldpath:?Dstring,newpath:?Dstring)"),
+#define POSIX_LINK_DEF_DOC(doc) DEX_MEMBER_F("link", &posix_link, DEXSYM_READONLY, "(oldpath:?Dstring,newpath:?Dstring)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_link_f_impl(DeeObject *oldpath, DeeObject *newpath);
 #ifndef DEFINED_kwlist__oldpath_newpath
 #define DEFINED_kwlist__oldpath_newpath
@@ -735,8 +735,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("flink", "oldfd:?X2?DFile?Dint,newpath:?Dstring", libname: "posix");]]]*/
-#define POSIX_FLINK_DEF { "flink", (DeeObject *)&posix_flink, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?Dstring)") },
-#define POSIX_FLINK_DEF_DOC(doc) { "flink", (DeeObject *)&posix_flink, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?Dstring)\n" doc) },
+#define POSIX_FLINK_DEF          DEX_MEMBER_F("flink", &posix_flink, DEXSYM_READONLY, "(oldfd:?X2?DFile?Dint,newpath:?Dstring)"),
+#define POSIX_FLINK_DEF_DOC(doc) DEX_MEMBER_F("flink", &posix_flink, DEXSYM_READONLY, "(oldfd:?X2?DFile?Dint,newpath:?Dstring)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_flink_f_impl(DeeObject *oldfd, DeeObject *newpath);
 #ifndef DEFINED_kwlist__oldfd_newpath
 #define DEFINED_kwlist__oldfd_newpath
@@ -798,8 +798,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("linkat", "olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags:u=0", libname: "posix");]]]*/
-#define POSIX_LINKAT_DEF { "linkat", (DeeObject *)&posix_linkat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags=!0)") },
-#define POSIX_LINKAT_DEF_DOC(doc) { "linkat", (DeeObject *)&posix_linkat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags=!0)\n" doc) },
+#define POSIX_LINKAT_DEF          DEX_MEMBER_F("linkat", &posix_linkat, DEXSYM_READONLY, "(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags=!0)"),
+#define POSIX_LINKAT_DEF_DOC(doc) DEX_MEMBER_F("linkat", &posix_linkat, DEXSYM_READONLY, "(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags=!0)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL posix_linkat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int atflags);
 #ifndef DEFINED_kwlist__olddirfd_oldpath_newdirfd_newpath_atflags
 #define DEFINED_kwlist__olddirfd_oldpath_newdirfd_newpath_atflags

@@ -2446,7 +2446,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpush_hregind(struct fungen *__restrict
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpush_hstack(struct fungen *__restrict self, host_cfa_t cfa_offset);                                                 /* (MEMOBJ_F_NOREF) */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpush_hstackind(struct fungen *__restrict self, host_cfa_t cfa_offset, ptrdiff_t val_delta);                         /* (MEMOBJ_F_NOREF) */
 #define fg_vpush_none(self)           fg_vpush_const_(self, Dee_None)
-#define fg_vpush_const(self, value)   fg_vpush_const_(self, (DeeObject *)Dee_REQUIRES_OBJECT(value))
+#define fg_vpush_const(self, value)   fg_vpush_const_(self, Dee_REQUIRES_ANYOBJECT(value))
 #define fg_vpush_funptr(self, ptr)    fg_vpush_addr(self, (void *)(Dee_funptr_t)(ptr))
 #define fg_vpush_NULL(self)           fg_vpush_addr(self, NULL)
 #define fg_vpush_imm8(self, imm8)     fg_vpush_addr(self, (void *)(uintptr_t)(uint8_t)(imm8))

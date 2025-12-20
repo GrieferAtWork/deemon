@@ -295,8 +295,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lchown_f_impl(DeeObject *path, De
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("chown", "path:?Dstring,uid:?X3?Dstring?Dint?N=Dee_None,gid:?X3?Dstring?Dint?N=Dee_None", libname: "posix"); ]]]*/
-#define POSIX_CHOWN_DEF { "chown", (DeeObject *)&posix_chown, MODSYM_FREADONLY, DOC("(path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)") },
-#define POSIX_CHOWN_DEF_DOC(doc) { "chown", (DeeObject *)&posix_chown, MODSYM_FREADONLY, DOC("(path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)\n" doc) },
+#define POSIX_CHOWN_DEF          DEX_MEMBER_F("chown", &posix_chown, DEXSYM_READONLY, "(path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)"),
+#define POSIX_CHOWN_DEF_DOC(doc) DEX_MEMBER_F("chown", &posix_chown, DEXSYM_READONLY, "(path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_chown_f_impl(DeeObject *path, DeeObject *uid, DeeObject *gid);
 #ifndef DEFINED_kwlist__path_uid_gid
 #define DEFINED_kwlist__path_uid_gid
@@ -413,8 +413,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("lchown", "path:?Dstring,uid:?X3?Dstring?Dint?N=Dee_None,gid:?X3?Dstring?Dint?N=Dee_None", libname: "posix"); ]]]*/
-#define POSIX_LCHOWN_DEF { "lchown", (DeeObject *)&posix_lchown, MODSYM_FREADONLY, DOC("(path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)") },
-#define POSIX_LCHOWN_DEF_DOC(doc) { "lchown", (DeeObject *)&posix_lchown, MODSYM_FREADONLY, DOC("(path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)\n" doc) },
+#define POSIX_LCHOWN_DEF          DEX_MEMBER_F("lchown", &posix_lchown, DEXSYM_READONLY, "(path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)"),
+#define POSIX_LCHOWN_DEF_DOC(doc) DEX_MEMBER_F("lchown", &posix_lchown, DEXSYM_READONLY, "(path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_lchown_f_impl(DeeObject *path, DeeObject *uid, DeeObject *gid);
 #ifndef DEFINED_kwlist__path_uid_gid
 #define DEFINED_kwlist__path_uid_gid
@@ -556,8 +556,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("fchown", "fd:?X2?Dint?DFile,uid:?X3?Dstring?Dint?N=Dee_None,gid:?X3?Dstring?Dint?N=Dee_None", libname: "posix"); ]]]*/
-#define POSIX_FCHOWN_DEF { "fchown", (DeeObject *)&posix_fchown, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)") },
-#define POSIX_FCHOWN_DEF_DOC(doc) { "fchown", (DeeObject *)&posix_fchown, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)\n" doc) },
+#define POSIX_FCHOWN_DEF          DEX_MEMBER_F("fchown", &posix_fchown, DEXSYM_READONLY, "(fd:?X2?Dint?DFile,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)"),
+#define POSIX_FCHOWN_DEF_DOC(doc) DEX_MEMBER_F("fchown", &posix_fchown, DEXSYM_READONLY, "(fd:?X2?Dint?DFile,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_fchown_f_impl(DeeObject *fd, DeeObject *uid, DeeObject *gid);
 #ifndef DEFINED_kwlist__fd_uid_gid
 #define DEFINED_kwlist__fd_uid_gid
@@ -696,8 +696,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("fchownat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,uid:?X3?Dstring?Dint?N=Dee_None,gid:?X3?Dstring?Dint?N=Dee_None,atflags:u=0", libname: "posix"); ]]]*/
-#define POSIX_FCHOWNAT_DEF { "fchownat", (DeeObject *)&posix_fchownat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N,atflags=!0)") },
-#define POSIX_FCHOWNAT_DEF_DOC(doc) { "fchownat", (DeeObject *)&posix_fchownat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N,atflags=!0)\n" doc) },
+#define POSIX_FCHOWNAT_DEF          DEX_MEMBER_F("fchownat", &posix_fchownat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N,atflags=!0)"),
+#define POSIX_FCHOWNAT_DEF_DOC(doc) DEX_MEMBER_F("fchownat", &posix_fchownat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N,atflags=!0)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL posix_fchownat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *uid, DeeObject *gid, unsigned int atflags);
 #ifndef DEFINED_kwlist__dfd_path_uid_gid_atflags
 #define DEFINED_kwlist__dfd_path_uid_gid_atflags

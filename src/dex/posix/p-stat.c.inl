@@ -1051,8 +1051,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("fstat", "fd:?X2?DFile?Dint->?Gstat", libname: "posix"); ]]]*/
-#define POSIX_FSTAT_DEF { "fstat", (DeeObject *)&posix_fstat, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint)->?Gstat") },
-#define POSIX_FSTAT_DEF_DOC(doc) { "fstat", (DeeObject *)&posix_fstat, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint)->?Gstat\n" doc) },
+#define POSIX_FSTAT_DEF          DEX_MEMBER_F("fstat", &posix_fstat, DEXSYM_READONLY, "(fd:?X2?DFile?Dint)->?Gstat"),
+#define POSIX_FSTAT_DEF_DOC(doc) DEX_MEMBER_F("fstat", &posix_fstat, DEXSYM_READONLY, "(fd:?X2?DFile?Dint)->?Gstat\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_fstat_f_impl(DeeObject *fd);
 #ifndef DEFINED_kwlist__fd
 #define DEFINED_kwlist__fd
@@ -1091,8 +1091,8 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("fstatat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:c:uint=0->?Gstat", libname: "posix"); ]]]*/
-#define POSIX_FSTATAT_DEF { "fstatat", (DeeObject *)&posix_fstatat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Gstat") },
-#define POSIX_FSTATAT_DEF_DOC(doc) { "fstatat", (DeeObject *)&posix_fstatat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Gstat\n" doc) },
+#define POSIX_FSTATAT_DEF          DEX_MEMBER_F("fstatat", &posix_fstatat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Gstat"),
+#define POSIX_FSTATAT_DEF_DOC(doc) DEX_MEMBER_F("fstatat", &posix_fstatat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Gstat\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fstatat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 #ifndef DEFINED_kwlist__dfd_path_atflags
 #define DEFINED_kwlist__dfd_path_atflags

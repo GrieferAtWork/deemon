@@ -223,7 +223,7 @@ struct Dee_kwds_object {
 
 
 DDATDEF DeeTypeObject DeeKwds_Type;
-#define DeeKwds_SIZE(ob)       ((DeeKwdsObject *)Dee_REQUIRES_OBJECT(ob))->kw_size
+#define DeeKwds_SIZE(ob)       Dee_REQUIRES_OBJECT(DeeKwdsObject, ob)->kw_size
 #define DeeKwds_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeKwds_Type) /* _Kwds is final */
 #define DeeKwds_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeKwds_Type)
 
@@ -356,8 +356,8 @@ typedef struct {
 DDATDEF DeeTypeObject DeeKwdsMapping_Type;
 #define DeeKwdsMapping_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeKwdsMapping_Type) /* `_KwdsMapping' is final */
 #define DeeKwdsMapping_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeKwdsMapping_Type)
-#define DeeKwdsMapping_KWDS(ob)       ((DeeKwdsMappingObject *)Dee_REQUIRES_OBJECT(ob))->kmo_kwds
-#define DeeKwdsMapping_ARGV(ob)       ((DeeKwdsMappingObject *)Dee_REQUIRES_OBJECT(ob))->kmo_argv
+#define DeeKwdsMapping_KWDS(ob)       Dee_REQUIRES_OBJECT(DeeKwdsMappingObject, ob)->kmo_kwds
+#define DeeKwdsMapping_ARGV(ob)       Dee_REQUIRES_OBJECT(DeeKwdsMappingObject, ob)->kmo_argv
 
 /* Construct a keywords-mapping object from a given `kwds' object,
  * as well as an argument vector that will be shared with the mapping.
@@ -602,7 +602,7 @@ typedef struct {
 	                                                            * Hash-vector of loaded, black-listed keywords. */
 //	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *,      blkd_args); /* Storage space for "blkd_argv" */
 } DeeBlackListKwdsObject;
-#define DeeBlackListKwds_KWDS(self)           ((DeeBlackListKwdsObject *)Dee_REQUIRES_OBJECT(self))->blkd_kwds
+#define DeeBlackListKwds_KWDS(self)           Dee_REQUIRES_OBJECT(DeeBlackListKwdsObject, self)->blkd_kwds
 #define DeeBlackListKwds_BLCKNEXT(i, perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1), (perturb) >>= 5)
 
 #define DeeBlackListKwds_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->blkd_lock)
@@ -689,7 +689,7 @@ typedef struct {
 	COMPILER_FLEXIBLE_ARRAY(DeeBlackListKwdsEntry, blkw_blck); /* [lock(blkw_lock)][0..blkw_mask+1]
 	                                                            * Hash-vector of loaded, black-listed keywords. */
 } DeeBlackListKwObject;
-#define DeeBlackListKw_KW(self)             ((DeeBlackListKwObject *)Dee_REQUIRES_OBJECT(self))->blkw_kw
+#define DeeBlackListKw_KW(self)             Dee_REQUIRES_OBJECT(DeeBlackListKwObject, self)->blkw_kw
 #define DeeBlackListKw_BLCKNEXT(i, perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1), (perturb) >>= 5)
 
 #define DeeBlackListKw_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->blkw_lock)

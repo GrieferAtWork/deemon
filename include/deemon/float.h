@@ -90,7 +90,7 @@ struct Dee_float_object {
 #endif /* !CONFIG_HAVE_FPU */
 
 #ifdef CONFIG_HAVE_FPU
-#define DeeFloat_VALUE(x) ((DeeFloatObject *)Dee_REQUIRES_OBJECT(x))->f_value
+#define DeeFloat_VALUE(x) Dee_REQUIRES_OBJECT(DeeFloatObject, x)->f_value
 #endif /* CONFIG_HAVE_FPU */
 
 #define DeeFloat_Check(x)      DeeObject_InstanceOfExact(x, &DeeFloat_Type) /* `float' is final */

@@ -512,8 +512,8 @@ PRIVATE DEFINE_CMETHOD1(posix_errno_set, &posix_errno_set_f, METHOD_FNORMAL);
 /* strerror()                                                           */
 /************************************************************************/
 /*[[[deemon import("rt.gen.dexutils").gw("strerror", "errnum?:d=DeeSystem_GetErrno()->?X2?Dstring?N", libname: "posix");]]]*/
-#define POSIX_STRERROR_DEF { "strerror", (DeeObject *)&posix_strerror, MODSYM_FREADONLY, DOC("(errnum?:?Dint)->?X2?Dstring?N") },
-#define POSIX_STRERROR_DEF_DOC(doc) { "strerror", (DeeObject *)&posix_strerror, MODSYM_FREADONLY, DOC("(errnum?:?Dint)->?X2?Dstring?N\n" doc) },
+#define POSIX_STRERROR_DEF          DEX_MEMBER_F("strerror", &posix_strerror, DEXSYM_READONLY, "(errnum?:?Dint)->?X2?Dstring?N"),
+#define POSIX_STRERROR_DEF_DOC(doc) DEX_MEMBER_F("strerror", &posix_strerror, DEXSYM_READONLY, "(errnum?:?Dint)->?X2?Dstring?N\n" doc),
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum);
 #ifndef DEFINED_kwlist__errnum
 #define DEFINED_kwlist__errnum
@@ -613,8 +613,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum)
 /* strerrorname()                                                       */
 /************************************************************************/
 /*[[[deemon import("rt.gen.dexutils").gw("strerrorname", "errnum?:d=DeeSystem_GetErrno()->?X2?Dstring?N", libname: "posix");]]]*/
-#define POSIX_STRERRORNAME_DEF { "strerrorname", (DeeObject *)&posix_strerrorname, MODSYM_FREADONLY, DOC("(errnum?:?Dint)->?X2?Dstring?N") },
-#define POSIX_STRERRORNAME_DEF_DOC(doc) { "strerrorname", (DeeObject *)&posix_strerrorname, MODSYM_FREADONLY, DOC("(errnum?:?Dint)->?X2?Dstring?N\n" doc) },
+#define POSIX_STRERRORNAME_DEF          DEX_MEMBER_F("strerrorname", &posix_strerrorname, DEXSYM_READONLY, "(errnum?:?Dint)->?X2?Dstring?N"),
+#define POSIX_STRERRORNAME_DEF_DOC(doc) DEX_MEMBER_F("strerrorname", &posix_strerrorname, DEXSYM_READONLY, "(errnum?:?Dint)->?X2?Dstring?N\n" doc),
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerrorname_f_impl(int errnum);
 #ifndef DEFINED_kwlist__errnum
 #define DEFINED_kwlist__errnum

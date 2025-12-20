@@ -127,8 +127,8 @@ struct Dee_bytes_object {
 
 /* Data accessor helper macros for bytes objects */
 #ifdef Dee_BYTES_HAVE_b_inuse_p
-#define DeeBytes_IncUse(self) _DeeRefcnt_Inc(((DeeBytesObject *)Dee_REQUIRES_OBJECT(self))->b_inuse_p)
-#define DeeBytes_DecUse(self) _DeeRefcnt_Dec(((DeeBytesObject *)Dee_REQUIRES_OBJECT(self))->b_inuse_p)
+#define DeeBytes_IncUse(self) _DeeRefcnt_Inc(Dee_REQUIRES_OBJECT(DeeBytesObject, self)->b_inuse_p)
+#define DeeBytes_DecUse(self) _DeeRefcnt_Dec(Dee_REQUIRES_OBJECT(DeeBytesObject, self)->b_inuse_p)
 #else /* Dee_BYTES_HAVE_b_inuse_p */
 #define DeeBytes_IncUse(self) (void)0
 #define DeeBytes_DecUse(self) (void)0
@@ -136,14 +136,14 @@ struct Dee_bytes_object {
 
 /* Access to the effect data-blob of some given "Bytes".
  * These function should only be used after `DeeBytes_IncUse()' has been called. */
-#define DeeBytes_DATA(x) ((DeeBytesObject *)Dee_REQUIRES_OBJECT(x))->b_base
-#define DeeBytes_SIZE(x) ((DeeBytesObject *)Dee_REQUIRES_OBJECT(x))->b_size
+#define DeeBytes_DATA(x) Dee_REQUIRES_OBJECT(DeeBytesObject, x)->b_base
+#define DeeBytes_SIZE(x) Dee_REQUIRES_OBJECT(DeeBytesObject, x)->b_size
 #define DeeBytes_END(x)  (DeeBytes_DATA(x) + DeeBytes_SIZE(x))
 
-#define DeeBytes_WRITABLE(x)   (((DeeBytesObject *)Dee_REQUIRES_OBJECT(x))->b_flags & Dee_BUFFER_FWRITABLE)
+#define DeeBytes_WRITABLE(x)   (Dee_REQUIRES_OBJECT(DeeBytesObject, x)->b_flags & Dee_BUFFER_FWRITABLE)
 #define DeeBytes_Check(x)      DeeObject_InstanceOfExact(x, &DeeBytes_Type) /* `Bytes' is final. */
 #define DeeBytes_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeBytes_Type)
-#define DeeBytes_IsEmpty(x)    (((DeeBytesObject *)Dee_REQUIRES_OBJECT(x))->b_size == 0)
+#define DeeBytes_IsEmpty(x)    (Dee_REQUIRES_OBJECT(DeeBytesObject, x)->b_size == 0)
 
 /* The builtin `Bytes' data type.
  * This type offers functionality identical to what can also be found in
@@ -246,26 +246,26 @@ DeeBytes_ReleaseRef(DREF DeeObject *self);
 
 #ifdef __INTELLISENSE__
 #define DeeBytes_NewSubView(self, base, num_bytes)                                           \
-	DeeBytes_NewView(((DeeBytesObject *)Dee_REQUIRES_OBJECT(self))->b_orig, base, num_bytes, \
+	DeeBytes_NewView(Dee_REQUIRES_OBJECT(DeeBytesObject, self)->b_orig, base, num_bytes, \
 	                 ((DeeBytesObject *)(self))->b_flags)
 #define DeeBytes_NewSubViewRo(self, base, num_bytes)                                                   \
-	DeeBytes_NewView(((DeeBytesObject *)Dee_REQUIRES_OBJECT(self))->b_orig, (void *)(base), num_bytes, \
+	DeeBytes_NewView(Dee_REQUIRES_OBJECT(DeeBytesObject, self)->b_orig, (void *)(base), num_bytes, \
 	                 ((DeeBytesObject *)(self))->b_flags & ~Dee_BUFFER_FWRITABLE)
 #else /* __INTELLISENSE__ */
 #define DeeBytes_NewSubView(self, base, num_bytes)                                  \
-	DeeBytes_NewView(((DeeBytesObject *)Dee_REQUIRES_OBJECT(self))->b_buffer.bb_put \
+	DeeBytes_NewView(Dee_REQUIRES_OBJECT(DeeBytesObject, self)->b_buffer.bb_put \
 	                 ? (DeeObject *)(self)                                          \
 	                 : ((DeeBytesObject *)(self))->b_orig,                          \
 	                 base, num_bytes, ((DeeBytesObject *)(self))->b_flags)
 #if Dee_BUFFER_FMASK == Dee_BUFFER_FWRITABLE
 #define DeeBytes_NewSubViewRo(self, base, num_bytes)                                \
-	DeeBytes_NewView(((DeeBytesObject *)Dee_REQUIRES_OBJECT(self))->b_buffer.bb_put \
+	DeeBytes_NewView(Dee_REQUIRES_OBJECT(DeeBytesObject, self)->b_buffer.bb_put \
 	                 ? (DeeObject *)(self)                                          \
 	                 : ((DeeBytesObject *)(self))->b_orig,                          \
 	                 (void *)(base), num_bytes, Dee_BUFFER_FREADONLY)
 #else /* Dee_BUFFER_FMASK == Dee_BUFFER_FWRITABLE */
 #define DeeBytes_NewSubViewRo(self, base, num_bytes)                                \
-	DeeBytes_NewView(((DeeBytesObject *)Dee_REQUIRES_OBJECT(self))->b_buffer.bb_put \
+	DeeBytes_NewView(Dee_REQUIRES_OBJECT(DeeBytesObject, self)->b_buffer.bb_put \
 	                 ? (DeeObject *)(self)                                          \
 	                 : ((DeeBytesObject *)(self))->b_orig,                          \
 	                 (void *)(base), num_bytes,                                     \

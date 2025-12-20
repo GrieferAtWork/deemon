@@ -53,8 +53,8 @@ DDATDEF DeeObject DeeNone_Singleton;
 /* WARNING: If these two macros are ever changed, make sure to allow
  *          `NULL' to be passed for `x', as code exists that assumes
  *          this being possible (btw: `NULL' should evaluate to `false') */
-#define DeeNone_Check(x)      ((DeeObject *)Dee_REQUIRES_OBJECT(x) == Dee_None) /* `none' is a singleton. */
-#define DeeNone_CheckExact(x) ((DeeObject *)Dee_REQUIRES_OBJECT(x) == Dee_None)
+#define DeeNone_Check(x)      (Dee_REQUIRES_ANYOBJECT(x) == Dee_None) /* `none' is a singleton. */
+#define DeeNone_CheckExact(x) (Dee_REQUIRES_ANYOBJECT(x) == Dee_None)
 
 /* No-op/none function pointers */
 DFUNDEF ATTR_RETNONNULL WUNUSED DREF DeeObject *(DCALL DeeNone_NewRef)(void);

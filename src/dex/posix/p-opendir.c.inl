@@ -760,30 +760,28 @@ LOCAL unsigned int dee_DTTOIF(TYPEOF_struct_dirent_d_type dt) {
 #endif /* !posix_opendir_USE_GENERIC_DT_CONSTANTS */
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-posix_DTTOIF_f(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+posix_DTTOIF_f(DeeObject *__restrict dt_arg) {
 	TYPEOF_struct_dirent_d_type dt;
-	DeeArg_Unpack1X(err, argc, argv, "DTTOIF", &dt, UNP_struct_dirent_d_type, DeeObject_AsUIntX);
+	if (DeeObject_AsUIntX(dt_arg, &dt))
+		goto err;
 	return DeeInt_NewUInt(USED_DTTOIF(dt));
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-posix_IFTODT_f(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("IFTODT", params: "unsigned int if");]]]*/
-	struct {
-		unsigned int if_;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "IFTODT", &args.if_, "u", DeeObject_AsUInt);
-/*[[[end]]]*/
-	return DeeInt_New_D_TYPE(USED_IFTODT(args.if_));
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+posix_IFTODT_f(DeeObject *__restrict if_arg) {
+	unsigned int if_;
+	if (DeeObject_AsUInt(if_arg, &if_))
+		goto err;
+	return DeeInt_New_D_TYPE(USED_IFTODT(if_));
 err:
 	return NULL;
 }
 
-INTERN DEFINE_CMETHOD(posix_DTTOIF, &posix_DTTOIF_f, METHOD_FNORMAL);
-INTERN DEFINE_CMETHOD(posix_IFTODT, &posix_IFTODT_f, METHOD_FNORMAL);
+INTERN DEFINE_CMETHOD1(posix_DTTOIF, &posix_DTTOIF_f, METHOD_FNORMAL);
+INTERN DEFINE_CMETHOD1(posix_IFTODT, &posix_IFTODT_f, METHOD_FNORMAL);
 
 /* High-level wrappers around `struct dirent' and `DIR'
  * Note that `DIR' has a constructor that behaves just like `opendir(3)',

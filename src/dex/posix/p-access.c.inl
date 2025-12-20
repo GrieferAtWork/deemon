@@ -130,8 +130,8 @@ print "/" "**" "/";
 
 #if defined(posix_access_USE_waccess) || defined(__DEEMON__)
 /*[[[deemon import("rt.gen.dexutils").gw("access", "filename:c:wchar_t[],how:d->?Dbool", libname: "posix"); ]]]*/
-#define POSIX_ACCESS_DEF { "access", (DeeObject *)&posix_access, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
-#define POSIX_ACCESS_DEF_DOC(doc) { "access", (DeeObject *)&posix_access, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
+#define POSIX_ACCESS_DEF          DEX_MEMBER_F("access", &posix_access, DEXSYM_READONLY, "(filename:?Dstring,how:?Dint)->?Dbool"),
+#define POSIX_ACCESS_DEF_DOC(doc) DEX_MEMBER_F("access", &posix_access, DEXSYM_READONLY, "(filename:?Dstring,how:?Dint)->?Dbool\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_access_f_impl(Dee_wchar_t const *filename, int how);
 #ifndef DEFINED_kwlist__filename_how
 #define DEFINED_kwlist__filename_how
@@ -154,8 +154,8 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_access_f_impl(Dee_wc
 #endif /* posix_access_USE_waccess */
 #if !defined(posix_access_USE_waccess) || defined(__DEEMON__)
 /*[[[deemon import("rt.gen.dexutils").gw("access", "filename:c:char[],how:d->?Dbool", libname: "posix"); ]]]*/
-#define POSIX_ACCESS_DEF { "access", (DeeObject *)&posix_access, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
-#define POSIX_ACCESS_DEF_DOC(doc) { "access", (DeeObject *)&posix_access, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
+#define POSIX_ACCESS_DEF          DEX_MEMBER_F("access", &posix_access, DEXSYM_READONLY, "(filename:?Dstring,how:?Dint)->?Dbool"),
+#define POSIX_ACCESS_DEF_DOC(doc) DEX_MEMBER_F("access", &posix_access, DEXSYM_READONLY, "(filename:?Dstring,how:?Dint)->?Dbool\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_access_f_impl(char const *filename, int how);
 #ifndef DEFINED_kwlist__filename_how
 #define DEFINED_kwlist__filename_how
@@ -234,8 +234,8 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("euidaccess", "filename:c:char[],how:d->?Dbool", libname: "posix"); ]]]*/
-#define POSIX_EUIDACCESS_DEF { "euidaccess", (DeeObject *)&posix_euidaccess, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
-#define POSIX_EUIDACCESS_DEF_DOC(doc) { "euidaccess", (DeeObject *)&posix_euidaccess, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
+#define POSIX_EUIDACCESS_DEF          DEX_MEMBER_F("euidaccess", &posix_euidaccess, DEXSYM_READONLY, "(filename:?Dstring,how:?Dint)->?Dbool"),
+#define POSIX_EUIDACCESS_DEF_DOC(doc) DEX_MEMBER_F("euidaccess", &posix_euidaccess, DEXSYM_READONLY, "(filename:?Dstring,how:?Dint)->?Dbool\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_euidaccess_f_impl(char const *filename, int how);
 #ifndef DEFINED_kwlist__filename_how
 #define DEFINED_kwlist__filename_how
@@ -300,8 +300,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("faccessat", "dfd:d,filename:c:char[],how:d,atflags:d->?Dbool", libname: "posix"); ]]]*/
-#define POSIX_FACCESSAT_DEF { "faccessat", (DeeObject *)&posix_faccessat, MODSYM_FREADONLY, DOC("(dfd:?Dint,filename:?Dstring,how:?Dint,atflags:?Dint)->?Dbool") },
-#define POSIX_FACCESSAT_DEF_DOC(doc) { "faccessat", (DeeObject *)&posix_faccessat, MODSYM_FREADONLY, DOC("(dfd:?Dint,filename:?Dstring,how:?Dint,atflags:?Dint)->?Dbool\n" doc) },
+#define POSIX_FACCESSAT_DEF          DEX_MEMBER_F("faccessat", &posix_faccessat, DEXSYM_READONLY, "(dfd:?Dint,filename:?Dstring,how:?Dint,atflags:?Dint)->?Dbool"),
+#define POSIX_FACCESSAT_DEF_DOC(doc) DEX_MEMBER_F("faccessat", &posix_faccessat, DEXSYM_READONLY, "(dfd:?Dint,filename:?Dstring,how:?Dint,atflags:?Dint)->?Dbool\n" doc),
 FORCELOCAL WUNUSED NONNULL((2)) DREF DeeObject *DCALL posix_faccessat_f_impl(int dfd, char const *filename, int how, int atflags);
 #ifndef DEFINED_kwlist__dfd_filename_how_atflags
 #define DEFINED_kwlist__dfd_filename_how_atflags

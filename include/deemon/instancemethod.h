@@ -39,8 +39,8 @@ struct Dee_instance_method {
 	DREF DeeObject *im_func; /* [1..1] The function to-be called. */
 	DREF DeeObject *im_this; /* [1..1] The this argument. */
 };
-#define DeeInstanceMethod_FUNC(x) ((DeeInstanceMethodObject *)Dee_REQUIRES_OBJECT(x))->im_func
-#define DeeInstanceMethod_THIS(x) ((DeeInstanceMethodObject *)Dee_REQUIRES_OBJECT(x))->im_this
+#define DeeInstanceMethod_FUNC(x) Dee_REQUIRES_OBJECT(DeeInstanceMethodObject, x)->im_func
+#define DeeInstanceMethod_THIS(x) Dee_REQUIRES_OBJECT(DeeInstanceMethodObject, x)->im_this
 
 DDATDEF DeeTypeObject DeeInstanceMethod_Type;
 #define DeeInstanceMethod_Check(ob)      DeeObject_InstanceOf(ob, &DeeInstanceMethod_Type)
@@ -49,8 +49,8 @@ DDATDEF DeeTypeObject DeeInstanceMethod_Type;
 #define Dee_DEFINE_INSTANCEMETHOD(name, func, thisarg) \
 	DeeInstanceMethodObject name = {                   \
 		Dee_OBJECT_HEAD_INIT(&DeeInstanceMethod_Type), \
-		(DREF DeeObject *)Dee_REQUIRES_OBJECT(func),   \
-		(DREF DeeObject *)Dee_REQUIRES_OBJECT(thisarg) \
+		Dee_REQUIRES_OBJECT(DREF DeeObject, func),   \
+		Dee_REQUIRES_OBJECT(DREF DeeObject, thisarg) \
 	}
 
 /* Create a new instance method.

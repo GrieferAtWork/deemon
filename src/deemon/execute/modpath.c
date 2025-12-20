@@ -1448,7 +1448,7 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #ifdef DEE_SYSTEM_FS_ICASE
 #define fs_memcmp                        memcasecmp
 #define fs_bcmp                          memcasecmp
-#define fs_hashobj(ob)                   DeeString_HashCase(Dee_REQUIRES_OBJECT(ob))
+#define fs_hashobj(ob)                   DeeString_HashCase(Dee_REQUIRES_ANYOBJECT(ob))
 #define fs_hashstr(s)                    Dee_HashCaseStr(s)
 #define fs_hashutf8(s, n)                Dee_HashCaseUtf8(s, n)
 #define fs_hashmodname_equals(mod, hash) 1
@@ -1457,7 +1457,7 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #else /* DEE_SYSTEM_FS_ICASE */
 #define fs_memcmp                        memcmp
 #define fs_bcmp                          bcmp
-#define fs_hashobj(ob)                   DeeString_Hash(Dee_REQUIRES_OBJECT(ob))
+#define fs_hashobj(ob)                   DeeString_Hash(Dee_REQUIRES_ANYOBJECT(ob))
 #define fs_hashstr(s)                    Dee_HashStr(s)
 #define fs_hashutf8(s, n)                Dee_HashUtf8(s, n)
 #define fs_hashmodpath(mod)              DeeString_HASH((mod)->mo_path)

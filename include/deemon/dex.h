@@ -40,35 +40,83 @@
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
-#define Dee_dex_object       dex_object
-#define Dee_dex_symbol       dex_symbol
-#define Dee_dex              dex
-#ifndef CONFIG_NO_NOTIFICATIONS
-#define Dee_string_object    string_object
-#define Dee_dex_notification dex_notification
-#endif /* !CONFIG_NO_NOTIFICATIONS */
+#define DEXSYM_NORMAL      Dee_DEXSYM_NORMAL
+#define DEXSYM_READONLY    Dee_DEXSYM_READONLY
+#define DEXSYM_CONSTEXPR   Dee_DEXSYM_CONSTEXPR
+#define DEXSYM_ALIAS       Dee_DEXSYM_ALIAS
+#define DEXSYM_HIDDEN      Dee_DEXSYM_HIDDEN
+#define DEXSYM_PROPERTY    Dee_DEXSYM_PROPERTY
+#define DEXSYM_EXTERN      Dee_DEXSYM_EXTERN
+#define Dee_dex_object     dex_object
+#define Dee_dex_symbol     dex_symbol
+#define Dee_dex            dex
+#define DEX_BEGIN          Dee_DEX_BEGIN
+#define DEX_MEMBER         Dee_DEX_MEMBER
+#define DEX_MEMBER_F       Dee_DEX_MEMBER_F
+#define DEX_MEMBER_NODOC   Dee_DEX_MEMBER_NODOC
+#define DEX_MEMBER_F_NODOC Dee_DEX_MEMBER_F_NODOC
+#define DEX_GETSET_F       Dee_DEX_GETSET_F
+#define DEX_GETTER_F       Dee_DEX_GETTER_F
+#define DEX_GETSET         Dee_DEX_GETSET
+#define DEX_GETTER         Dee_DEX_GETTER
+#define DEX_GETSET_F_NODOC Dee_DEX_GETSET_F_NODOC
+#define DEX_GETTER_F_NODOC Dee_DEX_GETTER_F_NODOC
+#define DEX_GETSET_NODOC   Dee_DEX_GETSET_NODOC
+#define DEX_GETTER_NODOC   Dee_DEX_GETTER_NODOC
+#define DEX_END            Dee_DEX_END
 #endif /* DEE_SOURCE */
+
+
+/* Possible values for DEX symbol flags */
+#define Dee_DEXSYM_NORMAL    Dee_MODSYM_FNORMAL
+#define Dee_DEXSYM_READONLY  Dee_MODSYM_FREADONLY
+#define Dee_DEXSYM_CONSTEXPR Dee_MODSYM_FCONSTEXPR
+#define Dee_DEXSYM_ALIAS     Dee_MODSYM_FALIAS
+#define Dee_DEXSYM_HIDDEN    Dee_MODSYM_FHIDDEN
+#define Dee_DEXSYM_PROPERTY  Dee_MODSYM_FPROPERTY
+#define Dee_DEXSYM_EXTERN    Dee_MODSYM_FEXTERN
 
 typedef struct Dee_dex_object DeeDexObject;
 
 struct Dee_dex_symbol {
 	char const           *ds_name;  /* [1..1][SENTINEL(NULL)] Name of this symbol. */
 	DeeObject            *ds_obj;   /* [0..1] The initial value of this symbol. */
-	uintptr_t             ds_flags; /* Set of `MODSYM_F*'. */
+	uintptr_t             ds_flags; /* Set of `Dee_DEXSYM_*'. */
 	/*utf-8*/ char const *ds_doc;   /* [0..1] An optional documentation string. */
 };
 
-#ifndef CONFIG_NO_NOTIFICATIONS
-struct Dee_string_object;
-struct Dee_dex_notification {
-#define Dee_DEX_NOTIFICATION_FNORMAL 0x0000 /* Normal notification flags. */
-	__UINTPTR_HALF_TYPE__     dn_class;    /* [valid_if(dn_name)] Notification class (One of `NOTIFICATION_CLASS_*') */
-	__UINTPTR_HALF_TYPE__     dn_flag;     /* [valid_if(dn_name)] Notification flags (Set of `DEX_NOTIFICATION_F*') */
-	struct Dee_string_object *dn_name;     /* [0..1] Notification name (`NULL' indicates sentinel). */
-	Dee_notify_t              dn_callback; /* [1..1][valid_if(dn_name)] Notification callback. */
-	DeeObject                *dn_arg;      /* [0..1][valid_if(dn_name)] Notification argument. */
-};
-#endif /* !CONFIG_NO_NOTIFICATIONS */
+
+
+/* Helpers for defining DEX exports from C */
+#define Dee_DEX_BEGIN \
+	PRIVATE struct Dee_dex_symbol _dex_symbols[] = {
+#define Dee_DEX_MEMBER(name, obj, doc)           Dee_DEX_MEMBER_F(name, obj, Dee_DEXSYM_NORMAL, doc)
+#define Dee_DEX_MEMBER_F(name, obj, flags, doc)  { name, Dee_REQUIRES_ANYOBJECT(obj), (flags) & ~(Dee_DEXSYM_PROPERTY), DOC(doc) }
+#define Dee_DEX_MEMBER_NODOC(name, obj)          Dee_DEX_MEMBER(name, obj, NULL)
+#define Dee_DEX_MEMBER_F_NODOC(name, obj, flags) Dee_DEX_MEMBER_F(name, obj, flags, NULL)
+#define Dee_DEX_GETSET_F(name, get, del, set, flags, doc)                                              \
+	{ name, Dee_REQUIRES_ANYOBJECT(get), MODSYM_FPROPERTY | ((flags) & ~MODSYM_FREADONLY), DOC(doc) }, \
+	{ NULL, Dee_REQUIRES_ANYOBJECT(del), MODSYM_FNORMAL, NULL },                                       \
+	{ NULL, Dee_REQUIRES_ANYOBJECT(set), MODSYM_FNORMAL, NULL }
+#define Dee_DEX_GETTER_F(name, get, flags, doc) \
+	{ name, Dee_REQUIRES_ANYOBJECT(get), MODSYM_FREADONLY | MODSYM_FPROPERTY | (flags), DOC(doc) }
+#define Dee_DEX_GETSET(name, get, del, set, doc)           Dee_DEX_GETSET_F(name, get, del, set, Dee_DEXSYM_NORMAL, doc)
+#define Dee_DEX_GETTER(name, get, doc)                     Dee_DEX_GETTER_F(name, get, Dee_DEXSYM_NORMAL, doc)
+#define Dee_DEX_GETSET_F_NODOC(name, get, del, set, flags) Dee_DEX_GETSET_F(name, get, del, set, flags, NULL)
+#define Dee_DEX_GETTER_F_NODOC(name, get, flags)           Dee_DEX_GETTER_F(name, get, flags, NULL)
+#define Dee_DEX_GETSET_NODOC(name, get, del, set)          Dee_DEX_GETSET(name, get, del, set, NULL)
+#define Dee_DEX_GETTER_NODOC(name, get)                    Dee_DEX_GETTER(name, get, NULL)           
+#define Dee_DEX_END(init, fini, clear)   \
+		{ NULL, NULL, 0, NULL }          \
+	};                                   \
+	PUBLIC struct Dee_dex DEX = {        \
+		/* .d_symbols = */ _dex_symbols, \
+		/* .d_init    = */ init,         \
+		/* .d_fini    = */ fini,         \
+		/* .d_clear   = */ clear         \
+	}
+
+
 
 struct Dee_dex {
 	/* The extension descriptor structure that must be
@@ -98,6 +146,8 @@ struct Dee_dex {
 	NONNULL_T((1))
 	bool       (DCALL *d_clear)(DeeDexObject *__restrict self);
 };
+
+
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 

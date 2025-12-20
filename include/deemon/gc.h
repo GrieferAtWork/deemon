@@ -77,9 +77,9 @@ struct Dee_gc_head {
 
 #define DEE_GC_OBJECT_OFFSET COMPILER_OFFSETOF(struct Dee_gc_head, gc_object)
 #define DEE_GC_HEAD_SIZE     COMPILER_OFFSETOF(struct Dee_gc_head, gc_object)
-#define DeeGC_Head(ob)       ((struct Dee_gc_head *)((uintptr_t)Dee_REQUIRES_OBJECT(ob) - DEE_GC_OBJECT_OFFSET))
+#define DeeGC_Head(ob)       ((struct Dee_gc_head *)((uintptr_t)Dee_REQUIRES_ANYOBJECT(ob) - DEE_GC_OBJECT_OFFSET))
 #define DeeGC_Object(ob)     (&(ob)->gc_object)
-#define DeeGC_Check(ob)      ((Dee_TYPE(ob)->tp_flags & TP_FGC) && (!DeeType_Check(ob) || (((DeeTypeObject *)Dee_REQUIRES_OBJECT(ob))->tp_flags & TP_FHEAP)))
+#define DeeGC_Check(ob)      ((Dee_TYPE(ob)->tp_flags & TP_FGC) && (!DeeType_Check(ob) || (Dee_REQUIRES_OBJECT(DeeTypeObject, ob)->tp_flags & TP_FHEAP)))
 
 /* Begin/end tracking a given GC-allocated object.
  * `DeeGC_Track()' must be called explicitly when the object
@@ -96,7 +96,7 @@ DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL DeeGC_Untrack(DeeObject *_
 DFUNDEF NONNULL((1, 2)) void DCALL
 DeeGC_TrackAll(DeeObject *first, DeeObject *last);
 
-#define DeeGC_TRACK(T, ob) ((DREF T *)DeeGC_Track((DREF DeeObject *)Dee_REQUIRES_OBJECT(ob)))
+#define DeeGC_TRACK(T, ob) ((DREF T *)DeeGC_Track(Dee_REQUIRES_OBJECT(DREF DeeObject, ob)))
 
 /* Try to collect at most `max_objects' GC-objects,
  * returning the actual amount collected. */

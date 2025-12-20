@@ -521,9 +521,9 @@ struct Dee_module_object {
 	                                             * Hash-vector for translating a string into a `uint16_t' index for `mo_globalv'.
 	                                             * This is where module symbol names are stored and also used to
 	                                             * implement symbol access by name at runtime. */
-#define Dee_MODULE_HASHST(self, hash)  ((hash) & ((DeeModuleObject *)Dee_REQUIRES_OBJECT(self))->mo_bucketm)
+#define Dee_MODULE_HASHST(self, hash)  ((hash) & Dee_REQUIRES_OBJECT(DeeModuleObject, self)->mo_bucketm)
 #define Dee_MODULE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define Dee_MODULE_HASHIT(self, i)     (((DeeModuleObject *)Dee_REQUIRES_OBJECT(self))->mo_bucketv + ((i) & ((DeeModuleObject *)(self))->mo_bucketm))
+#define Dee_MODULE_HASHIT(self, i)     (Dee_REQUIRES_OBJECT(DeeModuleObject, self)->mo_bucketv + ((i) & ((DeeModuleObject *)(self))->mo_bucketm))
 	DREF DeeModuleObject   *const *mo_importv;  /* [1..1][const][0..mo_importc][const][owned] Vector of other modules imported by this one. */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t            mo_lock;     /* Lock for accessing `mo_globalv'. */
@@ -750,9 +750,9 @@ struct Dee_module_object {
 	                                              * Hash-vector for translating a string into a `uint16_t' index for `mo_globalv'.
 	                                              * This is where module symbol names are stored and also used to
 	                                              * implement symbol access by name at runtime. */
-#define Dee_MODULE_HASHST(self, hash)  ((hash) & ((DeeModuleObject *)Dee_REQUIRES_OBJECT(self))->mo_bucketm)
+#define Dee_MODULE_HASHST(self, hash)  ((hash) & Dee_REQUIRES_OBJECT(DeeModuleObject, self)->mo_bucketm)
 #define Dee_MODULE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define Dee_MODULE_HASHIT(self, i)     (((DeeModuleObject *)Dee_REQUIRES_OBJECT(self))->mo_bucketv + ((i) & ((DeeModuleObject *)(self))->mo_bucketm))
+#define Dee_MODULE_HASHIT(self, i)     (Dee_REQUIRES_OBJECT(DeeModuleObject, self)->mo_bucketv + ((i) & ((DeeModuleObject *)(self))->mo_bucketm))
 	DREF DeeModuleObject   *const *mo_importv;   /* [1..1][const_if(Dee_MODULE_FDIDLOAD)][0..mo_importc][lock(Dee_MODULE_FLOADING)][const_if(Dee_MODULE_FDIDLOAD)][owned] Vector of other modules imported by this one. */
 	/* TODO: Make "Module" a variable-length object and inline "mo_globalv" (== one less indirection necessary for access to globals) */
 	DREF DeeObject               **mo_globalv;   /* [0..1][lock(mo_lock)][0..mo_globalc][valid_if(Dee_MODULE_FDIDLOAD)][owned] Vector of module-private global variables. */
@@ -826,9 +826,9 @@ struct Dee_module_object {
  * >> print foo.bar.__name__; // "modules.bar" (Updated to become a global module)
  */
 #define DeeModule_IsGlobal(self) \
-	LIST_ISBOUND((DeeModuleObject *)Dee_REQUIRES_OBJECT(self), mo_globlink)
+	LIST_ISBOUND(Dee_REQUIRES_OBJECT(DeeModuleObject, self), mo_globlink)
 #define DeeModule_HasPath(self) \
-	LIST_ISBOUND((DeeModuleObject *)Dee_REQUIRES_OBJECT(self), mo_link)
+	LIST_ISBOUND(Dee_REQUIRES_OBJECT(DeeModuleObject, self), mo_link)
 
 
 

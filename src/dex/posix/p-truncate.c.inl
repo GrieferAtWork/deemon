@@ -297,8 +297,8 @@ PRIVATE int DCALL dee_truncate(char *filename, __ULONGPTR_TYPE__ size) {
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("truncate", "path:?Dstring,length:?Dint", libname: "posix"); ]]]*/
-#define POSIX_TRUNCATE_DEF { "truncate", (DeeObject *)&posix_truncate, MODSYM_FREADONLY, DOC("(path:?Dstring,length:?Dint)") },
-#define POSIX_TRUNCATE_DEF_DOC(doc) { "truncate", (DeeObject *)&posix_truncate, MODSYM_FREADONLY, DOC("(path:?Dstring,length:?Dint)\n" doc) },
+#define POSIX_TRUNCATE_DEF          DEX_MEMBER_F("truncate", &posix_truncate, DEXSYM_READONLY, "(path:?Dstring,length:?Dint)"),
+#define POSIX_TRUNCATE_DEF_DOC(doc) DEX_MEMBER_F("truncate", &posix_truncate, DEXSYM_READONLY, "(path:?Dstring,length:?Dint)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_truncate_f_impl(DeeObject *path, DeeObject *length);
 #ifndef DEFINED_kwlist__path_length
 #define DEFINED_kwlist__path_length
@@ -387,8 +387,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("ftruncate", "fd:?X2?DFile?Dint,length:?Dint", libname: "posix"); ]]]*/
-#define POSIX_FTRUNCATE_DEF { "ftruncate", (DeeObject *)&posix_ftruncate, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint,length:?Dint)") },
-#define POSIX_FTRUNCATE_DEF_DOC(doc) { "ftruncate", (DeeObject *)&posix_ftruncate, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint,length:?Dint)\n" doc) },
+#define POSIX_FTRUNCATE_DEF          DEX_MEMBER_F("ftruncate", &posix_ftruncate, DEXSYM_READONLY, "(fd:?X2?DFile?Dint,length:?Dint)"),
+#define POSIX_FTRUNCATE_DEF_DOC(doc) DEX_MEMBER_F("ftruncate", &posix_ftruncate, DEXSYM_READONLY, "(fd:?X2?DFile?Dint,length:?Dint)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_ftruncate_f_impl(DeeObject *fd, DeeObject *length);
 #ifndef DEFINED_kwlist__fd_length
 #define DEFINED_kwlist__fd_length
@@ -479,8 +479,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("ftruncateat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,length:?Dint,atflags:u=0", libname: "posix"); ]]]*/
-#define POSIX_FTRUNCATEAT_DEF { "ftruncateat", (DeeObject *)&posix_ftruncateat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,length:?Dint,atflags=!0)") },
-#define POSIX_FTRUNCATEAT_DEF_DOC(doc) { "ftruncateat", (DeeObject *)&posix_ftruncateat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,length:?Dint,atflags=!0)\n" doc) },
+#define POSIX_FTRUNCATEAT_DEF          DEX_MEMBER_F("ftruncateat", &posix_ftruncateat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,length:?Dint,atflags=!0)"),
+#define POSIX_FTRUNCATEAT_DEF_DOC(doc) DEX_MEMBER_F("ftruncateat", &posix_ftruncateat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,length:?Dint,atflags=!0)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_ftruncateat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *length, unsigned int atflags);
 #ifndef DEFINED_kwlist__dfd_path_length_atflags
 #define DEFINED_kwlist__dfd_path_length_atflags
@@ -537,8 +537,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("truncateat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,length:?Dint", libname: "posix"); ]]]*/
-#define POSIX_TRUNCATEAT_DEF { "truncateat", (DeeObject *)&posix_truncateat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,length:?Dint)") },
-#define POSIX_TRUNCATEAT_DEF_DOC(doc) { "truncateat", (DeeObject *)&posix_truncateat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,length:?Dint)\n" doc) },
+#define POSIX_TRUNCATEAT_DEF          DEX_MEMBER_F("truncateat", &posix_truncateat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,length:?Dint)"),
+#define POSIX_TRUNCATEAT_DEF_DOC(doc) DEX_MEMBER_F("truncateat", &posix_truncateat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,length:?Dint)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_truncateat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *length);
 #ifndef DEFINED_kwlist__dfd_path_length
 #define DEFINED_kwlist__dfd_path_length

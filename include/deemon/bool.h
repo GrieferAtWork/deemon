@@ -54,7 +54,7 @@ struct Dee_bool_object {
 
 #define DeeBool_Check(x)      DeeObject_InstanceOfExact(x, &DeeBool_Type) /* `bool' is final. */
 #define DeeBool_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeBool_Type)
-#define DeeBool_IsTrue(x)     ((DeeBoolObject *)Dee_REQUIRES_OBJECT(x) != &Dee_FalseTrue[0])
+#define DeeBool_IsTrue(x)     (Dee_REQUIRES_OBJECT(DeeBoolObject, x) != &Dee_FalseTrue[0])
 
 DDATDEF DeeTypeObject DeeBool_Type;
 DDATDEF DeeBoolObject Dee_FalseTrue[2];

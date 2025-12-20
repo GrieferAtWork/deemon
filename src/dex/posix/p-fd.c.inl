@@ -172,8 +172,8 @@ print "/" "**" "/";
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("isatty", "fd:unix:fd->?Dbool", libname: "posix"); ]]]*/
-#define POSIX_ISATTY_DEF { "isatty", (DeeObject *)&posix_isatty, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)->?Dbool") },
-#define POSIX_ISATTY_DEF_DOC(doc) { "isatty", (DeeObject *)&posix_isatty, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)->?Dbool\n" doc) },
+#define POSIX_ISATTY_DEF          DEX_MEMBER_F("isatty", &posix_isatty, DEXSYM_READONLY, "(fd:?X2?Dint?DFile)->?Dbool"),
+#define POSIX_ISATTY_DEF_DOC(doc) DEX_MEMBER_F("isatty", &posix_isatty, DEXSYM_READONLY, "(fd:?X2?Dint?DFile)->?Dbool\n" doc),
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_isatty_f_impl(int fd);
 #ifndef DEFINED_kwlist__fd
 #define DEFINED_kwlist__fd
@@ -240,8 +240,8 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("umask", "mask:d->?Dint", libname: "posix"); ]]]*/
-#define POSIX_UMASK_DEF { "umask", (DeeObject *)&posix_umask, MODSYM_FREADONLY, DOC("(mask:?Dint)->?Dint") },
-#define POSIX_UMASK_DEF_DOC(doc) { "umask", (DeeObject *)&posix_umask, MODSYM_FREADONLY, DOC("(mask:?Dint)->?Dint\n" doc) },
+#define POSIX_UMASK_DEF          DEX_MEMBER_F("umask", &posix_umask, DEXSYM_READONLY, "(mask:?Dint)->?Dint"),
+#define POSIX_UMASK_DEF_DOC(doc) DEX_MEMBER_F("umask", &posix_umask, DEXSYM_READONLY, "(mask:?Dint)->?Dint\n" doc),
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_umask_f_impl(int mask);
 #ifndef DEFINED_kwlist__mask
 #define DEFINED_kwlist__mask
@@ -292,8 +292,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_umask_f_impl(int mask)
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("dup", "fd:unix:fd->?Dint", libname: "posix"); ]]]*/
-#define POSIX_DUP_DEF { "dup", (DeeObject *)&posix_dup, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)->?Dint") },
-#define POSIX_DUP_DEF_DOC(doc) { "dup", (DeeObject *)&posix_dup, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)->?Dint\n" doc) },
+#define POSIX_DUP_DEF          DEX_MEMBER_F("dup", &posix_dup, DEXSYM_READONLY, "(fd:?X2?Dint?DFile)->?Dint"),
+#define POSIX_DUP_DEF_DOC(doc) DEX_MEMBER_F("dup", &posix_dup, DEXSYM_READONLY, "(fd:?X2?Dint?DFile)->?Dint\n" doc),
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup_f_impl(int fd);
 #ifndef DEFINED_kwlist__fd
 #define DEFINED_kwlist__fd
@@ -352,8 +352,8 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("dup2", "oldfd:unix:fd,newfd:unix:fd->?Dint", libname: "posix"); ]]]*/
-#define POSIX_DUP2_DEF { "dup2", (DeeObject *)&posix_dup2, MODSYM_FREADONLY, DOC("(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile)->?Dint") },
-#define POSIX_DUP2_DEF_DOC(doc) { "dup2", (DeeObject *)&posix_dup2, MODSYM_FREADONLY, DOC("(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile)->?Dint\n" doc) },
+#define POSIX_DUP2_DEF          DEX_MEMBER_F("dup2", &posix_dup2, DEXSYM_READONLY, "(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile)->?Dint"),
+#define POSIX_DUP2_DEF_DOC(doc) DEX_MEMBER_F("dup2", &posix_dup2, DEXSYM_READONLY, "(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile)->?Dint\n" doc),
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup2_f_impl(int oldfd, int newfd);
 #ifndef DEFINED_kwlist__oldfd_newfd
 #define DEFINED_kwlist__oldfd_newfd
@@ -418,8 +418,8 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("dup3", "oldfd:unix:fd,newfd:unix:fd,oflags:d->?Dint", libname: "posix"); ]]]*/
-#define POSIX_DUP3_DEF { "dup3", (DeeObject *)&posix_dup3, MODSYM_FREADONLY, DOC("(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile,oflags:?Dint)->?Dint") },
-#define POSIX_DUP3_DEF_DOC(doc) { "dup3", (DeeObject *)&posix_dup3, MODSYM_FREADONLY, DOC("(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile,oflags:?Dint)->?Dint\n" doc) },
+#define POSIX_DUP3_DEF          DEX_MEMBER_F("dup3", &posix_dup3, DEXSYM_READONLY, "(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile,oflags:?Dint)->?Dint"),
+#define POSIX_DUP3_DEF_DOC(doc) DEX_MEMBER_F("dup3", &posix_dup3, DEXSYM_READONLY, "(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile,oflags:?Dint)->?Dint\n" doc),
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup3_f_impl(int oldfd, int newfd, int oflags);
 #ifndef DEFINED_kwlist__oldfd_newfd_oflags
 #define DEFINED_kwlist__oldfd_newfd_oflags
@@ -597,8 +597,8 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("close", "fd:unix:fd", libname: "posix"); ]]]*/
-#define POSIX_CLOSE_DEF { "close", (DeeObject *)&posix_close, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)") },
-#define POSIX_CLOSE_DEF_DOC(doc) { "close", (DeeObject *)&posix_close, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile)\n" doc) },
+#define POSIX_CLOSE_DEF          DEX_MEMBER_F("close", &posix_close, DEXSYM_READONLY, "(fd:?X2?Dint?DFile)"),
+#define POSIX_CLOSE_DEF_DOC(doc) DEX_MEMBER_F("close", &posix_close, DEXSYM_READONLY, "(fd:?X2?Dint?DFile)\n" doc),
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_close_f_impl(int fd);
 #ifndef DEFINED_kwlist__fd
 #define DEFINED_kwlist__fd

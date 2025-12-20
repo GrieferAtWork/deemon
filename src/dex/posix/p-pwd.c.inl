@@ -172,8 +172,8 @@ DeeSystem_DEFINE_strnlen(strnlen)
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("getcwd", "->?Dstring", libname: "posix");]]]*/
-#define POSIX_GETCWD_DEF { "getcwd", (DeeObject *)&posix_getcwd, MODSYM_FREADONLY, DOC("->?Dstring") },
-#define POSIX_GETCWD_DEF_DOC(doc) { "getcwd", (DeeObject *)&posix_getcwd, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
+#define POSIX_GETCWD_DEF          DEX_MEMBER_F("getcwd", &posix_getcwd, DEXSYM_READONLY, "->?Dstring"),
+#define POSIX_GETCWD_DEF_DOC(doc) DEX_MEMBER_F("getcwd", &posix_getcwd, DEXSYM_READONLY, "->?Dstring\n" doc),
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getcwd_f_impl(void);
 PRIVATE DEFINE_CMETHOD0(posix_getcwd, &posix_getcwd_f_impl, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getcwd_f_impl(void)
@@ -191,8 +191,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("gettmp", "->?Dstring", libname: "posix");]]]*/
-#define POSIX_GETTMP_DEF { "gettmp", (DeeObject *)&posix_gettmp, MODSYM_FREADONLY, DOC("->?Dstring") },
-#define POSIX_GETTMP_DEF_DOC(doc) { "gettmp", (DeeObject *)&posix_gettmp, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
+#define POSIX_GETTMP_DEF          DEX_MEMBER_F("gettmp", &posix_gettmp, DEXSYM_READONLY, "->?Dstring"),
+#define POSIX_GETTMP_DEF_DOC(doc) DEX_MEMBER_F("gettmp", &posix_gettmp, DEXSYM_READONLY, "->?Dstring\n" doc),
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_gettmp_f_impl(void);
 PRIVATE DEFINE_CMETHOD0(posix_gettmp, &posix_gettmp_f_impl, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_gettmp_f_impl(void)
@@ -224,8 +224,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_gettmp_f_impl(void)
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("gethostname", "->?Dstring", libname: "posix");]]]*/
-#define POSIX_GETHOSTNAME_DEF { "gethostname", (DeeObject *)&posix_gethostname, MODSYM_FREADONLY, DOC("->?Dstring") },
-#define POSIX_GETHOSTNAME_DEF_DOC(doc) { "gethostname", (DeeObject *)&posix_gethostname, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
+#define POSIX_GETHOSTNAME_DEF          DEX_MEMBER_F("gethostname", &posix_gethostname, DEXSYM_READONLY, "->?Dstring"),
+#define POSIX_GETHOSTNAME_DEF_DOC(doc) DEX_MEMBER_F("gethostname", &posix_gethostname, DEXSYM_READONLY, "->?Dstring\n" doc),
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_gethostname_f_impl(void);
 PRIVATE DEFINE_CMETHOD0(posix_gethostname, &posix_gethostname_f_impl, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_gethostname_f_impl(void)
@@ -320,8 +320,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("chdir", "path:?Dstring", libname: "posix");]]]*/
-#define POSIX_CHDIR_DEF { "chdir", (DeeObject *)&posix_chdir, MODSYM_FREADONLY, DOC("(path:?Dstring)") },
-#define POSIX_CHDIR_DEF_DOC(doc) { "chdir", (DeeObject *)&posix_chdir, MODSYM_FREADONLY, DOC("(path:?Dstring)\n" doc) },
+#define POSIX_CHDIR_DEF          DEX_MEMBER_F("chdir", &posix_chdir, DEXSYM_READONLY, "(path:?Dstring)"),
+#define POSIX_CHDIR_DEF_DOC(doc) DEX_MEMBER_F("chdir", &posix_chdir, DEXSYM_READONLY, "(path:?Dstring)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_chdir_f_impl(DeeObject *path);
 #ifndef DEFINED_kwlist__path
 #define DEFINED_kwlist__path
@@ -454,8 +454,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("fchdir", "fd:?X2?DFile?Dint", libname: "posix");]]]*/
-#define POSIX_FCHDIR_DEF { "fchdir", (DeeObject *)&posix_fchdir, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint)") },
-#define POSIX_FCHDIR_DEF_DOC(doc) { "fchdir", (DeeObject *)&posix_fchdir, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint)\n" doc) },
+#define POSIX_FCHDIR_DEF          DEX_MEMBER_F("fchdir", &posix_fchdir, DEXSYM_READONLY, "(fd:?X2?DFile?Dint)"),
+#define POSIX_FCHDIR_DEF_DOC(doc) DEX_MEMBER_F("fchdir", &posix_fchdir, DEXSYM_READONLY, "(fd:?X2?DFile?Dint)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_fchdir_f_impl(DeeObject *fd);
 #ifndef DEFINED_kwlist__fd
 #define DEFINED_kwlist__fd
@@ -525,8 +525,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("fchdirat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:u=0", libname: "posix");]]]*/
-#define POSIX_FCHDIRAT_DEF { "fchdirat", (DeeObject *)&posix_fchdirat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)") },
-#define POSIX_FCHDIRAT_DEF_DOC(doc) { "fchdirat", (DeeObject *)&posix_fchdirat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n" doc) },
+#define POSIX_FCHDIRAT_DEF          DEX_MEMBER_F("fchdirat", &posix_fchdirat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)"),
+#define POSIX_FCHDIRAT_DEF_DOC(doc) DEX_MEMBER_F("fchdirat", &posix_fchdirat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fchdirat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 #ifndef DEFINED_kwlist__dfd_path_atflags
 #define DEFINED_kwlist__dfd_path_atflags

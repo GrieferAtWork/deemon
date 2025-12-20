@@ -456,9 +456,9 @@ struct udict_object {
 	WEAKREF_SUPPORT
 };
 
-#define UDict_HashSt(self, hash)  ((hash) & ((UDict *)Dee_REQUIRES_OBJECT(self))->ud_mask)
+#define UDict_HashSt(self, hash)  ((hash) & Dee_REQUIRES_OBJECT(UDict, self)->ud_mask)
 #define UDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define UDict_HashIt(self, i)     (((UDict *)Dee_REQUIRES_OBJECT(self))->ud_elem + ((i) & ((UDict *)(self))->ud_mask))
+#define UDict_HashIt(self, i)     (Dee_REQUIRES_OBJECT(UDict, self)->ud_elem + ((i) & ((UDict *)(self))->ud_mask))
 
 #define UDict_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->ud_lock)
 #define UDict_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->ud_lock)
@@ -484,9 +484,9 @@ struct urodict_object {
 	COMPILER_FLEXIBLE_ARRAY(struct udict_item, urd_elem); /* [urd_mask+1] Dict key-item pairs. */
 };
 
-#define URoDict_HashSt(self, hash)  ((hash) & ((URoDict *)Dee_REQUIRES_OBJECT(self))->urd_mask)
+#define URoDict_HashSt(self, hash)  ((hash) & Dee_REQUIRES_OBJECT(URoDict, self)->urd_mask)
 #define URoDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define URoDict_HashIt(self, i)     (((URoDict *)Dee_REQUIRES_OBJECT(self))->urd_elem + ((i) & ((URoDict *)(self))->urd_mask))
+#define URoDict_HashIt(self, i)     (Dee_REQUIRES_OBJECT(URoDict, self)->urd_elem + ((i) & ((URoDict *)(self))->urd_mask))
 
 
 struct udict_iterator_object {
@@ -543,9 +543,9 @@ struct uset_object {
 	WEAKREF_SUPPORT
 };
 
-#define USet_HashSt(self, hash)  ((hash) & ((USet *)Dee_REQUIRES_OBJECT(self))->us_mask)
+#define USet_HashSt(self, hash)  ((hash) & Dee_REQUIRES_OBJECT(USet, self)->us_mask)
 #define USet_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define USet_HashIt(self, i)     (((USet *)Dee_REQUIRES_OBJECT(self))->us_elem + ((i) & ((USet *)(self))->us_mask))
+#define USet_HashIt(self, i)     (Dee_REQUIRES_OBJECT(USet, self)->us_elem + ((i) & ((USet *)(self))->us_mask))
 
 #define USet_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->us_lock)
 #define USet_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->us_lock)

@@ -683,7 +683,7 @@ PRIVATE ATTR_NOINLINE ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t
 	}	break;
 
 	}
-	DeeString_HASH(self) = result;
+	((DeeStringObject *)self)->s_hash = result;
 	return result;
 }
 

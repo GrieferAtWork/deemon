@@ -163,7 +163,7 @@ INTDEF DeeTypeObject SetSymmetricDifferenceIterator_Type;
 
 
 #define SetInversion_New(a) \
-	_SetInversion_New((DeeObject *)Dee_REQUIRES_OBJECT(a))
+	_SetInversion_New(Dee_REQUIRES_ANYOBJECT(a))
 LOCAL WUNUSED NONNULL((1)) DREF SetInversion *DCALL
 _SetInversion_New(DeeObject *a) {
 	DREF SetInversion *result;
@@ -179,7 +179,7 @@ err:
 }
 
 #define SetInversion_New_inherit(a) \
-	_SetInversion_New_inherit((DREF DeeObject *)Dee_REQUIRES_OBJECT(a))
+	_SetInversion_New_inherit(Dee_REQUIRES_OBJECT(DREF DeeObject, a))
 LOCAL WUNUSED NONNULL((1)) DREF SetInversion *DCALL
 _SetInversion_New_inherit(/*inherit(always)*/ DREF DeeObject *a) {
 	DREF SetInversion *result;
@@ -199,7 +199,7 @@ err:
 
 
 #define SetUnion_New(a, b) \
-	_SetUnion_New((DeeObject *)Dee_REQUIRES_OBJECT(a), (DeeObject *)Dee_REQUIRES_OBJECT(b))
+	_SetUnion_New(Dee_REQUIRES_ANYOBJECT(a), Dee_REQUIRES_ANYOBJECT(b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF SetUnion *DCALL
 _SetUnion_New(DeeObject *a, DeeObject *b) {
 	DREF SetUnion *result;
@@ -217,7 +217,7 @@ err:
 }
 
 #define SetUnion_New_inherit_a(a, b) \
-	_SetUnion_New_inherit_a((DREF DeeObject *)Dee_REQUIRES_OBJECT(a), (DeeObject *)Dee_REQUIRES_OBJECT(b))
+	_SetUnion_New_inherit_a(Dee_REQUIRES_OBJECT(DREF DeeObject, a), Dee_REQUIRES_ANYOBJECT(b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF SetUnion *DCALL
 _SetUnion_New_inherit_a(/*inherit(always)*/ DREF DeeObject *a, DeeObject *b) {
 	DREF SetUnion *result;
@@ -235,7 +235,7 @@ err:
 }
 
 #define SetUnion_New_inherit_b(a, b) \
-	_SetUnion_New_inherit_b((DeeObject *)Dee_REQUIRES_OBJECT(a), (DREF DeeObject *)Dee_REQUIRES_OBJECT(b))
+	_SetUnion_New_inherit_b(Dee_REQUIRES_ANYOBJECT(a), Dee_REQUIRES_OBJECT(DREF DeeObject, b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF SetUnion *DCALL
 _SetUnion_New_inherit_b(DeeObject *a, /*inherit(always)*/ DREF DeeObject *b) {
 	DREF SetUnion *result;
@@ -253,7 +253,7 @@ err:
 }
 
 #define SetUnion_New_inherit_ab(a, b) \
-	_SetUnion_New_inherit_ab((DREF DeeObject *)Dee_REQUIRES_OBJECT(a), (DREF DeeObject *)Dee_REQUIRES_OBJECT(b))
+	_SetUnion_New_inherit_ab(Dee_REQUIRES_OBJECT(DREF DeeObject, a), Dee_REQUIRES_OBJECT(DREF DeeObject, b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF SetUnion *DCALL
 _SetUnion_New_inherit_ab(/*inherit(always)*/ DREF DeeObject *a,
                          /*inherit(always)*/ DREF DeeObject *b) {
@@ -276,7 +276,7 @@ err:
 
 
 #define SetIntersection_New(a, b) \
-	_SetIntersection_New((DeeObject *)Dee_REQUIRES_OBJECT(a), (DeeObject *)Dee_REQUIRES_OBJECT(b))
+	_SetIntersection_New(Dee_REQUIRES_ANYOBJECT(a), Dee_REQUIRES_ANYOBJECT(b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF SetIntersection *DCALL
 _SetIntersection_New(DeeObject *a, DeeObject *b) {
 	DREF SetIntersection *result;
@@ -294,7 +294,7 @@ err:
 }
 
 #define SetIntersection_New_inherit_a(a, b) \
-	_SetIntersection_New_inherit_a((DREF DeeObject *)Dee_REQUIRES_OBJECT(a), (DeeObject *)Dee_REQUIRES_OBJECT(b))
+	_SetIntersection_New_inherit_a(Dee_REQUIRES_OBJECT(DREF DeeObject, a), Dee_REQUIRES_ANYOBJECT(b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF SetIntersection *DCALL
 _SetIntersection_New_inherit_a(/*inherit(always)*/ DREF DeeObject *a, DeeObject *b) {
 	DREF SetIntersection *result;
@@ -312,7 +312,7 @@ err:
 }
 
 #define SetIntersection_New_inherit_b(a, b) \
-	_SetIntersection_New_inherit_b((DeeObject *)Dee_REQUIRES_OBJECT(a), (DREF DeeObject *)Dee_REQUIRES_OBJECT(b))
+	_SetIntersection_New_inherit_b(Dee_REQUIRES_ANYOBJECT(a), Dee_REQUIRES_OBJECT(DREF DeeObject, b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF SetIntersection *DCALL
 _SetIntersection_New_inherit_b(DeeObject *a, /*inherit(always)*/ DREF DeeObject *b) {
 	DREF SetIntersection *result;
@@ -330,7 +330,7 @@ err:
 }
 
 #define SetIntersection_New_inherit_ab(a, b) \
-	_SetIntersection_New_inherit_ab((DREF DeeObject *)Dee_REQUIRES_OBJECT(a), (DREF DeeObject *)Dee_REQUIRES_OBJECT(b))
+	_SetIntersection_New_inherit_ab(Dee_REQUIRES_OBJECT(DREF DeeObject, a), Dee_REQUIRES_OBJECT(DREF DeeObject, b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF SetIntersection *DCALL
 _SetIntersection_New_inherit_ab(/*inherit(always)*/ DREF DeeObject *a,
                                 /*inherit(always)*/ DREF DeeObject *b) {
@@ -353,7 +353,7 @@ err:
 
 
 #define SetDifference_New(a, b) \
-	_SetDifference_New((DeeObject *)Dee_REQUIRES_OBJECT(a), (DeeObject *)Dee_REQUIRES_OBJECT(b))
+	_SetDifference_New(Dee_REQUIRES_ANYOBJECT(a), Dee_REQUIRES_ANYOBJECT(b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF SetDifference *DCALL
 _SetDifference_New(DeeObject *a, DeeObject *b) {
 	DREF SetDifference *result;
@@ -371,7 +371,7 @@ err:
 }
 
 #define SetDifference_New_inherit_a(a, b) \
-	_SetDifference_New_inherit_a((DREF DeeObject *)Dee_REQUIRES_OBJECT(a), (DeeObject *)Dee_REQUIRES_OBJECT(b))
+	_SetDifference_New_inherit_a(Dee_REQUIRES_OBJECT(DREF DeeObject, a), Dee_REQUIRES_ANYOBJECT(b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF SetDifference *DCALL
 _SetDifference_New_inherit_a(/*inherit(always)*/ DREF DeeObject *a, DeeObject *b) {
 	DREF SetDifference *result;
@@ -389,7 +389,7 @@ err:
 }
 
 #define SetDifference_New_inherit_b(a, b) \
-	_SetDifference_New_inherit_b((DeeObject *)Dee_REQUIRES_OBJECT(a), (DREF DeeObject *)Dee_REQUIRES_OBJECT(b))
+	_SetDifference_New_inherit_b(Dee_REQUIRES_ANYOBJECT(a), Dee_REQUIRES_OBJECT(DREF DeeObject, b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF SetDifference *DCALL
 _SetDifference_New_inherit_b(DeeObject *a, /*inherit(always)*/ DREF DeeObject *b) {
 	DREF SetDifference *result;
@@ -407,7 +407,7 @@ err:
 }
 
 #define SetDifference_New_inherit_ab(a, b) \
-	_SetDifference_New_inherit_ab((DREF DeeObject *)Dee_REQUIRES_OBJECT(a), (DREF DeeObject *)Dee_REQUIRES_OBJECT(b))
+	_SetDifference_New_inherit_ab(Dee_REQUIRES_OBJECT(DREF DeeObject, a), Dee_REQUIRES_OBJECT(DREF DeeObject, b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF SetDifference *DCALL
 _SetDifference_New_inherit_ab(/*inherit(always)*/ DREF DeeObject *a,
                               /*inherit(always)*/ DREF DeeObject *b) {
@@ -430,7 +430,7 @@ err:
 
 
 #define SetSymmetricDifference_New(a, b) \
-	_SetSymmetricDifference_New((DeeObject *)Dee_REQUIRES_OBJECT(a), (DeeObject *)Dee_REQUIRES_OBJECT(b))
+	_SetSymmetricDifference_New(Dee_REQUIRES_ANYOBJECT(a), Dee_REQUIRES_ANYOBJECT(b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF SetSymmetricDifference *DCALL
 _SetSymmetricDifference_New(DeeObject *a, DeeObject *b) {
 	DREF SetSymmetricDifference *result;
@@ -448,7 +448,7 @@ err:
 }
 
 #define SetSymmetricDifference_New_inherit_a(a, b) \
-	_SetSymmetricDifference_New_inherit_a((DREF DeeObject *)Dee_REQUIRES_OBJECT(a), (DeeObject *)Dee_REQUIRES_OBJECT(b))
+	_SetSymmetricDifference_New_inherit_a(Dee_REQUIRES_OBJECT(DREF DeeObject, a), Dee_REQUIRES_ANYOBJECT(b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF SetSymmetricDifference *DCALL
 _SetSymmetricDifference_New_inherit_a(/*inherit(always)*/ DREF DeeObject *a, DeeObject *b) {
 	DREF SetSymmetricDifference *result;
@@ -466,7 +466,7 @@ err:
 }
 
 #define SetSymmetricDifference_New_inherit_b(a, b) \
-	_SetSymmetricDifference_New_inherit_b((DeeObject *)Dee_REQUIRES_OBJECT(a), (DREF DeeObject *)Dee_REQUIRES_OBJECT(b))
+	_SetSymmetricDifference_New_inherit_b(Dee_REQUIRES_ANYOBJECT(a), Dee_REQUIRES_OBJECT(DREF DeeObject, b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF SetSymmetricDifference *DCALL
 _SetSymmetricDifference_New_inherit_b(DeeObject *a, /*inherit(always)*/ DREF DeeObject *b) {
 	DREF SetSymmetricDifference *result;
@@ -484,7 +484,7 @@ err:
 }
 
 #define SetSymmetricDifference_New_inherit_ab(a, b) \
-	_SetSymmetricDifference_New_inherit_ab((DREF DeeObject *)Dee_REQUIRES_OBJECT(a), (DREF DeeObject *)Dee_REQUIRES_OBJECT(b))
+	_SetSymmetricDifference_New_inherit_ab(Dee_REQUIRES_OBJECT(DREF DeeObject, a), Dee_REQUIRES_OBJECT(DREF DeeObject, b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF SetSymmetricDifference *DCALL
 _SetSymmetricDifference_New_inherit_ab(/*inherit(always)*/ DREF DeeObject *a,
                                        /*inherit(always)*/ DREF DeeObject *b) {

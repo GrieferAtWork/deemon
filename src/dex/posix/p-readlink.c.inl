@@ -98,8 +98,8 @@ DECL_BEGIN
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("readlink", "file:?Dstring->?Dstring", libname: "posix");]]]*/
-#define POSIX_READLINK_DEF { "readlink", (DeeObject *)&posix_readlink, MODSYM_FREADONLY, DOC("(file:?Dstring)->?Dstring") },
-#define POSIX_READLINK_DEF_DOC(doc) { "readlink", (DeeObject *)&posix_readlink, MODSYM_FREADONLY, DOC("(file:?Dstring)->?Dstring\n" doc) },
+#define POSIX_READLINK_DEF          DEX_MEMBER_F("readlink", &posix_readlink, DEXSYM_READONLY, "(file:?Dstring)->?Dstring"),
+#define POSIX_READLINK_DEF_DOC(doc) DEX_MEMBER_F("readlink", &posix_readlink, DEXSYM_READONLY, "(file:?Dstring)->?Dstring\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_readlink_f_impl(DeeObject *file);
 #ifndef DEFINED_kwlist__file
 #define DEFINED_kwlist__file
@@ -313,8 +313,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("freadlink", "fd:?X2?DFile?Dint->?Dstring", libname: "posix");]]]*/
-#define POSIX_FREADLINK_DEF { "freadlink", (DeeObject *)&posix_freadlink, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint)->?Dstring") },
-#define POSIX_FREADLINK_DEF_DOC(doc) { "freadlink", (DeeObject *)&posix_freadlink, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint)->?Dstring\n" doc) },
+#define POSIX_FREADLINK_DEF          DEX_MEMBER_F("freadlink", &posix_freadlink, DEXSYM_READONLY, "(fd:?X2?DFile?Dint)->?Dstring"),
+#define POSIX_FREADLINK_DEF_DOC(doc) DEX_MEMBER_F("freadlink", &posix_freadlink, DEXSYM_READONLY, "(fd:?X2?DFile?Dint)->?Dstring\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_freadlink_f_impl(DeeObject *fd);
 #ifndef DEFINED_kwlist__fd
 #define DEFINED_kwlist__fd
@@ -382,8 +382,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("readlinkat", "dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags:u=0->?Dstring", libname: "posix");]]]*/
-#define POSIX_READLINKAT_DEF { "readlinkat", (DeeObject *)&posix_readlinkat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags=!0)->?Dstring") },
-#define POSIX_READLINKAT_DEF_DOC(doc) { "readlinkat", (DeeObject *)&posix_readlinkat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags=!0)->?Dstring\n" doc) },
+#define POSIX_READLINKAT_DEF          DEX_MEMBER_F("readlinkat", &posix_readlinkat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags=!0)->?Dstring"),
+#define POSIX_READLINKAT_DEF_DOC(doc) DEX_MEMBER_F("readlinkat", &posix_readlinkat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags=!0)->?Dstring\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_readlinkat_f_impl(DeeObject *dfd, DeeObject *file, unsigned int atflags);
 #ifndef DEFINED_kwlist__dfd_file_atflags
 #define DEFINED_kwlist__dfd_file_atflags

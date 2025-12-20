@@ -697,9 +697,9 @@ struct Dee_thread_interrupt_hook {
 
 /* Helper macros to enable/disable interrupt hooks for a given thread. */
 #define DeeThread_EnableInterruptHooks(self) \
-	_DeeRefcnt_Inc(&((DeeThreadObject *)Dee_REQUIRES_OBJECT(self))->t_inthookon)
+	_DeeRefcnt_Inc(&Dee_REQUIRES_OBJECT(DeeThreadObject, self)->t_inthookon)
 #define DeeThread_DisableInterruptHooks(self) \
-	_DeeRefcnt_Dec(&((DeeThreadObject *)Dee_REQUIRES_OBJECT(self))->t_inthookon)
+	_DeeRefcnt_Dec(&Dee_REQUIRES_OBJECT(DeeThreadObject, self)->t_inthookon)
 
 /* Register an additional thread interrupt hook.
  * @return: 1 : No-op (given `hook' was already registered)

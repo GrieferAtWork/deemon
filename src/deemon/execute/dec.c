@@ -1480,11 +1480,11 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #endif /* !CONFIG_HAVE_memcasecmp */
 #define fs_memcmp      memcasecmp
 #define fs_bcmp        memcasecmp
-#define fs_hashobj(ob) DeeString_HashCase(Dee_REQUIRES_OBJECT(ob))
+#define fs_hashobj(ob) DeeString_HashCase(Dee_REQUIRES_ANYOBJECT(ob))
 #else /* DEE_SYSTEM_FS_ICASE */
 #define fs_memcmp      memcmp
 #define fs_bcmp        bcmp
-#define fs_hashobj(ob) DeeString_Hash(Dee_REQUIRES_OBJECT(ob))
+#define fs_hashobj(ob) DeeString_Hash(Dee_REQUIRES_ANYOBJECT(ob))
 #endif /* !DEE_SYSTEM_FS_ICASE */
 
 

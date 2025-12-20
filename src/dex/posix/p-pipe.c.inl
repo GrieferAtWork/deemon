@@ -85,8 +85,8 @@ DECL_BEGIN
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("pipe", "->?T2?Dint?Dint", libname: "posix"); ]]]*/
-#define POSIX_PIPE_DEF { "pipe", (DeeObject *)&posix_pipe, MODSYM_FREADONLY, DOC("->?T2?Dint?Dint") },
-#define POSIX_PIPE_DEF_DOC(doc) { "pipe", (DeeObject *)&posix_pipe, MODSYM_FREADONLY, DOC("->?T2?Dint?Dint\n" doc) },
+#define POSIX_PIPE_DEF          DEX_MEMBER_F("pipe", &posix_pipe, DEXSYM_READONLY, "->?T2?Dint?Dint"),
+#define POSIX_PIPE_DEF_DOC(doc) DEX_MEMBER_F("pipe", &posix_pipe, DEXSYM_READONLY, "->?T2?Dint?Dint\n" doc),
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe_f_impl(void);
 PRIVATE DEFINE_CMETHOD0(posix_pipe, &posix_pipe_f_impl, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe_f_impl(void)
@@ -201,8 +201,8 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("pipe2", "oflags:d->?T2?Dint?Dint", libname: "posix"); ]]]*/
-#define POSIX_PIPE2_DEF { "pipe2", (DeeObject *)&posix_pipe2, MODSYM_FREADONLY, DOC("(oflags:?Dint)->?T2?Dint?Dint") },
-#define POSIX_PIPE2_DEF_DOC(doc) { "pipe2", (DeeObject *)&posix_pipe2, MODSYM_FREADONLY, DOC("(oflags:?Dint)->?T2?Dint?Dint\n" doc) },
+#define POSIX_PIPE2_DEF          DEX_MEMBER_F("pipe2", &posix_pipe2, DEXSYM_READONLY, "(oflags:?Dint)->?T2?Dint?Dint"),
+#define POSIX_PIPE2_DEF_DOC(doc) DEX_MEMBER_F("pipe2", &posix_pipe2, DEXSYM_READONLY, "(oflags:?Dint)->?T2?Dint?Dint\n" doc),
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pipe2_f_impl(int oflags);
 #ifndef DEFINED_kwlist__oflags
 #define DEFINED_kwlist__oflags

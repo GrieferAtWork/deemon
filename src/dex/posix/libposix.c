@@ -1631,13 +1631,6 @@ PRIVATE WUNUSED DREF DeeObject *DCALL pst_ctor(void) {
 #endif /* POSIX_STUBS_TOTLEN == 0 */
 
 
-#ifdef __INTELLISENSE__
-#define D(...) /* nothing */
-#else /* __INTELLISENSE__ */
-#define D(...) __VA_ARGS__
-#endif /* !__INTELLISENSE__ */
-
-
 /*[[[deemon
 local names = {
 	"IFMT", "IFDIR", "IFCHR", "IFBLK", "IFREG",
@@ -1795,1025 +1788,1029 @@ PRIVATE DEFINE_CMETHOD(libposix_S_ISSOCK, &posix_S_ISSOCK, METHOD_FCONSTCALL | M
 
 
 
-
-PRIVATE struct dex_symbol symbols[] = {
-	/* E* errno codes */
-	D(POSIX_ERRNO_DEFS)
-	/* IMPORTANT: errno codes must come first! */
-
-	{ "stubs", &PosixStubsList_Singleton, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
-	  DOC("->?S?Dstring\n"
-	      "Set of the names of all of the functions that are implemented as stubs\n"
-	      "The names contained within this set are identical to the names of the "
-	      /**/ "resp. symbols exported by this module. e.g. ${'open' in posix.stubs} would "
-	      /**/ "mean that ?Gopen will unconditionally throw :{UnsupportedAPI}. Other functions "
-	      /**/ "may behave differently or always behave as no-ops, but the general meaning is "
-	      /**/ "that the function will simply be implemented as a stub") },
-
-	/* File control */
-	D(POSIX_OPEN_DEF_DOC("Open a given @filename using @oflags (a set of ${O_*} flags), and @mode (describing "
-	                     /**/ "the posix permissions to apply to a newly created file when ?GO_CREAT is given)"))
-	D(POSIX__OPEN_DEF_DOC("Same as ?Gopen, but whereas ?Gopen will automatically set the ?GO_OBTAIN_DIR and "
-	                      /**/ "?GO_BINARY flags on platforms that define them in order to better standartize "
-	                      /**/ "behavior of that function on those system, this function (?G_open) will not "
-	                      /**/ "make any changes to the given @oflags"))
-	D(POSIX_CREAT_DEF_DOC("Create a new file (same as ${open(filename, O_CREAT | O_WRONLY | O_TRUNC, mode)})"))
-	D(POSIX__CREAT_DEF_DOC("Same as ?Gcreat, but on systems that define ?GO_BINARY, that flag is also passed "
-	                       /**/ "via the internal @oflags list eventually passed to ?Gopen (or rather ?G_open)"))
-	D(POSIX_OPENAT_DEF_DOC("Same as ?Gopen, but allows the path to be specified as @dfd:@filename"))
-	D(POSIX__OPENAT_DEF_DOC("Same as ?G_open, but allows the path to be specified as @dfd:@filename"))
-	D(POSIX_READ_DEF_DOC("Read up to @count bytes into @buf\n"
-	                     "When @buf is given, return the actual number of read bytes. "
-	                     /**/ "Otherwise, read into a new ?GBytes object that is then returned"))
-	D(POSIX_WRITE_DEF_DOC("Write up to @count bytes from @buf, returning the actual number of bytes written"))
-	D(POSIX_LSEEK_DEF)
-	D(POSIX_FSYNC_DEF)
-	D(POSIX_FDATASYNC_DEF)
-	D(POSIX_CLOSE_DEF)
-	D(POSIX_UMASK_DEF)
-	D(POSIX_DUP_DEF)
-	D(POSIX_DUP2_DEF)
-	D(POSIX_DUP3_DEF)
-	/* TODO: lockf() */
-	D(POSIX_PREAD_DEF)
-	/* TODO: readv() */
-	/* TODO: preadv() */
-	D(POSIX_PWRITE_DEF)
-	/* TODO: writev() */
-	/* TODO: pwritev() */
-	D(POSIX_ISATTY_DEF)
-	D(POSIX_PIPE_DEF)
-	D(POSIX_PIPE2_DEF)
-	/* TODO: fcntl() */
-	/* TODO: ioctl() */
-	/* TODO: posix_fallocate() */
-	/* TODO: posix_fadvise() */
-	/* TODO: fcntl commands */
-	/* TODO: ioctl commands */
-
-	/* Filesystem control */
-	D(POSIX_TRUNCATE_DEF)
-	D(POSIX_FTRUNCATE_DEF)
-	D(POSIX_TRUNCATEAT_DEF)
-	D(POSIX_FTRUNCATEAT_DEF)
-	D(POSIX_ACCESS_DEF)
-	D(POSIX_EUIDACCESS_DEF)
-	D(POSIX_FACCESSAT_DEF)
-	D(POSIX_FCHOWNAT_DEF)
-	/* TODO: chflags() */
-	/* TODO: lchflags() */
-	/* TODO: chroot() */
-	/* TODO: mkfifo() */
-	/* TODO: mknod() */
-	/* TODO: major() */
-	/* TODO: minor() */
-	/* TODO: mkdev() */
-	D(POSIX_SYNC_DEF)
-	/* TODO: pathconf() */
-	/* TODO: fpathconf() */
-	/* TODO: statvfs() */
-	/* TODO: fstatvfs() */
-	/* TODO: getxattr() */
-	/* TODO: lgetxattr() */
-	/* TODO: fgetxattr() */
-	/* TODO: setxattr() */
-	/* TODO: lsetxattr() */
-	/* TODO: fsetxattr() */
-	/* TODO: removexattr() */
-	/* TODO: lremovexattr() */
-	/* TODO: fremovexattr() */
-	/* TODO: listxattr() */
-	/* TODO: llistxattr() */
-	/* TODO: flistxattr() */
-
-	/* Path normalization */
-	D(POSIX_LREALPATH_DEF_DOC("#tFileAccessError{Permissions to access @path were denied (consider using ?Glresolvepath)}"
-	                          "#tFileNotFound{Some part of @path does not exist (consider using ?Glresolvepath)}"
-	                          "#tNoDirectory{Some part of @path isn't a directory (consider using ?Glresolvepath)}"
-	                          "#tSystemError{Failed to resolve the realpath for some reason}"
-	                          "Return the absolute, fully resolved, canonical name of @path.\n"
-	                          "This function also ensures that @path actually exists. If "
-	                          /**/ "this is not a requirement, consider using ?Glresolvepath instead.\n"
-	                          "If @path is a symbolic link, don't resolve that link but return the path to the link itself"))
-	D(POSIX_REALPATH_DEF_DOC("#tFileAccessError{Permissions to access @path were denied (consider using ?Gresolvepath)}"
-	                         "#tFileNotFound{Some part of @path does not exist (consider using ?Gresolvepath)}"
-	                         "#tNoDirectory{Some part of @path isn't a directory (consider using ?Gresolvepath)}"
-	                         "#tSystemError{Failed to resolve the realpath for some reason}"
-	                         "Return the absolute, fully resolved, canonical name of @path.\n"
-	                         "This function also ensures that @path actually exists. If "
-	                         /**/ "this is not a requirement, consider using ?Gresolvepath instead"))
-	D(POSIX_FREALPATH_DEF_DOC("#tSystemError{Failed to resolve the realpath for some reason}"
-	                          "#patflags{Should always be $0, except on KOS where ?GAT_DOSPATH can also be passed}"
-	                          "Return the absolute, fully resolved, canonical name of @fd"))
-	D(POSIX_REALPATHAT_DEF_DOC("#tFileAccessError{Permissions to access @dfd:@path were denied (consider using ?Gresolvepathat)}"
-	                           "#tFileNotFound{Some part of @dfd:@path does not exist (consider using ?Gresolvepathat)}"
-	                           "#tNoDirectory{Some part of @dfd:@path isn't a directory (consider using ?Gresolvepathat)}"
-	                           "#tSystemError{Failed to resolve the realpath for some reason}"
-	                           "#patflags{Set of ?GAT_SYMLINK_NOFOLLOW, ?GAT_DOSPATH}"
-	                           "Return the absolute, fully resolved, canonical name of @dfd:@path.\n"
-	                           "This function also ensures that @dfd:@path actually exists. If "
-	                           /**/ "this is not a requirement, consider using ?Gresolvepathat instead"))
-	D(POSIX_LRESOLVEPATH_DEF_DOC("#tSystemError{Failed to resolve the path for some reason}"
-	                             "Same as ?Glrealpath, but don't force the returned path to be absolute (if @path is "
-	                             /**/ "relative, then so will the returned path be), and handle errors by simply not "
-	                             /**/ "expanding a relevant portion of the path"))
-	D(POSIX_RESOLVEPATH_DEF_DOC("#tSystemError{Failed to resolve the path for some reason}"
-	                            "Same as ?Grealpath, but don't force the returned path to be absolute (if @path is "
-	                            /**/ "relative, then so will the returned path be), and handle errors by simply not "
-	                            /**/ "expanding a relevant portion of the path"))
-	D(POSIX_RESOLVEPATHAT_DEF_DOC("#tSystemError{Failed to resolve the path for some reason}"
-	                              "Same as ?Grealpathat, but don't force the returned path to be absolute (if @dfd:@path "
-	                              /**/ "is relative, then so will the returned path be), and handle errors by simply not "
-	                              /**/ "expanding a relevant portion of the path"))
-
-	/* System information */
-	/* TODO: uname() */
-	/* TODO: sethostname() */
-	/* TODO: setdomainname() */
-	/* TODO: confstr() */
-	/* TODO: sysconf() */
-	/* TODO: times() */
-	/* TODO: getloadavg() */
-
-	/* Terminal control */
-	/* TODO: ttyname() */
-	/* TODO: ctermid() */
-	/* TODO: openpty() */
-	/* TODO: forkpty() */
-	/* TODO: getlogin() */
-	/* TODO: tcgetpgrp() */
-	/* TODO: tcsetpgrp() */
-
-	/* Process control */
-	D(POSIX_GETPID_DEF)
-	D(POSIX_SYSTEM_DEF)
-	/* TODO: gettid() */
-	/* TODO: execl() */
-	/* TODO: execle() */
-	/* TODO: execlp() */
-	/* TODO: execlpe() */
-	/* TODO: execv() */
-	/* TODO: execve() */
-	/* TODO: execvp() */
-	/* TODO: execvpe() */
-	/* TODO: fexecve() */
-	/* TODO: cwait() */
-	/* TODO: spawnl() */
-	/* TODO: spawnle() */
-	/* TODO: spawnlp() */
-	/* TODO: spawnlpe() */
-	/* TODO: spawnv() */
-	/* TODO: spawnve() */
-	/* TODO: spawnvp() */
-	/* TODO: spawnvpe() */
-
-	/* Scheduling control */
-	D(POSIX_SCHED_YIELD_DEF)
-	/* TODO: sched_get_priority_min() */
-	/* TODO: sched_get_priority_max() */
-	/* TODO: sched_getparam() */
-	/* TODO: sched_setparam() */
-	/* TODO: sched_getscheduler() */
-	/* TODO: sched_setscheduler() */
-	/* TODO: sched_rr_get_interval() */
-	/* TODO: sched_getaffinity() */
-	/* TODO: sched_getaffinity() */
-	/* TODO: nice() */
-	/* TODO: getpriority() */
-	/* TODO: setpriority() */
-	/* TODO: fork() */
-	/* TODO: wait() */
-	/* TODO: wait3() */
-	/* TODO: wait4() */
-	/* TODO: waitid() */
-	/* TODO: waitpid() */
-	/* TODO: kill() */
-	/* TODO: killpg() */
-	/* TODO: getppid() */
-	/* TODO: getpgrp() */
-	/* TODO: setpgrp() */
-	/* TODO: getpgid() */
-	/* TODO: setpgid() */
-	/* TODO: getsid() */
-	/* TODO: setsid() */
-	/* TODO: WCOREDUMP() */
-	/* TODO: WIFCONTINUED() */
-	/* TODO: WIFSTOPPED() */
-	/* TODO: WIFSIGNALED() */
-	/* TODO: WIFEXITED() */
-	/* TODO: WEXITSTATUS() */
-	/* TODO: WTERMSIG() */
-	/* TODO: WSTOPSIG() */
-
-	/* User/Permission control */
-	/* TODO: geteuid() */ /* nt: GetTokenInformation(OpenProcessToken(), TokenOwner) */
-	/* TODO: seteuid() */
-	/* TODO: getegid() */ /* nt: GetTokenInformation(OpenProcessToken(), TokenPrimaryGroup) */
-	/* TODO: setegid() */
-	/* TODO: getuid() */ /* nt: LookupAccountName(GetUserName()) */
-	/* TODO: setuid() */
-	/* TODO: getgid() */ /* nt: ??? */
-	/* TODO: setgid() */
-	/* TODO: setreuid() */
-	/* TODO: setregid() */
-	/* TODO: setresuid() */
-	/* TODO: setresgid() */
-	/* TODO: getresuid() */
-	/* TODO: getresgid() */
-	/* TODO: getgrouplist() */
-	/* TODO: getgroups() */ /* nt: GetTokenInformation(OpenProcessToken(), TokenGroups) */
-	/* TODO: setgroups() */
-	/* TODO: initgroups() */
-
-	/* Random number generation */
-	/* TODO: urandom() */
-	/* TODO: getrandom() */
-
-	/* Python-like helper functions */
-	D(POSIX_CPU_COUNT_DEF_DOC("Returns the ## of available processors on the host machine"))
-	/* TODO: get_inheritable() */
-	/* TODO: set_inheritable() */
-
-	/* Higher-level wrapper functions */
-	/* TODO: popen() */
-	/* TODO: fdopen() (Basically just a wrapper around `DeeFile_OpenFd') */
+#ifdef __INTELLISENSE__
+#define D(...) /* nothing */
+#else /* __INTELLISENSE__ */
+#define D(...) __VA_ARGS__
+#endif /* !__INTELLISENSE__ */
 
 
-	/* Directory access */
-	D({ "dirent", (DeeObject *)&DeeDirIterator_Type, MODSYM_FREADONLY },)
-	D({ "DIR", (DeeObject *)&DeeDir_Type, MODSYM_FREADONLY },)
-	D({ "opendir", (DeeObject *)&DeeDir_Type, MODSYM_FREADONLY,
-	    DOC("(" posix_opendir_params ")->?GDIR\n"
-	        "Read the contents of a given directory. The returned "
-	        /**/ "object may be iterated to yield ?Gdirent objects.\n"
-	        "Additionally, you may specify @skipdots as ?f if you "
-	        /**/ "wish to include the special $'.' and $'..' entries.") },)
-	D({ "fdopendir", (DeeObject *)&posix_fdopendir, MODSYM_FREADONLY,
-	    DOC("(" posix_fdopendir_params ")->?GDIR\n"
-	        "Same as ?Gopendir, but the default value of @inheritfd is ?t, "
-	        /**/ "mimicking the behavior of the native $fdopendir function") },)
+DEX_BEGIN
 
-	/* File type constants. */
-	D({ "DT_UNKNOWN", (DeeObject *)&posix_DT_UNKNOWN, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },)
-	D({ "DT_FIFO", (DeeObject *)&posix_DT_FIFO, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },)
-	D({ "DT_CHR", (DeeObject *)&posix_DT_CHR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },)
-	D({ "DT_DIR", (DeeObject *)&posix_DT_DIR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },)
-	D({ "DT_BLK", (DeeObject *)&posix_DT_BLK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },)
-	D({ "DT_REG", (DeeObject *)&posix_DT_REG, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },)
-	D({ "DT_LNK", (DeeObject *)&posix_DT_LNK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },)
-	D({ "DT_SOCK", (DeeObject *)&posix_DT_SOCK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },)
-	D({ "DT_WHT", (DeeObject *)&posix_DT_WHT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },)
-	D({ "DTTOIF", (DeeObject *)&posix_DTTOIF, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
-	    DOC("(dt:?Dint)->?Dint\n"
-	        "Convert a #C{DT_*} constant to #C{S_IF*}") },)
-	D({ "IFTODT", (DeeObject *)&posix_IFTODT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
-	    DOC("(if:?Dint)->?Dint\n"
-	        "Convert an #C{S_IF*} constant to #C{DT_*}") },)
+/* E* errno codes */
+D(POSIX_ERRNO_DEFS)
+/* IMPORTANT: errno codes must come first! */
 
-	/* Environ control */
-	D(POSIX_GETENV_DEF_DOC("#tKeyError{The given @varname wasn't found, and @defl wasn't given}"
-	                       "Same as ${environ[varname]}\n"))
-	D(POSIX_SETENV_DEF_DOC("Same as ${environ[varname] = value}. When @replace is ?f, only "
-	                       "add new variables, but don't override one that was already set\n"))
-	D(POSIX_PUTENV_DEF_DOC("If @envline constains $'=', same as ${local name, none, value = envline.partition(\"=\")...; setenv(name, value);}\n"
-	                       "Otherwise, same as ?#unsetenv"))
-	D(POSIX_UNSETENV_DEF_DOC("Returns ?t if @varname was deleted, and ?f if @varname didn't exist in ?Genviron"))
-	D(POSIX_CLEARENV_DEF_DOC("Clear ?Genviron"))
-	D({ "environ", &DeeEnviron_Singleton, MODSYM_FREADONLY,
-	    DOC("->?M?Dstring?Dstring\n"
-	        "A ?DMapping-style singleton instance that can be used to "
-	        /**/ "access and enumerate environment variables by name:\n"
-	        "${"
-	        /**/ "print environ[\"PATH\"]; /* \"/bin:/usr/bin:...\" */"
-	        "}\n"
-	        "Other mapping operations known from ?DMapping can be used "
-	        /**/ "to delete (${del environ[...]}), set (${environ[...] = ...}) and "
-	        /**/ "check for the existance of (${... in environ}) environment variables, "
-	        /**/ "as well as enumerating all variables (${for (key, item: environ) ...})")
-	},)
+DEX_MEMBER_F("stubs", &PosixStubsList_Singleton, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+             "->?S?Dstring\n"
+             "Set of the names of all of the functions that are implemented as stubs\n"
+             "The names contained within this set are identical to the names of the "
+             /**/ "resp. symbols exported by this module. e.g. ${'open' in posix.stubs} would "
+             /**/ "mean that ?Gopen will unconditionally throw :{UnsupportedAPI}. Other functions "
+             /**/ "may behave differently or always behave as no-ops, but the general meaning is "
+             /**/ "that the function will simply be implemented as a stub"),
 
-	/* stat.st_mode bits. */
-	LIBPOSIX_S_IFMT_DEF
-	LIBPOSIX_S_IFDIR_DEF
-	LIBPOSIX_S_IFCHR_DEF
-	LIBPOSIX_S_IFBLK_DEF
-	LIBPOSIX_S_IFREG_DEF
-	LIBPOSIX_S_IFIFO_DEF
-	LIBPOSIX_S_IFLNK_DEF
-	LIBPOSIX_S_IFSOCK_DEF
-	LIBPOSIX_S_ISUID_DEF
-	LIBPOSIX_S_ISGID_DEF
-	LIBPOSIX_S_ISVTX_DEF
-	LIBPOSIX_S_IRUSR_DEF
-	LIBPOSIX_S_IWUSR_DEF
-	LIBPOSIX_S_IXUSR_DEF
-	LIBPOSIX_S_IRGRP_DEF
-	LIBPOSIX_S_IWGRP_DEF
-	LIBPOSIX_S_IXGRP_DEF
-	LIBPOSIX_S_IROTH_DEF
-	LIBPOSIX_S_IWOTH_DEF
-	LIBPOSIX_S_IXOTH_DEF
+/* File control */
+D(POSIX_OPEN_DEF_DOC("Open a given @filename using @oflags (a set of ${O_*} flags), and @mode (describing "
+                     /**/ "the posix permissions to apply to a newly created file when ?GO_CREAT is given)"))
+D(POSIX__OPEN_DEF_DOC("Same as ?Gopen, but whereas ?Gopen will automatically set the ?GO_OBTAIN_DIR and "
+                      /**/ "?GO_BINARY flags on platforms that define them in order to better standartize "
+                      /**/ "behavior of that function on those system, this function (?G_open) will not "
+                      /**/ "make any changes to the given @oflags"))
+D(POSIX_CREAT_DEF_DOC("Create a new file (same as ${open(filename, O_CREAT | O_WRONLY | O_TRUNC, mode)})"))
+D(POSIX__CREAT_DEF_DOC("Same as ?Gcreat, but on systems that define ?GO_BINARY, that flag is also passed "
+                       /**/ "via the internal @oflags list eventually passed to ?Gopen (or rather ?G_open)"))
+D(POSIX_OPENAT_DEF_DOC("Same as ?Gopen, but allows the path to be specified as @dfd:@filename"))
+D(POSIX__OPENAT_DEF_DOC("Same as ?G_open, but allows the path to be specified as @dfd:@filename"))
+D(POSIX_READ_DEF_DOC("Read up to @count bytes into @buf\n"
+                     "When @buf is given, return the actual number of read bytes. "
+                     /**/ "Otherwise, read into a new ?GBytes object that is then returned"))
+D(POSIX_WRITE_DEF_DOC("Write up to @count bytes from @buf, returning the actual number of bytes written"))
+D(POSIX_LSEEK_DEF)
+D(POSIX_FSYNC_DEF)
+D(POSIX_FDATASYNC_DEF)
+D(POSIX_CLOSE_DEF)
+D(POSIX_UMASK_DEF)
+D(POSIX_DUP_DEF)
+D(POSIX_DUP2_DEF)
+D(POSIX_DUP3_DEF)
+/* TODO: lockf() */
+D(POSIX_PREAD_DEF)
+/* TODO: readv() */
+/* TODO: preadv() */
+D(POSIX_PWRITE_DEF)
+/* TODO: writev() */
+/* TODO: pwritev() */
+D(POSIX_ISATTY_DEF)
+D(POSIX_PIPE_DEF)
+D(POSIX_PIPE2_DEF)
+/* TODO: fcntl() */
+/* TODO: ioctl() */
+/* TODO: posix_fallocate() */
+/* TODO: posix_fadvise() */
+/* TODO: fcntl commands */
+/* TODO: ioctl commands */
 
-	/* stat.st_mode helper functions. */
-	{ "S_ISDIR", (DeeObject *)&libposix_S_ISDIR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(" posix_S_ISDIR_params ")->?Dbool") },
-	{ "S_ISCHR", (DeeObject *)&libposix_S_ISCHR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(" posix_S_ISCHR_params ")->?Dbool") },
-	{ "S_ISBLK", (DeeObject *)&libposix_S_ISBLK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(" posix_S_ISBLK_params ")->?Dbool") },
-	{ "S_ISDEV", (DeeObject *)&libposix_S_ISDEV, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(" posix_S_ISDEV_params ")->?Dbool") },
-	{ "S_ISREG", (DeeObject *)&libposix_S_ISREG, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(" posix_S_ISREG_params ")->?Dbool") },
-	{ "S_ISFIFO", (DeeObject *)&libposix_S_ISFIFO, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(" posix_S_ISFIFO_params ")->?Dbool") },
-	{ "S_ISLNK", (DeeObject *)&libposix_S_ISLNK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(" posix_S_ISLNK_params ")->?Dbool") },
-	{ "S_ISSOCK", (DeeObject *)&libposix_S_ISSOCK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(" posix_S_ISSOCK_params ")->?Dbool") },
+/* Filesystem control */
+D(POSIX_TRUNCATE_DEF)
+D(POSIX_FTRUNCATE_DEF)
+D(POSIX_TRUNCATEAT_DEF)
+D(POSIX_FTRUNCATEAT_DEF)
+D(POSIX_ACCESS_DEF)
+D(POSIX_EUIDACCESS_DEF)
+D(POSIX_FACCESSAT_DEF)
+D(POSIX_FCHOWNAT_DEF)
+/* TODO: chflags() */
+/* TODO: lchflags() */
+/* TODO: chroot() */
+/* TODO: mkfifo() */
+/* TODO: mknod() */
+/* TODO: major() */
+/* TODO: minor() */
+/* TODO: mkdev() */
+D(POSIX_SYNC_DEF)
+/* TODO: pathconf() */
+/* TODO: fpathconf() */
+/* TODO: statvfs() */
+/* TODO: fstatvfs() */
+/* TODO: getxattr() */
+/* TODO: lgetxattr() */
+/* TODO: fgetxattr() */
+/* TODO: setxattr() */
+/* TODO: lsetxattr() */
+/* TODO: fsetxattr() */
+/* TODO: removexattr() */
+/* TODO: lremovexattr() */
+/* TODO: fremovexattr() */
+/* TODO: listxattr() */
+/* TODO: llistxattr() */
+/* TODO: flistxattr() */
 
-	/* stat & friends */
-	D({ "stat", (DeeObject *)&DeeStat_Type, MODSYM_FREADONLY },)
-	D({ "lstat", (DeeObject *)&DeeLStat_Type, MODSYM_FREADONLY },)
-	D(POSIX_FSTAT_DEF_DOC("More restrictive alias for ?Gstat"))
-	D(POSIX_FSTATAT_DEF_DOC("More restrictive alias for ?Gstat"))
+/* Path normalization */
+D(POSIX_LREALPATH_DEF_DOC("#tFileAccessError{Permissions to access @path were denied (consider using ?Glresolvepath)}"
+                          "#tFileNotFound{Some part of @path does not exist (consider using ?Glresolvepath)}"
+                          "#tNoDirectory{Some part of @path isn't a directory (consider using ?Glresolvepath)}"
+                          "#tSystemError{Failed to resolve the realpath for some reason}"
+                          "Return the absolute, fully resolved, canonical name of @path.\n"
+                          "This function also ensures that @path actually exists. If "
+                          /**/ "this is not a requirement, consider using ?Glresolvepath instead.\n"
+                          "If @path is a symbolic link, don't resolve that link but return the path to the link itself"))
+D(POSIX_REALPATH_DEF_DOC("#tFileAccessError{Permissions to access @path were denied (consider using ?Gresolvepath)}"
+                         "#tFileNotFound{Some part of @path does not exist (consider using ?Gresolvepath)}"
+                         "#tNoDirectory{Some part of @path isn't a directory (consider using ?Gresolvepath)}"
+                         "#tSystemError{Failed to resolve the realpath for some reason}"
+                         "Return the absolute, fully resolved, canonical name of @path.\n"
+                         "This function also ensures that @path actually exists. If "
+                         /**/ "this is not a requirement, consider using ?Gresolvepath instead"))
+D(POSIX_FREALPATH_DEF_DOC("#tSystemError{Failed to resolve the realpath for some reason}"
+                          "#patflags{Should always be $0, except on KOS where ?GAT_DOSPATH can also be passed}"
+                          "Return the absolute, fully resolved, canonical name of @fd"))
+D(POSIX_REALPATHAT_DEF_DOC("#tFileAccessError{Permissions to access @dfd:@path were denied (consider using ?Gresolvepathat)}"
+                           "#tFileNotFound{Some part of @dfd:@path does not exist (consider using ?Gresolvepathat)}"
+                           "#tNoDirectory{Some part of @dfd:@path isn't a directory (consider using ?Gresolvepathat)}"
+                           "#tSystemError{Failed to resolve the realpath for some reason}"
+                           "#patflags{Set of ?GAT_SYMLINK_NOFOLLOW, ?GAT_DOSPATH}"
+                           "Return the absolute, fully resolved, canonical name of @dfd:@path.\n"
+                           "This function also ensures that @dfd:@path actually exists. If "
+                           /**/ "this is not a requirement, consider using ?Gresolvepathat instead"))
+D(POSIX_LRESOLVEPATH_DEF_DOC("#tSystemError{Failed to resolve the path for some reason}"
+                             "Same as ?Glrealpath, but don't force the returned path to be absolute (if @path is "
+                             /**/ "relative, then so will the returned path be), and handle errors by simply not "
+                             /**/ "expanding a relevant portion of the path"))
+D(POSIX_RESOLVEPATH_DEF_DOC("#tSystemError{Failed to resolve the path for some reason}"
+                            "Same as ?Grealpath, but don't force the returned path to be absolute (if @path is "
+                            /**/ "relative, then so will the returned path be), and handle errors by simply not "
+                            /**/ "expanding a relevant portion of the path"))
+D(POSIX_RESOLVEPATHAT_DEF_DOC("#tSystemError{Failed to resolve the path for some reason}"
+                              "Same as ?Grealpathat, but don't force the returned path to be absolute (if @dfd:@path "
+                              /**/ "is relative, then so will the returned path be), and handle errors by simply not "
+                              /**/ "expanding a relevant portion of the path"))
 
-	/* Process Environment */
-	D(POSIX_GETCWD_DEF_DOC("#t{:Interrupt}"
-	                       "#tFileAccessError{Permission to read a part of the current working directory's path was denied}"
-	                       "#tFileNotFound{The current working directory has been unlinked}"
-	                       "#tSystemError{Failed to retrieve the current working directory for some reason}"
-	                       "Return the absolute path of the current working directory"))
-	D(POSIX_GETTMP_DEF_DOC("#t{:Interrupt}"
-	                       "#tSystemError{Failed to retrieve a temporary path name for some reason}"
-	                       "Return the path to a folder that can be used as temporary storage of files and directories\n"
-	                       "If (in this order) one of these environment variables is defined, "
-	                       /**/ "it will be returned $'TMPDIR', $'TMP', $'TEMP', $'TEMPDIR'"))
-	D(POSIX_GETHOSTNAME_DEF_DOC("#t{:Interrupt}"
-	                            "#tSystemError{Failed to retrieve the name of the hosting machine for some reason}"
-	                            "Returns the user-assigned name of the hosting machine"))
-	D(POSIX_CHDIR_DEF_DOC("#t{:Interrupt}"
-	                      "#tFileNotFound{The given @path could not be found}"
-	                      "#tNoDirectory{The given @path is not a directory}"
-	                      "#tFileAccessError{The current user does not have permissions to enter @path}"
-	                      "#tSystemError{Failed to change the current working directory for some reason}"
-	                      "Change the current working directory to @path, which may be "
-	                      /**/ "a path relative to the old current working directory"))
-	D(POSIX_FCHDIR_DEF_DOC("#t{:Interrupt}"
-	                       "#tFileNotFound{The given @fd could not be found}"
-	                       "#tNoDirectory{The given @fd is not a directory}"
-	                       "#tFileClosed{The given @fd has been closed or is invalid}"
-	                       "#tFileAccessError{The current user does not have permissions to enter @fd}"
-	                       "#tSystemError{Failed to change the current working directory for some reason}"
-	                       "Change the current working directory to @fd"))
-	D(POSIX_FCHDIRAT_DEF_DOC("#t{:Interrupt}"
-	                         "#tFileNotFound{The given @dfd:@path could not be found}"
-	                         "#tNoDirectory{The given @dfd:@path is not a directory}"
-	                         "#tFileClosed{The given @dfd has been closed or is invalid}"
-	                         "#tFileAccessError{The current user does not have permissions to enter @dfd:@path}"
-	                         "#tSystemError{Failed to change the current working directory for some reason}"
-	                         "#tValueError{Invalid set of flags specified by @atflags}"
-	                         "Change the current working directory to @dfd:@path"))
+/* System information */
+/* TODO: uname() */
+/* TODO: sethostname() */
+/* TODO: setdomainname() */
+/* TODO: confstr() */
+/* TODO: sysconf() */
+/* TODO: times() */
+/* TODO: getloadavg() */
 
-	/************************************************************************/
-	/* Filesystem                                                           */
-	/************************************************************************/
+/* Terminal control */
+/* TODO: ttyname() */
+/* TODO: ctermid() */
+/* TODO: openpty() */
+/* TODO: forkpty() */
+/* TODO: getlogin() */
+/* TODO: tcgetpgrp() */
+/* TODO: tcsetpgrp() */
 
-	/* mkdir(2) */
-	D(POSIX_MKDIR_DEF_DOC("#t{:Interrupt}"
-	                      "#tFileNotFound{One or more of @path's parents do not exist}"
-	                      "#tNoDirectory{A part of the given @path is not a directory}"
-	                      "#tFileExists{The given @path already exists}"
-	                      "#tValueError{The given @permissions are malformed or not recognized}"
-	                      "#tFileAccessError{The current user does not have permissions to "
-	                      /*                  */ "create a new directory within the folder of @path}"
-	                      "#tReadOnlyFile{The filesystem or device hosting the directory of "
-	                      /*               */ "@path is in read-only operations mode, preventing the "
-	                      /*               */ "creation of new directories}"
-	                      "#tSystemError{Failed to create a directory for some reason}"
-	                      "Create a new directory named @path"))
-	D(POSIX_MKDIRAT_DEF_DOC("#t{:Interrupt}"
-	                        "#tFileNotFound{One or more of @dfd:@path's parents do not exist}"
-	                        "#tNoDirectory{A part of the given @dfd:@path is not a directory}"
-	                        "#tFileExists{The given @dfd:@path already exists}"
-	                        "#tValueError{The given @permissions are malformed or not recognized}"
-	                        "#tFileAccessError{The current user does not have permissions to "
-	                        /*                  */ "create a new directory within the folder of @dfd:@path}"
-	                        "#tReadOnlyFile{The filesystem or device hosting the directory of "
-	                        /*               */ "@dfd:@path is in read-only operations mode, preventing the "
-	                        /*               */ "creation of new directories}"
-	                        "#tSystemError{Failed to create a directory for some reason}"
-	                        "#tFileClosed{The given @dfd was closed}"
-	                        "Create a new directory named @dfd:@path"))
-	D(POSIX_FMKDIRAT_DEF_DOC("#t{:Interrupt}"
-	                         "#tFileNotFound{One or more of @dfd:@path's parents do not exist}"
-	                         "#tNoDirectory{A part of the given @dfd:@path is not a directory}"
-	                         "#tFileExists{The given @dfd:@path already exists}"
-	                         "#tValueError{The given @permissions are malformed or not recognized}"
-	                         "#tFileAccessError{The current user does not have permissions to "
-	                         /*                  */ "create a new directory within the folder of @dfd:@path}"
-	                         "#tReadOnlyFile{The filesystem or device hosting the directory of "
-	                         /*               */ "@dfd:@path is in read-only operations mode, preventing the "
-	                         /*               */ "creation of new directories}"
-	                         "#tSystemError{Failed to create a directory for some reason}"
-	                         "#tFileClosed{The given @dfd was closed}"
-	                         "Create a new directory named @dfd:@path"))
+/* Process control */
+D(POSIX_GETPID_DEF)
+D(POSIX_SYSTEM_DEF)
+/* TODO: gettid() */
+/* TODO: execl() */
+/* TODO: execle() */
+/* TODO: execlp() */
+/* TODO: execlpe() */
+/* TODO: execv() */
+/* TODO: execve() */
+/* TODO: execvp() */
+/* TODO: execvpe() */
+/* TODO: fexecve() */
+/* TODO: cwait() */
+/* TODO: spawnl() */
+/* TODO: spawnle() */
+/* TODO: spawnlp() */
+/* TODO: spawnlpe() */
+/* TODO: spawnv() */
+/* TODO: spawnve() */
+/* TODO: spawnvp() */
+/* TODO: spawnvpe() */
 
-	/* TODO: mkdir_p() -- Same as `mkdir()', but:
+/* Scheduling control */
+D(POSIX_SCHED_YIELD_DEF)
+/* TODO: sched_get_priority_min() */
+/* TODO: sched_get_priority_max() */
+/* TODO: sched_getparam() */
+/* TODO: sched_setparam() */
+/* TODO: sched_getscheduler() */
+/* TODO: sched_setscheduler() */
+/* TODO: sched_rr_get_interval() */
+/* TODO: sched_getaffinity() */
+/* TODO: sched_getaffinity() */
+/* TODO: nice() */
+/* TODO: getpriority() */
+/* TODO: setpriority() */
+/* TODO: fork() */
+/* TODO: wait() */
+/* TODO: wait3() */
+/* TODO: wait4() */
+/* TODO: waitid() */
+/* TODO: waitpid() */
+/* TODO: kill() */
+/* TODO: killpg() */
+/* TODO: getppid() */
+/* TODO: getpgrp() */
+/* TODO: setpgrp() */
+/* TODO: getpgid() */
+/* TODO: setpgid() */
+/* TODO: getsid() */
+/* TODO: setsid() */
+/* TODO: WCOREDUMP() */
+/* TODO: WIFCONTINUED() */
+/* TODO: WIFSTOPPED() */
+/* TODO: WIFSIGNALED() */
+/* TODO: WIFEXITED() */
+/* TODO: WEXITSTATUS() */
+/* TODO: WTERMSIG() */
+/* TODO: WSTOPSIG() */
+
+/* User/Permission control */
+/* TODO: geteuid() */ /* nt: GetTokenInformation(OpenProcessToken(), TokenOwner) */
+/* TODO: seteuid() */
+/* TODO: getegid() */ /* nt: GetTokenInformation(OpenProcessToken(), TokenPrimaryGroup) */
+/* TODO: setegid() */
+/* TODO: getuid() */ /* nt: LookupAccountName(GetUserName()) */
+/* TODO: setuid() */
+/* TODO: getgid() */ /* nt: ??? */
+/* TODO: setgid() */
+/* TODO: setreuid() */
+/* TODO: setregid() */
+/* TODO: setresuid() */
+/* TODO: setresgid() */
+/* TODO: getresuid() */
+/* TODO: getresgid() */
+/* TODO: getgrouplist() */
+/* TODO: getgroups() */ /* nt: GetTokenInformation(OpenProcessToken(), TokenGroups) */
+/* TODO: setgroups() */
+/* TODO: initgroups() */
+
+/* Random number generation */
+/* TODO: urandom() */
+/* TODO: getrandom() */
+
+/* Python-like helper functions */
+D(POSIX_CPU_COUNT_DEF_DOC("Returns the ## of available processors on the host machine"))
+/* TODO: get_inheritable() */
+/* TODO: set_inheritable() */
+
+/* Higher-level wrapper functions */
+/* TODO: popen() */
+/* TODO: fdopen() (Basically just a wrapper around `DeeFile_OpenFd') */
+
+
+/* Directory access */
+D(DEX_MEMBER_F_NODOC("dirent", &DeeDirIterator_Type, DEXSYM_READONLY),)
+D(DEX_MEMBER_F_NODOC("DIR", &DeeDir_Type, DEXSYM_READONLY),)
+D(DEX_MEMBER_F("opendir", &DeeDir_Type, DEXSYM_READONLY,
+               "(" posix_opendir_params ")->?GDIR\n"
+               "Read the contents of a given directory. The returned "
+               /**/ "object may be iterated to yield ?Gdirent objects.\n"
+               "Additionally, you may specify @skipdots as ?f if you "
+               /**/ "wish to include the special $'.' and $'..' entries."),)
+D(DEX_MEMBER_F("fdopendir", &posix_fdopendir, DEXSYM_READONLY,
+               "(" posix_fdopendir_params ")->?GDIR\n"
+               "Same as ?Gopendir, but the default value of @inheritfd is ?t, "
+               /**/ "mimicking the behavior of the native $fdopendir function"),)
+
+/* File type constants. */
+D(DEX_MEMBER_F_NODOC("DT_UNKNOWN", &posix_DT_UNKNOWN, DEXSYM_READONLY | DEXSYM_CONSTEXPR),)
+D(DEX_MEMBER_F_NODOC("DT_FIFO", &posix_DT_FIFO, DEXSYM_READONLY | DEXSYM_CONSTEXPR),)
+D(DEX_MEMBER_F_NODOC("DT_CHR", &posix_DT_CHR, DEXSYM_READONLY | DEXSYM_CONSTEXPR),)
+D(DEX_MEMBER_F_NODOC("DT_DIR", &posix_DT_DIR, DEXSYM_READONLY | DEXSYM_CONSTEXPR),)
+D(DEX_MEMBER_F_NODOC("DT_BLK", &posix_DT_BLK, DEXSYM_READONLY | DEXSYM_CONSTEXPR),)
+D(DEX_MEMBER_F_NODOC("DT_REG", &posix_DT_REG, DEXSYM_READONLY | DEXSYM_CONSTEXPR),)
+D(DEX_MEMBER_F_NODOC("DT_LNK", &posix_DT_LNK, DEXSYM_READONLY | DEXSYM_CONSTEXPR),)
+D(DEX_MEMBER_F_NODOC("DT_SOCK", &posix_DT_SOCK, DEXSYM_READONLY | DEXSYM_CONSTEXPR),)
+D(DEX_MEMBER_F_NODOC("DT_WHT", &posix_DT_WHT, DEXSYM_READONLY | DEXSYM_CONSTEXPR),)
+D(DEX_MEMBER_F("DTTOIF", &posix_DTTOIF, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+               "(dt:?Dint)->?Dint\n"
+               "Convert a #C{DT_*} constant to #C{S_IF*}"),)
+D(DEX_MEMBER_F("IFTODT", &posix_IFTODT, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+               "(if:?Dint)->?Dint\n"
+               "Convert an #C{S_IF*} constant to #C{DT_*}"),)
+
+/* Environ control */
+D(POSIX_GETENV_DEF_DOC("#tKeyError{The given @varname wasn't found, and @defl wasn't given}"
+                       "Same as ${environ[varname]}\n"))
+D(POSIX_SETENV_DEF_DOC("Same as ${environ[varname] = value}. When @replace is ?f, only "
+                       "add new variables, but don't override one that was already set\n"))
+D(POSIX_PUTENV_DEF_DOC("If @envline constains $'=', same as ${local name, none, value = envline.partition(\"=\")...; setenv(name, value);}\n"
+                       "Otherwise, same as ?#unsetenv"))
+D(POSIX_UNSETENV_DEF_DOC("Returns ?t if @varname was deleted, and ?f if @varname didn't exist in ?Genviron"))
+D(POSIX_CLEARENV_DEF_DOC("Clear ?Genviron"))
+D(DEX_MEMBER_F("environ", &DeeEnviron_Singleton, DEXSYM_READONLY,
+               "->?M?Dstring?Dstring\n"
+               "A ?DMapping-style singleton instance that can be used to "
+               /**/ "access and enumerate environment variables by name:\n"
+               "${"
+               /**/ "print environ[\"PATH\"]; /* \"/bin:/usr/bin:...\" */"
+               "}\n"
+               "Other mapping operations known from ?DMapping can be used "
+               /**/ "to delete (${del environ[...]}), set (${environ[...] = ...}) and "
+               /**/ "check for the existance of (${... in environ}) environment variables, "
+               /**/ "as well as enumerating all variables (${for (key, item: environ) ...})"),)
+
+/* stat.st_mode bits. */
+LIBPOSIX_S_IFMT_DEF
+LIBPOSIX_S_IFDIR_DEF
+LIBPOSIX_S_IFCHR_DEF
+LIBPOSIX_S_IFBLK_DEF
+LIBPOSIX_S_IFREG_DEF
+LIBPOSIX_S_IFIFO_DEF
+LIBPOSIX_S_IFLNK_DEF
+LIBPOSIX_S_IFSOCK_DEF
+LIBPOSIX_S_ISUID_DEF
+LIBPOSIX_S_ISGID_DEF
+LIBPOSIX_S_ISVTX_DEF
+LIBPOSIX_S_IRUSR_DEF
+LIBPOSIX_S_IWUSR_DEF
+LIBPOSIX_S_IXUSR_DEF
+LIBPOSIX_S_IRGRP_DEF
+LIBPOSIX_S_IWGRP_DEF
+LIBPOSIX_S_IXGRP_DEF
+LIBPOSIX_S_IROTH_DEF
+LIBPOSIX_S_IWOTH_DEF
+LIBPOSIX_S_IXOTH_DEF
+
+/* stat.st_mode helper functions. */
+DEX_MEMBER_F("S_ISDIR", &libposix_S_ISDIR, DEXSYM_READONLY | DEXSYM_CONSTEXPR, "(" posix_S_ISDIR_params ")->?Dbool"),
+DEX_MEMBER_F("S_ISCHR", &libposix_S_ISCHR, DEXSYM_READONLY | DEXSYM_CONSTEXPR, "(" posix_S_ISCHR_params ")->?Dbool"),
+DEX_MEMBER_F("S_ISBLK", &libposix_S_ISBLK, DEXSYM_READONLY | DEXSYM_CONSTEXPR, "(" posix_S_ISBLK_params ")->?Dbool"),
+DEX_MEMBER_F("S_ISDEV", &libposix_S_ISDEV, DEXSYM_READONLY | DEXSYM_CONSTEXPR, "(" posix_S_ISDEV_params ")->?Dbool"),
+DEX_MEMBER_F("S_ISREG", &libposix_S_ISREG, DEXSYM_READONLY | DEXSYM_CONSTEXPR, "(" posix_S_ISREG_params ")->?Dbool"),
+DEX_MEMBER_F("S_ISFIFO", &libposix_S_ISFIFO, DEXSYM_READONLY | DEXSYM_CONSTEXPR, "(" posix_S_ISFIFO_params ")->?Dbool"),
+DEX_MEMBER_F("S_ISLNK", &libposix_S_ISLNK, DEXSYM_READONLY | DEXSYM_CONSTEXPR, "(" posix_S_ISLNK_params ")->?Dbool"),
+DEX_MEMBER_F("S_ISSOCK", &libposix_S_ISSOCK, DEXSYM_READONLY | DEXSYM_CONSTEXPR, "(" posix_S_ISSOCK_params ")->?Dbool"),
+
+/* stat & friends */
+D(DEX_MEMBER_F_NODOC("stat", &DeeStat_Type, DEXSYM_READONLY),)
+D(DEX_MEMBER_F_NODOC("lstat", &DeeLStat_Type, DEXSYM_READONLY),)
+D(POSIX_FSTAT_DEF_DOC("More restrictive alias for ?Gstat"))
+D(POSIX_FSTATAT_DEF_DOC("More restrictive alias for ?Gstat"))
+
+/* Process Environment */
+D(POSIX_GETCWD_DEF_DOC("#t{:Interrupt}"
+                       "#tFileAccessError{Permission to read a part of the current working directory's path was denied}"
+                       "#tFileNotFound{The current working directory has been unlinked}"
+                       "#tSystemError{Failed to retrieve the current working directory for some reason}"
+                       "Return the absolute path of the current working directory"))
+D(POSIX_GETTMP_DEF_DOC("#t{:Interrupt}"
+                       "#tSystemError{Failed to retrieve a temporary path name for some reason}"
+                       "Return the path to a folder that can be used as temporary storage of files and directories\n"
+                       "If (in this order) one of these environment variables is defined, "
+                       /**/ "it will be returned $'TMPDIR', $'TMP', $'TEMP', $'TEMPDIR'"))
+D(POSIX_GETHOSTNAME_DEF_DOC("#t{:Interrupt}"
+                            "#tSystemError{Failed to retrieve the name of the hosting machine for some reason}"
+                            "Returns the user-assigned name of the hosting machine"))
+D(POSIX_CHDIR_DEF_DOC("#t{:Interrupt}"
+                      "#tFileNotFound{The given @path could not be found}"
+                      "#tNoDirectory{The given @path is not a directory}"
+                      "#tFileAccessError{The current user does not have permissions to enter @path}"
+                      "#tSystemError{Failed to change the current working directory for some reason}"
+                      "Change the current working directory to @path, which may be "
+                      /**/ "a path relative to the old current working directory"))
+D(POSIX_FCHDIR_DEF_DOC("#t{:Interrupt}"
+                       "#tFileNotFound{The given @fd could not be found}"
+                       "#tNoDirectory{The given @fd is not a directory}"
+                       "#tFileClosed{The given @fd has been closed or is invalid}"
+                       "#tFileAccessError{The current user does not have permissions to enter @fd}"
+                       "#tSystemError{Failed to change the current working directory for some reason}"
+                       "Change the current working directory to @fd"))
+D(POSIX_FCHDIRAT_DEF_DOC("#t{:Interrupt}"
+                         "#tFileNotFound{The given @dfd:@path could not be found}"
+                         "#tNoDirectory{The given @dfd:@path is not a directory}"
+                         "#tFileClosed{The given @dfd has been closed or is invalid}"
+                         "#tFileAccessError{The current user does not have permissions to enter @dfd:@path}"
+                         "#tSystemError{Failed to change the current working directory for some reason}"
+                         "#tValueError{Invalid set of flags specified by @atflags}"
+                         "Change the current working directory to @dfd:@path"))
+
+/************************************************************************/
+/* Filesystem                                                           */
+/************************************************************************/
+
+/* mkdir(2) */
+D(POSIX_MKDIR_DEF_DOC("#t{:Interrupt}"
+                      "#tFileNotFound{One or more of @path's parents do not exist}"
+                      "#tNoDirectory{A part of the given @path is not a directory}"
+                      "#tFileExists{The given @path already exists}"
+                      "#tValueError{The given @permissions are malformed or not recognized}"
+                      "#tFileAccessError{The current user does not have permissions to "
+                      /*                  */ "create a new directory within the folder of @path}"
+                      "#tReadOnlyFile{The filesystem or device hosting the directory of "
+                      /*               */ "@path is in read-only operations mode, preventing the "
+                      /*               */ "creation of new directories}"
+                      "#tSystemError{Failed to create a directory for some reason}"
+                      "Create a new directory named @path"))
+D(POSIX_MKDIRAT_DEF_DOC("#t{:Interrupt}"
+                        "#tFileNotFound{One or more of @dfd:@path's parents do not exist}"
+                        "#tNoDirectory{A part of the given @dfd:@path is not a directory}"
+                        "#tFileExists{The given @dfd:@path already exists}"
+                        "#tValueError{The given @permissions are malformed or not recognized}"
+                        "#tFileAccessError{The current user does not have permissions to "
+                        /*                  */ "create a new directory within the folder of @dfd:@path}"
+                        "#tReadOnlyFile{The filesystem or device hosting the directory of "
+                        /*               */ "@dfd:@path is in read-only operations mode, preventing the "
+                        /*               */ "creation of new directories}"
+                        "#tSystemError{Failed to create a directory for some reason}"
+                        "#tFileClosed{The given @dfd was closed}"
+                        "Create a new directory named @dfd:@path"))
+D(POSIX_FMKDIRAT_DEF_DOC("#t{:Interrupt}"
+                         "#tFileNotFound{One or more of @dfd:@path's parents do not exist}"
+                         "#tNoDirectory{A part of the given @dfd:@path is not a directory}"
+                         "#tFileExists{The given @dfd:@path already exists}"
+                         "#tValueError{The given @permissions are malformed or not recognized}"
+                         "#tFileAccessError{The current user does not have permissions to "
+                         /*                  */ "create a new directory within the folder of @dfd:@path}"
+                         "#tReadOnlyFile{The filesystem or device hosting the directory of "
+                         /*               */ "@dfd:@path is in read-only operations mode, preventing the "
+                         /*               */ "creation of new directories}"
+                         "#tSystemError{Failed to create a directory for some reason}"
+                         "#tFileClosed{The given @dfd was closed}"
+                         "Create a new directory named @dfd:@path"))
+
+/* TODO: mkdir_p() -- Same as `mkdir()', but:
 	 * - Also create missing parent directories
 	 * - Ignore directory-already-exists errors (but only if the already-existing thing *actually* is a directory) */
 
-	/* symlink(2) */
-	D(POSIX_SYMLINK_DEF_DOC("#t{:Interrupt}"
-	                        "#tFileExists{A file or directory named @path already exists}"
-	                        "#tFileNotFound{A parent directory of @path does not exist}"
-	                        "#tNoDirectory{A part of the given @path is not a directory}"
-	                        "#tUnsupportedAPI{The underlying filesystem does not support symbolic links}"
-	                        "#tFileAccessError{The current user does not have permissions to access the "
-	                        /*                  */ "directory containing the non-existent file @path for writing}"
-	                        "#tReadOnlyFile{The filesystem or device hosting the directory "
-	                        /*               */ "containing the non-existent object @path is "
-	                        /*               */ "in read-only operations mode, preventing the "
-	                        /*               */ "creation of new symbolic links}"
-	                        "#tSystemError{Failed to create a symbolic link under @path for some reason}"
-	                        "Symbolic links are filesystem redirection points which you can think of as "
-	                        /**/ "keyword-style macros that exist in directories. When addressed, simply imagine "
-	                        /**/ "their name being replaced with @text, at which point the resulting path "
-	                        /**/ "is then re-evaluated:\n"
-	                        "${"
-	                        /**/ "import symlink from fs;\n"
-	                        /**/ "import File from deemon;\n"
-	                        /**/ "symlink(\"../foo\", \"/path/to/link\");\n"
-	                        /**/ "/* \"/path/to/[link]/file.txt\" */\n"
-	                        /**/ "/* \"/path/to/[../foo]/file.txt\" */\n"
-	                        /**/ "/* \"/path/foo/file.txt\" */\n"
-	                        /**/ "File.open(\"/path/to/link/file.txt\");"
-	                        "}"))
-	D(POSIX_SYMLINKAT_DEF_DOC("#t{:Interrupt}"
-	                          "#tFileExists{A file or directory named @dfd:@path already exists}"
-	                          "#tFileNotFound{A parent directory of @dfd:@path does not exist}"
-	                          "#tNoDirectory{A part of the given @dfd:@path is not a directory}"
-	                          "#tUnsupportedAPI{The underlying filesystem does not support symbolic links}"
-	                          "#tFileAccessError{The current user does not have permissions to access the "
-	                          /*                  */ "directory containing the non-existent file @dfd:@path for writing}"
-	                          "#tReadOnlyFile{The filesystem or device hosting the directory "
-	                          /*               */ "containing the non-existent object @dfd:@path is "
-	                          /*               */ "in read-only operations mode, preventing the "
-	                          /*               */ "creation of new symbolic links}"
-	                          "#tSystemError{Failed to create a symbolic link under @dfd:@path for some reason}"
-	                          "#tFileClosed{The given @dfd was closed}"
-	                          "Symbolic links are filesystem redirection points which you can think of as "
-	                          /**/ "keyword-style macros that exist in directories. When addressed, simply imagine "
-	                          /**/ "their name being replaced with @text, at which point the resulting path "
-	                          /**/ "is then re-evaluated:\n"
-	                          "${"
-	                          /**/ "import symlink from fs;\n"
-	                          /**/ "import File from deemon;\n"
-	                          /**/ "symlink(\"../foo\", \"/path/to/link\");\n"
-	                          /**/ "/* \"/path/to/[link]/file.txt\" */\n"
-	                          /**/ "/* \"/path/to/[../foo]/file.txt\" */\n"
-	                          /**/ "/* \"/path/foo/file.txt\" */\n"
-	                          /**/ "File.open(\"/path/to/link/file.txt\");"
-	                          "}"))
-	D(POSIX_FSYMLINKAT_DEF_DOC("#t{:Interrupt}"
-	                           "#tFileExists{A file or directory named @dfd:@path already exists}"
-	                           "#tFileNotFound{A parent directory of @dfd:@path does not exist}"
-	                           "#tNoDirectory{A part of the given @dfd:@path is not a directory}"
-	                           "#tUnsupportedAPI{The underlying filesystem does not support symbolic links}"
-	                           "#tFileAccessError{The current user does not have permissions to access the "
-	                           /*                  */ "directory containing the non-existent file @dfd:@path for writing}"
-	                           "#tReadOnlyFile{The filesystem or device hosting the directory "
-	                           /*               */ "containing the non-existent object @dfd:@path is "
-	                           /*               */ "in read-only operations mode, preventing the "
-	                           /*               */ "creation of new symbolic links}"
-	                           "#tSystemError{Failed to create a symbolic link under @dfd:@path for some reason}"
-	                           "#tFileClosed{The given @dfd was closed}"
-	                           "Symbolic links are filesystem redirection points which you can think of as "
-	                           /**/ "keyword-style macros that exist in directories. When addressed, simply imagine "
-	                           /**/ "their name being replaced with @text, at which point the resulting path "
-	                           /**/ "is then re-evaluated:\n"
-	                           "${"
-	                           /**/ "import symlink from fs;\n"
-	                           /**/ "import File from deemon;\n"
-	                           /**/ "symlink(\"../foo\", \"/path/to/link\");\n"
-	                           /**/ "/* \"/path/to/[link]/file.txt\" */\n"
-	                           /**/ "/* \"/path/to/[../foo]/file.txt\" */\n"
-	                           /**/ "/* \"/path/foo/file.txt\" */\n"
-	                           /**/ "File.open(\"/path/to/link/file.txt\");"
-	                           "}"))
-	D(POSIX__SYMLINK_DEF_DOC("Same as ?Gsymlink, but don't perform any OS-specific transformations on @text"))
-	D(POSIX__SYMLINKAT_DEF_DOC("Same as ?Gsymlinkat, but don't perform any OS-specific transformations on @text"))
-	D(POSIX__FSYMLINKAT_DEF_DOC("Same as ?Gfsymlinkat, but don't perform any OS-specific transformations on @text"))
+/* symlink(2) */
+D(POSIX_SYMLINK_DEF_DOC("#t{:Interrupt}"
+                        "#tFileExists{A file or directory named @path already exists}"
+                        "#tFileNotFound{A parent directory of @path does not exist}"
+                        "#tNoDirectory{A part of the given @path is not a directory}"
+                        "#tUnsupportedAPI{The underlying filesystem does not support symbolic links}"
+                        "#tFileAccessError{The current user does not have permissions to access the "
+                        /*                  */ "directory containing the non-existent file @path for writing}"
+                        "#tReadOnlyFile{The filesystem or device hosting the directory "
+                        /*               */ "containing the non-existent object @path is "
+                        /*               */ "in read-only operations mode, preventing the "
+                        /*               */ "creation of new symbolic links}"
+                        "#tSystemError{Failed to create a symbolic link under @path for some reason}"
+                        "Symbolic links are filesystem redirection points which you can think of as "
+                        /**/ "keyword-style macros that exist in directories. When addressed, simply imagine "
+                        /**/ "their name being replaced with @text, at which point the resulting path "
+                        /**/ "is then re-evaluated:\n"
+                        "${"
+                        /**/ "import symlink from fs;\n"
+                        /**/ "import File from deemon;\n"
+                        /**/ "symlink(\"../foo\", \"/path/to/link\");\n"
+                        /**/ "/* \"/path/to/[link]/file.txt\" */\n"
+                        /**/ "/* \"/path/to/[../foo]/file.txt\" */\n"
+                        /**/ "/* \"/path/foo/file.txt\" */\n"
+                        /**/ "File.open(\"/path/to/link/file.txt\");"
+                        "}"))
+D(POSIX_SYMLINKAT_DEF_DOC("#t{:Interrupt}"
+                          "#tFileExists{A file or directory named @dfd:@path already exists}"
+                          "#tFileNotFound{A parent directory of @dfd:@path does not exist}"
+                          "#tNoDirectory{A part of the given @dfd:@path is not a directory}"
+                          "#tUnsupportedAPI{The underlying filesystem does not support symbolic links}"
+                          "#tFileAccessError{The current user does not have permissions to access the "
+                          /*                  */ "directory containing the non-existent file @dfd:@path for writing}"
+                          "#tReadOnlyFile{The filesystem or device hosting the directory "
+                          /*               */ "containing the non-existent object @dfd:@path is "
+                          /*               */ "in read-only operations mode, preventing the "
+                          /*               */ "creation of new symbolic links}"
+                          "#tSystemError{Failed to create a symbolic link under @dfd:@path for some reason}"
+                          "#tFileClosed{The given @dfd was closed}"
+                          "Symbolic links are filesystem redirection points which you can think of as "
+                          /**/ "keyword-style macros that exist in directories. When addressed, simply imagine "
+                          /**/ "their name being replaced with @text, at which point the resulting path "
+                          /**/ "is then re-evaluated:\n"
+                          "${"
+                          /**/ "import symlink from fs;\n"
+                          /**/ "import File from deemon;\n"
+                          /**/ "symlink(\"../foo\", \"/path/to/link\");\n"
+                          /**/ "/* \"/path/to/[link]/file.txt\" */\n"
+                          /**/ "/* \"/path/to/[../foo]/file.txt\" */\n"
+                          /**/ "/* \"/path/foo/file.txt\" */\n"
+                          /**/ "File.open(\"/path/to/link/file.txt\");"
+                          "}"))
+D(POSIX_FSYMLINKAT_DEF_DOC("#t{:Interrupt}"
+                           "#tFileExists{A file or directory named @dfd:@path already exists}"
+                           "#tFileNotFound{A parent directory of @dfd:@path does not exist}"
+                           "#tNoDirectory{A part of the given @dfd:@path is not a directory}"
+                           "#tUnsupportedAPI{The underlying filesystem does not support symbolic links}"
+                           "#tFileAccessError{The current user does not have permissions to access the "
+                           /*                  */ "directory containing the non-existent file @dfd:@path for writing}"
+                           "#tReadOnlyFile{The filesystem or device hosting the directory "
+                           /*               */ "containing the non-existent object @dfd:@path is "
+                           /*               */ "in read-only operations mode, preventing the "
+                           /*               */ "creation of new symbolic links}"
+                           "#tSystemError{Failed to create a symbolic link under @dfd:@path for some reason}"
+                           "#tFileClosed{The given @dfd was closed}"
+                           "Symbolic links are filesystem redirection points which you can think of as "
+                           /**/ "keyword-style macros that exist in directories. When addressed, simply imagine "
+                           /**/ "their name being replaced with @text, at which point the resulting path "
+                           /**/ "is then re-evaluated:\n"
+                           "${"
+                           /**/ "import symlink from fs;\n"
+                           /**/ "import File from deemon;\n"
+                           /**/ "symlink(\"../foo\", \"/path/to/link\");\n"
+                           /**/ "/* \"/path/to/[link]/file.txt\" */\n"
+                           /**/ "/* \"/path/to/[../foo]/file.txt\" */\n"
+                           /**/ "/* \"/path/foo/file.txt\" */\n"
+                           /**/ "File.open(\"/path/to/link/file.txt\");"
+                           "}"))
+D(POSIX__SYMLINK_DEF_DOC("Same as ?Gsymlink, but don't perform any OS-specific transformations on @text"))
+D(POSIX__SYMLINKAT_DEF_DOC("Same as ?Gsymlinkat, but don't perform any OS-specific transformations on @text"))
+D(POSIX__FSYMLINKAT_DEF_DOC("Same as ?Gfsymlinkat, but don't perform any OS-specific transformations on @text"))
 
-	/* unlink(2) */
-	D(POSIX_UNLINK_DEF_DOC("#t{:Interrupt}"
-	                       "#tFileNotFound{The given @file does not exist}"
-	                       "#tNoDirectory{A part of the given @file is not a directory}"
-	                       "#tIsDirectory{The given @file is a directory and ?Grmdir or ?Gremove must be used to delete it}"
-	                       "#tBusyFile{The given @file is currently being used and cannot be deleted}"
-	                       "#tFileAccessError{The current user does not have permissions to remove the file described by @file}"
-	                       "#tReadOnlyFile{The filesystem or device hosting the directory of @file is in read-only "
-	                       /*               */ "operations mode, preventing the deletion of existing files}"
-	                       "#tSystemError{Failed to unlink the given file @file for some reason}"
-	                       "Remove a non-directory filesystem object named @file"))
-	D(POSIX_UNLINKAT_DEF_DOC("#t{:Interrupt}"
-	                         "#tFileNotFound{The given @dfd:@file does not exist}"
-	                         "#tNoDirectory{A part of the given @dfd:@file is not a directory}"
-	                         "#tIsDirectory{The given @dfd:@file is a directory and ?Grmdir or ?Gremove must be used to delete it}"
-	                         "#tBusyFile{The given @dfd:@file is currently being used and cannot be deleted}"
-	                         "#tFileAccessError{The current user does not have permissions to remove the file described by @dfd:@file}"
-	                         "#tReadOnlyFile{The filesystem or device hosting the directory of @dfd:@file is in read-only "
-	                         /*               */ "operations mode, preventing the deletion of existing files}"
-	                         "#tFileClosed{The given @fd was closed}"
-	                         "#tSystemError{Failed to unlink the given file @dfd:@file for some reason}"
-	                         "#patflags{Set of ?GAT_REMOVEDIR, ?GAT_REMOVEREG}"
-	                         "Remove a filesystem object named @dfd:@file"))
+/* unlink(2) */
+D(POSIX_UNLINK_DEF_DOC("#t{:Interrupt}"
+                       "#tFileNotFound{The given @file does not exist}"
+                       "#tNoDirectory{A part of the given @file is not a directory}"
+                       "#tIsDirectory{The given @file is a directory and ?Grmdir or ?Gremove must be used to delete it}"
+                       "#tBusyFile{The given @file is currently being used and cannot be deleted}"
+                       "#tFileAccessError{The current user does not have permissions to remove the file described by @file}"
+                       "#tReadOnlyFile{The filesystem or device hosting the directory of @file is in read-only "
+                       /*               */ "operations mode, preventing the deletion of existing files}"
+                       "#tSystemError{Failed to unlink the given file @file for some reason}"
+                       "Remove a non-directory filesystem object named @file"))
+D(POSIX_UNLINKAT_DEF_DOC("#t{:Interrupt}"
+                         "#tFileNotFound{The given @dfd:@file does not exist}"
+                         "#tNoDirectory{A part of the given @dfd:@file is not a directory}"
+                         "#tIsDirectory{The given @dfd:@file is a directory and ?Grmdir or ?Gremove must be used to delete it}"
+                         "#tBusyFile{The given @dfd:@file is currently being used and cannot be deleted}"
+                         "#tFileAccessError{The current user does not have permissions to remove the file described by @dfd:@file}"
+                         "#tReadOnlyFile{The filesystem or device hosting the directory of @dfd:@file is in read-only "
+                         /*               */ "operations mode, preventing the deletion of existing files}"
+                         "#tFileClosed{The given @fd was closed}"
+                         "#tSystemError{Failed to unlink the given file @dfd:@file for some reason}"
+                         "#patflags{Set of ?GAT_REMOVEDIR, ?GAT_REMOVEREG}"
+                         "Remove a filesystem object named @dfd:@file"))
 
-	/* rmdir(2) */
-	D(POSIX_RMDIR_DEF_DOC("#t{:Interrupt}"
-	                      "#tFileNotFound{The given @path does not exist}"
-	                      "#tNoDirectory{A part of the given @path is not a directory}"
-	                      "#tNoDirectory{The given @path isn't a directory and either ?Gunlink or ?Gremove must be used to "
-	                      /*              */ "delete it, or it is a mounting point if such functionality is supported by the host}"
-	                      "#tNotEmpty{The given directory @path isn't empty empty}"
-	                      "#tBusyFile{The given @path is currently being used and cannot be deleted}"
-	                      "#tFileAccessError{The current user does not have permissions to remove the directory described by @path}"
-	                      "#tReadOnlyFile{The filesystem or device hosting the directory of @path is in read-only "
-	                      /*               */ "operations mode, preventing the deletion of existing directories}"
-	                      "#tSystemError{Failed to delete the directory @path for some reason}"
-	                      "Remove a directory named @path"))
-	D(POSIX_RMDIRAT_DEF_DOC("#t{:Interrupt}"
-	                        "#tFileNotFound{The given @dfd:@path does not exist}"
-	                        "#tNoDirectory{A part of the given @dfd:@path is not a directory}"
-	                        "#tNoDirectory{The given @dfd:@path isn't a directory and either ?Gunlink or ?Gremove must be used to "
-	                        /*              */ "delete it, or it is a mounting point if such functionality is supported by the host}"
-	                        "#tNotEmpty{The given directory @dfd:@path isn't empty empty}"
-	                        "#tBusyFile{The given @dfd:@path is currently being used and cannot be deleted}"
-	                        "#tFileAccessError{The current user does not have permissions to remove the directory described by @dfd:@path}"
-	                        "#tReadOnlyFile{The filesystem or device hosting the directory of @dfd:@path is in read-only "
-	                        /*               */ "operations mode, preventing the deletion of existing directories}"
-	                        "#tFileClosed{The given @dfd was closed}"
-	                        "#tSystemError{Failed to delete the directory @dfd:@path for some reason}"
-	                        "Remove a directory named @dfd:@path"))
+/* rmdir(2) */
+D(POSIX_RMDIR_DEF_DOC("#t{:Interrupt}"
+                      "#tFileNotFound{The given @path does not exist}"
+                      "#tNoDirectory{A part of the given @path is not a directory}"
+                      "#tNoDirectory{The given @path isn't a directory and either ?Gunlink or ?Gremove must be used to "
+                      /*              */ "delete it, or it is a mounting point if such functionality is supported by the host}"
+                      "#tNotEmpty{The given directory @path isn't empty empty}"
+                      "#tBusyFile{The given @path is currently being used and cannot be deleted}"
+                      "#tFileAccessError{The current user does not have permissions to remove the directory described by @path}"
+                      "#tReadOnlyFile{The filesystem or device hosting the directory of @path is in read-only "
+                      /*               */ "operations mode, preventing the deletion of existing directories}"
+                      "#tSystemError{Failed to delete the directory @path for some reason}"
+                      "Remove a directory named @path"))
+D(POSIX_RMDIRAT_DEF_DOC("#t{:Interrupt}"
+                        "#tFileNotFound{The given @dfd:@path does not exist}"
+                        "#tNoDirectory{A part of the given @dfd:@path is not a directory}"
+                        "#tNoDirectory{The given @dfd:@path isn't a directory and either ?Gunlink or ?Gremove must be used to "
+                        /*              */ "delete it, or it is a mounting point if such functionality is supported by the host}"
+                        "#tNotEmpty{The given directory @dfd:@path isn't empty empty}"
+                        "#tBusyFile{The given @dfd:@path is currently being used and cannot be deleted}"
+                        "#tFileAccessError{The current user does not have permissions to remove the directory described by @dfd:@path}"
+                        "#tReadOnlyFile{The filesystem or device hosting the directory of @dfd:@path is in read-only "
+                        /*               */ "operations mode, preventing the deletion of existing directories}"
+                        "#tFileClosed{The given @dfd was closed}"
+                        "#tSystemError{Failed to delete the directory @dfd:@path for some reason}"
+                        "Remove a directory named @dfd:@path"))
 
-	/* remove(3) */
-	D(POSIX_REMOVE_DEF_DOC("#t{:Interrupt}"
-	                       "#tFileNotFound{The given @path does not exist}"
-	                       "#tNoDirectory{A part of the given @path is not a directory}"
-	                       "#tNotEmpty{The given @path is a directory that isn't empty empty}"
-	                       "#tBusyFile{The given @path is currently being used and cannot be deleted}"
-	                       "#tFileAccessError{The current user does not have permissions to remove the file or directory described by @path}"
-	                       "#tReadOnlyFile{The filesystem or device hosting the directory of @path is in read-only "
-	                       /*               */ "operations mode, preventing the deletion of existing files or directories}"
-	                       "#tSystemError{Failed to remove the given file @path for some reason}"
-	                       "Remove a file or an empty directory name @path"))
-	D(POSIX_REMOVEAT_DEF_DOC("#t{:Interrupt}"
-	                         "#tFileNotFound{The given @dfd:@path does not exist}"
-	                         "#tNoDirectory{A part of the given @dfd:@path is not a directory}"
-	                         "#tNotEmpty{The given @dfd:@path is a directory that isn't empty empty}"
-	                         "#tBusyFile{The given @dfd:@path is currently being used and cannot be deleted}"
-	                         "#tFileAccessError{The current user does not have permissions to remove the file or directory described by @dfd:@path}"
-	                         "#tReadOnlyFile{The filesystem or device hosting the directory of @dfd:@path is in read-only "
-	                         /*               */ "operations mode, preventing the deletion of existing files or directories}"
-	                         "#tFileClosed{The given @fd was closed}"
-	                         "#tSystemError{Failed to remove the given file @dfd:@path for some reason}"
-	                         "Remove a file or an empty directory name @dfd:@path"))
+/* remove(3) */
+D(POSIX_REMOVE_DEF_DOC("#t{:Interrupt}"
+                       "#tFileNotFound{The given @path does not exist}"
+                       "#tNoDirectory{A part of the given @path is not a directory}"
+                       "#tNotEmpty{The given @path is a directory that isn't empty empty}"
+                       "#tBusyFile{The given @path is currently being used and cannot be deleted}"
+                       "#tFileAccessError{The current user does not have permissions to remove the file or directory described by @path}"
+                       "#tReadOnlyFile{The filesystem or device hosting the directory of @path is in read-only "
+                       /*               */ "operations mode, preventing the deletion of existing files or directories}"
+                       "#tSystemError{Failed to remove the given file @path for some reason}"
+                       "Remove a file or an empty directory name @path"))
+D(POSIX_REMOVEAT_DEF_DOC("#t{:Interrupt}"
+                         "#tFileNotFound{The given @dfd:@path does not exist}"
+                         "#tNoDirectory{A part of the given @dfd:@path is not a directory}"
+                         "#tNotEmpty{The given @dfd:@path is a directory that isn't empty empty}"
+                         "#tBusyFile{The given @dfd:@path is currently being used and cannot be deleted}"
+                         "#tFileAccessError{The current user does not have permissions to remove the file or directory described by @dfd:@path}"
+                         "#tReadOnlyFile{The filesystem or device hosting the directory of @dfd:@path is in read-only "
+                         /*               */ "operations mode, preventing the deletion of existing files or directories}"
+                         "#tFileClosed{The given @fd was closed}"
+                         "#tSystemError{Failed to remove the given file @dfd:@path for some reason}"
+                         "Remove a file or an empty directory name @dfd:@path"))
 
-	/* readlink(2) */
-	D(POSIX_READLINK_DEF_DOC("#t{:Interrupt}"
-	                         "#tFileNotFound{The given @file does not exist}"
-	                         "#tNoDirectory{A part of the given @file is not a directory}"
-	                         "#tNoLink{The given @file does not refer to a symbolic link}"
-	                         "#tValueError{The file described by @file is not a symlink}"
-	                         "#tUnsupportedAPI{The underlying filesystem does not support reading of symbolic links}"
-	                         "#tFileAccessError{The current user does not have permissions to access @file or one of the containing directories for reading}"
-	                         "#tSystemError{Failed to read the symbolic link under @file for some reason}"
-	                         "Read and return the targetText used to create a symbolic link (see ?Gsymlink)"))
-	D(POSIX_FREADLINK_DEF_DOC("#t{:Interrupt}"
-	                          "#tNoLink{The given @fd does not refer to a symbolic link}"
-	                          "#tValueError{The file described by @fd is not a symlink}"
-	                          "#tUnsupportedAPI{The underlying filesystem does not support reading of symbolic links}"
-	                          "#tFileAccessError{The current user does not have permissions to access @fd or one of the containing directories for reading}"
-	                          "#tSystemError{Failed to read the symbolic link under @fd for some reason}"
-	                          "#tFileClosed{The given @fd was closed}"
-	                          "Read and return the targetText used to create a symbolic link (see ?Gsymlink)"))
-	D(POSIX_READLINKAT_DEF_DOC("#t{:Interrupt}"
-	                           "#tFileNotFound{The given @dfd:@file does not exist}"
-	                           "#tNoDirectory{A part of the given @dfd:@file is not a directory}"
-	                           "#tNoLink{The given @dfd:@file does not refer to a symbolic link}"
-	                           "#tValueError{The file described by @dfd:@file is not a symlink}"
-	                           "#tUnsupportedAPI{The underlying filesystem does not support reading of symbolic links}"
-	                           "#tFileAccessError{The current user does not have permissions to access @dfd:@file or one of the containing directories for reading}"
-	                           "#tFileClosed{The given @dfd was closed}"
-	                           "#tSystemError{Failed to read the symbolic link under @dfd:@file for some reason}"
-	                           "Read and return the targetText used to create a symbolic link (see ?Gsymlink)"))
+/* readlink(2) */
+D(POSIX_READLINK_DEF_DOC("#t{:Interrupt}"
+                         "#tFileNotFound{The given @file does not exist}"
+                         "#tNoDirectory{A part of the given @file is not a directory}"
+                         "#tNoLink{The given @file does not refer to a symbolic link}"
+                         "#tValueError{The file described by @file is not a symlink}"
+                         "#tUnsupportedAPI{The underlying filesystem does not support reading of symbolic links}"
+                         "#tFileAccessError{The current user does not have permissions to access @file or one of the containing directories for reading}"
+                         "#tSystemError{Failed to read the symbolic link under @file for some reason}"
+                         "Read and return the targetText used to create a symbolic link (see ?Gsymlink)"))
+D(POSIX_FREADLINK_DEF_DOC("#t{:Interrupt}"
+                          "#tNoLink{The given @fd does not refer to a symbolic link}"
+                          "#tValueError{The file described by @fd is not a symlink}"
+                          "#tUnsupportedAPI{The underlying filesystem does not support reading of symbolic links}"
+                          "#tFileAccessError{The current user does not have permissions to access @fd or one of the containing directories for reading}"
+                          "#tSystemError{Failed to read the symbolic link under @fd for some reason}"
+                          "#tFileClosed{The given @fd was closed}"
+                          "Read and return the targetText used to create a symbolic link (see ?Gsymlink)"))
+D(POSIX_READLINKAT_DEF_DOC("#t{:Interrupt}"
+                           "#tFileNotFound{The given @dfd:@file does not exist}"
+                           "#tNoDirectory{A part of the given @dfd:@file is not a directory}"
+                           "#tNoLink{The given @dfd:@file does not refer to a symbolic link}"
+                           "#tValueError{The file described by @dfd:@file is not a symlink}"
+                           "#tUnsupportedAPI{The underlying filesystem does not support reading of symbolic links}"
+                           "#tFileAccessError{The current user does not have permissions to access @dfd:@file or one of the containing directories for reading}"
+                           "#tFileClosed{The given @dfd was closed}"
+                           "#tSystemError{Failed to read the symbolic link under @dfd:@file for some reason}"
+                           "Read and return the targetText used to create a symbolic link (see ?Gsymlink)"))
 
-	/* rename(2) */
-	D(POSIX_RENAME_DEF_DOC("#t{:Interrupt}"
-	                       "#tFileNotFound{The given @oldpath could not be found, or a parent directory of @newpath does not exist}"
-	                       "#tNotEmpty{The given @newpath is a non-empty directory}"
-	                       "#tIsDirectory{The given @newpath is an existing directory, but @oldpath isn't "
-	                       /*              */ "one (directories can only be replaced by other directories)}"
-	                       "#tNoDirectory{A part of the given @oldpath or @newpath is not a directory, "
-	                       /*              */ "or @oldpath is a directory, but @newpath isn't}"
-	                       "#tCrossDevice{The given @oldpath and @newpath are not located on the same device}"
-	                       "#tValueError{Attempted to move a directory into itself}"
-	                       "#tFileAccessError{The current user does not have permissions to access the file "
-	                       /*                  */ "or directory @oldpath, or the directory containing @newpath}"
-	                       "#tReadOnlyFile{The filesystem or device hosting the given file or directory @oldpath or the "
-	                       /*               */ "directory containing the non-existent file @newpath is in read-only operations "
-	                       /*               */ "mode, preventing the modification of existing files or directories}"
-	                       "#tSystemError{Failed to rename the given @oldpath for some reason}"
-	                       "Renames or moves a given @oldpath to be referred to as @newpath from then on\n"
-	                       "When @newpath already exists, it is replaced by @oldpath"))
-	D(POSIX_FRENAME_DEF_DOC("#t{:Interrupt}"
-	                        "#tFileNotFound{A parent directory of @newpath does not exist}"
-	                        "#tNotEmpty{The given @newpath is a non-empty directory}"
-	                        "#tIsDirectory{The given @newpath is an existing directory, but @oldfd isn't "
-	                        /*              */ "one (directories can only be replaced by other directories)}"
-	                        "#tNoDirectory{A part of @newpath is not a directory, "
-	                        /*              */ "or @oldfd is a directory, but @newpath isn't}"
-	                        "#tCrossDevice{The given @oldfd and @newpath are not located on the same device}"
-	                        "#tValueError{Attempted to move a directory into itself}"
-	                        "#tFileAccessError{The current user does not have permissions to access the file "
-	                        /*                  */ "or directory @oldfd, or the directory containing @newpath}"
-	                        "#tReadOnlyFile{The filesystem or device hosting the given file or directory @oldfd or the "
-	                        /*               */ "directory containing the non-existent file @newpath is in read-only operations "
-	                        /*               */ "mode, preventing the modification of existing files or directories}"
-	                        "#tFileClosed{The given @oldfd has already been closed}"
-	                        "#tSystemError{Failed to rename the given @oldfd for some reason}"
-	                        "Renames or moves a given @oldfd to be referred to as @newpath from then on\n"
-	                        "When @newpath already exists, it is replaced by @oldfd"))
-	D(POSIX_RENAMEAT_DEF_DOC("#t{:Interrupt}"
-	                         "#tFileNotFound{The given @olddirfd:@oldpath could not be found, or a parent directory of @newdirfd:@newpath does not exist}"
-	                         "#tNotEmpty{The given @newdirfd:@newpath is a non-empty directory}"
-	                         "#tIsDirectory{The given @newdirfd:@newpath is an existing directory, but @olddirfd:@oldpath isn't "
-	                         /*              */ "one (directories can only be replaced by other directories)}"
-	                         "#tNoDirectory{A part of the given @olddirfd:@oldpath or @newdirfd:@newpath is not a directory, "
-	                         /*              */ "or @olddirfd:@oldpath is a directory, but @newdirfd:@newpath isn't}"
-	                         "#tCrossDevice{The given @olddirfd:@oldpath and @newdirfd:@newpath are not located on the same device}"
-	                         "#tValueError{Attempted to move a directory into itself}"
-	                         "#tFileAccessError{The current user does not have permissions to access the file "
-	                         /*                  */ "or directory @olddirfd:@oldpath, or the directory containing @newdirfd:@newpath}"
-	                         "#tReadOnlyFile{The filesystem or device hosting the given file or directory @olddirfd:@oldpath or the "
-	                         /*               */ "directory containing the non-existent file @newdirfd:@newpath is in read-only operations "
-	                         /*               */ "mode, preventing the modification of existing files or directories}"
-	                         "#tFileClosed{The given @olddirfd or @newdirfd has already been closed}"
-	                         "#tValueError{Invalid @atflags}"
-	                         "#tSystemError{Failed to rename the given @olddirfd:@oldpath for some reason}"
-	                         "Renames or moves a given @olddirfd:@oldpath to be referred to as @newdirfd:@newpath from then on\n"
-	                         "When @newpath already exists, it is replaced by @olddirfd:@oldpath"))
-	D(POSIX_RENAMEAT2_DEF_DOC("#t{:Interrupt}"
-	                          "#tFileNotFound{The given @olddirfd:@oldpath could not be found, or a parent directory of @newdirfd:@newpath does not exist}"
-	                          "#tNotEmpty{The given @newdirfd:@newpath is a non-empty directory}"
-	                          "#tIsDirectory{The given @newdirfd:@newpath is an existing directory, but @olddirfd:@oldpath isn't "
-	                          /*              */ "one (directories can only be replaced by other directories)}"
-	                          "#tNoDirectory{A part of the given @olddirfd:@oldpath or @newdirfd:@newpath is not a directory, "
-	                          /*              */ "or @olddirfd:@oldpath is a directory, but @newdirfd:@newpath isn't}"
-	                          "#tCrossDevice{The given @olddirfd:@oldpath and @newdirfd:@newpath are not located on the same device}"
-	                          "#tValueError{Attempted to move a directory into itself}"
-	                          "#tFileAccessError{The current user does not have permissions to access the file "
-	                          /*                  */ "or directory @olddirfd:@oldpath, or the directory containing @newdirfd:@newpath}"
-	                          "#tReadOnlyFile{The filesystem or device hosting the given file or directory @olddirfd:@oldpath or the "
-	                          /*               */ "directory containing the non-existent file @newdirfd:@newpath is in read-only operations "
-	                          /*               */ "mode, preventing the modification of existing files or directories}"
-	                          "#tFileExists{@flags include ?GRENAME_NOREPLACE, but @newdirfd:@newpath already exists}"
-	                          "#tFileClosed{The given @olddirfd or @newdirfd has already been closed}"
-	                          "#tValueError{Invalid @flags or @atflags}"
-	                          "#tSystemError{Failed to rename the given @olddirfd:@oldpath for some reason}"
-	                          "Renames or moves a given @olddirfd:@oldpath to be referred to as @newdirfd:@newpath from then on\n"
-	                          "When @newpath already exists, it is replaced by @olddirfd:@oldpath"))
+/* rename(2) */
+D(POSIX_RENAME_DEF_DOC("#t{:Interrupt}"
+                       "#tFileNotFound{The given @oldpath could not be found, or a parent directory of @newpath does not exist}"
+                       "#tNotEmpty{The given @newpath is a non-empty directory}"
+                       "#tIsDirectory{The given @newpath is an existing directory, but @oldpath isn't "
+                       /*              */ "one (directories can only be replaced by other directories)}"
+                       "#tNoDirectory{A part of the given @oldpath or @newpath is not a directory, "
+                       /*              */ "or @oldpath is a directory, but @newpath isn't}"
+                       "#tCrossDevice{The given @oldpath and @newpath are not located on the same device}"
+                       "#tValueError{Attempted to move a directory into itself}"
+                       "#tFileAccessError{The current user does not have permissions to access the file "
+                       /*                  */ "or directory @oldpath, or the directory containing @newpath}"
+                       "#tReadOnlyFile{The filesystem or device hosting the given file or directory @oldpath or the "
+                       /*               */ "directory containing the non-existent file @newpath is in read-only operations "
+                       /*               */ "mode, preventing the modification of existing files or directories}"
+                       "#tSystemError{Failed to rename the given @oldpath for some reason}"
+                       "Renames or moves a given @oldpath to be referred to as @newpath from then on\n"
+                       "When @newpath already exists, it is replaced by @oldpath"))
+D(POSIX_FRENAME_DEF_DOC("#t{:Interrupt}"
+                        "#tFileNotFound{A parent directory of @newpath does not exist}"
+                        "#tNotEmpty{The given @newpath is a non-empty directory}"
+                        "#tIsDirectory{The given @newpath is an existing directory, but @oldfd isn't "
+                        /*              */ "one (directories can only be replaced by other directories)}"
+                        "#tNoDirectory{A part of @newpath is not a directory, "
+                        /*              */ "or @oldfd is a directory, but @newpath isn't}"
+                        "#tCrossDevice{The given @oldfd and @newpath are not located on the same device}"
+                        "#tValueError{Attempted to move a directory into itself}"
+                        "#tFileAccessError{The current user does not have permissions to access the file "
+                        /*                  */ "or directory @oldfd, or the directory containing @newpath}"
+                        "#tReadOnlyFile{The filesystem or device hosting the given file or directory @oldfd or the "
+                        /*               */ "directory containing the non-existent file @newpath is in read-only operations "
+                        /*               */ "mode, preventing the modification of existing files or directories}"
+                        "#tFileClosed{The given @oldfd has already been closed}"
+                        "#tSystemError{Failed to rename the given @oldfd for some reason}"
+                        "Renames or moves a given @oldfd to be referred to as @newpath from then on\n"
+                        "When @newpath already exists, it is replaced by @oldfd"))
+D(POSIX_RENAMEAT_DEF_DOC("#t{:Interrupt}"
+                         "#tFileNotFound{The given @olddirfd:@oldpath could not be found, or a parent directory of @newdirfd:@newpath does not exist}"
+                         "#tNotEmpty{The given @newdirfd:@newpath is a non-empty directory}"
+                         "#tIsDirectory{The given @newdirfd:@newpath is an existing directory, but @olddirfd:@oldpath isn't "
+                         /*              */ "one (directories can only be replaced by other directories)}"
+                         "#tNoDirectory{A part of the given @olddirfd:@oldpath or @newdirfd:@newpath is not a directory, "
+                         /*              */ "or @olddirfd:@oldpath is a directory, but @newdirfd:@newpath isn't}"
+                         "#tCrossDevice{The given @olddirfd:@oldpath and @newdirfd:@newpath are not located on the same device}"
+                         "#tValueError{Attempted to move a directory into itself}"
+                         "#tFileAccessError{The current user does not have permissions to access the file "
+                         /*                  */ "or directory @olddirfd:@oldpath, or the directory containing @newdirfd:@newpath}"
+                         "#tReadOnlyFile{The filesystem or device hosting the given file or directory @olddirfd:@oldpath or the "
+                         /*               */ "directory containing the non-existent file @newdirfd:@newpath is in read-only operations "
+                         /*               */ "mode, preventing the modification of existing files or directories}"
+                         "#tFileClosed{The given @olddirfd or @newdirfd has already been closed}"
+                         "#tValueError{Invalid @atflags}"
+                         "#tSystemError{Failed to rename the given @olddirfd:@oldpath for some reason}"
+                         "Renames or moves a given @olddirfd:@oldpath to be referred to as @newdirfd:@newpath from then on\n"
+                         "When @newpath already exists, it is replaced by @olddirfd:@oldpath"))
+D(POSIX_RENAMEAT2_DEF_DOC("#t{:Interrupt}"
+                          "#tFileNotFound{The given @olddirfd:@oldpath could not be found, or a parent directory of @newdirfd:@newpath does not exist}"
+                          "#tNotEmpty{The given @newdirfd:@newpath is a non-empty directory}"
+                          "#tIsDirectory{The given @newdirfd:@newpath is an existing directory, but @olddirfd:@oldpath isn't "
+                          /*              */ "one (directories can only be replaced by other directories)}"
+                          "#tNoDirectory{A part of the given @olddirfd:@oldpath or @newdirfd:@newpath is not a directory, "
+                          /*              */ "or @olddirfd:@oldpath is a directory, but @newdirfd:@newpath isn't}"
+                          "#tCrossDevice{The given @olddirfd:@oldpath and @newdirfd:@newpath are not located on the same device}"
+                          "#tValueError{Attempted to move a directory into itself}"
+                          "#tFileAccessError{The current user does not have permissions to access the file "
+                          /*                  */ "or directory @olddirfd:@oldpath, or the directory containing @newdirfd:@newpath}"
+                          "#tReadOnlyFile{The filesystem or device hosting the given file or directory @olddirfd:@oldpath or the "
+                          /*               */ "directory containing the non-existent file @newdirfd:@newpath is in read-only operations "
+                          /*               */ "mode, preventing the modification of existing files or directories}"
+                          "#tFileExists{@flags include ?GRENAME_NOREPLACE, but @newdirfd:@newpath already exists}"
+                          "#tFileClosed{The given @olddirfd or @newdirfd has already been closed}"
+                          "#tValueError{Invalid @flags or @atflags}"
+                          "#tSystemError{Failed to rename the given @olddirfd:@oldpath for some reason}"
+                          "Renames or moves a given @olddirfd:@oldpath to be referred to as @newdirfd:@newpath from then on\n"
+                          "When @newpath already exists, it is replaced by @olddirfd:@oldpath"))
 
-	/* link(2) */
-	D(POSIX_LINK_DEF_DOC("#t{:Interrupt}"
-	                     "#tFileNotFound{The given @oldpath could not be found, or a parent directory of @newpath does not exist}"
-	                     "#tFileExists{The given @newpath already exists}"
-	                     "#tNoDirectory{A part of the given @oldpath or @newpath is not a directory}"
-	                     "#tUnsupportedAPI{The underlying filesystem hosting @oldpath and @newpathdoes not support hard links}"
-	                     "#tCrossDevice{The given @oldpath and @newpath are not apart of the same drive}"
-	                     "#tFileAccessError{The current user does not have permissions to access the file or directory "
-	                     /*                  */ "@oldpath for reading, or the directory containing the non-existent "
-	                     /*                  */ "object @newpath for writing}"
-	                     "#tReadOnlyFile{The filesystem or device hosting the directory containing the non-existent "
-	                     /*               */ "object @newpath is in read-only operations mode, preventing the addition "
-	                     /*               */ "of file or directory links}"
-	                     "#tSystemError{Failed to create the link to @oldpath for some reason}"
-	                     "Create a new hard link pointing to @oldpath as a file named @newpath\n"
-	                     "Hard links are similar to symbolic links, yet cannot be used across multiple devices and are "
-	                     /**/ "unaffected by mount locations. A hard link simply create a new directory entry under "
-	                     /**/ "@newpath that points to the data block of an existing file @oldpath"))
-	D(POSIX_FLINK_DEF_DOC("#t{:Interrupt}"
-	                      "#tFileNotFound{A parent directory of @newpath does not exist}"
-	                      "#tFileExists{The given @newpath already exists}"
-	                      "#tNoDirectory{A part of the given @newpath is not a directory}"
-	                      "#tUnsupportedAPI{The underlying filesystem hosting @oldfd and @newpathdoes not support hard links}"
-	                      "#tCrossDevice{The given @oldfd and @newpath are not apart of the same drive}"
-	                      "#tFileAccessError{The current user does not have permissions to access the file or directory "
-	                      /*                  */ "@oldfd for reading, or the directory containing the non-existent "
-	                      /*                  */ "object @newpath for writing}"
-	                      "#tReadOnlyFile{The filesystem or device hosting the directory containing the non-existent "
-	                      /*               */ "object @newpath is in read-only operations mode, preventing the addition "
-	                      /*               */ "of file or directory links}"
-	                      "#tSystemError{Failed to create the link to @oldfd for some reason}"
-	                      "Create a new hard link pointing to @oldfd as a file named @newpath\n"
-	                      "Hard links are similar to symbolic links, yet cannot be used across multiple devices and are "
-	                      /**/ "unaffected by mount locations. A hard link simply create a new directory entry under "
-	                      /**/ "@newpath that points to the data block of an existing file @oldfd"))
-	D(POSIX_LINKAT_DEF_DOC("#t{:Interrupt}"
-	                       "#tFileNotFound{The given @olddirfd:@oldpath could not be found, or a parent directory of @newdirfd:@newpath does not exist}"
-	                       "#tFileExists{The given @newdirfd:@newpath already exists}"
-	                       "#tNoDirectory{A part of the given @olddirfd:@oldpath or @newdirfd:@newpath is not a directory}"
-	                       "#tUnsupportedAPI{The underlying filesystem hosting @olddirfd:@oldpath and @newdirfd:@newpathdoes not support hard links}"
-	                       "#tCrossDevice{The given @olddirfd:@oldpath and @newdirfd:@newpath are not apart of the same drive}"
-	                       "#tFileAccessError{The current user does not have permissions to access the file or directory "
-	                       /*                  */ "@olddirfd:@oldpath for reading, or the directory containing the non-existent "
-	                       /*                  */ "object @newdirfd:@newpath for writing}"
-	                       "#tReadOnlyFile{The filesystem or device hosting the directory containing the non-existent "
-	                       /*               */ "object @newdirfd:@newpath is in read-only operations mode, preventing the addition "
-	                       /*               */ "of file or directory links}"
-	                       "#tSystemError{Failed to create the link to @olddirfd:@oldpath for some reason}"
-	                       "Create a new hard link pointing to @olddirfd:@oldpath as a file named @newdirfd:@newpath\n"
-	                       "Hard links are similar to symbolic links, yet cannot be used across multiple devices and are "
-	                       /**/ "unaffected by mount locations. A hard link simply create a new directory entry under "
-	                       /**/ "@newdirfd:@newpath that points to the data block of an existing file @olddirfd:@oldpath"))
+/* link(2) */
+D(POSIX_LINK_DEF_DOC("#t{:Interrupt}"
+                     "#tFileNotFound{The given @oldpath could not be found, or a parent directory of @newpath does not exist}"
+                     "#tFileExists{The given @newpath already exists}"
+                     "#tNoDirectory{A part of the given @oldpath or @newpath is not a directory}"
+                     "#tUnsupportedAPI{The underlying filesystem hosting @oldpath and @newpathdoes not support hard links}"
+                     "#tCrossDevice{The given @oldpath and @newpath are not apart of the same drive}"
+                     "#tFileAccessError{The current user does not have permissions to access the file or directory "
+                     /*                  */ "@oldpath for reading, or the directory containing the non-existent "
+                     /*                  */ "object @newpath for writing}"
+                     "#tReadOnlyFile{The filesystem or device hosting the directory containing the non-existent "
+                     /*               */ "object @newpath is in read-only operations mode, preventing the addition "
+                     /*               */ "of file or directory links}"
+                     "#tSystemError{Failed to create the link to @oldpath for some reason}"
+                     "Create a new hard link pointing to @oldpath as a file named @newpath\n"
+                     "Hard links are similar to symbolic links, yet cannot be used across multiple devices and are "
+                     /**/ "unaffected by mount locations. A hard link simply create a new directory entry under "
+                     /**/ "@newpath that points to the data block of an existing file @oldpath"))
+D(POSIX_FLINK_DEF_DOC("#t{:Interrupt}"
+                      "#tFileNotFound{A parent directory of @newpath does not exist}"
+                      "#tFileExists{The given @newpath already exists}"
+                      "#tNoDirectory{A part of the given @newpath is not a directory}"
+                      "#tUnsupportedAPI{The underlying filesystem hosting @oldfd and @newpathdoes not support hard links}"
+                      "#tCrossDevice{The given @oldfd and @newpath are not apart of the same drive}"
+                      "#tFileAccessError{The current user does not have permissions to access the file or directory "
+                      /*                  */ "@oldfd for reading, or the directory containing the non-existent "
+                      /*                  */ "object @newpath for writing}"
+                      "#tReadOnlyFile{The filesystem or device hosting the directory containing the non-existent "
+                      /*               */ "object @newpath is in read-only operations mode, preventing the addition "
+                      /*               */ "of file or directory links}"
+                      "#tSystemError{Failed to create the link to @oldfd for some reason}"
+                      "Create a new hard link pointing to @oldfd as a file named @newpath\n"
+                      "Hard links are similar to symbolic links, yet cannot be used across multiple devices and are "
+                      /**/ "unaffected by mount locations. A hard link simply create a new directory entry under "
+                      /**/ "@newpath that points to the data block of an existing file @oldfd"))
+D(POSIX_LINKAT_DEF_DOC("#t{:Interrupt}"
+                       "#tFileNotFound{The given @olddirfd:@oldpath could not be found, or a parent directory of @newdirfd:@newpath does not exist}"
+                       "#tFileExists{The given @newdirfd:@newpath already exists}"
+                       "#tNoDirectory{A part of the given @olddirfd:@oldpath or @newdirfd:@newpath is not a directory}"
+                       "#tUnsupportedAPI{The underlying filesystem hosting @olddirfd:@oldpath and @newdirfd:@newpathdoes not support hard links}"
+                       "#tCrossDevice{The given @olddirfd:@oldpath and @newdirfd:@newpath are not apart of the same drive}"
+                       "#tFileAccessError{The current user does not have permissions to access the file or directory "
+                       /*                  */ "@olddirfd:@oldpath for reading, or the directory containing the non-existent "
+                       /*                  */ "object @newdirfd:@newpath for writing}"
+                       "#tReadOnlyFile{The filesystem or device hosting the directory containing the non-existent "
+                       /*               */ "object @newdirfd:@newpath is in read-only operations mode, preventing the addition "
+                       /*               */ "of file or directory links}"
+                       "#tSystemError{Failed to create the link to @olddirfd:@oldpath for some reason}"
+                       "Create a new hard link pointing to @olddirfd:@oldpath as a file named @newdirfd:@newpath\n"
+                       "Hard links are similar to symbolic links, yet cannot be used across multiple devices and are "
+                       /**/ "unaffected by mount locations. A hard link simply create a new directory entry under "
+                       /**/ "@newdirfd:@newpath that points to the data block of an existing file @olddirfd:@oldpath"))
 
-	/* chmod(2) */
-	D(POSIX_CHMOD_DEF_DOC("#t{:Interrupt}"
-	                      "#tFileNotFound{The given @path could not be found}"
-	                      "#tNoDirectory{A part of the given @path is not a directory}"
-	                      "#tFileAccessError{The current user does not have permissions "
-	                      /*                  */ "to change the mode of the given file @path}"
-	                      "#tReadOnlyFile{The filesystem or device hosting the file found under "
-	                      /*               */ "@path is in read-only operations mode, preventing the "
-	                      /*               */ "file's mode from being changed}"
-	                      "#tSystemError{Failed to change permission for some reason}"
-	                      "#tValueError{The given @mode is malformed or not recognized}"
-	                      "Change the permissions associated with a given @path"))
-	D(POSIX_LCHMOD_DEF_DOC("#t{:Interrupt}"
-	                       "#tFileNotFound{The given @path could not be found}"
-	                       "#tNoDirectory{A part of the given @path is not a directory}"
-	                       "#tFileAccessError{The current user does not have permissions "
-	                       /*                  */ "to change the mode of the given file @path}"
-	                       "#tReadOnlyFile{The filesystem or device hosting the file found under "
-	                       /*               */ "@path is in read-only operations mode, preventing the "
-	                       /*               */ "file's mode from being changed}"
-	                       "#tSystemError{Failed to change permission for some reason}"
-	                       "#tValueError{The given @mode is malformed or not recognized}"
-	                       "Change the permissions associated with a given @path\n"
-	                       "If @path refers to a symbolic link, change the permissions "
-	                       /**/ "of that link, rather than those of the pointed-to file"))
-	D(POSIX_FCHMOD_DEF_DOC("#tFileClosed{The given file @fd was closed}"
-	                       "Same as ?Gchmod and ?Glchmod, but change permissions of @fd"))
-	D(POSIX_FCHMODAT_DEF_DOC("#patflags{Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH}"
-	                         "Combination of ?Gchmod, ?Glchmod, and ?Gfchmod, changing permissions of @dfd:@path"))
+/* chmod(2) */
+D(POSIX_CHMOD_DEF_DOC("#t{:Interrupt}"
+                      "#tFileNotFound{The given @path could not be found}"
+                      "#tNoDirectory{A part of the given @path is not a directory}"
+                      "#tFileAccessError{The current user does not have permissions "
+                      /*                  */ "to change the mode of the given file @path}"
+                      "#tReadOnlyFile{The filesystem or device hosting the file found under "
+                      /*               */ "@path is in read-only operations mode, preventing the "
+                      /*               */ "file's mode from being changed}"
+                      "#tSystemError{Failed to change permission for some reason}"
+                      "#tValueError{The given @mode is malformed or not recognized}"
+                      "Change the permissions associated with a given @path"))
+D(POSIX_LCHMOD_DEF_DOC("#t{:Interrupt}"
+                       "#tFileNotFound{The given @path could not be found}"
+                       "#tNoDirectory{A part of the given @path is not a directory}"
+                       "#tFileAccessError{The current user does not have permissions "
+                       /*                  */ "to change the mode of the given file @path}"
+                       "#tReadOnlyFile{The filesystem or device hosting the file found under "
+                       /*               */ "@path is in read-only operations mode, preventing the "
+                       /*               */ "file's mode from being changed}"
+                       "#tSystemError{Failed to change permission for some reason}"
+                       "#tValueError{The given @mode is malformed or not recognized}"
+                       "Change the permissions associated with a given @path\n"
+                       "If @path refers to a symbolic link, change the permissions "
+                       /**/ "of that link, rather than those of the pointed-to file"))
+D(POSIX_FCHMOD_DEF_DOC("#tFileClosed{The given file @fd was closed}"
+                       "Same as ?Gchmod and ?Glchmod, but change permissions of @fd"))
+D(POSIX_FCHMODAT_DEF_DOC("#patflags{Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH}"
+                         "Combination of ?Gchmod, ?Glchmod, and ?Gfchmod, changing permissions of @dfd:@path"))
 
-	/* chown(2) */
-	D(POSIX_CHOWN_DEF_DOC("#t{:Interrupt}"
-	                      "#tFileNotFound{The given @path could not be found}"
-	                      "#tNoDirectory{A part of the given @path is not a directory}"
-	                      "#tFileAccessError{The current user does not have permissions "
-	                      /*                  */ "to change the ownership of the given file @path}"
-	                      "#tReadOnlyFile{The filesystem or device hosting the file found under "
-	                      /*               */ "@path is in read-only operations mode, preventing the "
-	                      /*               */ "file's ownership from being changed}"
-	                      "#tValueError{The given @user or @group could not be found}"
-	                      "#tSystemError{Failed to change ownership for some reason}"
-	                      "#puid{The new user-id for the file, or ?N to leave unchanged}"
-	                      "#pgid{The new group-id for the file, or ?N to leave unchanged}"
-	                      "Change the ownership of a given @path"))
-	D(POSIX_LCHOWN_DEF_DOC("#t{:Interrupt}"
-	                       "#tFileNotFound{The given @path could not be found}"
-	                       "#tNoDirectory{A part of the given @path is not a directory}"
-	                       "#tFileAccessError{The current user does not have permissions "
-	                       /*                  */ "to change the ownership of the given file @path}"
-	                       "#tReadOnlyFile{The filesystem or device hosting the file found under "
-	                       /*               */ "@path is in read-only operations mode, preventing the "
-	                       /*               */ "file's ownership from being changed}"
-	                       "#tValueError{The given @user or @group could not be found}"
-	                       "#tSystemError{Failed to change ownership for some reason}"
-	                       "#puid{The new user-id for the file, or ?N to leave unchanged}"
-	                       "#pgid{The new group-id for the file, or ?N to leave unchanged}"
-	                       "Change the ownership of a given @path\n"
-	                       "If @path refers to a symbolic link, change the ownership "
-	                       /**/ "of that link, rather than those of the pointed-to file"))
-	D(POSIX_FCHOWN_DEF_DOC("#tFileClosed{The given file @fd was closed}"
-	                       "Same as ?Glchown, but change ownership of @fd"))
-	D(POSIX_FCHOWNAT_DEF_DOC("#patflags{Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH}"
-	                         "Combination of ?Glchown, ?Glchown, and ?Gfchown, changing ownership of @dfd:@path"))
+/* chown(2) */
+D(POSIX_CHOWN_DEF_DOC("#t{:Interrupt}"
+                      "#tFileNotFound{The given @path could not be found}"
+                      "#tNoDirectory{A part of the given @path is not a directory}"
+                      "#tFileAccessError{The current user does not have permissions "
+                      /*                  */ "to change the ownership of the given file @path}"
+                      "#tReadOnlyFile{The filesystem or device hosting the file found under "
+                      /*               */ "@path is in read-only operations mode, preventing the "
+                      /*               */ "file's ownership from being changed}"
+                      "#tValueError{The given @user or @group could not be found}"
+                      "#tSystemError{Failed to change ownership for some reason}"
+                      "#puid{The new user-id for the file, or ?N to leave unchanged}"
+                      "#pgid{The new group-id for the file, or ?N to leave unchanged}"
+                      "Change the ownership of a given @path"))
+D(POSIX_LCHOWN_DEF_DOC("#t{:Interrupt}"
+                       "#tFileNotFound{The given @path could not be found}"
+                       "#tNoDirectory{A part of the given @path is not a directory}"
+                       "#tFileAccessError{The current user does not have permissions "
+                       /*                  */ "to change the ownership of the given file @path}"
+                       "#tReadOnlyFile{The filesystem or device hosting the file found under "
+                       /*               */ "@path is in read-only operations mode, preventing the "
+                       /*               */ "file's ownership from being changed}"
+                       "#tValueError{The given @user or @group could not be found}"
+                       "#tSystemError{Failed to change ownership for some reason}"
+                       "#puid{The new user-id for the file, or ?N to leave unchanged}"
+                       "#pgid{The new group-id for the file, or ?N to leave unchanged}"
+                       "Change the ownership of a given @path\n"
+                       "If @path refers to a symbolic link, change the ownership "
+                       /**/ "of that link, rather than those of the pointed-to file"))
+D(POSIX_FCHOWN_DEF_DOC("#tFileClosed{The given file @fd was closed}"
+                       "Same as ?Glchown, but change ownership of @fd"))
+D(POSIX_FCHOWNAT_DEF_DOC("#patflags{Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH}"
+                         "Combination of ?Glchown, ?Glchown, and ?Gfchown, changing ownership of @dfd:@path"))
 
-	/* utime(2) */
-	D(POSIX_UTIME_DEF_DOC("#t{:Interrupt}"
-	                      "#tFileNotFound{The given @path could not be found}"
-	                      "#tNoDirectory{A part of the given @path is not a directory}"
-	                      "#tFileAccessError{The current user does not have permissions "
-	                      /*                  */ "to change the mode of the given file @path}"
-	                      "#tReadOnlyFile{The filesystem or device hosting the file found under "
-	                      /*               */ "@path is in read-only operations mode, preventing the "
-	                      /*               */ "file's mode from being changed}"
-	                      "#tSystemError{Failed to change timestamps for some reason}"
-	                      "#tValueError{The given @mode is malformed or not recognized}"
-	                      "#patime{The new last-accessed timestamp to set, or ?N to leave unchanged (s.a. ?Ast_atime?Gstat)}"
-	                      "#pmtime{The new last-modified timestamp to set, or ?N to leave unchanged (s.a. ?Ast_mtime?Gstat)}"
-	                      "#pctime{The new last-attribute-changed timestamp to set, or ?N to leave unchanged (s.a. ?Ast_ctime?Gstat)}"
-	                      "#pbirthtime{The new birth timestamp to set, or ?N to leave unchanged (s.a. ?Ast_btime?Gstat)}"
-	                      "Change the timestamps associated with a given @path"))
-	D(POSIX_LUTIME_DEF_DOC("#t{:Interrupt}"
-	                       "#tFileNotFound{The given @path could not be found}"
-	                       "#tNoDirectory{A part of the given @path is not a directory}"
-	                       "#tFileAccessError{The current user does not have permissions "
-	                       /*                  */ "to change the mode of the given file @path}"
-	                       "#tReadOnlyFile{The filesystem or device hosting the file found under "
-	                       /*               */ "@path is in read-only operations mode, preventing the "
-	                       /*               */ "file's mode from being changed}"
-	                       "#tSystemError{Failed to change timestamps for some reason}"
-	                       "#tValueError{The given @mode is malformed or not recognized}"
-	                       "#patime{The new last-accessed timestamp to set, or ?N to leave unchanged (s.a. ?Ast_atime?Gstat)}"
-	                       "#pmtime{The new last-modified timestamp to set, or ?N to leave unchanged (s.a. ?Ast_mtime?Gstat)}"
-	                       "#pctime{The new last-attribute-changed timestamp to set, or ?N to leave unchanged (s.a. ?Ast_ctime?Gstat)}"
-	                       "#pbirthtime{The new birth timestamp to set, or ?N to leave unchanged (s.a. ?Ast_btime?Gstat)}"
-	                       "Change the timestamps associated with a given @path\n"
-	                       "If @path refers to a symbolic link, change the timestamps "
-	                       /**/ "of that link, rather than those of the pointed-to file"))
-	D(POSIX_FUTIME_DEF_DOC("#tFileClosed{The given file @fd was closed}"
-	                       "Same as ?Gutime and ?Glutime, but change permissions of @fd"))
-	D(POSIX_UTIMEAT_DEF_DOC("#patflags{Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH}"
-	                        "Combination of ?Gutime, ?Glutime, and ?Gfutime, changing timestamps of @dfd:@path"))
+/* utime(2) */
+D(POSIX_UTIME_DEF_DOC("#t{:Interrupt}"
+                      "#tFileNotFound{The given @path could not be found}"
+                      "#tNoDirectory{A part of the given @path is not a directory}"
+                      "#tFileAccessError{The current user does not have permissions "
+                      /*                  */ "to change the mode of the given file @path}"
+                      "#tReadOnlyFile{The filesystem or device hosting the file found under "
+                      /*               */ "@path is in read-only operations mode, preventing the "
+                      /*               */ "file's mode from being changed}"
+                      "#tSystemError{Failed to change timestamps for some reason}"
+                      "#tValueError{The given @mode is malformed or not recognized}"
+                      "#patime{The new last-accessed timestamp to set, or ?N to leave unchanged (s.a. ?Ast_atime?Gstat)}"
+                      "#pmtime{The new last-modified timestamp to set, or ?N to leave unchanged (s.a. ?Ast_mtime?Gstat)}"
+                      "#pctime{The new last-attribute-changed timestamp to set, or ?N to leave unchanged (s.a. ?Ast_ctime?Gstat)}"
+                      "#pbirthtime{The new birth timestamp to set, or ?N to leave unchanged (s.a. ?Ast_btime?Gstat)}"
+                      "Change the timestamps associated with a given @path"))
+D(POSIX_LUTIME_DEF_DOC("#t{:Interrupt}"
+                       "#tFileNotFound{The given @path could not be found}"
+                       "#tNoDirectory{A part of the given @path is not a directory}"
+                       "#tFileAccessError{The current user does not have permissions "
+                       /*                  */ "to change the mode of the given file @path}"
+                       "#tReadOnlyFile{The filesystem or device hosting the file found under "
+                       /*               */ "@path is in read-only operations mode, preventing the "
+                       /*               */ "file's mode from being changed}"
+                       "#tSystemError{Failed to change timestamps for some reason}"
+                       "#tValueError{The given @mode is malformed or not recognized}"
+                       "#patime{The new last-accessed timestamp to set, or ?N to leave unchanged (s.a. ?Ast_atime?Gstat)}"
+                       "#pmtime{The new last-modified timestamp to set, or ?N to leave unchanged (s.a. ?Ast_mtime?Gstat)}"
+                       "#pctime{The new last-attribute-changed timestamp to set, or ?N to leave unchanged (s.a. ?Ast_ctime?Gstat)}"
+                       "#pbirthtime{The new birth timestamp to set, or ?N to leave unchanged (s.a. ?Ast_btime?Gstat)}"
+                       "Change the timestamps associated with a given @path\n"
+                       "If @path refers to a symbolic link, change the timestamps "
+                       /**/ "of that link, rather than those of the pointed-to file"))
+D(POSIX_FUTIME_DEF_DOC("#tFileClosed{The given file @fd was closed}"
+                       "Same as ?Gutime and ?Glutime, but change permissions of @fd"))
+D(POSIX_UTIMEAT_DEF_DOC("#patflags{Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH}"
+                        "Combination of ?Gutime, ?Glutime, and ?Gfutime, changing timestamps of @dfd:@path"))
 
-	/* copyfile */
-	D(POSIX_FCOPYFILE_DEF_DOC("#pflags{Set of $0, ?GRENAME_NOREPLACE}"
-	                          "#pprogress{Invoked every @bufsize bytes with an instance of ?GCopyFileProgress}"
-	                          "#pbufsize{How many bytes to copy at once (if not given, use a default)}"
-	                          "Copy all data from @oldfd to @newpath"))
-	D(POSIX_COPYFILE_DEF_DOC("#pflags{Set of $0, ?GRENAME_NOREPLACE}"
-	                         "#pprogress{Invoked every @bufsize bytes with an instance of ?GCopyFileProgress}"
-	                         "#pbufsize{How many bytes to copy at once (if not given, use a default)}"
-	                         "Copy all data from @oldpath to @newpath"))
-	D(POSIX_LCOPYFILE_DEF_DOC("#pflags{Set of $0, ?GRENAME_NOREPLACE}"
-	                          "#pprogress{Invoked every @bufsize bytes with an instance of ?GCopyFileProgress}"
-	                          "#pbufsize{How many bytes to copy at once (if not given, use a default)}"
-	                          "Copy all data from @oldpath to @newpath. When @oldpath is a symlink, rather than "
-	                          /**/ "copy the file pointed-to by the symlink, the symlink #Iitself is copied"))
-	D(POSIX_COPYFILEAT_DEF_DOC("#pflags{Set of $0, ?GRENAME_NOREPLACE}"
-	                           "#patflags{Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH}"
-	                           "#pprogress{Invoked every @bufsize bytes with an instance of ?GCopyFileProgress}"
-	                           "#pbufsize{How many bytes to copy at once (if not given, use a default)}"
-	                           "Copy all data from @olddirfd:@oldpath to @newdirfd:@newpath"))
-	D({ "CopyFileProgress", (DeeObject *)&DeeCopyFileProgress_Type, MODSYM_FREADONLY },)
+/* copyfile */
+D(POSIX_FCOPYFILE_DEF_DOC("#pflags{Set of $0, ?GRENAME_NOREPLACE}"
+                          "#pprogress{Invoked every @bufsize bytes with an instance of ?GCopyFileProgress}"
+                          "#pbufsize{How many bytes to copy at once (if not given, use a default)}"
+                          "Copy all data from @oldfd to @newpath"))
+D(POSIX_COPYFILE_DEF_DOC("#pflags{Set of $0, ?GRENAME_NOREPLACE}"
+                         "#pprogress{Invoked every @bufsize bytes with an instance of ?GCopyFileProgress}"
+                         "#pbufsize{How many bytes to copy at once (if not given, use a default)}"
+                         "Copy all data from @oldpath to @newpath"))
+D(POSIX_LCOPYFILE_DEF_DOC("#pflags{Set of $0, ?GRENAME_NOREPLACE}"
+                          "#pprogress{Invoked every @bufsize bytes with an instance of ?GCopyFileProgress}"
+                          "#pbufsize{How many bytes to copy at once (if not given, use a default)}"
+                          "Copy all data from @oldpath to @newpath. When @oldpath is a symlink, rather than "
+                          /**/ "copy the file pointed-to by the symlink, the symlink #Iitself is copied"))
+D(POSIX_COPYFILEAT_DEF_DOC("#pflags{Set of $0, ?GRENAME_NOREPLACE}"
+                           "#patflags{Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH}"
+                           "#pprogress{Invoked every @bufsize bytes with an instance of ?GCopyFileProgress}"
+                           "#pbufsize{How many bytes to copy at once (if not given, use a default)}"
+                           "Copy all data from @olddirfd:@oldpath to @newdirfd:@newpath"))
+D(DEX_MEMBER_F_NODOC("CopyFileProgress", &DeeCopyFileProgress_Type, DEXSYM_READONLY),)
 
 
-	/************************************************************************/
-	/* Application exit control                                             */
-	/************************************************************************/
-	D(POSIX_ATEXIT_DEF_DOC("Register a callback to-be invoked before ?Gexit (Same as ?Aatexit?AAppExit?DError)"))
-	D(POSIX_EXIT_DEF_DOC("Terminate execution of deemon after invoking ?Gatexit callbacks\n"
-	                     "Termination is done using the C $exit or $_Exit functions, if available. However if these "
-	                     /**/ "functions are not provided by the host, an ?AAppExit?DError error is thrown instead\n"
-	                     "When no @exitcode is given, the host's default default value of ?GEXIT_FAILURE, or $1 is used\n"
-	                     "This function never returns normally"))
-	D(POSIX__EXIT_DEF_DOC("Terminate execution of deemon without invoking ?Gatexit callbacks (s.a. ?Gexit)"))
-	D(POSIX_ABORT_DEF_DOC("Same as ?G_Exit when passing ?GEXIT_FAILURE"))
+/************************************************************************/
+/* Application exit control                                             */
+/************************************************************************/
+D(POSIX_ATEXIT_DEF_DOC("Register a callback to-be invoked before ?Gexit (Same as ?Aatexit?AAppExit?DError)"))
+D(POSIX_EXIT_DEF_DOC("Terminate execution of deemon after invoking ?Gatexit callbacks\n"
+                     "Termination is done using the C $exit or $_Exit functions, if available. However if these "
+                     /**/ "functions are not provided by the host, an ?AAppExit?DError error is thrown instead\n"
+                     "When no @exitcode is given, the host's default default value of ?GEXIT_FAILURE, or $1 is used\n"
+                     "This function never returns normally"))
+D(POSIX__EXIT_DEF_DOC("Terminate execution of deemon without invoking ?Gatexit callbacks (s.a. ?Gexit)"))
+D(POSIX_ABORT_DEF_DOC("Same as ?G_Exit when passing ?GEXIT_FAILURE"))
 
-	/* *_FILENO values */
-	D(POSIX_FD_DEFS)
+/* *_FILENO values */
+D(POSIX_FD_DEFS)
 
-	/* O_* and AT_* values */
-	D(POSIX_OPEN_DEFS)
+/* O_* and AT_* values */
+D(POSIX_OPEN_DEFS)
 
-	/* SEEK_* values */
-	D(POSIX_READWRITE_DEFS)
+/* SEEK_* values */
+D(POSIX_READWRITE_DEFS)
 
-	/* EXIT_* values */
-	D(POSIX_EXIT_DEFS)
+/* EXIT_* values */
+D(POSIX_EXIT_DEFS)
 
-	/* *_OK codes for `access()' and friends */
-	D(POSIX_ACCESS_DEFS)
+/* *_OK codes for `access()' and friends */
+D(POSIX_ACCESS_DEFS)
 
-	D({ "errno", (DeeObject *)&posix_errno_get, MODSYM_FPROPERTY,
-	    DOC("->?Dint\n"
-	        "Read/write the C errno thread-local variable") }, )
-	D({ NULL, (DeeObject *)&posix_errno_del, MODSYM_FNORMAL }, )
-	D({ NULL, (DeeObject *)&posix_errno_set, MODSYM_FNORMAL }, )
-	D(POSIX_STRERROR_DEF_DOC("Return the name of a given @errnum (which defaults to ?Gerrno), "
-	                         /**/ "or return ?N if the error doesn't have an associated name"))
-	D(POSIX_STRERRORNAME_DEF_DOC("Similar to ?Gstrerror, but instead of returning the message "
-	                             /**/ "associated with a given @errnum (which defaults to ?Gerrno), "
-	                             /**/ "return the name (e.g. $\"ENOENT\") of the error as a string\n"
-	                             "If the given error number is not recognized, return ?N instead"))
+D(DEX_GETSET("errno", &posix_errno_get, &posix_errno_del, &posix_errno_set,
+             "->?Dint\n"
+             "Read/write the C errno thread-local variable"),)
+D(POSIX_STRERROR_DEF_DOC("Return the name of a given @errnum (which defaults to ?Gerrno), "
+                         /**/ "or return ?N if the error doesn't have an associated name"))
+D(POSIX_STRERRORNAME_DEF_DOC("Similar to ?Gstrerror, but instead of returning the message "
+                             /**/ "associated with a given @errnum (which defaults to ?Gerrno), "
+                             /**/ "return the name (e.g. $\"ENOENT\") of the error as a string\n"
+                             "If the given error number is not recognized, return ?N instead"))
 
-	/************************************************************************/
-	/* Path utilities                                                       */
-	/************************************************************************/
-	D(POSIX_HEADOF_DEF_DOC("#r{The head of a path, that is the directory without the filename}"
-	                       "${"
-	                       /**/ "import headof from posix;\n"
-	                       /**/ "print headof(\"bar.txt\");        /* \"\" */\n"
-	                       /**/ "print headof(\"/foo/bar.txt\");   /* \"/foo/\" */\n"
-	                       /**/ "print headof(\"C:/foo/bar.txt\"); /* \"C:/foo/\" */"
-	                       "}"))
-	D(POSIX_TAILOF_DEF_DOC("#r{The tail of a path, that is the filename + extension}"
-	                       "${"
-	                       /**/ "import tailof from posix;\n"
-	                       /**/ "print tailof(\"bar.txt\");        /* \"bar.txt\" */\n"
-	                       /**/ "print tailof(\"/foo/bar.txt\");   /* \"bar.txt\" */\n"
-	                       /**/ "print tailof(\"C:/foo/bar.txt\"); /* \"bar.txt\" */"
-	                       "}"))
-	D(POSIX_DRIVEOF_DEF_DOC("#r{The drive portion of an absolute path on windows, or $\"/\" on other platforms}"
-	                        "${"
-	                        /**/ "import driveof from posix;\n"
-	                        /**/ "print driveof(\"bar.txt\");        /* \"\" or \"/\" */\n"
-	                        /**/ "print driveof(\"/foo/bar.txt\");   /* \"\" or \"/\" */\n"
-	                        /**/ "print driveof(\"C:/foo/bar.txt\"); /* \"C:/\" or \"/\" */"
-	                        "}"))
-	D(POSIX_INCTRAIL_DEF_DOC("#r{The path with a trailing slash included}"
-	                         "${"
-	                         /**/ "import inctrail from posix;\n"
-	                         /**/ "print inctrail(\"/\");         /* \"/\" */\n"
-	                         /**/ "print inctrail(\"/foo/bar/\"); /* \"/foo/bar/\" */\n"
-	                         /**/ "print inctrail(\"/foo/bar\");  /* \"/foo/bar/\" */"
-	                         "}"))
-	D(POSIX_EXCTRAIL_DEF_DOC("#r{The path with a trailing slash excluded}"
-	                         "${"
-	                         /**/ "import exctrail from posix;\n"
-	                         /**/ "print exctrail(\"/foo/bar/\"); /* \"/foo/bar\" */\n"
-	                         /**/ "print exctrail(\"/foo/bar\");  /* \"/foo/bar\" */"
-	                         "}"))
-	D(POSIX_WALKLINK_DEF_DOC("Helper function that operates similar to ?Gabspath, but is specifically designed to "
-	                         /**/ "be faster and exclusively meant for expanding the contents of symbolic links.\n"
-	                         "This function should be used like:\n"
-	                         "${"
-	                         /**/ "import walklink from posix;\n"
-	                         /**/ "local linkName = \"dir/my-link\";\n"
-	                         /**/ "symlink(\"../foo/bar\", linkName);\n"
-	                         /**/ "print repr walklink(readlink(linkName), linkName); /* \"dir/../foo/bar\" */"
-	                         "}\n"
-	                         "This function is implemented as follows:\n"
-	                         "${"
-	                         /**/ "function walklink(linktext: string, linkname: string): string {\n"
-	                         /**/ "	if (posix.isabs(linktext))\n"
-	                         /**/ "		return linktext;\n"
-	                         /**/ "	#ifdef __WINDOWS__\n"
-	                         /**/ "	if (linktext in [\"CON\", \"NUL\", ...])\n"
-	                         /**/ "		return linktext; /* Special case for DOS device filenames. */\n"
-	                         /**/ "	#endif /* __WINDOWS__ */\n"
-	                         /**/ "	local linkdir = posix.headof(linkname);\n"
-	                         /**/ "	if (!linkdir)\n"
-	                         /**/ "		return linktext;\n"
-	                         /**/ "	while (#linktext >= 2 && linktext[0] == \".\" && posix.issep(linktext[1]))\n"
-	                         /**/ "		linktext = linktext[2:];\n"
-	                         /**/ "	return linkdir + linktext;\n"
-	                         /**/ "}"
-	                         "}"))
-	D(POSIX_ABSPATH_DEF_DOC("Makes @path an absolute path, using @pwd as the base point for the relative disposition\n"
-	                        "If @path was already relative to begin with, it is forced to become relative "
-	                        /**/ "as the result of calling ?Grelpath with it and the return value of ?Ggetcwd\n"
-	                        "If @pwd is relative, if will be forced to become absolute as the result of calling "
-	                        /**/ "?Gabspath with @pwd as first and the return value of ?Ggetcwd as second argument\n"
-	                        "${"
-	                        /**/ "import abspath from posix;\n"
-	                        /**/ "print abspath(\"../you/Downloads\", \"/home/me\"); /* \"/home/you/Downloads\" */"
-	                        "}"))
-	D(POSIX_RELPATH_DEF_DOC("Creates a relative path leading to @path and originating from @pwd\n"
-	                        "If @path was already relative to begin with, it is forced to become absolute "
-	                        /**/ "as the result of calling ?Gabspath with it and the return value of ?Ggetcwd\n"
-	                        "If @pwd is relative, if will be forced into an absolute path as the "
-	                        /**/ "result of calling ?Gabspath with it and the return value of ?Ggetcwd\n"
-	                        "When running on a windows host, in the event that @path is located on a "
-	                        /**/ "different ?Gdriveof than @pwd, @path will be re-returned as is"))
-	D(POSIX_NORMALPATH_DEF_DOC("Normalize the given @path. This removes spaces around slashes, replaces os-specific "
-	                           "?GFS_ALTSEP with ?GFS_SEP, as well as $\".\" and $\"..\" path segments (if possible)"))
-	D(POSIX_ISABS_DEF_DOC("Returns ?t if the given @path is considered to be absolute"))
-	D(POSIX_ISREL_DEF_DOC("Returns the inverse of ?Gisabs"))
-	D(POSIX_ISSEP_DEF_DOC("Returns ?t if the given @str is recognized as a path "
-	                      /**/ "separator (Usually $\"/\" and/or $\"\\\")\n"
-	                      "The host's primary and secondary separator "
-	                      /**/ "values can be read from ?GSEP and ?GALTSEP"))
-	D(POSIX_JOINPATH_DEF_DOC("Joins all @paths passed through varargs to generate a full path. "
-	                         /**/ "For this purpose, all path elements are joined with ?GSEP, "
-	                         /**/ "after removal of additional slashes and spaces surrounding the given @paths"))
-	D({ "FS_SEP", (DeeObject *)&posix_FS_SEP, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
-	    DOC("->?Dstring\n"
-	        "The host's primary path separator. On windows that is "
-	        /**/ "$\"\\\" while on most other hosts it is $\"/\"\n"
-	        "If supported by the host, an alternative separator can be read from ?GALTSEP\n"
-	        "Additionally, a string can be testing for being a separator by calling ?Gissep") },)
-	D({ "FS_ALTSEP", (DeeObject *)&posix_FS_ALTSEP, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
-	    DOC("->?Dstring\n"
-	        "The alternative path separator or an alias for ?GSEP "
-	        /**/ "if the host only supports a single type of separator") },)
-	D({ "FS_DELIM", (DeeObject *)&posix_FS_DELIM, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
-	    DOC("->?Dstring\n"
-	        "A string used to delimit individual paths in path-listings often "
-	        /**/ "found in environment variables, most notably ${environ[\"PATH\"]}") },)
-	D({ "DEV_NULL", (DeeObject *)&posix_DEV_NULL, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
-	    DOC("->?Dstring\n"
-	        "A special filename accepted by ?Gopen and ?Aopen?DFile to return a data sink") },)
-	D({ "DEV_TTY", (DeeObject *)&posix_DEV_TTY, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
-	    DOC("->?Dstring\n"
-	        "A special filename accepted by ?Gopen and ?Aopen?DFile to return a "
-	        /**/ "handle to the calling process's controlling terminal") },)
-	D({ "DEV_STDIN", (DeeObject *)&posix_DEV_STDIN, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
-	    DOC("->?Dstring\n"
-	        "A special filename accepted by ?Gopen and ?Aopen?DFile to return a handle to ?Astdin?DFile") },)
-	D({ "DEV_STDOUT", (DeeObject *)&posix_DEV_STDOUT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
-	    DOC("->?Dstring\n"
-	        "A special filename accepted by ?Gopen and ?Aopen?DFile to return a handle to ?Astdout?DFile") },)
-	D({ "DEV_STDERR", (DeeObject *)&posix_DEV_STDERR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
-	    DOC("->?Dstring\n"
-	        "A special filename accepted by ?Gopen and ?Aopen?DFile to return a handle to ?Astderr?DFile") },)
+/************************************************************************/
+/* Path utilities                                                       */
+/************************************************************************/
+D(POSIX_HEADOF_DEF_DOC("#r{The head of a path, that is the directory without the filename}"
+                       "${"
+                       /**/ "import headof from posix;\n"
+                       /**/ "print headof(\"bar.txt\");        /* \"\" */\n"
+                       /**/ "print headof(\"/foo/bar.txt\");   /* \"/foo/\" */\n"
+                       /**/ "print headof(\"C:/foo/bar.txt\"); /* \"C:/foo/\" */"
+                       "}"))
+D(POSIX_TAILOF_DEF_DOC("#r{The tail of a path, that is the filename + extension}"
+                       "${"
+                       /**/ "import tailof from posix;\n"
+                       /**/ "print tailof(\"bar.txt\");        /* \"bar.txt\" */\n"
+                       /**/ "print tailof(\"/foo/bar.txt\");   /* \"bar.txt\" */\n"
+                       /**/ "print tailof(\"C:/foo/bar.txt\"); /* \"bar.txt\" */"
+                       "}"))
+D(POSIX_DRIVEOF_DEF_DOC("#r{The drive portion of an absolute path on windows, or $\"/\" on other platforms}"
+                        "${"
+                        /**/ "import driveof from posix;\n"
+                        /**/ "print driveof(\"bar.txt\");        /* \"\" or \"/\" */\n"
+                        /**/ "print driveof(\"/foo/bar.txt\");   /* \"\" or \"/\" */\n"
+                        /**/ "print driveof(\"C:/foo/bar.txt\"); /* \"C:/\" or \"/\" */"
+                        "}"))
+D(POSIX_INCTRAIL_DEF_DOC("#r{The path with a trailing slash included}"
+                         "${"
+                         /**/ "import inctrail from posix;\n"
+                         /**/ "print inctrail(\"/\");         /* \"/\" */\n"
+                         /**/ "print inctrail(\"/foo/bar/\"); /* \"/foo/bar/\" */\n"
+                         /**/ "print inctrail(\"/foo/bar\");  /* \"/foo/bar/\" */"
+                         "}"))
+D(POSIX_EXCTRAIL_DEF_DOC("#r{The path with a trailing slash excluded}"
+                         "${"
+                         /**/ "import exctrail from posix;\n"
+                         /**/ "print exctrail(\"/foo/bar/\"); /* \"/foo/bar\" */\n"
+                         /**/ "print exctrail(\"/foo/bar\");  /* \"/foo/bar\" */"
+                         "}"))
+D(POSIX_WALKLINK_DEF_DOC("Helper function that operates similar to ?Gabspath, but is specifically designed to "
+                         /**/ "be faster and exclusively meant for expanding the contents of symbolic links.\n"
+                         "This function should be used like:\n"
+                         "${"
+                         /**/ "import walklink from posix;\n"
+                         /**/ "local linkName = \"dir/my-link\";\n"
+                         /**/ "symlink(\"../foo/bar\", linkName);\n"
+                         /**/ "print repr walklink(readlink(linkName), linkName); /* \"dir/../foo/bar\" */"
+                         "}\n"
+                         "This function is implemented as follows:\n"
+                         "${"
+                         /**/ "function walklink(linktext: string, linkname: string): string {\n"
+                         /**/ "	if (posix.isabs(linktext))\n"
+                         /**/ "		return linktext;\n"
+                         /**/ "	#ifdef __WINDOWS__\n"
+                         /**/ "	if (linktext in [\"CON\", \"NUL\", ...])\n"
+                         /**/ "		return linktext; /* Special case for DOS device filenames. */\n"
+                         /**/ "	#endif /* __WINDOWS__ */\n"
+                         /**/ "	local linkdir = posix.headof(linkname);\n"
+                         /**/ "	if (!linkdir)\n"
+                         /**/ "		return linktext;\n"
+                         /**/ "	while (#linktext >= 2 && linktext[0] == \".\" && posix.issep(linktext[1]))\n"
+                         /**/ "		linktext = linktext[2:];\n"
+                         /**/ "	return linkdir + linktext;\n"
+                         /**/ "}"
+                         "}"))
+D(POSIX_ABSPATH_DEF_DOC("Makes @path an absolute path, using @pwd as the base point for the relative disposition\n"
+                        "If @path was already relative to begin with, it is forced to become relative "
+                        /**/ "as the result of calling ?Grelpath with it and the return value of ?Ggetcwd\n"
+                        "If @pwd is relative, if will be forced to become absolute as the result of calling "
+                        /**/ "?Gabspath with @pwd as first and the return value of ?Ggetcwd as second argument\n"
+                        "${"
+                        /**/ "import abspath from posix;\n"
+                        /**/ "print abspath(\"../you/Downloads\", \"/home/me\"); /* \"/home/you/Downloads\" */"
+                        "}"))
+D(POSIX_RELPATH_DEF_DOC("Creates a relative path leading to @path and originating from @pwd\n"
+                        "If @path was already relative to begin with, it is forced to become absolute "
+                        /**/ "as the result of calling ?Gabspath with it and the return value of ?Ggetcwd\n"
+                        "If @pwd is relative, if will be forced into an absolute path as the "
+                        /**/ "result of calling ?Gabspath with it and the return value of ?Ggetcwd\n"
+                        "When running on a windows host, in the event that @path is located on a "
+                        /**/ "different ?Gdriveof than @pwd, @path will be re-returned as is"))
+D(POSIX_NORMALPATH_DEF_DOC("Normalize the given @path. This removes spaces around slashes, replaces os-specific "
+                           "?GFS_ALTSEP with ?GFS_SEP, as well as $\".\" and $\"..\" path segments (if possible)"))
+D(POSIX_ISABS_DEF_DOC("Returns ?t if the given @path is considered to be absolute"))
+D(POSIX_ISREL_DEF_DOC("Returns the inverse of ?Gisabs"))
+D(POSIX_ISSEP_DEF_DOC("Returns ?t if the given @str is recognized as a path "
+                      /**/ "separator (Usually $\"/\" and/or $\"\\\")\n"
+                      "The host's primary and secondary separator "
+                      /**/ "values can be read from ?GSEP and ?GALTSEP"))
+D(POSIX_JOINPATH_DEF_DOC("Joins all @paths passed through varargs to generate a full path. "
+                         /**/ "For this purpose, all path elements are joined with ?GSEP, "
+                         /**/ "after removal of additional slashes and spaces surrounding the given @paths"))
+D(DEX_MEMBER_F("FS_SEP", &posix_FS_SEP, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+               "->?Dstring\n"
+               "The host's primary path separator. On windows that is "
+               /**/ "$\"\\\" while on most other hosts it is $\"/\"\n"
+               "If supported by the host, an alternative separator can be read from ?GALTSEP\n"
+               "Additionally, a string can be testing for being a separator by calling ?Gissep"),)
+D(DEX_MEMBER_F("FS_ALTSEP", &posix_FS_ALTSEP, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+               "->?Dstring\n"
+               "The alternative path separator or an alias for ?GSEP "
+               /**/ "if the host only supports a single type of separator"),)
+D(DEX_MEMBER_F("FS_DELIM", &posix_FS_DELIM, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+               "->?Dstring\n"
+               "A string used to delimit individual paths in path-listings often "
+               /**/ "found in environment variables, most notably ${environ[\"PATH\"]}"),)
+D(DEX_MEMBER_F("DEV_NULL", &posix_DEV_NULL, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+               "->?Dstring\n"
+               "A special filename accepted by ?Gopen and ?Aopen?DFile to return a data sink"),)
+D(DEX_MEMBER_F("DEV_TTY", &posix_DEV_TTY, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+               "->?Dstring\n"
+               "A special filename accepted by ?Gopen and ?Aopen?DFile to return a "
+               /**/ "handle to the calling process's controlling terminal"),)
+D(DEX_MEMBER_F("DEV_STDIN", &posix_DEV_STDIN, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+               "->?Dstring\n"
+               "A special filename accepted by ?Gopen and ?Aopen?DFile to return a handle to ?Astdin?DFile"),)
+D(DEX_MEMBER_F("DEV_STDOUT", &posix_DEV_STDOUT, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+               "->?Dstring\n"
+               "A special filename accepted by ?Gopen and ?Aopen?DFile to return a handle to ?Astdout?DFile"),)
+D(DEX_MEMBER_F("DEV_STDERR", &posix_DEV_STDERR, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+               "->?Dstring\n"
+               "A special filename accepted by ?Gopen and ?Aopen?DFile to return a handle to ?Astderr?DFile"),)
 
-	/* Allow user-code to dynamically determine if the host has a case-insensitive file-system.
+/* Allow user-code to dynamically determine if the host has a case-insensitive file-system.
 	 * We mark this global variable a a CONSTEXPR (in user-code: `final'), so that the compiler
 	 * is allowed to substitute it with a constant expression at compile-time. */
 #ifdef DEE_SYSTEM_FS_ICASE
@@ -2821,31 +2818,31 @@ PRIVATE struct dex_symbol symbols[] = {
 #else /* DEE_SYSTEM_FS_ICASE */
 #define OBJ_posix_FS_ICASE Dee_False
 #endif /* !DEE_SYSTEM_FS_ICASE */
-	{ "FS_ICASE", OBJ_posix_FS_ICASE, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
-	  DOC("Evaluations to true if the host has a case-insensitive file-system") },
+DEX_MEMBER_F("FS_ICASE", OBJ_posix_FS_ICASE, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+             "Evaluations to true if the host has a case-insensitive file-system"),
 
-	/* Allow user-code to dynamically determine if the host has drives. */
+/* Allow user-code to dynamically determine if the host has drives. */
 #ifdef DEE_SYSTEM_FS_DRIVES
 #define OBJ_posix_FS_DRIVES Dee_True
 #else /* DEE_SYSTEM_FS_DRIVES */
 #define OBJ_posix_FS_DRIVES Dee_False
 #endif /* !DEE_SYSTEM_FS_DRIVES */
-	{ "FS_DRIVES", OBJ_posix_FS_DRIVES, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
-	  DOC("Evaluations to true if the host has DOS-like, drive-based file-system") },
+DEX_MEMBER_F("FS_DRIVES", OBJ_posix_FS_DRIVES, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+             "Evaluations to true if the host has DOS-like, drive-based file-system"),
 
-	{ NULL }
-};
-#undef D
 
-PUBLIC struct dex DEX = {
-	/* .d_symbols = */ symbols,
-	/* .d_init    = */ NULL,
+/* clang-format off */
 #ifdef HAVE_posix_dex_fini
-	/* .d_fini    = */ &posix_dex_fini
+#define PTR_posix_dex_fini &posix_dex_fini
 #else /* HAVE_posix_dex_fini */
-	/* .d_fini    = */ NULL
+#define PTR_posix_dex_fini NULL
 #endif /* !HAVE_posix_dex_fini */
-};
+DEX_END(
+	/* init:  */ NULL,
+	/* fini:  */ PTR_posix_dex_fini,
+	/* clear: */ NULL
+);
+/* clang-format on */
 
 DECL_END
 

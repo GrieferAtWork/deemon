@@ -3061,600 +3061,610 @@ gi("HASHOF_RECURSIVE_ITEM", "DEE_HASHOF_RECURSIVE_ITEM");
 
 
 
-/* NOTE: At first glance, the combination of `MODSYM_FPROPERTY|MODSYM_FCONSTEXPR' may
+/* NOTE: At first glance, the combination of DEX_GETTER_F + `DEXSYM_CONSTEXPR' may
  *       not look like it would make sense, but by using this combination, we prevent
  *       the symbols to be considered properties during enumeration (`Dee_ATTRPERM_F_PROPERTY'
  *       doesn't get set), thus allowing the doc server to browse them unrestricted. */
-PRIVATE struct dex_symbol symbols[] = {
-	{ "getstacklimit", (DeeObject *)&librt_getstacklimit, MODSYM_FREADONLY, /* varying */
-	  DOC("->?Dint\n"
-	      "Returns the current stack limit, that is the max number of "
-	      /**/ "user-code functions that may be executed consecutively before "
-	      /**/ "a :StackOverflow error is thrown\n"
-	      "The default stack limit is $" PP_STR(DEE_CONFIG_DEFAULT_STACK_LIMIT)) },
-	{ "setstacklimit", (DeeObject *)&librt_setstacklimit, MODSYM_FREADONLY, /* varying */
-	  DOC("(new_limit=!" PP_STR(DEE_CONFIG_DEFAULT_STACK_LIMIT) ")->?Dint\n"
-	      "#tIntegerOverflow{@new_limit is negative, or greater than $0xffff}"
-	      "Set the new stack limit to @new_limit and return the old limit\n"
-	      "The stack limit is checked every time a user-code function is "
-	      /**/ "entered, at which point a :StackOverflow error is thrown if "
-	      /**/ "the currently set limit is exceeded") },
-	{ "stacklimitunlimited",
+
+#define RT_METHOD(name, mth, doc)  DEX_MEMBER_F(name, mth, DEXSYM_READONLY, doc)
+
+DEX_BEGIN
+
+/* clang-format off */
+#define DOCOF_getstacklimit                                               \
+	"->?Dint\n"                                                           \
+	"Returns the current stack limit, that is the max number of "         \
+	/**/ "user-code functions that may be executed consecutively before " \
+	/**/ "a :StackOverflow error is thrown\n"                             \
+	"The default stack limit is $" PP_STR(DEE_CONFIG_DEFAULT_STACK_LIMIT)
+DEX_MEMBER_F("getstacklimit", &librt_getstacklimit, DEXSYM_READONLY, DOCOF_getstacklimit),
+
+#define DOCOF_setstacklimit                                              \
+	"(new_limit=!" PP_STR(DEE_CONFIG_DEFAULT_STACK_LIMIT) ")->?Dint\n"   \
+	"#tIntegerOverflow{@new_limit is negative, or greater than $0xffff}" \
+	"Set the new stack limit to @new_limit and return the old limit\n"   \
+	"The stack limit is checked every time a user-code function is "     \
+	/**/ "entered, at which point a :StackOverflow error is thrown if "  \
+	/**/ "the currently set limit is exceeded"
+DEX_MEMBER_F("setstacklimit", &librt_setstacklimit, DEXSYM_READONLY, DOCOF_setstacklimit),
+/* clang-format on */
+
+
 #ifdef CONFIG_HAVE_EXEC_ALTSTACK
-	  Dee_True
+#define VALUEOF_stacklimitunlimited Dee_True
 #else /* CONFIG_HAVE_EXEC_ALTSTACK */
-	  Dee_False
+#define VALUEOF_stacklimitunlimited Dee_False
 #endif /* !CONFIG_HAVE_EXEC_ALTSTACK */
-	  ,
-	  MODSYM_FREADONLY | MODSYM_FCONSTEXPR, /* varying */
-	  DOC("->?Dbool\n"
-	      "A boolean that is ?t if the deemon interpreter supports "
-	      /**/ "an unlimited stack limit, meaning that #setstacklimit can "
-	      /**/ "be used to set a stack limit of to up $0xffff ($65535), which "
-	      /**/ "is the hard limit.\n"
-	      "When ?f, setting the stack limit higher than the default "
-	      /**/ "may lead to hard crashes of the deemon interpreter, causing "
-	      /**/ "the user-script and hosting application to crash in an undefined "
-	      /**/ "manner.\n"
-	      "Unlimited stack limit support requires a special arch-specific "
-	      /**/ "sub-routine within the deemon core, which may not be available "
-	      /**/ "on any arbitrary architecture.") },
+DEX_MEMBER_F("stacklimitunlimited", VALUEOF_stacklimitunlimited, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+             "->?Dbool\n"
+             "A boolean that is ?t if the deemon interpreter supports "
+             /**/ "an unlimited stack limit, meaning that #setstacklimit can "
+             /**/ "be used to set a stack limit of to up $0xffff ($65535), which "
+             /**/ "is the hard limit.\n"
+             "When ?f, setting the stack limit higher than the default "
+             /**/ "may lead to hard crashes of the deemon interpreter, causing "
+             /**/ "the user-script and hosting application to crash in an undefined "
+             /**/ "manner.\n"
+             "Unlimited stack limit support requires a special arch-specific "
+             /**/ "sub-routine within the deemon core, which may not be available "
+             /**/ "on any arbitrary architecture."),
 
-	{ "getcalloptimizethreshold", (DeeObject *)&librt_getcalloptimizethreshold, MODSYM_FREADONLY,
-	  DOC("->?Dint\n"
-	      "Get the threshold specifying how often a ?DFunction or ?DCode object "
-	      /**/ "needs to be called before deemon will automatically try to optimize it.") },
-	{ "setcalloptimizethreshold", (DeeObject *)&librt_setcalloptimizethreshold, MODSYM_FREADONLY,
-	  DOC("(" librt_setcalloptimizethreshold_params ")->?Dint\n"
-	      "#r{The old threshold}"
-	      "Set the threshold specifying how often a ?DFunction or ?DCode object "
-	      /**/ "needs to be called before deemon will automatically try to optimize it.") },
+DEX_MEMBER_F("getcalloptimizethreshold", &librt_getcalloptimizethreshold, DEXSYM_READONLY,
+             "->?Dint\n"
+             "Get the threshold specifying how often a ?DFunction or ?DCode object "
+             /**/ "needs to be called before deemon will automatically try to optimize it."),
+DEX_MEMBER_F("setcalloptimizethreshold", &librt_setcalloptimizethreshold, DEXSYM_READONLY,
+             "(" librt_setcalloptimizethreshold_params ")->?Dint\n"
+             "#r{The old threshold}"
+             "Set the threshold specifying how often a ?DFunction or ?DCode object "
+             /**/ "needs to be called before deemon will automatically try to optimize it."),
 
-	{ "SlabStat", (DeeObject *)&SlabStat_Type, MODSYM_FREADONLY },             /* Access to slab allocator statistics. */
-	{ "StringFiniHook", (DeeObject *)&StringFiniHook_Type, MODSYM_FREADONLY }, /* Definition of user-defined string finalization hooks. */
-	{ "makeclass", (DeeObject *)&librt_makeclass, MODSYM_FREADONLY,
-	  DOC("(" librt_makeclass_params ")->?DType\n"
-	      "#pmodule{The module that is declaring the class (and returned by ${return.__module__}). "
-	      /*    */ "When not given (or given as ?N), the type is not linked to a module.}"
-	      "Construct a new class from a given @base type, as well as class @descriptor") },
+/* Access to slab allocator statistics. */
+DEX_MEMBER_F_NODOC("SlabStat", &SlabStat_Type, DEXSYM_READONLY),
 
-	/* Access of the arguments passed to the __MAIN__ module. */
-	{ "argv", (DeeObject *)&librt_argv_get, MODSYM_FPROPERTY,
-	  DOC("->?DTuple\n"
-	      "The arguments that are passed to the $__MAIN__ user-code "
-	      /**/ "module, where they are available as ${[...]}.\n"
-	      "Since these arguments aren't accessible from any other module if not explicitly "
-	      /**/ "passed by the $__MAIN__ module itself (similar to how you'd have to forward "
-	      /**/ "#Cargc + #Cargv in C), this rt-specific extension property allows you to get "
-	      /**/ "and set that tuple of arguments.\n"
-	      "Note however that setting a new argument tuple will not change the tuple "
-	      /**/ "which the $__MAIN__ module has access to.") },
-	{ NULL, NULL, MODSYM_FNORMAL },
-	{ NULL, (DeeObject *)&librt_argv_set, MODSYM_FNORMAL },
+/* Definition of user-defined string finalization hooks. */
+DEX_MEMBER_F_NODOC("StringFiniHook", &StringFiniHook_Type, DEXSYM_READONLY),
 
-	/* Internal types used to drive sequence proxies */
-	{ "SeqCombinations", (DeeObject *)&librt_get_SeqCombinations, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* SeqCombinations_Type */
-	{ "SeqCombinationsIterator", (DeeObject *)&librt_get_SeqCombinationsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* SeqCombinationsIterator_Type */
-	{ "SeqRepeatCombinations", (DeeObject *)&librt_get_SeqRepeatCombinations, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* SeqRepeatCombinations_Type */
-	{ "SeqRepeatCombinationsIterator", (DeeObject *)&librt_get_SeqRepeatCombinationsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* SeqRepeatCombinationsIterator_Type */
-	{ "SeqPermutations", (DeeObject *)&librt_get_SeqPermutations, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* SeqPermutations_Type */
-	{ "SeqPermutationsIterator", (DeeObject *)&librt_get_SeqPermutationsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* SeqPermutationsIterator_Type */
-	{ "SeqCombinationsView", (DeeObject *)&librt_get_SeqCombinationsView, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* SeqCombinationsView_Type */
+DEX_MEMBER_F("makeclass", &librt_makeclass, DEXSYM_READONLY,
+             "(" librt_makeclass_params ")->?DType\n"
+             "#pmodule{The module that is declaring the class (and returned by ${return.__module__}). "
+             /*    */ "When not given (or given as ?N), the type is not linked to a module.}"
+             "Construct a new class from a given @base type, as well as class @descriptor"),
 
-	{ "SeqSegments", (DeeObject *)&librt_get_SeqSegments, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                     /* SeqSegments_Type */
-	{ "SeqSegmentsIterator", (DeeObject *)&librt_get_SeqSegmentsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* SeqSegmentsIterator_Type */
-	{ "SeqConcat", (DeeObject *)&librt_get_SeqConcat, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                         /* SeqConcat_Type */
-	{ "SeqConcatIterator", (DeeObject *)&librt_get_SeqConcatIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqConcatIterator_Type */
-	{ "SeqFilter", (DeeObject *)&librt_get_SeqFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                         /* SeqFilter_Type */
-	{ "SeqFilterAsUnbound", (DeeObject *)&librt_get_SeqFilterAsUnbound, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* SeqFilterAsUnbound_Type */
-	{ "SeqFilterIterator", (DeeObject *)&librt_get_SeqFilterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqFilterIterator_Type */
-	{ "SeqHashFilter", (DeeObject *)&librt_get_SeqHashFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* SeqHashFilter_Type */
-	{ "SeqHashFilterIterator", (DeeObject *)&librt_get_SeqHashFilterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* SeqHashFilterIterator_Type */
-	{ "SeqMapped", (DeeObject *)&librt_get_SeqMapped, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                         /* SeqMapped_Type */
-	{ "SeqMappedIterator", (DeeObject *)&librt_get_SeqMappedIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqMappedIterator_Type */
-	{ "SeqRange", (DeeObject *)&librt_get_SeqRange, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                           /* SeqRange_Type */
-	{ "SeqRangeIterator", (DeeObject *)&librt_get_SeqRangeIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* SeqRangeIterator_Type */
-	{ "SeqIntRange", (DeeObject *)&librt_get_SeqIntRange, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                     /* SeqIntRange_Type */
-	{ "SeqIntRangeIterator", (DeeObject *)&librt_get_SeqIntRangeIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* SeqIntRangeIterator_Type */
-	{ "SeqRepeat", (DeeObject *)&librt_get_SeqRepeat, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                         /* SeqRepeat_Type */
-	{ "SeqRepeatIterator", (DeeObject *)&librt_get_SeqRepeatIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqRepeatIterator_Type */
-	{ "SeqRepeatItem", (DeeObject *)&librt_get_SeqRepeatItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* SeqRepeatItem_Type */
-	{ "SeqRepeatItemIterator", (DeeObject *)&librt_get_SeqRepeatItemIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* SeqRepeatItemIterator_Type */
-	{ "SeqIds", (DeeObject *)&librt_get_SeqIds, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                               /* SeqIds_Type */
-	{ "SeqIdsIterator", (DeeObject *)&librt_get_SeqIdsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                               /* SeqIdsIterator_Type */
-	{ "SeqTypes", (DeeObject *)&librt_get_SeqTypes, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                           /* SeqTypes_Type */
-	{ "SeqTypesIterator", (DeeObject *)&librt_get_SeqTypesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* SeqTypesIterator_Type */
-	{ "SeqClasses", (DeeObject *)&librt_get_SeqClasses, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                       /* SeqClasses_Type */
-	{ "SeqClassesIterator", (DeeObject *)&librt_get_SeqClassesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* SeqClassesIterator_Type */
-	{ "SeqFlat", (DeeObject *)&librt_get_SeqFlat, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                             /* SeqFlat_Type */
-	{ "SeqFlatIterator", (DeeObject *)&librt_get_SeqFlatIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* SeqFlatIterator_Type */
+/* Access of the arguments passed to the __MAIN__ module. */
+DEX_GETSET("argv", &librt_argv_get, NULL, &librt_argv_set,
+           "->?DTuple\n"
+           "The arguments that are passed to the $__MAIN__ user-code "
+           /**/ "module, where they are available as ${[...]}.\n"
+           "Since these arguments aren't accessible from any other module if not explicitly "
+           /**/ "passed by the $__MAIN__ module itself (similar to how you'd have to forward "
+           /**/ "#Cargc + #Cargv in C), this rt-specific extension property allows you to get "
+           /**/ "and set that tuple of arguments.\n"
+           "Note however that setting a new argument tuple will not change the tuple "
+           /**/ "which the $__MAIN__ module has access to."),
 
-	/* Seq-each wrapper types. */
-	{ "SeqEach", (DeeObject *)&librt_get_SeqEach, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                             /* SeqEach_Type */
-	{ "SeqEachOperator", (DeeObject *)&librt_get_SeqEachOperator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* SeqEachOperator_Type */
-	{ "SeqEachOperatorIterator", (DeeObject *)&librt_get_SeqEachOperatorIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* SeqEachOperatorIterator_Type */
-	{ "SeqEachGetAttr_np", (DeeObject *)&librt_get_SeqEachGetAttr_np, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqEachGetAttr_Type */
-	{ "SeqEachGetAttrIterator_np", (DeeObject *)&librt_get_SeqEachGetAttrIterator_np, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* SeqEachGetAttrIterator_Type */
-	{ "SeqEachCallAttr_np", (DeeObject *)&librt_get_SeqEachCallAttr_np, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* SeqEachCallAttr_Type */
-	{ "SeqEachCallAttrIterator_np", (DeeObject *)&librt_get_SeqEachCallAttrIterator_np, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },       /* SeqEachCallAttrIterator_Type */
-	{ "SeqEachCallAttrKw_np", (DeeObject *)&librt_get_SeqEachCallAttrKw_np, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* SeqEachCallAttrKw_Type */
-	{ "SeqEachCallAttrKwIterator_np", (DeeObject *)&librt_get_SeqEachCallAttrKwIterator_np, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },   /* SeqEachCallAttrKwIterator_Type */
+/* Internal types used to drive sequence proxies */
+DEX_GETTER_F_NODOC("SeqCombinations", &librt_get_SeqCombinations, DEXSYM_CONSTEXPR),                             /* SeqCombinations_Type */
+DEX_GETTER_F_NODOC("SeqCombinationsIterator", &librt_get_SeqCombinationsIterator, DEXSYM_CONSTEXPR),             /* SeqCombinationsIterator_Type */
+DEX_GETTER_F_NODOC("SeqRepeatCombinations", &librt_get_SeqRepeatCombinations, DEXSYM_CONSTEXPR),                 /* SeqRepeatCombinations_Type */
+DEX_GETTER_F_NODOC("SeqRepeatCombinationsIterator", &librt_get_SeqRepeatCombinationsIterator, DEXSYM_CONSTEXPR), /* SeqRepeatCombinationsIterator_Type */
+DEX_GETTER_F_NODOC("SeqPermutations", &librt_get_SeqPermutations, DEXSYM_CONSTEXPR),                             /* SeqPermutations_Type */
+DEX_GETTER_F_NODOC("SeqPermutationsIterator", &librt_get_SeqPermutationsIterator, DEXSYM_CONSTEXPR),             /* SeqPermutationsIterator_Type */
+DEX_GETTER_F_NODOC("SeqCombinationsView", &librt_get_SeqCombinationsView, DEXSYM_CONSTEXPR),                     /* SeqCombinationsView_Type */
 
-	/* Seq-some wrapper types. */
-	{ "SeqSome", (DeeObject *)&DeeSeqSome_Type, MODSYM_FREADONLY },
-	{ "SeqSomeOperator", (DeeObject *)&librt_get_SeqSomeOperator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* SeqSomeOperator_Type */
-	{ "SeqSomeGetAttr_np", (DeeObject *)&librt_get_SeqSomeGetAttr_np, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqSomeGetAttr_Type */
-	{ "SeqSomeCallAttr_np", (DeeObject *)&librt_get_SeqSomeCallAttr_np, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* SeqSomeCallAttr_Type */
-	{ "SeqSomeCallAttrKw_np", (DeeObject *)&librt_get_SeqSomeCallAttrKw_np, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* SeqSomeCallAttrKw_Type */
+DEX_GETTER_F_NODOC("SeqSegments", &librt_get_SeqSegments, DEXSYM_CONSTEXPR),                     /* SeqSegments_Type */
+DEX_GETTER_F_NODOC("SeqSegmentsIterator", &librt_get_SeqSegmentsIterator, DEXSYM_CONSTEXPR),     /* SeqSegmentsIterator_Type */
+DEX_GETTER_F_NODOC("SeqConcat", &librt_get_SeqConcat, DEXSYM_CONSTEXPR),                         /* SeqConcat_Type */
+DEX_GETTER_F_NODOC("SeqConcatIterator", &librt_get_SeqConcatIterator, DEXSYM_CONSTEXPR),         /* SeqConcatIterator_Type */
+DEX_GETTER_F_NODOC("SeqFilter", &librt_get_SeqFilter, DEXSYM_CONSTEXPR),                         /* SeqFilter_Type */
+DEX_GETTER_F_NODOC("SeqFilterAsUnbound", &librt_get_SeqFilterAsUnbound, DEXSYM_CONSTEXPR),       /* SeqFilterAsUnbound_Type */
+DEX_GETTER_F_NODOC("SeqFilterIterator", &librt_get_SeqFilterIterator, DEXSYM_CONSTEXPR),         /* SeqFilterIterator_Type */
+DEX_GETTER_F_NODOC("SeqHashFilter", &librt_get_SeqHashFilter, DEXSYM_CONSTEXPR),                 /* SeqHashFilter_Type */
+DEX_GETTER_F_NODOC("SeqHashFilterIterator", &librt_get_SeqHashFilterIterator, DEXSYM_CONSTEXPR), /* SeqHashFilterIterator_Type */
+DEX_GETTER_F_NODOC("SeqMapped", &librt_get_SeqMapped, DEXSYM_CONSTEXPR),                         /* SeqMapped_Type */
+DEX_GETTER_F_NODOC("SeqMappedIterator", &librt_get_SeqMappedIterator, DEXSYM_CONSTEXPR),         /* SeqMappedIterator_Type */
+DEX_GETTER_F_NODOC("SeqRange", &librt_get_SeqRange, DEXSYM_CONSTEXPR),                           /* SeqRange_Type */
+DEX_GETTER_F_NODOC("SeqRangeIterator", &librt_get_SeqRangeIterator, DEXSYM_CONSTEXPR),           /* SeqRangeIterator_Type */
+DEX_GETTER_F_NODOC("SeqIntRange", &librt_get_SeqIntRange, DEXSYM_CONSTEXPR),                     /* SeqIntRange_Type */
+DEX_GETTER_F_NODOC("SeqIntRangeIterator", &librt_get_SeqIntRangeIterator, DEXSYM_CONSTEXPR),     /* SeqIntRangeIterator_Type */
+DEX_GETTER_F_NODOC("SeqRepeat", &librt_get_SeqRepeat, DEXSYM_CONSTEXPR),                         /* SeqRepeat_Type */
+DEX_GETTER_F_NODOC("SeqRepeatIterator", &librt_get_SeqRepeatIterator, DEXSYM_CONSTEXPR),         /* SeqRepeatIterator_Type */
+DEX_GETTER_F_NODOC("SeqRepeatItem", &librt_get_SeqRepeatItem, DEXSYM_CONSTEXPR),                 /* SeqRepeatItem_Type */
+DEX_GETTER_F_NODOC("SeqRepeatItemIterator", &librt_get_SeqRepeatItemIterator, DEXSYM_CONSTEXPR), /* SeqRepeatItemIterator_Type */
+DEX_GETTER_F_NODOC("SeqIds", &librt_get_SeqIds, DEXSYM_CONSTEXPR),                               /* SeqIds_Type */
+DEX_GETTER_F_NODOC("SeqIdsIterator", &librt_get_SeqIdsIterator, DEXSYM_CONSTEXPR),               /* SeqIdsIterator_Type */
+DEX_GETTER_F_NODOC("SeqTypes", &librt_get_SeqTypes, DEXSYM_CONSTEXPR),                           /* SeqTypes_Type */
+DEX_GETTER_F_NODOC("SeqTypesIterator", &librt_get_SeqTypesIterator, DEXSYM_CONSTEXPR),           /* SeqTypesIterator_Type */
+DEX_GETTER_F_NODOC("SeqClasses", &librt_get_SeqClasses, DEXSYM_CONSTEXPR),                       /* SeqClasses_Type */
+DEX_GETTER_F_NODOC("SeqClassesIterator", &librt_get_SeqClassesIterator, DEXSYM_CONSTEXPR),       /* SeqClassesIterator_Type */
+DEX_GETTER_F_NODOC("SeqFlat", &librt_get_SeqFlat, DEXSYM_CONSTEXPR),                             /* SeqFlat_Type */
+DEX_GETTER_F_NODOC("SeqFlatIterator", &librt_get_SeqFlatIterator, DEXSYM_CONSTEXPR),             /* SeqFlatIterator_Type */
 
-	/* Default enumeration types */
-	{ "SeqEnumWithSeqOperatorSizeAndGetItemIndexFast", (DeeObject *)&librt_get_SeqEnumWithSeqOperatorSizeAndGetItemIndexFast, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                             /* DefaultEnumeration__with__seq_operator_size__and__getitem_index_fast */
-	{ "SeqEnumWithIntFilterAndSeqOperatorSizeAndGetItemIndexFast", (DeeObject *)&librt_get_SeqEnumWithIntFilterAndSeqOperatorSizeAndGetItemIndexFast, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* DefaultEnumerationWithIntFilter__with__seq_operator_size__and__getitem_index_fast */
-	{ "SeqEnumWithSeqOperatorSizeAndSeqOperatorTryGetItemIndex", (DeeObject *)&librt_get_SeqEnumWithSeqOperatorSizeAndSeqOperatorTryGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* DefaultEnumeration__with__seq_operator_size__and__seq_operator_trygetitem_index */
-	{ "SeqEnumWithIntFilterAndSeqOperatorSizeAndSeqOperatorTryGetItemIndex", (DeeObject *)&librt_get_SeqEnumWithIntFilterAndSeqOperatorSizeAndSeqOperatorTryGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DefaultEnumerationWithIntFilter__with__seq_operator_size__and__seq_operator_trygetitem_index */
-	{ "SeqEnumWithSeqOperatorSizeAndSeqOperatorGetItemIndex", (DeeObject *)&librt_get_SeqEnumWithSeqOperatorSizeAndSeqOperatorGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                               /* DefaultEnumeration__with__seq_operator_size__and__seq_operator_getitem_index */
-	{ "SeqEnumWithIntFilterAndSeqOperatorSizeAndSeqOperatorGetItemIndex", (DeeObject *)&librt_get_SeqEnumWithIntFilterAndSeqOperatorSizeAndSeqOperatorGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },       /* DefaultEnumerationWithIntFilter__with__seq_operator_size__and__seq_operator_getitem_index */
-	{ "SeqEnumWithSeqOperatorSizeobAndSeqOperatorGetItem", (DeeObject *)&librt_get_SeqEnumWithSeqOperatorSizeobAndSeqOperatorGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                     /* DefaultEnumeration__with__seq_operator_sizeob__and__seq_operator_getitem */
-	{ "SeqEnumWithSeqOperatorGetItemIndex", (DeeObject *)&librt_get_SeqEnumWithSeqOperatorGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                                   /* DefaultEnumeration__with__seq_operator_getitem_index */
-	{ "SeqEnumWithIntFilterAndSeqOperatorGetItemIndex", (DeeObject *)&librt_get_SeqEnumWithIntFilterAndSeqOperatorGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                           /* DefaultEnumerationWithIntFilter__with__seq_operator_getitem_index */
-	{ "SeqEnumWithFilterAndSeqOperatorSizeobAndSeqOperatorGetItem", (DeeObject *)&librt_get_SeqEnumWithFilterAndSeqOperatorSizeobAndSeqOperatorGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* DefaultEnumerationWithFilter__with__seq_operator_sizeob__and__seq_operator_getitem */
-	{ "SeqEnumWithSeqOperatorGetItem", (DeeObject *)&librt_get_SeqEnumWithSeqOperatorGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                                             /* DefaultEnumeration__with__seq_operator_getitem */
-	{ "SeqEnumWithFilterAndSeqOperatorGetItem", (DeeObject *)&librt_get_SeqEnumWithFilterAndSeqOperatorGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                           /* DefaultEnumerationWithFilter__with__seq_operator_getitem */
-	{ "SeqEnumWithSeqOperatorIterAndCounter", (DeeObject *)&librt_get_SeqEnumWithSeqOperatorIterAndCounter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                               /* DefaultEnumeration__with__seq_operator_iter__and__counter */
-	{ "SeqEnumWithIntFilterAndSeqOperatorIterAndCounter", (DeeObject *)&librt_get_SeqEnumWithIntFilterAndSeqOperatorIterAndCounter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                       /* DefaultEnumerationWithIntFilter__with__seq_operator_iter__and__counter */
-	{ "SeqEnumWithSeqEnumerate", (DeeObject *)&librt_get_SeqEnumWithSeqEnumerate, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                                                         /* DefaultEnumeration__with__seq_enumerate */
-	{ "SeqEnumWithIntFilterAndSeqEnumerateIndex", (DeeObject *)&librt_get_SeqEnumWithIntFilterAndSeqEnumerateIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                       /* DefaultEnumerationWithIntFilter__with__seq_enumerate_index */
-	{ "SeqEnumWithFilterAndMapOperatorIterAndUnpack", (DeeObject *)&librt_get_SeqEnumWithFilterAndMapOperatorIterAndUnpack, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                               /* DefaultEnumerationWithFilter__with__map_operator_iter__and__unpack */
-	{ "SeqEnumWithMapIterkeysAndMapOperatorGetItem", (DeeObject *)&librt_get_SeqEnumWithMapIterkeysAndMapOperatorGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                 /* DefaultEnumeration__with__map_iterkeys__and__map_operator_getitem */
-	{ "SeqEnumWithFilterAndMapIterkeysAndMapOperatorGetItem", (DeeObject *)&librt_get_SeqEnumWithFilterAndMapIterkeysAndMapOperatorGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                               /* DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_getitem */
-	{ "SeqEnumWithMapIterkeysAndMapOperatorTryGetItem", (DeeObject *)&librt_get_SeqEnumWithMapIterkeysAndMapOperatorTryGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                           /* DefaultEnumeration__with__map_iterkeys__and__map_operator_trygetitem */
-	{ "SeqEnumWithFilterAndMapIterkeysAndMapOperatorTryGetItem", (DeeObject *)&librt_get_SeqEnumWithFilterAndMapIterkeysAndMapOperatorTryGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_trygetitem */
-	{ "SeqEnumWithMapEnumerate", (DeeObject *)&librt_get_SeqEnumWithMapEnumerate, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                                                         /* DefaultEnumeration__with__map_enumerate */
-	{ "SeqEnumWithFilterAndMapEnumerateRange", (DeeObject *)&librt_get_SeqEnumWithFilterAndMapEnumerateRange, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                             /* DefaultEnumerationWithFilter__with__map_enumerate_range */
+/* Seq-each wrapper types. */
+DEX_GETTER_F_NODOC("SeqEach", &librt_get_SeqEach, DEXSYM_CONSTEXPR),                                           /* SeqEach_Type */
+DEX_GETTER_F_NODOC("SeqEachOperator", &librt_get_SeqEachOperator, DEXSYM_CONSTEXPR),                           /* SeqEachOperator_Type */
+DEX_GETTER_F_NODOC("SeqEachOperatorIterator", &librt_get_SeqEachOperatorIterator, DEXSYM_CONSTEXPR),           /* SeqEachOperatorIterator_Type */
+DEX_GETTER_F_NODOC("SeqEachGetAttr_np", &librt_get_SeqEachGetAttr_np, DEXSYM_CONSTEXPR),                       /* SeqEachGetAttr_Type */
+DEX_GETTER_F_NODOC("SeqEachGetAttrIterator_np", &librt_get_SeqEachGetAttrIterator_np, DEXSYM_CONSTEXPR),       /* SeqEachGetAttrIterator_Type */
+DEX_GETTER_F_NODOC("SeqEachCallAttr_np", &librt_get_SeqEachCallAttr_np, DEXSYM_CONSTEXPR),                     /* SeqEachCallAttr_Type */
+DEX_GETTER_F_NODOC("SeqEachCallAttrIterator_np", &librt_get_SeqEachCallAttrIterator_np, DEXSYM_CONSTEXPR),     /* SeqEachCallAttrIterator_Type */
+DEX_GETTER_F_NODOC("SeqEachCallAttrKw_np", &librt_get_SeqEachCallAttrKw_np, DEXSYM_CONSTEXPR),                 /* SeqEachCallAttrKw_Type */
+DEX_GETTER_F_NODOC("SeqEachCallAttrKwIterator_np", &librt_get_SeqEachCallAttrKwIterator_np, DEXSYM_CONSTEXPR), /* SeqEachCallAttrKwIterator_Type */
 
-	/* Default sequence types */
-	{ "SeqWithSizeAndGetItemIndex", (DeeObject *)&librt_get_SeqWithSizeAndGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* DefaultSequence_WithSizeAndGetItemIndex_Type */
-	{ "SeqWithSizeAndGetItemIndexFast", (DeeObject *)&librt_get_SeqWithSizeAndGetItemIndexFast, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* DefaultSequence_WithSizeAndGetItemIndexFast_Type */
-	{ "SeqWithSizeAndTryGetItemIndex", (DeeObject *)&librt_get_SeqWithSizeAndTryGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },               /* DefaultSequence_WithSizeAndTryGetItemIndex_Type */
-	{ "SeqWithSizeObAndGetItem", (DeeObject *)&librt_get_SeqWithSizeAndGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* DefaultSequence_WithSizeObAndGetItem_Type */
-	{ "SeqWithIter", (DeeObject *)&librt_get_SeqWithIter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                   /* DefaultSequence_WithIter_Type */
-	{ "SeqWithIterAndLimit", (DeeObject *)&librt_get_SeqWithIterAndLimit, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                   /* DefaultSequence_WithIterAndLimit_Type */
+/* Seq-some wrapper types. */
+DEX_MEMBER_F_NODOC("SeqSome", &DeeSeqSome_Type, DEXSYM_READONLY),
+DEX_GETTER_F_NODOC("SeqSomeOperator", &librt_get_SeqSomeOperator, DEXSYM_CONSTEXPR),           /* SeqSomeOperator_Type */
+DEX_GETTER_F_NODOC("SeqSomeGetAttr_np", &librt_get_SeqSomeGetAttr_np, DEXSYM_CONSTEXPR),       /* SeqSomeGetAttr_Type */
+DEX_GETTER_F_NODOC("SeqSomeCallAttr_np", &librt_get_SeqSomeCallAttr_np, DEXSYM_CONSTEXPR),     /* SeqSomeCallAttr_Type */
+DEX_GETTER_F_NODOC("SeqSomeCallAttrKw_np", &librt_get_SeqSomeCallAttrKw_np, DEXSYM_CONSTEXPR), /* SeqSomeCallAttrKw_Type */
 
-	/* Special sequence types */
-	{ "SeqOne", (DeeObject *)&DeeSeqOne_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-	{ "SeqOneIterator", (DeeObject *)&librt_get_SeqOneIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* SeqOneIterator_Type */
+/* Default enumeration types */
+DEX_GETTER_F_NODOC("SeqEnumWithSeqOperatorSizeAndGetItemIndexFast", &librt_get_SeqEnumWithSeqOperatorSizeAndGetItemIndexFast, DEXSYM_CONSTEXPR),                                             /* DefaultEnumeration__with__seq_operator_size__and__getitem_index_fast */
+DEX_GETTER_F_NODOC("SeqEnumWithIntFilterAndSeqOperatorSizeAndGetItemIndexFast", &librt_get_SeqEnumWithIntFilterAndSeqOperatorSizeAndGetItemIndexFast, DEXSYM_CONSTEXPR),                     /* DefaultEnumerationWithIntFilter__with__seq_operator_size__and__getitem_index_fast */
+DEX_GETTER_F_NODOC("SeqEnumWithSeqOperatorSizeAndSeqOperatorTryGetItemIndex", &librt_get_SeqEnumWithSeqOperatorSizeAndSeqOperatorTryGetItemIndex, DEXSYM_CONSTEXPR),                         /* DefaultEnumeration__with__seq_operator_size__and__seq_operator_trygetitem_index */
+DEX_GETTER_F_NODOC("SeqEnumWithIntFilterAndSeqOperatorSizeAndSeqOperatorTryGetItemIndex", &librt_get_SeqEnumWithIntFilterAndSeqOperatorSizeAndSeqOperatorTryGetItemIndex, DEXSYM_CONSTEXPR), /* DefaultEnumerationWithIntFilter__with__seq_operator_size__and__seq_operator_trygetitem_index */
+DEX_GETTER_F_NODOC("SeqEnumWithSeqOperatorSizeAndSeqOperatorGetItemIndex", &librt_get_SeqEnumWithSeqOperatorSizeAndSeqOperatorGetItemIndex, DEXSYM_CONSTEXPR),                               /* DefaultEnumeration__with__seq_operator_size__and__seq_operator_getitem_index */
+DEX_GETTER_F_NODOC("SeqEnumWithIntFilterAndSeqOperatorSizeAndSeqOperatorGetItemIndex", &librt_get_SeqEnumWithIntFilterAndSeqOperatorSizeAndSeqOperatorGetItemIndex, DEXSYM_CONSTEXPR),       /* DefaultEnumerationWithIntFilter__with__seq_operator_size__and__seq_operator_getitem_index */
+DEX_GETTER_F_NODOC("SeqEnumWithSeqOperatorSizeobAndSeqOperatorGetItem", &librt_get_SeqEnumWithSeqOperatorSizeobAndSeqOperatorGetItem, DEXSYM_CONSTEXPR),                                     /* DefaultEnumeration__with__seq_operator_sizeob__and__seq_operator_getitem */
+DEX_GETTER_F_NODOC("SeqEnumWithSeqOperatorGetItemIndex", &librt_get_SeqEnumWithSeqOperatorGetItemIndex, DEXSYM_CONSTEXPR),                                                                   /* DefaultEnumeration__with__seq_operator_getitem_index */
+DEX_GETTER_F_NODOC("SeqEnumWithIntFilterAndSeqOperatorGetItemIndex", &librt_get_SeqEnumWithIntFilterAndSeqOperatorGetItemIndex, DEXSYM_CONSTEXPR),                                           /* DefaultEnumerationWithIntFilter__with__seq_operator_getitem_index */
+DEX_GETTER_F_NODOC("SeqEnumWithFilterAndSeqOperatorSizeobAndSeqOperatorGetItem", &librt_get_SeqEnumWithFilterAndSeqOperatorSizeobAndSeqOperatorGetItem, DEXSYM_CONSTEXPR),                   /* DefaultEnumerationWithFilter__with__seq_operator_sizeob__and__seq_operator_getitem */
+DEX_GETTER_F_NODOC("SeqEnumWithSeqOperatorGetItem", &librt_get_SeqEnumWithSeqOperatorGetItem, DEXSYM_CONSTEXPR),                                                                             /* DefaultEnumeration__with__seq_operator_getitem */
+DEX_GETTER_F_NODOC("SeqEnumWithFilterAndSeqOperatorGetItem", &librt_get_SeqEnumWithFilterAndSeqOperatorGetItem, DEXSYM_CONSTEXPR),                                                           /* DefaultEnumerationWithFilter__with__seq_operator_getitem */
+DEX_GETTER_F_NODOC("SeqEnumWithSeqOperatorIterAndCounter", &librt_get_SeqEnumWithSeqOperatorIterAndCounter, DEXSYM_CONSTEXPR),                                                               /* DefaultEnumeration__with__seq_operator_iter__and__counter */
+DEX_GETTER_F_NODOC("SeqEnumWithIntFilterAndSeqOperatorIterAndCounter", &librt_get_SeqEnumWithIntFilterAndSeqOperatorIterAndCounter, DEXSYM_CONSTEXPR),                                       /* DefaultEnumerationWithIntFilter__with__seq_operator_iter__and__counter */
+DEX_GETTER_F_NODOC("SeqEnumWithSeqEnumerate", &librt_get_SeqEnumWithSeqEnumerate, DEXSYM_CONSTEXPR),                                                                                         /* DefaultEnumeration__with__seq_enumerate */
+DEX_GETTER_F_NODOC("SeqEnumWithIntFilterAndSeqEnumerateIndex", &librt_get_SeqEnumWithIntFilterAndSeqEnumerateIndex, DEXSYM_CONSTEXPR),                                                       /* DefaultEnumerationWithIntFilter__with__seq_enumerate_index */
+DEX_GETTER_F_NODOC("SeqEnumWithFilterAndMapOperatorIterAndUnpack", &librt_get_SeqEnumWithFilterAndMapOperatorIterAndUnpack, DEXSYM_CONSTEXPR),                                               /* DefaultEnumerationWithFilter__with__map_operator_iter__and__unpack */
+DEX_GETTER_F_NODOC("SeqEnumWithMapIterkeysAndMapOperatorGetItem", &librt_get_SeqEnumWithMapIterkeysAndMapOperatorGetItem, DEXSYM_CONSTEXPR),                                                 /* DefaultEnumeration__with__map_iterkeys__and__map_operator_getitem */
+DEX_GETTER_F_NODOC("SeqEnumWithFilterAndMapIterkeysAndMapOperatorGetItem", &librt_get_SeqEnumWithFilterAndMapIterkeysAndMapOperatorGetItem, DEXSYM_CONSTEXPR),                               /* DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_getitem */
+DEX_GETTER_F_NODOC("SeqEnumWithMapIterkeysAndMapOperatorTryGetItem", &librt_get_SeqEnumWithMapIterkeysAndMapOperatorTryGetItem, DEXSYM_CONSTEXPR),                                           /* DefaultEnumeration__with__map_iterkeys__and__map_operator_trygetitem */
+DEX_GETTER_F_NODOC("SeqEnumWithFilterAndMapIterkeysAndMapOperatorTryGetItem", &librt_get_SeqEnumWithFilterAndMapIterkeysAndMapOperatorTryGetItem, DEXSYM_CONSTEXPR),                         /* DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_trygetitem */
+DEX_GETTER_F_NODOC("SeqEnumWithMapEnumerate", &librt_get_SeqEnumWithMapEnumerate, DEXSYM_CONSTEXPR),                                                                                         /* DefaultEnumeration__with__map_enumerate */
+DEX_GETTER_F_NODOC("SeqEnumWithFilterAndMapEnumerateRange", &librt_get_SeqEnumWithFilterAndMapEnumerateRange, DEXSYM_CONSTEXPR),                                                             /* DefaultEnumerationWithFilter__with__map_enumerate_range */
 
-	/* Misc. helper types for sequences */
-	{ "SeqEnumerateWrapper", (DeeObject *)&librt_get_EnumerateWrapper, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                           /* SeqEnumerateWrapper_Type */
-	{ "SeqEnumerateIndexWrapper", (DeeObject *)&librt_get_EnumerateIndexWrapper, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* SeqEnumerateIndexWrapper_Type */
-//TODO:	{ "SeqRemoveWithRemoveIfPredicate", (DeeObject *)&librt_get_SeqRemoveWithRemoveIfPredicate, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },               /* SeqRemoveWithRemoveIfPredicate_Type */
-//TODO:	{ "SeqRemoveWithRemoveIfPredicateWithKey", (DeeObject *)&librt_get_SeqRemoveWithRemoveIfPredicateWithKey, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* SeqRemoveWithRemoveIfPredicateWithKey_Type */
-//TODO:	{ "SeqRemoveIfWithRemoveAllItem", (DeeObject *)&librt_get_SeqRemoveIfWithRemoveAllItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* SeqRemoveIfWithRemoveAllItem_Type */
-//TODO:	{ "SeqRemoveIfWithRemoveAllKey", (DeeObject *)&librt_get_SeqRemoveIfWithRemoveAllKey, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* SeqRemoveIfWithRemoveAllKey_Type */
-//TODO:	{ "SeqRemoveIfWithRemoveAllItem_DummyInstance", (DeeObject *)&librt_get_SeqRemoveIfWithRemoveAllItem_DummyInstance, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* SeqRemoveIfWithRemoveAllItem_DummyInstance */
+/* Default sequence types */
+DEX_GETTER_F_NODOC("SeqWithSizeAndGetItemIndex", &librt_get_SeqWithSizeAndGetItemIndex, DEXSYM_CONSTEXPR),         /* DefaultSequence_WithSizeAndGetItemIndex_Type */
+DEX_GETTER_F_NODOC("SeqWithSizeAndGetItemIndexFast", &librt_get_SeqWithSizeAndGetItemIndexFast, DEXSYM_CONSTEXPR), /* DefaultSequence_WithSizeAndGetItemIndexFast_Type */
+DEX_GETTER_F_NODOC("SeqWithSizeAndTryGetItemIndex", &librt_get_SeqWithSizeAndTryGetItemIndex, DEXSYM_CONSTEXPR),   /* DefaultSequence_WithSizeAndTryGetItemIndex_Type */
+DEX_GETTER_F_NODOC("SeqWithSizeObAndGetItem", &librt_get_SeqWithSizeAndGetItem, DEXSYM_CONSTEXPR),                 /* DefaultSequence_WithSizeObAndGetItem_Type */
+DEX_GETTER_F_NODOC("SeqWithIter", &librt_get_SeqWithIter, DEXSYM_CONSTEXPR),                                       /* DefaultSequence_WithIter_Type */
+DEX_GETTER_F_NODOC("SeqWithIterAndLimit", &librt_get_SeqWithIterAndLimit, DEXSYM_CONSTEXPR),                       /* DefaultSequence_WithIterAndLimit_Type */
 
-	/* Default iterator types */
-	{ "IterWithGetItemIndex", (DeeObject *)&librt_get_IterWithGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* DefaultIterator_WithGetItemIndex_Type */
-	{ "IterWithGetItemIndexPair", (DeeObject *)&librt_get_IterWithGetItemIndexPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* DefaultIterator_WithGetItemIndexPair_Type */
-	{ "IterWithSizeAndGetItemIndex", (DeeObject *)&librt_get_IterWithSizeAndGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* DefaultIterator_WithSizeAndGetItemIndex_Type */
-	{ "IterWithSizeAndGetItemIndexPair", (DeeObject *)&librt_get_IterWithSizeAndGetItemIndexPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* DefaultIterator_WithSizeAndGetItemIndexPair_Type */
-	{ "IterWithSizeAndGetItemIndexFast", (DeeObject *)&librt_get_IterWithSizeAndGetItemIndexFast, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* DefaultIterator_WithSizeAndGetItemIndexFast_Type */
-	{ "IterWithSizeAndGetItemIndexFastPair", (DeeObject *)&librt_get_IterWithSizeAndGetItemIndexFastPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },   /* DefaultIterator_WithSizeAndGetItemIndexFastPair_Type */
-	{ "IterWithSizeAndTryGetItemIndex", (DeeObject *)&librt_get_IterWithSizeAndTryGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* DefaultIterator_WithSizeAndTryGetItemIndex_Type */
-	{ "IterWithSizeAndTryGetItemIndexPair", (DeeObject *)&librt_get_IterWithSizeAndTryGetItemIndexPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },     /* DefaultIterator_WithSizeAndTryGetItemIndexPair_Type */
-	{ "IterWithGetItem", (DeeObject *)&librt_get_IterWithGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                           /* DefaultIterator_WithGetItem_Type */
-	{ "IterWithGetItemPair", (DeeObject *)&librt_get_IterWithGetItemPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                   /* DefaultIterator_WithGetItemPair_Type */
-	{ "IterWithSizeObAndGetItem", (DeeObject *)&librt_get_IterWithSizeObAndGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* DefaultIterator_WithSizeObAndGetItem_Type */
-	{ "IterWithSizeAndGetItemPair", (DeeObject *)&librt_get_IterWithSizeObAndGetItemPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* DefaultIterator_WithSizeObAndGetItemPair_Type */
-	{ "IterWithNextAndLimit", (DeeObject *)&librt_get_IterWithNextAndLimit, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* DefaultIterator_WithNextAndLimit_Type */
-	{ "IterWithIterKeysAndGetItemForMap", (DeeObject *)&librt_get_IterWithIterKeysAndGetItemForMap, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* DefaultIterator_WithIterKeysAndGetItemMap_Type */
-	{ "IterWithIterKeysAndTryGetItemForMap", (DeeObject *)&librt_get_IterWithIterKeysAndTryGetItemForMap, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },   /* DefaultIterator_WithIterKeysAndTryGetItemMap_Type */
-	{ "IterWithForeach", (DeeObject *)&librt_get_IterWithForeach, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                           /* DefaultIterator_WithForeach_Type */
-	{ "IterWithForeachPair", (DeeObject *)&librt_get_IterWithForeachPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                   /* DefaultIterator_WithForeachPair_Type */
-	{ "IterWithEnumerateMap", (DeeObject *)&librt_get_IterWithEnumerateMap, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* DefaultIterator_WithEnumerateMap_Type */
-	{ "IterWithEnumerateIndexSeq", (DeeObject *)&librt_get_IterWithEnumerateIndexSeq, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* DefaultIterator_WithEnumerateIndexSeq_Type */
-	{ "IterWithEnumerateSeq", (DeeObject *)&librt_get_IterWithEnumerateSeq, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* DefaultIterator_WithEnumerateSeq_Type */
-	{ "IterWithNextAndCounterPair", (DeeObject *)&librt_get_IterWithNextAndCounterPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* DefaultIterator_WithNextAndCounterPair_Type */
-	{ "IterWithNextAndCounterAndLimitPair", (DeeObject *)&librt_get_IterWithNextAndCounterAndLimitPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },     /* DefaultIterator_WithNextAndCounterAndLimitPair_Type */
-	{ "IterWithNextAndUnpackFilter", (DeeObject *)&librt_get_IterWithNextAndUnpackFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* DefaultIterator_WithNextAndUnpackFilter_Type */
-	{ "IterWithNextKey", (DeeObject *)&librt_get_IterWithNextKey, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                           /* DefaultIterator_WithNextKey */
-	{ "IterWithNextValue", (DeeObject *)&librt_get_IterWithNextValue, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                       /* DefaultIterator_WithNextValue */
+/* Special sequence types */
+DEX_MEMBER_F_NODOC("SeqOne", &DeeSeqOne_Type, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
+DEX_GETTER_F_NODOC("SeqOneIterator", &librt_get_SeqOneIterator, DEXSYM_CONSTEXPR), /* SeqOneIterator_Type */
 
-	/* Default types for `Sequence.reversed()' */
-	{ "SeqReversedWithGetItemIndex", (DeeObject *)&librt_get_SeqReversedWithGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* DefaultReversed_WithGetItemIndex_Type */
-	{ "SeqReversedWithGetItemIndexFast", (DeeObject *)&librt_get_SeqReversedWithGetItemIndexFast, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* DefaultReversed_WithGetItemIndexFast_Type */
-	{ "SeqReversedWithTryGetItemIndex", (DeeObject *)&librt_get_SeqReversedWithTryGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* DefaultReversed_WithTryGetItemIndex_Type */
+/* Misc. helper types for sequences */
+DEX_GETTER_F_NODOC("SeqEnumerateWrapper", &librt_get_EnumerateWrapper, DEXSYM_CONSTEXPR),           /* SeqEnumerateWrapper_Type */
+DEX_GETTER_F_NODOC("SeqEnumerateIndexWrapper", &librt_get_EnumerateIndexWrapper, DEXSYM_CONSTEXPR), /* SeqEnumerateIndexWrapper_TyGETTER//_NODOCTODO:	DEX_MEMBER_F("SeqRemoveWithRemoveIfPredicate", &librt_get_SeqRemoveWithRemoveIfPredicate, DEXSYM_CONSTEXPR),               /* SeqRemoveWithRemoveIfPredicate_TyGETTER//_NODOCTODO:	DEX_MEMBER_F("SeqRemoveWithRemoveIfPredicateWithKey", &librt_get_SeqRemoveWithRemoveIfPredicateWithKey, DEXSYM_CONSTEXPR), /* SeqRemoveWithRemoveIfPredicateWithKey_TyGETTER//_NODOCTODO:	DEX_MEMBER_F("SeqRemoveIfWithRemoveAllItem", &librt_get_SeqRemoveIfWithRemoveAllItem, DEXSYM_CONSTEXPR),                   /* SeqRemoveIfWithRemoveAllItem_TyGETTER//_NODOCTODO:	DEX_MEMBER_F("SeqRemoveIfWithRemoveAllKey", &librt_get_SeqRemoveIfWithRemoveAllKey, DEXSYM_CONSTEXPR),                     /* SeqRemoveIfWithRemoveAllKey_TyGETTER//_NODOCTODO:	DEX_MEMBER_F("SeqRemoveIfWithRemoveAllItem_DummyInstance", &librt_get_SeqRemoveIfWithRemoveAllItem_DummyInstance, DEXSYM_CONSTEXPR),                   /* SeqRemoveIfWithRemoveAllItem_DummyInstance */
 
-	/* Default types for `Sequence.distinct()' */
-	{ "DistinctIterator", (DeeObject *)&librt_get_DistinctIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                         /* DistinctIterator_Type */
-	{ "DistinctIteratorWithKey", (DeeObject *)&librt_get_DistinctIteratorWithKey, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* DistinctIteratorWithKey_Type */
-	{ "DistinctSetWithKey", (DeeObject *)&librt_get_DistinctSetWithKey, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                     /* DistinctSetWithKey_Type */
-	{ "DistinctMappingIterator", (DeeObject *)&librt_get_DistinctMappingIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* DistinctMappingIterator_Type */
+/* Default iterator types */
+DEX_GETTER_F_NODOC("IterWithGetItemIndex", &librt_get_IterWithGetItemIndex, DEXSYM_CONSTEXPR),                               /* DefaultIterator_WithGetItemIndex_Type */
+DEX_GETTER_F_NODOC("IterWithGetItemIndexPair", &librt_get_IterWithGetItemIndexPair, DEXSYM_CONSTEXPR),                       /* DefaultIterator_WithGetItemIndexPair_Type */
+DEX_GETTER_F_NODOC("IterWithSizeAndGetItemIndex", &librt_get_IterWithSizeAndGetItemIndex, DEXSYM_CONSTEXPR),                 /* DefaultIterator_WithSizeAndGetItemIndex_Type */
+DEX_GETTER_F_NODOC("IterWithSizeAndGetItemIndexPair", &librt_get_IterWithSizeAndGetItemIndexPair, DEXSYM_CONSTEXPR),         /* DefaultIterator_WithSizeAndGetItemIndexPair_Type */
+DEX_GETTER_F_NODOC("IterWithSizeAndGetItemIndexFast", &librt_get_IterWithSizeAndGetItemIndexFast, DEXSYM_CONSTEXPR),         /* DefaultIterator_WithSizeAndGetItemIndexFast_Type */
+DEX_GETTER_F_NODOC("IterWithSizeAndGetItemIndexFastPair", &librt_get_IterWithSizeAndGetItemIndexFastPair, DEXSYM_CONSTEXPR), /* DefaultIterator_WithSizeAndGetItemIndexFastPair_Type */
+DEX_GETTER_F_NODOC("IterWithSizeAndTryGetItemIndex", &librt_get_IterWithSizeAndTryGetItemIndex, DEXSYM_CONSTEXPR),           /* DefaultIterator_WithSizeAndTryGetItemIndex_Type */
+DEX_GETTER_F_NODOC("IterWithSizeAndTryGetItemIndexPair", &librt_get_IterWithSizeAndTryGetItemIndexPair, DEXSYM_CONSTEXPR),   /* DefaultIterator_WithSizeAndTryGetItemIndexPair_Type */
+DEX_GETTER_F_NODOC("IterWithGetItem", &librt_get_IterWithGetItem, DEXSYM_CONSTEXPR),                                         /* DefaultIterator_WithGetItem_Type */
+DEX_GETTER_F_NODOC("IterWithGetItemPair", &librt_get_IterWithGetItemPair, DEXSYM_CONSTEXPR),                                 /* DefaultIterator_WithGetItemPair_Type */
+DEX_GETTER_F_NODOC("IterWithSizeObAndGetItem", &librt_get_IterWithSizeObAndGetItem, DEXSYM_CONSTEXPR),                       /* DefaultIterator_WithSizeObAndGetItem_Type */
+DEX_GETTER_F_NODOC("IterWithSizeAndGetItemPair", &librt_get_IterWithSizeObAndGetItemPair, DEXSYM_CONSTEXPR),                 /* DefaultIterator_WithSizeObAndGetItemPair_Type */
+DEX_GETTER_F_NODOC("IterWithNextAndLimit", &librt_get_IterWithNextAndLimit, DEXSYM_CONSTEXPR),                               /* DefaultIterator_WithNextAndLimit_Type */
+DEX_GETTER_F_NODOC("IterWithIterKeysAndGetItemForMap", &librt_get_IterWithIterKeysAndGetItemForMap, DEXSYM_CONSTEXPR),       /* DefaultIterator_WithIterKeysAndGetItemMap_Type */
+DEX_GETTER_F_NODOC("IterWithIterKeysAndTryGetItemForMap", &librt_get_IterWithIterKeysAndTryGetItemForMap, DEXSYM_CONSTEXPR), /* DefaultIterator_WithIterKeysAndTryGetItemMap_Type */
+DEX_GETTER_F_NODOC("IterWithForeach", &librt_get_IterWithForeach, DEXSYM_CONSTEXPR),                                         /* DefaultIterator_WithForeach_Type */
+DEX_GETTER_F_NODOC("IterWithForeachPair", &librt_get_IterWithForeachPair, DEXSYM_CONSTEXPR),                                 /* DefaultIterator_WithForeachPair_Type */
+DEX_GETTER_F_NODOC("IterWithEnumerateMap", &librt_get_IterWithEnumerateMap, DEXSYM_CONSTEXPR),                               /* DefaultIterator_WithEnumerateMap_Type */
+DEX_GETTER_F_NODOC("IterWithEnumerateIndexSeq", &librt_get_IterWithEnumerateIndexSeq, DEXSYM_CONSTEXPR),                     /* DefaultIterator_WithEnumerateIndexSeq_Type */
+DEX_GETTER_F_NODOC("IterWithEnumerateSeq", &librt_get_IterWithEnumerateSeq, DEXSYM_CONSTEXPR),                               /* DefaultIterator_WithEnumerateSeq_Type */
+DEX_GETTER_F_NODOC("IterWithNextAndCounterPair", &librt_get_IterWithNextAndCounterPair, DEXSYM_CONSTEXPR),                   /* DefaultIterator_WithNextAndCounterPair_Type */
+DEX_GETTER_F_NODOC("IterWithNextAndCounterAndLimitPair", &librt_get_IterWithNextAndCounterAndLimitPair, DEXSYM_CONSTEXPR),   /* DefaultIterator_WithNextAndCounterAndLimitPair_Type */
+DEX_GETTER_F_NODOC("IterWithNextAndUnpackFilter", &librt_get_IterWithNextAndUnpackFilter, DEXSYM_CONSTEXPR),                 /* DefaultIterator_WithNextAndUnpackFilter_Type */
+DEX_GETTER_F_NODOC("IterWithNextKey", &librt_get_IterWithNextKey, DEXSYM_CONSTEXPR),                                         /* DefaultIterator_WithNextKey */
+DEX_GETTER_F_NODOC("IterWithNextValue", &librt_get_IterWithNextValue, DEXSYM_CONSTEXPR),                                     /* DefaultIterator_WithNextValue */
 
-	/* Default sequence cache types */
-	{ "CachedSeqWithIter", (DeeObject *)&librt_get_CachedSeqWithIter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                       /* CachedSeq_WithIter_Type */
-	{ "CachedSeqWithIterIterator", (DeeObject *)&librt_get_CachedSeqWithIterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* CachedSeq_WithIter_Iterator_Type */
+/* Default types for `Sequence.reversed()' */
+DEX_GETTER_F_NODOC("SeqReversedWithGetItemIndex", &librt_get_SeqReversedWithGetItemIndex, DEXSYM_CONSTEXPR),         /* DefaultReversed_WithGetItemIndex_Type */
+DEX_GETTER_F_NODOC("SeqReversedWithGetItemIndexFast", &librt_get_SeqReversedWithGetItemIndexFast, DEXSYM_CONSTEXPR), /* DefaultReversed_WithGetItemIndexFast_Type */
+DEX_GETTER_F_NODOC("SeqReversedWithTryGetItemIndex", &librt_get_SeqReversedWithTryGetItemIndex, DEXSYM_CONSTEXPR),   /* DefaultReversed_WithTryGetItemIndex_Type */
 
-	/* Internal types used to drive set proxies */
-	{ "SetInversion", (DeeObject *)&librt_get_SetInversion, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                     /* SetInversion_Type */
-	{ "SetUnion", (DeeObject *)&librt_get_SetUnion, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                             /* SetUnion_Type */
-	{ "SetUnionIterator", (DeeObject *)&librt_get_SetUnionIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* SetUnionIterator_Type */
-	{ "SetSymmetricDifference", (DeeObject *)&librt_get_SetSymmetricDifference, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* SetSymmetricDifference_Type */
-	{ "SetSymmetricDifferenceIterator", (DeeObject *)&librt_get_SetSymmetricDifferenceIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* SetSymmetricDifferenceIterator_Type */
-	{ "SetIntersection", (DeeObject *)&librt_get_SetIntersection, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                               /* SetIntersection_Type */
-	{ "SetIntersectionIterator", (DeeObject *)&librt_get_SetIntersectionIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },               /* SetIntersectionIterator_Type */
-	{ "SetDifference", (DeeObject *)&librt_get_SetDifference, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                   /* SetDifference_Type */
-	{ "SetDifferenceIterator", (DeeObject *)&librt_get_SetDifferenceIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* SetDifferenceIterator_Type */
+/* Default types for `Sequence.distinct()' */
+DEX_GETTER_F_NODOC("DistinctIterator", &librt_get_DistinctIterator, DEXSYM_CONSTEXPR),               /* DistinctIterator_Type */
+DEX_GETTER_F_NODOC("DistinctIteratorWithKey", &librt_get_DistinctIteratorWithKey, DEXSYM_CONSTEXPR), /* DistinctIteratorWithKey_Type */
+DEX_GETTER_F_NODOC("DistinctSetWithKey", &librt_get_DistinctSetWithKey, DEXSYM_CONSTEXPR),           /* DistinctSetWithKey_Type */
+DEX_GETTER_F_NODOC("DistinctMappingIterator", &librt_get_DistinctMappingIterator, DEXSYM_CONSTEXPR), /* DistinctMappingIterator_Type */
 
-	/* Internal types used to drive map proxies */
-	{ "MapUnion", (DeeObject *)&librt_get_MapUnion, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                             /* MapUnion_Type */
-	{ "MapUnionIterator", (DeeObject *)&librt_get_MapUnionIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* MapUnionIterator_Type */
-	{ "MapSymmetricDifference", (DeeObject *)&librt_get_MapSymmetricDifference, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* MapSymmetricDifference_Type */
-	{ "MapSymmetricDifferenceIterator", (DeeObject *)&librt_get_MapSymmetricDifferenceIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* MapSymmetricDifferenceIterator_Type */
-	{ "MapIntersection", (DeeObject *)&librt_get_MapIntersection, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                               /* MapIntersection_Type */
-	{ "MapIntersectionIterator", (DeeObject *)&librt_get_MapIntersectionIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },               /* MapIntersectionIterator_Type */
-	{ "MapDifference", (DeeObject *)&librt_get_MapDifference, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                   /* MapDifference_Type */
-	{ "MapDifferenceIterator", (DeeObject *)&librt_get_MapDifferenceIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* MapDifferenceIterator_Type */
+/* Default sequence cache types */
+DEX_GETTER_F_NODOC("CachedSeqWithIter", &librt_get_CachedSeqWithIter, DEXSYM_CONSTEXPR),                 /* CachedSeq_WithIter_Type */
+DEX_GETTER_F_NODOC("CachedSeqWithIterIterator", &librt_get_CachedSeqWithIterIterator, DEXSYM_CONSTEXPR), /* CachedSeq_WithIter_Iterator_Type */
 
-	/* Internal types used to drive mapping proxies */
-	{ "MapHashFilter", (DeeObject *)&librt_get_MapHashFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* MapHashFilter_Type */
-	{ "MapHashFilterIterator", (DeeObject *)&librt_get_MapHashFilterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* MapHashFilterIterator_Type */
-	{ "MapByAttr", (DeeObject *)&librt_get_MapByAttr, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* MapByAttr_Type */
-	{ "MapKeys", (DeeObject *)&librt_get_MapKeys, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* DefaultSequence_MapKeys_Type */
-	{ "MapValues", (DeeObject *)&librt_get_MapValues, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* DefaultSequence_MapValues_Type */
+/* Internal types used to drive set proxies */
+DEX_GETTER_F_NODOC("SetInversion", &librt_get_SetInversion, DEXSYM_CONSTEXPR),                                     /* SetInversion_Type */
+DEX_GETTER_F_NODOC("SetUnion", &librt_get_SetUnion, DEXSYM_CONSTEXPR),                                             /* SetUnion_Type */
+DEX_GETTER_F_NODOC("SetUnionIterator", &librt_get_SetUnionIterator, DEXSYM_CONSTEXPR),                             /* SetUnionIterator_Type */
+DEX_GETTER_F_NODOC("SetSymmetricDifference", &librt_get_SetSymmetricDifference, DEXSYM_CONSTEXPR),                 /* SetSymmetricDifference_Type */
+DEX_GETTER_F_NODOC("SetSymmetricDifferenceIterator", &librt_get_SetSymmetricDifferenceIterator, DEXSYM_CONSTEXPR), /* SetSymmetricDifferenceIterator_Type */
+DEX_GETTER_F_NODOC("SetIntersection", &librt_get_SetIntersection, DEXSYM_CONSTEXPR),                               /* SetIntersection_Type */
+DEX_GETTER_F_NODOC("SetIntersectionIterator", &librt_get_SetIntersectionIterator, DEXSYM_CONSTEXPR),               /* SetIntersectionIterator_Type */
+DEX_GETTER_F_NODOC("SetDifference", &librt_get_SetDifference, DEXSYM_CONSTEXPR),                                   /* SetDifference_Type */
+DEX_GETTER_F_NODOC("SetDifferenceIterator", &librt_get_SetDifferenceIterator, DEXSYM_CONSTEXPR),                   /* SetDifferenceIterator_Type */
 
-	/* Internal types used to implement "Mapping.fromkeys" */
-	{ "MapFromKeysAndValue", (DeeObject *)&librt_get_MapFromKeysAndValue, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* MapFromKeysAndValue_Type */
-	{ "MapFromKeysAndCallback", (DeeObject *)&librt_get_MapFromKeysAndCallback, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* MapFromKeysAndCallback_Type */
-	{ "MapFromKeysAndValueIterator", (DeeObject *)&librt_get_MapFromKeysAndValueIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },       /* MapFromKeysAndValueIterator_Type */
-	{ "MapFromKeysAndCallbackIterator", (DeeObject *)&librt_get_MapFromKeysAndCallbackIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* MapFromKeysAndCallbackIterator_Type */
+/* Internal types used to drive map proxies */
+DEX_GETTER_F_NODOC("MapUnion", &librt_get_MapUnion, DEXSYM_CONSTEXPR),                                             /* MapUnion_Type */
+DEX_GETTER_F_NODOC("MapUnionIterator", &librt_get_MapUnionIterator, DEXSYM_CONSTEXPR),                             /* MapUnionIterator_Type */
+DEX_GETTER_F_NODOC("MapSymmetricDifference", &librt_get_MapSymmetricDifference, DEXSYM_CONSTEXPR),                 /* MapSymmetricDifference_Type */
+DEX_GETTER_F_NODOC("MapSymmetricDifferenceIterator", &librt_get_MapSymmetricDifferenceIterator, DEXSYM_CONSTEXPR), /* MapSymmetricDifferenceIterator_Type */
+DEX_GETTER_F_NODOC("MapIntersection", &librt_get_MapIntersection, DEXSYM_CONSTEXPR),                               /* MapIntersection_Type */
+DEX_GETTER_F_NODOC("MapIntersectionIterator", &librt_get_MapIntersectionIterator, DEXSYM_CONSTEXPR),               /* MapIntersectionIterator_Type */
+DEX_GETTER_F_NODOC("MapDifference", &librt_get_MapDifference, DEXSYM_CONSTEXPR),                                   /* MapDifference_Type */
+DEX_GETTER_F_NODOC("MapDifferenceIterator", &librt_get_MapDifferenceIterator, DEXSYM_CONSTEXPR),                   /* MapDifferenceIterator_Type */
 
-	/* Internal types used to implement "Mapping.fromattr" */
-	{ "MapFromAttr", (DeeObject *)&librt_get_MapFromAttr, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* MapFromAttr_Type */
-	{ "MapFromAttrKeysIterator", (DeeObject *)&librt_get_MapFromAttrKeysIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* MapFromAttrKeysIterator_Type */
+/* Internal types used to drive mapping proxies */
+DEX_GETTER_F_NODOC("MapHashFilter", &librt_get_MapHashFilter, DEXSYM_CONSTEXPR),                 /* MapHashFilter_Type */
+DEX_GETTER_F_NODOC("MapHashFilterIterator", &librt_get_MapHashFilterIterator, DEXSYM_CONSTEXPR), /* MapHashFilterIterator_Type */
+DEX_GETTER_F_NODOC("MapByAttr", &librt_get_MapByAttr, DEXSYM_CONSTEXPR),                         /* MapByAttr_Type */
+DEX_GETTER_F_NODOC("MapKeys", &librt_get_MapKeys, DEXSYM_CONSTEXPR),                             /* DefaultSequence_MapKeys_Type */
+DEX_GETTER_F_NODOC("MapValues", &librt_get_MapValues, DEXSYM_CONSTEXPR),                         /* DefaultSequence_MapValues_Type */
 
-	/* The special "nullable" tuple sequence type. */
-	{ "NullableTuple", (DeeObject *)&DeeNullableTuple_Type, MODSYM_FREADONLY },
+/* Internal types used to implement "Mapping.fromkeys" */
+DEX_GETTER_F_NODOC("MapFromKeysAndValue", &librt_get_MapFromKeysAndValue, DEXSYM_CONSTEXPR),                       /* MapFromKeysAndValue_Type */
+DEX_GETTER_F_NODOC("MapFromKeysAndCallback", &librt_get_MapFromKeysAndCallback, DEXSYM_CONSTEXPR),                 /* MapFromKeysAndCallback_Type */
+DEX_GETTER_F_NODOC("MapFromKeysAndValueIterator", &librt_get_MapFromKeysAndValueIterator, DEXSYM_CONSTEXPR),       /* MapFromKeysAndValueIterator_Type */
+DEX_GETTER_F_NODOC("MapFromKeysAndCallbackIterator", &librt_get_MapFromKeysAndCallbackIterator, DEXSYM_CONSTEXPR), /* MapFromKeysAndCallbackIterator_Type */
 
-	/* Internal types used for safe & fast passing of temporary sequences */
-	{ "SharedVector", (DeeObject *)&DeeSharedVector_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },                                      /* DeeSharedVector_Type */
-	{ "SharedVectorIterator", (DeeObject *)&librt_get_SharedVectorIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* SharedVectorIterator_Type */
-	{ "SharedMap", (DeeObject *)&DeeSharedMap_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },                                            /* DeeSharedMap_Type */
-	{ "SharedMapIterator", (DeeObject *)&librt_get_SharedMapIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },       /* SharedMapIterator_Type */
-	{ "RefVector", (DeeObject *)&librt_get_RefVector, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* RefVector_Type */
-	{ "RefVectorIterator", (DeeObject *)&librt_get_RefVectorIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },       /* RefVectorIterator_Type */
+/* Internal types used to implement "Mapping.fromattr" */
+DEX_GETTER_F_NODOC("MapFromAttr", &librt_get_MapFromAttr, DEXSYM_CONSTEXPR),                         /* MapFromAttr_Type */
+DEX_GETTER_F_NODOC("MapFromAttrKeysIterator", &librt_get_MapFromAttrKeysIterator, DEXSYM_CONSTEXPR), /* MapFromAttrKeysIterator_Type */
 
-	/* Internal types used to drive sequence operations on `Bytes' */
-	{ "BytesFind", (DeeObject *)&librt_get_BytesFind, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* BytesFind_Type */
-	{ "BytesFindIterator", (DeeObject *)&librt_get_BytesFindIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* BytesFindIterator_Type */
-	{ "BytesCaseFind", (DeeObject *)&librt_get_BytesCaseFind, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* BytesCaseFind_Type */
-	{ "BytesCaseFindIterator", (DeeObject *)&librt_get_BytesCaseFindIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },   /* BytesCaseFindIterator_Type */
-	{ "BytesSegments", (DeeObject *)&librt_get_BytesSegments, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* BytesSegments_Type */
-	{ "BytesSegmentsIterator", (DeeObject *)&librt_get_BytesSegmentsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },   /* BytesSegmentsIterator_Type */
-	{ "BytesSplit", (DeeObject *)&librt_get_BytesSplit, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* BytesSplit_Type */
-	{ "BytesSplitIterator", (DeeObject *)&librt_get_BytesSplitIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* BytesSplitIterator_Type */
-	{ "BytesCaseSplit", (DeeObject *)&librt_get_BytesCaseSplit, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* BytesCaseSplit_Type */
-	{ "BytesCaseSplitIterator", (DeeObject *)&librt_get_BytesCaseSplitIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* BytesCaseSplitIterator_Type */
-	{ "BytesLineSplit", (DeeObject *)&librt_get_BytesLineSplit, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* BytesLineSplit_Type */
-	{ "BytesLineSplitIterator", (DeeObject *)&librt_get_BytesLineSplitIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* BytesLineSplitIterator_Type */
+/* The special "nullable" tuple sequence type. */
+DEX_MEMBER_F_NODOC("NullableTuple", &DeeNullableTuple_Type, DEXSYM_READONLY),
 
-	/* Internal types used to drive sequence operations on `string' */
-	{ "StringScan", (DeeObject *)&librt_get_StringScan, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* StringScan_Type */
-	{ "StringScanIterator", (DeeObject *)&librt_get_StringScanIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* StringScanIterator_Type */
-	{ "StringFind", (DeeObject *)&librt_get_StringFind, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* StringFind_Type */
-	{ "StringFindIterator", (DeeObject *)&librt_get_StringFindIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* StringFindIterator_Type */
-	{ "StringCaseFind", (DeeObject *)&librt_get_StringCaseFind, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* StringCaseFind_Type */
-	{ "StringCaseFindIterator", (DeeObject *)&librt_get_StringCaseFindIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },   /* StringCaseFindIterator_Type */
-	{ "StringOrdinals", (DeeObject *)&librt_get_StringOrdinals, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* StringOrdinals_Type */
-	{ "StringSegments", (DeeObject *)&librt_get_StringSegments, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* StringSegments_Type */
-	{ "StringSegmentsIterator", (DeeObject *)&librt_get_StringSegmentsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },   /* StringSegmentsIterator_Type */
-	{ "StringSplit", (DeeObject *)&librt_get_StringSplit, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* StringSplit_Type */
-	{ "StringSplitIterator", (DeeObject *)&librt_get_StringSplitIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* StringSplitIterator_Type */
-	{ "StringCaseSplit", (DeeObject *)&librt_get_StringCaseSplit, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* StringCaseSplit_Type */
-	{ "StringCaseSplitIterator", (DeeObject *)&librt_get_StringCaseSplitIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* StringCaseSplitIterator_Type */
-	{ "StringLineSplit", (DeeObject *)&librt_get_StringLineSplit, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* StringLineSplit_Type */
-	{ "StringLineSplitIterator", (DeeObject *)&librt_get_StringLineSplitIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* StringLineSplitIterator_Type */
+/* Internal types used for safe & fast passing of temporary sequences */
+DEX_MEMBER_F_NODOC("SharedVector", &DeeSharedVector_Type, DEXSYM_READONLY | DEXSYM_CONSTEXPR), /* DeeSharedVector_Type */
+DEX_GETTER_F_NODOC("SharedVectorIterator", &librt_get_SharedVectorIterator, DEXSYM_CONSTEXPR), /* SharedVectorIterator_Type */
+DEX_MEMBER_F_NODOC("SharedMap", &DeeSharedMap_Type, DEXSYM_READONLY | DEXSYM_CONSTEXPR),       /* DeeSharedMap_Type */
+DEX_GETTER_F_NODOC("SharedMapIterator", &librt_get_SharedMapIterator, DEXSYM_CONSTEXPR),       /* SharedMapIterator_Type */
+DEX_GETTER_F_NODOC("RefVector", &librt_get_RefVector, DEXSYM_CONSTEXPR),                       /* RefVector_Type */
+DEX_GETTER_F_NODOC("RefVectorIterator", &librt_get_RefVectorIterator, DEXSYM_CONSTEXPR),       /* RefVectorIterator_Type */
 
-	/* Internal types used to drive sequence operations with regular expressions */
-	{ "ReFindAll", (DeeObject *)&librt_get_ReFindAll, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                               /* ReFindAll_Type */
-	{ "ReFindAllIterator", (DeeObject *)&librt_get_ReFindAllIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },               /* ReFindAllIterator_Type */
-	{ "RegFindAll", (DeeObject *)&librt_get_RegFindAll, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* RegFindAll_Type */
-	{ "RegFindAllIterator", (DeeObject *)&librt_get_RegFindAllIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* RegFindAllIterator_Type */
-	{ "ReLocateAll", (DeeObject *)&librt_get_ReLocateAll, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* ReLocateAll_Type */
-	{ "ReLocateAllIterator", (DeeObject *)&librt_get_ReLocateAllIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* ReLocateAllIterator_Type */
-	{ "RegLocateAll", (DeeObject *)&librt_get_RegLocateAll, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* RegLocateAll_Type */
-	{ "RegLocateAllIterator", (DeeObject *)&librt_get_RegLocateAllIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* RegLocateAllIterator_Type */
-	{ "ReSplit", (DeeObject *)&librt_get_ReSplit, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                   /* ReSplit_Type */
-	{ "ReSplitIterator", (DeeObject *)&librt_get_ReSplitIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* ReSplitIterator_Type */
-	{ "ReGroups", (DeeObject *)&librt_get_ReGroups, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* ReGroups_Type */
-	{ "ReSubStrings", (DeeObject *)&librt_get_ReSubStrings, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* ReSubStrings_Type */
-	{ "ReSubBytes", (DeeObject *)&librt_get_ReSubBytes, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* ReSubBytes_Type */
-	{ "ReBytesFindAll", (DeeObject *)&librt_get_ReBytesFindAll, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* ReBytesFindAll_Type */
-	{ "ReBytesFindAllIterator", (DeeObject *)&librt_get_ReBytesFindAllIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },     /* ReBytesFindAllIterator_Type */
-	{ "RegBytesFindAll", (DeeObject *)&librt_get_RegBytesFindAll, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* RegBytesFindAll_Type */
-	{ "RegBytesFindAllIterator", (DeeObject *)&librt_get_RegBytesFindAllIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },   /* RegBytesFindAllIterator_Type */
-	{ "ReBytesLocateAll", (DeeObject *)&librt_get_ReBytesLocateAll, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* ReBytesLocateAll_Type */
-	{ "ReBytesLocateAllIterator", (DeeObject *)&librt_get_ReBytesLocateAllIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* ReBytesLocateAllIterator_Type */
-	{ "RegBytesLocateAll", (DeeObject *)&librt_get_RegBytesLocateAll, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },               /* RegBytesLocateAll_Type */
-	{ "RegBytesLocateAllIterator", (DeeObject *)&librt_get_RegBytesLocateAllIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },/* RegBytesLocateAllIterator_Type */
-	{ "ReBytesSplit", (DeeObject *)&librt_get_ReBytesSplit, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* ReBytesSplit_Type */
-	{ "ReBytesSplitIterator", (DeeObject *)&librt_get_ReBytesSplitIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* ReBytesSplitIterator_Type */
+/* Internal types used to drive sequence operations on `Bytes' */
+DEX_GETTER_F_NODOC("BytesFind", &librt_get_BytesFind, DEXSYM_CONSTEXPR),                           /* BytesFind_Type */
+DEX_GETTER_F_NODOC("BytesFindIterator", &librt_get_BytesFindIterator, DEXSYM_CONSTEXPR),           /* BytesFindIterator_Type */
+DEX_GETTER_F_NODOC("BytesCaseFind", &librt_get_BytesCaseFind, DEXSYM_CONSTEXPR),                   /* BytesCaseFind_Type */
+DEX_GETTER_F_NODOC("BytesCaseFindIterator", &librt_get_BytesCaseFindIterator, DEXSYM_CONSTEXPR),   /* BytesCaseFindIterator_Type */
+DEX_GETTER_F_NODOC("BytesSegments", &librt_get_BytesSegments, DEXSYM_CONSTEXPR),                   /* BytesSegments_Type */
+DEX_GETTER_F_NODOC("BytesSegmentsIterator", &librt_get_BytesSegmentsIterator, DEXSYM_CONSTEXPR),   /* BytesSegmentsIterator_Type */
+DEX_GETTER_F_NODOC("BytesSplit", &librt_get_BytesSplit, DEXSYM_CONSTEXPR),                         /* BytesSplit_Type */
+DEX_GETTER_F_NODOC("BytesSplitIterator", &librt_get_BytesSplitIterator, DEXSYM_CONSTEXPR),         /* BytesSplitIterator_Type */
+DEX_GETTER_F_NODOC("BytesCaseSplit", &librt_get_BytesCaseSplit, DEXSYM_CONSTEXPR),                 /* BytesCaseSplit_Type */
+DEX_GETTER_F_NODOC("BytesCaseSplitIterator", &librt_get_BytesCaseSplitIterator, DEXSYM_CONSTEXPR), /* BytesCaseSplitIterator_Type */
+DEX_GETTER_F_NODOC("BytesLineSplit", &librt_get_BytesLineSplit, DEXSYM_CONSTEXPR),                 /* BytesLineSplit_Type */
+DEX_GETTER_F_NODOC("BytesLineSplitIterator", &librt_get_BytesLineSplitIterator, DEXSYM_CONSTEXPR), /* BytesLineSplitIterator_Type */
 
-	/* Internal types used to drive module symbol table inspection */
-	{ "ModuleExports", (DeeObject *)&librt_get_ModuleExports, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* ModuleExports_Type */
-	{ "ModuleExportsIterator", (DeeObject *)&librt_get_ModuleExportsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* ModuleExportsIterator_Type */
-	{ "ModuleGlobals", (DeeObject *)&librt_get_ModuleGlobals, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* ModuleGlobals_Type */
+/* Internal types used to drive sequence operations on `string' */
+DEX_GETTER_F_NODOC("StringScan", &librt_get_StringScan, DEXSYM_CONSTEXPR),                           /* StringScan_Type */
+DEX_GETTER_F_NODOC("StringScanIterator", &librt_get_StringScanIterator, DEXSYM_CONSTEXPR),           /* StringScanIterator_Type */
+DEX_GETTER_F_NODOC("StringFind", &librt_get_StringFind, DEXSYM_CONSTEXPR),                           /* StringFind_Type */
+DEX_GETTER_F_NODOC("StringFindIterator", &librt_get_StringFindIterator, DEXSYM_CONSTEXPR),           /* StringFindIterator_Type */
+DEX_GETTER_F_NODOC("StringCaseFind", &librt_get_StringCaseFind, DEXSYM_CONSTEXPR),                   /* StringCaseFind_Type */
+DEX_GETTER_F_NODOC("StringCaseFindIterator", &librt_get_StringCaseFindIterator, DEXSYM_CONSTEXPR),   /* StringCaseFindIterator_Type */
+DEX_GETTER_F_NODOC("StringOrdinals", &librt_get_StringOrdinals, DEXSYM_CONSTEXPR),                   /* StringOrdinals_Type */
+DEX_GETTER_F_NODOC("StringSegments", &librt_get_StringSegments, DEXSYM_CONSTEXPR),                   /* StringSegments_Type */
+DEX_GETTER_F_NODOC("StringSegmentsIterator", &librt_get_StringSegmentsIterator, DEXSYM_CONSTEXPR),   /* StringSegmentsIterator_Type */
+DEX_GETTER_F_NODOC("StringSplit", &librt_get_StringSplit, DEXSYM_CONSTEXPR),                         /* StringSplit_Type */
+DEX_GETTER_F_NODOC("StringSplitIterator", &librt_get_StringSplitIterator, DEXSYM_CONSTEXPR),         /* StringSplitIterator_Type */
+DEX_GETTER_F_NODOC("StringCaseSplit", &librt_get_StringCaseSplit, DEXSYM_CONSTEXPR),                 /* StringCaseSplit_Type */
+DEX_GETTER_F_NODOC("StringCaseSplitIterator", &librt_get_StringCaseSplitIterator, DEXSYM_CONSTEXPR), /* StringCaseSplitIterator_Type */
+DEX_GETTER_F_NODOC("StringLineSplit", &librt_get_StringLineSplit, DEXSYM_CONSTEXPR),                 /* StringLineSplit_Type */
+DEX_GETTER_F_NODOC("StringLineSplitIterator", &librt_get_StringLineSplitIterator, DEXSYM_CONSTEXPR), /* StringLineSplitIterator_Type */
 
-	/* Internal types used to drive user-defined classes */
-	{ "ClassOperatorTable", (DeeObject *)&librt_get_ClassOperatorTable, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* ClassOperatorTable_Type */
-	{ "ClassOperatorTableIterator", (DeeObject *)&librt_get_ClassOperatorTableIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },   /* ClassOperatorTableIterator_Type */
-	{ "ClassAttribute", (DeeObject *)&librt_get_ClassAttribute, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* ClassAttribute_Type */
-	{ "ClassAttributeTable", (DeeObject *)&librt_get_ClassAttributeTable, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* ClassAttributeTable_Type */
-	{ "ClassAttributeTableIterator", (DeeObject *)&librt_get_ClassAttributeTableIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* ClassAttributeTableIterator_Type */
-	{ "ObjectTable", (DeeObject *)&librt_get_ObjectTable, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* ObjectTable_Type */
-	{ "TypeMRO", (DeeObject *)&librt_get_TypeMRO, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                         /* TypeMRO_Type */
-	{ "TypeMROIterator", (DeeObject *)&librt_get_TypeMROIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* TypeMROIterator_Type */
-	{ "TypeBases", (DeeObject *)&librt_get_TypeBases, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                     /* TypeBases_Type */
-	{ "TypeBasesIterator", (DeeObject *)&librt_get_TypeBasesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* TypeBasesIterator_Type */
+/* Internal types used to drive sequence operations with regular expressions */
+DEX_GETTER_F_NODOC("ReFindAll", &librt_get_ReFindAll, DEXSYM_CONSTEXPR),                                 /* ReFindAll_Type */
+DEX_GETTER_F_NODOC("ReFindAllIterator", &librt_get_ReFindAllIterator, DEXSYM_CONSTEXPR),                 /* ReFindAllIterator_Type */
+DEX_GETTER_F_NODOC("RegFindAll", &librt_get_RegFindAll, DEXSYM_CONSTEXPR),                               /* RegFindAll_Type */
+DEX_GETTER_F_NODOC("RegFindAllIterator", &librt_get_RegFindAllIterator, DEXSYM_CONSTEXPR),               /* RegFindAllIterator_Type */
+DEX_GETTER_F_NODOC("ReLocateAll", &librt_get_ReLocateAll, DEXSYM_CONSTEXPR),                             /* ReLocateAll_Type */
+DEX_GETTER_F_NODOC("ReLocateAllIterator", &librt_get_ReLocateAllIterator, DEXSYM_CONSTEXPR),             /* ReLocateAllIterator_Type */
+DEX_GETTER_F_NODOC("RegLocateAll", &librt_get_RegLocateAll, DEXSYM_CONSTEXPR),                           /* RegLocateAll_Type */
+DEX_GETTER_F_NODOC("RegLocateAllIterator", &librt_get_RegLocateAllIterator, DEXSYM_CONSTEXPR),           /* RegLocateAllIterator_Type */
+DEX_GETTER_F_NODOC("ReSplit", &librt_get_ReSplit, DEXSYM_CONSTEXPR),                                     /* ReSplit_Type */
+DEX_GETTER_F_NODOC("ReSplitIterator", &librt_get_ReSplitIterator, DEXSYM_CONSTEXPR),                     /* ReSplitIterator_Type */
+DEX_GETTER_F_NODOC("ReGroups", &librt_get_ReGroups, DEXSYM_CONSTEXPR),                                   /* ReGroups_Type */
+DEX_GETTER_F_NODOC("ReSubStrings", &librt_get_ReSubStrings, DEXSYM_CONSTEXPR),                           /* ReSubStrings_Type */
+DEX_GETTER_F_NODOC("ReSubBytes", &librt_get_ReSubBytes, DEXSYM_CONSTEXPR),                               /* ReSubBytes_Type */
+DEX_GETTER_F_NODOC("ReBytesFindAll", &librt_get_ReBytesFindAll, DEXSYM_CONSTEXPR),                       /* ReBytesFindAll_Type */
+DEX_GETTER_F_NODOC("ReBytesFindAllIterator", &librt_get_ReBytesFindAllIterator, DEXSYM_CONSTEXPR),       /* ReBytesFindAllIterator_Type */
+DEX_GETTER_F_NODOC("RegBytesFindAll", &librt_get_RegBytesFindAll, DEXSYM_CONSTEXPR),                     /* RegBytesFindAll_Type */
+DEX_GETTER_F_NODOC("RegBytesFindAllIterator", &librt_get_RegBytesFindAllIterator, DEXSYM_CONSTEXPR),     /* RegBytesFindAllIterator_Type */
+DEX_GETTER_F_NODOC("ReBytesLocateAll", &librt_get_ReBytesLocateAll, DEXSYM_CONSTEXPR),                   /* ReBytesLocateAll_Type */
+DEX_GETTER_F_NODOC("ReBytesLocateAllIterator", &librt_get_ReBytesLocateAllIterator, DEXSYM_CONSTEXPR),   /* ReBytesLocateAllIterator_Type */
+DEX_GETTER_F_NODOC("RegBytesLocateAll", &librt_get_RegBytesLocateAll, DEXSYM_CONSTEXPR),                 /* RegBytesLocateAll_Type */
+DEX_GETTER_F_NODOC("RegBytesLocateAllIterator", &librt_get_RegBytesLocateAllIterator, DEXSYM_CONSTEXPR), /* RegBytesLocateAllIterator_Type */
+DEX_GETTER_F_NODOC("ReBytesSplit", &librt_get_ReBytesSplit, DEXSYM_CONSTEXPR),                           /* ReBytesSplit_Type */
+DEX_GETTER_F_NODOC("ReBytesSplitIterator", &librt_get_ReBytesSplitIterator, DEXSYM_CONSTEXPR),           /* ReBytesSplitIterator_Type */
 
-	/* Internal types used to drive natively defined types */
-	{ "TypeOperators", (DeeObject *)&librt_get_TypeOperators, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("Sequence type used to enumerate operators that have been overwritten by a given type\n"
-	      "A sequence of this type is returned by ?A__operators__?DType and ?A__operatorids__?DType") }, /* TypeOperators_Type */
-	{ "TypeOperatorsIterator", (DeeObject *)&librt_get_TypeOperatorsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* TypeOperatorsIterator_Type */
+/* Internal types used to drive module symbol table inspection */
+DEX_GETTER_F_NODOC("ModuleExports", &librt_get_ModuleExports, DEXSYM_CONSTEXPR),                 /* ModuleExports_Type */
+DEX_GETTER_F_NODOC("ModuleExportsIterator", &librt_get_ModuleExportsIterator, DEXSYM_CONSTEXPR), /* ModuleExportsIterator_Type */
+DEX_GETTER_F_NODOC("ModuleGlobals", &librt_get_ModuleGlobals, DEXSYM_CONSTEXPR),                 /* ModuleGlobals_Type */
 
-	/* Internal types used to drive the garbage collector */
-	{ "GCSet", (DeeObject *)&librt_get_GCSet, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR, /* DeeGCSet_Type */
-	  DOC("The set-like type returned by ?Areferred?Dgc, ?Areferredgc?Dgc, "
-	      /**/ "?Areachable?Dgc, ?Areachablegc?Dgc and ?Areferring?Dgc") },
-	{ "GCSetIterator", (DeeObject *)&librt_get_GCSetIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeGCSetIterator_Type */
+/* Internal types used to drive user-defined classes */
+DEX_GETTER_F_NODOC("ClassOperatorTable", &librt_get_ClassOperatorTable, DEXSYM_CONSTEXPR),                   /* ClassOperatorTable_Type */
+DEX_GETTER_F_NODOC("ClassOperatorTableIterator", &librt_get_ClassOperatorTableIterator, DEXSYM_CONSTEXPR),   /* ClassOperatorTableIterator_Type */
+DEX_GETTER_F_NODOC("ClassAttribute", &librt_get_ClassAttribute, DEXSYM_CONSTEXPR),                           /* ClassAttribute_Type */
+DEX_GETTER_F_NODOC("ClassAttributeTable", &librt_get_ClassAttributeTable, DEXSYM_CONSTEXPR),                 /* ClassAttributeTable_Type */
+DEX_GETTER_F_NODOC("ClassAttributeTableIterator", &librt_get_ClassAttributeTableIterator, DEXSYM_CONSTEXPR), /* ClassAttributeTableIterator_Type */
+DEX_GETTER_F_NODOC("ObjectTable", &librt_get_ObjectTable, DEXSYM_CONSTEXPR),                                 /* ObjectTable_Type */
+DEX_GETTER_F_NODOC("TypeMRO", &librt_get_TypeMRO, DEXSYM_CONSTEXPR),                                         /* TypeMRO_Type */
+DEX_GETTER_F_NODOC("TypeMROIterator", &librt_get_TypeMROIterator, DEXSYM_CONSTEXPR),                         /* TypeMROIterator_Type */
+DEX_GETTER_F_NODOC("TypeBases", &librt_get_TypeBases, DEXSYM_CONSTEXPR),                                     /* TypeBases_Type */
+DEX_GETTER_F_NODOC("TypeBasesIterator", &librt_get_TypeBasesIterator, DEXSYM_CONSTEXPR),                     /* TypeBasesIterator_Type */
 
-	/* Internal types used to drive variable keyword arguments */
-	{ "BlackListKwds", (DeeObject *)&DeeBlackListKwds_Type, MODSYM_FREADONLY },
-	{ "BlackListKwdsIterator", /* DeeBlackListKwdsIterator_Type */
-	  (DeeObject *)&librt_get_BlackListKwdsIterator,
-	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },
-	{ "BlackListKw", (DeeObject *)&DeeBlackListKw_Type, MODSYM_FREADONLY },
-	{ "BlackListKwIterator", /* DeeBlackListKwIterator_Type */
-	  (DeeObject *)&librt_get_BlackListKwIterator,
-	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },
-	{ "CachedDict", (DeeObject *)&DeeCachedDict_Type, MODSYM_FREADONLY },
-	{ "kw", (DeeObject *)&librt_kw, MODSYM_FNORMAL, /* varying */
-	  DOC("(map:?DMapping)->?DMapping\n"
-	      "Ensure that @map can be used as a keywords argument in the C API (s.a. ?A__iskw__?DType)\n"
-	      "You should never have to call this function. It is mainly here to expose that detail of the "
-	      /**/ "#IGATW deemon implementation.") },
+/* Internal types used to drive natively defined types */
+DEX_GETTER_F("TypeOperators", &librt_get_TypeOperators, DEXSYM_CONSTEXPR, /* TypeOperators_Type */
+             "Sequence type used to enumerate operators that have been overwritten by a given type\n"
+             "A sequence of this type is returned by ?A__operators__?DType and ?A__operatorids__?DType"),
+DEX_GETTER_F_NODOC("TypeOperatorsIterator", &librt_get_TypeOperatorsIterator, DEXSYM_CONSTEXPR), /* TypeOperatorsIterator_Type */
 
-	/* Internal types used to drive keyword argument support */
-	{ "DocKwds", /* DocKwds_Type */
-	  (DeeObject *)&librt_get_DocKwds,
-	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("Internal type for enumerating the keywords of functions implemented in C\n"
-	      "This is done via the associated doc string, with this sequence type being "
-	      /**/ "used to implement the string processing. This type is then returned by "
-	      /**/ "the $__kwds__ attributes of ?GKwCMethod, ?GKwObjMethod and ?GKwClassMethod "
-	      /**/ "when the associated documentation string was found to be non-empty") },
-	{ "DocKwdsIterator", /* DocKwdsIterator_Type */
-	  (DeeObject *)&librt_get_DocKwdsIterator,
-	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },
+/* Internal types used to drive the garbage collector */
+DEX_GETTER_F("GCSet", &librt_get_GCSet, DEXSYM_CONSTEXPR, /* DeeGCSet_Type */
+             "The set-like type returned by ?Areferred?Dgc, ?Areferredgc?Dgc, "
+             /**/ "?Areachable?Dgc, ?Areachablegc?Dgc and ?Areferring?Dgc"),
+DEX_GETTER_F_NODOC("GCSetIterator", &librt_get_GCSetIterator, DEXSYM_CONSTEXPR), /* DeeGCSetIterator_Type */
 
-	/* Special types exposed by the C API, but not normally visible to user-code. */
-	{ "InteractiveModule", (DeeObject *)&DeeInteractiveModule_Type, MODSYM_FREADONLY,
-	  DOC("The type used to implement an interactive module, as available by #C{deemon -i}") },
+/* Internal types used to drive variable keyword arguments */
+DEX_MEMBER_F_NODOC("BlackListKwds", &DeeBlackListKwds_Type, DEXSYM_READONLY),
+DEX_GETTER_F_NODOC("BlackListKwdsIterator", &librt_get_BlackListKwdsIterator, DEXSYM_CONSTEXPR), /* DeeBlackListKwdsIterator_Type */
+DEX_MEMBER_F_NODOC("BlackListKw", &DeeBlackListKw_Type, DEXSYM_READONLY),
+DEX_GETTER_F_NODOC("BlackListKwIterator", &librt_get_BlackListKwIterator, DEXSYM_CONSTEXPR), /* DeeBlackListKwIterator_Type */
+DEX_MEMBER_F_NODOC("CachedDict", &DeeCachedDict_Type, DEXSYM_READONLY),
+DEX_MEMBER_F("kw", &librt_kw, DEXSYM_READONLY, /* varying */
+             "(map:?DMapping)->?DMapping\n"
+             "Ensure that @map can be used as a keywords argument in the C API (s.a. ?A__iskw__?DType)\n"
+             "You should never have to call this function. It is mainly here to expose that detail of the "
+             /**/ "#IGATW deemon implementation."),
+
+/* Internal types used to drive keyword argument support */
+DEX_GETTER_F("DocKwds", &librt_get_DocKwds, DEXSYM_CONSTEXPR, /* DocKwds_Type */
+             "Internal type for enumerating the keywords of functions implemented in C\n"
+             "This is done via the associated doc string, with this sequence type being "
+             /**/ "used to implement the string processing. This type is then returned by "
+             /**/ "the $__kwds__ attributes of ?GKwCMethod, ?GKwObjMethod and ?GKwClassMethod "
+             /**/ "when the associated documentation string was found to be non-empty"),
+DEX_GETTER_F_NODOC("DocKwdsIterator", &librt_get_DocKwdsIterator, DEXSYM_CONSTEXPR), /* DocKwdsIterator_Type */
+
+/* Special types exposed by the C API, but not normally visible to user-code. */
+DEX_MEMBER_F("InteractiveModule", &DeeInteractiveModule_Type, DEXSYM_READONLY,
+             "The type used to implement an interactive module, as available by #C{deemon -i}"),
 #ifndef CONFIG_NO_DEX
-	{ "DexModule", (DeeObject *)&DeeDex_Type, MODSYM_FREADONLY,
-	  DOC("The type of a module that has been loaded from a machine-level shared library.") },
+DEX_MEMBER_F("DexModule", &DeeDex_Type, DEXSYM_READONLY,
+             "The type of a module that has been loaded from a machine-level shared library."),
 #endif /* !CONFIG_NO_DEX */
-	{ "Compiler", (DeeObject *)&DeeCompiler_Type, MODSYM_FREADONLY,
-	  DOC("A user-code interface for the compiler used by this implementation") },
-	/* TODO: All of the different compiler wrapper types, as well as the internal types for Ast and the different Scopes:
-	 *  - DeeCompilerObjItem_Type
-	 *  - DeeCompilerWrapper_Type
-	 *  - DeeCompilerLexer_Type
-	 *  - DeeCompilerLexerExtensions_Type
-	 *  - DeeCompilerLexerWarnings_Type
-	 *  - DeeCompilerLexerIfdef_Type
-	 *  - DeeCompilerLexerToken_Type
-	 *  - DeeCompilerParser_Type
-	 *  - DeeCompilerAst_Type
-	 *  - DeeCompilerScope_Type
-	 *  - DeeCompilerBaseScope_Type
-	 *  - DeeCompilerRootScope_Type
-	 *  - DeeAst_Type
-	 *  - DeeScope_Type
-	 *  - DeeClassScope_Type
-	 *  - DeeBaseScope_Type
-	 *  - DeeRootScope_Type
-	 */
-	{ "ClassDescriptor", (DeeObject *)&DeeClassDescriptor_Type, MODSYM_FREADONLY,
-	  DOC("The descriptor type generated by the compiler as a prototype for how a class will be created at runtime (s.a. ?Gmakeclass).") },
-	{ "InstanceMember", (DeeObject *)&DeeInstanceMember_Type, MODSYM_FREADONLY,
-	  DOC("An unbund class-\\>instance member (e.g. ${class MyClass { member foo; } type(MyClass.foo);})") },
-	{ "CMethod", (DeeObject *)&DeeCMethod_Type, MODSYM_FREADONLY,
-	  DOC("C-variant of ?GFunction taking a variable number of arguments (e.g. ${boundattr from deemon})") },
-	{ "CMethod0", (DeeObject *)&DeeCMethod0_Type, MODSYM_FREADONLY,
-	  DOC("C-variant of ?GFunction that does not take any arguments") },
-	{ "CMethod1", (DeeObject *)&DeeCMethod1_Type, MODSYM_FREADONLY,
-	  DOC("C-variant of ?GFunction that takes exactly 1 argument") },
-	{ "KwCMethod", (DeeObject *)&DeeKwCMethod_Type, MODSYM_FREADONLY,
-	  DOC("C-variant of ?GFunction (with keyword support)") },
-	{ "ObjMethod", (DeeObject *)&DeeObjMethod_Type, MODSYM_FREADONLY,
-	  DOC("C-variant of ?GInstanceMethod (e.g. ${\"FOO\".lower})") },
-	{ "KwObjMethod", (DeeObject *)&DeeKwObjMethod_Type, MODSYM_FREADONLY,
-	  DOC("C-variant of ?GInstanceMethod (with keyword support)") },
-	{ "ClassMethod", (DeeObject *)&DeeClsMethod_Type, MODSYM_FREADONLY,
-	  DOC("C-variant of an unbound class-\\>instance method (e.g. ${string.lower})") },
-	{ "KwClassMethod", (DeeObject *)&DeeKwClsMethod_Type, MODSYM_FREADONLY,
-	  DOC("C-variant of an unbound class-\\>instance method (with keyword support)") },
-	{ "ClassProperty", (DeeObject *)&DeeClsProperty_Type, MODSYM_FREADONLY,
-	  DOC("C-variant of an unbound class-\\>instance getset (e.g. ${Sequence.length})") },
-	{ "ClassMember", (DeeObject *)&DeeClsMember_Type, MODSYM_FREADONLY,
-	  DOC("C-variant of an unbound class-\\>instance member (e.g. ${Type.__name__})") },
-	{ "FileType", (DeeObject *)&DeeFileType_Type, MODSYM_FREADONLY,
-	  DOC("The typetype for file types (i.e. ${type(File)})") },
-	{ "YieldFunction", (DeeObject *)&DeeYieldFunction_Type, MODSYM_FREADONLY },
-	{ "YieldFunctionIterator", (DeeObject *)&DeeYieldFunctionIterator_Type, MODSYM_FREADONLY },
-	{ "RoDict", (DeeObject *)&DeeRoDict_Type, MODSYM_FREADONLY,
-	  DOC("A read-only variant of the builtin ?GDict type, aka. ?AFrozen?DDict. "
-	      /**/ "Used by the compiler to construct constant, generic mapping expression.") },
-	{ "RoDictIterator", (DeeObject *)&librt_get_RoDictIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },/* RoDictIterator_Type */
-	{ "RoSet", (DeeObject *)&DeeRoSet_Type, MODSYM_FREADONLY,
-	  DOC("A read-only variant of the builtin ?GHashSet type, aka. ?AFrozen?DHashSet. "
-	      /**/ "Used by the compiler to construct constant, generic set expression.") },
-	{ "RoSetIterator", (DeeObject *)&librt_get_RoSetIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* RoSetIterator_Type */
-	{ "Kwds", (DeeObject *)&DeeKwds_Type, MODSYM_FREADONLY,
-	  DOC("The type used to represent keyword arguments being mapped onto positional arguments.") },
-	{ "KwdsIterator", (DeeObject *)&librt_get_KwdsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeKwdsIterator_Type */
-	{ "KwdsMapping", (DeeObject *)&DeeKwdsMapping_Type, MODSYM_FREADONLY,
-	  DOC("A wrapper around ?GKwds and the associated argc/argv to create a proper Mapping object") },
-	{ "KwdsMappingIterator", (DeeObject *)&librt_get_KwdsMappingIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeKwdsMappingIterator_Type */
-	{ "DDI", (DeeObject *)&DeeDDI_Type, MODSYM_FREADONLY,
-	  DOC("The type used to hold debug information for user-defined code objects (DeemonDebugInformation).") },
-	{ "NoMemory_instance", (DeeObject *)&DeeError_NoMemory_instance, MODSYM_FREADONLY },
-	{ "StopIteration_instance", (DeeObject *)&DeeError_StopIteration_instance, MODSYM_FREADONLY },
-	{ "Interrupt_instance", (DeeObject *)&DeeError_Interrupt_instance, MODSYM_FREADONLY },
+DEX_MEMBER_F("Compiler", &DeeCompiler_Type, DEXSYM_READONLY,
+             "A user-code interface for the compiler used by this implementation"),
+/* TODO: All of the different compiler wrapper types, as well as the internal types for Ast and the different Scopes:
+ *  - DeeCompilerObjItem_Type
+ *  - DeeCompilerWrapper_Type
+ *  - DeeCompilerLexer_Type
+ *  - DeeCompilerLexerExtensions_Type
+ *  - DeeCompilerLexerWarnings_Type
+ *  - DeeCompilerLexerIfdef_Type
+ *  - DeeCompilerLexerToken_Type
+ *  - DeeCompilerParser_Type
+ *  - DeeCompilerAst_Type
+ *  - DeeCompilerScope_Type
+ *  - DeeCompilerBaseScope_Type
+ *  - DeeCompilerRootScope_Type
+ *  - DeeAst_Type
+ *  - DeeScope_Type
+ *  - DeeClassScope_Type
+ *  - DeeBaseScope_Type
+ *  - DeeRootScope_Type */
+DEX_MEMBER_F("ClassDescriptor", &DeeClassDescriptor_Type, DEXSYM_READONLY,
+             "The descriptor type generated by the compiler as a prototype for how a class will be created at runtime (s.a. ?Gmakeclass)."),
+DEX_MEMBER_F("InstanceMember", &DeeInstanceMember_Type, DEXSYM_READONLY,
+             "An unbund class-\\>instance member (e.g. ${class MyClass { member foo; } type(MyClass.foo);})"),
+DEX_MEMBER_F("CMethod", &DeeCMethod_Type, DEXSYM_READONLY,
+             "C-variant of ?GFunction taking a variable number of arguments (e.g. ${boundattr from deemon})"),
+DEX_MEMBER_F("CMethod0", &DeeCMethod0_Type, DEXSYM_READONLY,
+             "C-variant of ?GFunction that does not take any arguments"),
+DEX_MEMBER_F("CMethod1", &DeeCMethod1_Type, DEXSYM_READONLY,
+             "C-variant of ?GFunction that takes exactly 1 argument"),
+DEX_MEMBER_F("KwCMethod", &DeeKwCMethod_Type, DEXSYM_READONLY,
+             "C-variant of ?GFunction (with keyword support)"),
+DEX_MEMBER_F("ObjMethod", &DeeObjMethod_Type, DEXSYM_READONLY,
+             "C-variant of ?GInstanceMethod (e.g. ${\"FOO\".lower})"),
+DEX_MEMBER_F("KwObjMethod", &DeeKwObjMethod_Type, DEXSYM_READONLY,
+             "C-variant of ?GInstanceMethod (with keyword support)"),
+DEX_MEMBER_F("ClassMethod", &DeeClsMethod_Type, DEXSYM_READONLY,
+             "C-variant of an unbound class-\\>instance method (e.g. ${string.lower})"),
+DEX_MEMBER_F("KwClassMethod", &DeeKwClsMethod_Type, DEXSYM_READONLY,
+             "C-variant of an unbound class-\\>instance method (with keyword support)"),
+DEX_MEMBER_F("ClassProperty", &DeeClsProperty_Type, DEXSYM_READONLY,
+             "C-variant of an unbound class-\\>instance getset (e.g. ${Sequence.length})"),
+DEX_MEMBER_F("ClassMember", &DeeClsMember_Type, DEXSYM_READONLY,
+             "C-variant of an unbound class-\\>instance member (e.g. ${Type.__name__})"),
+DEX_MEMBER_F("FileType", &DeeFileType_Type, DEXSYM_READONLY,
+             "The typetype for file types (i.e. ${type(File)})"),
+DEX_MEMBER_F_NODOC("YieldFunction", &DeeYieldFunction_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("YieldFunctionIterator", &DeeYieldFunctionIterator_Type, DEXSYM_READONLY),
+DEX_MEMBER_F("RoDict", &DeeRoDict_Type, DEXSYM_READONLY,
+             "A read-only variant of the builtin ?GDict type, aka. ?AFrozen?DDict. "
+             /**/ "Used by the compiler to construct constant, generic mapping expression."),
+DEX_GETTER_F_NODOC("RoDictIterator", &librt_get_RoDictIterator, DEXSYM_CONSTEXPR), /* RoDictIterator_Type */
+DEX_MEMBER_F("RoSet", &DeeRoSet_Type, DEXSYM_READONLY,
+             "A read-only variant of the builtin ?GHashSet type, aka. ?AFrozen?DHashSet. "
+             /**/ "Used by the compiler to construct constant, generic set expression."),
+DEX_GETTER_F_NODOC("RoSetIterator", &librt_get_RoSetIterator, DEXSYM_CONSTEXPR), /* RoSetIterator_Type */
+DEX_MEMBER_F("Kwds", &DeeKwds_Type, DEXSYM_READONLY,
+             "The type used to represent keyword arguments being mapped onto positional arguments."),
+DEX_GETTER_F_NODOC("KwdsIterator", &librt_get_KwdsIterator, DEXSYM_CONSTEXPR), /* DeeKwdsIterator_Type */
+DEX_MEMBER_F("KwdsMapping", &DeeKwdsMapping_Type, DEXSYM_READONLY,
+             "A wrapper around ?GKwds and the associated argc/argv to create a proper Mapping object"),
+DEX_GETTER_F_NODOC("KwdsMappingIterator", &librt_get_KwdsMappingIterator, DEXSYM_CONSTEXPR), /* DeeKwdsMappingIterator_Type */
+DEX_MEMBER_F("DDI", &DeeDDI_Type, DEXSYM_READONLY,
+             "The type used to hold debug information for user-defined code objects (DeemonDebugInformation)."),
+DEX_MEMBER_F_NODOC("NoMemory_instance", &DeeError_NoMemory_instance, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("StopIteration_instance", &DeeError_StopIteration_instance, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Interrupt_instance", &DeeError_Interrupt_instance, DEXSYM_READONLY),
 
-	/* Types used to drive general purpose iterator support */
-	{ "IteratorPending", (DeeObject *)&librt_get_IteratorPending, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* IteratorPending_Type */
-	{ "IteratorFuture", (DeeObject *)&librt_get_IteratorFuture, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },   /* IteratorFuture_Type */
+/* Types used to drive general purpose iterator support */
+DEX_GETTER_F_NODOC("IteratorPending", &librt_get_IteratorPending, DEXSYM_CONSTEXPR), /* IteratorPending_Type */
+DEX_GETTER_F_NODOC("IteratorFuture", &librt_get_IteratorFuture, DEXSYM_CONSTEXPR),   /* IteratorFuture_Type */
 
-	/* Internal iterator types used to drive builtin sequence objects */
-	{ "StringIterator", (DeeObject *)&librt_get_StringIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },       /* StringIterator_Type */
-	{ "BytesIterator", (DeeObject *)&librt_get_BytesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* BytesIterator_Type */
-	{ "ListIterator", (DeeObject *)&librt_get_ListIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* DeeListIterator_Type */
-	{ "TupleIterator", (DeeObject *)&librt_get_TupleIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* DeeTupleIterator_Type */
-	{ "HashSetIterator", (DeeObject *)&librt_get_HashSetIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },     /* HashSetIterator_Type */
-	{ "TracebackIterator", (DeeObject *)&librt_get_TracebackIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeTracebackIterator_Type */
-	{ "DictIterator", (DeeObject *)&librt_get_DictIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* DictIterator_Type */
+/* Internal iterator types used to drive builtin sequence objects */
+DEX_GETTER_F_NODOC("StringIterator", &librt_get_StringIterator, DEXSYM_CONSTEXPR),       /* StringIterator_Type */
+DEX_GETTER_F_NODOC("BytesIterator", &librt_get_BytesIterator, DEXSYM_CONSTEXPR),         /* BytesIterator_Type */
+DEX_GETTER_F_NODOC("ListIterator", &librt_get_ListIterator, DEXSYM_CONSTEXPR),           /* DeeListIterator_Type */
+DEX_GETTER_F_NODOC("TupleIterator", &librt_get_TupleIterator, DEXSYM_CONSTEXPR),         /* DeeTupleIterator_Type */
+DEX_GETTER_F_NODOC("HashSetIterator", &librt_get_HashSetIterator, DEXSYM_CONSTEXPR),     /* HashSetIterator_Type */
+DEX_GETTER_F_NODOC("TracebackIterator", &librt_get_TracebackIterator, DEXSYM_CONSTEXPR), /* DeeTracebackIterator_Type */
+DEX_GETTER_F_NODOC("DictIterator", &librt_get_DictIterator, DEXSYM_CONSTEXPR),           /* DictIterator_Type */
 
-	/* Special instances of non-singleton objects */
-	{ "Sequence_empty", Dee_EmptySeq, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("A general-purpose, empty sequence singleton") },
-	{ "Set_empty", (DeeObject *)Dee_EmptySet, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("A general-purpose, empty set singleton") },
-	{ "Set_universal", (DeeObject *)Dee_UniversalSet, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("A general-purpose, universal set singleton") },
-	{ "Mapping_empty", (DeeObject *)Dee_EmptyMapping, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("A general-purpose, empty mapping singleton") },
-	{ "RoDict_empty", (DeeObject *)Dee_EmptyRoDict, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("An empty instance of ?GRoDict") },
-	{ "Tuple_empty", (DeeObject *)Dee_EmptyTuple, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("The empty tuple singleton ${()}") },
-	{ "String_empty", (DeeObject *)Dee_EmptyString, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("The empty string singleton $\"\"") },
-	{ "Bytes_empty", (DeeObject *)Dee_EmptyBytes, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("The empty bytes singleton ${\"\".bytes()}") },
-	{ "Int_0", DeeInt_Zero, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("The integer constant $0") },
-	{ "Int_1", DeeInt_One, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("The integer constant $1") },
-	{ "Int_m1", DeeInt_MinusOne, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("The integer constant ${-1}") },
-	{ "NullableTuple_empty", (DeeObject *)&librt_get_NullableTuple_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("The empty nullable-tuple singleton") },
-	{ "Code_empty", (DeeObject *)&librt_get_Code_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("->?GCode\n"
-	      "Special instance of ?GCode that immediately returns ?N") }, /* DeeCode_Empty */
-	{ "GCSet_empty", (DeeObject *)&librt_get_GCSet_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("->?GGCSet\n"
-	      "Special instance of ?GGCSet that is used to describe an empty set of objects") }, /* DeeGCSet_Empty */
-	{ "GCEnum_singleton", &DeeGCEnumTracked_Singleton, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
-	  DOC("The gc-singleton which can also be found under ?Dgc") }, /* DeeGCEnumTracked_Singleton */
-	{ "GCEnum", (DeeObject *)&librt_get_GCEnum, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("The result of ${type(gc from deemon)}") }, /* GCEnum_Type */
-	{ "GCIter", (DeeObject *)&librt_get_GCIter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("The result of ${type((gc from deemon)operator iter())}") }, /* GCIter_Type */
-	{ "Traceback_empty", (DeeObject *)&librt_get_Traceback_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("->?GTraceback\n"
-	      "The fallback #Iempty traceback") }, /* DeeTraceback_Empty */
-	{ "Module_deemon", (DeeObject *)&DeeModule_Deemon, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
-	  DOC("->?GModule\n"
-	      "The built-in ?Mdeemon module") }, /* DeeModule_Deemon */
-	{ "Module_empty", (DeeObject *)&librt_get_Module_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("->?GModule\n"
-	      "The fallback #Iempty module") }, /* DeeModule_Empty */
+/* Special instances of non-singleton objects */
+DEX_MEMBER_F("Sequence_empty", Dee_EmptySeq, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+             "A general-purpose, empty sequence singleton"),
+DEX_MEMBER_F("Set_empty", Dee_EmptySet, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+             "A general-purpose, empty set singleton"),
+DEX_MEMBER_F("Set_universal", Dee_UniversalSet, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+             "A general-purpose, universal set singleton"),
+DEX_MEMBER_F("Mapping_empty", Dee_EmptyMapping, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+             "A general-purpose, empty mapping singleton"),
+DEX_MEMBER_F("RoDict_empty", Dee_EmptyRoDict, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+             "An empty instance of ?GRoDict"),
+DEX_MEMBER_F("Tuple_empty", Dee_EmptyTuple, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+             "The empty tuple singleton ${()}"),
+DEX_MEMBER_F("String_empty", Dee_EmptyString, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+             "The empty string singleton $\"\""),
+DEX_MEMBER_F("Bytes_empty", Dee_EmptyBytes, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+             "The empty bytes singleton ${\"\".bytes()}"),
+DEX_MEMBER_F("Int_0", DeeInt_Zero, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+             "The integer constant $0"),
+DEX_MEMBER_F("Int_1", DeeInt_One, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+             "The integer constant $1"),
+DEX_MEMBER_F("Int_m1", DeeInt_MinusOne, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+             "The integer constant ${-1}"),
+DEX_GETTER_F("NullableTuple_empty", &librt_get_NullableTuple_empty, DEXSYM_CONSTEXPR,
+             "The empty nullable-tuple singleton"),
+DEX_GETTER_F("Code_empty", &librt_get_Code_empty, DEXSYM_CONSTEXPR,
+             "->?GCode\n"
+             "Special instance of ?GCode that immediately returns ?N"), /* DeeCode_Empty */
+DEX_GETTER_F("GCSet_empty", &librt_get_GCSet_empty, DEXSYM_CONSTEXPR,
+             "->?GGCSet\n"
+             "Special instance of ?GGCSet that is used to describe an empty set of objects"), /* DeeGCSet_Empty */
+DEX_MEMBER_F("GCEnum_singleton", &DeeGCEnumTracked_Singleton, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+             "The gc-singleton which can also be found under ?Dgc"), /* DeeGCEnumTracked_Singleton */
+DEX_GETTER_F("GCEnum", &librt_get_GCEnum, DEXSYM_CONSTEXPR,
+             "The result of ${type(gc from deemon)}"), /* GCEnum_Type */
+DEX_GETTER_F("GCIter", &librt_get_GCIter, DEXSYM_CONSTEXPR,
+             "The result of ${type((gc from deemon)operator iter())}"), /* GCIter_Type */
+DEX_GETTER_F("Traceback_empty", &librt_get_Traceback_empty, DEXSYM_CONSTEXPR,
+             "->?GTraceback\n"
+             "The fallback #Iempty traceback"), /* DeeTraceback_Empty */
+DEX_MEMBER_F("Module_deemon", &DeeModule_Deemon, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+             "->?GModule\n"
+             "The built-in ?Mdeemon module"), /* DeeModule_Deemon */
+DEX_GETTER_F("Module_empty", &librt_get_Module_empty, DEXSYM_CONSTEXPR,
+             "->?GModule\n"
+             "The fallback #Iempty module"), /* DeeModule_Empty */
 
-	/* Re-exports of standard types also exported from `deemon' */
-	{ "Int", (DeeObject *)&DeeInt_Type, MODSYM_FREADONLY },
-	{ "Bool", (DeeObject *)&DeeBool_Type, MODSYM_FREADONLY },
-	{ "Float", (DeeObject *)&DeeFloat_Type, MODSYM_FREADONLY },
-	{ "Sequence", (DeeObject *)&DeeSeq_Type, MODSYM_FREADONLY },
-	{ "Iterator", (DeeObject *)&DeeIterator_Type, MODSYM_FREADONLY },
-	{ "String", (DeeObject *)&DeeString_Type, MODSYM_FREADONLY },
-	{ "Bytes", (DeeObject *)&DeeBytes_Type, MODSYM_FREADONLY },
-	{ "List", (DeeObject *)&DeeList_Type, MODSYM_FREADONLY },
-	{ "Tuple", (DeeObject *)&DeeTuple_Type, MODSYM_FREADONLY },
-	{ "HashSet", (DeeObject *)&DeeHashSet_Type, MODSYM_FREADONLY },
-	{ "Dict", (DeeObject *)&DeeDict_Type, MODSYM_FREADONLY },
-	{ "Traceback", (DeeObject *)&DeeTraceback_Type, MODSYM_FREADONLY },
-	{ "Frame", (DeeObject *)&DeeFrame_Type, MODSYM_FREADONLY },
-	{ "Module", (DeeObject *)&DeeModule_Type, MODSYM_FREADONLY },
-	{ "Set", (DeeObject *)&DeeSet_Type, MODSYM_FREADONLY },
-	{ "Mapping", (DeeObject *)&DeeMapping_Type, MODSYM_FREADONLY },
-	{ "Code", (DeeObject *)&DeeCode_Type, MODSYM_FREADONLY },
-	{ "Function", (DeeObject *)&DeeFunction_Type, MODSYM_FREADONLY },
-	{ "Type", (DeeObject *)&DeeType_Type, MODSYM_FREADONLY },
-	{ "Object", (DeeObject *)&DeeObject_Type, MODSYM_FREADONLY },
-	{ "Callable", (DeeObject *)&DeeCallable_Type, MODSYM_FREADONLY },
-	{ "Numeric", (DeeObject *)&DeeNumeric_Type, MODSYM_FREADONLY },
-	{ "InstanceMethod", (DeeObject *)&DeeInstanceMethod_Type, MODSYM_FREADONLY },
-	{ "Property", (DeeObject *)&DeeProperty_Type, MODSYM_FREADONLY },
-	{ "Super", (DeeObject *)&DeeSuper_Type, MODSYM_FREADONLY },
-	{ "Thread", (DeeObject *)&DeeThread_Type, MODSYM_FREADONLY },
-	{ "WeakRef", (DeeObject *)&DeeWeakRef_Type, MODSYM_FREADONLY },
-	{ "Cell", (DeeObject *)&DeeCell_Type, MODSYM_FREADONLY },
-	{ "File", (DeeObject *)&DeeFile_Type, MODSYM_FREADONLY,
-	  DOC("(intended) base class for all file types (is to ?GFileType what ?GObject is to ?GType).") },
-	{ "FileBuffer", (DeeObject *)&DeeFileBuffer_Type, MODSYM_FREADONLY }, /* `File.Buffer' */
-	{ "SystemFile", (DeeObject *)&DeeSystemFile_Type, MODSYM_FREADONLY,
-	  DOC("Base class for file types that are managed by the system.") },
-	{ "FSFile", (DeeObject *)&DeeFSFile_Type, MODSYM_FREADONLY,
-	  DOC("Derived from ?GSystemFile: A system file that has been opened via the file system.") },
-	{ "MapFile", (DeeObject *)&DeeMapFile_Type, MODSYM_FREADONLY,
-	  DOC("Owner type for mmap buffers used during large file reads.") },
-	{ "NoneType", (DeeObject *)&DeeNone_Type, MODSYM_FREADONLY },         /* `type(none)' */
-	{ "None", Dee_None, MODSYM_FREADONLY },                               /* `none' */
-	{ "MemoryFile", (DeeObject *)&DeeMemoryFile_Type, MODSYM_FREADONLY,   /* An internal file type for streaming from read-only raw memory. */
-	  DOC("A special file type that may be used by the deemon runtime to temporarily "
-	      /**/ "allow user-code access to raw memory regions via the file interface, rather "
-	      /**/ "than the bytes interface. Note however that this type of file cannot be "
-	      /**/ "constructed from user-code such that it would reference data, and that memory "
-	      /**/ "files impose special access restrictions to prevent user-code from maintaining "
-	      /**/ "access to wrapped memory once the file's creator destroys it.") },
-	{ "FileReader", (DeeObject *)&DeeFileReader_Type, MODSYM_FREADONLY },             /* `File.Reader' */
-	{ "FileWriter", (DeeObject *)&DeeFileWriter_Type, MODSYM_FREADONLY },             /* `File.Writer' */
-	{ "FilePrinter", (DeeObject *)&DeeFilePrinter_Type, MODSYM_FREADONLY,
-	  DOC("Internal file-type for wrapping #Cdformatprinter when invoking user-defined print/printrepr operators") },
-	{ "Attribute", (DeeObject *)&DeeAttribute_Type, MODSYM_FREADONLY },               /* `Attribute' */
-	{ "EnumAttr", (DeeObject *)&DeeEnumAttr_Type, MODSYM_FREADONLY },                 /* `enumattr' */
-	{ "EnumAttrIterator", (DeeObject *)&DeeEnumAttrIterator_Type, MODSYM_FREADONLY }, /* `enumattr.Iterator' */
+/* Re-exports of standard types also exported from `deemon' */
+DEX_MEMBER_F_NODOC("Int", &DeeInt_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Bool", &DeeBool_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Float", &DeeFloat_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Sequence", &DeeSeq_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Iterator", &DeeIterator_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("String", &DeeString_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Bytes", &DeeBytes_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("List", &DeeList_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Tuple", &DeeTuple_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("HashSet", &DeeHashSet_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Dict", &DeeDict_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Traceback", &DeeTraceback_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Frame", &DeeFrame_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Module", &DeeModule_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Set", &DeeSet_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Mapping", &DeeMapping_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Code", &DeeCode_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Function", &DeeFunction_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Type", &DeeType_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Object", &DeeObject_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Callable", &DeeCallable_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Numeric", &DeeNumeric_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("InstanceMethod", &DeeInstanceMethod_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Property", &DeeProperty_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Super", &DeeSuper_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Thread", &DeeThread_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("WeakRef", &DeeWeakRef_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Cell", &DeeCell_Type, DEXSYM_READONLY),
+DEX_MEMBER_F("File", &DeeFile_Type.ft_base, DEXSYM_READONLY,
+             "(intended) base class for all file types (is to ?GFileType what ?GObject is to ?GType)."),
+DEX_MEMBER_F_NODOC("FileBuffer", &DeeFileBuffer_Type.ft_base, DEXSYM_READONLY), /* `File.Buffer' */
+DEX_MEMBER_F("SystemFile", &DeeSystemFile_Type.ft_base, DEXSYM_READONLY,
+             "Base class for file types that are managed by the system."),
+DEX_MEMBER_F("FSFile", &DeeFSFile_Type.ft_base, DEXSYM_READONLY,
+             "Derived from ?GSystemFile: A system file that has been opened via the file system."),
+DEX_MEMBER_F("MapFile", &DeeMapFile_Type, DEXSYM_READONLY,
+             "Owner type for mmap buffers used during large file reads."),
+DEX_MEMBER_F_NODOC("NoneType", &DeeNone_Type, DEXSYM_READONLY),          /* `type(none)' */
+DEX_MEMBER_F_NODOC("None", Dee_None, DEXSYM_READONLY),                   /* `none' */
+DEX_MEMBER_F("MemoryFile", &DeeMemoryFile_Type.ft_base, DEXSYM_READONLY, /* An internal file type for streaming from read-only raw memory. */
+             "A special file type that may be used by the deemon runtime to temporarily "
+             /**/ "allow user-code access to raw memory regions via the file interface, rather "
+             /**/ "than the bytes interface. Note however that this type of file cannot be "
+             /**/ "constructed from user-code such that it would reference data, and that memory "
+             /**/ "files impose special access restrictions to prevent user-code from maintaining "
+             /**/ "access to wrapped memory once the file's creator destroys it."),
+DEX_MEMBER_F_NODOC("FileReader", &DeeFileReader_Type.ft_base, DEXSYM_READONLY), /* `File.Reader' */
+DEX_MEMBER_F_NODOC("FileWriter", &DeeFileWriter_Type.ft_base, DEXSYM_READONLY), /* `File.Writer' */
+DEX_MEMBER_F("FilePrinter", &DeeFilePrinter_Type.ft_base, DEXSYM_READONLY,
+             "Internal file-type for wrapping #Cdformatprinter when invoking user-defined print/printrepr operators"),
+DEX_MEMBER_F_NODOC("Attribute", &DeeAttribute_Type, DEXSYM_READONLY),               /* `Attribute' */
+DEX_MEMBER_F_NODOC("EnumAttr", &DeeEnumAttr_Type, DEXSYM_READONLY),                 /* `enumattr' */
+DEX_MEMBER_F_NODOC("EnumAttrIterator", &DeeEnumAttrIterator_Type, DEXSYM_READONLY), /* `enumattr.Iterator' */
 
-	/* Function wrapper types */
-	{ "FunctionStatics", (DeeObject *)&librt_get_FunctionStatics, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                       /* FunctionStatics_Type */
-	{ "FunctionStaticsIterator", (DeeObject *)&librt_get_FunctionStaticsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* FunctionStatics_Type */
-	{ "FunctionSymbolsByName", (DeeObject *)&librt_get_FunctionSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* FunctionSymbolsByName_Type */
-	{ "FunctionSymbolsByNameIterator", (DeeObject *)&librt_get_FunctionSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* FunctionSymbolsByName_Type */
-	{ "FunctionSymbolsByNameKeysIterator", (DeeObject *)&librt_get_FunctionSymbolsByNameKeysIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },   /* FunctionSymbolsByNameKeysIterator_Type */
-	{ "YieldFunctionSymbolsByName", (DeeObject *)&librt_get_YieldFunctionSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* YieldFunctionSymbolsByName_Type */
-	{ "YieldFunctionSymbolsByNameIterator", (DeeObject *)&librt_get_YieldFunctionSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* YieldFunctionSymbolsByName_Type */
-	{ "YieldFunctionSymbolsByNameKeysIterator", (DeeObject *)&librt_get_YieldFunctionSymbolsByNameKeysIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* YieldFunctionSymbolsByNameKeysIterator_Type */
-	{ "FrameArgs", (DeeObject *)&librt_get_FrameArgs, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                   /* FrameArgs_Type */
-	{ "FrameLocals", (DeeObject *)&librt_get_FrameLocals, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                               /* FrameLocals_Type */
-	{ "FrameStack", (DeeObject *)&librt_get_FrameStack, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                 /* FrameStack_Type */
-	{ "FrameSymbolsByName", (DeeObject *)&librt_get_FrameSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* FrameSymbolsByName_Type */
-	{ "FrameSymbolsByNameIterator", (DeeObject *)&librt_get_FrameSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* FrameSymbolsByName_Type */
-	{ "FrameSymbolsByNameKeysIterator", (DeeObject *)&librt_get_FrameSymbolsByNameKeysIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* FrameSymbolsByNameKeysIterator_Type */
+/* Function wrapper types */
+DEX_GETTER_F_NODOC("FunctionStatics", &librt_get_FunctionStatics, DEXSYM_CONSTEXPR),                                               /* FunctionStatics_Type */
+DEX_GETTER_F_NODOC("FunctionStaticsIterator", &librt_get_FunctionStaticsIterator, DEXSYM_CONSTEXPR),                               /* FunctionStatics_Type */
+DEX_GETTER_F_NODOC("FunctionSymbolsByName", &librt_get_FunctionSymbolsByName, DEXSYM_CONSTEXPR),                                   /* FunctionSymbolsByName_Type */
+DEX_GETTER_F_NODOC("FunctionSymbolsByNameIterator", &librt_get_FunctionSymbolsByNameIterator, DEXSYM_CONSTEXPR),                   /* FunctionSymbolsByName_Type */
+DEX_GETTER_F_NODOC("FunctionSymbolsByNameKeysIterator", &librt_get_FunctionSymbolsByNameKeysIterator, DEXSYM_CONSTEXPR),           /* FunctionSymbolsByNameKeysIterator_Type */
+DEX_GETTER_F_NODOC("YieldFunctionSymbolsByName", &librt_get_YieldFunctionSymbolsByName, DEXSYM_CONSTEXPR),                         /* YieldFunctionSymbolsByName_Type */
+DEX_GETTER_F_NODOC("YieldFunctionSymbolsByNameIterator", &librt_get_YieldFunctionSymbolsByNameIterator, DEXSYM_CONSTEXPR),         /* YieldFunctionSymbolsByName_Type */
+DEX_GETTER_F_NODOC("YieldFunctionSymbolsByNameKeysIterator", &librt_get_YieldFunctionSymbolsByNameKeysIterator, DEXSYM_CONSTEXPR), /* YieldFunctionSymbolsByNameKeysIterator_Type */
+DEX_GETTER_F_NODOC("FrameArgs", &librt_get_FrameArgs, DEXSYM_CONSTEXPR),                                                           /* FrameArgs_Type */
+DEX_GETTER_F_NODOC("FrameLocals", &librt_get_FrameLocals, DEXSYM_CONSTEXPR),                                                       /* FrameLocals_Type */
+DEX_GETTER_F_NODOC("FrameStack", &librt_get_FrameStack, DEXSYM_CONSTEXPR),                                                         /* FrameStack_Type */
+DEX_GETTER_F_NODOC("FrameSymbolsByName", &librt_get_FrameSymbolsByName, DEXSYM_CONSTEXPR),                                         /* FrameSymbolsByName_Type */
+DEX_GETTER_F_NODOC("FrameSymbolsByNameIterator", &librt_get_FrameSymbolsByNameIterator, DEXSYM_CONSTEXPR),                         /* FrameSymbolsByName_Type */
+DEX_GETTER_F_NODOC("FrameSymbolsByNameKeysIterator", &librt_get_FrameSymbolsByNameKeysIterator, DEXSYM_CONSTEXPR),                 /* FrameSymbolsByNameKeysIterator_Type */
 
-	/* Some more aliases... */
-	{ "gc", (DeeObject *)&DeeGCEnumTracked_Singleton, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-	{ "enumattr", (DeeObject *)&DeeEnumAttr_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-	{ "bool", (DeeObject *)&DeeBool_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-	{ "string", (DeeObject *)&DeeString_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-	{ "int", (DeeObject *)&DeeInt_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
+/* Some more aliases... */
+DEX_MEMBER_F_NODOC("gc", &DeeGCEnumTracked_Singleton, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
+DEX_MEMBER_F_NODOC("enumattr", &DeeEnumAttr_Type, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
+DEX_MEMBER_F_NODOC("bool", &DeeBool_Type, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
+DEX_MEMBER_F_NODOC("string", &DeeString_Type, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
+DEX_MEMBER_F_NODOC("int", &DeeInt_Type, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
 
-	/* Special constants */
-	RT_HASHOF_EMPTY_SEQUENCE_DEF
-	RT_HASHOF_UNBOUND_ITEM_DEF
-	RT_HASHOF_RECURSIVE_ITEM_DEF
+/* Special constants */
+RT_HASHOF_EMPTY_SEQUENCE_DEF
+RT_HASHOF_UNBOUND_ITEM_DEF
+RT_HASHOF_RECURSIVE_ITEM_DEF
 
-	{ "ctypes_addrof", (DeeObject *)&librt_ctypes_addrof, MODSYM_FREADONLY,
-	  DOC("(ob)->?Aptr?Ectypes:void\n"
-	      "Returns the object address of @ob") },
-	{ NULL }
-};
+DEX_MEMBER_F("ctypes_addrof", &librt_ctypes_addrof, DEXSYM_READONLY,
+             "(ob)->?Aptr?Ectypes:void\n"
+             "Returns the object address of @ob"),
 
-PUBLIC struct dex DEX = {
-	/* .d_symbols = */ symbols
-};
+/* clang-format off */
+DEX_END(
+	/* init:  */ NULL,
+	/* fini:  */ NULL,
+	/* clear: */ NULL
+);
+/* clang-format on */
 
 DECL_END
 

@@ -468,7 +468,7 @@ typedef struct {
 	Dee_OBJECT_HEAD
 	DREF DeeObject *se_seq; /* [1..1][const] The sequence being wrapped. */
 } DeeSeqSomeObject;
-#define DeeSeqSome_GetSeq(self) ((DeeSeqSomeObject const *)Dee_REQUIRES_OBJECT(self))->se_seq
+#define DeeSeqSome_GetSeq(self) Dee_REQUIRES_OBJECT(DeeSeqSomeObject, self)->se_seq
 
 DDATDEF DeeTypeObject DeeSeqSome_Type;
 #define DeeSeqSome_Check(self)      DeeObject_InstanceOfExact(self, &DeeSeqSome_Type)

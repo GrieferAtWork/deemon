@@ -535,14 +535,14 @@ DeeInt_GetUleb(/*Int*/ DeeObject *__restrict self,
 #define DeeInt_GetSlebMaxSize(self) \
 	(((_DeeInt_GetAbsSize(self) + 1) * DIGIT_BITS) / 7)
 #define DeeInt_GetUlebMaxSize(self) \
-	((((size_t)((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size + 1) * DIGIT_BITS) / 7)
-#define _DeeInt_GetAbsSize(self)                                       \
-	(((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size < 0          \
-	 ? (size_t)(-((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size) \
-	 : (size_t)((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size)
+	((((size_t)Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size + 1) * DIGIT_BITS) / 7)
+#define _DeeInt_GetAbsSize(self)                                   \
+	(Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size < 0          \
+	 ? (size_t)(-Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size) \
+	 : (size_t)Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size)
 
-#define DeeInt_IsNeg(self)  (((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size < 0)
-#define DeeInt_IsZero(self) (((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size == 0)
+#define DeeInt_IsNeg(self)  (Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size < 0)
+#define DeeInt_IsZero(self) (Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size == 0)
 
 
 /* Return values for `DeeInt_TryAs*' */

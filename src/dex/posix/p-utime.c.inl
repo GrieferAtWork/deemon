@@ -899,8 +899,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("utime", "path:?Dstring,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,birthtime:?Etime:Time=Dee_None", libname: "posix"); ]]]*/
-#define POSIX_UTIME_DEF { "utime", (DeeObject *)&posix_utime, MODSYM_FREADONLY, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)") },
-#define POSIX_UTIME_DEF_DOC(doc) { "utime", (DeeObject *)&posix_utime, MODSYM_FREADONLY, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)\n" doc) },
+#define POSIX_UTIME_DEF          DEX_MEMBER_F("utime", &posix_utime, DEXSYM_READONLY, "(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)"),
+#define POSIX_UTIME_DEF_DOC(doc) DEX_MEMBER_F("utime", &posix_utime, DEXSYM_READONLY, "(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL posix_utime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime);
 #ifndef DEFINED_kwlist__path_atime_mtime_ctime_birthtime
 #define DEFINED_kwlist__path_atime_mtime_ctime_birthtime
@@ -1088,8 +1088,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("lutime", "path:?Dstring,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,birthtime:?Etime:Time=Dee_None", libname: "posix"); ]]]*/
-#define POSIX_LUTIME_DEF { "lutime", (DeeObject *)&posix_lutime, MODSYM_FREADONLY, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)") },
-#define POSIX_LUTIME_DEF_DOC(doc) { "lutime", (DeeObject *)&posix_lutime, MODSYM_FREADONLY, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)\n" doc) },
+#define POSIX_LUTIME_DEF          DEX_MEMBER_F("lutime", &posix_lutime, DEXSYM_READONLY, "(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)"),
+#define POSIX_LUTIME_DEF_DOC(doc) DEX_MEMBER_F("lutime", &posix_lutime, DEXSYM_READONLY, "(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime);
 #ifndef DEFINED_kwlist__path_atime_mtime_ctime_birthtime
 #define DEFINED_kwlist__path_atime_mtime_ctime_birthtime
@@ -1254,8 +1254,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("futime", "fd:?X2?Dint?DFile,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,birthtime:?Etime:Time=Dee_None", libname: "posix"); ]]]*/
-#define POSIX_FUTIME_DEF { "futime", (DeeObject *)&posix_futime, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)") },
-#define POSIX_FUTIME_DEF_DOC(doc) { "futime", (DeeObject *)&posix_futime, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)\n" doc) },
+#define POSIX_FUTIME_DEF          DEX_MEMBER_F("futime", &posix_futime, DEXSYM_READONLY, "(fd:?X2?Dint?DFile,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)"),
+#define POSIX_FUTIME_DEF_DOC(doc) DEX_MEMBER_F("futime", &posix_futime, DEXSYM_READONLY, "(fd:?X2?Dint?DFile,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL posix_futime_f_impl(DeeObject *fd, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime);
 #ifndef DEFINED_kwlist__fd_atime_mtime_ctime_birthtime
 #define DEFINED_kwlist__fd_atime_mtime_ctime_birthtime
@@ -1458,8 +1458,8 @@ err:
 
 
 /*[[[deemon import("rt.gen.dexutils").gw("utimeat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,birthtime:?Etime:Time=Dee_None,atflags:u=0", libname: "posix"); ]]]*/
-#define POSIX_UTIMEAT_DEF { "utimeat", (DeeObject *)&posix_utimeat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N,atflags=!0)") },
-#define POSIX_UTIMEAT_DEF_DOC(doc) { "utimeat", (DeeObject *)&posix_utimeat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N,atflags=!0)\n" doc) },
+#define POSIX_UTIMEAT_DEF          DEX_MEMBER_F("utimeat", &posix_utimeat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N,atflags=!0)"),
+#define POSIX_UTIMEAT_DEF_DOC(doc) DEX_MEMBER_F("utimeat", &posix_utimeat, DEXSYM_READONLY, "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N,atflags=!0)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) DREF DeeObject *DCALL posix_utimeat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime, unsigned int atflags);
 #ifndef DEFINED_kwlist__dfd_path_atime_mtime_ctime_birthtime_atflags
 #define DEFINED_kwlist__dfd_path_atime_mtime_ctime_birthtime_atflags

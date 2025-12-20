@@ -1237,8 +1237,8 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("headof", "path:?Dstring->?Dstring", libname: "posix", isconst: true);]]]*/
-#define POSIX_HEADOF_DEF { "headof", (DeeObject *)&posix_headof, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
-#define POSIX_HEADOF_DEF_DOC(doc) { "headof", (DeeObject *)&posix_headof, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
+#define POSIX_HEADOF_DEF          DEX_MEMBER_F("headof", &posix_headof, DEXSYM_READONLY, "(path:?Dstring)->?Dstring"),
+#define POSIX_HEADOF_DEF_DOC(doc) DEX_MEMBER_F("headof", &posix_headof, DEXSYM_READONLY, "(path:?Dstring)->?Dstring\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_headof_f_impl(DeeObject *path);
 #ifndef DEFINED_kwlist__path
 #define DEFINED_kwlist__path
@@ -1266,8 +1266,8 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("tailof", "path:?Dstring->?Dstring", libname: "posix", isconst: true);]]]*/
-#define POSIX_TAILOF_DEF { "tailof", (DeeObject *)&posix_tailof, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
-#define POSIX_TAILOF_DEF_DOC(doc) { "tailof", (DeeObject *)&posix_tailof, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
+#define POSIX_TAILOF_DEF          DEX_MEMBER_F("tailof", &posix_tailof, DEXSYM_READONLY, "(path:?Dstring)->?Dstring"),
+#define POSIX_TAILOF_DEF_DOC(doc) DEX_MEMBER_F("tailof", &posix_tailof, DEXSYM_READONLY, "(path:?Dstring)->?Dstring\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_tailof_f_impl(DeeObject *path);
 #ifndef DEFINED_kwlist__path
 #define DEFINED_kwlist__path
@@ -1295,8 +1295,8 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("driveof", "path:?Dstring->?Dstring", libname: "posix", isconst: true);]]]*/
-#define POSIX_DRIVEOF_DEF { "driveof", (DeeObject *)&posix_driveof, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
-#define POSIX_DRIVEOF_DEF_DOC(doc) { "driveof", (DeeObject *)&posix_driveof, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
+#define POSIX_DRIVEOF_DEF          DEX_MEMBER_F("driveof", &posix_driveof, DEXSYM_READONLY, "(path:?Dstring)->?Dstring"),
+#define POSIX_DRIVEOF_DEF_DOC(doc) DEX_MEMBER_F("driveof", &posix_driveof, DEXSYM_READONLY, "(path:?Dstring)->?Dstring\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_driveof_f_impl(DeeObject *path);
 #ifndef DEFINED_kwlist__path
 #define DEFINED_kwlist__path
@@ -1324,8 +1324,8 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("inctrail", "path:?Dstring->?Dstring", libname: "posix", isconst: true);]]]*/
-#define POSIX_INCTRAIL_DEF { "inctrail", (DeeObject *)&posix_inctrail, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
-#define POSIX_INCTRAIL_DEF_DOC(doc) { "inctrail", (DeeObject *)&posix_inctrail, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
+#define POSIX_INCTRAIL_DEF          DEX_MEMBER_F("inctrail", &posix_inctrail, DEXSYM_READONLY, "(path:?Dstring)->?Dstring"),
+#define POSIX_INCTRAIL_DEF_DOC(doc) DEX_MEMBER_F("inctrail", &posix_inctrail, DEXSYM_READONLY, "(path:?Dstring)->?Dstring\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_inctrail_f_impl(DeeObject *path);
 #ifndef DEFINED_kwlist__path
 #define DEFINED_kwlist__path
@@ -1353,8 +1353,8 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("exctrail", "path:?Dstring->?Dstring", libname: "posix", isconst: true);]]]*/
-#define POSIX_EXCTRAIL_DEF { "exctrail", (DeeObject *)&posix_exctrail, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
-#define POSIX_EXCTRAIL_DEF_DOC(doc) { "exctrail", (DeeObject *)&posix_exctrail, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
+#define POSIX_EXCTRAIL_DEF          DEX_MEMBER_F("exctrail", &posix_exctrail, DEXSYM_READONLY, "(path:?Dstring)->?Dstring"),
+#define POSIX_EXCTRAIL_DEF_DOC(doc) DEX_MEMBER_F("exctrail", &posix_exctrail, DEXSYM_READONLY, "(path:?Dstring)->?Dstring\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_exctrail_f_impl(DeeObject *path);
 #ifndef DEFINED_kwlist__path
 #define DEFINED_kwlist__path
@@ -1382,8 +1382,8 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("abspath", "path:?Dstring,pwd:?Dstring=NULL->?Dstring", libname: "posix", ispure: true);]]]*/
-#define POSIX_ABSPATH_DEF { "abspath", (DeeObject *)&posix_abspath, MODSYM_FREADONLY, DOC("(path:?Dstring,pwd?:?Dstring)->?Dstring") },
-#define POSIX_ABSPATH_DEF_DOC(doc) { "abspath", (DeeObject *)&posix_abspath, MODSYM_FREADONLY, DOC("(path:?Dstring,pwd?:?Dstring)->?Dstring\n" doc) },
+#define POSIX_ABSPATH_DEF          DEX_MEMBER_F("abspath", &posix_abspath, DEXSYM_READONLY, "(path:?Dstring,pwd?:?Dstring)->?Dstring"),
+#define POSIX_ABSPATH_DEF_DOC(doc) DEX_MEMBER_F("abspath", &posix_abspath, DEXSYM_READONLY, "(path:?Dstring,pwd?:?Dstring)->?Dstring\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_abspath_f_impl(DeeObject *path, DeeObject *pwd);
 #ifndef DEFINED_kwlist__path_pwd
 #define DEFINED_kwlist__path_pwd
@@ -1416,8 +1416,8 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("walklink", "linktext:?Dstring,linkname:?Dstring->?Dstring", libname: "posix", isconst: true);]]]*/
-#define POSIX_WALKLINK_DEF { "walklink", (DeeObject *)&posix_walklink, MODSYM_FREADONLY, DOC("(linktext:?Dstring,linkname:?Dstring)->?Dstring") },
-#define POSIX_WALKLINK_DEF_DOC(doc) { "walklink", (DeeObject *)&posix_walklink, MODSYM_FREADONLY, DOC("(linktext:?Dstring,linkname:?Dstring)->?Dstring\n" doc) },
+#define POSIX_WALKLINK_DEF          DEX_MEMBER_F("walklink", &posix_walklink, DEXSYM_READONLY, "(linktext:?Dstring,linkname:?Dstring)->?Dstring"),
+#define POSIX_WALKLINK_DEF_DOC(doc) DEX_MEMBER_F("walklink", &posix_walklink, DEXSYM_READONLY, "(linktext:?Dstring,linkname:?Dstring)->?Dstring\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_walklink_f_impl(DeeObject *linktext, DeeObject *linkname);
 #ifndef DEFINED_kwlist__linktext_linkname
 #define DEFINED_kwlist__linktext_linkname
@@ -1449,8 +1449,8 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("relpath", "path:?Dstring,pwd:?Dstring=NULL->?Dstring", libname: "posix", ispure: true);]]]*/
-#define POSIX_RELPATH_DEF { "relpath", (DeeObject *)&posix_relpath, MODSYM_FREADONLY, DOC("(path:?Dstring,pwd?:?Dstring)->?Dstring") },
-#define POSIX_RELPATH_DEF_DOC(doc) { "relpath", (DeeObject *)&posix_relpath, MODSYM_FREADONLY, DOC("(path:?Dstring,pwd?:?Dstring)->?Dstring\n" doc) },
+#define POSIX_RELPATH_DEF          DEX_MEMBER_F("relpath", &posix_relpath, DEXSYM_READONLY, "(path:?Dstring,pwd?:?Dstring)->?Dstring"),
+#define POSIX_RELPATH_DEF_DOC(doc) DEX_MEMBER_F("relpath", &posix_relpath, DEXSYM_READONLY, "(path:?Dstring,pwd?:?Dstring)->?Dstring\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_relpath_f_impl(DeeObject *path, DeeObject *pwd);
 #ifndef DEFINED_kwlist__path_pwd
 #define DEFINED_kwlist__path_pwd
@@ -1483,8 +1483,8 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("normalpath", "path:?Dstring->?Dstring", libname: "posix", isconst: true);]]]*/
-#define POSIX_NORMALPATH_DEF { "normalpath", (DeeObject *)&posix_normalpath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
-#define POSIX_NORMALPATH_DEF_DOC(doc) { "normalpath", (DeeObject *)&posix_normalpath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
+#define POSIX_NORMALPATH_DEF          DEX_MEMBER_F("normalpath", &posix_normalpath, DEXSYM_READONLY, "(path:?Dstring)->?Dstring"),
+#define POSIX_NORMALPATH_DEF_DOC(doc) DEX_MEMBER_F("normalpath", &posix_normalpath, DEXSYM_READONLY, "(path:?Dstring)->?Dstring\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_normalpath_f_impl(DeeObject *path);
 #ifndef DEFINED_kwlist__path
 #define DEFINED_kwlist__path
@@ -1512,8 +1512,8 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("isabs", "path:?Dstring->?Dbool", libname: "posix", isconst: true);]]]*/
-#define POSIX_ISABS_DEF { "isabs", (DeeObject *)&posix_isabs, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dbool") },
-#define POSIX_ISABS_DEF_DOC(doc) { "isabs", (DeeObject *)&posix_isabs, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dbool\n" doc) },
+#define POSIX_ISABS_DEF          DEX_MEMBER_F("isabs", &posix_isabs, DEXSYM_READONLY, "(path:?Dstring)->?Dbool"),
+#define POSIX_ISABS_DEF_DOC(doc) DEX_MEMBER_F("isabs", &posix_isabs, DEXSYM_READONLY, "(path:?Dstring)->?Dbool\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_isabs_f_impl(DeeObject *path);
 #ifndef DEFINED_kwlist__path
 #define DEFINED_kwlist__path
@@ -1541,8 +1541,8 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("isrel", "path:?Dstring->?Dbool", libname: "posix", isconst: true);]]]*/
-#define POSIX_ISREL_DEF { "isrel", (DeeObject *)&posix_isrel, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dbool") },
-#define POSIX_ISREL_DEF_DOC(doc) { "isrel", (DeeObject *)&posix_isrel, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dbool\n" doc) },
+#define POSIX_ISREL_DEF          DEX_MEMBER_F("isrel", &posix_isrel, DEXSYM_READONLY, "(path:?Dstring)->?Dbool"),
+#define POSIX_ISREL_DEF_DOC(doc) DEX_MEMBER_F("isrel", &posix_isrel, DEXSYM_READONLY, "(path:?Dstring)->?Dbool\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_isrel_f_impl(DeeObject *path);
 #ifndef DEFINED_kwlist__path
 #define DEFINED_kwlist__path
@@ -1570,8 +1570,8 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("issep", "path:?Dstring->?Dbool", libname: "posix", isconst: true);]]]*/
-#define POSIX_ISSEP_DEF { "issep", (DeeObject *)&posix_issep, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dbool") },
-#define POSIX_ISSEP_DEF_DOC(doc) { "issep", (DeeObject *)&posix_issep, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dbool\n" doc) },
+#define POSIX_ISSEP_DEF          DEX_MEMBER_F("issep", &posix_issep, DEXSYM_READONLY, "(path:?Dstring)->?Dbool"),
+#define POSIX_ISSEP_DEF_DOC(doc) DEX_MEMBER_F("issep", &posix_issep, DEXSYM_READONLY, "(path:?Dstring)->?Dbool\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_issep_f_impl(DeeObject *path);
 #ifndef DEFINED_kwlist__path
 #define DEFINED_kwlist__path

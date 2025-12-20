@@ -100,8 +100,8 @@ DECL_BEGIN
 /*[[[deemon import("rt.gen.dexutils").gw("fcopyfile",
 	"oldfd:?X2?DFile?Dint,newpath:?X3?Dstring?DFile?Dint,flags:u=0,"
 	"progress:?DCallable=Dee_None,bufsize:?Dint=Dee_None", libname: "posix"); ]]]*/
-#define POSIX_FCOPYFILE_DEF { "fcopyfile", (DeeObject *)&posix_fcopyfile, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?X3?Dstring?DFile?Dint,flags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
-#define POSIX_FCOPYFILE_DEF_DOC(doc) { "fcopyfile", (DeeObject *)&posix_fcopyfile, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?X3?Dstring?DFile?Dint,flags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
+#define POSIX_FCOPYFILE_DEF          DEX_MEMBER_F("fcopyfile", &posix_fcopyfile, DEXSYM_READONLY, "(oldfd:?X2?DFile?Dint,newpath:?X3?Dstring?DFile?Dint,flags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)"),
+#define POSIX_FCOPYFILE_DEF_DOC(doc) DEX_MEMBER_F("fcopyfile", &posix_fcopyfile, DEXSYM_READONLY, "(oldfd:?X2?DFile?Dint,newpath:?X3?Dstring?DFile?Dint,flags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_fcopyfile_f_impl(DeeObject *oldfd, DeeObject *newpath, unsigned int flags, DeeObject *progress, DeeObject *bufsize);
 #ifndef DEFINED_kwlist__oldfd_newpath_flags_progress_bufsize
 #define DEFINED_kwlist__oldfd_newpath_flags_progress_bufsize
@@ -192,8 +192,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("copyfile",
 	"oldpath:?X3?DFile?Dint?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:u=0,"
 	"progress:?DCallable=Dee_None,bufsize:?Dint=Dee_None", libname: "posix"); ]]]*/
-#define POSIX_COPYFILE_DEF { "copyfile", (DeeObject *)&posix_copyfile, MODSYM_FREADONLY, DOC("(oldpath:?X3?DFile?Dint?Dstring,newpath:?X3?Dstring?DFile?Dint,flags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
-#define POSIX_COPYFILE_DEF_DOC(doc) { "copyfile", (DeeObject *)&posix_copyfile, MODSYM_FREADONLY, DOC("(oldpath:?X3?DFile?Dint?Dstring,newpath:?X3?Dstring?DFile?Dint,flags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
+#define POSIX_COPYFILE_DEF          DEX_MEMBER_F("copyfile", &posix_copyfile, DEXSYM_READONLY, "(oldpath:?X3?DFile?Dint?Dstring,newpath:?X3?Dstring?DFile?Dint,flags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)"),
+#define POSIX_COPYFILE_DEF_DOC(doc) DEX_MEMBER_F("copyfile", &posix_copyfile, DEXSYM_READONLY, "(oldpath:?X3?DFile?Dint?Dstring,newpath:?X3?Dstring?DFile?Dint,flags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_copyfile_f_impl(DeeObject *oldpath, DeeObject *newpath, unsigned int flags, DeeObject *progress, DeeObject *bufsize);
 #ifndef DEFINED_kwlist__oldpath_newpath_flags_progress_bufsize
 #define DEFINED_kwlist__oldpath_newpath_flags_progress_bufsize
@@ -344,8 +344,8 @@ again:
 /*[[[deemon import("rt.gen.dexutils").gw("lcopyfile",
 	"oldpath:?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:u=0,"
 	"progress:?DCallable=Dee_None,bufsize:?Dint=Dee_None", libname: "posix"); ]]]*/
-#define POSIX_LCOPYFILE_DEF { "lcopyfile", (DeeObject *)&posix_lcopyfile, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?X3?Dstring?DFile?Dint,flags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
-#define POSIX_LCOPYFILE_DEF_DOC(doc) { "lcopyfile", (DeeObject *)&posix_lcopyfile, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?X3?Dstring?DFile?Dint,flags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
+#define POSIX_LCOPYFILE_DEF          DEX_MEMBER_F("lcopyfile", &posix_lcopyfile, DEXSYM_READONLY, "(oldpath:?Dstring,newpath:?X3?Dstring?DFile?Dint,flags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)"),
+#define POSIX_LCOPYFILE_DEF_DOC(doc) DEX_MEMBER_F("lcopyfile", &posix_lcopyfile, DEXSYM_READONLY, "(oldpath:?Dstring,newpath:?X3?Dstring?DFile?Dint,flags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_lcopyfile_f_impl(DeeObject *oldpath, DeeObject *newpath, unsigned int flags, DeeObject *progress, DeeObject *bufsize);
 #ifndef DEFINED_kwlist__oldpath_newpath_flags_progress_bufsize
 #define DEFINED_kwlist__oldpath_newpath_flags_progress_bufsize
@@ -499,8 +499,8 @@ err:
 	"olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,"
 	"newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags:u=0,"
 	"atflags:u=0,progress:?DCallable=Dee_None,bufsize:?Dint=Dee_None", libname: "posix");]]]*/
-#define POSIX_COPYFILEAT_DEF { "copyfileat", (DeeObject *)&posix_copyfileat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags=!0,atflags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
-#define POSIX_COPYFILEAT_DEF_DOC(doc) { "copyfileat", (DeeObject *)&posix_copyfileat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags=!0,atflags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
+#define POSIX_COPYFILEAT_DEF          DEX_MEMBER_F("copyfileat", &posix_copyfileat, DEXSYM_READONLY, "(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags=!0,atflags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)"),
+#define POSIX_COPYFILEAT_DEF_DOC(doc) DEX_MEMBER_F("copyfileat", &posix_copyfileat, DEXSYM_READONLY, "(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags=!0,atflags=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4, 7, 8)) DREF DeeObject *DCALL posix_copyfileat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int flags, unsigned int atflags, DeeObject *progress, DeeObject *bufsize);
 #ifndef DEFINED_kwlist__olddirfd_oldpath_newdirfd_newpath_flags_atflags_progress_bufsize
 #define DEFINED_kwlist__olddirfd_oldpath_newdirfd_newpath_flags_atflags_progress_bufsize

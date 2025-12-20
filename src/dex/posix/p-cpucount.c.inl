@@ -80,8 +80,8 @@ DECL_BEGIN
 #endif /* posix_cpu_count_USE_get_nprocs */
 
 /*[[[deemon import("rt.gen.dexutils").gw("cpu_count", "->?Dint", libname: "posix", ispure: true); ]]]*/
-#define POSIX_CPU_COUNT_DEF { "cpu_count", (DeeObject *)&posix_cpu_count, MODSYM_FREADONLY, DOC("->?Dint") },
-#define POSIX_CPU_COUNT_DEF_DOC(doc) { "cpu_count", (DeeObject *)&posix_cpu_count, MODSYM_FREADONLY, DOC("->?Dint\n" doc) },
+#define POSIX_CPU_COUNT_DEF          DEX_MEMBER_F("cpu_count", &posix_cpu_count, DEXSYM_READONLY, "->?Dint"),
+#define POSIX_CPU_COUNT_DEF_DOC(doc) DEX_MEMBER_F("cpu_count", &posix_cpu_count, DEXSYM_READONLY, "->?Dint\n" doc),
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void);
 PRIVATE DEFINE_CMETHOD0(posix_cpu_count, &posix_cpu_count_f_impl, METHOD_FPURECALL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void)

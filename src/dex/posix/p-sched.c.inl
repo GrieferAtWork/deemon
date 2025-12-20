@@ -103,8 +103,8 @@ DECL_BEGIN
 
 #if defined(posix_system_USE_wsystem) || defined(posix_system_USE_fork_AND_wexec) || defined(__DEEMON__)
 /*[[[deemon import("rt.gen.dexutils").gw("system", "command:c:wchar_t[]->?Dint", libname: "posix"); ]]]*/
-#define POSIX_SYSTEM_DEF { "system", (DeeObject *)&posix_system, MODSYM_FREADONLY, DOC("(command:?Dstring)->?Dint") },
-#define POSIX_SYSTEM_DEF_DOC(doc) { "system", (DeeObject *)&posix_system, MODSYM_FREADONLY, DOC("(command:?Dstring)->?Dint\n" doc) },
+#define POSIX_SYSTEM_DEF          DEX_MEMBER_F("system", &posix_system, DEXSYM_READONLY, "(command:?Dstring)->?Dint"),
+#define POSIX_SYSTEM_DEF_DOC(doc) DEX_MEMBER_F("system", &posix_system, DEXSYM_READONLY, "(command:?Dstring)->?Dint\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_system_f_impl(Dee_wchar_t const *command);
 #ifndef DEFINED_kwlist__command
 #define DEFINED_kwlist__command
@@ -126,8 +126,8 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_system_f_impl(Dee_wc
 #endif /* posix_system_USE_wsystem || posix_system_USE_fork_AND_wexec */
 #if (!defined(posix_system_USE_wsystem) && !defined(posix_system_USE_fork_AND_wexec)) || defined(__DEEMON__)
 /*[[[deemon import("rt.gen.dexutils").gw("system", "command:c:char[]->?Dint", libname: "posix"); ]]]*/
-#define POSIX_SYSTEM_DEF { "system", (DeeObject *)&posix_system, MODSYM_FREADONLY, DOC("(command:?Dstring)->?Dint") },
-#define POSIX_SYSTEM_DEF_DOC(doc) { "system", (DeeObject *)&posix_system, MODSYM_FREADONLY, DOC("(command:?Dstring)->?Dint\n" doc) },
+#define POSIX_SYSTEM_DEF          DEX_MEMBER_F("system", &posix_system, DEXSYM_READONLY, "(command:?Dstring)->?Dint"),
+#define POSIX_SYSTEM_DEF_DOC(doc) DEX_MEMBER_F("system", &posix_system, DEXSYM_READONLY, "(command:?Dstring)->?Dint\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_system_f_impl(char const *command);
 #ifndef DEFINED_kwlist__command
 #define DEFINED_kwlist__command
@@ -244,8 +244,8 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("sched_yield", "", libname: "posix"); ]]]*/
-#define POSIX_SCHED_YIELD_DEF { "sched_yield", (DeeObject *)&posix_sched_yield, MODSYM_FREADONLY, DOC("()") },
-#define POSIX_SCHED_YIELD_DEF_DOC(doc) { "sched_yield", (DeeObject *)&posix_sched_yield, MODSYM_FREADONLY, DOC("()\n" doc) },
+#define POSIX_SCHED_YIELD_DEF          DEX_MEMBER_F("sched_yield", &posix_sched_yield, DEXSYM_READONLY, "()"),
+#define POSIX_SCHED_YIELD_DEF_DOC(doc) DEX_MEMBER_F("sched_yield", &posix_sched_yield, DEXSYM_READONLY, "()\n" doc),
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_sched_yield_f_impl(void);
 PRIVATE DEFINE_CMETHOD0(posix_sched_yield, &posix_sched_yield_f_impl, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_sched_yield_f_impl(void)
@@ -263,8 +263,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_sched_yield_f_impl(void)
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("getpid", "->?Dint", libname: "posix", ispure: true); ]]]*/
-#define POSIX_GETPID_DEF { "getpid", (DeeObject *)&posix_getpid, MODSYM_FREADONLY, DOC("->?Dint") },
-#define POSIX_GETPID_DEF_DOC(doc) { "getpid", (DeeObject *)&posix_getpid, MODSYM_FREADONLY, DOC("->?Dint\n" doc) },
+#define POSIX_GETPID_DEF          DEX_MEMBER_F("getpid", &posix_getpid, DEXSYM_READONLY, "->?Dint"),
+#define POSIX_GETPID_DEF_DOC(doc) DEX_MEMBER_F("getpid", &posix_getpid, DEXSYM_READONLY, "->?Dint\n" doc),
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getpid_f_impl(void);
 PRIVATE DEFINE_CMETHOD0(posix_getpid, &posix_getpid_f_impl, METHOD_FPURECALL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getpid_f_impl(void)

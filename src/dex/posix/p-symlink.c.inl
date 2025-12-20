@@ -113,8 +113,8 @@ DECL_BEGIN
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("_symlink", "text:?Dstring,path:?Dstring", libname: "posix"); ]]]*/
-#define POSIX__SYMLINK_DEF { "_symlink", (DeeObject *)&posix__symlink, MODSYM_FREADONLY, DOC("(text:?Dstring,path:?Dstring)") },
-#define POSIX__SYMLINK_DEF_DOC(doc) { "_symlink", (DeeObject *)&posix__symlink, MODSYM_FREADONLY, DOC("(text:?Dstring,path:?Dstring)\n" doc) },
+#define POSIX__SYMLINK_DEF          DEX_MEMBER_F("_symlink", &posix__symlink, DEXSYM_READONLY, "(text:?Dstring,path:?Dstring)"),
+#define POSIX__SYMLINK_DEF_DOC(doc) DEX_MEMBER_F("_symlink", &posix__symlink, DEXSYM_READONLY, "(text:?Dstring,path:?Dstring)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix__symlink_f_impl(DeeObject *text, DeeObject *path);
 #ifndef DEFINED_kwlist__text_path
 #define DEFINED_kwlist__text_path
@@ -237,8 +237,8 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("_fsymlinkat", "text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:u=0", libname: "posix"); ]]]*/
-#define POSIX__FSYMLINKAT_DEF { "_fsymlinkat", (DeeObject *)&posix__fsymlinkat, MODSYM_FREADONLY, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)") },
-#define POSIX__FSYMLINKAT_DEF_DOC(doc) { "_fsymlinkat", (DeeObject *)&posix__fsymlinkat, MODSYM_FREADONLY, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n" doc) },
+#define POSIX__FSYMLINKAT_DEF          DEX_MEMBER_F("_fsymlinkat", &posix__fsymlinkat, DEXSYM_READONLY, "(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)"),
+#define POSIX__FSYMLINKAT_DEF_DOC(doc) DEX_MEMBER_F("_fsymlinkat", &posix__fsymlinkat, DEXSYM_READONLY, "(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix__fsymlinkat_f_impl(DeeObject *text, DeeObject *dfd, DeeObject *path, unsigned int atflags);
 #ifndef DEFINED_kwlist__text_dfd_path_atflags
 #define DEFINED_kwlist__text_dfd_path_atflags
@@ -347,8 +347,8 @@ err:
 /************************************************************************/
 
 /*[[[deemon import("rt.gen.dexutils").gw("_symlinkat", "text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring", libname: "posix"); ]]]*/
-#define POSIX__SYMLINKAT_DEF { "_symlinkat", (DeeObject *)&posix__symlinkat, MODSYM_FREADONLY, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring)") },
-#define POSIX__SYMLINKAT_DEF_DOC(doc) { "_symlinkat", (DeeObject *)&posix__symlinkat, MODSYM_FREADONLY, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring)\n" doc) },
+#define POSIX__SYMLINKAT_DEF          DEX_MEMBER_F("_symlinkat", &posix__symlinkat, DEXSYM_READONLY, "(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring)"),
+#define POSIX__SYMLINKAT_DEF_DOC(doc) DEX_MEMBER_F("_symlinkat", &posix__symlinkat, DEXSYM_READONLY, "(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix__symlinkat_f_impl(DeeObject *text, DeeObject *dfd, DeeObject *path);
 #ifndef DEFINED_kwlist__text_dfd_path
 #define DEFINED_kwlist__text_dfd_path
@@ -448,8 +448,8 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("symlink", "text:?Dstring,path:?Dstring", libname: "posix"); ]]]*/
-#define POSIX_SYMLINK_DEF { "symlink", (DeeObject *)&posix_symlink, MODSYM_FREADONLY, DOC("(text:?Dstring,path:?Dstring)") },
-#define POSIX_SYMLINK_DEF_DOC(doc) { "symlink", (DeeObject *)&posix_symlink, MODSYM_FREADONLY, DOC("(text:?Dstring,path:?Dstring)\n" doc) },
+#define POSIX_SYMLINK_DEF          DEX_MEMBER_F("symlink", &posix_symlink, DEXSYM_READONLY, "(text:?Dstring,path:?Dstring)"),
+#define POSIX_SYMLINK_DEF_DOC(doc) DEX_MEMBER_F("symlink", &posix_symlink, DEXSYM_READONLY, "(text:?Dstring,path:?Dstring)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_symlink_f_impl(DeeObject *text, DeeObject *path);
 #ifndef DEFINED_kwlist__text_path
 #define DEFINED_kwlist__text_path
@@ -482,8 +482,8 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("fsymlinkat", "text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:u=0", libname: "posix"); ]]]*/
-#define POSIX_FSYMLINKAT_DEF { "fsymlinkat", (DeeObject *)&posix_fsymlinkat, MODSYM_FREADONLY, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)") },
-#define POSIX_FSYMLINKAT_DEF_DOC(doc) { "fsymlinkat", (DeeObject *)&posix_fsymlinkat, MODSYM_FREADONLY, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n" doc) },
+#define POSIX_FSYMLINKAT_DEF          DEX_MEMBER_F("fsymlinkat", &posix_fsymlinkat, DEXSYM_READONLY, "(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)"),
+#define POSIX_FSYMLINKAT_DEF_DOC(doc) DEX_MEMBER_F("fsymlinkat", &posix_fsymlinkat, DEXSYM_READONLY, "(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_fsymlinkat_f_impl(DeeObject *text, DeeObject *dfd, DeeObject *path, unsigned int atflags);
 #ifndef DEFINED_kwlist__text_dfd_path_atflags
 #define DEFINED_kwlist__text_dfd_path_atflags
@@ -519,8 +519,8 @@ err:
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("symlinkat", "text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring", libname: "posix"); ]]]*/
-#define POSIX_SYMLINKAT_DEF { "symlinkat", (DeeObject *)&posix_symlinkat, MODSYM_FREADONLY, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring)") },
-#define POSIX_SYMLINKAT_DEF_DOC(doc) { "symlinkat", (DeeObject *)&posix_symlinkat, MODSYM_FREADONLY, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring)\n" doc) },
+#define POSIX_SYMLINKAT_DEF          DEX_MEMBER_F("symlinkat", &posix_symlinkat, DEXSYM_READONLY, "(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring)"),
+#define POSIX_SYMLINKAT_DEF_DOC(doc) DEX_MEMBER_F("symlinkat", &posix_symlinkat, DEXSYM_READONLY, "(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring)\n" doc),
 FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_symlinkat_f_impl(DeeObject *text, DeeObject *dfd, DeeObject *path);
 #ifndef DEFINED_kwlist__text_dfd_path
 #define DEFINED_kwlist__text_dfd_path

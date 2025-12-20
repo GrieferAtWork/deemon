@@ -131,10 +131,19 @@ struct Dee_reftracker;
 
 /* IDE hint for macros that require arguments types to implement `OBJECT_HEAD' */
 #ifdef __INTELLISENSE__
-#define Dee_REQUIRES_OBJECT(x) ((DeeObject *)&(x)->ob_refcnt)
+#ifdef __cplusplus
+extern "C++" {namespace __intern {
+template<class T, class S> T *__Dee_REQUIRES_OBJECT(S const *x, decltype(((S *)0)->ob_refcnt)=0);
+template<class T> T *__Dee_REQUIRES_OBJECT(decltype(nullptr));
+}} /* extern "C++" */
+#define Dee_REQUIRES_OBJECT(T, x) ::__intern::__Dee_REQUIRES_OBJECT< T >(x)
+#else /* __cplusplus */
+#define Dee_REQUIRES_OBJECT(T, x) ((T *)&(x)->ob_refcnt)
+#endif /* !__cplusplus */
 #else /* __INTELLISENSE__ */
-#define Dee_REQUIRES_OBJECT /* nothing */
+#define Dee_REQUIRES_OBJECT(T, x) ((T *)(x))
 #endif /* !__INTELLISENSE__ */
+#define Dee_REQUIRES_ANYOBJECT(x) Dee_REQUIRES_OBJECT(DeeObject, x)
 
 
 #ifdef __INTELLISENSE__

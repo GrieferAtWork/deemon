@@ -112,8 +112,8 @@ struct Dee_objmethod_object {
 
 DDATDEF DeeTypeObject DeeObjMethod_Type;
 DDATDEF DeeTypeObject DeeKwObjMethod_Type;
-#define DeeObjMethod_SELF(x)         ((DeeObjMethodObject *)Dee_REQUIRES_OBJECT(x))->om_this
-#define DeeObjMethod_FUNC(x)         ((DeeObjMethodObject *)Dee_REQUIRES_OBJECT(x))->om_func.omf_meth
+#define DeeObjMethod_SELF(x)         Dee_REQUIRES_OBJECT(DeeObjMethodObject, x)->om_this
+#define DeeObjMethod_FUNC(x)         Dee_REQUIRES_OBJECT(DeeObjMethodObject, x)->om_func.omf_meth
 #define DeeObjMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeObjMethod_Type) /* `_ObjMethod' is final. */
 #define DeeObjMethod_CheckExact(x)   DeeObject_InstanceOfExact(x, &DeeObjMethod_Type)
 #define DeeKwObjMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwObjMethod_Type) /* `_KwObjMethod' is final. */
@@ -149,8 +149,8 @@ struct Dee_clsmethod_object {
 
 DDATDEF DeeTypeObject DeeClsMethod_Type;
 DDATDEF DeeTypeObject DeeKwClsMethod_Type;
-#define DeeClsMethod_FUNC(x)         ((DeeClsMethodObject *)Dee_REQUIRES_OBJECT(x))->clm_func.clmf_meth
-#define DeeClsMethod_TYPE(x)         ((DeeClsMethodObject *)Dee_REQUIRES_OBJECT(x))->clm_type
+#define DeeClsMethod_FUNC(x)         Dee_REQUIRES_OBJECT(DeeClsMethodObject, x)->clm_func.clmf_meth
+#define DeeClsMethod_TYPE(x)         Dee_REQUIRES_OBJECT(DeeClsMethodObject, x)->clm_type
 #define DeeClsMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeClsMethod_Type)   /* `_ClassMethod' is final. */
 #define DeeClsMethod_CheckExact(x)   DeeObject_InstanceOfExact(x, &DeeClsMethod_Type)
 #define DeeKwClsMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwClsMethod_Type) /* `_KwClassMethod' is final. */
@@ -193,11 +193,11 @@ struct Dee_clsproperty_object {
 };
 
 DDATDEF DeeTypeObject DeeClsProperty_Type;
-#define DeeClsProperty_TYPE(x)       ((DeeClsPropertyObject const *)Dee_REQUIRES_OBJECT(x))->cp_type
-#define DeeClsProperty_GET(x)        ((DeeClsPropertyObject const *)Dee_REQUIRES_OBJECT(x))->cp_get
-#define DeeClsProperty_DEL(x)        ((DeeClsPropertyObject const *)Dee_REQUIRES_OBJECT(x))->cp_del
-#define DeeClsProperty_SET(x)        ((DeeClsPropertyObject const *)Dee_REQUIRES_OBJECT(x))->cp_set
-#define DeeClsProperty_BOUND(x)      ((DeeClsPropertyObject const *)Dee_REQUIRES_OBJECT(x))->cp_bound
+#define DeeClsProperty_TYPE(x)       Dee_REQUIRES_OBJECT(DeeClsPropertyObject, x)->cp_type
+#define DeeClsProperty_GET(x)        Dee_REQUIRES_OBJECT(DeeClsPropertyObject, x)->cp_get
+#define DeeClsProperty_DEL(x)        Dee_REQUIRES_OBJECT(DeeClsPropertyObject, x)->cp_del
+#define DeeClsProperty_SET(x)        Dee_REQUIRES_OBJECT(DeeClsPropertyObject, x)->cp_set
+#define DeeClsProperty_BOUND(x)      Dee_REQUIRES_OBJECT(DeeClsPropertyObject, x)->cp_bound
 #define DeeClsProperty_Check(x)      DeeObject_InstanceOfExact(x, &DeeClsProperty_Type) /* `_ClassProperty' is final. */
 #define DeeClsProperty_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeClsProperty_Type)
 #define Dee_DEFINE_CLSPROPERTY(name, type, get, del, set, bound)              \
@@ -289,7 +289,7 @@ DDATDEF DeeTypeObject DeeCMethod_Type;
 DDATDEF DeeTypeObject DeeKwCMethod_Type;
 DDATDEF DeeTypeObject DeeCMethod0_Type;
 DDATDEF DeeTypeObject DeeCMethod1_Type;
-#define DeeCMethod_FUNC(x)         ((DeeCMethodObject *)Dee_REQUIRES_OBJECT(x))->cm_func.cmf_meth
+#define DeeCMethod_FUNC(x)         Dee_REQUIRES_OBJECT(DeeCMethodObject, x)->cm_func.cmf_meth
 #define DeeCMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeCMethod_Type) /* `_CMethod' is final. */
 #define DeeCMethod_CheckExact(x)   DeeObject_InstanceOfExact(x, &DeeCMethod_Type)
 #define DeeKwCMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwCMethod_Type) /* `_KwCMethod' is final. */

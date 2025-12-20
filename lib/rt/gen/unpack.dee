@@ -1427,8 +1427,8 @@ import MODULE_NAME, getDefaultLibnameOfSourceFile from rt.gen.dexutils;
 @@>/*[[[deemon import("rt.gen.unpack").print_libMethod("bar", "arg1: c:utf8, arg2, arg3 = NULL, bool arg4 = true"); ]]]*/
 @@>FORCELOCAL WUNUSED DREF DeeObject *DCALL libfoo_bar_f_impl(char const *arg1, DeeObject *arg2, DeeObject *arg3, bool arg4);
 @@>PRIVATE WUNUSED DREF DeeObject *DCALL libfoo_bar_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-@@>#define LIBFOO_BAR_DEF { "bar", (DeeObject *)&libfoo_bar, MODSYM_FREADONLY, DOC("(arg1:?Dstring,arg2,arg3?,arg4=!t)") },
-@@>#define LIBFOO_BAR_DEF_DOC(doc) { "bar", (DeeObject *)&libfoo_bar, MODSYM_FREADONLY, DOC("(arg1:?Dstring,arg2,arg3?,arg4=!t)\n" doc) },
+@@>#define LIBFOO_BAR_DEF { "bar", (DeeObject *)&libfoo_bar, DEXSYM_FREADONLY, DOC("(arg1:?Dstring,arg2,arg3?,arg4=!t)") },
+@@>#define LIBFOO_BAR_DEF_DOC(doc) { "bar", (DeeObject *)&libfoo_bar, DEXSYM_FREADONLY, DOC("(arg1:?Dstring,arg2,arg3?,arg4=!t)\n" doc) },
 @@>PRIVATE DEFINE_KWCMETHOD(libfoo_bar, &libfoo_bar_f, METHOD_FNORMAL);
 @@>#ifndef DEFINED_kwlist__arg1_arg2_arg3_arg4
 @@>#define DEFINED_kwlist__arg1_arg2_arg3_arg4
@@ -1522,11 +1522,14 @@ function print_libMethod(name: string,
 	if (docStringPrefix)
 		printDocStringWithPrefix(docStringPrefix, name, params);
 	if (printDefMacros) {
-		local symbolFlags = isvarying ? "MODSYM_FNORMAL" : "MODSYM_FREADONLY";
-		print('#define ', LIBFOO_BAR, '_DEF { ', repr name, ', (DeeObject *)&', libfoo_bar, ', ',
-			symbolFlags, ', DOC(', repr(docString), ') },');
-		print('#define ', LIBFOO_BAR, '_DEF_DOC(doc) { ', repr name, ', (DeeObject *)&', libfoo_bar, ', ',
-			symbolFlags, ', DOC(', repr(docString + '\n'), ' doc) },');
+		local symbolFlags = isvarying ? "DEXSYM_NORMAL" : "DEXSYM_READONLY";
+		local hasFlags = symbolFlags != "DEXSYM_NORMAL";
+		print(f'#define {LIBFOO_BAR}_DEF          DEX_MEMBER{hasFlags ? "_F" : ""}({
+			repr name}, &{libfoo_bar}, {hasFlags ? symbolFlags + ", " : ""}{
+			repr docString}),');
+		print(f'#define {LIBFOO_BAR}_DEF_DOC(doc) DEX_MEMBER{hasFlags ? "_F" : ""}({
+			repr name}, &{libfoo_bar}, {hasFlags ? symbolFlags + ", " : ""}{
+			repr(docString + "\n")} doc),');
 	}
 
 	if (!methodFlags) {

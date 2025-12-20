@@ -553,7 +553,7 @@ struct Dee_class_desc {
 /* Returns the descriptor for a given class. */
 #define DeeClass_DESC(self)                                                      \
 	(ASSERT_OBJECT_TYPE(self, &DeeType_Type), Dee_ASSERT(DeeType_IsClass(self)), \
-	 ((DeeTypeObject *)Dee_REQUIRES_OBJECT(self))->tp_class)
+	 Dee_REQUIRES_OBJECT(DeeTypeObject, self)->tp_class)
 
 
 #define DeeClassDesc_QueryClassAttribute(self, attr)                                DeeClassDescriptor_QueryClassAttribute((self)->cd_desc, attr)
@@ -610,7 +610,7 @@ struct Dee_instance_desc {
 #define Dee_instance_desc_lock_end(self)        Dee_atomic_rwlock_end(&(self)->id_lock)
 
 #define DeeInstance_DESC(class_descriptor, self) \
-	((struct Dee_instance_desc *)((uintptr_t)Dee_REQUIRES_OBJECT(self) + (class_descriptor)->cd_offset))
+	((struct Dee_instance_desc *)((uintptr_t)Dee_REQUIRES_ANYOBJECT(self) + (class_descriptor)->cd_offset))
 
 
 /* Get/Call/Del/Set an instance attribute, as acquired

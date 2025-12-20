@@ -269,7 +269,7 @@ tuple_getrange_index(DeeTupleObject *__restrict self,
 #define STACK_PACK_THRESHOLD 16
 
 #define asm_gpush_constexpr_generic_inherited(value) \
-	asm_gpush_constexpr_generic_inherited((DREF DeeObject *)Dee_REQUIRES_OBJECT(value))
+	asm_gpush_constexpr_generic_inherited(Dee_REQUIRES_OBJECT(DREF DeeObject, value))
 PRIVATE WUNUSED NONNULL((1)) int
 (DCALL asm_gpush_constexpr_generic_inherited)(/*inherit(always)*/ DREF DeeObject *__restrict value) {
 	/* Fallback: Push a constant variable  */
