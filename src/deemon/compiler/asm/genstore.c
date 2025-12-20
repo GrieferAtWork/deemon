@@ -261,7 +261,7 @@ check_getattr_sym:
 				if (!PUSH_RESULT && !(modsym->ss_flags & MODSYM_FPROPERTY))
 					goto done;
 				if (modsym->ss_flags & MODSYM_FEXTERN) {
-					uint16_t impid = modsym->ss_extern.ss_impid;
+					uint16_t impid = modsym->ss_impid;
 					ASSERT(impid < SYMBOL_MODULE_MODULE(sym)->mo_importc);
 					module_id = asm_newmodule(SYMBOL_MODULE_MODULE(sym)->mo_importv[impid]);
 				} else {
@@ -425,7 +425,7 @@ check_boundattr_sym:
 				if (!PUSH_RESULT)
 					goto done;
 				if (modsym->ss_flags & MODSYM_FEXTERN) {
-					uint16_t impid = modsym->ss_extern.ss_impid;
+					uint16_t impid = modsym->ss_impid;
 					ASSERT(impid < SYMBOL_MODULE_MODULE(sym)->mo_importc);
 					module_id = asm_newmodule(SYMBOL_MODULE_MODULE(sym)->mo_importv[impid]);
 				} else {
@@ -866,7 +866,7 @@ check_base_symbol_class:
 				if (modsym->ss_flags & MODSYM_FREADONLY)
 					break;
 				if (modsym->ss_flags & MODSYM_FEXTERN) {
-					uint16_t impid = modsym->ss_extern.ss_impid;
+					uint16_t impid = modsym->ss_impid;
 					ASSERT(impid < SYMBOL_MODULE_MODULE(sym)->mo_importc);
 					module_id = asm_newmodule(SYMBOL_MODULE_MODULE(sym)->mo_importv[impid]);
 				} else {

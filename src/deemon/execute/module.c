@@ -479,8 +479,8 @@ read_symbol:
 	}
 
 	/* External symbol. */
-	ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
-	self = self->mo_importv[symbol->ss_extern.ss_impid];
+	ASSERT(symbol->ss_impid < self->mo_importc);
+	self = self->mo_importv[symbol->ss_impid];
 	goto read_symbol;
 }
 
@@ -521,8 +521,8 @@ read_symbol:
 	}
 
 	/* External symbol. */
-	ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
-	self = self->mo_importv[symbol->ss_extern.ss_impid];
+	ASSERT(symbol->ss_impid < self->mo_importc);
+	self = self->mo_importv[symbol->ss_impid];
 	goto read_symbol;
 }
 
@@ -552,8 +552,8 @@ DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
 		}
 
 		/* External symbol. */
-		ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
-		self = self->mo_importv[symbol->ss_extern.ss_impid];
+		ASSERT(symbol->ss_impid < self->mo_importc);
+		self = self->mo_importv[symbol->ss_impid];
 	}
 	ASSERT(symbol->ss_index < self->mo_globalc);
 	DeeModule_LockWrite(self);
@@ -573,8 +573,8 @@ DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self,
 	       symbol <= self->mo_bucketv + self->mo_bucketm);
 	if unlikely(symbol->ss_flags & (MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FEXTERN)) {
 		if unlikely(symbol->ss_flags & MODSYM_FEXTERN) {
-			ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
-			self = self->mo_importv[symbol->ss_extern.ss_impid];
+			ASSERT(symbol->ss_impid < self->mo_importc);
+			self = self->mo_importv[symbol->ss_impid];
 		}
 		if (symbol->ss_flags & MODSYM_FREADONLY) {
 			if (symbol->ss_flags & MODSYM_FPROPERTY)
@@ -606,8 +606,8 @@ err_is_readonly:
 			return temp ? 0 : -1;
 		}
 		/* External symbol. */
-		ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
-		self = self->mo_importv[symbol->ss_extern.ss_impid];
+		ASSERT(symbol->ss_impid < self->mo_importc);
+		self = self->mo_importv[symbol->ss_impid];
 	}
 	ASSERT(symbol->ss_index < self->mo_globalc);
 	Dee_Incref(value);

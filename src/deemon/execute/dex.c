@@ -273,7 +273,7 @@ dex_load_handle(DeeDexObject *__restrict self,
 			target->ss_doc   = sym->ds_doc;
 			target->ss_index = symi;
 			target->ss_hash  = hash;
-			target->ss_flags = (uint16_t)sym->ds_flags;
+			target->ss_flags = (uint8_t)sym->ds_flags;
 			ASSERT(!(sym->ds_flags & (MODSYM_FNAMEOBJ | MODSYM_FDOCOBJ)));
 			break;
 		}

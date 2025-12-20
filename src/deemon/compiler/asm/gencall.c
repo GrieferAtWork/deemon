@@ -403,8 +403,8 @@ check_small_constargs_symbol:
 						break;
 					/* Direct call to symbol. */
 					if (modsym->ss_flags & MODSYM_FEXTERN) {
-						ASSERT(modsym->ss_extern.ss_impid < funsym->s_extern.e_module->mo_importc);
-						symid = asm_newmodule(funsym->s_extern.e_module->mo_importv[modsym->ss_extern.ss_impid]);
+						ASSERT(modsym->ss_impid < funsym->s_extern.e_module->mo_importc);
+						symid = asm_newmodule(funsym->s_extern.e_module->mo_importv[modsym->ss_impid]);
 					} else {
 						symid = asm_esymid(funsym);
 					}
@@ -675,8 +675,8 @@ check_getattr_base_symbol_class_small:
 							if (modsym->ss_flags & MODSYM_FPROPERTY)
 								break;
 							if (modsym->ss_flags & MODSYM_FEXTERN) {
-								ASSERT(modsym->ss_extern.ss_impid < sym->s_module->mo_importc);
-								module_id = asm_newmodule(sym->s_module->mo_importv[modsym->ss_extern.ss_impid]);
+								ASSERT(modsym->ss_impid < sym->s_module->mo_importc);
+								module_id = asm_newmodule(sym->s_module->mo_importv[modsym->ss_impid]);
 							} else {
 								module_id = asm_msymid(sym);
 							}
@@ -1171,7 +1171,7 @@ check_funsym_class:
 			if (funsym->s_extern.e_symbol->ss_flags & MODSYM_FPROPERTY)
 				break;
 			if (funsym->s_extern.e_symbol->ss_flags & MODSYM_FEXTERN) {
-				symid = funsym->s_extern.e_symbol->ss_extern.ss_impid;
+				symid = funsym->s_extern.e_symbol->ss_impid;
 				ASSERT(symid < funsym->s_extern.e_module->mo_importc);
 				symid = asm_newmodule(funsym->s_extern.e_module->mo_importv[symid]);
 			} else {
@@ -1459,8 +1459,8 @@ check_getattr_base_symbol_class_argv:
 					if (modsym->ss_flags & MODSYM_FPROPERTY)
 						break;
 					if (modsym->ss_flags & MODSYM_FEXTERN) {
-						ASSERT(modsym->ss_extern.ss_impid < sym->s_module->mo_importc);
-						module_id = asm_newmodule(sym->s_module->mo_importv[modsym->ss_extern.ss_impid]);
+						ASSERT(modsym->ss_impid < sym->s_module->mo_importc);
+						module_id = asm_newmodule(sym->s_module->mo_importv[modsym->ss_impid]);
 					} else {
 						module_id = asm_msymid(sym);
 					}

@@ -3217,8 +3217,8 @@ asm_esymid(struct symbol *__restrict sym) {
 		return sym->s_symid;
 	module = sym->s_extern.e_module;
 	if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FEXTERN) {
-		ASSERT(SYMBOL_EXTERN_SYMBOL(sym)->ss_extern.ss_impid < module->mo_importc);
-		module = module->mo_importv[SYMBOL_EXTERN_SYMBOL(sym)->ss_extern.ss_impid];
+		ASSERT(SYMBOL_EXTERN_SYMBOL(sym)->ss_impid < module->mo_importc);
+		module = module->mo_importv[SYMBOL_EXTERN_SYMBOL(sym)->ss_impid];
 	}
 	result = asm_newmodule(module);
 	if unlikely(result < 0)

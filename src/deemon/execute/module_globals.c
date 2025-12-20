@@ -162,8 +162,8 @@ read_symbol:
 	}
 
 	/* External symbol. */
-	ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
-	self = self->mo_importv[symbol->ss_extern.ss_impid];
+	ASSERT(symbol->ss_impid < self->mo_importc);
+	self = self->mo_importv[symbol->ss_impid];
 	goto read_symbol;
 }
 
@@ -397,8 +397,8 @@ read_symbol:
 	}
 
 	/* External symbol. */
-	ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
-	self = self->mo_importv[symbol->ss_extern.ss_impid];
+	ASSERT(symbol->ss_impid < self->mo_importc);
+	self = self->mo_importv[symbol->ss_impid];
 	goto read_symbol;
 }
 
@@ -441,8 +441,8 @@ read_symbol:
 	}
 
 	/* External symbol. */
-	ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
-	self = self->mo_importv[symbol->ss_extern.ss_impid];
+	ASSERT(symbol->ss_impid < self->mo_importc);
+	self = self->mo_importv[symbol->ss_impid];
 	goto read_symbol;
 }
 
@@ -480,8 +480,8 @@ read_symbol:
 	}
 
 	/* External symbol. */
-	ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
-	self = self->mo_importv[symbol->ss_extern.ss_impid];
+	ASSERT(symbol->ss_impid < self->mo_importc);
+	self = self->mo_importv[symbol->ss_impid];
 	goto read_symbol;
 }
 

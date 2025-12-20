@@ -46,10 +46,6 @@ DECL_BEGIN
 #define DEXSYM_ALIAS       Dee_DEXSYM_ALIAS
 #define DEXSYM_HIDDEN      Dee_DEXSYM_HIDDEN
 #define DEXSYM_PROPERTY    Dee_DEXSYM_PROPERTY
-#define DEXSYM_EXTERN      Dee_DEXSYM_EXTERN
-#define Dee_dex_object     dex_object
-#define Dee_dex_symbol     dex_symbol
-#define Dee_dex            dex
 #define DEX_BEGIN          Dee_DEX_BEGIN
 #define DEX_MEMBER         Dee_DEX_MEMBER
 #define DEX_MEMBER_F       Dee_DEX_MEMBER_F
@@ -64,6 +60,11 @@ DECL_BEGIN
 #define DEX_GETSET_NODOC   Dee_DEX_GETSET_NODOC
 #define DEX_GETTER_NODOC   Dee_DEX_GETTER_NODOC
 #define DEX_END            Dee_DEX_END
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#define Dee_dex_object     dex_object
+#define Dee_dex_symbol     dex_symbol
+#define Dee_dex            dex
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #endif /* DEE_SOURCE */
 
 
@@ -74,8 +75,56 @@ DECL_BEGIN
 #define Dee_DEXSYM_ALIAS     Dee_MODSYM_FALIAS
 #define Dee_DEXSYM_HIDDEN    Dee_MODSYM_FHIDDEN
 #define Dee_DEXSYM_PROPERTY  Dee_MODSYM_FPROPERTY
-#define Dee_DEXSYM_EXTERN    Dee_MODSYM_FEXTERN
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+
+/* TODO: Provide macros to statically allocate the dex's DeeModuleObject!
+ *       For "CONFIG_EXPERIMENTAL_MMAP_DEC" to eventually work properly,
+ *       DeeModule_FromStaticPointer() must be able to re-return itself
+ *       when given a pointer to itself (iow: the DeeModuleObject *MUST*
+ *       be allocated statically within the external dex library) */
+
+struct Dee_dex_symbol {
+	char const           *ds_name;  /* [1..1][SENTINEL(NULL)] Name of this symbol. */
+	/*utf-8*/ char const *ds_doc;   /* [0..1] An optional documentation string. */
+	DeeObject            *ds_obj;   /* [0..1] The initial value of this symbol. */
+	uintptr_t             ds_flags; /* Set of `Dee_DEXSYM_*'. */
+};
+
+
+/* Helpers for defining DEX exports from C */
+#define Dee_DEX_BEGIN \
+	PRIVATE struct Dee_dex_symbol _dex_symbols[] = {
+#define Dee_DEX_MEMBER(name, obj, doc)           Dee_DEX_MEMBER_F(name, obj, Dee_DEXSYM_NORMAL, doc)
+#define Dee_DEX_MEMBER_F(name, obj, flags, doc)  { name, Dee_REQUIRES_ANYOBJECT(obj), (flags) & ~(Dee_DEXSYM_PROPERTY), DOC(doc) }
+#define Dee_DEX_MEMBER_NODOC(name, obj)          Dee_DEX_MEMBER(name, obj, NULL)
+#define Dee_DEX_MEMBER_F_NODOC(name, obj, flags) Dee_DEX_MEMBER_F(name, obj, flags, NULL)
+#define Dee_DEX_GETSET_F(name, get, del, set, flags, doc)                                              \
+	{ name, Dee_REQUIRES_ANYOBJECT(get), MODSYM_FPROPERTY | ((flags) & ~MODSYM_FREADONLY), DOC(doc) }, \
+	{ NULL, Dee_REQUIRES_ANYOBJECT(del), MODSYM_FNORMAL, NULL },                                       \
+	{ NULL, Dee_REQUIRES_ANYOBJECT(set), MODSYM_FNORMAL, NULL }
+#define Dee_DEX_GETTER_F(name, get, flags, doc) \
+	{ name, Dee_REQUIRES_ANYOBJECT(get), MODSYM_FREADONLY | MODSYM_FPROPERTY | (flags), DOC(doc) }
+#define Dee_DEX_GETSET(name, get, del, set, doc)           Dee_DEX_GETSET_F(name, get, del, set, Dee_DEXSYM_NORMAL, doc)
+#define Dee_DEX_GETTER(name, get, doc)                     Dee_DEX_GETTER_F(name, get, Dee_DEXSYM_NORMAL, doc)
+#define Dee_DEX_GETSET_F_NODOC(name, get, del, set, flags) Dee_DEX_GETSET_F(name, get, del, set, flags, NULL)
+#define Dee_DEX_GETTER_F_NODOC(name, get, flags)           Dee_DEX_GETTER_F(name, get, flags, NULL)
+#define Dee_DEX_GETSET_NODOC(name, get, del, set)          Dee_DEX_GETSET(name, get, del, set, NULL)
+#define Dee_DEX_GETTER_NODOC(name, get)                    Dee_DEX_GETTER(name, get, NULL)           
+#define Dee_DEX_END(init, fini, clear)   \
+		{ NULL, NULL, 0, NULL }          \
+	};                                   \
+	PUBLIC struct Dee_dex DEX = {        \
+		/* .d_symbols = */ _dex_symbols, \
+		/* .d_init    = */ init,         \
+		/* .d_fini    = */ fini,         \
+		/* .d_clear   = */ clear         \
+	}
+
+
+
+
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 typedef struct Dee_dex_object DeeDexObject;
 
 struct Dee_dex_symbol {
@@ -147,17 +196,6 @@ struct Dee_dex {
 	bool       (DCALL *d_clear)(DeeDexObject *__restrict self);
 };
 
-
-
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-
-/* TODO: Provide macros to statically allocate the dex's DeeModuleObject!
- *       For "CONFIG_EXPERIMENTAL_MMAP_DEC" to eventually work properly,
- *       DeeModule_FromStaticPointer() must be able to re-return itself
- *       when given a pointer to itself (iow: the DeeModuleObject *MUST*
- *       be allocated statically within the external dex library) */
-
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 struct Dee_dex_object {
 	DeeModuleObject    d_module;       /* The underlying module. */
 	struct Dee_dex    *d_dex;          /* [1..1][const_if(Dee_MODULE_FDIDLOAD)] The dex definition table exported by this extension.

@@ -56,8 +56,8 @@ bind_module_symbol(DeeModuleObject *__restrict module,
 		return 1; /* Doesn't exists */
 	if (symbol->ss_flags & MODSYM_FEXTERN) {
 		/* Follow external module symbols. */
-		ASSERT(symbol->ss_extern.ss_impid < module->mo_importc);
-		module = module->mo_importv[symbol->ss_extern.ss_impid];
+		ASSERT(symbol->ss_impid < module->mo_importc);
+		module = module->mo_importv[symbol->ss_impid];
 	}
 	/* XXX: What if the calling module is the `operators' module? */
 	temp = asm_newmodule(module);

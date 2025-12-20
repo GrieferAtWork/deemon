@@ -789,7 +789,7 @@ check_function_class:
 			if (function->s_extern.e_symbol->ss_flags & MODSYM_FPROPERTY)
 				break;
 			if (function->s_extern.e_symbol->ss_flags & MODSYM_FEXTERN) {
-				symid = function->s_extern.e_symbol->ss_extern.ss_impid;
+				symid = function->s_extern.e_symbol->ss_impid;
 				ASSERT(symid < function->s_extern.e_module->mo_importc);
 				symid = asm_newmodule(function->s_extern.e_module->mo_importv[symid]);
 			} else {

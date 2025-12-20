@@ -404,9 +404,9 @@ decgen_globals(DeeModuleObject *__restrict self) {
 			++symcount; /* Track the total number of symbols. */
 			if (dec_putw(symiter->ss_flags & ~(MODSYM_FNAMEOBJ | MODSYM_FDOCOBJ)))
 				goto err; /* Dec_GlbExt.s_flg */
-			if (dec_putw(symiter->ss_extern.ss_symid))
+			if (dec_putw(symiter->ss_index))
 				goto err; /* Dec_GlbExt.s_addr */
-			if (dec_putw(symiter->ss_extern.ss_impid))
+			if (dec_putw(symiter->ss_impid))
 				goto err; /* Dec_GlbExt.s_addr2 */
 			dec_curr = SC_STRING;
 			name_len = MODULE_SYMBOL_GETNAMELEN(symiter);

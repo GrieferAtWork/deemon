@@ -2588,23 +2588,24 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 
 	/* Read symbol information. */
 	for (i = 0; i < symbolc; ++i) {
-		uint16_t flags, addr, addr2;
+		uint8_t flags, addr2;
+		uint16_t addr;
 		char const *name, *doc;
 		uint32_t doclen;
 		Dee_hash_t name_hash, hash_i, perturb;
 		if unlikely(reader >= end)
 			GOTO_CORRUPTED(reader, stop_symbolv); /* Validate bounds. */
-		flags = UNALIGNED_GETLE16(reader), reader += 2;
+		flags = (uint8_t)UNALIGNED_GETLE16(reader), reader += 2;
 		if (flags & ~MODSYM_FMASK)
 			GOTO_CORRUPTED(reader, stop_symbolv); /* Unknown flags are being used. */
 		/* The first `globalc' descriptors lack the `s_addr' field. */
-		addr2 = (uint16_t)-1;
+		addr2 = (uint8_t)-1;
 		if (i < globalc) {
 			addr = i;
 		} else {
 			addr = UNALIGNED_GETLE16(reader), reader += 2;
 			if (flags & MODSYM_FEXTERN) {
-				addr2 = UNALIGNED_GETLE16(reader), reader += 2;
+				addr2 = (uint8_t)UNALIGNED_GETLE16(reader), reader += 2;
 				if (!(flags & MODSYM_FPROPERTY) && addr2 >= self->df_module->mo_importc)
 					GOTO_CORRUPTED(reader, stop_symbolv); /* Validate module index. */
 			} else {
@@ -2650,10 +2651,10 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 				target->ss_doc = DeeString_STR(temp);
 				flags |= MODSYM_FDOCOBJ;
 			}
-			target->ss_extern.ss_symid = addr;
-			target->ss_extern.ss_impid = addr2;
-			target->ss_hash            = name_hash;
-			target->ss_flags           = flags;
+			target->ss_index = addr;
+			target->ss_impid = (uint8_t)addr2;
+			target->ss_hash  = name_hash;
+			target->ss_flags = flags;
 			break;
 		}
 	}

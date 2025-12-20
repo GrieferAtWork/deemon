@@ -7306,8 +7306,8 @@ fg_vpush_module_symbol(struct fungen *__restrict self, DeeModuleObject *mod,
                        struct Dee_module_symbol const *sym, bool ref) {
 	uint16_t symaddr;
 	if (sym->ss_flags & Dee_MODSYM_FEXTERN) {
-		mod = mod->mo_importv[sym->ss_extern.ss_impid];
-		return fg_vpush_mod_global(self, mod, sym->ss_extern.ss_symid, ref);
+		mod = mod->mo_importv[sym->ss_impid];
+		return fg_vpush_mod_global(self, mod, sym->ss_index, ref);
 	}
 	symaddr = sym->ss_index;
 	if (sym->ss_flags & Dee_MODSYM_FPROPERTY) {
@@ -7327,8 +7327,8 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_vbound_module_symbol(struct fungen *__restrict self, DeeModuleObject *mod,
                         struct Dee_module_symbol const *sym) {
 	if (sym->ss_flags & Dee_MODSYM_FEXTERN) {
-		mod = mod->mo_importv[sym->ss_extern.ss_impid];
-		return fg_vbound_mod_global(self, mod, sym->ss_extern.ss_symid);
+		mod = mod->mo_importv[sym->ss_impid];
+		return fg_vbound_mod_global(self, mod, sym->ss_index);
 	}
 	if (!(sym->ss_flags & Dee_MODSYM_FPROPERTY))
 		return fg_vbound_mod_global(self, mod, sym->ss_index);
@@ -7354,8 +7354,8 @@ fg_vdel_module_symbol(struct fungen *__restrict self, DeeModuleObject *mod,
                       struct Dee_module_symbol const *sym) {
 	if (!(sym->ss_flags & Dee_MODSYM_FREADONLY)) {
 		if (sym->ss_flags & Dee_MODSYM_FEXTERN) {
-			mod = mod->mo_importv[sym->ss_extern.ss_impid];
-			return fg_vdel_mod_global(self, mod, sym->ss_extern.ss_symid);
+			mod = mod->mo_importv[sym->ss_impid];
+			return fg_vdel_mod_global(self, mod, sym->ss_index);
 		}
 		if (self->fg_assembler->fa_flags & Dee_MODSYM_FPROPERTY) {
 			DO(fg_vpush_mod_global(self, mod, sym->ss_index + Dee_MODULE_PROPERTY_DEL, true)); /* delete */
@@ -7376,8 +7376,8 @@ fg_vpop_module_symbol(struct fungen *__restrict self, DeeModuleObject *mod,
                       struct Dee_module_symbol const *sym) {
 	if (!(sym->ss_flags & Dee_MODSYM_FREADONLY)) {
 		if (sym->ss_flags & Dee_MODSYM_FEXTERN) {
-			mod = mod->mo_importv[sym->ss_extern.ss_impid];
-			return fg_vpop_mod_global(self, mod, sym->ss_extern.ss_symid);
+			mod = mod->mo_importv[sym->ss_impid];
+			return fg_vpop_mod_global(self, mod, sym->ss_index);
 		}
 		if (self->fg_assembler->fa_flags & Dee_MODSYM_FPROPERTY) {
 			DO(fg_vpush_mod_global(self, mod, sym->ss_index + Dee_MODULE_PROPERTY_SET, true)); /* value, setter */

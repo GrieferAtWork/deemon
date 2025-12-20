@@ -124,8 +124,8 @@ read_modsym:
 		}
 
 		/* External symbol. */
-		ASSERT(sym->ss_extern.ss_impid < mod->mo_importc);
-		mod = mod->mo_importv[sym->ss_extern.ss_impid];
+		ASSERT(sym->ss_impid < mod->mo_importc);
+		mod = mod->mo_importv[sym->ss_impid];
 		goto read_modsym;
 	}	break;
 
