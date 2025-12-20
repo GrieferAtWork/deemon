@@ -2830,13 +2830,13 @@ DEX_MEMBER_F("FS_ICASE", OBJ_posix_FS_ICASE, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
 DEX_MEMBER_F("FS_DRIVES", OBJ_posix_FS_DRIVES, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
              "Evaluations to true if the host has DOS-like, drive-based file-system"),
 
-
-/* clang-format off */
 #ifdef HAVE_posix_dex_fini
 #define PTR_posix_dex_fini &posix_dex_fini
 #else /* HAVE_posix_dex_fini */
 #define PTR_posix_dex_fini NULL
 #endif /* !HAVE_posix_dex_fini */
+
+/* clang-format off */
 DEX_END(
 	/* init:  */ NULL,
 	/* fini:  */ PTR_posix_dex_fini,

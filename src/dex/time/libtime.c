@@ -3703,109 +3703,105 @@ INTERN DeeTypeObject DeeTime_Type = {
 };
 
 
-PRIVATE struct dex_symbol symbols[] = {
-	{ "Time", (DeeObject *)&DeeTime_Type, MODSYM_FREADONLY },
-	{ "gmtime", (DeeObject *)&libtime_gmtime, MODSYM_FREADONLY,
-	  DOC("->?GTime\n"
-	      "Returns the current time in UTC (s.a. ?Glocaltime)") },
-	{ "localtime", (DeeObject *)&libtime_localtime, MODSYM_FREADONLY,
-	  DOC("->?GTime\n"
-	      "Returns the current time in the host's local timezone (s.a. ?Ggmtime)") },
-	/* TODO: timezone()->?GTime
-	 * Returns the ?Aisdelta?GTime delta that gets added to ?Ggmtime in order to produce ?Glocaltime
-	 * XXX: That's not how that works -- the delta of a timezone isn't constant and can only be
-	 *      calculated when given a specific point in (UTC) time. */
-	{ "tick", (DeeObject *)&libtime_tick, MODSYM_FREADONLY,
-	  DOC("->?GTime\n"
-	      "Returns the current tick suitable for high-precision timings.\n"
-	      "The tick itself is offset from some undefined point in time, meaning that the only "
-	      /**/ "meaningful use, is to subtract the return values of two calls to this function.") },
-	{ "maketime", (DeeObject *)&libtime_maketime, MODSYM_FREADONLY,
-	  DOC("(" libtime_maketime_params ")->?GTime\n"
-	      "Construct a new ?GTime object using the given arguments for the "
-	      /**/ "sub-day portion, while filling in the remainder as all zeroes:\n"
-	      "${"
-	      /**/ "import Time from time;\n"
-	      /**/ "Time(hour: hour, minute: minute, second: second, nanosecond: nanosecond);"
-	      "}") },
-	{ "makedate", (DeeObject *)&libtime_makedate, MODSYM_FREADONLY,
-	  DOC("(" libtime_makedate_params ")->?GTime\n"
-	      "Construct a new ?GTime object using the given arguments for the "
-	      /**/ "post-day portion, while filling in the remainder as all zeroes:\n"
-	      "${"
-	      /**/ "import Time from time;\n"
-	      /**/ "Time(year: year, month: month, day: day);"
-	      "}") },
+DEX_BEGIN
 
-	/* Export various functions for constructing time deltas.
-	 * NOTE: These functions are highly useful for specifying timeouts,
-	 *       and are actually the only portable way of specifying them,
-	 *       as it is implementation-specific what's the time resolution
-	 *       that's used by functions accepting timeouts (in the GATW
-	 *       implementation it's nanoseconds, but that wasn't always the
-	 *       case, as a one point, it was microseconds):
-	 * >> import seconds from time;
-	 * >> import Thread from deemon;
-	 * >>
-	 * >> print "Begin waiting for 2 seconds";
-	 * >> Thread.sleep(seconds(2));
-	 * >> print "Done waiting";
-	 */
-#define DEFINE_DELTA_CALLBACK(name)                          \
-	{ #name, (DeeObject *)&libtime_##name, MODSYM_FREADONLY, \
-	  DOC("(value:?Dint)->?GTime\n"                          \
-	      "#r{A time delta of @value " #name "}") }
-	DEFINE_DELTA_CALLBACK(nanoseconds),
-	DEFINE_DELTA_CALLBACK(microseconds),
-	DEFINE_DELTA_CALLBACK(milliseconds),
-	DEFINE_DELTA_CALLBACK(seconds),
-	DEFINE_DELTA_CALLBACK(minutes),
-	DEFINE_DELTA_CALLBACK(hours),
-	DEFINE_DELTA_CALLBACK(days),
-	DEFINE_DELTA_CALLBACK(weeks),
-	DEFINE_DELTA_CALLBACK(months),
-	DEFINE_DELTA_CALLBACK(years),
-	DEFINE_DELTA_CALLBACK(decades),
-	DEFINE_DELTA_CALLBACK(centuries),
-	DEFINE_DELTA_CALLBACK(millennia),
+DEX_MEMBER_F_NODOC("Time", &DeeTime_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F("gmtime", &libtime_gmtime, MODSYM_FREADONLY,
+             "->?GTime\n"
+             "Returns the current time in UTC (s.a. ?Glocaltime)"),
+DEX_MEMBER_F("localtime", &libtime_localtime, MODSYM_FREADONLY,
+             "->?GTime\n"
+             "Returns the current time in the host's local timezone (s.a. ?Ggmtime)"),
+/* TODO: timezone()->?GTime
+	* Returns the ?Aisdelta?GTime delta that gets added to ?Ggmtime in order to produce ?Glocaltime
+	* XXX: That's not how that works -- the delta of a timezone isn't constant and can only be
+	*      calculated when given a specific point in (UTC) time. */
+DEX_MEMBER_F("tick", &libtime_tick, MODSYM_FREADONLY,
+             "->?GTime\n"
+             "Returns the current tick suitable for high-precision timings.\n"
+             "The tick itself is offset from some undefined point in time, meaning that the only "
+             /**/ "meaningful use, is to subtract the return values of two calls to this function."),
+DEX_MEMBER_F("maketime", &libtime_maketime, MODSYM_FREADONLY,
+             "(" libtime_maketime_params ")->?GTime\n"
+             "Construct a new ?GTime object using the given arguments for the "
+             /**/ "sub-day portion, while filling in the remainder as all zeroes:\n"
+             "${"
+             /**/ "import Time from time;\n"
+             /**/ "Time(hour: hour, minute: minute, second: second, nanosecond: nanosecond);"
+             "}"),
+DEX_MEMBER_F("makedate", &libtime_makedate, MODSYM_FREADONLY,
+             "(" libtime_makedate_params ")->?GTime\n"
+             "Construct a new ?GTime object using the given arguments for the "
+             /**/ "post-day portion, while filling in the remainder as all zeroes:\n"
+             "${"
+             /**/ "import Time from time;\n"
+             /**/ "Time(year: year, month: month, day: day);"
+             "}"),
+
+/* Export various functions for constructing time deltas.
+	* NOTE: These functions are highly useful for specifying timeouts,
+	*       and are actually the only portable way of specifying them,
+	*       as it is implementation-specific what's the time resolution
+	*       that's used by functions accepting timeouts (in the GATW
+	*       implementation it's nanoseconds, but that wasn't always the
+	*       case, as a one point, it was microseconds):
+	* >> import seconds from time;
+	* >> import Thread from deemon;
+	* >>
+	* >> print "Begin waiting for 2 seconds";
+	* >> Thread.sleep(seconds(2));
+	* >> print "Done waiting";
+	*/
+#define DEFINE_DELTA_CALLBACK(name)                        \
+	DEX_MEMBER_F(#name, &libtime_##name, MODSYM_FREADONLY, \
+	             "(value:?Dint)->?GTime\n"                 \
+	             "#r{A time delta of @value " #name "}")
+DEFINE_DELTA_CALLBACK(nanoseconds),
+DEFINE_DELTA_CALLBACK(microseconds),
+DEFINE_DELTA_CALLBACK(milliseconds),
+DEFINE_DELTA_CALLBACK(seconds),
+DEFINE_DELTA_CALLBACK(minutes),
+DEFINE_DELTA_CALLBACK(hours),
+DEFINE_DELTA_CALLBACK(days),
+DEFINE_DELTA_CALLBACK(weeks),
+DEFINE_DELTA_CALLBACK(months),
+DEFINE_DELTA_CALLBACK(years),
+DEFINE_DELTA_CALLBACK(decades),
+DEFINE_DELTA_CALLBACK(centuries),
+DEFINE_DELTA_CALLBACK(millennia),
 #undef DEFINE_DELTA_CALLBACK
 
-#define DEFINE_DEPRECATED_DELTA_ALIAS(name, alias_for)           \
-	{ name, (DeeObject *)&libtime_##alias_for, MODSYM_FREADONLY, \
-	  DOC("(value:?Dint)->?GTime\n"                              \
-	      "Deprecated alias for ?G" #alias_for) }
-	DEFINE_DEPRECATED_DELTA_ALIAS("mics", microseconds),
-	DEFINE_DEPRECATED_DELTA_ALIAS("mils", milliseconds),
-	DEFINE_DEPRECATED_DELTA_ALIAS("secs", seconds),
-	DEFINE_DEPRECATED_DELTA_ALIAS("mins", minutes),
-	DEFINE_DEPRECATED_DELTA_ALIAS("hors", hours),
-	DEFINE_DEPRECATED_DELTA_ALIAS("weks", weeks),
-	DEFINE_DEPRECATED_DELTA_ALIAS("mons", months),
-	DEFINE_DEPRECATED_DELTA_ALIAS("yers", years),
-	DEFINE_DEPRECATED_DELTA_ALIAS("decs", decades),
-	DEFINE_DEPRECATED_DELTA_ALIAS("cens", centuries),
-	DEFINE_DEPRECATED_DELTA_ALIAS("mlls", millennia),
+#define DEFINE_DEPRECATED_DELTA_ALIAS(name, alias_for)         \
+	DEX_MEMBER_F(name, &libtime_##alias_for, MODSYM_FREADONLY, \
+	             "(value:?Dint)->?GTime\n"                     \
+	             "Deprecated alias for ?G" #alias_for)
+DEFINE_DEPRECATED_DELTA_ALIAS("mics", microseconds),
+DEFINE_DEPRECATED_DELTA_ALIAS("mils", milliseconds),
+DEFINE_DEPRECATED_DELTA_ALIAS("secs", seconds),
+DEFINE_DEPRECATED_DELTA_ALIAS("mins", minutes),
+DEFINE_DEPRECATED_DELTA_ALIAS("hors", hours),
+DEFINE_DEPRECATED_DELTA_ALIAS("weks", weeks),
+DEFINE_DEPRECATED_DELTA_ALIAS("mons", months),
+DEFINE_DEPRECATED_DELTA_ALIAS("yers", years),
+DEFINE_DEPRECATED_DELTA_ALIAS("decs", decades),
+DEFINE_DEPRECATED_DELTA_ALIAS("cens", centuries),
+DEFINE_DEPRECATED_DELTA_ALIAS("mlls", millennia),
 #undef DEFINE_DEPRECATED_DELTA_ALIAS
 
-	{ "now", (DeeObject *)&libtime_localtime, MODSYM_FREADONLY,
-	  DOC("->?GTime\n"
-	      "Deprecated alias for ?Glocaltime") },
+DEX_MEMBER_F("now", &libtime_localtime, MODSYM_FREADONLY,
+             "->?GTime\n"
+             "Deprecated alias for ?Glocaltime"),
 
-	{ "_mkunix", (DeeObject *)&libtime__mkunix, MODSYM_FREADONLY,
-	  DOC("(" libtime__mkunix_params ")->?GTime\n"
-	      "Construct a new anonymous timestamp object, from @time_t as seconds-"
-	      /**/ "since-#C{01-01-1970}, and the accompanying extra @nanosecond addend.") },
+DEX_MEMBER_F("_mkunix", &libtime__mkunix, MODSYM_FREADONLY,
+             "(" libtime__mkunix_params ")->?GTime\n"
+             "Construct a new anonymous timestamp object, from @time_t as seconds-"
+             /**/ "since-#C{01-01-1970}, and the accompanying extra @nanosecond addend."),
 #ifdef CONFIG_HOST_WINDOWS
-	{ "_mkFILETIME", (DeeObject *)&libtime__mkFILETIME, MODSYM_FREADONLY,
-	  DOC("(" libtime__mkFILETIME_params ")->?GTime\n"
-	      "Construct a new anonymous timestamp object, from 1/100th nanoseconds since #C{01-01-1601}") },
+DEX_MEMBER_F("_mkFILETIME", &libtime__mkFILETIME, MODSYM_FREADONLY,
+             "(" libtime__mkFILETIME_params ")->?GTime\n"
+             "Construct a new anonymous timestamp object, from 1/100th nanoseconds since #C{01-01-1601}"),
 #endif /* CONFIG_HOST_WINDOWS */
-	{ NULL }
-};
-
-PUBLIC struct dex DEX = {
-	/* .d_symbols = */ symbols
-};
+DEX_END(NULL, NULL, NULL);
 
 DECL_END
 

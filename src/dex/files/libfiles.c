@@ -29,24 +29,18 @@
 
 DECL_BEGIN
 
-PRIVATE struct dex_symbol symbols[] = {
-	{ "Joined", (DeeObject *)&Joined_Type },
-	//{ "Decoder", (DeeObject *)&Decoder_Type }, /* TODO */
-	//{ "Printer", (DeeObject *)&Printer_Type }, /* TODO*/
-	/* ^ Used to easily construct a file that invokes a given callback for its write-callback:
-	 * >> local fp = files.Printer((data: Bytes) -> {
-	 * >>     print "Now printing:", repr data;
-	 * >> });
-	 * >> print fp: "Hello!";
-	 */
-	{ NULL }
-};
-
-PUBLIC struct dex DEX = {
-	/* .d_symbols = */ symbols
-};
+DEX_BEGIN
+DEX_MEMBER_NODOC("Joined", &Joined_Type.ft_base),
+/* TODO: DEX_MEMBER_NODOC("Decoder", &Decoder_Type.ft_base), */
+/* TODO: DEX_MEMBER_NODOC("Printer", &Printer_Type.ft_base), */
+/* ^ Used to easily construct a file that invokes a given callback for its write-callback:
+ * >> local fp = files.Printer((data: Bytes) -> {
+ * >>     print "Now printing:", repr data;
+ * >> });
+ * >> print fp: "Hello!";
+ */
+DEX_END(NULL, NULL, NULL);
 
 DECL_END
-
 
 #endif /* !GUARD_DEX_FILES_LIBFILES_C */

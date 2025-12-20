@@ -56,71 +56,6 @@ INTERN ATTR_COLD NONNULL((1)) int
 	                       tp, info ? info->oi_sname : Q3);
 }
 
-PRIVATE struct dex_symbol symbols[] = {
-	{ "Accu", (DeeObject *)&Accu_Type, MODSYM_FREADONLY },
-	{ "Deque", (DeeObject *)&Deque_Type, MODSYM_FREADONLY },
-	{ "FixedList", (DeeObject *)&FixedList_Type, MODSYM_FREADONLY },
-	{ "UniqueDict", (DeeObject *)&UDict_Type, MODSYM_FREADONLY },
-	{ "UniqueSet", (DeeObject *)&USet_Type, MODSYM_FREADONLY },
-	{ "RangeMap", (DeeObject *)&RangeMap_Type, MODSYM_FREADONLY },
-	{ "RBTree", (DeeObject *)&RBTree_Type, MODSYM_FREADONLY },
-	{ "CachedDict", (DeeObject *)&DeeCachedDict_Type, MODSYM_FREADONLY },
-	{ "Bitset", (DeeObject *)&Bitset_Type, MODSYM_FREADONLY },
-	{ "BitsetView", (DeeObject *)&BitsetView_Type, MODSYM_FREADONLY },
-	{ "bits", (DeeObject *)&BitsetView_Type, MODSYM_FREADONLY,
-	  DOC("Alias for ?GBitsetView, that should be used as a "
-	      /**/ "function to access the bits of buffer-like objects") },
-
-	/* TODO: FixedSet  (set that can only contain a limited set of keys and is internally just a Bitset):
-	 * >> class FixedSet: Set {
-	 * >>      private final member _keys: {Object: int};
-	 * >>      private final member _present: Bitset;
-	 * >>      this(keys: {Object...}) {
-	 * >>          _keys = Mapping.frozen(for (local i, key: Sequence.enumerate(keys)) (key, i));
-	 * >>          _present = Bitset(#_keys);
-	 * >>      }
-	 * >>      operator contains(ob) {
-	 * >>          local index = _keys.get(ob);
-	 * >>          if (index is none)
-	 * >>              return false;
-	 * >>          return _present[index];
-	 * >>      }
-	 * >> };
-	 */
-	/* TODO: FixedDict  (dict that can only contain a limited set of keys)
-	 * >> class FixedDict: Mapping {
-	 * >>      private final member _keys: {Object: int};
-	 * >>      private final member _present: FixedList;
-	 * >>      this(keys: {Object...}) {
-	 * >>          _keys = Mapping.frozen(for (local i, key: Sequence.enumerate(keys)) (key, i));
-	 * >>          _present = FixedList(#_keys);
-	 * >>      }
-	 * >>      operator [] (key) {
-	 * >>          local index = _keys.get(ob);
-	 * >>          if (index is none)
-	 * >>              throw KeyError(...);
-	 * >>          return _present[index]; // Can throw UnboundItem
-	 * >>      }
-	 * >>      operator del[] (key) {
-	 * >>          local index = _keys.get(ob);
-	 * >>          if (index is none)
-	 * >>              throw KeyError(...);
-	 * >>          del _present[index];
-	 * >>      }
-	 * >>      operator []= (key, value) {
-	 * >>          local index = _keys.get(ob);
-	 * >>          if (index is none)
-	 * >>              throw KeyError(...);
-	 * >>          _present[index] = value;
-	 * >>      }
-	 * >> };
-	 */
-
-	/* TODO: STailQ (singly linked list; internally: STAILQ) */
-	/* TODO: TailQ (double linked list; internally: TAILQ) */
-	{ NULL }
-};
-
 PRIVATE WUNUSED_T NONNULL_T((1)) int DCALL
 libcollections_init(DeeDexObject *__restrict self) {
 	(void)self;
@@ -128,10 +63,70 @@ libcollections_init(DeeDexObject *__restrict self) {
 	return 0;
 }
 
-PUBLIC struct dex DEX = {
-	/* .d_symbols = */ symbols,
-	/* .d_init    = */ &libcollections_init,
-};
+
+DEX_BEGIN
+DEX_MEMBER_F_NODOC("Accu", &Accu_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("Deque", &Deque_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("FixedList", &FixedList_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("UniqueDict", &UDict_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("UniqueSet", &USet_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("RangeMap", &RangeMap_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("RBTree", &RBTree_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("CachedDict", &DeeCachedDict_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("Bitset", &Bitset_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("BitsetView", &BitsetView_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F("bits", &BitsetView_Type, MODSYM_FREADONLY,
+             "Alias for ?GBitsetView, that should be used as a "
+             /**/ "function to access the bits of buffer-like objects"),
+
+/* TODO: FixedSet  (set that can only contain a limited set of keys and is internally just a Bitset):
+ * >> class FixedSet: Set {
+ * >>      private final member _keys: {Object: int};
+ * >>      private final member _present: Bitset;
+ * >>      this(keys: {Object...}) {
+ * >>          _keys = Mapping.frozen(for (local i, key: Sequence.enumerate(keys)) (key, i));
+ * >>          _present = Bitset(#_keys);
+ * >>      }
+ * >>      operator contains(ob) {
+ * >>          local index = _keys.get(ob);
+ * >>          if (index is none)
+ * >>              return false;
+ * >>          return _present[index];
+ * >>      }
+ * >> };
+ */
+/* TODO: FixedDict  (dict that can only contain a limited set of keys)
+ * >> class FixedDict: Mapping {
+ * >>      private final member _keys: {Object: int};
+ * >>      private final member _present: FixedList;
+ * >>      this(keys: {Object...}) {
+ * >>          _keys = Mapping.frozen(for (local i, key: Sequence.enumerate(keys)) (key, i));
+ * >>          _present = FixedList(#_keys);
+ * >>      }
+ * >>      operator [] (key) {
+ * >>          local index = _keys.get(ob);
+ * >>          if (index is none)
+ * >>              throw KeyError(...);
+ * >>          return _present[index]; // Can throw UnboundItem
+ * >>      }
+ * >>      operator del[] (key) {
+ * >>          local index = _keys.get(ob);
+ * >>          if (index is none)
+ * >>              throw KeyError(...);
+ * >>          del _present[index];
+ * >>      }
+ * >>      operator []= (key, value) {
+ * >>          local index = _keys.get(ob);
+ * >>          if (index is none)
+ * >>              throw KeyError(...);
+ * >>          _present[index] = value;
+ * >>      }
+ * >> };
+ */
+
+/* TODO: STailQ (singly linked list; internally: STAILQ) */
+/* TODO: TailQ (double linked list; internally: TAILQ) */
+DEX_END(&libcollections_init, NULL, NULL);
 
 DECL_END
 

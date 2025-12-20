@@ -3642,44 +3642,40 @@ err:
 }
 
 
-PRIVATE struct dex_symbol symbols[] = {
-	{ "parse", (DeeObject *)&libjson_parse, MODSYM_FREADONLY,
-	  /* TODO: Add another argument `path' that allows you to only parse certain sub-
-	   *       components of a larger JSON-blob. For this, it's probably best to implement
-	   *       a sub-set of JsonPath: https://github.com/json-path/JsonPath
-	   */
-	  DOC("(data:?X4?DFile?DBytes?Dstring?DMapping)->?X7?Dfloat?Dint?Dstring?Dbool?N?GSequence?GMapping\n"
-	      "(data:?X4?DFile?DBytes?Dstring?DMapping,into)->\n"
-	      "(data:?X4?DFile?DBytes?Dstring?DMapping,into:?DType)->\n"
-	      "Parse JSON @data and convert it either into its native deemon representation, or "
-	      /**/ "use it to populate the fields of an object @into, or by creating a new instance "
-	      /**/ "of a ?DType @into (by calling its construct without any arguments), filling its "
-	      /**/ "fields, and then returning said instance.\n"
-	      "Additionally, a ?DMapping object can be given as data which then represents already-"
-	      /**/ "process JSON data. Using this, you can fill in DTO objects from sources other "
-	      /**/ "than JSON blobs\n"
-	      "This function may either ignore extra data that comes after the parsed JSON-construct, "
-	      /**/ "or it may throw an error should such data exist. The exact behavior is implementation-"
-	      /**/ "specific. Though if no exception is thrown, such trailing data is ignored and has no "
-	      /**/ "effect.") },
-	{ "write", (DeeObject *)&libjson_write, MODSYM_FREADONLY,
-	  DOC("(data:?X8?O?Dfloat?Dint?Dstring?Dbool?N?DSequence?DMapping,pretty=!f,recursion:?X2?DCallable?N=!N)->?Dstring\n"
-	      "(data:?X8?O?Dfloat?Dint?Dstring?Dbool?N?DSequence?DMapping,into:?DFile,pretty=!f,recursion:?X2?DCallable?N=!N)->?DFile\n"
-	      "#precursion{An optional callback that is invoked to replace inner instances of objects referencing "
-	      /*       */ "themselves via some attribute. When set to ?N, or if the object returned by the callback, "
-	      /*       */ "is also currently being written, a :ValueError is thrown instead.}"
-	      "Convert a native deemon object @data into JSON and write said JSON to @into, or pack it "
-	      /**/ "into a string which is then returned. In either case, you can use @pretty to specify "
-	      /**/ "if a pretty representation (using newlines, and indentation), or a compact one should "
-	      /**/ "be used in generated JSON. The default is to generate compact JSON.") },
-	{ "Sequence", (DeeObject *)&DeeJsonSequence_Type, MODSYM_FREADONLY },
-	{ "Mapping", (DeeObject *)&DeeJsonMapping_Type, MODSYM_FREADONLY },
-	{ NULL }
-};
+DEX_BEGIN
 
-PUBLIC struct dex DEX = {
-	/* .d_symbols = */ symbols
-};
+/* TODO: Add another argument `path' that allows you to only parse certain sub-
+ *       components of a larger JSON-blob. For this, it's probably best to implement
+ *       a sub-set of JsonPath: https://github.com/json-path/JsonPath */
+DEX_MEMBER_F("parse", &libjson_parse, MODSYM_FREADONLY,
+             "(data:?X4?DFile?DBytes?Dstring?DMapping)->?X7?Dfloat?Dint?Dstring?Dbool?N?GSequence?GMapping\n"
+             "(data:?X4?DFile?DBytes?Dstring?DMapping,into)->\n"
+             "(data:?X4?DFile?DBytes?Dstring?DMapping,into:?DType)->\n"
+             "Parse JSON @data and convert it either into its native deemon representation, or "
+             /**/ "use it to populate the fields of an object @into, or by creating a new instance "
+             /**/ "of a ?DType @into (by calling its construct without any arguments), filling its "
+             /**/ "fields, and then returning said instance.\n"
+             "Additionally, a ?DMapping object can be given as data which then represents already-"
+             /**/ "process JSON data. Using this, you can fill in DTO objects from sources other "
+             /**/ "than JSON blobs\n"
+             "This function may either ignore extra data that comes after the parsed JSON-construct, "
+             /**/ "or it may throw an error should such data exist. The exact behavior is implementation-"
+             /**/ "specific. Though if no exception is thrown, such trailing data is ignored and has no "
+             /**/ "effect."),
+DEX_MEMBER_F("write", &libjson_write, MODSYM_FREADONLY,
+             "(data:?X8?O?Dfloat?Dint?Dstring?Dbool?N?DSequence?DMapping,pretty=!f,recursion:?X2?DCallable?N=!N)->?Dstring\n"
+             "(data:?X8?O?Dfloat?Dint?Dstring?Dbool?N?DSequence?DMapping,into:?DFile,pretty=!f,recursion:?X2?DCallable?N=!N)->?DFile\n"
+             "#precursion{An optional callback that is invoked to replace inner instances of objects referencing "
+             /*       */ "themselves via some attribute. When set to ?N, or if the object returned by the callback, "
+             /*       */ "is also currently being written, a :ValueError is thrown instead.}"
+             "Convert a native deemon object @data into JSON and write said JSON to @into, or pack it "
+             /**/ "into a string which is then returned. In either case, you can use @pretty to specify "
+             /**/ "if a pretty representation (using newlines, and indentation), or a compact one should "
+             /**/ "be used in generated JSON. The default is to generate compact JSON."),
+DEX_MEMBER_F_NODOC("Sequence", &DeeJsonSequence_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("Mapping", &DeeJsonMapping_Type, MODSYM_FREADONLY),
+
+DEX_END(NULL, NULL, NULL);
 
 DECL_END
 

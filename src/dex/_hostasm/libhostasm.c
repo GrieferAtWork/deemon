@@ -93,26 +93,19 @@ PRIVATE DEFINE_CMETHOD(test_throw_o, &test_throw, METHOD_FNORMAL);
 #endif /* HAVE_test_throw */
 #endif /* CONFIG_HAVE_LIBHOSTASM */
 
-PRIVATE struct dex_symbol symbols[] = {
+DEX_BEGIN
 #ifdef CONFIG_HAVE_LIBHOSTASM
-	{ "test_compile_and_run", (DeeObject *)&test_compile_and_run_o, MODSYM_FREADONLY,
-	  DOC("(func:?DFunction,args=!T0)->") },
+DEX_MEMBER_F("test_compile_and_run", &test_compile_and_run_o, MODSYM_FREADONLY,
+             "(func:?DFunction,args=!T0)->"),
 #ifdef HAVE_test_throw
-	{ "test_throw", (DeeObject *)&test_throw_o, MODSYM_FREADONLY,
-	  DOC("()") },
+DEX_MEMBER_F("test_throw", &test_throw_o, MODSYM_FREADONLY, "()"),
 #endif /* HAVE_test_throw */
 #endif /* CONFIG_HAVE_LIBHOSTASM */
-	 /* TODO: Proper API that allows you to re-compile deemon.Function and deemon.Code objects,
-	  *       and be given their compiled equivalents (`test_compile_and_run()' will *not* stay
-	  *       and is only here to test re-compiling and running code) */
-	{ NULL }
-};
 
-PUBLIC struct dex DEX = {
-	/* .d_symbols = */ symbols,
-	/* .d_init    = */ NULL,
-	/* .d_fini    = */ NULL
-};
+/* TODO: Proper API that allows you to re-compile deemon.Function and deemon.Code objects,
+ *       and be given their compiled equivalents (`test_compile_and_run()' will *not* stay
+ *       and is only here to test re-compiling and running code) */
+DEX_END(NULL, NULL, NULL);
 
 DECL_END
 

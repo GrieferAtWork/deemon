@@ -501,14 +501,14 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap128_f_impl(Dee_uint128_t
 }
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define libctypes_htole16  DeeCUInt16_Type
-#define libctypes_letoh16  DeeCUInt16_Type
-#define libctypes_htole32  DeeCUInt32_Type
-#define libctypes_letoh32  DeeCUInt32_Type
-#define libctypes_htole64  DeeCUInt64_Type
-#define libctypes_letoh64  DeeCUInt64_Type
-#define libctypes_htole128 DeeCUInt128_Type
-#define libctypes_letoh128 DeeCUInt128_Type
+#define libctypes_htole16  DeeCUInt16_Type.st_base
+#define libctypes_letoh16  DeeCUInt16_Type.st_base
+#define libctypes_htole32  DeeCUInt32_Type.st_base
+#define libctypes_letoh32  DeeCUInt32_Type.st_base
+#define libctypes_htole64  DeeCUInt64_Type.st_base
+#define libctypes_letoh64  DeeCUInt64_Type.st_base
+#define libctypes_htole128 DeeCUInt128_Type.st_base
+#define libctypes_letoh128 DeeCUInt128_Type.st_base
 #define libctypes_htobe16  libctypes_bswap16
 #define libctypes_betoh16  libctypes_bswap16
 #define libctypes_htobe32  libctypes_bswap32
@@ -526,725 +526,18 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap128_f_impl(Dee_uint128_t
 #define libctypes_letoh64  libctypes_bswap64
 #define libctypes_htole128 libctypes_bswap128
 #define libctypes_letoh128 libctypes_bswap128
-#define libctypes_htobe16  DeeCUInt16_Type
-#define libctypes_betoh16  DeeCUInt16_Type
-#define libctypes_htobe32  DeeCUInt32_Type
-#define libctypes_betoh32  DeeCUInt32_Type
-#define libctypes_htobe64  DeeCUInt64_Type
-#define libctypes_betoh64  DeeCUInt64_Type
-#define libctypes_htobe128 DeeCUInt128_Type
-#define libctypes_betoh128 DeeCUInt128_Type
+#define libctypes_htobe16  DeeCUInt16_Type.st_base
+#define libctypes_betoh16  DeeCUInt16_Type.st_base
+#define libctypes_htobe32  DeeCUInt32_Type.st_base
+#define libctypes_betoh32  DeeCUInt32_Type.st_base
+#define libctypes_htobe64  DeeCUInt64_Type.st_base
+#define libctypes_betoh64  DeeCUInt64_Type.st_base
+#define libctypes_htobe128 DeeCUInt128_Type.st_base
+#define libctypes_betoh128 DeeCUInt128_Type.st_base
 #else /* __BYTE_ORDER__ == ... */
 #error "Unsupported `__BYTE_ORDER__'"
 #endif /* __BYTE_ORDER__ != ... */
 
-PRIVATE struct dex_symbol symbols[] = {
-	/* Export the underlying type-system used by ctypes. */
-	{ "StructuredType", (DeeObject *)&DeeSType_Type, MODSYM_FREADONLY },
-	{ "PointerType", (DeeObject *)&DeePointerType_Type, MODSYM_FREADONLY },
-	{ "LValueType", (DeeObject *)&DeeLValueType_Type, MODSYM_FREADONLY },
-	{ "ArrayType", (DeeObject *)&DeeArrayType_Type, MODSYM_FREADONLY },
-	{ "StructType", (DeeObject *)&DeeStructType_Type, MODSYM_FREADONLY },
-	{ "FunctionType", (DeeObject *)&DeeCFunctionType_Type, MODSYM_FREADONLY },
-	{ "Structured", DeeSType_AsObject(&DeeStructured_Type), MODSYM_FREADONLY },
-	{ "Pointer", DeePointerType_AsObject(&DeePointer_Type), MODSYM_FREADONLY },
-	{ "LValue", DeeLValueType_AsObject(&DeeLValue_Type), MODSYM_FREADONLY },
-	{ "Array", DeeArrayType_AsObject(&DeeArray_Type), MODSYM_FREADONLY },
-	{ "Struct", DeeStructType_AsObject(&DeeStruct_Type), MODSYM_FREADONLY },
-	{ "Function", DeeCFunctionType_AsObject(&DeeCFunction_Type), MODSYM_FREADONLY },
-	{ "struct", (DeeObject *)&libctypes_struct, MODSYM_FREADONLY },
-	{ "union", (DeeObject *)&libctypes_union, MODSYM_FREADONLY,
-	  DOC("(fields:?X2?S?T2?Dstring?GStructuredType?M?Dstring?GStructuredType)->?GStructType\n"
-	      "(name:?Dstring,fields:?X2?S?T2?Dstring?GStructuredType?M?Dstring?GStructuredType)->?GStructType") },
-
-	/* TODO: Both Pointer and LValue types need 1 sub-class each: RefPointer and RefLValue
-	 *       These sub-classes behave the same as the original Pointer/LValue-type, except
-	 *       that they don't have constructors, and instance have 1 additional field that
-	 *       follows after the underlying pointer: `DREF DeeObject *ob_ref; // [1..1]'.
-	 * This field is a reference to the owning object. These extra types are then used
-	 * whenever you do a ctypes operation where it is clear which object a pointer/lvalue
-	 * points into. e.g.:
-	 * >> union foo {
-	 * >>     .s = int32_t,
-	 * >>     .u = uint32_t,
-	 * >> };
-	 * >> local x = (foo){ .u = 0x80000000 };
-	 * >> local p1 = x.s.ptr;
-	 * >> local p2 = ((foo){ .u = 0x40000000 }).s.ptr;
-	 * >> print p1.ind.hex();
-	 * >> print p2.ind.hex();
-	 * Here, both `p1' and `p2' are RefPointer-objects, with `p1' holding a reference
-	 * to `x', and `p2' holding a reference to `(foo){ .u = 0x40000000 }'. This way,
-	 * using ctypes in user-code becomes much easier, as there's no need to make sure
-	 * that the objects pointed-to by pointer/lvalue instances stay alive for as long
-	 * as the pointer/lvalue type does (Because currently, `(foo){ .u = 0x40000000 }'
-	 * has already been destroyed by the time `print p2.ind.hex();' tries to use it)
-	 */
-
-	/* A wrapper around the native shared-library loader. */
-	{ "ShLib", (DeeObject *)&DeeShLib_Type, MODSYM_FREADONLY },
-	{ "dlopen", (DeeObject *)&DeeShLib_Type, MODSYM_FREADONLY }, /* Convenience alias for `ShLib' */
-
-	/* Export all the C-types. */
-	{ "void", DeeSType_AsObject(&DeeCVoid_Type), MODSYM_FREADONLY },
-	{ "char", DeeSType_AsObject(&DeeCChar_Type), MODSYM_FREADONLY },
-	{ "wchar_t", DeeSType_AsObject(&DeeCWChar_Type), MODSYM_FREADONLY },
-	{ "char16_t", DeeSType_AsObject(&DeeCChar16_Type), MODSYM_FREADONLY },
-	{ "char32_t", DeeSType_AsObject(&DeeCChar32_Type), MODSYM_FREADONLY },
-	{ "bool", DeeSType_AsObject(&DeeCBool_Type), MODSYM_FREADONLY },
-	{ "int8_t", DeeSType_AsObject(&DeeCInt8_Type), MODSYM_FREADONLY },
-	{ "int16_t", DeeSType_AsObject(&DeeCInt16_Type), MODSYM_FREADONLY },
-	{ "int32_t", DeeSType_AsObject(&DeeCInt32_Type), MODSYM_FREADONLY },
-	{ "int64_t", DeeSType_AsObject(&DeeCInt64_Type), MODSYM_FREADONLY },
-	{ "int128_t", DeeSType_AsObject(&DeeCInt128_Type), MODSYM_FREADONLY },
-	{ "uint8_t", DeeSType_AsObject(&DeeCUInt8_Type), MODSYM_FREADONLY },
-	{ "uint16_t", DeeSType_AsObject(&DeeCUInt16_Type), MODSYM_FREADONLY },
-	{ "uint32_t", DeeSType_AsObject(&DeeCUInt32_Type), MODSYM_FREADONLY },
-	{ "uint64_t", DeeSType_AsObject(&DeeCUInt64_Type), MODSYM_FREADONLY },
-	{ "uint128_t", DeeSType_AsObject(&DeeCUInt128_Type), MODSYM_FREADONLY },
-	/* TODO: endian-specific integer types (e.g. `le16' and `be16')
-	 *       These could be used in structures and always encode/decode
-	 *       the underlying value to/from a regular deemon `int' object
-	 *       to automatically apply the necessary endian conversion
-	 * >> import * from ctypes;
-	 * >> union foo = {
-	 * >> 	.le = le32,
-	 * >> 	.be = be32,
-	 * >> };
-	 * >> x = foo(le: 0x12345678);
-	 * >> print x.be; // 0x78563412
-	 */
-	{ "float", DeeSType_AsObject(&DeeCFloat_Type), MODSYM_FREADONLY },
-	{ "double", DeeSType_AsObject(&DeeCDouble_Type), MODSYM_FREADONLY },
-	{ "ldouble", DeeSType_AsObject(&DeeCLDouble_Type), MODSYM_FREADONLY },
-	{ "schar", DeeSType_AsObject(&DeeCSChar_Type), MODSYM_FREADONLY },
-	{ "uchar", DeeSType_AsObject(&DeeCUChar_Type), MODSYM_FREADONLY },
-	{ "short", DeeSType_AsObject(&DeeCShort_Type), MODSYM_FREADONLY },
-	{ "ushort", DeeSType_AsObject(&DeeCUShort_Type), MODSYM_FREADONLY },
-	{ "int", DeeSType_AsObject(&DeeCInt_Type), MODSYM_FREADONLY },
-	{ "uint", DeeSType_AsObject(&DeeCUInt_Type), MODSYM_FREADONLY },
-	{ "long", DeeSType_AsObject(&DeeCLong_Type), MODSYM_FREADONLY },
-	{ "ulong", DeeSType_AsObject(&DeeCULong_Type), MODSYM_FREADONLY },
-	{ "llong", DeeSType_AsObject(&DeeCLLong_Type), MODSYM_FREADONLY },
-	{ "ullong", DeeSType_AsObject(&DeeCULLong_Type), MODSYM_FREADONLY },
-
-	/* Other, platform-specific C-types. */
-	{ "size_t", DeeSType_AsObject(&CUINT_SIZED(__SIZEOF_SIZE_T__)), MODSYM_FREADONLY },
-	{ "ssize_t", DeeSType_AsObject(&CINT_SIZED(__SIZEOF_SIZE_T__)), MODSYM_FREADONLY },
-	{ "ptrdiff_t", DeeSType_AsObject(&CINT_SIZED(__SIZEOF_PTRDIFF_T__)), MODSYM_FREADONLY },
-	{ "intptr_t", DeeSType_AsObject(&CINT_SIZED(__SIZEOF_POINTER__)), MODSYM_FREADONLY },
-	{ "uintptr_t", DeeSType_AsObject(&CUINT_SIZED(__SIZEOF_POINTER__)), MODSYM_FREADONLY },
-
-	/* Export some helper functions */
-	{ "sizeof", (DeeObject *)&libctypes_sizeof, MODSYM_FREADONLY,
-	  DOC("(" libctypes_sizeof_params ")->?Dint\n"
-	      "#tTypeError{The given @tp or @ob are not recognized c-types, nor aliases}"
-	      "Returns the size of a given structured type or object in bytes\n"
-	      "\n"
-
-	      "(ob:?DBytes)->?Dint\n"
-	      "Returns the size of the given ?DBytes ob, which is the same as ${##ob}") },
-	{ "alignof", (DeeObject *)&libctypes_alignof, MODSYM_FREADONLY,
-	  DOC("(" libctypes_alignof_params ")->?Dint\n"
-	      "#tTypeError{The given @tp or @ob are not recognized c-types, nor aliases}"
-	      "Returns the alignment of a given structured type or object in bytes") },
-	{ "typeof", (DeeObject *)&libctypes_typeof, MODSYM_FREADONLY,
-	  DOC("(ob:?X7?GStructuredType?GStructured?DType?N?Dbool?Dint?Dfloat)->?GStructuredType\n"
-	      "#tTypeError{The given @tp or @ob are not recognized c-types, nor aliases}"
-	      "Returns the type of a given structured type or object") },
-	{ "intfor", (DeeObject *)&libctypes_intfor, MODSYM_FREADONLY,
-	  DOC("(" libctypes_intfor_params ")->?GStructuredType\n"
-	      "#tValueError{No integer matching the requirements of @size is supported}") },
-
-	{ "bswap16", (DeeObject *)&libctypes_bswap16, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap16_params ")->?Guint16_t\n"
-	      "Return @x with reversed endian") },
-	{ "bswap32", (DeeObject *)&libctypes_bswap32, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap32_params ")->?Guint32_t\n"
-	      "Return @x with reversed endian") },
-	{ "bswap64", (DeeObject *)&libctypes_bswap64, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap64_params ")->?Guint64_t\n"
-	      "Return @x with reversed endian") },
-	{ "bswap128", (DeeObject *)&libctypes_bswap128, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap128_params ")->?Guint128_t\n"
-	      "Return @x with reversed endian") },
-
-	{ "htole16", (DeeObject *)&libctypes_htole16, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap16_params ")->?Guint16_t\n"
-	      "Convert a 16-bit integer from host-endian to little-endian") },
-	{ "letoh16", (DeeObject *)&libctypes_letoh16, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap16_params ")->?Guint16_t\n"
-	      "Convert a 16-bit integer from little-endian to host-endian") },
-	{ "htole32", (DeeObject *)&libctypes_htole32, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap32_params ")->?Guint32_t\n"
-	      "Convert a 32-bit integer from host-endian to little-endian") },
-	{ "letoh32", (DeeObject *)&libctypes_letoh32, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap32_params ")->?Guint32_t\n"
-	      "Convert a 32-bit integer from little-endian to host-endian") },
-	{ "htole64", (DeeObject *)&libctypes_htole64, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap64_params ")->?Guint64_t\n"
-	      "Convert a 64-bit integer from host-endian to little-endian") },
-	{ "letoh64", (DeeObject *)&libctypes_letoh64, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap64_params ")->?Guint64_t\n"
-	      "Convert a 64-bit integer from little-endian to host-endian") },
-	{ "htole128", (DeeObject *)&libctypes_htole128, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap128_params ")->?Guint128_t\n"
-	      "Convert a 128-bit integer from host-endian to little-endian") },
-	{ "letoh128", (DeeObject *)&libctypes_letoh128, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap128_params ")->?Guint128_t\n"
-	      "Convert a 128-bit integer from little-endian to host-endian") },
-
-	{ "htobe16", (DeeObject *)&libctypes_htobe16, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap16_params ")->?Guint16_t\n"
-	      "Convert a 16-bit integer from host-endian to big-endian") },
-	{ "betoh16", (DeeObject *)&libctypes_betoh16, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap16_params ")->?Guint16_t\n"
-	      "Convert a 16-bit integer from big-endian to host-endian") },
-	{ "htobe32", (DeeObject *)&libctypes_htobe32, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap32_params ")->?Guint32_t\n"
-	      "Convert a 32-bit integer from host-endian to big-endian") },
-	{ "betoh32", (DeeObject *)&libctypes_betoh32, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap32_params ")->?Guint32_t\n"
-	      "Convert a 32-bit integer from big-endian to host-endian") },
-	{ "htobe64", (DeeObject *)&libctypes_htobe64, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap64_params ")->?Guint64_t\n"
-	      "Convert a 64-bit integer from host-endian to big-endian") },
-	{ "betoh64", (DeeObject *)&libctypes_betoh64, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap64_params ")->?Guint64_t\n"
-	      "Convert a 64-bit integer from big-endian to host-endian") },
-	{ "htobe128", (DeeObject *)&libctypes_htobe128, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap128_params ")->?Guint128_t\n"
-	      "Convert a 128-bit integer from host-endian to big-endian") },
-	{ "betoh128", (DeeObject *)&libctypes_betoh128, MODSYM_FREADONLY,
-	  DOC("(" libctypes_bswap128_params ")->?Guint128_t\n"
-	      "Convert a 128-bit integer from big-endian to host-endian") },
-
-	/* <string.h> & <stdlib.h> - style ctypes functions */
-	{ "malloc", (DeeObject *)&c_malloc_malloc, MODSYM_FREADONLY,
-	  DOC("(size:?Dint)->?Aptr?Gvoid\n"
-	      "#tNoMemory{Insufficient memory to allocate @size bytes}"
-	      "Allocate a raw buffer of @size bytes from a heap and return a "
-	      /**/ "pointer to its base\n"
-	      "Passing a value of $0 for @size will allocate a minimal-sized heap-block") },
-	{ "calloc", (DeeObject *)&c_malloc_calloc, MODSYM_FREADONLY,
-	  DOC("(size:?Dint)->?Aptr?Gvoid\n"
-	      "(count:?Dint,size:?Dint)->?Aptr?Gvoid\n"
-	      "#tNoMemory{Insufficient memory to allocate ${count * size} bytes}"
-	      "#tIntegerOverflow{The given @count and @size overflow ?Gsize_t when multiplied}"
-	      "Same as ?Gmalloc, but rather than leaving the newly allocated memory uninitialized, "
-	      /**/ "fill it with all zeroes, the same way ${memset(malloc(size), 0, size)} would\n"
-	      /**/ "If the product of @count and @size equals ${0}, a minimal-sized heap-block is allocated, "
-	      /**/ "however the caller must still assume that the memory range they are allowed to access "
-	      /**/ "is non-existent") },
-	{ "realloc", (DeeObject *)&c_malloc_realloc, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
-	      "#tNoMemory{Insufficient memory to allocate @size bytes}"
-	      "Given a heap-pointer previously allocated using either ?Gmalloc, ?Gcalloc or "
-	      /**/ "a prior call to ?Grealloc, change its size to @size, either releasing then "
-	      /**/ "unused trailing memory resulting from the difference between its old size "
-	      /**/ "and a smaller, newer size, or try to extend it if its new size is larger "
-	      /**/ "than its own, in which case a collision with another block located at the "
-	      /**/ "location where the extension attempt was made will result in an entirely "
-	      /**/ "new block being allocated, with all pre-existing data being copied inside.\n"
-	      "In all cases, a pointer to the new heap block is returned, which may be "
-	      /**/ "identical to the old block\n"
-	      "If a NULL-pointer is passed for @ptr, the function behaves the same as "
-	      /**/ "a call to ?Gmalloc with the given @{size}. Alternatively, if a valid heap "
-	      /**/ "pointer is passed for @ptr, and @size is passed as ${0}, the heap block is "
-	      /**/ "truncated to a minimal size and a heap block is returned that is semantically "
-	      /**/ "equivalent to one returned by ${malloc(0)}\n"
-	      "In the event of failure, the pre-existing heap-block passed for @ptr will remain unchanged") },
-	{ "free", (DeeObject *)&c_malloc_free, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?Gvoid)\n"
-	      "Release a previously allocated heap-block returned by one of ?Gmalloc, ?Gcalloc or ?Grealloc\n"
-	      "If a NULL-pointer is passed for @ptr, this function has no effect and returns immediately") },
-	{ "trymalloc", (DeeObject *)&c_malloc_trymalloc, MODSYM_FREADONLY,
-	  DOC("(size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as ?Gmalloc, but return a NULL-pointer if allocation isn't "
-	      /**/ "possible due to lack of memory, rather than throwing a :NoMemory error") },
-	{ "trycalloc", (DeeObject *)&c_malloc_trycalloc, MODSYM_FREADONLY,
-	  DOC("(size:?Dint)->?Aptr?Gvoid\n"
-	      "(count:?Dint,size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as ?Gcalloc, but return a NULL-pointer if allocation isn't "
-	      /**/ "possible due to lack of memory, rather than throwing a :NoMemory error") },
-	{ "tryrealloc", (DeeObject *)&c_malloc_tryrealloc, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as ?Grealloc, but return a NULL-pointer if allocation isn't "
-	      /**/ "possible due to lack of memory, rather than throwing a :NoMemory error\n"
-	      "In this event, the pre-existing heap-block passed for @ptr is not freed") },
-	{ "strdup", (DeeObject *)&c_malloc_strdup, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar,maxlen:?Dint=!A!Pmax!Gsize_t)->?Aptr?Gchar\n"
-	      "#tNoMemory{Insufficient memory}"
-	      "Duplicate the given @str into a heap-allocated memory block\n"
-	      "${"
-	      /**/ "function strndup(str: char.ptr, maxlen?: int): char.ptr {\n"
-	      /**/ "	if (maxlen !is bound)\n"
-	      /**/ "		maxlen = size_t.max;\n"
-	      /**/ "	local len = strnlen(str, maxlen) * sizeof(char);\n"
-	      /**/ "	local res = (char.ptr)memcpy(malloc(len + sizeof(char)), str, len);\n"
-	      /**/ "	res[len] = 0;\n"
-	      /**/ "	return res;\n"
-	      /**/ "}"
-	      "}") },
-	{ "trystrdup", (DeeObject *)&c_malloc_trystrdup, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar,maxlen:?Dint=!A!Pmax!Gsize_t)->?Aptr?Gchar\n"
-	      "Try to duplicate the given @str into a heap-allocated memory block\n"
-	      "${"
-	      /**/ "function trystrndup(str: char.ptr, maxlen?: int): char.ptr {\n"
-	      /**/ "	if (maxlen !is bound)\n"
-	      /**/ "		maxlen = size_t.max;\n"
-	      /**/ "	local len = strnlen(str, maxlen) * sizeof(char);\n"
-	      /**/ "	local res = (char.ptr)trymalloc(len + sizeof(char));\n"
-	      /**/ "	if (res) {\n"
-	      /**/ "		memcpy(res, str, len);\n"
-	      /**/ "		res[len] = 0;\n"
-	      /**/ "	}\n"
-	      /**/ "	return res;\n"
-	      /**/ "}"
-	      "}") },
-
-	{ "memcpy", (DeeObject *)&c_string_memcpy, MODSYM_FREADONLY,
-	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint,count=!1)->?Aptr?Gvoid\n"
-	      "#r{Always re-returns @dst as a ?Aptr?Gvoid}"
-	      "Copies @size * @count bytes of memory from @src to @dst\n"
-	      "Note that the source and destination ranges may not overlap") },
-	{ "mempcpy", (DeeObject *)&c_string_mempcpy, MODSYM_FREADONLY,
-	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint,count=!1)->?Aptr?Gvoid\n"
-	      "#r{Always re-returns ${dst + size * count} as a ?Aptr?Gvoid}"
-	      "Same as ?Gmemcpy, but returns ${dst + size * count}") },
-	{ "memccpy", (DeeObject *)&c_string_memccpy, MODSYM_FREADONLY,
-	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,needle:?Dint,size:?Dint)->?Aptr?Gvoid\n"
-	      "#r{The last modified by in @dst}"
-	      "Same as ?Gmemcpy, but stop after a byte equal to @needle is encountered in @src") },
-	{ "memset", (DeeObject *)&c_string_memset, MODSYM_FREADONLY,
-	  DOC("(dst:?Aptr?Gvoid,byte:?Dint,size:?Dint)->?Aptr?Gvoid\n"
-	      "#r{Always re-returns @dst as a ?Aptr?Gvoid}"
-	      "Set every byte in the range @dst+@size to equal @byte") },
-	{ "mempset", (DeeObject *)&c_string_mempset, MODSYM_FREADONLY,
-	  DOC("(dst:?Aptr?Gvoid,byte:?Dint,size:?Dint)->?Aptr?Gvoid\n"
-	      "#r{Always re-returns ${dst + size} as a ?Aptr?Gvoid}"
-	      "Same as ?Gmemset, but returns ${dst + size}") },
-	{ "bzero", (DeeObject *)&c_string_bzero, MODSYM_FREADONLY,
-	  DOC("(dst:?Aptr?Gvoid,size:?Dint)\n"
-	      "(dst:?Aptr?Gvoid,count:?Dint,size:?Dint)\n"
-	      "Same as ?Gmemset, but always fills memory with ${0}s") },
-	{ "memmove", (DeeObject *)&c_string_memmove, MODSYM_FREADONLY,
-	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
-	      "#r{Always re-returns @dst as a ?Aptr?Gvoid}"
-	      "Same as ?Gmemcpy, but the source and destination ranges are allowed to overlap") },
-	{ "mempmove", (DeeObject *)&c_string_mempmove, MODSYM_FREADONLY,
-	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
-	      "#r{Always re-returns ${dst + size} as a ?Aptr?Gvoid}"
-	      "Same as ?Gmemcpy, but returns ${dst + size}") },
-	{ "memchr", (DeeObject *)&c_string_memchr, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
-	      "Return a pointer to the first byte in the specified @haystack+@haystack_size "
-	      /**/ "that equals @needle, or return a NULL-pointer if not found") },
-	{ "memrchr", (DeeObject *)&c_string_memrchr, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as :memchr, but if @needle appears multiple times, return a pointer to the last instance") },
-	{ "memlen", (DeeObject *)&c_string_memlen, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Dint\n"
-	      "Return the offset from @haystack of the first byte equal to @needle, or @haystack_size if now found") },
-	{ "memrlen", (DeeObject *)&c_string_memrlen, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Dint\n"
-	      "Same as :memlen, but if @needle appears multiple times, return the offset of the last instance") },
-	{ "memend", (DeeObject *)&c_string_memend, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
-	      "Return a pointer to the first byte in @haystack that is equal to @needle, or @haystack+@haystack_size if now found") },
-	{ "memrend", (DeeObject *)&c_string_memrend, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as ?Gmemend, but if @needle appears multiple times, return a pointer to the last instance\n"
-	      "If @needle doesn't appear at all, return a pointer to @haystack") },
-	{ "rawmemchr", (DeeObject *)&c_string_rawmemchr, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Aptr?Gvoid\n"
-	      "Search for the byte equal to @needle, starting at @haystack and only "
-	      /**/ "stopping once one is found, or unmapped memory is reached and "
-	      /**/ "the host provides support for a MMU") },
-	{ "rawmemlen", (DeeObject *)&c_string_rawmemlen, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
-	      "Same as ?Grawmemchr, but return the offset from @haystack") },
-	{ "rawmemrchr", (DeeObject *)&c_string_rawmemrchr, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Aptr?Gvoid\n"
-	      "Same as :rawmemchr, but search in reverse, starting with ${haystack[-1]}\n"
-	      "You can think of this function as a variant of ?Gmemrend that operates "
-	      /**/ "on a buffer that spans the entirety of the available address space") },
-	{ "rawmemrlen", (DeeObject *)&c_string_rawmemrlen, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
-	      "Same as ?Grawmemrchr, but return the positive (unsigned) offset of the "
-	      /**/ "matching byte, such that ${haystack + return} points to the byte in question") },
-	{ "memxchr", (DeeObject *)&c_string_memxchr, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as ?Gmemchr, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "memxlen", (DeeObject *)&c_string_memxlen, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Dint\n"
-	      "Same as ?Gmemlen, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "memxend", (DeeObject *)&c_string_memxend, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as ?Gmemend, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "memrxchr", (DeeObject *)&c_string_memrxchr, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as ?Gmemrchr, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "memrxlen", (DeeObject *)&c_string_memrxlen, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Dint\n"
-	      "Same as ?Gmemrlen, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "memrxend", (DeeObject *)&c_string_memrxend, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as ?Gmemrend, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "rawmemxchr", (DeeObject *)&c_string_rawmemxchr, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Aptr?Gvoid\n"
-	      "Same as ?Grawmemchr, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "rawmemxlen", (DeeObject *)&c_string_rawmemxlen, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
-	      "Same as ?Grawmemlen, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "rawmemrxchr", (DeeObject *)&c_string_rawmemrxchr, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Aptr?Gvoid\n"
-	      "Same as ?Grawmemrchr, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "rawmemrxlen", (DeeObject *)&c_string_rawmemrxlen, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
-	      "Same as ?Grawmemrlen, but instead of comparing bytes for being equal, compare them for being different") },
-	{ "bcmp", (DeeObject *)&c_string_bcmp, MODSYM_FREADONLY,
-	  DOC("(a:?Aptr?Gvoid,b:?Aptr?Gvoid,size:?Dint)->?Dint\n"
-	      "Same as ?Gmemcmp, but only returns $0 when buffer are equal, and non-$0 otherwise") },
-	{ "memcmp", (DeeObject *)&c_string_memcmp, MODSYM_FREADONLY,
-	  DOC("(lhs:?Aptr?Gvoid,rhs:?Aptr?Gvoid,size:?Dint)->?Dint\n"
-	      "Compare bytes from 2 buffers in @lhs and @rhs of equal @size, and "
-	      /**/ "search for the first non-matching byte, returning ${< 0} if that byte "
-	      /**/ "in @lhs is smaller than its counterpart in @rhs, ${> 0} if the opposite "
-	      /**/ "is true, and ${== 0} no such byte exists") },
-	{ "memcasecmp", (DeeObject *)&c_string_memcasecmp, MODSYM_FREADONLY,
-	  DOC("(lhs:?Aptr?Gvoid,rhs:?Aptr?Gvoid,size:?Dint)->?Dint\n"
-	      "Same as ?Gmemcmp, but bytes are casted as ASCII characters "
-	      /**/ "into a common casing prior to comparison") },
-	{ "memmem", (DeeObject *)&c_string_memmem, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
-	      "Search for the first memory block in @haystack+@haystack_size that is equal to @needle+@needle_size "
-	      /**/ "such that ${memcmp(candidate, needle, needle_size) == 0} and return a pointer to its starting "
-	      /**/ "location in @haystack\n"
-	      "If no such memory block exists, or @needle_size is $0, return a NULL-pointer instead") },
-	{ "memcasemem", (DeeObject *)&c_string_memcasemem, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as ?Gmemmem, but perform case-insensitive comparisons, using ?Gmemcasecmp instead of ?Gmemcmp") },
-	{ "memrmem", (DeeObject *)&c_string_memrmem, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as ?Gmemmem, but in case more than 1 match exists, return a pointer to the last, rather than the first\n"
-	      "When @needle_size is $0, always return a NULL-pointer") },
-	{ "memcasermem", (DeeObject *)&c_string_memcasermem, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as ?Gmemcasemem, but in case more than 1 match exists, return a pointer to the last, rather than the first\n"
-	      "When @needle_size is $0, always return a NULL-pointer") },
-	{ "memrev", (DeeObject *)&c_string_memrev, MODSYM_FREADONLY,
-	  DOC("(buf:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
-	      "Reverse the order of bytes in the given @buf+@size, such that upon return its first "
-	      /**/ "byte contains the old value of the last byte, and the last byte the value of the first, "
-	      /**/ "and so on.") },
-	{ "memfrob", (DeeObject *)&c_string_memfrob, MODSYM_FREADONLY,
-	  DOC("(buf:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
-	      "xor all bytes within @buf with $42, implementing _very_ simplistic encryption") },
-
-	{ "strlen", (DeeObject *)&c_string_strlen, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar)->?Dint\n"
-	      "Returns the length of a given @str in characters") },
-	{ "strend", (DeeObject *)&c_string_strend, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "Return a pointer to the end of a given @str") },
-	{ "strnlen", (DeeObject *)&c_string_strnlen, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
-	      "Same as ?Gstrlen, but limit the max number of scanned characters to @maxlen") },
-	{ "strnend", (DeeObject *)&c_string_strnend, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar,maxlen:?Dint)->?Aptr?Gchar\n"
-	      "Same as ?Gstrend, but limit the max number of scanned characters to @maxlen") },
-	{ "strchr", (DeeObject *)&c_string_strchr, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
-	      "Search for the first character equal to @needle within @haystack\n"
-	      "If no such character exists, return a NULL-pointer instead") },
-	{ "strrchr", (DeeObject *)&c_string_strrchr, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
-	      "Search for the last character equal to @needle within @haystack\n"
-	      "If no such character exists, return a NULL-pointer instead") },
-	{ "strnchr", (DeeObject *)&c_string_strnchr, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
-	      "Same as ?Gstrchr, but limit the max number of scanned characters to @maxlen") },
-	{ "strnrchr", (DeeObject *)&c_string_strnrchr, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
-	      "Same as ?Gstrrchr, but limit the max number of scanned characters to @maxlen") },
-	{ "stroff", (DeeObject *)&c_string_stroff, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Dint\n"
-	      "Same ?Gstrchr, but return the offset of the found character from @haystack, "
-	      /**/ "or ${strlen(haystack)} if @needle wasn't found") },
-	{ "strroff", (DeeObject *)&c_string_strroff, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Dint\n"
-	      "Same ?Gstrrchr, but return the offset of the found character from @haystack, "
-	      /**/ "or ${size_t.max} if @needle wasn't found") },
-	{ "strnoff", (DeeObject *)&c_string_strnoff, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Dint\n"
-	      "Same ?Gstrnchr, but return the offset of the found character from @haystack, "
-	      /**/ "or ${strnlen(haystack, maxlen)} if @needle wasn't found") },
-	{ "strnroff", (DeeObject *)&c_string_strnroff, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Dint\n"
-	      "Same ?Gstrnrchr, but return the offset of the found character from @haystack, "
-	      /**/ "or ${size_t.max} if @needle wasn't found") },
-	{ "strchrnul", (DeeObject *)&c_string_strchrnul, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
-	      "Same as ?Gstrchr, but return ${strend(haystack)} if @needle wasn't found") },
-	{ "strrchrnul", (DeeObject *)&c_string_strrchrnul, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
-	      "Same as ?Gstrrchr, but return ${haystack - 1} if @needle wasn't found") },
-	{ "strnchrnul", (DeeObject *)&c_string_strnchrnul, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
-	      "Same as ?Gstrnchr, but return ${strnend(haystack, maxlen)} if @needle wasn't found") },
-	{ "strnrchrnul", (DeeObject *)&c_string_strnrchrnul, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
-	      "Same as ?Gstrnrchr, but return ${haystack - 1} if @needle wasn't found") },
-	{ "strcmp", (DeeObject *)&c_string_strcmp, MODSYM_FREADONLY,
-	  DOC("(lhs:?Aptr?Gchar,rhs:?Aptr?Gchar)->?Dint\n"
-	      "Compare the given strings @lhs and @rhs, returning ${<0}, "
-	      "${==0} or ${>0} indicative of their relation to one-another") },
-	{ "strncmp", (DeeObject *)&c_string_strncmp, MODSYM_FREADONLY,
-	  DOC("(lhs:?Aptr?Gchar,rhs:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
-	      "Same as ?Gstrcmp, but limit the max number of compared characters to @maxlen") },
-	{ "strcasecmp", (DeeObject *)&c_string_strcasecmp, MODSYM_FREADONLY,
-	  DOC("(lhs:?Aptr?Gchar,rhs:?Aptr?Gchar)->?Dint\n"
-	      "Same as ?Gstrcmp, but ignore casing") },
-	{ "strncasecmp", (DeeObject *)&c_string_strncasecmp, MODSYM_FREADONLY,
-	  DOC("(lhs:?Aptr?Gchar,rhs:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
-	      "Same as ?Gstrncmp, but ignore casing") },
-	{ "strcpy", (DeeObject *)&c_string_strcpy, MODSYM_FREADONLY,
-	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "Same as ${(char.ptr)memcpy(dst, src, (strlen(src) + 1) * sizeof(char))}") },
-	{ "strcat", (DeeObject *)&c_string_strcat, MODSYM_FREADONLY,
-	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "Same as ${({ local r = dst; strcpy(strend(dst), src); (char.ptr)r; })}") },
-	{ "strncpy", (DeeObject *)&c_string_strncpy, MODSYM_FREADONLY,
-	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar,count:?Dint)->?Aptr?Gchar\n"
-	      "Implemented as:\n"
-	      "${"
-	      /**/ "function strncpy(dst: char.ptr, src: char.ptr, count: int): char.ptr {\n"
-	      /**/ "	local srclen = strnlen(src, count);\n"
-	      /**/ "	memcpy(dst, src, srclen * sizeof(char));\n"
-	      /**/ "	memset(dst + strlen, 0, (count - srclen) * sizeof(char));\n"
-	      /**/ "	return dst;\n"
-	      /**/ "}"
-	      "}") },
-	{ "strncat", (DeeObject *)&c_string_strncat, MODSYM_FREADONLY,
-	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar,count:?Dint)->?Aptr?Gchar\n"
-	      "Implemented as:\n"
-	      "${"
-	      /**/ "function strncat(dst: char.ptr, src: char.ptr, count: int): char.ptr {\n"
-	      /**/ "	local srclen = strnlen(src, count);\n"
-	      /**/ "	local buf = strend(dst);\n"
-	      /**/ "	memcpy(buf, src, srclen * sizeof(char));\n"
-	      /**/ "	buf[srclen] = 0;\n"
-	      /**/ "	return dst;\n"
-	      /**/ "}"
-	      "}") },
-	{ "stpcpy", (DeeObject *)&c_string_stpcpy, MODSYM_FREADONLY,
-	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "Same as ${(char.ptr)mempcpy(dst, src, (strlen(src) + 1) * sizeof(char)) - 1}") },
-	{ "stpncpy", (DeeObject *)&c_string_stpncpy, MODSYM_FREADONLY,
-	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar,dstsize:?Dint)->?Aptr?Gchar\n"
-	      "Implemented as:\n"
-	      "${"
-	      /**/ "function stpncpy(dst: char.ptr, src: char.ptr, dstsize: int): char.ptr {\n"
-	      /**/ "	local srclen = strnlen(src, dstsize);\n"
-	      /**/ "	memcpy(dst, src, srclen * sizeof(char));\n"
-	      /**/ "	memset(dst + srclen, 0, (dstsize - srclen) * sizeof(char));\n"
-	      /**/ "	return dst + srclen;\n"
-	      /**/ "}"
-	      "}") },
-	{ "strstr", (DeeObject *)&c_string_strstr, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,needle:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "Find the first instance of @needle contained within @haystack, or return a NULL-pointer if none exists") },
-	{ "strcasestr", (DeeObject *)&c_string_strcasestr, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,needle:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "Same as ?Gstrstr, but ignore casing") },
-	{ "strnstr", (DeeObject *)&c_string_strnstr, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,needle:?Aptr?Gchar,haystack_maxlen:?Dint)->?Aptr?Gchar\n"
-	      "Find the first instance of @needle contained within @haystack, or return a NULL-pointer if none exists") },
-	{ "strncasestr", (DeeObject *)&c_string_strncasestr, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,needle:?Aptr?Gchar,haystack_maxlen:?Dint)->?Aptr?Gchar\n"
-	      "Same as ?Gstrnstr, but ignore casing") },
-	{ "strverscmp", (DeeObject *)&c_string_strverscmp, MODSYM_FREADONLY,
-	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar)->?Dint\n"
-	      "Same as ?Gstrcmp, but do special handling for version strings (s.a. ?Avercompare?Dstring)") },
-	{ "index", (DeeObject *)&c_string_strchr, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
-	      "Alias for ?Gstrchr") },
-	{ "rindex", (DeeObject *)&c_string_strrchr, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
-	      "Alias for ?Gstrrchr") },
-	{ "strspn", (DeeObject *)&c_string_strspn, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,accept:?Aptr?Gchar)->?Dint\n"
-	      "Returns the offset to the first character in @str that is also "
-	      "apart of @accept, or ${strlen(str)} when no such character exists") },
-	{ "strcspn", (DeeObject *)&c_string_strcspn, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,reject:?Aptr?Gchar)->?Dint\n"
-	      "Returns the offset to the first character in @str that isn't "
-	      "apart of @accept, or ${strlen(str)} when no such character exists") },
-	{ "strpbrk", (DeeObject *)&c_string_strpbrk, MODSYM_FREADONLY,
-	  DOC("(haystack:?Aptr?Gchar,accept:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "Return a pointer to the first character in @str, that is also apart of @accept\n"
-	      "If no such character exists, a NULL-pointer is returned") },
-	{ "strrev", (DeeObject *)&c_string_strrev, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "Reverse the order of characters in @str and re-return the given @str") },
-	{ "strnrev", (DeeObject *)&c_string_strnrev, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar,maxlen:?Dint)->?Aptr?Gchar\n"
-	      "Reverse the order of up to @maxlen characters in @str and re-return the given @str") },
-	{ "strlwr", (DeeObject *)&c_string_strlwr, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "Convert all characters in @str to lower-case and re-return the given @str") },
-	{ "strupr", (DeeObject *)&c_string_strupr, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "Convert all characters in @str to upper-case and re-return the given @str") },
-	{ "strnlwr", (DeeObject *)&c_string_strnlwr, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar,maxlen:?Dint)->?Aptr?Gchar\n"
-	      "Convert all characters in @str to lower-case and re-return the given @str") },
-	{ "strnupr", (DeeObject *)&c_string_strnupr, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar,maxlen:?Dint)->?Aptr?Gchar\n"
-	      "Convert all characters in @str to upper-case and re-return the given @str") },
-	{ "strset", (DeeObject *)&c_string_strset, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar,chr:?Dint)->?Aptr?Gchar\n"
-	      "Set all characters in @str to @chr and re-return the given @str") },
-	{ "strnset", (DeeObject *)&c_string_strnset, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar,chr:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
-	      "Same as ?Gstrset, but limit the operator to up to @maxlen characters") },
-	{ "strfry", (DeeObject *)&c_string_strfry, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "Randomly shuffle the order of characters in @str, creating an anagram") },
-	{ "strsep", (DeeObject *)&c_string_strsep, MODSYM_FREADONLY,
-	  DOC("(stringp:?Aptr?Aptr?Gchar,delim:?Aptr?Gchar)->?Aptr?Gchar") },
-	{ "stresep", (DeeObject *)&c_string_stresep, MODSYM_FREADONLY,
-	  DOC("(stringp:?Aptr?Aptr?Gchar,delim:?Aptr?Gchar,escape:?Dint)->?Aptr?Gchar") },
-	{ "strtok", (DeeObject *)&c_string_strtok, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar,delim:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "Split @str at each occurrence of @delim and return the resulting strings individually") },
-	{ "strtok_r", (DeeObject *)&c_string_strtok_r, MODSYM_FREADONLY,
-	  DOC("(str:?Aptr?Gchar,delim:?Aptr?Gchar,save_ptr:?Aptr?Aptr?Gchar)->?Aptr?Gchar") },
-	{ "basename", (DeeObject *)&c_string_basename, MODSYM_FREADONLY,
-	  DOC("(filename:?Aptr?Gchar)->?Aptr?Gchar") },
-
-	/* Atomic functions */
-	{ "atomic_cmpxch", (DeeObject *)&c_atomic_atomic_cmpxch, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,oldval:?Q!A!Aptr!Pind],newval:?Q!A!Aptr!Pind],weak=!f)->?Dbool\n"
-	      "Do an atomic compare-and-exchange of memory at @ptr from @oldval to @newval\n"
-	      /**/ "When @weak is true, the operation is allowed to fail sporadically, even when "
-	      /**/ "memory at @ptr and @oldval are identical\n"
-	      "This is a type-generic operation, with the address-width of the atomic operation "
-	      /**/ "depending on the typing of @ptr. Supported widths are $1, $2, $4 and $8 bytes") },
-	{ "atomic_cmpxch_val", (DeeObject *)&c_atomic_atomic_cmpxch_val, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,oldval:?Q!A!Aptr!Pind],newval:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
-	      "Same as ?Gatomic_cmpxch, except that rather than returning ?t or ?f indicative of "
-	      /**/ "the success of the exchange, the #Ireal old value read from @ptr is returned. If "
-	      /**/ "this is equal to @oldval, the operation was successful. If not, memory pointed-to "
-	      /**/ "by @ptr remains unchanged") },
-	{ "atomic_fetchadd", (DeeObject *)&c_atomic_atomic_fetchadd, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
-	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind += addend; r; })}") },
-	{ "atomic_fetchsub", (DeeObject *)&c_atomic_atomic_fetchsub, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
-	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind -= addend; r; })}") },
-	{ "atomic_fetchand", (DeeObject *)&c_atomic_atomic_fetchand, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
-	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind &= mask; r; })}") },
-	{ "atomic_fetchor", (DeeObject *)&c_atomic_atomic_fetchor, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
-	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind |= mask; r; })}") },
-	{ "atomic_fetchxor", (DeeObject *)&c_atomic_atomic_fetchxor, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
-	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind ^= mask; r; })}") },
-	{ "atomic_fetchnand", (DeeObject *)&c_atomic_atomic_fetchnand, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
-	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind = ~(ptr.ind & mask); r; })}") },
-	{ "atomic_addfetch", (DeeObject *)&c_atomic_atomic_addfetch, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
-	      "Atomic operation for ${({ ptr.ind += addend; copy ptr.ind; })}") },
-	{ "atomic_subfetch", (DeeObject *)&c_atomic_atomic_subfetch, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
-	      "Atomic operation for ${({ ptr.ind -= addend; copy ptr.ind; })}") },
-	{ "atomic_andfetch", (DeeObject *)&c_atomic_atomic_andfetch, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
-	      "Atomic operation for ${({ ptr.ind &= mask; copy ptr.ind; })}") },
-	{ "atomic_orfetch", (DeeObject *)&c_atomic_atomic_orfetch, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
-	      "Atomic operation for ${({ ptr.ind |= mask; copy ptr.ind; })}") },
-	{ "atomic_xorfetch", (DeeObject *)&c_atomic_atomic_xorfetch, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
-	      "Atomic operation for ${({ ptr.ind ^= mask; copy ptr.ind; })}") },
-	{ "atomic_nandfetch", (DeeObject *)&c_atomic_atomic_nandfetch, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
-	      "Atomic operation for ${({ ptr.ind = ~(ptr.ind & mask); copy ptr.ind; })}") },
-	{ "atomic_add", (DeeObject *)&c_atomic_atomic_add, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])\n"
-	      "Atomic operation for ${ptr.ind += addend}") },
-	{ "atomic_sub", (DeeObject *)&c_atomic_atomic_sub, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])\n"
-	      "Atomic operation for ${ptr.ind -= addend}") },
-	{ "atomic_and", (DeeObject *)&c_atomic_atomic_and, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
-	      "Atomic operation for ${ptr.ind &= mask}") },
-	{ "atomic_or", (DeeObject *)&c_atomic_atomic_or, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
-	      "Atomic operation for ${ptr.ind |= mask}") },
-	{ "atomic_xor", (DeeObject *)&c_atomic_atomic_xor, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
-	      "Atomic operation for ${ptr.ind ^= mask}") },
-	{ "atomic_nand", (DeeObject *)&c_atomic_atomic_nand, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
-	      "Atomic operation for ${ptr.ind = ~(ptr.ind & mask)}") },
-	{ "atomic_write", (DeeObject *)&c_atomic_atomic_write, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,value:?Q!A!Aptr!Pind])\n"
-	      "Atomic operation for ${ptr.ind = value}") },
-	{ "atomic_fetchinc", (DeeObject *)&c_atomic_atomic_fetchinc, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
-	      "Atomic operation for ${ptr.ind++}") },
-	{ "atomic_fetchdec", (DeeObject *)&c_atomic_atomic_fetchdec, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
-	      "Atomic operation for ${ptr.ind--}") },
-	{ "atomic_incfetch", (DeeObject *)&c_atomic_atomic_incfetch, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
-	      "Atomic operation for ${++ptr.ind}") },
-	{ "atomic_decfetch", (DeeObject *)&c_atomic_atomic_decfetch, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
-	      "Atomic operation for ${--ptr.ind}") },
-	{ "atomic_read", (DeeObject *)&c_atomic_atomic_read, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
-	      "Atomic operation for ${copy ptr.ind}") },
-	{ "atomic_inc", (DeeObject *)&c_atomic_atomic_inc, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured)\n"
-	      "Atomic operation for ${++ptr.ind}") },
-	{ "atomic_dec", (DeeObject *)&c_atomic_atomic_dec, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured)\n"
-	      "Atomic operation for ${--ptr.ind}") },
-
-	/* Futex functions */
-	{ "futex_wakeone", (DeeObject *)&c_atomic_futex_wakeone, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured)\n"
-	      "Wake at most 1 thread that is waiting for @ptr to change (s.a. ?Gfutex_wait)") },
-	{ "futex_wakeall", (DeeObject *)&c_atomic_futex_wakeall, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured)\n"
-	      "Wake all threads that are waiting for @ptr to change (s.a. ?Gfutex_wait)") },
-	{ "futex_wait", (DeeObject *)&c_atomic_futex_wait, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,expected:?Q!A!Aptr!Pind])\n"
-	      "Atomically check if ${ptr.ind == expected}. If this isn't the case, return immediately. "
-	      /**/ "Otherwise, wait until another thread makes a call to ?Gfutex_wakeone or ?Gfutex_wakeall, "
-	      /**/ "or until the #I{stars align} (by which I mean that this function might also return sporadically)\n"
-	      "This function can be used to form the basis of any other synchronization "
-	      /**/ "primitive (mutex, semaphore, condition-variable, events, #Ianything)") },
-	{ "futex_timedwait", (DeeObject *)&c_atomic_futex_timedwait, MODSYM_FREADONLY,
-	  DOC("(ptr:?Aptr?GStructured,expected:?Q!A!Aptr!Pind],timeout_nanoseconds:?Dint)->?Dbool\n"
-	      "#r{true You were woken up, either sporadically, because the value of ${ptr.ind} differs "
-	      /*   */ "from @expected, or because another thread called ?Gfutex_wakeone or ?Gfutex_wakeall}"
-	      "#r{false The given @timeout_nanoseconds has expired}"
-	      "Atomically check if ${ptr.ind == expected}. If this isn't the case, immediately return ?t. "
-	      /**/ "Otherwise, wait until either @timeout_nanoseconds have elapsed, or another thread "
-	      /**/ "makes a call to ?Gfutex_wakeone or ?Gfutex_wakeall, or until the #I{stars align} "
-	      /**/ "(by which I mean that this function might also return sporadically)\n"
-	      "This function can be used to form the basis of any other synchronization "
-	      /**/ "primitive (mutex, semaphore, condition-variable, events, #Ianything)") },
-
-	{ NULL }
-};
 
 #ifndef NDEBUG
 PRIVATE void DCALL
@@ -1255,6 +548,7 @@ libctypes_fini_type(DeeSTypeObject *__restrict self) {
 #endif /* !CONFIG_NO_CFUNCTION */
 }
 
+#define PTR_libctypes_fini &libctypes_fini
 PRIVATE void DCALL
 libctypes_fini(DeeDexObject *__restrict UNUSED(self)) {
 	/* Clear caches for static C-types, so they don't show up as leaks. */
@@ -1308,6 +602,10 @@ libctypes_fini(DeeDexObject *__restrict UNUSED(self)) {
 }
 #endif /* !NDEBUG */
 
+#ifndef PTR_libctypes_fini
+#define PTR_libctypes_fini NULL
+#endif /* !PTR_libctypes_fini */
+
 INTDEF bool DCALL clear_void_pointer(void);
 PRIVATE bool DCALL
 libctypes_clear(DeeDexObject *__restrict UNUSED(self)) {
@@ -1315,16 +613,718 @@ libctypes_clear(DeeDexObject *__restrict UNUSED(self)) {
 }
 
 
-PUBLIC struct dex DEX = {
-	/* .d_symbols = */ symbols,
-	/* .d_init    = */ NULL,
-#ifndef NDEBUG
-	/* .d_fini    = */ &libctypes_fini,
-#else  /* !NDEBUG */
-	/* .d_fini    = */ NULL,
-#endif /* NDEBUG */
-	/* .d_clear   = */ &libctypes_clear
-};
+
+DEX_BEGIN
+
+/* Export the underlying type-system used by ctypes. */
+DEX_MEMBER_F_NODOC("StructuredType", &DeeSType_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("PointerType", &DeePointerType_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("LValueType", &DeeLValueType_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("ArrayType", &DeeArrayType_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("StructType", &DeeStructType_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("FunctionType", &DeeCFunctionType_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("Structured", DeeSType_AsObject(&DeeStructured_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("Pointer", DeePointerType_AsObject(&DeePointer_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("LValue", DeeLValueType_AsObject(&DeeLValue_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("Array", DeeArrayType_AsObject(&DeeArray_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("Struct", DeeStructType_AsObject(&DeeStruct_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("Function", DeeCFunctionType_AsObject(&DeeCFunction_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("struct", &libctypes_struct, MODSYM_FREADONLY),
+DEX_MEMBER_F("union", &libctypes_union, MODSYM_FREADONLY,
+             "(fields:?X2?S?T2?Dstring?GStructuredType?M?Dstring?GStructuredType)->?GStructType\n"
+             "(name:?Dstring,fields:?X2?S?T2?Dstring?GStructuredType?M?Dstring?GStructuredType)->?GStructType"),
+
+/* TODO: Both Pointer and LValue types need 1 sub-class each: RefPointer and RefLValue
+ *       These sub-classes behave the same as the original Pointer/LValue-type, except
+ *       that they don't have constructors, and instance have 1 additional field that
+ *       follows after the underlying pointer: `DREF DeeObject *ob_ref; // [1..1]'.
+ * This field is a reference to the owning object. These extra types are then used
+ * whenever you do a ctypes operation where it is clear which object a pointer/lvalue
+ * points into. e.g.:
+ * >> union foo {
+ * >>     .s = int32_t,
+ * >>     .u = uint32_t,
+ * >> };
+ * >> local x = (foo){ .u = 0x80000000 };
+ * >> local p1 = x.s.ptr;
+ * >> local p2 = ((foo){ .u = 0x40000000 }).s.ptr;
+ * >> print p1.ind.hex();
+ * >> print p2.ind.hex();
+ * Here, both `p1' and `p2' are RefPointer-objects, with `p1' holding a reference
+ * to `x', and `p2' holding a reference to `(foo){ .u = 0x40000000 }'. This way,
+ * using ctypes in user-code becomes much easier, as there's no need to make sure
+ * that the objects pointed-to by pointer/lvalue instances stay alive for as long
+ * as the pointer/lvalue type does (Because currently, `(foo){ .u = 0x40000000 }'
+ * has already been destroyed by the time `print p2.ind.hex();' tries to use it)
+ */
+
+/* A wrapper around the native shared-library loader. */
+DEX_MEMBER_F_NODOC("ShLib", &DeeShLib_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("dlopen", &DeeShLib_Type, MODSYM_FREADONLY), /* Convenience alias for `ShLib' */
+
+/* Export all the C-types. */
+DEX_MEMBER_F_NODOC("void", DeeSType_AsObject(&DeeCVoid_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("char", DeeSType_AsObject(&DeeCChar_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("wchar_t", DeeSType_AsObject(&DeeCWChar_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("char16_t", DeeSType_AsObject(&DeeCChar16_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("char32_t", DeeSType_AsObject(&DeeCChar32_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("bool", DeeSType_AsObject(&DeeCBool_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("int8_t", DeeSType_AsObject(&DeeCInt8_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("int16_t", DeeSType_AsObject(&DeeCInt16_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("int32_t", DeeSType_AsObject(&DeeCInt32_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("int64_t", DeeSType_AsObject(&DeeCInt64_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("int128_t", DeeSType_AsObject(&DeeCInt128_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("uint8_t", DeeSType_AsObject(&DeeCUInt8_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("uint16_t", DeeSType_AsObject(&DeeCUInt16_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("uint32_t", DeeSType_AsObject(&DeeCUInt32_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("uint64_t", DeeSType_AsObject(&DeeCUInt64_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("uint128_t", DeeSType_AsObject(&DeeCUInt128_Type), MODSYM_FREADONLY),
+/* TODO: endian-specific integer types (e.g. `le16' and `be16')
+ *       These could be used in structures and always encode/decode
+ *       the underlying value to/from a regular deemon `int' object
+ *       to automatically apply the necessary endian conversion
+ * >> import * from ctypes;
+ * >> union foo = {
+ * >> 	.le = le32,
+ * >> 	.be = be32,
+ * >> };
+ * >> x = foo(le: 0x12345678);
+ * >> print x.be; // 0x78563412 */
+DEX_MEMBER_F_NODOC("float", DeeSType_AsObject(&DeeCFloat_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("double", DeeSType_AsObject(&DeeCDouble_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("ldouble", DeeSType_AsObject(&DeeCLDouble_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("schar", DeeSType_AsObject(&DeeCSChar_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("uchar", DeeSType_AsObject(&DeeCUChar_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("short", DeeSType_AsObject(&DeeCShort_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("ushort", DeeSType_AsObject(&DeeCUShort_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("int", DeeSType_AsObject(&DeeCInt_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("uint", DeeSType_AsObject(&DeeCUInt_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("long", DeeSType_AsObject(&DeeCLong_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("ulong", DeeSType_AsObject(&DeeCULong_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("llong", DeeSType_AsObject(&DeeCLLong_Type), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("ullong", DeeSType_AsObject(&DeeCULLong_Type), MODSYM_FREADONLY),
+
+/* Other, platform-specific C-types. */
+DEX_MEMBER_F_NODOC("size_t", DeeSType_AsObject(&CUINT_SIZED(__SIZEOF_SIZE_T__)), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("ssize_t", DeeSType_AsObject(&CINT_SIZED(__SIZEOF_SIZE_T__)), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("ptrdiff_t", DeeSType_AsObject(&CINT_SIZED(__SIZEOF_PTRDIFF_T__)), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("intptr_t", DeeSType_AsObject(&CINT_SIZED(__SIZEOF_POINTER__)), MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("uintptr_t", DeeSType_AsObject(&CUINT_SIZED(__SIZEOF_POINTER__)), MODSYM_FREADONLY),
+
+/* Export some helper functions */
+DEX_MEMBER_F("sizeof", &libctypes_sizeof, MODSYM_FREADONLY,
+             "(" libctypes_sizeof_params ")->?Dint\n"
+             "#tTypeError{The given @tp or @ob are not recognized c-types, nor aliases}"
+             "Returns the size of a given structured type or object in bytes\n"
+             "\n"
+
+             "(ob:?DBytes)->?Dint\n"
+             "Returns the size of the given ?DBytes ob, which is the same as ${##ob}"),
+DEX_MEMBER_F("alignof", &libctypes_alignof, MODSYM_FREADONLY,
+             "(" libctypes_alignof_params ")->?Dint\n"
+             "#tTypeError{The given @tp or @ob are not recognized c-types, nor aliases}"
+             "Returns the alignment of a given structured type or object in bytes"),
+DEX_MEMBER_F("typeof", &libctypes_typeof, MODSYM_FREADONLY,
+             "(ob:?X7?GStructuredType?GStructured?DType?N?Dbool?Dint?Dfloat)->?GStructuredType\n"
+             "#tTypeError{The given @tp or @ob are not recognized c-types, nor aliases}"
+             "Returns the type of a given structured type or object"),
+DEX_MEMBER_F("intfor", &libctypes_intfor, MODSYM_FREADONLY,
+             "(" libctypes_intfor_params ")->?GStructuredType\n"
+             "#tValueError{No integer matching the requirements of @size is supported}"),
+
+DEX_MEMBER_F("bswap16", &libctypes_bswap16, MODSYM_FREADONLY,
+             "(" libctypes_bswap16_params ")->?Guint16_t\n"
+             "Return @x with reversed endian"),
+DEX_MEMBER_F("bswap32", &libctypes_bswap32, MODSYM_FREADONLY,
+             "(" libctypes_bswap32_params ")->?Guint32_t\n"
+             "Return @x with reversed endian"),
+DEX_MEMBER_F("bswap64", &libctypes_bswap64, MODSYM_FREADONLY,
+             "(" libctypes_bswap64_params ")->?Guint64_t\n"
+             "Return @x with reversed endian"),
+DEX_MEMBER_F("bswap128", &libctypes_bswap128, MODSYM_FREADONLY,
+             "(" libctypes_bswap128_params ")->?Guint128_t\n"
+             "Return @x with reversed endian"),
+
+DEX_MEMBER_F("htole16", &libctypes_htole16, MODSYM_FREADONLY,
+             "(" libctypes_bswap16_params ")->?Guint16_t\n"
+             "Convert a 16-bit integer from host-endian to little-endian"),
+DEX_MEMBER_F("letoh16", &libctypes_letoh16, MODSYM_FREADONLY,
+             "(" libctypes_bswap16_params ")->?Guint16_t\n"
+             "Convert a 16-bit integer from little-endian to host-endian"),
+DEX_MEMBER_F("htole32", &libctypes_htole32, MODSYM_FREADONLY,
+             "(" libctypes_bswap32_params ")->?Guint32_t\n"
+             "Convert a 32-bit integer from host-endian to little-endian"),
+DEX_MEMBER_F("letoh32", &libctypes_letoh32, MODSYM_FREADONLY,
+             "(" libctypes_bswap32_params ")->?Guint32_t\n"
+             "Convert a 32-bit integer from little-endian to host-endian"),
+DEX_MEMBER_F("htole64", &libctypes_htole64, MODSYM_FREADONLY,
+             "(" libctypes_bswap64_params ")->?Guint64_t\n"
+             "Convert a 64-bit integer from host-endian to little-endian"),
+DEX_MEMBER_F("letoh64", &libctypes_letoh64, MODSYM_FREADONLY,
+             "(" libctypes_bswap64_params ")->?Guint64_t\n"
+             "Convert a 64-bit integer from little-endian to host-endian"),
+DEX_MEMBER_F("htole128", &libctypes_htole128, MODSYM_FREADONLY,
+             "(" libctypes_bswap128_params ")->?Guint128_t\n"
+             "Convert a 128-bit integer from host-endian to little-endian"),
+DEX_MEMBER_F("letoh128", &libctypes_letoh128, MODSYM_FREADONLY,
+             "(" libctypes_bswap128_params ")->?Guint128_t\n"
+             "Convert a 128-bit integer from little-endian to host-endian"),
+
+DEX_MEMBER_F("htobe16", &libctypes_htobe16, MODSYM_FREADONLY,
+             "(" libctypes_bswap16_params ")->?Guint16_t\n"
+             "Convert a 16-bit integer from host-endian to big-endian"),
+DEX_MEMBER_F("betoh16", &libctypes_betoh16, MODSYM_FREADONLY,
+             "(" libctypes_bswap16_params ")->?Guint16_t\n"
+             "Convert a 16-bit integer from big-endian to host-endian"),
+DEX_MEMBER_F("htobe32", &libctypes_htobe32, MODSYM_FREADONLY,
+             "(" libctypes_bswap32_params ")->?Guint32_t\n"
+             "Convert a 32-bit integer from host-endian to big-endian"),
+DEX_MEMBER_F("betoh32", &libctypes_betoh32, MODSYM_FREADONLY,
+             "(" libctypes_bswap32_params ")->?Guint32_t\n"
+             "Convert a 32-bit integer from big-endian to host-endian"),
+DEX_MEMBER_F("htobe64", &libctypes_htobe64, MODSYM_FREADONLY,
+             "(" libctypes_bswap64_params ")->?Guint64_t\n"
+             "Convert a 64-bit integer from host-endian to big-endian"),
+DEX_MEMBER_F("betoh64", &libctypes_betoh64, MODSYM_FREADONLY,
+             "(" libctypes_bswap64_params ")->?Guint64_t\n"
+             "Convert a 64-bit integer from big-endian to host-endian"),
+DEX_MEMBER_F("htobe128", &libctypes_htobe128, MODSYM_FREADONLY,
+             "(" libctypes_bswap128_params ")->?Guint128_t\n"
+             "Convert a 128-bit integer from host-endian to big-endian"),
+DEX_MEMBER_F("betoh128", &libctypes_betoh128, MODSYM_FREADONLY,
+             "(" libctypes_bswap128_params ")->?Guint128_t\n"
+             "Convert a 128-bit integer from big-endian to host-endian"),
+
+/* <string.h> & <stdlib.h> - style ctypes functions */
+DEX_MEMBER_F("malloc", &c_malloc_malloc, MODSYM_FREADONLY,
+             "(size:?Dint)->?Aptr?Gvoid\n"
+             "#tNoMemory{Insufficient memory to allocate @size bytes}"
+             "Allocate a raw buffer of @size bytes from a heap and return a "
+             /**/ "pointer to its base\n"
+             "Passing a value of $0 for @size will allocate a minimal-sized heap-block"),
+DEX_MEMBER_F("calloc", &c_malloc_calloc, MODSYM_FREADONLY,
+             "(size:?Dint)->?Aptr?Gvoid\n"
+             "(count:?Dint,size:?Dint)->?Aptr?Gvoid\n"
+             "#tNoMemory{Insufficient memory to allocate ${count * size} bytes}"
+             "#tIntegerOverflow{The given @count and @size overflow ?Gsize_t when multiplied}"
+             "Same as ?Gmalloc, but rather than leaving the newly allocated memory uninitialized, "
+             /**/ "fill it with all zeroes, the same way ${memset(malloc(size), 0, size)} would\n"
+             /**/ "If the product of @count and @size equals ${0}, a minimal-sized heap-block is allocated, "
+             /**/ "however the caller must still assume that the memory range they are allowed to access "
+             /**/ "is non-existent"),
+DEX_MEMBER_F("realloc", &c_malloc_realloc, MODSYM_FREADONLY,
+             "(ptr:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
+             "#tNoMemory{Insufficient memory to allocate @size bytes}"
+             "Given a heap-pointer previously allocated using either ?Gmalloc, ?Gcalloc or "
+             /**/ "a prior call to ?Grealloc, change its size to @size, either releasing then "
+             /**/ "unused trailing memory resulting from the difference between its old size "
+             /**/ "and a smaller, newer size, or try to extend it if its new size is larger "
+             /**/ "than its own, in which case a collision with another block located at the "
+             /**/ "location where the extension attempt was made will result in an entirely "
+             /**/ "new block being allocated, with all pre-existing data being copied inside.\n"
+             "In all cases, a pointer to the new heap block is returned, which may be "
+             /**/ "identical to the old block\n"
+             "If a NULL-pointer is passed for @ptr, the function behaves the same as "
+             /**/ "a call to ?Gmalloc with the given @{size}. Alternatively, if a valid heap "
+             /**/ "pointer is passed for @ptr, and @size is passed as ${0}, the heap block is "
+             /**/ "truncated to a minimal size and a heap block is returned that is semantically "
+             /**/ "equivalent to one returned by ${malloc(0)}\n"
+             "In the event of failure, the pre-existing heap-block passed for @ptr will remain unchanged"),
+DEX_MEMBER_F("free", &c_malloc_free, MODSYM_FREADONLY,
+             "(ptr:?Aptr?Gvoid)\n"
+             "Release a previously allocated heap-block returned by one of ?Gmalloc, ?Gcalloc or ?Grealloc\n"
+             "If a NULL-pointer is passed for @ptr, this function has no effect and returns immediately"),
+DEX_MEMBER_F("trymalloc", &c_malloc_trymalloc, MODSYM_FREADONLY,
+             "(size:?Dint)->?Aptr?Gvoid\n"
+             "Same as ?Gmalloc, but return a NULL-pointer if allocation isn't "
+             /**/ "possible due to lack of memory, rather than throwing a :NoMemory error"),
+DEX_MEMBER_F("trycalloc", &c_malloc_trycalloc, MODSYM_FREADONLY,
+             "(size:?Dint)->?Aptr?Gvoid\n"
+             "(count:?Dint,size:?Dint)->?Aptr?Gvoid\n"
+             "Same as ?Gcalloc, but return a NULL-pointer if allocation isn't "
+             /**/ "possible due to lack of memory, rather than throwing a :NoMemory error"),
+DEX_MEMBER_F("tryrealloc", &c_malloc_tryrealloc, MODSYM_FREADONLY,
+             "(ptr:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
+             "Same as ?Grealloc, but return a NULL-pointer if allocation isn't "
+             /**/ "possible due to lack of memory, rather than throwing a :NoMemory error\n"
+             "In this event, the pre-existing heap-block passed for @ptr is not freed"),
+DEX_MEMBER_F("strdup", &c_malloc_strdup, MODSYM_FREADONLY,
+             "(str:?Aptr?Gchar,maxlen:?Dint=!A!Pmax!Gsize_t)->?Aptr?Gchar\n"
+             "#tNoMemory{Insufficient memory}"
+             "Duplicate the given @str into a heap-allocated memory block\n"
+             "${"
+             /**/ "function strndup(str: char.ptr, maxlen?: int): char.ptr {\n"
+             /**/ "	if (maxlen !is bound)\n"
+             /**/ "		maxlen = size_t.max;\n"
+             /**/ "	local len = strnlen(str, maxlen) * sizeof(char);\n"
+             /**/ "	local res = (char.ptr)memcpy(malloc(len + sizeof(char)), str, len);\n"
+             /**/ "	res[len] = 0;\n"
+             /**/ "	return res;\n"
+             /**/ "}"
+             "}"),
+DEX_MEMBER_F("trystrdup", &c_malloc_trystrdup, MODSYM_FREADONLY,
+             "(str:?Aptr?Gchar,maxlen:?Dint=!A!Pmax!Gsize_t)->?Aptr?Gchar\n"
+             "Try to duplicate the given @str into a heap-allocated memory block\n"
+             "${"
+             /**/ "function trystrndup(str: char.ptr, maxlen?: int): char.ptr {\n"
+             /**/ "	if (maxlen !is bound)\n"
+             /**/ "		maxlen = size_t.max;\n"
+             /**/ "	local len = strnlen(str, maxlen) * sizeof(char);\n"
+             /**/ "	local res = (char.ptr)trymalloc(len + sizeof(char));\n"
+             /**/ "	if (res) {\n"
+             /**/ "		memcpy(res, str, len);\n"
+             /**/ "		res[len] = 0;\n"
+             /**/ "	}\n"
+             /**/ "	return res;\n"
+             /**/ "}"
+             "}"),
+
+DEX_MEMBER_F("memcpy", &c_string_memcpy, MODSYM_FREADONLY,
+             "(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint,count=!1)->?Aptr?Gvoid\n"
+             "#r{Always re-returns @dst as a ?Aptr?Gvoid}"
+             "Copies @size * @count bytes of memory from @src to @dst\n"
+             "Note that the source and destination ranges may not overlap"),
+DEX_MEMBER_F("mempcpy", &c_string_mempcpy, MODSYM_FREADONLY,
+             "(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint,count=!1)->?Aptr?Gvoid\n"
+             "#r{Always re-returns ${dst + size * count} as a ?Aptr?Gvoid}"
+             "Same as ?Gmemcpy, but returns ${dst + size * count}"),
+DEX_MEMBER_F("memccpy", &c_string_memccpy, MODSYM_FREADONLY,
+             "(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,needle:?Dint,size:?Dint)->?Aptr?Gvoid\n"
+             "#r{The last modified by in @dst}"
+             "Same as ?Gmemcpy, but stop after a byte equal to @needle is encountered in @src"),
+DEX_MEMBER_F("memset", &c_string_memset, MODSYM_FREADONLY,
+             "(dst:?Aptr?Gvoid,byte:?Dint,size:?Dint)->?Aptr?Gvoid\n"
+             "#r{Always re-returns @dst as a ?Aptr?Gvoid}"
+             "Set every byte in the range @dst+@size to equal @byte"),
+DEX_MEMBER_F("mempset", &c_string_mempset, MODSYM_FREADONLY,
+             "(dst:?Aptr?Gvoid,byte:?Dint,size:?Dint)->?Aptr?Gvoid\n"
+             "#r{Always re-returns ${dst + size} as a ?Aptr?Gvoid}"
+             "Same as ?Gmemset, but returns ${dst + size}"),
+DEX_MEMBER_F("bzero", &c_string_bzero, MODSYM_FREADONLY,
+             "(dst:?Aptr?Gvoid,size:?Dint)\n"
+             "(dst:?Aptr?Gvoid,count:?Dint,size:?Dint)\n"
+             "Same as ?Gmemset, but always fills memory with ${0}s"),
+DEX_MEMBER_F("memmove", &c_string_memmove, MODSYM_FREADONLY,
+             "(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
+             "#r{Always re-returns @dst as a ?Aptr?Gvoid}"
+             "Same as ?Gmemcpy, but the source and destination ranges are allowed to overlap"),
+DEX_MEMBER_F("mempmove", &c_string_mempmove, MODSYM_FREADONLY,
+             "(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
+             "#r{Always re-returns ${dst + size} as a ?Aptr?Gvoid}"
+             "Same as ?Gmemcpy, but returns ${dst + size}"),
+DEX_MEMBER_F("memchr", &c_string_memchr, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
+             "Return a pointer to the first byte in the specified @haystack+@haystack_size "
+             /**/ "that equals @needle, or return a NULL-pointer if not found"),
+DEX_MEMBER_F("memrchr", &c_string_memrchr, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
+             "Same as :memchr, but if @needle appears multiple times, return a pointer to the last instance"),
+DEX_MEMBER_F("memlen", &c_string_memlen, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Dint\n"
+             "Return the offset from @haystack of the first byte equal to @needle, or @haystack_size if now found"),
+DEX_MEMBER_F("memrlen", &c_string_memrlen, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Dint\n"
+             "Same as :memlen, but if @needle appears multiple times, return the offset of the last instance"),
+DEX_MEMBER_F("memend", &c_string_memend, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
+             "Return a pointer to the first byte in @haystack that is equal to @needle, or @haystack+@haystack_size if now found"),
+DEX_MEMBER_F("memrend", &c_string_memrend, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
+             "Same as ?Gmemend, but if @needle appears multiple times, return a pointer to the last instance\n"
+             "If @needle doesn't appear at all, return a pointer to @haystack"),
+DEX_MEMBER_F("rawmemchr", &c_string_rawmemchr, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint)->?Aptr?Gvoid\n"
+             "Search for the byte equal to @needle, starting at @haystack and only "
+             /**/ "stopping once one is found, or unmapped memory is reached and "
+             /**/ "the host provides support for a MMU"),
+DEX_MEMBER_F("rawmemlen", &c_string_rawmemlen, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
+             "Same as ?Grawmemchr, but return the offset from @haystack"),
+DEX_MEMBER_F("rawmemrchr", &c_string_rawmemrchr, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint)->?Aptr?Gvoid\n"
+             "Same as :rawmemchr, but search in reverse, starting with ${haystack[-1]}\n"
+             "You can think of this function as a variant of ?Gmemrend that operates "
+             /**/ "on a buffer that spans the entirety of the available address space"),
+DEX_MEMBER_F("rawmemrlen", &c_string_rawmemrlen, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
+             "Same as ?Grawmemrchr, but return the positive (unsigned) offset of the "
+             /**/ "matching byte, such that ${haystack + return} points to the byte in question"),
+DEX_MEMBER_F("memxchr", &c_string_memxchr, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
+             "Same as ?Gmemchr, but instead of comparing bytes for being equal, compare them for being different"),
+DEX_MEMBER_F("memxlen", &c_string_memxlen, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Dint\n"
+             "Same as ?Gmemlen, but instead of comparing bytes for being equal, compare them for being different"),
+DEX_MEMBER_F("memxend", &c_string_memxend, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
+             "Same as ?Gmemend, but instead of comparing bytes for being equal, compare them for being different"),
+DEX_MEMBER_F("memrxchr", &c_string_memrxchr, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
+             "Same as ?Gmemrchr, but instead of comparing bytes for being equal, compare them for being different"),
+DEX_MEMBER_F("memrxlen", &c_string_memrxlen, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Dint\n"
+             "Same as ?Gmemrlen, but instead of comparing bytes for being equal, compare them for being different"),
+DEX_MEMBER_F("memrxend", &c_string_memrxend, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
+             "Same as ?Gmemrend, but instead of comparing bytes for being equal, compare them for being different"),
+DEX_MEMBER_F("rawmemxchr", &c_string_rawmemxchr, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint)->?Aptr?Gvoid\n"
+             "Same as ?Grawmemchr, but instead of comparing bytes for being equal, compare them for being different"),
+DEX_MEMBER_F("rawmemxlen", &c_string_rawmemxlen, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
+             "Same as ?Grawmemlen, but instead of comparing bytes for being equal, compare them for being different"),
+DEX_MEMBER_F("rawmemrxchr", &c_string_rawmemrxchr, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint)->?Aptr?Gvoid\n"
+             "Same as ?Grawmemrchr, but instead of comparing bytes for being equal, compare them for being different"),
+DEX_MEMBER_F("rawmemrxlen", &c_string_rawmemrxlen, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
+             "Same as ?Grawmemrlen, but instead of comparing bytes for being equal, compare them for being different"),
+DEX_MEMBER_F("bcmp", &c_string_bcmp, MODSYM_FREADONLY,
+             "(a:?Aptr?Gvoid,b:?Aptr?Gvoid,size:?Dint)->?Dint\n"
+             "Same as ?Gmemcmp, but only returns $0 when buffer are equal, and non-$0 otherwise"),
+DEX_MEMBER_F("memcmp", &c_string_memcmp, MODSYM_FREADONLY,
+             "(lhs:?Aptr?Gvoid,rhs:?Aptr?Gvoid,size:?Dint)->?Dint\n"
+             "Compare bytes from 2 buffers in @lhs and @rhs of equal @size, and "
+             /**/ "search for the first non-matching byte, returning ${< 0} if that byte "
+             /**/ "in @lhs is smaller than its counterpart in @rhs, ${> 0} if the opposite "
+             /**/ "is true, and ${== 0} no such byte exists"),
+DEX_MEMBER_F("memcasecmp", &c_string_memcasecmp, MODSYM_FREADONLY,
+             "(lhs:?Aptr?Gvoid,rhs:?Aptr?Gvoid,size:?Dint)->?Dint\n"
+             "Same as ?Gmemcmp, but bytes are casted as ASCII characters "
+             /**/ "into a common casing prior to comparison"),
+DEX_MEMBER_F("memmem", &c_string_memmem, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
+             "Search for the first memory block in @haystack+@haystack_size that is equal to @needle+@needle_size "
+             /**/ "such that ${memcmp(candidate, needle, needle_size) == 0} and return a pointer to its starting "
+             /**/ "location in @haystack\n"
+             "If no such memory block exists, or @needle_size is $0, return a NULL-pointer instead"),
+DEX_MEMBER_F("memcasemem", &c_string_memcasemem, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
+             "Same as ?Gmemmem, but perform case-insensitive comparisons, using ?Gmemcasecmp instead of ?Gmemcmp"),
+DEX_MEMBER_F("memrmem", &c_string_memrmem, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
+             "Same as ?Gmemmem, but in case more than 1 match exists, return a pointer to the last, rather than the first\n"
+             "When @needle_size is $0, always return a NULL-pointer"),
+DEX_MEMBER_F("memcasermem", &c_string_memcasermem, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
+             "Same as ?Gmemcasemem, but in case more than 1 match exists, return a pointer to the last, rather than the first\n"
+             "When @needle_size is $0, always return a NULL-pointer"),
+DEX_MEMBER_F("memrev", &c_string_memrev, MODSYM_FREADONLY,
+             "(buf:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
+             "Reverse the order of bytes in the given @buf+@size, such that upon return its first "
+             /**/ "byte contains the old value of the last byte, and the last byte the value of the first, "
+             /**/ "and so on."),
+DEX_MEMBER_F("memfrob", &c_string_memfrob, MODSYM_FREADONLY,
+             "(buf:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
+             "xor all bytes within @buf with $42, implementing _very_ simplistic encryption"),
+
+DEX_MEMBER_F("strlen", &c_string_strlen, MODSYM_FREADONLY,
+             "(str:?Aptr?Gchar)->?Dint\n"
+             "Returns the length of a given @str in characters"),
+DEX_MEMBER_F("strend", &c_string_strend, MODSYM_FREADONLY,
+             "(str:?Aptr?Gchar)->?Aptr?Gchar\n"
+             "Return a pointer to the end of a given @str"),
+DEX_MEMBER_F("strnlen", &c_string_strnlen, MODSYM_FREADONLY,
+             "(str:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
+             "Same as ?Gstrlen, but limit the max number of scanned characters to @maxlen"),
+DEX_MEMBER_F("strnend", &c_string_strnend, MODSYM_FREADONLY,
+             "(str:?Aptr?Gchar,maxlen:?Dint)->?Aptr?Gchar\n"
+             "Same as ?Gstrend, but limit the max number of scanned characters to @maxlen"),
+DEX_MEMBER_F("strchr", &c_string_strchr, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
+             "Search for the first character equal to @needle within @haystack\n"
+             "If no such character exists, return a NULL-pointer instead"),
+DEX_MEMBER_F("strrchr", &c_string_strrchr, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
+             "Search for the last character equal to @needle within @haystack\n"
+             "If no such character exists, return a NULL-pointer instead"),
+DEX_MEMBER_F("strnchr", &c_string_strnchr, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
+             "Same as ?Gstrchr, but limit the max number of scanned characters to @maxlen"),
+DEX_MEMBER_F("strnrchr", &c_string_strnrchr, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
+             "Same as ?Gstrrchr, but limit the max number of scanned characters to @maxlen"),
+DEX_MEMBER_F("stroff", &c_string_stroff, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,needle:?Dint)->?Dint\n"
+             "Same ?Gstrchr, but return the offset of the found character from @haystack, "
+             /**/ "or ${strlen(haystack)} if @needle wasn't found"),
+DEX_MEMBER_F("strroff", &c_string_strroff, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,needle:?Dint)->?Dint\n"
+             "Same ?Gstrrchr, but return the offset of the found character from @haystack, "
+             /**/ "or ${size_t.max} if @needle wasn't found"),
+DEX_MEMBER_F("strnoff", &c_string_strnoff, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Dint\n"
+             "Same ?Gstrnchr, but return the offset of the found character from @haystack, "
+             /**/ "or ${strnlen(haystack, maxlen)} if @needle wasn't found"),
+DEX_MEMBER_F("strnroff", &c_string_strnroff, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Dint\n"
+             "Same ?Gstrnrchr, but return the offset of the found character from @haystack, "
+             /**/ "or ${size_t.max} if @needle wasn't found"),
+DEX_MEMBER_F("strchrnul", &c_string_strchrnul, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
+             "Same as ?Gstrchr, but return ${strend(haystack)} if @needle wasn't found"),
+DEX_MEMBER_F("strrchrnul", &c_string_strrchrnul, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
+             "Same as ?Gstrrchr, but return ${haystack - 1} if @needle wasn't found"),
+DEX_MEMBER_F("strnchrnul", &c_string_strnchrnul, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
+             "Same as ?Gstrnchr, but return ${strnend(haystack, maxlen)} if @needle wasn't found"),
+DEX_MEMBER_F("strnrchrnul", &c_string_strnrchrnul, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
+             "Same as ?Gstrnrchr, but return ${haystack - 1} if @needle wasn't found"),
+DEX_MEMBER_F("strcmp", &c_string_strcmp, MODSYM_FREADONLY,
+             "(lhs:?Aptr?Gchar,rhs:?Aptr?Gchar)->?Dint\n"
+             "Compare the given strings @lhs and @rhs, returning ${<0}, "
+             "${==0} or ${>0} indicative of their relation to one-another"),
+DEX_MEMBER_F("strncmp", &c_string_strncmp, MODSYM_FREADONLY,
+             "(lhs:?Aptr?Gchar,rhs:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
+             "Same as ?Gstrcmp, but limit the max number of compared characters to @maxlen"),
+DEX_MEMBER_F("strcasecmp", &c_string_strcasecmp, MODSYM_FREADONLY,
+             "(lhs:?Aptr?Gchar,rhs:?Aptr?Gchar)->?Dint\n"
+             "Same as ?Gstrcmp, but ignore casing"),
+DEX_MEMBER_F("strncasecmp", &c_string_strncasecmp, MODSYM_FREADONLY,
+             "(lhs:?Aptr?Gchar,rhs:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
+             "Same as ?Gstrncmp, but ignore casing"),
+DEX_MEMBER_F("strcpy", &c_string_strcpy, MODSYM_FREADONLY,
+             "(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
+             "Same as ${(char.ptr)memcpy(dst, src, (strlen(src) + 1) * sizeof(char))}"),
+DEX_MEMBER_F("strcat", &c_string_strcat, MODSYM_FREADONLY,
+             "(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
+             "Same as ${({ local r = dst; strcpy(strend(dst), src); (char.ptr)r; })}"),
+DEX_MEMBER_F("strncpy", &c_string_strncpy, MODSYM_FREADONLY,
+             "(dst:?Aptr?Gchar,src:?Aptr?Gchar,count:?Dint)->?Aptr?Gchar\n"
+             "Implemented as:\n"
+             "${"
+             /**/ "function strncpy(dst: char.ptr, src: char.ptr, count: int): char.ptr {\n"
+             /**/ "	local srclen = strnlen(src, count);\n"
+             /**/ "	memcpy(dst, src, srclen * sizeof(char));\n"
+             /**/ "	memset(dst + strlen, 0, (count - srclen) * sizeof(char));\n"
+             /**/ "	return dst;\n"
+             /**/ "}"
+             "}"),
+DEX_MEMBER_F("strncat", &c_string_strncat, MODSYM_FREADONLY,
+             "(dst:?Aptr?Gchar,src:?Aptr?Gchar,count:?Dint)->?Aptr?Gchar\n"
+             "Implemented as:\n"
+             "${"
+             /**/ "function strncat(dst: char.ptr, src: char.ptr, count: int): char.ptr {\n"
+             /**/ "	local srclen = strnlen(src, count);\n"
+             /**/ "	local buf = strend(dst);\n"
+             /**/ "	memcpy(buf, src, srclen * sizeof(char));\n"
+             /**/ "	buf[srclen] = 0;\n"
+             /**/ "	return dst;\n"
+             /**/ "}"
+             "}"),
+DEX_MEMBER_F("stpcpy", &c_string_stpcpy, MODSYM_FREADONLY,
+             "(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
+             "Same as ${(char.ptr)mempcpy(dst, src, (strlen(src) + 1) * sizeof(char)) - 1}"),
+DEX_MEMBER_F("stpncpy", &c_string_stpncpy, MODSYM_FREADONLY,
+             "(dst:?Aptr?Gchar,src:?Aptr?Gchar,dstsize:?Dint)->?Aptr?Gchar\n"
+             "Implemented as:\n"
+             "${"
+             /**/ "function stpncpy(dst: char.ptr, src: char.ptr, dstsize: int): char.ptr {\n"
+             /**/ "	local srclen = strnlen(src, dstsize);\n"
+             /**/ "	memcpy(dst, src, srclen * sizeof(char));\n"
+             /**/ "	memset(dst + srclen, 0, (dstsize - srclen) * sizeof(char));\n"
+             /**/ "	return dst + srclen;\n"
+             /**/ "}"
+             "}"),
+DEX_MEMBER_F("strstr", &c_string_strstr, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,needle:?Aptr?Gchar)->?Aptr?Gchar\n"
+             "Find the first instance of @needle contained within @haystack, or return a NULL-pointer if none exists"),
+DEX_MEMBER_F("strcasestr", &c_string_strcasestr, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,needle:?Aptr?Gchar)->?Aptr?Gchar\n"
+             "Same as ?Gstrstr, but ignore casing"),
+DEX_MEMBER_F("strnstr", &c_string_strnstr, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,needle:?Aptr?Gchar,haystack_maxlen:?Dint)->?Aptr?Gchar\n"
+             "Find the first instance of @needle contained within @haystack, or return a NULL-pointer if none exists"),
+DEX_MEMBER_F("strncasestr", &c_string_strncasestr, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,needle:?Aptr?Gchar,haystack_maxlen:?Dint)->?Aptr?Gchar\n"
+             "Same as ?Gstrnstr, but ignore casing"),
+DEX_MEMBER_F("strverscmp", &c_string_strverscmp, MODSYM_FREADONLY,
+             "(a:?Aptr?Gchar,b:?Aptr?Gchar)->?Dint\n"
+             "Same as ?Gstrcmp, but do special handling for version strings (s.a. ?Avercompare?Dstring)"),
+DEX_MEMBER_F("index", &c_string_strchr, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
+             "Alias for ?Gstrchr"),
+DEX_MEMBER_F("rindex", &c_string_strrchr, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
+             "Alias for ?Gstrrchr"),
+DEX_MEMBER_F("strspn", &c_string_strspn, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,accept:?Aptr?Gchar)->?Dint\n"
+             "Returns the offset to the first character in @str that is also "
+             "apart of @accept, or ${strlen(str)} when no such character exists"),
+DEX_MEMBER_F("strcspn", &c_string_strcspn, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,reject:?Aptr?Gchar)->?Dint\n"
+             "Returns the offset to the first character in @str that isn't "
+             "apart of @accept, or ${strlen(str)} when no such character exists"),
+DEX_MEMBER_F("strpbrk", &c_string_strpbrk, MODSYM_FREADONLY,
+             "(haystack:?Aptr?Gchar,accept:?Aptr?Gchar)->?Aptr?Gchar\n"
+             "Return a pointer to the first character in @str, that is also apart of @accept\n"
+             "If no such character exists, a NULL-pointer is returned"),
+DEX_MEMBER_F("strrev", &c_string_strrev, MODSYM_FREADONLY,
+             "(str:?Aptr?Gchar)->?Aptr?Gchar\n"
+             "Reverse the order of characters in @str and re-return the given @str"),
+DEX_MEMBER_F("strnrev", &c_string_strnrev, MODSYM_FREADONLY,
+             "(str:?Aptr?Gchar,maxlen:?Dint)->?Aptr?Gchar\n"
+             "Reverse the order of up to @maxlen characters in @str and re-return the given @str"),
+DEX_MEMBER_F("strlwr", &c_string_strlwr, MODSYM_FREADONLY,
+             "(str:?Aptr?Gchar)->?Aptr?Gchar\n"
+             "Convert all characters in @str to lower-case and re-return the given @str"),
+DEX_MEMBER_F("strupr", &c_string_strupr, MODSYM_FREADONLY,
+             "(str:?Aptr?Gchar)->?Aptr?Gchar\n"
+             "Convert all characters in @str to upper-case and re-return the given @str"),
+DEX_MEMBER_F("strnlwr", &c_string_strnlwr, MODSYM_FREADONLY,
+             "(str:?Aptr?Gchar,maxlen:?Dint)->?Aptr?Gchar\n"
+             "Convert all characters in @str to lower-case and re-return the given @str"),
+DEX_MEMBER_F("strnupr", &c_string_strnupr, MODSYM_FREADONLY,
+             "(str:?Aptr?Gchar,maxlen:?Dint)->?Aptr?Gchar\n"
+             "Convert all characters in @str to upper-case and re-return the given @str"),
+DEX_MEMBER_F("strset", &c_string_strset, MODSYM_FREADONLY,
+             "(str:?Aptr?Gchar,chr:?Dint)->?Aptr?Gchar\n"
+             "Set all characters in @str to @chr and re-return the given @str"),
+DEX_MEMBER_F("strnset", &c_string_strnset, MODSYM_FREADONLY,
+             "(str:?Aptr?Gchar,chr:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
+             "Same as ?Gstrset, but limit the operator to up to @maxlen characters"),
+DEX_MEMBER_F("strfry", &c_string_strfry, MODSYM_FREADONLY,
+             "(str:?Aptr?Gchar)->?Aptr?Gchar\n"
+             "Randomly shuffle the order of characters in @str, creating an anagram"),
+DEX_MEMBER_F("strsep", &c_string_strsep, MODSYM_FREADONLY,
+             "(stringp:?Aptr?Aptr?Gchar,delim:?Aptr?Gchar)->?Aptr?Gchar"),
+DEX_MEMBER_F("stresep", &c_string_stresep, MODSYM_FREADONLY,
+             "(stringp:?Aptr?Aptr?Gchar,delim:?Aptr?Gchar,escape:?Dint)->?Aptr?Gchar"),
+DEX_MEMBER_F("strtok", &c_string_strtok, MODSYM_FREADONLY,
+             "(str:?Aptr?Gchar,delim:?Aptr?Gchar)->?Aptr?Gchar\n"
+             "Split @str at each occurrence of @delim and return the resulting strings individually"),
+DEX_MEMBER_F("strtok_r", &c_string_strtok_r, MODSYM_FREADONLY,
+             "(str:?Aptr?Gchar,delim:?Aptr?Gchar,save_ptr:?Aptr?Aptr?Gchar)->?Aptr?Gchar"),
+DEX_MEMBER_F("basename", &c_string_basename, MODSYM_FREADONLY,
+             "(filename:?Aptr?Gchar)->?Aptr?Gchar"),
+
+/* Atomic functions */
+DEX_MEMBER_F("atomic_cmpxch", &c_atomic_atomic_cmpxch, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,oldval:?Q!A!Aptr!Pind],newval:?Q!A!Aptr!Pind],weak=!f)->?Dbool\n"
+             "Do an atomic compare-and-exchange of memory at @ptr from @oldval to @newval\n"
+             /**/ "When @weak is true, the operation is allowed to fail sporadically, even when "
+             /**/ "memory at @ptr and @oldval are identical\n"
+             "This is a type-generic operation, with the address-width of the atomic operation "
+             /**/ "depending on the typing of @ptr. Supported widths are $1, $2, $4 and $8 bytes"),
+DEX_MEMBER_F("atomic_cmpxch_val", &c_atomic_atomic_cmpxch_val, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,oldval:?Q!A!Aptr!Pind],newval:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "Same as ?Gatomic_cmpxch, except that rather than returning ?t or ?f indicative of "
+             /**/ "the success of the exchange, the #Ireal old value read from @ptr is returned. If "
+             /**/ "this is equal to @oldval, the operation was successful. If not, memory pointed-to "
+             /**/ "by @ptr remains unchanged"),
+DEX_MEMBER_F("atomic_fetchadd", &c_atomic_atomic_fetchadd, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind += addend; r; })}"),
+DEX_MEMBER_F("atomic_fetchsub", &c_atomic_atomic_fetchsub, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind -= addend; r; })}"),
+DEX_MEMBER_F("atomic_fetchand", &c_atomic_atomic_fetchand, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind &= mask; r; })}"),
+DEX_MEMBER_F("atomic_fetchor", &c_atomic_atomic_fetchor, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind |= mask; r; })}"),
+DEX_MEMBER_F("atomic_fetchxor", &c_atomic_atomic_fetchxor, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind ^= mask; r; })}"),
+DEX_MEMBER_F("atomic_fetchnand", &c_atomic_atomic_fetchnand, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind = ~(ptr.ind & mask); r; })}"),
+DEX_MEMBER_F("atomic_addfetch", &c_atomic_atomic_addfetch, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "Atomic operation for ${({ ptr.ind += addend; copy ptr.ind; })}"),
+DEX_MEMBER_F("atomic_subfetch", &c_atomic_atomic_subfetch, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "Atomic operation for ${({ ptr.ind -= addend; copy ptr.ind; })}"),
+DEX_MEMBER_F("atomic_andfetch", &c_atomic_atomic_andfetch, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "Atomic operation for ${({ ptr.ind &= mask; copy ptr.ind; })}"),
+DEX_MEMBER_F("atomic_orfetch", &c_atomic_atomic_orfetch, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "Atomic operation for ${({ ptr.ind |= mask; copy ptr.ind; })}"),
+DEX_MEMBER_F("atomic_xorfetch", &c_atomic_atomic_xorfetch, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "Atomic operation for ${({ ptr.ind ^= mask; copy ptr.ind; })}"),
+DEX_MEMBER_F("atomic_nandfetch", &c_atomic_atomic_nandfetch, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "Atomic operation for ${({ ptr.ind = ~(ptr.ind & mask); copy ptr.ind; })}"),
+DEX_MEMBER_F("atomic_add", &c_atomic_atomic_add, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])\n"
+             "Atomic operation for ${ptr.ind += addend}"),
+DEX_MEMBER_F("atomic_sub", &c_atomic_atomic_sub, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])\n"
+             "Atomic operation for ${ptr.ind -= addend}"),
+DEX_MEMBER_F("atomic_and", &c_atomic_atomic_and, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
+             "Atomic operation for ${ptr.ind &= mask}"),
+DEX_MEMBER_F("atomic_or", &c_atomic_atomic_or, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
+             "Atomic operation for ${ptr.ind |= mask}"),
+DEX_MEMBER_F("atomic_xor", &c_atomic_atomic_xor, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
+             "Atomic operation for ${ptr.ind ^= mask}"),
+DEX_MEMBER_F("atomic_nand", &c_atomic_atomic_nand, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
+             "Atomic operation for ${ptr.ind = ~(ptr.ind & mask)}"),
+DEX_MEMBER_F("atomic_write", &c_atomic_atomic_write, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,value:?Q!A!Aptr!Pind])\n"
+             "Atomic operation for ${ptr.ind = value}"),
+DEX_MEMBER_F("atomic_fetchinc", &c_atomic_atomic_fetchinc, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
+             "Atomic operation for ${ptr.ind++}"),
+DEX_MEMBER_F("atomic_fetchdec", &c_atomic_atomic_fetchdec, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
+             "Atomic operation for ${ptr.ind--}"),
+DEX_MEMBER_F("atomic_incfetch", &c_atomic_atomic_incfetch, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
+             "Atomic operation for ${++ptr.ind}"),
+DEX_MEMBER_F("atomic_decfetch", &c_atomic_atomic_decfetch, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
+             "Atomic operation for ${--ptr.ind}"),
+DEX_MEMBER_F("atomic_read", &c_atomic_atomic_read, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
+             "Atomic operation for ${copy ptr.ind}"),
+DEX_MEMBER_F("atomic_inc", &c_atomic_atomic_inc, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured)\n"
+             "Atomic operation for ${++ptr.ind}"),
+DEX_MEMBER_F("atomic_dec", &c_atomic_atomic_dec, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured)\n"
+             "Atomic operation for ${--ptr.ind}"),
+
+/* Futex functions */
+DEX_MEMBER_F("futex_wakeone", &c_atomic_futex_wakeone, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured)\n"
+             "Wake at most 1 thread that is waiting for @ptr to change (s.a. ?Gfutex_wait)"),
+DEX_MEMBER_F("futex_wakeall", &c_atomic_futex_wakeall, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured)\n"
+             "Wake all threads that are waiting for @ptr to change (s.a. ?Gfutex_wait)"),
+DEX_MEMBER_F("futex_wait", &c_atomic_futex_wait, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,expected:?Q!A!Aptr!Pind])\n"
+             "Atomically check if ${ptr.ind == expected}. If this isn't the case, return immediately. "
+             /**/ "Otherwise, wait until another thread makes a call to ?Gfutex_wakeone or ?Gfutex_wakeall, "
+             /**/ "or until the #I{stars align} (by which I mean that this function might also return sporadically)\n"
+             "This function can be used to form the basis of any other synchronization "
+             /**/ "primitive (mutex, semaphore, condition-variable, events, #Ianything)"),
+DEX_MEMBER_F("futex_timedwait", &c_atomic_futex_timedwait, MODSYM_FREADONLY,
+             "(ptr:?Aptr?GStructured,expected:?Q!A!Aptr!Pind],timeout_nanoseconds:?Dint)->?Dbool\n"
+             "#r{true You were woken up, either sporadically, because the value of ${ptr.ind} differs "
+             /*   */ "from @expected, or because another thread called ?Gfutex_wakeone or ?Gfutex_wakeall}"
+             "#r{false The given @timeout_nanoseconds has expired}"
+             "Atomically check if ${ptr.ind == expected}. If this isn't the case, immediately return ?t. "
+             /**/ "Otherwise, wait until either @timeout_nanoseconds have elapsed, or another thread "
+             /**/ "makes a call to ?Gfutex_wakeone or ?Gfutex_wakeall, or until the #I{stars align} "
+             /**/ "(by which I mean that this function might also return sporadically)\n"
+             "This function can be used to form the basis of any other synchronization "
+             /**/ "primitive (mutex, semaphore, condition-variable, events, #Ianything)"),
+
+/* clang-format off */
+DEX_END(
+	/* init:  */ NULL,
+	/* fini:  */ PTR_libctypes_fini,
+	/* clear: */ &libctypes_clear
+);
 
 DECL_END
 

@@ -44,291 +44,269 @@
 DECL_BEGIN
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_getafname_f(size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getafname", params: "int af");]]]*/
-	struct {
-		int af;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "getafname", &args.af, "d", DeeObject_AsInt);
-/*[[[end]]]*/
-	return sock_getafnameorid(args.af);
+/*[[[deemon (print_CMethod from rt.gen.unpack)("getafname", "int af", isconst: true);]]]*/
+#define libnet_getafname_params "af:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_getafname_f_impl(int af);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libnet_getafname_f(DeeObject *__restrict arg0) {
+	int af;
+	if (DeeObject_AsInt(arg0, &af))
+		goto err;
+	return libnet_getafname_f_impl(af);
 err:
 	return NULL;
 }
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_getafof_f(size_t argc, DeeObject *const *argv) {
-	int result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getafof", params: "DeeObject *af");]]]*/
-	struct {
-		DeeObject *af;
-	} args;
-	DeeArg_Unpack1(err, argc, argv, "getafof", &args.af);
+PRIVATE DEFINE_CMETHOD1(libnet_getafname, &libnet_getafname_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_getafname_f_impl(int af)
 /*[[[end]]]*/
-	if unlikely(sock_getafof(args.af, &result))
+{
+	return sock_getafnameorid(af);
+}
+
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("getafof", "DeeObject *af:?X3?Dstring?Dint?N", isconst: true);]]]*/
+#define libnet_getafof_params "af:?X3?Dstring?Dint?N"
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libnet_getafof_f_impl(DeeObject *af);
+PRIVATE DEFINE_CMETHOD1(libnet_getafof, &libnet_getafof_f_impl, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libnet_getafof_f_impl(DeeObject *af)
+/*[[[end]]]*/
+{
+	int result;
+	if unlikely(sock_getafof(af, &result))
 		goto err;
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_gettypename_f(size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("gettypename", params: "int typ");]]]*/
-	struct {
-		int typ;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "gettypename", &args.typ, "d", DeeObject_AsInt);
-/*[[[end]]]*/
-	return sock_gettypenameorid(args.typ);
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("gettypename", "int typ", isconst: true);]]]*/
+#define libnet_gettypename_params "typ:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_gettypename_f_impl(int typ);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libnet_gettypename_f(DeeObject *__restrict arg0) {
+	int typ;
+	if (DeeObject_AsInt(arg0, &typ))
+		goto err;
+	return libnet_gettypename_f_impl(typ);
 err:
 	return NULL;
 }
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_gettypeof_f(size_t argc, DeeObject *const *argv) {
-	int result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("gettypeof", params: "DeeObject *typ");]]]*/
-	struct {
-		DeeObject *typ;
-	} args;
-	DeeArg_Unpack1(err, argc, argv, "gettypeof", &args.typ);
+PRIVATE DEFINE_CMETHOD1(libnet_gettypename, &libnet_gettypename_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_gettypename_f_impl(int typ)
 /*[[[end]]]*/
-	if unlikely(sock_gettypeof(args.typ, &result))
+{
+	return sock_gettypenameorid(typ);
+}
+
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("gettypeof", "DeeObject *typ:?X3?Dstring?Dint?N", isconst: true);]]]*/
+#define libnet_gettypeof_params "typ:?X3?Dstring?Dint?N"
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libnet_gettypeof_f_impl(DeeObject *typ);
+PRIVATE DEFINE_CMETHOD1(libnet_gettypeof, &libnet_gettypeof_f_impl, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libnet_gettypeof_f_impl(DeeObject *typ)
+/*[[[end]]]*/
+{
+	int result;
+	if unlikely(sock_gettypeof(typ, &result))
 		goto err;
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_getprotoname_f(size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getprotoname", params: "int proto");]]]*/
-	struct {
-		int proto;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "getprotoname", &args.proto, "d", DeeObject_AsInt);
-/*[[[end]]]*/
-	return sock_getprotonameorid(args.proto);
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("getprotoname", "int proto", isconst: true);]]]*/
+#define libnet_getprotoname_params "proto:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_getprotoname_f_impl(int proto);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libnet_getprotoname_f(DeeObject *__restrict arg0) {
+	int proto;
+	if (DeeObject_AsInt(arg0, &proto))
+		goto err;
+	return libnet_getprotoname_f_impl(proto);
 err:
 	return NULL;
 }
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_getprotoof_f(size_t argc, DeeObject *const *argv) {
-	int result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("gettypeof", params: "DeeObject *proto");]]]*/
-	struct {
-		DeeObject *proto;
-	} args;
-	DeeArg_Unpack1(err, argc, argv, "gettypeof", &args.proto);
+PRIVATE DEFINE_CMETHOD1(libnet_getprotoname, &libnet_getprotoname_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_getprotoname_f_impl(int proto)
 /*[[[end]]]*/
-	if (sock_getprotoof(args.proto, &result))
+{
+	return sock_getprotonameorid(proto);
+}
+
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("getprotoof", "DeeObject *proto:?X2?Dstring?Dint", isconst: true);]]]*/
+#define libnet_getprotoof_params "proto:?X2?Dstring?Dint"
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libnet_getprotoof_f_impl(DeeObject *proto);
+PRIVATE DEFINE_CMETHOD1(libnet_getprotoof, &libnet_getprotoof_f_impl, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libnet_getprotoof_f_impl(DeeObject *proto)
+/*[[[end]]]*/
+{
+	int result;
+	if unlikely(sock_getprotoof(proto, &result))
 		goto err;
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_getmsgflagsname_f(size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getmsgflagsname", params: "int msgflags");]]]*/
-	struct {
-		int msgflags;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "getmsgflagsname", &args.msgflags, "d", DeeObject_AsInt);
-/*[[[end]]]*/
-	return sock_getmsgflagsnameorid(args.msgflags);
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("getmsgflagsname", "int msgflags", isconst: true);]]]*/
+#define libnet_getmsgflagsname_params "msgflags:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_getmsgflagsname_f_impl(int msgflags);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libnet_getmsgflagsname_f(DeeObject *__restrict arg0) {
+	int msgflags;
+	if (DeeObject_AsInt(arg0, &msgflags))
+		goto err;
+	return libnet_getmsgflagsname_f_impl(msgflags);
 err:
 	return NULL;
 }
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_getmsgflagsof_f(size_t argc, DeeObject *const *argv) {
-	int result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getmsgflags", params: "DeeObject *msgflags");]]]*/
-	struct {
-		DeeObject *msgflags;
-	} args;
-	DeeArg_Unpack1(err, argc, argv, "getmsgflags", &args.msgflags);
+PRIVATE DEFINE_CMETHOD1(libnet_getmsgflagsname, &libnet_getmsgflagsname_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_getmsgflagsname_f_impl(int msgflags)
 /*[[[end]]]*/
-	if (sock_getmsgflagsof(args.msgflags, &result))
+{
+	return sock_getmsgflagsnameorid(msgflags);
+}
+
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("getmsgflagsof", "DeeObject *msgflags:?X2?Dstring?Dint", isconst: true);]]]*/
+#define libnet_getmsgflagsof_params "msgflags:?X2?Dstring?Dint"
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libnet_getmsgflagsof_f_impl(DeeObject *msgflags);
+PRIVATE DEFINE_CMETHOD1(libnet_getmsgflagsof, &libnet_getmsgflagsof_f_impl, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libnet_getmsgflagsof_f_impl(DeeObject *msgflags)
+/*[[[end]]]*/
+{
+	int result;
+	if unlikely(sock_getmsgflagsof(msgflags, &result))
 		goto err;
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
 }
 
-PRIVATE DEFINE_CMETHOD(lib_getafname, &lib_getafname_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(lib_getafof, &lib_getafof_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(lib_gettypename, &lib_gettypename_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(lib_gettypeof, &lib_gettypeof_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(lib_getprotoname, &lib_getprotoname_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(lib_getprotoof, &lib_getprotoof_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(lib_getmsgflagsname, &lib_getmsgflagsname_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(lib_getmsgflagsof, &lib_getmsgflagsof_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_ntoh16_f(size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ntoh16", params: "uint16_t x");]]]*/
-	struct {
-		uint16_t x;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "ntoh16", &args.x, UNPu16, DeeObject_AsUInt16);
-/*[[[end]]]*/
-	return DeeInt_NewUInt16((uint16_t)BETOH16(args.x));
+
+
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("ntoh16", "uint16_t x", isconst: true);]]]*/
+#define libnet_ntoh16_params "x:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_ntoh16_f_impl(uint16_t x);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libnet_ntoh16_f(DeeObject *__restrict arg0) {
+	uint16_t x;
+	if (DeeObject_AsUInt16(arg0, &x))
+		goto err;
+	return libnet_ntoh16_f_impl(x);
 err:
 	return NULL;
 }
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_ntoh32_f(size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ntoh32", params: "uint32_t x");]]]*/
-	struct {
-		uint32_t x;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "ntoh32", &args.x, UNPu32, DeeObject_AsUInt32);
+PRIVATE DEFINE_CMETHOD1(libnet_ntoh16, &libnet_ntoh16_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_ntoh16_f_impl(uint16_t x)
 /*[[[end]]]*/
-	return DeeInt_NewUInt32((uint32_t)BETOH32(args.x));
+{
+	return DeeInt_NewUInt16((uint16_t)BETOH16(x));
+}
+
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("ntoh32", "uint32_t x", isconst: true);]]]*/
+#define libnet_ntoh32_params "x:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_ntoh32_f_impl(uint32_t x);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libnet_ntoh32_f(DeeObject *__restrict arg0) {
+	uint32_t x;
+	if (DeeObject_AsUInt32(arg0, &x))
+		goto err;
+	return libnet_ntoh32_f_impl(x);
 err:
 	return NULL;
 }
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_ntoh64_f(size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ntoh64", params: "uint64_t x");]]]*/
-	struct {
-		uint64_t x;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "ntoh64", &args.x, UNPu64, DeeObject_AsUInt64);
+PRIVATE DEFINE_CMETHOD1(libnet_ntoh32, &libnet_ntoh32_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_ntoh32_f_impl(uint32_t x)
 /*[[[end]]]*/
-	return DeeInt_NewUInt64((uint64_t)BETOH64(args.x));
+{
+	return DeeInt_NewUInt32((uint32_t)BETOH32(x));
+}
+
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("ntoh64", "uint64_t x", isconst: true);]]]*/
+#define libnet_ntoh64_params "x:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_ntoh64_f_impl(uint64_t x);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libnet_ntoh64_f(DeeObject *__restrict arg0) {
+	uint64_t x;
+	if (DeeObject_AsUInt64(arg0, &x))
+		goto err;
+	return libnet_ntoh64_f_impl(x);
 err:
 	return NULL;
 }
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_hton16_f(size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("hton16", params: "uint16_t x");]]]*/
-	struct {
-		uint16_t x;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "hton16", &args.x, UNPu16, DeeObject_AsUInt16);
+PRIVATE DEFINE_CMETHOD1(libnet_ntoh64, &libnet_ntoh64_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_ntoh64_f_impl(uint64_t x)
 /*[[[end]]]*/
-	return DeeInt_NewUInt16((uint16_t)HTOBE16(args.x));
+{
+	return DeeInt_NewUInt64((uint64_t)BETOH64(x));
+}
+
+
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("hton16", "uint16_t x", isconst: true);]]]*/
+#define libnet_hton16_params "x:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_hton16_f_impl(uint16_t x);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libnet_hton16_f(DeeObject *__restrict arg0) {
+	uint16_t x;
+	if (DeeObject_AsUInt16(arg0, &x))
+		goto err;
+	return libnet_hton16_f_impl(x);
 err:
 	return NULL;
 }
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_hton32_f(size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("hton32", params: "uint32_t x");]]]*/
-	struct {
-		uint32_t x;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "hton32", &args.x, UNPu32, DeeObject_AsUInt32);
+PRIVATE DEFINE_CMETHOD1(libnet_hton16, &libnet_hton16_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_hton16_f_impl(uint16_t x)
 /*[[[end]]]*/
-	return DeeInt_NewUInt32((uint32_t)HTOBE32(args.x));
+{
+	return DeeInt_NewUInt16((uint16_t)HTOBE16(x));
+}
+
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("hton32", "uint32_t x", isconst: true);]]]*/
+#define libnet_hton32_params "x:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_hton32_f_impl(uint32_t x);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libnet_hton32_f(DeeObject *__restrict arg0) {
+	uint32_t x;
+	if (DeeObject_AsUInt32(arg0, &x))
+		goto err;
+	return libnet_hton32_f_impl(x);
 err:
 	return NULL;
 }
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_hton64_f(size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("hton64", params: "uint64_t x");]]]*/
-	struct {
-		uint64_t x;
-	} args;
-	DeeArg_Unpack1X(err, argc, argv, "hton64", &args.x, UNPu64, DeeObject_AsUInt64);
+PRIVATE DEFINE_CMETHOD1(libnet_hton32, &libnet_hton32_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_hton32_f_impl(uint32_t x)
 /*[[[end]]]*/
-	return DeeInt_NewUInt64((uint64_t)HTOBE64(args.x));
+{
+	return DeeInt_NewUInt32((uint32_t)HTOBE32(x));
+}
+
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("hton64", "uint64_t x", isconst: true);]]]*/
+#define libnet_hton64_params "x:?Dint"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_hton64_f_impl(uint64_t x);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libnet_hton64_f(DeeObject *__restrict arg0) {
+	uint64_t x;
+	if (DeeObject_AsUInt64(arg0, &x))
+		goto err;
+	return libnet_hton64_f_impl(x);
 err:
 	return NULL;
 }
-
-PRIVATE DEFINE_CMETHOD(lib_ntoh16, lib_ntoh16_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(lib_ntoh32, lib_ntoh32_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(lib_ntoh64, lib_ntoh64_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(lib_hton16, lib_hton16_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(lib_hton32, lib_hton32_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-PRIVATE DEFINE_CMETHOD(lib_hton64, lib_hton64_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-
-
-PRIVATE struct dex_symbol symbols[] = {
-	{ "socket", (DeeObject *)&DeeSocket_Type, MODSYM_FREADONLY },
-	{ "sockaddr", (DeeObject *)&DeeSockAddr_Type, MODSYM_FREADONLY },
-	{ "NetError", (DeeObject *)&DeeError_NetError, MODSYM_FREADONLY },
-	{ "getafname", (DeeObject *)&lib_getafname, MODSYM_FREADONLY,
-	  DOC("(id:?Dint)->?Dstring\n"
-	      "(id:?Dint)->?Dint\n"
-	      "Return the name of a given address family, given its system-dependent ID\n"
-	      "When not known, re-return the given @id") },
-	{ "getafof", (DeeObject *)&lib_getafof, MODSYM_FREADONLY,
-	  DOC("(id:?Dint)->?Dint\n"
-	      "(name:?Dstring)->?Dint\n"
-	      "#t{?ANoSupport?GNetError}{The given @name is not recognized by this library}"
-	      "Return the system-dependent ID of a given address family @name, or re-return the given @id.\n"
-	      "The given @name is encoded the same way as the first constructor argument for ?Gsocket") },
-	{ "gettypename", (DeeObject *)&lib_gettypename, MODSYM_FREADONLY,
-	  DOC("(typ:?Dint)->?Dstring\n"
-	      "(typ:?Dint)->?Dint\n"
-	      "Return the name of a given socket type @type, given its system-dependent ID\n"
-	      "When not known, re-return the given @type") },
-	{ "gettypeof", (DeeObject *)&lib_gettypeof, MODSYM_FREADONLY,
-	  DOC("(typ:?Dint)->?Dint\n"
-	      "(name:?Dstring)->?Dint\n"
-	      "#t{?ANoSupport?GNetError}{The given @name is not recognized by this library}"
-	      "Return the system-dependent ID of a given socket type @name, or re-return the given @type.\n"
-	      "The given @name is encoded the same way as the second constructor argument for ?Gsocket") },
-	{ "getprotoname", (DeeObject *)&lib_getprotoname, MODSYM_FREADONLY,
-	  DOC("(proto:?Dint)->?Dstring\n"
-	      "(proto:?Dint)->?Dint\n"
-	      "Return the name of a given protocol @proto, given its system-dependent ID\n"
-	      "When not known, re-return the given @proto") },
-	{ "getprotoof", (DeeObject *)&lib_getprotoof, MODSYM_FREADONLY,
-	  DOC("(proto:?Dint)->?Dint\n"
-	      "(name:?Dstring)->?Dint\n"
-	      "#t{?ANoSupport?GNetError}{The given @name is not recognized by this library}"
-	      "Return the system-dependent ID of a given protocol name @name, or re-return the given @proto.\n"
-	      "The given @name is encoded the same way as the third constructor argument for ?Gsocket") },
-	{ "getmsgflagsname", (DeeObject *)&lib_getmsgflagsname, MODSYM_FREADONLY,
-	  DOC("(msgflags:?Dint)->?Dstring\n"
-	      "(msgflags:?Dint)->?Dint\n"
-	      "Return the name of a given message flags @msgflags, given a system-dependent set of flags\n"
-	      "When not known, re-return the given @msgflags") },
-	{ "getmsgflagsof", (DeeObject *)&lib_getmsgflagsof, MODSYM_FREADONLY,
-	  DOC("(msgflags:?Dint)->?Dint\n"
-	      "(flags:?Dstring)->?Dint\n"
-	      "#t{?ANoSupport?GNetError}{The given @flags contains at least one flag that is not recognized by this library}"
-	      "Return a system-dependent set of flags for given message flags @flags, or re-return the given @flags.\n"
-	      "The given @flags is encoded the same way as the flags argument passed to ?Arecv?Gsocket") },
-	{ "ntoh16", (DeeObject *)&lib_ntoh16, MODSYM_FREADONLY,
-	  DOC("(x:?Dint)->?Dint\n"
-	      "Convert a 16-bit integer @x from network-endian to host-endian") },
-	{ "ntoh32", (DeeObject *)&lib_ntoh32, MODSYM_FREADONLY,
-	  DOC("(x:?Dint)->?Dint\n"
-	      "Convert a 32-bit integer @x from network-endian to host-endian") },
-	{ "ntoh64", (DeeObject *)&lib_ntoh64, MODSYM_FREADONLY,
-	  DOC("(x:?Dint)->?Dint\n"
-	      "Convert a 64-bit integer @x from network-endian to host-endian") },
-	{ "hton16", (DeeObject *)&lib_hton16, MODSYM_FREADONLY,
-	  DOC("(x:?Dint)->?Dint\n"
-	      "Convert a 16-bit integer @x from host-endian to network-endian") },
-	{ "hton32", (DeeObject *)&lib_hton32, MODSYM_FREADONLY,
-	  DOC("(x:?Dint)->?Dint\n"
-	      "Convert a 32-bit integer @x from host-endian to network-endian") },
-	{ "hton64", (DeeObject *)&lib_hton64, MODSYM_FREADONLY,
-	  DOC("(x:?Dint)->?Dint\n"
-	      "Convert a 64-bit integer @x from host-endian to network-endian") },
-	{ NULL }
-};
+PRIVATE DEFINE_CMETHOD1(libnet_hton64, &libnet_hton64_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_hton64_f_impl(uint64_t x)
+/*[[[end]]]*/
+{
+	return DeeInt_NewUInt64((uint64_t)HTOBE64(x));
+}
 
 
+#ifdef CONFIG_HOST_WINDOWS
+#define PTR_libnet_init &libnet_init
 PRIVATE int DCALL
 libnet_init(DeeDexObject *__restrict UNUSED(self)) {
-#ifdef CONFIG_HOST_WINDOWS
 	/* Start up the the windows networking subsystem. */
 	neterrno_t error;
 	WSADATA wsaData;
@@ -338,7 +316,12 @@ libnet_init(DeeDexObject *__restrict UNUSED(self)) {
 	DBG_ALIGNMENT_ENABLE();
 	if unlikely(error != 0)
 		return DeeError_Throwf(&DeeError_NetError, "WSAStartup() : %lu", error);
+	return 0;
+}
 #elif defined(CONFIG_HAVE_signal) && defined(SIGPIPE)
+#define PTR_libnet_init &libnet_init
+PRIVATE int DCALL
+libnet_init(DeeDexObject *__restrict UNUSED(self)) {
 	/* SIGPIPE is generated when a remote socket is closed. */
 	void (*handler)(int);
 	DBG_ALIGNMENT_DISABLE();
@@ -348,11 +331,12 @@ libnet_init(DeeDexObject *__restrict UNUSED(self)) {
 	if (handler != SIG_DFL)
 		signal(SIGPIPE, handler);
 	DBG_ALIGNMENT_ENABLE();
-#endif /* ... */
 	return 0;
 }
+#endif /* ... */
 
 #ifdef CONFIG_HOST_WINDOWS
+#define PTR_libnet_fini &libnet_fini
 PRIVATE void DCALL
 libnet_fini(DeeDexObject *__restrict UNUSED(self)) {
 	DBG_ALIGNMENT_DISABLE();
@@ -362,15 +346,84 @@ libnet_fini(DeeDexObject *__restrict UNUSED(self)) {
 #endif /* CONFIG_HOST_WINDOWS */
 
 
-PUBLIC struct dex DEX = {
-	/* .d_symbols = */ symbols,
-	/* .d_init    = */ &libnet_init,
-#ifdef CONFIG_HOST_WINDOWS
-	/* .d_fini    = */ &libnet_fini
-#else /* CONFIG_HOST_WINDOWS */
-	/* .d_fini    = */ NULL
-#endif /* !CONFIG_HOST_WINDOWS */
-};
+
+
+
+
+DEX_BEGIN
+
+DEX_MEMBER_F_NODOC("socket", &DeeSocket_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("sockaddr", &DeeSockAddr_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("NetError", &DeeError_NetError, MODSYM_FREADONLY),
+DEX_MEMBER_F("getafname", &libnet_getafname, MODSYM_FREADONLY,
+             "(" libnet_getafname_params ")->?X2?Dstring?Dint\n"
+             "Return the name of a given address family, given its system-dependent ID\n"
+             "When not known, re-return the given @id"),
+DEX_MEMBER_F("getafof", &libnet_getafof, MODSYM_FREADONLY,
+             "(" libnet_getafof_params ")->?Dint\n"
+             "#t{?ANoSupport?GNetError}{The given @name is not recognized by this library}"
+             "Return the system-dependent ID of a given address family @name, or re-return the given @id.\n"
+             "The given @name is encoded the same way as the first constructor argument for ?Gsocket"),
+DEX_MEMBER_F("gettypename", &libnet_gettypename, MODSYM_FREADONLY,
+             "(" libnet_gettypename_params ")->?X2?Dstring?Dint\n"
+             "Return the name of a given socket type @type, given its system-dependent ID\n"
+             "When not known, re-return the given @type"),
+DEX_MEMBER_F("gettypeof", &libnet_gettypeof, MODSYM_FREADONLY,
+             "(" libnet_gettypeof_params ")->?Dint\n"
+             "#t{?ANoSupport?GNetError}{The given @name is not recognized by this library}"
+             "Return the system-dependent ID of a given socket type @name, or re-return the given @type.\n"
+             "The given @name is encoded the same way as the second constructor argument for ?Gsocket"),
+DEX_MEMBER_F("getprotoname", &libnet_getprotoname, MODSYM_FREADONLY,
+             "(" libnet_getprotoname_params ")->?X2?Dstring?Dint\n"
+             "Return the name of a given protocol @proto, given its system-dependent ID\n"
+             "When not known, re-return the given @proto"),
+DEX_MEMBER_F("getprotoof", &libnet_getprotoof, MODSYM_FREADONLY,
+             "(" libnet_getprotoof_params ")->?Dint\n"
+             "#t{?ANoSupport?GNetError}{The given @name is not recognized by this library}"
+             "Return the system-dependent ID of a given protocol name @name, or re-return the given @proto.\n"
+             "The given @name is encoded the same way as the third constructor argument for ?Gsocket"),
+DEX_MEMBER_F("getmsgflagsname", &libnet_getmsgflagsname, MODSYM_FREADONLY,
+             "(" libnet_getmsgflagsname_params ")->?X2?Dstring?Dint\n"
+             "Return the name of a given message flags @msgflags, given a system-dependent set of flags\n"
+             "When not known, re-return the given @msgflags"),
+DEX_MEMBER_F("getmsgflagsof", &libnet_getmsgflagsof, MODSYM_FREADONLY,
+             "(" libnet_getmsgflagsof_params ")->?Dint\n"
+             "#t{?ANoSupport?GNetError}{The given @flags contains at least one flag that is not recognized by this library}"
+             "Return a system-dependent set of flags for given message flags @flags, or re-return the given @flags.\n"
+             "The given @flags is encoded the same way as the flags argument passed to ?Arecv?Gsocket"),
+DEX_MEMBER_F("ntoh16", &libnet_ntoh16, MODSYM_FREADONLY,
+             "(" libnet_ntoh16_params ")->?Dint\n"
+             "Convert a 16-bit integer @x from network-endian to host-endian"),
+DEX_MEMBER_F("ntoh32", &libnet_ntoh32, MODSYM_FREADONLY,
+             "(" libnet_ntoh32_params ")->?Dint\n"
+             "Convert a 32-bit integer @x from network-endian to host-endian"),
+DEX_MEMBER_F("ntoh64", &libnet_ntoh64, MODSYM_FREADONLY,
+             "(" libnet_ntoh64_params ")->?Dint\n"
+             "Convert a 64-bit integer @x from network-endian to host-endian"),
+DEX_MEMBER_F("hton16", &libnet_hton16, MODSYM_FREADONLY,
+             "(" libnet_hton16_params ")->?Dint\n"
+             "Convert a 16-bit integer @x from host-endian to network-endian"),
+DEX_MEMBER_F("hton32", &libnet_hton32, MODSYM_FREADONLY,
+             "(" libnet_hton32_params ")->?Dint\n"
+             "Convert a 32-bit integer @x from host-endian to network-endian"),
+DEX_MEMBER_F("hton64", &libnet_hton64, MODSYM_FREADONLY,
+             "(" libnet_hton64_params ")->?Dint\n"
+             "Convert a 64-bit integer @x from host-endian to network-endian"),
+
+#ifndef PTR_libnet_init
+#define PTR_libnet_init NULL
+#endif /* !PTR_libnet_init */
+#ifndef PTR_libnet_fini
+#define PTR_libnet_fini NULL
+#endif /* !PTR_libnet_fini */
+
+/* clang-format off */
+DEX_END(
+	/* init:  */ PTR_libnet_init,
+	/* fini:  */ PTR_libnet_fini,
+	/* clear: */ NULL
+);
+/* clang-format on */
 
 DECL_END
 

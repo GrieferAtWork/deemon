@@ -77,68 +77,62 @@ INTERN void DCALL libsqlite3_fini(void) {
 }
 
 
-PRIVATE struct dex_symbol symbols[] = {
-	/* sqlite3 dex module:
-	 *
-	 * >> import * from sqlite3;
-	 * >> local db = DB("mydb.db");
-	 * >> // function exec(sql: string, args: {Object...} | {string: Object}): none;
-	 * >> db.exec(r"
-	 * >> CREATE TABLE my_table1(id INT PRIMARY KEY, v1 INT);
-	 * >> CREATE TABLE my_table2(id INT PRIMARY KEY, v2 INT);
-	 * >> INSERT INTO my_table1 (id, v1) VALUES (10, 10), (11, 20);
-	 * >> INSERT INTO my_table2 (id, v1) VALUES (12, 30), (13, 40);
-	 * >> ");
-	 * >>
-	 * >> // function query(sql: string, args: {Object...} | {string: Object}): Query;
-	 * >> db.query(r"SELECT * from my_table1 WHERE id = :id AND v1 < :limit", { "id": 10, "limit": 99 });
-	 * >> db.query(r"SELECT * from my_table1 WHERE id = ? AND v1 < ?", { 10, 99 });
-	 *
-	 * NOTE: "sqlite3_stmt" get lazily pre-compiled and are then stored alongside
-	 *       deemon's `DeeStringObject' (and are only destroyed when the corresponding
-	 *       string is, making use of `DeeString_AddFiniHook()')
-	 *
-	 * The "Query" type returned by "DB.query()" then:
-	 * - Extends "Sequence" (meaning you can do stuff like ".first" to get the first row)
-	 * - Also has methods like "fetchone()" (hint: ".fetchall()" is the same as ".frozen")
-	 * - Implements "operator iter(): QueryIterator", which calls "sqlite3_step()" and yield columns as `Row'.
-	 *   - The "Row" type then:
-	 *     - Implements "operator getitem(index: int): Object" to lookup columns by index (using "sqlite3_column_*()")
-	 *     - Implements "operator getitem(name: string): Object" to lookup columns by name (using "sqlite3_column_*()")
-	 *     - Implements "operator size(): int" to return the # of columns in the query (using "sqlite3_column_count()")
-	 *     - Implements an iterator "RowIterator" that yields {Object...} (same as >> for (local index: [:#this]) yield this[index])
-	 *   - When a Query steps ahead to the next row, but the "Row" object for the current row
-	 *     hasn't been destroyed yet, then the old "Row" is updated to contain copies of all
-	 *     old columns (meaning that the apparent contents of some "Row" don't change if the
-	 *     query is advanced)
-	 *
-	 * Above, `Object' as returned or passed into sqlite3 is always mapped as:
-	 * - SQLITE_INTEGER: int
-	 * - SQLITE_FLOAT:   float
-	 * - SQLITE_TEXT:    string
-	 * - SQLITE_BLOB:    DeeBytesObject
-	 * - SQLITE_NULL:    none
-	 */
-	{ "DB", (DeeObject *)&DB_Type, MODSYM_FREADONLY },
-	{ "Query", (DeeObject *)&Query_Type, MODSYM_FREADONLY },
-	{ "QueryIterator", (DeeObject *)&QueryIterator_Type, MODSYM_FREADONLY },
-	{ "Row", (DeeObject *)&Row_Type, MODSYM_FREADONLY },
-	{ "SQLError", (DeeObject *)&SQLError_Type, MODSYM_FREADONLY },
-	{ "SQLSyntaxError", (DeeObject *)&SQLSyntaxError_Type, MODSYM_FREADONLY },
-	{ "SQLConstraintError", (DeeObject *)&SQLConstraintError_Type, MODSYM_FREADONLY },
+DEX_BEGIN
+/* sqlite3 dex module:
+ *
+ * >> import * from sqlite3;
+ * >> local db = DB("mydb.db");
+ * >> // function exec(sql: string, args: {Object...} | {string: Object}): none;
+ * >> db.exec(r"
+ * >> CREATE TABLE my_table1(id INT PRIMARY KEY, v1 INT);
+ * >> CREATE TABLE my_table2(id INT PRIMARY KEY, v2 INT);
+ * >> INSERT INTO my_table1 (id, v1) VALUES (10, 10), (11, 20);
+ * >> INSERT INTO my_table2 (id, v1) VALUES (12, 30), (13, 40);
+ * >> ");
+ * >>
+ * >> // function query(sql: string, args: {Object...} | {string: Object}): Query;
+ * >> db.query(r"SELECT * from my_table1 WHERE id = :id AND v1 < :limit", { "id": 10, "limit": 99 });
+ * >> db.query(r"SELECT * from my_table1 WHERE id = ? AND v1 < ?", { 10, 99 });
+ *
+ * NOTE: "sqlite3_stmt" get lazily pre-compiled and are then stored alongside
+ *       deemon's `DeeStringObject' (and are only destroyed when the corresponding
+ *       string is, making use of `DeeString_AddFiniHook()')
+ *
+ * The "Query" type returned by "DB.query()" then:
+ * - Extends "Sequence" (meaning you can do stuff like ".first" to get the first row)
+ * - Also has methods like "fetchone()" (hint: ".fetchall()" is the same as ".frozen")
+ * - Implements "operator iter(): QueryIterator", which calls "sqlite3_step()" and yield columns as `Row'.
+ *   - The "Row" type then:
+ *     - Implements "operator getitem(index: int): Object" to lookup columns by index (using "sqlite3_column_*()")
+ *     - Implements "operator getitem(name: string): Object" to lookup columns by name (using "sqlite3_column_*()")
+ *     - Implements "operator size(): int" to return the # of columns in the query (using "sqlite3_column_count()")
+ *     - Implements an iterator "RowIterator" that yields {Object...} (same as >> for (local index: [:#this]) yield this[index])
+ *   - When a Query steps ahead to the next row, but the "Row" object for the current row
+ *     hasn't been destroyed yet, then the old "Row" is updated to contain copies of all
+ *     old columns (meaning that the apparent contents of some "Row" don't change if the
+ *     query is advanced)
+ *
+ * Above, `Object' as returned or passed into sqlite3 is always mapped as:
+ * - SQLITE_INTEGER: int
+ * - SQLITE_FLOAT:   float
+ * - SQLITE_TEXT:    string
+ * - SQLITE_BLOB:    DeeBytesObject
+ * - SQLITE_NULL:    none
+ */
+DEX_MEMBER_F_NODOC("DB", &DB_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("Query", &Query_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("QueryIterator", &QueryIterator_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("Row", &Row_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("SQLError", &SQLError_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("SQLSyntaxError", &SQLSyntaxError_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("SQLConstraintError", &SQLConstraintError_Type, MODSYM_FREADONLY),
 
-	/* Internal types */
-	{ "_RowFmt", (DeeObject *)&RowFmt_Type, MODSYM_FREADONLY },
-	{ "_RowFmtColumns", (DeeObject *)&RowFmtColumns_Type, MODSYM_FREADONLY },
-	{ "_CellFmt", (DeeObject *)&CellFmt_Type, MODSYM_FREADONLY },
+/* Internal types */
+DEX_MEMBER_F_NODOC("_RowFmt", &RowFmt_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("_RowFmtColumns", &RowFmtColumns_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("_CellFmt", &CellFmt_Type, MODSYM_FREADONLY),
 
-	/* TODO: Directly expose sqlite3_config() */
-	{ NULL }
-};
-
-PUBLIC struct dex DEX = {
-	/* .d_symbols = */ symbols
-};
+DEX_END(NULL, NULL, NULL);
 
 DECL_END
 

@@ -2351,17 +2351,11 @@ err:
 	return NULL;
 }
 
-
-PRIVATE struct dex_symbol symbols[] = {
-	{ "hash", (DeeObject *)&libhash_hash, MODSYM_FREADONLY,
-	  DOC("(name:?Dstring,data:?X2?Dstring?DBytes,start?:?Dint)->?Dint\n"
-	      "Calculate the hash of @data using the given hash function @name") },
-	{ NULL }
-};
-
-PUBLIC struct dex DEX = {
-	/* .d_symbols = */ symbols
-};
+DEX_BEGIN
+DEX_MEMBER_F("hash", &libhash_hash, MODSYM_FREADONLY,
+             "(name:?Dstring,data:?X2?Dstring?DBytes,start?:?Dint)->?Dint\n"
+             "Calculate the hash of @data using the given hash function @name"),
+DEX_END(NULL, NULL, NULL);
 
 DECL_END
 

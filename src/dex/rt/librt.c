@@ -3658,13 +3658,7 @@ DEX_MEMBER_F("ctypes_addrof", &librt_ctypes_addrof, DEXSYM_READONLY,
              "(ob)->?Aptr?Ectypes:void\n"
              "Returns the object address of @ob"),
 
-/* clang-format off */
-DEX_END(
-	/* init:  */ NULL,
-	/* fini:  */ NULL,
-	/* clear: */ NULL
-);
-/* clang-format on */
+DEX_END(NULL, NULL, NULL);
 
 DECL_END
 

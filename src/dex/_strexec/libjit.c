@@ -230,223 +230,216 @@ err:
 
 
 
+DEX_BEGIN
+DEX_MEMBER_F("exec", &libjit_exec, MODSYM_FREADONLY,
+             "(expr:?X3?Dstring?DBytes?DFile,globals?:?M?Dstring?O,base?:?DModule,import?:?DCallable)->\n"
+             "Execute a given expression @expr and return the result\n"
+             "This function is used to implement the builtin ?Dexec function"),
 
-PRIVATE struct dex_symbol symbols[] = {
-	{ "exec", (DeeObject *)&libjit_exec, MODSYM_FREADONLY,
-	  DOC("(expr:?X3?Dstring?DBytes?DFile,globals?:?M?Dstring?O,base?:?DModule,import?:?DCallable)->\n"
-	      "Execute a given expression @expr and return the result\n"
-	      "This function is used to implement the builtin ?Dexec function") },
-	/* TODO: `mode:?Dstring=!Prestricted'
-	 * >> One of `full', `restricted' or `pure', controlling which language
-	 *    features are available to the code being executed.
-	 *  - full:
-	 *     - `print' statements without a file target are compiled as follows
-	 *       >> print "foo"; // This...
-	 *       >> print globals["__stdout__"]: "foo"; // ... becomes this
-	 *       If no `__stdout__' global is provided, `File.stdout' is used.
-	 *  - restricted:
-	 *     - `catch' statements/expressions with interrupt capabilities are not allowed.
-	 *     - Recursive calls to `exec()' result in a `Error.RuntimeError.StackOverflow'
-	 *       being thrown immediately, thus preventing code from breaking out of the
-	 *       sandbox by creating another, less restrictive one.
-	 *     - `print' statements without a file target are compiled as follows
-	 *       >> print "foo"; // This...
-	 *       >> print globals["__stdout__"]: "foo"; // ... becomes this
-	 *       If no `__stdout__' global is provided, a NotImplemented error is thrown
-	 *     - `import' (both in expressions, as well as statements) is restricted
-	 *       for any arbitrary module, but is subject to the following restriction:
-	 *       >> // NOTE: import statements are compiled to all use the standard import
-	 *       >> //       expression, while access to imported modules is compiled to
-	 *       >> //       generate the appropriate attribute operators.
-	 *       >> import("foo"); // This...
-	 *       >> globals.get("__import__", restricted_import)("foo"); // ... becomes this
-	 *       >>
-	 *       >> // Where `restricted_import' is implemented as follows:
-	 *       >> //   - A function that emulates `deemon.import()', but only allows
-	 *       >> //     modules to be taken from a globally available mapping-like
-	 *       >> //     table of allowed modules
-	 *       >> //     >> import deemon;
-	 *       >> //     >> exec(get_untrusted_code(), mode: "restricted", globals: {
-	 *       >> //     >>     "__modules__": {
-	 *       >> //     >>         "deemon" : deemon
-	 *       >> //     >>     }
-	 *       >> //     >> });
-	 *       >> function restricted_import(name: string, base?: module): module | none {
-	 *       >>     local allowed;
-	 *       >>     try {
-	 *       >>        // NOTE: `globals' here is the argument passed to `exec()'
-	 *       >>        allowed = globals["__modules__"];
-	 *       >>     } catch (Error.KeyError) {
-	 *       >>        allowed = {
-	 *       >>            "deemon",
-	 *       >>            "codecs",
-	 *       >>            "threading",
-	 *       >>            "util",
-	 *       >>            "operators",
-	 *       >>            "rt.d200",
-	 *       >>        };
-	 *       >>        // Using the regular import
-	 *       >>        if (name in allowed)
-	 *       >>            return import(name);
-	 *       >>        goto restricted_module;
-	 *       >>     }
-	 *       >>     try {
-	 *       >>         return allowed[name];
-	 *       >>     } catch (Error.KeyError) {
-	 *       >> restricted_module:
-	 *       >>         throw Error.SystemError.FSError.FileNotFound("Restricted module");
-	 *       >>     }
-	 *       >> }
-	 *       Separately, accessing an attribute of a module has special restrictions
-	 *       applied when done for the exports of the builtin `deemon' module:
-	 *         - The following types/objects are off-limits, and access
-	 *           will cause an AttributeError to be thrown:
-	 *             - `deemon.gc'
-	 *             - `deemon.Thread'
-	 *             - `deemon.Error.SystemError'
-	 *             - `deemon.Error.AppExit'
-	 *             - `deemon.Signal.Interrupt'
-	 *         - `deemon.import' will cause the value of the expression
-	 *            `globals.get("__import__", restricted_import)' to be
-	 *            returned instead.
-	 *       Note that other ways of loading modules, such as `string.decode()'
-	 *       are not restricted, as them becoming unsafe would already require
-	 *       either a bug in their implementation, or pre-existing write-access
-	 *       to the deemon library path, meaning that they don't pose a security
-	 *       risk on their own.
-	 *     - Seperately, the runtime restricts access to `File.open()',
-	 *       `File.System' (and `File.io'), as well as `File.Buffer.sync()'
-	 *       Attempting to perform any of these operations will cause a
-	 *       `NotImplemented' error to be thrown, emulating a target system
-	 *       that doesn't implement user-code I/O support.
-	 *     - Access to attributes beginning with a leading underscore is disallowed
-	 *       This is done to prevent access to implementation-specific attributes that
-	 *       could be used to break out of the restricted-code sandbox
-	 *       >> import fs;
-	 *       >> function safe_unlink(path: string) {
-	 *       >>     if (!is_allowed_path(path))
-	 *       >>         throw "Illegal path";
-	 *       >>     fs.unlink(path);
-	 *       >> }
-	 *       >> exec('
-	 *       >>     local real_unlink = safe_unlink.__refs__[0]; // Ups...
-	 *       >>     local fs_module = real_unlink.__module__;    // This is bad...
-	 *       >>     function deltree(x) {
-	 *       >>         for (local y: fs_module.dir(x)) {
-	 *       >>             try {
-	 *       >>                 y = fs_module.joinpath(x, y);
-	 *       >>                 if (fs_module.stat.isdir(y)) {
-	 *       >>                     deltree(y);
-	 *       >>                     fs_module.rmdir(y);
-	 *       >>                 } else {
-	 *       >>                     fs_module.unlink(y);
-	 *       >>                 }
-	 *       >>             } catch (...) {
-	 *       >>             }
-	 *       >>         }
-	 *       >>     }
-	 *       >>     // Let's just delete _EVERYTHING_ _EVERYWHERE_
-	 *       >>     deltree("/");
-	 *       >>     for (local x: [:26])
-	 *       >>         deltree(type("").chr("A".ord() + x) + ":");
-	 *       >> ', mode: "pure", globals: {
-	 *       >>     "safe_unlink" : safe_unlink // Wasn't so safe afterall...
-	 *       >> });
-	 *       However, this can easily be prevented by disallowing access to attributes
-	 *       starting with a leading underscore.
-	 *       Without implementation-specific, underscore-accessible features, there shouldn't
-	 *       be any way of reversing module access from a single member, or gaining full type
-	 *       access without a bound instance of the associated type.
-	 *
-	 *  - pure:
-	 *     - `catch' statements/expressions with interrupt capabilities are not allowed.
-	 *     - Recursive calls to `exec()' result in a `Error.RuntimeError.StackOverflow'
-	 *       being thrown immediately, thus preventing code from breaking out of the
-	 *       sandbox by creating another.
-	 *     - `type' and `.class' expressions can only be used if the result is one of the following:
-	 *        - `deemon.Error'
-	 *        - `deemon.Signal'
-	 *        - `deemon.bool'
-	 *        - `deemon.string'
-	 *        - `deemon.Bytes'
-	 *        - `deemon.Tuple'
-	 *        - `deemon.List'
-	 *        - `deemon.Dict'
-	 *        - `deemon.HashSet'
-	 *        - `deemon.int'
-	 *        - `deemon.float'
-	 *        - `deemon.Object'
-	 *        - `deemon.Type'
-	 *        - `deemon.Cell'
-	 *        - `deemon.WeakRef'
-	 *        - `type(none)'
-	 *        - `deemon.Super'
-	 *        - `deemon.InstanceMethod'
-	 *        - `deemon.Property'
-	 *        - `deemon.Attribute'
-	 *        - `deemon.Frame'
-	 *        - `deemon.enumattr'
-	 *     - `print' statements without a file target are compiled as follows
-	 *       >> print "foo"; // This...
-	 *       >> print globals["__stdout__"]: "foo"; // ... becomes this
-	 *       If no `__stdout__' global is provided, a NotImplemented error is thrown
-	 *     - `import' (both in expressions, as well as statements) is not allowed
-	 *     - Attempting to use an instance of one of the following types as
-	 *       operands for any kind of expression will cause a NotImplemented error
-	 *       to be thrown, thus preventing them from ever appearing in `pure' code
-	 *       expressions.
-	 *       NOTE: An exception to this are `x is y', as well as `x === y' and `x !== y' expressions.
-	 *       The types are:
-	 *         - `deemon.Thread'     (blocking access to multi-threading)
-	 *         - `deemon.File'       (blocking access to `deemon.File.open()')
-	 *       Additionally, the following objects are disallowed:
-	 *         - `deemon.gc'
-	 *         - `deemon.enumattr'   (There is no reason for code to do this)
-	 *                                NOTE: This also includes `operator enumattr()'!
-	 *         - `deemon.Traceback'  (Tracebacks should be restricted to the invoker of the code)
-	 *         - `deemon.import'
-	 *         - `deemon.Error.SystemError'
-	 *         - `deemon.Error.AppExit'
-	 *         - `deemon.Signal.Interrupt'
-	 *     - Access to attributes beginning with a leading underscore is disallowed
-	 *       This is done to prevent access to implementation-specific attributes that
-	 *       could be used to break out of the pure-code sandbox
-	 *
-	 * WARNING:
-	 *   - None of the above mentioned restriction models can prevent executed code
-	 *     from interacting with arguments passed, or anything somehow reachable from
-	 *     them from being worked with.
-	 *     If you are careless and pass globals to objects that code should not be
-	 *     allowed to operate on, then you've only got yourself to blame.
-	 *     >> exec("fs.unlink('/path/to/important/file')",
-	 *     >>      mode: "pure",  // Pure, so nothing bad can happen (not...)
-	 *     >>      globals: {
-	 *     >>          "fs" : import("fs") // Sure. - Let's give it filesystem access
-	 *     >>      });
-	 *   - On its own, executed code can (even accidentally) cause an infinite loop
-	 *     Note however that every time execution jumps to a point it was already at
-	 *     before, interrupts are checked for the calling thread, meaning that another
-	 *     thread can easily set up a timeout for monitoring the exec() thread, and
-	 *     interrupt it if it ends up taking too long, or using too much CPU.
-	 *   - On its own, exec() code can create an arbitrary amount of objects, potentially
-	 *     allowing for memory starvation attacks by having code allocate ridiculous amounts
-	 *     of memory though simple interfaces such as `Bytes from deemon', or simply by
-	 *     doing something like `"foo" * 12345678'
-	 *     XXX: Add a runtime feature to allow for pre-thread redirection of heap functions,
-	 *          thus allowing for a custom implementation which could then set a ceiling on
-	 *          memory allocation
-	 */
-	{ "Function", (DeeObject *)&JITFunction_Type, MODSYM_FREADONLY },
-	{ "YieldFunction", (DeeObject *)&JITYieldFunction_Type, MODSYM_FREADONLY },
-	{ "YieldFunctionIterator", (DeeObject *)&JITYieldFunctionIterator_Type, MODSYM_FREADONLY },
-	{ NULL }
-};
-
-PUBLIC struct dex DEX = {
-	/* .d_symbols = */ symbols,
-	/* .d_init    = */ NULL,
-	/* .d_fini    = */ NULL
-};
+/* TODO: `mode:?Dstring=!Prestricted'
+ * >> One of `full', `restricted' or `pure', controlling which language
+ *    features are available to the code being executed.
+ *  - full:
+ *     - `print' statements without a file target are compiled as follows
+ *       >> print "foo"; // This...
+ *       >> print globals["__stdout__"]: "foo"; // ... becomes this
+ *       If no `__stdout__' global is provided, `File.stdout' is used.
+ *  - restricted:
+ *     - `catch' statements/expressions with interrupt capabilities are not allowed.
+ *     - Recursive calls to `exec()' result in a `Error.RuntimeError.StackOverflow'
+ *       being thrown immediately, thus preventing code from breaking out of the
+ *       sandbox by creating another, less restrictive one.
+ *     - `print' statements without a file target are compiled as follows
+ *       >> print "foo"; // This...
+ *       >> print globals["__stdout__"]: "foo"; // ... becomes this
+ *       If no `__stdout__' global is provided, a NotImplemented error is thrown
+ *     - `import' (both in expressions, as well as statements) is restricted
+ *       for any arbitrary module, but is subject to the following restriction:
+ *       >> // NOTE: import statements are compiled to all use the standard import
+ *       >> //       expression, while access to imported modules is compiled to
+ *       >> //       generate the appropriate attribute operators.
+ *       >> import("foo"); // This...
+ *       >> globals.get("__import__", restricted_import)("foo"); // ... becomes this
+ *       >>
+ *       >> // Where `restricted_import' is implemented as follows:
+ *       >> //   - A function that emulates `deemon.import()', but only allows
+ *       >> //     modules to be taken from a globally available mapping-like
+ *       >> //     table of allowed modules
+ *       >> //     >> import deemon;
+ *       >> //     >> exec(get_untrusted_code(), mode: "restricted", globals: {
+ *       >> //     >>     "__modules__": {
+ *       >> //     >>         "deemon" : deemon
+ *       >> //     >>     }
+ *       >> //     >> });
+ *       >> function restricted_import(name: string, base?: module): module | none {
+ *       >>     local allowed;
+ *       >>     try {
+ *       >>        // NOTE: `globals' here is the argument passed to `exec()'
+ *       >>        allowed = globals["__modules__"];
+ *       >>     } catch (Error.KeyError) {
+ *       >>        allowed = {
+ *       >>            "deemon",
+ *       >>            "codecs",
+ *       >>            "threading",
+ *       >>            "util",
+ *       >>            "operators",
+ *       >>            "rt.d200",
+ *       >>        };
+ *       >>        // Using the regular import
+ *       >>        if (name in allowed)
+ *       >>            return import(name);
+ *       >>        goto restricted_module;
+ *       >>     }
+ *       >>     try {
+ *       >>         return allowed[name];
+ *       >>     } catch (Error.KeyError) {
+ *       >> restricted_module:
+ *       >>         throw Error.SystemError.FSError.FileNotFound("Restricted module");
+ *       >>     }
+ *       >> }
+ *       Separately, accessing an attribute of a module has special restrictions
+ *       applied when done for the exports of the builtin `deemon' module:
+ *         - The following types/objects are off-limits, and access
+ *           will cause an AttributeError to be thrown:
+ *             - `deemon.gc'
+ *             - `deemon.Thread'
+ *             - `deemon.Error.SystemError'
+ *             - `deemon.Error.AppExit'
+ *             - `deemon.Signal.Interrupt'
+ *         - `deemon.import' will cause the value of the expression
+ *            `globals.get("__import__", restricted_import)' to be
+ *            returned instead.
+ *       Note that other ways of loading modules, such as `string.decode()'
+ *       are not restricted, as them becoming unsafe would already require
+ *       either a bug in their implementation, or pre-existing write-access
+ *       to the deemon library path, meaning that they don't pose a security
+ *       risk on their own.
+ *     - Seperately, the runtime restricts access to `File.open()',
+ *       `File.System' (and `File.io'), as well as `File.Buffer.sync()'
+ *       Attempting to perform any of these operations will cause a
+ *       `NotImplemented' error to be thrown, emulating a target system
+ *       that doesn't implement user-code I/O support.
+ *     - Access to attributes beginning with a leading underscore is disallowed
+ *       This is done to prevent access to implementation-specific attributes that
+ *       could be used to break out of the restricted-code sandbox
+ *       >> import fs;
+ *       >> function safe_unlink(path: string) {
+ *       >>     if (!is_allowed_path(path))
+ *       >>         throw "Illegal path";
+ *       >>     fs.unlink(path);
+ *       >> }
+ *       >> exec('
+ *       >>     local real_unlink = safe_unlink.__refs__[0]; // Ups...
+ *       >>     local fs_module = real_unlink.__module__;    // This is bad...
+ *       >>     function deltree(x) {
+ *       >>         for (local y: fs_module.dir(x)) {
+ *       >>             try {
+ *       >>                 y = fs_module.joinpath(x, y);
+ *       >>                 if (fs_module.stat.isdir(y)) {
+ *       >>                     deltree(y);
+ *       >>                     fs_module.rmdir(y);
+ *       >>                 } else {
+ *       >>                     fs_module.unlink(y);
+ *       >>                 }
+ *       >>             } catch (...) {
+ *       >>             }
+ *       >>         }
+ *       >>     }
+ *       >>     // Let's just delete _EVERYTHING_ _EVERYWHERE_
+ *       >>     deltree("/");
+ *       >>     for (local x: [:26])
+ *       >>         deltree(type("").chr("A".ord() + x) + ":");
+ *       >> ', mode: "pure", globals: {
+ *       >>     "safe_unlink" : safe_unlink // Wasn't so safe afterall...
+ *       >> });
+ *       However, this can easily be prevented by disallowing access to attributes
+ *       starting with a leading underscore.
+ *       Without implementation-specific, underscore-accessible features, there shouldn't
+ *       be any way of reversing module access from a single member, or gaining full type
+ *       access without a bound instance of the associated type.
+ *
+ *  - pure:
+ *     - `catch' statements/expressions with interrupt capabilities are not allowed.
+ *     - Recursive calls to `exec()' result in a `Error.RuntimeError.StackOverflow'
+ *       being thrown immediately, thus preventing code from breaking out of the
+ *       sandbox by creating another.
+ *     - `type' and `.class' expressions can only be used if the result is one of the following:
+ *        - `deemon.Error'
+ *        - `deemon.Signal'
+ *        - `deemon.bool'
+ *        - `deemon.string'
+ *        - `deemon.Bytes'
+ *        - `deemon.Tuple'
+ *        - `deemon.List'
+ *        - `deemon.Dict'
+ *        - `deemon.HashSet'
+ *        - `deemon.int'
+ *        - `deemon.float'
+ *        - `deemon.Object'
+ *        - `deemon.Type'
+ *        - `deemon.Cell'
+ *        - `deemon.WeakRef'
+ *        - `type(none)'
+ *        - `deemon.Super'
+ *        - `deemon.InstanceMethod'
+ *        - `deemon.Property'
+ *        - `deemon.Attribute'
+ *        - `deemon.Frame'
+ *        - `deemon.enumattr'
+ *     - `print' statements without a file target are compiled as follows
+ *       >> print "foo"; // This...
+ *       >> print globals["__stdout__"]: "foo"; // ... becomes this
+ *       If no `__stdout__' global is provided, a NotImplemented error is thrown
+ *     - `import' (both in expressions, as well as statements) is not allowed
+ *     - Attempting to use an instance of one of the following types as
+ *       operands for any kind of expression will cause a NotImplemented error
+ *       to be thrown, thus preventing them from ever appearing in `pure' code
+ *       expressions.
+ *       NOTE: An exception to this are `x is y', as well as `x === y' and `x !== y' expressions.
+ *       The types are:
+ *         - `deemon.Thread'     (blocking access to multi-threading)
+ *         - `deemon.File'       (blocking access to `deemon.File.open()')
+ *       Additionally, the following objects are disallowed:
+ *         - `deemon.gc'
+ *         - `deemon.enumattr'   (There is no reason for code to do this)
+ *                                NOTE: This also includes `operator enumattr()'!
+ *         - `deemon.Traceback'  (Tracebacks should be restricted to the invoker of the code)
+ *         - `deemon.import'
+ *         - `deemon.Error.SystemError'
+ *         - `deemon.Error.AppExit'
+ *         - `deemon.Signal.Interrupt'
+ *     - Access to attributes beginning with a leading underscore is disallowed
+ *       This is done to prevent access to implementation-specific attributes that
+ *       could be used to break out of the pure-code sandbox
+ *
+ * WARNING:
+ *   - None of the above mentioned restriction models can prevent executed code
+ *     from interacting with arguments passed, or anything somehow reachable from
+ *     them from being worked with.
+ *     If you are careless and pass globals to objects that code should not be
+ *     allowed to operate on, then you've only got yourself to blame.
+ *     >> exec("fs.unlink('/path/to/important/file')",
+ *     >>      mode: "pure",  // Pure, so nothing bad can happen (not...)
+ *     >>      globals: {
+ *     >>          "fs" : import("fs") // Sure. - Let's give it filesystem access
+ *     >>      });
+ *   - On its own, executed code can (even accidentally) cause an infinite loop
+ *     Note however that every time execution jumps to a point it was already at
+ *     before, interrupts are checked for the calling thread, meaning that another
+ *     thread can easily set up a timeout for monitoring the exec() thread, and
+ *     interrupt it if it ends up taking too long, or using too much CPU.
+ *   - On its own, exec() code can create an arbitrary amount of objects, potentially
+ *     allowing for memory starvation attacks by having code allocate ridiculous amounts
+ *     of memory though simple interfaces such as `Bytes from deemon', or simply by
+ *     doing something like `"foo" * 12345678'
+ *     XXX: Add a runtime feature to allow for pre-thread redirection of heap functions,
+ *          thus allowing for a custom implementation which could then set a ceiling on
+ *          memory allocation
+ */
+DEX_MEMBER_F_NODOC("Function", &JITFunction_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("YieldFunction", &JITYieldFunction_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("YieldFunctionIterator", &JITYieldFunctionIterator_Type, MODSYM_FREADONLY),
+DEX_END(NULL, NULL, NULL);
 
 DECL_END
 

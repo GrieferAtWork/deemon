@@ -37,54 +37,10 @@ DECL_BEGIN
 
 INTDEF DeeCMethodObject libthreading_lockunion_all;
 
-PRIVATE struct dex_symbol symbols[] = {
-	/* Normal locks */
-	{ "Lock", (DeeObject *)&DeeLock_Type, MODSYM_FREADONLY },
-	{ "AtomicLock", (DeeObject *)&DeeAtomicLock_Type, MODSYM_FREADONLY },
-	{ "SharedLock", (DeeObject *)&DeeSharedLock_Type, MODSYM_FREADONLY },
-	{ "RAtomicLock", (DeeObject *)&DeeRAtomicLock_Type, MODSYM_FREADONLY },
-	{ "RSharedLock", (DeeObject *)&DeeRSharedLock_Type, MODSYM_FREADONLY },
-
-	/* Read/write locks */
-	{ "RWLock", (DeeObject *)&DeeRWLock_Type, MODSYM_FREADONLY },
-	{ "RWLockReadLock", (DeeObject *)&DeeRWLockReadLock_Type, MODSYM_FREADONLY },
-	{ "RWLockWriteLock", (DeeObject *)&DeeRWLockWriteLock_Type, MODSYM_FREADONLY },
-	{ "AtomicRWLock", (DeeObject *)&DeeAtomicRWLock_Type, MODSYM_FREADONLY },
-	{ "SharedRWLock", (DeeObject *)&DeeSharedRWLock_Type, MODSYM_FREADONLY },
-	{ "RAtomicRWLock", (DeeObject *)&DeeRAtomicRWLock_Type, MODSYM_FREADONLY },
-	{ "RSharedRWLock", (DeeObject *)&DeeRSharedRWLock_Type, MODSYM_FREADONLY },
-
-	/* LockUnion */
-	{ "LockUnion", (DeeObject *)&DeeLockUnion_Type },
-	{ "all", (DeeObject *)&libthreading_lockunion_all, MODSYM_FREADONLY,
-	  DOC("(locks!:?GLock)->?GLock\n"
-	      "#tValueError{No @locks specified (a lock union must contain at least 1 lock)}"
-	      "Return a ?GLockUnion for all of the given @locks, or re-returns ${locks.first} "
-	      /**/ "when only a single lock was given\n"
-	      "Lock unions can be used to (safely) acquire multiple locks at the same time, whilst "
-	      /**/ "ensuring that doing so doesn't result in a dead-lock (as would normally be the "
-	      /**/ "case when 2 threads acquire multiple locks at the same time, but not in the same "
-	      /**/ "order). For more details on how this is done, see ?GLockUnion") },
-
-	/* Semaphore */
-	{ "Semaphore", (DeeObject *)&DeeSemaphore_Type, MODSYM_FREADONLY },
-
-	/* Event */
-	{ "Event", (DeeObject *)&DeeEvent_Type, MODSYM_FREADONLY },
-
-	/* Once */
-	{ "Once", (DeeObject *)&DeeOnce_Type, MODSYM_FREADONLY },
-
-	/* ThreadLocalStorage */
-	{ "TLS", (DeeObject *)&DeeTLS_Type, MODSYM_FREADONLY },
-	{ NULL }
-};
-
-
-
 #ifndef CONFIG_NO_THREADS
 PRIVATE struct tls_callback_hooks orig_hooks;
 
+#define PTR_libthreading_init &libthreading_init
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 libthreading_init(DeeDexObject *__restrict UNUSED(self)) {
 	/* Install our custom TLS callback hooks. */
@@ -93,22 +49,70 @@ libthreading_init(DeeDexObject *__restrict UNUSED(self)) {
 	return 0;
 }
 
+#define PTR_libthreading_fini &libthreading_fini
 PRIVATE NONNULL((1)) void DCALL
 libthreading_fini(DeeDexObject *__restrict UNUSED(self)) {
 	/* Restore the original TLS callback hooks. */
 	memcpy(&_DeeThread_TlsCallbacks, &orig_hooks, sizeof(struct tls_callback_hooks));
 }
-
 #endif /* !CONFIG_NO_THREADS */
 
+DEX_BEGIN
 
-PUBLIC struct dex DEX = {
-	/* .d_symbols      = */ symbols,
-#ifndef CONFIG_NO_THREADS
-	/* .d_init         = */ &libthreading_init,
-	/* .d_fini         = */ &libthreading_fini
-#endif /* !CONFIG_NO_THREADS */
-};
+/* Normal locks */
+DEX_MEMBER_F_NODOC("Lock", &DeeLock_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("AtomicLock", &DeeAtomicLock_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("SharedLock", &DeeSharedLock_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("RAtomicLock", &DeeRAtomicLock_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("RSharedLock", &DeeRSharedLock_Type, MODSYM_FREADONLY),
+
+/* Read/write locks */
+DEX_MEMBER_F_NODOC("RWLock", &DeeRWLock_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("RWLockReadLock", &DeeRWLockReadLock_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("RWLockWriteLock", &DeeRWLockWriteLock_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("AtomicRWLock", &DeeAtomicRWLock_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("SharedRWLock", &DeeSharedRWLock_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("RAtomicRWLock", &DeeRAtomicRWLock_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("RSharedRWLock", &DeeRSharedRWLock_Type, MODSYM_FREADONLY),
+
+/* LockUnion */
+DEX_MEMBER_F_NODOC("LockUnion", &DeeLockUnion_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F("all", &libthreading_lockunion_all, MODSYM_FREADONLY,
+             "(locks!:?GLock)->?GLock\n"
+             "#tValueError{No @locks specified (a lock union must contain at least 1 lock)}"
+             "Return a ?GLockUnion for all of the given @locks, or re-returns ${locks.first} "
+             /**/ "when only a single lock was given\n"
+             "Lock unions can be used to (safely) acquire multiple locks at the same time, whilst "
+             /**/ "ensuring that doing so doesn't result in a dead-lock (as would normally be the "
+             /**/ "case when 2 threads acquire multiple locks at the same time, but not in the same "
+             /**/ "order). For more details on how this is done, see ?GLockUnion"),
+
+/* Semaphore */
+DEX_MEMBER_F_NODOC("Semaphore", &DeeSemaphore_Type, MODSYM_FREADONLY),
+
+/* Event */
+DEX_MEMBER_F_NODOC("Event", &DeeEvent_Type, MODSYM_FREADONLY),
+
+/* Once */
+DEX_MEMBER_F_NODOC("Once", &DeeOnce_Type, MODSYM_FREADONLY),
+
+/* ThreadLocalStorage */
+DEX_MEMBER_F_NODOC("TLS", &DeeTLS_Type, MODSYM_FREADONLY),
+
+#ifndef PTR_libthreading_init
+#define PTR_libthreading_init NULL
+#endif /* !PTR_libthreading_init */
+#ifndef PTR_libthreading_fini
+#define PTR_libthreading_fini NULL
+#endif /* !PTR_libthreading_fini */
+
+/* clang-format off */
+DEX_END(
+	/* init:  */ PTR_libthreading_init,
+	/* fini:  */ PTR_libthreading_fini,
+	/* clear: */ NULL
+);
+/* clang-format on */
 
 DECL_END
 
