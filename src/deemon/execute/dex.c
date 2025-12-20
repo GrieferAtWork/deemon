@@ -87,68 +87,6 @@ DECL_BEGIN
  * and if not supported, we can still fall back on "dl_iterate_phdr", which
  * should work with glibc, and anything that emulates glibc closely enough.
  */
-#undef DeeModule_FromStaticPointer_USE_GetModuleHandleExW
-#undef DeeModule_FromStaticPointer_USE_dlgethandle
-#undef DeeModule_FromStaticPointer_USE_dl_iterate_phdr
-#undef DeeModule_FromStaticPointer_USE_xdlmodule_info
-#undef DeeModule_FromStaticPointer_USE_dladdr1__RTLD_DL_LINKMAP
-#undef DeeModule_FromStaticPointer_USE_dladdr__dli_fname
-#undef DeeModule_FromStaticPointer_USE_STUB
-#ifdef DeeSystem_DlOpen_USE_LoadLibrary
-#define DeeModule_FromStaticPointer_USE_GetModuleHandleExW /* Windows */
-#elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dlgethandle)
-#define DeeModule_FromStaticPointer_USE_dlgethandle /* KOSmk4 */
-#elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(__KOS_VERSION__) && (__KOS_VERSION__ >= 300 && __KOS_VERSION__ < 400)
-#define DeeModule_FromStaticPointer_USE_xdlmodule_info /* KOSmk3 */
-#else /* ... */
-/* Under linux, there are many different ways to do this, some of which may not work at runtime. */
-#if defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP)
-#define DeeModule_FromStaticPointer_USE_dladdr1__RTLD_DL_LINKMAP /* Linux */
-#endif /* DeeSystem_DlOpen_USE_dlopen && CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP */
-#if defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dladdr)
-#define DeeModule_FromStaticPointer_USE_dladdr__dli_fname /* Linux */
-#endif /* DeeSystem_DlOpen_USE_dlopen && CONFIG_HAVE_dladdr */
-#if defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dl_iterate_phdr)
-#define DeeModule_FromStaticPointer_USE_dl_iterate_phdr /* Linux */
-#endif /* DeeSystem_DlOpen_USE_dlopen && CONFIG_HAVE_dl_iterate_phdr */
-#define DeeModule_FromStaticPointer_USE_STUB
-#endif /* !... */
-
-
-
-
-struct Dee_module_dexnode {
-	struct Dee_module_dexnode *mdn_par; /* [?..?] Parent node */
-	struct Dee_module_dexnode *mdn_lhs; /* [?..?] Left node */
-	struct Dee_module_dexnode *mdn_rhs; /* [?..?] Right node */
-	union {
-		struct Dee_module_dexdata *mdn_dex; /* [1..1] Associated dex data */
-		__UINTPTR_TYPE__           mdn_red; /* Least significant bit is red-flag */
-	} mdn_dat;
-	__BYTE_TYPE__ *mdn_minaddr; /* Memory segment min address */
-	__BYTE_TYPE__ *mdn_maxaddr; /* Memory segment max address */
-};
-
-struct Dee_module_dexdata {
-	struct {
-		struct Dee_module_dexdata *le_next, **le_prev;
-	}                              mdx_libraries; /* [1..1][lock(INTERNAL)] Internal list of dex modules */
-	struct Dee_module_object      *mdx_module;    /* [1..1][const] Associated dex module descriptor */
-	void                          *mdx_handle;    /* [?..?][const][owned] System-specific library handle */
-
-	/* [0..1][const] Optional initializer/finalizer callbacks. */
-	WUNUSED_T NONNULL_T((1)) int (DCALL *mdx_init)(void);
-	NONNULL_T((1)) void (DCALL *mdx_fini)(void);
-
-	/* Array of memory segments to which this dex is mapped (for use in an R/B-tree) */
-	/* TODO:
-	 * - For "DeeModule_FromStaticPointer_USE_GetModuleHandleExW", use GetModuleInformation()
-	 *   and MODULEINFO to retrieve the load address + image size of any loaded module,
-	 *   which appears to be the bounds of the memory mapping containing an executable.
-	 */
-	COMPILER_FLEXIBLE_ARRAY(struct Dee_module_dexnode, mdx_nodes);
-};
-
 
 INTERN NONNULL((1)) int DCALL
 module_dex_init(DeeModuleObject *__restrict self) {

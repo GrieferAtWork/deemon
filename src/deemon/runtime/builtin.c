@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 #include <deemon/code.h>
+#include <deemon/dex.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
@@ -441,6 +442,20 @@ struct Dee_deemon_module_struct {
 	Dee_MODULE_STRUCT(/**/, num_builtins_obj) m_module;
 };
 
+#ifndef CONFIG_NO_DEX
+INTERN struct Dee_module_dexdata deemon_dexdata = {
+	/* .mdx_module = */ &DeeModule_Deemon.m_module,
+	/* .mdx_handle = */ _Dee_MODULE_DEXDATA_INIT_HANDLE,
+	/* .mdx_init   = */ NULL,
+	/* .mdx_fini   = */ NULL,
+	/* .mdx_clear  = */ NULL,
+	/* .mdx_node   = */ { NULL, NULL, NULL },
+	/* .mdx_flags  = */ Dee_MODULE_DEXDATA_F_NORMAL /* Root node is always *black* */
+	_Dee_MODULE_DEXDATA_INIT_LOADBOUNDS
+	_Dee_MODULE_DEXDATA_INIT_LOADHANDLE
+	_Dee_MODULE_DEXDATA_INIT_LOADSTRING
+};
+#endif /* !CONFIG_NO_DEX */
 
 #undef DeeModule_Deemon
 PUBLIC struct Dee_static_module_struct DeeModule_Deemon = {
@@ -449,7 +464,11 @@ PUBLIC struct Dee_static_module_struct DeeModule_Deemon = {
 		NULL,
 		NULL
 	}, {
+#ifdef CONFIG_NO_DEX
 		OBJECT_HEAD_INIT(&DeeModuleDee_Type),
+#else /* CONFIG_NO_DEX */
+		OBJECT_HEAD_INIT(&DeeModuleDex_Type),
+#endif /* !CONFIG_NO_DEX */
 		/* .mo_absname = */ NULL,
 		/* .mo_absnode = */ { NULL, NULL, NULL },
 		/* .mo_libname = */ {
@@ -457,7 +476,11 @@ PUBLIC struct Dee_static_module_struct DeeModule_Deemon = {
 			/* .mle_dat  = */ { (DeeModuleObject *)&DeeModule_Deemon.m_module },
 		},
 		/* .mo_dir     = */ (struct Dee_module_directory *)&empty_module_directory,
-		/* .mo_moddata = */ { &DeeCode_Empty },
+#ifdef CONFIG_NO_DEX
+		/* .mo_moddata = */ Dee_MODULE_MODDATA_INIT_CODE(&DeeCode_Empty),
+#else /* CONFIG_NO_DEX */
+		/* .mo_moddata = */ { &deemon_dexdata },
+#endif /* !CONFIG_NO_DEX */
 		/* .mo_init    = */ Dee_MODULE_INIT_INITIALIZED,
 		/* .mo_flags   = */ Dee_MODULE_FNORMAL,
 		/* .mo_importc = */ 0,

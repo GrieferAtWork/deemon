@@ -100,7 +100,9 @@ DEX_MEMBER_F("test_compile_and_run", &test_compile_and_run_o, MODSYM_FREADONLY,
 #ifdef HAVE_test_throw
 DEX_MEMBER_F("test_throw", &test_throw_o, MODSYM_FREADONLY, "()"),
 #endif /* HAVE_test_throw */
-#endif /* CONFIG_HAVE_LIBHOSTASM */
+#else /* CONFIG_HAVE_LIBHOSTASM */
+DEX_MEMBER_NODOC("__dummy__", Dee_None),
+#endif /* !CONFIG_HAVE_LIBHOSTASM */
 
 /* TODO: Proper API that allows you to re-compile deemon.Function and deemon.Code objects,
  *       and be given their compiled equivalents (`test_compile_and_run()' will *not* stay

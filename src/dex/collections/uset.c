@@ -33,6 +33,7 @@
 #include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/hashset.h>
+#include <deemon/int.h>
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
 #include <deemon/roset.h>

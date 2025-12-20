@@ -22,25 +22,16 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/arg.h>
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>
-#include <deemon/exec.h>
 #include <deemon/file.h>
 #include <deemon/int.h>
-#include <deemon/map.h>
 #include <deemon/module.h>
-#include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
+#include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/thread.h>
-#include <deemon/tuple.h>
-
-#include <hybrid/sched/yield.h>
 
 #include <stdbool.h>
 
@@ -48,7 +39,6 @@
 #include <Windows.h>
 #include <aclapi.h>
 #endif /* CONFIG_HOST_WINDOWS */
-
 
  /* MSVC thought it smart to rename `st_birthtime' to `st_ctime' */
 #undef CONFIG_STAT_CTIME_IS_ACTUALLY_BIRTHTIME

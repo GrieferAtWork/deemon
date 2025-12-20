@@ -451,15 +451,31 @@ struct Dee_module_treenode {
 };
 
 union Dee_module_moddata {
-	struct Dee_code_object    *mo_rootcode; /* [1..1][valid_if(DeeModuleDee_Type)][owned] Root code object (owned)
+#ifndef CONFIG_NO_DEX
+	struct Dee_module_dexdata *mo_dexdata;  /* [1..1][valid_if(DeeModuleDex_Type)][const] Dex data of module */
+#define Dee_MODULE_MODDATA_INIT_CODE(c) { (struct Dee_module_dexdata *)Dee_REQUIRES_TYPE(struct Dee_code_object *, c) }
+#else /* !CONFIG_NO_DEX */
+#define Dee_MODULE_MODDATA_INIT_CODE(c) { c }
+#endif /* CONFIG_NO_DEX */
+	/* FIXME: The whole of idea of "mo_rootcode" not forming a reference loop with the module itself
+	 *        is flawed! This reference loop is actually **NECESSARY** to ensure that modules remain
+	 *        loaded even if no-longer used, because importing a module invokes user-code, which may
+	 *        have side effects that shouldn't be repeated if the module is imported multiple times.
+	 *
+	 * Instead, "DeeCodeObject" should be changed such that "co_module" becomes [0..1] (with NULL
+	 * being allowed if the code running inside doesn't make use of the module; though the module
+	 * can still be determined using `DeeModule_FromObject()' after CONFIG_EXPERIMENTAL_MMAP_DEC),
+	 * and `mo_rootcode' of a user-code module may be set to `DeeCode_Empty' if all initialization
+	 * can be done statically (iow: the module's global function doesn't have any side-effects).
+	 *
+	 * Once all that is done, we're automatically at the point where modules that *can* be unloaded
+	 * as soon as they aren't used anymore, *will* automatically unload once that happens, too! */
+	struct Dee_code_object    *mo_rootcode; /* [1..1][valid_if(DeeModuleDee_Type)][const][owned] Root code object (owned)
 	                                         * Note that "owned" means that the module itself **owns** all data of
 	                                         * this code object, except for the reference in `co_module'. On top of
 	                                         * that, the tp_destroy operator of `DeeCode_Type' checks if the code
 	                                         * object is its own module's root, and if so: only decref's `co_module'
 	                                         * without clobbering any of the object's other fields. */
-#ifndef CONFIG_NO_DEX
-	struct Dee_module_dexdata *mo_dexdata;  /* [1..1][valid_if(DeeModuleDex_Type)][owned] Dex data of module (owned) */
-#endif /* !CONFIG_NO_DEX */
 };
 
 struct Dee_module_object {

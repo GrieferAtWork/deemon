@@ -30,6 +30,7 @@
 #include <deemon/float.h>
 #include <deemon/int.h>
 #include <deemon/module.h>
+#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/system-features.h>
@@ -795,319 +796,387 @@ DEX_BEGIN
 	DEX_MEMBER_F(#name, &math_##name, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, doc)
 
 #ifdef MATH_HAVE_acos
+#define HAVE_EXPORTS
 MATH_MEMBER(acos, "(x:?Dfloat)->?Dfloat\n"
                   "Returns the arc cosine of @x"),
 #endif /* MATH_HAVE_acos */
 
 #ifdef MATH_HAVE_acosh
+#define HAVE_EXPORTS
 MATH_MEMBER(acosh, "(x:?Dfloat)->?Dfloat\n"
                    "Returns the area hyperbolic cosine of @x"),
 #endif /* MATH_HAVE_acosh */
 
 #ifdef MATH_HAVE_asin
+#define HAVE_EXPORTS
 MATH_MEMBER(asin, "(x:?Dfloat)->?Dfloat\n"
                   "Returns the arc sinus of @x"),
 #endif /* MATH_HAVE_asin */
 
 #ifdef MATH_HAVE_asinh
+#define HAVE_EXPORTS
 MATH_MEMBER(asinh, "(x:?Dfloat)->?Dfloat\n"
                    "Returns the area hyperbolic sine of @x"),
 #endif /* MATH_HAVE_asinh */
 
 #ifdef MATH_HAVE_atan
+#define HAVE_EXPORTS
 MATH_MEMBER(atan, "(x:?Dfloat)->?Dfloat\n"
                   "Returns the arc tangent of @x"),
 #endif /* MATH_HAVE_atan */
 
 #ifdef MATH_HAVE_atan2
+#define HAVE_EXPORTS
 MATH_MEMBER(atan2, "(x:?Dfloat,y:?Dfloat)->?Dfloat\n"
                    "Returns the arc tangent of @x and @y"),
 #endif /* MATH_HAVE_atan2 */
 
 #ifdef MATH_HAVE_atanh
+#define HAVE_EXPORTS
 MATH_MEMBER(atanh, "(x:?Dfloat)->?Dfloat\n"
                    "Returns the area hyperbolic tangent of @x"),
 #endif /* MATH_HAVE_atanh */
 
 #ifdef MATH_HAVE_cbrt
+#define HAVE_EXPORTS
 MATH_MEMBER(cbrt, "(x:?Dfloat)->?Dfloat\n"
                   "Returns the cubic root of @x"),
 #endif /* MATH_HAVE_cbrt */
 
 #ifdef MATH_HAVE_ceil
+#define HAVE_EXPORTS
 MATH_MEMBER(ceil, "(x:?Dfloat)->?Dfloat\n"
                   "Returns @x rounded to the next greater decimal"),
 #endif /* MATH_HAVE_ceil */
 
 #ifdef MATH_HAVE_copysign
+#define HAVE_EXPORTS
 MATH_MEMBER(copysign, "(x:?Dfloat,y:?Dfloat)->?Dfloat\n"
                       "Return @x with the sign copied from @y"),
 #endif /* MATH_HAVE_copysign */
 
 #ifdef MATH_HAVE_cos
+#define HAVE_EXPORTS
 MATH_MEMBER(cos, "(x:?Dfloat)->?Dfloat\n"
                  "Returns the cosine of @x"),
 #endif /* MATH_HAVE_cos */
 
 #ifdef MATH_HAVE_cosh
+#define HAVE_EXPORTS
 MATH_MEMBER(cosh, "(x:?Dfloat)->?Dfloat\n"
                   "Returns the hyperbolic cosine of @x"),
 #endif /* MATH_HAVE_cosh */
 
 #ifdef MATH_HAVE_erf
+#define HAVE_EXPORTS
 MATH_MEMBER(erf, "(x:?Dfloat)->?Dfloat\n"
                  "Returns the error of @x"),
 #endif /* MATH_HAVE_erf */
 
 #ifdef MATH_HAVE_erfc
+#define HAVE_EXPORTS
 MATH_MEMBER(erfc, "(x:?Dfloat)->?Dfloat\n"
                   "Returns the complementary error of @x"),
 #endif /* MATH_HAVE_erfc */
 
 #ifdef MATH_HAVE_exp
+#define HAVE_EXPORTS
 MATH_MEMBER(exp, "(x:?Dfloat)->?Dfloat\n"
                  "Returns the exponential of @x"),
 #endif /* MATH_HAVE_exp */
 
 #ifdef MATH_HAVE_exp2
+#define HAVE_EXPORTS
 MATH_MEMBER(exp2, "(x:?Dfloat)->?Dfloat\n"
                   "Returns the binary exponential of @x"),
 #endif /* MATH_HAVE_exp2 */
 
 #ifdef MATH_HAVE_expm1
+#define HAVE_EXPORTS
 MATH_MEMBER(expm1, "(x:?Dfloat)->?Dfloat\n"
                    "Returns the exponential of @x minus ${1.0}"),
 #endif /* MATH_HAVE_expm1 */
 
 #ifdef MATH_HAVE_fabs
+#define HAVE_EXPORTS
 MATH_MEMBER(fabs, "(x:?Dfloat)->?Dfloat\n"
                   "Returns the absolute value of @x"),
 #endif /* MATH_HAVE_fabs */
 
 #ifdef MATH_HAVE_floor
+#define HAVE_EXPORTS
 MATH_MEMBER(floor, "(x:?Dfloat)->?Dfloat\n"
                    "Returns @x rounded to the next smaller decimal"),
 #endif /* MATH_HAVE_floor */
 
 #ifdef MATH_HAVE_fmod
+#define HAVE_EXPORTS
 MATH_MEMBER(fmod, "(x:?Dfloat,x:?Dfloat)->?Dfloat\n"
                   "Returns the floating point remainder of @x divided by @y"),
 #endif /* MATH_HAVE_fmod */
 
 #ifdef MATH_HAVE_frexp
+#define HAVE_EXPORTS
 MATH_MEMBER(frexp, "(x:?Dfloat)->?T2?Dfloat?Dint\n"
                    "Returns the mantissa and exponent of @x"),
 #endif /* MATH_HAVE_frexp */
 
 #ifdef MATH_HAVE_ilogb
+#define HAVE_EXPORTS
 MATH_MEMBER(ilogb, "(x:?Dfloat)->?Dint\n"
                    "return binary logarithm of @x"),
 #endif /* MATH_HAVE_ilogb */
 
 #ifdef MATH_HAVE_isfinite
+#define HAVE_EXPORTS
 MATH_MEMBER(isfinite, "(x:?Dfloat)->?Dbool\n"
                       "Returns ?t if @x is infinite"),
 #endif /* MATH_HAVE_isfinite */
 
 #ifdef MATH_HAVE_isinf
+#define HAVE_EXPORTS
 MATH_MEMBER(isinf, "(x:?Dfloat)->?Dbool\n"
                    "Returns ?t if @x is infinite"),
 #endif /* MATH_HAVE_isinf */
 
 #ifdef MATH_HAVE_isnan
+#define HAVE_EXPORTS
 MATH_MEMBER(isnan, "(x:?Dfloat)->?Dbool\n"
                    "Returns ?t if @x is NotANumber"),
 #endif /* MATH_HAVE_isnan */
 
 #ifdef MATH_HAVE_isnormal
+#define HAVE_EXPORTS
 MATH_MEMBER(isnormal, "(x:?Dfloat)->?Dbool\n"
                       "Returns ?t if @x is a normal number"),
 #endif /* MATH_HAVE_isnormal */
 
 #ifdef MATH_HAVE_ldexp
+#define HAVE_EXPORTS
 MATH_MEMBER(ldexp, "(float significand,exponent:?Dint)->?Dfloat\n"
                    "Generate value from significand and exponent of @x"),
 #endif /* MATH_HAVE_ldexp */
 
 #ifdef MATH_HAVE_log
+#define HAVE_EXPORTS
 MATH_MEMBER(log, "(x:?Dfloat)->?Dfloat\n"
                  "Returns the natural logarithm of @x"),
 #endif /* MATH_HAVE_log */
 
 #ifdef MATH_HAVE_log10
+#define HAVE_EXPORTS
 MATH_MEMBER(log10, "(x:?Dfloat)->?Dfloat\n"
                    "Returns the common logarithm of @x"),
 #endif /* MATH_HAVE_log10 */
 
 #ifdef MATH_HAVE_log1p
+#define HAVE_EXPORTS
 MATH_MEMBER(log1p, "(x:?Dfloat)->?Dfloat\n"
                    "Returns the logarithm of @x logarithm plus ${1.0}"),
 #endif /* MATH_HAVE_log1p */
 
 #ifdef MATH_HAVE_log2
+#define HAVE_EXPORTS
 MATH_MEMBER(log2, "(x:?Dfloat)->?Dfloat\n"
                   "Returns the binary logarithm of @x"),
 #endif /* MATH_HAVE_log2 */
 
 #ifdef MATH_HAVE_logb
+#define HAVE_EXPORTS
 MATH_MEMBER(logb, "(x:?Dfloat)->?Dfloat\n"
                   "Returns the floating-point base logarithm of @x"),
 #endif /* MATH_HAVE_logb */
 
 #ifdef MATH_HAVE_modf
+#define HAVE_EXPORTS
 MATH_MEMBER(modf, "(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
                   "Returns the fractional and integral parts of @x"),
 #endif /* MATH_HAVE_modf */
 
 #ifdef MATH_HAVE_pow
+#define HAVE_EXPORTS
 MATH_MEMBER(pow, "(x:?Dfloat,y:?Dfloat)->?Dfloat\n"
                  "Returns @x to the power of @y"),
 #endif /* MATH_HAVE_pow */
 
 #ifdef MATH_HAVE_round
+#define HAVE_EXPORTS
 MATH_MEMBER(round, "(x:?Dfloat)->?Dfloat\n"
                    "Returns @x rounded to the next nearest decimal"),
 #endif /* MATH_HAVE_round */
 
 #ifdef MATH_HAVE_sin
+#define HAVE_EXPORTS
 MATH_MEMBER(sin, "(x:?Dfloat)->?Dfloat\n"
                  "Returns the sinus of @x"),
 #endif /* MATH_HAVE_sin */
 
 #ifdef MATH_HAVE_sinh
+#define HAVE_EXPORTS
 MATH_MEMBER(sinh, "(x:?Dfloat)->?Dfloat\n"
                   "Returns the hyperbolic sinus of @x"),
 #endif /* MATH_HAVE_sinh */
 
 #ifdef MATH_HAVE_sqrt
+#define HAVE_EXPORTS
 MATH_MEMBER(sqrt, "(x:?Dfloat)->?Dfloat\n"
                   "Returns the square root of @x"),
 #endif /* MATH_HAVE_sqrt */
 
 #ifdef MATH_HAVE_tan
+#define HAVE_EXPORTS
 MATH_MEMBER(tan, "(x:?Dfloat)->?Dfloat\n"
                  "Returns the tangent of @x"),
 #endif /* MATH_HAVE_tan */
 
 #ifdef MATH_HAVE_tanh
+#define HAVE_EXPORTS
 MATH_MEMBER(tanh, "(x:?Dfloat)->?Dfloat\n"
                   "Returns the hyperbolic tangent of @x"),
 #endif /* MATH_HAVE_tanh */
 
 #ifdef MATH_HAVE_sincos
+#define HAVE_EXPORTS
 MATH_MEMBER(sincos, "(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
                     "Returns a tuple equivalent to ${(sin(x), cos(x))}"),
 #endif /* MATH_HAVE_sincos */
 
 #ifdef MATH_HAVE_asincos
+#define HAVE_EXPORTS
 MATH_MEMBER(asincos, "(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
                      "Returns a tuple equivalent to ${(asin(x), acos(x))}"),
 #endif /* MATH_HAVE_asincos */
 
 #ifdef MATH_HAVE_sincosh
+#define HAVE_EXPORTS
 MATH_MEMBER(sincosh, "(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
                      "Returns a tuple equivalent to ${(sinh(x), cosh(x))}"),
 #endif /* MATH_HAVE_sincosh */
 
 #ifdef MATH_HAVE_asincosh
+#define HAVE_EXPORTS
 MATH_MEMBER(asincosh, "(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
                       "Returns a tuple equivalent to ${(asinh(x), acosh(x))}"),
 #endif /* MATH_HAVE_asincosh */
 
 #ifdef MATH_HAVE_scalbn
+#define HAVE_EXPORTS
 MATH_MEMBER(scalbn, "(x:?Dfloat,n:?Dint)->?Dfloat\n"
                     "Scales @x by :float.radix raised to the power of @n"),
 #endif /* MATH_HAVE_scalbn */
 
 #ifdef MATH_HAVE_hypot
+#define HAVE_EXPORTS
 MATH_MEMBER(hypot, "(x:?Dfloat,y:?Dfloat)->?Dfloat\n"
                    "Returns the hypotenuse of a right-angled triangle whose legs are @x and @y"),
 #endif /* MATH_HAVE_hypot */
 
 #ifdef MATH_HAVE_tgamma
+#define HAVE_EXPORTS
 MATH_MEMBER(tgamma, "(x:?Dfloat)->?Dfloat\n"
                     "Returns the gamma function of @x"),
 #endif /* MATH_HAVE_tgamma */
 
 #ifdef MATH_HAVE_lgamma
+#define HAVE_EXPORTS
 MATH_MEMBER(lgamma, "(x:?Dfloat)->?Dfloat\n"
                     "Returns the natural logarithm of the absolute value of the gamma function of @x"),
 #endif /* MATH_HAVE_lgamma */
 
 #ifdef MATH_HAVE_remainder
+#define HAVE_EXPORTS
 MATH_MEMBER(remainder, "(numer:?Dfloat,denom:?Dfloat)->?Dfloat\n"
                        "Returns the floating-point remainder of numer/denom (rounded to nearest)"),
 #endif /* MATH_HAVE_remainder */
 
 #ifdef MATH_HAVE_remquo
+#define HAVE_EXPORTS
 MATH_MEMBER(remquo, "(numer:?Dfloat,denom:?Dfloat)->?T2?Dfloat?Dint\n"
                     "Returns the same as ?#remainder, but additionally returns the quotient internally used to determine its result"),
 #endif /* MATH_HAVE_remquo */
 
 #ifdef MATH_HAVE_nextafter
+#define HAVE_EXPORTS
 MATH_MEMBER(nextafter, "(x:?Dfloat,y:?Dfloat)->?Dfloat\n"
                        "Returns the next representable value after @x in the direction of @y"),
 #endif /* MATH_HAVE_nextafter */
 
 #ifdef MATH_HAVE_fdim
+#define HAVE_EXPORTS
 MATH_MEMBER(fdim, "(x:?Dfloat,y:?Dfloat)->?Dfloat\n"
                   "Returns the positive difference between @x and @y"),
 #endif /* MATH_HAVE_fdim */
 
 #ifdef MATH_HAVE_signbit
+#define HAVE_EXPORTS
 MATH_MEMBER(signbit, "(x:?Dfloat)->?Dbool\n"
                      "Returns whether the sign of @x is negative"),
 #endif /* MATH_HAVE_signbit */
 
 #ifdef MATH_HAVE_isgreater
+#define HAVE_EXPORTS
 MATH_MEMBER(isgreater, "(x:?Dfloat,y:?Dfloat)->?Dbool\n"
                        "Returns whether @x is greater than @y, returning ?f if either is ?#nan"),
 #endif /* MATH_HAVE_isgreater */
 
 #ifdef MATH_HAVE_isgreaterequal
+#define HAVE_EXPORTS
 MATH_MEMBER(isgreaterequal, "(x:?Dfloat,y:?Dfloat)->?Dbool\n"
                             "Returns whether @x is greater than or equal to @y, returning ?f if either is ?#nan"),
 #endif /* MATH_HAVE_isgreaterequal */
 
 #ifdef MATH_HAVE_isless
+#define HAVE_EXPORTS
 MATH_MEMBER(isless, "(x:?Dfloat,y:?Dfloat)->?Dbool\n"
                     "Returns whether @x is less than @y, returning ?f if either is ?#nan"),
 #endif /* MATH_HAVE_isless */
 
 #ifdef MATH_HAVE_islessequal
+#define HAVE_EXPORTS
 MATH_MEMBER(islessequal, "(x:?Dfloat,y:?Dfloat)->?Dbool\n"
                          "Returns whether @x is less than or equal to @y, returning ?f if either is ?#nan"),
 #endif /* MATH_HAVE_islessequal */
 
 #ifdef MATH_HAVE_islessgreater
+#define HAVE_EXPORTS
 MATH_MEMBER(islessgreater, "(x:?Dfloat,y:?Dfloat)->?Dbool\n"
                            "Returns whether @x is less than or greater than @y, returning ?f if either is ?#nan"),
 #endif /* MATH_HAVE_islessgreater */
 
 #ifdef MATH_HAVE_isunordered
+#define HAVE_EXPORTS
 MATH_MEMBER(isunordered, "(x:?Dfloat,y:?Dfloat)->?Dbool\n"
                          "Returns ?t if either @x or @y is ?#nan"),
 #endif /* MATH_HAVE_isunordered */
 
 #ifdef MATH_HAVE_inf
+#define HAVE_EXPORTS
 MATH_MEMBER(inf, "A special floating point value, representing INFinity"),
 #endif /* MATH_HAVE_inf */
 
 #ifdef MATH_HAVE_nan
+#define HAVE_EXPORTS
 MATH_MEMBER(nan, "A special floating point value, representing NotANumber"),
 #endif /* MATH_HAVE_nan */
 
 #ifdef MATH_HAVE_tau
+#define HAVE_EXPORTS
 MATH_MEMBER(tau, "The mathematical constant TAU ${pi * 2}"),
 #endif /* MATH_HAVE_tau */
 
 #ifdef MATH_HAVE_pi
+#define HAVE_EXPORTS
 MATH_MEMBER(pi, "The mathematical constant PI"),
 #endif /* MATH_HAVE_pi */
 
 #ifdef MATH_HAVE_e
+#define HAVE_EXPORTS
 MATH_MEMBER(e, "The mathematical constant E"),
 #endif /* MATH_HAVE_e */
+
+#ifndef HAVE_EXPORTS
+DEX_MEMBER_NODOC("__dummy__", Dee_None),
+#endif /* !HAVE_EXPORTS */
 
 DEX_END(NULL, NULL, NULL);
 

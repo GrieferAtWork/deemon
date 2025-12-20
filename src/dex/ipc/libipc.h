@@ -21,10 +21,9 @@
 #define GUARD_DEX_IPC_LIBIPC_H 1
 
 #include <deemon/api.h>
-
-#include <deemon/dex.h>
 #include <deemon/file.h>
 #include <deemon/object.h>
+#include <deemon/string.h>
 
 DECL_BEGIN
 

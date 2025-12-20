@@ -6174,11 +6174,12 @@ DECL_END
 
 #else /* CONFIG_HOST_WINDOWS */
 #include <deemon/dex.h>
+#include <deemon/none.h>
 
 DECL_BEGIN
 
 DEX_BEGIN
-/* --- Nothing here --- */
+DEX_MEMBER_NODOC("__dummy__", Dee_None),
 DEX_END(NULL, NULL, NULL);
 
 DECL_END

@@ -1296,6 +1296,9 @@
 #define DECLARE_DeeTime_NewFILETIME() DeeObject*DeeTime_NewFILETIME(void const*p_filetime)
 #define DEFINE_DeeTime_NewFILETIME(get_time_module) DeeObject*DeeTime_NewFILETIME(void const*p_filetime){}
 
+#define Dee_MODULE_STRUCT_EX(...) DeeModuleObject
+#define Dee_MODULE_STRUCT(...) DeeModuleObject
+
 #define DEX_BEGIN struct Dee_dex_symbol _dex_symbols[]={
 #define Dee_DEX_BEGIN struct Dee_dex_symbol _dex_symbols[]={
 #define DEX_MEMBER(...){}
