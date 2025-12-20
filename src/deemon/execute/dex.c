@@ -21,6 +21,8 @@
 #define GUARD_DEEMON_EXECUTE_DEX_C 1
 
 #include <deemon/api.h>
+
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #include <deemon/dex.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
@@ -62,70 +64,6 @@
 
 DECL_BEGIN
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-
-/* TODO: Implementation using GCC's "__start" and "__end" symbols (dex modules
- *       would then provide pointers to these within their control structures)
- * XXX: Doesn't seem to work?
- *      readelf testlib.so
- *      >> ...
- *      >>  4: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND __end
- *      >> 44: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND __start
- *      >> ...
- *
- * XXX: After further research:
- * - "_end" is the name of the symbol at the end of all sections
- * - There does not seem to be a name for the start of all sections :(
- * - However, one can do this:  '-Wl,-defsym=__dex_start__=.'
- *   >> INTDEF char __dex_start__[];  // Start of dex module
- *   >> INTDEF char _end[];           // End of dex module
- *   Here, "__dex_start__" points at the start of Elf_Ehdr
- * NOTE: This only works for ELF -- on PE, even using _end gives you errors:
- * >> `_end' referenced in section `.rdata$.refptr._end[.refptr._end]' of ...: defined in discarded section `.endjunk' of a.exe
- *
- * Support for this stuff can be tested for using the "configure" script,
- * and if not supported, we can still fall back on "dl_iterate_phdr", which
- * should work with glibc, and anything that emulates glibc closely enough.
- */
-
-INTERN NONNULL((1)) int DCALL
-module_dex_init(DeeModuleObject *__restrict self) {
-	struct Dee_module_dexdata *dex;
-	ASSERT(Dee_TYPE(self) == &DeeModuleDex_Type);
-	dex = self->mo_moddata.mo_dexdata;
-	ASSERT(dex);
-	ASSERT(dex->mdx_module == self);
-	return dex->mdx_init ? (*dex->mdx_init)() : 0;
-}
-
-
-INTERN NONNULL((1)) void DCALL
-module_dex_fini(DeeModuleObject *__restrict self) {
-	struct Dee_module_dexdata *dex;
-	ASSERT(Dee_TYPE(self) == &DeeModuleDex_Type);
-	dex = self->mo_moddata.mo_dexdata;
-	ASSERT(dex);
-	ASSERT(dex->mdx_module == self);
-
-	/* Invoke finalizer, but can't unload the module (it may be
-	 * defining static objects that are still referenced elsewhere)
-	 *
-	 * XXX: Maybe use GC visit to determine if code exists that still
-	 *      references objects statically defined by this module?
-	 * XXX: Though that wouldn't work because tp_visit is allowed
-	 *      to skip certain objects like "string" that can never
-	 *      form reference loops, when we'd need those references
-	 *      in order to detect such uses... */
-	if (dex->mdx_fini && (self->mo_init == Dee_MODULE_INIT_INITIALIZED))
-		(*dex->mdx_fini)();
-
-	/* Indicate that the dex is no longer initialized */
-	atomic_write(&self->mo_init, Dee_MODULE_INIT_UNINITIALIZED);
-}
-
-
-
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 INTDEF struct module_symbol empty_module_buckets[];
 
 /* Try to load an extension file.
@@ -922,8 +860,6 @@ DeeModule_FromStaticPointer(void const *ptr) {
 #endif /* DeeModule_FromStaticPointer_USE_STUB */
 }
 
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
 DECL_END
 
 #else /* !CONFIG_NO_DEX */
@@ -978,5 +914,6 @@ DeeModule_FromStaticPointer(void const *ptr) {
 DECL_END
 
 #endif /* CONFIG_NO_DEX */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 #endif /* !GUARD_DEEMON_EXECUTE_DEX_C */

@@ -49,7 +49,7 @@
 DECL_BEGIN
 
 /* Destructor linked into `struct Dee_heapregion' for dec file mappings. */
-PRIVATE NONNULL((1)) void DCALL
+INTERN NONNULL((1)) void DCALL
 DeeDec_heapregion_destroy(struct Dee_heapregion *__restrict self) {
 	Dec_Ehdr *ehdr = container_of(self, Dec_Ehdr, e_heap);
 	/* Finalize the dec file's file mapping (which will cause the mapping to be unloaded) */
@@ -864,7 +864,6 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 	}
 
 	/* Check if "obj" points into a dex module, or the deemon core */
-	/* TODO: For this to work properly, dex modules must statically allocate their own "DeeModuleObject" objects! */
 	mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(obj);
 	if (mod) {
 		struct Dee_dec_depmod *dep;
@@ -908,7 +907,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 		Dec_Ehdr *ehdr = container_of(self, Dec_Ehdr, e_heap);
 		struct gc_head *mod_gc_head = (struct gc_head *)(&ehdr->e_heap.hr_first + 1);
 		mod = (DeeModuleObject *)DeeGC_Object(mod_gc_head);
-		ASSERT(Dee_TYPE(mod) == &DeeModule_Type);
+		ASSERT(Dee_TYPE(mod) == &DeeModuleDee_Type);
 		if (Dee_IncrefIfNotZero(mod)) {
 			struct Dee_dec_depmod *dep;
 			ASSERT(DeeModule_GetRelBase(mod) == (uintptr_t)ehdr);
@@ -1146,7 +1145,7 @@ DeeDecWriter_AppendModule(DeeDecWriter *__restrict self,
 	 *       indicative of the module having been unloaded, but some
 	 *       objects originating from that module still being alive) */
 	Dee_dec_addr_t addr;
-	ASSERT_OBJECT_TYPE_EXACT(mod, &DeeModule_Type); /* *_EXACT because it mustn't be a Dex module */
+	ASSERT_OBJECT_TYPE_EXACT(mod, &DeeModuleDee_Type);
 	addr = DeeDecWriter_AppendObject(self, (DeeObject *)mod);
 	if unlikely(addr == 0)
 		goto err;
@@ -1270,7 +1269,7 @@ DeeDec_RelocateEx(/*inherit(always)*/ DeeDec_Ehdr *__restrict self,
 	 * first contained object should be the relevant DeeModuleObject! */
 	first_gc = (struct gc_head *)(&self->e_heap.hr_first + 1);
 	result = (DeeModuleObject *)DeeGC_Object(first_gc);
-	if (Dee_TYPE(result) != &DeeModule_Type)
+	if (Dee_TYPE(result) != &DeeModuleDee_Type)
 		goto fail;
 	if (result->ob_refcnt == 0)
 		goto fail;

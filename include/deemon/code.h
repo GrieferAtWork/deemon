@@ -657,7 +657,9 @@ struct Dee_code_object {
 		                                      * HINT: At some point during compilation, this field may also point
 		                                      *       to another code object, forming a linked list to track all
 		                                      *       code objects of a given module before that module has actually
-		                                      *       been created. */
+		                                      *       been created.
+		                                      * TODO: This field should be [0..1] and allowed to be NULL if "co_code"
+		                                      *       doesn't need the current module in order to run. */
 		DREF DeeCodeObject  *co_next;        /* [0..1] Only used during compilation: Pointer to another code object. */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION

@@ -419,6 +419,9 @@ struct Dee_module_directory {
 	COMPILER_FLEXIBLE_ARRAY(DREF struct Dee_string_object *, md_files); /* [1..1][const][md_count] Names of "*.dee" files (w/o extension) and sub-directories */
 };
 
+#define Dee_module_directory_fini(self)    Dee_Decrefv((self)->md_files, (self)->md_count)
+#define Dee_module_directory_destroy(self) (Dee_module_directory_fini(self), Dee_Free(self))
+
 struct Dee_module_libentry {
 	DREF struct Dee_string_object *mle_name; /* [0..1][lock(INTERNAL(module_libtree_lock))][valid_if(mo_absname)]
 	                                          * LIBPATH-name of module (or "NULL" if not a global module, or not
@@ -457,10 +460,10 @@ union Dee_module_moddata {
 #else /* !CONFIG_NO_DEX */
 #define Dee_MODULE_MODDATA_INIT_CODE(c) { c }
 #endif /* CONFIG_NO_DEX */
-	/* FIXME: The whole of idea of "mo_rootcode" not forming a reference loop with the module itself
-	 *        is flawed! This reference loop is actually **NECESSARY** to ensure that modules remain
-	 *        loaded even if no-longer used, because importing a module invokes user-code, which may
-	 *        have side effects that shouldn't be repeated if the module is imported multiple times.
+	/* NOTE: The whole of idea of "mo_rootcode" not forming a reference loop with the module itself
+	 *       is flawed! This reference loop is actually **NECESSARY** to ensure that modules remain
+	 *       loaded even if no-longer used, because importing a module invokes user-code, which may
+	 *       have side effects that shouldn't be repeated if the module is imported multiple times.
 	 *
 	 * Instead, "DeeCodeObject" should be changed such that "co_module" becomes [0..1] (with NULL
 	 * being allowed if the code running inside doesn't make use of the module; though the module
@@ -470,12 +473,10 @@ union Dee_module_moddata {
 	 *
 	 * Once all that is done, we're automatically at the point where modules that *can* be unloaded
 	 * as soon as they aren't used anymore, *will* automatically unload once that happens, too! */
-	struct Dee_code_object    *mo_rootcode; /* [1..1][valid_if(DeeModuleDee_Type)][const][owned] Root code object (owned)
-	                                         * Note that "owned" means that the module itself **owns** all data of
-	                                         * this code object, except for the reference in `co_module'. On top of
-	                                         * that, the tp_destroy operator of `DeeCode_Type' checks if the code
-	                                         * object is its own module's root, and if so: only decref's `co_module'
-	                                         * without clobbering any of the object's other fields. */
+	DREF struct Dee_code_object *mo_rootcode; /* [1..1][valid_if(DeeModuleDee_Type)][lock(:mo_lock)] Root code object
+	                                           * If the module is discovered to be unreachable (part of a GC reference
+	                                           * loop), then (alongside clearing of globals), this code is replaced with
+	                                           * `DeeCode_Empty' in order to break reference loops via `co_module'. */
 };
 
 struct Dee_module_object {
@@ -1417,7 +1418,22 @@ DeeModule_GetNativeSymbol(/*Module*/ DeeObject *__restrict self,
  *                No matter the case, no error is thrown for this, meaning that
  *                the caller must decide on how to handle this. */
 DFUNDEF WUNUSED DREF /*Module*/ DeeObject *DCALL
-DeeModule_FromStaticPointer(void const *ptr);
+DeeModule_FromStaticPointer(void const *ptr); /* TODO: Rename to "DeeModule_OfStaticPointer" */
+
+/* Determine the module associated with `ob'. For this purpose, "ob" may be:
+ * #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+ * - ... part of an mmap'd `.dec' file, in which case the .dec file's module
+ *   will be returned unless that module's reference counter has already hit 0.
+ *   This makes use of `DeeHeap_GetRegionOf()'
+ * #endif // CONFIG_EXPERIMENTAL_MMAP_DEC
+ * - ... statically allocated within the deemon core or some dex module,
+ *   in which case that dex module will be returned.
+ * - ... and instance of [...], in which case the embedded module reference
+ *   will be returned (if present and not-yet-destroyed):
+ *   - DeeType_Type: DeeTypeObject::tp_module
+ *   - DeeCode_Type: DeeCodeObject::co_module */
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_OfObject(DeeObject *__restrict ob);
 
 /* Lookup an external symbol.
  * Convenience function (same as `DeeObject_GetAttr(DeeModule_OpenGlobal(...)+DeeModule_RunInit, ...)') */

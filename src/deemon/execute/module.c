@@ -133,11 +133,6 @@ done:
 
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#ifndef CONFIG_NO_DEX
-INTDEF NONNULL((1)) int DCALL
-module_dex_init(DeeModuleObject *__restrict self);
-#endif /* !CONFIG_NO_DEX */
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 DeeModule_DoInitialize(DeeModuleObject *__restrict me) {
 	DREF DeeFunctionObject *rootfunc;
@@ -145,8 +140,13 @@ DeeModule_DoInitialize(DeeModuleObject *__restrict me) {
 #ifndef CONFIG_NO_DEX
 	ASSERT(Dee_TYPE(me) == &DeeModuleDee_Type ||
 	       Dee_TYPE(me) == &DeeModuleDex_Type);
-	if (Dee_TYPE(me) == &DeeModuleDex_Type)
-		return module_dex_init(me);
+	if (Dee_TYPE(me) == &DeeModuleDex_Type) {
+		struct Dee_module_dexdata *dexdata;
+		dexdata = me->mo_moddata.mo_dexdata;
+		ASSERT(dexdata);
+		ASSERT(dexdata->mdx_module == me);
+		return dexdata->mdx_init ? (*dexdata->mdx_init)() : 0;
+	}
 #else /* !CONFIG_NO_DEX */
 	ASSERT(Dee_TYPE(me) == &DeeModuleDee_Type);
 #endif /* CONFIG_NO_DEX */
@@ -2433,40 +2433,20 @@ PRIVATE struct type_method tpconst module_class_methods[] = {
 };
 
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 INTDEF NONNULL((1)) void DCALL
 module_unbind(DeeModuleObject *__restrict self);
-
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-INTDEF NONNULL((1)) void DCALL
-code_destroy_common(DeeCodeObject *__restrict self);
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 PRIVATE NONNULL((1)) void DCALL
 module_fini(DeeModuleObject *__restrict self) {
 	weakref_support_fini(self);
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	if (self->mo_absname) {
-		module_unbind(self);
-		Dee_Free(self->mo_absname);
-	}
-	if (self->mo_dir && self->mo_dir != (struct Dee_module_directory *)&empty_module_directory) {
-		size_t i;
-		for (i = 0; i < self->mo_dir->md_count; ++i)
-			Dee_Decref_likely(self->mo_dir->md_files[i]);
-		Dee_Free(self->mo_dir);
-	}
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	module_unbind(self);
 	Dee_Decref(self->mo_name);
 	Dee_XDecref(self->mo_root);
 	Dee_XDecref(self->mo_path);
-	if (self->mo_flags & Dee_MODULE_FDIDLOAD)
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	{
+	if (self->mo_flags & Dee_MODULE_FDIDLOAD) {
 		Dee_XDecrefv(self->mo_globalv, self->mo_globalc);
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		Dee_Free(self->mo_globalv);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}
 	if (self->mo_bucketv != empty_module_buckets) {
 		struct module_symbol *iter, *end;
@@ -2489,24 +2469,15 @@ module_fini(DeeModuleObject *__restrict self) {
 PRIVATE NONNULL((1, 2)) void DCALL
 module_visit(DeeModuleObject *__restrict self,
              Dee_visit_t proc, void *arg) {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	DeeModule_LockRead(self);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	DeeModule_LockRead(self);
 	/* Visit the root-code object. */
 	Dee_XVisit(self->mo_root);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	Dee_Visit(self->mo_name);
 	Dee_XVisit(self->mo_path);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Visit global variables. */
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	if (self->mo_flags & Dee_MODULE_FDIDLOAD)
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	{
+	if (self->mo_flags & Dee_MODULE_FDIDLOAD) {
 		Dee_XVisitv(self->mo_globalv, self->mo_globalc);
 	}
 
@@ -2519,15 +2490,11 @@ module_visit(DeeModuleObject *__restrict self,
 PRIVATE NONNULL((1)) void DCALL
 module_clear(DeeModuleObject *__restrict self) {
 	DREF DeeObject *buffer[16];
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	DREF DeeCodeObject *root_code;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	size_t i, bufi = 0;
 	DeeModule_LockWrite(self);
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	root_code     = self->mo_root;
 	self->mo_root = NULL;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 restart:
 	i = self->mo_globalc;
 	while (i--) {
@@ -2551,9 +2518,7 @@ restart:
 	}
 	DeeModule_LockEndWrite(self);
 	Dee_Decrefv(buffer, bufi);
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	Dee_XDecref(root_code);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -2587,43 +2552,233 @@ PRIVATE struct type_gc tpconst module_gc = {
 	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&module_pclear,
 	/* .tp_gcprio = */ Dee_GC_PRIORITY_MODULE
 };
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 
-INTDEF NONNULL((1, 2)) void DCALL
-code_visit_common(DeeCodeObject *__restrict self,
-                  Dee_visit_t proc, void *arg);
+/* Unbind "self" from relevant trees.
+ * Caller must ensure that `self->mo_absname != NULL' */
+INTDEF NONNULL((1)) void DCALL
+module_unbind(DeeModuleObject *__restrict self);
 
+PRIVATE NONNULL((1)) void DCALL
+module_common_destroy(DeeModuleObject *__restrict self) {
+	if (self->mo_absname) {
+		module_unbind(self);
+		Dee_Free(self->mo_absname);
+	}
+	if (self->mo_dir != NULL &&
+	    self->mo_dir != (struct Dee_module_directory *)&empty_module_directory)
+		Dee_module_directory_destroy(self->mo_dir);
+}
+
+
+/************************************************************************/
+/* DeeModuleDir_Type -- /opt                                            */
+/************************************************************************/
+PRIVATE NONNULL((1)) void DCALL
+module_dir_destroy(DeeModuleObject *__restrict self) {
+	/* Assert always-true invariants for "DeeModuleDir_Type" */
+	ASSERT(Dee_TYPE(self) == &DeeModuleDir_Type);
+	ASSERT(self->mo_importc == 0);
+	ASSERT(self->mo_importv == NULL);
+	ASSERT(self->mo_globalc == 0);
+	ASSERT(self->mo_bucketm == 0);
+	ASSERT(self->mo_bucketv == empty_module_buckets);
+	ASSERT(self->mo_init == Dee_MODULE_INIT_INITIALIZED);
+	self = (DeeModuleObject *)DeeGC_Untrack((DeeObject *)self);
+	module_common_destroy(self);
+	DeeGCObject_Free(self);
+}
+
+PRIVATE struct type_gc tpconst module_dir_gc = {
+	/* .tp_clear  = */ NULL,
+	/* .tp_pclear = */ NULL,
+	/* .tp_gcprio = */ Dee_GC_PRIORITY_MODULE
+};
+
+
+
+/************************************************************************/
+/* DeeModuleDee_Type -- /opt/script.dee                                 */
+/************************************************************************/
 PRIVATE NONNULL((1, 2)) void DCALL
 module_dee_visit(DeeModuleObject *__restrict self,
                  Dee_visit_t proc, void *arg) {
-	/* Visit the root-code object. */
-	DeeCodeObject *root = self->mo_moddata.mo_rootcode;
 	ASSERT(Dee_TYPE(self) == &DeeModuleDee_Type);
-	ASSERT(root->co_module == self);
-	ASSERT(root->ob_type == &DeeCode_Type);
-	code_visit_common(root, proc, arg);
+	DeeModule_LockRead(self);
+	Dee_XVisitv(self->mo_globalv, self->mo_globalc);
+	Dee_Visit(self->mo_moddata.mo_rootcode);
+	Dee_Visitv(self->mo_importv, self->mo_importc);
+	DeeModule_LockEndRead(self);
 }
 
-INTDEF NONNULL((1)) void DCALL
-code_destroy_common(DeeCodeObject *__restrict self);
+PRIVATE NONNULL((1, 2)) void DCALL
+module_dee_destroy(DeeModuleObject *__restrict self,
+                   Dee_visit_t proc, void *arg) {
+	/* Assert always-true invariants for "DeeModuleDee_Type" */
+	ASSERT(Dee_TYPE(self) == &DeeModuleDee_Type);
+	ASSERT(self->mo_init == Dee_MODULE_INIT_INITIALIZED ||
+	       self->mo_init == Dee_MODULE_INIT_UNINITIALIZED);
+	self = (DeeModuleObject *)DeeGC_Untrack((DeeObject *)self);
+
+	/* Destroy Dee-specific data */
+	Dee_XDecrefv(self->mo_globalv, self->mo_globalc);
+	Dee_Decref(self->mo_moddata.mo_rootcode);
+	Dee_Decrefv(self->mo_importv, self->mo_importc);
+	Dee_Free((void *)self->mo_importv);
+
+	/* Destroy common data */
+	module_common_destroy(self);
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+	/* TODO: Custom version of Dee_Free() that doesn't DBG_memset() the payload.
+	 * Reason: the module's "ob_refcnt" must remain set to "0" so that DeeHeap_GetRegionOf()
+	 *         can still locate the module of an object, but see that it's ob_refcnt==0,
+	 *         and then not trying to incref it again (which would be possible if DBG_memset
+	 *         were to fill ob_refcnt with some non-zero debug pattern)
+	 * @see TODO in DeeDecWriter_AppendModule */
+	DeeGCObject_Free(self);
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+	DeeGCObject_Free(self);
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
+}
 
 PRIVATE NONNULL((1)) void DCALL
-module_dee_fini(DeeModuleObject *__restrict self) {
-	DeeCodeObject *root = self->mo_moddata.mo_rootcode;
-	ASSERT(root->co_module == self);
-	ASSERT(root->ob_refcnt == 0);
-	ASSERT(root->ob_type == &DeeCode_Type);
-	/* To prevent a reference loop, dee-modules literally **own** the data of their root code.
-	 * Matching this special case, there is another check in "DeeCode_Type.tp_dtor" to only do
-	 * a decref() on "co_module" if the code object is it's module's root code. */
-	code_destroy_common(root);
+module_dee_clear(DeeModuleObject *__restrict self) {
+	uint16_t i;
+	DeeModule_LockWrite(self);
+	for (i = self->mo_globalc; i--;) {
+		/* Operate in reverse order, better mirrors the
+		 * (likely) order in which stuff was initialized in. */
+		DREF DeeObject *ob = self->mo_globalv[i];
+		if (ob == NULL)
+			continue;
+		self->mo_globalv[i] = NULL;
+
+		/* Temporarily unlock the module to immediately
+		 * destroy a global variable when the priority
+		 * level isn't encompassing _all_ objects, yet. */
+		DeeModule_LockEndWrite(self);
+		Dee_Decref(ob);
+		DeeModule_LockWrite(self);
+	}
+	DeeModule_LockEndWrite(self);
 }
 
-INTDEF NONNULL((1)) void DCALL /* from "./dex.c" */
-module_dex_fini(DeeModuleObject *__restrict self);
+PRIVATE NONNULL((1)) void DCALL
+module_dee_pclear(DeeModuleObject *__restrict self, unsigned int priority) {
+	uint16_t i;
+	DeeModule_LockWrite(self);
+	for (i = self->mo_globalc; i--;) {
+		/* Operate in reverse order, better mirrors the
+		 * (likely) order in which stuff was initialized in. */
+		DREF DeeObject *ob = self->mo_globalv[i];
+		if (ob == NULL)
+			continue;
+		if (DeeObject_GCPriority(ob) < priority)
+			continue; /* Clear this object in a later pass. */
+		self->mo_globalv[i] = NULL;
+
+		/* Temporarily unlock the module to immediately
+		 * destroy a global variable when the priority
+		 * level isn't encompassing _all_ objects, yet. */
+		DeeModule_LockEndWrite(self);
+		Dee_Decref(ob);
+		DeeModule_LockWrite(self);
+	}
+	DeeModule_LockEndWrite(self);
+}
+
+PRIVATE struct type_gc tpconst module_dee_gc = {
+	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&module_dee_clear,
+	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&module_dee_pclear,
+	/* .tp_gcprio = */ Dee_GC_PRIORITY_MODULE
+};
+
+
+
+
+#ifndef CONFIG_NO_DEX
+PRIVATE NONNULL((1, 2)) void DCALL
+module_dex_visit(DeeModuleObject *__restrict self,
+                 Dee_visit_t proc, void *arg) {
+	ASSERT(Dee_TYPE(self) == &DeeModuleDex_Type);
+	ASSERT(self->mo_importc == 0);
+	ASSERT(self->mo_importv == NULL);
+	DeeModule_LockRead(self);
+	Dee_XVisitv(self->mo_globalv, self->mo_globalc);
+	DeeModule_LockEndRead(self);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+module_dex_destroy(DeeModuleObject *__restrict self,
+                   Dee_visit_t proc, void *arg) {
+	struct Dee_module_dexdata *dexdata;
+	/* Assert always-true invariants for "DeeModuleDex_Type" */
+	ASSERT(Dee_TYPE(self) == &DeeModuleDex_Type);
+	ASSERT(self->mo_init == Dee_MODULE_INIT_INITIALIZED ||
+	       self->mo_init == Dee_MODULE_INIT_UNINITIALIZED);
+	ASSERT(self->mo_importc == 0);
+	ASSERT(self->mo_importv == NULL);
+	self = (DeeModuleObject *)DeeGC_Untrack((DeeObject *)self);
+	dexdata = self->mo_moddata.mo_dexdata;
+	ASSERT(dexdata);
+	ASSERT(dexdata->mdx_module == self);
+
+	/* Invoke finalizer if dex was ever initialized. */
+	if ((dexdata->mdx_fini != NULL) &&
+	    (self->mo_init == Dee_MODULE_INIT_INITIALIZED))
+		(*dexdata->mdx_fini)();
+
+	Dee_XDecrefv(self->mo_globalv, self->mo_globalc);
+
+	/* Destroy common data */
+	module_common_destroy(self);
+
+#if 0
+	/* FIXME: Work-around for preventing DEX modules being unloaded
+	 *        while objects referring to statically defined types inside
+	 *        still exist.
+	 *        The proper way to fix this would be to use a GC-like mechanism
+	 *        for this that delays the actual DEX unloading until no objects
+	 *        exist that are apart of, or use types from the DEX.
+	 *        Note that for this, we must also change the ruling that objects
+	 *        pointing to other objects don't have to implement GC-visit if it
+	 *        is known that none of those objects are ever GC objects. With this
+	 *        change, _all_ objects have to implement GC-visit! (though we could
+	 *        add a type-flag to indicate that pointed-to objects can never form
+	 *        a ~conventional~ loop) */
+	DeeSystem_DlClose(dexdata->mdx_handle);
+#endif
+}
+
+PRIVATE NONNULL((1)) void DCALL
+module_dex_clear_common(DeeModuleObject *__restrict self) {
+	struct Dee_module_dexdata *dexdata = self->mo_moddata.mo_dexdata;
+	if (dexdata->mdx_clear)
+		(*dexdata->mdx_clear)();
+}
+
+PRIVATE NONNULL((1)) void DCALL
+module_dex_clear(DeeModuleObject *__restrict self) {
+	module_dex_clear_common(self);
+	module_dee_clear(self);
+}
+
+PRIVATE NONNULL((1)) void DCALL
+module_dex_pclear(DeeModuleObject *__restrict self, unsigned int priority) {
+	module_dex_clear_common(self);
+	module_dee_pclear(self, priority);
+}
+
+PRIVATE struct type_gc tpconst module_dex_gc = {
+	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&module_dex_clear,
+	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&module_dex_pclear,
+	/* .tp_gcprio = */ Dee_GC_PRIORITY_MODULE
+};
+#endif /* !CONFIG_NO_DEX */
 
 PUBLIC DeeTypeObject DeeModule_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -2637,35 +2792,35 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,   /* !!! Not constructible !!! */
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,   /* !!! Not constructible !!! */
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,   /* !!! Not constructible !!! */
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,   /* !!! Not constructible !!! */
 				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)NULL // TODO: &module_writedec
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL, /* !!! Not constructible !!! */
+				/* .tp_writedec    = */ (Dee_funptr_t)NULL
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&module_fini,
+		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&module_str,
-		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&module_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&module_visit,
-	/* .tp_gc            = */ &module_gc,
-	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &DeeObject_GenericCmpByAddr,
-	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
-	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
-	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ &module_attr,
-	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
+	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ module_getsets,
@@ -2674,8 +2829,8 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 	/* .tp_class_getsets = */ module_class_getsets,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ NULL,
 };
 
 PUBLIC DeeTypeObject DeeModuleDir_Type = {
@@ -2694,13 +2849,15 @@ PUBLIC DeeTypeObject DeeModuleDir_Type = {
 				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)NULL
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL, /* TODO */
+				/* .tp_writedec    = */ (Dee_funptr_t)NULL  /* TODO */
 			}
 		},
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
+		/* .tp_deepload    = */ NULL,
+		/* .tp_destroy     = */ (void (DCALL *)(DeeObject *__restrict))&module_dir_destroy,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
@@ -2709,8 +2866,8 @@ PUBLIC DeeTypeObject DeeModuleDir_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ NULL,
 	},
-	/* .tp_visit         = */ NULL,
-	/* .tp_gc            = */ NULL,
+	/* .tp_visit         = */ NULL, // (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&module_dir_visit, /* Wouldn't have anything to visit! */ 
+	/* .tp_gc            = */ &module_dir_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ NULL,
@@ -2746,13 +2903,15 @@ PUBLIC DeeTypeObject DeeModuleDee_Type = {
 				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)NULL
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL, /* TODO */
+				/* .tp_writedec    = */ (Dee_funptr_t)NULL  /* TODO */
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&module_dee_fini,
+		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
+		/* .tp_deepload    = */ NULL,
+		/* .tp_destroy     = */ (void (DCALL *)(DeeObject *__restrict))&module_dee_destroy,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
@@ -2761,8 +2920,8 @@ PUBLIC DeeTypeObject DeeModuleDee_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ NULL,
 	},
-	/* .tp_visit         = */ NULL,
-	/* .tp_gc            = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&module_dee_visit,
+	/* .tp_gc            = */ &module_dee_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ NULL,
@@ -2799,13 +2958,15 @@ PUBLIC DeeTypeObject DeeModuleDex_Type = {
 				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)NULL
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL, /* TODO */
+				/* .tp_writedec    = */ (Dee_funptr_t)NULL  /* TODO */
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&module_dex_fini,
+		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
+		/* .tp_deepload    = */ NULL,
+		/* .tp_destroy     = */ (void (DCALL *)(DeeObject *__restrict))&module_dex_destroy,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
@@ -2814,8 +2975,8 @@ PUBLIC DeeTypeObject DeeModuleDex_Type = {
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ NULL,
 	},
-	/* .tp_visit         = */ NULL,
-	/* .tp_gc            = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&module_dex_visit,
+	/* .tp_gc            = */ &module_dex_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ NULL,
@@ -2858,7 +3019,7 @@ INTERN struct Dee_empty_module_struct DeeModule_Empty = {
 			/* .mle_dat  = */ { (DeeModuleObject *)&DeeModule_Empty.m_module },
 		},
 		/* .mo_dir     = */ (struct Dee_module_directory *)&empty_module_directory,
-		/* .mo_moddata = */ { &DeeCode_Empty },
+		/* .mo_moddata = */ Dee_MODULE_MODDATA_INIT_CODE(&DeeCode_Empty),
 		/* .mo_init    = */ Dee_MODULE_INIT_INITIALIZED,
 		/* .mo_flags   = */ Dee_MODULE_FNORMAL,
 		/* .mo_importc = */ 0,

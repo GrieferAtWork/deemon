@@ -120,7 +120,7 @@ struct Dee_dex_symbol {
 #define Dee_DEXBOUNDS_USE_LOADBOUNDS___dex_start____AND___end
 #define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
 #define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC
-#elif 0 && defined(DeeSystem_DlOpen_USE_LoadLibrary)
+#elif defined(DeeSystem_DlOpen_USE_LoadLibrary)
 #define Dee_DEXBOUNDS_USE_LOADBOUNDS__GetModuleInformation
 #define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
 #elif (defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dl_iterate_phdr) && \

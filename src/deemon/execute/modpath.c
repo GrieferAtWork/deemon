@@ -23,7 +23,10 @@
 #include <deemon/api.h>
 /**/
 
+#include <deemon/dec.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
+#include <deemon/heap.h>
 #include <deemon/list.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
@@ -34,8 +37,8 @@
 #include <deemon/system.h>
 #include <deemon/thread.h>
 #include <deemon/types.h>
-#include <deemon/util/atomic.h>
 #include <deemon/util/atomic-ref.h>
+#include <deemon/util/atomic.h>
 
 #include <hybrid/align.h>
 #include <hybrid/debug-alignment.h>
@@ -91,6 +94,8 @@ DECL_BEGIN
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
+#undef container_of
+#define container_of COMPILER_CONTAINER_OF
 
 #ifdef __ARCH_PAGESIZE_MIN
 #define SAMEPAGE(a, b) (((uintptr_t)(a) & (__ARCH_PAGESIZE_MIN - 1)) == ((uintptr_t)(b) & (__ARCH_PAGESIZE_MIN - 1)))
@@ -603,7 +608,8 @@ dex_initialize_loadstring(struct Dee_module_dexdata *__restrict data) {
 
 /* Ensure that "dex_byaddr_tree" has been initialized. */
 #ifdef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC
-#define dex_byaddr_ensure_initialized() (void)0
+#define dex_byaddr_ensure_initialized()      (void)0
+#define dex_byaddr_ensure_initialized_impl() (void)0
 #else /* Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC */
 #define dex_byaddr_ensure_initialized() \
 	(void)(likely(dex_byaddr_tree != NULL) || (dex_byaddr_ensure_initialized_impl(), 1))
@@ -627,6 +633,7 @@ dex_byaddr_ensure_initialized_impl(void) {
 	dex_initialize_loadbounds(&deemon_dexdata);
 	dex_initialize_loadstring(&deemon_dexdata);
 
+	/* Set by-addr tree to consist of exactly the deemon core. */
 	dex_byaddr_tree = &deemon_dexdata;
 }
 #endif /* !Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC */
@@ -748,6 +755,7 @@ handle_existing_dexdata:
 	result->mo_absname  = absname;    /* Inherit reference */
 	result->mo_init     = Dee_MODULE_INIT_UNINITIALIZED;
 	result->mo_flags    = Dee_MODULE_FNORMAL;
+	result->mo_dir      = NULL;
 	dexdata->mdx_handle = dex_handle; /* Inherit reference */
 
 	/* Initialize OS-specific data of the module... */
@@ -783,6 +791,8 @@ handle_existing_dexdata:
 	/* Register the module globally... */
 	dex_byaddr_insert(&dex_byaddr_tree, dexdata);
 	module_abstree_insert(&module_abstree_root, result);
+	Dee_XIncrefv(result->mo_globalv, result->mo_globalc);
+	result = (DeeModuleObject *)DeeGC_Track((DeeObject *)result);
 	LOCAL_unlock();
 	return result;
 #ifdef WANT_err_unlock_dlerror
@@ -811,10 +821,151 @@ err:
 	return NULL;
 #undef LOCAL_unlock
 }
+
+/* Special handling needed to deal with the "@NN"
+ * suffix caused by STDCALL functions on i386-pe */
+#undef NEED_DeeModule_GetNativeSymbol_AT_SUFFIX
+#if defined(__i386__) && !defined(__x86_64__) && defined(__PE__)
+#define NEED_DeeModule_GetNativeSymbol_AT_SUFFIX
+#endif /* __i386__ && !__x86_64__ && __PE__ */
+
+PRIVATE WUNUSED NONNULL((1, 2)) void *DCALL
+DeeSystem_DlSym_with_decoration(void *handle, char const *__restrict name) {
+	void *result = DeeSystem_DlSym(handle, name);
+	if (!result) {
+#ifdef NEED_DeeModule_GetNativeSymbol_AT_SUFFIX
+		/* Try again after inserting an underscore. */
+		char *temp_name;
+		size_t namelen = strlen(name);
+#ifdef Dee_MallocaNoFailc
+		Dee_MallocaNoFailc(temp_name, namelen + 6, sizeof(char));
+#else /* Dee_MallocaNoFailc */
+		temp_name = (char *)Dee_Mallocac(namelen + 6, sizeof(char));
+		if unlikely(!temp_name) {
+			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+			return NULL; /* ... Technically not correct, but if memory has gotten
+			              *     this low, that's the last or the user's problems. */
+		}
+#endif /* !Dee_MallocaNoFailc */
+		memcpyc(temp_name + 1, name, namelen + 1, sizeof(char));
+		temp_name[0] = '_';
+		result = DeeSystem_DlSym(handle, temp_name);
+		if (!result) {
+			/* Try to append (in order): "@0", "@4", "@8", "@12", "@16", "@20", "@24", "@28", "@32" */
+			size_t n;
+			for (n = 0; n <= 32; n += 4) {
+				Dee_sprintf(temp_name + 1 + namelen, "@%" PRFuSIZ, n);
+
+				/* Try without leading '_' */
+				result = DeeSystem_DlSym(handle, temp_name + 1);
+				if (result)
+					break;
+
+				/* Try with leading '_' */
+				result = DeeSystem_DlSym(handle, temp_name);
+				if (result)
+					break;
+			}
+		}
+		Dee_Freea(temp_name);
+
+#else /* NEED_DeeModule_GetNativeSymbol_AT_SUFFIX */
+		/* Try again after inserting an underscore. */
+		if (SAMEPAGE(name, name - 1) && name[-1] == '_') {
+			result = DeeSystem_DlSym(handle, name - 1);
+		} else {
+			char *temp_name;
+			size_t namelen = strlen(name);
+#ifdef Dee_MallocaNoFailc
+			Dee_MallocaNoFailc(temp_name, namelen + 2, sizeof(char));
+#else /* Dee_MallocaNoFailc */
+			temp_name = (char *)Dee_Mallocac(namelen + 2, sizeof(char));
+			if unlikely(!temp_name) {
+				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+				return NULL; /* ... Technically not correct, but if memory has gotten
+				              *     this low, that's the last or the user's problems. */
+			}
+#endif /* !Dee_MallocaNoFailc */
+			memcpyc(temp_name + 1, name,
+			        namelen + 1,
+			        sizeof(char));
+			temp_name[0] = '_';
+			result = DeeSystem_DlSym(handle, temp_name);
+			Dee_Freea(temp_name);
+		}
+#endif /* !NEED_DeeModule_GetNativeSymbol_AT_SUFFIX */
+	}
+	return result;
+}
+
+
+/* Return the export address of a native symbol exported from a dex `self'.
+ * When `self' isn't a dex, but a regular module, or if the symbol wasn't found, return `NULL'.
+ * NOTE: Because native symbols cannot appear in user-defined modules,
+ *       in the interest of keeping native functionality to its bare
+ *       minimum, any code making using of this function should contain
+ *       a fallback that calls a global symbol of the module, rather
+ *       than a native symbol:
+ * >> static int (*p_add)(int x, int y) = NULL;
+ * >> if (!p_add) *(void **)&p_add = DeeModule_GetNativeSymbol(IMPORTED_MODULE, "add");
+ * >> // Fallback: Invoke a member attribute `add' if the native symbol doesn't exist.
+ * >> if (!p_add) return DeeObject_CallAttrStringf(IMPORTED_MODULE, "add", "dd", x, y);
+ * >> // Invoke the native symbol.
+ * >> return DeeInt_NewInt((*p_add)(x, y)); */
+PUBLIC WUNUSED NONNULL((1, 2)) void *DCALL
+DeeModule_GetNativeSymbol(DeeObject *__restrict self,
+                          char const *__restrict name) {
+#ifndef CONFIG_NO_DEX
+	if (Dee_TYPE(self) == &DeeModuleDex_Type) {
+		struct Dee_module_dexdata *dexdata;
+		dexdata = ((DeeModuleObject *)self)->mo_moddata.mo_dexdata;
+#ifndef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC
+		if unlikely(!dexdata->mdx_handle) {
+			/* In case "self" is the deemon core module,
+			 * lazily initialize the system handle. */
+			dex_byaddr_lock_write();
+			dex_byaddr_ensure_initialized();
+			dex_byaddr_lock_endwrite();
+		}
+#endif /* !Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC */
+		return DeeSystem_DlSym_with_decoration(dexdata->mdx_handle, name);
+	}
+#endif /* !CONFIG_NO_DEX */
+	/* TODO */
+	(void)self;
+	(void)name;
+	COMPILER_IMPURE();
+	return NULL;
+}
+
+/* Given a static pointer `ptr' (as in: a pointer to some statically allocated structure),
+ * try to determine which DEX module (if not the deemon core itself) was used to declare
+ * a structure located at that pointer, and return a reference to that module.
+ * If this proves to be impossible, or if `ptr' is an invalid pointer, return `NULL'
+ * instead, but don't throw an error.
+ * When deemon has been built with `CONFIG_NO_DEX', this function will always return
+ * a reference to the builtin `deemon' module.
+ * @return: * :   A pointer to the dex module (or to `DeeModule_GetDeemon()') that
+ *                contains a static memory segment of which `ptr' is apart of.
+ * @return: NULL: Either `ptr' is an invalid pointer, part of a library not loaded
+ *                as a module, or points to a heap/stack segment.
+ *                No matter the case, no error is thrown for this, meaning that
+ *                the caller must decide on how to handle this. */
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeModule_FromStaticPointer(void const *ptr) {
+	DREF DeeModuleObject *result;
+	(void)ptr;
+	COMPILER_IMPURE();
+	result = DeeModule_GetDeemon();
+	Dee_Incref(result);
+	return (DREF DeeObject *)result;
+}
 #endif /* !CONFIG_NO_DEX */
 
 
 
+/* Unbind "self" from relevant trees.
+ * Caller must ensure that `self->mo_absname != NULL' */
 INTERN NONNULL((1)) void DCALL
 module_unbind(DeeModuleObject *__restrict self) {
 	ASSERT(self->mo_absname);
@@ -6105,6 +6256,102 @@ PUBLIC void DCALL DeeModule_InitPath(void) {
 	}
 }
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
+
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+/* Destructor linked into `struct Dee_heapregion' for dec file mappings. */
+INTDEF NONNULL((1)) void DCALL
+DeeDec_heapregion_destroy(struct Dee_heapregion *__restrict self);
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+
+/* Determine the module associated with `ob'. For this purpose, "ob" may be:
+ * #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+ * - ... part of an mmap'd `.dec' file, in which case the .dec file's module
+ *   will be returned unless that module's reference counter has already hit 0.
+ *   This makes use of `DeeHeap_GetRegionOf()'
+ * #endif // CONFIG_EXPERIMENTAL_MMAP_DEC
+ * - ... statically allocated within the deemon core or some dex module,
+ *   in which case that dex module will be returned.
+ * - ... and instance of [...], in which case the embedded module reference
+ *   will be returned (if present and not-yet-destroyed):
+ *   - DeeType_Type: DeeTypeObject::tp_module
+ *   - DeeCode_Type: DeeCodeObject::co_module */
+PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_OfObject(DeeObject *__restrict ob) {
+	DeeModuleObject *result;
+	DeeTypeObject *tp;
+	ASSERT_OBJECT(ob);
+
+	/* Check for mmap'd .dec files */
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+	tp = Dee_TYPE(ob);
+	{
+		struct Dee_heapregion *region;
+		void *baseptr = ob;
+		if (DeeType_IsGC(tp))
+			baseptr = DeeGC_Head(ob);
+		region = DeeHeap_GetRegionOf(baseptr);
+		if (region && region->hr_destroy == &DeeDec_heapregion_destroy) {
+			/* Jup: "ob" belongs to a .dec file mapping */
+			Dec_Ehdr *ehdr = container_of(region, Dec_Ehdr, e_heap);
+			struct gc_head *mod_gc_head = (struct gc_head *)(&ehdr->e_heap.hr_first + 1);
+			result = (DeeModuleObject *)DeeGC_Object(mod_gc_head);
+			ASSERT(Dee_TYPE(result) == &DeeModuleDee_Type);
+			if (Dee_IncrefIfNotZero(result))
+				return (DREF DeeObject *)result;
+		}
+	}
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+
+	/* Check for a static pointer */
+#ifndef CONFIG_NO_DEX
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	{
+		struct Dee_module_dexdata *dexdata;
+		dex_byaddr_lock_read();
+#ifndef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC
+		if unlikely(!dex_byaddr_tree) {
+			dex_byaddr_lock_upgrade();
+			if likely(!dex_byaddr_tree)
+				dex_byaddr_ensure_initialized_impl();
+			dex_byaddr_lock_downgrade();
+		}
+#endif /* !Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC */
+		dexdata = dex_byaddr_find(ob);
+		if (dexdata) {
+			result = dexdata->mdx_module;
+			Dee_Incref(result);
+			dex_byaddr_lock_endread();
+			return (DREF DeeObject *)result;
+		}
+		dex_byaddr_lock_endread();
+	}
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	result = (DeeModuleObject *)DeeModule_FromStaticPointer(ob);
+	if (result)
+		return (DeeObject *)result;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#endif /* !CONFIG_NO_DEX */
+
+#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
+	tp = Dee_TYPE(ob);
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+
+	/* Check for certain types of objects */
+	if (DeeType_IsTypeType(tp))
+		return DeeType_GetModule((DeeTypeObject *)ob);
+	if (DeeType_Extends(tp, &DeeModule_Type))
+		return_reference_(ob); /* The module of a module, is just that same module again! */
+	if (tp == &DeeCode_Type) {
+		DeeCodeObject *me = (DeeCodeObject *)ob;
+		return_reference(me->co_module);
+	}
+
+	/* Unable to determine module... (this happens
+	 * for temporary heap objects and-the-like) */
+	return NULL;
+}
+
 
 DECL_END
 

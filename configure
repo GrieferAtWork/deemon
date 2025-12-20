@@ -1246,11 +1246,13 @@ EOF
 fi
 
 
-
+# Cleanup temporary files related to configuration tests
 unlink "$CONFTEST" > /dev/null 2>&1
 unlink "${CONFTEST_H}.gch" > /dev/null 2>&1
 unlink "$CONFTEST_H" > /dev/null 2>&1
 unlink "$CONFTEST_OUT" > /dev/null 2>&1
+unlink "$CONFTEST_EXE" > /dev/null 2>&1
+unlink "${CONFTEST_EXE}.exe" > /dev/null 2>&1
 
 
 
