@@ -147,9 +147,12 @@ DFUNDEF WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void);
 
 /* Return the last modified timestamp of `filename'
  * > uses the same format as `DeeSystem_GetWalltime()'
- * @return: (uint64_t)-1: An error was thrown */
+ * @return: (uint64_t)-1: An error was thrown
+ * @return: 0 : Failed to query file timestamp (probably ENOENT) */
 DFUNDEF WUNUSED NONNULL((1)) uint64_t DCALL
 DeeSystem_GetLastModified(/*String*/ DeeObject *__restrict filename);
+DFUNDEF WUNUSED NONNULL((1)) uint64_t DCALL
+DeeSystem_GetLastModifiedString(/*utf-8*/ char const *__restrict filename);
 
 /* Try to unlink() the given `filename'
  * WARNING: When `filename' is an empty directory, it is system-specific if
@@ -395,17 +398,17 @@ DFUNDEF ATTR_COLD NONNULL((2)) int (DCALL DeeNTSystem_VThrowLastErrorf)(DeeTypeO
 /* Open a shared library
  * @return: * :                      A handle for the shared library.
  * @return: NULL:                    A deemon callback failed and an error was thrown.
- * @return: DEESYSTEM_DLOPEN_FAILED: Failed to open the shared library. */
+ * @return: DeeSystem_DlOpen_FAILED: Failed to open the shared library. */
 DFUNDEF WUNUSED NONNULL((1)) void *DCALL DeeSystem_DlOpen(/*String*/ DeeObject *__restrict filename);
 DFUNDEF WUNUSED NONNULL((1)) void *DCALL DeeSystem_DlOpenString(/*utf-8*/ char const *filename);
-#define DEESYSTEM_DLOPEN_FAILED ((void *)(uintptr_t)-1)
+#define DeeSystem_DlOpen_FAILED ((void *)(uintptr_t)-1)
 
 /* Lookup a symbol within a given shared library
  * Returns `NULL' if the symbol could not be found */
 DFUNDEF WUNUSED NONNULL((2)) void *DCALL DeeSystem_DlSym(void *handle, char const *symbol_name);
 
 /* Try to get a human-readable description on what went wrong during a call
- * to `DeeSystem_DlOpen[String]()' that caused `DEESYSTEM_DLOPEN_FAILED' to
+ * to `DeeSystem_DlOpen[String]()' that caused `DeeSystem_DlOpen_FAILED' to
  * be returned, or `DeeSystem_DlSym()' to have caused `NULL' to be returned.
  * @return: * :        The human-readable error description
  * @return: NULL:      A deemon callback failed and an error was thrown.

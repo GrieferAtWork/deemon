@@ -120,7 +120,7 @@ struct Dee_dex_symbol {
 #define Dee_DEXBOUNDS_USE_LOADBOUNDS___dex_start____AND___end
 #define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
 #define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC
-#elif defined(DeeSystem_DlOpen_USE_LoadLibrary)
+#elif 0 && defined(DeeSystem_DlOpen_USE_LoadLibrary)
 #define Dee_DEXBOUNDS_USE_LOADBOUNDS__GetModuleInformation
 #define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
 #elif (defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dl_iterate_phdr) && \
@@ -166,20 +166,6 @@ struct Dee_module_dexdata {
 	NONNULL_T((1)) void (DCALL *mdx_fini)(void);
 	NONNULL_T((1)) bool (DCALL *mdx_clear)(void);
 
-	struct {
-		struct Dee_module_dexdata *mdn_par; /* [?..?] Parent node */
-		struct Dee_module_dexdata *mdn_lhs; /* [?..?] Left node */
-		struct Dee_module_dexdata *mdn_rhs; /* [?..?] Right node */
-	}                         mdx_node;   /* Node in tree of modules (tree is either by
-	                                       * "mdx_minaddr"+"mdx_maxaddr", or "mdx_loadhandle") */
-	uintptr_t                 mdx_flags;  /* Set of `Dee_MODULE_DEXDATA_F_*' */
-#define Dee_MODULE_DEXDATA_F_NORMAL  0x0000
-#define Dee_MODULE_DEXDATA_F_REDNODE 0x0001 /* `mdx_node' is a red node */
-
-#ifdef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
-	__BYTE_TYPE__ *mdx_minaddr;    /* [const] Lowest address of this dex module */
-	__BYTE_TYPE__ *mdx_maxaddr;    /* [const] Greatest address of this dex module */
-#endif /* Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS */
 #if defined(Dee_MODULE_DEXDATA_HAVE_LOADHANDLE) && !defined(Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE)
 	__BYTE_TYPE__ *mdx_loadhandle; /* [const] os-specific handle to identify this load-instance.
 	                                * The OS must provide the means to convert an arbitrary static
@@ -198,21 +184,22 @@ extern /*IMAGE_DOS_HEADER*/ int __ImageBase;
 #define _Dee_MODULE_DEXDATA_INIT_HANDLE (void *)&__ImageBase
 #define _Dee_MODULE_DEXDATA_INIT_HANDLE_IS_STATIC
 #else /* ... */
-#define _Dee_MODULE_DEXDATA_INIT_HANDLE NULL
+#define _Dee_MODULE_DEXDATA_INIT_HANDLE DeeSystem_DlOpen_FAILED
 #endif /* !... */
 
-#ifndef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
+#if defined(CONFIG_NO_DEC) && defined(CONFIG_NO_DEX)
 #define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS /* nothing */
-#elif defined(Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC)
+#elif (!defined(Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS) || \
+       !defined(Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC))
+#define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS NULL, NULL, { NULL, NULL, NULL },
+#else /* ... */
 #ifdef Dee_DEXBOUNDS_USE_LOADBOUNDS___dex_start____AND___end
 INTDEF __BYTE_TYPE__ __dex_start__[];
 INTDEF __BYTE_TYPE__ _end[];
-#define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS , __dex_start__, _end - 1
+#define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS __dex_start__, _end - 1, { NULL, NULL, NULL },
 #else /* Dee_DEXBOUNDS_USE_LOADBOUNDS___dex_start____AND___end */
 #error "Bad configuration: Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC, but no way to statically initialize"
 #endif /* !Dee_DEXBOUNDS_USE_LOADBOUNDS___dex_start____AND___end */
-#else /* ... */
-#define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS , NULL, NULL
 #endif /* !... */
 #if !defined(Dee_MODULE_DEXDATA_HAVE_LOADHANDLE) || defined(Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE)
 #define _Dee_MODULE_DEXDATA_INIT_LOADHANDLE /* nothing */
@@ -275,10 +262,7 @@ INTDEF __BYTE_TYPE__ _end[];
 		/* .mdx_handle = */ _Dee_MODULE_DEXDATA_INIT_HANDLE,                \
 		/* .mdx_init   = */ init,                                           \
 		/* .mdx_fini   = */ fini,                                           \
-		/* .mdx_clear  = */ clear,                                          \
-		/* .mdx_node   = */ { NULL, NULL, NULL },                           \
-		/* .mdx_flags  = */ Dee_MODULE_DEXDATA_F_NORMAL                     \
-		_Dee_MODULE_DEXDATA_INIT_LOADBOUNDS                                 \
+		/* .mdx_clear  = */ clear                                           \
 		_Dee_MODULE_DEXDATA_INIT_LOADHANDLE                                 \
 		_Dee_MODULE_DEXDATA_INIT_LOADSTRING                                 \
 	};                                                                      \
@@ -288,17 +272,19 @@ INTDEF __BYTE_TYPE__ _end[];
 		/* .mo_absnode = */ { NULL, NULL, NULL },                           \
 		/* .mo_libname = */ { NULL, { NULL }, { NULL, NULL, NULL }, NULL }, \
 		/* .mo_dir     = */ NULL,                                           \
-		/* .mo_moddata = */ { &_dex_data },                                 \
 		/* .mo_init    = */ Dee_MODULE_INIT_UNINITIALIZED,                  \
+		/* .mo_ctime   = */ 0,                                              \
 		/* .mo_flags   = */ Dee_MODULE_FNORMAL,                             \
 		/* .mo_importc = */ 0,                                              \
 		/* .mo_globalc = */ COMPILER_LENOF(_dex_symbols),                   \
 		/* .mo_bucketm = */ _DEX_BUCKETM,                                   \
-		/* .mo_bucketv = */ _dex_bucketv,                                   \
-		/* .mo_importv = */ NULL,                                           \
+		/* .mo_bucketv = */ _dex_bucketv                                    \
 		_Dee_MODULE_INIT_mo_lock                                            \
 		Dee_WEAKREF_SUPPORT_INIT,                                           \
-		/* .mo_globalv = */ {}                                              \
+		/* .mo_moddata = */ { &_dex_data },                                 \
+		/* .mo_importv = */ NULL,                                           \
+		_Dee_MODULE_DEXDATA_INIT_LOADBOUNDS                                 \
+		/* .mo_globalv = */ { /* ... */ }                                   \
 	}}
 #endif /* CONFIG_BUILDING_DEX */
 

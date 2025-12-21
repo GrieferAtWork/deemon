@@ -1403,6 +1403,7 @@ int main(int argc, char *argv[]) {
 
 			/* The user's module has been loaded. - Now load dependencies and open it's root. */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+			/* TODO: Ensure that imports of "user_module" have been initialized */
 			(void)DeeModule_SetInitialized((DeeObject *)user_module);
 			user_module_main = DeeModule_GetRootFunction((DeeObject *)user_module);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */

@@ -246,6 +246,7 @@ struct Dee_weakref_list {
 /* Initialize weakref support (must be called manually by
  * constructors of types implementing weakref support!) */
 #define Dee_weakref_support_init(x) ((x)->ob_weakrefs.wl_nodes = NULL)
+#define Dee_weakref_support_cinit(x) Dee_ASSERT((x)->ob_weakrefs.wl_nodes == NULL)
 
 /* Finalize weakref support (must be called manually by
  * destructors of types implementing weakref support!) */

@@ -763,7 +763,7 @@ PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED ATTR_INS(1, 2) char const *
 /* Open a shared library
  * @return: * :                      A handle for the shared library.
  * @return: NULL:                    A deemon callback failed and an error was thrown.
- * @return: DEESYSTEM_DLOPEN_FAILED: Failed to open the shared library. */
+ * @return: DeeSystem_DlOpen_FAILED: Failed to open the shared library. */
 PUBLIC WUNUSED NONNULL((1)) void *DCALL
 DeeSystem_DlOpen(/*String*/ DeeObject *__restrict filename) {
 #ifdef DeeSystem_DlOpen_USE_LoadLibrary
@@ -780,7 +780,7 @@ again_loadlib:
 	DBG_ALIGNMENT_ENABLE();
 	if (!hResult) {
 		DWORD dwError;
-		hResult = (HMODULE)DEESYSTEM_DLOPEN_FAILED;
+		hResult = (HMODULE)DeeSystem_DlOpen_FAILED;
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
@@ -814,7 +814,7 @@ again_loadlib:
 						goto err;
 					goto again;
 				}
-				hResult = (HMODULE)DEESYSTEM_DLOPEN_FAILED;
+				hResult = (HMODULE)DeeSystem_DlOpen_FAILED;
 			}
 		}
 	}
@@ -839,7 +839,7 @@ err:
 #ifdef DeeSystem_DlOpen_USE_STUB
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
 	(void)filename;
-	return DEESYSTEM_DLOPEN_FAILED;
+	return DeeSystem_DlOpen_FAILED;
 #endif /* DeeSystem_DlOpen_USE_STUB */
 }
 
@@ -874,18 +874,18 @@ done:
 	                USED_DLOPEN_BIND);
 	DBG_ALIGNMENT_ENABLE();
 	if unlikely(!result)
-		result = DEESYSTEM_DLOPEN_FAILED;
+		result = DeeSystem_DlOpen_FAILED;
 	return result;
 #endif /* DeeSystem_DlOpen_USE_dlopen */
 
 #ifdef DeeSystem_DlOpen_USE_STUB
 	(void)filename;
-	return DEESYSTEM_DLOPEN_FAILED;
+	return DeeSystem_DlOpen_FAILED;
 #endif /* DeeSystem_DlOpen_USE_STUB */
 }
 
 /* Try to get a human-readable description on what went wrong during a call
- * to `DeeSystem_DlOpen[String]()' that caused `DEESYSTEM_DLOPEN_FAILED' to
+ * to `DeeSystem_DlOpen[String]()' that caused `DeeSystem_DlOpen_FAILED' to
  * be returned, or `DeeSystem_DlSym()' to have caused `NULL' to be returned.
  * @return: * :        The human-readable error description
  * @return: NULL:      A deemon callback failed and an error was thrown.
@@ -1064,26 +1064,128 @@ nt_getunixfiletime(uint64_t filetime) {
 }
 #endif /* ... */
 
+#ifdef DeeSystem_GetLastModified_USE_GetFileAttributesExW
+/* @return: 1 : OS indicates success
+ * @return: 0 : OS indicates failure
+ * @return: -1: Error was thrown */
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeNTSystem_GetFileAttributesExW(DeeObject *__restrict lpFileName,
+                                 GET_FILEEX_INFO_LEVELS fInfoLevelId,
+                                 void *lpFileInformation) {
+	LPWSTR wname = (LPWSTR)DeeString_AsWide(lpFileName);
+	if unlikely(!wname)
+		goto err;
+again:
+	DBG_ALIGNMENT_DISABLE();
+	if (!GetFileAttributesExW(wname, fInfoLevelId, lpFileInformation)) {
+		DWORD dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeNTSystem_IsBadAllocError(dwError)) {
+handle_nomem:
+			if (!Dee_CollectMemory(1))
+				goto err;
+			goto again;
+		} else if (DeeNTSystem_IsIntr(dwError)) {
+handle_intr:
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		} else if (DeeNTSystem_IsUncError(dwError)) {
+			BOOL bOk;
+			LPWSTR unc_wname;
+			DREF DeeObject *unc_filename;
+			unc_filename = DeeNTSystem_FixUncPath(lpFileName);
+			if unlikely(!unc_filename)
+				goto err;
+			unc_wname = (LPWSTR)DeeString_AsWide(unc_filename);
+			if unlikely(!unc_wname) {
+				Dee_Decref(unc_filename);
+				goto err;
+			}
+			DBG_ALIGNMENT_DISABLE();
+			bOk = GetFileAttributesExW(wname, fInfoLevelId, lpFileInformation);
+			DBG_ALIGNMENT_ENABLE();
+			Dee_Decref(unc_filename);
+			if (!bOk) {
+				DBG_ALIGNMENT_DISABLE();
+				dwError = GetLastError();
+				DBG_ALIGNMENT_ENABLE();
+				if (DeeNTSystem_IsBadAllocError(dwError))
+					goto handle_nomem;
+				if (DeeNTSystem_IsIntr(dwError))
+					goto handle_intr;
+				return 0;
+			}
+		} else {
+			return 0;
+		}
+	}
+	DBG_ALIGNMENT_ENABLE();
+	return 1;
+err:
+	return -1;
+}
+#endif /* DeeSystem_GetLastModified_USE_GetFileAttributesExW */
 
 /* Return the last modified timestamp of `filename'
  * > uses the same format as `DeeSystem_GetWalltime()'
- * @return: (uint64_t)-1: An error was thrown */
+ * @return: (uint64_t)-1: An error was thrown
+ * @return: 0 : Failed to query file timestamp (probably ENOENT) */
 PUBLIC WUNUSED NONNULL((1)) uint64_t DCALL
 DeeSystem_GetLastModified(/*String*/ DeeObject *__restrict filename) {
 #ifdef DeeSystem_GetLastModified_USE_GetFileAttributesExW
+	uint64_t result;
 	WIN32_FILE_ATTRIBUTE_DATA attrib;
-	LPWSTR wname;
-	wname = (LPWSTR)DeeString_AsWide(filename);
-	if unlikely(!wname)
-		return (uint64_t)-1;
-	DBG_ALIGNMENT_DISABLE();
-	if (!GetFileAttributesExW(wname, GetFileExInfoStandard, &attrib)) {
-		DBG_ALIGNMENT_ENABLE();
-		return 0;
+	int status = DeeNTSystem_GetFileAttributesExW(filename, GetFileExInfoStandard, &attrib);
+	if unlikely(status <= 0) {
+		ASSERT(status == 0 || status == -1);
+		return (uint64_t)(int64_t)status;
 	}
+	result = nt_getunixfiletime((uint64_t)attrib.ftLastWriteTime.dwLowDateTime |
+	                            (uint64_t)attrib.ftLastWriteTime.dwHighDateTime << 32);
+	if unlikely(result == (uint64_t)-1)
+		result = (uint64_t)-2;
+	return result;
+#endif /* DeeSystem_GetLastModified_USE_GetFileAttributesExW */
+
+#ifdef DeeSystem_GetLastModified_USE_stat
+	char const *utf8_name = DeeString_AsUtf8(filename);
+	if unlikely(!utf8_name)
+		return (uint64_t)-1;
+	return DeeSystem_GetLastModifiedString(utf8_name);
+#endif /* DeeSystem_GetLastModified_USE_stat */
+
+#ifdef DeeSystem_GetLastModified_USE_STUB
+	(void)filename;
+	return 0;
+#endif /* DeeSystem_GetLastModified_USE_STUB */
+}
+
+PUBLIC WUNUSED NONNULL((1)) uint64_t DCALL
+DeeSystem_GetLastModifiedString(/*utf-8*/ char const *__restrict filename) {
+#ifdef DeeSystem_GetLastModified_USE_GetFileAttributesExW
+	BOOL bOk;
+	WIN32_FILE_ATTRIBUTE_DATA attrib;
+	uint64_t result;
+	DREF DeeObject *filename_obj;
+	DBG_ALIGNMENT_DISABLE();
+	bOk = GetFileAttributesExA(filename, GetFileExInfoStandard, &attrib);
 	DBG_ALIGNMENT_ENABLE();
-	return nt_getunixfiletime((uint64_t)attrib.ftLastWriteTime.dwLowDateTime |
-	                          (uint64_t)attrib.ftLastWriteTime.dwHighDateTime << 32);
+	if (bOk) {
+		result = nt_getunixfiletime((uint64_t)attrib.ftLastWriteTime.dwLowDateTime |
+		                            (uint64_t)attrib.ftLastWriteTime.dwHighDateTime << 32);
+		if unlikely(result == (uint64_t)-1)
+			result = (uint64_t)-2;
+		return result;
+	}
+	filename_obj = DeeString_NewUtf8(filename, strlen(filename), STRING_ERROR_FSTRICT);
+	if unlikely(!filename_obj)
+		goto err;
+	result = DeeSystem_GetLastModified(filename_obj);
+	Dee_Decref_likely(filename_obj);
+	return result;
+err:
+	return (uint64_t)-1;
 #endif /* DeeSystem_GetLastModified_USE_GetFileAttributesExW */
 
 #ifdef DeeSystem_GetLastModified_USE_stat
@@ -1093,18 +1195,36 @@ DeeSystem_GetLastModified(/*String*/ DeeObject *__restrict filename) {
 #else /* CONFIG_HAVE_stat64 */
 	struct stat st;
 #endif /* !CONFIG_HAVE_stat64 */
-	char const *utf8_name;
-	utf8_name = DeeString_AsUtf8(filename);
-	if unlikely(!utf8_name)
-		return (uint64_t)-1;
 	DBG_ALIGNMENT_DISABLE();
+#if defined(CONFIG_HAVE_errno) && (defined(EINTR) || defined(ENOMEM))
+again:
+#endif /* CONFIG_HAVE_errno && (EINTR || ENOMEM) */
 #ifdef CONFIG_HAVE_stat64
-	if (stat64(utf8_name, &st))
+	if (stat64(filename, &st))
 #else /* CONFIG_HAVE_stat64 */
-	if (stat(utf8_name, &st))
+	if (stat(filename, &st))
 #endif /* !CONFIG_HAVE_stat64 */
 	{
+#if defined(CONFIG_HAVE_errno) && (defined(EINTR) || defined(ENOMEM))
+		int error = DeeSystem_GetErrno();
+#endif /* CONFIG_HAVE_errno && (EINTR || ENOMEM) */
 		DBG_ALIGNMENT_ENABLE();
+#if defined(CONFIG_HAVE_errno) && (defined(EINTR) || defined(ENOMEM))
+#ifdef EINTR
+		if (error == EINTR) {
+			if (DeeThread_CheckInterrupt())
+				return (uint64_t)-1;
+			goto again;
+		}
+#endif /* EINTR */
+#ifdef ENOMEM
+		if (error == ENOMEM) {
+			if (!Dee_CollectMemory(1))
+				goto err;
+			goto again;
+		}
+#endif /* ENOMEM */
+#endif /* CONFIG_HAVE_errno && (EINTR || ENOMEM) */
 		return 0;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -1117,7 +1237,8 @@ DeeSystem_GetLastModified(/*String*/ DeeObject *__restrict filename) {
 #elif defined(CONFIG_HAVE_struct_stat_st_timespec)
 	result += st.st_mtimespec.tv_nsec / 1000;
 #endif /* ... */
-
+	if unlikely(result == (uint64_t)-1)
+		result = (uint64_t)-2;
 	return result;
 #endif /* DeeSystem_GetLastModified_USE_stat */
 

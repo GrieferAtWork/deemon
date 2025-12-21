@@ -90,7 +90,7 @@ shlib_init(Shlib *__restrict self, size_t argc,
 	self->sh_lib = DeeSystem_DlOpen((DeeObject *)name);
 	if unlikely(!self->sh_lib)
 		goto err;
-	if unlikely(self->sh_lib == DEESYSTEM_DLOPEN_FAILED) {
+	if unlikely(self->sh_lib == DeeSystem_DlOpen_FAILED) {
 #ifdef DeeSystem_DlOpen_USE_STUB
 #define DLOPEN_ERROR_TYPE  &DeeError_UnsupportedAPI
 #else /* DeeSystem_DlOpen_USE_STUB */

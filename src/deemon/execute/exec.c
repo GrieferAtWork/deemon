@@ -97,6 +97,8 @@ PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeExec_CompileModuleStream(DeeObject *source_stream,
                             int start_line, int start_col, unsigned int mode,
                             struct Dee_compiler_options *options, DeeObject *default_symbols) {
+	/* TODO: Call "DeeSystem_GetWalltime()" before compilation begins
+	 *       -- that timestamp must be used as the module's "mo_ctime" */
 	/* TODO */
 	(void)source_stream;
 	(void)start_line;

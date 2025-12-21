@@ -1193,6 +1193,7 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 			if unlikely(!dep)
 				goto err_dependencies_count;
 			dependencies[dep_count] = (DREF DeeModuleObject *)dep;
+			/* TODO: Check timestamp of dependency */
 		}
 	}
 	result = DeeDec_RelocateEx(self, dependencies);
@@ -1289,12 +1290,14 @@ fail:
 /* Map the contents of `input_stream' into memory, validate them, and
  * relocate them. This function is actually a convenience wrapper around
  * `DeeDec_OpenFileEx()'
+ * @param: dee_file_last_modified: Timestamp when the ".dee" file was last modified
  * @return: * :        Successfully loaded the given DEC file.
  * @return: ITER_DONE: The DEC file was out of date or had been corrupted.
  * @return: NULL:      An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DCALL
 DeeDec_OpenFile(DeeObject *__restrict input_stream,
-                struct Dee_compiler_options *options) {
+                struct Dee_compiler_options *options,
+                uint64_t dee_file_last_modified) {
 	char const *dec_dirname;
 	size_t dec_dirname_len;
 	struct DeeMapFile fmap;
@@ -1324,7 +1327,8 @@ DeeDec_OpenFile(DeeObject *__restrict input_stream,
 		goto err_filename;
 
 	/* Open file mapping as a dec file */
-	result = DeeDec_OpenFileEx(&fmap, dec_dirname, dec_dirname_len, options);
+	result = DeeDec_OpenFileEx(&fmap, dec_dirname, dec_dirname_len,
+	                           options, dee_file_last_modified);
 
 	/* On success, the returned module inherits the file mapping */
 	if unlikely(!ITER_ISOK(result))
@@ -1342,13 +1346,15 @@ err:
 
 /* Extended version of `DeeDec_OpenFile()' that can be used to load a
  * dec file that has already been mapped into memory.
+ * @param: dee_file_last_modified: Timestamp when the ".dee" file was last modified
  * @return: * :        Successfully loaded the given DEC file.
  * @return: ITER_DONE: The DEC file was out of date or had been corrupted.
  * @return: NULL:      An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DCALL
 DeeDec_OpenFileEx(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
                   /*utf-8*/ char const *dec_dirname, size_t dec_dirname_len,
-                  struct Dee_compiler_options *options) {
+                  struct Dee_compiler_options *options,
+                  uint64_t dee_file_last_modified) {
 	DREF DeeModuleObject *result;
 	Dec_Ehdr *ehdr = (Dec_Ehdr *)DeeMapFile_GetBase(fmap);
 	if unlikely(DeeMapFile_GetSize(fmap) < sizeof(Dec_Ehdr))
@@ -2102,7 +2108,9 @@ typedef struct {
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DecFile_Init(DecFile *__restrict self,
              struct DeeMapFile *__restrict input,
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
              struct module_object *__restrict module,
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
              struct string_object *__restrict dec_pathname,
              struct compiler_options *options);
 PRIVATE NONNULL((1)) void DCALL
@@ -2114,6 +2122,7 @@ DecFile_Fini(DecFile *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) DeeObject *DCALL
 DecFile_Strtab(DecFile *__restrict self);
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 /* Check if a given DEC file is up to date, or if it must not be loaded.
  * because it a dependency has changed since it was created.
  * @return:  0: The file is up-to-date.
@@ -2121,6 +2130,7 @@ DecFile_Strtab(DecFile *__restrict self);
  * @return: -1: An error occurred. */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 DecFile_IsUpToDate(DecFile *__restrict self);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 /* Load a given DEC file and fill in the given `module'.
  * @return:  0: Successfully loaded the given DEC file.
@@ -2129,6 +2139,7 @@ DecFile_IsUpToDate(DecFile *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 DecFile_Load(DecFile *__restrict self);
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 /* Return the last-modified time (in microseconds since 01-01-1970).
  * For this purpose, an internal cache is kept that is consulted
  * before and populated after making an attempt at contacting the
@@ -2138,6 +2149,7 @@ DecFile_Load(DecFile *__restrict self);
  * @return: (uint64_t)-1: The lookup failed and an error was thrown. */
 PRIVATE WUNUSED NONNULL((1)) uint64_t DCALL
 DecTime_Lookup(DeeObject *__restrict filename);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 /* DEC loader implementation. */
 
@@ -2246,11 +2258,15 @@ corrupt_heref(DecFile *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DecFile_Init(DecFile *__restrict self,
              struct DeeMapFile *__restrict input,
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
              DeeModuleObject *__restrict module,
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
              DeeStringObject *__restrict dec_pathname,
              struct compiler_options *options) {
 	Dec_Ehdr *hdr;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	ASSERT_OBJECT_TYPE(module, &DeeModule_Type);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	ASSERT_OBJECT_TYPE_EXACT(dec_pathname, &DeeString_Type);
 
 	/* Quick check: If the file is larger than the allowed limit,
@@ -2315,9 +2331,13 @@ DecFile_Init(DecFile *__restrict self,
 	      offsetof(DecFile, df_strtab));
 
 	/* Save the module and filename of the DEC input file. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	self->df_module = NULL;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	self->df_module = module;
-	self->df_name   = dec_pathname;
 	Dee_Incref(module);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	self->df_name = dec_pathname;
 	Dee_Incref(dec_pathname);
 	return 0;
 end_not_a_dec:
@@ -2327,7 +2347,9 @@ end_not_a_dec:
 PRIVATE NONNULL((1)) void DCALL
 DecFile_Fini(DecFile *__restrict self) {
 	Dee_XDecref(self->df_strtab);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	Dee_Decref(self->df_module);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	Dee_Decref(self->df_name);
 }
 
@@ -2349,6 +2371,7 @@ DecFile_Strtab(DecFile *__restrict self) {
 
 
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 /* Check if a given DEC file is up to date, or if it must not be loaded.
  * because it a dependency has changed since it was created.
  * @return:  0: The file is up-to-date.
@@ -2413,6 +2436,7 @@ changed:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 
@@ -2465,10 +2489,17 @@ DecFile_LoadImports(DecFile *__restrict self) {
 			GOTO_CORRUPTED(reader, stop_imports);
 		module_name = strtab + off;
 		/* Load the imported module. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		module = (DREF DeeModuleObject *)DeeModule_OpenEx(module_name, strlen(module_name),
+		                                                  module_pathstr, module_pathlen,
+		                                                  DeeModule_IMPORT_F_ENOENT | DeeModule_IMPORT_F_CTXDIR,
+		                                                  self->df_options ? self->df_options->co_inner : NULL);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		module = (DREF DeeModuleObject *)DeeModule_OpenRelativeString(module_name, strlen(module_name),
 		                                                              module_pathstr, module_pathlen,
 		                                                              self->df_options ? self->df_options->co_inner : NULL,
 		                                                              false);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		if unlikely(!ITER_ISOK(module)) {
 			if (!module)
 				goto err_imports;
@@ -2495,14 +2526,16 @@ DecFile_LoadImports(DecFile *__restrict self) {
 			 * -> This can happen if global modules that were previously used
 			 *    suddenly disappear between execution cycles. */
 			DeeError_Throwf(&DeeError_FileNotFound,
-			                "Dependency %q of module %r in %$q could not be found",
-			                strtab + off, self->df_module->mo_name,
-			                module_pathlen, module_pathstr);
+			                "Dependency %q of module %r could not be found",
+			                strtab + off, self->df_name);
 			goto err_imports;
 		}
 
 		/* Check if the module has changed. */
-		if (!self->df_options || !(self->df_options->co_decloader & Dee_DEC_FLOADOUTDATED)) {
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		if (!self->df_options || !(self->df_options->co_decloader & Dee_DEC_FLOADOUTDATED))
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+		{
 			uint64_t modtime = DeeModule_GetCTime((DeeObject *)module);
 			if unlikely(modtime == (uint64_t)-1)
 				GOTO_CORRUPTED(reader, err_imports_module);
@@ -2510,11 +2543,9 @@ DecFile_LoadImports(DecFile *__restrict self) {
 			 * described on the DEC header, stop loading. */
 			if unlikely(modtime > timestamp) {
 				GOTO_CORRUPTEDF(reader, stop_imports_module,
-				                "Dependency %q of module %r in %$q changed "
-				                "after .dec file was created (%" PRFu64 " > %" PRFu64 ")",
-				                strtab + off, self->df_module->mo_name,
-				                module_pathlen, module_pathstr,
-				                modtime, timestamp);
+				                "Dependency %q of module %r changed after .dec "
+				                "file was created (%" PRFu64 " > %" PRFu64 ")",
+				                strtab + off, self->df_name, modtime, timestamp);
 			}
 		}
 		*moditer = module; /* Inherit */
@@ -2522,7 +2553,11 @@ DecFile_LoadImports(DecFile *__restrict self) {
 	/* Write the module import table. */
 	self->df_module->mo_importc = importc;
 	self->df_module->mo_importv = importv; /* Inherit. */
-	result                      = 0;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	self->df_module->mo_ctime = timestamp;
+	self->df_module->mo_flags |= Dee_MODULE_FHASCTIME;
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	result = 0;
 stop:
 	return result;
 stop_imports:
@@ -2544,11 +2579,38 @@ err:
 	goto stop;
 }
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+DecFile_CreateModule(uint16_t num_globals) {
+	DREF DeeModuleObject *result;
+	size_t size = _Dee_MallococBufsize(offsetof(DeeModuleObject, mo_globalv),
+	                                   num_globals, sizeof(DREF DeeObject *));
+	result = (DREF DeeModuleObject *)DeeGCObject_Calloc(size);
+	if likely(result) {
+		result->mo_globalc = num_globals;
+		Dee_atomic_rwlock_cinit(&result->mo_lock);
+		Dee_weakref_support_cinit(result);
+		DeeObject_Init(result, &DeeModuleDee_Type);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+DecFile_LoadGlobals(DecFile *__restrict self)
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-DecFile_LoadGlobals(DecFile *__restrict self) {
+DecFile_LoadGlobals(DecFile *__restrict self)
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+{
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	int result = 1;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	Dec_Glbmap const *glbmap;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	DREF DeeModuleObject *module = (DREF DeeModuleObject *)ITER_DONE;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	DeeModuleObject *module = self->df_module;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	Dec_Ehdr const *hdr = self->df_ehdr;
 	uint16_t i, globalc, symbolc;
 	uint8_t const *end = self->df_base + self->df_size;
@@ -2557,8 +2619,13 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 	struct module_symbol *bucketv;
 	char const *strtab;
 	/* Quick check: Without a global variable table, nothing needs to be loaded. */
-	if (!hdr->e_globoff)
+	if (!hdr->e_globoff) {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		return DecFile_CreateModule(0);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		return 0;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	}
 
 	/* Load the global object table. */
 	glbmap  = (Dec_Glbmap const *)(self->df_base + LETOH32(hdr->e_globoff));
@@ -2566,8 +2633,14 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 	symbolc = UNALIGNED_GETLE16(&glbmap->g_len);
 	if unlikely(globalc > symbolc)
 		GOTO_CORRUPTED(&glbmap->g_cnt, stop);
-	if unlikely(!symbolc)
-		return 0; /* Unlikely, but allowed. */
+	if unlikely(!symbolc) {
+		/* Unlikely, but allowed. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		return DecFile_CreateModule(0);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+		return 0;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	}
 	strtab = (char const *)(self->df_base + LETOH32(hdr->e_stroff));
 	reader = (uint8_t const *)glbmap + 4;
 
@@ -2605,8 +2678,19 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 			addr = UNALIGNED_GETLE16(reader), reader += 2;
 			if (flags & MODSYM_FEXTERN) {
 				addr2 = (uint8_t)UNALIGNED_GETLE16(reader), reader += 2;
-				if (!(flags & MODSYM_FPROPERTY) && addr2 >= self->df_module->mo_importc)
-					GOTO_CORRUPTED(reader, stop_symbolv); /* Validate module index. */
+				if (!(flags & MODSYM_FPROPERTY)) {
+					/* Validate module index. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+					Dec_Strmap const *impmap  = (Dec_Strmap const *)(self->df_base + LETOH32(hdr->e_impoff));
+					uint16_t importc = UNALIGNED_GETLE16(&impmap->i_len);
+					if (addr2 >= importc)
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+					if (addr2 >= self->df_module->mo_importc)
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+					{
+						GOTO_CORRUPTED(reader, stop_symbolv);
+					}
+				}
 			} else {
 				if unlikely(addr >= globalc)
 					GOTO_CORRUPTED(reader, stop_symbolv); /* Validate symbol address. */
@@ -2659,20 +2743,36 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 	}
 
 	/* Allocate and setup the global variable vector. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	module = DecFile_CreateModule(globalc);
+	if unlikely(!module)
+		goto err_symbolv;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	module->mo_globalv = (DREF DeeObject **)Dee_Callocc(globalc, sizeof(DREF DeeObject *));
 	if unlikely(!module->mo_globalv)
 		goto err_symbolv;
 	module->mo_globalc = globalc;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Install the symbol mask and hash-table. */
 	module->mo_bucketm = bucket_mask;
 	module->mo_bucketv = bucketv;
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	result = 0;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 stop:
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	return module;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return result;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 err_symbolv:
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	module = NULL;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	result = -1;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 stop_symbolv:
 	do {
 		if (bucketv[bucket_mask].ss_name)
@@ -2683,7 +2783,11 @@ stop_symbolv:
 	Dee_Free(bucketv);
 	goto stop;
 err:
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	module = NULL;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	result = -1;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	goto stop;
 }
 
@@ -3825,6 +3929,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 	            header.co_textoff + header.co_textsiz >= self->df_size)
 		GOTO_CORRUPTED(reader, done);
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (self->df_options &&
 	    (self->df_options->co_decloader & Dee_DEC_FUNTRUSTED)) {
 		/* The origin of the code cannot be trusted and we must append
@@ -3841,7 +3946,9 @@ DecFile_LoadCode(DecFile *__restrict self,
 			memset(result->co_code + header.co_textsiz, ASM_RET_NONE, INSTRLEN_MAX);
 #endif /* ASM_RET_NONE != 0 */
 		}
-	} else {
+	} else
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	{
 		/* Allocate the resulting code object. */
 		result = (DREF DeeCodeObject *)DeeCode_Malloc(header.co_textsiz);
 	}
@@ -4168,15 +4275,24 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 DecFile_Load(DecFile *__restrict self) {
 	DeeModuleObject *module;
 	int result;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	module = self->df_module;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
+	/* Load global variables related to this module. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	module = DecFile_LoadGlobals(self);
+	if (!ITER_ISOK(module))
+		return module ? 1 : -1;
+	self->df_module = module;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	result = DecFile_LoadGlobals(self);
+	if (result != 0)
+		goto err;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Load the module import table and all collect all dependency modules. */
 	result = DecFile_LoadImports(self);
-	if (result != 0)
-		goto err;
-
-	/* Load global variables related to this module. */
-	result = DecFile_LoadGlobals(self);
 	if (result != 0)
 		goto err;
 
@@ -4190,25 +4306,36 @@ DecFile_Load(DecFile *__restrict self) {
 			result = root_code ? 1 : -1;
 			goto err;
 		}
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		module->mo_moddata.mo_rootcode = root_code; /* Inherit. */
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		module->mo_root = root_code; /* Inherit. */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}
 
 	return 0;
 err:
 	{
 		DREF DeeCodeObject *root;
-		root            = module->mo_root;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		root = module->mo_moddata.mo_rootcode;
+		module->mo_moddata.mo_rootcode = NULL;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+		root = module->mo_root;
 		module->mo_root = NULL;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		Dee_XDecref(root);
 	}
 
 	/* Free the module's global variable vector.
 	 * NOTE: At this point, we can still assume that it was filled with all NULLs. */
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	ASSERT((module->mo_globalv != NULL) ==
 	       (module->mo_globalc != 0));
 	Dee_Free(module->mo_globalv);
-	module->mo_globalc = 0;
 	module->mo_globalv = NULL;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	module->mo_globalc = 0;
 
 	/* Free the module's symbol table. */
 	ASSERT((module->mo_bucketv != empty_module_buckets) ==
@@ -4233,19 +4360,26 @@ err:
 	Dee_Decrefv(module->mo_importv, module->mo_importc);
 	Dee_Free((void *)module->mo_importv);
 	module->mo_importv = NULL;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	DeeGCObject_Free(module);
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return result;
 }
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-/* @param: dec_dirname: Absolute path of directory containing "input_stream"
+/* @param: dec_dirname:     Absolute filename of the corresponding ".dee" file (ZERO-terminated)
+ * @param: dec_dirname_len: Offset (in bytes) from "dec_dirname" where the filename portion begins
  * @return:  * :       Successfully loaded the given DEC file. The caller must still initialize:
- *                      - return->mo_absname (Current set to "NULL")
+ *                      - return->mo_absname  (Current set to "NULL")
  *                      - return->mo_absnode
+ *                      - return->mo_libname  (Current set to "NULL")
+ *                      - return->mo_libnode
  * @return: ITER_DONE: The DEC file was out of date or had been corrupted.
  * @return: NULL:      An error occurred. */
 INTERN WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
 DeeModule_OpenDec(DeeObject *__restrict input_stream, struct Dee_compiler_options *options,
-                  /*utf-8*/ char const *__restrict dec_dirname, size_t dec_dirname_len)
+                  /*utf-8*/ char const *__restrict dec_dirname, size_t dec_dirname_len,
+                  uint64_t dee_file_last_modified)
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 /* @return:  0: Successfully loaded the given DEC file.
  * @return:  1: The DEC file was out of date or had been corrupted.
@@ -4259,19 +4393,55 @@ DeeModule_OpenDec(struct Dee_module_object *__restrict mod,
 	DecFile file;
 	struct DeeMapFile filemap;
 	int result;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	ASSERT(mod->mo_path);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Initialize the file */
 	if unlikely(DeeMapFile_InitFile(&filemap, input_stream,
 	                                0, 0, DFILE_LIMIT + 1, DECFILE_PADDING,
-	                                DEE_MAPFILE_F_READALL | DEE_MAPFILE_F_ATSTART))
+	                                DEE_MAPFILE_F_READALL | DEE_MAPFILE_F_ATSTART)) {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		return NULL;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		return -1;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	}
+
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	{
+		DREF DeeObject *path;
+		(void)dec_dirname_len;
+		/* Use the full "strlen(dec_dirname)", which is the filename of the ".dee" file */
+		path = DeeString_NewUtf8(dec_dirname, strlen(dec_dirname), STRING_ERROR_FSTRICT);
+		if unlikely(!path) {
+			DeeMapFile_Fini(&filemap);
+			return NULL;
+		}
+		result = DecFile_Init(&file, &filemap, (DeeStringObject *)path, options);
+		Dee_Decref(path);
+	}
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	result = DecFile_Init(&file, &filemap, mod, mod->mo_path, options);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
 	if unlikely(result != 0)
 		goto done_map;
 	Dee_DPRINTF("[LD] Opened dec file for %r\n", file.df_name);
 
 	/* Check if the file is up-to-date (unless this check is being suppressed). */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	{
+		uint64_t timestamp;
+		timestamp = (((uint64_t)LETOH32(file.df_ehdr->e_timestamp_hi) << 32) |
+		             ((uint64_t)LETOH32(file.df_ehdr->e_timestamp_lo)));
+		if (dee_file_last_modified > timestamp) {
+			Dee_DPRINTF("[LD] Dec file for %r is out-of-date\n", file.df_name);
+			result = 1;
+			goto done_map_file;
+		}
+	}
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if (!options || !(options->co_decloader & Dee_DEC_FLOADOUTDATED)) {
 		result = DecFile_IsUpToDate(&file);
 		if (result != 0) {
@@ -4279,6 +4449,7 @@ DeeModule_OpenDec(struct Dee_module_object *__restrict mod,
 			goto done_map_file;
 		}
 	}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* With all that out of the way, actually load the file. */
 	result = DecFile_Load(&file);
@@ -4290,9 +4461,21 @@ done_map_file:
 	DecFile_Fini(&file);
 done_map:
 	DeeMapFile_Fini(&filemap);
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	if (result == 0) {
+		ASSERT(ITER_ISOK(file.df_module));
+		return file.df_module;
+	}
+	Dee_XDecref(file.df_module);
+	if (result > 0)
+		return (DREF struct Dee_module_object *)ITER_DONE;
+	return NULL;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return result;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PUBLIC WUNUSED NONNULL((1)) uint64_t DCALL
 DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self) {
 	uint64_t result;
@@ -4322,8 +4505,10 @@ DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self) {
 done:
 	return result;
 }
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 struct mtime_entry {
 	DREF DeeStringObject *me_file; /* [0..1] Absolute, normalized filename.
 	                                *  NOTE: When NULL, then this entry is unused. */
@@ -4567,6 +4752,7 @@ DecTime_Lookup(DeeObject *__restrict filename) {
 #endif
 	return result;
 }
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 DECL_END

@@ -1134,7 +1134,9 @@ PRIVATE pcacheclr caches[] = {
 #endif /* CONFIG_STRING_LATIN1_CACHED */
 	&Dee_membercache_clearall,
 #ifndef CONFIG_NO_DEC
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	&DecTime_ClearCache,
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #endif /* !CONFIG_NO_DEC */
 	NULL
 };

@@ -150,7 +150,7 @@ DeeModule_DoInitialize(DeeModuleObject *__restrict me) {
 #else /* !CONFIG_NO_DEX */
 	ASSERT(Dee_TYPE(me) == &DeeModuleDee_Type);
 #endif /* CONFIG_NO_DEX */
-
+	/* TODO: Ensure that imports of "me" have been initialized */
 	rootfunc = (DREF DeeFunctionObject *)DeeModule_GetRootFunction((DeeObject *)me);
 	if unlikely(!rootfunc)
 		goto err;
@@ -231,23 +231,16 @@ DeeModule_SetInitialized(/*Module*/ DeeObject *__restrict self) {
 
 
 /* Return the root code object of a given module.
- * The caller must ensure that `self' is an instance */
+ * The caller must ensure that `self' is an instance of "DeeModuleDee_Type" */
 PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF /*Code*/ DeeObject *DCALL
 DeeModule_GetRootCode(/*Module*/ DeeObject *__restrict self) {
-	DeeCodeObject *result;
+	DREF DeeCodeObject *result;
 	DeeModuleObject *me = (DeeModuleObject *)self;
-	Dee_refcnt_t old_code_refcnt;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeModuleDee_Type);
+	DeeModule_LockRead(me);
 	result = me->mo_moddata.mo_rootcode;
-	ASSERT(result);
-	ASSERT(result->co_module == me);
-	Dee_Incref(self); /* In case "old_code_refcnt" ends up being "0" */
-	old_code_refcnt = _DeeRefcnt_FetchInc(&result->ob_refcnt);
-	if (old_code_refcnt == 0) {
-		/* Incref above is inherited by `result->co_module' */
-	} else {
-		Dee_DecrefNokill(self);
-	}
+	Dee_Incref(result);
+	DeeModule_LockEndRead(me);
 	return (DREF DeeObject *)result;
 }
 
@@ -262,6 +255,39 @@ DeeModule_GetRootFunction(/*Module*/ DeeObject *__restrict self) {
 	return (DREF DeeObject *)rootfunc;
 }
 
+
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) uint64_t DCALL
+DeeModule_GetCTime_uncached(DeeModuleObject *__restrict self) {
+	DeeTypeObject *tp = Dee_TYPE(self);
+	if (self == &DeeModule_Deemon)
+		return DeeExec_GetTimestamp();
+
+	/* TODO: special handling for dex modules (which should embed a build timestamp) */
+	/* TODO: fallback handling: use last-modified timestamp of module filename */
+	(void)tp;
+	return 0;
+}
+
+/* Returns the compile-time of a given module (in microseconds
+ * since 01-01-1970), or (uint64_t)-1 if an error occurred.
+ * Use this function instead of directly reading `self->mo_ctime',
+ * as this function will lazily initialize the timestamp in cases
+ * where it may not be loaded, yet. */
+PUBLIC WUNUSED NONNULL((1)) uint64_t DCALL
+DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self) {
+	uint64_t result;
+	DeeModuleObject *me = (DeeModuleObject *)self;
+	uint16_t flags = atomic_read(&me->mo_flags);
+	if (flags & Dee_MODULE_FHASCTIME) {
+		COMPILER_READ_BARRIER();
+		return me->mo_ctime;
+	}
+	result = DeeModule_GetCTime_uncached(me);
+	me->mo_ctime = result;
+	COMPILER_WRITE_BARRIER();
+	atomic_or(&me->mo_flags, Dee_MODULE_FHASCTIME);
+	return result;
+}
 
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
@@ -358,7 +384,7 @@ DeeModule_GetSymbolID(DeeModuleObject const *__restrict self, uint16_t gid) {
 	 * when reading the bucket fields below, as they only
 	 * become immutable once this flag has been set. */
 	if unlikely(!(self->mo_flags & Dee_MODULE_FDIDLOAD))
-		goto err;
+		return NULL;
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	end = (iter = self->mo_bucketv) + (self->mo_bucketm + 1);
 	for (; iter < end; ++iter) {
@@ -376,8 +402,6 @@ DeeModule_GetSymbolID(DeeModuleObject const *__restrict self, uint16_t gid) {
 		}
 	}
 	return result;
-err:
-	return NULL;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
@@ -1796,7 +1820,7 @@ module_printrepr(DeeObject *__restrict self,
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (me == DeeModule_GetDeemon())
 		return DeeFormat_PRINT(printer, arg, "import.deemon");
-//	if (me->mo_libname) /* TODO */
+//	if (me->mo_libname.mle_name) /* TODO */
 	if (!me->mo_absname)
 		return DeeFormat_PRINT(printer, arg, "Module()");
 	return DeeFormat_Printf(printer, arg, "import(%q)", me->mo_absname);
@@ -2615,14 +2639,24 @@ module_dee_visit(DeeModuleObject *__restrict self,
 	DeeModule_LockEndRead(self);
 }
 
-PRIVATE NONNULL((1, 2)) void DCALL
-module_dee_destroy(DeeModuleObject *__restrict self,
-                   Dee_visit_t proc, void *arg) {
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+/* Unbind from `module_byaddr_tree' */
+INTDEF NONNULL((1)) void DCALL
+module_dee_unbind(DeeModuleObject *__restrict self);
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+
+PRIVATE NONNULL((1)) void DCALL
+module_dee_destroy(DeeModuleObject *__restrict self) {
 	/* Assert always-true invariants for "DeeModuleDee_Type" */
 	ASSERT(Dee_TYPE(self) == &DeeModuleDee_Type);
 	ASSERT(self->mo_init == Dee_MODULE_INIT_INITIALIZED ||
 	       self->mo_init == Dee_MODULE_INIT_UNINITIALIZED);
 	self = (DeeModuleObject *)DeeGC_Untrack((DeeObject *)self);
+
+	/* Unbind from `module_byaddr_tree' */
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+	module_dee_unbind(self);
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 	/* Destroy Dee-specific data */
 	Dee_XDecrefv(self->mo_globalv, self->mo_globalc);
@@ -2712,9 +2746,8 @@ module_dex_visit(DeeModuleObject *__restrict self,
 	DeeModule_LockEndRead(self);
 }
 
-PRIVATE NONNULL((1, 2)) void DCALL
-module_dex_destroy(DeeModuleObject *__restrict self,
-                   Dee_visit_t proc, void *arg) {
+PRIVATE NONNULL((1)) void DCALL
+module_dex_destroy(DeeModuleObject *__restrict self) {
 	struct Dee_module_dexdata *dexdata;
 	/* Assert always-true invariants for "DeeModuleDex_Type" */
 	ASSERT(Dee_TYPE(self) == &DeeModuleDex_Type);
@@ -2732,26 +2765,15 @@ module_dex_destroy(DeeModuleObject *__restrict self,
 	    (self->mo_init == Dee_MODULE_INIT_INITIALIZED))
 		(*dexdata->mdx_fini)();
 
-	Dee_XDecrefv(self->mo_globalv, self->mo_globalc);
+	/* NOTE: No need to unlink from "dex_byaddr_tree" -- that tree used to
+	 *       hold a reference to our module, so the fact that we go here
+	 *       has to mean that the module has already been removed from that
+	 *       tree! */
 
 	/* Destroy common data */
+	Dee_XDecrefv(self->mo_globalv, self->mo_globalc);
 	module_common_destroy(self);
-
-#if 0
-	/* FIXME: Work-around for preventing DEX modules being unloaded
-	 *        while objects referring to statically defined types inside
-	 *        still exist.
-	 *        The proper way to fix this would be to use a GC-like mechanism
-	 *        for this that delays the actual DEX unloading until no objects
-	 *        exist that are apart of, or use types from the DEX.
-	 *        Note that for this, we must also change the ruling that objects
-	 *        pointing to other objects don't have to implement GC-visit if it
-	 *        is known that none of those objects are ever GC objects. With this
-	 *        change, _all_ objects have to implement GC-visit! (though we could
-	 *        add a type-flag to indicate that pointed-to objects can never form
-	 *        a ~conventional~ loop) */
 	DeeSystem_DlClose(dexdata->mdx_handle);
-#endif
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -3017,18 +3039,26 @@ INTERN struct Dee_empty_module_struct DeeModule_Empty = {
 		/* .mo_libname = */ {
 			/* .mle_name = */ NULL,
 			/* .mle_dat  = */ { (DeeModuleObject *)&DeeModule_Empty.m_module },
+			/* .mle_node = */ { NULL, NULL, NULL },
+			/* .mle_next = */ NULL
 		},
 		/* .mo_dir     = */ (struct Dee_module_directory *)&empty_module_directory,
-		/* .mo_moddata = */ Dee_MODULE_MODDATA_INIT_CODE(&DeeCode_Empty),
 		/* .mo_init    = */ Dee_MODULE_INIT_INITIALIZED,
-		/* .mo_flags   = */ Dee_MODULE_FNORMAL,
+		/* .mo_ctime   = */ 0,
+		/* .mo_flags   = */ Dee_MODULE_FNORMAL | Dee_MODULE_FHASCTIME,
 		/* .mo_importc = */ 0,
 		/* .mo_globalc = */ 0,
 		/* .mo_bucketm = */ 0,
 		/* .mo_bucketv = */ empty_module_buckets,
-		/* .mo_importv = */ NULL,
 		_Dee_MODULE_INIT_mo_lock
-		WEAKREF_SUPPORT_INIT
+		WEAKREF_SUPPORT_INIT,
+		/* .mo_moddata = */ Dee_MODULE_MODDATA_INIT_CODE(&DeeCode_Empty),
+		/* .mo_importv = */ NULL,
+#if !defined(CONFIG_NO_DEC) || !defined(CONFIG_NO_DEX)
+		/* .mo_minaddr = */ NULL,
+		/* .mo_maxaddr = */ NULL,
+		/* .mo_adrnode = */ NULL,
+#endif /* !CONFIG_NO_DEC || !CONFIG_NO_DEX */
 	}
 };
 

@@ -26,7 +26,8 @@
 #include "types.h"
 /**/
 
-#include <stddef.h> /* size_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
 
 DECL_BEGIN
 
@@ -117,7 +118,7 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_RemoveLibPath(/*String*/ DeeObj
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_RemoveLibPathString(/*utf-8*/ char const *path);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_RemoveLibPathStringLen(/*utf-8*/ char const *path, size_t path_len);
 #ifdef CONFIG_BUILDING_DEEMON
-INTDEF void DCALL DeeModule_ClearLibPath(void);
+INTDEF bool DCALL DeeModule_ClearLibPath(void);
 #endif /* CONFIG_BUILDING_DEEMON */
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 DDATDEF struct Dee_list_object DeeModule_Path;

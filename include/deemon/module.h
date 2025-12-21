@@ -495,26 +495,28 @@ struct Dee_module_object {
 	                                             * - Anonymous (explicitly created by user-code)
 	                                             * - The special built-in "deemon" module
 	                                             *
-	                                             * When executing a file as a deemon code that doesn't end with
+	                                             * When executing a file as deemon code that doesn't end with
 	                                             * `.dee' (e.g. "/opt/foo/somefile.txt"), then this string is
 	                                             * set to that path as-is (with the extension still in-tact),
-	                                             * but the module is also initialized to not do directory-scanning */
+	                                             * but the module is also initialized to do no directory-scanning */
 	struct Dee_module_treenode     mo_absnode;  /* [lock(INTERNAL(module_abstree_lock))][valid_if(mo_absname)]
 	                                             * Node in tree of modules-by-mo_absname */
 	struct Dee_module_libentry     mo_libname;  /* [valid_if(mo_absname != NULL)] Primary lib entry for this module (unused if "mle_name" is "NULL") */
 	struct Dee_module_directory   *mo_dir;      /* [0..1][owned_if(!= empty_module_directory)][lock(WRITE_ONCE)]
 	                                             * Results of interpreting `mo_absname' as a directory and scanning
 	                                             * that directory for "*.dee" files, and more directories. */
-	union Dee_module_moddata       mo_moddata;  /* Module-type-specific data */
 #define Dee_MODULE_INIT_UNINITIALIZED ((struct Dee_thread_object *)NULL)
 #define Dee_MODULE_INIT_INITIALIZED   ((struct Dee_thread_object *)ITER_DONE)
 	struct Dee_thread_object      *mo_init;     /* [0..1][lock(ATOMIC)] Module initialization state (one of `Dee_MODULE_INIT_*', or the thread doing the init)
 	                                             * NOTE: For module types other than `DeeModuleDee_Type' and `DeeModuleDex_Type',
 	                                             *       this must always be `Dee_MODULE_INIT_INITIALIZED' */
+	uint64_t                       mo_ctime;    /* [valid_if(Dee_MODULE_FHASCTIME)][lock(WRITE_ONCE)] Timestamp when this module was compiled (0 for dir-modules) */
 #define Dee_MODULE_FNORMAL         0x0000       /* Normal module flags. */
-#define Dee_MODULE_FABSRED         0x0001       /* is-red-bit for `mo_absnode' */
-#define Dee_MODULE_FNOTDEE         0x0002       /* [DeeModuleDee_Type][const] `mo_absname' is the actual, absolute filename of this module (which doesn't end with `.dee') */
-#define Dee_MODULE_FWAITINIT       0x8000       /* [lock(ATOMIC)] When `mo_init' is set to `Dee_MODULE_INIT_UNINITIALIZED' or `Dee_MODULE_INIT_INITIALIZED', must `DeeFutex_WakeAll(&mo_init)' */
+#define Dee_MODULE_FNOTDEE         0x0001       /* [DeeModuleDee_Type][const] `mo_absname' is the actual, absolute filename of this module (which doesn't end with `.dee') */
+#define Dee_MODULE_FHASCTIME       0x0002       /* [lock(WRITE_ONCE)] Field `mo_ctime' has been initialized */
+#define Dee_MODULE_FWAITINIT       0x0004       /* [lock(ATOMIC)] When `mo_init' is set to `Dee_MODULE_INIT_UNINITIALIZED' or `Dee_MODULE_INIT_INITIALIZED', must `DeeFutex_WakeAll(&mo_init)' */
+#define Dee_MODULE_FABSRED         0x0100       /* [lock(ATOMIC)] is-red-bit for `mo_absnode' */
+#define Dee_MODULE_FADRRED         0x0200       /* [lock(ATOMIC)] is-red-bit for `mo_adrnode' */
 	uint16_t                       mo_flags;    /* Module flags (Set of `Dee_MODULE_F*') */
 	uint16_t                       mo_importc;  /* [const] The total number of other modules imported by this one.
 	                                             * (there may be more than these, but these are the ones accessible
@@ -529,11 +531,22 @@ struct Dee_module_object {
 #define Dee_MODULE_HASHST(self, hash)  ((hash) & Dee_REQUIRES_OBJECT(DeeModuleObject, self)->mo_bucketm)
 #define Dee_MODULE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
 #define Dee_MODULE_HASHIT(self, i)     (Dee_REQUIRES_OBJECT(DeeModuleObject, self)->mo_bucketv + ((i) & ((DeeModuleObject *)(self))->mo_bucketm))
-	DREF DeeModuleObject   *const *mo_importv;  /* [1..1][const][0..mo_importc][const][owned] Vector of other modules imported by this one. */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t            mo_lock;     /* Lock for accessing `mo_globalv'. */
 #endif /* !CONFIG_NO_THREADS */
 	Dee_WEAKREF_SUPPORT
+	/* End of common data (the following fields don't exist for DeeModuleDir_Type-type modules) */
+	union Dee_module_moddata                  mo_moddata;  /* Module-type-specific data */
+	DREF DeeModuleObject              *const *mo_importv;  /* [1..1][const][0..mo_importc][const][owned] Vector of other modules imported by this one. */
+#if !defined(CONFIG_NO_DEC) || !defined(CONFIG_NO_DEX)
+	/* The by-address tree is used by:
+	 * - !CONFIG_NO_DEX: (always, but different tree than by !CONFIG_NO_DEC
+	 *                    if `#ifndef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS')
+	 * - !CONFIG_NO_DEC: #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC */
+	__BYTE_TYPE__ const                      *mo_minaddr;  /* [const] Min address of memory mapped by this module */
+	__BYTE_TYPE__ const                      *mo_maxaddr;  /* [const] Max address of memory mapped by this module */
+	struct Dee_module_treenode                mo_adrnode;  /* [lock(INTERNAL(module_byaddr_lock))] Node in by-address tree */
+#endif /* !CONFIG_NO_DEC || !CONFIG_NO_DEX */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, mo_globalv); /* [0..1][lock(mo_globalv)][mo_globalc] Globals of this module */
 };
 
@@ -544,6 +557,16 @@ struct Dee_module_object {
 #define _Dee_MODULE_STRUCT_mo_lock /* nothing */
 #define _Dee_MODULE_INIT_mo_lock   /* nothing */
 #endif /* CONFIG_NO_THREADS */
+#if !defined(CONFIG_NO_DEC) || !defined(CONFIG_NO_DEX)
+#define _Dee_MODULE_STRUCT_mo_minaddr __BYTE_TYPE__ const *mo_minaddr;
+#define _Dee_MODULE_STRUCT_mo_maxaddr __BYTE_TYPE__ const *mo_maxaddr;
+#define _Dee_MODULE_STRUCT_mo_adrnode struct Dee_module_treenode mo_adrnode;
+#else /* !CONFIG_NO_DEC || !CONFIG_NO_DEX */
+#define _Dee_MODULE_STRUCT_mo_minaddr /* nothing */
+#define _Dee_MODULE_STRUCT_mo_maxaddr /* nothing */
+#define _Dee_MODULE_STRUCT_mo_adrnode /* nothing */
+#endif /* CONFIG_NO_DEC && CONFIG_NO_DEX */
+
 
 #define Dee_MODULE_STRUCT_EX(name, mo_globalv_def) \
 	struct name {                                  \
@@ -552,16 +575,20 @@ struct Dee_module_object {
 		struct Dee_module_treenode     mo_absnode; \
 		struct Dee_module_libentry     mo_libname; \
 		struct Dee_module_directory   *mo_dir;     \
-		union Dee_module_moddata       mo_moddata; \
 		struct Dee_thread_object      *mo_init;    \
+		uint64_t                       mo_ctime;   \
 		uint16_t                       mo_flags;   \
 		uint16_t                       mo_importc; \
 		uint16_t                       mo_globalc; \
 		uint16_t                       mo_bucketm; \
 		struct Dee_module_symbol      *mo_bucketv; \
-		DREF DeeModuleObject   *const *mo_importv; \
 		_Dee_MODULE_STRUCT_mo_lock                 \
 		Dee_WEAKREF_SUPPORT                        \
+		union Dee_module_moddata       mo_moddata; \
+		DREF DeeModuleObject   *const *mo_importv; \
+		_Dee_MODULE_STRUCT_mo_minaddr              \
+		_Dee_MODULE_STRUCT_mo_maxaddr              \
+		_Dee_MODULE_STRUCT_mo_adrnode              \
 		mo_globalv_def                             \
 	}
 #define Dee_MODULE_STRUCT(name, mo_globalc_) \
@@ -653,7 +680,7 @@ DeeModule_SetInitialized(/*Module*/ DeeObject *__restrict self);
 #define DeeModule_SetInitialized_INPRGRS 2 /* Module is currently being initialized and can't have its status changed */
 
 /* Return the root code object of a given module.
- * The caller must ensure that `self' is an instance */
+ * The caller must ensure that `self' is an instance of "DeeModuleDee_Type" */
 DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF /*Code*/ DeeObject *DCALL
 DeeModule_GetRootCode(/*Module*/ DeeObject *__restrict self);
 DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF /*Function*/ DeeObject *DCALL
@@ -663,16 +690,16 @@ DeeModule_GetRootFunction(/*Module*/ DeeObject *__restrict self);
 /* Possible values for `DeeModule_ImportEx()' and `DeeModule_OpenEx()' */
 #define DeeModule_IMPORT_F_NORMAL 0x0000 /* Normal import flags */
 #define DeeModule_IMPORT_F_ENOENT 0x0001 /* Handle file-not-found errors by returning ITER_DONE instead of throwing an error */
-#define DeeModule_IMPORT_F_FILNAM 0x0002 /* The given "import_str" is a system filename that is then loaded as a ".dee" file */
+#define DeeModule_IMPORT_F_FILNAM 0x0002 /* The given "import_str" is a system filename that is then loaded as a ".dee" file (only "DeeModuleDee_Type" is ever returned) */
+#define DeeModule_IMPORT_F_CTXDIR 0x0004 /* `context_absname' is the path of the directory to use for relative imports, rather than a file within that directory. */
+#define DeeModule_IMPORT_F_ANONYM 0x0008 /* Don't look at, or write into the global module tree -- always load anew as an anonymous module (unless it's a dex module). */
 #ifndef CONFIG_NO_DEX
-#define DeeModule_IMPORT_F_NOLDEX 0x0004 /* Do not attempt to load DEX modules */
+#define DeeModule_IMPORT_F_NOLDEX 0x0010 /* Do not attempt to load DEX modules */
 #endif /* !CONFIG_NO_DEX */
 #ifndef CONFIG_NO_DEC
-#define DeeModule_IMPORT_F_NOLDEC 0x0008 /* Do not attempt to load ".dec" files */
-#define DeeModule_IMPORT_F_NOGDEC 0x0010 /* Do not attempt to generate ".dec" files */
+#define DeeModule_IMPORT_F_NOLDEC 0x0020 /* Do not attempt to load ".dec" files */
+#define DeeModule_IMPORT_F_NOGDEC 0x0040 /* Do not attempt to generate ".dec" files */
 #endif /* !CONFIG_NO_DEC */
-#define DeeModule_IMPORT_F_CTXDIR 0x0020 /* `context_absname' is the path of the directory to use for relative imports, rather than a file within that directory. */
-#define DeeModule_IMPORT_F_ANONYM 0x0040 /* Don't look at, or write into the global module tree -- always load anew as an anonymous module. */
 
 /* Import (DeeModule_Open() + DeeModule_Initialize()) a specific module */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
@@ -723,6 +750,14 @@ DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_size,
                  /*utf-8*/ char const *context_absname, size_t context_absname_size,
                  unsigned int flags, struct Dee_compiler_options *options);
+
+/* Returns the compile-time of a given module (in microseconds
+ * since 01-01-1970), or (uint64_t)-1 if an error occurred.
+ * Use this function instead of directly reading `self->mo_ctime',
+ * as this function will lazily initialize the timestamp in cases
+ * where it may not be loaded, yet. */
+DFUNDEF WUNUSED NONNULL((1)) uint64_t DCALL
+DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self);
 
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
