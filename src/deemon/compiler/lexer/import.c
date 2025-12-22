@@ -66,7 +66,11 @@ import_module_by_name(DeeStringObject *__restrict module_name,
 		size_t name_size;
 		if (module_name->s_len == 1) {
 			/* Special case: Import your own module. */
-			return_reference_(current_rootscope->rs_module);
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+			return MODULE_CURRENT;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+			return_reference_(MODULE_CURRENT);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		}
 		filename = TPPFile_RealFilename(token.t_file, &name_size);
 		if likely(filename) {
@@ -222,7 +226,10 @@ err:
 /* Parse a module name and return the associated module object.
  * @param: for_alias: Should be `true' if the name is used in `foo = <name>',
  *                    or if no alias can be used where the name appears,
- *                    else `false' */
+ *                    else `false'
+ * @return: * :             The named module
+ * @return: NULL:           Error was thrown
+ * @return: MODULE_CURRENT: The module currently being compiled */
 INTERN WUNUSED DREF DeeModuleObject *DCALL
 parse_module_byname(bool for_alias) {
 	DREF DeeModuleObject *result;
@@ -261,28 +268,32 @@ ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name) {
 		goto err_module;
 
 	/* Lookup the symbol which we're importing. */
-	modsym = import_module_symbol(mod, import_name);
-	if unlikely(!modsym) {
-		if (WARN(W_MODULE_IMPORT_NOT_FOUND,
-		         import_name->k_name,
-		         DeeString_STR(mod->mo_name)))
-			goto err_module;
-		if (mod == current_rootscope->rs_module) {
-			extern_symbol->s_type = SYMBOL_TYPE_MYMOD;
-			Dee_Decref(mod);
-		} else {
+	if (mod == MODULE_CURRENT) {
+		if (WARN(W_IMPORT_GLOBAL_FROM_OWN_MODULE))
+			goto err;
+		extern_symbol->s_type = SYMBOL_TYPE_MYMOD;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		Dee_Decref(mod);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	} else {
+		modsym = import_module_symbol(mod, import_name);
+		if unlikely(!modsym) {
+			if (WARN(W_MODULE_IMPORT_NOT_FOUND,
+			         import_name->k_name,
+			         DeeString_STR(mod->mo_name)))
+				goto err_module;
 			extern_symbol->s_type   = SYMBOL_TYPE_MODULE;
 			extern_symbol->s_module = mod; /* Inherit reference. */
+		} else {
+			/* Setup this symbol as an external reference. */
+			extern_symbol->s_type            = SYMBOL_TYPE_EXTERN;
+			extern_symbol->s_extern.e_module = mod; /* Inherit reference. */
+			extern_symbol->s_extern.e_symbol = modsym;
 		}
-	} else {
-		/* Setup this symbol as an external reference. */
-		extern_symbol->s_type            = SYMBOL_TYPE_EXTERN;
-		extern_symbol->s_extern.e_module = mod; /* Inherit reference. */
-		extern_symbol->s_extern.e_symbol = modsym;
 	}
 	return extern_symbol;
 err_module:
-	Dee_Decref(mod);
+	decref_parse_module_byname(mod);
 	/*goto err;*/
 err:
 	return NULL;
@@ -546,7 +557,7 @@ ast_import_all_from_module(DeeModuleObject *__restrict mod,
                            struct ast_loc *loc) {
 	struct module_symbol *iter, *end;
 	ASSERT_OBJECT_TYPE(mod, &DeeModule_Type);
-	if (mod == current_rootscope->rs_module) {
+	if (mod == MODULE_CURRENT) {
 		if (WARNAT(loc, W_IMPORT_GLOBAL_FROM_OWN_MODULE))
 			goto err;
 		goto done;
@@ -707,7 +718,7 @@ ast_import_single_from_module(DeeModuleObject *__restrict mod,
                               struct import_item *__restrict item) {
 	struct module_symbol *sym;
 	struct symbol *import_symbol;
-	if (mod == current_rootscope->rs_module) {
+	if (mod == MODULE_CURRENT) {
 		if (WARNAT(&item->ii_import_loc, W_IMPORT_GLOBAL_FROM_OWN_MODULE))
 			goto err;
 		goto done;
@@ -797,7 +808,7 @@ ast_import_module(struct import_item *__restrict item) {
 		/* Another symbol with the same name had already been imported. */
 		if ((import_symbol->s_type == SYMBOL_TYPE_MODULE &&
 		     import_symbol->s_extern.e_module == mod) ||
-		    (mod == current_rootscope->rs_module &&
+		    (mod == MODULE_CURRENT &&
 		     import_symbol->s_type == SYMBOL_TYPE_MYMOD)) {
 			/* The same module has already been imported under this name! */
 		} else {
@@ -806,16 +817,16 @@ ast_import_module(struct import_item *__restrict item) {
 			           item->ii_symbol_name))
 				goto err_module;
 		}
-		Dee_Decref(mod);
+		decref_parse_module_byname(mod);
 	} else {
 		import_symbol = new_local_symbol(item->ii_symbol_name,
 		                                 &item->ii_import_loc);
 		if unlikely(!import_symbol)
 			goto err_module;
 init_import_symbol:
-		if (mod == current_rootscope->rs_module) {
+		if (mod == MODULE_CURRENT) {
 			import_symbol->s_type = SYMBOL_TYPE_MYMOD;
-			Dee_Decref(mod);
+			decref_parse_module_byname(mod);
 		} else {
 			import_symbol->s_type   = SYMBOL_TYPE_MODULE;
 			import_symbol->s_module = mod; /* Inherit reference */
@@ -823,7 +834,7 @@ init_import_symbol:
 	}
 	return 0;
 err_module:
-	Dee_Decref(mod);
+	decref_parse_module_byname(mod);
 err:
 	return -1;
 }
@@ -866,7 +877,7 @@ INTERN int DFCALL ast_parse_post_import(void) {
 			if unlikely(!mod)
 				goto err;
 			error = ast_import_all_from_module(mod, &star_loc);
-			Dee_Decref(mod);
+			decref_parse_module_byname(mod);
 			goto done;
 		} else if (tok == ',') {
 			item_c = 0;
@@ -917,7 +928,7 @@ parse_module_import_list:
 			goto err_item;
 		error = ast_import_single_from_module(mod, &item);
 		Dee_XDecref(item.ii_import_name);
-		Dee_Decref(mod);
+		decref_parse_module_byname(mod);
 		if unlikely(error)
 			goto err;
 	} else if (tok == ',') {
@@ -1016,7 +1027,7 @@ import_parse_list:
 					goto err_item_v_module;
 				Dee_XClear(item_v[i].ii_import_name);
 			}
-			Dee_Decref(mod);
+			decref_parse_module_byname(mod);
 		} else {
 			size_t i;
 			if unlikely(!allow_modules) {
@@ -1035,7 +1046,7 @@ import_parse_list:
 		Dee_Free(item_v);
 		goto done;
 err_item_v_module:
-		Dee_Decref(mod);
+		decref_parse_module_byname(mod);
 err_item_v:
 		while (item_c--)
 			Dee_XDecref(item_v[item_c].ii_import_name);
@@ -1224,7 +1235,7 @@ INTERN WUNUSED DREF struct ast *DFCALL ast_parse_import(void) {
 			if unlikely(yield() < 0)
 				goto err_r_module;
 		}
-		Dee_Decref(mod);
+		decref_parse_module_byname(mod);
 	} else {
 		/* - import("deemon");
 		 * - import pack "deemon";
@@ -1266,7 +1277,7 @@ INTERN WUNUSED DREF struct ast *DFCALL ast_parse_import(void) {
 done:
 	return result;
 err_r_module:
-	Dee_Decref(mod);
+	decref_parse_module_byname(mod);
 err_r:
 	ast_decref(result);
 err:

@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_UTIL_RLOCK_H
-#define GUARD_DEEMON_UTIL_RLOCK_H 1
+#ifndef GUARD_DEEMON_UTIL_NRLOCK_H
+#define GUARD_DEEMON_UTIL_NRLOCK_H 1
 
 #include "../api.h"
 
@@ -294,4 +294,4 @@ DECL_END
 
 #endif /* !CONFIG_NO_THREADS */
 
-#endif /* !GUARD_DEEMON_UTIL_RLOCK_H */
+#endif /* !GUARD_DEEMON_UTIL_NRLOCK_H */

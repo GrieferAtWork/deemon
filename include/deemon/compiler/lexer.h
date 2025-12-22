@@ -507,10 +507,22 @@ ast_parse_loopexpr_hybrid(unsigned int *p_was_expression);
 
 struct module_object;
 
+/* Special return value to the module currently being compiled. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#define MODULE_CURRENT ((struct module_object *)ITER_DONE)
+#define decref_parse_module_byname(x) ((x) == MODULE_CURRENT ? (void)0 : Dee_Decref(x))
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#define MODULE_CURRENT current_rootscope->rs_module
+#define decref_parse_module_byname(x) Dee_Decref(x)
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
 /* Parse a module name and return the associated module object.
  * @param: for_alias: Should be `true' if the name is used in `foo = <name>',
  *                    or if no alias can be used where the name appears,
- *                    else `false' */
+ *                    else `false'
+ * @return: * :             The named module
+ * @return: NULL:           Error was thrown
+ * @return: MODULE_CURRENT: The module currently being compiled */
 INTDEF WUNUSED DREF struct module_object *DCALL
 parse_module_byname(bool for_alias);
 

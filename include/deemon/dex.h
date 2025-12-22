@@ -308,6 +308,12 @@ INTDEF __BYTE_TYPE__ _end[];
 INTDEF WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 DeeModule_OpenDex(/*inherit(always)*/ /*utf-8*/ char *__restrict absname,
                   /*inherit(always)*/ void *dex_handle);
+
+/* Invoke the "mdx_clear" operator on every loaded dex module. */
+INTDEF bool DCALL DeeModule_ClearDexModuleCaches(void);
+
+/* Unload all loaded dex modules. */
+INTDEF void DCALL DeeModule_UnloadAllDexModules(void);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 

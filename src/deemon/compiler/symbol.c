@@ -823,6 +823,24 @@ INTERN DeeTypeObject DeeBaseScope_Type = {
 
 
 /* -------- DeeRootScopeObject Implementation -------- */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+root_scope_ctor(DeeRootScopeObject *__restrict self) {
+	bzero((uint8_t *)self + offsetof(DeeScopeObject, s_prev),
+	      sizeof(DeeRootScopeObject) - offsetof(DeeScopeObject, s_prev));
+	weakref_support_init((DeeScopeObject *)self);
+	self->rs_scope.bs_scope.s_base = &self->rs_scope;
+	self->rs_scope.bs_root         = self;
+	self->rs_bucketv               = empty_module_buckets;
+#if CODE_FNORMAL != 0
+	self->rs_scope.bs_flags = CODE_FNORMAL;
+#endif /* CODE_FNORMAL != 0 */
+#if Dee_MODULE_FNORMAL != 0
+	self->rs_flags = Dee_MODULE_FNORMAL;
+#endif /* Dee_MODULE_FNORMAL != 0 */
+	return 0;
+}
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 root_scope_init(DeeRootScopeObject *__restrict self,
                 size_t argc, DeeObject *const *argv) {
@@ -848,10 +866,13 @@ root_scope_init(DeeRootScopeObject *__restrict self,
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 PRIVATE NONNULL((1)) void DCALL
 root_scope_fini(DeeRootScopeObject *__restrict self) {
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	Dee_Decref(self->rs_module);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	Dee_XDecref(self->rs_code);
 	Dee_Decrefv(self->rs_importv, self->rs_importc);
 	Dee_Free(self->rs_importv);
@@ -870,17 +891,21 @@ root_scope_fini(DeeRootScopeObject *__restrict self) {
 	}
 }
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 root_scope_str(DeeRootScopeObject *__restrict self) {
 	return_reference_((DeeObject *)self->rs_module->mo_name);
 }
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 PRIVATE NONNULL((1, 2)) void DCALL
 root_scope_visit(DeeRootScopeObject *__restrict self,
                  Dee_visit_t proc, void *arg) {
 	size_t i;
 	DeeCompiler_LockReadNoInt();
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	Dee_Visit(self->rs_module);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	Dee_XVisit(self->rs_code);
 	for (i = 0; i < self->rs_importc; ++i)
 		Dee_Visit(self->rs_importv[i]);
@@ -898,10 +923,17 @@ INTERN DeeTypeObject DeeRootScope_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+				/* .tp_ctor      = */ (Dee_funptr_t)&root_scope_ctor,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
 				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&root_scope_init,
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 				TYPE_FIXED_ALLOCATOR(DeeRootScopeObject)
 			}
 		},
@@ -910,7 +942,11 @@ INTERN DeeTypeObject DeeRootScope_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		/* .tp_str  = */ NULL,
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&root_scope_str,
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},

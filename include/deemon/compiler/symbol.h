@@ -1044,7 +1044,9 @@ struct base_scope_object {
 
 struct root_scope_object {
 	DeeBaseScopeObject         rs_scope;   /* Underlying base scope. */
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	DREF struct module_object *rs_module;  /* [1..1][const] The module that is being compiled. */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	/* NOTE: Fields below are only modified during code generation (aka. by the assembler)
 	 *    >> Before assembly starts for the first time, they should all be ZERO/NULL-initialized. */
 	DREF DeeCodeObject        *rs_code;    /* [0..1][LINK(->co_next)] Linked list of all code objects already generated for this module. */

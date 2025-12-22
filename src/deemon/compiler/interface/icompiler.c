@@ -220,6 +220,7 @@ err:
 	return NULL;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 compiler_get_module(DeeCompilerObject *__restrict self) {
 	DREF DeeModuleObject *result;
@@ -232,6 +233,7 @@ compiler_get_module(DeeCompilerObject *__restrict self) {
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 INTDEF struct type_getset tpconst compiler_getsets[];
@@ -257,11 +259,13 @@ INTERN_TPCONST struct type_getset tpconst compiler_getsets[] = {
 	            "->?#RootScope\n"
 	            "Get the root-scope active within @this compiler\n"
 	            "Note that this scope is fixed and cannot be changed"),
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	TYPE_GETTER(STR_module, &compiler_get_module,
 	            "->?DModule\n"
 	            "Returns the module being constructed by @this compiler\n"
 	            "Warning: The returned module is incomplete and uninitialized, "
 	            "and can't actually be used, yet"),
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	TYPE_GETSET_END
 };
 

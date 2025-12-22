@@ -39,6 +39,7 @@
 #include <deemon/types.h>
 #include <deemon/util/atomic-ref.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/nrlock.h>
 
 #include <hybrid/align.h>
 #include <hybrid/debug-alignment.h>
@@ -247,9 +248,11 @@ PRIVATE Dee_ATOMIC_REF(DeeTupleObject) deemon_path = Dee_ATOMIC_REF_INIT(NULL);
 #undef HAVE_module_byaddr_tree
 #if !defined(CONFIG_NO_DEX) && defined(Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS)
 #define HAVE_module_byaddr_tree
+#define HAVE_module_byaddr_tree_CONTAINS_DEX
 #endif /* !CONFIG_NO_DEX && Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS */
 #if !defined(CONFIG_NO_DEC) && defined(CONFIG_EXPERIMENTAL_MMAP_DEC)
 #define HAVE_module_byaddr_tree
+#define HAVE_module_byaddr_tree_CONTAINS_DEC
 #endif /* !CONFIG_NO_DEC && CONFIG_EXPERIMENTAL_MMAP_DEC */
 #if !defined(CONFIG_NO_DEX) && !defined(Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS)
 #define HAVE_dex_byaddr_tree
@@ -312,7 +315,7 @@ DECL_BEGIN
 #endif /* HAVE_module_byaddr_tree */
 
 #ifndef CONFIG_NO_DEX
-#ifndef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
+#ifdef HAVE_dex_byaddr_tree
 #define RBTREE(name)           dex_byaddr_##name
 #define RBTREE_T               DeeModuleObject
 #ifdef Dee_MODULE_DEXDATA_HAVE_LOADHANDLE
@@ -343,7 +346,7 @@ DECL_BEGIN
 
 /* [0..n][lock(module_byaddr_lock)] */
 PRIVATE RBTREE_ROOT(DREF Dee_module_object) dex_byaddr_tree = NULL;
-#endif /* !Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS */
+#endif /* HAVE_dex_byaddr_tree */
 
 
 #ifdef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
@@ -883,6 +886,185 @@ err:
 	return NULL;
 #undef LOCAL_unlock
 }
+
+
+PRIVATE NONNULL((1)) void DCALL
+DeeModule_ClearDexModuleCaches_prepare_at(DeeModuleObject *__restrict root) {
+again:
+	atomic_and(&root->mo_flags, ~_Dee_MODULE_FCLEARED);
+	if (root->mo_adrnode.rb_lhs) {
+		if (root->mo_adrnode.rb_rhs)
+			DeeModule_ClearDexModuleCaches_prepare_at(root->mo_adrnode.rb_rhs);
+		root = root->mo_adrnode.rb_lhs;
+		goto again;
+	}
+	if (root->mo_adrnode.rb_rhs) {
+		root = root->mo_adrnode.rb_rhs;
+		goto again;
+	}
+}
+
+PRIVATE WUNUSED NONNULL((1)) DeeModuleObject *DCALL
+DeeModule_ClearDexModuleCaches_find_uncleared(DeeModuleObject *__restrict root) {
+again:
+#if !defined(HAVE_dex_byaddr_tree) && defined(HAVE_module_byaddr_tree_CONTAINS_DEC)
+	if (Dee_TYPE(root) == &DeeModuleDex_Type)
+#else /* !HAVE_dex_byaddr_tree && HAVE_module_byaddr_tree_CONTAINS_DEC */
+	ASSERT(Dee_TYPE(root) == &DeeModuleDex_Type);
+#endif /* HAVE_dex_byaddr_tree || !HAVE_module_byaddr_tree_CONTAINS_DEC */
+	{
+		if (!(atomic_read(&root->mo_flags) & _Dee_MODULE_FCLEARED) &&
+		    root->mo_moddata.mo_dexdata->mdx_clear != NULL) {
+			atomic_or(&root->mo_flags, _Dee_MODULE_FCLEARED);
+			return root;
+		}
+	}
+	if (root->mo_adrnode.rb_lhs) {
+		if (root->mo_adrnode.rb_rhs) {
+			DeeModuleObject *result;
+			result = DeeModule_ClearDexModuleCaches_find_uncleared(root->mo_adrnode.rb_rhs);
+			if (result)
+				return result;
+		}
+		root = root->mo_adrnode.rb_lhs;
+		goto again;
+	}
+	if (root->mo_adrnode.rb_rhs) {
+		root = root->mo_adrnode.rb_rhs;
+		goto again;
+	}
+	return NULL;
+}
+
+PRIVATE bool DCALL DeeModule_ClearDexModuleCaches_locked(void) {
+	bool result = false;
+	DeeModuleObject *root;
+	module_byaddr_lock_read();
+#ifdef HAVE_dex_byaddr_tree
+	root = dex_byaddr_tree;
+#else /* HAVE_dex_byaddr_tree */
+	root = module_byaddr_tree;
+#endif /* !HAVE_dex_byaddr_tree */
+	if (root) {
+		DeeModuleObject *todo;
+		DeeModule_ClearDexModuleCaches_prepare_at(root);
+		while ((todo = DeeModule_ClearDexModuleCaches_find_uncleared(root)) != NULL) {
+			Dee_Incref(todo);
+			module_byaddr_lock_endread();
+			ASSERT(Dee_TYPE(todo) == &DeeModuleDex_Type);
+			ASSERT(todo->mo_moddata.mo_dexdata->mdx_clear);
+			result |= (*todo->mo_moddata.mo_dexdata->mdx_clear)();
+			Dee_Decref_unlikely(todo);
+			module_byaddr_lock_read();
+		}
+	}
+	module_byaddr_lock_endread();
+	return result;
+}
+
+PRIVATE Dee_nrshared_lock_t dex_clear_cache_lock = DEE_NRSHARED_LOCK_INIT;
+
+/* Invoke the "mdx_clear" operator on every loaded dex module. */
+INTERN bool DCALL DeeModule_ClearDexModuleCaches(void) {
+	bool result;
+	int status = Dee_nrshared_lock_acquire_noint(&dex_clear_cache_lock);
+	if (status != Dee_NRLOCK_OK)
+		return false; /* Don't allow re-entrancy! */
+	result = DeeModule_ClearDexModuleCaches_locked();
+	Dee_nrshared_lock_release(&dex_clear_cache_lock);
+	return result;
+}
+
+#define mo_nextdex mo_adrnode.rb_par
+
+PRIVATE NONNULL((1, 2)) void DCALL
+serialize_tree_without_deemon(DeeModuleObject *root,
+                              DREF DeeModuleObject **p_dexlist
+#if !defined(HAVE_dex_byaddr_tree) && defined(HAVE_module_byaddr_tree_CONTAINS_DEC)
+                              , DeeModuleObject **p_deelist
+#endif /* !HAVE_dex_byaddr_tree && HAVE_module_byaddr_tree_CONTAINS_DEC */
+                              ) {
+	DeeModuleObject *lhs, *rhs;
+again:
+	lhs = root->mo_adrnode.rb_lhs;
+	rhs = root->mo_adrnode.rb_rhs;
+	if (root != &DeeModule_Deemon) {
+#if !defined(HAVE_dex_byaddr_tree) && defined(HAVE_module_byaddr_tree_CONTAINS_DEC)
+		if (Dee_TYPE(root) == &DeeModuleDee_Type) {
+			root->mo_nextdex = *p_deelist;
+			*p_deelist = root;
+		} else
+#endif /* !HAVE_dex_byaddr_tree && HAVE_module_byaddr_tree_CONTAINS_DEC */
+		{
+			ASSERT(Dee_TYPE(root) == &DeeModuleDex_Type);
+			root->mo_nextdex = *p_dexlist;
+			*p_dexlist = root;
+		}
+	}
+	if (lhs != NULL) {
+		if (rhs != NULL) {
+#if !defined(HAVE_dex_byaddr_tree) && defined(HAVE_module_byaddr_tree_CONTAINS_DEC)
+			serialize_tree_without_deemon(rhs, p_dexlist, p_deelist);
+#else /* !HAVE_dex_byaddr_tree && HAVE_module_byaddr_tree_CONTAINS_DEC */
+			serialize_tree_without_deemon(rhs, p_dexlist);
+#endif /* HAVE_dex_byaddr_tree || !HAVE_module_byaddr_tree_CONTAINS_DEC */
+		}
+		root = lhs;
+		goto again;
+	}
+	if (rhs != NULL) {
+		root = rhs;
+		goto again;
+	}
+}
+
+/* Unload all loaded dex modules. */
+INTERN void DCALL DeeModule_UnloadAllDexModules(void) {
+	DREF DeeModuleObject *dex_list = NULL;
+#if !defined(HAVE_dex_byaddr_tree) && defined(HAVE_module_byaddr_tree_CONTAINS_DEC)
+	DeeModuleObject *dec_list = NULL;
+#endif /* !HAVE_dex_byaddr_tree && HAVE_module_byaddr_tree_CONTAINS_DEC */
+	module_byaddr_lock_write();
+#ifdef HAVE_dex_byaddr_tree
+	if unlikely(!dex_byaddr_tree) {
+		module_byaddr_lock_endwrite();
+		return;
+	}
+	serialize_tree_without_deemon(dex_byaddr_tree, &dex_list);
+	dex_byaddr_tree = &DeeModule_Deemon;
+#else /* HAVE_dex_byaddr_tree */
+	if unlikely(!module_byaddr_tree) {
+		module_byaddr_lock_endwrite();
+		return;
+	}
+#if !defined(HAVE_dex_byaddr_tree) && defined(HAVE_module_byaddr_tree_CONTAINS_DEC)
+	serialize_tree_without_deemon(module_byaddr_tree, &dex_list, &dec_list);
+#else /* !HAVE_dex_byaddr_tree && HAVE_module_byaddr_tree_CONTAINS_DEC */
+	serialize_tree_without_deemon(module_byaddr_tree, &dex_list);
+#endif /* HAVE_dex_byaddr_tree || !HAVE_module_byaddr_tree_CONTAINS_DEC */
+	module_byaddr_tree = &DeeModule_Deemon;
+#endif /* !HAVE_dex_byaddr_tree */
+	atomic_and(&DeeModule_Deemon.mo_flags, ~Dee_MODULE_FADRRED);
+	DeeModule_Deemon.mo_adrnode.rb_lhs = NULL;
+	DeeModule_Deemon.mo_adrnode.rb_rhs = NULL;
+	DeeModule_Deemon.mo_adrnode.rb_par = NULL;
+#if !defined(HAVE_dex_byaddr_tree) && defined(HAVE_module_byaddr_tree_CONTAINS_DEC)
+	while (dec_list) {
+		DeeModuleObject *next = dec_list->mo_nextdex;
+		module_byaddr_insert(&module_byaddr_tree, dec_list);
+		dec_list = next;
+	}
+#endif /* !HAVE_dex_byaddr_tree && HAVE_module_byaddr_tree_CONTAINS_DEC */
+	module_byaddr_lock_endwrite();
+
+	/* Drop references that were stored in the tree. */
+	while (dex_list) {
+		DeeModuleObject *next = dex_list->mo_nextdex;
+		Dee_Decref_likely(dex_list);
+		dex_list = next;
+	}
+}
+
 #endif /* !CONFIG_NO_DEX */
 
 #if !defined(CONFIG_NO_DEC) && defined(CONFIG_EXPERIMENTAL_MMAP_DEC)
@@ -1317,12 +1499,10 @@ no_dec_file:
 	                                                             &used_options, NULL);
 	Dee_Decref_likely(source_stream);
 	if (!result) {
-		if (!(flags & DeeModule_IMPORT_F_FILNAM)) {
-			/* TODO: Check if "source_stream" might be a directory (should
-			 *       be possible to determine based on thrown error, which
-			 *       should be `DeeError_IsDirectory', though currently is
-			 *       just a generic "FSError: I/O Operation failed"). */
-		}
+		/* TODO: Check if "source_stream" might be a directory (should
+		 *       be possible to determine based on thrown error, which
+		 *       should be `DeeError_IsDirectory', though currently is
+		 *       just a generic "FSError: I/O Operation failed"). */
 	} else {
 		ASSERT(!DeeObject_IsShared(result));
 #ifndef CONFIG_NO_DEC

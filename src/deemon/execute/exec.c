@@ -85,31 +85,6 @@ err:
 }
 
 
-/* Similar to `DeeExec_RunStream()', but rather than directly executing it,
- * return the module used to describe the code that is being executed, or
- * some unspecified, callable object which (when invoked) executes the given
- * input code in one way or another.
- * It is up to the implementation if an associated module should simply be
- * generated, before that module's root is returned, or if the given user-code
- * is only executed when the function is called, potentially allowing for
- * JIT-like execution of simple expressions such as `10 + 20' */
-PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
-DeeExec_CompileModuleStream(DeeObject *source_stream,
-                            int start_line, int start_col, unsigned int mode,
-                            struct Dee_compiler_options *options, DeeObject *default_symbols) {
-	/* TODO: Call "DeeSystem_GetWalltime()" before compilation begins
-	 *       -- that timestamp must be used as the module's "mo_ctime" */
-	/* TODO */
-	(void)source_stream;
-	(void)start_line;
-	(void)start_col;
-	(void)mode;
-	(void)options;
-	(void)default_symbols;
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
 PUBLIC WUNUSED NONNULL((1)) DREF /*Callable*/ DeeObject *DCALL
 DeeExec_CompileFunctionStream(DeeObject *source_stream,
                               int start_line, int start_col, unsigned int mode,
@@ -919,7 +894,11 @@ PRIVATE bool DCALL shutdown_globals(void) {
 	result |= DeeThread_InterruptAndJoinAll();
 #endif /* !CONFIG_NO_THREADS */
 #ifndef CONFIG_NO_DEX
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	result |= DeeModule_ClearDexModuleCaches();
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	result |= DeeDex_Cleanup();
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #endif /* !CONFIG_NO_DEX */
 #ifndef CONFIG_NO_NOTIFICATIONS
 	result |= DeeNotify_Shutdown();
@@ -1068,7 +1047,11 @@ do_kill_user:
 	/* Shutdown all loaded DEX extensions. */
 #ifndef CONFIG_NO_DEX
 	Dee_CHECKMEMORY();
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	DeeModule_UnloadAllDexModules();
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	DeeDex_Finalize();
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	Dee_CHECKMEMORY();
 #endif /* !CONFIG_NO_DEX */
 

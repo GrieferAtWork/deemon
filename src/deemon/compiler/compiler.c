@@ -24,6 +24,7 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
+#include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/error.h>
 #include <deemon/compiler/lexer.h>
@@ -31,6 +32,7 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/computed-operators.h>
+#include <deemon/exec.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
@@ -227,17 +229,29 @@ DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler) {
 /* -------- Compiler Object Implementation -------- */
 /* Construct a new compiler for generating the source for the given `module'.
  * @param: flags: Set of `COMPILER_F*' (see above) */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PUBLIC WUNUSED NONNULL((1)) DREF DeeCompilerObject *DCALL
-DeeCompiler_New(DeeObject *__restrict module, uint16_t flags) {
+DeeCompiler_New(uint16_t flags)
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeCompilerObject *DCALL
+DeeCompiler_New(DeeObject *__restrict module, uint16_t flags)
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+{
 	DREF DeeCompilerObject *result;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	ASSERT_OBJECT_TYPE(module, &DeeModule_Type);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	ASSERTF(!(flags & ~COMPILER_FMASK), "Invalid compiler flags in %x", flags);
 	result = DeeObject_MALLOC(DeeCompilerObject);
 	if unlikely(!result)
 		goto done;
 	/* Create the new root scope object. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	result->cp_scope = (DREF DeeScopeObject *)DeeObject_NewDefault(&DeeRootScope_Type);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	result->cp_scope = (DREF DeeScopeObject *)DeeObject_New(&DeeRootScope_Type, 1,
 	                                                        (DeeObject **)&module);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if unlikely(!result->cp_scope)
 		goto err_r;
 	weakref_support_init(result);
@@ -389,6 +403,265 @@ PUBLIC DeeTypeObject DeeCompiler_Type = {
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
+
+
+
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+TPPFile_SetStartingLineAndColumn(struct TPPFile *__restrict self,
+                                 int start_line, int start_col) {
+	/* Set the starting-line offset. */
+	self->f_textfile.f_lineoff = start_line;
+	if (start_col > 0) {
+		struct TPPString *pad_text;
+		/* Insert some padding white-space to make it look like the first line
+		 * starts with a whole bunch of whitespace, thereby adjusting the offset
+		 * of the starting column number in the first line. */
+		pad_text = TPPString_NewSized((size_t)(unsigned int)start_col);
+		if unlikely(!pad_text)
+			goto err;
+		/* Use space characters to pad text. */
+		memset(pad_text->s_text, ' ', pad_text->s_size);
+		TPPString_Decref(self->f_text);
+		self->f_text  = pad_text; /* Inherit reference */
+		self->f_begin = pad_text->s_text;
+		self->f_end   = pad_text->s_text + pad_text->s_size;
+		/* Start scanning _after_ the padding text (don't produce white-space tokens before then!) */
+		self->f_pos = self->f_end;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+/* Similar to `DeeExec_RunStream()', but rather than directly executing it,
+ * return the module used to describe the code that is being executed, or
+ * some unspecified, callable object which (when invoked) executes the given
+ * input code in one way or another.
+ * It is up to the implementation if an associated module should simply be
+ * generated, before that module's root is returned, or if the given user-code
+ * is only executed when the function is called, potentially allowing for
+ * JIT-like execution of simple expressions such as `10 + 20' */
+PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeExec_CompileModuleStream(DeeObject *source_stream,
+                            int start_line, int start_col, unsigned int mode,
+                            struct Dee_compiler_options *options, DeeObject *default_symbols) {
+	/* TODO: Call "DeeSystem_GetWalltime()" before compilation begins
+	 *       -- that timestamp must be used as the module's "mo_ctime" */
+	struct TPPFile *base_file;
+	DREF DeeCodeObject *root_code;
+	DREF DeeCompilerObject *compiler;
+	DREF struct ast *code;
+	DREF DeeModuleObject *result;
+	uint16_t assembler_flags;
+
+	compiler = DeeCompiler_New(options ? options->co_compiler : COMPILER_FNORMAL);
+	if unlikely(!compiler)
+		goto err;
+	if (COMPILER_BEGIN(compiler))
+		goto err_compiler_not_locked;
+	base_file = TPPFile_OpenStream((stream_t)source_stream,
+	                               (options && options->co_pathname)
+	                               ? options->co_pathname
+	                               : "");
+	if unlikely(!base_file)
+		goto err_compiler;
+
+	/* Set the starting-line offset. */
+	if (TPPFile_SetStartingLineAndColumn(base_file, start_line, start_col)) {
+		TPPFile_Decref(base_file);
+		goto err_compiler;
+	}
+
+	/* Push the initial source file onto the #include-stack,
+	 * and TPP inherit our reference to it. */
+	TPPLexer_PushFileInherited(base_file);
+
+	/* Override the name that is used as the
+	 * effective display/DDI string of the file. */
+	if (options && options->co_filename) {
+		struct TPPString *used_name;
+		ASSERT_OBJECT_TYPE_EXACT(options->co_filename, &DeeString_Type);
+		used_name = TPPString_New(DeeString_STR(options->co_filename),
+		                          DeeString_SIZE(options->co_filename));
+		if unlikely(!used_name)
+			goto err_compiler;
+		ASSERT(!base_file->f_textfile.f_usedname);
+		base_file->f_textfile.f_usedname = used_name; /* Inherit */
+	}
+	ASSERT(!current_basescope->bs_name);
+
+#if 0
+	if (!(mode & DeeExec_RUNMODE_FHASPP)) {
+		/* Disable preprocessor directives & macros. */
+		TPPLexer_Current->l_flags |= (TPPLEXER_FLAG_NO_DIRECTIVES |
+		                              TPPLEXER_FLAG_NO_MACROS |
+		                              TPPLEXER_FLAG_NO_BUILTIN_MACROS);
+	}
+#endif
+
+	inner_compiler_options = NULL;
+	if (options) {
+		/* Set the name of the current base-scope, which
+		 * describes the function of the module's root code. */
+		if (options->co_rootname) {
+			ASSERT_OBJECT_TYPE_EXACT(options->co_rootname, &DeeString_Type);
+			current_basescope->bs_name = TPPLexer_LookupKeyword(DeeString_STR(options->co_rootname),
+			                                                    DeeString_SIZE(options->co_rootname),
+			                                                    1);
+			if unlikely(!current_basescope->bs_name)
+				goto err_compiler;
+		}
+
+		compiler->cp_options   = options;
+		inner_compiler_options = options->co_inner;
+		parser_flags           = options->co_parser;
+		optimizer_flags        = options->co_optimizer;
+		optimizer_unwind_limit = options->co_unwind_limit;
+		if (options->co_tabwidth)
+			TPPLexer_Current->l_tabsize = (size_t)options->co_tabwidth;
+		if (parser_flags & PARSE_FLFSTMT)
+			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
+		if (options->co_setup) {
+			/* Run a custom setup protocol. */
+			if unlikely((*options->co_setup)(options->co_setup_arg) < 0)
+				goto err_compiler;
+		}
+	}
+
+	/* Allocate the varargs symbol for the root-scope. */
+	{
+		struct symbol *dots = new_unnamed_symbol();
+		if unlikely(!dots)
+			goto err_compiler;
+		current_basescope->bs_argv = (struct symbol **)Dee_Mallocc(1, sizeof(struct symbol *));
+		if unlikely(!current_basescope->bs_argv)
+			goto err_compiler;
+#ifdef CONFIG_SYMBOL_HAS_REFCNT
+		dots->s_refcnt = 1;
+#endif /* CONFIG_SYMBOL_HAS_REFCNT */
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
+		dots->s_decltype.da_type = DAST_NONE;
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
+		dots->s_type  = SYMBOL_TYPE_ARG;
+		dots->s_symid = 0;
+		dots->s_flag |= SYMBOL_FALLOC;
+		current_basescope->bs_argc    = 1;
+		current_basescope->bs_argv[0] = dots;
+		current_basescope->bs_varargs = dots;
+		current_basescope->bs_flags |= CODE_FVARARGS;
+	}
+
+	(void)default_symbols; /* TODO */
+
+	/* Save the current exception context. */
+	parser_start();
+
+	/* Yield the initial token. */
+	if unlikely(yield() < 0) {
+		code = NULL;
+	} else {
+		/* Parse statements until the end of the source stream. */
+		switch (mode & DeeExec_RUNMODE_MASK) {
+
+		default:
+			code = ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST, TOK_EOF);
+			break;
+
+		case DeeExec_RUNMODE_STMT:
+			code = ast_parse_statement(false);
+			goto pack_code_in_return;
+
+		case DeeExec_RUNMODE_EXPR:
+			code = ast_parse_comma(AST_COMMA_NORMAL,
+			                       AST_FMULTIPLE_KEEPLAST,
+			                       NULL);
+			goto pack_code_in_return;
+
+		case DeeExec_RUNMODE_FULLEXPR:
+			code = ast_parse_comma(AST_COMMA_NORMAL |
+			                       AST_COMMA_ALLOWVARDECLS |
+			                       AST_COMMA_ALLOWTYPEDECL,
+			                       AST_FMULTIPLE_KEEPLAST,
+			                       NULL);
+pack_code_in_return:
+			if likely(code) {
+				DREF struct ast *return_ast;
+				return_ast = ast_putddi(ast_return(code), &code->a_ddi);
+				ast_decref(code);
+				code = return_ast;
+			}
+			break;
+		}
+	}
+	if (!(TPPLexer_Current->l_flags & TPPLEXER_FLAG_ERROR))
+		TPPLexer_ClearIfdefStack();
+
+	/* Rethrow all errors that may have occurred during parsing. */
+	if unlikely(parser_rethrow(code == NULL))
+		goto err_compiler_code;
+	if unlikely(!code)
+		goto err_compiler;
+
+	/* Run an additional optimization pass on the
+	 * AST before passing it off to the assembler. */
+	if (optimizer_flags & OPTIMIZE_FENABLED) {
+		int error = ast_optimize_all(code, false);
+		/* Rethrow all errors that may have occurred during optimization. */
+		if (parser_rethrow(error != 0))
+			error = -1;
+		if (error)
+			goto err_compiler_code;
+	}
+
+	assembler_flags = ASM_FNORMAL;
+	if (options)
+		assembler_flags = options->co_assembler;
+	{
+		uint16_t refc;
+		struct asm_symbol_ref *refv;
+		root_code = code_compile(code,
+		                         assembler_flags,
+		                         true,
+		                         &refc,
+		                         &refv);
+		ASSERT(!root_code || !refc);
+		ASSERT(!root_code || !refv);
+	}
+	ast_decref(code);
+
+	/* Rethrow all errors that may have occurred during text assembly. */
+	if (parser_rethrow(root_code == NULL))
+		Dee_XClear(root_code);
+
+	/* Check for errors during assembly. */
+	if unlikely(!root_code)
+		goto err_compiler;
+
+	/* Finally, put together the module itself. */
+	result = module_compile(root_code, assembler_flags);
+	Dee_Decref(root_code);
+
+#if 0 /* Doesn't throw any new compiler errors... */
+	/* Rethrow all errors that may have occurred during module linkage. */
+	if (parser_rethrow(result == NULL))
+		Dee_Clear(result);
+#endif
+
+	DeeCompiler_End();
+	Dee_Decref(compiler);
+	DeeCompiler_LockEndWrite();
+	return (DREF DeeObject *)result;
+err_compiler_code:
+	ast_xdecref(code);
+err_compiler:
+	COMPILER_END();
+err_compiler_not_locked:
+	Dee_Decref(compiler);
+err:
+	return NULL;
+}
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_END
 

@@ -517,6 +517,7 @@ struct Dee_module_object {
 #define Dee_MODULE_FWAITINIT       0x0004       /* [lock(ATOMIC)] When `mo_init' is set to `Dee_MODULE_INIT_UNINITIALIZED' or `Dee_MODULE_INIT_INITIALIZED', must `DeeFutex_WakeAll(&mo_init)' */
 #define Dee_MODULE_FABSRED         0x0100       /* [lock(ATOMIC)] is-red-bit for `mo_absnode' */
 #define Dee_MODULE_FADRRED         0x0200       /* [lock(ATOMIC)] is-red-bit for `mo_adrnode' */
+#define _Dee_MODULE_FCLEARED       0x8000       /* [lock(ATOMIC)] Used internally by `DeeModule_ClearDexModuleCaches()' */
 	uint16_t                       mo_flags;    /* Module flags (Set of `Dee_MODULE_F*') */
 	uint16_t                       mo_importc;  /* [const] The total number of other modules imported by this one.
 	                                             * (there may be more than these, but these are the ones accessible
@@ -690,7 +691,7 @@ DeeModule_GetRootFunction(/*Module*/ DeeObject *__restrict self);
 /* Possible values for `DeeModule_ImportEx()' and `DeeModule_OpenEx()' */
 #define DeeModule_IMPORT_F_NORMAL 0x0000 /* Normal import flags */
 #define DeeModule_IMPORT_F_ENOENT 0x0001 /* Handle file-not-found errors by returning ITER_DONE instead of throwing an error */
-#define DeeModule_IMPORT_F_FILNAM 0x0002 /* The given "import_str" is a system filename that is then loaded as a ".dee" file (only "DeeModuleDee_Type" is ever returned) */
+#define DeeModule_IMPORT_F_FILNAM 0x0002 /* The given "import_str" is a system filename that is then loaded as a ".dee" file or directory */
 #define DeeModule_IMPORT_F_CTXDIR 0x0004 /* `context_absname' is the path of the directory to use for relative imports, rather than a file within that directory. */
 #define DeeModule_IMPORT_F_ANONYM 0x0008 /* Don't look at, or write into the global module tree -- always load anew as an anonymous module (unless it's a dex module). */
 #ifndef CONFIG_NO_DEX

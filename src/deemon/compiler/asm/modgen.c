@@ -88,6 +88,7 @@ module_compile(DeeModuleObject *__restrict mod,
 	                                                  sizeof(DREF DeeObject *));
 	if unlikely(!mod)
 		goto err;
+	DeeObject_Init(mod, &DeeModuleDee_Type);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	mod->mo_globalv = (DREF DeeObject **)Dee_Callocc(current_rootscope->rs_globalc,
 	                                                 sizeof(DREF DeeObject *));
