@@ -1220,7 +1220,7 @@ again:
 #ifdef ENOMEM
 		if (error == ENOMEM) {
 			if (!Dee_CollectMemory(1))
-				goto err;
+				return (uint64_t)-1;
 			goto again;
 		}
 #endif /* ENOMEM */
