@@ -500,7 +500,11 @@ DEF_WARNING(W_CLASS_MEMBER_ALREADY_DEFINED, (WG_SYMBOL), WSTATE_ERROR, { size_t 
 DEF_WARNING(W_IMPLICIT_MEMBER_DECLARATION, (WG_IMPLICIT, WG_SYMBOL), WSTATE_WARN, WARNF("Implicit declaration of member `%s' without initializer. If this is intended, prefix with `member'", KWDNAME()))
 DEF_WARNING(W_TOO_MANY_CLASS_MEMBER, (WG_SYMBOL), WSTATE_ERROR, WARNF("Class `%s' has too many members", ARG(char const *)))
 DEF_WARNING(W_MODULE_NOT_FOUND, (WG_SYMBOL), WSTATE_ERROR, WARNF("Module `%k' could not be found", ARG(DeeObject *)))
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+DEF_WARNING(W_RECURSIVE_MODULE_DEPENDENCY, (WG_SYMBOL), WSTATE_ERROR, { DeeObject *a = ARG(DeeObject *); WARNF("Recursive dependency between modules `%k' and `%q'", a, ARG(char const *)); })
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 DEF_WARNING(W_RECURSIVE_MODULE_DEPENDENCY, (WG_SYMBOL), WSTATE_ERROR, { DeeObject *a = ARG(DeeObject *); WARNF("Recursive dependency between modules `%k' and `%k'", a, ARG(DeeObject *)); })
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 DEF_WARNING(W_VARIABLE_READ_NEVER_WRITTEN, (WG_SYMBOL), WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Read from variable `%s' that is never written", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_NO_OPERATOR_SYMBOL, (WG_SYMBOL), WSTATE_ERROR, WARNF("Module `operators' is not exporting a dedicated symbol for `operator %s'", ARG(char const *)))
 DEF_WARNING(W_NO_OPERATOR_FALLBACK_FUNCTION, (WG_SYMBOL), WSTATE_ERROR, WARNF("Module `operators' is not exporting the fallback `operator' function required to implement generic operator support"))

@@ -52,7 +52,8 @@ INTDEF struct module_symbol empty_module_buckets[];
  * @param: flags: Set of `ASM_F*' (Assembly flags; see above) */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 INTERN WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
-module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code, uint16_t flags)
+module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code,
+               uint16_t flags, uint64_t ctime)
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 module_compile(DeeModuleObject *__restrict mod,
@@ -97,13 +98,15 @@ module_compile(DeeModuleObject *__restrict mod,
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	mod->mo_globalc = current_rootscope->rs_globalc;
 	mod->mo_importc = current_rootscope->rs_importc;
-	atomic_or(&mod->mo_flags, current_rootscope->rs_flags);
 	mod->mo_bucketm = current_rootscope->rs_bucketm;
 	mod->mo_bucketv = current_rootscope->rs_bucketv;
 	mod->mo_importv = current_rootscope->rs_importv;
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	mod->mo_moddata.mo_rootcode = root_code; /* Inherit reference */
+	mod->mo_flags = current_rootscope->rs_flags | Dee_MODULE_FHASCTIME;
+	mod->mo_ctime = ctime;
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	atomic_or(&mod->mo_flags, current_rootscope->rs_flags);
 	mod->mo_root = root_code;
 	Dee_Incref(root_code);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */

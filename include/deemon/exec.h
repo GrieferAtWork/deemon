@@ -93,7 +93,7 @@ DFUNDEF void DCALL DeeExec_SetHome(/*String*/ DeeObject *new_home);
 
 /* Return the current module path, which is a tuple of absolute,
  * normalized directory names describing where deemon system
- * modules can be found.
+ * modules can be found. (Paths have **NO** trailing '/'!)
  * @return: * :   The module path
  * @return: NULL: Error */
 DFUNDEF WUNUSED DREF /*Tuple*/ DeeObject *DCALL DeeModule_GetLibPath(void);

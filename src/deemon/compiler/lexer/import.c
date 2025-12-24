@@ -60,17 +60,58 @@ LOCAL unsigned int DCALL dot_count(tok_t tk) {
 PRIVATE WUNUSED DREF DeeModuleObject *DCALL
 import_module_by_name(DeeStringObject *__restrict module_name,
                       struct ast_loc *loc) {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	DREF DeeModuleObject *result;
+	char const *filename;
+	size_t name_size;
+	if (module_name->s_str[0] == '.' && module_name->s_len == 1) {
+		/* Special case: Import your own module. */
+		return MODULE_CURRENT;
+	}
+
+	filename = TPPFile_RealFilename(token.t_file, &name_size);
+	result = (DREF DeeModuleObject *)DeeModule_OpenEx(module_name->s_str, module_name->s_len,
+	                                                  filename, filename ? strlen(filename) : 0,
+	                                                  DeeModule_IMPORT_F_NORMAL |
+	                                                  DeeModule_IMPORT_F_ENOENT |
+	                                                  DeeModule_IMPORT_F_ERECUR,
+	                                                  inner_compiler_options);
+	if unlikely(!DeeModule_IMPORT_ISOK(result)) {
+		if unlikely(result == (DREF DeeModuleObject *)DeeModule_IMPORT_ERROR) {
+#if 0 /* TODO */
+			/* Check for recursive dependency. */
+			if (!(result->mo_flags & Dee_MODULE_FDIDLOAD) &&
+			    result != current_rootscope->rs_module) {
+				PERRAT(loc, W_RECURSIVE_MODULE_DEPENDENCY,
+				       result->mo_name, current_rootscope->rs_module->mo_name);
+				Dee_Decref(result);
+				goto err;
+			}
+#endif
+			goto err;
+		} else if (result == (DREF DeeModuleObject *)DeeModule_IMPORT_ENOENT) {
+			if (WARNAT(loc, W_MODULE_NOT_FOUND, module_name))
+				goto err;
+		} else if (result == (DREF DeeModuleObject *)DeeModule_IMPORT_ERECUR) {
+			struct Dee_import_frame *current = DeeThread_Self()->t_import_curr;
+			char const *current_name = current ? current->if_absfile : NULL;
+			if (WARNAT(loc, W_RECURSIVE_MODULE_DEPENDENCY, module_name, current_name))
+				goto err;
+		}
+		result = &DeeModule_Empty;
+		Dee_Incref(result);
+	}
+	return result;
+err:
+	return NULL;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	DREF DeeModuleObject *result;
 	if (module_name->s_str[0] == '.') {
 		char const *filename;
 		size_t name_size;
 		if (module_name->s_len == 1) {
 			/* Special case: Import your own module. */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-			return MODULE_CURRENT;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			return_reference_(MODULE_CURRENT);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		}
 		filename = TPPFile_RealFilename(token.t_file, &name_size);
 		if likely(filename) {
@@ -110,6 +151,7 @@ module_opened:
 	return result;
 err:
 	return NULL;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 INTERN WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
@@ -280,7 +322,7 @@ ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name) {
 		if unlikely(!modsym) {
 			if (WARN(W_MODULE_IMPORT_NOT_FOUND,
 			         import_name->k_name,
-			         DeeString_STR(mod->mo_name)))
+			         DeeModule_GetShortName((DeeObject *)mod)))
 				goto err_module;
 			extern_symbol->s_type   = SYMBOL_TYPE_MODULE;
 			extern_symbol->s_module = mod; /* Inherit reference. */
@@ -627,11 +669,19 @@ ast_import_all_from_module(DeeModuleObject *__restrict mod,
 						 * -> Make sure both modules have been loaded, and compare the values that have been bound.
 						 * NOTE: For this purpose, we must perform an exact comparison (i.e. `a === b') */
 						int error;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+						error = DeeModule_Initialize((DeeObject *)mod);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 						error = DeeModule_RunInit((DeeObject *)mod);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 						if unlikely(error < 0)
 							goto err;
 						if (error == 0) {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+							error = DeeModule_Initialize((DeeObject *)sym->s_extern.e_module);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 							error = DeeModule_RunInit((DeeObject *)sym->s_extern.e_module);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 							if unlikely(error < 0)
 								goto err;
 							if (error == 0) {
@@ -728,7 +778,7 @@ ast_import_single_from_module(DeeModuleObject *__restrict mod,
 		if (!sym) {
 			if (WARNAT(&item->ii_import_loc, W_MODULE_IMPORT_NOT_FOUND,
 			           DeeString_STR(item->ii_import_name),
-			           DeeString_STR(mod->mo_name)))
+			           DeeModule_GetShortName((DeeObject *)mod)))
 				goto err;
 			goto done;
 		}
@@ -737,7 +787,7 @@ ast_import_single_from_module(DeeModuleObject *__restrict mod,
 		if (!sym) {
 			if (WARNAT(&item->ii_import_loc, W_MODULE_IMPORT_NOT_FOUND,
 			           item->ii_symbol_name->k_name,
-			           DeeString_STR(mod->mo_name)))
+			           DeeModule_GetShortName((DeeObject *)mod)))
 				goto err;
 			goto done;
 		}

@@ -1167,6 +1167,7 @@
 #define _DeeSystem_DEFINE_stpncpyT(T,n,strnlen) static T*n(T*buf,T const*src,size_t buflen){}
 #define _DeeSystem_DEFINE_strncpyT(T,n,strnlen) static T*n(T*buf,T const*src,size_t buflen){}
 #define _DeeSystem_DEFINE_strcasecmpzT(T,Tu,Tr,n,...) Tr n(T const *lhs,T const *rhs,size_t rhs_len){}
+#define DeeSystem_DEFINE_strrchr(n) char*n(char const*haystack,int needle){}
 #define DeeSystem_DEFINE_memccpy(n) _DeeSystem_DEFINE_memccpyT(void,uint8_t,int,n)
 #define DeeSystem_DEFINE_memrchr(n) _DeeSystem_DEFINE_memrchrT(void,uint8_t,int,n)
 #define DeeSystem_DEFINE_memrchrw(n) _DeeSystem_DEFINE_memrchrT(uint16_t,uint16_t,uint16_t,n)

@@ -409,15 +409,20 @@ END(_impl_assert_failed)
 /* }; */
 
 /* struct thread_object { */
-#define t_inthookon     DEE_OBJECT_OFFSETOF_DATA     /* Dee_refcnt_t t_inthookon */
-#define t_str_curr     (DEE_OBJECT_OFFSETOF_DATA+4)  /* struct Dee_repr_frame *t_str_curr; */
-#define t_repr_curr    (DEE_OBJECT_OFFSETOF_DATA+8)  /* struct Dee_repr_frame *t_repr_curr; */
-#define t_hash_curr    (DEE_OBJECT_OFFSETOF_DATA+12) /* struct Dee_repr_frame *t_hash_curr; */
-#define t_deepassoc    (DEE_OBJECT_OFFSETOF_DATA+28) /* struct Dee_deep_assoc t_deepassoc; */
-#define t_exec         (DEE_OBJECT_OFFSETOF_DATA+32) /* struct Dee_code_frame *t_exec; */
-#define t_except       (DEE_OBJECT_OFFSETOF_DATA+36) /* struct Dee_except_frame *t_except; */
-#define t_execsz       (DEE_OBJECT_OFFSETOF_DATA+38) /* uint16_t t_execsz; */
-#define t_exceptsz     (DEE_OBJECT_OFFSETOF_DATA+40) /* uint16_t t_exceptsz; */
+#define t_inthookon     DEE_OBJECT_OFFSETOF_DATA    /* Dee_refcnt_t t_inthookon */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#define t_import_curr  (DEE_OBJECT_OFFSETOF_DATA+4) /* struct Dee_import_frame *t_import_curr; */
+#define t_str_curr     (DEE_OBJECT_OFFSETOF_DATA+8) /* struct Dee_repr_frame *t_str_curr; */
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#define t_str_curr     (DEE_OBJECT_OFFSETOF_DATA+4) /* struct Dee_repr_frame *t_str_curr; */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#define t_repr_curr    (t_str_curr+4)               /* struct Dee_repr_frame *t_repr_curr; */
+#define t_hash_curr    (t_str_curr+8)               /* struct Dee_repr_frame *t_hash_curr; */
+#define t_deepassoc    (t_str_curr+12)              /* struct Dee_deep_assoc t_deepassoc; */
+#define t_exec         (t_str_curr+28)              /* struct Dee_code_frame *t_exec; */
+#define t_except       (t_str_curr+32)              /* struct Dee_except_frame *t_except; */
+#define t_execsz       (t_str_curr+36)              /* uint16_t t_execsz; */
+#define t_exceptsz     (t_str_curr+38)              /* uint16_t t_exceptsz; */
 /* }; */
 
 /* struct except_handler { */

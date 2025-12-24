@@ -12793,6 +12793,20 @@ dee_memcmp(void const *s1, void const *s2, size_t n) {
 DECL_END
 #endif /* !CONFIG_HAVE_memcmp */
 
+#define DeeSystem_DEFINE_strrchr(name)             \
+	LOCAL WUNUSED NONNULL((1)) char *              \
+	name(char const *haystack, int needle) {       \
+		char *result = NULL;                       \
+		for (;; ++haystack) {                      \
+			char ch = *haystack;                   \
+			if (ch == (char)(unsigned char)needle) \
+				result = (char *)haystack;         \
+			if (!ch)                               \
+				break;                             \
+		}                                          \
+		return result;                             \
+	}
+
 #define _DeeSystem_DEFINE_memccpyT(rT, T, Tneedle, name)        \
 	LOCAL ATTR_PURE WUNUSED ATTR_OUTS(1, 4) ATTR_INS(2, 4) rT * \
 	name(void *__restrict dst, void const *__restrict src,      \

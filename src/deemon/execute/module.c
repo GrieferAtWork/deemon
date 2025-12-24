@@ -244,7 +244,7 @@ DeeModule_GetRootCode(/*Module*/ DeeObject *__restrict self) {
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF /*Function*/ DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF /*Function*/ DeeObject *DCALL
 DeeModule_GetRootFunction(/*Module*/ DeeObject *__restrict self) {
 	DREF DeeCodeObject *rootcode;
 	DREF DeeFunctionObject *rootfunc;
@@ -645,44 +645,6 @@ err_is_readonly:
 
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-INTERN struct Dee_module_directory_empty empty_module_directory = { 0 };
-
-/* Allocate+return the uncached contents of the directory represented by `self'.
- * >> for (local e: opendir(self->mo_absname)) {
- * >>     if (e.d_type == DT_DIR) {
- * >>         yield e.d_name;
- * >>     } else if (e.d_type == DT_REG && e.d_name.endswith(".dee")) {
- * >>         yield e.d_name[:-4];
- * >>     } else if (e.d_type == DT_REG && e.d_name.endswith(DeeSystem_SOEXT)) {
- * >>         yield e.d_name[:-#DeeSystem_SOEXT];
- * >>     }
- * >> }
- *
- * Special case when `mo_absname == ""':
- * - enumerate files in filesystem root "/" on unix
- * - enumerate drive letters on windows
- *
- * Special case when `mo_absname == "C:"':
- * - enumerate files from "C:\" on windows
- */
-INTDEF WUNUSED NONNULL((1)) struct Dee_module_directory *DCALL /* from "./modpath.c" */
-DeeModule_GetDirectoryUncached(DeeModuleObject *__restrict self);
-
-PRIVATE WUNUSED NONNULL((1)) struct Dee_module_directory *DCALL
-DeeModule_GetDirectory(DeeModuleObject *__restrict self) {
-	struct Dee_module_directory *result;
-again:
-	result = atomic_read(&self->mo_dir);
-	if (result == NULL) {
-		result = DeeModule_GetDirectoryUncached(self);
-		if unlikely(!atomic_cmpxch(&self->mo_dir, NULL, result)) {
-			Dee_Free(result);
-			goto again;
-		}
-	}
-	return result;
-}
-
 #ifdef DEE_SYSTEM_FS_ICASE
 #define FS_strcmp  strcasecmp
 #define FS_strcmpz strcasecmpz

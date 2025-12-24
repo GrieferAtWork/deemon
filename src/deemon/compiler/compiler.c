@@ -37,6 +37,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
+#include <deemon/system.h>
 #include <deemon/util/rlock.h>
 
 #include <hybrid/typecore.h>
@@ -446,14 +447,13 @@ PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeExec_CompileModuleStream(DeeObject *source_stream,
                             int start_line, int start_col, unsigned int mode,
                             struct Dee_compiler_options *options, DeeObject *default_symbols) {
-	/* TODO: Call "DeeSystem_GetWalltime()" before compilation begins
-	 *       -- that timestamp must be used as the module's "mo_ctime" */
 	struct TPPFile *base_file;
 	DREF DeeCodeObject *root_code;
 	DREF DeeCompilerObject *compiler;
 	DREF struct ast *code;
 	DREF DeeModuleObject *result;
 	uint16_t assembler_flags;
+	uint64_t ctime = DeeSystem_GetWalltime();
 
 	compiler = DeeCompiler_New(options ? options->co_compiler : COMPILER_FNORMAL);
 	if unlikely(!compiler)
@@ -639,7 +639,7 @@ pack_code_in_return:
 		goto err_compiler;
 
 	/* Finally, put together the module itself. */
-	result = module_compile(root_code, assembler_flags);
+	result = module_compile(root_code, assembler_flags, ctime);
 	Dee_Decref(root_code);
 
 #if 0 /* Doesn't throw any new compiler errors... */

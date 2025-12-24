@@ -289,18 +289,7 @@ DeeSystem_DEFINE_strncpy(dee_strncpy)
 #define CONFIG_HAVE_strrchr
 #undef strrchr
 #define strrchr dee_strrchr
-LOCAL WUNUSED NONNULL((1)) char *
-dee_strrchr(char const *haystack, int needle) {
-	char *result = NULL;
-	for (;; ++haystack) {
-		char ch = *haystack;
-		if (ch == (char)(unsigned char)needle)
-			result = (char *)haystack;
-		if (!ch)
-			break;
-	}
-	return result;
-}
+DeeSystem_DEFINE_strrchr(dee_strrchr)
 #endif /* !CONFIG_HAVE_strrchr */
 
 #ifndef CONFIG_HAVE_strnchr

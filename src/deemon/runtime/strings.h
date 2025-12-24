@@ -155,6 +155,7 @@ local STRINGS = List {
 
 	("str_lt_anonymous_gr", "<anonymous>"),
 	("str_nomemory", "allocation failed"),
+	("str_dot", "."),
 	("str_dots", "..."),
 
 	// Strings used for internal AST branches
@@ -522,6 +523,9 @@ DEF_STRING(str_lt_anonymous_gr, "<anonymous>", 0xd5f7311c, 0x536d809a7d1c1aab)
 #define Dee_HashStr__nomemory _Dee_HashSelectC(0xbef65010, 0x6315c4e658da5e37)
 DEF_STRING(str_nomemory, "allocation failed", 0xbef65010, 0x6315c4e658da5e37)
 #define STR_nomemory DeeString_STR(&str_nomemory)
+#define Dee_HashStr__dot _Dee_HashSelectC(0xaf56fc23, 0x1b2b6c69013a8f64)
+DEF_STRING(str_dot, ".", 0xaf56fc23, 0x1b2b6c69013a8f64)
+#define STR_dot DeeString_STR(&str_dot)
 #define Dee_HashStr__dots _Dee_HashSelectC(0x1a086252, 0xf5eff0465042ef13)
 DEF_STRING(str_dots, "...", 0x1a086252, 0xf5eff0465042ef13)
 #define STR_dots DeeString_STR(&str_dots)
