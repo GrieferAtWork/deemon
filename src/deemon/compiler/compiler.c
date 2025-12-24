@@ -443,10 +443,10 @@ err:
  * generated, before that module's root is returned, or if the given user-code
  * is only executed when the function is called, potentially allowing for
  * JIT-like execution of simple expressions such as `10 + 20' */
-PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
-DeeExec_CompileModuleStream(DeeObject *source_stream,
-                            int start_line, int start_col, unsigned int mode,
-                            struct Dee_compiler_options *options, DeeObject *default_symbols) {
+INTERN WUNUSED NONNULL((1)) DREF /*untracked*/ /*Module*/ DeeObject *DCALL
+DeeExec_CompileModuleStream_impl(DeeObject *source_stream,
+                                 int start_line, int start_col, unsigned int mode,
+                                 struct Dee_compiler_options *options, DeeObject *default_symbols) {
 	struct TPPFile *base_file;
 	DREF DeeCodeObject *root_code;
 	DREF DeeCompilerObject *compiler;
@@ -640,7 +640,9 @@ pack_code_in_return:
 
 	/* Finally, put together the module itself. */
 	result = module_compile(root_code, ctime);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	Dee_Decref(root_code);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 #if 0 /* Doesn't throw any new compiler errors... */
 	/* Rethrow all errors that may have occurred during module linkage. */
@@ -661,6 +663,19 @@ err_compiler_not_locked:
 err:
 	return NULL;
 }
+
+PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeExec_CompileModuleStream(DeeObject *source_stream,
+                            int start_line, int start_col, unsigned int mode,
+                            struct Dee_compiler_options *options, DeeObject *default_symbols) {
+	DREF /*Module*/ DeeObject *result;
+	result = DeeExec_CompileModuleStream_impl(source_stream, start_line, start_col,
+	                                          mode, options, default_symbols);
+	if likely(result)
+		result = DeeGC_Track(result);
+	return result;
+}
+
 #endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_END

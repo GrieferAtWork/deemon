@@ -459,11 +459,7 @@ INTERN struct Dee_module_dexdata deemon_dexdata = {
 
 #undef DeeModule_Deemon
 PUBLIC struct Dee_static_module_struct DeeModule_Deemon = {
-	{
-		/* ... */
-		NULL,
-		NULL
-	}, {
+	{ _Dee_GC_HEAD_UNTRACKED_INIT }, {
 #ifdef CONFIG_NO_DEX
 		OBJECT_HEAD_INIT(&DeeModuleDee_Type),
 #else /* CONFIG_NO_DEX */

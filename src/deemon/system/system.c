@@ -432,15 +432,10 @@ next:
 handle_eof:
 		flush_end = iter - 1;
 		/* Skip multiple slashes and whitespace following a path separator. */
-		for (;;) {
-			iter = unicode_skipspaceutf8_n(iter, end);
-			if (iter >= end)
-				break;
-			if (!DeeSystem_IsSep(*iter))
-				break;
-			++iter;
-		}
-		flush_end = unicode_skipspaceutf8_rev_n(flush_end, flush_start);
+		if (iter != unicode_skipspaceutf8_n(iter, end))
+			goto no;
+		if (flush_end != unicode_skipspaceutf8_rev_n(flush_end, flush_start))
+			goto no;
 
 		/* Analyze the last path portion for being a special name (`.' or `..') */
 		if (flush_end[-1] == '.') {
@@ -453,13 +448,9 @@ handle_eof:
 			if (flush_end[-2] == DeeSystem_SEP && flush_end - 2 >= flush_start)
 				goto no; /* Self-directory-reference. */
 		}
-		/* Check if we need to fix anything */
-		if (flush_end == iter - 1) {
-			if (iter == end + 1)
-				goto yes;
-			goto next;
-		}
-		goto no;
+		if (iter >= end)
+			goto yes;
+		goto next;
 	default: goto next;
 	}
 yes:

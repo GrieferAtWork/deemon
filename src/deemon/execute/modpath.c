@@ -846,7 +846,8 @@ handle_existing_module:
 			result->mo_globalv[i] = sym->ds_obj;
 			dex_add_symbol(v, m, sym, i);
 			++i;
-			if (sym->ds_flags & Dee_DEXSYM_PROPERTY) {
+			if ((sym->ds_flags & (Dee_DEXSYM_PROPERTY | Dee_DEXSYM_READONLY)) ==
+			    /*            */ (Dee_DEXSYM_PROPERTY)) {
 				result->mo_globalv[i] = sym[1].ds_obj;
 				++i;
 				result->mo_globalv[i] = sym[2].ds_obj;
@@ -861,10 +862,10 @@ handle_existing_module:
 		goto handle_existing_module;
 
 	/* Register the module globally... */
+	Dee_XIncrefv(result->mo_globalv, result->mo_globalc);
 	dex_byaddr_insert_module(result);
 	module_abstree_insert(&module_abstree_root, result);
-	Dee_XIncrefv(result->mo_globalv, result->mo_globalc);
-	result = (DeeModuleObject *)DeeGC_Track((DeeObject *)result);
+	result = DeeGC_TRACK(DeeModuleObject, result);
 	LOCAL_unlock();
 	return result;
 #ifdef WANT_err_unlock_dlerror
@@ -1381,7 +1382,7 @@ DeeModule_ClearLibAllFlag_locked(void) {
  * @param: dec_dirname:     Absolute filename of the corresponding ".dee" file (ZERO-terminated)
  * @param: dec_dirname_len: Offset (in bytes) from "dec_dirname" where the filename portion begins
  * @param: dee_file_last_modified: Timestamp when the ".dee" file was last modified
- * @return: * :        Success (module is anonymous "mo_absname == NULL" and non-shared "!DeeObject_IsShared()")
+ * @return: * :        Success (module is anonymous "mo_absname == NULL" and not-yet-tracked)
  * @return: ITER_DONE: Failed to load dec file (probably corrupt)
  * @return: NULL:      Error was thrown. */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DCALL
@@ -1461,8 +1462,72 @@ enum{ DeeModule_OpenFile_impl_EXTRA_CHARS_ = DeeModule_OpenFile_impl_EXTRA_CHARS
 #define DeeModule_OpenFile_impl_EXTRA_CHARS DeeModule_OpenFile_impl_EXTRA_CHARS_
 
 
+INTDEF WUNUSED NONNULL((1)) DREF /*untracked*/ /*Module*/ DeeObject *DCALL
+DeeExec_CompileModuleStream_impl(DeeObject *source_stream,
+                                 int start_line, int start_col, unsigned int mode,
+                                 struct Dee_compiler_options *options, DeeObject *default_symbols);
+INTDEF NONNULL((1)) void DCALL
+module_dee_destroy(DeeModuleObject *__restrict self);
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+INTDEF struct module_symbol empty_module_buckets[];
+
+PRIVATE NONNULL((1)) void DCALL
+module_destroy_untracked(DREF DeeModuleObject *self) {
+#ifndef CONFIG_NO_DEX
+	ASSERT(Dee_TYPE(self) != &DeeModuleDex_Type);
+#endif /* !CONFIG_NO_DEX */
+	ASSERT(self->mo_absname == NULL);
+	if (Dee_TYPE(self) == &DeeModuleDee_Type) {
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+		void *base = DeeGC_Head(self);
+		struct Dee_heapregion *region = DeeHeap_GetRegionOf(base);
+		if (region && region->hr_destroy == &DeeDec_heapregion_destroy) {
+			DeeDec_heapregion_destroy(region);
+		} else
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+		{
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+			/* TODO: Once the compiler also only generates region-based
+			 *       modules, this won't be needed (s.a. `DeeDec_Track()') */
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+			DREF DeeCodeObject *root;
+			ASSERT(self->mo_dir == NULL);
+			Dee_XDecrefv(self->mo_globalv, self->mo_globalc);
+			root = self->mo_moddata.mo_rootcode;
+			self->mo_moddata.mo_rootcode = NULL;
+			Dee_Decref(root);
+			Dee_Decrefv(self->mo_importv, self->mo_importc);
+			Dee_Free((void *)self->mo_importv);
+		}
+	} else {
+		ASSERT(self->mo_dir == (struct Dee_module_directory *)&empty_module_directory);
+		ASSERT(Dee_TYPE(self) == &DeeModuleDir_Type);
+		ASSERT(self->mo_importc == 0);
+		ASSERT(self->mo_importv == NULL);
+		ASSERT(self->mo_globalc == 0);
+		ASSERT(self->mo_bucketm == 0);
+		ASSERT(self->mo_bucketv == empty_module_buckets);
+	}
+	DeeGCObject_Free(self);
+}
+
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+/* Destructor linked into `struct Dee_heapregion' for dec file mappings. */
+INTDEF NONNULL((1)) void DCALL
+DeeDec_heapregion_destroy(struct Dee_heapregion *__restrict self);
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+
+
+PRIVATE NONNULL((1)) DREF DeeModuleObject *DCALL
+module_track(DREF DeeModuleObject *self) {
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+	if (Dee_TYPE(self) == &DeeModuleDee_Type)
+		return DeeDec_Track(self);
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+	return DeeGC_TRACK(DeeModuleObject, self);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF /*untracked*/ DeeModuleObject *DCALL
 DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_filename_length,
                          unsigned int flags, struct Dee_compiler_options *options) {
 	struct Dee_compiler_options used_options;
@@ -1502,23 +1567,25 @@ DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_fil
 
 		/* Open file */
 		dec_stream = DeeFile_OpenString(abs_filename, OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
-		if (!ITER_ISOK(dec_stream)) {
-			if unlikely(!dec_stream)
-				return NULL;
-			goto no_dec_file;
-		}
 
 		/* Restore the normal ".dee" file extension. */
 		memmovedownc(basename, basename + 1, basesize - 1, sizeof(char));
 		basename[basesize - 1] = 'e';
 		basename[basesize - 0] = '\0';
 
+		/* Check if file could be opened. */
+		if (!ITER_ISOK(dec_stream)) {
+			if unlikely(!dec_stream)
+				return (DREF DeeModuleObject *)DeeModule_IMPORT_ERROR;
+			goto no_dec_file;
+		}
+
 		/* Get last-modified timestamp of .dee file (to
 		 * check if source changed since last compilation) */
 		dee_file_last_modified = DeeSystem_GetLastModifiedString(abs_filename);
 		if unlikely(dee_file_last_modified == (uint64_t)-1) {
 			Dee_Decref_likely(dec_stream);
-			return NULL;
+			return (DREF DeeModuleObject *)DeeModule_IMPORT_ERROR;
 		}
 
 		/* Check open file status */
@@ -1535,9 +1602,11 @@ no_dec_file:
 	/* Try to open the .dee file so we can compile it. */
 	source_stream = DeeFile_OpenString(abs_filename, OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 	if (!ITER_ISOK(source_stream)) {
-		if unlikely(source_stream && (flags & DeeModule_IMPORT_F_ENOENT)) {
+		ASSERT(source_stream == (DeeObject *)DeeModule_IMPORT_ERROR ||
+		       source_stream == (DeeObject *)DeeModule_IMPORT_ENOENT);
+		if unlikely(source_stream && !(flags & DeeModule_IMPORT_F_ENOENT)) {
 			err_file_not_found_string(abs_filename);
-			source_stream = NULL;
+			source_stream = DeeModule_IMPORT_ERROR;
 		}
 		return (DeeModuleObject *)source_stream;
 	}
@@ -1570,9 +1639,9 @@ no_dec_file:
 	/* TODO: Similar to how we switch stacks when executing user-code, that should
 	 *       also be done here every 2-3 nested imports (or maybe even: every time,
 	 *       starting with the 2nd nested import; iow: when "frame.if_prev != NULL") */
-	result = (DREF DeeModuleObject *)DeeExec_CompileModuleStream(source_stream, 0, 0,
-	                                                             DeeExec_RUNMODE_DEFAULT,
-	                                                             &used_options, NULL);
+	result = (DREF DeeModuleObject *)DeeExec_CompileModuleStream_impl(source_stream, 0, 0,
+	                                                                  DeeExec_RUNMODE_DEFAULT,
+	                                                                  &used_options, NULL);
 	caller->t_import_curr = frame.if_prev;
 	Dee_Decref_likely(source_stream);
 
@@ -1582,20 +1651,21 @@ no_dec_file:
 		 *       should be `DeeError_IsDirectory', though currently is
 		 *       just a generic "FSError: I/O Operation failed"). */
 	} else {
-		ASSERT(!DeeObject_IsShared(result));
 #ifndef CONFIG_NO_DEC
 		if ((flags & (_DeeModule_IMPORT_F_IS_DEE_FILE | DeeModule_IMPORT_F_NOGDEC)) ==
 		    /*....*/ (_DeeModule_IMPORT_F_IS_DEE_FILE)) {
 			/* generate a .dec file */
-			if unlikely(dec_create(result))
-				Dee_Clear(result);
+			if unlikely(dec_create(result)) {
+				module_destroy_untracked(result);
+				result = NULL;
+			}
 		}
 #endif /* !CONFIG_NO_DEC */
 	}
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF /*untracked_if(Dee_TYPE(return) != DeeModuleDex_Type)*/ DeeModuleObject *DCALL
 DeeModule_OpenFile_impl3(/*utf-8*/ char **p_abs_filename, size_t abs_filename_length,
                          unsigned int *p_flags, struct Dee_compiler_options *options) {
 	DREF DeeModuleObject *result;
@@ -1617,8 +1687,10 @@ DeeModule_OpenFile_impl3(/*utf-8*/ char **p_abs_filename, size_t abs_filename_le
 	*abs_filename_end++ = 'e';
 	*abs_filename_end++ = 'e';
 	*abs_filename_end = '\0';
+	abs_filename_length += 4;
 	result = DeeModule_OpenFile_impl4(*p_abs_filename, abs_filename_length,
-	                                  *p_flags | _DeeModule_IMPORT_F_IS_DEE_FILE,
+	                                  *p_flags | DeeModule_IMPORT_F_ENOENT |
+	                                  _DeeModule_IMPORT_F_IS_DEE_FILE,
 	                                  options);
 	if (result == (DREF DeeModuleObject *)DeeModule_IMPORT_ENOENT) {
 		abs_filename_end -= 4;
@@ -1662,7 +1734,7 @@ err:
 	return (DREF DeeModuleObject *)DeeModule_IMPORT_ERROR;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF /*tracked*/ DeeModuleObject *DCALL
 DeeModule_OpenFile_impl2(/*inherit_if(!(flags & _DeeModule_IMPORT_F_NO_INHERIT_FILENAME))*/
                          /*utf-8*/ char *__restrict abs_filename, size_t abs_filename_length,
                          unsigned int flags, struct Dee_compiler_options *options) {
@@ -1722,11 +1794,16 @@ DeeModule_OpenFile_impl2(/*inherit_if(!(flags & _DeeModule_IMPORT_F_NO_INHERIT_F
 	/* Skip "module_abstree_*" if the module is being imported anonymously. */
 	if (flags & DeeModule_IMPORT_F_ANONYM) {
 		result = DeeModule_OpenFile_impl3((char **)&abs_filename, abs_filename_length, &flags, options);
+#ifndef CONFIG_NO_DEX
+		if (Dee_TYPE(result) == &DeeModuleDex_Type)
+			goto free_abs_filename_and_return_result;
+#endif /* !CONFIG_NO_DEX */
 		if (DeeModule_IMPORT_ISOK(result) &&
 		    ((flags & (_DeeModule_IMPORT_F_OUT_IS_RAW_FILE)) ||
 		     (flags & (DeeModule_IMPORT_F_FILNAM | _DeeModule_IMPORT_F_IS_DEE_FILE)) ==
 		     /*....*/ (DeeModule_IMPORT_F_FILNAM)))
 			result->mo_flags |= Dee_MODULE_FABSFILE;
+		result = module_track(result);
 		goto free_abs_filename_and_return_result;
 	}
 
@@ -1756,7 +1833,6 @@ DeeModule_OpenFile_impl2(/*inherit_if(!(flags & _DeeModule_IMPORT_F_NO_INHERIT_F
 		if (Dee_TYPE(result) == &DeeModuleDex_Type)
 			goto free_abs_filename_and_return_result;
 #endif /* !CONFIG_NO_DEX */
-		ASSERT(!DeeObject_IsShared(result));
 		ASSERT(!result->mo_absname);
 		if (flags & _DeeModule_IMPORT_F_IS_DEE_FILE)
 			abs_filename_length -= 4; /* The trailing ".dee" isn't included in "mo_absname". */
@@ -1792,6 +1868,7 @@ DeeModule_OpenFile_impl2(/*inherit_if(!(flags & _DeeModule_IMPORT_F_NO_INHERIT_F
 			module_abstree_removenode(&module_abstree_root, existing);
 		}
 		module_abstree_insert(&module_abstree_root, result);
+		result = module_track(result);
 		module_abstree_lock_endwrite();
 	} else {
 free_abs_filename_and_return_result:
@@ -1800,7 +1877,7 @@ free_abs_filename_and_return_result:
 	}
 	return result;
 err_r:
-	Dee_DecrefDokill(result);
+	module_destroy_untracked(result);
 err:
 	if (!(flags & _DeeModule_IMPORT_F_NO_INHERIT_FILENAME))
 		Dee_Free(abs_filename);
@@ -1889,13 +1966,13 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF /*tracked*/ DeeModuleObject *DCALL
 do_DeeModule_OpenFile(/*utf-8*/ char const *__restrict filename, size_t filename_size, DeeStringObject *filename_ob,
                       /*utf-8*/ char const *context_absname, size_t context_absname_size, DeeStringObject *context_absname_ob,
                       unsigned int flags, struct Dee_compiler_options *options) {
 	char *normal_filename;
 	size_t normal_filename_size;
-	DREF DeeModuleObject *result;
+	DREF /*tracked*/ DeeModuleObject *result;
 
 	/* Check if the given "filename" is already absolute */
 	if (DeeSystem_IsNormalAndAbsolute(filename, filename_size)) {
@@ -2131,12 +2208,12 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 5)) DREF DeeModuleObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 5)) DREF /*tracked*/ DeeModuleObject *DCALL
 do_DeeModule_OpenGlobal_impl(/*utf-8*/ char const *__restrict import_str, size_t import_str_size,
                              unsigned int flags, struct Dee_compiler_options *options,
                              DeeTupleObject *__restrict libpath) {
 	size_t i;
-	DREF DeeModuleObject *result;
+	DREF /*tracked*/ DeeModuleObject *result;
 	/* Check for special case: given "libpath" is empty. */
 	if unlikely(DeeTuple_IsEmpty(libpath)) {
 		if (flags & DeeModule_IMPORT_F_ENOENT)
@@ -2169,7 +2246,7 @@ do_DeeModule_OpenGlobal_impl(/*utf-8*/ char const *__restrict import_str, size_t
 		if unlikely(!absname)
 			goto err;
 		result = DeeModule_OpenFile_impl2(absname, absname_len, flags, options);
-		if (result != (DREF DeeModuleObject *)DeeModule_IMPORT_ENOENT)
+		if (result != (DREF /*tracked*/ DeeModuleObject *)DeeModule_IMPORT_ENOENT)
 			break;
 		++i;
 		if (i >= DeeTuple_SIZE(libpath))
@@ -2180,10 +2257,10 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF /*tracked*/ DeeModuleObject *DCALL
 do_DeeModule_OpenGlobal(/*utf-8*/ char const *__restrict import_str, size_t import_str_size, DeeStringObject *import_str_ob,
                         unsigned int flags, struct Dee_compiler_options *options) {
-	DREF DeeModuleObject *result;
+	DREF /*tracked*/ DeeModuleObject *result;
 	DeeTupleObject *libpath;
 
 	/* Check if the module has already been loaded. */
@@ -2296,11 +2373,11 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF /*tracked*/ DeeModuleObject *DCALL
 do_DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_size, DeeStringObject *import_str_ob,
                     /*utf-8*/ char const *context_absname, size_t context_absname_size, DeeStringObject *context_absname_ob,
                     unsigned int flags, struct Dee_compiler_options *options) {
-	DREF DeeModuleObject *result;
+	DREF /*tracked*/ DeeModuleObject *result;
 
 	/* Check if "import_str" needs to be interpreted as
 	 * a system filename, rather than a module path. */
@@ -3178,7 +3255,7 @@ again_lock_libtree:
 		/* Remember that all possible lib names have been loaded for this module. */
 		atomic_or(&self->mo_flags, _Dee_MODULE_FLIBALL);
 	}
-	if (!Dee_DecrefIfNotOne(libpath)) {
+	if unlikely(!Dee_DecrefIfNotOne(libpath)) {
 unlock_write_and_try_again:
 		module_libtree_lock_endwrite();
 		Dee_Decref_likely(libpath);
@@ -7182,8 +7259,9 @@ again:
 		/* Lazily generate+cache default path */
 		result = (DREF DeeObject *)DeeModule_NewDefaultPath();
 		if (result) {
+			Dee_Incref(result);
 			if (!Dee_atomic_ref_xcmpxch_inherited(&deemon_path, NULL, result)) {
-				Dee_Decref_likely(result);
+				Dee_Decref_n(result, 2);
 				goto again;
 			}
 		}
@@ -7475,12 +7553,6 @@ PUBLIC void DCALL DeeModule_InitPath(void) {
 }
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
-
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-/* Destructor linked into `struct Dee_heapregion' for dec file mappings. */
-INTDEF NONNULL((1)) void DCALL
-DeeDec_heapregion_destroy(struct Dee_heapregion *__restrict self);
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 /* Determine the module associated with `ob'. For this purpose, "ob" may be:
  * #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC

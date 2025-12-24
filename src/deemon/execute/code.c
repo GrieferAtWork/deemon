@@ -1882,7 +1882,7 @@ err_r_keywords:
 		Dee_Free((void *)result->co_keywords);
 	}
 err_r:
-	DeeGCObject_Free(result);
+	DeeCode_Free(result);
 	return NULL;
 }
 
@@ -2293,8 +2293,13 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	}
 	/* NOTE: Always check this, so prevent stuff like interactive
 	 *       modules to leaking into generic code objects. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	if (DeeObject_AssertTypeExact(args.module_, &DeeModuleDee_Type))
+		goto err_r_constv;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if (DeeObject_AssertTypeExact(args.module_, &DeeModule_Type))
 		goto err_r_constv;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Generate exception handlers. */
 	result->co_exceptc = 0;
@@ -2405,7 +2410,7 @@ err_r_keywords:
 		Dee_Free((void *)result->co_keywords);
 	}
 err_r:
-	DeeGCObject_Free(result);
+	DeeCode_Free(result);
 	goto err;
 err_buf:
 	DeeObject_PutBuf(args.text, &text_buf, Dee_BUFFER_FREADONLY);

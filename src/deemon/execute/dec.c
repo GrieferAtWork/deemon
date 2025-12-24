@@ -1276,16 +1276,56 @@ DeeDec_RelocateEx(/*inherit(always)*/ DeeDec_Ehdr *__restrict self,
 		goto fail;
 
 	/* Link in GC objects (if there are any) */
+#if 0 /* This needs to be done by the caller using `DeeDec_Track()' */
 	if (self->e_offsetof_gchead) {
 		struct gc_head *gc_head = (struct gc_head *)((byte_t *)self + self->e_offsetof_gchead);
 		struct gc_head *gc_tail = (struct gc_head *)((byte_t *)self + self->e_offsetof_gctail);
 		DeeGC_TrackAll(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
 	}
+#endif
 
 	return result;
 fail:
 	return (DeeModuleObject *)ITER_DONE;
 }
+
+/* Start GC-tracking "self" (as returned by `DeeDec_Relocate()' or `DeeDec_RelocateEx()') */
+PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
+DeeDec_Track(DREF struct Dee_module_object *__restrict self) {
+#if 1 /* Work-around until deemon compiler also produces dec-compatible modules from the get-go */
+	void *base = DeeGC_Head(self);
+	struct Dee_heapregion *region = DeeHeap_GetRegionOf(base);
+	if (region && region->hr_destroy == &DeeDec_heapregion_destroy) {
+		/* Link in GC objects (if there are any) */
+		Dec_Ehdr *ehdr = container_of(self, Dec_Ehdr, e_heap);
+		if (ehdr->e_offsetof_gchead) {
+			struct gc_head *gc_head = (struct gc_head *)((byte_t *)ehdr + ehdr->e_offsetof_gchead);
+			struct gc_head *gc_tail = (struct gc_head *)((byte_t *)ehdr + ehdr->e_offsetof_gctail);
+			DeeGC_TrackAll(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
+			return self;
+		}
+	}
+	return DeeGC_TRACK(DeeModuleObject, self);
+#else
+	Dec_Ehdr *ehdr;
+	struct Dee_heapregion *region;
+	ASSERT_OBJECT_TYPE_EXACT(self, &DeeModuleDee_Type);
+	region = DeeHeap_GetRegionOf(DeeGC_Head(self));
+	ASSERTF(region && region->hr_destroy == &DeeDec_heapregion_destroy,
+	        "All .dee module objects should be allocated within their own heap region, "
+	        "including those created by the deemon compiler. So the region of any module "
+	        "should **always** be a dec-based heap region!");
+	/* Link in GC objects (if there are any) */
+	ehdr = container_of(self, Dec_Ehdr, e_heap);
+	if (ehdr->e_offsetof_gchead) {
+		struct gc_head *gc_head = (struct gc_head *)((byte_t *)ehdr + ehdr->e_offsetof_gchead);
+		struct gc_head *gc_tail = (struct gc_head *)((byte_t *)ehdr + ehdr->e_offsetof_gctail);
+		DeeGC_TrackAll(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
+	}
+	return self;
+#endif
+}
+
 
 /* Map the contents of `input_stream' into memory, validate them, and
  * relocate them. This function is actually a convenience wrapper around

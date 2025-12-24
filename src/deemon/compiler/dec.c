@@ -695,12 +695,14 @@ INTERN WUNUSED NONNULL((1)) int
 	dec_writer_init();
 
 	/* Load dec writer options from active compiler options. */
-	ASSERT(DeeCompiler_Current != NULL);
 	config_filename = NULL;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	ASSERT(DeeCompiler_Current != NULL);
 	if (DeeCompiler_Current->cp_options) {
 		current_dec.dw_flags = DeeCompiler_Current->cp_options->co_decwriter;
 		config_filename      = DeeCompiler_Current->cp_options->co_decoutput;
 	}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Generate and link DEC data for the given module. */
 	result = dec_generate_and_link(module);

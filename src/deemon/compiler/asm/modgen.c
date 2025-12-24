@@ -67,7 +67,8 @@ module_compile(DeeModuleObject *__restrict mod,
 	ASSERT_OBJECT_TYPE_EXACT(root_code, &DeeCode_Type);
 	ASSERT_OBJECT_TYPE((DeeObject *)current_rootscope, &DeeRootScope_Type);
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	ASSERT(!DeeObject_IsShared(root_code));
+	ASSERT(current_rootscope->rs_code == root_code);
+	ASSERT(root_code->ob_refcnt == 2);
 #endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Truncate some vectors before we'll be inheriting them. */
@@ -190,6 +191,7 @@ err_module:
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 err:
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	Dee_DecrefNokill(root_code); /* *Nokill because "current_rootscope->rs_code == root_code" */
 	return NULL;
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return -1;

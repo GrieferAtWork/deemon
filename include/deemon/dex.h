@@ -267,7 +267,7 @@ INTDEF __BYTE_TYPE__ _end[];
 		_Dee_MODULE_DEXDATA_INIT_LOADHANDLE                                 \
 		_Dee_MODULE_DEXDATA_INIT_LOADSTRING                                 \
 	};                                                                      \
-	PUBLIC struct _dex_object DEX = {{ NULL, NULL }, {                      \
+	PUBLIC struct _dex_object DEX = {{ _Dee_GC_HEAD_UNTRACKED_INIT }, {     \
 		__Dee_DEX_OBJECT_HEAD_INIT,                                         \
 		/* .mo_absname = */ NULL, /* Filled at runtime... */                \
 		/* .mo_absnode = */ { NULL, NULL, NULL },                           \

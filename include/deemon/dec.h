@@ -513,12 +513,16 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
  * @param: dependencies: Already-loaded array of dependent modules,
  *                       matching `self->e_offsetof_deps'
  *
- * @return: * :   The module object described by `self'
+ * @return: * :   The module object described by `self' (CAUTION: Not-)
  * @return: NULL: An error was thrown
  * @return: ITER_DONE: The DEC file was out of date or had been corrupted */
 DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
 DeeDec_RelocateEx(/*inherit(always)*/ DeeDec_Ehdr *__restrict self,
                   struct Dee_module_object *const *dependencies);
+
+/* Start GC-tracking "self" (as returned by `DeeDec_Relocate()' or `DeeDec_RelocateEx()') */
+DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
+DeeDec_Track(DREF struct Dee_module_object *__restrict self);
 
 /* Map the contents of `input_stream' into memory, validate them, and
  * relocate them. This function is actually a convenience wrapper around

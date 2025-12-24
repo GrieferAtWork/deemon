@@ -99,13 +99,29 @@ decgen_imports(DeeModuleObject *__restrict self) {
 		 * based module names, but that would require extra effort here,
 		 * and wouldn't give us any advantage later... */
 		if (!mod->mo_absname) {
-			return DeeError_Throwf(&DeeError_NotImplemented,
-			                       "Cannot encode import of "
-			                       "anonymous module in .dec file");
+			char const *libname_utf8;
+			DREF DeeObject *libname = DeeModule_GetLibName((DeeObject *)mod, 0);
+			if unlikely(!libname)
+				goto err;
+			if (libname == ITER_DONE) {
+				return DeeError_Throwf(&DeeError_NotImplemented,
+				                       "Cannot encode import of "
+				                       "anonymous module in .dec file");
+			}
+			libname_utf8 = DeeString_AsUtf8(libname);
+			if unlikely(!libname_utf8) {
+				Dee_Decref(libname);
+				goto err;
+			}
+			data = dec_allocstr(libname_utf8,
+			                    (WSTR_LENGTH(libname_utf8) + 1) *
+			                    sizeof(char));
+			Dee_Decref(libname);
+		} else {
+			data = dec_allocstr(mod->mo_absname,
+			                    (strlen(mod->mo_absname) + 1) *
+			                    sizeof(char));
 		}
-		data = dec_allocstr(mod->mo_absname,
-		                    (strlen(mod->mo_absname) + 1) *
-		                    sizeof(char));
 		if unlikely(!data)
 			goto err;
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */

@@ -2628,7 +2628,7 @@ INTDEF NONNULL((1)) void DCALL
 module_dee_unbind(DeeModuleObject *__restrict self);
 #endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
-PRIVATE NONNULL((1)) void DCALL
+INTERN NONNULL((1)) void DCALL
 module_dee_destroy(DeeModuleObject *__restrict self) {
 	/* Assert always-true invariants for "DeeModuleDee_Type" */
 	ASSERT(Dee_TYPE(self) == &DeeModuleDee_Type);
@@ -2842,7 +2842,7 @@ PUBLIC DeeTypeObject DeeModuleDir_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ModuleDir",
 	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FVARIABLE,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeModuleObject),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeModule_Type,
@@ -2896,7 +2896,7 @@ PUBLIC DeeTypeObject DeeModuleDee_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ModuleDee",
 	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FVARIABLE,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeModuleObject),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeModule_Type,
@@ -2951,7 +2951,7 @@ PUBLIC DeeTypeObject DeeModuleDex_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ModuleDex",
 	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FVARIABLE,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeModuleObject),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeModule_Type,

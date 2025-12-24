@@ -75,6 +75,22 @@ struct Dee_gc_head {
 };
 #endif /* !DEE_SOURCE || !__INTELLISENSE__ */
 
+#ifndef NDEBUG
+#if __SIZEOF_POINTER__ == 4
+#define _Dee_GC_HEAD_UNTRACKED_MARKER ((struct gc_head **)UINT32_C(0xcccccccc))
+#elif __SIZEOF_POINTER__ == 8
+#define _Dee_GC_HEAD_UNTRACKED_MARKER ((struct gc_head **)UINT64_C(0xcccccccccccccccc))
+#endif /* __SIZEOF_POINTER__ == ... */
+#endif /* !NDEBUG */
+
+#ifdef _Dee_GC_HEAD_UNTRACKED_MARKER
+#define _Dee_GC_HEAD_UNTRACKED_INIT NULL, _Dee_GC_HEAD_UNTRACKED_MARKER
+#else /* _Dee_GC_HEAD_UNTRACKED_MARKER */
+#define _Dee_GC_HEAD_UNTRACKED_INIT NULL, NULL
+#endif /* !_Dee_GC_HEAD_UNTRACKED_MARKER */
+
+
+
 #define DEE_GC_OBJECT_OFFSET COMPILER_OFFSETOF(struct Dee_gc_head, gc_object)
 #define DEE_GC_HEAD_SIZE     COMPILER_OFFSETOF(struct Dee_gc_head, gc_object)
 #define DeeGC_Head(ob)       ((struct Dee_gc_head *)((uintptr_t)Dee_REQUIRES_ANYOBJECT(ob) - DEE_GC_OBJECT_OFFSET))

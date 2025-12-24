@@ -24,6 +24,8 @@ import * from errors;
 #if __DEEMON_VARIANT__ == "gatw"
 import rt;
 
+local CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES = hasattr(rt, "ModuleDir");
+
 function assertRtTypeName(gName: string, tNames: {string...} | string | none = none) {
 	if (tNames is none)
 		tNames = "_" + gName;
@@ -292,8 +294,15 @@ assertRtTypeName("CachedDict", "CachedDict");
 assertRtTypeName("DocKwds");
 assertRtTypeName("DocKwdsIterator");
 
-assertRtTypeName("InteractiveModule");
-assertRtTypeName("DexModule");
+if (CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES) {
+	assertRtTypeName("ModuleDee");
+	assertRtTypeName("ModuleDir");
+	if (hasattr(rt, "ModuleDex"))
+		assertRtTypeName("ModuleDex");
+} else {
+	assertRtTypeName("InteractiveModule");
+	assertRtTypeName("DexModule");
+}
 assertRtTypeName("Compiler");
 assertRtTypeName("ClassDescriptor");
 assertRtTypeName("InstanceMember");
