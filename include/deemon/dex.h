@@ -377,20 +377,17 @@ struct Dee_dex {
 	 *       Any other return value can be used to indicate an error having
 	 *       been thrown, which in turn will cause the caller to propagate
 	 *       said error. */
-	WUNUSED_T NONNULL_T((1))
-	int        (DCALL *d_init)(DeeDexObject *__restrict self);
+	WUNUSED_T NONNULL_T((1)) int (DCALL *d_init)(void);
 	/* WARNING: `d_fini()' must not attempt to add more references to `self'.
 	 *           When an extension module is supposed to get unloaded, it _has_
 	 *           to be unloaded and there is no way around that! */
-	NONNULL_T((1))
-	void       (DCALL *d_fini)(DeeDexObject *__restrict self);
+	NONNULL_T((1)) void (DCALL *d_fini)(void);
 
 	/* Called during the GC-cleanup phase near the end of deemon's execution cycle.
 	 * This function should be implemented to clear global caches or object hooks.
 	 * @return: true:  Something was cleared.
 	 * @return: false: Nothing was cleared. (Same as not implementing this callback) */
-	NONNULL_T((1))
-	bool       (DCALL *d_clear)(DeeDexObject *__restrict self);
+	NONNULL_T((1)) bool (DCALL *d_clear)(void);
 };
 
 struct Dee_dex_object {

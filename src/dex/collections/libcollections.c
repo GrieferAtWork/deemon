@@ -56,9 +56,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 	                       tp, info ? info->oi_sname : Q3);
 }
 
-PRIVATE WUNUSED_T NONNULL_T((1)) int DCALL
-libcollections_init(DeeDexObject *__restrict self) {
-	(void)self;
+PRIVATE WUNUSED int DCALL libcollections_init(void) {
 	RBTree_Type.tp_cmp = DeeSeq_Type.tp_cmp;
 	return 0;
 }
@@ -126,7 +124,13 @@ DEX_MEMBER_F("bits", &BitsetView_Type, MODSYM_FREADONLY,
 
 /* TODO: STailQ (singly linked list; internally: STAILQ) */
 /* TODO: TailQ (double linked list; internally: TAILQ) */
-DEX_END(&libcollections_init, NULL, NULL);
+/* clang-format off */
+DEX_END(
+	/* init:  */ &libcollections_init,
+	/* fini:  */ NULL,
+	/* clear: */ NULL
+);
+/* clang-format on */
 
 DECL_END
 

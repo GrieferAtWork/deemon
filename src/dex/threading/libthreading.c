@@ -41,8 +41,7 @@ INTDEF DeeCMethodObject libthreading_lockunion_all;
 PRIVATE struct tls_callback_hooks orig_hooks;
 
 #define PTR_libthreading_init &libthreading_init
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-libthreading_init(DeeDexObject *__restrict UNUSED(self)) {
+PRIVATE WUNUSED int DCALL libthreading_init(void) {
 	/* Install our custom TLS callback hooks. */
 	memcpy(&orig_hooks, &_DeeThread_TlsCallbacks, sizeof(struct tls_callback_hooks));
 	_DeeThread_TlsCallbacks.tc_fini = (void(DCALL *)(void *__restrict))&thread_tls_fini;
@@ -50,8 +49,7 @@ libthreading_init(DeeDexObject *__restrict UNUSED(self)) {
 }
 
 #define PTR_libthreading_fini &libthreading_fini
-PRIVATE NONNULL((1)) void DCALL
-libthreading_fini(DeeDexObject *__restrict UNUSED(self)) {
+PRIVATE void DCALL libthreading_fini(void) {
 	/* Restore the original TLS callback hooks. */
 	memcpy(&_DeeThread_TlsCallbacks, &orig_hooks, sizeof(struct tls_callback_hooks));
 }

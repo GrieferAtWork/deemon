@@ -692,7 +692,8 @@ INTDEF struct Dee_static_module_struct DeeModule_Empty;
 /* Import (DeeModule_Open() + DeeModule_Initialize()) a specific module */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_Import(/*String*/ DeeObject *__restrict import_str,
-                 /*Module|String|None*/ DeeObject *context_absname);
+                 /*Module|String|None*/ DeeObject *context_absname,
+                 unsigned int flags);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_ImportEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_size,
                    /*utf-8*/ char const *context_absname, size_t context_absname_size,
@@ -734,7 +735,8 @@ DeeModule_ImportEx(/*utf-8*/ char const *__restrict import_str, size_t import_st
  * @return: DeeModule_IMPORT_ERECUR: `DeeModule_IMPORT_F_ERECUR' was set, and module is already being imported */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_Open(/*String*/ DeeObject *__restrict import_str,
-               /*Module|String|None*/ DeeObject *context_absname);
+               /*Module|String|None*/ DeeObject *context_absname,
+               unsigned int flags);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_size,
                  /*utf-8*/ char const *context_absname, size_t context_absname_size,

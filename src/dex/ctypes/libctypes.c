@@ -549,8 +549,7 @@ libctypes_fini_type(DeeSTypeObject *__restrict self) {
 }
 
 #define PTR_libctypes_fini &libctypes_fini
-PRIVATE void DCALL
-libctypes_fini(DeeDexObject *__restrict UNUSED(self)) {
+PRIVATE void DCALL libctypes_fini(void) {
 	/* Clear caches for static C-types, so they don't show up as leaks. */
 	libctypes_fini_type(&DeeStructured_Type);
 	libctypes_fini_type(DeePointerType_AsSType(&DeePointer_Type));
@@ -607,10 +606,13 @@ libctypes_fini(DeeDexObject *__restrict UNUSED(self)) {
 #endif /* !PTR_libctypes_fini */
 
 INTDEF bool DCALL clear_void_pointer(void);
-PRIVATE bool DCALL
-libctypes_clear(DeeDexObject *__restrict UNUSED(self)) {
+#if 1
+#define libctypes_clear clear_void_pointer
+#else
+PRIVATE bool DCALL libctypes_clear(void) {
 	return clear_void_pointer();
 }
+#endif
 
 
 
@@ -1325,6 +1327,7 @@ DEX_END(
 	/* fini:  */ PTR_libctypes_fini,
 	/* clear: */ &libctypes_clear
 );
+/* clang-format on */
 
 DECL_END
 

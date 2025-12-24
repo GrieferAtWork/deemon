@@ -338,7 +338,7 @@ INTERN bool DCALL DeeDex_Cleanup(void) {
 	     dex = dex->d_next) {
 		dex_lock_endread();
 		/* Invoke the clear-operator on the dex (If it implements it). */
-		if (dex->d_dex->d_clear && (*dex->d_dex->d_clear)(dex))
+		if (dex->d_dex->d_clear && (*dex->d_dex->d_clear)())
 			result = true;
 		dex_lock_read();
 	}
@@ -368,10 +368,10 @@ again:
 /* Initialize the given dex module. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 dex_initialize(DeeDexObject *__restrict self) {
-	int (DCALL *func)(DeeDexObject * __restrict self);
+	int (DCALL *func)(void);
 	ASSERT(self->d_dex);
 	func = self->d_dex->d_init;
-	if (func && (*func)(self))
+	if (func && (*func)())
 		goto err;
 
 	/* Register the dex in the global chain. */
@@ -401,7 +401,7 @@ dex_fini(DeeDexObject *__restrict self) {
 		ASSERT(self->d_dex);
 		if ((self->d_module.mo_flags & Dee_MODULE_FDIDINIT) &&
 		    (self->d_dex->d_fini != NULL))
-			(*self->d_dex->d_fini)(self);
+			(*self->d_dex->d_fini)();
 
 		/* Must clear membercaches that may have been loaded by
 		 * this extension before unloading the associated library.

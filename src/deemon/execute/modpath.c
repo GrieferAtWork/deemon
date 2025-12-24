@@ -2410,7 +2410,8 @@ DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_
  * @return: DeeModule_IMPORT_ERECUR: `DeeModule_IMPORT_F_ERECUR' was set, and module is already being imported */
 PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_Open(/*String*/ DeeObject *__restrict import_str,
-               /*Module|String|None*/ DeeObject *context_absname) {
+               /*Module|String|None*/ DeeObject *context_absname,
+               unsigned int flags) {
 	char const *import_str_utf8 = DeeString_AsUtf8(import_str);
 	char const *context_absname_utf8;
 	size_t context_absname_size;
@@ -2440,8 +2441,7 @@ DeeModule_Open(/*String*/ DeeObject *__restrict import_str,
 	return (DREF DeeObject *)do_DeeModule_OpenEx(import_str_utf8, WSTR_LENGTH(import_str_utf8),
 	                                             (DeeStringObject *)import_str,
 	                                             context_absname_utf8, context_absname_size,
-	                                             context_absname_ob,
-	                                             DeeModule_IMPORT_F_NORMAL, NULL);
+	                                             context_absname_ob, flags, NULL);
 err:
 	return DeeModule_IMPORT_ERROR;
 }
@@ -2451,8 +2451,9 @@ err:
 /* Import (DeeModule_Open() + DeeModule_Initialize()) a specific module */
 PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_Import(/*String*/ DeeObject *__restrict import_str,
-                 /*Module|String|None*/ DeeObject *context_absname) {
-	DREF DeeObject *result = DeeModule_Open(import_str, context_absname);
+                 /*Module|String|None*/ DeeObject *context_absname,
+                 unsigned int flags) {
+	DREF DeeObject *result = DeeModule_Open(import_str, context_absname, flags);
 	if (likely(result) && unlikely(DeeModule_Initialize(result) < 0))
 		Dee_Clear(result);
 	return result;

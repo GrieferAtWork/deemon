@@ -149,7 +149,7 @@ PRIVATE char const str_usage[] =
 "Usage: deemon [options...] <infile> [args...]\n"
 "       deemon [options...] -F <sourcefiles...>\n"
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-"       deemon [options...] -i\n"
+"       deemon [options...] -i\n" /* TODO: Re-implement somehow before making "CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES" mandatory */
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 ;
 PRIVATE char const str_minhelp[] =
@@ -724,10 +724,8 @@ PRIVATE struct cmd_option const preprocessor_options[] = {
 	{ CMD_FARG | CMD_FARGIMM | CMD_FARGEQ, "", "name", { (void *)&cmdpp_name }, " <name>\tSet the name used for `__FILE__' and debug informations by `INFILE'\nUseful when running in interactive mode" },
 	{ CMD_FJOINABLE, "E", NULL, { (void *)&cmd_E }, doc_cmdE },
 	{ CMD_FJOINABLE, "P", NULL, { (void *)&cmd_P }, doc_cmdP },
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	{ CMD_FARG | CMD_FARGIMM, "o", NULL, { (void *)&cmd_o }, doc_cmdo },
 	{ CMD_FARG | CMD_FARGIMM | CMD_FARGEQ, "", "out", { (void *)&cmd_o }, doc_cmdo },
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	{ CMD_FARG | CMD_FARGIMM | CMD_FRUNLATER, "D", NULL, { (void *)&cmd_D }, doc_cmdD },
 	{ CMD_FARG | CMD_FARGIMM | CMD_FRUNLATER, "U", NULL, { (void *)&cmd_U }, doc_cmdU },
 	{ CMD_FARG | CMD_FARGIMM | CMD_FRUNLATER, "A", NULL, { (void *)&cmd_A }, doc_cmdA },
@@ -796,9 +794,7 @@ PRIVATE struct cmd_option const cmdline_options[] = {
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	{ CMD_FJOINABLE, "P", NULL, { (void *)&cmd_P }, doc_cmdP },
 	{ CMD_FJOINABLE, "c", NULL, { (void *)&cmd_c }, doc_cmdc },
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	{ CMD_FARG | CMD_FARGIMM, "o", NULL, { (void *)&cmd_o }, doc_cmdo },
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	{ CMD_FARG | CMD_FARGIMM | CMD_FRUNLATER, "D", NULL, { (void *)&cmd_D }, doc_cmdD },
 	{ CMD_FARG | CMD_FARGIMM | CMD_FRUNLATER, "U", NULL, { (void *)&cmd_U }, doc_cmdU },
 	{ CMD_FARG | CMD_FARGIMM | CMD_FRUNLATER, "A", NULL, { (void *)&cmd_A }, doc_cmdA },

@@ -5342,8 +5342,7 @@ INTERN DeeTypeObject DeeProcess_Type = {
 #error "Multiple definitions of `libipc_fini()'"
 #endif /* HAVE_libipc_fini */
 #define HAVE_libipc_fini
-PRIVATE NONNULL((1)) void DCALL
-libipc_fini(DeeDexObject *__restrict UNUSED(self)) {
+PRIVATE void DCALL libipc_fini(void) {
 #ifdef HAVE_ipc_reaped_childprocs_clear
 	ipc_reaped_childprocs_clear();
 #endif /* HAVE_ipc_reaped_childprocs_clear */

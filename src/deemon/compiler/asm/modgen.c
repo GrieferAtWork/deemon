@@ -164,6 +164,7 @@ module_compile(DeeModuleObject *__restrict mod,
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return 0;
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #ifndef CONFIG_NO_DEC
 err_module:
 	/* Transfer ownership back to the compiler. */
@@ -187,6 +188,7 @@ err_module:
 	mod->mo_globalv = NULL;
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #endif /* !CONFIG_NO_DEC */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 err:
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	return NULL;

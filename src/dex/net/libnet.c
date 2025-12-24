@@ -305,8 +305,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libnet_hton64_f_impl(uint64_t x)
 
 #ifdef CONFIG_HOST_WINDOWS
 #define PTR_libnet_init &libnet_init
-PRIVATE int DCALL
-libnet_init(DeeDexObject *__restrict UNUSED(self)) {
+PRIVATE WUNUSED int DCALL libnet_init(void) {
 	/* Start up the the windows networking subsystem. */
 	neterrno_t error;
 	WSADATA wsaData;
@@ -320,8 +319,7 @@ libnet_init(DeeDexObject *__restrict UNUSED(self)) {
 }
 #elif defined(CONFIG_HAVE_signal) && defined(SIGPIPE)
 #define PTR_libnet_init &libnet_init
-PRIVATE int DCALL
-libnet_init(DeeDexObject *__restrict UNUSED(self)) {
+PRIVATE WUNUSED int DCALL libnet_init(void) {
 	/* SIGPIPE is generated when a remote socket is closed. */
 	void (*handler)(int);
 	DBG_ALIGNMENT_DISABLE();
@@ -337,8 +335,7 @@ libnet_init(DeeDexObject *__restrict UNUSED(self)) {
 
 #ifdef CONFIG_HOST_WINDOWS
 #define PTR_libnet_fini &libnet_fini
-PRIVATE void DCALL
-libnet_fini(DeeDexObject *__restrict UNUSED(self)) {
+PRIVATE void DCALL libnet_fini(void) {
 	DBG_ALIGNMENT_DISABLE();
 	WSACleanup();
 	DBG_ALIGNMENT_ENABLE();

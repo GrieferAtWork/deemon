@@ -90,9 +90,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL get_time_module(void) {
 #error "More than one posix_dex_fini() function"
 #endif /* HAVE_posix_dex_fini */
 #define HAVE_posix_dex_fini
-PRIVATE NONNULL((1)) void DCALL
-posix_dex_fini(DeeDexObject *__restrict self) {
-	(void)self;
+PRIVATE void DCALL posix_dex_fini(void) {
 	Dee_XDecref(dee_time_module);
 }
 

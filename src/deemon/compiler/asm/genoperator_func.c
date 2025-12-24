@@ -96,9 +96,15 @@ ast_gen_operator_func(struct ast *binding,
 		}
 	}
 	/* Import the operators module. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	operators_module = (DREF DeeModuleObject *)DeeModule_OpenEx("operators", COMPILER_STRLEN("operators"),
+	                                                            NULL, 0, DeeModule_IMPORT_F_ENOENT,
+	                                                            inner_compiler_options);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	operators_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal((DeeObject *)&str_operators,
 	                                                                inner_compiler_options,
 	                                                                false);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if unlikely(!ITER_ISOK(operators_module)) {
 		if (operators_module) {
 			DO(WARNAST(ddi_ast, W_MODULE_NOT_FOUND, &str_operators));
