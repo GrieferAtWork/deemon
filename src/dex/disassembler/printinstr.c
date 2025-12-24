@@ -489,12 +489,12 @@ libdisasm_printmembername(Dee_formatprinter_t printer, void *arg,
 				class_sym = DeeModule_GetSymbolString(code->co_module, class_name);
 				if (!class_sym)
 					goto search_module_root_constants;
-				if (class_sym->ss_index < mod->mo_globalc &&
+				if (Dee_module_symbol_getindex(class_sym) < mod->mo_globalc &&
 				    !(class_sym->ss_flags & (MODSYM_FPROPERTY | MODSYM_FEXTERN))) {
 					DREF DeeObject *class_type;
 					DeeClassDescriptorObject *desc;
 					DeeModule_LockRead(mod);
-					class_type = mod->mo_globalv[class_sym->ss_index];
+					class_type = mod->mo_globalv[Dee_module_symbol_getindex(class_sym)];
 					Dee_XIncref(class_type);
 					DeeModule_LockEndRead(mod);
 					if (!class_type) {

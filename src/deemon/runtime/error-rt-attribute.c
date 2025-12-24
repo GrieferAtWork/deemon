@@ -903,13 +903,13 @@ AttributeError_LoadDesc(AttributeError *__restrict self) {
 		if (sym->ss_flags & MODSYM_FPROPERTY) {
 			DeeModule_LockRead(mod);
 			/* Check which property operations have been bound. */
-			if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_GET])
+			if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + MODULE_PROPERTY_GET])
 				self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANGET;
 			if (!(sym->ss_flags & MODSYM_FREADONLY)) {
 				/* These callbacks are only allocated if the READONLY flag isn't set. */
-				if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_DEL])
+				if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + MODULE_PROPERTY_DEL])
 					self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANDEL;
-				if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_SET])
+				if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + MODULE_PROPERTY_SET])
 					self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANSET;
 			}
 			DeeModule_LockEndRead(mod);
@@ -919,13 +919,13 @@ AttributeError_LoadDesc(AttributeError *__restrict self) {
 			DeeModule_LockRead(mod);
 			if (sym->ss_flags & MODSYM_FPROPERTY) {
 				/* Check which property operations have been bound. */
-				if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_GET])
+				if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + MODULE_PROPERTY_GET])
 					self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANGET;
 				if (!(sym->ss_flags & MODSYM_FREADONLY)) {
 					/* These callbacks are only allocated if the READONLY flag isn't set. */
-					if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_DEL])
+					if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + MODULE_PROPERTY_DEL])
 						self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANDEL;
-					if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_SET])
+					if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + MODULE_PROPERTY_SET])
 						self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANSET;
 				}
 			}

@@ -273,8 +273,8 @@ check_getattr_sym:
 				/* Push an external symbol accessed through its module. */
 				DO(asm_putddi(ddi_ast));
 				return modsym->ss_flags & MODSYM_FPROPERTY
-				       ? asm_gcall_extern((uint16_t)module_id, modsym->ss_index + MODULE_PROPERTY_GET, 0)
-				       : asm_gpush_extern((uint16_t)module_id, modsym->ss_index);
+				       ? asm_gcall_extern((uint16_t)module_id, Dee_module_symbol_getindex(modsym) + MODULE_PROPERTY_GET, 0)
+				       : asm_gpush_extern((uint16_t)module_id, Dee_module_symbol_getindex(modsym));
 			}	break;
 
 			default: break;
@@ -436,7 +436,7 @@ check_boundattr_sym:
 
 				/* Push an external symbol accessed through its module. */
 				DO(asm_putddi(ddi_ast));
-				return asm_gpush_bnd_extern((uint16_t)module_id, modsym->ss_index);
+				return asm_gpush_bnd_extern((uint16_t)module_id, Dee_module_symbol_getindex(modsym));
 			}	break;
 
 			default: break;
@@ -881,10 +881,10 @@ check_base_symbol_class:
 					DO(asm_gdup());
 				if (modsym->ss_flags & MODSYM_FPROPERTY) {
 					/* Invoke the setter callback. */
-					DO(asm_gcall_extern((uint16_t)module_id, modsym->ss_index + MODULE_PROPERTY_SET, 1));
+					DO(asm_gcall_extern((uint16_t)module_id, Dee_module_symbol_getindex(modsym) + MODULE_PROPERTY_SET, 1));
 					return asm_gpop();
 				}
-				return asm_gpop_extern((uint16_t)module_id, modsym->ss_index);
+				return asm_gpop_extern((uint16_t)module_id, Dee_module_symbol_getindex(modsym));
 			}	break;
 
 			default:
@@ -1186,7 +1186,7 @@ check_src_sym_class:
 			goto err;
 		DO(asm_putddi(dst_ast));
 		DO(asm_gprefix_symbol(dst_sym, dst_ast));
-		return asm_gpush_extern_p((uint16_t)symid, SYMBOL_EXTERN_SYMBOL(src_sym)->ss_index);
+		return asm_gpush_extern_p((uint16_t)symid, Dee_module_symbol_getindex(SYMBOL_EXTERN_SYMBOL(src_sym)));
 
 	default: break;
 	}
@@ -1631,7 +1631,7 @@ check_dst_sym_class_hybrid:
 						goto err;
 					DO(asm_putddi(dst));
 					DO(asm_gprefix_symbol_for_read(src->a_sym, src));
-					return asm_gpop_extern_p((uint16_t)symid, SYMBOL_EXTERN_SYMBOL(dst_sym)->ss_index);
+					return asm_gpop_extern_p((uint16_t)symid, Dee_module_symbol_getindex(SYMBOL_EXTERN_SYMBOL(dst_sym)));
 
 				case SYMBOL_TYPE_STACK:
 					if (!(dst_sym->s_flag & SYMBOL_FALLOC))

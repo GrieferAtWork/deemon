@@ -287,7 +287,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
 				has_special_symbols = true;
 				continue;
 			}
-			if (symiter->ss_index == normali) {
+			if (Dee_module_symbol_getindex(symiter) == normali) {
 				if (!first_alias)
 					first_alias = symiter;
 				if (!(symiter->ss_flags & MODSYM_FALIAS))
@@ -359,7 +359,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
 					continue;
 				if (first_alias->ss_flags & MODSYM_FEXTERN)
 					continue;
-				if (first_alias->ss_index != normali)
+				if (Dee_module_symbol_getindex(first_alias) != normali)
 					continue;
 
 				/* Found another symbol for this address.
@@ -422,7 +422,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
 			++symcount; /* Track the total number of symbols. */
 			if (dec_putw(symiter->ss_flags & ~(MODSYM_FNAMEOBJ | MODSYM_FDOCOBJ)))
 				goto err; /* Dec_GlbExt.s_flg */
-			if (dec_putw(symiter->ss_index))
+			if (dec_putw(Dee_module_symbol_getindex(symiter)))
 				goto err; /* Dec_GlbExt.s_addr */
 			if (dec_putw(symiter->ss_impid))
 				goto err; /* Dec_GlbExt.s_addr2 */

@@ -151,9 +151,9 @@ module_it_getattr_symbol(DeeModuleObject *__restrict self,
 	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
 		DREF DeeObject *result;
 read_symbol:
-		ASSERT(symbol->ss_index < self->mo_globalc);
+		ASSERT(Dee_module_symbol_getindex(symbol) < self->mo_globalc);
 		DeeModule_LockRead(self);
-		result = self->mo_globalv[symbol->ss_index];
+		result = self->mo_globalv[Dee_module_symbol_getindex(symbol)];
 		Dee_XIncref(result);
 		DeeModule_LockEndRead(self);
 		if unlikely(!result)
@@ -165,7 +165,7 @@ read_symbol:
 	if (symbol->ss_flags & MODSYM_FPROPERTY) {
 		DREF DeeObject *callback;
 		DeeModule_LockRead(self);
-		callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_GET];
+		callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback)
@@ -368,9 +368,9 @@ DeeModule_GetAttrSymbol_asitem(ModuleExports *exports_map,
 	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
 		DREF DeeObject *result;
 read_symbol:
-		ASSERT(symbol->ss_index < self->mo_globalc);
+		ASSERT(Dee_module_symbol_getindex(symbol) < self->mo_globalc);
 		DeeModule_LockRead(self);
-		result = self->mo_globalv[symbol->ss_index];
+		result = self->mo_globalv[Dee_module_symbol_getindex(symbol)];
 		Dee_XIncref(result);
 		DeeModule_LockEndRead(self);
 		if unlikely(!result) {
@@ -390,7 +390,7 @@ read_symbol:
 	if (symbol->ss_flags & MODSYM_FPROPERTY) {
 		DREF DeeObject *callback;
 		DeeModule_LockRead(self);
-		callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_GET];
+		callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback) {
@@ -421,9 +421,9 @@ DeeModule_TryGetAttrSymbol_asitem(DeeModuleObject *self,
 	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
 		DREF DeeObject *result;
 read_symbol:
-		ASSERT(symbol->ss_index < self->mo_globalc);
+		ASSERT(Dee_module_symbol_getindex(symbol) < self->mo_globalc);
 		DeeModule_LockRead(self);
-		result = self->mo_globalv[symbol->ss_index];
+		result = self->mo_globalv[Dee_module_symbol_getindex(symbol)];
 		Dee_XIncref(result);
 		DeeModule_LockEndRead(self);
 		if unlikely(!result)
@@ -436,7 +436,7 @@ read_symbol:
 		DREF DeeObject *result;
 		DREF DeeObject *callback;
 		DeeModule_LockRead(self);
-		callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_GET];
+		callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback)
@@ -464,8 +464,8 @@ DeeModule_BoundAttrSymbol_asitem(DeeModuleObject *self,
                                  struct module_symbol *symbol) {
 	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
 read_symbol:
-		ASSERT(symbol->ss_index < self->mo_globalc);
-		return Dee_BOUND_FROMBOOL(atomic_read(&self->mo_globalv[symbol->ss_index]));
+		ASSERT(Dee_module_symbol_getindex(symbol) < self->mo_globalc);
+		return Dee_BOUND_FROMBOOL(atomic_read(&self->mo_globalv[Dee_module_symbol_getindex(symbol)]));
 	}
 
 	/* External symbol, or property. */
@@ -473,7 +473,7 @@ read_symbol:
 		DREF DeeObject *result;
 		DREF DeeObject *callback;
 		DeeModule_LockRead(self);
-		callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_GET];
+		callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback)

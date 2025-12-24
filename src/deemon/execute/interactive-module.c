@@ -1318,7 +1318,7 @@ err_compiler_basefile:
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 					sym->s_type         = SYMBOL_TYPE_GLOBAL;
 					sym->s_flag         = SYMBOL_FALLOC;
-					sym->s_symid        = modsym->ss_index;
+					sym->s_symid        = Dee_module_symbol_getindex(modsym);
 					sym->s_global.g_doc = NULL;
 					sym->s_nread        = 0;
 					sym->s_nwrite       = 1; /* The initial write done by the pre-initialization. */

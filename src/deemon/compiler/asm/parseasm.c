@@ -890,7 +890,7 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
 				goto err_module;
 			*pgid = 0;
 		} else {
-			*pgid = modsym->ss_index;
+			*pgid = Dee_module_symbol_getindex(modsym);
 		}
 	} else {
 		temp = uasm_parse_imm16(UASM_INTEXPR_FNORMAL);
@@ -1306,7 +1306,7 @@ check_sym_class:
 					goto err;
 				result->io_class           = OPERAND_CLASS_EXTERN;
 				result->io_extern.io_modid = (uint16_t)symid;
-				result->io_extern.io_symid = SYMBOL_EXTERN_SYMBOL(sym)->ss_index;
+				result->io_extern.io_symid = Dee_module_symbol_getindex(SYMBOL_EXTERN_SYMBOL(sym));
 				break;
 
 			case SYMBOL_TYPE_GLOBAL:

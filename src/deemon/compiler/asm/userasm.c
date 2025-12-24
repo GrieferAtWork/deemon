@@ -1669,7 +1669,7 @@ abs_stack_any:
 		if unlikely(eid < 0)
 			goto err;
 		result = DeeString_Newf("extern %" PRFu16 ":%" PRFu16, (uint16_t)eid,
-		                        SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
+		                        Dee_module_symbol_getindex(SYMBOL_EXTERN_SYMBOL(sym)));
 	}	break;
 
 	case ASM_OP_GLOBAL: {

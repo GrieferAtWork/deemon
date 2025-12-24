@@ -404,7 +404,7 @@ DeeModule_GetSymbolID(DeeModuleObject const *__restrict self, uint16_t gid) {
 	for (; iter < end; ++iter) {
 		if (!MODULE_SYMBOL_GETNAMESTR(iter))
 			continue; /* Skip empty entries. */
-		if (iter->ss_index == gid) {
+		if (Dee_module_symbol_getindex(iter) == gid) {
 			result = iter;
 
 			/* If it's a symbol, we still stored it's name as
@@ -490,13 +490,13 @@ DeeModule_GetAttrSymbol(DeeModuleObject *__restrict self,
 	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
 		DREF DeeObject *result;
 read_symbol:
-		ASSERT(symbol->ss_index < self->mo_globalc);
+		ASSERT(Dee_module_symbol_getindex(symbol) < self->mo_globalc);
 		DeeModule_LockRead(self);
-		result = self->mo_globalv[symbol->ss_index];
+		result = self->mo_globalv[Dee_module_symbol_getindex(symbol)];
 		Dee_XIncref(result);
 		DeeModule_LockEndRead(self);
 		if unlikely(!result)
-			err_unbound_global(self, symbol->ss_index);
+			err_unbound_global(self, Dee_module_symbol_getindex(symbol));
 		return result;
 	}
 
@@ -504,7 +504,7 @@ read_symbol:
 	if (symbol->ss_flags & MODSYM_FPROPERTY) {
 		DREF DeeObject *callback;
 		DeeModule_LockRead(self);
-		callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_GET];
+		callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback) {
@@ -530,9 +530,9 @@ DeeModule_BoundAttrSymbol(DeeModuleObject *__restrict self,
 	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
 		DeeObject *value;
 read_symbol:
-		ASSERT(symbol->ss_index < self->mo_globalc);
+		ASSERT(Dee_module_symbol_getindex(symbol) < self->mo_globalc);
 		DeeModule_LockRead(self);
-		value = self->mo_globalv[symbol->ss_index];
+		value = self->mo_globalv[Dee_module_symbol_getindex(symbol)];
 		DeeModule_LockEndRead(self);
 		return Dee_BOUND_FROMBOOL(value);
 	}
@@ -541,7 +541,7 @@ read_symbol:
 	if (symbol->ss_flags & MODSYM_FPROPERTY) {
 		DREF DeeObject *callback, *callback_result;
 		DeeModule_LockRead(self);
-		callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_GET];
+		callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback)
@@ -576,8 +576,8 @@ DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
 		if (symbol->ss_flags & MODSYM_FPROPERTY) {
 			DREF DeeObject *callback, *temp;
 			DeeModule_LockRead(self);
-			ASSERT(symbol->ss_index + MODULE_PROPERTY_DEL < self->mo_globalc);
-			callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_DEL];
+			ASSERT(Dee_module_symbol_getindex(symbol) + MODULE_PROPERTY_DEL < self->mo_globalc);
+			callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + MODULE_PROPERTY_DEL];
 			Dee_XIncref(callback);
 			DeeModule_LockEndRead(self);
 			if unlikely(!callback)
@@ -593,10 +593,10 @@ DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
 		ASSERT(symbol->ss_impid < self->mo_importc);
 		self = self->mo_importv[symbol->ss_impid];
 	}
-	ASSERT(symbol->ss_index < self->mo_globalc);
+	ASSERT(Dee_module_symbol_getindex(symbol) < self->mo_globalc);
 	DeeModule_LockWrite(self);
-	old_value = self->mo_globalv[symbol->ss_index];
-	self->mo_globalv[symbol->ss_index] = NULL;
+	old_value = self->mo_globalv[Dee_module_symbol_getindex(symbol)];
+	self->mo_globalv[Dee_module_symbol_getindex(symbol)] = NULL;
 	DeeModule_LockEndWrite(self);
 	Dee_XDecref(old_value);
 	return 0;
@@ -617,24 +617,24 @@ DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self,
 		if (symbol->ss_flags & MODSYM_FREADONLY) {
 			if (symbol->ss_flags & MODSYM_FPROPERTY)
 				goto err_is_readonly;
-			ASSERT(symbol->ss_index < self->mo_globalc);
+			ASSERT(Dee_module_symbol_getindex(symbol) < self->mo_globalc);
 			DeeModule_LockWrite(self);
 			/* Make sure not to allow write-access to global variables that
 			 * have already been assigned, but are marked as read-only. */
-			if unlikely(self->mo_globalv[symbol->ss_index] != NULL) {
+			if unlikely(self->mo_globalv[Dee_module_symbol_getindex(symbol)] != NULL) {
 				DeeModule_LockEndWrite(self);
 err_is_readonly:
 				return err_module_readonly_global_string(self, MODULE_SYMBOL_GETNAMESTR(symbol));
 			}
 			Dee_Incref(value);
-			self->mo_globalv[symbol->ss_index] = value;
+			self->mo_globalv[Dee_module_symbol_getindex(symbol)] = value;
 			DeeModule_LockEndWrite(self);
 			return 0;
 		}
 		if (symbol->ss_flags & MODSYM_FPROPERTY) {
 			DREF DeeObject *callback;
 			DeeModule_LockWrite(self);
-			callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_SET];
+			callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + MODULE_PROPERTY_SET];
 			Dee_XIncref(callback);
 			DeeModule_LockEndWrite(self);
 			if unlikely(!callback)
@@ -647,11 +647,11 @@ err_is_readonly:
 		ASSERT(symbol->ss_impid < self->mo_importc);
 		self = self->mo_importv[symbol->ss_impid];
 	}
-	ASSERT(symbol->ss_index < self->mo_globalc);
+	ASSERT(Dee_module_symbol_getindex(symbol) < self->mo_globalc);
 	Dee_Incref(value);
 	DeeModule_LockWrite(self);
-	temp = self->mo_globalv[symbol->ss_index];
-	self->mo_globalv[symbol->ss_index] = value;
+	temp = self->mo_globalv[Dee_module_symbol_getindex(symbol)];
+	self->mo_globalv[Dee_module_symbol_getindex(symbol)] = value;
 	DeeModule_LockEndWrite(self);
 	Dee_XDecref(temp);
 	return 0;
@@ -1885,7 +1885,7 @@ module_attriter_next(struct module_attriter *__restrict self,
 	} while (!atomic_cmpxch_or_write(&self->mai_hidx, old_hidx, new_hidx));
 
 	perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET;
-	ASSERT(sym->ss_index < mod->mo_globalc);
+	ASSERT(Dee_module_symbol_getindex(sym) < mod->mo_globalc);
 	if (!(sym->ss_flags & MODSYM_FREADONLY))
 		perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 	if (sym->ss_flags & MODSYM_FPROPERTY) {
@@ -1914,13 +1914,13 @@ module_attriter_next(struct module_attriter *__restrict self,
 			DeeModule_LockRead(mod);
 			if (sym->ss_flags & MODSYM_FPROPERTY) {
 				/* Check which property operations have been bound. */
-				if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_GET])
+				if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + MODULE_PROPERTY_GET])
 					perm |= Dee_ATTRPERM_F_CANGET;
 				if (!(sym->ss_flags & MODSYM_FREADONLY)) {
 					/* These callbacks are only allocated if the READONLY flag isn't set. */
-					if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_DEL])
+					if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + MODULE_PROPERTY_DEL])
 						perm |= Dee_ATTRPERM_F_CANDEL;
-					if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_SET])
+					if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + MODULE_PROPERTY_SET])
 						perm |= Dee_ATTRPERM_F_CANSET;
 				}
 			}
@@ -1929,7 +1929,7 @@ module_attriter_next(struct module_attriter *__restrict self,
 	}
 	doc_sym = sym;
 	if (!doc_sym->ss_doc && (doc_sym->ss_flags & MODSYM_FALIAS)) {
-		doc_sym = DeeModule_GetSymbolID(mod, doc_sym->ss_index);
+		doc_sym = DeeModule_GetSymbolID(mod, Dee_module_symbol_getindex(doc_sym));
 		ASSERT(doc_sym != NULL);
 	}
 
@@ -2016,7 +2016,7 @@ module_findattr_impl(DeeModuleObject *__restrict self,
 		if (sym) {
 			struct module_symbol *doc_sym;
 			Dee_attrperm_t perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET;
-			ASSERT(sym->ss_index < self->mo_globalc);
+			ASSERT(Dee_module_symbol_getindex(sym) < self->mo_globalc);
 			if (!(sym->ss_flags & MODSYM_FREADONLY))
 				perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 			if (sym->ss_flags & MODSYM_FPROPERTY) {
@@ -2044,13 +2044,13 @@ module_findattr_impl(DeeModuleObject *__restrict self,
 					DeeModule_LockRead(self);
 					if (sym->ss_flags & MODSYM_FPROPERTY) {
 						/* Check which property operations have been bound. */
-						if (self->mo_globalv[sym->ss_index + MODULE_PROPERTY_GET])
+						if (self->mo_globalv[Dee_module_symbol_getindex(sym) + MODULE_PROPERTY_GET])
 							perm |= Dee_ATTRPERM_F_CANGET;
 						if (!(sym->ss_flags & MODSYM_FREADONLY)) {
 							/* These callbacks are only allocated if the READONLY flag isn't set. */
-							if (self->mo_globalv[sym->ss_index + MODULE_PROPERTY_DEL])
+							if (self->mo_globalv[Dee_module_symbol_getindex(sym) + MODULE_PROPERTY_DEL])
 								perm |= Dee_ATTRPERM_F_CANDEL;
-							if (self->mo_globalv[sym->ss_index + MODULE_PROPERTY_SET])
+							if (self->mo_globalv[Dee_module_symbol_getindex(sym) + MODULE_PROPERTY_SET])
 								perm |= Dee_ATTRPERM_F_CANSET;
 						}
 					}
@@ -2059,7 +2059,7 @@ module_findattr_impl(DeeModuleObject *__restrict self,
 			}
 			doc_sym = sym;
 			if (!doc_sym->ss_doc && (doc_sym->ss_flags & MODSYM_FALIAS)) {
-				doc_sym = DeeModule_GetSymbolID(self, doc_sym->ss_index);
+				doc_sym = DeeModule_GetSymbolID(self, Dee_module_symbol_getindex(doc_sym));
 				ASSERT(doc_sym != NULL);
 			}
 			if (sym->ss_flags & MODSYM_FNAMEOBJ)

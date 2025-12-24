@@ -90,10 +90,9 @@ INTERN WUNUSED NONNULL((1, 2)) int
 			goto err;
 		if (error == 0) {
 			/* The module is not initialized. */
-			ASSERT(sym->s_extern.e_symbol->ss_index <
-			       symmod->mo_globalc);
+			ASSERT(Dee_module_symbol_getindex(sym->s_extern.e_symbol) < symmod->mo_globalc);
 			DeeModule_LockRead(symmod);
-			symval = symmod->mo_globalv[sym->s_extern.e_symbol->ss_index];
+			symval = symmod->mo_globalv[Dee_module_symbol_getindex(sym->s_extern.e_symbol)];
 			Dee_XIncref(symval);
 			DeeModule_LockEndRead(symmod);
 			/* Make sure that the symbol value is allowed

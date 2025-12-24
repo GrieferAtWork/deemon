@@ -7314,9 +7314,9 @@ fg_vpush_module_symbol(struct fungen *__restrict self, DeeModuleObject *mod,
 	uint16_t symaddr;
 	if (sym->ss_flags & Dee_MODSYM_FEXTERN) {
 		mod = mod->mo_importv[sym->ss_impid];
-		return fg_vpush_mod_global(self, mod, sym->ss_index, ref);
+		return fg_vpush_mod_global(self, mod, Dee_module_symbol_getindex(sym), ref);
 	}
-	symaddr = sym->ss_index;
+	symaddr = Dee_module_symbol_getindex(sym);
 	if (sym->ss_flags & Dee_MODSYM_FPROPERTY) {
 		symaddr += Dee_MODULE_PROPERTY_GET;
 		ref = true;
@@ -7335,10 +7335,10 @@ fg_vbound_module_symbol(struct fungen *__restrict self, DeeModuleObject *mod,
                         struct Dee_module_symbol const *sym) {
 	if (sym->ss_flags & Dee_MODSYM_FEXTERN) {
 		mod = mod->mo_importv[sym->ss_impid];
-		return fg_vbound_mod_global(self, mod, sym->ss_index);
+		return fg_vbound_mod_global(self, mod, Dee_module_symbol_getindex(sym));
 	}
 	if (!(sym->ss_flags & Dee_MODSYM_FPROPERTY))
-		return fg_vbound_mod_global(self, mod, sym->ss_index);
+		return fg_vbound_mod_global(self, mod, Dee_module_symbol_getindex(sym));
 	DO(fg_vpush_const(self, mod)); /* mod */
 	DO(fg_vpush_addr(self, sym));  /* mod, sym */
 	DO(fg_vcallapi(self, &DeeModule_BoundAttrSymbol, VCALL_CC_M1INT, 2));
@@ -7362,13 +7362,13 @@ fg_vdel_module_symbol(struct fungen *__restrict self, DeeModuleObject *mod,
 	if (!(sym->ss_flags & Dee_MODSYM_FREADONLY)) {
 		if (sym->ss_flags & Dee_MODSYM_FEXTERN) {
 			mod = mod->mo_importv[sym->ss_impid];
-			return fg_vdel_mod_global(self, mod, sym->ss_index);
+			return fg_vdel_mod_global(self, mod, Dee_module_symbol_getindex(sym));
 		}
 		if (self->fg_assembler->fa_flags & Dee_MODSYM_FPROPERTY) {
-			DO(fg_vpush_mod_global(self, mod, sym->ss_index + Dee_MODULE_PROPERTY_DEL, true)); /* delete */
+			DO(fg_vpush_mod_global(self, mod, Dee_module_symbol_getindex(sym) + Dee_MODULE_PROPERTY_DEL, true)); /* delete */
 			return fg_vopcall(self, 0);
 		}
-		return fg_vdel_mod_global(self, mod, sym->ss_index);
+		return fg_vdel_mod_global(self, mod, Dee_module_symbol_getindex(sym));
 	}
 	DO(fg_vpush_const(self, mod)); /* mod */
 	DO(fg_vpush_addr(self, sym));  /* mod, sym */
@@ -7384,14 +7384,14 @@ fg_vpop_module_symbol(struct fungen *__restrict self, DeeModuleObject *mod,
 	if (!(sym->ss_flags & Dee_MODSYM_FREADONLY)) {
 		if (sym->ss_flags & Dee_MODSYM_FEXTERN) {
 			mod = mod->mo_importv[sym->ss_impid];
-			return fg_vpop_mod_global(self, mod, sym->ss_index);
+			return fg_vpop_mod_global(self, mod, Dee_module_symbol_getindex(sym));
 		}
 		if (self->fg_assembler->fa_flags & Dee_MODSYM_FPROPERTY) {
-			DO(fg_vpush_mod_global(self, mod, sym->ss_index + Dee_MODULE_PROPERTY_SET, true)); /* value, setter */
+			DO(fg_vpush_mod_global(self, mod, Dee_module_symbol_getindex(sym) + Dee_MODULE_PROPERTY_SET, true)); /* value, setter */
 			DO(fg_vswap(self));                                                                /* setter, value */
 			return fg_vopcall(self, 1);
 		}
-		return fg_vpop_mod_global(self, mod, sym->ss_index);
+		return fg_vpop_mod_global(self, mod, Dee_module_symbol_getindex(sym));
 	}
 	DO(fg_vpush_const(self, mod)); /* value, mod */
 	DO(fg_vpush_addr(self, sym));  /* value, mod, sym */

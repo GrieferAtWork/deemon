@@ -621,7 +621,7 @@ struct ast {
 	((self)->a_type == AST_SYM &&                             \
 	 (self)->a_sym->s_type == SYMBOL_TYPE_EXTERN &&           \
 	 (self)->a_sym->s_extern.e_module == &DeeModule_Deemon && \
-	 (self)->a_sym->s_extern.e_symbol->ss_index == (symbol_id))
+	 Dee_module_symbol_getindex((self)->a_sym->s_extern.e_symbol) == (symbol_id))
 
 
 

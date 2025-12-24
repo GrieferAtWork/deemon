@@ -64,7 +64,7 @@ bind_module_symbol(DeeModuleObject *__restrict module,
 	if unlikely(temp < 0)
 		goto err;
 	*p_modid = (uint16_t)temp;
-	*p_symid = symbol->ss_index;
+	*p_symid = Dee_module_symbol_getindex(symbol);
 	return 0;
 err:
 	return -1;

@@ -109,9 +109,9 @@ Dee_attrinfo_typeof(struct Dee_attrinfo *__restrict self) {
 		if likely(!(sym->ss_flags & MODSYM_FEXTERN)) {
 			DeeObject *symval;
 read_modsym:
-			ASSERT(sym->ss_index < mod->mo_globalc);
+			ASSERT(Dee_module_symbol_getindex(sym) < mod->mo_globalc);
 			DeeModule_LockRead(mod);
-			symval = mod->mo_globalv[sym->ss_index];
+			symval = mod->mo_globalv[Dee_module_symbol_getindex(sym)];
 			if (symval) {
 				DREF DeeTypeObject *result;
 				result = Dee_TYPE(symval);

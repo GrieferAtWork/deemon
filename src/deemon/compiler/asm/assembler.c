@@ -2879,7 +2879,7 @@ asm_gsymid(struct symbol *__restrict sym) {
 		if (iter->ss_hash == name_hash &&
 		    MODULE_SYMBOL_EQUALS(iter, name->k_name, name->k_size)) {
 			/* Found a match! - This global variable had already been defined. */
-			result       = iter->ss_index;
+			result       = Dee_module_symbol_getindex(iter);
 			sym->s_symid = result;
 			/* Set the allocated-flag, so we don't have to do this again for this symbol. */
 			sym->s_flag |= SYMBOL_FALLOC;
@@ -3289,7 +3289,7 @@ did_find_export:
 				continue;
 			if (result->s_extern.e_module != &DeeModule_Deemon)
 				continue;
-			if (result->s_extern.e_symbol->ss_index != i)
+			if (Dee_module_symbol_getindex(result->s_extern.e_symbol) != i)
 				continue;
 			return result; /* Found it! */
 		}

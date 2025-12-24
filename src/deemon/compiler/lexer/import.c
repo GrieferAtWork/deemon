@@ -688,10 +688,10 @@ ast_import_all_from_module(DeeModuleObject *__restrict mod,
 								/* Both modules are now initialized. */
 								DeeObject *old_val, *new_val;
 								DeeModule_LockRead(mod);
-								old_val = mod->mo_globalv[iter->ss_index];
+								old_val = mod->mo_globalv[Dee_module_symbol_getindex(iter)];
 								DeeModule_LockEndRead(mod);
 								DeeModule_LockRead(sym->s_extern.e_module);
-								new_val = sym->s_extern.e_module->mo_globalv[sym->s_extern.e_symbol->ss_index];
+								new_val = sym->s_extern.e_module->mo_globalv[Dee_module_symbol_getindex(sym->s_extern.e_symbol)];
 								DeeModule_LockEndRead(sym->s_extern.e_module);
 								if (old_val == new_val) {
 									/* One of the modules contains a copy-alias (i.e. a secondary memory location)

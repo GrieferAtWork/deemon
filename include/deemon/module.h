@@ -239,6 +239,8 @@ struct Dee_module_symbol {
 	                                    *       3 if `MODSYM_FREADONLY' isn't set, and 1 if it is. */
 };
 
+#define Dee_module_symbol_getindex(self) ((uint16_t)(self)->ss_index)
+
 #define Dee_MODULE_SYMBOL_EQUALS(x, name, size)              \
 	(bcmp((x)->ss_name, name, (size) * sizeof(char)) == 0 && \
 	 (x)->ss_name[size] == 0)

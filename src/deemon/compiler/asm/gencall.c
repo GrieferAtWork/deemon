@@ -412,7 +412,7 @@ check_small_constargs_symbol:
 						goto err;
 					DO(push_tuple_items(args->a_constexpr, args));
 					DO(asm_putddi(ddi_ast));
-					DO(asm_gcall_extern((uint16_t)symid, modsym->ss_index, argc));
+					DO(asm_gcall_extern((uint16_t)symid, Dee_module_symbol_getindex(modsym), argc));
 					goto pop_unused;
 				}	break;
 
@@ -685,7 +685,7 @@ check_getattr_base_symbol_class_small:
 							/* Do a call to an external symbol. `ASM_CALL_EXTERN' */
 							DO(push_tuple_items(args->a_constexpr, args));
 							DO(asm_putddi(ddi_ast));
-							DO(asm_gcall_extern((uint16_t)module_id, modsym->ss_index, argc));
+							DO(asm_gcall_extern((uint16_t)module_id, Dee_module_symbol_getindex(modsym), argc));
 							goto pop_unused;
 						}	break;
 
@@ -1181,7 +1181,7 @@ check_funsym_class:
 				goto err;
 			DO(asm_gargv(argc, argv));
 			DO(asm_putddi(ddi_ast));
-			DO(asm_gcall_extern((uint16_t)symid, funsym->s_extern.e_symbol->ss_index, argc));
+			DO(asm_gcall_extern((uint16_t)symid, Dee_module_symbol_getindex(funsym->s_extern.e_symbol), argc));
 			goto pop_unused;
 
 		case SYMBOL_TYPE_LOCAL:
@@ -1469,7 +1469,7 @@ check_getattr_base_symbol_class_argv:
 					/* Do a call to an external symbol. `ASM_CALL_EXTERN' */
 					DO(asm_gargv(argc, argv));
 					DO(asm_putddi(ddi_ast));
-					DO(asm_gcall_extern((uint16_t)module_id, modsym->ss_index, argc));
+					DO(asm_gcall_extern((uint16_t)module_id, Dee_module_symbol_getindex(modsym), argc));
 					goto pop_unused;
 				}	break;
 

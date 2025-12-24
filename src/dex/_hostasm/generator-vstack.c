@@ -3554,7 +3554,7 @@ fg_vpush_mod_global(struct fungen *__restrict self,
 	if unlikely(gid >= mod->mo_globalc)
 		return err_illegal_gid(mod, gid);
 	symbol = DeeModule_GetSymbolID(mod, gid);
-	ASSERT(!symbol || symbol->ss_index == gid);
+	ASSERT(!symbol || Dee_module_symbol_getindex(symbol) == gid);
 	/* Global object references can be inlined if they are `final' and bound */
 	if (((symbol == NULL) || /* Can be NULL in case it's the DELETE/SETTER of a property */
 	     (symbol->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FREADONLY))) &&
@@ -3618,7 +3618,7 @@ fg_vbound_mod_global(struct fungen *__restrict self,
 	if unlikely(gid >= mod->mo_globalc)
 		return err_illegal_gid(mod, gid);
 	symbol = DeeModule_GetSymbolID(mod, gid);
-	ASSERT(!symbol || symbol->ss_index == gid);
+	ASSERT(!symbol || Dee_module_symbol_getindex(symbol) == gid);
 	/* If the symbol is read-only and bound, then we know it can't be unbound */
 	if (((symbol == NULL) || /* Can be NULL in case it's the DELETE/SETTER of a property */
 	     (symbol->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FREADONLY))) &&

@@ -4781,7 +4781,7 @@ err_buf_name_dec_stream:
 				result->mo_pathihash = hash;
 #else /* DEE_SYSTEM_FS_ICASE */
 				ASSERT(DeeString_Hash(module_path_ob) == hash);
-				DeeString_HASH(module_path_ob) = hash;
+				((DeeStringObject *)module_path_ob)->s_hash = hash;
 #endif /* !DEE_SYSTEM_FS_ICASE */
 
 				result->mo_flags |= Dee_MODULE_FLOADING;
@@ -4898,7 +4898,7 @@ load_module_after_dec_failure:
 		goto err_buf;
 #ifndef DEE_SYSTEM_FS_ICASE
 	ASSERT(fs_hashutf8(buf, len) == hash);
-	DeeString_HASH(module_path_ob) = hash;
+	((DeeStringObject *)module_path_ob)->s_hash = hash;
 #endif /* !DEE_SYSTEM_FS_ICASE */
 #else /* CONFIG_NO_DEX */
 	/* Try to load the module from a DEX extension. */
@@ -4941,7 +4941,7 @@ load_module_after_dec_failure:
 				goto err_buf;
 #ifndef DEE_SYSTEM_FS_ICASE
 			ASSERT(fs_hashutf8(buf, len) == hash);
-			DeeString_HASH(module_path_ob) = hash;
+			((DeeStringObject *)module_path_ob)->s_hash = hash;
 #endif /* !DEE_SYSTEM_FS_ICASE */
 		} else {
 			int error;

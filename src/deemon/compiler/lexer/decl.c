@@ -209,7 +209,7 @@ check_symbol:
 
 		case SYMBOL_TYPE_EXTERN:
 			return (sym->s_extern.e_module == &DeeModule_Deemon &&
-			        sym->s_extern.e_symbol->ss_index == id_none);
+			        Dee_module_symbol_getindex(sym->s_extern.e_symbol) == id_none);
 
 		case SYMBOL_TYPE_CONST:
 			return DeeNone_Check(sym->s_const) || sym->s_const == (DeeObject *)&DeeNone_Type;
@@ -237,7 +237,7 @@ check_symbol:
 
 		case SYMBOL_TYPE_EXTERN:
 			return (sym->s_extern.e_module == &DeeModule_Deemon &&
-			        sym->s_extern.e_symbol->ss_index == id_Object);
+			        Dee_module_symbol_getindex(sym->s_extern.e_symbol) == id_Object);
 
 		case SYMBOL_TYPE_CONST:
 			return sym->s_const == (DeeObject *)&DeeObject_Type;
@@ -270,8 +270,8 @@ check_symbol:
 			 * that type is exported from the deemon module. */
 			if (sym->s_extern.e_module != &DeeModule_Deemon)
 				return false;
-			if (sym->s_extern.e_symbol->ss_index < DeeModule_Deemon.mo_globalc &&
-			    DeeModule_Deemon.mo_globalv[sym->s_extern.e_symbol->ss_index] == (DeeObject *)tp)
+			if (Dee_module_symbol_getindex(sym->s_extern.e_symbol) < DeeModule_Deemon.mo_globalc &&
+			    DeeModule_Deemon.mo_globalv[Dee_module_symbol_getindex(sym->s_extern.e_symbol)] == (DeeObject *)tp)
 				return true;
 			break;
 
@@ -508,17 +508,17 @@ switch_symbol_type:
 					goto err;
 			} else {
 				/* Reference into deemon. */
-				if (msym->ss_index == id_Object) {
+				if (Dee_module_symbol_getindex(msym) == id_Object) {
 					if (UNICODE_PRINTER_PRINT(printer, "?O") < 0)
 						goto err;
-				} else if (msym->ss_index == id_none) {
+				} else if (Dee_module_symbol_getindex(msym) == id_none) {
 					if (UNICODE_PRINTER_PRINT(printer, "?N") < 0)
 						goto err;
 #if 0
-				} else if (msym->ss_index == id_Sequence) {
+				} else if (Dee_module_symbol_getindex(msym) == id_Sequence) {
 					if (UNICODE_PRINTER_PRINT(printer, "?S?O") < 0)
 						goto err;
-				} else if (msym->ss_index == id_Mapping) {
+				} else if (Dee_module_symbol_getindex(msym) == id_Mapping) {
 					if (UNICODE_PRINTER_PRINT(printer, "?M?O?O") < 0)
 						goto err;
 #endif

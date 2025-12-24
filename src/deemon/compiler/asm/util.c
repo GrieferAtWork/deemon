@@ -797,7 +797,7 @@ check_function_class:
 			}
 			if unlikely(symid < 0)
 				goto err;
-			if (asm_gcall_extern((uint16_t)symid, function->s_extern.e_symbol->ss_index, argc))
+			if (asm_gcall_extern((uint16_t)symid, Dee_module_symbol_getindex(function->s_extern.e_symbol), argc))
 				goto err;
 			goto done;
 
@@ -1026,11 +1026,11 @@ check_sym_class:
 			goto err;
 		if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY) {
 			/* Generate an external call to the getter. */
-			uint16_t slot = SYMBOL_EXTERN_SYMBOL(sym)->ss_index + MODULE_PROPERTY_GET;
+			uint16_t slot = Dee_module_symbol_getindex(SYMBOL_EXTERN_SYMBOL(sym)) + MODULE_PROPERTY_GET;
 			return asm_gcall_extern((uint16_t)symid, slot, 0);
 		}
 		ASSERT(SYMBOL_EXTERN_SYMBOL(sym));
-		return asm_gpush_extern((uint16_t)symid, SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
+		return asm_gpush_extern((uint16_t)symid, Dee_module_symbol_getindex(SYMBOL_EXTERN_SYMBOL(sym)));
 
 	case SYMBOL_TYPE_GLOBAL:
 		symid = asm_gsymid_for_read(sym, warn_ast);
@@ -1345,7 +1345,7 @@ check_sym_class:
 		if unlikely(symid < 0)
 			goto err;
 		ASSERT(SYMBOL_EXTERN_SYMBOL(sym));
-		return asm_pextern((uint16_t)symid, SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
+		return asm_pextern((uint16_t)symid, Dee_module_symbol_getindex(SYMBOL_EXTERN_SYMBOL(sym)));
 
 	case SYMBOL_TYPE_GLOBAL:
 		ASSERTF(!(sym->s_flag & SYMBOL_FFINAL) || (sym->s_nwrite <= 1),
@@ -1426,7 +1426,7 @@ check_sym_class:
 		if unlikely(symid < 0)
 			goto err;
 		ASSERT(SYMBOL_EXTERN_SYMBOL(sym));
-		return asm_pextern((uint16_t)symid, SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
+		return asm_pextern((uint16_t)symid, Dee_module_symbol_getindex(SYMBOL_EXTERN_SYMBOL(sym)));
 
 	case SYMBOL_TYPE_GLOBAL:
 		symid = asm_gsymid(sym);
@@ -1528,7 +1528,7 @@ check_sym_class:
 		if unlikely(symid < 0)
 			goto err;
 		ASSERT(SYMBOL_EXTERN_SYMBOL(sym));
-		return asm_gpush_bnd_extern((uint16_t)symid, SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
+		return asm_gpush_bnd_extern((uint16_t)symid, Dee_module_symbol_getindex(SYMBOL_EXTERN_SYMBOL(sym)));
 
 	case SYMBOL_TYPE_GLOBAL:
 		if (!sym->s_nwrite)
@@ -1802,7 +1802,7 @@ check_sym_class:
 				/* Call an external property:
 				 * >> call    extern <mid>:<gid + MODULE_PROPERTY_DEL>, #0
 				 * >> pop     top */
-				uint16_t slot = modsym->ss_index + MODULE_PROPERTY_DEL;
+				uint16_t slot = Dee_module_symbol_getindex(modsym) + MODULE_PROPERTY_DEL;
 				if (asm_gcall_extern((uint16_t)mid, slot, 0))
 					goto err;
 				return asm_gpop();
@@ -2049,12 +2049,12 @@ check_sym_class:
 			if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY) {
 				uint16_t slot;
 				/* Invoke the external setter callback. */
-				slot = SYMBOL_EXTERN_SYMBOL(sym)->ss_index + MODULE_PROPERTY_SET;
+				slot = Dee_module_symbol_getindex(SYMBOL_EXTERN_SYMBOL(sym)) + MODULE_PROPERTY_SET;
 				if (asm_gcall_extern((uint16_t)symid, slot, 1))
 					goto err;
 				return asm_gpop();
 			}
-			return asm_gpop_extern((uint16_t)symid, SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
+			return asm_gpop_extern((uint16_t)symid, Dee_module_symbol_getindex(SYMBOL_EXTERN_SYMBOL(sym)));
 
 		case SYMBOL_TYPE_GLOBAL:
 			symid = asm_gsymid(sym);
