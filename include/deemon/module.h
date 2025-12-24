@@ -760,6 +760,12 @@ DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
 DeeModule_Initialize(/*Module*/ DeeObject *__restrict self);
 
+/* Ensure that imports of "self" have been initialized.
+ * @return: 0 : Success.
+ * @return: -1: An error was thrown. */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
+DeeModule_InitializeImports(/*Module*/ DeeObject *__restrict self);
+
 /* Check if the given module's current stat is `Dee_MODULE_INIT_UNINITIALIZED',
  * and if so: change it to `Dee_MODULE_INIT_INITIALIZED' (even if the module
  * may not have already been initialized)

@@ -133,9 +133,14 @@ done:
 
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-DeeModule_DoInitializeImports(DeeModuleObject *__restrict me) {
+
+/* Ensure that imports of "self" have been initialized.
+ * @return: 0 : Success.
+ * @return: -1: An error was thrown. */
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeModule_InitializeImports(/*Module*/ DeeObject *__restrict self) {
 	uint16_t i;
+	DeeModuleObject *me = (DeeModuleObject *)self;
 	for (i = 0; i < me->mo_importc; ++i) {
 		DeeModuleObject *imp = me->mo_importv[i];
 		int status = DeeModule_Initialize((DeeObject *)imp);
@@ -163,7 +168,7 @@ DeeModule_DoInitialize(DeeModuleObject *__restrict me) {
 	ASSERT(Dee_TYPE(me) == &DeeModuleDee_Type);
 #endif /* CONFIG_NO_DEX */
 	/* Ensure that imports of "me" have been initialized */
-	if unlikely(DeeModule_DoInitializeImports(me))
+	if unlikely(DeeModule_InitializeImports((DeeObject *)me))
 		goto err;
 	rootfunc = (DREF DeeFunctionObject *)DeeModule_GetRootFunction((DeeObject *)me);
 	if unlikely(!rootfunc)
@@ -2572,6 +2577,7 @@ module_unbind(DeeModuleObject *__restrict self);
 
 PRIVATE NONNULL((1)) void DCALL
 module_common_destroy(DeeModuleObject *__restrict self) {
+	weakref_support_fini(self);
 	if (self->mo_absname) {
 		module_unbind(self);
 		Dee_Free(self->mo_absname);
@@ -2647,6 +2653,22 @@ module_dee_destroy(DeeModuleObject *__restrict self) {
 	Dee_Decrefv(self->mo_importv, self->mo_importc);
 	Dee_Free((void *)self->mo_importv);
 
+	/* Destroy symbol table */
+	if (self->mo_bucketv != empty_module_buckets) {
+		uint16_t i;
+		struct Dee_module_symbol *bucketv = self->mo_bucketv;
+		for (i = 0; i <= self->mo_bucketm; ++i) {
+			struct Dee_module_symbol *item = &bucketv[i];
+			if (!MODULE_SYMBOL_GETNAMESTR(item))
+				continue;
+			if (item->ss_flags & MODSYM_FNAMEOBJ)
+				Dee_Decref(COMPILER_CONTAINER_OF(MODULE_SYMBOL_GETNAMESTR(item), DeeStringObject, s_str));
+			if (item->ss_flags & MODSYM_FDOCOBJ)
+				Dee_Decref(COMPILER_CONTAINER_OF(item->ss_doc, DeeStringObject, s_str));
+		}
+		Dee_Free(bucketv);
+	}
+
 	/* Destroy common data */
 	module_common_destroy(self);
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
@@ -2665,6 +2687,7 @@ module_dee_destroy(DeeModuleObject *__restrict self) {
 PRIVATE NONNULL((1)) void DCALL
 module_dee_clear(DeeModuleObject *__restrict self) {
 	uint16_t i;
+	DREF DeeCodeObject *code;
 	DeeModule_LockWrite(self);
 	for (i = self->mo_globalc; i--;) {
 		/* Operate in reverse order, better mirrors the
@@ -2681,12 +2704,17 @@ module_dee_clear(DeeModuleObject *__restrict self) {
 		Dee_Decref(ob);
 		DeeModule_LockWrite(self);
 	}
+	code = self->mo_moddata.mo_rootcode;
+	self->mo_moddata.mo_rootcode = &DeeCode_Empty;
+	Dee_Incref(&DeeCode_Empty);
 	DeeModule_LockEndWrite(self);
+	Dee_Decref_likely(code);
 }
 
 PRIVATE NONNULL((1)) void DCALL
 module_dee_pclear(DeeModuleObject *__restrict self, unsigned int priority) {
 	uint16_t i;
+	DREF DeeCodeObject *code;
 	DeeModule_LockWrite(self);
 	for (i = self->mo_globalc; i--;) {
 		/* Operate in reverse order, better mirrors the
@@ -2705,7 +2733,15 @@ module_dee_pclear(DeeModuleObject *__restrict self, unsigned int priority) {
 		Dee_Decref(ob);
 		DeeModule_LockWrite(self);
 	}
-	DeeModule_LockEndWrite(self);
+	code = self->mo_moddata.mo_rootcode;
+	if (DeeObject_GCPriority(code) >= priority) {
+		self->mo_moddata.mo_rootcode = &DeeCode_Empty;
+		Dee_Incref(&DeeCode_Empty);
+		DeeModule_LockEndWrite(self);
+		Dee_Decref_likely(code);
+	} else {
+		DeeModule_LockEndWrite(self);
+	}
 }
 
 PRIVATE struct type_gc tpconst module_dee_gc = {
@@ -2756,7 +2792,21 @@ module_dex_destroy(DeeModuleObject *__restrict self) {
 	/* Destroy common data */
 	Dee_XDecrefv(self->mo_globalv, self->mo_globalc);
 	module_common_destroy(self);
+#if 0
+	/* FIXME: Work-around for preventing DEX modules being unloaded
+	 *        while objects referring to statically defined types inside
+	 *        still exist.
+	 *        The proper way to fix this would be to use a GC-like mechanism
+	 *        for this that delays the actual DEX unloading until no objects
+	 *        exist that are apart of, or use types from the DEX.
+	 *        Note that for this, we must also change the ruling that objects
+	 *        pointing to other objects don't have to implement GC-visit if it
+	 *        is known that none of those objects are ever GC objects. With this
+	 *        change, _all_ objects have to implement GC-visit! (though we could
+	 *        add a type-flag to indicate that pointed-to objects can never form
+	 *        a ~conventional~ loop) */
 	DeeSystem_DlClose(dexdata->mdx_handle);
+#endif
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -2768,8 +2818,25 @@ module_dex_clear_common(DeeModuleObject *__restrict self) {
 
 PRIVATE NONNULL((1)) void DCALL
 module_dex_clear(DeeModuleObject *__restrict self) {
+	uint16_t i;
 	module_dex_clear_common(self);
-	module_dee_clear(self);
+	DeeModule_LockWrite(self);
+	for (i = self->mo_globalc; i--;) {
+		/* Operate in reverse order, better mirrors the
+		 * (likely) order in which stuff was initialized in. */
+		DREF DeeObject *ob = self->mo_globalv[i];
+		if (ob == NULL)
+			continue;
+		self->mo_globalv[i] = NULL;
+
+		/* Temporarily unlock the module to immediately
+		 * destroy a global variable when the priority
+		 * level isn't encompassing _all_ objects, yet. */
+		DeeModule_LockEndWrite(self);
+		Dee_Decref(ob);
+		DeeModule_LockWrite(self);
+	}
+	DeeModule_LockEndWrite(self);
 }
 
 PRIVATE NONNULL((1)) void DCALL

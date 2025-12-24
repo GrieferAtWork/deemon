@@ -1176,9 +1176,6 @@ int main(int argc, char *argv[]) {
 	/*_CrtSetBreakAlloc(280);*/
 #endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
-	/* TODO: Make Dict and RoDict sensitive to item ordering
-	 *       -> `{ foo: "bar", bar: "foo" }' should on some level
-	 *          be distinct from `{ bar: "foo", foo: "bar" }' */
 	/* TODO: Using type caches, add the ability for volatile extensions
 	 *       to available attributes, allowing user-code to extend the
 	 *       functionality available through builtin types.
@@ -1399,9 +1396,13 @@ int main(int argc, char *argv[]) {
 
 			/* The user's module has been loaded. - Now load dependencies and open it's root. */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-			/* TODO: Ensure that imports of "user_module" have been initialized */
-			(void)DeeModule_SetInitialized((DeeObject *)user_module);
-			user_module_main = DeeModule_GetRootFunction((DeeObject *)user_module);
+			/* Ensure that imports of "user_module" have been initialized */
+			if unlikely(DeeModule_InitializeImports((DeeObject *)user_module)) {
+				user_module_main = NULL;
+			} else {
+				(void)DeeModule_SetInitialized((DeeObject *)user_module);
+				user_module_main = DeeModule_GetRootFunction((DeeObject *)user_module);
+			}
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			user_module_main = DeeModule_GetRoot((DeeObject *)user_module, true);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */

@@ -1271,9 +1271,15 @@ module_unbind(DeeModuleObject *__restrict self) {
 		while ((iter = iter->mle_next) != NULL) {
 			ASSERT(Dee_module_libentry_getmodule(iter) == self);
 			module_libtree_removenode(&module_libtree_root, iter);
-			Dee_module_libentry_free(iter);
 		}
 		module_libtree_lock_endwrite();
+		iter = &self->mo_libname;
+		Dee_Decref(iter->mle_name);
+		while ((iter = iter->mle_next) != NULL) {
+			ASSERT(Dee_module_libentry_getmodule(iter) == self);
+			Dee_Decref(iter->mle_name);
+			Dee_module_libentry_free(iter);
+		}
 	}
 }
 
