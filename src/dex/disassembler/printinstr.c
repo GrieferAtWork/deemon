@@ -298,7 +298,7 @@ print_module_name(Dee_formatprinter_t printer, void *arg,
 	DeeString_PrintUtf8((DeeObject *)(mod)->mo_name, printer, arg)
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
-PRIVATE WUNUSED NONNULL((1, 4)) Dee_ssize_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 libdisasm_printmodule(Dee_formatprinter_t printer, void *arg,
                       uint16_t mid, DeeCodeObject *code,
                       unsigned int flags) {
