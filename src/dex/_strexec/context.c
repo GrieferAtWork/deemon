@@ -1258,8 +1258,12 @@ JITContext_DoImportModule(JITContext *__restrict self,
 				Dee_Decref(args[0]);
 			}
 		} else {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+			goto do_import_module;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			source_module = DeeModule_ImportRelString((DeeObject *)self->jc_impbase,
 			                                          source_name, source_size);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		}
 	} else if (self->jc_import) {
 		/* Absolute module import with user-defined import hook. */
@@ -1274,7 +1278,14 @@ JITContext_DoImportModule(JITContext *__restrict self,
 			Dee_Decref(import_name);
 		}
 	} else {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+do_import_module:
+		source_module = DeeModule_ImportString(source_name, source_size,
+		                                       (DeeObject *)self->jc_impbase,
+		                                       DeeModule_IMPORT_F_NORMAL);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		source_module = DeeModule_ImportGlobalString(source_name, source_size);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}
 	if unlikely(!source_module)
 		goto err;
@@ -1336,9 +1347,9 @@ JITContext_DoImportSymbol(JITContext *__restrict self,
 		                                          source_name, source_size, source_hash);
 		if unlikely(!modsym) {
 			DeeError_Throwf(&DeeError_SyntaxError,
-			                "Symbol `%$s' could not be found in module `%k'",
+			                "Symbol `%$s' could not be found in module `%s'",
 			                source_size, source_name,
-			                ((DeeModuleObject *)source_module)->mo_name);
+			                DeeModule_GetShortName(source_module));
 			goto err;
 		}
 		ent->oe_type = JIT_OBJECT_ENTRY_EXTERN_SYMBOL;

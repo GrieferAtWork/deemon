@@ -266,14 +266,14 @@ err:
 }
 
 /*[[[deemon (print_KwCMethod from rt.gen.unpack)("__import__", """
-	DeeModuleObject *base;
+	DeeObject *base:?X4?DModule?Dstring?DType?N;
 	DeeStringObject *name;
 """, visi: "PUBLIC", cMethodSymbolName: "DeeBuiltin_Import", defineKwList: false);]]]*/
-#define builtin_functions___import___params "base:?DModule,name:?Dstring"
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions___import___f_impl(DeeModuleObject *base, DeeStringObject *name);
+#define builtin_functions___import___params "base:?X4?DModule?Dstring?DType?N,name:?Dstring"
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions___import___f_impl(DeeObject *base, DeeStringObject *name);
 PRIVATE WUNUSED DREF DeeObject *DCALL builtin_functions___import___f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	struct {
-		DeeModuleObject *base;
+		DeeObject *base;
 		DeeStringObject *name;
 	} args;
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__base_name, "oo:__import__", &args))
@@ -283,9 +283,14 @@ err:
 	return NULL;
 }
 PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Import, &builtin_functions___import___f, METHOD_FNORMAL);
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions___import___f_impl(DeeModuleObject *base, DeeStringObject *name)
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions___import___f_impl(DeeObject *base, DeeStringObject *name)
 /*[[[end]]]*/
 {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+		goto err;
+	return DeeModule_Import((DeeObject *)name, base, DeeModule_IMPORT_F_NORMAL);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	DREF DeeObject *result;
 	if (DeeObject_AssertType(base, &DeeModule_Type))
 		goto err;
@@ -294,6 +299,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions___imp
 	result = DeeModule_ImportRel((DeeObject *)base,
 	                             (DeeObject *)name);
 	return result;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 err:
 	return NULL;
 }
@@ -344,6 +350,10 @@ builtin_exec_fallback(size_t argc,
 		usertext = (char const *)DeeBytes_DATA(args.expr);
 		usersize = DeeBytes_SIZE(args.expr);
 	}
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	result = DeeExec_RunMemory(usertext, usersize, 0, NULL, 0, 0,
+	                           DeeExec_RUNMODE_EXPR, NULL, args.globals);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	result = DeeExec_RunMemory(usertext,
 	                           usersize,
 	                           DeeExec_RUNMODE_EXPR,
@@ -355,12 +365,14 @@ builtin_exec_fallback(size_t argc,
 	                           args.globals,
 	                           NULL,
 	                           NULL);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	Dee_Decref_unlikely(args.expr);
 	return result;
 err:
 	return NULL;
 }
 
+/* TODO: Use "Dee_atomic_ref_t" here */
 PRIVATE DREF DeeObject *strexec_module = NULL; /* import("_strexec") */
 PRIVATE DREF DeeObject *strexec_exec = NULL;   /* _strexec.exec */
 
@@ -411,6 +423,15 @@ again:
 	result = strexec_module;
 	if unlikely(!result) {
 		strexec_access_lock_endread();
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		result = DeeModule_Import((DeeObject *)&str__strexec, NULL, DeeModule_IMPORT_F_ENOENT);
+		if unlikely(!ITER_ISOK(result)) {
+			if unlikely(!result)
+				return NULL;
+		} else {
+			Dee_Incref(result); /* The reference stored in `strexec_module' */
+		}
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		result = DeeModule_OpenGlobal((DeeObject *)&str__strexec, NULL, false);
 		if unlikely(!ITER_ISOK(result)) {
 			if (!result)
@@ -422,6 +443,7 @@ again:
 			}
 			Dee_Incref(result); /* The reference stored in `strexec_module' */
 		}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		strexec_access_lock_write();
 		if unlikely(atomic_read(&strexec_module)) {
 			strexec_access_lock_endwrite();

@@ -418,7 +418,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 	return DeeError_Throwf(&DeeError_UnboundLocal, /* XXX: UnboundGlobal? */
 	                       "Unbound global variable `%s' from `%s'",
 	                       name ? name : Q3,
-	                       DeeString_STR(module->mo_name));
+	                       DeeModule_GetShortName((DeeObject *)module));
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
@@ -614,7 +614,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s global variable `%s' of module `%k' that hasn't been loaded yet",
 	                       access_names[access & ATTR_ACCESS_MASK],
-	                       name, self->mo_name);
+	                       name, self);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
@@ -624,7 +624,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s global variable `%$s' of module `%k' that hasn't been loaded yet",
 	                       access_names[access & ATTR_ACCESS_MASK],
-	                       namelen, name, self->mo_name);
+	                       namelen, name, self);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
@@ -633,7 +633,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s unknown global variable: `%k.%s'",
 	                       access_names[access & ATTR_ACCESS_MASK],
-	                       self->mo_name, name);
+	                       self, name);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
@@ -643,7 +643,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s unknown global variable: `%k.%$s'",
 	                       access_names[access & ATTR_ACCESS_MASK],
-	                       self->mo_name, namelen, name);
+	                       self, namelen, name);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
@@ -651,7 +651,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
                                           char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot modify read-only global variable: `%k.%s'",
-	                       self->mo_name, name);
+	                       self, name);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
@@ -659,7 +659,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
                                                char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot read global property: `%k.%s'",
-	                       self->mo_name, name);
+	                       self, name);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
@@ -667,7 +667,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
                                                  char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot write global property: `%k.%s'",
-	                       self->mo_name, name);
+	                       self, name);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
@@ -675,7 +675,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
                                                 char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot write global property: `%k.%s'",
-	                       self->mo_name, name);
+	                       self, name);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int

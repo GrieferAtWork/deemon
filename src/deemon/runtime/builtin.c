@@ -442,16 +442,16 @@ struct Dee_deemon_module_struct {
 	Dee_MODULE_STRUCT(/**/, num_builtins_obj) m_module;
 };
 
+DDATDEF struct Dee_static_module_struct DeeModule_Deemon;
+
 #ifndef CONFIG_NO_DEX
 INTERN struct Dee_module_dexdata deemon_dexdata = {
 	/* .mdx_module = */ &DeeModule_Deemon.m_module,
+	/* .mdx_export = */ NULL,
 	/* .mdx_handle = */ _Dee_MODULE_DEXDATA_INIT_HANDLE,
 	/* .mdx_init   = */ NULL,
 	/* .mdx_fini   = */ NULL,
 	/* .mdx_clear  = */ NULL,
-	/* .mdx_node   = */ { NULL, NULL, NULL },
-	/* .mdx_flags  = */ Dee_MODULE_DEXDATA_F_NORMAL /* Root node is always *black* */
-	_Dee_MODULE_DEXDATA_INIT_LOADBOUNDS
 	_Dee_MODULE_DEXDATA_INIT_LOADHANDLE
 	_Dee_MODULE_DEXDATA_INIT_LOADSTRING
 };
@@ -472,24 +472,28 @@ PUBLIC struct Dee_static_module_struct DeeModule_Deemon = {
 		/* .mo_absname = */ NULL,
 		/* .mo_absnode = */ { NULL, NULL, NULL },
 		/* .mo_libname = */ {
-			/* .mle_name = */ NULL,
+			/* .mle_name = */ (DeeStringObject *)&str_deemon,
 			/* .mle_dat  = */ { (DeeModuleObject *)&DeeModule_Deemon.m_module },
+			/* .mle_node = */ { NULL, NULL, NULL },
+			/* .mle_next = */ NULL,
 		},
 		/* .mo_dir     = */ (struct Dee_module_directory *)&empty_module_directory,
+		/* .mo_init    = */ Dee_MODULE_INIT_INITIALIZED,
+		/* .mo_ctime   = */ 0, /* Lazily initialized (from `DeeExec_GetTimestamp()') */
+		/* .mo_flags   = */ Dee_MODULE_FNORMAL | _Dee_MODULE_FLIBALL,
+		/* .mo_importc = */ 0,
+		/* .mo_globalc = */ num_builtins_obj,
+		/* .mo_bucketm = */ BUILTINS_HASHMASK,
+		/* .mo_bucketv = */ deemon_symbols,
+		_Dee_MODULE_INIT_mo_lock
+		WEAKREF_SUPPORT_INIT,
 #ifdef CONFIG_NO_DEX
 		/* .mo_moddata = */ Dee_MODULE_MODDATA_INIT_CODE(&DeeCode_Empty),
 #else /* CONFIG_NO_DEX */
 		/* .mo_moddata = */ { &deemon_dexdata },
 #endif /* !CONFIG_NO_DEX */
-		/* .mo_init    = */ Dee_MODULE_INIT_INITIALIZED,
-		/* .mo_flags   = */ Dee_MODULE_FNORMAL,
-		/* .mo_importc = */ 0,
-		/* .mo_globalc = */ num_builtins_obj,
-		/* .mo_bucketm = */ BUILTINS_HASHMASK,
-		/* .mo_bucketv = */ deemon_symbols,
 		/* .mo_importv = */ NULL,
-		_Dee_MODULE_INIT_mo_lock
-		WEAKREF_SUPPORT_INIT,
+		_Dee_MODULE_DEXDATA_INIT_LOADBOUNDS
 		/* .mo_globalv = */ {
 #define BUILTIN(name, object, flags) (DeeObject *)object,
 #define BUILTIN_NO_INCLUDES

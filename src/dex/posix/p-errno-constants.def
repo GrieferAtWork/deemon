@@ -7353,7 +7353,7 @@ PRIVATE DEFINE_INT75(posix_ECOUNT, ECOUNT);
 #endif /* !ECOUNT */
 #ifdef ELIMIT
 #define POSIX_EMAX_DEF \
-	{ "EMAX", (DeeObject *)&posix_ELIMIT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Max possible errno" },
+	DEX_MEMBER_F("EMAX", &posix_ELIMIT, DEXSYM_READONLY | DEXSYM_CONSTEXPR, "Max possible errno"),
 #else /* ELIMIT */
 #define POSIX_EMAX_DEF /* nothing */
 #endif /* !ELIMIT */

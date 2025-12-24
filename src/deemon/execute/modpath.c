@@ -488,7 +488,7 @@ remember_result:
 
 #ifdef Dee_DEXBOUNDS_USE_LOADBOUNDS__GetModuleInformation
 #ifdef _MSC_VER
-#define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
+#define HINST_THISCOMPONENT ((HINSTANCE)__ImageBase)
 #else /* _MSC_VER */
 /* XXX: This only works when deemon is the primary
  *      binary, but not if it was loaded as a DLL! */
@@ -2362,7 +2362,7 @@ do_DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_s
 	/* Final case: "import_str" refers to a LIBPATH module */
 	return do_DeeModule_OpenGlobal(import_str, import_str_size, import_str_ob, flags, options);
 err:
-	return DeeModule_IMPORT_ERROR;
+	return (DREF DeeModuleObject *)DeeModule_IMPORT_ERROR;
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
@@ -2408,23 +2408,22 @@ DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_
  * @return: DeeModule_IMPORT_ERROR:  An error was thrown
  * @return: DeeModule_IMPORT_ENOENT: `DeeModule_IMPORT_F_ENOENT' was set, and no such file exists
  * @return: DeeModule_IMPORT_ERECUR: `DeeModule_IMPORT_F_ERECUR' was set, and module is already being imported */
-PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
-DeeModule_Open(/*String*/ DeeObject *__restrict import_str,
-               /*Module|String|None*/ DeeObject *context_absname,
-               unsigned int flags) {
-	char const *import_str_utf8 = DeeString_AsUtf8(import_str);
+PRIVATE WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+do_DeeModule_OpenString(/*utf-8*/ char const *__restrict import_str, size_t import_str_size,
+                        DeeStringObject *import_str_ob,
+                        /*Module|String|Type|None*/ DeeObject *context_absname,
+                        unsigned int flags) {
 	char const *context_absname_utf8;
 	size_t context_absname_size;
 	DeeStringObject *context_absname_ob = NULL;
-	if unlikely(!import_str_utf8)
-		goto err;
 	if (context_absname == NULL || DeeNone_Check(context_absname)) {
+no_context:
 		context_absname_utf8 = NULL;
 		context_absname_size = 0;
 	} else if (DeeModule_Check(context_absname)) {
 		DeeModuleObject *context_mod = (DeeModuleObject *)context_absname;
 		/* Special case optimization: `import(".")' -> simply re-return the context module. */
-		if (WSTR_LENGTH(import_str_utf8) == 1 && import_str_utf8[0] == '.')
+		if (import_str_size == 1 && import_str[0] == '.')
 			return_reference_(context_absname);
 		context_absname_utf8 = context_mod->mo_absname;
 		context_absname_size = context_absname_utf8 ? strlen(context_absname_utf8) : 0;
@@ -2434,30 +2433,71 @@ DeeModule_Open(/*String*/ DeeObject *__restrict import_str,
 		if unlikely(!context_absname_utf8)
 			goto err;
 		context_absname_size = WSTR_LENGTH(context_absname_utf8);
+	} else if (DeeType_Check(context_absname)) {
+		DREF DeeObject *result;
+		context_absname = DeeType_GetModule((DeeTypeObject *)context_absname);
+		if (!context_absname)
+			goto no_context;
+		result = do_DeeModule_OpenString(import_str, import_str_size,
+		                                 import_str_ob, context_absname,
+		                                 flags);
+		Dee_Decref_unlikely(context_absname);
+		return result;
 	} else {
-		DeeObject_TypeAssertFailed2(context_absname, &DeeModule_Type, &DeeString_Type);
+		DeeObject_TypeAssertFailed3(context_absname, &DeeModule_Type, &DeeString_Type, &DeeType_Type);
 		goto err;
 	}
-	return (DREF DeeObject *)do_DeeModule_OpenEx(import_str_utf8, WSTR_LENGTH(import_str_utf8),
-	                                             (DeeStringObject *)import_str,
+	return (DREF DeeObject *)do_DeeModule_OpenEx(import_str, import_str_size, import_str_ob,
 	                                             context_absname_utf8, context_absname_size,
 	                                             context_absname_ob, flags, NULL);
 err:
 	return DeeModule_IMPORT_ERROR;
 }
 
+PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_Open(/*String*/ DeeObject *__restrict import_str,
+               /*Module|String|Type|None*/ DeeObject *context_absname,
+               unsigned int flags) {
+	char const *import_str_utf8 = DeeString_AsUtf8(import_str);
+	if unlikely(!import_str_utf8)
+		goto err;
+	return do_DeeModule_OpenString(import_str_utf8, WSTR_LENGTH(import_str_utf8),
+	                               (DeeStringObject *)import_str, context_absname,
+	                               flags);
+err:
+	return DeeModule_IMPORT_ERROR;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenString(/*utf-8*/ char const *__restrict import_str, size_t import_str_size,
+                     /*Module|String|Type|None*/ DeeObject *context_absname, unsigned int flags) {
+	return do_DeeModule_OpenString(import_str, import_str_size, NULL,
+	                               context_absname, flags);
+}
+
+
 
 
 /* Import (DeeModule_Open() + DeeModule_Initialize()) a specific module */
 PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_Import(/*String*/ DeeObject *__restrict import_str,
-                 /*Module|String|None*/ DeeObject *context_absname,
+                 /*Module|String|Type|None*/ DeeObject *context_absname,
                  unsigned int flags) {
 	DREF DeeObject *result = DeeModule_Open(import_str, context_absname, flags);
-	if (likely(result) && unlikely(DeeModule_Initialize(result) < 0))
+	if (likely(DeeModule_IMPORT_ISOK(result)) && unlikely(DeeModule_Initialize(result) < 0))
 		Dee_Clear(result);
 	return result;
 }
+
+PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_ImportString(/*utf-8*/ char const *__restrict import_str, size_t import_str_size,
+                       /*Module|String|Type|None*/ DeeObject *context_absname, unsigned int flags) {
+	DREF DeeObject *result = DeeModule_OpenString(import_str, import_str_size, context_absname, flags);
+	if (likely(DeeModule_IMPORT_ISOK(result)) && unlikely(DeeModule_Initialize(result) < 0))
+		Dee_Clear(result);
+	return result;
+}
+
 
 PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_ImportEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_size,
@@ -2465,7 +2505,7 @@ DeeModule_ImportEx(/*utf-8*/ char const *__restrict import_str, size_t import_st
                    unsigned int flags, struct Dee_compiler_options *options) {
 	DREF DeeObject *result = DeeModule_OpenEx(import_str, import_str_size, context_absname,
 	                                          context_absname_size, flags, options);
-	if (likely(result) && unlikely(DeeModule_Initialize(result) < 0))
+	if (likely(DeeModule_IMPORT_ISOK(result)) && unlikely(DeeModule_Initialize(result) < 0))
 		Dee_Clear(result);
 	return result;
 }
@@ -2727,7 +2767,7 @@ do_DeeModule_PrintRelNameEx_impl2(DeeModuleObject *__restrict self,
 #ifdef DEE_SYSTEM_FS_DRIVES
 	/* Special handling when `module_absname' starts with a drive prefix */
 	if (DeeSystem_IsAbs(module_absname)) {
-		char drive_char = tolower(module_absname[0]);
+		char drive_char = (char)tolower((unsigned char)module_absname[0]);
 		module_absname += 2; /* "C:" (such that "module_absname" now starts with '\') */
 		ASSERT(module_absname[0] == DeeSystem_SEP);
 		temp = (*printer)(arg, &drive_char, 1);
@@ -2808,8 +2848,9 @@ err:
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeModule_CanHaveRelName(DeeModuleObject const *__restrict self) {
-	char const *absname = self->mo_absname;
-	if ((self->mo_absname == NULL) || (self->mo_flags & Dee_MODULE_FABSFILE))
+	if (self->mo_absname == NULL)
+		return false;
+	if (self->mo_flags & Dee_MODULE_FABSFILE)
 		return false;
 	return true;
 }
@@ -2878,7 +2919,7 @@ err_printer:
  * @return: NULL:      An error was thrown. */
 PUBLIC WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeModule_GetRelName(/*Module*/ DeeObject *__restrict self,
-                     /*Module|String|None*/ DeeObject *context_absname) {
+                     /*Module|String|Type|None*/ DeeObject *context_absname) {
 	char const *context_absname_utf8;
 	size_t context_absname_size;
 	DeeStringObject *context_absname_ob = NULL;
@@ -3180,6 +3221,14 @@ DeeModule_GetLibName(/*Module*/ DeeObject *__restrict self, size_t index) {
 	DREF /*String*/ DeeObject *result;
 	struct Dee_module_libentry *libname;
 	DeeModuleObject *me = (DeeModuleObject *)self;
+#if 0 /* Not needed -- see initialization of "DeeModule_Deemon" */
+	/* Special case for the builtin "deemon" module */
+	if (me == &DeeModule_Deemon) {
+		if (index == 0)
+			return_reference(&str_deemon);
+		return ITER_DONE;
+	}
+#endif
 	if unlikely(module_lock_and_load_libnames(me))
 		goto err;
 	for (libname = &me->mo_libname; index; --index) {
@@ -3215,6 +3264,11 @@ DeeModule_GetLibNameCount(/*Module*/ DeeObject *__restrict self) {
 	size_t result = 0;
 	struct Dee_module_libentry *libname;
 	DeeModuleObject *me = (DeeModuleObject *)self;
+#if 0 /* Not needed -- see initialization of "DeeModule_Deemon" */
+	/* Special case for the builtin "deemon" module */
+	if (me == &DeeModule_Deemon)
+		return 1;
+#endif
 	if unlikely(module_lock_and_load_libnames(me))
 		goto err;
 	libname = &me->mo_libname;
@@ -7504,6 +7558,136 @@ DeeModule_OfObject(DeeObject *__restrict ob) {
 	return NULL;
 }
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+
+/* Lookup an external symbol.
+ * Convenience function (same as `DeeObject_GetAttr(DeeModule_Import(...), ...)') */
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_GetExtern(/*String*/ DeeObject *__restrict module_name,
+                    /*String*/ DeeObject *__restrict global_name) {
+	DREF DeeObject *result;
+	DREF DeeModuleObject *mod;
+	mod = (DREF DeeModuleObject *)DeeModule_Import(module_name, NULL, DeeModule_IMPORT_F_NORMAL);
+	if unlikely(!mod)
+		goto err;
+	result = DeeObject_GetAttr((DeeObject *)mod, global_name);
+	Dee_Decref(mod);
+	return result;
+err:
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_GetExternString(/*utf-8*/ char const *__restrict module_name,
+                          /*utf-8*/ char const *__restrict global_name) {
+	DREF DeeObject *result;
+	DREF DeeModuleObject *mod;
+	mod = (DREF DeeModuleObject *)DeeModule_ImportString(module_name, strlen(module_name),
+	                                                     NULL, DeeModule_IMPORT_F_NORMAL);
+	if unlikely(!mod)
+		goto err;
+	result = DeeObject_GetAttrString((DeeObject *)mod, global_name);
+	Dee_Decref(mod);
+	return result;
+err:
+	return NULL;
+}
+
+/* Helper wrapper for `DeeObject_Call(DeeModule_GetExternString(...), ...)',
+ * that returns the return value of the call operation. */
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_CallExtern(/*String*/ DeeObject *__restrict module_name,
+                     /*String*/ DeeObject *__restrict global_name,
+                     size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *result;
+	DREF DeeModuleObject *mod;
+	mod = (DREF DeeModuleObject *)DeeModule_Import(module_name, NULL, DeeModule_IMPORT_F_NORMAL);
+	if unlikely(!mod)
+		goto err;
+	result = DeeObject_CallAttr((DeeObject *)mod, global_name, argc, argv);
+	Dee_Decref(mod);
+	return result;
+err:
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_CallExternString(/*utf-8*/ char const *__restrict module_name,
+                           /*utf-8*/ char const *__restrict global_name,
+                           size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *result;
+	DREF DeeModuleObject *mod;
+	mod = (DREF DeeModuleObject *)DeeModule_ImportString(module_name, strlen(module_name),
+	                                                     NULL, DeeModule_IMPORT_F_NORMAL);
+	if unlikely(!mod)
+		goto err;
+	result = DeeObject_CallAttrString((DeeObject *)mod, global_name, argc, argv);
+	Dee_Decref(mod);
+	return result;
+err:
+	return NULL;
+}
+
+/* Helper wrapper for `DeeObject_Callf(DeeModule_GetExternString(...), ...)',
+ * that returns the return value of the call operation. */
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+DeeModule_CallExternf(/*String*/ DeeObject *__restrict module_name,
+                      /*String*/ DeeObject *__restrict global_name,
+                      char const *__restrict format, ...) {
+	va_list args;
+	DREF DeeObject *result;
+	va_start(args, format);
+	result = DeeModule_VCallExternf(module_name, global_name, format, args);
+	va_end(args);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+DeeModule_CallExternStringf(/*utf-8*/ char const *__restrict module_name,
+                            /*utf-8*/ char const *__restrict global_name,
+                            char const *__restrict format, ...) {
+	va_list args;
+	DREF DeeObject *result;
+	va_start(args, format);
+	result = DeeModule_VCallExternStringf(module_name, global_name, format, args);
+	va_end(args);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_VCallExternf(/*String*/ DeeObject *__restrict module_name,
+                       /*String*/ DeeObject *__restrict global_name,
+                       char const *__restrict format, va_list args) {
+	DREF DeeObject *result;
+	DREF DeeModuleObject *mod;
+	mod = (DREF DeeModuleObject *)DeeModule_Import(module_name, NULL, DeeModule_IMPORT_F_NORMAL);
+	if unlikely(!mod)
+		goto err;
+	result = DeeObject_VCallAttrf((DeeObject *)mod, global_name, format, args);
+	Dee_Decref(mod);
+	return result;
+err:
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_VCallExternStringf(/*utf-8*/ char const *__restrict module_name,
+                             /*utf-8*/ char const *__restrict global_name,
+                             char const *__restrict format, va_list args) {
+	DREF DeeObject *result;
+	DREF DeeModuleObject *mod;
+	mod = (DREF DeeModuleObject *)DeeModule_ImportString(module_name, strlen(module_name),
+	                                                     NULL, DeeModule_IMPORT_F_NORMAL);
+	if unlikely(!mod)
+		goto err;
+	result = DeeObject_VCallAttrStringf((DeeObject *)mod, global_name, format, args);
+	Dee_Decref(mod);
+	return result;
+err:
+	return NULL;
+}
+
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_END
 

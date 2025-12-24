@@ -275,22 +275,78 @@ print_generic:
 	return DeeFormat_Printf(printer, arg, "global %u", (unsigned int)gid);
 }
 
-PRIVATE Dee_ssize_t DCALL
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+PRIVATE WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
+print_module_name(Dee_formatprinter_t printer, void *arg,
+                  DeeModuleObject *__restrict mod) {
+	Dee_ssize_t result;
+	DREF DeeObject *libname = DeeModule_GetLibName((DeeObject *)mod, 0);
+	if (ITER_ISOK(libname)) {
+		result = DeeString_PrintUtf8(libname, printer, arg);
+		Dee_Decref_unlikely(libname);
+	} else if unlikely(!libname) {
+		result = -1;
+	} else if (mod->mo_absname)  {
+		result = DeeFormat_Printf(printer, arg, "%q", mod->mo_absname);
+	} else {
+		result = DeeFormat_PRINT(printer, arg, "<anonymous module>");
+	}
+	return result;
+}
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#define print_module_name(printer, arg, mod) \
+	DeeString_PrintUtf8((DeeObject *)(mod)->mo_name, printer, arg)
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
+PRIVATE WUNUSED NONNULL((1, 4)) Dee_ssize_t DCALL
 libdisasm_printmodule(Dee_formatprinter_t printer, void *arg,
                       uint16_t mid, DeeCodeObject *code,
                       unsigned int flags) {
 	if (code) {
-		DeeStringObject *name;
+		Dee_ssize_t result, temp;
+		DeeModuleObject *mod;
 		if (mid >= code->co_module->mo_importc) {
 			if (flags & PCODE_FNOBADCOMMENT)
 				goto print_generic;
 			return DeeFormat_Printf(printer, arg, "module %u /* invalid mid */", (unsigned int)mid);
 		}
-		name = code->co_module->mo_importv[mid]->mo_name;
-		return DeeFormat_Printf(printer, arg, "module " PREFIX_VARNAME "%k", name);
+		mod = code->co_module->mo_importv[mid];
+		result = DeeFormat_PRINT(printer, arg, "module " PREFIX_VARNAME);
+		if likely(result >= 0) {
+			temp = print_module_name(printer, arg, mod);
+			if unlikely(temp < 0) {
+				result = temp;
+			} else {
+				result += temp;
+			}
+		}
+		return result;
 	}
 print_generic:
 	return DeeFormat_Printf(printer, arg, "module %u", (unsigned int)mid);
+}
+
+PRIVATE Dee_ssize_t DCALL
+print_extern_symbol(Dee_formatprinter_t printer, void *arg,
+                    DeeModuleObject *mod, struct module_symbol *symbol,
+                    char const *suffix) {
+	Dee_ssize_t result, temp;
+	result = DeeFormat_PRINT(printer, arg, "extern " PREFIX_VARNAME);
+	if unlikely(result < 0)
+		return result;
+	temp = print_module_name(printer, arg, mod);
+	if unlikely(temp < 0)
+		return temp;
+	result += temp;
+	if (suffix) {
+		temp = DeeFormat_Printf(printer, arg, ":" PREFIX_VARNAME "%s+%s", symbol->ss_name, suffix);
+	} else {
+		temp = DeeFormat_Printf(printer, arg, ":" PREFIX_VARNAME "%s", symbol->ss_name);
+	}
+	if unlikely(temp < 0)
+		return temp;
+	result += temp;
+	return result;
 }
 
 PRIVATE Dee_ssize_t DCALL
@@ -307,35 +363,53 @@ libdisasm_printextern(Dee_formatprinter_t printer, void *arg,
 		}
 		module = code->co_module->mo_importv[mid];
 		if (gid >= module->mo_globalc) {
+			Dee_ssize_t result, temp;
 			if (flags & PCODE_FNOBADCOMMENT)
 				goto print_unknown_name;
-			return DeeFormat_Printf(printer, arg, "extern " PREFIX_VARNAME "%k:%u /* invalid gid */", module->mo_name, (unsigned int)gid);
+			result = DeeFormat_PRINT(printer, arg, "extern " PREFIX_VARNAME);
+			if unlikely(result < 0)
+				return result;
+			temp = print_module_name(printer, arg, module);
+			if unlikely(temp < 0)
+				return temp;
+			result += temp;
+			temp = DeeFormat_Printf(printer, arg, ":%u /* invalid gid */", (unsigned int)gid);
+			if unlikely(temp < 0)
+				return temp;
+			result += temp;
+			return result;
 		}
 		symbol = DeeModule_GetSymbolID(module, gid);
 		if (symbol) {
-			if (symbol->ss_flags & MODSYM_FPROPERTY) {
-				return DeeFormat_Printf(printer, arg, "extern " PREFIX_VARNAME "%k:" PREFIX_VARNAME "%s+getter",
-				                        module->mo_name, symbol->ss_name);
-			}
-			return DeeFormat_Printf(printer, arg, "extern " PREFIX_VARNAME "%k:" PREFIX_VARNAME "%s",
-			                        module->mo_name, symbol->ss_name);
+			char const *suffix = (symbol->ss_flags & MODSYM_FPROPERTY) ? "getter" : NULL;
+			return print_extern_symbol(printer, arg, module, symbol, suffix);
 		}
 		if (gid >= MODULE_PROPERTY_DEL) {
 			symbol = DeeModule_GetSymbolID(module, gid - MODULE_PROPERTY_DEL);
-			if (symbol && (symbol->ss_flags & (MODSYM_FPROPERTY | MODSYM_FREADONLY)) == MODSYM_FPROPERTY) {
-				return DeeFormat_Printf(printer, arg, "extern " PREFIX_VARNAME "%k:" PREFIX_VARNAME "%s+delete",
-				                        module->mo_name, symbol->ss_name);
-			}
+			if (symbol && (symbol->ss_flags & (MODSYM_FPROPERTY | MODSYM_FREADONLY)) == MODSYM_FPROPERTY)
+				return print_extern_symbol(printer, arg, module, symbol, "delete");
 			if (gid >= MODULE_PROPERTY_SET) {
 				symbol = DeeModule_GetSymbolID(module, gid - MODULE_PROPERTY_SET);
-				if (symbol && (symbol->ss_flags & (MODSYM_FPROPERTY | MODSYM_FREADONLY)) == MODSYM_FPROPERTY) {
-					return DeeFormat_Printf(printer, arg, "extern " PREFIX_VARNAME "%k:" PREFIX_VARNAME "%s+setter",
-					                        module->mo_name, symbol->ss_name);
-				}
+				if (symbol && (symbol->ss_flags & (MODSYM_FPROPERTY | MODSYM_FREADONLY)) == MODSYM_FPROPERTY)
+					return print_extern_symbol(printer, arg, module, symbol, "setter");
 			}
 		}
+		{
+			Dee_ssize_t result, temp;
 print_unknown_name:
-		return DeeFormat_Printf(printer, arg, "extern " PREFIX_VARNAME "%k:%u", module->mo_name, (unsigned int)gid);
+			result = DeeFormat_PRINT(printer, arg, "extern " PREFIX_VARNAME);
+			if unlikely(result < 0)
+				return result;
+			temp = print_module_name(printer, arg, module);
+			if unlikely(temp < 0)
+				return temp;
+			result += temp;
+			temp = DeeFormat_Printf(printer, arg, ":%u", (unsigned int)gid);
+			if unlikely(temp < 0)
+				return temp;
+			result += temp;
+			return result;
+		}
 	}
 print_generic:
 	return DeeFormat_Printf(printer, arg, "extern %u:%u", (unsigned int)mid, (unsigned int)gid);
@@ -407,7 +481,10 @@ libdisasm_printmembername(Dee_formatprinter_t printer, void *arg,
 		class_name = DeeCode_GetRSymbolName((DeeObject *)code, rid);
 		if (class_name) {
 			DeeModuleObject *mod = code->co_module;
-			if (!DeeInteractiveModule_Check(code->co_module)) {
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+			if (!DeeInteractiveModule_Check(code->co_module))
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+			{
 				struct module_symbol *class_sym;
 				class_sym = DeeModule_GetSymbolString(code->co_module, class_name);
 				if (!class_sym)
@@ -423,11 +500,16 @@ libdisasm_printmembername(Dee_formatprinter_t printer, void *arg,
 					if (!class_type) {
 						DREF DeeCodeObject *root;
 search_module_root_constants:
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+						root = (DeeCodeObject *)DeeModule_GetRootCode((DeeObject *)mod);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 						DeeModule_LockRead(mod);
 						root = mod->mo_root;
 						Dee_XIncref(root);
 						DeeModule_LockEndRead(mod);
-						if (root) {
+						if (root)
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+						{
 							desc = find_class_descriptor_in_constants(root, class_name);
 							Dee_Decref(root);
 							if (desc) {

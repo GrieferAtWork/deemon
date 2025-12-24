@@ -134,6 +134,18 @@ done:
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE WUNUSED NONNULL((1)) int DCALL
+DeeModule_DoInitializeImports(DeeModuleObject *__restrict me) {
+	uint16_t i;
+	for (i = 0; i < me->mo_importc; ++i) {
+		DeeModuleObject *imp = me->mo_importv[i];
+		int status = DeeModule_Initialize((DeeObject *)imp);
+		if (status < 0)
+			return status;
+	}
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 DeeModule_DoInitialize(DeeModuleObject *__restrict me) {
 	DREF DeeFunctionObject *rootfunc;
 	DREF DeeObject *rootresult;
@@ -150,7 +162,9 @@ DeeModule_DoInitialize(DeeModuleObject *__restrict me) {
 #else /* !CONFIG_NO_DEX */
 	ASSERT(Dee_TYPE(me) == &DeeModuleDee_Type);
 #endif /* CONFIG_NO_DEX */
-	/* TODO: Ensure that imports of "me" have been initialized */
+	/* Ensure that imports of "me" have been initialized */
+	if unlikely(DeeModule_DoInitializeImports(me))
+		goto err;
 	rootfunc = (DREF DeeFunctionObject *)DeeModule_GetRootFunction((DeeObject *)me);
 	if unlikely(!rootfunc)
 		goto err;
@@ -1780,12 +1794,14 @@ module_printrepr(DeeObject *__restrict self,
                  Dee_formatprinter_t printer, void *arg) {
 	DeeModuleObject *me = (DeeModuleObject *)self;
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	if (me == DeeModule_GetDeemon())
-		return DeeFormat_PRINT(printer, arg, "import.deemon");
-//	if (me->mo_libname.mle_name) /* TODO */
-	if (!me->mo_absname)
-		return DeeFormat_PRINT(printer, arg, "Module()");
-	return DeeFormat_Printf(printer, arg, "import(%q)", me->mo_absname);
+	DREF DeeObject *libname = DeeModule_GetLibName((DeeObject *)me, 0);
+	if (ITER_ISOK(libname))
+		return DeeFormat_Printf(printer, arg, "import.%K", libname);
+	if unlikely(!libname)
+		return -1;
+	if (me->mo_absname)
+		return DeeFormat_Printf(printer, arg, "import(%q)", me->mo_absname);
+	return DeeFormat_PRINT(printer, arg, "Module()");
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return DeeFormat_Printf(printer, arg, "import(%r)", me->mo_name);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -2255,12 +2271,7 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 	               "Similar to ?#__exports__, however global variables are addressed using their "
 	               /**/ "internal index. Using this, anonymous global variables (such as property callbacks) "
 	               /**/ "can be accessed and modified"),
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	TYPE_GETTER_F("__code__", &module_get_code, METHOD_FCONSTCALL | METHOD_FNOTHROW,
-	              "->?Ert:Code\n"
-	              "#tValueError{The Module hasn't been fully loaded}"
-	              "Returns the code object for the Module's root initializer"),
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	TYPE_GETTER_F("__code__", &module_get_code, METHOD_FNOREFESCAPE,
 	              "->?Ert:Code\n"
 	              "#tValueError{The Module hasn't been fully loaded}"
@@ -2279,6 +2290,16 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	TYPE_GETSET_END
 };
+
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+PRIVATE struct type_getset tpconst module_dee_getsets[] = {
+	TYPE_GETTER_F("__code__", &module_get_code, METHOD_FCONSTCALL | METHOD_FNOTHROW,
+	              "->?Ert:Code\n"
+	              "#tValueError{The Module hasn't been fully loaded}"
+	              "Returns the code object for the Module's root initializer"),
+	TYPE_GETSET_END
+};
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2350,9 +2371,9 @@ module_import_with_frame_base(DeeObject *__restrict module_name) {
 		ASSERT_OBJECT_TYPE_EXACT(frame->cf_func, &DeeFunction_Type);
 		ASSERT_OBJECT_TYPE_EXACT(frame->cf_func->fo_code, &DeeCode_Type);
 		ASSERT_OBJECT_TYPE(frame->cf_func->fo_code->co_module, &DeeModule_Type);
-		result = DeeModule_Import(module_name, (DeeObject *)frame->cf_func->fo_code->co_module);
+		result = DeeModule_Import(module_name, (DeeObject *)frame->cf_func->fo_code->co_module, DeeModule_IMPORT_F_NORMAL);
 	} else {
-		result = DeeModule_Import(module_name, NULL);
+		result = DeeModule_Import(module_name, NULL, DeeModule_IMPORT_F_NORMAL);
 	}
 	return result;
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -2915,7 +2936,7 @@ PUBLIC DeeTypeObject DeeModuleDee_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ module_dee_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,

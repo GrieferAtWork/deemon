@@ -1150,8 +1150,13 @@ INTERN bool DCALL DeeGC_IsEmptyWithoutDex(void) {
 		if (!iter->gc_object.ob_refcnt)
 			continue;
 #ifndef CONFIG_NO_DEX
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		if (Dee_TYPE(&iter->gc_object) == &DeeModuleDex_Type)
+			continue;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		if (DeeDex_Check(&iter->gc_object))
 			continue;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #endif /* !CONFIG_NO_DEX */
 		goto is_nonempty;
 	}
@@ -1548,7 +1553,11 @@ INTERN void DCALL gc_dump_all(void) {
 		} else if (ob_type == &DeeFunction_Type) {
 			Dee_DPRINTF(" {co_name:%q}", DeeCode_NAME(DeeFunction_CODE(ob)));
 		} else if (ob_type == &DeeModule_Type) {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+			Dee_DPRINTF(" {mo_absname:%q}", ((DeeModuleObject *)ob)->mo_absname);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			Dee_DPRINTF(" {mo_name:%r}", ((DeeModuleObject *)ob)->mo_name);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		}
 		Dee_DPRINT("\n");
 #ifdef CONFIG_TRACE_REFCHANGES

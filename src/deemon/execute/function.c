@@ -181,8 +181,10 @@ lookup_code_info(/*[in]*/ DeeCodeObject *code,
 	mod = code->co_module;
 	if unlikely(!mod)
 		goto without_module;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if unlikely(DeeInteractiveModule_Check(mod))
 		goto without_module;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	DeeModule_LockRead(mod);
 	for (addr = 0; addr < mod->mo_globalc; ++addr) {
 		if (!mod->mo_globalv[addr])

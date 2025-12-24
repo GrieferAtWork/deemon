@@ -1600,8 +1600,10 @@ err:
 }
 
 
-#define POSIX_JOINPATH_DEF { "joinpath", (DeeObject *)&posix_joinpath, MODSYM_FNORMAL, DOC("(paths!:?Dstring)->?Dstring") },
-#define POSIX_JOINPATH_DEF_DOC(doc) { "joinpath", (DeeObject *)&posix_joinpath, MODSYM_FNORMAL, DOC("(paths!:?Dstring)->?Dstring\n" doc) },
+#define POSIX_JOINPATH_DEF \
+	DEX_MEMBER("joinpath", &posix_joinpath, "(paths!:?Dstring)->?Dstring"),
+#define POSIX_JOINPATH_DEF_DOC(doc) \
+	DEX_MEMBER("joinpath", &posix_joinpath, "(paths!:?Dstring)->?Dstring\n" doc),
 PRIVATE DEFINE_CMETHOD(posix_joinpath, &posix_path_joinpath_f, METHOD_FCONSTCALL);
 
 

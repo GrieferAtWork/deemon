@@ -524,8 +524,10 @@ PRIVATE WUNUSED int DCALL hostasm_loadapi(void) {
 	pdyn_hostasm_hostfunc_new = sym_hostasm_hostfunc_new;
 	COMPILER_WRITE_BARRIER();
 	return 0;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err_mod_hostasm:
 	Dee_Decref(mod_hostasm);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 err:
 	return -1;
 not_available:

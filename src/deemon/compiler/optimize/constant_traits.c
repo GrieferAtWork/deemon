@@ -158,6 +158,7 @@ allowed:
 INTERN WUNUSED NONNULL((1)) int
 (DCALL allow_constexpr)(DeeObject *__restrict self) {
 	DeeTypeObject *type;
+	goto again0;
 again0:
 	type = Dee_TYPE(self);
 	/* Whitelist! */

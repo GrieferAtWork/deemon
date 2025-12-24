@@ -233,7 +233,11 @@ JIT_GetOperatorFunction(DeeTypeObject *__restrict typetype, Dee_operator_t opnam
 		if (info)
 			symbol_name = info->oi_sname;
 	}
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	operators_module = (DREF DeeModuleObject *)DeeModule_Import((DeeObject *)&str_operators, NULL, DeeModule_IMPORT_F_NORMAL);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	operators_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal((DeeObject *)&str_operators, NULL, true);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if unlikely(!operators_module)
 		goto err;
 	if (symbol_name) {
@@ -1034,7 +1038,11 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 			if (import_function) {
 				result = DeeObject_Call(import_function, 1, (DeeObject **)&str);
 			} else {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+				result = DeeModule_Import((DeeObject *)str, NULL, DeeModule_IMPORT_F_NORMAL);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 				result = DeeModule_ImportGlobal((DeeObject *)str);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			}
 		} else if (DeeString_SIZE(str) == 1) {
 			result = JITContext_GetCurrentModule(self->jl_context);
@@ -1052,7 +1060,11 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 				args[1] = (DeeObject *)base;
 				result = DeeObject_Call(import_function, 2, args);
 			} else {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+				result = DeeModule_Import((DeeObject *)str, (DeeObject *)base, DeeModule_IMPORT_F_NORMAL);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 				result = DeeModule_ImportRel((DeeObject *)base, (DeeObject *)str);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			}
 		}
 		Dee_Decref(str);
@@ -1081,8 +1093,14 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 		}
 		Dee_Decref(str);
 	} else if (name_start[0] != '.') {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		result = DeeModule_ImportString((char const *)name_start,
+		                                (size_t)(name_end - name_start),
+		                                NULL, DeeModule_IMPORT_F_NORMAL);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		result = DeeModule_ImportGlobalString((char const *)name_start,
 		                                      (size_t)(name_end - name_start));
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	} else if (name_end == name_start + 1) {
 		result = JITContext_GetCurrentModule(self->jl_context);
 	} else {
@@ -1094,9 +1112,16 @@ err_name_start_end_cannot_import_relative:
 			                           (size_t)(name_end - name_start));
 			goto err_trace;
 		}
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		result = DeeModule_ImportString((char const *)name_start,
+		                                (size_t)(name_end - name_start),
+		                                (DeeObject *)base,
+		                                DeeModule_IMPORT_F_NORMAL);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		result = DeeModule_ImportRelString((DeeObject *)base,
 		                                   (char const *)name_start,
 		                                   (size_t)(name_end - name_start));
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}
 	if unlikely(!result)
 		goto err_trace;
@@ -1175,9 +1200,15 @@ do_with_paren:
 		if (DeeObject_AssertTypeExact(module_name, &DeeString_Type))
 			goto err_args_kwds;
 		/* Do the import */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		result = DeeModule_Import(module_name,
+		                          (DeeObject *)self->jl_context->jc_impbase,
+		                          DeeModule_IMPORT_F_NORMAL);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		result = self->jl_context->jc_impbase
 		         ? DeeModule_ImportRel((DeeObject *)self->jl_context->jc_impbase, module_name)
 		         : DeeModule_ImportGlobal(module_name);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}
 	Dee_XDecref(kwds);
 	Dee_Decref(args);

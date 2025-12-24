@@ -477,6 +477,12 @@ typexpr_parser_parse_object_after_qmark(struct typexpr_parser *__restrict self) 
 
 		case 'E': {
 			DREF DeeObject *mod_export;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+			result = DeeModule_ImportString(name.ten_start,
+			                                (size_t)(name.ten_end - name.ten_start),
+			                                (DeeObject *)self->txp_info->di_typ,
+			                                DeeModule_IMPORT_F_ENOENT);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			if (name.ten_str) {
 				result = (DeeObject *)DeeModule_OpenGlobal((DeeObject *)name.ten_str, NULL, false);
 			} else {
@@ -484,6 +490,7 @@ typexpr_parser_parse_object_after_qmark(struct typexpr_parser *__restrict self) 
 				                                                 (size_t)(name.ten_end - name.ten_start),
 				                                                 NULL, false);
 			}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			type_expression_name_fini(&name);
 			if (result == ITER_DONE)
 				goto unknown;

@@ -265,14 +265,15 @@ err:
 }
 #endif /* !posix_read_USE_STUB */
 
-#define POSIX_READ_DEF                                     \
-	{ "read", (DeeObject *)&posix_read, MODSYM_FNORMAL,    \
-	  DOC("(fd:?X2?Dint?DFile,count:?Dint=!-1)->?DBytes\n" \
-		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!-1)->?Dint") },
-#define POSIX_READ_DEF_DOC(doc)                            \
-	{ "read", (DeeObject *)&posix_read, MODSYM_FNORMAL,    \
-	  DOC("(fd:?X2?Dint?DFile,count:?Dint=!-1)->?DBytes\n" \
-		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!-1)->?Dint\n" doc) },
+#define POSIX_READ_DEF(doc)                                     \
+	DEX_MEMBER("read", &posix_read,                             \
+	           "(fd:?X2?Dint?DFile,count:?Dint=!-1)->?DBytes\n" \
+	           "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!-1)->?Dint"),
+#define POSIX_READ_DEF_DOC(doc)                                           \
+	DEX_MEMBER("read", &posix_read,                                       \
+	           "(fd:?X2?Dint?DFile,count:?Dint=!-1)->?DBytes\n"           \
+	           "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!-1)->?Dint\n" \
+	           "" doc),
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject *const *argv) {
 #ifndef posix_read_USE_STUB
 	int fd_fd;
@@ -601,14 +602,15 @@ err:
 }
 #endif /* !posix_pread_USE_STUB */
 
-#define POSIX_PREAD_DEF                                             \
-	{ "pread", (DeeObject *)&posix_pread, MODSYM_FNORMAL,           \
-	  DOC("(fd:?X2?Dint?DFile,count:?Dint,offset:?Dint)->?DBytes\n" \
-		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint,offset:?Dint)->?Dint") },
-#define POSIX_PREAD_DEF_DOC(doc)                                    \
-	{ "pread", (DeeObject *)&posix_pread, MODSYM_FNORMAL,           \
-	  DOC("(fd:?X2?Dint?DFile,count:?Dint,offset:?Dint)->?DBytes\n" \
-		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint,offset:?Dint)->?Dint\n" doc) },
+#define POSIX_PREAD_DEF                                                  \
+	DEX_MEMBER("pread", &posix_pread,                                    \
+	           "(fd:?X2?Dint?DFile,count:?Dint,offset:?Dint)->?DBytes\n" \
+	           "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint,offset:?Dint)->?Dint"),
+#define POSIX_PREAD_DEF_DOC(doc)                                                   \
+	DEX_MEMBER("pread", &posix_pread,                                              \
+	           "(fd:?X2?Dint?DFile,count:?Dint,offset:?Dint)->?DBytes\n"           \
+	           "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint,offset:?Dint)->?Dint\n" \
+	           "" doc),
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pread_f(size_t argc, DeeObject *const *argv) {
 #ifndef posix_pread_USE_STUB
 	size_t error;
@@ -916,14 +918,15 @@ err:
 }
 #endif /* !posix_pwrite_USE_STUB */
 
-#define POSIX_PWRITE_DEF                                          \
-	{ "pwrite", (DeeObject *)&posix_pwrite, MODSYM_FNORMAL,       \
-	  DOC("(fd:?X2?Dint?DFile,buf:?DBytes,offset:?Dint)->?Dint\n" \
-	      "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint,offset:?Dint)->?Dint") },
-#define POSIX_PWRITE_DEF_DOC(doc)                                 \
-	{ "pwrite", (DeeObject *)&posix_pwrite, MODSYM_FNORMAL,       \
-	  DOC("(fd:?X2?Dint?DFile,buf:?DBytes,offset:?Dint)->?Dint\n" \
-	      "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint,offset:?Dint)->?Dint\n" doc) },
+#define POSIX_PWRITE_DEF                                               \
+	DEX_MEMBER("pwrite", &posix_pwrite,                                \
+	           "(fd:?X2?Dint?DFile,buf:?DBytes,offset:?Dint)->?Dint\n" \
+	           "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint,offset:?Dint)->?Dint"),
+#define POSIX_PWRITE_DEF_DOC(doc)                                                  \
+	DEX_MEMBER("pwrite", &posix_pwrite,                                            \
+	           "(fd:?X2?Dint?DFile,buf:?DBytes,offset:?Dint)->?Dint\n"             \
+	           "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint,offset:?Dint)->?Dint\n" \
+	           "" doc),
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pwrite_f(size_t argc, DeeObject *const *argv) {
 #ifndef posix_pwrite_USE_STUB
 	DeeBuffer buffer;

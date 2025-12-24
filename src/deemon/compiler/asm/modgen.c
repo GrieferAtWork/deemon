@@ -52,8 +52,7 @@ INTDEF struct module_symbol empty_module_buckets[];
  * @param: flags: Set of `ASM_F*' (Assembly flags; see above) */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 INTERN WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
-module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code,
-               uint16_t flags, uint64_t ctime)
+module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code, uint64_t ctime)
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 module_compile(DeeModuleObject *__restrict mod,

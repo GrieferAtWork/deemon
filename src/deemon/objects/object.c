@@ -2687,15 +2687,21 @@ type_repr(DeeObject *__restrict self) {
 	DeeTypeObject *me = (DeeTypeObject *)self;
 	DREF DeeObject *mod;
 	DREF DeeStringObject *result;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	DeeStringObject *modname;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	char const *name;
 	mod = DeeType_GetModule(me);
 	if (!mod)
 		goto fallback;
+	name = DeeType_GetName(me);
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	result  = (DREF DeeStringObject *)DeeString_Newf("%r.%s", mod, name);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	modname = ((DeeModuleObject *)mod)->mo_name;
-	name    = DeeType_GetName(me);
 	result  = (DREF DeeStringObject *)DeeString_Newf("%k.%s", modname, name);
 	Dee_Decref(mod);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return (DREF DeeObject *)result;
 fallback:
 	return type_str(self);
@@ -2703,6 +2709,18 @@ fallback:
 
 DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 type_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	char const *name;
+	DREF DeeModuleObject *mod;
+	DeeTypeObject *me = (DeeTypeObject *)self;
+	mod = (DREF DeeModuleObject *)DeeType_GetModule(me);
+	if (!mod)
+		goto fallback;
+	name = DeeType_GetName(me);
+	return DeeFormat_Printf(printer, arg, "%R.%s", mod, name);
+fallback:
+	return type_print(self, printer, arg);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	DeeTypeObject *me = (DeeTypeObject *)self;
 	Dee_ssize_t result, temp;
 	DREF DeeModuleObject *mod;
@@ -2725,6 +2743,7 @@ err:
 	return temp;
 fallback:
 	return type_print(self, printer, arg);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 

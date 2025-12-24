@@ -1951,8 +1951,7 @@ code_docompile(struct ast *__restrict code_ast);
  * @param: flags: Set of `ASM_F*' (Assembly flags; see above) */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 INTDEF WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
-module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code,
-               uint16_t flags, uint64_t ctime);
+module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code, uint64_t ctime);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 module_compile(DREF struct module_object *__restrict module,

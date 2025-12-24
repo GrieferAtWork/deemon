@@ -639,7 +639,7 @@ pack_code_in_return:
 		goto err_compiler;
 
 	/* Finally, put together the module itself. */
-	result = module_compile(root_code, assembler_flags, ctime);
+	result = module_compile(root_code, ctime);
 	Dee_Decref(root_code);
 
 #if 0 /* Doesn't throw any new compiler errors... */

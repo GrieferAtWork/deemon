@@ -717,7 +717,7 @@ PRIVATE uint64_t exec_timestamp = (uint64_t)-1;
 #define WRAP_UINT64_C(x) UINT64_C(x)
 #define parse_timestamp() (WRAP_UINT64_C(BUILD_TIMESTAMP) * MICROSECONDS_PER_SECOND)
 #elif defined(_MSC_VER) && !defined(__clang__) && defined(__PE__)
-extern /*IMAGE_DOS_HEADER*/ uint8_t const __ImageBase[];
+extern /*IMAGE_DOS_HEADER*/ __BYTE_TYPE__ const __ImageBase[];
 LOCAL uint64_t parse_timestamp(void) {
 	uint32_t e_lfanew      = *(uint32_t const *)(__ImageBase + 60);
 	uint32_t TimeDateStamp = *(uint32_t const *)(__ImageBase + e_lfanew + 8); /* Problem: this is 32-bit... */

@@ -45,6 +45,19 @@
 
 DECL_BEGIN
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#define do_DeeModule_LockSymbols(err, mod) (void)0
+#define do_DeeModule_UnlockSymbols(mod)    (void)0
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#define do_DeeModule_LockSymbols(err, mod) \
+	do {                                   \
+		if (DeeModule_LockSymbols(mod))    \
+			goto err;                      \
+	}	__WHILE0
+#define do_DeeModule_UnlockSymbols(mod) \
+	DeeModule_UnlockSymbols(mod)
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
 
 typedef struct {
 	OBJECT_HEAD
@@ -172,14 +185,13 @@ modexportsiter_next(ModuleExportsIterator *__restrict self) {
 	DREF DeeObject *result, *result_name, *result_value;
 	DeeModuleObject *mod = self->mei_module;
 	uint16_t old_index, new_index;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 again:
 	for (;;) {
 		struct module_symbol *symbol;
 		old_index = atomic_read(&self->mei_index);
 		if (old_index > mod->mo_bucketm) {
-			DeeModule_UnlockSymbols(mod);
+			do_DeeModule_UnlockSymbols(mod);
 			return ITER_DONE;
 		}
 		new_index = old_index;
@@ -188,7 +200,7 @@ again:
 			if (symbol->ss_name) {
 				result_name = (DREF DeeObject *)module_symbol_getnameobj(symbol);
 				if unlikely(!result_name) {
-					DeeModule_UnlockSymbols(mod);
+					do_DeeModule_UnlockSymbols(mod);
 					return NULL;
 				}
 				break;
@@ -198,7 +210,7 @@ continue_symbol_search:
 			if (new_index > mod->mo_bucketm) {
 				if (!atomic_cmpxch_weak(&self->mei_index, old_index, new_index))
 					goto again;
-				DeeModule_UnlockSymbols(mod);
+				do_DeeModule_UnlockSymbols(mod);
 				return ITER_DONE;
 			}
 		}
@@ -214,7 +226,7 @@ continue_symbol_search:
 		Dee_Decref_unlikely(result_value);
 	}
 	Dee_Incref(result_name);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	result = DeeTuple_PackSymbolic(2, result_name, result_value);
 	if unlikely(!result) {
 		Dee_Decref_unlikely(result_name);
@@ -336,16 +348,17 @@ PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 modexports_size(ModuleExports *__restrict self) {
 	size_t i, total_symbols = 0;
 	DeeModuleObject *mod = self->me_module;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	for (i = 0; i <= mod->mo_bucketm; ++i) {
 		if (mod->mo_bucketv[i].ss_name)
 			++total_symbols;
 	}
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return total_symbols;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return (size_t)-1;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -492,24 +505,22 @@ modexports_getitem(ModuleExports *self, DeeObject *key) {
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
 	if (DeeString_Check(key)) {
-		if (DeeModule_LockSymbols(mod))
-			goto err;
+		do_DeeModule_LockSymbols(err, mod);
 		symbol = DeeModule_GetSymbol(mod, key);
 	} else {
 		uint16_t gid;
 		if (DeeObject_AsUInt16(key, &gid))
 			goto err;
-		if (DeeModule_LockSymbols(mod))
-			goto err;
+		do_DeeModule_LockSymbols(err, mod);
 		symbol = DeeModule_GetSymbolID(mod, gid);
 	}
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_GetAttrSymbol_asitem(self, mod, symbol);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	DeeRT_ErrUnknownKey(self, key);
 err:
 	return NULL;
@@ -521,24 +532,22 @@ modexports_bounditem(ModuleExports *self, DeeObject *key) {
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
 	if (DeeString_Check(key)) {
-		if (DeeModule_LockSymbols(mod))
-			goto err;
+		do_DeeModule_LockSymbols(err, mod);
 		symbol = DeeModule_GetSymbol(mod, key);
 	} else {
 		uint16_t gid;
 		if (DeeObject_AsUInt16(key, &gid))
 			goto err;
-		if (DeeModule_LockSymbols(mod))
-			goto err;
+		do_DeeModule_LockSymbols(err, mod);
 		symbol = DeeModule_GetSymbolID(mod, gid);
 	}
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_BoundAttrSymbol_asitem(mod, symbol);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return Dee_BOUND_MISSING;
 err:
 	return Dee_BOUND_ERR;
@@ -549,23 +558,21 @@ modexports_hasitem(ModuleExports *self, DeeObject *key) {
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
 	if (DeeString_Check(key)) {
-		if (DeeModule_LockSymbols(mod))
-			goto err;
+		do_DeeModule_LockSymbols(err, mod);
 		symbol = DeeModule_GetSymbol(mod, key);
 	} else {
 		uint16_t gid;
 		if (DeeObject_AsUInt16(key, &gid))
 			goto err;
-		if (DeeModule_LockSymbols(mod))
-			goto err;
+		do_DeeModule_LockSymbols(err, mod);
 		symbol = DeeModule_GetSymbolID(mod, gid);
 	}
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return Dee_HAS_YES;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return Dee_HAS_NO;
 err:
 	return Dee_HAS_ERR;
@@ -577,24 +584,22 @@ modexports_trygetitem(ModuleExports *self, DeeObject *key) {
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
 	if (DeeString_Check(key)) {
-		if (DeeModule_LockSymbols(mod))
-			goto err;
+		do_DeeModule_LockSymbols(err, mod);
 		symbol = DeeModule_GetSymbol(mod, key);
 	} else {
 		uint16_t gid;
 		if (DeeObject_AsUInt16(key, &gid))
 			goto err;
-		if (DeeModule_LockSymbols(mod))
-			goto err;
+		do_DeeModule_LockSymbols(err, mod);
 		symbol = DeeModule_GetSymbolID(mod, gid);
 	}
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_TryGetAttrSymbol_asitem(mod, symbol);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return ITER_DONE;
 err:
 	return NULL;
@@ -606,24 +611,22 @@ modexports_delitem(ModuleExports *self, DeeObject *key) {
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
 	if (DeeString_Check(key)) {
-		if (DeeModule_LockSymbols(mod))
-			goto err;
+		do_DeeModule_LockSymbols(err, mod);
 		symbol = DeeModule_GetSymbol(mod, key);
 	} else {
 		uint16_t gid;
 		if (DeeObject_AsUInt16(key, &gid))
 			goto err;
-		if (DeeModule_LockSymbols(mod))
-			goto err;
+		do_DeeModule_LockSymbols(err, mod);
 		symbol = DeeModule_GetSymbolID(mod, gid);
 	}
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_DelAttrSymbol(mod, symbol);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	DeeRT_ErrUnknownKey(self, key);
 err:
 	return -1;
@@ -635,24 +638,22 @@ modexports_setitem(ModuleExports *self, DeeObject *key, DeeObject *value) {
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
 	if (DeeString_Check(key)) {
-		if (DeeModule_LockSymbols(mod))
-			goto err;
+		do_DeeModule_LockSymbols(err, mod);
 		symbol = DeeModule_GetSymbol(mod, key);
 	} else {
 		uint16_t gid;
 		if (DeeObject_AsUInt16(key, &gid))
 			goto err;
-		if (DeeModule_LockSymbols(mod))
-			goto err;
+		do_DeeModule_LockSymbols(err, mod);
 		symbol = DeeModule_GetSymbolID(mod, gid);
 	}
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_SetAttrSymbol(mod, symbol, value);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	DeeRT_ErrUnknownKey(self, key);
 err:
 	return -1;
@@ -665,19 +666,20 @@ modexports_getitem_index(ModuleExports *self, size_t key) {
 	struct module_symbol *symbol;
 	if unlikely(key > UINT16_MAX)
 		goto err_nokey;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolID(mod, (uint16_t)key);
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_GetAttrSymbol_asitem(self, mod, symbol);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 err_nokey:
 	DeeRT_ErrUnknownKeyInt((DeeObject *)self, key);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return NULL;
 }
 
@@ -688,20 +690,21 @@ modexports_bounditem_index(ModuleExports *self, size_t key) {
 	struct module_symbol *symbol;
 	if unlikely(key > UINT16_MAX)
 		goto err_nokey;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolID(mod, (uint16_t)key);
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_BoundAttrSymbol_asitem(mod, symbol);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 err_nokey:
 	return Dee_BOUND_MISSING;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return Dee_BOUND_ERR;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -710,19 +713,20 @@ modexports_hasitem_index(ModuleExports *self, size_t key) {
 	struct module_symbol *symbol;
 	if unlikely(key > UINT16_MAX)
 		goto err_nokey;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolID(mod, (uint16_t)key);
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return Dee_HAS_YES;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 err_nokey:
 	return Dee_HAS_NO;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return Dee_HAS_ERR;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -732,20 +736,21 @@ modexports_trygetitem_index(ModuleExports *self, size_t key) {
 	struct module_symbol *symbol;
 	if unlikely(key > UINT16_MAX)
 		goto err_nokey;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolID(mod, (uint16_t)key);
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_TryGetAttrSymbol_asitem(mod, symbol);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 err_nokey:
 	return ITER_DONE;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return NULL;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -755,20 +760,21 @@ modexports_delitem_index(ModuleExports *self, size_t key) {
 	struct module_symbol *symbol;
 	if unlikely(key > UINT16_MAX)
 		goto err_nokey;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolID(mod, (uint16_t)key);
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_DelAttrSymbol(mod, symbol);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 err_nokey:
-	DeeRT_ErrUnknownKeyInt((DeeObject *)self, key);
+	return DeeRT_ErrUnknownKeyInt((DeeObject *)self, key);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
@@ -778,20 +784,21 @@ modexports_setitem_index(ModuleExports *self, size_t key, DeeObject *value) {
 	struct module_symbol *symbol;
 	if unlikely(key > UINT16_MAX)
 		goto err_nokey;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolID(mod, (uint16_t)key);
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_SetAttrSymbol(mod, symbol, value);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 err_nokey:
-	DeeRT_ErrUnknownKeyInt((DeeObject *)self, key);
+	return DeeRT_ErrUnknownKeyInt((DeeObject *)self, key);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 
@@ -802,18 +809,19 @@ modexports_getitem_string_hash(ModuleExports *self, char const *key, Dee_hash_t 
 	DREF DeeObject *result;
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringHash(mod, key, hash);
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_GetAttrSymbol_asitem(self, mod, symbol);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return NULL;
 }
 
@@ -822,37 +830,39 @@ modexports_bounditem_string_hash(ModuleExports *self, char const *key, Dee_hash_
 	int result;
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringHash(mod, key, hash);
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_BoundAttrSymbol_asitem(mod, symbol);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return Dee_BOUND_MISSING;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return Dee_BOUND_ERR;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 modexports_hasitem_string_hash(ModuleExports *self, char const *key, Dee_hash_t hash) {
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringHash(mod, key, hash);
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return Dee_HAS_YES;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return Dee_HAS_NO;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return Dee_HAS_ERR;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -860,19 +870,20 @@ modexports_trygetitem_string_hash(ModuleExports *self, char const *key, Dee_hash
 	DREF DeeObject *result;
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringHash(mod, key, hash);
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_TryGetAttrSymbol_asitem(mod, symbol);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return ITER_DONE;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return NULL;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -880,19 +891,20 @@ modexports_delitem_string_hash(ModuleExports *self, char const *key, Dee_hash_t 
 	int result;
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringHash(mod, key, hash);
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_DelAttrSymbol(mod, symbol);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
-	DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
+	do_DeeModule_UnlockSymbols(mod);
+	return DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
@@ -900,19 +912,20 @@ modexports_setitem_string_hash(ModuleExports *self, char const *key, Dee_hash_t 
 	int result;
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringHash(mod, key, hash);
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_SetAttrSymbol(mod, symbol, value);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
-	DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
+	do_DeeModule_UnlockSymbols(mod);
+	return DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 
@@ -922,18 +935,19 @@ modexports_getitem_string_len_hash(ModuleExports *self, char const *key, size_t 
 	DREF DeeObject *result;
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringLenHash(mod, key, keylen, hash);
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_GetAttrSymbol_asitem(self, mod, symbol);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return NULL;
 }
 
@@ -942,37 +956,39 @@ modexports_bounditem_string_len_hash(ModuleExports *self, char const *key, size_
 	int result;
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringLenHash(mod, key, keylen, hash);
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_BoundAttrSymbol_asitem(mod, symbol);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return Dee_BOUND_MISSING;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return Dee_BOUND_ERR;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 modexports_hasitem_string_len_hash(ModuleExports *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringLenHash(mod, key, keylen, hash);
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return Dee_HAS_YES;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return Dee_HAS_NO;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return Dee_HAS_ERR;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -980,19 +996,20 @@ modexports_trygetitem_string_len_hash(ModuleExports *self, char const *key, size
 	DREF DeeObject *result;
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringLenHash(mod, key, keylen, hash);
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_TryGetAttrSymbol_asitem(mod, symbol);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return ITER_DONE;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return NULL;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1000,19 +1017,20 @@ modexports_delitem_string_len_hash(ModuleExports *self, char const *key, size_t 
 	int result;
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringLenHash(mod, key, keylen, hash);
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_DelAttrSymbol(mod, symbol);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
-	DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
+	do_DeeModule_UnlockSymbols(mod);
+	return DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
@@ -1020,19 +1038,20 @@ modexports_setitem_string_len_hash(ModuleExports *self, char const *key, size_t 
 	int result;
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringLenHash(mod, key, keylen, hash);
 	if unlikely(!symbol)
 		goto err_nokey_unlock;
 	result = DeeModule_SetAttrSymbol(mod, symbol, value);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_nokey_unlock:
-	DeeModule_UnlockSymbols(mod);
-	DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
+	do_DeeModule_UnlockSymbols(mod);
+	return DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 
@@ -1042,8 +1061,7 @@ modexports_mh_map_enumerate(ModuleExports *self, Dee_seq_enumerate_t proc, void 
 	Dee_ssize_t temp, result = 0;
 	DeeModuleObject *mod = self->me_module;
 	Dee_hash_t i;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	for (i = 0; i <= mod->mo_bucketm; ++i) {
 		DREF DeeStringObject *item_name;
 		DREF DeeObject *item_value;
@@ -1067,14 +1085,16 @@ modexports_mh_map_enumerate(ModuleExports *self, Dee_seq_enumerate_t proc, void 
 			goto err_temp_unlock;
 		result += temp;
 	}
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err_temp_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return temp;
 err_unlock:
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return -1;
 }
 
@@ -1248,11 +1268,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 modglobals_getitem_index(ModuleGlobals *self, size_t index) {
 	DREF DeeObject *result;
 	DeeModuleObject *mod = self->mg_module;
-	if unlikely(DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	if unlikely(index >= mod->mo_globalc) {
 		size_t num_globals = mod->mo_globalc;
-		DeeModule_UnlockSymbols(mod);
+		do_DeeModule_UnlockSymbols(mod);
 		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, num_globals);
 		goto err;
 	}
@@ -1260,13 +1279,13 @@ modglobals_getitem_index(ModuleGlobals *self, size_t index) {
 	result = mod->mo_globalv[index];
 	if unlikely(!result) {
 		DeeModule_LockEndRead(mod);
-		DeeModule_UnlockSymbols(mod);
+		do_DeeModule_UnlockSymbols(mod);
 		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 		goto err;
 	}
 	Dee_Incref(result);
 	DeeModule_LockEndRead(mod);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return result;
 err:
 	return NULL;
@@ -1276,11 +1295,10 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 modglobals_setitem_index(ModuleGlobals *self, size_t index, DeeObject *value) {
 	DREF DeeObject *oldvalue;
 	DeeModuleObject *mod = self->mg_module;
-	if unlikely(DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	if unlikely(index >= mod->mo_globalc) {
 		size_t num_globals = mod->mo_globalc;
-		DeeModule_UnlockSymbols(mod);
+		do_DeeModule_UnlockSymbols(mod);
 		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, num_globals);
 		goto err;
 	}
@@ -1289,7 +1307,7 @@ modglobals_setitem_index(ModuleGlobals *self, size_t index, DeeObject *value) {
 	oldvalue = mod->mo_globalv[index];
 	mod->mo_globalv[index] = value;
 	DeeModule_LockEndWrite(mod);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	Dee_XDecref(oldvalue);
 	return 0;
 err:
@@ -1300,19 +1318,20 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 modglobals_bounditem_index(ModuleGlobals *self, size_t index) {
 	DeeObject *value;
 	DeeModuleObject *mod = self->mg_module;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	if (index >= mod->mo_globalc) {
-		DeeModule_UnlockSymbols(mod);
+		do_DeeModule_UnlockSymbols(mod);
 		return Dee_BOUND_MISSING;
 	}
 	DeeModule_LockRead(mod);
 	value = mod->mo_globalv[index];
 	DeeModule_LockEndRead(mod);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return Dee_BOUND_FROMBOOL(value);
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return Dee_BOUND_ERR;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1325,25 +1344,24 @@ PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 modglobals_xchitem_index(ModuleGlobals *self, size_t index, DeeObject *value) {
 	DREF DeeObject *oldvalue;
 	DeeModuleObject *mod = self->mg_module;
-	if unlikely(DeeModule_LockSymbols(mod))
-		goto err;
+	do_DeeModule_LockSymbols(err, mod);
 	if unlikely(index >= mod->mo_globalc) {
 		size_t num_globals = mod->mo_globalc;
-		DeeModule_UnlockSymbols(mod);
+		do_DeeModule_UnlockSymbols(mod);
 		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, num_globals);
 		goto err;
 	}
 	DeeModule_LockWrite(mod);
 	oldvalue = mod->mo_globalv[index];
 	if unlikely(!oldvalue) {
-		DeeModule_UnlockSymbols(mod);
+		do_DeeModule_UnlockSymbols(mod);
 		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
 		goto err;
 	}
 	Dee_Incref(value);
 	mod->mo_globalv[index] = value;
 	DeeModule_LockEndWrite(mod);
-	DeeModule_UnlockSymbols(mod);
+	do_DeeModule_UnlockSymbols(mod);
 	return oldvalue;
 err:
 	return NULL;
@@ -1362,12 +1380,11 @@ modglobals_mh_seq_enumerate_index(ModuleGlobals *__restrict self,
 	DREF DeeObject *item;
 	DeeModuleObject *mod = self->mg_module;
 	for (; start < end; ++start) {
-		if (DeeModule_LockSymbols(mod))
-			goto err;
+		do_DeeModule_LockSymbols(err, mod);
 		if (end > mod->mo_globalc) {
 			end = mod->mo_globalc;
 			if (start >= end) {
-				DeeModule_UnlockSymbols(mod);
+				do_DeeModule_UnlockSymbols(mod);
 				break;
 			}
 		}
@@ -1375,7 +1392,7 @@ modglobals_mh_seq_enumerate_index(ModuleGlobals *__restrict self,
 		item = mod->mo_globalv[start];
 		Dee_XIncref(item);
 		DeeModule_LockEndRead(mod);
-		DeeModule_UnlockSymbols(mod);
+		do_DeeModule_UnlockSymbols(mod);
 		temp = (*proc)(arg, start, item);
 		Dee_XDecref(item);
 		if unlikely(temp < 0)
@@ -1385,8 +1402,10 @@ modglobals_mh_seq_enumerate_index(ModuleGlobals *__restrict self,
 	return result;
 err_temp:
 	return temp;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE struct type_method tpconst modglobals_methods[] = {

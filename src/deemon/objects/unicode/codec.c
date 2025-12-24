@@ -758,7 +758,11 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libcodecs_get(void) {
 		return result;
 	}
 	libcodecs_lock_endread();
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	result = DeeModule_Import((DeeObject *)&str_codecs, NULL, DeeModule_IMPORT_F_NORMAL);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	result = DeeModule_OpenGlobal((DeeObject *)&str_codecs, NULL, true);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if likely(result) {
 		libcodecs_lock_write();
 		ASSERT(!g_libcodecs || g_libcodecs == result);
@@ -767,8 +771,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libcodecs_get(void) {
 			g_libcodecs = result;
 		}
 		libcodecs_lock_endwrite();
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		if unlikely(DeeModule_RunInit(result) < 0)
 			Dee_Clear(result);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}
 	return result;
 }

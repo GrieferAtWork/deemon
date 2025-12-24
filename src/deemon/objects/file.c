@@ -1637,11 +1637,17 @@ again:
 	mod = files_module;
 	if unlikely(!mod) {
 		files_module_lock_endread();
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		mod = DeeModule_Import((DeeObject *)&str_files, NULL, DeeModule_IMPORT_F_NORMAL);
+		if unlikely(!mod)
+			goto err;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		mod = DeeModule_OpenGlobal((DeeObject *)&str_files, NULL, true);
 		if unlikely(!mod)
 			goto err;
 		if unlikely(DeeModule_RunInit(mod) < 0)
 			goto err_mod;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		files_module_lock_write();
 		if unlikely(atomic_read(&files_module)) {
 			files_module_lock_endwrite();
@@ -1658,8 +1664,10 @@ again:
 	result = DeeObject_GetAttr(mod, name);
 	Dee_Decref(mod);
 	return result;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err_mod:
 	Dee_Decref(mod);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 err:
 	return NULL;
 }

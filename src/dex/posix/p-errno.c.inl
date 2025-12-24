@@ -250,7 +250,7 @@ e("ECOUNT",          doc: "One plus ?GELIMIT");
 
 print("#ifdef ELIMIT");
 print('#define POSIX_EMAX_DEF \\');
-print('	{ "EMAX", (DeeObject *)&posix_ELIMIT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Max possible errno" },');
+print('	DEX_MEMBER_F("EMAX", &posix_ELIMIT, DEXSYM_READONLY | DEXSYM_CONSTEXPR, "Max possible errno"),');
 print("#else /" "* ELIMIT *" "/");
 print('#define POSIX_EMAX_DEF /' '* nothing *' '/');
 print("#endif /" "* !ELIMIT *" "/");
@@ -556,9 +556,16 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum)
 	/* Search our own symbol table for error code.
 	 * Since we use the errno message as doc string, we can simply return the doc here. */
 	{
-		struct dex_symbol *iter;
+		struct Dee_dex_symbol *iter;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		INTDEF struct Dee_dex_symbol _dex_symbols[];
+		for (iter = _dex_symbols;
+		     iter->ds_name && SYMBOL_NAME_IS_ERRNO(iter->ds_name); ++iter)
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		for (iter = DEX.d_symbols;
-		     iter->ds_name && SYMBOL_NAME_IS_ERRNO(iter->ds_name); ++iter) {
+		     iter->ds_name && SYMBOL_NAME_IS_ERRNO(iter->ds_name); ++iter)
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+		{
 			int eval;
 			if (!DeeInt_Check(iter->ds_obj))
 				break;
@@ -648,9 +655,16 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerrorname_f_impl(int errnum)
 	/* Search our own symbol table for error code.
 	 * Since we use the errno message as doc string, we can simply return the doc here. */
 	{
-		struct dex_symbol *iter;
+		struct Dee_dex_symbol *iter;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		INTDEF struct Dee_dex_symbol _dex_symbols[];
+		for (iter = _dex_symbols;
+		     iter->ds_name && SYMBOL_NAME_IS_ERRNO(iter->ds_name); ++iter)
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		for (iter = DEX.d_symbols;
-		     iter->ds_name && SYMBOL_NAME_IS_ERRNO(iter->ds_name); ++iter) {
+		     iter->ds_name && SYMBOL_NAME_IS_ERRNO(iter->ds_name); ++iter)
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+		{
 			int eval;
 			if (!DeeInt_Check(iter->ds_obj))
 				break;

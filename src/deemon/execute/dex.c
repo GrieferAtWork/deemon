@@ -544,8 +544,8 @@ DECL_BEGIN
 
 #ifdef DeeSystem_DlOpen_USE_LoadLibrary
 #ifdef _MSC_VER
-extern /*IMAGE_DOS_HEADER*/ int __ImageBase;
-#define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
+extern /*IMAGE_DOS_HEADER*/ __BYTE_TYPE__ const __ImageBase[];
+#define HINST_THISCOMPONENT ((HINSTANCE)__ImageBase)
 #else /* _MSC_VER */
 /* XXX: This only works when deemon is the primary
  *      binary, but not if it was loaded as a DLL! */

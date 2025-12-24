@@ -68,6 +68,7 @@ compiler_init(DeeCompilerObject *__restrict self,
               size_t argc, DeeObject *const *argv,
               DeeObject *kw) {
 	/* TODO: All those other arguments, like compiler options, etc. */
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("Compiler", params: """
 	DeeObject *module:?X2?N?Dstring?DModule = Dee_None;
 ");]]]*/
@@ -89,10 +90,19 @@ compiler_init(DeeCompilerObject *__restrict self,
 	} else {
 		Dee_Incref(args.module_);
 	}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
 	/* Create the new root scope object. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	(void)argc; /* XXX: Arguments? */
+	(void)argv;
+	(void)kw;
+	self->cp_scope = (DREF DeeScopeObject *)DeeObject_NewDefault(&DeeRootScope_Type);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	self->cp_scope = (DREF DeeScopeObject *)DeeObject_New(&DeeRootScope_Type, 1,
 	                                                      (DeeObject **)&args.module_);
 	Dee_Decref(args.module_);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if unlikely(!self->cp_scope)
 		goto err;
 	weakref_support_init(self);

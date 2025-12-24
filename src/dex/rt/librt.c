@@ -3437,12 +3437,20 @@ DEX_GETTER_F("DocKwds", &librt_get_DocKwds, DEXSYM_CONSTEXPR, /* DocKwds_Type */
 DEX_GETTER_F_NODOC("DocKwdsIterator", &librt_get_DocKwdsIterator, DEXSYM_CONSTEXPR), /* DocKwdsIterator_Type */
 
 /* Special types exposed by the C API, but not normally visible to user-code. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+DEX_MEMBER_F_NODOC("ModuleDee", &DeeModuleDee_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("ModuleDir", &DeeModuleDir_Type, DEXSYM_READONLY),
+#ifndef CONFIG_NO_DEX
+DEX_MEMBER_F_NODOC("ModuleDex", &DeeModuleDex_Type, DEXSYM_READONLY),
+#endif /* !CONFIG_NO_DEX */
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 DEX_MEMBER_F("InteractiveModule", &DeeInteractiveModule_Type, DEXSYM_READONLY,
              "The type used to implement an interactive module, as available by #C{deemon -i}"),
 #ifndef CONFIG_NO_DEX
 DEX_MEMBER_F("DexModule", &DeeDex_Type, DEXSYM_READONLY,
              "The type of a module that has been loaded from a machine-level shared library."),
 #endif /* !CONFIG_NO_DEX */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 DEX_MEMBER_F("Compiler", &DeeCompiler_Type, DEXSYM_READONLY,
              "A user-code interface for the compiler used by this implementation"),
 /* TODO: All of the different compiler wrapper types, as well as the internal types for Ast and the different Scopes:

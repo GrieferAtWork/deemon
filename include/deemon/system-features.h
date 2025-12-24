@@ -14886,7 +14886,6 @@ for (local x: [1:n+1]) {
 #endif /* GUARD_DEEMON_FILE_H */
 
 
-#ifdef CONFIG_BUILDING_DEEMON
 /* Figure out how to implement the shared library system API */
 #undef DeeSystem_DlOpen_USE_LoadLibrary
 #undef DeeSystem_DlOpen_USE_dlopen
@@ -14898,6 +14897,6 @@ for (local x: [1:n+1]) {
 #else /* ... */
 #define DeeSystem_DlOpen_USE_STUB
 #endif /* !... */
-#endif /* CONFIG_BUILDING_DEEMON */
+
 
 #endif /* !GUARD_DEEMON_SYSTEM_FEATURES_H */

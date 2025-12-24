@@ -28,6 +28,7 @@
 #include "module.h"
 #include "object.h"
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#include "system.h"
 #include "system-features.h"
 #endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 /**/
@@ -180,8 +181,8 @@ struct Dee_module_dexdata {
 #if defined(CONFIG_BUILDING_DEEMON) || defined(CONFIG_BUILDING_DEX)
 #undef _Dee_MODULE_DEXDATA_INIT_HANDLE_IS_STATIC
 #if defined(DeeSystem_DlOpen_USE_LoadLibrary) && defined(_MSC_VER)
-extern /*IMAGE_DOS_HEADER*/ int __ImageBase;
-#define _Dee_MODULE_DEXDATA_INIT_HANDLE (void *)&__ImageBase
+extern /*IMAGE_DOS_HEADER*/ __BYTE_TYPE__ const __ImageBase[];
+#define _Dee_MODULE_DEXDATA_INIT_HANDLE (void *)__ImageBase
 #define _Dee_MODULE_DEXDATA_INIT_HANDLE_IS_STATIC
 #else /* ... */
 #define _Dee_MODULE_DEXDATA_INIT_HANDLE DeeSystem_DlOpen_FAILED
@@ -222,7 +223,7 @@ INTDEF __BYTE_TYPE__ _end[];
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
 #define Dee_DEX_BEGIN \
-	PRIVATE struct Dee_dex_symbol _dex_symbols[] = {
+	INTERN struct Dee_dex_symbol _dex_symbols[] = {
 #define Dee_DEX_MEMBER(name, obj, doc)           Dee_DEX_MEMBER_F(name, obj, Dee_DEXSYM_NORMAL, doc)
 #define Dee_DEX_MEMBER_F(name, obj, flags, doc)  { name, DOC(doc), Dee_REQUIRES_ANYOBJECT(obj), (flags) & ~(Dee_DEXSYM_PROPERTY), 0, 0 }
 #define Dee_DEX_MEMBER_NODOC(name, obj)          Dee_DEX_MEMBER(name, obj, NULL)
@@ -255,10 +256,10 @@ INTDEF __BYTE_TYPE__ _end[];
 		struct Dee_gc_head_link m_head;                                     \
 		struct _dex_object_raw  m_dex;                                      \
 	};                                                                      \
-	DDATDEF struct _dex_object DEX;                                         \
+	EXPDEF struct _dex_object DEX;                                          \
 	PRIVATE struct Dee_module_dexdata _dex_data = {                         \
-		/* .mdx_module = */ _dex_symbols,                                   \
-		/* .mdx_export = */ (struct Dee_module_object *)&DEX.m_dex,         \
+		/* .mdx_module = */ (struct Dee_module_object *)&DEX.m_dex,         \
+		/* .mdx_export = */ _dex_symbols,                                   \
 		/* .mdx_handle = */ _Dee_MODULE_DEXDATA_INIT_HANDLE,                \
 		/* .mdx_init   = */ init,                                           \
 		/* .mdx_fini   = */ fini,                                           \
@@ -278,7 +279,7 @@ INTDEF __BYTE_TYPE__ _end[];
 		/* .mo_importc = */ 0,                                              \
 		/* .mo_globalc = */ COMPILER_LENOF(_dex_symbols),                   \
 		/* .mo_bucketm = */ _DEX_BUCKETM,                                   \
-		/* .mo_bucketv = */ _dex_bucketv                                    \
+		/* .mo_bucketv = */ _dex_bucketv,                                   \
 		_Dee_MODULE_INIT_mo_lock                                            \
 		Dee_WEAKREF_SUPPORT_INIT,                                           \
 		/* .mo_moddata = */ { &_dex_data },                                 \

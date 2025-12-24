@@ -899,6 +899,22 @@ AttributeError_LoadDesc(AttributeError *__restrict self) {
 		}
 		mod = (DeeModuleObject *)self->ae_desc.ad_info.ai_decl;
 		ASSERT_OBJECT_TYPE(mod, &DeeModule_Type);
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		if (sym->ss_flags & MODSYM_FPROPERTY) {
+			DeeModule_LockRead(mod);
+			/* Check which property operations have been bound. */
+			if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_GET])
+				self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANGET;
+			if (!(sym->ss_flags & MODSYM_FREADONLY)) {
+				/* These callbacks are only allocated if the READONLY flag isn't set. */
+				if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_DEL])
+					self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANDEL;
+				if (mod->mo_globalv[sym->ss_index + MODULE_PROPERTY_SET])
+					self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANSET;
+			}
+			DeeModule_LockEndRead(mod);
+		}
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		if (mod->mo_flags & Dee_MODULE_FDIDINIT) {
 			DeeModule_LockRead(mod);
 			if (sym->ss_flags & MODSYM_FPROPERTY) {
@@ -915,6 +931,7 @@ AttributeError_LoadDesc(AttributeError *__restrict self) {
 			}
 			DeeModule_LockEndRead(mod);
 		}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}	break;
 
 	case Dee_ATTRINFO_METHOD: {

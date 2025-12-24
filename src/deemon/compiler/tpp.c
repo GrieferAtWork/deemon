@@ -660,7 +660,11 @@ tpp_unknown_file(int mode, char *__restrict filename,
                  struct TPPKeyword **p_keyword_entry) {
 	DeeStringObject *buffer, *new_buffer;
 	size_t buflen;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	DREF DeeTupleObject *libpath;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	DeeListObject *libpath;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	size_t i;
 	struct TPPKeyword *keyword_entry;
 	DREF DeeObject *path, *stream;
@@ -681,18 +685,35 @@ tpp_unknown_file(int mode, char *__restrict filename,
 		buffer->s_data = NULL;
 		buffer->s_hash = (Dee_hash_t)-1;
 	}
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	libpath = (DREF DeeTupleObject *)DeeModule_GetLibPath();
+	if unlikely(!libpath) {
+		Dee_XDecref(buffer);
+		goto err;
+	}
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	libpath = DeeModule_GetPath();
 	DeeList_LockRead(libpath);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Go through all library paths and generate the filename of a system header. */
-	for (i = 0; i < DeeList_SIZE(libpath); ++i) {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	for (i = 0; i < DeeTuple_SIZE(libpath); ++i)
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	for (i = 0; i < DeeList_SIZE(libpath); ++i)
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	{
 		size_t req_length;
 		char *dst;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		path = DeeTuple_GET(libpath, i);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		path = DeeList_GET(libpath, i);
 		if (!DeeString_Check(path))
 			continue;     /* Ignore anything that isn't a string. */
 		Dee_Incref(path); /* Keep a reference to prevent the path from getting deleted. */
 		DeeList_LockEndRead(libpath);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		req_length = (DeeString_SIZE(path) +            /* /foo/bar */
 		              1 +                               /* /  (Optional, but always allocated) */
 		              COMPILER_STRLEN(include_prefix) + /* include/ */
@@ -733,7 +754,9 @@ tpp_unknown_file(int mode, char *__restrict filename,
 #endif /* !ALTSEP */
 
 		/* Drop our reference to the library path. */
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		Dee_Decref(path);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 		/* Add a separator after the library path (if there wasn't one to being with) */
 		if (dst > buffer->s_str && dst[-1] != SEP)
@@ -761,6 +784,9 @@ tpp_unknown_file(int mode, char *__restrict filename,
 				Dee_string_utf_free(buffer->s_data);
 			}
 			DeeObject_Free(buffer);
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+			Dee_Decref_unlikely(libpath);
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			return result;
 		}
 
@@ -823,9 +849,16 @@ tpp_unknown_file(int mode, char *__restrict filename,
 				*p_keyword_entry = keyword_entry;
 			return result;
 		}
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		DeeList_LockRead(libpath);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	DeeList_LockEndRead(libpath);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	Dee_Decref_unlikely(libpath);
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 done_notfound:
 	result = NULL;
 
@@ -839,7 +872,11 @@ done_notfound:
 done_result:
 	return NULL;
 err_path:
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	Dee_Decref_unlikely(libpath);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	Dee_Decref(path);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	TPPLexer_SetErr();
 	goto done_notfound;
 err_streamopen_failed:

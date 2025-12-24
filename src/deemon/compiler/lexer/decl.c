@@ -485,10 +485,16 @@ switch_symbol_type:
 			if (sym->s_extern.e_module != &DeeModule_Deemon) {
 				char const *module_name;
 				/* External symbol reference. */
-				if (UNICODE_PRINTER_PRINT(printer, "?E") < 0)
-					goto err;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+				module_name = sym->s_extern.e_module->mo_absname;
+				if unlikely(!module_name)
+					goto print_object;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 				module_name = DeeString_AsUtf8((DeeObject *)sym->s_extern.e_module->mo_name);
 				if unlikely(!module_name)
+					goto err;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+				if (UNICODE_PRINTER_PRINT(printer, "?E") < 0)
 					goto err;
 				if (decl_ast_escapename(module_name,
 				                        WSTR_LENGTH(module_name),
@@ -641,7 +647,8 @@ print_undefined_symbol_name:
 		break;
 
 	default:
-/*print_object:*/
+		goto print_object;
+print_object:
 		/* Fallback: emit a reference to `object' */
 		if (UNICODE_PRINTER_PRINT(printer, "?O") < 0)
 			goto err;
@@ -1373,7 +1380,7 @@ decl_ast_parse_unary(struct decl_ast *__restrict self) {
 				self->da_symbol = new_symbol;
 			} else {
 				if (WARN(W_MODULE_IMPORT_NOT_FOUND, token.t_kwd->k_name,
-				         DeeString_STR(self->da_symbol->s_module->mo_name)))
+				         DeeModule_GetShortName((DeeObject *)self->da_symbol->s_module)))
 					goto err_r;
 			}
 		} else {

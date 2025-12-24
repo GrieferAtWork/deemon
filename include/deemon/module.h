@@ -692,8 +692,11 @@ INTDEF struct Dee_static_module_struct DeeModule_Empty;
 /* Import (DeeModule_Open() + DeeModule_Initialize()) a specific module */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_Import(/*String*/ DeeObject *__restrict import_str,
-                 /*Module|String|None*/ DeeObject *context_absname,
+                 /*Module|String|Type|None*/ DeeObject *context_absname,
                  unsigned int flags);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_ImportString(/*utf-8*/ char const *__restrict import_str, size_t import_str_size,
+                       /*Module|String|Type|None*/ DeeObject *context_absname, unsigned int flags);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_ImportEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_size,
                    /*utf-8*/ char const *context_absname, size_t context_absname_size,
@@ -735,8 +738,11 @@ DeeModule_ImportEx(/*utf-8*/ char const *__restrict import_str, size_t import_st
  * @return: DeeModule_IMPORT_ERECUR: `DeeModule_IMPORT_F_ERECUR' was set, and module is already being imported */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_Open(/*String*/ DeeObject *__restrict import_str,
-               /*Module|String|None*/ DeeObject *context_absname,
+               /*Module|String|Type|None*/ DeeObject *context_absname,
                unsigned int flags);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenString(/*utf-8*/ char const *__restrict import_str, size_t import_str_size,
+                     /*Module|String|Type|None*/ DeeObject *context_absname, unsigned int flags);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_size,
                  /*utf-8*/ char const *context_absname, size_t context_absname_size,
@@ -847,7 +853,7 @@ DeeModule_GetFileName(/*Module*/ DeeObject *__restrict self);
  * @return: NULL:      An error was thrown. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeModule_GetRelName(/*Module*/ DeeObject *__restrict self,
-                     /*Module|String|None*/ DeeObject *context_absname);
+                     /*Module|String|Type|None*/ DeeObject *context_absname);
 
 /* Same as `DeeModule_GetRelName()', but allows you to specify the context
  * path in the same manner as can be specified by `DeeModule_OpenEx()':
@@ -1647,6 +1653,47 @@ DeeModule_FromStaticPointer(void const *ptr); /* TODO: Rename to "DeeModule_OfSt
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_OfObject(DeeObject *__restrict ob);
 
+
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+/* Lookup an external symbol.
+ * Convenience function (same as `DeeObject_GetAttr(DeeModule_Import(...), ...)') */
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_GetExtern(/*String*/ DeeObject *__restrict module_name,
+                    /*String*/ DeeObject *__restrict global_name);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_GetExternString(/*utf-8*/ char const *__restrict module_name,
+                          /*utf-8*/ char const *__restrict global_name);
+
+/* Helper wrapper for `DeeObject_Call(DeeModule_GetExternString(...), ...)',
+ * that returns the return value of the call operation. */
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_CallExtern(/*String*/ DeeObject *__restrict module_name,
+                     /*String*/ DeeObject *__restrict global_name,
+                     size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_CallExternString(/*utf-8*/ char const *__restrict module_name,
+                           /*utf-8*/ char const *__restrict global_name,
+                           size_t argc, DeeObject *const *argv);
+
+/* Helper wrapper for `DeeObject_Callf(DeeModule_GetExternString(...), ...)',
+ * that returns the return value of the call operation. */
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *
+DeeModule_CallExternf(/*String*/ DeeObject *__restrict module_name,
+                      /*String*/ DeeObject *__restrict global_name,
+                      char const *__restrict format, ...);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_VCallExternf(/*String*/ DeeObject *__restrict module_name,
+                       /*String*/ DeeObject *__restrict global_name,
+                       char const *__restrict format, va_list args);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *
+DeeModule_CallExternStringf(/*utf-8*/ char const *__restrict module_name,
+                            /*utf-8*/ char const *__restrict global_name,
+                            char const *__restrict format, ...);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_VCallExternStringf(/*utf-8*/ char const *__restrict module_name,
+                             /*utf-8*/ char const *__restrict global_name,
+                             char const *__restrict format, va_list args);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 /* Lookup an external symbol.
  * Convenience function (same as `DeeObject_GetAttr(DeeModule_OpenGlobal(...)+DeeModule_RunInit, ...)') */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1685,6 +1732,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_VCallExternStringf(/*utf-8*/ char const *__restrict module_name,
                              /*utf-8*/ char const *__restrict global_name,
                              char const *__restrict format, va_list args);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 #ifdef CONFIG_BUILDING_DEEMON

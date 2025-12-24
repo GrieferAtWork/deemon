@@ -1751,7 +1751,7 @@ do_keyword:
 						struct symbol *sym = result->a_sym;
 						if (sym->s_type == SYMBOL_TYPE_EXTERN) {
 							symname = sym->s_extern.e_symbol->ss_name;
-							modname = DeeString_STR(sym->s_extern.e_module->mo_name);
+							modname = DeeModule_GetShortName((DeeObject *)sym->s_extern.e_module);
 						}
 					}
 					if (WARNAT(&loc, W_UNCLEAR_SYMBOL_FROM_MODULE, symname, modname))

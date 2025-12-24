@@ -92,6 +92,23 @@ decgen_imports(DeeModuleObject *__restrict self) {
 		uint32_t addr;
 		ASSERT_OBJECT_TYPE(mod, &DeeModule_Type);
 		dec_curr = SC_STRING;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		/* Always encode module names using their absolute names.
+		 *
+		 * In theory, we could also encode using relative-, or libpath-
+		 * based module names, but that would require extra effort here,
+		 * and wouldn't give us any advantage later... */
+		if (!mod->mo_absname) {
+			return DeeError_Throwf(&DeeError_NotImplemented,
+			                       "Cannot encode import of "
+			                       "anonymous module in .dec file");
+		}
+		data = dec_allocstr(mod->mo_absname,
+		                    (strlen(mod->mo_absname) + 1) *
+		                    sizeof(char));
+		if unlikely(!data)
+			goto err;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		if (DeeModule_IsGlobal(mod)) {
 			/* Globally available module (loadable as part of the library path). */
 			char const *global_name;
@@ -226,7 +243,8 @@ import_module_by_name:
 			data = dec_reuselocal(num_dots + 1 + (size_t)(other_pathend - other_pathstr));
 			/*ASSERT(data);*/ /* `dec_reuselocal()' never returns NULL */
 		}
-		addr     = dec_ptr2addr(data);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+		addr = dec_ptr2addr(data);
 		dec_curr = SC_IMPORTS;
 
 		/* Encode the string address as a pointer. */
@@ -1860,7 +1878,11 @@ err:
 INTERN WUNUSED NONNULL((1)) int
 (DCALL dec_generate)(DeeModuleObject *__restrict self) {
 	Dec_Ehdr *header;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	ASSERT_OBJECT_TYPE_EXACT(self, &DeeModuleDee_Type);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	dec_curr = SC_HEADER;
 	header   = (Dec_Ehdr *)dec_alloc(sizeof(Dec_Ehdr));
 	if unlikely(!header)
@@ -1918,6 +1940,17 @@ INTERN WUNUSED NONNULL((1)) int
 
 	/* Emit the root code object. */
 	dec_curr = SC_ROOT;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	{
+		int temp;
+		DREF /*Code*/ DeeCodeObject *code;
+		code = (DREF /*Code*/ DeeCodeObject *)DeeModule_GetRootCode((DeeObject *)self);
+		temp = dec_putcode(code);
+		Dee_Decref_unlikely(code);
+		if unlikely(temp)
+			goto err;
+	}
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if likely(self->mo_root) {
 		if unlikely(dec_putcode(self->mo_root))
 			goto err;
@@ -1926,7 +1959,7 @@ INTERN WUNUSED NONNULL((1)) int
 		if unlikely(dec_putcode(&DeeCode_Empty))
 			goto err;
 	}
-
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return 0;
 err:
 	return -1;
