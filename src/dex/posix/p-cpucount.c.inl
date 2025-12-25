@@ -167,8 +167,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void)
 #ifdef posix_cpu_count_USE_open_AND_proc_cpuinfo
 	unsigned int result = 0;
 	DREF DeeObject *file;
-	file = DeeFile_OpenString("/proc/cpuinfo",
-	                          OPEN_FRDONLY, 0);
+	file = DeeFile_OpenString("/proc/cpuinfo", OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 	if unlikely(!file)
 		goto fallback;
 	/* Count the # of lines that begin with `processor'

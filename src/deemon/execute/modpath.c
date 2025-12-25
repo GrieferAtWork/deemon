@@ -4607,7 +4607,7 @@ got_result_modulepath:
 #endif
 
 	/* Open the module's source file stream. */
-	input_stream = DeeFile_Open((DeeObject *)module_path_ob, OPEN_FRDONLY, 0);
+	input_stream = DeeFile_Open((DeeObject *)module_path_ob, OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 	if unlikely(!ITER_ISOK(input_stream)) {
 		result = (DREF DeeModuleObject *)input_stream;
 		if (input_stream == ITER_DONE && throw_error) {
@@ -5299,7 +5299,7 @@ again_find_existing_global_module:
 		ASSERT(dst[module_namesize + 5] == '\0');
 		{
 			DREF DeeObject *dec_stream;
-			dec_stream = DeeFile_OpenString(buf, OPEN_FRDONLY, 0);
+			dec_stream = DeeFile_OpenString(buf, OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 			memmovedownc(dst,
 			             dst + 1,
 			             module_namesize + 5,
@@ -5417,7 +5417,7 @@ try_load_module_after_dec_failure:
 				}
 load_module_after_dec_failure:
 				/* Must try to load the module from its source file. */
-				dec_stream = DeeFile_OpenString(buf, OPEN_FRDONLY, 0);
+				dec_stream = DeeFile_OpenString(buf, OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 				if unlikely(!ITER_ISOK(dec_stream)) {
 					DeeModule_FailLoading(result);
 					if (dec_stream == ITER_DONE) {
@@ -5604,7 +5604,7 @@ load_module_after_dex_failure:
 		DeeModuleObject *existing_module;
 		DREF DeeObject *source_stream;
 		int error;
-		source_stream = DeeFile_Open((DeeObject *)module_path_ob, OPEN_FRDONLY, 0);
+		source_stream = DeeFile_Open((DeeObject *)module_path_ob, OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 		if unlikely(!ITER_ISOK(source_stream)) {
 			Dee_Decref(module_name_ob);
 			if (source_stream == ITER_DONE) {

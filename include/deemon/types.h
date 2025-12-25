@@ -47,18 +47,19 @@ DECL_BEGIN
 #define OBJECT_HEAD_INIT Dee_OBJECT_HEAD_INIT
 #endif /* DEE_SOURCE */
 
+struct Dee_weakref;
 struct Dee_object;
 struct Dee_type_object;
 
-typedef struct Dee_object      DeeObject;     /* Common base for all deemon objects */
-typedef struct Dee_type_object DeeTypeObject; /* Common base for all deemon type objects */
-typedef __SSIZE_TYPE__         Dee_ssize_t;   /* Signed size type (s.a. `size_t') */
-typedef __ULONG64_TYPE__       Dee_pos_t;     /* File position */
-typedef __LONG64_TYPE__        Dee_off_t;     /* Delta between 2 file positions */
-typedef __UINTPTR_TYPE__       Dee_refcnt_t;  /* Object reference count type */
-typedef __UINTPTR_TYPE__       Dee_hash_t;    /* Object hash data type */
-typedef __hybrid_uint128_t     Dee_uint128_t; /* unsigned, 128-bit integer */
-typedef __hybrid_int128_t      Dee_int128_t;  /* signed, 128-bit integer */
+typedef struct Dee_object /*     */ DeeObject;     /* Common base for all deemon objects */
+typedef struct Dee_type_object /**/ DeeTypeObject; /* Common base for all deemon type objects */
+typedef __SSIZE_TYPE__ /*        */ Dee_ssize_t;   /* Signed size type (s.a. `size_t') */
+typedef __ULONG64_TYPE__ /*      */ Dee_pos_t;     /* File position */
+typedef __LONG64_TYPE__ /*       */ Dee_off_t;     /* Delta between 2 file positions */
+typedef __UINTPTR_TYPE__ /*      */ Dee_refcnt_t;  /* Object reference count type */
+typedef __UINTPTR_TYPE__ /*      */ Dee_hash_t;    /* Object hash data type */
+typedef __hybrid_uint128_t /*    */ Dee_uint128_t; /* unsigned, 128-bit integer */
+typedef __hybrid_int128_t /*     */ Dee_int128_t;  /* signed, 128-bit integer */
 
 #define Dee_SIZEOF_POS_T    8                  /* == sizeof(Dee_pos_t) */
 #define Dee_SIZEOF_OFF_T    Dee_SIZEOF_POS_T   /* == sizeof(Dee_off_t) */
@@ -233,7 +234,6 @@ DeeType_Implements(DeeTypeObject const *test_type,
 
 
 
-struct Dee_weakref;
 struct Dee_weakref_list {
 	struct Dee_weakref *wl_nodes; /* [0..1][lock(BIT0(wl_nodes))] chain of weak references. */
 };

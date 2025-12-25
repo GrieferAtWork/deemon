@@ -2026,7 +2026,7 @@ lexer_include(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *arg
 	    DeeObject_AssertTypeExact(filename, &DeeString_Type))
 		goto err;
 	if (DeeString_Check(arg)) {
-		stream = DeeFile_Open(arg, OPEN_FRDONLY, 0);
+		stream = DeeFile_Open(arg, OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 		if unlikely(!stream)
 			goto err;
 		if (DeeNone_Check(filename)) {

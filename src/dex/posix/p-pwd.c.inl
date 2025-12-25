@@ -294,7 +294,7 @@ err_printer:
 
 #ifdef posix_gethostname_USE_read_etc_hostname
 	DREF DeeObject *file, *bytes, *result;
-	file = DeeFile_OpenString("/etc/hostname", OPEN_FRDONLY, 0);
+	file = DeeFile_OpenString("/etc/hostname", OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 	if unlikely(!file)
 		goto err;
 	bytes = DeeFile_ReadBytes(file, (size_t)-1, true);

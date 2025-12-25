@@ -66,7 +66,7 @@ DeeSystem_DEFINE_memrchr(dee_memrchr)
 PRIVATE stream_t DCALL
 tpp_userstream_fopen(char const *__restrict filename) {
 	stream_t result;
-	result = (stream_t)DeeFile_OpenString(filename, OPEN_FRDONLY, 0);
+	result = (stream_t)DeeFile_OpenString(filename, OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 	if (!result) {
 		TPPLexer_SetErr(); /* Set a lexer error to indicate failure. */
 	} else if (result == (stream_t)ITER_DONE) {
@@ -804,7 +804,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 				buflen = buffer->s_len;
 			}
 		}
-		stream = DeeFile_Open((DeeObject *)buffer, OPEN_FRDONLY, 0);
+		stream = DeeFile_Open((DeeObject *)buffer, OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 		if (stream != ITER_DONE) {       /* Error or success. */
 			Dee_Incref(&DeeString_Type); /* Finalize initialization of the buffer. */
 

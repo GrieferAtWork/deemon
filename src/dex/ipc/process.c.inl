@@ -772,7 +772,7 @@ is_executable_file(DeeStringObject *__restrict filename) {
 #ifdef is_executable_file_USE_DeeFile_Open
 	{
 		DREF DeeObject *fp;
-		fp = DeeFile_Open((DeeObject *)filename, Dee_OPEN_FRDONLY, 0);
+		fp = DeeFile_Open((DeeObject *)filename, Dee_OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 		if (ITER_ISOK(fp)) {
 			Dee_Decref_likely(fp);
 			return 1;
@@ -794,7 +794,7 @@ err:
 PRIVATE WUNUSED DREF DeeStringObject *DCALL
 process_do_get_etc_shells_default_shell(void) {
 	DREF DeeObject *fp, *line;
-	fp = DeeFile_OpenString(_PATH_SHELLS, Dee_OPEN_FRDONLY, 0);
+	fp = DeeFile_OpenString(_PATH_SHELLS, OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 	if (!ITER_ISOK(fp))
 		return (DREF DeeStringObject *)fp; /* File-not-found or error. */
 	while (ITER_ISOK(line = DeeFile_ReadLine(fp, (size_t)-1, false))) {
@@ -4503,7 +4503,7 @@ process_get_argv(Process *__restrict self)
 			goto err;
 		Process_LockEndWrite(self);
 		Dee_sprintf(cmdline_path, "/proc/%" PRFdPID "/cmdline", pid);
-		cmdline_file = DeeFile_OpenString(cmdline_path, OPEN_FRDONLY, 0);
+		cmdline_file = DeeFile_OpenString(cmdline_path, OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 		if (!ITER_ISOK(cmdline_file)) {
 #define WANT_err_file_not_found
 			if (cmdline_file != NULL)
@@ -4723,7 +4723,7 @@ process_get_environ(Process *__restrict self) {
 			goto err;
 		Process_LockEndWrite(self);
 		Dee_sprintf(environ_path, "/proc/%" PRFdPID "/environ", pid);
-		environ_file = DeeFile_OpenString(environ_path, OPEN_FRDONLY, 0);
+		environ_file = DeeFile_OpenString(environ_path, OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 		if (!ITER_ISOK(environ_file)) {
 #define WANT_err_file_not_found
 			if (environ_file != NULL)
@@ -5010,9 +5010,9 @@ process_get_stdfd(Process *__restrict self, unsigned int std_handle_id) {
 		Process_LockEndWrite(self);
 		Dee_sprintf(stdfd_path, "/proc/%" PRFdPID "/fd/%d", pid,
 		            DEE_STDID_TO_FILENO(std_handle_id));
-		result = DeeFile_OpenString(stdfd_path, OPEN_FRDWR, 0);
+		result = DeeFile_OpenString(stdfd_path, OPEN_FRDWR | OPEN_FCLOEXEC, 0);
 		if (result == NULL && DeeError_Catch(&DeeError_FileAccessError))
-			result = DeeFile_OpenString(stdfd_path, OPEN_FRDONLY, 0);
+			result = DeeFile_OpenString(stdfd_path, OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 		if unlikely(result == ITER_DONE) {
 #define WANT_ipc_unimplemented
 			ipc_unimplemented();

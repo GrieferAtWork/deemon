@@ -137,7 +137,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_fcopyfile_f
 	}
 
 	/* Open arguments as deemon file objects. */
-	src_file = posix_fd_openfile(oldfd, OPEN_FRDONLY);
+	src_file = posix_fd_openfile(oldfd, OPEN_FRDONLY | OPEN_FCLOEXEC);
 #define NEED_posix_fd_openfile
 	if unlikely(!src_file)
 		goto err;
@@ -155,7 +155,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_fcopyfile_f
 			ASSERT(dst_file != ITER_DONE);
 		}
 	} else {
-		dst_file = posix_fd_openfile(newpath, OPEN_FWRONLY);
+		dst_file = posix_fd_openfile(newpath, OPEN_FWRONLY | OPEN_FCLOEXEC);
 #define NEED_posix_fd_openfile
 	}
 	if unlikely(!dst_file)
@@ -231,7 +231,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_copyfile_f_
 
 	/* Open arguments as deemon file objects. */
 	if (DeeString_Check(oldpath)) {
-		src_file = DeeFile_Open(oldpath, OPEN_FRDONLY, 0);
+		src_file = DeeFile_Open(oldpath, OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 		if unlikely(src_file == ITER_DONE) {
 			DeeError_Throwf(&DeeError_FileNotFound, "File %r could not be found", oldpath);
 			goto err;
@@ -240,7 +240,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_copyfile_f_
 		/* We opened the source-file, so we can assume that it's file-pointer is at the start. */
 		src_file_mmap_hints |= DEE_MAPFILE_F_ATSTART;
 	} else {
-		src_file = posix_fd_openfile(oldpath, OPEN_FRDONLY);
+		src_file = posix_fd_openfile(oldpath, OPEN_FRDONLY | OPEN_FCLOEXEC);
 #define NEED_posix_fd_openfile
 	}
 	if unlikely(!src_file)
@@ -249,17 +249,17 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_copyfile_f_
 	/* Load `newpath' as a deemon file object. */
 	if (DeeString_Check(newpath)) {
 		if (flags & RENAME_NOREPLACE) {
-			dst_file = DeeFile_Open(newpath, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FTRUNC | OPEN_FEXCL, 0644);
+			dst_file = DeeFile_Open(newpath, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FTRUNC | OPEN_FEXCL | OPEN_FCLOEXEC, 0644);
 			if unlikely(dst_file == ITER_DONE) {
 				DeeError_Throwf(&DeeError_FileExists, "File %r already exists", newpath);
 				goto err_src_file;
 			}
 		} else {
-			dst_file = DeeFile_Open(newpath, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FTRUNC, 0644);
+			dst_file = DeeFile_Open(newpath, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FTRUNC | OPEN_FCLOEXEC, 0644);
 			ASSERT(dst_file != ITER_DONE);
 		}
 	} else {
-		dst_file = posix_fd_openfile(newpath, OPEN_FWRONLY);
+		dst_file = posix_fd_openfile(newpath, OPEN_FWRONLY | OPEN_FCLOEXEC);
 #define NEED_posix_fd_openfile
 	}
 	if unlikely(!dst_file)
@@ -401,7 +401,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_lcopyfile_f
 		}
 #endif /* posix_lcopyfile_USE_symlink_before_open */
 
-		src_file = DeeFile_Open(oldpath, OPEN_FRDONLY | OPEN_FNOFOLLOW, 0);
+		src_file = DeeFile_Open(oldpath, OPEN_FRDONLY | OPEN_FNOFOLLOW | OPEN_FCLOEXEC, 0);
 		if unlikely(src_file == ITER_DONE) {
 			DeeError_Throwf(&DeeError_FileNotFound, "File %r could not be found", oldpath);
 			goto err;
@@ -410,7 +410,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_lcopyfile_f
 		/* We opened the source-file, so we can assume that it's file-pointer is at the start. */
 		src_file_mmap_hints |= DEE_MAPFILE_F_ATSTART;
 	} else {
-		src_file = posix_fd_openfile(oldpath, OPEN_FRDONLY | OPEN_FNOFOLLOW);
+		src_file = posix_fd_openfile(oldpath, OPEN_FRDONLY | OPEN_FNOFOLLOW | OPEN_FCLOEXEC);
 #define NEED_posix_fd_openfile
 	}
 	if unlikely(!src_file)
@@ -448,17 +448,17 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_lcopyfile_f
 	/* Load `newpath' as a deemon file object. */
 	if (DeeString_Check(newpath)) {
 		if (flags & RENAME_NOREPLACE) {
-			dst_file = DeeFile_Open(newpath, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FTRUNC | OPEN_FEXCL, 0644);
+			dst_file = DeeFile_Open(newpath, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FTRUNC | OPEN_FEXCL | OPEN_FCLOEXEC, 0644);
 			if unlikely(dst_file == ITER_DONE) {
 				DeeError_Throwf(&DeeError_FileExists, "File %r already exists", newpath);
 				goto err_src_file;
 			}
 		} else {
-			dst_file = DeeFile_Open(newpath, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FTRUNC, 0644);
+			dst_file = DeeFile_Open(newpath, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FTRUNC | OPEN_FCLOEXEC, 0644);
 			ASSERT(dst_file != ITER_DONE);
 		}
 	} else {
-		dst_file = posix_fd_openfile(newpath, OPEN_FWRONLY);
+		dst_file = posix_fd_openfile(newpath, OPEN_FWRONLY | OPEN_FCLOEXEC);
 #define NEED_posix_fd_openfile
 	}
 	if unlikely(!dst_file)

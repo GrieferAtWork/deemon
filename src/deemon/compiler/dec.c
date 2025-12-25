@@ -705,7 +705,8 @@ INTERN WUNUSED NONNULL((1)) int
 	Dee_DPRINTF("DECGEN: %q -> %q\n", module->mo_absname, dec_filename);
 	output_fp = DeeFile_OpenString(dec_filename,
 	                               OPEN_FWRONLY | OPEN_FCREAT |
-	                               OPEN_FTRUNC | OPEN_FHIDDEN,
+	                               OPEN_FTRUNC | OPEN_FHIDDEN |
+	                               OPEN_FCLOEXEC,
 	                               0644);
 	if unlikely(!output_fp)
 		goto err;
@@ -835,7 +836,8 @@ INTERN WUNUSED NONNULL((1)) int
 		DREF DeeObject *output_fp;
 		output_fp = DeeFile_Open(dec_filename,
 		                         OPEN_FWRONLY | OPEN_FCREAT |
-		                         OPEN_FTRUNC | OPEN_FHIDDEN,
+		                         OPEN_FTRUNC | OPEN_FHIDDEN |
+		                         OPEN_FCLOEXEC,
 		                         0644);
 		if unlikely(!output_fp)
 			goto err_filename;

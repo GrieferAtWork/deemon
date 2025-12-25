@@ -270,7 +270,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_o(char *arg) {
 		/* Special case: output to stdout */
 		script_output_stream = DeeFile_GetStd(DEE_STDOUT);
 	} else {
-		script_output_stream = DeeFile_OpenString(arg, OPEN_FWRONLY | OPEN_FCREAT, 644);
+		script_output_stream = DeeFile_OpenString(arg, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FCLOEXEC, 644);
 	}
 	if unlikely(!script_output_stream)
 		goto err;
@@ -2482,7 +2482,7 @@ dformat_source_files(char *filename,
 
 	/* Open the file that's supposed to get formatted. */
 	filestream = (DREF DeeFileObject *)DeeFile_OpenString(filename,
-	                                                      OPEN_FRDWR | OPEN_FXWRITE,
+	                                                      OPEN_FRDWR | OPEN_FXWRITE | OPEN_FCLOEXEC,
 	                                                      0);
 	if unlikely(filestream == (DREF DeeFileObject *)ITER_DONE) {
 		/* File-not-found. */
