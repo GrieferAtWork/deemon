@@ -108,6 +108,7 @@ DECL_BEGIN
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 #ifdef DEE_SOURCE
+#define Dee_tuple_object          tuple_object
 #define Dee_thread_object         thread_object
 #define Dee_string_object         string_object
 #define Dee_code_object           code_object
@@ -140,6 +141,7 @@ struct Dee_string_object;
 struct Dee_code_object;
 struct Dee_cmethod_object;
 struct Dee_thread_object;
+struct Dee_tuple_object;
 typedef struct Dee_module_object DeeModuleObject;
 
 #define Dee_MODSYM_FNORMAL         0x00 /* Normal symbol flags. */
@@ -419,15 +421,6 @@ struct Dee_compiler_options {
  * - DeeModuleDir_Type:  mo_absname           (it's a directory)
  */
 
-
-struct Dee_module_directory {
-	size_t                                                   md_count;  /* [const] # of files */
-	COMPILER_FLEXIBLE_ARRAY(DREF struct Dee_string_object *, md_files); /* [1..1][const][md_count] Names of "*.dee" files (w/o extension) and sub-directories */
-};
-
-#define Dee_module_directory_fini(self)    Dee_Decrefv((self)->md_files, (self)->md_count)
-#define Dee_module_directory_destroy(self) (Dee_module_directory_fini(self), Dee_Free(self))
-
 struct Dee_module_libentry {
 	DREF struct Dee_string_object *mle_name; /* [0..1][lock(INTERNAL(module_libtree_lock))][valid_if(mo_absname)]
 	                                          * LIBPATH-name of module (or "NULL" if not a global module, or not
@@ -511,7 +504,7 @@ struct Dee_module_object {
 	struct Dee_module_treenode     mo_absnode;  /* [lock(INTERNAL(module_abstree_lock))][valid_if(mo_absname)]
 	                                             * Node in tree of modules-by-mo_absname */
 	struct Dee_module_libentry     mo_libname;  /* [valid_if(mo_absname != NULL)] Primary lib entry for this module (unused if "mle_name" is "NULL") */
-	struct Dee_module_directory   *mo_dir;      /* [0..1][owned_if(!= empty_module_directory)][lock(WRITE_ONCE)]
+	DREF struct Dee_tuple_object  *mo_dir;      /* [0..1][lock(WRITE_ONCE)] Tuple of strings (names of possible sub-modules of this module)
 	                                             * Results of interpreting `mo_absname' as a directory and scanning
 	                                             * that directory for "*.dee" files, and more directories. */
 #define Dee_MODULE_INIT_UNINITIALIZED ((struct Dee_thread_object *)NULL)
@@ -585,7 +578,7 @@ struct Dee_module_object {
 		/*utf-8*/ char                *mo_absname; \
 		struct Dee_module_treenode     mo_absnode; \
 		struct Dee_module_libentry     mo_libname; \
-		struct Dee_module_directory   *mo_dir;     \
+		struct Dee_tuple_object       *mo_dir;     \
 		struct Dee_thread_object      *mo_init;    \
 		uint64_t                       mo_ctime;   \
 		uint16_t                       mo_flags;   \
@@ -631,14 +624,6 @@ DDATDEF DeeTypeObject DeeModuleDee_Type; /* ./foo.dee  (or ".foo.dec"; user-code
 #ifndef CONFIG_NO_DEX
 DDATDEF DeeTypeObject DeeModuleDex_Type; /* ./net.so   (".so/.dll"; native module) */
 #endif /* !CONFIG_NO_DEX */
-
-
-#ifdef CONFIG_BUILDING_DEEMON
-struct Dee_module_directory_empty {
-	size_t md_count;  /* [const][== 0] */
-};
-INTDEF struct Dee_module_directory_empty empty_module_directory;
-#endif /* CONFIG_BUILDING_DEEMON */
 
 
 struct Dee_static_module_struct {
@@ -707,6 +692,14 @@ DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_ImportEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_size,
                    /*utf-8*/ char const *context_absname, size_t context_absname_size,
                    unsigned int flags, struct Dee_compiler_options *options);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_ImportChild(/*Module*/ DeeObject *self,
+                      /*String*/ DeeObject *name,
+                      unsigned int flags);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_ImportChildEx(/*Module*/ DeeObject *self,
+                        /*utf-8*/ char const *__restrict name, size_t name_size,
+                        unsigned int flags, struct Dee_compiler_options *options);
 
 
 /* Open a module, given an import string, and another module/path used
@@ -754,6 +747,22 @@ DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_
                  /*utf-8*/ char const *context_absname, size_t context_absname_size,
                  unsigned int flags, struct Dee_compiler_options *options);
 
+/* Open a child of a specific module:
+ * >> rt      = DeeModule_Open("rt", NULL, DeeModule_IMPORT_F_NORMAL);
+ * >> rt_hash = DeeModule_OpenChild(rt, "hash", DeeModule_IMPORT_F_NORMAL);
+ * Same as:
+ * >> rt_hash = DeeModule_Open("rt.hash", NULL, DeeModule_IMPORT_F_NORMAL);
+ *
+ * NOTE: These functions ignore the `DeeModule_IMPORT_F_CTXDIR' flag! */
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenChild(/*Module*/ DeeObject *self,
+                    /*String*/ DeeObject *name,
+                    unsigned int flags);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenChildEx(/*Module*/ DeeObject *self,
+                      /*utf-8*/ char const *__restrict name, size_t name_size,
+                      unsigned int flags, struct Dee_compiler_options *options);
+
 
 
 
@@ -800,11 +809,11 @@ DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self);
  * (that don't contain any '.' characters) and matching the module's filename
  * with *its* trailing "*.dee"/"*.so"/"*.dll" removed (or just the directory
  * itself if that exists, but no associated source file / DEX module does).
- * If no such directory exists, "empty_module_directory" is returned.
+ * If no such directory exists, "Dee_EmptyTuple" is returned.
  *
  * @return: * : The module's directory file list.
  * @return: NULL: An error was thrown */
-DFUNDEF WUNUSED NONNULL((1)) struct Dee_module_directory *DCALL
+DFUNDEF WUNUSED NONNULL((1)) /*Tuple*/ DeeObject *DCALL
 DeeModule_GetDirectory(DeeModuleObject *__restrict self);
 
 /* Return the unique, absolute name used to identify "self" within the filesystem.

@@ -2413,8 +2413,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetLogicalDriveStrings_f_impl(voi
 /*[[[end]]]*/
 {
 	LPWSTR lpBuffer, lpNewBuffer;
-	DWORD dwBufSize = PATH_MAX, dwError;
-	lpBuffer        = DeeString_NewWideBuffer(dwBufSize);
+	DWORD dwError, dwBufSize = 26 * 4;
+	lpBuffer = DeeString_NewWideBuffer(dwBufSize);
 	if unlikely(!lpBuffer)
 		goto err;
 again:

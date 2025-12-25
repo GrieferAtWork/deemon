@@ -2142,10 +2142,18 @@ do_DeeModule_OpenDirectory(/*inherit(always)*/ /*utf-8*/ char *__restrict abs_di
 	}
 	module_abstree_lock_endread();
 
-	/* Verify that "posix.stat.isdir(abs_dirname)". If not:
+	/* Verify that:
+	 * - posix.stat.isdir(abs_dirname)
+	 * - !posix.stat.exists(abs_dirname + ".dee")
+	 * #ifndef CONFIG_NO_DEX
+	 * - !posix.stat.exists(abs_dirname + DeeSystem_SOEXT)
+	 * #endif // !CONFIG_NO_DEX
+	 *
+	 * If not:
 	 * - return `DeeModule_IMPORT_ENOENT' if `flags & DeeModule_IMPORT_F_ENOENT'
-	 * - throw `DeeError_NoDirectory' if it's actually a regular file
-	 * - throw `DeeError_FileNotFound' if it doesn't exist at all */
+	 * - throw `DeeError_NoDirectory' if "abs_dirname" is actually a regular file
+	 * - throw `DeeError_FileNotFound' if "abs_dirname" doesn't exist at all
+	 * - throw `DeeError_NoDirectory' if one of the other files exists */
 	(void)abs_dirname_length;
 	(void)flags;
 	/* TODO */
@@ -2299,6 +2307,17 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 			--pathname_size;
 		while (pathname_size >= 1 && DeeSystem_IsSep(pathname[pathname_size - 1]))
 			--pathname_size;
+	}
+
+	if unlikely(pathname_size == 0) {
+		/* Special case: given "import_str" is relative to the filesystem root:
+		 * #ifdef DeeSystem_HAVE_FS_DRIVES
+		 * "c.users.me.projects.deemon.script"  -> "C:\users\me\projects\deemon\script"
+		 * #else // DeeSystem_HAVE_FS_DRIVES
+		 * "home.me.projects.deemon.script"     -> "/home/me/projects/deemon/script"
+		 * #endif // !DeeSystem_HAVE_FS_DRIVES
+		 */
+		/* TODO */
 	}
 
 	/* Check if "pathname" is a properly normalized, absolute path */
@@ -2713,6 +2732,76 @@ DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_
 	                                             flags, options);
 }
 
+/* Open a child of a specific module:
+ * >> rt      = DeeModule_Open("rt", NULL, DeeModule_IMPORT_F_NORMAL);
+ * >> rt_hash = DeeModule_OpenChild(rt, "hash", DeeModule_IMPORT_F_NORMAL);
+ * Same as:
+ * >> rt_hash = DeeModule_Open("rt.hash", NULL, DeeModule_IMPORT_F_NORMAL);
+ *
+ * NOTE: These functions ignore the `DeeModule_IMPORT_F_CTXDIR' flag! */
+PUBLIC WUNUSED NONNULL((1, 2)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenChild(/*Module*/ DeeObject *self,
+                    /*String*/ DeeObject *name,
+                    unsigned int flags) {
+	char const *name_utf8;
+	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
+	name_utf8 = DeeString_AsUtf8(name);
+	if unlikely(!name_utf8)
+		goto err;
+	return DeeModule_OpenChildEx(self, name_utf8, WSTR_LENGTH(name_utf8), flags, NULL);
+err:
+	return DeeModule_IMPORT_ERROR;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenChildEx(/*Module*/ DeeObject *self,
+                      /*utf-8*/ char const *__restrict name, size_t name_size,
+                      unsigned int flags, struct Dee_compiler_options *options) {
+	char *child_absname, *dst;
+	char const *context_absname;
+	size_t child_absname_length, context_absname_length;
+	DeeModuleObject *me = (DeeModuleObject *)self;
+	DREF DeeModuleObject *result;
+	ASSERT_OBJECT_TYPE(me, &DeeModule_Type);
+	ASSERTF(!(flags & _DeeModule_IMPORT_F_MASK), "Internal flags may not be set by API");
+	context_absname = me->mo_absname;
+	if unlikely(!context_absname)
+		goto err_no_child;
+	if (me->mo_flags & Dee_MODULE_FABSFILE) {
+		if unlikely(Dee_TYPE(self) != &DeeModuleDir_Type)
+			goto err_no_child;
+	}
+	context_absname_length = strlen(context_absname);
+	child_absname_length = context_absname_length + 1 + name_size;
+	child_absname = (char *)Dee_Mallocc(child_absname_length +
+	                                    DeeModule_OpenFile_impl4_EXTRA_CHARS +
+	                                    DeeModule_OpenFile_impl3_EXTRA_CHARS + 1,
+	                                    sizeof(char));
+	if unlikely(!child_absname)
+		goto err;
+	dst = (char *)mempcpyc(child_absname, context_absname, context_absname_length, sizeof(char));
+	*dst++ = DeeSystem_SEP;
+	dst = (char *)mempcpyc(dst, name, name_size, sizeof(char));
+	*dst = '\0';
+	ASSERT((size_t)(dst - child_absname) == child_absname_length);
+#if 0
+	/* TODO: Same as "DeeModule_OpenFile_impl2()", but without the
+	 *       `.endswith(".so")'-part or `.endswith(".dee")'-part,
+	 *       and all "_DeeModule_IMPORT_F_IS_DEE_FILE"-related
+	 *       handling omitted */
+#else
+	result = DeeModule_OpenFile_impl2(child_absname, child_absname_length, flags, options);
+#endif
+	return (DREF /*Module*/ DeeObject *)result;
+err_no_child:
+	if (flags & DeeModule_IMPORT_F_ENOENT)
+		return DeeModule_IMPORT_ENOENT;
+	DeeError_Throwf(&DeeError_FileNotFound, "%k has no child %$q", self, name_size, name);
+err:
+	return DeeModule_IMPORT_ERROR;
+}
+
+
 /* Open a module, given an import string, and another module/path used
  * to resolve relative paths. The given "import_str" can take any of the
  * following forms (assuming that `DeeSystem_SEP' is '/'):
@@ -2848,61 +2937,23 @@ DeeModule_ImportEx(/*utf-8*/ char const *__restrict import_str, size_t import_st
 	return result;
 }
 
-
-
-/* Allocate+return the uncached contents of the directory represented by `self'.
- * >> for (local e: opendir(self->mo_absname)) {
- * >>     if (e.d_type == DT_DIR) {
- * >>         yield e.d_name;
- * >>     } else if (e.d_type == DT_REG && e.d_name.endswith(".dee")) {
- * >>         yield e.d_name[:-4];
- * >>     } else if (e.d_type == DT_REG && e.d_name.endswith(DeeSystem_SOEXT)) {
- * >>         yield e.d_name[:-#DeeSystem_SOEXT];
- * >>     }
- * >> }
- *
- * Special case when `mo_absname == ""':
- * - enumerate files in filesystem root "/" on unix
- * - enumerate (lower-case) drive letters on windows
- *
- * Special case when `mo_absname == "C:"':
- * - enumerate files from "C:\" on windows
- *
- * If the directory no longer exists for some reason,
- * return "empty_module_directory" instead */
-INTERN WUNUSED NONNULL((1)) struct Dee_module_directory *DCALL
-DeeModule_GetDirectory_uncached(DeeModuleObject *__restrict self) {
-	if (self->mo_absname == NULL)
-		return (struct Dee_module_directory *)&empty_module_directory;
-
-	/* TODO */
-	return (struct Dee_module_directory *)&empty_module_directory;
+PUBLIC WUNUSED NONNULL((1, 2)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_ImportChild(/*Module*/ DeeObject *self,
+                      /*String*/ DeeObject *name,
+                      unsigned int flags) {
+	DREF DeeObject *result = DeeModule_OpenChild(self, name, flags);
+	if (likely(DeeModule_IMPORT_ISOK(result)) && unlikely(DeeModule_Initialize(result) < 0))
+		Dee_Clear(result);
+	return result;
 }
 
-INTERN struct Dee_module_directory_empty empty_module_directory = { 0 };
-
-/* Return the directory view of a given module, that is: the (lexicographically
- * sorted) list of ["*.dee", "*.so", "*.dll", DT_DIR]-files within a directory
- * (that don't contain any '.' characters) and matching the module's filename
- * with *its* trailing "*.dee"/"*.so"/"*.dll" removed (or just the directory
- * itself if that exists, but no associated source file / DEX module does).
- * If no such directory exists, "empty_module_directory" is returned.
- *
- * @return: * : The module's directory file list.
- * @return: NULL: An error was thrown */
-PUBLIC WUNUSED NONNULL((1)) struct Dee_module_directory *DCALL
-DeeModule_GetDirectory(DeeModuleObject *__restrict self) {
-	struct Dee_module_directory *result;
-again:
-	result = atomic_read(&self->mo_dir);
-	if (result == NULL) {
-		result = DeeModule_GetDirectory_uncached(self);
-		if unlikely(!atomic_cmpxch(&self->mo_dir, NULL, result)) {
-			if (result != (struct Dee_module_directory *)&empty_module_directory)
-				Dee_module_directory_destroy(result);
-			goto again;
-		}
-	}
+PUBLIC WUNUSED NONNULL((1, 2)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_ImportChildEx(/*Module*/ DeeObject *self,
+                        /*utf-8*/ char const *__restrict name, size_t name_size,
+                        unsigned int flags, struct Dee_compiler_options *options) {
+	DREF DeeObject *result = DeeModule_OpenChildEx(self, name, name_size, flags, options);
+	if (likely(DeeModule_IMPORT_ISOK(result)) && unlikely(DeeModule_Initialize(result) < 0))
+		Dee_Clear(result);
 	return result;
 }
 
@@ -3480,15 +3531,20 @@ module_try_add_missing_libnames_or_unlock(DeeModuleObject *__restrict self,
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) int DCALL
 module_lock_and_load_libnames(DeeModuleObject *__restrict self) {
 	DREF DeeTupleObject *libpath;
+	uint16_t flags;
 again:
 	module_libtree_lock_read();
-	if (atomic_read(&self->mo_flags) & (Dee_MODULE_FABSFILE | _Dee_MODULE_FLIBALL)) {
-		/* All possible lib names have already been loaded for
-		 * this module, or this module can't have any lib names. */
-		return 0;
-	}
 	if (self->mo_absname == NULL)
 		return 0; /* Module can't have any lib names */
+	flags = atomic_read(&self->mo_flags);
+	if (flags & (Dee_MODULE_FABSFILE | _Dee_MODULE_FLIBALL)) {
+		/* All possible lib names have already been loaded for
+		 * this module, or this module can't have any lib names. */
+		if (flags & _Dee_MODULE_FLIBALL)
+			return 0;
+		if (Dee_TYPE(self) != &DeeModuleDir_Type)
+			return 0;
+	}
 	module_libtree_lock_endread();
 	libpath = (DREF DeeTupleObject *)DeeModule_GetLibPath();
 	if unlikely(!libpath)

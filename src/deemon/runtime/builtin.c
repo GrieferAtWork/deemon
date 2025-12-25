@@ -27,6 +27,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system.h>
+#include <deemon/tuple.h>
 #include <deemon/util/lock.h>
 
 #include <hybrid/sequence/list.h>
@@ -473,7 +474,7 @@ PUBLIC struct Dee_static_module_struct DeeModule_Deemon = {
 			/* .mle_node = */ { NULL, NULL, NULL },
 			/* .mle_next = */ NULL,
 		},
-		/* .mo_dir     = */ (struct Dee_module_directory *)&empty_module_directory,
+		/* .mo_dir     = */ (DeeTupleObject *)Dee_EmptyTuple,
 		/* .mo_init    = */ Dee_MODULE_INIT_INITIALIZED,
 		/* .mo_ctime   = */ 0, /* Lazily initialized (from `DeeExec_GetTimestamp()') */
 		/* .mo_flags   = */ Dee_MODULE_FNORMAL | _Dee_MODULE_FLIBALL,

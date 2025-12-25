@@ -1682,6 +1682,9 @@
 		<ClCompile Include="..\src\deemon\execute\interactive-module.c">
 			<Filter>src\execute</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\execute\modpath-directory.c">
+			<Filter>src\execute</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\execute\modpath.c">
 			<Filter>src\execute</Filter>
 		</ClCompile>

@@ -702,15 +702,16 @@ PRIVATE WUNUSED NONNULL((1)) DeeStringObject *DCALL
 DeeModule_FindDirectoryAttrString(DeeModuleObject *__restrict self,
                                   char const *__restrict attr_name) {
 	size_t lo, hi;
-	struct Dee_module_directory *dir = DeeModule_GetDirectory(self);
+	DeeTupleObject *dir;
+	dir = (DeeTupleObject *)DeeModule_GetDirectory(self);
 	if unlikely(!dir)
 		goto err;
 	lo = 0;
-	hi = dir->md_count;
+	hi = DeeTuple_SIZE(dir);
 	while (lo < hi) {
 		int diff;
 		size_t mid = (lo + hi) / 2;
-		DeeStringObject *name = dir->md_files[mid];
+		DeeStringObject *name = (DeeStringObject *)DeeTuple_GET(dir, mid);
 		char const *name_utf8 = DeeString_AsUtf8((DeeObject *)name);
 		if unlikely(!name_utf8)
 			goto err;
@@ -736,15 +737,16 @@ DeeModule_FindDirectoryAttrStringLen(DeeModuleObject *__restrict self,
                                      char const *__restrict attr_name,
                                      size_t attrlen) {
 	size_t lo, hi;
-	struct Dee_module_directory *dir = DeeModule_GetDirectory(self);
+	DeeTupleObject *dir;
+	dir = (DeeTupleObject *)DeeModule_GetDirectory(self);
 	if unlikely(!dir)
 		goto err;
 	lo = 0;
-	hi = dir->md_count;
+	hi = DeeTuple_SIZE(dir);
 	while (lo < hi) {
 		int diff;
 		size_t mid = (lo + hi) / 2;
-		DeeStringObject *name = dir->md_files[mid];
+		DeeStringObject *name = (DeeStringObject *)DeeTuple_GET(dir, mid);
 		char const *name_utf8 = DeeString_AsUtf8((DeeObject *)name);
 		if unlikely(!name_utf8)
 			goto err;
@@ -792,13 +794,23 @@ DeeModule_GetAttr(DeeModuleObject *self, /*String*/ DeeObject *attr) {
 	}
 
 	/* Check for a directory element */
-	dir_status = DeeModule_FindDirectoryAttr(self, attr);
-	if (dir_status != DeeModule_DIRECTORY_ATTR_NO) {
-		if unlikely(dir_status == DeeModule_DIRECTORY_ATTR_ERR)
-			goto err;
-		return DeeModule_Import(attr, (DeeObject *)self,
-		                        DeeModule_IMPORT_F_NORMAL |
-		                        DeeModule_IMPORT_F_CTXDIR);
+	if (!self->mo_dir) {
+		/* Directory not yet loaded -- try to do the import so we don't have to load it now */
+		result = DeeModule_ImportChild((DeeObject *)self, attr,
+		                               DeeModule_IMPORT_F_NORMAL |
+		                               DeeModule_IMPORT_F_CTXDIR |
+		                               DeeModule_IMPORT_F_ENOENT);
+		if (result != DeeModule_IMPORT_ENOENT)
+			return result;
+	} else {
+		dir_status = DeeModule_FindDirectoryAttr(self, attr);
+		if (dir_status != DeeModule_DIRECTORY_ATTR_NO) {
+			if unlikely(dir_status == DeeModule_DIRECTORY_ATTR_ERR)
+				goto err;
+			return DeeModule_ImportChild((DeeObject *)self, attr,
+			                             DeeModule_IMPORT_F_NORMAL |
+			                             DeeModule_IMPORT_F_CTXDIR);
+		}
 	}
 
 	/* Fallback: Do a generic attribute lookup on the module. */
@@ -829,15 +841,27 @@ DeeModule_GetAttrStringHash(DeeModuleObject *__restrict self,
 	}
 
 	/* Check for a directory element */
-	dir_status = DeeModule_FindDirectoryAttrString(self, attr_name);
-	if (dir_status != DeeModule_DIRECTORY_ATTR_NO) {
-		if unlikely(dir_status == DeeModule_DIRECTORY_ATTR_ERR)
-			goto err;
-		return DeeModule_ImportEx(attr_name, strlen(attr_name),
-		                          self->mo_absname, strlen(self->mo_absname),
-		                          DeeModule_IMPORT_F_NORMAL |
-		                          DeeModule_IMPORT_F_CTXDIR,
-		                          NULL);
+	if (!self->mo_dir) {
+		/* Directory not yet loaded -- try to do the import so we don't have to load it now */
+		result = DeeModule_ImportChildEx((DeeObject *)self,
+		                                 attr_name, strlen(attr_name),
+		                                 DeeModule_IMPORT_F_NORMAL |
+		                                 DeeModule_IMPORT_F_CTXDIR |
+		                                 DeeModule_IMPORT_F_ENOENT,
+		                                 NULL);
+		if (result != DeeModule_IMPORT_ENOENT)
+			return result;
+	} else {
+		dir_status = DeeModule_FindDirectoryAttrString(self, attr_name);
+		if (dir_status != DeeModule_DIRECTORY_ATTR_NO) {
+			if unlikely(dir_status == DeeModule_DIRECTORY_ATTR_ERR)
+				goto err;
+			return DeeModule_ImportChildEx((DeeObject *)self,
+			                               attr_name, strlen(attr_name),
+			                               DeeModule_IMPORT_F_NORMAL |
+			                               DeeModule_IMPORT_F_CTXDIR,
+			                               NULL);
+		}
 	}
 
 	/* Fallback: Do a generic attribute lookup on the module. */
@@ -870,15 +894,27 @@ DeeModule_GetAttrStringLenHash(DeeModuleObject *__restrict self,
 	}
 
 	/* Check for a directory element */
-	dir_status = DeeModule_FindDirectoryAttrStringLen(self, attr_name, attrlen);
-	if (dir_status != DeeModule_DIRECTORY_ATTR_NO) {
-		if unlikely(dir_status == DeeModule_DIRECTORY_ATTR_ERR)
-			goto err;
-		return DeeModule_ImportEx(attr_name, attrlen,
-		                          self->mo_absname, strlen(self->mo_absname),
-		                          DeeModule_IMPORT_F_NORMAL |
-		                          DeeModule_IMPORT_F_CTXDIR,
-		                          NULL);
+	if (!self->mo_dir) {
+		/* Directory not yet loaded -- try to do the import so we don't have to load it now */
+		result = DeeModule_ImportChildEx((DeeObject *)self,
+		                                 attr_name, attrlen,
+		                                 DeeModule_IMPORT_F_NORMAL |
+		                                 DeeModule_IMPORT_F_CTXDIR |
+		                                 DeeModule_IMPORT_F_ENOENT,
+		                                 NULL);
+		if (result != DeeModule_IMPORT_ENOENT)
+			return result;
+	} else {
+		dir_status = DeeModule_FindDirectoryAttrStringLen(self, attr_name, attrlen);
+		if (dir_status != DeeModule_DIRECTORY_ATTR_NO) {
+			if unlikely (dir_status == DeeModule_DIRECTORY_ATTR_ERR)
+				goto err;
+			return DeeModule_ImportChildEx((DeeObject *)self,
+			                               attr_name, attrlen,
+			                               DeeModule_IMPORT_F_NORMAL |
+			                               DeeModule_IMPORT_F_CTXDIR,
+			                               NULL);
+		}
 	}
 
 	/* Fallback: Do a generic attribute lookup on the module. */
@@ -1963,6 +1999,8 @@ module_str(DeeObject *__restrict self) { /* TODO: Refactor to "tp_print" */
 	name = me->mo_absname;
 	if (!name)
 		return DeeString_New("<anonymous module>");
+	if (!*name)
+		return DeeString_New("<filesystem root module>");
 	return DeeString_Newf("<module %q>", name);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return_reference_((DeeObject *)me->mo_name);
@@ -1979,8 +2017,15 @@ module_printrepr(DeeObject *__restrict self,
 		return DeeFormat_Printf(printer, arg, "import.%K", libname);
 	if unlikely(!libname)
 		return -1;
-	if (me->mo_absname)
+	if (me->mo_absname) {
+		if (!*me->mo_absname) {
+			/* TODO: import("/") on linux, but no way to easily express on windows,
+			 *       where the module needs to be accessed via `import("......")',
+			 *       with the # of '.' needing to be 1+ the number of '/' in the
+			 *       caller's module. */
+		}
 		return DeeFormat_Printf(printer, arg, "import(%q)", me->mo_absname);
+	}
 	return DeeFormat_PRINT(printer, arg, "Module()");
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return DeeFormat_Printf(printer, arg, "import(%r)", me->mo_name);
@@ -2046,16 +2091,17 @@ module_attriter_next(struct module_attriter *__restrict self,
 			if unlikely(new_hidx > mod->mo_bucketm) {
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 				size_t didx;
-				struct Dee_module_directory *dir = DeeModule_GetDirectory(mod);
+				DeeTupleObject *dir;
 				DeeStringObject *file;
+				dir = (DeeTupleObject *)DeeModule_GetDirectory(mod);
 				if unlikely(!dir)
 					goto err;
 				do {
 					didx = atomic_read(&self->mai_didx);
-					if (didx >= dir->md_count)
+					if (didx >= DeeTuple_SIZE(dir))
 						return 1;
 				} while (!atomic_cmpxch_or_write(&self->mai_didx, didx, didx + 1));
-				file = dir->md_files[didx];
+				file = (DeeStringObject *)DeeTuple_GET(dir, didx);
 				ASSERT_OBJECT_TYPE_EXACT(file, &DeeString_Type);
 				Dee_Incref(file);
 				desc->ad_name = DeeString_STR(file);
@@ -2173,6 +2219,9 @@ module_iterattr(DeeTypeObject *UNUSED(tp_self), DeeModuleObject *self,
 		struct module_attriter *iter;
 		iter = (struct module_attriter *)Dee_attriterchain_builder_getiterbuf(&builder);
 		Dee_attriter_init(iter, &module_attriter_type);
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		iter->mai_didx = 0;
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		iter->mai_hidx = 0;
 		iter->mai_mod  = self;
 	}
@@ -2759,9 +2808,7 @@ module_common_destroy(DeeModuleObject *__restrict self) {
 		module_unbind(self);
 		Dee_Free(self->mo_absname);
 	}
-	if (self->mo_dir != NULL &&
-	    self->mo_dir != (struct Dee_module_directory *)&empty_module_directory)
-		Dee_module_directory_destroy(self->mo_dir);
+	Dee_XDecref(self->mo_dir);
 }
 
 
@@ -3269,7 +3316,7 @@ INTERN struct Dee_empty_module_struct DeeModule_Empty = {
 			/* .mle_node = */ { NULL, NULL, NULL },
 			/* .mle_next = */ NULL
 		},
-		/* .mo_dir     = */ (struct Dee_module_directory *)&empty_module_directory,
+		/* .mo_dir     = */ (DeeTupleObject *)Dee_EmptyTuple,
 		/* .mo_init    = */ Dee_MODULE_INIT_INITIALIZED,
 		/* .mo_ctime   = */ 0,
 		/* .mo_flags   = */ Dee_MODULE_FNORMAL | Dee_MODULE_FHASCTIME,

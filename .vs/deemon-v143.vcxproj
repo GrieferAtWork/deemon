@@ -570,6 +570,7 @@
 		<ClCompile Include="..\src\deemon\execute\function-wrappers.c" />
 		<ClCompile Include="..\src\deemon\execute\function.c" />
 		<ClCompile Include="..\src\deemon\execute\interactive-module.c" />
+		<ClCompile Include="..\src\deemon\execute\modpath-directory.c" />
 		<ClCompile Include="..\src\deemon\execute\modpath.c" />
 		<ClCompile Include="..\src\deemon\execute\module.c" />
 		<ClCompile Include="..\src\deemon\execute\module_globals.c" />

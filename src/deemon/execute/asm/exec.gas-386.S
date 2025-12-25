@@ -357,7 +357,7 @@ END(_impl_assert_failed)
 #define mo_absname    DEE_OBJECT_OFFSETOF_DATA     /* char                          *mo_absname; */
 #define mo_absnode   (DEE_OBJECT_OFFSETOF_DATA+4)  /* struct Dee_module_treenode     mo_absnode; */
 #define mo_libname   (DEE_OBJECT_OFFSETOF_DATA+16) /* struct Dee_module_libentry     mo_libname; */
-#define mo_dir       (DEE_OBJECT_OFFSETOF_DATA+40) /* struct Dee_module_directory   *mo_dir; */
+#define mo_dir       (DEE_OBJECT_OFFSETOF_DATA+40) /* DREF struct Dee_tuple_object  *mo_dir; */
 #define mo_moddata   (DEE_OBJECT_OFFSETOF_DATA+44) /* union Dee_module_moddata       mo_moddata; */
 #define mo_init      (DEE_OBJECT_OFFSETOF_DATA+48) /* struct Dee_thread_object      *mo_init; */
 #define mo_flags     (DEE_OBJECT_OFFSETOF_DATA+52) /* uint16_t                       mo_flags; */
