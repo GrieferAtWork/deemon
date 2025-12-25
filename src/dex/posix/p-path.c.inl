@@ -313,7 +313,7 @@ PRIVATE WUNUSED NONNULL((1)) bool DCALL
 posix_path_is_nt_special(char const *path_str, size_t path_len) {
 	switch (path_len) {
 #ifdef DeeSystem_HAVE_FS_ICASE
-#define eqfscase(a, b) ((a) == (b) || (a) == ((b) - ('A' - 'a')))
+#define eqfscase(a, b) ((a) == (b) || (a) == ((b) - 'A' + 'a'))
 #else /* DeeSystem_HAVE_FS_ICASE */
 #define eqfscase(a, b) ((a) == (b))
 #endif /* !DeeSystem_HAVE_FS_ICASE */
@@ -1170,6 +1170,14 @@ err:
 	return NULL;
 }
 
+#define POSIX_JOINPATH_DEF \
+	DEX_MEMBER("joinpath", &posix_joinpath, "(paths!:?Dstring)->?Dstring"),
+#define POSIX_JOINPATH_DEF_DOC(doc) \
+	DEX_MEMBER("joinpath", &posix_joinpath, "(paths!:?Dstring)->?Dstring\n" doc),
+PRIVATE WUNUSED ATTR_INS(2, 1) DREF DeeStringObject *DCALL
+posix_path_joinpath_f(size_t pathc, DeeStringObject *const *__restrict pathv);
+PRIVATE DEFINE_CMETHOD(posix_joinpath, &posix_path_joinpath_f, METHOD_FCONSTCALL);
+
 PRIVATE WUNUSED ATTR_INS(2, 1) DREF DeeStringObject *DCALL
 posix_path_joinpath_f(size_t pathc, DeeStringObject *const *__restrict pathv) {
 	size_t i;
@@ -1221,9 +1229,11 @@ posix_path_joinpath_f(size_t pathc, DeeStringObject *const *__restrict pathv) {
 			goto err;
 
 		/* Set the separator that should be preferred for the next part. */
+#if defined(DeeSystem_ALTSEP) && DeeSystem_ALTSEP != DeeSystem_SEP
 		nextsep = end[0];
 		if (!DeeSystem_IsSep(nextsep))
 			nextsep = DeeSystem_SEP;
+#endif /* DeeSystem_ALTSEP && DeeSystem_ALTSEP != DeeSystem_SEP */
 	}
 	return (DREF DeeStringObject *)unicode_printer_pack(&printer);
 err:
@@ -1600,11 +1610,6 @@ err:
 }
 
 
-#define POSIX_JOINPATH_DEF \
-	DEX_MEMBER("joinpath", &posix_joinpath, "(paths!:?Dstring)->?Dstring"),
-#define POSIX_JOINPATH_DEF_DOC(doc) \
-	DEX_MEMBER("joinpath", &posix_joinpath, "(paths!:?Dstring)->?Dstring\n" doc),
-PRIVATE DEFINE_CMETHOD(posix_joinpath, &posix_path_joinpath_f, METHOD_FCONSTCALL);
 
 
 /*[[[deemon

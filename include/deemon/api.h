@@ -155,7 +155,7 @@
 __pragma_GCC_diagnostic_ignored(Wcast_function_type)
 
 /* When declaring DeeTypeObject objects and the like, we often skip
- * the initializers for various fields that have no reason of being
+ * the initializers for various fields that have no reason for being
  * explicitly initialized by the static initializer. This mainly affects
  * `tp_cache' and `tp_class_cache'. However, the default (zero-/NULL-)
  * initializer already does what we need it to do, meaning that

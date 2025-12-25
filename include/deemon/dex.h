@@ -215,7 +215,7 @@ INTDEF __BYTE_TYPE__ _end[];
 #endif /* CONFIG_BUILDING_DEEMON || CONFIG_BUILDING_DEX */
 
 /* Helpers for defining DEX exports from C */
-#if 1 //def CONFIG_BUILDING_DEX
+#ifdef CONFIG_BUILDING_DEX
 #ifdef CONFIG_TRACE_REFCHANGES
 #define __Dee_DEX_OBJECT_HEAD_INIT 1, &DeeModuleDex_Type, DEE_REFTRACKER_UNTRACKED
 #else /* CONFIG_TRACE_REFCHANGES */

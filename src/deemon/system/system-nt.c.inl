@@ -1971,7 +1971,7 @@ DeeNTSystem_CreateFile(/*String*/ DeeObject *__restrict lpFileName,
 	LPWSTR lpwName;
 	ASSERT_OBJECT_TYPE_EXACT(lpFileName, &DeeString_Type);
 #ifdef CONFIG_WANT_WINDOWS_STD_FILES
-#define eqnocase(a, b_upper) ((a) == (b_upper) || (a) == ((b_upper) - ('A' - 'a')))
+#define eqnocase(a, b_upper) ((a) == (b_upper) || (a) == ((b_upper) - 'A' + 'a'))
 	if (DeeString_SIZE(lpFileName) >= 6 &&
 	    eqnocase(DeeString_STR(lpFileName)[0], 'S') &&
 	    eqnocase(DeeString_STR(lpFileName)[1], 'T') &&

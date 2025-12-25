@@ -133,7 +133,7 @@ PRIVATE WUNUSED NONNULL((1)) bool DCALL
 nt_IsSpecialFilename(/*utf-8*/ char const *filename, size_t filename_len) {
 	switch (filename_len) {
 #ifdef DeeSystem_HAVE_FS_ICASE
-#define eqfscase(a, b) ((a) == (b) || (a) == ((b) - ('A' - 'a')))
+#define eqfscase(a, b) ((a) == (b) || (a) == ((b) - 'A' + 'a'))
 #else /* DeeSystem_HAVE_FS_ICASE */
 #define eqfscase(a, b) ((a) == (b))
 #endif /* !DeeSystem_HAVE_FS_ICASE */
