@@ -1998,10 +1998,10 @@ module_str(DeeObject *__restrict self) { /* TODO: Refactor to "tp_print" */
 		return libname;
 	name = me->mo_absname;
 	if (!name)
-		return DeeString_New("<anonymous module>");
+		return DeeString_New("<Anonymous module>");
 	if (!*name)
-		return DeeString_New("<filesystem root module>");
-	return DeeString_Newf("<module %q>", name);
+		return DeeString_New("<Filesystem root module>");
+	return DeeString_Newf("<Module %q>", name);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return_reference_((DeeObject *)me->mo_name);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */

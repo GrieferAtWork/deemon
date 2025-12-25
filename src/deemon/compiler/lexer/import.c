@@ -78,16 +78,6 @@ import_module_by_name(DeeStringObject *__restrict module_name,
 	                                                  inner_compiler_options);
 	if unlikely(!DeeModule_IMPORT_ISOK(result)) {
 		if unlikely(result == (DREF DeeModuleObject *)DeeModule_IMPORT_ERROR) {
-#if 0 /* TODO */
-			/* Check for recursive dependency. */
-			if (!(result->mo_flags & Dee_MODULE_FDIDLOAD) &&
-			    result != current_rootscope->rs_module) {
-				PERRAT(loc, W_RECURSIVE_MODULE_DEPENDENCY,
-				       result->mo_name, current_rootscope->rs_module->mo_name);
-				Dee_Decref(result);
-				goto err;
-			}
-#endif
 			goto err;
 		} else if (result == (DREF DeeModuleObject *)DeeModule_IMPORT_ENOENT) {
 			if (WARNAT(loc, W_MODULE_NOT_FOUND, module_name))
@@ -1317,6 +1307,27 @@ INTERN WUNUSED DREF struct ast *DFCALL ast_parse_import(void) {
 			result = ast_parse_postexpr(result);
 			goto done;
 		}
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		if (tok == '.') {
+			/* FIXME: Ambiguity:
+			 * >> import .foo.bar.baz;  // same as: local bar = import(".foo.bar");
+			 * vs:
+			 * >> import.foo.bar.baz;   // same as: import("foo").bar.baz;
+			 *
+			 * The only real solution that I can see is so compile the expression
+			 * in both ways, and see if one of the ways works without causing any
+			 * compiler errors due to module-not-found.
+			 * In most cases, exactly one way should work, and if both ways end up
+			 * working, issue warning so the user re-writes the code so one of:
+			 * >> (import.foo.bar.baz);      // for `import("foo").bar.baz;'
+			 * >> import baz = .foo.bar.baz; // for `local bar = import(".foo.bar");'
+			 *
+			 * Alternatively, actually make use of the presence of that singular " "
+			 * between "import" and "." to differentiate between the two meanings...
+			 */
+		}
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
 		result = ast_constexpr(Dee_None);
 		result = ast_setddi(result, &import_loc);
 		if unlikely(!result)

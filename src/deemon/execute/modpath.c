@@ -2357,6 +2357,10 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 	result_end = (char *)mempcpyc(result, pathname, pathname_size, sizeof(char));
 	Dee_XDecref_likely(pathname_ob);
 
+	/* Trim trailing slashes */
+	while ((result_end > result) && result_end[-1] == DeeSystem_SEP)
+		--result_end;
+
 	/* Deal with leading parent-directory references */
 	import_str_end = import_str + import_str_size;
 	while (import_str < import_str_end) {
@@ -2373,9 +2377,9 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 			                (size_t)(import_str_end - import_str), import_str);
 			goto err_r;
 		}
-		while ((result_end > result) && !DeeSystem_IsSep(result_end[-1]))
+		while ((result_end > result) && result_end[-1] != DeeSystem_SEP)
 			--result_end;
-		while ((result_end > result) && DeeSystem_IsSep(result_end[-1]))
+		while ((result_end > result) && result_end[-1] == DeeSystem_SEP)
 			--result_end;
 		++import_str;
 	}
@@ -2958,6 +2962,157 @@ DeeModule_ImportChildEx(/*Module*/ DeeObject *self,
 }
 
 
+
+
+
+
+/************************************************************************/
+/************************************************************************/
+/*                                                                      */
+/* Helper APIs for "DeeBuiltin_ImportType"                              */
+/*                                                                      */
+/************************************************************************/
+/************************************************************************/
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+do_DeeModule_ImportGlobal(/*utf-8*/ char const *__restrict import_str,
+                          size_t import_str_size,
+                          DeeStringObject *import_str_ob) {
+	DREF /*tracked*/ DeeModuleObject *result;
+	result = do_DeeModule_OpenGlobal(import_str, import_str_size, import_str_ob, DeeModule_IMPORT_F_NORMAL, NULL);
+	if likely(result) {
+		if (DeeModule_Initialize((DeeObject *)result) < 0)
+			Dee_Clear(result);
+	}
+	return (DREF DeeObject *)result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+do_import_getattr_string_len(char const *__restrict attr, size_t attrlen) {
+	/* Special case: "import_str" is the string "deemon" */
+	if (attrlen == 6 && fs_bcmp(attr, "deemon", 6 * sizeof(char)) == 0)
+		return_reference(DeeModule_GetDeemon());
+	return do_DeeModule_ImportGlobal(attr, attrlen, NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+do_import_getattr_string(char const *__restrict attr) {
+	/* Special case: "import_str" is the string "deemon" */
+	if (fs_strcmp(attr, "deemon") == 0)
+		return_reference(DeeModule_GetDeemon());
+	return do_DeeModule_ImportGlobal(attr, strlen(attr), NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+do_import_getattr(DeeObject *__restrict attr) {
+	char const *utf8 = DeeString_AsUtf8(attr);
+	if unlikely(!utf8)
+		goto err;
+	if (WSTR_LENGTH(utf8) == 6 && fs_bcmp(utf8, "deemon", 6 * sizeof(char)) == 0)
+		return_reference(DeeModule_GetDeemon());
+	return do_DeeModule_ImportGlobal(utf8, WSTR_LENGTH(utf8), (DeeStringObject *)attr);
+err:
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+import_getattr_string_len_hash(DeeObject *UNUSED(self), char const *attr,
+                               size_t attrlen, Dee_hash_t UNUSED(hash)) {
+	return do_import_getattr_string_len(attr, attrlen);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+import_getattr_string_hash(DeeObject *UNUSED(self), char const *attr, Dee_hash_t UNUSED(hash)) {
+	return do_import_getattr_string(attr);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+import_getattr(DeeObject *UNUSED(self), DeeObject *attr) {
+	return do_import_getattr(attr);
+}
+
+
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+do_DeeModule_BoundGlobal(/*utf-8*/ char const *__restrict import_str,
+                         size_t import_str_size,
+                         DeeStringObject *import_str_ob) {
+	DREF /*tracked*/ DeeModuleObject *result;
+	result = do_DeeModule_OpenGlobal(import_str, import_str_size, import_str_ob,
+	                                 DeeModule_IMPORT_F_NORMAL |
+	                                 DeeModule_IMPORT_F_ENOENT |
+	                                 DeeModule_IMPORT_F_ERECUR, NULL);
+	if (DeeModule_IMPORT_ISOK(result)) {
+		Dee_Decref(result);
+		return Dee_BOUND_YES;
+	}
+	if (result == (DREF /*tracked*/ DeeModuleObject *)DeeModule_IMPORT_ENOENT)
+		return Dee_BOUND_MISSING;
+	if (result == (DREF /*tracked*/ DeeModuleObject *)DeeModule_IMPORT_ERECUR)
+		return Dee_BOUND_NO; /* Present, but not yet bound (because currently being initialized in calling thread) */
+	return Dee_BOUND_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+do_import_boundattr_string_len(char const *__restrict attr, size_t attrlen) {
+	/* Special case: "import_str" is the string "deemon" */
+	if (attrlen == 6 && fs_bcmp(attr, "deemon", 6 * sizeof(char)) == 0)
+		return Dee_BOUND_YES;
+	return do_DeeModule_BoundGlobal(attr, attrlen, NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+do_import_boundattr_string(char const *__restrict attr) {
+	/* Special case: "import_str" is the string "deemon" */
+	if (fs_strcmp(attr, "deemon") == 0)
+		return Dee_BOUND_YES;
+	return do_DeeModule_BoundGlobal(attr, strlen(attr), NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+do_import_boundattr(DeeObject *__restrict attr) {
+	char const *utf8 = DeeString_AsUtf8(attr);
+	if unlikely(!utf8)
+		goto err;
+	if (WSTR_LENGTH(utf8) == 6 && fs_bcmp(utf8, "deemon", 6 * sizeof(char)) == 0)
+		return Dee_BOUND_YES;
+	return do_DeeModule_BoundGlobal(utf8, WSTR_LENGTH(utf8), (DeeStringObject *)attr);
+err:
+	return Dee_BOUND_ERR;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+import_boundattr_string_len_hash(DeeObject *UNUSED(self), char const *attr,
+                                 size_t attrlen, Dee_hash_t UNUSED(hash)) {
+	return do_import_boundattr_string_len(attr, attrlen);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+import_boundattr_string_hash(DeeObject *UNUSED(self), char const *attr, Dee_hash_t UNUSED(hash)) {
+	return do_import_boundattr_string(attr);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+import_boundattr(DeeObject *UNUSED(self), DeeObject *attr) {
+	return do_import_boundattr(attr);
+}
+
+
+
+
+
+
+
+
+/************************************************************************/
+/************************************************************************/
+/*                                                                      */
+/* Module name APIs                                                     */
+/*                                                                      */
+/************************************************************************/
+/************************************************************************/
 
 #ifndef CONFIG_HAVE_strrchr
 #define CONFIG_HAVE_strrchr

@@ -93,6 +93,11 @@ function assertEquals(expected: Object, actual: Object,
 	}
 }
 
+function assertSame(expected: Object, actual: Object,
+                    message: Callable | string | none = none) {
+	assert expected === actual, message;
+}
+
 @@Same as @assertEquals, but also assert identical typing
 function assertEqualsTyped(expected: Object, actual: Object,
                            message: Callable | string | none = none,

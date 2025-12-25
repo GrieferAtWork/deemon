@@ -729,13 +729,13 @@ librt_get_BlackListKwIterator_f(void) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_DocKwds_uncached_f(void) {
 	/* To implement this, we need to get access to an instance of it,
-	 * which we are doing via `type(("import" from deemon).__kwds__)'.
+	 * which we are doing via `type((compare from deemon).__kwds__)'.
 	 * Because the `import()' function is known to implement keyword
 	 * support, we can use it as a reference point for a C-level function
 	 * with a non-empty keyword list, without having to create such an
 	 * object ourself. */
 	DREF DeeObject *result, *kwds;
-	kwds = DeeObject_GetAttrStringHash((DeeObject *)&DeeBuiltin_Import, STR_AND_HASH(__kwds__));
+	kwds = DeeObject_GetAttrStringHash((DeeObject *)&DeeBuiltin_Compare, STR_AND_HASH(__kwds__));
 	if unlikely(!kwds)
 		goto err;
 	result = (DREF DeeObject *)Dee_TYPE(kwds);
@@ -3656,6 +3656,20 @@ DEX_MEMBER_F_NODOC("enumattr", &DeeEnumAttr_Type, DEXSYM_READONLY | DEXSYM_CONST
 DEX_MEMBER_F_NODOC("bool", &DeeBool_Type, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
 DEX_MEMBER_F_NODOC("string", &DeeString_Type, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
 DEX_MEMBER_F_NODOC("int", &DeeInt_Type, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
+
+/* Builtin functions and special types */
+DEX_MEMBER_F_NODOC("hasattr", &DeeBuiltin_HasAttr, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
+DEX_MEMBER_F_NODOC("hasitem", &DeeBuiltin_HasItem, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
+DEX_MEMBER_F_NODOC("boundattr", &DeeBuiltin_BoundAttr, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
+DEX_MEMBER_F_NODOC("bounditem", &DeeBuiltin_BoundItem, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
+DEX_MEMBER_F_NODOC("compare", &DeeBuiltin_Compare, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
+DEX_MEMBER_F_NODOC("equals", &DeeBuiltin_Equals, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
+DEX_MEMBER_F_NODOC("hash", &DeeBuiltin_Hash, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
+DEX_MEMBER_F_NODOC("exec", &DeeBuiltin_Exec, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
+DEX_MEMBER_F_NODOC("import", &DeeBuiltin_Import, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+DEX_MEMBER_F_NODOC("ImportType", &DeeBuiltin_ImportType, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 /* Special constants */
 RT_HASHOF_EMPTY_SEQUENCE_DEF

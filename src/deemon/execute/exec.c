@@ -1046,13 +1046,11 @@ do_kill_user:
 
 	/* Shutdown all loaded DEX extensions. */
 #ifndef CONFIG_NO_DEX
-	Dee_CHECKMEMORY();
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	DeeModule_UnloadAllDexModules();
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	DeeDex_Finalize();
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	Dee_CHECKMEMORY();
 #endif /* !CONFIG_NO_DEX */
 
 	/* Free up cached objects. They're not actually memory leaks, mkay?
@@ -1085,13 +1083,10 @@ do_kill_user:
 	 */
 #if !defined(NDEBUG) || defined(CONFIG_TRACE_REFCHANGES)
 	DeeExec_SetHome(NULL);
-	Dee_CHECKMEMORY();
 	DeeThread_SubSystemFini();
-	Dee_CHECKMEMORY();
 #endif /* !NDEBUG || CONFIG_TRACE_REFCHANGES */
 #ifndef NDEBUG
 	DeeMem_ClearCaches((size_t)-1);
-	Dee_CHECKMEMORY();
 #endif /* !NDEBUG */
 
 	/* Deallocate slab caches. */

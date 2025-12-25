@@ -24,6 +24,8 @@
 /**/
 
 #include <deemon/alloc.h>
+#include <deemon/arg.h>
+#include <deemon/callable.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
@@ -35,6 +37,11 @@
 
 #include <hybrid/debug-alignment.h>
 
+/**/
+#include "../runtime/kwlist.h"
+#include "../runtime/strings.h"
+
+/**/
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
@@ -522,6 +529,191 @@ again:
 	}
 	return (DeeObject *)result;
 }
+
+
+/* TODO: Functions to iteratively enumerate the modules
+ *       from elements of "DeeModule_GetLibPath()" */
+
+
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+import_getattr(DeeObject *self, DeeObject *attr);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+import_getattr_string_hash(DeeObject *self, char const *attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+import_getattr_string_len_hash(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+import_boundattr(DeeObject *self, DeeObject *attr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+import_boundattr_string_hash(DeeObject *self, char const *attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+import_boundattr_string_len_hash(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+
+#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+#define import_hasattr                 import_boundattr
+#define import_hasattr_string_hash     import_boundattr_string_hash
+#define import_hasattr_string_len_hash import_boundattr_string_len_hash
+#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+import_hasattr(DeeObject *self, DeeObject *attr) {
+	int result = import_boundattr(self, attr);
+	return Dee_BOUND_ASHAS(result);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+import_hasattr_string_hash(DeeObject *self, char const *attr, Dee_hash_t hash) {
+	int result = import_boundattr_string_hash(self, attr, hash);
+	return Dee_BOUND_ASHAS(result);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+import_hasattr_string_len_hash(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
+	int result = import_boundattr_string_len_hash(self, attr, attrlen, hash);
+	return Dee_BOUND_ASHAS(result);
+}
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
+
+
+PRIVATE struct type_attr import_attr = {
+	/* .tp_getattr                   = */ &import_getattr,
+	/* .tp_delattr                   = */ NULL,
+	/* .tp_setattr                   = */ NULL,
+	/* .tp_iterattr                  = */ NULL, // TODO: &import_iterattr,
+	/* .tp_findattr                  = */ NULL, // TODO: &import_findattr,
+	/* .tp_hasattr                   = */ &import_hasattr,
+	/* .tp_boundattr                 = */ &import_boundattr,
+	/* .tp_callattr                  = */ NULL,
+	/* .tp_callattr_kw               = */ NULL,
+	/* .tp_vcallattrf                = */ NULL,
+	/* .tp_getattr_string_hash       = */ &import_getattr_string_hash,
+	/* .tp_delattr_string_hash       = */ NULL,
+	/* .tp_setattr_string_hash       = */ NULL,
+	/* .tp_hasattr_string_hash       = */ &import_hasattr_string_hash,
+	/* .tp_boundattr_string_hash     = */ &import_boundattr_string_hash,
+	/* .tp_callattr_string_hash      = */ NULL,
+	/* .tp_callattr_string_hash_kw   = */ NULL,
+	/* .tp_vcallattr_string_hashf    = */ NULL,
+	/* .tp_getattr_string_len_hash   = */ &import_getattr_string_len_hash,
+	/* .tp_delattr_string_len_hash   = */ NULL,
+	/* .tp_setattr_string_len_hash   = */ NULL,
+	/* .tp_hasattr_string_len_hash   = */ &import_hasattr_string_len_hash,
+	/* .tp_boundattr_string_len_hash = */ &import_boundattr_string_len_hash,
+};
+
+
+#define import_repr import_str
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+import_str(DeeObject *__restrict UNUSED(self)) {
+	return_reference(&str_import);
+}
+
+
+PRIVATE WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeObject *DCALL
+import_call(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("import", params: """
+	DeeObject *base:?X4?DModule?Dstring?DType?N;
+	DeeStringObject *name;
+""");]]]*/
+	struct {
+		DeeObject *base;
+		DeeStringObject *name;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "import", &args, &args.base, &args.name);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
+		goto err;
+	return DeeModule_Import((DeeObject *)args.name, args.base,
+	                        DeeModule_IMPORT_F_NORMAL);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeObject *DCALL
+import_call_kw(DeeObject *UNUSED(self), size_t argc,
+               DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("import", params: """
+	DeeObject *base:?X4?DModule?Dstring?DType?N;
+	DeeStringObject *name;
+""", docStringPrefix: "import");]]]*/
+#define import_import_params "base:?X4?DModule?Dstring?DType?N,name:?Dstring"
+	struct {
+		DeeObject *base;
+		DeeStringObject *name;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__base_name, "oo:import", &args))
+		goto err;
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
+		goto err;
+	return DeeModule_Import((DeeObject *)args.name, args.base,
+	                        DeeModule_IMPORT_F_NORMAL);
+err:
+	return NULL;
+}
+
+PRIVATE struct type_callable import_callable = {
+	/* .tp_call_kw = */ &import_call_kw,
+};
+
+PUBLIC DeeTypeObject DeeBuiltin_ImportType = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ STR_import,
+	/* .tp_doc      = */ DOC("Runtime part of the magic compiler builtin $import keyword. "
+	                         /**/ "This object's ?#{op:call} implements ${import(\"foo\")}, "
+	                         /**/ "and its ?#{op:getattr} implements ${import.foo}\n"
+	                         "\n"
+	                         "getattr->?DModule\n"
+	                         "\n"
+	                         "call(" import_import_params ")->?DModule"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FFINAL | TP_FNAMEOBJECT,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeCallable_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
+				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
+				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR_S(DeeObject)
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ &import_str,
+		/* .tp_repr      = */ &import_repr,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ NULL,
+	},
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &DeeObject_GenericCmpByAddr,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ &import_attr,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ &import_call,
+	/* .tp_callable      = */ &import_callable,
+};
+
+PUBLIC DeeObject DeeBuiltin_Import = {
+	OBJECT_HEAD_INIT(&DeeBuiltin_ImportType)
+};
 
 DECL_END
 #endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */

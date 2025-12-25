@@ -107,6 +107,7 @@ local STRINGS = List {
 	"set",
 	"enumattr",
 	"gc",
+	"import",
 	"__import__",
 	"hash",
 	"exec",
@@ -400,6 +401,9 @@ DEF_STRING(str_enumattr, "enumattr", 0x767e1f86, 0x6b627a9d4ba17e37)
 #define Dee_HashStr__gc _Dee_HashSelectC(0x73e7fc4c, 0x5369f38dbb7cb94e)
 DEF_STRING(str_gc, "gc", 0x73e7fc4c, 0x5369f38dbb7cb94e)
 #define STR_gc DeeString_STR(&str_gc)
+#define Dee_HashStr__import _Dee_HashSelectC(0x1a3f5a1f, 0x5a525def3865fbed)
+DEF_STRING(str_import, "import", 0x1a3f5a1f, 0x5a525def3865fbed)
+#define STR_import DeeString_STR(&str_import)
 #define Dee_HashStr____import__ _Dee_HashSelectC(0x5ace85a6, 0x9083cbce4d7003c2)
 DEF_STRING(str___import__, "__import__", 0x5ace85a6, 0x9083cbce4d7003c2)
 #define STR___import__ DeeString_STR(&str___import__)

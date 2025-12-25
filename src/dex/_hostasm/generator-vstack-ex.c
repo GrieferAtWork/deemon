@@ -1430,10 +1430,13 @@ vcall_kwcmethod(struct fungen *__restrict self,
 	if (func == DeeBuiltin_Compare.cm_func.cmf_kwmeth) {
 		/*if (argc == 2 && memval_isnull(fg_vtop(self))) // XXX: Inline?
 			return fg_vopcompare(self);*/
-	} else if (func == DeeBuiltin_Import.cm_func.cmf_kwmeth) {
+	}
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	else if (func == DeeBuiltin_Import.cm_func.cmf_kwmeth) {
 		/*if (argc == 2 && memval_isnull(fg_vtop(self))) // XXX: Inline?
 			return fg_vopimport(self);*/
 	}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	DO(fg_vnotoneref(self, argc + 1));                               /* [args...], kw */
 	DO(fg_vrrot(self, argc + 1));                                    /* kw, [args...] */

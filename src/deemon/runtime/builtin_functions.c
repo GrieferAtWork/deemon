@@ -265,6 +265,7 @@ err:
 	return NULL;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 /*[[[deemon (print_KwCMethod from rt.gen.unpack)("__import__", """
 	DeeObject *base:?X4?DModule?Dstring?DType?N;
 	DeeStringObject *name;
@@ -303,6 +304,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions___imp
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 builtin_functions_f_builtin_hash(size_t argc, DeeObject *const *argv);

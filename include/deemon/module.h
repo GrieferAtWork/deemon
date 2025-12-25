@@ -1619,9 +1619,77 @@ DDATDEF struct Dee_cmethod_object DeeBuiltin_BoundAttr;
 DDATDEF struct Dee_cmethod_object DeeBuiltin_BoundItem;
 DDATDEF struct Dee_cmethod_object DeeBuiltin_Compare;
 DDATDEF struct Dee_cmethod_object DeeBuiltin_Equals;
-DDATDEF struct Dee_cmethod_object DeeBuiltin_Import;
 DDATDEF struct Dee_cmethod_object DeeBuiltin_Hash;
 DDATDEF struct Dee_cmethod_object DeeBuiltin_Exec;
+
+/* The object used to implement the magic compiler "import" builtin.
+ *
+ * This object behaves in 1 of 2 ways (the later only being available
+ * when deemon was builtin with "CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES"):
+ *
+ * - It provides an `operator ()' that can be invoked by passing a string
+ *   argument that is then interpreted as either an absolute (LIBPATH),
+ *   or relative (to the calling module) import string:
+ *   >> local relativeModule = import(".sibling"); // Loads "./sibling.dee"
+ *   >> local libModule      = import("deemon");   // Returns "DeeModule_Deemon"
+ * - Note that for relative imports to correctly work, when the compiler
+ *   identifies a call to "import", it will inject an additional, leading
+ *   argument that is equal to the caller's own module, and resolve the
+ *   call as a whole against "deemon.__import__":
+ *   >> local libModule = import(".sibling");
+ *   Same as:
+ *   >> import . as me, deemon;
+ *   >> local libModule = deemon.__import__(me, ".sibling");
+ * - Note that "deemon.__import__" simply resolves to `DeeBuiltin_Import',
+ *   meaning that the built-in `import' keyword is pretty much just there
+ *   as (admittedly very necessary, since `deemon.__import__' is actually
+ *   an implementation-specific symbol) syntax sugar.
+ *
+ * #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+ * - It provides an `operator .' and `operator enumattr' that can be used
+ *   to enumerate modules of- and import modules from the LIBPATH (as set
+ *   by `DeeModule_SetLibPath()'):
+ *   >> local libModule1 = import.deemon;   // import("deemon")
+ *   >> local libModule2 = import.rt;       // import("rt")
+ *   >> local libModule3 = import.rt.hash;  // import("rt.hash")
+ *
+ * - In order to enumerate all modules found on the LIBPATH, you can simply
+ *   treat "import" as an object whose attributes can be enumerated to get
+ *   the names and mappings of all top-level LIBPATH modules:
+ *   >> local allLibModules = Mapping.fromattr(import);
+ *   >> for (local k, v: allLibModules)
+ *   >>     print repr k, repr v;
+ *   Output will probably look like this:
+ *   >> [...]
+ *   >> "deemon" import.deemon
+ *   >> [...]
+ *   >> "annotations" import.annotations
+ *   >> "codecs" import.codecs
+ *   >> "collections" import.collections
+ *   >> "ctypes" import.ctypes
+ *   >> "disassembler" import.disassembler
+ *   >> "doc" import.doc
+ *   >> "doctext" import.doctext
+ *   >> "errors" import.errors
+ *   >> "files" import.files
+ *   >> "fs" import.fs
+ *   >> [...]
+ *
+ * - Thanks to this new attribute-based syntax, as well as the fact that
+ *   regular directories can be treated as modules (even when a properly
+ *   named ".dee" file also exists), this means that anything defined by
+ *   LIBPATH modules can be named without the need of "(symbol from module)":
+ *   >> import.deemon.string.find; // this...
+ *   >> (string from deemon).find; // ... is the same as this, but easier to read
+ *
+ * #endif // CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+ */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+DDATDEF DeeObject DeeBuiltin_Import;
+DDATDEF DeeTypeObject DeeBuiltin_ImportType; /* Dee_TYPE(&DeeBuiltin_Import) */
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+DDATDEF struct Dee_cmethod_object DeeBuiltin_Import;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 /* Return the export address of a native symbol exported from a dex `self'.

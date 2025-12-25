@@ -1448,8 +1448,6 @@ done:
 	Dee_XDecref(script_options.co_rootname);
 	Dee_XDecref(import_options.co_rootname);
 
-	Dee_CHECKMEMORY();
-
 	/* Run functions registered for atexit(). */
 	Dee_RunAtExit(DEE_RUNATEXIT_FRUNALL);
 
@@ -2036,6 +2034,8 @@ exec_module_and_capture_stdout(DeeModuleObject *__restrict mod) {
 
 	/* Open the root of the module. */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	if unlikely(DeeModule_InitializeImports((DeeObject *)mod))
+		goto err;
 	(void)DeeModule_SetInitialized((DeeObject *)mod);
 	module_root = (DREF DeeFunctionObject *)DeeModule_GetRootFunction((DeeObject *)mod);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
