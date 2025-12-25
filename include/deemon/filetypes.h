@@ -78,7 +78,7 @@ typedef struct Dee_file_printer_object DeeFilePrinterObject;
 
 struct Dee_system_file_object {
 	Dee_FILE_OBJECT_HEAD
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 #define DEESYSTEM_FILE_HAVE_sf_filename
 	DREF DeeObject  *sf_filename;   /* [0..1][lock(WRITE_ONCE)] The filename of this systemfile. */
 	/*HANDLE*/ void *sf_handle;     /* [0..1][lock(CLEAR_ONCE)] Underlying file handle (or `INVALID_HANDLE_VALUE') */
@@ -87,21 +87,21 @@ struct Dee_system_file_object {
 	unsigned char    sf_pendingc;   /* Number of write-pending characters (for UTF-8 console output). */
 	unsigned char    sf_pending[7]; /* Write-pending characters (for UTF-8 console output). */
 #define DeeSystemFile_GetHandle(self) Dee_REQUIRES_OBJECT(DeeSystemFileObject, self)->sf_handle
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
+#ifdef DeeSystem_FILE_USE_unix_fd
 #define DEESYSTEM_FILE_HAVE_sf_filename
 	DREF DeeObject  *sf_filename;   /* [0..1][lock(WRITE_ONCE)] The filename, or NULL if not known. */
 	int              sf_handle;     /* [0..1][lock(CLEAR_ONCE)] Underlying system file (or `-1') */
 	int              sf_ownhandle;  /* [0..1][lock(CLEAR_ONCE)] The owned underlying system file (or `-1') */
 #define DeeSystemFile_GetHandle(self) Dee_REQUIRES_OBJECT(DeeSystemFileObject, self)->sf_handle
-#endif /* DEESYSTEM_FILE_USE_UNIX */
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#endif /* DeeSystem_FILE_USE_unix_fd */
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 #define DEESYSTEM_FILE_HAVE_sf_filename
 	DREF DeeObject  *sf_filename;   /* [0..1][const] The filename, or NULL if not known. */
 	/*FILE*/ void   *sf_handle;     /* [0..1][lock(CLEAR_ONCE)] Underlying system file (or `NULL') */
 	/*FILE*/ void   *sf_ownhandle;  /* [0..1][lock(CLEAR_ONCE)] The owned underlying system file (or `NULL') */
 #define DeeSystemFile_GetHandle(self) Dee_REQUIRES_OBJECT(DeeSystemFileObject, self)->sf_handle
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 };
 
 

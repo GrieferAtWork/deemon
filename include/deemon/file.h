@@ -31,14 +31,14 @@
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* uint32_t */
 
-#if (!defined(DEESYSTEM_FILE_USE_WINDOWS) && \
-     !defined(DEESYSTEM_FILE_USE_UNIX) &&    \
-     !defined(DEESYSTEM_FILE_USE_STDIO) &&   \
-     !defined(DEESYSTEM_FILE_USE_STUB))
+#if (!defined(DeeSystem_FILE_USE_nt_HANDLE) &&  \
+     !defined(DeeSystem_FILE_USE_unix_fd) &&    \
+     !defined(DeeSystem_FILE_USE_stdio_FILE) && \
+     !defined(DeeSystem_FILE_USE_STUB))
 #ifdef CONFIG_HOST_WINDOWS
-#define DEESYSTEM_FILE_USE_WINDOWS
+#define DeeSystem_FILE_USE_nt_HANDLE
 #elif defined(CONFIG_HOST_UNIX)
-#define DEESYSTEM_FILE_USE_UNIX
+#define DeeSystem_FILE_USE_unix_fd
 #else /* ... */
 #include "system-features.h"
 #if (defined(CONFIG_HAVE_read) || defined(CONFIG_HAVE_write) ||    \
@@ -47,15 +47,15 @@
      defined(CONFIG_HAVE_close) || defined(CONFIG_HAVE_lseek) ||   \
      defined(CONFIG_HAVE_lseek64))
 /* Check if there are any fd-based functions available */
-#define DEESYSTEM_FILE_USE_UNIX
+#define DeeSystem_FILE_USE_unix_fd
 #elif (defined(CONFIG_HAVE_fopen) || defined(CONFIG_HAVE_fopen64) || \
        defined(CONFIG_HAVE_fread) || defined(CONFIG_HAVE_fwrite) ||  \
        defined(CONFIG_HAVE_fgetc) || defined(CONFIG_HAVE_fputc))
 /* Check if there are any FILE-based functions available */
-#define DEESYSTEM_FILE_USE_STDIO
+#define DeeSystem_FILE_USE_stdio_FILE
 #else /* FILE-based I/O mechanism */
 /* Fallback: Use stub file apis */
-#define DEESYSTEM_FILE_USE_STUB
+#define DeeSystem_FILE_USE_STUB
 #endif /* Unknown I/O mechanism */
 #endif /* !... */
 #endif /* !... */
@@ -121,11 +121,11 @@ struct Dee_file_object {
 #undef Dee_fd_t_IS_HANDLE /* Window's `HANDLE' (~ala `CreateFile()') */
 #undef Dee_fd_t_IS_int    /* Unix's `int'-style file handles (~ala `open(2)') */
 #undef Dee_fd_t_IS_FILE   /* Stdio's `FILE *' (~ala `fopen(3)') */
-#if defined(DEESYSTEM_FILE_USE_WINDOWS)
+#if defined(DeeSystem_FILE_USE_nt_HANDLE)
 #define Dee_fd_t_IS_HANDLE
-#elif defined(DEESYSTEM_FILE_USE_UNIX)
+#elif defined(DeeSystem_FILE_USE_unix_fd)
 #define Dee_fd_t_IS_int
-#elif defined(DEESYSTEM_FILE_USE_STDIO)
+#elif defined(DeeSystem_FILE_USE_stdio_FILE)
 #define Dee_fd_t_IS_FILE
 #else /* ... */
 /* Fallback: Just assume FD-based file I/O (even though at this point

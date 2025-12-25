@@ -39,7 +39,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/system-features.h>
-#include <deemon/system.h> /* DEE_SYSTEM_FS_DRIVES */
+#include <deemon/system.h> /* DeeSystem_HAVE_FS_DRIVES */
 
 #include <hybrid/debug-alignment.h>
 /**/
@@ -371,7 +371,7 @@ posix_print_resolved_path(struct unicode_printer *__restrict printer,
 	if (DeeSystem_IsAbs(path_utf8)) {
 		/* Reset path resolver and print everything from `path' until we reach the relative part. */
 		unicode_printer_clear(printer);
-#ifdef DEE_SYSTEM_FS_DRIVES
+#ifdef DeeSystem_HAVE_FS_DRIVES
 		{
 			char const *drive_end = path_utf8;
 			if (drive_end[1] == ':') {
@@ -388,16 +388,16 @@ posix_print_resolved_path(struct unicode_printer *__restrict printer,
 			while (DeeSystem_IsSep(*path_utf8))
 				++path_utf8;
 		}
-#else /* DEE_SYSTEM_FS_DRIVES */
+#else /* DeeSystem_HAVE_FS_DRIVES */
 		if unlikely(unicode_printer_putascii(printer, DeeSystem_SEP))
 			goto err;
 		do {
 			++path_utf8;
 		} while (DeeSystem_IsSep(*path_utf8));
-#endif /* !DEE_SYSTEM_FS_DRIVES */
+#endif /* !DeeSystem_HAVE_FS_DRIVES */
 	}
 
-#ifdef DEE_SYSTEM_FS_DRIVES
+#ifdef DeeSystem_HAVE_FS_DRIVES
 	if (DeeSystem_IsSep(*path_utf8)) {
 		/* Special case: drive-relative path (truncate the printer and dump leading slashes) */
 		char const *leading_seps_end;
@@ -410,7 +410,7 @@ posix_print_resolved_path(struct unicode_printer *__restrict printer,
 			goto err;
 		path_utf8 = leading_seps_end;
 	}
-#endif /* DEE_SYSTEM_FS_DRIVES */
+#endif /* DeeSystem_HAVE_FS_DRIVES */
 
 	while (*path_utf8) {
 		char const *segment_end = path_utf8;
@@ -478,7 +478,7 @@ print_dot_dot_segment:
 					--prev_segment_end;
 				}
 
-#ifdef DEE_SYSTEM_FS_DRIVES
+#ifdef DeeSystem_HAVE_FS_DRIVES
 				/* Check for special case: don't delete a leading "C:" or "\\" prefix */
 				if (prev_segment_end == 0 && printer_length >= 2) {
 					uint32_t ch0 = UNICODE_PRINTER_GETCHAR(printer, 0);
@@ -488,7 +488,7 @@ print_dot_dot_segment:
 					if (ch0 == '\\' && ch1 == '\\')
 						goto skip_segment;
 				}
-#endif /* DEE_SYSTEM_FS_DRIVES */
+#endif /* DeeSystem_HAVE_FS_DRIVES */
 
 				/* Kill the preceding segment. */
 				unicode_printer_truncate(printer, prev_segment_end);

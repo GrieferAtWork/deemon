@@ -5245,7 +5245,7 @@ got_dfd_path:
 		}
 	}
 
-#ifndef DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
+#ifndef DeeSystem_HAVE_FS_ISABS_CHECKS_LEADING_SLASHES
 	if (DeeSystem_IsSep(DeeString_STR(path)[0])) {
 		/* Must skip leading slashes in `path' */
 		char const *utf8_path = DeeString_AsUtf8(path);
@@ -5256,7 +5256,7 @@ got_dfd_path:
 		if unlikely(unicode_printer_printutf8(&printer, utf8_path, strlen(utf8_path)) < 0)
 			goto err_printer;
 	} else
-#endif /* !DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES */
+#endif /* !DeeSystem_HAVE_FS_ISABS_CHECKS_LEADING_SLASHES */
 	{
 		if unlikely(unicode_printer_printstring(&printer, path) < 0)
 			goto err_printer;

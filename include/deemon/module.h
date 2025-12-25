@@ -27,7 +27,7 @@
 #include "types.h"
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #include "system-features.h" /* bcmp */
-#include "system.h" /* DEE_SYSTEM_FS_ICASE */
+#include "system.h" /* DeeSystem_HAVE_FS_ICASE */
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #include "util/lock.h"
 /**/
@@ -966,9 +966,9 @@ struct Dee_module_object {
 	DREF struct Dee_string_object *mo_name;      /* [1..1][const] Name of this module (e.g.: `foo'). */
 	LIST_ENTRY(Dee_module_object)  mo_link;      /* [0..1][lock(INTERN(modules_lock))] Link into module file hash-table.*/
 	DREF struct Dee_string_object *mo_path;      /* [0..1][lock(Dee_MODULE_FLOADING)][const_if(Dee_MODULE_FDIDLOAD)] The absolute filename of this module's source file. */
-#ifdef DEE_SYSTEM_FS_ICASE
+#ifdef DeeSystem_HAVE_FS_ICASE
 	Dee_hash_t                     mo_pathihash; /* The case-insensitive hash for `mo_path' */
-#endif /* DEE_SYSTEM_FS_ICASE */
+#endif /* DeeSystem_HAVE_FS_ICASE */
 	LIST_ENTRY(Dee_module_object)  mo_globlink;  /* [0..1][lock(INTERN(modules_glob_lock))] Link into global module hash-table.*/
 	uint16_t                       mo_importc;   /* [lock(Dee_MODULE_FLOADING)][const_if(Dee_MODULE_FDIDLOAD)] The total number of other modules imported by this one. */
 	uint16_t                       mo_globalc;   /* [lock(Dee_MODULE_FLOADING)][const_if(Dee_MODULE_FDIDLOAD)] The total number of global symbols slots provided by this module. */

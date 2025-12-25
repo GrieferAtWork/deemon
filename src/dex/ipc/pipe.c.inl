@@ -39,9 +39,9 @@
 #undef ipc_Pipe_USE_CreatePipe
 #undef ipc_Pipe_USE_pipe_OR_pipe2
 #undef ipc_Pipe_USE_STUB
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 #define ipc_Pipe_USE_CreatePipe
-#elif (defined(DEESYSTEM_FILE_USE_UNIX) && \
+#elif (defined(DeeSystem_FILE_USE_unix_fd) && \
        (defined(CONFIG_HAVE_pipe2) || defined(CONFIG_HAVE_pipe)))
 #define ipc_Pipe_USE_pipe_OR_pipe2
 #else /* ... */

@@ -664,7 +664,7 @@ err_is_readonly:
 
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#ifdef DEE_SYSTEM_FS_ICASE
+#ifdef DeeSystem_HAVE_FS_ICASE
 #define FS_strcmp  strcasecmp
 #define FS_strcmpz strcasecmpz
 #ifndef CONFIG_HAVE_strcasecmp
@@ -679,7 +679,7 @@ DeeSystem_DEFINE_strcasecmp(dee_strcasecmp)
 #define strcasecmpz dee_strcasecmpz
 DeeSystem_DEFINE_strcasecmpz(dee_strcasecmpz)
 #endif /* !CONFIG_HAVE_strcasecmpz */
-#else /* DEE_SYSTEM_FS_ICASE */
+#else /* DeeSystem_HAVE_FS_ICASE */
 #define FS_strcmp  strcmp
 #define FS_strcmpz strcmpz
 #ifndef CONFIG_HAVE_strcmpz
@@ -688,7 +688,7 @@ DeeSystem_DEFINE_strcasecmpz(dee_strcasecmpz)
 #define strcmpz dee_strcmpz
 DeeSystem_DEFINE_strcmpz(dee_strcmpz)
 #endif /* !CONFIG_HAVE_strcmpz */
-#endif /* !DEE_SYSTEM_FS_ICASE */
+#endif /* !DeeSystem_HAVE_FS_ICASE */
 
 
 
@@ -3180,9 +3180,9 @@ INTERN struct Dee_static_module_struct DeeModule_Empty =
 		/* .mo_name      = */ (DeeStringObject *)Dee_EmptyString,
 		/* .mo_link      = */ LIST_ENTRY_UNBOUND_INITIALIZER,
 		/* .mo_path      = */ NULL,
-#ifdef DEE_SYSTEM_FS_ICASE
+#ifdef DeeSystem_HAVE_FS_ICASE
 		/* .mo_pathihash  = */ 0,
-#endif /* DEE_SYSTEM_FS_ICASE */
+#endif /* DeeSystem_HAVE_FS_ICASE */
 		/* .mo_globlink  = */ LIST_ENTRY_UNBOUND_INITIALIZER,
 		/* .mo_importc   = */ 0,
 		/* .mo_globalc   = */ 0,

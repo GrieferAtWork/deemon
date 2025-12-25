@@ -125,7 +125,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 posix_path_driveof_f(DeeStringObject *__restrict path) {
-#ifdef DEE_SYSTEM_FS_DRIVES
+#ifdef DeeSystem_HAVE_FS_DRIVES
 	char const *pathstr, *iter, *end;
 	DREF DeeStringObject *result;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
@@ -159,11 +159,11 @@ posix_path_driveof_f(DeeStringObject *__restrict path) {
 	return_reference_((DeeStringObject *)Dee_EmptyString);
 err:
 	return NULL;
-#else /* DEE_SYSTEM_FS_DRIVES */
+#else /* DeeSystem_HAVE_FS_DRIVES */
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	(void)path;
 	return_reference_((DeeStringObject *)&posix_FS_SEP);
-#endif /* !DEE_SYSTEM_FS_DRIVES */
+#endif /* !DeeSystem_HAVE_FS_DRIVES */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
@@ -312,11 +312,11 @@ done:
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 posix_path_is_nt_special(char const *path_str, size_t path_len) {
 	switch (path_len) {
-#ifdef DEE_SYSTEM_FS_ICASE
+#ifdef DeeSystem_HAVE_FS_ICASE
 #define eqfscase(a, b) ((a) == (b) || (a) == ((b) - ('A' - 'a')))
-#else /* DEE_SYSTEM_FS_ICASE */
+#else /* DeeSystem_HAVE_FS_ICASE */
 #define eqfscase(a, b) ((a) == (b))
-#endif /* !DEE_SYSTEM_FS_ICASE */
+#endif /* !DeeSystem_HAVE_FS_ICASE */
 
 	case 3:
 		if (eqfscase(path_str[0], 'N') && eqfscase(path_str[1], 'U') && eqfscase(path_str[2], 'L'))
@@ -519,7 +519,7 @@ return_unmodified:
 		}
 
 		/* Special case: drive-relative paths. */
-#ifdef DEE_SYSTEM_FS_DRIVES
+#ifdef DeeSystem_HAVE_FS_DRIVES
 		if (pth_begin < pth_end && DeeSystem_IsSep(*pth_begin)) {
 			char *dst;
 			size_t pth_len;
@@ -538,7 +538,7 @@ return_unmodified:
 			result = (DREF DeeStringObject *)DeeString_SetUtf8((DeeObject *)result, STRING_ERROR_FIGNORE);
 			goto done_decref_pwd;
 		}
-#endif /* DEE_SYSTEM_FS_DRIVES */
+#endif /* DeeSystem_HAVE_FS_DRIVES */
 
 		while (pth_begin < pth_end) {
 			next = pth_begin;
@@ -625,9 +625,9 @@ done_merge_paths:
 			result = (DREF DeeStringObject *)DeeString_SetUtf8((DREF DeeObject *)result, STRING_ERROR_FIGNORE);
 		}
 	}
-#ifdef DEE_SYSTEM_FS_DRIVES
+#ifdef DeeSystem_HAVE_FS_DRIVES
 done_decref_pwd:
-#endif /* DEE_SYSTEM_FS_DRIVES */
+#endif /* DeeSystem_HAVE_FS_DRIVES */
 	Dee_Decref(pwd);
 	return result;
 err_pwd:
@@ -654,9 +654,9 @@ posix_path_relpath_f(DeeStringObject *path, DeeStringObject *pwd) {
 	char const *pth_begin, *pth_iter, *pth_end;
 	char const *pwd_begin, *pwd_iter, *pwd_end;
 	uint32_t a, b;
-#ifdef DEE_SYSTEM_FS_DRIVES
+#ifdef DeeSystem_HAVE_FS_DRIVES
 	char const *pth_base;
-#endif /* DEE_SYSTEM_FS_DRIVES */
+#endif /* DeeSystem_HAVE_FS_DRIVES */
 	bool is_nonempty_segment;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 
@@ -664,7 +664,7 @@ posix_path_relpath_f(DeeStringObject *path, DeeStringObject *pwd) {
 	 *              then we've got nothing to do. */
 	if (!DeeString_IsAbsPath(path)) {
 		if (!pwd) {
-#ifdef DEE_SYSTEM_FS_DRIVES
+#ifdef DeeSystem_HAVE_FS_DRIVES
 			/* If the given path is drive-relative, then we still want to
 			 * turn it into a normal (PWD-relative) path:
 			 * >> chdir(r"D:\path\to\my\folder");
@@ -675,7 +675,7 @@ posix_path_relpath_f(DeeStringObject *path, DeeStringObject *pwd) {
 			 * >> print relpath(r"\foo.txt", "."); // r"..\..\..\..\foo.txt"
 			 */
 			if (!DeeSystem_IsSep(DeeString_STR(path)[0]))
-#endif /* DEE_SYSTEM_FS_DRIVES */
+#endif /* DeeSystem_HAVE_FS_DRIVES */
 			{
 				return_reference_(path);
 			}
@@ -715,7 +715,7 @@ posix_path_relpath_f(DeeStringObject *path, DeeStringObject *pwd) {
 	pwd_end = pwd_iter + WSTR_LENGTH(pwd_iter);
 
 	/* Match the drive prefix. */
-#ifdef DEE_SYSTEM_FS_DRIVES
+#ifdef DeeSystem_HAVE_FS_DRIVES
 	for (;;) {
 		a = unicode_readutf8_n(&pth_iter, pth_end);
 		b = unicode_readutf8_n(&pwd_iter, pwd_end);
@@ -735,7 +735,7 @@ posix_path_relpath_f(DeeStringObject *path, DeeStringObject *pwd) {
 			goto return_single_dot;
 	}
 	pth_base = pth_iter;
-#endif /* DEE_SYSTEM_FS_DRIVES */
+#endif /* DeeSystem_HAVE_FS_DRIVES */
 
 	/* Jump to start here, so that we automatically
 	 * skip leading space and slashes. */
@@ -744,10 +744,10 @@ posix_path_relpath_f(DeeStringObject *path, DeeStringObject *pwd) {
 	for (;;) {
 		a = unicode_readutf8_n(&pth_iter, pth_end);
 		b = unicode_readutf8_n(&pwd_iter, pwd_end);
-#ifdef DEE_SYSTEM_FS_ICASE
+#ifdef DeeSystem_HAVE_FS_ICASE
 		a = DeeUni_ToUpper(a);
 		b = DeeUni_ToUpper(b);
-#endif /* DEE_SYSTEM_FS_ICASE */
+#endif /* DeeSystem_HAVE_FS_ICASE */
 		if (DeeSystem_IsSep(a)) {
 			/* Align differing space in `b' */
 			while (DeeUni_IsSpace(b)) {
@@ -918,12 +918,12 @@ continue_uprefs_normal:
 					 * located directly past its position.
 					 * The two brackets denote the portions of the input `path' that
 					 * had to be retrieved retroactively. */
-#ifndef DEE_SYSTEM_FS_DRIVES
+#ifndef DeeSystem_HAVE_FS_DRIVES
 					char const *pth_base;
 					pth_base = DeeString_AsUtf8((DeeObject *)path);
 					if unlikely(!pth_base)
 						goto err;
-#endif /* !DEE_SYSTEM_FS_DRIVES */
+#endif /* !DeeSystem_HAVE_FS_DRIVES */
 
 					/* Skip trailing slash/space characters that had been skipped previously. */
 					pth_begin = find_last_path_segment(pth_base, pth_begin);

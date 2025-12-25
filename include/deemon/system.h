@@ -63,8 +63,8 @@ struct Dee_unicode_printer;
 
 
 #ifdef CONFIG_HOST_WINDOWS
-#define DEE_SYSTEM_FS_ICASE
-#define DEE_SYSTEM_FS_DRIVES
+#define DeeSystem_HAVE_FS_ICASE
+#define DeeSystem_HAVE_FS_DRIVES
 #define DeeSystem_DELIM        ';'
 #define DeeSystem_DELIM_S      ";"
 #define DeeSystem_SEP          '\\'
@@ -74,10 +74,10 @@ struct Dee_unicode_printer;
 #define DeeSystem_IsSep(x)     ((x) == '\\' || (x) == '/')
 #define DeeSystem_IsAbs(x)     ((x)[0] && ((x)[1] == ':' || ((x)[0] == '\\' && (x)[1] == '\\')))
 #define DeeSystem_IsAbsN(x, n) ((n) >= 2 && ((x)[1] == ':' || ((x)[0] == '\\' && (x)[1] == '\\')))
-#undef DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
+#undef DeeSystem_HAVE_FS_ISABS_CHECKS_LEADING_SLASHES
 #elif defined(__CYGWIN__) || defined(__CYGWIN32__)
 /* Cygwin paths also accept r'\' as alias for r'/' */
-#undef DEE_SYSTEM_FS_ICASE
+#undef DeeSystem_HAVE_FS_ICASE
 #define DeeSystem_DELIM        ':'
 #define DeeSystem_DELIM_S      ":"
 #define DeeSystem_SEP          '/'
@@ -87,9 +87,9 @@ struct Dee_unicode_printer;
 #define DeeSystem_IsSep(x)     ((x) == '/' || (x) == '\\')
 #define DeeSystem_IsAbs(x)     ((x)[0] == '/') /* Absolute paths still require a leading '/'! */
 #define DeeSystem_IsAbsN(x, n) ((n) >= 1 && (x)[0] == '/')
-#define DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
+#define DeeSystem_HAVE_FS_ISABS_CHECKS_LEADING_SLASHES
 #else /* ... */
-#undef DEE_SYSTEM_FS_ICASE
+#undef DeeSystem_HAVE_FS_ICASE
 #define DeeSystem_DELIM        ':'
 #define DeeSystem_DELIM_S      ":"
 #define DeeSystem_SEP          '/'
@@ -97,7 +97,7 @@ struct Dee_unicode_printer;
 #define DeeSystem_IsSep(x)     ((x) == '/')
 #define DeeSystem_IsAbs(x)     ((x)[0] == '/')
 #define DeeSystem_IsAbsN(x, n) ((n) >= 1 && (x)[0] == '/')
-#define DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
+#define DeeSystem_HAVE_FS_ISABS_CHECKS_LEADING_SLASHES
 #endif /* !... */
 
 /* Returns the filename-portion of a given `path'

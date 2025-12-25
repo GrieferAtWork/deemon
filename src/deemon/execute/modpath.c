@@ -106,7 +106,7 @@ DECL_BEGIN
 #define SAMEPAGE(a, b) false
 #endif /* !__ARCH_PAGESIZE_MIN */
 
-#ifdef DEE_SYSTEM_FS_ICASE
+#ifdef DeeSystem_HAVE_FS_ICASE
 #ifndef CONFIG_HAVE_strcasecmp
 #define CONFIG_HAVE_strcasecmp
 #undef strcasecmp
@@ -124,7 +124,7 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define fs_strcmp(a, b)    strcasecmp(a, b)
 #define fs_memcmp(a, b, n) memcasecmp(a, b, n)
 #define fs_bcmp(a, b, n)   memcasecmp(a, b, n)
-#else /* DEE_SYSTEM_FS_ICASE */
+#else /* DeeSystem_HAVE_FS_ICASE */
 #ifndef CONFIG_HAVE_strcmp
 #define CONFIG_HAVE_strcmp
 #undef strcmp
@@ -135,7 +135,7 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 #define fs_strcmp(a, b)    strcmp(a, b)
 #define fs_memcmp(a, b, n) memcmp(a, b, n)
 #define fs_bcmp(a, b, n)   bcmp(a, b, n)
-#endif /* !DEE_SYSTEM_FS_ICASE */
+#endif /* !DeeSystem_HAVE_FS_ICASE */
 
 #define FS_DeeString_EqualsSTR(lhs, rhs)             \
 	(DeeString_SIZE(lhs) == DeeString_SIZE(rhs) &&   \
@@ -1252,7 +1252,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 	return NULL;
 #else /* !CONFIG_NO_DEX */
 	DREF DeeModuleObject *result;
-	/* TODO: Must still verify that "ptr" isn't a heap structure! */
+	/* XXX: Must still verify that "ptr" isn't a heap structure! */
 	(void)ptr;
 	COMPILER_IMPURE();
 	result = DeeModule_GetDeemon();
@@ -1643,9 +1643,9 @@ no_dec_file:
 		}
 	}
 	caller->t_import_curr = &frame;
-	/* TODO: Similar to how we switch stacks when executing user-code, that should
-	 *       also be done here every 2-3 nested imports (or maybe even: every time,
-	 *       starting with the 2nd nested import; iow: when "frame.if_prev != NULL") */
+	/* XXX: Similar to how we switch stacks when executing user-code, that should
+	 *      also be done here every 2-3 nested imports (or maybe even: every time,
+	 *      starting with the 2nd nested import; iow: when "frame.if_prev != NULL") */
 	result = (DREF DeeModuleObject *)DeeExec_CompileModuleStream_impl(source_stream, 0, 0,
 	                                                                  DeeExec_RUNMODE_DEFAULT,
 	                                                                  &used_options, NULL);
@@ -1959,11 +1959,11 @@ cat_and_normalize_paths(/*utf-8*/ char const *__restrict pathname, size_t pathna
 				} else if ((size_t)(filename_end - filename) >= 1 && *filename == '.' &&
 				           ((size_t)(filename_end - filename) <= 1 || DeeSystem_IsSep(filename[1]))) {
 					/* parent-directory-reference */
-#ifdef DEE_SYSTEM_FS_DRIVES
+#ifdef DeeSystem_HAVE_FS_DRIVES
 					char *min_base = dst + 2; /* Don't go beyond the drive-prefix */
-#else /* DEE_SYSTEM_FS_DRIVES */
+#else /* DeeSystem_HAVE_FS_DRIVES */
 					char *min_base = dst;
-#endif /* !DEE_SYSTEM_FS_DRIVES */
+#endif /* !DeeSystem_HAVE_FS_DRIVES */
 					/* Position "dst" after the previous "/" */
 					do {
 						--dst;
@@ -2207,7 +2207,7 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 			                (size_t)(import_str_end - import_str), import_str);
 			goto err_r;
 		}
-#ifdef DEE_SYSTEM_FS_DRIVES
+#ifdef DeeSystem_HAVE_FS_DRIVES
 		if (result_end <= result) {
 			/* Write new drive-string */
 			if unlikely(segment_len != 1) {
@@ -2220,7 +2220,7 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 			*result_end++ = (char)(unsigned char)toupper((unsigned int)*import_str);
 			*result_end++ = ':';
 		} else
-#endif /* DEE_SYSTEM_FS_DRIVES */
+#endif /* DeeSystem_HAVE_FS_DRIVES */
 		{
 			*result_end++ = DeeSystem_SEP;
 			result_end = (char *)mempcpyc(result_end, import_str, segment_len, sizeof(char));
@@ -2828,13 +2828,13 @@ do_DeeModule_PrintRelNameEx_impl2(DeeModuleObject *__restrict self,
 		mod_char = unicode_readutf8(&module_absname);
 		ctx_char = unicode_readutf8_n(&context_absname, context_absname_end);
 		if (mod_char != ctx_char) {
-#ifdef DEE_SYSTEM_FS_ICASE
+#ifdef DeeSystem_HAVE_FS_ICASE
 			mod_char = DeeUni_ToLower(mod_char);
 			ctx_char = DeeUni_ToLower(ctx_char);
 			if (mod_char == ctx_char) {
 				/* Keep going! */
 			} else
-#endif /* DEE_SYSTEM_FS_ICASE */
+#endif /* DeeSystem_HAVE_FS_ICASE */
 			{
 				break;
 			}
@@ -2887,7 +2887,7 @@ do_DeeModule_PrintRelNameEx_impl2(DeeModuleObject *__restrict self,
 	if unlikely(result < 0)
 		goto done;
 
-#ifdef DEE_SYSTEM_FS_DRIVES
+#ifdef DeeSystem_HAVE_FS_DRIVES
 	/* Special handling when `module_absname' starts with a drive prefix */
 	if (DeeSystem_IsAbs(module_absname)) {
 		char drive_char = (char)tolower((unsigned char)module_absname[0]);
@@ -2898,7 +2898,7 @@ do_DeeModule_PrintRelNameEx_impl2(DeeModuleObject *__restrict self,
 			goto err_temp;
 		result += temp;
 	}
-#endif /* !DEE_SYSTEM_FS_DRIVES */
+#endif /* !DeeSystem_HAVE_FS_DRIVES */
 
 	/* Now print the entirety of `module_absname', but with '/' replaced with '.' */
 	while (*module_absname) {
@@ -3481,16 +3481,16 @@ INTDEF struct module_symbol empty_module_buckets[];
 #define ISSEP DeeSystem_IsSep
 #define ISABS DeeSystem_IsAbs
 
-#ifdef DEE_SYSTEM_FS_ICASE
+#ifdef DeeSystem_HAVE_FS_ICASE
 #ifndef CONFIG_HAVE_memcasecmp
 #define CONFIG_HAVE_memcasecmp
 #define memcasecmp dee_memcasecmp
 DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #endif /* !CONFIG_HAVE_memcasecmp */
-#endif /* DEE_SYSTEM_FS_ICASE */
+#endif /* DeeSystem_HAVE_FS_ICASE */
 
 
-#ifdef DEE_SYSTEM_FS_ICASE
+#ifdef DeeSystem_HAVE_FS_ICASE
 #define fs_memcmp                        memcasecmp
 #define fs_bcmp                          memcasecmp
 #define fs_hashobj(ob)                   DeeString_HashCase(Dee_REQUIRES_ANYOBJECT(ob))
@@ -3499,7 +3499,7 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define fs_hashmodname_equals(mod, hash) 1
 #define fs_hashmodpath(mod)              ((mod)->mo_pathihash)
 #define fs_hashmodpath_equals(mod, hash) ((mod)->mo_pathihash == (hash))
-#else /* DEE_SYSTEM_FS_ICASE */
+#else /* DeeSystem_HAVE_FS_ICASE */
 #define fs_memcmp                        memcmp
 #define fs_bcmp                          bcmp
 #define fs_hashobj(ob)                   DeeString_Hash(Dee_REQUIRES_ANYOBJECT(ob))
@@ -3508,7 +3508,7 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define fs_hashmodpath(mod)              DeeString_HASH((mod)->mo_path)
 #define fs_hashmodname_equals(mod, hash) (DeeString_HASH((mod)->mo_name) == (hash))
 #define fs_hashmodpath_equals(mod, hash) (DeeString_HASH((mod)->mo_path) == (hash))
-#endif /* !DEE_SYSTEM_FS_ICASE */
+#endif /* !DeeSystem_HAVE_FS_ICASE */
 
 #define DeeString_FS_EQUALS_STR(lhs, rhs)            \
 	(DeeString_SIZE(lhs) == DeeString_SIZE(rhs) &&   \
@@ -4224,9 +4224,9 @@ got_result_modulepath:
 
 	/* Register the module in the filesystem & global cache. */
 	result->mo_path = module_path_ob; /* Inherit reference. */
-#ifdef DEE_SYSTEM_FS_ICASE
+#ifdef DeeSystem_HAVE_FS_ICASE
 	result->mo_pathihash = hash;
-#endif /* DEE_SYSTEM_FS_ICASE */
+#endif /* DeeSystem_HAVE_FS_ICASE */
 	result->mo_flags |= Dee_MODULE_FLOADING;
 	COMPILER_WRITE_BARRIER();
 
@@ -4900,12 +4900,12 @@ err_buf_name_dec_stream:
 				}
 				Dee_Decref_unlikely(module_name_ob);
 				result->mo_path = module_path_ob; /* Inherit reference. */
-#ifdef DEE_SYSTEM_FS_ICASE
+#ifdef DeeSystem_HAVE_FS_ICASE
 				result->mo_pathihash = hash;
-#else /* DEE_SYSTEM_FS_ICASE */
+#else /* DeeSystem_HAVE_FS_ICASE */
 				ASSERT(DeeString_Hash(module_path_ob) == hash);
 				((DeeStringObject *)module_path_ob)->s_hash = hash;
-#endif /* !DEE_SYSTEM_FS_ICASE */
+#endif /* !DeeSystem_HAVE_FS_ICASE */
 
 				result->mo_flags |= Dee_MODULE_FLOADING;
 				COMPILER_WRITE_BARRIER();
@@ -5019,10 +5019,10 @@ load_module_after_dec_failure:
 	module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf, len, STRING_ERROR_FSTRICT);
 	if unlikely(!module_path_ob)
 		goto err_buf;
-#ifndef DEE_SYSTEM_FS_ICASE
+#ifndef DeeSystem_HAVE_FS_ICASE
 	ASSERT(fs_hashutf8(buf, len) == hash);
 	((DeeStringObject *)module_path_ob)->s_hash = hash;
-#endif /* !DEE_SYSTEM_FS_ICASE */
+#endif /* !DeeSystem_HAVE_FS_ICASE */
 #else /* CONFIG_NO_DEX */
 	/* Try to load the module from a DEX extension. */
 	ASSERT(dst[module_namesize + 0] == '.');
@@ -5062,10 +5062,10 @@ load_module_after_dec_failure:
 			module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf, len, STRING_ERROR_FSTRICT);
 			if unlikely(!module_path_ob)
 				goto err_buf;
-#ifndef DEE_SYSTEM_FS_ICASE
+#ifndef DeeSystem_HAVE_FS_ICASE
 			ASSERT(fs_hashutf8(buf, len) == hash);
 			((DeeStringObject *)module_path_ob)->s_hash = hash;
-#endif /* !DEE_SYSTEM_FS_ICASE */
+#endif /* !DeeSystem_HAVE_FS_ICASE */
 		} else {
 			int error;
 			DeeModuleObject *existing_module;
@@ -5083,12 +5083,12 @@ load_module_after_dec_failure:
 			}
 			Dee_Decref_unlikely(module_name_ob);
 			result->mo_path = module_path_ob; /* Inherit reference. */
-#ifdef DEE_SYSTEM_FS_ICASE
+#ifdef DeeSystem_HAVE_FS_ICASE
 			result->mo_pathihash = hash;
-#else /* DEE_SYSTEM_FS_ICASE */
+#else /* DeeSystem_HAVE_FS_ICASE */
 			/* Load the updated path hash (and also force the hash to be pre-cached) */
 			hash = fs_hashobj(module_path_ob);
-#endif /* !DEE_SYSTEM_FS_ICASE */
+#endif /* !DeeSystem_HAVE_FS_ICASE */
 			result->mo_flags |= Dee_MODULE_FLOADING;
 			COMPILER_WRITE_BARRIER();
 
@@ -5197,12 +5197,12 @@ load_module_after_dex_failure:
 		}
 		Dee_Decref_unlikely(module_name_ob);
 		result->mo_path = module_path_ob; /* Inherit reference. */
-#ifdef DEE_SYSTEM_FS_ICASE
+#ifdef DeeSystem_HAVE_FS_ICASE
 		result->mo_pathihash = hash;
-#else /* DEE_SYSTEM_FS_ICASE */
+#else /* DeeSystem_HAVE_FS_ICASE */
 		ASSERT(DeeString_HASHOK(module_path_ob));
 		ASSERT(DeeString_HASH(module_path_ob) == hash);
-#endif /* !DEE_SYSTEM_FS_ICASE */
+#endif /* !DeeSystem_HAVE_FS_ICASE */
 		result->mo_flags |= Dee_MODULE_FLOADING;
 		COMPILER_WRITE_BARRIER();
 

@@ -68,13 +68,13 @@
 #define UINT32_MAX __UINT32_MAX__
 #endif /* !UINT32_MAX */
 
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 #include <Windows.h>
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
 
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 #include <stdio.h>
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 
 #ifdef CONFIG_HAVE_PATHS_H
 #include <paths.h> /* _PATH_DEVNULL */
@@ -100,9 +100,9 @@
 
 
 /************************************************************************/
-/* Auto-configure system features for `DEESYSTEM_FILE_USE_UNIX'-mode    */
+/* Auto-configure system features for `DeeSystem_FILE_USE_unix_fd'-mode    */
 /************************************************************************/
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#ifdef DeeSystem_FILE_USE_unix_fd
 #ifndef STDIN_FILENO
 #define STDIN_FILENO 0
 #endif /* !STDIN_FILENO */
@@ -112,12 +112,12 @@
 #ifndef STDERR_FILENO
 #define STDERR_FILENO 2
 #endif /* !STDERR_FILENO */
-#endif /* DEESYSTEM_FILE_USE_UNIX */
+#endif /* DeeSystem_FILE_USE_unix_fd */
 
 
 
 /************************************************************************/
-/* Auto-configure system features for `DEESYSTEM_FILE_USE_STDIO'-mode   */
+/* Auto-configure system features for `DeeSystem_FILE_USE_stdio_FILE'-mode   */
 /************************************************************************/
 #ifdef CONFIG_HAVE_fopen64
 #undef fopen
@@ -294,13 +294,13 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
 #endif /* DEE_STDDBG_IS_UNIQUE */
 
 
-#ifdef DEESYSTEM_FILE_USE_STUB
+#ifdef DeeSystem_FILE_USE_STUB
 PRIVATE char const fs_unsupported_message[] = "No filesystem supported";
 PRIVATE ATTR_NOINLINE int DCALL fs_unsupported(void) {
 	return DeeError_Throwf(&DeeError_UnsupportedAPI,
 	                       fs_unsupported_message);
 }
-#else /* DEESYSTEM_FILE_USE_STUB */
+#else /* DeeSystem_FILE_USE_STUB */
 
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_file_closed(SystemFile *__restrict self) {
@@ -313,11 +313,11 @@ PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_file_io(SystemFile *__restrict self) {
 	if (self->sf_handle == Dee_fd_INVALID)
 		return err_file_closed(self);
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 	return DeeNTSystem_ThrowErrorf(&DeeError_FSError,
 	                               GetLastError(),
 	                               "I/O Operation failed");
-#elif defined(DEESYSTEM_FILE_USE_UNIX)
+#elif defined(DeeSystem_FILE_USE_unix_fd)
 	return DeeUnixSystem_ThrowErrorf(&DeeError_FSError,
 	                                 DeeSystem_GetErrno(),
 	                                 "I/O Operation failed");
@@ -326,7 +326,7 @@ err_file_io(SystemFile *__restrict self) {
 #endif /* !... */
 }
 
-#endif /* !DEESYSTEM_FILE_USE_STUB */
+#endif /* !DeeSystem_FILE_USE_STUB */
 
 
 
@@ -334,21 +334,21 @@ err_file_io(SystemFile *__restrict self) {
 PUBLIC WUNUSED DREF /*SystemFile*/ DeeObject *DCALL
 DeeFile_OpenFd(Dee_fd_t fd, /*String*/ DeeObject *filename,
                int oflags, bool inherit_fd) {
-#ifdef DEESYSTEM_FILE_USE_STUB
+#ifdef DeeSystem_FILE_USE_STUB
 	(void)fd;
 	(void)filename;
 	(void)oflags;
 	(void)inherit_fd;
 	fs_unsupported();
 	return NULL;
-#else /* DEESYSTEM_FILE_USE_STUB */
+#else /* DeeSystem_FILE_USE_STUB */
 	SystemFile *result;
 	result = DeeObject_MALLOC(SystemFile);
 	if unlikely(!result)
 		goto done;
 
 	/* Os-specific part. */
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 	(void)oflags;
 	result->sf_handle    = fd;
 	result->sf_ownhandle = inherit_fd ? fd : INVALID_HANDLE_VALUE; /* Inherit. */
@@ -356,37 +356,37 @@ DeeFile_OpenFd(Dee_fd_t fd, /*String*/ DeeObject *filename,
 	result->sf_filetype  = (uint32_t)FILE_TYPE_UNKNOWN;
 	result->sf_pendingc  = 0;
 	Dee_XIncref(filename);
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
 
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#ifdef DeeSystem_FILE_USE_unix_fd
 	(void)oflags;
 	result->sf_handle    = fd;
 	result->sf_ownhandle = inherit_fd ? fd : (Dee_fd_t)-1; /* Inherit. */
 	result->sf_filename  = filename;
 	Dee_XIncref(filename);
-#endif /* DEESYSTEM_FILE_USE_UNIX */
+#endif /* DeeSystem_FILE_USE_unix_fd */
 
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 	(void)oflags;
 	result->sf_handle    = (FILE *)fd;
 	result->sf_ownhandle = inherit_fd ? (FILE *)fd : NULL; /* Inherit. */
 	result->sf_filename  = filename;
 	Dee_XIncref(filename);
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 
 	DeeFileObject_Init(result, &DeeSystemFile_Type);
 done:
 	return (DREF DeeObject *)result;
-#endif /* !DEESYSTEM_FILE_USE_STUB */
+#endif /* !DeeSystem_FILE_USE_STUB */
 }
 
 
 INTERN WUNUSED NONNULL((1)) Dee_fd_t DCALL
 DeeSystemFile_Fileno(/*SystemFile*/ DeeObject *__restrict self) {
-#ifdef DEESYSTEM_FILE_USE_STUB
+#ifdef DeeSystem_FILE_USE_STUB
 	(void)self;
 	return (Dee_fd_t)DeeError_Throwf(&DeeError_FileClosed, fs_unsupported_message);
-#elif defined(DEESYSTEM_FILE_USE_STDIO) && 1
+#elif defined(DeeSystem_FILE_USE_stdio_FILE)
 	/* Due to the unpredictable race condition and the fact that
 	 * it's up to the kernel to deal with closed file descriptors,
 	 * we could never safely expose the underlying FILE * to the
@@ -407,12 +407,12 @@ DeeSystemFile_Fileno(/*SystemFile*/ DeeObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self) {
-#ifdef DEESYSTEM_FILE_USE_STUB
+#ifdef DeeSystem_FILE_USE_STUB
 	ASSERT_OBJECT_TYPE(self, (DeeTypeObject *)&DeeSystemFile_Type);
 	(void)self;
 	fs_unsupported();
 	return NULL;
-#elif defined(DEESYSTEM_FILE_USE_STDIO)
+#elif defined(DeeSystem_FILE_USE_stdio_FILE)
 	SystemFile *me = (SystemFile *)self;
 	DREF DeeObject *result;
 	ASSERT_OBJECT_TYPE((DeeObject *)me, (DeeTypeObject *)&DeeSystemFile_Type);
@@ -433,12 +433,12 @@ DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self) {
 			err_file_closed(me);
 			goto done;
 		}
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 		result = DeeNTSystem_GetFilenameOfHandle(hand);
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
+#ifdef DeeSystem_FILE_USE_unix_fd
 		result = DeeSystem_GetFilenameOfFD(hand);
-#endif /* DEESYSTEM_FILE_USE_UNIX */
+#endif /* DeeSystem_FILE_USE_unix_fd */
 		if unlikely(!result)
 			goto done;
 
@@ -461,7 +461,7 @@ done:
 /* File open API                                                        */
 /************************************************************************/
 
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#ifdef DeeSystem_FILE_USE_unix_fd
 /* Fix names of aliasing flags. */
 #ifndef CONFIG_HAVE_O_CREAT
 #error "Missing system support for `O_CREAT'"
@@ -615,7 +615,7 @@ done:
 #undef O_RDWR
 #define O_RDWR 0
 #endif /* !CONFIG_HAVE_O_RDWR */
-#endif /* DEESYSTEM_FILE_USE_UNIX */
+#endif /* DeeSystem_FILE_USE_unix_fd */
 
 
 
@@ -624,7 +624,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 
 	/* Windows implementation */
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 	/* NOTE: this implementation is mirrored in `posix__open_f_impl()' */
 	DREF SystemFile *result;
 	HANDLE hFile;
@@ -648,10 +648,10 @@ err_fp:
 	CloseHandle(hFile);
 err:
 	return NULL;
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
 
 	/* Unix implementation */
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#ifdef DeeSystem_FILE_USE_unix_fd
 	DREF SystemFile *result;
 	int fd, used_oflags;
 	char const *utf8_filename;
@@ -831,10 +831,10 @@ err_fd:
 #endif /* CONFIG_HAVE_close */
 err:
 	return NULL;
-#endif /* DEESYSTEM_FILE_USE_UNIX */
+#endif /* DeeSystem_FILE_USE_unix_fd */
 
 	/* Stdio implementation */
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 #if defined(CONFIG_HAVE_fopen) || defined(CONFIG_HAVE_fopen64)
 	char const *utf8_filename;
 	char modbuf[16], *iter = modbuf;
@@ -904,28 +904,28 @@ err_fp:
 #endif /* !CONFIG_HAVE_fopen && !CONFIG_HAVE_fopen64 */
 err:
 	return NULL;
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 
 	/* Stub implementation */
-#ifdef DEESYSTEM_FILE_USE_STUB
+#ifdef DeeSystem_FILE_USE_STUB
 	(void)filename;
 	(void)oflags;
 	(void)mode;
 	fs_unsupported();
 	return NULL;
-#endif /* DEESYSTEM_FILE_USE_STUB */
+#endif /* DeeSystem_FILE_USE_STUB */
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFile_OpenString(char const *__restrict filename,
                    int oflags, int mode) {
-#ifdef DEESYSTEM_FILE_USE_STUB
+#ifdef DeeSystem_FILE_USE_STUB
 	(void)filename;
 	(void)oflags;
 	(void)mode;
 	fs_unsupported();
 	return NULL;
-#else /* DEESYSTEM_FILE_USE_STUB */
+#else /* DeeSystem_FILE_USE_STUB */
 	DREF DeeObject *result, *nameob;
 	nameob = DeeString_New(filename);
 	if unlikely(!nameob)
@@ -935,12 +935,12 @@ DeeFile_OpenString(char const *__restrict filename,
 	return result;
 err:
 	return NULL;
-#endif /* !DEESYSTEM_FILE_USE_STUB */
+#endif /* !DeeSystem_FILE_USE_STUB */
 }
 
 
 
-#ifdef DEESYSTEM_FILE_USE_STUB
+#ifdef DeeSystem_FILE_USE_STUB
 PRIVATE DeeFileObject std_file = { FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type) };
 
 /* Return the the default stream for a given STD number. */
@@ -951,13 +951,13 @@ DeeFile_DefaultStd(unsigned int id) {
 	return (DeeObject *)&std_file;
 }
 
-#else /* DEESYSTEM_FILE_USE_STUB */
+#else /* DeeSystem_FILE_USE_STUB */
 
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 #undef deemon_file_CAN_STATIC_INITIALIZE_SYSF_STD
-#elif defined(DEESYSTEM_FILE_USE_UNIX)
+#elif defined(DeeSystem_FILE_USE_unix_fd)
 #define deemon_file_CAN_STATIC_INITIALIZE_SYSF_STD
-#elif defined(DEESYSTEM_FILE_USE_STDIO)
+#elif defined(DeeSystem_FILE_USE_stdio_FILE)
 /* When the std file streams are not defined as macros,
  * we are pretty safe to assume that they are ~real~
  * external symbols that can be linked against. */
@@ -979,15 +979,15 @@ STATIC_ASSERT(DEE_STDDBG == 3);
 #endif /* DEE_STDDBG_IS_UNIQUE */
 
 PRIVATE SystemFile sysf_std[] = {
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL, FILE_TYPE_UNKNOWN, 0 },
 	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL, FILE_TYPE_UNKNOWN, 0 },
 	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL, FILE_TYPE_UNKNOWN, 0 }
-#elif defined(DEESYSTEM_FILE_USE_UNIX)
+#elif defined(DeeSystem_FILE_USE_unix_fd)
 	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, STDIN_FILENO, -1 },
 	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, STDOUT_FILENO, -1 },
 	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, STDERR_FILENO, -1 }
-#elif defined(DEESYSTEM_FILE_USE_STDIO)
+#elif defined(DeeSystem_FILE_USE_stdio_FILE)
 #ifdef deemon_file_CAN_STATIC_INITIALIZE_SYSF_STD
 	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, stdin, NULL },
 	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, stdout, NULL },
@@ -1005,10 +1005,10 @@ PRIVATE SystemFile sysf_std[] = {
 #endif /* DEE_STDDBG_IS_UNIQUE */
 };
 
-#if !defined(deemon_file_CAN_STATIC_INITIALIZE_SYSF_STD) && defined(DEESYSTEM_FILE_USE_STDIO)
+#if !defined(deemon_file_CAN_STATIC_INITIALIZE_SYSF_STD) && defined(DeeSystem_FILE_USE_stdio_FILE)
 #define HAVE_sysf_std_closed
 PRIVATE uint8_t sysf_std_closed = 0;
-#endif /* !deemon_file_CAN_STATIC_INITIALIZE_SYSF_STD && DEESYSTEM_FILE_USE_STDIO */
+#endif /* !deemon_file_CAN_STATIC_INITIALIZE_SYSF_STD && DeeSystem_FILE_USE_stdio_FILE */
 
 
 /* Return the the default stream for a given STD number. */
@@ -1017,7 +1017,7 @@ DeeFile_DefaultStd(unsigned int id) {
 #ifdef deemon_file_CAN_STATIC_INITIALIZE_SYSF_STD
 	ASSERT(id < COMPILER_LENOF(sysf_std));
 	return (DeeObject *)&sysf_std[id];
-#elif defined(DEESYSTEM_FILE_USE_STDIO)
+#elif defined(DeeSystem_FILE_USE_stdio_FILE)
 	SystemFile *result;
 	ASSERT(id <= DEE_STDDBG);
 	result = &sysf_std[id];
@@ -1070,7 +1070,7 @@ DeeFile_DefaultStd(unsigned int id) {
 		}
 	}
 	return (DeeObject *)result;
-#elif defined(DEESYSTEM_FILE_USE_WINDOWS)
+#elif defined(DeeSystem_FILE_USE_nt_HANDLE)
 	SystemFile *result;
 	ASSERT(id < COMPILER_LENOF(sysf_std));
 	result = &sysf_std[id];
@@ -1099,7 +1099,7 @@ DeeFile_DefaultStd(unsigned int id) {
 #error "Invalid configuration"
 #endif /* !... */
 }
-#endif /* !DEESYSTEM_FILE_USE_STUB */
+#endif /* !DeeSystem_FILE_USE_STUB */
 
 
 #ifdef HAVE_sysf_std_closed
@@ -1120,7 +1120,7 @@ DeeFile_DefaultStd(unsigned int id) {
 /************************************************************************/
 /* Helpers used by the WINDOWS implementation                           */
 /************************************************************************/
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 typedef union {
 	struct {
 		/* Use our own structure so it gets aligned by 64 bits,
@@ -1473,14 +1473,14 @@ again:
 err:
 	return -1;
 }
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
 
 
 
 /************************************************************************/
 /* Helpers used by the STDIO implementation                             */
 /************************************************************************/
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 #ifndef CONFIG_HAVE_fread
 #ifdef CONFIG_HAVE_fgetc
 #define CONFIG_HAVE_fread
@@ -1520,7 +1520,7 @@ dee_fwrite(void const *buf, size_t elemsize, size_t elemcount, FILE *stream) {
 }
 #endif /* CONFIG_HAVE_fputc */
 #endif /* !CONFIG_HAVE_fwrite */
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 
 
 
@@ -1530,7 +1530,7 @@ sysfile_read(SystemFile *__restrict self,
              size_t bufsize, dioflag_t flags) {
 
 	/* Windows implementation */
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 	DWORD result;
 #if __SIZEOF_SIZE_T__ > 4
 	if unlikely(bufsize > UINT32_MAX)
@@ -1590,10 +1590,10 @@ err_io:
 	err_file_io(self);
 err:
 	return (size_t)-1;
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
 
 	/* Unix implementation */
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#ifdef DeeSystem_FILE_USE_unix_fd
 #ifdef CONFIG_HAVE_read
 	/* TODO: Use `select()' to check if reading will block for `Dee_FILEIO_FNONBLOCKING' */
 	/* TODO: Use KOS's readf() function */
@@ -1613,10 +1613,10 @@ err:
 	return (size_t)err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
 	                                          FILE_OPERATOR_READ);
 #endif /* !CONFIG_HAVE_read */
-#endif /* DEESYSTEM_FILE_USE_UNIX */
+#endif /* DeeSystem_FILE_USE_unix_fd */
 
 	/* Stdio implementation */
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 #ifdef CONFIG_HAVE_fread
 	size_t result;
 	if unlikely(!self->sf_handle)
@@ -1641,16 +1641,16 @@ err:
 	                           FILE_OPERATOR_READ);
 	return (size_t)-1;
 #endif /* !CONFIG_HAVE_fread */
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 
 	/* Stub implementation */
-#ifdef DEESYSTEM_FILE_USE_STUB
+#ifdef DeeSystem_FILE_USE_STUB
 	(void)self;
 	(void)buffer;
 	(void)bufsize;
 	(void)flags;
 	return (size_t)fs_unsupported();
-#endif /* DEESYSTEM_FILE_USE_STUB */
+#endif /* DeeSystem_FILE_USE_STUB */
 }
 
 
@@ -1660,7 +1660,7 @@ sysfile_write(SystemFile *__restrict self,
               size_t bufsize, dioflag_t UNUSED(flags)) {
 
 	/* Windows implementation */
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 	DWORD bytes_written, file_type;
 #if __SIZEOF_SIZE_T__ > 4
 	if unlikely(bufsize > UINT32_MAX)
@@ -1707,10 +1707,10 @@ again:
 	return bytes_written;
 err:
 	return (size_t)-1;
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
 
 	/* Unix implementation */
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#ifdef DeeSystem_FILE_USE_unix_fd
 #ifdef CONFIG_HAVE_write
 	/* TODO: Use `select()' to check if writing will block for `Dee_FILEIO_FNONBLOCKING' */
 	/* TODO: Use KOS's writef() function */
@@ -1730,10 +1730,10 @@ err:
 	return (size_t)err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
 	                                          FILE_OPERATOR_WRITE);
 #endif /* !CONFIG_HAVE_write */
-#endif /* DEESYSTEM_FILE_USE_UNIX */
+#endif /* DeeSystem_FILE_USE_unix_fd */
 
 	/* Stdio implementation */
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 #ifdef CONFIG_HAVE_fwrite
 	size_t result;
 	if unlikely(!self->sf_handle)
@@ -1756,28 +1756,28 @@ err:
 	                           FILE_OPERATOR_WRITE);
 	return (size_t)-1;
 #endif /* !CONFIG_HAVE_fwrite */
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 
 	/* Stub implementation */
-#ifdef DEESYSTEM_FILE_USE_STUB
+#ifdef DeeSystem_FILE_USE_STUB
 	(void)self;
 	(void)buffer;
 	(void)bufsize;
 	(void)flags;
 	return (size_t)fs_unsupported();
-#endif /* DEESYSTEM_FILE_USE_STUB */
+#endif /* DeeSystem_FILE_USE_STUB */
 }
 
 
 #define deemon_file_HAVE_sysfile_pread
 #define deemon_file_HAVE_sysfile_pwrite
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 /* Under stdio, pread/pwrite must be emulated using seek+read/write
  * We signify this to the high-level operator wrappers by simply not
  * defining the pread/pwrite callbacks. */
 #undef deemon_file_HAVE_sysfile_pread
 #undef deemon_file_HAVE_sysfile_pwrite
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 
 
 
@@ -1789,7 +1789,7 @@ sysfile_pread(SystemFile *__restrict self,
               dioflag_t flags) {
 
 	/* Windows implementation */
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 	DWORD bytes_read;
 	DEE_FIXED_OVERLAPPED overlapped;
 	(void)flags;
@@ -1823,10 +1823,10 @@ again:
 	return bytes_read;
 err:
 	return (size_t)-1;
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
 
 	/* Unix implementation */
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#ifdef DeeSystem_FILE_USE_unix_fd
 #if defined(CONFIG_HAVE_pread64) || defined(CONFIG_HAVE_pread)
 	size_t result;
 	(void)flags;
@@ -1849,17 +1849,17 @@ err:
 	return (size_t)err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
 	                                          FILE_OPERATOR_PREAD);
 #endif /* !CONFIG_HAVE_pread[64] */
-#endif /* DEESYSTEM_FILE_USE_UNIX */
+#endif /* DeeSystem_FILE_USE_unix_fd */
 
 	/* Stub implementation */
-#ifdef DEESYSTEM_FILE_USE_STUB
+#ifdef DeeSystem_FILE_USE_STUB
 	(void)self;
 	(void)buffer;
 	(void)bufsize;
 	(void)pos;
 	(void)flags;
 	return (size_t)fs_unsupported();
-#endif /* DEESYSTEM_FILE_USE_STUB */
+#endif /* DeeSystem_FILE_USE_STUB */
 }
 #endif /* deemon_file_HAVE_sysfile_pread */
 
@@ -1871,7 +1871,7 @@ sysfile_pwrite(SystemFile *__restrict self,
                dioflag_t flags) {
 
 	/* Windows implementation */
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 	DWORD bytes_written;
 	DEE_FIXED_OVERLAPPED overlapped;
 	(void)flags;
@@ -1905,10 +1905,10 @@ again:
 	return bytes_written;
 err:
 	return (size_t)-1;
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
 
 	/* Unix implementation */
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#ifdef DeeSystem_FILE_USE_unix_fd
 #if defined(CONFIG_HAVE_pwrite64) || defined(CONFIG_HAVE_pwrite)
 	size_t result;
 	(void)flags;
@@ -1931,17 +1931,17 @@ err:
 	return (size_t)err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
 	                                          FILE_OPERATOR_PWRITE);
 #endif /* !CONFIG_HAVE_pwrite[64] */
-#endif /* DEESYSTEM_FILE_USE_UNIX */
+#endif /* DeeSystem_FILE_USE_unix_fd */
 
 	/* Stub implementation */
-#ifdef DEESYSTEM_FILE_USE_STUB
+#ifdef DeeSystem_FILE_USE_STUB
 	(void)self;
 	(void)buffer;
 	(void)bufsize;
 	(void)pos;
 	(void)flags;
 	return (size_t)fs_unsupported();
-#endif /* DEESYSTEM_FILE_USE_STUB */
+#endif /* DeeSystem_FILE_USE_STUB */
 }
 #endif /* deemon_file_HAVE_sysfile_pwrite */
 
@@ -1950,7 +1950,7 @@ PRIVATE Dee_pos_t DCALL
 sysfile_seek(SystemFile *__restrict self, Dee_off_t off, int whence) {
 
 	/* Windows implementation */
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 	DWORD result;
 	LONG high;
 again:
@@ -1973,10 +1973,10 @@ again:
 	return (Dee_pos_t)result | ((Dee_pos_t)high << 32);
 err:
 	return (Dee_pos_t)-1;
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
 
 	/* Unix implementation */
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#ifdef DeeSystem_FILE_USE_unix_fd
 #if defined(CONFIG_HAVE_lseek) || defined(CONFIG_HAVE_lseek64)
 	Dee_pos_t result;
 	DBG_ALIGNMENT_DISABLE();
@@ -1996,10 +1996,10 @@ err:
 	return (Dee_pos_t)err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
 	                                          FILE_OPERATOR_SEEK);
 #endif /* !CONFIG_HAVE_lseek && !CONFIG_HAVE_lseek64 */
-#endif /* DEESYSTEM_FILE_USE_UNIX */
+#endif /* DeeSystem_FILE_USE_unix_fd */
 
 	/* Stdio implementation */
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 	Dee_pos_t result;
 	if unlikely(!self->sf_handle)
 		return err_file_closed(self);
@@ -2042,22 +2042,22 @@ err:
 	result = (Dee_pos_t)-1;
 #endif /* !... */
 	return result;
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 
 	/* Stub implementation */
-#ifdef DEESYSTEM_FILE_USE_STUB
+#ifdef DeeSystem_FILE_USE_STUB
 	(void)self;
 	(void)off;
 	(void)whence;
 	return (Dee_pos_t)(Dee_off_t)fs_unsupported();
-#endif /* DEESYSTEM_FILE_USE_STUB */
+#endif /* DeeSystem_FILE_USE_STUB */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sysfile_sync(SystemFile *__restrict self) {
 
 	/* Windows implementation */
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 	/* Attempting to flush a console handle bickers about the handle being invalid... */
 	if (self->sf_filetype == (uint32_t)FILE_TYPE_CHAR)
 		goto done;
@@ -2087,10 +2087,10 @@ done:
 	return 0;
 err:
 	return -1;
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
 
 	/* Unix implementation */
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#ifdef DeeSystem_FILE_USE_unix_fd
 #if defined(CONFIG_HAVE_fdatasync)
 	DBG_ALIGNMENT_DISABLE();
 	if unlikely(fdatasync((int)self->sf_handle) < 0) {
@@ -2109,10 +2109,10 @@ err:
 	(void)self;
 #endif /* !... */
 	return 0;
-#endif /* DEESYSTEM_FILE_USE_UNIX */
+#endif /* DeeSystem_FILE_USE_unix_fd */
 
 	/* Stdio implementation */
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 	if unlikely(!self->sf_handle)
 		return err_file_closed(self);
 	DBG_ALIGNMENT_DISABLE();
@@ -2127,20 +2127,20 @@ err:
 #endif /* ... */
 	DBG_ALIGNMENT_ENABLE();
 	return 0;
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 
 	/* Stub implementation */
-#ifdef DEESYSTEM_FILE_USE_STUB
+#ifdef DeeSystem_FILE_USE_STUB
 	(void)self;
 	return fs_unsupported();
-#endif /* DEESYSTEM_FILE_USE_STUB */
+#endif /* DeeSystem_FILE_USE_STUB */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sysfile_trunc(SystemFile *__restrict self, Dee_pos_t size) {
 
 	/* Windows implementation */
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 	Dee_pos_t old_pos = sysfile_seek(self, 0, SEEK_CUR);
 	if unlikely(old_pos == (Dee_pos_t)-1)
 		goto err;
@@ -2161,10 +2161,10 @@ sysfile_trunc(SystemFile *__restrict self, Dee_pos_t size) {
 	return 0;
 err:
 	return -1;
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
 
 	/* Unix implementation */
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#ifdef DeeSystem_FILE_USE_unix_fd
 	int result;
 #if defined(CONFIG_HAVE_ftruncate) || defined(CONFIG_HAVE_ftruncate64)
 	/* Use ftruncate() */
@@ -2205,10 +2205,10 @@ err:
 	                                    FILE_OPERATOR_TRUNC);
 #endif /* !... */
 	return result;
-#endif /* DEESYSTEM_FILE_USE_UNIX */
+#endif /* DeeSystem_FILE_USE_unix_fd */
 
 	/* Stdio implementation */
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 	if unlikely(!self->sf_handle)
 		return err_file_closed(self);
 #ifdef CONFIG_HAVE_fftruncate64
@@ -2249,21 +2249,21 @@ err:
 	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
 	                                  FILE_OPERATOR_TRUNC);
 #endif /* !... */
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 
 	/* Stub implementation */
-#ifdef DEESYSTEM_FILE_USE_STUB
+#ifdef DeeSystem_FILE_USE_STUB
 	(void)self;
 	(void)size;
 	return fs_unsupported();
-#endif /* DEESYSTEM_FILE_USE_STUB */
+#endif /* DeeSystem_FILE_USE_STUB */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sysfile_close(SystemFile *__restrict self) {
 
 	/* Windows implementation */
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 	{
 		HANDLE hHandle;
 		atomic_write(&self->sf_handle, INVALID_HANDLE_VALUE);
@@ -2279,10 +2279,10 @@ sysfile_close(SystemFile *__restrict self) {
 		REMEMBER_FILE_CLOSED(self);
 		return 0;
 	}
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
 
 	/* Unix implementation */
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#ifdef DeeSystem_FILE_USE_unix_fd
 	{
 		int fd;
 		atomic_write(&self->sf_handle, -1);
@@ -2300,10 +2300,10 @@ sysfile_close(SystemFile *__restrict self) {
 		REMEMBER_FILE_CLOSED(self);
 		return 0;
 	}
-#endif /* DEESYSTEM_FILE_USE_UNIX */
+#endif /* DeeSystem_FILE_USE_unix_fd */
 
 	/* Stdio implementation */
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 	{
 		FILE *fp;
 		atomic_write(&self->sf_handle, NULL);
@@ -2321,13 +2321,13 @@ sysfile_close(SystemFile *__restrict self) {
 		REMEMBER_FILE_CLOSED(self);
 		return 0;
 	}
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 
 	/* Stub implementation */
-#ifdef DEESYSTEM_FILE_USE_STUB
+#ifdef DeeSystem_FILE_USE_STUB
 	(void)self;
 	return fs_unsupported();
-#endif /* DEESYSTEM_FILE_USE_STUB */
+#endif /* DeeSystem_FILE_USE_STUB */
 }
 
 
@@ -2335,23 +2335,23 @@ sysfile_close(SystemFile *__restrict self) {
 #undef deemon_file_HAVE_sysfile_getc
 #undef deemon_file_HAVE_sysfile_ungetc
 #undef deemon_file_HAVE_sysfile_putc
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 #define deemon_file_HAVE_sysfile_getc
 #define deemon_file_HAVE_sysfile_ungetc
 #define deemon_file_HAVE_sysfile_putc
-#endif /* DEESYSTEM_FILE_USE_STDIO */
-#ifdef DEESYSTEM_FILE_USE_STUB
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
+#ifdef DeeSystem_FILE_USE_STUB
 #define deemon_file_HAVE_sysfile_getc
 #define deemon_file_HAVE_sysfile_ungetc
 #define deemon_file_HAVE_sysfile_putc
-#endif /* DEESYSTEM_FILE_USE_STUB */
+#endif /* DeeSystem_FILE_USE_STUB */
 
 #ifdef deemon_file_HAVE_sysfile_getc
 PRIVATE NONNULL((1)) int DCALL
 sysfile_getc(SystemFile *__restrict self, dioflag_t flags) {
 
 	/* Stdio implementation */
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 #if defined(CONFIG_HAVE_fgetc) || defined(CONFIG_HAVE_fread)
 	int result;
 	(void)flags;
@@ -2393,15 +2393,15 @@ sysfile_getc(SystemFile *__restrict self, dioflag_t flags) {
 	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
 	                                  FILE_OPERATOR_GETC);
 #endif /* !CONFIG_HAVE_fgetc && !CONFIG_HAVE_fread */
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 
 	/* Stub implementation */
-#ifdef DEESYSTEM_FILE_USE_STUB
+#ifdef DeeSystem_FILE_USE_STUB
 	(void)self;
 	(void)flags;
 	fs_unsupported();
 	return GETC_ERR;
-#endif /* DEESYSTEM_FILE_USE_STUB */
+#endif /* DeeSystem_FILE_USE_STUB */
 }
 #endif /* deemon_file_HAVE_sysfile_getc */
 
@@ -2410,7 +2410,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 sysfile_ungetc(SystemFile *__restrict self, int ch) {
 
 	/* Stdio implementation */
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 #if defined(CONFIG_HAVE_ungetc)
 	int result;
 	if unlikely(!self->sf_handle) {
@@ -2425,15 +2425,15 @@ sysfile_ungetc(SystemFile *__restrict self, int ch) {
 	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
 	                                  FILE_OPERATOR_UNGETC);
 #endif /* !CONFIG_HAVE_ungetc */
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 
 	/* Stub implementation */
-#ifdef DEESYSTEM_FILE_USE_STUB
+#ifdef DeeSystem_FILE_USE_STUB
 	(void)self;
 	(void)ch;
 	fs_unsupported();
 	return GETC_ERR;
-#endif /* DEESYSTEM_FILE_USE_STUB */
+#endif /* DeeSystem_FILE_USE_STUB */
 }
 #endif /* deemon_file_HAVE_sysfile_ungetc */
 
@@ -2442,7 +2442,7 @@ PRIVATE int DCALL
 sysfile_putc(SystemFile *__restrict self, int ch, dioflag_t flags) {
 
 	/* Stdio implementation */
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 #if defined(CONFIG_HAVE_fputc) || defined(CONFIG_HAVE_fwrite)
 #ifndef CONFIG_HAVE_fputc
 	unsigned char chr;
@@ -2475,21 +2475,21 @@ sysfile_putc(SystemFile *__restrict self, int ch, dioflag_t flags) {
 	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
 	                                  FILE_OPERATOR_PUTC);
 #endif /* !CONFIG_HAVE_fputc && !CONFIG_HAVE_fwrite */
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 
 	/* Stub implementation */
-#ifdef DEESYSTEM_FILE_USE_STUB
+#ifdef DeeSystem_FILE_USE_STUB
 	(void)self;
 	(void)ch;
 	(void)flags;
 	fs_unsupported();
 	return GETC_ERR;
-#endif /* DEESYSTEM_FILE_USE_STUB */
+#endif /* DeeSystem_FILE_USE_STUB */
 }
 #endif /* deemon_file_HAVE_sysfile_putc */
 
 
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_osfhandle_np(SystemFile *__restrict self) {
 	Dee_fd_t result;
@@ -2500,9 +2500,9 @@ sysfile_osfhandle_np(SystemFile *__restrict self) {
 err:
 	return NULL;
 }
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
 
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#ifdef DeeSystem_FILE_USE_unix_fd
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_fileno_np(SystemFile *__restrict self) {
 	Dee_fd_t result;
@@ -2513,13 +2513,13 @@ sysfile_fileno_np(SystemFile *__restrict self) {
 err:
 	return NULL;
 }
-#endif /* DEESYSTEM_FILE_USE_UNIX */
+#endif /* DeeSystem_FILE_USE_unix_fd */
 
 
 #undef Dee_fd_t_AsUnixFd
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#ifdef DeeSystem_FILE_USE_unix_fd
 #define Dee_fd_t_AsUnixFd(sysfd) (sysfd)
-#elif defined(CONFIG_HAVE_fileno) && defined(DEESYSTEM_FILE_USE_STDIO)
+#elif defined(CONFIG_HAVE_fileno) && defined(DeeSystem_FILE_USE_stdio_FILE)
 #define Dee_fd_t_AsUnixFd(sysfd) fileno(sysfd)
 #endif /* ... */
 
@@ -2530,13 +2530,13 @@ err:
 #undef sysfile_isatty_USE_isastdfile_stdio
 #undef sysfile_isatty_USE_isastdfile
 #undef sysfile_isatty_USE_return_false
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 #define sysfile_isatty_USE_nt_sysfile_gettype
-#elif defined(DEESYSTEM_FILE_USE_STDIO) && defined(CONFIG_HAVE_fisatty)
+#elif defined(DeeSystem_FILE_USE_stdio_FILE) && defined(CONFIG_HAVE_fisatty)
 #define sysfile_isatty_USE_fisatty
 #elif defined(Dee_fd_t_AsUnixFd) && defined(CONFIG_HAVE_isatty)
 #define sysfile_isatty_USE_isatty
-#elif defined(DEESYSTEM_FILE_USE_STDIO)
+#elif defined(DeeSystem_FILE_USE_stdio_FILE)
 #define sysfile_isatty_USE_isastdfile_stdio
 #elif defined(Dee_fd_t_AsUnixFd) && (defined(STDIN_FILENO) || defined(STDOUT_FILENO) || defined(STDERR_FILENO))
 #define sysfile_isatty_USE_isastdfile
@@ -2652,32 +2652,32 @@ is_an_std_file:
 
 PRIVATE struct type_getset tpconst sysfile_getsets[] = {
 	TYPE_GETTER_F(STR_isatty, &sysfile_isatty, METHOD_FNOREFESCAPE, "->?Dbool"),
-#ifndef DEESYSTEM_FILE_USE_STDIO /* In the stdio-backend, "filename" is a member instead of a getset! */
+#ifndef DeeSystem_FILE_USE_stdio_FILE /* In the stdio-backend, "filename" is a member instead of a getset! */
 	TYPE_GETTER_F(STR_filename, &DeeSystemFile_Filename, METHOD_FNOREFESCAPE, "->?Dstring"),
-#endif /* !DEESYSTEM_FILE_USE_STDIO */
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#endif /* !DeeSystem_FILE_USE_stdio_FILE */
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 	TYPE_GETTER_F(STR_osfhandle_np, &sysfile_osfhandle_np, METHOD_FNOREFESCAPE, "->?Dint"),
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
+#ifdef DeeSystem_FILE_USE_unix_fd
 	TYPE_GETTER_F(STR_fileno_np, &sysfile_fileno_np, METHOD_FNOREFESCAPE, "->?Dint"),
-#endif /* DEESYSTEM_FILE_USE_UNIX */
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#endif /* DeeSystem_FILE_USE_unix_fd */
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 	TYPE_GETTER_AB("file", &DeeObject_NewRef,
 	               "->?DFile\n"
 	               "Returns @this File, indicating the self-buffering "
 	               "behavior of system files on this host"),
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 	TYPE_GETSET_END
 };
 
 
 #undef deemon_file_HAVE_sysfile_init_kw
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 #define deemon_file_HAVE_sysfile_init_kw
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
+#ifdef DeeSystem_FILE_USE_unix_fd
 #define deemon_file_HAVE_sysfile_init_kw
-#endif /* DEESYSTEM_FILE_USE_UNIX */
+#endif /* DeeSystem_FILE_USE_unix_fd */
 
 #ifdef deemon_file_HAVE_sysfile_init_kw
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2686,7 +2686,7 @@ sysfile_init_kw(SystemFile *__restrict self,
                 DeeObject *kw) {
 
 	/* Windows implementation */
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 	PRIVATE DEFINE_KWLIST(kwlist, { K(fd), K(inherit), K(duplicate), KEND });
 	bool inherit = false;
 	bool duplicate = false;
@@ -2733,9 +2733,9 @@ again_duplicate:
 	return 0;
 err:
 	return -1;
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
 
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#ifdef DeeSystem_FILE_USE_unix_fd
 	PRIVATE DEFINE_KWLIST(kwlist, { K(fd), K(inherit), K(duplicate), KEND });
 	bool inherit = false;
 	bool duplicate = false;
@@ -2795,21 +2795,21 @@ again_dup:
 	return 0;
 err:
 	return -1;
-#endif /* DEESYSTEM_FILE_USE_UNIX */
+#endif /* DeeSystem_FILE_USE_unix_fd */
 }
 #endif /* deemon_file_HAVE_sysfile_init_kw */
 
 
 #undef deemon_file_HAVE_sysfile_fini
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 #define deemon_file_HAVE_sysfile_fini
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
+#ifdef DeeSystem_FILE_USE_unix_fd
 #define deemon_file_HAVE_sysfile_fini
-#endif /* DEESYSTEM_FILE_USE_UNIX */
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#endif /* DeeSystem_FILE_USE_unix_fd */
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 #define deemon_file_HAVE_sysfile_fini
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 #ifdef DEESYSTEM_FILE_HAVE_sf_filename
 #define deemon_file_HAVE_sysfile_fini
 #endif /* DEESYSTEM_FILE_HAVE_sf_filename */
@@ -2819,16 +2819,16 @@ err:
 PRIVATE NONNULL((1)) void DCALL
 sysfile_fini(SystemFile *__restrict self) {
 
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 	if (self->sf_ownhandle &&
 	    self->sf_ownhandle != INVALID_HANDLE_VALUE) {
 		DBG_ALIGNMENT_DISABLE();
 		CloseHandle(self->sf_ownhandle);
 		DBG_ALIGNMENT_ENABLE();
 	}
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
 
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#ifdef DeeSystem_FILE_USE_unix_fd
 #ifdef CONFIG_HAVE_close
 	if (self->sf_ownhandle != -1) {
 		DBG_ALIGNMENT_DISABLE();
@@ -2836,9 +2836,9 @@ sysfile_fini(SystemFile *__restrict self) {
 		DBG_ALIGNMENT_ENABLE();
 	}
 #endif /* CONFIG_HAVE_close */
-#endif /* DEESYSTEM_FILE_USE_UNIX */
+#endif /* DeeSystem_FILE_USE_unix_fd */
 
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 #ifdef CONFIG_HAVE_fclose
 	if (self->sf_ownhandle) {
 		DBG_ALIGNMENT_DISABLE();
@@ -2846,7 +2846,7 @@ sysfile_fini(SystemFile *__restrict self) {
 		DBG_ALIGNMENT_ENABLE();
 	}
 #endif /* CONFIG_HAVE_fclose */
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 
 #ifdef DEESYSTEM_FILE_HAVE_sf_filename
 	Dee_XDecref(self->sf_filename);
@@ -2867,11 +2867,11 @@ sysfile_class_sync(DeeObject *UNUSED(self),
 	DBG_ALIGNMENT_DISABLE();
 	(void)sync();
 	DBG_ALIGNMENT_ENABLE();
-#elif defined(DEESYSTEM_FILE_USE_STDIO) && defined(CONFIG_HAVE_fflush)
+#elif defined(DeeSystem_FILE_USE_stdio_FILE) && defined(CONFIG_HAVE_fflush)
 	DBG_ALIGNMENT_DISABLE();
 	(void)fflush(NULL);
 	DBG_ALIGNMENT_ENABLE();
-#elif defined(DEESYSTEM_FILE_USE_WINDOWS)
+#elif defined(DeeSystem_FILE_USE_nt_HANDLE)
 	/* TODO:
 	 * >> for (filename: "\\.\<DRIVELETTER>:")
 	 * >>     with (local x = File.open(filename, "r"))
@@ -2883,7 +2883,7 @@ sysfile_class_sync(DeeObject *UNUSED(self),
 	 *      ignore failure?
 	 *      How does cygwin implement `sync()'?
 	 */
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
 	return_none;
 err:
 	return NULL;
@@ -2904,7 +2904,7 @@ PRIVATE struct type_member tpconst sysfile_class_members[] = {
 
 /* Extra methods to emulate the `File.Buffer' API that
  * are only available when the STDIO backend is used. */
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 #undef HAVE_USABLE_setvbuf
 #if (defined(CONFIG_HAVE_setvbuf) && \
      (defined(CONFIG_HAVE__IONBF) || defined(CONFIG_HAVE__IOFBF) || defined(CONFIG_HAVE__IOLBF)))
@@ -3052,7 +3052,7 @@ PRIVATE struct type_member tpconst sysfile_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_filename, STRUCT_OBJECT, offsetof(SystemFile, sf_filename), "->?Dstring"),
 	TYPE_MEMBER_END
 };
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -3061,11 +3061,11 @@ sysfile_print(SystemFile *__restrict self, Dee_formatprinter_t printer, void * a
 	if (self->sf_filename != NULL)
 		return DeeFormat_Printf(printer, arg, "<File %r>", self->sf_filename);
 #endif /* DEESYSTEM_FILE_HAVE_sf_filename */
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 	return DeeFormat_Printf(printer, arg, "<File (handle %p)>", self->sf_handle);
-#elif defined(DEESYSTEM_FILE_USE_UNIX)
+#elif defined(DeeSystem_FILE_USE_unix_fd)
 	return DeeFormat_Printf(printer, arg, "<File (fd %d)>", self->sf_handle);
-#elif defined(DEESYSTEM_FILE_USE_STDIO) && defined(CONFIG_HAVE_fileno)
+#elif defined(DeeSystem_FILE_USE_stdio_FILE) && defined(CONFIG_HAVE_fileno)
 	return DeeFormat_Printf(printer, arg, "<File (fd %d)>", fileno(self->sf_handle));
 #else /* ... */
 	(void)self;
@@ -3079,7 +3079,7 @@ sysfile_printrepr(SystemFile *__restrict self, Dee_formatprinter_t printer, void
 	if (self->sf_filename != NULL)
 		return DeeFormat_Printf(printer, arg, "File.open(%r)", self->sf_filename);
 #endif /* DEESYSTEM_FILE_HAVE_sf_filename */
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 	{
 		char const *name = self->ob_type->ft_base.tp_name;
 		if (name == NULL)
@@ -3088,7 +3088,7 @@ sysfile_printrepr(SystemFile *__restrict self, Dee_formatprinter_t printer, void
 		                        name, self->sf_handle,
 		                        self->sf_ownhandle == self->sf_handle ? "true" : "false");
 	}
-#elif defined(DEESYSTEM_FILE_USE_UNIX)
+#elif defined(DeeSystem_FILE_USE_unix_fd)
 	{
 		char const *name = self->ob_type->ft_base.tp_name;
 		if (name == NULL)
@@ -3116,11 +3116,11 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		                     "\n"
 #ifdef deemon_file_HAVE_sysfile_init_kw
 		                     "(fd:"
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 		                     "?X3?Dint?DFile?Ewin32:HANDLE"
-#else /* DEESYSTEM_FILE_USE_WINDOWS */
+#else /* DeeSystem_FILE_USE_nt_HANDLE */
 		                     "?X2?Dint?DFile"
-#endif /* !DEESYSTEM_FILE_USE_WINDOWS */
+#endif /* !DeeSystem_FILE_USE_nt_HANDLE */
 		                     ",inherit=!f,duplicate=!f)\n"
 		                     "Construct a new SystemFile wrapper for @handle. When @inherit is "
 		                     /**/ "?t, the given @handle is inherited (and automatically closed "

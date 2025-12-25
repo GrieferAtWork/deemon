@@ -703,13 +703,13 @@ err:
 #ifdef DeeSystemFile_GetHandle
 #undef HAVE_file_read_trymap
 
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
 #define HAVE_file_read_trymap
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+#endif /* DeeSystem_FILE_USE_nt_HANDLE */
 
-#ifdef DEESYSTEM_FILE_USE_UNIX
+#ifdef DeeSystem_FILE_USE_unix_fd
 #define HAVE_file_read_trymap
-#endif /* DEESYSTEM_FILE_USE_UNIX */
+#endif /* DeeSystem_FILE_USE_unix_fd */
 
 #ifdef HAVE_file_read_trymap
 #ifndef FILE_READ_MMAP_THRESHOLD

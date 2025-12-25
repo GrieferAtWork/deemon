@@ -42,9 +42,9 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 #include <stdio.h>
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -1888,13 +1888,13 @@ buffer_class_sync(DeeObject *UNUSED(self),
 	DeeArg_Unpack0(err, argc, argv, "sync");
 	if (DeeFileBuffer_SyncTTYs(NULL) < 0)
 		goto err;
-#ifdef DEESYSTEM_FILE_USE_STDIO
+#ifdef DeeSystem_FILE_USE_stdio_FILE
 	/* When the STDIO filesystem is used, also flush its buffers.
 	 * Since it doesn't use ours, we need to make sure that its
 	 * buffer implementation is flushed when the user requests
 	 * all buffers to be flushed. */
 	fflush(NULL);
-#endif /* DEESYSTEM_FILE_USE_STDIO */
+#endif /* DeeSystem_FILE_USE_stdio_FILE */
 	return_none;
 err:
 	return NULL;

@@ -36,7 +36,7 @@
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
-#include <deemon/system.h> /* DEE_SYSTEM_FS_DRIVES */
+#include <deemon/system.h> /* DeeSystem_HAVE_FS_DRIVES */
 #include <deemon/thread.h>
 
 #include <hybrid/debug-alignment.h>
@@ -71,7 +71,7 @@ DECL_BEGIN
 #define posix_gethostname_USE_nt_GetComputerName
 #elif defined(CONFIG_HAVE_gethostname)
 #define posix_gethostname_USE_gethostname
-#elif !defined(DEESYSTEM_FILE_USE_STUB) && !defined(DEE_SYSTEM_FS_DRIVES)
+#elif !defined(DeeSystem_FILE_USE_STUB) && !defined(DeeSystem_HAVE_FS_DRIVES)
 #define posix_gethostname_USE_read_etc_hostname
 #else /* ... */
 #define posix_gethostname_USE_STUB

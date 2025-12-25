@@ -132,11 +132,11 @@ PRIVATE ATTR_COLD int DCALL nt_err_getcwd(DWORD dwError) {
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 nt_IsSpecialFilename(/*utf-8*/ char const *filename, size_t filename_len) {
 	switch (filename_len) {
-#ifdef DEE_SYSTEM_FS_ICASE
+#ifdef DeeSystem_HAVE_FS_ICASE
 #define eqfscase(a, b) ((a) == (b) || (a) == ((b) - ('A' - 'a')))
-#else /* DEE_SYSTEM_FS_ICASE */
+#else /* DeeSystem_HAVE_FS_ICASE */
 #define eqfscase(a, b) ((a) == (b))
-#endif /* !DEE_SYSTEM_FS_ICASE */
+#endif /* !DeeSystem_HAVE_FS_ICASE */
 
 	case 3:
 		if (eqfscase(filename[0], 'N') && eqfscase(filename[1], 'U') && eqfscase(filename[2], 'L'))
@@ -223,7 +223,7 @@ DeeSystem_MakeNormalAndAbsolute(/*String*/ DeeObject *__restrict filename) {
 			goto err;
 
 		/* Handle drive-relative paths. */
-#ifdef DEE_SYSTEM_FS_DRIVES
+#ifdef DeeSystem_HAVE_FS_DRIVES
 		if (DeeSystem_IsSep(iter[0]) && UNICODE_PRINTER_LENGTH(&printer)) {
 			size_t index = 0;
 
@@ -242,7 +242,7 @@ DeeSystem_MakeNormalAndAbsolute(/*String*/ DeeObject *__restrict filename) {
 				++iter;
 			}
 		}
-#endif /* DEE_SYSTEM_FS_DRIVES */
+#endif /* DeeSystem_HAVE_FS_DRIVES */
 	}
 	flush_start = iter;
 	ASSERTF(*end == '\0',

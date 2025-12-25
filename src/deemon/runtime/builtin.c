@@ -515,9 +515,9 @@ PUBLIC struct Dee_static_module_struct DeeModule_Deemon =
 		/* .mo_name      = */ (DREF DeeStringObject *)&str_deemon,
 		/* .mo_link      = */ LIST_ENTRY_UNBOUND_INITIALIZER,
 		/* .mo_path      = */ NULL,
-#ifdef DEE_SYSTEM_FS_ICASE
+#ifdef DeeSystem_HAVE_FS_ICASE
 		/* .mo_pathihash = */ 0,
-#endif /* DEE_SYSTEM_FS_ICASE */
+#endif /* DeeSystem_HAVE_FS_ICASE */
 		/* .mo_globlink  = */ LIST_ENTRY_UNBOUND_INITIALIZER,
 		/* .mo_importc   = */ 0,
 		/* .mo_globalc   = */ num_builtins_obj,

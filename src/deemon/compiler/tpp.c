@@ -144,9 +144,9 @@ DECL_END
 #undef SEP
 #undef ALTSEP
 #undef ISABS
-#ifdef DEE_SYSTEM_FS_ICASE
+#ifdef DeeSystem_HAVE_FS_ICASE
 #define HAVE_INSENSITIVE_PATHS
-#endif /* DEE_SYSTEM_FS_ICASE */
+#endif /* DeeSystem_HAVE_FS_ICASE */
 #ifndef DeeSystem_ALTSEP
 #define SEP DeeSystem_SEP
 #elif DeeSystem_SEP == '\\' && DeeSystem_ALTSEP == '/'

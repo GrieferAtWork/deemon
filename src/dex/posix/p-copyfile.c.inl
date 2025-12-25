@@ -299,7 +299,7 @@ err:
 /* Figure out how we want to implement the symlink check in `lcopyfile()' */
 #undef posix_lcopyfile_USE_symlink_after_open
 #undef posix_lcopyfile_USE_symlink_before_open
-#if (defined(DEESYSTEM_FILE_USE_WINDOWS) && \
+#if (defined(DeeSystem_FILE_USE_nt_HANDLE) && \
      defined(posix_readlink_USE_nt_FReadLink) && !defined(posix_symlink_USE_STUB))
 #define posix_lcopyfile_USE_symlink_after_open
 #elif !defined(posix_readlink_USE_STUB) && !defined(posix_symlink_USE_STUB)
