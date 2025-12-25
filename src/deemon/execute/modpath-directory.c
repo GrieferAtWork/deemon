@@ -111,6 +111,22 @@ fs_wstr_endswith_str(LPCWSTR wstr, size_t wstr_length,
 	}
 	return true;
 }
+
+#define UTF16_LOW_SURROGATE_MIN  0xdc00
+#define UTF16_HIGH_SURROGATE_MIN 0xd800
+#define UTF16_SURROGATE_SHIFT    0x10000
+
+PRIVATE WUNUSED uint16_t *DCALL 
+Dee_unicode_writeutf16(/*utf-16*/ uint16_t *__restrict dst, uint32_t ch) {
+	if likely(ch <= 0xffff && (ch < 0xd800 || ch > 0xdfff)) {
+		*dst++ = (uint16_t)ch;
+	} else {
+		ch -= UTF16_SURROGATE_SHIFT;
+		*dst++ = UTF16_HIGH_SURROGATE_MIN + (uint16_t)(ch >> 10);
+		*dst++ = UTF16_LOW_SURROGATE_MIN + (uint16_t)(ch & 0x3ff);
+	}
+	return dst;
+}
 #endif /* DeeModule_GetDirectory_USE_FindFirstFileExW */
 
 #ifdef DeeModule_GetDirectory_USE_opendir
@@ -124,139 +140,256 @@ fs_wstr_endswith_str(LPCWSTR wstr, size_t wstr_length,
 #endif /* DeeModule_GetDirectory_USE_opendir */
 
 
-/* TODO: This function is good and all, but won't be usable to implement `enumattr(import)'!
- *       In order to implement that one, there needs to be a function to iteratively produce
- *       viable module items from deemon lib paths one-at-a-time (if this function was used,
- *       then the modules of each lib path would have to be loaded all-at-once, rather than
- *       loading them lazily as the enumattr-iterator is enumerated)
- */
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-DeeModule_GetDirectory_uncached_impl(struct Dee_tuple_builder *__restrict builder,
-                                     char const *__restrict absname) {
+struct module_dir_iterator {
+	char const *mdi_absname; /* [1..1][const] Absolute pathname that is being iterated (s.a. `DeeModuleObject::mo_absname') */
+	union {
+#ifdef DeeModule_GetDirectory_USE_GetLogicalDrives
+		struct {
+			DWORD dwDrives/* = GetLogicalDrives()*/;
+			uint8_t letter/* = 'a'*/;
+		} mdid_fsroot; /* [valid_if(*mdi_absname == '\0')] */
+#endif /* DeeModule_GetDirectory_USE_GetLogicalDrives */
+
+#ifdef DeeModule_GetDirectory_USE_FindFirstFileExW
+		struct {
+			HANDLE hFind;
+			WIN32_FIND_DATAW fdData;
+			LPWSTR wildcard;
+		} mdid_find; /* [valid_if(*mdi_absname != '\0')] */
+#endif /* DeeModule_GetDirectory_USE_FindFirstFileExW */
+
+	} mdi_data; /* Iterator-specific data */
+};
+
+/* @return: 1 : Failure (no error)
+ * @return: 0 : Success
+ * @return: -1: Error was thrown */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+module_dir_iterator_init(struct module_dir_iterator *__restrict self) {
+	char const *absname = self->mdi_absname;
+	ASSERT(absname);
 #ifdef DeeModule_GetDirectory_USE_GetLogicalDrives
 	if (!*absname) {
-		DWORD dwDrives = GetLogicalDrives();
-		uint8_t letter = 'a';
-		while (dwDrives) {
-			if (dwDrives & 1) {
-				DREF DeeObject *drive = DeeString_Chr(letter);
-				if unlikely(!drive)
-					goto err;
-				if unlikely(Dee_tuple_builder_append_inherited(builder, drive) < 0)
-					goto err;
-#define NEED_err
-			}
-			dwDrives >>= 1;
-			++letter;
-		}
+		self->mdi_data.mdid_fsroot.dwDrives = GetLogicalDrives();
+		self->mdi_data.mdid_fsroot.letter   = 'a';
 		return 0;
 	}
 #endif /* DeeModule_GetDirectory_USE_GetLogicalDrives */
 
 #ifdef DeeModule_GetDirectory_USE_FindFirstFileExW
 	{
-		HANDLE hFind;
-		WIN32_FIND_DATAW fdData;
-		LPWSTR wildcard, dst;
+		LPWSTR dst;
 		size_t absname_length = strlen(absname);
 		uint32_t ch;
 		ASSERT(!absname_length || absname[absname_length - 1] != DeeSystem_SEP);
 		/* Enough space for: f"\\\\.\\{absname}\\*\0" */
-		wildcard = (LPWSTR)Dee_Mallocac(4 + absname_length + 3, sizeof(WCHAR));
-		if unlikely(!wildcard)
-			goto err;
-#define NEED_err
-		dst = wildcard;
+		self->mdi_data.mdid_find.wildcard = (LPWSTR)Dee_Mallocc(4 + absname_length + 3, sizeof(WCHAR));
+		if unlikely(!self->mdi_data.mdid_find.wildcard)
+			return -1;
+		dst = self->mdi_data.mdid_find.wildcard;
 		*dst++ = (WCHAR)'\\';
 		*dst++ = (WCHAR)'\\';
 		*dst++ = (WCHAR)'.';
 		*dst++ = (WCHAR)'\\';
 		while ((ch = unicode_readutf8(&absname)) != 0) {
-			/* TODO: encode utf-32 character as utf-16 */
-			*dst++ = (WCHAR)ch;
+			/* encode utf-32 character as utf-16 */
+			dst = (LPWSTR)Dee_unicode_writeutf16((uint16_t *)dst, ch);
 		}
 		*dst++ = (WCHAR)'\\';
 		*dst++ = (WCHAR)'*';
 		*dst = (WCHAR)'\0';
 
 		DBG_ALIGNMENT_DISABLE();
-		hFind = FindFirstFileExW(wildcard, FindExInfoBasic, &fdData,
-		                         FindExSearchNameMatch, NULL, 0);
-		if likely(hFind != INVALID_HANDLE_VALUE) {
-			do {
-				size_t i, szFileName = wcslen(fdData.cFileName);
-				DBG_ALIGNMENT_ENABLE();
-				if (fdData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-					/* Allow directories... */
-				} else if (fdData.dwFileAttributes & (/*FILE_ATTRIBUTE_REPARSE_POINT | */FILE_ATTRIBUTE_DEVICE)) {
-					/* Do not allow device files (but do allow symlinks) */
-					goto next_file;
-				} else if (fs_wstr_endswith_str(fdData.cFileName, szFileName, ".dee", 4)) {
-					/* Deemon script -> allow */
-					szFileName -= 4;
-#ifndef CONFIG_NO_DEX
-				} else if (fs_wstr_endswith_str(fdData.cFileName, szFileName,
-				                                DeeSystem_SOEXT,
-				                                COMPILER_STRLEN(DeeSystem_SOEXT))) {
-					/* Potential dex module -> allow */
-					szFileName -= COMPILER_STRLEN(DeeSystem_SOEXT);
-#endif /* !CONFIG_NO_DEX */
-				} else {
-					goto next_file;
-				}
-
-				/* Assert that "fdData.cFileName" does not contain any "." characters */
-				for (i = 0; i < szFileName; ++i) {
-					if (fdData.cFileName[i] == (WCHAR)'.')
-						goto next_file;
-				}
-
-				/* Append file to builder. */
-				{
-					DREF DeeObject *string;
-					string = DeeString_NewWide((Dee_wchar_t const *)fdData.cFileName,
-					                           szFileName, STRING_ERROR_FIGNORE);
-					if unlikely(!string)
-						goto err_find;
-					if unlikely(Dee_tuple_builder_append_inherited(builder, string) < 0)
-						goto err;
-				}
-
-next_file:
-				DBG_ALIGNMENT_DISABLE();
-			} while (FindNextFileW(hFind, &fdData));
-			(void)FindClose(hFind);
+		self->mdi_data.mdid_find.hFind = FindFirstFileExW(self->mdi_data.mdid_find.wildcard,
+		                                                  FindExInfoBasic,
+		                                                  &self->mdi_data.mdid_find.fdData,
+		                                                  FindExSearchNameMatch, NULL, 0);
+		DBG_ALIGNMENT_ENABLE();
+		if likely(self->mdi_data.mdid_find.hFind == INVALID_HANDLE_VALUE) {
+			Dee_Free(self->mdi_data.mdid_find.wildcard);
+			return 1;
 		}
-		DBG_ALIGNMENT_ENABLE();
-		Dee_Freea(wildcard);
 		return 0;
-err_find:
-		DBG_ALIGNMENT_DISABLE();
-		(void)FindClose(hFind);
-		DBG_ALIGNMENT_ENABLE();
-		Dee_Freea(wildcard);
-		return -1;
 	}
 #endif /* DeeModule_GetDirectory_USE_FindFirstFileExW */
 
 #ifdef DeeModule_GetDirectory_USE_opendir
 	/* TODO */
-	(void)builder;
+	(void)self;
 	(void)absname;
-	return 0;
+	return 1;
 #endif /* DeeModule_GetDirectory_USE_opendir */
 
 #ifdef DeeModule_GetDirectory_USE_STUB
-	(void)builder;
+	(void)self;
 	(void)absname;
-	return 0;
+	return 1;
+#endif /* DeeModule_GetDirectory_USE_STUB */
+}
+
+PRIVATE NONNULL((1)) void DCALL
+module_dir_iterator_fini(struct module_dir_iterator *__restrict self) {
+#ifdef DeeModule_GetDirectory_USE_GetLogicalDrives
+	if (!*self->mdi_absname)
+		return;
+#endif /* DeeModule_GetDirectory_USE_GetLogicalDrives */
+
+#ifdef DeeModule_GetDirectory_USE_FindFirstFileExW
+	if likely(self->mdi_data.mdid_find.hFind != INVALID_HANDLE_VALUE) {
+		DBG_ALIGNMENT_DISABLE();
+		FindClose(self->mdi_data.mdid_find.hFind);
+		DBG_ALIGNMENT_ENABLE();
+	}
+	Dee_Free(self->mdi_data.mdid_find.wildcard);
+#endif /* DeeModule_GetDirectory_USE_FindFirstFileExW */
+
+#ifdef DeeModule_GetDirectory_USE_opendir
+	/* TODO */
+	(void)self;
+#endif /* DeeModule_GetDirectory_USE_opendir */
+
+#ifdef DeeModule_GetDirectory_USE_STUB
+	(void)self;
+#endif /* DeeModule_GetDirectory_USE_STUB */
+}
+
+/* Yield next module directory item
+ * @return: * :        Next item
+ * @return: ITER_DONE: End-of-directory reached
+ * @return: NULL:      Error was thrown */
+PRIVATE WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
+module_dir_iterator_next(struct module_dir_iterator *__restrict self) {
+#ifdef DeeModule_GetDirectory_USE_GetLogicalDrives
+	if (!*self->mdi_absname) {
+		while (self->mdi_data.mdid_fsroot.dwDrives) {
+			if (self->mdi_data.mdid_fsroot.dwDrives & 1) {
+				DREF DeeObject *drive = DeeString_Chr(self->mdi_data.mdid_fsroot.letter);
+				if unlikely(!drive)
+					goto err;
+#define NEED_err
+				self->mdi_data.mdid_fsroot.dwDrives >>= 1;
+				++self->mdi_data.mdid_fsroot.letter;
+				return drive;
+			}
+			self->mdi_data.mdid_fsroot.dwDrives >>= 1;
+			++self->mdi_data.mdid_fsroot.letter;
+		}
+		return ITER_DONE;
+	}
+#endif /* DeeModule_GetDirectory_USE_GetLogicalDrives */
+
+#ifdef DeeModule_GetDirectory_USE_FindFirstFileExW
+	if likely(self->mdi_data.mdid_find.hFind != INVALID_HANDLE_VALUE) {
+		do {
+			size_t i, szFileName = wcslen(self->mdi_data.mdid_find.fdData.cFileName);
+			DBG_ALIGNMENT_ENABLE();
+			if (self->mdi_data.mdid_find.fdData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+				/* Allow directories... */
+			} else if (self->mdi_data.mdid_find.fdData.dwFileAttributes & (/*FILE_ATTRIBUTE_REPARSE_POINT | */FILE_ATTRIBUTE_DEVICE)) {
+				/* Do not allow device files (but do allow symlinks) */
+				goto next_file;
+			} else if (fs_wstr_endswith_str(self->mdi_data.mdid_find.fdData.cFileName,
+			                                szFileName, ".dee", 4)) {
+				/* Deemon script -> allow */
+				szFileName -= 4;
+#ifndef CONFIG_NO_DEX
+			} else if (fs_wstr_endswith_str(self->mdi_data.mdid_find.fdData.cFileName,
+			                                szFileName, DeeSystem_SOEXT,
+			                                COMPILER_STRLEN(DeeSystem_SOEXT))) {
+				/* Potential dex module -> allow */
+				szFileName -= COMPILER_STRLEN(DeeSystem_SOEXT);
+#endif /* !CONFIG_NO_DEX */
+			} else {
+				goto next_file;
+			}
+
+			/* Assert that "self->mdi_data.mdid_find.fdData.cFileName"
+			 * does not contain any "." characters */
+			for (i = 0; i < szFileName; ++i) {
+				if (self->mdi_data.mdid_find.fdData.cFileName[i] == (WCHAR)'.')
+					goto next_file;
+			}
+
+			/* Append file to builder. */
+			{
+				DREF DeeObject *string;
+				string = DeeString_NewWide((Dee_wchar_t const *)self->mdi_data.mdid_find.fdData.cFileName,
+				                           szFileName, STRING_ERROR_FIGNORE);
+				if unlikely(!string)
+					goto err;
+#define NEED_err
+				DBG_ALIGNMENT_DISABLE();
+				if (!FindNextFileW(self->mdi_data.mdid_find.hFind,
+				                   &self->mdi_data.mdid_find.fdData)) {
+					(void)FindClose(self->mdi_data.mdid_find.hFind);
+					self->mdi_data.mdid_find.hFind = INVALID_HANDLE_VALUE;
+				}
+				DBG_ALIGNMENT_ENABLE();
+				return string;
+			}
+
+next_file:
+			DBG_ALIGNMENT_DISABLE();
+		} while (FindNextFileW(self->mdi_data.mdid_find.hFind, &self->mdi_data.mdid_find.fdData));
+		(void)FindClose(self->mdi_data.mdid_find.hFind);
+		self->mdi_data.mdid_find.hFind = INVALID_HANDLE_VALUE;
+		DBG_ALIGNMENT_ENABLE();
+		return ITER_DONE;
+	}
+#endif /* DeeModule_GetDirectory_USE_FindFirstFileExW */
+
+#ifdef DeeModule_GetDirectory_USE_opendir
+	/* TODO */
+	(void)self;
+	return ITER_DONE;
+#endif /* DeeModule_GetDirectory_USE_opendir */
+
+#ifdef DeeModule_GetDirectory_USE_STUB
+	(void)self;
+	return ITER_DONE;
 #endif /* DeeModule_GetDirectory_USE_STUB */
 
 #ifdef NEED_err
 #undef NEED_err
 err:
-	return -1;
+	return NULL;
 #endif /* NEED_err */
+}
+
+
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeModule_GetDirectory_uncached_impl(struct Dee_tuple_builder *__restrict builder,
+                                     char const *__restrict absname) {
+	int init_status;
+	DREF DeeObject *item;
+	struct module_dir_iterator iter;
+
+	/* Initialize iterator */
+	iter.mdi_absname = absname;
+	init_status = module_dir_iterator_init(&iter);
+	if unlikely(init_status != 0) {
+		if unlikely(init_status < 0)
+			goto err;
+		return 0;
+	}
+
+	/* Enumerate all items and append them to "builder" */
+	while (ITER_ISOK(item = module_dir_iterator_next(&iter))) {
+		if unlikely(Dee_tuple_builder_append_inherited(builder, item) < 0)
+			goto err_iter;
+	}
+	if unlikely(!item)
+		goto err_iter;
+
+	/* Cleanup */
+	module_dir_iterator_fini(&iter);
+	return 0;
+err_iter:
+	module_dir_iterator_fini(&iter);
+err:
+	return -1;
 }
 
 #ifndef CONFIG_HAVE_qsort
