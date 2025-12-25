@@ -1534,6 +1534,9 @@ module_track(DREF DeeModuleObject *self) {
 	return DeeGC_TRACK(DeeModuleObject, self);
 }
 
+#define DeeModule_DestroyAnonymousDirectory(self) \
+	(Dee_DecrefNokill(&DeeModuleDir_Type), DeeGCObject_Free(self))
+
 #define sizeof_DeeModuleDir offsetof(DeeModuleObject, mo_moddata)
 PRIVATE WUNUSED DREF /*untracked*/ DeeModuleObject *DCALL
 DeeModule_CreateAnonymousDirectory(void) {
@@ -1888,6 +1891,7 @@ DeeModule_OpenFile_impl2(/*inherit_if(!(flags & _DeeModule_IMPORT_F_NO_INHERIT_F
 	/* Check if the file is already in-cache. */
 	module_abstree_lock_read();
 	if (flags & _DeeModule_IMPORT_F_IS_DEE_FILE) {
+		ASSERT(abs_filename_length >= 4);
 		abs_filename[abs_filename_length - 4] = '\0';
 		result = module_abstree_locate(module_abstree_root, abs_filename);
 		abs_filename[abs_filename_length - 4] = '.';
@@ -1963,11 +1967,13 @@ err:
 	return (DREF DeeModuleObject *)DeeModule_IMPORT_ERROR;
 }
 
-/* Append "filename" to "pathname", whilst normalizing it. */
-PRIVATE WUNUSED NONNULL((1, 3, 5)) /*utf-8*/ char *DCALL
+/* Append "filename" to "pathname", whilst normalizing it.
+ * @param: p_must_be_directory: Set to "true" if resulting path must be a directory for it to be loadable. */
+PRIVATE WUNUSED NONNULL((1, 3, 5, 6)) /*utf-8*/ char *DCALL
 cat_and_normalize_paths(/*utf-8*/ char const *__restrict pathname, size_t pathname_size,
                         /*utf-8*/ char const *__restrict filename, size_t filename_size,
-                        size_t *__restrict p_result_strlen) {
+                        size_t *__restrict p_result_strlen,
+                        bool *__restrict p_must_be_directory) {
 	char const *filename_end;
 	size_t final_result_size;
 	size_t result_size = pathname_size + 1 + filename_size;
@@ -1975,36 +1981,55 @@ cat_and_normalize_paths(/*utf-8*/ char const *__restrict pathname, size_t pathna
 	if unlikely(!result)
 		goto err;
 	dst = (char *)mempcpyc(result, pathname, pathname_size, sizeof(char));
-	*dst++ = DeeSystem_SEP;
+	if ((dst <= result) || dst[-1] != DeeSystem_SEP)
+		*dst++ = DeeSystem_SEP;
 	filename_end = filename + filename_size;
 	/* Skip leading whitespace */
 	filename = unicode_skipspaceutf8_n(filename, filename_end);
+#ifdef DeeSystem_HAVE_FS_DRIVES
+	/* Check if "filename" indicates that it is relative to the current drive's root */
+	if (filename < filename_end && DeeSystem_IsSep(*filename)) {
+		dst = result;
+		if likely(pathname_size >= 2 && dst[1] == ':')
+			dst += 2;
+	}
+#endif /* DeeSystem_HAVE_FS_DRIVES */
 	while (filename < filename_end) {
 		char ch = *filename++;
 		switch (ch) {
 		case '.':
 			if (dst[-1] == DeeSystem_SEP) {
 				/* Deal with "." and ".." path references */
-				if ((filename >= filename_end) || DeeSystem_IsSep(*filename)) {
+				char const *filename_after_space;
+				filename_after_space = unicode_skipspaceutf8_n(filename, filename_end);
+				if ((filename_after_space >= filename_end) || DeeSystem_IsSep(*filename_after_space)) {
 					/* current-directory-reference */
 					--dst;
+					filename = filename_after_space;
 					continue;
-				} else if ((size_t)(filename_end - filename) >= 1 && *filename == '.' &&
-				           ((size_t)(filename_end - filename) <= 1 || DeeSystem_IsSep(filename[1]))) {
-					/* parent-directory-reference */
+				} else if ((size_t)(filename_end - filename) >= 1 && *filename == '.') {
+					filename_after_space = unicode_skipspaceutf8_n(filename + 1, filename_end);
+					if (filename_after_space >= filename_end || DeeSystem_IsSep(*filename_after_space)) {
+						/* parent-directory-reference */
 #ifdef DeeSystem_HAVE_FS_DRIVES
-					char *min_base = dst + 2; /* Don't go beyond the drive-prefix */
+						/* Don't go beyond the drive-prefix (the special root-of-all-drives
+						 * module can only be reached using the relative-module-name syntax;
+						 * iow: by doing `import("......")' ("." repeated until you'd go 1
+						 * past the root of your current drive)) */
+						char *min_base = result + 2;
 #else /* DeeSystem_HAVE_FS_DRIVES */
-					char *min_base = dst;
+						char *min_base = result;
 #endif /* !DeeSystem_HAVE_FS_DRIVES */
-					/* Position "dst" after the previous "/" */
-					do {
-						--dst;
-					} while (dst > min_base && dst[-1] != DeeSystem_SEP);
+						/* Position "dst" after the previous "/" */
+						do {
+							--dst;
+						} while (dst > min_base && dst[-1] != DeeSystem_SEP);
 
-					/* Position "filename" **after** the associated "/" */
-					filename += 2;
-					continue;
+						/* Position "filename" **after** the associated "/" */
+						filename = filename_after_space + 1;
+						filename = unicode_skipspaceutf8_n(filename, filename_end);
+						continue;
+					}
 				}
 			}
 			*dst++ = '.';
@@ -2017,6 +2042,11 @@ cat_and_normalize_paths(/*utf-8*/ char const *__restrict pathname, size_t pathna
 		case DeeSystem_SEP:
 			/* Trim already-written whitespace */
 			dst = unicode_skipspaceutf8_rev_n(dst, result);
+			if (dst > result && dst[-1] == DeeSystem_SEP) {
+				dst = unicode_skipspaceutf8_rev_n(dst - 1, result);
+				ASSERT(!(dst > result && dst[-1] == DeeSystem_SEP));
+			}
+
 			/* Skip upcoming whitespace */
 			for (;;) {
 				filename = unicode_skipspaceutf8_n(filename, filename_end);
@@ -2032,6 +2062,13 @@ cat_and_normalize_paths(/*utf-8*/ char const *__restrict pathname, size_t pathna
 			break;
 		}
 	}
+	/* Strip trailing "/" and (if present) set `*p_must_be_directory = true' */
+	if (dst > result && dst[-1] == DeeSystem_SEP) {
+		*p_must_be_directory = true;
+		--dst;
+	}
+	ASSERT(dst <= result || dst[-1] != DeeSystem_SEP);
+	ASSERT(dst <= result || !DeeUni_IsSpace(dst[-1]));
 	*dst = '\0';
 	final_result_size = (size_t)(dst - result);
 	if unlikely(final_result_size < result_size) {
@@ -2045,6 +2082,83 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED DREF /*tracked*/ DeeModuleObject *DCALL
+do_DeeModule_CreateDirectory(/*inherit(always)*/ /*utf-8*/ char *__restrict abs_dirname) {
+	DREF /*tracked*/ DeeModuleObject *result;
+	DeeModuleObject *existing_result;
+	ASSERTF(!*abs_dirname || abs_dirname[strlen(abs_dirname) - 1] != DeeSystem_SEP,
+	        "Directory names must *NOT* end with trailing slashes!");
+	result = DeeModule_CreateAnonymousDirectory();
+	if unlikely(!result)
+		goto done;
+	result->mo_absname = abs_dirname; /* Inherit */
+	module_abstree_lock_write();
+	existing_result = module_abstree_locate(module_abstree_root, abs_dirname);
+	if unlikely(existing_result) {
+		if unlikely(Dee_IncrefIfNotZero(existing_result)) {
+			module_abstree_lock_endwrite();
+			DeeModule_DestroyAnonymousDirectory(result);
+			Dee_Free(abs_dirname);
+			return existing_result;
+		}
+		module_abstree_removenode(&module_abstree_root, existing_result);
+	}
+	module_abstree_insert(&module_abstree_root, result);
+	result = DeeGC_TRACK(DeeModuleObject, result);
+	module_abstree_lock_endwrite();
+done:
+	return result;
+}
+
+PRIVATE WUNUSED DREF /*tracked*/ DeeModuleObject *DCALL
+do_DeeModule_OpenDirectory_checked(/*inherit(always)*/ /*utf-8*/ char *__restrict abs_dirname) {
+	DREF /*tracked*/ DeeModuleObject *result;
+	/* Check if the specified directory has already been opened. */
+	module_abstree_lock_read();
+	result = module_abstree_locate(module_abstree_root, abs_dirname);
+	if (result && Dee_IncrefIfNotZero(result)) {
+		module_abstree_lock_endread();
+		Dee_Free(abs_dirname);
+		return result;
+	}
+	module_abstree_lock_endread();
+	return do_DeeModule_CreateDirectory(abs_dirname);
+}
+
+/* Verify that a directory exists, and open it as a cached `DeeModuleDir_Type' */
+PRIVATE WUNUSED DREF /*tracked*/ DeeModuleObject *DCALL
+do_DeeModule_OpenDirectory(/*inherit(always)*/ /*utf-8*/ char *__restrict abs_dirname,
+                           size_t abs_dirname_length, unsigned int flags) {
+	DREF /*tracked*/ DeeModuleObject *result;
+	ASSERT(abs_dirname[abs_dirname_length] == '\0');
+
+	/* Check if the specified directory has already been opened. */
+	module_abstree_lock_read();
+	result = module_abstree_locate(module_abstree_root, abs_dirname);
+	if (result && Dee_IncrefIfNotZero(result)) {
+		module_abstree_lock_endread();
+		Dee_Free(abs_dirname);
+		return result;
+	}
+	module_abstree_lock_endread();
+
+	/* Verify that "posix.stat.isdir(abs_dirname)". If not:
+	 * - return `DeeModule_IMPORT_ENOENT' if `flags & DeeModule_IMPORT_F_ENOENT'
+	 * - throw `DeeError_NoDirectory' if it's actually a regular file
+	 * - throw `DeeError_FileNotFound' if it doesn't exist at all */
+	(void)abs_dirname_length;
+	(void)flags;
+	/* TODO */
+
+	return do_DeeModule_OpenDirectory_checked(abs_dirname);
+}
+
+PRIVATE WUNUSED DREF /*tracked*/ DeeModuleObject *DCALL
+do_DeeModule_OpenFsRoot(/*inherit(always)*/ char *__restrict empty_absname) {
+	ASSERT(*empty_absname == '\0');
+	return do_DeeModule_OpenDirectory_checked(empty_absname);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF /*tracked*/ DeeModuleObject *DCALL
 do_DeeModule_OpenFile(/*utf-8*/ char const *__restrict filename, size_t filename_size, DeeStringObject *filename_ob,
                       /*utf-8*/ char const *context_absname, size_t context_absname_size, DeeStringObject *context_absname_ob,
@@ -2052,10 +2166,21 @@ do_DeeModule_OpenFile(/*utf-8*/ char const *__restrict filename, size_t filename
 	char *normal_filename;
 	size_t normal_filename_size;
 	DREF /*tracked*/ DeeModuleObject *result;
+	bool must_be_directory;
 
 	/* Check if the given "filename" is already absolute */
 	if (DeeSystem_IsNormalAndAbsolute(filename, filename_size)) {
 		char *filename_dup;
+		if (filename_size && filename[filename_size - 1] == DeeSystem_SEP) {
+			/* Path ends with a trailing slash -> needs to be a directory */
+			--filename_size;
+			ASSERT(!filename_size || filename[filename_size - 1] != DeeSystem_SEP);
+			filename_dup = (char *)Dee_Mallocc(filename_size + 1, sizeof(char));
+			if unlikely(!filename_dup)
+				goto err;
+			*(char *)mempcpyc(filename_dup, filename, filename_size, sizeof(char)) = '\0';
+			return do_DeeModule_OpenDirectory(filename_dup, filename_size, flags);
+		}
 		if (filename_ob || (SAMEPAGE(filename, filename + filename_size) && filename[filename_size] == '\0'))
 			return DeeModule_OpenFile_impl2((char *)filename, filename_size, flags | _DeeModule_IMPORT_F_NO_INHERIT_FILENAME, options);
 		filename_dup = (char *)Dee_Mallocc(filename_size + DeeModule_OpenFile_impl_EXTRA_CHARS + 1, sizeof(char));
@@ -2124,16 +2249,29 @@ use_absolute_filename:
 	}
 
 	/* Concat the context path with the filename to get a normalized filename. */
+	must_be_directory = false;
 	normal_filename = cat_and_normalize_paths(context_absname, context_absname_size,
 	                                          filename, filename_size,
-	                                          &normal_filename_size);
+	                                          &normal_filename_size,
+	                                          &must_be_directory);
+	if unlikely(!normal_filename)
+		goto err_xcontext_absname_ob;
+
+	/* Deal with case where the effective "normal_filename" would have ended
+	 * with a trailing slash: in this case, assert that the directory exists,
+	 * and open it as a `DeeModuleDir_Type' */
+	if (must_be_directory)
+		return do_DeeModule_OpenDirectory(normal_filename, normal_filename_size, flags);
 
 	/* Use the normalized filename to open a module */
 	result = DeeModule_OpenFile_impl2(normal_filename, normal_filename_size, flags, options);
 	Dee_XDecref_likely(context_absname_ob);
 	return result;
+err_xcontext_absname_ob:
+	if (context_absname_ob) {
 err_context_absname_ob:
-	Dee_Decref_likely(context_absname_ob);
+		Dee_Decref_likely(context_absname_ob);
+	}
 	goto err;
 err_filename_ob:
 	Dee_Decref_likely(filename_ob);
@@ -2145,10 +2283,11 @@ err:
 
 /* Append "import_str" to "pathname", converting the "...foo.bar" to "../../foo/bar"
  * (though the returned string is normalized, meaning ".." path segments are removed) */
-PRIVATE WUNUSED NONNULL((1, 4, 6)) /*utf-8*/ char *DCALL
+PRIVATE WUNUSED NONNULL((1, 4, 6, 7)) /*utf-8*/ char *DCALL
 cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathname_size, DeeStringObject *pathname_ob,
                          /*utf-8*/ char const *__restrict import_str, size_t import_str_size,
-                         size_t *__restrict p_result_strlen, unsigned int flags) {
+                         size_t *__restrict p_result_strlen, unsigned int flags,
+                         bool *__restrict p_must_be_directory) {
 	char const *import_str_end;
 	char *result, *result_end;
 	size_t result_maxlen;
@@ -2223,48 +2362,64 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 	}
 
 	/* Deal with sub-directory references */
-	while (import_str < import_str_end) {
-		char const *segment_end;
-		size_t segment_len;
-		ASSERT(import_str < import_str_end);
-		ASSERTF(!DeeSystem_IsSep(*import_str),
-		        "Presence of SEPs should have caused "
-		        "caller to take a different path!");
-		segment_end = (char const *)memchr(import_str, '.', (size_t)(import_str_end - import_str) * sizeof(char));
-		if (segment_end == NULL)
-			segment_end = import_str_end;
-		segment_len = (size_t)(segment_end - import_str);
-		if unlikely(segment_len == 0) {
-			DeeError_Throwf(&DeeError_ValueError,
-			                "Bad relative module path %$q contains empty path segment",
-			                (size_t)(import_str_end - import_str), import_str);
-			goto err_r;
-		}
-#ifdef DeeSystem_HAVE_FS_DRIVES
-		if (result_end <= result) {
-			/* Write new drive-string */
-			if unlikely(segment_len != 1) {
+	if (import_str >= import_str_end) {
+		/* No sub-directory references
+		 * -> given import string ends with "."
+		 * -> indicated module **must** be a directory */
+		*p_must_be_directory = true;
+	} else {
+		for (;;) {
+			char const *segment_end;
+			size_t segment_len;
+			if (import_str >= import_str_end)
+				break;
+			ASSERTF(!DeeSystem_IsSep(*import_str),
+			        "Presence of SEPs should have caused "
+			        "caller to take a different path!");
+			segment_end = (char const *)memchr(import_str, '.', (size_t)(import_str_end - import_str) * sizeof(char));
+			if (segment_end == NULL)
+				segment_end = import_str_end;
+			if ((import_str != Dee_unicode_skipspaceutf8_n(import_str, segment_end)) ||
+			    (segment_end != Dee_unicode_skipspaceutf8_rev_n(segment_end, import_str))) {
 				DeeError_Throwf(&DeeError_ValueError,
-				                "Length of drive name %$q is not 1 character",
-				                segment_len, import_str);
+				                "Illegal leading/trailing whitespace in import string segment: %$q",
+				                (size_t)(segment_end - import_str), import_str);
 				goto err_r;
 			}
-			ASSERT(result_end == result);
-			*result_end++ = (char)(unsigned char)toupper((unsigned int)*import_str);
-			*result_end++ = ':';
-		} else
+			segment_end = Dee_unicode_skipspaceutf8_rev_n(segment_end, import_str);
+			segment_len = (size_t)(segment_end - import_str);
+			if unlikely(segment_len == 0) {
+				DeeError_Throwf(&DeeError_ValueError,
+				                "Bad relative module path %$q contains empty path segment",
+				                (size_t)(import_str_end - import_str), import_str);
+				goto err_r;
+			}
+#ifdef DeeSystem_HAVE_FS_DRIVES
+			if (result_end <= result) {
+				/* Write new drive-string */
+				if unlikely(segment_len != 1) {
+					DeeError_Throwf(&DeeError_ValueError,
+					                "Length of drive name %$q is not 1 character",
+					                segment_len, import_str);
+					goto err_r;
+				}
+				ASSERT(result_end == result);
+				*result_end++ = (char)(unsigned char)toupper((unsigned int)*import_str);
+				*result_end++ = ':';
+			} else
 #endif /* DeeSystem_HAVE_FS_DRIVES */
-		{
-			*result_end++ = DeeSystem_SEP;
-			result_end = (char *)mempcpyc(result_end, import_str, segment_len, sizeof(char));
+			{
+				*result_end++ = DeeSystem_SEP;
+				result_end = (char *)mempcpyc(result_end, import_str, segment_len, sizeof(char));
+			}
+			import_str = segment_end;
+			/* Skip the discovered "." to get to the start of the next segment.
+			 * Also handles the case where import_str ends with "." (in which
+			 * case we simply ignore the trailing ".") */
+			++import_str;
+			if (import_str >= import_str_end)
+				break;
 		}
-		import_str = segment_end;
-		/* Skip the discovered "." to get to the start of the next segment.
-		 * Also handles the case where import_str ends with "." (in which
-		 * case we simply ignore the trailing ".") */
-		++import_str;
-		if (import_str >= import_str_end)
-			break;
 	}
 
 	/* Finalize filename and calculate offsets */
@@ -2292,6 +2447,7 @@ do_DeeModule_OpenGlobal_impl(/*utf-8*/ char const *__restrict import_str, size_t
                              unsigned int flags, struct Dee_compiler_options *options,
                              DeeTupleObject *__restrict libpath) {
 	size_t i;
+	char *absname;
 	DREF /*tracked*/ DeeModuleObject *result;
 	/* Check for special case: given "libpath" is empty. */
 	if unlikely(DeeTuple_IsEmpty(libpath)) {
@@ -2306,11 +2462,11 @@ do_DeeModule_OpenGlobal_impl(/*utf-8*/ char const *__restrict import_str, size_t
 	flags |= DeeModule_IMPORT_F_CTXDIR; /* Context is LIBPATH, which are always directories */
 	ASSERT(!(flags & _DeeModule_IMPORT_F_NO_INHERIT_FILENAME));
 	for (i = 0;;) {
-		char *absname;
 		size_t absname_len;
 		unsigned int used_flags;
 		DeeStringObject *path;
 		char const *path_utf8;
+		bool must_be_directory;
 		ASSERT(i < DeeTuple_SIZE(libpath));
 		path = (DeeStringObject *)DeeTuple_GET(libpath, i);
 		path_utf8 = DeeString_AsUtf8((DeeObject *)path);
@@ -2319,11 +2475,18 @@ do_DeeModule_OpenGlobal_impl(/*utf-8*/ char const *__restrict import_str, size_t
 		used_flags = flags | DeeModule_IMPORT_F_ENOENT;
 		if (i >= (DeeTuple_SIZE(libpath) - 1))
 			used_flags = flags; /* Last libpath uses ENOENT rules given by caller */
+		must_be_directory = false;
 		absname = cat_and_normalize_import(path_utf8, WSTR_LENGTH(path_utf8), path,
 		                                   import_str, import_str_size, &absname_len,
-		                                   used_flags);
+		                                   used_flags, &must_be_directory);
 		if unlikely(!absname)
 			goto err;
+		if unlikely(must_be_directory) {
+			DeeError_Throwf(&DeeError_ValueError,
+			                "Invalid import string %$q is global but ends with '.'",
+			                import_str_size, import_str);
+			goto err_absname;
+		}
 		result = DeeModule_OpenFile_impl2(absname, absname_len, flags, options);
 		if (result != (DREF /*tracked*/ DeeModuleObject *)DeeModule_IMPORT_ENOENT)
 			break;
@@ -2332,6 +2495,8 @@ do_DeeModule_OpenGlobal_impl(/*utf-8*/ char const *__restrict import_str, size_t
 			break;
 	}
 	return result;
+err_absname:
+	Dee_Free(absname);
 err:
 	return NULL;
 }
@@ -2471,22 +2636,30 @@ do_DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_s
 		                             flags, options);
 	}
 
-	/* Check for special case: `import_str == "."' --> return the module described by "context_absname" */
-	if (import_str_size == 1 && import_str[0] == '.') {
-		if (flags & DeeModule_IMPORT_F_CTXDIR) {
-			DeeError_Throwf(&DeeError_ValueError,
-			                "Cannot determine module \".\" from context directory %$q alone",
-			                context_absname_size, context_absname);
-			goto err;
-		}
-		return do_DeeModule_OpenFile(context_absname, context_absname_size, context_absname_ob,
-		                             NULL, 0, NULL, flags, options);
+	/* Make sure that the import string isn't an empty string */
+	if unlikely(import_str_size < 1) {
+		DeeError_Throwf(&DeeError_ValueError, "An empty string is not a valid module name");
+		goto err;
 	}
 
 	/* Check if "import_str" is a relative import-string (iow: starts with a leading `.') */
-	if (import_str_size > 1 && import_str[0] == '.') {
+	if (import_str[0] == '.') {
 		size_t filename_size;
 		char *filename;
+		bool must_be_directory;
+		/* Check for special case: `import_str == "."'
+		 * --> return the module described by "context_absname" */
+		if (import_str_size == 1) {
+			if (flags & DeeModule_IMPORT_F_CTXDIR) {
+				DeeError_Throwf(&DeeError_ValueError,
+				                "Cannot determine module \".\" from context directory %$q alone",
+				                context_absname_size, context_absname);
+				goto err;
+			}
+			return do_DeeModule_OpenFile(context_absname, context_absname_size, context_absname_ob,
+			                             NULL, 0, NULL, flags, options);
+		}
+
 		if (!(flags & DeeModule_IMPORT_F_CTXDIR)) {
 			/* Trim "context_absname_size" to get rid of everything after the last slash. */
 			while (context_absname_size >= 1 && !DeeSystem_IsSep(context_absname[context_absname_size - 1]))
@@ -2497,10 +2670,19 @@ do_DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_s
 		}
 		++import_str; /* Skip leading "." */
 		--import_str_size;
+		must_be_directory = false;
 		filename = cat_and_normalize_import(context_absname, context_absname_size, context_absname_ob,
-		                                    import_str, import_str_size, &filename_size, flags);
+		                                    import_str, import_str_size, &filename_size,
+		                                    flags, &must_be_directory);
 		if unlikely(!filename)
 			goto err;
+		if (must_be_directory) {
+			/* Special handling for directory-module describing the filesystem root. */
+			if unlikely(filename_size == 0)
+				return do_DeeModule_OpenFsRoot(filename);
+			return do_DeeModule_OpenDirectory(filename, filename_size, flags);
+		}
+		ASSERTF(filename_size, "An empty filename should have caused 'must_be_directory == true'");
 		return DeeModule_OpenFile_impl2(filename, filename_size, flags, options);
 	}
 
@@ -2681,15 +2863,18 @@ DeeModule_ImportEx(/*utf-8*/ char const *__restrict import_str, size_t import_st
  *
  * Special case when `mo_absname == ""':
  * - enumerate files in filesystem root "/" on unix
- * - enumerate drive letters on windows
+ * - enumerate (lower-case) drive letters on windows
  *
  * Special case when `mo_absname == "C:"':
  * - enumerate files from "C:\" on windows
- */
+ *
+ * If the directory no longer exists for some reason,
+ * return "empty_module_directory" instead */
 INTERN WUNUSED NONNULL((1)) struct Dee_module_directory *DCALL
 DeeModule_GetDirectory_uncached(DeeModuleObject *__restrict self) {
 	if (self->mo_absname == NULL)
 		return (struct Dee_module_directory *)&empty_module_directory;
+
 	/* TODO */
 	return (struct Dee_module_directory *)&empty_module_directory;
 }

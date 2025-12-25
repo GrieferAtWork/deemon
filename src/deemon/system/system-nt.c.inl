@@ -2035,7 +2035,7 @@ again_createfile:
 	                      (DWORD)dwCreationDisposition,
 	                      (DWORD)dwFlagsAndAttributes,
 	                      (HANDLE)hTemplateFile);
-	if (hResult == INVALID_HANDLE_VALUE) {
+	if (hResult == INVALID_HANDLE_VALUE && *lpwName) {
 		DWORD dwError = GetLastError();
 		if (DeeNTSystem_IsUncError(dwError)) {
 			/* Fix the filename and try again. */

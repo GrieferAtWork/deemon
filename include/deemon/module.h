@@ -244,6 +244,10 @@ struct Dee_module_symbol {
 #define Dee_MODULE_SYMBOL_EQUALS(x, name, size)              \
 	(bcmp((x)->ss_name, name, (size) * sizeof(char)) == 0 && \
 	 (x)->ss_name[size] == 0)
+#define Dee_MODULE_SYMBOL_EQUALS_STR(x, string)                                                 \
+	(((x)->ss_flags & MODSYM_FNAMEOBJ)                                                          \
+	 ? DeeString_EqualsSTR(string, COMPILER_CONTAINER_OF((x)->ss_name, DeeStringObject, s_str)) \
+	 : DeeString_EqualsBuf(string, (x)->ss_name, strlen((x)->ss_name)))
 #define Dee_MODULE_SYMBOL_GETNAMESTR(x) ((x)->ss_name)
 #define Dee_MODULE_SYMBOL_GETNAMELEN(x) (((x)->ss_flags & MODSYM_FNAMEOBJ) ? DeeString_SIZE(COMPILER_CONTAINER_OF((x)->ss_name, DeeStringObject, s_str)) : strlen((x)->ss_name))
 #define Dee_MODULE_SYMBOL_GETDOCSTR(x)  ((x)->ss_doc)
@@ -1751,6 +1755,13 @@ struct Dee_attrinfo;
 /* Access global variables of a given module by their name described by a C-string.
  * These functions act and behave just as once would expect, raising errors when
  * appropriate and returning NULL/false/-1 upon error or not knowing the given name. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttr(DeeModuleObject *self, /*String*/ DeeObject *attr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_HasAttr(DeeModuleObject *self, /*String*/ DeeObject *attr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_BoundAttr(DeeModuleObject *self, /*String*/ DeeObject *attr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_DelAttr(DeeModuleObject *self, /*String*/ DeeObject *attr);
+INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeModule_SetAttr(DeeModuleObject *self, /*String*/ DeeObject *attr, DeeObject *value);
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttrStringHash(DeeModuleObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttrStringLenHash(DeeModuleObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_HasAttrStringHash(DeeModuleObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
@@ -1763,23 +1774,25 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeModule_SetAttrStringHash(DeeModul
 INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeModule_SetAttrStringLenHash(DeeModuleObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 5)) bool DCALL DeeModule_FindAttrInfoStringLenHash(DeeModuleObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #define DeeModule_GetAttr(self, attr)                          DeeModule_GetAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeModule_HasAttr(self, attr)                          DeeModule_HasAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeModule_BoundAttr(self, attr)                        DeeModule_BoundAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeModule_DelAttr(self, attr)                          DeeModule_DelAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeModule_SetAttr(self, attr, value)                   DeeModule_SetAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr), value)
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #define DeeModule_GetAttrHash(self, attr, hash)                DeeModule_GetAttrStringHash(self, DeeString_STR(attr), hash)
 #define DeeModule_GetAttrString(self, attr)                    DeeModule_GetAttrStringHash(self, attr, Dee_HashStr(attr))
 #define DeeModule_GetAttrStringLen(self, attr, attrlen)        DeeModule_GetAttrStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))
-#define DeeModule_HasAttr(self, attr)                          DeeModule_HasAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeModule_HasAttrHash(self, attr, hash)                DeeModule_HasAttrStringHash(self, DeeString_STR(attr), hash)
 #define DeeModule_HasAttrString(self, attr)                    DeeModule_HasAttrStringHash(self, attr, Dee_HashStr(attr))
 #define DeeModule_HasAttrStringLen(self, attr, attrlen)        DeeModule_HasAttrStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))
-#define DeeModule_BoundAttr(self, attr)                        DeeModule_BoundAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeModule_BoundAttrHash(self, attr, hash)              DeeModule_BoundAttrStringHash(self, DeeString_STR(attr), hash)
 #define DeeModule_BoundAttrString(self, attr)                  DeeModule_BoundAttrStringHash(self, attr, Dee_HashStr(attr))
 #define DeeModule_BoundAttrStringLen(self, attr, attrlen)      DeeModule_BoundAttrStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))
-#define DeeModule_DelAttr(self, attr)                          DeeModule_DelAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeModule_DelAttrHash(self, attr, hash)                DeeModule_DelAttrStringHash(self, DeeString_STR(attr), hash)
 #define DeeModule_DelAttrString(self, attr)                    DeeModule_DelAttrStringHash(self, attr, Dee_HashStr(attr))
 #define DeeModule_DelAttrStringLen(self, attr, attrlen)        DeeModule_DelAttrStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))
-#define DeeModule_SetAttr(self, attr, value)                   DeeModule_SetAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr), value)
 #define DeeModule_SetAttrHash(self, attr, hash, value)         DeeModule_SetAttrStringHash(self, DeeString_STR(attr), hash, value)
 #define DeeModule_SetAttrString(self, attr, value)             DeeModule_SetAttrStringHash(self, attr, Dee_HashStr(attr), value)
 #define DeeModule_SetAttrStringLen(self, attr, attrlen, value) DeeModule_SetAttrStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen), value)

@@ -630,6 +630,15 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_module_no_such_global)(struct module_object *self,
+                                  DeeObject *name, int access) {
+	return DeeError_Throwf(&DeeError_AttributeError,
+	                       "Cannot %s unknown global variable: %r.%k",
+	                       access_names[access & ATTR_ACCESS_MASK],
+	                       self, name);
+}
+
+INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_module_no_such_global_string)(DeeModuleObject *__restrict self,
                                          char const *__restrict name, int access) {
 	return DeeError_Throwf(&DeeError_AttributeError,

@@ -762,6 +762,53 @@ err:
 	return DeeModule_DIRECTORY_ATTR_ERR;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DeeStringObject *DCALL
+DeeModule_FindDirectoryAttr(DeeModuleObject *__restrict self,
+                            /*String*/ DeeObject *__restrict attr_name) {
+	char const *name = DeeString_AsUtf8(attr_name);
+	if unlikely(!name)
+		goto err;
+	return DeeModule_FindDirectoryAttrStringLen(self, name, WSTR_LENGTH(name));
+err:
+	return DeeModule_DIRECTORY_ATTR_ERR;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_GetAttr(DeeModuleObject *self, /*String*/ DeeObject *attr) {
+	DeeStringObject *dir_status;
+	Dee_hash_t i, perturb, hash;
+	DREF DeeObject *result;
+	hash = DeeString_Hash(attr);
+	perturb = i = Dee_MODULE_HASHST(self, hash);
+	for (;; Dee_MODULE_HASHNX(i, perturb)) {
+		struct module_symbol *item = Dee_MODULE_HASHIT(self, i);
+		if (!item->ss_name)
+			break; /* Not found */
+		if (item->ss_hash != hash)
+			continue; /* Non-matching hash */
+		if (Dee_MODULE_SYMBOL_EQUALS_STR(item, attr))
+			return DeeModule_GetAttrSymbol(self, item);
+	}
+
+	/* Check for a directory element */
+	dir_status = DeeModule_FindDirectoryAttr(self, attr);
+	if (dir_status != DeeModule_DIRECTORY_ATTR_NO) {
+		if unlikely(dir_status == DeeModule_DIRECTORY_ATTR_ERR)
+			goto err;
+		return DeeModule_Import(attr, (DeeObject *)self,
+		                        DeeModule_IMPORT_F_NORMAL |
+		                        DeeModule_IMPORT_F_CTXDIR);
+	}
+
+	/* Fallback: Do a generic attribute lookup on the module. */
+	result = DeeObject_GenericGetAttr((DeeObject *)self, attr);
+	if (result != ITER_DONE)
+		return result;
+	err_module_no_such_global(self, attr, ATTR_ACCESS_GET);
+err:
+	return NULL;
+}
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_GetAttrStringHash(DeeModuleObject *__restrict self,
@@ -844,6 +891,36 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeModule_BoundAttr(DeeModuleObject *self, /*String*/ DeeObject *attr) {
+	DeeStringObject *dir_status;
+	Dee_hash_t i, perturb, hash;
+	hash = DeeString_Hash(attr);
+	perturb = i = Dee_MODULE_HASHST(self, hash);
+	for (;; Dee_MODULE_HASHNX(i, perturb)) {
+		struct module_symbol *item = Dee_MODULE_HASHIT(self, i);
+		if (!item->ss_name)
+			break; /* Not found */
+		if (item->ss_hash != hash)
+			continue; /* Non-matching hash */
+		if (Dee_MODULE_SYMBOL_EQUALS_STR(item, attr))
+			return DeeModule_BoundAttrSymbol(self, item);
+	}
+
+	/* Check for a directory element */
+	dir_status = DeeModule_FindDirectoryAttr(self, attr);
+	if (dir_status != DeeModule_DIRECTORY_ATTR_NO) {
+		if unlikely(dir_status == DeeModule_DIRECTORY_ATTR_ERR)
+			goto err;
+		return Dee_BOUND_YES;
+	}
+
+	/* Fallback: Do a generic attribute lookup on the module. */
+	return DeeObject_GenericBoundAttr((DeeObject *)self, attr);
+err:
+	return Dee_BOUND_ERR;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_BoundAttrStringHash(DeeModuleObject *__restrict self,
                               char const *__restrict attr_name,
                               Dee_hash_t hash) {
@@ -905,6 +982,37 @@ DeeModule_BoundAttrStringLenHash(DeeModuleObject *__restrict self,
 	return DeeObject_GenericBoundAttrStringLenHash((DeeObject *)self, attr_name, attrlen, hash);
 err:
 	return Dee_BOUND_ERR;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeModule_HasAttr(DeeModuleObject *self, /*String*/ DeeObject *attr) {
+	DeeStringObject *dir_status;
+	Dee_hash_t i, perturb, hash;
+	hash = DeeString_Hash(attr);
+	perturb = i = Dee_MODULE_HASHST(self, hash);
+	for (;; Dee_MODULE_HASHNX(i, perturb)) {
+		struct module_symbol *item = Dee_MODULE_HASHIT(self, i);
+		if (!item->ss_name)
+			break; /* Not found */
+		if (item->ss_hash != hash)
+			continue; /* Non-matching hash */
+		if (Dee_MODULE_SYMBOL_EQUALS_STR(item, attr))
+			return Dee_HAS_YES;
+	}
+
+	/* Check for a directory element */
+	dir_status = DeeModule_FindDirectoryAttr(self, attr);
+	if (dir_status != DeeModule_DIRECTORY_ATTR_NO) {
+		if (dir_status == DeeModule_DIRECTORY_ATTR_ERR)
+			goto err;
+		return Dee_HAS_YES;
+	}
+
+	/* Fallback: Do a generic attribute lookup on the module. */
+	return DeeObject_GenericHasAttr((DeeObject *)self, attr);
+err:
+	return Dee_HAS_ERR;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -969,6 +1077,38 @@ DeeModule_HasAttrStringLenHash(DeeModuleObject *__restrict self,
 	return DeeObject_GenericHasAttrStringLenHash((DeeObject *)self, attr_name, attrlen, hash);
 err:
 	return Dee_HAS_ERR;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeModule_DelAttr(DeeModuleObject *self, /*String*/ DeeObject *attr) {
+	int error;
+	DeeStringObject *dir_status;
+	Dee_hash_t i, perturb, hash;
+	hash = DeeString_Hash(attr);
+	perturb = i = Dee_MODULE_HASHST(self, hash);
+	for (;; Dee_MODULE_HASHNX(i, perturb)) {
+		struct module_symbol *item = Dee_MODULE_HASHIT(self, i);
+		if (!item->ss_name)
+			break; /* Not found */
+		if (item->ss_hash != hash)
+			continue; /* Non-matching hash */
+		if (Dee_MODULE_SYMBOL_EQUALS_STR(item, attr))
+			return DeeModule_DelAttrSymbol(self, item);
+	}
+
+	/* Check for a directory element */
+	dir_status = DeeModule_FindDirectoryAttr(self, attr);
+	if (dir_status != DeeModule_DIRECTORY_ATTR_NO) {
+		if (dir_status == DeeModule_DIRECTORY_ATTR_ERR)
+			return -1;
+		return DeeRT_ErrRestrictedAttr(self, dir_status, DeeRT_ATTRIBUTE_ACCESS_DEL);
+	}
+
+	/* Fallback: Do a generic attribute lookup on the module. */
+	error = DeeObject_GenericDelAttr((DeeObject *)self, attr);
+	if unlikely(error <= 0)
+		return error;
+	return err_module_no_such_global(self, attr, ATTR_ACCESS_DEL);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -1037,6 +1177,38 @@ DeeModule_DelAttrStringLenHash(DeeModuleObject *__restrict self,
 	if unlikely(error <= 0)
 		return error;
 	return err_module_no_such_global_string_len(self, attr_name, attrlen, ATTR_ACCESS_DEL);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 4)) int DCALL
+DeeModule_SetAttr(DeeModuleObject *self, /*String*/ DeeObject *attr, DeeObject *value) {
+	int error;
+	DeeStringObject *dir_status;
+	Dee_hash_t i, perturb, hash;
+	hash = DeeString_Hash(attr);
+	perturb = i = Dee_MODULE_HASHST(self, hash);
+	for (;; Dee_MODULE_HASHNX(i, perturb)) {
+		struct module_symbol *item = Dee_MODULE_HASHIT(self, i);
+		if (!item->ss_name)
+			break; /* Not found */
+		if (item->ss_hash != hash)
+			continue; /* Non-matching hash */
+		if (Dee_MODULE_SYMBOL_EQUALS_STR(item, attr))
+			return DeeModule_SetAttrSymbol(self, item, value);
+	}
+
+	/* Check for a directory element */
+	dir_status = DeeModule_FindDirectoryAttr(self, attr);
+	if (dir_status != DeeModule_DIRECTORY_ATTR_NO) {
+		if (dir_status == DeeModule_DIRECTORY_ATTR_ERR)
+			return -1;
+		return DeeRT_ErrRestrictedAttr(self, dir_status, DeeRT_ATTRIBUTE_ACCESS_SET);
+	}
+
+	/* Fallback: Do a generic attribute lookup on the module. */
+	error = DeeObject_GenericSetAttr((DeeObject *)self, attr, value);
+	if unlikely(error <= 0)
+		return error;
+	return err_module_no_such_global(self, attr, ATTR_ACCESS_SET);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 4)) int DCALL
@@ -1816,24 +1988,38 @@ module_printrepr(DeeObject *__restrict self,
 }
 
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#define module_getattr   DeeModule_GetAttr
+#define module_delattr   DeeModule_DelAttr
+#define module_setattr   DeeModule_SetAttr
+#define module_hasattr   DeeModule_HasAttr
+#define module_boundattr DeeModule_BoundAttr
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-module_getattr(DeeModuleObject *__restrict self,
-               /*String*/ DeeObject *__restrict name) {
+module_getattr(DeeModuleObject *self, /*String*/ DeeObject *name) {
 	return DeeModule_GetAttr(self, name);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-module_delattr(DeeModuleObject *__restrict self,
-               /*String*/ DeeObject *__restrict name) {
+module_delattr(DeeModuleObject *self, /*String*/ DeeObject *name) {
 	return DeeModule_DelAttr(self, name);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-module_setattr(DeeModuleObject *__restrict self,
-               /*String*/ DeeObject *__restrict name,
-               DeeObject *__restrict value) {
+module_setattr(DeeModuleObject *self, /*String*/ DeeObject *name, DeeObject *value) {
 	return DeeModule_SetAttr(self, name, value);
 }
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+module_hasattr(DeeModuleObject *self, /*String*/ DeeObject *name) {
+	return DeeModule_HasAttr(self, name);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+module_boundattr(DeeModuleObject *self, /*String*/ DeeObject *name) {
+	return DeeModule_BoundAttr(self, name);
+}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 struct module_attriter {
 	Dee_ATTRITER_HEAD
@@ -2140,18 +2326,6 @@ module_findattr(DeeTypeObject *UNUSED(tp_self), DeeModuleObject *self,
                 struct Dee_attrspec const *__restrict specs,
                 struct Dee_attrdesc *__restrict result) {
 	return module_findattr_impl(self, specs, result);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-module_hasattr(DeeModuleObject *__restrict self,
-               /*String*/ DeeObject *__restrict name) {
-	return DeeModule_HasAttr(self, name);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-module_boundattr(DeeModuleObject *__restrict self,
-                 /*String*/ DeeObject *__restrict name) {
-	return DeeModule_BoundAttr(self, name);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 6)) bool DCALL
