@@ -1579,10 +1579,31 @@ again:
 				goto err;
 			goto again;
 		}
-		if (error != ERROR_BROKEN_PIPE)
-			goto err_io;
-		/* Handle pipe-disconnect as EOF (like it should be...). */
-		result = 0;
+		if (DeeNTSystem_IsBadAllocError(error)) {
+			if (Dee_CollectMemory(1))
+				goto again;
+			goto err;
+		}
+		switch (error) {
+		case ERROR_INVALID_FUNCTION: {
+			/* This happens when the handle is for a directory or some other
+			 * kind of file that does not allow reading.
+			 *
+			 * Since I honestly don't know what type of file (other than a
+			 * directory) would not allow reading, assume that it simply is
+			 * a directory and throw "DeeError_IsDirectory" */
+			DWORD file_type = nt_sysfile_trygettype(self);
+			if (file_type == FILE_TYPE_DISK) {
+				return (size_t)DeeNTSystem_ThrowErrorf(&DeeError_IsDirectory, error,
+				                                       "Cannot read from directory");
+			}
+		}	break;
+		case ERROR_BROKEN_PIPE:
+			/* Handle pipe-disconnect as EOF (like it should be...). */
+			result = 0;
+			break;
+		default: goto err_io;
+		}
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return result;
@@ -1599,11 +1620,30 @@ err:
 	/* TODO: Use KOS's readf() function */
 	size_t result;
 	(void)flags;
+#if defined(CONFIG_HAVE_errno) && (defined(ENOMEM) || defined(EINTR))
+again:
+#endif /* CONFIG_HAVE_errno && (ENOMEM || EINTR) */
 	DBG_ALIGNMENT_DISABLE();
 	result = (size_t)read((int)self->sf_handle, buffer, bufsize);
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely(result == (size_t)-1)
+	if unlikely(result == (size_t)-1) {
+		int error = DeeSystem_GetErrno();
+		DeeSystem_IF_E1(error, ENOMEM, {
+			if (Dee_CollectMemory(1))
+				goto again;
+			return (size_t)-1;
+		});
+		DeeSystem_IF_E1(error, EINTR, {
+			if (DeeThread_CheckInterrupt())
+				goto again;
+			return (size_t)-1;
+		});
+		DeeSystem_IF_E1(error, EISDIR, {
+			return (size_t)DeeUnixSystem_ThrowErrorf(&DeeError_IsDirectory, error, "Cannot read from directory");
+		});
+		(void)error;
 		err_file_io(self);
+	}
 	return result;
 #else /* CONFIG_HAVE_read */
 	(void)self;
@@ -1701,6 +1741,21 @@ again:
 				goto err;
 			goto again;
 		}
+		if (DeeNTSystem_IsBadAllocError(error)) {
+			if (Dee_CollectMemory(1))
+				goto again;
+			goto err;
+		}
+		switch (error) {
+		case ERROR_INVALID_FUNCTION:
+			if (file_type == FILE_TYPE_DISK) {
+				/* See ReadFile above... */
+				return (size_t)DeeNTSystem_ThrowErrorf(&DeeError_IsDirectory, error,
+				                                       "Cannot write to directory");
+			}
+			break;
+		default: break;
+		}
 		return err_file_io(self);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -1716,11 +1771,31 @@ err:
 	/* TODO: Use KOS's writef() function */
 	size_t result;
 	(void)flags;
+
+#if defined(CONFIG_HAVE_errno) && (defined(ENOMEM) || defined(EINTR))
+again:
+#endif /* CONFIG_HAVE_errno && (ENOMEM || EINTR) */
 	DBG_ALIGNMENT_DISABLE();
 	result = (size_t)write((int)self->sf_handle, buffer, bufsize);
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely(result == (size_t)-1)
+	if unlikely(result == (size_t)-1) {
+		int error = DeeSystem_GetErrno();
+		DeeSystem_IF_E1(error, ENOMEM, {
+			if (Dee_CollectMemory(1))
+				goto again;
+			return (size_t)-1;
+		});
+		DeeSystem_IF_E1(error, EINTR, {
+			if (DeeThread_CheckInterrupt())
+				goto again;
+			return (size_t)-1;
+		});
+		DeeSystem_IF_E1(error, EISDIR, {
+			return (size_t)DeeUnixSystem_ThrowErrorf(&DeeError_IsDirectory, error, "Cannot write to directory");
+		});
+		(void)error;
 		err_file_io(self);
+	}
 	return result;
 #else /* CONFIG_HAVE_write */
 	(void)self;

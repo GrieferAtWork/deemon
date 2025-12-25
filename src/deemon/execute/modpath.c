@@ -1507,10 +1507,10 @@ module_destroy_untracked(DREF /*untracked*/ DeeModuleObject *self) {
 			Dee_Free((void *)self->mo_importv);
 		}
 	} else {
-		ASSERT(self->mo_dir == (struct Dee_module_directory *)&empty_module_directory);
+		ASSERT(self->mo_dir == NULL);
 		ASSERT(Dee_TYPE(self) == &DeeModuleDir_Type);
 		ASSERT(self->mo_importc == 0);
-		ASSERT(self->mo_importv == NULL);
+//		ASSERT(self->mo_importv == NULL); /* Not alllocated */
 		ASSERT(self->mo_globalc == 0);
 		ASSERT(self->mo_bucketm == 0);
 		ASSERT(self->mo_bucketv == empty_module_buckets);
@@ -1532,6 +1532,31 @@ module_track(DREF DeeModuleObject *self) {
 		return DeeDec_Track(self);
 #endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 	return DeeGC_TRACK(DeeModuleObject, self);
+}
+
+#define sizeof_DeeModuleDir offsetof(DeeModuleObject, mo_moddata)
+PRIVATE WUNUSED DREF /*untracked*/ DeeModuleObject *DCALL
+DeeModule_CreateAnonymousDirectory(void) {
+	DREF /*untracked*/ DeeModuleObject *result;
+	result = (DREF /*untracked*/ DeeModuleObject *)DeeGCObject_Malloc(sizeof_DeeModuleDir);
+	if unlikely(!result)
+		goto done;
+	DeeObject_Init(result, &DeeModuleDir_Type);
+	result->mo_absname = NULL; /* Will be filled in by caller */
+	result->mo_libname.mle_dat.mle_mod = result;
+	result->mo_libname.mle_name = NULL;
+	result->mo_dir = NULL; /* Will be initialized lazily */
+	result->mo_init = Dee_MODULE_INIT_INITIALIZED;
+	result->mo_ctime = 0;
+	result->mo_flags = Dee_MODULE_FABSFILE | Dee_MODULE_FHASCTIME;
+	result->mo_importc = 0;
+	result->mo_globalc = 0;
+	result->mo_bucketm = 0;
+	result->mo_bucketv = empty_module_buckets;
+	Dee_atomic_rwlock_init(&result->mo_lock);
+	weakref_support_init(result);
+done:
+	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF /*untracked*/ DeeModuleObject *DCALL
@@ -1653,10 +1678,13 @@ no_dec_file:
 	Dee_Decref_likely(source_stream);
 
 	if (!result) {
-		/* TODO: Check if "source_stream" might be a directory (should
-		 *       be possible to determine based on thrown error, which
-		 *       should be `DeeError_IsDirectory', though currently is
-		 *       just a generic "FSError: I/O Operation failed"). */
+		if ((flags & (_DeeModule_IMPORT_F_OUT_IS_RAW_FILE | _DeeModule_IMPORT_F_IS_DEE_FILE)) ==
+		    /*    */ (_DeeModule_IMPORT_F_OUT_IS_RAW_FILE)) {
+			/* If compilation failed because "source_stream"
+			 * is a directory, create a directory module. */
+			if (DeeError_Catch(&DeeError_IsDirectory))
+				return DeeModule_CreateAnonymousDirectory();
+		}
 	} else {
 #ifndef CONFIG_NO_DEC
 		if ((flags & (_DeeModule_IMPORT_F_IS_DEE_FILE | DeeModule_IMPORT_F_NOGDEC)) ==
@@ -1724,6 +1752,7 @@ DeeModule_OpenFile_impl3(/*utf-8*/ char **p_abs_filename, size_t abs_filename_le
 			goto err;
 		memcpyc(copy, *p_abs_filename, abs_filename_length + 1, sizeof(char));
 		*p_flags &= ~_DeeModule_IMPORT_F_NO_INHERIT_FILENAME;
+		*p_abs_filename = copy;
 	}
 
 	/* Try to append a trailing ".dee" to the filename and try to open that */
@@ -1840,16 +1869,19 @@ DeeModule_OpenFile_impl2(/*inherit_if(!(flags & _DeeModule_IMPORT_F_NO_INHERIT_F
 	/* Skip "module_abstree_*" if the module is being imported anonymously. */
 	if (flags & DeeModule_IMPORT_F_ANONYM) {
 		result = DeeModule_OpenFile_impl3((char **)&abs_filename, abs_filename_length, &flags, options);
+		if (DeeModule_IMPORT_ISOK(result)) {
 #ifndef CONFIG_NO_DEX
-		if (Dee_TYPE(result) == &DeeModuleDex_Type)
-			goto free_abs_filename_and_return_result;
+			if (Dee_TYPE(result) == &DeeModuleDex_Type)
+				goto free_abs_filename_and_return_result;
 #endif /* !CONFIG_NO_DEX */
-		if (DeeModule_IMPORT_ISOK(result) &&
-		    ((flags & (_DeeModule_IMPORT_F_OUT_IS_RAW_FILE)) ||
-		     (flags & (DeeModule_IMPORT_F_FILNAM | _DeeModule_IMPORT_F_IS_DEE_FILE)) ==
-		     /*....*/ (DeeModule_IMPORT_F_FILNAM)))
-			result->mo_flags |= Dee_MODULE_FABSFILE;
-		result = module_track(result);
+			if (Dee_TYPE(result) == &DeeModuleDir_Type)
+				goto remember_dir_module;
+			if ((flags & (_DeeModule_IMPORT_F_OUT_IS_RAW_FILE)) ||
+			    (flags & (DeeModule_IMPORT_F_FILNAM | _DeeModule_IMPORT_F_IS_DEE_FILE)) ==
+			    /*....*/ (DeeModule_IMPORT_F_FILNAM))
+				result->mo_flags |= Dee_MODULE_FABSFILE;
+			result = module_track(result);
+		}
 		goto free_abs_filename_and_return_result;
 	}
 
@@ -1879,9 +1911,10 @@ DeeModule_OpenFile_impl2(/*inherit_if(!(flags & _DeeModule_IMPORT_F_NO_INHERIT_F
 		if (Dee_TYPE(result) == &DeeModuleDex_Type)
 			goto free_abs_filename_and_return_result;
 #endif /* !CONFIG_NO_DEX */
-		ASSERT(!result->mo_absname);
 		if (flags & _DeeModule_IMPORT_F_IS_DEE_FILE)
 			abs_filename_length -= 4; /* The trailing ".dee" isn't included in "mo_absname". */
+remember_dir_module:
+		ASSERT(!result->mo_absname);
 		if (flags & _DeeModule_IMPORT_F_NO_INHERIT_FILENAME) {
 			char *copy = (char *)Dee_Mallocc(abs_filename_length + 1, sizeof(char));
 			if unlikely(!copy)

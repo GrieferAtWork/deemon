@@ -99,8 +99,10 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_expected_string_for_attribute(DeeObj
 #define ATTR_ACCESS_MASK 3
 
 /* @param: access: One of `ATTR_ACCESS_*' */
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_not_loaded_attr_string(struct module_object *__restrict self, char const *__restrict name, int access);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_not_loaded_attr_string_len(struct module_object *__restrict self, char const *__restrict name, size_t namelen, int access);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_no_such_global_string(struct module_object *__restrict self, char const *__restrict name, int access);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_no_such_global_string_len(struct module_object *__restrict self, char const *__restrict name, size_t namelen, int access);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_readonly_global_string(struct module_object *__restrict self, char const *__restrict name);
@@ -159,8 +161,10 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict
 #define err_srt_invalid_extern(frame, mid, gid)                                                           Dee_ASSUMED_VALUE(err_srt_invalid_extern(frame, mid, gid), -1)
 #define err_unimplemented_operator(tp, operator_name)                                                     Dee_ASSUMED_VALUE(err_unimplemented_operator(tp, operator_name), -1)
 #define err_expected_string_for_attribute(but_instead_got)                                                Dee_ASSUMED_VALUE(err_expected_string_for_attribute(but_instead_got), -1)
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #define err_module_not_loaded_attr_string(self, name, access)                                             Dee_ASSUMED_VALUE(err_module_not_loaded_attr_string(self, name, access), -1)
 #define err_module_not_loaded_attr_string_len(self, name, namelen, access)                                Dee_ASSUMED_VALUE(err_module_not_loaded_attr_string_len(self, name, namelen, access), -1)
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #define err_module_no_such_global_string(self, name, access)                                              Dee_ASSUMED_VALUE(err_module_no_such_global_string(self, name, access), -1)
 #define err_module_no_such_global_string_len(self, name, namelen, access)                                 Dee_ASSUMED_VALUE(err_module_no_such_global_string_len(self, name, namelen, access), -1)
 #define err_module_readonly_global_string(self, name)                                                     Dee_ASSUMED_VALUE(err_module_readonly_global_string(self, name), -1)

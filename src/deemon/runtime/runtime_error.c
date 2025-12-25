@@ -608,6 +608,7 @@ PRIVATE char const access_names[4][4] = {
 	/* [?]               = */ "",
 };
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_module_not_loaded_attr_string)(DeeModuleObject *__restrict self,
                                           char const *__restrict name, int access) {
@@ -626,12 +627,13 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	                       access_names[access & ATTR_ACCESS_MASK],
 	                       namelen, name, self);
 }
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_module_no_such_global_string)(DeeModuleObject *__restrict self,
                                          char const *__restrict name, int access) {
 	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot %s unknown global variable: `%k.%s'",
+	                       "Cannot %s unknown global variable: %r.%s",
 	                       access_names[access & ATTR_ACCESS_MASK],
 	                       self, name);
 }
@@ -641,7 +643,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
                                              char const *__restrict name,
                                              size_t namelen, int access) {
 	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot %s unknown global variable: `%k.%$s'",
+	                       "Cannot %s unknown global variable: %r.%$s",
 	                       access_names[access & ATTR_ACCESS_MASK],
 	                       self, namelen, name);
 }
@@ -650,7 +652,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_module_readonly_global_string)(DeeModuleObject *__restrict self,
                                           char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot modify read-only global variable: `%k.%s'",
+	                       "Cannot modify read-only global variable: %r.%s",
 	                       self, name);
 }
 
@@ -658,7 +660,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_module_cannot_read_property_string)(DeeModuleObject *__restrict self,
                                                char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot read global property: `%k.%s'",
+	                       "Cannot read global property: %r.%s",
 	                       self, name);
 }
 
@@ -666,7 +668,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_module_cannot_delete_property_string)(DeeModuleObject *__restrict self,
                                                  char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot write global property: `%k.%s'",
+	                       "Cannot write global property: %r.%s",
 	                       self, name);
 }
 
@@ -674,7 +676,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_module_cannot_write_property_string)(DeeModuleObject *__restrict self,
                                                 char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot write global property: `%k.%s'",
+	                       "Cannot write global property: %r.%s",
 	                       self, name);
 }
 

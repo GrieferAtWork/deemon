@@ -1784,11 +1784,14 @@ DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_str(DeeObject *__restrict self) { /* TODO: Refactor to "tp_print" */
 	DeeModuleObject *me = (DeeModuleObject *)self;
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	char const *name = me->mo_absname;
+	char const *name;
+	DREF DeeObject *libname = DeeModule_GetLibName((DeeObject *)me, 0);
+	if (libname != ITER_DONE)
+		return libname;
+	name = me->mo_absname;
 	if (!name)
 		return DeeString_New("<anonymous module>");
-	name = DeeSystem_BaseName(name, strlen(name));
-	return DeeString_New(name);
+	return DeeString_Newf("<module %q>", name);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return_reference_((DeeObject *)me->mo_name);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -2596,7 +2599,7 @@ module_dir_destroy(DeeModuleObject *__restrict self) {
 	/* Assert always-true invariants for "DeeModuleDir_Type" */
 	ASSERT(Dee_TYPE(self) == &DeeModuleDir_Type);
 	ASSERT(self->mo_importc == 0);
-	ASSERT(self->mo_importv == NULL);
+//	ASSERT(self->mo_importv == NULL); /* Not alllocated */
 	ASSERT(self->mo_globalc == 0);
 	ASSERT(self->mo_bucketm == 0);
 	ASSERT(self->mo_bucketv == empty_module_buckets);
