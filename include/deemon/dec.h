@@ -1126,7 +1126,7 @@ struct Dee_compiler_options;
  *                      - return->mo_libnode
  * @return: ITER_DONE: The DEC file was out of date or had been corrupted.
  * @return: NULL:      An error occurred. */
-INTDEF WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF /*untracked*/ struct Dee_module_object *DCALL
 DeeModule_OpenDec(DeeObject *__restrict input_stream, struct Dee_compiler_options *options,
                   /*utf-8*/ char const *__restrict dec_dirname, size_t dec_dirname_len,
                   uint64_t dee_file_last_modified);

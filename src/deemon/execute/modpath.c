@@ -74,6 +74,7 @@
 #endif /* !DLOPEN_NULL_FLAGS */
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#include <deemon/compiler/compiler.h>
 #include <deemon/dec.h>
 #include <deemon/exec.h>
 #include <deemon/file.h>
@@ -455,14 +456,21 @@ PRIVATE LPGETMODULEINFORMATION DCALL get_GetModuleInformation(void) {
 	static WCHAR const wKernel32_dll[] = { 'K', 'e', 'r', 'n', 'e', 'l', '3', '2', '.', 'd', 'l', 'l', 0 };
 	static WCHAR const wPsapi_dll[]    = { 'P', 's', 'A', 'p', 'i', '.', 'd', 'l', 'l', 0 };
 	LPGETMODULEINFORMATION result = atomic_read(&pdyn_GetModuleInformation);
+	HMODULE hModule;
 	if (result)
 		return result;
-	*(FARPROC *)&result = GetProcAddress(GetModuleHandleW(wKernel32), name_GetModuleInformation);
-	if (result != NULL)
-		goto remember_result;
-	*(FARPROC *)&result = GetProcAddress(GetModuleHandleW(wPsapi), name_GetModuleInformation);
-	if (result != NULL)
-		goto remember_result;
+	hModule = GetModuleHandleW(wKernel32);
+	if (hModule) {
+		*(FARPROC *)&result = GetProcAddress(hModule, name_GetModuleInformation);
+		if (result != NULL)
+			goto remember_result;
+	}
+	hModule = GetModuleHandleW(wPsapi);
+	if (hModule) {
+		*(FARPROC *)&result = GetProcAddress(hModule, name_GetModuleInformation);
+		if (result != NULL)
+			goto remember_result;
+	}
 	hMod = LoadLibraryW(wKernel32_dll);
 	if (hMod != NULL) {
 		*(FARPROC *)&result = GetProcAddress(hMod, name_GetModuleInformation);
@@ -1391,7 +1399,7 @@ DeeModule_ClearLibAllFlag_locked(void) {
  * @return: * :        Success (module is anonymous "mo_absname == NULL" and not-yet-tracked)
  * @return: ITER_DONE: Failed to load dec file (probably corrupt)
  * @return: NULL:      Error was thrown. */
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF /*untracked*/ DeeModuleObject *DCALL
 DeeModule_OpenDecFile_impl(/*inherit(always)*/ DREF DeeObject *dec_stream,
                            /*utf-8*/ char const *__restrict dec_dirname, size_t dec_dirname_len,
                            struct Dee_compiler_options *options, uint64_t dee_file_last_modified) {
@@ -1468,17 +1476,10 @@ enum{ DeeModule_OpenFile_impl_EXTRA_CHARS_ = DeeModule_OpenFile_impl_EXTRA_CHARS
 #define DeeModule_OpenFile_impl_EXTRA_CHARS DeeModule_OpenFile_impl_EXTRA_CHARS_
 
 
-INTDEF WUNUSED NONNULL((1)) DREF /*untracked*/ /*Module*/ DeeObject *DCALL
-DeeExec_CompileModuleStream_impl(DeeObject *source_stream,
-                                 int start_line, int start_col, unsigned int mode,
-                                 struct Dee_compiler_options *options, DeeObject *default_symbols);
-INTDEF NONNULL((1)) void DCALL
-module_dee_destroy(DeeModuleObject *__restrict self);
-
 INTDEF struct module_symbol empty_module_buckets[];
 
 PRIVATE NONNULL((1)) void DCALL
-module_destroy_untracked(DREF DeeModuleObject *self) {
+module_destroy_untracked(DREF /*untracked*/ DeeModuleObject *self) {
 #ifndef CONFIG_NO_DEX
 	ASSERT(Dee_TYPE(self) != &DeeModuleDex_Type);
 #endif /* !CONFIG_NO_DEX */
@@ -1537,7 +1538,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF /*untracked*/ DeeModuleObject *DCALL
 DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_filename_length,
                          unsigned int flags, struct Dee_compiler_options *options) {
 	struct Dee_compiler_options used_options;
-	DREF DeeModuleObject *result;
+	DREF /*untracked*/ DeeModuleObject *result;
 	DREF DeeObject *source_stream;
 	DeeThreadObject *caller;
 	struct Dee_import_frame frame;
@@ -1661,7 +1662,46 @@ no_dec_file:
 		if ((flags & (_DeeModule_IMPORT_F_IS_DEE_FILE | DeeModule_IMPORT_F_NOGDEC)) ==
 		    /*....*/ (_DeeModule_IMPORT_F_IS_DEE_FILE)) {
 			/* generate a .dec file */
-			if unlikely(dec_create(result)) {
+			int status;
+			size_t basesize;
+			char *basename;
+			ASSERT(abs_filename_length >= 4);
+			ASSERT(abs_filename[abs_filename_length - 4] == '.');
+			ASSERT(abs_filename[abs_filename_length - 3] == 'd');
+			ASSERT(abs_filename[abs_filename_length - 2] == 'e');
+			ASSERT(abs_filename[abs_filename_length - 1] == 'e');
+
+			basename = (char *)memrchr(abs_filename, DeeSystem_SEP, abs_filename_length);
+			if likely(basename) {
+				++basename;
+			} else {
+				/* Probably shouldn't ever get here... */
+				basename = abs_filename;
+			}
+
+			/* Form the filename for a .dec file */
+			basesize = (size_t)((abs_filename + abs_filename_length) - basename);
+
+			/* Move up "module_name.de" by 1 (don't move the
+			 * trailing "e\0", which'll be replaced with "c\0") */
+			memmoveupc(basename + 1, basename, basesize - 1, sizeof(char));
+			basename[0] = '.';
+			basename[basesize + 0] = 'c';
+			basename[basesize + 1] = '\0';
+
+			/* Open file */
+			status = DeeCompiler_LockWrite();
+			if likely(status == 0) {
+				status = dec_create(result, abs_filename);
+				DeeCompiler_LockEndWrite();
+			}
+
+			/* Restore the normal ".dee" file extension. */
+			memmovedownc(basename, basename + 1, basesize - 1, sizeof(char));
+			basename[basesize - 1] = 'e';
+			basename[basesize - 0] = '\0';
+
+			if unlikely(status) {
 				module_destroy_untracked(result);
 				result = NULL;
 			}
@@ -7589,28 +7629,42 @@ DeeModule_OfObject(DeeObject *__restrict ob) {
 		module_byaddr_lock_downgrade();
 	}
 #endif /* !Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC */
-	result = dex_byaddr_find_addr(ob);
-#if !defined(CONFIG_NO_DEC) && defined(CONFIG_EXPERIMENTAL_MMAP_DEC)
+
+	/* Search "module_byaddr_tree" */
+#ifdef HAVE_module_byaddr_tree
+	result = module_byaddr_locate(module_byaddr_tree, (byte_t const *)ob);
 	if (result) {
-#ifdef CONFIG_NO_DEX
-		ASSERT(Dee_TYPE(result) == &DeeModuleDee_Type);
-#else /* CONFIG_NO_DEX */
+#ifdef HAVE_module_byaddr_tree_CONTAINS_DEC
+#ifdef HAVE_module_byaddr_tree_CONTAINS_DEX
 		ASSERT(Dee_TYPE(result) == &DeeModuleDee_Type ||
 		       Dee_TYPE(result) == &DeeModuleDex_Type);
-#endif /* !CONFIG_NO_DEX */
-		if (Dee_IncrefIfNotZero(result)) {
+#else /* HAVE_module_byaddr_tree_CONTAINS_DEX */
+		ASSERT(Dee_TYPE(result) == &DeeModuleDee_Type);
+#endif /* !HAVE_module_byaddr_tree_CONTAINS_DEX */
+		if (Dee_IncrefIfNotZero(result))
+#else /* HAVE_module_byaddr_tree_CONTAINS_DEC */
+		ASSERT(Dee_TYPE(result) == &DeeModuleDex_Type);
+		Dee_Incref(result);
+#endif /* !HAVE_module_byaddr_tree_CONTAINS_DEC */
+		{
 			module_byaddr_lock_endread();
 			return (DREF DeeObject *)result;
 		}
 	}
-#else /* !CONFIG_NO_DEC && CONFIG_EXPERIMENTAL_MMAP_DEC */
+#endif /* HAVE_module_byaddr_tree */
+
+	/* Search "dex_byaddr_tree" */
+#ifdef HAVE_dex_byaddr_tree
+	/* NOTE: There are configurations where both "dex_byaddr_tree"
+	 *       and "module_byaddr_tree" must be searched! */
+	result = dex_byaddr_find_addr(ob);
 	if (result) {
 		ASSERT(Dee_TYPE(result) == &DeeModuleDex_Type);
 		Dee_Incref(result);
 		module_byaddr_lock_endread();
 		return (DREF DeeObject *)result;
 	}
-#endif /* CONFIG_NO_DEC || !CONFIG_EXPERIMENTAL_MMAP_DEC */
+#endif /* HAVE_dex_byaddr_tree */
 	module_byaddr_lock_endread();
 #endif /* HAVE_module_byaddr_tree || HAVE_dex_byaddr_tree */
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */

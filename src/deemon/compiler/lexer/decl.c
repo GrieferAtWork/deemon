@@ -496,10 +496,17 @@ switch_symbol_type:
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 				if (UNICODE_PRINTER_PRINT(printer, "?E") < 0)
 					goto err;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+				if (decl_ast_escapename(module_name,
+				                        strlen(module_name),
+				                        printer) < 0)
+					goto err;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 				if (decl_ast_escapename(module_name,
 				                        WSTR_LENGTH(module_name),
 				                        printer) < 0)
 					goto err;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 				if unlikely(unicode_printer_putc(printer, ':'))
 					goto err;
 				if (decl_ast_escapename(MODULE_SYMBOL_GETNAMESTR(msym),

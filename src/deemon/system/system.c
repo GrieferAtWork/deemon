@@ -1457,8 +1457,6 @@ err:
 	return -1;
 #endif /* DeeSystem_Unlink_USE_DeleteFileW */
 
-#if (defined(DeeSystem_Unlink_USE_wunlink) || defined(DeeSystem_Unlink_USE_wremove) || \
-     defined(DeeSystem_Unlink_USE_unlink) || defined(DeeSystem_Unlink_USE_remove))
 #if defined(DeeSystem_Unlink_USE_wunlink) || defined(DeeSystem_Unlink_USE_wremove)
 	Dee_wchar_t const *wname;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
@@ -1468,9 +1466,9 @@ err:
 		/* Since unlink() is a cleanup operation,
 		 * try hard to comply, even after an error! */
 #ifdef CONFIG_HAVE_unlink
-		if (unlink(DeeString_STR(filename)))
+		if (unlink(DeeString_STR(filename)) == 0)
 #else /* CONFIG_HAVE_unlink */
-		if (remove(DeeString_STR(filename)))
+		if (remove(DeeString_STR(filename)) == 0)
 #endif /* !CONFIG_HAVE_unlink */
 		{
 			if (DeeError_Handled(ERROR_HANDLED_NORMAL))
@@ -1483,10 +1481,10 @@ err:
 again_deletefile:
 #endif /* CONFIG_HAVE_errno && EINTR */
 #ifdef DeeSystem_Unlink_USE_wunlink
-	if (wunlink(wname))
+	if (wunlink(wname) == 0)
 		return 0;
 #else /* DeeSystem_Unlink_USE_wunlink */
-	if (wremove(wname))
+	if (wremove(wname) == 0)
 		return 0;
 #endif /* !DeeSystem_Unlink_USE_wunlink */
 #if defined(CONFIG_HAVE_errno) && defined(EINTR)
@@ -1494,60 +1492,16 @@ again_deletefile:
 		if (DeeThread_CheckInterrupt()) {
 			/* Try hard to delete the file... (even after an interrupt) */
 #ifdef DeeSystem_Unlink_USE_wunlink
-			wunlink(wname);
+			(void)wunlink(wname);
 #else /* DeeSystem_Unlink_USE_wunlink */
-			wremove(wname);
+			(void)wremove(wname);
 #endif /* !DeeSystem_Unlink_USE_wunlink */
 			return -1;
 		}
 		goto again_deletefile;
 	}
 #endif /* CONFIG_HAVE_errno && EINTR */
-#endif /* DeeSystem_Unlink_USE_wunlink || DeeSystem_Unlink_USE_wremove */
 
-#if defined(DeeSystem_Unlink_USE_unlink) || defined(DeeSystem_Unlink_USE_remove)
-	char const *utf8_name;
-	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
-	utf8_name = DeeString_AsUtf8(filename);
-	if unlikely(!utf8_name) {
-		/* Since unlink() is a cleanup operation,
-		 * try hard to comply, even after an error! */
-#ifdef DeeSystem_Unlink_USE_unlink
-		if (unlink(DeeString_STR(filename)))
-#else /* CONFIG_HAVE_unlink */
-		if (remove(DeeString_STR(filename)))
-#endif /* !CONFIG_HAVE_unlink */
-		{
-			if (DeeError_Handled(ERROR_HANDLED_NORMAL))
-				return 0;
-		}
-		return -1;
-	}
-#if defined(CONFIG_HAVE_errno) && defined(EINTR)
-again_deletefile:
-#endif /* CONFIG_HAVE_errno && EINTR */
-#ifdef DeeSystem_Unlink_USE_unlink
-	if (unlink(utf8_name))
-		return 0;
-#else /* DeeSystem_Unlink_USE_unlink */
-	if (remove(utf8_name))
-		return 0;
-#endif /* !DeeSystem_Unlink_USE_unlink */
-#if defined(CONFIG_HAVE_errno) && defined(EINTR)
-	if (DeeSystem_GetErrno() == EINTR) {
-		if (DeeThread_CheckInterrupt()) {
-			/* Try hard to delete the file... (even after an interrupt) */
-#ifdef DeeSystem_Unlink_USE_unlink
-			unlink(utf8_name);
-#else /* DeeSystem_Unlink_USE_unlink */
-			remove(utf8_name);
-#endif /* !DeeSystem_Unlink_USE_unlink */
-			return -1;
-		}
-		goto again_deletefile;
-	}
-#endif /* CONFIG_HAVE_errno && EINTR */
-#endif /* DeeSystem_Unlink_USE_wunlink || DeeSystem_Unlink_USE_wremove */
 	/* Can't delete the file, no matter what I try...  :( */
 	if (!throw_exception_on_error)
 		return 1;
@@ -1573,19 +1527,143 @@ again_deletefile:
 		                          filename);
 	}
 	return -1;
-#endif /* DeeSystem_Unlink_USE_wunlink || DeeSystem_Unlink_USE_wremove || \
-          DeeSystem_Unlink_USE_unlink || DeeSystem_Unlink_USE_remove */
+#endif /* DeeSystem_Unlink_USE_wunlink || DeeSystem_Unlink_USE_wremove */
+
+#if defined(DeeSystem_Unlink_USE_unlink) || defined(DeeSystem_Unlink_USE_remove)
+#ifdef DeeSystem_Unlink_USE_unlink
+#define LOCAL_unlink_or_remove unlink
+#else /* CONFIG_HAVE_unlink */
+#define LOCAL_unlink_or_remove remove
+#endif /* !CONFIG_HAVE_unlink */
+	char const *filename_utf8 = DeeString_AsUtf8(filename);
+	if unlikely(!filename_utf8) {
+		/* Since unlink() is a cleanup operation,
+		 * try hard to comply, even after an error! */
+		if (LOCAL_unlink_or_remove(DeeString_STR(filename))) {
+			if (DeeError_Handled(ERROR_HANDLED_NORMAL))
+				return 0;
+		}
+		return -1;
+	}
+	return DeeSystem_UnlinkString(filename_utf8, throw_exception_on_error);
+#undef LOCAL_unlink_or_remove
+#endif /* DeeSystem_Unlink_USE_unlink || DeeSystem_Unlink_USE_remove */
 
 #ifdef DeeSystem_Unlink_STUB
 	if (!throw_exception_on_error)
 		return 1;
-	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError,
-	                                 DeeSystem_GetErrno(),
-	                                 "Failed to delete file %r",
-	                                 filename);
+	return DeeError_Throwf(&DeeError_UnsupportedAPI,
+	                       "Unable to delete file %r",
+	                       filename);
 #endif /* DeeSystem_Unlink_STUB */
-
 }
+
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeSystem_UnlinkString(/*utf-8*/ char const *__restrict filename,
+                       bool throw_exception_on_error) {
+#ifdef DeeSystem_Unlink_USE_DeleteFileW
+	int result;
+	DREF DeeObject *filename_ob;
+	DBG_ALIGNMENT_DISABLE();
+	if (DeleteFileA(filename)) {
+		DBG_ALIGNMENT_ENABLE();
+		return 0;
+	}
+	DBG_ALIGNMENT_ENABLE();
+	filename_ob = DeeString_NewUtf8(filename, strlen(filename), STRING_ERROR_FIGNORE);
+	if unlikely(!filename_ob)
+		return -1;
+	result = DeeSystem_Unlink(filename_ob, throw_exception_on_error);
+	Dee_Decref_likely(filename_ob);
+	return result;
+#endif /* DeeSystem_Unlink_USE_DeleteFileW */
+
+#if defined(DeeSystem_Unlink_USE_wunlink) || defined(DeeSystem_Unlink_USE_wremove)
+	int result;
+	DREF DeeObject *filename_ob;
+#ifdef CONFIG_HAVE_unlink
+	DBG_ALIGNMENT_DISABLE();
+	if (unlink(filename) == 0) {
+		DBG_ALIGNMENT_ENABLE();
+		return 0;
+	}
+	DBG_ALIGNMENT_ENABLE();
+#endif /* CONFIG_HAVE_unlink */
+#ifdef CONFIG_HAVE_remove
+	DBG_ALIGNMENT_DISABLE();
+	if (remove(filename) == 0) {
+		DBG_ALIGNMENT_ENABLE();
+		return 0;
+	}
+	DBG_ALIGNMENT_ENABLE();
+#endif /* CONFIG_HAVE_remove */
+	filename_ob = DeeString_NewUtf8(filename, strlen(filename), STRING_ERROR_FIGNORE);
+	if unlikely(!filename_ob)
+		return -1;
+	result = DeeSystem_Unlink(filename_ob, throw_exception_on_error);
+	Dee_Decref_likely(filename_ob);
+	return result;
+#endif /* DeeSystem_Unlink_USE_wunlink || DeeSystem_Unlink_USE_wremove */
+
+#if defined(DeeSystem_Unlink_USE_unlink) || defined(DeeSystem_Unlink_USE_remove)
+#ifdef DeeSystem_Unlink_USE_unlink
+#define LOCAL_unlink_or_remove unlink
+#else /* CONFIG_HAVE_unlink */
+#define LOCAL_unlink_or_remove remove
+#endif /* !CONFIG_HAVE_unlink */
+#if defined(CONFIG_HAVE_errno) && defined(EINTR)
+again_deletefile:
+#endif /* CONFIG_HAVE_errno && EINTR */
+	if (LOCAL_unlink_or_remove(filename) == 0)
+		return 0;
+#if defined(CONFIG_HAVE_errno) && defined(EINTR)
+	if (DeeSystem_GetErrno() == EINTR) {
+		if (DeeThread_CheckInterrupt()) {
+			/* Try hard to delete the file... (even after an interrupt) */
+			(void)LOCAL_unlink_or_remove(filename);
+			return -1;
+		}
+		goto again_deletefile;
+	}
+#endif /* CONFIG_HAVE_errno && EINTR */
+
+	/* Can't delete the file, no matter what I try...  :( */
+	if (!throw_exception_on_error)
+		return 1;
+	{
+		int error = DeeSystem_GetErrno();
+		DeeSystem_IF_E4(error, ENOENT, ENOTDIR, ENAMETOOLONG, ELOOP, {
+			return DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, error,
+			                                 "Cannot delete missing file %q",
+			                                 filename);
+		});
+		DeeSystem_IF_E2(error, EPERM, EACCES, {
+			return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, error,
+			                                 "Not allowed to delete file %q",
+			                                 filename);
+		});
+		DeeSystem_IF_E1(error, EROFS, {
+			return DeeUnixSystem_ThrowErrorf(&DeeError_ReadOnlyFile, error,
+			                                 "Cannot delete file %q on read-only filesystem",
+			                                 filename);
+		});
+		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+		                          "Failed to delete file %q",
+		                          filename);
+	}
+	return -1;
+#undef LOCAL_unlink_or_remove
+#endif /* DeeSystem_Unlink_USE_unlink || DeeSystem_Unlink_USE_remove */
+
+#ifdef DeeSystem_Unlink_STUB
+	if (!throw_exception_on_error)
+		return 1;
+	return DeeError_Throwf(&DeeError_UnsupportedAPI,
+	                       "Unable to delete file %q",
+	                       filename);
+#endif /* DeeSystem_Unlink_STUB */
+}
+
 
 
 

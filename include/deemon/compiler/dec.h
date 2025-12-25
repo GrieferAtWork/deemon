@@ -291,8 +291,13 @@ INTDEF WUNUSED NONNULL((1)) int (DCALL dec_putcode)(DeeCodeObject *__restrict se
 INTDEF WUNUSED ATTR_INS(2, 1) int (DCALL dec_putobjv)(uint16_t count, DeeObject *const *vec); /* `Dec_Objects' */
 
 /* Create and emit a DEC file for the given module. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+INTDEF WUNUSED NONNULL((1)) int
+(DCALL dec_create)(DeeModuleObject *__restrict mod, char const *dec_filename);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 INTDEF WUNUSED NONNULL((1)) int
 (DCALL dec_create)(DeeModuleObject *__restrict mod);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 #if 0
 /* Similar to `dec_create', but write data to the given `file_stream' */

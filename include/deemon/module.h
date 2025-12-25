@@ -472,7 +472,7 @@ union Dee_module_moddata {
 	 *
 	 * Instead, "DeeCodeObject" should be changed such that "co_module" becomes [0..1] (with NULL
 	 * being allowed if the code running inside doesn't make use of the module; though the module
-	 * can still be determined using `DeeModule_FromObject()' after CONFIG_EXPERIMENTAL_MMAP_DEC),
+	 * can still be determined using `DeeModule_OfObject()' after CONFIG_EXPERIMENTAL_MMAP_DEC),
 	 * and `mo_rootcode' of a user-code module may be set to `DeeCode_Empty' if all initialization
 	 * can be done statically (iow: the module's global function doesn't have any side-effects).
 	 *

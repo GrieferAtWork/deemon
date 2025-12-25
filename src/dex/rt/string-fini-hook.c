@@ -110,20 +110,15 @@ sfh_init(StringFiniHook *__restrict self, size_t argc, DeeObject *const *argv) {
 	hook = user_string_fini_hook_alloc();
 	if unlikely(!hook)
 		goto err;
-	Dee_CHECKMEMORY();
 	weakref_support_init(self);
-	Dee_CHECKMEMORY();
 	Dee_weakref_init(&hook->usfh_user, (DeeObject *)self, NULL);
-	Dee_CHECKMEMORY();
 	hook->usfh_hook.sfh_refcnt  = 1;
 	hook->usfh_hook.sfh_destroy = &user_string_fini_hook_destroy;
 	hook->usfh_hook.sfh_onfini  = &user_string_fini_hook_onfini;
 	self->sfh_hook = hook; /* Inherit reference */
 	Dee_Incref(self->sfh_cb);
-	Dee_CHECKMEMORY();
 	if unlikely(DeeString_AddFiniHook(&hook->usfh_hook))
 		goto err_self_hook;
-	Dee_CHECKMEMORY();
 	return 0;
 err_self_hook:
 	Dee_DecrefNokill(self->sfh_cb);

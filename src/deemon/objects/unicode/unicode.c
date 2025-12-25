@@ -2139,6 +2139,12 @@ utf8_getchar16(uint8_t const *__restrict base, uint8_t seqlen) {
 	return result;
 }
 
+PRIVATE ATTR_COLD int DCALL throw_invalid_utf8_character_byte(uint8_t byte) {
+	return DeeError_Throwf(&DeeError_UnicodeDecodeError,
+	                       "Invalid utf-8 character byte 0x%.2I8x",
+	                       byte);
+}
+
 /* Construct a string from a UTF-8 character sequence. */
 #ifdef NDEBUG
 PUBLIC WUNUSED DREF DeeObject *
@@ -2208,9 +2214,7 @@ PUBLIC WUNUSED DREF DeeObject *
 				             sizeof(char));
 				continue;
 			}
-			DeeError_Throwf(&DeeError_UnicodeDecodeError,
-			                "Invalid utf-8 character byte 0x%.2I8x",
-			                ch);
+			throw_invalid_utf8_character_byte(ch);
 			goto err_r;
 		}
 		ch32 = utf8_getchar(iter, seqlen);
@@ -2258,9 +2262,7 @@ use_buffer32:
 						             sizeof(char));
 						continue;
 					}
-					DeeError_Throwf(&DeeError_UnicodeDecodeError,
-					                "Invalid utf-8 character byte 0x%.2I8x",
-					                ch);
+					throw_invalid_utf8_character_byte(ch);
 err_buffer32:
 					LOCAL_DeeDbgString(Free4ByteBuffer, buffer32);
 					goto err_r;
@@ -2320,9 +2322,7 @@ err_buffer32:
 						             sizeof(char));
 						continue;
 					}
-					DeeError_Throwf(&DeeError_UnicodeDecodeError,
-					                "Invalid utf-8 character byte 0x%.2I8x",
-					                ch);
+					throw_invalid_utf8_character_byte(ch);
 err_buffer16:
 					LOCAL_DeeDbgString(Free2ByteBuffer, buffer16);
 					goto err_r;
@@ -2647,9 +2647,7 @@ DeeString_SetUtf8(/*inherit(always)*/ DREF DeeObject *__restrict self,
 				             sizeof(char));
 				continue;
 			}
-			DeeError_Throwf(&DeeError_UnicodeDecodeError,
-			                "Invalid utf-8 character byte 0x%.2I8x",
-			                ch);
+			throw_invalid_utf8_character_byte(ch);
 			goto err_r;
 		}
 		ch32 = utf8_getchar(iter, seqlen);
@@ -2697,9 +2695,7 @@ use_buffer32:
 						             sizeof(char));
 						continue;
 					}
-					DeeError_Throwf(&DeeError_UnicodeDecodeError,
-					                "Invalid utf-8 character byte 0x%.2I8x",
-					                ch);
+					throw_invalid_utf8_character_byte(ch);
 err_buffer32:
 					DeeString_Free4ByteBuffer(buffer32);
 					goto err_r;
@@ -2759,9 +2755,7 @@ err_buffer32:
 						             sizeof(char));
 						continue;
 					}
-					DeeError_Throwf(&DeeError_UnicodeDecodeError,
-					                "Invalid utf-8 character byte 0x%.2I8x",
-					                ch);
+					throw_invalid_utf8_character_byte(ch);
 err_buffer16:
 					DeeString_Free2ByteBuffer(buffer16);
 					goto err_r;

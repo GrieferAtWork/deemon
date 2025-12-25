@@ -2634,7 +2634,7 @@ INTDEF NONNULL((1)) void DCALL
 module_dee_unbind(DeeModuleObject *__restrict self);
 #endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
-INTERN NONNULL((1)) void DCALL
+PRIVATE NONNULL((1)) void DCALL
 module_dee_destroy(DeeModuleObject *__restrict self) {
 	/* Assert always-true invariants for "DeeModuleDee_Type" */
 	ASSERT(Dee_TYPE(self) == &DeeModuleDee_Type);

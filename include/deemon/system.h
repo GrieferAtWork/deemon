@@ -165,6 +165,9 @@ DeeSystem_GetLastModifiedString(/*utf-8*/ char const *__restrict filename);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
 DeeSystem_Unlink(/*String*/ DeeObject *__restrict filename,
                  bool throw_exception_on_error);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
+DeeSystem_UnlinkString(/*utf-8*/ char const *__restrict filename,
+                       bool throw_exception_on_error);
 
 #ifdef CONFIG_HOST_WINDOWS
 typedef __ULONG32_TYPE__ DeeNT_DWORD;

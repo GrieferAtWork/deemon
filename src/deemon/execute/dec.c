@@ -2530,9 +2530,10 @@ DecFile_LoadImports(DecFile *__restrict self) {
 		module_name = strtab + off;
 		/* Load the imported module. */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		/* Important: don't set "DeeModule_IMPORT_F_CTXDIR" flag since "module_pathstr" still ends with a trailing slash! */
 		module = (DREF DeeModuleObject *)DeeModule_OpenEx(module_name, strlen(module_name),
 		                                                  module_pathstr, module_pathlen,
-		                                                  DeeModule_IMPORT_F_ENOENT | DeeModule_IMPORT_F_CTXDIR,
+		                                                  DeeModule_IMPORT_F_ENOENT /*| DeeModule_IMPORT_F_CTXDIR*/,
 		                                                  self->df_options ? self->df_options->co_inner : NULL);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		module = (DREF DeeModuleObject *)DeeModule_OpenRelativeString(module_name, strlen(module_name),
@@ -2619,6 +2620,8 @@ err:
 	goto stop;
 }
 
+INTDEF struct module_symbol empty_module_buckets[];
+
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 DecFile_CreateModule(uint16_t num_globals) {
@@ -2636,6 +2639,17 @@ DecFile_CreateModule(uint16_t num_globals) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+DecFile_CreateEmptyModule(void) {
+	DREF DeeModuleObject *result = DecFile_CreateModule(0);
+	if likely(result) {
+		/* Install the symbol mask and hash-table. */
+		Dee_ASSERT(result->mo_bucketm == 0);
+		result->mo_bucketv = empty_module_buckets;
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF /*untracked*/ DeeModuleObject *DCALL
 DecFile_LoadGlobals(DecFile *__restrict self)
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2661,7 +2675,7 @@ DecFile_LoadGlobals(DecFile *__restrict self)
 	/* Quick check: Without a global variable table, nothing needs to be loaded. */
 	if (!hdr->e_globoff) {
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-		return DecFile_CreateModule(0);
+		return DecFile_CreateEmptyModule();
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		return 0;
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -2676,7 +2690,7 @@ DecFile_LoadGlobals(DecFile *__restrict self)
 	if unlikely(!symbolc) {
 		/* Unlikely, but allowed. */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-		return DecFile_CreateModule(0);
+		return DecFile_CreateEmptyModule();
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		return 0;
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -4305,15 +4319,13 @@ corrupt:
 	goto done;
 }
 
-INTDEF struct module_symbol empty_module_buckets[];
-
 /* Load a given DEC file and fill in the given `module'.
  * @return:  0: Successfully loaded the given DEC file.
  * @return:  1: The DEC file has been corrupted or is out of date.
  * @return: -1: An error occurred. */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 DecFile_Load(DecFile *__restrict self) {
-	DeeModuleObject *module;
+	/*untracked*/ DeeModuleObject *module;
 	int result;
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	module = self->df_module;
@@ -4402,6 +4414,7 @@ err:
 	module->mo_importv = NULL;
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	DeeGCObject_Free(module);
+	self->df_module = NULL;
 #endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return result;
 }
@@ -4416,7 +4429,7 @@ err:
  *                      - return->mo_libnode
  * @return: ITER_DONE: The DEC file was out of date or had been corrupted.
  * @return: NULL:      An error occurred. */
-INTERN WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
+INTERN WUNUSED NONNULL((1)) DREF /*untracked*/ struct Dee_module_object *DCALL
 DeeModule_OpenDec(DeeObject *__restrict input_stream, struct Dee_compiler_options *options,
                   /*utf-8*/ char const *__restrict dec_dirname, size_t dec_dirname_len,
                   uint64_t dee_file_last_modified)
@@ -4493,6 +4506,12 @@ DeeModule_OpenDec(struct Dee_module_object *__restrict mod,
 
 	/* With all that out of the way, actually load the file. */
 	result = DecFile_Load(&file);
+
+	/* Translate certain errors into the "module-corrupted" status */
+	if (result < 0) {
+		if (DeeError_Catch(&DeeError_ValueError))
+			result = 1;
+	}
 #ifndef Dee_DPRINT_IS_NOOP
 	if unlikely(result > 0)
 		Dee_DPRINTF("[LD] Dec file for %r is corrupted\n", file.df_name);

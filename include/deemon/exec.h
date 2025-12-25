@@ -243,6 +243,12 @@ DeeExec_RunStreamString(DeeObject *source_stream, unsigned int mode,
  * is only executed when the function is called, potentially allowing for
  * JIT-like execution of simple expressions such as `10 + 20' */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#ifdef CONFIG_BUILDING_DEEMON
+INTDEF WUNUSED NONNULL((1)) DREF /*untracked*/ /*Module*/ DeeObject *DCALL
+DeeExec_CompileModuleStream_impl(DeeObject *source_stream,
+                                 int start_line, int start_col, unsigned int mode,
+                                 struct Dee_compiler_options *options, DeeObject *default_symbols);
+#endif /* CONFIG_BUILDING_DEEMON */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeExec_CompileModuleStream(DeeObject *source_stream,
                             int start_line, int start_col, unsigned int mode,

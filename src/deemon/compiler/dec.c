@@ -681,6 +681,56 @@ done:
 
 
 /* Create and emit a DEC file for the given module. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+INTERN WUNUSED NONNULL((1)) int
+(DCALL dec_create)(DeeModuleObject *__restrict module, char const *dec_filename) {
+	int result;
+	struct dec_writer old_dec;
+	DREF DeeObject *output_fp;
+
+	/* Save the previously active DEC context. */
+	memcpy(&old_dec, &current_dec, sizeof(struct dec_writer));
+
+	/* Initialize a new DEC context. */
+	dec_writer_init();
+
+	/* Generate and link DEC data for the given module. */
+	result = dec_generate_and_link(module);
+	if unlikely(result)
+		goto done;
+
+	/* Create the DEC output file only after we've generated
+	 * all dec data, so we don't have to concern ourselves
+	 * with deletion of the output file is generation fails. */
+	Dee_DPRINTF("DECGEN: %q -> %q\n", module->mo_absname, dec_filename);
+	output_fp = DeeFile_OpenString(dec_filename,
+	                               OPEN_FWRONLY | OPEN_FCREAT |
+	                               OPEN_FTRUNC | OPEN_FHIDDEN,
+	                               0644);
+	if unlikely(!output_fp)
+		goto err;
+
+	/* Write all DEC data to the provided file stream. */
+	result = dec_write(output_fp);
+	Dee_Decref(output_fp);
+	if (result) {
+		/* Delete the DEC file, considering that we've failed to do write to it. */
+		if (DeeSystem_UnlinkString(dec_filename, false) < 0) {
+			if (!DeeError_Handled(ERROR_HANDLED_NORMAL))
+				goto err;
+		}
+	}
+
+done:
+	/* Cleanup... */
+	dec_writer_fini();
+	memcpy(&current_dec, &old_dec, sizeof(struct dec_writer));
+	return result;
+err:
+	result = -1;
+	goto done;
+}
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 INTERN WUNUSED NONNULL((1)) int
 (DCALL dec_create)(DeeModuleObject *__restrict module) {
 	int result;
@@ -781,23 +831,17 @@ INTERN WUNUSED NONNULL((1)) int
 	Dee_DPRINTF("DECGEN: %r -> %r\n", module->mo_path, dec_filename);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	ASSERT_OBJECT_TYPE_EXACT(dec_filename, &DeeString_Type);
-
-	if (DeeString_Check(dec_filename)) {
+	{
 		DREF DeeObject *output_fp;
-		ASSERT_OBJECT_TYPE_EXACT(dec_filename, &DeeString_Type);
 		output_fp = DeeFile_Open(dec_filename,
 		                         OPEN_FWRONLY | OPEN_FCREAT |
 		                         OPEN_FTRUNC | OPEN_FHIDDEN,
 		                         0644);
-		ASSERT_OBJECT_TYPE_EXACT(dec_filename, &DeeString_Type);
 		if unlikely(!output_fp)
 			goto err_filename;
 		/* Write all DEC data to the provided file stream. */
-		ASSERT_OBJECT_TYPE_EXACT(dec_filename, &DeeString_Type);
 		result = dec_write(output_fp);
-		ASSERT_OBJECT_TYPE_EXACT(dec_filename, &DeeString_Type);
 		Dee_Decref(output_fp);
-		ASSERT_OBJECT_TYPE_EXACT(dec_filename, &DeeString_Type);
 		if (result) {
 			/* Delete the DEC file, considering that we've failed to do write to it. */
 			if (DeeSystem_Unlink(dec_filename, false) < 0) {
@@ -805,14 +849,7 @@ INTERN WUNUSED NONNULL((1)) int
 					goto err_filename;
 			}
 		}
-		ASSERT_OBJECT_TYPE_EXACT(dec_filename, &DeeString_Type);
-	} else {
-		/* Assume that `dec_filename' is a stream-output */
-		ASSERT_OBJECT_TYPE_EXACT(dec_filename, &DeeString_Type);
-		result = dec_write(dec_filename);
-		ASSERT_OBJECT_TYPE_EXACT(dec_filename, &DeeString_Type);
 	}
-	ASSERT_OBJECT_TYPE_EXACT(dec_filename, &DeeString_Type);
 	Dee_Decref(dec_filename);
 
 done:
@@ -829,7 +866,7 @@ cannot_create:
 	result = 0;
 	goto done;
 }
-
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_END
 

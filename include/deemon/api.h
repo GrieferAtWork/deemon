@@ -444,6 +444,18 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_BYTES_INUSE */
 
+/* Experimental feature switch: Use custom heap implementation based on
+ * dlmalloc, rather than the host system's native malloc(3). (needed in
+ * order to support `DeeHeap_RegionOf()') */
+#if (!defined(CONFIG_EXPERIMENTAL_CUSTOM_HEAP) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_CUSTOM_HEAP))
+#if 1
+#define CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+#else
+#define CONFIG_NO_EXPERIMENTAL_CUSTOM_HEAP
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_CUSTOM_HEAP */
+
 /* Experimental feature switch: ST_ISDIR can be imported as a module, and modules
  * whose names match an equally named directory within the same containing directory
  * also expose all the symbols from that directory within themselves:
@@ -476,16 +488,6 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #define CONFIG_NO_EXPERIMENTAL_MODULE_DIRECTORIES
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_MODULE_DIRECTORIES */
-
-/* Experimental feature switch: Use custom heap implementation */
-#if (!defined(CONFIG_EXPERIMENTAL_CUSTOM_HEAP) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_CUSTOM_HEAP))
-#if 1
-#define CONFIG_EXPERIMENTAL_CUSTOM_HEAP
-#else
-#define CONFIG_NO_EXPERIMENTAL_CUSTOM_HEAP
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_CUSTOM_HEAP */
 
 /* Experimental feature switch: Use a new (mmap-able) file format for dec files */
 #if (!defined(CONFIG_EXPERIMENTAL_CUSTOM_HEAP) || \

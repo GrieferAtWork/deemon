@@ -1758,9 +1758,9 @@ static size_t traverse_and_check(PARAM_mstate_m) {
 static void do_check_malloc_state(PARAM_mstate_m) {
 	bindex_t i;
 	size_t total;
-	static int count = 0;
+	/*static int count = 0;
 	if (((count++) % 256) != 0)
-		return;
+		return;*/
 
 	/* check bins */
 	for (i = 0; i < NSMALLBINS; ++i)

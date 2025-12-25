@@ -1921,9 +1921,14 @@ INTERN WUNUSED NONNULL((1)) int
 
 	{
 		uint64_t comtm;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		ASSERT(self->mo_flags & Dee_MODULE_FHASCTIME);
+		comtm = self->mo_ctime;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		comtm = DeeModule_GetCTime((DeeObject *)self);
 		if unlikely(comtm == (uint64_t)-1)
 			goto err;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 		/* Fill in the original timestamp of when the module was compiled. */
 		header->e_timestamp_lo = (uint32_t)HTOLE32((uint32_t)comtm);
