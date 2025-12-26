@@ -1047,7 +1047,7 @@ DeeBlackListKwds_New(struct code_object *__restrict code,
 	result->blkd_mask = mask;
 	DeeObject_Init(result, &DeeBlackListKwds_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -1948,7 +1948,7 @@ DeeBlackListKw_New(struct code_object *__restrict code,
 	Dee_Incref(kw);
 	DeeObject_Init(result, &DeeBlackListKw_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 

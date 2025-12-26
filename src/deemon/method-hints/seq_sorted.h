@@ -112,7 +112,7 @@ __seq_sorted__.seq_sorted([[nonnull]] DeeObject *self,
 		             end, sizeof(DREF DeeObject *));
 		result = DeeTuple_TruncateUninitialized(result, end);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeTuple_FreeUninitialized(result);
 err:
@@ -147,7 +147,7 @@ err:
 		             end, sizeof(DREF DeeObject *));
 		result = DeeTuple_TruncateUninitialized(result, end);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeTuple_FreeUninitialized(result);
 err:
@@ -167,7 +167,7 @@ err:
 	                              DeeTuple_ELEM(base)))
 		goto err_base_r;
 	DeeTuple_FreeUninitialized(base);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_base_r:
 	DeeTuple_FreeUninitialized(result);
 err_base:
@@ -219,7 +219,7 @@ __seq_sorted__.seq_sorted_with_key([[nonnull]] DeeObject *self,
 		             end, sizeof(DREF DeeObject *));
 		result = DeeTuple_TruncateUninitialized(result, end);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeTuple_FreeUninitialized(result);
 err:
@@ -254,7 +254,7 @@ err:
 		             end, sizeof(DREF DeeObject *));
 		result = DeeTuple_TruncateUninitialized(result, end);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeTuple_FreeUninitialized(result);
 err:
@@ -274,7 +274,7 @@ err:
 	                                     DeeTuple_ELEM(base), key))
 		goto err_base_r;
 	DeeTuple_FreeUninitialized(base);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_base_r:
 	DeeTuple_FreeUninitialized(result);
 err_base:

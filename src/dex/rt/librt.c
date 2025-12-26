@@ -700,7 +700,7 @@ librt_get_Module_empty_uncached_f(void) {
 	result = ((DeeCodeObject *)empty_code)->co_module;
 	Dee_Incref(result);
 	Dee_Decref_unlikely(empty_code);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_empty_code:
 	Dee_Decref(empty_code);
 err:

@@ -1159,7 +1159,7 @@ DeeSeq_Repeat(DeeObject *__restrict self, size_t count) {
 	result->rp_num = count;
 	DeeObject_Init(result, &SeqRepeat_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1175,7 +1175,7 @@ DeeSeq_RepeatItem(DeeObject *__restrict item, size_t count) {
 	result->rpit_num = count;
 	DeeObject_Init(result, &SeqRepeatItem_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL

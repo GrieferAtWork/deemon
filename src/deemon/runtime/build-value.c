@@ -529,7 +529,7 @@ DeeTuple_VNewf(char const *__restrict format, va_list args) {
 		DeeTuple_SET(result, i, elem);
 	}
 	ASSERTF(!*format, "Invalid format: `%s'", format);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	Dee_Decrefv(DeeTuple_ELEM(result), i);
 	DeeTuple_FreeUninitialized(result);

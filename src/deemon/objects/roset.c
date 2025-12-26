@@ -367,7 +367,7 @@ DeeRoSet_FromSequence(DeeObject *__restrict sequence) {
 		if unlikely(DeeObject_Foreach(sequence, DeeRoSet_InsertSequence_foreach_PTR, &result))
 			goto err_r;
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	Dee_DecrefDokill(result);
 /*err:*/

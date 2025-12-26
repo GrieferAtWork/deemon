@@ -1276,12 +1276,12 @@ INTDEF NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL DeeFunction_OptimizeAndThisCa
 
 #ifndef CONFIG_BUILDING_DEEMON
 #define DeeFunction_NewNoRefs(code)                            DeeFunction_New(code, 0, NULL)
-#define DeeFunction_ThisCall(self, this_arg, argc, argv)       DeeObject_ThisCall(Dee_REQUIRES_ANYOBJECT(self), this_arg, argc, argv)
-#define DeeFunction_ThisCallKw(self, this_arg, argc, argv, kw) DeeObject_ThisCallKw(Dee_REQUIRES_ANYOBJECT(self), this_arg, argc, argv, kw)
-#define DeeFunction_CallTuple(self, args)                      DeeObject_CallTuple(Dee_REQUIRES_ANYOBJECT(self), args)
-#define DeeFunction_CallTupleKw(self, args, kw)                DeeObject_CallTupleKw(Dee_REQUIRES_ANYOBJECT(self), args, kw)
-#define DeeFunction_ThisCallTuple(self, this_arg, args)        DeeObject_ThisCallTuple(Dee_REQUIRES_ANYOBJECT(self), this_arg, args)
-#define DeeFunction_ThisCallTupleKw(self, this_arg, args, kw)  DeeObject_ThisCallTupleKw(Dee_REQUIRES_ANYOBJECT(self), this_arg, args, kw)
+#define DeeFunction_ThisCall(self, this_arg, argc, argv)       DeeObject_ThisCall(Dee_AsObject(self), this_arg, argc, argv)
+#define DeeFunction_ThisCallKw(self, this_arg, argc, argv, kw) DeeObject_ThisCallKw(Dee_AsObject(self), this_arg, argc, argv, kw)
+#define DeeFunction_CallTuple(self, args)                      DeeObject_CallTuple(Dee_AsObject(self), args)
+#define DeeFunction_CallTupleKw(self, args, kw)                DeeObject_CallTupleKw(Dee_AsObject(self), args, kw)
+#define DeeFunction_ThisCallTuple(self, this_arg, args)        DeeObject_ThisCallTuple(Dee_AsObject(self), this_arg, args)
+#define DeeFunction_ThisCallTupleKw(self, this_arg, args, kw)  DeeObject_ThisCallTupleKw(Dee_AsObject(self), this_arg, args, kw)
 #else /* !CONFIG_BUILDING_DEEMON */
 INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeFunction_NewInherited(DeeObject *code, size_t refc,

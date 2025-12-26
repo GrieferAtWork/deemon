@@ -56,7 +56,7 @@ __seq_iter__.seq_operator_iter([[nonnull]] DeeObject *__restrict self)
 	result->disgi_index            = 0;
 	result->disgi_end              = size;
 	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndexFast_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }}
@@ -74,7 +74,7 @@ err:
 	result->disgi_index            = 0;
 	result->disgi_end              = size;
 	DeeObject_Init(result, &DefaultIterator_WithSizeAndTryGetItemIndex_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }}
@@ -92,7 +92,7 @@ err:
 	result->disgi_index            = 0;
 	result->disgi_end              = size;
 	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndex_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }}
@@ -106,7 +106,7 @@ err:
 	result->digi_tp_getitem_index = REQUIRE_DEPENDENCY(seq_operator_getitem_index);
 	result->digi_index            = 0;
 	DeeObject_Init(result, &DefaultIterator_WithGetItemIndex_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }}
@@ -193,7 +193,7 @@ err:
 	result->diikgi_tp_next    = DeeType_RequireNativeOperator(itertyp, iter_next);
 	result->diikgi_tp_getitem = REQUIRE_DEPENDENCY(map_operator_trygetitem);
 	DeeObject_Init(result, &DefaultIterator_WithIterKeysAndTryGetItemMap_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -224,7 +224,7 @@ err:
 	result->diikgi_tp_next    = DeeType_RequireNativeOperator(itertyp, iter_next);
 	result->diikgi_tp_getitem = REQUIRE_DEPENDENCY(map_operator_getitem);
 	DeeObject_Init(result, &DefaultIterator_WithIterKeysAndGetItemMap_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 err:

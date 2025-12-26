@@ -2550,7 +2550,7 @@ err_ol:
 				objectlist_fini(&ol);
 				goto err;
 			}
-			return (DREF DeeObject *)result;
+			return Dee_AsObject(result);
 		}
 
 		/* Check for special case: Tuple */
@@ -2560,7 +2560,7 @@ err_ol:
 			result = (DREF DeeTupleObject *)objectlist_packtuple(&ol);
 			if unlikely(!result)
 				goto err_ol;
-			return (DREF DeeObject *)result;
+			return Dee_AsObject(result);
 		}
 
 		/* Check for special case: Set (which we treat like `HashSet') */
@@ -2688,7 +2688,7 @@ err_ol:
 
 		/* Given the caller the tuple we just parsed. */
 done_tuple:
-		return (DREF DeeObject *)result;
+		return Dee_AsObject(result);
 err_r_tuple_i_syntax:
 		err_json_syntax();
 /*err_r_tuple_i:*/

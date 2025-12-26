@@ -524,7 +524,7 @@ DeeTuple_NewVector(size_t objc, DeeObject *const *__restrict objv) {
 		goto done;
 	Dee_Movrefv(DeeTuple_ELEM(result), objv, objc);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL
@@ -536,7 +536,7 @@ DeeTuple_NewVectorSymbolic(size_t objc, DeeObject *const *__restrict objv) {
 	memcpyc(DeeTuple_ELEM(result), objv,
 	        objc, sizeof(DREF DeeObject *));
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL
@@ -547,7 +547,7 @@ DeeTuple_TryNewVector(size_t objc, DeeObject *const *__restrict objv) {
 		goto done;
 	Dee_Movrefv(DeeTuple_ELEM(result), objv, objc);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL
@@ -559,7 +559,7 @@ DeeTuple_TryNewVectorSymbolic(size_t objc, DeeObject *const *__restrict objv) {
 	memcpyc(DeeTuple_ELEM(result), objv,
 	        objc, sizeof(DREF DeeObject *));
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -585,7 +585,7 @@ list_size_changed:
 	            DeeList_ELEM(me),
 	            seq_length);
 	DeeList_LockEndRead(me);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -638,7 +638,7 @@ DeeTuple_Types(DeeObject *__restrict self) {
 		DeeTuple_SET(result, i, tp);
 	}
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 #ifdef __ARCH_VA_LIST_IS_STACK_POINTER
@@ -687,7 +687,7 @@ DeeTuple_VPack(size_t n, va_list args) {
 		DeeTuple_SET(result, i, elem);
 	}
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
@@ -703,7 +703,7 @@ DeeTuple_VPackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ va_list args) 
 		DeeTuple_SET(result, i, elem);
 	}
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
@@ -720,7 +720,7 @@ DeeTuple_VTryPack(size_t n, va_list args) {
 		DeeTuple_SET(result, i, elem);
 	}
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
@@ -736,7 +736,7 @@ DeeTuple_VTryPackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ va_list arg
 		DeeTuple_SET(result, i, elem);
 	}
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 #endif /* !__ARCH_VA_LIST_IS_STACK_POINTER */
 
@@ -1942,7 +1942,7 @@ DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *se
 	if unlikely(DeeObject_IsShared(me)) {
 		result = tuple_concat(me, sequence);
 		Dee_Decref_unlikely(me);
-		return (DREF DeeObject *)result;
+		return Dee_AsObject(result);
 	}
 
 	tp_sequence         = Dee_TYPE(sequence);
@@ -2010,7 +2010,7 @@ DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *se
 		total_size = data.tcfed_offset;
 		result = DeeTuple_TruncateUninitialized(result, total_size);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeTuple_FreeUninitialized(result);
 err:
@@ -2046,7 +2046,7 @@ DeeTuple_ExtendInherited(/*inherit(always)*/ DREF DeeObject *self, size_t argc,
 		memcpyc(iter, argv, argc, sizeof(DREF DeeObject *));
 		Dee_Decref_unlikely(me);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_me_argv:
 	Dee_Decrefv(argv, argc);
 	Dee_Decref(me);
@@ -2940,7 +2940,7 @@ Dee_nullable_tuple_builder_pack(struct Dee_tuple_builder *__restrict self) {
 	result = DeeTuple_TruncateUninitialized(result, self->tb_size);
 	if likely(result)
 		result = make_nullable(result);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 /* Ensure that at least "index + 1" elements are allocated (default-initializing

@@ -337,7 +337,7 @@ DeeFile_OpenRoMemory(void const *data, size_t data_size) {
 	Dee_atomic_rwlock_init(&result->mf_lock);
 	DeeFileObject_Init(result, &DeeMemoryFile_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC NONNULL((1)) void DCALL
@@ -846,7 +846,7 @@ DeeFile_OpenObjectMemory(DeeObject *__restrict data_owner,
 	Dee_atomic_rwlock_init(&result->r_lock);
 	DeeFileObject_Init(result, &DeeFileReader_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 /* Similar to `DeeFile_OpenObjectMemory()', but used
@@ -878,7 +878,7 @@ DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
 	Dee_atomic_rwlock_init(&result->r_lock);
 	DeeFileObject_Init(result, &DeeFileReader_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 	return NULL;
@@ -1044,7 +1044,7 @@ again:
 	Dee_Incref(result);
 	DeeFileWriter_LockEndRead(me);
 	ASSERT(DeeString_STR(result)[DeeString_SIZE(result)] == 0);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_collect:
 	DeeFileWriter_LockEndRead(me);
 	if (Dee_CollectMemory(512))
@@ -1789,7 +1789,7 @@ PUBLIC WUNUSED DREF /*File*/ DeeObject *DCALL DeeFile_OpenWriter(void) {
 	writer_ctor(result);
 	DeeFileObject_Init(result, &DeeFileWriter_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -1915,7 +1915,7 @@ DeeFile_OpenPrinter(Dee_formatprinter_t printer, void *arg) {
 	Dee_shared_rwlock_init(&result->fp_lock);
 	DeeFileObject_Init(result, &DeeFilePrinter_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 /* Drop the primary reference from `self'.

@@ -723,7 +723,7 @@ default__seq_operator_iter__with__seq_operator_size__and__operator_getitem_index
 	result->disgi_index            = 0;
 	result->disgi_end              = size;
 	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndexFast_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -743,7 +743,7 @@ default__seq_operator_iter__with__seq_operator_size__and__seq_operator_trygetite
 	result->disgi_index            = 0;
 	result->disgi_end              = size;
 	DeeObject_Init(result, &DefaultIterator_WithSizeAndTryGetItemIndex_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -763,7 +763,7 @@ default__seq_operator_iter__with__seq_operator_size__and__seq_operator_getitem_i
 	result->disgi_index            = 0;
 	result->disgi_end              = size;
 	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndex_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -779,7 +779,7 @@ default__seq_operator_iter__with__seq_operator_getitem_index(DeeObject *__restri
 	result->digi_tp_getitem_index = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem_index);
 	result->digi_index            = 0;
 	DeeObject_Init(result, &DefaultIterator_WithGetItemIndex_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -878,7 +878,7 @@ default__seq_operator_iter__with__map_iterkeys__and__map_operator_trygetitem(Dee
 	result->diikgi_tp_next    = DeeType_RequireNativeOperator(itertyp, iter_next);
 	result->diikgi_tp_getitem = DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_trygetitem);
 	DeeObject_Init(result, &DefaultIterator_WithIterKeysAndTryGetItemMap_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -911,7 +911,7 @@ default__seq_operator_iter__with__map_iterkeys__and__map_operator_getitem(DeeObj
 	result->diikgi_tp_next    = DeeType_RequireNativeOperator(itertyp, iter_next);
 	result->diikgi_tp_getitem = DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_getitem);
 	DeeObject_Init(result, &DefaultIterator_WithIterKeysAndGetItemMap_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -2289,7 +2289,7 @@ default__seq_operator_getrange__with__seq_operator_sizeob__and__seq_operator_get
 	result->dssg_seq        = self;
 	result->dssg_tp_getitem = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem);
 	DeeObject_Init(result, &DefaultSequence_WithSizeObAndGetItem_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -2348,7 +2348,7 @@ default__seq_operator_getrange_index__with__seq_operator_size__and__operator_get
 	result->dssgi_start            = range.sr_start;
 	result->dssgi_end              = range.sr_end;
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndexFast_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -2370,7 +2370,7 @@ default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator
 	result->dssgi_start            = range.sr_start;
 	result->dssgi_end              = range.sr_end;
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -2392,7 +2392,7 @@ default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator
 	result->dssgi_start            = range.sr_start;
 	result->dssgi_end              = range.sr_end;
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -2418,7 +2418,7 @@ default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator
 	result->dssg_seq        = self;
 	result->dssg_tp_getitem = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem);
 	DeeObject_Init(result, &DefaultSequence_WithSizeObAndGetItem_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r_start:
 	Dee_Decref(result->dssg_start);
 err_r:
@@ -2451,7 +2451,7 @@ default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator
 	result->dsial_limit   = range.sr_end - range.sr_start;
 	result->dsial_tp_iter = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_iter);
 	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 empty_seq:
 	return DeeSeq_NewEmpty();
 err:
@@ -2532,7 +2532,7 @@ default__seq_operator_getrange_index_n__with__seq_operator_size__and__operator_g
 	result->dssgi_start            = (size_t)start;
 	result->dssgi_end              = size;
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndexFast_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 empty_range:
 	return DeeSeq_NewEmpty();
 err:
@@ -2562,7 +2562,7 @@ default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operat
 	result->dssgi_start            = (size_t)start;
 	result->dssgi_end              = size;
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 empty_range:
 	return DeeSeq_NewEmpty();
 err:
@@ -2592,7 +2592,7 @@ default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operat
 	result->dssgi_start            = (size_t)start;
 	result->dssgi_end              = size;
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 empty_range:
 	return DeeSeq_NewEmpty();
 err:
@@ -2626,7 +2626,7 @@ default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operat
 	result->dssg_seq        = self;
 	result->dssg_tp_getitem = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem);
 	DeeObject_Init(result, &DefaultSequence_WithSizeObAndGetItem_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 empty_range:
 	return DeeSeq_NewEmpty();
 err_r_start:
@@ -2658,7 +2658,7 @@ default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operat
 	result->dsial_limit   = (size_t)-1;
 	result->dsial_tp_iter = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_iter);
 	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -13820,7 +13820,7 @@ default__seq_reversed__with__seq_operator_size__and__operator_getitem_index_fast
 	result->drwgii_max  = end - 1; /* It's ok if this underflows */
 	result->drwgii_size = end - start;
 	DeeObject_Init(result, &DefaultReversed_WithGetItemIndexFast_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -13844,7 +13844,7 @@ default__seq_reversed__with__seq_operator_size__and__seq_operator_getitem_index(
 	result->drwgii_max  = end - 1; /* It's ok if this underflows */
 	result->drwgii_size = end - start;
 	DeeObject_Init(result, &DefaultReversed_WithGetItemIndex_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -13868,7 +13868,7 @@ default__seq_reversed__with__seq_operator_size__and__seq_operator_trygetitem_ind
 	result->drwgii_max  = end - 1; /* It's ok if this underflows */
 	result->drwgii_size = end - start;
 	DeeObject_Init(result, &DefaultReversed_WithTryGetItemIndex_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -14154,7 +14154,7 @@ default__seq_sorted__with__seq_operator_size__and__operator_getitem_index_fast(D
 		             end, sizeof(DREF DeeObject *));
 		result = DeeTuple_TruncateUninitialized(result, end);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeTuple_FreeUninitialized(result);
 err:
@@ -14191,7 +14191,7 @@ default__seq_sorted__with__seq_operator_size__and__seq_operator_trygetitem_index
 		             end, sizeof(DREF DeeObject *));
 		result = DeeTuple_TruncateUninitialized(result, end);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeTuple_FreeUninitialized(result);
 err:
@@ -14212,7 +14212,7 @@ default__seq_sorted__with__seq_operator_foreach(DeeObject *self, size_t start, s
 	                              DeeTuple_ELEM(base)))
 		goto err_base_r;
 	DeeTuple_FreeUninitialized(base);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_base_r:
 	DeeTuple_FreeUninitialized(result);
 err_base:
@@ -14283,7 +14283,7 @@ default__seq_sorted_with_key__with__seq_operator_size__and__operator_getitem_ind
 		             end, sizeof(DREF DeeObject *));
 		result = DeeTuple_TruncateUninitialized(result, end);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeTuple_FreeUninitialized(result);
 err:
@@ -14320,7 +14320,7 @@ default__seq_sorted_with_key__with__seq_operator_size__and__seq_operator_trygeti
 		             end, sizeof(DREF DeeObject *));
 		result = DeeTuple_TruncateUninitialized(result, end);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeTuple_FreeUninitialized(result);
 err:
@@ -14341,7 +14341,7 @@ default__seq_sorted_with_key__with__seq_operator_foreach(DeeObject *self, size_t
 	                                     DeeTuple_ELEM(base), key))
 		goto err_base_r;
 	DeeTuple_FreeUninitialized(base);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_base_r:
 	DeeTuple_FreeUninitialized(result);
 err_base:
@@ -19545,7 +19545,7 @@ default__map_keys__with__map_iterkeys(DeeObject *__restrict self) {
 	Dee_Incref(self);
 	result->dsmp_map = self;
 	DeeObject_Init(result, &DefaultSequence_MapKeys_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -19616,7 +19616,7 @@ default__map_iterkeys__with__map_operator_iter(DeeObject *__restrict self) {
 	itertyp            = Dee_TYPE(result->dipsi_iter);
 	result->dipsi_next = DeeType_RequireNativeOperator(itertyp, nextkey);
 	DeeObject_Init(result, &DefaultIterator_WithNextKey);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -19669,7 +19669,7 @@ default__map_values__with__map_itervalues(DeeObject *__restrict self) {
 	Dee_Incref(self);
 	result->dsmp_map = self;
 	DeeObject_Init(result, &DefaultSequence_MapValues_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -19731,7 +19731,7 @@ default__map_itervalues__with__map_operator_iter(DeeObject *__restrict self) {
 	itertyp            = Dee_TYPE(result->dipsi_iter);
 	result->dipsi_next = DeeType_RequireNativeOperator(itertyp, nextvalue);
 	DeeObject_Init(result, &DefaultIterator_WithNextValue);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 err:

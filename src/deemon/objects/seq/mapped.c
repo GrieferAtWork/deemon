@@ -252,7 +252,7 @@ mapped_iter(SeqMapped *__restrict self) {
 	result->smi_mapper = self->sm_mapper;
 	Dee_Incref(self->sm_mapper);
 	DeeObject_Init(result, &SeqMappedIterator_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -717,7 +717,7 @@ DeeSeq_Map(DeeObject *self, DeeObject *mapper) {
 	Dee_Incref(mapper);
 	DeeObject_Init(result, &SeqMapped_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 DECL_END

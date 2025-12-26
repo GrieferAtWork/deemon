@@ -112,7 +112,7 @@ float_newdouble(CONFIG_CTYPES_DOUBLE_TYPE val) {
 	DeeObject_Init(result, DeeSType_AsType(&DeeCDouble_Type));
 	result->f_value = val;
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 #endif /* !INT_NEWINT_DEFINED */
 
@@ -127,7 +127,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL F(fltnew)(T val) {
 	DeeObject_Init(result, DeeSType_AsType(&TYPE_NAME));
 	result->f_value = val;
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 #endif /* TYPE_ID > 1 */
 

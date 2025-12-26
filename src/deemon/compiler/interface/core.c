@@ -255,7 +255,7 @@ DeeCompiler_GetWrapper(DeeCompilerObject *__restrict self,
 	Dee_Incref(self);
 	DeeObject_Init(result, type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -282,7 +282,7 @@ again:
 				continue;
 			ASSERT_OBJECT_TYPE_EXACT(result, type);
 			Dee_compiler_items_lock_endread(&self->cp_items);
-			return (DREF DeeObject *)result;
+			return Dee_AsObject(result);
 		}
 	}
 	Dee_compiler_items_lock_endread(&self->cp_items);
@@ -361,7 +361,7 @@ again:
 		Dee_Incref((DeeObject *)value);
 	Dee_compiler_items_lock_endwrite(&self->cp_items);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 

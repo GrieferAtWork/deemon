@@ -904,7 +904,7 @@ DeeSeq_Filter(DeeObject *self, DeeObject *pred_keep) {
 	result->f_fun = pred_keep;
 	DeeObject_Init(result, &SeqFilter_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -919,7 +919,7 @@ DeeSeq_FilterAsUnbound(DeeObject *self, DeeObject *pred_keep) {
 	result->f_fun = pred_keep;
 	DeeObject_Init(result, &SeqFilterAsUnbound_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 

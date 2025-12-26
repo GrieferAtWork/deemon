@@ -212,7 +212,7 @@ attr_getattrtype(Attr *__restrict self) {
 	DREF DeeTypeObject *result;
 	result = Dee_attrdesc_typeof(&self->a_desc);
 	if (result)
-		return (DREF DeeObject *)result;
+		return Dee_AsObject(result);
 	return_none;
 }
 
@@ -221,7 +221,7 @@ attr_getabiattrtype(Attr *__restrict self) {
 	DREF DeeTypeObject *result;
 	result = Dee_attrinfo_typeof(&self->a_desc.ad_info);
 	if (result)
-		return (DREF DeeObject *)result;
+		return Dee_AsObject(result);
 	return_none;
 }
 

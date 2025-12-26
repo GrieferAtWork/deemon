@@ -733,7 +733,7 @@ DeeBytes_SplitByte(Bytes *__restrict self, byte_t sep) {
 	Dee_Incref(self);
 	DeeObject_Init(result, &BytesSplit_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -761,7 +761,7 @@ DeeBytes_Split(Bytes *self, DeeObject *sep) {
 	Dee_Incref(sep);
 	DeeObject_Init(result, &BytesSplit_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 	return NULL;
@@ -784,7 +784,7 @@ DeeBytes_CaseSplitByte(Bytes *__restrict self, byte_t sep) {
 	Dee_Incref(self);
 	DeeObject_Init(result, &BytesCaseSplit_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -812,7 +812,7 @@ DeeBytes_CaseSplit(Bytes *self, DeeObject *sep) {
 	Dee_Incref(sep);
 	DeeObject_Init(result, &BytesCaseSplit_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 	return NULL;
@@ -1211,7 +1211,7 @@ DeeBytes_SplitLines(Bytes *__restrict self,
 	Dee_Incref(self);
 	DeeObject_Init(result, &BytesLineSplit_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 DECL_END

@@ -86,7 +86,7 @@ DeeTuple_NewII(size_t a, size_t b) {
 		goto err_aval_bval;
 	DeeTuple_SET(result, 0, aval); /* Inherit reference */
 	DeeTuple_SET(result, 1, bval); /* Inherit reference */
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_aval_bval:
 	Dee_Decref(bval);
 err_aval:
@@ -1372,7 +1372,7 @@ bytes_hex(Bytes *self, size_t argc,
 	} while (--size);
 	ASSERT(dst == DeeString_END(result));
 	DeeBytes_DecUse(self);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 empty:
 	DeeBytes_DecUse(self);
 	return DeeString_NewEmpty();
@@ -3765,7 +3765,7 @@ bytes_center(Bytes *self, size_t argc, DeeObject *const *argv) {
 	}
 	DeeBytes_IncUse(self);
 	if (args.width <= DeeBytes_SIZE(self)) {
-		result = (DREF DeeObject *)self;
+		result = Dee_AsObject(self);
 		Dee_Incref(result);
 	} else {
 		size_t fill_front, fill_back;
@@ -3825,7 +3825,7 @@ bytes_ljust(Bytes *self, size_t argc, DeeObject *const *argv) {
 	}
 	DeeBytes_IncUse(self);
 	if (args.width <= DeeBytes_SIZE(self)) {
-		result = (DREF DeeObject *)self;
+		result = Dee_AsObject(self);
 		Dee_Incref(result);
 	} else {
 		size_t fill_back;
@@ -3882,7 +3882,7 @@ bytes_rjust(Bytes *self, size_t argc, DeeObject *const *argv) {
 	}
 	DeeBytes_IncUse(self);
 	if (args.width <= DeeBytes_SIZE(self)) {
-		result = (DREF DeeObject *)self;
+		result = Dee_AsObject(self);
 		Dee_Incref(result);
 	} else {
 		size_t fill_front;
@@ -3938,7 +3938,7 @@ bytes_zfill(Bytes *self, size_t argc, DeeObject *const *argv) {
 	}
 	DeeBytes_IncUse(self);
 	if (args.width <= DeeBytes_SIZE(self)) {
-		result = (DREF DeeObject *)self;
+		result = Dee_AsObject(self);
 		Dee_Incref(result);
 	} else {
 		size_t fill_front, src_len;
@@ -4829,14 +4829,14 @@ bytes_partitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (acquire_needle(&s_clos, args.close))
 		goto err_open;
-#define SET_BYTES(a, b, c)                                       \
-	do {                                                         \
-		if ((result->t_elem[0] = (DREF DeeObject *)(a)) == NULL) \
-			goto err_open_clos_use_r_0;                          \
-		if ((result->t_elem[1] = (DREF DeeObject *)(b)) == NULL) \
-			goto err_open_clos_use_r_1;                          \
-		if ((result->t_elem[2] = (DREF DeeObject *)(c)) == NULL) \
-			goto err_open_clos_use_r_2;                          \
+#define SET_BYTES(a, b, c)                                 \
+	do {                                                   \
+		if ((result->t_elem[0] = Dee_AsObject(a)) == NULL) \
+			goto err_open_clos_use_r_0;                    \
+		if ((result->t_elem[1] = Dee_AsObject(b)) == NULL) \
+			goto err_open_clos_use_r_1;                    \
+		if ((result->t_elem[2] = Dee_AsObject(c)) == NULL) \
+			goto err_open_clos_use_r_2;                    \
 	}	__WHILE0
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
@@ -4868,7 +4868,7 @@ done:
 	DeeBytes_DecUse(self);
 	release_needle(&s_clos);
 	release_needle(&s_open);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 not_found:
 	result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr_locked(self, args.start, args.end);
 	if unlikely(!result->t_elem[0])
@@ -4960,7 +4960,7 @@ done:
 	DeeBytes_DecUse(self);
 	release_needle(&s_clos);
 	release_needle(&s_open);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 not_found:
 	result->t_elem[2] = (DREF DeeObject *)bytes_getsubstr_locked(self, args.start, args.end);
 	if unlikely(!result->t_elem[2])
@@ -5052,7 +5052,7 @@ done:
 	DeeBytes_DecUse(self);
 	release_needle(&s_clos);
 	release_needle(&s_open);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 not_found:
 	result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr_locked(self, args.start, args.end);
 	if unlikely(!result->t_elem[0])
@@ -5144,7 +5144,7 @@ done:
 	DeeBytes_DecUse(self);
 	release_needle(&s_clos);
 	release_needle(&s_open);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 not_found:
 	result->t_elem[2] = (DREF DeeObject *)bytes_getsubstr_locked(self, args.start, args.end);
 	if unlikely(!result->t_elem[2])
@@ -5355,54 +5355,54 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_regmatch(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DREF ReGroups *groups;
-	Dee_ssize_t result;
+	DREF ReGroups *result;
+	Dee_ssize_t status;
 	struct DeeRegexExec exec;
 	if unlikely(bytes_generic_regex_getargs(self, argc, argv, kw,
 	                                        BYTES_GENERIC_REGEX_GETARGS_FMT("regmatch"),
 	                                        &exec))
 		goto err;
-	groups = ReGroups_Malloc(1 + exec.rx_code->rc_ngrps);
-	if unlikely(!groups) {
+	result = ReGroups_Malloc(1 + exec.rx_code->rc_ngrps);
+	if unlikely(!result) {
 		bytes_generic_regex_putargs(self);
 		goto err;
 	}
 	exec.rx_nmatch = exec.rx_code->rc_ngrps;
-	exec.rx_pmatch = groups->rg_groups + 1;
-	result = DeeRegex_Match(&exec);
+	exec.rx_pmatch = result->rg_groups + 1;
+	status = DeeRegex_Match(&exec);
 	bytes_generic_regex_putargs(self);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(status == DEE_RE_STATUS_ERROR)
 		goto err_g;
-	if (result == DEE_RE_STATUS_NOMATCH) {
-		ReGroups_Free(groups);
+	if (status == DEE_RE_STATUS_NOMATCH) {
+		ReGroups_Free(result);
 		return DeeSeq_NewEmpty();
 	}
-	groups->rg_groups[0].rm_so = 0;
-	groups->rg_groups[0].rm_eo = (size_t)result;
-	ReGroups_Init(groups, 1 + exec.rx_code->rc_ngrps);
-	return (DREF DeeObject *)groups;
+	result->rg_groups[0].rm_so = 0;
+	result->rg_groups[0].rm_eo = (size_t)status;
+	ReGroups_Init(result, 1 + exec.rx_code->rc_ngrps);
+	return Dee_AsObject(result);
 err_g:
-	ReGroups_Free(groups);
+	ReGroups_Free(result);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_rematches(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	Dee_ssize_t result;
+	Dee_ssize_t status;
 	struct DeeRegexExec exec;
 	if unlikely(bytes_generic_regex_getargs(self, argc, argv, kw,
 	                                        BYTES_GENERIC_REGEX_GETARGS_FMT("rematches"),
 	                                        &exec))
 		goto err;
-	result = DeeRegex_Match(&exec);
+	status = DeeRegex_Match(&exec);
 	bytes_generic_regex_putargs(self);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(status == DEE_RE_STATUS_ERROR)
 		goto err;
-	if (result == DEE_RE_STATUS_NOMATCH)
+	if (status == DEE_RE_STATUS_NOMATCH)
 		return_false;
-	ASSERT((size_t)result <= exec.rx_endoff);
-	return_bool((size_t)result >= exec.rx_endoff);
+	ASSERT((size_t)status <= exec.rx_endoff);
+	return_bool((size_t)status >= exec.rx_endoff);
 err:
 	return NULL;
 }
@@ -5410,224 +5410,224 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_refind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	Dee_ssize_t result;
+	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
 	if unlikely(bytes_search_regex_getargs(self, argc, argv, kw,
 	                                       BYTES_SEARCH_REGEX_GETARGS_FMT("refind"),
 	                                       &exec))
 		goto err;
-	result = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
+	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(status == DEE_RE_STATUS_ERROR)
 		goto err;
-	if (result == DEE_RE_STATUS_NOMATCH)
+	if (status == DEE_RE_STATUS_NOMATCH)
 		return_none;
-	match_size += (size_t)result;
-	return DeeTuple_NewII((size_t)result, (size_t)match_size);
+	match_size += (size_t)status;
+	return DeeTuple_NewII((size_t)status, (size_t)match_size);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_rerfind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	Dee_ssize_t result;
+	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
 	if unlikely(bytes_search_regex_getargs(self, argc, argv, kw,
 	                                       BYTES_SEARCH_REGEX_GETARGS_FMT("rerfind"),
 	                                       &exec))
 		goto err;
-	result = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
+	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(status == DEE_RE_STATUS_ERROR)
 		goto err;
-	if (result == DEE_RE_STATUS_NOMATCH)
+	if (status == DEE_RE_STATUS_NOMATCH)
 		return_none;
-	match_size += (size_t)result;
-	return DeeTuple_NewII((size_t)result, (size_t)match_size);
+	match_size += (size_t)status;
+	return DeeTuple_NewII((size_t)status, (size_t)match_size);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_rescanf(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DREF ReSubBytes *subbytes;
-	Dee_ssize_t result;
+	DREF ReSubBytes *result;
+	Dee_ssize_t status;
 	struct DeeRegexExec exec;
 	if unlikely(bytes_generic_regex_getargs(self, argc, argv, kw,
 	                                        BYTES_GENERIC_REGEX_GETARGS_FMT("rescanf"),
 	                                        &exec))
 		goto err;
-	subbytes = ReSubBytes_Malloc(exec.rx_code->rc_ngrps);
-	if unlikely(!subbytes) {
+	result = ReSubBytes_Malloc(exec.rx_code->rc_ngrps);
+	if unlikely(!result) {
 		bytes_generic_regex_putargs(self);
 		goto err;
 	}
 	exec.rx_nmatch = exec.rx_code->rc_ngrps;
-	exec.rx_pmatch = subbytes->rss_groups;
-	result = DeeRegex_Match(&exec);
+	exec.rx_pmatch = result->rss_groups;
+	status = DeeRegex_Match(&exec);
 	bytes_generic_regex_putargs(self);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(status == DEE_RE_STATUS_ERROR)
 		goto err_g;
-	if (result == DEE_RE_STATUS_NOMATCH) {
-		ReSubBytes_Free(subbytes);
+	if (status == DEE_RE_STATUS_NOMATCH) {
+		ReSubBytes_Free(result);
 		return DeeSeq_NewEmpty();
 	}
-	ReSubBytes_InitBytes(subbytes, (DeeObject *)self,
-	                exec.rx_inbase,
-	                exec.rx_code->rc_ngrps);
-	return (DREF DeeObject *)subbytes;
+	ReSubBytes_InitBytes(result, (DeeObject *)self,
+	                     exec.rx_inbase,
+	                     exec.rx_code->rc_ngrps);
+	return Dee_AsObject(result);
 err_g:
-	ReSubBytes_Free(subbytes);
+	ReSubBytes_Free(result);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_regfind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DREF ReGroups *groups;
-	Dee_ssize_t result;
+	DREF ReGroups *result;
+	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
 	if unlikely(bytes_search_regex_getargs(self, argc, argv, kw,
 	                                       BYTES_SEARCH_REGEX_GETARGS_FMT("regfind"),
 	                                       &exec))
 		goto err;
-	groups = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
-	if unlikely(!groups) {
+	result = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
+	if unlikely(!result) {
 		bytes_search_regex_putargs(self);
 		goto err;
 	}
 	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
-	exec.rewr_exec.rx_pmatch = groups->rg_groups + 1;
-	result = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
+	exec.rewr_exec.rx_pmatch = result->rg_groups + 1;
+	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(status == DEE_RE_STATUS_ERROR)
 		goto err_g;
-	if (result == DEE_RE_STATUS_NOMATCH) {
-		ReGroups_Free(groups);
+	if (status == DEE_RE_STATUS_NOMATCH) {
+		ReGroups_Free(result);
 		return DeeSeq_NewEmpty();
 	}
-	match_size += (size_t)result;
-	groups->rg_groups[0].rm_so = (size_t)result;
-	groups->rg_groups[0].rm_eo = match_size;
-	ReGroups_Init(groups, 1 + exec.rewr_exec.rx_code->rc_ngrps);
-	return (DREF DeeObject *)groups;
+	match_size += (size_t)status;
+	result->rg_groups[0].rm_so = (size_t)status;
+	result->rg_groups[0].rm_eo = match_size;
+	ReGroups_Init(result, 1 + exec.rewr_exec.rx_code->rc_ngrps);
+	return Dee_AsObject(result);
 err_g:
-	ReGroups_Free(groups);
+	ReGroups_Free(result);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_regrfind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DREF ReGroups *groups;
-	Dee_ssize_t result;
+	DREF ReGroups *result;
+	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
 	if unlikely(bytes_search_regex_getargs(self, argc, argv, kw,
 	                                       BYTES_SEARCH_REGEX_GETARGS_FMT("regrfind"),
 	                                       &exec))
 		goto err;
-	groups = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
-	if unlikely(!groups) {
+	result = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
+	if unlikely(!result) {
 		bytes_search_regex_putargs(self);
 		goto err;
 	}
 	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
-	exec.rewr_exec.rx_pmatch = groups->rg_groups + 1;
-	result = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
+	exec.rewr_exec.rx_pmatch = result->rg_groups + 1;
+	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(status == DEE_RE_STATUS_ERROR)
 		goto err_g;
-	if (result == DEE_RE_STATUS_NOMATCH) {
-		ReGroups_Free(groups);
+	if (status == DEE_RE_STATUS_NOMATCH) {
+		ReGroups_Free(result);
 		return DeeSeq_NewEmpty();
 	}
-	match_size += (size_t)result;
-	groups->rg_groups[0].rm_so = (size_t)result;
-	groups->rg_groups[0].rm_eo = match_size;
-	ReGroups_Init(groups, 1 + exec.rewr_exec.rx_code->rc_ngrps);
-	return (DREF DeeObject *)groups;
+	match_size += (size_t)status;
+	result->rg_groups[0].rm_so = (size_t)status;
+	result->rg_groups[0].rm_eo = match_size;
+	ReGroups_Init(result, 1 + exec.rewr_exec.rx_code->rc_ngrps);
+	return Dee_AsObject(result);
 err_g:
-	ReGroups_Free(groups);
+	ReGroups_Free(result);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_reglocate(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DREF ReSubBytes *subbytes;
-	Dee_ssize_t result;
+	DREF ReSubBytes *result;
+	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
 	if unlikely(bytes_search_regex_getargs(self, argc, argv, kw,
 	                                       BYTES_SEARCH_REGEX_GETARGS_FMT("reglocate"),
 	                                       &exec))
 		goto err;
-	subbytes = ReSubBytes_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
-	if unlikely(!subbytes) {
+	result = ReSubBytes_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
+	if unlikely(!result) {
 		bytes_search_regex_putargs(self);
 		goto err;
 	}
 	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
-	exec.rewr_exec.rx_pmatch = subbytes->rss_groups + 1;
-	result = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
+	exec.rewr_exec.rx_pmatch = result->rss_groups + 1;
+	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(status == DEE_RE_STATUS_ERROR)
 		goto err_g;
-	if (result == DEE_RE_STATUS_NOMATCH) {
-		ReGroups_Free(subbytes);
+	if (status == DEE_RE_STATUS_NOMATCH) {
+		ReGroups_Free(result);
 		return DeeSeq_NewEmpty();
 	}
-	match_size += (size_t)result;
-	subbytes->rss_groups[0].rm_so = (size_t)result;
-	subbytes->rss_groups[0].rm_eo = match_size;
-	ReSubBytes_InitBytes(subbytes, (DeeObject *)self,
+	match_size += (size_t)status;
+	result->rss_groups[0].rm_so = (size_t)status;
+	result->rss_groups[0].rm_eo = match_size;
+	ReSubBytes_InitBytes(result, (DeeObject *)self,
 	                     exec.rewr_exec.rx_inbase,
 	                     1 + exec.rewr_exec.rx_code->rc_ngrps);
-	return (DREF DeeObject *)subbytes;
+	return Dee_AsObject(result);
 err_g:
-	ReGroups_Free(subbytes);
+	ReGroups_Free(result);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_regrlocate(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DREF ReSubBytes *subbytes;
-	Dee_ssize_t result;
+	DREF ReSubBytes *result;
+	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
 	if unlikely(bytes_search_regex_getargs(self, argc, argv, kw,
 	                                       BYTES_SEARCH_REGEX_GETARGS_FMT("regrlocate"),
 	                                       &exec))
 		goto err;
-	subbytes = ReSubBytes_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
-	if unlikely(!subbytes) {
+	result = ReSubBytes_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
+	if unlikely(!result) {
 		bytes_search_regex_putargs(self);
 		goto err;
 	}
 	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
-	exec.rewr_exec.rx_pmatch = subbytes->rss_groups + 1;
-	result = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
+	exec.rewr_exec.rx_pmatch = result->rss_groups + 1;
+	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(status == DEE_RE_STATUS_ERROR)
 		goto err_g;
-	if (result == DEE_RE_STATUS_NOMATCH) {
-		ReGroups_Free(subbytes);
+	if (status == DEE_RE_STATUS_NOMATCH) {
+		ReGroups_Free(result);
 		return DeeSeq_NewEmpty();
 	}
-	match_size += (size_t)result;
-	subbytes->rss_groups[0].rm_so = (size_t)result;
-	subbytes->rss_groups[0].rm_eo = match_size;
-	ReSubBytes_InitBytes(subbytes, (DeeObject *)self,
+	match_size += (size_t)status;
+	result->rss_groups[0].rm_so = (size_t)status;
+	result->rss_groups[0].rm_eo = match_size;
+	ReSubBytes_InitBytes(result, (DeeObject *)self,
 	                     exec.rewr_exec.rx_inbase,
 	                     1 + exec.rewr_exec.rx_code->rc_ngrps);
-	return (DREF DeeObject *)subbytes;
+	return Dee_AsObject(result);
 err_g:
-	ReGroups_Free(subbytes);
+	ReGroups_Free(result);
 err:
 	return NULL;
 }
@@ -5645,21 +5645,21 @@ err_regex_not_found_in_bytes(Bytes *self, struct DeeRegexExecWithRange const *__
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_reindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	Dee_ssize_t result;
+	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
 	if unlikely(bytes_search_regex_getargs(self, argc, argv, kw,
 	                                       BYTES_SEARCH_REGEX_GETARGS_FMT("reindex"),
 	                                       &exec))
 		goto err;
-	result = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
+	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(status == DEE_RE_STATUS_ERROR)
 		goto err;
-	if (result == DEE_RE_STATUS_NOMATCH)
+	if (status == DEE_RE_STATUS_NOMATCH)
 		goto not_found;
-	match_size += (size_t)result;
-	return DeeTuple_NewII((size_t)result, (size_t)match_size);
+	match_size += (size_t)status;
+	return DeeTuple_NewII((size_t)status, (size_t)match_size);
 not_found:
 	err_regex_not_found_in_bytes(self, &exec);
 err:
@@ -5668,21 +5668,21 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_rerindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	Dee_ssize_t result;
+	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
 	if unlikely(bytes_search_regex_getargs(self, argc, argv, kw,
 	                                       BYTES_SEARCH_REGEX_GETARGS_FMT("rerindex"),
 	                                       &exec))
 		goto err;
-	result = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
+	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(status == DEE_RE_STATUS_ERROR)
 		goto err;
-	if (result == DEE_RE_STATUS_NOMATCH)
+	if (status == DEE_RE_STATUS_NOMATCH)
 		goto not_found;
-	match_size += (size_t)result;
-	return DeeTuple_NewII((size_t)result, (size_t)match_size);
+	match_size += (size_t)status;
+	return DeeTuple_NewII((size_t)status, (size_t)match_size);
 not_found:
 	err_regex_not_found_in_bytes(self, &exec);
 err:
@@ -5691,72 +5691,72 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_regindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DREF ReGroups *groups;
-	Dee_ssize_t result;
+	DREF ReGroups *result;
+	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
 	if unlikely(bytes_search_regex_getargs(self, argc, argv, kw,
 	                                       BYTES_SEARCH_REGEX_GETARGS_FMT("regindex"),
 	                                       &exec))
 		goto err;
-	groups = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
-	if unlikely(!groups) {
+	result = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
+	if unlikely(!result) {
 		bytes_search_regex_putargs(self);
 		goto err;
 	}
 	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
-	exec.rewr_exec.rx_pmatch = groups->rg_groups + 1;
-	result = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
+	exec.rewr_exec.rx_pmatch = result->rg_groups + 1;
+	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(status == DEE_RE_STATUS_ERROR)
 		goto err_g;
-	if (result == DEE_RE_STATUS_NOMATCH)
+	if (status == DEE_RE_STATUS_NOMATCH)
 		goto not_found;
-	match_size += (size_t)result;
-	groups->rg_groups[0].rm_so = (size_t)result;
-	groups->rg_groups[0].rm_eo = match_size;
-	ReGroups_Init(groups, 1 + exec.rewr_exec.rx_code->rc_ngrps);
-	return (DREF DeeObject *)groups;
+	match_size += (size_t)status;
+	result->rg_groups[0].rm_so = (size_t)status;
+	result->rg_groups[0].rm_eo = match_size;
+	ReGroups_Init(result, 1 + exec.rewr_exec.rx_code->rc_ngrps);
+	return Dee_AsObject(result);
 not_found:
 	err_regex_not_found_in_bytes(self, &exec);
 err_g:
-	ReGroups_Free(groups);
+	ReGroups_Free(result);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_regrindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DREF ReGroups *groups;
-	Dee_ssize_t result;
+	DREF ReGroups *result;
+	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
 	if unlikely(bytes_search_regex_getargs(self, argc, argv, kw,
 	                                       BYTES_SEARCH_REGEX_GETARGS_FMT("regrindex"),
 	                                       &exec))
 		goto err;
-	groups = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
-	if unlikely(!groups) {
+	result = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
+	if unlikely(!result) {
 		bytes_search_regex_putargs(self);
 		goto err;
 	}
 	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
-	exec.rewr_exec.rx_pmatch = groups->rg_groups + 1;
-	result = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
+	exec.rewr_exec.rx_pmatch = result->rg_groups + 1;
+	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(status == DEE_RE_STATUS_ERROR)
 		goto err_g;
-	if (result == DEE_RE_STATUS_NOMATCH)
+	if (status == DEE_RE_STATUS_NOMATCH)
 		goto not_found;
-	match_size += (size_t)result;
-	groups->rg_groups[0].rm_so = (size_t)result;
-	groups->rg_groups[0].rm_eo = match_size;
-	ReGroups_Init(groups, 1 + exec.rewr_exec.rx_code->rc_ngrps);
-	return (DREF DeeObject *)groups;
+	match_size += (size_t)status;
+	result->rg_groups[0].rm_so = (size_t)status;
+	result->rg_groups[0].rm_eo = match_size;
+	ReGroups_Init(result, 1 + exec.rewr_exec.rx_code->rc_ngrps);
+	return Dee_AsObject(result);
 not_found:
 	err_regex_not_found_in_bytes(self, &exec);
 err_g:
-	ReGroups_Free(groups);
+	ReGroups_Free(result);
 err:
 	return NULL;
 }

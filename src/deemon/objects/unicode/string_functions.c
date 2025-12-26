@@ -2008,7 +2008,7 @@ DeeTuple_NewII(size_t a, size_t b) {
 		goto err_aval_bval;
 	DeeTuple_SET(result, 0, aval); /* Inherit reference */
 	DeeTuple_SET(result, 1, bval); /* Inherit reference */
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_aval_bval:
 	Dee_Decref(bval);
 err_aval:
@@ -8567,7 +8567,7 @@ string_partitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	}
 #undef SET_STRING
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 not_found:
 	result->t_elem[0] = (DREF DeeObject *)string_getsubstr(self, args.start, args.end);
 	if unlikely(!result->t_elem[0])
@@ -8727,7 +8727,7 @@ string_rpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	}
 #undef SET_STRING
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 not_found:
 	result->t_elem[2] = (DREF DeeObject *)string_getsubstr(self, args.start, args.end);
 	if unlikely(!result->t_elem[2])
@@ -8895,7 +8895,7 @@ string_casepartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	}
 #undef SET_STRING
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 not_found:
 	result->t_elem[0] = (DREF DeeObject *)string_getsubstr(self, args.start, args.end);
 	if unlikely(!result->t_elem[0])
@@ -9055,7 +9055,7 @@ string_caserpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	}
 #undef SET_STRING
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 not_found:
 	result->t_elem[2] = (DREF DeeObject *)string_getsubstr(self, args.start, args.end);
 	if unlikely(!result->t_elem[2])
@@ -9258,32 +9258,32 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_regmatch(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DREF ReGroups *groups;
-	Dee_ssize_t result;
+	DREF ReGroups *result;
+	Dee_ssize_t status;
 	struct DeeRegexExec exec;
 	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("regmatch"), &exec))
 		goto err;
-	groups = ReGroups_Malloc(1 + exec.rx_code->rc_ngrps);
-	if unlikely(!groups)
+	result = ReGroups_Malloc(1 + exec.rx_code->rc_ngrps);
+	if unlikely(!result)
 		goto err;
 	exec.rx_nmatch = exec.rx_code->rc_ngrps;
-	exec.rx_pmatch = groups->rg_groups + 1;
-	result = DeeRegex_Match(&exec);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	exec.rx_pmatch = result->rg_groups + 1;
+	status = DeeRegex_Match(&exec);
+	if unlikely(status == DEE_RE_STATUS_ERROR)
 		goto err_g;
-	if (result == DEE_RE_STATUS_NOMATCH) {
-		ReGroups_Free(groups);
+	if (status == DEE_RE_STATUS_NOMATCH) {
+		ReGroups_Free(result);
 		return DeeSeq_NewEmpty();
 	}
 	string_bytecnt2charcnt_v(self, (char const *)exec.rx_inbase,
-	                         groups->rg_groups + 1,
+	                         result->rg_groups + 1,
 	                         exec.rx_code->rc_ngrps);
-	groups->rg_groups[0].rm_so = 0;
-	groups->rg_groups[0].rm_eo = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rx_inbase);
-	ReGroups_Init(groups, 1 + exec.rx_code->rc_ngrps);
-	return (DREF DeeObject *)groups;
+	result->rg_groups[0].rm_so = 0;
+	result->rg_groups[0].rm_eo = string_bytecnt2charcnt(self, (size_t)status, (char const *)exec.rx_inbase);
+	ReGroups_Init(result, 1 + exec.rx_code->rc_ngrps);
+	return Dee_AsObject(result);
 err_g:
-	ReGroups_Free(groups);
+	ReGroups_Free(result);
 err:
 	return NULL;
 }
@@ -9308,20 +9308,20 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_refind(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	Dee_ssize_t result;
+	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
 	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("refind"), &exec))
 		goto err;
-	result = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
+	if unlikely(status == DEE_RE_STATUS_ERROR)
 		goto err;
-	if (result == DEE_RE_STATUS_NOMATCH)
+	if (status == DEE_RE_STATUS_NOMATCH)
 		return_none;
-	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)result);
-	result     = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rewr_exec.rx_inbase);
-	match_size += (size_t)result;
-	return DeeTuple_NewII((size_t)result, (size_t)match_size);
+	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)status);
+	status     = string_bytecnt2charcnt(self, (size_t)status, (char const *)exec.rewr_exec.rx_inbase);
+	match_size += (size_t)status;
+	return DeeTuple_NewII((size_t)status, (size_t)match_size);
 err:
 	return NULL;
 }

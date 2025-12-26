@@ -326,9 +326,9 @@ DeeFunction_New(DeeObject *code_, size_t refc,
 	Dee_atomic_rwlock_init(&result->fo_reflock);
 	Dee_Movrefv(result->fo_refv, refv, refc);
 	DeeObject_Init(result, &DeeFunction_Type);
-	result = (DREF Function *)DeeGC_Track((DeeObject *)result);
+	result = DeeGC_TRACK(Function, result);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -365,9 +365,9 @@ DeeFunction_NewInherited(DeeObject *code_, size_t refc,
 	Dee_atomic_rwlock_init(&result->fo_reflock);
 	memcpyc(result->fo_refv, refv, refc, sizeof(DREF DeeObject *));
 	DeeObject_Init(result, &DeeFunction_Type);
-	result = (DREF Function *)DeeGC_Track((DeeObject *)result);
+	result = DeeGC_TRACK(Function, result);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -395,9 +395,9 @@ DeeFunction_NewNoRefs(DeeObject *__restrict code_) {
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 	Dee_atomic_rwlock_init(&result->fo_reflock);
 	DeeObject_Init(result, &DeeFunction_Type);
-	result = (DREF Function *)DeeGC_Track((DeeObject *)result);
+	result = DeeGC_TRACK(Function, result);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -431,7 +431,7 @@ function_init(size_t argc, DeeObject *const *argv) {
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 	Dee_atomic_rwlock_init(&result->fo_reflock);
 	DeeObject_Init(result, &DeeFunction_Type);
-	result = (DREF Function *)DeeGC_Track((DeeObject *)result);
+	result = DeeGC_TRACK(Function, result);
 	return result;
 err_r:
 	DeeObject_Free(result);

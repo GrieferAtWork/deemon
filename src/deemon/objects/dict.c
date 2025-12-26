@@ -581,7 +581,7 @@ dict_new_with_hint(size_t num_items, bool tryalloc, bool allow_overalloc) {
 	weakref_support_init(result);
 	DeeObject_Init(result, &DeeDict_Type);
 	result = DeeGC_TRACK(Dict, result);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_tabs:
 	if likely(num_items)
 		_DeeDict_TabsFree(tabs);
@@ -1802,7 +1802,7 @@ DeeDict_FromSequence(DeeObject *__restrict self) {
 	foreach_status = DeeObject_ForeachPair(self, &dict_fromsequence_foreach_cb, result);
 	if unlikely(foreach_status < 0)
 		goto err_r;
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	Dee_DecrefDokill(result);
 err:
@@ -1996,7 +1996,7 @@ DeeDict_NewKeyValuesInherited(size_t num_items,
 	}
 	dict_verify(result);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	/* Free "result" without inheriting references to already inserted key/value pairs */
 	ASSERTF(_DeeDict_GetVirtVTab(result) != DeeDict_EmptyVTab,
@@ -2620,7 +2620,7 @@ dict_mh_popitem(Dict *__restrict self) {
 	--self->d_vused;
 	dict_autoshrink(self);
 	DeeDict_LockEndWrite(self);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

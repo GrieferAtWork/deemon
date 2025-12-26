@@ -628,7 +628,7 @@ DeeSeq_HashFilter(DeeObject *self, Dee_hash_t hash) {
 	result->f_hash = hash;
 	DeeObject_Init(result, &SeqHashFilter_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -642,7 +642,7 @@ DeeMap_HashFilter(DeeObject *self, Dee_hash_t hash) {
 	result->f_hash = hash;
 	DeeObject_Init(result, &MapHashFilter_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 DECL_END

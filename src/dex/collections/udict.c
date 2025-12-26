@@ -1048,7 +1048,7 @@ udict_iter(UDict *__restrict self) {
 	Dee_Incref(self);
 	result->udi_next = atomic_read(&self->ud_elem);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -1082,7 +1082,7 @@ udict_mh_popitem(UDict *__restrict self) {
 	if (--self->ud_used <= self->ud_size / 3)
 		udict_rehash(self, -1);
 	UDict_LockEndWrite(self);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

@@ -873,7 +873,7 @@ libwin32_CreateHandle(HANDLE hHandle) {
 	result->ho_handle = hHandle;
 	DeeObject_Init(result, &DeeHandle_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -3922,7 +3922,7 @@ again:
 			DeeTuple_SET(result, i, handle);
 		}
 		Dee_Free(phModules);
-		return (DREF DeeObject *)result;
+		return Dee_AsObject(result);
 err_modules_result:
 		while (i--) {
 #ifdef libwin32_CreateHandle_ALWAYS_RETURNS_UNIQUE_REFERENCE
@@ -4007,7 +4007,7 @@ again:
 			DeeTuple_SET(result, i, pid_obj);
 		}
 		Dee_Free(pidProcesses);
-		return (DREF DeeObject *)result;
+		return Dee_AsObject(result);
 err_pids_result:
 		Dee_Decrefv_likely(DeeTuple_ELEM(result), i);
 		DeeTuple_FreeUninitialized(result);
@@ -4614,7 +4614,7 @@ resize_buffer:
 		result = (DREF DeeBytesObject *)DeeBytes_TruncateBuffer((DeeObject *)result,
 		                                                        ulReturnLength);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	Dee_Decref_likely(result);
 err:
@@ -4708,7 +4708,7 @@ resize_buffer:
 		result = (DREF DeeBytesObject *)DeeBytes_TruncateBuffer((DeeObject *)result,
 		                                                        ulReturnLength);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	Dee_Decref_likely(result);
 err:
@@ -4777,7 +4777,7 @@ again:
 		result = (DREF DeeBytesObject *)DeeBytes_ResizeBuffer((DREF DeeObject *)result,
 		                                                      szNumberOfBytesRead);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	Dee_Decref_likely(result);
 err:
@@ -4854,7 +4854,7 @@ again:
 		result = (DREF DeeBytesObject *)DeeBytes_ResizeBuffer((DREF DeeObject *)result,
 		                                                      (size_t)szNumberOfBytesRead);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	Dee_Decref_likely(result);
 err:

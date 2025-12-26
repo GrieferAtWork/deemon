@@ -1353,7 +1353,7 @@ DeeSeq_Flat(DeeObject *__restrict self) {
 	Dee_Incref(self);
 	result->sf_seq = self;
 	DeeObject_Init(result, &SeqFlat_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

@@ -97,7 +97,7 @@ PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *
 	Dee_XIncref(owner);
 	DeeObject_Init(result, &DeeFrame_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -680,7 +680,7 @@ frame_getfunc(Frame *__restrict self) {
 	result = frame->cf_func;
 	Dee_Incref(result);
 	DeeFrame_LockEndRead((DeeObject *)self);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -695,7 +695,7 @@ frame_getcode(Frame *__restrict self) {
 	result = frame->cf_func->fo_code;
 	Dee_Incref(result);
 	DeeFrame_LockEndRead((DeeObject *)self);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

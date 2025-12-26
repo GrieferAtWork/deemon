@@ -52,12 +52,12 @@ struct Dee_tuple_object {
 #define DeeTuple_SIZEOF(n_items)                                    \
 	_Dee_MallococBufsize(COMPILER_OFFSETOF(DeeTupleObject, t_elem), \
 	                     n_items, sizeof(DREF DeeObject *))
-#define DeeTuple_IsEmpty(ob)   (Dee_REQUIRES_ANYOBJECT(ob) == Dee_EmptyTuple)
+#define DeeTuple_IsEmpty(ob)   (Dee_AsObject(ob) == Dee_EmptyTuple)
 #define DeeTuple_SIZE(ob)      Dee_REQUIRES_OBJECT(DeeTupleObject, ob)->t_size
 #define DeeTuple_ELEM(ob)      Dee_REQUIRES_OBJECT(DeeTupleObject, ob)->t_elem
 #define DeeTuple_END(ob)       (Dee_REQUIRES_OBJECT(DeeTupleObject, ob)->t_elem + ((DeeTupleObject *)(ob))->t_size)
 #define DeeTuple_GET(ob, i)    Dee_REQUIRES_OBJECT(DeeTupleObject, ob)->t_elem[i]
-#define DeeTuple_SET(ob, i, v) (void)(Dee_REQUIRES_OBJECT(DeeTupleObject, ob)->t_elem[i] = Dee_REQUIRES_ANYOBJECT(v))
+#define DeeTuple_SET(ob, i, v) (void)(Dee_REQUIRES_OBJECT(DeeTupleObject, ob)->t_elem[i] = Dee_AsObject(v))
 
 /* Same as `DeeTuple_SIZEOF()', but makes sure that no overflow takes place. */
 #define DeeTuple_SIZEOF_SAFE(n_items)                                   \

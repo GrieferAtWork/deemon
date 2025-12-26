@@ -146,7 +146,7 @@ INTDEF DeeTypeObject MapSymmetricDifferenceIterator_Type;
 
 
 #define MapUnion_New(a, b) \
-	_MapUnion_New(Dee_REQUIRES_ANYOBJECT(a), Dee_REQUIRES_ANYOBJECT(b))
+	_MapUnion_New(Dee_AsObject(a), Dee_AsObject(b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF MapUnion *DCALL
 _MapUnion_New(DeeObject *a, DeeObject *b) {
 	DREF MapUnion *result;
@@ -164,7 +164,7 @@ err:
 }
 
 #define MapUnion_New_inherit_a(a, b) \
-	_MapUnion_New_inherit_a(Dee_REQUIRES_OBJECT(DREF DeeObject, a), Dee_REQUIRES_ANYOBJECT(b))
+	_MapUnion_New_inherit_a(Dee_REQUIRES_OBJECT(DREF DeeObject, a), Dee_AsObject(b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF MapUnion *DCALL
 _MapUnion_New_inherit_a(/*inherit(always)*/ DREF DeeObject *a, DeeObject *b) {
 	DREF MapUnion *result;
@@ -182,7 +182,7 @@ err:
 }
 
 #define MapUnion_New_inherit_b(a, b) \
-	_MapUnion_New_inherit_b(Dee_REQUIRES_ANYOBJECT(a), Dee_REQUIRES_OBJECT(DREF DeeObject, b))
+	_MapUnion_New_inherit_b(Dee_AsObject(a), Dee_REQUIRES_OBJECT(DREF DeeObject, b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF MapUnion *DCALL
 _MapUnion_New_inherit_b(DeeObject *a, /*inherit(always)*/ DREF DeeObject *b) {
 	DREF MapUnion *result;
@@ -223,7 +223,7 @@ err:
 
 
 #define MapIntersection_New(a, b) \
-	_MapIntersection_New(Dee_REQUIRES_ANYOBJECT(a), Dee_REQUIRES_ANYOBJECT(b))
+	_MapIntersection_New(Dee_AsObject(a), Dee_AsObject(b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF MapIntersection *DCALL
 _MapIntersection_New(DeeObject *a, DeeObject *b) {
 	DREF MapIntersection *result;
@@ -241,7 +241,7 @@ err:
 }
 
 #define MapIntersection_New_inherit_a(a, b) \
-	_MapIntersection_New_inherit_a(Dee_REQUIRES_OBJECT(DREF DeeObject, a), Dee_REQUIRES_ANYOBJECT(b))
+	_MapIntersection_New_inherit_a(Dee_REQUIRES_OBJECT(DREF DeeObject, a), Dee_AsObject(b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF MapIntersection *DCALL
 _MapIntersection_New_inherit_a(/*inherit(always)*/ DREF DeeObject *a, DeeObject *b) {
 	DREF MapIntersection *result;
@@ -259,7 +259,7 @@ err:
 }
 
 #define MapIntersection_New_inherit_b(a, b) \
-	_MapIntersection_New_inherit_b(Dee_REQUIRES_ANYOBJECT(a), Dee_REQUIRES_OBJECT(DREF DeeObject, b))
+	_MapIntersection_New_inherit_b(Dee_AsObject(a), Dee_REQUIRES_OBJECT(DREF DeeObject, b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF MapIntersection *DCALL
 _MapIntersection_New_inherit_b(DeeObject *a, /*inherit(always)*/ DREF DeeObject *b) {
 	DREF MapIntersection *result;
@@ -300,7 +300,7 @@ err:
 
 
 #define MapDifference_New(a, b) \
-	_MapDifference_New(Dee_REQUIRES_ANYOBJECT(a), Dee_REQUIRES_ANYOBJECT(b))
+	_MapDifference_New(Dee_AsObject(a), Dee_AsObject(b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF MapDifference *DCALL
 _MapDifference_New(DeeObject *a, DeeObject *b) {
 	DREF MapDifference *result;
@@ -318,7 +318,7 @@ err:
 }
 
 #define MapDifference_New_inherit_a(a, b) \
-	_MapDifference_New_inherit_a(Dee_REQUIRES_OBJECT(DREF DeeObject, a), Dee_REQUIRES_ANYOBJECT(b))
+	_MapDifference_New_inherit_a(Dee_REQUIRES_OBJECT(DREF DeeObject, a), Dee_AsObject(b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF MapDifference *DCALL
 _MapDifference_New_inherit_a(/*inherit(always)*/ DREF DeeObject *a, DeeObject *b) {
 	DREF MapDifference *result;
@@ -336,7 +336,7 @@ err:
 }
 
 #define MapDifference_New_inherit_b(a, b) \
-	_MapDifference_New_inherit_b(Dee_REQUIRES_ANYOBJECT(a), Dee_REQUIRES_OBJECT(DREF DeeObject, b))
+	_MapDifference_New_inherit_b(Dee_AsObject(a), Dee_REQUIRES_OBJECT(DREF DeeObject, b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF MapDifference *DCALL
 _MapDifference_New_inherit_b(DeeObject *a, /*inherit(always)*/ DREF DeeObject *b) {
 	DREF MapDifference *result;
@@ -377,7 +377,7 @@ err:
 
 
 #define MapSymmetricDifference_New(a, b) \
-	_MapSymmetricDifference_New(Dee_REQUIRES_ANYOBJECT(a), Dee_REQUIRES_ANYOBJECT(b))
+	_MapSymmetricDifference_New(Dee_AsObject(a), Dee_AsObject(b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF MapSymmetricDifference *DCALL
 _MapSymmetricDifference_New(DeeObject *a, DeeObject *b) {
 	DREF MapSymmetricDifference *result;
@@ -395,7 +395,7 @@ err:
 }
 
 #define MapSymmetricDifference_New_inherit_a(a, b) \
-	_MapSymmetricDifference_New_inherit_a(Dee_REQUIRES_OBJECT(DREF DeeObject, a), Dee_REQUIRES_ANYOBJECT(b))
+	_MapSymmetricDifference_New_inherit_a(Dee_REQUIRES_OBJECT(DREF DeeObject, a), Dee_AsObject(b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF MapSymmetricDifference *DCALL
 _MapSymmetricDifference_New_inherit_a(/*inherit(always)*/ DREF DeeObject *a, DeeObject *b) {
 	DREF MapSymmetricDifference *result;
@@ -413,7 +413,7 @@ err:
 }
 
 #define MapSymmetricDifference_New_inherit_b(a, b) \
-	_MapSymmetricDifference_New_inherit_b(Dee_REQUIRES_ANYOBJECT(a), Dee_REQUIRES_OBJECT(DREF DeeObject, b))
+	_MapSymmetricDifference_New_inherit_b(Dee_AsObject(a), Dee_REQUIRES_OBJECT(DREF DeeObject, b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF MapSymmetricDifference *DCALL
 _MapSymmetricDifference_New_inherit_b(DeeObject *a, /*inherit(always)*/ DREF DeeObject *b) {
 	DREF MapSymmetricDifference *result;

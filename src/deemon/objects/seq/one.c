@@ -469,7 +469,7 @@ so_add(SeqOne *lhs, DeeObject *rhs) {
 			DREF DeeTupleObject *result;
 			result = pack_tuple_with_prepend(lhs->so_item, rhs, sizehint,
 			                                 Dee_TYPE(rhs)->tp_seq->tp_asvector);
-			return (DREF DeeObject *)result;
+			return Dee_AsObject(result);
 		}
 	}
 	return DeeSeq_Concat((DeeObject *)lhs, rhs);
@@ -1262,7 +1262,7 @@ DeeSeq_PackOne(DeeObject *__restrict item) {
 	Dee_Incref(item);
 	result->so_item = item;
 	DeeObject_Init(result, &DeeSeqOne_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -1274,7 +1274,7 @@ DeeSeq_PackOneInherited(/*inherit(always)*/ DREF DeeObject *__restrict item) {
 		goto err;
 	result->so_item = item; /* Inherited */
 	DeeObject_Init(result, &DeeSeqOne_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	Dee_Decref(item); /* Inherited */
 	return NULL;
@@ -1287,7 +1287,7 @@ DeeSeq_PackOneInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restr
 		goto err;
 	result->so_item = item; /* Inherited */
 	DeeObject_Init(result, &DeeSeqOne_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

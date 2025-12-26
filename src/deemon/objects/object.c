@@ -1592,7 +1592,7 @@ object_str(DeeObject *__restrict self) {
 			                               DeeStringObject,
 			                               s_str);
 			Dee_Incref(result);
-			return (DREF DeeObject *)result;
+			return Dee_AsObject(result);
 		}
 		return DeeString_New(tp_self->tp_name);
 	}
@@ -2667,7 +2667,7 @@ type_str(DeeObject *__restrict self) {
 		                               DeeStringObject,
 		                               s_str);
 		Dee_Incref(result);
-		return (DREF DeeObject *)result;
+		return Dee_AsObject(result);
 	}
 	name = DeeType_GetName(me);
 	return DeeString_New(name);
@@ -2708,7 +2708,7 @@ type_repr(DeeObject *__restrict self) {
 	result  = (DREF DeeStringObject *)DeeString_Newf("%k.%s", modname, name);
 	Dee_Decref(mod);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 fallback:
 	return type_str(self);
 }
@@ -4155,7 +4155,7 @@ get_module_from_addr(struct class_desc *__restrict my_class, uint16_t addr) {
 		Dee_Incref(result);
 	}
 	Dee_class_desc_lock_endread(my_class);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

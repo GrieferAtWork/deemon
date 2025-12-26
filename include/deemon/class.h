@@ -610,7 +610,7 @@ struct Dee_instance_desc {
 #define Dee_instance_desc_lock_end(self)        Dee_atomic_rwlock_end(&(self)->id_lock)
 
 #define DeeInstance_DESC(class_descriptor, self) \
-	((struct Dee_instance_desc *)((uintptr_t)Dee_REQUIRES_ANYOBJECT(self) + (class_descriptor)->cd_offset))
+	((struct Dee_instance_desc *)((uintptr_t)Dee_AsObject(self) + (class_descriptor)->cd_offset))
 
 
 /* Get/Call/Del/Set an instance attribute, as acquired

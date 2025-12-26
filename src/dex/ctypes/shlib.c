@@ -222,7 +222,7 @@ shlib_getitem(Shlib *self, DeeObject *name) {
 		goto err_type;
 	DeeObject_InitInherited(result, DeeSType_AsType(result_type));
 	result->p_ptr.ptr = symaddr;
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_type:
 	Dee_Decref_unlikely(DeeSType_AsType(result_type));
 err:
@@ -305,7 +305,7 @@ shlib_getattr(Shlib *self,
 	DeeObject_Init(result, DeeSType_AsType(result_type));
 #endif /* !CONFIG_NO_CFUNCTION */
 	result->p_ptr.ptr = symaddr;
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -340,7 +340,7 @@ shlib_base(Shlib *self, size_t argc,
 	/* Return the base address of the shared library. */
 	result->p_ptr.ptr = (void *)self->sh_lib;
 
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_type:
 	Dee_Decref_unlikely(DeeSType_AsType(result_type));
 err:
@@ -473,7 +473,7 @@ shlib_addr2name_impl(void const *addr) {
 				goto err_name_delta;
 			result->t_elem[0] = name;  /* Inherit reference */
 			result->t_elem[1] = delta; /* Inherit reference */
-			return (DREF DeeObject *)result;
+			return Dee_AsObject(result);
 err_name_delta:
 			Dee_Decref(delta);
 err_name:

@@ -1679,7 +1679,7 @@ AttributeError_get_name(AttributeError *__restrict self) {
 	if (self->ae_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ) {
 		DeeStringObject *result = Dee_attrdesc_nameobj(&self->ae_desc);
 		Dee_Incref(result);
-		return (DREF DeeObject *)result;
+		return Dee_AsObject(result);
 	}
 	return DeeString_New(self->ae_desc.ad_name);
 err_unbound:

@@ -294,7 +294,7 @@ MapByAttr_New(DeeObject *__restrict map) {
 		Dee_Incref(map);
 		result->mba_map = map;
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 

@@ -2830,7 +2830,7 @@ string_re_findall(String *__restrict self,
 	Dee_Incref(result->rs_exec.rx_pattern);
 	DeeObject_Init(result, &ReFindAll_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -2846,7 +2846,7 @@ string_reg_findall(String *__restrict self,
 	Dee_Incref(result->rs_exec.rx_pattern);
 	DeeObject_Init(result, &RegFindAll_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -2862,7 +2862,7 @@ string_reg_locateall(String *__restrict self,
 	Dee_Incref(result->rs_exec.rx_pattern);
 	DeeObject_Init(result, &RegLocateAll_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -2878,7 +2878,7 @@ string_re_locateall(String *__restrict self,
 	Dee_Incref(result->rs_exec.rx_pattern);
 	DeeObject_Init(result, &ReLocateAll_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -2896,7 +2896,7 @@ string_re_split(String *__restrict self,
 	Dee_Incref(result->rs_exec.rx_pattern);
 	DeeObject_Init(result, &ReSplit_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -2913,7 +2913,7 @@ bytes_re_findall(DeeBytesObject *__restrict self,
 	Dee_Incref(result->rs_exec.rx_pattern);
 	DeeObject_Init(result, &ReBytesFindAll_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -2929,7 +2929,7 @@ bytes_reg_findall(DeeBytesObject *__restrict self,
 	Dee_Incref(result->rs_exec.rx_pattern);
 	DeeObject_Init(result, &RegBytesFindAll_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -2945,7 +2945,7 @@ bytes_reg_locateall(DeeBytesObject *__restrict self,
 	Dee_Incref(result->rs_exec.rx_pattern);
 	DeeObject_Init(result, &RegBytesLocateAll_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -2961,7 +2961,7 @@ bytes_re_locateall(DeeBytesObject *__restrict self,
 	Dee_Incref(result->rs_exec.rx_pattern);
 	DeeObject_Init(result, &ReBytesLocateAll_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -2979,7 +2979,7 @@ bytes_re_split(DeeBytesObject *__restrict self,
 	Dee_Incref(result->rs_exec.rx_pattern);
 	DeeObject_Init(result, &ReBytesSplit_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 DECL_END

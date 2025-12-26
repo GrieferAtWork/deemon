@@ -265,7 +265,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 	result->s_hash = (Dee_hash_t)-1;
 	result->s_data = NULL;
 	DBG_memset(self, 0xcc, sizeof(*self));
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 /* Search the buffer that has already been created for an existing instance
@@ -337,7 +337,7 @@ DeeString_ResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 		result->s_len = num_bytes;
 		result->s_str[num_bytes] = '\0';
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
@@ -368,7 +368,7 @@ DeeString_TryResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 		result->s_len            = num_bytes;
 		result->s_str[num_bytes] = '\0';
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 /* Construct an uninitialized single-byte string,
@@ -399,7 +399,7 @@ PUBLIC WUNUSED DREF DeeObject *
 		result->s_len            = num_bytes;
 		result->s_str[num_bytes] = '\0';
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 #ifdef NDEBUG
@@ -1729,7 +1729,7 @@ string_iter(String *__restrict self) {
 	                              WSTR_LENGTH(result->si_iter.ptr) *
 	                              STRING_SIZEOF_WIDTH(result->si_width));
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

@@ -37,7 +37,7 @@ __map_setold_ex__(key,value)->?T2?Dbool?X2?O?N {
 		goto err_old_value;
 	result->t_elem[0] = DeeBool_NewTrue();
 	result->t_elem[1] = old_value; /* Inherit reference */
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_old_value:
 	Dee_Decref(old_value);
 err:

@@ -239,7 +239,7 @@ compiler_get_module(DeeCompilerObject *__restrict self) {
 	result = current_rootscope->rs_module;
 	Dee_Incref(result);
 	COMPILER_END();
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

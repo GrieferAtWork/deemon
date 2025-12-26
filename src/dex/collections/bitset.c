@@ -3391,7 +3391,7 @@ bsv_frozen(BitsetView *__restrict self) {
 	                                   ref.bsr_startbit, ref_nbits);
 	result->bs_nbits = ref_nbits;
 	DeeObject_Init(result, &RoBitset_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

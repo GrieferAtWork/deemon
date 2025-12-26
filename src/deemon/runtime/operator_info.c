@@ -2105,7 +2105,7 @@ type_get_operators(DeeTypeObject *__restrict self) {
 	Dee_Incref(self);
 	DeeObject_Init(result, &TypeOperators_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2119,7 +2119,7 @@ type_get_operatorids(DeeTypeObject *__restrict self) {
 	Dee_Incref(self);
 	DeeObject_Init(result, &TypeOperators_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 

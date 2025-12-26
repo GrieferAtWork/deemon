@@ -1219,7 +1219,7 @@ DeeCachedDict_New(DeeObject *__restrict mapping) {
 	DeeObject_Init(result, &DeeCachedDict_Type);
 	result = (DREF CachedDict *)DeeGC_Track((DREF DeeObject *)result);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1236,7 +1236,7 @@ DeeCachedDict_NewInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__re
 	DeeObject_Init(result, &DeeCachedDict_Type);
 	result = (DREF CachedDict *)DeeGC_Track((DREF DeeObject *)result);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 

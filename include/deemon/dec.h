@@ -395,8 +395,8 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_dec_addr_t (DCALL DeeDecWriter_TryMalloc)(DeeDe
 DFUNDEF WUNUSED NONNULL((1)) Dee_dec_addr_t (DCALL DeeDecWriter_Malloc)(DeeDecWriter *__restrict self, size_t num_bytes);
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_dec_addr_t (DCALL DeeDecWriter_Object_Malloc)(DeeDecWriter *__restrict self, size_t num_bytes, DeeObject *__restrict ref);
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_dec_addr_t (DCALL DeeDecWriter_GCObject_Malloc)(DeeDecWriter *__restrict self, size_t num_bytes, DeeObject *__restrict ref);
-#define DeeDecWriter_Object_Malloc(self, num_bytes, ref)      DeeDecWriter_Object_Malloc(self, num_bytes, Dee_REQUIRES_ANYOBJECT(ref))
-#define DeeDecWriter_GCObject_Malloc(self, num_bytes, ref)    DeeDecWriter_GCObject_Malloc(self, num_bytes, Dee_REQUIRES_ANYOBJECT(ref))
+#define DeeDecWriter_Object_Malloc(self, num_bytes, ref)      DeeDecWriter_Object_Malloc(self, num_bytes, Dee_AsObject(ref))
+#define DeeDecWriter_GCObject_Malloc(self, num_bytes, ref)    DeeDecWriter_GCObject_Malloc(self, num_bytes, Dee_AsObject(ref))
 /* Free a heap pointer
  * CAUTION: Only the most-recent pointer can *actually* be free'd!
  *          If you pass anything else, this function is a no-op! */
@@ -426,10 +426,10 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeDecWriter_PutObject)(DeeDecWriter 
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeDecWriter_XPutObject)(DeeDecWriter *__restrict self, Dee_dec_addr_t addr, /*0..1*/ DeeObject *obj);
 DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeDecWriter_PutObjectInherited)(DeeDecWriter *__restrict self, Dee_dec_addr_t addr, /*inherit(always)*/ DREF DeeObject *__restrict obj);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeDecWriter_XPutObjectInherited)(DeeDecWriter *__restrict self, Dee_dec_addr_t addr, /*0..1*/ /*inherit(always)*/ DREF DeeObject *obj);
-#define DeeDecWriter_PutObject(self, addr, obj)           DeeDecWriter_PutObject(self, addr, Dee_REQUIRES_ANYOBJECT(obj))
-#define DeeDecWriter_XPutObject(self, addr, obj)          DeeDecWriter_XPutObject(self, addr, Dee_REQUIRES_ANYOBJECT(obj))
-#define DeeDecWriter_PutObjectInherited(self, addr, obj)  DeeDecWriter_PutObjectInherited(self, addr, Dee_REQUIRES_ANYOBJECT(obj))
-#define DeeDecWriter_XPutObjectInherited(self, addr, obj) DeeDecWriter_XPutObjectInherited(self, addr, Dee_REQUIRES_ANYOBJECT(obj))
+#define DeeDecWriter_PutObject(self, addr, obj)           DeeDecWriter_PutObject(self, addr, Dee_AsObject(obj))
+#define DeeDecWriter_XPutObject(self, addr, obj)          DeeDecWriter_XPutObject(self, addr, Dee_AsObject(obj))
+#define DeeDecWriter_PutObjectInherited(self, addr, obj)  DeeDecWriter_PutObjectInherited(self, addr, Dee_AsObject(obj))
+#define DeeDecWriter_XPutObjectInherited(self, addr, obj) DeeDecWriter_XPutObjectInherited(self, addr, Dee_AsObject(obj))
 
 /* Create a duplicate of memory `data...+=num_bytes' and put an address to
  * this newly allocated copy at `DeeDecWriter_Addr2Mem(self, addr, void *)'

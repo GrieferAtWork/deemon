@@ -2707,7 +2707,7 @@ IteratorFuture_For(DeeObject *__restrict self) {
 	Dee_Incref(self);
 	DeeObject_Init(result, &IteratorFuture_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2895,7 +2895,7 @@ IteratorPending_For(DeeObject *__restrict self) {
 	Dee_Incref(self);
 	DeeObject_Init(result, &IteratorPending_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 STATIC_ASSERT(offsetof(IteratorFuture, if_iter) ==

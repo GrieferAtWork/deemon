@@ -2056,7 +2056,7 @@ DeeRelInt_New(struct asm_sym *__restrict sym,
 	result->ri_mode = mode;
 	DeeObject_Init(result, &DeeRelInt_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED int32_t DCALL

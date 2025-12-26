@@ -573,7 +573,7 @@ again:
 	result->rd_hidxget = Dee_dict_hidxio[dst_hidxio].dhxio_get;
 	DeeObject_Init(result, &DeeRoDict_Type);
 	rodict_verify(result);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

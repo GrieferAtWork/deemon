@@ -1029,7 +1029,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL asm_gpush_stk(struct asm_sym *__restrict s
 INTDEF WUNUSED NONNULL((1)) int32_t (DCALL asm_newconst)(DeeObject *__restrict constvalue);
 INTDEF WUNUSED NONNULL((1)) int32_t (DCALL asm_newconst_string)(char const *__restrict str, size_t len);
 INTDEF WUNUSED NONNULL((1)) int32_t (DCALL asm_newconst_inherited)(/*inherit(always)*/ DREF DeeObject *__restrict constvalue);
-#define asm_newconst(constvalue)           asm_newconst(Dee_REQUIRES_ANYOBJECT(constvalue))
+#define asm_newconst(constvalue)           asm_newconst(Dee_AsObject(constvalue))
 #define asm_newconst_inherited(constvalue) asm_newconst_inherited(Dee_REQUIRES_OBJECT(DREF DeeObject, constvalue))
 
 /* Check if a given constant value can safely appear in constant variable slots.
@@ -1588,7 +1588,7 @@ INTDEF WUNUSED NONNULL((1)) bool DCALL asm_can_prefix_symbol_for_read(struct sym
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_gpush_bnd_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_gdel_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_gpop_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
-#define asm_gpush_constexpr(value)           __builtin_expect(asm_gpush_constexpr(Dee_REQUIRES_ANYOBJECT(value)), 0)
+#define asm_gpush_constexpr(value)           __builtin_expect(asm_gpush_constexpr(Dee_AsObject(value)), 0)
 #define asm_gpush_constexpr_inherited(value) __builtin_expect(asm_gpush_constexpr_inherited(Dee_REQUIRES_OBJECT(DREF DeeObject, value)), 0)
 
 /* Check if `sym' is accessible from the current

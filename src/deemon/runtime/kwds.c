@@ -337,7 +337,7 @@ DeeKwds_NewWithHint(size_t num_items) {
 	result->kw_mask = init_mask;
 	DeeObject_Init(result, &DeeKwds_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF Kwds *DCALL
@@ -1589,7 +1589,7 @@ DeeKwdsMapping_New(/*Kwds*/ DeeObject *kwds,
 	result->kmo_kwds = (DREF DeeKwdsObject *)kwds;
 	DeeObject_Init(result, &DeeKwdsMapping_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 /* Unshare the argument vector from a keywords-mapping object, automatically

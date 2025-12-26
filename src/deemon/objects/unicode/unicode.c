@@ -515,7 +515,7 @@ PUBLIC WUNUSED DREF DeeObject *
 		latin1_chars[ch] = result;
 		latin1_chars_lock_endwrite();
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 #endif /* CONFIG_STRING_LATIN1_CACHED */
@@ -525,14 +525,14 @@ err:
 	result = (DREF String *)DeeString_NewBuffer(1);
 	if likely(result)
 		result->s_str[0] = (char)ch;
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 #endif /* CONFIG_STRING_LATIN1_NORMAL */
 
 #ifdef CONFIG_STRING_LATIN1_STATIC
 	String *result;
 	result = (String *)&DeeString_Latin1[ch];
 	Dee_Incref(result);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 #endif /* CONFIG_STRING_LATIN1_STATIC */
 }
 
@@ -1498,7 +1498,7 @@ DeeString_Pack2ByteBuffer(/*inherit(always)*/ uint16_t *__restrict text) {
 	result->s_str[utf8_length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
 	(void)Dee_UntrackAlloc((size_t *)text - 1);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_Free(result);
 err:
@@ -1552,7 +1552,7 @@ DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/ uint16_t *__restrict text) 
 	result->s_str[utf8_length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
 	(void)Dee_UntrackAlloc((size_t *)text - 1);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_Free(result);
 err:
@@ -1732,7 +1732,7 @@ read_text_i:
 	result->s_hash = DEE_STRING_HASH_UNSET;
 	result->s_str[utf8_length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r_utf:
 	Dee_string_utf_free(utf);
 err_r:
@@ -1886,7 +1886,7 @@ continue_at_i:
 	result->s_hash = DEE_STRING_HASH_UNSET;
 	result->s_str[utf8_length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r_utf:
 	Dee_string_utf_free(utf);
 err_r:
@@ -1966,7 +1966,7 @@ DeeString_PackUtf32Buffer(/*inherit(always)*/ uint32_t *__restrict text,
 	result->s_str[utf8_length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
 	(void)Dee_UntrackAlloc((size_t *)text - 1);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_Free(result);
 err:
@@ -2028,7 +2028,7 @@ DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/ uint32_t *__restrict text) 
 	result->s_str[utf8_length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
 	(void)Dee_UntrackAlloc((size_t *)text - 1);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_Free(result);
 err:
@@ -2369,7 +2369,7 @@ err_buffer16:
 	result->s_len  = length;
 	result->s_str[length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_Free(result);
 err:
@@ -2595,7 +2595,7 @@ err_buffer16:
 	result->s_len  = length;
 	result->s_str[length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_Free(result);
 err:
@@ -2801,7 +2801,7 @@ err_buffer16:
 	ASSERT(!DeeObject_IsShared(result));
 	ASSERT(!result->s_data);
 	result->s_data = Dee_string_utf_untrack(utf);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FreeTracker((DeeObject *)result);
 	DeeObject_Free(result);
@@ -2973,7 +2973,7 @@ err_buffer16:
 	ASSERT(!DeeObject_IsShared(result));
 	ASSERT(!result->s_data);
 	result->s_data = Dee_string_utf_untrack(utf);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	/*DeeObject_FreeTracker(result);*/
 	/*DeeObject_Free(result);*/

@@ -745,13 +745,13 @@ _DeeString_WSiz(DeeStringObject const *__restrict self) {
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t
 (DCALL DeeString_Hash)(DeeObject *__restrict self);
-#define DeeString_Hash(self) DeeString_Hash(Dee_REQUIRES_ANYOBJECT(self))
+#define DeeString_Hash(self) DeeString_Hash(Dee_AsObject(self))
 #else /* CONFIG_BUILDING_DEEMON */
 #define DeeString_Hash(self) DeeObject_Hash(self)
 #endif /* !CONFIG_BUILDING_DEEMON */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t
 (DCALL DeeString_HashCase)(DeeObject *__restrict self);
-#define DeeString_HashCase(self) DeeString_HashCase(Dee_REQUIRES_ANYOBJECT(self))
+#define DeeString_HashCase(self) DeeString_HashCase(Dee_AsObject(self))
 
 /* Delete cached buffer encodings from a given 1-byte string. */
 PUBLIC NONNULL((1)) void DCALL DeeString_FreeWidth(DeeObject *__restrict self);
@@ -1809,7 +1809,7 @@ LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 	result->s_hash               = DEE_STRING_HASH_UNSET;
 	result->s_str[result->s_len] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 LOCAL WUNUSED NONNULL((1)) DREF DeeObject *

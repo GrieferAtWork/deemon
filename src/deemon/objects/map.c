@@ -628,7 +628,7 @@ map_fromkeys(DeeTypeObject *self, size_t argc,
 		Dee_Decref_likely(result);
 		return instance;
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

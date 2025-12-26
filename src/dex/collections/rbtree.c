@@ -938,7 +938,7 @@ err_changed_unlock:
 		Dee_Incref(result->rbti_tree);                                           \
 		DeeObject_Init(result, &RBTreeIterator_Type);                            \
 	done:                                                                        \
-		return (DREF DeeObject *)result;                                         \
+		return Dee_AsObject(result);                                         \
 	err_r_unlock_unbound:                                                        \
 		RBTree_LockEndRead(tree);                                                \
 		DeeObject_FREE(result);                                                  \
@@ -2369,7 +2369,7 @@ rbtree_locate(RBTree *self, size_t argc, DeeObject *const *argv) {
 	DeeTuple_SET(result, 2, rbtree_node_get_value(node));
 	Dee_Increfv(DeeTuple_ELEM(result), 3);
 	RBTree_LockEndRead(self);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -2407,7 +2407,7 @@ rbtree_itlocate(RBTree *self, size_t argc, DeeObject *const *argv) {
 	result->rbti_tree = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &RBTreeIterator_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -2447,7 +2447,7 @@ again_locate_node:
 	DeeTuple_SET(result, 1, rbtree_node_get_maxkey(node)); /* Inherit reference */
 	DeeTuple_SET(result, 2, rbtree_node_get_value(node));  /* Inherit reference */
 	rbtree_node_free(node); /* NOTE: free; not destroy! (because we stole references) */
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -2490,7 +2490,7 @@ rbtree_prevnode(RBTree *self, size_t argc, DeeObject *const *argv) {
 	DeeTuple_SET(result, 2, rbtree_node_get_value(node));
 	Dee_Increfv(DeeTuple_ELEM(result), 3);
 	RBTree_LockEndRead(self);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -2522,7 +2522,7 @@ rbtree_nextnode(RBTree *self, size_t argc, DeeObject *const *argv) {
 	DeeTuple_SET(result, 2, rbtree_node_get_value(node));
 	Dee_Increfv(DeeTuple_ELEM(result), 3);
 	RBTree_LockEndRead(self);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -2555,7 +2555,7 @@ rbtree_itprevnode(RBTree *self, size_t argc, DeeObject *const *argv) {
 	result->rbti_tree = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &RBTreeIterator_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -2588,7 +2588,7 @@ rbtree_itnextnode(RBTree *self, size_t argc, DeeObject *const *argv) {
 	result->rbti_tree = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &RBTreeIterator_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -2616,7 +2616,7 @@ rbtree_popfront(RBTree *self, size_t argc, DeeObject *const *argv) {
 	DeeTuple_SET(result, 1, rbtree_node_get_maxkey(node)); /* Inherit reference */
 	DeeTuple_SET(result, 2, rbtree_node_get_value(node));  /* Inherit reference */
 	rbtree_node_free(node); /* NOTE: free; not destroy! (because we stole references) */
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_empty:
 	DeeRT_ErrEmptySequence(self);
 err:
@@ -2646,7 +2646,7 @@ rbtree_popback(RBTree *self, size_t argc, DeeObject *const *argv) {
 	DeeTuple_SET(result, 1, rbtree_node_get_maxkey(node)); /* Inherit reference */
 	DeeTuple_SET(result, 2, rbtree_node_get_value(node));  /* Inherit reference */
 	rbtree_node_free(node); /* NOTE: free; not destroy! (because we stole references) */
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_empty:
 	DeeRT_ErrEmptySequence(self);
 err:

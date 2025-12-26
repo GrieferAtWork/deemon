@@ -39,7 +39,7 @@ __map_values__.map_values([[nonnull]] DeeObject *__restrict self)
 	Dee_Incref(self);
 	result->dsmp_map = self;
 	DeeObject_Init(result, &DefaultSequence_MapValues_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }} {

@@ -701,6 +701,7 @@
 		<ClCompile Include="..\src\deemon\runtime\operator.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator_info.c" />
 		<ClCompile Include="..\src\deemon\runtime\runtime_error.c" />
+		<ClCompile Include="..\src\deemon\runtime\serial.c" />
 		<ClCompile Include="..\src\deemon\runtime\simple-hashset.c" />
 		<ClCompile Include="..\src\deemon\runtime\strings.c" />
 		<ClCompile Include="..\src\deemon\runtime\struct.c" />

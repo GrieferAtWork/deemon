@@ -528,7 +528,7 @@ DeeString_Segments(String *__restrict self,
 	result->s_siz = segment_size;
 	DeeObject_Init(result, &StringSegments_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 

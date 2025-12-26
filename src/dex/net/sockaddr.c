@@ -436,7 +436,7 @@ again:
 		result->s_data = NULL;
 		result->s_len  = name_length;
 		DeeObject_Init(result, &DeeString_Type);
-		return (DREF DeeObject *)result;
+		return Dee_AsObject(result);
 	}
 	sysdb_lock_endwrite();
 	if (!ent)
@@ -794,7 +794,7 @@ restart:
 	result->s_data = NULL;
 	result->s_hash = (Dee_hash_t)-1;
 	result->s_len  = name_length;
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 nodns2:

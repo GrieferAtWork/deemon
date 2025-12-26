@@ -641,7 +641,7 @@ DeeFunction_GetStaticsWrapper(DeeFunctionObject *__restrict self) {
 	result->fs_func = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &FunctionStatics_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -1782,7 +1782,7 @@ DeeFunction_GetRefsByNameWrapper(DeeFunctionObject *__restrict self) {
 	result->fsbn_rid_start = 0;
 	result->fsbn_rid_end   = self->fo_code->co_refc;
 	DeeObject_Init(result, &FunctionSymbolsByName_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -1798,7 +1798,7 @@ DeeFunction_GetStaticsByNameWrapper(DeeFunctionObject *__restrict self) {
 	result->fsbn_rid_start = self->fo_code->co_refc;
 	result->fsbn_rid_end   = self->fo_code->co_refstaticc;
 	DeeObject_Init(result, &FunctionSymbolsByName_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -1814,7 +1814,7 @@ DeeFunction_GetSymbolsByNameWrapper(DeeFunctionObject *__restrict self) {
 	result->fsbn_rid_start = 0;
 	result->fsbn_rid_end   = self->fo_code->co_refstaticc;
 	DeeObject_Init(result, &FunctionSymbolsByName_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -2996,7 +2996,7 @@ DeeYieldFunction_GetArgsByNameWrapper(DeeYieldFunctionObject *__restrict self) {
 	result->yfsbn_rid_start = 0;
 	result->yfsbn_rid_end   = 0;
 	DeeObject_Init(result, &YieldFunctionSymbolsByName_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -3011,11 +3011,11 @@ DeeYieldFunction_GetSymbolsByNameWrapper(DeeYieldFunctionObject *__restrict self
 	result->yfsbn_yfunc = self;
 	Dee_Incref(self);
 	code = self->yf_func->fo_code;
-	result->yfsbn_nargs     = code->co_argc_max;
+	result->yfsbn_nargs = code->co_argc_max;
 	result->yfsbn_rid_start = 0;
 	result->yfsbn_rid_end   = code->co_refstaticc;
 	DeeObject_Init(result, &YieldFunctionSymbolsByName_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -3264,7 +3264,7 @@ DeeFrame_GetArgsWrapper(DeeFrameObject *__restrict self) {
 	result->fa_frame = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &FrameArgs_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -3604,7 +3604,7 @@ DeeFrame_GetLocalsWrapper(DeeFrameObject *__restrict self) {
 	result->fl_frame = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &FrameLocals_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -4026,7 +4026,7 @@ DeeFrame_GetStackWrapper(DeeFrameObject *__restrict self) {
 	result->fs_frame = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &FrameStack_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -5621,7 +5621,7 @@ DeeFrame_GetArgsByNameWrapper(DeeFrameObject *__restrict self) {
 		result->frsbn_localc    = 0;
 		result->frsbn_stackc    = 0;
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -5634,7 +5634,7 @@ DeeFrame_GetLocalsByNameWrapper(DeeFrameObject *__restrict self) {
 		result->frsbn_rid_end   = 0;
 		result->frsbn_stackc    = 0;
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -5647,7 +5647,7 @@ DeeFrame_GetStackByNameWrapper(DeeFrameObject *__restrict self) {
 		result->frsbn_rid_end   = 0;
 		result->frsbn_localc    = 0;
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -5659,7 +5659,7 @@ DeeFrame_GetVariablesByNameWrapper(DeeFrameObject *__restrict self) {
 		result->frsbn_rid_start = 0;
 		result->frsbn_rid_end   = 0;
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -5685,7 +5685,7 @@ DeeFrame_GetSymbolsByNameWrapper(DeeFrameObject *__restrict self) {
 	result->frsbn_frame     = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &FrameSymbolsByName_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 err:

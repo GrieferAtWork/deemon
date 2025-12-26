@@ -897,7 +897,7 @@ DeeString_FindAll(String *self, String *other,
 	Dee_Incref(other);
 	DeeObject_Init(result, &StringFind_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -917,7 +917,7 @@ DeeString_CaseFindAll(String *self, String *other,
 	Dee_Incref(other);
 	DeeObject_Init(result, &StringCaseFind_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 

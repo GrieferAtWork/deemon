@@ -260,7 +260,7 @@ DeeModule_GetRootCode(/*Module*/ DeeObject *__restrict self) {
 	result = me->mo_moddata.mo_rootcode;
 	Dee_Incref(result);
 	DeeModule_LockEndRead(me);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF /*Function*/ DeeObject *DCALL
@@ -379,7 +379,7 @@ DeeModule_GetRoot(DeeObject *__restrict self,
 				break; /* Don't interfere with an on-going initialization. */
 		} while (!atomic_cmpxch_weak(&me->mo_flags, flags, flags | Dee_MODULE_FDIDINIT));
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

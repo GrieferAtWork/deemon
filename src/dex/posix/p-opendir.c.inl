@@ -2239,7 +2239,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_fdopendir_f_impl(Dee
 	result->d_path      = path;
 	result->d_skipdots  = skipdots;
 	result->d_inheritfd = inheritfd;
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

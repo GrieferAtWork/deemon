@@ -177,7 +177,7 @@ again:
 	DeeList_LockEndRead(self);
 	DeeObject_Init(result, &DeeTuple_Type);
 	result->t_size = range_size;
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

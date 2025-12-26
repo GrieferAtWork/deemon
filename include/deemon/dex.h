@@ -225,15 +225,15 @@ INTDEF __BYTE_TYPE__ _end[];
 #define Dee_DEX_BEGIN \
 	INTERN struct Dee_dex_symbol _dex_symbols[] = {
 #define Dee_DEX_MEMBER(name, obj, doc)           Dee_DEX_MEMBER_F(name, obj, Dee_DEXSYM_NORMAL, doc)
-#define Dee_DEX_MEMBER_F(name, obj, flags, doc)  { name, DOC(doc), Dee_REQUIRES_ANYOBJECT(obj), (flags) & ~(Dee_DEXSYM_PROPERTY), 0, 0 }
+#define Dee_DEX_MEMBER_F(name, obj, flags, doc)  { name, DOC(doc), Dee_AsObject(obj), (flags) & ~(Dee_DEXSYM_PROPERTY), 0, 0 }
 #define Dee_DEX_MEMBER_NODOC(name, obj)          Dee_DEX_MEMBER(name, obj, NULL)
 #define Dee_DEX_MEMBER_F_NODOC(name, obj, flags) Dee_DEX_MEMBER_F(name, obj, flags, NULL)
 #define Dee_DEX_GETSET_F(name, get, del, set, flags, doc)                                                    \
-	{ name, DOC(doc), Dee_REQUIRES_ANYOBJECT(get), MODSYM_FPROPERTY | ((flags) & ~MODSYM_FREADONLY), 0, 0 }, \
-	{ NULL, NULL, Dee_REQUIRES_ANYOBJECT(del), MODSYM_FNORMAL, 0, 0 },                                       \
-	{ NULL, NULL, Dee_REQUIRES_ANYOBJECT(set), MODSYM_FNORMAL, 0, 0 }
+	{ name, DOC(doc), Dee_AsObject(get), MODSYM_FPROPERTY | ((flags) & ~MODSYM_FREADONLY), 0, 0 }, \
+	{ NULL, NULL, Dee_AsObject(del), MODSYM_FNORMAL, 0, 0 },                                       \
+	{ NULL, NULL, Dee_AsObject(set), MODSYM_FNORMAL, 0, 0 }
 #define Dee_DEX_GETTER_F(name, get, flags, doc) \
-	{ name, DOC(doc), Dee_REQUIRES_ANYOBJECT(get), MODSYM_FREADONLY | MODSYM_FPROPERTY | (flags), 0, 0 }
+	{ name, DOC(doc), Dee_AsObject(get), MODSYM_FREADONLY | MODSYM_FPROPERTY | (flags), 0, 0 }
 #define Dee_DEX_GETSET(name, get, del, set, doc)           Dee_DEX_GETSET_F(name, get, del, set, Dee_DEXSYM_NORMAL, doc)
 #define Dee_DEX_GETTER(name, get, doc)                     Dee_DEX_GETTER_F(name, get, Dee_DEXSYM_NORMAL, doc)
 #define Dee_DEX_GETSET_F_NODOC(name, get, del, set, flags) Dee_DEX_GETSET_F(name, get, del, set, flags, NULL)
@@ -335,15 +335,15 @@ struct Dee_dex_symbol {
 #define Dee_DEX_BEGIN \
 	PRIVATE struct Dee_dex_symbol _dex_symbols[] = {
 #define Dee_DEX_MEMBER(name, obj, doc)           Dee_DEX_MEMBER_F(name, obj, Dee_DEXSYM_NORMAL, doc)
-#define Dee_DEX_MEMBER_F(name, obj, flags, doc)  { name, Dee_REQUIRES_ANYOBJECT(obj), (flags) & ~(Dee_DEXSYM_PROPERTY), DOC(doc) }
+#define Dee_DEX_MEMBER_F(name, obj, flags, doc)  { name, Dee_AsObject(obj), (flags) & ~(Dee_DEXSYM_PROPERTY), DOC(doc) }
 #define Dee_DEX_MEMBER_NODOC(name, obj)          Dee_DEX_MEMBER(name, obj, NULL)
 #define Dee_DEX_MEMBER_F_NODOC(name, obj, flags) Dee_DEX_MEMBER_F(name, obj, flags, NULL)
 #define Dee_DEX_GETSET_F(name, get, del, set, flags, doc)                                              \
-	{ name, Dee_REQUIRES_ANYOBJECT(get), MODSYM_FPROPERTY | ((flags) & ~MODSYM_FREADONLY), DOC(doc) }, \
-	{ NULL, Dee_REQUIRES_ANYOBJECT(del), MODSYM_FNORMAL, NULL },                                       \
-	{ NULL, Dee_REQUIRES_ANYOBJECT(set), MODSYM_FNORMAL, NULL }
+	{ name, Dee_AsObject(get), MODSYM_FPROPERTY | ((flags) & ~MODSYM_FREADONLY), DOC(doc) }, \
+	{ NULL, Dee_AsObject(del), MODSYM_FNORMAL, NULL },                                       \
+	{ NULL, Dee_AsObject(set), MODSYM_FNORMAL, NULL }
 #define Dee_DEX_GETTER_F(name, get, flags, doc) \
-	{ name, Dee_REQUIRES_ANYOBJECT(get), MODSYM_FREADONLY | MODSYM_FPROPERTY | (flags), DOC(doc) }
+	{ name, Dee_AsObject(get), MODSYM_FREADONLY | MODSYM_FPROPERTY | (flags), DOC(doc) }
 #define Dee_DEX_GETSET(name, get, del, set, doc)           Dee_DEX_GETSET_F(name, get, del, set, Dee_DEXSYM_NORMAL, doc)
 #define Dee_DEX_GETTER(name, get, doc)                     Dee_DEX_GETTER_F(name, get, Dee_DEXSYM_NORMAL, doc)
 #define Dee_DEX_GETSET_F_NODOC(name, get, del, set, flags) Dee_DEX_GETSET_F(name, get, del, set, flags, NULL)

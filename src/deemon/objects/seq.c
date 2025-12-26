@@ -690,7 +690,7 @@ seq_distinct(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	result->dswk_seq = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &DistinctSetWithKey_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

@@ -75,7 +75,7 @@ DeeFloat_New(double value) {
 	DeeObject_Init(result, &DeeFloat_Type);
 	result->f_value = value;
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

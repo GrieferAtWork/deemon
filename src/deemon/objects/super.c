@@ -88,7 +88,7 @@ DeeSuper_New(DeeTypeObject *tp_self, DeeObject *self) {
 	result->s_self = self;
 	Dee_Incref(tp_self);
 	Dee_Incref(self);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_badtype:
 	DeeObject_TypeAssertFailed(self, tp_self);
 err:

@@ -793,7 +793,7 @@ traceback_ofthrow(DeeTypeObject *__restrict UNUSED(self),
 	if (!result)
 		return_none;
 	Dee_Incref(result);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

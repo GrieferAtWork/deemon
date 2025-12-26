@@ -337,7 +337,7 @@ symbol_getalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *ar
 	if likely(sym) {
 		if (sym->s_type != SYMBOL_TYPE_ALIAS) {
 			/* We're not an alias, so just re-return the given symbol. */
-			result = (DREF DeeObject *)self;
+			result = Dee_AsObject(self);
 			Dee_Incref(result);
 		} else {
 			do {
@@ -397,7 +397,7 @@ symbol_setalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *ar
 		SYMBOL_ADD_NREAD(other_sym, sym->s_nread);
 		SYMBOL_ADD_NWRITE(other_sym, sym->s_nwrite);
 		SYMBOL_ADD_NBOUND(other_sym, sym->s_nbound);
-		result = (DREF DeeObject *)self;
+		result = Dee_AsObject(self);
 		Dee_Incref(result);
 	}
 done_compiler_end:

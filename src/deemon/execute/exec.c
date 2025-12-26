@@ -860,7 +860,7 @@ PUBLIC WUNUSED ATTR_RETNONNULL /*Tuple*/ DREF DeeObject *DCALL Dee_GetArgv(void)
 	Dee_Incref(result);
 	atomic_write(&usercode_argv, result);
 	ASSERT_OBJECT_TYPE_EXACT(result, &DeeTuple_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC NONNULL((1)) void DCALL

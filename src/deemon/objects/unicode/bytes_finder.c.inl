@@ -743,7 +743,7 @@ DeeBytes_FindAll(Bytes *self, DeeObject *needle,
 	Dee_Incref(needle);
 	DeeObject_Init(result, &BytesFind_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 	return NULL;
@@ -772,7 +772,7 @@ DeeBytes_CaseFindAll(Bytes *self, DeeObject *needle,
 	Dee_Incref(needle);
 	DeeObject_Init(result, &BytesCaseFind_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 	return NULL;

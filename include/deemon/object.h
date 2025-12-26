@@ -221,22 +221,22 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase4Byte)(ui
 	}	__WHILE0
 #define Dee_return_DeeObject_Compare_if_ne(a, b)                                    \
 	do {                                                                            \
-		int _rtceqin_temp = DeeObject_Compare(Dee_REQUIRES_ANYOBJECT(a),  \
-		                                      Dee_REQUIRES_ANYOBJECT(b)); \
+		int _rtceqin_temp = DeeObject_Compare(Dee_AsObject(a),  \
+		                                      Dee_AsObject(b)); \
 		if (_rtceqin_temp != Dee_COMPARE_EQ)                                        \
 			return _rtceqin_temp;                                                   \
 	}	__WHILE0
 #define Dee_return_DeeObject_CompareEq_if_ne(a, b)                                    \
 	do {                                                                              \
-		int _rtceqin_temp = DeeObject_CompareEq(Dee_REQUIRES_ANYOBJECT(a),  \
-		                                        Dee_REQUIRES_ANYOBJECT(b)); \
+		int _rtceqin_temp = DeeObject_CompareEq(Dee_AsObject(a),  \
+		                                        Dee_AsObject(b)); \
 		if (_rtceqin_temp != Dee_COMPARE_EQ)                                          \
 			return _rtceqin_temp;                                                     \
 	}	__WHILE0
 #define Dee_return_DeeObject_TryCompareEq_if_ne(a, b)                                    \
 	do {                                                                                 \
-		int _rtceqin_temp = DeeObject_TryCompareEq(Dee_REQUIRES_ANYOBJECT(a),  \
-		                                           Dee_REQUIRES_ANYOBJECT(b)); \
+		int _rtceqin_temp = DeeObject_TryCompareEq(Dee_AsObject(a),  \
+		                                           Dee_AsObject(b)); \
 		if (_rtceqin_temp != Dee_COMPARE_EQ)                                             \
 			return _rtceqin_temp;                                                        \
 	}	__WHILE0
@@ -561,14 +561,14 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
 /* Type visit helpers.
  * WARNING: These helper macros are allowed to evaluate their arguments multiple times! */
 typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg);
-#define Dee_Visit(ob)  (*proc)(Dee_REQUIRES_ANYOBJECT(ob), arg)
+#define Dee_Visit(ob)  (*proc)(Dee_AsObject(ob), arg)
 #define Dee_XVisit(ob) (void)(!(ob) || (Dee_Visit(ob), 0))
 
 #define Dee_Visitv(object_vector, object_count)                                             \
 	do {                                                                                    \
 		size_t _dvv_i;                                                                      \
 		for (_dvv_i = 0; _dvv_i < (size_t)(object_count); ++_dvv_i) {                       \
-			DeeObject *_dvv_ob = Dee_REQUIRES_ANYOBJECT((object_vector)[_dvv_i]); \
+			DeeObject *_dvv_ob = Dee_AsObject((object_vector)[_dvv_i]); \
 			Dee_Visit(_dvv_ob);                                                             \
 		}                                                                                   \
 	}	__WHILE0
@@ -576,7 +576,7 @@ typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, voi
 	do {                                                                                    \
 		size_t _dvv_i;                                                                      \
 		for (_dvv_i = 0; _dvv_i < (size_t)(object_count); ++_dvv_i) {                       \
-			DeeObject *_dvv_ob = Dee_REQUIRES_ANYOBJECT((object_vector)[_dvv_i]); \
+			DeeObject *_dvv_ob = Dee_AsObject((object_vector)[_dvv_i]); \
 			Dee_XVisit(_dvv_ob);                                                            \
 		}                                                                                   \
 	}	__WHILE0
@@ -924,7 +924,7 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__rest
 /* NOTE: `(Dee_)return_reference()' only evaluates `ob' _once_! */
 #define Dee_return_reference(ob)                                                       \
 	do {                                                                               \
-		__register DeeObject *const _rr_result = Dee_REQUIRES_ANYOBJECT(ob); \
+		__register DeeObject *const _rr_result = Dee_AsObject(ob); \
 		Dee_Incref(_rr_result);                                                        \
 		return _rr_result;                                                             \
 	}	__WHILE0
@@ -1147,10 +1147,10 @@ DECL_END
 
 
 #ifdef __INTELLISENSE__
-#define Dee_Increfv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)Dee_REQUIRES_ANYOBJECT(*(object_vector)))
-#define Dee_Decrefv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)Dee_REQUIRES_ANYOBJECT(*(object_vector)))
-#define Dee_Movrefv_untraced(dst, src, object_count)      ((void)(object_count), Dee_REQUIRES_ANYOBJECT(*(src)), (DeeObject **)Dee_REQUIRES_ANYOBJECT(*(dst)))
-#define Dee_Setrefv_untraced(dst, obj, object_count)      ((void)(object_count), Dee_REQUIRES_ANYOBJECT(obj), (DeeObject **)Dee_REQUIRES_ANYOBJECT(*(dst)))
+#define Dee_Increfv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)Dee_AsObject(*(object_vector)))
+#define Dee_Decrefv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)Dee_AsObject(*(object_vector)))
+#define Dee_Movrefv_untraced(dst, src, object_count)      ((void)(object_count), Dee_AsObject(*(src)), (DeeObject **)Dee_AsObject(*(dst)))
+#define Dee_Setrefv_untraced(dst, obj, object_count)      ((void)(object_count), Dee_AsObject(obj), (DeeObject **)Dee_AsObject(*(dst)))
 #elif defined(CONFIG_INLINE_INCREFV)
 #define Dee_Increfv_untraced(object_vector, object_count) \
 	Dee_Increfv_untraced((DeeObject *const *)(object_vector), object_count)
@@ -1220,9 +1220,9 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) NONNULL((2)) DREF DeeObject **
 
 
 #ifdef __INTELLISENSE__
-#define Dee_XIncrefv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)Dee_REQUIRES_ANYOBJECT(*(object_vector)))
-#define Dee_XDecrefv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)Dee_REQUIRES_ANYOBJECT(*(object_vector)))
-#define Dee_XMovrefv_untraced(dst, src, object_count)      ((void)(object_count), Dee_REQUIRES_ANYOBJECT(*(src)), (DeeObject **)Dee_REQUIRES_ANYOBJECT(*(dst)))
+#define Dee_XIncrefv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)Dee_AsObject(*(object_vector)))
+#define Dee_XDecrefv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)Dee_AsObject(*(object_vector)))
+#define Dee_XMovrefv_untraced(dst, src, object_count)      ((void)(object_count), Dee_AsObject(*(src)), (DeeObject **)Dee_AsObject(*(dst)))
 #else /* __INTELLISENSE__ */
 #define Dee_XIncrefv_untraced(object_vector, object_count) (Dee_XIncrefv)((DeeObject *const *)(object_vector), object_count)
 #define Dee_XDecrefv_untraced(object_vector, object_count) (Dee_XDecrefv)((DeeObject *const *)(object_vector), object_count)
@@ -3299,7 +3299,7 @@ union Dee_type_member_desc {
 #endif /* !... */
 	}          md_field; /* Field descriptor */
 };
-#define Dee_TYPE_MEMBER_DESC_INITCONST(value) { Dee_REQUIRES_ANYOBJECT(value) }
+#define Dee_TYPE_MEMBER_DESC_INITCONST(value) { Dee_AsObject(value) }
 #if __SIZEOF_POINTER__ == 4
 #define Dee_TYPE_MEMBER_DESC_INITFIELD(type, offset) \
 	{ (DeeObject *)(uintptr_t)((uint32_t)(type) | ((uint32_t)(offset) << 16)) }
@@ -4404,11 +4404,11 @@ DFUNDEF ATTR_COLD NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_TypeAssertFailed3)(
 #endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
 #define DeeObject_AssertTypeOrNone(self, required_type)      (DeeNone_Check(self) ? 0 : DeeObject_AssertType(self, required_type))
 #define DeeObject_AssertTypeExactOrNone(self, required_type) (DeeNone_CheckExact(self) ? 0 : DeeObject_AssertTypeExact(self, required_type))
-#define DeeObject_AssertType(self, required_type)            (unlikely((DeeObject_AssertType)(Dee_REQUIRES_ANYOBJECT(self), required_type)))
-#define DeeObject_AssertTypeOrAbstract(self, required_type)  (unlikely((DeeObject_AssertTypeOrAbstract)(Dee_REQUIRES_ANYOBJECT(self), required_type)))
-#define DeeObject_AssertImplements(self, required_type)      (unlikely((DeeObject_AssertImplements)(Dee_REQUIRES_ANYOBJECT(self), required_type)))
+#define DeeObject_AssertType(self, required_type)            (unlikely((DeeObject_AssertType)(Dee_AsObject(self), required_type)))
+#define DeeObject_AssertTypeOrAbstract(self, required_type)  (unlikely((DeeObject_AssertTypeOrAbstract)(Dee_AsObject(self), required_type)))
+#define DeeObject_AssertImplements(self, required_type)      (unlikely((DeeObject_AssertImplements)(Dee_AsObject(self), required_type)))
 #ifdef __OPTIMIZE_SIZE__
-#define DeeObject_AssertTypeExact(self, required_type) (unlikely((DeeObject_AssertTypeExact)(Dee_REQUIRES_ANYOBJECT(self), required_type)))
+#define DeeObject_AssertTypeExact(self, required_type) (unlikely((DeeObject_AssertTypeExact)(Dee_AsObject(self), required_type)))
 #else /* __OPTIMIZE_SIZE__ */
 #undef DeeObject_AssertTypeOrAbstract
 #define DeeObject_AssertTypeOrAbstract(self, required_type) (DeeType_IsAbstract(required_type) ? 0 : DeeObject_AssertType(self, required_type))
@@ -4593,7 +4593,7 @@ DFUNDEF WUNUSED /*ATTR_PURE*/ NONNULL((1)) Dee_hash_t (DCALL DeeObject_Hash)(Dee
 DFUNDEF WUNUSED /*ATTR_PURE*/ NONNULL((1)) Dee_hash_t (DCALL DeeObject_HashInherited)(/*inherit(always)*/ DREF DeeObject *__restrict self);
 DFUNDEF WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t (DCALL DeeObject_Hashv)(DeeObject *const *__restrict object_vector, size_t object_count);
 DFUNDEF WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t (DCALL DeeObject_XHashv)(DeeObject *const *__restrict object_vector, size_t object_count);
-#define DeeObject_Hash(self)          DeeObject_Hash(Dee_REQUIRES_ANYOBJECT(self))
+#define DeeObject_Hash(self)          DeeObject_Hash(Dee_AsObject(self))
 #define DeeObject_HashInherited(self) DeeObject_HashInherited(Dee_REQUIRES_OBJECT(DREF DeeObject, self))
 
 /* GC operator invocation. */

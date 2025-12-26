@@ -67,7 +67,7 @@ DeeObjMethod_New(Dee_objmethod_t func, DeeObject *__restrict self) {
 	result->om_this          = self;
 	Dee_Incref(self);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -82,7 +82,7 @@ DeeKwObjMethod_New(Dee_kwobjmethod_t func, DeeObject *__restrict self) {
 	result->om_this            = self;
 	Dee_Incref(self);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -844,7 +844,7 @@ doc_decode_kwds(DeeObject *owner, char const *doc) {
 	result->dk_start = doc;
 	DeeObject_Init(result, &DocKwds_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 no_kwds:
 	return DeeSeq_NewEmpty();
 }
@@ -1006,7 +1006,7 @@ DeeClsMethod_New(DeeTypeObject *__restrict type,
 	result->clm_func.clmf_meth = func;
 	Dee_Incref(type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF /*KwClsMethod*/ DeeObject *DCALL
@@ -1022,7 +1022,7 @@ DeeKwClsMethod_New(DeeTypeObject *__restrict type,
 	result->clm_func.clmf_kwmeth = func;
 	Dee_Incref(type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -1507,7 +1507,7 @@ DeeClsProperty_NewEx(DeeTypeObject *__restrict type,
 	result->cp_set   = set;
 	result->cp_bound = bound;
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 #define clsproperty_fini  clsmethod_fini
@@ -1917,7 +1917,7 @@ DeeClsMember_New(DeeTypeObject *__restrict type,
 	result->cmb_type = type;
 	Dee_Incref(type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 STATIC_ASSERT(offsetof(DeeClsMemberObject, cmb_type) == offsetof(ProxyObject, po_obj));
@@ -2901,7 +2901,7 @@ DeeCMethod_New(Dee_cmethod_t func, uintptr_t flags) {
 		result->cm_flags         = flags;
 		DeeObject_Init(result, &DeeCMethod_Type);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2913,7 +2913,7 @@ DeeKwCMethod_New(Dee_kwcmethod_t func, uintptr_t flags) {
 		result->cm_flags           = flags;
 		DeeObject_Init(result, &DeeKwCMethod_Type);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2925,7 +2925,7 @@ DeeCMethod0_New(Dee_cmethod0_t func, uintptr_t flags) {
 		result->cm_flags          = flags;
 		DeeObject_Init(result, &DeeCMethod0_Type);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2937,7 +2937,7 @@ DeeCMethod1_New(Dee_cmethod1_t func, uintptr_t flags) {
 		result->cm_flags          = flags;
 		DeeObject_Init(result, &DeeCMethod1_Type);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 

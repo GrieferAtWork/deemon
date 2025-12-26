@@ -921,7 +921,7 @@ done2:
 	/* Save the new read position. */
 	*p_reader = reader;
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED ATTR_INOUT(1) DREF /*Int*/ DeeObject *DCALL
@@ -999,7 +999,7 @@ done2:
 	/* Save the new read position. */
 	*p_reader = reader;
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -1148,7 +1148,7 @@ DeeInt_NewInt8(int8_t val) {
 		result->ob_size     = sign;
 		result->ob_digit[0] = (digit)abs_val;
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 #endif /* !DeeInt_8bit */
 }
 
@@ -1165,7 +1165,7 @@ DeeInt_NewUInt8(uint8_t val) {
 		result->ob_size     = 1;
 		result->ob_digit[0] = (digit)val;
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 #endif /* !DeeInt_8bit */
 }
 
@@ -1212,7 +1212,7 @@ DeeInt_NewUInt16(uint16_t val) {
 #else /* DIGIT_BITS >= ... */
 #error "Not implemented"
 #endif /* DIGIT_BITS < ... */
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED DREF /*Int*/ DeeObject *DCALL
@@ -1251,7 +1251,7 @@ DeeInt_NewUInt32(uint32_t val) {
 				result->ob_digit[req_digits] = val & DIGIT_MASK;
 		}
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED DREF /*Int*/ DeeObject *DCALL
@@ -1298,7 +1298,7 @@ DeeInt_NewUInt64(uint64_t val) {
 				result->ob_digit[req_digits] = val & DIGIT_MASK;
 		}
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED DREF /*Int*/ DeeObject *DCALL
@@ -1349,7 +1349,7 @@ DeeInt_NewInt16(int16_t val) {
 #else /* DIGIT_BITS >= ... */
 #error "Not implemented"
 #endif /* DIGIT_BITS < ... */
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED DREF /*Int*/ DeeObject *DCALL
@@ -1390,7 +1390,7 @@ DeeInt_NewInt32(int32_t val) {
 				result->ob_digit[req_digits] = abs_val & DIGIT_MASK;
 		}
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED DREF /*Int*/ DeeObject *DCALL
@@ -1443,7 +1443,7 @@ DeeInt_NewInt64(int64_t val) {
 				result->ob_digit[req_digits] = abs_val & DIGIT_MASK;
 		}
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -1472,7 +1472,7 @@ DeeInt_NewUInt128(Dee_uint128_t val) {
 			result->ob_digit[req_digits] = __hybrid_uint128_least_significant_DIGIT_BITS(val);
 		}
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED DREF /*Int*/ DeeObject *DCALL
@@ -1509,7 +1509,7 @@ DeeInt_NewInt128(Dee_int128_t val) {
 			result->ob_digit[req_digits] = __hybrid_uint128_least_significant_DIGIT_BITS(abs_val.u);
 		}
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED DREF /*Int*/ DeeObject *DCALL
@@ -1920,7 +1920,7 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 	if (negative)
 		result->ob_size = -result->ob_size;
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 invalid_r:
 	Dee_DecrefDokill(result);
 invalid:
@@ -2095,7 +2095,7 @@ handle_linefeed_in_text:
 	if (negative)
 		result->ob_size = -result->ob_size;
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 invalid_r:
 	Dee_DecrefDokill(result);
 invalid:
@@ -3969,7 +3969,7 @@ done_decr:
 	if (is_negative)
 		result->ob_size = -result->ob_size;
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 do_return_minus_one:
 	return DeeInt_NewMinusOne();
 do_return_zero:

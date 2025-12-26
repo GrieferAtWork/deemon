@@ -820,7 +820,7 @@ DeeSeq_Concat(DeeObject *self, DeeObject *other) {
 	Dee_DecrefNokill(&DeeTuple_Type);
 	Dee_Incref(&SeqConcat_Type);
 	result->ob_type = &SeqConcat_Type;
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

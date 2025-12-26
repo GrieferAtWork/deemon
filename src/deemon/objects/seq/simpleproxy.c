@@ -1174,7 +1174,7 @@ SeqIds_New(DeeObject *__restrict seq) {
 	result->sp_seq = seq;
 	DeeObject_Init(result, &SeqIds_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1187,7 +1187,7 @@ SeqTypes_New(DeeObject *__restrict seq) {
 	result->sp_seq = seq;
 	DeeObject_Init(result, &SeqTypes_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1200,7 +1200,7 @@ SeqClasses_New(DeeObject *__restrict seq) {
 	result->sp_seq = seq;
 	DeeObject_Init(result, &SeqClasses_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 

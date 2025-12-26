@@ -376,7 +376,7 @@ DeeFile_OpenFd(Dee_fd_t fd, /*String*/ DeeObject *filename,
 
 	DeeFileObject_Init(result, &DeeSystemFile_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 #endif /* !DeeSystem_FILE_USE_STUB */
 }
 
@@ -642,7 +642,7 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 	Dee_Incref(filename); /* For `result->sf_filename' */
 	result->sf_filetype  = (uint32_t)FILE_TYPE_UNKNOWN;
 	result->sf_pendingc  = 0;
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_fp:
 	CloseHandle(hFile);
 err:
@@ -823,7 +823,7 @@ err:
 	result->sf_ownhandle = (Dee_fd_t)fd; /* Inherit stream. */
 	result->sf_filename  = filename;
 	Dee_Incref(filename);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_fd:
 #ifdef CONFIG_HAVE_close
 	(void)close(fd);
@@ -888,7 +888,7 @@ err:
 	result->sf_filename  = filename;
 	Dee_Incref(filename);
 	DeeFileObject_Init(result, &DeeFSFile_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_unsupported_mode:
 	DeeError_Throwf(&DeeError_UnsupportedAPI,
 	                "The given open-mode combination is not supported");

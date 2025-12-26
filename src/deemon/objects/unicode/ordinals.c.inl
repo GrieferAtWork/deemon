@@ -250,7 +250,7 @@ DeeString_Ordinals(DeeObject *__restrict self) {
 	Dee_Incref(self);
 	DeeObject_Init(result, &StringOrdinals_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 DECL_END

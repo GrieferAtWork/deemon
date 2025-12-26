@@ -485,7 +485,7 @@ DeeSeq_Segments(DeeObject *__restrict self, size_t segsize) {
 	Dee_Incref(self);
 	DeeObject_Init(result, &SeqSegments_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 

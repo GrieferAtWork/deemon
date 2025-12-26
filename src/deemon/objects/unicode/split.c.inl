@@ -752,7 +752,7 @@ DeeString_Split(DeeStringObject *self,
 	result->s_str = self;      /* Inherit */
 	result->s_sep = separator; /* Inherit */
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 handle_empty_sep:
 	return DeeSuper_New(&DeeSeq_Type, (DeeObject *)self);
 }
@@ -776,7 +776,7 @@ DeeString_CaseSplit(DeeStringObject *self,
 	result->s_str = self;      /* Inherit */
 	result->s_sep = separator; /* Inherit */
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 handle_empty_sep:
 	return DeeSuper_New(&DeeSeq_Type, (DeeObject *)self);
 }
@@ -1194,7 +1194,7 @@ DeeString_SplitLines(DeeObject *__restrict self,
 	result->ls_str  = (DREF DeeStringObject *)self; /* Inherit */
 	result->ls_keep = keepends;
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 

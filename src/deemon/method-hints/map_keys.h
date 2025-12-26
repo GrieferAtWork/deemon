@@ -39,7 +39,7 @@ __map_keys__.map_keys([[nonnull]] DeeObject *__restrict self)
 	Dee_Incref(self);
 	result->dsmp_map = self;
 	DeeObject_Init(result, &DefaultSequence_MapKeys_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }} {

@@ -154,20 +154,20 @@ struct Dee_serial {
  * >> DeeSerial_PutObject(self, return + offsetof(DeeObject, ob_type), Dee_TYPE(ref));
  *
  * Meaning that the caller need only initialize all non-standard object fields. */
-#define DeeSerial_ObjectMalloc(self, num_bytes, ref)    (*(self)->ser_type->set_object_malloc)(self, num_bytes, Dee_REQUIRES_ANYOBJECT(ref))
-#define DeeSerial_ObjectCalloc(self, num_bytes, ref)    (*(self)->ser_type->set_object_calloc)(self, num_bytes, Dee_REQUIRES_ANYOBJECT(ref))
-#define DeeSerial_ObjectTryMalloc(self, num_bytes, ref) (*(self)->ser_type->set_object_trymalloc)(self, num_bytes, Dee_REQUIRES_ANYOBJECT(ref))
-#define DeeSerial_ObjectTryCalloc(self, num_bytes, ref) (*(self)->ser_type->set_object_trycalloc)(self, num_bytes, Dee_REQUIRES_ANYOBJECT(ref))
+#define DeeSerial_ObjectMalloc(self, num_bytes, ref)    (*(self)->ser_type->set_object_malloc)(self, num_bytes, Dee_AsObject(ref))
+#define DeeSerial_ObjectCalloc(self, num_bytes, ref)    (*(self)->ser_type->set_object_calloc)(self, num_bytes, Dee_AsObject(ref))
+#define DeeSerial_ObjectTryMalloc(self, num_bytes, ref) (*(self)->ser_type->set_object_trymalloc)(self, num_bytes, Dee_AsObject(ref))
+#define DeeSerial_ObjectTryCalloc(self, num_bytes, ref) (*(self)->ser_type->set_object_trycalloc)(self, num_bytes, Dee_AsObject(ref))
 
 /* Free generic heap memory (as per "DeeObject_Free()")
  * Same restrictions of `set_free' regarding order of free() operations also apply to this */
 #define DeeSerial_ObjectFree(self, addr) (*(self)->ser_type->set_object_free)(self, addr)
 
 /* Same as above, but must be used for GC-objects (as per "DeeGCObject_Malloc()") */
-#define DeeSerial_GCObjectMalloc(self, num_bytes, ref)    (*(self)->ser_type->set_gcobject_malloc)(self, num_bytes, Dee_REQUIRES_ANYOBJECT(ref))
-#define DeeSerial_GCObjectCalloc(self, num_bytes, ref)    (*(self)->ser_type->set_gcobject_calloc)(self, num_bytes, Dee_REQUIRES_ANYOBJECT(ref))
-#define DeeSerial_GCObjectTryMalloc(self, num_bytes, ref) (*(self)->ser_type->set_gcobject_trymalloc)(self, num_bytes, Dee_REQUIRES_ANYOBJECT(ref))
-#define DeeSerial_GCObjectTryCalloc(self, num_bytes, ref) (*(self)->ser_type->set_gcobject_trycalloc)(self, num_bytes, Dee_REQUIRES_ANYOBJECT(ref))
+#define DeeSerial_GCObjectMalloc(self, num_bytes, ref)    (*(self)->ser_type->set_gcobject_malloc)(self, num_bytes, Dee_AsObject(ref))
+#define DeeSerial_GCObjectCalloc(self, num_bytes, ref)    (*(self)->ser_type->set_gcobject_calloc)(self, num_bytes, Dee_AsObject(ref))
+#define DeeSerial_GCObjectTryMalloc(self, num_bytes, ref) (*(self)->ser_type->set_gcobject_trymalloc)(self, num_bytes, Dee_AsObject(ref))
+#define DeeSerial_GCObjectTryCalloc(self, num_bytes, ref) (*(self)->ser_type->set_gcobject_trycalloc)(self, num_bytes, Dee_AsObject(ref))
 
 /* Free generic heap memory (as per "DeeGCObject_Free()") */
 #define DeeSerial_GCObjectFree(self, addr) (*(self)->ser_type->set_gcobject_free)(self, addr)
@@ -191,7 +191,7 @@ DFUNDEF WUNUSED NONNULL((1)) int
  * @return: 0 : Success
  * @return: -1: Error */
 #define DeeSerial_PutObject(self, addrof_object, ob) \
-	__builtin_expect((*(self)->ser_type->set_putobject)(self, addrof_object, Dee_REQUIRES_ANYOBJECT(ob)), 0)
+	__builtin_expect((*(self)->ser_type->set_putobject)(self, addrof_object, Dee_AsObject(ob)), 0)
 DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL DeeSerial_XPutObject)(DeeSerial *__restrict self,
                              Dee_seraddr_t addrof_object,
@@ -203,11 +203,11 @@ DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL DeeSerial_XPutObjectInherited)(DeeSerial *__restrict self, Dee_seraddr_t addrof_object,
                                       /*0..1*/ /*inherit(always)*/ DREF DeeObject *ob);
 #define DeeSerial_XPutObject(self, addrof_object, /*0..1*/ ob) \
-	__builtin_expect((DeeSerial_XPutObject)(self, addrof_object, Dee_REQUIRES_ANYOBJECT(ob)), 0)
+	__builtin_expect((DeeSerial_XPutObject)(self, addrof_object, Dee_AsObject(ob)), 0)
 #define DeeSerial_PutObjectInherited(self, addrof_object, /*1..1*/ /*inherit(always)*/ /*DREF*/ ob) \
-	__builtin_expect((DeeSerial_PutObjectInherited)(self, addrof_object, Dee_REQUIRES_ANYOBJECT(ob)), 0)
+	__builtin_expect((DeeSerial_PutObjectInherited)(self, addrof_object, Dee_AsObject(ob)), 0)
 #define DeeSerial_XPutObjectInherited(self, addrof_object, /*0..1*/ /*inherit(always)*/ /*DREF*/ ob) \
-	__builtin_expect((DeeSerial_XPutObjectInherited)(self, addrof_object, Dee_REQUIRES_ANYOBJECT(ob)), 0)
+	__builtin_expect((DeeSerial_XPutObjectInherited)(self, addrof_object, Dee_AsObject(ob)), 0)
 
 
 /* Serialize a `void *' field at `addrof_pointer' as being populated with the address of a static

@@ -2057,6 +2057,9 @@
 		<ClCompile Include="..\src\deemon\runtime\runtime_error.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\serial.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\simple-hashset.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>

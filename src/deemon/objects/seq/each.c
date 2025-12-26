@@ -2137,7 +2137,7 @@ DeeSeq_Each(DeeObject *__restrict self) {
 	Dee_Incref(self);
 	DeeObject_Init(result, &SeqEach_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -2154,7 +2154,7 @@ DeeSeq_Some(DeeObject *__restrict self) {
 	Dee_Incref(self);
 	DeeObject_Init(result, &DeeSeqSome_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -4174,7 +4174,7 @@ DeeSeqEach_CallAttr(DeeObject *self, DeeObject *attr,
 	Dee_Incref(attr);
 	DeeObject_Init(result, &SeqEachCallAttr_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -4197,7 +4197,7 @@ DeeSeqEach_CallAttrKw(DeeObject *self, DeeObject *attr, size_t argc,
 	Dee_Incref(kw);
 	DeeObject_Init(result, &SeqEachCallAttrKw_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -4279,7 +4279,7 @@ DeeSeqSome_CallAttr(DeeObject *self, DeeObject *attr,
 	Dee_Incref(attr);
 	DeeObject_Init(result, &SeqSomeCallAttr_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -4302,7 +4302,7 @@ DeeSeqSome_CallAttrKw(DeeObject *self, DeeObject *attr, size_t argc,
 	Dee_Incref(kw);
 	DeeObject_Init(result, &SeqSomeCallAttrKw_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 

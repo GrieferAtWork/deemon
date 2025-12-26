@@ -359,7 +359,7 @@ DeeList_NewVectorInherited(size_t objc, /*inherit(on_success)*/ DREF DeeObject *
 	 * we can start tracking it as a GC object. */
 	result = (DREF List *)DeeList_FinalizeUninitialized(result);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 /* Inherit the entire vector, which must have been allocated using `Dee_Malloc()' and friends. */
@@ -555,7 +555,7 @@ allocate_new_vector:
 		Dee_atomic_rwlock_init(&result->l_lock);
 		result = (DREF List *)DeeGC_Track((DeeObject *)result);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_me_argv:
 	Dee_Decrefv(argv, argc);
 	Dee_Decref(me);

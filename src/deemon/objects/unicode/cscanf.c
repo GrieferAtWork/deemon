@@ -913,7 +913,7 @@ DeeString_Scanf(DeeObject *self,
 	Dee_Incref(format);
 	DeeObject_Init(result, &StringScan_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 

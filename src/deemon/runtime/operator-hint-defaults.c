@@ -1066,7 +1066,7 @@ tdefault__iter_next__with__nextpair(DeeTypeObject *tp_self, DeeObject *self) {
 			goto err_key_and_value;
 		result->t_elem[0] = key_and_value[0]; /* Inherit reference */
 		result->t_elem[1] = key_and_value[1]; /* Inherit reference */
-		return (DREF DeeObject *)result;
+		return Dee_AsObject(result);
 	}
 	if likely(error > 0)
 		return ITER_DONE;
@@ -1124,7 +1124,7 @@ default__iter_next__with__nextpair(DeeObject *__restrict self) {
 			goto err_key_and_value;
 		result->t_elem[0] = key_and_value[0]; /* Inherit reference */
 		result->t_elem[1] = key_and_value[1]; /* Inherit reference */
-		return (DREF DeeObject *)result;
+		return Dee_AsObject(result);
 	}
 	if likely(error > 0)
 		return ITER_DONE;

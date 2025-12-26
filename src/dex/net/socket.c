@@ -1981,7 +1981,7 @@ socket_doaccept(Socket *__restrict self, uint64_t timeout_nanoseconds) {
 	result->s_type                  = self->s_type;
 	result->s_proto                 = self->s_proto;
 	DeeObject_Init(result, &DeeSocket_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 err:

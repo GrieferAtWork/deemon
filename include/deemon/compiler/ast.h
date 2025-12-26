@@ -616,7 +616,7 @@ struct ast {
 	 !((self)->a_operator.o_exflag & (AST_OPERATOR_FVARARGS | AST_OPERATOR_FPOSTOP)))
 
 
-#define ast_isconstexpr(self, v) ((self)->a_constexpr == Dee_REQUIRES_ANYOBJECT(v))
+#define ast_isconstexpr(self, v) ((self)->a_constexpr == Dee_AsObject(v))
 #define ast_is_deemon_symbol(self, symbol_id)                 \
 	((self)->a_type == AST_SYM &&                             \
 	 (self)->a_sym->s_type == SYMBOL_TYPE_EXTERN &&           \

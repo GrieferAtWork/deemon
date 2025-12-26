@@ -308,7 +308,7 @@ DeeFileBuffer_New(DeeObject *__restrict file,
 		goto err_r;
 	DeeFileObject_Init(result, &DeeFileBuffer_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 	return NULL;

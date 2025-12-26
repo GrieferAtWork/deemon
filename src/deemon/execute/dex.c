@@ -667,7 +667,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 			DBG_ALIGNMENT_ENABLE();
 			result = DeeModule_GetDeemon();
 			Dee_Incref(result);
-			return (DREF DeeObject *)result;
+			return Dee_AsObject(result);
 		}
 		DBG_ALIGNMENT_ENABLE();
 	}
@@ -908,7 +908,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 	COMPILER_IMPURE();
 	result = DeeModule_GetDeemon();
 	Dee_Incref(result);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 DECL_END

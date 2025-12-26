@@ -69,7 +69,7 @@ DeeInstanceMethod_New(DeeObject *func,
 	result->im_this = this_arg;
 	Dee_Incref(func);
 	Dee_Incref(this_arg);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -86,7 +86,7 @@ DeeInstanceMethod_NewInherited(/*inherit(always)*/ DREF DeeObject *func,
 	DeeObject_Init(result, &DeeInstanceMethod_Type);
 	result->im_func = func;     /* Inherit reference */
 	result->im_this = this_arg; /* Inherit reference */
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	Dee_Decref_unlikely(func);     /* *_unlikely because functions usually live until the module dies */
 	Dee_Decref_unlikely(this_arg); /* *_unlikely because the instance is probably referenced elsewhere */

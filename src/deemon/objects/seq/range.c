@@ -929,7 +929,7 @@ got_ns_ne:
 	result->r_step  = self->r_step;
 	Dee_XIncref(result->r_step);
 	DeeObject_Init(result, &SeqRange_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_ns_ne:
 	Dee_Decref(new_end);
 	Dee_Decref(new_start);
@@ -1714,7 +1714,7 @@ err:
 	result->ir_end   = end;
 	result->ir_step  = step;
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 #endif /* !ALWAYS_USE_OBJECT_RANGES */
 }
 
@@ -1777,7 +1777,7 @@ do_object_range:
 	Dee_Incref(end);
 	Dee_XIncref(step);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

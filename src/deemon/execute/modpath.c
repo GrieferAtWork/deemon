@@ -1246,7 +1246,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 	{
 		Dee_Incref(result);
 		module_byaddr_lock_endread();
-		return (DREF DeeObject *)result;
+		return Dee_AsObject(result);
 	}
 	module_byaddr_lock_endread();
 	return NULL;
@@ -1257,7 +1257,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 	COMPILER_IMPURE();
 	result = DeeModule_GetDeemon();
 	Dee_Incref(result);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 #endif /* CONFIG_NO_DEX */
 }
 
@@ -2984,7 +2984,7 @@ do_DeeModule_ImportGlobal(/*utf-8*/ char const *__restrict import_str,
 		if (DeeModule_Initialize((DeeObject *)result) < 0)
 			Dee_Clear(result);
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3922,7 +3922,7 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #ifdef DeeSystem_HAVE_FS_ICASE
 #define fs_memcmp                        memcasecmp
 #define fs_bcmp                          memcasecmp
-#define fs_hashobj(ob)                   DeeString_HashCase(Dee_REQUIRES_ANYOBJECT(ob))
+#define fs_hashobj(ob)                   DeeString_HashCase(Dee_AsObject(ob))
 #define fs_hashstr(s)                    Dee_HashCaseStr(s)
 #define fs_hashutf8(s, n)                Dee_HashCaseUtf8(s, n)
 #define fs_hashmodname_equals(mod, hash) 1
@@ -3931,7 +3931,7 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #else /* DeeSystem_HAVE_FS_ICASE */
 #define fs_memcmp                        memcmp
 #define fs_bcmp                          bcmp
-#define fs_hashobj(ob)                   DeeString_Hash(Dee_REQUIRES_ANYOBJECT(ob))
+#define fs_hashobj(ob)                   DeeString_Hash(Dee_AsObject(ob))
 #define fs_hashstr(s)                    Dee_HashStr(s)
 #define fs_hashutf8(s, n)                Dee_HashUtf8(s, n)
 #define fs_hashmodpath(mod)              DeeString_HASH((mod)->mo_path)
@@ -4745,7 +4745,7 @@ load_module_after_failure:
 		DeeModule_DoneLoading(result);
 	}
 got_result:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_inputstream_r:
 	Dee_Decref(input_stream);
 err_r:
@@ -4885,7 +4885,7 @@ found_existing_module:
 		DeeModule_DoneLoading(result);
 	}
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	Dee_Decref(result);
 err:
@@ -5854,7 +5854,7 @@ DeeModule_OpenInPath(/*utf-8*/ char const *__restrict module_path, size_t module
 		                                    options,
 		                                    mode);
 		Dee_Decref(abs_path);
-		return (DREF DeeObject *)result;
+		return Dee_AsObject(result);
 err_abs_path:
 		Dee_Decref(abs_path);
 		goto err;
@@ -5973,7 +5973,7 @@ err_path:
 done_path:
 	Dee_Decref(path);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
@@ -6057,7 +6057,7 @@ done_path:
 	Dee_Decref(path);
 	Dee_Decref(module_name_ob);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -6854,7 +6854,7 @@ pack_code_in_return:
 	COMPILER_END();
 	Dee_Decref(compiler);
 	atomic_or(&result->mo_flags, Dee_MODULE_FDIDLOAD);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r_compiler_code:
 	ast_xdecref(code);
 err_r_compiler:
@@ -7108,7 +7108,7 @@ DeeExec_GetHome(void) {
 	DREF DeeStringObject *result;
 	result = (DREF DeeStringObject *)Dee_atomic_ref_xget(&deemon_home);
 	if (result)
-		return (DREF DeeObject *)result;
+		return Dee_AsObject(result);
 
 	/* Re-create the default home path. */
 	result = get_default_home();
@@ -7126,7 +7126,7 @@ DeeExec_GetHome(void) {
 			}
 		}
 	}
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 /* Set the new home folder, overwriting whatever was set before.
@@ -8077,7 +8077,7 @@ DeeModule_OfObject(DeeObject *__restrict ob) {
 #endif /* !HAVE_module_byaddr_tree_CONTAINS_DEC */
 		{
 			module_byaddr_lock_endread();
-			return (DREF DeeObject *)result;
+			return Dee_AsObject(result);
 		}
 	}
 #endif /* HAVE_module_byaddr_tree */
@@ -8091,7 +8091,7 @@ DeeModule_OfObject(DeeObject *__restrict ob) {
 		ASSERT(Dee_TYPE(result) == &DeeModuleDex_Type);
 		Dee_Incref(result);
 		module_byaddr_lock_endread();
-		return (DREF DeeObject *)result;
+		return Dee_AsObject(result);
 	}
 #endif /* HAVE_dex_byaddr_tree */
 	module_byaddr_lock_endread();

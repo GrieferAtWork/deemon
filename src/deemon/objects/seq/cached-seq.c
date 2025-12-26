@@ -1199,7 +1199,7 @@ cswgi_sizeob(CachedSeq_WithGetItem *__restrict self) {
 	cachedseq_index_copy(&result, &self->cswgi_size);
 	CachedSeq_WithGetItem_LockRelease(self);
 	if (result.csi_indexob != NULL)
-		return (DREF DeeObject *)result.csi_indexob;
+		return Dee_AsObject(result).csi_indexob;
 	return DeeInt_NewSize(result.csi_index);
 err:
 	return NULL;

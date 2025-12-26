@@ -75,7 +75,7 @@ err:
 	result->dssg_seq        = self;
 	result->dssg_tp_getitem = REQUIRE_DEPENDENCY(seq_operator_getitem);
 	DeeObject_Init(result, &DefaultSequence_WithSizeObAndGetItem_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }} {
@@ -148,7 +148,7 @@ err:
 	result->dssgi_start            = range.sr_start;
 	result->dssgi_end              = range.sr_end;
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndexFast_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }}
@@ -168,7 +168,7 @@ err:
 	result->dssgi_start            = range.sr_start;
 	result->dssgi_end              = range.sr_end;
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }}
@@ -188,7 +188,7 @@ err:
 	result->dssgi_start            = range.sr_start;
 	result->dssgi_end              = range.sr_end;
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }}
@@ -212,7 +212,7 @@ err:
 	result->dssg_seq        = self;
 	result->dssg_tp_getitem = REQUIRE_DEPENDENCY(seq_operator_getitem);
 	DeeObject_Init(result, &DefaultSequence_WithSizeObAndGetItem_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r_start:
 	Dee_Decref(result->dssg_start);
 err_r:
@@ -243,7 +243,7 @@ err:
 	result->dsial_limit   = range.sr_end - range.sr_start;
 	result->dsial_tp_iter = REQUIRE_DEPENDENCY(seq_operator_iter);
 	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 empty_seq:
 	return DeeSeq_NewEmpty();
 err:
@@ -325,7 +325,7 @@ err:
 	result->dssgi_start            = (size_t)start;
 	result->dssgi_end              = size;
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndexFast_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 empty_range:
 	return DeeSeq_NewEmpty();
 err:
@@ -371,7 +371,7 @@ err:
 	result->dssgi_start            = (size_t)start;
 	result->dssgi_end              = size;
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 empty_range:
 	return DeeSeq_NewEmpty();
 err:
@@ -399,7 +399,7 @@ err:
 	result->dssgi_start            = (size_t)start;
 	result->dssgi_end              = size;
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 empty_range:
 	return DeeSeq_NewEmpty();
 err:
@@ -431,7 +431,7 @@ err:
 	result->dssg_seq        = self;
 	result->dssg_tp_getitem = REQUIRE_DEPENDENCY(seq_operator_getitem);
 	DeeObject_Init(result, &DefaultSequence_WithSizeObAndGetItem_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 empty_range:
 	return DeeSeq_NewEmpty();
 err_r_start:
@@ -461,7 +461,7 @@ err:
 	result->dsial_limit   = (size_t)-1;
 	result->dsial_tp_iter = REQUIRE_DEPENDENCY(seq_operator_iter);
 	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }} = $with__seq_operator_getrange;

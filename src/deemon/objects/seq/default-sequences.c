@@ -1988,7 +1988,7 @@ ds_i_getrange_index(DefaultSequence_WithIter *self, Dee_ssize_t start, Dee_ssize
 	result->dsial_limit   = range.sr_end - range.sr_start;
 	result->dsial_tp_iter = self->dsi_tp_iter; /* Fast-forward the underlying sequence */
 	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 empty_seq:
 	return DeeSeq_NewEmpty();
 err:
@@ -2016,7 +2016,7 @@ ds_i_getrange_index_n(DefaultSequence_WithIter *self, Dee_ssize_t start) {
 	result->dsial_limit   = (size_t)-1;
 	result->dsial_tp_iter = self->dsi_tp_iter; /* Fast-forward the underlying sequence */
 	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -2051,7 +2051,7 @@ ds_ial_iter(DefaultSequence_WithIterAndLimit *__restrict self) {
 	result->dinl_tp_next = iter_next;
 	result->dinl_limit   = self->dsial_limit;
 	DeeObject_Init(result, &DefaultIterator_WithNextAndLimit_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_iter_no_iter_next:
 	err_unimplemented_operator(Dee_TYPE(iter), OPERATOR_ITERNEXT);
 err_iter:
@@ -2151,7 +2151,7 @@ ds_ial_getrange_index(DefaultSequence_WithIterAndLimit *__restrict self,
 	result->dsial_start   = self->dsial_start + range.sr_start;
 	result->dsial_limit   = range.sr_end - range.sr_start;
 	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

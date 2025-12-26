@@ -470,7 +470,7 @@ DeeBytes_Segments(DeeBytesObject *__restrict self,
 	result->b_siz = segment_size;
 	DeeObject_Init(result, &BytesSegments_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 

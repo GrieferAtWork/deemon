@@ -441,7 +441,7 @@ INTERN WUNUSED DREF DeeObject *DCALL int_newint(CTYPES_INT val) {
 	DeeObject_Init(result, DeeSType_AsType(&DeeCInt_Type));
 	result->i_value = val;
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 #endif /* !INT_NEWINT_DEFINED */
 
@@ -454,7 +454,7 @@ INTERN WUNUSED DREF DeeObject *DCALL F(int_new)(T val) {
 	DeeObject_Init(result, DeeSType_AsType(&TYPE_NAME));
 	result->i_value = val;
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 #endif /* !SIGNED || SIZEOF != CONFIG_CTYPES_SIZEOF_INT */
 
@@ -468,7 +468,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL F(int_new_)(T val) {
 	DeeObject_Init(result, DeeSType_AsType(&TYPE_NAME));
 	result->i_value = val;
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 #elif ((SIZEOF < CONFIG_CTYPES_SIZEOF_INT) || \
        (defined(SIGNED) && SIZEOF == CONFIG_CTYPES_SIZEOF_INT))

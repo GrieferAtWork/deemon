@@ -774,7 +774,7 @@ DeeRefVector_New(DeeObject *owner, size_t length,
 	result->rv_writable = writable;
 #endif /* CONFIG_NO_THREADS */
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -1423,7 +1423,7 @@ DeeSharedVector_NewShared(size_t length, DREF DeeObject *const *vector) {
 	result->sv_length = length;
 	result->sv_vector = vector;
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 /* Check if the reference counter of `self' is 1. When it is,

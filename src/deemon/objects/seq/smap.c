@@ -890,7 +890,7 @@ DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem const *vector) {
 	Dee_atomic_rwlock_cinit(&result->sm_lock);
 	DeeObject_Init(result, &DeeSharedMap_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 /* Check if the reference counter of `self' is 1. When it is,

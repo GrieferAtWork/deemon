@@ -1083,7 +1083,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_fstat_f_impl(DeeObje
 	if unlikely(dee_stat_init(&result->so_stat, NULL, fd, DEE_STAT_F_NORMAL))
 		goto err_r;
 	DeeObject_Init(result, &DeeStat_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -1139,7 +1139,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fstatat_f_impl(De
 	if unlikely(dee_stat_init(&result->so_stat, dfd, path, atflags))
 		goto err_r;
 	DeeObject_Init(result, &DeeStat_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 err:

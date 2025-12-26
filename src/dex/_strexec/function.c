@@ -538,7 +538,7 @@ err_no_keyword_for_argument:
 		}
 	}
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	Dee_DecrefDokill(result);
 	return NULL;
@@ -1134,7 +1134,7 @@ jf_getkwds(JITFunction *__restrict self) {
 		DeeTuple_SET(result, i, name); /* Inherit reference. */
 	}
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r_i:
 	Dee_Decrefv_likely(DeeTuple_ELEM(result), i);
 	DeeTuple_FreeUninitialized(result);
@@ -1168,7 +1168,7 @@ jf_getrefs(JITFunction *__restrict self) {
 	}
 	ASSERT(dst == self->jf_refs.ot_used);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1221,7 +1221,7 @@ jf_getrefsbyname(JITFunction *__restrict self) {
 			goto err_r;
 	}
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	Dee_Decref_likely(result);
 	return NULL;

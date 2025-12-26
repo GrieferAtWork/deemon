@@ -1596,7 +1596,7 @@ DeePointer_New(DeePointerTypeObject *pointer_type,
 	DeeObject_Init(result, DeePointerType_AsType(pointer_type));
 	result->p_ptr.ptr = pointer_value;
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -1614,7 +1614,7 @@ DeePointer_NewInherited(/*inherit(always)*/ DREF DeePointerTypeObject *pointer_t
 	/* Initialize the new pointer object. */
 	DeeObject_InitInherited(result, DeePointerType_AsType(pointer_type));
 	result->p_ptr.ptr = pointer_value;
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	Dee_Decref(DeePointerType_AsType(pointer_type));
 	return NULL;
@@ -1646,7 +1646,7 @@ DeeLValue_NewInherited(/*inherit(always)*/ DREF DeeLValueTypeObject *lvalue_type
 	/* Initialize the new lvalue object. */
 	DeeObject_InitInherited(result, DeeLValueType_AsType(lvalue_type));
 	result->l_ptr.ptr = pointer_value;
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	Dee_Decref(DeeLValueType_AsType(lvalue_type));
 	return NULL;

@@ -155,7 +155,7 @@ struct Dee_object {
 #ifdef __INTELLISENSE__
 #ifdef __cplusplus
 extern "C++" {namespace __intern {
-template<class T, class S> T *__Dee_REQUIRES_OBJECT(S const *x, decltype(((S *)0)->ob_refcnt)=0);
+template<class T, class S> T *__Dee_REQUIRES_OBJECT(S const *x, int(*)[(__UINTPTR_TYPE__)&((S *)0)->ob_refcnt ? -1 : 1]=0);
 template<class T> T *__Dee_REQUIRES_OBJECT(decltype(nullptr));
 }} /* extern "C++" */
 #define Dee_REQUIRES_OBJECT(T, x) ::__intern::__Dee_REQUIRES_OBJECT< T >(x)
@@ -165,7 +165,11 @@ template<class T> T *__Dee_REQUIRES_OBJECT(decltype(nullptr));
 #else /* __INTELLISENSE__ */
 #define Dee_REQUIRES_OBJECT(T, x) ((T *)(x))
 #endif /* !__INTELLISENSE__ */
-#define Dee_REQUIRES_ANYOBJECT(x) Dee_REQUIRES_OBJECT(DeeObject, x)
+
+/* Cast some pointer-to struct "x" into 'DeeObject'. May include compile-time
+ * checking that "x" is "NULL" or that the struct of "x" has a field "ob_refcnt",
+ * and that said field is located at the proper offset. */
+#define Dee_AsObject(x) Dee_REQUIRES_OBJECT(DeeObject, x)
 
 
 

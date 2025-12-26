@@ -174,7 +174,7 @@ sc_iter(SeqCombinations *__restrict self) {
 	result->sci_com = self;
 	Dee_weakref_initempty(&result->sci_view);
 	DeeObject_Init(result, &SeqCombinationsIterator_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -197,7 +197,7 @@ src_iter(SeqCombinations *__restrict self) {
 	result->sci_idx[rparam - 1] = (size_t)-1; /* Hack to get the first element to load correctly */
 	Dee_weakref_initempty(&result->sci_view);
 	DeeObject_Init(result, &SeqRepeatCombinationsIterator_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -227,7 +227,7 @@ sp_iter(SeqCombinations *__restrict self) {
 	result->sci_com = self;
 	Dee_weakref_initempty(&result->sci_view);
 	DeeObject_Init(result, &SeqPermutationsIterator_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -1559,7 +1559,7 @@ SeqCombinations_New(/*inherit(always)*/ DREF DeeObject *__restrict seq,
 	result->sc_rparam  = rparam;
 	result->sc_seq     = seq; /* Inherit reference */
 	DeeObject_Init(result, type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_seq_r_combinations_not_supported:
 	DeeObject_FREE(result);
 	DeeError_Throwf(&DeeError_SequenceError,

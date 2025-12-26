@@ -277,10 +277,12 @@ err:
 }
 
 DEFINE_OPERATOR_INVOKE(operator_visit, &instance_visit, &do_inherit_noop) {
+	DREF GCSet *result;
 	(void)p_self;
 	(void)opname;
 	DeeArg_Unpack0(err, argc, argv, OPNAME("visit"));
-	return (DREF DeeObject *)DeeGC_TNewReferred(tp_self, self);
+	result = DeeGC_TNewReferred(tp_self, self);
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

@@ -60,7 +60,7 @@ err:
 	itertyp            = Dee_TYPE(result->dipsi_iter);
 	result->dipsi_next = DeeType_RequireNativeOperator(itertyp, nextkey);
 	DeeObject_Init(result, &DefaultIterator_WithNextKey);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
 err:

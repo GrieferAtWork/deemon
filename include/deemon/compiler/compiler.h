@@ -102,7 +102,7 @@ DeeCompiler_DelItemType(DeeTypeObject *__restrict type);
  * @return: NULL: The item got deleted (a ReferenceError was thrown) */
 INTDEF NONNULL((1)) void *(DCALL DeeCompilerItem_GetValue)(DeeObject *__restrict self);
 #define DeeCompilerItem_VALUE(self, T) \
-	((T *)DeeCompilerItem_GetValue(Dee_REQUIRES_ANYOBJECT(self)))
+	((T *)DeeCompilerItem_GetValue(Dee_AsObject(self)))
 
 LIST_HEAD(Dee_compiler_item_object_list, Dee_compiler_item_object);
 struct Dee_compiler_items {

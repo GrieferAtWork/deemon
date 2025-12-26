@@ -653,7 +653,7 @@ pack_code_in_return:
 	DeeCompiler_End();
 	Dee_Decref(compiler);
 	DeeCompiler_LockEndWrite();
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 err_compiler_code:
 	ast_xdecref(code);
 err_compiler:

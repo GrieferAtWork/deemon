@@ -2861,7 +2861,7 @@ type_get_ctable(DeeTypeObject *__restrict self) {
 	Dee_Incref(self);
 	DeeObject_Init(result, &ObjectTable_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2886,7 +2886,7 @@ instance_get_itable(DeeObject *__restrict self) {
 	Dee_Incref(self);
 	DeeObject_Init(result, &ObjectTable_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -3230,7 +3230,7 @@ DeeInstanceMember_New(DeeTypeObject *__restrict class_type,
 	Dee_Incref(class_type);
 	DeeObject_Init(result, &DeeInstanceMember_Type);
 done:
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -3774,7 +3774,7 @@ DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type,
 
 	/* Finalize initialization of the property wrapper and return it. */
 	DeeObject_Init(result, &DeeProperty_Type);
-	return (DREF DeeObject *)result;
+	return Dee_AsObject(result);
 unbound:
 	DeeRT_ErrUnboundInstanceAttrCA(class_type, attr);
 err:

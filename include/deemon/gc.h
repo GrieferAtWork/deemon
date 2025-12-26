@@ -93,7 +93,7 @@ struct Dee_gc_head {
 
 #define DEE_GC_OBJECT_OFFSET COMPILER_OFFSETOF(struct Dee_gc_head, gc_object)
 #define DEE_GC_HEAD_SIZE     COMPILER_OFFSETOF(struct Dee_gc_head, gc_object)
-#define DeeGC_Head(ob)       ((struct Dee_gc_head *)((uintptr_t)Dee_REQUIRES_ANYOBJECT(ob) - DEE_GC_OBJECT_OFFSET))
+#define DeeGC_Head(ob)       ((struct Dee_gc_head *)((uintptr_t)Dee_AsObject(ob) - DEE_GC_OBJECT_OFFSET))
 #define DeeGC_Object(ob)     (&(ob)->gc_object)
 #define DeeGC_Check(ob)      ((Dee_TYPE(ob)->tp_flags & TP_FGC) && (!DeeType_Check(ob) || (Dee_REQUIRES_OBJECT(DeeTypeObject, ob)->tp_flags & TP_FHEAP)))
 
