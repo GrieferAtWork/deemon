@@ -4297,11 +4297,11 @@ DeeType_GetName(DeeTypeObject const *__restrict self) {
 /* Returns the "tp_serialize" operator for "self". If possible, inherit from base class. */
 INTERN WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetTpSerialize)(DeeTypeObject *__restrict self) {
-	Dee_funptr_t result = self->tp_init._tp_init_._tp_init8_;
+	Dee_funptr_t result = self->tp_init._tp_init_._tp_init5_;
 	if (!result && (self->tp_flags & TP_FINHERITCTOR) && self->tp_base) {
 		result = DeeType_GetTpSerialize(self->tp_base);
 		if (result)
-			self->tp_init._tp_init_._tp_init8_ = result;
+			self->tp_init._tp_init_._tp_init5_ = result;
 	}
 	return result;
 }

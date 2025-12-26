@@ -1474,10 +1474,10 @@ Dee_funptr_t __Dee_REQUIRE_tp_free(decltype(nullptr));
 		_Dee_REQUIRE_VAR_tp_copy_ctor(tp_copy_ctor),     \
 		_Dee_REQUIRE_VAR_tp_copy_ctor(tp_deep_ctor),     \
 		_Dee_REQUIRE_VAR_tp_any_ctor(tp_any_ctor),       \
-		_Dee_REQUIRE_tp_free(tp_free),                   \
-		{ NULL },                                        \
 		_Dee_REQUIRE_VAR_tp_any_ctor_kw(tp_any_ctor_kw), \
-		_Dee_REQUIRE_VAR_tp_serialize(tp_serialize)      \
+		_Dee_REQUIRE_VAR_tp_serialize(tp_serialize),     \
+		_Dee_REQUIRE_tp_free(tp_free),                   \
+		{ NULL }                                         \
 	}}
 
 
@@ -1499,10 +1499,10 @@ Dee_funptr_t __Dee_REQUIRE_tp_free(decltype(nullptr));
 		_Dee_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor),     \
 		_Dee_REQUIRE_ALLOC_tp_copy_ctor(tp_deep_ctor),     \
 		_Dee_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor),       \
-		_Dee_REQUIRE_tp_free(tp_free),                     \
-		{ _Dee_REQUIRE_tp_alloc(tp_alloc) },               \
 		_Dee_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw), \
-		_Dee_REQUIRE_ALLOC_tp_serialize(tp_serialize)      \
+		_Dee_REQUIRE_ALLOC_tp_serialize(tp_serialize),     \
+		_Dee_REQUIRE_tp_free(tp_free),                     \
+		{ _Dee_REQUIRE_tp_alloc(tp_alloc) }                \
 	}}
 
 /* Specifies an automatic object allocator. */
@@ -1522,10 +1522,10 @@ Dee_funptr_t __Dee_REQUIRE_tp_free(decltype(nullptr));
 		_Dee_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor),              \
 		_Dee_REQUIRE_ALLOC_tp_copy_ctor(tp_deep_ctor),              \
 		_Dee_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor),                \
-		(Dee_funptr_t)NULL,                                         \
-		{ (Dee_funptr_t)(void *)(uintptr_t)(tp_instance_size) },    \
 		_Dee_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw),          \
-		_Dee_REQUIRE_ALLOC_tp_serialize(tp_serialize)               \
+		_Dee_REQUIRE_ALLOC_tp_serialize(tp_serialize),              \
+		(Dee_funptr_t)NULL,                                         \
+		{ (Dee_funptr_t)(void *)(uintptr_t)(tp_instance_size) }     \
 	}}
 
 /* Specifies an allocator that may provides optimizations
@@ -1580,11 +1580,11 @@ struct Dee_type_constructor {
 			Dee_funptr_t _tp_init1_; /* tp_copy_ctor */
 			Dee_funptr_t _tp_init2_; /* tp_deep_ctor */
 			Dee_funptr_t _tp_init3_; /* tp_any_ctor */
+			Dee_funptr_t _tp_init4_; /* tp_any_ctor_kw */
+			Dee_funptr_t _tp_init5_; /* tp_serialize */
 			/* Initializer for a custom type allocator. */
-			Dee_funptr_t _tp_init4_; /* tp_free */
-			struct { Dee_funptr_t _tp_init5_; } _tp_init6_;
-			Dee_funptr_t _tp_init7_; /* tp_any_ctor_kw */
-			Dee_funptr_t _tp_init8_; /* tp_serialize */
+			Dee_funptr_t _tp_init6_; /* tp_free */
+			struct { Dee_funptr_t _tp_init7_; } _tp_init7_;
 		} _tp_init_;
 
 		struct {
@@ -1592,22 +1592,7 @@ struct Dee_type_constructor {
 			WUNUSED_T NONNULL_T((1, 2))               int (DCALL *tp_copy_ctor)(DeeObject *__restrict self, DeeObject *__restrict other);
 			WUNUSED_T NONNULL_T((1, 2))               int (DCALL *tp_deep_ctor)(DeeObject *__restrict self, DeeObject *__restrict other);
 			WUNUSED_T NONNULL_T((1)) ATTR_INS_T(3, 2) int (DCALL *tp_any_ctor)(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
-			/* WARNING: A situation can arise in which the `tp_free'
-			 *          operator of a base-class is used instead of
-			 *          the one accompanying `tp_alloc()'.
-			 *       >> Because of this, `tp_alloc' and `tp_free' should only
-			 *          be used for accessing a cache of pre-allocated objects, that
-			 *          were created using regular heap allocations (`DeeObject_Malloc'). */
-			NONNULL_T((1)) void (DCALL *tp_free)(void *__restrict ob);
-			union {
-				size_t tp_instance_size;       /* [valid_if(tp_free == NULL)] */
-				void *(DCALL *tp_alloc)(void); /* [valid_if(tp_free != NULL)] */
-			}
-#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
-			_dee_aunion
-#define tp_instance_size _dee_aunion.tp_instance_size
-#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
-			;
+
 			/* WARNING: `tp_any_ctor_kw' may be invoked with `argc == 0 && kw == NULL',
 			 *           even when `tp_ctor' has been defined as non-NULL! */
 			WUNUSED_T NONNULL_T((1)) ATTR_INS_T(3, 2)
@@ -1629,6 +1614,23 @@ struct Dee_type_constructor {
 			(DCALL *tp_serialize)(DeeObject *__restrict self,
 			                      struct Dee_serial *__restrict writer,
 			                      Dee_seraddr_t addr);
+
+			/* WARNING: A situation can arise in which the `tp_free'
+			 *          operator of a base-class is used instead of
+			 *          the one accompanying `tp_alloc()'.
+			 *       >> Because of this, `tp_alloc' and `tp_free' should only
+			 *          be used for accessing a cache of pre-allocated objects, that
+			 *          were created using regular heap allocations (`DeeObject_Malloc'). */
+			NONNULL_T((1)) void (DCALL *tp_free)(void *__restrict ob);
+			union {
+				size_t tp_instance_size;       /* [valid_if(tp_free == NULL)] */
+				void *(DCALL *tp_alloc)(void); /* [valid_if(tp_free != NULL)] */
+			}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+			_dee_aunion
+#define tp_instance_size _dee_aunion.tp_instance_size
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+			;
 		} tp_alloc; /* [valid_if(!TP_FVARIABLE)] */
 
 		struct {
@@ -1649,8 +1651,6 @@ struct Dee_type_constructor {
 			WUNUSED_T NONNULL_T((1))   DREF DeeObject *(DCALL *tp_copy_ctor)(DeeObject *__restrict other);
 			WUNUSED_T NONNULL_T((1))   DREF DeeObject *(DCALL *tp_deep_ctor)(DeeObject *__restrict other);
 			WUNUSED_T ATTR_INS_T(2, 1) DREF DeeObject *(DCALL *tp_any_ctor)(size_t argc, DeeObject *const *argv);
-			          NONNULL_T((1))   void            (DCALL *tp_free)(void *__restrict ob);
-			struct { Dee_funptr_t tp_pad; } tp_pad; /* ... */
 			/* WARNING: `tp_any_ctor_kw' may be invoked with `argc == 0 && kw == NULL',
 			 *          even when `tp_ctor' or `tp_any_ctor' has been defined as non-NULL! */
 			WUNUSED_T ATTR_INS_T(2, 1) DREF DeeObject *(DCALL *tp_any_ctor_kw)(size_t argc, DeeObject *const *argv, DeeObject *kw);
@@ -1661,6 +1661,9 @@ struct Dee_type_constructor {
 			WUNUSED_T NONNULL_T((1, 2)) Dee_seraddr_t
 			(DCALL *tp_serialize)(DeeObject *__restrict self,
 			                      struct Dee_serial *__restrict writer);
+
+			NONNULL_T((1)) void (DCALL *tp_free)(void *__restrict ob);
+			struct { Dee_funptr_t tp_pad; } tp_pad; /* ... */
 		} tp_var; /* [valid_if(TP_FVARIABLE)] */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
