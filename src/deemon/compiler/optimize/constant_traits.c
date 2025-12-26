@@ -193,12 +193,12 @@ again0:
 	if (type == &DeeSuper_Type) {
 		int temp, result;
 		result = CONSTEXPR_ALLOWED;
-		temp   = allow_constexpr((DeeObject *)DeeSuper_TYPE(self));
+		temp   = allow_constexpr(Dee_AsObject(DeeSuper_TYPE(self)));
 		if (temp == CONSTEXPR_ILLEGAL)
 			goto illegal;
 		if (temp == CONSTEXPR_USECOPY)
 			result = CONSTEXPR_USECOPY;
-		temp = allow_constexpr((DeeObject *)DeeSuper_SELF(self));
+		temp = allow_constexpr(DeeSuper_SELF(self));
 		if (temp == CONSTEXPR_ILLEGAL)
 			goto illegal;
 		if (temp == CONSTEXPR_USECOPY)
@@ -360,21 +360,21 @@ usecopy:
 /* Check if a given object `type' is a type that implements a cast-constructor. */
 INTERN WUNUSED NONNULL((1)) bool
 (DCALL has_cast_constructor)(DeeObject *__restrict type) {
-	if (type == (DeeObject *)&DeeTuple_Type)
+	if (type == Dee_AsObject(&DeeTuple_Type))
 		goto yes;
-	if (type == (DeeObject *)&DeeList_Type)
+	if (type == Dee_AsObject(&DeeList_Type))
 		goto yes;
-	if (type == (DeeObject *)&DeeHashSet_Type)
+	if (type == Dee_AsObject(&DeeHashSet_Type))
 		goto yes;
-	if (type == (DeeObject *)&DeeDict_Type)
+	if (type == Dee_AsObject(&DeeDict_Type))
 		goto yes;
-	if (type == (DeeObject *)&DeeRoDict_Type)
+	if (type == Dee_AsObject(&DeeRoDict_Type))
 		goto yes;
-	if (type == (DeeObject *)&DeeRoSet_Type)
+	if (type == Dee_AsObject(&DeeRoSet_Type))
 		goto yes;
-	if (type == (DeeObject *)&DeeInt_Type)
+	if (type == Dee_AsObject(&DeeInt_Type))
 		goto yes;
-	if (type == (DeeObject *)&DeeString_Type)
+	if (type == Dee_AsObject(&DeeString_Type))
 		goto yes;
 	return false;
 yes:

@@ -453,7 +453,7 @@ except_unknown_tag:
 				if (DeeNone_Check(mask)) {
 					/* Special case: `mask(none)' is the same as `mask(type none)' */
 					Dee_Decref(mask);
-					mask = (DREF DeeObject *)&DeeNone_Type;
+					mask = Dee_AsObject(&DeeNone_Type);
 					Dee_Incref(mask);
 				}
 				if (DeeObject_AssertType(mask, &DeeType_Type)) {

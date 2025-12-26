@@ -509,7 +509,7 @@ PUBLIC WUNUSED DREF DeeObject *
 			Dee_Incref(new_result);
 			latin1_chars_lock_endwrite();
 			Dee_Decref(result);
-			return (DREF DeeObject *)new_result;
+			return Dee_AsObject(new_result);
 		}
 		Dee_Incref(result); /* The reference stored in `latin1_chars' */
 		latin1_chars[ch] = result;

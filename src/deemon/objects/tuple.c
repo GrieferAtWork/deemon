@@ -869,7 +869,7 @@ tuple_iterator_init(TupleIterator *__restrict self,
 	Dee_Incref(self->ti_tuple);
 	return 0;
 err_bounds:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self->ti_tuple,
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self->ti_tuple),
 	                          self->ti_index,
 	                          DeeTuple_SIZE(self->ti_tuple));
 err:
@@ -1213,7 +1213,7 @@ tuple_getitem(Tuple *self, DeeObject *index) {
 		goto err_bounds;
 	return_reference(DeeTuple_GET(self, i));
 err_bounds:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, i,
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), i,
 	                          DeeTuple_SIZE(self));
 err:
 	return NULL;
@@ -1230,7 +1230,7 @@ tuple_getrange_index(Tuple *__restrict self,
 	DeeSeqRange_Clamp(&range, begin, end, self->t_size);
 	range_size = range.sr_end - range.sr_start;
 	if unlikely(range_size == self->t_size)
-		return_reference((DeeObject *)self);
+		return_reference(Dee_AsObject(self));
 	return DeeTuple_NewVector(range_size, self->t_elem + range.sr_start);
 }
 
@@ -1243,7 +1243,7 @@ tuple_getrange_index_n(Tuple *__restrict self,
 	size_t start;
 	start = DeeSeqRange_Clamp_n(begin, self->t_size);
 	if unlikely(start == 0)
-		return_reference((DeeObject *)self);
+		return_reference(Dee_AsObject(self));
 	return DeeTuple_NewVector(DeeTuple_SIZE(self) - start,
 	                          DeeTuple_ELEM(self) + start);
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -1277,7 +1277,7 @@ tuple_getitem_index(Tuple *__restrict self, size_t index) {
 		goto err_bounds;
 	return_reference(self->t_elem[index]);
 err_bounds:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->t_size);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->t_size);
 	return NULL;
 }
 
@@ -2506,10 +2506,10 @@ nullable_tuple_getitem_index(Tuple *__restrict self, size_t index) {
 		goto err_unbound;
 	return_reference(self->t_elem[index]);
 err_unbound:
-	DeeRT_ErrUnboundIndex((DeeObject *)self, index);
+	DeeRT_ErrUnboundIndex(self, index);
 	return NULL;
 err_bounds:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->t_size);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->t_size);
 	return NULL;
 }
 
@@ -2777,7 +2777,7 @@ Dee_tuple_builder_pack(struct Dee_tuple_builder *__restrict self) {
 		ASSERT(self->tb_size == 0);
 		return DeeTuple_NewEmpty();
 	}
-	return (DREF DeeObject *)DeeTuple_TruncateUninitialized(result, self->tb_size);
+	return Dee_AsObject(DeeTuple_TruncateUninitialized(result, self->tb_size));
 }
 
 PUBLIC WUNUSED NONNULL((2)) Dee_ssize_t DCALL

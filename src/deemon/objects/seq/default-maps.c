@@ -155,7 +155,7 @@ mu_iter(MapUnion *__restrict self) {
 	Dee_atomic_rwlock_init(&result->mui_lock);
 	result->mui_in2nd = false;
 	DeeObject_Init(result, &MapUnionIterator_Type);
-	return (DREF MapUnionIterator *)DeeGC_Track((DREF DeeObject *)result);
+	return DeeGC_TRACK(MapUnionIterator, result);
 err_r:
 	DeeGCObject_FREE(result);
 err:
@@ -730,7 +730,7 @@ muiter_advance(MapUnionIterator *__restrict self, size_t step) {
 	MapUnionIterator_LockRead(self);
 	if (self->mui_in2nd) {
 		MapUnionIterator_LockEndRead(self);
-		return default__advance__with__nextkey((DeeObject *)self, step);
+		return default__advance__with__nextkey(Dee_AsObject(self), step);
 	}
 	iter = self->mui_iter;
 	Dee_Incref(iter);
@@ -740,7 +740,7 @@ muiter_advance(MapUnionIterator *__restrict self, size_t step) {
 	if (result >= step /* || unlikely(result == (size_t)-1)*/)
 		return result; /* Error, or fully "step" was fully applied */
 	/* Must use default for remaining steps. */
-	temp = default__advance__with__nextkey((DeeObject *)self, step - result);
+	temp = default__advance__with__nextkey(Dee_AsObject(self), step - result);
 	if unlikely(temp == (size_t)-1)
 		goto err;
 	return result + temp;
@@ -1794,7 +1794,7 @@ msd_iter(MapSymmetricDifference *__restrict self) {
 	Dee_atomic_rwlock_init(&result->msdi_lock);
 	result->msdi_in2nd = false;
 	DeeObject_Init(result, &MapSymmetricDifferenceIterator_Type);
-	return (DREF MapSymmetricDifferenceIterator *)DeeGC_Track((DREF DeeObject *)result);
+	return DeeGC_TRACK(MapSymmetricDifferenceIterator, result);
 err_r:
 	DeeGCObject_FREE(result);
 err:
@@ -1922,7 +1922,7 @@ msd_getitem_index(MapSymmetricDifference *__restrict self, size_t key) {
 	return result;
 err_key_r:
 	Dee_Decref(result);
-	DeeRT_ErrUnknownKeyInt((DeeObject *)self, key);
+	DeeRT_ErrUnknownKeyInt(Dee_AsObject(self), key);
 err:
 	return NULL;
 }
@@ -2012,7 +2012,7 @@ msd_getitem_string_hash(MapSymmetricDifference *__restrict self,
 	return result;
 err_key_r:
 	Dee_Decref(result);
-	DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
+	DeeRT_ErrUnboundKeyStr(Dee_AsObject(self), key);
 err:
 	return NULL;
 }
@@ -2105,7 +2105,7 @@ msd_getitem_string_len_hash(MapSymmetricDifference *__restrict self,
 	return result;
 err_key_r:
 	Dee_Decref(result);
-	DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
+	DeeRT_ErrUnboundKeyStr(Dee_AsObject(self), key);
 err:
 	return NULL;
 }

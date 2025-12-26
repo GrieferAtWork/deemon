@@ -129,7 +129,7 @@ err:
 	result->disg_end        = sizeob; /* Inherit reference */
 	Dee_atomic_lock_init(&result->disg_lock);
 	DeeObject_Init(result, &DefaultIterator_WithSizeObAndGetItem_Type);
-	return DeeGC_Track((DREF DeeObject *)result);
+	return DeeGC_Track(Dee_AsObject(result));
 err_size_ob:
 	Dee_Decref(sizeob);
 err:
@@ -146,7 +146,7 @@ err:
 	result->dig_tp_getitem = REQUIRE_DEPENDENCY(seq_operator_getitem);
 	Dee_atomic_lock_init(&result->dig_lock);
 	DeeObject_Init(result, &DefaultIterator_WithGetItem_Type);
-	return DeeGC_Track((DREF DeeObject *)result);
+	return DeeGC_Track(Dee_AsObject(result));
 err:
 	return NULL;
 }}
@@ -257,7 +257,7 @@ default_foreach_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject *valu
 	pair->t_elem[0] = key;
 	pair->t_elem[1] = value;
 	result = (*data->dfwme_cb)(data->dfwme_arg, (DeeObject *)pair);
-	DeeTuple_DecrefSymbolic((DREF DeeObject *)pair);
+	DeeTuple_DecrefSymbolic(Dee_AsObject(pair));
 	return result;
 err:
 	return -1;

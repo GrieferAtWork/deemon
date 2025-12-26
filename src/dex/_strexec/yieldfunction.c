@@ -122,7 +122,7 @@ jy_iter(JITYieldFunction *__restrict self) {
 	 *       must be loaded, rather than the function loading itself! */
 	if (jf->jf_selfarg != (size_t)-1) {
 		ASSERT(result->ji_loc.ot_list[jf->jf_selfarg].oe_value == NULL);
-		result->ji_loc.ot_list[jf->jf_selfarg].oe_value = (DREF DeeObject *)self;
+		result->ji_loc.ot_list[jf->jf_selfarg].oe_value = Dee_AsObject(self);
 	}
 
 	if (self->jy_kw) {
@@ -175,7 +175,7 @@ jy_iter(JITYieldFunction *__restrict self) {
 	               (unsigned char const *)jf->jf_source_start,
 	               (unsigned char const *)jf->jf_source_end);
 	DeeObject_Init(result, &JITYieldFunctionIterator_Type);
-	return (DREF JITYieldFunctionIterator *)DeeGC_Track((DeeObject *)result);
+	return DeeGC_TRACK(JITYieldFunctionIterator, result);
 err_r_loc_bad_argc:
 	if (jf->jf_selfarg == (size_t)-1) {
 		err_invalid_argc_len(NULL,
@@ -220,7 +220,7 @@ jy_getargs(JITYieldFunction *__restrict self) {
 		arg_offset = DeeKwds_SIZE(self->jy_kw);
 	if (arg_offset > self->jy_argc)
 		arg_offset = self->jy_argc;
-	return DeeRefVector_NewReadonly((DeeObject *)self,
+	return DeeRefVector_NewReadonly(Dee_AsObject(self),
 	                                self->jy_argc - arg_offset,
 	                                self->jy_argv + arg_offset);
 }

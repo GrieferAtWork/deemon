@@ -235,7 +235,7 @@ invset_operator_add(SetInversion *self, DeeObject *some_object) {
 		intersection = DeeObject_InvokeMethodHint(set_operator_and, self->si_set, xrhs->si_set);
 		if unlikely(!intersection)
 			goto err;
-		return (DREF DeeObject *)SetInversion_New_inherit(intersection);
+		return Dee_AsObject(SetInversion_New_inherit(intersection));
 	} else {
 		/* (~a | b)  <=>  ~(a & ~b) */
 		DREF SetInversion *b_inv;
@@ -246,7 +246,7 @@ invset_operator_add(SetInversion *self, DeeObject *some_object) {
 		intersection = SetIntersection_New_inherit_b(self->si_set, b_inv);
 		if unlikely(!intersection)
 			goto err;
-		return (DREF DeeObject *)SetInversion_New_inherit(intersection);
+		return Dee_AsObject(SetInversion_New_inherit(intersection));
 	}
 	__builtin_unreachable();
 err:
@@ -266,7 +266,7 @@ invset_operator_sub(SetInversion *self, DeeObject *some_object) {
 		DREF SetUnion *su = SetUnion_New(self->si_set, some_object);
 		if unlikely(!su)
 			goto err;
-		return (DREF DeeObject *)SetInversion_New_inherit(su);
+		return Dee_AsObject(SetInversion_New_inherit(su));
 	}
 	__builtin_unreachable();
 err:
@@ -289,7 +289,7 @@ invset_operator_and(SetInversion *self, DeeObject *some_object) {
 		su = SetUnion_New_inherit_b(self->si_set, b_inv);
 		if unlikely(!su)
 			goto err;
-		return (DREF DeeObject *)SetInversion_New_inherit(su);
+		return Dee_AsObject(SetInversion_New_inherit(su));
 	}
 	__builtin_unreachable();
 err:
@@ -303,7 +303,7 @@ invset_operator_xor(SetInversion *self, DeeObject *some_object) {
 	ssd = SetSymmetricDifference_New(self->si_set, some_object);
 	if unlikely(!ssd)
 		goto err;
-	return (DREF DeeObject *)SetInversion_New_inherit(ssd);
+	return Dee_AsObject(SetInversion_New_inherit(ssd));
 err:
 	return NULL;
 }
@@ -827,7 +827,7 @@ su_iter(SetUnion *__restrict self) {
 	result->sui_union = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &SetUnionIterator_Type);
-	return (DREF SetUnionIterator *)DeeGC_Track((DREF DeeObject *)result);
+	return DeeGC_TRACK(SetUnionIterator, result);
 err_r:
 	DeeGCObject_FREE(result);
 err:
@@ -1210,7 +1210,7 @@ ssd_iter(SetSymmetricDifference *__restrict self) {
 	result->ssd_set   = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &SetSymmetricDifferenceIterator_Type);
-	return (DREF SetSymmetricDifferenceIterator *)DeeGC_Track((DeeObject *)result);
+	return DeeGC_TRACK(SetSymmetricDifferenceIterator, result);
 err_r:
 	DeeGCObject_FREE(result);
 err:

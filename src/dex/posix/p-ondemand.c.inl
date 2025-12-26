@@ -4150,11 +4150,11 @@ nt_CreateSymbolicLinkAuto_isdir(DeeObject *lpSymlinkFileName,
 	DWORD dwTargetAttributes;
 	if (!DeeString_IsAbsPath(lpTargetFileName)) {
 		DREF DeeObject *filename_path, *target_abspath;
-		filename_path = (DREF DeeObject *)posix_path_headof_f((DeeStringObject *)lpSymlinkFileName);
+		filename_path = Dee_AsObject(posix_path_headof_f((DeeStringObject *)lpSymlinkFileName));
 		if unlikely(!filename_path)
 			goto err;
-		target_abspath = (DREF DeeObject *)posix_path_abspath_f((DeeStringObject *)lpTargetFileName,
-		                                                        (DeeStringObject *)filename_path);
+		target_abspath = Dee_AsObject(posix_path_abspath_f((DeeStringObject *)lpTargetFileName,
+		                                                   (DeeStringObject *)filename_path));
 		Dee_Decref(filename_path);
 		if unlikely(!target_abspath)
 			goto err;

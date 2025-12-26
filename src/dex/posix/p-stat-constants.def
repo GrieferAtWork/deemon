@@ -24,36 +24,36 @@
 #define OBJ_libposix_S_IFMT DeeInt_ForSmallInt(STAT_IFMT)
 #elif STAT_IFMT >= 0
 #if STAT_IFMT <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_IFMT ((DeeObject *)&libposix_S_IFMT)
+#define OBJ_libposix_S_IFMT &libposix_S_IFMT
 PRIVATE DEFINE_UINT15(libposix_S_IFMT, STAT_IFMT);
 #elif STAT_IFMT <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_IFMT ((DeeObject *)&libposix_S_IFMT)
+#define OBJ_libposix_S_IFMT &libposix_S_IFMT
 PRIVATE DEFINE_UINT30(libposix_S_IFMT, STAT_IFMT);
 #elif STAT_IFMT <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_IFMT ((DeeObject *)&libposix_S_IFMT)
+#define OBJ_libposix_S_IFMT &libposix_S_IFMT
 PRIVATE DEFINE_UINT45(libposix_S_IFMT, STAT_IFMT);
 #elif STAT_IFMT <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_IFMT ((DeeObject *)&libposix_S_IFMT)
+#define OBJ_libposix_S_IFMT &libposix_S_IFMT
 PRIVATE DEFINE_UINT60(libposix_S_IFMT, STAT_IFMT);
 #else
-#define OBJ_libposix_S_IFMT ((DeeObject *)&libposix_S_IFMT)
+#define OBJ_libposix_S_IFMT &libposix_S_IFMT
 PRIVATE DEFINE_UINT75(libposix_S_IFMT, STAT_IFMT);
 #endif
 #else /* STAT_IFMT >= 0 */
 #if STAT_IFMT >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_IFMT ((DeeObject *)&libposix_S_IFMT)
+#define OBJ_libposix_S_IFMT &libposix_S_IFMT
 PRIVATE DEFINE_INT15(libposix_S_IFMT, STAT_IFMT);
 #elif STAT_IFMT >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_IFMT ((DeeObject *)&libposix_S_IFMT)
+#define OBJ_libposix_S_IFMT &libposix_S_IFMT
 PRIVATE DEFINE_INT30(libposix_S_IFMT, STAT_IFMT);
 #elif STAT_IFMT >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_IFMT ((DeeObject *)&libposix_S_IFMT)
+#define OBJ_libposix_S_IFMT &libposix_S_IFMT
 PRIVATE DEFINE_INT45(libposix_S_IFMT, STAT_IFMT);
 #elif STAT_IFMT >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_IFMT ((DeeObject *)&libposix_S_IFMT)
+#define OBJ_libposix_S_IFMT &libposix_S_IFMT
 PRIVATE DEFINE_INT60(libposix_S_IFMT, STAT_IFMT);
 #else
-#define OBJ_libposix_S_IFMT ((DeeObject *)&libposix_S_IFMT)
+#define OBJ_libposix_S_IFMT &libposix_S_IFMT
 PRIVATE DEFINE_INT75(libposix_S_IFMT, STAT_IFMT);
 #endif
 #endif /* STAT_IFMT < 0 */
@@ -63,36 +63,36 @@ PRIVATE DEFINE_INT75(libposix_S_IFMT, STAT_IFMT);
 #define OBJ_libposix_S_IFDIR DeeInt_ForSmallInt(STAT_IFDIR)
 #elif STAT_IFDIR >= 0
 #if STAT_IFDIR <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_IFDIR ((DeeObject *)&libposix_S_IFDIR)
+#define OBJ_libposix_S_IFDIR &libposix_S_IFDIR
 PRIVATE DEFINE_UINT15(libposix_S_IFDIR, STAT_IFDIR);
 #elif STAT_IFDIR <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_IFDIR ((DeeObject *)&libposix_S_IFDIR)
+#define OBJ_libposix_S_IFDIR &libposix_S_IFDIR
 PRIVATE DEFINE_UINT30(libposix_S_IFDIR, STAT_IFDIR);
 #elif STAT_IFDIR <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_IFDIR ((DeeObject *)&libposix_S_IFDIR)
+#define OBJ_libposix_S_IFDIR &libposix_S_IFDIR
 PRIVATE DEFINE_UINT45(libposix_S_IFDIR, STAT_IFDIR);
 #elif STAT_IFDIR <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_IFDIR ((DeeObject *)&libposix_S_IFDIR)
+#define OBJ_libposix_S_IFDIR &libposix_S_IFDIR
 PRIVATE DEFINE_UINT60(libposix_S_IFDIR, STAT_IFDIR);
 #else
-#define OBJ_libposix_S_IFDIR ((DeeObject *)&libposix_S_IFDIR)
+#define OBJ_libposix_S_IFDIR &libposix_S_IFDIR
 PRIVATE DEFINE_UINT75(libposix_S_IFDIR, STAT_IFDIR);
 #endif
 #else /* STAT_IFDIR >= 0 */
 #if STAT_IFDIR >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_IFDIR ((DeeObject *)&libposix_S_IFDIR)
+#define OBJ_libposix_S_IFDIR &libposix_S_IFDIR
 PRIVATE DEFINE_INT15(libposix_S_IFDIR, STAT_IFDIR);
 #elif STAT_IFDIR >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_IFDIR ((DeeObject *)&libposix_S_IFDIR)
+#define OBJ_libposix_S_IFDIR &libposix_S_IFDIR
 PRIVATE DEFINE_INT30(libposix_S_IFDIR, STAT_IFDIR);
 #elif STAT_IFDIR >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_IFDIR ((DeeObject *)&libposix_S_IFDIR)
+#define OBJ_libposix_S_IFDIR &libposix_S_IFDIR
 PRIVATE DEFINE_INT45(libposix_S_IFDIR, STAT_IFDIR);
 #elif STAT_IFDIR >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_IFDIR ((DeeObject *)&libposix_S_IFDIR)
+#define OBJ_libposix_S_IFDIR &libposix_S_IFDIR
 PRIVATE DEFINE_INT60(libposix_S_IFDIR, STAT_IFDIR);
 #else
-#define OBJ_libposix_S_IFDIR ((DeeObject *)&libposix_S_IFDIR)
+#define OBJ_libposix_S_IFDIR &libposix_S_IFDIR
 PRIVATE DEFINE_INT75(libposix_S_IFDIR, STAT_IFDIR);
 #endif
 #endif /* STAT_IFDIR < 0 */
@@ -102,36 +102,36 @@ PRIVATE DEFINE_INT75(libposix_S_IFDIR, STAT_IFDIR);
 #define OBJ_libposix_S_IFCHR DeeInt_ForSmallInt(STAT_IFCHR)
 #elif STAT_IFCHR >= 0
 #if STAT_IFCHR <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_IFCHR ((DeeObject *)&libposix_S_IFCHR)
+#define OBJ_libposix_S_IFCHR &libposix_S_IFCHR
 PRIVATE DEFINE_UINT15(libposix_S_IFCHR, STAT_IFCHR);
 #elif STAT_IFCHR <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_IFCHR ((DeeObject *)&libposix_S_IFCHR)
+#define OBJ_libposix_S_IFCHR &libposix_S_IFCHR
 PRIVATE DEFINE_UINT30(libposix_S_IFCHR, STAT_IFCHR);
 #elif STAT_IFCHR <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_IFCHR ((DeeObject *)&libposix_S_IFCHR)
+#define OBJ_libposix_S_IFCHR &libposix_S_IFCHR
 PRIVATE DEFINE_UINT45(libposix_S_IFCHR, STAT_IFCHR);
 #elif STAT_IFCHR <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_IFCHR ((DeeObject *)&libposix_S_IFCHR)
+#define OBJ_libposix_S_IFCHR &libposix_S_IFCHR
 PRIVATE DEFINE_UINT60(libposix_S_IFCHR, STAT_IFCHR);
 #else
-#define OBJ_libposix_S_IFCHR ((DeeObject *)&libposix_S_IFCHR)
+#define OBJ_libposix_S_IFCHR &libposix_S_IFCHR
 PRIVATE DEFINE_UINT75(libposix_S_IFCHR, STAT_IFCHR);
 #endif
 #else /* STAT_IFCHR >= 0 */
 #if STAT_IFCHR >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_IFCHR ((DeeObject *)&libposix_S_IFCHR)
+#define OBJ_libposix_S_IFCHR &libposix_S_IFCHR
 PRIVATE DEFINE_INT15(libposix_S_IFCHR, STAT_IFCHR);
 #elif STAT_IFCHR >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_IFCHR ((DeeObject *)&libposix_S_IFCHR)
+#define OBJ_libposix_S_IFCHR &libposix_S_IFCHR
 PRIVATE DEFINE_INT30(libposix_S_IFCHR, STAT_IFCHR);
 #elif STAT_IFCHR >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_IFCHR ((DeeObject *)&libposix_S_IFCHR)
+#define OBJ_libposix_S_IFCHR &libposix_S_IFCHR
 PRIVATE DEFINE_INT45(libposix_S_IFCHR, STAT_IFCHR);
 #elif STAT_IFCHR >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_IFCHR ((DeeObject *)&libposix_S_IFCHR)
+#define OBJ_libposix_S_IFCHR &libposix_S_IFCHR
 PRIVATE DEFINE_INT60(libposix_S_IFCHR, STAT_IFCHR);
 #else
-#define OBJ_libposix_S_IFCHR ((DeeObject *)&libposix_S_IFCHR)
+#define OBJ_libposix_S_IFCHR &libposix_S_IFCHR
 PRIVATE DEFINE_INT75(libposix_S_IFCHR, STAT_IFCHR);
 #endif
 #endif /* STAT_IFCHR < 0 */
@@ -141,36 +141,36 @@ PRIVATE DEFINE_INT75(libposix_S_IFCHR, STAT_IFCHR);
 #define OBJ_libposix_S_IFBLK DeeInt_ForSmallInt(STAT_IFBLK)
 #elif STAT_IFBLK >= 0
 #if STAT_IFBLK <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_IFBLK ((DeeObject *)&libposix_S_IFBLK)
+#define OBJ_libposix_S_IFBLK &libposix_S_IFBLK
 PRIVATE DEFINE_UINT15(libposix_S_IFBLK, STAT_IFBLK);
 #elif STAT_IFBLK <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_IFBLK ((DeeObject *)&libposix_S_IFBLK)
+#define OBJ_libposix_S_IFBLK &libposix_S_IFBLK
 PRIVATE DEFINE_UINT30(libposix_S_IFBLK, STAT_IFBLK);
 #elif STAT_IFBLK <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_IFBLK ((DeeObject *)&libposix_S_IFBLK)
+#define OBJ_libposix_S_IFBLK &libposix_S_IFBLK
 PRIVATE DEFINE_UINT45(libposix_S_IFBLK, STAT_IFBLK);
 #elif STAT_IFBLK <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_IFBLK ((DeeObject *)&libposix_S_IFBLK)
+#define OBJ_libposix_S_IFBLK &libposix_S_IFBLK
 PRIVATE DEFINE_UINT60(libposix_S_IFBLK, STAT_IFBLK);
 #else
-#define OBJ_libposix_S_IFBLK ((DeeObject *)&libposix_S_IFBLK)
+#define OBJ_libposix_S_IFBLK &libposix_S_IFBLK
 PRIVATE DEFINE_UINT75(libposix_S_IFBLK, STAT_IFBLK);
 #endif
 #else /* STAT_IFBLK >= 0 */
 #if STAT_IFBLK >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_IFBLK ((DeeObject *)&libposix_S_IFBLK)
+#define OBJ_libposix_S_IFBLK &libposix_S_IFBLK
 PRIVATE DEFINE_INT15(libposix_S_IFBLK, STAT_IFBLK);
 #elif STAT_IFBLK >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_IFBLK ((DeeObject *)&libposix_S_IFBLK)
+#define OBJ_libposix_S_IFBLK &libposix_S_IFBLK
 PRIVATE DEFINE_INT30(libposix_S_IFBLK, STAT_IFBLK);
 #elif STAT_IFBLK >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_IFBLK ((DeeObject *)&libposix_S_IFBLK)
+#define OBJ_libposix_S_IFBLK &libposix_S_IFBLK
 PRIVATE DEFINE_INT45(libposix_S_IFBLK, STAT_IFBLK);
 #elif STAT_IFBLK >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_IFBLK ((DeeObject *)&libposix_S_IFBLK)
+#define OBJ_libposix_S_IFBLK &libposix_S_IFBLK
 PRIVATE DEFINE_INT60(libposix_S_IFBLK, STAT_IFBLK);
 #else
-#define OBJ_libposix_S_IFBLK ((DeeObject *)&libposix_S_IFBLK)
+#define OBJ_libposix_S_IFBLK &libposix_S_IFBLK
 PRIVATE DEFINE_INT75(libposix_S_IFBLK, STAT_IFBLK);
 #endif
 #endif /* STAT_IFBLK < 0 */
@@ -180,36 +180,36 @@ PRIVATE DEFINE_INT75(libposix_S_IFBLK, STAT_IFBLK);
 #define OBJ_libposix_S_IFREG DeeInt_ForSmallInt(STAT_IFREG)
 #elif STAT_IFREG >= 0
 #if STAT_IFREG <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_IFREG ((DeeObject *)&libposix_S_IFREG)
+#define OBJ_libposix_S_IFREG &libposix_S_IFREG
 PRIVATE DEFINE_UINT15(libposix_S_IFREG, STAT_IFREG);
 #elif STAT_IFREG <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_IFREG ((DeeObject *)&libposix_S_IFREG)
+#define OBJ_libposix_S_IFREG &libposix_S_IFREG
 PRIVATE DEFINE_UINT30(libposix_S_IFREG, STAT_IFREG);
 #elif STAT_IFREG <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_IFREG ((DeeObject *)&libposix_S_IFREG)
+#define OBJ_libposix_S_IFREG &libposix_S_IFREG
 PRIVATE DEFINE_UINT45(libposix_S_IFREG, STAT_IFREG);
 #elif STAT_IFREG <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_IFREG ((DeeObject *)&libposix_S_IFREG)
+#define OBJ_libposix_S_IFREG &libposix_S_IFREG
 PRIVATE DEFINE_UINT60(libposix_S_IFREG, STAT_IFREG);
 #else
-#define OBJ_libposix_S_IFREG ((DeeObject *)&libposix_S_IFREG)
+#define OBJ_libposix_S_IFREG &libposix_S_IFREG
 PRIVATE DEFINE_UINT75(libposix_S_IFREG, STAT_IFREG);
 #endif
 #else /* STAT_IFREG >= 0 */
 #if STAT_IFREG >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_IFREG ((DeeObject *)&libposix_S_IFREG)
+#define OBJ_libposix_S_IFREG &libposix_S_IFREG
 PRIVATE DEFINE_INT15(libposix_S_IFREG, STAT_IFREG);
 #elif STAT_IFREG >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_IFREG ((DeeObject *)&libposix_S_IFREG)
+#define OBJ_libposix_S_IFREG &libposix_S_IFREG
 PRIVATE DEFINE_INT30(libposix_S_IFREG, STAT_IFREG);
 #elif STAT_IFREG >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_IFREG ((DeeObject *)&libposix_S_IFREG)
+#define OBJ_libposix_S_IFREG &libposix_S_IFREG
 PRIVATE DEFINE_INT45(libposix_S_IFREG, STAT_IFREG);
 #elif STAT_IFREG >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_IFREG ((DeeObject *)&libposix_S_IFREG)
+#define OBJ_libposix_S_IFREG &libposix_S_IFREG
 PRIVATE DEFINE_INT60(libposix_S_IFREG, STAT_IFREG);
 #else
-#define OBJ_libposix_S_IFREG ((DeeObject *)&libposix_S_IFREG)
+#define OBJ_libposix_S_IFREG &libposix_S_IFREG
 PRIVATE DEFINE_INT75(libposix_S_IFREG, STAT_IFREG);
 #endif
 #endif /* STAT_IFREG < 0 */
@@ -219,36 +219,36 @@ PRIVATE DEFINE_INT75(libposix_S_IFREG, STAT_IFREG);
 #define OBJ_libposix_S_IFIFO DeeInt_ForSmallInt(STAT_IFIFO)
 #elif STAT_IFIFO >= 0
 #if STAT_IFIFO <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_IFIFO ((DeeObject *)&libposix_S_IFIFO)
+#define OBJ_libposix_S_IFIFO &libposix_S_IFIFO
 PRIVATE DEFINE_UINT15(libposix_S_IFIFO, STAT_IFIFO);
 #elif STAT_IFIFO <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_IFIFO ((DeeObject *)&libposix_S_IFIFO)
+#define OBJ_libposix_S_IFIFO &libposix_S_IFIFO
 PRIVATE DEFINE_UINT30(libposix_S_IFIFO, STAT_IFIFO);
 #elif STAT_IFIFO <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_IFIFO ((DeeObject *)&libposix_S_IFIFO)
+#define OBJ_libposix_S_IFIFO &libposix_S_IFIFO
 PRIVATE DEFINE_UINT45(libposix_S_IFIFO, STAT_IFIFO);
 #elif STAT_IFIFO <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_IFIFO ((DeeObject *)&libposix_S_IFIFO)
+#define OBJ_libposix_S_IFIFO &libposix_S_IFIFO
 PRIVATE DEFINE_UINT60(libposix_S_IFIFO, STAT_IFIFO);
 #else
-#define OBJ_libposix_S_IFIFO ((DeeObject *)&libposix_S_IFIFO)
+#define OBJ_libposix_S_IFIFO &libposix_S_IFIFO
 PRIVATE DEFINE_UINT75(libposix_S_IFIFO, STAT_IFIFO);
 #endif
 #else /* STAT_IFIFO >= 0 */
 #if STAT_IFIFO >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_IFIFO ((DeeObject *)&libposix_S_IFIFO)
+#define OBJ_libposix_S_IFIFO &libposix_S_IFIFO
 PRIVATE DEFINE_INT15(libposix_S_IFIFO, STAT_IFIFO);
 #elif STAT_IFIFO >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_IFIFO ((DeeObject *)&libposix_S_IFIFO)
+#define OBJ_libposix_S_IFIFO &libposix_S_IFIFO
 PRIVATE DEFINE_INT30(libposix_S_IFIFO, STAT_IFIFO);
 #elif STAT_IFIFO >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_IFIFO ((DeeObject *)&libposix_S_IFIFO)
+#define OBJ_libposix_S_IFIFO &libposix_S_IFIFO
 PRIVATE DEFINE_INT45(libposix_S_IFIFO, STAT_IFIFO);
 #elif STAT_IFIFO >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_IFIFO ((DeeObject *)&libposix_S_IFIFO)
+#define OBJ_libposix_S_IFIFO &libposix_S_IFIFO
 PRIVATE DEFINE_INT60(libposix_S_IFIFO, STAT_IFIFO);
 #else
-#define OBJ_libposix_S_IFIFO ((DeeObject *)&libposix_S_IFIFO)
+#define OBJ_libposix_S_IFIFO &libposix_S_IFIFO
 PRIVATE DEFINE_INT75(libposix_S_IFIFO, STAT_IFIFO);
 #endif
 #endif /* STAT_IFIFO < 0 */
@@ -258,36 +258,36 @@ PRIVATE DEFINE_INT75(libposix_S_IFIFO, STAT_IFIFO);
 #define OBJ_libposix_S_IFLNK DeeInt_ForSmallInt(STAT_IFLNK)
 #elif STAT_IFLNK >= 0
 #if STAT_IFLNK <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_IFLNK ((DeeObject *)&libposix_S_IFLNK)
+#define OBJ_libposix_S_IFLNK &libposix_S_IFLNK
 PRIVATE DEFINE_UINT15(libposix_S_IFLNK, STAT_IFLNK);
 #elif STAT_IFLNK <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_IFLNK ((DeeObject *)&libposix_S_IFLNK)
+#define OBJ_libposix_S_IFLNK &libposix_S_IFLNK
 PRIVATE DEFINE_UINT30(libposix_S_IFLNK, STAT_IFLNK);
 #elif STAT_IFLNK <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_IFLNK ((DeeObject *)&libposix_S_IFLNK)
+#define OBJ_libposix_S_IFLNK &libposix_S_IFLNK
 PRIVATE DEFINE_UINT45(libposix_S_IFLNK, STAT_IFLNK);
 #elif STAT_IFLNK <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_IFLNK ((DeeObject *)&libposix_S_IFLNK)
+#define OBJ_libposix_S_IFLNK &libposix_S_IFLNK
 PRIVATE DEFINE_UINT60(libposix_S_IFLNK, STAT_IFLNK);
 #else
-#define OBJ_libposix_S_IFLNK ((DeeObject *)&libposix_S_IFLNK)
+#define OBJ_libposix_S_IFLNK &libposix_S_IFLNK
 PRIVATE DEFINE_UINT75(libposix_S_IFLNK, STAT_IFLNK);
 #endif
 #else /* STAT_IFLNK >= 0 */
 #if STAT_IFLNK >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_IFLNK ((DeeObject *)&libposix_S_IFLNK)
+#define OBJ_libposix_S_IFLNK &libposix_S_IFLNK
 PRIVATE DEFINE_INT15(libposix_S_IFLNK, STAT_IFLNK);
 #elif STAT_IFLNK >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_IFLNK ((DeeObject *)&libposix_S_IFLNK)
+#define OBJ_libposix_S_IFLNK &libposix_S_IFLNK
 PRIVATE DEFINE_INT30(libposix_S_IFLNK, STAT_IFLNK);
 #elif STAT_IFLNK >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_IFLNK ((DeeObject *)&libposix_S_IFLNK)
+#define OBJ_libposix_S_IFLNK &libposix_S_IFLNK
 PRIVATE DEFINE_INT45(libposix_S_IFLNK, STAT_IFLNK);
 #elif STAT_IFLNK >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_IFLNK ((DeeObject *)&libposix_S_IFLNK)
+#define OBJ_libposix_S_IFLNK &libposix_S_IFLNK
 PRIVATE DEFINE_INT60(libposix_S_IFLNK, STAT_IFLNK);
 #else
-#define OBJ_libposix_S_IFLNK ((DeeObject *)&libposix_S_IFLNK)
+#define OBJ_libposix_S_IFLNK &libposix_S_IFLNK
 PRIVATE DEFINE_INT75(libposix_S_IFLNK, STAT_IFLNK);
 #endif
 #endif /* STAT_IFLNK < 0 */
@@ -297,36 +297,36 @@ PRIVATE DEFINE_INT75(libposix_S_IFLNK, STAT_IFLNK);
 #define OBJ_libposix_S_IFSOCK DeeInt_ForSmallInt(STAT_IFSOCK)
 #elif STAT_IFSOCK >= 0
 #if STAT_IFSOCK <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_IFSOCK ((DeeObject *)&libposix_S_IFSOCK)
+#define OBJ_libposix_S_IFSOCK &libposix_S_IFSOCK
 PRIVATE DEFINE_UINT15(libposix_S_IFSOCK, STAT_IFSOCK);
 #elif STAT_IFSOCK <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_IFSOCK ((DeeObject *)&libposix_S_IFSOCK)
+#define OBJ_libposix_S_IFSOCK &libposix_S_IFSOCK
 PRIVATE DEFINE_UINT30(libposix_S_IFSOCK, STAT_IFSOCK);
 #elif STAT_IFSOCK <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_IFSOCK ((DeeObject *)&libposix_S_IFSOCK)
+#define OBJ_libposix_S_IFSOCK &libposix_S_IFSOCK
 PRIVATE DEFINE_UINT45(libposix_S_IFSOCK, STAT_IFSOCK);
 #elif STAT_IFSOCK <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_IFSOCK ((DeeObject *)&libposix_S_IFSOCK)
+#define OBJ_libposix_S_IFSOCK &libposix_S_IFSOCK
 PRIVATE DEFINE_UINT60(libposix_S_IFSOCK, STAT_IFSOCK);
 #else
-#define OBJ_libposix_S_IFSOCK ((DeeObject *)&libposix_S_IFSOCK)
+#define OBJ_libposix_S_IFSOCK &libposix_S_IFSOCK
 PRIVATE DEFINE_UINT75(libposix_S_IFSOCK, STAT_IFSOCK);
 #endif
 #else /* STAT_IFSOCK >= 0 */
 #if STAT_IFSOCK >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_IFSOCK ((DeeObject *)&libposix_S_IFSOCK)
+#define OBJ_libposix_S_IFSOCK &libposix_S_IFSOCK
 PRIVATE DEFINE_INT15(libposix_S_IFSOCK, STAT_IFSOCK);
 #elif STAT_IFSOCK >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_IFSOCK ((DeeObject *)&libposix_S_IFSOCK)
+#define OBJ_libposix_S_IFSOCK &libposix_S_IFSOCK
 PRIVATE DEFINE_INT30(libposix_S_IFSOCK, STAT_IFSOCK);
 #elif STAT_IFSOCK >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_IFSOCK ((DeeObject *)&libposix_S_IFSOCK)
+#define OBJ_libposix_S_IFSOCK &libposix_S_IFSOCK
 PRIVATE DEFINE_INT45(libposix_S_IFSOCK, STAT_IFSOCK);
 #elif STAT_IFSOCK >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_IFSOCK ((DeeObject *)&libposix_S_IFSOCK)
+#define OBJ_libposix_S_IFSOCK &libposix_S_IFSOCK
 PRIVATE DEFINE_INT60(libposix_S_IFSOCK, STAT_IFSOCK);
 #else
-#define OBJ_libposix_S_IFSOCK ((DeeObject *)&libposix_S_IFSOCK)
+#define OBJ_libposix_S_IFSOCK &libposix_S_IFSOCK
 PRIVATE DEFINE_INT75(libposix_S_IFSOCK, STAT_IFSOCK);
 #endif
 #endif /* STAT_IFSOCK < 0 */
@@ -336,36 +336,36 @@ PRIVATE DEFINE_INT75(libposix_S_IFSOCK, STAT_IFSOCK);
 #define OBJ_libposix_S_ISUID DeeInt_ForSmallInt(STAT_ISUID)
 #elif STAT_ISUID >= 0
 #if STAT_ISUID <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_ISUID ((DeeObject *)&libposix_S_ISUID)
+#define OBJ_libposix_S_ISUID &libposix_S_ISUID
 PRIVATE DEFINE_UINT15(libposix_S_ISUID, STAT_ISUID);
 #elif STAT_ISUID <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_ISUID ((DeeObject *)&libposix_S_ISUID)
+#define OBJ_libposix_S_ISUID &libposix_S_ISUID
 PRIVATE DEFINE_UINT30(libposix_S_ISUID, STAT_ISUID);
 #elif STAT_ISUID <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_ISUID ((DeeObject *)&libposix_S_ISUID)
+#define OBJ_libposix_S_ISUID &libposix_S_ISUID
 PRIVATE DEFINE_UINT45(libposix_S_ISUID, STAT_ISUID);
 #elif STAT_ISUID <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_ISUID ((DeeObject *)&libposix_S_ISUID)
+#define OBJ_libposix_S_ISUID &libposix_S_ISUID
 PRIVATE DEFINE_UINT60(libposix_S_ISUID, STAT_ISUID);
 #else
-#define OBJ_libposix_S_ISUID ((DeeObject *)&libposix_S_ISUID)
+#define OBJ_libposix_S_ISUID &libposix_S_ISUID
 PRIVATE DEFINE_UINT75(libposix_S_ISUID, STAT_ISUID);
 #endif
 #else /* STAT_ISUID >= 0 */
 #if STAT_ISUID >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_ISUID ((DeeObject *)&libposix_S_ISUID)
+#define OBJ_libposix_S_ISUID &libposix_S_ISUID
 PRIVATE DEFINE_INT15(libposix_S_ISUID, STAT_ISUID);
 #elif STAT_ISUID >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_ISUID ((DeeObject *)&libposix_S_ISUID)
+#define OBJ_libposix_S_ISUID &libposix_S_ISUID
 PRIVATE DEFINE_INT30(libposix_S_ISUID, STAT_ISUID);
 #elif STAT_ISUID >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_ISUID ((DeeObject *)&libposix_S_ISUID)
+#define OBJ_libposix_S_ISUID &libposix_S_ISUID
 PRIVATE DEFINE_INT45(libposix_S_ISUID, STAT_ISUID);
 #elif STAT_ISUID >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_ISUID ((DeeObject *)&libposix_S_ISUID)
+#define OBJ_libposix_S_ISUID &libposix_S_ISUID
 PRIVATE DEFINE_INT60(libposix_S_ISUID, STAT_ISUID);
 #else
-#define OBJ_libposix_S_ISUID ((DeeObject *)&libposix_S_ISUID)
+#define OBJ_libposix_S_ISUID &libposix_S_ISUID
 PRIVATE DEFINE_INT75(libposix_S_ISUID, STAT_ISUID);
 #endif
 #endif /* STAT_ISUID < 0 */
@@ -375,36 +375,36 @@ PRIVATE DEFINE_INT75(libposix_S_ISUID, STAT_ISUID);
 #define OBJ_libposix_S_ISGID DeeInt_ForSmallInt(STAT_ISGID)
 #elif STAT_ISGID >= 0
 #if STAT_ISGID <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_ISGID ((DeeObject *)&libposix_S_ISGID)
+#define OBJ_libposix_S_ISGID &libposix_S_ISGID
 PRIVATE DEFINE_UINT15(libposix_S_ISGID, STAT_ISGID);
 #elif STAT_ISGID <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_ISGID ((DeeObject *)&libposix_S_ISGID)
+#define OBJ_libposix_S_ISGID &libposix_S_ISGID
 PRIVATE DEFINE_UINT30(libposix_S_ISGID, STAT_ISGID);
 #elif STAT_ISGID <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_ISGID ((DeeObject *)&libposix_S_ISGID)
+#define OBJ_libposix_S_ISGID &libposix_S_ISGID
 PRIVATE DEFINE_UINT45(libposix_S_ISGID, STAT_ISGID);
 #elif STAT_ISGID <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_ISGID ((DeeObject *)&libposix_S_ISGID)
+#define OBJ_libposix_S_ISGID &libposix_S_ISGID
 PRIVATE DEFINE_UINT60(libposix_S_ISGID, STAT_ISGID);
 #else
-#define OBJ_libposix_S_ISGID ((DeeObject *)&libposix_S_ISGID)
+#define OBJ_libposix_S_ISGID &libposix_S_ISGID
 PRIVATE DEFINE_UINT75(libposix_S_ISGID, STAT_ISGID);
 #endif
 #else /* STAT_ISGID >= 0 */
 #if STAT_ISGID >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_ISGID ((DeeObject *)&libposix_S_ISGID)
+#define OBJ_libposix_S_ISGID &libposix_S_ISGID
 PRIVATE DEFINE_INT15(libposix_S_ISGID, STAT_ISGID);
 #elif STAT_ISGID >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_ISGID ((DeeObject *)&libposix_S_ISGID)
+#define OBJ_libposix_S_ISGID &libposix_S_ISGID
 PRIVATE DEFINE_INT30(libposix_S_ISGID, STAT_ISGID);
 #elif STAT_ISGID >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_ISGID ((DeeObject *)&libposix_S_ISGID)
+#define OBJ_libposix_S_ISGID &libposix_S_ISGID
 PRIVATE DEFINE_INT45(libposix_S_ISGID, STAT_ISGID);
 #elif STAT_ISGID >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_ISGID ((DeeObject *)&libposix_S_ISGID)
+#define OBJ_libposix_S_ISGID &libposix_S_ISGID
 PRIVATE DEFINE_INT60(libposix_S_ISGID, STAT_ISGID);
 #else
-#define OBJ_libposix_S_ISGID ((DeeObject *)&libposix_S_ISGID)
+#define OBJ_libposix_S_ISGID &libposix_S_ISGID
 PRIVATE DEFINE_INT75(libposix_S_ISGID, STAT_ISGID);
 #endif
 #endif /* STAT_ISGID < 0 */
@@ -414,36 +414,36 @@ PRIVATE DEFINE_INT75(libposix_S_ISGID, STAT_ISGID);
 #define OBJ_libposix_S_ISVTX DeeInt_ForSmallInt(STAT_ISVTX)
 #elif STAT_ISVTX >= 0
 #if STAT_ISVTX <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_ISVTX ((DeeObject *)&libposix_S_ISVTX)
+#define OBJ_libposix_S_ISVTX &libposix_S_ISVTX
 PRIVATE DEFINE_UINT15(libposix_S_ISVTX, STAT_ISVTX);
 #elif STAT_ISVTX <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_ISVTX ((DeeObject *)&libposix_S_ISVTX)
+#define OBJ_libposix_S_ISVTX &libposix_S_ISVTX
 PRIVATE DEFINE_UINT30(libposix_S_ISVTX, STAT_ISVTX);
 #elif STAT_ISVTX <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_ISVTX ((DeeObject *)&libposix_S_ISVTX)
+#define OBJ_libposix_S_ISVTX &libposix_S_ISVTX
 PRIVATE DEFINE_UINT45(libposix_S_ISVTX, STAT_ISVTX);
 #elif STAT_ISVTX <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_ISVTX ((DeeObject *)&libposix_S_ISVTX)
+#define OBJ_libposix_S_ISVTX &libposix_S_ISVTX
 PRIVATE DEFINE_UINT60(libposix_S_ISVTX, STAT_ISVTX);
 #else
-#define OBJ_libposix_S_ISVTX ((DeeObject *)&libposix_S_ISVTX)
+#define OBJ_libposix_S_ISVTX &libposix_S_ISVTX
 PRIVATE DEFINE_UINT75(libposix_S_ISVTX, STAT_ISVTX);
 #endif
 #else /* STAT_ISVTX >= 0 */
 #if STAT_ISVTX >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_ISVTX ((DeeObject *)&libposix_S_ISVTX)
+#define OBJ_libposix_S_ISVTX &libposix_S_ISVTX
 PRIVATE DEFINE_INT15(libposix_S_ISVTX, STAT_ISVTX);
 #elif STAT_ISVTX >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_ISVTX ((DeeObject *)&libposix_S_ISVTX)
+#define OBJ_libposix_S_ISVTX &libposix_S_ISVTX
 PRIVATE DEFINE_INT30(libposix_S_ISVTX, STAT_ISVTX);
 #elif STAT_ISVTX >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_ISVTX ((DeeObject *)&libposix_S_ISVTX)
+#define OBJ_libposix_S_ISVTX &libposix_S_ISVTX
 PRIVATE DEFINE_INT45(libposix_S_ISVTX, STAT_ISVTX);
 #elif STAT_ISVTX >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_ISVTX ((DeeObject *)&libposix_S_ISVTX)
+#define OBJ_libposix_S_ISVTX &libposix_S_ISVTX
 PRIVATE DEFINE_INT60(libposix_S_ISVTX, STAT_ISVTX);
 #else
-#define OBJ_libposix_S_ISVTX ((DeeObject *)&libposix_S_ISVTX)
+#define OBJ_libposix_S_ISVTX &libposix_S_ISVTX
 PRIVATE DEFINE_INT75(libposix_S_ISVTX, STAT_ISVTX);
 #endif
 #endif /* STAT_ISVTX < 0 */
@@ -453,36 +453,36 @@ PRIVATE DEFINE_INT75(libposix_S_ISVTX, STAT_ISVTX);
 #define OBJ_libposix_S_IRUSR DeeInt_ForSmallInt(STAT_IRUSR)
 #elif STAT_IRUSR >= 0
 #if STAT_IRUSR <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_IRUSR ((DeeObject *)&libposix_S_IRUSR)
+#define OBJ_libposix_S_IRUSR &libposix_S_IRUSR
 PRIVATE DEFINE_UINT15(libposix_S_IRUSR, STAT_IRUSR);
 #elif STAT_IRUSR <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_IRUSR ((DeeObject *)&libposix_S_IRUSR)
+#define OBJ_libposix_S_IRUSR &libposix_S_IRUSR
 PRIVATE DEFINE_UINT30(libposix_S_IRUSR, STAT_IRUSR);
 #elif STAT_IRUSR <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_IRUSR ((DeeObject *)&libposix_S_IRUSR)
+#define OBJ_libposix_S_IRUSR &libposix_S_IRUSR
 PRIVATE DEFINE_UINT45(libposix_S_IRUSR, STAT_IRUSR);
 #elif STAT_IRUSR <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_IRUSR ((DeeObject *)&libposix_S_IRUSR)
+#define OBJ_libposix_S_IRUSR &libposix_S_IRUSR
 PRIVATE DEFINE_UINT60(libposix_S_IRUSR, STAT_IRUSR);
 #else
-#define OBJ_libposix_S_IRUSR ((DeeObject *)&libposix_S_IRUSR)
+#define OBJ_libposix_S_IRUSR &libposix_S_IRUSR
 PRIVATE DEFINE_UINT75(libposix_S_IRUSR, STAT_IRUSR);
 #endif
 #else /* STAT_IRUSR >= 0 */
 #if STAT_IRUSR >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_IRUSR ((DeeObject *)&libposix_S_IRUSR)
+#define OBJ_libposix_S_IRUSR &libposix_S_IRUSR
 PRIVATE DEFINE_INT15(libposix_S_IRUSR, STAT_IRUSR);
 #elif STAT_IRUSR >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_IRUSR ((DeeObject *)&libposix_S_IRUSR)
+#define OBJ_libposix_S_IRUSR &libposix_S_IRUSR
 PRIVATE DEFINE_INT30(libposix_S_IRUSR, STAT_IRUSR);
 #elif STAT_IRUSR >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_IRUSR ((DeeObject *)&libposix_S_IRUSR)
+#define OBJ_libposix_S_IRUSR &libposix_S_IRUSR
 PRIVATE DEFINE_INT45(libposix_S_IRUSR, STAT_IRUSR);
 #elif STAT_IRUSR >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_IRUSR ((DeeObject *)&libposix_S_IRUSR)
+#define OBJ_libposix_S_IRUSR &libposix_S_IRUSR
 PRIVATE DEFINE_INT60(libposix_S_IRUSR, STAT_IRUSR);
 #else
-#define OBJ_libposix_S_IRUSR ((DeeObject *)&libposix_S_IRUSR)
+#define OBJ_libposix_S_IRUSR &libposix_S_IRUSR
 PRIVATE DEFINE_INT75(libposix_S_IRUSR, STAT_IRUSR);
 #endif
 #endif /* STAT_IRUSR < 0 */
@@ -492,36 +492,36 @@ PRIVATE DEFINE_INT75(libposix_S_IRUSR, STAT_IRUSR);
 #define OBJ_libposix_S_IWUSR DeeInt_ForSmallInt(STAT_IWUSR)
 #elif STAT_IWUSR >= 0
 #if STAT_IWUSR <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_IWUSR ((DeeObject *)&libposix_S_IWUSR)
+#define OBJ_libposix_S_IWUSR &libposix_S_IWUSR
 PRIVATE DEFINE_UINT15(libposix_S_IWUSR, STAT_IWUSR);
 #elif STAT_IWUSR <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_IWUSR ((DeeObject *)&libposix_S_IWUSR)
+#define OBJ_libposix_S_IWUSR &libposix_S_IWUSR
 PRIVATE DEFINE_UINT30(libposix_S_IWUSR, STAT_IWUSR);
 #elif STAT_IWUSR <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_IWUSR ((DeeObject *)&libposix_S_IWUSR)
+#define OBJ_libposix_S_IWUSR &libposix_S_IWUSR
 PRIVATE DEFINE_UINT45(libposix_S_IWUSR, STAT_IWUSR);
 #elif STAT_IWUSR <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_IWUSR ((DeeObject *)&libposix_S_IWUSR)
+#define OBJ_libposix_S_IWUSR &libposix_S_IWUSR
 PRIVATE DEFINE_UINT60(libposix_S_IWUSR, STAT_IWUSR);
 #else
-#define OBJ_libposix_S_IWUSR ((DeeObject *)&libposix_S_IWUSR)
+#define OBJ_libposix_S_IWUSR &libposix_S_IWUSR
 PRIVATE DEFINE_UINT75(libposix_S_IWUSR, STAT_IWUSR);
 #endif
 #else /* STAT_IWUSR >= 0 */
 #if STAT_IWUSR >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_IWUSR ((DeeObject *)&libposix_S_IWUSR)
+#define OBJ_libposix_S_IWUSR &libposix_S_IWUSR
 PRIVATE DEFINE_INT15(libposix_S_IWUSR, STAT_IWUSR);
 #elif STAT_IWUSR >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_IWUSR ((DeeObject *)&libposix_S_IWUSR)
+#define OBJ_libposix_S_IWUSR &libposix_S_IWUSR
 PRIVATE DEFINE_INT30(libposix_S_IWUSR, STAT_IWUSR);
 #elif STAT_IWUSR >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_IWUSR ((DeeObject *)&libposix_S_IWUSR)
+#define OBJ_libposix_S_IWUSR &libposix_S_IWUSR
 PRIVATE DEFINE_INT45(libposix_S_IWUSR, STAT_IWUSR);
 #elif STAT_IWUSR >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_IWUSR ((DeeObject *)&libposix_S_IWUSR)
+#define OBJ_libposix_S_IWUSR &libposix_S_IWUSR
 PRIVATE DEFINE_INT60(libposix_S_IWUSR, STAT_IWUSR);
 #else
-#define OBJ_libposix_S_IWUSR ((DeeObject *)&libposix_S_IWUSR)
+#define OBJ_libposix_S_IWUSR &libposix_S_IWUSR
 PRIVATE DEFINE_INT75(libposix_S_IWUSR, STAT_IWUSR);
 #endif
 #endif /* STAT_IWUSR < 0 */
@@ -531,36 +531,36 @@ PRIVATE DEFINE_INT75(libposix_S_IWUSR, STAT_IWUSR);
 #define OBJ_libposix_S_IXUSR DeeInt_ForSmallInt(STAT_IXUSR)
 #elif STAT_IXUSR >= 0
 #if STAT_IXUSR <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_IXUSR ((DeeObject *)&libposix_S_IXUSR)
+#define OBJ_libposix_S_IXUSR &libposix_S_IXUSR
 PRIVATE DEFINE_UINT15(libposix_S_IXUSR, STAT_IXUSR);
 #elif STAT_IXUSR <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_IXUSR ((DeeObject *)&libposix_S_IXUSR)
+#define OBJ_libposix_S_IXUSR &libposix_S_IXUSR
 PRIVATE DEFINE_UINT30(libposix_S_IXUSR, STAT_IXUSR);
 #elif STAT_IXUSR <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_IXUSR ((DeeObject *)&libposix_S_IXUSR)
+#define OBJ_libposix_S_IXUSR &libposix_S_IXUSR
 PRIVATE DEFINE_UINT45(libposix_S_IXUSR, STAT_IXUSR);
 #elif STAT_IXUSR <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_IXUSR ((DeeObject *)&libposix_S_IXUSR)
+#define OBJ_libposix_S_IXUSR &libposix_S_IXUSR
 PRIVATE DEFINE_UINT60(libposix_S_IXUSR, STAT_IXUSR);
 #else
-#define OBJ_libposix_S_IXUSR ((DeeObject *)&libposix_S_IXUSR)
+#define OBJ_libposix_S_IXUSR &libposix_S_IXUSR
 PRIVATE DEFINE_UINT75(libposix_S_IXUSR, STAT_IXUSR);
 #endif
 #else /* STAT_IXUSR >= 0 */
 #if STAT_IXUSR >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_IXUSR ((DeeObject *)&libposix_S_IXUSR)
+#define OBJ_libposix_S_IXUSR &libposix_S_IXUSR
 PRIVATE DEFINE_INT15(libposix_S_IXUSR, STAT_IXUSR);
 #elif STAT_IXUSR >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_IXUSR ((DeeObject *)&libposix_S_IXUSR)
+#define OBJ_libposix_S_IXUSR &libposix_S_IXUSR
 PRIVATE DEFINE_INT30(libposix_S_IXUSR, STAT_IXUSR);
 #elif STAT_IXUSR >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_IXUSR ((DeeObject *)&libposix_S_IXUSR)
+#define OBJ_libposix_S_IXUSR &libposix_S_IXUSR
 PRIVATE DEFINE_INT45(libposix_S_IXUSR, STAT_IXUSR);
 #elif STAT_IXUSR >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_IXUSR ((DeeObject *)&libposix_S_IXUSR)
+#define OBJ_libposix_S_IXUSR &libposix_S_IXUSR
 PRIVATE DEFINE_INT60(libposix_S_IXUSR, STAT_IXUSR);
 #else
-#define OBJ_libposix_S_IXUSR ((DeeObject *)&libposix_S_IXUSR)
+#define OBJ_libposix_S_IXUSR &libposix_S_IXUSR
 PRIVATE DEFINE_INT75(libposix_S_IXUSR, STAT_IXUSR);
 #endif
 #endif /* STAT_IXUSR < 0 */
@@ -570,36 +570,36 @@ PRIVATE DEFINE_INT75(libposix_S_IXUSR, STAT_IXUSR);
 #define OBJ_libposix_S_IRGRP DeeInt_ForSmallInt(STAT_IRGRP)
 #elif STAT_IRGRP >= 0
 #if STAT_IRGRP <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_IRGRP ((DeeObject *)&libposix_S_IRGRP)
+#define OBJ_libposix_S_IRGRP &libposix_S_IRGRP
 PRIVATE DEFINE_UINT15(libposix_S_IRGRP, STAT_IRGRP);
 #elif STAT_IRGRP <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_IRGRP ((DeeObject *)&libposix_S_IRGRP)
+#define OBJ_libposix_S_IRGRP &libposix_S_IRGRP
 PRIVATE DEFINE_UINT30(libposix_S_IRGRP, STAT_IRGRP);
 #elif STAT_IRGRP <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_IRGRP ((DeeObject *)&libposix_S_IRGRP)
+#define OBJ_libposix_S_IRGRP &libposix_S_IRGRP
 PRIVATE DEFINE_UINT45(libposix_S_IRGRP, STAT_IRGRP);
 #elif STAT_IRGRP <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_IRGRP ((DeeObject *)&libposix_S_IRGRP)
+#define OBJ_libposix_S_IRGRP &libposix_S_IRGRP
 PRIVATE DEFINE_UINT60(libposix_S_IRGRP, STAT_IRGRP);
 #else
-#define OBJ_libposix_S_IRGRP ((DeeObject *)&libposix_S_IRGRP)
+#define OBJ_libposix_S_IRGRP &libposix_S_IRGRP
 PRIVATE DEFINE_UINT75(libposix_S_IRGRP, STAT_IRGRP);
 #endif
 #else /* STAT_IRGRP >= 0 */
 #if STAT_IRGRP >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_IRGRP ((DeeObject *)&libposix_S_IRGRP)
+#define OBJ_libposix_S_IRGRP &libposix_S_IRGRP
 PRIVATE DEFINE_INT15(libposix_S_IRGRP, STAT_IRGRP);
 #elif STAT_IRGRP >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_IRGRP ((DeeObject *)&libposix_S_IRGRP)
+#define OBJ_libposix_S_IRGRP &libposix_S_IRGRP
 PRIVATE DEFINE_INT30(libposix_S_IRGRP, STAT_IRGRP);
 #elif STAT_IRGRP >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_IRGRP ((DeeObject *)&libposix_S_IRGRP)
+#define OBJ_libposix_S_IRGRP &libposix_S_IRGRP
 PRIVATE DEFINE_INT45(libposix_S_IRGRP, STAT_IRGRP);
 #elif STAT_IRGRP >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_IRGRP ((DeeObject *)&libposix_S_IRGRP)
+#define OBJ_libposix_S_IRGRP &libposix_S_IRGRP
 PRIVATE DEFINE_INT60(libposix_S_IRGRP, STAT_IRGRP);
 #else
-#define OBJ_libposix_S_IRGRP ((DeeObject *)&libposix_S_IRGRP)
+#define OBJ_libposix_S_IRGRP &libposix_S_IRGRP
 PRIVATE DEFINE_INT75(libposix_S_IRGRP, STAT_IRGRP);
 #endif
 #endif /* STAT_IRGRP < 0 */
@@ -609,36 +609,36 @@ PRIVATE DEFINE_INT75(libposix_S_IRGRP, STAT_IRGRP);
 #define OBJ_libposix_S_IWGRP DeeInt_ForSmallInt(STAT_IWGRP)
 #elif STAT_IWGRP >= 0
 #if STAT_IWGRP <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_IWGRP ((DeeObject *)&libposix_S_IWGRP)
+#define OBJ_libposix_S_IWGRP &libposix_S_IWGRP
 PRIVATE DEFINE_UINT15(libposix_S_IWGRP, STAT_IWGRP);
 #elif STAT_IWGRP <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_IWGRP ((DeeObject *)&libposix_S_IWGRP)
+#define OBJ_libposix_S_IWGRP &libposix_S_IWGRP
 PRIVATE DEFINE_UINT30(libposix_S_IWGRP, STAT_IWGRP);
 #elif STAT_IWGRP <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_IWGRP ((DeeObject *)&libposix_S_IWGRP)
+#define OBJ_libposix_S_IWGRP &libposix_S_IWGRP
 PRIVATE DEFINE_UINT45(libposix_S_IWGRP, STAT_IWGRP);
 #elif STAT_IWGRP <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_IWGRP ((DeeObject *)&libposix_S_IWGRP)
+#define OBJ_libposix_S_IWGRP &libposix_S_IWGRP
 PRIVATE DEFINE_UINT60(libposix_S_IWGRP, STAT_IWGRP);
 #else
-#define OBJ_libposix_S_IWGRP ((DeeObject *)&libposix_S_IWGRP)
+#define OBJ_libposix_S_IWGRP &libposix_S_IWGRP
 PRIVATE DEFINE_UINT75(libposix_S_IWGRP, STAT_IWGRP);
 #endif
 #else /* STAT_IWGRP >= 0 */
 #if STAT_IWGRP >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_IWGRP ((DeeObject *)&libposix_S_IWGRP)
+#define OBJ_libposix_S_IWGRP &libposix_S_IWGRP
 PRIVATE DEFINE_INT15(libposix_S_IWGRP, STAT_IWGRP);
 #elif STAT_IWGRP >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_IWGRP ((DeeObject *)&libposix_S_IWGRP)
+#define OBJ_libposix_S_IWGRP &libposix_S_IWGRP
 PRIVATE DEFINE_INT30(libposix_S_IWGRP, STAT_IWGRP);
 #elif STAT_IWGRP >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_IWGRP ((DeeObject *)&libposix_S_IWGRP)
+#define OBJ_libposix_S_IWGRP &libposix_S_IWGRP
 PRIVATE DEFINE_INT45(libposix_S_IWGRP, STAT_IWGRP);
 #elif STAT_IWGRP >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_IWGRP ((DeeObject *)&libposix_S_IWGRP)
+#define OBJ_libposix_S_IWGRP &libposix_S_IWGRP
 PRIVATE DEFINE_INT60(libposix_S_IWGRP, STAT_IWGRP);
 #else
-#define OBJ_libposix_S_IWGRP ((DeeObject *)&libposix_S_IWGRP)
+#define OBJ_libposix_S_IWGRP &libposix_S_IWGRP
 PRIVATE DEFINE_INT75(libposix_S_IWGRP, STAT_IWGRP);
 #endif
 #endif /* STAT_IWGRP < 0 */
@@ -648,36 +648,36 @@ PRIVATE DEFINE_INT75(libposix_S_IWGRP, STAT_IWGRP);
 #define OBJ_libposix_S_IXGRP DeeInt_ForSmallInt(STAT_IXGRP)
 #elif STAT_IXGRP >= 0
 #if STAT_IXGRP <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_IXGRP ((DeeObject *)&libposix_S_IXGRP)
+#define OBJ_libposix_S_IXGRP &libposix_S_IXGRP
 PRIVATE DEFINE_UINT15(libposix_S_IXGRP, STAT_IXGRP);
 #elif STAT_IXGRP <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_IXGRP ((DeeObject *)&libposix_S_IXGRP)
+#define OBJ_libposix_S_IXGRP &libposix_S_IXGRP
 PRIVATE DEFINE_UINT30(libposix_S_IXGRP, STAT_IXGRP);
 #elif STAT_IXGRP <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_IXGRP ((DeeObject *)&libposix_S_IXGRP)
+#define OBJ_libposix_S_IXGRP &libposix_S_IXGRP
 PRIVATE DEFINE_UINT45(libposix_S_IXGRP, STAT_IXGRP);
 #elif STAT_IXGRP <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_IXGRP ((DeeObject *)&libposix_S_IXGRP)
+#define OBJ_libposix_S_IXGRP &libposix_S_IXGRP
 PRIVATE DEFINE_UINT60(libposix_S_IXGRP, STAT_IXGRP);
 #else
-#define OBJ_libposix_S_IXGRP ((DeeObject *)&libposix_S_IXGRP)
+#define OBJ_libposix_S_IXGRP &libposix_S_IXGRP
 PRIVATE DEFINE_UINT75(libposix_S_IXGRP, STAT_IXGRP);
 #endif
 #else /* STAT_IXGRP >= 0 */
 #if STAT_IXGRP >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_IXGRP ((DeeObject *)&libposix_S_IXGRP)
+#define OBJ_libposix_S_IXGRP &libposix_S_IXGRP
 PRIVATE DEFINE_INT15(libposix_S_IXGRP, STAT_IXGRP);
 #elif STAT_IXGRP >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_IXGRP ((DeeObject *)&libposix_S_IXGRP)
+#define OBJ_libposix_S_IXGRP &libposix_S_IXGRP
 PRIVATE DEFINE_INT30(libposix_S_IXGRP, STAT_IXGRP);
 #elif STAT_IXGRP >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_IXGRP ((DeeObject *)&libposix_S_IXGRP)
+#define OBJ_libposix_S_IXGRP &libposix_S_IXGRP
 PRIVATE DEFINE_INT45(libposix_S_IXGRP, STAT_IXGRP);
 #elif STAT_IXGRP >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_IXGRP ((DeeObject *)&libposix_S_IXGRP)
+#define OBJ_libposix_S_IXGRP &libposix_S_IXGRP
 PRIVATE DEFINE_INT60(libposix_S_IXGRP, STAT_IXGRP);
 #else
-#define OBJ_libposix_S_IXGRP ((DeeObject *)&libposix_S_IXGRP)
+#define OBJ_libposix_S_IXGRP &libposix_S_IXGRP
 PRIVATE DEFINE_INT75(libposix_S_IXGRP, STAT_IXGRP);
 #endif
 #endif /* STAT_IXGRP < 0 */
@@ -687,36 +687,36 @@ PRIVATE DEFINE_INT75(libposix_S_IXGRP, STAT_IXGRP);
 #define OBJ_libposix_S_IROTH DeeInt_ForSmallInt(STAT_IROTH)
 #elif STAT_IROTH >= 0
 #if STAT_IROTH <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_IROTH ((DeeObject *)&libposix_S_IROTH)
+#define OBJ_libposix_S_IROTH &libposix_S_IROTH
 PRIVATE DEFINE_UINT15(libposix_S_IROTH, STAT_IROTH);
 #elif STAT_IROTH <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_IROTH ((DeeObject *)&libposix_S_IROTH)
+#define OBJ_libposix_S_IROTH &libposix_S_IROTH
 PRIVATE DEFINE_UINT30(libposix_S_IROTH, STAT_IROTH);
 #elif STAT_IROTH <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_IROTH ((DeeObject *)&libposix_S_IROTH)
+#define OBJ_libposix_S_IROTH &libposix_S_IROTH
 PRIVATE DEFINE_UINT45(libposix_S_IROTH, STAT_IROTH);
 #elif STAT_IROTH <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_IROTH ((DeeObject *)&libposix_S_IROTH)
+#define OBJ_libposix_S_IROTH &libposix_S_IROTH
 PRIVATE DEFINE_UINT60(libposix_S_IROTH, STAT_IROTH);
 #else
-#define OBJ_libposix_S_IROTH ((DeeObject *)&libposix_S_IROTH)
+#define OBJ_libposix_S_IROTH &libposix_S_IROTH
 PRIVATE DEFINE_UINT75(libposix_S_IROTH, STAT_IROTH);
 #endif
 #else /* STAT_IROTH >= 0 */
 #if STAT_IROTH >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_IROTH ((DeeObject *)&libposix_S_IROTH)
+#define OBJ_libposix_S_IROTH &libposix_S_IROTH
 PRIVATE DEFINE_INT15(libposix_S_IROTH, STAT_IROTH);
 #elif STAT_IROTH >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_IROTH ((DeeObject *)&libposix_S_IROTH)
+#define OBJ_libposix_S_IROTH &libposix_S_IROTH
 PRIVATE DEFINE_INT30(libposix_S_IROTH, STAT_IROTH);
 #elif STAT_IROTH >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_IROTH ((DeeObject *)&libposix_S_IROTH)
+#define OBJ_libposix_S_IROTH &libposix_S_IROTH
 PRIVATE DEFINE_INT45(libposix_S_IROTH, STAT_IROTH);
 #elif STAT_IROTH >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_IROTH ((DeeObject *)&libposix_S_IROTH)
+#define OBJ_libposix_S_IROTH &libposix_S_IROTH
 PRIVATE DEFINE_INT60(libposix_S_IROTH, STAT_IROTH);
 #else
-#define OBJ_libposix_S_IROTH ((DeeObject *)&libposix_S_IROTH)
+#define OBJ_libposix_S_IROTH &libposix_S_IROTH
 PRIVATE DEFINE_INT75(libposix_S_IROTH, STAT_IROTH);
 #endif
 #endif /* STAT_IROTH < 0 */
@@ -726,36 +726,36 @@ PRIVATE DEFINE_INT75(libposix_S_IROTH, STAT_IROTH);
 #define OBJ_libposix_S_IWOTH DeeInt_ForSmallInt(STAT_IWOTH)
 #elif STAT_IWOTH >= 0
 #if STAT_IWOTH <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_IWOTH ((DeeObject *)&libposix_S_IWOTH)
+#define OBJ_libposix_S_IWOTH &libposix_S_IWOTH
 PRIVATE DEFINE_UINT15(libposix_S_IWOTH, STAT_IWOTH);
 #elif STAT_IWOTH <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_IWOTH ((DeeObject *)&libposix_S_IWOTH)
+#define OBJ_libposix_S_IWOTH &libposix_S_IWOTH
 PRIVATE DEFINE_UINT30(libposix_S_IWOTH, STAT_IWOTH);
 #elif STAT_IWOTH <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_IWOTH ((DeeObject *)&libposix_S_IWOTH)
+#define OBJ_libposix_S_IWOTH &libposix_S_IWOTH
 PRIVATE DEFINE_UINT45(libposix_S_IWOTH, STAT_IWOTH);
 #elif STAT_IWOTH <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_IWOTH ((DeeObject *)&libposix_S_IWOTH)
+#define OBJ_libposix_S_IWOTH &libposix_S_IWOTH
 PRIVATE DEFINE_UINT60(libposix_S_IWOTH, STAT_IWOTH);
 #else
-#define OBJ_libposix_S_IWOTH ((DeeObject *)&libposix_S_IWOTH)
+#define OBJ_libposix_S_IWOTH &libposix_S_IWOTH
 PRIVATE DEFINE_UINT75(libposix_S_IWOTH, STAT_IWOTH);
 #endif
 #else /* STAT_IWOTH >= 0 */
 #if STAT_IWOTH >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_IWOTH ((DeeObject *)&libposix_S_IWOTH)
+#define OBJ_libposix_S_IWOTH &libposix_S_IWOTH
 PRIVATE DEFINE_INT15(libposix_S_IWOTH, STAT_IWOTH);
 #elif STAT_IWOTH >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_IWOTH ((DeeObject *)&libposix_S_IWOTH)
+#define OBJ_libposix_S_IWOTH &libposix_S_IWOTH
 PRIVATE DEFINE_INT30(libposix_S_IWOTH, STAT_IWOTH);
 #elif STAT_IWOTH >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_IWOTH ((DeeObject *)&libposix_S_IWOTH)
+#define OBJ_libposix_S_IWOTH &libposix_S_IWOTH
 PRIVATE DEFINE_INT45(libposix_S_IWOTH, STAT_IWOTH);
 #elif STAT_IWOTH >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_IWOTH ((DeeObject *)&libposix_S_IWOTH)
+#define OBJ_libposix_S_IWOTH &libposix_S_IWOTH
 PRIVATE DEFINE_INT60(libposix_S_IWOTH, STAT_IWOTH);
 #else
-#define OBJ_libposix_S_IWOTH ((DeeObject *)&libposix_S_IWOTH)
+#define OBJ_libposix_S_IWOTH &libposix_S_IWOTH
 PRIVATE DEFINE_INT75(libposix_S_IWOTH, STAT_IWOTH);
 #endif
 #endif /* STAT_IWOTH < 0 */
@@ -765,36 +765,36 @@ PRIVATE DEFINE_INT75(libposix_S_IWOTH, STAT_IWOTH);
 #define OBJ_libposix_S_IXOTH DeeInt_ForSmallInt(STAT_IXOTH)
 #elif STAT_IXOTH >= 0
 #if STAT_IXOTH <= 0x7fffull /* 15-bit */
-#define OBJ_libposix_S_IXOTH ((DeeObject *)&libposix_S_IXOTH)
+#define OBJ_libposix_S_IXOTH &libposix_S_IXOTH
 PRIVATE DEFINE_UINT15(libposix_S_IXOTH, STAT_IXOTH);
 #elif STAT_IXOTH <= 0x3fffffffull /* 30-bit */
-#define OBJ_libposix_S_IXOTH ((DeeObject *)&libposix_S_IXOTH)
+#define OBJ_libposix_S_IXOTH &libposix_S_IXOTH
 PRIVATE DEFINE_UINT30(libposix_S_IXOTH, STAT_IXOTH);
 #elif STAT_IXOTH <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_libposix_S_IXOTH ((DeeObject *)&libposix_S_IXOTH)
+#define OBJ_libposix_S_IXOTH &libposix_S_IXOTH
 PRIVATE DEFINE_UINT45(libposix_S_IXOTH, STAT_IXOTH);
 #elif STAT_IXOTH <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_libposix_S_IXOTH ((DeeObject *)&libposix_S_IXOTH)
+#define OBJ_libposix_S_IXOTH &libposix_S_IXOTH
 PRIVATE DEFINE_UINT60(libposix_S_IXOTH, STAT_IXOTH);
 #else
-#define OBJ_libposix_S_IXOTH ((DeeObject *)&libposix_S_IXOTH)
+#define OBJ_libposix_S_IXOTH &libposix_S_IXOTH
 PRIVATE DEFINE_UINT75(libposix_S_IXOTH, STAT_IXOTH);
 #endif
 #else /* STAT_IXOTH >= 0 */
 #if STAT_IXOTH >= -0x4000ll /* 15-bit */
-#define OBJ_libposix_S_IXOTH ((DeeObject *)&libposix_S_IXOTH)
+#define OBJ_libposix_S_IXOTH &libposix_S_IXOTH
 PRIVATE DEFINE_INT15(libposix_S_IXOTH, STAT_IXOTH);
 #elif STAT_IXOTH >= -0x20000000ll /* 30-bit */
-#define OBJ_libposix_S_IXOTH ((DeeObject *)&libposix_S_IXOTH)
+#define OBJ_libposix_S_IXOTH &libposix_S_IXOTH
 PRIVATE DEFINE_INT30(libposix_S_IXOTH, STAT_IXOTH);
 #elif STAT_IXOTH >= -0x100000000000ll /* 45-bit */
-#define OBJ_libposix_S_IXOTH ((DeeObject *)&libposix_S_IXOTH)
+#define OBJ_libposix_S_IXOTH &libposix_S_IXOTH
 PRIVATE DEFINE_INT45(libposix_S_IXOTH, STAT_IXOTH);
 #elif STAT_IXOTH >= -0x800000000000000ll /* 60-bit */
-#define OBJ_libposix_S_IXOTH ((DeeObject *)&libposix_S_IXOTH)
+#define OBJ_libposix_S_IXOTH &libposix_S_IXOTH
 PRIVATE DEFINE_INT60(libposix_S_IXOTH, STAT_IXOTH);
 #else
-#define OBJ_libposix_S_IXOTH ((DeeObject *)&libposix_S_IXOTH)
+#define OBJ_libposix_S_IXOTH &libposix_S_IXOTH
 PRIVATE DEFINE_INT75(libposix_S_IXOTH, STAT_IXOTH);
 #endif
 #endif /* STAT_IXOTH < 0 */

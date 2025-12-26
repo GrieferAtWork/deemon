@@ -680,7 +680,7 @@ USet_FromSequence(DeeObject *__restrict sequence) {
 	if unlikely(USet_InitSequence(result, sequence))
 		goto err_r;
 	DeeObject_Init(result, &USet_Type);
-	return (DREF USet *)DeeGC_Track((DeeObject *)result);
+	return DeeGC_TRACK(USet, result);
 err_r:
 	DeeGCObject_FREE(result);
 err:

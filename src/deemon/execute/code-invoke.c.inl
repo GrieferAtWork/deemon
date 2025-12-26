@@ -265,13 +265,13 @@ LOCAL_DeeFunction_Call(DeeFunctionObject *self
 
 		/* Perform a regular callback. */
 #ifdef CALL_KW
-		result = DeeFunction_CallTupleKw(self, (DeeObject *)packed_args, kw);
+		result = DeeFunction_CallTupleKw(self, Dee_AsObject(packed_args), kw);
 #else /* CALL_KW */
-		result = DeeFunction_CallTuple(self, (DeeObject *)packed_args);
+		result = DeeFunction_CallTuple(self, Dee_AsObject(packed_args));
 #endif /* !CALL_KW */
 
 		/* The tuple we've created above only contained symbolic references. */
-		DeeTuple_DecrefSymbolic((DeeObject *)packed_args);
+		DeeTuple_DecrefSymbolic(Dee_AsObject(packed_args));
 		return result;
 	}
 #else /* CALL_THIS */
@@ -645,7 +645,7 @@ err_ex_frame:
 #endif /* !CALL_THIS */
 		yf->yf_kw = NULL;
 		DeeObject_Init(yf, &DeeYieldFunction_Type);
-		return (DREF DeeObject *)yf;
+		return Dee_AsObject(yf);
 	}
 err:
 	return NULL;

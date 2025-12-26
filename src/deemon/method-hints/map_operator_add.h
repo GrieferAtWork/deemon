@@ -36,7 +36,7 @@ __map_add__.map_operator_add([[nonnull]] DeeObject *lhs,
 %{unsupported({
 	if (DeeMap_CheckEmpty(rhs))
 		return_reference_(lhs);
-	return (DREF DeeObject *)MapUnion_New(lhs, rhs);
+	return Dee_AsObject(MapUnion_New(lhs, rhs));
 })}
 %{$none = return_none}
 %{$empty = "default__map_operator_add__unsupported"} {

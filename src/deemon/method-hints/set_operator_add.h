@@ -48,11 +48,11 @@ __set_add__.set_operator_add([[nonnull]] DeeObject *lhs,
 		intersection = SetIntersection_New_inherit_b(inv_lhs, xrhs->si_set);
 		if unlikely(!intersection)
 			goto err;
-		return (DREF DeeObject *)SetInversion_New_inherit(intersection);
+		return Dee_AsObject(SetInversion_New_inherit(intersection));
 	}
 	if (DeeSet_CheckEmpty(rhs))
 		return_reference_(lhs);
-	return (DREF DeeObject *)SetUnion_New(lhs, rhs);
+	return Dee_AsObject(SetUnion_New(lhs, rhs));
 err:
 	return NULL;
 })}

@@ -220,7 +220,7 @@ PRIVATE struct type_cmp objmethod_cmp = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 objmethod_bound_origin(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
-	bool bound = DeeObjMethod_GetOrigin((DeeObject *)self, &origin);
+	bool bound = DeeObjMethod_GetOrigin(Dee_AsObject(self), &origin);
 	return Dee_BOUND_FROMBOOL(bound);
 }
 
@@ -228,7 +228,7 @@ objmethod_bound_origin(DeeObjMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 objmethod_get_func(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
-	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin))
+	if likely(DeeObjMethod_GetOrigin(Dee_AsObject(self), &origin))
 		return DeeClsMethod_New(origin.omo_type, self->om_func.omf_meth);
 	return DeeRT_ErrUnboundAttrCStr(self, "__func__");
 }
@@ -237,7 +237,7 @@ objmethod_get_func(DeeObjMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 objmethod_get_name(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
-	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin))
+	if likely(DeeObjMethod_GetOrigin(Dee_AsObject(self), &origin))
 		return DeeString_NewAuto(origin.omo_decl->m_name);
 	return DeeRT_ErrUnboundAttr(self, &str___name__);
 }
@@ -245,7 +245,7 @@ objmethod_get_name(DeeObjMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 objmethod_get_doc(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
-	if (likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin)) &&
+	if (likely(DeeObjMethod_GetOrigin(Dee_AsObject(self), &origin)) &&
 	    origin.omo_decl->m_doc != NULL)
 		return DeeString_NewAutoUtf8(origin.omo_decl->m_doc);
 	return_none;
@@ -255,7 +255,7 @@ objmethod_get_doc(DeeObjMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 objmethod_get_type(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
-	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin))
+	if likely(DeeObjMethod_GetOrigin(Dee_AsObject(self), &origin))
 		return_reference_(origin.omo_type);
 	return (DREF DeeTypeObject *)DeeRT_ErrUnboundAttr(self, &str___type__);
 }
@@ -263,7 +263,7 @@ objmethod_get_type(DeeObjMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 objmethod_get_module(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
-	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin)) {
+	if likely(DeeObjMethod_GetOrigin(Dee_AsObject(self), &origin)) {
 		DREF DeeObject *result = DeeType_GetModule(origin.omo_type);
 		if likely(result)
 			return result;
@@ -274,7 +274,7 @@ objmethod_get_module(DeeObjMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 objmethod_bound_module(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
-	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin)) {
+	if likely(DeeObjMethod_GetOrigin(Dee_AsObject(self), &origin)) {
 		DREF DeeObject *result = DeeType_GetModule(origin.omo_type);
 		if likely(result) {
 			Dee_Decref_unlikely(result);
@@ -340,7 +340,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 objmethod_print(DeeObjMethodObject *__restrict self,
                 Dee_formatprinter_t printer, void *arg) {
 	struct objmethod_origin origin;
-	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin)) {
+	if likely(DeeObjMethod_GetOrigin(Dee_AsObject(self), &origin)) {
 		return DeeFormat_Printf(printer, arg,
 		                        "<object method %k.%s, bound to %r>",
 		                        origin.omo_type,
@@ -357,7 +357,7 @@ objmethod_printrepr(DeeObjMethodObject *__restrict self,
                     Dee_formatprinter_t printer, void *arg) {
 	struct objmethod_origin origin;
 	char const *name = "<unknown>";
-	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin))
+	if likely(DeeObjMethod_GetOrigin(Dee_AsObject(self), &origin))
 		name = origin.omo_decl->m_name;
 	return DeeFormat_Printf(printer, arg, "%r.%s", self->om_this, name);
 }
@@ -870,7 +870,7 @@ kwobjmethod_call_kw(DeeObjMethodObject *self, size_t argc,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwobjmethod_get_func(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
-	if likely(DeeKwObjMethod_GetOrigin((DeeObject *)self, &origin))
+	if likely(DeeKwObjMethod_GetOrigin(Dee_AsObject(self), &origin))
 		return DeeKwClsMethod_New(origin.omo_type, self->om_func.omf_kwmeth);
 	return DeeRT_ErrUnboundAttrCStr(self, "__func__");
 }
@@ -878,8 +878,8 @@ kwobjmethod_get_func(DeeObjMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwobjmethod_get_kwds(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
-	if likely(DeeKwObjMethod_GetOrigin((DeeObject *)self, &origin))
-		return doc_decode_kwds((DeeObject *)self, origin.omo_decl->m_doc);
+	if likely(DeeKwObjMethod_GetOrigin(Dee_AsObject(self), &origin))
+		return doc_decode_kwds(Dee_AsObject(self), origin.omo_decl->m_doc);
 	return DeeRT_ErrUnboundAttr(self, &str___kwds__);
 }
 #define kwobjmethod_bound_kwds objmethod_bound_origin
@@ -1088,7 +1088,7 @@ clsmethod_serialize(DeeClsMethodObject *__restrict self,
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) char const *DCALL
 clsmethod_getname(DeeClsMethodObject *__restrict self) {
 	struct objmethod_origin origin;
-	if likely(DeeClsMethod_GetOrigin((DeeObject *)self, &origin))
+	if likely(DeeClsMethod_GetOrigin(Dee_AsObject(self), &origin))
 		return origin.omo_decl->m_name;
 	return "<unknown>";
 }
@@ -1140,13 +1140,13 @@ PRIVATE struct type_cmp clsmethod_cmp = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 clsmethod_bound_origin(DeeClsMethodObject *__restrict self) {
 	struct objmethod_origin origin;
-	return DeeClsMethod_GetOrigin((DeeObject *)self, &origin) ? 1 : 0;
+	return DeeClsMethod_GetOrigin(Dee_AsObject(self), &origin) ? 1 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmethod_get_name(DeeClsMethodObject *__restrict self) {
 	struct objmethod_origin origin;
-	if likely(DeeClsMethod_GetOrigin((DeeObject *)self, &origin))
+	if likely(DeeClsMethod_GetOrigin(Dee_AsObject(self), &origin))
 		return DeeString_NewAuto(origin.omo_decl->m_name);
 	return DeeRT_ErrUnboundAttr(self, &str___name__);
 }
@@ -1155,7 +1155,7 @@ clsmethod_get_name(DeeClsMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmethod_get_doc(DeeClsMethodObject *__restrict self) {
 	struct objmethod_origin origin;
-	if (likely(DeeClsMethod_GetOrigin((DeeObject *)self, &origin)) &&
+	if (likely(DeeClsMethod_GetOrigin(Dee_AsObject(self), &origin)) &&
 	    origin.omo_decl->m_doc != NULL)
 		return DeeString_NewAutoUtf8(origin.omo_decl->m_doc);
 	return_none;
@@ -1164,8 +1164,8 @@ clsmethod_get_doc(DeeClsMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwclsmethod_get_kwds(DeeClsMethodObject *__restrict self) {
 	struct objmethod_origin origin;
-	if likely(DeeKwClsMethod_GetOrigin((DeeObject *)self, &origin))
-		return doc_decode_kwds((DeeObject *)self, origin.omo_decl->m_doc);
+	if likely(DeeKwClsMethod_GetOrigin(Dee_AsObject(self), &origin))
+		return doc_decode_kwds(Dee_AsObject(self), origin.omo_decl->m_doc);
 	return DeeRT_ErrUnboundAttr(self, &str___kwds__);
 }
 #define kwclsmethod_bound_kwds clsmethod_bound_origin
@@ -1702,7 +1702,7 @@ PRIVATE struct type_method tpconst clsproperty_methods[] = {
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) char const *DCALL
 clsproperty_getname(DeeClsPropertyObject *__restrict self) {
 	struct clsproperty_origin origin;
-	if likely(DeeClsProperty_GetOrigin((DeeObject *)self, &origin))
+	if likely(DeeClsProperty_GetOrigin(Dee_AsObject(self), &origin))
 		return origin.cpo_decl->gs_name;
 	return "<unknown>";
 }
@@ -1736,14 +1736,14 @@ clsproperty_printrepr(DeeClsPropertyObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 clsproperty_bound_origin(DeeClsPropertyObject *__restrict self) {
 	struct clsproperty_origin origin;
-	return DeeClsProperty_GetOrigin((DeeObject *)self, &origin) ? 1 : 0;
+	return DeeClsProperty_GetOrigin(Dee_AsObject(self), &origin) ? 1 : 0;
 }
 
 #define clsproperty_bound_name clsproperty_bound_origin
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsproperty_get_name(DeeClsPropertyObject *__restrict self) {
 	struct clsproperty_origin origin;
-	if likely(DeeClsProperty_GetOrigin((DeeObject *)self, &origin))
+	if likely(DeeClsProperty_GetOrigin(Dee_AsObject(self), &origin))
 		return DeeString_NewAuto(origin.cpo_decl->gs_name);
 	return DeeRT_ErrUnboundAttr(self, &str___name__);
 }
@@ -1751,7 +1751,7 @@ clsproperty_get_name(DeeClsPropertyObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsproperty_get_doc(DeeClsPropertyObject *__restrict self) {
 	struct clsproperty_origin origin;
-	if (likely(DeeClsProperty_GetOrigin((DeeObject *)self, &origin)) &&
+	if (likely(DeeClsProperty_GetOrigin(Dee_AsObject(self), &origin)) &&
 	    origin.cpo_decl->gs_doc != NULL)
 		return DeeString_NewAutoUtf8(origin.cpo_decl->gs_doc);
 	return_none;
@@ -2390,7 +2390,7 @@ kwcmethod_get_kwds(DeeCMethodObject *__restrict self) {
 	if (DeeCMethod_GetOrigin(self, &origin)) {
 		DREF DeeObject *result;
 		if (origin.cmo_doc) {
-			DeeObject *owner = (DeeObject *)self;
+			DeeObject *owner = Dee_AsObject(self);
 			if (origin.cmo_module)
 				owner = (DeeObject *)origin.cmo_module;
 			if (origin.cmo_type)
@@ -2424,7 +2424,7 @@ cmethod_get_type(DeeCMethodObject *__restrict self) {
 	if (DeeCMethod_GetOrigin(self, &origin)) {
 		Dee_XDecref(origin.cmo_module);
 		if (origin.cmo_type)
-			return (DREF DeeObject *)origin.cmo_type;
+			return Dee_AsObject(origin.cmo_type);
 	}
 	return DeeRT_ErrUnboundAttr(self, &str___type__);
 }

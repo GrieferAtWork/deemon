@@ -450,27 +450,27 @@ split_doiter(StringSplit *__restrict self,
 	SWITCH_SIZEOF_WIDTH(result->s_width) {
 
 	CASE_WIDTH_1BYTE:
-		result->s_start.cp8 = DeeString_As1Byte((DeeObject *)self->s_str);
+		result->s_start.cp8 = DeeString_As1Byte(Dee_AsObject(self->s_str));
 		result->s_end.cp8   = result->s_start.cp8 + WSTR_LENGTH(result->s_start.cp8);
-		result->s_sep.cp8   = DeeString_As1Byte((DeeObject *)self->s_sep);
+		result->s_sep.cp8   = DeeString_As1Byte(Dee_AsObject(self->s_sep));
 		break;
 
 	CASE_WIDTH_2BYTE:
-		result->s_start.cp16 = DeeString_As2Byte((DeeObject *)self->s_str);
+		result->s_start.cp16 = DeeString_As2Byte(Dee_AsObject(self->s_str));
 		if unlikely(!result->s_start.cp16)
 			goto err_r;
 		result->s_end.cp16 = result->s_start.cp16 + WSTR_LENGTH(result->s_start.cp16);
-		result->s_sep.cp16 = DeeString_As2Byte((DeeObject *)self->s_sep);
+		result->s_sep.cp16 = DeeString_As2Byte(Dee_AsObject(self->s_sep));
 		if unlikely(!result->s_sep.cp16)
 			goto err_r;
 		break;
 
 	CASE_WIDTH_4BYTE:
-		result->s_start.cp32 = DeeString_As4Byte((DeeObject *)self->s_str);
+		result->s_start.cp32 = DeeString_As4Byte(Dee_AsObject(self->s_str));
 		if unlikely(!result->s_start.cp32)
 			goto err_r;
 		result->s_end.cp32 = result->s_start.cp32 + WSTR_LENGTH(result->s_start.cp32);
-		result->s_sep.cp32 = DeeString_As4Byte((DeeObject *)self->s_sep);
+		result->s_sep.cp32 = DeeString_As4Byte(Dee_AsObject(self->s_sep));
 		if unlikely(!result->s_sep.cp32)
 			goto err_r;
 		break;
@@ -754,7 +754,7 @@ DeeString_Split(DeeStringObject *self,
 done:
 	return Dee_AsObject(result);
 handle_empty_sep:
-	return DeeSuper_New(&DeeSeq_Type, (DeeObject *)self);
+	return DeeSuper_New(&DeeSeq_Type, Dee_AsObject(self));
 }
 
 /* @return: An abstract sequence type for enumerating the segments of a split string. */
@@ -778,7 +778,7 @@ DeeString_CaseSplit(DeeStringObject *self,
 done:
 	return Dee_AsObject(result);
 handle_empty_sep:
-	return DeeSuper_New(&DeeSeq_Type, (DeeObject *)self);
+	return DeeSuper_New(&DeeSeq_Type, Dee_AsObject(self));
 }
 
 

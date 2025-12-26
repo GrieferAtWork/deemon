@@ -76,8 +76,8 @@ DeeCompilerObjItem_Fini(CompilerItem *__restrict self) {
 	--com->cp_items.cis_size;
 	Dee_compiler_items_lock_endwrite(&com->cp_items);
 	COMPILER_BEGIN_NOINT(com);
-	ASSERT_OBJECT((DeeObject *)self->ci_value);
-	Dee_Decref((DeeObject *)self->ci_value);
+	ASSERT_OBJECT((DeeObject *)(self->ci_value));
+	Dee_Decref((DeeObject *)(self->ci_value));
 	DeeCompiler_End();
 	Dee_Decref_unlikely(com);
 	DeeCompiler_LockEndWrite();
@@ -87,7 +87,7 @@ INTERN NONNULL((1, 2)) void DCALL
 DeeCompilerObjItem_Visit(CompilerItem *__restrict self, Dee_visit_t proc, void *arg) {
 	COMPILER_BEGIN_NOINT(self->ci_compiler);
 	Dee_Visit(self->ci_compiler);
-	Dee_Visit((DeeObject *)self->ci_value);
+	Dee_Visit((DeeObject *)(self->ci_value));
 	COMPILER_END();
 }
 
@@ -306,7 +306,7 @@ again:
 			ASSERT_OBJECT_TYPE_EXACT(new_result, type);
 			Dee_compiler_items_lock_endread(&self->cp_items);
 			DeeObject_FREE(result);
-			return (DREF DeeObject *)new_result;
+			return Dee_AsObject(new_result);
 		}
 	}
 

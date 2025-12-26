@@ -244,11 +244,11 @@ err_r:
 LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 LOCAL_seX(transform)(LOCAL_SeqEach *self, DeeObject *elem) {
 #ifdef DEFINE_SeqEachGetAttr
-	return DeeObject_GetAttr(elem, (DeeObject *)self->sg_attr);
+	return DeeObject_GetAttr(elem, Dee_AsObject(self->sg_attr));
 #elif defined(DEFINE_SeqEachCallAttr)
-	return DeeObject_CallAttr(elem, (DeeObject *)self->sg_attr, self->sg_argc, self->sg_argv);
+	return DeeObject_CallAttr(elem, Dee_AsObject(self->sg_attr), self->sg_argc, self->sg_argv);
 #elif defined(DEFINE_SeqEachCallAttrKw)
-	return DeeObject_CallAttrKw(elem, (DeeObject *)self->sg_attr, self->sg_argc, self->sg_argv, self->sg_kw);
+	return DeeObject_CallAttrKw(elem, Dee_AsObject(self->sg_attr), self->sg_argc, self->sg_argv, self->sg_kw);
 #else /* ... */
 #error "Unsupported mode"
 #endif /* !... */
@@ -1062,7 +1062,7 @@ LOCAL_seX(printrepr)(LOCAL_SeqEach *__restrict self,
 		size_t full_suffix_len;
 		char *full_suffix, *p;
 		char const *attr_utf8;
-		attr_utf8 = DeeString_AsUtf8((DeeObject *)self->sg_attr);
+		attr_utf8 = DeeString_AsUtf8(Dee_AsObject(self->sg_attr));
 		if unlikely(!attr_utf8)
 			return -1;
 		full_suffix_len = strlen(each_suffix);
@@ -1282,14 +1282,14 @@ err:
 PRIVATE WUNUSED DREF SeqEachCallAttr *DCALL
 LOCAL_seX(call)(LOCAL_SeqEach *__restrict self, size_t argc, DeeObject *const *argv) {
 	return (DREF SeqEachCallAttr *)DeeSeqEach_CallAttr(self->se_seq,
-	                                                   (DeeObject *)self->sg_attr,
+	                                                   Dee_AsObject(self->sg_attr),
 	                                                   argc, argv);
 }
 
 PRIVATE WUNUSED DREF SeqEachCallAttrKw *DCALL
 LOCAL_seX(call_kw)(LOCAL_SeqEach *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	return (DREF SeqEachCallAttrKw *)DeeSeqEach_CallAttrKw(self->se_seq,
-	                                                       (DeeObject *)self->sg_attr,
+	                                                       Dee_AsObject(self->sg_attr),
 	                                                       argc, argv, kw);
 }
 #endif /* DEFINE_SeqEachGetAttr */
@@ -1536,7 +1536,7 @@ LOCAL_ssX(printrepr)(LOCAL_SeqEach *__restrict self,
 		size_t full_suffix_len;
 		char *full_suffix, *p;
 		char const *attr_utf8;
-		attr_utf8 = DeeString_AsUtf8((DeeObject *)self->sg_attr);
+		attr_utf8 = DeeString_AsUtf8(Dee_AsObject(self->sg_attr));
 		if unlikely(!attr_utf8)
 			return -1;
 		full_suffix_len = strlen(some_suffix);
@@ -1572,14 +1572,14 @@ LOCAL_ssX(printrepr)(LOCAL_SeqEach *__restrict self,
 PRIVATE WUNUSED DREF SeqEachCallAttr *DCALL
 LOCAL_ssX(call)(LOCAL_SeqEach *__restrict self, size_t argc, DeeObject *const *argv) {
 	return (DREF SeqEachCallAttr *)DeeSeqSome_CallAttr(self->se_seq,
-	                                                   (DeeObject *)self->sg_attr,
+	                                                   Dee_AsObject(self->sg_attr),
 	                                                   argc, argv);
 }
 
 PRIVATE WUNUSED DREF SeqEachCallAttrKw *DCALL
 LOCAL_ssX(call_kw)(LOCAL_SeqEach *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	return (DREF SeqEachCallAttrKw *)DeeSeqSome_CallAttrKw(self->se_seq,
-	                                                       (DeeObject *)self->sg_attr,
+	                                                       Dee_AsObject(self->sg_attr),
 	                                                       argc, argv, kw);
 }
 #endif /* DEFINE_SeqEachGetAttr */

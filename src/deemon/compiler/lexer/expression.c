@@ -583,7 +583,7 @@ ast_sym___import___from_deemon(void) {
 	import_symbol->s_extern.e_module = DeeModule_GetDeemon();
 	Dee_Incref(import_symbol->s_extern.e_module);
 	import_symbol->s_extern.e_symbol = DeeModule_GetSymbol(import_symbol->s_extern.e_module,
-	                                                       (DeeObject *)&str___import__);
+	                                                       Dee_AsObject(&str___import__));
 	ASSERT(import_symbol->s_extern.e_symbol);
 	return ast_sym(import_symbol);
 err:
@@ -1751,7 +1751,7 @@ do_keyword:
 						struct symbol *sym = result->a_sym;
 						if (sym->s_type == SYMBOL_TYPE_EXTERN) {
 							symname = sym->s_extern.e_symbol->ss_name;
-							modname = DeeModule_GetShortName((DeeObject *)sym->s_extern.e_module);
+							modname = DeeModule_GetShortName(Dee_AsObject(sym->s_extern.e_module));
 						}
 					}
 					if (WARNAT(&loc, W_UNCLEAR_SYMBOL_FROM_MODULE, symname, modname))

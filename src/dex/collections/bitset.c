@@ -148,7 +148,7 @@ typedef struct {
 /************************************************************************/
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 bs_err_bad_index(Bitset *__restrict self, size_t bitno) {
-	return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, bitno, self->bs_nbits);
+	return DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), bitno, self->bs_nbits);
 }
 
 
@@ -501,7 +501,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bs_eq(Bitset *self, DeeObject *other) {
 	struct bitset_ref ref;
 	if (!DeeObject_AsBitset(other, &ref))
-		return (*DeeSeq_Type.tp_cmp->tp_eq)((DeeObject *)self, other);
+		return (*DeeSeq_Type.tp_cmp->tp_eq)(Dee_AsObject(self), other);
 	return_bool(bs_cmp_eqne_bitset_ref(self, &ref));
 }
 
@@ -509,7 +509,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bs_ne(Bitset *self, DeeObject *other) {
 	struct bitset_ref ref;
 	if (!DeeObject_AsBitset(other, &ref))
-		return (*DeeSeq_Type.tp_cmp->tp_ne)((DeeObject *)self, other);
+		return (*DeeSeq_Type.tp_cmp->tp_ne)(Dee_AsObject(self), other);
 	return_bool(!bs_cmp_eqne_bitset_ref(self, &ref));
 }
 
@@ -518,7 +518,7 @@ bs_le(Bitset *self, DeeObject *other) {
 	size_t n_bits;
 	struct bitset_ref ref;
 	if (!DeeObject_AsBitset(other, &ref))
-		return (*DeeSeq_Type.tp_cmp->tp_le)((DeeObject *)self, other);
+		return (*DeeSeq_Type.tp_cmp->tp_le)(Dee_AsObject(self), other);
 	/* All bits from "self" must also be set in "other" */
 	n_bits = self->bs_nbits;
 	if (n_bits > bitset_ref_nbits(&ref)) {
@@ -539,7 +539,7 @@ bs_ge(Bitset *self, DeeObject *other) {
 	size_t n_bits;
 	struct bitset_ref ref;
 	if (!DeeObject_AsBitset(other, &ref))
-		return (*DeeSeq_Type.tp_cmp->tp_ge)((DeeObject *)self, other);
+		return (*DeeSeq_Type.tp_cmp->tp_ge)(Dee_AsObject(self), other);
 	/* All bits from "other" must also be set in "self" */
 	n_bits = bitset_ref_nbits(&ref);
 	if (n_bits > self->bs_nbits) {
@@ -560,7 +560,7 @@ bs_gr(Bitset *self, DeeObject *other) {
 	size_t n_bits;
 	struct bitset_ref ref;
 	if (!DeeObject_AsBitset(other, &ref))
-		return (*DeeSeq_Type.tp_cmp->tp_gr)((DeeObject *)self, other);
+		return (*DeeSeq_Type.tp_cmp->tp_gr)(Dee_AsObject(self), other);
 	/* not(All bits from "self" must also be set in "other") */
 	n_bits = self->bs_nbits;
 	if (n_bits > bitset_ref_nbits(&ref)) {
@@ -581,7 +581,7 @@ bs_lo(Bitset *self, DeeObject *other) {
 	size_t n_bits;
 	struct bitset_ref ref;
 	if (!DeeObject_AsBitset(other, &ref))
-		return (*DeeSeq_Type.tp_cmp->tp_lo)((DeeObject *)self, other);
+		return (*DeeSeq_Type.tp_cmp->tp_lo)(Dee_AsObject(self), other);
 	/* not(All bits from "other" must also be set in "self") */
 	n_bits = bitset_ref_nbits(&ref);
 	if (n_bits > self->bs_nbits) {
@@ -603,7 +603,7 @@ bs_iter(Bitset *__restrict self) {
 	result = DeeObject_MALLOC(BitsetIterator);
 	if unlikely(!result)
 		goto err;
-	result->bsi_owner = (DREF DeeObject *)self;
+	result->bsi_owner = Dee_AsObject(self);
 	Dee_Incref(self);
 	result->bsi_bitset   = self->bs_bitset;
 	result->bsi_startbit = 0;
@@ -683,7 +683,7 @@ bs_getrange_index(Bitset *self, Dee_ssize_t start, Dee_ssize_t end) {
 	if unlikely(!result)
 		goto err;
 	DeeSeqRange_Clamp(&range, start, end, self->bs_nbits);
-	result->bsv_owner = (DREF DeeObject *)self;
+	result->bsv_owner = Dee_AsObject(self);
 	Dee_Incref(self);
 	result->bsv_buf.bb_base = self->bs_bitset;
 	result->bsv_buf.bb_size = BITSET_SIZEOF(self->bs_nbits);
@@ -705,7 +705,7 @@ bs_getrange_index_n(Bitset *self, Dee_ssize_t start) {
 	result = DeeObject_MALLOC(BitsetView);
 	if unlikely(!result)
 		goto err;
-	result->bsv_owner = (DREF DeeObject *)self;
+	result->bsv_owner = Dee_AsObject(self);
 	Dee_Incref(self);
 	result->bsv_buf.bb_base = self->bs_bitset;
 	result->bsv_buf.bb_size = BITSET_SIZEOF(self->bs_nbits);
@@ -757,14 +757,14 @@ bs_setrange_index(Bitset *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *v
 		dst.bsr_endbit   = range.sr_end;
 		bitset_ref_fix(&dst);
 		if (DeeObject_AsBitset(value, &src))
-			return bitset_ref_assign(&dst, &src, (DeeObject *)self);
+			return bitset_ref_assign(&dst, &src, Dee_AsObject(self));
 		value_bitset = bs_init_fromseq(value, NULL);
 		if unlikely(!value_bitset)
 			goto err;
 		src.bsr_bitset   = value_bitset->bs_bitset;
 		src.bsr_startbit = 0;
 		src.bsr_endbit   = value_bitset->bs_nbits;
-		result = bitset_ref_assign(&dst, &src, (DeeObject *)self);
+		result = bitset_ref_assign(&dst, &src, Dee_AsObject(self));
 		Dee_DecrefDokill(value_bitset);
 		return result;
 	}
@@ -1179,7 +1179,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bs_bytes(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack0(err, argc, argv, "bytes");
-	return DeeBytes_NewView((DeeObject *)self,
+	return DeeBytes_NewView(Dee_AsObject(self),
 	                        self->bs_bitset,
 	                        BITSET_SIZEOF(self->bs_nbits),
 	                        Dee_BUFFER_FWRITABLE);
@@ -2061,7 +2061,7 @@ robs_getrange_index(Bitset *self, Dee_ssize_t start, Dee_ssize_t end) {
 	if unlikely(!result)
 		goto err;
 	DeeSeqRange_Clamp(&range, start, end, self->bs_nbits);
-	result->bsv_owner = (DREF DeeObject *)self;
+	result->bsv_owner = Dee_AsObject(self);
 	Dee_Incref(self);
 	result->bsv_buf.bb_base = self->bs_bitset;
 	result->bsv_buf.bb_size = BITSET_SIZEOF(self->bs_nbits);
@@ -2083,7 +2083,7 @@ robs_getrange_index_n(Bitset *self, Dee_ssize_t start) {
 	result = DeeObject_MALLOC(BitsetView);
 	if unlikely(!result)
 		goto err;
-	result->bsv_owner = (DREF DeeObject *)self;
+	result->bsv_owner = Dee_AsObject(self);
 	Dee_Incref(self);
 	result->bsv_buf.bb_base = self->bs_bitset;
 	result->bsv_buf.bb_size = BITSET_SIZEOF(self->bs_nbits);
@@ -2116,7 +2116,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 robs_bytes(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack0(err, argc, argv, "bytes");
-	return DeeBytes_NewView((DeeObject *)self,
+	return DeeBytes_NewView(Dee_AsObject(self),
 	                        self->bs_bitset,
 	                        BITSET_SIZEOF(self->bs_nbits),
 	                        Dee_BUFFER_FREADONLY);
@@ -2504,7 +2504,7 @@ INTERN DeeTypeObject RoBitset_Type = {
 
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 bsv_err_bad_index(BitsetView *__restrict self, size_t bitno) {
-	return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, bitno, BitsetView_GetNBits(self));
+	return DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), bitno, BitsetView_GetNBits(self));
 }
 
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
@@ -2605,7 +2605,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bsv_eq(BitsetView *self, DeeObject *other) {
 	struct bitset_ref a, b;
 	if (!DeeObject_AsBitset(other, &b))
-		return (*DeeSeq_Type.tp_cmp->tp_eq)((DeeObject *)self, other);
+		return (*DeeSeq_Type.tp_cmp->tp_eq)(Dee_AsObject(self), other);
 	bitset_ref_fromview(&a, self);
 	return_bool(bitset_ref_cmp_eq(&a, &b));
 }
@@ -2614,7 +2614,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bsv_ne(BitsetView *self, DeeObject *other) {
 	struct bitset_ref a, b;
 	if (!DeeObject_AsBitset(other, &b))
-		return (*DeeSeq_Type.tp_cmp->tp_eq)((DeeObject *)self, other);
+		return (*DeeSeq_Type.tp_cmp->tp_eq)(Dee_AsObject(self), other);
 	bitset_ref_fromview(&a, self);
 	return_bool(bitset_ref_cmp_ne(&a, &b));
 }
@@ -2623,7 +2623,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bsv_le(BitsetView *self, DeeObject *other) {
 	struct bitset_ref a, b;
 	if (!DeeObject_AsBitset(other, &b))
-		return (*DeeSeq_Type.tp_cmp->tp_le)((DeeObject *)self, other);
+		return (*DeeSeq_Type.tp_cmp->tp_le)(Dee_AsObject(self), other);
 	bitset_ref_fromview(&a, self);
 	return_bool(bitset_ref_cmp_le(&a, &b));
 }
@@ -2632,7 +2632,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bsv_ge(BitsetView *self, DeeObject *other) {
 	struct bitset_ref a, b;
 	if (!DeeObject_AsBitset(other, &b))
-		return (*DeeSeq_Type.tp_cmp->tp_ge)((DeeObject *)self, other);
+		return (*DeeSeq_Type.tp_cmp->tp_ge)(Dee_AsObject(self), other);
 	bitset_ref_fromview(&a, self);
 	return_bool(bitset_ref_cmp_ge(&a, &b));
 }
@@ -2641,7 +2641,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bsv_gr(BitsetView *self, DeeObject *other) {
 	struct bitset_ref a, b;
 	if (!DeeObject_AsBitset(other, &b))
-		return (*DeeSeq_Type.tp_cmp->tp_gr)((DeeObject *)self, other);
+		return (*DeeSeq_Type.tp_cmp->tp_gr)(Dee_AsObject(self), other);
 	bitset_ref_fromview(&a, self);
 	return_bool(bitset_ref_cmp_gr(&a, &b));
 }
@@ -2650,7 +2650,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bsv_lo(BitsetView *self, DeeObject *other) {
 	struct bitset_ref a, b;
 	if (!DeeObject_AsBitset(other, &b))
-		return (*DeeSeq_Type.tp_cmp->tp_lo)((DeeObject *)self, other);
+		return (*DeeSeq_Type.tp_cmp->tp_lo)(Dee_AsObject(self), other);
 	bitset_ref_fromview(&a, self);
 	return_bool(bitset_ref_cmp_lo(&a, &b));
 }
@@ -2662,7 +2662,7 @@ bsv_iter(BitsetView *__restrict self) {
 	result = DeeObject_MALLOC(BitsetIterator);
 	if unlikely(!result)
 		goto err;
-	result->bsi_owner = (DREF DeeObject *)self;
+	result->bsi_owner = Dee_AsObject(self);
 	Dee_Incref(self);
 	result->bsi_bitset   = BitsetView_GetBitset(self);
 	result->bsi_startbit = self->bsv_startbit;
@@ -2753,7 +2753,7 @@ bsv_getrange_index(BitsetView *self, Dee_ssize_t start, Dee_ssize_t end) {
 	if unlikely(!result)
 		goto err;
 	DeeSeqRange_Clamp(&range, start, end, BitsetView_GetNBits(self));
-	result->bsv_owner = (DREF DeeObject *)self;
+	result->bsv_owner = Dee_AsObject(self);
 	result->bsv_buf.bb_base = self->bsv_buf.bb_base;
 	result->bsv_buf.bb_size = self->bsv_buf.bb_size;
 #ifndef __INTELLISENSE__
@@ -2777,7 +2777,7 @@ bsv_getrange_index_n(BitsetView *self, Dee_ssize_t start) {
 	result = DeeObject_MALLOC(BitsetView);
 	if unlikely(!result)
 		goto err;
-	result->bsv_owner = (DREF DeeObject *)self;
+	result->bsv_owner = Dee_AsObject(self);
 	result->bsv_buf.bb_base = self->bsv_buf.bb_base;
 	result->bsv_buf.bb_size = self->bsv_buf.bb_size;
 #ifndef __INTELLISENSE__
@@ -2853,14 +2853,14 @@ bsv_setrange_index(BitsetView *self, Dee_ssize_t start,
 		dst.bsr_endbit   = self->bsv_startbit + range.sr_end;
 		bitset_ref_fix(&dst);
 		if (DeeObject_AsBitset(value, &src))
-			return bitset_ref_assign(&dst, &src, (DeeObject *)self);
+			return bitset_ref_assign(&dst, &src, Dee_AsObject(self));
 		value_bitset = bs_init_fromseq(value, NULL);
 		if unlikely(!value_bitset)
 			goto err;
 		src.bsr_bitset   = value_bitset->bs_bitset;
 		src.bsr_startbit = 0;
 		src.bsr_endbit   = value_bitset->bs_nbits;
-		result = bitset_ref_assign(&dst, &src, (DeeObject *)self);
+		result = bitset_ref_assign(&dst, &src, Dee_AsObject(self));
 		Dee_DecrefDokill(value_bitset);
 		return result;
 	}
@@ -3353,7 +3353,7 @@ bsv_bytes(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeObject *owner;
 	DeeArg_Unpack0(err, argc, argv, "bytes");
 	bitset_ref_fromview(&ref, self);
-	owner = (DeeObject *)self;
+	owner = Dee_AsObject(self);
 #ifndef __INTELLISENSE__
 	if (!self->bsv_buf.bb_put)
 		owner = self->bsv_owner;
@@ -3377,7 +3377,7 @@ bsv_frozen(BitsetView *__restrict self) {
 		if (tp_owner && tp_owner->tp_buffer &&
 		    (tp_owner->tp_buffer->tp_buffer_flags & Dee_BUFFER_TYPE_FREADONLY)) {
 			/* Underlying buffer is always read-only -> can re-return "self" */
-			return_reference_((DeeObject *)self);
+			return_reference_(Dee_AsObject(self));
 		}
 	}
 
@@ -3425,7 +3425,7 @@ bsv_copy(BitsetView *__restrict self,
 #ifndef __INTELLISENSE__
 	self->bsv_buf.bb_put = NULL;
 	if (other->bsv_buf.bb_put)
-		self->bsv_owner = (DREF DeeObject *)other;
+		self->bsv_owner = Dee_AsObject(other);
 #endif /* !__INTELLISENSE__ */
 	Dee_Incref(self->bsv_owner);
 	self->bsv_startbit = other->bsv_startbit;
@@ -3563,14 +3563,14 @@ bsv_assign(BitsetView *self, DeeObject *value) {
 		goto err_readonly;
 	bitset_ref_fromview(&dst, self);
 	if (DeeObject_AsBitset(value, &src))
-		return bitset_ref_assign(&dst, &src, (DeeObject *)self);
+		return bitset_ref_assign(&dst, &src, Dee_AsObject(self));
 	value_bitset = bs_init_fromseq(value, NULL);
 	if unlikely(!value_bitset)
 		goto err;
 	src.bsr_bitset   = value_bitset->bs_bitset;
 	src.bsr_startbit = 0;
 	src.bsr_endbit   = value_bitset->bs_nbits;
-	result = bitset_ref_assign(&dst, &src, (DeeObject *)self);
+	result = bitset_ref_assign(&dst, &src, Dee_AsObject(self));
 	Dee_DecrefDokill(value_bitset);
 	return result;
 err_readonly:

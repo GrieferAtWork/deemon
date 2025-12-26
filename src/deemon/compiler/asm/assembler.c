@@ -1991,7 +1991,7 @@ relint_trycompare_eq(DeeRelIntObject *self, DeeRelIntObject *other) {
 
 
 PRIVATE struct type_cmp relint_cmp = {
-	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&relint_hash,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&relint_hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&relint_compare_eq,
 	/* .tp_compare       = */ NULL,
 	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&relint_trycompare_eq,
@@ -2093,7 +2093,7 @@ fix_relint(DeeObject **__restrict p_obj) {
 	if unlikely(!intob)
 		goto err;
 	/* Replace the constant slot with this value. */
-	*p_obj = (DREF DeeObject *)intob; /* Inherit reference (x2) */
+	*p_obj = intob; /* Inherit reference (x2) */
 	Dee_DecrefDokill(relint);
 	return 0;
 err:
@@ -2850,7 +2850,7 @@ asm_gsymid(struct symbol *__restrict sym) {
 	struct module_symbol *iter;
 	Dee_hash_t perturb, i;
 	ASSERT(sym->s_type == SYMBOL_TYPE_GLOBAL);
-	ASSERT_OBJECT_TYPE((DeeObject *)current_rootscope, &DeeRootScope_Type);
+	ASSERT_OBJECT_TYPE(&current_rootscope->rs_scope.bs_scope, &DeeRootScope_Type);
 	if (sym->s_flag & SYMBOL_FALLOC)
 		return sym->s_symid;
 
@@ -3155,7 +3155,7 @@ INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_newmodule(DeeModuleObject *__restrict mod) {
 	uint16_t result;
 	ASSERT_OBJECT_TYPE(mod, &DeeModule_Type);
-	ASSERT_OBJECT_TYPE((DeeObject *)current_rootscope, &DeeRootScope_Type);
+	ASSERT_OBJECT_TYPE(&current_rootscope->rs_scope.bs_scope, &DeeRootScope_Type);
 	/* Check if this module has already been imported by the one calling.
 	 * Must be checking to ensure that any module is only ever imported once.
 	 * NOTE: Since modules cannot be copied, we can simply compare pointers here! */
@@ -3357,7 +3357,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL
 code_docompile(struct ast *__restrict code_ast) {
 	int link_error;
 	ASSERT_AST(code_ast);
-	ASSERT_OBJECT_TYPE((DeeObject *)current_basescope, &DeeBaseScope_Type);
+	ASSERT_OBJECT_TYPE(&current_basescope->bs_scope, &DeeBaseScope_Type);
 
 restart:
 	/* Generate code for copying modified arguments into locals. */

@@ -88,7 +88,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 comerr_init_kw(DeeCompilerErrorObject *__restrict self,
                size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	/* TODO: Initialization for CompilerError-specific fields */
-	int result = (*DeeError_Error.tp_init.tp_alloc.tp_any_ctor_kw)((DeeObject *)self, argc, argv, kw);
+	int result = (*DeeError_Error.tp_init.tp_alloc.tp_any_ctor_kw)(Dee_AsObject(self), argc, argv, kw);
 	if likely(result == 0)
 		comerr_init_common(self);
 	return result;
@@ -136,14 +136,14 @@ comerr_print(DeeCompilerErrorObject *__restrict self,
              Dee_formatprinter_t printer, void *arg) {
 	if (self->e_msg)
 		return DeeObject_Print(self->e_msg, printer, arg);
-	return DeeCompilerError_Print((DeeObject *)self, printer, arg);
+	return DeeCompilerError_Print(Dee_AsObject(self), printer, arg);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 comerr_printrepr(DeeCompilerErrorObject *__restrict self,
                  Dee_formatprinter_t printer, void *arg) {
 	/* TODO */
-	return DeeStructObject_PrintRepr((DeeObject *)self, printer, arg);
+	return DeeStructObject_PrintRepr(Dee_AsObject(self), printer, arg);
 }
 
 #define comerr_cmp DeeStructObject_Cmp /* TODO */

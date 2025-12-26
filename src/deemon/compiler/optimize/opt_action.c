@@ -646,7 +646,7 @@ action_set_expr_result:
 		    DeeString_Check(self->a_action.a_act0->a_operator.o_op1->a_constexpr) &&
 		    DeeString_EQUALS_ASCII(self->a_action.a_act0->a_operator.o_op1->a_constexpr, "stdout")) {
 			struct ast *base = self->a_action.a_act0->a_operator.o_op0;
-			if (ast_isconstexpr(base, (DeeObject *)&DeeFile_Type) ||
+			if (ast_isconstexpr(base, Dee_AsObject(&DeeFile_Type.ft_base)) ||
 			    ast_is_deemon_symbol(base, id_File)) {
 				OPTIMIZE_VERBOSE("Optimize `print File.stdout: ...' -> `print ...'\n");
 				++optimizer_count;
@@ -746,7 +746,7 @@ check_printseq_const:
 							DeeTuple_SET(new_tuple, j, ob);
 						}
 						Dee_Decref_unlikely(printseq->a_constexpr);
-						printseq->a_constexpr = (DREF DeeObject *)new_tuple;
+						printseq->a_constexpr = Dee_AsObject(new_tuple);
 					} else {
 						DeeTuple_SET(printseq->a_constexpr, i, elem_str); /* Inherit reference (x2) */
 						Dee_Decref(elem);

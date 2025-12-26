@@ -424,7 +424,7 @@ dswk_iter(DistinctSetWithKey *__restrict self) {
 	Dee_Incref(self->dswk_key);
 	Dee_simple_hashset_with_lock_init(&result->diwk_encountered);
 	DeeObject_Init(result, &DistinctIteratorWithKey_Type);
-	return (DREF DistinctIteratorWithKey *)DeeGC_Track((DREF DeeObject *)result);
+	return DeeGC_TRACK(DistinctIteratorWithKey, result);
 err_r_iter:
 	Dee_Decref(result->diwk_iter);
 err_r:

@@ -2288,7 +2288,7 @@ sew_call(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	tuple = DeeTuple_NewVector(argc, argv);
 	if unlikely(!tuple)
 		goto err;
-	return (DREF DeeObject *)seqeach_makeop1(self, OPERATOR_CALL, tuple);
+	return Dee_AsObject(seqeach_makeop1(self, OPERATOR_CALL, tuple));
 err:
 	return NULL;
 }
@@ -2606,14 +2606,14 @@ PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 sew_iterattr(DeeTypeObject *UNUSED(tp_self), SeqEachBase *self,
              struct Dee_attriter *iterbuf, size_t bufsize,
              struct Dee_attrhint const *__restrict hint) {
-	return se_iterattr_impl((DeeObject *)self, iterbuf, bufsize, hint);
+	return se_iterattr_impl(Dee_AsObject(self), iterbuf, bufsize, hint);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 sew_findattr(DeeTypeObject *UNUSED(tp_self), SeqEachBase *self,
              struct Dee_attrspec const *__restrict specs,
              struct Dee_attrdesc *__restrict result) {
-	return se_findattr_impl((DeeObject *)self, specs, result);
+	return se_findattr_impl(Dee_AsObject(self), specs, result);
 }
 
 LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -3517,7 +3517,7 @@ ssw_call(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	tuple = DeeTuple_NewVector(argc, argv);
 	if unlikely(!tuple)
 		goto err;
-	return (DREF DeeObject *)seqsome_makeop1(self, OPERATOR_CALL, tuple);
+	return Dee_AsObject(seqsome_makeop1(self, OPERATOR_CALL, tuple));
 err:
 	return NULL;
 }
@@ -3840,14 +3840,14 @@ PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 ssw_iterattr(DeeTypeObject *UNUSED(tp_self), SeqEachBase *self,
              struct Dee_attriter *iterbuf, size_t bufsize,
              struct Dee_attrhint const *__restrict hint) {
-	return ss_iterattr_impl((DeeObject *)self, iterbuf, bufsize, hint);
+	return ss_iterattr_impl(Dee_AsObject(self), iterbuf, bufsize, hint);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 ssw_findattr(DeeTypeObject *UNUSED(tp_self), SeqEachBase *self,
              struct Dee_attrspec const *__restrict specs,
              struct Dee_attrdesc *__restrict result) {
-	return ss_findattr_impl((DeeObject *)self, specs, result);
+	return ss_findattr_impl(Dee_AsObject(self), specs, result);
 }
 
 PRIVATE struct type_attr sso_attr = {

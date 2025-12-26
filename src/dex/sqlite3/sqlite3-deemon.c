@@ -75,7 +75,7 @@ again:
 		                          &_dee_sqlite3_bind_string_decref);
 	} else {
 		size_t length;
-		char const *utf8 = DeeString_AsUtf8((DeeObject *)self);
+		char const *utf8 = DeeString_AsUtf8(Dee_AsObject(self));
 		if unlikely(!utf8)
 			goto err;
 		length = WSTR_LENGTH(utf8);

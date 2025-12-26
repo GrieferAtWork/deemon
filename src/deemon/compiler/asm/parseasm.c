@@ -886,7 +886,7 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
 		if unlikely(!modsym) {
 			if (WARN(W_MODULE_IMPORT_NOT_FOUND,
 			         symbol_name->k_name,
-			         DeeModule_GetShortName((DeeObject *)module)))
+			         DeeModule_GetShortName(Dee_AsObject(module))))
 				goto err_module;
 			*pgid = 0;
 		} else {

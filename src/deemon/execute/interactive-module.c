@@ -468,10 +468,10 @@ do_exec_code:
 	is_reusing_code_object = (atomic_read(&current_code->ob_refcnt) == 2 &&
 	                          !DeeObject_IsShared(self->im_frame.cf_func));
 	if (is_reusing_code_object) {
-		DeeGC_Untrack((DeeObject *)current_code);
+		DeeGC_Untrack(Dee_AsObject(current_code));
 		is_reusing_code_object = (atomic_read(&current_code->ob_refcnt) == 2);
 		if unlikely(!is_reusing_code_object)
-			current_code = (DeeCodeObject *)DeeGC_Track((DeeObject *)current_code);
+			current_code = DeeGC_TRACK(DeeCodeObject, current_code);
 	}
 	ASSERT(current_code->co_refc == 0);
 	ASSERT(current_code->co_argc_min == 0);
@@ -487,12 +487,12 @@ do_exec_code:
 	old_co_ddi       = current_code->co_ddi;
 	if (is_reusing_code_object) {
 		ASSERT(current_code->co_module == (DREF DeeModuleObject *)self);
-		DeeObject_FreeTracker((DeeObject *)current_code);
+		DeeObject_FreeTracker(current_code);
 		assembler_init_reuse(current_code,
 		                     current_code->co_code +
 		                     preexisting_codesize);
-		Dee_DecrefNokill(&DeeCode_Type);     /* current_code->ob_type */
-		Dee_DecrefNokill((DeeObject *)self); /* current_code->co_module */
+		Dee_DecrefNokill(&DeeCode_Type);    /* current_code->ob_type */
+		Dee_DecrefNokill(&self->im_module); /* current_code->co_module */
 		current_assembler.a_constv = (DREF DeeObject **)current_code->co_constv;
 		current_code->co_constv    = NULL;
 		current_code->co_constc    = 0;
@@ -663,7 +663,7 @@ gencode_failed:
 			Dee_DecrefNokill(current_code); /* Stolen from `current_rootscope->rs_code' */
 			current_code->co_next = NULL;
 			/* Fill in module-field of the new code object. */
-			Dee_Incref((DeeObject *)self);
+			Dee_Incref(&self->im_module);
 			current_code->co_module = (DREF DeeModuleObject *)self;
 
 			ASSERT((current_code->co_exceptc != 0) ==
@@ -723,7 +723,7 @@ gencode_failed:
 			if (DeeObject_IsShared(self->im_frame.cf_func)) {
 				DeeFunctionObject *new_self_func;
 				/* Must create a new function-object. */
-				new_self_func = (DeeFunctionObject *)DeeFunction_NewNoRefs((DeeObject *)current_code);
+				new_self_func = (DeeFunctionObject *)DeeFunction_NewNoRefs(Dee_AsObject(current_code));
 				Dee_DecrefNokill(current_code);
 				if unlikely(!new_self_func) {
 					result = NULL;
@@ -773,7 +773,7 @@ recover_old_code_object:
 			current_code->co_argc_max  = 0;
 			current_code->co_framesize = old_co_framesize;
 			current_code->co_codebytes = (code_size_t)(preexisting_codesize + 1);
-			Dee_Incref((DeeObject *)self);
+			Dee_Incref(&self->im_module);
 			current_code->co_module   = (DREF DeeModuleObject *)self;
 			current_code->co_defaultv = NULL;
 			current_code->co_keywords = NULL;
@@ -1170,7 +1170,8 @@ imod_init(InteractiveModule *__restrict self,
 
 	/* Allocate the compiler that will be used
 	 * to process data from the source stream. */
-	self->im_compiler = DeeCompiler_New((DeeObject *)self, self->im_options.co_compiler);
+	self->im_compiler = DeeCompiler_New(Dee_AsObject(&self->im_module),
+	                                    self->im_options.co_compiler);
 	if unlikely(!self->im_compiler)
 		goto err_frame;
 
@@ -1375,7 +1376,7 @@ err_compiler_basefile:
 		init_code->co_keywords = NULL;
 		init_code->co_ddi      = &DeeDDI_Empty;
 		init_code->co_code[0]  = ASM_UD;
-		Dee_Incref((DeeObject *)self);
+		Dee_Incref(&self->im_module);
 		Dee_Incref(&DeeDDI_Empty);
 #ifdef CONFIG_HAVE_CODE_METRICS
 		Dee_code_metrics_init(&init_code->co_metrics);
@@ -1384,7 +1385,7 @@ err_compiler_basefile:
 		Dee_hostasm_code_init(&init_code->co_hostasm);
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 		DeeObject_Init(init_code, &DeeCode_Type);
-		init_code = (DREF DeeCodeObject *)DeeGC_Track((DREF DeeObject *)init_code);
+		init_code = DeeGC_TRACK(DeeCodeObject, init_code);
 		self->im_module.mo_root = init_code; /* Inherit reference. */
 
 		/* Set the initial instruction pointer. */
@@ -1409,8 +1410,8 @@ err_compiler:
 	Dee_Decref(self->im_compiler);
 err_frame:
 	Dee_DecrefNokill(&DeeFunction_Type);
-	DeeObject_FreeTracker((DeeObject *)self->im_frame.cf_func);
-	DeeObject_Free((DeeObject *)self->im_frame.cf_func);
+	DeeObject_FreeTracker(Dee_AsObject(self->im_frame.cf_func));
+	DeeObject_Free(Dee_AsObject(self->im_frame.cf_func));
 err_stream:
 	Dee_Decref(self->im_stream);
 err_globals:
@@ -1735,11 +1736,11 @@ DeeModule_OpenInteractive(DeeObject *source_stream,
 	              default_symbols))
 		goto err_r;
 	/* Start tracking the new module as a GC object. */
-	return DeeGC_Track((DREF DeeObject *)result);
+	return DeeGC_Track(Dee_AsObject(&result->im_module));
 err_r:
 	Dee_DecrefNokill(&DeeInteractiveModule_Type);
-	DeeObject_FreeTracker((DeeObject *)result);
-	DeeGCObject_FREE((DeeObject *)result);
+	DeeObject_FreeTracker(Dee_AsObject(&result->im_module));
+	DeeGCObject_FREE(Dee_AsObject(&result->im_module));
 err:
 	return NULL;
 }
@@ -1900,7 +1901,7 @@ imod_visit(InteractiveModule *__restrict self, Dee_visit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF InteractiveModule *DCALL
 imod_iter(InteractiveModule *__restrict self) {
-	Dee_Incref((DeeObject *)self);
+	Dee_Incref(&self->im_module);
 	return self;
 }
 

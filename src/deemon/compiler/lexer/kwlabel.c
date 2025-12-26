@@ -72,8 +72,8 @@ ast_parse_argument_list(uint16_t mode,
 		if (*next == ':') {
 			size_t multiple_a;
 			if (result->a_type == AST_CONSTEXPR) {
-				ASSERT(result->a_constexpr == (DeeObject *)&DeeTuple_Empty);
-				Dee_DecrefNokill(&DeeTuple_Empty);
+				ASSERT(result->a_constexpr == Dee_EmptyTuple);
+				Dee_DecrefNokill(Dee_EmptyTuple);
 				result->a_type            = AST_MULTIPLE;
 				result->a_flag            = AST_FMULTIPLE_TUPLE;
 				result->a_multiple.m_astc = 0;

@@ -132,7 +132,7 @@ libdisasm_printstatic(Dee_formatprinter_t printer, void *arg, uint16_t sid,
                       DeeCodeObject *code, unsigned int flags) {
 	if (code) {
 		char const *name;
-		if ((name = DeeCode_GetRSymbolName((DeeObject *)code, sid)) != NULL)
+		if ((name = DeeCode_GetRSymbolName(Dee_AsObject(code), sid)) != NULL)
 			return DeeFormat_Printf(printer, arg, "static " PREFIX_VARNAME "%s", name);
 		if (sid >= code->co_constc) {
 			if (flags & PCODE_FNOBADCOMMENT)
@@ -165,7 +165,7 @@ libdisasm_printlocal(Dee_formatprinter_t printer, void *arg,
 			DDI_STATE_DO(iter, ddi) {
 				if (lid < iter->dx_lcnamc) {
 					char const *name;
-					if ((name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_lcnamv[lid])) != NULL)
+					if ((name = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_lcnamv[lid])) != NULL)
 						return DeeFormat_Printf(printer, arg, "local " PREFIX_VARNAME "%s", name);
 				}
 			}
@@ -192,7 +192,7 @@ libdisasm_printstack(Dee_formatprinter_t printer, void *arg,
 			DDI_STATE_DO(iter, ddi) {
 				if (soff < MIN(iter->dx_base.dr_usp, iter->dx_spnama)) {
 					char const *name;
-					if ((name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_spnamv[soff])) != NULL)
+					if ((name = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_spnamv[soff])) != NULL)
 						return DeeFormat_Printf(printer, arg, "stack " PREFIX_VARNAME "%s", name);
 				}
 			}
@@ -234,7 +234,7 @@ print_generic:
 			DDI_STATE_DO(iter, ddi) {
 				if (soff < MIN(iter->dx_base.dr_usp, iter->dx_spnama)) {
 					char const *name;
-					if ((name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_spnamv[soff])) != NULL) {
+					if ((name = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_spnamv[soff])) != NULL) {
 						if (!(flags & PCODE_FALTCOMMENT))
 							return DeeFormat_Printf(printer, arg, "stack " PREFIX_VARNAME "%s", name);
 						return DeeFormat_Printf(printer, arg,
@@ -267,7 +267,7 @@ libdisasm_printglobal(Dee_formatprinter_t printer, void *arg,
 				goto print_generic;
 			return DeeFormat_Printf(printer, arg, "global %u /* invalid gid */", (unsigned int)gid);
 		}
-		name = DeeModule_GlobalName((DeeObject *)code->co_module, gid);
+		name = DeeModule_GlobalName(Dee_AsObject(code->co_module), gid);
 		if (name)
 			return DeeFormat_Printf(printer, arg, "global " PREFIX_VARNAME "%s", name);
 	}
@@ -421,7 +421,7 @@ libdisasm_printref(Dee_formatprinter_t printer, void *arg,
                    unsigned int flags) {
 	if (code) {
 		char const *name;
-		if ((name = DeeCode_GetRSymbolName((DeeObject *)code, rid)) != NULL)
+		if ((name = DeeCode_GetRSymbolName(Dee_AsObject(code), rid)) != NULL)
 			return DeeFormat_Printf(printer, arg, "ref " PREFIX_VARNAME "%s", name);
 		if (rid >= code->co_refc) {
 			if (flags & PCODE_FNOBADCOMMENT)
@@ -478,7 +478,7 @@ libdisasm_printmembername(Dee_formatprinter_t printer, void *arg,
 	(void)flags;
 	if (code) {
 		char const *class_name;
-		class_name = DeeCode_GetRSymbolName((DeeObject *)code, rid);
+		class_name = DeeCode_GetRSymbolName(Dee_AsObject(code), rid);
 		if (class_name) {
 			DeeModuleObject *mod = code->co_module;
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
@@ -514,7 +514,7 @@ search_module_root_constants:
 							Dee_Decref(root);
 							if (desc) {
 								Dee_Incref(desc);
-								class_type = (DREF DeeObject *)desc; /* Inherit reference. (will be dropped later) */
+								class_type = Dee_AsObject(desc); /* Inherit reference. (will be dropped later) */
 								goto do_search_desc;
 							}
 						}
@@ -601,7 +601,7 @@ libdisasm_printarg(Dee_formatprinter_t printer, void *arg,
                    unsigned int flags) {
 	if (code) {
 		char const *name;
-		if ((name = DeeCode_GetASymbolName((DeeObject *)code, aid)) != NULL)
+		if ((name = DeeCode_GetASymbolName(Dee_AsObject(code), aid)) != NULL)
 			return DeeFormat_Printf(printer, arg, "arg " PREFIX_VARNAME "%s", name);
 		if (aid >= code->co_argc_max && !(flags & PCODE_FNOBADCOMMENT))
 			return DeeFormat_Printf(printer, arg, "arg %u /* invalid aid */", (unsigned int)aid);

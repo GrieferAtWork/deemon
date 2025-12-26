@@ -970,7 +970,7 @@ DeeString_IsObject(/*unsigned*/ char const *__restrict str) {
 			 *              that the heap-size field was our reference counter.
 			 * -> Because of case #3, this function can't be used for heap-allocated strings. */
 			if (base->ob_refcnt != 0)
-				return (DeeObject *)base;
+				return Dee_AsObject(base);
 		}
 	}
 	return NULL;

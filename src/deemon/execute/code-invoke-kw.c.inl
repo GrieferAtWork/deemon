@@ -174,7 +174,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 			DeeStringObject *name = code->co_keywords[frame.cf_argc + i];
 			ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 #ifdef KW_IS_MAPPING
-			val = DeeKw_TryGetItemNR(kw, (DeeObject *)name);
+			val = DeeKw_TryGetItemNR(kw, Dee_AsObject(name));
 			if unlikely(!ITER_ISOK(val)) {
 				if (val != NULL) {
 					/* Missing, mandatory argument. */
@@ -187,7 +187,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 				goto err_ex_frame;
 			}
 #else /* KW_IS_MAPPING */
-			index = DeeKwds_IndexOf(kw, (DeeObject *)name);
+			index = DeeKwds_IndexOf(kw, Dee_AsObject(name));
 			if unlikely(index == (size_t)-1) {
 				/* Missing, mandatory argument. */
 				err_invalid_argc_missing_kw(DeeString_STR(name),
@@ -216,7 +216,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 		DeeStringObject *name = code->co_keywords[frame.cf_argc + i];
 		ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 #ifdef KW_IS_MAPPING
-		val = DeeKw_TryGetItemNR(kw, (DeeObject *)name);
+		val = DeeKw_TryGetItemNR(kw, Dee_AsObject(name));
 		if (!ITER_ISOK(val)) {
 			if unlikely(!val)
 				goto err_ex_frame;
@@ -224,7 +224,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 			continue;
 		}
 #else /* KW_IS_MAPPING */
-		index = DeeKwds_IndexOf(kw, (DeeObject *)name);
+		index = DeeKwds_IndexOf(kw, Dee_AsObject(name));
 		if (index == (size_t)-1) {
 			/* Missing argument (leave as unbound / allow fallthrough to argument defaults) */
 			frame.cf_kw->fk_kargv[i] = NULL;
@@ -301,7 +301,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 #endif /* CODE_FLAGS & CODE_FVARKWDS ) */
 	yf->yf_kw = frame.cf_kw; /* Inherit data. */
 	DeeObject_Init(yf, &DeeYieldFunction_Type);
-	return (DREF DeeObject *)yf;
+	return Dee_AsObject(yf);
 #else /* CODE_FLAGS & CODE_FYIELDING */
 	/* Direct function invocation */
 #ifdef Dee_Alloca

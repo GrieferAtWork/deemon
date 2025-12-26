@@ -284,7 +284,7 @@ struct Dee_dec_deptab {
 
 struct Dee_dec_objtab_entry {
 	DeeObject     *dote_obj; /* [0..1] Address of some object that was already encoded (NULL means unused/sentinal entry) */
-	Dee_dec_addr_t dote_off; /* [1..1] Offset from `dw_base' to the `(DeeObject *)' where the object is written */
+	Dee_dec_addr_t dote_off; /* [1..1] Offset from `dw_base' to the `DeeObject *' where the object is written */
 };
 
 struct Dee_dec_objtab {

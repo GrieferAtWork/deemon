@@ -109,7 +109,7 @@ next_expr:
 			JITLexer_Yield(self);
 		}
 #ifdef JIT_EVAL
-		current = (DREF DeeObject *)JITLexer_EvalClass(self, tp_flags);
+		current = Dee_AsObject(JITLexer_EvalClass(self, tp_flags));
 #else /* JIT_EVAL */
 		current = JITLexer_SkipClass(self);
 #endif /* !JIT_EVAL */

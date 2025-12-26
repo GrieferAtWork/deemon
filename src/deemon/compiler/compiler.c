@@ -94,9 +94,9 @@ load_compiler(DeeCompilerObject *__restrict compiler) {
 	current_scope = compiler->cp_scope;
 	ASSERT_OBJECT(current_scope);
 	current_basescope = current_scope->s_base;
-	ASSERT_OBJECT((DeeObject *)current_basescope);
+	ASSERT_OBJECT(&current_basescope->bs_scope);
 	current_rootscope = current_basescope->bs_root;
-	ASSERT_OBJECT((DeeObject *)current_rootscope);
+	ASSERT_OBJECT(&current_rootscope->rs_scope.bs_scope);
 	inner_compiler_options = compiler->cp_inner_options;
 	memcpy(&current_tags, &compiler->cp_tags, sizeof(struct ast_tags));
 	parser_flags           = compiler->cp_parser_flags;
@@ -114,8 +114,8 @@ PRIVATE NONNULL((1)) void DCALL
 save_compiler(DeeCompilerObject *__restrict compiler) {
 	ASSERT(DeeCompiler_LockWriting());
 	ASSERT_OBJECT(current_scope);
-	ASSERT_OBJECT((DeeObject *)current_basescope);
-	ASSERT_OBJECT((DeeObject *)current_rootscope);
+	ASSERT_OBJECT(&current_basescope->bs_scope);
+	ASSERT_OBJECT(&current_rootscope->rs_scope.bs_scope);
 	ASSERT(current_basescope == current_scope->s_base);
 	ASSERT(current_rootscope == current_basescope->bs_root);
 	compiler->cp_scope         = current_scope;
@@ -163,12 +163,12 @@ do_load_compiler:
 			/* Load the new compiler. */
 			load_compiler(compiler);
 			compiler_loaded = compiler;
-			Dee_weakref_set(&DeeCompiler_Active, (DeeObject *)compiler);
+			Dee_weakref_set(&DeeCompiler_Active, Dee_AsObject(compiler));
 		}
 		DeeCompiler_Current = compiler;
 	}
 	ASSERT(compiler_loaded == compiler);
-	ASSERT(DeeCompiler_Active.wr_obj == (DeeObject *)compiler);
+	ASSERT(DeeCompiler_Active.wr_obj == Dee_AsObject(compiler));
 	++compiler->cp_recursion;
 }
 
@@ -179,7 +179,7 @@ DeeCompiler_End(void) {
 	curr = DeeCompiler_Current;
 	ASSERT(curr != NULL);
 	ASSERT(compiler_loaded == curr);
-	ASSERT(DeeCompiler_Active.wr_obj == (DeeObject *)curr);
+	ASSERT(DeeCompiler_Active.wr_obj == Dee_AsObject(curr));
 	if (!--curr->cp_recursion) {
 		DeeCompiler_Current = curr->cp_prev;
 		curr->cp_prev       = NULL;
@@ -188,7 +188,7 @@ DeeCompiler_End(void) {
 			save_compiler(curr);
 			load_compiler(DeeCompiler_Current);
 			compiler_loaded = DeeCompiler_Current;
-			Dee_weakref_set(&DeeCompiler_Active, (DeeObject *)DeeCompiler_Current);
+			Dee_weakref_set(&DeeCompiler_Active, Dee_AsObject(DeeCompiler_Current));
 		} else {
 			/* NOTE: We intentionally leave `compiler_loaded' dangling,
 			 *       so we can optimize for cases in which only one compiler

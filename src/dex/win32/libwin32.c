@@ -4774,7 +4774,7 @@ again:
 	}
 	DBG_ALIGNMENT_ENABLE();
 	if unlikely(szNumberOfBytesRead < nSize) {
-		result = (DREF DeeBytesObject *)DeeBytes_ResizeBuffer((DREF DeeObject *)result,
+		result = (DREF DeeBytesObject *)DeeBytes_ResizeBuffer(Dee_AsObject(result),
 		                                                      szNumberOfBytesRead);
 	}
 	return Dee_AsObject(result);
@@ -4851,7 +4851,7 @@ again:
 	}
 	DBG_ALIGNMENT_ENABLE();
 	if unlikely(szNumberOfBytesRead < nSize) {
-		result = (DREF DeeBytesObject *)DeeBytes_ResizeBuffer((DREF DeeObject *)result,
+		result = (DREF DeeBytesObject *)DeeBytes_ResizeBuffer(Dee_AsObject(result),
 		                                                      (size_t)szNumberOfBytesRead);
 	}
 	return Dee_AsObject(result);

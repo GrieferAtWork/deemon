@@ -940,8 +940,8 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL posix_utime_f_
 	link_text = posix_readlink_f_impl(path);
 	if (link_text) {
 		DREF DeeObject *full_path, *result;
-		full_path = (DREF DeeObject *)posix_path_walklink_f((DeeStringObject *)link_text,
-		                                                    (DeeStringObject *)path);
+		full_path = Dee_AsObject(posix_path_walklink_f((DeeStringObject *)link_text,
+		                                               (DeeStringObject *)path));
 		Dee_Decref(link_text);
 		if unlikely(!full_path)
 			goto err;

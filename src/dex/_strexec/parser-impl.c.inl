@@ -858,7 +858,7 @@ done_y1:
 						        DeeTuple_SIZE(merge),
 						        sizeof(DREF DeeObject *));
 						DeeTuple_DecrefSymbolic(merge);
-						result = (DREF DeeObject *)tuple; /* Inherit references. */
+						result = Dee_AsObject(tuple); /* Inherit references. */
 					}
 #endif /* JIT_EVAL */
 				}
@@ -1504,7 +1504,7 @@ skip_rbrck_and_done:
 					new_result = Dee_TYPE(result);
 					Dee_Incref(new_result);
 					Dee_Decref(result);
-					result = (DREF DeeObject *)new_result;
+					result = Dee_AsObject(new_result);
 				}
 #endif /* JIT_EVAL */
 				goto done;
@@ -1646,7 +1646,7 @@ skip_rbrck_and_done:
 					}
 				}
 #ifdef JIT_EVAL
-				result = (DREF DeeObject *)JITLexer_EvalClass(self, tp_flags);
+				result = Dee_AsObject(JITLexer_EvalClass(self, tp_flags));
 #else /* JIT_EVAL */
 				result = JITLexer_SkipClass(self);
 #endif /* !JIT_EVAL */
@@ -3579,7 +3579,7 @@ again:
 		/* Expand expression */
 		JITLexer_Yield(self);
 #ifdef JIT_EVAL
-		result = (DREF DeeTupleObject *)DeeTuple_ConcatInherited((DREF DeeObject *)result, lhs);
+		result = (DREF DeeTupleObject *)DeeTuple_ConcatInherited(Dee_AsObject(result), lhs);
 		if unlikely(!result)
 			goto err;
 #endif /* JIT_EVAL */

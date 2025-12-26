@@ -295,7 +295,7 @@ DeeDex_New(DeeObject *__restrict name) {
 	result->d_module.mo_bucketv = empty_module_buckets;
 	Dee_Incref(name);
 	weakref_support_init(&result->d_module);
-	return DeeGC_Track((DREF DeeObject *)result);
+	return DeeGC_Track(Dee_AsObject(&result->d_module));
 err:
 	return NULL;
 }
@@ -355,9 +355,9 @@ again:
 		dex_chain    = dex->d_next;
 		dex->d_pself = NULL;
 		dex->d_next  = NULL;
-		if (!Dee_DecrefIfNotOne((DeeObject *)dex)) {
+		if (!Dee_DecrefIfNotOne(&dex->d_module)) {
 			dex_lock_endwrite();
-			Dee_Decref((DeeObject *)dex);
+			Dee_Decref(&dex->d_module);
 			goto again;
 		}
 	}
@@ -380,7 +380,7 @@ dex_initialize(DeeDexObject *__restrict self) {
 		dex_chain->d_pself = &self->d_next;
 	self->d_pself = &dex_chain;
 	dex_chain     = self;
-	Dee_Incref((DeeObject *)self); /* The reference stored in the dex chain. */
+	Dee_Incref(Dee_AsObject(self)); /* The reference stored in the dex chain. */
 	dex_lock_endwrite();
 	return 0;
 err:
@@ -566,9 +566,9 @@ DeeModule_FromElfLoadAddr(ElfW(Addr) addr) {
 		dlinfo_RTLD_DI_LINKMAP(iter->d_handle, &lm);
 		if (lm->l_addr != addr)
 			continue;
-		Dee_Incref((DeeModuleObject *)iter);
+		Dee_Incref(&iter->d_module);
 		dex_lock_endread();
-		return (DREF DeeObject *)iter;
+		return Dee_AsObject(&iter->d_module);
 	}
 	dex_lock_endread();
 	return NULL;
@@ -600,7 +600,7 @@ iter_modules_callback(struct dl_phdr_info *info,
 		/* Check for the special case of this being the deemon core module. */
 		if ((uintptr_t)&DeeObject_Type >= start &&
 		    (uintptr_t)&DeeObject_Type < end) {
-			data->search_res = (DREF DeeObject *)DeeModule_GetDeemon();
+			data->search_res = Dee_AsObject(DeeModule_GetDeemon());
 			Dee_Incref(data->search_res);
 		} else {
 			/* Given a loaded module, search for its base
@@ -657,7 +657,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 				continue;
 			Dee_Incref(&iter->d_module);
 			dex_lock_endread();
-			return (DREF DeeObject *)&iter->d_module;
+			return Dee_AsObject(&iter->d_module);
 		}
 		dex_lock_endread();
 		DBG_ALIGNMENT_DISABLE();
@@ -699,9 +699,9 @@ DeeModule_FromStaticPointer(void const *ptr) {
 	for (iter = dex_chain; iter; iter = iter->d_next) {
 		if (iter->d_handle != module_handle)
 			continue;
-		Dee_Incref((DeeModuleObject *)iter);
+		Dee_Incref(Dee_AsObject(&iter->d_module));
 		dex_lock_endread();
-		return (DREF DeeObject *)iter;
+		return Dee_AsObject(&iter->d_module);
 	}
 	dex_lock_endread();
 
@@ -716,7 +716,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 	{
 		/* It is the deemon core. */
 		DREF DeeObject *result;
-		result = (DREF DeeObject *)DeeModule_GetDeemon();
+		result = Dee_AsObject(DeeModule_GetDeemon());
 		Dee_Incref(result);
 		return result;
 	}
@@ -734,9 +734,9 @@ DeeModule_FromStaticPointer(void const *ptr) {
 			continue;
 		if ((uintptr_t)ptr >= info.mi_segend)
 			continue;
-		Dee_Incref((DeeModuleObject *)iter);
+		Dee_Incref(&iter->d_module);
 		dex_lock_endread();
-		return (DREF DeeObject *)iter;
+		return Dee_AsObject(&iter->d_module);
 	}
 	dex_lock_endread();
 	/* Check if we're dealing with the deemon core itself.
@@ -752,7 +752,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 			    (uintptr_t)&DeeObject_Type < info.mi_segend) {
 				/* It is the deemon core. */
 				DREF DeeObject *result;
-				result = (DREF DeeObject *)DeeModule_GetDeemon();
+				result = Dee_AsObject(DeeModule_GetDeemon());
 				Dee_Incref(result);
 				return result;
 			}
@@ -774,9 +774,9 @@ DeeModule_FromStaticPointer(void const *ptr) {
 				dlinfo_RTLD_DI_LINKMAP(iter->d_handle, &dex_lm);
 				if (dex_lm != ptr_lm)
 					continue;
-				Dee_Incref((DeeModuleObject *)iter);
+				Dee_Incref(&iter->d_module);
 				dex_lock_endread();
-				return (DREF DeeObject *)iter;
+				return Dee_AsObject(&iter->d_module);
 			}
 			dex_lock_endread();
 
@@ -785,7 +785,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 				if (ptr_lm == dex_lm) {
 					/* It is the deemon core. */
 					DREF DeeObject *result;
-					result = (DREF DeeObject *)DeeModule_GetDeemon();
+					result = Dee_AsObject(DeeModule_GetDeemon());
 					Dee_Incref(result);
 					return result;
 				}
@@ -811,16 +811,16 @@ DeeModule_FromStaticPointer(void const *ptr) {
 				struct link_map *dex_lm;
 				dlinfo_RTLD_DI_LINKMAP(iter->d_handle, &dex_lm);
 				if (Dl_info__dli_fname__equal(dli.dli_fname, dex_lm->l_name)) {
-					Dee_Incref((DeeModuleObject *)iter);
+					Dee_Incref(&iter->d_module);
 					dex_lock_endread();
-					return (DREF DeeObject *)iter;
+					return Dee_AsObject(&iter->d_module);
 				}
 #else /* CONFIG_HAVE_struct__link_map__l_name */
 				if (dladdr(iter->d_dex, &dex_dli) && dex_dli.dli_fname &&
 				    Dl_info__dli_fname__equal(dli.dli_fname, dex_dli.dli_fname)) {
-					Dee_Incref((DeeModuleObject *)iter);
+					Dee_Incref(&iter->d_module);
 					dex_lock_endread();
-					return (DREF DeeObject *)iter;
+					return Dee_AsObject(&iter->d_module);
 				}
 #endif /* !CONFIG_HAVE_struct__link_map__l_name */
 			}
@@ -831,7 +831,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 				if (Dl_info__dli_fname__equal(dli.dli_fname, dex_dli.dli_fname)) {
 					/* It is the deemon core. */
 					DREF DeeObject *result;
-					result = (DREF DeeObject *)DeeModule_GetDeemon();
+					result = Dee_AsObject(DeeModule_GetDeemon());
 					Dee_Incref(result);
 					return result;
 				}

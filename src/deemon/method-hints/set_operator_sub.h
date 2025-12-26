@@ -40,7 +40,7 @@ __set_sub__.set_operator_sub([[nonnull]] DeeObject *lhs,
 	}
 	if (DeeSet_CheckEmpty(rhs))
 		return_reference_(lhs); /* `a - {}' -> `a' */
-	return (DREF DeeObject *)SetDifference_New(lhs, rhs);
+	return Dee_AsObject(SetDifference_New(lhs, rhs));
 })}
 %{$none = return_none}
 %{$empty = "default__set_operator_sub__unsupported"} {

@@ -346,7 +346,7 @@ rs_gii_getitem_index(DefaultReversed_WithGetItemIndex *__restrict self, size_t i
 		goto err_obb;
 	return (*self->drwgii_tp_getitem_index)(self->drwgii_seq, self->drwgii_max - index);
 err_obb:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->drwgii_size);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->drwgii_size);
 	return NULL;
 }
 
@@ -364,10 +364,10 @@ rs_giif_getitem_index(DefaultReversed_WithGetItemIndex *__restrict self, size_t 
 		goto err_obb;
 	result = (*self->drwgii_tp_getitem_index)(self->drwgii_seq, self->drwgii_max - index);
 	if unlikely(!result)
-		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex(self, index);
 	return result;
 err_obb:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->drwgii_size);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->drwgii_size);
 	return NULL;
 }
 
@@ -393,7 +393,7 @@ rs_tgii_getitem_index(DefaultReversed_WithGetItemIndex *__restrict self, size_t 
 		goto err_obb;
 	return DeeObject_GetItemIndex(self->drwgii_seq, self->drwgii_max - index);
 err_obb:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->drwgii_size);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->drwgii_size);
 	return NULL;
 }
 

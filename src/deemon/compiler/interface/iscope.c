@@ -63,7 +63,7 @@ DeeCompiler_GetScope(struct scope_object *__restrict scope) {
 		ASSERT(Dee_TYPE(scope) == &DeeRootScope_Type);
 		result_type = &DeeCompilerRootScope_Type;
 	}
-	return DeeCompiler_GetObjItem(result_type, (DeeObject *)scope);
+	return DeeCompiler_GetObjItem(result_type, Dee_AsObject(scope));
 }
 
 
@@ -286,7 +286,7 @@ scope_getitem(DeeCompilerScopeObject *self, DeeObject *elem) {
 		goto err;
 	sym = scope_lookup_str(self->ci_value, utf8, WSTR_LENGTH(utf8));
 	if unlikely(!sym) {
-		DeeRT_ErrItemNotFound((DeeObject *)self, elem);
+		DeeRT_ErrItemNotFound(self, elem);
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetSymbol(sym);
@@ -312,7 +312,7 @@ scope_delitem(DeeCompilerScopeObject *__restrict self,
 		goto err;
 	sym = scope_lookup_str(self->ci_value, utf8, WSTR_LENGTH(utf8));
 	if unlikely(!sym) {
-		DeeRT_ErrItemNotFound((DeeObject *)self, elem);
+		DeeRT_ErrItemNotFound(self, elem);
 		result = -1;
 	} else {
 		/* Delete the symbol. */
@@ -388,7 +388,7 @@ scope_newlocal(DeeCompilerScopeObject *self, size_t argc,
 		goto done;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
-	name_utf8 = DeeString_AsUtf8((DeeObject *)args.name);
+	name_utf8 = DeeString_AsUtf8(Dee_AsObject(args.name));
 	if unlikely(!name_utf8)
 		goto done_compiler_end;
 	kwd = TPPLexer_LookupKeyword(name_utf8, WSTR_LENGTH(name_utf8), 1);

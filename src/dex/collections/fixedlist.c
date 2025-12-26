@@ -67,7 +67,7 @@ PRIVATE WUNUSED DREF FixedList *DCALL fl_ctor(void) {
 	result->fl_size = 0;
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
-	return (DREF FixedList *)DeeGC_Track((DeeObject *)result);
+	return DeeGC_TRACK(FixedList, result);
 err:
 	return NULL;
 }
@@ -86,7 +86,7 @@ fl_copy(FixedList *__restrict self) {
 	FixedList_LockEndRead(self);
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
-	return (DREF FixedList *)DeeGC_Track((DeeObject *)result);
+	return DeeGC_TRACK(FixedList, result);
 err:
 	return NULL;
 }
@@ -181,7 +181,7 @@ fl_init(size_t argc, DeeObject *const *argv) {
 /*done:*/
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
-	return (DREF FixedList *)DeeGC_Track((DeeObject *)result);
+	return DeeGC_TRACK(FixedList, result);
 err_r_elem:
 	Dee_XDecrefv(result->fl_elem, result->fl_size);
 /*err_r:*/
@@ -365,14 +365,14 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fl_getitem_index(FixedList *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->fl_size) {
-		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->fl_size);
+		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->fl_size);
 		goto err;
 	}
 	FixedList_LockRead(self);
 	result = self->fl_elem[index];
 	if unlikely(!result) {
 		FixedList_LockEndRead(self);
-		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex(self, index);
 		goto err;
 	}
 	Dee_Incref(result);
@@ -437,7 +437,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 fl_delitem_index(FixedList *__restrict self, size_t index) {
 	DREF DeeObject *oldval;
 	if unlikely(index >= self->fl_size) {
-		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->fl_size);
+		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->fl_size);
 		goto err;
 	}
 	FixedList_LockRead(self);
@@ -454,7 +454,7 @@ PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 fl_setitem_index(FixedList *self, size_t index, DeeObject *value) {
 	DREF DeeObject *oldval;
 	if unlikely(index >= self->fl_size) {
-		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->fl_size);
+		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->fl_size);
 		goto err;
 	}
 	Dee_Incref(value);
@@ -717,14 +717,14 @@ PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 fl_xchitem_index(FixedList *self, size_t index, DeeObject *value) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->fl_size) {
-		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->fl_size);
+		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->fl_size);
 		goto err;
 	}
 	FixedList_LockRead(self);
 	result = self->fl_elem[index];
 	if unlikely(!result) {
 		FixedList_LockEndRead(self);
-		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex(self, index);
 		goto err;
 	}
 	Dee_Incref(value);
@@ -747,12 +747,12 @@ fl_mh_pop(FixedList *__restrict self, Dee_ssize_t index) {
 	self->fl_elem[(size_t)index] = NULL;
 	FixedList_LockEndRead(self);
 	if unlikely(!result) {
-		DeeRT_ErrUnboundIndex((DeeObject *)self,
+		DeeRT_ErrUnboundIndex(self,
 		                      (size_t)index);
 	}
 	return result;
 err_bounds:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self,
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self),
 	                          (size_t)index,
 	                          self->fl_size);
 	return NULL;

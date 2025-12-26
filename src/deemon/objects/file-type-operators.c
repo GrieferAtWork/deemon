@@ -142,7 +142,7 @@ INTERN WUNUSED NONNULL((1, 2)) Dee_pos_t DCALL
 instance_tseek(DeeFileTypeObject *tp_self, DeeFileObject *self,
                Dee_off_t off, int whence) {
 	DREF DeeObject *result_ob;
-	result_ob = DeeClass_CallOperatorf((DeeTypeObject *)tp_self, (DeeObject *)self,
+	result_ob = DeeClass_CallOperatorf((DeeTypeObject *)tp_self, Dee_AsObject(self),
 	                                   FILE_OPERATOR_SEEK,
 	                                   PCKd64 "d", (int64_t)off, whence);
 	if unlikely(!result_ob)
@@ -155,7 +155,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_tsync(DeeFileTypeObject *tp_self, DeeFileObject *self) {
 	DREF DeeObject *result_ob;
-	result_ob = DeeClass_CallOperator((DeeTypeObject *)tp_self, (DeeObject *)self,
+	result_ob = DeeClass_CallOperator((DeeTypeObject *)tp_self, Dee_AsObject(self),
 	                                  FILE_OPERATOR_SYNC, 0, NULL);
 	if unlikely(!result_ob)
 		goto err;
@@ -168,7 +168,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_ttrunc(DeeFileTypeObject *tp_self, DeeFileObject *self, Dee_pos_t size) {
 	DREF DeeObject *result_ob;
-	result_ob = DeeClass_CallOperatorf((DeeTypeObject *)tp_self, (DeeObject *)self,
+	result_ob = DeeClass_CallOperatorf((DeeTypeObject *)tp_self, Dee_AsObject(self),
 	                                   FILE_OPERATOR_TRUNC, PCKu64, (uint64_t)size);
 	if unlikely(!result_ob)
 		goto err;
@@ -181,7 +181,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_tclose(DeeFileTypeObject *tp_self, DeeFileObject *self) {
 	DREF DeeObject *result_ob;
-	result_ob = DeeClass_CallOperator((DeeTypeObject *)tp_self, (DeeObject *)self,
+	result_ob = DeeClass_CallOperator((DeeTypeObject *)tp_self, Dee_AsObject(self),
 	                                  FILE_OPERATOR_CLOSE, 0, NULL);
 	if unlikely(!result_ob)
 		goto err;
@@ -227,7 +227,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_tgetc(DeeFileTypeObject *tp_self, DeeFileObject *self, Dee_ioflag_t flags) {
 	int temp;
 	DREF DeeObject *result_ob;
-	result_ob = DeeClass_CallOperatorf((DeeTypeObject *)tp_self, (DeeObject *)self,
+	result_ob = DeeClass_CallOperatorf((DeeTypeObject *)tp_self, Dee_AsObject(self),
 	                                   FILE_OPERATOR_GETC, "u", flags);
 	if unlikely(!result_ob)
 		goto err;
@@ -252,7 +252,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_tungetc(DeeFileTypeObject *tp_self, DeeFileObject *self, int ch) {
 	int temp;
 	DREF DeeObject *result_ob;
-	result_ob = DeeClass_CallOperatorf((DeeTypeObject *)tp_self, (DeeObject *)self,
+	result_ob = DeeClass_CallOperatorf((DeeTypeObject *)tp_self, Dee_AsObject(self),
 	                                   FILE_OPERATOR_UNGETC,
 	                                   PCKuN(1), (byte_t)ch);
 	if unlikely(!result_ob)
@@ -274,7 +274,7 @@ instance_tputc(DeeFileTypeObject *tp_self, DeeFileObject *self,
                int ch, Dee_ioflag_t flags) {
 	int temp;
 	DREF DeeObject *result_ob;
-	result_ob = DeeClass_CallOperatorf((DeeTypeObject *)tp_self, (DeeObject *)self,
+	result_ob = DeeClass_CallOperatorf((DeeTypeObject *)tp_self, Dee_AsObject(self),
 	                                   FILE_OPERATOR_PUTC,
 	                                   PCKuN(1) "u", (byte_t)ch, flags);
 	if unlikely(!result_ob)
@@ -341,13 +341,13 @@ DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_putc, DeeFileType_InheritPutc)
 
 LOCAL ATTR_RETNONNULL WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
 make_super(DeeSuperObject *__restrict buf, DeeFileTypeObject *tp_self, DeeFileObject *self) {
-	ASSERT_OBJECT_TYPE((DeeObject *)self, (DeeTypeObject *)tp_self);
+	ASSERT_OBJECT_TYPE(Dee_AsObject(self), (DeeTypeObject *)tp_self);
 	if (Dee_TYPE(self) == tp_self)
-		return (DeeObject *)self;
+		return Dee_AsObject(self);
 	buf->ob_refcnt = 1;
 	buf->ob_type   = &DeeSuper_Type;
 	buf->s_type    = (DeeTypeObject *)tp_self;
-	buf->s_self    = (DeeObject *)self;
+	buf->s_self    = Dee_AsObject(self);
 	return (DeeObject *)buf;
 }
 
@@ -547,7 +547,7 @@ DEFINE_OPERATOR_INVOKE(operator_trunc, &instance_trunc, NULL /*&filetype_inherit
 			goto err;
 	} else {
 		/* TODO: Directly invoke `ft_trunc' */
-		if (DeeFile_TTruncHere((DeeTypeObject *)tp_self, (DeeObject *)self, &length))
+		if (DeeFile_TTruncHere((DeeTypeObject *)tp_self, Dee_AsObject(self), &length))
 			goto err;
 	}
 	return DeeInt_NewUInt64(length);

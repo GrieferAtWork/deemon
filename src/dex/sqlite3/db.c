@@ -727,13 +727,13 @@ again_open:
 	sf_hook->dsfh_hook.sfh_refcnt  = 1;
 	sf_hook->dsfh_hook.sfh_destroy = &db_string_fini_hook_destroy;
 	sf_hook->dsfh_hook.sfh_onfini  = &db_string_fini_hook_onfini;
-	Dee_weakref_init(&sf_hook->dsfh_db, (DeeObject *)self, NULL);
+	Dee_weakref_init(&sf_hook->dsfh_db, Dee_AsObject(self), NULL);
 
 	/* Initialize thread interrupt hooks. */
 	ti_hook->dtih_hook.tih_refcnt  = 1;
 	ti_hook->dtih_hook.tih_destroy = &db_thread_interrupt_hook_destroy;
 	ti_hook->dtih_hook.tih_onwake  = &db_thread_interrupt_hook_onwake;
-	Dee_weakref_init(&ti_hook->dtih_db, (DeeObject *)self, NULL);
+	Dee_weakref_init(&ti_hook->dtih_db, Dee_AsObject(self), NULL);
 
 	/* Register string finalization hooks. */
 	if unlikely(DeeString_AddFiniHook(&self->db_sf_hook->dsfh_hook))

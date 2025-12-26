@@ -894,7 +894,7 @@ root_scope_fini(DeeRootScopeObject *__restrict self) {
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 root_scope_str(DeeRootScopeObject *__restrict self) {
-	return_reference_((DeeObject *)self->rs_module->mo_name);
+	return_reference(self->rs_module->mo_name);
 }
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
@@ -1049,7 +1049,7 @@ basescope_push_ob(DeeBaseScopeObject *__restrict scope) {
 	ASSERT(scope->bs_scope.s_prev == current_scope);
 	ASSERT(scope->bs_scope.s_class == (current_scope ? current_scope->s_class : NULL));
 	ASSERT(scope->bs_prev == current_basescope);
-	Dee_Incref((DeeObject *)scope);
+	Dee_Incref(&scope->bs_scope);
 	Dee_Decref(current_scope);
 	current_scope     = (DREF DeeScopeObject *)scope;
 	current_basescope = scope;
@@ -1087,7 +1087,7 @@ INTERN void DCALL basescope_pop(void) {
 	current_scope     = pop_scope->bs_scope.s_prev;
 	current_basescope = pop_scope->bs_prev;
 	Dee_Incref(current_scope);
-	Dee_Decref((DeeObject *)pop_scope); /* Drop the reference previously stored in `current_scope' */
+	Dee_Decref(&pop_scope->bs_scope); /* Drop the reference previously stored in `current_scope' */
 }
 
 

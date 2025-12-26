@@ -206,7 +206,7 @@ parser_throw(struct compiler_error_object *__restrict error) {
 	 *               possible that no compiler is currently active, in
 	 *               which case we need to do this ourself! */
 	if (!DeeCompiler_Current) {
-		int mode = DeeFile_PrintObjectNl(DeeFile_DefaultStddbg, (DeeObject *)error);
+		int mode = DeeFile_PrintObjectNl(DeeFile_DefaultStddbg, Dee_AsObject(error));
 		if unlikely(mode < 0)
 			goto err;
 	} else {
@@ -377,7 +377,7 @@ handle_master:
 
 		/* Weakly reference the master error in all child errors. */
 		for (i = 0; i < count; ++i)
-			Dee_weakref_set(&current_parser_errors.pe_errorv[i]->ce_master, (DeeObject *)master);
+			Dee_weakref_set(&current_parser_errors.pe_errorv[i]->ce_master, Dee_AsObject(master));
 		master->ce_errorc = current_parser_errors.pe_errorc;
 		master->ce_errorv = current_parser_errors.pe_errorv; /* Inherit */
 
@@ -391,7 +391,7 @@ handle_master:
 		 *      `master' variable. */
 
 		/* With the master fully initialized, throw it. */
-		DeeError_ThrowInherited((DeeObject *)master);
+		DeeError_ThrowInherited(master);
 		goto err;
 	}
 	if (must_fail) {
@@ -429,8 +429,7 @@ err_handle_all_but_last:
 				Dee_Decref(iter->ef_trace);
 			restore_interrupt_error(caller, iter);
 		} else {
-			DeeError_Display(NULL, iter->ef_error,
-			                 (DeeObject *)except_frame_gettb(iter));
+			DeeError_Display(NULL, iter->ef_error, Dee_AsObject(except_frame_gettb(iter)));
 			if (ITER_ISOK(iter->ef_trace))
 				Dee_Decref(iter->ef_trace);
 			Dee_Decref(iter->ef_error);

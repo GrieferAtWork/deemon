@@ -1637,8 +1637,8 @@ no_dec_file:
 	/* Try to open the .dee file so we can compile it. */
 	source_stream = DeeFile_OpenString(abs_filename, OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 	if (!ITER_ISOK(source_stream)) {
-		ASSERT(source_stream == (DeeObject *)DeeModule_IMPORT_ERROR ||
-		       source_stream == (DeeObject *)DeeModule_IMPORT_ENOENT);
+		ASSERT(source_stream == DeeModule_IMPORT_ERROR ||
+		       source_stream == DeeModule_IMPORT_ENOENT);
 		if unlikely(source_stream && !(flags & DeeModule_IMPORT_F_ENOENT)) {
 			err_file_not_found_string(abs_filename);
 			source_stream = DeeModule_IMPORT_ERROR;
@@ -2200,7 +2200,7 @@ do_DeeModule_OpenFile(/*utf-8*/ char const *__restrict filename, size_t filename
 		/* Don't need "context_absname" -- just need to normalize "filename" */
 use_absolute_filename:
 		if (filename_ob) {
-			filename_ob = (DeeStringObject *)DeeSystem_MakeNormalAndAbsolute((DeeObject *)filename_ob);
+			filename_ob = (DeeStringObject *)DeeSystem_MakeNormalAndAbsolute(Dee_AsObject(filename_ob));
 		} else {
 			DREF DeeObject *raw_filename;
 			raw_filename = DeeString_NewUtf8(filename, filename_size, STRING_ERROR_FSTRICT);
@@ -2211,7 +2211,7 @@ use_absolute_filename:
 		}
 		if unlikely(!filename_ob)
 			goto err;
-		filename = DeeString_AsUtf8((DeeObject *)filename_ob);
+		filename = DeeString_AsUtf8(Dee_AsObject(filename_ob));
 		if unlikely(!filename)
 			goto err_filename_ob;
 		result = DeeModule_OpenFile_impl2((char *)filename, WSTR_LENGTH(filename),
@@ -2239,7 +2239,7 @@ use_absolute_filename:
 		context_absname_ob = NULL;
 	} else {
 		if (context_absname_ob && (flags & DeeModule_IMPORT_F_CTXDIR)) {
-			context_absname_ob = (DeeStringObject *)DeeSystem_MakeNormalAndAbsolute((DeeObject *)context_absname_ob);
+			context_absname_ob = (DeeStringObject *)DeeSystem_MakeNormalAndAbsolute(Dee_AsObject(context_absname_ob));
 		} else {
 			DREF DeeObject *raw_context_absname;
 			raw_context_absname = DeeString_NewUtf8(context_absname, context_absname_size, STRING_ERROR_FSTRICT);
@@ -2250,7 +2250,7 @@ use_absolute_filename:
 		}
 		if unlikely(!context_absname_ob)
 			goto err;
-		context_absname = DeeString_AsUtf8((DeeObject *)context_absname_ob);
+		context_absname = DeeString_AsUtf8(Dee_AsObject(context_absname_ob));
 		if unlikely(!context_absname)
 			goto err_context_absname_ob;
 		context_absname_size = WSTR_LENGTH(context_absname);
@@ -2325,7 +2325,7 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 		pathname_ob = NULL;
 	} else {
 		if (pathname_ob && (flags & DeeModule_IMPORT_F_CTXDIR)) {
-			pathname_ob = (DeeStringObject *)DeeSystem_MakeNormalAndAbsolute((DeeObject *)pathname_ob);
+			pathname_ob = (DeeStringObject *)DeeSystem_MakeNormalAndAbsolute(Dee_AsObject(pathname_ob));
 		} else {
 			DREF DeeObject *raw_pathname;
 			raw_pathname = DeeString_NewUtf8(pathname, pathname_size, STRING_ERROR_FSTRICT);
@@ -2336,7 +2336,7 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 		}
 		if unlikely(!pathname_ob)
 			goto err;
-		pathname = DeeString_AsUtf8((DeeObject *)pathname_ob);
+		pathname = DeeString_AsUtf8(Dee_AsObject(pathname_ob));
 		if unlikely(!pathname)
 			goto err_pathname_ob;
 		pathname_size = WSTR_LENGTH(pathname);
@@ -2492,7 +2492,7 @@ do_DeeModule_OpenGlobal_impl(/*utf-8*/ char const *__restrict import_str, size_t
 		bool must_be_directory;
 		ASSERT(i < DeeTuple_SIZE(libpath));
 		path = (DeeStringObject *)DeeTuple_GET(libpath, i);
-		path_utf8 = DeeString_AsUtf8((DeeObject *)path);
+		path_utf8 = DeeString_AsUtf8(Dee_AsObject(path));
 		if unlikely(!path_utf8)
 			goto err;
 		used_flags = flags | DeeModule_IMPORT_F_ENOENT;
@@ -2731,9 +2731,9 @@ DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_
                  /*utf-8*/ char const *context_absname, size_t context_absname_size,
                  unsigned int flags, struct Dee_compiler_options *options) {
 	ASSERTF(!(flags & _DeeModule_IMPORT_F_MASK), "Internal flags may not be set by API");
-	return (DREF DeeObject *)do_DeeModule_OpenEx(import_str, import_str_size, NULL,
-	                                             context_absname, context_absname_size, NULL,
-	                                             flags, options);
+	return Dee_AsObject(do_DeeModule_OpenEx(import_str, import_str_size, NULL,
+	                                        context_absname, context_absname_size, NULL,
+	                                        flags, options));
 }
 
 /* Open a child of a specific module:
@@ -2878,9 +2878,9 @@ no_context:
 		DeeObject_TypeAssertFailed3(context_absname, &DeeModule_Type, &DeeString_Type, &DeeType_Type);
 		goto err;
 	}
-	return (DREF DeeObject *)do_DeeModule_OpenEx(import_str, import_str_size, import_str_ob,
-	                                             context_absname_utf8, context_absname_size,
-	                                             context_absname_ob, flags, NULL);
+	return Dee_AsObject(do_DeeModule_OpenEx(import_str, import_str_size, import_str_ob,
+	                                        context_absname_utf8, context_absname_size,
+	                                        context_absname_ob, flags, NULL));
 err:
 	return DeeModule_IMPORT_ERROR;
 }
@@ -3178,7 +3178,7 @@ DeeModule_GetFileName(/*Module*/ DeeObject *__restrict self) {
 	dst = DeeString_GetBuffer(result);
 	dst = (char *)mempcpyc(dst, absname, abslen, sizeof(char));
 	memcpyc(dst, extension, extension_len, sizeof(char));
-	return DeeString_SetUtf8((DREF DeeObject *)result, STRING_ERROR_FIGNORE);
+	return DeeString_SetUtf8(Dee_AsObject(result), STRING_ERROR_FIGNORE);
 err:
 	return NULL;
 }
@@ -3411,7 +3411,7 @@ do_DeeModule_PrintRelNameEx(DeeModuleObject *__restrict self,
                             unsigned int flags) {
 	if (flags & DeeModule_RELNAME_F_LIBNAM) {
 		DREF /*String*/ DeeObject *result;
-		result = DeeModule_GetLibName((DeeObject *)self, 0);
+		result = DeeModule_GetLibName(Dee_AsObject(self), 0);
 		if (result != ITER_DONE) {
 			Dee_ssize_t status;
 			status = DeeString_PrintUtf8(result, printer, arg);
@@ -3436,7 +3436,7 @@ do_DeeModule_GetRelNameEx(DeeModuleObject *__restrict self,
 	struct unicode_printer printer;
 	if (flags & DeeModule_RELNAME_F_LIBNAM) {
 		DREF /*String*/ DeeObject *result;
-		result = DeeModule_GetLibName((DeeObject *)self, 0);
+		result = DeeModule_GetLibName(Dee_AsObject(self), 0);
 		if (result != ITER_DONE)
 			return result;
 	}
@@ -3672,7 +3672,7 @@ module_try_add_missing_libnames_or_unlock(DeeModuleObject *__restrict self,
 	for (i = 0; i < DeeTuple_SIZE(libpath); ++i) {
 		int status;
 		DeeStringObject *path = (DeeStringObject *)DeeTuple_GET(libpath, i);
-		char const *utf8 = DeeString_AsUtf8((DeeObject *)path);
+		char const *utf8 = DeeString_AsUtf8(Dee_AsObject(path));
 		ASSERTF(utf8, "Should have been pre-loaded by caller");
 		status = module_try_add_missing_libname_or_unlock(self, utf8);
 		if (status != MODULE_TRY_ADD_MISSING_LIBNAMES_OR_UNLOCK__OK)
@@ -4063,7 +4063,7 @@ DeeModule_LoadSourceStreamEx(DeeModuleObject *__restrict self,
 		compiler_flags = options->co_compiler;
 
 	/* Create a new compiler for the module. */
-	compiler = DeeCompiler_New((DeeObject *)self, compiler_flags);
+	compiler = DeeCompiler_New(Dee_AsObject(self), compiler_flags);
 	if unlikely(!compiler)
 		goto err;
 
@@ -4508,7 +4508,7 @@ add_glob_module(DeeModuleObject *__restrict self) {
 		return false;
 	ASSERT(modules_glob_a != 0);
 	/* Insert the module into the table. */
-	hash   = fs_hashobj((DeeObject *)self->mo_name);
+	hash   = fs_hashobj(Dee_AsObject(self->mo_name));
 	bucket = &modules_glob_v[hash % modules_glob_a];
 	LIST_INSERT_HEAD(bucket, self, mo_globlink);
 	++modules_glob_c;
@@ -5043,7 +5043,7 @@ DeeModule_New(/*String*/ DeeObject *__restrict name) {
 	Dee_atomic_rwlock_cinit(&result->mo_lock);
 	Dee_Incref(name);
 	weakref_support_init(result);
-	return DeeGC_Track((DREF DeeObject *)result);
+	return DeeGC_Track(Dee_AsObject(result));
 err:
 	return NULL;
 }
@@ -5862,11 +5862,10 @@ err_printer:
 		unicode_printer_fini(&printer);
 		goto err;
 	}
-	return (DREF DeeObject *)DeeModule_SubOpenInPathAbs(module_path, module_pathsize,
-	                                                    module_name, module_namesize,
-	                                                    module_global_name,
-	                                                    options,
-	                                                    mode);
+	return Dee_AsObject(DeeModule_SubOpenInPathAbs(module_path, module_pathsize,
+	                                               module_name, module_namesize,
+	                                               module_global_name,
+	                                               options, mode));
 err:
 	return NULL;
 }
@@ -6303,14 +6302,14 @@ DeeModule_OpenRelativeString(/*utf-8*/ char const *__restrict module_name, size_
 	/* Shouldn't happen: Not actually a relative module name. */
 	if (!module_namesize || *module_name != '.')
 		return DeeModule_OpenGlobalString(module_name, module_namesize, options, throw_error);
-	return (DREF DeeObject *)DeeModule_OpenInPath(module_pathname,
-	                                              module_pathsize,
-	                                              module_name,
-	                                              module_namesize,
-	                                              NULL,
-	                                              options,
-	                                              throw_error ? (Dee_MODULE_OPENINPATH_FRELMODULE | Dee_MODULE_OPENINPATH_FTHROWERROR)
-	                                                          : (Dee_MODULE_OPENINPATH_FRELMODULE));
+	return Dee_AsObject(DeeModule_OpenInPath(module_pathname,
+	                                         module_pathsize,
+	                                         module_name,
+	                                         module_namesize,
+	                                         NULL,
+	                                         options,
+	                                         throw_error ? (Dee_MODULE_OPENINPATH_FRELMODULE | Dee_MODULE_OPENINPATH_FTHROWERROR)
+	                                                     : (Dee_MODULE_OPENINPATH_FRELMODULE)));
 }
 
 /* Import a module, with relative module paths being imported in relation to `basemodule'
@@ -6328,7 +6327,7 @@ DeeModule_ImportRel(/*Module*/ DeeObject *__restrict basemodule,
 		result = DeeModule_OpenGlobal(module_name, NULL, true);
 	} else {
 		ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
-		begin = DeeString_AsUtf8((DeeObject *)path);
+		begin = DeeString_AsUtf8(Dee_AsObject(path));
 		if unlikely(!begin)
 			goto err;
 		end = begin + WSTR_LENGTH(begin);
@@ -6368,7 +6367,7 @@ DeeModule_ImportRelString(/*Module*/ DeeObject *__restrict basemodule,
 		result = DeeModule_OpenGlobalString(module_name, module_namesize, NULL, true);
 	} else {
 		ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
-		begin = DeeString_AsUtf8((DeeObject *)path);
+		begin = DeeString_AsUtf8(Dee_AsObject(path));
 		if unlikely(!begin)
 			goto err;
 		end = begin + WSTR_LENGTH(begin);
@@ -6600,7 +6599,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 	Dee_atomic_rwlock_cinit(&result->mo_lock);
 	DeeObject_Init(result, &DeeModule_Type);
 	weakref_support_init(result);
-	result = (DREF DeeModuleObject *)DeeGC_Track((DREF DeeObject *)result);
+	result = DeeGC_TRACK(DeeModuleObject, result);
 	result->mo_flags = Dee_MODULE_FLOADING;
 #ifndef CONFIG_NO_THREADS
 	result->mo_loader = DeeThread_Self();
@@ -7732,7 +7731,7 @@ again:
 	result = Dee_atomic_ref_xget(&deemon_path);
 	if (result == NULL) {
 		/* Lazily generate+cache default path */
-		result = (DREF DeeObject *)DeeModule_NewDefaultPath();
+		result = Dee_AsObject(DeeModule_NewDefaultPath());
 		if (result) {
 			Dee_Incref(result);
 			if (!Dee_atomic_ref_xcmpxch_inherited(&deemon_path, NULL, result)) {

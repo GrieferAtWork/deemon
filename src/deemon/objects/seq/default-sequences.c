@@ -557,7 +557,7 @@ ds_sgi_getitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, s
 		goto err_obb;
 	return (*self->dssgi_tp_getitem_index)(self->dssgi_seq, used_index);
 err_obb:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, ds_sgi_size(self));
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, ds_sgi_size(self));
 	return NULL;
 }
 
@@ -574,7 +574,7 @@ ds_sgif_getitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, 
 		DeeRT_ErrUnboundIndex(self->dssgi_seq, used_index);
 	return result;
 err_obb:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, ds_sgif_size(self));
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, ds_sgif_size(self));
 	return NULL;
 }
 
@@ -593,7 +593,7 @@ ds_stgi_getitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, 
 	}
 	return result;
 err_obb:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, ds_stgi_size(self));
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, ds_stgi_size(self));
 	return NULL;
 }
 
@@ -655,7 +655,7 @@ ds_sgi_delitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, s
 		goto err_obb;
 	return DeeObject_InvokeMethodHint(seq_operator_delitem_index, self->dssgi_seq, used_index);
 err_obb:
-	return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, ds_sgi_size(self));
+	return DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, ds_sgi_size(self));
 }
 
 #define ds_sgif_setitem_index ds_sgi_setitem_index
@@ -670,7 +670,7 @@ ds_sgi_setitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
 		goto err_obb;
 	return DeeObject_InvokeMethodHint(seq_operator_setitem_index, self->dssgi_seq, used_index, value);
 err_obb:
-	return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, ds_sgi_size(self));
+	return DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, ds_sgi_size(self));
 }
 
 
@@ -1290,7 +1290,7 @@ ds_sg_iter(DefaultSequence_WithSizeObAndGetItem *__restrict self) {
 	result->disg_end        = self->dssg_end;
 	Dee_atomic_lock_init(&result->disg_lock);
 	DeeObject_Init(result, &DefaultIterator_WithSizeObAndGetItem_Type);
-	return (DREF DefaultIterator_WithSizeObAndGetItem *)DeeGC_Track((DREF DeeObject *)result);
+	return DeeGC_TRACK(DefaultIterator_WithSizeObAndGetItem, result);
 err:
 	return NULL;
 }
@@ -1972,7 +1972,7 @@ ds_i_getrange_index(DefaultSequence_WithIter *self, Dee_ssize_t start, Dee_ssize
 		range.sr_start = (size_t)start;
 		range.sr_end   = (size_t)end;
 	} else {
-		size_t size = ds_i_size((DeeObject *)self);
+		size_t size = ds_i_size(Dee_AsObject(self));
 		if unlikely(size == (size_t)-1)
 			goto err;
 		DeeSeqRange_Clamp(&range, start, end, size);
@@ -2002,7 +2002,7 @@ ds_i_getrange_index_n(DefaultSequence_WithIter *self, Dee_ssize_t start) {
 	if (start >= 0) {
 		used_start = (size_t)start;
 	} else {
-		size_t size = ds_i_size((DeeObject *)self);
+		size_t size = ds_i_size(Dee_AsObject(self));
 		if unlikely(size == (size_t)-1)
 			goto err;
 		used_start = DeeSeqRange_Clamp_n(start, size);
@@ -2103,14 +2103,14 @@ ds_ial_getitem_index(DefaultSequence_WithIterAndLimit *__restrict self, size_t i
 			goto err_iter;
 		if (OVERFLOW_USUB(iter_status, self->dsial_start, &iter_status))
 			iter_status = 0;
-		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, abs_index, iter_status);
+		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), abs_index, iter_status);
 		goto err_iter;
 	}
 	result = DeeObject_IterNext(iter);
 	Dee_Decref(iter);
 	if unlikely(result == ITER_DONE) {
 		ASSERT(index == (abs_index - self->dsial_start));
-		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, index);
+		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, index);
 		goto err;
 	}
 	return result;
@@ -2122,7 +2122,7 @@ err_overflow:
 	DeeRT_ErrIntegerOverflowUAdd(index, self->dsial_start);
 	goto err;
 err_obb:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->dsial_limit);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->dsial_limit);
 	goto err;
 }
 

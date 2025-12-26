@@ -502,7 +502,7 @@ PRIVATE WUNUSED int DCALL hostasm_loadapi(void) {
 		goto not_available;
 	}
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	mod_hostasm = DeeModule_OpenGlobal((DeeObject *)&str__hostasm, NULL, false);
+	mod_hostasm = DeeModule_OpenGlobal(Dee_AsObject(&str__hostasm), NULL, false);
 	if unlikely(!ITER_ISOK(mod_hostasm)) {
 		if unlikely(mod_hostasm == NULL)
 			goto err;
@@ -1287,13 +1287,13 @@ code_visit(DeeCodeObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_kwds(DeeCodeObject *__restrict self) {
 	if likely(self->co_keywords) {
-		return DeeRefVector_NewReadonly((DeeObject *)self,
+		return DeeRefVector_NewReadonly(Dee_AsObject(self),
 		                                (size_t)self->co_argc_max,
 		                                (DeeObject *const *)self->co_keywords);
 	}
 	if (self->co_argc_max == 0)
 		return DeeSeq_NewEmpty();
-	return DeeRT_ErrUnboundAttr((DeeObject *)self, (DeeObject *)&str___kwds__);
+	return DeeRT_ErrUnboundAttr(self, &str___kwds__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1304,7 +1304,7 @@ code_bound_kwds(DeeCodeObject *__restrict self) {
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_getdefaults(DeeCodeObject *__restrict self) {
 	ASSERT(self->co_argc_min <= self->co_argc_max);
-	return DeeRefVector_NewReadonly((DeeObject *)self,
+	return DeeRefVector_NewReadonly(Dee_AsObject(self),
 	                                (size_t)(self->co_argc_max - self->co_argc_min),
 	                                self->co_defaultv);
 }
@@ -1312,7 +1312,7 @@ code_getdefaults(DeeCodeObject *__restrict self) {
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_getconstants(DeeCodeObject *__restrict self) {
 	ASSERT(self->co_argc_min <= self->co_argc_max);
-	return DeeRefVector_NewReadonly((DeeObject *)self,
+	return DeeRefVector_NewReadonly(Dee_AsObject(self),
 	                                self->co_constc,
 	                                self->co_constv);
 }
@@ -1327,13 +1327,13 @@ code_get_nstatic(DeeCodeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_name(DeeCodeObject *__restrict self) {
 	struct function_info info;
-	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_doc);
 	if likely(info.fi_name)
-		return (DREF DeeObject *)info.fi_name;
-	DeeRT_ErrUnboundAttr((DeeObject *)self, (DeeObject *)&str___name__);
+		return Dee_AsObject(info.fi_name);
+	DeeRT_ErrUnboundAttr(self, &str___name__);
 err:
 	return NULL;
 }
@@ -1341,7 +1341,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 code_bound_name(DeeCodeObject *__restrict self) {
 	struct function_info info;
-	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
@@ -1354,12 +1354,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_doc(DeeCodeObject *__restrict self) {
 	struct function_info info;
-	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
 	if likely(info.fi_doc)
-		return (DREF DeeObject *)info.fi_doc;
+		return Dee_AsObject(info.fi_doc);
 	return_none;
 err:
 	return NULL;
@@ -1368,13 +1368,13 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 code_get_type(DeeCodeObject *__restrict self) {
 	struct function_info info;
-	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
 	if likely(info.fi_type)
 		return info.fi_type;
-	DeeRT_ErrUnboundAttr((DeeObject *)self, (DeeObject *)&str___type__);
+	DeeRT_ErrUnboundAttr(self, &str___type__);
 err:
 	return NULL;
 }
@@ -1382,7 +1382,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 code_bound_type(DeeCodeObject *__restrict self) {
 	struct function_info info;
-	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
@@ -1395,14 +1395,14 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_operator(DeeCodeObject *__restrict self) {
 	struct function_info info;
-	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
 	if (info.fi_opname != (Dee_operator_t)-1)
 		return DeeInt_NewUInt16(info.fi_opname);
-	DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__operator__");
+	DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__operator__");
 err:
 	return NULL;
 }
@@ -1410,7 +1410,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 code_bound_operator(DeeCodeObject *__restrict self) {
 	struct function_info info;
-	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
@@ -1424,7 +1424,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_operatorname(DeeCodeObject *__restrict self) {
 	struct function_info info;
 	struct opinfo const *op;
-	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
@@ -1438,7 +1438,7 @@ code_get_operatorname(DeeCodeObject *__restrict self) {
 		return DeeString_New(op->oi_sname);
 	}
 	Dee_XDecref(info.fi_type);
-	DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__operatorname__");
+	DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__operatorname__");
 err:
 	return NULL;
 }
@@ -1446,14 +1446,14 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_property(DeeCodeObject *__restrict self) {
 	struct function_info info;
-	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
 	Dee_XDecref(info.fi_type);
 	if (info.fi_getset != (uint16_t)-1)
 		return DeeInt_NewUInt16(info.fi_getset);
-	DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__property__");
+	DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__property__");
 err:
 	return NULL;
 }
@@ -1461,7 +1461,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 code_bound_property(DeeCodeObject *__restrict self) {
 	struct function_info info;
-	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
@@ -1767,8 +1767,8 @@ code_compare_eq_impl(DeeCodeObject *self, DeeCodeObject *other) {
 	}
 	if (bcmp(self->co_code, other->co_code, self->co_codebytes) != 0)
 		goto nope;
-	return DeeObject_TryCompareEq((DeeObject *)self->co_ddi,
-	                              (DeeObject *)other->co_ddi);
+	return DeeObject_TryCompareEq(Dee_AsObject(self->co_ddi),
+	                              Dee_AsObject(other->co_ddi));
 nope:
 	return Dee_COMPARE_NE;
 }
@@ -2543,7 +2543,7 @@ code_printrepr(DeeCodeObject *__restrict self,
 		for (i = 0; i < self->co_argc_max; ++i) {
 			if (i != 0)
 				DO(DeeFormat_PRINT(printer, arg, ", "));
-			DO(DeeString_PrintUtf8((DeeObject *)self->co_keywords[i], printer, arg));
+			DO(DeeString_PrintUtf8(Dee_AsObject(self->co_keywords[i]), printer, arg));
 		}
 		DO(DeeFormat_PRINT(printer, arg, " }"));
 	}

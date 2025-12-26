@@ -478,7 +478,7 @@ do_string:
 	case '(': {
 		size_t i, num_args;
 		num_args = count_pack_args(format);
-		result   = (DREF DeeObject *)DeeTuple_NewUninitialized(num_args);
+		result   = Dee_AsObject(DeeTuple_NewUninitialized(num_args));
 		if unlikely(!result)
 			break;
 		for (i = 0; i < num_args; ++i) {

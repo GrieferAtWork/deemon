@@ -336,7 +336,7 @@ stype_dofunc(DeeSTypeObject *self, size_t argc,
 	}
 
 	/* Lookup the associated C-function type while inheriting the argument vector. */
-	return (DREF DeeObject *)DeeSType_CFunction(self, cc, argc, argv_types, true);
+	return DeeCFunctionType_AsObject(DeeSType_CFunction(self, cc, argc, argv_types, true));
 err_argv:
 	Dee_Free(argv_types);
 err:
@@ -506,9 +506,9 @@ stype_call(DeeSTypeObject *self, size_t argc, DeeObject *const *argv) {
 		argc = 0;
 
 	/* Use the default calling convention for constructing this function type. */
-	return (DREF DeeObject *)DeeSType_CFunction(self, CC_DEFAULT, argc,
-	                                            (DeeSTypeObject **)argv,
-	                                            false);
+	return DeeCFunctionType_AsObject(DeeSType_CFunction(self, CC_DEFAULT, argc,
+	                                                    (DeeSTypeObject **)argv,
+	                                                    false));
 create_inst:
 	/* Construct a new instance. */
 	return DeeObject_New(DeeSType_AsType(self), argc, argv);
@@ -860,7 +860,7 @@ pointertype_new(DeeSTypeObject *__restrict self) {
 
 	/* Finish the pointer type. */
 	DeeObject_Init(DeePointerType_AsType(result), &DeePointerType_Type);
-	return DeeType_AsPointerType((DeeTypeObject *)DeeGC_Track(DeePointerType_AsObject(result)));
+	return DeeType_AsPointerType(DeeGC_TRACK(DeeTypeObject, DeePointerType_AsType(result)));
 err_r:
 	DeeGCObject_FREE(result);
 err:
@@ -903,7 +903,7 @@ lvaluetype_new(DeeSTypeObject *__restrict self) {
 
 	/* Finish the lvalue type. */
 	DeeObject_Init(DeeLValueType_AsType(result), &DeeLValueType_Type);
-	return DeeType_AsLValueType((DeeTypeObject *)DeeGC_Track(DeeLValueType_AsObject(result)));
+	return DeeType_AsLValueType(DeeGC_TRACK(DeeTypeObject, DeeLValueType_AsType(result)));
 err_r:
 	DeeGCObject_FREE(result);
 err:

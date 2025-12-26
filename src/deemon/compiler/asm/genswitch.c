@@ -352,14 +352,14 @@ err_jump_table_builder:
 		 * >>    unpack   pop, #2                         // target.PC, target.SP
 		 * >>    jmp      pop, #pop                       // ... */
 		jump_table = Dee_rodict_builder_pack(&jump_table_builder);
-		if (asm_allowconst((DeeObject *)jump_table)) {
+		if (asm_allowconst(Dee_AsObject(jump_table))) {
 			jumptable_cid = asm_newconst_inherited(jump_table);
 			if unlikely(jumptable_cid < 0)
 				goto err;
 			if (asm_gpush_const((uint16_t)jumptable_cid))
 				goto err;
 		} else {
-			if (asm_gpush_constexpr_inherited((DeeObject *)jump_table))
+			if (asm_gpush_constexpr_inherited(jump_table))
 				goto err;
 		}
 		if (!has_expression) {

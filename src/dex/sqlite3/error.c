@@ -440,7 +440,7 @@ handle_nomem:
 		error->sqe_sqloffutf8 = erroffs;
 		error->sqe_ecode      = errcode;
 		/* Throw SQL error */
-		result = DeeError_ThrowInherited((DREF DeeObject *)error);
+		result = DeeError_ThrowInherited(&error->sqe_system);
 	} else if (erroffs >= 0) {
 		result = DeeError_Throwf(type, "SQL error %d: %K [at offset %d in %r]",
 		                         errcode, errmsg_ob, erroffs, sql);

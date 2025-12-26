@@ -4483,7 +4483,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_tostr_impl(DeeIntObject *__restrict self, uint32_t flags, size_t precision) {
 #ifdef DeeInt_Print_USES_UNICODE
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if unlikely(DeeInt_Print((DeeObject *)self, flags, precision,
+	if unlikely(DeeInt_Print(Dee_AsObject(self), flags, precision,
 	                         &unicode_printer_print,
 	                         &printer) < 0)
 		goto err_printer;
@@ -4493,7 +4493,7 @@ err_printer:
 	return NULL;
 #else /* DeeInt_Print_USES_UNICODE */
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	if unlikely(DeeInt_Print((DeeObject *)self, flags, precision,
+	if unlikely(DeeInt_Print(Dee_AsObject(self), flags, precision,
 	                         &ascii_printer_print,
 	                         &printer) < 0)
 		goto err_printer;
@@ -4511,7 +4511,7 @@ int_str(DeeIntObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 int_print(DeeIntObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
-	return DeeInt_Print((DeeObject *)self, DEEINT_PRINT_DEC, 0, printer, arg);
+	return DeeInt_Print(Dee_AsObject(self), DEEINT_PRINT_DEC, 0, printer, arg);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -4672,7 +4672,7 @@ not_a_limit_int:
 	}
 	return result;
 err_underflow:
-	DeeRT_ErrIntegerOverflowEx((DeeObject *)self, 0,
+	DeeRT_ErrIntegerOverflowEx(Dee_AsObject(self), 0,
 	                           DeeRT_ErrIntegerOverflowEx_F_NEGATIVE |
 	                           DeeRT_ErrIntegerOverflowEx_F_UNSIGNED);
 	return (size_t)-1;
@@ -4735,7 +4735,7 @@ int_tobytes(DeeIntObject *self, size_t argc,
 	result = DeeBytes_NewBufferUninitialized(args.length);
 	if unlikely(!result)
 		goto err;
-	if (DeeInt_AsBytes((DeeObject *)self,
+	if (DeeInt_AsBytes(Dee_AsObject(self),
 	                   DeeBytes_DATA(result),
 	                   args.length,
 	                   encode_little,
@@ -4890,8 +4890,8 @@ int_divmod_f(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err_divrem;
-	DeeTuple_SET(result, 0, (DREF DeeObject *)div); /* Inherit reference */
-	DeeTuple_SET(result, 1, (DREF DeeObject *)rem); /* Inherit reference */
+	DeeTuple_SET(result, 0, div); /* Inherit reference */
+	DeeTuple_SET(result, 1, rem); /* Inherit reference */
 	return result;
 err_divrem:
 	Dee_Decref_likely(div);
@@ -5308,7 +5308,7 @@ int_get_bitmask(DeeIntObject *__restrict self) {
 	shift_t last_digit_bits;
 	size_t n_bits, n_digits;
 	DREF DeeIntObject *result;
-	if unlikely(DeeInt_AsSize((DeeObject *)self, &n_bits))
+	if unlikely(DeeInt_AsSize(Dee_AsObject(self), &n_bits))
 		goto err;
 	if unlikely(!n_bits)
 		return (DeeIntObject *)DeeInt_NewZero();
@@ -5342,7 +5342,7 @@ int_get_nth(DeeIntObject *__restrict self) {
 	uint32_t lastchar;
 	struct unicode_printer printer;
 	unicode_printer_init(&printer);
-	if unlikely(DeeInt_Print((DeeObject *)self, DEEINT_PRINT_DEC,
+	if unlikely(DeeInt_Print(Dee_AsObject(self), DEEINT_PRINT_DEC,
 	                         0, &unicode_printer_print, &printer) < 0)
 		goto err_printer;
 	ASSERT(UNICODE_PRINTER_LENGTH(&printer) >= 1);
@@ -5358,7 +5358,7 @@ err_printer:
 	unsigned char lastchar;
 	struct ascii_printer printer;
 	ascii_printer_init(&printer);
-	if unlikely(DeeInt_Print((DeeObject *)self, DEEINT_PRINT_DEC,
+	if unlikely(DeeInt_Print(Dee_AsObject(self), DEEINT_PRINT_DEC,
 	                         0, &ascii_printer_print, &printer) < 0)
 		goto err_printer;
 	ASSERT(ASCII_PRINTER_LEN(&printer) >= 1);

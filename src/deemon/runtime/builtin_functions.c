@@ -290,15 +290,15 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions___imp
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
-	return DeeModule_Import((DeeObject *)name, base, DeeModule_IMPORT_F_NORMAL);
+	return DeeModule_Import(Dee_AsObject(name), base, DeeModule_IMPORT_F_NORMAL);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	DREF DeeObject *result;
 	if (DeeObject_AssertType(base, &DeeModule_Type))
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
-	result = DeeModule_ImportRel((DeeObject *)base,
-	                             (DeeObject *)name);
+	result = DeeModule_ImportRel(Dee_AsObject(base),
+	                             Dee_AsObject(name));
 	return result;
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 err:

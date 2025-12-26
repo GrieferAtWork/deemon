@@ -25,36 +25,36 @@
 #define OBJ_posix_STDIN_FILENO DeeInt_ForSmallInt(STDIN_FILENO)
 #elif STDIN_FILENO >= 0
 #if STDIN_FILENO <= 0x7fffull /* 15-bit */
-#define OBJ_posix_STDIN_FILENO ((DeeObject *)&posix_STDIN_FILENO)
+#define OBJ_posix_STDIN_FILENO &posix_STDIN_FILENO
 PRIVATE DEFINE_UINT15(posix_STDIN_FILENO, STDIN_FILENO);
 #elif STDIN_FILENO <= 0x3fffffffull /* 30-bit */
-#define OBJ_posix_STDIN_FILENO ((DeeObject *)&posix_STDIN_FILENO)
+#define OBJ_posix_STDIN_FILENO &posix_STDIN_FILENO
 PRIVATE DEFINE_UINT30(posix_STDIN_FILENO, STDIN_FILENO);
 #elif STDIN_FILENO <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_posix_STDIN_FILENO ((DeeObject *)&posix_STDIN_FILENO)
+#define OBJ_posix_STDIN_FILENO &posix_STDIN_FILENO
 PRIVATE DEFINE_UINT45(posix_STDIN_FILENO, STDIN_FILENO);
 #elif STDIN_FILENO <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_posix_STDIN_FILENO ((DeeObject *)&posix_STDIN_FILENO)
+#define OBJ_posix_STDIN_FILENO &posix_STDIN_FILENO
 PRIVATE DEFINE_UINT60(posix_STDIN_FILENO, STDIN_FILENO);
 #else
-#define OBJ_posix_STDIN_FILENO ((DeeObject *)&posix_STDIN_FILENO)
+#define OBJ_posix_STDIN_FILENO &posix_STDIN_FILENO
 PRIVATE DEFINE_UINT75(posix_STDIN_FILENO, STDIN_FILENO);
 #endif
 #else /* STDIN_FILENO >= 0 */
 #if STDIN_FILENO >= -0x4000ll /* 15-bit */
-#define OBJ_posix_STDIN_FILENO ((DeeObject *)&posix_STDIN_FILENO)
+#define OBJ_posix_STDIN_FILENO &posix_STDIN_FILENO
 PRIVATE DEFINE_INT15(posix_STDIN_FILENO, STDIN_FILENO);
 #elif STDIN_FILENO >= -0x20000000ll /* 30-bit */
-#define OBJ_posix_STDIN_FILENO ((DeeObject *)&posix_STDIN_FILENO)
+#define OBJ_posix_STDIN_FILENO &posix_STDIN_FILENO
 PRIVATE DEFINE_INT30(posix_STDIN_FILENO, STDIN_FILENO);
 #elif STDIN_FILENO >= -0x100000000000ll /* 45-bit */
-#define OBJ_posix_STDIN_FILENO ((DeeObject *)&posix_STDIN_FILENO)
+#define OBJ_posix_STDIN_FILENO &posix_STDIN_FILENO
 PRIVATE DEFINE_INT45(posix_STDIN_FILENO, STDIN_FILENO);
 #elif STDIN_FILENO >= -0x800000000000000ll /* 60-bit */
-#define OBJ_posix_STDIN_FILENO ((DeeObject *)&posix_STDIN_FILENO)
+#define OBJ_posix_STDIN_FILENO &posix_STDIN_FILENO
 PRIVATE DEFINE_INT60(posix_STDIN_FILENO, STDIN_FILENO);
 #else
-#define OBJ_posix_STDIN_FILENO ((DeeObject *)&posix_STDIN_FILENO)
+#define OBJ_posix_STDIN_FILENO &posix_STDIN_FILENO
 PRIVATE DEFINE_INT75(posix_STDIN_FILENO, STDIN_FILENO);
 #endif
 #endif /* STDIN_FILENO < 0 */
@@ -68,36 +68,36 @@ PRIVATE DEFINE_INT75(posix_STDIN_FILENO, STDIN_FILENO);
 #define OBJ_posix_STDOUT_FILENO DeeInt_ForSmallInt(STDOUT_FILENO)
 #elif STDOUT_FILENO >= 0
 #if STDOUT_FILENO <= 0x7fffull /* 15-bit */
-#define OBJ_posix_STDOUT_FILENO ((DeeObject *)&posix_STDOUT_FILENO)
+#define OBJ_posix_STDOUT_FILENO &posix_STDOUT_FILENO
 PRIVATE DEFINE_UINT15(posix_STDOUT_FILENO, STDOUT_FILENO);
 #elif STDOUT_FILENO <= 0x3fffffffull /* 30-bit */
-#define OBJ_posix_STDOUT_FILENO ((DeeObject *)&posix_STDOUT_FILENO)
+#define OBJ_posix_STDOUT_FILENO &posix_STDOUT_FILENO
 PRIVATE DEFINE_UINT30(posix_STDOUT_FILENO, STDOUT_FILENO);
 #elif STDOUT_FILENO <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_posix_STDOUT_FILENO ((DeeObject *)&posix_STDOUT_FILENO)
+#define OBJ_posix_STDOUT_FILENO &posix_STDOUT_FILENO
 PRIVATE DEFINE_UINT45(posix_STDOUT_FILENO, STDOUT_FILENO);
 #elif STDOUT_FILENO <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_posix_STDOUT_FILENO ((DeeObject *)&posix_STDOUT_FILENO)
+#define OBJ_posix_STDOUT_FILENO &posix_STDOUT_FILENO
 PRIVATE DEFINE_UINT60(posix_STDOUT_FILENO, STDOUT_FILENO);
 #else
-#define OBJ_posix_STDOUT_FILENO ((DeeObject *)&posix_STDOUT_FILENO)
+#define OBJ_posix_STDOUT_FILENO &posix_STDOUT_FILENO
 PRIVATE DEFINE_UINT75(posix_STDOUT_FILENO, STDOUT_FILENO);
 #endif
 #else /* STDOUT_FILENO >= 0 */
 #if STDOUT_FILENO >= -0x4000ll /* 15-bit */
-#define OBJ_posix_STDOUT_FILENO ((DeeObject *)&posix_STDOUT_FILENO)
+#define OBJ_posix_STDOUT_FILENO &posix_STDOUT_FILENO
 PRIVATE DEFINE_INT15(posix_STDOUT_FILENO, STDOUT_FILENO);
 #elif STDOUT_FILENO >= -0x20000000ll /* 30-bit */
-#define OBJ_posix_STDOUT_FILENO ((DeeObject *)&posix_STDOUT_FILENO)
+#define OBJ_posix_STDOUT_FILENO &posix_STDOUT_FILENO
 PRIVATE DEFINE_INT30(posix_STDOUT_FILENO, STDOUT_FILENO);
 #elif STDOUT_FILENO >= -0x100000000000ll /* 45-bit */
-#define OBJ_posix_STDOUT_FILENO ((DeeObject *)&posix_STDOUT_FILENO)
+#define OBJ_posix_STDOUT_FILENO &posix_STDOUT_FILENO
 PRIVATE DEFINE_INT45(posix_STDOUT_FILENO, STDOUT_FILENO);
 #elif STDOUT_FILENO >= -0x800000000000000ll /* 60-bit */
-#define OBJ_posix_STDOUT_FILENO ((DeeObject *)&posix_STDOUT_FILENO)
+#define OBJ_posix_STDOUT_FILENO &posix_STDOUT_FILENO
 PRIVATE DEFINE_INT60(posix_STDOUT_FILENO, STDOUT_FILENO);
 #else
-#define OBJ_posix_STDOUT_FILENO ((DeeObject *)&posix_STDOUT_FILENO)
+#define OBJ_posix_STDOUT_FILENO &posix_STDOUT_FILENO
 PRIVATE DEFINE_INT75(posix_STDOUT_FILENO, STDOUT_FILENO);
 #endif
 #endif /* STDOUT_FILENO < 0 */
@@ -111,36 +111,36 @@ PRIVATE DEFINE_INT75(posix_STDOUT_FILENO, STDOUT_FILENO);
 #define OBJ_posix_STDERR_FILENO DeeInt_ForSmallInt(STDERR_FILENO)
 #elif STDERR_FILENO >= 0
 #if STDERR_FILENO <= 0x7fffull /* 15-bit */
-#define OBJ_posix_STDERR_FILENO ((DeeObject *)&posix_STDERR_FILENO)
+#define OBJ_posix_STDERR_FILENO &posix_STDERR_FILENO
 PRIVATE DEFINE_UINT15(posix_STDERR_FILENO, STDERR_FILENO);
 #elif STDERR_FILENO <= 0x3fffffffull /* 30-bit */
-#define OBJ_posix_STDERR_FILENO ((DeeObject *)&posix_STDERR_FILENO)
+#define OBJ_posix_STDERR_FILENO &posix_STDERR_FILENO
 PRIVATE DEFINE_UINT30(posix_STDERR_FILENO, STDERR_FILENO);
 #elif STDERR_FILENO <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_posix_STDERR_FILENO ((DeeObject *)&posix_STDERR_FILENO)
+#define OBJ_posix_STDERR_FILENO &posix_STDERR_FILENO
 PRIVATE DEFINE_UINT45(posix_STDERR_FILENO, STDERR_FILENO);
 #elif STDERR_FILENO <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_posix_STDERR_FILENO ((DeeObject *)&posix_STDERR_FILENO)
+#define OBJ_posix_STDERR_FILENO &posix_STDERR_FILENO
 PRIVATE DEFINE_UINT60(posix_STDERR_FILENO, STDERR_FILENO);
 #else
-#define OBJ_posix_STDERR_FILENO ((DeeObject *)&posix_STDERR_FILENO)
+#define OBJ_posix_STDERR_FILENO &posix_STDERR_FILENO
 PRIVATE DEFINE_UINT75(posix_STDERR_FILENO, STDERR_FILENO);
 #endif
 #else /* STDERR_FILENO >= 0 */
 #if STDERR_FILENO >= -0x4000ll /* 15-bit */
-#define OBJ_posix_STDERR_FILENO ((DeeObject *)&posix_STDERR_FILENO)
+#define OBJ_posix_STDERR_FILENO &posix_STDERR_FILENO
 PRIVATE DEFINE_INT15(posix_STDERR_FILENO, STDERR_FILENO);
 #elif STDERR_FILENO >= -0x20000000ll /* 30-bit */
-#define OBJ_posix_STDERR_FILENO ((DeeObject *)&posix_STDERR_FILENO)
+#define OBJ_posix_STDERR_FILENO &posix_STDERR_FILENO
 PRIVATE DEFINE_INT30(posix_STDERR_FILENO, STDERR_FILENO);
 #elif STDERR_FILENO >= -0x100000000000ll /* 45-bit */
-#define OBJ_posix_STDERR_FILENO ((DeeObject *)&posix_STDERR_FILENO)
+#define OBJ_posix_STDERR_FILENO &posix_STDERR_FILENO
 PRIVATE DEFINE_INT45(posix_STDERR_FILENO, STDERR_FILENO);
 #elif STDERR_FILENO >= -0x800000000000000ll /* 60-bit */
-#define OBJ_posix_STDERR_FILENO ((DeeObject *)&posix_STDERR_FILENO)
+#define OBJ_posix_STDERR_FILENO &posix_STDERR_FILENO
 PRIVATE DEFINE_INT60(posix_STDERR_FILENO, STDERR_FILENO);
 #else
-#define OBJ_posix_STDERR_FILENO ((DeeObject *)&posix_STDERR_FILENO)
+#define OBJ_posix_STDERR_FILENO &posix_STDERR_FILENO
 PRIVATE DEFINE_INT75(posix_STDERR_FILENO, STDERR_FILENO);
 #endif
 #endif /* STDERR_FILENO < 0 */

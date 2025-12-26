@@ -84,9 +84,9 @@ ast_assemble_function_refargs(struct ast *__restrict function_ast,
 	ASSERT(function_ast->a_type == AST_FUNCTION);
 	/* This is where it gets interesting, because this will
 	 * create a temporary sub-assembler, allowing for recursion! */
-	ASSERT_OBJECT_TYPE((DeeObject *)current_scope, &DeeScope_Type);
-	ASSERT_OBJECT_TYPE((DeeObject *)current_basescope, &DeeBaseScope_Type);
-	ASSERT_OBJECT_TYPE((DeeObject *)function_ast->a_function.f_scope, &DeeBaseScope_Type);
+	ASSERT_OBJECT_TYPE(current_scope, &DeeScope_Type);
+	ASSERT_OBJECT_TYPE(&current_basescope->bs_scope, &DeeBaseScope_Type);
+	ASSERT_OBJECT_TYPE(&function_ast->a_function.f_scope->bs_scope, &DeeBaseScope_Type);
 	ASSERT(function_ast->a_function.f_scope->bs_root == current_rootscope);
 	ASSERT(current_basescope == current_scope->s_base);
 	prev_scope = current_scope;
@@ -233,7 +233,7 @@ asm_gcall_func(struct ast *__restrict func,
 		 *    itself as a constant. */
 		DREF DeeFunctionObject *function;
 		Dee_Free(refv);
-		function = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs((DeeObject *)code);
+		function = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs(Dee_AsObject(code));
 		Dee_Decref(code);
 		if unlikely(!function)
 			goto err_refargv;
@@ -1091,14 +1091,14 @@ check_getattr_base_symbol_class_tuple:
 			DeeObject *cxpr = func->a_constexpr;
 			/* Some casting-style expression have their own opcode. */
 #if 0 /* The real constructor has a special case for strings... */
-			if (cxpr == (DeeObject *)&DeeInt_Type) {
+			if (cxpr == Dee_AsObject(&DeeInt_Type)) {
 				DO(ast_genasm(arg0, ASM_G_FPUSHRES));
 				DO(asm_putddi(ddi_ast));
 				DO(asm_gcast_int());
 				goto pop_unused;
 			}
 #endif
-			if (cxpr == (DeeObject *)&DeeBool_Type) {
+			if (cxpr == Dee_AsObject(&DeeBool_Type)) {
 				if (ast_predict_type(arg0) == &DeeBool_Type)
 					goto pop_unused;
 				DO(ast_genasm(arg0, ASM_G_FPUSHRES));
@@ -1106,7 +1106,7 @@ check_getattr_base_symbol_class_tuple:
 				DO(asm_gbool(false));
 				goto pop_unused;
 			}
-			if (cxpr == (DeeObject *)&DeeString_Type) {
+			if (cxpr == Dee_AsObject(&DeeString_Type)) {
 				if (ast_predict_type(arg0) == &DeeString_Type)
 					goto pop_unused;
 				DO(ast_genasm(arg0, ASM_G_FPUSHRES));
@@ -1114,7 +1114,7 @@ check_getattr_base_symbol_class_tuple:
 				DO(asm_gstr());
 				goto pop_unused;
 			}
-			if (cxpr == (DeeObject *)&DeeTuple_Type) {
+			if (cxpr == Dee_AsObject(&DeeTuple_Type)) {
 				if (ast_predict_type(arg0) == &DeeTuple_Type)
 					goto pop_unused;
 				DO(ast_genasm(arg0, ASM_G_FPUSHRES));
@@ -1122,7 +1122,7 @@ check_getattr_base_symbol_class_tuple:
 				DO(asm_gcast_tuple());
 				goto pop_unused;
 			}
-			if (cxpr == (DeeObject *)&DeeList_Type) {
+			if (cxpr == Dee_AsObject(&DeeList_Type)) {
 				DeeTypeObject *predict = ast_predict_type(arg0);
 				if (predict == &DeeList_Type)
 					goto pop_unused;
@@ -1139,7 +1139,7 @@ check_getattr_base_symbol_class_tuple:
 					goto pop_unused;
 				}
 			}
-			if (cxpr == (DeeObject *)&DeeDict_Type) {
+			if (cxpr == Dee_AsObject(&DeeDict_Type)) {
 				if (ast_predict_type(arg0) == &DeeDict_Type)
 					goto pop_unused;
 				DO(ast_genasm(arg0, ASM_G_FPUSHRES));
@@ -1147,7 +1147,7 @@ check_getattr_base_symbol_class_tuple:
 				DO(asm_gcast_dict());
 				goto pop_unused;
 			}
-			if (cxpr == (DeeObject *)&DeeHashSet_Type) {
+			if (cxpr == Dee_AsObject(&DeeHashSet_Type)) {
 				if (ast_predict_type(arg0) == &DeeHashSet_Type)
 					goto pop_unused;
 				DO(ast_genasm(arg0, ASM_G_FPUSHRES));

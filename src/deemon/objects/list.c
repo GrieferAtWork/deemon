@@ -282,7 +282,7 @@ DeeList_FreeUninitialized(DREF List *__restrict self) {
 	ASSERT(!DeeObject_IsShared(self));
 	Dee_DecrefNokill(&DeeList_Type);
 	Dee_objectlist_elemv_free(self->l_list.ol_elemv);
-	DeeObject_FreeTracker((DeeObject *)self);
+	DeeObject_FreeTracker(Dee_AsObject(self));
 	DeeGCObject_FREE(self);
 }
 
@@ -472,7 +472,7 @@ DeeList_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *seq
 	 * This doesn't even need to be complicated; we can just use the prealloc
 	 * mechanism and have `DeeList_Copy()' prealloc sufficient space for at least
 	 * `DeeObject_SizeFast(sequence)' trailing objects. */
-	result = (DREF DeeObject *)DeeList_Copy((List *)self);
+	result = Dee_AsObject(DeeList_Copy((List *)self));
 	Dee_Decref_unlikely(self);
 	if unlikely(!result)
 		goto err;
@@ -553,7 +553,7 @@ allocate_new_vector:
 		_DeeList_SetAlloc(result, list_size + argc);
 		weakref_support_init(result);
 		Dee_atomic_rwlock_init(&result->l_lock);
-		result = (DREF List *)DeeGC_Track((DeeObject *)result);
+		result = DeeGC_TRACK(List, result);
 	}
 	return Dee_AsObject(result);
 err_me_argv:
@@ -3145,18 +3145,18 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_mh_clear(List *__restrict self) {
-	DeeList_Clear((DeeObject *)self);
+	DeeList_Clear(Dee_AsObject(self));
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_mh_sort(List *__restrict self, size_t start, size_t end) {
-	return DeeList_Sort((DeeObject *)self, start, end, Dee_None);
+	return DeeList_Sort(Dee_AsObject(self), start, end, Dee_None);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_mh_reverse(List *__restrict self, size_t start, size_t end) {
-	DeeList_Reverse((DeeObject *)self, start, end);
+	DeeList_Reverse(Dee_AsObject(self), start, end);
 	return 0;
 }
 
@@ -3991,7 +3991,7 @@ again:
 	weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
 	DeeObject_Init(result, &DeeList_Type);
-	return (DREF List *)DeeGC_Track((DeeObject *)result);
+	return DeeGC_TRACK(List, result);
 err_elem:
 	Dee_Decrefv(res_elemv, res_elemc);
 	Dee_objectlist_elemv_free(res_elemv);

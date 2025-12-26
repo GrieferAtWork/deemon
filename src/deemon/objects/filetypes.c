@@ -571,8 +571,8 @@ reader_setowner(Reader *__restrict self,
                 DeeObject *__restrict value) {
 	DeeObject *old_value;
 	DeeBuffer new_buffer, old_buffer;
-	if (DeeGC_IsReachable((DeeObject *)self, value))
-		return err_reference_loop((DeeObject *)self, value);
+	if (DeeGC_IsReachable(Dee_AsObject(self), value))
+		return err_reference_loop(Dee_AsObject(self), value);
 	if (DeeObject_GetBuf(value, &new_buffer, Dee_BUFFER_FREADONLY))
 		goto err;
 	Dee_Incref(value);
@@ -962,7 +962,7 @@ writer_visit(Writer *__restrict self, Dee_visit_t proc, void *arg) {
 PRIVATE NONNULL((1, 2)) Dee_ssize_t DCALL
 writer_printrepr(Writer *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	DREF DeeObject *str;
-	str = DeeFileWriter_GetString((DeeObject *)self);
+	str = DeeFileWriter_GetString(Dee_AsObject(self));
 	if unlikely(!str)
 		goto err;
 	return DeeFormat_Printf(printer, arg, "File.Writer(%R)", str);
@@ -1155,7 +1155,7 @@ writer_get(Writer *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("get", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "get");
 /*[[[end]]]*/
-	return (DREF DeeStringObject *)DeeFileWriter_GetString((DeeObject *)self);
+	return (DREF DeeStringObject *)DeeFileWriter_GetString(Dee_AsObject(self));
 err:
 	return NULL;
 }
@@ -2065,7 +2065,7 @@ mapfile_bytes(DeeMapFileObject *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("bytes", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "bytes");
 /*[[[end]]]*/
-	return DeeBytes_NewView((DeeObject *)self,
+	return DeeBytes_NewView(Dee_AsObject(self),
 	                        (void *)DeeMapFile_GetBase(&self->mf_map),
 	                        self->mf_rsize, Dee_BUFFER_FWRITABLE);
 err:

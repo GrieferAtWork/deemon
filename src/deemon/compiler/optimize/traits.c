@@ -82,7 +82,7 @@ is_defined_by_deemon_core(DeeTypeObject *__restrict self) {
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
 		return false;
 	}
-	result = type_module == (DeeObject *)&DeeModule_Deemon;
+	result = type_module == Dee_AsObject(&DeeModule_Deemon);
 	Dee_Decref(type_module);
 	return result;
 }
@@ -103,7 +103,7 @@ filter_builtin_deemon_types(/*inherit(always)*/ DREF DeeObject *__restrict self)
 	Dee_Decref(type_module);
 
 	/* Only propagate types from the builtin deemon module. */
-	if (type_module != (DeeObject *)&DeeModule_Deemon)
+	if (type_module != Dee_AsObject(&DeeModule_Deemon))
 		goto err_decref_self;
 
 	/* Because it's builtin+non-custom, it mustn't be heap-allocated
@@ -176,8 +176,8 @@ again:
 		base = eval_decl_ast_type(self->da_attr.a_base);
 		if (!base)
 			break;
-		attr = DeeObject_GetAttr((DeeObject *)base,
-		                         (DeeObject *)self->da_attr.a_name);
+		attr = DeeObject_GetAttr(Dee_AsObject(base),
+		                         Dee_AsObject(self->da_attr.a_name));
 		if (!attr) {
 			DeeError_Handled(ERROR_HANDLED_RESTORE);
 			return NULL;

@@ -323,7 +323,7 @@ err:
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeBytes_FromSequence(DeeObject *__restrict seq) {
-	DREF Bytes *bytes;
+	DREF Bytes *result;
 	size_t bsize;
 	if (DeeBytes_Check(seq))
 		return DeeBytes_NewBufferData(DeeBytes_DATA(seq), DeeBytes_SIZE(seq));
@@ -332,39 +332,39 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 	bsize = DeeObject_SizeFast(seq);
 	if (bsize == (size_t)-1)
 		bsize = 256;
-	bytes = (DREF Bytes *)DeeObject_TryMallocc(offsetof(Bytes, b_data), bsize, sizeof(byte_t)); /* TODO: b_inuse_p */
+	result = (DREF Bytes *)DeeObject_TryMallocc(offsetof(Bytes, b_data), bsize, sizeof(byte_t)); /* TODO: b_inuse_p */
 	if unlikely(!bsize) {
 		bsize = 1;
-		bytes  = (DREF Bytes *)DeeObject_Mallocc(offsetof(Bytes, b_data), 1, sizeof(byte_t)); /* TODO: b_inuse_p */
-		if unlikely(!bytes)
+		result  = (DREF Bytes *)DeeObject_Mallocc(offsetof(Bytes, b_data), 1, sizeof(byte_t)); /* TODO: b_inuse_p */
+		if unlikely(!result)
 			goto err;
 	}
-	bytes->b_size           = 0;
-	bytes->b_buffer.bb_size = bsize;
-	if unlikely(DeeObject_Foreach(seq, &bytes_fromseq_foreach_cb, &bytes))
+	result->b_size           = 0;
+	result->b_buffer.bb_size = bsize;
+	if unlikely(DeeObject_Foreach(seq, &bytes_fromseq_foreach_cb, &result))
 		goto err_r;
 
 	/* Free unused buffer memory. */
-	ASSERT(bytes->b_size <= bytes->b_buffer.bb_size);
-	if (bytes->b_size < bytes->b_buffer.bb_size) {
+	ASSERT(result->b_size <= result->b_buffer.bb_size);
+	if (result->b_size < result->b_buffer.bb_size) {
 		DREF Bytes *new_result;
-		new_result = (DREF Bytes *)DeeObject_TryReallocc(bytes, offsetof(Bytes, b_data), /* TODO: b_inuse_p */
-		                                                 bytes->b_size, sizeof(byte_t));
+		new_result = (DREF Bytes *)DeeObject_TryReallocc(result, offsetof(Bytes, b_data), /* TODO: b_inuse_p */
+		                                                 result->b_size, sizeof(byte_t));
 		if likely(new_result)
-			bytes = new_result;
-		bytes->b_buffer.bb_size = bytes->b_size;
+			result = new_result;
+		result->b_buffer.bb_size = result->b_size;
 	}
-	bytes->b_base  = bytes->b_data;
-	bytes->b_orig  = (DREF DeeObject *)bytes;
-	bytes->b_flags = Dee_BUFFER_FWRITABLE;
-	bytes->b_buffer.bb_base = bytes->b_data;
+	result->b_base  = result->b_data;
+	result->b_orig  = Dee_AsObject(result);
+	result->b_flags = Dee_BUFFER_FWRITABLE;
+	result->b_buffer.bb_base = result->b_data;
 #ifndef __INTELLISENSE__
-	bytes->b_buffer.bb_put = NULL;
+	result->b_buffer.bb_put = NULL;
 #endif /* !__INTELLISENSE__ */
-	DeeObject_Init(bytes, &DeeBytes_Type);
-	return (DREF DeeObject *)bytes;
+	DeeObject_Init(result, &DeeBytes_Type);
+	return Dee_AsObject(result);
 err_r:
-	DeeObject_Free(bytes);
+	DeeObject_Free(result);
 err:
 	return NULL;
 }
@@ -444,7 +444,7 @@ DeeBytes_NewBuffer(size_t num_bytes, byte_t init) {
 	memset(result->b_data, init, num_bytes);
 	result->b_base           = result->b_data;
 	result->b_size           = num_bytes;
-	result->b_orig           = (DREF DeeObject *)result;
+	result->b_orig           = Dee_AsObject(result);
 	result->b_flags          = Dee_BUFFER_FWRITABLE;
 	result->b_buffer.bb_base = result->b_data;
 	result->b_buffer.bb_size = num_bytes;
@@ -465,7 +465,7 @@ DeeBytes_NewBufferUninitialized(size_t num_bytes) {
 		goto done;
 	result->b_base           = result->b_data;
 	result->b_size           = num_bytes;
-	result->b_orig           = (DREF DeeObject *)result;
+	result->b_orig           = Dee_AsObject(result);
 	result->b_flags          = Dee_BUFFER_FWRITABLE;
 	result->b_buffer.bb_base = result->b_data;
 	result->b_buffer.bb_size = num_bytes;
@@ -486,7 +486,7 @@ DeeBytes_TryNewBufferUninitialized(size_t num_bytes) {
 		goto done;
 	result->b_base           = result->b_data;
 	result->b_size           = num_bytes;
-	result->b_orig           = (DREF DeeObject *)result;
+	result->b_orig           = Dee_AsObject(result);
 	result->b_flags          = Dee_BUFFER_FWRITABLE;
 	result->b_buffer.bb_base = result->b_data;
 	result->b_buffer.bb_size = num_bytes;
@@ -507,7 +507,7 @@ DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes) {
 		goto done;
 	result->b_base  = (byte_t *)memcpy(result->b_data, data, num_bytes);
 	result->b_size  = num_bytes;
-	result->b_orig  = (DREF DeeObject *)result;
+	result->b_orig  = Dee_AsObject(result);
 	result->b_flags = Dee_BUFFER_FWRITABLE;
 	result->b_buffer.bb_base = result->b_data;
 	result->b_buffer.bb_size = num_bytes;
@@ -528,7 +528,7 @@ DeeBytes_TryNewBufferData(void const *__restrict data, size_t num_bytes) {
 		goto done;
 	result->b_base  = (byte_t *)memcpy(result->b_data, data, num_bytes);
 	result->b_size  = num_bytes;
-	result->b_orig  = (DREF DeeObject *)result;
+	result->b_orig  = Dee_AsObject(result);
 	result->b_flags = Dee_BUFFER_FWRITABLE;
 	result->b_buffer.bb_base = result->b_data;
 	result->b_buffer.bb_size = num_bytes;
@@ -551,7 +551,7 @@ DeeBytes_ResizeBuffer(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
 		total_bytes = (size_t)-1;
 	result = (DREF Bytes *)self;
 	ASSERT(result->b_base == result->b_data);
-	ASSERT(result->b_orig == (DREF DeeObject *)result);
+	ASSERT(result->b_orig == Dee_AsObject(result));
 	ASSERT(result->b_flags == Dee_BUFFER_FWRITABLE);
 	ASSERT(result->b_buffer.bb_base == result->b_data);
 	ASSERT(result->b_buffer.bb_size == result->b_size);
@@ -566,10 +566,10 @@ again:
 			goto again;
 		return NULL;
 	}
-	result->b_orig               = (DREF DeeObject *)result;
+	result->b_orig               = Dee_AsObject(result);
 	new_result->b_buffer.bb_base = new_result->b_base = new_result->b_data;
 	new_result->b_buffer.bb_size = new_result->b_size = num_bytes;
-	return (DREF DeeObject *)new_result;
+	return Dee_AsObject(new_result);
 }
 
 PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -580,7 +580,7 @@ DeeBytes_TruncateBuffer(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
 	ASSERT(!DeeObject_IsShared(self));
 	result = (DREF Bytes *)self;
 	ASSERT(result->b_base == result->b_data);
-	ASSERT(result->b_orig == (DREF DeeObject *)result);
+	ASSERT(result->b_orig == Dee_AsObject(result));
 	ASSERT(result->b_flags == Dee_BUFFER_FWRITABLE);
 	ASSERT(result->b_buffer.bb_base == result->b_data);
 	ASSERT(result->b_buffer.bb_size == result->b_size);
@@ -593,7 +593,7 @@ DeeBytes_TruncateBuffer(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
 			result->b_size = result->b_buffer.bb_size = num_bytes;
 			return Dee_AsObject(result);
 		}
-		result->b_orig           = (DREF DeeObject *)result;
+		result->b_orig           = Dee_AsObject(result);
 		result->b_buffer.bb_base = result->b_base = result->b_data;
 		result->b_buffer.bb_size = result->b_size = num_bytes;
 	}
@@ -633,7 +633,7 @@ done:
 PRIVATE NONNULL((1)) void DCALL
 bytes_fini(Bytes *__restrict self) {
 	/* Check for special case: we're owning the object buffer outself. */
-	if (self->b_orig == (DREF DeeObject *)self)
+	if (self->b_orig == Dee_AsObject(self))
 		return;
 	/* Release the object buffer held on `b_orig' */
 	DeeObject_PutBuf(self->b_orig, &self->b_buffer, self->b_flags);
@@ -643,7 +643,7 @@ bytes_fini(Bytes *__restrict self) {
 PRIVATE NONNULL((1, 2)) void DCALL
 bytes_visit(Bytes *__restrict self, Dee_visit_t proc, void *arg) {
 	/* Check for special case: we're owning the object buffer outself. */
-	if (self->b_orig == (DREF DeeObject *)self)
+	if (self->b_orig == Dee_AsObject(self))
 		return;
 	Dee_Visit(self->b_orig);
 }
@@ -783,7 +783,7 @@ bytes_assign(Bytes *__restrict self,
 	                           DeeBytes_SIZE(self),
 	                           values);
 err_readonly:
-	return err_bytes_not_writable((DeeObject *)self);
+	return err_bytes_not_writable(Dee_AsObject(self));
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -830,7 +830,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_repr(Bytes *__restrict self) {
 	/* Optimization: can use an ascii_printer, instead of the default unicode_printer */
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	if unlikely(DeeBytes_PrintRepr((DeeObject *)self,
+	if unlikely(DeeBytes_PrintRepr(Dee_AsObject(self),
 	                               &ascii_printer_print,
 	                               &printer) < 0)
 		goto err;
@@ -1226,7 +1226,7 @@ bytes_getitem_index(Bytes *__restrict self, size_t index) {
 	return DeeInt_NewUInt8(value);
 #endif /* !DeeInt_8bit */
 err_bounds:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, DeeBytes_SIZE(self));
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, DeeBytes_SIZE(self));
 	return NULL;
 }
 
@@ -1248,7 +1248,7 @@ bytes_getitem_index_fast(Bytes *__restrict self, size_t index) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bytes_delitem_index(Bytes *__restrict self, size_t index) {
 	if unlikely(index >= DeeBytes_SIZE(self)) {
-		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, DeeBytes_SIZE(self));
+		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, DeeBytes_SIZE(self));
 		goto err;
 	}
 	if unlikely(!DeeBytes_WRITABLE(self))
@@ -1256,7 +1256,7 @@ bytes_delitem_index(Bytes *__restrict self, size_t index) {
 	DeeBytes_DATA(self)[index] = 0;
 	return 0;
 err_readonly:
-	err_bytes_not_writable((DeeObject *)self);
+	err_bytes_not_writable(Dee_AsObject(self));
 err:
 	return -1;
 }
@@ -1267,7 +1267,7 @@ bytes_setitem_index(Bytes *self, size_t index, DeeObject *value) {
 	if (DeeObject_AsByte(value, &val))
 		goto err;
 	if unlikely(index >= DeeBytes_SIZE(self)) {
-		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, DeeBytes_SIZE(self));
+		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, DeeBytes_SIZE(self));
 		goto err;
 	}
 	if unlikely(!DeeBytes_WRITABLE(self))
@@ -1275,7 +1275,7 @@ bytes_setitem_index(Bytes *self, size_t index, DeeObject *value) {
 	DeeBytes_DATA(self)[index] = val;
 	return 0;
 err_readonly:
-	err_bytes_not_writable((DeeObject *)self);
+	err_bytes_not_writable(Dee_AsObject(self));
 err:
 	return -1;
 }
@@ -1333,7 +1333,7 @@ bytes_setrange_index(Bytes *self,
 	dst = DeeBytes_DATA(self) + range.sr_start;
 	return DeeSeq_ItemsToBytes(dst, range_size, value);
 err_readonly:
-	return err_bytes_not_writable((DeeObject *)self);
+	return err_bytes_not_writable(Dee_AsObject(self));
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
@@ -1351,7 +1351,7 @@ bytes_setrange_index_n(Bytes *self, Dee_ssize_t i_begin,
 	dst = DeeBytes_DATA(self) + start;
 	return DeeSeq_ItemsToBytes(dst, range_size, value);
 err_readonly:
-	return err_bytes_not_writable((DeeObject *)self);
+	return err_bytes_not_writable(Dee_AsObject(self));
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -1371,7 +1371,7 @@ bytes_delrange_index(Bytes *self, Dee_ssize_t i_begin, Dee_ssize_t i_end) {
 	bzero(dst, range_size);
 	return 0;
 err_readonly:
-	return err_bytes_not_writable((DeeObject *)self);
+	return err_bytes_not_writable(Dee_AsObject(self));
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -1390,7 +1390,7 @@ bytes_delrange_index_n(Bytes *self, Dee_ssize_t i_begin) {
 	bzero(dst, range_size);
 	return 0;
 err_readonly:
-	return err_bytes_not_writable((DeeObject *)self);
+	return err_bytes_not_writable(Dee_AsObject(self));
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -1435,7 +1435,7 @@ bytes_asvector(Bytes *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 			DREF DeeObject *int_value;
 			byte_t value = DeeBytes_DATA(self)[i];
 #ifdef DeeInt_8bit
-			int_value = (DREF DeeObject *)(DeeInt_8bit + value);
+			int_value = Dee_AsObject(DeeInt_8bit + value);
 			Dee_Incref(int_value);
 #else /* DeeInt_8bit */
 			int_value = DeeInt_NewUInt8(value);
@@ -1533,7 +1533,7 @@ err_empty:
 	DeeRT_ErrEmptySequence(self);
 	goto err;
 err_readonly:
-	err_bytes_not_writable((DeeObject *)self);
+	err_bytes_not_writable(Dee_AsObject(self));
 err:
 	return -1;
 }
@@ -1563,7 +1563,7 @@ err_empty:
 	DeeRT_ErrEmptySequence(self);
 	goto err;
 err_readonly:
-	err_bytes_not_writable((DeeObject *)self);
+	err_bytes_not_writable(Dee_AsObject(self));
 err:
 	return -1;
 }
@@ -1640,7 +1640,7 @@ bytes_getbuf(Bytes *__restrict self,
 	info->bb_size = DeeBytes_SIZE(self);
 	return 0;
 err_readonly:
-	return err_bytes_not_writable((DeeObject *)self);
+	return err_bytes_not_writable(Dee_AsObject(self));
 }
 
 PRIVATE struct type_buffer bytes_buffer = {
@@ -2131,7 +2131,7 @@ Dee_bytes_printer_pack(/*inherit(always)*/ struct bytes_printer *__restrict self
 
 	/* Do final object initialization. */
 	result->b_base           = result->b_data;
-	result->b_orig           = (DREF DeeObject *)result;
+	result->b_orig           = Dee_AsObject(result);
 	result->b_flags          = Dee_BUFFER_FWRITABLE;
 	result->b_buffer.bb_base = result->b_data;
 	result->b_buffer.bb_size = self->bp_length;

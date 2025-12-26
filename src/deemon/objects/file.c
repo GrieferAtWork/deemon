@@ -93,11 +93,11 @@ PRIVATE WUNUSED NONNULL((1)) int
 	int result;
 	while (bytec) {
 		--bytec;
-		result = DeeFile_Ungetc((DeeObject *)self, bytev[bytec]);
+		result = DeeFile_Ungetc(Dee_AsObject(self), bytev[bytec]);
 		if (result != 0)
 			goto done;
 	}
-	result = DeeFile_Ungetc((DeeObject *)self, byte0);
+	result = DeeFile_Ungetc(Dee_AsObject(self), byte0);
 	if (result == 0)
 		result = GETC_EOF;
 done:
@@ -2643,13 +2643,13 @@ PRIVATE struct type_with file_with = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_next(DeeFileObject *__restrict self) {
-	return DeeFile_ReadLine((DeeObject *)self, (size_t)-1, true);
+	return DeeFile_ReadLine(Dee_AsObject(self), (size_t)-1, true);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_pos_get(DeeFileObject *__restrict self) {
 	Dee_pos_t result;
-	result = DeeFile_Tell((DeeObject *)self);
+	result = DeeFile_Tell(Dee_AsObject(self));
 	if unlikely(result == (Dee_pos_t)-1)
 		goto err;
 	return DeeInt_NewUInt64(result);
@@ -2659,7 +2659,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_pos_del(DeeFileObject *__restrict self) {
-	if unlikely(DeeFile_Rewind((DeeObject *)self) == (Dee_pos_t)-1)
+	if unlikely(DeeFile_Rewind(Dee_AsObject(self)) == (Dee_pos_t)-1)
 		goto err;
 	return 0;
 err:
@@ -2671,7 +2671,7 @@ file_pos_set(DeeFileObject *self, DeeObject *value) {
 	Dee_pos_t newpos;
 	if (DeeObject_AsUInt64(value, &newpos))
 		goto err;
-	if unlikely(DeeFile_SetPos((DeeObject *)self, newpos) == (Dee_pos_t)-1)
+	if unlikely(DeeFile_SetPos(Dee_AsObject(self), newpos) == (Dee_pos_t)-1)
 		goto err;
 	return 0;
 err:

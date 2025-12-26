@@ -608,14 +608,14 @@ DEFINE_AST_GENERATOR(NONNULL((1, 2)), ast_function,
                       DeeBaseScopeObject *__restrict scope)) {
 	DREF struct ast *result;
 	ASSERT_AST(function_code);
-	ASSERT_OBJECT_TYPE((DeeObject *)scope, &DeeBaseScope_Type);
+	ASSERT_OBJECT_TYPE(&scope->bs_scope, &DeeBaseScope_Type);
 	result = ast_new();
 	if likely(result) {
 		result->a_type             = AST_FUNCTION;
 		result->a_function.f_code  = function_code;
 		result->a_function.f_scope = scope;
 		ast_incref(function_code);
-		Dee_Incref((DeeObject *)scope);
+		Dee_Incref(&scope->bs_scope);
 		INIT_REF(result);
 	}
 	return result;
@@ -859,7 +859,7 @@ DEFINE_AST_GENERATOR(NONNULL((2, 3)), ast_label,
 		result->a_flag          = flags;
 		result->a_label.l_label = lbl;
 		result->a_label.l_base  = base_scope;
-		Dee_Incref((DeeObject *)base_scope);
+		Dee_Incref(&base_scope->bs_scope);
 		INIT_REF(result);
 	}
 	return result;
@@ -874,7 +874,7 @@ DEFINE_AST_GENERATOR(NONNULL((1, 2)), ast_goto,
 		result->a_flag         = AST_FNORMAL;
 		result->a_goto.g_label = lbl;
 		result->a_goto.g_base  = base_scope;
-		Dee_Incref((DeeObject *)base_scope);
+		Dee_Incref(&base_scope->bs_scope);
 		/* Trace the number of uses of this label. */
 		++lbl->tl_goto;
 		INIT_REF(result);
@@ -1084,7 +1084,7 @@ do_xdecref_3:
 		--self->a_goto.g_label->tl_goto;
 		ATTR_FALLTHROUGH
 	case AST_LABEL:
-		Dee_Decref((DeeObject *)self->a_label.l_base);
+		Dee_Decref(&self->a_label.l_base->bs_scope);
 		break;
 
 	case AST_SWITCH:
@@ -1205,7 +1205,7 @@ do_xvisit_3:
 
 	case AST_GOTO:
 	case AST_LABEL:
-		Dee_Visit((DeeObject *)self->a_label.l_base);
+		Dee_Visit(&self->a_label.l_base->bs_scope);
 		break;
 
 	case AST_SWITCH:

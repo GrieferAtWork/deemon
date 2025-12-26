@@ -283,7 +283,7 @@ PRIVATE struct type_member tpconst pointer_members[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_deref_func(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack0(err, argc, argv, "__deref__");
-	return (DREF DeeObject *)pointer_get_deref((struct pointer_object *)self);
+	return Dee_AsObject(pointer_get_deref((struct pointer_object *)self));
 err:
 	return NULL;
 }

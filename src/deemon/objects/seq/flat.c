@@ -212,7 +212,7 @@ sf_iter(SeqFlat *__restrict self) {
 	if unlikely(sfi_inititer_withseq(result, self->sf_seq))
 		goto err_r;
 	DeeObject_Init(result, &SeqFlatIterator_Type);
-	return (DREF SeqFlatIterator *)DeeGC_Track((DREF DeeObject *)result);
+	return DeeGC_TRACK(SeqFlatIterator, result);
 err_r:
 	DeeGCObject_FREE(result);
 err:
@@ -570,7 +570,7 @@ sf_getitem_index(SeqFlat *__restrict self, size_t index) {
 		size_t size = sf_size(self);
 		if unlikely(size == (size_t)-1)
 			goto err;
-		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, size);
+		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, size);
 		goto err;
 	}
 #ifndef NDEBUG
@@ -599,7 +599,7 @@ sf_getitem_index(SeqFlat *__restrict self, size_t index) {
 	}
 	if unlikely(status < 0)
 		goto err;
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, data.sfeid_index);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, data.sfeid_index);
 err:
 	return NULL;
 }
@@ -651,7 +651,7 @@ sf_interact_withitem(SeqFlat *__restrict self, size_t index,
 	if unlikely(status < 0)
 		goto err;
 	/* Item not found -> index must be out-of-bounds */
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, data.sfiwid_count);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, data.sfiwid_count);
 err:
 	return -1;
 }

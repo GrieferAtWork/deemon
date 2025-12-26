@@ -804,7 +804,7 @@ default__seq_operator_iter__with__seq_operator_sizeob__and__seq_operator_getitem
 	result->disg_end        = sizeob; /* Inherit reference */
 	Dee_atomic_lock_init(&result->disg_lock);
 	DeeObject_Init(result, &DefaultIterator_WithSizeObAndGetItem_Type);
-	return DeeGC_Track((DREF DeeObject *)result);
+	return DeeGC_Track(Dee_AsObject(result));
 err_size_ob:
 	Dee_Decref(sizeob);
 err:
@@ -823,7 +823,7 @@ default__seq_operator_iter__with__seq_operator_getitem(DeeObject *__restrict sel
 	result->dig_tp_getitem = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem);
 	Dee_atomic_lock_init(&result->dig_lock);
 	DeeObject_Init(result, &DefaultIterator_WithGetItem_Type);
-	return DeeGC_Track((DREF DeeObject *)result);
+	return DeeGC_Track(Dee_AsObject(result));
 err:
 	return NULL;
 }
@@ -944,7 +944,7 @@ default_foreach_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value
 	pair->t_elem[0] = key;   /* Symbolic reference */
 	pair->t_elem[1] = value; /* Symbolic reference */
 	result = (*data->dfwfp_cb)(data->dfwfp_arg, (DeeObject *)pair);
-	DeeTuple_DecrefSymbolic((DREF DeeObject *)pair);
+	DeeTuple_DecrefSymbolic(Dee_AsObject(pair));
 	return result;
 err:
 	return -1;
@@ -1216,7 +1216,7 @@ default_foreach_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject *valu
 	pair->t_elem[0] = key;
 	pair->t_elem[1] = value;
 	result = (*data->dfwme_cb)(data->dfwme_arg, (DeeObject *)pair);
-	DeeTuple_DecrefSymbolic((DREF DeeObject *)pair);
+	DeeTuple_DecrefSymbolic(Dee_AsObject(pair));
 	return result;
 err:
 	return -1;
@@ -1469,7 +1469,7 @@ default__seq_operator_getitem_index__with__seq_operator_foreach(DeeObject *__res
 	}
 	return data.dsgiiwfd_result;
 err_bad_bounds:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, index - data.dsgiiwfd_nskip);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, index - data.dsgiiwfd_nskip);
 err:
 	return NULL;
 }
@@ -1491,7 +1491,7 @@ default__seq_operator_getitem_index__with__seq_operator_size__and__seq_operator_
 	DeeRT_ErrUnboundIndex(self, index);
 	goto err;
 err_bad_bounds:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, size);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, size);
 err:
 	return NULL;
 }
@@ -1514,10 +1514,10 @@ default_seq_getitem_index_with_map_enumerate_cb(void *arg, DeeObject *key, DeeOb
 			if unlikely(!pair)
 				goto err;
 			Dee_Incref(key);
-			pair->t_elem[0] = key;                         /* Inherit reference */
+			pair->t_elem[0] = key;                      /* Inherit reference */
 			Dee_Incref(value);
-			pair->t_elem[1] = value;                       /* Inherit reference */
-			data->dsgiiwme_result = (DREF DeeObject *)pair; /* Inherit reference */
+			pair->t_elem[1] = value;                    /* Inherit reference */
+			data->dsgiiwme_result = Dee_AsObject(pair); /* Inherit reference */
 		} else {
 			data->dsgiiwme_result = NULL;
 		}
@@ -1548,7 +1548,7 @@ err_unbound:
 	DeeRT_ErrUnboundIndex(self, index);
 	goto err;
 err_bad_bounds:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, index - data.dsgiiwme_nskip);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, index - data.dsgiiwme_nskip);
 err:
 	return NULL;
 }
@@ -5705,42 +5705,42 @@ default__seq_makeenumeration__empty(DeeObject *__restrict UNUSED(self)) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_makeenumeration__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self) {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_size__and__getitem_index_fast, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_size__and__getitem_index_fast, self));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self) {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_size__and__seq_operator_trygetitem_index, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_size__and__seq_operator_trygetitem_index, self));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self) {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_size__and__seq_operator_getitem_index, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_size__and__seq_operator_getitem_index, self));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_makeenumeration__with__seq_operator_sizeob__and__seq_operator_getitem(DeeObject *__restrict self) {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_sizeob__and__seq_operator_getitem, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_sizeob__and__seq_operator_getitem, self));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_makeenumeration__with__seq_operator_getitem_index(DeeObject *__restrict self) {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_getitem_index, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_getitem_index, self));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_makeenumeration__with__seq_operator_getitem(DeeObject *__restrict self) {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_getitem, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_getitem, self));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_makeenumeration__with__seq_operator_iter__and__counter(DeeObject *__restrict self) {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_iter__and__counter, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_iter__and__counter, self));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_makeenumeration__with__seq_enumerate(DeeObject *__restrict self) {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_enumerate, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__seq_enumerate, self));
 }
 
 
@@ -5790,12 +5790,12 @@ default__seq_makeenumeration_with_range__empty(DeeObject *UNUSED(self), DeeObjec
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 default__seq_makeenumeration_with_range__with__seq_operator_sizeob__and__seq_operator_getitem(DeeObject *self, DeeObject *start, DeeObject *end) {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__seq_operator_sizeob__and__seq_operator_getitem, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__seq_operator_sizeob__and__seq_operator_getitem, self, start, end));
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 default__seq_makeenumeration_with_range__with__seq_operator_getitem(DeeObject *self, DeeObject *start, DeeObject *end) {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__seq_operator_getitem, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__seq_operator_getitem, self, start, end));
 }
 
 
@@ -5846,32 +5846,32 @@ default__seq_makeenumeration_with_intrange__empty(DeeObject *__restrict UNUSED(s
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_makeenumeration_with_intrange__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t start, size_t end) {
-	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__getitem_index_fast, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__getitem_index_fast, self, start, end));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_makeenumeration_with_intrange__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t start, size_t end) {
-	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__seq_operator_trygetitem_index, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__seq_operator_trygetitem_index, self, start, end));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_makeenumeration_with_intrange__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t start, size_t end) {
-	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__seq_operator_getitem_index, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__seq_operator_getitem_index, self, start, end));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_makeenumeration_with_intrange__with__seq_operator_getitem_index(DeeObject *__restrict self, size_t start, size_t end) {
-	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_getitem_index, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_getitem_index, self, start, end));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_makeenumeration_with_intrange__with__seq_operator_iter__and__counter(DeeObject *__restrict self, size_t start, size_t end) {
-	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_iter__and__counter, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_iter__and__counter, self, start, end));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_makeenumeration_with_intrange__with__seq_enumerate_index(DeeObject *__restrict self, size_t start, size_t end) {
-	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_enumerate_index, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_enumerate_index, self, start, end));
 }
 
 
@@ -7522,7 +7522,7 @@ default__seq_cached__with__seq_operator_iter(DeeObject *__restrict self) {
 	DREF DeeObject *iter = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_iter))(self);
 	if unlikely(!iter)
 		goto err;
-	return (DREF DeeObject *)CachedSeq_WithIter_New(iter);
+	return Dee_AsObject(CachedSeq_WithIter_New(iter));
 err:
 	return NULL;
 }
@@ -13937,7 +13937,7 @@ DeeSeq_GetForeachSubRangeAsTuple(DeeObject *self, size_t start, size_t end) {
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	data.fesrat_result = DeeTuple_TruncateUninitialized(data.fesrat_result, data.fesrat_used);
-	return (DREF DeeObject *)data.fesrat_result;
+	return Dee_AsObject(data.fesrat_result);
 err_r:
 	Dee_Decrefv(data.fesrat_result->t_elem, data.fesrat_used);
 	DeeTuple_FreeUninitialized(data.fesrat_result);
@@ -15293,7 +15293,7 @@ default__set_operator_iter__with__seq_operator_iter(DeeObject *__restrict self) 
 	result->di_iter    = iter; /* Inherit reference */
 	Dee_simple_hashset_with_lock_init(&result->di_encountered);
 	DeeObject_Init(result, &DistinctIterator_Type);
-	return DeeGC_Track((DREF DeeObject *)result);
+	return DeeGC_Track(Dee_AsObject(result));
 err_iter:
 	Dee_Decref(iter);
 err:
@@ -16089,7 +16089,7 @@ default__set_operator_inv__with_callobjectcache___set_inv__(DeeObject *__restric
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__set_operator_inv__unsupported(DeeObject *__restrict self) {
-	return (DREF DeeObject *)SetInversion_New(self);
+	return Dee_AsObject(SetInversion_New(self));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -16139,11 +16139,11 @@ default__set_operator_add__unsupported(DeeObject *lhs, DeeObject *rhs) {
 		intersection = SetIntersection_New_inherit_b(inv_lhs, xrhs->si_set);
 		if unlikely(!intersection)
 			goto err;
-		return (DREF DeeObject *)SetInversion_New_inherit(intersection);
+		return Dee_AsObject(SetInversion_New_inherit(intersection));
 	}
 	if (DeeSet_CheckEmpty(rhs))
 		return_reference_(lhs);
-	return (DREF DeeObject *)SetUnion_New(lhs, rhs);
+	return Dee_AsObject(SetUnion_New(lhs, rhs));
 err:
 	return NULL;
 }
@@ -16183,7 +16183,7 @@ default__set_operator_sub__unsupported(DeeObject *lhs, DeeObject *rhs) {
 	}
 	if (DeeSet_CheckEmpty(rhs))
 		return_reference_(lhs); /* `a - {}' -> `a' */
-	return (DREF DeeObject *)SetDifference_New(lhs, rhs);
+	return Dee_AsObject(SetDifference_New(lhs, rhs));
 }
 
 
@@ -16221,7 +16221,7 @@ default__set_operator_and__unsupported(DeeObject *lhs, DeeObject *rhs) {
 	}
 	if (DeeSet_CheckEmpty(rhs))
 		return_reference_(Dee_EmptySet); /* `a & {}' -> `{}' */
-	return (DREF DeeObject *)SetIntersection_New(lhs, rhs);
+	return Dee_AsObject(SetIntersection_New(lhs, rhs));
 }
 
 
@@ -16262,11 +16262,11 @@ default__set_operator_xor__unsupported(DeeObject *lhs, DeeObject *rhs) {
 		symdiff = SetSymmetricDifference_New(lhs, xrhs->si_set);
 		if unlikely(!symdiff)
 			goto err;
-		return (DREF DeeObject *)SetInversion_New_inherit(symdiff);
+		return Dee_AsObject(SetInversion_New_inherit(symdiff));
 	}
 	if (DeeSet_CheckEmpty(rhs))
 		return_reference_(lhs); /* `a ^ {}' -> `a' */
-	return (DREF DeeObject *)SetSymmetricDifference_New(lhs, rhs);
+	return Dee_AsObject(SetSymmetricDifference_New(lhs, rhs));
 err:
 	return NULL;
 }
@@ -17909,7 +17909,7 @@ default__map_operator_iter__with__seq_operator_iter(DeeObject *__restrict self) 
 	result->dmi_iter        = iter; /* Inherit reference */
 	Dee_simple_hashset_with_lock_init(&result->dmi_encountered);
 	DeeObject_Init(result, &DistinctMappingIterator_Type);
-	return DeeGC_Track((DREF DeeObject *)result);
+	return DeeGC_Track(Dee_AsObject(result));
 err_iter:
 	Dee_Decref(iter);
 err:
@@ -19943,17 +19943,17 @@ default__map_makeenumeration__unsupported(DeeObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__map_makeenumeration__with__map_iterkeys__and__map_operator_getitem(DeeObject *__restrict self) {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__map_iterkeys__and__map_operator_getitem, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__map_iterkeys__and__map_operator_getitem, self));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__map_makeenumeration__with__map_iterkeys__and__map_operator_trygetitem(DeeObject *__restrict self) {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__map_iterkeys__and__map_operator_trygetitem, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__map_iterkeys__and__map_operator_trygetitem, self));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__map_makeenumeration__with__map_enumerate(DeeObject *__restrict self) {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__map_enumerate, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__map_enumerate, self));
 }
 
 
@@ -19986,22 +19986,22 @@ default__map_makeenumeration_with_range__unsupported(DeeObject *self, DeeObject 
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 default__map_makeenumeration_with_range__with__map_operator_iter(DeeObject *self, DeeObject *start, DeeObject *end) {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_operator_iter__and__unpack, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_operator_iter__and__unpack, self, start, end));
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 default__map_makeenumeration_with_range__with__map_iterkeys__and__map_operator_getitem(DeeObject *self, DeeObject *start, DeeObject *end) {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_getitem, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_getitem, self, start, end));
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 default__map_makeenumeration_with_range__with__map_iterkeys__and__map_operator_trygetitem(DeeObject *self, DeeObject *start, DeeObject *end) {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_trygetitem, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_trygetitem, self, start, end));
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 default__map_makeenumeration_with_range__with__map_enumerate_range(DeeObject *self, DeeObject *start, DeeObject *end) {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_enumerate_range, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_enumerate_range, self, start, end));
 }
 
 
@@ -20475,7 +20475,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__map_operator_add__unsupported(DeeObject *lhs, DeeObject *rhs) {
 	if (DeeMap_CheckEmpty(rhs))
 		return_reference_(lhs);
-	return (DREF DeeObject *)MapUnion_New(lhs, rhs);
+	return Dee_AsObject(MapUnion_New(lhs, rhs));
 }
 
 
@@ -20513,7 +20513,7 @@ default__map_operator_sub__unsupported(DeeObject *lhs, DeeObject *keys) {
 	}
 	if (DeeSet_CheckEmpty(keys))
 		return_reference_(lhs); /* `a - {}' -> `a' */
-	return (DREF DeeObject *)MapDifference_New(lhs, keys);
+	return Dee_AsObject(MapDifference_New(lhs, keys));
 }
 
 
@@ -20551,7 +20551,7 @@ default__map_operator_and__unsupported(DeeObject *lhs, DeeObject *keys) {
 	}
 	if (DeeSet_CheckEmpty(keys))
 		return_reference_(Dee_EmptyMapping); /* `a & {}' -> `{}' */
-	return (DREF DeeObject *)MapIntersection_New(lhs, keys);
+	return Dee_AsObject(MapIntersection_New(lhs, keys));
 }
 
 
@@ -20584,7 +20584,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__map_operator_xor__unsupported(DeeObject *lhs, DeeObject *rhs) {
 	if (DeeMap_CheckEmpty(rhs))
 		return_reference_(lhs);
-	return (DREF DeeObject *)MapSymmetricDifference_New(lhs, rhs);
+	return Dee_AsObject(MapSymmetricDifference_New(lhs, rhs));
 }
 
 

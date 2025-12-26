@@ -709,7 +709,7 @@ jf_call_kw(JITFunction *self, size_t argc,
 		Dee_XIncref(kw);
 		Dee_Movrefv(yfo->jy_argv, argv, argc);
 		DeeObject_Init(yfo, &JITYieldFunction_Type);
-		return (DREF DeeObject *)yfo;
+		return Dee_AsObject(yfo);
 	}
 	ts = DeeThread_Self();
 	if (DeeThread_CheckInterrupt())
@@ -732,7 +732,7 @@ jf_call_kw(JITFunction *self, size_t argc,
 	 *       must be loaded, rather than the function loading itself! */
 	if (self->jf_selfarg != (size_t)-1) {
 		ASSERT(base_locals.ot_list[self->jf_selfarg].oe_value == NULL);
-		base_locals.ot_list[self->jf_selfarg].oe_value = (DeeObject *)self; /* Incref'd later */
+		base_locals.ot_list[self->jf_selfarg].oe_value = Dee_AsObject(self); /* Incref'd later */
 	}
 
 	if (kw) {

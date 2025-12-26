@@ -441,7 +441,7 @@ repeat_iter(Repeat *__restrict self) {
 	Dee_atomic_rwlock_init(&result->rpi_lock);
 	Dee_Incref(self);
 	DeeObject_Init(result, &SeqRepeatIterator_Type);
-	return (DREF RepeatIterator *)DeeGC_Track((DREF DeeObject *)result);
+	return DeeGC_TRACK(RepeatIterator, result);
 err_r:
 	DeeGCObject_FREE(result);
 err:
@@ -461,7 +461,7 @@ repeat_getitem(Repeat *self, DeeObject *index_ob) {
 	if unlikely(seq_size == (size_t)-1)
 		goto err;
 	if unlikely(index >= seq_size * self->rp_num) {
-		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index,
 		                          seq_size * self->rp_num);
 		goto err;
 	}
@@ -506,7 +506,7 @@ repeat_getitem_index(Repeat *__restrict self, size_t index) {
 	if unlikely(seq_size == (size_t)-1)
 		goto err;
 	if unlikely(index >= seq_size * self->rp_num) {
-		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index,
 		                          seq_size * self->rp_num);
 		goto err;
 	}
@@ -945,7 +945,7 @@ repeatitem_getitem_index(RepeatItem *__restrict self, size_t index) {
 		goto err_bounds;
 	return_reference_(self->rpit_obj);
 err_bounds:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->rpit_num);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->rpit_num);
 /*err:*/
 	return NULL;
 }

@@ -324,8 +324,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 catiterator_curr_set(CatIterator *__restrict self,
                      DeeObject *__restrict value) {
 	DREF DeeObject *oldval;
-	if (DeeGC_ReferredBy(value, (DeeObject *)self))
-		return err_reference_loop((DeeObject *)self, value);
+	if (DeeGC_ReferredBy(value, Dee_AsObject(self)))
+		return err_reference_loop(Dee_AsObject(self), value);
 	Dee_Incref(value);
 	CatIterator_LockWrite(self);
 	oldval       = self->cti_curr;
@@ -420,7 +420,7 @@ cat_iter(Cat *__restrict self) {
 	Dee_Incref(self);
 	Dee_atomic_rwlock_init(&result->cti_lock);
 	DeeObject_Init(result, &SeqConcatIterator_Type);
-	return (DREF CatIterator *)DeeGC_Track((DREF DeeObject *)result);
+	return DeeGC_TRACK(CatIterator, result);
 err_r:
 	DeeGCObject_FREE(result);
 err:
@@ -429,7 +429,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cat_get_sequences(Cat *__restrict self) {
-	return DeeRefVector_NewReadonly((DeeObject *)self,
+	return DeeRefVector_NewReadonly(Dee_AsObject(self),
 	                                DeeTuple_SIZE(self),
 	                                DeeTuple_ELEM(self));
 }
@@ -553,7 +553,7 @@ cat_getitem_index(Cat *__restrict self, size_t index) {
 		                                  DeeTuple_GET(self, i),
 		                                  sub_index);
 	}
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, total_length);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, total_length);
 err:
 	return NULL;
 }
@@ -573,7 +573,7 @@ cat_delitem_index(Cat *__restrict self, size_t index) {
 		return DeeObject_InvokeMethodHint(seq_operator_delitem_index,
 		                                  DeeTuple_GET(self, i), sub_index);
 	}
-	return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, total_length);
+	return DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, total_length);
 err:
 	return -1;
 }
@@ -594,7 +594,7 @@ cat_setitem_index(Cat *self, size_t index, DeeObject *value) {
 		                                  DeeTuple_GET(self, i),
 		                                  sub_index, value);
 	}
-	return DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, total_length);
+	return DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, total_length);
 err:
 	return -1;
 }

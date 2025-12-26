@@ -338,7 +338,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL librt_makeclass_f_im
 		if (DeeObject_AssertTypeExact(module_, &DeeModule_Type))
 			goto err;
 	}
-	return (DREF DeeObject *)DeeClass_New(base, descriptor, module_);
+	return Dee_AsObject(DeeClass_New(base, descriptor, module_));
 err:
 	return NULL;
 }
@@ -364,7 +364,7 @@ _store_cache(DeeObject **p_cache, DREF DeeObject *result) {
 	if likely(result) {
 		DREF DeeObject *result_module;
 		result_module = DeeModule_FromStaticPointer(result);
-		if likely(result_module == (DREF DeeObject *)DeeModule_GetDeemon()) {
+		if likely(result_module == Dee_AsObject(DeeModule_GetDeemon())) {
 			/* Objects statically allocated within the deemon core can never
 			 * be destroyed. - As such, we can store a non-referencing pointer
 			 * to them that will allow us to skip object calculation the next
@@ -632,7 +632,7 @@ librt_get_TracebackIterator_f(void) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_GCEnum_f(void) {
-	return_reference((DREF DeeObject *)Dee_TYPE(&DeeGCEnumTracked_Singleton));
+	return_reference(Dee_TYPE(&DeeGCEnumTracked_Singleton));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -738,7 +738,7 @@ librt_get_DocKwds_uncached_f(void) {
 	kwds = DeeObject_GetAttrStringHash((DeeObject *)&DeeBuiltin_Compare, STR_AND_HASH(__kwds__));
 	if unlikely(!kwds)
 		goto err;
-	result = (DREF DeeObject *)Dee_TYPE(kwds);
+	result = Dee_AsObject(Dee_TYPE(kwds));
 	Dee_Incref(result);
 	Dee_Decref_likely(kwds);
 	return result;

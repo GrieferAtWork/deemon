@@ -2264,7 +2264,7 @@ PRIVATE WUNUSED NONNULL((2)) DREF DeeObject *DCALL
 libthreading_lockunion_all_f(size_t argc, DeeObject *const *argv) {
 	if (argc == 1) /* Special case for when only a single lock was specified */
 		return_reference_(argv[0]);
-	return (DREF DeeObject *)LockUnion_FromVector(argc, argv);
+	return Dee_AsObject(LockUnion_FromVector(argc, argv));
 }
 
 INTDEF DeeCMethodObject libthreading_lockunion_all;
@@ -2831,7 +2831,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_union_locks_get(LockUnion *__restrict self) {
-	return DeeRefVector_NewReadonly((DeeObject *)self, self->lu_size, self->lu_elem);
+	return DeeRefVector_NewReadonly(Dee_AsObject(self), self->lu_size, self->lu_elem);
 }
 
 PRIVATE struct type_with lock_union_with = {

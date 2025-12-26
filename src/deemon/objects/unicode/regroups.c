@@ -65,7 +65,7 @@ rg_getitem_index(ReGroups *__restrict self, size_t index) {
 		goto err_bounds;
 	return DeeRegexMatch_AsRangeObject(&self->rg_groups[index]);
 err_bounds:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->rg_ngroups);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->rg_ngroups);
 	return NULL;
 }
 
@@ -152,7 +152,7 @@ rss_getitem_index(ReSubStrings *__restrict self, size_t index) {
 	                                 self->rss_baseown,
 	                                 self->rss_baseptr);
 err_bounds:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->rss_ngroups);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->rss_ngroups);
 	return NULL;
 }
 
@@ -164,7 +164,7 @@ rsb_getitem_index(ReSubBytes *__restrict self, size_t index) {
 	                                self->rss_baseown,
 	                                self->rss_baseptr);
 err_bounds:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->rss_ngroups);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->rss_ngroups);
 	return NULL;
 }
 

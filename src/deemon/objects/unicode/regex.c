@@ -329,7 +329,7 @@ re_compile(DeeStringObject *__restrict self, unsigned int compile_flags) {
 	struct re_compiler comp;
 	char const *utf8;
 again:
-	utf8 = DeeString_AsUtf8((DeeObject *)self);
+	utf8 = DeeString_AsUtf8(Dee_AsObject(self));
 	if unlikely(!utf8)
 		goto err;
 

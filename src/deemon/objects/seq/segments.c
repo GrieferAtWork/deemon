@@ -301,7 +301,7 @@ seg_getitem_index(Segments *__restrict self, size_t index) {
 		goto err;
 	if (start + self->s_len > len) {
 		if unlikely(start >= len) {
-			DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+			DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index,
 			                          (len + (self->s_len - 1)) / self->s_len);
 			goto err;
 		}

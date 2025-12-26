@@ -708,7 +708,7 @@ arraytype_new(DeeSTypeObject *__restrict item_type,
 
 	/* Finalize the array type. */
 	DeeObject_Init(DeeArrayType_AsType(result), &DeeArrayType_Type);
-	return DeeType_AsArrayType((DeeTypeObject *)DeeGC_Track(DeeArrayType_AsObject(result)));
+	return DeeType_AsArrayType(DeeGC_TRACK(DeeTypeObject, DeeArrayType_AsType(result)));
 err_r:
 	DeeGCObject_FREE(result);
 err:

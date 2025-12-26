@@ -2824,7 +2824,7 @@ string_re_findall(String *__restrict self,
 	result = DeeObject_MALLOC(ReSequence);
 	if unlikely(!result)
 		goto done;
-	result->rs_data = (DREF DeeObject *)self;
+	result->rs_data = Dee_AsObject(self);
 	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
@@ -2840,7 +2840,7 @@ string_reg_findall(String *__restrict self,
 	result = DeeObject_MALLOC(ReSequence);
 	if unlikely(!result)
 		goto done;
-	result->rs_data = (DREF DeeObject *)self;
+	result->rs_data = Dee_AsObject(self);
 	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
@@ -2856,7 +2856,7 @@ string_reg_locateall(String *__restrict self,
 	result = DeeObject_MALLOC(ReSequence);
 	if unlikely(!result)
 		goto done;
-	result->rs_data = (DREF DeeObject *)self;
+	result->rs_data = Dee_AsObject(self);
 	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
@@ -2872,7 +2872,7 @@ string_re_locateall(String *__restrict self,
 	result = DeeObject_MALLOC(ReSequence);
 	if unlikely(!result)
 		goto done;
-	result->rs_data = (DREF DeeObject *)self;
+	result->rs_data = Dee_AsObject(self);
 	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
@@ -2888,7 +2888,7 @@ string_re_split(String *__restrict self,
 	result = DeeObject_MALLOC(ReSequence);
 	if unlikely(!result)
 		goto done;
-	result->rs_data = (DREF DeeObject *)self;
+	result->rs_data = Dee_AsObject(self);
 	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	if (result->rs_exec.rx_startoff >= result->rs_exec.rx_endoff)
 		result->rs_exec.rx_inbase = NULL;
@@ -2907,7 +2907,7 @@ bytes_re_findall(DeeBytesObject *__restrict self,
 	result = DeeObject_MALLOC(ReSequence);
 	if unlikely(!result)
 		goto done;
-	result->rs_data = (DREF DeeObject *)self;
+	result->rs_data = Dee_AsObject(self);
 	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
@@ -2923,7 +2923,7 @@ bytes_reg_findall(DeeBytesObject *__restrict self,
 	result = DeeObject_MALLOC(ReSequence);
 	if unlikely(!result)
 		goto done;
-	result->rs_data = (DREF DeeObject *)self;
+	result->rs_data = Dee_AsObject(self);
 	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
@@ -2939,7 +2939,7 @@ bytes_reg_locateall(DeeBytesObject *__restrict self,
 	result = DeeObject_MALLOC(ReSequence);
 	if unlikely(!result)
 		goto done;
-	result->rs_data = (DREF DeeObject *)self;
+	result->rs_data = Dee_AsObject(self);
 	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
@@ -2955,7 +2955,7 @@ bytes_re_locateall(DeeBytesObject *__restrict self,
 	result = DeeObject_MALLOC(ReSequence);
 	if unlikely(!result)
 		goto done;
-	result->rs_data = (DREF DeeObject *)self;
+	result->rs_data = Dee_AsObject(self);
 	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
@@ -2971,7 +2971,7 @@ bytes_re_split(DeeBytesObject *__restrict self,
 	result = DeeObject_MALLOC(ReSequence);
 	if unlikely(!result)
 		goto done;
-	result->rs_data = (DREF DeeObject *)self;
+	result->rs_data = Dee_AsObject(self);
 	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	if (result->rs_exec.rx_startoff >= result->rs_exec.rx_endoff)
 		result->rs_exec.rx_inbase = NULL;

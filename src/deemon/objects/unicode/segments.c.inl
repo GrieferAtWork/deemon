@@ -399,7 +399,7 @@ sseg_getitem_index(StringSegments *__restrict self, size_t index) {
 	index *= self->s_siz;
 	return string_getsubstr(self->s_str, index, index + self->s_siz);
 err_index:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, length);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, length);
 	return NULL;
 }
 

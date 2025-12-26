@@ -164,7 +164,7 @@ types_getitem(SeqSimpleProxy *__restrict self, DeeObject *index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_InvokeMethodHint(seq_operator_getitem, self->sp_seq, index);
 	if likely(elem) {
-		result = (DREF DeeObject *)Dee_TYPE(elem);
+		result = Dee_AsObject(Dee_TYPE(elem));
 		Dee_Incref(result);
 		Dee_Decref(elem);
 	}
@@ -176,7 +176,7 @@ classes_getitem(SeqSimpleProxy *__restrict self, DeeObject *index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_InvokeMethodHint(seq_operator_getitem, self->sp_seq, index);
 	if likely(elem) {
-		result = (DREF DeeObject *)DeeObject_Class(elem);
+		result = Dee_AsObject(DeeObject_Class(elem));
 		Dee_Incref(result);
 		Dee_Decref(elem);
 	}
@@ -199,7 +199,7 @@ types_getitem_index(SeqSimpleProxy *__restrict self, size_t index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_InvokeMethodHint(seq_operator_getitem_index, self->sp_seq, index);
 	if likely(elem) {
-		result = (DREF DeeObject *)Dee_TYPE(elem);
+		result = Dee_AsObject(Dee_TYPE(elem));
 		Dee_Incref(result);
 		Dee_Decref(elem);
 	}
@@ -211,7 +211,7 @@ classes_getitem_index(SeqSimpleProxy *__restrict self, size_t index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_InvokeMethodHint(seq_operator_getitem_index, self->sp_seq, index);
 	if likely(elem) {
-		result = (DREF DeeObject *)DeeObject_Class(elem);
+		result = Dee_AsObject(DeeObject_Class(elem));
 		Dee_Incref(result);
 		Dee_Decref(elem);
 	}
@@ -234,7 +234,7 @@ types_trygetitem(SeqSimpleProxy *__restrict self, DeeObject *index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_InvokeMethodHint(seq_operator_trygetitem, self->sp_seq, index);
 	if likely(ITER_ISOK(elem)) {
-		result = (DREF DeeObject *)Dee_TYPE(elem);
+		result = Dee_AsObject(Dee_TYPE(elem));
 		Dee_Incref(result);
 		Dee_Decref(elem);
 	}
@@ -246,7 +246,7 @@ classes_trygetitem(SeqSimpleProxy *__restrict self, DeeObject *index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_InvokeMethodHint(seq_operator_trygetitem, self->sp_seq, index);
 	if likely(ITER_ISOK(elem)) {
-		result = (DREF DeeObject *)DeeObject_Class(elem);
+		result = Dee_AsObject(DeeObject_Class(elem));
 		Dee_Incref(result);
 		Dee_Decref(elem);
 	}
@@ -269,7 +269,7 @@ types_trygetitem_index(SeqSimpleProxy *__restrict self, size_t index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_InvokeMethodHint(seq_operator_trygetitem_index, self->sp_seq, index);
 	if likely(ITER_ISOK(elem)) {
-		result = (DREF DeeObject *)Dee_TYPE(elem);
+		result = Dee_AsObject(Dee_TYPE(elem));
 		Dee_Incref(result);
 		Dee_Decref(elem);
 	}
@@ -281,7 +281,7 @@ classes_trygetitem_index(SeqSimpleProxy *__restrict self, size_t index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_InvokeMethodHint(seq_operator_trygetitem_index, self->sp_seq, index);
 	if likely(ITER_ISOK(elem)) {
-		result = (DREF DeeObject *)DeeObject_Class(elem);
+		result = Dee_AsObject(DeeObject_Class(elem));
 		Dee_Incref(result);
 		Dee_Decref(elem);
 	}
@@ -941,7 +941,7 @@ typesiter_next(SeqSimpleProxyIterator *__restrict self) {
 	DREF DeeObject *result = DeeObject_IterNext(self->si_iter);
 	if (ITER_ISOK(result)) {
 		DREF DeeObject *elem = result;
-		result = (DREF DeeObject *)Dee_TYPE(elem);
+		result = Dee_AsObject(Dee_TYPE(elem));
 		Dee_Incref(result);
 		Dee_Decref(elem);
 	}
@@ -953,7 +953,7 @@ classesiter_next(SeqSimpleProxyIterator *__restrict self) {
 	DREF DeeObject *result = DeeObject_IterNext(self->si_iter);
 	if (ITER_ISOK(result)) {
 		DREF DeeObject *elem = result;
-		result = (DREF DeeObject *)DeeObject_Class(elem);
+		result = Dee_AsObject(DeeObject_Class(elem));
 		Dee_Incref(result);
 		Dee_Decref(elem);
 	}

@@ -101,7 +101,7 @@ ast_gen_operator_func(struct ast *binding,
 	                                                            NULL, 0, DeeModule_IMPORT_F_ENOENT,
 	                                                            inner_compiler_options);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	operators_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal((DeeObject *)&str_operators,
+	operators_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal(Dee_AsObject(&str_operators),
 	                                                                inner_compiler_options,
 	                                                                false);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */

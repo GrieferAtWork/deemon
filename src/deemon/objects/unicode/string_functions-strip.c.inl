@@ -358,7 +358,7 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 		/************************************************************************/
 	CASE_WIDTH_1BYTE:
 #ifdef LOCAL_IS_MASKED
-		mystr.cp8  = DeeString_As1Byte((DeeObject *)self);
+		mystr.cp8  = DeeString_As1Byte(Dee_AsObject(self));
 		mskstr.cp8 = DeeString_As1Byte((DeeObject *)mask);
 		mylen      = WSTR_LENGTH(mystr.cp8);
 		msklen     = WSTR_LENGTH(mskstr.cp8);
@@ -454,7 +454,7 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 		/************************************************************************/
 	CASE_WIDTH_2BYTE:
 #ifdef LOCAL_IS_MASKED
-		mystr.cp16 = DeeString_As2Byte((DeeObject *)self);
+		mystr.cp16 = DeeString_As2Byte(Dee_AsObject(self));
 		if unlikely(!mystr.cp16)
 			goto err;
 		mskstr.cp16 = DeeString_As2Byte((DeeObject *)mask);
@@ -547,7 +547,7 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 		if (newlen == mylen)
 			goto return_self_noprinter;
 		if (DeeString_WIDTH(self) == STRING_WIDTH_1BYTE) {
-			uint8_t const *base = DeeString_Get1Byte((DeeObject *)self);
+			uint8_t const *base = DeeString_Get1Byte(Dee_AsObject(self));
 			return (DREF String *)DeeString_New1Byte(base + (newstr.cp16 - mystr.cp16), newlen);
 		}
 		return (DREF String *)DeeString_New2Byte(newstr.cp16, newlen);
@@ -558,7 +558,7 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 		/************************************************************************/
 	CASE_WIDTH_4BYTE:
 #ifdef LOCAL_IS_MASKED
-		mystr.cp32 = DeeString_As4Byte((DeeObject *)self);
+		mystr.cp32 = DeeString_As4Byte(Dee_AsObject(self));
 		if unlikely(!mystr.cp32)
 			goto err;
 		mskstr.cp32 = DeeString_As4Byte((DeeObject *)mask);
@@ -651,11 +651,11 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 		if (newlen == mylen)
 			goto return_self_noprinter;
 		if (DeeString_WIDTH(self) == STRING_WIDTH_1BYTE) {
-			uint8_t const *base = DeeString_Get1Byte((DeeObject *)self);
+			uint8_t const *base = DeeString_Get1Byte(Dee_AsObject(self));
 			return (DREF String *)DeeString_New1Byte(base + (newstr.cp32 - mystr.cp32), newlen);
 		}
 		if (DeeString_WIDTH(self) == STRING_WIDTH_2BYTE) {
-			uint16_t const *base = DeeString_Get2Byte((DeeObject *)self);
+			uint16_t const *base = DeeString_Get2Byte(Dee_AsObject(self));
 			return (DREF String *)DeeString_New2Byte(base + (newstr.cp32 - mystr.cp32), newlen);
 		}
 		return (DREF String *)DeeString_New4Byte(newstr.cp32, newlen);

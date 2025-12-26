@@ -49,28 +49,28 @@ __seq_enumerate_items__.seq_makeenumeration([[nonnull]] DeeObject *__restrict se
 %{$empty = return DeeSeq_NewEmpty()}
 %{$with__seq_operator_size__and__operator_getitem_index_fast =
 [[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_size__and__getitem_index_fast, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_size__and__getitem_index_fast, self));
 }}
 %{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_size__and__seq_operator_trygetitem_index, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_size__and__seq_operator_trygetitem_index, self));
 }}
 %{$with__seq_operator_size__and__seq_operator_getitem_index = {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_size__and__seq_operator_getitem_index, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_size__and__seq_operator_getitem_index, self));
 }}
 %{$with__seq_operator_sizeob__and__seq_operator_getitem = {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_sizeob__and__seq_operator_getitem, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_sizeob__and__seq_operator_getitem, self));
 }}
 %{$with__seq_operator_getitem_index = {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_getitem_index, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_getitem_index, self));
 }}
 %{$with__seq_operator_getitem = {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_getitem, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_getitem, self));
 }}
 %{$with__seq_operator_iter__and__counter = {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_iter__and__counter, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_iter__and__counter, self));
 }}
 %{$with__seq_enumerate = {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_enumerate, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__seq_enumerate, self));
 }} {
 	return LOCAL_CALLATTR(self, 0, NULL);
 }
@@ -95,10 +95,10 @@ err:
 	return NULL;
 }}
 %{$with__seq_operator_sizeob__and__seq_operator_getitem = {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__seq_operator_sizeob__and__seq_operator_getitem, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__seq_operator_sizeob__and__seq_operator_getitem, self, start, end));
 }}
 %{$with__seq_operator_getitem = {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__seq_operator_getitem, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__seq_operator_getitem, self, start, end));
 }} {
 	DeeObject *args[2];
 	args[0] = start;
@@ -135,22 +135,22 @@ err:
 }}
 %{$with__seq_operator_size__and__operator_getitem_index_fast =
 [[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
-	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__getitem_index_fast, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__getitem_index_fast, self, start, end));
 }}
 %{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
-	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__seq_operator_trygetitem_index, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__seq_operator_trygetitem_index, self, start, end));
 }}
 %{$with__seq_operator_size__and__seq_operator_getitem_index = {
-	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__seq_operator_getitem_index, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__seq_operator_getitem_index, self, start, end));
 }}
 %{$with__seq_operator_getitem_index = {
-	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_getitem_index, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_getitem_index, self, start, end));
 }}
 %{$with__seq_operator_iter__and__counter = {
-	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_iter__and__counter, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_iter__and__counter, self, start, end));
 }}
 %{$with__seq_enumerate_index = {
-	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_enumerate_index, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_enumerate_index, self, start, end));
 }} {
 	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ, start, end);
 }

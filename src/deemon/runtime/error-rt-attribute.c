@@ -1206,7 +1206,7 @@ AttributeError_init_kw(AttributeError *__restrict self, size_t argc,
 		           DeeObject_InstanceOfExact(attr, &DeeKwClsMethod_Type)) {
 			DeeClsMethodObject *method = (DeeClsMethodObject *)attr;
 			Dee_Incref(method->clm_type);
-			self->ae_desc.ad_info.ai_decl = (DREF DeeObject *)method->clm_type;
+			self->ae_desc.ad_info.ai_decl = Dee_AsObject(method->clm_type);
 			self->ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_CLMETHOD;
 			self->ae_flags |= (AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL);
 			AttributeError_LazyMethod_SetMethod(self, method->clm_func.clmf_meth);
@@ -1214,7 +1214,7 @@ AttributeError_init_kw(AttributeError *__restrict self, size_t argc,
 		} else if (DeeObject_InstanceOfExact(attr, &DeeClsProperty_Type)) {
 			DeeClsPropertyObject *prop = (DeeClsPropertyObject *)attr;
 			Dee_Incref(prop->cp_type);
-			self->ae_desc.ad_info.ai_decl = (DREF DeeObject *)prop->cp_type;
+			self->ae_desc.ad_info.ai_decl = Dee_AsObject(prop->cp_type);
 			self->ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_GETSET;
 			self->ae_flags |= (AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL);
 			AttributeError_LazyGetSet_SetGetter(self, prop->cp_get);
@@ -1226,7 +1226,7 @@ AttributeError_init_kw(AttributeError *__restrict self, size_t argc,
 			DeeClsMemberObject *member = (DeeClsMemberObject *)attr;
 			buffer = Dee_attrdesc__type_member_buffer(&self->ae_desc);
 			Dee_Incref(member->cmb_type);
-			self->ae_desc.ad_info.ai_decl = (DREF DeeObject *)member->cmb_type;
+			self->ae_desc.ad_info.ai_decl = Dee_AsObject(member->cmb_type);
 			self->ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_MEMBER;
 			self->ae_flags |= (AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL);
 			self->ae_desc.ad_info.ai_value.v_member = type_member_buffer_asmember(buffer);

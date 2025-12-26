@@ -922,11 +922,11 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__rest
 #define Dee_XClear_unlikely_traced(x, file, line)  (void)(!(x) || (Dee_Decref_unlikely_traced(x, file, line), (x) = NULL, 0))
 
 /* NOTE: `(Dee_)return_reference()' only evaluates `ob' _once_! */
-#define Dee_return_reference(ob)                                                       \
-	do {                                                                               \
+#define Dee_return_reference(ob)                                   \
+	do {                                                           \
 		__register DeeObject *const _rr_result = Dee_AsObject(ob); \
-		Dee_Incref(_rr_result);                                                        \
-		return _rr_result;                                                             \
+		Dee_Incref(_rr_result);                                    \
+		return _rr_result;                                         \
 	}	__WHILE0
 
 /* NOTE: `(Dee_)return_reference_()' may evaluate `ob' multiple times */
@@ -4594,7 +4594,7 @@ DFUNDEF WUNUSED /*ATTR_PURE*/ NONNULL((1)) Dee_hash_t (DCALL DeeObject_HashInher
 DFUNDEF WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t (DCALL DeeObject_Hashv)(DeeObject *const *__restrict object_vector, size_t object_count);
 DFUNDEF WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t (DCALL DeeObject_XHashv)(DeeObject *const *__restrict object_vector, size_t object_count);
 #define DeeObject_Hash(self)          DeeObject_Hash(Dee_AsObject(self))
-#define DeeObject_HashInherited(self) DeeObject_HashInherited(Dee_REQUIRES_OBJECT(DREF DeeObject, self))
+#define DeeObject_HashInherited(self) DeeObject_HashInherited(Dee_AsObject(self))
 
 /* GC operator invocation. */
 DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_Visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg);

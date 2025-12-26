@@ -255,7 +255,7 @@ check_getattr_sym:
 				int32_t module_id;
 				/* module.attr --> push extern ... */
 				modsym = DeeModule_GetSymbol(SYMBOL_MODULE_MODULE(sym),
-				                             (DeeObject *)attrname);
+				                             Dee_AsObject(attrname));
 				if (!modsym)
 					break;
 				if (!PUSH_RESULT && !(modsym->ss_flags & MODSYM_FPROPERTY))
@@ -417,7 +417,7 @@ check_boundattr_sym:
 				int32_t module_id;
 				/* module.attr --> push bnd extern ... */
 				modsym = DeeModule_GetSymbol(SYMBOL_MODULE_MODULE(sym),
-				                             (DeeObject *)attrname);
+				                             Dee_AsObject(attrname));
 				if (!modsym)
 					break;
 				if (modsym->ss_flags & MODSYM_FPROPERTY)

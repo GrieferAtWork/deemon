@@ -25,36 +25,36 @@
 #define OBJ_posix_R_OK DeeInt_ForSmallInt(R_OK)
 #elif R_OK >= 0
 #if R_OK <= 0x7fffull /* 15-bit */
-#define OBJ_posix_R_OK ((DeeObject *)&posix_R_OK)
+#define OBJ_posix_R_OK &posix_R_OK
 PRIVATE DEFINE_UINT15(posix_R_OK, R_OK);
 #elif R_OK <= 0x3fffffffull /* 30-bit */
-#define OBJ_posix_R_OK ((DeeObject *)&posix_R_OK)
+#define OBJ_posix_R_OK &posix_R_OK
 PRIVATE DEFINE_UINT30(posix_R_OK, R_OK);
 #elif R_OK <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_posix_R_OK ((DeeObject *)&posix_R_OK)
+#define OBJ_posix_R_OK &posix_R_OK
 PRIVATE DEFINE_UINT45(posix_R_OK, R_OK);
 #elif R_OK <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_posix_R_OK ((DeeObject *)&posix_R_OK)
+#define OBJ_posix_R_OK &posix_R_OK
 PRIVATE DEFINE_UINT60(posix_R_OK, R_OK);
 #else
-#define OBJ_posix_R_OK ((DeeObject *)&posix_R_OK)
+#define OBJ_posix_R_OK &posix_R_OK
 PRIVATE DEFINE_UINT75(posix_R_OK, R_OK);
 #endif
 #else /* R_OK >= 0 */
 #if R_OK >= -0x4000ll /* 15-bit */
-#define OBJ_posix_R_OK ((DeeObject *)&posix_R_OK)
+#define OBJ_posix_R_OK &posix_R_OK
 PRIVATE DEFINE_INT15(posix_R_OK, R_OK);
 #elif R_OK >= -0x20000000ll /* 30-bit */
-#define OBJ_posix_R_OK ((DeeObject *)&posix_R_OK)
+#define OBJ_posix_R_OK &posix_R_OK
 PRIVATE DEFINE_INT30(posix_R_OK, R_OK);
 #elif R_OK >= -0x100000000000ll /* 45-bit */
-#define OBJ_posix_R_OK ((DeeObject *)&posix_R_OK)
+#define OBJ_posix_R_OK &posix_R_OK
 PRIVATE DEFINE_INT45(posix_R_OK, R_OK);
 #elif R_OK >= -0x800000000000000ll /* 60-bit */
-#define OBJ_posix_R_OK ((DeeObject *)&posix_R_OK)
+#define OBJ_posix_R_OK &posix_R_OK
 PRIVATE DEFINE_INT60(posix_R_OK, R_OK);
 #else
-#define OBJ_posix_R_OK ((DeeObject *)&posix_R_OK)
+#define OBJ_posix_R_OK &posix_R_OK
 PRIVATE DEFINE_INT75(posix_R_OK, R_OK);
 #endif
 #endif /* R_OK < 0 */
@@ -68,36 +68,36 @@ PRIVATE DEFINE_INT75(posix_R_OK, R_OK);
 #define OBJ_posix_W_OK DeeInt_ForSmallInt(W_OK)
 #elif W_OK >= 0
 #if W_OK <= 0x7fffull /* 15-bit */
-#define OBJ_posix_W_OK ((DeeObject *)&posix_W_OK)
+#define OBJ_posix_W_OK &posix_W_OK
 PRIVATE DEFINE_UINT15(posix_W_OK, W_OK);
 #elif W_OK <= 0x3fffffffull /* 30-bit */
-#define OBJ_posix_W_OK ((DeeObject *)&posix_W_OK)
+#define OBJ_posix_W_OK &posix_W_OK
 PRIVATE DEFINE_UINT30(posix_W_OK, W_OK);
 #elif W_OK <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_posix_W_OK ((DeeObject *)&posix_W_OK)
+#define OBJ_posix_W_OK &posix_W_OK
 PRIVATE DEFINE_UINT45(posix_W_OK, W_OK);
 #elif W_OK <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_posix_W_OK ((DeeObject *)&posix_W_OK)
+#define OBJ_posix_W_OK &posix_W_OK
 PRIVATE DEFINE_UINT60(posix_W_OK, W_OK);
 #else
-#define OBJ_posix_W_OK ((DeeObject *)&posix_W_OK)
+#define OBJ_posix_W_OK &posix_W_OK
 PRIVATE DEFINE_UINT75(posix_W_OK, W_OK);
 #endif
 #else /* W_OK >= 0 */
 #if W_OK >= -0x4000ll /* 15-bit */
-#define OBJ_posix_W_OK ((DeeObject *)&posix_W_OK)
+#define OBJ_posix_W_OK &posix_W_OK
 PRIVATE DEFINE_INT15(posix_W_OK, W_OK);
 #elif W_OK >= -0x20000000ll /* 30-bit */
-#define OBJ_posix_W_OK ((DeeObject *)&posix_W_OK)
+#define OBJ_posix_W_OK &posix_W_OK
 PRIVATE DEFINE_INT30(posix_W_OK, W_OK);
 #elif W_OK >= -0x100000000000ll /* 45-bit */
-#define OBJ_posix_W_OK ((DeeObject *)&posix_W_OK)
+#define OBJ_posix_W_OK &posix_W_OK
 PRIVATE DEFINE_INT45(posix_W_OK, W_OK);
 #elif W_OK >= -0x800000000000000ll /* 60-bit */
-#define OBJ_posix_W_OK ((DeeObject *)&posix_W_OK)
+#define OBJ_posix_W_OK &posix_W_OK
 PRIVATE DEFINE_INT60(posix_W_OK, W_OK);
 #else
-#define OBJ_posix_W_OK ((DeeObject *)&posix_W_OK)
+#define OBJ_posix_W_OK &posix_W_OK
 PRIVATE DEFINE_INT75(posix_W_OK, W_OK);
 #endif
 #endif /* W_OK < 0 */
@@ -111,36 +111,36 @@ PRIVATE DEFINE_INT75(posix_W_OK, W_OK);
 #define OBJ_posix_X_OK DeeInt_ForSmallInt(X_OK)
 #elif X_OK >= 0
 #if X_OK <= 0x7fffull /* 15-bit */
-#define OBJ_posix_X_OK ((DeeObject *)&posix_X_OK)
+#define OBJ_posix_X_OK &posix_X_OK
 PRIVATE DEFINE_UINT15(posix_X_OK, X_OK);
 #elif X_OK <= 0x3fffffffull /* 30-bit */
-#define OBJ_posix_X_OK ((DeeObject *)&posix_X_OK)
+#define OBJ_posix_X_OK &posix_X_OK
 PRIVATE DEFINE_UINT30(posix_X_OK, X_OK);
 #elif X_OK <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_posix_X_OK ((DeeObject *)&posix_X_OK)
+#define OBJ_posix_X_OK &posix_X_OK
 PRIVATE DEFINE_UINT45(posix_X_OK, X_OK);
 #elif X_OK <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_posix_X_OK ((DeeObject *)&posix_X_OK)
+#define OBJ_posix_X_OK &posix_X_OK
 PRIVATE DEFINE_UINT60(posix_X_OK, X_OK);
 #else
-#define OBJ_posix_X_OK ((DeeObject *)&posix_X_OK)
+#define OBJ_posix_X_OK &posix_X_OK
 PRIVATE DEFINE_UINT75(posix_X_OK, X_OK);
 #endif
 #else /* X_OK >= 0 */
 #if X_OK >= -0x4000ll /* 15-bit */
-#define OBJ_posix_X_OK ((DeeObject *)&posix_X_OK)
+#define OBJ_posix_X_OK &posix_X_OK
 PRIVATE DEFINE_INT15(posix_X_OK, X_OK);
 #elif X_OK >= -0x20000000ll /* 30-bit */
-#define OBJ_posix_X_OK ((DeeObject *)&posix_X_OK)
+#define OBJ_posix_X_OK &posix_X_OK
 PRIVATE DEFINE_INT30(posix_X_OK, X_OK);
 #elif X_OK >= -0x100000000000ll /* 45-bit */
-#define OBJ_posix_X_OK ((DeeObject *)&posix_X_OK)
+#define OBJ_posix_X_OK &posix_X_OK
 PRIVATE DEFINE_INT45(posix_X_OK, X_OK);
 #elif X_OK >= -0x800000000000000ll /* 60-bit */
-#define OBJ_posix_X_OK ((DeeObject *)&posix_X_OK)
+#define OBJ_posix_X_OK &posix_X_OK
 PRIVATE DEFINE_INT60(posix_X_OK, X_OK);
 #else
-#define OBJ_posix_X_OK ((DeeObject *)&posix_X_OK)
+#define OBJ_posix_X_OK &posix_X_OK
 PRIVATE DEFINE_INT75(posix_X_OK, X_OK);
 #endif
 #endif /* X_OK < 0 */
@@ -154,36 +154,36 @@ PRIVATE DEFINE_INT75(posix_X_OK, X_OK);
 #define OBJ_posix_F_OK DeeInt_ForSmallInt(F_OK)
 #elif F_OK >= 0
 #if F_OK <= 0x7fffull /* 15-bit */
-#define OBJ_posix_F_OK ((DeeObject *)&posix_F_OK)
+#define OBJ_posix_F_OK &posix_F_OK
 PRIVATE DEFINE_UINT15(posix_F_OK, F_OK);
 #elif F_OK <= 0x3fffffffull /* 30-bit */
-#define OBJ_posix_F_OK ((DeeObject *)&posix_F_OK)
+#define OBJ_posix_F_OK &posix_F_OK
 PRIVATE DEFINE_UINT30(posix_F_OK, F_OK);
 #elif F_OK <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_posix_F_OK ((DeeObject *)&posix_F_OK)
+#define OBJ_posix_F_OK &posix_F_OK
 PRIVATE DEFINE_UINT45(posix_F_OK, F_OK);
 #elif F_OK <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_posix_F_OK ((DeeObject *)&posix_F_OK)
+#define OBJ_posix_F_OK &posix_F_OK
 PRIVATE DEFINE_UINT60(posix_F_OK, F_OK);
 #else
-#define OBJ_posix_F_OK ((DeeObject *)&posix_F_OK)
+#define OBJ_posix_F_OK &posix_F_OK
 PRIVATE DEFINE_UINT75(posix_F_OK, F_OK);
 #endif
 #else /* F_OK >= 0 */
 #if F_OK >= -0x4000ll /* 15-bit */
-#define OBJ_posix_F_OK ((DeeObject *)&posix_F_OK)
+#define OBJ_posix_F_OK &posix_F_OK
 PRIVATE DEFINE_INT15(posix_F_OK, F_OK);
 #elif F_OK >= -0x20000000ll /* 30-bit */
-#define OBJ_posix_F_OK ((DeeObject *)&posix_F_OK)
+#define OBJ_posix_F_OK &posix_F_OK
 PRIVATE DEFINE_INT30(posix_F_OK, F_OK);
 #elif F_OK >= -0x100000000000ll /* 45-bit */
-#define OBJ_posix_F_OK ((DeeObject *)&posix_F_OK)
+#define OBJ_posix_F_OK &posix_F_OK
 PRIVATE DEFINE_INT45(posix_F_OK, F_OK);
 #elif F_OK >= -0x800000000000000ll /* 60-bit */
-#define OBJ_posix_F_OK ((DeeObject *)&posix_F_OK)
+#define OBJ_posix_F_OK &posix_F_OK
 PRIVATE DEFINE_INT60(posix_F_OK, F_OK);
 #else
-#define OBJ_posix_F_OK ((DeeObject *)&posix_F_OK)
+#define OBJ_posix_F_OK &posix_F_OK
 PRIVATE DEFINE_INT75(posix_F_OK, F_OK);
 #endif
 #endif /* F_OK < 0 */

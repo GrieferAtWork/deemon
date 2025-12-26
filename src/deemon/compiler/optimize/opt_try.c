@@ -136,7 +136,7 @@ err_guard_assumes:
 		/* `catch (object)' --> `catch (...)' */
 		if (iter->ce_mask &&
 		    iter->ce_mask->a_type == AST_CONSTEXPR &&
-		    iter->ce_mask->a_constexpr == (DeeObject *)&DeeObject_Type) {
+		    iter->ce_mask->a_constexpr == Dee_AsObject(&DeeObject_Type)) {
 			OPTIMIZE_VERBOSE("Optimize object-mask to catch-all\n");
 			++optimizer_count;
 			ast_decref(iter->ce_mask);

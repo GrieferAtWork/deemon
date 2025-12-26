@@ -68,7 +68,7 @@ default_foreach_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value
 	pair->t_elem[0] = key;   /* Symbolic reference */
 	pair->t_elem[1] = value; /* Symbolic reference */
 	result = (*data->dfwfp_cb)(data->dfwfp_arg, (DeeObject *)pair);
-	DeeTuple_DecrefSymbolic((DREF DeeObject *)pair);
+	DeeTuple_DecrefSymbolic(Dee_AsObject(pair));
 	return result;
 err:
 	return -1;

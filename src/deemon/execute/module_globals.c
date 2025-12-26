@@ -198,7 +198,7 @@ again:
 		for (;;) {
 			symbol = &mod->mo_bucketv[new_index];
 			if (symbol->ss_name) {
-				result_name = (DREF DeeObject *)module_symbol_getnameobj(symbol);
+				result_name = Dee_AsObject(module_symbol_getnameobj(symbol));
 				if unlikely(!result_name) {
 					do_DeeModule_UnlockSymbols(mod);
 					return NULL;
@@ -676,7 +676,7 @@ modexports_getitem_index(ModuleExports *self, size_t key) {
 err_nokey_unlock:
 	do_DeeModule_UnlockSymbols(mod);
 err_nokey:
-	DeeRT_ErrUnknownKeyInt((DeeObject *)self, key);
+	DeeRT_ErrUnknownKeyInt(Dee_AsObject(self), key);
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -770,7 +770,7 @@ modexports_delitem_index(ModuleExports *self, size_t key) {
 err_nokey_unlock:
 	do_DeeModule_UnlockSymbols(mod);
 err_nokey:
-	return DeeRT_ErrUnknownKeyInt((DeeObject *)self, key);
+	return DeeRT_ErrUnknownKeyInt(Dee_AsObject(self), key);
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return -1;
@@ -794,7 +794,7 @@ modexports_setitem_index(ModuleExports *self, size_t key, DeeObject *value) {
 err_nokey_unlock:
 	do_DeeModule_UnlockSymbols(mod);
 err_nokey:
-	return DeeRT_ErrUnknownKeyInt((DeeObject *)self, key);
+	return DeeRT_ErrUnknownKeyInt(Dee_AsObject(self), key);
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return -1;
@@ -818,7 +818,7 @@ modexports_getitem_string_hash(ModuleExports *self, char const *key, Dee_hash_t 
 	return result;
 err_nokey_unlock:
 	do_DeeModule_UnlockSymbols(mod);
-	DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
+	DeeRT_ErrUnboundKeyStr(Dee_AsObject(self), key);
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -900,7 +900,7 @@ modexports_delitem_string_hash(ModuleExports *self, char const *key, Dee_hash_t 
 	return result;
 err_nokey_unlock:
 	do_DeeModule_UnlockSymbols(mod);
-	return DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
+	return DeeRT_ErrUnboundKeyStr(Dee_AsObject(self), key);
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return -1;
@@ -921,7 +921,7 @@ modexports_setitem_string_hash(ModuleExports *self, char const *key, Dee_hash_t 
 	return result;
 err_nokey_unlock:
 	do_DeeModule_UnlockSymbols(mod);
-	return DeeRT_ErrUnboundKeyStr((DeeObject *)self, key);
+	return DeeRT_ErrUnboundKeyStr(Dee_AsObject(self), key);
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return -1;
@@ -944,7 +944,7 @@ modexports_getitem_string_len_hash(ModuleExports *self, char const *key, size_t 
 	return result;
 err_nokey_unlock:
 	do_DeeModule_UnlockSymbols(mod);
-	DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
+	DeeRT_ErrUnknownKeyStrLen(Dee_AsObject(self), key, keylen);
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -1026,7 +1026,7 @@ modexports_delitem_string_len_hash(ModuleExports *self, char const *key, size_t 
 	return result;
 err_nokey_unlock:
 	do_DeeModule_UnlockSymbols(mod);
-	return DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
+	return DeeRT_ErrUnknownKeyStrLen(Dee_AsObject(self), key, keylen);
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return -1;
@@ -1047,7 +1047,7 @@ modexports_setitem_string_len_hash(ModuleExports *self, char const *key, size_t 
 	return result;
 err_nokey_unlock:
 	do_DeeModule_UnlockSymbols(mod);
-	return DeeRT_ErrUnknownKeyStrLen((DeeObject *)self, key, keylen);
+	return DeeRT_ErrUnknownKeyStrLen(Dee_AsObject(self), key, keylen);
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err:
 	return -1;
@@ -1272,7 +1272,7 @@ modglobals_getitem_index(ModuleGlobals *self, size_t index) {
 	if unlikely(index >= mod->mo_globalc) {
 		size_t num_globals = mod->mo_globalc;
 		do_DeeModule_UnlockSymbols(mod);
-		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, num_globals);
+		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, num_globals);
 		goto err;
 	}
 	DeeModule_LockRead(mod);
@@ -1280,7 +1280,7 @@ modglobals_getitem_index(ModuleGlobals *self, size_t index) {
 	if unlikely(!result) {
 		DeeModule_LockEndRead(mod);
 		do_DeeModule_UnlockSymbols(mod);
-		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex(self, index);
 		goto err;
 	}
 	Dee_Incref(result);
@@ -1299,7 +1299,7 @@ modglobals_setitem_index(ModuleGlobals *self, size_t index, DeeObject *value) {
 	if unlikely(index >= mod->mo_globalc) {
 		size_t num_globals = mod->mo_globalc;
 		do_DeeModule_UnlockSymbols(mod);
-		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, num_globals);
+		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, num_globals);
 		goto err;
 	}
 	DeeModule_LockWrite(mod);
@@ -1348,14 +1348,14 @@ modglobals_xchitem_index(ModuleGlobals *self, size_t index, DeeObject *value) {
 	if unlikely(index >= mod->mo_globalc) {
 		size_t num_globals = mod->mo_globalc;
 		do_DeeModule_UnlockSymbols(mod);
-		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, num_globals);
+		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, num_globals);
 		goto err;
 	}
 	DeeModule_LockWrite(mod);
 	oldvalue = mod->mo_globalv[index];
 	if unlikely(!oldvalue) {
 		do_DeeModule_UnlockSymbols(mod);
-		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex(self, index);
 		goto err;
 	}
 	Dee_Incref(value);

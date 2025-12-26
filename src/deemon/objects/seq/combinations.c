@@ -1210,7 +1210,7 @@ scv_ctor(SeqCombinationsView *__restrict self) {
 	self->scv_com = self->scv_iter->sci_com;
 	self->scv_idx = self->scv_iter->sci_idx;
 	Dee_weakref_support_init(self);
-	(void)Dee_weakref_set(&self->scv_iter->sci_view, (DeeObject *)self);
+	(void)Dee_weakref_set(&self->scv_iter->sci_view, Dee_AsObject(self));
 	return 0;
 err:
 	return -1;
@@ -1281,7 +1281,7 @@ scv_init(SeqCombinationsView *__restrict self,
 	Dee_weakref_support_init(self);
 	return 0;
 err_bad_iter_type:
-	DeeObject_TypeAssertFailed3((DeeObject *)self->scv_iter,
+	DeeObject_TypeAssertFailed3(Dee_AsObject(self->scv_iter),
 	                            &SeqCombinationsIterator_Type,
 	                            &SeqRepeatCombinationsIterator_Type,
 	                            &SeqPermutationsIterator_Type);
@@ -1316,7 +1316,7 @@ scv_getitem_index(SeqCombinationsView *__restrict self, size_t index) {
 	index = idx[index];
 	return DeeObject_InvokeMethodHint(seq_operator_getitem_index, self->scv_com->sc_seq, index);
 err_oob:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->scv_com->sc_rparam);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->scv_com->sc_rparam);
 	return NULL;
 }
 

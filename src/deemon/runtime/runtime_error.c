@@ -428,7 +428,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	struct ddi_state state;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	ASSERT(local_index < code->co_localc);
-	error = DeeCode_FindDDI((DeeObject *)code, &state, NULL,
+	error = DeeCode_FindDDI(Dee_AsObject(code), &state, NULL,
 	                        (code_addr_t)((instruction_t *)ip - code->co_code),
 	                        DDI_STATE_FNOTHROW);
 	if (DDI_ISOK(error)) {
@@ -437,8 +437,8 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 			if (local_index < iter->dx_lcnamc) {
 				char const *local_name;
 				if (!code_name)
-					code_name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_name);
-				if ((local_name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_lcnamv[local_index])) != NULL) {
+					code_name = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_base.dr_name);
+				if ((local_name = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_lcnamv[local_index])) != NULL) {
 					if (!code_name)
 						code_name = DeeCode_NAME(code);
 					DeeError_Throwf(&DeeError_UnboundLocal,
@@ -471,7 +471,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	ASSERT(static_index < code->co_refstaticc);
 	(void)ip;
 	code_name   = DeeCode_NAME(code);
-	symbol_name = DeeCode_GetRSymbolName((DeeObject *)code, static_index);
+	symbol_name = DeeCode_GetRSymbolName(Dee_AsObject(code), static_index);
 	if (symbol_name) {
 		return DeeError_Throwf(&DeeError_UnboundLocal,
 		                       "Unbound static variable `%s'%s%s",
@@ -519,7 +519,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	struct ddi_state state;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	ASSERT(local_index < code->co_localc);
-	error = DeeCode_FindDDI((DeeObject *)code, &state, NULL,
+	error = DeeCode_FindDDI(Dee_AsObject(code), &state, NULL,
 	                        (code_addr_t)((instruction_t *)ip - code->co_code),
 	                        DDI_STATE_FNOTHROW);
 	if (DDI_ISOK(error)) {
@@ -528,8 +528,8 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 			if (local_index < iter->dx_lcnamc) {
 				char const *local_name;
 				if (!code_name)
-					code_name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_name);
-				if ((local_name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_lcnamv[local_index])) != NULL) {
+					code_name = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_base.dr_name);
+				if ((local_name = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_lcnamv[local_index])) != NULL) {
 					if (!code_name)
 						code_name = DeeCode_NAME(code);
 					DeeError_Throwf(&DeeError_RuntimeError,

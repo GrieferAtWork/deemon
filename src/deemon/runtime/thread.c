@@ -1234,7 +1234,7 @@ DeeThread_Suspend(DeeThreadObject *__restrict self) {
 			break;
 
 		/* Wake up the thread (in case it's currently inside of a blocking system call) */
-		DeeThread_Wake((DeeObject *)self);
+		DeeThread_Wake(Dee_AsObject(self));
 
 		/* Futex-wait for the thread to become suspended (with a short timeout so we're
 		 * able to catch threads that were just on their way into a blocking system call). */
@@ -1886,7 +1886,7 @@ DeeThread_DecrefInOtherThread(DREF DeeThreadObject *self) {
 		return;
 
 	/* Use a custom interrupt descriptor to decref `self' in the main thread. */
-	self->t_interrupt.ti_intr = (DREF DeeObject *)self;               /* Inherit reference */
+	self->t_interrupt.ti_intr = Dee_AsObject(self);                   /* Inherit reference */
 	self->t_interrupt.ti_args = (struct Dee_tuple_object *)ITER_DONE; /* Decref marker (& prevent descriptor free) */
 
 	/* Let the main thread inherit a reference to our thread. */
@@ -1897,7 +1897,7 @@ DeeThread_DecrefInOtherThread(DREF DeeThreadObject *self) {
 		DeeThread_Main.ot_thread.t_interrupt.ti_next = &self->t_interrupt; /* Inherit reference */
 	} else {
 		/* Initial interrupt */
-		DeeThread_Main.ot_thread.t_interrupt.ti_intr = (DREF DeeObject *)self; /* Inherit reference */
+		DeeThread_Main.ot_thread.t_interrupt.ti_intr = Dee_AsObject(self); /* Inherit reference */
 		DeeThread_Main.ot_thread.t_interrupt.ti_args = (DREF struct Dee_tuple_object *)ITER_DONE;
 	}
 	_DeeThread_ReleaseInterrupt(&DeeThread_Main.ot_thread);
@@ -2455,8 +2455,8 @@ PRIVATE int DeeThread_Entry_func(void *arg)
 
 	/* Insert the thread into the global list of threads */
 	LIST_INSERT_HEAD(&thread_list, &self->ot_thread, t_global);
-	thread_main = (DREF DeeObject *)self->ot_thread.t_inout.io_main;  /* Inherit reference */
-	thread_args = (DREF DeeObject *)self->ot_thread.t_context.d_args; /* Inherit reference */
+	thread_main = Dee_AsObject(self->ot_thread.t_inout.io_main);  /* Inherit reference */
+	thread_args = Dee_AsObject(self->ot_thread.t_context.d_args); /* Inherit reference */
 	DBG_memset(&self->ot_thread.t_inout.io_main, 0xcc,
 	           sizeof(self->ot_thread.t_inout.io_main));
 	self->ot_thread.t_context.d_tls = NULL;
@@ -3264,7 +3264,7 @@ except_frame_copy_for_rethrow_or_unlock(struct except_frame *__restrict self,
 	thread_crash->e_msg = NULL;
 	thread_crash->e_cause   = self->ef_error;
 	result->ef_trace = self->ef_trace;
-	result->ef_error = (DREF DeeObject *)thread_crash;
+	result->ef_error = Dee_AsObject(thread_crash);
 	Dee_Incref(self->ef_error);
 	if (ITER_ISOK(self->ef_trace))
 		Dee_Incref(self->ef_trace);
@@ -3474,8 +3474,8 @@ thread_clear(DeeThreadObject *__restrict self) {
 			self->t_inout.io_result = DeeNone_NewRef();
 		}
 	} else {
-		old_objects[0] = self->t_inout.io_main;                    /* Inherit reference */
-		old_objects[1] = (DREF DeeObject *)self->t_context.d_args; /* Inherit reference */
+		old_objects[0] = self->t_inout.io_main;                /* Inherit reference */
+		old_objects[1] = Dee_AsObject(self->t_context.d_args); /* Inherit reference */
 		self->t_inout.io_main  = NULL;
 		self->t_context.d_args = (DREF struct Dee_tuple_object *)DeeTuple_NewEmpty();
 	}
@@ -4170,12 +4170,12 @@ thread_crash_traceback(DeeThreadObject *self, size_t argc, DeeObject *const *arg
 		DeeRT_ErrNoActiveException();
 		goto err;
 	}
-	result = (DeeObject *)self->t_except->ef_trace;
+	result = Dee_AsObject(self->t_except->ef_trace);
 	if (result == ITER_DONE) {
 		result = NULL;
 		if (self == caller) {
 			self->t_except->ef_trace = except_frame_gettb(self->t_except);
-			result = (DeeObject *)self->t_except->ef_trace;
+			result = Dee_AsObject(self->t_except->ef_trace);
 		}
 	}
 	if (result == NULL)
@@ -4575,7 +4575,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_result_get(DeeThreadObject *__restrict self) {
 #ifndef DeeThread_USE_SINGLE_THREADED
 	DREF DeeObject *result;
-	result = DeeThread_Join((DeeObject *)self, 0);
+	result = DeeThread_Join(Dee_AsObject(self), 0);
 	if (result == ITER_DONE)
 		goto err_unbound;
 	return result;
@@ -4590,7 +4590,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_id(DeeThreadObject *__restrict self) {
 #ifdef Dee_pid_t
 	Dee_pid_t result;
-	result = DeeThread_GetTid((DeeObject *)self);
+	result = DeeThread_GetTid(Dee_AsObject(self));
 	return DeeInt_NEWU(result);
 #else /* Dee_pid_t */
 	(void)self;
@@ -5297,7 +5297,7 @@ err:
 	} else
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 	{
-		return (DREF DeeObject *)DeeTraceback_NewWithException(me);
+		return Dee_AsObject(DeeTraceback_NewWithException(me));
 	}
 }
 

@@ -427,7 +427,7 @@ error_display(DeeErrorObject *__restrict self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__reason_fp_traceback, "|ooo:display", &args))
 		goto err;
 /*[[[end]]]*/
-	return error_display_impl((DeeObject *)self, args.reason, args.fp, args.traceback);
+	return error_display_impl(Dee_AsObject(self), args.reason, args.fp, args.traceback);
 err:
 	return NULL;
 }
@@ -501,7 +501,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 error_getmessage(DeeErrorObject *__restrict self) {
 	if (self->e_msg)
 		return DeeObject_Str(self->e_msg);
-	return DeeObject_Str((DeeObject *)self);
+	return DeeObject_Str(Dee_AsObject(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2477,7 +2477,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 		Dee_variant_init_copy(&result->ie_base.ke_key, &overflow->io_base.ve_value);
 		Dee_variant_init_unbound(&result->ie_length);
 		result->ie_base.ke_base.e_msg   = NULL;
-		result->ie_base.ke_base.e_cause = (DREF DeeObject *)overflow; /* Inherit reference */
+		result->ie_base.ke_base.e_cause = Dee_AsObject(&overflow->io_base); /* Inherit reference */
 		DeeObject_Init(&result->ie_base.ke_base, &DeeError_IndexError);
 		error->ef_error = (DREF DeeObject *)result; /* Inherit reference */
 	}
@@ -2525,9 +2525,9 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 		Dee_variant_init_copy(&result->nsf_rhs, &overflow->io_base.ve_value);
 		result->nsf_left = is_left_shift;
 		result->nsf_base.e_msg   = NULL;
-		result->nsf_base.e_cause = (DREF DeeObject *)overflow; /* Inherit reference */
+		result->nsf_base.e_cause = Dee_AsObject(&overflow->io_base); /* Inherit reference */
 		DeeObject_Init(&result->nsf_base, &DeeError_NegativeShift);
-		error->ef_error = (DREF DeeObject *)result; /* Inherit reference */
+		error->ef_error = Dee_AsObject(&result->nsf_base); /* Inherit reference */
 	}
 done:
 	return -1;
@@ -2608,8 +2608,8 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 			Dee_variant_fini(&nested->ve_value);
 			Dee_variant_init_object(&nested->ve_value, to);
 			Dee_XDecref(nested->e_cause);
-			nested->e_cause = (DREF DeeObject *)current; /* Inherit reference */
-			error->ef_error = (DREF DeeObject *)nested; /* Inherit reference */
+			nested->e_cause = Dee_AsObject(current); /* Inherit reference */
+			error->ef_error = Dee_AsObject(nested);  /* Inherit reference */
 		}
 	}
 done:
@@ -2658,9 +2658,9 @@ PRIVATE ATTR_COLD NONNULL((1, 2)) int
 		Dee_variant_init_copy(&result->io_maxval, maxval);
 		result->io_positive = overflow->io_positive;
 		result->io_base.e_msg   = NULL;
-		result->io_base.e_cause = (DREF DeeObject *)overflow; /* Inherit reference */
+		result->io_base.e_cause = Dee_AsObject(&overflow->io_base); /* Inherit reference */
 		DeeObject_Init(&result->io_base, &DeeError_IntegerOverflow);
-		error->ef_error = (DREF DeeObject *)result; /* Inherit reference */
+		error->ef_error = Dee_AsObject(&result->io_base); /* Inherit reference */
 	}
 done:
 	return -1;

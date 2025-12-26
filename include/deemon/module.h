@@ -258,8 +258,8 @@ struct Dee_module_symbol {
 INTDEF WUNUSED NONNULL((1)) DREF struct Dee_string_object *DCALL module_symbol_getnameobj(struct Dee_module_symbol *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF struct Dee_string_object *DCALL module_symbol_getdocobj(struct Dee_module_symbol *__restrict self);
 #else /* CONFIG_BUILDING_DEEMON */
-#define Dee_module_symbol_getnameobj(x)   ((DeeStringObject *)(((x)->ss_flags & MODSYM_FNAMEOBJ) ? DeeObject_NewRef((DeeObject *)COMPILER_CONTAINER_OF((x)->ss_name, DeeStringObject, s_str)) : DeeString_NewWithHash((x)->ss_name, (x)->ss_hash)))
-#define Dee_module_symbol_getdocobj(x)    ((DeeStringObject *)(((x)->ss_flags & MODSYM_FDOCOBJ) ? DeeObject_NewRef((DeeObject *)COMPILER_CONTAINER_OF((x)->ss_doc, DeeStringObject, s_str)) : DeeString_NewUtf8((x)->ss_doc, strlen((x)->ss_doc), Dee_STRING_ERROR_FIGNORE)))
+#define Dee_module_symbol_getnameobj(x)   ((DeeStringObject *)(((x)->ss_flags & MODSYM_FNAMEOBJ) ? DeeObject_NewRef(Dee_AsObject(COMPILER_CONTAINER_OF((x)->ss_name, DeeStringObject, s_str))) : DeeString_NewWithHash((x)->ss_name, (x)->ss_hash)))
+#define Dee_module_symbol_getdocobj(x)    ((DeeStringObject *)(((x)->ss_flags & MODSYM_FDOCOBJ) ? DeeObject_NewRef(Dee_AsObject(COMPILER_CONTAINER_OF((x)->ss_doc, DeeStringObject, s_str))) : DeeString_NewUtf8((x)->ss_doc, strlen((x)->ss_doc), Dee_STRING_ERROR_FIGNORE)))
 #ifdef DEE_SOURCE
 #define module_symbol_getnameobj   Dee_module_symbol_getnameobj
 #define module_symbol_getdocobj    Dee_module_symbol_getdocobj

@@ -100,7 +100,7 @@ decgen_imports(DeeModuleObject *__restrict self) {
 		 * and wouldn't give us any advantage later... */
 		if (!mod->mo_absname) {
 			char const *libname_utf8;
-			DREF DeeObject *libname = DeeModule_GetLibName((DeeObject *)mod, 0);
+			DREF DeeObject *libname = DeeModule_GetLibName(Dee_AsObject(mod), 0);
 			if unlikely(!libname)
 				goto err;
 			if (libname == ITER_DONE) {
@@ -129,7 +129,7 @@ decgen_imports(DeeModuleObject *__restrict self) {
 			/* Globally available module (loadable as part of the library path). */
 			char const *global_name;
 import_module_by_name:
-			global_name = DeeString_AsUtf8((DeeObject *)mod->mo_name);
+			global_name = DeeString_AsUtf8(Dee_AsObject(mod->mo_name));
 			if unlikely(!global_name)
 				goto err;
 			data = dec_allocstr(global_name,
@@ -148,13 +148,13 @@ import_module_by_name:
 			 *       the empty module don't have a path assigned. */
 			if (!mod->mo_path)
 				goto import_module_by_name;
-			other_pathstr = DeeString_AsUtf8((DeeObject *)mod->mo_path);
+			other_pathstr = DeeString_AsUtf8(Dee_AsObject(mod->mo_path));
 			if unlikely(!other_pathstr)
 				goto err;
 			other_pathend = other_pathstr + WSTR_LENGTH(other_pathstr);
 			if (!module_pathstr) {
 				/* Lazily calculate the module's path when it's start being used. */
-				module_pathstr = DeeString_AsUtf8((DeeObject *)self->mo_path);
+				module_pathstr = DeeString_AsUtf8(Dee_AsObject(self->mo_path));
 				if unlikely(!module_pathstr)
 					goto err;
 				module_pathend = module_pathstr + WSTR_LENGTH(module_pathstr);
@@ -567,7 +567,7 @@ dec_putclassdesc(DeeClassDescriptorObject *__restrict self) {
 	if (dec_putptr(straddr))
 		goto err; /* Dec_ClassDescriptor::cd_nam */
 	if (self->cd_doc) {
-		char const *doc_str = DeeString_AsUtf8((DeeObject *)self->cd_doc);
+		char const *doc_str = DeeString_AsUtf8(Dee_AsObject(self->cd_doc));
 		if unlikely(!doc_str)
 			goto err;
 		if (WSTR_LENGTH(doc_str) == 0)
@@ -663,7 +663,7 @@ empty_doc:
 		if (dec_putptr(straddr))
 			goto err; /* Dec_ClassAttribute::ca_nam */
 		if (attr->ca_doc) {
-			char const *doc_str = DeeString_AsUtf8((DeeObject *)attr->ca_doc);
+			char const *doc_str = DeeString_AsUtf8(Dee_AsObject(attr->ca_doc));
 			if unlikely(!doc_str)
 				goto err;
 			if (WSTR_LENGTH(doc_str) == 0)
@@ -719,7 +719,7 @@ empty_cattr_doc:
 		if (dec_putptr(straddr))
 			goto err; /* Dec_ClassAttribute::ca_nam */
 		if (attr->ca_doc) {
-			char const *doc_str = DeeString_AsUtf8((DeeObject *)attr->ca_doc);
+			char const *doc_str = DeeString_AsUtf8(Dee_AsObject(attr->ca_doc));
 			if unlikely(!doc_str)
 				goto err;
 			if (WSTR_LENGTH(doc_str) == 0)
@@ -952,7 +952,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(/*nullable*/ DeeObject *self) {
 	if (tp_self == &DeeList_Type) {
 		size_t i, length;
 		DeeListObject *me = (DeeListObject *)self;
-		if (dec_recursion_check((DeeObject *)me))
+		if (dec_recursion_check(Dee_AsObject(me)))
 			goto err;
 		if (dec_putb(DTYPE_LIST))
 			goto err;
@@ -961,7 +961,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(/*nullable*/ DeeObject *self) {
 		DeeList_LockEndRead(me);
 		if (dec_putptr((uint32_t)length))
 			goto err;
-		DEC_RECURSION_BEGIN((DeeObject *)me);
+		DEC_RECURSION_BEGIN(Dee_AsObject(me));
 
 		/* Encode all of the list's elements. */
 		DeeList_LockRead(me);
@@ -992,7 +992,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(/*nullable*/ DeeObject *self) {
 	if (tp_self == &DeeHashSet_Type) {
 		size_t i, length, written;
 		DeeHashSetObject *me = (DeeHashSetObject *)self;
-		if (dec_recursion_check((DeeObject *)me))
+		if (dec_recursion_check(Dee_AsObject(me)))
 			goto err;
 		if (dec_putb((DTYPE16_HASHSET & 0xff00) >> 8))
 			goto err;
@@ -1003,7 +1003,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(/*nullable*/ DeeObject *self) {
 		DeeHashSet_LockEndRead(me);
 		if (dec_putptr((uint32_t)length))
 			goto err;
-		DEC_RECURSION_BEGIN((DeeObject *)me);
+		DEC_RECURSION_BEGIN(Dee_AsObject(me));
 
 		/* Encode all of the set's elements. */
 		written = 0;
@@ -1047,7 +1047,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(/*nullable*/ DeeObject *self) {
 	if (tp_self == &DeeDict_Type) {
 		size_t i, length, written;
 		DeeDictObject *me = (DeeDictObject *)self;
-		if (dec_recursion_check((DeeObject *)me))
+		if (dec_recursion_check(Dee_AsObject(me)))
 			goto err;
 		if (dec_putb((DTYPE16_DICT & 0xff00) >> 8))
 			goto err;
@@ -1058,7 +1058,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(/*nullable*/ DeeObject *self) {
 		DeeDict_LockEndRead(me);
 		if (dec_putptr((uint32_t)length))
 			goto err;
-		DEC_RECURSION_BEGIN((DeeObject *)me);
+		DEC_RECURSION_BEGIN(Dee_AsObject(me));
 
 		/* Encode all of the Dict's elements. */
 		written = 0;
@@ -1626,7 +1626,7 @@ INTERN WUNUSED NONNULL((1)) int
 					goto err; /* Dec_8BitCodeExcept.ce_addr */
 				if (dec_putb((uint8_t)iter->eh_stack))
 					goto err; /* Dec_8BitCodeExcept.ce_stack */
-				if (dec_putobj((DeeObject *)iter->eh_mask))
+				if (dec_putobj(Dee_AsObject(iter->eh_mask)))
 					goto err; /* Dec_8BitCodeExcept.ce_mask */
 			}
 		} else {
@@ -1643,7 +1643,7 @@ INTERN WUNUSED NONNULL((1)) int
 					goto err; /* Dec_CodeExcept.ce_addr */
 				if (dec_putw(iter->eh_stack))
 					goto err; /* Dec_CodeExcept.ce_stack */
-				if (dec_putobj((DeeObject *)iter->eh_mask))
+				if (dec_putobj(Dee_AsObject(iter->eh_mask)))
 					goto err; /* Dec_CodeExcept.ce_mask */
 			}
 		}
@@ -1754,7 +1754,7 @@ INTERN WUNUSED NONNULL((1)) int
 				uint8_t *name;
 				uint32_t addr;
 				dec_curr = SC_STRING;
-				name     = (uint8_t *)DeeString_AsUtf8((DeeObject *)self->co_keywords[i]);
+				name = (uint8_t *)DeeString_AsUtf8(Dee_AsObject(self->co_keywords[i]));
 				if unlikely(!name)
 					goto err;
 				name = dec_allocstr(name, (WSTR_LENGTH(name) + 1) * sizeof(char));
@@ -1770,7 +1770,7 @@ INTERN WUNUSED NONNULL((1)) int
 				uint8_t *name;
 				uint32_t addr;
 				size_t len;
-				name = (uint8_t *)DeeString_AsUtf8((DeeObject *)self->co_keywords[i]);
+				name = (uint8_t *)DeeString_AsUtf8(Dee_AsObject(self->co_keywords[i]));
 				if unlikely(!name)
 					goto err;
 				len = WSTR_LENGTH(name);
@@ -1925,7 +1925,7 @@ INTERN WUNUSED NONNULL((1)) int
 		ASSERT(self->mo_flags & Dee_MODULE_FHASCTIME);
 		comtm = self->mo_ctime;
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		comtm = DeeModule_GetCTime((DeeObject *)self);
+		comtm = DeeModule_GetCTime(Dee_AsObject(self));
 		if unlikely(comtm == (uint64_t)-1)
 			goto err;
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -1965,7 +1965,7 @@ INTERN WUNUSED NONNULL((1)) int
 	{
 		int temp;
 		DREF /*Code*/ DeeCodeObject *code;
-		code = (DREF /*Code*/ DeeCodeObject *)DeeModule_GetRootCode((DeeObject *)self);
+		code = (DREF /*Code*/ DeeCodeObject *)DeeModule_GetRootCode(Dee_AsObject(self));
 		temp = dec_putcode(code);
 		Dee_Decref_unlikely(code);
 		if unlikely(temp)

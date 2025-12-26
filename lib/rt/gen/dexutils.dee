@@ -84,14 +84,14 @@ local converter_map: {string: (string, string, string) | string} = {
 	"c:char[]"  : ("o", "?Dstring", "DeeStringObject *",
 		"\tif (DeeObject_AssertTypeExact({obj}, &DeeString_Type))\n"
 		"\t\tgoto err;\n"
-		"\t{obj}_str = DeeString_AsUtf8((DeeObject *){obj});\n"
+		"\t{obj}_str = DeeString_AsUtf8(Dee_AsObject({obj}));\n"
 		"\tif unlikely(!{obj}_str)\n"
 		"\t\tgoto err;\n",
 		("/*utf-8*/ char const *", "{}_str")),
 	"c:wchar_t[]"  : ("o", "?Dstring", "DeeStringObject *",
 		"\tif (DeeObject_AssertTypeExact({obj}, &DeeString_Type))\n"
 		"\t\tgoto err;\n"
-		"\t{obj}_str = (Dee_wchar_t const *)DeeString_AsWide((DeeObject *){obj});\n"
+		"\t{obj}_str = (Dee_wchar_t const *)DeeString_AsWide(Dee_AsObject({obj}));\n"
 		"\tif unlikely(!{obj}_str)\n"
 		"\t\tgoto err;\n",
 		("Dee_wchar_t const *", "{}_str")),
@@ -137,14 +137,14 @@ local converter_map: {string: (string, string, string) | string} = {
 	"nt:LPCSTR"    : ("o", "?Dstring", "DeeStringObject *",
 		"\tif (DeeObject_AssertTypeExact({obj}, &DeeString_Type))\n"
 		"\t\tgoto err;\n"
-		"\t{obj}_str = (LPCSTR)DeeString_AsUtf8((DeeObject *){obj});\n"
+		"\t{obj}_str = (LPCSTR)DeeString_AsUtf8(Dee_AsObject({obj}));\n"
 		"\tif unlikely(!{obj}_str)\n"
 		"\t\tgoto err;\n",
 		("LPCSTR", "{}_str")),
 	"nt:LPCWSTR"   : ("o", "?Dstring", "DeeStringObject *",
 		"\tif (DeeObject_AssertTypeExact({obj}, &DeeString_Type))\n"
 		"\t\tgoto err;\n"
-		"\t{obj}_str = (LPCWSTR)DeeString_AsWide((DeeObject *){obj});\n"
+		"\t{obj}_str = (LPCWSTR)DeeString_AsWide(Dee_AsObject({obj}));\n"
 		"\tif unlikely(!{obj}_str)\n"
 		"\t\tgoto err;\n",
 		("LPCWSTR", "{}_str")),
@@ -194,7 +194,7 @@ function gi(
 	if (value is none)
 		value = name;
 	function define_with_bits(sign, n_bits) {
-		print("#define OBJ_", libname, name, " ((DeeObject *)&", libname, name, ")");
+		print("#define OBJ_", libname, name, " &", libname, name);
 		print(visi, " DEFINE_", sign ? "" : "U", "INT", n_bits, "(", libname, name, ", ", value, ");");
 	}
 	local macro_name = f"{libname.upper()}{name.upper()}_DEF";

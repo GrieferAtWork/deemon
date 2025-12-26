@@ -87,7 +87,7 @@ lookup_code_info_in_class(DeeTypeObject *type,
 	desc     = my_class->cd_desc;
 	Dee_class_desc_lock_read(my_class);
 	for (addr = 0; addr < desc->cd_cmemb_size; ++addr) {
-		if (my_class->cd_members[addr] == (DeeObject *)function ||
+		if (my_class->cd_members[addr] == Dee_AsObject(function) ||
 		    (my_class->cd_members[addr] &&
 		     DeeFunction_Check(my_class->cd_members[addr]) &&
 		     DeeFunction_CODE(my_class->cd_members[addr]) == code)) {
@@ -189,7 +189,7 @@ lookup_code_info(/*[in]*/ DeeCodeObject *code,
 	for (addr = 0; addr < mod->mo_globalc; ++addr) {
 		if (!mod->mo_globalv[addr])
 			continue;
-		if (mod->mo_globalv[addr] == (DeeObject *)function ||
+		if (mod->mo_globalv[addr] == Dee_AsObject(function) ||
 		    (DeeFunction_Check(mod->mo_globalv[addr]) &&
 		     DeeFunction_CODE(mod->mo_globalv[addr]) == code)) {
 			struct module_symbol *function_symbol;
@@ -447,7 +447,7 @@ PRIVATE struct type_member tpconst function_class_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_refs(Function *__restrict self) {
-	return DeeRefVector_NewReadonly((DeeObject *)self,
+	return DeeRefVector_NewReadonly(Dee_AsObject(self),
 	                                self->fo_code->co_refc,
 	                                self->fo_refv);
 }
@@ -456,13 +456,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_kwds(Function *__restrict self) {
 	DeeCodeObject *code = self->fo_code;
 	if likely(code->co_keywords) {
-		return DeeRefVector_NewReadonly((DeeObject *)code,
+		return DeeRefVector_NewReadonly(Dee_AsObject(code),
 		                                (size_t)code->co_argc_max,
 		                                (DeeObject *const *)code->co_keywords);
 	}
 	if (code->co_argc_max == 0)
 		return DeeSeq_NewEmpty();
-	return DeeRT_ErrUnboundAttr((DeeObject *)self, (DeeObject *)&str___kwds__);
+	return DeeRT_ErrUnboundAttr(self, &str___kwds__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -474,13 +474,13 @@ function_bound_kwds(Function *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_name(Function *__restrict self) {
 	struct function_info info;
-	if (DeeFunction_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_doc);
 	if (info.fi_name)
-		return (DREF DeeObject *)info.fi_name;
-	DeeRT_ErrUnboundAttr((DeeObject *)self, (DeeObject *)&str___name__);
+		return Dee_AsObject(info.fi_name);
+	DeeRT_ErrUnboundAttr(self, &str___name__);
 err:
 	return NULL;
 }
@@ -488,7 +488,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 function_bound_name(Function *__restrict self) {
 	struct function_info info;
-	if (DeeFunction_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_doc);
@@ -501,12 +501,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_doc(Function *__restrict self) {
 	struct function_info info;
-	if (DeeFunction_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
 	if (info.fi_doc)
-		return (DREF DeeObject *)info.fi_doc;
+		return Dee_AsObject(info.fi_doc);
 	return_none;
 err:
 	return NULL;
@@ -515,13 +515,13 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 function_get_type(Function *__restrict self) {
 	struct function_info info;
-	if (DeeFunction_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
 	if (info.fi_type)
 		return info.fi_type;
-	DeeRT_ErrUnboundAttr((DeeObject *)self, (DeeObject *)&str___type__);
+	DeeRT_ErrUnboundAttr(self, &str___type__);
 err:
 	return NULL;
 }
@@ -529,7 +529,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 function_bound_type(Function *__restrict self) {
 	struct function_info info;
-	if (DeeFunction_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
@@ -542,9 +542,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_module(Function *__restrict self) {
 	if likely(self->fo_code->co_module)
-		return_reference_((DREF DeeObject *)self->fo_code->co_module);
+		return_reference(self->fo_code->co_module);
 	/* Shouldn't happen... */
-	return DeeRT_ErrUnboundAttr((DeeObject *)self, (DeeObject *)&str___module__);
+	return DeeRT_ErrUnboundAttr(self, &str___module__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -555,14 +555,14 @@ function_bound_module(Function *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_operator(Function *__restrict self) {
 	struct function_info info;
-	if (DeeFunction_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
 	if (info.fi_opname != (Dee_operator_t)-1)
 		return DeeInt_NewUInt16(info.fi_opname);
-	DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__operator__");
+	DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__operator__");
 err:
 	return NULL;
 }
@@ -570,7 +570,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 function_bound_operator(Function *__restrict self) {
 	struct function_info info;
-	if (DeeFunction_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
@@ -584,7 +584,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_operatorname(Function *__restrict self) {
 	struct function_info info;
 	struct opinfo const *op;
-	if (DeeFunction_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
@@ -597,7 +597,7 @@ function_get_operatorname(Function *__restrict self) {
 			return DeeInt_NewUInt16(info.fi_opname);
 		return DeeString_New(op->oi_sname);
 	}
-	DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__operatorname__");
+	DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__operatorname__");
 err:
 	return NULL;
 }
@@ -605,14 +605,14 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_property(Function *__restrict self) {
 	struct function_info info;
-	if (DeeFunction_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
 	Dee_XDecref(info.fi_type);
 	if (info.fi_getset != (uint16_t)-1)
 		return DeeInt_NewUInt16(info.fi_getset);
-	DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__property__");
+	DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__property__");
 err:
 	return NULL;
 }
@@ -620,7 +620,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 function_bound_property(Function *__restrict self) {
 	struct function_info info;
-	if (DeeFunction_GetInfo((DeeObject *)self, &info) < 0)
+	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
@@ -1088,7 +1088,7 @@ function_print(Function *__restrict self,
 	result = DeeFormat_PRINT(printer, arg, "<Function(");
 	if unlikely(result < 0)
 		goto done;
-	DO(err, DeeFormat_PrintObjectRepr(printer, arg, (DeeObject *)self->fo_code));
+	DO(err, DeeFormat_PrintObjectRepr(printer, arg, Dee_AsObject(self->fo_code)));
 	if (self->fo_code->co_refc > 0) {
 		DO(err, DeeFormat_PRINT(printer, arg, ", { "));
 		for (i = 0; i < self->fo_code->co_refc; ++i) {
@@ -1194,8 +1194,8 @@ function_compare_eq(Function *self, Function *other) {
 	int result;
 	if (DeeObject_AssertTypeExact(other, &DeeFunction_Type))
 		goto err;
-	result = DeeObject_CompareEq((DeeObject *)code,
-	                             (DeeObject *)other->fo_code);
+	result = DeeObject_CompareEq(Dee_AsObject(code),
+	                             Dee_AsObject(other->fo_code));
 	if (result != Dee_COMPARE_EQ)
 		goto done;
 	ASSERT(code->co_refc == other->fo_code->co_refc);
@@ -1449,13 +1449,13 @@ yf_deepcopy(YFunction *__restrict self) {
 			DeeObject *val = NULL;
 			DeeStringObject *name = code->co_keywords[self->yf_pargc + i];
 			if (DeeKwds_Check(kwcopy)) {
-				size_t index = DeeKwds_IndexOf(kwcopy, (DeeObject *)name);
+				size_t index = DeeKwds_IndexOf(kwcopy, Dee_AsObject(name));
 				if (index != (size_t)-1) {
 					ASSERT(index < (result->yf_argc - result->yf_pargc));
 					val = kw_argv[index];
 				}
 			} else {
-				val = DeeKw_TryGetItemNR(kwcopy, (DeeObject *)name);
+				val = DeeKw_TryGetItemNR(kwcopy, Dee_AsObject(name));
 				if unlikely(!ITER_ISOK(val)) {
 					if unlikely(!val)
 						goto err_kw_this_args_r_kw;
@@ -1538,7 +1538,7 @@ yf_iter(YFunction *__restrict self) {
 	if unlikely(yfi_init(result, self))
 		goto err_r;
 	DeeObject_Init(result, &DeeYieldFunctionIterator_Type);
-	return (DREF YFIterator *)DeeGC_Track((DeeObject *)result);
+	return DeeGC_TRACK(YFIterator, result);
 err_r:
 	DeeGCObject_FREE(result);
 err:
@@ -1643,7 +1643,7 @@ PRIVATE struct type_member tpconst yf_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yf_get_args(YFunction *__restrict self) {
-	return DeeRefVector_NewReadonly((DeeObject *)self, self->yf_pargc, self->yf_argv);
+	return DeeRefVector_NewReadonly(Dee_AsObject(self), self->yf_pargc, self->yf_argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL
@@ -2060,10 +2060,10 @@ yfi_clear(YFIterator *__restrict self) {
 		DeeYieldFunctionIterator_LockEndWrite(self);
 		return;
 	}
-	obj[0] = (DeeObject *)self->yi_func;
-	obj[1] = (DeeObject *)self->yi_frame.cf_func;
-	obj[2] = (DeeObject *)self->yi_frame.cf_this;
-	obj[3] = (DeeObject *)self->yi_frame.cf_vargs;
+	obj[0] = Dee_AsObject(self->yi_func);
+	obj[1] = Dee_AsObject(self->yi_frame.cf_func);
+	obj[2] = Dee_AsObject(self->yi_frame.cf_this);
+	obj[3] = Dee_AsObject(self->yi_frame.cf_vargs);
 	if (self->yi_frame.cf_func)
 		numlocals = self->yi_frame.cf_func->fo_code->co_localc;
 	stack     = self->yi_frame.cf_stack;
@@ -2310,7 +2310,7 @@ again:
 		DeeObject *const *argv;
 		DeeObject **refv;
 		this_arg = self->yi_frame.cf_this;
-		varargs  = (DeeObject *)self->yi_frame.cf_vargs;
+		varargs  = Dee_AsObject(self->yi_frame.cf_vargs);
 		argc     = self->yi_frame.cf_argc;
 		argv     = self->yi_frame.cf_argv;
 		refc     = self->yi_func->yf_func->fo_code->co_refc;
@@ -2370,7 +2370,7 @@ yfi_get_yfunc(YFIterator *__restrict self) {
 	Dee_XIncref(result);
 	DeeYieldFunctionIterator_LockEndRead(self);
 	if unlikely(!result)
-		DeeRT_ErrUnboundAttr((DeeObject *)self, (DeeObject *)&str_seq);
+		DeeRT_ErrUnboundAttr(self, &str_seq);
 	return result;
 err:
 	return NULL;
@@ -2400,7 +2400,7 @@ yfi_get_this(YFIterator *__restrict self) {
 	Dee_XIncref(thisarg);
 	DeeYieldFunctionIterator_LockEndRead(self);
 	if unlikely(!thisarg)
-		DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__this__");
+		DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__this__");
 	return thisarg;
 err:
 	return NULL;
@@ -2441,7 +2441,7 @@ yfi_get_frame(YFIterator *__restrict self) {
 		         * field should not be touched and be considered as unbound. */
 		        DEEFRAME_FNORESULT
 	};
-	return (DREF DeeFrameObject *)DeeFrame_NewReferenceWithLock((DeeObject *)self, &self->yi_frame,
+	return (DREF DeeFrameObject *)DeeFrame_NewReferenceWithLock(Dee_AsObject(self), &self->yi_frame,
 	                                                            FLAGS, &self->yi_lock);
 }
 
@@ -2452,7 +2452,7 @@ yfi_get_func(YFIterator *__restrict self) {
 		goto err;
 	if unlikely(!self->yi_func) {
 		DeeYieldFunctionIterator_LockEndRead(self);
-		DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__func__");
+		DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__func__");
 		goto err;
 	}
 	result = self->yi_func->yf_func;
@@ -2471,7 +2471,7 @@ yfi_get_code(YFIterator *__restrict self) {
 		goto err;
 	if unlikely(!self->yi_func) {
 		DeeYieldFunctionIterator_LockEndRead(self);
-		DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__code__");
+		DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__code__");
 		goto err;
 	}
 	result = self->yi_func->yf_func->fo_code;
@@ -2491,7 +2491,7 @@ yfi_get_refs(YFIterator *__restrict self) {
 		goto err;
 	if unlikely(!self->yi_func) {
 		DeeYieldFunctionIterator_LockEndRead(self);
-		DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__refs__");
+		DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__refs__");
 		goto err;
 	}
 	func = self->yi_func->yf_func;
@@ -2513,7 +2513,7 @@ yfi_get_statics(YFIterator *__restrict self) {
 		goto err;
 	if unlikely(!self->yi_func) {
 		DeeYieldFunctionIterator_LockEndRead(self);
-		DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__statics__");
+		DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__statics__");
 		goto err;
 	}
 	func = self->yi_func->yf_func;
@@ -2535,7 +2535,7 @@ yfi_get_refsbyname(YFIterator *__restrict self) {
 		goto err;
 	if unlikely(!self->yi_func) {
 		DeeYieldFunctionIterator_LockEndRead(self);
-		DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__refsbyname__");
+		DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__refsbyname__");
 		goto err;
 	}
 	func = self->yi_func->yf_func;
@@ -2557,7 +2557,7 @@ yfi_get_staticsbyname(YFIterator *__restrict self) {
 		goto err;
 	if unlikely(!self->yi_func) {
 		DeeYieldFunctionIterator_LockEndRead(self);
-		DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__staticsbyname__");
+		DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__staticsbyname__");
 		goto err;
 	}
 	func = self->yi_func->yf_func;
@@ -2579,7 +2579,7 @@ yfi_get_argsbyname(YFIterator *__restrict self) {
 		goto err;
 	if unlikely(!self->yi_func) {
 		DeeYieldFunctionIterator_LockEndRead(self);
-		DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__argsbyname__");
+		DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__argsbyname__");
 		goto err;
 	}
 	func = self->yi_func;
@@ -2679,7 +2679,7 @@ yfi_get_kwds(YFIterator *__restrict self) {
 		goto err;
 	if unlikely(!self->yi_func) {
 		DeeYieldFunctionIterator_LockEndRead(self);
-		DeeRT_ErrUnboundAttr((DeeObject *)self, (DeeObject *)&str___kwds__);
+		DeeRT_ErrUnboundAttr(self, &str___kwds__);
 		goto err;
 	}
 	func = self->yi_func->yf_func;
@@ -2712,7 +2712,7 @@ yfi_get_args(YFIterator *__restrict self) {
 		goto err;
 	if unlikely(!self->yi_func) {
 		DeeYieldFunctionIterator_LockEndRead(self);
-		DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "__args__");
+		DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__args__");
 		goto err;
 	}
 	yfunction = self->yi_func;
@@ -2734,7 +2734,7 @@ yfi_get_func_reference(YFIterator *__restrict self,
 		goto err;
 	if unlikely(!self->yi_func) {
 		DeeYieldFunctionIterator_LockEndRead(self);
-		DeeRT_ErrUnboundAttrCStr((DeeObject *)self, attr_name);
+		DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), attr_name);
 		goto err;
 	}
 	result = self->yi_func;

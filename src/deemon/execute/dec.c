@@ -703,7 +703,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) Dee_dec_addr_t
 	copy->ob_trace = NULL;
 #endif /* CONFIG_TRACE_REFCHANGES */
 	if unlikely(DeeDecWriter_PutObject(self, result + offsetof(DeeObject, ob_type),
-	                                   (DeeObject *)Dee_TYPE(ref)))
+	                                   Dee_AsObject(Dee_TYPE(ref))))
 		goto err;
 	return result;
 err:
@@ -1146,7 +1146,7 @@ DeeDecWriter_AppendModule(DeeDecWriter *__restrict self,
 	 *       objects originating from that module still being alive) */
 	Dee_dec_addr_t addr;
 	ASSERT_OBJECT_TYPE_EXACT(mod, &DeeModuleDee_Type);
-	addr = DeeDecWriter_AppendObject(self, (DeeObject *)mod);
+	addr = DeeDecWriter_AppendObject(self, Dee_AsObject(mod));
 	if unlikely(addr == 0)
 		goto err;
 	ASSERTF(addr == (offsetof(Dec_Ehdr, e_heap.hr_first) +
@@ -1795,7 +1795,7 @@ PRIVATE struct builtin_desc builtin_descs[NUM_BUILTIN_OBJECTS] = {
 	{ (DeeObject *)&DeeError_UnknownKey, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_UnknownKey) },
 	{ (DeeObject *)&DeeError_ItemNotFound, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_ItemNotFound) },
 	{ (DeeObject *)&DeeError_BufferError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_BufferError) },
-	{ (DeeObject *)&DeeObject_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Object) },
+	{ Dee_AsObject(&DeeObject_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Object) },
 	{ (DeeObject *)&DeeSeq_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Sequence) },
 	{ (DeeObject *)&DeeMapping_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Mapping) },
 	{ (DeeObject *)&DeeIterator_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Iterator) },
@@ -1874,7 +1874,7 @@ PRIVATE DeeObject *buitlin_set0[DTYPE_BUILTIN_NUM] = {
 	/* 0x3d */ NULL,
 	/* 0x3e */ NULL,
 	/* 0x3f */ NULL,
-	/* 0x40 */ (DeeObject *)&DeeObject_Type, /* Object */
+	/* 0x40 */ Dee_AsObject(&DeeObject_Type), /* Object */
 	/* 0x41 */ (DeeObject *)&DeeSeq_Type, /* Sequence */
 	/* 0x42 */ (DeeObject *)&DeeMapping_Type, /* Mapping */
 	/* 0x43 */ (DeeObject *)&DeeIterator_Type, /* Iterator */
@@ -2405,7 +2405,7 @@ DecFile_Strtab(DecFile *__restrict self) {
 		                                               LETOH32(self->df_ehdr->e_strsiz));
 		self->df_strtab = result; /* Inherit reference. */
 	}
-	return (DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 
@@ -2421,7 +2421,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 DecFile_IsUpToDate(DecFile *__restrict self) {
 	Dec_Ehdr const *hdr = self->df_ehdr;
 	uint64_t timestamp, other;
-	other = DecTime_Lookup((DeeObject *)self->df_name);
+	other = DecTime_Lookup(Dee_AsObject(self->df_name));
 	if unlikely(other == (uint64_t)-1)
 		goto err;
 	timestamp = (((uint64_t)LETOH32(hdr->e_timestamp_hi) << 32) |
@@ -2504,7 +2504,7 @@ DecFile_LoadImports(DecFile *__restrict self) {
 
 	/* Load the import table. */
 	strtab         = (char const *)(self->df_base + LETOH32(hdr->e_stroff));
-	module_pathstr = DeeString_AsUtf8((DeeObject *)self->df_name);
+	module_pathstr = DeeString_AsUtf8(Dee_AsObject(self->df_name));
 	if unlikely(!module_pathstr)
 		goto err;
 	module_pathlen = WSTR_LENGTH(module_pathstr);
@@ -2577,7 +2577,7 @@ DecFile_LoadImports(DecFile *__restrict self) {
 		if (!self->df_options || !(self->df_options->co_decloader & Dee_DEC_FLOADOUTDATED))
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		{
-			uint64_t modtime = DeeModule_GetCTime((DeeObject *)module);
+			uint64_t modtime = DeeModule_GetCTime(Dee_AsObject(module));
 			if unlikely(modtime == (uint64_t)-1)
 				GOTO_CORRUPTED(reader, err_imports_module);
 			/* If the module has changed since the time
@@ -2911,7 +2911,7 @@ set_none_result:
 
 	/* Another code object. */
 	case DTYPE_CODE:
-		result = (DREF DeeObject *)DecFile_LoadCode(self, &reader);
+		result = Dee_AsObject(DecFile_LoadCode(self, &reader));
 		break;
 
 	/* A function object. */
@@ -2967,7 +2967,7 @@ err_function_code:
 		uint32_t i, length;
 		uint8_t const *end;
 		length = Dec_DecodePointer(&reader);
-		result = (DREF DeeObject *)DeeTuple_NewUninitialized(length);
+		result = Dee_AsObject(DeeTuple_NewUninitialized(length));
 		if unlikely(!result)
 			goto done;
 		end = self->df_data + self->df_size;
@@ -3285,7 +3285,7 @@ err_function_code:
 			uint32_t num_items;
 			uint8_t const *end;
 			num_items = Dec_DecodePointer(&reader);
-			result    = (DREF DeeObject *)DeeRoSet_NewWithHint(num_items);
+			result    = Dee_AsObject(DeeRoSet_NewWithHint(num_items));
 			if unlikely(!result)
 				goto done;
 			end = self->df_data + self->df_size;
@@ -3392,7 +3392,7 @@ err_function_code:
 					goto err;
 				}
 			}
-			result = (DREF DeeObject *)Dee_rodict_builder_pack(&result_builder);
+			result = Dee_AsObject(Dee_rodict_builder_pack(&result_builder));
 		}	break;
 
 		case DTYPE16_CLASSDESC & 0xff: {
@@ -4553,7 +4553,7 @@ DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self) {
 		if unlikely(!path) {
 			result = 0;
 		} else {
-			result = DecTime_Lookup((DeeObject *)path);
+			result = DecTime_Lookup(Dee_AsObject(path));
 			if unlikely(result == (uint64_t)-1)
 				goto done;
 		}

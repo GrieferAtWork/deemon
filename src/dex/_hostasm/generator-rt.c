@@ -72,7 +72,7 @@ libhostasm_rt_err_unbound_local(DeeCodeObject *code, void *ip, uint16_t local_in
 	struct ddi_state state;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	ASSERT(local_index < code->co_localc);
-	error = DeeCode_FindDDI((DeeObject *)code, &state, NULL,
+	error = DeeCode_FindDDI(Dee_AsObject(code), &state, NULL,
 	                        (code_addr_t)((instruction_t *)ip - code->co_code),
 	                        DDI_STATE_FNOTHROW);
 	if (DDI_ISOK(error)) {
@@ -81,8 +81,8 @@ libhostasm_rt_err_unbound_local(DeeCodeObject *code, void *ip, uint16_t local_in
 			if (local_index < iter->dx_lcnamc) {
 				char const *local_name;
 				if (!code_name)
-					code_name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_name);
-				if ((local_name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_lcnamv[local_index])) != NULL) {
+					code_name = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_base.dr_name);
+				if ((local_name = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_lcnamv[local_index])) != NULL) {
 					if (!code_name)
 						code_name = DeeCode_NAME(code);
 					DeeError_Throwf(&DeeError_UnboundLocal,

@@ -285,7 +285,7 @@ again:
 			if (WARNAST(self, W_ASM_LABEL_NEVER_USED,
 			            self->a_flag & AST_FLABEL_CASE ? (self->a_label.l_label->tl_expr ? "case" : "default") : self->a_label.l_label->tl_name->k_name))
 				goto err;
-			Dee_Decref((DeeObject *)self->a_label.l_base);
+			Dee_Decref(&self->a_label.l_base->bs_scope);
 			self->a_type      = AST_CONSTEXPR;
 			self->a_flag      = AST_FNORMAL;
 			self->a_constexpr = DeeNone_NewRef();

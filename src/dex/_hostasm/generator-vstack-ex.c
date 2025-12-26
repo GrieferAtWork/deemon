@@ -316,7 +316,7 @@ type_expression_name_unescape(struct type_expression_name *__restrict self) {
 	self->ten_str = (DREF DeeStringObject *)unicode_printer_pack(&printer);
 	if unlikely(!self->ten_str)
 		goto err;
-	self->ten_start = DeeString_AsUtf8((DeeObject *)self->ten_str);
+	self->ten_start = DeeString_AsUtf8(Dee_AsObject(self->ten_str));
 	if unlikely(!self->ten_start)
 		goto err_ten_str;
 	self->ten_end = self->ten_start + WSTR_LENGTH(self->ten_start);
@@ -434,12 +434,12 @@ typexpr_parser_parse_object_after_qmark(struct typexpr_parser *__restrict self) 
 	switch (*self->txp_iter++) {
 
 	case '.':
-		return (DeeObject *)self->txp_info->di_typ;
+		return Dee_AsObject(self->txp_info->di_typ);
 
 	case 'N':
 		return (DeeObject *)&DeeNone_Type;
 	case 'O':
-		return (DeeObject *)&DeeObject_Type;
+		return Dee_AsObject(&DeeObject_Type);
 
 	case 'T':
 		/* TODO: Also remember information about tuple size!
@@ -463,16 +463,16 @@ typexpr_parser_parse_object_after_qmark(struct typexpr_parser *__restrict self) 
 		switch (how) {
 		case '#':
 			/* Use current context as base */
-			result = (DeeObject *)self->txp_info->di_typ;
+			result = Dee_AsObject(self->txp_info->di_typ);
 			if (result == NULL) {
 		case 'G':
-				result = (DeeObject *)self->txp_info->di_mod;
+				result = Dee_AsObject(self->txp_info->di_mod);
 			if (result == NULL)
 				goto unknown;
 			}
 			break;
 		case 'D':
-			result = (DeeObject *)&DeeModule_Deemon;
+			result = Dee_AsObject(&DeeModule_Deemon);
 			break;
 
 		case 'E': {
@@ -480,11 +480,11 @@ typexpr_parser_parse_object_after_qmark(struct typexpr_parser *__restrict self) 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 			result = DeeModule_ImportString(name.ten_start,
 			                                (size_t)(name.ten_end - name.ten_start),
-			                                (DeeObject *)self->txp_info->di_typ,
+			                                Dee_AsObject(self->txp_info->di_typ),
 			                                DeeModule_IMPORT_F_ENOENT);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			if (name.ten_str) {
-				result = (DeeObject *)DeeModule_OpenGlobal((DeeObject *)name.ten_str, NULL, false);
+				result = (DeeObject *)DeeModule_OpenGlobal(Dee_AsObject(name.ten_str), NULL, false);
 			} else {
 				result = (DeeObject *)DeeModule_OpenGlobalString(name.ten_start,
 				                                                 (size_t)(name.ten_end - name.ten_start),
@@ -506,7 +506,7 @@ typexpr_parser_parse_object_after_qmark(struct typexpr_parser *__restrict self) 
 				goto err;
 			}
 			if (name.ten_str) {
-				mod_export = DeeObject_GetAttr(result, (DeeObject *)name.ten_str);
+				mod_export = DeeObject_GetAttr(result, Dee_AsObject(name.ten_str));
 			} else {
 				mod_export = DeeObject_GetAttrStringLen(result, name.ten_start,
 				                                        (size_t)(name.ten_end - name.ten_start));
@@ -531,7 +531,7 @@ typexpr_parser_parse_object_after_qmark(struct typexpr_parser *__restrict self) 
 		}
 		ASSERT(result);
 		if (name.ten_str) {
-			result = DeeObject_GetAttr(result, (DeeObject *)name.ten_str);
+			result = DeeObject_GetAttr(result, Dee_AsObject(name.ten_str));
 		} else {
 			result = DeeObject_GetAttrStringLen(result, name.ten_start,
 			                                    (size_t)(name.ten_end - name.ten_start));
@@ -3641,7 +3641,7 @@ vopcallseqmap_impl(struct fungen *__restrict self,
 			 * >>     ret   $8 */
 			/* TODO: Can inline more than this! (see impl of `string_format()'):
 			 * - Inline "DeeArg_Unpack1(err, argc, argv, "format", &args)"
-			 * - Inline "DeeString_AsUtf8((DeeObject *)self)"
+			 * - Inline "DeeString_AsUtf8(Dee_AsObject(self))"
 			 */
 
 			/* TODO: Inline constant arguments into the format string */
@@ -3684,9 +3684,9 @@ vopcallseqmap_impl(struct fungen *__restrict self,
 					goto err;
 				}
 			}
-			cseq = (DREF DeeObject *)Dee_rodict_builder_pack(&cseq_builder);
+			cseq = Dee_AsObject(Dee_rodict_builder_pack(&cseq_builder));
 		} else {
-			cseq = (DREF DeeObject *)DeeTuple_NewUninitialized(itemc);
+			cseq = Dee_AsObject(DeeTuple_NewUninitialized(itemc));
 			if unlikely(!cseq)
 				goto err;
 			for (i = 0; i < itemc; ++i) {
@@ -5391,9 +5391,9 @@ fg_vpackseq(struct fungen *__restrict self,
 					goto err;
 				}
 			}
-			cseq = (DREF DeeObject *)Dee_rodict_builder_pack(&cseq_builder);
+			cseq = Dee_AsObject(Dee_rodict_builder_pack(&cseq_builder));
 		} else if (DeeType_Extends(seq_type, &DeeSet_Type)) {
-			cseq = (DREF DeeObject *)DeeRoSet_NewWithHint(elemc);
+			cseq = Dee_AsObject(DeeRoSet_NewWithHint(elemc));
 			if unlikely(!cseq)
 				goto err;
 			for (i = 0; i < elemc; ++i) {
@@ -5405,7 +5405,7 @@ fg_vpackseq(struct fungen *__restrict self,
 				}
 			}
 		} else {
-			cseq = (DREF DeeObject *)DeeTuple_NewUninitialized(elemc);
+			cseq = Dee_AsObject(DeeTuple_NewUninitialized(elemc));
 			if unlikely(!cseq)
 				goto err;
 			for (i = 0; i < elemc; ++i) {

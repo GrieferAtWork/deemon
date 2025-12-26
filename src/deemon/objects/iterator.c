@@ -1476,7 +1476,7 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 			for (;;) {
 				if (DeeThread_CheckInterrupt())
 					goto err_temp;
-				temp3 = (DREF DeeObject *)&int_SIZE_MAX;
+				temp3 = Dee_AsObject(&int_SIZE_MAX);
 				temp2 = DeeObject_Call(temp, 1, &temp3);
 				if unlikely(!temp2)
 					goto err_temp;
@@ -1501,7 +1501,7 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 			for (;;) {
 				if (DeeThread_CheckInterrupt())
 					goto err_temp;
-				temp3 = (DREF DeeObject *)&int_SIZE_MIN;
+				temp3 = Dee_AsObject(&int_SIZE_MIN);
 				temp2 = DeeObject_Call(temp, 1, &temp3);
 				if unlikely(!temp2)
 					goto err_temp;

@@ -120,7 +120,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF SlabInfoObject *DCALL
 ss_getitem_index(SlabStatObject *__restrict self, size_t index) {
 	DREF SlabInfoObject *result;
 	if unlikely(index >= self->st_stat.st_slabcount) {
-		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->st_stat.st_slabcount);
+		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->st_stat.st_slabcount);
 		return NULL;
 	}
 	result = DeeObject_MALLOC(SlabInfoObject);

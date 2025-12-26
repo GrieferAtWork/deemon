@@ -1236,19 +1236,19 @@ next_instr:
 	if (_Dee_dprint_enabled) {
 		struct ddi_state state;
 		code_addr_t ip_addr = (code_addr_t)(ip.ptr - code->co_code);
-		if (!DeeCode_FindDDI((DeeObject *)code, &state, NULL, ip_addr, DDI_STATE_FNOTHROW | DDI_STATE_FNONAMES)) {
+		if (!DeeCode_FindDDI(Dee_AsObject(code), &state, NULL, ip_addr, DDI_STATE_FNOTHROW | DDI_STATE_FNONAMES)) {
 			Dee_DPRINTF("%s+%.4I32X [trace]\n", DeeCode_NAME(code), ip_addr);
 		} else {
 			struct ddi_xregs *iter;
 			char const *path, *file, *name;
 			char const *base_name = DeeCode_NAME(code);
 			DDI_STATE_DO(iter, &state) {
-				file = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_file);
-				name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_name);
+				file = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_base.dr_file);
+				name = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_base.dr_name);
 				if (!state.rs_regs.dr_path--) {
 					path = NULL;
 				} else {
-					path = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_path);
+					path = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_base.dr_path);
 				}
 				Dee_DPRINTF("%s%s%s(%d,%d) : %s+%.4I32X",
 				            path ? path : "",
@@ -1907,7 +1907,7 @@ do_push_arg:
 						HANDLE_EXCEPT();
 				}
 			}
-			PUSHREF((DeeObject *)frame->cf_vargs);
+			PUSHREF(Dee_AsObject(frame->cf_vargs));
 			DISPATCH();
 		}
 
@@ -2111,7 +2111,7 @@ do_push_module:
 #endif /* !EXEC_SAFE */
 			mod = mod->mo_importv[imm_val];
 			ASSERT_OBJECT(mod);
-			PUSHREF((DeeObject *)mod);
+			PUSHREF(Dee_AsObject(mod));
 			DISPATCH();
 		}
 
@@ -2148,7 +2148,7 @@ do_push_module:
 			typ = Dee_TYPE(TOP);
 			Dee_Incref(typ);
 			Dee_Decref(TOP);
-			TOP = (DREF DeeObject *)typ; /* Inherit object. */
+			TOP = Dee_AsObject(typ); /* Inherit object. */
 			DISPATCH();
 		}
 
@@ -2157,7 +2157,7 @@ do_push_module:
 			typ = DeeObject_Class(TOP);
 			Dee_Incref(typ);
 			Dee_Decref(TOP);
-			TOP = (DREF DeeObject *)typ; /* Inherit object. */
+			TOP = Dee_AsObject(typ); /* Inherit object. */
 			DISPATCH();
 		}
 
@@ -2184,7 +2184,7 @@ do_push_module:
 			}
 			POPREF();
 			Dee_Decref(TOP);
-			TOP = (DeeObject *)&Dee_FalseTrue[is_instance];
+			TOP = Dee_AsObject(&Dee_FalseTrue[is_instance]);
 			Dee_Incref(TOP);
 			DISPATCH();
 		}
@@ -2202,7 +2202,7 @@ do_push_module:
 			}
 			POPREF();
 			Dee_Decref(TOP);
-			TOP = (DeeObject *)&Dee_FalseTrue[is_implemented];
+			TOP = Dee_AsObject(&Dee_FalseTrue[is_implemented]);
 			Dee_Incref(TOP);
 			DISPATCH();
 		}
@@ -2400,7 +2400,7 @@ do_class_c:
 			if unlikely(!new_class)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
-			TOP = (DREF DeeObject *)new_class; /* Inherit reference. */
+			TOP = Dee_AsObject(new_class); /* Inherit reference. */
 			DISPATCH();
 		}
 
@@ -2433,7 +2433,7 @@ do_class_gc:
 			Dee_Decref(base);
 			if unlikely(!new_class)
 				HANDLE_EXCEPT();
-			PUSH((DREF DeeObject *)new_class); /* Inherit reference. */
+			PUSH(Dee_AsObject(new_class)); /* Inherit reference. */
 			DISPATCH();
 		}
 
@@ -2470,7 +2470,7 @@ do_class_gc:
 			Dee_Decref(base);
 			if unlikely(!new_class)
 				HANDLE_EXCEPT();
-			PUSH((DREF DeeObject *)new_class); /* Inherit reference. */
+			PUSH(Dee_AsObject(new_class)); /* Inherit reference. */
 			DISPATCH();
 		}
 
@@ -4379,12 +4379,12 @@ do_setattr_this_c:
 				}
 
 				TARGET(ASM_PUSH_THIS_FUNCTION, -0, +1) {
-					PUSHREF((DeeObject *)frame->cf_func);
+					PUSHREF(Dee_AsObject(frame->cf_func));
 					DISPATCH();
 				}
 
 				TARGET(ASM_PUSH_THIS_MODULE, -0, +1) {
-					PUSHREF((DeeObject *)code->co_module);
+					PUSHREF(Dee_AsObject(code->co_module));
 					DISPATCH();
 				}
 
@@ -4591,7 +4591,7 @@ do_setattr_this_c:
 						HANDLE_EXCEPT();
 					POPREF();
 					Dee_Decref(TOP);
-					TOP = (DREF DeeObject *)new_class; /* Inherit reference. */
+					TOP = Dee_AsObject(new_class); /* Inherit reference. */
 					DISPATCH();
 				}
 
@@ -4639,7 +4639,7 @@ do_setattr_this_c:
 					Dee_Decref(base);
 					if unlikely(!new_class)
 						HANDLE_EXCEPT();
-					PUSH((DREF DeeObject *)new_class); /* Inherit reference. */
+					PUSH(Dee_AsObject(new_class)); /* Inherit reference. */
 					DISPATCH();
 				}
 
@@ -6351,7 +6351,7 @@ do_prefix_push_module:
 					mod = mod->mo_importv[imm_val];
 					ASSERT_OBJECT(mod);
 					Dee_Incref(mod);
-					if (set_prefix_object((DeeObject *)mod))
+					if (set_prefix_object(Dee_AsObject(mod)))
 						HANDLE_EXCEPT();
 					DISPATCH();
 				}
@@ -6417,7 +6417,7 @@ do_prefix_push_arg:
 						}
 					}
 					Dee_Incref(frame->cf_vargs);
-					if (set_prefix_object((DeeObject *)frame->cf_vargs))
+					if (set_prefix_object(Dee_AsObject(frame->cf_vargs)))
 						HANDLE_EXCEPT();
 					DISPATCH();
 				}
@@ -6453,7 +6453,7 @@ do_prefix_push_arg:
 						varkwds = Dee_EmptyRoDict;
 					}
 					Dee_Incref(varkwds);
-					if (set_prefix_object((DeeObject *)varkwds))
+					if (set_prefix_object(Dee_AsObject(varkwds)))
 						HANDLE_EXCEPT();
 					DISPATCH();
 				}
@@ -7076,15 +7076,15 @@ again_check_staticimm_for_cmpxch_ub_lock:
 						}
 
 						PREFIX_RAW_TARGET(ASM_PUSH_THIS_MODULE) {
-							Dee_Incref((DeeObject *)code->co_module);
-							if (set_prefix_object((DeeObject *)code->co_module))
+							Dee_Incref(Dee_AsObject(code->co_module));
+							if (set_prefix_object(Dee_AsObject(code->co_module)))
 								HANDLE_EXCEPT();
 							DISPATCH();
 						}
 
 						PREFIX_RAW_TARGET(ASM_PUSH_THIS_FUNCTION) {
-							Dee_Incref((DeeObject *)frame->cf_func);
-							if (set_prefix_object((DeeObject *)frame->cf_func))
+							Dee_Incref(Dee_AsObject(frame->cf_func));
+							if (set_prefix_object(Dee_AsObject(frame->cf_func)))
 								HANDLE_EXCEPT();
 							DISPATCH();
 						}

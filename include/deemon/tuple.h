@@ -68,7 +68,7 @@ struct Dee_tuple_object {
 /* Define a statically allocated tuple:
  * >> PRIVATE WUNUSED DREF DeeObject *DCALL get_my_tuple(void) {
  * >>     PRIVATE DEFINE_TUPLE(my_tuple, 2, { Dee_EmptyString, Dee_EmptyString });
- * >>     return_reference((DeeObject *)&my_tuple);
+ * >>     return_reference(&my_tuple);
  * >> }
  */
 #define Dee_DEFINE_TUPLE(name, elemc, ...)    \
@@ -95,7 +95,7 @@ DDATDEF struct Dee_empty_tuple_struct DeeNullableTuple_Empty;
 #define DeeTuple_NewEmpty()         Dee_EmptyTuple
 #define DeeNullableTuple_NewEmpty() Dee_EmptyNullableTuple
 #else /* __INTELLISENSE__ */
-#define DeeTuple_NewEmpty()         (Dee_Incref(&DeeTuple_Empty), (DeeObject *)&DeeTuple_Empty)
+#define DeeTuple_NewEmpty()         (Dee_Incref(&DeeTuple_Empty), Dee_EmptyTuple)
 #define DeeNullableTuple_NewEmpty() (Dee_Incref(&DeeNullableTuple_Empty), (DeeObject *)&DeeNullableTuple_Empty)
 #endif /* !__INTELLISENSE__ */
 

@@ -200,14 +200,14 @@ do_xcopy_3:
 		temp->a_goto.g_label = other->a_goto.g_label;
 		++other->a_goto.g_label->tl_goto;
 		temp->a_goto.g_base = other->a_goto.g_base;
-		Dee_Incref((DeeObject *)temp->a_goto.g_base);
+		Dee_Incref(&temp->a_goto.g_base->bs_scope);
 		break;
 
 	case AST_LABEL:
 		ASSERT(other->a_label.l_label);
 		temp->a_label.l_label = other->a_label.l_label;
 		temp->a_label.l_base  = other->a_label.l_base;
-		Dee_Incref((DeeObject *)temp->a_label.l_base);
+		Dee_Incref(&temp->a_label.l_base->bs_scope);
 		break;
 
 #if 0

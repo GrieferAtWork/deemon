@@ -53,8 +53,7 @@ STATIC_ASSERT(__SIZEOF_REGISTER__ >= __SIZEOF_INT__);
 #endif /* DCALL_RETURN_COMMON */
 
 PUBLIC ATTR_RETNONNULL WUNUSED DREF DeeObject *(DCALL DeeNone_NewRef)(void) {
-	Dee_Incref(&DeeNone_Singleton);
-	return (DREF DeeObject *)&DeeNone_Singleton;
+	return_reference(&DeeNone_Singleton);
 }
 
 
@@ -521,7 +520,7 @@ PRIVATE struct type_with none_with = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeNone_OperatorStr(DeeObject *__restrict UNUSED(a)) {
-	return_reference_((DREF DeeObject *)&str_none);
+	return_reference(&str_none);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

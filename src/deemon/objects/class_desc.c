@@ -742,8 +742,8 @@ cati_nextpair(ClassAttributeTableIterator *__restrict self, DeeObject *key_and_v
 	if unlikely(!attr)
 		goto err;
 	Dee_Incref(ent->ca_name);
-	key_and_value[0] = (DREF DeeObject *)ent->ca_name;
-	key_and_value[1] = (DREF DeeObject *)attr; /* Inherit reference */
+	key_and_value[0] = Dee_AsObject(ent->ca_name);
+	key_and_value[1] = Dee_AsObject(attr); /* Inherit reference */
 	return 0;
 err:
 	return -1;
@@ -832,7 +832,7 @@ cat_trygetitem_string_len_hash(ClassAttributeTable *self, char const *key,
 			continue;
 		if (!DeeString_EqualsBuf(at->ca_name, key, keylen))
 			continue;
-		return (DREF DeeObject *)cattr_new(self->ca_desc, at);
+		return Dee_AsObject(cattr_new(self->ca_desc, at));
 	}
 /*nope:*/
 	return ITER_DONE;
@@ -925,7 +925,7 @@ ca_printrepr(ClassAttribute *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ca_getname(ClassAttribute *__restrict self) {
-	return_reference_((DeeObject *)self->ca_attr->ca_name);
+	return_reference_(Dee_AsObject(self->ca_attr->ca_name));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2754,7 +2754,7 @@ ot_init(ObjectTable *__restrict self,
 		self->ot_desc = DeeInstance_DESC(desc, ob);
 		self->ot_size = desc->cd_desc->cd_imemb_size;
 	}
-	self->ot_owner = (DREF DeeObject *)ob;
+	self->ot_owner = Dee_AsObject(ob);
 	Dee_Incref(ob);
 	return 0;
 err_no_class:
@@ -2855,7 +2855,7 @@ type_get_ctable(DeeTypeObject *__restrict self) {
 	result = DeeObject_MALLOC(ObjectTable);
 	if unlikely(!result)
 		goto done;
-	result->ot_owner = (DREF DeeObject *)self;
+	result->ot_owner = Dee_AsObject(self);
 	result->ot_desc  = class_desc_as_instance(desc);
 	result->ot_size  = desc->cd_desc->cd_cmemb_size;
 	Dee_Incref(self);
@@ -2880,7 +2880,7 @@ instance_get_itable(DeeObject *__restrict self) {
 	result = DeeObject_MALLOC(ObjectTable);
 	if unlikely(!result)
 		goto done;
-	result->ot_owner = (DREF DeeObject *)self;
+	result->ot_owner = Dee_AsObject(self);
 	result->ot_desc  = DeeInstance_DESC(desc, real_self);
 	result->ot_size  = desc->cd_desc->cd_imemb_size;
 	Dee_Incref(self);
@@ -3013,14 +3013,14 @@ instancemember_get_module(DeeInstanceMemberObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_get_name(DeeInstanceMemberObject *__restrict self) {
-	return_reference_((DREF DeeObject *)self->im_attribute->ca_name);
+	return_reference(self->im_attribute->ca_name);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_get_doc(DeeInstanceMemberObject *__restrict self) {
 	if (!self->im_attribute->ca_doc)
 		return_none;
-	return_reference_((DREF DeeObject *)self->im_attribute->ca_doc);
+	return_reference(self->im_attribute->ca_doc);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3300,7 +3300,7 @@ class_ciattriter_next(struct class_ciattriter *__restrict self,
 		desc->ad_doc = DeeString_STR(attr->ca_doc);
 	}
 	desc->ad_perm = perm;
-	desc->ad_info.ai_decl = (DeeObject *)self->cciai_class;
+	desc->ad_info.ai_decl = Dee_AsObject(self->cciai_class);
 	desc->ad_info.ai_type = Dee_ATTRINFO_INSTANCE_ATTR;
 	desc->ad_info.ai_value.v_instance_attr = attr;
 	desc->ad_type = NULL;
@@ -3387,7 +3387,7 @@ class_cattriter_next(struct class_cattriter *__restrict self,
 		desc->ad_doc = DeeString_STR(attr->ca_doc);
 	}
 	desc->ad_perm = perm;
-	desc->ad_info.ai_decl = (DeeObject *)self->ccai_class;
+	desc->ad_info.ai_decl = Dee_AsObject(self->ccai_class);
 	desc->ad_info.ai_type = Dee_ATTRINFO_ATTR;
 	desc->ad_info.ai_value.v_instance_attr = attr;
 	desc->ad_type = NULL;
@@ -3490,7 +3490,7 @@ class_iattriter_next(struct class_iattriter *__restrict self,
 		desc->ad_doc = DeeString_STR(attr->ca_doc);
 	}
 	desc->ad_perm = perm;
-	desc->ad_info.ai_decl = (DeeObject *)self->ciai_class;
+	desc->ad_info.ai_decl = Dee_AsObject(self->ciai_class);
 	desc->ad_info.ai_type = Dee_ATTRINFO_ATTR;
 	desc->ad_info.ai_value.v_instance_attr = attr;
 	desc->ad_type = NULL;
@@ -3561,7 +3561,7 @@ not_found:
 	result->ad_name = DeeString_STR(attr->ca_name);
 	result->ad_doc  = NULL;
 	result->ad_perm = perm | Dee_ATTRPERM_F_NAMEOBJ;
-	result->ad_info.ai_decl = (DREF DeeObject *)self;
+	result->ad_info.ai_decl = Dee_AsObject(self);
 	result->ad_info.ai_type = Dee_ATTRINFO_ATTR;
 	result->ad_info.ai_value.v_attr = attr;
 	Dee_Incref(attr->ca_name);
@@ -3630,7 +3630,7 @@ not_found:
 	result->ad_name = DeeString_STR(attr->ca_name);
 	result->ad_doc  = NULL;
 	result->ad_perm = perm | Dee_ATTRPERM_F_NAMEOBJ;
-	result->ad_info.ai_decl = (DREF DeeObject *)self;
+	result->ad_info.ai_decl = Dee_AsObject(self);
 	result->ad_info.ai_type = Dee_ATTRINFO_INSTANCE_ATTR;
 	result->ad_info.ai_value.v_instance_attr = attr;
 	Dee_Incref(attr->ca_name);
@@ -3705,7 +3705,7 @@ not_found:
 	result->ad_name = DeeString_STR(attr->ca_name);
 	result->ad_doc  = NULL;
 	result->ad_perm = perm | Dee_ATTRPERM_F_NAMEOBJ;
-	result->ad_info.ai_decl = (DREF DeeObject *)self;
+	result->ad_info.ai_decl = Dee_AsObject(self);
 	result->ad_info.ai_type = Dee_ATTRINFO_ATTR;
 	result->ad_info.ai_value.v_attr = attr;
 	Dee_Incref(attr->ca_name);

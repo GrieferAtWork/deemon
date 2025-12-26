@@ -708,7 +708,7 @@ done_fake_none:
 				    condition->a_flag == AST_FACTION_IS &&
 				    ((condition->a_action.a_act1->a_type == AST_CONSTEXPR &&
 				      (condition->a_action.a_act1->a_constexpr == Dee_None ||
-				       condition->a_action.a_act1->a_constexpr == (DeeObject *)&DeeNone_Type)) ||
+				       condition->a_action.a_act1->a_constexpr == Dee_AsObject(&DeeNone_Type))) ||
 				     (condition->a_action.a_act1->a_type == AST_ACTION &&
 				      condition->a_action.a_act1->a_flag == AST_FACTION_TYPEOF &&
 				      condition->a_action.a_act1->a_action.a_act0->a_type == AST_CONSTEXPR &&
@@ -2247,7 +2247,7 @@ do_this_as_typesym_ref:
 				if (PUSH_RESULT &&
 				    (self->a_action.a_act1->a_type == AST_CONSTEXPR &&
 				     (self->a_action.a_act1->a_constexpr == Dee_None ||
-				      self->a_action.a_act1->a_constexpr == (DeeObject *)&DeeNone_Type))) {
+				      self->a_action.a_act1->a_constexpr == Dee_AsObject(&DeeNone_Type)))) {
 					/* Optimization for code like this: `foo is none'.
 					 * A special opcode exists for this case because a lot of code uses
 					 * `none' as placeholder in default arguments, relying on the `is'

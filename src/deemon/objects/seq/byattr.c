@@ -205,7 +205,7 @@ byattr_findattr(DeeTypeObject *UNUSED(tp_self), MapByAttr *self,
 		result->ad_perm = Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET |
 		                  Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_PROPERTY;
 		result->ad_info.ai_type = Dee_ATTRINFO_CUSTOM;
-		result->ad_info.ai_decl = (DeeObject *)self;
+		result->ad_info.ai_decl = Dee_AsObject(self);
 		result->ad_info.ai_value.v_custom = &byattr_attr;
 		result->ad_type = NULL;
 		return 0;

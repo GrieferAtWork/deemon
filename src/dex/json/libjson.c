@@ -1008,7 +1008,7 @@ jseq_getitem_index(DeeJsonSequenceObject *__restrict self, size_t index) {
 done:
 	return result;
 err_out_of_bounds:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->js_size);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->js_size);
 	goto err;
 err_syntax_r:
 	Dee_Decref(result);
@@ -1581,11 +1581,11 @@ DeeJson_ParseObject(DeeJsonParser *__restrict self,
 		break;
 
 	case JSON_PARSER_OBJECT:
-		result = (DREF DeeObject *)DeeJsonMapping_New(self, must_advance_parser);
+		result = Dee_AsObject(DeeJsonMapping_New(self, must_advance_parser));
 		break;
 
 	case JSON_PARSER_ARRAY:
-		result = (DREF DeeObject *)DeeJsonSequence_New(self, must_advance_parser);
+		result = Dee_AsObject(DeeJsonSequence_New(self, must_advance_parser));
 		break;
 
 	case JSON_PARSER_NULL: {
@@ -1978,7 +1978,7 @@ type_expression_name_unescape(struct type_expression_name *__restrict self) {
 	self->ten_str = (DREF DeeStringObject *)unicode_printer_pack(&printer);
 	if unlikely(!self->ten_str)
 		goto err;
-	self->ten_start = DeeString_AsUtf8((DeeObject *)self->ten_str);
+	self->ten_start = DeeString_AsUtf8(Dee_AsObject(self->ten_str));
 	if unlikely(!self->ten_start)
 		goto err_ten_str;
 	self->ten_end = self->ten_start + WSTR_LENGTH(self->ten_start);
@@ -2086,12 +2086,12 @@ type_expression_parser_parsetype(struct type_expression_parser *__restrict self,
 		switch (doc[-1]) {
 
 		case '#':
-			base = (DREF DeeObject *)self->tep_decl_type;
+			base = Dee_AsObject(self->tep_decl_type);
 			Dee_Incref(base);
 			break;
 
 		case 'D':
-			base = (DREF DeeObject *)DeeModule_GetDeemon();
+			base = Dee_AsObject(DeeModule_GetDeemon());
 			Dee_Incref(base);
 			break;
 
@@ -2132,8 +2132,8 @@ type_expression_parser_parsetype(struct type_expression_parser *__restrict self,
 				if unlikely(!export_name.ten_str)
 					goto err_name;
 			}
-			result = (DREF DeeTypeObject *)DeeModule_GetExtern((DeeObject *)name.ten_str,
-			                                                   (DeeObject *)export_name.ten_str);
+			result = (DREF DeeTypeObject *)DeeModule_GetExtern(Dee_AsObject(name.ten_str),
+			                                                   Dee_AsObject(export_name.ten_str));
 			type_expression_name_fini(&export_name);
 			type_expression_name_fini(&name);
 			if unlikely(!result)
@@ -2150,7 +2150,7 @@ type_expression_parser_parsetype(struct type_expression_parser *__restrict self,
 				goto err_name;
 			}
 			++self->tep_doc;
-			base = (DREF DeeObject *)type_expression_parser_parsetype(self, true);
+			base = Dee_AsObject(type_expression_parser_parsetype(self, true));
 			if (!ITER_ISOK(base)) {
 				if (!base)
 					goto err;
@@ -2164,7 +2164,7 @@ type_expression_parser_parsetype(struct type_expression_parser *__restrict self,
 		default: __builtin_unreachable();
 		}
 		if (name.ten_str) {
-			result = (DREF DeeTypeObject *)DeeObject_GetAttr(base, (DeeObject *)name.ten_str);
+			result = (DREF DeeTypeObject *)DeeObject_GetAttr(base, Dee_AsObject(name.ten_str));
 		} else {
 			result = (DREF DeeTypeObject *)DeeObject_GetAttrStringLen(base, name.ten_start,
 			                                                          (size_t)(name.ten_end - name.ten_start));
@@ -3121,7 +3121,7 @@ DeeJson_ParseIntoType(DeeJsonParser *__restrict self,
 		int tok;
 		tok = libjson_parser_peeknext(&self->djp_parser);
 		if (tok == JSON_PARSER_OBJECT) {
-			result = (DREF DeeObject *)DeeJsonMapping_New(self, must_advance_parser);
+			result = Dee_AsObject(DeeJsonMapping_New(self, must_advance_parser));
 check_result_and_maybe_cast_to_into_type:
 			if unlikely(!result)
 				goto err;
@@ -3141,7 +3141,7 @@ check_result_and_maybe_cast_to_into_type:
 		int tok;
 		tok = libjson_parser_peeknext(&self->djp_parser);
 		if (tok == JSON_PARSER_ARRAY) {
-			result = (DREF DeeObject *)DeeJsonSequence_New(self, must_advance_parser);
+			result = Dee_AsObject(DeeJsonSequence_New(self, must_advance_parser));
 			goto check_result_and_maybe_cast_to_into_type;
 		}
 		goto err_cannot_parse_into;
@@ -3248,7 +3248,7 @@ libjson_writer_writeattr(void *arg, struct Dee_attrdesc *__restrict attr) {
 	int error;
 
 	/* Skip attributes from low-level base classes. */
-	if (attr->ad_info.ai_decl == (DeeObject *)&DeeObject_Type ||
+	if (attr->ad_info.ai_decl == Dee_AsObject(&DeeObject_Type) ||
 	    attr->ad_info.ai_decl == (DeeObject *)&DeeType_Type) {
 		if (attr->ad_info.ai_decl != me->djw_obj)
 			return 0;

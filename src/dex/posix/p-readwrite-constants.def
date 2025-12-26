@@ -25,36 +25,36 @@
 #define OBJ_posix_SEEK_SET DeeInt_ForSmallInt(SEEK_SET)
 #elif SEEK_SET >= 0
 #if SEEK_SET <= 0x7fffull /* 15-bit */
-#define OBJ_posix_SEEK_SET ((DeeObject *)&posix_SEEK_SET)
+#define OBJ_posix_SEEK_SET &posix_SEEK_SET
 PRIVATE DEFINE_UINT15(posix_SEEK_SET, SEEK_SET);
 #elif SEEK_SET <= 0x3fffffffull /* 30-bit */
-#define OBJ_posix_SEEK_SET ((DeeObject *)&posix_SEEK_SET)
+#define OBJ_posix_SEEK_SET &posix_SEEK_SET
 PRIVATE DEFINE_UINT30(posix_SEEK_SET, SEEK_SET);
 #elif SEEK_SET <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_posix_SEEK_SET ((DeeObject *)&posix_SEEK_SET)
+#define OBJ_posix_SEEK_SET &posix_SEEK_SET
 PRIVATE DEFINE_UINT45(posix_SEEK_SET, SEEK_SET);
 #elif SEEK_SET <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_posix_SEEK_SET ((DeeObject *)&posix_SEEK_SET)
+#define OBJ_posix_SEEK_SET &posix_SEEK_SET
 PRIVATE DEFINE_UINT60(posix_SEEK_SET, SEEK_SET);
 #else
-#define OBJ_posix_SEEK_SET ((DeeObject *)&posix_SEEK_SET)
+#define OBJ_posix_SEEK_SET &posix_SEEK_SET
 PRIVATE DEFINE_UINT75(posix_SEEK_SET, SEEK_SET);
 #endif
 #else /* SEEK_SET >= 0 */
 #if SEEK_SET >= -0x4000ll /* 15-bit */
-#define OBJ_posix_SEEK_SET ((DeeObject *)&posix_SEEK_SET)
+#define OBJ_posix_SEEK_SET &posix_SEEK_SET
 PRIVATE DEFINE_INT15(posix_SEEK_SET, SEEK_SET);
 #elif SEEK_SET >= -0x20000000ll /* 30-bit */
-#define OBJ_posix_SEEK_SET ((DeeObject *)&posix_SEEK_SET)
+#define OBJ_posix_SEEK_SET &posix_SEEK_SET
 PRIVATE DEFINE_INT30(posix_SEEK_SET, SEEK_SET);
 #elif SEEK_SET >= -0x100000000000ll /* 45-bit */
-#define OBJ_posix_SEEK_SET ((DeeObject *)&posix_SEEK_SET)
+#define OBJ_posix_SEEK_SET &posix_SEEK_SET
 PRIVATE DEFINE_INT45(posix_SEEK_SET, SEEK_SET);
 #elif SEEK_SET >= -0x800000000000000ll /* 60-bit */
-#define OBJ_posix_SEEK_SET ((DeeObject *)&posix_SEEK_SET)
+#define OBJ_posix_SEEK_SET &posix_SEEK_SET
 PRIVATE DEFINE_INT60(posix_SEEK_SET, SEEK_SET);
 #else
-#define OBJ_posix_SEEK_SET ((DeeObject *)&posix_SEEK_SET)
+#define OBJ_posix_SEEK_SET &posix_SEEK_SET
 PRIVATE DEFINE_INT75(posix_SEEK_SET, SEEK_SET);
 #endif
 #endif /* SEEK_SET < 0 */
@@ -68,36 +68,36 @@ PRIVATE DEFINE_INT75(posix_SEEK_SET, SEEK_SET);
 #define OBJ_posix_SEEK_CUR DeeInt_ForSmallInt(SEEK_CUR)
 #elif SEEK_CUR >= 0
 #if SEEK_CUR <= 0x7fffull /* 15-bit */
-#define OBJ_posix_SEEK_CUR ((DeeObject *)&posix_SEEK_CUR)
+#define OBJ_posix_SEEK_CUR &posix_SEEK_CUR
 PRIVATE DEFINE_UINT15(posix_SEEK_CUR, SEEK_CUR);
 #elif SEEK_CUR <= 0x3fffffffull /* 30-bit */
-#define OBJ_posix_SEEK_CUR ((DeeObject *)&posix_SEEK_CUR)
+#define OBJ_posix_SEEK_CUR &posix_SEEK_CUR
 PRIVATE DEFINE_UINT30(posix_SEEK_CUR, SEEK_CUR);
 #elif SEEK_CUR <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_posix_SEEK_CUR ((DeeObject *)&posix_SEEK_CUR)
+#define OBJ_posix_SEEK_CUR &posix_SEEK_CUR
 PRIVATE DEFINE_UINT45(posix_SEEK_CUR, SEEK_CUR);
 #elif SEEK_CUR <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_posix_SEEK_CUR ((DeeObject *)&posix_SEEK_CUR)
+#define OBJ_posix_SEEK_CUR &posix_SEEK_CUR
 PRIVATE DEFINE_UINT60(posix_SEEK_CUR, SEEK_CUR);
 #else
-#define OBJ_posix_SEEK_CUR ((DeeObject *)&posix_SEEK_CUR)
+#define OBJ_posix_SEEK_CUR &posix_SEEK_CUR
 PRIVATE DEFINE_UINT75(posix_SEEK_CUR, SEEK_CUR);
 #endif
 #else /* SEEK_CUR >= 0 */
 #if SEEK_CUR >= -0x4000ll /* 15-bit */
-#define OBJ_posix_SEEK_CUR ((DeeObject *)&posix_SEEK_CUR)
+#define OBJ_posix_SEEK_CUR &posix_SEEK_CUR
 PRIVATE DEFINE_INT15(posix_SEEK_CUR, SEEK_CUR);
 #elif SEEK_CUR >= -0x20000000ll /* 30-bit */
-#define OBJ_posix_SEEK_CUR ((DeeObject *)&posix_SEEK_CUR)
+#define OBJ_posix_SEEK_CUR &posix_SEEK_CUR
 PRIVATE DEFINE_INT30(posix_SEEK_CUR, SEEK_CUR);
 #elif SEEK_CUR >= -0x100000000000ll /* 45-bit */
-#define OBJ_posix_SEEK_CUR ((DeeObject *)&posix_SEEK_CUR)
+#define OBJ_posix_SEEK_CUR &posix_SEEK_CUR
 PRIVATE DEFINE_INT45(posix_SEEK_CUR, SEEK_CUR);
 #elif SEEK_CUR >= -0x800000000000000ll /* 60-bit */
-#define OBJ_posix_SEEK_CUR ((DeeObject *)&posix_SEEK_CUR)
+#define OBJ_posix_SEEK_CUR &posix_SEEK_CUR
 PRIVATE DEFINE_INT60(posix_SEEK_CUR, SEEK_CUR);
 #else
-#define OBJ_posix_SEEK_CUR ((DeeObject *)&posix_SEEK_CUR)
+#define OBJ_posix_SEEK_CUR &posix_SEEK_CUR
 PRIVATE DEFINE_INT75(posix_SEEK_CUR, SEEK_CUR);
 #endif
 #endif /* SEEK_CUR < 0 */
@@ -111,36 +111,36 @@ PRIVATE DEFINE_INT75(posix_SEEK_CUR, SEEK_CUR);
 #define OBJ_posix_SEEK_END DeeInt_ForSmallInt(SEEK_END)
 #elif SEEK_END >= 0
 #if SEEK_END <= 0x7fffull /* 15-bit */
-#define OBJ_posix_SEEK_END ((DeeObject *)&posix_SEEK_END)
+#define OBJ_posix_SEEK_END &posix_SEEK_END
 PRIVATE DEFINE_UINT15(posix_SEEK_END, SEEK_END);
 #elif SEEK_END <= 0x3fffffffull /* 30-bit */
-#define OBJ_posix_SEEK_END ((DeeObject *)&posix_SEEK_END)
+#define OBJ_posix_SEEK_END &posix_SEEK_END
 PRIVATE DEFINE_UINT30(posix_SEEK_END, SEEK_END);
 #elif SEEK_END <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_posix_SEEK_END ((DeeObject *)&posix_SEEK_END)
+#define OBJ_posix_SEEK_END &posix_SEEK_END
 PRIVATE DEFINE_UINT45(posix_SEEK_END, SEEK_END);
 #elif SEEK_END <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_posix_SEEK_END ((DeeObject *)&posix_SEEK_END)
+#define OBJ_posix_SEEK_END &posix_SEEK_END
 PRIVATE DEFINE_UINT60(posix_SEEK_END, SEEK_END);
 #else
-#define OBJ_posix_SEEK_END ((DeeObject *)&posix_SEEK_END)
+#define OBJ_posix_SEEK_END &posix_SEEK_END
 PRIVATE DEFINE_UINT75(posix_SEEK_END, SEEK_END);
 #endif
 #else /* SEEK_END >= 0 */
 #if SEEK_END >= -0x4000ll /* 15-bit */
-#define OBJ_posix_SEEK_END ((DeeObject *)&posix_SEEK_END)
+#define OBJ_posix_SEEK_END &posix_SEEK_END
 PRIVATE DEFINE_INT15(posix_SEEK_END, SEEK_END);
 #elif SEEK_END >= -0x20000000ll /* 30-bit */
-#define OBJ_posix_SEEK_END ((DeeObject *)&posix_SEEK_END)
+#define OBJ_posix_SEEK_END &posix_SEEK_END
 PRIVATE DEFINE_INT30(posix_SEEK_END, SEEK_END);
 #elif SEEK_END >= -0x100000000000ll /* 45-bit */
-#define OBJ_posix_SEEK_END ((DeeObject *)&posix_SEEK_END)
+#define OBJ_posix_SEEK_END &posix_SEEK_END
 PRIVATE DEFINE_INT45(posix_SEEK_END, SEEK_END);
 #elif SEEK_END >= -0x800000000000000ll /* 60-bit */
-#define OBJ_posix_SEEK_END ((DeeObject *)&posix_SEEK_END)
+#define OBJ_posix_SEEK_END &posix_SEEK_END
 PRIVATE DEFINE_INT60(posix_SEEK_END, SEEK_END);
 #else
-#define OBJ_posix_SEEK_END ((DeeObject *)&posix_SEEK_END)
+#define OBJ_posix_SEEK_END &posix_SEEK_END
 PRIVATE DEFINE_INT75(posix_SEEK_END, SEEK_END);
 #endif
 #endif /* SEEK_END < 0 */
@@ -154,36 +154,36 @@ PRIVATE DEFINE_INT75(posix_SEEK_END, SEEK_END);
 #define OBJ_posix_SEEK_HOLE DeeInt_ForSmallInt(SEEK_HOLE)
 #elif SEEK_HOLE >= 0
 #if SEEK_HOLE <= 0x7fffull /* 15-bit */
-#define OBJ_posix_SEEK_HOLE ((DeeObject *)&posix_SEEK_HOLE)
+#define OBJ_posix_SEEK_HOLE &posix_SEEK_HOLE
 PRIVATE DEFINE_UINT15(posix_SEEK_HOLE, SEEK_HOLE);
 #elif SEEK_HOLE <= 0x3fffffffull /* 30-bit */
-#define OBJ_posix_SEEK_HOLE ((DeeObject *)&posix_SEEK_HOLE)
+#define OBJ_posix_SEEK_HOLE &posix_SEEK_HOLE
 PRIVATE DEFINE_UINT30(posix_SEEK_HOLE, SEEK_HOLE);
 #elif SEEK_HOLE <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_posix_SEEK_HOLE ((DeeObject *)&posix_SEEK_HOLE)
+#define OBJ_posix_SEEK_HOLE &posix_SEEK_HOLE
 PRIVATE DEFINE_UINT45(posix_SEEK_HOLE, SEEK_HOLE);
 #elif SEEK_HOLE <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_posix_SEEK_HOLE ((DeeObject *)&posix_SEEK_HOLE)
+#define OBJ_posix_SEEK_HOLE &posix_SEEK_HOLE
 PRIVATE DEFINE_UINT60(posix_SEEK_HOLE, SEEK_HOLE);
 #else
-#define OBJ_posix_SEEK_HOLE ((DeeObject *)&posix_SEEK_HOLE)
+#define OBJ_posix_SEEK_HOLE &posix_SEEK_HOLE
 PRIVATE DEFINE_UINT75(posix_SEEK_HOLE, SEEK_HOLE);
 #endif
 #else /* SEEK_HOLE >= 0 */
 #if SEEK_HOLE >= -0x4000ll /* 15-bit */
-#define OBJ_posix_SEEK_HOLE ((DeeObject *)&posix_SEEK_HOLE)
+#define OBJ_posix_SEEK_HOLE &posix_SEEK_HOLE
 PRIVATE DEFINE_INT15(posix_SEEK_HOLE, SEEK_HOLE);
 #elif SEEK_HOLE >= -0x20000000ll /* 30-bit */
-#define OBJ_posix_SEEK_HOLE ((DeeObject *)&posix_SEEK_HOLE)
+#define OBJ_posix_SEEK_HOLE &posix_SEEK_HOLE
 PRIVATE DEFINE_INT30(posix_SEEK_HOLE, SEEK_HOLE);
 #elif SEEK_HOLE >= -0x100000000000ll /* 45-bit */
-#define OBJ_posix_SEEK_HOLE ((DeeObject *)&posix_SEEK_HOLE)
+#define OBJ_posix_SEEK_HOLE &posix_SEEK_HOLE
 PRIVATE DEFINE_INT45(posix_SEEK_HOLE, SEEK_HOLE);
 #elif SEEK_HOLE >= -0x800000000000000ll /* 60-bit */
-#define OBJ_posix_SEEK_HOLE ((DeeObject *)&posix_SEEK_HOLE)
+#define OBJ_posix_SEEK_HOLE &posix_SEEK_HOLE
 PRIVATE DEFINE_INT60(posix_SEEK_HOLE, SEEK_HOLE);
 #else
-#define OBJ_posix_SEEK_HOLE ((DeeObject *)&posix_SEEK_HOLE)
+#define OBJ_posix_SEEK_HOLE &posix_SEEK_HOLE
 PRIVATE DEFINE_INT75(posix_SEEK_HOLE, SEEK_HOLE);
 #endif
 #endif /* SEEK_HOLE < 0 */
@@ -197,36 +197,36 @@ PRIVATE DEFINE_INT75(posix_SEEK_HOLE, SEEK_HOLE);
 #define OBJ_posix_SEEK_DATA DeeInt_ForSmallInt(SEEK_DATA)
 #elif SEEK_DATA >= 0
 #if SEEK_DATA <= 0x7fffull /* 15-bit */
-#define OBJ_posix_SEEK_DATA ((DeeObject *)&posix_SEEK_DATA)
+#define OBJ_posix_SEEK_DATA &posix_SEEK_DATA
 PRIVATE DEFINE_UINT15(posix_SEEK_DATA, SEEK_DATA);
 #elif SEEK_DATA <= 0x3fffffffull /* 30-bit */
-#define OBJ_posix_SEEK_DATA ((DeeObject *)&posix_SEEK_DATA)
+#define OBJ_posix_SEEK_DATA &posix_SEEK_DATA
 PRIVATE DEFINE_UINT30(posix_SEEK_DATA, SEEK_DATA);
 #elif SEEK_DATA <= 0x1fffffffffffull /* 45-bit */
-#define OBJ_posix_SEEK_DATA ((DeeObject *)&posix_SEEK_DATA)
+#define OBJ_posix_SEEK_DATA &posix_SEEK_DATA
 PRIVATE DEFINE_UINT45(posix_SEEK_DATA, SEEK_DATA);
 #elif SEEK_DATA <= 0xfffffffffffffffull /* 60-bit */
-#define OBJ_posix_SEEK_DATA ((DeeObject *)&posix_SEEK_DATA)
+#define OBJ_posix_SEEK_DATA &posix_SEEK_DATA
 PRIVATE DEFINE_UINT60(posix_SEEK_DATA, SEEK_DATA);
 #else
-#define OBJ_posix_SEEK_DATA ((DeeObject *)&posix_SEEK_DATA)
+#define OBJ_posix_SEEK_DATA &posix_SEEK_DATA
 PRIVATE DEFINE_UINT75(posix_SEEK_DATA, SEEK_DATA);
 #endif
 #else /* SEEK_DATA >= 0 */
 #if SEEK_DATA >= -0x4000ll /* 15-bit */
-#define OBJ_posix_SEEK_DATA ((DeeObject *)&posix_SEEK_DATA)
+#define OBJ_posix_SEEK_DATA &posix_SEEK_DATA
 PRIVATE DEFINE_INT15(posix_SEEK_DATA, SEEK_DATA);
 #elif SEEK_DATA >= -0x20000000ll /* 30-bit */
-#define OBJ_posix_SEEK_DATA ((DeeObject *)&posix_SEEK_DATA)
+#define OBJ_posix_SEEK_DATA &posix_SEEK_DATA
 PRIVATE DEFINE_INT30(posix_SEEK_DATA, SEEK_DATA);
 #elif SEEK_DATA >= -0x100000000000ll /* 45-bit */
-#define OBJ_posix_SEEK_DATA ((DeeObject *)&posix_SEEK_DATA)
+#define OBJ_posix_SEEK_DATA &posix_SEEK_DATA
 PRIVATE DEFINE_INT45(posix_SEEK_DATA, SEEK_DATA);
 #elif SEEK_DATA >= -0x800000000000000ll /* 60-bit */
-#define OBJ_posix_SEEK_DATA ((DeeObject *)&posix_SEEK_DATA)
+#define OBJ_posix_SEEK_DATA &posix_SEEK_DATA
 PRIVATE DEFINE_INT60(posix_SEEK_DATA, SEEK_DATA);
 #else
-#define OBJ_posix_SEEK_DATA ((DeeObject *)&posix_SEEK_DATA)
+#define OBJ_posix_SEEK_DATA &posix_SEEK_DATA
 PRIVATE DEFINE_INT75(posix_SEEK_DATA, SEEK_DATA);
 #endif
 #endif /* SEEK_DATA < 0 */

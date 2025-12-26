@@ -223,7 +223,7 @@ compiler_get_rootscope(DeeCompilerObject *__restrict self) {
 	if (COMPILER_BEGIN(self))
 		goto err;
 	result = DeeCompiler_GetObjItem(&DeeCompilerRootScope_Type,
-	                                (DeeObject *)current_rootscope);
+	                                Dee_AsObject(&current_rootscope->rs_scope.bs_scope));
 	COMPILER_END();
 	return result;
 err:
@@ -878,10 +878,10 @@ unpack_catch_expression(DeeObject *__restrict triple,
 	result->ce_mode  = CATCH_EXPR_FNORMAL;
 	result->ce_flags = EXCEPTION_HANDLER_FNORMAL;
 	if (DeeString_Check(args[0])) {
-		if unlikely(parse_handler_flags(DeeString_STR((DeeObject *)args[0]), result))
+		if unlikely(parse_handler_flags(DeeString_STR(args[0]), result))
 			goto err;
 	} else {
-		if (DeeObject_AsUInt16((DeeObject *)args[0], &result->ce_flags))
+		if (DeeObject_AsUInt16(Dee_AsObject(args[0]), &result->ce_flags))
 			goto err;
 	}
 	/* Fill in the code and mask branches. */
@@ -1312,7 +1312,7 @@ ast_makeconditional(DeeCompilerObject *self, size_t argc,
 			if (parse_conditional_flags(DeeString_STR(args.flags), &flags))
 				goto done_compiler_end;
 		} else {
-			if (DeeObject_AsUInt16((DeeObject *)args.flags, &flags))
+			if (DeeObject_AsUInt16(Dee_AsObject(args.flags), &flags))
 				goto done_compiler_end;
 		}
 	}
@@ -1552,7 +1552,7 @@ ast_makefunction(DeeCompilerObject *self, size_t argc,
 	result_ast->a_function.f_code  = args.code->ci_value;
 	result_ast->a_function.f_scope = code_scope;
 	ast_incref(args.code->ci_value);
-	Dee_Incref((DeeObject *)code_scope);
+	Dee_Incref(&code_scope->bs_scope);
 	result = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
 done_compiler_end:
@@ -1776,7 +1776,7 @@ ast_makeoperator(DeeCompilerObject *self, size_t argc,
 			if (parse_operator_flags(DeeString_STR(args.flags), &flags))
 				goto done_compiler_end;
 		} else {
-			if (DeeObject_AsUInt16((DeeObject *)args.flags, &flags))
+			if (DeeObject_AsUInt16(Dee_AsObject(args.flags), &flags))
 				goto done_compiler_end;
 		}
 	}

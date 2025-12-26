@@ -481,22 +481,22 @@ ast_getmultiple_typing(Ast *__restrict self) {
 		switch (me->a_flag) {
 
 		case AST_FMULTIPLE_TUPLE:
-			result = (DeeObject *)&DeeTuple_Type;
+			result = Dee_AsObject(&DeeTuple_Type);
 			break;
 		case AST_FMULTIPLE_LIST:
-			result = (DeeObject *)&DeeList_Type;
+			result = Dee_AsObject(&DeeList_Type);
 			break;
 		case AST_FMULTIPLE_HASHSET:
-			result = (DeeObject *)&DeeHashSet_Type;
+			result = Dee_AsObject(&DeeHashSet_Type);
 			break;
 		case AST_FMULTIPLE_DICT:
-			result = (DeeObject *)&DeeDict_Type;
+			result = Dee_AsObject(&DeeDict_Type);
 			break;
 		case AST_FMULTIPLE_GENERIC:
-			result = (DeeObject *)&DeeSeq_Type;
+			result = Dee_AsObject(&DeeSeq_Type);
 			break;
 		case AST_FMULTIPLE_GENERIC_MAP:
-			result = (DeeObject *)&DeeMapping_Type;
+			result = Dee_AsObject(&DeeMapping_Type);
 			break;
 
 		default:
@@ -547,7 +547,7 @@ ast_getreturnast(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_RETURN);
 		result = NULL;
 	} else if (!me->a_return) {
-		result = DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "returnast");
+		result = DeeRT_ErrUnboundAttrCStr(self, "returnast");
 	} else {
 		result = DeeCompiler_GetAst(me->a_return);
 	}
@@ -666,7 +666,7 @@ ast_getthrowast(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_THROW);
 		result = NULL;
 	} else if (!me->a_throw) {
-		result = DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "throwast");
+		result = DeeRT_ErrUnboundAttrCStr(self, "throwast");
 	} else {
 		result = DeeCompiler_GetAst(me->a_throw);
 	}
@@ -924,7 +924,7 @@ ast_setloopisforeach(Ast *__restrict self,
 		result = err_invalid_ast_type(self, AST_LOOP);
 	} else if (newval) {
 		if (!me->a_loop.l_iter) {
-			DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "loopiter");
+			DeeRT_ErrUnboundAttrCStr(self, "loopiter");
 			result = -1;
 		} else {
 			me->a_flag |= AST_FLOOP_FOREACH;
@@ -1092,7 +1092,7 @@ ast_setloopflags(Ast *__restrict self,
 		result = err_invalid_ast_type(self, AST_LOOP);
 	} else {
 		if ((new_flags & AST_FLOOP_FOREACH) && !me->a_loop.l_iter) {
-			DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "loopiter");
+			DeeRT_ErrUnboundAttrCStr(self, "loopiter");
 			result = -1;
 		} else {
 			me->a_flag = new_flags;
@@ -1132,7 +1132,7 @@ ast_getloopcond(Ast *__restrict self) {
 		err_is_a_foreach_loop(self);
 		result = NULL;
 	} else if (!me->a_loop.l_cond) {
-		result = DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "loopcond");
+		result = DeeRT_ErrUnboundAttrCStr(self, "loopcond");
 	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_cond);
 	}
@@ -1210,7 +1210,7 @@ ast_getloopnext(Ast *__restrict self) {
 		err_is_a_foreach_loop(self);
 		result = NULL;
 	} else if (!me->a_loop.l_next) {
-		result = DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "loopnext");
+		result = DeeRT_ErrUnboundAttrCStr(self, "loopnext");
 	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_next);
 	}
@@ -1288,7 +1288,7 @@ ast_getloopelem(Ast *__restrict self) {
 		err_not_a_foreach_loop(self);
 		result = NULL;
 	} else if (!me->a_loop.l_elem) {
-		result = DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "loopelem");
+		result = DeeRT_ErrUnboundAttrCStr(self, "loopelem");
 	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_elem);
 	}
@@ -1417,7 +1417,7 @@ ast_getlooploop(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_LOOP);
 		result = NULL;
 	} else if (!me->a_loop.l_loop) {
-		result = DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "looploop");
+		result = DeeRT_ErrUnboundAttrCStr(self, "looploop");
 	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_loop);
 	}
@@ -1489,7 +1489,7 @@ ast_getloopelemcond(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_LOOP);
 		result = NULL;
 	} else if (!me->a_loop.l_elem) {
-		result = DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "loopelemcond");
+		result = DeeRT_ErrUnboundAttrCStr(self, "loopelemcond");
 	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_elem);
 	}
@@ -1560,7 +1560,7 @@ ast_getloopiternext(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_LOOP);
 		result = NULL;
 	} else if (!me->a_loop.l_iter) {
-		result = DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "loopiternext");
+		result = DeeRT_ErrUnboundAttrCStr(self, "loopiternext");
 	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_iter);
 	}
@@ -1725,7 +1725,7 @@ ast_getconditionaltt(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_CONDITIONAL);
 		result = NULL;
 	} else if (!me->a_conditional.c_tt) {
-		result = DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "conditionaltt");
+		result = DeeRT_ErrUnboundAttrCStr(self, "conditionaltt");
 	} else {
 		result = DeeCompiler_GetAst(me->a_conditional.c_tt);
 	}
@@ -1796,7 +1796,7 @@ ast_getconditionalff(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_CONDITIONAL);
 		result = NULL;
 	} else if (!me->a_conditional.c_ff) {
-		result = DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "conditionalff");
+		result = DeeRT_ErrUnboundAttrCStr(self, "conditionalff");
 	} else {
 		result = DeeCompiler_GetAst(me->a_conditional.c_ff);
 	}
@@ -2245,13 +2245,13 @@ ast_setfunctioncode(Ast *__restrict self,
 			DREF DeeBaseScopeObject *old_scope;
 			DREF struct ast *old_code;
 			ast_incref(value->ci_value);
-			Dee_Incref((DeeObject *)code_scope);
+			Dee_Incref(&code_scope->bs_scope);
 			old_code               = me->a_function.f_code;
 			old_scope              = me->a_function.f_scope;
 			me->a_function.f_code  = value->ci_value;
 			me->a_function.f_scope = code_scope;
 			ast_decref(old_code);
-			Dee_Decref((DeeObject *)old_scope);
+			Dee_Decref(&old_scope->bs_scope);
 		}
 	}
 	COMPILER_END();
@@ -2337,7 +2337,7 @@ ast_getoperatorfuncbinding(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_OPERATOR_FUNC);
 		result = NULL;
 	} else if (!me->a_operator_func.of_binding) {
-		result = DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "operatorfuncbinding");
+		result = DeeRT_ErrUnboundAttrCStr(self, "operatorfuncbinding");
 	} else {
 		result = DeeCompiler_GetAst(me->a_operator_func.of_binding);
 	}
@@ -2500,7 +2500,7 @@ ast_getoperatorb(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_OPERATOR);
 		result = NULL;
 	} else if (!me->a_operator.o_op1) {
-		result = DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "operatorb");
+		result = DeeRT_ErrUnboundAttrCStr(self, "operatorb");
 	} else {
 		result = DeeCompiler_GetAst(me->a_operator.o_op1);
 	}
@@ -2571,7 +2571,7 @@ ast_getoperatorc(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_OPERATOR);
 		result = NULL;
 	} else if (!me->a_operator.o_op2) {
-		result = DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "operatorc");
+		result = DeeRT_ErrUnboundAttrCStr(self, "operatorc");
 	} else {
 		result = DeeCompiler_GetAst(me->a_operator.o_op2);
 	}
@@ -2642,7 +2642,7 @@ ast_getoperatord(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_OPERATOR);
 		result = NULL;
 	} else if (!me->a_operator.o_op3) {
-		result = DeeRT_ErrUnboundAttrCStr((DeeObject *)self, "operatord");
+		result = DeeRT_ErrUnboundAttrCStr(self, "operatord");
 	} else {
 		result = DeeCompiler_GetAst(me->a_operator.o_op3);
 	}
@@ -4533,13 +4533,13 @@ operator_fallback:
 		desc = (DeeClassDescriptorObject *)self->a_class.c_desc->a_constexpr;
 		if (desc->cd_doc) {
 			PRINT("@");
-			DO(DeeObject_PrintRepr((DeeObject *)desc->cd_doc, printer, arg));
+			DO(DeeObject_PrintRepr(Dee_AsObject(desc->cd_doc), printer, arg));
 			PRINT("\n");
 		}
 		PRINT("class ");
 		if (desc->cd_name) {
 			PRINT(" ");
-			DO(DeeObject_Print((DeeObject *)desc->cd_name, printer, arg));
+			DO(DeeObject_Print(Dee_AsObject(desc->cd_name), printer, arg));
 		}
 		if (self->a_class.c_base) {
 			PRINT(": ");
@@ -4556,7 +4556,7 @@ operator_fallback:
 			if (attr->ca_doc) {
 				DO(DeeFormat_Repeat(printer, arg, '\t', indent));
 				PRINT("@");
-				DO(DeeObject_PrintRepr((DeeObject *)attr->ca_doc, printer, arg));
+				DO(DeeObject_PrintRepr(Dee_AsObject(attr->ca_doc), printer, arg));
 				PRINT("\n");
 			}
 			DO(DeeFormat_Repeat(printer, arg, '\t', indent));
@@ -4637,7 +4637,7 @@ instance_member_in_class:
 			if (attr->ca_doc) {
 				DO(DeeFormat_Repeat(printer, arg, '\t', indent));
 				PRINT("@");
-				DO(DeeObject_PrintRepr((DeeObject *)attr->ca_doc, printer, arg));
+				DO(DeeObject_PrintRepr(Dee_AsObject(attr->ca_doc), printer, arg));
 				PRINT("\n");
 			}
 			DO(DeeFormat_Repeat(printer, arg, '\t', indent));

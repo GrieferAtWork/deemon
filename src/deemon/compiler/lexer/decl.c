@@ -197,7 +197,7 @@ decl_ast_getobj(struct decl_ast const *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 decl_ast_isnone(struct decl_ast const *__restrict self) {
 	if (self->da_type == DAST_CONST)
-		return DeeNone_Check(self->da_const) || self->da_const == (DeeObject *)&DeeNone_Type;
+		return DeeNone_Check(self->da_const) || self->da_const == Dee_AsObject(&DeeNone_Type);
 	if (self->da_type == DAST_SYMBOL) {
 		struct symbol *sym = self->da_symbol;
 check_symbol:
@@ -212,7 +212,7 @@ check_symbol:
 			        Dee_module_symbol_getindex(sym->s_extern.e_symbol) == id_none);
 
 		case SYMBOL_TYPE_CONST:
-			return DeeNone_Check(sym->s_const) || sym->s_const == (DeeObject *)&DeeNone_Type;
+			return DeeNone_Check(sym->s_const) || sym->s_const == Dee_AsObject(&DeeNone_Type);
 
 		default: break;
 		}
@@ -225,7 +225,7 @@ check_symbol:
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 decl_ast_isobject(struct decl_ast const *__restrict self) {
 	if (self->da_type == DAST_CONST)
-		return self->da_const == (DeeObject *)&DeeObject_Type;
+		return self->da_const == Dee_AsObject(&DeeObject_Type);
 	if (self->da_type == DAST_SYMBOL) {
 		struct symbol *sym = self->da_symbol;
 check_symbol:
@@ -240,7 +240,7 @@ check_symbol:
 			        Dee_module_symbol_getindex(sym->s_extern.e_symbol) == id_Object);
 
 		case SYMBOL_TYPE_CONST:
-			return sym->s_const == (DeeObject *)&DeeObject_Type;
+			return sym->s_const == Dee_AsObject(&DeeObject_Type);
 
 		default: break;
 		}
@@ -255,7 +255,7 @@ decl_ast_istype(struct decl_ast const *__restrict self,
 	if (tp == &DeeNone_Type)
 		return decl_ast_isnone(self);
 	if (self->da_type == DAST_CONST)
-		return self->da_const == (DeeObject *)tp;
+		return self->da_const == Dee_AsObject(tp);
 	if (self->da_type == DAST_SYMBOL) {
 		struct symbol *sym = self->da_symbol;
 check_symbol:
@@ -271,12 +271,12 @@ check_symbol:
 			if (sym->s_extern.e_module != &DeeModule_Deemon)
 				return false;
 			if (Dee_module_symbol_getindex(sym->s_extern.e_symbol) < DeeModule_Deemon.mo_globalc &&
-			    DeeModule_Deemon.mo_globalv[Dee_module_symbol_getindex(sym->s_extern.e_symbol)] == (DeeObject *)tp)
+			    DeeModule_Deemon.mo_globalv[Dee_module_symbol_getindex(sym->s_extern.e_symbol)] == Dee_AsObject(tp))
 				return true;
 			break;
 
 		case SYMBOL_TYPE_CONST:
-			return sym->s_const == (DeeObject *)tp;
+			return sym->s_const == Dee_AsObject(tp);
 
 		default: break;
 		}
@@ -314,10 +314,10 @@ decl_ast_isempty(struct decl_ast const *__restrict self) {
 			goto nope;
 		if ((scope->bs_argc != 0) ||                   /* We've got argument names */
 		    !(scope->bs_cflags & BASESCOPE_FRETURN)) { /* We know that only `none' is ever returned */
-			Dee_Decref_unlikely((DeeObject *)scope);
+			Dee_Decref_unlikely(&scope->bs_scope);
 			goto nope;
 		}
-		Dee_Decref_unlikely((DeeObject *)scope);
+		Dee_Decref_unlikely(&scope->bs_scope);
 		/* The argument count can be determined without the doc,
 		 * so we can simply consider this decl ast as empty. */
 	}	break;
@@ -401,7 +401,7 @@ decl_ast_print_const_type(DeeObject const *__restrict ob,
                           struct unicode_printer *__restrict printer) {
 	uint16_t i;
 	DeeModuleObject *deemon;
-	if (DeeNone_Check(ob) || ob == (DeeObject *)&DeeNone_Type) {
+	if (DeeNone_Check(ob) || ob == Dee_AsObject(&DeeNone_Type)) {
 		if (UNICODE_PRINTER_PRINT(printer, "?N") < 0)
 			goto err;
 		return 0;
@@ -440,7 +440,7 @@ decl_ast_print_const_type(DeeObject const *__restrict ob,
 			 *       the builtin deemon module doesn't export anything that would require
 			 *       its name to be escaped (deemon only exposes symbols with pure names) */
 			if (sym->ss_flags & MODSYM_FNAMEOBJ) {
-				if (unicode_printer_printstring(printer, (DeeObject *)COMPILER_CONTAINER_OF(sym->ss_name, DeeStringObject, s_str)) < 0)
+				if (unicode_printer_printstring(printer, Dee_AsObject(COMPILER_CONTAINER_OF(sym->ss_name, DeeStringObject, s_str))) < 0)
 					goto err;
 			} else {
 				if (unicode_printer_print(printer, sym->ss_name, strlen(sym->ss_name)) < 0)
@@ -490,7 +490,7 @@ switch_symbol_type:
 				if unlikely(!module_name)
 					goto print_object;
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-				module_name = DeeString_AsUtf8((DeeObject *)sym->s_extern.e_module->mo_name);
+				module_name = DeeString_AsUtf8(Dee_AsObject(sym->s_extern.e_module->mo_name));
 				if unlikely(!module_name)
 					goto err;
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -619,7 +619,7 @@ print_undefined_symbol_name:
 
 	case DAST_ATTR: {
 		char const *attrname;
-		attrname = DeeString_AsUtf8((DeeObject *)self->da_attr.a_name);
+		attrname = DeeString_AsUtf8(Dee_AsObject(self->da_attr.a_name));
 		if unlikely(!attrname)
 			goto err;
 		if unlikely(UNICODE_PRINTER_PRINT(printer, "?A") < 0)
@@ -649,7 +649,7 @@ print_undefined_symbol_name:
 		break;
 
 	case DAST_STRING:
-		if unlikely(unicode_printer_printstring(printer, (DeeObject *)self->da_string) < 0)
+		if unlikely(unicode_printer_printstring(printer, Dee_AsObject(self->da_string)) < 0)
 			goto err;
 		break;
 
@@ -823,10 +823,10 @@ encode_empty_paren:
 		if (UNICODE_PRINTER_PRINT(printer, "()") < 0)
 			goto err;
 	}
-	Dee_Decref_unlikely((DeeObject *)scope);
+	Dee_Decref_unlikely(&scope->bs_scope);
 	return 0;
 err:
-	Dee_Decref_unlikely((DeeObject *)scope);
+	Dee_Decref_unlikely(&scope->bs_scope);
 err_noscope:
 	return -1;
 }
@@ -1047,7 +1047,7 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 			goto err;
 		self->da_type  = DAST_CONST;
 		self->da_flag  = DAST_FNORMAL;
-		self->da_const = (DREF DeeObject *)&DeeNone_Type;
+		self->da_const = Dee_AsObject(&DeeNone_Type);
 		Dee_Incref(&DeeNone_Type);
 		break;
 
@@ -1073,7 +1073,7 @@ err_type_expr:
 		}
 		old_opt_flags = optimizer_flags;
 		optimizer_flags &= ~OPTIMIZE_FNOPREDICT;
-		self->da_const = (DREF DeeObject *)ast_predict_type(type_expr);
+		self->da_const = Dee_AsObject(ast_predict_type(type_expr));
 		optimizer_flags |= old_opt_flags & OPTIMIZE_FNOPREDICT;
 		if unlikely(!self->da_const) {
 			if (WARN(W_EXPECTED_CONSTANT_AFTER_TYPE_IN_DECL_EXPRESSION))
@@ -1387,7 +1387,7 @@ decl_ast_parse_unary(struct decl_ast *__restrict self) {
 				self->da_symbol = new_symbol;
 			} else {
 				if (WARN(W_MODULE_IMPORT_NOT_FOUND, token.t_kwd->k_name,
-				         DeeModule_GetShortName((DeeObject *)self->da_symbol->s_module)))
+				         DeeModule_GetShortName(Dee_AsObject(self->da_symbol->s_module))))
 					goto err_r;
 			}
 		} else {

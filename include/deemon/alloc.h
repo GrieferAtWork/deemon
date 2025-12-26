@@ -435,8 +435,9 @@ DFUNDEF void *(DCALL DeeDbgObject_UntrackAlloc)(void *ptr, char const *file, int
 #define Dee_object object_
 #endif /* DEE_SOURCE */
 struct Dee_object;
-DFUNDEF ATTR_RETNONNULL NONNULL((1)) struct Dee_object *DCALL
-DeeObject_FreeTracker(struct Dee_object *__restrict self);
+DFUNDEF NONNULL((1)) void
+(DCALL DeeObject_FreeTracker)(struct Dee_object *__restrict self);
+#define DeeObject_FreeTracker(self) (DeeObject_FreeTracker)(Dee_AsObject(self))
 #else /* CONFIG_TRACE_REFCHANGES */
 #define DeeObject_FreeTracker(self) (void)0
 #endif /* !CONFIG_TRACE_REFCHANGES */

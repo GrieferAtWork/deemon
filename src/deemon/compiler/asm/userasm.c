@@ -1447,7 +1447,7 @@ unknown_encoding:
 			goto next_option;
 		if (ast_genasm(self, ASM_G_FNORMAL))
 			goto err;
-		result = (DeeObject *)&str_none;
+		result = Dee_AsObject(&str_none);
 		Dee_Incref(result);
 		break;
 
@@ -1496,7 +1496,7 @@ abs_stack_any:
 			goto next_option;
 		if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
 			goto next_option;
-		result = (DeeObject *)&str_except;
+		result = Dee_AsObject(&str_except);
 		Dee_Incref(result);
 		break;
 
@@ -1521,7 +1521,7 @@ abs_stack_any:
 			goto next_option;
 		if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
 			goto next_option;
-		result = (DeeObject *)&str_this;
+		result = Dee_AsObject(&str_this);
 		Dee_Incref(result);
 		break;
 
@@ -1531,7 +1531,7 @@ abs_stack_any:
 		sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
 		if (sym->s_type != SYMBOL_TYPE_MYMOD)
 			goto next_option;
-		result = (DeeObject *)&str_this_module;
+		result = Dee_AsObject(&str_this_module);
 		Dee_Incref(result);
 		break;
 
@@ -1543,7 +1543,7 @@ abs_stack_any:
 			goto next_option;
 		if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
 			goto next_option;
-		result = (DeeObject *)&str_this_function;
+		result = Dee_AsObject(&str_this_function);
 		Dee_Incref(result);
 		break;
 
@@ -1738,7 +1738,7 @@ write_regular_local:
 			goto next_option;
 		if (self->a_constexpr != Dee_True)
 			goto next_option;
-		result = (DeeObject *)&str_true;
+		result = Dee_AsObject(&str_true);
 		Dee_Incref(result);
 		break;
 
@@ -1747,7 +1747,7 @@ write_regular_local:
 			goto next_option;
 		if (self->a_constexpr != Dee_False)
 			goto next_option;
-		result = (DeeObject *)&str_false;
+		result = Dee_AsObject(&str_false);
 		Dee_Incref(result);
 		break;
 
@@ -1901,18 +1901,18 @@ write_regular_local:
 	case ASM_OP_CAST:
 		if (self->a_type != AST_CONSTEXPR)
 			goto next_option;
-		if (self->a_constexpr == (DeeObject *)&DeeTuple_Type) {
-			result = (DeeObject *)&str_Tuple;
-		} else if (self->a_constexpr == (DeeObject *)&DeeList_Type) {
-			result = (DeeObject *)&str_List;
-		} else if (self->a_constexpr == (DeeObject *)&DeeDict_Type) {
-			result = (DeeObject *)&str_Dict;
-		} else if (self->a_constexpr == (DeeObject *)&DeeHashSet_Type) {
-			result = (DeeObject *)&str_HashSet;
-		} else if (self->a_constexpr == (DeeObject *)&DeeInt_Type) {
-			result = (DeeObject *)&str_int;
-		} else if (self->a_constexpr == (DeeObject *)&DeeBool_Type) {
-			result = (DeeObject *)&str_bool;
+		if (self->a_constexpr == Dee_AsObject(&DeeTuple_Type)) {
+			result = Dee_AsObject(&str_Tuple);
+		} else if (self->a_constexpr == Dee_AsObject(&DeeList_Type)) {
+			result = Dee_AsObject(&str_List);
+		} else if (self->a_constexpr == Dee_AsObject(&DeeDict_Type)) {
+			result = Dee_AsObject(&str_Dict);
+		} else if (self->a_constexpr == Dee_AsObject(&DeeHashSet_Type)) {
+			result = Dee_AsObject(&str_HashSet);
+		} else if (self->a_constexpr == Dee_AsObject(&DeeInt_Type)) {
+			result = Dee_AsObject(&str_int);
+		} else if (self->a_constexpr == Dee_AsObject(&DeeBool_Type)) {
+			result = Dee_AsObject(&str_bool);
 		} else {
 			goto next_option;
 		}

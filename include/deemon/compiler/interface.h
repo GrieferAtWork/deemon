@@ -98,7 +98,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetAst(struct ast 
 #define DeeCompiler_GetLexerIfdef(self)      DeeCompiler_GetWrapper(self, &DeeCompilerLexerIfdef_Type)
 #define DeeCompiler_GetLexerToken(self)      DeeCompiler_GetWrapper(self, &DeeCompilerLexerToken_Type)
 #define DeeCompiler_GetParser(self)          DeeCompiler_GetWrapper(self, &DeeCompilerParser_Type)
-#define DeeCompiler_GetAst(branch)           DeeCompiler_GetObjItem(&DeeCompilerAst_Type, (DeeObject *)(branch))
+#define DeeCompiler_GetAst(branch)           DeeCompiler_GetObjItem(&DeeCompilerAst_Type, Dee_AsObject(branch))
 #endif /* !__INTELLISENSE__ */
 
 /* Type fields of DeeCompilerItem_Type and DeeCompilerWrapper_Type */

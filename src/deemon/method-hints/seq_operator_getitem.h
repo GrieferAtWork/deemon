@@ -113,10 +113,10 @@ default_seq_getitem_index_with_map_enumerate_cb(void *arg, DeeObject *key, DeeOb
 			if unlikely(!pair)
 				goto err;
 			Dee_Incref(key);
-			pair->t_elem[0] = key;                         /* Inherit reference */
+			pair->t_elem[0] = key;                      /* Inherit reference */
 			Dee_Incref(value);
-			pair->t_elem[1] = value;                       /* Inherit reference */
-			data->dsgiiwme_result = (DREF DeeObject *)pair; /* Inherit reference */
+			pair->t_elem[1] = value;                    /* Inherit reference */
+			data->dsgiiwme_result = Dee_AsObject(pair); /* Inherit reference */
 		} else {
 			data->dsgiiwme_result = NULL;
 		}
@@ -182,7 +182,7 @@ __seq_getitem__.seq_operator_getitem_index([[nonnull]] DeeObject *__restrict sel
 	}
 	return data.dsgiiwfd_result;
 err_bad_bounds:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, index - data.dsgiiwfd_nskip);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, index - data.dsgiiwfd_nskip);
 err:
 	return NULL;
 }}
@@ -202,7 +202,7 @@ err:
 	DeeRT_ErrUnboundIndex(self, index);
 	goto err;
 err_bad_bounds:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, size);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, size);
 err:
 	return NULL;
 }}
@@ -235,7 +235,7 @@ err_unbound:
 	DeeRT_ErrUnboundIndex(self, index);
 	goto err;
 err_bad_bounds:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, index - data.dsgiiwme_nskip);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, index - data.dsgiiwme_nskip);
 err:
 	return NULL;
 }}

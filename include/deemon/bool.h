@@ -82,13 +82,13 @@ DDATDEF DeeBoolObject Dee_FalseTrue[2];
 	do {                                                                         \
 		__register struct Dee_bool_object *const _rb_result = _DeeBool_For(val); \
 		Dee_Incref(_rb_result);                                                  \
-		return (DeeObject *)_rb_result;                                          \
+		return (DREF DeeObject *)_rb_result;                                     \
 	}	__WHILE0
 #define Dee_return_bool01(val)                                                     \
 	do {                                                                           \
 		__register struct Dee_bool_object *const _rb_result = _DeeBool_For01(val); \
 		Dee_Incref(_rb_result);                                                    \
-		return (DeeObject *)_rb_result;                                            \
+		return (DREF DeeObject *)_rb_result;                                       \
 	}	__WHILE0
 #endif /* !__INTELLISENSE__ */
 #define Dee_return_true  return DeeBool_NewTrue()

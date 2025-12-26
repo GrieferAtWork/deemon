@@ -30,7 +30,7 @@ __set_inv__()->?DSet {
 [[wunused]] DREF DeeObject *
 __set_inv__.set_operator_inv([[nonnull]] DeeObject *__restrict self)
 %{unsupported({
-	return (DREF DeeObject *)SetInversion_New(self);
+	return Dee_AsObject(SetInversion_New(self));
 })}
 %{$none = return_none}
 %{$empty = return DeeSet_NewUniversal()}

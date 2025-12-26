@@ -38,17 +38,17 @@ DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 has_sequence_cast_constructor(DeeObject *__restrict type) {
-	if (type == (DeeObject *)&DeeTuple_Type)
+	if (type == Dee_AsObject(&DeeTuple_Type))
 		goto yes;
-	if (type == (DeeObject *)&DeeList_Type)
+	if (type == Dee_AsObject(&DeeList_Type))
 		goto yes;
-	if (type == (DeeObject *)&DeeHashSet_Type)
+	if (type == Dee_AsObject(&DeeHashSet_Type))
 		goto yes;
-	if (type == (DeeObject *)&DeeDict_Type)
+	if (type == Dee_AsObject(&DeeDict_Type))
 		goto yes;
-	if (type == (DeeObject *)&DeeRoDict_Type)
+	if (type == Dee_AsObject(&DeeRoDict_Type))
 		goto yes;
-	if (type == (DeeObject *)&DeeRoSet_Type)
+	if (type == Dee_AsObject(&DeeRoSet_Type))
 		goto yes;
 	return false;
 yes:

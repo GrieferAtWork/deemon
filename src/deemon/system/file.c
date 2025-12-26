@@ -2255,7 +2255,7 @@ err:
 	/* Use truncate() */
 	DREF DeeObject *filename;
 	char const *utf8_filename;
-	filename = DeeSystemFile_Filename((DeeObject *)self);
+	filename = DeeSystemFile_Filename(Dee_AsObject(self));
 	if unlikely(!filename)
 		goto err;
 	utf8_filename = DeeString_AsUtf8(filename);
@@ -2567,7 +2567,7 @@ sysfile_putc(SystemFile *__restrict self, int ch, dioflag_t flags) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_osfhandle_np(SystemFile *__restrict self) {
 	Dee_fd_t result;
-	result = DeeSystemFile_Fileno((DeeObject *)self);
+	result = DeeSystemFile_Fileno(Dee_AsObject(self));
 	if unlikely(!result)
 		goto err;
 	return DeeInt_NewUIntptr((uintptr_t)result);
@@ -2580,7 +2580,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_fileno_np(SystemFile *__restrict self) {
 	Dee_fd_t result;
-	result = DeeSystemFile_Fileno((DeeObject *)self);
+	result = DeeSystemFile_Fileno(Dee_AsObject(self));
 	if unlikely(result == (Dee_fd_t)-1)
 		goto err;
 	return DeeInt_NewInt((int)result);

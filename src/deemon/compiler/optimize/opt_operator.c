@@ -127,10 +127,10 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL string_hasutf(DeeObject *__res
 
 
 /* Don't allow member calls with these types at compile-time. */
-#define IS_BLACKLISTED_BASE(self)                 \
-	((self) == (DeeObject *)&DeeThread_Type ||    \
-	 (self) == (DeeObject *)&DeeTraceback_Type || \
-	 (self) == (DeeObject *)&DeeModule_Type)
+#define IS_BLACKLISTED_BASE(self)                  \
+	((self) == Dee_AsObject(&DeeThread_Type) ||    \
+	 (self) == Dee_AsObject(&DeeTraceback_Type) || \
+	 (self) == Dee_AsObject(&DeeModule_Type))
 
 /* Returns `ITER_DONE' if the call isn't allowed. */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -201,7 +201,8 @@ emulate_getattr(DeeObject *base, DeeObject *name) {
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeStringObject *
 (DCALL string_getsubstr)(DeeStringObject *__restrict self, size_t start, size_t end);
-#define string_getsubstr(self, start, end) (DeeObject *)string_getsubstr((DeeStringObject *)(self), start, end)
+#define string_getsubstr(self, start, end) \
+	Dee_AsObject(string_getsubstr(Dee_REQUIRES_OBJECT(DeeStringObject, self), start, end))
 
 PRIVATE NONNULL((1, 3, 4)) bool DCALL
 find_string_template_insert_area(/*utf-8*/ char const *__restrict template_str,
@@ -706,11 +707,11 @@ do_generic:
 			    objmethod->om_func.omf_meth == (Dee_objmethod_t)&string_format) {
 				unsigned int old_optimizer_count = optimizer_count;
 				if (DeeObject_IsShared(objmethod)) {
-					objmethod = (DeeObjMethodObject *)DeeObject_Copy((DeeObject *)objmethod);
+					objmethod = (DREF DeeObjMethodObject *)DeeObject_Copy(Dee_AsObject(objmethod));
 					if unlikely(!objmethod)
 						goto err;
 					Dee_Decref(self->a_operator.o_op0->a_constexpr);
-					self->a_operator.o_op0->a_constexpr = (DREF DeeObject *)objmethod; /* Inherit reference */
+					self->a_operator.o_op0->a_constexpr = Dee_AsObject(objmethod); /* Inherit reference */
 				}
 	
 				/* Special optimizations for `string.format' (since
@@ -866,13 +867,13 @@ generic_operator_optimizations:
 			/* Propagate explicit cast calls to underlying sequence types:
 			 * >> tuple([10, 20, 30]); // Optimize to `pack(10, 20, 30)' */
 			uint16_t new_kind;
-			if (function == (DeeObject *)&DeeTuple_Type) {
+			if (function == Dee_AsObject(&DeeTuple_Type)) {
 				new_kind = AST_FMULTIPLE_TUPLE;
-			} else if (function == (DeeObject *)&DeeList_Type) {
+			} else if (function == Dee_AsObject(&DeeList_Type)) {
 				new_kind = AST_FMULTIPLE_LIST;
-			} else if (function == (DeeObject *)&DeeHashSet_Type) {
+			} else if (function == Dee_AsObject(&DeeHashSet_Type)) {
 				new_kind = AST_FMULTIPLE_HASHSET;
-			} else if (function == (DeeObject *)&DeeDict_Type) {
+			} else if (function == Dee_AsObject(&DeeDict_Type)) {
 				new_kind = AST_FMULTIPLE_DICT;
 			} else {
 				goto after_sequence_cast_propagation;

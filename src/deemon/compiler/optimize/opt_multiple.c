@@ -181,7 +181,7 @@ multiple_continue_at_iter:
 				ast_decref(branch);
 			}
 			Dee_Free(self->a_multiple.m_astv);
-			self->a_constexpr = (DREF DeeObject *)new_tuple; /* Inherit reference. */
+			self->a_constexpr = Dee_AsObject(new_tuple); /* Inherit reference. */
 		} else if (self->a_flag == AST_FMULTIPLE_LIST) {
 			DREF DeeListObject *new_list;
 			size_t i;
@@ -243,7 +243,7 @@ multiple_continue_at_iter:
 			}
 			ast_decrefv(self->a_multiple.m_astv, self->a_multiple.m_astc);
 			Dee_Free(self->a_multiple.m_astv);
-			self->a_constexpr = (DREF DeeObject *)Dee_rodict_builder_pack(&new_dict); /* Inherit reference. */
+			self->a_constexpr = Dee_AsObject(Dee_rodict_builder_pack(&new_dict)); /* Inherit reference. */
 		} else {
 			goto after_multiple_constexpr;
 		}

@@ -560,14 +560,14 @@ DeeCode_LidNameAtAddr(DeeCodeObject *__restrict self,
 	char const *result;
 	struct Dee_ddi_state st;
 	struct Dee_ddi_xregs *iter;
-	ptr = DeeCode_FindDDI((DeeObject *)self, &st, NULL,
+	ptr = DeeCode_FindDDI(Dee_AsObject(self), &st, NULL,
 	                      code_addr, DDI_STATE_FNOTHROW);
 	if (!DDI_ISOK(ptr))
 		return NULL;
 	result = NULL;
 	DDI_STATE_DO(iter, &st) {
 		if (lid < iter->dx_lcnamc) {
-			result = DeeCode_GetDDIString((DeeObject *)self, iter->dx_lcnamv[lid]);
+			result = DeeCode_GetDDIString(Dee_AsObject(self), iter->dx_lcnamv[lid]);
 			if (result)
 				goto done;
 		}

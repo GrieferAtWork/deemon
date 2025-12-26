@@ -562,7 +562,7 @@ typemro_getitem_index(TypeMRO *__restrict self, size_t index) {
 			return_reference_(iter);
 		++position;
 	} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, position);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, position);
 	return NULL;
 }
 
@@ -594,7 +594,7 @@ typebases_getitem_index(TypeMRO *__restrict self, size_t index) {
 			return_reference_(iter);
 		++position;
 	}
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, position);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, position);
 	return NULL;
 }
 

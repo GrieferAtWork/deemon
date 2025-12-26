@@ -43,13 +43,13 @@ __map_enumerate_items__.map_makeenumeration([[nonnull]] DeeObject *__restrict se
 %{$with__operator_iter = [[inherit_as(default__map_makeenumeration__with__map_operator_iter)]] "DeeObject_NewRef"}
 %{$with__map_operator_iter = "generic_obj__asmap"} /* DefaultEnumeration__with__map_operator_iter__and__unpack */
 %{$with__map_iterkeys__and__map_operator_getitem = {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__map_iterkeys__and__map_operator_getitem, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__map_iterkeys__and__map_operator_getitem, self));
 }}
 %{$with__map_iterkeys__and__map_operator_trygetitem = {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__map_iterkeys__and__map_operator_trygetitem, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__map_iterkeys__and__map_operator_trygetitem, self));
 }}
 %{$with__map_enumerate = {
-	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__map_enumerate, self);
+	return Dee_AsObject(DefaultEnumeration_New(&DefaultEnumeration__with__map_enumerate, self));
 }} {
 	return LOCAL_CALLATTR(self, 0, NULL);
 }
@@ -64,16 +64,16 @@ __map_enumerate_items__.map_makeenumeration_with_range([[nonnull]] DeeObject *se
 %{$none = "default__seq_makeenumeration_with_range__none"}
 %{$empty = "default__seq_makeenumeration_with_range__empty"}
 %{$with__map_operator_iter = {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_operator_iter__and__unpack, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_operator_iter__and__unpack, self, start, end));
 }}
 %{$with__map_iterkeys__and__map_operator_getitem = {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_getitem, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_getitem, self, start, end));
 }}
 %{$with__map_iterkeys__and__map_operator_trygetitem = {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_trygetitem, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_iterkeys__and__map_operator_trygetitem, self, start, end));
 }}
 %{$with__map_enumerate_range = {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_enumerate_range, self, start, end);
+	return Dee_AsObject(DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__map_enumerate_range, self, start, end));
 }}
 /*%{$with__map_makeenumeration = {
 	// TODO

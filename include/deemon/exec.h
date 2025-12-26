@@ -123,7 +123,7 @@ INTDEF bool DCALL DeeModule_ClearLibPath(void);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 DDATDEF struct Dee_list_object DeeModule_Path;
 DFUNDEF void DCALL DeeModule_InitPath(void);
-#define DeeModule_ClearLibPath() DeeList_Clear((DeeObject *)&DeeModule_Path)
+#define DeeModule_ClearLibPath() DeeList_Clear(Dee_AsObject(&DeeModule_Path))
 
 /* Initialize the module path sub-system and return its global list of path. */
 #define DeeModule_GetPath() (DeeModule_InitPath(), &DeeModule_Path)

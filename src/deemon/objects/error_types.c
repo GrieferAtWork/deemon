@@ -822,7 +822,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 /* Fallback instance when throwing no-memory errors with an unknown size. */
 PUBLIC DeeNoMemoryErrorObject DeeError_NoMemory_instance = {
 	OBJECT_HEAD_INIT(&DeeError_NoMemory),
-	/* .e_msg    = */ (DREF DeeObject *)&str_nomemory,
+	/* .e_msg        = */ Dee_AsObject(&str_nomemory),
 	/* .e_cause      = */ NULL,
 	/* .nm_allocsize = */ (size_t)-1
 };

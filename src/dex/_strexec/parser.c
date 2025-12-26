@@ -1057,13 +1057,13 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 			if (import_function) {
 				DeeObject *args[2];
 				args[0] = (DeeObject *)str;
-				args[1] = (DeeObject *)base;
+				args[1] = Dee_AsObject(base);
 				result = DeeObject_Call(import_function, 2, args);
 			} else {
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-				result = DeeModule_Import((DeeObject *)str, (DeeObject *)base, DeeModule_IMPORT_F_NORMAL);
+				result = DeeModule_Import((DeeObject *)str, Dee_AsObject(base), DeeModule_IMPORT_F_NORMAL);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-				result = DeeModule_ImportRel((DeeObject *)base, (DeeObject *)str);
+				result = DeeModule_ImportRel(Dee_AsObject(base), (DeeObject *)str);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			}
 		}
@@ -1086,7 +1086,7 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 		if (name_start[0] == '.') {
 			DeeObject *args[2];
 			args[0] = (DeeObject *)str;
-			args[1] = (DeeObject *)self->jl_context->jc_impbase;
+			args[1] = Dee_AsObject(self->jl_context->jc_impbase);
 			result = DeeObject_Call(import_function, 2, args);
 		} else {
 			result = DeeObject_Call(import_function, 1, (DeeObject **)&str);
@@ -1115,10 +1115,10 @@ err_name_start_end_cannot_import_relative:
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		result = DeeModule_ImportString((char const *)name_start,
 		                                (size_t)(name_end - name_start),
-		                                (DeeObject *)base,
+		                                Dee_AsObject(base),
 		                                DeeModule_IMPORT_F_NORMAL);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		result = DeeModule_ImportRelString((DeeObject *)base,
+		result = DeeModule_ImportRelString(Dee_AsObject(base),
 		                                   (char const *)name_start,
 		                                   (size_t)(name_end - name_start));
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -1202,11 +1202,11 @@ do_with_paren:
 		/* Do the import */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		result = DeeModule_Import(module_name,
-		                          (DeeObject *)self->jl_context->jc_impbase,
+		                          Dee_AsObject(self->jl_context->jc_impbase),
 		                          DeeModule_IMPORT_F_NORMAL);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		result = self->jl_context->jc_impbase
-		         ? DeeModule_ImportRel((DeeObject *)self->jl_context->jc_impbase, module_name)
+		         ? DeeModule_ImportRel(Dee_AsObject(self->jl_context->jc_impbase), module_name)
 		         : DeeModule_ImportGlobal(module_name);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}
@@ -1328,7 +1328,7 @@ JITLexer_ParseCatchExpr(JITLexer *__restrict self) {
 			goto err_r_next;
 		DeeTuple_SET(new_tuple, 0, result); /* Inherit reference */
 		DeeTuple_SET(new_tuple, 1, next);   /* Inherit reference */
-		result = (DREF DeeObject *)new_tuple;
+		result = Dee_AsObject(new_tuple);
 		while (self->jl_tok == '|') {
 			size_t length;
 			JITLexer_Yield(self);
@@ -1341,7 +1341,7 @@ JITLexer_ParseCatchExpr(JITLexer *__restrict self) {
 			if unlikely(!new_tuple)
 				goto err_r_next;
 			DeeTuple_SET(new_tuple, length, next); /* Inherit reference */
-			result = (DREF DeeObject *)new_tuple;
+			result = Dee_AsObject(new_tuple);
 		}
 	}
 	return result;

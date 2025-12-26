@@ -1255,7 +1255,7 @@ decl_ast_initfunc(struct decl_ast *__restrict self,
 	self->da_flag       = DAST_FNORMAL;
 	self->da_func.f_ret = return_type;
 	Dee_weakref_init(&self->da_func.f_scope,
-	                 (DeeObject *)function_scope,
+	                 Dee_AsObject(&function_scope->bs_scope),
 	                 NULL);
 }
 

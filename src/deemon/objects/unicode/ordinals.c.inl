@@ -102,7 +102,7 @@ stringordinals_getitem_index(StringOrdinals *__restrict self, size_t index) {
 	}
 	__builtin_unreachable();
 err_oob:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index,
 	                          WSTR_LENGTH(self->so_ptr.ptr));
 	return NULL;
 }

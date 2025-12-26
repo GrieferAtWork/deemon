@@ -4374,7 +4374,7 @@ fg_vlinear(struct fungen *__restrict self,
 		DREF DummyVectorObject *vec = DummyVector_New(argc);
 		if unlikely(!vec)
 			goto err;
-		vec = (DREF DummyVectorObject *)fg_inlineref(self, (DREF DeeObject *)vec);
+		vec = (DREF DummyVectorObject *)fg_inlineref(self, Dee_AsObject(vec));
 		if unlikely(!vec)
 			goto err;
 		cbase = self->fg_state->ms_stackv + self->fg_state->ms_stackc - argc;

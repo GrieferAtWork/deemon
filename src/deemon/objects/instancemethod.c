@@ -277,7 +277,7 @@ instancemethod_get_type(InstanceMethod *__restrict self) {
 	DeeTypeObject *result;
 	if (instancemethod_getattr(self, NULL, &result))
 		return_reference_(result);
-	DeeRT_ErrTUnboundAttr(&DeeInstanceMethod_Type, (DeeObject *)self, (DeeObject *)&str___type__);
+	DeeRT_ErrTUnboundAttr(&DeeInstanceMethod_Type, Dee_AsObject(self), (DeeObject *)&str___type__);
 	return NULL;
 }
 

@@ -35,7 +35,7 @@ __seq_cached__.seq_cached([[nonnull]] DeeObject *__restrict self)
 	DREF DeeObject *iter = CALL_DEPENDENCY(seq_operator_iter, self);
 	if unlikely(!iter)
 		goto err;
-	return (DREF DeeObject *)CachedSeq_WithIter_New(iter);
+	return Dee_AsObject(CachedSeq_WithIter_New(iter));
 err:
 	return NULL;
 }}

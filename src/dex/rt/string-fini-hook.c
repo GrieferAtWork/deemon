@@ -111,7 +111,7 @@ sfh_init(StringFiniHook *__restrict self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!hook)
 		goto err;
 	weakref_support_init(self);
-	Dee_weakref_init(&hook->usfh_user, (DeeObject *)self, NULL);
+	Dee_weakref_init(&hook->usfh_user, Dee_AsObject(self), NULL);
 	hook->usfh_hook.sfh_refcnt  = 1;
 	hook->usfh_hook.sfh_destroy = &user_string_fini_hook_destroy;
 	hook->usfh_hook.sfh_onfini  = &user_string_fini_hook_onfini;

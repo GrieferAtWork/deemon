@@ -519,7 +519,7 @@ DeeRoDict_FromSequence(DeeObject *__restrict self) {
 		return_reference_(self);
 	if (DeeDict_CheckExact(self))
 		return DeeRoDict_FromDict(self);
-	return (DREF DeeObject *)rodict_from_generic_sequence(self);
+	return Dee_AsObject(rodict_from_generic_sequence(self));
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1708,7 +1708,7 @@ rodict_mh_seq_getitem_index(RoDict *__restrict self, size_t index) {
 	Dee_Incref(result->t_elem[1]);
 	return result;
 err_oob:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, self->rd_vsize);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->rd_vsize);
 err:
 	return NULL;
 }

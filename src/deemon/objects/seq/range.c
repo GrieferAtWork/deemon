@@ -327,8 +327,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ri_index_set(RangeIterator *__restrict self,
              DeeObject *__restrict value) {
 	DREF DeeObject *old_index;
-	if (DeeGC_ReferredBy(value, (DeeObject *)self))
-		return err_reference_loop((DeeObject *)self, value);
+	if (DeeGC_ReferredBy(value, Dee_AsObject(self)))
+		return err_reference_loop(Dee_AsObject(self), value);
 	/* XXX: Race condition: What if `value' starts referencing
 	 *      us before we acquire the following lock? */
 	RangeIterator_LockWrite(self);
@@ -509,7 +509,7 @@ range_iter(Range *__restrict self) {
 	result->ri_rev   = self->r_rev;
 	Dee_atomic_rwlock_init(&result->ri_lock);
 	DeeObject_Init(result, &SeqRangeIterator_Type);
-	result = (DREF RangeIterator *)DeeGC_Track((DeeObject *)result);
+	result = DeeGC_TRACK(RangeIterator, result);
 done:
 	return result;
 }
@@ -733,7 +733,7 @@ range_getrange(Range *self,
 	DREF DeeObject *mylen;
 	if (DeeNone_Check(start)) {
 		if (DeeNone_Check(end))
-			return_reference_((DeeObject *)self);
+			return_reference_(Dee_AsObject(self));
 		/* if (end < 0) {
 		 *     if (self->r_step) {
 		 *         new_end = self->r_step * end;
@@ -746,7 +746,7 @@ range_getrange(Range *self,
 		 * } else {
 		 *     mylen = range_size(self);
 		 *     if (mylen >= end)
-		 *         return_reference_((DeeObject *)self);
+		 *         return_reference_(Dee_AsObject(self));
 		 *     if (self->r_step) {
 		 *         new_end = self->r_step * end;
 		 *         new_end = self->r_start + new_end;
@@ -778,7 +778,7 @@ range_getrange(Range *self,
 			if (error != 0) {
 				if unlikely(error < 0)
 					goto err;
-				return_reference_((DeeObject *)self);
+				return_reference_(Dee_AsObject(self));
 			}
 			if (self->r_step) {
 				temp = DeeObject_Mul(self->r_step, end);
@@ -1384,7 +1384,7 @@ intrange_getitem_index(IntRange *__restrict self, size_t index) {
 		goto oob;
 	return DeeInt_NewSSize(result);
 oob:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index,
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index,
 	                          intrange_size(self));
 	return NULL;
 }

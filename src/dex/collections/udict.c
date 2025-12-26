@@ -1747,7 +1747,7 @@ URoDict_FromSequence(DeeObject *__restrict sequence) {
 INTERN WUNUSED NONNULL((1)) DREF URoDict *DCALL
 URoDict_FromUDict(UDict *__restrict self) {
 	/* TODO */
-	return URoDict_FromSequence((DeeObject *)self);
+	return URoDict_FromSequence(Dee_AsObject(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF URoDict *DCALL

@@ -47,9 +47,9 @@ ast_assemble_function(struct ast *__restrict function_ast,
 	ASSERT(function_ast->a_type == AST_FUNCTION);
 	/* This is where it gets interesting, because this will
 	 * create a temporary sub-assembler, allowing for recursion! */
-	ASSERT_OBJECT_TYPE((DeeObject *)current_scope, &DeeScope_Type);
-	ASSERT_OBJECT_TYPE((DeeObject *)current_basescope, &DeeBaseScope_Type);
-	ASSERT_OBJECT_TYPE((DeeObject *)function_ast->a_function.f_scope, &DeeBaseScope_Type);
+	ASSERT_OBJECT_TYPE(current_scope, &DeeScope_Type);
+	ASSERT_OBJECT_TYPE(&current_basescope->bs_scope, &DeeBaseScope_Type);
+	ASSERT_OBJECT_TYPE(&function_ast->a_function.f_scope->bs_scope, &DeeBaseScope_Type);
 	ASSERT(function_ast->a_function.f_scope->bs_root == current_rootscope);
 	ASSERT(current_basescope == current_scope->s_base);
 
@@ -96,7 +96,7 @@ asm_gpush_function(struct ast *__restrict function_ast) {
 		 *    itself as a constant. */
 		DREF DeeFunctionObject *function;
 		Dee_Free(refv);
-		function = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs((DeeObject *)code);
+		function = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs(Dee_AsObject(code));
 		Dee_Decref(code);
 		if unlikely(!function)
 			goto err;
@@ -142,7 +142,7 @@ asm_gmov_function(struct symbol *__restrict dst,
 		 *    itself as a constant. */
 		DREF DeeFunctionObject *function;
 		Dee_Free(refv);
-		function = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs((DeeObject *)code);
+		function = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs(Dee_AsObject(code));
 		Dee_Decref(code);
 		if unlikely(!function)
 			goto err;

@@ -167,7 +167,7 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 		src = src->cf_prev;
 	}
 	ASSERT(src == NULL);
-	return (DREF DeeTracebackObject *)DeeGC_Track((DeeObject *)result);
+	return DeeGC_TRACK(DeeTracebackObject, result);
 err:
 	return NULL;
 }
@@ -306,7 +306,7 @@ traceiter_next(TraceIterator *__restrict self) {
 	} while (!atomic_cmpxch_weak_or_write(&self->ti_next, result_frame, result_frame - 1));
 
 	/* Create a new frame wrapper for this entry. */
-	return DeeFrame_NewReferenceWithLock((DeeObject *)self->ti_trace,
+	return DeeFrame_NewReferenceWithLock(Dee_AsObject(self->ti_trace),
 	                                     result_frame,
 	                                     DEEFRAME_FREADONLY,
 	                                     &self->ti_trace->tb_lock);
@@ -354,7 +354,7 @@ traceiter_nii_peek(TraceIterator *__restrict self) {
 		return ITER_DONE;
 
 	/* Create a new frame wrapper for this entry. */
-	return DeeFrame_NewReferenceWithLock((DeeObject *)self->ti_trace,
+	return DeeFrame_NewReferenceWithLock(Dee_AsObject(self->ti_trace),
 	                                     result_frame,
 	                                     DEEFRAME_FREADONLY,
 	                                     &self->ti_trace->tb_lock);
@@ -749,9 +749,9 @@ traceback_current(DeeTypeObject *__restrict self) {
 	thread = DeeThread_Self();
 	if unlikely(thread->t_except == NULL)
 		goto err_no_except;
-	result = (DREF DeeObject *)except_frame_gettb(thread->t_except);
+	result = Dee_AsObject(except_frame_gettb(thread->t_except));
 	if unlikely(result == NULL)
-		result = (DREF DeeObject *)&DeeTraceback_Empty;
+		result = Dee_AsObject(&DeeTraceback_Empty);
 	Dee_Incref(result);
 	return result;
 err_no_except:

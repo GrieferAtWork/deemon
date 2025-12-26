@@ -49,8 +49,8 @@ DDATDEF DeeTypeObject DeeInstanceMethod_Type;
 #define Dee_DEFINE_INSTANCEMETHOD(name, func, thisarg) \
 	DeeInstanceMethodObject name = {                   \
 		Dee_OBJECT_HEAD_INIT(&DeeInstanceMethod_Type), \
-		Dee_REQUIRES_OBJECT(DREF DeeObject, func),   \
-		Dee_REQUIRES_OBJECT(DREF DeeObject, thisarg) \
+		Dee_AsObject(func),                            \
+		Dee_AsObject(thisarg)                          \
 	}
 
 /* Create a new instance method.

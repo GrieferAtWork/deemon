@@ -40,7 +40,7 @@ __map_and__.map_operator_and([[nonnull]] DeeObject *lhs,
 	}
 	if (DeeSet_CheckEmpty(keys))
 		return_reference_(Dee_EmptyMapping); /* `a & {}' -> `{}' */
-	return (DREF DeeObject *)MapIntersection_New(lhs, keys);
+	return Dee_AsObject(MapIntersection_New(lhs, keys));
 })}
 %{$none = return_none}
 %{$empty = "default__map_operator_and__unsupported"} {

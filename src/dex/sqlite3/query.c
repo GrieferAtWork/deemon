@@ -743,7 +743,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 query_step(Query *__restrict self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DeeArg_Unpack0(err, argc, argv, "step");
-	result = (DREF DeeObject *)Query_Step(self);
+	result = Dee_AsObject(Query_Step(self));
 	if (result == ITER_DONE)
 		result = DeeNone_NewRef();
 	return result;

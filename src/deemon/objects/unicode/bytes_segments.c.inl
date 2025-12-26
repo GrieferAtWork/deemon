@@ -315,7 +315,7 @@ bseg_getitem_index(BytesSegments *__restrict self, size_t index) {
 	index *= self->b_siz;
 	return bytes_getsubstr(self->b_str, index, index + self->b_siz);
 err_index:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, length);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, length);
 	return NULL;
 }
 

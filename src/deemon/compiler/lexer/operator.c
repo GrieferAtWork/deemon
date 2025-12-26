@@ -225,7 +225,7 @@ do_generic:
 		function_symbol->s_extern.e_module = DeeModule_GetDeemon();
 		Dee_Incref(function_symbol->s_extern.e_module);
 		function_symbol->s_extern.e_symbol = DeeModule_GetSymbol(function_symbol->s_extern.e_module,
-		                                                         (DeeObject *)function_name);
+		                                                         Dee_AsObject(function_name));
 		ASSERTF(function_symbol->s_extern.e_symbol,
 		        "Missing runtime function `%s'",
 		        DeeString_STR(function_name));
@@ -336,7 +336,7 @@ do_generic:
 		function_symbol->s_extern.e_module = DeeModule_GetDeemon();
 		Dee_Incref(function_symbol->s_extern.e_module);
 		function_symbol->s_extern.e_symbol = DeeModule_GetSymbol(function_symbol->s_extern.e_module,
-		                                                         (DeeObject *)function_name);
+		                                                         Dee_AsObject(function_name));
 		ASSERTF(function_symbol->s_extern.e_symbol,
 		        "Missing runtime function `%s'",
 		        DeeString_STR(function_name));

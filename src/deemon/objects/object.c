@@ -1596,13 +1596,11 @@ object_str(DeeObject *__restrict self) {
 		}
 		return DeeString_New(tp_self->tp_name);
 	}
-	Dee_Incref(&str_Object);
-	return (DREF DeeObject *)&str_Object;
+	return_reference(&str_Object);
 #else
 	if (Dee_TYPE(self) != &DeeObject_Type)
 		goto err_noimp;
-	Dee_Incref(&str_Object);
-	return (DREF DeeObject *)&str_Object;
+	return_reference(&str_Object);
 err_noimp:
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_STR);
 	return NULL;
@@ -3717,7 +3715,7 @@ type_is_ctypes_class(DeeTypeObject *__restrict self,
                      char const *__restrict name) {
 	DREF DeeObject *temp;
 	int error;
-	temp = DeeObject_GetAttrString((DeeObject *)self, "isstructured");
+	temp = DeeObject_GetAttrString(Dee_AsObject(self), "isstructured");
 	if unlikely(!temp)
 		goto err;
 	error = DeeObject_BoolInherited(temp);
@@ -3725,7 +3723,7 @@ type_is_ctypes_class(DeeTypeObject *__restrict self,
 		goto err;
 	if (!error)
 		goto nope;
-	temp = DeeObject_GetAttrString((DeeObject *)self, name);
+	temp = DeeObject_GetAttrString(Dee_AsObject(self), name);
 	if unlikely(!temp)
 		goto err;
 	error = DeeObject_BoolInherited(temp);
@@ -3760,7 +3758,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_structured(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack0(err, argc, argv, "is_structured");
-	return DeeObject_GetAttrString((DeeObject *)self, "isstructured");
+	return DeeObject_GetAttrString(Dee_AsObject(self), "isstructured");
 err:
 	return NULL;
 }
@@ -4077,7 +4075,7 @@ type_getname(DeeTypeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE(self, &DeeType_Type);
 	if (self->tp_name == NULL)
 		return_reference(&str_anonymous_type);
-	return (DREF DeeObject *)type_getname_impl(self);
+	return Dee_AsObject(type_getname_impl(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -4085,7 +4083,7 @@ type_get__name__(DeeTypeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE(self, &DeeType_Type);
 	if unlikely(self->tp_name == NULL)
 		return DeeRT_ErrTUnboundAttrCStr(&DeeType_Type, self, STR___name__);
-	return (DREF DeeObject *)type_getname_impl(self);
+	return Dee_AsObject(type_getname_impl(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -4101,7 +4099,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_get_classdesc(DeeTypeObject *__restrict self) {
 	if (!DeeType_IsClass(self))
 		return DeeRT_ErrTUnboundAttrCStr(&DeeType_Type, self, "__class__");
-	return_reference_((DeeObject *)self->tp_class->cd_desc);
+	return_reference_(Dee_AsObject(self->tp_class->cd_desc));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -4113,13 +4111,13 @@ type_get_seqclass(DeeTypeObject *__restrict self) {
 		result = Dee_None;
 		break;
 	case Dee_SEQCLASS_SEQ:
-		result = (DREF DeeObject *)&DeeSeq_Type;
+		result = Dee_AsObject(&DeeSeq_Type);
 		break;
 	case Dee_SEQCLASS_SET:
-		result = (DREF DeeObject *)&DeeSet_Type;
+		result = Dee_AsObject(&DeeSet_Type);
 		break;
 	case Dee_SEQCLASS_MAP:
-		result = (DREF DeeObject *)&DeeMapping_Type;
+		result = Dee_AsObject(&DeeMapping_Type);
 		break;
 	default: __builtin_unreachable();
 	}
@@ -4317,7 +4315,7 @@ type_get_module(DeeTypeObject *__restrict self) {
 	result = DeeType_GetModule(self);
 	if likely(result)
 		return result;
-	DeeRT_ErrTUnboundAttr(&DeeType_Type, (DeeObject *)self, (DeeObject *)&str___module__);
+	DeeRT_ErrTUnboundAttr(&DeeType_Type, Dee_AsObject(self), (DeeObject *)&str___module__);
 	return NULL;
 }
 
@@ -4363,7 +4361,7 @@ type_get_instancesize(DeeTypeObject *__restrict self) {
 	}
 	return DeeInt_NewSize(instance_size);
 unknown:
-	DeeRT_ErrTUnboundAttrCStr(&DeeType_Type, (DeeObject *)self, "__instancesize__");
+	DeeRT_ErrTUnboundAttrCStr(&DeeType_Type, Dee_AsObject(self), "__instancesize__");
 	return NULL;
 }
 
@@ -5055,10 +5053,9 @@ free_reftracker(struct Dee_reftracker *__restrict self) {
 }
 
 #define DID_DEFINE_DEEOBJECT_FREETRACKER
-PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL
+PUBLIC NONNULL((1)) void DCALL
 DeeObject_FreeTracker(DeeObject *__restrict self) {
 	free_reftracker(self->ob_trace);
-	return self;
 }
 
 PRIVATE WUNUSED NONNULL((1)) struct Dee_reftracker *DCALL
@@ -5612,10 +5609,10 @@ PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) NONNULL((2)) DREF DeeObject **
 
 #ifndef DID_DEFINE_DEEOBJECT_FREETRACKER
 #define DID_DEFINE_DEEOBJECT_FREETRACKER
-PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject * /* Defined only for binary compatibility */
+PUBLIC NONNULL((1)) void /* Defined only for binary compatibility */
 (DCALL DeeObject_FreeTracker)(DeeObject *__restrict self) {
 	COMPILER_IMPURE();
-	return self;
+	(void)self;
 }
 #endif /* !DID_DEFINE_DEEOBJECT_FREETRACKER */
 

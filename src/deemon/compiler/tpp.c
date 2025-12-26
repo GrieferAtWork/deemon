@@ -87,7 +87,7 @@ tpp_userstream_fread(DeeFileObject *__restrict self,
 	/* Check for interrupts so the user can stop very long compilation processes. */
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	result = DeeFile_Read((DeeObject *)self, buffer, bufsize);
+	result = DeeFile_Read(Dee_AsObject(self), buffer, bufsize);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return result;
@@ -101,7 +101,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 tpp_userstream_fread_nonblock(DeeFileObject *__restrict self,
                               void *__restrict buffer, size_t bufsize) {
 	size_t result;
-	result = DeeFile_Readf((DeeObject *)self, buffer, bufsize,
+	result = DeeFile_Readf(Dee_AsObject(self), buffer, bufsize,
 	                       Dee_FILEIO_FNONBLOCKING);
 	if unlikely(result == (size_t)-1)
 		goto err;
@@ -625,7 +625,7 @@ DeeCompilerError_Print(DeeObject *__restrict self,
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;
-		temp = DeeObject_Print((DeeObject *)me->ce_errorv[i],
+		temp = DeeObject_Print(Dee_AsObject(me->ce_errorv[i]),
 		                       printer, arg);
 		if unlikely(temp < 0)
 			goto err;
@@ -804,7 +804,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 				buflen = buffer->s_len;
 			}
 		}
-		stream = DeeFile_Open((DeeObject *)buffer, OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
+		stream = DeeFile_Open(Dee_AsObject(buffer), OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 		if (stream != ITER_DONE) {       /* Error or success. */
 			Dee_Incref(&DeeString_Type); /* Finalize initialization of the buffer. */
 

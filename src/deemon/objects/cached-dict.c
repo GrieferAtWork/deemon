@@ -1217,7 +1217,7 @@ DeeCachedDict_New(DeeObject *__restrict mapping) {
 	result->cd_elem = empty_cdict_items;
 	Dee_atomic_rwlock_init(&result->cd_lock);
 	DeeObject_Init(result, &DeeCachedDict_Type);
-	result = (DREF CachedDict *)DeeGC_Track((DREF DeeObject *)result);
+	result = DeeGC_TRACK(CachedDict, result);
 done:
 	return Dee_AsObject(result);
 }
@@ -1234,7 +1234,7 @@ DeeCachedDict_NewInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__re
 	result->cd_elem = empty_cdict_items;
 	Dee_atomic_rwlock_init(&result->cd_lock);
 	DeeObject_Init(result, &DeeCachedDict_Type);
-	result = (DREF CachedDict *)DeeGC_Track((DREF DeeObject *)result);
+	result = DeeGC_TRACK(CachedDict, result);
 done:
 	return Dee_AsObject(result);
 }

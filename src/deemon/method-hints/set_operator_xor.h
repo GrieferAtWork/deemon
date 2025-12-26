@@ -43,11 +43,11 @@ __set_xor__.set_operator_xor([[nonnull]] DeeObject *lhs,
 		symdiff = SetSymmetricDifference_New(lhs, xrhs->si_set);
 		if unlikely(!symdiff)
 			goto err;
-		return (DREF DeeObject *)SetInversion_New_inherit(symdiff);
+		return Dee_AsObject(SetInversion_New_inherit(symdiff));
 	}
 	if (DeeSet_CheckEmpty(rhs))
 		return_reference_(lhs); /* `a ^ {}' -> `a' */
-	return (DREF DeeObject *)SetSymmetricDifference_New(lhs, rhs);
+	return Dee_AsObject(SetSymmetricDifference_New(lhs, rhs));
 err:
 	return NULL;
 })}

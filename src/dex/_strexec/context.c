@@ -382,7 +382,7 @@ JITLValue_IsBound(JITLValue *__restrict self,
 		if unlikely(!context->jc_globals)
 			return 0;
 		result = DeeObject_BoundItem(context->jc_globals,
-		                             (DeeObject *)self->lv_global);
+		                             Dee_AsObject(self->lv_global));
 		if unlikely(Dee_BOUND_ISERR(result))
 			goto err;
 		result = Dee_BOUND_ISBOUND(result);
@@ -408,7 +408,7 @@ JITLValue_IsBound(JITLValue *__restrict self,
 
 	case JIT_LVALUE_ATTR:
 		result = DeeObject_BoundAttr(self->lv_attr.la_base,
-		                             (DeeObject *)self->lv_attr.la_name);
+		                             Dee_AsObject(self->lv_attr.la_name));
 		if unlikely(Dee_BOUND_ISERR(result))
 			goto err;
 		result = Dee_BOUND_ISBOUND(result);
@@ -487,11 +487,11 @@ err_unbound:
 
 	case JIT_LVALUE_GLOBAL:
 		if unlikely(!context->jc_globals) {
-			err_unknown_global((DeeObject *)self->lv_global);
+			err_unknown_global(Dee_AsObject(self->lv_global));
 			goto err;
 		}
 		result = DeeObject_GetItem(context->jc_globals,
-		                           (DeeObject *)self->lv_global);
+		                           Dee_AsObject(self->lv_global));
 		break;
 
 	case JIT_LVALUE_GLOBALSTR:
@@ -514,7 +514,7 @@ err_unbound:
 
 	case JIT_LVALUE_ATTR:
 		result = DeeObject_GetAttr(self->lv_attr.la_base,
-		                           (DeeObject *)self->lv_attr.la_name);
+		                           Dee_AsObject(self->lv_attr.la_name));
 		break;
 
 	case JIT_LVALUE_ATTRSTR:
@@ -584,9 +584,9 @@ JITLValue_DelValue(JITLValue *__restrict self,
 
 	case JIT_LVALUE_GLOBAL:
 		if unlikely(!context->jc_globals)
-			return err_unknown_global((DeeObject *)self->lv_global);
+			return err_unknown_global(Dee_AsObject(self->lv_global));
 		result = DeeObject_DelItem(context->jc_globals,
-		                           (DeeObject *)self->lv_global);
+		                           Dee_AsObject(self->lv_global));
 		break;
 
 	case JIT_LVALUE_GLOBALSTR:
@@ -608,7 +608,7 @@ JITLValue_DelValue(JITLValue *__restrict self,
 
 	case JIT_LVALUE_ATTR:
 		result = DeeObject_DelAttr(self->lv_attr.la_base,
-		                           (DeeObject *)self->lv_attr.la_name);
+		                           Dee_AsObject(self->lv_attr.la_name));
 		break;
 
 	case JIT_LVALUE_ATTRSTR:
@@ -687,7 +687,7 @@ JITLValue_SetValue(JITLValue *__restrict self,
 				goto err;
 		}
 		result = DeeObject_SetItem(context->jc_globals,
-		                           (DeeObject *)self->lv_global,
+		                           Dee_AsObject(self->lv_global),
 		                           value);
 		break;
 
@@ -713,7 +713,7 @@ JITLValue_SetValue(JITLValue *__restrict self,
 
 	case JIT_LVALUE_ATTR:
 		result = DeeObject_SetAttr(self->lv_attr.la_base,
-		                           (DeeObject *)self->lv_attr.la_name,
+		                           Dee_AsObject(self->lv_attr.la_name),
 		                           value);
 		break;
 
@@ -768,7 +768,7 @@ JITLValue_CallValue(JITLValue *__restrict self, JITContext *__restrict context,
 
 	case JIT_LVALUE_ATTR:
 		result = DeeObject_CallAttrTupleKw(self->lv_attr.la_base,
-		                                   (DeeObject *)self->lv_attr.la_name,
+		                                   Dee_AsObject(self->lv_attr.la_name),
 		                                   args, kw);
 		break;
 
@@ -1247,7 +1247,7 @@ JITContext_DoImportModule(JITContext *__restrict self,
 			/* Special case: invoke the user-defined import hook */
 			DeeObject *args[2];
 			args[0] = (DeeObject *)spec->ii_import_name;
-			args[1] = (DeeObject *)self->jc_impbase;
+			args[1] = Dee_AsObject(self->jc_impbase);
 			if (args[0]) {
 				source_module = DeeObject_Call(self->jc_import, 2, args);
 			} else {
@@ -1261,7 +1261,7 @@ JITContext_DoImportModule(JITContext *__restrict self,
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 			goto do_import_module;
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-			source_module = DeeModule_ImportRelString((DeeObject *)self->jc_impbase,
+			source_module = DeeModule_ImportRelString(Dee_AsObject(self->jc_impbase),
 			                                          source_name, source_size);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		}
@@ -1281,7 +1281,7 @@ JITContext_DoImportModule(JITContext *__restrict self,
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 do_import_module:
 		source_module = DeeModule_ImportString(source_name, source_size,
-		                                       (DeeObject *)self->jc_impbase,
+		                                       Dee_AsObject(self->jc_impbase),
 		                                       DeeModule_IMPORT_F_NORMAL);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		source_module = DeeModule_ImportGlobalString(source_name, source_size);

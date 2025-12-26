@@ -744,7 +744,7 @@ LOCAL_lockapi_leave(LOCAL_DeeLockObject *__restrict self) {
 	_LOCAL_lock_release_NDEBUG(&self->l_lock);
 	return 0;
 err_not_acquired:
-	return err_lock_not_acquired((DeeObject *)self);
+	return err_lock_not_acquired(Dee_AsObject(self));
 }
 
 PRIVATE struct type_with LOCAL_lockapi_with = {
@@ -1110,7 +1110,7 @@ LOCAL_rwlockapi_endread(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *con
 	_LOCAL_rwlock_endread_NDEBUG(&self->rwl_lock);
 	return_none;
 err_no_read_lock:
-	err_read_lock_not_acquired((DeeObject *)self);
+	err_read_lock_not_acquired(Dee_AsObject(self));
 err:
 	return NULL;
 }
@@ -1125,7 +1125,7 @@ LOCAL_rwlockapi_endwrite(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *co
 	_LOCAL_rwlock_endwrite_NDEBUG(&self->rwl_lock);
 	return_none;
 err_no_write_lock:
-	err_write_lock_not_acquired((DeeObject *)self);
+	err_write_lock_not_acquired(Dee_AsObject(self));
 err:
 	return NULL;
 }
@@ -1140,7 +1140,7 @@ LOCAL_rwlockapi_end(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *
 	_LOCAL_rwlock_end_NDEBUG(&self->rwl_lock);
 	return_none;
 err_nolock:
-	err_read_or_write_lock_not_acquired((DeeObject *)self);
+	err_read_or_write_lock_not_acquired(Dee_AsObject(self));
 err:
 	return NULL;
 }
@@ -1155,7 +1155,7 @@ LOCAL_rwlockapi_downgrade(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *c
 	_LOCAL_rwlock_downgrade_NDEBUG(&self->rwl_lock);
 	return_none;
 err_no_write_lock:
-	err_write_lock_not_acquired((DeeObject *)self);
+	err_write_lock_not_acquired(Dee_AsObject(self));
 err:
 	return NULL;
 }
@@ -1195,7 +1195,7 @@ LOCAL_rwlockapi_upgrade(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *con
 	LOCAL_rwlock_write_p(&self->rwl_lock, err);
 	return_false;
 err_no_read_lock:
-	err_read_lock_not_acquired((DeeObject *)self);
+	err_read_lock_not_acquired(Dee_AsObject(self));
 err:
 	return NULL;
 }
@@ -1320,7 +1320,7 @@ LOCAL_rwlockapi_readlock_get(LOCAL_DeeRWLockObject *__restrict self) {
 	result = DeeObject_MALLOC(DeeGenericRWLockProxyObject);
 	if unlikely(!result)
 		goto done;
-	result->grwl_lock = (DREF DeeObject *)self;
+	result->grwl_lock = Dee_AsObject(self);
 	Dee_Incref(self);
 	DeeObject_Init(result, &LOCAL_DeeRWLockReadLock_Type);
 done:
@@ -1333,7 +1333,7 @@ LOCAL_rwlockapi_writelock_get(LOCAL_DeeRWLockObject *__restrict self) {
 	result = DeeObject_MALLOC(DeeGenericRWLockProxyObject);
 	if unlikely(!result)
 		goto done;
-	result->grwl_lock = (DREF DeeObject *)self;
+	result->grwl_lock = Dee_AsObject(self);
 	Dee_Incref(self);
 	DeeObject_Init(result, &LOCAL_DeeRWLockWriteLock_Type);
 done:

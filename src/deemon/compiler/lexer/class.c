@@ -485,7 +485,7 @@ class_maker_push_ctorscope(struct class_maker *__restrict self) {
 	/* Now just set the constructor-flag in the scope. */
 	current_basescope->bs_flags |= CODE_FCONSTRUCTOR;
 	self->cm_ctor_scope = current_basescope;
-	Dee_Incref((DeeObject *)current_basescope);
+	Dee_Incref(&current_basescope->bs_scope);
 	return 0;
 err:
 	return -1;
@@ -744,9 +744,9 @@ class_maker_addinit(struct class_maker *__restrict self,
 			goto err;
 
 		/* Override the store-ast's scope with our constructor scope. */
-		Dee_Incref((DeeObject *)self->cm_ctor_scope);
+		Dee_Incref(&self->cm_ctor_scope->bs_scope);
 		Dee_Decref(initializer->a_scope);
-		initializer->a_scope = (DREF DeeScopeObject *)self->cm_ctor_scope;
+		initializer->a_scope = &self->cm_ctor_scope->bs_scope;
 
 		/* Place the store-ast in the initialization vector. */
 		self->cm_initv[self->cm_initc++] = initializer;
@@ -858,7 +858,7 @@ class_maker_fini(struct class_maker *__restrict self) {
 	Dee_XDecref_unlikely(self->cm_desc);
 	ast_xdecref_unlikely(self->cm_base);
 	ast_xdecref_unlikely(self->cm_ctor);
-	Dee_XDecref_unlikely((DeeObject *)self->cm_ctor_scope);
+	Dee_XDecref_unlikely(&self->cm_ctor_scope->bs_scope);
 	unicode_printer_fini(&self->cm_doc);
 	ast_decrefv(self->cm_initv, self->cm_initc);
 	Dee_Free(self->cm_initv);
@@ -926,7 +926,7 @@ class_maker_pack(struct class_maker *__restrict self) {
 			goto err;
 
 		/* Set the correct scope for the constructor text. */
-		Dee_Incref((DeeObject *)self->cm_ctor_scope);
+		Dee_Incref(&self->cm_ctor_scope->bs_scope);
 		Dee_Decref(constructor_text->a_scope);
 		constructor_text->a_scope = (DREF DeeScopeObject *)self->cm_ctor_scope;
 		if (constructor_function) {
@@ -1019,7 +1019,7 @@ class_maker_pack(struct class_maker *__restrict self) {
 	/* Finally, create the actual class AST */
 	{
 		DREF struct ast *descr_ast;
-		descr_ast = ast_constexpr((DeeObject *)self->cm_desc);
+		descr_ast = ast_constexpr(Dee_AsObject(self->cm_desc));
 		if unlikely(!descr_ast)
 			goto err;
 		result = ast_class(self->cm_base,
@@ -1589,14 +1589,14 @@ err_basev:
 			                                                          NULL, 0, DeeModule_IMPORT_F_ENOENT,
 			                                                          inner_compiler_options);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-			rt_d200_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal((DeeObject *)&str_rt_d200,
+			rt_d200_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal(Dee_AsObject(&str_rt_d200),
 			                                                              inner_compiler_options,
 			                                                              false);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			if unlikely(!ITER_ISOK(rt_d200_module)) {
 				if (rt_d200_module) {
 #if 1
-					if (WARN(W_MODULE_NOT_FOUND, (DeeObject *)&str_rt_d200))
+					if (WARN(W_MODULE_NOT_FOUND, Dee_AsObject(&str_rt_d200)))
 						goto err;
 #else
 					if (WARN(W_NO_D200_OLD_USER_CLASS))
@@ -1628,7 +1628,7 @@ err_basev:
 			maker.cm_base = ast_sym(base_symbol);
 		} else {
 use_object_base:
-			maker.cm_base = ast_constexpr((DeeObject *)&DeeObject_Type);
+			maker.cm_base = ast_constexpr(Dee_AsObject(&DeeObject_Type));
 		}
 		if unlikely(!maker.cm_base)
 			goto err;

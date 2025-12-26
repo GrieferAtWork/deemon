@@ -4050,7 +4050,7 @@ no_base:
 		if unlikely(direct_base_count == 1) {
 			self->cb_base = (DREF DeeTypeObject *)bases_list.ol_elemv[0];
 			Dee_Free(bases_list.ol_elemv);
-			if (DeeObject_AssertType((DeeObject *)self->cb_base, &DeeType_Type)) {
+			if (DeeObject_AssertType(Dee_AsObject(self->cb_base), &DeeType_Type)) {
 				Dee_Decref_unlikely(self->cb_base);
 				goto err;
 			}
@@ -4062,7 +4062,7 @@ no_base:
 		self->cb_base = NULL;
 		for (mro_i = 0; mro_i < direct_base_count; ++mro_i) {
 			DeeTypeObject *base = (DeeTypeObject *)bases_list.ol_elemv[mro_i];
-			if (DeeObject_AssertType((DeeObject *)base, &DeeType_Type))
+			if (DeeObject_AssertType(Dee_AsObject(base), &DeeType_Type))
 				goto err_bases_list;
 			if (base->tp_flags & (TP_FFINAL | TP_FVARIABLE)) {
 				err_cannot_use_final_type_as_base(base);
@@ -4119,8 +4119,8 @@ use_this_base_as_primary_base:
 				DeeTypeMRO base_mro;
 				base = DeeTypeMRO_Init(&base_mro, base);
 				do {
-					if (!objectlist_contains_byid(&bases_list, (DeeObject *)base)) {
-						if (Dee_objectlist_append(&bases_list, (DeeObject *)base))
+					if (!objectlist_contains_byid(&bases_list, Dee_AsObject(base))) {
+						if (Dee_objectlist_append(&bases_list, Dee_AsObject(base)))
 							goto err_bases_list;
 					}
 				} while ((base = DeeTypeMRO_NextDirectBase(&base_mro, base)) != NULL);
@@ -4553,7 +4553,7 @@ err_custom_allocator:
 
 	/* Initialize the resulting object, and start tracking it. */
 	DeeObject_Init(result, result_type_type);
-	return (DeeTypeObject *)DeeGC_Track((DeeObject *)result);
+	return DeeGC_TRACK(DeeTypeObject, result);
 err_r_base_cbases:
 	Dee_weakref_fini(&result->tp_module);
 	Dee_Free(result->tp_math);

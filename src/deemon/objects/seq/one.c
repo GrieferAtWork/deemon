@@ -346,7 +346,7 @@ so_getitem_index(SeqOne *__restrict self, size_t index) {
 		goto err_index;
 	return_reference(self->so_item);
 err_index:
-	DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, 1);
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, 1);
 	return NULL;
 }
 
@@ -380,14 +380,14 @@ so_getrange_index(SeqOne *__restrict self, Dee_ssize_t start, Dee_ssize_t end) {
 	struct Dee_seq_range range;
 	DeeSeqRange_Clamp(&range, start, end, 1);
 	if (range.sr_start == 0 && range.sr_end == 1)
-		return_reference((DeeObject *)self);
+		return_reference(Dee_AsObject(self));
 	return DeeSeq_NewEmpty();
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 so_getrange_index_n(SeqOne *__restrict self, Dee_ssize_t start) {
 	if (start == 0)
-		return_reference((DeeObject *)self);
+		return_reference(Dee_AsObject(self));
 	return DeeSeq_NewEmpty();
 }
 
@@ -542,7 +542,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 so_mh_seq_makeenumeration_with_intrange(SeqOne *__restrict self,
                                         size_t start, size_t end) {
 	if (start == 0 && end >= 1)
-		return (DREF DeeObject *)so_mh_seq_makeenumeration(self);
+		return Dee_AsObject(so_mh_seq_makeenumeration(self));
 	return DeeSeq_NewEmpty();
 }
 
@@ -809,7 +809,7 @@ so_mh_seq_find_with_key(SeqOne *self, DeeObject *item, size_t start, size_t end,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 so_mh_seq_reversed(SeqOne *self, size_t start, size_t end) {
 	if (start == 0 && end >= 1)
-		return_reference((DeeObject *)self);
+		return_reference(Dee_AsObject(self));
 	return DeeSeq_NewEmpty();
 }
 

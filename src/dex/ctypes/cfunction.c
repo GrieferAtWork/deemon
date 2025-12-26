@@ -454,7 +454,7 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
 
 	/* Finalize the cfunction type. */
 	DeeObject_Init(DeeCFunctionType_AsType(result), &DeeCFunctionType_Type);
-	return DeeType_AsCFunctionType((DeeTypeObject *)DeeGC_Track(DeeCFunctionType_AsObject(result)));
+	return DeeType_AsCFunctionType(DeeGC_TRACK(DeeTypeObject, DeeCFunctionType_AsType(result)));
 err_argv_r_name_ffi_typev:
 	Dee_Free(result->ft_ffi_arg_type_v);
 err_argv_r_name:

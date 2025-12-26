@@ -110,14 +110,14 @@ err:
 			name_size = (size_t)(name_base - filename);
 
 			/* Interpret the module name relative to the path of the current source file. */
-			result = (DREF DeeModuleObject *)DeeModule_OpenRelative((DeeObject *)module_name,
+			result = (DREF DeeModuleObject *)DeeModule_OpenRelative(Dee_AsObject(module_name),
 			                                                        filename, name_size,
 			                                                        inner_compiler_options,
 			                                                        false);
 			goto module_opened;
 		}
 	}
-	result = (DREF DeeModuleObject *)DeeModule_OpenGlobal((DeeObject *)module_name,
+	result = (DREF DeeModuleObject *)DeeModule_OpenGlobal(Dee_AsObject(module_name),
 	                                                      inner_compiler_options,
 	                                                      false);
 module_opened:
@@ -312,7 +312,7 @@ ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name) {
 		if unlikely(!modsym) {
 			if (WARN(W_MODULE_IMPORT_NOT_FOUND,
 			         import_name->k_name,
-			         DeeModule_GetShortName((DeeObject *)mod)))
+			         DeeModule_GetShortName(Dee_AsObject(mod))))
 				goto err_module;
 			extern_symbol->s_type   = SYMBOL_TYPE_MODULE;
 			extern_symbol->s_module = mod; /* Inherit reference. */
@@ -357,7 +357,7 @@ PRIVATE struct TPPKeyword *DCALL
 get_module_symbol_name(DeeStringObject *__restrict module_name, bool is_module) {
 	char const *utf8_repr, *symbol_start;
 	size_t symbol_length;
-	utf8_repr = DeeString_AsUtf8((DeeObject *)module_name);
+	utf8_repr = DeeString_AsUtf8(Dee_AsObject(module_name));
 	if unlikely(!utf8_repr)
 		goto err;
 	symbol_start  = (char const *)memrend(utf8_repr, '.', WSTR_LENGTH(utf8_repr)) + 1;
@@ -660,17 +660,17 @@ ast_import_all_from_module(DeeModuleObject *__restrict mod,
 						 * NOTE: For this purpose, we must perform an exact comparison (i.e. `a === b') */
 						int error;
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-						error = DeeModule_Initialize((DeeObject *)mod);
+						error = DeeModule_Initialize(Dee_AsObject(mod));
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-						error = DeeModule_RunInit((DeeObject *)mod);
+						error = DeeModule_RunInit(Dee_AsObject(mod));
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 						if unlikely(error < 0)
 							goto err;
 						if (error == 0) {
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-							error = DeeModule_Initialize((DeeObject *)sym->s_extern.e_module);
+							error = DeeModule_Initialize(Dee_AsObject(sym->s_extern.e_module));
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-							error = DeeModule_RunInit((DeeObject *)sym->s_extern.e_module);
+							error = DeeModule_RunInit(Dee_AsObject(sym->s_extern.e_module));
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 							if unlikely(error < 0)
 								goto err;
@@ -764,11 +764,11 @@ ast_import_single_from_module(DeeModuleObject *__restrict mod,
 		goto done;
 	}
 	if (item->ii_import_name) {
-		sym = DeeModule_GetSymbol(mod, (DeeObject *)item->ii_import_name);
+		sym = DeeModule_GetSymbol(mod, Dee_AsObject(item->ii_import_name));
 		if (!sym) {
 			if (WARNAT(&item->ii_import_loc, W_MODULE_IMPORT_NOT_FOUND,
 			           DeeString_STR(item->ii_import_name),
-			           DeeModule_GetShortName((DeeObject *)mod)))
+			           DeeModule_GetShortName(Dee_AsObject(mod))))
 				goto err;
 			goto done;
 		}
@@ -777,7 +777,7 @@ ast_import_single_from_module(DeeModuleObject *__restrict mod,
 		if (!sym) {
 			if (WARNAT(&item->ii_import_loc, W_MODULE_IMPORT_NOT_FOUND,
 			           item->ii_symbol_name->k_name,
-			           DeeModule_GetShortName((DeeObject *)mod)))
+			           DeeModule_GetShortName(Dee_AsObject(mod))))
 				goto err;
 			goto done;
 		}

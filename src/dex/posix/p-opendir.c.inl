@@ -1257,7 +1257,7 @@ diriter_get_d_fullname(DeeDirIteratorObject *__restrict self) {
 		path = diriter_getpathstr(self);
 		if likely(path) {
 			struct unicode_printer printer = UNICODE_PRINTER_INIT;
-			if unlikely(unicode_printer_printstring(&printer, (DeeObject *)path) < 0) {
+			if unlikely(unicode_printer_printstring(&printer, Dee_AsObject(path)) < 0) {
 				Dee_Decref(path);
 err_printer:
 				unicode_printer_fini(&printer);

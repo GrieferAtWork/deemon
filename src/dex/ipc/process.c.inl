@@ -32,6 +32,7 @@
 #include <deemon/exec.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
+#include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/notify.h>
 #include <deemon/object.h>
@@ -916,7 +917,7 @@ process_init(Process *__restrict self,
 		Dee_XIncref(self->p_envp);
 	} else if (DeeString_Check(exe_or_cmdline_or_pid)) {
 		/* Use the system shell as executable. */
-		self->p_exe = (DREF DeeObject *)process_get_shell();
+		self->p_exe = Dee_AsObject(process_get_shell());
 		if unlikely(!self->p_exe)
 			goto err;
 
@@ -1206,7 +1207,7 @@ process_printrepr(Process *__restrict self,
 #ifdef ipc_Process_USE_cmdline
 	proc_argv = NULL;
 	if (proc_cmdline) {
-		proc_argv = (DREF DeeObject *)ipc_cmdline2argv(proc_cmdline);
+		proc_argv = Dee_AsObject(ipc_cmdline2argv(proc_cmdline));
 		Dee_Decref(proc_cmdline);
 		if unlikely(!proc_argv) {
 			temp = -1;
@@ -1587,7 +1588,7 @@ ipc_exe2path_uncached(ipc_exe2path_char_t const *__restrict exe) {
 			goto err;
 		return (DREF DeeStringObject *)ITER_DONE;
 	}
-	path_str = (ipc_exe2path_char_t *)DeeString_As_ipc_exe2path_char_t((DeeObject *)path);
+	path_str = (ipc_exe2path_char_t *)DeeString_As_ipc_exe2path_char_t(Dee_AsObject(path));
 	if unlikely(!path_str)
 		goto err_path;
 	result = ipc_exe2path_uncached_in_path(exe, WSTR_LENGTH(exe), path_str);
@@ -1878,7 +1879,7 @@ ipc_nt_CreateProcessPathWithoutCache(LPWSTR lpApplicationName, SIZE_T szApplicat
 			goto err_nopath;
 		goto done_nopath;
 	}
-	pathStr = (LPWSTR)DeeString_AsWide((DeeObject *)path);
+	pathStr = (LPWSTR)DeeString_AsWide(Dee_AsObject(path));
 	if unlikely(!pathStr)
 		goto err;
 again:
@@ -2880,7 +2881,7 @@ again:
 		lpwExe = (LPWSTR)DeeString_AsWide((DeeObject *)exe_str);
 		if unlikely(!lpwExe)
 			goto err_exe_str;
-		lpwCmdLine = (LPWSTR)DeeString_AsWide((DeeObject *)self->p_cmdline);
+		lpwCmdLine = (LPWSTR)DeeString_AsWide(Dee_AsObject(self->p_cmdline));
 		if unlikely(!lpwCmdLine)
 			goto err_exe_str;
 
@@ -2961,7 +2962,7 @@ again:
 save_full_exe_str_and_process_created_ok:
 				Process_LockWrite(self);
 				old_exe_str = self->p_exe;
-				self->p_exe = (DREF DeeObject *)full_exe_str; /* Inherit reference */
+				self->p_exe = Dee_AsObject(full_exe_str); /* Inherit reference */
 				Process_LockEndWrite(self);
 				Dee_Decref(old_exe_str);
 				goto process_created_ok;
@@ -4289,8 +4290,9 @@ process_get_exe(Process *__restrict self) {
 	}
 #else /* ... */
 	if (self->p_state & PROCESS_FLAG_SELF) {
+		PRIVATE DEFINE_STRING(str_deemon, "deemon");
 		Process_LockEndWrite(self);
-		result = (DREF DeeObject *)DeeModule_GetDeemon()->mo_name;
+		result = Dee_AsObject(&str_deemon);
 		Dee_Incref(result);
 		/*Dee_UntrackAlloc(result);*/
 	} else {
@@ -4428,7 +4430,7 @@ process_get_argv(Process *__restrict self)
 
 	/* Check if we've already cached the correct result. */
 #ifdef ipc_Process_USE_cmdline
-	result = (DREF DeeObject *)self->p_cmdline;
+	result = Dee_AsObject(self->p_cmdline);
 #else /* ipc_Process_USE_cmdline */
 	result = self->p_argv;
 #endif /* !ipc_Process_USE_cmdline */
@@ -4448,7 +4450,7 @@ process_get_argv(Process *__restrict self)
 	/* Get a write-lock. */
 	if (!Process_LockUpgrade(self)) {
 #ifdef ipc_Process_USE_cmdline
-		result = (DREF DeeObject *)self->p_cmdline;
+		result = Dee_AsObject(self->p_cmdline);
 #else /* ipc_Process_USE_cmdline */
 		result = self->p_argv;
 #endif /* !ipc_Process_USE_cmdline */
@@ -4514,8 +4516,8 @@ process_get_argv(Process *__restrict self)
 		Dee_Decref(cmdline_file);
 		if unlikely(!cmdline_content)
 			goto err;
-		result = (DREF DeeObject *)ipc_unix_strings_from_nulterm_bytes((char const *)DeeBytes_DATA(cmdline_content),
-		                                                               DeeBytes_SIZE(cmdline_content));
+		result = Dee_AsObject(ipc_unix_strings_from_nulterm_bytes((char const *)DeeBytes_DATA(cmdline_content),
+		                                                          DeeBytes_SIZE(cmdline_content)));
 		if unlikely(!result)
 			goto err;
 #ifndef NDEBUG
@@ -4529,11 +4531,12 @@ process_get_argv(Process *__restrict self)
 #endif /* ipc_Process_USE_cmdline */
 	Process_LockEndWrite(self);
 	if (self->p_state & PROCESS_FLAG_SELF) {
+		PRIVATE DEFINE_STRING(str_deemon, "deemon");
 		DeeObject *argv = Dee_GetArgv(), *name;
 		result = DeeTuple_NewUninitialized(1 + DeeTuple_SIZE(argv));
 		if unlikely(!result)
 			goto err;
-		name = (DREF DeeObject *)DeeModule_GetDeemon()->mo_name;
+		name = Dee_AsObject(&str_deemon);
 		Dee_Incref(name);
 		DeeTuple_SET(result, 0, name);
 		Dee_Movrefv(DeeTuple_ELEM(result) + 1, DeeTuple_ELEM(argv), DeeTuple_SIZE(argv));
@@ -4562,7 +4565,7 @@ process_get_argv(Process *__restrict self)
 	} else {
 		DREF DeeObject *old_result;
 #ifdef ipc_Process_USE_cmdline
-		old_result = (DREF DeeObject *)self->p_cmdline;
+		old_result = Dee_AsObject(self->p_cmdline);
 #else /* ipc_Process_USE_cmdline */
 		old_result = self->p_argv;
 #endif /* !ipc_Process_USE_cmdline */
@@ -4616,7 +4619,7 @@ process_set_argv(Process *self, DeeObject *value)
 	}
 	Dee_XIncref(value);
 #ifdef ipc_Process_USE_cmdline
-	old_value       = (DREF DeeObject *)self->p_cmdline;
+	old_value       = Dee_AsObject(self->p_cmdline);
 	self->p_cmdline = (DREF DeeStringObject *)value;
 #else /* ipc_Process_USE_cmdline */
 	old_value    = self->p_argv;
@@ -4734,8 +4737,8 @@ process_get_environ(Process *__restrict self) {
 		Dee_Decref(environ_file);
 		if unlikely(!environ_content)
 			goto err;
-		result = (DREF DeeObject *)ipc_unix_strings_from_nulterm_bytes((char const *)DeeBytes_DATA(environ_content),
-		                                                               DeeBytes_SIZE(environ_content));
+		result = Dee_AsObject(ipc_unix_strings_from_nulterm_bytes((char const *)DeeBytes_DATA(environ_content),
+		                                                          DeeBytes_SIZE(environ_content)));
 		if unlikely(!result)
 			goto err;
 	}

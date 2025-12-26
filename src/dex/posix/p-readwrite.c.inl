@@ -354,7 +354,7 @@ err_bytes_printer:
 			}
 			result_bytes = (DREF DeeBytesObject *)bytes_printer_pack(&p);
 		}
-		return (DREF DeeObject *)result_bytes;
+		return Dee_AsObject(result_bytes);
 	}
 err:
 	return NULL;
@@ -672,7 +672,7 @@ err_bytes_printer:
 			}
 			result_bytes = (DREF DeeBytesObject *)bytes_printer_pack(&p);
 		}
-		return (DREF DeeObject *)result_bytes;
+		return Dee_AsObject(result_bytes);
 	}	break;
 
 	case 4: {

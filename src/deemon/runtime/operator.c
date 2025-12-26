@@ -1165,7 +1165,7 @@ DeeObject_AddInt8(DeeObject *__restrict self, int8_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* Optimization for `int' */
 	if (DeeInt_Check(self))
-		return (DREF DeeObject *)DeeInt_AddSDigit((DeeIntObject *)self, val);
+		return Dee_AsObject(DeeInt_AddSDigit((DeeIntObject *)self, val));
 	val_ob = DeeInt_NewInt8(val);
 	if unlikely(!val_ob)
 		goto err;
@@ -1181,7 +1181,7 @@ DeeObject_SubInt8(DeeObject *__restrict self, int8_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* Optimization for `int' */
 	if (DeeInt_Check(self))
-		return (DREF DeeObject *)DeeInt_SubSDigit((DeeIntObject *)self, val);
+		return Dee_AsObject(DeeInt_SubSDigit((DeeIntObject *)self, val));
 	val_ob = DeeInt_NewInt8(val);
 	if unlikely(!val_ob)
 		goto err;
@@ -1197,7 +1197,7 @@ DeeObject_AddUInt32(DeeObject *__restrict self, uint32_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* Optimization for `int' */
 	if (DeeInt_Check(self))
-		return (DREF DeeObject *)DeeInt_AddUInt32((DeeIntObject *)self, val);
+		return Dee_AsObject(DeeInt_AddUInt32((DeeIntObject *)self, val));
 	val_ob = DeeInt_NewUInt32(val);
 	if unlikely(!val_ob)
 		goto err;
@@ -1227,7 +1227,7 @@ DeeObject_SubUInt32(DeeObject *__restrict self, uint32_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* Optimization for `int' */
 	if (DeeInt_Check(self))
-		return (DREF DeeObject *)DeeInt_SubUInt32((DeeIntObject *)self, val);
+		return Dee_AsObject(DeeInt_SubUInt32((DeeIntObject *)self, val));
 	val_ob = DeeInt_NewUInt32(val);
 	if unlikely(!val_ob)
 		goto err;

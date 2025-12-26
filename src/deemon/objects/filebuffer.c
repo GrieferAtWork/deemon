@@ -1775,7 +1775,7 @@ buffer_setbuf(Buffer *self, size_t argc,
 		mode |= mode_names[i].flag; /* Found it! */
 		break;
 	}
-	if (DeeFileBuffer_SetMode((DeeObject *)self, mode, args.size))
+	if (DeeFileBuffer_SetMode(Dee_AsObject(self), mode, args.size))
 		goto err;
 	return_none;
 err_invalid_mode:

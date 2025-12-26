@@ -1041,7 +1041,7 @@ hashset_size(HashSet *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 hashset_contains(HashSet *self, DeeObject *search_item) {
-	int result = DeeHashSet_Contains((DeeObject *)self, search_item);
+	int result = DeeHashSet_Contains(Dee_AsObject(self), search_item);
 	if unlikely(result < 0)
 		goto err;
 	return_bool(result);

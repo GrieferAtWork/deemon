@@ -591,7 +591,7 @@ PRIVATE struct type_seq bcs_seq = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bs_getsep(BytesSplit *__restrict self) {
 	return DeeBytes_NewViewRo(self->bs_sep_owner ? self->bs_sep_owner
-	                                             : (DeeObject *)self,
+	                                             : Dee_AsObject(self),
 	                          self->bs_sep_ptr, self->bs_sep_len);
 }
 
@@ -767,7 +767,7 @@ err_r:
 	return NULL;
 handle_empty_sep:
 	DeeObject_FREE(result);
-	return DeeSuper_New(&DeeSeq_Type, (DeeObject *)self);
+	return DeeSuper_New(&DeeSeq_Type, Dee_AsObject(self));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -818,7 +818,7 @@ err_r:
 	return NULL;
 handle_empty_sep:
 	DeeObject_FREE(result);
-	return DeeSuper_New(&DeeSeq_Type, (DeeObject *)self);
+	return DeeSuper_New(&DeeSeq_Type, Dee_AsObject(self));
 }
 
 

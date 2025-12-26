@@ -220,7 +220,7 @@ parser_parse_allstmt(DeeCompilerWrapperObject *self, size_t argc,
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto done;
 	if (args.end != (DeeStringObject *)Dee_EmptyString) {
-		end_token = get_token_from_obj((DeeObject *)args.end, true);
+		end_token = get_token_from_obj(Dee_AsObject(args.end), true);
 		if unlikely(end_token == TOK_ERR)
 			goto done_compiler_end;
 	}

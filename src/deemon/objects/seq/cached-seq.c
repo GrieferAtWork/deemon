@@ -331,7 +331,7 @@ err_oob:
 		CachedSeq_WithIter_LockAcquire(self);
 		size = self->cswi_cache.ol_elemc;
 		CachedSeq_WithIter_LockRelease(self);
-		DeeRT_ErrIndexOutOfBounds((DeeObject *)self, index, size);
+		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, size);
 	}
 /*err:*/
 	return NULL;
@@ -1217,7 +1217,7 @@ cswgi_size(CachedSeq_WithGetItem *__restrict self) {
 	CachedSeq_WithGetItem_LockRelease(self);
 	if (result.csi_indexob != NULL) {
 		int temp;
-		temp = DeeInt_AsSize((DREF DeeObject *)result.csi_indexob, &result.csi_index);
+		temp = DeeInt_AsSize(Dee_AsObject(result.csi_indexob), &result.csi_index);
 		Dee_Decref(result.csi_indexob);
 		if unlikely(temp)
 			goto err;
@@ -1248,14 +1248,14 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cswgi_getitem(CachedSeq_WithGetItem *self, DeeObject *index) {
 	DREF DeeObject *result = cswgi_getitem_object_ex(self, index);
 	if unlikely(result == CSWGI_GETITEM_UNBOUND) {
-		DeeRT_ErrUnboundIndexObj((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndexObj(Dee_AsObject(self), index);
 		goto err;
 	}
 	if unlikely(result == CSWGI_GETITEM_OOB) {
 		DREF DeeObject *sizeob = cswgi_sizeob(self);
 		if unlikely(!sizeob)
 			goto err;
-		DeeRT_ErrIndexOutOfBoundsObj((DeeObject *)self, index, sizeob);
+		DeeRT_ErrIndexOutOfBoundsObj(Dee_AsObject(self), index, sizeob);
 		Dee_Decref_unlikely(sizeob);
 		goto err;
 	}
@@ -1349,7 +1349,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cswgi_getitem_index(CachedSeq_WithGetItem *self, size_t index) {
 	DREF DeeObject *result = cswgi_getitem_index_ex(self, index);
 	if unlikely(result == CSWGI_GETITEM_UNBOUND) {
-		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex(self, index);
 		goto err;
 	}
 	if unlikely(result == CSWGI_GETITEM_OOB) {
@@ -1359,7 +1359,7 @@ cswgi_getitem_index(CachedSeq_WithGetItem *self, size_t index) {
 			goto err;
 		indexob = DeeInt_NewSize(index);
 		if likely(indexob) {
-			DeeRT_ErrIndexOutOfBoundsObj((DeeObject *)self, indexob, sizeob);
+			DeeRT_ErrIndexOutOfBoundsObj(Dee_AsObject(self), indexob, sizeob);
 			Dee_Decref_likely(indexob);
 		}
 		Dee_Decref_unlikely(sizeob);

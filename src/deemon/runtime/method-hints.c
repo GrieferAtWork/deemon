@@ -2472,9 +2472,9 @@ findattr_for_method_hint(DeeTypeObject *__restrict self,
                          /*string*/ DeeObject *__restrict attr,
                          struct Dee_attrinfo *__restrict retinfo) {
 #ifdef SEARCH_IN_TYPE_FOR_ATTRIBUTES
-	if (!DeeObject_TFindPrivateAttrInfo(Dee_TYPE(self), (DeeObject *)self, attr, retinfo))
+	if (!DeeObject_TFindPrivateAttrInfo(Dee_TYPE(self), Dee_AsObject(self), attr, retinfo))
 		goto nope;
-	if (retinfo->ai_decl != (DeeObject *)self)
+	if (retinfo->ai_decl != Dee_AsObject(self))
 		goto nope;
 	switch (retinfo->ai_type) {
 	case Dee_ATTRINFO_CUSTOM:

@@ -392,7 +392,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 posix_environ_hasenv(DeeStringObject *__restrict name) {
 #ifdef posix_getenv_USE_GetEnvironmentVariableW
 	bool result;
-	LPCWSTR wname = (LPCWSTR)DeeString_AsWide((DeeObject *)name);
+	LPCWSTR wname = (LPCWSTR)DeeString_AsWide(Dee_AsObject(name));
 	if unlikely(!wname)
 		return -1;
 	environ_lock_read();
@@ -405,7 +405,7 @@ posix_environ_hasenv(DeeStringObject *__restrict name) {
 
 #ifdef posix_getenv_USE_wgetenv
 	bool result;
-	Dee_wchar_t const *wname = DeeString_AsWide((DeeObject *)name);
+	Dee_wchar_t const *wname = DeeString_AsWide(Dee_AsObject(name));
 	if unlikely(!wname)
 		return -1;
 	environ_lock_read();
@@ -418,7 +418,7 @@ posix_environ_hasenv(DeeStringObject *__restrict name) {
 
 #ifdef posix_getenv_USE_getenv
 	bool result;
-	char const *utf8 = DeeString_AsUtf8((DeeObject *)name);
+	char const *utf8 = DeeString_AsUtf8(Dee_AsObject(name));
 	if unlikely(!utf8)
 		return -1;
 	environ_lock_read();
@@ -434,7 +434,7 @@ posix_environ_hasenv(DeeStringObject *__restrict name) {
 	Dee_wchar_t const *wenvstr;
 	Dee_wchar_t const *wname;
 	size_t i, wname_len;
-	wname = DeeString_AsWide((DeeObject *)name);
+	wname = DeeString_AsWide(Dee_AsObject(name));
 	if unlikely(!wname)
 		return -1;
 	wname_len = wcslen((wchar_t *)wname);
@@ -457,7 +457,7 @@ posix_environ_hasenv(DeeStringObject *__restrict name) {
 	int result;
 	char const *envstr, *utf8_name;
 	size_t i, utf8_name_len;
-	utf8_name = DeeString_AsUtf8((DeeObject *)name);
+	utf8_name = DeeString_AsUtf8(Dee_AsObject(name));
 	if unlikely(!utf8_name)
 		return -1;
 	utf8_name_len = strlen(utf8_name);
@@ -489,14 +489,14 @@ err_unknown_env_var(DeeObject *__restrict name) {
 	                       name);
 }
 
-/* Caller must call: `err_unknown_env_var((DeeObject *)name);'  */
+/* Caller must call: `err_unknown_env_var(Dee_AsObject(name));'  */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 posix_environ_trygetenv(DeeStringObject *name) {
 #ifdef posix_getenv_USE_GetEnvironmentVariableW
 	LPWSTR buffer, new_buffer;
 	DWORD bufsize = 256, error;
 	LPWSTR wname;
-	wname = (LPWSTR)DeeString_AsWide((DeeObject *)name);
+	wname = (LPWSTR)DeeString_AsWide(Dee_AsObject(name));
 	if unlikely(!wname)
 		goto err;
 	buffer = DeeString_NewWideBuffer(bufsize);
@@ -534,7 +534,7 @@ err:
 	size_t reqlen;
 	Dee_wchar_t *new_buffer, *buffer = NULL;
 	Dee_wchar_t const *wenvstr;
-	Dee_wchar_t const *wname = DeeString_AsWide((DeeObject *)name);
+	Dee_wchar_t const *wname = DeeString_AsWide(Dee_AsObject(name));
 #ifdef posix_getenv_USE_wenviron
 	size_t wname_len;
 #endif /* posix_getenv_USE_wenviron */
@@ -591,7 +591,7 @@ err:
 #if (defined(posix_getenv_USE_getenv) || defined(posix_getenv_USE_environ))
 	size_t reqlen;
 	char *new_buffer, *buffer = NULL;
-	char const *envstr, *utf8_name = DeeString_AsUtf8((DeeObject *)name);
+	char const *envstr, *utf8_name = DeeString_AsUtf8(Dee_AsObject(name));
 #ifdef posix_getenv_USE_environ
 	size_t utf8_name_len;
 #endif /* posix_getenv_USE_environ */
@@ -655,7 +655,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 posix_environ_setenv(DeeStringObject *name, DeeStringObject *value, bool replace) {
 #ifdef posix_setenv_USE_SetEnvironmentVariableW
 	LPWSTR wname, wvalue;
-	wname = (LPWSTR)DeeString_AsWide((DeeObject *)name);
+	wname = (LPWSTR)DeeString_AsWide(Dee_AsObject(name));
 	if unlikely(!wname)
 		goto err;
 	wvalue = (LPWSTR)DeeString_AsWide((DeeObject *)value);
@@ -690,14 +690,14 @@ again_setenv:
 	environ_changed();
 	environ_lock_endwrite();
 	/* Broadcast an environ-changed notification. */
-	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)name);
+	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, Dee_AsObject(name));
 err:
 	return -1;
 #endif /* posix_setenv_USE_SetEnvironmentVariableW */
 
 #ifdef posix_setenv_USE_wsetenv
 	Dee_wchar_t const *wname, *wvalue;
-	wname = DeeString_AsWide((DeeObject *)name);
+	wname = DeeString_AsWide(Dee_AsObject(name));
 	if unlikely(!wname)
 		goto err;
 	wvalue = DeeString_AsWide((DeeObject *)value);
@@ -724,14 +724,14 @@ again_setenv:
 	environ_changed();
 	environ_lock_endwrite();
 	/* Broadcast an environ-changed notification. */
-	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)name);
+	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, Dee_AsObject(name));
 err:
 	return -1;
 #endif /* posix_setenv_USE_wsetenv */
 
 #ifdef posix_setenv_USE_setenv
 	char const *utf8_name, *utf8_value;
-	utf8_name = DeeString_AsUtf8((DeeObject *)name);
+	utf8_name = DeeString_AsUtf8(Dee_AsObject(name));
 	if unlikely(!utf8_name)
 		goto err;
 	utf8_value = DeeString_AsUtf8((DeeObject *)value);
@@ -758,7 +758,7 @@ again_setenv:
 	environ_changed();
 	environ_lock_endwrite();
 	/* Broadcast an environ-changed notification. */
-	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)name);
+	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, Dee_AsObject(name));
 err:
 	return -1;
 #endif /* posix_setenv_USE_setenv */
@@ -766,7 +766,7 @@ err:
 #ifdef posix_setenv_USE_wputenv_s
 	int error;
 	Dee_wchar_t const *wname, *wvalue;
-	wname = DeeString_AsWide((DeeObject *)name);
+	wname = DeeString_AsWide(Dee_AsObject(name));
 	if unlikely(!wname)
 		goto err;
 	wvalue = DeeString_AsWide((DeeObject *)value);
@@ -818,7 +818,7 @@ again_setenv:
 	environ_changed();
 	environ_lock_endwrite();
 	/* Broadcast an environ-changed notification. */
-	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)name);
+	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, Dee_AsObject(name));
 err:
 	return -1;
 #endif /* posix_setenv_USE_wputenv_s */
@@ -826,7 +826,7 @@ err:
 #ifdef posix_setenv_USE_putenv_s
 	int error;
 	char const *utf8_name, *utf8_value;
-	utf8_name = DeeString_AsUtf8((DeeObject *)name);
+	utf8_name = DeeString_AsUtf8(Dee_AsObject(name));
 	if unlikely(!utf8_name)
 		goto err;
 	utf8_value = DeeString_AsUtf8((DeeObject *)value);
@@ -878,7 +878,7 @@ again_setenv:
 	environ_changed();
 	environ_lock_endwrite();
 	/* Broadcast an environ-changed notification. */
-	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)name);
+	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, Dee_AsObject(name));
 err:
 	return -1;
 #endif /* posix_setenv_USE_putenv_s */
@@ -888,7 +888,7 @@ err:
 	Dee_wchar_t const *wide_name, *wide_value;
 	Dee_wchar_t *wide_envline, *wide_oldline;
 	size_t wide_name_len, wide_value_len;
-	wide_name = DeeString_AsWide((DeeObject *)name);
+	wide_name = DeeString_AsWide(Dee_AsObject(name));
 	if unlikely(!wide_name)
 		goto err;
 	wide_value = DeeString_AsWide((DeeObject *)value);
@@ -930,7 +930,7 @@ again_insert_env:
 					Dee_Free(wide_envline);
 				Dee_Free(wide_oldline);
 				if (replace)
-					return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)name);
+					return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, Dee_AsObject(name));
 				return 0;
 			}
 		}
@@ -952,7 +952,7 @@ again_insert_env:
 	}
 	environ_changed();
 	environ_lock_endwrite();
-	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)name);
+	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, Dee_AsObject(name));
 unlock_and_try_collect_memory:
 	environ_lock_endwrite();
 	if (Dee_CollectMemory(1))
@@ -969,7 +969,7 @@ err:
 	char const *utf8_name, *utf8_value;
 	char *utf8_envline, *utf8_oldline;
 	size_t utf8_name_len, utf8_value_len;
-	utf8_name = DeeString_AsUtf8((DeeObject *)name);
+	utf8_name = DeeString_AsUtf8(Dee_AsObject(name));
 	if unlikely(!utf8_name)
 		goto err;
 	utf8_value = DeeString_AsUtf8((DeeObject *)value);
@@ -1011,7 +1011,7 @@ again_insert_env:
 					Dee_Free(utf8_envline);
 				Dee_Free(utf8_oldline);
 				if (replace)
-					return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)name);
+					return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, Dee_AsObject(name));
 				return 0;
 			}
 		}
@@ -1033,7 +1033,7 @@ again_insert_env:
 	}
 	environ_changed();
 	environ_lock_endwrite();
-	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)name);
+	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, Dee_AsObject(name));
 unlock_and_try_collect_memory:
 	environ_lock_endwrite();
 	if (Dee_CollectMemory(1))
@@ -1062,7 +1062,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 posix_environ_unsetenv(DeeStringObject *__restrict name) {
 #ifdef posix_unsetenv_USE_SetEnvironmentVariableW
 	LPWSTR wname;
-	wname = (LPWSTR)DeeString_AsWide((DeeObject *)name);
+	wname = (LPWSTR)DeeString_AsWide(Dee_AsObject(name));
 	if unlikely(!wname)
 		goto err;
 	environ_lock_write();
@@ -1075,14 +1075,14 @@ posix_environ_unsetenv(DeeStringObject *__restrict name) {
 	DBG_ALIGNMENT_ENABLE();
 	environ_changed();
 	environ_lock_endwrite();
-	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)name);
+	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, Dee_AsObject(name));
 err:
 	return -1;
 #endif /* posix_unsetenv_USE_SetEnvironmentVariableW */
 
 #ifdef posix_unsetenv_USE_wunsetenv
 	Dee_wchar_t const *wname;
-	wname = DeeString_AsWide((DeeObject *)name);
+	wname = DeeString_AsWide(Dee_AsObject(name));
 	if unlikely(!wname)
 		goto err;
 	environ_lock_write();
@@ -1095,14 +1095,14 @@ err:
 	DBG_ALIGNMENT_ENABLE();
 	environ_changed();
 	environ_lock_endwrite();
-	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)name);
+	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, Dee_AsObject(name));
 err:
 	return -1;
 #endif /* posix_unsetenv_USE_wunsetenv */
 
 #ifdef posix_unsetenv_USE_unsetenv
 	char const *utf8_name;
-	utf8_name = DeeString_AsUtf8((DeeObject *)name);
+	utf8_name = DeeString_AsUtf8(Dee_AsObject(name));
 	if unlikely(!utf8_name)
 		goto err;
 	environ_lock_write();
@@ -1115,14 +1115,14 @@ err:
 	DBG_ALIGNMENT_ENABLE();
 	environ_changed();
 	environ_lock_endwrite();
-	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)name);
+	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, Dee_AsObject(name));
 err:
 	return -1;
 #endif /* posix_unsetenv_USE_unsetenv */
 
 #ifdef posix_unsetenv_USE_wputenv
 	Dee_wchar_t const *wname;
-	wname = DeeString_AsWide((DeeObject *)name);
+	wname = DeeString_AsWide(Dee_AsObject(name));
 	if unlikely(!wname)
 		goto err;
 	environ_lock_write();
@@ -1136,14 +1136,14 @@ err:
 	DBG_ALIGNMENT_ENABLE();
 	environ_changed();
 	environ_lock_endwrite();
-	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)name);
+	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, Dee_AsObject(name));
 err:
 	return -1;
 #endif /* posix_unsetenv_USE_wputenv */
 
 #ifdef posix_unsetenv_USE_putenv
 	char const *utf8_name;
-	utf8_name = DeeString_AsUtf8((DeeObject *)name);
+	utf8_name = DeeString_AsUtf8(Dee_AsObject(name));
 	if unlikely(!utf8_name)
 		goto err;
 	environ_lock_write();
@@ -1156,7 +1156,7 @@ err:
 	DBG_ALIGNMENT_ENABLE();
 	environ_changed();
 	environ_lock_endwrite();
-	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)name);
+	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, Dee_AsObject(name));
 err:
 	return -1;
 #endif /* posix_unsetenv_USE_putenv */
@@ -1166,7 +1166,7 @@ err:
 	Dee_wchar_t const *wide_name;
 	Dee_wchar_t *wide_oldline;
 	size_t wide_name_len;
-	wide_name = DeeString_AsWide((DeeObject *)name);
+	wide_name = DeeString_AsWide(Dee_AsObject(name));
 	if unlikely(!wide_name)
 		goto err;
 	wide_name_len = wcslen((wchar_t *)wide_name);
@@ -1194,7 +1194,7 @@ again_search_env:
 				environ_changed();
 				environ_lock_endwrite();
 				Dee_Free(wide_oldline);
-				return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)name);
+				return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, Dee_AsObject(name));
 			}
 		}
 	}
@@ -1213,7 +1213,7 @@ err:
 	char const *utf8_name;
 	char *utf8_oldline;
 	size_t utf8_name_len;
-	utf8_name = DeeString_AsUtf8((DeeObject *)name);
+	utf8_name = DeeString_AsUtf8(Dee_AsObject(name));
 	if unlikely(!utf8_name)
 		goto err;
 	utf8_name_len = strlen(utf8_name);
@@ -1241,7 +1241,7 @@ again_search_env:
 				environ_changed();
 				environ_lock_endwrite();
 				Dee_Free(utf8_oldline);
-				return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)name);
+				return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, Dee_AsObject(name));
 			}
 		}
 	}
@@ -1721,7 +1721,7 @@ again:
 #if defined(posix_enumenv_USE_environ) || defined(posix_enumenv_USE_wenviron)
 	if (self->ei_environ_version != dee_environ_version) {
 		environ_lock_endread();
-		err_changed_sequence((DeeObject *)self);
+		err_changed_sequence(Dee_AsObject(self));
 		goto err;
 	}
 #endif /* posix_enumenv_USE_environ || posix_enumenv_USE_wenviron */
@@ -1841,7 +1841,7 @@ again:
 #if defined(posix_enumenv_USE_environ) || defined(posix_enumenv_USE_wenviron)
 	if (self->ei_environ_version != dee_environ_version) {
 		environ_lock_endread();
-		err_changed_sequence((DeeObject *)self);
+		err_changed_sequence(Dee_AsObject(self));
 		goto err;
 	}
 #endif /* posix_enumenv_USE_environ || posix_enumenv_USE_wenviron */
@@ -1935,7 +1935,7 @@ again:
 #if defined(posix_enumenv_USE_environ) || defined(posix_enumenv_USE_wenviron)
 	if (self->ei_environ_version != dee_environ_version) {
 		environ_lock_endread();
-		err_changed_sequence((DeeObject *)self);
+		err_changed_sequence(Dee_AsObject(self));
 		goto err;
 	}
 #endif /* posix_enumenv_USE_environ || posix_enumenv_USE_wenviron */
@@ -2029,7 +2029,7 @@ environ_iterator_bool(EnvironIterator *__restrict self) {
 #if defined(posix_enumenv_USE_environ) || defined(posix_enumenv_USE_wenviron)
 	if (self->ei_environ_version != dee_environ_version) {
 		environ_lock_endread();
-		return err_changed_sequence((DeeObject *)self);
+		return err_changed_sequence(Dee_AsObject(self));
 	}
 #endif /* posix_enumenv_USE_environ || posix_enumenv_USE_wenviron */
 

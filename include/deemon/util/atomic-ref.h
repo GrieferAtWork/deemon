@@ -105,8 +105,8 @@ typedef struct Dee_atomic_ref {
 #define Dee_ATOMIC_REF_INIT(/*0..1*/ /*inherit(always)*/ obj) { _Dee_ATOMIC_REF_INIT_COMMON_ obj }
 #define Dee_atomic_ref_init_inherited(self, /*0..1*/ /*inherit(always)*/ obj)  (void)(_Dee_atomic_ref_init_common_(self) (self)->ar_obj = (obj))
 #define Dee_atomic_ref_cinit_inherited(self, /*0..1*/ /*inherit(always)*/ obj) (void)(_Dee_atomic_ref_cinit_common_(self) (self)->ar_obj = (obj))
-#define Dee_atomic_ref_init(self, /*1..1*/ obj)   (void)(_Dee_atomic_ref_init_common_(self) (self)->ar_obj = Dee_REQUIRES_OBJECT(DREF DeeObject, obj), Dee_Incref((self)->ar_obj))
-#define Dee_atomic_ref_cinit(self, /*1..1*/ obj)  (void)(_Dee_atomic_ref_cinit_common_(self) (self)->ar_obj = Dee_REQUIRES_OBJECT(DREF DeeObject, obj), Dee_Incref((self)->ar_obj))
+#define Dee_atomic_ref_init(self, /*1..1*/ obj)   (void)(_Dee_atomic_ref_init_common_(self) (self)->ar_obj = Dee_AsObject(obj), Dee_Incref((self)->ar_obj))
+#define Dee_atomic_ref_cinit(self, /*1..1*/ obj)  (void)(_Dee_atomic_ref_cinit_common_(self) (self)->ar_obj = Dee_AsObject(obj), Dee_Incref((self)->ar_obj))
 #define Dee_atomic_ref_xinit(self, /*0..1*/ obj)  (void)(_Dee_atomic_ref_init_common_(self) (self)->ar_obj = (obj), Dee_XIncref((self)->ar_obj))
 #define Dee_atomic_ref_cxinit(self, /*0..1*/ obj) (void)(_Dee_atomic_ref_cinit_common_(self) (self)->ar_obj = (obj), Dee_XIncref((self)->ar_obj))
 #define Dee_atomic_ref_fini(self)  Dee_Decref((self)->ar_obj)

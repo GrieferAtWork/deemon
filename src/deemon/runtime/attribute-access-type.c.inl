@@ -624,7 +624,7 @@ continue_at_iter:
 	} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
 
 #ifdef CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC
-	retval = LOCAL_DeeObject_GenericAccessAttr((DeeObject *)self);
+	retval = LOCAL_DeeObject_GenericAccessAttr(Dee_AsObject(self));
 	if (retval != LOCAL_ATTR_NOT_FOUND_RESULT)
 		goto done;
 #endif /* CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC */

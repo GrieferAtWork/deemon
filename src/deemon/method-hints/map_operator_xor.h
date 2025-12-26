@@ -35,7 +35,7 @@ __map_xor__.map_operator_xor([[nonnull]] DeeObject *lhs,
 %{unsupported({
 	if (DeeMap_CheckEmpty(rhs))
 		return_reference_(lhs);
-	return (DREF DeeObject *)MapSymmetricDifference_New(lhs, rhs);
+	return Dee_AsObject(MapSymmetricDifference_New(lhs, rhs));
 })}
 %{$none = return_none}
 %{$empty = "default__map_operator_xor__unsupported"} {

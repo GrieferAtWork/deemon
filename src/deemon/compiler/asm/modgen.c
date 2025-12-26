@@ -65,7 +65,7 @@ module_compile(DeeModuleObject *__restrict mod,
 #endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	ASSERT(DeeCompiler_LockWriting());
 	ASSERT_OBJECT_TYPE_EXACT(root_code, &DeeCode_Type);
-	ASSERT_OBJECT_TYPE((DeeObject *)current_rootscope, &DeeRootScope_Type);
+	ASSERT_OBJECT_TYPE(&current_rootscope->rs_scope.bs_scope, &DeeRootScope_Type);
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	ASSERT(current_rootscope->rs_code == root_code);
 	ASSERT(root_code->ob_refcnt == 2);

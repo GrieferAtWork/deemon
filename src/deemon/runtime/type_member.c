@@ -181,7 +181,7 @@ type_method_attriter_next(struct type_method_attriter *__restrict self,
 	desc->ad_doc  = item->m_doc;
 	desc->ad_perm = self->tmai_perm;
 	desc->ad_info.ai_type = self->tmai_type;
-	desc->ad_info.ai_decl = (DeeObject *)self->tmai_tpself;
+	desc->ad_info.ai_decl = Dee_AsObject(self->tmai_tpself);
 	desc->ad_info.ai_value.v_method = item;
 	desc->ad_type = NULL;
 	return 0;
@@ -221,7 +221,7 @@ type_getset_attriter_next(struct type_getset_attriter *__restrict self,
 	if (item->gs_set)
 		desc->ad_perm |= Dee_ATTRPERM_F_CANSET;
 	desc->ad_info.ai_type = self->tgsai_type;
-	desc->ad_info.ai_decl = (DeeObject *)self->tgsai_tpself;
+	desc->ad_info.ai_decl = Dee_AsObject(self->tgsai_tpself);
 	desc->ad_info.ai_value.v_getset = item;
 	desc->ad_type = NULL;
 	return 0;
@@ -259,7 +259,7 @@ type_member_attriter_next(struct type_member_attriter *__restrict self,
 			desc->ad_perm |= (Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 	}
 	desc->ad_info.ai_type = self->tmai_type;
-	desc->ad_info.ai_decl = (DeeObject *)self->tmai_tpself;
+	desc->ad_info.ai_decl = Dee_AsObject(self->tmai_tpself);
 	desc->ad_info.ai_value.v_member = item;
 	desc->ad_type = NULL;
 	return 0;
@@ -938,7 +938,7 @@ Dee_type_member_set_impl(struct type_member const *desc,
 		char chr_value;
 		if (DeeString_Check(value)) {
 			if unlikely(DeeString_WLEN(self) != 1)
-				return err_expected_single_character_string((DeeObject *)self);
+				return err_expected_single_character_string(Dee_AsObject(self));
 			chr_value = (char)DeeString_WSTR(value)[0];
 		} else {
 			if (DeeObject_AsChar(value, &chr_value))

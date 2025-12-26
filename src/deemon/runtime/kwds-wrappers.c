@@ -142,7 +142,7 @@ blvi_nextpair(DeeBlackListKwdsIterator *__restrict self,
 	Dee_Incref(value);
 	DeeBlackListKwds_LockEndRead(self->blki_map);
 	Dee_Incref(ent->ke_name);
-	key_and_value[0] = (DREF DeeObject *)ent->ke_name;
+	key_and_value[0] = Dee_AsObject(ent->ke_name);
 	key_and_value[1] = value;
 	return 0;
 }
@@ -481,7 +481,7 @@ blv_bool(DeeBlackListKwdsObject *__restrict self) {
 			continue;
 
 		/* Check if this keyword has been black-listed. */
-		if (!DeeBlackListKwds_IsBlackListed(self, (DeeObject *)name))
+		if (!DeeBlackListKwds_IsBlackListed(self, Dee_AsObject(name)))
 			return 1; /* non-empty. */
 	}
 	return 0; /* empty */
@@ -498,7 +498,7 @@ blv_size(DeeBlackListKwdsObject *__restrict self) {
 			continue;
 
 		/* Check if this keyword has been black-listed. */
-		if (!DeeBlackListKwds_IsBlackListed(self, (DeeObject *)name))
+		if (!DeeBlackListKwds_IsBlackListed(self, Dee_AsObject(name)))
 			++result;
 	}
 	return result;
@@ -524,7 +524,7 @@ blv_contains(DeeBlackListKwdsObject *self, DeeObject *key) {
 	size_t index;
 	if unlikely(!DeeString_Check(key))
 		goto nope;
-	index = DeeKwds_IndexOf((DeeObject *)self->blkd_kwds, key);
+	index = DeeKwds_IndexOf(Dee_AsObject(self->blkd_kwds), key);
 	if (index == (size_t)-1)
 		goto nope;
 	if (DeeBlackListKwds_IsBlackListed(self, key))
@@ -538,7 +538,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 blv_trygetitemnr(DeeBlackListKwdsObject *__restrict self,
                  /*string*/ DeeObject *__restrict name) {
 	DeeObject *result;
-	size_t index = DeeKwds_IndexOf((DeeObject *)self->blkd_kwds, name);
+	size_t index = DeeKwds_IndexOf(Dee_AsObject(self->blkd_kwds), name);
 	if unlikely(index == (size_t)-1)
 		goto missing;
 	if unlikely(DeeBlackListKwds_IsBlackListed(self, name))
@@ -555,7 +555,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 blv_trygetitemnr_string_hash(DeeBlackListKwdsObject *__restrict self,
                              char const *__restrict name, Dee_hash_t hash) {
 	DeeObject *result;
-	size_t index = DeeKwds_IndexOfStringHash((DeeObject *)self->blkd_kwds, name, hash);
+	size_t index = DeeKwds_IndexOfStringHash(Dee_AsObject(self->blkd_kwds), name, hash);
 	if unlikely(index == (size_t)-1)
 		goto missing;
 	if unlikely(DeeBlackListKwds_IsBlackListedStringHash(self, name, hash))
@@ -573,7 +573,7 @@ blv_trygetitemnr_string_len_hash(DeeBlackListKwdsObject *__restrict self,
                                  char const *__restrict name,
                                  size_t namelen, Dee_hash_t hash) {
 	DeeObject *result;
-	size_t index = DeeKwds_IndexOfStringLenHash((DeeObject *)self->blkd_kwds, name, namelen, hash);
+	size_t index = DeeKwds_IndexOfStringLenHash(Dee_AsObject(self->blkd_kwds), name, namelen, hash);
 	if unlikely(index == (size_t)-1)
 		goto missing;
 	if unlikely(DeeBlackListKwds_IsBlackListedStringLenHash(self, name, namelen, hash))
@@ -594,7 +594,7 @@ blv_getitem(DeeBlackListKwdsObject *self, DeeObject *key) {
 		DeeRT_ErrUnknownKey(self, key);
 		return NULL;
 	}
-	index = DeeKwds_IndexOf((DeeObject *)self->blkd_kwds, key);
+	index = DeeKwds_IndexOf(Dee_AsObject(self->blkd_kwds), key);
 	if unlikely(index == (size_t)-1)
 		goto missing;
 	if unlikely(DeeBlackListKwds_IsBlackListed(self, key))
@@ -613,7 +613,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 blv_getitem_string_hash(DeeBlackListKwdsObject *__restrict self,
                         char const *__restrict name, Dee_hash_t hash) {
 	DeeObject *result;
-	size_t index = DeeKwds_IndexOfStringHash((DeeObject *)self->blkd_kwds, name, hash);
+	size_t index = DeeKwds_IndexOfStringHash(Dee_AsObject(self->blkd_kwds), name, hash);
 	if unlikely(index == (size_t)-1)
 		goto missing;
 	if unlikely(DeeBlackListKwds_IsBlackListedStringHash(self, name, hash))
@@ -633,7 +633,7 @@ blv_getitem_string_len_hash(DeeBlackListKwdsObject *__restrict self,
                             char const *__restrict name,
                             size_t namelen, Dee_hash_t hash) {
 	DeeObject *result;
-	size_t index = DeeKwds_IndexOfStringLenHash((DeeObject *)self->blkd_kwds, name, namelen, hash);
+	size_t index = DeeKwds_IndexOfStringLenHash(Dee_AsObject(self->blkd_kwds), name, namelen, hash);
 	if unlikely(index == (size_t)-1)
 		goto missing;
 	if unlikely(DeeBlackListKwds_IsBlackListedStringLenHash(self, name, namelen, hash))
@@ -682,7 +682,7 @@ blv_hasitem(DeeBlackListKwdsObject *self, DeeObject *key) {
 	size_t index;
 	if unlikely(!DeeString_Check(key))
 		goto nope;
-	index = DeeKwds_IndexOf((DeeObject *)self->blkd_kwds, key);
+	index = DeeKwds_IndexOf(Dee_AsObject(self->blkd_kwds), key);
 	if (index == (size_t)-1)
 		goto nope;
 	if (DeeBlackListKwds_IsBlackListed(self, key))
@@ -694,7 +694,7 @@ nope:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 blv_hasitem_string_hash(DeeBlackListKwdsObject *self, char const *key, Dee_hash_t hash) {
-	size_t index = DeeKwds_IndexOfStringHash((DeeObject *)self->blkd_kwds, key, hash);
+	size_t index = DeeKwds_IndexOfStringHash(Dee_AsObject(self->blkd_kwds), key, hash);
 	if (index == (size_t)-1)
 		goto nope;
 	if (DeeBlackListKwds_IsBlackListedStringHash(self, key, hash))
@@ -706,7 +706,7 @@ nope:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 blv_hasitem_string_len_hash(DeeBlackListKwdsObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
-	size_t index = DeeKwds_IndexOfStringLenHash((DeeObject *)self->blkd_kwds, key, keylen, hash);
+	size_t index = DeeKwds_IndexOfStringLenHash(Dee_AsObject(self->blkd_kwds), key, keylen, hash);
 	if (index == (size_t)-1)
 		goto nope;
 	if (DeeBlackListKwds_IsBlackListedStringLenHash(self, key, keylen, hash))

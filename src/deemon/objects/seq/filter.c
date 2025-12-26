@@ -379,7 +379,7 @@ filterub_getitem(Filter *self, DeeObject *index) {
 	if unlikely(temp < 0)
 		goto err_r;
 	if unlikely(!temp) {
-		DeeRT_ErrUnboundKey((DeeObject *)self, index);
+		DeeRT_ErrUnboundKey(Dee_AsObject(self), index);
 		goto err_r;
 	}
 	return result;
@@ -400,7 +400,7 @@ filterub_getitem_index(Filter *self, size_t index) {
 	if unlikely(temp < 0)
 		goto err_r;
 	if unlikely(!temp) {
-		DeeRT_ErrUnboundIndex((DeeObject *)self, index);
+		DeeRT_ErrUnboundIndex(self, index);
 		goto err_r;
 	}
 	return result;

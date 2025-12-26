@@ -746,7 +746,7 @@ libdisasm_printcode(Dee_formatprinter_t printer, void *arg,
 	memset(&last_print_ddi, 0xff, sizeof(last_print_ddi));
 	if (code) {
 		uint16_t stack_max;
-		if ((ddi_ip = Dee_ddi_state_init(&ddi, (DeeObject *)code, DDI_STATE_FNORMAL)) == DDI_NEXT_ERR)
+		if ((ddi_ip = Dee_ddi_state_init(&ddi, Dee_AsObject(code), DDI_STATE_FNORMAL)) == DDI_NEXT_ERR)
 			goto err_n1;
 		stack_max = (uint16_t)DeeCode_StackDepth(code);
 		if (stack_max >= 10000) {
@@ -828,7 +828,7 @@ libdisasm_printcode(Dee_formatprinter_t printer, void *arg,
 				}
 				PRINT(".ddi ");
 				if (last_print_ddi.dr_name != ddi.rs_regs.dr_name) {
-					char const *name = DeeCode_GetDDIString((DeeObject *)code,
+					char const *name = DeeCode_GetDDIString(Dee_AsObject(code),
 					                                        ddi.rs_regs.dr_name);
 					if (name) {
 						printf("@name(%q)", name);
@@ -842,8 +842,8 @@ libdisasm_printcode(Dee_formatprinter_t printer, void *arg,
 				    last_print_ddi.dr_file != ddi.rs_regs.dr_file) {
 					char const *path = NULL, *file;
 					if (ddi.rs_regs.dr_path != 0)
-						path = DeeCode_GetDDIString((DeeObject *)code, ddi.rs_regs.dr_path - 1);
-					file = DeeCode_GetDDIString((DeeObject *)code, ddi.rs_regs.dr_file);
+						path = DeeCode_GetDDIString(Dee_AsObject(code), ddi.rs_regs.dr_path - 1);
+					file = DeeCode_GetDDIString(Dee_AsObject(code), ddi.rs_regs.dr_file);
 					if (!is_first)
 						PRINT(", ");
 					printf("\"%#q%s%#q\"", path ? path : "", path ? "/" : "", file ? file : "");

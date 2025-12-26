@@ -276,11 +276,11 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 property_callback_getattr(Property *self, DeeStringObject *name) {
 	DREF DeeObject *result;
 	if (self->p_get) {
-		result = DeeObject_GetAttr(self->p_get, (DeeObject *)name);
+		result = DeeObject_GetAttr(self->p_get, Dee_AsObject(name));
 	} else if (self->p_del) {
-		result = DeeObject_GetAttr(self->p_del, (DeeObject *)name);
+		result = DeeObject_GetAttr(self->p_del, Dee_AsObject(name));
 	} else if (self->p_set) {
-		result = DeeObject_GetAttr(self->p_set, (DeeObject *)name);
+		result = DeeObject_GetAttr(self->p_set, Dee_AsObject(name));
 	} else {
 		return ITER_DONE;
 	}
@@ -293,11 +293,11 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 property_callback_boundattr(Property *self, DeeStringObject *name) {
 	int result;
 	if (self->p_get) {
-		result = DeeObject_BoundAttr(self->p_get, (DeeObject *)name);
+		result = DeeObject_BoundAttr(self->p_get, Dee_AsObject(name));
 	} else if (self->p_del) {
-		result = DeeObject_BoundAttr(self->p_del, (DeeObject *)name);
+		result = DeeObject_BoundAttr(self->p_del, Dee_AsObject(name));
 	} else if (self->p_set) {
-		result = DeeObject_BoundAttr(self->p_set, (DeeObject *)name);
+		result = DeeObject_BoundAttr(self->p_set, Dee_AsObject(name));
 	} else {
 		result = Dee_BOUND_NO;
 	}
@@ -315,7 +315,7 @@ property_get_name(Property *__restrict self) {
 	Dee_XDecref(info.fi_doc);
 	Dee_XDecref(info.fi_type);
 	if (info.fi_name)
-		return (DREF DeeObject *)info.fi_name;
+		return Dee_AsObject(info.fi_name);
 	result = property_callback_getattr(self, &str___name__);
 	if (result != ITER_DONE)
 		return result;
@@ -352,7 +352,7 @@ property_get_doc(Property *__restrict self) {
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_type);
 	if (info.fi_doc)
-		return (DREF DeeObject *)info.fi_doc;
+		return Dee_AsObject(info.fi_doc);
 	result = property_callback_getattr(self, &str___doc__);
 	if (result != ITER_DONE)
 		return result;
@@ -495,7 +495,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_call(Property *self, size_t argc, DeeObject *const *argv) {
 	if likely(self->p_get)
 		return DeeObject_Call(self->p_get, argc, argv);
-	DeeRT_ErrTUnboundAttrCStr(&DeeProperty_Type, (DeeObject *)self, "getter");
+	DeeRT_ErrTUnboundAttrCStr(&DeeProperty_Type, Dee_AsObject(self), "getter");
 	return NULL;
 }
 
@@ -503,7 +503,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_call_kw(Property *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	if likely(self->p_get)
 		return DeeObject_CallKw(self->p_get, argc, argv, kw);
-	DeeRT_ErrTUnboundAttrCStr(&DeeProperty_Type, (DeeObject *)self, "getter");
+	DeeRT_ErrTUnboundAttrCStr(&DeeProperty_Type, Dee_AsObject(self), "getter");
 	return NULL;
 }
 

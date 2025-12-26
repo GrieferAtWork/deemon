@@ -244,7 +244,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL c_atomic_atomic_cmpx
 		}
 	}, goto err_result_obj);
 	DeeObject_Init(result_obj, DeeSType_AsType(basetype));
-	return (DREF DeeObject *)result_obj;
+	return Dee_AsObject(result_obj);
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 err_result_obj:
 	DeeStructObject_Free(result_obj);
@@ -286,7 +286,7 @@ err:
 			}                                                                                             \
 		}, goto err_result_obj);                                                                          \
 		DeeObject_Init(result_obj, DeeSType_AsType(basetype));                                            \
-		return (DREF DeeObject *)result_obj;                                                              \
+		return Dee_AsObject(result_obj);                                                                  \
 	IF_HAVE_FAULTPROTECT(err_result_obj:                                                                  \
 		DeeStructObject_Free(result_obj);)                                                                \
 	err:                                                                                                  \
@@ -366,7 +366,7 @@ CTYPES_DEFINE_ATOMIC_BINOP_VOID(c_atomic_atomic_write, "atomic_write", atomic_wr
 			}                                                                              \
 		}, goto err_result_obj);                                                           \
 		DeeObject_Init(result_obj, DeeSType_AsType(basetype));                             \
-		return (DREF DeeObject *)result_obj;                                               \
+		return Dee_AsObject(result_obj);                                                   \
 	IF_HAVE_FAULTPROTECT(err_result_obj:                                                   \
 		DeeStructObject_Free(result_obj);)                                                 \
 	err:                                                                                   \

@@ -43,7 +43,7 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 add_getattr_format(struct ast *__restrict self) {
 	DREF struct ast *attr, *result;
-	attr = ast_constexpr((DeeObject *)&str_format);
+	attr = ast_constexpr(Dee_AsObject(&str_format));
 	if unlikely(!attr)
 		goto err;
 	result = ast_operator2(OPERATOR_GETATTR,

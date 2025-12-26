@@ -91,7 +91,7 @@ DeeSeq_GetForeachSubRangeAsTuple(DeeObject *self, size_t start, size_t end) {
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	data.fesrat_result = DeeTuple_TruncateUninitialized(data.fesrat_result, data.fesrat_used);
-	return (DREF DeeObject *)data.fesrat_result;
+	return Dee_AsObject(data.fesrat_result);
 err_r:
 	Dee_Decrefv(data.fesrat_result->t_elem, data.fesrat_used);
 	DeeTuple_FreeUninitialized(data.fesrat_result);

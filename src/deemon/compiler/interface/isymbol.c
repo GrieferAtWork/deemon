@@ -411,7 +411,7 @@ symbol_setnone(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *arg
 	DeeArg_Unpack0(err, argc, argv, "setnone");
 	if (symbol_delkind(self))
 		goto err;
-	return_reference_((DeeObject *)self);
+	return_reference_(Dee_AsObject(self));
 err:
 	return NULL;
 }
