@@ -303,15 +303,15 @@ INTERN DeeTypeObject BytesFindIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&bfi_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&bfi_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&bfi_init,
-				TYPE_FIXED_ALLOCATOR(BytesFindIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ BytesFindIterator,
+			/* tp_ctor:        */ &bfi_ctor,
+			/* tp_copy_ctor:   */ &bfi_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &bfi_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bfi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -355,15 +355,15 @@ INTERN DeeTypeObject BytesCaseFindIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&bcfi_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&bcfi_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&bcfi_init,
-				TYPE_FIXED_ALLOCATOR(BytesFindIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ BytesFindIterator,
+			/* tp_ctor:        */ &bcfi_ctor,
+			/* tp_copy_ctor:   */ &bcfi_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &bcfi_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bfi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -620,15 +620,15 @@ INTERN DeeTypeObject BytesFind_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&bf_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&bf_init,
-				TYPE_FIXED_ALLOCATOR(BytesFind)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ BytesFind,
+			/* tp_ctor:        */ &bf_ctor,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &bf_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bf_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -678,15 +678,15 @@ INTERN DeeTypeObject BytesCaseFind_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&bf_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&bf_init,
-				TYPE_FIXED_ALLOCATOR(BytesFind)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ BytesFind,
+			/* tp_ctor:        */ &bf_ctor,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &bf_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bf_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

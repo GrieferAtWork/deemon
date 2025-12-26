@@ -1277,17 +1277,15 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeCallable_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&function_init,
-				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL }, /* XXX: Use the tuple-allocator? (if somehow still possible with "CONFIG_EXPERIMENTAL_MMAP_DEC") */
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&function_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL, /* TODO */
+			/* tp_deep_ctor:   */ NULL, /* TODO */
+			/* tp_any_ctor:    */ &function_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &function_serialize,
+			/* tp_free:        */ NULL /* XXX: Use the tuple-allocator? (if somehow still possible with "CONFIG_EXPERIMENTAL_MMAP_DEC") */
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&function_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1856,17 +1854,15 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&yf_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&yf_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&yf_deepcopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL }, /* XXX: Use the tuple-allocator? (if somehow still possible with "CONFIG_EXPERIMENTAL_MMAP_DEC") */
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ NULL, // TODO: (Dee_funptr_t)&yf_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &yf_ctor,
+			/* tp_copy_ctor:   */ &yf_copy,
+			/* tp_deep_ctor:   */ &yf_deepcopy,
+			/* tp_any_ctor:    */ NULL, /* TODO */
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL, // TODO: &yf_serialize
+			/* tp_free:        */ NULL /* XXX: Use the tuple-allocator? (if somehow still possible with "CONFIG_EXPERIMENTAL_MMAP_DEC") */
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&yf_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -3119,15 +3115,15 @@ PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&yfi_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&yfi_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&yfi_new,
-				TYPE_FIXED_ALLOCATOR_GC(YFIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ YFIterator,
+			/* tp_ctor:        */ &yfi_ctor,
+			/* tp_copy_ctor:   */ &yfi_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &yfi_new,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&yfi_dtor,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

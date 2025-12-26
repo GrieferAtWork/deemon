@@ -356,15 +356,15 @@ INTERN DeeTypeObject SeqConcatIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&catiterator_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&catiterator_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&catiterator_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&catiterator_init,
-				TYPE_FIXED_ALLOCATOR_GC(CatIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ CatIterator,
+			/* tp_ctor:        */ &catiterator_ctor,
+			/* tp_copy_ctor:   */ &catiterator_copy,
+			/* tp_deep_ctor:   */ &catiterator_deep,
+			/* tp_any_ctor:    */ &catiterator_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&catiterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -402,8 +402,8 @@ INTDEF NONNULL((1)) void DCALL tuple_fini(DeeTupleObject *__restrict self);
 INTDEF NONNULL((1, 2)) void DCALL tuple_visit(DeeTupleObject *__restrict self, Dee_visit_t proc, void *arg);
 INTERN WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL tuple_serialize(DeeTupleObject *__restrict self, DeeSerial *__restrict writer);
 #define cat_serialize tuple_serialize
-#define cat_fini     tuple_fini
-#define cat_visit    tuple_visit
+#define cat_fini      tuple_fini
+#define cat_visit     tuple_visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF CatIterator *DCALL
 cat_iter(Cat *__restrict self) {
@@ -728,17 +728,15 @@ INTERN DeeTypeObject SeqConcat_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&cat_deepcopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_free      = */ (Dee_funptr_t)cat_tp_free_PTR, { NULL },
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&cat_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &DeeObject_NewRef,
+			/* tp_deep_ctor:   */ &cat_deepcopy,
+			/* tp_any_ctor:    */ NULL, /* TODO */
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &cat_serialize,
+			/* tp_free:        */ cat_tp_free_PTR
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cat_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

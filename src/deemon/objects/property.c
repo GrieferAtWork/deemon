@@ -595,17 +595,15 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ (Dee_funptr_t)&property_ctor,
-				/* .tp_copy_ctor   = */ (Dee_funptr_t)&property_copy,
-				/* .tp_deep_ctor   = */ (Dee_funptr_t)&property_deep,
-				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(Property),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&property_init_kw,
-				/* .tp_serialize = */ (Dee_funptr_t)&property_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ Property,
+			/* tp_ctor:        */ &property_ctor,
+			/* tp_copy_ctor:   */ &property_copy,
+			/* tp_deep_ctor:   */ &property_deep,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ &property_init_kw,
+			/* tp_serialize:   */ &property_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&property_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

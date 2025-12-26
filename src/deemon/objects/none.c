@@ -241,6 +241,7 @@ DeeNone_OperatorNe(DeeObject *UNUSED(self), DeeObject *other) {
 #define DeeNone_OperatorVarCtor    DeeNone_NewRef
 #define DeeNone_OperatorVarCopy    (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&_DeeNone_NewRef1)
 #define DeeNone_OperatorVarInit    (*(DREF DeeObject *(DCALL *)(size_t, DeeObject *const *))&_DeeNone_NewRef2)
+#define DeeNone_OperatorVarInitKw  (*(DREF DeeObject *(DCALL *)(size_t, DeeObject *const *, DeeObject *))&_DeeNone_NewRef3)
 #define DeeNone_OperatorInv        DeeNone_OperatorVarCopy
 #define DeeNone_OperatorPos        DeeNone_OperatorVarCopy
 #define DeeNone_OperatorNeg        DeeNone_OperatorVarCopy
@@ -999,14 +1000,15 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 	/* .tp_features = */ TF_SINGLETON | TF_KW,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&DeeNone_OperatorVarCtor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeNone_OperatorVarCopy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeNone_OperatorVarCopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&DeeNone_OperatorVarInit
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &DeeNone_OperatorVarCtor,
+			/* tp_copy_ctor:   */ &DeeNone_OperatorVarCopy,
+			/* tp_deep_ctor:   */ &DeeNone_OperatorVarCopy,
+			/* tp_any_ctor:    */ &DeeNone_OperatorVarInit,
+			/* tp_any_ctor_kw: */ &DeeNone_OperatorVarInitKw,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ &DeeNone_OperatorAssign,
 		/* .tp_move_assign = */ &DeeNone_OperatorMoveAssign,

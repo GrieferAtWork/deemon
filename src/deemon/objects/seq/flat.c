@@ -909,17 +909,15 @@ INTERN DeeTypeObject SeqFlat_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&sf_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&sf_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&sf_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&sf_init,
-				TYPE_FIXED_ALLOCATOR(SeqFlat),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&sf_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ SeqFlat,
+			/* tp_ctor:        */ &sf_ctor,
+			/* tp_copy_ctor:   */ &sf_copy,
+			/* tp_deep_ctor:   */ &sf_deep,
+			/* tp_any_ctor:    */ &sf_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &sf_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sf_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1302,15 +1300,15 @@ INTERN DeeTypeObject SeqFlatIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&sfi_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&sfi_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&sfi_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&sfi_init,
-				TYPE_FIXED_ALLOCATOR_GC(SeqFlatIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ SeqFlatIterator,
+			/* tp_ctor:        */ &sfi_ctor,
+			/* tp_copy_ctor:   */ &sfi_copy,
+			/* tp_deep_ctor:   */ &sfi_deep,
+			/* tp_any_ctor:    */ &sfi_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sfi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

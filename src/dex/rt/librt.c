@@ -918,15 +918,15 @@ my_custom_getitem(DeeObject *self, DeeObject *index) {
 		/* .tp_features = */ TF_NONE,                         \
 		/* .tp_base     = */ tp_base,                         \
 		/* .tp_init = */ {                                    \
-			{                                                 \
-				/* .tp_alloc = */ {                           \
-					/* .tp_ctor      = */ (Dee_funptr_t)NULL, \
-					/* .tp_copy_ctor = */ (Dee_funptr_t)NULL, \
-					/* .tp_deep_ctor = */ (Dee_funptr_t)NULL, \
-					/* .tp_any_ctor  = */ (Dee_funptr_t)NULL, \
-					TYPE_AUTO_ALLOCATOR(DeeObject)            \
-				}                                             \
-			},                                                \
+			Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO(             \
+				/* T:              */ DeeObject,              \
+				/* tp_ctor:        */ NULL,                   \
+				/* tp_copy_ctor:   */ NULL,                   \
+				/* tp_deep_ctor:   */ NULL,                   \
+				/* tp_any_ctor:    */ NULL,                   \
+				/* tp_any_ctor_kw: */ NULL,                   \
+				/* tp_serialize:   */ NULL                    \
+			),                                                \
 			/* .tp_dtor        = */ NULL,                     \
 			/* .tp_assign      = */ NULL,                     \
 			/* .tp_move_assign = */ NULL                      \
@@ -1535,15 +1535,15 @@ PRIVATE DeeTypeObject type_with_seq_enumerate = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_AUTO_ALLOCATOR(DeeObject)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO(
+			/* T:              */ DeeObject,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -1638,15 +1638,15 @@ PRIVATE DeeTypeObject type_with_map_enumerate = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_AUTO_ALLOCATOR(DeeObject)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO(
+			/* T:              */ DeeObject,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL

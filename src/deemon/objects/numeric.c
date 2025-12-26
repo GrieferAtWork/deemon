@@ -1982,17 +1982,15 @@ PUBLIC DeeTypeObject DeeNumeric_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&DeeNone_OperatorCtor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeNone_OperatorCopy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeNone_OperatorCopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR_S(DeeObject),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&DeeNone_OperatorWriteDec
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S(
+			/* T:              */ DeeObject,
+			/* tp_ctor:        */ &DeeNone_OperatorCtor,
+			/* tp_copy_ctor:   */ &DeeNone_OperatorCopy,
+			/* tp_deep_ctor:   */ &DeeNone_OperatorCopy,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &DeeNone_OperatorWriteDec
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

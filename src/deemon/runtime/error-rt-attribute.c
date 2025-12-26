@@ -1768,16 +1768,15 @@ PUBLIC DeeTypeObject DeeError_AttributeError = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeError_Error,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&AttributeError_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&AttributeError_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(AttributeError),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&AttributeError_init_kw,
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ AttributeError,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &AttributeError_copy,
+			/* tp_deep_ctor:   */ &AttributeError_deep,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ &AttributeError_init_kw,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&AttributeError_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1823,16 +1822,15 @@ PUBLIC DeeTypeObject DeeError_AttributeError = {
 		/* .tp_features = */ TF_NONE,                                       \
 		/* .tp_base     = */ tp_base,                                       \
 		/* .tp_init = */ {                                                  \
-			{                                                               \
-				/* .tp_alloc = */ {                                         \
-					/* .tp_ctor      = */ (Dee_funptr_t)NULL,               \
-					/* .tp_copy_ctor = */ (Dee_funptr_t)&AttributeError_copy, \
-					/* .tp_deep_ctor = */ (Dee_funptr_t)&AttributeError_deep, \
-					/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,               \
-					TYPE_FIXED_ALLOCATOR(AttributeError),                   \
-					/* .tp_any_ctor_kw = */ (Dee_funptr_t)&AttributeError_init_kw, \
-				}                                                           \
-			},                                                              \
+			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(                                \
+				/* T:              */ AttributeError,                       \
+				/* tp_ctor:        */ NULL,                                 \
+				/* tp_copy_ctor:   */ &AttributeError_copy,                 \
+				/* tp_deep_ctor:   */ &AttributeError_deep,                 \
+				/* tp_any_ctor:    */ NULL,                                 \
+				/* tp_any_ctor_kw: */ &AttributeError_init_kw,              \
+				/* tp_serialize:   */ NULL                                  \
+			),                                                              \
 			/* .tp_dtor        = */ NULL,                                   \
 			/* .tp_assign      = */ NULL,                                   \
 			/* .tp_move_assign = */ NULL                                    \

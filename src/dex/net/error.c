@@ -42,15 +42,15 @@ DECL_BEGIN
 		/* .tp_features = */ TF_NONE,                          \
 		/* .tp_base     = */ base,                             \
 		/* .tp_init = */ {                                     \
-			{                                                  \
-				/* .tp_alloc = */ {                            \
-					/* .tp_ctor      = */ (Dee_funptr_t)NULL,  \
-					/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,  \
-					/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,  \
-					/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,  \
-					TYPE_FIXED_ALLOCATOR(DeeSystemErrorObject) \
-				}                                              \
-			},                                                 \
+			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(                   \
+				/* T:              */ DeeSystemErrorObject,    \
+				/* tp_ctor:        */ NULL,                    \
+				/* tp_copy_ctor:   */ NULL,                    \
+				/* tp_deep_ctor:   */ NULL,                    \
+				/* tp_any_ctor:    */ NULL,                    \
+				/* tp_any_ctor_kw: */ NULL,                    \
+				/* tp_serialize:   */ NULL                     \
+			),                                                 \
 			/* .tp_dtor        = */ NULL,                      \
 			/* .tp_assign      = */ NULL,                      \
 			/* .tp_move_assign = */ NULL                       \

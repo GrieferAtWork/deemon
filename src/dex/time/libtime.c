@@ -3663,16 +3663,15 @@ INTERN DeeTypeObject DeeTime_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeNumeric_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ (Dee_funptr_t)&time_ctor,
-				/* .tp_copy_ctor   = */ (Dee_funptr_t)&time_copy,
-				/* .tp_deep_ctor   = */ (Dee_funptr_t)&time_copy,
-				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeTimeObject),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&time_init_kw,
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DeeTimeObject,
+			/* tp_ctor:        */ &time_ctor,
+			/* tp_copy_ctor:   */ &time_copy,
+			/* tp_deep_ctor:   */ &time_copy,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ &time_init_kw,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ (int(DCALL *)(DeeObject *__restric, DeeObject *__restrict))&time_assign,
 		/* .tp_move_assign = */ NULL

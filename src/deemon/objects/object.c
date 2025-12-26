@@ -2598,17 +2598,15 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ NULL,    /* No base */
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&DeeNone_OperatorCtor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeNone_OperatorCopy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeNone_OperatorCopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&object_any_ctor,
-				TYPE_FIXED_ALLOCATOR_S(DeeObject),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&DeeNone_OperatorWriteDec
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S(
+			/* T:              */ DeeObject,
+			/* tp_ctor:        */ &DeeNone_OperatorCtor,
+			/* tp_copy_ctor:   */ &DeeNone_OperatorCopy,
+			/* tp_deep_ctor:   */ &DeeNone_OperatorCopy,
+			/* tp_any_ctor:    */ &object_any_ctor,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &DeeNone_OperatorWriteDec
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -4830,15 +4828,15 @@ PUBLIC DeeTypeObject DeeType_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type, /* class Type: Object { ... } */
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&type_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR_GC(DeeTypeObject)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ DeeTypeObject,
+			/* tp_ctor:        */ &type_ctor,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&type_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

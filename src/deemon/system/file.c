@@ -245,14 +245,15 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
 		/* .tp_features = */ TF_NONE,
 		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
 		/* .tp_init = */ {
-			{
-				/* .tp_var = */ {
-					/* .tp_ctor      = */ (Dee_funptr_t)&debugfile_get,
-					/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-					/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-					/* .tp_any_ctor  = */ (Dee_funptr_t)NULL
-				}
-			},
+			Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+				/* tp_ctor:        */ &debugfile_get,
+				/* tp_copy_ctor:   */ &DeeObject_NewRef,
+				/* tp_deep_ctor:   */ &DeeObject_NewRef,
+				/* tp_any_ctor:    */ NULL,
+				/* tp_any_ctor_kw: */ NULL,
+				/* tp_serialize:   */ NULL,
+				/* tp_free:        */ NULL
+			),
 			/* .tp_dtor        = */ NULL,
 			/* .tp_assign      = */ NULL,
 			/* .tp_move_assign = */ NULL
@@ -3209,20 +3210,21 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_features = */ TF_NONLOOPING,
 		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
 		/* .tp_init = */ {
-			{
-				/* .tp_alloc = */ {
-					/* .tp_ctor        = */ (Dee_funptr_t)NULL,
-					/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL,
-					/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,
-					/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
-					TYPE_FIXED_ALLOCATOR(SystemFile),
 #ifdef deemon_file_HAVE_sysfile_init_kw
-					/* .tp_any_ctor_kw = */ (Dee_funptr_t)&sysfile_init_kw
+#define PTR_sysfile_init_kw &sysfile_init_kw
 #else /* deemon_file_HAVE_sysfile_init_kw */
-					/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL
+#define PTR_sysfile_init_kw NULL
 #endif /* !deemon_file_HAVE_sysfile_init_kw */
-				}
-			},
+			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+				/* T:              */ SystemFile,
+				/* tp_ctor:        */ NULL,
+				/* tp_copy_ctor:   */ NULL,
+				/* tp_deep_ctor:   */ NULL,
+				/* tp_any_ctor:    */ NULL,
+				/* tp_any_ctor_kw: */ PTR_sysfile_init_kw,
+				/* tp_serialize:   */ NULL
+			),
+#undef PTR_sysfile_init_kw
 #ifdef deemon_file_HAVE_sysfile_fini
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sysfile_fini,
 #else /* deemon_file_HAVE_sysfile_fini */
@@ -3306,15 +3308,15 @@ PUBLIC DeeFileTypeObject DeeFSFile_Type = {
 		/* .tp_features = */ TF_NONE,
 		/* .tp_base     = */ (DeeTypeObject *)&DeeSystemFile_Type,
 		/* .tp_init = */ {
-			{
-				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-					/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-					/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-					/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-					TYPE_FIXED_ALLOCATOR(SystemFile)
-				}
-			},
+			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+				/* T:              */ SystemFile,
+				/* tp_ctor:        */ NULL,
+				/* tp_copy_ctor:   */ NULL,
+				/* tp_deep_ctor:   */ NULL,
+				/* tp_any_ctor:    */ NULL,
+				/* tp_any_ctor_kw: */ NULL,
+				/* tp_serialize:   */ NULL
+			),
 			/* .tp_dtor        = */ NULL,
 			/* .tp_assign      = */ NULL,
 			/* .tp_move_assign = */ NULL

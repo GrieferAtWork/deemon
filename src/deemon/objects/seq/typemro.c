@@ -249,14 +249,14 @@ PRIVATE struct type_nii tpconst typemroiter_nii = {
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (Dee_funptr_t)&typemroiter_nii_getseq,
-			/* .nii_getindex = */ (Dee_funptr_t)NULL,
-			/* .nii_setindex = */ (Dee_funptr_t)NULL,
+			/* .nii_getindex = */ NULL,
+			/* .nii_setindex = */ NULL,
 			/* .nii_rewind   = */ (Dee_funptr_t)&typemroiter_nii_rewind,
-			/* .nii_revert   = */ (Dee_funptr_t)NULL,
-			/* .nii_advance  = */ (Dee_funptr_t)NULL,
-			/* .nii_prev     = */ (Dee_funptr_t)NULL,
-			/* .nii_next     = */ (Dee_funptr_t)NULL,
-			/* .nii_hasprev  = */ (Dee_funptr_t)NULL,
+			/* .nii_revert   = */ NULL,
+			/* .nii_advance  = */ NULL,
+			/* .nii_prev     = */ NULL,
+			/* .nii_next     = */ NULL,
+			/* .nii_hasprev  = */ NULL,
 			/* .nii_peek     = */ (Dee_funptr_t)&typemroiter_nii_peek
 		}
 	}
@@ -268,14 +268,14 @@ PRIVATE struct type_nii tpconst typebasesiter_nii = {
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (Dee_funptr_t)&typebasesiter_nii_getseq,
-			/* .nii_getindex = */ (Dee_funptr_t)NULL,
-			/* .nii_setindex = */ (Dee_funptr_t)NULL,
+			/* .nii_getindex = */ NULL,
+			/* .nii_setindex = */ NULL,
 			/* .nii_rewind   = */ (Dee_funptr_t)&typebasesiter_nii_rewind,
-			/* .nii_revert   = */ (Dee_funptr_t)NULL,
-			/* .nii_advance  = */ (Dee_funptr_t)NULL,
-			/* .nii_prev     = */ (Dee_funptr_t)NULL,
-			/* .nii_next     = */ (Dee_funptr_t)NULL,
-			/* .nii_hasprev  = */ (Dee_funptr_t)NULL,
+			/* .nii_revert   = */ NULL,
+			/* .nii_advance  = */ NULL,
+			/* .nii_prev     = */ NULL,
+			/* .nii_next     = */ NULL,
+			/* .nii_hasprev  = */ NULL,
 			/* .nii_peek     = */ (Dee_funptr_t)&typebasesiter_nii_peek
 		}
 	}
@@ -339,15 +339,15 @@ INTERN DeeTypeObject TypeMROIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&typemroiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&typemroiter_init,
-				TYPE_FIXED_ALLOCATOR(TypeMROIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ TypeMROIterator,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &typemroiter_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &typemroiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&typemroiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -390,15 +390,15 @@ INTERN DeeTypeObject TypeBasesIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&typebasesiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&typebasesiter_init,
-				TYPE_FIXED_ALLOCATOR(TypeMROIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ TypeMROIterator,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &typebasesiter_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &typebasesiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&typebasesiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -765,17 +765,15 @@ INTERN DeeTypeObject TypeMRO_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&typemro_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&typemro_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&typemro_init,
-				TYPE_FIXED_ALLOCATOR(TypeMRO),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&typemro_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ TypeMRO,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &typemro_copy,
+			/* tp_deep_ctor:   */ &typemro_deep,
+			/* tp_any_ctor:    */ &typemro_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &typemro_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&typemro_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -817,17 +815,15 @@ INTERN DeeTypeObject TypeBases_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&typebases_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&typebases_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&typebases_init,
-				TYPE_FIXED_ALLOCATOR(TypeMRO),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&typebases_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ TypeMRO,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &typebases_copy,
+			/* tp_deep_ctor:   */ &typebases_deep,
+			/* tp_any_ctor:    */ &typebases_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &typebases_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&typebases_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

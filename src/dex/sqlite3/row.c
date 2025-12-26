@@ -160,15 +160,15 @@ INTERN DeeTypeObject CellFmt_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL, /* TODO */
-				TYPE_FIXED_ALLOCATOR(CellFmt),
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ CellFmt,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL, /* TODO */
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL, /* TODO */
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ob_cellfmt_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -299,15 +299,15 @@ INTERN DeeTypeObject RowFmtColumns_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL, /* TODO */
-				TYPE_FIXED_ALLOCATOR(RowFmtColumns),
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ RowFmtColumns,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL, /* TODO */
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL, /* TODO */
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rowfmtcolumns_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -543,15 +543,15 @@ INTERN DeeTypeObject RowFmt_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				/* .tp_free      = */ (Dee_funptr_t)NULL,
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rowfmt_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -1007,15 +1007,15 @@ INTERN DeeTypeObject Row_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(Row),
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ Row,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&row_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL

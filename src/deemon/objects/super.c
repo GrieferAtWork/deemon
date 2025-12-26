@@ -1286,17 +1286,15 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&super_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&super_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&super_deepcopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&super_init,
-				TYPE_FIXED_ALLOCATOR(Super),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&super_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ Super,
+			/* tp_ctor:        */ &super_ctor,
+			/* tp_copy_ctor:   */ &super_copy,
+			/* tp_deep_ctor:   */ &super_deepcopy,
+			/* tp_any_ctor:    */ &super_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &super_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&super_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_moveassign,

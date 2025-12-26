@@ -1045,15 +1045,15 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&tuple_iterator_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&tuple_iterator_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&tuple_iterator_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&tuple_iterator_init,
-				TYPE_FIXED_ALLOCATOR(TupleIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ TupleIterator,
+			/* tp_ctor:        */ &tuple_iterator_ctor,
+			/* tp_copy_ctor:   */ &tuple_iterator_copy,
+			/* tp_deep_ctor:   */ &tuple_iterator_deep,
+			/* tp_any_ctor:    */ &tuple_iterator_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&tuple_iterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -2289,17 +2289,15 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&tuple_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&tuple_deepcopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&tuple_init,
-				/* .tp_free      = */ (Dee_funptr_t)tuple_tp_free_PTR, { NULL },
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&tuple_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &tuple_ctor,
+			/* tp_copy_ctor:   */ &DeeObject_NewRef,
+			/* tp_deep_ctor:   */ &tuple_deepcopy,
+			/* tp_any_ctor:    */ &tuple_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &tuple_serialize,
+			/* tp_free:        */ tuple_tp_free_PTR
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&tuple_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -2717,17 +2715,15 @@ PUBLIC DeeTypeObject DeeNullableTuple_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&nullable_tuple_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&nullable_tuple_deepcopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&nullable_tuple_init,
-				/* .tp_free      = */ (Dee_funptr_t)tuple_tp_free_PTR, { NULL },
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&nullable_tuple_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &nullable_tuple_ctor,
+			/* tp_copy_ctor:   */ &DeeObject_NewRef,
+			/* tp_deep_ctor:   */ &nullable_tuple_deepcopy,
+			/* tp_any_ctor:    */ &nullable_tuple_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &nullable_tuple_serialize,
+			/* tp_free:        */ tuple_tp_free_PTR
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&nullable_tuple_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

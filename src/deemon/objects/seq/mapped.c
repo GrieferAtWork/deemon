@@ -171,15 +171,15 @@ INTERN DeeTypeObject SeqMappedIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&mappediter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&mappediter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&mappediter_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&mappediter_init,
-				TYPE_FIXED_ALLOCATOR(SeqMappedIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ SeqMappedIterator,
+			/* tp_ctor:        */ &mappediter_ctor,
+			/* tp_copy_ctor:   */ &mappediter_copy,
+			/* tp_deep_ctor:   */ &mappediter_deep,
+			/* tp_any_ctor:    */ &mappediter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mappediter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -662,17 +662,15 @@ INTERN DeeTypeObject SeqMapped_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&mapped_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&mapped_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&mapped_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&mapped_init,
-				TYPE_FIXED_ALLOCATOR(SeqMapped),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&mapped_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ SeqMapped,
+			/* tp_ctor:        */ &mapped_ctor,
+			/* tp_copy_ctor:   */ &mapped_copy,
+			/* tp_deep_ctor:   */ &mapped_deep,
+			/* tp_any_ctor:    */ &mapped_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &mapped_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mapped_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

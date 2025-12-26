@@ -1044,8 +1044,8 @@ PRIVATE struct type_nii tpconst rbtreeiter_nii = {
 			/* .nii_getindex = */ (Dee_funptr_t)&rbtreeiter_nii_getindex,
 			/* .nii_setindex = */ (Dee_funptr_t)&rbtreeiter_nii_setindex,
 			/* .nii_rewind   = */ (Dee_funptr_t)&rbtreeiter_nii_rewind,
-			/* .nii_revert   = */ (Dee_funptr_t)NULL,
-			/* .nii_advance  = */ (Dee_funptr_t)NULL,
+			/* .nii_revert   = */ NULL,
+			/* .nii_advance  = */ NULL,
 			/* .nii_prev     = */ (Dee_funptr_t)&rbtreeiter_nii_prev,
 			/* .nii_next     = */ (Dee_funptr_t)&rbtreeiter_nii_next,
 			/* .nii_hasprev  = */ (Dee_funptr_t)&rbtreeiter_nii_hasprev,
@@ -1128,15 +1128,15 @@ INTERN DeeTypeObject RBTreeIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&rbtreeiter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&rbtreeiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&rbtreeiter_init,
-				TYPE_FIXED_ALLOCATOR(RBTreeIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ RBTreeIterator,
+			/* tp_ctor:        */ &rbtreeiter_ctor,
+			/* tp_copy_ctor:   */ &rbtreeiter_copy,
+			/* tp_deep_ctor:   */ NULL, /* TODO */
+			/* tp_any_ctor:    */ &rbtreeiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rbtreeiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -3653,15 +3653,15 @@ INTERN DeeTypeObject RBTree_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &RangeMap_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&rbtree_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&rbtree_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&rbtree_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&rbtree_init,
-				TYPE_FIXED_ALLOCATOR_GC(RBTree)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ RBTree,
+			/* tp_ctor:        */ &rbtree_ctor,
+			/* tp_copy_ctor:   */ &rbtree_copy,
+			/* tp_deep_ctor:   */ &rbtree_copy,
+			/* tp_any_ctor:    */ &rbtree_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rbtree_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&rbtree_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&rbtree_move_assign,

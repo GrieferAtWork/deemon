@@ -224,15 +224,15 @@ INTERN DeeFileTypeObject DeePipe_Type = {
 		/* .tp_features = */ TF_NONE,
 		/* .tp_base     = */ (DeeTypeObject *)&DeeSystemFile_Type,
 		/* .tp_init = */ {
-			{
-				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-					/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-					/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-					/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-					TYPE_FIXED_ALLOCATOR(DeeSystemFileObject)
-				}
-			},
+			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+				/* T:              */ DeeSystemFileObject,
+				/* tp_ctor:        */ NULL,
+				/* tp_copy_ctor:   */ NULL,
+				/* tp_deep_ctor:   */ NULL,
+				/* tp_any_ctor:    */ NULL,
+				/* tp_any_ctor_kw: */ NULL,
+				/* tp_serialize:   */ NULL
+			),
 			/* .tp_dtor        = */ NULL,
 			/* .tp_assign      = */ NULL,
 			/* .tp_move_assign = */ NULL
@@ -282,15 +282,15 @@ INTERN DeeFileTypeObject DeePipeReader_Type = {
 		/* .tp_features = */ TF_NONE,
 		/* .tp_base     = */ (DeeTypeObject *)&DeePipe_Type,
 		/* .tp_init = */ {
-			{
-				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-					/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-					/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-					/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-					TYPE_FIXED_ALLOCATOR(DeeSystemFileObject)
-				}
-			},
+			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+				/* T:              */ DeeSystemFileObject,
+				/* tp_ctor:        */ NULL,
+				/* tp_copy_ctor:   */ NULL,
+				/* tp_deep_ctor:   */ NULL,
+				/* tp_any_ctor:    */ NULL,
+				/* tp_any_ctor_kw: */ NULL,
+				/* tp_serialize:   */ NULL
+			),
 			/* .tp_dtor        = */ NULL,
 			/* .tp_assign      = */ NULL,
 			/* .tp_move_assign = */ NULL
@@ -340,15 +340,15 @@ INTERN DeeFileTypeObject DeePipeWriter_Type = {
 		/* .tp_features = */ TF_NONE,
 		/* .tp_base     = */ (DeeTypeObject *)&DeePipe_Type,
 		/* .tp_init = */ {
-			{
-				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-					/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-					/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-					/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-					TYPE_FIXED_ALLOCATOR(DeeSystemFileObject)
-				}
-			},
+			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+				/* T:              */ DeeSystemFileObject,
+				/* tp_ctor:        */ NULL,
+				/* tp_copy_ctor:   */ NULL,
+				/* tp_deep_ctor:   */ NULL,
+				/* tp_any_ctor:    */ NULL,
+				/* tp_any_ctor_kw: */ NULL,
+				/* tp_serialize:   */ NULL
+			),
 			/* .tp_dtor        = */ NULL,
 			/* .tp_assign      = */ NULL,
 			/* .tp_move_assign = */ NULL

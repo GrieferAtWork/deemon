@@ -365,15 +365,15 @@ INTERN DeeTypeObject DeeStructType_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSType_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&struct_type_new_empty,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&struct_type_init,
-				/* .tp_free      = */ (Dee_funptr_t)NULL
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &struct_type_new_empty,
+			/* tp_copy_ctor:   */ &DeeObject_NewRef,
+			/* tp_deep_ctor:   */ &DeeObject_NewRef,
+			/* tp_any_ctor:    */ &struct_type_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&struct_type_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -673,23 +673,23 @@ INTERN struct empty_struct_type_object DeeStruct_Type = {
 			/* .tp_features = */ TF_NONE,
 			/* .tp_base     = */ DeeSType_AsType(&DeeStructured_Type),
 			/* .tp_init = */ {
-				{
-					/* .tp_alloc = */ {
-						/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-						/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-						/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-						/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-						TYPE_FIXED_ALLOCATOR_S(DeeObject)
-					}
-				},
+				Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S(
+					/* T:              */ DeeObject,
+					/* tp_ctor:        */ NULL,
+					/* tp_copy_ctor:   */ NULL,
+					/* tp_deep_ctor:   */ NULL,
+					/* tp_any_ctor:    */ NULL,
+					/* tp_any_ctor_kw: */ NULL,
+					/* tp_serialize:   */ NULL
+				),
 				/* .tp_dtor        = */ NULL,
 				/* .tp_assign      = */ NULL,
 				/* .tp_move_assign = */ NULL
 			},
 			/* .tp_cast = */ {
-				/* .tp_str  = */ NULL,
-				/* .tp_repr = */ NULL,
-				/* .tp_bool = */ NULL
+			/* .tp_str  = */ NULL,
+			/* .tp_repr = */ NULL,
+			/* .tp_bool = */ NULL
 			},
 			/* .tp_visit         = */ NULL,
 			/* .tp_gc            = */ NULL,

@@ -229,12 +229,12 @@ PRIVATE struct type_nii tpconst funcstaticsiter_nii = {
 			/* .nii_getindex = */ (Dee_funptr_t)&funcstaticsiter_nii_getindex,
 			/* .nii_setindex = */ (Dee_funptr_t)&funcstaticsiter_nii_setindex,
 			/* .nii_rewind   = */ (Dee_funptr_t)&funcstaticsiter_nii_rewind,
-			/* .nii_revert   = */ (Dee_funptr_t)NULL,
-			/* .nii_advance  = */ (Dee_funptr_t)NULL,
-			/* .nii_prev     = */ (Dee_funptr_t)NULL,
-			/* .nii_next     = */ (Dee_funptr_t)NULL,
-			/* .nii_hasprev  = */ (Dee_funptr_t)NULL,
-			/* .nii_peek     = */ (Dee_funptr_t)NULL,
+			/* .nii_revert   = */ NULL,
+			/* .nii_advance  = */ NULL,
+			/* .nii_prev     = */ NULL,
+			/* .nii_next     = */ NULL,
+			/* .nii_hasprev  = */ NULL,
+			/* .nii_peek     = */ NULL,
 		}
 	}
 };
@@ -274,15 +274,15 @@ INTERN DeeTypeObject FunctionStaticsIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&funcstaticsiter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&funcstaticsiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&funcstaticsiter_init,
-				TYPE_FIXED_ALLOCATOR(FunctionStaticsIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ FunctionStaticsIterator,
+			/* tp_ctor:        */ &funcstaticsiter_ctor,
+			/* tp_copy_ctor:   */ &funcstaticsiter_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &funcstaticsiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&funcstaticsiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -587,15 +587,15 @@ INTERN DeeTypeObject FunctionStatics_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&funcstatics_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&funcstatics_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&funcstatics_init,
-				TYPE_FIXED_ALLOCATOR(FunctionStatics)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ FunctionStatics,
+			/* tp_ctor:        */ &funcstatics_ctor,
+			/* tp_copy_ctor:   */ &funcstatics_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &funcstatics_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&funcstatics_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -902,12 +902,12 @@ PRIVATE struct type_nii tpconst funcsymbolsbynameiter_nii = {
 			/* .nii_getindex = */ (Dee_funptr_t)&funcsymbolsbynameiter_nii_getindex,
 			/* .nii_setindex = */ (Dee_funptr_t)&funcsymbolsbynameiter_nii_setindex,
 			/* .nii_rewind   = */ (Dee_funptr_t)&funcsymbolsbynameiter_nii_rewind,
-			/* .nii_revert   = */ (Dee_funptr_t)NULL,
-			/* .nii_advance  = */ (Dee_funptr_t)NULL,
-			/* .nii_prev     = */ (Dee_funptr_t)NULL,
-			/* .nii_next     = */ (Dee_funptr_t)NULL,
-			/* .nii_hasprev  = */ (Dee_funptr_t)NULL,
-			/* .nii_peek     = */ (Dee_funptr_t)NULL,
+			/* .nii_revert   = */ NULL,
+			/* .nii_advance  = */ NULL,
+			/* .nii_prev     = */ NULL,
+			/* .nii_next     = */ NULL,
+			/* .nii_hasprev  = */ NULL,
+			/* .nii_peek     = */ NULL,
 		}
 	}
 };
@@ -943,15 +943,15 @@ INTERN DeeTypeObject FunctionSymbolsByNameIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&funcsymbolsbynameiter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&funcsymbolsbynameiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&funcsymbolsbynameiter_init,
-				TYPE_FIXED_ALLOCATOR(FunctionSymbolsByNameIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ FunctionSymbolsByNameIterator,
+			/* tp_ctor:        */ &funcsymbolsbynameiter_ctor,
+			/* tp_copy_ctor:   */ &funcsymbolsbynameiter_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &funcsymbolsbynameiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&funcsymbolsbynameiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -993,15 +993,15 @@ INTERN DeeTypeObject FunctionSymbolsByNameKeysIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&funcsymbolsbynameiter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&funcsymbolsbynameiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&funcsymbolsbynameiter_init,
-				TYPE_FIXED_ALLOCATOR(FunctionSymbolsByNameIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ FunctionSymbolsByNameIterator,
+			/* tp_ctor:        */ &funcsymbolsbynameiter_ctor,
+			/* tp_copy_ctor:   */ &funcsymbolsbynameiter_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &funcsymbolsbynameiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&funcsymbolsbynameiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1725,16 +1725,15 @@ INTERN DeeTypeObject FunctionSymbolsByName_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&funcsymbolsbyname_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&funcsymbolsbyname_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(FunctionSymbolsByName),
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&funcsymbolsbyname_init_kw,
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ FunctionSymbolsByName,
+			/* tp_ctor:        */ &funcsymbolsbyname_ctor,
+			/* tp_copy_ctor:   */ &funcsymbolsbyname_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ &funcsymbolsbyname_init_kw,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -2241,12 +2240,12 @@ PRIVATE struct type_nii tpconst yfuncsymbolsbynameiter_nii = {
 			/* .nii_getindex = */ (Dee_funptr_t)&yfuncsymbolsbynameiter_nii_getindex,
 			/* .nii_setindex = */ (Dee_funptr_t)&yfuncsymbolsbynameiter_nii_setindex,
 			/* .nii_rewind   = */ (Dee_funptr_t)&yfuncsymbolsbynameiter_nii_rewind,
-			/* .nii_revert   = */ (Dee_funptr_t)NULL,
-			/* .nii_advance  = */ (Dee_funptr_t)NULL,
-			/* .nii_prev     = */ (Dee_funptr_t)NULL,
-			/* .nii_next     = */ (Dee_funptr_t)NULL,
-			/* .nii_hasprev  = */ (Dee_funptr_t)NULL,
-			/* .nii_peek     = */ (Dee_funptr_t)NULL,
+			/* .nii_revert   = */ NULL,
+			/* .nii_advance  = */ NULL,
+			/* .nii_prev     = */ NULL,
+			/* .nii_next     = */ NULL,
+			/* .nii_hasprev  = */ NULL,
+			/* .nii_peek     = */ NULL,
 		}
 	}
 };
@@ -2302,15 +2301,15 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&yfuncsymbolsbynameiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&yfuncsymbolsbynameiter_init,
-				TYPE_FIXED_ALLOCATOR(YieldFunctionSymbolsByNameIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ YieldFunctionSymbolsByNameIterator,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &yfuncsymbolsbynameiter_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &yfuncsymbolsbynameiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbynameiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -2355,15 +2354,15 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameKeysIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&yfuncsymbolsbynameiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&yfuncsymbolsbynameiter_init,
-				TYPE_FIXED_ALLOCATOR(YieldFunctionSymbolsByNameIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ YieldFunctionSymbolsByNameIterator,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &yfuncsymbolsbynameiter_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &yfuncsymbolsbynameiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbynameiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -2939,16 +2938,15 @@ INTERN DeeTypeObject YieldFunctionSymbolsByName_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&yfuncsymbolsbyname_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&yfuncsymbolsbyname_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(YieldFunctionSymbolsByName),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&yfuncsymbolsbyname_init_kw
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ YieldFunctionSymbolsByName,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &yfuncsymbolsbyname_copy,
+			/* tp_deep_ctor:   */ &yfuncsymbolsbyname_deep,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ &yfuncsymbolsbyname_init_kw,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -3207,15 +3205,15 @@ INTERN DeeTypeObject FrameArgs_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&frameargs_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&frameargs_init,
-				TYPE_FIXED_ALLOCATOR(FrameArgs)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ FrameArgs,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &frameargs_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &frameargs_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&frameargs_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -3548,15 +3546,15 @@ INTERN DeeTypeObject FrameLocals_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&framelocals_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&framelocals_init,
-				TYPE_FIXED_ALLOCATOR(FrameLocals)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ FrameLocals,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &framelocals_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &framelocals_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&framelocals_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -3976,15 +3974,15 @@ INTERN DeeTypeObject FrameStack_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&framestack_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&framestack_init,
-				TYPE_FIXED_ALLOCATOR(FrameStack)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ FrameStack,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &framestack_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &framestack_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&framestack_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -4684,12 +4682,12 @@ PRIVATE struct type_nii tpconst framesymbolsbynameiter_nii = {
 			/* .nii_getindex = */ (Dee_funptr_t)&framesymbolsbynameiter_nii_getindex,
 			/* .nii_setindex = */ (Dee_funptr_t)&framesymbolsbynameiter_nii_setindex,
 			/* .nii_rewind   = */ (Dee_funptr_t)&framesymbolsbynameiter_nii_rewind,
-			/* .nii_revert   = */ (Dee_funptr_t)NULL,
-			/* .nii_advance  = */ (Dee_funptr_t)NULL,
-			/* .nii_prev     = */ (Dee_funptr_t)NULL,
-			/* .nii_next     = */ (Dee_funptr_t)NULL,
-			/* .nii_hasprev  = */ (Dee_funptr_t)NULL,
-			/* .nii_peek     = */ (Dee_funptr_t)NULL,
+			/* .nii_revert   = */ NULL,
+			/* .nii_advance  = */ NULL,
+			/* .nii_prev     = */ NULL,
+			/* .nii_next     = */ NULL,
+			/* .nii_hasprev  = */ NULL,
+			/* .nii_peek     = */ NULL,
 		}
 	}
 };
@@ -4732,15 +4730,15 @@ INTERN DeeTypeObject FrameSymbolsByNameIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&framesymbolsbynameiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&framesymbolsbynameiter_init,
-				TYPE_FIXED_ALLOCATOR(FrameSymbolsByNameIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ FrameSymbolsByNameIterator,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &framesymbolsbynameiter_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &framesymbolsbynameiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&framesymbolsbynameiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -4782,15 +4780,15 @@ INTERN DeeTypeObject FrameSymbolsByNameKeysIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&framesymbolsbynameiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&framesymbolsbynameiter_init,
-				TYPE_FIXED_ALLOCATOR(FrameSymbolsByNameIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ FrameSymbolsByNameIterator,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &framesymbolsbynameiter_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &framesymbolsbynameiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&framesymbolsbynameiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -5566,16 +5564,15 @@ INTERN DeeTypeObject FrameSymbolsByName_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&framesymbolsbyname_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(FrameSymbolsByName),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&framesymbolsbyname_init_kw
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ FrameSymbolsByName,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &framesymbolsbyname_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ &framesymbolsbyname_init_kw,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&framesymbolsbyname_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

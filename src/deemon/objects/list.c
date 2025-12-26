@@ -4372,17 +4372,15 @@ PUBLIC DeeTypeObject DeeList_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&list_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&list_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&list_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&list_init,
-				TYPE_FIXED_ALLOCATOR_GC(List),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&list_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ List,
+			/* tp_ctor:        */ &list_ctor,
+			/* tp_copy_ctor:   */ &list_copy,
+			/* tp_deep_ctor:   */ &list_copy,
+			/* tp_any_ctor:    */ &list_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &list_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&list_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&list_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&list_moveassign,
@@ -4672,17 +4670,15 @@ INTERN DeeTypeObject DeeListIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&li_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&li_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&li_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&li_init,
-				TYPE_FIXED_ALLOCATOR(ListIterator),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&li_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ ListIterator,
+			/* tp_ctor:        */ &li_ctor,
+			/* tp_copy_ctor:   */ &li_copy,
+			/* tp_deep_ctor:   */ &li_deep,
+			/* tp_any_ctor:    */ &li_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &li_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&li_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

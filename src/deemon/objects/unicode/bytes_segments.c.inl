@@ -161,15 +161,15 @@ INTERN DeeTypeObject BytesSegmentsIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&bsegiter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&bsegiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&bsegiter_init,
-				TYPE_FIXED_ALLOCATOR(BytesSegmentsIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ BytesSegmentsIterator,
+			/* tp_ctor:        */ &bsegiter_ctor,
+			/* tp_copy_ctor:   */ &bsegiter_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &bsegiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bsegiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -415,15 +415,15 @@ INTERN DeeTypeObject BytesSegments_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&bseg_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&bseg_init,
-				TYPE_FIXED_ALLOCATOR(BytesSegments)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ BytesSegments,
+			/* tp_ctor:        */ &bseg_ctor,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &bseg_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bseg_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

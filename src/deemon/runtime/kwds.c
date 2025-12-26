@@ -280,15 +280,15 @@ INTERN DeeTypeObject DeeKwdsIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&kwdsiter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&kwdsiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&kwdsiter_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&kwdsiter_init,
-				TYPE_FIXED_ALLOCATOR(KwdsIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ KwdsIterator,
+			/* tp_ctor:        */ &kwdsiter_ctor,
+			/* tp_copy_ctor:   */ &kwdsiter_copy,
+			/* tp_deep_ctor:   */ &kwdsiter_deep,
+			/* tp_any_ctor:    */ &kwdsiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kwdsiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -798,17 +798,15 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 	/* .tp_features = */ TF_NONLOOPING | TF_KW, /* Instances of this type are allowed in "kw" arguments. */
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&kwds_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&kwds_init,
-				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&kwds_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &kwds_ctor,
+			/* tp_copy_ctor:   */ &DeeObject_NewRef,
+			/* tp_deep_ctor:   */ &DeeObject_NewRef,
+			/* tp_any_ctor:    */ &kwds_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &kwds_serialize,
+			/* tp_free:        */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kwds_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1072,15 +1070,15 @@ PRIVATE DeeTypeObject DeeKwdsMappingIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&kmapiter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&kmapiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&kmapiter_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&kmapiter_init,
-				TYPE_FIXED_ALLOCATOR(KmapIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ KmapIterator,
+			/* tp_ctor:        */ &kmapiter_ctor,
+			/* tp_copy_ctor:   */ &kmapiter_copy,
+			/* tp_deep_ctor:   */ &kmapiter_deep,
+			/* tp_any_ctor:    */ &kmapiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kmapiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1525,15 +1523,15 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
 	/* .tp_features = */ TF_KW,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&kmap_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&kmap_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&kmap_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&kmap_init,
-				/* .tp_free      = */ (Dee_funptr_t)NULL
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &kmap_ctor,
+			/* tp_copy_ctor:   */ &kmap_copy,
+			/* tp_deep_ctor:   */ &kmap_deep,
+			/* tp_any_ctor:    */ &kmap_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kmap_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

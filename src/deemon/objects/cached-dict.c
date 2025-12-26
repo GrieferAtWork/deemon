@@ -1154,17 +1154,15 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 	/* .tp_features = */ TF_KW,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&cdict_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&cdict_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&cdict_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&cdict_init,
-				TYPE_FIXED_ALLOCATOR_GC(CachedDict),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&cdict_serialize,
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ CachedDict,
+			/* tp_ctor:        */ &cdict_ctor,
+			/* tp_copy_ctor:   */ &cdict_copy,
+			/* tp_deep_ctor:   */ &cdict_copy,
+			/* tp_any_ctor:    */ &cdict_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &cdict_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cdict_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

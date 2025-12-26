@@ -423,16 +423,15 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ (Dee_funptr_t)&ob_weakref_ctor,
-				/* .tp_copy_ctor   = */ (Dee_funptr_t)&ob_weakref_copy,
-				/* .tp_deep_ctor   = */ (Dee_funptr_t)&ob_weakref_deep,
-				/* .tp_any_ctor    = */ (Dee_funptr_t)&ob_weakref_init,
-				TYPE_FIXED_ALLOCATOR(WeakRef),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&ob_weakref_init_kw
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ WeakRef,
+			/* tp_ctor:        */ &ob_weakref_ctor,
+			/* tp_copy_ctor:   */ &ob_weakref_copy,
+			/* tp_deep_ctor:   */ &ob_weakref_deep,
+			/* tp_any_ctor:    */ &ob_weakref_init,
+			/* tp_any_ctor_kw: */ &ob_weakref_init_kw,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ob_weakref_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&ob_weakref_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&ob_weakref_moveassign,
@@ -511,15 +510,15 @@ PUBLIC DeeTypeObject DeeWeakRefAble_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&weakrefable_init,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&weakrefable_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&weakrefable_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(WeakRefAble)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ WeakRefAble,
+			/* tp_ctor:        */ &weakrefable_init,
+			/* tp_copy_ctor:   */ &weakrefable_copy,
+			/* tp_deep_ctor:   */ &weakrefable_copy,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&weakrefable_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&weakrefable_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&weakrefable_moveassign,

@@ -633,17 +633,15 @@ PUBLIC DeeTypeObject DeeCell_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&cell_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&cell_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&cell_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&cell_init,
-				TYPE_FIXED_ALLOCATOR_GC(DeeCellObject),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&cell_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ DeeCellObject,
+			/* tp_ctor:        */ &cell_ctor,
+			/* tp_copy_ctor:   */ &cell_copy,
+			/* tp_deep_ctor:   */ &cell_copy,
+			/* tp_any_ctor:    */ &cell_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &cell_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cell_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&cell_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&cell_moveassign,

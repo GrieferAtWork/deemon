@@ -428,14 +428,15 @@ PUBLIC DeeTypeObject DeeBool_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeNumeric_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&bool_return_false,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&bool_new
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &bool_return_false,
+			/* tp_copy_ctor:   */ &DeeObject_NewRef,
+			/* tp_deep_ctor:   */ &DeeObject_NewRef,
+			/* tp_any_ctor:    */ &bool_new,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

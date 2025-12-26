@@ -1417,15 +1417,15 @@ INTERN DeeTypeObject HashSetIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&hashsetiterator_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&hashsetiterator_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&hashsetiterator_init,
-				TYPE_FIXED_ALLOCATOR(HashSetIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ HashSetIterator,
+			/* tp_ctor:        */ &hashsetiterator_ctor,
+			/* tp_copy_ctor:   */ &hashsetiterator_copy,
+			/* tp_deep_ctor:   */ NULL, /* TODO */
+			/* tp_any_ctor:    */ &hashsetiterator_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&hashsetiterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1958,17 +1958,15 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSet_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&hashset_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&hashset_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&hashset_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&hashset_init,
-				TYPE_FIXED_ALLOCATOR_GC(HashSet),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&hashset_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ HashSet,
+			/* tp_ctor:        */ &hashset_ctor,
+			/* tp_copy_ctor:   */ &hashset_copy,
+			/* tp_deep_ctor:   */ &hashset_copy,
+			/* tp_any_ctor:    */ &hashset_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &hashset_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&hashset_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

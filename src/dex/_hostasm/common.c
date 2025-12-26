@@ -67,10 +67,10 @@ INTERN struct memequiv const memequivs_dummy_list[1] = {
 	/* [0] = */ {
 		/* .meq_loc = */ {
 			/* .ml_adr = */ {
-				/* .ma_typ  = */ MEMEQUIV_TYPE_UNUSED,
-				/* .ma_reg  = */ 0,
-				/* ._ma_zro = */ { 0, },
-				/* .ma_val  = */ { 0 },
+			/* .ma_typ  = */ MEMEQUIV_TYPE_UNUSED,
+			/* .ma_reg  = */ 0,
+			/* ._ma_zro = */ { 0, },
+			/* .ma_val  = */ { 0 },
 			},
 			/* .ml_off = */ 0,
 		},

@@ -211,15 +211,15 @@ INTERN DeeTypeObject USetIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&usetiterator_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&usetiterator_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&usetiterator_init,
-				TYPE_FIXED_ALLOCATOR(USetIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ USetIterator,
+			/* tp_ctor:        */ &usetiterator_ctor,
+			/* tp_copy_ctor:   */ &usetiterator_copy,
+			/* tp_deep_ctor:   */ NULL, /* TODO */
+			/* tp_any_ctor:    */ &usetiterator_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&usetiterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -1273,15 +1273,15 @@ INTERN DeeTypeObject USet_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSet_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&USet_InitEmpty,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&USet_InitCopy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&USet_InitCopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&uset_init,
-				TYPE_FIXED_ALLOCATOR_GC(USet)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ USet,
+			/* tp_ctor:        */ &USet_InitEmpty,
+			/* tp_copy_ctor:   */ &USet_InitCopy,
+			/* tp_deep_ctor:   */ &USet_InitCopy,
+			/* tp_any_ctor:    */ &uset_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&USet_Fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1409,15 +1409,15 @@ INTERN DeeTypeObject URoSetIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&urosetiterator_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&urosetiterator_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&urosetiterator_init,
-				TYPE_FIXED_ALLOCATOR(URoSetIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ URoSetIterator,
+			/* tp_ctor:        */ &urosetiterator_ctor,
+			/* tp_copy_ctor:   */ &urosetiterator_copy,
+			/* tp_deep_ctor:   */ NULL, /* TODO */
+			/* tp_any_ctor:    */ &urosetiterator_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&urosetiterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -1963,14 +1963,15 @@ INTERN DeeTypeObject URoSet_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSet_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&URoSet_New,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&uroset_deepcopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&uroset_init
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &URoSet_New,
+			/* tp_copy_ctor:   */ &DeeObject_NewRef,
+			/* tp_deep_ctor:   */ &uroset_deepcopy,
+			/* tp_any_ctor:    */ &uroset_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&uroset_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

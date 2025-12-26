@@ -341,15 +341,15 @@ INTERN DeeTypeObject DictIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&diter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&diter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&diter_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&diter_init,
-				TYPE_FIXED_ALLOCATOR(DictIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DictIterator,
+			/* tp_ctor:        */ &diter_ctor,
+			/* tp_copy_ctor:   */ &diter_copy,
+			/* tp_deep_ctor:   */ &diter_deep,
+			/* tp_any_ctor:    */ &diter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&diter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -4286,17 +4286,15 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&dict_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&dict_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&dict_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&dict_init,
-				TYPE_FIXED_ALLOCATOR_GC(Dict),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&dict_serialize,
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ Dict,
+			/* tp_ctor:        */ &dict_ctor,
+			/* tp_copy_ctor:   */ &dict_copy,
+			/* tp_deep_ctor:   */ &dict_copy,
+			/* tp_any_ctor:    */ &dict_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &dict_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dict_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_moveassign,

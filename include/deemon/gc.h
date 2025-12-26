@@ -275,9 +275,9 @@ DeeSlab_ENUMERATE(DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS)
 #define DeeGCObject_FFree(ptr, size) DeeSlab_Invoke(DeeGCObject_SlabFree, size, (ptr), DeeGCObject_Free(ptr))
 #endif /* !CONFIG_NO_OBJECT_SLABS */
 
-/* Same as the regular malloc functions, but use the same allocation methods that
- * would be used by `TYPE_FIXED_ALLOCATOR_GC' and `TYPE_FIXED_ALLOCATOR_GC_S', meaning
- * that pointers returned by these macros have binary compatibility with them. */
+/* Same as the regular malloc functions, but use the same allocation methods that would be
+ * used by `Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC' and `Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S',
+ * meaning that pointers returned by these macros have binary compatibility with them. */
 #define DeeGCObject_MALLOC(T)       ((T *)DeeGCObject_FMalloc(sizeof(T)))
 #define DeeGCObject_CALLOC(T)       ((T *)DeeGCObject_FCalloc(sizeof(T)))
 #define DeeGCObject_TRYMALLOC(T)    ((T *)DeeGCObject_FTryMalloc(sizeof(T)))

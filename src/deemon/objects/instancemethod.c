@@ -379,17 +379,15 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeCallable_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ (Dee_funptr_t)&im_ctor,
-				/* .tp_copy_ctor   = */ (Dee_funptr_t)&im_copy,
-				/* .tp_deep_ctor   = */ (Dee_funptr_t)&im_deepcopy,
-				/* .tp_any_ctor    = */ (Dee_funptr_t)&im_init,
-				TYPE_FIXED_ALLOCATOR(InstanceMethod),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&im_init_kw,
-				/* .tp_serialize = */ (Dee_funptr_t)&im_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ InstanceMethod,
+			/* tp_ctor:        */ &im_ctor,
+			/* tp_copy_ctor:   */ &im_copy,
+			/* tp_deep_ctor:   */ &im_deepcopy,
+			/* tp_any_ctor:    */ &im_init,
+			/* tp_any_ctor_kw: */ &im_init_kw,
+			/* tp_serialize:   */ &im_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&im_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

@@ -569,15 +569,15 @@ INTERN DeeTypeObject CachedSeq_WithIter_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&cswi_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&cswi_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&cswi_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&cswi_init,
-				TYPE_FIXED_ALLOCATOR_GC(CachedSeq_WithIter)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ CachedSeq_WithIter,
+			/* tp_ctor:        */ &cswi_ctor,
+			/* tp_copy_ctor:   */ &cswi_copy,
+			/* tp_deep_ctor:   */ &cswi_deep,
+			/* tp_any_ctor:    */ &cswi_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -729,15 +729,15 @@ INTERN DeeTypeObject CachedSeq_WithIter_Iterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&cswiiter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&cswiiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&cswiiter_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&cswiiter_init,
-				TYPE_FIXED_ALLOCATOR(CachedSeq_WithIter_Iterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ CachedSeq_WithIter_Iterator,
+			/* tp_ctor:        */ &cswiiter_ctor,
+			/* tp_copy_ctor:   */ &cswiiter_copy,
+			/* tp_deep_ctor:   */ &cswiiter_deep,
+			/* tp_any_ctor:    */ &cswiiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswiiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1747,15 +1747,15 @@ INTERN DeeTypeObject CachedSeq_WithGetItem_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&cswgi_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&cswgi_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&cswgi_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&cswgi_init,
-				TYPE_FIXED_ALLOCATOR_GC(CachedSeq_WithGetItem)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ CachedSeq_WithGetItem,
+			/* tp_ctor:        */ &cswgi_ctor,
+			/* tp_copy_ctor:   */ &cswgi_copy,
+			/* tp_deep_ctor:   */ &cswgi_deep,
+			/* tp_any_ctor:    */ &cswgi_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswgi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1795,15 +1795,15 @@ INTERN DeeTypeObject CachedSeq_WithSizeObAndGetItem_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&cswsogi_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&cswsogi_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&cswsogi_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&cswsogi_init,
-				TYPE_FIXED_ALLOCATOR_GC(CachedSeq_WithIter)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ CachedSeq_WithIter,
+			/* tp_ctor:        */ &cswsogi_ctor,
+			/* tp_copy_ctor:   */ &cswsogi_copy,
+			/* tp_deep_ctor:   */ &cswsogi_deep,
+			/* tp_any_ctor:    */ &cswsogi_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswsogi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1843,15 +1843,15 @@ INTERN DeeTypeObject CachedSeq_WithSizeAndGetItem_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&cswsgi_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&cswsgi_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&cswsgi_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&cswsgi_init,
-				TYPE_FIXED_ALLOCATOR_GC(CachedSeq_WithIter)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ CachedSeq_WithIter,
+			/* tp_ctor:        */ &cswsgi_ctor,
+			/* tp_copy_ctor:   */ &cswsgi_copy,
+			/* tp_deep_ctor:   */ &cswsgi_deep,
+			/* tp_any_ctor:    */ &cswsgi_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswsgi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1899,15 +1899,15 @@ INTERN DeeTypeObject CachedSeq_WithGetItem_Iterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&cswgiiter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&cswgiiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&cswgiiter_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&cswgiiter_init,
-				TYPE_FIXED_ALLOCATOR(CachedSeq_WithGetItem_Iterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ CachedSeq_WithGetItem_Iterator,
+			/* tp_ctor:        */ &cswgiiter_ctor,
+			/* tp_copy_ctor:   */ &cswgiiter_copy,
+			/* tp_deep_ctor:   */ &cswgiiter_deep,
+			/* tp_any_ctor:    */ &cswgiiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswgiiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL

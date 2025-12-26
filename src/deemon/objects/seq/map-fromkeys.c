@@ -218,15 +218,15 @@ INTERN DeeTypeObject MapFromKeysAndValueIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&mfkvi_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&mfkvi_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&mfkvi_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&mfkvi_init,
-				TYPE_FIXED_ALLOCATOR(MapFromKeysIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ MapFromKeysIterator,
+			/* tp_ctor:        */ &mfkvi_ctor,
+			/* tp_copy_ctor:   */ &mfkvi_copy,
+			/* tp_deep_ctor:   */ &mfkvi_deep,
+			/* tp_any_ctor:    */ &mfkvi_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mfkvi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -271,15 +271,15 @@ INTERN DeeTypeObject MapFromKeysAndCallbackIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&mfkci_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&mfkci_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&mfkci_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&mfkci_init,
-				TYPE_FIXED_ALLOCATOR(MapFromKeysIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ MapFromKeysIterator,
+			/* tp_ctor:        */ &mfkci_ctor,
+			/* tp_copy_ctor:   */ &mfkci_copy,
+			/* tp_deep_ctor:   */ &mfkci_deep,
+			/* tp_any_ctor:    */ &mfkci_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mfkci_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -687,17 +687,15 @@ INTERN DeeTypeObject MapFromKeysAndValue_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&mfkv_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&mfkv_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&mfkv_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&mfkv_init,
-				TYPE_FIXED_ALLOCATOR(MapFromKeys),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&mfkv_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ MapFromKeys,
+			/* tp_ctor:        */ &mfkv_ctor,
+			/* tp_copy_ctor:   */ &mfkv_copy,
+			/* tp_deep_ctor:   */ &mfkv_deep,
+			/* tp_any_ctor:    */ &mfkv_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &mfkv_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mfkv_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -740,17 +738,15 @@ INTERN DeeTypeObject MapFromKeysAndCallback_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&mfkc_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&mfkc_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&mfkc_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&mfkc_init,
-				TYPE_FIXED_ALLOCATOR(MapFromKeys),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&mfkc_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ MapFromKeys,
+			/* tp_ctor:        */ &mfkc_ctor,
+			/* tp_copy_ctor:   */ &mfkc_copy,
+			/* tp_deep_ctor:   */ &mfkc_deep,
+			/* tp_any_ctor:    */ &mfkc_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &mfkc_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mfkc_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

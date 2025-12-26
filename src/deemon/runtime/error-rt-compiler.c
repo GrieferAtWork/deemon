@@ -165,16 +165,15 @@ PUBLIC DeeTypeObject DeeError_CompilerError = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeError_Error,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&comerr_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&comerr_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeCompilerErrorObject),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&comerr_init_kw,
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DeeCompilerErrorObject,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &comerr_copy,
+			/* tp_deep_ctor:   */ &comerr_deep,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ &comerr_init_kw,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&comerr_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -219,16 +218,15 @@ PUBLIC DeeTypeObject DeeError_CompilerError = {
 		/* .tp_features = */ TF_NONE,                                     \
 		/* .tp_base     = */ tp_base,                                     \
 		/* .tp_init = */ {                                                \
-			{                                                             \
-				/* .tp_alloc = */ {                                       \
-					/* .tp_ctor      = */ (Dee_funptr_t)NULL,             \
-					/* .tp_copy_ctor = */ (Dee_funptr_t)&comerr_copy,     \
-					/* .tp_deep_ctor = */ (Dee_funptr_t)&comerr_deep,     \
-					/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,             \
-					TYPE_FIXED_ALLOCATOR(DeeCompilerErrorObject),         \
-					/* .tp_any_ctor_kw = */ (Dee_funptr_t)&comerr_init_kw,\
-				}                                                         \
-			},                                                            \
+			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(                              \
+				/* T:              */ DeeCompilerErrorObject,             \
+				/* tp_ctor:        */ NULL,                               \
+				/* tp_copy_ctor:   */ &comerr_copy,                       \
+				/* tp_deep_ctor:   */ &comerr_deep,                       \
+				/* tp_any_ctor:    */ NULL,                               \
+				/* tp_any_ctor_kw: */ &comerr_init_kw,                    \
+				/* tp_serialize:   */ NULL                                \
+			),                                                            \
 			/* .tp_dtor        = */ NULL,                                 \
 			/* .tp_assign      = */ NULL,                                 \
 			/* .tp_move_assign = */ NULL                                  \

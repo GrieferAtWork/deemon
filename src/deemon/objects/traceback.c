@@ -390,9 +390,9 @@ PRIVATE struct type_nii tpconst traceiter_nii = {
 			/* .nii_getindex = */ (Dee_funptr_t)&traceiter_nii_getindex,
 			/* .nii_setindex = */ (Dee_funptr_t)&traceiter_nii_setindex,
 			/* .nii_rewind   = */ (Dee_funptr_t)&traceiter_nii_rewind,
-			/* .nii_revert   = */ (Dee_funptr_t)NULL, //TODO:&traceiter_nii_revert,
-			/* .nii_advance  = */ (Dee_funptr_t)NULL, //TODO:&traceiter_nii_advance,
-			/* .nii_prev     = */ (Dee_funptr_t)NULL, //TODO:&traceiter_nii_prev,
+			/* .nii_revert   = */ NULL, //TODO:&traceiter_nii_revert,
+			/* .nii_advance  = */ NULL, //TODO:&traceiter_nii_advance,
+			/* .nii_prev     = */ NULL, //TODO:&traceiter_nii_prev,
 			/* .nii_next     = */ (Dee_funptr_t)&traceiter_nii_next,
 			/* .nii_hasprev  = */ (Dee_funptr_t)&traceiter_nii_hasprev,
 			/* .nii_peek     = */ (Dee_funptr_t)&traceiter_nii_peek
@@ -442,15 +442,15 @@ INTERN DeeTypeObject DeeTracebackIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&traceiter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&traceiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&traceiter_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&traceiter_init,
-				TYPE_FIXED_ALLOCATOR(TraceIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ TraceIterator,
+			/* tp_ctor:        */ &traceiter_ctor,
+			/* tp_copy_ctor:   */ &traceiter_copy,
+			/* tp_deep_ctor:   */ &traceiter_deep,
+			/* tp_any_ctor:    */ &traceiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&traceiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -857,14 +857,15 @@ PUBLIC DeeTypeObject DeeTraceback_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&traceback_new,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &traceback_new,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&traceback_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

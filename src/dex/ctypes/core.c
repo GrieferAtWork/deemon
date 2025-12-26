@@ -541,15 +541,15 @@ INTERN DeeTypeObject DeeSType_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeType_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&stype_init,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR_GC(DeeSTypeObject)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ DeeSTypeObject,
+			/* tp_ctor:        */ &stype_init,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&stype_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -624,15 +624,15 @@ INTERN DeeTypeObject DeePointerType_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSType_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR_GC(DeePointerTypeObject)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ DeePointerTypeObject,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ptype_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -776,15 +776,15 @@ INTERN DeeTypeObject DeeLValueType_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSType_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR_GC(DeeLValueTypeObject)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ DeeLValueTypeObject,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ltype_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -1465,16 +1465,16 @@ INTERN DeeSTypeObject DeeStructured_Type = {
 		/* .tp_features = */ TF_NONE,
 		/* .tp_base     = */ &DeeObject_Type,
 		/* .tp_init = */ {
-			{
-				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ (Dee_funptr_t)&struct_ctor,
-					/* .tp_copy_ctor = */ (Dee_funptr_t)&struct_copy,
-					/* .tp_deep_ctor = */ (Dee_funptr_t)&struct_copy,
-					/* .tp_any_ctor  = */ (Dee_funptr_t)&struct_init,
-					/* TODO: Use a custom allocator that takes alignment into account. */
-					TYPE_FIXED_ALLOCATOR_S(DeeObject)
-				}
-			},
+			Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S(
+				/* TODO: Use a custom allocator that takes alignment into account. */
+				/* T:              */ DeeObject,
+				/* tp_ctor:        */ &struct_ctor,
+				/* tp_copy_ctor:   */ &struct_copy,
+				/* tp_deep_ctor:   */ &struct_copy,
+				/* tp_any_ctor:    */ &struct_init,
+				/* tp_any_ctor_kw: */ NULL,
+				/* tp_serialize:   */ NULL
+			),
 			/* .tp_dtor        = */ NULL,
 			/* .tp_assign      = */ &struct_assign,
 			/* .tp_move_assign = */ &struct_assign
@@ -2100,15 +2100,15 @@ INTERN DeeTypeObject DeeArrayType_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSType_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR_GC(DeeArrayTypeObject)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ DeeArrayTypeObject,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&atype_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -2258,15 +2258,15 @@ INTERN DeeTypeObject DeeCFunctionType_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSType_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR_GC(DeeCFunctionTypeObject)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ DeeCFunctionTypeObject,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ CFUNCTION_OPERATOR((void (DCALL *)(DeeObject *__restrict))&ftype_fini),
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL

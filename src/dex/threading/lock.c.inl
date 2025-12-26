@@ -940,20 +940,21 @@ INTERN DeeTypeObject LOCAL_DeeLock_Type = {
 	/* .tp_base     = */ &DeeLock_Type,
 #endif /* !... */
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&LOCAL_lockapi_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(LOCAL_DeeLockObject),
 #ifdef LOCAL_lockapi_init_kw
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&LOCAL_lockapi_init_kw
+#define LOCAL_lockapi_init_kw_PTR &LOCAL_lockapi_init_kw
 #else /* LOCAL_lockapi_init_kw */
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL
+#define LOCAL_lockapi_init_kw_PTR NULL
 #endif /* !LOCAL_lockapi_init_kw */
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ LOCAL_DeeLockObject,
+			/* tp_ctor:        */ &LOCAL_lockapi_ctor,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ LOCAL_lockapi_init_kw_PTR,
+			/* tp_serialize:   */ NULL
+		),
+#undef LOCAL_lockapi_init_kw_PTR
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -1412,20 +1413,21 @@ INTERN DeeTypeObject LOCAL_DeeRWLock_Type = {
 	/* .tp_base     = */ &DeeRWLock_Type,
 #endif /* !... */
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&LOCAL_rwlockapi_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(LOCAL_DeeRWLockObject),
 #ifdef LOCAL_rwlockapi_init_kw
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&LOCAL_rwlockapi_init_kw
+#define LOCAL_rwlockapi_init_kw_PTR &LOCAL_rwlockapi_init_kw
 #else /* LOCAL_rwlockapi_init_kw */
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL
+#define LOCAL_rwlockapi_init_kw_PTR NULL
 #endif /* !LOCAL_rwlockapi_init_kw */
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ LOCAL_DeeRWLockObject,
+			/* tp_ctor:        */ &LOCAL_rwlockapi_ctor,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ LOCAL_rwlockapi_init_kw_PTR,
+			/* tp_serialize:   */ NULL
+		),
+#undef LOCAL_rwlockapi_init_kw_PTR
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -1682,15 +1684,15 @@ INTERN DeeTypeObject LOCAL_DeeRWLockReadLock_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeRWLockReadLock_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&LOCAL_rwlockapi_readlock_init,
-				TYPE_FIXED_ALLOCATOR(DeeGenericRWLockProxyObject)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DeeGenericRWLockProxyObject,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &LOCAL_rwlockapi_readlock_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -1728,15 +1730,15 @@ INTERN DeeTypeObject LOCAL_DeeRWLockWriteLock_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeRWLockWriteLock_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&LOCAL_rwlockapi_writelock_init,
-				TYPE_FIXED_ALLOCATOR(DeeGenericRWLockProxyObject)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DeeGenericRWLockProxyObject,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &LOCAL_rwlockapi_writelock_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL

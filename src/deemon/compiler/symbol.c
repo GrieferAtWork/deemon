@@ -613,15 +613,15 @@ INTERN DeeTypeObject DeeScope_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ NULL, /*&DeeObject_Type*/
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeScopeObject)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DeeScopeObject,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&scope_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -677,15 +677,15 @@ INTERN DeeTypeObject DeeClassScope_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeScope_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeClassScopeObject)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DeeClassScopeObject,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&class_scope_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -777,15 +777,15 @@ INTERN DeeTypeObject DeeBaseScope_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeScope_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeBaseScopeObject)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DeeBaseScopeObject,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&base_scope_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -912,6 +912,14 @@ root_scope_visit(DeeRootScopeObject *__restrict self,
 	DeeCompiler_LockEndRead();
 }
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#define PTR_root_scope_ctor &root_scope_ctor
+#define PTR_root_scope_init NULL
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#define PTR_root_scope_ctor NULL
+#define PTR_root_scope_init &root_scope_init
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
 INTERN DeeTypeObject DeeRootScope_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "RootScope",
@@ -921,22 +929,15 @@ INTERN DeeTypeObject DeeRootScope_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeBaseScope_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-				/* .tp_ctor      = */ (Dee_funptr_t)&root_scope_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&root_scope_init,
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-				TYPE_FIXED_ALLOCATOR(DeeRootScopeObject)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DeeRootScopeObject,
+			/* tp_ctor:        */ PTR_root_scope_ctor,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ PTR_root_scope_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&root_scope_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL

@@ -1322,17 +1322,15 @@ INTERN DeeTypeObject SeqEach_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type, /* Not a sequence type! (can't have stuff like "find()", etc.) */
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&se_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&se_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&se_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&se_init,
-				TYPE_FIXED_ALLOCATOR(SeqEachBase),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&se_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ SeqEachBase,
+			/* tp_ctor:        */ &se_ctor,
+			/* tp_copy_ctor:   */ &se_copy,
+			/* tp_deep_ctor:   */ &se_deep,
+			/* tp_any_ctor:    */ &se_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &se_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&se_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&se_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&se_moveassign,
@@ -2078,15 +2076,15 @@ PUBLIC DeeTypeObject DeeSeqSome_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type, /* Not a sequence type! (can't have stuff like "find()", etc.) */
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&ss_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&ss_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&ss_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&ss_init,
-				TYPE_FIXED_ALLOCATOR(SeqEachBase)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ SeqEachBase,
+			/* tp_ctor:        */ &ss_ctor,
+			/* tp_copy_ctor:   */ &ss_copy,
+			/* tp_deep_ctor:   */ &ss_deep,
+			/* tp_any_ctor:    */ &ss_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ss_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -3424,15 +3422,16 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type, /* Not a sequence type! (can't have stuff like "find()", etc.) */
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&seo_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&seo_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&seo_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&seo_init,
-				TYPE_SIZED_ALLOCATOR_R(offsetof(SeqEachOperator, so_opargv), sizeof(SeqEachOperator))
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R(
+			/* min_tp_instance_size: */ offsetof(SeqEachOperator, so_opargv),
+			/* max_tp_instance_size: */ sizeof(SeqEachOperator),
+			/* tp_ctor:              */ &seo_ctor,
+			/* tp_copy_ctor:         */ &seo_copy,
+			/* tp_deep_ctor:         */ &seo_deep,
+			/* tp_any_ctor:          */ &seo_init,
+			/* tp_any_ctor_kw:       */ NULL,
+			/* tp_serialize:         */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&seo_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_moveassign,
@@ -3916,15 +3915,16 @@ INTERN DeeTypeObject SeqSomeOperator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type, /* Not a sequence type! */
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&seo_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&seo_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&seo_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&seo_init,
-				TYPE_SIZED_ALLOCATOR_R(offsetof(SeqEachOperator, so_opargv), sizeof(SeqEachOperator))
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R(
+			/* min_tp_instance_size: */ offsetof(SeqEachOperator, so_opargv),
+			/* max_tp_instance_size: */ sizeof(SeqEachOperator),
+			/* tp_ctor:              */ &seo_ctor,
+			/* tp_copy_ctor:         */ &seo_copy,
+			/* tp_deep_ctor:         */ &seo_deep,
+			/* tp_any_ctor:          */ &seo_init,
+			/* tp_any_ctor_kw:       */ NULL,
+			/* tp_serialize:         */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&seo_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_moveassign,
@@ -4112,15 +4112,15 @@ INTERN DeeTypeObject SeqEachOperatorIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&seoi_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&sewi_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&sewi_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&seoi_init,
-				TYPE_FIXED_ALLOCATOR(SeqEachIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ SeqEachIterator,
+			/* tp_ctor:        */ &seoi_ctor,
+			/* tp_copy_ctor:   */ &sewi_copy,
+			/* tp_deep_ctor:   */ &sewi_deep,
+			/* tp_any_ctor:    */ &seoi_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sewi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

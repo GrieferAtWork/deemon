@@ -240,17 +240,15 @@ INTERN DeeTypeObject MapByAttr_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&byattr_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&byattr_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&byattr_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&byattr_init,
-				TYPE_FIXED_ALLOCATOR(MapByAttr),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&byattr_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ MapByAttr,
+			/* tp_ctor:        */ &byattr_ctor,
+			/* tp_copy_ctor:   */ &byattr_copy,
+			/* tp_deep_ctor:   */ &byattr_deep,
+			/* tp_any_ctor:    */ &byattr_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &byattr_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&byattr_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

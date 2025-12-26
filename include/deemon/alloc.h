@@ -1033,9 +1033,9 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 #define DeeDbgObject_FFree(ptr, size, file, line) DeeSlab_Invoke(DeeDbgObject_SlabFree, size, (ptr, file, line), DeeDbgObject_Free(ptr, file, line))
 #endif /* !CONFIG_NO_OBJECT_SLABS */
 
-/* Same as the regular malloc functions, but use the same allocation methods that
- * would be used by `TYPE_FIXED_ALLOCATOR' and `TYPE_FIXED_ALLOCATOR_S', meaning
- * that pointers returned by these macros have binary compatibility with them. */
+/* Same as the regular malloc functions, but use the same allocation methods that would
+ * be used by `Dee_TYPE_CONSTRUCTOR_INIT_FIXED' and `Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S',
+ * meaning that pointers returned by these macros have binary compatibility with them. */
 #define DeeObject_MALLOC(T)                      ((T *)DeeObject_FMalloc(sizeof(T)))
 #define DeeObject_CALLOC(T)                      ((T *)DeeObject_FCalloc(sizeof(T)))
 #define DeeObject_TRYMALLOC(T)                   ((T *)DeeObject_FTryMalloc(sizeof(T)))
@@ -1073,86 +1073,62 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 #define DeeObject_TRYREALLOCC_SAFE(p, T, m, c) ((T *)DeeObject_TryRealloccSafe(Dee_REQUIRES_TYPE(T *, p), __builtin_offsetof(T, m), c, sizeof(*(((T *)0)->m))))
 
 
-#ifndef DEE_TYPE_ALLOCATOR
-/* Specifies a custom object allocator declaration. */
-#define DEE_TYPE_ALLOCATOR(tp_malloc, tp_free) (Dee_funptr_t)(tp_free), { (Dee_funptr_t)(tp_malloc) }
-
-/* Specifies an automatic object allocator. */
-#define DEE_TYPE_AUTOSIZED_ALLOCATOR(size)                 NULL, { (Dee_funptr_t)(void *)(uintptr_t)(size) }
-#define DEE_TYPE_AUTOSIZED_ALLOCATOR_R(min_size, max_size) NULL, { (Dee_funptr_t)(void *)(uintptr_t)(max_size) }
-#define DEE_TYPE_AUTO_ALLOCATOR(T)                         NULL, { (Dee_funptr_t)(void *)(uintptr_t)sizeof(T) }
-
-/* Expose shorter variants of macros */
-#ifdef DEE_SOURCE
-#define TYPE_ALLOCATOR             DEE_TYPE_ALLOCATOR
-#define TYPE_AUTOSIZED_ALLOCATOR   DEE_TYPE_AUTOSIZED_ALLOCATOR
-#define TYPE_AUTOSIZED_ALLOCATOR_R DEE_TYPE_AUTOSIZED_ALLOCATOR_R
-#define TYPE_AUTO_ALLOCATOR        DEE_TYPE_AUTO_ALLOCATOR
-#endif /* DEE_SOURCE */
-#endif /* !DEE_TYPE_ALLOCATOR */
-
 #ifdef GUARD_DEEMON_OBJECT_H
 /* Specifies an allocator that may provides optimizations
  * for types with a FIXED size (which most objects have). */
 #ifdef CONFIG_NO_OBJECT_SLABS
-#define DEE_TYPE_SIZED_ALLOCATOR_R    TYPE_AUTOSIZED_ALLOCATOR_R
-#define DEE_TYPE_SIZED_ALLOCATOR_GC_R TYPE_AUTOSIZED_ALLOCATOR_R
-#define DEE_TYPE_SIZED_ALLOCATOR      TYPE_AUTOSIZED_ALLOCATOR
-#define DEE_TYPE_SIZED_ALLOCATOR_GC   TYPE_AUTOSIZED_ALLOCATOR
-#define DEE_TYPE_FIXED_ALLOCATOR      TYPE_AUTO_ALLOCATOR
-#define DEE_TYPE_FIXED_ALLOCATOR_GC   TYPE_AUTO_ALLOCATOR
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC_R Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO
 #else /* CONFIG_NO_OBJECT_SLABS */
-#define DEE_TYPE_SIZED_ALLOCATOR_R(min_size, max_size)                     \
-	  DeeSlab_Invoke((Dee_funptr_t)&DeeObject_SlabFree, min_size, , NULL), \
-	{ DeeSlab_Invoke((Dee_funptr_t)&DeeObject_SlabMalloc, max_size, , (Dee_funptr_t)(void *)(uintptr_t)(max_size)) }
-#define DEE_TYPE_SIZED_ALLOCATOR_GC_R(min_size, max_size)                    \
-	  DeeSlab_Invoke((Dee_funptr_t)&DeeGCObject_SlabFree, min_size, , NULL), \
-	{ DeeSlab_Invoke((Dee_funptr_t)&DeeGCObject_SlabMalloc, max_size, , (Dee_funptr_t)(void *)(uintptr_t)(max_size)) }
-#define DEE_TYPE_SIZED_ALLOCATOR(size)    DEE_TYPE_SIZED_ALLOCATOR_R(size, size)
-#define DEE_TYPE_SIZED_ALLOCATOR_GC(size) DEE_TYPE_SIZED_ALLOCATOR_GC_R(size, size)
-#define DEE_TYPE_FIXED_ALLOCATOR(T)       DEE_TYPE_SIZED_ALLOCATOR_R(sizeof(T), sizeof(T))
-#define DEE_TYPE_FIXED_ALLOCATOR_GC(T)    DEE_TYPE_SIZED_ALLOCATOR_GC_R(sizeof(T), sizeof(T))
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R(min_tp_instance_size, max_tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize,                                                   \
+	                                DeeSlab_Invoke(&DeeObject_SlabMalloc, max_tp_instance_size, , (void *(DCALL *)(void))(void *)(uintptr_t)(max_tp_instance_size)),  \
+	                                DeeSlab_Invoke(&DeeObject_SlabFree, min_tp_instance_size, , (void (DCALL *)(void *))(Dee_funptr_t)NULL))
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC_R(min_tp_instance_size, max_tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize,                                                      \
+	                                DeeSlab_Invoke(&DeeGCObject_SlabMalloc, max_tp_instance_size, , (void *(DCALL *)(void))(void *)(uintptr_t)(max_tp_instance_size)),   \
+	                                DeeSlab_Invoke(&DeeGCObject_SlabFree, min_tp_instance_size, , (void (DCALL *)(void *))(Dee_funptr_t)NULL))
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED(tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R(tp_instance_size, tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC_R(tp_instance_size, tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED(T, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_SIZED(sizeof(T), tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(T, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(sizeof(T), tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
 #endif /* !CONFIG_NO_OBJECT_SLABS */
-#ifdef DEE_SOURCE
-#define TYPE_SIZED_ALLOCATOR_R    DEE_TYPE_SIZED_ALLOCATOR_R
-#define TYPE_SIZED_ALLOCATOR_GC_R DEE_TYPE_SIZED_ALLOCATOR_GC_R
-#define TYPE_SIZED_ALLOCATOR      DEE_TYPE_SIZED_ALLOCATOR
-#define TYPE_SIZED_ALLOCATOR_GC   DEE_TYPE_SIZED_ALLOCATOR_GC
-#define TYPE_FIXED_ALLOCATOR      DEE_TYPE_FIXED_ALLOCATOR
-#define TYPE_FIXED_ALLOCATOR_GC   DEE_TYPE_FIXED_ALLOCATOR_GC
-#endif /* DEE_SOURCE */
+
+/* Same as `Dee_TYPE_CONSTRUCTOR_INIT_FIXED()', but don't link against
+ * dedicated allocator functions when doing so would require the creation
+ * of relocations that might cause loading times to become larger. */
+#ifdef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO
+#else /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S    Dee_TYPE_CONSTRUCTOR_INIT_FIXED
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC
+#endif /* !CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
+
 #endif /* GUARD_DEEMON_OBJECT_H */
 
-/* Same as `TYPE_FIXED_ALLOCATOR()', but don't link agains dedicated
- * allocator functions when doing so would require the creation of
- * relocations that might cause loading times to become larger. */
+/* Same as `Dee_TYPE_CONSTRUCTOR_INIT_FIXED()', but don't link agains
+ * dedicated allocator functions when doing so would require the creation
+ * of relocations that might cause loading times to become larger. */
 #undef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
 #if (!defined(CONFIG_BUILDING_DEEMON) || defined(__PIE__) ||     \
      defined(__PIC__) || defined(__pie__) || defined(__pic__) || \
      defined(CONFIG_NO_OBJECT_SLABS))
 #define CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
-#ifdef GUARD_DEEMON_OBJECT_H
-#define DEE_TYPE_FIXED_ALLOCATOR_S(T)    DEE_TYPE_AUTO_ALLOCATOR(T)
-#define DEE_TYPE_FIXED_ALLOCATOR_GC_S(T) DEE_TYPE_AUTO_ALLOCATOR(T)
-#ifdef DEE_SOURCE
-#define TYPE_FIXED_ALLOCATOR_S           DEE_TYPE_FIXED_ALLOCATOR_S
-#define TYPE_FIXED_ALLOCATOR_GC_S        DEE_TYPE_FIXED_ALLOCATOR_GC_S
-#endif /* DEE_SOURCE */
-#endif /* GUARD_DEEMON_OBJECT_H */
 #define DeeObject_MALLOC_S(T)    ((T *)DeeObject_Malloc(sizeof(T)))
 #define DeeObject_CALLOC_S(T)    ((T *)DeeObject_Calloc(sizeof(T)))
 #define DeeObject_TRYMALLOC_S(T) ((T *)DeeObject_TryMalloc(sizeof(T)))
 #define DeeObject_TRYCALLOC_S(T) ((T *)DeeObject_TryCalloc(sizeof(T)))
 #define DeeObject_FREE_S               DeeObject_Free
 #else /* !CONFIG_BUILDING_DEEMON || __pic__ */
-#ifdef GUARD_DEEMON_OBJECT_H
-#define DEE_TYPE_FIXED_ALLOCATOR_S(T)    DEE_TYPE_FIXED_ALLOCATOR(T)
-#define DEE_TYPE_FIXED_ALLOCATOR_GC_S(T) DEE_TYPE_FIXED_ALLOCATOR_GC(T)
-#ifdef DEE_SOURCE
-#define TYPE_FIXED_ALLOCATOR_S           DEE_TYPE_FIXED_ALLOCATOR_S
-#define TYPE_FIXED_ALLOCATOR_GC_S        DEE_TYPE_FIXED_ALLOCATOR_GC_S
-#endif /* DEE_SOURCE */
-#endif /* GUARD_DEEMON_OBJECT_H */
 #define DeeObject_FMALLOC_S    DeeObject_MALLOC
 #define DeeObject_FCALLOC_S    DeeObject_CALLOC
 #define DeeObject_TRYFMALLOC_S DeeObject_TRYMALLOC

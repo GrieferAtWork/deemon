@@ -5644,17 +5644,15 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeNumeric_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&int_return_zero,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef, /* No need to actually copy. - Integers are immutable! */
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&int_new,
-				/* .tp_free      = */ (Dee_funptr_t)int_free_PTR, { NULL },
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&int_serialize,
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &int_return_zero,
+			/* tp_copy_ctor:   */ &DeeObject_NewRef, /* No need to actually copy. - Integers are immutable! */
+			/* tp_deep_ctor:   */ &DeeObject_NewRef,
+			/* tp_any_ctor:    */ &int_new,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &int_serialize,
+			/* tp_free:        */ int_free_PTR
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

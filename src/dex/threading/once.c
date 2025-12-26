@@ -707,16 +707,15 @@ INTERN DeeTypeObject DeeOnce_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeCallable_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&once_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&once_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&once_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&once_init,
-				TYPE_FIXED_ALLOCATOR_GC(DeeOnceObject),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&once_init_kw
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ DeeOnceObject,
+			/* tp_ctor:        */ &once_ctor,
+			/* tp_copy_ctor:   */ &once_copy,
+			/* tp_deep_ctor:   */ &once_copy,
+			/* tp_any_ctor:    */ &once_init,
+			/* tp_any_ctor_kw: */ &once_init_kw,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&once_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

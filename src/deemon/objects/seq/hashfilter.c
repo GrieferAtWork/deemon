@@ -246,15 +246,15 @@ INTERN DeeTypeObject SeqHashFilterIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&filteriterator_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&filteriterator_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&filteriterator_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&seq_filteriterator_init,
-				TYPE_FIXED_ALLOCATOR(HashFilterIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ HashFilterIterator,
+			/* tp_ctor:        */ &filteriterator_ctor,
+			/* tp_copy_ctor:   */ &filteriterator_copy,
+			/* tp_deep_ctor:   */ &filteriterator_deep,
+			/* tp_any_ctor:    */ &seq_filteriterator_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&filteriterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -296,15 +296,15 @@ INTERN DeeTypeObject MapHashFilterIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&filteriterator_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&filteriterator_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&filteriterator_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&map_filteriterator_init,
-				TYPE_FIXED_ALLOCATOR(HashFilterIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ HashFilterIterator,
+			/* tp_ctor:        */ &filteriterator_ctor,
+			/* tp_copy_ctor:   */ &filteriterator_copy,
+			/* tp_deep_ctor:   */ &filteriterator_deep,
+			/* tp_any_ctor:    */ &map_filteriterator_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&filteriterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -525,15 +525,15 @@ INTERN DeeTypeObject SeqHashFilter_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&filter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&filter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&filter_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&seq_filter_init,
-				TYPE_FIXED_ALLOCATOR(HashFilter)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ HashFilter,
+			/* tp_ctor:        */ &filter_ctor,
+			/* tp_copy_ctor:   */ &filter_copy,
+			/* tp_deep_ctor:   */ &filter_deep,
+			/* tp_any_ctor:    */ &seq_filter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&filter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -576,15 +576,15 @@ INTERN DeeTypeObject MapHashFilter_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&filter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&filter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&filter_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&map_filter_init,
-				TYPE_FIXED_ALLOCATOR(HashFilter)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ HashFilter,
+			/* tp_ctor:        */ &filter_ctor,
+			/* tp_copy_ctor:   */ &filter_copy,
+			/* tp_deep_ctor:   */ &filter_deep,
+			/* tp_any_ctor:    */ &map_filter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&filter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

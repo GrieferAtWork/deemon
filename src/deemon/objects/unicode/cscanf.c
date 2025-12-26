@@ -666,15 +666,15 @@ INTERN DeeTypeObject StringScanIterator_Type = {
 	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&ssi_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&ssi_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&ssi_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&ssi_init,
-				TYPE_FIXED_ALLOCATOR(StringScanIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ StringScanIterator,
+			/* tp_ctor:        */ &ssi_ctor,
+			/* tp_copy_ctor:   */ &ssi_copy,
+			/* tp_deep_ctor:   */ &ssi_copy,
+			/* tp_any_ctor:    */ &ssi_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ssi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -831,15 +831,15 @@ INTERN DeeTypeObject StringScan_Type = {
 	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&ss_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&ss_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&ss_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&ss_init,
-				TYPE_FIXED_ALLOCATOR(StringScanner)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ StringScanner,
+			/* tp_ctor:        */ &ss_ctor,
+			/* tp_copy_ctor:   */ &ss_copy,
+			/* tp_deep_ctor:   */ &ss_deep,
+			/* tp_any_ctor:    */ &ss_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ss_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

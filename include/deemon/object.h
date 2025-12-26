@@ -1379,72 +1379,6 @@ LOCAL ATTR_ARTIFICIAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 #endif /* !__OPTIMIZE_SIZE__ */
 
 
-#ifndef DEE_TYPE_ALLOCATOR
-/* Specifies a custom object allocator declaration. */
-#define DEE_TYPE_ALLOCATOR(tp_malloc, tp_free) (Dee_funptr_t)(tp_free), { (Dee_funptr_t)(tp_malloc) }
-
-/* Specifies an automatic object allocator. */
-#define DEE_TYPE_AUTOSIZED_ALLOCATOR(size)                 NULL, { (Dee_funptr_t)(void *)(uintptr_t)(size) }
-#define DEE_TYPE_AUTOSIZED_ALLOCATOR_R(min_size, max_size) NULL, { (Dee_funptr_t)(void *)(uintptr_t)(max_size) }
-#define DEE_TYPE_AUTO_ALLOCATOR(T)                         NULL, { (Dee_funptr_t)(void *)(uintptr_t)sizeof(T) }
-
-/* Expose shorter variants of macros */
-#ifdef DEE_SOURCE
-#define TYPE_ALLOCATOR             DEE_TYPE_ALLOCATOR
-#define TYPE_AUTOSIZED_ALLOCATOR   DEE_TYPE_AUTOSIZED_ALLOCATOR
-#define TYPE_AUTOSIZED_ALLOCATOR_R DEE_TYPE_AUTOSIZED_ALLOCATOR_R
-#define TYPE_AUTO_ALLOCATOR        DEE_TYPE_AUTO_ALLOCATOR
-#endif /* DEE_SOURCE */
-#endif /* !DEE_TYPE_ALLOCATOR */
-
-#ifdef GUARD_DEEMON_ALLOC_H
-/* Specifies an allocator that may provides optimizations
- * for types with a FIXED size (which most objects have). */
-#ifdef CONFIG_NO_OBJECT_SLABS
-#define DEE_TYPE_SIZED_ALLOCATOR_R    DEE_TYPE_AUTOSIZED_ALLOCATOR_R
-#define DEE_TYPE_SIZED_ALLOCATOR_GC_R DEE_TYPE_AUTOSIZED_ALLOCATOR_R
-#define DEE_TYPE_SIZED_ALLOCATOR      DEE_TYPE_AUTOSIZED_ALLOCATOR
-#define DEE_TYPE_SIZED_ALLOCATOR_GC   DEE_TYPE_AUTOSIZED_ALLOCATOR
-#define DEE_TYPE_FIXED_ALLOCATOR      DEE_TYPE_AUTO_ALLOCATOR
-#define DEE_TYPE_FIXED_ALLOCATOR_GC   DEE_TYPE_AUTO_ALLOCATOR
-#else /* CONFIG_NO_OBJECT_SLABS */
-#define DEE_TYPE_SIZED_ALLOCATOR_R(min_size, max_size)                     \
-	  DeeSlab_Invoke((Dee_funptr_t)&DeeObject_SlabFree, min_size, , NULL), \
-	{ DeeSlab_Invoke((Dee_funptr_t)&DeeObject_SlabMalloc, max_size, , (Dee_funptr_t)(void *)(uintptr_t)(max_size)) }
-#define DEE_TYPE_SIZED_ALLOCATOR_GC_R(min_size, max_size)                    \
-	  DeeSlab_Invoke((Dee_funptr_t)&DeeGCObject_SlabFree, min_size, , NULL), \
-	{ DeeSlab_Invoke((Dee_funptr_t)&DeeGCObject_SlabMalloc, max_size, , (Dee_funptr_t)(void *)(uintptr_t)(max_size)) }
-#define DEE_TYPE_SIZED_ALLOCATOR(size)    DEE_TYPE_SIZED_ALLOCATOR_R(size, size)
-#define DEE_TYPE_SIZED_ALLOCATOR_GC(size) DEE_TYPE_SIZED_ALLOCATOR_GC_R(size, size)
-#define DEE_TYPE_FIXED_ALLOCATOR(T)       DEE_TYPE_SIZED_ALLOCATOR_R(sizeof(T), sizeof(T))
-#define DEE_TYPE_FIXED_ALLOCATOR_GC(T)    DEE_TYPE_SIZED_ALLOCATOR_GC_R(sizeof(T), sizeof(T))
-#endif /* !CONFIG_NO_OBJECT_SLABS */
-
-/* Same as `DEE_TYPE_FIXED_ALLOCATOR()', but don't link agains dedicated
- * allocator functions when doing so would require the creation of
- * relocations that might cause loading times to become larger. */
-#ifdef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
-#define DEE_TYPE_FIXED_ALLOCATOR_S(T)    DEE_TYPE_AUTO_ALLOCATOR(T)
-#define DEE_TYPE_FIXED_ALLOCATOR_GC_S(T) DEE_TYPE_AUTO_ALLOCATOR(T)
-#else /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
-#define DEE_TYPE_FIXED_ALLOCATOR_S(T)    DEE_TYPE_FIXED_ALLOCATOR(T)
-#define DEE_TYPE_FIXED_ALLOCATOR_GC_S(T) DEE_TYPE_FIXED_ALLOCATOR_GC(T)
-#endif /* !CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
-
-#ifdef DEE_SOURCE
-#define TYPE_SIZED_ALLOCATOR_R    DEE_TYPE_SIZED_ALLOCATOR_R
-#define TYPE_SIZED_ALLOCATOR_GC_R DEE_TYPE_SIZED_ALLOCATOR_GC_R
-#define TYPE_SIZED_ALLOCATOR      DEE_TYPE_SIZED_ALLOCATOR
-#define TYPE_SIZED_ALLOCATOR_GC   DEE_TYPE_SIZED_ALLOCATOR_GC
-#define TYPE_FIXED_ALLOCATOR      DEE_TYPE_FIXED_ALLOCATOR
-#define TYPE_FIXED_ALLOCATOR_GC   DEE_TYPE_FIXED_ALLOCATOR_GC
-#define TYPE_FIXED_ALLOCATOR_S    DEE_TYPE_FIXED_ALLOCATOR_S
-#define TYPE_FIXED_ALLOCATOR_GC_S DEE_TYPE_FIXED_ALLOCATOR_GC_S
-#endif /* DEE_SOURCE */
-#endif /* GUARD_DEEMON_ALLOC_H */
-
-
-
 /* Serialization address (points into the abstract serialization buffer) */
 #ifndef Dee_seraddr_t_DEFINED
 #define Dee_seraddr_t_DEFINED
@@ -1462,6 +1396,180 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 myobject_serialize(MyObject *__restrict self, DeeSerial *__restrict writer) {
 }
 #endif
+
+
+
+
+
+#ifdef __INTELLISENSE__
+extern "C++" {namespace __intern {
+#define _Dee_REQUIRE_VAR_tp_ctor(tp_ctor) ::__intern::__Dee_REQUIRE_VAR_tp_ctor(tp_ctor)
+template<class Tobj> Dee_funptr_t __Dee_REQUIRE_VAR_tp_ctor(Tobj *(DCALL *)(void)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_REQUIRE_VAR_tp_ctor(decltype(nullptr));
+#define _Dee_REQUIRE_VAR_tp_copy_ctor(tp_copy_ctor) ::__intern::__Dee_REQUIRE_VAR_tp_copy_ctor(tp_copy_ctor)
+template<class Tobj> Dee_funptr_t __Dee_REQUIRE_VAR_tp_copy_ctor(Tobj *(DCALL *)(Tobj *__restrict)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_REQUIRE_VAR_tp_copy_ctor(decltype(nullptr));
+#define _Dee_REQUIRE_VAR_tp_any_ctor(tp_any_ctor) ::__intern::__Dee_REQUIRE_VAR_tp_any_ctor(tp_any_ctor)
+template<class Tobj> Dee_funptr_t __Dee_REQUIRE_VAR_tp_any_ctor(Tobj *(DCALL *)(size_t, DeeObject *const *)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_REQUIRE_VAR_tp_any_ctor(decltype(nullptr));
+#define _Dee_REQUIRE_VAR_tp_any_ctor_kw(tp_any_ctor_kw) ::__intern::__Dee_REQUIRE_VAR_tp_any_ctor_kw(tp_any_ctor_kw)
+template<class Tobj> Dee_funptr_t __Dee_REQUIRE_VAR_tp_any_ctor_kw(Tobj *(DCALL *)(size_t, DeeObject *const *, DeeObject *)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_REQUIRE_VAR_tp_any_ctor_kw(decltype(nullptr));
+#define _Dee_REQUIRE_VAR_tp_serialize(tp_serialize) ::__intern::__Dee_REQUIRE_VAR_tp_serialize(tp_serialize)
+template<class Tobj> Dee_funptr_t __Dee_REQUIRE_VAR_tp_serialize(Dee_seraddr_t (DCALL *)(Tobj *__restrict, struct Dee_serial *__restrict)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_REQUIRE_VAR_tp_serialize(decltype(nullptr));
+
+#define _Dee_REQUIRE_ALLOC_tp_ctor(tp_ctor) ::__intern::__Dee_REQUIRE_ALLOC_tp_ctor(tp_ctor)
+template<class Tobj> Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_ctor(int (DCALL *)(Tobj *__restrict)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_ctor(decltype(nullptr));
+#define _Dee_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor) ::__intern::__Dee_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor)
+template<class Tobj> Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_copy_ctor(int (DCALL *)(Tobj *__restrict, Tobj *__restrict)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_copy_ctor(decltype(nullptr));
+#define _Dee_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor) ::__intern::__Dee_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor)
+template<class Tobj> Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_any_ctor(int (DCALL *)(Tobj *__restrict, size_t, DeeObject *const *)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_any_ctor(decltype(nullptr));
+#define _Dee_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw) ::__intern::__Dee_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw)
+template<class Tobj> Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_any_ctor_kw(int (DCALL *)(Tobj *__restrict, size_t, DeeObject *const *, DeeObject *)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_any_ctor_kw(decltype(nullptr));
+#define _Dee_REQUIRE_ALLOC_tp_serialize(tp_serialize) ::__intern::__Dee_REQUIRE_ALLOC_tp_serialize(tp_serialize)
+template<class Tobj> Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_serialize(int (DCALL *)(Tobj *__restrict, struct Dee_serial *__restrict, Dee_seraddr_t)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_serialize(decltype(nullptr));
+
+#define _Dee_REQUIRE_tp_alloc(tp_alloc) ::__intern::__Dee_REQUIRE_tp_alloc(tp_alloc)
+template<class Tobj> Dee_funptr_t __Dee_REQUIRE_tp_alloc(Tobj *(DCALL *)(void)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_REQUIRE_tp_alloc(void *(DCALL *)(void));
+Dee_funptr_t __Dee_REQUIRE_tp_alloc(decltype(nullptr));
+#define _Dee_REQUIRE_tp_free(tp_free) ::__intern::__Dee_REQUIRE_tp_free(tp_free)
+template<class Tobj> Dee_funptr_t __Dee_REQUIRE_tp_free(void (DCALL *)(Tobj *__restrict)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_REQUIRE_tp_free(void (DCALL *)(void *__restrict));
+Dee_funptr_t __Dee_REQUIRE_tp_free(decltype(nullptr));
+}}
+#else /* __INTELLISENSE__ */
+#define _Dee_REQUIRE_VAR_tp_ctor(tp_ctor)                 (Dee_funptr_t)(tp_ctor)
+#define _Dee_REQUIRE_VAR_tp_copy_ctor(tp_copy_ctor)       (Dee_funptr_t)(tp_copy_ctor)
+#define _Dee_REQUIRE_VAR_tp_any_ctor(tp_any_ctor)         (Dee_funptr_t)(tp_any_ctor)
+#define _Dee_REQUIRE_VAR_tp_any_ctor_kw(tp_any_ctor_kw)   (Dee_funptr_t)(tp_any_ctor_kw)
+#define _Dee_REQUIRE_VAR_tp_serialize(tp_serialize)       (Dee_funptr_t)(tp_serialize)
+#define _Dee_REQUIRE_ALLOC_tp_ctor(tp_ctor)               (Dee_funptr_t)(tp_ctor)
+#define _Dee_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor)     (Dee_funptr_t)(tp_copy_ctor)
+#define _Dee_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor)       (Dee_funptr_t)(tp_any_ctor)
+#define _Dee_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw) (Dee_funptr_t)(tp_any_ctor_kw)
+#define _Dee_REQUIRE_ALLOC_tp_serialize(tp_serialize)     (Dee_funptr_t)(tp_serialize)
+#define _Dee_REQUIRE_tp_alloc(tp_alloc)                   (Dee_funptr_t)(tp_alloc)
+#define _Dee_REQUIRE_tp_free(tp_free)                     (Dee_funptr_t)(tp_free)
+#endif /* !__INTELLISENSE__ */
+
+/************************************************************************/
+/* Initializers for TP_FVARIABLE types                                  */
+/************************************************************************/
+#define Dee_TYPE_CONSTRUCTOR_INIT_VAR(tp_ctor,           \
+                                      tp_copy_ctor,      \
+                                      tp_deep_ctor,      \
+                                      tp_any_ctor,       \
+                                      tp_any_ctor_kw,    \
+                                      tp_serialize,      \
+                                      tp_free)           \
+	{{                                                   \
+		_Dee_REQUIRE_VAR_tp_ctor(tp_ctor),               \
+		_Dee_REQUIRE_VAR_tp_copy_ctor(tp_copy_ctor),     \
+		_Dee_REQUIRE_VAR_tp_copy_ctor(tp_deep_ctor),     \
+		_Dee_REQUIRE_VAR_tp_any_ctor(tp_any_ctor),       \
+		_Dee_REQUIRE_tp_free(tp_free),                   \
+		{ NULL },                                        \
+		_Dee_REQUIRE_VAR_tp_any_ctor_kw(tp_any_ctor_kw), \
+		_Dee_REQUIRE_VAR_tp_serialize(tp_serialize)      \
+	}}
+
+
+/************************************************************************/
+/* Initializers for non-TP_FVARIABLE types                              */
+/************************************************************************/
+
+/* With custom allocator */
+#define Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor,           \
+                                        tp_copy_ctor,      \
+                                        tp_deep_ctor,      \
+                                        tp_any_ctor,       \
+                                        tp_any_ctor_kw,    \
+                                        tp_serialize,      \
+                                        tp_alloc,          \
+                                        tp_free)           \
+	{{                                                     \
+		_Dee_REQUIRE_ALLOC_tp_ctor(tp_ctor),               \
+		_Dee_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor),     \
+		_Dee_REQUIRE_ALLOC_tp_copy_ctor(tp_deep_ctor),     \
+		_Dee_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor),       \
+		_Dee_REQUIRE_tp_free(tp_free),                     \
+		{ _Dee_REQUIRE_tp_alloc(tp_alloc) },               \
+		_Dee_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw), \
+		_Dee_REQUIRE_ALLOC_tp_serialize(tp_serialize)      \
+	}}
+
+/* Specifies an automatic object allocator. */
+#define Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO(T, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED(sizeof(T), tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
+#define Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R(min_tp_instance_size, max_tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED(max_tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
+#define Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED(tp_instance_size, \
+                                                  tp_ctor,          \
+                                                  tp_copy_ctor,     \
+                                                  tp_deep_ctor,     \
+                                                  tp_any_ctor,      \
+                                                  tp_any_ctor_kw,   \
+                                                  tp_serialize)     \
+	{{                                                              \
+		_Dee_REQUIRE_ALLOC_tp_ctor(tp_ctor),                        \
+		_Dee_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor),              \
+		_Dee_REQUIRE_ALLOC_tp_copy_ctor(tp_deep_ctor),              \
+		_Dee_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor),                \
+		(Dee_funptr_t)NULL,                                         \
+		{ (Dee_funptr_t)(void *)(uintptr_t)(tp_instance_size) },    \
+		_Dee_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw),          \
+		_Dee_REQUIRE_ALLOC_tp_serialize(tp_serialize)               \
+	}}
+
+/* Specifies an allocator that may provides optimizations
+ * for types with a FIXED size (which most objects have). */
+#ifdef GUARD_DEEMON_ALLOC_H
+#ifdef CONFIG_NO_OBJECT_SLABS
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC_R Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO
+#else /* CONFIG_NO_OBJECT_SLABS */
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R(min_tp_instance_size, max_tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize,                                                   \
+	                                DeeSlab_Invoke(&DeeObject_SlabMalloc, max_tp_instance_size, , (void *(DCALL *)(void))(void *)(uintptr_t)(max_tp_instance_size)),  \
+	                                DeeSlab_Invoke(&DeeObject_SlabFree, min_tp_instance_size, , (void (DCALL *)(void *))(Dee_funptr_t)NULL))
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC_R(min_tp_instance_size, max_tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize,                                                      \
+	                                DeeSlab_Invoke(&DeeGCObject_SlabMalloc, max_tp_instance_size, , (void *(DCALL *)(void))(void *)(uintptr_t)(max_tp_instance_size)),   \
+	                                DeeSlab_Invoke(&DeeGCObject_SlabFree, min_tp_instance_size, , (void (DCALL *)(void *))(Dee_funptr_t)NULL))
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED(tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R(tp_instance_size, tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC_R(tp_instance_size, tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED(T, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_SIZED(sizeof(T), tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(T, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(sizeof(T), tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
+#endif /* !CONFIG_NO_OBJECT_SLABS */
+
+/* Same as `Dee_TYPE_CONSTRUCTOR_INIT_FIXED()', but don't link against
+ * dedicated allocator functions when doing so would require the creation
+ * of relocations that might cause loading times to become larger. */
+#ifdef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO
+#else /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S    Dee_TYPE_CONSTRUCTOR_INIT_FIXED
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC
+#endif /* !CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
+
+#endif /* GUARD_DEEMON_ALLOC_H */
+
 
 #undef tp_alloc
 struct Dee_type_constructor {

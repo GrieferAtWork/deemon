@@ -1930,14 +1930,15 @@ INTERN DeeTypeObject Bitset_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSet_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&bs_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&bs_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&bs_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&bs_init,
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &bs_ctor,
+			/* tp_copy_ctor:   */ &bs_copy,
+			/* tp_deep_ctor:   */ &bs_copy,
+			/* tp_any_ctor:    */ &bs_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
 		/* .tp_dtor        = */ NULL, /* No destructor needed! */
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&bs_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&bs_assign,
@@ -2453,14 +2454,15 @@ INTERN DeeTypeObject RoBitset_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSet_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&robs_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&robs_init,
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &robs_ctor,
+			/* tp_copy_ctor:   */ &DeeObject_NewRef,
+			/* tp_deep_ctor:   */ &DeeObject_NewRef,
+			/* tp_any_ctor:    */ &robs_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
 		/* .tp_dtor        = */ NULL, /* No destructor needed! */
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -4208,15 +4210,15 @@ INTERN DeeTypeObject BitsetView_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSet_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&bsv_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&bsv_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&bsv_init,
-				TYPE_FIXED_ALLOCATOR(BitsetView)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ BitsetView,
+			/* tp_ctor:        */ &bsv_ctor,
+			/* tp_copy_ctor:   */ &bsv_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &bsv_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bsv_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&bsv_assign,
 		/* .tp_move_assign = */ NULL,
@@ -4529,15 +4531,15 @@ INTERN DeeTypeObject BitsetIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&bsiter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&bsiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&bsiter_init,
-				TYPE_FIXED_ALLOCATOR(BitsetIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ BitsetIterator,
+			/* tp_ctor:        */ &bsiter_ctor,
+			/* tp_copy_ctor:   */ &bsiter_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &bsiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bsiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

@@ -437,15 +437,15 @@ INTERN DeeTypeObject SeqRangeIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&ri_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&ri_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&ri_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&ri_init,
-				TYPE_FIXED_ALLOCATOR_GC(RangeIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ RangeIterator,
+			/* tp_ctor:        */ &ri_ctor,
+			/* tp_copy_ctor:   */ &ri_copy,
+			/* tp_deep_ctor:   */ &ri_deep,
+			/* tp_any_ctor:    */ &ri_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ri_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1104,15 +1104,15 @@ INTERN DeeTypeObject SeqRange_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&range_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&range_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&range_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&range_init,
-				TYPE_FIXED_ALLOCATOR(Range)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ Range,
+			/* tp_ctor:        */ &range_ctor,
+			/* tp_copy_ctor:   */ &range_copy,
+			/* tp_deep_ctor:   */ &range_deep,
+			/* tp_any_ctor:    */ &range_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&range_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1265,15 +1265,15 @@ INTERN DeeTypeObject SeqIntRangeIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&iri_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&iri_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&iri_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&iri_init,
-				TYPE_FIXED_ALLOCATOR(IntRangeIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ IntRangeIterator,
+			/* tp_ctor:        */ &iri_ctor,
+			/* tp_copy_ctor:   */ &iri_copy,
+			/* tp_deep_ctor:   */ &iri_copy,
+			/* tp_any_ctor:    */ &iri_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1613,15 +1613,15 @@ INTERN DeeTypeObject SeqIntRange_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&intrange_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&intrange_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&intrange_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&intrange_init,
-				TYPE_FIXED_ALLOCATOR(IntRange)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ IntRange,
+			/* tp_ctor:        */ &intrange_ctor,
+			/* tp_copy_ctor:   */ &intrange_copy,
+			/* tp_deep_ctor:   */ &intrange_copy,
+			/* tp_any_ctor:    */ &intrange_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

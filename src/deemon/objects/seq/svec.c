@@ -164,12 +164,12 @@ PRIVATE struct type_nii tpconst rveciter_nii = {
 			/* .nii_getindex = */ (Dee_funptr_t)&rveciter_nii_getindex,
 			/* .nii_setindex = */ (Dee_funptr_t)&rveciter_nii_setindex,
 			/* .nii_rewind   = */ (Dee_funptr_t)&rveciter_nii_rewind,
-			/* .nii_revert   = */ (Dee_funptr_t)NULL,
-			/* .nii_advance  = */ (Dee_funptr_t)NULL,
-			/* .nii_prev     = */ (Dee_funptr_t)NULL,
-			/* .nii_next     = */ (Dee_funptr_t)NULL,
-			/* .nii_hasprev  = */ (Dee_funptr_t)NULL,
-			/* .nii_peek     = */ (Dee_funptr_t)NULL,
+			/* .nii_revert   = */ NULL,
+			/* .nii_advance  = */ NULL,
+			/* .nii_prev     = */ NULL,
+			/* .nii_next     = */ NULL,
+			/* .nii_hasprev  = */ NULL,
+			/* .nii_peek     = */ NULL,
 		}
 	}
 };
@@ -205,15 +205,15 @@ INTERN DeeTypeObject RefVectorIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&rveciter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&rveciter_ctor,
-				TYPE_FIXED_ALLOCATOR(RefVectorIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ RefVectorIterator,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &rveciter_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &rveciter_ctor,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rveciter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -702,15 +702,15 @@ INTERN DeeTypeObject RefVector_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&rvec_init,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&rvec_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(RefVector)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ RefVector,
+			/* tp_ctor:        */ &rvec_init,
+			/* tp_copy_ctor:   */ &rvec_copy,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rvec_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -913,15 +913,15 @@ INTERN DeeTypeObject SharedVectorIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&sveciter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&sveciter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&sveciter_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&sveciter_init,
-				TYPE_FIXED_ALLOCATOR(SharedVectorIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ SharedVectorIterator,
+			/* tp_ctor:        */ &sveciter_ctor,
+			/* tp_copy_ctor:   */ &sveciter_copy,
+			/* tp_deep_ctor:   */ &sveciter_deep,
+			/* tp_any_ctor:    */ &sveciter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sveciter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1362,15 +1362,15 @@ PUBLIC DeeTypeObject DeeSharedVector_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&svec_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&svec_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&svec_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(SharedVector)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ SharedVector,
+			/* tp_ctor:        */ &svec_ctor,
+			/* tp_copy_ctor:   */ &svec_copy,
+			/* tp_deep_ctor:   */ &svec_deep,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&svec_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

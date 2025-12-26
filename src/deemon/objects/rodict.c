@@ -769,15 +769,15 @@ INTERN DeeTypeObject RoDictIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&rditer_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&rditer_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&rditer_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&rditer_init,
-				TYPE_FIXED_ALLOCATOR(RoDictIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ RoDictIterator,
+			/* tp_ctor:        */ &rditer_ctor,
+			/* tp_copy_ctor:   */ &rditer_copy,
+			/* tp_deep_ctor:   */ &rditer_deep,
+			/* tp_any_ctor:    */ &rditer_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rditer_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -2233,17 +2233,15 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
 	/* .tp_features = */ TF_KW, /* RoDict offers KW-support (because items cannot be removed, values can be loaded as NOREF) */
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&rodict_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&rodict_deepcopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&rodict_init,
-				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&rodict_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &rodict_ctor,
+			/* tp_copy_ctor:   */ &DeeObject_NewRef,
+			/* tp_deep_ctor:   */ &rodict_deepcopy,
+			/* tp_any_ctor:    */ &rodict_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &rodict_serialize,
+			/* tp_free:        */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rodict_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

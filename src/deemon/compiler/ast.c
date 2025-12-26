@@ -1265,15 +1265,16 @@ INTERN DeeTypeObject DeeAst_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ NULL, /*&DeeObject_Type*/
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_ALLOCATOR(&ast_tp_alloc, &ast_tp_free)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_alloc:       */ &ast_tp_alloc,
+			/* tp_free:        */ &ast_tp_free
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ast_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL

@@ -375,16 +375,15 @@ PUBLIC DeeTypeObject DeeError_SystemError = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeError_Error,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeSystemErrorObject),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&systemerror_init_kw
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DeeSystemErrorObject,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ &systemerror_init_kw,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -429,16 +428,15 @@ PUBLIC DeeTypeObject DeeError_SystemError = {
 		/* .tp_features = */ TF_NONE,                                                    \
 		/* .tp_base     = */ tp_base,                                                    \
 		/* .tp_init = */ {                                                               \
-			{                                                                            \
-				/* .tp_alloc = */ {                                                      \
-					/* .tp_ctor        = */ (Dee_funptr_t)NULL,                          \
-					/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL,                          \
-					/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,                          \
-					/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,                          \
-					TYPE_FIXED_ALLOCATOR(T),                                             \
-					/* .tp_any_ctor_kw = */ (Dee_funptr_t)&systemerror_init_kw           \
-				}                                                                        \
-			},                                                                           \
+			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(                                             \
+				/* T:              */ T,                                                 \
+				/* tp_ctor:        */ NULL,                                              \
+				/* tp_copy_ctor:   */ NULL,                                              \
+				/* tp_deep_ctor:   */ NULL,                                              \
+				/* tp_any_ctor:    */ NULL,                                              \
+				/* tp_any_ctor_kw: */ &systemerror_init_kw,                              \
+				/* tp_serialize:   */ NULL                                               \
+			),                                                                           \
 			/* .tp_dtor        = */ NULL,                                                \
 			/* .tp_assign      = */ NULL,                                                \
 			/* .tp_move_assign = */ NULL,                                                \
@@ -773,15 +771,15 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 	/* .tp_base     = */ NULL, /* No base type (to only allow AppExit-interrupt handlers,
 	                            * and all-interrupt handlers to catch this error) */
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&appexit_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&appexit_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&appexit_init,
-				TYPE_FIXED_ALLOCATOR(struct appexit_object)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ struct appexit_object,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &appexit_copy,
+			/* tp_deep_ctor:   */ &appexit_copy,
+			/* tp_any_ctor:    */ &appexit_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -837,7 +835,7 @@ PUBLIC DeeNoMemoryErrorObject DeeError_NoMemory_instance = {
 /* ==== Signal type subsystem ==== */
 #define INIT_CUSTOM_SIGNAL(tp_name, tp_doc, tp_flags, tp_base,           \
                            tp_ctor, tp_copy, tp_deep, tp_init,           \
-                           tp_init_kw, tp_serialize, tp_visit, T,         \
+                           tp_init_kw, tp_serialize, tp_visit, T,        \
                            tp_str, tp_print, tp_repr, tp_printrepr,      \
                            tp_methods, tp_getsets, tp_members,           \
                            tp_class_members)                             \
@@ -850,17 +848,15 @@ PUBLIC DeeNoMemoryErrorObject DeeError_NoMemory_instance = {
 		/* .tp_features = */ TF_NONE | TF_TPVISIT,                       \
 		/* .tp_base     = */ tp_base,                                    \
 		/* .tp_init = */ {                                               \
-			{                                                            \
-				/* .tp_alloc = */ {                                      \
-					/* .tp_ctor      = */ (Dee_funptr_t)(tp_ctor),       \
-					/* .tp_copy_ctor = */ (Dee_funptr_t)(tp_copy),       \
-					/* .tp_deep_ctor = */ (Dee_funptr_t)(tp_deep),       \
-					/* .tp_any_ctor  = */ (Dee_funptr_t)(tp_init),       \
-					TYPE_FIXED_ALLOCATOR(T),                             \
-					/* .tp_any_ctor_kw = */ (Dee_funptr_t)(tp_init_kw),  \
-					/* .tp_serialize = */ (Dee_funptr_t)(tp_serialize)  \
-				}                                                        \
-			},                                                           \
+			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(                             \
+				/* T:              */ T,                                 \
+				/* tp_ctor:        */ tp_ctor,                           \
+				/* tp_copy_ctor:   */ tp_copy,                           \
+				/* tp_deep_ctor:   */ tp_deep,                           \
+				/* tp_any_ctor:    */ tp_init,                           \
+				/* tp_any_ctor_kw: */ tp_init_kw,                        \
+				/* tp_serialize:   */ tp_serialize                       \
+			),                                                           \
 			/* .tp_dtor        = */ NULL,                                \
 			/* .tp_assign      = */ NULL,                                \
 			/* .tp_move_assign = */ NULL                                 \
@@ -970,17 +966,15 @@ PUBLIC DeeTypeObject DeeError_Signal = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&DeeNone_OperatorCtor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&DeeNone_OperatorCopy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&DeeNone_OperatorCopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeSignalObject),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&DeeNone_OperatorWriteDec
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DeeSignalObject,
+			/* tp_ctor:        */ &DeeNone_OperatorCtor,
+			/* tp_copy_ctor:   */ &DeeNone_OperatorCopy,
+			/* tp_deep_ctor:   */ &DeeNone_OperatorCopy,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &DeeNone_OperatorWriteDec
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

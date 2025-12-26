@@ -393,15 +393,15 @@ INTERN DeeTypeObject Accu_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&accu_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&accu_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&accu_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&accu_init,
-				TYPE_FIXED_ALLOCATOR(AccuObject)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ AccuObject,
+			/* tp_ctor:        */ &accu_ctor,
+			/* tp_copy_ctor:   */ &accu_copy,
+			/* tp_deep_ctor:   */ &accu_deep,
+			/* tp_any_ctor:    */ &accu_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&accu_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

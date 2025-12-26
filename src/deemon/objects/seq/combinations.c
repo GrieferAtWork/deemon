@@ -433,15 +433,15 @@ INTERN DeeTypeObject SeqCombinations_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&sc_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&sc_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&sc_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&sc_init,
-				TYPE_FIXED_ALLOCATOR(SeqCombinations)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ SeqCombinations,
+			/* tp_ctor:        */ &sc_ctor,
+			/* tp_copy_ctor:   */ &sc_copy,
+			/* tp_deep_ctor:   */ &sc_deep,
+			/* tp_any_ctor:    */ &sc_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sc_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -486,15 +486,15 @@ INTERN DeeTypeObject SeqRepeatCombinations_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&src_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&src_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&src_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&src_init,
-				TYPE_FIXED_ALLOCATOR(SeqCombinations)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ SeqCombinations,
+			/* tp_ctor:        */ &src_ctor,
+			/* tp_copy_ctor:   */ &src_copy,
+			/* tp_deep_ctor:   */ &src_deep,
+			/* tp_any_ctor:    */ &src_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&src_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -537,15 +537,15 @@ INTERN DeeTypeObject SeqPermutations_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&sp_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&sp_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&sp_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&sp_init,
-				TYPE_FIXED_ALLOCATOR(SeqCombinations)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ SeqCombinations,
+			/* tp_ctor:        */ &sp_ctor,
+			/* tp_copy_ctor:   */ &sp_copy,
+			/* tp_deep_ctor:   */ &sp_deep,
+			/* tp_any_ctor:    */ &sp_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sp_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1039,14 +1039,15 @@ INTERN DeeTypeObject SeqCombinationsIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&sci_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&sci_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&sci_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&sci_init,
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &sci_ctor,
+			/* tp_copy_ctor:   */ &sci_copy,
+			/* tp_deep_ctor:   */ &sci_deep,
+			/* tp_any_ctor:    */ &sci_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sci_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&sci_assign,
 		/* .tp_move_assign = */ NULL,
@@ -1090,14 +1091,15 @@ INTERN DeeTypeObject SeqRepeatCombinationsIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&srci_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&srci_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&srci_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&srci_init,
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &srci_ctor,
+			/* tp_copy_ctor:   */ &srci_copy,
+			/* tp_deep_ctor:   */ &srci_deep,
+			/* tp_any_ctor:    */ &srci_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&srci_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&srci_assign,
 		/* .tp_move_assign = */ NULL,
@@ -1141,14 +1143,15 @@ INTERN DeeTypeObject SeqPermutationsIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&spi_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&spi_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&spi_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&spi_init,
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &spi_ctor,
+			/* tp_copy_ctor:   */ &spi_copy,
+			/* tp_deep_ctor:   */ &spi_deep,
+			/* tp_any_ctor:    */ &spi_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&spi_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&spi_assign,
 		/* .tp_move_assign = */ NULL,
@@ -1496,15 +1499,15 @@ INTERN DeeTypeObject SeqCombinationsView_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&scv_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&scv_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&scv_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&scv_init,
-				TYPE_FIXED_ALLOCATOR(SeqCombinationsView)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ SeqCombinationsView,
+			/* tp_ctor:        */ &scv_ctor,
+			/* tp_copy_ctor:   */ &scv_copy,
+			/* tp_deep_ctor:   */ &scv_deep,
+			/* tp_any_ctor:    */ &scv_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&scv_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

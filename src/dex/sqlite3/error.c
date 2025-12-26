@@ -183,16 +183,15 @@ INTERN DeeTypeObject SQLError_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeError_SystemError,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(SQLError),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&sqlerror_init_kw
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ SQLError,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ &sqlerror_init_kw,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sqlerror_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -235,15 +234,15 @@ INTERN DeeTypeObject SQLError_Type = {
 		/* .tp_features = */ TF_NONE,                           \
 		/* .tp_base     = */ base,                              \
 		/* .tp_init = */ {                                      \
-			{                                                   \
-				/* .tp_alloc = */ {                             \
-					/* .tp_ctor        = */ (Dee_funptr_t)NULL, \
-					/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL, \
-					/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL, \
-					/* .tp_any_ctor    = */ (Dee_funptr_t)NULL, \
-					TYPE_FIXED_ALLOCATOR(SQLError),             \
-				}                                               \
-			},                                                  \
+			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(                    \
+				/* T:              */ SQLError,                 \
+				/* tp_ctor:        */ NULL,                     \
+				/* tp_copy_ctor:   */ NULL,                     \
+				/* tp_deep_ctor:   */ NULL,                     \
+				/* tp_any_ctor:    */ NULL,                     \
+				/* tp_any_ctor_kw: */ NULL,                     \
+				/* tp_serialize:   */ NULL                      \
+			),                                                  \
 			/* .tp_dtor        = */ NULL,                       \
 			/* .tp_assign      = */ NULL,                       \
 			/* .tp_move_assign = */ NULL,                       \

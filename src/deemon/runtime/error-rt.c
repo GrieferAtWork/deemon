@@ -133,7 +133,7 @@ print define_Dee_HashStr("cause");
 	                     tp_class_members)
 #define INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, tp_flags, tp_features,                                   \
                              tp_base, T, tp_ctor, tp_copy, tp_deep, tp_init,                           \
-                             tp_init_kw, tp_serialize, tp_fini, tp_visit, tp_cmp,                       \
+                             tp_init_kw, tp_serialize, tp_fini, tp_visit, tp_cmp,                      \
                              tp_str, tp_print,                                                         \
                              tp_methods, tp_getsets, tp_members,                                       \
                              tp_class_members)                                                         \
@@ -146,17 +146,15 @@ print define_Dee_HashStr("cause");
 		/* .tp_features = */ TF_NONE | (tp_features),                                                  \
 		/* .tp_base     = */ tp_base,                                                                  \
 		/* .tp_init = */ {                                                                             \
-			{                                                                                          \
-				/* .tp_alloc = */ {                                                                    \
-					/* .tp_ctor      = */ (Dee_funptr_t)(tp_ctor),                                     \
-					/* .tp_copy_ctor = */ (Dee_funptr_t)(tp_copy),                                     \
-					/* .tp_deep_ctor = */ (Dee_funptr_t)(tp_deep),                                     \
-					/* .tp_any_ctor  = */ (Dee_funptr_t)(tp_init),                                     \
-					TYPE_FIXED_ALLOCATOR(T),                                                           \
-					/* .tp_any_ctor_kw = */ (Dee_funptr_t)(tp_init_kw),                                \
-					/* .tp_serialize = */ (Dee_funptr_t)(tp_serialize)                                \
-				}                                                                                      \
-			},                                                                                         \
+			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(                                                           \
+				/* T:              */ T,                                                               \
+				/* tp_ctor:        */ tp_ctor,                                                         \
+				/* tp_copy_ctor:   */ tp_copy,                                                         \
+				/* tp_deep_ctor:   */ tp_deep,                                                         \
+				/* tp_any_ctor:    */ tp_init,                                                         \
+				/* tp_any_ctor_kw: */ tp_init_kw,                                                      \
+				/* tp_serialize:   */ tp_serialize                                                     \
+			),                                                                                         \
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))(tp_fini),                  \
 			/* .tp_assign      = */ NULL,                                                              \
 			/* .tp_move_assign = */ NULL                                                               \
@@ -672,17 +670,15 @@ PUBLIC DeeTypeObject DeeError_Error = {
 	/* .tp_features = */ error_tp_features,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ (Dee_funptr_t)&error_ctor,
-				/* .tp_copy_ctor   = */ (Dee_funptr_t)&error_copy,
-				/* .tp_deep_ctor   = */ (Dee_funptr_t)&error_deep,
-				/* .tp_any_ctor    = */ (Dee_funptr_t)&error_init,
-				TYPE_FIXED_ALLOCATOR(DeeErrorObject),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&error_init_kw,
-				/* .tp_serialize = */ (Dee_funptr_t)&error_serialize,
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DeeErrorObject,
+			/* tp_ctor:        */ &error_ctor,
+			/* tp_copy_ctor:   */ &error_copy,
+			/* tp_deep_ctor:   */ &error_deep,
+			/* tp_any_ctor:    */ &error_init,
+			/* tp_any_ctor_kw: */ &error_init_kw,
+			/* tp_serialize:   */ &error_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&error_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

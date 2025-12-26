@@ -308,23 +308,23 @@ INTERN DeePointerTypeObject DeePointer_Type = {
 			/* .tp_features = */ TF_NONE,
 			/* .tp_base     = */ DeeSType_AsType(&DeeStructured_Type),
 			/* .tp_init = */ {
-				{
-					/* .tp_alloc = */ {
-						/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-						/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-						/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-						/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-						TYPE_FIXED_ALLOCATOR(struct pointer_object)
-					}
-				},
+				Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+					/* T:              */ struct pointer_object,
+					/* tp_ctor:        */ NULL,
+					/* tp_copy_ctor:   */ NULL,
+					/* tp_deep_ctor:   */ NULL,
+					/* tp_any_ctor:    */ NULL,
+					/* tp_any_ctor_kw: */ NULL,
+					/* tp_serialize:   */ NULL
+				),
 				/* .tp_dtor        = */ NULL,
 				/* .tp_assign      = */ NULL,
 				/* .tp_move_assign = */ NULL
 			},
 			/* .tp_cast = */ {
-				/* .tp_str  = */ NULL,
-				/* .tp_repr = */ NULL,
-				/* .tp_bool = */ NULL
+			/* .tp_str  = */ NULL,
+			/* .tp_repr = */ NULL,
+			/* .tp_bool = */ NULL
 			},
 					/* .tp_visit         = */ NULL,
 			/* .tp_gc            = */ NULL,
@@ -746,23 +746,23 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
 			/* .tp_features = */ TF_NONE,
 			/* .tp_base     = */ DeeSType_AsType(&DeeStructured_Type),
 			/* .tp_init = */ {
-				{
-					/* .tp_var = */ {
-						/* .tp_ctor      = */ (Dee_funptr_t)&lvalue_ctor,
-						/* .tp_copy_ctor = */ (Dee_funptr_t)&lvalue_copy,
-						/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-						/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-						TYPE_FIXED_ALLOCATOR(struct pointer_object)
-					}
-				},
+				Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+					/* tp_ctor:        */ &lvalue_ctor,
+					/* tp_copy_ctor:   */ &lvalue_copy,
+					/* tp_deep_ctor:   */ NULL,
+					/* tp_any_ctor:    */ NULL,
+					/* tp_any_ctor_kw: */ NULL,
+					/* tp_serialize:   */ NULL,
+					/* tp_free:        */ NULL
+				),
 				/* .tp_dtor        = */ NULL,
 				/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&lvalue_tp_assign,
 				/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&lvalue_tp_assign
 			},
 			/* .tp_cast = */ {
-				/* .tp_str  = */ NULL,
-				/* .tp_repr = */ NULL,
-				/* .tp_bool = */ NULL
+			/* .tp_str  = */ NULL,
+			/* .tp_repr = */ NULL,
+			/* .tp_bool = */ NULL
 			},
 					/* .tp_visit         = */ NULL,
 			/* .tp_gc            = */ NULL,

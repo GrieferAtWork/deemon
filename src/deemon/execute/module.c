@@ -3086,17 +3086,15 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,   /* !!! Not constructible !!! */
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,   /* !!! Not constructible !!! */
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,   /* !!! Not constructible !!! */
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,   /* !!! Not constructible !!! */
-				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL, /* !!! Not constructible !!! */
-				/* .tp_serialize = */ (Dee_funptr_t)NULL
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ NULL, /* !!! Not constructible !!! */
+			/* tp_copy_ctor:   */ NULL, /* !!! Not constructible !!! */
+			/* tp_deep_ctor:   */ NULL, /* !!! Not constructible !!! */
+			/* tp_any_ctor:    */ NULL, /* !!! Not constructible !!! */
+			/* tp_any_ctor_kw: */ NULL, /* !!! Not constructible !!! */
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL,
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -3138,17 +3136,15 @@ PUBLIC DeeTypeObject DeeModuleDir_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeModule_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_serialize = */ (Dee_funptr_t)NULL  /* TODO */
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ NULL, /* TODO */
+			/* tp_copy_ctor:   */ NULL, /* TODO */
+			/* tp_deep_ctor:   */ NULL, /* TODO */
+			/* tp_any_ctor:    */ NULL, /* TODO */
+			/* tp_any_ctor_kw: */ NULL, /* TODO */
+			/* tp_serialize:   */ NULL, /* TODO */
+			/* tp_free:        */ NULL,
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -3192,17 +3188,15 @@ PUBLIC DeeTypeObject DeeModuleDee_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeModule_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_serialize = */ (Dee_funptr_t)NULL  /* TODO */
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ NULL, /* TODO */
+			/* tp_copy_ctor:   */ NULL, /* TODO */
+			/* tp_deep_ctor:   */ NULL, /* TODO */
+			/* tp_any_ctor:    */ NULL, /* TODO */
+			/* tp_any_ctor_kw: */ NULL, /* TODO */
+			/* tp_serialize:   */ NULL, /* TODO */
+			/* tp_free:        */ NULL,
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -3247,17 +3241,15 @@ PUBLIC DeeTypeObject DeeModuleDex_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeModule_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_serialize = */ (Dee_funptr_t)NULL  /* TODO */
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ NULL, /* TODO */
+			/* tp_copy_ctor:   */ NULL, /* TODO */
+			/* tp_deep_ctor:   */ NULL, /* TODO */
+			/* tp_any_ctor:    */ NULL, /* TODO */
+			/* tp_any_ctor_kw: */ NULL, /* TODO */
+			/* tp_serialize:   */ NULL, /* TODO */
+			/* tp_free:        */ NULL,
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -3347,15 +3339,15 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR_GC(DeeModuleObject)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ DeeModuleObject,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&module_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

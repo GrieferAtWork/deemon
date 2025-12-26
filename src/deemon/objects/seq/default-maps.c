@@ -408,17 +408,15 @@ INTERN DeeTypeObject MapUnion_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&mu_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&mu_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&mu_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&mu_init,
-				TYPE_FIXED_ALLOCATOR(MapUnion),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&mu_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ MapUnion,
+			/* tp_ctor:        */ &mu_ctor,
+			/* tp_copy_ctor:   */ &mu_copy,
+			/* tp_deep_ctor:   */ &mu_deep,
+			/* tp_any_ctor:    */ &mu_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &mu_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mu_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -883,15 +881,15 @@ INTERN DeeTypeObject MapUnionIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&muiter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&muiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&muiter_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&muiter_init,
-				TYPE_FIXED_ALLOCATOR_GC(MapUnionIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ MapUnionIterator,
+			/* tp_ctor:        */ &muiter_ctor,
+			/* tp_copy_ctor:   */ &muiter_copy,
+			/* tp_deep_ctor:   */ &muiter_deep,
+			/* tp_any_ctor:    */ &muiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&muiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1134,17 +1132,15 @@ INTERN DeeTypeObject MapIntersection_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&mi_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&mi_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&mi_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&mi_init,
-				TYPE_FIXED_ALLOCATOR(MapIntersection),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&mi_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ MapIntersection,
+			/* tp_ctor:        */ &mi_ctor,
+			/* tp_copy_ctor:   */ &mi_copy,
+			/* tp_deep_ctor:   */ &mi_deep,
+			/* tp_any_ctor:    */ &mi_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &mi_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1329,15 +1325,15 @@ INTERN DeeTypeObject MapIntersectionIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&miiter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&miiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&miiter_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&miiter_init,
-				TYPE_FIXED_ALLOCATOR(MapIntersectionIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ MapIntersectionIterator,
+			/* tp_ctor:        */ &miiter_ctor,
+			/* tp_copy_ctor:   */ &miiter_copy,
+			/* tp_deep_ctor:   */ &miiter_deep,
+			/* tp_any_ctor:    */ &miiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&miiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1569,17 +1565,15 @@ INTERN DeeTypeObject MapDifference_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&md_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&md_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&md_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&md_init,
-				TYPE_FIXED_ALLOCATOR(MapDifference),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&md_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ MapDifference,
+			/* tp_ctor:        */ &md_ctor,
+			/* tp_copy_ctor:   */ &md_copy,
+			/* tp_deep_ctor:   */ &md_deep,
+			/* tp_any_ctor:    */ &md_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &md_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&md_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1702,15 +1696,15 @@ INTERN DeeTypeObject MapDifferenceIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&mditer_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&mditer_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&mditer_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&mditer_init,
-				TYPE_FIXED_ALLOCATOR(MapDifferenceIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ MapDifferenceIterator,
+			/* tp_ctor:        */ &mditer_ctor,
+			/* tp_copy_ctor:   */ &mditer_copy,
+			/* tp_deep_ctor:   */ &mditer_deep,
+			/* tp_any_ctor:    */ &mditer_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mditer_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -2272,17 +2266,15 @@ INTERN DeeTypeObject MapSymmetricDifference_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&msd_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&msd_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&msd_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&msd_init,
-				TYPE_FIXED_ALLOCATOR(MapSymmetricDifference),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&msd_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ MapSymmetricDifference,
+			/* tp_ctor:        */ &msd_ctor,
+			/* tp_copy_ctor:   */ &msd_copy,
+			/* tp_deep_ctor:   */ &msd_deep,
+			/* tp_any_ctor:    */ &msd_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &msd_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&msd_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -2735,15 +2727,15 @@ INTERN DeeTypeObject MapSymmetricDifferenceIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&msditer_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&msditer_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&msditer_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&msditer_init,
-				TYPE_FIXED_ALLOCATOR_GC(MapSymmetricDifferenceIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ MapSymmetricDifferenceIterator,
+			/* tp_ctor:        */ &msditer_ctor,
+			/* tp_copy_ctor:   */ &msditer_copy,
+			/* tp_deep_ctor:   */ &msditer_deep,
+			/* tp_any_ctor:    */ &msditer_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&msditer_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

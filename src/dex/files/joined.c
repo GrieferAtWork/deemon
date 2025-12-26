@@ -42,15 +42,15 @@ INTERN DeeFileTypeObject Joined_Type = {
 		/* .tp_features = */ TF_NONE,
 		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
 		/* .tp_init = */ {
-			{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				/* .tp_free      = */ (Dee_funptr_t)NULL
-			}
-			},
+			Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+				/* tp_ctor:        */ NULL,
+				/* tp_copy_ctor:   */ NULL,
+				/* tp_deep_ctor:   */ NULL,
+				/* tp_any_ctor:    */ NULL,
+				/* tp_any_ctor_kw: */ NULL,
+				/* tp_serialize:   */ NULL,
+				/* tp_free:        */ NULL
+			),
 			/* .tp_dtor        = */ NULL,
 			/* .tp_assign      = */ NULL,
 			/* .tp_move_assign = */ NULL

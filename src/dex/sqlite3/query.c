@@ -122,15 +122,15 @@ INTERN DeeTypeObject QueryIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&qiter_init,
-				TYPE_FIXED_ALLOCATOR(QueryIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ QueryIterator,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ &qiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&qiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -862,17 +862,15 @@ INTERN DeeTypeObject Query_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor        = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor   = */ (Dee_funptr_t)NULL,
-				/* .tp_deep_ctor   = */ (Dee_funptr_t)NULL,
-				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
-				/* .tp_free        = */ (Dee_funptr_t)NULL,
-				/* .tp_pad         = */ { (Dee_funptr_t)NULL },
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL, // TODO: &query_init_kw,
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL, // TODO: &query_init_kw,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
 		/* .tp_dtor        = */ NULL, /* Nope: this one has a custom tp_destroy (needed to dead queries can be re-used) */
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

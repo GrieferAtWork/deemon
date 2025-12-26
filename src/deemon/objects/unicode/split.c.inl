@@ -331,15 +331,15 @@ INTERN DeeTypeObject StringSplitIterator_Type = {
 	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&splititer_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&splititer_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&splititer_init,
-				TYPE_FIXED_ALLOCATOR(StringSplitIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ StringSplitIterator,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &splititer_copy,
+			/* tp_deep_ctor:   */ &splititer_copy,
+			/* tp_any_ctor:    */ &splititer_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&splititer_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -383,15 +383,15 @@ INTERN DeeTypeObject StringCaseSplitIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &StringSplitIterator_Type, /* Extend the regular split() iterator type. */
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&splititer_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&splititer_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&splititer_init,
-				TYPE_FIXED_ALLOCATOR(StringSplitIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ StringSplitIterator,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &splititer_copy,
+			/* tp_deep_ctor:   */ &splititer_copy,
+			/* tp_any_ctor:    */ &splititer_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ NULL, /* INHERITED */
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -643,15 +643,15 @@ INTERN DeeTypeObject StringSplit_Type = {
 	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&split_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&split_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&split_init,
-				TYPE_FIXED_ALLOCATOR(StringSplit)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ StringSplit,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &split_copy,
+			/* tp_deep_ctor:   */ &split_copy,
+			/* tp_any_ctor:    */ &split_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&split_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -693,15 +693,15 @@ INTERN DeeTypeObject StringCaseSplit_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &StringSplit_Type, /* Extend the regular split() type. */
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&split_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&split_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&split_init,
-				TYPE_FIXED_ALLOCATOR(StringSplit)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ StringSplit,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &split_copy,
+			/* tp_deep_ctor:   */ &split_copy,
+			/* tp_any_ctor:    */ &split_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ NULL, /* INHERITED */
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -973,15 +973,15 @@ INTERN DeeTypeObject StringLineSplitIterator_Type = {
 	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&lineiter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&lineiter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&lineiter_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&lineiter_init,
-				TYPE_FIXED_ALLOCATOR(LineSplitIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ LineSplitIterator,
+			/* tp_ctor:        */ &lineiter_ctor,
+			/* tp_copy_ctor:   */ &lineiter_copy,
+			/* tp_deep_ctor:   */ &lineiter_copy,
+			/* tp_any_ctor:    */ &lineiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&splititer_fini, /* offset:`s_split' == offset:`ls_split' */
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1137,15 +1137,15 @@ INTERN DeeTypeObject StringLineSplit_Type = {
 	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&linesplit_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&linesplit_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&linesplit_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&linesplit_init,
-				TYPE_FIXED_ALLOCATOR(LineSplit)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ LineSplit,
+			/* tp_ctor:        */ &linesplit_ctor,
+			/* tp_copy_ctor:   */ &linesplit_copy,
+			/* tp_deep_ctor:   */ &linesplit_copy,
+			/* tp_any_ctor:    */ &linesplit_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&linesplit_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

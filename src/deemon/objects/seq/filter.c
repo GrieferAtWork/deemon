@@ -191,15 +191,15 @@ INTERN DeeTypeObject SeqFilterIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&filteriterator_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&filteriterator_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&filteriterator_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&filteriterator_init,
-				TYPE_FIXED_ALLOCATOR(FilterIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ FilterIterator,
+			/* tp_ctor:        */ &filteriterator_ctor,
+			/* tp_copy_ctor:   */ &filteriterator_copy,
+			/* tp_deep_ctor:   */ &filteriterator_deep,
+			/* tp_any_ctor:    */ &filteriterator_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&filteriterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -801,17 +801,15 @@ INTERN DeeTypeObject SeqFilter_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&filter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&filter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&filter_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&filter_init,
-				TYPE_FIXED_ALLOCATOR(Filter),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&filter_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ Filter,
+			/* tp_ctor:        */ &filter_ctor,
+			/* tp_copy_ctor:   */ &filter_copy,
+			/* tp_deep_ctor:   */ &filter_deep,
+			/* tp_any_ctor:    */ &filter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &filter_serialize
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&filter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -854,15 +852,15 @@ INTERN DeeTypeObject SeqFilterAsUnbound_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&filter_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&filter_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&filter_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&filter_init,
-				TYPE_FIXED_ALLOCATOR(Filter)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ Filter,
+			/* tp_ctor:        */ &filter_ctor,
+			/* tp_copy_ctor:   */ &filter_copy,
+			/* tp_deep_ctor:   */ &filter_deep,
+			/* tp_any_ctor:    */ &filter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&filter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

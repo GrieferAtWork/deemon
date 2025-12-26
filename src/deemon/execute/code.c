@@ -2737,17 +2737,15 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&code_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&code_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&code_deepcopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
-				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&code_init_kw,
-				/* .tp_serialize = */ (Dee_funptr_t)&code_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &code_ctor,
+			/* tp_copy_ctor:   */ &code_copy,
+			/* tp_deep_ctor:   */ &code_deepcopy,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ &code_init_kw,
+			/* tp_serialize:   */ &code_serialize,
+			/* tp_free:        */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&code_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

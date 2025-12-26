@@ -923,17 +923,15 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeNumeric_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&float_ctor,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&float_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&float_copy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&float_init,
-				TYPE_FIXED_ALLOCATOR(Float),
-				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_serialize = */ (Dee_funptr_t)&float_serialize
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ Float,
+			/* tp_ctor:        */ &float_ctor,
+			/* tp_copy_ctor:   */ &float_copy,
+			/* tp_deep_ctor:   */ &float_copy,
+			/* tp_any_ctor:    */ &float_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &float_serialize
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -981,15 +979,15 @@ PUBLIC DeeTypeObject _nofpu_DeeFloat_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeNumeric_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
-				TYPE_FIXED_ALLOCATOR(Float)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ Float,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL

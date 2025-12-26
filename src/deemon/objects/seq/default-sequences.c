@@ -1040,15 +1040,15 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndex_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&ds_sgi_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&ds_sgi_deepcopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&ds_sgi_init,
-				TYPE_FIXED_ALLOCATOR(DefaultSequence_WithSizeAndGetItemIndex)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DefaultSequence_WithSizeAndGetItemIndex,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &ds_sgi_copy,
+			/* tp_deep_ctor:   */ &ds_sgi_deepcopy,
+			/* tp_any_ctor:    */ &ds_sgi_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_sgi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1090,15 +1090,15 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&ds_sgif_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&ds_sgif_deepcopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&ds_sgif_init,
-				TYPE_FIXED_ALLOCATOR(DefaultSequence_WithSizeAndGetItemIndex)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DefaultSequence_WithSizeAndGetItemIndex,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &ds_sgif_copy,
+			/* tp_deep_ctor:   */ &ds_sgif_deepcopy,
+			/* tp_any_ctor:    */ &ds_sgif_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_sgif_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1140,15 +1140,15 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndTryGetItemIndex_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&ds_stgi_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&ds_stgi_deepcopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&ds_stgi_init,
-				TYPE_FIXED_ALLOCATOR(DefaultSequence_WithSizeAndGetItemIndex)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DefaultSequence_WithSizeAndGetItemIndex,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &ds_stgi_copy,
+			/* tp_deep_ctor:   */ &ds_stgi_deepcopy,
+			/* tp_any_ctor:    */ &ds_stgi_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_stgi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -1815,15 +1815,15 @@ INTERN DeeTypeObject DefaultSequence_WithSizeObAndGetItem_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&ds_sg_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&ds_sg_deepcopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&ds_sg_init,
-				TYPE_FIXED_ALLOCATOR(DefaultSequence_WithSizeObAndGetItem)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DefaultSequence_WithSizeObAndGetItem,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &ds_sg_copy,
+			/* tp_deep_ctor:   */ &ds_sg_deepcopy,
+			/* tp_any_ctor:    */ &ds_sg_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_sg_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -2298,15 +2298,15 @@ INTERN DeeTypeObject DefaultSequence_WithIter_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&ds_i_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&ds_i_deepcopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&ds_i_init,
-				TYPE_FIXED_ALLOCATOR(DefaultSequence_WithIter)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DefaultSequence_WithIter,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &ds_i_copy,
+			/* tp_deep_ctor:   */ &ds_i_deepcopy,
+			/* tp_any_ctor:    */ &ds_i_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_i_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -2348,15 +2348,15 @@ INTERN DeeTypeObject DefaultSequence_WithIterAndLimit_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&ds_ial_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&ds_ial_deepcopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&ds_ial_init,
-				TYPE_FIXED_ALLOCATOR(DefaultSequence_WithIterAndLimit)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DefaultSequence_WithIterAndLimit,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &ds_ial_copy,
+			/* tp_deep_ctor:   */ &ds_ial_deepcopy,
+			/* tp_any_ctor:    */ &ds_ial_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_ial_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

@@ -1337,25 +1337,27 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type, /* Not a sequence type! (can't have stuff like "find()", etc.) */
 	/* .tp_init = */ {
-		{
 #if !(LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE)
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&LOCAL_seX(ctor),
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&LOCAL_seX(copy),
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&LOCAL_seX(deep),
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&LOCAL_seX(init),
-				TYPE_FIXED_ALLOCATOR(LOCAL_SeqEach)
-			}
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ LOCAL_SeqEach,
+			/* tp_ctor:        */ &LOCAL_seX(ctor),
+			/* tp_copy_ctor:   */ &LOCAL_seX(copy),
+			/* tp_deep_ctor:   */ &LOCAL_seX(deep),
+			/* tp_any_ctor:    */ &LOCAL_seX(init),
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 #else /* !(LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE) */
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&LOCAL_seX(ctor),
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&LOCAL_seX(copy),
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&LOCAL_seX(deep),
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&LOCAL_seX(init),
-				/* .tp_free      = */ (Dee_funptr_t)NULL
-			}
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &LOCAL_seX(ctor),
+			/* tp_copy_ctor:   */ &LOCAL_seX(copy),
+			/* tp_deep_ctor:   */ &LOCAL_seX(deep),
+			/* tp_any_ctor:    */ &LOCAL_seX(init),
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
 #endif /* LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE */
-		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&LOCAL_seX(fini),
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&LOCAL_seX(assign),
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&LOCAL_seX(moveassign),
@@ -1461,15 +1463,15 @@ INTERN DeeTypeObject LOCAL_SeqEachIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&LOCAL_seXi(ctor),
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&sewi_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&sewi_deep,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&LOCAL_seXi(init),
-				TYPE_FIXED_ALLOCATOR(SeqEachIterator)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ SeqEachIterator,
+			/* tp_ctor:        */ &LOCAL_seXi(ctor),
+			/* tp_copy_ctor:   */ &sewi_copy,
+			/* tp_deep_ctor:   */ &sewi_deep,
+			/* tp_any_ctor:    */ &LOCAL_seXi(init),
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sewi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -1832,25 +1834,27 @@ INTERN DeeTypeObject LOCAL_SeqSome_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type, /* Not a sequence type! (can't have stuff like "find()", etc.) */
 	/* .tp_init = */ {
-		{
 #if !(LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE)
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&LOCAL_seX(ctor),
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&LOCAL_seX(copy),
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&LOCAL_seX(deep),
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&LOCAL_seX(init),
-				TYPE_FIXED_ALLOCATOR(LOCAL_SeqEach)
-			}
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ LOCAL_SeqEach,
+			/* tp_ctor:        */ &LOCAL_seX(ctor),
+			/* tp_copy_ctor:   */ &LOCAL_seX(copy),
+			/* tp_deep_ctor:   */ &LOCAL_seX(deep),
+			/* tp_any_ctor:    */ &LOCAL_seX(init),
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 #else /* !(LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE) */
-			/* .tp_var = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)&LOCAL_seX(ctor),
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&LOCAL_seX(copy),
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&LOCAL_seX(deep),
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&LOCAL_seX(init),
-				/* .tp_free      = */ (Dee_funptr_t)NULL
-			}
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ &LOCAL_seX(ctor),
+			/* tp_copy_ctor:   */ &LOCAL_seX(copy),
+			/* tp_deep_ctor:   */ &LOCAL_seX(deep),
+			/* tp_any_ctor:    */ &LOCAL_seX(init),
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
 #endif /* LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE */
-		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&LOCAL_seX(fini),
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,

@@ -661,15 +661,15 @@ INTERN DeeTypeObject DefaultReversed_WithGetItemIndex_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&rs_gii_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&rs_gii_deepcopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&rs_gii_init,
-				TYPE_FIXED_ALLOCATOR(DefaultReversed_WithGetItemIndex)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DefaultReversed_WithGetItemIndex,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &rs_gii_copy,
+			/* tp_deep_ctor:   */ &rs_gii_deepcopy,
+			/* tp_any_ctor:    */ &rs_gii_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rs_gii_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -711,15 +711,15 @@ INTERN DeeTypeObject DefaultReversed_WithGetItemIndexFast_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&rs_giif_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&rs_giif_deepcopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&rs_giif_init,
-				TYPE_FIXED_ALLOCATOR(DefaultReversed_WithGetItemIndex)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DefaultReversed_WithGetItemIndex,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &rs_giif_copy,
+			/* tp_deep_ctor:   */ &rs_giif_deepcopy,
+			/* tp_any_ctor:    */ &rs_giif_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rs_giif_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
@@ -761,15 +761,15 @@ INTERN DeeTypeObject DefaultReversed_WithTryGetItemIndex_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (Dee_funptr_t)NULL,
-				/* .tp_copy_ctor = */ (Dee_funptr_t)&rs_tgii_copy,
-				/* .tp_deep_ctor = */ (Dee_funptr_t)&rs_tgii_deepcopy,
-				/* .tp_any_ctor  = */ (Dee_funptr_t)&rs_tgii_init,
-				TYPE_FIXED_ALLOCATOR(DefaultReversed_WithGetItemIndex)
-			}
-		},
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ DefaultReversed_WithGetItemIndex,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &rs_tgii_copy,
+			/* tp_deep_ctor:   */ &rs_tgii_deepcopy,
+			/* tp_any_ctor:    */ &rs_tgii_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rs_tgii_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
