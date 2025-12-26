@@ -223,7 +223,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL c_atomic_atomic_cmpx
 	union atomic_operand op_oldval, op_newval;
 	union pointer op_ptr;
 	DeeSTypeObject *basetype;
-	DREF DeeObject *result_obj;
+	DREF DeeStructObject *result_obj;
 	if unlikely(DeeObject_AsGenericPointer(ptr, &basetype, &op_ptr))
 		goto err;
 	if unlikely(get_atomic_operand(oldval, basetype, &op_oldval))
@@ -231,8 +231,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL c_atomic_atomic_cmpx
 	if unlikely(get_atomic_operand(newval, basetype, &op_newval))
 		goto err;
 	/* Allocate a buffer for the result (which is the *real* old value) */
-	result_obj = (DREF DeeObject *)DeeObject_Malloc(sizeof(DeeObject) +
-	                                                basetype->st_sizeof);
+	result_obj = DeeStructObject_Malloc(basetype->st_sizeof);
 	if unlikely(!result_obj)
 		goto err;
 	CTYPES_FAULTPROTECT({
@@ -245,10 +244,10 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL c_atomic_atomic_cmpx
 		}
 	}, goto err_result_obj);
 	DeeObject_Init(result_obj, DeeSType_AsType(basetype));
-	return result_obj;
+	return (DREF DeeObject *)result_obj;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 err_result_obj:
-	DeeObject_Free(result_obj);
+	DeeStructObject_Free(result_obj);
 #endif /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
 err:
 	return NULL;
@@ -267,15 +266,14 @@ err:
 		union atomic_operand addend;                                                                      \
 		union pointer ptr;                                                                                \
 		DeeSTypeObject *basetype;                                                                         \
-		DREF DeeObject *result_obj;                                                                       \
+		DREF DeeStructObject *result_obj;                                                                 \
 		DeeArg_Unpack2(err, argc, argv, atomic_name, &ob_ptr, &ob_addend);                                \
 		if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))                                  \
 			goto err;                                                                                     \
 		if unlikely(get_atomic_operand(ob_addend, basetype, &addend))                                     \
 			goto err;                                                                                     \
 		/* Allocate a buffer for the result (which is the *real* old value) */                            \
-		result_obj = (DREF DeeObject *)DeeObject_Malloc(sizeof(DeeObject) +                               \
-		                                                basetype->st_sizeof);                             \
+		result_obj = DeeStructObject_Malloc(basetype->st_sizeof);                                         \
 		if unlikely(!result_obj)                                                                          \
 			goto err;                                                                                     \
 		CTYPES_FAULTPROTECT({                                                                             \
@@ -288,9 +286,9 @@ err:
 			}                                                                                             \
 		}, goto err_result_obj);                                                                          \
 		DeeObject_Init(result_obj, DeeSType_AsType(basetype));                                            \
-		return result_obj;                                                                                \
+		return (DREF DeeObject *)result_obj;                                                              \
 	IF_HAVE_FAULTPROTECT(err_result_obj:                                                                  \
-		DeeObject_Free(result_obj);)                                                                      \
+		DeeStructObject_Free(result_obj);)                                                                \
 	err:                                                                                                  \
 		return NULL;                                                                                      \
 	}                                                                                                     \
@@ -350,13 +348,12 @@ CTYPES_DEFINE_ATOMIC_BINOP_VOID(c_atomic_atomic_write, "atomic_write", atomic_wr
 		DeeObject *ob_ptr;                                                                 \
 		union pointer ptr;                                                                 \
 		DeeSTypeObject *basetype;                                                          \
-		DREF DeeObject *result_obj;                                                        \
+		DREF DeeStructObject *result_obj;                                                  \
 		DeeArg_Unpack1(err, argc, argv, atomic_name, &ob_ptr);                             \
 		if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))                   \
 			goto err;                                                                      \
 		/* Allocate a buffer for the result (which is the *real* old value) */             \
-		result_obj = (DREF DeeObject *)DeeObject_Malloc(sizeof(DeeObject) +                \
-		                                                basetype->st_sizeof);              \
+		result_obj = DeeStructObject_Malloc(basetype->st_sizeof);                          \
 		if unlikely(!result_obj)                                                           \
 			goto err;                                                                      \
 		CTYPES_FAULTPROTECT({                                                              \
@@ -369,9 +366,9 @@ CTYPES_DEFINE_ATOMIC_BINOP_VOID(c_atomic_atomic_write, "atomic_write", atomic_wr
 			}                                                                              \
 		}, goto err_result_obj);                                                           \
 		DeeObject_Init(result_obj, DeeSType_AsType(basetype));                             \
-		return result_obj;                                                                 \
+		return (DREF DeeObject *)result_obj;                                               \
 	IF_HAVE_FAULTPROTECT(err_result_obj:                                                   \
-		DeeObject_Free(result_obj);)                                                       \
+		DeeStructObject_Free(result_obj);)                                                 \
 	err:                                                                                   \
 		return NULL;                                                                       \
 	}                                                                                      \

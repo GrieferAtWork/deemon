@@ -703,7 +703,7 @@ lvalue_copy(struct lvalue_object *__restrict self) {
 		DeeType_FreeInstance(&orig_type->st_base, result);
 		return NULL;
 	});
-	DeeObject_Init(result, DeeSType_AsType(orig_type));
+	DeeObject_Init((DeeStructObject *)result, DeeSType_AsType(orig_type));
 
 	/* Handle GC objects (which can appear if the user
 	 * their own creates sub-classes of types from ctypes) */

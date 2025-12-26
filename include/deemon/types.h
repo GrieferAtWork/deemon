@@ -130,6 +130,27 @@ struct Dee_reftracker;
 #define DEE_OBJECT_OFFSETOF_TYPE    __SIZEOF_POINTER__
 
 
+#define Dee_OBJECT_HEAD_EX(Ttype) \
+	Dee_refcnt_t ob_refcnt;       \
+	DREF Ttype  *ob_type;         \
+	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
+#define Dee_OBJECT_HEAD \
+	Dee_OBJECT_HEAD_EX(DeeTypeObject)
+
+/* Mark "ob_type" of the raw, basic "DeeObject" as "const" to
+ * allow compilers to assume that the field won't change across
+ * calls to functions using that object. */
+#ifndef Dee_ob_type_const
+#define Dee_ob_type_const const
+#endif /* !Dee_ob_type_const */
+
+struct Dee_object {
+	Dee_refcnt_t                          ob_refcnt; /* [lock(ATOMIC)] Object reference counter */
+	DREF DeeTypeObject *Dee_ob_type_const ob_type;   /* [1..1][const] Object type */
+	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
+};
+
+
 /* IDE hint for macros that require arguments types to implement `OBJECT_HEAD' */
 #ifdef __INTELLISENSE__
 #ifdef __cplusplus
@@ -145,35 +166,6 @@ template<class T> T *__Dee_REQUIRES_OBJECT(decltype(nullptr));
 #define Dee_REQUIRES_OBJECT(T, x) ((T *)(x))
 #endif /* !__INTELLISENSE__ */
 #define Dee_REQUIRES_ANYOBJECT(x) Dee_REQUIRES_OBJECT(DeeObject, x)
-
-
-#ifdef __INTELLISENSE__
-#define Dee_OBJECT_HEAD       \
-	Dee_refcnt_t   ob_refcnt; \
-	DeeTypeObject *ob_type;   \
-	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
-#define Dee_OBJECT_HEAD_EX(Ttype) \
-	Dee_refcnt_t ob_refcnt;       \
-	Ttype       *ob_type;         \
-	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
-struct Dee_object {
-	Dee_refcnt_t   ob_refcnt;
-	DeeTypeObject *ob_type;
-	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
-};
-#else /* __INTELLISENSE__ */
-#define Dee_OBJECT_HEAD            \
-	Dee_refcnt_t        ob_refcnt; \
-	DREF DeeTypeObject *ob_type;   \
-	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
-#define Dee_OBJECT_HEAD_EX(Ttype) \
-	Dee_refcnt_t ob_refcnt;       \
-	DREF Ttype  *ob_type;         \
-	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
-struct Dee_object {
-	Dee_OBJECT_HEAD
-};
-#endif /* !__INTELLISENSE__ */
 
 
 

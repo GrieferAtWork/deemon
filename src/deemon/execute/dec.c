@@ -2958,7 +2958,7 @@ err_function_code:
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 		Dee_hostasm_function_init(&((DREF DeeFunctionObject *)result)->fo_hostasm);
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
-		DeeObject_Init(result, &DeeFunction_Type);
+		DeeObject_Init((DeeFunctionObject *)result, &DeeFunction_Type);
 		Dee_atomic_rwlock_init(&((DREF DeeFunctionObject *)result)->fo_reflock);
 		result = DeeGC_Track(result);
 	}	break;
@@ -3064,7 +3064,7 @@ err_function_code:
 		                                             iattr_mask + 1, sizeof(struct class_attribute));
 		if unlikely(!result)
 			goto err;
-		DeeObject_Init(result, &DeeClassDescriptor_Type);
+		DeeObject_Init(descriptor, &DeeClassDescriptor_Type);
 		descriptor->cd_flags      = flags;
 		descriptor->cd_cattr_list = empty_class_attributes;
 		descriptor->cd_clsop_list = empty_class_operators;
@@ -3440,7 +3440,7 @@ err_function_code:
 			                                             iattr_mask + 1, sizeof(struct class_attribute));
 			if unlikely(!result)
 				goto err;
-			DeeObject_Init(result, &DeeClassDescriptor_Type);
+			DeeObject_Init(descriptor, &DeeClassDescriptor_Type);
 			descriptor->cd_flags      = flags;
 			descriptor->cd_cattr_list = empty_class_attributes;
 			descriptor->cd_clsop_list = empty_class_operators;

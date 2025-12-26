@@ -381,7 +381,7 @@ stype_frombytes(DeeSTypeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!result)
 		goto err;
 	memcpy(DeeObject_DATA(result), DeeBytes_DATA(args.data) + args.offset, type_size);
-	DeeObject_Init(result, DeeSType_AsType(self));
+	DeeObject_Init((DeeStructObject *)result, DeeSType_AsType(self));
 	return result;
 err_bad_size:
 	data_size = DeeBytes_SIZE(args.data);

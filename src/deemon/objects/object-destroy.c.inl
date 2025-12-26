@@ -293,6 +293,12 @@ DECL_BEGIN
 #error "LOCAL_HAS_GC must be specified statically"
 #endif /* !LOCAL_HAS_GC */
 
+#ifndef GenericObject_DEFINED
+#define GenericObject_DEFINED
+typedef struct {
+	OBJECT_HEAD
+} GenericObject;
+#endif /* !GenericObject_DEFINED */
 
 PRIVATE NONNULL((1)) void DCALL
 LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
@@ -304,7 +310,7 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 #endif /* LOCAL_HAS_GC */
 
 	/* Load the object's type. */
-	orig_type = Dee_TYPE(self);
+	orig_type = Dee_TYPE((GenericObject *)self);
 
 #if LOCAL_HAS_Dtor > 1
 	{
@@ -321,7 +327,7 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 				 *       implementors of `tp_free' are aware of its volatile
 				 *       nature that may only be interpreted as a free-hint).
 				 * NOTE: This even applies to the slab allocators used by `DeeObject_MALLOC'! */
-				self->ob_type = type;
+				((GenericObject *)self)->ob_type = type;
 				COMPILER_WRITE_BARRIER();
 				(*type->tp_init.tp_dtor)(self);
 				COMPILER_READ_BARRIER();

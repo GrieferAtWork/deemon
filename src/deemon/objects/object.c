@@ -995,6 +995,12 @@ again:
 }
 
 
+#ifndef GenericObject_DEFINED
+#define GenericObject_DEFINED
+typedef struct {
+	OBJECT_HEAD
+} GenericObject;
+#endif /* !GenericObject_DEFINED */
 
 PUBLIC WUNUSED NONNULL((2)) bool DCALL
 DeeObject_UndoConstruction(DeeTypeObject *undo_start,
@@ -1010,7 +1016,7 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start,
 			 *       it's reference counter is ZERO (aka: the object isn't shared
 			 *       and also can't be revived by weak references, which don't
 			 *       allow locking once the object's reference counter has hit ZERO). */
-			self->ob_type = undo_start;
+			((GenericObject *)self)->ob_type = undo_start;
 			COMPILER_WRITE_BARRIER();
 			(*undo_start->tp_init.tp_dtor)(self);
 			COMPILER_READ_BARRIER();
@@ -2914,7 +2920,7 @@ type_new_raw(DeeTypeObject *__restrict self) {
 	result = DeeType_AllocInstance(self);
 	if unlikely(!result)
 		goto err;
-	DeeObject_Init(result, self);
+	DeeObject_Init((GenericObject *)result, self);
 
 	/* Search for the first non-class base. */
 	first_base = self;
@@ -3166,7 +3172,7 @@ type_new_extended(DeeTypeObject *self, DeeObject *initializer) {
 	result = DeeType_AllocInstance(self);
 	if unlikely(!result)
 		goto err;
-	DeeObject_Init(result, self);
+	DeeObject_Init((GenericObject *)result, self);
 
 	/* Search for the first non-class base. */
 	first_base = self;

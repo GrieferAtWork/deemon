@@ -3379,10 +3379,10 @@ seq_class_concat(DeeObject *UNUSED(self),
 		return_reference_(argv[0]);
 	result = DeeTuple_NewVector(argc, argv);
 	if likely(result) {
-		ASSERT(result->ob_type == &DeeTuple_Type);
+		ASSERT(((DeeTupleObject *)result)->ob_type == &DeeTuple_Type);
 		Dee_DecrefNokill(&DeeTuple_Type);
 		Dee_Incref(&SeqConcat_Type);
-		result->ob_type = &SeqConcat_Type;
+		((DeeTupleObject *)result)->ob_type = &SeqConcat_Type;
 	}
 	return result;
 }

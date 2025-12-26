@@ -1007,7 +1007,7 @@ INTERN WUNUSED int (DCALL classscope_push)(void) {
 	this_sym = sym_alloc();
 	if unlikely(!this_sym)
 		goto err_new_scope;
-	DeeObject_Init((DeeObject *)new_scope, &DeeClassScope_Type);
+	DeeObject_Init(&new_scope->cs_scope, &DeeClassScope_Type);
 	bzero(this_sym, sizeof(*this_sym));
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 	this_sym->s_refcnt = 1;
@@ -1060,7 +1060,7 @@ INTERN WUNUSED int (DCALL basescope_push)(void) {
 	new_scope = DeeObject_CALLOC(DeeBaseScopeObject);
 	if unlikely(!new_scope)
 		goto err;
-	DeeObject_Init((DeeObject *)new_scope, &DeeBaseScope_Type);
+	DeeObject_Init(&new_scope->bs_scope, &DeeBaseScope_Type);
 	ASSERT(current_scope != NULL);
 	ASSERT(current_rootscope == current_basescope->bs_root);
 	new_scope->bs_scope.s_prev  = current_scope; /* Inherit reference */

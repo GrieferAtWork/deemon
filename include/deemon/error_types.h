@@ -40,12 +40,13 @@ DECL_BEGIN
 #define Dee_nomemory_error_object nomemory_error_object
 #define Dee_compiler_error_object compiler_error_object
 #define Dee_compiler_error_loc    compiler_error_loc
+#define Dee_signal_object         signal_object
 #endif /* DEE_SOURCE */
 
 typedef struct Dee_system_error_object DeeSystemErrorObject;
 typedef struct Dee_nomemory_error_object DeeNoMemoryErrorObject;
 typedef struct Dee_compiler_error_object DeeCompilerErrorObject;
-typedef DeeObject DeeSignalObject;
+typedef struct Dee_signal_object DeeSignalObject;
 
 struct Dee_system_error_object {
 	Dee_ERROR_OBJECT_HEAD
@@ -61,6 +62,10 @@ struct Dee_nomemory_error_object {
 	Dee_ERROR_OBJECT_HEAD
 	size_t nm_allocsize; /* The size of the allocation that failed (in bytes).
 	                      * Set to `0' when not known. */
+};
+
+struct Dee_signal_object {
+	Dee_OBJECT_HEAD
 };
 
 struct TPPFile;

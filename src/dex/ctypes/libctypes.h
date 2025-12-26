@@ -448,6 +448,15 @@ DeeSType_Get(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DeeSTypeObject *DCALL
 DeeSType_GetTypeOf(DeeObject *__restrict self);
 
+typedef struct {
+	Dee_OBJECT_HEAD
+	COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, so_data);
+} DeeStructObject;
+
+#define DeeStructObject_Malloc(sizeof_data) \
+	((DREF DeeStructObject *)DeeObject_Malloc(sizeof(DeeObject) + (sizeof_data)))
+#define DeeStructObject_Free(ptr) DeeObject_Free(ptr)
+
 /* Check of `ob' is a structured object. */
 #define DeeStruct_Check(ob)  DeeSType_Check(Dee_TYPE(ob))
 /* Return a pointer to the structured data-block of `ob' */

@@ -190,7 +190,7 @@ DeeStructType_FromSequence(DeeObject *name,
 		data.staf_result->st_base.st_base.tp_flags |= TP_FNAMEOBJECT;
 		Dee_Incref(name);
 	}
-	DeeObject_Init((DeeObject *)data.staf_result, &DeeStructType_Type);
+	DeeObject_Init(&data.staf_result->st_base.st_base, &DeeStructType_Type);
 	return DeeType_AsStructType((DeeTypeObject *)DeeGC_Track(DeeStructType_AsObject(data.staf_result)));
 err_r:
 	for (i = 0; i <= data.staf_result->st_fmsk; ++i) {

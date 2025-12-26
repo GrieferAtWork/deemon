@@ -142,6 +142,14 @@ DECL_BEGIN
 #define DeeType_INVOKE_HASH(tp_self, self)                    (*(tp_self)->tp_cmp->tp_hash)(self)
 #endif /* !DEFINE_TYPED_OPERATORS */
 
+#ifndef GenericObject_DEFINED
+#define GenericObject_DEFINED
+typedef struct {
+	OBJECT_HEAD
+} GenericObject;
+#endif /* !GenericObject_DEFINED */
+
+
 #ifndef DEFINE_TYPED_OPERATORS
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_NewDefault(DeeTypeObject *__restrict object_type) {
@@ -175,7 +183,7 @@ do_invoke_var_any_ctor_kw:
 		result = DeeType_AllocInstance(object_type);
 		if unlikely(!result)
 			goto err;
-		DeeObject_Init(result, object_type);
+		DeeObject_Init((GenericObject *)result, object_type);
 		if (object_type->tp_init.tp_alloc.tp_ctor) {
 do_invoke_alloc_ctor:
 			error = (*object_type->tp_init.tp_alloc.tp_ctor)(result);
@@ -193,7 +201,7 @@ do_invoke_alloc_any_ctor_kw:
 			result = DeeType_AllocInstance(object_type);
 			if unlikely(!result)
 				goto err_object_type;
-			DeeObject_InitInherited(result, object_type);
+			DeeObject_InitInherited((GenericObject *)result, object_type);
 			if (object_type->tp_init.tp_alloc.tp_ctor)
 				goto do_invoke_alloc_ctor;
 			if (object_type->tp_init.tp_alloc.tp_any_ctor)
@@ -263,7 +271,7 @@ do_invoke_var_copy:
 		result = DeeType_AllocInstance(object_type);
 		if unlikely(!result)
 			goto err;
-		DeeObject_Init(result, object_type);
+		DeeObject_Init((GenericObject *)result, object_type);
 		if (object_type->tp_init.tp_alloc.tp_ctor && !argc) {
 do_invoke_alloc_ctor:
 			error = (*object_type->tp_init.tp_alloc.tp_ctor)(result);
@@ -285,7 +293,7 @@ do_invoke_alloc_copy:
 			result = DeeType_AllocInstance(object_type);
 			if unlikely(!result)
 				goto err_object_type;
-			DeeObject_InitInherited(result, object_type);
+			DeeObject_InitInherited((GenericObject *)result, object_type);
 			if (object_type->tp_init.tp_alloc.tp_ctor && argc == 0)
 				goto do_invoke_alloc_ctor;
 			if (object_type->tp_init.tp_alloc.tp_any_ctor)
@@ -399,7 +407,7 @@ do_invoke_var_copy:
 		result = DeeType_AllocInstance(object_type);
 		if unlikely(!result)
 			goto err;
-		DeeObject_Init(result, object_type);
+		DeeObject_Init((GenericObject *)result, object_type);
 		if (object_type->tp_init.tp_alloc.tp_any_ctor_kw) {
 do_invoke_alloc_any_ctor_kw:
 			error = (*object_type->tp_init.tp_alloc.tp_any_ctor_kw)(result, argc, argv, kw);
@@ -460,7 +468,7 @@ do_invoke_alloc_copy:
 			result = DeeType_AllocInstance(object_type);
 			if unlikely(!result)
 				goto err_object_type;
-			DeeObject_InitInherited(result, object_type);
+			DeeObject_InitInherited((GenericObject *)result, object_type);
 			if (object_type->tp_init.tp_alloc.tp_any_ctor_kw)
 				goto do_invoke_alloc_any_ctor_kw;
 			if (object_type->tp_init.tp_alloc.tp_any_ctor)
@@ -644,7 +652,7 @@ got_deep_copy:
 			goto done_endcopy;
 
 		/* Perform basic object initialization. */
-		DeeObject_Init(result, tp_self);
+		DeeObject_Init((GenericObject *)result, tp_self);
 
 		/* Invoke the deepcopy constructor first. */
 		if unlikely(tp_self->tp_init.tp_alloc.tp_deep_ctor
@@ -775,7 +783,7 @@ do_invoke_alloc_copy:
 		result = DeeType_AllocInstance(tp_self);
 		if unlikely(!result)
 			goto err;
-		DeeObject_Init(result, tp_self);
+		DeeObject_Init((GenericObject *)result, tp_self);
 		error = (*tp_self->tp_init.tp_alloc.tp_copy_ctor)(result, self);
 		if unlikely(error)
 			goto err_r;
@@ -792,7 +800,7 @@ do_invoke_alloc_copy:
 		result = DeeType_AllocInstance(tp_self);
 		if unlikely(!result)
 			goto err;
-		DeeObject_Init(result, tp_self);
+		DeeObject_Init((GenericObject *)result, tp_self);
 		if (tp_self->tp_init.tp_alloc.tp_any_ctor) {
 do_invoke_alloc_any_ctor:
 			/* TODO: If this returns a TypeError, wrap that error as NotImplemented */
@@ -817,7 +825,7 @@ do_invoke_alloc_any_ctor_kw:
 			result = DeeType_AllocInstance(tp_self);
 			if unlikely(!result)
 				goto err_object_type;
-			DeeObject_InitInherited(result, tp_self);
+			DeeObject_InitInherited((GenericObject *)result, tp_self);
 			if (tp_self->tp_init.tp_alloc.tp_any_ctor)
 				goto do_invoke_alloc_any_ctor;
 			if (tp_self->tp_init.tp_alloc.tp_any_ctor_kw)

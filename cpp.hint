@@ -1013,6 +1013,7 @@
 #define TPPSTRING_DEF(name, value) struct{refcnt_t _r;size_t _s;char _t[1];}name={}
 #define PRIVDEF
 
+#define Dee_ob_type_const
 #define OBJECT_HEAD               Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;
 #define Dee_OBJECT_HEAD           Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;
 #define OBJECT_HEAD_EX(Ttype)     Dee_refcnt_t ob_refcnt;Ttype*ob_type;
@@ -1350,6 +1351,7 @@
 #define cmethod_origin                 Dee_cmethod_origin
 #define code_frame                     Dee_code_frame
 #define code_object                    Dee_code_object
+#define signal_object                  Dee_signal_object
 #define compiler_error_loc             Dee_compiler_error_loc
 #define compiler_error_object          Dee_compiler_error_object
 #define compiler_items                 Dee_compiler_items

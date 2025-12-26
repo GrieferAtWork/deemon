@@ -399,7 +399,7 @@ def_var_data:
 			goto done_wbuf;
 
 		/* Construct a new structured type that is returned as result. */
-		DeeObject_Init(result, DeeSType_AsType(orig_type));
+		DeeObject_Init((DeeStructObject *)result, DeeSType_AsType(orig_type));
 		memcpy(DeeStruct_Data(result), ret_mem, DeeSType_Sizeof(orig_type));
 	}
 #undef ret_mem
