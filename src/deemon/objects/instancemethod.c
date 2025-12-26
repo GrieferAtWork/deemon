@@ -111,7 +111,7 @@ STATIC_ASSERT(offsetof(InstanceMethod, im_this) == offsetof(ProxyObject2, po_obj
 #define im_visit         generic_proxy2__visit
 #define im_copy          generic_proxy2__copy_alias12
 #define im_deepcopy      generic_proxy2__deepcopy
-#define im_serialize      generic_proxy2__serialize
+#define im_serialize     generic_proxy2__serialize
 #define im_hash          generic_proxy2__hash_recursive_ordered
 #define im_compare_eq    generic_proxy2__compare_eq_recursive
 #define im_trycompare_eq generic_proxy2__trycompare_eq_recursive

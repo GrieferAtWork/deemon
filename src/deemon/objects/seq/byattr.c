@@ -47,9 +47,9 @@ byattr_ctor(MapByAttr *__restrict self) {
 }
 
 STATIC_ASSERT(offsetof(MapByAttr, mba_map) == offsetof(ProxyObject, po_obj));
-#define byattr_copy     generic_proxy__copy_alias
-#define byattr_deep     generic_proxy__deepcopy
-#define byattr_init     generic_proxy__init
+#define byattr_copy      generic_proxy__copy_alias
+#define byattr_deep      generic_proxy__deepcopy
+#define byattr_init      generic_proxy__init
 #define byattr_serialize generic_proxy__serialize
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL

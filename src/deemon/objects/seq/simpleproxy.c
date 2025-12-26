@@ -51,7 +51,7 @@ STATIC_ASSERT(offsetof(SeqSimpleProxy, sp_seq) == offsetof(ProxyObject, po_obj))
 #define proxy_copy            generic_proxy__copy_alias
 #define proxy_deep            generic_proxy__deepcopy
 #define proxy_init            generic_proxy__init
-#define proxy_serialize        generic_proxy__serialize
+#define proxy_serialize       generic_proxy__serialize
 #define proxy_fini            generic_proxy__fini
 #define proxy_visit           generic_proxy__visit
 #define proxy_size_fast       generic_proxy__size_fast

@@ -115,12 +115,12 @@ se_ctor(SeqEachBase *__restrict self) {
 	return 0;
 }
 
-#define se_copy     generic_proxy__copy_alias
-#define se_deep     generic_proxy__deepcopy
-#define se_init     generic_proxy__init
+#define se_copy      generic_proxy__copy_alias
+#define se_deep      generic_proxy__deepcopy
+#define se_init      generic_proxy__init
 #define se_serialize generic_proxy__serialize
-#define se_fini     generic_proxy__fini
-#define se_visit    generic_proxy__visit
+#define se_fini      generic_proxy__fini
+#define se_visit     generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 se_foreach_assign_cb(void *arg, DeeObject *elem) {

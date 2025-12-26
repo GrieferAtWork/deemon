@@ -289,13 +289,13 @@ INTERN DeeTypeObject SeqOneIterator_Type = {
 /* SeqOne                                                               */
 /************************************************************************/
 STATIC_ASSERT(offsetof(SeqOne, so_item) == offsetof(ProxyObject, po_obj));
-#define so_copy     generic_proxy__copy_alias
-#define so_deep     generic_proxy__deepcopy
-#define so_init     generic_proxy__init
+#define so_copy      generic_proxy__copy_alias
+#define so_deep      generic_proxy__deepcopy
+#define so_init      generic_proxy__init
 #define so_serialize generic_proxy__serialize
-#define so_fini     generic_proxy__fini
-#define so_bool     _DeeNone_reti1_1
-#define so_visit    generic_proxy__visit
+#define so_fini      generic_proxy__fini
+#define so_bool      _DeeNone_reti1_1
+#define so_visit     generic_proxy__visit
 
 #define so_size      _DeeNone_rets1_1
 #define so_size_fast _DeeNone_rets1_1

@@ -136,12 +136,12 @@ err:
 /* SeqFlat                                                              */
 /************************************************************************/
 STATIC_ASSERT(offsetof(SeqFlat, sf_seq) == offsetof(ProxyObject, po_obj));
-#define sf_copy     generic_proxy__copy_alias
-#define sf_deep     generic_proxy__deepcopy
-#define sf_init     generic_proxy__init
+#define sf_copy      generic_proxy__copy_alias
+#define sf_deep      generic_proxy__deepcopy
+#define sf_init      generic_proxy__init
 #define sf_serialize generic_proxy__serialize
-#define sf_fini     generic_proxy__fini
-#define sf_visit    generic_proxy__visit
+#define sf_fini      generic_proxy__fini
+#define sf_visit     generic_proxy__visit
 
 #define sf_foreachseq(self, cb, arg)         DeeObject_InvokeMethodHint(seq_operator_foreach, (self)->sf_seq, cb, arg)
 #define sf_foreachseq_reverse(self, cb, arg) DeeSeq_InvokeForeachReverse((self)->sf_seq, cb, arg)

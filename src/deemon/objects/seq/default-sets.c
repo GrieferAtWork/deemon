@@ -134,10 +134,10 @@ invset_ctor(SetInversion *__restrict self) {
 
 
 STATIC_ASSERT(offsetof(SetInversion, si_set) == offsetof(ProxyObject, po_obj));
-#define invset_init     generic_proxy__init
+#define invset_init      generic_proxy__init
 #define invset_serialize generic_proxy__serialize
-#define invset_fini     generic_proxy__fini
-#define invset_visit    generic_proxy__visit
+#define invset_fini      generic_proxy__fini
+#define invset_visit     generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 invset_printrepr(SetInversion *__restrict self,
@@ -809,9 +809,10 @@ STATIC_ASSERT(offsetof(SetUnion, su_a) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SetUnion, su_a) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(SetUnion, su_b) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SetUnion, su_b) == offsetof(ProxyObject2, po_obj2));
-#define su_init generic_proxy2__init
-#define su_copy generic_proxy2__copy_alias12
-#define su_deep generic_proxy2__deepcopy
+#define su_init      generic_proxy2__init
+#define su_copy      generic_proxy2__copy_alias12
+#define su_deep      generic_proxy2__deepcopy
+#define su_serialize generic_proxy2__serialize
 
 PRIVATE WUNUSED NONNULL((1)) DREF SetUnionIterator *DCALL
 su_iter(SetUnion *__restrict self) {
@@ -984,7 +985,9 @@ INTERN DeeTypeObject SetUnion_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&su_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&su_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&su_init,
-				TYPE_FIXED_ALLOCATOR(SetUnion)
+				TYPE_FIXED_ALLOCATOR(SetUnion),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_serialize = */ (Dee_funptr_t)&su_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&su_fini,
@@ -1190,11 +1193,12 @@ STATIC_ASSERT(offsetof(SetSymmetricDifference, ssd_a) == offsetof(ProxyObject2, 
               offsetof(SetSymmetricDifference, ssd_a) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(SetSymmetricDifference, ssd_b) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SetSymmetricDifference, ssd_b) == offsetof(ProxyObject2, po_obj2));
-#define ssd_init  generic_proxy2__init
-#define ssd_copy  generic_proxy2__copy_alias12
-#define ssd_deep  generic_proxy2__deepcopy
-#define ssd_fini  generic_proxy2__fini
-#define ssd_visit generic_proxy2__visit
+#define ssd_init      generic_proxy2__init
+#define ssd_copy      generic_proxy2__copy_alias12
+#define ssd_deep      generic_proxy2__deepcopy
+#define ssd_fini      generic_proxy2__fini
+#define ssd_visit     generic_proxy2__visit
+#define ssd_serialize generic_proxy2__serialize
 
 PRIVATE WUNUSED NONNULL((1)) DREF SetSymmetricDifferenceIterator *DCALL
 ssd_iter(SetSymmetricDifference *__restrict self) {
@@ -1329,7 +1333,9 @@ INTERN DeeTypeObject SetSymmetricDifference_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&ssd_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&ssd_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&ssd_init,
-				TYPE_FIXED_ALLOCATOR(SetSymmetricDifference)
+				TYPE_FIXED_ALLOCATOR(SetSymmetricDifference),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_serialize = */ (Dee_funptr_t)&ssd_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ssd_fini,
@@ -1543,11 +1549,12 @@ STATIC_ASSERT(offsetof(SetIntersection, si_a) == offsetof(ProxyObject2, po_obj1)
               offsetof(SetIntersection, si_a) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(SetIntersection, si_b) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SetIntersection, si_b) == offsetof(ProxyObject2, po_obj2));
-#define si_init  generic_proxy2__init
-#define si_copy  generic_proxy2__copy_alias12
-#define si_deep  generic_proxy2__deepcopy
-#define si_fini  generic_proxy2__fini
-#define si_visit generic_proxy2__visit
+#define si_init      generic_proxy2__init
+#define si_copy      generic_proxy2__copy_alias12
+#define si_deep      generic_proxy2__deepcopy
+#define si_fini      generic_proxy2__fini
+#define si_visit     generic_proxy2__visit
+#define si_serialize generic_proxy2__serialize
 
 PRIVATE WUNUSED NONNULL((1)) DREF SetIntersectionIterator *DCALL
 si_iter(SetIntersection *__restrict self) {
@@ -1671,7 +1678,9 @@ INTERN DeeTypeObject SetIntersection_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&si_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&si_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&si_init,
-				TYPE_FIXED_ALLOCATOR(SetIntersection)
+				TYPE_FIXED_ALLOCATOR(SetIntersection),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_serialize = */ (Dee_funptr_t)&si_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&si_fini,
@@ -1810,11 +1819,12 @@ STATIC_ASSERT(offsetof(SetDifference, sd_b) == offsetof(SetUnion, su_b));
 
 STATIC_ASSERT(offsetof(SetDifference, sd_a) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(SetDifference, sd_b) == offsetof(ProxyObject2, po_obj2));
-#define sd_init  generic_proxy2__init
-#define sd_copy  generic_proxy2__copy_alias12
-#define sd_deep  generic_proxy2__deepcopy
-#define sd_fini  generic_proxy2__fini
-#define sd_visit generic_proxy2__visit
+#define sd_init      generic_proxy2__init
+#define sd_copy      generic_proxy2__copy_alias12
+#define sd_deep      generic_proxy2__deepcopy
+#define sd_fini      generic_proxy2__fini
+#define sd_visit     generic_proxy2__visit
+#define sd_serialize generic_proxy2__serialize
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF SetDifferenceIterator *DCALL
@@ -1939,7 +1949,9 @@ INTERN DeeTypeObject SetDifference_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&sd_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&sd_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&sd_init,
-				TYPE_FIXED_ALLOCATOR(SetDifference)
+				TYPE_FIXED_ALLOCATOR(SetDifference),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_serialize = */ (Dee_funptr_t)&sd_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sd_fini,

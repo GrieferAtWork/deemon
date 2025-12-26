@@ -64,11 +64,12 @@ filter_ctor(Filter *__restrict self) {
 	return 0;
 }
 
-#define filter_copy  generic_proxy2__copy_alias12
-#define filter_deep  generic_proxy2__deepcopy
-#define filter_init  generic_proxy2__init
-#define filter_fini  generic_proxy2__fini
-#define filter_visit generic_proxy2__visit
+#define filter_copy      generic_proxy2__copy_alias12
+#define filter_deep      generic_proxy2__deepcopy
+#define filter_init      generic_proxy2__init
+#define filter_fini      generic_proxy2__fini
+#define filter_visit     generic_proxy2__visit
+#define filter_serialize generic_proxy2__serialize
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 filteriterator_ctor(FilterIterator *__restrict self) {
@@ -806,7 +807,9 @@ INTERN DeeTypeObject SeqFilter_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&filter_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&filter_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&filter_init,
-				TYPE_FIXED_ALLOCATOR(Filter)
+				TYPE_FIXED_ALLOCATOR(Filter),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_serialize = */ (Dee_funptr_t)&filter_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&filter_fini,

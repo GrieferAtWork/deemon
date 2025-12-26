@@ -323,14 +323,16 @@ STATIC_ASSERT(offsetof(MapFromKeys, mfk_keys) == offsetof(ProxyObject2, po_obj1)
               offsetof(MapFromKeys, mfk_keys) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(MapFromKeys, mfk_value) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapFromKeys, mfk_value) == offsetof(ProxyObject2, po_obj2));
-#define mfkv_copy  generic_proxy2__copy_alias12
-#define mfkc_copy  generic_proxy2__copy_alias12
-#define mfkv_deep  generic_proxy2__deepcopy
-#define mfkc_deep  generic_proxy2__deepcopy
-#define mfkv_fini  generic_proxy2__fini
-#define mfkc_fini  generic_proxy2__fini
-#define mfkv_visit generic_proxy2__visit
-#define mfkc_visit generic_proxy2__visit
+#define mfkv_copy      generic_proxy2__copy_alias12
+#define mfkc_copy      generic_proxy2__copy_alias12
+#define mfkv_deep      generic_proxy2__deepcopy
+#define mfkc_deep      generic_proxy2__deepcopy
+#define mfkv_fini      generic_proxy2__fini
+#define mfkc_fini      generic_proxy2__fini
+#define mfkv_visit     generic_proxy2__visit
+#define mfkc_visit     generic_proxy2__visit
+#define mfkv_serialize generic_proxy2__serialize
+#define mfkc_serialize generic_proxy2__serialize
 
 STATIC_ASSERT(offsetof(MapFromKeys, mfk_keys) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(MapFromKeys, mfk_value) == offsetof(ProxyObject2, po_obj2));
@@ -691,7 +693,9 @@ INTERN DeeTypeObject MapFromKeysAndValue_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&mfkv_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&mfkv_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&mfkv_init,
-				TYPE_FIXED_ALLOCATOR(MapFromKeys)
+				TYPE_FIXED_ALLOCATOR(MapFromKeys),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_serialize = */ (Dee_funptr_t)&mfkv_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mfkv_fini,
@@ -742,7 +746,9 @@ INTERN DeeTypeObject MapFromKeysAndCallback_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&mfkc_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&mfkc_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&mfkc_init,
-				TYPE_FIXED_ALLOCATOR(MapFromKeys)
+				TYPE_FIXED_ALLOCATOR(MapFromKeys),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_serialize = */ (Dee_funptr_t)&mfkc_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mfkc_fini,

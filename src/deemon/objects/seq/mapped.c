@@ -512,8 +512,9 @@ STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(SeqMapped, sm_mapper) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SeqMapped, sm_mapper) == offsetof(ProxyObject2, po_obj2));
-#define mapped_copy generic_proxy2__copy_alias12
-#define mapped_deep generic_proxy2__deepcopy
+#define mapped_copy      generic_proxy2__copy_alias12
+#define mapped_deep      generic_proxy2__deepcopy
+#define mapped_serialize generic_proxy2__serialize
 
 STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(SeqMapped, sm_mapper) == offsetof(ProxyObject2, po_obj2));
@@ -667,7 +668,9 @@ INTERN DeeTypeObject SeqMapped_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&mapped_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&mapped_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&mapped_init,
-				TYPE_FIXED_ALLOCATOR(SeqMapped)
+				TYPE_FIXED_ALLOCATOR(SeqMapped),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_serialize = */ (Dee_funptr_t)&mapped_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mapped_fini,

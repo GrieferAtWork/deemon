@@ -45,8 +45,8 @@ STATIC_ASSERT(offsetof(DefaultSequence_MapProxy, dsmp_map) ==
               offsetof(ProxyObject, po_obj));
 #define ds_mk_init             generic_proxy__init
 #define ds_mv_init             generic_proxy__init
-#define ds_mk_serialize         generic_proxy__serialize
-#define ds_mv_serialize         generic_proxy__serialize
+#define ds_mk_serialize        generic_proxy__serialize
+#define ds_mv_serialize        generic_proxy__serialize
 #define ds_mk_copy             generic_proxy__copy_alias
 #define ds_mv_copy             generic_proxy__copy_alias
 #define ds_mv_deepcopy         generic_proxy__deepcopy

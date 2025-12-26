@@ -120,11 +120,12 @@ STATIC_ASSERT(offsetof(MapUnion, mu_a) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapUnion, mu_a) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(MapUnion, mu_b) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapUnion, mu_b) == offsetof(ProxyObject2, po_obj2));
-#define mu_copy  generic_proxy2__copy_alias12
-#define mu_deep  generic_proxy2__deepcopy
-#define mu_init  generic_proxy2__init
-#define mu_fini  generic_proxy2__fini
-#define mu_visit generic_proxy2__visit
+#define mu_copy      generic_proxy2__copy_alias12
+#define mu_deep      generic_proxy2__deepcopy
+#define mu_init      generic_proxy2__init
+#define mu_fini      generic_proxy2__fini
+#define mu_visit     generic_proxy2__visit
+#define mu_serialize generic_proxy2__serialize
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mu_ctor(MapUnion *__restrict self) {
@@ -413,7 +414,9 @@ INTERN DeeTypeObject MapUnion_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&mu_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&mu_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&mu_init,
-				TYPE_FIXED_ALLOCATOR(MapUnion)
+				TYPE_FIXED_ALLOCATOR(MapUnion),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_serialize = */ (Dee_funptr_t)&mu_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mu_fini,
@@ -937,11 +940,12 @@ STATIC_ASSERT(offsetof(MapIntersection, mi_map) == offsetof(ProxyObject2, po_obj
               offsetof(MapIntersection, mi_map) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(MapIntersection, mi_keys) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapIntersection, mi_keys) == offsetof(ProxyObject2, po_obj2));
-#define mi_copy  generic_proxy2__copy_alias12
-#define mi_deep  generic_proxy2__deepcopy
-#define mi_init  generic_proxy2__init
-#define mi_fini  generic_proxy2__fini
-#define mi_visit generic_proxy2__visit
+#define mi_copy      generic_proxy2__copy_alias12
+#define mi_deep      generic_proxy2__deepcopy
+#define mi_init      generic_proxy2__init
+#define mi_fini      generic_proxy2__fini
+#define mi_visit     generic_proxy2__visit
+#define mi_serialize generic_proxy2__serialize
 
 #define MAP_CONTAINSANY_FOREACH__FOUND SSIZE_MIN
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -1136,7 +1140,9 @@ INTERN DeeTypeObject MapIntersection_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&mi_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&mi_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&mi_init,
-				TYPE_FIXED_ALLOCATOR(MapIntersection)
+				TYPE_FIXED_ALLOCATOR(MapIntersection),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_serialize = */ (Dee_funptr_t)&mi_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mi_fini,
@@ -1376,10 +1382,11 @@ STATIC_ASSERT(offsetof(MapDifference, md_map) == offsetof(ProxyObject2, po_obj1)
               offsetof(MapDifference, md_map) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(MapDifference, md_keys) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapDifference, md_keys) == offsetof(ProxyObject2, po_obj2));
-#define md_copy  generic_proxy2__copy_alias12
-#define md_deep  generic_proxy2__deepcopy
-#define md_fini  generic_proxy2__fini
-#define md_visit generic_proxy2__visit
+#define md_copy      generic_proxy2__copy_alias12
+#define md_deep      generic_proxy2__deepcopy
+#define md_fini      generic_proxy2__fini
+#define md_visit     generic_proxy2__visit
+#define md_serialize generic_proxy2__serialize
 
 STATIC_ASSERT(offsetof(MapDifference, md_map) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(MapDifference, md_keys) == offsetof(ProxyObject2, po_obj2));
@@ -1568,7 +1575,9 @@ INTERN DeeTypeObject MapDifference_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&md_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&md_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&md_init,
-				TYPE_FIXED_ALLOCATOR(MapDifference)
+				TYPE_FIXED_ALLOCATOR(MapDifference),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_serialize = */ (Dee_funptr_t)&md_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&md_fini,
@@ -1746,11 +1755,12 @@ STATIC_ASSERT(offsetof(MapSymmetricDifference, msd_a) == offsetof(ProxyObject2, 
               offsetof(MapSymmetricDifference, msd_a) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(MapSymmetricDifference, msd_b) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapSymmetricDifference, msd_b) == offsetof(ProxyObject2, po_obj2));
-#define msd_copy  generic_proxy2__copy_alias12
-#define msd_deep  generic_proxy2__deepcopy
-#define msd_init  generic_proxy2__init
-#define msd_fini  generic_proxy2__fini
-#define msd_visit generic_proxy2__visit
+#define msd_copy      generic_proxy2__copy_alias12
+#define msd_deep      generic_proxy2__deepcopy
+#define msd_init      generic_proxy2__init
+#define msd_fini      generic_proxy2__fini
+#define msd_visit     generic_proxy2__visit
+#define msd_serialize generic_proxy2__serialize
 
 STATIC_ASSERT(offsetof(MapSymmetricDifference, msd_a) == offsetof(MapUnion, mu_a) ||
               offsetof(MapSymmetricDifference, msd_a) == offsetof(MapUnion, mu_b));
@@ -2268,7 +2278,9 @@ INTERN DeeTypeObject MapSymmetricDifference_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&msd_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&msd_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&msd_init,
-				TYPE_FIXED_ALLOCATOR(MapSymmetricDifference)
+				TYPE_FIXED_ALLOCATOR(MapSymmetricDifference),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_serialize = */ (Dee_funptr_t)&msd_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&msd_fini,

@@ -395,10 +395,11 @@ STATIC_ASSERT(offsetof(DistinctSetWithKey, dswk_seq) == offsetof(ProxyObject2, p
               offsetof(DistinctSetWithKey, dswk_seq) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(DistinctSetWithKey, dswk_key) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(DistinctSetWithKey, dswk_key) == offsetof(ProxyObject2, po_obj2));
-#define dswk_copy  generic_proxy2__copy_alias12
-#define dswk_deep  generic_proxy2__deepcopy
-#define dswk_fini  generic_proxy2__fini
-#define dswk_visit generic_proxy2__visit
+#define dswk_copy      generic_proxy2__copy_alias12
+#define dswk_deep      generic_proxy2__deepcopy
+#define dswk_fini      generic_proxy2__fini
+#define dswk_visit     generic_proxy2__visit
+#define dswk_serialize generic_proxy2__serialize
 
 STATIC_ASSERT(offsetof(DistinctSetWithKey, dswk_seq) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(DistinctSetWithKey, dswk_key) == offsetof(ProxyObject2, po_obj2));
@@ -503,7 +504,9 @@ INTERN DeeTypeObject DistinctSetWithKey_Type = {
 				/* .tp_copy_ctor = */ (Dee_funptr_t)&dswk_copy,
 				/* .tp_deep_ctor = */ (Dee_funptr_t)&dswk_deep,
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&dswk_init,
-				TYPE_FIXED_ALLOCATOR(DistinctSetWithKey)
+				TYPE_FIXED_ALLOCATOR(DistinctSetWithKey),
+				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
+				/* .tp_serialize = */ (Dee_funptr_t)&dswk_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dswk_fini,
