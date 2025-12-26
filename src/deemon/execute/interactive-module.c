@@ -1722,7 +1722,7 @@ DeeModule_OpenInteractive(DeeObject *source_stream,
 	result = DeeGCObject_MALLOC(InteractiveModule);
 	if unlikely(!result)
 		goto err;
-	DeeObject_Init((DeeObject *)result, &DeeInteractiveModule_Type);
+	DeeObject_Init(&result->im_module, &DeeInteractiveModule_Type);
 	if (imod_init(result,
 	              source_stream,
 	              mode,

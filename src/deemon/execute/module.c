@@ -2901,7 +2901,7 @@ module_dee_destroy(DeeModuleObject *__restrict self) {
 	 *         can still locate the module of an object, but see that it's ob_refcnt==0,
 	 *         and then not trying to incref it again (which would be possible if DBG_memset
 	 *         were to fill ob_refcnt with some non-zero debug pattern)
-	 * @see TODO in DeeDecWriter_AppendModule */
+	 * @see TODO in DeeSerial_AppendModule */
 	DeeGCObject_Free(self);
 #else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 	DeeGCObject_Free(self);
@@ -3094,7 +3094,7 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,   /* !!! Not constructible !!! */
 				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL, /* !!! Not constructible !!! */
-				/* .tp_writedec    = */ (Dee_funptr_t)NULL
+				/* .tp_serialize = */ (Dee_funptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -3146,7 +3146,7 @@ PUBLIC DeeTypeObject DeeModuleDir_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_writedec    = */ (Dee_funptr_t)NULL  /* TODO */
+				/* .tp_serialize = */ (Dee_funptr_t)NULL  /* TODO */
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -3200,7 +3200,7 @@ PUBLIC DeeTypeObject DeeModuleDee_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_writedec    = */ (Dee_funptr_t)NULL  /* TODO */
+				/* .tp_serialize = */ (Dee_funptr_t)NULL  /* TODO */
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -3255,7 +3255,7 @@ PUBLIC DeeTypeObject DeeModuleDex_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL, /* TODO */
-				/* .tp_writedec    = */ (Dee_funptr_t)NULL  /* TODO */
+				/* .tp_serialize = */ (Dee_funptr_t)NULL  /* TODO */
 			}
 		},
 		/* .tp_dtor        = */ NULL,

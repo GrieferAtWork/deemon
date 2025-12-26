@@ -699,7 +699,7 @@ INTERN DeeTypeObject DeeLock_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeObject),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&DeeNone_OperatorWriteDec
+				/* .tp_serialize = */ (Dee_funptr_t)&DeeNone_OperatorWriteDec
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -1274,7 +1274,7 @@ INTERN DeeTypeObject DeeRWLock_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeObject),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&DeeNone_OperatorWriteDec
+				/* .tp_serialize = */ (Dee_funptr_t)&DeeNone_OperatorWriteDec
 			}
 		},
 		/* .tp_dtor        = */ NULL,

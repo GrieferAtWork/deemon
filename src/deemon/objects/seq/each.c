@@ -118,7 +118,7 @@ se_ctor(SeqEachBase *__restrict self) {
 #define se_copy     generic_proxy__copy_alias
 #define se_deep     generic_proxy__deepcopy
 #define se_init     generic_proxy__init
-#define se_writedec generic_proxy__writedec
+#define se_serialize generic_proxy__serialize
 #define se_fini     generic_proxy__fini
 #define se_visit    generic_proxy__visit
 
@@ -1330,7 +1330,7 @@ INTERN DeeTypeObject SeqEach_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&se_init,
 				TYPE_FIXED_ALLOCATOR(SeqEachBase),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&se_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&se_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&se_fini,

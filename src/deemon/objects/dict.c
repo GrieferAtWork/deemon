@@ -25,7 +25,6 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
-#include <deemon/dec.h>
 #include <deemon/dict.h>
 #include <deemon/error-rt.h>
 #include <deemon/format.h>
@@ -41,6 +40,7 @@
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
 #include <deemon/tuple.h>
@@ -2328,13 +2328,14 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-dict_writedec(DeeDecWriter *__restrict writer,
-              Dict *self, Dee_dec_addr_t addr) {
+dict_serialize(Dict *__restrict self,
+               DeeSerial *__restrict writer,
+               Dee_seraddr_t addr) {
 	Dict *out;
 	Dee_dict_gethidx_t out__d_hidxget;
 	Dee_dict_sethidx_t out__d_hidxset;
 again:
-	out = DeeDecWriter_Addr2Mem(writer, addr, Dict);
+	out = DeeSerial_Addr2Mem(writer, addr, Dict);
 	DeeDict_LockRead(self);
 	out->d_valloc  = self->d_valloc;
 	out->d_vsize   = self->d_vsize;
@@ -2346,31 +2347,31 @@ again:
 	if (self->d_vtab == DeeDict_EmptyVTab) {
 		ASSERT(self->d_htab == DeeDict_EmptyHTab);
 		DeeDict_LockEndRead(self);
-		if (DeeDecWriter_PutDeemonPointer(writer, addr + offsetof(Dict, d_vtab), DeeDict_EmptyVTab))
+		if (DeeSerial_PutStaticDeemon(writer, addr + offsetof(Dict, d_vtab), DeeDict_EmptyVTab))
 			goto err;
-		if (DeeDecWriter_PutDeemonPointer(writer, addr + offsetof(Dict, d_htab), DeeDict_EmptyHTab))
+		if (DeeSerial_PutStaticDeemon(writer, addr + offsetof(Dict, d_htab), DeeDict_EmptyHTab))
 			goto err;
 	} else {
 		size_t out__d_vsize;
-		Dee_dec_addr_t addrof_out__d_vtab;
+		Dee_seraddr_t addrof_out__d_vtab;
 		size_t i, sizeof_out__d_vtab;
 		struct dict_item *out__d_vtab;
 		struct dict_item *in__d_vtab;
 		shift_t hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
 		sizeof_out__d_vtab = self->d_valloc * sizeof(struct dict_item);
 		sizeof_out__d_vtab += (self->d_hmask + 1) << hidxio;
-		addrof_out__d_vtab = DeeDecWriter_TryMalloc(writer, sizeof_out__d_vtab);
-		if unlikely(!addrof_out__d_vtab) {
+		addrof_out__d_vtab = DeeSerial_TryMalloc(writer, sizeof_out__d_vtab);
+		if (!Dee_SERADDR_ISOK(addrof_out__d_vtab)) {
 			DeeDict_LockEndRead(self);
-			addrof_out__d_vtab = DeeDecWriter_Malloc(writer, sizeof_out__d_vtab);
-			if unlikely(!addrof_out__d_vtab)
+			addrof_out__d_vtab = DeeSerial_Malloc(writer, sizeof_out__d_vtab);
+			if (!Dee_SERADDR_ISOK(addrof_out__d_vtab))
 				goto err;
 			DeeDict_LockRead(self);
-			out = DeeDecWriter_Addr2Mem(writer, addr, Dict);
+			out = DeeSerial_Addr2Mem(writer, addr, Dict);
 			if unlikely(out->d_valloc != self->d_valloc) {
 free_out__d_vtab__and__again:
 				DeeDict_LockEndRead(self);
-				DeeDecWriter_Free(writer, addrof_out__d_vtab);
+				DeeSerial_Free(writer, addrof_out__d_vtab);
 				goto again;
 			}
 			if unlikely(out->d_vsize != self->d_vsize)
@@ -2386,9 +2387,9 @@ free_out__d_vtab__and__again:
 			if unlikely(self->d_vtab == DeeDict_EmptyVTab)
 				goto free_out__d_vtab__and__again;
 		}
-		out          = DeeDecWriter_Addr2Mem(writer, addr, Dict);
+		out          = DeeSerial_Addr2Mem(writer, addr, Dict);
 		out__d_vsize = out->d_vsize;
-		out__d_vtab  = DeeDecWriter_Addr2Mem(writer, addrof_out__d_vtab, struct dict_item);
+		out__d_vtab  = DeeSerial_Addr2Mem(writer, addrof_out__d_vtab, struct dict_item);
 		in__d_vtab   = _DeeDict_GetRealVTab(self);
 		memcpy(out__d_vtab, in__d_vtab, sizeof_out__d_vtab);
 		for (i = 0; i < out__d_vsize; ++i) {
@@ -2404,17 +2405,17 @@ free_out__d_vtab__and__again:
 				DREF DeeObject *key, *value;
 				key   = out__d_vtab[i].di_key;
 				value = out__d_vtab[i].di_value;
-				error = DeeDecWriter_PutObject(writer,
-				                               addrof_out__d_vtab + offsetof(struct dict_item, di_key),
-				                               key);
+				error = DeeSerial_PutObject(writer,
+				                            addrof_out__d_vtab + offsetof(struct dict_item, di_key),
+				                            key);
 				if likely(error == 0) {
-					error = DeeDecWriter_PutObject(writer,
-					                               addrof_out__d_vtab + offsetof(struct dict_item, di_value),
-					                               value);
+					error = DeeSerial_PutObject(writer,
+					                            addrof_out__d_vtab + offsetof(struct dict_item, di_value),
+					                            value);
 				}
 				Dee_Decref_unlikely(key);
 				Dee_Decref_unlikely(value);
-				out__d_vtab = DeeDecWriter_Addr2Mem(writer, addrof_out__d_vtab, struct dict_item);
+				out__d_vtab = DeeSerial_Addr2Mem(writer, addrof_out__d_vtab, struct dict_item);
 				if unlikely(error) {
 					for (; i < out__d_vsize; ++i) {
 						if (out__d_vtab[i].di_key) {
@@ -2426,17 +2427,17 @@ free_out__d_vtab__and__again:
 				}
 			}
 		}
-		if (DeeDecWriter_PutRel(writer, addr + offsetof(Dict, d_vtab),
-		                        addrof_out__d_vtab - sizeof(struct Dee_dict_item)))
+		if (DeeSerial_PutAddr(writer, addr + offsetof(Dict, d_vtab),
+		                      addrof_out__d_vtab - sizeof(struct Dee_dict_item)))
 			goto err;
-		out = DeeDecWriter_Addr2Mem(writer, addr, Dict);
-		if (DeeDecWriter_PutRel(writer, addr + offsetof(Dict, d_htab),
-		                        addrof_out__d_vtab + (out->d_valloc * sizeof(struct dict_item))))
+		out = DeeSerial_Addr2Mem(writer, addr, Dict);
+		if (DeeSerial_PutAddr(writer, addr + offsetof(Dict, d_htab),
+		                      addrof_out__d_vtab + (out->d_valloc * sizeof(struct dict_item))))
 			goto err;
 	}
-	if (DeeDecWriter_PutDeemonPointer(writer, addr + offsetof(Dict, d_hidxget), (void *)out__d_hidxget))
+	if (DeeSerial_PutStaticDeemon(writer, addr + offsetof(Dict, d_hidxget), (void *)out__d_hidxget))
 		goto err;
-	if (DeeDecWriter_PutDeemonPointer(writer, addr + offsetof(Dict, d_hidxset), (void *)out__d_hidxset))
+	if (DeeSerial_PutStaticDeemon(writer, addr + offsetof(Dict, d_hidxset), (void *)out__d_hidxset))
 		goto err;
 	return 0;
 err:
@@ -4293,7 +4294,7 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&dict_init,
 				TYPE_FIXED_ALLOCATOR_GC(Dict),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&dict_writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&dict_serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dict_fini,

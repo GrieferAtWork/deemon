@@ -211,6 +211,7 @@
 		<ClInclude Include="..\include\deemon\rodict.h" />
 		<ClInclude Include="..\include\deemon\roset.h" />
 		<ClInclude Include="..\include\deemon\seq.h" />
+		<ClInclude Include="..\include\deemon\serial.h" />
 		<ClInclude Include="..\include\deemon\set.h" />
 		<ClInclude Include="..\include\deemon\string.h" />
 		<ClInclude Include="..\include\deemon\stringutils.h" />

@@ -1149,60 +1149,6 @@ INTDEF size_t DCALL DecTime_ClearCache(size_t max_clear);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 
-#if 1 /* Dummy macros for forward-compatibility */
-#ifndef Dee_dec_addr_t_DEFINED
-#define Dee_dec_addr_t_DEFINED
-typedef uintptr_t Dee_dec_addr_t; /* Offset from start of `Dec_Ehdr' to some other structure. */
-#endif /* !Dee_dec_addr_t_DEFINED */
-#ifdef DEE_SOURCE
-#define Dee_module_object module_object
-#endif /* DEE_SOURCE */
-struct Dee_module_object;
-
-typedef char DeeDec_Ehdr;
-typedef struct Dee_dec_writer {
-	int placeholder;
-} DeeDecWriter;
-
-#define DeeDecWriter_Init(self)                                  ((void)(self), 0)
-#define DeeDecWriter_Fini(self)                                  (void)(self)
-#define DeeDecWriter_PackMapping(self)                           ((DeeDec_Ehdr *)(self))
-#define DeeDecWriter_PackModule(self)                            ((DREF struct Dee_module_object *)(self))
-#define DeeDecWriter_Malloc(self, num_bytes)                     ((void)(self), (void)(num_bytes), 0)
-#define DeeDecWriter_TryMalloc(self, num_bytes)                  ((void)(self), (void)(num_bytes), 0)
-#define DeeDecWriter_Free(self, addr)                            ((void)(self), (void)(addr))
-#define DeeDecWriter_Object_Malloc(self, num_bytes, ref)         ((void)(self), (void)(num_bytes), (void)(ref), 0)
-#define DeeDecWriter_GCObject_Malloc(self, num_bytes, ref)       ((void)(self), (void)(num_bytes), (void)(ref), 0)
-#define DeeDecWriter_Addr2Mem(self, addr, T)                     ((T *)((self) + (addr)))
-#define DeeDecWriter_PutRel(self, addrof_pointer, addrof_target) ((void)(self), (void)(addrof_pointer), (void)(addrof_target), 0)
-#define DeeDecWriter_PutObject(self, addr, obj)                  ((void)(self), (void)(addr), (void)(obj), 0)
-#define DeeDecWriter_XPutObject(self, addr, obj)                 ((void)(self), (void)(addr), (void)(obj), 0)
-#define DeeDecWriter_PutObjectInherited(self, addr, obj)         ((void)(self), (void)(addr), (void)(obj), 0)
-#define DeeDecWriter_XPutObjectInherited(self, addr, obj)        ((void)(self), (void)(addr), (void)(obj), 0)
-#define DeeDecWriter_PutMemDup(self, addr, data, num_bytes)      ((void)(self), (void)(addr), (void)(data), (void)(num_bytes), 0)
-#define DeeDecWriter_InplacePutObject(self, addr)                ((void)(self), (void)(addr), 0)
-#define DeeDecWriter_XInplacePutObject(self, addr)               ((void)(self), (void)(addr), 0)
-#define DeeDecWriter_InplacePutObjectv(self, addr, objc)         ((void)(self), (void)(addr), (void)(objc), 0)
-#define DeeDecWriter_XInplacePutObjectv(self, addr, objc)        ((void)(self), (void)(addr), (void)(objc), 0)
-#define DeeDecWriter_PutStaticPointer(self, addr, value)         ((void)(self), (void)(addr), (void)(value), 0)
-#define DeeDecWriter_XPutStaticPointer(self, addr, value)        ((void)(self), (void)(addr), (void)(value), 0)
-#ifdef CONFIG_BUILDING_DEEMON
-#define DeeDecWriter_PutDeemonPointer(self, addr, value)  ((void)(self), (void)(addr), (void)(value), 0)
-#define DeeDecWriter_XPutDeemonPointer(self, addr, value) ((void)(self), (void)(addr), (void)(value), 0)
-#endif /* CONFIG_BUILDING_DEEMON */
-#define DeeDecWriter_AppendModule(self, mod) ((void)(self), (void)(mod), 0)
-#define DeeDec_Relocate(self, dec_dirname, dec_dirname_len, options)              \
-	((void)(self), (void)(dec_dirname), (void)(dec_dirname_len), (void)(options), \
-	 (DREF struct Dee_module_object *)NULL)
-#define DeeDec_RelocateEx(self, dependencies) \
-	((void)(self), (void)(dependencies), (DREF struct Dee_module_object *)NULL)
-#define DeeDec_OpenFile(input_stream, options) \
-	((void)(input_stream), (void)(options), (DREF struct Dee_module_object *)NULL)
-#define DeeDec_OpenFileEx(fmap, dec_dirname, dec_dirname_len, options)   \
-	((void)(input_stream), (void)(dec_dirname), (void)(dec_dirname_len), \
-	 (void)(options), (DREF struct Dee_module_object *)NULL)
-#endif /* Dummy macros for forward-compatibility */
-
 DECL_END
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 

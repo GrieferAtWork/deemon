@@ -26,7 +26,6 @@
 #include <deemon/bool.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
-#include <deemon/dec.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -34,6 +33,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/property.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 
 #include "../runtime/kwlist.h"
@@ -128,14 +128,15 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-property_writedec(DeeDecWriter *__restrict writer,
-                  Property *self, Dee_dec_addr_t addr) {
-	int result = DeeDecWriter_XPutObject(writer, addr + offsetof(Property, p_get), self->p_get);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+property_serialize(Property *__restrict self,
+                   DeeSerial *__restrict writer,
+                   Dee_seraddr_t addr) {
+	int result = DeeSerial_XPutObject(writer, addr + offsetof(Property, p_get), self->p_get);
 	if likely(result == 0)
-		result = DeeDecWriter_XPutObject(writer, addr + offsetof(Property, p_del), self->p_del);
+		result = DeeSerial_XPutObject(writer, addr + offsetof(Property, p_del), self->p_del);
 	if likely(result == 0)
-		result = DeeDecWriter_XPutObject(writer, addr + offsetof(Property, p_set), self->p_set);
+		result = DeeSerial_XPutObject(writer, addr + offsetof(Property, p_set), self->p_set);
 	return result;
 }
 
@@ -602,7 +603,7 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
 				/* .tp_any_ctor    = */ (Dee_funptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(Property),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&property_init_kw,
-				/* .tp_writedec    = */ (Dee_funptr_t)&property_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&property_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&property_fini,

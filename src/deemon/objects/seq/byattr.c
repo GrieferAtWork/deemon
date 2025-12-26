@@ -50,7 +50,7 @@ STATIC_ASSERT(offsetof(MapByAttr, mba_map) == offsetof(ProxyObject, po_obj));
 #define byattr_copy     generic_proxy__copy_alias
 #define byattr_deep     generic_proxy__deepcopy
 #define byattr_init     generic_proxy__init
-#define byattr_writedec generic_proxy__writedec
+#define byattr_serialize generic_proxy__serialize
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 byattr_iterattr(DeeTypeObject *UNUSED(tp_self), MapByAttr *self,
@@ -248,7 +248,7 @@ INTERN DeeTypeObject MapByAttr_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&byattr_init,
 				TYPE_FIXED_ALLOCATOR(MapByAttr),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&byattr_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&byattr_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&byattr_fini,

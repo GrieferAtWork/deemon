@@ -609,6 +609,9 @@
 		<ClInclude Include="..\include\deemon\seq.h">
 			<Filter>include</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\serial.h">
+			<Filter>include</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\set.h">
 			<Filter>include</Filter>
 		</ClInclude>

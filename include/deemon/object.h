@@ -1445,21 +1445,21 @@ LOCAL ATTR_ARTIFICIAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 
 
 
-#ifndef Dee_dec_addr_t_DEFINED
-#define Dee_dec_addr_t_DEFINED
-typedef uintptr_t Dee_dec_addr_t; /* Offset from start of `Dec_Ehdr' to some other structure. */
-#endif /* !Dee_dec_addr_t_DEFINED */
-struct Dee_dec_writer;
+/* Serialization address (points into the abstract serialization buffer) */
+#ifndef Dee_seraddr_t_DEFINED
+#define Dee_seraddr_t_DEFINED
+typedef __UINTPTR_TYPE__ Dee_seraddr_t;
+#endif /* !Dee_seraddr_t_DEFINED */
+
+struct Dee_serial;
 
 #if 0
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-myobject_writedec(DeeDecWriter *__restrict writer,
-                  MyObject *__restrict self, Dee_dec_addr_t addr) {
+myobject_serialize(MyObject *__restrict self, DeeSerial *__restrict writer, Dee_seraddr_t addr) {
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
-myobject_writedec(DeeDecWriter *__restrict writer,
-                  MyObject *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+myobject_serialize(MyObject *__restrict self, DeeSerial *__restrict writer) {
 }
 #endif
 
@@ -1476,7 +1476,7 @@ struct Dee_type_constructor {
 			Dee_funptr_t _tp_init4_; /* tp_free */
 			struct { Dee_funptr_t _tp_init5_; } _tp_init6_;
 			Dee_funptr_t _tp_init7_; /* tp_any_ctor_kw */
-			Dee_funptr_t _tp_init8_; /* tp_writedec */
+			Dee_funptr_t _tp_init8_; /* tp_serialize */
 		} _tp_init_;
 
 		struct {
@@ -1506,7 +1506,6 @@ struct Dee_type_constructor {
 			int (DCALL *tp_any_ctor_kw)(DeeObject *__restrict self, size_t argc,
 			                            DeeObject *const *argv, DeeObject *kw);
 
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 			/* [0..1] Serialize the binary data of `self' into `writer'.
 			 * The caller has already pre-allocated the necessary amount
 			 * of storage needed as per `tp_instance_size' (or `tp_alloc')
@@ -1514,14 +1513,14 @@ struct Dee_type_constructor {
 			 * of `self' into `writer'
 			 *
 			 * Standard fields like `ob_refcnt' and `ob_type' will have
-			 * already been initialized at the time this operator is called.
+			 * already been initialized by the time this operator is called.
 			 *
 			 * @return: 0 : Success
 			 * @return: -1: Error */
-			WUNUSED_T NONNULL_T((1, 2))
-			int (DCALL *tp_writedec)(struct Dee_dec_writer *__restrict writer,
-			                         DeeObject *__restrict self, Dee_dec_addr_t addr);
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+			WUNUSED_T NONNULL_T((1, 2)) int
+			(DCALL *tp_serialize)(DeeObject *__restrict self,
+			                      struct Dee_serial *__restrict writer,
+			                      Dee_seraddr_t addr);
 		} tp_alloc; /* [valid_if(!TP_FVARIABLE)] */
 
 		struct {
@@ -1548,14 +1547,12 @@ struct Dee_type_constructor {
 			 *          even when `tp_ctor' or `tp_any_ctor' has been defined as non-NULL! */
 			WUNUSED_T ATTR_INS_T(2, 1) DREF DeeObject *(DCALL *tp_any_ctor_kw)(size_t argc, DeeObject *const *argv, DeeObject *kw);
 
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 			/* [0..1] Serialize the binary data of `self' into `writer'.
-			 * @return: 0 : Error
-			 * @return: * : Address where data for `self' was written to. */
-			WUNUSED_T NONNULL_T((1, 2))
-			Dee_dec_addr_t (DCALL *tp_writedec)(struct Dee_dec_writer *__restrict writer,
-			                                    DeeObject *__restrict self);
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+			 * @return: Dee_SERADDR_INVALID : Error
+			 * @return: * : Address where data of `self' was written to. */
+			WUNUSED_T NONNULL_T((1, 2)) Dee_seraddr_t
+			(DCALL *tp_serialize)(DeeObject *__restrict self,
+			                      struct Dee_serial *__restrict writer);
 		} tp_var; /* [valid_if(TP_FVARIABLE)] */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
@@ -4077,10 +4074,8 @@ struct Dee_type_object {
 #define DeeObject_IsInterrupt(x)         DeeType_IsInterrupt(Dee_TYPE(x))
 
 #ifdef CONFIG_BUILDING_DEEMON
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-/* Returns the "tp_writedec" operator for "tp". If possible, inherit from base class. */
-INTDEF WUNUSED NONNULL((1)) Dee_funptr_t (DCALL DeeType_GetTpWriteDec)(DeeTypeObject *__restrict self);
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+/* Returns the "tp_serialize" operator for "tp". If possible, inherit from base class. */
+INTDEF WUNUSED NONNULL((1)) Dee_funptr_t (DCALL DeeType_GetTpSerialize)(DeeTypeObject *__restrict self);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Helpers for allocating/freeing fixed-length (non-variable) type instances. */

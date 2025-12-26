@@ -773,10 +773,10 @@ DeeDecWriter_PutRel(DeeDecWriter *__restrict self,
 }
 
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_dec_addr_t
-(DCALL *Dee_tp_writedec_var_t)(struct Dee_dec_writer *__restrict writer,
+(DCALL *Dee_tp_serialize_var_t)(struct Dee_dec_writer *__restrict writer,
                                DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) int
-(DCALL *Dee_tp_writedec_obj_t)(struct Dee_dec_writer *__restrict writer,
+(DCALL *Dee_tp_serialize_obj_t)(struct Dee_dec_writer *__restrict writer,
                                DeeObject *__restrict self,
                                Dee_dec_addr_t addr);
 
@@ -790,13 +790,13 @@ DeeDecWriter_AppendObject(DeeDecWriter *__restrict self,
 	Dee_dec_addr_t addr;
 	size_t instance_size;
 	DeeTypeObject *tp = Dee_TYPE(obj);
-	Dee_funptr_t tp_writedec;
+	Dee_funptr_t tp_serialize;
 	void (DCALL *tp_free)(void *__restrict ob);
-	tp_writedec = DeeType_GetTpWriteDec(tp);
-	if unlikely(!tp_writedec)
+	tp_serialize = DeeType_GetTpWriteDec(tp);
+	if unlikely(!tp_serialize)
 		goto err_cannot_serialize;
 	if (tp->tp_flags & TP_FVARIABLE)
-		return (*(Dee_tp_writedec_var_t)tp_writedec)(self, obj);
+		return (*(Dee_tp_serialize_var_t)tp_serialize)(self, obj);
 
 	/* Figure out instance size (with support for slab allocators). */
 	tp_free = tp->tp_init.tp_alloc.tp_free;
@@ -831,7 +831,7 @@ DeeDecWriter_AppendObject(DeeDecWriter *__restrict self,
 	if unlikely(!addr)
 		goto err;
 	/* NOTE: Standard fields have already been initialized by "DeeDecWriter_[GC]Object_Malloc" */
-	status = (*(Dee_tp_writedec_obj_t)tp_writedec)(self, obj, addr);
+	status = (*(Dee_tp_serialize_obj_t)tp_serialize)(self, obj, addr);
 	if unlikely(status)
 		goto err;
 	return addr;

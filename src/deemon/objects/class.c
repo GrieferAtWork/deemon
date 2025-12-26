@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2025 Griefer@Work                                       *
+																					   /* Copyright (c) 2018-2025 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -23,7 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/class.h>
-#include <deemon/dec.h>
+#include <deemon/serial.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -750,20 +750,20 @@ instance_builtin_destructor(DeeObject *__restrict self) {
 	                       desc->cd_desc->cd_imemb_size);
 }
 
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 PRIVATE WUNUSED bool DCALL
-instance_builtin_writedec_enabled(DeeTypeObject *base) {
+instance_builtin_serialize_enabled(DeeTypeObject *base) {
 	while (base && base != &DeeObject_Type) {
 		if (!DeeType_IsClass(base))
-			return DeeType_GetTpWriteDec(base) != NULL;
+			return DeeType_GetTpSerialize(base) != NULL;
 		base = DeeType_Base(base);
 	}
 	return true;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_writedec(DeeDecWriter *__restrict writer,
-                          DeeObject *self, Dee_dec_addr_t addr) {
+instance_builtin_serialize(DeeObject *__restrict self,
+                           DeeSerial *__restrict writer,
+                           Dee_seraddr_t addr) {
 	DeeTypeObject *tp = Dee_TYPE(self);
 	DeeTypeObject *first_non_class = DeeType_Base(tp);
 
@@ -771,9 +771,9 @@ instance_builtin_writedec(DeeDecWriter *__restrict writer,
 	while (first_non_class && first_non_class != &DeeObject_Type) {
 		if (!DeeType_IsClass(first_non_class)) {
 			int nested;
-			ASSERTF(first_non_class->tp_init.tp_alloc.tp_writedec,
+			ASSERTF(first_non_class->tp_init.tp_alloc.tp_serialize,
 			        "This should have been checked by `DeeClass_New()'");
-			nested = (*first_non_class->tp_init.tp_alloc.tp_writedec)(writer, self, addr);
+			nested = (*first_non_class->tp_init.tp_alloc.tp_serialize)(self, writer, addr);
 			if unlikely(nested)
 				return nested;
 			break;
@@ -789,16 +789,16 @@ instance_builtin_writedec(DeeDecWriter *__restrict writer,
 		ASSERT(DeeType_IsClass(tp));
 		cdesc = DeeClass_DESC(tp);
 		idesc = DeeInstance_DESC(cdesc, self);
-		odesc = DeeDecWriter_Addr2Mem(writer, addr + cdesc->cd_offset, struct instance_desc);
+		odesc = DeeSerial_Addr2Mem(writer, addr + cdesc->cd_offset, struct instance_desc);
 		objc  = cdesc->cd_desc->cd_imemb_size;
 		Dee_atomic_rwlock_init(&odesc->id_lock);
 		Dee_instance_desc_lock_read(idesc);
 		Dee_XMovrefv(odesc->id_vtab, idesc->id_vtab, objc);
 		Dee_instance_desc_lock_endread(idesc);
-		if (DeeDecWriter_XInplacePutObjectv(writer,
-		                                    addr + cdesc->cd_offset +
-		                                    offsetof(struct instance_desc, id_vtab),
-		                                    objc))
+		if (DeeSerial_XInplacePutObjectv(writer,
+		                                 addr + cdesc->cd_offset +
+		                                 offsetof(struct instance_desc, id_vtab),
+		                                 objc))
 			goto err;
 		tp = DeeType_Base(tp);
 	} while (tp && tp != &DeeObject_Type && DeeType_IsClass(tp));
@@ -806,7 +806,6 @@ instance_builtin_writedec(DeeDecWriter *__restrict writer,
 err:
 	return -1;
 }
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 
 INTERN NONNULL((1)) void DCALL
@@ -4326,11 +4325,9 @@ err_custom_allocator:
 	}
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 	/* Enable DEC encoding if supported by the underlying base. */
-	if (instance_builtin_writedec_enabled(cbases.cb_base))
-		result->tp_init.tp_alloc.tp_writedec = &instance_builtin_writedec;
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+	if (instance_builtin_serialize_enabled(cbases.cb_base))
+		result->tp_init.tp_alloc.tp_serialize = &instance_builtin_serialize;
 
 	{
 #define FEATURE_CONSTRUCTOR 0x0001 /* A constructor is provided */

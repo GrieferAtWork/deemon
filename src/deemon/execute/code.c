@@ -27,7 +27,7 @@
 #include <deemon/bool.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
-#include <deemon/dec.h>
+#include <deemon/serial.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -2600,34 +2600,31 @@ err:
  * at `addr'. NULL-elements within `objv' are replicated within the duplicate.
  * @return: * : Address of duplicated vector
  * @return: 0 : An error was thrown. */
-DFUNDEF WUNUSED ATTR_INS(3, 4) NONNULL((1)) Dee_dec_addr_t
-(DCALL DeeDecWriter_XPutObjectVectorDup)(DeeDecWriter *__restrict self, Dee_dec_addr_t addr,
-                                         DeeObject *const *objv, size_t objc) {
+DFUNDEF WUNUSED ATTR_INS(3, 4) NONNULL((1)) int
+(DCALL DeeSerial_XPutObjectVectorDup)(DeeSerial *__restrict writer, Dee_seraddr_t addr,
+                                      DeeObject *const *objv, size_t objc) {
 	size_t i;
-	Dee_dec_addr_t md_addr = DeeDecWriter_Malloc(self, objc * sizeof(DREF DeeObject *));
-	if unlikely(!md_addr)
+	Dee_seraddr_t md_addr = DeeSerial_Malloc(writer, objc * sizeof(DREF DeeObject *));
+	if (!Dee_SERADDR_ISOK(md_addr))
 		goto err;
 	for (i = 0; i < objc; ++i) {
-		Dee_dec_addr_t addrof_i = md_addr + i * sizeof(DREF DeeObject *);
-		if (DeeDecWriter_XPutObject(self, addrof_i, objv[i]))
+		Dee_seraddr_t addrof_i = md_addr + i * sizeof(DREF DeeObject *);
+		if (DeeSerial_XPutObject(writer, addrof_i, objv[i]))
 			goto err;
 	}
-	if (DeeDecWriter_PutRel(self, addr, md_addr))
-		goto err;
-	return md_addr;
+	return DeeSerial_PutAddr(writer, addr, md_addr);
 err:
-	return 0;
+	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
-code_writedec(DeeDecWriter *__restrict writer,
-              DeeCodeObject *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+code_serialize(DeeCodeObject *__restrict self, DeeSerial *__restrict writer) {
 	DeeCodeObject *out;
 	size_t sizeof_code = offsetof(DeeCodeObject, co_code) + self->co_codebytes;
-	Dee_dec_addr_t addr = DeeDecWriter_Object_Malloc(writer, sizeof_code, self);
-	if unlikely(!addr)
+	Dee_seraddr_t addr = DeeSerial_ObjectMalloc(writer, sizeof_code, self);
+	if (!Dee_SERADDR_ISOK(addr))
 		goto err;
-	out = DeeDecWriter_Addr2Mem(writer, addr, DeeCodeObject);
+	out = DeeSerial_Addr2Mem(writer, addr, DeeCodeObject);
 	out->co_flags      = self->co_flags;
 	out->co_localc     = self->co_localc;
 	out->co_constc     = self->co_constc;
@@ -2650,54 +2647,54 @@ code_writedec(DeeDecWriter *__restrict writer,
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 	memcpy(out->co_code, self->co_code, self->co_codebytes);
 	if (self->co_keywords) {
-		if unlikely(!DeeDecWriter_XPutObjectVectorDup(writer, addr + offsetof(DeeCodeObject, co_keywords),
-		                                              (DeeObject *const *)self->co_keywords,
-		                                              self->co_argc_max))
+		if unlikely(DeeSerial_XPutObjectVectorDup(writer, addr + offsetof(DeeCodeObject, co_keywords),
+		                                          (DeeObject *const *)self->co_keywords,
+		                                          self->co_argc_max))
 			goto err;
 	}
 	if (self->co_defaultv) {
-		if unlikely(!DeeDecWriter_XPutObjectVectorDup(writer, addr + offsetof(DeeCodeObject, co_defaultv),
-		                                              (DeeObject *const *)self->co_defaultv,
-		                                              self->co_argc_max - self->co_argc_min))
+		if unlikely(DeeSerial_XPutObjectVectorDup(writer, addr + offsetof(DeeCodeObject, co_defaultv),
+		                                          (DeeObject *const *)self->co_defaultv,
+		                                          self->co_argc_max - self->co_argc_min))
 			goto err;
 	}
 	if (self->co_constv) {
-		if unlikely(!DeeDecWriter_XPutObjectVectorDup(writer, addr + offsetof(DeeCodeObject, co_constv),
-		                                              (DeeObject *const *)self->co_constv,
-		                                              self->co_constc))
+		if unlikely(DeeSerial_XPutObjectVectorDup(writer, addr + offsetof(DeeCodeObject, co_constv),
+		                                          (DeeObject *const *)self->co_constv,
+		                                          self->co_constc))
 			goto err;
 	}
 	if (self->co_exceptv) {
 		struct except_handler *out_exceptv, *in_exceptv;
 		uint16_t i, exceptc = self->co_exceptc;
 		size_t sizeof_exceptv = exceptc * sizeof(struct except_handler);
-		Dee_dec_addr_t addrof_out_exceptv = DeeDecWriter_Malloc(writer, sizeof_exceptv);
-		if unlikely(!addrof_out_exceptv)
+		Dee_seraddr_t addrof_out_exceptv = DeeSerial_Malloc(writer, sizeof_exceptv);
+		if (!Dee_SERADDR_ISOK(addrof_out_exceptv))
 			goto err;
-		out_exceptv = DeeDecWriter_Addr2Mem(writer, addrof_out_exceptv, struct except_handler);
+		out_exceptv = DeeSerial_Addr2Mem(writer, addrof_out_exceptv, struct except_handler);
 		in_exceptv  = self->co_exceptv;
 		for (i = 0; i < exceptc; ++i) {
 			out_exceptv[i] = in_exceptv[i];
 			if (in_exceptv[i].eh_mask) {
-				Dee_dec_addr_t addrof_out_exceptv_item_mask;
+				Dee_seraddr_t addrof_out_exceptv_item_mask;
 				addrof_out_exceptv_item_mask = addrof_out_exceptv +
 				                               i * sizeof(struct except_handler) +
 				                               offsetof(struct except_handler, eh_mask);
-				if (DeeDecWriter_PutObject(writer, addrof_out_exceptv_item_mask, in_exceptv[i].eh_mask))
+				if (DeeSerial_PutObject(writer, addrof_out_exceptv_item_mask, in_exceptv[i].eh_mask))
 					goto err;
-				out_exceptv = DeeDecWriter_Addr2Mem(writer, addrof_out_exceptv, struct except_handler);
+				out_exceptv = DeeSerial_Addr2Mem(writer, addrof_out_exceptv, struct except_handler);
 			}
 		}
-		if (DeeDecWriter_PutRel(writer, addr + offsetof(DeeCodeObject, co_exceptv), addrof_out_exceptv))
+		if (DeeSerial_PutAddr(writer, addr + offsetof(DeeCodeObject, co_exceptv), addrof_out_exceptv))
 			goto err;
 	}
-	if (DeeDecWriter_PutObject(writer, addr + offsetof(DeeCodeObject, co_module), self->co_module))
+	if (DeeSerial_PutObject(writer, addr + offsetof(DeeCodeObject, co_module), self->co_module))
 		goto err;
-	if (DeeDecWriter_PutObject(writer, addr + offsetof(DeeCodeObject, co_ddi), self->co_ddi))
+	if (DeeSerial_PutObject(writer, addr + offsetof(DeeCodeObject, co_ddi), self->co_ddi))
 		goto err;
 	return addr;
 err:
-	return 0;
+	return Dee_SERADDR_INVALID;
 }
 
 PUBLIC DeeTypeObject DeeCode_Type = {
@@ -2748,7 +2745,7 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL,
 				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&code_init_kw,
-				/* .tp_writedec    = */ (Dee_funptr_t)&code_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&code_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&code_fini,

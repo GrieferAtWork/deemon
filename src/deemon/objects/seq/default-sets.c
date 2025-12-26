@@ -135,7 +135,7 @@ invset_ctor(SetInversion *__restrict self) {
 
 STATIC_ASSERT(offsetof(SetInversion, si_set) == offsetof(ProxyObject, po_obj));
 #define invset_init     generic_proxy__init
-#define invset_writedec generic_proxy__writedec
+#define invset_serialize generic_proxy__serialize
 #define invset_fini     generic_proxy__fini
 #define invset_visit    generic_proxy__visit
 
@@ -361,7 +361,7 @@ INTERN DeeTypeObject SetInversion_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&invset_init,
 				TYPE_FIXED_ALLOCATOR(SetInversion),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&invset_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&invset_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&invset_fini,

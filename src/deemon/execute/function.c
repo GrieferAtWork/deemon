@@ -28,7 +28,6 @@
 #include <deemon/class.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
-#include <deemon/dec.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -39,6 +38,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/traceback.h>
@@ -1030,27 +1030,26 @@ function_visit(Function *__restrict self,
 	Dee_Visit(self->fo_code);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
-function_writedec(DeeDecWriter *__restrict writer,
-                  Function *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+function_serialize(Function *__restrict self, DeeSerial *__restrict writer) {
 	Function *out;
 	size_t i, refc = self->fo_code->co_refstaticc;
 	size_t sizeof_function = offsetof(Function, fo_refv) + refc * sizeof(DREF DeeObject *);
-	Dee_dec_addr_t addr = DeeDecWriter_GCObject_Malloc(writer, sizeof_function, self);
-	if unlikely(!addr)
+	Dee_seraddr_t addr = DeeSerial_GCObjectMalloc(writer, sizeof_function, self);
+	if (!Dee_SERADDR_ISOK(addr))
 		goto err;
-	out = DeeDecWriter_Addr2Mem(writer, addr, Function);
+	out = DeeSerial_Addr2Mem(writer, addr, Function);
 	(void)out;
 	Dee_atomic_rwlock_init(&out->fo_reflock);
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 	bzero(&out->fo_hostasm, sizeof(out->fo_hostasm)); /* Don't serialize hostasm */
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
-	if (DeeDecWriter_PutObject(writer, addr + offsetof(Function, fo_code), self->fo_code))
+	if (DeeSerial_PutObject(writer, addr + offsetof(Function, fo_code), self->fo_code))
 		goto err;
 #define addrof_out_refv(i) (addr + offsetof(Function, fo_refv) + (i) * sizeof(DREF DeeObject *))
 	/* Constant references... */
 	for (i = 0; i < self->fo_code->co_refc; ++i) {
-		if (DeeDecWriter_PutObject(writer, addrof_out_refv(i), self->fo_refv[i]))
+		if (DeeSerial_PutObject(writer, addrof_out_refv(i), self->fo_refv[i]))
 			goto err;
 	}
 
@@ -1061,13 +1060,13 @@ function_writedec(DeeDecWriter *__restrict writer,
 		value = self->fo_refv[i];
 		Dee_XIncref(value);
 		DeeFunction_RefLockEndRead(self);
-		if (DeeDecWriter_XPutObjectInherited(writer, addrof_out_refv(i), value))
+		if (DeeSerial_XPutObjectInherited(writer, addrof_out_refv(i), value))
 			goto err;
 	}
 #undef addrof_out_refv
 	return addr;
 err:
-	return 0;
+	return Dee_SERADDR_INVALID;
 }
 
 
@@ -1286,7 +1285,7 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&function_init,
 				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL }, /* XXX: Use the tuple-allocator? (if somehow still possible with "CONFIG_EXPERIMENTAL_MMAP_DEC") */
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&function_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&function_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&function_fini,
@@ -1546,31 +1545,43 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
-yf_writedec(DeeDecWriter *__restrict writer, YFunction *__restrict self) {
+#if 0 /* TODO */
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+yf_serialize(YFunction *__restrict self, DeeSerial *__restrict writer) {
 	YFunction *out;
 	size_t i, sizeof_yfunc = offsetof(YFunction, yf_argv) + (self->yf_argc * sizeof(DREF DeeObject *));
-	Dee_dec_addr_t addr = DeeDecWriter_Object_Malloc(writer, sizeof_yfunc, self);
-	if unlikely(!addr)
+	Dee_seraddr_t addr = DeeSerial_ObjectMalloc(writer, sizeof_yfunc, self);
+	if (!Dee_SERADDR_ISOK(addr))
 		goto err;
-	out = DeeDecWriter_Addr2Mem(writer, addr, YFunction);
+	out = DeeSerial_Addr2Mem(writer, addr, YFunction);
 	out->yf_pargc = self->yf_pargc;
 	out->yf_argc  = self->yf_argc;
-	if (DeeDecWriter_PutObject(writer, addr + offsetof(YFunction, yf_func), self->yf_func))
+	out->yf_kw    = NULL;
+	if (DeeSerial_PutObject(writer, addr + offsetof(YFunction, yf_func), self->yf_func))
 		goto err;
-	if (DeeDecWriter_XPutObject(writer, addr + offsetof(YFunction, yf_kw), self->yf_kw))
-		goto err;
-	if (DeeDecWriter_XPutObject(writer, addr + offsetof(YFunction, yf_this), self->yf_this))
+	if (self->yf_kw) {
+		Dee_seraddr_t addrof_kw;
+		size_t kw_count = (self->yf_func->fo_code->co_argc_max - self->yf_pargc);
+		size_t sizeof_kw = _Dee_MallococBufsize(offsetof(struct code_frame_kwds, fk_kargv),
+		                                        kw_count, sizeof(DeeObject *));
+		ASSERT(self->yf_func->fo_code->co_argc_max >= self->yf_pargc);
+		addrof_kw = DeeSerial_Malloc(writer, sizeof_kw);
+		if (!Dee_SERADDR_ISOK(addrof_kw))
+			goto err;
+		/* TODO */
+	}
+	if (DeeSerial_XPutObject(writer, addr + offsetof(YFunction, yf_this), self->yf_this))
 		goto err;
 	for (i = 0; i < self->yf_argc; ++i) {
-		Dee_dec_addr_t addrof_arg = addr + offsetof(YFunction, yf_argv) + (i * sizeof(DREF DeeObject *));
-		if (DeeDecWriter_PutObject(writer, addrof_arg, self->yf_argv[i]))
+		Dee_seraddr_t addrof_arg = addr + offsetof(YFunction, yf_argv) + (i * sizeof(DREF DeeObject *));
+		if (DeeSerial_PutObject(writer, addrof_arg, self->yf_argv[i]))
 			goto err;
 	}
 	return addr;
 err:
-	return 0;
+	return Dee_SERADDR_INVALID;
 }
+#endif
 
 PRIVATE struct type_seq yf_seq = {
 	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_iter
@@ -1853,7 +1864,7 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)NULL, /* TODO */
 				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL }, /* XXX: Use the tuple-allocator? (if somehow still possible with "CONFIG_EXPERIMENTAL_MMAP_DEC") */
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&yf_writedec
+				/* .tp_serialize = */ NULL, // TODO: (Dee_funptr_t)&yf_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&yf_fini,

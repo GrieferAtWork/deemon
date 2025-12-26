@@ -25,12 +25,12 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
-#include <deemon/dec.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
 #include <deemon/int.h>
 #include <deemon/numeric.h>
 #include <deemon/object.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 
@@ -124,9 +124,10 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-float_writedec(DeeDecWriter *__restrict writer,
-               Float *self, Dee_dec_addr_t addr) {
-	Float *out = DeeDecWriter_Addr2Mem(writer, addr, Float);
+float_serialize(Float *__restrict self,
+                DeeSerial *__restrict writer,
+                Dee_seraddr_t addr) {
+	Float *out = DeeSerial_Addr2Mem(writer, addr, Float);
 	out->f_value = self->f_value;
 	return 0;
 }
@@ -930,7 +931,7 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&float_init,
 				TYPE_FIXED_ALLOCATOR(Float),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&float_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&float_serialize
 			}
 		},
 		/* .tp_dtor        = */ NULL,

@@ -297,7 +297,7 @@ STATIC_ASSERT(offsetof(MapFromAttr, mfa_ob) == offsetof(ProxyObject, po_obj));
 #define mfa_copy     generic_proxy__copy_alias
 #define mfa_deep     generic_proxy__deepcopy
 #define mfa_init     generic_proxy__init
-#define mfa_writedec generic_proxy__writedec
+#define mfa_serialize generic_proxy__serialize
 #define mfa_fini     generic_proxy__fini
 #define mfa_visit    generic_proxy__visit
 
@@ -542,7 +542,7 @@ INTERN DeeTypeObject MapFromAttr_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&mfa_init,
 				TYPE_FIXED_ALLOCATOR(MapFromAttr),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&mfa_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&mfa_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mfa_fini,

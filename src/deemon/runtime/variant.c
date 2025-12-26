@@ -22,10 +22,10 @@
 
 #include <deemon/api.h>
 #include <deemon/bool.h>
-#include <deemon/dec.h>
 #include <deemon/float.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
@@ -108,19 +108,35 @@ Dee_variant_visit(struct Dee_variant *__restrict self,
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-Dee_variant_writedec(DeeDecWriter *__restrict writer,
-                     struct Dee_variant *__restrict self,
-                     Dee_dec_addr_t addr) {
-	struct Dee_variant *out = DeeDecWriter_Addr2Mem(writer, addr, struct Dee_variant);
+Dee_variant_serialize(struct Dee_variant *__restrict self,
+                      DeeSerial *__restrict writer,
+                      Dee_seraddr_t addr) {
+	struct Dee_variant *out = DeeSerial_Addr2Mem(writer, addr, struct Dee_variant);
 	enum Dee_variant_type type = Dee_variant_lock(self);
 	out->var_type = type;
-	if (type == Dee_VARIANT_OBJECT) {
+	switch (type) {
+
+	case Dee_VARIANT_OBJECT: {
 		DREF DeeObject *obj = self->var_data.d_object;
 		Dee_Incref(obj);
 		Dee_variant_unlock(self, type);
-		return DeeDecWriter_PutObjectInherited(writer,
-		                                       addr + offsetof(struct Dee_variant, var_data.d_object),
-		                                       obj);
+		return DeeSerial_PutObjectInherited(writer,
+		                                    addr + offsetof(struct Dee_variant, var_data.d_object),
+		                                    obj);
+	}	break;
+
+	case Dee_VARIANT_CSTRLEN:
+		out->var_data.d_cstrlen.sl_len = self->var_data.d_cstrlen.sl_len;
+		ATTR_FALLTHROUGH
+	case Dee_VARIANT_CSTR: {
+		char const *cstr = self->var_data.d_cstr;
+		Dee_variant_unlock(self, type);
+		return DeeSerial_PutStatic(writer,
+		                           addr + offsetof(struct Dee_variant, var_data.d_cstr),
+		                           cstr);
+	}	break;
+
+	default: break;
 	}
 	out->var_data = self->var_data;
 	Dee_variant_unlock(self, type);

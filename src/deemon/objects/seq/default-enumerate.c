@@ -22,7 +22,6 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/dec.h>
 #include <deemon/error.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
@@ -30,6 +29,7 @@
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/util/lock.h>
 
 /**/
@@ -50,12 +50,12 @@ DECL_BEGIN
 
 /* common: DefaultEnumeration */
 STATIC_ASSERT(offsetof(DefaultEnumeration, de_seq) == offsetof(ProxyObject, po_obj));
-#define DefaultEnumeration__init     generic_proxy__init
-#define DefaultEnumeration__writedec generic_proxy__writedec
-#define DefaultEnumeration__fini     generic_proxy__fini
-#define DefaultEnumeration__visit    generic_proxy__visit
-#define DefaultEnumeration__copy     generic_proxy__copy_alias
-#define DefaultEnumeration__deepcopy generic_proxy__deepcopy
+#define DefaultEnumeration__init      generic_proxy__init
+#define DefaultEnumeration__serialize generic_proxy__serialize
+#define DefaultEnumeration__fini      generic_proxy__fini
+#define DefaultEnumeration__visit     generic_proxy__visit
+#define DefaultEnumeration__copy      generic_proxy__copy_alias
+#define DefaultEnumeration__deepcopy  generic_proxy__deepcopy
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 DefaultEnumeration__ctor(DefaultEnumeration *__restrict self) {
@@ -68,12 +68,12 @@ DefaultEnumeration__ctor(DefaultEnumeration *__restrict self) {
 STATIC_ASSERT(offsetof(DefaultEnumerationWithFilter, dewf_seq) == offsetof(ProxyObject3, po_obj1));
 STATIC_ASSERT(offsetof(DefaultEnumerationWithFilter, dewf_start) == offsetof(ProxyObject3, po_obj2));
 STATIC_ASSERT(offsetof(DefaultEnumerationWithFilter, dewf_end) == offsetof(ProxyObject3, po_obj3));
-#define DefaultEnumerationWithFilter__init     generic_proxy3__init
-#define DefaultEnumerationWithFilter__writedec generic_proxy3__writedec
-#define DefaultEnumerationWithFilter__fini     generic_proxy3__fini
-#define DefaultEnumerationWithFilter__visit    generic_proxy3__visit
-#define DefaultEnumerationWithFilter__copy     generic_proxy3__copy_alias123
-#define DefaultEnumerationWithFilter__deepcopy generic_proxy3__deepcopy
+#define DefaultEnumerationWithFilter__init      generic_proxy3__init
+#define DefaultEnumerationWithFilter__serialize generic_proxy3__serialize
+#define DefaultEnumerationWithFilter__fini      generic_proxy3__fini
+#define DefaultEnumerationWithFilter__visit     generic_proxy3__visit
+#define DefaultEnumerationWithFilter__copy      generic_proxy3__copy_alias123
+#define DefaultEnumerationWithFilter__deepcopy  generic_proxy3__deepcopy
 STATIC_ASSERT(offsetof(DefaultEnumeration, de_seq) == offsetof(DefaultEnumerationWithFilter, dewf_seq));
 PRIVATE struct type_member tpconst DefaultEnumerationWithFilter__members[] = {
 	TYPE_MEMBER_FIELD("__start__", STRUCT_OBJECT, offsetof(DefaultEnumerationWithFilter, dewf_start)),
@@ -140,14 +140,14 @@ DefaultEnumerationWithIntFilter__copy(DefaultEnumerationWithIntFilter *__restric
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-DefaultEnumerationWithIntFilter__writedec(DeeDecWriter *__restrict writer,
-                                          DefaultEnumerationWithIntFilter *self,
-                                          Dee_dec_addr_t addr) {
+DefaultEnumerationWithIntFilter__serialize(DefaultEnumerationWithIntFilter *__restrict self,
+                                           DeeSerial *__restrict writer,
+                                           Dee_seraddr_t addr) {
 	DefaultEnumerationWithIntFilter *out;
-	out = DeeDecWriter_Addr2Mem(writer, addr, DefaultEnumerationWithIntFilter);
+	out = DeeSerial_Addr2Mem(writer, addr, DefaultEnumerationWithIntFilter);
 	out->dewif_start = self->dewif_start;
 	out->dewif_end   = self->dewif_end;
-	return generic_proxy__writedec(writer, (ProxyObject *)self, addr);
+	return generic_proxy__serialize((ProxyObject *)self, writer, addr);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -199,7 +199,7 @@ printPrefixAliases("ctor");
 printPrefixAliases("init");
 printPrefixAliases("copy");
 printPrefixAliases("deepcopy");
-printPrefixAliases("writedec");
+printPrefixAliases("serialize");
 printPrefixAliases("fini");
 printPrefixAliases("visit");
 printPrefixAliases("members");
@@ -304,30 +304,30 @@ printPrefixAliases("members");
 #define de_me__deepcopy           DefaultEnumeration__deepcopy
 #define dewf_mer__deepcopy        DefaultEnumerationWithFilter__deepcopy
 
-/* Common: writedec */
-#define de_sos_gif__writedec      DefaultEnumeration__writedec
-#define dewif_sos_gif__writedec   DefaultEnumerationWithIntFilter__writedec
-#define de_sos_sotgi__writedec    DefaultEnumeration__writedec
-#define dewif_sos_sotgi__writedec DefaultEnumerationWithIntFilter__writedec
-#define de_sos_sogi__writedec     DefaultEnumeration__writedec
-#define dewif_sos_soii__writedec  DefaultEnumerationWithIntFilter__writedec
-#define de_soso_sog__writedec     DefaultEnumeration__writedec
-#define de_sogi__writedec         DefaultEnumeration__writedec
-#define dewif_soii__writedec      DefaultEnumerationWithIntFilter__writedec
-#define dewf_soso_sog__writedec   DefaultEnumerationWithFilter__writedec
-#define de_sog__writedec          DefaultEnumeration__writedec
-#define dewf_sog__writedec        DefaultEnumerationWithFilter__writedec
-#define de_soi__writedec          DefaultEnumeration__writedec
-#define dewif_soi__writedec       DefaultEnumerationWithIntFilter__writedec
-#define de_se__writedec           DefaultEnumeration__writedec
-#define dewif_sei__writedec       DefaultEnumerationWithIntFilter__writedec
-#define dewf_moi__writedec        DefaultEnumerationWithFilter__writedec
-#define de_mik_mog__writedec      DefaultEnumeration__writedec
-#define dewf_mik_mog__writedec    DefaultEnumerationWithFilter__writedec
-#define de_mik_motg__writedec     DefaultEnumeration__writedec
-#define dewf_mik_motg__writedec   DefaultEnumerationWithFilter__writedec
-#define de_me__writedec           DefaultEnumeration__writedec
-#define dewf_mer__writedec        DefaultEnumerationWithFilter__writedec
+/* Common: serialize */
+#define de_sos_gif__serialize      DefaultEnumeration__serialize
+#define dewif_sos_gif__serialize   DefaultEnumerationWithIntFilter__serialize
+#define de_sos_sotgi__serialize    DefaultEnumeration__serialize
+#define dewif_sos_sotgi__serialize DefaultEnumerationWithIntFilter__serialize
+#define de_sos_sogi__serialize     DefaultEnumeration__serialize
+#define dewif_sos_soii__serialize  DefaultEnumerationWithIntFilter__serialize
+#define de_soso_sog__serialize     DefaultEnumeration__serialize
+#define de_sogi__serialize         DefaultEnumeration__serialize
+#define dewif_soii__serialize      DefaultEnumerationWithIntFilter__serialize
+#define dewf_soso_sog__serialize   DefaultEnumerationWithFilter__serialize
+#define de_sog__serialize          DefaultEnumeration__serialize
+#define dewf_sog__serialize        DefaultEnumerationWithFilter__serialize
+#define de_soi__serialize          DefaultEnumeration__serialize
+#define dewif_soi__serialize       DefaultEnumerationWithIntFilter__serialize
+#define de_se__serialize           DefaultEnumeration__serialize
+#define dewif_sei__serialize       DefaultEnumerationWithIntFilter__serialize
+#define dewf_moi__serialize        DefaultEnumerationWithFilter__serialize
+#define de_mik_mog__serialize      DefaultEnumeration__serialize
+#define dewf_mik_mog__serialize    DefaultEnumerationWithFilter__serialize
+#define de_mik_motg__serialize     DefaultEnumeration__serialize
+#define dewf_mik_motg__serialize   DefaultEnumerationWithFilter__serialize
+#define de_me__serialize           DefaultEnumeration__serialize
+#define dewf_mer__serialize        DefaultEnumerationWithFilter__serialize
 
 /* Common: fini */
 #define de_sos_gif__fini      DefaultEnumeration__fini
@@ -1246,7 +1246,7 @@ do_print_substruct:
 		print('				/' '* .tp_any_ctor  = *' '/ (Dee_funptr_t)', getFieldPtr('init'), ',');
 		print('				TYPE_FIXED_ALLOCATOR(', typename.partition("__").first, '),');
 		print('				/' '* .tp_any_ctor_kw = *' '/ (Dee_funptr_t)NULL,');
-		print('				/' '* .tp_writedec    = *' '/ (Dee_funptr_t)', getFieldPtr('writedec'), ',');
+		print('				/' '* .tp_serialize = *' '/ (Dee_funptr_t)', getFieldPtr('serialize'), ',');
 		print('			}');
 		print('		},');
 		print('		/' '* .tp_dtor        = *' '/ ', getFieldTypedPtr('fini', '(void (DCALL *)(DeeObject *__restrict))'), ',');
@@ -1395,7 +1395,7 @@ INTERN DeeTypeObject DefaultEnumeration__with__seq_operator_size__and__getitem_i
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&de_sos_gif__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumeration),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&de_sos_gif__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&de_sos_gif__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&de_sos_gif__fini,
@@ -1493,7 +1493,7 @@ INTERN DeeTypeObject DefaultEnumerationWithIntFilter__with__seq_operator_size__a
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&dewif_sos_gif__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumerationWithIntFilter),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&dewif_sos_gif__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&dewif_sos_gif__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dewif_sos_gif__fini,
@@ -1591,7 +1591,7 @@ INTERN DeeTypeObject DefaultEnumeration__with__seq_operator_size__and__seq_opera
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&de_sos_sotgi__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumeration),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&de_sos_sotgi__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&de_sos_sotgi__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&de_sos_sotgi__fini,
@@ -1689,7 +1689,7 @@ INTERN DeeTypeObject DefaultEnumerationWithIntFilter__with__seq_operator_size__a
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&dewif_sos_sotgi__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumerationWithIntFilter),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&dewif_sos_sotgi__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&dewif_sos_sotgi__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dewif_sos_sotgi__fini,
@@ -1787,7 +1787,7 @@ INTERN DeeTypeObject DefaultEnumeration__with__seq_operator_size__and__seq_opera
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&de_sos_sogi__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumeration),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&de_sos_sogi__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&de_sos_sogi__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&de_sos_sogi__fini,
@@ -1885,7 +1885,7 @@ INTERN DeeTypeObject DefaultEnumerationWithIntFilter__with__seq_operator_size__a
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&dewif_sos_soii__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumerationWithIntFilter),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&dewif_sos_soii__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&dewif_sos_soii__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dewif_sos_soii__fini,
@@ -1983,7 +1983,7 @@ INTERN DeeTypeObject DefaultEnumeration__with__seq_operator_sizeob__and__seq_ope
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&de_soso_sog__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumeration),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&de_soso_sog__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&de_soso_sog__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&de_soso_sog__fini,
@@ -2081,7 +2081,7 @@ INTERN DeeTypeObject DefaultEnumeration__with__seq_operator_getitem_index = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&de_sogi__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumeration),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&de_sogi__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&de_sogi__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&de_sogi__fini,
@@ -2179,7 +2179,7 @@ INTERN DeeTypeObject DefaultEnumerationWithIntFilter__with__seq_operator_getitem
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&dewif_soii__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumerationWithIntFilter),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&dewif_soii__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&dewif_soii__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dewif_soii__fini,
@@ -2277,7 +2277,7 @@ INTERN DeeTypeObject DefaultEnumerationWithFilter__with__seq_operator_sizeob__an
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&dewf_soso_sog__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumerationWithFilter),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&dewf_soso_sog__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&dewf_soso_sog__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dewf_soso_sog__fini,
@@ -2375,7 +2375,7 @@ INTERN DeeTypeObject DefaultEnumeration__with__seq_operator_getitem = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&de_sog__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumeration),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&de_sog__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&de_sog__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&de_sog__fini,
@@ -2473,7 +2473,7 @@ INTERN DeeTypeObject DefaultEnumerationWithFilter__with__seq_operator_getitem = 
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&dewf_sog__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumerationWithFilter),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&dewf_sog__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&dewf_sog__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dewf_sog__fini,
@@ -2571,7 +2571,7 @@ INTERN DeeTypeObject DefaultEnumeration__with__seq_operator_iter__and__counter =
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&de_soi__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumeration),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&de_soi__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&de_soi__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&de_soi__fini,
@@ -2669,7 +2669,7 @@ INTERN DeeTypeObject DefaultEnumerationWithIntFilter__with__seq_operator_iter__a
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&dewif_soi__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumerationWithIntFilter),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&dewif_soi__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&dewif_soi__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dewif_soi__fini,
@@ -2767,7 +2767,7 @@ INTERN DeeTypeObject DefaultEnumeration__with__seq_enumerate = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&de_se__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumeration),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&de_se__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&de_se__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&de_se__fini,
@@ -2865,7 +2865,7 @@ INTERN DeeTypeObject DefaultEnumerationWithIntFilter__with__seq_enumerate_index 
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&dewif_sei__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumerationWithIntFilter),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&dewif_sei__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&dewif_sei__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dewif_sei__fini,
@@ -2963,7 +2963,7 @@ INTERN DeeTypeObject DefaultEnumerationWithFilter__with__map_operator_iter__and_
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&dewf_moi__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumerationWithFilter),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&dewf_moi__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&dewf_moi__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dewf_moi__fini,
@@ -3061,7 +3061,7 @@ INTERN DeeTypeObject DefaultEnumeration__with__map_iterkeys__and__map_operator_g
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&de_mik_mog__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumeration),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&de_mik_mog__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&de_mik_mog__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&de_mik_mog__fini,
@@ -3159,7 +3159,7 @@ INTERN DeeTypeObject DefaultEnumerationWithFilter__with__map_iterkeys__and__map_
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&dewf_mik_mog__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumerationWithFilter),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&dewf_mik_mog__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&dewf_mik_mog__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dewf_mik_mog__fini,
@@ -3257,7 +3257,7 @@ INTERN DeeTypeObject DefaultEnumeration__with__map_iterkeys__and__map_operator_t
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&de_mik_motg__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumeration),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&de_mik_motg__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&de_mik_motg__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&de_mik_motg__fini,
@@ -3355,7 +3355,7 @@ INTERN DeeTypeObject DefaultEnumerationWithFilter__with__map_iterkeys__and__map_
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&dewf_mik_motg__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumerationWithFilter),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&dewf_mik_motg__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&dewf_mik_motg__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dewf_mik_motg__fini,
@@ -3453,7 +3453,7 @@ INTERN DeeTypeObject DefaultEnumeration__with__map_enumerate = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&de_me__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumeration),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&de_me__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&de_me__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&de_me__fini,
@@ -3551,7 +3551,7 @@ INTERN DeeTypeObject DefaultEnumerationWithFilter__with__map_enumerate_range = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&dewf_mer__init,
 				TYPE_FIXED_ALLOCATOR(DefaultEnumerationWithFilter),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&dewf_mer__writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&dewf_mer__serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dewf_mer__fini,

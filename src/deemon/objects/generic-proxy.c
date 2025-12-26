@@ -21,11 +21,11 @@
 #define GUARD_DEEMON_OBJECTS_GENERIC_PROXY_C 1
 
 #include <deemon/api.h>
-#include <deemon/dec.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/set.h>
 #include <deemon/super.h>
 
@@ -83,9 +83,10 @@ generic_proxy__init(ProxyObject *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy__writedec(struct Dee_dec_writer *__restrict writer,
-                        ProxyObject *self, Dee_dec_addr_t addr) {
-	return DeeDecWriter_PutObject(writer, addr + offsetof(ProxyObject, po_obj), self->po_obj);
+generic_proxy__serialize(ProxyObject *__restrict self,
+                         DeeSerial *__restrict writer,
+                         Dee_seraddr_t addr) {
+	return DeeSerial_PutObject(writer, addr + offsetof(ProxyObject, po_obj), self->po_obj);
 }
 
 INTERN NONNULL((1, 2)) void DCALL
@@ -159,11 +160,12 @@ generic_proxy2__init(ProxyObject2 *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy2__writedec(struct Dee_dec_writer *__restrict writer,
-                         ProxyObject2 *self, Dee_dec_addr_t addr) {
-	int result = DeeDecWriter_PutObject(writer, addr + offsetof(ProxyObject2, po_obj1), self->po_obj1);
+generic_proxy2__serialize(ProxyObject2 *__restrict self,
+                          DeeSerial *__restrict writer,
+                          Dee_seraddr_t addr) {
+	int result = DeeSerial_PutObject(writer, addr + offsetof(ProxyObject2, po_obj1), self->po_obj1);
 	if likely(result == 0)
-		result = DeeDecWriter_PutObject(writer, addr + offsetof(ProxyObject2, po_obj2), self->po_obj2);
+		result = DeeSerial_PutObject(writer, addr + offsetof(ProxyObject2, po_obj2), self->po_obj2);
 	return result;
 }
 
@@ -233,13 +235,14 @@ generic_proxy3__init(ProxyObject3 *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy3__writedec(struct Dee_dec_writer *__restrict writer,
-                         ProxyObject3 *self, Dee_dec_addr_t addr) {
-	int result = DeeDecWriter_PutObject(writer, addr + offsetof(ProxyObject3, po_obj1), self->po_obj1);
+generic_proxy3__serialize(ProxyObject3 *__restrict self,
+                          DeeSerial *__restrict writer,
+                          Dee_seraddr_t addr) {
+	int result = DeeSerial_PutObject(writer, addr + offsetof(ProxyObject3, po_obj1), self->po_obj1);
 	if likely(result == 0) {
-		result = DeeDecWriter_PutObject(writer, addr + offsetof(ProxyObject3, po_obj2), self->po_obj2);
+		result = DeeSerial_PutObject(writer, addr + offsetof(ProxyObject3, po_obj2), self->po_obj2);
 		if likely(result == 0)
-			result = DeeDecWriter_PutObject(writer, addr + offsetof(ProxyObject3, po_obj3), self->po_obj3);
+			result = DeeSerial_PutObject(writer, addr + offsetof(ProxyObject3, po_obj3), self->po_obj3);
 	}
 	return result;
 }

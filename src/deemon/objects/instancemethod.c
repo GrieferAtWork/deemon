@@ -111,7 +111,7 @@ STATIC_ASSERT(offsetof(InstanceMethod, im_this) == offsetof(ProxyObject2, po_obj
 #define im_visit         generic_proxy2__visit
 #define im_copy          generic_proxy2__copy_alias12
 #define im_deepcopy      generic_proxy2__deepcopy
-#define im_writedec      generic_proxy2__writedec
+#define im_serialize      generic_proxy2__serialize
 #define im_hash          generic_proxy2__hash_recursive_ordered
 #define im_compare_eq    generic_proxy2__compare_eq_recursive
 #define im_trycompare_eq generic_proxy2__trycompare_eq_recursive
@@ -387,7 +387,7 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 				/* .tp_any_ctor    = */ (Dee_funptr_t)&im_init,
 				TYPE_FIXED_ALLOCATOR(InstanceMethod),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&im_init_kw,
-				/* .tp_writedec    = */ (Dee_funptr_t)&im_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&im_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&im_fini,

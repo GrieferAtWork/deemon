@@ -433,8 +433,8 @@ INTERN DeeTypeObject TypeBasesIterator_Type = {
 
 
 
-#define typebases_writedec generic_proxy__writedec
-#define typemro_writedec   generic_proxy__writedec
+#define typebases_serialize generic_proxy__serialize
+#define typemro_serialize   generic_proxy__serialize
 
 #define typebases_init typemro_init
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -773,7 +773,7 @@ INTERN DeeTypeObject TypeMRO_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&typemro_init,
 				TYPE_FIXED_ALLOCATOR(TypeMRO),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&typemro_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&typemro_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&typemro_fini,
@@ -825,7 +825,7 @@ INTERN DeeTypeObject TypeBases_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&typebases_init,
 				TYPE_FIXED_ALLOCATOR(TypeMRO),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&typebases_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&typebases_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&typebases_fini,

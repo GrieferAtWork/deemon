@@ -26,7 +26,6 @@
 #include <deemon/attribute.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
-#include <deemon/dec.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>
@@ -40,6 +39,7 @@
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/struct.h>
 #include <deemon/system-features.h>
@@ -104,7 +104,7 @@ print define_Dee_HashStr("cause");
 	INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, tp_flags, TF_TPVISIT, tp_base, T,  \
 	                     &DeeStructObject_Ctor, &DeeStructObject_Copy,       \
 	                     &DeeStructObject_Deep, &DeeStructObject_Init,       \
-	                     &DeeStructObject_InitKw, &DeeStructObject_WriteDec, \
+	                     &DeeStructObject_InitKw, &DeeStructObject_Serialize, \
 	                     &DeeStructObject_Fini, &DeeStructObject_Visit,      \
 	                     &DeeStructObject_Cmp, tp_str, tp_print,             \
 	                     tp_methods, tp_getsets, tp_members,                 \
@@ -128,12 +128,12 @@ print define_Dee_HashStr("cause");
 	INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, tp_flags, TF_NONE,                  \
 	                     tp_base, DeeErrorObject, &error_ctor, &error_copy,   \
 	                     &error_deep, &error_init, &error_init_kw,            \
-	                     &error_writedec, NULL, NULL, NULL, tp_str, tp_print, \
+	                     &error_serialize, NULL, NULL, NULL, tp_str, tp_print, \
 	                     tp_methods, tp_getsets, NULL,                        \
 	                     tp_class_members)
 #define INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, tp_flags, tp_features,                                   \
                              tp_base, T, tp_ctor, tp_copy, tp_deep, tp_init,                           \
-                             tp_init_kw, tp_writedec, tp_fini, tp_visit, tp_cmp,                       \
+                             tp_init_kw, tp_serialize, tp_fini, tp_visit, tp_cmp,                       \
                              tp_str, tp_print,                                                         \
                              tp_methods, tp_getsets, tp_members,                                       \
                              tp_class_members)                                                         \
@@ -154,7 +154,7 @@ print define_Dee_HashStr("cause");
 					/* .tp_any_ctor  = */ (Dee_funptr_t)(tp_init),                                     \
 					TYPE_FIXED_ALLOCATOR(T),                                                           \
 					/* .tp_any_ctor_kw = */ (Dee_funptr_t)(tp_init_kw),                                \
-					/* .tp_writedec    = */ (Dee_funptr_t)(tp_writedec)                                \
+					/* .tp_serialize = */ (Dee_funptr_t)(tp_serialize)                                \
 				}                                                                                      \
 			},                                                                                         \
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))(tp_fini),                  \
@@ -209,7 +209,7 @@ PRIVATE struct type_member tpconst error_class_members[] = {
 #define error_ctor        DeeStructObject_Ctor
 #define error_copy        DeeStructObject_Copy
 #define error_deep        DeeStructObject_Deep
-#define error_writedec    DeeStructObject_WriteDec
+#define error_serialize    DeeStructObject_Serialize
 #define error_init        DeeStructObject_Init
 #define error_init_kw     DeeStructObject_InitKw
 #else /* __OPTIMIZE_SIZE__ */
@@ -265,13 +265,13 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-error_writedec(DeeDecWriter *__restrict writer,
-               DeeObject *self, Dee_dec_addr_t addr) {
-	int result;
+error_serialize(DeeObject *__restrict self,
+                DeeSerial *__restrict writer,
+                Dee_seraddr_t addr) {
 	DeeErrorObject *me = (DeeErrorObject *)self;
-	result = DeeDecWriter_XPutObject(writer, addr + offsetof(DeeErrorObject, e_msg), me->e_msg);
+	int result = DeeSerial_XPutObject(writer, addr + offsetof(DeeErrorObject, e_msg), me->e_msg);
 	if likely(result == 0)
-		result = DeeDecWriter_XPutObject(writer, addr + offsetof(DeeErrorObject, e_cause), me->e_cause);
+		result = DeeSerial_XPutObject(writer, addr + offsetof(DeeErrorObject, e_cause), me->e_cause);
 	return result;
 }
 
@@ -680,7 +680,7 @@ PUBLIC DeeTypeObject DeeError_Error = {
 				/* .tp_any_ctor    = */ (Dee_funptr_t)&error_init,
 				TYPE_FIXED_ALLOCATOR(DeeErrorObject),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)&error_init_kw,
-				/* .tp_writedec    = */ (Dee_funptr_t)&error_writedec,
+				/* .tp_serialize = */ (Dee_funptr_t)&error_serialize,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&error_fini,

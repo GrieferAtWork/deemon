@@ -25,7 +25,6 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
-#include <deemon/dec.h>
 #include <deemon/dict.h>
 #include <deemon/error-rt.h>
 #include <deemon/format.h>
@@ -39,6 +38,7 @@
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
@@ -921,52 +921,51 @@ rodict_visit(RoDict *__restrict self, Dee_visit_t proc, void *arg) {
 	}
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
-rodict_writedec(DeeDecWriter *__restrict writer,
-                RoDict *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+rodict_serialize(RoDict *__restrict self, DeeSerial *__restrict writer) {
 	RoDict *out;
 	size_t i, sizeof_dict = _RoDict_SizeOf(self->rd_vsize, self->rd_hmask);
-	Dee_dec_addr_t addr = DeeDecWriter_Object_Malloc(writer, sizeof_dict, self);
-	if unlikely(!addr)
+	Dee_seraddr_t addr = DeeSerial_ObjectMalloc(writer, sizeof_dict, self);
+	if (!Dee_SERADDR_ISOK(addr))
 		goto err;
-	out = DeeDecWriter_Addr2Mem(writer, addr, RoDict);
+	out = DeeSerial_Addr2Mem(writer, addr, RoDict);
 	out->rd_vsize = self->rd_vsize;
 	out->rd_hmask = self->rd_hmask;
 	for (i = 0; i <= self->rd_hmask; ++i) {
 		struct Dee_dict_item *out_item;
 		struct Dee_dict_item *in_item;
-		Dee_dec_addr_t addrof_item;
+		Dee_seraddr_t addrof_item;
 		addrof_item = addr + offsetof(RoDict, rd_vtab) +
 		              i * sizeof(struct Dee_dict_item);
-		out_item = DeeDecWriter_Addr2Mem(writer, addrof_item, struct Dee_dict_item);
+		out_item = DeeSerial_Addr2Mem(writer, addrof_item, struct Dee_dict_item);
 		in_item  = &self->rd_vtab[i];
 		if (in_item->di_key) {
 			out_item->di_hash = in_item->di_hash;
-			if (DeeDecWriter_PutObject(writer,
-			                           addrof_item + offsetof(struct Dee_dict_item, di_key),
-			                           in_item->di_key))
+			if (DeeSerial_PutObject(writer,
+			                        addrof_item + offsetof(struct Dee_dict_item, di_key),
+			                        in_item->di_key))
 				goto err;
-			if (DeeDecWriter_PutObject(writer,
-			                           addrof_item + offsetof(struct Dee_dict_item, di_value),
-			                           in_item->di_value))
+			if (DeeSerial_PutObject(writer,
+			                        addrof_item + offsetof(struct Dee_dict_item, di_value),
+			                        in_item->di_value))
 				goto err;
 		} else {
 			out_item->di_key = NULL;
 		}
 	}
-	if (DeeDecWriter_PutDeemonPointer(writer,
-	                                  addr + offsetof(RoDict, rd_hidxget),
-	                                  (void *)self->rd_hidxget))
+	if (DeeSerial_PutStaticDeemon(writer,
+	                              addr + offsetof(RoDict, rd_hidxget),
+	                              (void *)self->rd_hidxget))
 		goto err;
-	if (DeeDecWriter_PutRel(writer,
-	                        addr + offsetof(RoDict, rd_htab),
-	                        /* _DeeRoDict_GetRealVTab(addr) + rd_vsize */
-	                        offsetof(RoDict, rd_vtab) +
-	                        self->rd_vsize * sizeof(struct Dee_dict_item)))
+	if (DeeSerial_PutAddr(writer,
+	                      addr + offsetof(RoDict, rd_htab),
+	                      /* _DeeRoDict_GetRealVTab(addr) + rd_vsize */
+	                      offsetof(RoDict, rd_vtab) +
+	                      self->rd_vsize * sizeof(struct Dee_dict_item)))
 		goto err;
 	return addr;
 err:
-	return 0;
+	return Dee_SERADDR_INVALID;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2242,7 +2241,7 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&rodict_init,
 				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&rodict_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&rodict_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rodict_fini,

@@ -25,7 +25,6 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
-#include <deemon/dec.h>
 #include <deemon/error-rt.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -35,6 +34,7 @@
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
@@ -1140,25 +1140,24 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
-tuple_writedec(DeeDecWriter *__restrict writer,
-               Tuple *__restrict self) {
+INTERN WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+tuple_serialize(Tuple *__restrict self, DeeSerial *__restrict writer) {
 	Tuple *out;
 	size_t i, sizeof_tuple = offsetof(Tuple, t_elem) + (self->t_size * sizeof(DREF DeeObject *));
-	Dee_dec_addr_t addr = DeeDecWriter_Object_Malloc(writer, sizeof_tuple, self);
-	if unlikely(!addr)
+	Dee_seraddr_t addr = DeeSerial_ObjectMalloc(writer, sizeof_tuple, self);
+	if (!Dee_SERADDR_ISOK(addr))
 		goto err;
-	out = DeeDecWriter_Addr2Mem(writer, addr, Tuple);
+	out = DeeSerial_Addr2Mem(writer, addr, Tuple);
 	out->t_size = self->t_size;
 	for (i = 0; i < self->t_size; ++i) {
 		DeeObject *item = self->t_elem[i];
-		Dee_dec_addr_t addrof_item = addr + offsetof(Tuple, t_elem) + (i * sizeof(DREF DeeObject *));
-		if (DeeDecWriter_PutObject(writer, addrof_item, item))
+		Dee_seraddr_t addrof_item = addr + offsetof(Tuple, t_elem) + (i * sizeof(DREF DeeObject *));
+		if (DeeSerial_PutObject(writer, addrof_item, item))
 			goto err;
 	}
 	return addr;
 err:
-	return 0;
+	return Dee_SERADDR_INVALID;
 }
 
 INTERN NONNULL((1)) void DCALL
@@ -2298,7 +2297,7 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&tuple_init,
 				/* .tp_free      = */ (Dee_funptr_t)tuple_tp_free_PTR, { NULL },
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&tuple_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&tuple_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&tuple_fini,
@@ -2443,25 +2442,24 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
-nullable_tuple_writedec(DeeDecWriter *__restrict writer,
-                        Tuple *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+nullable_tuple_serialize(Tuple *__restrict self, DeeSerial *__restrict writer) {
 	Tuple *out;
 	size_t i, sizeof_tuple = offsetof(Tuple, t_elem) + (self->t_size * sizeof(DREF DeeObject *));
-	Dee_dec_addr_t addr = DeeDecWriter_Object_Malloc(writer, sizeof_tuple, self);
-	if unlikely(!addr)
+	Dee_seraddr_t addr = DeeSerial_ObjectMalloc(writer, sizeof_tuple, self);
+	if (!Dee_SERADDR_ISOK(addr))
 		goto err;
-	out = DeeDecWriter_Addr2Mem(writer, addr, Tuple);
+	out = DeeSerial_Addr2Mem(writer, addr, Tuple);
 	out->t_size = self->t_size;
 	for (i = 0; i < self->t_size; ++i) {
 		DeeObject *item = self->t_elem[i];
-		Dee_dec_addr_t addrof_item = addr + offsetof(Tuple, t_elem) + (i * sizeof(DREF DeeObject *));
-		if (DeeDecWriter_XPutObject(writer, addrof_item, item))
+		Dee_seraddr_t addrof_item = addr + offsetof(Tuple, t_elem) + (i * sizeof(DREF DeeObject *));
+		if (DeeSerial_XPutObject(writer, addrof_item, item))
 			goto err;
 	}
 	return addr;
 err:
-	return 0;
+	return Dee_SERADDR_INVALID;
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -2727,7 +2725,7 @@ PUBLIC DeeTypeObject DeeNullableTuple_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&nullable_tuple_init,
 				/* .tp_free      = */ (Dee_funptr_t)tuple_tp_free_PTR, { NULL },
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&nullable_tuple_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&nullable_tuple_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&nullable_tuple_fini,

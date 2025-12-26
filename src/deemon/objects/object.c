@@ -2608,7 +2608,7 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&object_any_ctor,
 				TYPE_FIXED_ALLOCATOR_S(DeeObject),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&DeeNone_OperatorWriteDec
+				/* .tp_serialize = */ (Dee_funptr_t)&DeeNone_OperatorWriteDec
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -4298,19 +4298,17 @@ DeeType_GetName(DeeTypeObject const *__restrict self) {
 }
 
 
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-/* Returns the "tp_writedec" operator for "self". If possible, inherit from base class. */
+/* Returns the "tp_serialize" operator for "self". If possible, inherit from base class. */
 INTERN WUNUSED NONNULL((1)) Dee_funptr_t
-(DCALL DeeType_GetTpWriteDec)(DeeTypeObject *__restrict self) {
+(DCALL DeeType_GetTpSerialize)(DeeTypeObject *__restrict self) {
 	Dee_funptr_t result = self->tp_init._tp_init_._tp_init8_;
 	if (!result && (self->tp_flags & TP_FINHERITCTOR) && self->tp_base) {
-		result = DeeType_GetTpWriteDec(self->tp_base);
+		result = DeeType_GetTpSerialize(self->tp_base);
 		if (result)
 			self->tp_init._tp_init_._tp_init8_ = result;
 	}
 	return result;
 }
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

@@ -27,7 +27,6 @@
 #include <deemon/cached-dict.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
-#include <deemon/dec.h>
 #include <deemon/error-rt.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -36,6 +35,7 @@
 #include <deemon/object.h>
 #include <deemon/rodict.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
@@ -506,30 +506,30 @@ kwds_visit(Kwds *__restrict self, Dee_visit_t proc, void *arg) {
 		Dee_XVisit(self->kw_map[i].ke_name);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
-kwds_writedec(DeeDecWriter *__restrict writer, Kwds *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+kwds_serialize(Kwds *__restrict self, DeeSerial *__restrict writer) {
 	Kwds *out;
 	size_t i, sizeof_kwds = offsetof(Kwds, kw_map) + (self->kw_mask + 1) * sizeof(struct kwds_entry);
-	Dee_dec_addr_t addr = DeeDecWriter_Object_Malloc(writer, sizeof_kwds, self);
-	if unlikely(!addr)
+	Dee_seraddr_t addr = DeeSerial_ObjectMalloc(writer, sizeof_kwds, self);
+	if (!Dee_SERADDR_ISOK(addr))
 		goto err;
-	out = DeeDecWriter_Addr2Mem(writer, addr, Kwds);
+	out = DeeSerial_Addr2Mem(writer, addr, Kwds);
 	out->kw_size = self->kw_size;
 	out->kw_mask = self->kw_mask;
 	memcpyc(out->kw_map, self->kw_map, self->kw_mask + 1, sizeof(struct kwds_entry));
 	for (i = 0; i <= self->kw_mask; ++i) {
 		if (self->kw_map[i].ke_name) {
-			Dee_dec_addr_t addrof_out_entry_name;
+			Dee_seraddr_t addrof_out_entry_name;
 			addrof_out_entry_name = addr + offsetof(Kwds, kw_map) +
 			                        i * sizeof(struct kwds_entry);
-			if unlikely(DeeDecWriter_PutObject(writer, addrof_out_entry_name,
-			                                   self->kw_map[i].ke_name))
+			if unlikely(DeeSerial_PutObject(writer, addrof_out_entry_name,
+			                                self->kw_map[i].ke_name))
 				goto err;
 		}
 	}
 	return addr;
 err:
-	return 0;
+	return Dee_SERADDR_INVALID;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -806,7 +806,7 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&kwds_init,
 				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&kwds_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&kwds_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kwds_fini,

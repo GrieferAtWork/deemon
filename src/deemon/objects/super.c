@@ -23,10 +23,10 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/dec.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
 
@@ -1122,15 +1122,16 @@ PRIVATE struct type_buffer super_buffer = {
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-super_writedec(DeeDecWriter *__restrict writer,
-               Super *self, Dee_dec_addr_t addr) {
+super_serialize(Super *__restrict self,
+                DeeSerial *__restrict writer,
+                Dee_seraddr_t addr) {
 	/* Unlike all other operators provided by "Super", this one does **NOT**
-	 * invoke the relevant operator (tp_writedec) in the context of some other
+	 * invoke the relevant operator (tp_serialize) in the context of some other
 	 * type. -- Instead, it literally does what you'd think it does: it writes
 	 * the Super-object to the dec file! */
-	int result = DeeDecWriter_PutObject(writer, addr + offsetof(Super, s_type), self->s_type);
+	int result = DeeSerial_PutObject(writer, addr + offsetof(Super, s_type), self->s_type);
 	if likely(result == 0)
-		result = DeeDecWriter_PutObject(writer, addr + offsetof(Super, s_self), self->s_self);
+		result = DeeSerial_PutObject(writer, addr + offsetof(Super, s_self), self->s_self);
 	return result;
 }
 
@@ -1293,7 +1294,7 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&super_init,
 				TYPE_FIXED_ALLOCATOR(Super),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&super_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&super_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&super_fini,

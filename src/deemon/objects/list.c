@@ -25,7 +25,6 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
-#include <deemon/dec.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -36,6 +35,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
@@ -1035,8 +1035,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-list_writedec(DeeDecWriter *__restrict writer,
-              List *self, Dee_dec_addr_t addr) {
+list_serialize(List *__restrict self,
+               DeeSerial *__restrict writer,
+               Dee_seraddr_t addr) {
 	List *out;
 	size_t sizeof_list;
 	size_t out__l_list_ol_elemc;
@@ -1044,7 +1045,7 @@ list_writedec(DeeDecWriter *__restrict writer,
 	DREF DeeObject **in__l_list_ol_elemv;
 	DREF DeeObject **out__l_list_ol_elemv;
 again:
-	out = DeeDecWriter_Addr2Mem(writer, addr, List);
+	out = DeeSerial_Addr2Mem(writer, addr, List);
 	DeeList_LockRead(self);
 	out->l_list.ol_elemc = self->l_list.ol_elemc;
 #ifdef DEE_OBJECTLIST_HAVE_ELEMA
@@ -1058,11 +1059,11 @@ again:
 	}
 	out__l_list_ol_elemc = out->l_list.ol_elemc;
 	sizeof_list = out__l_list_ol_elemc * sizeof(DREF DeeObject *);
-	addrof_out__l_list_ol_elemv = DeeDecWriter_TryMalloc(writer, sizeof_list);
-	if unlikely(!addrof_out__l_list_ol_elemv) {
+	addrof_out__l_list_ol_elemv = DeeSerial_TryMalloc(writer, sizeof_list);
+	if (!Dee_SERADDR_ISOK(addrof_out__l_list_ol_elemv)) {
 		DeeList_LockEndRead(self);
-		addrof_out__l_list_ol_elemv = DeeDecWriter_Malloc(writer, sizeof_list);
-		if unlikely(!addrof_out__l_list_ol_elemv)
+		addrof_out__l_list_ol_elemv = DeeSerial_Malloc(writer, sizeof_list);
+		if (!Dee_SERADDR_ISOK(addrof_out__l_list_ol_elemv))
 			goto err;
 		DeeList_LockRead(self);
 		if unlikely(out__l_list_ol_elemc != self->l_list.ol_elemc) {
@@ -1070,17 +1071,18 @@ again:
 			goto again;
 		}
 	}
-//	out = DeeDecWriter_Addr2Mem(writer, addr, List);
-	out__l_list_ol_elemv = DeeDecWriter_Addr2Mem(writer, addrof_out__l_list_ol_elemv, DREF DeeObject *);
+//	out = DeeSerial_Addr2Mem(writer, addr, List);
+	out__l_list_ol_elemv = DeeSerial_Addr2Mem(writer, addrof_out__l_list_ol_elemv, DREF DeeObject *);
 	in__l_list_ol_elemv  = self->l_list.ol_elemv;
 	Dee_Movrefv(out__l_list_ol_elemv, in__l_list_ol_elemv, out__l_list_ol_elemc);
 	DeeList_LockEndRead(self);
-	if unlikely(DeeDecWriter_InplacePutObjectv(self,
-	                                           addrof_out__l_list_ol_elemv,
-	                                           out__l_list_ol_elemc))
+	if (DeeSerial_InplacePutObjectv(writer,
+	                                addrof_out__l_list_ol_elemv,
+	                                out__l_list_ol_elemc))
 		goto err;
-	return DeeDecWriter_PutRel(writer, addr + offsetof(List, l_list.ol_elemv),
-	                           addrof_out__l_list_ol_elemv);
+	return DeeSerial_PutAddr(writer,
+	                         addr + offsetof(List, l_list.ol_elemv),
+	                         addrof_out__l_list_ol_elemv);
 err:
 	return -1;
 }
@@ -4378,7 +4380,7 @@ PUBLIC DeeTypeObject DeeList_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&list_init,
 				TYPE_FIXED_ALLOCATOR_GC(List),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&list_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&list_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&list_fini,
@@ -4477,11 +4479,12 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-li_writedec(DeeDecWriter *__restrict writer,
-            ListIterator *self, Dee_dec_addr_t addr) {
-	ListIterator *out = DeeDecWriter_Addr2Mem(writer, addr, ListIterator);
+li_serialize(ListIterator *__restrict self,
+             DeeSerial *__restrict writer,
+             Dee_seraddr_t addr) {
+	ListIterator *out = DeeSerial_Addr2Mem(writer, addr, ListIterator);
 	out->li_index = LI_GETINDEX(self);
-	return generic_proxy__writedec(writer, (ProxyObject *)self, addr);
+	return generic_proxy__serialize((ProxyObject *)self, writer, addr);
 }
 
 STATIC_ASSERT(offsetof(ListIterator, li_list) == offsetof(ProxyObject, po_obj));
@@ -4677,7 +4680,7 @@ INTERN DeeTypeObject DeeListIterator_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&li_init,
 				TYPE_FIXED_ALLOCATOR(ListIterator),
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&li_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&li_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&li_fini,

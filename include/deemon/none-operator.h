@@ -115,7 +115,7 @@ DFUNDEF int (DCALL _DeeNone_reti0_6)(void *, void *, void *, void *, void *, voi
 /* Default no-op constructor callbacks (these should be used by TP_FABSTRACT types) */
 #define DeeNone_OperatorCtor     (*(int (DCALL *)(DeeObject *__restrict))&_DeeNone_reti0_1)
 #define DeeNone_OperatorCopy     (*(int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&_DeeNone_reti0_2)
-#define DeeNone_OperatorWriteDec (*(int (DCALL *)(struct Dee_dec_writer *__restrict, DeeObject *__restrict, Dee_dec_addr_t))&_DeeNone_reti0_3)
+#define DeeNone_OperatorWriteDec (*(int (DCALL *)(DeeObject *__restrict, struct Dee_serial *__restrict, Dee_seraddr_t))&_DeeNone_reti0_3)
 
 DECL_END
 

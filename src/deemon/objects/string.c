@@ -26,7 +26,6 @@
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
-#include <deemon/dec.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -37,6 +36,7 @@
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memmem() */
@@ -530,15 +530,14 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_dec_addr_t DCALL
-string_writedec(DeeDecWriter *__restrict writer,
-                String *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+string_serialize(String *__restrict self, DeeSerial *__restrict writer) {
 	String *out;
 	size_t sizeof_string = offsetof(String, s_str) + (self->s_len + 1) * sizeof(char);
-	Dee_dec_addr_t addr = DeeDecWriter_Object_Malloc(writer, sizeof_string, self);
-	if unlikely(!addr)
+	Dee_seraddr_t addr = DeeSerial_ObjectMalloc(writer, sizeof_string, self);
+	if (!Dee_SERADDR_ISOK(addr))
 		goto err;
-	out = DeeDecWriter_Addr2Mem(writer, addr, String);
+	out = DeeSerial_Addr2Mem(writer, addr, String);
 #ifdef __OPTIMIZE_SIZE__
 	out->s_hash = self->s_hash;
 #else /* __OPTIMIZE_SIZE__ */
@@ -553,15 +552,15 @@ string_writedec(DeeDecWriter *__restrict writer,
 	if (DeeString_STR_ISLATIN1(self)) {
 		out->s_data = NULL;
 	} else {
-		Dee_dec_addr_t addrof_data;
+		Dee_seraddr_t addrof_data;
 		struct string_utf *out_data;
 		struct string_utf const *in_data;
-		addrof_data = DeeDecWriter_Malloc(writer, sizeof(struct string_utf));
-		if unlikely(!addrof_data)
+		addrof_data = DeeSerial_Malloc(writer, sizeof(struct string_utf));
+		if (!Dee_SERADDR_ISOK(addrof_data))
 			goto err;
-		if unlikely(DeeDecWriter_PutRel(writer, addr + offsetof(String, s_data), addrof_data))
+		if (DeeSerial_PutAddr(writer, addr + offsetof(String, s_data), addrof_data))
 			goto err;
-		out_data = DeeDecWriter_Addr2Mem(writer, addrof_data, struct string_utf);
+		out_data = DeeSerial_Addr2Mem(writer, addrof_data, struct string_utf);
 		in_data  = self->s_data;
 		out_data->u_width = in_data->u_width;
 		out_data->u_flags = in_data->u_flags;
@@ -573,11 +572,11 @@ string_writedec(DeeDecWriter *__restrict writer,
 		out_data->u_utf16 = NULL;
 #define addrin_data(field) (addrof_data + offsetof(struct string_utf, field))
 		if (in_data->u_data[STRING_WIDTH_1BYTE] == (void *)self->s_str) {
-			if unlikely(DeeDecWriter_PutRel(writer, addrin_data(u_data[STRING_WIDTH_1BYTE]), addr + offsetof(String, s_str)))
+			if (DeeSerial_PutAddr(writer, addrin_data(u_data[STRING_WIDTH_1BYTE]), addr + offsetof(String, s_str)))
 				goto err;
 		}
 		if (in_data->u_utf8 == self->s_str) {
-			if unlikely(DeeDecWriter_PutRel(writer, addrin_data(u_utf8), addr + offsetof(String, s_str)))
+			if (DeeSerial_PutAddr(writer, addrin_data(u_utf8), addr + offsetof(String, s_str)))
 				goto err;
 		}
 
@@ -594,13 +593,13 @@ string_writedec(DeeDecWriter *__restrict writer,
 			void *wstr = in_data->u_data[STRING_WIDTH_2BYTE];
 			size_t lengthof_wstr = WSTR_LENGTH(wstr);
 			size_t sizeof_wstr = sizeof(size_t) + ((lengthof_wstr + 1) * 2);
-			Dee_dec_addr_t addrof_wstr = DeeDecWriter_Malloc(writer, sizeof_wstr);
-			if unlikely(!addrof_wstr)
+			Dee_seraddr_t addrof_wstr = DeeSerial_Malloc(writer, sizeof_wstr);
+			if (!Dee_SERADDR_ISOK(addrof_wstr))
 				goto err;
-			memcpy(DeeDecWriter_Addr2Mem(writer, addrof_wstr, uint16_t),
+			memcpy(DeeSerial_Addr2Mem(writer, addrof_wstr, uint16_t),
 			       (uint16_t *)((size_t *)wstr - 1), sizeof_wstr);
 			addrof_wstr += sizeof(size_t);
-			if unlikely(DeeDecWriter_PutRel(writer, addrin_data(u_data[STRING_WIDTH_2BYTE]), addrof_wstr))
+			if (DeeSerial_PutAddr(writer, addrin_data(u_data[STRING_WIDTH_2BYTE]), addrof_wstr))
 				goto err;
 		}	break;
 
@@ -608,13 +607,13 @@ string_writedec(DeeDecWriter *__restrict writer,
 			void *wstr = in_data->u_data[STRING_WIDTH_4BYTE];
 			size_t lengthof_wstr = WSTR_LENGTH(wstr);
 			size_t sizeof_wstr = sizeof(size_t) + ((lengthof_wstr + 1) * 4);
-			Dee_dec_addr_t addrof_wstr = DeeDecWriter_Malloc(writer, sizeof_wstr);
-			if unlikely(!addrof_wstr)
+			Dee_seraddr_t addrof_wstr = DeeSerial_Malloc(writer, sizeof_wstr);
+			if (!Dee_SERADDR_ISOK(addrof_wstr))
 				goto err;
-			memcpy(DeeDecWriter_Addr2Mem(writer, addrof_wstr, uint32_t),
+			memcpy(DeeSerial_Addr2Mem(writer, addrof_wstr, uint32_t),
 			       (uint32_t *)((size_t *)wstr - 1), sizeof_wstr);
 			addrof_wstr += sizeof(size_t);
-			if unlikely(DeeDecWriter_PutRel(writer, addrin_data(u_data[STRING_WIDTH_4BYTE]), addrof_wstr))
+			if (DeeSerial_PutAddr(writer, addrin_data(u_data[STRING_WIDTH_4BYTE]), addrof_wstr))
 				goto err;
 		}	break;
 
@@ -623,7 +622,7 @@ string_writedec(DeeDecWriter *__restrict writer,
 	}
 	return addr;
 err:
-	return 0;
+	return Dee_SERADDR_INVALID;
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2944,7 +2943,7 @@ PUBLIC DeeTypeObject DeeString_Type = {
 				/* .tp_any_ctor  = */ (Dee_funptr_t)&string_new,
 				/* .tp_free      = */ (Dee_funptr_t)NULL, { NULL },
 				/* .tp_any_ctor_kw = */ (Dee_funptr_t)NULL,
-				/* .tp_writedec    = */ (Dee_funptr_t)&string_writedec
+				/* .tp_serialize = */ (Dee_funptr_t)&string_serialize
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&string_fini,

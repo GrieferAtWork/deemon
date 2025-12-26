@@ -962,10 +962,8 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_tassign(DeeTypeObje
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_assign(DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_tmoveassign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_moveassign(DeeObject *self, DeeObject *other);
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-struct Dee_dec_writer;
-INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_writedec(struct Dee_dec_writer *__restrict writer, DeeObject *self, Dee_dec_addr_t addr);
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+struct Dee_serial;
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_serialize(DeeObject *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
 
 #ifdef CLASS_TP_FAUTOINIT
 /* No predefined construction operators (with `CLASS_TP_FAUTOINIT'). */
