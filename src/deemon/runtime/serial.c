@@ -106,7 +106,7 @@ err:
  * >> int result = DeeSerial_PutObject(self, addrof_object, obj);
  * >> Dee_Decref(obj);
  * >> return result; */
-PUBLIC WUNUSED NONNULL((1, 3)) int
+PUBLIC WUNUSED NONNULL((1)) int
 (DCALL DeeSerial_InplacePutObject)(DeeSerial *__restrict self,
                                    Dee_seraddr_t addrof_object) {
 	DREF DeeObject *obj = *DeeSerial_Addr2Mem(self, addrof_object, DREF DeeObject *);
@@ -115,7 +115,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1, 3)) int
+PUBLIC WUNUSED NONNULL((1)) int
 (DCALL DeeSerial_XInplacePutObject)(DeeSerial *__restrict self,
                                     Dee_seraddr_t addrof_object) {
 	DREF DeeObject *obj = *DeeSerial_Addr2Mem(self, addrof_object, DREF DeeObject *);
@@ -141,7 +141,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
  * >>     }
  * >> }
  * >> return 0; */
-PUBLIC WUNUSED NONNULL((1, 3)) int
+PUBLIC WUNUSED NONNULL((1)) int
 (DCALL DeeSerial_InplacePutObjectv)(DeeSerial *__restrict self,
                                     Dee_seraddr_t addrof_objects,
                                     size_t objc) {
@@ -159,7 +159,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 	return 0;
 }
 
-PUBLIC WUNUSED NONNULL((1, 3)) int
+PUBLIC WUNUSED NONNULL((1)) int
 (DCALL DeeSerial_XInplacePutObjectv)(DeeSerial *__restrict self,
                                      Dee_seraddr_t addrof_objects,
                                      size_t objc) {

@@ -260,10 +260,10 @@ DFUNDEF WUNUSED NONNULL((1)) int
  * >> int result = DeeSerial_PutObject(self, addrof_object, obj);
  * >> Dee_Decref(obj);
  * >> return result; */
-DFUNDEF WUNUSED NONNULL((1, 3)) int
+DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL DeeSerial_InplacePutObject)(DeeSerial *__restrict self,
                                    Dee_seraddr_t addrof_object);
-DFUNDEF WUNUSED NONNULL((1, 3)) int
+DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL DeeSerial_XInplacePutObject)(DeeSerial *__restrict self,
                                     Dee_seraddr_t addrof_object);
 #ifndef __INTELLISENSE__
@@ -286,11 +286,11 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int
  * >>     }
  * >> }
  * >> return 0; */
-DFUNDEF WUNUSED NONNULL((1, 3)) int
+DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL DeeSerial_InplacePutObjectv)(DeeSerial *__restrict self,
                                     Dee_seraddr_t addrof_objects,
                                     size_t objc);
-DFUNDEF WUNUSED NONNULL((1, 3)) int
+DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL DeeSerial_XInplacePutObjectv)(DeeSerial *__restrict self,
                                      Dee_seraddr_t addrof_objects,
                                      size_t objc);
