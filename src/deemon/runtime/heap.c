@@ -46,6 +46,7 @@ ClCompile.BasicRuntimeChecks = Default
 #include <hybrid/host.h>
 #include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
+#include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
 
 #include <stddef.h> /* uintptr_t */
@@ -124,6 +125,7 @@ DECL_BEGIN
 #define USE_LOCKS 0
 #else /* CONFIG_NO_THREADS */
 #define USE_LOCKS 2
+#define USE_PENDING_FREE_LIST 1
 #endif /* !CONFIG_NO_THREADS */
 
 /* Enable external debugging (footers, usage checks, debug-memset patterns, leak detector) */
@@ -1109,8 +1111,53 @@ static int has_segment_link(PARAM_mstate_m_ msegmentptr ss) {
   failure. If you are not using locking, you can redefine these to do
   anything you like.
 */
+#ifndef USE_PENDING_FREE_LIST
+#define USE_PENDING_FREE_LIST 0
+#endif /* !USE_PENDING_FREE_LIST */
+#if USE_PENDING_FREE_LIST
+struct freelist_entry {
+	SLIST_ENTRY(freelist_entry) fle_link;
+};
+SLIST_HEAD(freelist, freelist_entry);
+
+/* [0..n][lock(ATOMIC)] List of heap pointers that still need to be free'd */
+PRIVATE struct freelist dl_freelist = SLIST_HEAD_INITIALIZER(dl_freelist);
+
+PRIVATE ATTR_NOINLINE NONNULL((1)) void
+dl_freelist_do_reap(struct freelist_entry *__restrict flist);
+#define NEED_dl_freelist_do_reap
+
+PRIVATE void dl_freelist_release_and_reap(PARAM_mstate_m) {
+	struct freelist pending;
+again:
+	pending.slh_first = SLIST_ATOMIC_CLEAR(&dl_freelist);
+	if unlikely(pending.slh_first)
+		dl_freelist_do_reap(pending.slh_first);
+	Dee_atomic_lock_release(&mstate_mutex(m));
+	if unlikely(atomic_read(&dl_freelist.slh_first) != NULL) {
+		if (Dee_atomic_lock_tryacquire(&mstate_mutex(M)))
+			goto again;
+	}
+}
+
+#define TRY_PREACTION(M)  Dee_atomic_lock_tryacquire(&mstate_mutex(M))
+#define PREACTION(M)      (Dee_atomic_lock_acquire(&mstate_mutex(M)), 0)
+#define POSTACTION(M)     dl_freelist_release_and_reap(ARG_mstate_X(M))
+
+#define dl_freelist_append(M, p)                                   \
+	{                                                              \
+		/* Append to free list... */                               \
+		struct freelist_entry *ent = (struct freelist_entry *)(p); \
+		SLIST_ATOMIC_INSERT(&dl_freelist, ent, fle_link);          \
+		/* Try to reap free list... */                             \
+		if (TRY_PREACTION(M))                                      \
+			POSTACTION(M);                                         \
+	}
+#else /* USE_PENDING_FREE_LIST */
 #define PREACTION(M)  (Dee_atomic_lock_acquire(&mstate_mutex(M)), 0)
 #define POSTACTION(M) Dee_atomic_lock_release(&mstate_mutex(M))
+#endif /* !USE_PENDING_FREE_LIST */
+
 
 /*
   CORRUPTION_ERROR_ACTION is triggered upon detected bad addresses.
@@ -3175,7 +3222,14 @@ PUBLIC void (DCALL Dee_Free)(void *mem)
 #define fm gm
 #endif /* FOOTERS || GM_ONLY */
 		dl_setfree_data(mem, chunksize(p) - overhead_for(p));
-		if (!PREACTION(fm)) {
+#if USE_PENDING_FREE_LIST
+		if (!TRY_PREACTION(fm)) {
+			dl_freelist_append(fm, mem);
+		} else
+#else /* USE_PENDING_FREE_LIST */
+		if (!PREACTION(fm))
+#endif /* !USE_PENDING_FREE_LIST */
+		{
 #if FLAG4_BIT_INDICATES_HEAP_REGION
 #if DL_DEBUG_INTERNAL
 			if (!flag4inuse(p))
@@ -3289,6 +3343,133 @@ postaction:
 #undef fm
 #endif /* FOOTERS */
 }
+
+#ifdef NEED_dl_freelist_do_reap
+PRIVATE NONNULL((1)) void
+dl_freelist_do_reap_item(void *__restrict mem) {
+	mchunkptr p = mem2chunk(mem);
+
+	/* BEGIN: Copy-paste from `dlfree()' above */
+#if FLAG4_BIT_INDICATES_HEAP_REGION
+#if DL_DEBUG_INTERNAL
+	if (!flag4inuse(p))
+		check_inuse_chunk(fm, p);
+#endif /* DL_DEBUG_INTERNAL */
+	if (RTCHECK(ok_inuse(p)))
+#else /* FLAG4_BIT_INDICATES_HEAP_REGION */
+	check_inuse_chunk(fm, p);
+	if (RTCHECK(ok_address(fm, p) && ok_inuse(p)))
+#endif /* !FLAG4_BIT_INDICATES_HEAP_REGION */
+	{
+		size_t psize;
+		mchunkptr next;
+		psize = chunksize(p);
+		next  = chunk_plus_offset(p, psize);
+		if (!pinuse(p)) {
+			size_t prevsize = p->prev_foot;
+			if (is_mmapped(p)) {
+#if FLAG4_BIT_INDICATES_HEAP_REGION
+				if unlikely(flag4inuse(p)) {
+					if (free_flag4_mem(ARG_mstate_X_(fm) p))
+						return;
+					goto postaction;
+				}
+#endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
+
+				psize += prevsize + MMAP_FOOT_PAD;
+#ifndef DL_MUNMAP_ALWAYS_FAILS
+				if (DL_MUNMAP((char *)p - prevsize, psize) == 0)
+					mstate_footprint(fm) -= psize;
+#endif /* !DL_MUNMAP_ALWAYS_FAILS */
+				goto postaction;
+			} else {
+				mchunkptr prev = chunk_minus_offset(p, prevsize);
+				psize += prevsize;
+				if (RTCHECK(ok_address(fm, prev))) { /* consolidate backward */
+					if (prev != mstate_dv(fm)) {
+						unlink_chunk(fm, prev, prevsize);
+					} else if ((next->head & INUSE_BITS) == INUSE_BITS) {
+						mstate_dvsize(fm) = psize;
+						set_free_with_pinuse(prev, psize, next);
+						dl_setfree_word(p->prev_foot, size_t);
+						dl_setfree_word(p->head, size_t);
+						goto postaction;
+					}
+				} else
+					goto erroraction;
+				dl_setfree_word(p->prev_foot, size_t);
+				dl_setfree_word(p->head, size_t);
+				p = prev;
+			}
+		}
+
+		if (RTCHECK(ok_next(p, next) && ok_pinuse(next))) {
+			if (!cinuse(next)) { /* consolidate forward */
+				if (next == mstate_top(fm)) {
+					size_t tsize   = mstate_topsize(fm) += psize;
+					mstate_top(fm) = p;
+					p->head        = tsize | PINUSE_BIT;
+					dl_setfree_word(next->prev_foot, size_t);
+					dl_setfree_word(next->head, size_t);
+					if (p == mstate_dv(fm)) {
+						mstate_dv(fm)     = 0;
+						mstate_dvsize(fm) = 0;
+					}
+					if (should_trim(fm, tsize))
+						sys_trim(ARG_mstate_X_(fm) 0);
+					goto postaction;
+				} else if (next == mstate_dv(fm)) {
+					size_t dsize  = mstate_dvsize(fm) += psize;
+					mstate_dv(fm) = p;
+					dl_setfree_word(next->prev_foot, size_t);
+					dl_setfree_word(next->head, size_t);
+					set_size_and_pinuse_of_free_chunk(p, dsize);
+					goto postaction;
+				} else {
+					size_t nsize = chunksize(next);
+					psize += nsize;
+					unlink_chunk(fm, next, nsize);
+					dl_setfree_word(next->prev_foot, size_t);
+					dl_setfree_word(next->head, size_t);
+					set_size_and_pinuse_of_free_chunk(p, psize);
+					if (p == mstate_dv(fm)) {
+						mstate_dvsize(fm) = psize;
+						goto postaction;
+					}
+				}
+			} else
+				set_free_with_pinuse(p, psize, next);
+
+			if (is_small(psize)) {
+				insert_small_chunk(fm, p, psize);
+				check_free_chunk(fm, p);
+			} else {
+				tchunkptr tp = (tchunkptr)p;
+				insert_large_chunk(fm, tp, psize);
+				check_free_chunk(fm, p);
+				if (--mstate_release_checks(fm) == 0)
+					release_unused_segments(ARG_mstate_X(fm));
+			}
+			goto postaction;
+		}
+	}
+erroraction:
+	USAGE_ERROR_ACTION(fm, p);
+postaction:
+	/* END: Copy-paste from `dlfree()' above */
+	;
+}
+
+PRIVATE ATTR_NOINLINE NONNULL((1)) void
+dl_freelist_do_reap(struct freelist_entry *__restrict flist) {
+	struct freelist_entry *next;
+	do {
+		next = flist->fle_link.sle_next;
+		dl_setfree_word(flist->fle_link.sle_next, struct freelist_entry *);
+		dl_freelist_do_reap_item(flist);
+	} while ((flist = next) != NULL);
+}
+#endif /* NEED_dl_freelist_do_reap */
 
 #if 1
 #if !DIRECTLY_DEFINE_DEEMON_PUBLIC_API
