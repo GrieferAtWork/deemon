@@ -36,6 +36,7 @@
 #include <deemon/util/atomic.h>
 /**/
 
+#include "../objects/generic-proxy.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 /**/
@@ -60,14 +61,12 @@ DECL_BEGIN
 
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeModuleObject *mei_module; /* [1..1][const] The module who's exports are being iterated. */
-	DWEAK uint16_t        mei_index;  /* The current global variable index. */
+	PROXY_OBJECT_HEAD_EX(DeeModuleObject, mei_module); /* [1..1][const] The module who's exports are being iterated. */
+	DWEAK uint16_t                        mei_index;   /* The current global variable index. */
 } ModuleExportsIterator;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeModuleObject *me_module;  /* [1..1][const] The module who's exports are being viewed. */
+	PROXY_OBJECT_HEAD_EX(DeeModuleObject, me_module); /* [1..1][const] The module who's exports are being viewed. */
 } ModuleExports;
 
 INTDEF DeeTypeObject ModuleExports_Type;
@@ -85,6 +84,7 @@ modexportsiter_ctor(ModuleExportsIterator *__restrict self) {
 	return 0;
 }
 
+#define modexportsiter_deep modexportsiter_copy /* Don't deep-copy modules */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 modexportsiter_copy(ModuleExportsIterator *__restrict self,
                     ModuleExportsIterator *__restrict other) {
@@ -109,17 +109,9 @@ err:
 	return -1;
 }
 
-
-PRIVATE NONNULL((1)) void DCALL
-modexportsiter_fini(ModuleExportsIterator *__restrict self) {
-	Dee_Decref_unlikely(self->mei_module);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-modexportsiter_visit(ModuleExportsIterator *__restrict self,
-                     Dee_visit_t proc, void *arg) {
-	Dee_Visit(self->mei_module);
-}
+#define modexportsiter_fini      generic_proxy__fini_unlikely
+#define modexportsiter_visit     generic_proxy__visit
+#define modexportsiter_serialize generic_proxy__serialize_and_copy
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 modexportsiter_compare(ModuleExportsIterator *lhs,
@@ -133,9 +125,9 @@ err:
 }
 
 PRIVATE struct type_cmp modexportsiter_cmp = {
-	/* .tp_hash       = */ DEFIMPL_UNSUPPORTED(&default__hash__unsupported),
-	/* .tp_compare_eq = */ DEFIMPL(&default__compare_eq__with__compare),
-	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&modexportsiter_compare,
+	/* .tp_hash          = */ DEFIMPL_UNSUPPORTED(&default__hash__unsupported),
+	/* .tp_compare_eq    = */ DEFIMPL(&default__compare_eq__with__compare),
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&modexportsiter_compare,
 	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),
 	/* .tp_eq            = */ DEFIMPL(&default__eq__with__compare_eq),
 	/* .tp_ne            = */ DEFIMPL(&default__ne__with__compare_eq),
@@ -262,10 +254,10 @@ INTERN DeeTypeObject ModuleExportsIterator_Type = {
 			/* T:              */ ModuleExportsIterator,
 			/* tp_ctor:        */ &modexportsiter_ctor,
 			/* tp_copy_ctor:   */ &modexportsiter_copy,
-			/* tp_deep_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ &modexportsiter_deep,
 			/* tp_any_ctor:    */ &modexportsiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &modexportsiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&modexportsiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -320,10 +312,12 @@ err:
 	return -1;
 }
 
-STATIC_ASSERT(offsetof(ModuleExportsIterator, mei_module) ==
-              offsetof(ModuleExports, me_module));
-#define modexports_fini  modexportsiter_fini
-#define modexports_visit modexportsiter_visit
+STATIC_ASSERT(offsetof(ModuleExports, me_module) == offsetof(ProxyObject, po_obj));
+#define modexports_copy      generic_proxy__copy_alias
+#define modexports_deep      generic_proxy__copy_alias /* Don't deep-copy modules */
+#define modexports_fini      generic_proxy__fini_unlikely
+#define modexports_visit     generic_proxy__visit
+#define modexports_serialize generic_proxy__serialize
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 modexports_bool(ModuleExports *__restrict self) {
@@ -1177,11 +1171,11 @@ INTERN DeeTypeObject ModuleExports_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ ModuleExports,
 			/* tp_ctor:        */ &modexports_ctor,
-			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
+			/* tp_copy_ctor:   */ &modexports_copy,
+			/* tp_deep_ctor:   */ &modexports_deep,
 			/* tp_any_ctor:    */ &modexports_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &modexports_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&modexports_fini,
 		/* .tp_assign      = */ NULL,
@@ -1234,8 +1228,7 @@ done:
 
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeModuleObject *mg_module; /* [1..1] The module who's exports are being viewed. */
+	PROXY_OBJECT_HEAD_EX(DeeModuleObject, mg_module); /* [1..1] The module who's exports are being viewed. */
 } ModuleGlobals;
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1250,12 +1243,16 @@ err:
 	return -1;
 }
 
-STATIC_ASSERT(offsetof(ModuleExports, me_module) == offsetof(ModuleGlobals, mg_module));
-STATIC_ASSERT(offsetof(ModuleExportsIterator, mei_module) == offsetof(ModuleGlobals, mg_module));
+STATIC_ASSERT(offsetof(ModuleGlobals, mg_module) == offsetof(ProxyObject, po_obj));
+#define modglobals_copy      generic_proxy__copy_alias
+#define modglobals_deep      generic_proxy__copy_alias /* Don't deep-copy modules */
+#define modglobals_fini      generic_proxy__fini_unlikely
+#define modglobals_visit     generic_proxy__visit
+#define modglobals_serialize generic_proxy__serialize
+
+STATIC_ASSERT(offsetof(ModuleGlobals, mg_module) == offsetof(ModuleExports, me_module));
 #define modglobals_ctor    modexports_ctor
-#define modglobals_fini    modexportsiter_fini
 #define modglobals_bool    modexports_bool
-#define modglobals_visit   modexportsiter_visit
 #define modglobals_members modexports_members
 
 
@@ -1476,11 +1473,11 @@ INTERN DeeTypeObject ModuleGlobals_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ ModuleExports,
 			/* tp_ctor:        */ &modglobals_ctor,
-			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
+			/* tp_copy_ctor:   */ &modglobals_copy,
+			/* tp_deep_ctor:   */ &modglobals_deep,
 			/* tp_any_ctor:    */ &modglobals_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &modglobals_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&modglobals_fini,
 		/* .tp_assign      = */ NULL,

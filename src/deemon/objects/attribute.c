@@ -20,9 +20,8 @@
 #ifndef GUARD_DEEMON_OBJECTS_ATTRIBUTE_C
 #define GUARD_DEEMON_OBJECTS_ATTRIBUTE_C 1
 
-#include <deemon/api.h>
-
 #include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
@@ -32,6 +31,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 
@@ -51,6 +51,8 @@ DECL_BEGIN
 #define byte_t __BYTE_TYPE__
 #undef shift_t
 #define shift_t __SHIFT_TYPE__
+#undef container_of
+#define container_of COMPILER_CONTAINER_OF
 
 #ifndef NDEBUG
 #define DBG_memset (void)memset
@@ -93,6 +95,41 @@ PRIVATE NONNULL((1, 2)) void DCALL
 attr_visit(Attr *__restrict self, Dee_visit_t proc, void *arg) {
 	/* No need to visit the name/doc (strings don't need to be visited) */
 	Dee_Visit(self->a_desc.ad_info.ai_decl);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+attr_serialize(Attr *__restrict self,
+               DeeSerial *__restrict writer,
+               Dee_seraddr_t addr) {
+	Attr *out = DeeSerial_Addr2Mem(writer, addr, Attr);
+	memcpy(&out->a_desc, &self->a_desc, sizeof(self->a_desc));
+	if (DeeSerial_PutObject(writer, addr + offsetof(Attr, a_desc.ad_info.ai_decl), self->a_desc.ad_info.ai_decl))
+		goto err;
+	ASSERT(self->a_desc.ad_name);
+	if (self->a_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ) {
+		DeeStringObject *ob = container_of(self->a_desc.ad_name, DeeStringObject, s_str);
+		if (DeeSerial_PutObjectEx(writer, addr + offsetof(Attr, a_desc.ad_name), ob, offsetof(DeeStringObject, s_str)))
+			goto err;
+	} else {
+		char const *name = self->a_desc.ad_name;
+		if (DeeSerial_PutPointer(writer, addr + offsetof(Attr, a_desc.ad_name), name))
+			goto err;
+	}
+	if (self->a_desc.ad_doc) {
+		if (self->a_desc.ad_perm & Dee_ATTRPERM_F_DOCOBJ) {
+			DeeStringObject *ob = container_of(self->a_desc.ad_doc, DeeStringObject, s_str);
+			if (DeeSerial_PutObjectEx(writer, addr + offsetof(Attr, a_desc.ad_doc), ob, offsetof(DeeStringObject, s_str)))
+				goto err;
+		} else {
+			char const *doc = self->a_desc.ad_doc;
+			if (DeeSerial_PutPointer(writer, addr + offsetof(Attr, a_desc.ad_doc), doc))
+				goto err;
+		}
+	}
+	return DeeSerial_XPutObject(writer, addr + offsetof(Attr, a_desc.ad_type),
+	                            self->a_desc.ad_type);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
@@ -720,7 +757,7 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &attr_init_kw,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &attr_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&attr_fini,
 		/* .tp_assign      = */ NULL,
@@ -811,6 +848,20 @@ PRIVATE NONNULL((1, 2)) void DCALL
 enumattr_visit(EnumAttr *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visit(self->ea_obj);
 	Dee_XVisit(self->ea_hint.ah_decl);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+enumattr_serialize(EnumAttr *__restrict self,
+                   DeeSerial *__restrict writer,
+                   Dee_seraddr_t addr) {
+	EnumAttr *out = DeeSerial_Addr2Mem(writer, addr, EnumAttr);
+	out->ea_hint.ah_perm_mask  = self->ea_hint.ah_perm_mask;
+	out->ea_hint.ah_perm_value = self->ea_hint.ah_perm_value;
+	if (DeeSerial_PutObject(writer, addr + offsetof(EnumAttr, ea_obj), self->ea_obj))
+		goto err;
+	return DeeSerial_XPutObject(writer, addr + offsetof(EnumAttr, ea_hint.ah_decl), self->ea_hint.ah_decl);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF EnumAttrIter *DCALL
@@ -950,7 +1001,7 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &enumattr_init_kw,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &enumattr_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&enumattr_fini,
 		/* .tp_assign      = */ NULL,
@@ -1091,7 +1142,7 @@ PUBLIC DeeTypeObject DeeEnumAttrIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &enumattriter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL, /* Not serializable (would require an extra operator in `struct Dee_attriter_type') */
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&enumattriter_fini,

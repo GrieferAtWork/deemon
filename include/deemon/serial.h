@@ -109,17 +109,29 @@ struct Dee_serial_type {
 	 * @return: 0 : Success
 	 * @return: -1: Error */
 	WUNUSED_T NONNULL_T((1, 3)) int
-	(DCALL *set_putobject)(DeeSerial *__restrict self, Dee_seraddr_t addrof_object, DeeObject *__restrict ob);
-
-	/* Serialize a `void *' field at `addrof_pointer' as being populated with the address of a static
-	 * object at `static_addr' ("static" here meaning that `DeeModule_FromStaticPointer()' will
-	 * return a non-NULL pointer for `static_addr'). Behavior is undefined if `static_addr' does
-	 * cannot be resolved using `DeeModule_FromStaticPointer()'.
+	(DCALL *set_putobject)(DeeSerial *__restrict self,
+	                       Dee_seraddr_t addrof_object,
+	                       DeeObject *__restrict ob);
+	/* Same as `set_putobject', but encode a reference ob "ob", but have the pointer be at `ob + offset_into_ob'
 	 * @return: 0 : Success
 	 * @return: -1: Error */
 	WUNUSED_T NONNULL_T((1, 3)) int
-	(DCALL *set_putstatic)(DeeSerial *__restrict self, Dee_seraddr_t addrof_pointer,
-	                       void const *__restrict static_addr);
+	(DCALL *set_putobject_ex)(DeeSerial *__restrict self,
+	                          Dee_seraddr_t addrof_object,
+	                          DeeObject *__restrict ob,
+	                          ptrdiff_t offset_into_ob);
+
+	/* Serialize a `void *' field at `addrof_pointer' as being populated with the address of a
+	 * static object at `pointer' ("static" here meaning that `DeeModule_FromStaticPointer()'
+	 * will return a non-NULL pointer for `pointer'), or as pointing into the payload portion
+	 * of another object or heap block that had already been serialized (iow: "pointer" points
+	 * into [ref,ref+num_bytes) of a prior `set_object_malloc', `set_gcobject_malloc', ...).
+	 * If neither is the case, an error is thrown.
+	 * @return: 0 : Success
+	 * @return: -1: Error */
+	WUNUSED_T NONNULL_T((1, 3)) int
+	(DCALL *set_putpointer)(DeeSerial *__restrict self, Dee_seraddr_t addrof_pointer,
+	                        void const *__restrict pointer);
 };
 
 #define Dee_SERIAL_HEAD \
@@ -145,7 +157,10 @@ struct Dee_serial {
 /* Free generic heap memory (as per "Dee_Free()")
  * Only allowed to be called for the most-recent non-Dee_SERADDR_INVALID
  * return value of one of the allocation functions above. Behavior is hard
- * undefined if you try to free a buffer that isn't the most recent one. */
+ * undefined if you try to free a buffer that isn't the most recent one.
+ *
+ * NOTE: DON'T call this method for error-cleanup -- On error, the
+ *       owner of the serializer will free all allocated memory! */
 #define DeeSerial_Free(self, addr) (*(self)->ser_type->set_free)(self, addr)
 
 /* Allocate generic object heap memory (as per "DeeObject_Malloc()")
@@ -160,7 +175,10 @@ struct Dee_serial {
 #define DeeSerial_ObjectTryCalloc(self, num_bytes, ref) (*(self)->ser_type->set_object_trycalloc)(self, num_bytes, Dee_AsObject(ref))
 
 /* Free generic heap memory (as per "DeeObject_Free()")
- * Same restrictions of `set_free' regarding order of free() operations also apply to this */
+ * Same restrictions of `set_free' regarding order of free() operations also apply to this
+ *
+ * NOTE: DON'T call this method for error-cleanup -- On error, the
+ *       owner of the serializer will free all allocated memory! */
 #define DeeSerial_ObjectFree(self, addr) (*(self)->ser_type->set_object_free)(self, addr)
 
 /* Same as above, but must be used for GC-objects (as per "DeeGCObject_Malloc()") */
@@ -169,7 +187,10 @@ struct Dee_serial {
 #define DeeSerial_GCObjectTryMalloc(self, num_bytes, ref) (*(self)->ser_type->set_gcobject_trymalloc)(self, num_bytes, Dee_AsObject(ref))
 #define DeeSerial_GCObjectTryCalloc(self, num_bytes, ref) (*(self)->ser_type->set_gcobject_trycalloc)(self, num_bytes, Dee_AsObject(ref))
 
-/* Free generic heap memory (as per "DeeGCObject_Free()") */
+/* Free generic heap memory (as per "DeeGCObject_Free()")
+ *
+ * NOTE: DON'T call this method for error-cleanup -- On error, the
+ *       owner of the serializer will free all allocated memory! */
 #define DeeSerial_GCObjectFree(self, addr) (*(self)->ser_type->set_gcobject_free)(self, addr)
 
 
@@ -192,6 +213,13 @@ DFUNDEF WUNUSED NONNULL((1)) int
  * @return: -1: Error */
 #define DeeSerial_PutObject(self, addrof_object, ob) \
 	__builtin_expect((*(self)->ser_type->set_putobject)(self, addrof_object, Dee_AsObject(ob)), 0)
+
+/* Same as `DeeSerial_PutObject', but encode a reference ob "ob", but have the pointer be at `ob + offset_into_ob'
+ * @return: 0 : Success
+ * @return: -1: Error */
+#define DeeSerial_PutObjectEx(self, addrof_object, ob, offset_into_ob) \
+	__builtin_expect((*(self)->ser_type->set_putobject_ex)(self, addrof_object, Dee_AsObject(ob), offset_into_ob), 0)
+
 DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL DeeSerial_XPutObject)(DeeSerial *__restrict self,
                              Dee_seraddr_t addrof_object,
@@ -210,33 +238,35 @@ DFUNDEF WUNUSED NONNULL((1)) int
 	__builtin_expect((DeeSerial_XPutObjectInherited)(self, addrof_object, Dee_AsObject(ob)), 0)
 
 
-/* Serialize a `void *' field at `addrof_pointer' as being populated with the address of a static
- * object at `static_addr' ("static" here meaning that `DeeModule_FromStaticPointer()' will
- * return a non-NULL pointer for `static_addr'). Behavior is undefined if `static_addr' does
- * cannot be resolved using `DeeModule_FromStaticPointer()'.
+/* Serialize a `void *' field at `addrof_pointer' as being populated with the address of a
+ * static object at `pointer' ("static" here meaning that `DeeModule_FromStaticPointer()'
+ * will return a non-NULL pointer for `pointer'), or as pointing into the payload portion
+ * of another object or heap block that had already been serialized (iow: "pointer" points
+ * into [ref,ref+num_bytes) of a prior `DeeSerial_ObjectMalloc', `DeeSerial_GCObjectMalloc',
+ * ...). If neither is the case, an error is thrown.
  * @return: 0 : Success
  * @return: -1: Error */
 #ifdef __INTELLISENSE__
 DFUNDEF WUNUSED NONNULL((1, 3)) int
-(DCALL DeeSerial_PutStatic)(DeeSerial *__restrict self,
-                            Dee_seraddr_t addrof_pointer,
-                            void const *__restrict static_addr);
+(DCALL DeeSerial_PutPointer)(DeeSerial *__restrict self,
+                             Dee_seraddr_t addrof_pointer,
+                             void const *__restrict pointer);
 #else /* __INTELLISENSE__ */
-#define DeeSerial_PutStatic(self, addrof_pointer, static_addr) \
-	__builtin_expect((*(self)->ser_type->set_putstatic)(self, addrof_pointer, static_addr), 0)
+#define DeeSerial_PutPointer(self, addrof_pointer, pointer) \
+	__builtin_expect((*(self)->ser_type->set_putpointer)(self, addrof_pointer, pointer), 0)
 #endif /* !__INTELLISENSE__ */
 DFUNDEF WUNUSED NONNULL((1)) int
-(DCALL DeeSerial_XPutStatic)(DeeSerial *__restrict self,
-                             Dee_seraddr_t addrof_pointer,
-                             void const *static_addr);
+(DCALL DeeSerial_XPutPointer)(DeeSerial *__restrict self,
+                              Dee_seraddr_t addrof_pointer,
+                              void const *pointer);
 #ifndef __INTELLISENSE__
-#define DeeSerial_XPutStatic(self, addrof_pointer, static_addr) \
-	__builtin_expect(DeeSerial_XPutStatic(self, addrof_pointer, static_addr), 0)
+#define DeeSerial_XPutPointer(self, addrof_pointer, pointer) \
+	__builtin_expect(DeeSerial_XPutPointer(self, addrof_pointer, pointer), 0)
 #endif /* !__INTELLISENSE__ */
 
 #ifdef CONFIG_BUILDING_DEEMON
-#define DeeSerial_PutStaticDeemon(self, addrof_pointer, static_addr)  DeeSerial_PutStatic(self, addrof_pointer, static_addr)
-#define DeeSerial_XPutStaticDeemon(self, addrof_pointer, static_addr) DeeSerial_XPutStatic(self, addrof_pointer, static_addr)
+#define DeeSerial_PutStaticDeemon(self, addrof_pointer, pointer)  DeeSerial_PutPointer(self, addrof_pointer, pointer)
+#define DeeSerial_XPutStaticDeemon(self, addrof_pointer, pointer) DeeSerial_XPutPointer(self, addrof_pointer, pointer)
 #endif /* CONFIG_BUILDING_DEEMON */
 
 

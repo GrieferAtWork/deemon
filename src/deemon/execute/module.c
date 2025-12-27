@@ -36,6 +36,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
@@ -54,6 +55,9 @@
 #include "../runtime/strings.h"
 
 DECL_BEGIN
+
+#undef container_of
+#define container_of COMPILER_CONTAINER_OF
 
 #ifndef CONFIG_HAVE_strcmp
 #define CONFIG_HAVE_strcmp
@@ -2975,6 +2979,121 @@ PRIVATE struct type_gc tpconst module_dee_gc = {
 };
 
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+module_dee_serialize(DeeModuleObject *__restrict self,
+                     DeeSerial *__restrict writer) {
+	uint16_t globalc = self->mo_globalc;
+	size_t sizeof_module = offsetof(DeeModuleObject, mo_globalv) +
+	                       globalc * sizeof(DREF DeeObject *);
+	Dee_seraddr_t out_addr = DeeSerial_GCObjectMalloc(writer, sizeof_module, self);
+	DeeModuleObject *out;
+	if (!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, DeeModuleObject);
+	out->mo_absname = NULL; /* Will be initialized by dex loader */
+	memset(&out->mo_absnode, 0xcc, sizeof(out->mo_absnode));
+	out->mo_libname.mle_name        = NULL;
+	out->mo_libname.mle_dat.mle_mod = NULL; /* Will be initialized by dex loader */
+	out->mo_libname.mle_next        = NULL;
+	memset(&out->mo_libname.mle_node, 0xcc, sizeof(out->mo_libname.mle_node));
+	out->mo_dir   = NULL; /* Will be initialized by dex loader */
+	out->mo_init  = Dee_MODULE_INIT_UNINITIALIZED;
+	out->mo_ctime = DeeModule_GetCTime((DeeObject *)self);
+	out->mo_flags = atomic_read(&self->mo_flags) | Dee_MODULE_FHASCTIME;
+	out->mo_flags &= ~(Dee_MODULE_FABSFILE | Dee_MODULE_FWAITINIT |
+	                   Dee_MODULE_FABSRED | Dee_MODULE_FADRRED |
+	                   _Dee_MODULE_FLIBALL | _Dee_MODULE_FCLEARED);
+	out->mo_importc = self->mo_importc;
+	out->mo_globalc = globalc;
+	out->mo_bucketm = self->mo_bucketm;
+	Dee_atomic_rwlock_init(&out->mo_lock);
+#if !defined(CONFIG_NO_DEC) || !defined(CONFIG_NO_DEX)
+	out->mo_minaddr = NULL;
+	out->mo_maxaddr = NULL;
+	memset(&out->mo_adrnode, 0xcc, sizeof(out->mo_adrnode));
+#endif /* !CONFIG_NO_DEC || !CONFIG_NO_DEX */
+
+	DeeModule_LockRead(self);
+	out->mo_moddata.mo_rootcode = self->mo_moddata.mo_rootcode;
+	Dee_Incref(out->mo_moddata.mo_rootcode);
+	Dee_XMovrefv(out->mo_globalv, self->mo_globalv, globalc);
+	DeeModule_LockEndRead(self);
+	if (DeeSerial_InplacePutObject(writer, out_addr + offsetof(DeeModuleObject, mo_moddata.mo_rootcode))) {
+		out = DeeSerial_Addr2Mem(writer, out_addr, DeeModuleObject);
+		Dee_XDecrefv(out->mo_globalv, globalc);
+		goto err;
+	}
+	if (DeeSerial_XInplacePutObjectv(writer, out_addr + offsetof(DeeModuleObject, mo_globalv), globalc))
+		goto err;
+
+	/* Duplicate "mo_bucketv" */
+	if (self->mo_bucketv == empty_module_buckets) {
+		if (DeeSerial_PutStaticDeemon(writer, out_addr + offsetof(DeeModuleObject, mo_bucketv), empty_module_buckets))
+			goto err;
+	} else {
+		size_t i, count = self->mo_bucketm + 1;
+		Dee_seraddr_t out__mo_bucketv;
+		struct Dee_module_symbol *in__mo_bucketv = self->mo_bucketv;
+		struct Dee_module_symbol *ou__mo_bucketv;
+		out__mo_bucketv = DeeSerial_Malloc(writer, count * sizeof(struct Dee_module_symbol));
+		if (!Dee_SERADDR_ISOK(out__mo_bucketv))
+			goto err;
+		if (DeeSerial_PutAddr(writer, out_addr + offsetof(DeeModuleObject, mo_bucketv), out__mo_bucketv))
+			goto err;
+		ou__mo_bucketv = DeeSerial_Addr2Mem(writer, out__mo_bucketv, struct Dee_module_symbol);
+		memcpyc(ou__mo_bucketv, in__mo_bucketv, count, sizeof(struct Dee_module_symbol));
+		for (i = 0; i < count; ++i, ++in__mo_bucketv) {
+			Dee_seraddr_t out__mo_bucketv_i = out__mo_bucketv + i * sizeof(struct Dee_module_symbol);
+			if (in__mo_bucketv->ss_name) {
+				int status;
+				if (in__mo_bucketv->ss_flags & Dee_MODSYM_FNAMEOBJ) {
+					DeeStringObject *ob = container_of(in__mo_bucketv->ss_name, DeeStringObject, s_str);
+					status = DeeSerial_PutObjectEx(writer, out__mo_bucketv_i + offsetof(struct Dee_module_symbol, ss_name),
+					                               ob, offsetof(DeeStringObject, s_str));
+				} else {
+					status = DeeSerial_PutPointer(writer, out__mo_bucketv_i + offsetof(struct Dee_module_symbol, ss_name),
+					                             in__mo_bucketv->ss_name);
+				}
+				if unlikely(status)
+					goto err;
+			}
+			if (in__mo_bucketv->ss_doc) {
+				int status;
+				if (in__mo_bucketv->ss_flags & Dee_MODSYM_FDOCOBJ) {
+					DeeStringObject *ob = container_of(in__mo_bucketv->ss_doc, DeeStringObject, s_str);
+					status = DeeSerial_PutObjectEx(writer, out__mo_bucketv_i + offsetof(struct Dee_module_symbol, ss_doc),
+					                               ob, offsetof(DeeStringObject, s_str));
+				} else {
+					status = DeeSerial_PutPointer(writer, out__mo_bucketv_i + offsetof(struct Dee_module_symbol, ss_doc),
+					                             in__mo_bucketv->ss_doc);
+				}
+				if unlikely(status)
+					goto err;
+			}
+		}
+	}
+
+	/* Duplicate "mo_importv" */
+	if (self->mo_importv) {
+		uint16_t count = self->mo_importc;
+		Dee_seraddr_t out__mo_importv;
+		DREF DeeModuleObject **ou__mo_importv;
+		out__mo_importv = DeeSerial_Malloc(writer, count * sizeof(DREF DeeModuleObject *));
+		if (!Dee_SERADDR_ISOK(out__mo_importv))
+			goto err;
+		if (DeeSerial_PutAddr(writer, out_addr + offsetof(DeeModuleObject, mo_importv), out__mo_importv))
+			goto err;
+		ou__mo_importv = DeeSerial_Addr2Mem(writer, out__mo_importv, DREF DeeModuleObject *);
+		Dee_Movrefv(ou__mo_importv, self->mo_importv, count);
+		if (DeeSerial_InplacePutObjectv(writer, out__mo_importv, count))
+			goto err;
+	}
+
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+}
+
 
 
 #ifndef CONFIG_NO_DEX
@@ -3092,8 +3211,8 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 			/* tp_deep_ctor:   */ NULL, /* !!! Not constructible !!! */
 			/* tp_any_ctor:    */ NULL, /* !!! Not constructible !!! */
 			/* tp_any_ctor_kw: */ NULL, /* !!! Not constructible !!! */
-			/* tp_serialize:   */ NULL,
-			/* tp_free:        */ NULL,
+			/* tp_serialize:   */ NULL, /* !!! Not constructible !!! */
+			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -3137,13 +3256,13 @@ PUBLIC DeeTypeObject DeeModuleDir_Type = {
 	/* .tp_base     = */ &DeeModule_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
-			/* tp_ctor:        */ NULL, /* TODO */
-			/* tp_copy_ctor:   */ NULL, /* TODO */
-			/* tp_deep_ctor:   */ NULL, /* TODO */
-			/* tp_any_ctor:    */ NULL, /* TODO */
-			/* tp_any_ctor_kw: */ NULL, /* TODO */
-			/* tp_serialize:   */ NULL, /* TODO */
-			/* tp_free:        */ NULL,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL, /* Not serializable */
+			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -3194,8 +3313,8 @@ PUBLIC DeeTypeObject DeeModuleDee_Type = {
 			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL, /* TODO */
-			/* tp_serialize:   */ NULL, /* TODO */
-			/* tp_free:        */ NULL,
+			/* tp_serialize:   */ &module_dee_serialize,
+			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -3242,13 +3361,13 @@ PUBLIC DeeTypeObject DeeModuleDex_Type = {
 	/* .tp_base     = */ &DeeModule_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
-			/* tp_ctor:        */ NULL, /* TODO */
-			/* tp_copy_ctor:   */ NULL, /* TODO */
-			/* tp_deep_ctor:   */ NULL, /* TODO */
-			/* tp_any_ctor:    */ NULL, /* TODO */
-			/* tp_any_ctor_kw: */ NULL, /* TODO */
-			/* tp_serialize:   */ NULL, /* TODO */
-			/* tp_free:        */ NULL,
+			/* tp_ctor:        */ NULL, /* !!! Not constructible !!! */
+			/* tp_copy_ctor:   */ NULL, /* !!! Not constructible !!! */
+			/* tp_deep_ctor:   */ NULL, /* !!! Not constructible !!! */
+			/* tp_any_ctor:    */ NULL, /* !!! Not constructible !!! */
+			/* tp_any_ctor_kw: */ NULL, /* !!! Not constructible !!! */
+			/* tp_serialize:   */ NULL, /* Not serializable */
+			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -3346,7 +3465,7 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* Legacy; unsupported */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&module_fini,
 		/* .tp_assign      = */ NULL,

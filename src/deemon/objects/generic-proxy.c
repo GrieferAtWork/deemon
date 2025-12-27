@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_OBJECTS_GENERIC_PROXY_C 1
 
 #include <deemon/api.h>
+#include <deemon/format.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
@@ -29,6 +30,8 @@
 #include <deemon/set.h>
 #include <deemon/super.h>
 
+#include <hybrid/typecore.h>
+
 #include "../runtime/runtime_error.h"
 
 /**/
@@ -36,6 +39,9 @@
 /**/
 
 #include <stddef.h> /* size_t */
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 DECL_BEGIN
 
@@ -259,6 +265,82 @@ generic_proxy3__fini(ProxyObject3 *__restrict self) {
 	Dee_Decref(self->po_obj1);
 	Dee_Decref(self->po_obj2);
 	Dee_Decref(self->po_obj3);
+}
+
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) void DCALL
+serialize_copy_after(DeeObject *__restrict self,
+                     struct Dee_serial *__restrict writer,
+                     Dee_seraddr_t addr, size_t basic_size) {
+	DeeObject *out;
+	size_t instance_size;
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	void (DCALL *tp_free)(void *);
+	ASSERT(!(tp_self->tp_flags & TP_FVARIABLE));
+	if ((tp_free = tp_self->tp_init.tp_alloc.tp_free) != NULL) {
+		/* Figure out the slab size used by the base-class. */
+		if (tp_self->tp_flags & TP_FGC) {
+#define CHECK_ALLOCATOR(index, size)                      \
+			if (tp_free == &DeeGCObject_SlabFree##size) { \
+				instance_size = size * sizeof(void *);    \
+			} else
+			DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
+#undef CHECK_ALLOCATOR
+			{
+				Dee_Fatalf("Unable to determine tp_instance_size for %r", tp_self);
+				return;
+			}
+		} else {
+#define CHECK_ALLOCATOR(index, size)                    \
+			if (tp_free == &DeeObject_SlabFree##size) { \
+				instance_size = size * sizeof(void *);  \
+			} else
+			DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
+#undef CHECK_ALLOCATOR
+			{
+				Dee_Fatalf("Unable to determine tp_instance_size for %r", tp_self);
+				return;
+			}
+		}
+	} else {
+		instance_size = tp_self->tp_init.tp_alloc.tp_instance_size;
+	}
+	ASSERTF(instance_size >= basic_size,
+	        "Instance size %" PRFuSIZ " of %r is lower than "
+	        /**/ "basic size %" PRFuSIZ " of proxy object",
+	        instance_size, tp_self, basic_size);
+	out = DeeSerial_Addr2Mem(writer, addr, DeeObject);
+	memcpy((byte_t *)out + basic_size,
+	       (byte_t const *)self + basic_size,
+	       instance_size - basic_size);
+}
+
+
+/* Same as `generic_proxy__serialize()', but look at "tp_instance_size" (or
+ * "tp_alloc") and memcpy all memory that is located after "ProxyObject". */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__serialize_and_copy(ProxyObject *__restrict self,
+                                  struct Dee_serial *__restrict writer,
+                                  Dee_seraddr_t addr) {
+	serialize_copy_after(Dee_AsObject(self), writer, addr, sizeof(*self));
+	return generic_proxy__serialize(self, writer, addr);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy2__serialize_and_copy(ProxyObject2 *__restrict self,
+                                   struct Dee_serial *__restrict writer,
+                                   Dee_seraddr_t addr) {
+	serialize_copy_after(Dee_AsObject(self), writer, addr, sizeof(*self));
+	return generic_proxy2__serialize(self, writer, addr);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy3__serialize_and_copy(ProxyObject3 *__restrict self,
+                                   struct Dee_serial *__restrict writer,
+                                   Dee_seraddr_t addr) {
+	serialize_copy_after(Dee_AsObject(self), writer, addr, sizeof(*self));
+	return generic_proxy3__serialize(self, writer, addr);
 }
 
 

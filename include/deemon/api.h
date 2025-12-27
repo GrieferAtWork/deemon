@@ -482,7 +482,7 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
  */
 #if (!defined(CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES) && \
      !defined(CONFIG_NO_EXPERIMENTAL_MODULE_DIRECTORIES))
-#if 0 /* TODO: Enable by default */
+#if 0 /* TODO: Test-compile for cygwin, then enable by default */
 #define CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #else
 #define CONFIG_NO_EXPERIMENTAL_MODULE_DIRECTORIES

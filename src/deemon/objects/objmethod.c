@@ -175,7 +175,7 @@ objmethod_serialize(DeeObjMethodObject *__restrict self,
                     Dee_seraddr_t addr) {
 	int result = DeeSerial_PutObject(writer, addr + offsetof(DeeObjMethodObject, om_this), self->om_this);
 	if likely(result == 0) {
-		result = DeeSerial_PutStatic(writer,
+		result = DeeSerial_PutPointer(writer,
 		                             addr + offsetof(DeeObjMethodObject, om_func.omf_meth),
 		                             (void *)self->om_func.omf_kwmeth);
 	}
@@ -1071,7 +1071,7 @@ clsmethod_serialize(DeeClsMethodObject *__restrict self,
                     Dee_seraddr_t addr) {
 	int result = DeeSerial_PutObject(writer, addr + offsetof(DeeClsMethodObject, clm_type), self->clm_type);
 	if likely(result == 0) {
-		result = DeeSerial_PutStatic(writer,
+		result = DeeSerial_PutPointer(writer,
 		                             addr + offsetof(DeeClsMethodObject, clm_func.clmf_meth),
 		                             (void *)self->clm_func.clmf_meth);
 	}
@@ -1510,13 +1510,13 @@ clsproperty_serialize(DeeClsPropertyObject *__restrict self,
                       Dee_seraddr_t addr) {
 	int result = DeeSerial_PutObject(writer, addr + offsetof(DeeClsPropertyObject, cp_type), self->cp_type);
 	if likely(result == 0)
-		result = DeeSerial_XPutStatic(writer, addr + offsetof(DeeClsPropertyObject, cp_get), (void *)self->cp_get);
+		result = DeeSerial_XPutPointer(writer, addr + offsetof(DeeClsPropertyObject, cp_get), (void *)self->cp_get);
 	if likely(result == 0)
-		result = DeeSerial_XPutStatic(writer, addr + offsetof(DeeClsPropertyObject, cp_del), (void *)self->cp_del);
+		result = DeeSerial_XPutPointer(writer, addr + offsetof(DeeClsPropertyObject, cp_del), (void *)self->cp_del);
 	if likely(result == 0)
-		result = DeeSerial_XPutStatic(writer, addr + offsetof(DeeClsPropertyObject, cp_set), (void *)self->cp_set);
+		result = DeeSerial_XPutPointer(writer, addr + offsetof(DeeClsPropertyObject, cp_set), (void *)self->cp_set);
 	if likely(result == 0)
-		result = DeeSerial_XPutStatic(writer, addr + offsetof(DeeClsPropertyObject, cp_bound), (void *)self->cp_bound);
+		result = DeeSerial_XPutPointer(writer, addr + offsetof(DeeClsPropertyObject, cp_bound), (void *)self->cp_bound);
 	return result;
 }
 
@@ -1920,7 +1920,7 @@ clsmember_serialize(DeeClsMemberObject *__restrict self,
                     Dee_seraddr_t addr) {
 	int result = DeeSerial_PutObject(writer, addr + offsetof(DeeClsMemberObject, cmb_type), self->cmb_type);
 	if likely(result == 0)
-		result = DeeSerial_PutStatic(writer, addr + offsetof(DeeClsMemberObject, cmb_memb.m_name), (void *)self->cmb_memb.m_name);
+		result = DeeSerial_PutPointer(writer, addr + offsetof(DeeClsMemberObject, cmb_memb.m_name), (void *)self->cmb_memb.m_name);
 	if likely(result == 0) {
 		if (Dee_TYPE_MEMBER_ISCONST(&self->cmb_memb)) {
 			result = DeeSerial_PutObject(writer,
@@ -1933,7 +1933,7 @@ clsmember_serialize(DeeClsMemberObject *__restrict self,
 		}
 	}
 	if likely(result == 0)
-		result = DeeSerial_XPutStatic(writer, addr + offsetof(DeeClsMemberObject, cmb_memb.m_doc), (void *)self->cmb_memb.m_doc);
+		result = DeeSerial_XPutPointer(writer, addr + offsetof(DeeClsMemberObject, cmb_memb.m_doc), (void *)self->cmb_memb.m_doc);
 	return result;
 }
 
@@ -2334,7 +2334,7 @@ cmethod_serialize(DeeCMethodObject *__restrict self,
                   Dee_seraddr_t addr) {
 	DeeCMethodObject *out = DeeSerial_Addr2Mem(writer, addr, DeeCMethodObject);
 	out->cm_flags = self->cm_flags;
-	return DeeSerial_PutStatic(writer,
+	return DeeSerial_PutPointer(writer,
 	                           addr + offsetof(DeeCMethodObject, cm_func.cmf_meth),
 	                           (void *)self->cm_func.cmf_meth);
 }

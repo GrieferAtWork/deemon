@@ -106,6 +106,13 @@ INTDEF NONNULL((1, 2)) void DCALL generic_proxy3__visit(ProxyObject3 *__restrict
 INTDEF NONNULL((1)) void DCALL generic_proxy3__fini(ProxyObject3 *__restrict self);
 
 
+/* Same as `generic_proxy__serialize()', but look at "tp_instance_size" (or
+ * "tp_alloc") and memcpy all memory that is located after "ProxyObject". */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__serialize_and_copy(ProxyObject *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__serialize_and_copy(ProxyObject2 *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy3__serialize_and_copy(ProxyObject3 *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
+
+
 
 STATIC_ASSERT_MSG(offsetof(ProxyObject2, po_obj1) == offsetof(ProxyObject, po_obj),
                   "You're allowed to use everything below with `ProxyObject2', "

@@ -34,6 +34,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/super.h>
@@ -80,6 +81,18 @@ INTDEF DeeTypeObject BytesIterator_Type;
 
 #define bytesiter_fini  generic_proxy__fini
 #define bytesiter_visit generic_proxy__visit
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bytesiter_serialize(BytesIterator *__restrict self,
+                    DeeSerial *__restrict writer,
+                    Dee_seraddr_t addr) {
+	int result = generic_proxy__serialize((ProxyObject *)self, writer, addr);
+	if likely(result == 0) {
+		byte_t *pointer = BytesIterator_GetIter(self);
+		result = DeeSerial_PutPointer(writer, addr + offsetof(BytesIterator, bi_iter), pointer);
+	}
+	return result;
+}
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytesiter_next(BytesIterator *__restrict self) {
@@ -183,7 +196,7 @@ INTERN DeeTypeObject BytesIterator_Type = {
 			/* tp_deep_ctor:   */ &bytesiter_copy,
 			/* tp_any_ctor:    */ &bytesiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &bytesiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bytesiter_fini,
 		/* .tp_assign      = */ NULL,

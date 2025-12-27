@@ -34,6 +34,7 @@
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/traceback.h>
@@ -176,8 +177,9 @@ err:
 }
 
 STATIC_ASSERT(offsetof(FunctionStaticsIterator, fsi_func) == offsetof(ProxyObject, po_obj));
-#define funcstaticsiter_fini  generic_proxy__fini
-#define funcstaticsiter_visit generic_proxy__visit
+#define funcstaticsiter_fini      generic_proxy__fini
+#define funcstaticsiter_visit     generic_proxy__visit
+#define funcstaticsiter_serialize generic_proxy__serialize_and_copy
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 funcstaticsiter_bool(FunctionStaticsIterator *__restrict self) {
@@ -281,7 +283,7 @@ INTERN DeeTypeObject FunctionStaticsIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &funcstaticsiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &funcstaticsiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&funcstaticsiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -482,9 +484,10 @@ err:
 
 
 STATIC_ASSERT(offsetof(FunctionStatics, fs_func) == offsetof(ProxyObject, po_obj));
-#define funcstatics_copy  generic_proxy__copy_alias
-#define funcstatics_fini  generic_proxy__fini
-#define funcstatics_visit generic_proxy__visit
+#define funcstatics_copy      generic_proxy__copy_alias
+#define funcstatics_fini      generic_proxy__fini
+#define funcstatics_visit     generic_proxy__visit
+#define funcstatics_serialize generic_proxy__serialize
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 funcstatics_mh_seq_enumerate_index(FunctionStatics *self, Dee_seq_enumerate_index_t proc,
@@ -594,7 +597,7 @@ INTERN DeeTypeObject FunctionStatics_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &funcstatics_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &funcstatics_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&funcstatics_fini,
 		/* .tp_assign      = */ NULL,
@@ -754,6 +757,26 @@ err:
 STATIC_ASSERT(offsetof(FunctionSymbolsByNameIterator, fsbni_seq) == offsetof(ProxyObject, po_obj));
 #define funcsymbolsbynameiter_fini  generic_proxy__fini
 #define funcsymbolsbynameiter_visit generic_proxy__visit
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+funcsymbolsbynameiter_serialize(FunctionSymbolsByNameIterator *__restrict self,
+                                DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	int result;
+	FunctionSymbolsByNameIterator *out;
+	out = DeeSerial_Addr2Mem(writer, addr, FunctionSymbolsByNameIterator);
+	out->fsbni_rid = atomic_read(&self->fsbni_rid);
+	out->fsbni_end = self->fsbni_end;
+	result = generic_proxy__serialize((ProxyObject *)self, writer, addr);
+	if likely(result == 0) {
+		/* Even though it's an object, it isn't a reference that should already
+		 * have been encoded at this point. As such, `fsbni_func' can be encoded
+		 * as a "raw" pointer. */
+		result = DeeSerial_PutPointer(writer,
+		                              addr + offsetof(FunctionSymbolsByNameIterator, fsbni_func),
+		                              self->fsbni_func);
+	}
+	return result;
+}
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 funcsymbolsbynameiter_bool(FunctionSymbolsByNameIterator *__restrict self) {
@@ -950,7 +973,7 @@ INTERN DeeTypeObject FunctionSymbolsByNameIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &funcsymbolsbynameiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &funcsymbolsbynameiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&funcsymbolsbynameiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1000,7 +1023,7 @@ INTERN DeeTypeObject FunctionSymbolsByNameKeysIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &funcsymbolsbynameiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &funcsymbolsbynameiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&funcsymbolsbynameiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1629,8 +1652,9 @@ err:
 }
 
 STATIC_ASSERT(offsetof(FunctionSymbolsByName, fsbn_func) == offsetof(ProxyObject, po_obj));
-#define funcsymbolsbyname_fini  generic_proxy__fini
-#define funcsymbolsbyname_visit generic_proxy__visit
+#define funcsymbolsbyname_fini      generic_proxy__fini
+#define funcsymbolsbyname_visit     generic_proxy__visit
+#define funcsymbolsbyname_serialize generic_proxy__serialize_and_copy
 
 
 PRIVATE struct type_seq funcsymbolsbyname_seq = {
@@ -1732,7 +1756,7 @@ INTERN DeeTypeObject FunctionSymbolsByName_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &funcsymbolsbyname_init_kw,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &funcsymbolsbyname_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_fini,
 		/* .tp_assign      = */ NULL,
@@ -1949,8 +1973,9 @@ err:
 }
 
 STATIC_ASSERT(offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_seq) == offsetof(ProxyObject, po_obj));
-#define yfuncsymbolsbynameiter_fini  generic_proxy__fini
-#define yfuncsymbolsbynameiter_visit generic_proxy__visit
+#define yfuncsymbolsbynameiter_fini      generic_proxy__fini
+#define yfuncsymbolsbynameiter_visit     generic_proxy__visit
+#define yfuncsymbolsbynameiter_serialize generic_proxy__serialize_and_copy
 
 /* Returns `NULL' if the arg isn't bound. */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) DeeObject *DCALL
@@ -2308,7 +2333,7 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &yfuncsymbolsbynameiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &yfuncsymbolsbynameiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbynameiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -2361,7 +2386,7 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameKeysIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &yfuncsymbolsbynameiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &yfuncsymbolsbynameiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbynameiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -2839,8 +2864,9 @@ err:
 }
 
 STATIC_ASSERT(offsetof(YieldFunctionSymbolsByName, yfsbn_yfunc) == offsetof(ProxyObject, po_obj));
-#define yfuncsymbolsbyname_fini  generic_proxy__fini
-#define yfuncsymbolsbyname_visit generic_proxy__visit
+#define yfuncsymbolsbyname_fini      generic_proxy__fini
+#define yfuncsymbolsbyname_visit     generic_proxy__visit
+#define yfuncsymbolsbyname_serialize generic_proxy__serialize_and_copy
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeFunctionObject *DCALL
 yfuncsymbolsbyname_getfunc(YieldFunctionSymbolsByName *__restrict self) {
@@ -2945,7 +2971,7 @@ INTERN DeeTypeObject YieldFunctionSymbolsByName_Type = {
 			/* tp_deep_ctor:   */ &yfuncsymbolsbyname_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &yfuncsymbolsbyname_init_kw,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &yfuncsymbolsbyname_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_fini,
 		/* .tp_assign      = */ NULL,
@@ -3137,9 +3163,10 @@ STATIC_ASSERT(offsetof(FrameArgs, fa_frame) == offsetof(ProxyObject2, po_obj1) |
               offsetof(FrameArgs, fa_frame) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(FrameArgs, fa_code) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(FrameArgs, fa_code) == offsetof(ProxyObject2, po_obj2));
-#define frameargs_copy  generic_proxy2__copy_alias12
-#define frameargs_fini  generic_proxy2__fini
-#define frameargs_visit generic_proxy2__visit
+#define frameargs_copy      generic_proxy2__copy_alias12
+#define frameargs_fini      generic_proxy2__fini
+#define frameargs_visit     generic_proxy2__visit
+#define frameargs_serialize generic_proxy2__serialize
 
 PRIVATE struct type_seq frameargs_seq = {
 	/* .tp_iter               = */ DEFIMPL(&default__seq_operator_iter__with__seq_operator_size__and__seq_operator_getitem_index),
@@ -3212,7 +3239,7 @@ INTERN DeeTypeObject FrameArgs_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &frameargs_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &frameargs_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&frameargs_fini,
 		/* .tp_assign      = */ NULL,
@@ -3467,8 +3494,9 @@ err:
 }
 
 STATIC_ASSERT(offsetof(FrameLocals, fl_frame) == offsetof(ProxyObject, po_obj));
-#define framelocals_fini  generic_proxy__fini
-#define framelocals_visit generic_proxy__visit
+#define framelocals_fini      generic_proxy__fini
+#define framelocals_visit     generic_proxy__visit
+#define framelocals_serialize generic_proxy__serialize_and_copy
 
 PRIVATE struct type_method tpconst framelocals_methods[] = {
 	TYPE_METHOD_HINTREF(Sequence_xchitem),
@@ -3553,7 +3581,7 @@ INTERN DeeTypeObject FrameLocals_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &framelocals_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &framelocals_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&framelocals_fini,
 		/* .tp_assign      = */ NULL,
@@ -3742,9 +3770,10 @@ err:
 }
 
 STATIC_ASSERT(offsetof(FrameStack, fs_frame) == offsetof(ProxyObject, po_obj));
-#define framestack_copy  generic_proxy__copy_alias
-#define framestack_fini  generic_proxy__fini
-#define framestack_visit generic_proxy__visit
+#define framestack_copy      generic_proxy__copy_alias
+#define framestack_fini      generic_proxy__fini
+#define framestack_visit     generic_proxy__visit
+#define framestack_serialize generic_proxy__serialize
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 framestack_mh_seq_enumerate_index(FrameStack *__restrict self, Dee_seq_enumerate_index_t proc,
@@ -3981,7 +4010,7 @@ INTERN DeeTypeObject FrameStack_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &framestack_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &framestack_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&framestack_fini,
 		/* .tp_assign      = */ NULL,
@@ -4214,6 +4243,19 @@ err:
 STATIC_ASSERT(offsetof(FrameSymbolsByNameIterator, frsbni_seq) == offsetof(ProxyObject, po_obj));
 #define framesymbolsbynameiter_fini  generic_proxy__fini
 #define framesymbolsbynameiter_visit generic_proxy__visit
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+framesymbolsbynameiter_serialize(FrameSymbolsByNameIterator *__restrict self,
+                                 DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	FrameSymbolsByNameIterator *out;
+	out = DeeSerial_Addr2Mem(writer, addr, FrameSymbolsByNameIterator);
+	FrameSymbolsByNameIterator_LockAcquire(self);
+	out->frsbni_idx = self->frsbni_idx;
+	FrameSymbolsByNameIterator_LockRelease(self);
+	Dee_atomic_lock_init(&out->frsbni_lock);
+	return generic_proxy__serialize((ProxyObject *)self, writer, addr);
+}
+
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 framesymbolsbynameiter_bool(FrameSymbolsByNameIterator *__restrict self) {
@@ -4737,7 +4779,7 @@ INTERN DeeTypeObject FrameSymbolsByNameIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &framesymbolsbynameiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&framesymbolsbynameiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -4787,7 +4829,7 @@ INTERN DeeTypeObject FrameSymbolsByNameKeysIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &framesymbolsbynameiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &framesymbolsbynameiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&framesymbolsbynameiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -5467,8 +5509,9 @@ STATIC_ASSERT(offsetof(FrameSymbolsByName, frsbn_frame) == offsetof(ProxyObject2
               offsetof(FrameSymbolsByName, frsbn_frame) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(FrameSymbolsByName, frsbn_func) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(FrameSymbolsByName, frsbn_func) == offsetof(ProxyObject2, po_obj2));
-#define framesymbolsbyname_fini  generic_proxy2__fini
-#define framesymbolsbyname_visit generic_proxy2__visit
+#define framesymbolsbyname_fini      generic_proxy2__fini
+#define framesymbolsbyname_visit     generic_proxy2__visit
+#define framesymbolsbyname_serialize generic_proxy2__serialize_and_copy
 
 
 PRIVATE struct type_seq framesymbolsbyname_seq = {
@@ -5571,7 +5614,7 @@ INTERN DeeTypeObject FrameSymbolsByName_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &framesymbolsbyname_init_kw,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &framesymbolsbyname_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&framesymbolsbyname_fini,
 		/* .tp_assign      = */ NULL,
