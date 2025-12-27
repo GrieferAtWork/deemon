@@ -1119,6 +1119,9 @@ INTDEF size_t DCALL Dee_tuplecache_clearall(size_t max_clear);
 INTDEF size_t DCALL Dee_latincache_clearall(size_t max_clear);
 #endif /* CONFIG_STRING_LATIN1_CACHED */
 INTDEF size_t DCALL Dee_membercache_clearall(size_t max_clear);
+#ifndef CONFIG_NO_THREADS
+INTDEF size_t DCALL Dee_futex_clearall(size_t max_clear);
+#endif /* !CONFIG_NO_THREADS */
 
 PRIVATE pcacheclr caches[] = {
 #define Cs(x) &x##_clear,
@@ -1138,6 +1141,10 @@ PRIVATE pcacheclr caches[] = {
 	&DecTime_ClearCache,
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #endif /* !CONFIG_NO_DEC */
+#ifndef CONFIG_NO_THREADS
+	&Dee_futex_clearall,
+#endif /* !CONFIG_NO_THREADS */
+
 	NULL
 };
 

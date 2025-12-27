@@ -472,6 +472,26 @@ PRIVATE LLRBTREE_ROOT(futex_controller) fcont_tree = NULL;
 
 /* Max number of elements in `fcont_freelist' before further controllers are *actually* free'd */
 #define FCONT_FREELIST_MAXSIZE 8
+
+
+#define Dee_futex_clearall_DEFINED
+INTERN size_t DCALL Dee_futex_clearall(size_t max_clear) {
+	size_t result = 0;
+	struct futex_controller_slist freelist;
+	struct futex_controller *iter, *tvar;
+	fcont_lock_write();
+	freelist = fcont_freelist;
+	SLIST_EMPTY(&fcont_freelist);
+	fcont_freesize = 0;
+	fcont_lock_endwrite();
+
+	(void)max_clear;
+	SLIST_FOREACH_SAFE (iter, &freelist, fc_free, tvar) {
+		result += sizeof(*iter);
+		futex_controller_free(iter);
+	}
+	return result;
+}
 #endif /* DeeFutex_USES_CONTROL_STRUCTURE */
 
 
@@ -930,6 +950,17 @@ DeeFutex_WakeGlobal(DeeThreadObject *thread) {
 	COMPILER_IMPURE();
 }
 #endif /* !... */
+
+#ifndef CONFIG_NO_THREADS
+#ifndef Dee_futex_clearall_DEFINED
+#define Dee_futex_clearall_DEFINED
+INTERN size_t DCALL Dee_futex_clearall(size_t max_clear) {
+	(void)max_clear;
+	return 0;
+}
+#endif /* !Dee_futex_clearall_DEFINED */
+#endif /* !CONFIG_NO_THREADS */
+
 
 DECL_END
 
