@@ -481,7 +481,7 @@ INTERN size_t DCALL Dee_futex_clearall(size_t max_clear) {
 	struct futex_controller *iter, *tvar;
 	fcont_lock_write();
 	freelist = fcont_freelist;
-	SLIST_EMPTY(&fcont_freelist);
+	SLIST_CLEAR(&fcont_freelist);
 	fcont_freesize = 0;
 	fcont_lock_endwrite();
 
