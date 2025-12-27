@@ -4260,7 +4260,7 @@ again:
 	}
 	if (!(self->tp_flags & TP_FHEAP)) {
 		/* Lookup the originating module of a statically allocated C-type. */
-		result = DeeModule_FromStaticPointer(self);
+		result = DeeModule_OfPointer(self);
 		if (result) {
 			Dee_weakref_set(&self->tp_module, result);
 			return result;

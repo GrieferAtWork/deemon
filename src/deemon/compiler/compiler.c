@@ -32,9 +32,11 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/computed-operators.h>
+#include <deemon/dec.h>
 #include <deemon/exec.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/system.h>
@@ -442,15 +444,27 @@ err:
  * generated, before that module's root is returned, or if the given user-code
  * is only executed when the function is called, potentially allowing for
  * JIT-like execution of simple expressions such as `10 + 20' */
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeExec_CompileModuleStream_impl(struct Dee_serial *__restrict writer, DeeObject *source_stream,
+                                 int start_line, int start_col, unsigned int mode,
+                                 struct Dee_compiler_options *options, DeeObject *default_symbols)
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 INTERN WUNUSED NONNULL((1)) DREF /*untracked*/ /*Module*/ DeeObject *DCALL
 DeeExec_CompileModuleStream_impl(DeeObject *source_stream,
                                  int start_line, int start_col, unsigned int mode,
-                                 struct Dee_compiler_options *options, DeeObject *default_symbols) {
+                                 struct Dee_compiler_options *options, DeeObject *default_symbols)
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
+{
 	struct TPPFile *base_file;
 	DREF DeeCodeObject *root_code;
 	DREF DeeCompilerObject *compiler;
 	DREF struct ast *code;
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+	int result;
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 	DREF DeeModuleObject *result;
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	uint16_t assembler_flags;
 	uint64_t ctime = DeeSystem_GetWalltime();
 
@@ -638,7 +652,11 @@ pack_code_in_return:
 		goto err_compiler;
 
 	/* Finally, put together the module itself. */
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+	result = module_compile(writer, root_code, ctime);
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 	result = module_compile(root_code, ctime);
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	Dee_Decref(root_code);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -652,7 +670,11 @@ pack_code_in_return:
 	DeeCompiler_End();
 	Dee_Decref(compiler);
 	DeeCompiler_LockEndWrite();
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+	return result;
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 	return Dee_AsObject(result);
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 err_compiler_code:
 	ast_xdecref(code);
 err_compiler:
@@ -660,19 +682,67 @@ err_compiler:
 err_compiler_not_locked:
 	Dee_Decref(compiler);
 err:
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+	return -1;
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 	return NULL;
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 }
+
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+INTDEF NONNULL((1)) DREF DeeModuleObject *DCALL
+module_track_dee(DREF DeeModuleObject *self);
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeExec_CompileModuleStream(DeeObject *source_stream,
                             int start_line, int start_col, unsigned int mode,
                             struct Dee_compiler_options *options, DeeObject *default_symbols) {
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+	DREF DeeModuleObject *result;
+	DeeDecWriter writer;
+	DeeDec_Ehdr *ehdr;
+	int status = DeeDecWriter_Init(&writer);
+	if unlikely(status)
+		goto err;
+
+	/* Compile module to serial writer */
+	status = DeeExec_CompileModuleStream_impl((DeeSerial *)&writer, source_stream,
+	                                          start_line, start_col,
+	                                          mode, options, default_symbols);
+	if unlikely(status)
+		goto err_writer;
+
+	/* Package module into a (simplified, because 'DeeModule_IMPORT_F_NOGDEC' is set) EHDR */
+	ehdr = DeeDecWriter_PackEhdr(&writer, NULL, 0, DeeModule_IMPORT_F_NOGDEC);
+	if unlikely(!ehdr)
+		goto err_writer;
+
+	/* Convert EHDR into a proper module (by executing relocations stored in `writer') */
+	result = DeeDecWriter_PackModule(&writer, ehdr);
+	if unlikely(!result)
+		goto err_writer_ehdr;
+
+	/* Cleanup... */
+	DeeDecWriter_Fini(&writer);
+
+	/* Start tracking the newly created module. */
+	result = module_track_dee(result);
+	return (DREF DeeObject *)result;
+err_writer_ehdr:
+	DeeDec_Ehdr_Destroy(ehdr);
+err_writer:
+	DeeDecWriter_Fini(&writer);
+err:
+	return NULL;
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 	DREF /*Module*/ DeeObject *result;
 	result = DeeExec_CompileModuleStream_impl(source_stream, start_line, start_col,
 	                                          mode, options, default_symbols);
 	if likely(result)
 		result = DeeGC_Track(result);
 	return result;
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 }
 
 #endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */

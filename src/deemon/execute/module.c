@@ -3308,11 +3308,11 @@ PUBLIC DeeTypeObject DeeModuleDee_Type = {
 	/* .tp_base     = */ &DeeModule_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
-			/* tp_ctor:        */ NULL, /* TODO */
-			/* tp_copy_ctor:   */ NULL, /* TODO */
-			/* tp_deep_ctor:   */ NULL, /* TODO */
-			/* tp_any_ctor:    */ NULL, /* TODO */
-			/* tp_any_ctor_kw: */ NULL, /* TODO */
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &module_dee_serialize,
 			/* tp_free:        */ NULL
 		),

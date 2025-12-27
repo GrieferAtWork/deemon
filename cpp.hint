@@ -1029,6 +1029,8 @@
 #define WEAKREF(T)                struct Dee_weakref
 #define Dee_WEAKREF(T)            struct Dee_weakref
 
+#define Dee_SERIAL_HEAD struct Dee_serial_type *ser_type;
+
 #define Dee_ONCE(...) __VA_ARGS__
 #define Dee_ATOMIC_REF(T) Dee_atomic_ref_t
 

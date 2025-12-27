@@ -363,7 +363,7 @@ PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
 _store_cache(DeeObject **p_cache, DREF DeeObject *result) {
 	if likely(result) {
 		DREF DeeObject *result_module;
-		result_module = DeeModule_FromStaticPointer(result);
+		result_module = DeeModule_OfPointer(result);
 		if likely(result_module == Dee_AsObject(DeeModule_GetDeemon())) {
 			/* Objects statically allocated within the deemon core can never
 			 * be destroyed. - As such, we can store a non-referencing pointer

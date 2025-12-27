@@ -512,31 +512,31 @@ DECL_END
 
 
 
-#undef DeeModule_FromStaticPointer_USE_GetModuleHandleExW
-#undef DeeModule_FromStaticPointer_USE_dlgethandle
-#undef DeeModule_FromStaticPointer_USE_dl_iterate_phdr
-#undef DeeModule_FromStaticPointer_USE_xdlmodule_info
-#undef DeeModule_FromStaticPointer_USE_dladdr1__RTLD_DL_LINKMAP
-#undef DeeModule_FromStaticPointer_USE_dladdr__dli_fname
-#undef DeeModule_FromStaticPointer_USE_STUB
+#undef DeeModule_OfPointer_USE_GetModuleHandleExW
+#undef DeeModule_OfPointer_USE_dlgethandle
+#undef DeeModule_OfPointer_USE_dl_iterate_phdr
+#undef DeeModule_OfPointer_USE_xdlmodule_info
+#undef DeeModule_OfPointer_USE_dladdr1__RTLD_DL_LINKMAP
+#undef DeeModule_OfPointer_USE_dladdr__dli_fname
+#undef DeeModule_OfPointer_USE_STUB
 #ifdef DeeSystem_DlOpen_USE_LoadLibrary
-#define DeeModule_FromStaticPointer_USE_GetModuleHandleExW /* Windows */
+#define DeeModule_OfPointer_USE_GetModuleHandleExW /* Windows */
 #elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dlgethandle)
-#define DeeModule_FromStaticPointer_USE_dlgethandle /* KOSmk4 */
+#define DeeModule_OfPointer_USE_dlgethandle /* KOSmk4 */
 #elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(__KOS_VERSION__) && (__KOS_VERSION__ >= 300 && __KOS_VERSION__ < 400)
-#define DeeModule_FromStaticPointer_USE_xdlmodule_info /* KOSmk3 */
+#define DeeModule_OfPointer_USE_xdlmodule_info /* KOSmk3 */
 #else /* ... */
 /* Under linux, there are many different ways to do this, some of which may not work at runtime. */
 #if defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP)
-#define DeeModule_FromStaticPointer_USE_dladdr1__RTLD_DL_LINKMAP /* Linux */
+#define DeeModule_OfPointer_USE_dladdr1__RTLD_DL_LINKMAP /* Linux */
 #endif /* DeeSystem_DlOpen_USE_dlopen && CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP */
 #if defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dladdr)
-#define DeeModule_FromStaticPointer_USE_dladdr__dli_fname /* Linux */
+#define DeeModule_OfPointer_USE_dladdr__dli_fname /* Linux */
 #endif /* DeeSystem_DlOpen_USE_dlopen && CONFIG_HAVE_dladdr */
 #if defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dl_iterate_phdr)
-#define DeeModule_FromStaticPointer_USE_dl_iterate_phdr /* Linux */
+#define DeeModule_OfPointer_USE_dl_iterate_phdr /* Linux */
 #endif /* DeeSystem_DlOpen_USE_dlopen && CONFIG_HAVE_dl_iterate_phdr */
-#define DeeModule_FromStaticPointer_USE_STUB
+#define DeeModule_OfPointer_USE_STUB
 #endif /* !... */
 
 
@@ -555,7 +555,7 @@ extern /*IMAGE_DOS_HEADER*/ __BYTE_TYPE__ const __ImageBase[];
 
 
 
-#ifdef DeeModule_FromStaticPointer_USE_dl_iterate_phdr
+#ifdef DeeModule_OfPointer_USE_dl_iterate_phdr
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 DeeModule_FromElfLoadAddr(ElfW(Addr) addr) {
@@ -611,7 +611,7 @@ iter_modules_callback(struct dl_phdr_info *info,
 	}
 	return 0;
 }
-#endif /* DeeModule_FromStaticPointer_USE_dl_iterate_phdr */
+#endif /* DeeModule_OfPointer_USE_dl_iterate_phdr */
 
 
 
@@ -628,8 +628,8 @@ iter_modules_callback(struct dl_phdr_info *info,
  *                as a module, or points to a heap/stack segment.
  *                No matter the case, no error is thrown for this, meaning that
  *                the caller must decide on how to handle this. */
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeModule_FromStaticPointer(void const *ptr) {
+PUBLIC WUNUSED DREF /*Module*/ DeeObject *DCALL
+DeeModule_OfPointer(void const *ptr) {
 	/* TODO: This function should cache the address ranges of
 	 *       native modules in order to speed up operations.
 	 *
@@ -643,7 +643,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 	 * the min/max addresses of module segments, whilst pointing to
 	 * the relevant DeeModuleObject associated with the address. */
 
-#ifdef DeeModule_FromStaticPointer_USE_GetModuleHandleExW
+#ifdef DeeModule_OfPointer_USE_GetModuleHandleExW
 	HMODULE hTypeModule;
 	DBG_ALIGNMENT_DISABLE();
 	if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
@@ -672,9 +672,9 @@ DeeModule_FromStaticPointer(void const *ptr) {
 		DBG_ALIGNMENT_ENABLE();
 	}
 	return NULL;
-#endif /* DeeModule_FromStaticPointer_USE_GetModuleHandleExW */
+#endif /* DeeModule_OfPointer_USE_GetModuleHandleExW */
 
-#ifdef DeeModule_FromStaticPointer_USE_dlgethandle
+#ifdef DeeModule_OfPointer_USE_dlgethandle
 	/* KOS Mk4 changed up the dynlib API somewhat, such that we
 	 * need a different way of translating module pointers.
 	 * In Mk4, this is done by:
@@ -711,7 +711,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 	 * can use `dlopen(NULL)' to get the handle for our own binary. */
 	if (module_handle == dlopen(NULL, 0))
 #else /* __pic__ */
-	if (module_handle == dlgethandle((void *)&DeeModule_FromStaticPointer, DLGETHANDLE_FNORMAL))
+	if (module_handle == dlgethandle((void *)&DeeModule_OfPointer, DLGETHANDLE_FNORMAL))
 #endif /* !__pic__ */
 	{
 		/* It is the deemon core. */
@@ -721,9 +721,9 @@ DeeModule_FromStaticPointer(void const *ptr) {
 		return result;
 	}
 	return NULL;
-#endif /* DeeModule_FromStaticPointer_USE_dlgethandle */
+#endif /* DeeModule_OfPointer_USE_dlgethandle */
 
-#ifdef DeeModule_FromStaticPointer_USE_xdlmodule_info
+#ifdef DeeModule_OfPointer_USE_xdlmodule_info
 	struct module_basic_info info;
 	DeeDexObject *iter;
 	dex_lock_read();
@@ -759,9 +759,9 @@ DeeModule_FromStaticPointer(void const *ptr) {
 		}
 	}
 	return NULL;
-#endif /* DeeModule_FromStaticPointer_USE_xdlmodule_info */
+#endif /* DeeModule_OfPointer_USE_xdlmodule_info */
 
-#ifdef DeeModule_FromStaticPointer_USE_dladdr1__RTLD_DL_LINKMAP
+#ifdef DeeModule_OfPointer_USE_dladdr1__RTLD_DL_LINKMAP
 	/* Compare link map pointers. */
 	{
 		Dl_info dli;
@@ -781,7 +781,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 			dex_lock_endread();
 
 			/* Check if it's the main module. */
-			if (dladdr1((void *)&DeeModule_FromStaticPointer, &dli, (void **)&dex_lm, RTLD_DL_LINKMAP) && dex_lm) {
+			if (dladdr1((void *)&DeeModule_OfPointer, &dli, (void **)&dex_lm, RTLD_DL_LINKMAP) && dex_lm) {
 				if (ptr_lm == dex_lm) {
 					/* It is the deemon core. */
 					DREF DeeObject *result;
@@ -793,9 +793,9 @@ DeeModule_FromStaticPointer(void const *ptr) {
 			}
 		}
 	}
-#endif /* DeeModule_FromStaticPointer_USE_dladdr1__RTLD_DL_LINKMAP */
+#endif /* DeeModule_OfPointer_USE_dladdr1__RTLD_DL_LINKMAP */
 
-#ifdef DeeModule_FromStaticPointer_USE_dladdr__dli_fname
+#ifdef DeeModule_OfPointer_USE_dladdr__dli_fname
 #define Dl_info__dli_fname__equal(a, b) \
 	((sizeof(((Dl_info *)0)->dli_fname) == sizeof(void *) && (a) == (b)) || strcmp(a, b) == 0)
 	/* Compare object filenames. */
@@ -827,7 +827,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 			dex_lock_endread();
 
 			/* Check if it's the main module. */
-			if (dladdr((void *)&DeeModule_FromStaticPointer, &dex_dli) && dex_dli.dli_fname) {
+			if (dladdr((void *)&DeeModule_OfPointer, &dex_dli) && dex_dli.dli_fname) {
 				if (Dl_info__dli_fname__equal(dli.dli_fname, dex_dli.dli_fname)) {
 					/* It is the deemon core. */
 					DREF DeeObject *result;
@@ -840,9 +840,9 @@ DeeModule_FromStaticPointer(void const *ptr) {
 		}
 	}
 #undef Dl_info__dli_fname__equal
-#endif /* DeeModule_FromStaticPointer_USE_dladdr__dli_fname */
+#endif /* DeeModule_OfPointer_USE_dladdr__dli_fname */
 
-#ifdef DeeModule_FromStaticPointer_USE_dl_iterate_phdr
+#ifdef DeeModule_OfPointer_USE_dl_iterate_phdr
 	{
 		struct iter_modules_data data;
 		data.search_ptr = ptr;
@@ -852,12 +852,12 @@ DeeModule_FromStaticPointer(void const *ptr) {
 		if (data.search_res != NULL)
 			return data.search_res;
 	}
-#endif /* DeeModule_FromStaticPointer_USE_dl_iterate_phdr */
+#endif /* DeeModule_OfPointer_USE_dl_iterate_phdr */
 
-#ifdef DeeModule_FromStaticPointer_USE_STUB
+#ifdef DeeModule_OfPointer_USE_STUB
 	(void)ptr;
 	return NULL;
-#endif /* DeeModule_FromStaticPointer_USE_STUB */
+#endif /* DeeModule_OfPointer_USE_STUB */
 }
 
 DECL_END
@@ -902,7 +902,7 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
  *                No matter the case, no error is thrown for this, meaning that
  *                the caller must decide on how to handle this. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeModule_FromStaticPointer(void const *ptr) {
+DeeModule_OfPointer(void const *ptr) {
 	DREF DeeModuleObject *result;
 	(void)ptr;
 	COMPILER_IMPURE();

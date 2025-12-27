@@ -1200,15 +1200,29 @@ err:
 	return -1;
 }
 
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+INTDEF DeeObject current_module_marker;
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+
 PRIVATE NONNULL((1)) void DCALL
 code_fini(DeeCodeObject *__restrict self) {
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+	ASSERTF((self->co_module == NULL) ||
+	        (self->co_module == (DeeModuleObject *)&current_module_marker) ||
+	        !DeeModule_Check(self->co_module) ||
+	        self != atomic_read(&self->co_module->mo_moddata.mo_rootcode) ||
+	        self->co_module->ob_refcnt == 0,
+	        "Cannot destroy the root code object of a module, "
+	        /**/ "before the module has been destroyed");
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 	ASSERTF(!self->co_module ||
 	        !DeeModule_Check(self->co_module) ||
 	        self != atomic_read(&self->co_module->mo_moddata.mo_rootcode) ||
 	        self->co_module->ob_refcnt == 0,
 	        "Cannot destroy the root code object of a module, "
 	        /**/ "before the module has been destroyed");
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	ASSERTF(!self->co_module ||
 	        !DeeModule_Check(self->co_module) ||

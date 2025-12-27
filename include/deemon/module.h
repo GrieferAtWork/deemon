@@ -1711,34 +1711,23 @@ DFUNDEF WUNUSED NONNULL((1, 2)) void *DCALL
 DeeModule_GetNativeSymbol(/*Module*/ DeeObject *__restrict self,
                           char const *__restrict name);
 
-/* Given a static pointer `ptr' (as in: a pointer to some statically allocated structure),
- * try to determine which DEX module (if not the deemon core itself) was used to declare
- * a structure located at that pointer, and return a reference to that module.
- * If this proves to be impossible, or if `ptr' is an invalid pointer, return `NULL'
- * instead, but don't throw an error.
- * When deemon has been built with `CONFIG_NO_DEX', this function will always return
- * a reference to the builtin `deemon' module.
- * @return: * :   A pointer to the dex module (or to `DeeModule_GetDeemon()') that
- *                contains a static memory segment of which `ptr' is apart of.
- * @return: NULL: Either `ptr' is an invalid pointer, part of a library not loaded
- *                as a module, or points to a heap/stack segment.
- *                No matter the case, no error is thrown for this, meaning that
- *                the caller must decide on how to handle this. */
+/* Given a pointer `ptr' that is either for some statically allocated variable/symbol
+ * (as in: a pointer to some statically allocated structure), or is part of some user
+ * module's statically allocated memory blob (e.g. the address of a 'DeeStringObject'
+ * that is a constant in user-code), try to return a reference for the module that
+ * contains this pointer (only when CONFIG_EXPERIMENTAL_MMAP_DEC).
+ *
+ * @return: * :   A pointer to the module that 'ptr' belongs to.
+ * @return: NULL: Given `ptr' is either invalid, heap-allocated, or simply not part
+ *                of the deemon core, some dex module, or a some user-code module. */
 DFUNDEF WUNUSED DREF /*Module*/ DeeObject *DCALL
-DeeModule_FromStaticPointer(void const *ptr); /* TODO: Rename to "DeeModule_OfStaticPointer" */
+DeeModule_OfPointer(void const *ptr);
 
-/* Determine the module associated with `ob'. For this purpose, "ob" may be:
- * #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
- * - ... part of an mmap'd `.dec' file, in which case the .dec file's module
- *   will be returned unless that module's reference counter has already hit 0.
- *   This makes use of `DeeHeap_GetRegionOf()'
- * #endif // CONFIG_EXPERIMENTAL_MMAP_DEC
- * - ... statically allocated within the deemon core or some dex module,
- *   in which case that dex module will be returned.
- * - ... and instance of [...], in which case the embedded module reference
- *   will be returned (if present and not-yet-destroyed):
- *   - DeeType_Type: DeeTypeObject::tp_module
- *   - DeeCode_Type: DeeCodeObject::co_module */
+/* Extension to `DeeModule_OfPointer()' that checks if `ob' is statically allocated
+ * within some specific module. But if it isn't, then it looks at the type of `ob'
+ * and tries to return the associated module via type-specific means:
+ * - DeeType_Type: DeeTypeObject::tp_module
+ * - DeeCode_Type: DeeCodeObject::co_module */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_OfObject(DeeObject *__restrict ob);
 

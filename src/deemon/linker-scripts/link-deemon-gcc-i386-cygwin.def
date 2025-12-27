@@ -614,7 +614,7 @@ EXPORTS
 	_DeeModule_CallExtern@16=DeeModule_CallExtern@16
 	_DeeModule_CallExternString@16=DeeModule_CallExternString@16
 	_DeeModule_DelAttrSymbol@8=DeeModule_DelAttrSymbol@8
-	_DeeModule_FromStaticPointer@4=DeeModule_FromStaticPointer@4
+	_DeeModule_OfPointer@4=DeeModule_OfPointer@4
 	_DeeModule_GetAttrSymbol@8=DeeModule_GetAttrSymbol@8
 	_DeeModule_GetCTime@4=DeeModule_GetCTime@4
 	_DeeModule_GetExtern@8=DeeModule_GetExtern@8

@@ -29,6 +29,7 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
+#include <deemon/serial.h>
 #include <deemon/system.h> /* DeeSystem_GetWalltime() */
 #include <deemon/util/atomic.h>
 
@@ -42,6 +43,9 @@
 
 DECL_BEGIN
 
+#undef container_of
+#define container_of COMPILER_CONTAINER_OF
+
 INTDEF struct module_symbol empty_module_buckets[];
 
 /* Compile a new module, using `current_rootscope' for module information,
@@ -49,7 +53,136 @@ INTDEF struct module_symbol empty_module_buckets[];
  * WARNING: During this process a lot of data is directly inherited from
  *         `current_rootscope' by the returned module object, meaning that the
  *          root scope will have been reset to an empty (or near empty) state.
- * @param: flags: Set of `ASM_F*' (Assembly flags; see above) */
+ * #ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
+ * @param: flags: Set of `ASM_F*' (Assembly flags; see above)
+ * #endif // !CONFIG_EXPERIMENTAL_MMAP_DEC */
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+INTERN DeeObject current_module_marker = {
+	OBJECT_HEAD_INIT(&DeeModuleDee_Type)
+};
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+module_compile(struct Dee_serial *__restrict writer,
+               /*inherit(always)*/ DREF DeeCodeObject *__restrict root_code,
+               uint64_t ctime) {
+	DeeModuleObject *out_module;
+	Dee_seraddr_t addrof_module;
+	size_t sizeof_module;
+	ASSERT(DeeCompiler_LockWriting());
+	ASSERT_OBJECT_TYPE_EXACT(root_code, &DeeCode_Type);
+	ASSERT_OBJECT_TYPE(&current_rootscope->rs_scope.bs_scope, &DeeRootScope_Type);
+	ASSERT(current_rootscope->rs_code == root_code);
+	ASSERT(root_code->ob_refcnt == 2);
+
+	/* Resolve the "co_module" fields of code objects to "current_module_marker"
+	 * This is a hacky work-around so we have something that can be linked against-,
+	 * and be resolve to the module we're about to write. */
+	{
+		DREF DeeCodeObject *iter, *next;
+		iter = current_rootscope->rs_code;
+		current_rootscope->rs_code = NULL;
+		while (iter) {
+			next = iter->co_next;
+			if (Dee_DecrefIfOne(iter)) {
+				/* Unused code object? */
+			} else {
+				iter->co_module = (DeeModuleObject *)&current_module_marker;
+				Dee_Incref(&current_module_marker);
+			}
+			iter = next;
+		}
+	}
+
+	/* Allocate the primary buffer for the module object */
+	sizeof_module = offsetof(DeeModuleObject, mo_globalv) +
+	                current_rootscope->rs_globalc * sizeof(DREF DeeObject *);
+	addrof_module = DeeSerial_GCObjectCalloc(writer, sizeof_module, &current_module_marker);
+	if (!Dee_SERADDR_ISOK(addrof_module))
+		goto err;
+#define ADDROF(field) (addrof_module + offsetof(DeeModuleObject, field))
+
+	/* Initialize basic fields */
+	out_module = DeeSerial_Addr2Mem(writer, addrof_module, DeeModuleObject);
+	out_module->mo_globalc = current_rootscope->rs_globalc;
+	out_module->mo_importc = current_rootscope->rs_importc;
+	out_module->mo_bucketm = current_rootscope->rs_bucketm;
+	out_module->mo_flags   = current_rootscope->rs_flags | Dee_MODULE_FHASCTIME;
+	out_module->mo_ctime   = ctime;
+
+	/* Output "current_rootscope->rs_bucketv" into "mo_bucketv" */
+	if (current_rootscope->rs_bucketv == empty_module_buckets) {
+		if (DeeSerial_PutStaticDeemon(writer, ADDROF(mo_bucketv), empty_module_buckets))
+			goto err;
+	} else {
+		size_t i, count = current_rootscope->rs_bucketm + 1;
+		Dee_seraddr_t out__mo_bucketv;
+		struct Dee_module_symbol *in__mo_bucketv = current_rootscope->rs_bucketv;
+		struct Dee_module_symbol *ou__mo_bucketv;
+		out__mo_bucketv = DeeSerial_Malloc(writer, count * sizeof(struct Dee_module_symbol));
+		if (!Dee_SERADDR_ISOK(out__mo_bucketv))
+			goto err;
+		if (DeeSerial_PutAddr(writer, ADDROF(mo_bucketv), out__mo_bucketv))
+			goto err;
+		ou__mo_bucketv = DeeSerial_Addr2Mem(writer, out__mo_bucketv, struct Dee_module_symbol);
+		memcpyc(ou__mo_bucketv, in__mo_bucketv, count, sizeof(struct Dee_module_symbol));
+		for (i = 0; i < count; ++i, ++in__mo_bucketv) {
+			Dee_seraddr_t out__mo_bucketv_i = out__mo_bucketv + i * sizeof(struct Dee_module_symbol);
+			if (in__mo_bucketv->ss_name) {
+				int status;
+				if (in__mo_bucketv->ss_flags & Dee_MODSYM_FNAMEOBJ) {
+					DeeStringObject *ob = container_of(in__mo_bucketv->ss_name, DeeStringObject, s_str);
+					status = DeeSerial_PutObjectEx(writer, out__mo_bucketv_i + offsetof(struct Dee_module_symbol, ss_name),
+					                               ob, offsetof(DeeStringObject, s_str));
+				} else {
+					status = DeeSerial_PutPointer(writer, out__mo_bucketv_i + offsetof(struct Dee_module_symbol, ss_name),
+					                             in__mo_bucketv->ss_name);
+				}
+				if unlikely(status)
+					goto err;
+			}
+			if (in__mo_bucketv->ss_doc) {
+				int status;
+				if (in__mo_bucketv->ss_flags & Dee_MODSYM_FDOCOBJ) {
+					DeeStringObject *ob = container_of(in__mo_bucketv->ss_doc, DeeStringObject, s_str);
+					status = DeeSerial_PutObjectEx(writer, out__mo_bucketv_i + offsetof(struct Dee_module_symbol, ss_doc),
+					                               ob, offsetof(DeeStringObject, s_str));
+				} else {
+					status = DeeSerial_PutPointer(writer, out__mo_bucketv_i + offsetof(struct Dee_module_symbol, ss_doc),
+					                             in__mo_bucketv->ss_doc);
+				}
+				if unlikely(status)
+					goto err;
+			}
+		}
+	}
+
+	/* Output "current_rootscope->rs_importv" into "mo_importv" */
+	if (current_rootscope->rs_importv) {
+		uint16_t count = current_rootscope->rs_importc;
+		Dee_seraddr_t out__mo_importv;
+		DREF DeeModuleObject **ou__mo_importv;
+		out__mo_importv = DeeSerial_Malloc(writer, count * sizeof(DREF DeeModuleObject *));
+		if (!Dee_SERADDR_ISOK(out__mo_importv))
+			goto err;
+		if (DeeSerial_PutAddr(writer, ADDROF(mo_importv), out__mo_importv))
+			goto err;
+		ou__mo_importv = DeeSerial_Addr2Mem(writer, out__mo_importv, DREF DeeModuleObject *);
+		Dee_Movrefv(ou__mo_importv, current_rootscope->rs_importv, count);
+		if (DeeSerial_InplacePutObjectv(writer, out__mo_importv, count))
+			goto err;
+	}
+
+	/* XXX: At this point, we'd be able to output static initializers for module
+	 *      globals by emitting objects into 'ADDROF(mo_globalv[GID])'. */
+
+	/* Serialize the module's root-code object */
+	return DeeSerial_PutObjectInherited(writer, ADDROF(mo_moddata.mo_rootcode), root_code);
+#undef ADDROF
+err:
+	Dee_Decref(root_code);
+	return -1;
+}
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 INTERN WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
 module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code, uint64_t ctime)
@@ -197,6 +330,7 @@ err:
 	return -1;
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 
 DECL_END

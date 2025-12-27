@@ -102,6 +102,26 @@ struct DeeMapFile {
 #endif /* !... */
 };
 
+/* Configure `self' as using a heap buffer */
+#ifdef DeeMapFile_IS_os_mapfile
+#define DeeMapFile_SETHEAP(self) __mapfile_setheap(&(self)->dmf_map)
+#elif defined(DeeMapFile_IS_CreateFileMapping)
+#define DeeMapFile_SETHEAP(self) ((self)->_dmf_hmap = NULL)
+#elif defined(DeeMapFile_IS_mmap)
+#define DeeMapFile_SETHEAP(self) ((self)->_dmf_mapsize = 0)
+#else /* ... */
+#define DeeMapFile_SETHEAP(self) (void)0
+#endif /* !... */
+
+#ifdef DeeMapFile_IS_os_mapfile
+#define DeeMapFile_SETADDR(self, p) (void)((self)->dmf_map.mf_addr = (unsigned char *)(p))
+#define DeeMapFile_SETSIZE(self, s) (void)((self)->dmf_map.mf_size = (s))
+#else /* DeeMapFile_IS_os_mapfile */
+#define DeeMapFile_SETADDR(self, p) (void)((self)->dmf_addr = (void const *)(p))
+#define DeeMapFile_SETSIZE(self, s) (void)((self)->dmf_size = (s))
+#endif /* !DeeMapFile_IS_os_mapfile */
+
+
 /* Finalize a given file map */
 DFUNDEF NONNULL((1)) void DCALL
 DeeMapFile_Fini(struct DeeMapFile *__restrict self);

@@ -64,9 +64,9 @@ PUBLIC WUNUSED NONNULL((1)) int
 
 
 /* Serialize a `void *' field at `addrof_pointer' as being populated with the address of a static
- * object at `static_addr' ("static" here meaning that `DeeModule_FromStaticPointer()' will
+ * object at `static_addr' ("static" here meaning that `DeeModule_OfPointer()' will
  * return a non-NULL pointer for `static_addr'). Behavior is undefined if `static_addr' does
- * cannot be resolved using `DeeModule_FromStaticPointer()'.
+ * cannot be resolved using `DeeModule_OfPointer()'.
  * @return: 0 : Success
  * @return: -1: Error */
 PUBLIC WUNUSED NONNULL((1)) int

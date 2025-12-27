@@ -96,7 +96,7 @@ struct Dee_dex_symbol {
 #define CONFIG_NO___dex_start____AND___end
 #endif /* ... */
 
-/* Figure out how `DeeModule_FromStaticPointer()' will be implemented,
+/* Figure out how `DeeModule_OfPointer()' will be implemented,
  * and what sort of extra data must be stored in dex modules for this
  * to function properly. */
 #undef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC

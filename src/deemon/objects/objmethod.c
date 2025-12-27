@@ -2299,7 +2299,7 @@ cmethod_gettypefield(DeeModuleObject *mod,
 PUBLIC WUNUSED NONNULL((1, 2)) bool DCALL
 Dee_cmethod_origin_init(struct cmethod_origin *__restrict result, Dee_cmethod_t func) {
 	bzero(result, sizeof(*result));
-	result->cmo_module = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&func);
+	result->cmo_module = (DREF DeeModuleObject *)DeeModule_OfPointer(*(void **)&func);
 	if likely(result->cmo_module) {
 		result->cmo_modsym = cmethod_getmodsym(result->cmo_module, func);
 		if (result->cmo_modsym) {
@@ -2347,7 +2347,7 @@ cmethod_call(DeeCMethodObject *self, size_t argc, DeeObject *const *argv) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod_get_module(DeeCMethodObject *__restrict self) {
 	DREF DeeObject *result;
-	result = DeeModule_FromStaticPointer(*(void **)&self->cm_func);
+	result = DeeModule_OfPointer(*(void **)&self->cm_func);
 	if likely(result)
 		return result;
 	return DeeRT_ErrUnboundAttr(self, &str___module__);
@@ -2356,7 +2356,7 @@ cmethod_get_module(DeeCMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cmethod_bound_module(DeeCMethodObject *__restrict self) {
 	DREF DeeObject *result;
-	result = DeeModule_FromStaticPointer(*(void **)&self->cm_func);
+	result = DeeModule_OfPointer(*(void **)&self->cm_func);
 	if (result) {
 		Dee_Decref_unlikely(result);
 		return Dee_BOUND_YES;
@@ -2488,7 +2488,7 @@ cmethod_print(DeeCMethodObject *__restrict self,
 	DREF DeeModuleObject *mod;
 	char const *type_name = cmethod_get_print_typename(self);
 	Dee_ssize_t result;
-	mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
+	mod = (DREF DeeModuleObject *)DeeModule_OfPointer(*(void **)&self->cm_func);
 	if (mod != NULL) {
 		DREF DeeTypeObject *type;
 		struct type_member const *member;
@@ -2526,7 +2526,7 @@ cmethod_printrepr(DeeCMethodObject *__restrict self,
                   Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t result;
 	DREF DeeModuleObject *mod;
-	mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
+	mod = (DREF DeeModuleObject *)DeeModule_OfPointer(*(void **)&self->cm_func);
 	if (mod) {
 		struct module_symbol *symbol;
 		struct type_member const *member;

@@ -23,6 +23,7 @@
 #include <deemon/api.h>
 
 #ifndef CONFIG_NO_DEC
+#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
 #include <deemon/compiler/compiler.h>
 
 #include <deemon/alloc.h>
@@ -872,6 +873,7 @@ cannot_create:
 
 DECL_END
 
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 #endif /* !CONFIG_NO_DEC */
 
 #endif /* !GUARD_DEEMON_COMPILER_DEC_C */

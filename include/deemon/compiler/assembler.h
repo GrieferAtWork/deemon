@@ -1948,7 +1948,16 @@ code_docompile(struct ast *__restrict code_ast);
  * WARNING: During this process a lot of data is directly inherited from
  *         `current_rootscope' by the returned module object, meaning that the
  *          root scope will have been reset to an empty (or near empty) state.
- * @param: flags: Set of `ASM_F*' (Assembly flags; see above) */
+ * #ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
+ * @param: flags: Set of `ASM_F*' (Assembly flags; see above)
+ * #endif // !CONFIG_EXPERIMENTAL_MMAP_DEC */
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+struct Dee_serial;
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+module_compile(struct Dee_serial *__restrict writer,
+               /*inherit(always)*/ DREF DeeCodeObject *__restrict root_code,
+               uint64_t ctime);
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 INTDEF WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
 module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code, uint64_t ctime);
@@ -1958,6 +1967,7 @@ module_compile(DREF struct module_object *__restrict module,
                DeeCodeObject *__restrict root_code,
                uint16_t flags);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 
 INTDEF WUNUSED NONNULL((1)) int DCALL

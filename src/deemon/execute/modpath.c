@@ -315,7 +315,9 @@ DECL_END
 #define RBTREE_DECL            PRIVATE
 #define RBTREE_IMPL            PRIVATE
 #define RBTREE_OMIT_REMOVE
+#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
 #define RBTREE_OMIT_REMOVENODE /* Not needed... */
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 #include <hybrid/sequence/rbtree-abi.h>
 
 DECL_BEGIN
@@ -1218,54 +1220,6 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
 	return NULL;
 }
 
-/* Given a static pointer `ptr' (as in: a pointer to some statically allocated structure),
- * try to determine which DEX module (if not the deemon core itself) was used to declare
- * a structure located at that pointer, and return a reference to that module.
- * If this proves to be impossible, or if `ptr' is an invalid pointer, return `NULL'
- * instead, but don't throw an error.
- * When deemon has been built with `CONFIG_NO_DEX', this function will always return
- * a reference to the builtin `deemon' module.
- * @return: * :   A pointer to the dex module (or to `DeeModule_GetDeemon()') that
- *                contains a static memory segment of which `ptr' is apart of.
- * @return: NULL: Either `ptr' is an invalid pointer, part of a library not loaded
- *                as a module, or points to a heap/stack segment.
- *                No matter the case, no error is thrown for this, meaning that
- *                the caller must decide on how to handle this. */
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeModule_FromStaticPointer(void const *ptr) {
-#ifndef CONFIG_NO_DEX
-	DeeModuleObject *result;
-	module_byaddr_lock_read();
-#ifndef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC
-	if unlikely(!module_byaddr_is_initialized()) {
-		module_byaddr_lock_upgrade();
-		module_byaddr_ensure_initialized();
-		module_byaddr_lock_downgrade();
-	}
-#endif /* !Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC */
-	result = dex_byaddr_find_addr(ptr);
-#if !defined(CONFIG_NO_DEC) && defined(CONFIG_EXPERIMENTAL_MMAP_DEC)
-	if (result && Dee_TYPE(result) == &DeeModuleDex_Type)
-#else /* !CONFIG_NO_DEC && CONFIG_EXPERIMENTAL_MMAP_DEC */
-	if (result)
-#endif /* CONFIG_NO_DEC || !CONFIG_EXPERIMENTAL_MMAP_DEC */
-	{
-		Dee_Incref(result);
-		module_byaddr_lock_endread();
-		return Dee_AsObject(result);
-	}
-	module_byaddr_lock_endread();
-	return NULL;
-#else /* !CONFIG_NO_DEX */
-	DREF DeeModuleObject *result;
-	/* XXX: Must still verify that "ptr" isn't a heap structure! */
-	(void)ptr;
-	COMPILER_IMPURE();
-	result = DeeModule_GetDeemon();
-	Dee_Incref(result);
-	return Dee_AsObject(result);
-#endif /* CONFIG_NO_DEX */
-}
 
 
 
@@ -1407,27 +1361,33 @@ PRIVATE void DCALL DeeModule_ClearLibAllFlag_locked(void) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF /*untracked*/ DeeModuleObject *DCALL
 DeeModule_OpenDecFile_impl(/*inherit(always)*/ DREF DeeObject *dec_stream,
                            /*utf-8*/ char const *__restrict dec_dirname, size_t dec_dirname_len,
-                           struct Dee_compiler_options *options, uint64_t dee_file_last_modified) {
+                           unsigned int flags, struct Dee_compiler_options *options,
+                           uint64_t dee_file_last_modified) {
 	DREF DeeModuleObject *result;
-	while (dec_dirname_len && dec_dirname[dec_dirname_len - 1] == DeeSystem_SEP)
-		--dec_dirname_len;
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 	struct DeeMapFile fmap;
 	int fmap_status;
 
 	/* Map file into memory */
+	while (dec_dirname_len && dec_dirname[dec_dirname_len - 1] == DeeSystem_SEP)
+		--dec_dirname_len;
 	fmap_status = DeeMapFile_InitFile(&fmap, dec_stream, 0, 0, DFILE_LIMIT, 0, DEE_MAPFILE_F_READALL);
 	Dee_Decref_likely(dec_stream);
 	if unlikely(fmap_status)
 		return NULL;
 
 	/* Load file mapping as a .dec file */
-	result = DeeDec_OpenFileEx(&fmap, dec_dirname, dec_dirname_len, options, dee_file_last_modified);
+	ASSERT(flags & DeeModule_IMPORT_F_CTXDIR);
+	result = DeeDec_OpenFile(&fmap, dec_dirname, dec_dirname_len,
+	                         flags, options, dee_file_last_modified);
 
 	/* Cleanup on error */
 	if unlikely(!ITER_ISOK(result))
 		DeeMapFile_Fini(&fmap);
 #else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+	while (dec_dirname_len && dec_dirname[dec_dirname_len - 1] == DeeSystem_SEP)
+		--dec_dirname_len;
+	(void)flags;
 	result = DeeModule_OpenDec(dec_stream, options, dec_dirname, dec_dirname_len, dee_file_last_modified);
 	Dee_Decref_likely(dec_stream);
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
@@ -1491,26 +1451,17 @@ module_destroy_untracked(DREF /*untracked*/ DeeModuleObject *self) {
 	ASSERT(self->mo_absname == NULL);
 	if (Dee_TYPE(self) == &DeeModuleDee_Type) {
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-		void *base = DeeGC_Head(self);
-		struct Dee_heapregion *region = DeeHeap_GetRegionOf(base);
-		if (region && region->hr_destroy == &DeeDec_heapregion_destroy) {
-			DeeDec_heapregion_destroy(region);
-		} else
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-		{
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-			/* TODO: Once the compiler also only generates region-based
-			 *       modules, this won't be needed (s.a. `DeeDec_Track()') */
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-			DREF DeeCodeObject *root;
-			ASSERT(self->mo_dir == NULL);
-			Dee_XDecrefv(self->mo_globalv, self->mo_globalc);
-			root = self->mo_moddata.mo_rootcode;
-			self->mo_moddata.mo_rootcode = NULL;
-			Dee_Decref(root);
-			Dee_Decrefv(self->mo_importv, self->mo_importc);
-			Dee_Free((void *)self->mo_importv);
-		}
+		DeeDec_DestroyUntracked(self);
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+		DREF DeeCodeObject *root;
+		ASSERT(self->mo_dir == NULL);
+		Dee_XDecrefv(self->mo_globalv, self->mo_globalc);
+		root = self->mo_moddata.mo_rootcode;
+		self->mo_moddata.mo_rootcode = NULL;
+		Dee_Decref(root);
+		Dee_Decrefv(self->mo_importv, self->mo_importc);
+		Dee_Free((void *)self->mo_importv);
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	} else {
 		ASSERT(self->mo_dir == NULL);
 		ASSERT(Dee_TYPE(self) == &DeeModuleDir_Type);
@@ -1524,20 +1475,62 @@ module_destroy_untracked(DREF /*untracked*/ DeeModuleObject *self) {
 }
 
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-/* Destructor linked into `struct Dee_heapregion' for dec file mappings. */
 INTDEF NONNULL((1)) void DCALL
 DeeDec_heapregion_destroy(struct Dee_heapregion *__restrict self);
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
+/* Free relocation-only data from the image mapping of `DeeDec_Ehdr'.
+ *
+ * - Dee_DEC_TYPE_RELOC:
+ *   For EHDRs created by `DeeDec_Relocate()', this will try to munmap()
+ *   or realloc_in_place() all data of `self' that comes after the end
+ *   of the file's object heap (iow: will truncate `self->e_mapping' to
+ *   have a size of `offsetof(DeeDec_Ehdr, e_heap) + self->e_heap.hr_size')
+ *
+ * - Dee_DEC_TYPE_IMAGE:
+ *   For EHDRs created by `DeeDecWriter_PackModule()', this frees the
+ *   relocation tables that were stolen from the associated `DeeDecWriter'
+ *   and only kept within the dec's EHDR for `DeeDec_DestroyUntracked()'
+ *   to be able to undo incref()s that had been done.
+ *   Because 'Dee_DEC_TYPE_RELOC' may be converted to this type of EHDR,
+ *   this type will also try to truncate `self->e_mapping'. */
+INTDEF NONNULL((1)) void DCALL
+DeeDec_Ehdr_FreeRelocationData(DeeDec_Ehdr *__restrict self);
 
-PRIVATE NONNULL((1)) DREF DeeModuleObject *DCALL
-module_track(DREF DeeModuleObject *self) {
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-	if (Dee_TYPE(self) == &DeeModuleDee_Type)
-		return DeeDec_Track(self);
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-	return DeeGC_TRACK(DeeModuleObject, self);
+/* Start GC-tracking (and allowing reverse address lookup of) "self", as returned by:
+ * - DeeDec_OpenFile()
+ * - DeeDec_Relocate()
+ * - DeeDecWriter_PackModule() */
+PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF /*tracked*/ struct Dee_module_object *DCALL
+DeeDec_Track(DREF /*untracked*/ struct Dee_module_object *__restrict self) {
+	Dec_Ehdr *ehdr = DeeDec_Ehdr_FromModule(self);
+	ASSERT_OBJECT_TYPE_EXACT(self, &DeeModuleDee_Type);
+	ehdr = container_of(self, Dec_Ehdr, e_heap);
+	ASSERT(ehdr->e_heap.hr_destroy == &DeeDec_heapregion_destroy);
+	ASSERT(DeeHeap_GetRegionOf(DeeGC_Head(self)) == &ehdr->e_heap);
+
+	/* munmap() / realloc_in_place() unused, trailing memory
+	 * from the dec image (i.e.: memory containing relocation
+	 * info and dependency strings; iow: memory that's no longer
+	 * needed now that the module's been fully loaded) */
+	DeeDec_Ehdr_FreeRelocationData(ehdr);
+
+	module_byaddr_lock_write();
+	/* Insert module into by-address tree so allow reverse module lookup by-address */
+	self->mo_minaddr = (byte_t *)ehdr;
+	self->mo_maxaddr = (byte_t *)ehdr + ehdr->e_offsetof_eof - 1;
+	module_byaddr_insert(&module_byaddr_tree, self);
+
+	/* Link in GC objects (if there are any) */
+	if likely(ehdr->e_offsetof_gchead) {
+		struct gc_head *gc_head = (struct gc_head *)((byte_t *)ehdr + ehdr->e_offsetof_gchead);
+		struct gc_head *gc_tail = (struct gc_head *)((byte_t *)ehdr + ehdr->e_offsetof_gctail);
+		DeeGC_TrackAll(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
+	}
+	module_byaddr_lock_endwrite();
+
+	return self;
 }
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 #define DeeModule_DestroyAnonymousDirectory(self) \
 	(Dee_DecrefNokill(&DeeModuleDir_Type), DeeGCObject_Free(self))
@@ -1575,6 +1568,7 @@ DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_fil
 	DREF DeeObject *source_stream;
 	DeeThreadObject *caller;
 	struct Dee_import_frame frame;
+
 #ifndef CONFIG_NO_DEC
 	if ((flags & (_DeeModule_IMPORT_F_IS_DEE_FILE | DeeModule_IMPORT_F_NOLDEC)) ==
 	    /*    */ (_DeeModule_IMPORT_F_IS_DEE_FILE)) {
@@ -1631,7 +1625,7 @@ DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_fil
 		/* Check open file status */
 		pathsize = (size_t)(basename - abs_filename);
 		result = DeeModule_OpenDecFile_impl(dec_stream, abs_filename, pathsize,
-		                                    options, dee_file_last_modified);
+		                                    flags, options, dee_file_last_modified);
 //		Dee_Decref(dec_stream); /* Inherited by `DeeModule_OpenDecFile_impl()' */
 		if (result != (DREF DeeModuleObject *)ITER_DONE)
 			return result;
@@ -1679,9 +1673,111 @@ no_dec_file:
 	/* XXX: Similar to how we switch stacks when executing user-code, that should
 	 *      also be done here every 2-3 nested imports (or maybe even: every time,
 	 *      starting with the 2nd nested import; iow: when "frame.if_prev != NULL") */
+
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+	/* Can only generate .dec files for .dee files */
+	if (!(flags & _DeeModule_IMPORT_F_IS_DEE_FILE))
+		flags |= DeeModule_IMPORT_F_NOGDEC;
+
+	{
+		DeeDecWriter writer;
+		DeeDec_Ehdr *ehdr;
+		int status = DeeDecWriter_Init(&writer);
+		if unlikely(status == 0) {
+err_compile:
+			result = NULL;
+			goto done_compile;
+		}
+
+		/* Compile source code and write module to "writer" */
+		status = DeeExec_CompileModuleStream_impl((DeeSerial *)&writer, source_stream,
+		                                          0, 0, DeeExec_RUNMODE_DEFAULT,
+		                                          &used_options, NULL);
+		if unlikely(status) {
+err_compile_writer:
+			DeeDecWriter_Fini(&writer);
+			goto err_compile;
+		}
+
+		/* Pack written module into an EHDR */
+		ehdr = DeeDecWriter_PackEhdr(&writer, abs_filename, abs_filename_length, flags);
+		if unlikely(!ehdr)
+			goto err_compile_writer;
+
+		/* If not disabled, emit a .dec file */
+#ifndef CONFIG_NO_DEC
+		if (!(flags & DeeModule_IMPORT_F_NOGDEC)) {
+			/* generate a .dec file */
+			size_t basesize;
+			char *basename;
+			DREF DeeObject *output_stream;
+			ASSERT(abs_filename_length >= 4);
+			ASSERT(abs_filename[abs_filename_length - 4] == '.');
+			ASSERT(abs_filename[abs_filename_length - 3] == 'd');
+			ASSERT(abs_filename[abs_filename_length - 2] == 'e');
+			ASSERT(abs_filename[abs_filename_length - 1] == 'e');
+	
+			basename = (char *)memrchr(abs_filename, DeeSystem_SEP, abs_filename_length);
+			if likely(basename) {
+				++basename;
+			} else {
+				/* Probably shouldn't ever get here... */
+				basename = abs_filename;
+			}
+	
+			/* Form the filename for a .dec file */
+			basesize = (size_t)((abs_filename + abs_filename_length) - basename);
+	
+			/* Move up "module_name.de" by 1 (don't move the
+			 * trailing "e\0", which'll be replaced with "c\0") */
+			memmoveupc(basename + 1, basename, basesize - 1, sizeof(char));
+			basename[0] = '.';
+			basename[basesize + 0] = 'c';
+			basename[basesize + 1] = '\0';
+	
+			/* Output file */
+			Dee_DPRINTF("[rt] Generate dec file %q\n", abs_filename);
+			output_stream = DeeFile_OpenString(abs_filename,
+			                                   OPEN_FWRONLY | OPEN_FCREAT |
+			                                   OPEN_FTRUNC | OPEN_FHIDDEN |
+			                                   OPEN_FCLOEXEC,
+			                                   0644);
+			if likely(output_stream) {
+				size_t write_status;
+				write_status = DeeFile_WriteAll(output_stream, ehdr, ehdr->e_offsetof_eof);
+				Dee_Decref_likely(output_stream);
+				if unlikely(write_status == (size_t)-1)
+					output_stream = NULL;
+			}
+	
+			/* Restore the normal ".dee" file extension. */
+			memmovedownc(basename, basename + 1, basesize - 1, sizeof(char));
+			basename[basesize - 1] = 'e';
+			basename[basesize - 0] = '\0';
+
+			if unlikely(!output_stream) {
+				if (DeeError_Handled(Dee_ERROR_HANDLED_NORMAL)) {
+					/* Failed to generate dec file... :( */
+				} else {
+					DeeDec_Ehdr_Destroy(ehdr);
+					goto err_compile_writer;
+				}
+			}
+		}
+#endif /* !CONFIG_NO_DEC */
+
+		/* Pack ehdr into a proper module. */
+		result = DeeDecWriter_PackModule(&writer, ehdr);
+
+		/* Finalize dec writer */
+		DeeDecWriter_Fini(&writer);
+	}
+done_compile:
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 	result = (DREF DeeModuleObject *)DeeExec_CompileModuleStream_impl(source_stream, 0, 0,
 	                                                                  DeeExec_RUNMODE_DEFAULT,
 	                                                                  &used_options, NULL);
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	caller->t_import_curr = frame.if_prev;
 	Dee_Decref_likely(source_stream);
 
@@ -1693,58 +1789,63 @@ no_dec_file:
 			if (DeeError_Catch(&DeeError_IsDirectory))
 				return DeeModule_CreateAnonymousDirectory();
 		}
-	} else {
-#ifndef CONFIG_NO_DEC
-		if ((flags & (_DeeModule_IMPORT_F_IS_DEE_FILE | DeeModule_IMPORT_F_NOGDEC)) ==
-		    /*....*/ (_DeeModule_IMPORT_F_IS_DEE_FILE)) {
-			/* generate a .dec file */
-			int status;
-			size_t basesize;
-			char *basename;
-			ASSERT(abs_filename_length >= 4);
-			ASSERT(abs_filename[abs_filename_length - 4] == '.');
-			ASSERT(abs_filename[abs_filename_length - 3] == 'd');
-			ASSERT(abs_filename[abs_filename_length - 2] == 'e');
-			ASSERT(abs_filename[abs_filename_length - 1] == 'e');
-
-			basename = (char *)memrchr(abs_filename, DeeSystem_SEP, abs_filename_length);
-			if likely(basename) {
-				++basename;
-			} else {
-				/* Probably shouldn't ever get here... */
-				basename = abs_filename;
-			}
-
-			/* Form the filename for a .dec file */
-			basesize = (size_t)((abs_filename + abs_filename_length) - basename);
-
-			/* Move up "module_name.de" by 1 (don't move the
-			 * trailing "e\0", which'll be replaced with "c\0") */
-			memmoveupc(basename + 1, basename, basesize - 1, sizeof(char));
-			basename[0] = '.';
-			basename[basesize + 0] = 'c';
-			basename[basesize + 1] = '\0';
-
-			/* Open file */
-			status = DeeCompiler_LockWrite();
-			if likely(status == 0) {
-				status = dec_create(result, abs_filename);
-				DeeCompiler_LockEndWrite();
-			}
-
-			/* Restore the normal ".dee" file extension. */
-			memmovedownc(basename, basename + 1, basesize - 1, sizeof(char));
-			basename[basesize - 1] = 'e';
-			basename[basesize - 0] = '\0';
-
-			if unlikely(status) {
-				module_destroy_untracked(result);
-				result = NULL;
-			}
-		}
-#endif /* !CONFIG_NO_DEC */
+		goto err;
 	}
+
+#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
+#ifndef CONFIG_NO_DEC
+	if ((flags & (_DeeModule_IMPORT_F_IS_DEE_FILE | DeeModule_IMPORT_F_NOGDEC)) ==
+	    /*....*/ (_DeeModule_IMPORT_F_IS_DEE_FILE)) {
+		/* generate a .dec file */
+		int status;
+		size_t basesize;
+		char *basename;
+		ASSERT(abs_filename_length >= 4);
+		ASSERT(abs_filename[abs_filename_length - 4] == '.');
+		ASSERT(abs_filename[abs_filename_length - 3] == 'd');
+		ASSERT(abs_filename[abs_filename_length - 2] == 'e');
+		ASSERT(abs_filename[abs_filename_length - 1] == 'e');
+
+		basename = (char *)memrchr(abs_filename, DeeSystem_SEP, abs_filename_length);
+		if likely(basename) {
+			++basename;
+		} else {
+			/* Probably shouldn't ever get here... */
+			basename = abs_filename;
+		}
+
+		/* Form the filename for a .dec file */
+		basesize = (size_t)((abs_filename + abs_filename_length) - basename);
+
+		/* Move up "module_name.de" by 1 (don't move the
+		 * trailing "e\0", which'll be replaced with "c\0") */
+		memmoveupc(basename + 1, basename, basesize - 1, sizeof(char));
+		basename[0] = '.';
+		basename[basesize + 0] = 'c';
+		basename[basesize + 1] = '\0';
+
+		/* Open file */
+		status = DeeCompiler_LockWrite();
+		if likely(status == 0) {
+			status = dec_create(result, abs_filename);
+			DeeCompiler_LockEndWrite();
+		}
+
+		/* Restore the normal ".dee" file extension. */
+		memmovedownc(basename, basename + 1, basesize - 1, sizeof(char));
+		basename[basesize - 1] = 'e';
+		basename[basesize - 0] = '\0';
+
+		if unlikely(status) {
+			module_destroy_untracked(result);
+			result = NULL;
+		}
+	}
+#endif /* !CONFIG_NO_DEC */
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF /*untracked_if(Dee_TYPE(return) != DeeModuleDex_Type)*/ DeeModuleObject *DCALL
@@ -1888,7 +1989,11 @@ DeeModule_OpenFile_impl2(/*inherit_if(!(flags & _DeeModule_IMPORT_F_NO_INHERIT_F
 			    (flags & (DeeModule_IMPORT_F_FILNAM | _DeeModule_IMPORT_F_IS_DEE_FILE)) ==
 			    /*....*/ (DeeModule_IMPORT_F_FILNAM))
 				result->mo_flags |= Dee_MODULE_FABSFILE;
-			result = module_track(result);
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+			result = DeeDec_Track(result);
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+			result = DeeGC_TRACK(DeeModuleObject, result);
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 		}
 		goto free_abs_filename_and_return_result;
 	}
@@ -1949,14 +2054,27 @@ remember_dir_module:
 		if unlikely(existing) {
 			if (Dee_IncrefIfNotZero(existing)) {
 				module_abstree_lock_endwrite();
-				Dee_DecrefDokill(result);
+				module_destroy_untracked(result);
 				Dee_Free(abs_filename);
 				return existing;
 			}
 			module_abstree_removenode(&module_abstree_root, existing);
 		}
 		module_abstree_insert(&module_abstree_root, result);
-		result = module_track(result);
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+		if (Dee_TYPE(result) == &DeeModuleDee_Type) {
+			/* TODO: This call blocking-acquires a lock to "module_byaddr_lock_write()"
+			 *       while we're already holding "module_abstree_lock_write()". Instead,
+			 *       if both locks are needed, then do so above (to guaranty that there
+			 *       won't be any deadlocks, which is currently only guarantied because
+			 *       no other piece of code exists that acquires these locks in reverse
+			 *       order while also blocking) */
+			result = DeeDec_Track(result);
+		} else
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+		{
+			result = DeeGC_TRACK(DeeModuleObject, result);
+		}
 		module_abstree_lock_endwrite();
 	} else {
 free_abs_filename_and_return_result:
@@ -8037,26 +8155,20 @@ PUBLIC void DCALL DeeModule_InitPath(void) {
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
-/* Determine the module associated with `ob'. For this purpose, "ob" may be:
- * #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
- * - ... part of an mmap'd `.dec' file, in which case the .dec file's module
- *   will be returned unless that module's reference counter has already hit 0.
- *   This makes use of `DeeHeap_GetRegionOf()'
- * #endif // CONFIG_EXPERIMENTAL_MMAP_DEC
- * - ... statically allocated within the deemon core or some dex module,
- *   in which case that dex module will be returned.
- * - ... and instance of [...], in which case the embedded module reference
- *   will be returned (if present and not-yet-destroyed):
- *   - DeeType_Type: DeeTypeObject::tp_module
- *   - DeeCode_Type: DeeCodeObject::co_module */
-PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
-DeeModule_OfObject(DeeObject *__restrict ob) {
-	DeeModuleObject *result;
-	DeeTypeObject *tp;
-	ASSERT_OBJECT(ob);
-
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+/* Given a pointer `ptr' that is either for some statically allocated variable/symbol
+ * (as in: a pointer to some statically allocated structure), or is part of some user
+ * module's statically allocated memory blob (e.g. the address of a 'DeeStringObject'
+ * that is a constant in user-code), try to return a reference for the module that
+ * contains this pointer (only when CONFIG_EXPERIMENTAL_MMAP_DEC).
+ *
+ * @return: * :   A pointer to the module that 'ptr' belongs to.
+ * @return: NULL: Given `ptr' is either invalid, heap-allocated, or simply not part
+ *                of the deemon core, some dex module, or a some user-code module. */
+PUBLIC WUNUSED DREF /*Module*/ DeeObject *DCALL
+DeeModule_OfPointer(void const *ptr) {
 #if defined(HAVE_module_byaddr_tree) || defined(HAVE_dex_byaddr_tree)
+	DREF DeeModuleObject *result;
 	/* Check for a static pointer and mmap'd .dec files */
 	module_byaddr_lock_read();
 #ifndef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC
@@ -8069,7 +8181,7 @@ DeeModule_OfObject(DeeObject *__restrict ob) {
 
 	/* Search "module_byaddr_tree" */
 #ifdef HAVE_module_byaddr_tree
-	result = module_byaddr_locate(module_byaddr_tree, (byte_t const *)ob);
+	result = module_byaddr_locate(module_byaddr_tree, (byte_t const *)ptr);
 	if (result) {
 #ifdef HAVE_module_byaddr_tree_CONTAINS_DEC
 #ifdef HAVE_module_byaddr_tree_CONTAINS_DEX
@@ -8094,7 +8206,7 @@ DeeModule_OfObject(DeeObject *__restrict ob) {
 #ifdef HAVE_dex_byaddr_tree
 	/* NOTE: There are configurations where both "dex_byaddr_tree"
 	 *       and "module_byaddr_tree" must be searched! */
-	result = dex_byaddr_find_addr(ob);
+	result = dex_byaddr_find_addr(ptr);
 	if (result) {
 		ASSERT(Dee_TYPE(result) == &DeeModuleDex_Type);
 		Dee_Incref(result);
@@ -8104,11 +8216,29 @@ DeeModule_OfObject(DeeObject *__restrict ob) {
 #endif /* HAVE_dex_byaddr_tree */
 	module_byaddr_lock_endread();
 #endif /* HAVE_module_byaddr_tree || HAVE_dex_byaddr_tree */
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	result = (DeeModuleObject *)DeeModule_FromStaticPointer(ob);
-	if (result)
-		return (DeeObject *)result;
+
+	/* No such module... */
+	(void)ptr;
+	return NULL;
+}
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
+
+/* Extension to `DeeModule_OfPointer()' that checks if `ob' is statically allocated
+ * within some specific module. But if it isn't, then it looks at the type of `ob'
+ * and tries to return the associated module via type-specific means:
+ * - DeeType_Type: DeeTypeObject::tp_module
+ * - DeeCode_Type: DeeCodeObject::co_module */
+PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_OfObject(DeeObject *__restrict ob) {
+	DREF DeeModuleObject *result;
+	DeeTypeObject *tp;
+	ASSERT_OBJECT(ob);
+
+	/* Check for statically allocated pointers first. */
+	result = (DREF DeeModuleObject *)DeeModule_OfPointer(ob);
+	if (result)
+		return (DREF DeeObject *)result;
 
 	tp = Dee_TYPE(ob);
 	/* Check for certain types of objects */
@@ -8126,6 +8256,8 @@ DeeModule_OfObject(DeeObject *__restrict ob) {
 	 * for temporary heap objects and-the-like) */
 	return NULL;
 }
+
+
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 

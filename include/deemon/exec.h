@@ -135,6 +135,11 @@ DFUNDEF void DCALL DeeModule_InitPath(void);
  * associated deemon core has changed, and if they are using the `deemon' module. */
 DDATDEF uint64_t DCALL DeeExec_GetTimestamp(void);
 
+/* Get some unique IDs for this build of deemon,
+ * as well as the host that is running deemon. */
+DDATDEF void DCALL DeeExec_GetBuildId(uint8_t build_id[16]);
+DDATDEF void DCALL DeeExec_GetHostId(uint8_t host_id[16]);
+
 
 /* High-level functionality for registering at-exit hooks.
  * When executed, at-exit callbacks are run in order of being registered.
@@ -244,10 +249,18 @@ DeeExec_RunStreamString(DeeObject *source_stream, unsigned int mode,
  * JIT-like execution of simple expressions such as `10 + 20' */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #ifdef CONFIG_BUILDING_DEEMON
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+struct Dee_serial;
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeExec_CompileModuleStream_impl(struct Dee_serial *__restrict writer, DeeObject *source_stream,
+                                 int start_line, int start_col, unsigned int mode,
+                                 struct Dee_compiler_options *options, DeeObject *default_symbols);
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 INTDEF WUNUSED NONNULL((1)) DREF /*untracked*/ /*Module*/ DeeObject *DCALL
 DeeExec_CompileModuleStream_impl(DeeObject *source_stream,
                                  int start_line, int start_col, unsigned int mode,
                                  struct Dee_compiler_options *options, DeeObject *default_symbols);
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 #endif /* CONFIG_BUILDING_DEEMON */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeExec_CompileModuleStream(DeeObject *source_stream,

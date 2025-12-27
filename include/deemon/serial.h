@@ -122,7 +122,7 @@ struct Dee_serial_type {
 	                          ptrdiff_t offset_into_ob);
 
 	/* Serialize a `void *' field at `addrof_pointer' as being populated with the address of a
-	 * static object at `pointer' ("static" here meaning that `DeeModule_FromStaticPointer()'
+	 * static object at `pointer' ("static" here meaning that `DeeModule_OfPointer()'
 	 * will return a non-NULL pointer for `pointer'), or as pointing into the payload portion
 	 * of another object or heap block that had already been serialized (iow: "pointer" points
 	 * into [ref,ref+num_bytes] (yes: closed range; iow: "ref+num_bytes" (1 past last byte) is
@@ -136,7 +136,7 @@ struct Dee_serial_type {
 };
 
 #define Dee_SERIAL_HEAD \
-	struct Dee_serial_type *ser_type;
+	struct Dee_serial_type const *ser_type;
 struct Dee_serial {
 	struct Dee_serial_type const *const ser_type; /* [1..1][const] Type of serializer */
 	/* Serializer-specific fields go here... */
@@ -240,7 +240,7 @@ DFUNDEF WUNUSED NONNULL((1)) int
 
 
 /* Serialize a `void *' field at `addrof_pointer' as being populated with the address of a
- * static object at `pointer' ("static" here meaning that `DeeModule_FromStaticPointer()'
+ * static object at `pointer' ("static" here meaning that `DeeModule_OfPointer()'
  * will return a non-NULL pointer for `pointer'), or as pointing into the payload portion
  * of another object or heap block that had already been serialized (iow: "pointer" points
  * into [ref,ref+num_bytes] (yes: closed range; iow: "ref+num_bytes" (1 past last byte) is
