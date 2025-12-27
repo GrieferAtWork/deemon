@@ -443,23 +443,23 @@ struct Dee_deemon_module_struct {
 	Dee_MODULE_STRUCT(/**/, num_builtins_obj) m_module;
 };
 
-DDATDEF struct Dee_static_module_struct DeeModule_Deemon;
+DDATDEF struct Dee_deemon_module_struct DeeModule_Deemon;
 
 #ifndef CONFIG_NO_DEX
 INTERN struct Dee_module_dexdata deemon_dexdata = {
-	/* .mdx_module = */ &DeeModule_Deemon.m_module,
+	/* .mdx_module = */ (DeeModuleObject *)&DeeModule_Deemon.m_module,
 	/* .mdx_export = */ NULL,
 	/* .mdx_handle = */ _Dee_MODULE_DEXDATA_INIT_HANDLE,
 	/* .mdx_init   = */ NULL,
 	/* .mdx_fini   = */ NULL,
-	/* .mdx_clear  = */ NULL,
+	/* .mdx_clear  = */ NULL
 	_Dee_MODULE_DEXDATA_INIT_LOADHANDLE
 	_Dee_MODULE_DEXDATA_INIT_LOADSTRING
 };
 #endif /* !CONFIG_NO_DEX */
 
 #undef DeeModule_Deemon
-PUBLIC struct Dee_static_module_struct DeeModule_Deemon = {
+PUBLIC struct Dee_deemon_module_struct DeeModule_Deemon = {
 	{ _Dee_GC_HEAD_UNTRACKED_INIT }, {
 #ifdef CONFIG_NO_DEX
 		OBJECT_HEAD_INIT(&DeeModuleDee_Type),
@@ -472,7 +472,7 @@ PUBLIC struct Dee_static_module_struct DeeModule_Deemon = {
 			/* .mle_name = */ (DeeStringObject *)&str_deemon,
 			/* .mle_dat  = */ { (DeeModuleObject *)&DeeModule_Deemon.m_module },
 			/* .mle_node = */ { NULL, NULL, NULL },
-			/* .mle_next = */ NULL,
+			/* .mle_next = */ NULL
 		},
 		/* .mo_dir     = */ (DeeTupleObject *)Dee_EmptyTuple,
 		/* .mo_init    = */ Dee_MODULE_INIT_INITIALIZED,

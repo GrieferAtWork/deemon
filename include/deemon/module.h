@@ -783,7 +783,7 @@ DeeModule_InitializeImports(/*Module*/ DeeObject *__restrict self);
  * and if so: change it to `Dee_MODULE_INIT_INITIALIZED' (even if the module
  * may not have already been initialized)
  * @return: * : One of `DeeModule_SetInitialized_*' */
-DFUNDEF WUNUSED NONNULL((1)) unsigned int DCALL
+DFUNDEF NONNULL((1)) unsigned int DCALL
 DeeModule_SetInitialized(/*Module*/ DeeObject *__restrict self);
 #define DeeModule_SetInitialized_SUCCESS 0 /* Module was marked as `Dee_MODULE_INIT_INITIALIZED' */
 #define DeeModule_SetInitialized_ALREADY 1 /* Module was already marked as `Dee_MODULE_INIT_INITIALIZED' */
@@ -1837,7 +1837,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttr(DeeModule
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_HasAttr(DeeModuleObject *self, /*String*/ DeeObject *attr);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_BoundAttr(DeeModuleObject *self, /*String*/ DeeObject *attr);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_DelAttr(DeeModuleObject *self, /*String*/ DeeObject *attr);
-INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeModule_SetAttr(DeeModuleObject *self, /*String*/ DeeObject *attr, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeModule_SetAttr(DeeModuleObject *self, /*String*/ DeeObject *attr, DeeObject *value);
 #endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttrStringHash(DeeModuleObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttrStringLenHash(DeeModuleObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);

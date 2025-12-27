@@ -120,7 +120,7 @@ err:
 PRIVATE NONNULL((1)) void DCALL
 shlib_fini(Shlib *__restrict self) {
 #ifndef CONFIG_NO_CFUNCTION
-	Dee_XDecref(DeeSType_AsObject(self->sh_vfunptr));
+	Dee_XDecref(DeeSType_AsType(self->sh_vfunptr));
 #endif /* !CONFIG_NO_CFUNCTION */
 	DeeSystem_DlClose(self->sh_lib);
 }
@@ -128,7 +128,7 @@ shlib_fini(Shlib *__restrict self) {
 #ifndef CONFIG_NO_CFUNCTION
 PRIVATE NONNULL((1, 2)) void DCALL
 shlib_visit(Shlib *__restrict self, Dee_visit_t proc, void *arg) {
-	Dee_XVisit(DeeSType_AsObject(self->sh_vfunptr));
+	Dee_XVisit(DeeSType_AsType(self->sh_vfunptr));
 }
 #endif /* !CONFIG_NO_CFUNCTION */
 

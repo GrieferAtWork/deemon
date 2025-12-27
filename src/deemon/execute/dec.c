@@ -2623,7 +2623,7 @@ err:
 INTDEF struct module_symbol empty_module_buckets[];
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+PRIVATE WUNUSED DREF DeeModuleObject *DCALL
 DecFile_CreateModule(uint16_t num_globals) {
 	DREF DeeModuleObject *result;
 	size_t size = _Dee_MallococBufsize(offsetof(DeeModuleObject, mo_globalv),
@@ -2638,7 +2638,7 @@ DecFile_CreateModule(uint16_t num_globals) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+PRIVATE WUNUSED DREF DeeModuleObject *DCALL
 DecFile_CreateEmptyModule(void) {
 	DREF DeeModuleObject *result = DecFile_CreateModule(0);
 	if likely(result) {

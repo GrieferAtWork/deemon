@@ -269,7 +269,7 @@ generic_proxy3__fini(ProxyObject3 *__restrict self) {
 
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 serialize_copy_after(DeeObject *__restrict self,
                      struct Dee_serial *__restrict writer,
                      Dee_seraddr_t addr, size_t basic_size) {

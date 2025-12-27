@@ -315,6 +315,7 @@ DECL_END
 #define RBTREE_DECL            PRIVATE
 #define RBTREE_IMPL            PRIVATE
 #define RBTREE_OMIT_REMOVE
+#define RBTREE_OMIT_REMOVENODE /* Not needed... */
 #include <hybrid/sequence/rbtree-abi.h>
 
 DECL_BEGIN
@@ -348,6 +349,7 @@ DECL_BEGIN
 #define RBTREE_DECL            PRIVATE
 #define RBTREE_IMPL            PRIVATE
 #define RBTREE_OMIT_REMOVE
+#define RBTREE_OMIT_REMOVENODE /* Not needed... */
 DECL_END
 #include <hybrid/sequence/rbtree-abi.h>
 DECL_BEGIN
@@ -361,10 +363,10 @@ PRIVATE RBTREE_ROOT(DREF Dee_module_object) dex_byaddr_tree = NULL;
 #define dex_byaddr_find_module(mod)   module_byaddr_rlocate(module_byaddr_tree, (mod)->mo_minaddr, (mod)->mo_maxaddr)
 #define dex_byaddr_find_addr(addr)    module_byaddr_locate(module_byaddr_tree, (byte_t const *)(addr))
 #define dex_byaddr_insert_module(mod) module_byaddr_insert(&module_byaddr_tree, mod)
-#define dex_byaddr_remove_module(mod) module_byaddr_removenode(&module_byaddr_tree, mod)
+/*#define dex_byaddr_remove_module(mod) module_byaddr_removenode(&module_byaddr_tree, mod)*/
 #else /* Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS */
 #define dex_byaddr_insert_module(mod) dex_byaddr_insert(&dex_byaddr_tree, mod)
-#define dex_byaddr_remove_module(mod) dex_byaddr_removenode(&dex_byaddr_tree, mod)
+/*#define dex_byaddr_remove_module(mod) dex_byaddr_removenode(&dex_byaddr_tree, mod)*/
 #ifdef Dee_MODULE_DEXDATA_HAVE_LOADHANDLE
 #ifdef Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE
 #define dex_byaddr_find_module(mod) dex_byaddr_locate(dex_byaddr_tree, (byte_t *)(mod)->mo_moddata.mo_dexdata->mdx_handle)
@@ -429,8 +431,10 @@ PRIVATE ATTR_PURE WUNUSED DeeModuleObject *DCALL
 dex_byaddr_find_addr(void const *addr) {
 #ifdef Dee_DEXBOUNDS_USE_LOADSTRING__dladdr__dli_fname
 	Dl_info dli;
-	if (dladdr(addr, &dli) && (Dee_MODULE_DEXDATA_HAVE_LOADSTRING_OWNED || dli.dli_fname))
-		return dex_byaddr_locate(dex_byaddr_tree, dli.dli_fname);
+	if (dladdr(addr, &dli) && ((sizeof(dli.dli_fname) != sizeof(char const *)) || dli.dli_fname)) {
+		Dee_DPRINTF("[debug] dladdr(%p) -> %q\n", addr, dli.dli_fname);
+		return dex_byaddr_locate(dex_byaddr_tree, (char const *)dli.dli_fname);
+	}
 #endif /* Dee_DEXBOUNDS_USE_LOADSTRING__dladdr__dli_fname */
 	(void)addr;
 	return NULL;
@@ -586,6 +590,8 @@ dex_initialize_loadhandle(struct Dee_module_dexdata *__restrict dexdata) {
 /* Initialize "mod->mo_minaddr" / "mod->mo_maxaddr" */
 #ifndef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
 #define dex_initialize_loadbounds(mod) (void)0
+#elif defined(Dee_DEXBOUNDS_USE_LOADBOUNDS___dex_start____AND___end)
+#define dex_initialize_loadbounds(mod) (void)0
 #else /* !Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS */
 #ifndef Dee_DEXBOUNDS_USE_LOADBOUNDS__EXPORTED_OBJECTS
 ATTR_COLD ATTR_NOINLINE
@@ -624,7 +630,8 @@ dex_initialize_loadbounds(DeeModuleObject *__restrict mod) {
 	}
 #endif /* Dee_DEXBOUNDS_USE_LOADBOUNDS__GetModuleInformation */
 
-#ifdef Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr
+#if (defined(Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr) || \
+     defined(Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP))
 	mod->mo_minaddr = (byte_t const *)-1;
 	mod->mo_maxaddr = (byte_t const *)0;
 	(void)dl_iterate_phdr(&initialize_dexdata_minmax_iterate_cb, (void *)mod);
@@ -632,7 +639,7 @@ dex_initialize_loadbounds(DeeModuleObject *__restrict mod) {
 		Dee_DPRINTF("ERROR: Failed to dl_iterate_phdr()-find module %q", mod->mo_absname);
 		dex_initialize_loadbounds_by_exported_objects(mod);
 	}
-#endif /* Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr */
+#endif /* Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr || Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP */
 
 #ifdef Dee_DEXBOUNDS_USE_LOADBOUNDS__xdlmodule_info
 	struct module_basic_info info;
@@ -659,7 +666,6 @@ dex_initialize_loadbounds(DeeModuleObject *__restrict mod) {
 PRIVATE void DCALL
 dex_initialize_loadstring(struct Dee_module_dexdata *__restrict dexdata) {
 #ifdef Dee_MODULE_DEXDATA_HAVE_LOADSTRING_IS__dladdr__dli_fname
-	Dl_info dli;
 	if (!dladdr(dexdata, &dexdata->mdx_loadstring))
 		bzero(&dexdata->mdx_loadstring, sizeof(dexdata->mdx_loadstring));
 #endif /* Dee_MODULE_DEXDATA_HAVE_LOADSTRING_IS__dladdr__dli_fname */
@@ -1383,8 +1389,7 @@ again:
 	}
 }
 
-PRIVATE NONNULL((1)) void DCALL
-DeeModule_ClearLibAllFlag_locked(void) {
+PRIVATE void DCALL DeeModule_ClearLibAllFlag_locked(void) {
 	ASSERT(module_libtree_lock_writing());
 	if (module_libtree_root)
 		DeeModule_ClearLibAllFlag_locked_at(module_libtree_root);
@@ -2291,7 +2296,7 @@ err:
 
 /* Append "import_str" to "pathname", converting the "...foo.bar" to "../../foo/bar"
  * (though the returned string is normalized, meaning ".." path segments are removed) */
-PRIVATE WUNUSED NONNULL((1, 4, 6, 7)) /*utf-8*/ char *DCALL
+PRIVATE WUNUSED NONNULL((1, 4, 6, 8)) /*utf-8*/ char *DCALL
 cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathname_size, DeeStringObject *pathname_ob,
                          /*utf-8*/ char const *__restrict import_str, size_t import_str_size,
                          size_t *__restrict p_result_strlen, unsigned int flags,
@@ -7442,6 +7447,7 @@ DeeModule_AppendEnvironPath(struct Dee_tuple_builder *__restrict builder) {
 		return 0;
 	if unlikely(path_ob == NULL)
 		goto err;
+#define NEED_err
 	path = DeeString_AsUtf8(path_ob);
 	if unlikely(!path)
 		goto err_path_ob;
@@ -7482,7 +7488,10 @@ err_path_ob:
 #undef LOCAL_HAVE_path_ob
 	Dee_Decref_likely(path_ob);
 #endif /* LOCAL_HAVE_path_ob */
+#ifdef NEED_err
+#undef NEED_err
 err:
+#endif /* NEED_err */
 	return -1;
 }
 #endif /* !DeeModule_AppendEnvironPath_USE_STUB */
@@ -7635,7 +7644,7 @@ DeeModule_ApplyLibPath(DeeTupleObject *old_path,
 			Dee_atomic_ref_set_inherited(&deemon_path, (DeeObject *)new_path);
 			return 0;
 		}
-		if (!Dee_atomic_ref_cmpxch_inherited(&deemon_path, (DeeObject *)old_path, (DeeObject *)new_path))
+		if (!Dee_atomic_ref_xcmpxch_inherited(&deemon_path, (DeeObject *)old_path, (DeeObject *)new_path))
 			return 1; /* "old_path" is no longer up-to-date */
 		Dee_Decref_likely(old_path);
 		return 0;
@@ -7670,7 +7679,7 @@ again_load_assumed_old_path:
 
 	/* Check for special case: no path loaded. */
 	if (!assumed_old_path) {
-		if (!Dee_atomic_ref_cmpxch_inherited(&deemon_path, NULL, (DeeObject *)new_path))
+		if (!Dee_atomic_ref_xcmpxch_inherited(&deemon_path, NULL, (DeeObject *)new_path))
 			goto again_load_assumed_old_path;
 		return 0;
 	}

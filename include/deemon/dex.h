@@ -163,9 +163,9 @@ struct Dee_module_dexdata {
 	void                        *mdx_handle; /* [?..?][const][owned] System-specific library handle (filled in during loading) */
 
 	/* [0..1][const] Optional initializer/finalizer/clear callbacks. */
-	WUNUSED_T NONNULL_T((1)) int (DCALL *mdx_init)(void);
-	NONNULL_T((1)) void (DCALL *mdx_fini)(void);
-	NONNULL_T((1)) bool (DCALL *mdx_clear)(void);
+	WUNUSED_T int (DCALL *mdx_init)(void);
+	void (DCALL *mdx_fini)(void);
+	bool (DCALL *mdx_clear)(void);
 
 #if defined(Dee_MODULE_DEXDATA_HAVE_LOADHANDLE) && !defined(Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE)
 	__BYTE_TYPE__ *mdx_loadhandle; /* [const] os-specific handle to identify this load-instance.

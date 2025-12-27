@@ -882,7 +882,7 @@ log_checking_begin "Checking if '_end' and '-Wl,-defsym=__dex_start__=.' works"
 cat > "$CONFTEST" <<EOF
 extern __attribute__((visibility("hidden"))) char __dex_start__[];
 extern __attribute__((visibility("hidden"))) char _end[];
-$CONFTEST_MAIN{return __dex_start__ != 0 && _end != 0;}
+$CONFTEST_MAIN{return (int)(_end - __dex_start__);}
 EOF
 if try_compile_raw && try_link_raw "-Wl,-defsym=__dex_start__=."; then
 	log_checking_yes

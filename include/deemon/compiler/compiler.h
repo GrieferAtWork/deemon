@@ -196,7 +196,7 @@ DDATDEF DeeTypeObject DeeCompiler_Type; /* Compiler from rt */
 /* Construct a new compiler for generating the source for the given `module'.
  * @param: flags: Set of `COMPILER_F*' (see above) */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeCompilerObject *DCALL DeeCompiler_New(uint16_t flags);
+DFUNDEF WUNUSED DREF DeeCompilerObject *DCALL DeeCompiler_New(uint16_t flags);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeCompilerObject *DCALL
 DeeCompiler_New(DeeObject *__restrict module, uint16_t flags);

@@ -77,7 +77,9 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 decgen_imports(DeeModuleObject *__restrict self) {
 	DeeModuleObject *const *iter, *const *end;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	char const *module_pathstr, *module_pathend;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if (!self->mo_importc)
 		goto done;
 	dec_curr = SC_IMPORTS;
@@ -85,7 +87,9 @@ decgen_imports(DeeModuleObject *__restrict self) {
 		goto err; /* Dec_Strmap.i_len */
 	iter = self->mo_importv;
 	end  = iter + self->mo_importc;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	module_pathstr = module_pathend = NULL;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	for (; iter < end; ++iter) {
 		DeeModuleObject *mod = *iter;
 		uint8_t *data;

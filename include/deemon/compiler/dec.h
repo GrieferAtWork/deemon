@@ -322,7 +322,6 @@ INTDEF WUNUSED NONNULL((1, 2)) int
 #define dec_putobj(self)              __builtin_expect(dec_putobj(self), 0)
 #define dec_putcode(self)             __builtin_expect(dec_putcode(self), 0)
 #define dec_putobjv(count, vec)       __builtin_expect(dec_putobjv(count, vec), 0)
-#define dec_create(mod)               __builtin_expect(dec_create(mod), 0)
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
 

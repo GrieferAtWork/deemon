@@ -231,7 +231,7 @@ DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler) {
 /* Construct a new compiler for generating the source for the given `module'.
  * @param: flags: Set of `COMPILER_F*' (see above) */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-PUBLIC WUNUSED NONNULL((1)) DREF DeeCompilerObject *DCALL
+PUBLIC WUNUSED DREF DeeCompilerObject *DCALL
 DeeCompiler_New(uint16_t flags)
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeCompilerObject *DCALL

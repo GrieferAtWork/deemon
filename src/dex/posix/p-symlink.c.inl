@@ -547,12 +547,12 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_symlinkat_f_im
 
 
 #else /* posix_symlink_USE_nt_CreateSymbolicLinkAuto */
-#define POSIX_SYMLINK_DEF { "symlink", (DeeObject *)&posix__symlink, MODSYM_FNORMAL, DOC("(text:?Dstring,path:?Dstring)") },
-#define POSIX_SYMLINK_DEF_DOC(doc) { "symlink", (DeeObject *)&posix__symlink, MODSYM_FNORMAL, DOC("(text:?Dstring,path:?Dstring)\n" doc) },
-#define POSIX_FSYMLINKAT_DEF { "fsymlinkat", (DeeObject *)&posix__fsymlinkat, MODSYM_FNORMAL, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)") },
-#define POSIX_FSYMLINKAT_DEF_DOC(doc) { "fsymlinkat", (DeeObject *)&posix__fsymlinkat, MODSYM_FNORMAL, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)\n" doc) },
-#define POSIX_SYMLINKAT_DEF { "symlinkat", (DeeObject *)&posix__symlinkat, MODSYM_FNORMAL, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring)") },
-#define POSIX_SYMLINKAT_DEF_DOC(doc) { "symlinkat", (DeeObject *)&posix__symlinkat, MODSYM_FNORMAL, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring)\n" doc) },
+#define POSIX_SYMLINK_DEF             DEX_MEMBER_F("symlink", &posix__symlink, DEXSYM_READONLY, "(text:?Dstring,path:?Dstring)"),
+#define POSIX_SYMLINK_DEF_DOC(doc)    DEX_MEMBER_F("symlink", &posix__symlink, DEXSYM_READONLY, "(text:?Dstring,path:?Dstring)\n" doc),
+#define POSIX_FSYMLINKAT_DEF          DEX_MEMBER_F("fsymlinkat", &posix__fsymlinkat, DEXSYM_READONLY, "(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)"),
+#define POSIX_FSYMLINKAT_DEF_DOC(doc) DEX_MEMBER_F("fsymlinkat", &posix__fsymlinkat, DEXSYM_READONLY, "(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n" doc),
+#define POSIX_SYMLINKAT_DEF           DEX_MEMBER_F("symlinkat", &posix__symlinkat, DEXSYM_READONLY, "(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring)"),
+#define POSIX_SYMLINKAT_DEF_DOC(doc)  DEX_MEMBER_F("symlinkat", &posix__symlinkat, DEXSYM_READONLY, "(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring)\n" doc),
 #endif /* !posix_symlink_USE_nt_CreateSymbolicLinkAuto */
 
 

@@ -699,7 +699,9 @@ PRIVATE char const doc_cmdA[]    = "pred=answer\tDefine an assertion `pred' as `
 PRIVATE char const doc_cmdf[]    = "[no-]<extension>\tEnable/Disable a given `extension' (s.a.: `--help extensions')";
 PRIVATE char const doc_cmdW[]    = "[no-]<warning>\tEnable/Disable a given `warning' (s.a.: `--help warnings')";
 PRIVATE char const doc_cmdname[] = "=<name>\tSet the name of the main module";
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE char const doc_cmdi[]    = " ...\tRead, compile, and execute sourcecode interactively from the stdin";
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 PRIVATE char const doc_cmdE[]    = "Emit preprocessor output, rather than running a user-script";
 PRIVATE char const doc_cmdP[]    = "Disable emission of #line adjustment directives (Default: on)";
 PRIVATE char const doc_cmdD[]    = "sym[=val=1]\tDefines `sym' as `val'";

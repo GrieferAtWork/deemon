@@ -234,7 +234,7 @@ err:
  * and if so: change it to `Dee_MODULE_INIT_INITIALIZED' (even if the module
  * may not have already been initialized)
  * @return: * : One of `DeeModule_SetInitialized_*' */
-PUBLIC WUNUSED NONNULL((1)) unsigned int DCALL
+PUBLIC NONNULL((1)) unsigned int DCALL
 DeeModule_SetInitialized(/*Module*/ DeeObject *__restrict self) {
 	DeeModuleObject *me = (DeeModuleObject *)self;
 	DeeThreadObject *status;
@@ -1219,7 +1219,7 @@ DeeModule_DelAttrStringLenHash(DeeModuleObject *__restrict self,
 	return err_module_no_such_global_string_len(self, attr_name, attrlen, ATTR_ACCESS_DEL);
 }
 
-INTERN WUNUSED NONNULL((1, 2, 4)) int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeModule_SetAttr(DeeModuleObject *self, /*String*/ DeeObject *attr, DeeObject *value) {
 	int error;
 	DeeStringObject *dir_status;
@@ -3413,11 +3413,7 @@ struct Dee_empty_module_struct {
 
 #undef DeeModule_Empty
 INTERN struct Dee_empty_module_struct DeeModule_Empty = {
-	{
-		/* ... */
-		NULL,
-		NULL
-	}, {
+	{ _Dee_GC_HEAD_UNTRACKED_INIT }, {
 		OBJECT_HEAD_INIT(&DeeModuleDee_Type),
 		/* .mo_absname = */ NULL,
 		/* .mo_absnode = */ { NULL, NULL, NULL },
