@@ -725,15 +725,15 @@ DeeBytes_FindAll(Bytes *self, DeeObject *needle,
                  size_t start, size_t end,
                  bool overlapping) {
 	DREF BytesFind *result;
+	if (end > DeeBytes_SIZE(self))
+		end = DeeBytes_SIZE(self);
+	if (start >= end)
+		return DeeSeq_NewEmpty();
 	result = DeeObject_MALLOC(BytesFind);
 	if unlikely(!result)
 		goto done;
 	if (acquire_needle(&result->bf_needle, needle)) /* TODO: release_needle() */
 		goto err_r;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end)
-		return DeeSeq_NewEmpty();
 	result->bf_bytes  = self;
 	result->bf_other  = needle;
 	result->bf_start  = DeeBytes_DATA(self) + start;
@@ -754,15 +754,15 @@ DeeBytes_CaseFindAll(Bytes *self, DeeObject *needle,
                      size_t start, size_t end,
                      bool overlapping) {
 	DREF BytesFind *result;
+	if (end > DeeBytes_SIZE(self))
+		end = DeeBytes_SIZE(self);
+	if (start >= end)
+		return DeeSeq_NewEmpty();
 	result = DeeObject_MALLOC(BytesFind);
 	if unlikely(!result)
 		goto done;
 	if (acquire_needle(&result->bf_needle, needle)) /* TODO: release_needle() */
 		goto err_r;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end)
-		return DeeSeq_NewEmpty();
 	result->bf_bytes  = self;
 	result->bf_other  = needle;
 	result->bf_start  = DeeBytes_DATA(self) + start;

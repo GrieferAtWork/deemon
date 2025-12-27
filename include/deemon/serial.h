@@ -125,7 +125,8 @@ struct Dee_serial_type {
 	 * static object at `pointer' ("static" here meaning that `DeeModule_FromStaticPointer()'
 	 * will return a non-NULL pointer for `pointer'), or as pointing into the payload portion
 	 * of another object or heap block that had already been serialized (iow: "pointer" points
-	 * into [ref,ref+num_bytes) of a prior `set_object_malloc', `set_gcobject_malloc', ...).
+	 * into [ref,ref+num_bytes] (yes: closed range; iow: "ref+num_bytes" (1 past last byte) is
+	 * still recognized and linked) of a prior `set_object_malloc', `set_gcobject_malloc', ...).
 	 * If neither is the case, an error is thrown.
 	 * @return: 0 : Success
 	 * @return: -1: Error */
@@ -242,7 +243,8 @@ DFUNDEF WUNUSED NONNULL((1)) int
  * static object at `pointer' ("static" here meaning that `DeeModule_FromStaticPointer()'
  * will return a non-NULL pointer for `pointer'), or as pointing into the payload portion
  * of another object or heap block that had already been serialized (iow: "pointer" points
- * into [ref,ref+num_bytes) of a prior `DeeSerial_ObjectMalloc', `DeeSerial_GCObjectMalloc',
+ * into [ref,ref+num_bytes] (yes: closed range; iow: "ref+num_bytes" (1 past last byte) is
+ * still recognized and linked) of a prior `DeeSerial_ObjectMalloc', `DeeSerial_GCObjectMalloc',
  * ...). If neither is the case, an error is thrown.
  * @return: 0 : Success
  * @return: -1: Error */
