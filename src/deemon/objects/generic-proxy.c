@@ -20,6 +20,7 @@
 #ifndef GUARD_DEEMON_OBJECTS_GENERIC_PROXY_C
 #define GUARD_DEEMON_OBJECTS_GENERIC_PROXY_C 1
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/format.h>
 #include <deemon/map.h>
@@ -29,6 +30,7 @@
 #include <deemon/serial.h>
 #include <deemon/set.h>
 #include <deemon/super.h>
+#include <deemon/system-features.h>
 
 #include <hybrid/typecore.h>
 
@@ -279,6 +281,10 @@ serialize_copy_after(DeeObject *__restrict self,
 	void (DCALL *tp_free)(void *);
 	ASSERT(!(tp_self->tp_flags & TP_FVARIABLE));
 	if ((tp_free = tp_self->tp_init.tp_alloc.tp_free) != NULL) {
+#ifdef CONFIG_NO_OBJECT_SLABS
+		Dee_Fatalf("Unable to determine tp_instance_size for %r", tp_self);
+		return;
+#else /* CONFIG_NO_OBJECT_SLABS */
 		/* Figure out the slab size used by the base-class. */
 		if (tp_self->tp_flags & TP_FGC) {
 #define CHECK_ALLOCATOR(index, size)                      \
@@ -303,6 +309,7 @@ serialize_copy_after(DeeObject *__restrict self,
 				return;
 			}
 		}
+#endif /* !CONFIG_NO_OBJECT_SLABS */
 	} else {
 		instance_size = tp_self->tp_init.tp_alloc.tp_instance_size;
 	}

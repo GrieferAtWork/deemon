@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/mapfile.h>
 #include <deemon/object.h>
@@ -2110,8 +2111,66 @@ again:
 				}
 			}
 #else /* ... */
-			buf = (unsigned char *)MMAP(NULL, mapsize, PROT_READ | PROT_WRITE,
-			                            LOCAL_USED_mmap_flags, fd, map_offset);
+			{
+#if 1 /* XXX: Feature test: CONFIG_HAVE_MMAP_PAST_EOF_PAGES_ARE_SIGBUS */
+				uint64_t true_filesize_psm, true_mapend;
+				true_filesize_psm = STRUCT_STAT_FOR_SIZE_GETSIZE(st);
+				true_filesize_psm = (true_filesize_psm + psm) & ~psm;
+				true_mapend = map_offset + mapsize;
+				if (true_mapend > true_filesize_psm) {
+					/* Special case: trying to mmap past the page-aligned end of the file.
+					 * In this case, doing *only* a regular MMAP would work, but all pages
+					 * that were mapped past the end of the file would raise SIGBUG when
+					 * we try to access them. This differs from accessing the same-page
+					 * trailing bytes within the file's last page, where accessing those
+					 * bytes will yield all-zeroes.
+					 *
+					 * To work around this issue, we have to:
+					 * - Do the initial MMAP as a whole like normal (which includes having
+					 *   the kernel create those SIGBUG pages at the tail end of the mapping).
+					 * - Do another MMAP with MAP_FIXED to override those last few pages with
+					 *   a new, anonymous memory mapping.
+					 *
+					 * However: if the host does not support MAP_FIXED (and MAP_ANONYMOUS),
+					 *          then making use of mmap(2) isn't possible and we have to
+					 *          fall back on regular malloc()+read() */
+#if defined(CONFIG_HAVE_MAP_FIXED) && defined(CONFIG_HAVE_MAP_ANONYMOUS)
+					size_t trailmem_offset = (size_t)true_filesize_psm;
+					size_t trailmem_size   = (size_t)(true_mapend - true_filesize_psm);
+					buf = (unsigned char *)MMAP(NULL, mapsize, PROT_READ | PROT_WRITE,
+					                            LOCAL_USED_mmap_flags, fd, map_offset);
+					if likely(buf != (unsigned char *)MAP_FAILED) {
+						void *trailmem_addr = buf + trailmem_offset;
+						void *trailmem_result;
+						trailmem_result = (void *)MMAP(trailmem_addr, trailmem_size,
+						                               PROT_READ | PROT_WRITE,
+						                               MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS,
+						                               -1, 0);
+						if unlikely(trailmem_result == trailmem_addr) {
+							Dee_DPRINTF("[mmap] Replaced %" PRFuSIZ " SIGBUG bytes at %p-%p after "
+							            /**/ "%" PRFuSIZ " file bytes with MAP_ANONYMOUS\n",
+							            trailmem_size, trailmem_addr,
+							            (char *)trailmem_addr + trailmem_size - 1,
+							            trailmem_offset);
+						} else {
+#ifdef CONFIG_HAVE_munmap
+							if (trailmem_result != (void *)MAP_FAILED)
+								(void)munmap(trailmem_result, trailmem_size);
+							(void)munmap(buf, mapsize);
+#endif /* CONFIG_HAVE_munmap */
+							buf = (unsigned char *)MAP_FAILED;
+						}
+					}
+#else /* CONFIG_HAVE_MAP_FIXED && CONFIG_HAVE_MAP_ANONYMOUS */
+					goto after_mmap_attempt;
+#endif /* !CONFIG_HAVE_MAP_FIXED || !CONFIG_HAVE_MAP_ANONYMOUS */
+				} else
+#endif /* CONFIG_HAVE_MMAP_PAST_EOF_PAGES_ARE_SIGBUS */
+				{
+					buf = (unsigned char *)MMAP(NULL, mapsize, PROT_READ | PROT_WRITE,
+					                            LOCAL_USED_mmap_flags, fd, map_offset);
+				}
+			}
 #endif /* !... */
 
 			/*Dee_DPRINTF("mmap(%Iu, %d, %I64d) -> %p [psm: %Iu, errno:%d:%s, true_filesize: %I64u]\n",

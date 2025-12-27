@@ -853,6 +853,7 @@ constant("MAP_GROWSDOWN");
 constant("MAP_FILE");
 constant("MAP_STACK");
 constant("MAP_UNINITIALIZED");
+constant("MAP_FIXED");
 constant("PROT_READ");
 constant("PROT_WRITE");
 constant("PROT_EXEC");
@@ -6707,6 +6708,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_MAP_UNINITIALIZED) && \
       (defined(MAP_UNINITIALIZED) || defined(__MAP_UNINITIALIZED_defined))
 #define CONFIG_HAVE_MAP_UNINITIALIZED
+#endif
+
+#ifdef CONFIG_NO_MAP_FIXED
+#undef CONFIG_HAVE_MAP_FIXED
+#elif !defined(CONFIG_HAVE_MAP_FIXED) && \
+      (defined(MAP_FIXED) || defined(__MAP_FIXED_defined))
+#define CONFIG_HAVE_MAP_FIXED
 #endif
 
 #ifdef CONFIG_NO_PROT_READ
