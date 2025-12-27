@@ -1740,7 +1740,7 @@ DeeModule_OpenInteractive(DeeObject *source_stream,
 err_r:
 	Dee_DecrefNokill(&DeeInteractiveModule_Type);
 	DeeObject_FreeTracker(Dee_AsObject(&result->im_module));
-	DeeGCObject_FREE(Dee_AsObject(&result->im_module));
+	DeeGCObject_FREE(result);
 err:
 	return NULL;
 }
