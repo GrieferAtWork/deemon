@@ -3438,7 +3438,7 @@ INTERN struct Dee_empty_module_struct DeeModule_Empty = {
 #if !defined(CONFIG_NO_DEC) || !defined(CONFIG_NO_DEX)
 		/* .mo_minaddr = */ NULL,
 		/* .mo_maxaddr = */ NULL,
-		/* .mo_adrnode = */ NULL,
+		/* .mo_adrnode = */ { NULL, NULL, NULL },
 #endif /* !CONFIG_NO_DEC || !CONFIG_NO_DEX */
 	}
 };
