@@ -104,6 +104,9 @@ struct DeeMapFile {
 
 /* Configure `self' as using a heap buffer */
 #ifdef DeeMapFile_IS_os_mapfile
+/* FIXME: This doesn't work because "CONFIG_EXPERIMENTAL_CUSTOM_HEAP"
+ *        means that deemon doesn't use libc's heap, also meaning that
+ *        this will case unmapfile(3) to call the wrong free(3)! */
 #define DeeMapFile_SETHEAP(self) __mapfile_setheap(&(self)->dmf_map)
 #elif defined(DeeMapFile_IS_CreateFileMapping)
 #define DeeMapFile_SETHEAP(self) ((self)->_dmf_hmap = NULL)

@@ -46,7 +46,7 @@ DECL_BEGIN
  * ==============================================================================
  *
  * The following is an example of how the binary data of a deemon heap region may
- * look like. Note that the existing of data formatted like this is enough for you
+ * look like. Note that the existence of data formatted like this is enough for you
  * to be able to pass pointers to the user-data areas of chunks to Dee_Free(). --
  * There is no need to register heap regions before they can be used in APIs.
  *
@@ -75,8 +75,8 @@ DECL_BEGIN
  *    0134   00 00 00 00   struct Dee_heaptail::ht_zero                   Must always be "0" in last chunk
  *
  * The above region features 3 addresses for heap chunks with associated user-data.
- * Once both those chunks are free'd (order of Dee_Free() operations doesn't matter),
- * then the destructor callback at "0x87654321" will be invoked during the last free.
+ * Once all 3 chunks are free'd (order of Dee_Free() operations doesn't matter),
+ * the destructor callback at "0x87654321" will be invoked during the last free.
  * >> Dee_MallocUsableSize(REGION_BASE + 0x10);  // 256
  * >> Dee_MallocUsableSize(REGION_BASE + 0x118); // 16
  * >> Dee_MallocUsableSize(REGION_BASE + 0x128); // 16
@@ -126,8 +126,14 @@ struct Dee_heapregion {
 //	struct Dee_heaptail  hr_tail;                                 /* Region tail (see above) */
 };
 
+/* ============================================================================== */
 
-/* TODO: Expose dlmalloc's configuration/stats functions here */
+
+
+
+/************************************************************************/
+/* DEEMON HEAP API                                                      */
+/************************************************************************/
 
 /* Validate heap memory, asserting the absence of corruptions from
  * various common heap mistakes (write-past-end, use-after-free, etc.).
@@ -146,7 +152,7 @@ DFUNDEF size_t DCALL DeeHeap_DumpMemoryLeaks(void);
  * - When the deemon heap was built to track memory leaks, an optional
  *   allocation breakpoint can be defined which, when reached, causes
  *   an attached debugger to break, allowing you to inspect the stack
- *   at the point where the `id'the allocation happened
+ *   at the point where the `id'th allocation happened
  * - Allocation IDs are assigned in ascending order during every call
  *   to Dee_Malloc(), Dee_Calloc() and Dee_Realloc() (when ptr==NULL)
  * - When the deemon heap was not built with this feature, this API

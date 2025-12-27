@@ -1401,7 +1401,7 @@ myobject_serialize(MyObject *__restrict self, DeeSerial *__restrict writer) {
 
 
 
-#ifdef __INTELLISENSE__
+#if defined(__INTELLISENSE__) && defined(__cplusplus)
 extern "C++" {namespace __intern {
 #define _Dee_REQUIRE_VAR_tp_ctor(tp_ctor) ::__intern::__Dee_REQUIRE_VAR_tp_ctor(tp_ctor)
 template<class Tobj> Dee_funptr_t __Dee_REQUIRE_VAR_tp_ctor(Tobj *(DCALL *)(void)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
@@ -1444,7 +1444,7 @@ template<class Tobj> Dee_funptr_t __Dee_REQUIRE_tp_free(void (DCALL *)(Tobj *__r
 Dee_funptr_t __Dee_REQUIRE_tp_free(void (DCALL *)(void *__restrict));
 Dee_funptr_t __Dee_REQUIRE_tp_free(decltype(nullptr));
 }}
-#else /* __INTELLISENSE__ */
+#else /* __INTELLISENSE__ && __cplusplus */
 #define _Dee_REQUIRE_VAR_tp_ctor(tp_ctor)                 (Dee_funptr_t)(tp_ctor)
 #define _Dee_REQUIRE_VAR_tp_copy_ctor(tp_copy_ctor)       (Dee_funptr_t)(tp_copy_ctor)
 #define _Dee_REQUIRE_VAR_tp_any_ctor(tp_any_ctor)         (Dee_funptr_t)(tp_any_ctor)
@@ -1457,7 +1457,7 @@ Dee_funptr_t __Dee_REQUIRE_tp_free(decltype(nullptr));
 #define _Dee_REQUIRE_ALLOC_tp_serialize(tp_serialize)     (Dee_funptr_t)(tp_serialize)
 #define _Dee_REQUIRE_tp_alloc(tp_alloc)                   (Dee_funptr_t)(tp_alloc)
 #define _Dee_REQUIRE_tp_free(tp_free)                     (Dee_funptr_t)(tp_free)
-#endif /* !__INTELLISENSE__ */
+#endif /* !__INTELLISENSE__ || !__cplusplus */
 
 /************************************************************************/
 /* Initializers for TP_FVARIABLE types                                  */

@@ -838,12 +838,12 @@ PUBLIC uint64_t DCALL DeeExec_GetTimestamp(void) {
 
 /* Get some unique IDs for this build of deemon,
  * as well as the host that is running deemon. */
-PUBLIC void DCALL DeeExec_GetBuildId(uint8_t build_id[16]) {
+PUBLIC void DCALL DeeExec_GetBuildId(uint64_t build_id[2]) {
 	/* TODO */
 	bzero(build_id, 16);
 }
 
-PUBLIC void DCALL DeeExec_GetHostId(uint8_t host_id[16]) {
+PUBLIC void DCALL DeeExec_GetHostId(uint64_t host_id[2]) {
 	/* TODO */
 	bzero(host_id, 16);
 }

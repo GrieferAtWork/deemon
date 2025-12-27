@@ -4891,7 +4891,7 @@ PRIVATE size_t alloc_id_break = 0;
  * - When the deemon heap was built to track memory leaks, an optional
  *   allocation breakpoint can be defined which, when reached, causes
  *   an attached debugger to break, allowing you to inspect the stack
- *   at the point where the `id'the allocation happened
+ *   at the point where the `id'th allocation happened
  * - Allocation IDs are assigned in ascending order during every call
  *   to Dee_Malloc(), Dee_Calloc() and Dee_Realloc() (when ptr==NULL)
  * - When the deemon heap was not built with this feature, this API
@@ -5549,7 +5549,7 @@ PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(void) {
  * - When the deemon heap was built to track memory leaks, an optional
  *   allocation breakpoint can be defined which, when reached, causes
  *   an attached debugger to break, allowing you to inspect the stack
- *   at the point where the `id'the allocation happened
+ *   at the point where the `id'th allocation happened
  * - Allocation IDs are assigned in ascending order during every call
  *   to Dee_Malloc(), Dee_Calloc() and Dee_Realloc() (when ptr==NULL)
  * - When the deemon heap was not built with this feature, this API

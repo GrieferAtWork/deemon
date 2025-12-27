@@ -541,7 +541,7 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
                 /*utf-8*/ char const *context_absname, size_t context_absname_size,
                 unsigned int flags, struct Dee_compiler_options *options,
                 uint64_t dee_file_last_modified) {
-	uint8_t temp_id[16];
+	uint64_t temp_id[2];
 	DREF DeeModuleObject *result;
 	Dec_Ehdr *ehdr = (Dec_Ehdr *)DeeMapFile_GetBase(fmap);
 	if unlikely(DeeMapFile_GetSize(fmap) < sizeof(Dec_Ehdr))
@@ -551,10 +551,14 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 	if (ehdr->e_deemon_timestamp != DeeExec_GetTimestamp())
 		goto fail;
 	DeeExec_GetBuildId(temp_id);
-	if (bcmp(ehdr->e_deemon_build_id, temp_id, 16) != 0)
+	if (ehdr->e_deemon_build_id[0] != temp_id[0])
+		goto fail;
+	if (ehdr->e_deemon_build_id[1] != temp_id[1])
 		goto fail;
 	DeeExec_GetHostId(temp_id);
-	if unlikely(bcmp(ehdr->e_deemon_host_id, temp_id, 16) != 0)
+	if unlikely(ehdr->e_deemon_host_id[0] != temp_id[0])
+		goto fail;
+	if unlikely(ehdr->e_deemon_host_id[1] != temp_id[1])
 		goto fail;
 	if unlikely(ehdr->e_ident[DI_MAG0] != DECMAG0)
 		goto fail;
@@ -1626,8 +1630,6 @@ DeeDecWriter_Init(DeeDecWriter *__restrict self) {
 	self->dw_known.dot_size = 0;
 	self->dw_known.dot_list = NULL;
 	return 0;
-err_ehdr:
-	Dee_Free(self->dw_ehdr);
 err:
 	return -1;
 }
@@ -1651,12 +1653,6 @@ DeeDecWriter_Fini(DeeDecWriter *__restrict self) {
 	Dee_Free(self->dw_fdeps.dfdt_depv);
 	Dee_Free(self->dw_known.dot_list);
 }
-
-
-
-
-
-
 
 DECL_END
 
@@ -2621,7 +2617,7 @@ DecFile_IsUpToDate(DecFile *__restrict self) {
 	             ((uint64_t)LETOH32(hdr->e_timestamp_lo)));
 	if (other > timestamp)
 		goto changed; /* Base source file has changed. */
-#if 0 /* TODO */
+#if 0 /* TO-DO Will never be implemented */
 	/* Check additional dependencies. */
 	if (hdr->e_depoff != 0) {
 		Dec_Strmap *depmap;

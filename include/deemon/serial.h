@@ -105,14 +105,17 @@ struct Dee_serial_type {
 	                     Dee_seraddr_t addrof_pointer,
 	                     Dee_seraddr_t addrof_target);
 
-	/* Serialize a `DREF DeeObject *' field at `addrof_object' as being populated with a reference to `ob'
+	/* Serialize a `DREF DeeObject *' field at `addrof_object'
+	 * as being populated with a reference to `ob'
 	 * @return: 0 : Success
 	 * @return: -1: Error */
 	WUNUSED_T NONNULL_T((1, 3)) int
 	(DCALL *set_putobject)(DeeSerial *__restrict self,
 	                       Dee_seraddr_t addrof_object,
 	                       DeeObject *__restrict ob);
-	/* Same as `set_putobject', but encode a reference ob "ob", but have the pointer be at `ob + offset_into_ob'
+
+	/* Same as `set_putobject', but encode a reference ob "ob",
+	 * but have the pointer be at `(byte_t *)ob + offset_into_ob'
 	 * @return: 0 : Success
 	 * @return: -1: Error */
 	WUNUSED_T NONNULL_T((1, 3)) int
@@ -121,10 +124,10 @@ struct Dee_serial_type {
 	                          DeeObject *__restrict ob,
 	                          ptrdiff_t offset_into_ob);
 
-	/* Serialize a `void *' field at `addrof_pointer' as being populated with the address of a
-	 * static object at `pointer' ("static" here meaning that `DeeModule_OfPointer()'
-	 * will return a non-NULL pointer for `pointer'), or as pointing into the payload portion
-	 * of another object or heap block that had already been serialized (iow: "pointer" points
+	/* Serialize a `void *' field at `addrof_pointer' as being populated with the address of
+	 * a static object at `pointer' ("static" here meaning that `DeeModule_OfPointer()' will
+	 * return a non-NULL pointer for `pointer'), or as pointing into the payload portion of
+	 * another object or heap block that had already been serialized (iow: "pointer" points
 	 * into [ref,ref+num_bytes] (yes: closed range; iow: "ref+num_bytes" (1 past last byte) is
 	 * still recognized and linked) of a prior `set_object_malloc', `set_gcobject_malloc', ...).
 	 * If neither is the case, an error is thrown.
@@ -215,7 +218,8 @@ DFUNDEF WUNUSED NONNULL((1)) int
 #define DeeSerial_PutObject(self, addrof_object, ob) \
 	__builtin_expect((*(self)->ser_type->set_putobject)(self, addrof_object, Dee_AsObject(ob)), 0)
 
-/* Same as `DeeSerial_PutObject', but encode a reference ob "ob", but have the pointer be at `ob + offset_into_ob'
+/* Same as `DeeSerial_PutObject', but encode a reference ob "ob",
+ * but have the pointer be at `(byte_t *)ob + offset_into_ob'
  * @return: 0 : Success
  * @return: -1: Error */
 #define DeeSerial_PutObjectEx(self, addrof_object, ob, offset_into_ob) \
@@ -239,10 +243,10 @@ DFUNDEF WUNUSED NONNULL((1)) int
 	__builtin_expect((DeeSerial_XPutObjectInherited)(self, addrof_object, Dee_AsObject(ob)), 0)
 
 
-/* Serialize a `void *' field at `addrof_pointer' as being populated with the address of a
- * static object at `pointer' ("static" here meaning that `DeeModule_OfPointer()'
- * will return a non-NULL pointer for `pointer'), or as pointing into the payload portion
- * of another object or heap block that had already been serialized (iow: "pointer" points
+/* Serialize a `void *' field at `addrof_pointer' as being populated with the address of
+ * a static object at `pointer' ("static" here meaning that `DeeModule_OfPointer()' will
+ * return a non-NULL pointer for `pointer'), or as pointing into the payload portion of
+ * another object or heap block that had already been serialized (iow: "pointer" points
  * into [ref,ref+num_bytes] (yes: closed range; iow: "ref+num_bytes" (1 past last byte) is
  * still recognized and linked) of a prior `DeeSerial_ObjectMalloc', `DeeSerial_GCObjectMalloc',
  * ...). If neither is the case, an error is thrown.
