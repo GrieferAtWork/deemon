@@ -310,9 +310,7 @@ compiler_fini(DeeCompilerObject *__restrict self) {
 		self->cp_tags.at_anno.an_annoa = 0;
 		self->cp_tags.at_anno.an_annov = NULL;
 	}
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	unicode_printer_fini(&self->cp_tags.at_decl);
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	unicode_printer_fini(&self->cp_tags.at_doc);
 
 	/* Always set the error-flag to prevent TPP from attempting
@@ -553,9 +551,7 @@ DeeExec_CompileModuleStream_impl(DeeObject *source_stream,
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 		dots->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 		dots->s_decltype.da_type = DAST_NONE;
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		dots->s_type  = SYMBOL_TYPE_ARG;
 		dots->s_symid = 0;
 		dots->s_flag |= SYMBOL_FALLOC;

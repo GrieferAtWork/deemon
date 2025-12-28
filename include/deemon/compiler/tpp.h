@@ -51,13 +51,6 @@ DECL_BEGIN
 #endif
 
 
-/* TODO: Get rid of these config options (having them on is mandatory) */
-#undef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
-#define CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
-
-#undef CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS
-#define CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS
-
 struct ast_loc;
 struct ast;
 

@@ -373,7 +373,6 @@ struct class_attribute;
 
 
 
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 #define DAST_NONE    0x0000 /* No declaration information. */
 #define DAST_SYMBOL  0x0001 /* `int from deemon' Declaration information is provided as a symbol reference. */
 #define DAST_CONST   0x0002 /* `type(0)' Declaration information is provided as a constant type. */
@@ -455,7 +454,6 @@ INTDEF WUNUSED NONNULL((1)) int DCALL decl_ast_parse_for_symbol(struct symbol *_
 INTDEF WUNUSED int DCALL decl_ast_skip(void);
 #endif /* CONFIG_BUILDING_DEEMON */
 
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 
 struct ast_loc {
@@ -589,9 +587,7 @@ struct symbol {
 	uint32_t             s_nread;  /* Number of times the symbol is read */
 	uint32_t             s_nwrite; /* Number of times the symbol is written */
 	uint32_t             s_nbound; /* Number of times the symbol is checking for being bound */
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	struct decl_ast      s_decltype; /* Symbol declaration type. */
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	union {                        /* Type-specific symbol data. */
 		struct {
 			DREF struct module_object *e_module; /* [1..1] The module from which the symbol is imported. */
@@ -1190,8 +1186,6 @@ get_local_symbol_in_scope(DeeScopeObject *__restrict scope,
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
 
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
-
 FORCELOCAL NONNULL((1, 2)) void DCALL
 decl_ast_move(struct decl_ast *__restrict dst,
               struct decl_ast *__restrict src) {
@@ -1264,9 +1258,6 @@ decl_ast_func_getscope(struct decl_ast const *__restrict self) {
 	Dee_ASSERT(self->da_type == DAST_FUNC);
 	return (DREF DeeBaseScopeObject *)Dee_weakref_lock(&self->da_func.f_scope);
 }
-
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-
 
 #endif /* CONFIG_BUILDING_DEEMON */
 

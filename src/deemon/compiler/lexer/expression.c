@@ -1075,12 +1075,7 @@ do_else_branch:
 			if unlikely(yield() < 0)
 				goto err;
 		}
-		result = ast_parse_function(function_name, NULL, false, &loc
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
-		                            ,
-		                            NULL
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-		                            );
+		result = ast_parse_function(function_name, NULL, false, &loc, NULL);
 	}	break;
 
 	case KWD_final: {
@@ -1291,13 +1286,11 @@ do_create_class:
 					goto err;
 
 				/* Support for java-style lambda with empty argument list. */
-#ifdef CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS
 				if (tok == TOK_ARROW) {
 					result = ast_parse_function_java_lambda(NULL, NULL);
 					result = ast_setddi(result, &loc);
 					break;
 				}
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 				if (tok == ':') {
 					bool isarrow;
 					struct TPPLexerPosition pos;
@@ -1318,8 +1311,6 @@ err_restore_pos:
 						break;
 					}
 				}
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-#endif /* CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS */
 
 				/* Empty tuple. */
 				result = ast_constexpr(Dee_EmptyTuple);
@@ -1328,7 +1319,6 @@ err_restore_pos:
 				allow_cast = false; /* Don't allow empty tuples for cast expressions. */
 			} else {
 				/* Lambda function. */
-#ifdef CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS
 				int error = ast_is_after_lparen_of_java_lambda();
 				if (error != 0) {
 					if unlikely(error < 0)
@@ -1338,7 +1328,6 @@ err_restore_pos:
 					result = ast_setddi(result, &loc);
 					break;
 				}
-#endif /* CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS */
 
 				/* Parenthesis / tuple expression. */
 				result = ast_parse_comma(AST_COMMA_NORMAL,
@@ -1513,12 +1502,7 @@ do_lambda:
 				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 				if unlikely(parse_tags_block())
 					goto err_flags;
-				result = ast_parse_function(NULL, NULL, true, &loc
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
-				                            ,
-				                            NULL
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-				                            );
+				result = ast_parse_function(NULL, NULL, true, &loc, NULL);
 				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 				break;
 			}
@@ -1757,11 +1741,9 @@ do_keyword:
 					if (WARNAT(&loc, W_UNCLEAR_SYMBOL_FROM_MODULE, symname, modname))
 						goto err;
 				}
-#ifdef CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS
 			} else if (tok == TOK_ARROW) {
 				/* Support for java-style lambda with singular argument. */
 				result = ast_parse_function_java_lambda(name, &loc);
-#endif /* CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS */
 			} else {
 				DREF struct symbol *sym;
 				sym = lookup_symbol(lookup_mode & ~PARSE_UNARY_DISALLOW_CASTS, name, &loc);

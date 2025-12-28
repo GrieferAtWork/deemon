@@ -87,7 +87,6 @@ is_defined_by_deemon_core(DeeTypeObject *__restrict self) {
 	return result;
 }
 
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 PRIVATE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 filter_builtin_deemon_types(/*inherit(always)*/ DREF DeeObject *__restrict self) {
 	DREF DeeObject *type_module;
@@ -190,7 +189,6 @@ again:
 	}
 	return NULL;
 }
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 
 struct seqops {
@@ -225,7 +223,6 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 			return ast_predict_type_ex(self->a_multiple.m_astv[self->a_multiple.m_astc - 1],
 			                           flags);
 		}
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 		if (flags & AST_PREDICT_TYPE_F_NOANNO) {
 			/* Special case: the normal code generator is allowed to optimize
 			 *               based on type annotation, such that:
@@ -252,7 +249,6 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 				}
 			}
 		}
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		if (self->a_flag == AST_FMULTIPLE_TUPLE)
 			return &DeeTuple_Type;
 		if (self->a_flag == AST_FMULTIPLE_LIST)
@@ -330,10 +326,8 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 
 		default: break;
 		}
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 		if (!(flags & AST_PREDICT_TYPE_F_NOANNO))
 			return eval_decl_ast_type(&sym->s_decltype);
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	}	break;
 
 	case AST_BOOL:

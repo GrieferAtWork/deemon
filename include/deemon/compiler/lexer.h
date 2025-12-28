@@ -328,7 +328,6 @@ ast_parse_loopexpr(void);
  *       scope if the desire is to address the function by name.
  *       This parser function will merely return the `AST_FUNCTION',
  *       not some wrapper that assigns it to a symbol using `AST_STORE'. */
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 INTDEF WUNUSED DREF struct ast *DCALL
 ast_parse_function(struct TPPKeyword *name, bool *p_need_semi,
                    bool allow_missing_params, struct ast_loc *name_loc,
@@ -337,18 +336,9 @@ INTDEF WUNUSED DREF struct ast *DCALL
 ast_parse_function_noscope(struct TPPKeyword *name, bool *p_need_semi,
                            bool allow_missing_params, struct ast_loc *name_loc,
                            struct decl_ast *decl);
-#else /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-INTDEF WUNUSED DREF struct ast *DCALL
-ast_parse_function(struct TPPKeyword *name, bool *p_need_semi,
-                   bool allow_missing_params, struct ast_loc *name_loc);
-INTDEF WUNUSED DREF struct ast *DCALL
-ast_parse_function_noscope(struct TPPKeyword *name, bool *p_need_semi,
-                           bool allow_missing_params, struct ast_loc *name_loc);
-#endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 INTDEF WUNUSED DREF struct ast *DCALL
 ast_parse_function_noscope_noargs(bool *p_need_semi);
 
-#ifdef CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS
 /* Parse a java-style lambda. */
 INTDEF WUNUSED DREF struct ast *DCALL
 ast_parse_function_java_lambda(struct TPPKeyword *first_argument_name,
@@ -359,7 +349,6 @@ ast_parse_function_java_lambda(struct TPPKeyword *first_argument_name,
  * @return:  0: No
  * @return: -1: Error */
 INTDEF WUNUSED int DCALL ast_is_after_lparen_of_java_lambda(void);
-#endif /* CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS */
 
 /* Parse everything following a `del' keyword in a statement, or expression:
  * >> foo = 7;
@@ -583,16 +572,12 @@ struct ast_annotations {
 };
 
 struct ast_tags_printers {
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	struct unicode_printer at_decl; /* A custom declaration overwrite (for creating a custom documentation prefix). */
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	struct unicode_printer at_doc;  /* The documentation string that should be applied to the following declaration. */
 };
 
 struct ast_tags {
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	struct unicode_printer at_decl;         /* A custom declaration overwrite (for creating a custom documentation prefix). */
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	struct unicode_printer at_doc;          /* The documentation string that should be applied to the following declaration. */
 	struct ast_annotations at_anno;         /* AST Annotations. */
 	uint16_t               at_expect;       /* Set of `AST_FCOND_LIKELY|AST_FCOND_UNLIKELY' */
@@ -601,7 +586,6 @@ struct ast_tags {
 	uint16_t               at_attr_flags;   /* Set of `CLASS_ATTRIBUTE_F*' or'd to flags during creation of a new class attribute. */
 };
 
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 #define AST_TAGS_BACKUP_PRINTERS(buf)                                   \
 	(memcpy(&(buf), &current_tags, 2 * sizeof(struct unicode_printer)), \
 	 bzero(&current_tags, 2 * sizeof(struct unicode_printer)))
@@ -609,14 +593,6 @@ struct ast_tags {
 	(unicode_printer_fini(&current_tags.at_decl), \
 	 unicode_printer_fini(&current_tags.at_doc),  \
 	 memcpy(&current_tags, &(buf), 2 * sizeof(struct unicode_printer)))
-#else /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-#define AST_TAGS_BACKUP_PRINTERS(buf)                               \
-	(memcpy(&(buf), &current_tags, sizeof(struct unicode_printer)), \
-	 bzero(&current_tags, sizeof(struct unicode_printer)))
-#define AST_TAGS_RESTORE_PRINTERS(buf)           \
-	(unicode_printer_fini(&current_tags.at_doc), \
-	 memcpy(&current_tags, &(buf), sizeof(struct unicode_printer)))
-#endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 
 /* Current set of active AST tags.
@@ -629,19 +605,13 @@ INTDEF struct ast_tags current_tags;
 INTDEF WUNUSED int (DCALL ast_tags_clear)(void);
 
 /* Pack together the current documentation string. */
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_tags_doc(struct decl_ast const *__restrict decl);
-#else /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-INTDEF WUNUSED DREF DeeObject *DCALL ast_tags_doc(void);
-#endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 /* Escape documentation text from "Encoded Documentation Text"
  * into "Fully Encoded Documentation Text" */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 doctext_escape(struct unicode_printer *__restrict doctext);
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 /* Add a new annotation to the current set of tags. */
 INTDEF WUNUSED NONNULL((1)) int

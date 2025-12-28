@@ -225,7 +225,6 @@ parse_varargs_suffix:
 					if unlikely(yield() < 0)
 						goto err;
 				}
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 				if (tok == ':') {
 					/* Parse argument declaration information. */
 					if unlikely(yield() < 0)
@@ -233,7 +232,6 @@ parse_varargs_suffix:
 					if unlikely(decl_ast_parse_for_symbol(arg))
 						goto err;
 				}
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				if unlikely(tok == '=') {
 					if (WARN(W_UNEXPECTED_DEFAULT_AFTER_VARARGS_OR_VARKWDS, arg))
 						goto err;
@@ -324,14 +322,12 @@ set_argument_as_local:
 				arg->s_flag = symbol_flags;
 				if (tok == '?' && unlikely(yield() < 0))
 					goto err;
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 				if (tok == ':') {
 					if unlikely(yield() < 0)
 						goto err;
 					if unlikely(decl_ast_parse_for_symbol(arg))
 						goto err;
 				}
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				if (tok == '=')
 					goto skip_default_suffix;
 			} else if (tok == '?') { /* Optional argument */
@@ -350,14 +346,12 @@ set_argument_as_local:
 				current_basescope->bs_default[current_basescope->bs_argc_max -
 				                              current_basescope->bs_argc_min] = NULL;
 				++current_basescope->bs_argc_max;
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 				if (tok == ':') {
 					if unlikely(yield() < 0)
 						goto err;
 					if unlikely(decl_ast_parse_for_symbol(arg))
 						goto err;
 				}
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				if unlikely(tok == '=') {
 					DREF struct ast *default_expr;
 					if (WARN(W_UNEXPECTED_DEFAULT_AFTER_OPTIONAL, arg))
@@ -373,7 +367,6 @@ skip_default_suffix:
 					ast_decref(default_expr);
 					goto next_argument;
 				}
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 			} else if (tok == ':') { /* Declaration suffix. */
 				if unlikely(yield() < 0)
 					goto err;
@@ -382,13 +375,10 @@ skip_default_suffix:
 				if (tok == '=')
 					goto parse_default_suffix;
 				goto set_arg_as_normal;
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 			} else if (tok == '=') { /* Default argument */
 				DREF DeeObject *default_value;
 				DREF struct ast *default_expr;
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 parse_default_suffix:
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				if unlikely(yield() < 0)
 					goto err;
 				default_expr = ast_parse_expr(LOOKUP_SYM_NORMAL);
@@ -420,9 +410,7 @@ err_default_expr:
 				                              current_basescope->bs_argc_min] = default_value; /* Inherit reference. */
 				++current_basescope->bs_argc_max;
 			} else {
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 set_arg_as_normal:
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				ASSERT(current_basescope->bs_argc_min <= current_basescope->bs_argc_max);
 				if (current_basescope->bs_argc_min < current_basescope->bs_argc_max) {
 					/* Positional-after-optional */
@@ -497,24 +485,15 @@ err:
 INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_function(struct TPPKeyword *name, bool *p_need_semi,
                    bool allow_missing_params,
-                   struct ast_loc *name_loc
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
-                   ,
-                   struct decl_ast *decl
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-                   ) {
+                   struct ast_loc *name_loc,
+                   struct decl_ast *decl) {
 	DREF struct ast *result;
 	struct ast_annotations annotations;
 	ast_annotations_get(&annotations);
 	if unlikely(basescope_push())
 		goto err_anno;
 	current_basescope->bs_flags |= current_tags.at_code_flags;
-	result = ast_parse_function_noscope(name, p_need_semi, allow_missing_params, name_loc
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
-	                                    ,
-	                                    decl
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-	                                    );
+	result = ast_parse_function_noscope(name, p_need_semi, allow_missing_params, name_loc, decl);
 	basescope_pop();
 	if unlikely(!result)
 		goto err_anno;
@@ -528,23 +507,14 @@ INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_function_noscope(struct TPPKeyword *name,
                            bool *p_need_semi,
                            bool allow_missing_params,
-                           struct ast_loc *name_loc
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
-                           ,
-                           struct decl_ast *decl
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-                           ) {
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
+                           struct ast_loc *name_loc,
+                           struct decl_ast *decl) {
 	struct decl_ast my_decl;
 	struct symbol *funcself_symbol = NULL;
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	uint32_t old_flags;
 	DREF struct ast *result, *code;
 	/* Add information from tags. */
 	if (name) {
-#ifndef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
-		struct symbol *funcself_symbol;
-#endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		/* Save the function name in the base scope. */
 		current_basescope->bs_name = name;
 
@@ -556,9 +526,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 	}
 
 	/* Declaration meta-information */
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	decl_ast_initfunc(&my_decl, NULL, current_basescope);
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 	if (tok == '(') {
 		/* Argument list. */
@@ -576,7 +544,6 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 			goto err_decl;
 	}
 
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	if (tok == ':') {
 		struct decl_ast *return_type;
 		if unlikely(yield() < 0)
@@ -609,7 +576,6 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		}
 		my_decl.da_type = DAST_NONE;
 	}
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 	if (tok == TOK_ARROW) {
 		struct ast_loc arrow_loc;
@@ -640,7 +606,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if (skip('}', W_EXPECTED_RBRACE_AFTER_FUNCTION))
-			goto err_xcode_decl;
+			goto err_decl_xcode;
 		if (p_need_semi)
 			*p_need_semi = false;
 	} else {
@@ -692,7 +658,6 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 	ASSERT(current_basescope->bs_scope.s_prev);
 	result->a_scope = current_basescope->bs_scope.s_prev;
 	Dee_Incref(result->a_scope);
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	ASSERT(!funcself_symbol || my_decl.da_type == DAST_NONE);
 	if (decl) {
 		/* Pass Declaration information to the caller. */
@@ -705,23 +670,17 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 	} else {
 		decl_ast_fini(&my_decl);
 	}
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	return ast_setddi(result, name_loc);
 err_flags_decl:
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	decl_ast_fini(&my_decl);
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 /*err_flags:*/
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 	goto err;
-err_xcode_decl:
+err_decl_xcode:
 	ast_xdecref(code);
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 err_decl:
 	decl_ast_fini(&my_decl);
-	goto err;
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 err:
 	return NULL;
 }
@@ -796,7 +755,6 @@ err:
 
 
 
-#ifdef CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS
 /* Parse a `() -> 42' or `a -> a+42'-style lambda.
  * In either case, upon entry the current token must be the '->' */
 INTERN WUNUSED DREF struct ast *DCALL
@@ -843,13 +801,7 @@ ast_parse_function_java_lambda(struct TPPKeyword *first_argument_name,
 		current_basescope->bs_argc_min = 1;
 		current_basescope->bs_argc_max = 1;
 		current_basescope->bs_argc     = 1;
-	} else
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
-	if (tok != TOK_ARROW && tok != ':')
-#else /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-	if (tok != TOK_ARROW)
-#endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-	{
+	} else if (tok != TOK_ARROW && tok != ':') {
 		uint32_t old_flags;
 		int error;
 		old_flags = TPPLexer_Current->l_flags;
@@ -867,7 +819,6 @@ ast_parse_function_java_lambda(struct TPPKeyword *first_argument_name,
 		ASSERT(current_basescope->bs_argv == NULL);
 	}
 
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	if (tok == ':') {
 		struct decl_ast temp;
 		if unlikely(yield() < 0)
@@ -876,7 +827,6 @@ ast_parse_function_java_lambda(struct TPPKeyword *first_argument_name,
 			goto err_scope;
 		decl_ast_fini(&temp);
 	}
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 	ASSERT(tok == TOK_ARROW);
 	loc_here(&arrow_loc);
@@ -991,7 +941,6 @@ INTERN WUNUSED int DCALL ast_is_after_lparen_of_java_lambda(void) {
 				goto err_restore;
 			if (tok == ',' || tok == ')')
 				goto yes_restore; /* Something like `(foo?)' is guarantied to be a paren-lambda. */
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 			if (tok == ':') {
 				/* Parse argument declaration information. */
 				if unlikely(yield() < 0)
@@ -999,12 +948,9 @@ INTERN WUNUSED int DCALL ast_is_after_lparen_of_java_lambda(void) {
 				if unlikely(decl_ast_skip())
 					goto err_restore;
 			}
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		} else {
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 			if (tok == ':') /* Something like `(foo: int)' is guarantied to be a paren-lambda. */
 				goto yes_restore;
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		}
 		if unlikely(tok == '=') {
 			struct ast *temp;
@@ -1028,7 +974,6 @@ check_and_consume_rparen:
 		goto nope_restore;
 	if unlikely(yield() < 0)
 		goto err_restore;
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	if (tok == ':') {
 		/* Parse argument declaration information. */
 		if unlikely(yield() < 0)
@@ -1036,7 +981,6 @@ check_and_consume_rparen:
 		if unlikely(decl_ast_skip())
 			goto err_restore;
 	}
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	if (tok != TOK_ARROW)
 		goto nope_restore;
 yes_restore:
@@ -1052,10 +996,6 @@ err_restore:
 err:
 	return -1;
 }
-
-#endif /* CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS */
-
-
 
 DECL_END
 

@@ -4272,9 +4272,7 @@ DeeModule_LoadSourceStreamEx(DeeModuleObject *__restrict self,
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 		dots->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 		dots->s_decltype.da_type = DAST_NONE;
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		dots->s_type  = SYMBOL_TYPE_ARG;
 		dots->s_symid = 0;
 		dots->s_flag |= SYMBOL_FALLOC;
@@ -6813,9 +6811,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 		dots->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 		dots->s_decltype.da_type = DAST_NONE;
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		dots->s_type  = SYMBOL_TYPE_ARG;
 		dots->s_symid = 0;
 		dots->s_flag |= SYMBOL_FALLOC;

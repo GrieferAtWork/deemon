@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_COMPILER_LEXER_DOCTEXT_C 1
 
 #include <deemon/compiler/doctext.h>
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
@@ -3128,7 +3127,5 @@ err:
 }
 
 DECL_END
-
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 #endif /* !GUARD_DEEMON_COMPILER_LEXER_DOCTEXT_C */

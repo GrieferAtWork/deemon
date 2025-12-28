@@ -23,8 +23,6 @@
 #include "../api.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include "tpp.h" /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 #include "../string.h"
 
 DECL_BEGIN
@@ -653,10 +651,7 @@ DECL_BEGIN
 INTDEF WUNUSED NONNULL((1)) int DCALL
 doctext_compile(struct unicode_printer *__restrict doctext);
 
-
-
 DECL_END
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 #endif /* CONFIG_BUILDING_DEEMON */
 
 #endif /* !GUARD_DEEMON_COMPILER_DOCTEXT_H */

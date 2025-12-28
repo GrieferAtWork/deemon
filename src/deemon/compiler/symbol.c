@@ -448,9 +448,7 @@ set_default_location:
 
 INTERN NONNULL((1)) void DCALL
 symbol_fini(struct symbol *__restrict self) {
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	decl_ast_fini(&self->s_decltype);
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	switch (self->s_type) {
 
 	case SYMBOL_TYPE_EXTERN:
@@ -1013,11 +1011,9 @@ INTERN WUNUSED int (DCALL classscope_push)(void) {
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 	this_sym->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 #if DAST_NONE != 0
 	this_sym->s_decltype.da_type = DAST_NONE;
 #endif /* DAST_NONE != 0 */
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	this_sym->s_type  = SYMBOL_TYPE_THIS;
 	this_sym->s_scope = &new_scope->cs_scope;
 	this_sym->s_name  = TPPLexer_LookupKeyword(STR_this, 4, 0);
@@ -1460,11 +1456,9 @@ seach_single:
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 			result->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 #if DAST_NONE != 0
 			result->s_decltype.da_type = DAST_NONE;
 #endif /* DAST_NONE != 0 */
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 			result->s_name = name;
 			result->s_type = SYMBOL_TYPE_FWD;
 			goto add_result_to_iter;
@@ -1491,11 +1485,9 @@ create_variable:
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 	result->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 #if DAST_NONE != 0
 	result->s_decltype.da_type = DAST_NONE;
 #endif /* DAST_NONE != 0 */
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	result->s_name  = name;
 	result->s_scope = current_scope;
 	result->s_type  = SYMBOL_TYPE_FWD;
@@ -1601,9 +1593,7 @@ new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc) {
 	bucket         = &current_scope->s_map[name->k_id % current_scope->s_mapa];
 	result->s_next = *bucket;
 	*bucket        = result;
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	result->s_decltype.da_type = DAST_NONE;
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	result->s_flag   = SYMBOL_FNORMAL;
 	result->s_nread  = 0;
 	result->s_nwrite = 0;
@@ -1636,9 +1626,7 @@ INTERN WUNUSED struct symbol *DCALL new_unnamed_symbol(void) {
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 	result->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	result->s_decltype.da_type = DAST_NONE;
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	result->s_name        = &TPPKeyword_Empty;
 	result->s_next        = current_scope->s_del;
 	current_scope->s_del  = result;
@@ -1663,9 +1651,7 @@ new_unnamed_symbol_in_scope(DeeScopeObject *__restrict scope) {
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 	result->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	result->s_decltype.da_type = DAST_NONE;
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	result->s_name        = &TPPKeyword_Empty;
 	result->s_next        = scope->s_del;
 	scope->s_del          = result;
@@ -1698,9 +1684,7 @@ new_local_symbol_in_scope(DeeScopeObject *__restrict scope,
 			goto err_r;
 	}
 	ASSERT(scope->s_mapa != 0);
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	result->s_decltype.da_type = DAST_NONE;
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	bucket           = &scope->s_map[name->k_id % scope->s_mapa];
 	result->s_next   = *bucket;
 	*bucket          = result;

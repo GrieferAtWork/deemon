@@ -20,8 +20,10 @@
 #ifndef GUARD_DEEMON_COMPILER_LEXER_DECL_C
 #define GUARD_DEEMON_COMPILER_LEXER_DECL_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+/**/
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
@@ -35,15 +37,14 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
 
-#include "../../runtime/builtin.h"
 /**/
+#include "../../runtime/builtin.h"
 
+/**/
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t, uint32_t */
 
 DECL_BEGIN
-
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_copy(struct decl_ast *__restrict self,
@@ -858,7 +859,6 @@ decl_ast_escapetext32(uint32_t const *__restrict text, size_t text_len,
 #include "decl-escape-text-impl.c.inl"
 #endif /* !__INTELLISENSE__ */
 
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 /* Escape documentation text from "Encoded Documentation Text"
  * into "Fully Encoded Documentation Text" */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -901,7 +901,6 @@ err_r:
 err:
 	return -1;
 }
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 
 /* Pack together the current documentation string. */
@@ -1617,8 +1616,6 @@ decl_ast_equal(struct decl_ast const *__restrict a,
 nope:
 	return false;
 }
-
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 DECL_END
 

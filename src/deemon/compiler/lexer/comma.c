@@ -20,9 +20,12 @@
 #ifndef GUARD_DEEMON_COMPILER_LEXER_COMMA_C
 #define GUARD_DEEMON_COMPILER_LEXER_COMMA_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+/**/
+#include <deemon/alloc.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/doctext.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
@@ -31,13 +34,10 @@
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
-#include <deemon/compiler/doctext.h>
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-
-#include "../../runtime/strings.h"
 /**/
+#include "../../runtime/strings.h"
 
+/**/
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t, uint32_t */
 
@@ -246,9 +246,7 @@ err:
  *                     set to `AST_COMMA_OUT_FNEEDSEMI' indicative of this. */
 INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *p_out_mode) {
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	struct decl_ast decl;
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	DREF struct ast *current;
 	bool need_semi;
 	int error;
@@ -407,7 +405,6 @@ next_expr:
 		{
 			struct ast_tags_printers temp;
 			AST_TAGS_BACKUP_PRINTERS(temp);
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 			{
 				struct ast_annotations annotations;
 				ast_annotations_get(&annotations);
@@ -429,9 +426,6 @@ err_function_anno:
 					goto err_function_anno;
 				current = ast_annotations_apply(&annotations, current);
 			}
-#else /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-			current = ast_parse_function(function_name, &need_semi, false, &loc);
-#endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 			AST_TAGS_RESTORE_PRINTERS(temp);
 		}
 		if unlikely(!current)
@@ -439,7 +433,6 @@ err_function_anno:
 
 		/* Pack together the documentation string for the function. */
 		if (function_symbol) {
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 			if (function_symbol->s_decltype.da_type != DAST_NONE) {
 				if (!decl_ast_equal(&function_symbol->s_decltype, &decl)) {
 					if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED, function_symbol))
@@ -449,21 +442,14 @@ err_function_anno:
 			} else {
 				decl_ast_move(&function_symbol->s_decltype, &decl);
 			}
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 			if (function_symbol->s_type == SYMBOL_TYPE_GLOBAL &&
 			    !function_symbol->s_global.g_doc) {
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 				function_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc(&function_symbol->s_decltype);
-#else /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-				function_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc();
-#endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				if unlikely(!function_symbol->s_global.g_doc)
 					goto err;
 			}
 		} else {
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 			decl_ast_fini(&decl);
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		}
 		if unlikely(ast_tags_clear())
 			goto err_current;
@@ -549,7 +535,6 @@ err_function_anno:
 				            current_scope == (DeeScopeObject *)current_rootscope)) {
 					var_symbol->s_type         = SYMBOL_TYPE_GLOBAL;
 					var_symbol->s_global.g_doc = NULL;
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 					if (var_symbol->s_decltype.da_type == DAST_NONE) {
 						/* Try to extract documentation information from the C-declaration's type specifier. */
 						switch (current->a_type) {
@@ -576,12 +561,6 @@ err_function_anno:
 					var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc(&var_symbol->s_decltype);
 					if unlikely(!var_symbol->s_global.g_doc)
 						goto err_current;
-#else /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-					/* Package together documentation tags for this variable symbol. */
-					var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc();
-					if unlikely(!var_symbol->s_global.g_doc)
-						goto err_current;
-#endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				} else {
 					var_symbol->s_type = SYMBOL_TYPE_LOCAL;
 				}
@@ -730,7 +709,6 @@ err_args:
 			if (current->a_type == AST_SYM &&
 			    (mode & AST_COMMA_ALLOWTYPEDECL)) {
 				struct symbol *var_symbol = current->a_sym;
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 				if (tok == ':') {
 					if unlikely(yield() < 0)
 						goto err_current;
@@ -749,16 +727,11 @@ err_args:
 						decl_ast_move(&var_symbol->s_decltype, &decl);
 					}
 				}
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				if (var_symbol->s_type == SYMBOL_TYPE_GLOBAL &&
 				    !var_symbol->s_global.g_doc) {
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 					if unlikely(doctext_compile(&current_tags.at_doc))
 						goto err_current;
 					var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc(&var_symbol->s_decltype);
-#else /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-					var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc();
-#endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 					if unlikely(!var_symbol->s_global.g_doc)
 						goto err_current;
 				}
@@ -1016,16 +989,11 @@ done_expression_nocurrent:
 			goto err;
 	}
 	goto done_expression_nomerge;
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 err_decl:
 	decl_ast_fini(&decl);
 	goto err;
-#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 err_current:
 	ast_decref(current);
-#ifndef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
-err_decl:
-#endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 err:
 	astlist_fini(&expr_comma);
 err_nocomma:
