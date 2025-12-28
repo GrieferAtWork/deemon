@@ -832,20 +832,20 @@ final class NativeMethod {
 			if (callAttrImpl.alias !is none)
 				continue;
 			printInternImpl(f"default__{name}__with_callattr_{attr}", callAttrImpl, {
-				"LOCAL_str_attr": () -> f"(DeeObject *)&str_{attr}",
+				"LOCAL_str_attr": () -> f"Dee_AsObject(&str_{attr})",
 				"LOCAL_STR_attr": () -> f"STR_{attr}",
 				"LOCAL_GETATTR": (self) ->
-					f"DeeObject_GetAttr({self}, (DeeObject *)&str_{attr})",
+					f"DeeObject_GetAttr({self}, Dee_AsObject(&str_{attr}))",
 				"LOCAL_BOUNDATTR": (self) ->
-					f"DeeObject_BoundAttr({self}, (DeeObject *)&str_{attr})",
+					f"DeeObject_BoundAttr({self}, Dee_AsObject(&str_{attr}))",
 				"LOCAL_DELATTR": (self) ->
-					f"DeeObject_DelAttr({self}, (DeeObject *)&str_{attr})",
+					f"DeeObject_DelAttr({self}, Dee_AsObject(&str_{attr}))",
 				"LOCAL_SETATTR": (self, value) ->
-					f"DeeObject_SetAttr({self}, (DeeObject *)&str_{attr}, {value})",
+					f"DeeObject_SetAttr({self}, Dee_AsObject(&str_{attr}), {value})",
 				"LOCAL_CALLATTR": (self, argc, argv) ->
-					f"DeeObject_CallAttr({self}, (DeeObject *)&str_{attr}, {argc}, {argv})",
+					f"DeeObject_CallAttr({self}, Dee_AsObject(&str_{attr}), {argc}, {argv})",
 				"LOCAL_CALLATTRF": (self, args...) ->
-					f"DeeObject_CallAttrf({self}, (DeeObject *)&str_{attr}, {", ".join(args)})",
+					f"DeeObject_CallAttrf({self}, Dee_AsObject(&str_{attr}), {", ".join(args)})",
 			});
 			print;
 		}
@@ -1662,7 +1662,7 @@ function print_Dee_tmh_id() {
 	print(" *");
 	print(" * Do not make use of these IDs if you're developing a DEX module and");
 	print(" * wish to remain compatible with the deemon core across many version.");
-	print(" * If that's want you're trying to accomplish, you should instead define");
+	print(" * If that's what you're trying to accomplish, you should instead define");
 	print(" * regular `tp_methods' with names recognized as method hints. */");
 	print("enum Dee_tmh_id {");
 	for (local none, hint: NATIVE_METHOD_HINTS) {
@@ -2649,9 +2649,15 @@ function printSuperMethodHintWrappers(impl: bool) {
 			}
 			if (needWithSuper) {
 				print(f"	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:");
-				print(f"		return (*(DeeMH_{name}_t)specs.smh_cb)(({
-						nativeMethod.params.first.fullTypWithoutRestrict}){
-						", ".join(usedParams.each.name)});");
+				local firstType = nativeMethod.params.first.fullTypWithoutRestrict;
+				if (firstType == "DeeObject *") {
+					print(f"		return (*(DeeMH_{name}_t)specs.smh_cb)(Dee_AsObject({
+							usedParams.first.name}){
+							"".join(for (local x: usedParams[1:]) ", " + x.name)});");
+				} else {
+					print(f"		return (*(DeeMH_{name}_t)specs.smh_cb)(({
+							firstType}){", ".join(usedParams.each.name)});");
+				}
 			} else {
 				print(f"/*	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER: // Unused */");
 			}

@@ -61,12 +61,12 @@ DECL_BEGIN
  * >>     ...
  * >> }
  * >>
- * >> PRIVATE struct type_method_hint myob_method_hints[] = {
+ * >> PRIVATE struct type_method_hint tpconst myob_method_hints[] = {
  * >>     TYPE_METHOD_HINT(map_setdefault, &myob_setdefault),
  * >>     TYPE_METHOD_HINT_END
  * >> };
  * >>
- * >> PRIVATE struct type_method myob_methods[] = {
+ * >> PRIVATE struct type_method tpconst myob_methods[] = {
  * >>     TYPE_METHOD_HINTREF(Mapping_setdefault),
  * >>     TYPE_METHOD_END
  * >> };
@@ -132,7 +132,7 @@ my_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
  *
  * Do not make use of these IDs if you're developing a DEX module and
  * wish to remain compatible with the deemon core across many version.
- * If that's want you're trying to accomplish, you should instead define
+ * If that's what you're trying to accomplish, you should instead define
  * regular `tp_methods' with names recognized as method hints. */
 enum Dee_tmh_id {
 	Dee_TMH_seq_operator_bool,

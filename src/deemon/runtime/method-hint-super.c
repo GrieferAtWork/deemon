@@ -531,7 +531,7 @@ super_mh__seq_operator_compare(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_seq_operator_compare_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_operator_compare_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_seq_operator_compare_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -547,7 +547,7 @@ super_mh__seq_operator_compare_eq(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_seq_operator_compare_eq_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_operator_compare_eq_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_seq_operator_compare_eq_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -563,7 +563,7 @@ super_mh__seq_operator_trycompare_eq(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_seq_operator_trycompare_eq_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_operator_trycompare_eq_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_seq_operator_trycompare_eq_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -579,7 +579,7 @@ super_mh__seq_operator_eq(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_seq_operator_eq_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_operator_eq_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_seq_operator_eq_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -595,7 +595,7 @@ super_mh__seq_operator_ne(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_seq_operator_ne_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_operator_ne_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_seq_operator_ne_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -611,7 +611,7 @@ super_mh__seq_operator_lo(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_seq_operator_lo_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_operator_lo_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_seq_operator_lo_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -627,7 +627,7 @@ super_mh__seq_operator_le(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_seq_operator_le_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_operator_le_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_seq_operator_le_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -643,7 +643,7 @@ super_mh__seq_operator_gr(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_seq_operator_gr_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_operator_gr_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_seq_operator_gr_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -659,7 +659,7 @@ super_mh__seq_operator_ge(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_seq_operator_ge_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_operator_ge_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_seq_operator_ge_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -675,7 +675,7 @@ super_mh__seq_operator_add(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_seq_operator_add_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_operator_add_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_seq_operator_add_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -2453,7 +2453,7 @@ super_mh__set_operator_compare_eq(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_set_operator_compare_eq_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_set_operator_compare_eq_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_set_operator_compare_eq_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -2469,7 +2469,7 @@ super_mh__set_operator_trycompare_eq(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_set_operator_trycompare_eq_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_set_operator_trycompare_eq_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_set_operator_trycompare_eq_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -2485,7 +2485,7 @@ super_mh__set_operator_eq(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_set_operator_eq_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_set_operator_eq_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_set_operator_eq_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -2501,7 +2501,7 @@ super_mh__set_operator_ne(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_set_operator_ne_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_set_operator_ne_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_set_operator_ne_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -2517,7 +2517,7 @@ super_mh__set_operator_lo(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_set_operator_lo_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_set_operator_lo_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_set_operator_lo_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -2533,7 +2533,7 @@ super_mh__set_operator_le(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_set_operator_le_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_set_operator_le_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_set_operator_le_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -2549,7 +2549,7 @@ super_mh__set_operator_gr(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_set_operator_gr_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_set_operator_gr_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_set_operator_gr_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -2565,7 +2565,7 @@ super_mh__set_operator_ge(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_set_operator_ge_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_set_operator_ge_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_set_operator_ge_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -2613,7 +2613,7 @@ super_mh__set_operator_add(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_set_operator_add_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_set_operator_add_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_set_operator_add_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -2629,7 +2629,7 @@ super_mh__set_operator_sub(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_set_operator_sub_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_set_operator_sub_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_set_operator_sub_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -2645,7 +2645,7 @@ super_mh__set_operator_and(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_set_operator_and_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_set_operator_and_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_set_operator_and_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -2661,7 +2661,7 @@ super_mh__set_operator_xor(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_set_operator_xor_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_set_operator_xor_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_set_operator_xor_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -3675,7 +3675,7 @@ super_mh__map_operator_compare_eq(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_map_operator_compare_eq_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_map_operator_compare_eq_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_map_operator_compare_eq_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -3691,7 +3691,7 @@ super_mh__map_operator_trycompare_eq(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_map_operator_trycompare_eq_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_map_operator_trycompare_eq_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_map_operator_trycompare_eq_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -3707,7 +3707,7 @@ super_mh__map_operator_eq(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_map_operator_eq_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_map_operator_eq_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_map_operator_eq_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -3723,7 +3723,7 @@ super_mh__map_operator_ne(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_map_operator_ne_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_map_operator_ne_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_map_operator_ne_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -3739,7 +3739,7 @@ super_mh__map_operator_lo(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_map_operator_lo_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_map_operator_lo_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_map_operator_lo_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -3755,7 +3755,7 @@ super_mh__map_operator_le(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_map_operator_le_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_map_operator_le_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_map_operator_le_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -3771,7 +3771,7 @@ super_mh__map_operator_gr(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_map_operator_gr_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_map_operator_gr_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_map_operator_gr_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -3787,7 +3787,7 @@ super_mh__map_operator_ge(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_map_operator_ge_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_map_operator_ge_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_map_operator_ge_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -3803,7 +3803,7 @@ super_mh__map_operator_add(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_map_operator_add_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_map_operator_add_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_map_operator_add_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
@@ -3819,7 +3819,7 @@ super_mh__map_operator_sub(DeeSuperObject *lhs, DeeObject *keys) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_map_operator_sub_t)specs.smh_cb)(lhs->s_self, keys);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_map_operator_sub_t)specs.smh_cb)((DeeObject *)lhs, keys);
+		return (*(DeeMH_map_operator_sub_t)specs.smh_cb)(Dee_AsObject(lhs), keys);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, keys);
 	default: __builtin_unreachable();
@@ -3835,7 +3835,7 @@ super_mh__map_operator_and(DeeSuperObject *lhs, DeeObject *keys) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_map_operator_and_t)specs.smh_cb)(lhs->s_self, keys);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_map_operator_and_t)specs.smh_cb)((DeeObject *)lhs, keys);
+		return (*(DeeMH_map_operator_and_t)specs.smh_cb)(Dee_AsObject(lhs), keys);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, keys);
 	default: __builtin_unreachable();
@@ -3851,7 +3851,7 @@ super_mh__map_operator_xor(DeeSuperObject *lhs, DeeObject *rhs) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
 		return (*(DeeMH_map_operator_xor_t)specs.smh_cb)(lhs->s_self, rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_map_operator_xor_t)specs.smh_cb)((DeeObject *)lhs, rhs);
+		return (*(DeeMH_map_operator_xor_t)specs.smh_cb)(Dee_AsObject(lhs), rhs);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
 		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(lhs->s_type, lhs->s_self, rhs);
 	default: __builtin_unreachable();
