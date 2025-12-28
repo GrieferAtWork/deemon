@@ -40,6 +40,7 @@
 #include <deemon/object.h>
 #include <deemon/property.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
@@ -1371,6 +1372,118 @@ cd_visit(ClassDescriptor *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_XVisit(self->cd_doc);
 }
 
+PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
+cd_serialize(ClassDescriptor *__restrict self, DeeSerial *__restrict writer) {
+	ClassDescriptor *out;
+	Dee_seraddr_t out_addr;
+	size_t i, sizeof_self;
+	sizeof_self = offsetof(ClassDescriptor, cd_iattr_list) +
+	              (self->cd_iattr_mask + 1) *
+	              sizeof(struct Dee_class_attribute);
+	out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	if (!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, ClassDescriptor);
+#define ADDROF(field) (out_addr + offsetof(ClassDescriptor, field))
+	out->cd_flags      = self->cd_flags;
+	out->cd_cmemb_size = self->cd_cmemb_size;
+	out->cd_imemb_size = self->cd_imemb_size;
+	out->cd_clsop_mask = self->cd_clsop_mask;
+	out->cd_cattr_mask = self->cd_cattr_mask;
+	out->cd_iattr_mask = self->cd_iattr_mask;
+	memcpyc(out->cd_iattr_list, self->cd_iattr_list,
+	        self->cd_iattr_mask + 1,
+	        sizeof(struct Dee_class_attribute));
+
+	/* Write class name and doc-string */
+	if (DeeSerial_XPutObject(writer, ADDROF(cd_name), self->cd_name))
+		goto err;
+	if (DeeSerial_XPutObject(writer, ADDROF(cd_doc), self->cd_doc))
+		goto err;
+
+	/* Write instance attribute table. */
+	for (i = 0; i <= self->cd_iattr_mask; ++i) {
+		Dee_seraddr_t out_addr__cd_iattr_list__i;
+		if (!self->cd_iattr_list[i].ca_name)
+			continue;
+		out_addr__cd_iattr_list__i = ADDROF(cd_iattr_list);
+		out_addr__cd_iattr_list__i += i * sizeof(struct Dee_class_attribute);
+		if (DeeSerial_PutObject(writer,
+		                        out_addr__cd_iattr_list__i +
+		                        offsetof(struct Dee_class_attribute, ca_name),
+		                        self->cd_iattr_list[i].ca_name))
+			goto err;
+		if (DeeSerial_XPutObject(writer,
+		                         out_addr__cd_iattr_list__i +
+		                         offsetof(struct Dee_class_attribute, ca_doc),
+		                         self->cd_iattr_list[i].ca_doc))
+			goto err;
+	}
+
+	/* Write class attribute table. */
+	if (self->cd_cattr_list == empty_class_attributes) {
+		if (DeeSerial_PutStaticDeemon(writer, ADDROF(cd_cattr_list), empty_class_attributes))
+			goto err;
+	} else {
+		size_t sizeof__cd_cattr_list;
+		struct Dee_class_attribute *in__cd_cattr_list;
+		struct Dee_class_attribute *out__cd_cattr_list;
+		Dee_seraddr_t addrof_out__cd_cattr_list;
+		in__cd_cattr_list = self->cd_cattr_list;
+		sizeof__cd_cattr_list = (self->cd_cattr_mask + 1) * sizeof(struct Dee_class_attribute);
+		addrof_out__cd_cattr_list = DeeSerial_Malloc(writer, sizeof__cd_cattr_list);
+		if (!Dee_SERADDR_ISOK(addrof_out__cd_cattr_list))
+			goto err;
+		if (DeeSerial_PutAddr(writer, ADDROF(cd_cattr_list), addrof_out__cd_cattr_list))
+			goto err;
+		out__cd_cattr_list = DeeSerial_Addr2Mem(writer, addrof_out__cd_cattr_list,
+		                                        struct Dee_class_attribute);
+		memcpy(out__cd_cattr_list, in__cd_cattr_list, sizeof__cd_cattr_list);
+		for (i = 0; i <= self->cd_cattr_mask; ++i) {
+			Dee_seraddr_t addrof_out__cd_cattr_list__i;
+			if (!in__cd_cattr_list[i].ca_name)
+				continue;
+			addrof_out__cd_cattr_list__i = addrof_out__cd_cattr_list;
+			addrof_out__cd_cattr_list__i += i * sizeof(struct Dee_class_attribute);
+			if (DeeSerial_PutObject(writer,
+			                        addrof_out__cd_cattr_list__i +
+			                        offsetof(struct Dee_class_attribute, ca_name),
+			                        in__cd_cattr_list[i].ca_name))
+				goto err;
+			if (DeeSerial_XPutObject(writer,
+			                         addrof_out__cd_cattr_list__i +
+			                         offsetof(struct Dee_class_attribute, ca_doc),
+			                         in__cd_cattr_list[i].ca_doc))
+				goto err;
+		}
+	}
+
+	/* Write class operator table. */
+	if (self->cd_clsop_list == empty_class_operators) {
+		if (DeeSerial_PutStaticDeemon(writer, ADDROF(cd_clsop_list), empty_class_operators))
+			goto err;
+	} else {
+		size_t sizeof__cd_clsop_list;
+		Dee_seraddr_t addrof_out__cd_clsop_list;
+		struct Dee_class_operator *in__cd_clsop_list;
+		struct Dee_class_operator *out__cd_clsop_list;
+		in__cd_clsop_list = self->cd_clsop_list;
+		sizeof__cd_clsop_list = (self->cd_clsop_mask + 1) * sizeof(struct Dee_class_operator);
+		addrof_out__cd_clsop_list = DeeSerial_Malloc(writer, sizeof__cd_clsop_list);
+		if (!Dee_SERADDR_ISOK(addrof_out__cd_clsop_list))
+			goto err;
+		if (DeeSerial_PutAddr(writer, ADDROF(cd_clsop_list), addrof_out__cd_clsop_list))
+			goto err;
+		out__cd_clsop_list = DeeSerial_Addr2Mem(writer, addrof_out__cd_clsop_list,
+		                                        struct Dee_class_operator);
+		memcpy(out__cd_clsop_list, in__cd_clsop_list, sizeof__cd_clsop_list);
+	}
+#undef ADDROF
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+}
+
 
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 class_attribute_eq(struct class_attribute *__restrict lhs,
@@ -2403,7 +2516,7 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
 			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &cd_init_kw,
-			/* tp_serialize:   */ NULL, /* TODO */
+			/* tp_serialize:   */ &cd_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cd_fini,

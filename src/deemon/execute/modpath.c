@@ -1567,7 +1567,9 @@ DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_fil
 	struct Dee_import_frame frame;
 
 #ifndef CONFIG_NO_DEC
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 	bool has_broken_dec_file = false;
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 	if ((flags & (_DeeModule_IMPORT_F_IS_DEE_FILE | DeeModule_IMPORT_F_NOLDEC)) ==
 	    /*    */ (_DeeModule_IMPORT_F_IS_DEE_FILE)) {
 		size_t pathsize, basesize;
@@ -1628,7 +1630,9 @@ DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_fil
 //		Dee_Decref(dec_stream); /* Inherited by `DeeModule_OpenDecFile_impl()' */
 		if (result != (DREF DeeModuleObject *)ITER_DONE)
 			return result;
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 		has_broken_dec_file = true;
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 	}
 no_dec_file:
 #endif /* !CONFIG_NO_DEC */
