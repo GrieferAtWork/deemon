@@ -2099,7 +2099,7 @@ INTERN DeeTypeObject DeeDirIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &diriter_init_kw,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* Directory iterators can't be serialized */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&diriter_fini,
 		/* .tp_assign      = */ NULL,
@@ -2299,7 +2299,7 @@ INTERN DeeTypeObject DeeDir_Type = {
 			/* tp_deep_ctor:   */ &dir_copy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &dir_init_kw,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* Directory readers can't be serialized */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dir_fini,
 		/* .tp_assign      = */ NULL,

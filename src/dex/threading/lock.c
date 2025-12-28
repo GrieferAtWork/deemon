@@ -1575,7 +1575,7 @@ INTERN DeeTypeObject DeeRWLockReadLock_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &rwlock_readlock_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rwlock_readlock_fini,
 		/* .tp_assign      = */ NULL,
@@ -1624,7 +1624,7 @@ INTERN DeeTypeObject DeeRWLockWriteLock_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &rwlock_writelock_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rwlock_writelock_fini,
 		/* .tp_assign      = */ NULL,
@@ -1899,7 +1899,7 @@ INTERN DeeTypeObject DeeSemaphore_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &semaphore_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO (writes the output semaphore with its current ticket count) */
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -2085,7 +2085,7 @@ INTERN DeeTypeObject DeeEvent_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &event_init_kw,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO (writes the output event with its current state) */
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -2912,7 +2912,7 @@ INTERN DeeTypeObject DeeLockUnion_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &lock_union_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL /* TODO */,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&lock_union_fini,

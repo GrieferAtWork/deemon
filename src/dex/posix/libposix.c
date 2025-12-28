@@ -1594,7 +1594,7 @@ PRIVATE DeeTypeObject PosixStubsList_Type = {
 			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL, /* Static singleton, so no serial needed */
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ NULL,

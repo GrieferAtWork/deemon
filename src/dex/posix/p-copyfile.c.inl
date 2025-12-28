@@ -762,7 +762,7 @@ INTERN DeeTypeObject DeeCopyFileProgress_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &copyfile_progress_init_kw,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&copyfile_progress_fini,
 		/* .tp_assign      = */ NULL,

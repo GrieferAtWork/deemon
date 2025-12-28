@@ -616,7 +616,7 @@ INTERN DeeTypeObject DocKwdsIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &dockwdsiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dockwdsiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -791,7 +791,7 @@ INTERN DeeTypeObject DocKwds_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &dockwds_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dockwds_fini,
 		/* .tp_assign      = */ NULL,

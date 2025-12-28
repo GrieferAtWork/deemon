@@ -29,6 +29,7 @@
 #include <deemon/format.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/weakref.h>
 
@@ -430,7 +431,7 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 			/* tp_deep_ctor:   */ &ob_weakref_deep,
 			/* tp_any_ctor:    */ &ob_weakref_init,
 			/* tp_any_ctor_kw: */ &ob_weakref_init_kw,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* XXX: Serializable weak references? */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ob_weakref_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&ob_weakref_assign,
@@ -472,10 +473,21 @@ weakrefable_init(WeakRefAble *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 weakrefable_copy(WeakRefAble *__restrict self,
                  WeakRefAble *__restrict UNUSED(other)) {
 	weakref_support_init(self);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+weakrefable_serialize(WeakRefAble *__restrict UNUSED(self),
+                      DeeSerial *__restrict writer,
+                      Dee_seraddr_t addr) {
+	/* Weak reference lists can't be serialized,
+	 * so just set-up as empty in the copy */
+	WeakRefAble *out = DeeSerial_Addr2Mem(writer, addr, WeakRefAble);
+	weakref_support_init(out);
 	return 0;
 }
 
@@ -517,7 +529,7 @@ PUBLIC DeeTypeObject DeeWeakRefAble_Type = {
 			/* tp_deep_ctor:   */ &weakrefable_copy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ &weakrefable_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&weakrefable_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&weakrefable_assign,

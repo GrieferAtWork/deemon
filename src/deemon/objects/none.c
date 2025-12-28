@@ -1006,7 +1006,7 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 			/* tp_deep_ctor:   */ &DeeNone_OperatorVarCopy,
 			/* tp_any_ctor:    */ &DeeNone_OperatorVarInit,
 			/* tp_any_ctor_kw: */ &DeeNone_OperatorVarInitKw,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL, /* Static singleton, so no serial needed */
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ NULL,

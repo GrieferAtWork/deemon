@@ -218,7 +218,7 @@ INTERN DeeTypeObject USetIterator_Type = {
 			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ &usetiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&usetiterator_fini,
 		/* .tp_assign      = */ NULL,
@@ -1280,7 +1280,7 @@ INTERN DeeTypeObject USet_Type = {
 			/* tp_deep_ctor:   */ &USet_InitCopy,
 			/* tp_any_ctor:    */ &uset_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&USet_Fini,
 		/* .tp_assign      = */ NULL,
@@ -1416,7 +1416,7 @@ INTERN DeeTypeObject URoSetIterator_Type = {
 			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ &urosetiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&urosetiterator_fini,
 		/* .tp_assign      = */ NULL,
@@ -1969,7 +1969,7 @@ INTERN DeeTypeObject URoSet_Type = {
 			/* tp_deep_ctor:   */ &uroset_deepcopy,
 			/* tp_any_ctor:    */ &uroset_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL /* TODO */,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&uroset_fini,

@@ -225,7 +225,7 @@ INTERN DeeTypeObject MapFromKeysAndValueIterator_Type = {
 			/* tp_deep_ctor:   */ &mfkvi_deep,
 			/* tp_any_ctor:    */ &mfkvi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mfkvi_fini,
 		/* .tp_assign      = */ NULL,
@@ -278,7 +278,7 @@ INTERN DeeTypeObject MapFromKeysAndCallbackIterator_Type = {
 			/* tp_deep_ctor:   */ &mfkci_deep,
 			/* tp_any_ctor:    */ &mfkci_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mfkci_fini,
 		/* .tp_assign      = */ NULL,

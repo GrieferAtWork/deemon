@@ -1456,7 +1456,7 @@ INTERN DeeTypeObject FixedList_Type = {
 			/* tp_deep_ctor:   */ &fl_copy,
 			/* tp_any_ctor:    */ &fl_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL /* TODO */,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&fl_fini,
@@ -1731,7 +1731,7 @@ INTERN DeeTypeObject FixedListIterator_Type = {
 			/* tp_deep_ctor:   */ &fli_deep,
 			/* tp_any_ctor:    */ &fli_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&fli_fini,
 		/* .tp_assign      = */ NULL,

@@ -2663,7 +2663,7 @@ INTERN DeeTypeObject DeeStat_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &stat_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* Filesystem status can't be serialized */
 		),
 #ifdef HAVE_stat_fini
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&stat_fini,
@@ -2719,7 +2719,7 @@ INTERN DeeTypeObject DeeLStat_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &lstat_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* Filesystem status can't be serialized */
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,

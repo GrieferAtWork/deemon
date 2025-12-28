@@ -1936,7 +1936,7 @@ INTERN DeeTypeObject Bitset_Type = {
 			/* tp_deep_ctor:   */ &bs_copy,
 			/* tp_any_ctor:    */ &bs_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL /* TODO */,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ NULL, /* No destructor needed! */
@@ -2460,7 +2460,7 @@ INTERN DeeTypeObject RoBitset_Type = {
 			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ &robs_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL /* TODO */,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ NULL, /* No destructor needed! */
@@ -4217,7 +4217,7 @@ INTERN DeeTypeObject BitsetView_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bsv_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bsv_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&bsv_assign,
@@ -4538,7 +4538,7 @@ INTERN DeeTypeObject BitsetIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bsiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bsiter_fini,
 		/* .tp_assign      = */ NULL,

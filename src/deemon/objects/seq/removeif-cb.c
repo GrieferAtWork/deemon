@@ -130,7 +130,7 @@ INTERN DeeTypeObject SeqRemoveWithRemoveIfPredicate_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &srwrip_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&srwrip_fini,
 		/* .tp_assign      = */ NULL,
@@ -177,7 +177,7 @@ INTERN DeeTypeObject SeqRemoveWithRemoveIfPredicateWithKey_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &srwripwk_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&srwripwk_fini,
 		/* .tp_assign      = */ NULL,
@@ -258,7 +258,7 @@ INTERN DeeTypeObject SeqRemoveIfWithRemoveAllItem_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* Static singleton, so no serial needed */
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,

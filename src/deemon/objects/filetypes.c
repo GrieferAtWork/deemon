@@ -272,7 +272,7 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
 				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ NULL,
-				/* tp_serialize:   */ NULL
+				/* tp_serialize:   */ NULL /* TODO */
 			),
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mf_fini,
 			/* .tp_assign      = */ NULL,
@@ -772,7 +772,7 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ &reader_init_kw,
-				/* tp_serialize:   */ NULL
+				/* tp_serialize:   */ NULL /* TODO */
 			),
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&reader_fini,
 			/* .tp_assign      = */ NULL,
@@ -1736,7 +1736,7 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ &writer_init,
 				/* tp_any_ctor_kw: */ NULL,
-				/* tp_serialize:   */ NULL
+				/* tp_serialize:   */ NULL /* TODO */
 			),
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&writer_fini,
 			/* .tp_assign      = */ NULL,
@@ -1860,7 +1860,7 @@ PUBLIC DeeFileTypeObject DeeFilePrinter_Type = {
 				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ NULL,
-				/* tp_serialize:   */ NULL
+				/* tp_serialize:   */ NULL /* TODO */
 			),
 			/* .tp_dtor        = */ NULL,
 			/* .tp_assign      = */ NULL,
@@ -2119,7 +2119,7 @@ PUBLIC DeeTypeObject DeeMapFile_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &mapfile_init_kw,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* Not serializable since "struct DeeMapFile" isn't (always) serializable */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mapfile_fini,
 		/* .tp_assign      = */ NULL,

@@ -5306,7 +5306,7 @@ INTERN DeeTypeObject DeeProcess_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &process_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* Can't be serialized */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&process_fini,
 		/* .tp_assign      = */ NULL,

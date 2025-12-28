@@ -400,7 +400,7 @@ INTERN DeeTypeObject Accu_Type = {
 			/* tp_deep_ctor:   */ &accu_deep,
 			/* tp_any_ctor:    */ &accu_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&accu_fini,
 		/* .tp_assign      = */ NULL,

@@ -1135,7 +1135,7 @@ INTERN DeeTypeObject RBTreeIterator_Type = {
 			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ &rbtreeiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rbtreeiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -3660,7 +3660,7 @@ INTERN DeeTypeObject RBTree_Type = {
 			/* tp_deep_ctor:   */ &rbtree_copy,
 			/* tp_any_ctor:    */ &rbtree_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rbtree_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&rbtree_assign,

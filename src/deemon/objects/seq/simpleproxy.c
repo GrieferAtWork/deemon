@@ -1022,7 +1022,7 @@ INTERN DeeTypeObject SeqIdsIterator_Type = {
 			/* tp_deep_ctor:   */ &iter_deep,
 			/* tp_any_ctor:    */ &iter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&iter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1072,7 +1072,7 @@ INTERN DeeTypeObject SeqTypesIterator_Type = {
 			/* tp_deep_ctor:   */ &iter_deep,
 			/* tp_any_ctor:    */ &iter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&iter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1122,7 +1122,7 @@ INTERN DeeTypeObject SeqClassesIterator_Type = {
 			/* tp_deep_ctor:   */ &iter_deep,
 			/* tp_any_ctor:    */ &iter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&iter_fini,
 		/* .tp_assign      = */ NULL,

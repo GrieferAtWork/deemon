@@ -818,7 +818,7 @@ PRIVATE DeeTypeObject DeeHandle_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &handle_init_kw,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* Can't be serialized (because HANDLE-s can't be, either) */
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,

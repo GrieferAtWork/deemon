@@ -342,7 +342,7 @@ INTERN DeeTypeObject SeqRepeatIterator_Type = {
 			/* tp_deep_ctor:   */ &repeatiter_deep,
 			/* tp_any_ctor:    */ &repeatiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&repeatiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -663,7 +663,7 @@ INTERN DeeTypeObject SeqRepeat_Type = {
 			/* tp_deep_ctor:   */ &repeat_deep,
 			/* tp_any_ctor:    */ &repeat_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&repeat_fini,
 		/* .tp_assign      = */ NULL,
@@ -822,7 +822,7 @@ INTERN DeeTypeObject SeqRepeatItemIterator_Type = {
 			/* tp_deep_ctor:   */ &repeatitemiter_deep,
 			/* tp_any_ctor:    */ &repeatitemiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&repeatitemiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1109,7 +1109,7 @@ INTERN DeeTypeObject SeqRepeatItem_Type = {
 			/* tp_deep_ctor:   */ &repeatitem_deep,
 			/* tp_any_ctor:    */ &repeatitem_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&repeatitem_fini,
 		/* .tp_assign      = */ NULL,

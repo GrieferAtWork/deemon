@@ -3670,7 +3670,7 @@ INTERN DeeTypeObject DeeTime_Type = {
 			/* tp_deep_ctor:   */ &time_copy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &time_init_kw,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ (int(DCALL *)(DeeObject *__restric, DeeObject *__restrict))&time_assign,

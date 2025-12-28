@@ -4919,7 +4919,7 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &thread_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* Threads can't be serialized */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&thread_fini,
 		/* .tp_assign      = */ NULL,

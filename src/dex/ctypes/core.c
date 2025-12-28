@@ -548,7 +548,7 @@ INTERN DeeTypeObject DeeSType_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&stype_fini,
 		/* .tp_assign      = */ NULL,
@@ -631,7 +631,7 @@ INTERN DeeTypeObject DeePointerType_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ptype_fini,
 		/* .tp_assign      = */ NULL,
@@ -783,7 +783,7 @@ INTERN DeeTypeObject DeeLValueType_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ltype_fini,
 		/* .tp_assign      = */ NULL,
@@ -1473,7 +1473,7 @@ INTERN DeeSTypeObject DeeStructured_Type = {
 				/* tp_deep_ctor:   */ &struct_copy,
 				/* tp_any_ctor:    */ &struct_init,
 				/* tp_any_ctor_kw: */ NULL,
-				/* tp_serialize:   */ NULL
+				/* tp_serialize:   */ NULL /* TODO */
 			),
 			/* .tp_dtor        = */ NULL,
 			/* .tp_assign      = */ &struct_assign,
@@ -2107,7 +2107,7 @@ INTERN DeeTypeObject DeeArrayType_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&atype_fini,
 		/* .tp_assign      = */ NULL,
@@ -2265,7 +2265,7 @@ INTERN DeeTypeObject DeeCFunctionType_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ CFUNCTION_OPERATOR((void (DCALL *)(DeeObject *__restrict))&ftype_fini),
 		/* .tp_assign      = */ NULL,

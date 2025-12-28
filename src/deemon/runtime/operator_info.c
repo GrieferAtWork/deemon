@@ -2009,7 +2009,7 @@ INTERN DeeTypeObject TypeOperatorsIterator_Type = {
 			/* tp_deep_ctor:   */ &toi_copy,
 			/* tp_any_ctor:    */ &toi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&toi_fini,
 		/* .tp_assign      = */ NULL,
@@ -2059,7 +2059,7 @@ INTERN DeeTypeObject TypeOperators_Type = {
 			/* tp_deep_ctor:   */ &to_copy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&to_fini,
 		/* .tp_assign      = */ NULL,

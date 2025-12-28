@@ -677,7 +677,7 @@ PUBLIC DeeTypeObject DeeBuiltin_ImportType = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* Static singleton, so no serial needed */
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,

@@ -668,7 +668,7 @@ INTERN DeeTypeObject DefaultReversed_WithGetItemIndex_Type = {
 			/* tp_deep_ctor:   */ &rs_gii_deepcopy,
 			/* tp_any_ctor:    */ &rs_gii_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rs_gii_fini,
 		/* .tp_assign      = */ NULL,
@@ -718,7 +718,7 @@ INTERN DeeTypeObject DefaultReversed_WithGetItemIndexFast_Type = {
 			/* tp_deep_ctor:   */ &rs_giif_deepcopy,
 			/* tp_any_ctor:    */ &rs_giif_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rs_giif_fini,
 		/* .tp_assign      = */ NULL,
@@ -768,7 +768,7 @@ INTERN DeeTypeObject DefaultReversed_WithTryGetItemIndex_Type = {
 			/* tp_deep_ctor:   */ &rs_tgii_deepcopy,
 			/* tp_any_ctor:    */ &rs_tgii_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rs_tgii_fini,
 		/* .tp_assign      = */ NULL,

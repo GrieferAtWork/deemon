@@ -4835,7 +4835,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO (only heap types, though) */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&type_fini,
 		/* .tp_assign      = */ NULL,

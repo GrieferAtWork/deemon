@@ -167,7 +167,7 @@ INTERN DeeTypeObject CellFmt_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ob_cellfmt_fini,
 		/* .tp_assign      = */ NULL,
@@ -306,7 +306,7 @@ INTERN DeeTypeObject RowFmtColumns_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rowfmtcolumns_fini,
 		/* .tp_assign      = */ NULL,
@@ -549,7 +549,7 @@ INTERN DeeTypeObject RowFmt_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL /* TODO */,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rowfmt_fini,
@@ -1014,7 +1014,7 @@ INTERN DeeTypeObject Row_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO (always writes "r_query == NULL") */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&row_fini,
 		/* .tp_assign      = */ NULL,

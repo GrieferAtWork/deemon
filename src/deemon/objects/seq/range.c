@@ -444,7 +444,7 @@ INTERN DeeTypeObject SeqRangeIterator_Type = {
 			/* tp_deep_ctor:   */ &ri_deep,
 			/* tp_any_ctor:    */ &ri_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ri_fini,
 		/* .tp_assign      = */ NULL,
@@ -1111,7 +1111,7 @@ INTERN DeeTypeObject SeqRange_Type = {
 			/* tp_deep_ctor:   */ &range_deep,
 			/* tp_any_ctor:    */ &range_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&range_fini,
 		/* .tp_assign      = */ NULL,
@@ -1272,7 +1272,7 @@ INTERN DeeTypeObject SeqIntRangeIterator_Type = {
 			/* tp_deep_ctor:   */ &iri_copy,
 			/* tp_any_ctor:    */ &iri_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -1620,7 +1620,7 @@ INTERN DeeTypeObject SeqIntRange_Type = {
 			/* tp_deep_ctor:   */ &intrange_copy,
 			/* tp_any_ctor:    */ &intrange_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,

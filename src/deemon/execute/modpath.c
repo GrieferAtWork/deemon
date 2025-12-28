@@ -1642,7 +1642,8 @@ no_dec_file:
 	if (!ITER_ISOK(source_stream)) {
 		ASSERT(source_stream == DeeModule_IMPORT_ERROR ||
 		       source_stream == DeeModule_IMPORT_ENOENT);
-		if unlikely(source_stream && !(flags & DeeModule_IMPORT_F_ENOENT)) {
+		if unlikely(source_stream != DeeModule_IMPORT_ERROR &&
+		            !(flags & DeeModule_IMPORT_F_ENOENT)) {
 			err_file_not_found_string(abs_filename);
 			source_stream = DeeModule_IMPORT_ERROR;
 		}

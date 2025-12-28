@@ -471,7 +471,7 @@ INTERN DeeTypeObject StringFindIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &sfi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sfi_fini,
 		/* .tp_assign      = */ NULL,
@@ -523,7 +523,7 @@ INTERN DeeTypeObject StringCaseFindIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &scfi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sfi_fini,
 		/* .tp_assign      = */ NULL,
@@ -793,7 +793,7 @@ INTERN DeeTypeObject StringFind_Type = {
 			/* tp_deep_ctor:   */ &sf_copy,
 			/* tp_any_ctor:    */ &sf_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sf_fini,
 		/* .tp_assign      = */ NULL,
@@ -845,7 +845,7 @@ INTERN DeeTypeObject StringCaseFind_Type = {
 			/* tp_deep_ctor:   */ &scf_copy,
 			/* tp_any_ctor:    */ &scf_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&scf_fini,
 		/* .tp_assign      = */ NULL,

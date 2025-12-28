@@ -321,7 +321,7 @@ INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &coti_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&coti_fini,
 		/* .tp_assign      = */ NULL,
@@ -581,7 +581,7 @@ INTERN DeeTypeObject ClassOperatorTable_Type = {
 			/* tp_deep_ctor:   */ &cot_deep,
 			/* tp_any_ctor:    */ &cot_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cot_fini,
 		/* .tp_assign      = */ NULL,
@@ -1160,7 +1160,7 @@ INTERN DeeTypeObject ClassAttribute_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ca_fini,
 		/* .tp_assign      = */ NULL,
@@ -1212,7 +1212,7 @@ INTERN DeeTypeObject ClassAttributeTableIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &cati_iter,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cati_fini,
 		/* .tp_assign      = */ NULL,
@@ -1288,7 +1288,7 @@ INTERN DeeTypeObject ClassAttributeTable_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cat_fini,
 		/* .tp_assign      = */ NULL,
@@ -2921,7 +2921,7 @@ INTERN DeeTypeObject ObjectTable_Type = {
 			/* tp_deep_ctor:   */ &ot_deepcopy,
 			/* tp_any_ctor:    */ &ot_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ot_fini,
 		/* .tp_assign      = */ NULL,
@@ -3292,7 +3292,7 @@ PUBLIC DeeTypeObject DeeInstanceMember_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&instancemember_fini,
 		/* .tp_assign      = */ NULL,

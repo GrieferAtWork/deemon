@@ -576,7 +576,7 @@ INTERN DeeTypeObject CachedSeq_WithIter_Type = {
 			/* tp_deep_ctor:   */ &cswi_deep,
 			/* tp_any_ctor:    */ &cswi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswi_fini,
 		/* .tp_assign      = */ NULL,
@@ -736,7 +736,7 @@ INTERN DeeTypeObject CachedSeq_WithIter_Iterator_Type = {
 			/* tp_deep_ctor:   */ &cswiiter_deep,
 			/* tp_any_ctor:    */ &cswiiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswiiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1754,7 +1754,7 @@ INTERN DeeTypeObject CachedSeq_WithGetItem_Type = {
 			/* tp_deep_ctor:   */ &cswgi_deep,
 			/* tp_any_ctor:    */ &cswgi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswgi_fini,
 		/* .tp_assign      = */ NULL,
@@ -1802,7 +1802,7 @@ INTERN DeeTypeObject CachedSeq_WithSizeObAndGetItem_Type = {
 			/* tp_deep_ctor:   */ &cswsogi_deep,
 			/* tp_any_ctor:    */ &cswsogi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswsogi_fini,
 		/* .tp_assign      = */ NULL,
@@ -1850,7 +1850,7 @@ INTERN DeeTypeObject CachedSeq_WithSizeAndGetItem_Type = {
 			/* tp_deep_ctor:   */ &cswsgi_deep,
 			/* tp_any_ctor:    */ &cswsgi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswsgi_fini,
 		/* .tp_assign      = */ NULL,
@@ -1906,7 +1906,7 @@ INTERN DeeTypeObject CachedSeq_WithGetItem_Iterator_Type = {
 			/* tp_deep_ctor:   */ &cswgiiter_deep,
 			/* tp_any_ctor:    */ &cswgiiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswgiiter_fini,
 		/* .tp_assign      = */ NULL,

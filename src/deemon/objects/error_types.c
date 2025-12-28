@@ -382,7 +382,7 @@ PUBLIC DeeTypeObject DeeError_SystemError = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &systemerror_init_kw,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -435,7 +435,7 @@ PUBLIC DeeTypeObject DeeError_SystemError = {
 				/* tp_deep_ctor:   */ NULL,                                              \
 				/* tp_any_ctor:    */ NULL,                                              \
 				/* tp_any_ctor_kw: */ &systemerror_init_kw,                              \
-				/* tp_serialize:   */ NULL                                               \
+				/* tp_serialize:   */ NULL /* TODO */                                    \
 			),                                                                           \
 			/* .tp_dtor        = */ NULL,                                                \
 			/* .tp_assign      = */ NULL,                                                \
@@ -778,7 +778,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 			/* tp_deep_ctor:   */ &appexit_copy,
 			/* tp_any_ctor:    */ &appexit_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,

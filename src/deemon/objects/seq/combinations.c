@@ -440,7 +440,7 @@ INTERN DeeTypeObject SeqCombinations_Type = {
 			/* tp_deep_ctor:   */ &sc_deep,
 			/* tp_any_ctor:    */ &sc_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sc_fini,
 		/* .tp_assign      = */ NULL,
@@ -493,7 +493,7 @@ INTERN DeeTypeObject SeqRepeatCombinations_Type = {
 			/* tp_deep_ctor:   */ &src_deep,
 			/* tp_any_ctor:    */ &src_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&src_fini,
 		/* .tp_assign      = */ NULL,
@@ -544,7 +544,7 @@ INTERN DeeTypeObject SeqPermutations_Type = {
 			/* tp_deep_ctor:   */ &sp_deep,
 			/* tp_any_ctor:    */ &sp_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sp_fini,
 		/* .tp_assign      = */ NULL,
@@ -1045,7 +1045,7 @@ INTERN DeeTypeObject SeqCombinationsIterator_Type = {
 			/* tp_deep_ctor:   */ &sci_deep,
 			/* tp_any_ctor:    */ &sci_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL /* TODO */,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sci_fini,
@@ -1097,7 +1097,7 @@ INTERN DeeTypeObject SeqRepeatCombinationsIterator_Type = {
 			/* tp_deep_ctor:   */ &srci_deep,
 			/* tp_any_ctor:    */ &srci_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL /* TODO */,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&srci_fini,
@@ -1149,7 +1149,7 @@ INTERN DeeTypeObject SeqPermutationsIterator_Type = {
 			/* tp_deep_ctor:   */ &spi_deep,
 			/* tp_any_ctor:    */ &spi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL /* TODO */,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&spi_fini,
@@ -1506,7 +1506,7 @@ INTERN DeeTypeObject SeqCombinationsView_Type = {
 			/* tp_deep_ctor:   */ &scv_deep,
 			/* tp_any_ctor:    */ &scv_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&scv_fini,
 		/* .tp_assign      = */ NULL,

@@ -449,7 +449,7 @@ INTERN DeeTypeObject DeeTracebackIterator_Type = {
 			/* tp_deep_ctor:   */ &traceiter_deep,
 			/* tp_any_ctor:    */ &traceiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&traceiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -863,7 +863,7 @@ PUBLIC DeeTypeObject DeeTraceback_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL /* TODO */,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&traceback_fini,

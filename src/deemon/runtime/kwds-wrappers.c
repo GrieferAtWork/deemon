@@ -232,7 +232,7 @@ INTERN DeeTypeObject DeeBlackListKwdsIterator_Type = {
 			/* tp_deep_ctor:   */ &blvi_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blvi_fini,
 		/* .tp_assign      = */ NULL,
@@ -972,7 +972,7 @@ PUBLIC DeeTypeObject DeeBlackListKwds_Type = {
 			/* tp_deep_ctor:   */ &blv_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &blv_init_kw,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL /* TODO */,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blv_fini,
@@ -1207,7 +1207,7 @@ INTERN DeeTypeObject DeeBlackListKwIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blmi_fini,
 		/* .tp_assign      = */ NULL,
@@ -1870,7 +1870,7 @@ PUBLIC DeeTypeObject DeeBlackListKw_Type = {
 			/* tp_deep_ctor:   */ &blkw_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &blkw_init_kw,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL /* TODO */,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blkw_fini,

@@ -2841,7 +2841,7 @@ INTERN DeeTypeObject IteratorFuture_Type = {
 			/* tp_deep_ctor:   */ &if_deep,
 			/* tp_any_ctor:    */ &if_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&if_fini,
 		/* .tp_assign      = */ NULL,
@@ -2991,7 +2991,7 @@ INTERN DeeTypeObject IteratorPending_Type = {
 			/* tp_deep_ctor:   */ &ip_deep,
 			/* tp_any_ctor:    */ &ip_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ip_fini,
 		/* .tp_assign      = */ NULL,

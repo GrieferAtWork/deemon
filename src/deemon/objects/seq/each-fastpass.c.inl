@@ -1345,7 +1345,7 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 			/* tp_deep_ctor:   */ &LOCAL_seX(deep),
 			/* tp_any_ctor:    */ &LOCAL_seX(init),
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 #else /* !(LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE) */
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
@@ -1354,7 +1354,7 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 			/* tp_deep_ctor:   */ &LOCAL_seX(deep),
 			/* tp_any_ctor:    */ &LOCAL_seX(init),
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL /* TODO */,
 			/* tp_free:        */ NULL
 		),
 #endif /* LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE */
@@ -1470,7 +1470,7 @@ INTERN DeeTypeObject LOCAL_SeqEachIterator_Type = {
 			/* tp_deep_ctor:   */ &sewi_deep,
 			/* tp_any_ctor:    */ &LOCAL_seXi(init),
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sewi_fini,
 		/* .tp_assign      = */ NULL,
@@ -1842,7 +1842,7 @@ INTERN DeeTypeObject LOCAL_SeqSome_Type = {
 			/* tp_deep_ctor:   */ &LOCAL_seX(deep),
 			/* tp_any_ctor:    */ &LOCAL_seX(init),
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 #else /* !(LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE) */
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
@@ -1851,7 +1851,7 @@ INTERN DeeTypeObject LOCAL_SeqSome_Type = {
 			/* tp_deep_ctor:   */ &LOCAL_seX(deep),
 			/* tp_any_ctor:    */ &LOCAL_seX(init),
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL /* TODO */,
 			/* tp_free:        */ NULL
 		),
 #endif /* LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE */

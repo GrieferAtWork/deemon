@@ -187,7 +187,7 @@ INTERN DeeTypeObject SeqSegmentsIterator_Type = {
 			/* tp_deep_ctor:   */ &segiter_deep,
 			/* tp_any_ctor:    */ &segiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&segiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -436,7 +436,7 @@ INTERN DeeTypeObject SeqSegments_Type = {
 			/* tp_deep_ctor:   */ &seg_deep,
 			/* tp_any_ctor:    */ &seg_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&seg_fini,
 		/* .tp_assign      = */ NULL,

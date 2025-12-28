@@ -249,7 +249,7 @@ INTERN DeeTypeObject SeqOneIterator_Type = {
 			/* tp_deep_ctor:   */ &soi_deep,
 			/* tp_any_ctor:    */ &soi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&soi_fini,
 		/* .tp_assign      = */ NULL,

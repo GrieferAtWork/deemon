@@ -251,7 +251,7 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
 				/* tp_deep_ctor:   */ &DeeObject_NewRef,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ NULL,
-				/* tp_serialize:   */ NULL,
+				/* tp_serialize:   */ NULL, /* Static singleton, so no serial needed */
 				/* tp_free:        */ NULL
 			),
 			/* .tp_dtor        = */ NULL,
@@ -3222,7 +3222,7 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ PTR_sysfile_init_kw,
-				/* tp_serialize:   */ NULL
+				/* tp_serialize:   */ NULL /* System files can't be serialized */
 			),
 #undef PTR_sysfile_init_kw
 #ifdef deemon_file_HAVE_sysfile_fini
@@ -3315,7 +3315,7 @@ PUBLIC DeeFileTypeObject DeeFSFile_Type = {
 				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ NULL,
-				/* tp_serialize:   */ NULL
+				/* tp_serialize:   */ NULL /* System files can't be serialized */
 			),
 			/* .tp_dtor        = */ NULL,
 			/* .tp_assign      = */ NULL,

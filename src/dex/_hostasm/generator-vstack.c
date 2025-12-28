@@ -4237,7 +4237,7 @@ PRIVATE DeeTypeObject DeeVectorDummy_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL, /* Not needed; only used internally */
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ NULL,

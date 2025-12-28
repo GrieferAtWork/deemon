@@ -178,7 +178,7 @@ INTERN DeeTypeObject SeqMappedIterator_Type = {
 			/* tp_deep_ctor:   */ &mappediter_deep,
 			/* tp_any_ctor:    */ &mappediter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mappediter_fini,
 		/* .tp_assign      = */ NULL,

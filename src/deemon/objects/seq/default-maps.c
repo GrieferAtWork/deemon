@@ -888,7 +888,7 @@ INTERN DeeTypeObject MapUnionIterator_Type = {
 			/* tp_deep_ctor:   */ &muiter_deep,
 			/* tp_any_ctor:    */ &muiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&muiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1332,7 +1332,7 @@ INTERN DeeTypeObject MapIntersectionIterator_Type = {
 			/* tp_deep_ctor:   */ &miiter_deep,
 			/* tp_any_ctor:    */ &miiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&miiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1703,7 +1703,7 @@ INTERN DeeTypeObject MapDifferenceIterator_Type = {
 			/* tp_deep_ctor:   */ &mditer_deep,
 			/* tp_any_ctor:    */ &mditer_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mditer_fini,
 		/* .tp_assign      = */ NULL,
@@ -2734,7 +2734,7 @@ INTERN DeeTypeObject MapSymmetricDifferenceIterator_Type = {
 			/* tp_deep_ctor:   */ &msditer_deep,
 			/* tp_any_ctor:    */ &msditer_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&msditer_fini,
 		/* .tp_assign      = */ NULL,

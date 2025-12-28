@@ -512,7 +512,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemIndex_Type = {
 			/* tp_deep_ctor:   */ &di_gi_deepcopy,
 			/* tp_any_ctor:    */ &di_gi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_gi_fini,
 		/* .tp_assign      = */ NULL,
@@ -564,7 +564,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemIndexPair_Type = {
 			/* tp_deep_ctor:   */ &di_gi_deepcopy,
 			/* tp_any_ctor:    */ &di_gi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_gi_fini,
 		/* .tp_assign      = */ NULL,
@@ -614,7 +614,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndex_Type = {
 			/* tp_deep_ctor:   */ &di_sgi_deepcopy,
 			/* tp_any_ctor:    */ &di_sgi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_sgi_fini,
 		/* .tp_assign      = */ NULL,
@@ -666,7 +666,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexPair_Type = {
 			/* tp_deep_ctor:   */ &di_sgi_deepcopy,
 			/* tp_any_ctor:    */ &di_sgi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_sgi_fini,
 		/* .tp_assign      = */ NULL,
@@ -716,7 +716,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFast_Type = {
 			/* tp_deep_ctor:   */ &di_sgif_deepcopy,
 			/* tp_any_ctor:    */ &di_sgif_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_sgif_fini,
 		/* .tp_assign      = */ NULL,
@@ -768,7 +768,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFastPair_Type = {
 			/* tp_deep_ctor:   */ &di_sgif_deepcopy,
 			/* tp_any_ctor:    */ &di_sgif_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_sgif_fini,
 		/* .tp_assign      = */ NULL,
@@ -818,7 +818,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndTryGetItemIndex_Type = {
 			/* tp_deep_ctor:   */ &di_stgi_deepcopy,
 			/* tp_any_ctor:    */ &di_stgi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_stgi_fini,
 		/* .tp_assign      = */ NULL,
@@ -870,7 +870,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndTryGetItemIndexPair_Type = {
 			/* tp_deep_ctor:   */ &di_stgi_deepcopy,
 			/* tp_any_ctor:    */ &di_stgi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_stgi_fini,
 		/* .tp_assign      = */ NULL,
@@ -1213,7 +1213,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItem_Type = {
 			/* tp_deep_ctor:   */ &di_g_deepcopy,
 			/* tp_any_ctor:    */ &di_g_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_g_fini,
 		/* .tp_assign      = */ NULL,
@@ -1264,7 +1264,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemPair_Type = {
 			/* tp_deep_ctor:   */ &di_g_deepcopy,
 			/* tp_any_ctor:    */ &di_g_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_g_fini,
 		/* .tp_assign      = */ NULL,
@@ -1552,7 +1552,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type = {
 			/* tp_deep_ctor:   */ &di_sg_deepcopy,
 			/* tp_any_ctor:    */ &di_sg_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_sg_fini,
 		/* .tp_assign      = */ NULL,
@@ -1603,7 +1603,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItemPair_Type = {
 			/* tp_deep_ctor:   */ &di_sg_deepcopy,
 			/* tp_any_ctor:    */ &di_sg_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_sg_fini,
 		/* .tp_assign      = */ NULL,
@@ -1818,7 +1818,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndLimit_Type = {
 			/* tp_deep_ctor:   */ &di_nl_deepcopy,
 			/* tp_any_ctor:    */ &di_nl_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_nl_fini,
 		/* .tp_assign      = */ NULL,
@@ -2085,7 +2085,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type = {
 			/* tp_deep_ctor:   */ &di_ikgim_deepcopy,
 			/* tp_any_ctor:    */ &di_ikgim_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_ikgim_fini,
 		/* .tp_assign      = */ NULL,
@@ -2136,7 +2136,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type = {
 			/* tp_deep_ctor:   */ &di_iktrgim_deepcopy,
 			/* tp_any_ctor:    */ &di_iktrgim_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_iktrgim_fini,
 		/* .tp_assign      = */ NULL,
@@ -2216,7 +2216,7 @@ INTERN DeeTypeObject DefaultIterator_WithForeach_Type = {
 			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -2266,7 +2266,7 @@ INTERN DeeTypeObject DefaultIterator_WithForeachPair_Type = {
 			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -2316,7 +2316,7 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateSeq_Type = {
 			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -2366,7 +2366,7 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateMap_Type = {
 			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -2416,7 +2416,7 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateIndexSeq_Type = {
 			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -2626,7 +2626,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndCounterPair_Type = {
 			/* tp_deep_ctor:   */ &di_ncp_deepcopy,
 			/* tp_any_ctor:    */ &di_ncp_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_ncp_fini,
 		/* .tp_assign      = */ NULL,
@@ -2676,7 +2676,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndCounterAndLimitPair_Type = {
 			/* tp_deep_ctor:   */ &di_ncpl_deepcopy,
 			/* tp_any_ctor:    */ &di_ncpl_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_ncpl_fini,
 		/* .tp_assign      = */ NULL,
@@ -2960,7 +2960,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndUnpackFilter_Type = {
 			/* tp_deep_ctor:   */ &di_nuf_deepcopy,
 			/* tp_any_ctor:    */ &di_nuf_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_nuf_fini,
 		/* .tp_assign      = */ NULL,
@@ -3145,7 +3145,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextKey = {
 			/* tp_deep_ctor:   */ &di_nk_deepcopy,
 			/* tp_any_ctor:    */ &di_nk_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_nk_fini,
 		/* .tp_assign      = */ NULL,
@@ -3195,7 +3195,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextValue = {
 			/* tp_deep_ctor:   */ &di_nv_deepcopy,
 			/* tp_any_ctor:    */ &di_nv_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_nv_fini,
 		/* .tp_assign      = */ NULL,

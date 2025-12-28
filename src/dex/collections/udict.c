@@ -267,7 +267,7 @@ INTERN DeeTypeObject UDictIterator_Type = {
 			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ &udictiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&udictiterator_fini,
 		/* .tp_assign      = */ NULL,
@@ -1365,7 +1365,7 @@ INTERN DeeTypeObject UDict_Type = {
 			/* tp_deep_ctor:   */ &udict_copy,
 			/* tp_any_ctor:    */ &udict_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&udict_fini,
 		/* .tp_assign      = */ NULL,
@@ -1541,7 +1541,7 @@ INTERN DeeTypeObject URoDictIterator_Type = {
 			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ &urodictiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&urodictiterator_fini,
 		/* .tp_assign      = */ NULL,
@@ -2049,7 +2049,7 @@ INTERN DeeTypeObject URoDict_Type = {
 			/* tp_deep_ctor:   */ &urodict_deepcopy,
 			/* tp_any_ctor:    */ &urodict_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL /* TODO */,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&urodict_fini,

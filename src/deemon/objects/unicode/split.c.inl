@@ -338,7 +338,7 @@ INTERN DeeTypeObject StringSplitIterator_Type = {
 			/* tp_deep_ctor:   */ &splititer_copy,
 			/* tp_any_ctor:    */ &splititer_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&splititer_fini,
 		/* .tp_assign      = */ NULL,
@@ -390,7 +390,7 @@ INTERN DeeTypeObject StringCaseSplitIterator_Type = {
 			/* tp_deep_ctor:   */ &splititer_copy,
 			/* tp_any_ctor:    */ &splititer_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ NULL, /* INHERITED */
 		/* .tp_assign      = */ NULL,
@@ -650,7 +650,7 @@ INTERN DeeTypeObject StringSplit_Type = {
 			/* tp_deep_ctor:   */ &split_copy,
 			/* tp_any_ctor:    */ &split_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&split_fini,
 		/* .tp_assign      = */ NULL,
@@ -700,7 +700,7 @@ INTERN DeeTypeObject StringCaseSplit_Type = {
 			/* tp_deep_ctor:   */ &split_copy,
 			/* tp_any_ctor:    */ &split_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ NULL, /* INHERITED */
 		/* .tp_assign      = */ NULL,
@@ -980,7 +980,7 @@ INTERN DeeTypeObject StringLineSplitIterator_Type = {
 			/* tp_deep_ctor:   */ &lineiter_copy,
 			/* tp_any_ctor:    */ &lineiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&splititer_fini, /* offset:`s_split' == offset:`ls_split' */
 		/* .tp_assign      = */ NULL,
@@ -1144,7 +1144,7 @@ INTERN DeeTypeObject StringLineSplit_Type = {
 			/* tp_deep_ctor:   */ &linesplit_copy,
 			/* tp_any_ctor:    */ &linesplit_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&linesplit_fini,
 		/* .tp_assign      = */ NULL,

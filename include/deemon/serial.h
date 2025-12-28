@@ -33,6 +33,21 @@ DECL_BEGIN
 struct Dee_serial;
 typedef struct Dee_serial DeeSerial;
 
+/* TODO: "DeeSerial" can also be used to implement "deepcopy" (in a way that
+ *       solves the problem of non-GC objects being copied whilst some nested
+ *       GC object holding another reference to the original object; in the
+ *       current deepcopy impl, this causes the original object to be copied
+ *       twice).
+ *
+ * Even beyond this, "DeeSerial" can also be used to implement "copy", too.
+ * For that, simply do what "deepcopy" does, but rather than recurse on each
+ * nested object, simply re-encode a reference to the source object instead!
+ * (though in this regard, this can only be a fallback "copy", since certain
+ * types of objects; specifically certain Iterator types; still need to do
+ * certain nested copy operations to ensure the copied iterator is detached
+ * from the original iterator). */
+
+
 /* Serialization address (points into the abstract serialization buffer) */
 #ifndef Dee_seraddr_t_DEFINED
 #define Dee_seraddr_t_DEFINED

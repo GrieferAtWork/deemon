@@ -2089,7 +2089,7 @@ INTERN DeeTypeObject DeeEnvironIterator_Type = {
 			/* tp_deep_ctor:   */ &environ_iterator_copy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 #ifdef HAVE_environ_iterator_fini
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&environ_iterator_fini,
@@ -2281,7 +2281,7 @@ INTERN DeeTypeObject DeeEnviron_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL, /* Static singleton, so no serial needed */
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ NULL,

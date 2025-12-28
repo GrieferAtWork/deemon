@@ -272,7 +272,7 @@ INTERN DeeTypeObject BytesSplitIterator_Type = {
 			/* tp_deep_ctor:   */ &bsi_deepcopy,
 			/* tp_any_ctor:    */ &bsi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bsi_fini,
 		/* .tp_assign      = */ NULL,
@@ -324,7 +324,7 @@ INTERN DeeTypeObject BytesCaseSplitIterator_Type = {
 			/* tp_deep_ctor:   */ &bsi_deepcopy,
 			/* tp_any_ctor:    */ &bsi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bsi_fini,
 		/* .tp_assign      = */ NULL,
@@ -635,7 +635,7 @@ INTERN DeeTypeObject BytesSplit_Type = {
 			/* tp_deep_ctor:   */ &bs_deepcopy,
 			/* tp_any_ctor:    */ &bs_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bs_fini,
 		/* .tp_assign      = */ NULL,
@@ -685,7 +685,7 @@ INTERN DeeTypeObject BytesCaseSplit_Type = {
 			/* tp_deep_ctor:   */ &bs_deepcopy,
 			/* tp_any_ctor:    */ &bs_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bs_fini,
 		/* .tp_assign      = */ NULL,
@@ -990,7 +990,7 @@ INTERN DeeTypeObject BytesLineSplitIterator_Type = {
 			/* tp_deep_ctor:   */ &blsi_deepcopy,
 			/* tp_any_ctor:    */ &blsi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blsi_fini,
 		/* .tp_assign      = */ NULL,
@@ -1165,7 +1165,7 @@ INTERN DeeTypeObject BytesLineSplit_Type = {
 			/* tp_deep_ctor:   */ &bls_deepcopy,
 			/* tp_any_ctor:    */ &bls_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bls_fini,
 		/* .tp_assign      = */ NULL,

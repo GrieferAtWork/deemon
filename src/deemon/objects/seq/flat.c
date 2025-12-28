@@ -1307,7 +1307,7 @@ INTERN DeeTypeObject SeqFlatIterator_Type = {
 			/* tp_deep_ctor:   */ &sfi_deep,
 			/* tp_any_ctor:    */ &sfi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sfi_fini,
 		/* .tp_assign      = */ NULL,

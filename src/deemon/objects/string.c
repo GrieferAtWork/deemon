@@ -1678,7 +1678,7 @@ INTERN DeeTypeObject StringIterator_Type = {
 			/* tp_deep_ctor:   */ &stringiter_copy,
 			/* tp_any_ctor:    */ &stringiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&stringiter_fini,
 		/* .tp_assign      = */ NULL, /* TODO */

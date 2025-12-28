@@ -212,7 +212,7 @@ INTERN DeeTypeObject RefVectorIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &rveciter_ctor,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rveciter_fini,
 		/* .tp_assign      = */ NULL,
@@ -709,7 +709,7 @@ INTERN DeeTypeObject RefVector_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rvec_fini,
 		/* .tp_assign      = */ NULL,
@@ -920,7 +920,7 @@ INTERN DeeTypeObject SharedVectorIterator_Type = {
 			/* tp_deep_ctor:   */ &sveciter_deep,
 			/* tp_any_ctor:    */ &sveciter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sveciter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1369,7 +1369,7 @@ PUBLIC DeeTypeObject DeeSharedVector_Type = {
 			/* tp_deep_ctor:   */ &svec_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&svec_fini,
 		/* .tp_assign      = */ NULL,

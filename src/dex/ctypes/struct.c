@@ -371,7 +371,7 @@ INTERN DeeTypeObject DeeStructType_Type = {
 			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ &struct_type_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL /* TODO */,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&struct_type_fini,
@@ -680,7 +680,7 @@ INTERN struct empty_struct_type_object DeeStruct_Type = {
 					/* tp_deep_ctor:   */ NULL,
 					/* tp_any_ctor:    */ NULL,
 					/* tp_any_ctor_kw: */ NULL,
-					/* tp_serialize:   */ NULL
+					/* tp_serialize:   */ NULL /* TODO */
 				),
 				/* .tp_dtor        = */ NULL,
 				/* .tp_assign      = */ NULL,

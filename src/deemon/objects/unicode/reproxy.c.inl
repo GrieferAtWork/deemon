@@ -444,7 +444,7 @@ INTERN DeeTypeObject ReFindAllIterator_Type = {
 			/* tp_deep_ctor:   */ &refaiter_deep,
 			/* tp_any_ctor:    */ &refaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&refaiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -496,7 +496,7 @@ INTERN DeeTypeObject ReBytesFindAllIterator_Type = {
 			/* tp_deep_ctor:   */ &rebfaiter_deep,
 			/* tp_any_ctor:    */ &rebfaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rebfaiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -687,7 +687,7 @@ INTERN DeeTypeObject RegFindAllIterator_Type = {
 			/* tp_deep_ctor:   */ &regfaiter_deep,
 			/* tp_any_ctor:    */ &regfaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&regfaiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -739,7 +739,7 @@ INTERN DeeTypeObject RegBytesFindAllIterator_Type = {
 			/* tp_deep_ctor:   */ &regbfaiter_deep,
 			/* tp_any_ctor:    */ &regbfaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&regbfaiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -932,7 +932,7 @@ INTERN DeeTypeObject RegLocateAllIterator_Type = {
 			/* tp_deep_ctor:   */ &reglaiter_deep,
 			/* tp_any_ctor:    */ &reglaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&reglaiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -984,7 +984,7 @@ INTERN DeeTypeObject RegBytesLocateAllIterator_Type = {
 			/* tp_deep_ctor:   */ &regblaiter_deep,
 			/* tp_any_ctor:    */ &regblaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&regblaiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1143,7 +1143,7 @@ INTERN DeeTypeObject ReLocateAllIterator_Type = {
 			/* tp_deep_ctor:   */ &relaiter_deep,
 			/* tp_any_ctor:    */ &relaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&relaiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1195,7 +1195,7 @@ INTERN DeeTypeObject ReBytesLocateAllIterator_Type = {
 			/* tp_deep_ctor:   */ &reblaiter_deep,
 			/* tp_any_ctor:    */ &reblaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&reblaiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1380,7 +1380,7 @@ INTERN DeeTypeObject ReSplitIterator_Type = {
 			/* tp_deep_ctor:   */ &respiter_deep,
 			/* tp_any_ctor:    */ &respiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&respiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1432,7 +1432,7 @@ INTERN DeeTypeObject ReBytesSplitIterator_Type = {
 			/* tp_deep_ctor:   */ &rebspiter_deep,
 			/* tp_any_ctor:    */ &rebspiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rebspiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1700,7 +1700,7 @@ INTERN DeeTypeObject ReFindAll_Type = {
 			/* tp_deep_ctor:   */ &refa_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&refa_fini,
 		/* .tp_assign      = */ NULL,
@@ -1750,7 +1750,7 @@ INTERN DeeTypeObject ReBytesFindAll_Type = {
 			/* tp_deep_ctor:   */ &rebfa_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rebfa_fini,
 		/* .tp_assign      = */ NULL,
@@ -1951,7 +1951,7 @@ INTERN DeeTypeObject RegFindAll_Type = {
 			/* tp_deep_ctor:   */ &regfa_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&regfa_fini,
 		/* .tp_assign      = */ NULL,
@@ -2001,7 +2001,7 @@ INTERN DeeTypeObject RegBytesFindAll_Type = {
 			/* tp_deep_ctor:   */ &regbfa_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&regbfa_fini,
 		/* .tp_assign      = */ NULL,
@@ -2205,7 +2205,7 @@ INTERN DeeTypeObject RegLocateAll_Type = {
 			/* tp_deep_ctor:   */ &regla_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&regla_fini,
 		/* .tp_assign      = */ NULL,
@@ -2255,7 +2255,7 @@ INTERN DeeTypeObject RegBytesLocateAll_Type = {
 			/* tp_deep_ctor:   */ &regbla_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&regbla_fini,
 		/* .tp_assign      = */ NULL,
@@ -2457,7 +2457,7 @@ INTERN DeeTypeObject ReLocateAll_Type = {
 			/* tp_deep_ctor:   */ &rela_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rela_fini,
 		/* .tp_assign      = */ NULL,
@@ -2507,7 +2507,7 @@ INTERN DeeTypeObject ReBytesLocateAll_Type = {
 			/* tp_deep_ctor:   */ &rebla_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rebla_fini,
 		/* .tp_assign      = */ NULL,
@@ -2730,7 +2730,7 @@ INTERN DeeTypeObject ReSplit_Type = {
 			/* tp_deep_ctor:   */ &resp_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&resp_fini,
 		/* .tp_assign      = */ NULL,
@@ -2780,7 +2780,7 @@ INTERN DeeTypeObject ReBytesSplit_Type = {
 			/* tp_deep_ctor:   */ &rebsp_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rebsp_fini,
 		/* .tp_assign      = */ NULL,

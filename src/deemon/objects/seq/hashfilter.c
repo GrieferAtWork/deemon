@@ -253,7 +253,7 @@ INTERN DeeTypeObject SeqHashFilterIterator_Type = {
 			/* tp_deep_ctor:   */ &filteriterator_deep,
 			/* tp_any_ctor:    */ &seq_filteriterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&filteriterator_fini,
 		/* .tp_assign      = */ NULL,
@@ -303,7 +303,7 @@ INTERN DeeTypeObject MapHashFilterIterator_Type = {
 			/* tp_deep_ctor:   */ &filteriterator_deep,
 			/* tp_any_ctor:    */ &map_filteriterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&filteriterator_fini,
 		/* .tp_assign      = */ NULL,
@@ -532,7 +532,7 @@ INTERN DeeTypeObject SeqHashFilter_Type = {
 			/* tp_deep_ctor:   */ &filter_deep,
 			/* tp_any_ctor:    */ &seq_filter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&filter_fini,
 		/* .tp_assign      = */ NULL,
@@ -583,7 +583,7 @@ INTERN DeeTypeObject MapHashFilter_Type = {
 			/* tp_deep_ctor:   */ &filter_deep,
 			/* tp_any_ctor:    */ &map_filter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&filter_fini,
 		/* .tp_assign      = */ NULL,

@@ -172,7 +172,7 @@ PUBLIC DeeTypeObject DeeError_CompilerError = {
 			/* tp_deep_ctor:   */ &comerr_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &comerr_init_kw,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&comerr_fini,
 		/* .tp_assign      = */ NULL,
@@ -225,7 +225,7 @@ PUBLIC DeeTypeObject DeeError_CompilerError = {
 				/* tp_deep_ctor:   */ &comerr_deep,                       \
 				/* tp_any_ctor:    */ NULL,                               \
 				/* tp_any_ctor_kw: */ &comerr_init_kw,                    \
-				/* tp_serialize:   */ NULL                                \
+				/* tp_serialize:   */ NULL /* TODO */                     \
 			),                                                            \
 			/* .tp_dtor        = */ NULL,                                 \
 			/* .tp_assign      = */ NULL,                                 \

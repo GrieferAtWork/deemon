@@ -287,7 +287,7 @@ INTERN DeeTypeObject DeeKwdsIterator_Type = {
 			/* tp_deep_ctor:   */ &kwdsiter_deep,
 			/* tp_any_ctor:    */ &kwdsiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kwdsiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1077,7 +1077,7 @@ PRIVATE DeeTypeObject DeeKwdsMappingIterator_Type = {
 			/* tp_deep_ctor:   */ &kmapiter_deep,
 			/* tp_any_ctor:    */ &kmapiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kmapiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1529,7 +1529,7 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
 			/* tp_deep_ctor:   */ &kmap_deep,
 			/* tp_any_ctor:    */ &kmap_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
+			/* tp_serialize:   */ NULL /* TODO */,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kmap_fini,

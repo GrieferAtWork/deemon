@@ -1052,7 +1052,7 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
 			/* tp_deep_ctor:   */ &tuple_iterator_deep,
 			/* tp_any_ctor:    */ &tuple_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&tuple_iterator_fini,
 		/* .tp_assign      = */ NULL,

@@ -714,7 +714,7 @@ INTERN DeeTypeObject DeeOnce_Type = {
 			/* tp_deep_ctor:   */ &once_copy,
 			/* tp_any_ctor:    */ &once_init,
 			/* tp_any_ctor_kw: */ &once_init_kw,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO (writes the object in its current state) */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&once_fini,
 		/* .tp_assign      = */ NULL,

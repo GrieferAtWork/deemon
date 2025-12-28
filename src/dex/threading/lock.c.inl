@@ -952,7 +952,7 @@ INTERN DeeTypeObject LOCAL_DeeLock_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ LOCAL_lockapi_init_kw_PTR,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO (writes the output lock as unlocked) */
 		),
 #undef LOCAL_lockapi_init_kw_PTR
 		/* .tp_dtor        = */ NULL,
@@ -1425,7 +1425,7 @@ INTERN DeeTypeObject LOCAL_DeeRWLock_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ LOCAL_rwlockapi_init_kw_PTR,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO (writes the output lock as unlocked) */
 		),
 #undef LOCAL_rwlockapi_init_kw_PTR
 		/* .tp_dtor        = */ NULL,
@@ -1691,7 +1691,7 @@ INTERN DeeTypeObject LOCAL_DeeRWLockReadLock_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &LOCAL_rwlockapi_readlock_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -1737,7 +1737,7 @@ INTERN DeeTypeObject LOCAL_DeeRWLockWriteLock_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &LOCAL_rwlockapi_writelock_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,

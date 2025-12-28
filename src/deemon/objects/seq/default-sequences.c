@@ -1047,7 +1047,7 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndex_Type = {
 			/* tp_deep_ctor:   */ &ds_sgi_deepcopy,
 			/* tp_any_ctor:    */ &ds_sgi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_sgi_fini,
 		/* .tp_assign      = */ NULL,
@@ -1097,7 +1097,7 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type = {
 			/* tp_deep_ctor:   */ &ds_sgif_deepcopy,
 			/* tp_any_ctor:    */ &ds_sgif_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_sgif_fini,
 		/* .tp_assign      = */ NULL,
@@ -1147,7 +1147,7 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndTryGetItemIndex_Type = {
 			/* tp_deep_ctor:   */ &ds_stgi_deepcopy,
 			/* tp_any_ctor:    */ &ds_stgi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_stgi_fini,
 		/* .tp_assign      = */ NULL,
@@ -1822,7 +1822,7 @@ INTERN DeeTypeObject DefaultSequence_WithSizeObAndGetItem_Type = {
 			/* tp_deep_ctor:   */ &ds_sg_deepcopy,
 			/* tp_any_ctor:    */ &ds_sg_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_sg_fini,
 		/* .tp_assign      = */ NULL,
@@ -2305,7 +2305,7 @@ INTERN DeeTypeObject DefaultSequence_WithIter_Type = {
 			/* tp_deep_ctor:   */ &ds_i_deepcopy,
 			/* tp_any_ctor:    */ &ds_i_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_i_fini,
 		/* .tp_assign      = */ NULL,
@@ -2355,7 +2355,7 @@ INTERN DeeTypeObject DefaultSequence_WithIterAndLimit_Type = {
 			/* tp_deep_ctor:   */ &ds_ial_deepcopy,
 			/* tp_any_ctor:    */ &ds_ial_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_ial_fini,
 		/* .tp_assign      = */ NULL,

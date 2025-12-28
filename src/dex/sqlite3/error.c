@@ -190,7 +190,7 @@ INTERN DeeTypeObject SQLError_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &sqlerror_init_kw,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sqlerror_fini,
 		/* .tp_assign      = */ NULL,
@@ -241,7 +241,7 @@ INTERN DeeTypeObject SQLError_Type = {
 				/* tp_deep_ctor:   */ NULL,                     \
 				/* tp_any_ctor:    */ NULL,                     \
 				/* tp_any_ctor_kw: */ NULL,                     \
-				/* tp_serialize:   */ NULL                      \
+				/* tp_serialize:   */ NULL /* Inherited */      \
 			),                                                  \
 			/* .tp_dtor        = */ NULL,                       \
 			/* .tp_assign      = */ NULL,                       \

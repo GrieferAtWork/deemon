@@ -673,7 +673,7 @@ INTERN DeeTypeObject StringScanIterator_Type = {
 			/* tp_deep_ctor:   */ &ssi_copy,
 			/* tp_any_ctor:    */ &ssi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ssi_fini,
 		/* .tp_assign      = */ NULL,
@@ -838,7 +838,7 @@ INTERN DeeTypeObject StringScan_Type = {
 			/* tp_deep_ctor:   */ &ss_deep,
 			/* tp_any_ctor:    */ &ss_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ss_fini,
 		/* .tp_assign      = */ NULL,

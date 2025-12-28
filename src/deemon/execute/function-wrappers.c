@@ -4779,7 +4779,7 @@ INTERN DeeTypeObject FrameSymbolsByNameIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &framesymbolsbynameiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &framesymbolsbynameiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&framesymbolsbynameiter_fini,
 		/* .tp_assign      = */ NULL,

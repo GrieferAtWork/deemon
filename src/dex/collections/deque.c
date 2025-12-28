@@ -1468,7 +1468,7 @@ INTERN DeeTypeObject Deque_Type = {
 			/* tp_deep_ctor:   */ &deq_copy,
 			/* tp_any_ctor:    */ &deq_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&deq_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&deq_assign,
@@ -1695,7 +1695,7 @@ INTERN DeeTypeObject DequeIterator_Type = {
 			/* tp_deep_ctor:   */ &deqiter_deep,
 			/* tp_any_ctor:    */ &deqiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&deqiter_fini,
 		/* .tp_assign      = */ NULL,

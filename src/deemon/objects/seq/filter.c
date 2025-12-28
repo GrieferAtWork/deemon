@@ -198,7 +198,7 @@ INTERN DeeTypeObject SeqFilterIterator_Type = {
 			/* tp_deep_ctor:   */ &filteriterator_deep,
 			/* tp_any_ctor:    */ &filteriterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&filteriterator_fini,
 		/* .tp_assign      = */ NULL,
@@ -859,7 +859,7 @@ INTERN DeeTypeObject SeqFilterAsUnbound_Type = {
 			/* tp_deep_ctor:   */ &filter_deep,
 			/* tp_any_ctor:    */ &filter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&filter_fini,
 		/* .tp_assign      = */ NULL,

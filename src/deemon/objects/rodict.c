@@ -776,7 +776,7 @@ INTERN DeeTypeObject RoDictIterator_Type = {
 			/* tp_deep_ctor:   */ &rditer_deep,
 			/* tp_any_ctor:    */ &rditer_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rditer_fini,
 		/* .tp_assign      = */ NULL,

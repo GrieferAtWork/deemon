@@ -363,7 +363,7 @@ INTERN DeeTypeObject SeqConcatIterator_Type = {
 			/* tp_deep_ctor:   */ &catiterator_deep,
 			/* tp_any_ctor:    */ &catiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL
+			/* tp_serialize:   */ NULL /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&catiterator_fini,
 		/* .tp_assign      = */ NULL,
