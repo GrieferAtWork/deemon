@@ -1828,14 +1828,19 @@ DeeMapFile_Fini(struct DeeMapFile *__restrict self) {
 	(void)unmapfile(&self->dmf_map);
 #elif defined(DeeMapFile_IS_CreateFileMapping)
 	if (self->_dmf_hmap != NULL) {
+		void *hmap = self->_dmf_hmap;
 		size_t psm = getpagesize() - 1;
 		void *baseptr = (void *)((uintptr_t)self->dmf_addr & ~psm);
 		if (self->_dmf_vfre) {
 			void *vbas = (void *)(((uintptr_t)baseptr + self->dmf_size + psm) & ~psm);
 			(void)VirtualFree(vbas, /*self->_dmf_vfre*/ 0, MEM_RELEASE);
 		}
+		COMPILER_BARRIER();
 		(void)UnmapViewOfFile(baseptr);
-		(void)CloseHandle(self->_dmf_hmap);
+		COMPILER_BARRIER();
+		/* It is possible that "self" was moved into its own mapping. As
+		 * such, we must no longer dereference `*self' at this point! */
+		(void)CloseHandle(hmap);
 	} else {
 		Dee_Free((void *)self->dmf_addr);
 	}

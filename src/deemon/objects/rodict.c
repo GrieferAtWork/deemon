@@ -931,7 +931,7 @@ rodict_serialize(RoDict *__restrict self, DeeSerial *__restrict writer) {
 	out = DeeSerial_Addr2Mem(writer, addr, RoDict);
 	out->rd_vsize = self->rd_vsize;
 	out->rd_hmask = self->rd_hmask;
-	for (i = 0; i <= self->rd_hmask; ++i) {
+	for (i = 0; i < self->rd_vsize; ++i) {
 		struct Dee_dict_item *out_item;
 		struct Dee_dict_item *in_item;
 		Dee_seraddr_t addrof_item;
@@ -950,7 +950,9 @@ rodict_serialize(RoDict *__restrict self, DeeSerial *__restrict writer) {
 			                        in_item->di_value))
 				goto err;
 		} else {
-			out_item->di_key = NULL;
+			out_item->di_hash  = 0;
+			out_item->di_key   = NULL;
+			out_item->di_value = NULL;
 		}
 	}
 	if (DeeSerial_PutStaticDeemon(writer,

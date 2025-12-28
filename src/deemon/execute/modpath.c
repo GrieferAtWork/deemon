@@ -1621,6 +1621,7 @@ DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_fil
 
 		/* Check open file status */
 		pathsize = (size_t)(basename - abs_filename);
+		Dee_DPRINTF("[LD] Loading dec file for %q\n", abs_filename);
 		result = DeeModule_OpenDecFile_impl(dec_stream, abs_filename, pathsize,
 		                                    flags, options, dee_file_last_modified);
 //		Dee_Decref(dec_stream); /* Inherited by `DeeModule_OpenDecFile_impl()' */
@@ -1725,7 +1726,7 @@ no_dec_file:
 			basename[basesize + 1] = '\0';
 	
 			/* Output file */
-			Dee_DPRINTF("[rt] Generate dec file %q\n", abs_filename);
+			Dee_DPRINTF("[RT] Generate dec file %q\n", abs_filename);
 			output_stream = DeeFile_OpenString(abs_filename,
 			                                   OPEN_FWRONLY | OPEN_FCREAT |
 			                                   OPEN_FTRUNC | OPEN_FHIDDEN |
@@ -3803,7 +3804,7 @@ module_try_add_missing_libnames_or_unlock(DeeModuleObject *__restrict self,
 /* Acquire a lock to `module_libtree_lock_read()' whilst simultaneously
  * ensuring that all possible libpath entries of "self" has been allocated. */
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) int DCALL
-module_lock_and_load_libnames(DeeModuleObject *__restrict self) {
+module_lock_and_load_libnames(DeeModuleObject *__restrict self, size_t load_until) {
 	DREF DeeTupleObject *libpath;
 	uint16_t flags;
 again:
@@ -3818,6 +3819,19 @@ again:
 			return 0;
 		if (Dee_TYPE(self) != &DeeModuleDir_Type)
 			return 0;
+	}
+	/* Fast-pass: is the libname list loaded far enough? */
+	if (load_until != (size_t)-1 && self->mo_libname.mle_name) {
+		struct Dee_module_libentry *iter;
+		if (load_until == 0)
+			return 0;
+		iter = self->mo_libname.mle_next;
+		while (iter) {
+			ASSERT(iter->mle_name);
+			if (!--load_until)
+				return 0;
+			iter = iter->mle_next;
+		}
 	}
 	module_libtree_lock_endread();
 	libpath = (DREF DeeTupleObject *)DeeModule_GetLibPath();
@@ -3900,7 +3914,7 @@ DeeModule_GetLibName(/*Module*/ DeeObject *__restrict self, size_t index) {
 		return ITER_DONE;
 	}
 #endif
-	if unlikely(module_lock_and_load_libnames(me))
+	if unlikely(module_lock_and_load_libnames(me, index))
 		goto err;
 	for (libname = &me->mo_libname; index; --index) {
 		libname = libname->mle_next;
@@ -3940,7 +3954,7 @@ DeeModule_GetLibNameCount(/*Module*/ DeeObject *__restrict self) {
 	if (me == &DeeModule_Deemon)
 		return 1;
 #endif
-	if unlikely(module_lock_and_load_libnames(me))
+	if unlikely(module_lock_and_load_libnames(me, (size_t)-1))
 		goto err;
 	libname = &me->mo_libname;
 	if (libname->mle_name) {

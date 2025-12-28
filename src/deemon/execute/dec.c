@@ -180,7 +180,7 @@ DeeDec_Relocate_with_dependencies(DeeDec_Ehdr *__restrict self) {
 	size_t i;
 	Dec_Dhdr *dhdr;
 	DeeModuleObject *result;
-	ASSERTF(self->e_type != Dee_DEC_TYPE_RELOC,
+	ASSERTF(self->e_type == Dee_DEC_TYPE_RELOC,
 	        "Bad API usage -- Only use this function with 'DeeDec_OpenFile()', "
 	        "which should have already asserted that 'e_type == Dee_DEC_TYPE_RELOC'");
 
@@ -249,7 +249,7 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 	DREF DeeModuleObject *result;
 	Dec_Dhdr *dhdr;
 	size_t dep_index;
-	ASSERTF(self->e_type != Dee_DEC_TYPE_RELOC,
+	ASSERTF(self->e_type == Dee_DEC_TYPE_RELOC,
 	        "Bad API usage -- Only use this function with 'DeeDec_OpenFile()', "
 	        "which should have already asserted that 'e_type == Dee_DEC_TYPE_RELOC'");
 	dhdr = (Dec_Dhdr *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_deps);
@@ -257,7 +257,7 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 	/* Check if source file was modified **after** .dec file */
 	result = DeeDec_Ehdr_GetModule(self);
 	if (result->mo_ctime < dee_file_last_modified) {
-		Dee_DPRINTF("[rt][dec] Source file %q modified after .dec file "
+		Dee_DPRINTF("[LD][dec %q] Source file modified after .dec file "
 		            /**/ "was created: %" PRFu64 " > %" PRFu64 "\n",
 		            context_absname, dee_file_last_modified, result->mo_ctime);
 		goto corrupt;
@@ -267,8 +267,8 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 	if (self->e_typedata.td_reloc.er_offsetof_files) {
 		Dec_Dstr const *dep_files = (Dec_Dstr const *)((byte_t const *)self + self->e_typedata.td_reloc.er_offsetof_files);
 		while (dep_files->ds_length) {
-			Dee_DPRINTF("[rt][dec] XXX: Check Dependency file %$q is modified after .dec file %q was created\n",
-			            dep_files->ds_length, dep_files->ds_string, context_absname);
+			Dee_DPRINTF("[LD][dec %q] XXX: Check Dependency file %$q is modified after .dec file was created\n",
+			            context_absname, dep_files->ds_length, dep_files->ds_string);
 
 			/* XXX: Check timestamp of dependent file (if the encoded path
 			 *      is relative, use "context_absname" to resolve it) */
@@ -293,8 +293,11 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 		if unlikely(!DeeModule_IMPORT_ISOK((DeeObject *)dep)) {
 			if unlikely(dep == (DeeModuleObject *)DeeModule_IMPORT_ERROR)
 				goto err_dep_index;
+			Dee_DPRINTF("[LD][dec %q] Failed to open dependency %$q\n",
+			            context_absname, dependency_name->ds_length, dependency_name->ds_string);
 			goto corrupt_dep_index;
 		}
+
 		/* Apply non-incref relocations now, since we're about to overwrite the pointer to that table */
 		apply_rel(self, dependency->d_modspec.d_file.d_offsetof_rel, (uintptr_t)dep);
 		dependency->d_modspec.d_mod = dep; /* Inherit reference */
@@ -303,9 +306,9 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 		/* Check timestamp of dependency (must be older than our dec file's timestamp) */
 		dep_timestamp = DeeModule_GetCTime((DeeObject *)dep);
 		if (dep_timestamp > result->mo_ctime) {
-			Dee_DPRINTF("[rt][dec] Dependency %q of %q modified after .dec file "
+			Dee_DPRINTF("[LD][dec %q] Dependency %q modified after .dec file "
 			            /**/ "was created: %" PRFu64 " > %" PRFu64 "\n",
-			            DeeModule_GetAbsName((DeeObject *)dep), context_absname,
+			            context_absname, DeeModule_GetAbsName((DeeObject *)dep),
 			            dep_timestamp, result->mo_ctime);
 			goto corrupt_dep_index;
 		}
@@ -612,61 +615,71 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
                 /*utf-8*/ char const *context_absname, size_t context_absname_size,
                 unsigned int flags, struct Dee_compiler_options *options,
                 uint64_t dee_file_last_modified) {
+#ifndef Dee_DPRINT_IS_NOOP
+	unsigned int fail_code;
+#define goto_fail             \
+	do {                      \
+		fail_code = __LINE__; \
+		goto fail;            \
+	}	__WHILE0
+#else /* !Dee_DPRINT_IS_NOOP */
+#define goto_fail goto fail
+#endif /* Dee_DPRINT_IS_NOOP */
 	uint64_t temp_id[2];
 	Dec_Ehdr *ehdr = (Dec_Ehdr *)DeeMapFile_GetBase(fmap);
 	if unlikely(DeeMapFile_GetSize(fmap) < sizeof(Dec_Ehdr))
-		goto fail;
+		goto_fail;
 
 	/* Validate dec file header... */
 	if (ehdr->e_typedata.td_reloc.er_deemon_timestamp != DeeExec_GetTimestamp())
-		goto fail;
+		goto_fail;
 	DeeExec_GetBuildId(temp_id);
 	if (ehdr->e_typedata.td_reloc.er_deemon_build_id[0] != temp_id[0])
-		goto fail;
+		goto_fail;
 	if (ehdr->e_typedata.td_reloc.er_deemon_build_id[1] != temp_id[1])
-		goto fail;
+		goto_fail;
 	DeeExec_GetHostId(temp_id);
 	if unlikely(ehdr->e_typedata.td_reloc.er_deemon_host_id[0] != temp_id[0])
-		goto fail;
+		goto_fail;
 	if unlikely(ehdr->e_typedata.td_reloc.er_deemon_host_id[1] != temp_id[1])
-		goto fail;
+		goto_fail;
 	if unlikely(ehdr->e_ident[DI_MAG0] != DECMAG0)
-		goto fail;
+		goto_fail;
 	if unlikely(ehdr->e_ident[DI_MAG1] != DECMAG1)
-		goto fail;
+		goto_fail;
 	if unlikely(ehdr->e_ident[DI_MAG2] != DECMAG2)
-		goto fail;
+		goto_fail;
 	if unlikely(ehdr->e_ident[DI_MAG3] != DECMAG3)
-		goto fail;
+		goto_fail;
 	if unlikely(ehdr->e_mach != Dee_DEC_MACH)
-		goto fail;
+		goto_fail;
 	/* Only relocatable images can be written to disk, so that's the only valid type */
 	if unlikely(ehdr->e_type != Dee_DEC_TYPE_RELOC)
-		goto fail;
+		goto_fail;
 	if unlikely(ehdr->e_version != DVERSION_CUR)
-		goto fail;
+		goto_fail;
 	if unlikely(ehdr->e_offsetof_eof != DeeMapFile_GetSize(fmap))
-		goto fail;
+		goto_fail;
 	if unlikely(ehdr->e_offsetof_eof > DFILE_LIMIT)
-		goto fail;
+		goto_fail;
 	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_srel >= ehdr->e_offsetof_eof)
-		goto fail;
+		goto_fail;
 	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_drel >= ehdr->e_offsetof_eof)
-		goto fail;
+		goto_fail;
 	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_drrel >= ehdr->e_offsetof_eof)
-		goto fail;
+		goto_fail;
 	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_deps >= ehdr->e_offsetof_eof)
-		goto fail;
+		goto_fail;
 	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_files && ehdr->e_typedata.td_reloc.er_offsetof_files >= ehdr->e_offsetof_eof)
-		goto fail;
+		goto_fail;
 	if unlikely(ehdr->e_offsetof_gchead && ehdr->e_offsetof_gchead >= ehdr->e_offsetof_eof)
-		goto fail;
+		goto_fail;
 	if unlikely(ehdr->e_offsetof_gctail && ehdr->e_offsetof_gctail >= ehdr->e_offsetof_eof)
-		goto fail;
+		goto_fail;
 	if unlikely((ehdr->e_offsetof_gchead != 0) != (ehdr->e_offsetof_gctail != 0))
-		goto fail;
+		goto_fail;
 	if unlikely(ehdr->e_heap.hr_size >= (ehdr->e_offsetof_eof - offsetof(Dec_Ehdr, e_heap)))
-		goto fail;
+		goto_fail;
 
 	/* Configure the runtime portion of the ehdr */
 	ehdr->e_mapping         = *fmap;
@@ -675,7 +688,11 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 	/* Relocate the dec file to turn it into the embedded module object. */
 	return DeeDec_Relocate(ehdr, context_absname, context_absname_size,
 	                       flags, options, dee_file_last_modified);
+#undef goto_fail
 fail:
+#ifndef Dee_DPRINT_IS_NOOP
+	Dee_DPRINTF("[LD][dec %q] Dec file verification failed: %u\n", context_absname, fail_code);
+#endif /* !Dee_DPRINT_IS_NOOP */
 	return (DREF DeeModuleObject *)ITER_DONE;
 }
 
@@ -712,7 +729,7 @@ DeeDecWriter_GenImpStr(DeeDecWriter *__restrict self,
 		ASSERT(!dep->ddm_impstr);
 		dep_name = (DREF DeeStringObject *)DeeModule_GetRelNameEx((DeeObject *)mod, context_absname,
 		                                                          context_absname_size, relname_flags);
-		if unlikely(ITER_ISOK(dep_name)) {
+		if unlikely(!ITER_ISOK(dep_name)) {
 			if (dep_name) {
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Unable to determine relative import name for module "
@@ -947,6 +964,9 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 				addrof_outname += offsetof(Dec_Dstr, ds_string);
 				addrof_outname += (out_name->ds_length + 1) * sizeof(char);
 			}
+			/* Emit terminating "d_modspec.d_mod==NULL"-entry */
+			out_deps->d_modspec.d_mod = NULL;
+
 			addrof_outname = CEIL_ALIGN(addrof_outname, __ALIGNOF_SIZE_T__);
 			out_name = (Dec_Dstr *)((byte_t *)ehdr + addrof_outname);
 			out_name->ds_length = 0; /* "terminated by a ds_length==0-entry" */
@@ -1601,6 +1621,7 @@ decwriter_insert_drrela_miss(DeeDecWriter *__restrict self,
 	rel = &self->dw_drrela.drat_relv[self->dw_drrela_miss];
 	memmoveupc(rel + 1, rel, self->dw_drrela.drat_relc - self->dw_drrela_miss, sizeof(Dec_RRela));
 	++self->dw_drrela_miss;
+	++self->dw_drrela.drat_relc;
 	rel->r_addr = addr;
 	rel->r_offs = offs;
 	return 0;
@@ -1683,7 +1704,7 @@ decwriter_appendobject(DeeDecWriter *__restrict self,
 	}
 	return decwriter_putaddr(self, addrof_object, out_addr + offset_into_ob);
 cannot_serialize:
-	Dee_DPRINTF("[rt][dec@%#" PRFxSIZ "] Warning: Unable to serialize instance of %q at %p%+" PRFdSIZ ": %r\n",
+	Dee_DPRINTF("[LD][dec@%#" PRFxSIZ "] Warning: Unable to serialize instance of %q at %p%+" PRFdSIZ ": %r\n",
 	            addrof_object, DeeType_GetName(Dee_TYPE(obj)), obj, offset_into_ob, obj);
 	if (self->dw_flags & DeeDecWriter_F_FRELOC)
 		return DeeRT_ErrCannotDecSerialize(obj);
@@ -1831,7 +1852,7 @@ decwriter_putpointer(DeeDecWriter *__restrict self,
 	}
 
 	/* If neither was the case, throw an error indicating that serialization isn't possible */
-	Dee_DPRINTF("[rt][dec@%#" PRFxSIZ "] Warning: Unable to serialize pointer %p\n", addrof_pointer, pointer);
+	Dee_DPRINTF("[LD][dec@%#" PRFxSIZ "] Warning: Unable to serialize pointer %p\n", addrof_pointer, pointer);
 	if (self->dw_flags & DeeDecWriter_F_FRELOC) {
 		return DeeError_Throwf(&DeeError_NotImplemented,
 		                       "Unable to serialize pointer '%p': not statically allocated, "
@@ -4943,6 +4964,8 @@ DeeModule_OpenDec(struct Dee_module_object *__restrict mod,
 		}
 		result = DecFile_Init(&file, &filemap, (DeeStringObject *)path, options);
 		Dee_Decref(path);
+		if (result != 0)
+			file.df_module = NULL; /* Hack -- needed for cleanup path below */
 	}
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	result = DecFile_Init(&file, &filemap, mod, mod->mo_path, options);
