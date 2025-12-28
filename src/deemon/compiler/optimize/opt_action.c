@@ -48,12 +48,18 @@ DECL_BEGIN
 #define is_builtin_object is_builtin_object
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 is_builtin_object(DeeObject *__restrict ob) {
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+	DREF DeeObject *mod = DeeModule_OfPointer(ob);
+	Dee_XDecref_unlikely(mod);
+	return mod != NULL;
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 	if (Dec_BuiltinID(ob) != DEC_BUILTINID_UNKNOWN)
 		return true;
 	if (ob == Dee_None)
 		return true;
 	/* XXX: What about all the other builtin objects? */
 	return false;
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

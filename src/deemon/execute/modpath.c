@@ -97,8 +97,6 @@ DECL_BEGIN
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
-#undef container_of
-#define container_of COMPILER_CONTAINER_OF
 
 #ifdef __ARCH_PAGESIZE_MIN
 #define SAMEPAGE(a, b) (((uintptr_t)(a) & (__ARCH_PAGESIZE_MIN - 1)) == ((uintptr_t)(b) & (__ARCH_PAGESIZE_MIN - 1)))
@@ -1504,7 +1502,6 @@ PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF /*tracked*/ struct Dee_module_o
 DeeDec_Track(DREF /*untracked*/ struct Dee_module_object *__restrict self) {
 	Dec_Ehdr *ehdr = DeeDec_Ehdr_FromModule(self);
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeModuleDee_Type);
-	ehdr = container_of(self, Dec_Ehdr, e_heap);
 	ASSERT(ehdr->e_heap.hr_destroy == &DeeDec_heapregion_destroy);
 	ASSERT(DeeHeap_GetRegionOf(DeeGC_Head(self)) == &ehdr->e_heap);
 
@@ -1682,22 +1679,14 @@ no_dec_file:
 	{
 		DeeDecWriter writer;
 		DeeDec_Ehdr *ehdr;
-		int status = DeeDecWriter_Init(&writer);
-		if unlikely(status == 0) {
-err_compile:
-			result = NULL;
-			goto done_compile;
-		}
+		if unlikely(DeeDecWriter_Init(&writer, DeeDecWriter_F_NORMAL))
+			goto err_compile;
 
 		/* Compile source code and write module to "writer" */
-		status = DeeExec_CompileModuleStream_impl((DeeSerial *)&writer, source_stream,
-		                                          0, 0, DeeExec_RUNMODE_DEFAULT,
-		                                          &used_options, NULL);
-		if unlikely(status) {
-err_compile_writer:
-			DeeDecWriter_Fini(&writer);
-			goto err_compile;
-		}
+		if unlikely(DeeExec_CompileModuleStream_impl((DeeSerial *)&writer, source_stream,
+		                                             0, 0, DeeExec_RUNMODE_DEFAULT,
+		                                             &used_options, NULL))
+			goto err_compile_writer;
 
 		/* Pack written module into an EHDR */
 		ehdr = DeeDecWriter_PackEhdr(&writer, abs_filename, abs_filename_length, flags);
@@ -1706,7 +1695,7 @@ err_compile_writer:
 
 		/* If not disabled, emit a .dec file */
 #ifndef CONFIG_NO_DEC
-		if (!(flags & DeeModule_IMPORT_F_NOGDEC)) {
+		if (!(flags & DeeModule_IMPORT_F_NOGDEC) && ehdr->e_type == Dee_DEC_TYPE_RELOC) {
 			/* generate a .dec file */
 			size_t basesize;
 			char *basename;
@@ -1756,12 +1745,9 @@ err_compile_writer:
 			basename[basesize - 0] = '\0';
 
 			if unlikely(!output_stream) {
-				if (DeeError_Handled(Dee_ERROR_HANDLED_NORMAL)) {
-					/* Failed to generate dec file... :( */
-				} else {
-					DeeDec_Ehdr_Destroy(ehdr);
-					goto err_compile_writer;
-				}
+				if (!DeeError_Handled(Dee_ERROR_HANDLED_NORMAL))
+					goto err_compile_writer_ehdr;
+				/* Failed to generate dec file... :( */
 			}
 		}
 #endif /* !CONFIG_NO_DEC */
@@ -1771,8 +1757,18 @@ err_compile_writer:
 
 		/* Finalize dec writer */
 		DeeDecWriter_Fini(&writer);
+
+		__IF0 {
+#ifndef CONFIG_NO_DEC
+err_compile_writer_ehdr:
+			DeeDec_Ehdr_Destroy(ehdr);
+#endif /* !CONFIG_NO_DEC */
+err_compile_writer:
+			DeeDecWriter_Fini(&writer);
+err_compile:
+			result = NULL;
+		}
 	}
-done_compile:
 #else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 	result = (DREF DeeModuleObject *)DeeExec_CompileModuleStream_impl(source_stream, 0, 0,
 	                                                                  DeeExec_RUNMODE_DEFAULT,

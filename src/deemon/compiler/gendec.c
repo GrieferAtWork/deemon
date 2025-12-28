@@ -23,6 +23,7 @@
 #include <deemon/api.h>
 
 #ifndef CONFIG_NO_DEC
+#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
 #include <deemon/cell.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
@@ -1993,6 +1994,7 @@ err:
 
 DECL_END
 
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 #endif /* !CONFIG_NO_DEC */
 
 #endif /* !GUARD_DEEMON_COMPILER_GENDEC_C */

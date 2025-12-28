@@ -20,23 +20,18 @@
 #ifndef GUARD_DEEMON_COMPILER_OPTIMIZE_CONSTANT_TRAITS_C
 #define GUARD_DEEMON_COMPILER_OPTIMIZE_CONSTANT_TRAITS_C 1
 
+#include <deemon/api.h>
+/**/
+
 #include <deemon/compiler/compiler.h>
 
-#include <deemon/api.h>
-#include <deemon/bool.h>
-#include <deemon/class.h>
-#include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/optimize.h>
-#include <deemon/dec.h>
 #include <deemon/dict.h>
-#include <deemon/float.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
-#include <deemon/kwds.h>
 #include <deemon/list.h>
 #include <deemon/module.h>
-#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/rodict.h>
@@ -44,6 +39,15 @@
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/tuple.h>
+#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
+#include <deemon/bool.h>
+#include <deemon/class.h>
+#include <deemon/code.h>
+#include <deemon/dec.h>
+#include <deemon/float.h>
+#include <deemon/kwds.h>
+#include <deemon/none.h>
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 /**/
 
 #include <stddef.h> /* size_t */
@@ -52,6 +56,7 @@ DECL_BEGIN
 
 PRIVATE DeeTypeObject *constant_types[] = {
 	/* Non-object-sequence types that can be encoded using DEC type codes. */
+#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
 	&DeeInt_Type,
 	&DeeFloat_Type,
 	&DeeString_Type,
@@ -60,6 +65,7 @@ PRIVATE DeeTypeObject *constant_types[] = {
 	&DeeClassDescriptor_Type, /* Required for class declarations. */
 	&DeeKwds_Type,            /* Required for functions calls with keywords. */
 	&DeeCode_Type,            /* Not really, but must count because code objects live in constant slots. */
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	&DeeRelInt_Type           /* Required so-as to support constant relocations.
 	                           * Objects of this type don't actually show up */
 };
@@ -109,8 +115,20 @@ asm_allowconst(DeeObject *__restrict self) {
 		if (type == constant_types[i])
 			goto allowed;
 	}
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+	if (DeeType_GetTpSerialize(type))
+		goto allowed;
+	{
+		DREF DeeObject *mod = DeeModule_OfPointer(self);
+		if (mod) {
+			Dee_Decref_unlikely(mod);
+			goto allowed;
+		}
+	}
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 	if (Dec_BuiltinID(self) != DEC_BUILTINID_UNKNOWN)
 		goto allowed;
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	if (type == &DeeTuple_Type) {
 		/* Special case: Only allow tuples of constant expressions. */
 		for (i = 0; i < DeeTuple_SIZE(self); ++i) {
@@ -346,9 +364,11 @@ again0:
 		goto usecopy;
 	}
 
+#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
 	/* Last check: There is a small hand full of constant objects that are always allowed. */
 	if (Dec_BuiltinID(self) != DEC_BUILTINID_UNKNOWN)
 		goto allowed;
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 illegal:
 	return CONSTEXPR_ILLEGAL;
 allowed:

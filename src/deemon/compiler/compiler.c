@@ -685,11 +685,6 @@ err:
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 }
 
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-INTDEF NONNULL((1)) DREF DeeModuleObject *DCALL
-module_track_dee(DREF DeeModuleObject *self);
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-
 PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeExec_CompileModuleStream(DeeObject *source_stream,
                             int start_line, int start_col, unsigned int mode,
@@ -698,7 +693,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 	DREF DeeModuleObject *result;
 	DeeDecWriter writer;
 	DeeDec_Ehdr *ehdr;
-	int status = DeeDecWriter_Init(&writer);
+	int status = DeeDecWriter_Init(&writer, DeeDecWriter_F_NORMAL);
 	if unlikely(status)
 		goto err;
 
@@ -723,7 +718,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 	DeeDecWriter_Fini(&writer);
 
 	/* Start tracking the newly created module. */
-	result = module_track_dee(result);
+	result = DeeDec_Track(result);
 	return (DREF DeeObject *)result;
 err_writer_ehdr:
 	DeeDec_Ehdr_Destroy(ehdr);

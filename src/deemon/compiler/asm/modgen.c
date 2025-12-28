@@ -88,6 +88,7 @@ module_compile(struct Dee_serial *__restrict writer,
 			} else {
 				iter->co_module = (DeeModuleObject *)&current_module_marker;
 				Dee_Incref(&current_module_marker);
+				Dee_Decref_unlikely(iter);
 			}
 			iter = next;
 		}

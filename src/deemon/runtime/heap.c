@@ -4960,6 +4960,11 @@ PUBLIC ATTR_HOT void
 		return;
 	leak_lock_acquire();
 	node = leaknode_tree_remove(&leak_nodes, (char *)ptr);
+	if unlikely(node && ptr != chunk2mem(node->ln_chunk)) {
+		/* This can happen if "ptr" is a custom flag4 sub-region of a bigger heap region */
+		leaknode_tree_insert(&leak_nodes, node);
+		node = NULL;
+	}
 	leak_lock_release();
 	if (!node) {
 		mchunkptr p = mem2chunk(ptr);
@@ -4970,6 +4975,7 @@ PUBLIC ATTR_HOT void
 			Dee_BREAKPOINT();
 		}
 	} else {
+#if 0 /* Never happens -- see "leaknode_tree_insert" above */
 		if (ptr != chunk2mem(node->ln_chunk)) {
 			_DeeAssert_Failf("Dee_Free(ptr)", file, line,
 			                 "Bad pointer %p does not map to start of node at %p-%p",
@@ -4978,6 +4984,7 @@ PUBLIC ATTR_HOT void
 			                 (chunksize(node->ln_chunk) - overhead_for(node->ln_chunk) - 1));
 			Dee_BREAKPOINT();
 		}
+#endif
 		dlfree(node);
 	}
 	dlfree(ptr);
@@ -4992,6 +4999,11 @@ PUBLIC ATTR_HOT WUNUSED void *
 		return DeeDbg_TryMalloc(n_bytes, file, line);
 	leak_lock_acquire();
 	node = leaknode_tree_remove(&leak_nodes, (char *)ptr);
+	if unlikely(node && ptr != chunk2mem(node->ln_chunk)) {
+		/* This can happen if "ptr" is a custom flag4 sub-region of a bigger heap region */
+		leaknode_tree_insert(&leak_nodes, node);
+		node = NULL;
+	}
 	leak_lock_release();
 	if (!node) {
 		/* This should only happen when "ptr" is part of a "custom" heap region */
@@ -5012,6 +5024,7 @@ PUBLIC ATTR_HOT WUNUSED void *
 			dlfree(node);
 		}
 	} else {
+#if 0 /* Never happens -- see "leaknode_tree_insert" above */
 		if (ptr != chunk2mem(node->ln_chunk)) {
 			_DeeAssert_Failf("Dee_Realloc(ptr)", file, line,
 			                 "Bad pointer %p does not map to start of node at %p-%p",
@@ -5020,6 +5033,7 @@ PUBLIC ATTR_HOT WUNUSED void *
 			                 (chunksize(node->ln_chunk) - overhead_for(node->ln_chunk) - 1));
 			Dee_BREAKPOINT();
 		}
+#endif
 		ptr = dlrealloc(ptr, n_bytes);
 		if (ptr) {
 			if (!node->ln_file) {
