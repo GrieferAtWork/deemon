@@ -49,7 +49,7 @@ DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNoActiveException)(void);
 /* Throws a `DeeError_NotImplemented' indicating that `self'
  * cannot be serialized into a ".dec" file */
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrCannotDecSerialize)(DeeObject *__restrict self);
-#define DeeRT_ErrCannotDecSerialize(self) Dee_ASSUMED_VALUE((DeeRT_ErrCannotDecSerialize)(self), -1)
+#define DeeRT_ErrCannotDecSerialize(self) Dee_ASSUMED_VALUE((DeeRT_ErrCannotDecSerialize)(Dee_AsObject(self)), -1)
 
 
 /* Throws a `DeeError_IntegerOverflow' indicating that some an integer

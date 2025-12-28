@@ -38,6 +38,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
+#include <deemon/util/atomic.h>
 
 #include <hybrid/align.h>
 #include <hybrid/limitcore.h>
@@ -257,7 +258,7 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 	/* Check if source file was modified **after** .dec file */
 	result = DeeDec_Ehdr_GetModule(self);
 	if (result->mo_ctime < dee_file_last_modified) {
-		Dee_DPRINTF("[LD][dec %q] Source file modified after .dec file "
+		Dee_DPRINTF("[LD][dec %q] CORRUPT: Source file modified after .dec file "
 		            /**/ "was created: %" PRFu64 " > %" PRFu64 "\n",
 		            context_absname, dee_file_last_modified, result->mo_ctime);
 		goto corrupt;
@@ -293,7 +294,7 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 		if unlikely(!DeeModule_IMPORT_ISOK((DeeObject *)dep)) {
 			if unlikely(dep == (DeeModuleObject *)DeeModule_IMPORT_ERROR)
 				goto err_dep_index;
-			Dee_DPRINTF("[LD][dec %q] Failed to open dependency %$q\n",
+			Dee_DPRINTF("[LD][dec %q] CORRUPT: Failed to open dependency %$q\n",
 			            context_absname, dependency_name->ds_length, dependency_name->ds_string);
 			goto corrupt_dep_index;
 		}
@@ -306,8 +307,8 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 		/* Check timestamp of dependency (must be older than our dec file's timestamp) */
 		dep_timestamp = DeeModule_GetCTime((DeeObject *)dep);
 		if (dep_timestamp > result->mo_ctime) {
-			Dee_DPRINTF("[LD][dec %q] Dependency %q modified after .dec file "
-			            /**/ "was created: %" PRFu64 " > %" PRFu64 "\n",
+			Dee_DPRINTF("[LD][dec %q] CORRUPT: Dependency %q was compiled after "
+			            /**/ ".dec file was created: %" PRFu64 " > %" PRFu64 "\n",
 			            context_absname, DeeModule_GetAbsName((DeeObject *)dep),
 			            dep_timestamp, result->mo_ctime);
 			goto corrupt_dep_index;
@@ -421,6 +422,13 @@ DeeDecWriter_PackModule(DeeDecWriter *__restrict self,
 	size_t i;
 	DREF /*untracked*/ struct Dee_module_object *result;
 	result = DeeDec_Ehdr_GetModule(ehdr);
+
+	/* If the module didn't end up having relocation info,
+	 * remember that fact within the module itself, so that
+	 * other modules that depend on this one will know that
+	 * trying to generate .dec files is impossible. */
+	if (ehdr->e_type != Dee_DEC_TYPE_RELOC)
+		result->mo_flags |= Dee_MODULE_FNOSERIAL;
 
 	/* Self-relocations... */
 	w_apply_rel(ehdr, self->dw_srel.drlt_relv, self->dw_srel.drlt_relc, (uintptr_t)ehdr);
@@ -616,70 +624,69 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
                 unsigned int flags, struct Dee_compiler_options *options,
                 uint64_t dee_file_last_modified) {
 #ifndef Dee_DPRINT_IS_NOOP
-	unsigned int fail_code;
-#define goto_fail             \
+	char const *fail_reason;
+#define goto_fail(reason)     \
 	do {                      \
-		fail_code = __LINE__; \
+		fail_reason = reason; \
 		goto fail;            \
 	}	__WHILE0
 #else /* !Dee_DPRINT_IS_NOOP */
-#define goto_fail goto fail
+#define goto_fail(reason) goto fail
 #endif /* Dee_DPRINT_IS_NOOP */
 	uint64_t temp_id[2];
 	Dec_Ehdr *ehdr = (Dec_Ehdr *)DeeMapFile_GetBase(fmap);
 	if unlikely(DeeMapFile_GetSize(fmap) < sizeof(Dec_Ehdr))
-		goto_fail;
+		goto_fail("File is smaller than 'sizeof(Dec_Ehdr)'");
 
 	/* Validate dec file header... */
 	if (ehdr->e_typedata.td_reloc.er_deemon_timestamp != DeeExec_GetTimestamp())
-		goto_fail;
+		goto_fail("Deemon core built timestamp doesn't match");
 	DeeExec_GetBuildId(temp_id);
-	if (ehdr->e_typedata.td_reloc.er_deemon_build_id[0] != temp_id[0])
-		goto_fail;
-	if (ehdr->e_typedata.td_reloc.er_deemon_build_id[1] != temp_id[1])
-		goto_fail;
+	if (ehdr->e_typedata.td_reloc.er_deemon_build_id[0] != temp_id[0] ||
+	    ehdr->e_typedata.td_reloc.er_deemon_build_id[1] != temp_id[1])
+		goto_fail("Deemon build ID doesn't match");
 	DeeExec_GetHostId(temp_id);
-	if unlikely(ehdr->e_typedata.td_reloc.er_deemon_host_id[0] != temp_id[0])
-		goto_fail;
-	if unlikely(ehdr->e_typedata.td_reloc.er_deemon_host_id[1] != temp_id[1])
-		goto_fail;
+	if unlikely(ehdr->e_typedata.td_reloc.er_deemon_host_id[0] != temp_id[0] ||
+	            ehdr->e_typedata.td_reloc.er_deemon_host_id[1] != temp_id[1])
+		goto_fail("Deemon host ID doesn't match");
 	if unlikely(ehdr->e_ident[DI_MAG0] != DECMAG0)
-		goto_fail;
+		goto_fail("Bad DI_MAG0");
 	if unlikely(ehdr->e_ident[DI_MAG1] != DECMAG1)
-		goto_fail;
+		goto_fail("Bad DI_MAG1");
 	if unlikely(ehdr->e_ident[DI_MAG2] != DECMAG2)
-		goto_fail;
+		goto_fail("Bad DI_MAG2");
 	if unlikely(ehdr->e_ident[DI_MAG3] != DECMAG3)
-		goto_fail;
+		goto_fail("Bad DI_MAG3");
 	if unlikely(ehdr->e_mach != Dee_DEC_MACH)
-		goto_fail;
+		goto_fail("Bad 'e_mach'");
 	/* Only relocatable images can be written to disk, so that's the only valid type */
 	if unlikely(ehdr->e_type != Dee_DEC_TYPE_RELOC)
-		goto_fail;
+		goto_fail("Bad 'e_type'");
 	if unlikely(ehdr->e_version != DVERSION_CUR)
-		goto_fail;
+		goto_fail("Bad 'e_version'");
 	if unlikely(ehdr->e_offsetof_eof != DeeMapFile_GetSize(fmap))
-		goto_fail;
+		goto_fail("Bad 'e_offsetof_eof' does not match size of file");
 	if unlikely(ehdr->e_offsetof_eof > DFILE_LIMIT)
-		goto_fail;
+		goto_fail("Bad 'e_offsetof_eof' is greater than 'DFILE_LIMIT'");
 	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_srel >= ehdr->e_offsetof_eof)
-		goto_fail;
+		goto_fail("Bad 'er_offsetof_srel'");
 	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_drel >= ehdr->e_offsetof_eof)
-		goto_fail;
+		goto_fail("Bad 'er_offsetof_drel'");
 	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_drrel >= ehdr->e_offsetof_eof)
-		goto_fail;
+		goto_fail("Bad 'er_offsetof_drrel'");
 	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_deps >= ehdr->e_offsetof_eof)
-		goto_fail;
-	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_files && ehdr->e_typedata.td_reloc.er_offsetof_files >= ehdr->e_offsetof_eof)
-		goto_fail;
-	if unlikely(ehdr->e_offsetof_gchead && ehdr->e_offsetof_gchead >= ehdr->e_offsetof_eof)
-		goto_fail;
-	if unlikely(ehdr->e_offsetof_gctail && ehdr->e_offsetof_gctail >= ehdr->e_offsetof_eof)
-		goto_fail;
+		goto_fail("Bad 'er_offsetof_deps'");
+	if unlikely(/*ehdr->e_typedata.td_reloc.er_offsetof_files != 0 &&*/
+	            ehdr->e_typedata.td_reloc.er_offsetof_files >= ehdr->e_offsetof_eof)
+		goto_fail("Bad 'er_offsetof_files'");
+	if unlikely(/*ehdr->e_offsetof_gchead != 0 &&*/ ehdr->e_offsetof_gchead >= ehdr->e_offsetof_eof)
+		goto_fail("Bad 'e_offsetof_gchead'");
+	if unlikely(/*ehdr->e_offsetof_gctail != 0 &&*/ ehdr->e_offsetof_gctail >= ehdr->e_offsetof_eof)
+		goto_fail("Bad 'e_offsetof_gctail'");
 	if unlikely((ehdr->e_offsetof_gchead != 0) != (ehdr->e_offsetof_gctail != 0))
-		goto_fail;
+		goto_fail("Presence of 'e_offsetof_gchead' and 'e_offsetof_gctail' do not match");
 	if unlikely(ehdr->e_heap.hr_size >= (ehdr->e_offsetof_eof - offsetof(Dec_Ehdr, e_heap)))
-		goto_fail;
+		goto_fail("Bad 'e_heap.hr_size' points past EOF");
 
 	/* Configure the runtime portion of the ehdr */
 	ehdr->e_mapping         = *fmap;
@@ -691,7 +698,8 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 #undef goto_fail
 fail:
 #ifndef Dee_DPRINT_IS_NOOP
-	Dee_DPRINTF("[LD][dec %q] Dec file verification failed: %u\n", context_absname, fail_code);
+	Dee_DPRINTF("[LD][dec %q] CORRUPT: Header verification failed: %s\n",
+	            context_absname, fail_reason);
 #endif /* !Dee_DPRINT_IS_NOOP */
 	return (DREF DeeModuleObject *)ITER_DONE;
 }
@@ -710,10 +718,10 @@ fail:
 
 /* Generate import strings for module dependencies (s.a. `struct Dee_dec_depmod::ddm_impstr') */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-DeeDecWriter_GenImpStr(DeeDecWriter *__restrict self,
-                       /*utf-8*/ char const *context_absname,
-                       size_t context_absname_size,
-                       unsigned int flags) {
+decwriter_genimpstr(DeeDecWriter *__restrict self,
+                    /*utf-8*/ char const *context_absname,
+                    size_t context_absname_size,
+                    unsigned int flags) {
 	size_t i;
 	unsigned int relname_flags;
 #if DeeModule_IMPORT_F_CTXDIR == DeeModule_RELNAME_F_CTXDIR
@@ -814,7 +822,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 		DeeExec_GetHostId(ehdr->e_typedata.td_reloc.er_deemon_host_id);
 
 		/* Generate `ddm_impstr' strings for dependencies. */
-		if unlikely(DeeDecWriter_GenImpStr(self, context_absname, context_absname_size, flags))
+		if unlikely(decwriter_genimpstr(self, context_absname, context_absname_size, flags))
 			goto err;
 
 		/* Module dependency tables. */
@@ -1266,6 +1274,16 @@ decwriter_getdep(DeeDecWriter *__restrict self,
 	++self->dw_deps.ddpt_depc;
 	Dee_Incref(mod);
 	Dee_dec_depmod_init(dst, mod);
+	if unlikely(atomic_read(&mod->mo_flags) & Dee_MODULE_FNOSERIAL) {
+		Dee_DPRINTF("[LD][dec] Warning: dependent module %q could not be "
+		            /**/ "serialized, meaning this one can't be either\n",
+		            DeeModule_GetAbsName((DeeObject *)mod));
+		if (self->dw_flags & DeeDecWriter_F_FRELOC) {
+			DeeRT_ErrCannotDecSerialize(mod);
+			goto err;
+		}
+		self->dw_flags |= DeeDecWriter_F_NRELOC;
+	}
 	return dst;
 err:
 	return NULL;

@@ -517,6 +517,7 @@ struct Dee_module_object {
 #define Dee_MODULE_FABSFILE        0x0001       /* [DeeModuleDee_Type][const] `mo_absname' is the actual, absolute filename of this module (which doesn't end with `.dee') */
 #define Dee_MODULE_FHASCTIME       0x0002       /* [lock(WRITE_ONCE)] Field `mo_ctime' has been initialized */
 #define Dee_MODULE_FWAITINIT       0x0004       /* [lock(ATOMIC)] When `mo_init' is set to `Dee_MODULE_INIT_UNINITIALIZED' or `Dee_MODULE_INIT_INITIALIZED', must `DeeFutex_WakeAll(&mo_init)' */
+#define Dee_MODULE_FNOSERIAL       0x0008       /* [const] Indicates that this module could not be serialized during compilation, meaning that anything that depends on it can't be serialized, either. */
 #define Dee_MODULE_FABSRED         0x0100       /* [lock(ATOMIC)] is-red-bit for `mo_absnode' */
 #define Dee_MODULE_FADRRED         0x0200       /* [lock(ATOMIC)] is-red-bit for `mo_adrnode' */
 #define _Dee_MODULE_FLIBALL        0x4000       /* [lock(ATOMIC)] Used internally by `DeeModule_GetLibName()' */

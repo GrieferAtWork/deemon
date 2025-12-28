@@ -413,10 +413,16 @@ typedef struct Dee_dec_writer {
 	Dee_dec_addr32_t        dw_gctail; /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `dw_srel') */
 	struct Dee_dec_objtab   dw_known;  /* Table of known, already-encoded objects */
 	unsigned int            dw_flags;  /* Dec writer flags (set of `DeeDecWriter_F_*') */
-#define DeeDecWriter_F_NORMAL 0x0000   /* Normal flags */
-#define DeeDecWriter_F_NRELOC 0x0001   /* Encountered a object/pointer that cannot be serialized. Dec generation continues, but resulting image cannot be written to a file */
-#define DeeDecWriter_F_FRELOC 0x0002   /* Force the produced dec file to be relocatable: `DeeDecWriter_F_NRELOC' will not be set and `DeeRT_ErrCannotDecSerialize' will be thrown */
 } DeeDecWriter;
+
+#define DeeDecWriter_F_NORMAL 0x0000 /* Normal flags */
+#define DeeDecWriter_F_FRELOC 0x0002 /* Force the produced dec file to be relocatable: `DeeDecWriter_F_NRELOC' will not be set and `DeeRT_ErrCannotDecSerialize' will be thrown */
+#define DeeDecWriter_F_NRELOC 0x0080 /* Encountered a object/pointer that cannot be serialized.
+                                      * Dec generation continues, but resulting image cannot be
+                                      * written to a file (iow: is "Dee_DEC_TYPE_IMAGE"). This
+                                      * flag may also speed up object serialization, since it
+                                      * means that relocations against other modules don't have
+                                      * to be kept track of. */
 
 /* Same as `DeeSerial_Addr2Mem()' */
 #define DeeDecWriter_Addr2Mem(self, addr, T) ((T *)((self)->dw_base + (addr)))

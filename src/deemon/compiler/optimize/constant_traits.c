@@ -37,9 +37,9 @@
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
 #include <deemon/string.h>
+#include <deemon/thread.h>
 #include <deemon/super.h>
 #include <deemon/tuple.h>
-#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
 #include <deemon/bool.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
@@ -47,16 +47,26 @@
 #include <deemon/float.h>
 #include <deemon/kwds.h>
 #include <deemon/none.h>
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
+
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+#include <deemon/error.h>
+#include <deemon/map.h>
+#include <deemon/seq.h>
+#include <deemon/set.h>
+#include <deemon/callable.h>
+#include <deemon/numeric.h>
+#include <deemon/weakref.h>
+#include <deemon/cell.h>
+#include <deemon/traceback.h>
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 /**/
 
 #include <stddef.h> /* size_t */
 
 DECL_BEGIN
 
-PRIVATE DeeTypeObject *constant_types[] = {
+PRIVATE DeeTypeObject *tpconst constant_types[] = {
 	/* Non-object-sequence types that can be encoded using DEC type codes. */
-#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
 	&DeeInt_Type,
 	&DeeFloat_Type,
 	&DeeString_Type,
@@ -65,10 +75,97 @@ PRIVATE DeeTypeObject *constant_types[] = {
 	&DeeClassDescriptor_Type, /* Required for class declarations. */
 	&DeeKwds_Type,            /* Required for functions calls with keywords. */
 	&DeeCode_Type,            /* Not really, but must count because code objects live in constant slots. */
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	&DeeRelInt_Type           /* Required so-as to support constant relocations.
 	                           * Objects of this type don't actually show up */
 };
+
+
+/* Expectations regarding what is- and isn't allowed to be a constant seem way too abstruse
+ * and overcomplicated, with systems upon systems built upon legacy code. Since the entire
+ * compiler needs to be re-written to properly use CONFIG_EXPERIMENTAL_MMAP_DEC anyways,
+ * rather than figuring out what was meant to happen here, just emulate legacy behavior
+ * for now... */
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+PRIVATE DeeObject *tpconst legacy_Dec_BuiltinID[] = {
+	{ (DeeObject *)&DeeError_Signal },
+	{ (DeeObject *)&DeeError_Interrupt },
+	{ (DeeObject *)&DeeError_StopIteration },
+	{ (DeeObject *)&DeeError_Error },
+	{ (DeeObject *)&DeeError_AttributeError },
+	{ (DeeObject *)&DeeError_UnboundAttribute },
+	{ (DeeObject *)&DeeError_CompilerError },
+	{ (DeeObject *)&DeeError_ThreadCrash },
+	{ (DeeObject *)&DeeError_RuntimeError },
+	{ (DeeObject *)&DeeError_NotImplemented },
+	{ (DeeObject *)&DeeError_AssertionError },
+	{ (DeeObject *)&DeeError_UnboundLocal },
+	{ (DeeObject *)&DeeError_StackOverflow },
+	{ (DeeObject *)&DeeError_TypeError },
+	{ (DeeObject *)&DeeError_ValueError },
+	{ (DeeObject *)&DeeError_ArithmeticError },
+	{ (DeeObject *)&DeeError_DivideByZero },
+	{ (DeeObject *)&DeeError_KeyError },
+	{ (DeeObject *)&DeeError_IndexError },
+	{ (DeeObject *)&DeeError_UnboundItem },
+	{ (DeeObject *)&DeeError_SequenceError },
+	{ (DeeObject *)&DeeError_UnicodeError },
+	{ (DeeObject *)&DeeError_ReferenceError },
+	{ (DeeObject *)&DeeError_UnpackError },
+	{ (DeeObject *)&DeeError_SystemError },
+	{ (DeeObject *)&DeeError_FSError },
+	{ (DeeObject *)&DeeError_FileAccessError },
+	{ (DeeObject *)&DeeError_FileNotFound },
+	{ (DeeObject *)&DeeError_FileExists },
+	{ (DeeObject *)&DeeError_FileClosed },
+	{ (DeeObject *)&DeeError_NoMemory },
+	{ (DeeObject *)&DeeError_IntegerOverflow },
+	{ (DeeObject *)&DeeError_UnknownKey },
+	{ (DeeObject *)&DeeError_ItemNotFound },
+	{ (DeeObject *)&DeeError_BufferError },
+	{ (DeeObject *)&DeeObject_Type },
+	{ (DeeObject *)&DeeSeq_Type },
+	{ (DeeObject *)&DeeMapping_Type },
+	{ (DeeObject *)&DeeIterator_Type },
+	{ (DeeObject *)&DeeCallable_Type },
+	{ (DeeObject *)&DeeNumeric_Type },
+	{ (DeeObject *)&DeeWeakRefAble_Type },
+	{ (DeeObject *)&DeeList_Type },
+	{ (DeeObject *)&DeeDict_Type },
+	{ (DeeObject *)&DeeHashSet_Type },
+	{ (DeeObject *)&DeeCell_Type },
+	{ (DeeObject *)&Dee_FalseTrue },
+	{ (DeeObject *)&Dee_FalseTrue },
+	{ (DeeObject *)&DeeSeq_EmptyInstance },
+	{ (DeeObject *)&DeeSet_EmptyInstance },
+	{ (DeeObject *)&DeeMapping_EmptyInstance },
+	{ (DeeObject *)&DeeType_Type },
+	{ (DeeObject *)&DeeTraceback_Type },
+	{ (DeeObject *)&DeeThread_Type },
+	{ (DeeObject *)&DeeSuper_Type },
+	{ (DeeObject *)&DeeString_Type },
+	{ (DeeObject *)&DeeNone_Type },
+	{ (DeeObject *)&DeeInt_Type },
+	{ (DeeObject *)&DeeFloat_Type },
+	{ (DeeObject *)&DeeModule_Type },
+	{ (DeeObject *)&DeeCode_Type },
+	{ (DeeObject *)&DeeTuple_Type },
+	{ (DeeObject *)&DeeBool_Type },
+	{ (DeeObject *)&DeeWeakRef_Type },
+};
+
+INTERN WUNUSED NONNULL((1)) bool DCALL
+legacy_has_Dec_BuiltinID(DeeObject *__restrict obj) {
+	size_t i;
+	for (i = 0; i < COMPILER_LENOF(legacy_Dec_BuiltinID); ++i) {
+		if (legacy_Dec_BuiltinID[i] == obj)
+			return true;
+	}
+	return false;
+}
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+#define legacy_has_Dec_BuiltinID(obj) (Dec_BuiltinID(obj) != DEC_BUILTINID_UNKNOWN)
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
+
 
 struct constexpr_frame {
 	struct constexpr_frame *cf_prev; /* [0..1] Previous frame. */
@@ -115,20 +212,8 @@ asm_allowconst(DeeObject *__restrict self) {
 		if (type == constant_types[i])
 			goto allowed;
 	}
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-	if (DeeType_GetTpSerialize(type))
+	if (legacy_has_Dec_BuiltinID(self))
 		goto allowed;
-	{
-		DREF DeeObject *mod = DeeModule_OfPointer(self);
-		if (mod) {
-			Dee_Decref_unlikely(mod);
-			goto allowed;
-		}
-	}
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-	if (Dec_BuiltinID(self) != DEC_BUILTINID_UNKNOWN)
-		goto allowed;
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	if (type == &DeeTuple_Type) {
 		/* Special case: Only allow tuples of constant expressions. */
 		for (i = 0; i < DeeTuple_SIZE(self); ++i) {
@@ -364,11 +449,9 @@ again0:
 		goto usecopy;
 	}
 
-#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
 	/* Last check: There is a small hand full of constant objects that are always allowed. */
-	if (Dec_BuiltinID(self) != DEC_BUILTINID_UNKNOWN)
+	if (legacy_has_Dec_BuiltinID(self))
 		goto allowed;
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 illegal:
 	return CONSTEXPR_ILLEGAL;
 allowed:

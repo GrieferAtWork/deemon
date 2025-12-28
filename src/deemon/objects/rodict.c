@@ -924,18 +924,26 @@ rodict_visit(RoDict *__restrict self, Dee_visit_t proc, void *arg) {
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 rodict_serialize(RoDict *__restrict self, DeeSerial *__restrict writer) {
 	RoDict *out;
-	size_t i, sizeof_dict = _RoDict_SizeOf(self->rd_vsize, self->rd_hmask);
-	Dee_seraddr_t addr = DeeSerial_ObjectMalloc(writer, sizeof_dict, self);
-	if (!Dee_SERADDR_ISOK(addr))
+	size_t i, sizeof_dict;
+	size_t sizeof__rd_htab;
+	Dee_seraddr_t addrof_out;
+	byte_t *out__rd_htab;
+	shift_t hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->rd_vsize);
+	sizeof__rd_htab = (self->rd_hmask + 1) << hidxio;
+	sizeof_dict = _RoDict_SizeOf3(self->rd_vsize, self->rd_hmask, hidxio);
+	addrof_out  = DeeSerial_ObjectMalloc(writer, sizeof_dict, self);
+	if (!Dee_SERADDR_ISOK(addrof_out))
 		goto err;
-	out = DeeSerial_Addr2Mem(writer, addr, RoDict);
+	out = DeeSerial_Addr2Mem(writer, addrof_out, RoDict);
 	out->rd_vsize = self->rd_vsize;
 	out->rd_hmask = self->rd_hmask;
+	out__rd_htab = (byte_t *)(out->rd_vtab + self->rd_vsize);
+	memcpy(out__rd_htab, self->rd_htab, sizeof__rd_htab);
 	for (i = 0; i < self->rd_vsize; ++i) {
 		struct Dee_dict_item *out_item;
 		struct Dee_dict_item *in_item;
 		Dee_seraddr_t addrof_item;
-		addrof_item = addr + offsetof(RoDict, rd_vtab) +
+		addrof_item = addrof_out + offsetof(RoDict, rd_vtab) +
 		              i * sizeof(struct Dee_dict_item);
 		out_item = DeeSerial_Addr2Mem(writer, addrof_item, struct Dee_dict_item);
 		in_item  = &self->rd_vtab[i];
@@ -955,17 +963,14 @@ rodict_serialize(RoDict *__restrict self, DeeSerial *__restrict writer) {
 			out_item->di_value = NULL;
 		}
 	}
-	if (DeeSerial_PutStaticDeemon(writer,
-	                              addr + offsetof(RoDict, rd_hidxget),
+	if (DeeSerial_PutStaticDeemon(writer, addrof_out + offsetof(RoDict, rd_hidxget),
 	                              (void *)self->rd_hidxget))
 		goto err;
-	if (DeeSerial_PutAddr(writer,
-	                      addr + offsetof(RoDict, rd_htab),
-	                      /* _DeeRoDict_GetRealVTab(addr) + rd_vsize */
-	                      offsetof(RoDict, rd_vtab) +
+	if (DeeSerial_PutAddr(writer, addrof_out + offsetof(RoDict, rd_htab),
+	                      addrof_out + offsetof(RoDict, rd_vtab) +
 	                      self->rd_vsize * sizeof(struct Dee_dict_item)))
 		goto err;
-	return addr;
+	return addrof_out;
 err:
 	return Dee_SERADDR_INVALID;
 }

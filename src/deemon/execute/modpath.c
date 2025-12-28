@@ -1567,6 +1567,7 @@ DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_fil
 	struct Dee_import_frame frame;
 
 #ifndef CONFIG_NO_DEC
+	bool has_broken_dec_file = false;
 	if ((flags & (_DeeModule_IMPORT_F_IS_DEE_FILE | DeeModule_IMPORT_F_NOLDEC)) ==
 	    /*    */ (_DeeModule_IMPORT_F_IS_DEE_FILE)) {
 		size_t pathsize, basesize;
@@ -1621,12 +1622,13 @@ DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_fil
 
 		/* Check open file status */
 		pathsize = (size_t)(basename - abs_filename);
-		Dee_DPRINTF("[LD] Loading dec file for %q\n", abs_filename);
+		Dee_DPRINTF("[LD][dec %q] Loading dec file\n", abs_filename);
 		result = DeeModule_OpenDecFile_impl(dec_stream, abs_filename, pathsize,
 		                                    flags, options, dee_file_last_modified);
 //		Dee_Decref(dec_stream); /* Inherited by `DeeModule_OpenDecFile_impl()' */
 		if (result != (DREF DeeModuleObject *)ITER_DONE)
 			return result;
+		has_broken_dec_file = true;
 	}
 no_dec_file:
 #endif /* !CONFIG_NO_DEC */
@@ -1680,8 +1682,15 @@ no_dec_file:
 	{
 		DeeDecWriter writer;
 		DeeDec_Ehdr *ehdr;
-		if unlikely(DeeDecWriter_Init(&writer, DeeDecWriter_F_NORMAL))
+#if DeeModule_IMPORT_F_NOGDEC == DeeDecWriter_F_NRELOC
+		if unlikely(DeeDecWriter_Init(&writer, flags & DeeModule_IMPORT_F_NOGDEC))
 			goto err_compile;
+#else /* DeeModule_IMPORT_F_NOGDEC == DeeDecWriter_F_NRELOC */
+		if unlikely(DeeDecWriter_Init(&writer, flags & DeeModule_IMPORT_F_NOGDEC
+		                                       ? DeeDecWriter_F_NRELOC
+		                                       : DeeDecWriter_F_NORMAL))
+			goto err_compile;
+#endif /* DeeModule_IMPORT_F_NOGDEC != DeeDecWriter_F_NRELOC */
 
 		/* Compile source code and write module to "writer" */
 		if unlikely(DeeExec_CompileModuleStream_impl((DeeSerial *)&writer, source_stream,
@@ -1696,59 +1705,74 @@ no_dec_file:
 
 		/* If not disabled, emit a .dec file */
 #ifndef CONFIG_NO_DEC
-		if (!(flags & DeeModule_IMPORT_F_NOGDEC) && ehdr->e_type == Dee_DEC_TYPE_RELOC) {
-			/* generate a .dec file */
-			size_t basesize;
-			char *basename;
-			DREF DeeObject *output_stream;
+		if (!(flags & DeeModule_IMPORT_F_NOGDEC)) {
 			ASSERT(abs_filename_length >= 4);
 			ASSERT(abs_filename[abs_filename_length - 4] == '.');
 			ASSERT(abs_filename[abs_filename_length - 3] == 'd');
 			ASSERT(abs_filename[abs_filename_length - 2] == 'e');
 			ASSERT(abs_filename[abs_filename_length - 1] == 'e');
-	
-			basename = (char *)memrchr(abs_filename, DeeSystem_SEP, abs_filename_length);
-			if likely(basename) {
-				++basename;
-			} else {
-				/* Probably shouldn't ever get here... */
-				basename = abs_filename;
-			}
-	
-			/* Form the filename for a .dec file */
-			basesize = (size_t)((abs_filename + abs_filename_length) - basename);
-	
-			/* Move up "module_name.de" by 1 (don't move the
-			 * trailing "e\0", which'll be replaced with "c\0") */
-			memmoveupc(basename + 1, basename, basesize - 1, sizeof(char));
-			basename[0] = '.';
-			basename[basesize + 0] = 'c';
-			basename[basesize + 1] = '\0';
-	
-			/* Output file */
-			Dee_DPRINTF("[RT] Generate dec file %q\n", abs_filename);
-			output_stream = DeeFile_OpenString(abs_filename,
-			                                   OPEN_FWRONLY | OPEN_FCREAT |
-			                                   OPEN_FTRUNC | OPEN_FHIDDEN |
-			                                   OPEN_FCLOEXEC,
-			                                   0644);
-			if likely(output_stream) {
-				size_t write_status;
-				write_status = DeeFile_WriteAll(output_stream, ehdr, ehdr->e_offsetof_eof);
-				Dee_Decref_likely(output_stream);
-				if unlikely(write_status == (size_t)-1)
-					output_stream = NULL;
-			}
-	
-			/* Restore the normal ".dee" file extension. */
-			memmovedownc(basename, basename + 1, basesize - 1, sizeof(char));
-			basename[basesize - 1] = 'e';
-			basename[basesize - 0] = '\0';
+			if (ehdr->e_type == Dee_DEC_TYPE_RELOC) {
+				/* generate a .dec file */
+				size_t basesize;
+				char *basename;
+				DREF DeeObject *output_stream;
+				Dee_DPRINTF("[LD][dec %q] Writing dec file\n", abs_filename);
 
-			if unlikely(!output_stream) {
-				if (!DeeError_Handled(Dee_ERROR_HANDLED_NORMAL))
+				basename = (char *)memrchr(abs_filename, DeeSystem_SEP, abs_filename_length);
+				basename = basename ? basename + 1 : /* Probably shouldn't ever get here... */ abs_filename;
+
+				/* Form the filename for a .dec file */
+				basesize = (size_t)((abs_filename + abs_filename_length) - basename);
+
+				/* Move up "module_name.de" by 1 (don't move the
+				 * trailing "e\0", which'll be replaced with "c\0") */
+				memmoveupc(basename + 1, basename, basesize - 1, sizeof(char));
+				basename[0] = '.';
+				basename[basesize + 0] = 'c';
+				basename[basesize + 1] = '\0';
+
+				/* Output file */
+				output_stream = DeeFile_OpenString(abs_filename,
+				                                   OPEN_FWRONLY | OPEN_FCREAT |
+				                                   OPEN_FTRUNC | OPEN_FHIDDEN |
+				                                   OPEN_FCLOEXEC,
+				                                   0644);
+				if likely(output_stream) {
+					size_t write_status;
+					write_status = DeeFile_WriteAll(output_stream, ehdr, ehdr->e_offsetof_eof);
+					Dee_Decref_likely(output_stream);
+					if unlikely(write_status == (size_t)-1)
+						output_stream = NULL;
+				}
+
+				/* Restore the normal ".dee" file extension. */
+				memmovedownc(basename, basename + 1, basesize - 1, sizeof(char));
+				basename[basesize - 1] = 'e';
+				basename[basesize - 0] = '\0';
+	
+				if unlikely(!output_stream) {
+					if (!DeeError_Handled(Dee_ERROR_HANDLED_NORMAL))
+						goto err_compile_writer_ehdr;
+					/* Failed to generate dec file... :( */
+				}
+			} else if (has_broken_dec_file) {
+				int status;
+				size_t basesize;
+				char *basename;
+				Dee_DPRINTF("[LD][dec %q] Deleting broken dec file\n", abs_filename);
+				basename = (char *)memrchr(abs_filename, DeeSystem_SEP, abs_filename_length);
+				basename = basename ? basename + 1 : /* Probably shouldn't ever get here... */ abs_filename;
+				basesize = (size_t)((abs_filename + abs_filename_length) - basename);
+				memmoveupc(basename + 1, basename, basesize - 1, sizeof(char));
+				basename[0] = '.';
+				basename[basesize + 0] = 'c';
+				basename[basesize + 1] = '\0';
+				status = DeeSystem_UnlinkString(abs_filename, false);
+				memmovedownc(basename, basename + 1, basesize - 1, sizeof(char));
+				basename[basesize - 1] = 'e';
+				basename[basesize - 0] = '\0';
+				if unlikely(status < 0)
 					goto err_compile_writer_ehdr;
-				/* Failed to generate dec file... :( */
 			}
 		}
 #endif /* !CONFIG_NO_DEC */
