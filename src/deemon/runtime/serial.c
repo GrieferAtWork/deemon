@@ -177,6 +177,35 @@ PUBLIC WUNUSED NONNULL((1)) int
 	return 0;
 }
 
+/* Encode an `DREF DeeObject *addrof_objv[objc]' from "objv" */
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeSerial_PutObjectv)(DeeSerial *__restrict self, Dee_seraddr_t addrof_objv,
+                             /*1..1*/ DeeObject *const *objv, size_t objc) {
+	size_t i;
+	for (i = 0; i < objc; ++i, addrof_objv += sizeof(DREF DeeObject *)) {
+		if (DeeSerial_PutObject(self, addrof_objv, objv[i]))
+			goto err;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeSerial_XPutObjectv)(DeeSerial *__restrict self, Dee_seraddr_t addrof_objv,
+                              /*0..1*/ DeeObject *const *objv, size_t objc) {
+	size_t i;
+	for (i = 0; i < objc; ++i, addrof_objv += sizeof(DREF DeeObject *)) {
+		if (DeeSerial_XPutObject(self, addrof_objv, objv[i]))
+			goto err;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_RUNTIME_SERIAL_C */

@@ -88,8 +88,9 @@ err:
 }
 
 STATIC_ASSERT(offsetof(GCSetIterator, gsi_set) == offsetof(ProxyObject, po_obj));
-#define gcsetiterator_fini  generic_proxy__fini
-#define gcsetiterator_visit generic_proxy__visit
+#define gcsetiterator_fini      generic_proxy__fini
+#define gcsetiterator_visit     generic_proxy__visit
+#define gcsetiterator_serialize generic_proxy__serialize_and_copy
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcsetiterator_next(GCSetIterator *__restrict self) {
@@ -175,7 +176,7 @@ INTERN DeeTypeObject DeeGCSetIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &gcsetiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &gcsetiterator_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&gcsetiterator_fini,
 		/* .tp_assign      = */ NULL,

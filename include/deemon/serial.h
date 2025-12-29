@@ -352,6 +352,14 @@ DFUNDEF WUNUSED NONNULL((1)) int
 	__builtin_expect(DeeSerial_XInplacePutObjectv(self, addrof_objects, objc), 0)
 #endif /* !__INTELLISENSE__ */
 
+/* Encode an `DREF DeeObject *addrof_objv[objc]' from "objv" */
+DFUNDEF WUNUSED NONNULL((1)) int
+(DCALL DeeSerial_PutObjectv)(DeeSerial *__restrict self, Dee_seraddr_t addrof_objv,
+                             /*1..1*/ DeeObject *const *objv, size_t objc);
+DFUNDEF WUNUSED NONNULL((1)) int
+(DCALL DeeSerial_XPutObjectv)(DeeSerial *__restrict self, Dee_seraddr_t addrof_objv,
+                              /*0..1*/ DeeObject *const *objv, size_t objc);
+
 
 DECL_END
 

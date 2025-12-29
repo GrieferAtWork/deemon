@@ -37,6 +37,7 @@
 #include <deemon/numeric.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
@@ -3156,8 +3157,18 @@ time_bool(DeeTimeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 time_copy(DeeTimeObject *__restrict self,
           DeeTimeObject *__restrict other) {
-	self->t_typekind  = other->t_typekind;
+	self->t_typekind = other->t_typekind;
 	self->t_nanos = other->t_nanos;
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+time_serialize(DeeTimeObject *__restrict self,
+               DeeSerial *__restrict writer,
+               Dee_seraddr_t addr) {
+	DeeTimeObject *out = DeeSerial_Addr2Mem(writer, addr, DeeTimeObject);
+	out->t_typekind = self->t_typekind;
+	out->t_nanos    = self->t_nanos;
 	return 0;
 }
 
@@ -3670,7 +3681,7 @@ INTERN DeeTypeObject DeeTime_Type = {
 			/* tp_deep_ctor:   */ &time_copy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &time_init_kw,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &time_serialize
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ (int(DCALL *)(DeeObject *__restric, DeeObject *__restrict))&time_assign,

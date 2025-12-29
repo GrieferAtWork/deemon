@@ -487,6 +487,8 @@ switch_symbol_type:
 				char const *module_name;
 				/* External symbol reference. */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+				/* TODO: Don't unconditionally use "mo_absname" --
+				 *       if possible, use the module's first libname */
 				module_name = sym->s_extern.e_module->mo_absname;
 				if unlikely(!module_name)
 					goto print_object;
