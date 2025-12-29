@@ -1512,6 +1512,8 @@ DeeDec_Track(DREF /*untracked*/ struct Dee_module_object *__restrict self) {
 	DeeDec_Ehdr_FreeRelocationData(ehdr);
 
 	module_byaddr_lock_write();
+	module_byaddr_ensure_initialized();
+
 	/* Insert module into by-address tree so allow reverse module lookup by-address */
 	self->mo_minaddr = (byte_t *)ehdr;
 	self->mo_maxaddr = (byte_t *)ehdr + ehdr->e_offsetof_eof - 1;
