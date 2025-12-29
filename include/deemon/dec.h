@@ -194,10 +194,10 @@ typedef struct ATTR_PACKED dec_rrel Dec_RRel;
 typedef struct ATTR_PACKED dec_rrela Dec_RRela;
 
 typedef struct ATTR_PACKED {
-	uint8_t               e_ident[DI_NIDENT]; /* Identification bytes. (See `DI_*') */
-	uint8_t               e_mach;             /* Machine identification (`Dee_DEC_MACH') */
-	uint8_t               e_type;             /* EHDR type (one of `Dee_DEC_TYPE_*') */
-	uint16_t              e_version;          /* DEC version number (One of `DVERSION_*'). */
+	uint8_t               e_ident[DI_NIDENT]; /* [AT(0-3)] Identification bytes. (See `DI_*') */
+	uint8_t               e_mach;             /* [AT(4-4)] Machine identification (`Dee_DEC_MACH') */
+	uint8_t               e_type;             /* [AT(5-5)] EHDR type (one of `Dee_DEC_TYPE_*') */
+	uint16_t              e_version;          /* [AT(6-7)] DEC version number (One of `DVERSION_*') -- NOTE: __MUST__ remain at this specific offset for backwards compatibility! */
 	Dee_dec_addr32_t      e_offsetof_eof;     /* [1..1] Offset to EOF of file mapping (should also equal the dec file's size) */
 	Dee_dec_addr32_t      e_offsetof_gchead;  /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
 	Dee_dec_addr32_t      e_offsetof_gctail;  /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `e_offsetof_srel') */

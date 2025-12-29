@@ -1426,9 +1426,8 @@ int main(int argc, char *argv[]) {
 			} else
 #endif /* EXIT_SUCCESS != 0 */
 			{
-				int error;
 				/* Interpret the module-result as an integer and use that as exit-code. */
-				error = DeeObject_AsInt(user_module_result, &result);
+				int error = DeeObject_AsInt(user_module_result, &result);
 				Dee_Decref(user_module_result);
 				if unlikely(error)
 					goto err;
