@@ -1648,7 +1648,8 @@ buffer_serialize(Buffer *__restrict self,
 	Dee_pos_t self__fb_fblk, self__fb_fpos;
 	uint16_t self__fb_flag;
 again:
-	DeeFileBuffer_LockRead(self);
+	if (DeeFileBuffer_LockRead(self))
+		goto err;
 	self__fb_file = self->fb_file;
 	self__fb_ptr  = self->fb_ptr;
 	self__fb_chng = self->fb_chng;
@@ -1690,7 +1691,10 @@ again:
 			addrof_out__fb_base = DeeSerial_Malloc(writer, self__fb_size, NULL);
 			if (!Dee_SERADDR_ISOK(addrof_out__fb_base))
 				goto err;
-			DeeFileBuffer_LockRead(self);
+			if (DeeFileBuffer_LockRead(self)) {
+				DeeSerial_Free(writer, addrof_out__fb_base, NULL);
+				goto err;
+			}
 			if unlikely(self__fb_file != self->fb_file) {
 unlock_and_free_buffer_and_start_over:
 				DeeFileBuffer_LockEndRead(self);
