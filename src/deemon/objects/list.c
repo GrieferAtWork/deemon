@@ -1059,10 +1059,10 @@ again:
 	}
 	out__l_list_ol_elemc = out->l_list.ol_elemc;
 	sizeof_list = out__l_list_ol_elemc * sizeof(DREF DeeObject *);
-	addrof_out__l_list_ol_elemv = DeeSerial_TryMalloc(writer, sizeof_list);
+	addrof_out__l_list_ol_elemv = DeeSerial_TryMalloc(writer, sizeof_list, NULL);
 	if (!Dee_SERADDR_ISOK(addrof_out__l_list_ol_elemv)) {
 		DeeList_LockEndRead(self);
-		addrof_out__l_list_ol_elemv = DeeSerial_Malloc(writer, sizeof_list);
+		addrof_out__l_list_ol_elemv = DeeSerial_Malloc(writer, sizeof_list, NULL);
 		if (!Dee_SERADDR_ISOK(addrof_out__l_list_ol_elemv))
 			goto err;
 		DeeList_LockRead(self);

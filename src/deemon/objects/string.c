@@ -554,14 +554,13 @@ string_serialize(String *__restrict self, DeeSerial *__restrict writer) {
 	} else {
 		Dee_seraddr_t addrof_data;
 		struct string_utf *out_data;
-		struct string_utf const *in_data;
-		addrof_data = DeeSerial_Malloc(writer, sizeof(struct string_utf));
+		struct string_utf *in_data = self->s_data;
+		addrof_data = DeeSerial_Malloc(writer, sizeof(struct string_utf), in_data);
 		if (!Dee_SERADDR_ISOK(addrof_data))
 			goto err;
 		if (DeeSerial_PutAddr(writer, addr + offsetof(String, s_data), addrof_data))
 			goto err;
 		out_data = DeeSerial_Addr2Mem(writer, addrof_data, struct string_utf);
-		in_data  = self->s_data;
 		out_data->u_width = in_data->u_width;
 		out_data->u_flags = in_data->u_flags;
 		/* Individual strings are written as-needed */
@@ -593,7 +592,7 @@ string_serialize(String *__restrict self, DeeSerial *__restrict writer) {
 			void *wstr = in_data->u_data[STRING_WIDTH_2BYTE];
 			size_t lengthof_wstr = WSTR_LENGTH(wstr);
 			size_t sizeof_wstr = sizeof(size_t) + ((lengthof_wstr + 1) * 2);
-			Dee_seraddr_t addrof_wstr = DeeSerial_Malloc(writer, sizeof_wstr);
+			Dee_seraddr_t addrof_wstr = DeeSerial_Malloc(writer, sizeof_wstr, (size_t *)wstr - 1);
 			if (!Dee_SERADDR_ISOK(addrof_wstr))
 				goto err;
 			memcpy(DeeSerial_Addr2Mem(writer, addrof_wstr, uint16_t),
@@ -607,7 +606,7 @@ string_serialize(String *__restrict self, DeeSerial *__restrict writer) {
 			void *wstr = in_data->u_data[STRING_WIDTH_4BYTE];
 			size_t lengthof_wstr = WSTR_LENGTH(wstr);
 			size_t sizeof_wstr = sizeof(size_t) + ((lengthof_wstr + 1) * 4);
-			Dee_seraddr_t addrof_wstr = DeeSerial_Malloc(writer, sizeof_wstr);
+			Dee_seraddr_t addrof_wstr = DeeSerial_Malloc(writer, sizeof_wstr, (size_t *)wstr - 1);
 			if (!Dee_SERADDR_ISOK(addrof_wstr))
 				goto err;
 			memcpy(DeeSerial_Addr2Mem(writer, addrof_wstr, uint32_t),

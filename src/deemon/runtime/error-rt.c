@@ -207,7 +207,7 @@ PRIVATE struct type_member tpconst error_class_members[] = {
 #define error_ctor        DeeStructObject_Ctor
 #define error_copy        DeeStructObject_Copy
 #define error_deep        DeeStructObject_Deep
-#define error_serialize    DeeStructObject_Serialize
+#define error_serialize   DeeStructObject_Serialize
 #define error_init        DeeStructObject_Init
 #define error_init_kw     DeeStructObject_InitKw
 #else /* __OPTIMIZE_SIZE__ */

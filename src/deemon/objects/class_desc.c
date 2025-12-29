@@ -220,6 +220,20 @@ STATIC_ASSERT(offsetof(ClassOperatorTableIterator, co_desc) == offsetof(ProxyObj
 #define coti_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+coti_serialize(ClassOperatorTableIterator *__restrict self,
+               DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(ClassOperatorTableIterator, field))
+	if (generic_proxy__serialize((ProxyObject *)self, writer, addr))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(co_iter), COTI_GETITER(self)))
+		goto err;
+	return DeeSerial_PutPointer(writer, ADDROF(co_end), self->co_end);
+#undef ADDROF
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 coti_copy(ClassOperatorTableIterator *__restrict self,
           ClassOperatorTableIterator *__restrict other) {
 	self->co_desc = other->co_desc;
@@ -321,7 +335,7 @@ INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &coti_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &coti_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&coti_fini,
 		/* .tp_assign      = */ NULL,
@@ -357,10 +371,11 @@ INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
 
 
 STATIC_ASSERT(offsetof(ClassOperatorTable, co_desc) == offsetof(ProxyObject, po_obj));
-#define cot_copy  generic_proxy__copy_alias
-#define cot_deep  generic_proxy__copy_alias
-#define cot_fini  generic_proxy__fini
-#define cot_visit generic_proxy__visit
+#define cot_copy      generic_proxy__copy_alias
+#define cot_deep      generic_proxy__copy_alias
+#define cot_fini      generic_proxy__fini
+#define cot_visit     generic_proxy__visit
+#define cot_serialize generic_proxy__serialize
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cot_init(ClassOperatorTable *__restrict self,
@@ -581,7 +596,7 @@ INTERN DeeTypeObject ClassOperatorTable_Type = {
 			/* tp_deep_ctor:   */ &cot_deep,
 			/* tp_any_ctor:    */ &cot_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &cot_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cot_fini,
 		/* .tp_assign      = */ NULL,
@@ -662,6 +677,41 @@ done:
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ca_copy(ClassAttribute *__restrict self,
+        ClassAttribute *__restrict other) {
+	self->ca_desc = other->ca_desc;
+	self->ca_attr = other->ca_attr;
+	Dee_Incref(other->ca_desc);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ca_serialize(ClassAttribute *__restrict self,
+             DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(ClassAttribute, field))
+	if (generic_proxy__serialize((ProxyObject *)self, writer, addr))
+		goto err;
+	return DeeSerial_PutPointer(writer, ADDROF(ca_attr), self->ca_attr);
+#undef ADDROF
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cat_serialize(ClassAttributeTable *__restrict self,
+              DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(ClassAttributeTable, field))
+	ClassAttributeTable *out = DeeSerial_Addr2Mem(writer, addr, ClassAttributeTable);
+	out->ca_mask = self->ca_mask;
+	if (generic_proxy__serialize((ProxyObject *)self, writer, addr))
+		goto err;
+	return DeeSerial_PutPointer(writer, ADDROF(ca_start), self->ca_start);
+#undef ADDROF
+err:
+	return -1;
+}
+
 STATIC_ASSERT(offsetof(ClassAttribute, ca_desc) == offsetof(ProxyObject, po_obj));
 #define ca_fini  generic_proxy__fini
 #define ca_visit generic_proxy__visit
@@ -675,8 +725,9 @@ STATIC_ASSERT(offsetof(ClassAttributeTableIterator, ca_desc) == offsetof(ProxyOb
 STATIC_ASSERT(offsetof(ClassOperatorTableIterator, co_desc) == offsetof(ClassAttributeTableIterator, ca_desc));
 STATIC_ASSERT(offsetof(ClassOperatorTableIterator, co_iter) == offsetof(ClassAttributeTableIterator, ca_iter));
 STATIC_ASSERT(offsetof(ClassOperatorTableIterator, co_end) == offsetof(ClassAttributeTableIterator, ca_end));
-#define cati_cmp  coti_cmp
-#define cati_copy coti_copy
+#define cati_cmp       coti_cmp
+#define cati_copy      coti_copy
+#define cati_serialize coti_serialize
 
 #define CATI_GETITER(x) atomic_read(&(x)->ca_iter)
 
@@ -1156,11 +1207,11 @@ INTERN DeeTypeObject ClassAttribute_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ ClassAttribute,
 			/* tp_ctor:        */ NULL,
-			/* tp_copy_ctor:   */ NULL,
+			/* tp_copy_ctor:   */ &ca_copy,
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &ca_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ca_fini,
 		/* .tp_assign      = */ NULL,
@@ -1212,7 +1263,7 @@ INTERN DeeTypeObject ClassAttributeTableIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &cati_iter,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &cati_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cati_fini,
 		/* .tp_assign      = */ NULL,
@@ -1288,7 +1339,7 @@ INTERN DeeTypeObject ClassAttributeTable_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &cat_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cat_fini,
 		/* .tp_assign      = */ NULL,
@@ -1426,12 +1477,11 @@ cd_serialize(ClassDescriptor *__restrict self, DeeSerial *__restrict writer) {
 			goto err;
 	} else {
 		size_t sizeof__cd_cattr_list;
-		struct Dee_class_attribute *in__cd_cattr_list;
-		struct Dee_class_attribute *out__cd_cattr_list;
 		Dee_seraddr_t addrof_out__cd_cattr_list;
-		in__cd_cattr_list = self->cd_cattr_list;
+		struct Dee_class_attribute *out__cd_cattr_list;
+		struct Dee_class_attribute *in__cd_cattr_list = self->cd_cattr_list;
 		sizeof__cd_cattr_list = (self->cd_cattr_mask + 1) * sizeof(struct Dee_class_attribute);
-		addrof_out__cd_cattr_list = DeeSerial_Malloc(writer, sizeof__cd_cattr_list);
+		addrof_out__cd_cattr_list = DeeSerial_Malloc(writer, sizeof__cd_cattr_list, in__cd_cattr_list);
 		if (!Dee_SERADDR_ISOK(addrof_out__cd_cattr_list))
 			goto err;
 		if (DeeSerial_PutAddr(writer, ADDROF(cd_cattr_list), addrof_out__cd_cattr_list))
@@ -1465,11 +1515,10 @@ cd_serialize(ClassDescriptor *__restrict self, DeeSerial *__restrict writer) {
 	} else {
 		size_t sizeof__cd_clsop_list;
 		Dee_seraddr_t addrof_out__cd_clsop_list;
-		struct Dee_class_operator *in__cd_clsop_list;
 		struct Dee_class_operator *out__cd_clsop_list;
-		in__cd_clsop_list = self->cd_clsop_list;
+		struct Dee_class_operator *in__cd_clsop_list = self->cd_clsop_list;
 		sizeof__cd_clsop_list = (self->cd_clsop_mask + 1) * sizeof(struct Dee_class_operator);
-		addrof_out__cd_clsop_list = DeeSerial_Malloc(writer, sizeof__cd_clsop_list);
+		addrof_out__cd_clsop_list = DeeSerial_Malloc(writer, sizeof__cd_clsop_list, in__cd_clsop_list);
 		if (!Dee_SERADDR_ISOK(addrof_out__cd_clsop_list))
 			goto err;
 		if (DeeSerial_PutAddr(writer, ADDROF(cd_clsop_list), addrof_out__cd_clsop_list))
@@ -2565,6 +2614,20 @@ STATIC_ASSERT(offsetof(ObjectTable, ot_owner) == offsetof(ProxyObject, po_obj));
 #define ot_fini  generic_proxy__fini
 #define ot_visit generic_proxy__visit
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ot_serialize(ObjectTable *__restrict self,
+             DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	ObjectTable *out = DeeSerial_Addr2Mem(writer, addr, ObjectTable);
+	out->ot_size = self->ot_size;
+#define ADDROF(field) (addr + offsetof(ObjectTable, field))
+	if (generic_proxy__serialize((ProxyObject *)self, writer, addr))
+		goto err;
+	return DeeSerial_PutPointer(writer, ADDROF(ot_desc), self->ot_desc);
+#undef ADDROF
+err:
+	return -1;
+}
+
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 ot_type(ObjectTable *__restrict self) {
 	DeeTypeObject *result;
@@ -2921,7 +2984,7 @@ INTERN DeeTypeObject ObjectTable_Type = {
 			/* tp_deep_ctor:   */ &ot_deepcopy,
 			/* tp_any_ctor:    */ &ot_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &ot_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ot_fini,
 		/* .tp_assign      = */ NULL,
@@ -3086,14 +3149,12 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-instancemember_copy(DeeInstanceMemberObject *__restrict self,
-                    DeeInstanceMemberObject *__restrict other) {
-	self->im_type      = other->im_type;
-	self->im_attribute = other->im_attribute;
-	Dee_Incref(other->im_type);
-	return 0;
-}
+
+STATIC_ASSERT(offsetof(DeeInstanceMemberObject, im_type) == offsetof(ClassAttribute, ca_desc));
+STATIC_ASSERT(offsetof(DeeInstanceMemberObject, im_attribute) == offsetof(ClassAttribute, ca_attr));
+STATIC_ASSERT(sizeof(DeeInstanceMemberObject) == sizeof(ClassAttribute));
+#define instancemember_copy      ca_copy
+#define instancemember_serialize ca_serialize
 
 STATIC_ASSERT(offsetof(DeeInstanceMemberObject, im_type) == offsetof(ProxyObject, po_obj));
 #define instancemember_fini  generic_proxy__fini
@@ -3292,7 +3353,7 @@ PUBLIC DeeTypeObject DeeInstanceMember_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &instancemember_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&instancemember_fini,
 		/* .tp_assign      = */ NULL,

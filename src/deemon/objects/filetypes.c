@@ -34,6 +34,7 @@
 #include <deemon/mapfile.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
@@ -272,7 +273,7 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
 				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ NULL,
-				/* tp_serialize:   */ NULL /* TODO */
+				/* tp_serialize:   */ NULL /* Not serializable */
 			),
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mf_fini,
 			/* .tp_assign      = */ NULL,

@@ -97,8 +97,9 @@ typedef struct {
 INTDEF DeeTypeObject DictIterator_Type;
 
 STATIC_ASSERT(offsetof(DictIterator, di_dict) == offsetof(ProxyObject, po_obj));
-#define diter_fini  generic_proxy__fini
-#define diter_visit generic_proxy__visit
+#define diter_fini      generic_proxy__fini
+#define diter_visit     generic_proxy__visit
+#define diter_serialize generic_proxy__serialize_and_copy
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 diter_ctor(DictIterator *__restrict self) {
@@ -348,7 +349,7 @@ INTERN DeeTypeObject DictIterator_Type = {
 			/* tp_deep_ctor:   */ &diter_deep,
 			/* tp_any_ctor:    */ &diter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &diter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&diter_fini,
 		/* .tp_assign      = */ NULL,
@@ -2360,10 +2361,10 @@ again:
 		shift_t hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
 		sizeof_out__d_vtab = self->d_valloc * sizeof(struct dict_item);
 		sizeof_out__d_vtab += (self->d_hmask + 1) << hidxio;
-		addrof_out__d_vtab = DeeSerial_TryMalloc(writer, sizeof_out__d_vtab);
+		addrof_out__d_vtab = DeeSerial_TryMalloc(writer, sizeof_out__d_vtab, NULL);
 		if (!Dee_SERADDR_ISOK(addrof_out__d_vtab)) {
 			DeeDict_LockEndRead(self);
-			addrof_out__d_vtab = DeeSerial_Malloc(writer, sizeof_out__d_vtab);
+			addrof_out__d_vtab = DeeSerial_Malloc(writer, sizeof_out__d_vtab, NULL);
 			if (!Dee_SERADDR_ISOK(addrof_out__d_vtab))
 				goto err;
 			DeeDict_LockRead(self);
@@ -2371,7 +2372,7 @@ again:
 			if unlikely(out->d_valloc != self->d_valloc) {
 free_out__d_vtab__and__again:
 				DeeDict_LockEndRead(self);
-				DeeSerial_Free(writer, addrof_out__d_vtab);
+				DeeSerial_Free(writer, addrof_out__d_vtab, NULL);
 				goto again;
 			}
 			if unlikely(out->d_vsize != self->d_vsize)

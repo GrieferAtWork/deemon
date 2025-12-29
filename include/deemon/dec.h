@@ -358,23 +358,23 @@ struct Dee_dec_deptab {
 #define Dee_dec_deptab_init(self) \
 	(void)((self)->ddpt_depv = NULL, (self)->ddpt_depc = (self)->ddpt_depa = 0)
 
-struct Dee_dec_objtab_entry {
-	DeeObject       *dote_obj; /* [1..1] Address of some object that was already encoded */
-	Dee_dec_addr32_t dote_off; /* Offset from `dw_base' to the `DeeObject *' where the object is written */
-	Dee_dec_addr32_t dote_siz; /* # of bytes associated with this object */
+struct Dee_dec_ptrtab_entry {
+	void            *dpte_ptr; /* [1..1] Source address that was already encoded */
+	Dee_dec_addr32_t dote_off; /* Offset from `dw_base' to where "dpte_ptr" was written */
+	Dee_dec_addr32_t dote_siz; /* # of bytes associated with "dpte_ptr" */
 };
-#define Dee_dec_objtab_entry_getminaddr(self) ((__BYTE_TYPE__ *)(self)->dote_obj)
-#define Dee_dec_objtab_entry_getmaxaddr(self) ((__BYTE_TYPE__ *)(self)->dote_obj + (self)->dote_siz - 1)
+#define Dee_dec_ptrtab_entry_getminaddr(self) ((__BYTE_TYPE__ *)(self)->dpte_ptr)
+#define Dee_dec_ptrtab_entry_getmaxaddr(self) ((__BYTE_TYPE__ *)(self)->dpte_ptr + (self)->dote_siz - 1)
 
-struct Dee_dec_objtab {
-	struct Dee_dec_objtab_entry *dot_objv; /* [0..dot_objc][SORT(dote_obj ASC)][owned] List of already-encoded objects */
-	size_t                       dot_objc; /* Amount of non-NULL key-item pairs. */
-	size_t                       dot_obja; /* Amount of non-NULL key-item pairs. */
+struct Dee_dec_ptrtab {
+	struct Dee_dec_ptrtab_entry *dpt_ptrv; /* [0..dpt_ptrc][SORT(dpte_ptr ASC)][owned] List of already-encoded objects */
+	size_t                       dpt_ptrc; /* Amount of non-NULL key-item pairs. */
+	size_t                       dpt_ptra; /* Amount of non-NULL key-item pairs. */
 };
-#define Dee_dec_objtab_init(self) \
-	(void)((self)->dot_objv = NULL, (self)->dot_objc = (self)->dot_obja = 0)
-#define Dee_dec_objtab_fini(self) \
-	Dee_Free((self)->dot_objv)
+#define Dee_dec_ptrtab_init(self) \
+	(void)((self)->dpt_ptrv = NULL, (self)->dpt_ptrc = (self)->dpt_ptra = 0)
+#define Dee_dec_ptrtab_fini(self) \
+	Dee_Free((self)->dpt_ptrv)
 
 struct Dee_dec_fdeptab {
 	__BYTE_TYPE__ *dfdt_depv; /* [0..dfdt_depc][owned] Flat array of `Dec_Dstr' (each aligned to `__ALIGNOF_SIZE_T__') */
@@ -411,7 +411,7 @@ typedef struct Dee_dec_writer {
 	struct Dee_dec_fdeptab  dw_fdeps;  /* Table of dependent files */
 	Dee_dec_addr32_t        dw_gchead; /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
 	Dee_dec_addr32_t        dw_gctail; /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `dw_srel') */
-	struct Dee_dec_objtab   dw_known;  /* Table of known, already-encoded objects */
+	struct Dee_dec_ptrtab   dw_known;  /* Table of known, already-encoded pointers */
 	unsigned int            dw_flags;  /* Dec writer flags (set of `DeeDecWriter_F_*') */
 } DeeDecWriter;
 

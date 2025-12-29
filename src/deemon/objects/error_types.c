@@ -34,6 +34,7 @@
 #include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/struct.h>
 #include <deemon/system-features.h> /* bzero(), ... */
@@ -48,6 +49,7 @@
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
+#include "generic-proxy.h"
 
 #undef token
 #undef tok
@@ -377,12 +379,12 @@ PUBLIC DeeTypeObject DeeError_SystemError = {
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ DeeSystemErrorObject,
-			/* tp_ctor:        */ NULL,
-			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
+			/* tp_ctor:        */ &DeeStructObject_Ctor,
+			/* tp_copy_ctor:   */ &DeeStructObject_Copy,
+			/* tp_deep_ctor:   */ &DeeStructObject_Deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &systemerror_init_kw,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &DeeStructObject_Serialize
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -430,12 +432,12 @@ PUBLIC DeeTypeObject DeeError_SystemError = {
 		/* .tp_init = */ {                                                               \
 			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(                                             \
 				/* T:              */ T,                                                 \
-				/* tp_ctor:        */ NULL,                                              \
-				/* tp_copy_ctor:   */ NULL,                                              \
-				/* tp_deep_ctor:   */ NULL,                                              \
+				/* tp_ctor:        */ &DeeStructObject_Ctor,                             \
+				/* tp_copy_ctor:   */ &DeeStructObject_Copy,                             \
+				/* tp_deep_ctor:   */ &DeeStructObject_Deep,                             \
 				/* tp_any_ctor:    */ NULL,                                              \
 				/* tp_any_ctor_kw: */ &systemerror_init_kw,                              \
-				/* tp_serialize:   */ NULL /* TODO */                                    \
+				/* tp_serialize:   */ &DeeStructObject_Serialize                         \
 			),                                                                           \
 			/* .tp_dtor        = */ NULL,                                                \
 			/* .tp_assign      = */ NULL,                                                \
@@ -773,12 +775,12 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ struct appexit_object,
-			/* tp_ctor:        */ NULL,
+			/* tp_ctor:        */ &DeeStructObject_Ctor,
 			/* tp_copy_ctor:   */ &appexit_copy,
 			/* tp_deep_ctor:   */ &appexit_copy,
 			/* tp_any_ctor:    */ &appexit_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &DeeStructObject_Serialize
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -899,7 +901,7 @@ signal_printrepr(DeeSignalObject *__restrict self,
 PUBLIC DeeTypeObject DeeError_StopIteration =
 INIT_CUSTOM_SIGNAL("StopIteration", NULL, TP_FNORMAL, &DeeError_Signal,
                    &DeeNone_OperatorCtor, &DeeNone_OperatorCopy, &DeeNone_OperatorCopy, NULL,
-                   NULL, &DeeNone_OperatorWriteDec, NULL, DeeSignalObject,
+                   NULL, &DeeNone_OperatorSerialize, NULL, DeeSignalObject,
                    NULL, NULL, NULL, &signal_printrepr,
                    NULL, NULL, NULL, NULL);
 
@@ -914,7 +916,7 @@ PRIVATE struct type_member tpconst interrupt_class_members[] = {
 PUBLIC DeeTypeObject DeeError_Interrupt =
 INIT_CUSTOM_SIGNAL("Interrupt", NULL, TP_FNORMAL | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Signal,
                    &DeeNone_OperatorCtor, &DeeNone_OperatorCopy, &DeeNone_OperatorCopy, NULL,
-                   NULL, &DeeNone_OperatorWriteDec, NULL, DeeSignalObject,
+                   NULL, &DeeNone_OperatorSerialize, NULL, DeeSignalObject,
                    NULL, NULL, NULL, &signal_printrepr,
                    NULL, NULL, NULL, interrupt_class_members);
 
@@ -941,7 +943,7 @@ INIT_CUSTOM_SIGNAL("ThreadExit", NULL, TP_FNORMAL | TP_FINTERRUPT /* Interrupt t
 PUBLIC DeeTypeObject DeeError_KeyboardInterrupt =
 INIT_CUSTOM_SIGNAL("KeyboardInterrupt", NULL, TP_FNORMAL | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Interrupt,
                    &DeeNone_OperatorCtor, &DeeNone_OperatorCopy, &DeeNone_OperatorCopy, NULL,
-                   NULL, &DeeNone_OperatorWriteDec, NULL, DeeSignalObject,
+                   NULL, &DeeNone_OperatorSerialize, NULL, DeeSignalObject,
                    NULL, NULL, NULL, &signal_printrepr,
                    NULL, NULL, NULL, NULL);
 
@@ -973,7 +975,7 @@ PUBLIC DeeTypeObject DeeError_Signal = {
 			/* tp_deep_ctor:   */ &DeeNone_OperatorCopy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ &DeeNone_OperatorWriteDec
+			/* tp_serialize:   */ &DeeNone_OperatorSerialize
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,

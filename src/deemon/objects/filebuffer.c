@@ -31,6 +31,7 @@
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* atexit(), memcpy(), ... */
 #include <deemon/util/atomic.h>
@@ -1635,6 +1636,122 @@ buffer_visit(Buffer *__restrict self, Dee_visit_t proc, void *arg) {
 	DeeFileBuffer_LockEndWrite(self);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+buffer_serialize(Buffer *__restrict self,
+                 DeeSerial *__restrict writer,
+                 Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(Buffer, field))
+	Buffer *out;
+	DREF DeeObject *self__fb_file;
+	byte_t *self__fb_ptr, *self__fb_chng, *self__fb_base;
+	size_t self__fb_cnt, self__fb_chsz, self__fb_size;
+	Dee_pos_t self__fb_fblk, self__fb_fpos;
+	uint16_t self__fb_flag;
+again:
+	DeeFileBuffer_LockRead(self);
+	self__fb_file = self->fb_file;
+	self__fb_ptr  = self->fb_ptr;
+	self__fb_chng = self->fb_chng;
+	self__fb_base = self->fb_base;
+	self__fb_cnt  = self->fb_cnt;
+	self__fb_chsz = self->fb_chsz;
+	self__fb_size = self->fb_size;
+	self__fb_fblk = self->fb_fblk;
+	self__fb_fpos = self->fb_fpos;
+	self__fb_flag = self->fb_flag;
+#if 1 /* Don't serialize references to static buffers */
+	self__fb_flag &= ~FILE_BUFFER_FSTATICBUF;
+#else
+	if (self__fb_flag & FILE_BUFFER_FSTATICBUF) {
+		Dee_XIncref(self__fb_file);
+		DeeFileBuffer_LockEndRead(self);
+		/* XXX: Maybe not allowed buffers to be copied  */
+		if (self__fb_base) {
+			if (DeeSerial_PutPointer(writer, ADDROF(fb_ptr), self__fb_ptr))
+				goto err_self__fb_file;
+			if (DeeSerial_PutPointer(writer, ADDROF(fb_chng), self__fb_chng))
+				goto err_self__fb_file;
+			if (DeeSerial_PutPointer(writer, ADDROF(fb_base), self__fb_base))
+				goto err_self__fb_file;
+		} else {
+			out = DeeSerial_Addr2Mem(writer, addr, Buffer);
+			out->fb_ptr  = self__fb_ptr;
+			out->fb_chng = self__fb_chng;
+			out->fb_base = self__fb_base;
+		}
+	} else
+#endif
+	{
+		byte_t *out__fb_base;
+		Dee_seraddr_t addrof_out__fb_base;
+		addrof_out__fb_base = DeeSerial_TryMalloc(writer, self__fb_size, NULL);
+		if (!Dee_SERADDR_ISOK(addrof_out__fb_base)) {
+			DeeFileBuffer_LockEndRead(self);
+			addrof_out__fb_base = DeeSerial_Malloc(writer, self__fb_size, NULL);
+			if (!Dee_SERADDR_ISOK(addrof_out__fb_base))
+				goto err;
+			DeeFileBuffer_LockRead(self);
+			if unlikely(self__fb_file != self->fb_file) {
+unlock_and_free_buffer_and_start_over:
+				DeeFileBuffer_LockEndRead(self);
+				DeeSerial_Free(writer, addrof_out__fb_base, NULL);
+				goto again;
+			}
+			if (self__fb_ptr  != self->fb_ptr)
+				goto unlock_and_free_buffer_and_start_over;
+			if (self__fb_chng != self->fb_chng)
+				goto unlock_and_free_buffer_and_start_over;
+			if (self__fb_base != self->fb_base)
+				goto unlock_and_free_buffer_and_start_over;
+			if (self__fb_cnt  != self->fb_cnt)
+				goto unlock_and_free_buffer_and_start_over;
+			if (self__fb_chsz != self->fb_chsz)
+				goto unlock_and_free_buffer_and_start_over;
+			if (self__fb_size != self->fb_size)
+				goto unlock_and_free_buffer_and_start_over;
+			if (self__fb_fblk != self->fb_fblk)
+				goto unlock_and_free_buffer_and_start_over;
+			if (self__fb_fpos != self->fb_fpos)
+				goto unlock_and_free_buffer_and_start_over;
+#if 1 /* Don't serialize references to static buffers */
+			if (self__fb_flag != (self->fb_flag & ~FILE_BUFFER_FSTATICBUF))
+				goto unlock_and_free_buffer_and_start_over;
+#else
+			if (self__fb_flag != self->fb_flag)
+				goto unlock_and_free_buffer_and_start_over;
+#endif
+		}
+		out__fb_base = DeeSerial_Addr2Mem(writer, addrof_out__fb_base, byte_t);
+		memcpy(out__fb_base, self->fb_base, self__fb_size);
+		Dee_XIncref(self__fb_file);
+		DeeFileBuffer_LockEndRead(self);
+		if (DeeSerial_PutAddr(writer, ADDROF(fb_base), addrof_out__fb_base))
+			goto err_self__fb_file;
+		if (DeeSerial_PutAddr(writer, ADDROF(fb_ptr), addrof_out__fb_base + (self__fb_ptr - self__fb_base)))
+			goto err_self__fb_file;
+		if (DeeSerial_PutAddr(writer, ADDROF(fb_chng), addrof_out__fb_base + (self__fb_chng - self__fb_base)))
+			goto err_self__fb_file;
+	}
+	if (DeeSerial_XPutObjectInherited(writer, ADDROF(fb_file), self__fb_file))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, addr, Buffer);
+	Dee_rshared_rwlock_init(&out->fb_lock);
+	out->fb_cnt = self__fb_cnt;
+	out->fb_chsz = self__fb_chsz;
+	out->fb_size = self__fb_size;
+	out->fb_ttych.le_prev = NULL;
+	out->fb_ttych.le_next = NULL;
+	out->fb_fblk = self__fb_fblk;
+	out->fb_fpos = self__fb_fpos;
+	out->fb_flag = self__fb_flag;
+	return 0;
+err_self__fb_file:
+	Dee_XDecref_unlikely(self__fb_file);
+err:
+	return -1;
+#undef ADDROF
+}
+
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_size(Buffer *self, size_t argc, DeeObject *const *argv) {
@@ -1969,7 +2086,7 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ &buffer_init_operator,
 				/* tp_any_ctor_kw: */ NULL,
-				/* tp_serialize:   */ NULL /* TODO */
+				/* tp_serialize:   */ &buffer_serialize
 			),
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&buffer_fini,
 			/* .tp_assign      = */ NULL,

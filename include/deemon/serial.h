@@ -74,18 +74,27 @@ struct Dee_serial_type {
 	(DCALL *set_addr2mem)(DeeSerial *__restrict self, Dee_seraddr_t addr);
 
 	/* Allocate generic heap memory (as per "Dee_Malloc()")
+	 * @param: ref: When non-NULL, a reference pointer describing where data originates from.
+	 *              This should **ONLY** be given when serializing "[owned][const]" fields of
+	 *              a containing object (e.g. "DeeClassDescriptorObject::cd_clsop_list"), but
+	 *              **MUST** be "NULL" when serializing "[owned][lock(...)]" fields (e.g.
+	 *              "DeeListObject::l_list::ol_elemv").
+	 *              The reason why this is needed is to allow later "DeeSerial_PutPointer()"
+	 *              calls to connect the dots and understand that a given pointer actually
+	 *              points into a block previously returned by `DeeSerial_Malloc()', similar
+	 *              to how it can do so for `DeeSerial_ObjectMalloc()'
 	 * @return: * : Serialized address of heap buffer
 	 * @return: Dee_SERADDR_INVALID: Allocation failed (for "set_malloc" and "set_calloc": error was thrown) */
-	WUNUSED_T NONNULL_T((1)) Dee_seraddr_t (DCALL *set_malloc)(DeeSerial *__restrict self, size_t num_bytes);
-	WUNUSED_T NONNULL_T((1)) Dee_seraddr_t (DCALL *set_calloc)(DeeSerial *__restrict self, size_t num_bytes);
-	WUNUSED_T NONNULL_T((1)) Dee_seraddr_t (DCALL *set_trymalloc)(DeeSerial *__restrict self, size_t num_bytes);
-	WUNUSED_T NONNULL_T((1)) Dee_seraddr_t (DCALL *set_trycalloc)(DeeSerial *__restrict self, size_t num_bytes);
+	WUNUSED_T NONNULL_T((1)) Dee_seraddr_t (DCALL *set_malloc)(DeeSerial *__restrict self, size_t num_bytes, /*0..1*/ void *ref);
+	WUNUSED_T NONNULL_T((1)) Dee_seraddr_t (DCALL *set_calloc)(DeeSerial *__restrict self, size_t num_bytes, /*0..1*/ void *ref);
+	WUNUSED_T NONNULL_T((1)) Dee_seraddr_t (DCALL *set_trymalloc)(DeeSerial *__restrict self, size_t num_bytes, /*0..1*/ void *ref);
+	WUNUSED_T NONNULL_T((1)) Dee_seraddr_t (DCALL *set_trycalloc)(DeeSerial *__restrict self, size_t num_bytes, /*0..1*/ void *ref);
 
 	/* Free generic heap memory (as per "Dee_Free()")
 	 * Only allowed to be called for the most-recent non-Dee_SERADDR_INVALID
 	 * return value of one of the allocation functions above. Behavior is hard
 	 * undefined if you try to free a buffer that isn't the most recent one. */
-	NONNULL_T((1)) void (DCALL *set_free)(DeeSerial *__restrict self, Dee_seraddr_t addr);
+	NONNULL_T((1)) void (DCALL *set_free)(DeeSerial *__restrict self, Dee_seraddr_t addr, /*0..1*/ void *ref);
 
 	/* Allocate generic object heap memory (as per "DeeObject_Malloc()")
 	 * These functions will have automatically pre-initialized:
@@ -100,7 +109,7 @@ struct Dee_serial_type {
 
 	/* Free generic heap memory (as per "DeeObject_Free()")
 	 * Same restrictions of `set_free' regarding order of free() operations also apply to this */
-	NONNULL_T((1)) void (DCALL *set_object_free)(DeeSerial *__restrict self, Dee_seraddr_t addr);
+	NONNULL_T((1, 3)) void (DCALL *set_object_free)(DeeSerial *__restrict self, Dee_seraddr_t addr, DeeObject *__restrict ref);
 
 	/* Same as above, but must be used for GC-objects (as per "DeeGCObject_Malloc()") */
 	WUNUSED_T NONNULL_T((1, 3)) Dee_seraddr_t (DCALL *set_gcobject_malloc)(DeeSerial *__restrict self, size_t num_bytes, DeeObject *__restrict ref);
@@ -109,7 +118,7 @@ struct Dee_serial_type {
 	WUNUSED_T NONNULL_T((1, 3)) Dee_seraddr_t (DCALL *set_gcobject_trycalloc)(DeeSerial *__restrict self, size_t num_bytes, DeeObject *__restrict ref);
 
 	/* Free generic heap memory (as per "DeeGCObject_Free()") */
-	NONNULL_T((1)) void (DCALL *set_gcobject_free)(DeeSerial *__restrict self, Dee_seraddr_t addr);
+	NONNULL_T((1, 3)) void (DCALL *set_gcobject_free)(DeeSerial *__restrict self, Dee_seraddr_t addr, DeeObject *__restrict ref);
 
 	/* Serialize a `void *' field at `addrof_pointer' as being populated with the
 	 * effectively final value of `DeeSerial_Addr2Mem(self, addrof_target, void)'
@@ -166,12 +175,25 @@ struct Dee_serial {
 	((T *)(*(self)->ser_type->set_addr2mem)(self, addr))
 
 /* Allocate generic heap memory (as per "Dee_Malloc()")
+ * @param: ref: When non-NULL, a reference pointer describing where data originates from.
+ *              This should **ONLY** be given when serializing "[owned][const]" fields of
+ *              a containing object (e.g. "DeeClassDescriptorObject::cd_clsop_list"), but
+ *              **MUST** be "NULL" when serializing "[owned][lock(...)]" fields (e.g.
+ *              "DeeListObject::l_list::ol_elemv").
+ *              The reason why this is needed is to allow later "DeeSerial_PutPointer()"
+ *              calls to connect the dots and understand that a given pointer actually
+ *              points into a block previously returned by `DeeSerial_Malloc()', similar
+ *              to how it can do so for `DeeSerial_ObjectMalloc()'
+ *              TLDR:
+ *              - If you use "DeeSerial_TryMalloc()" because of a lock, you probably want to pass "NULL"
+ *              - Otherwise, pass the [const] source pointer
+ *
  * @return: * : Serialized address of heap buffer
  * @return: Dee_SERADDR_INVALID: Allocation failed (for "DeeSerial_Malloc" and "DeeSerial_Calloc": error was thrown) */
-#define DeeSerial_Malloc(self, num_bytes)    (*(self)->ser_type->set_malloc)(self, num_bytes)
-#define DeeSerial_Calloc(self, num_bytes)    (*(self)->ser_type->set_calloc)(self, num_bytes)
-#define DeeSerial_TryMalloc(self, num_bytes) (*(self)->ser_type->set_trymalloc)(self, num_bytes)
-#define DeeSerial_TryCalloc(self, num_bytes) (*(self)->ser_type->set_trycalloc)(self, num_bytes)
+#define DeeSerial_Malloc(self, num_bytes, ref)    (*(self)->ser_type->set_malloc)(self, num_bytes, ref)
+#define DeeSerial_Calloc(self, num_bytes, ref)    (*(self)->ser_type->set_calloc)(self, num_bytes, ref)
+#define DeeSerial_TryMalloc(self, num_bytes, ref) (*(self)->ser_type->set_trymalloc)(self, num_bytes, ref)
+#define DeeSerial_TryCalloc(self, num_bytes, ref) (*(self)->ser_type->set_trycalloc)(self, num_bytes, ref)
 
 /* Free generic heap memory (as per "Dee_Free()")
  * Only allowed to be called for the most-recent non-Dee_SERADDR_INVALID
@@ -180,7 +202,7 @@ struct Dee_serial {
  *
  * NOTE: DON'T call this method for error-cleanup -- On error, the
  *       owner of the serializer will free all allocated memory! */
-#define DeeSerial_Free(self, addr) (*(self)->ser_type->set_free)(self, addr)
+#define DeeSerial_Free(self, addr, ref) (*(self)->ser_type->set_free)(self, addr, ref)
 
 /* Allocate generic object heap memory (as per "DeeObject_Malloc()")
  * These functions will have automatically pre-initialized:
@@ -198,7 +220,7 @@ struct Dee_serial {
  *
  * NOTE: DON'T call this method for error-cleanup -- On error, the
  *       owner of the serializer will free all allocated memory! */
-#define DeeSerial_ObjectFree(self, addr) (*(self)->ser_type->set_object_free)(self, addr)
+#define DeeSerial_ObjectFree(self, addr, ref) (*(self)->ser_type->set_object_free)(self, addr, ref)
 
 /* Same as above, but must be used for GC-objects (as per "DeeGCObject_Malloc()") */
 #define DeeSerial_GCObjectMalloc(self, num_bytes, ref)    (*(self)->ser_type->set_gcobject_malloc)(self, num_bytes, Dee_AsObject(ref))
@@ -210,7 +232,7 @@ struct Dee_serial {
  *
  * NOTE: DON'T call this method for error-cleanup -- On error, the
  *       owner of the serializer will free all allocated memory! */
-#define DeeSerial_GCObjectFree(self, addr) (*(self)->ser_type->set_gcobject_free)(self, addr)
+#define DeeSerial_GCObjectFree(self, addr, ref) (*(self)->ser_type->set_gcobject_free)(self, addr, ref)
 
 
 /* Serialize a `void *' field at `addrof_pointer' as being populated with the

@@ -2618,7 +2618,7 @@ DFUNDEF WUNUSED ATTR_INS(3, 4) NONNULL((1)) int
 (DCALL DeeSerial_XPutObjectVectorDup)(DeeSerial *__restrict writer, Dee_seraddr_t addr,
                                       DeeObject *const *objv, size_t objc) {
 	size_t i;
-	Dee_seraddr_t md_addr = DeeSerial_Malloc(writer, objc * sizeof(DREF DeeObject *));
+	Dee_seraddr_t md_addr = DeeSerial_Malloc(writer, objc * sizeof(DREF DeeObject *), (void *)objv);
 	if (!Dee_SERADDR_ISOK(md_addr))
 		goto err;
 	for (i = 0; i < objc; ++i) {
@@ -2679,14 +2679,13 @@ code_serialize(DeeCodeObject *__restrict self, DeeSerial *__restrict writer) {
 			goto err;
 	}
 	if (self->co_exceptv) {
-		struct except_handler *out_exceptv, *in_exceptv;
+		struct except_handler *out_exceptv, *in_exceptv = self->co_exceptv;
 		uint16_t i, exceptc = self->co_exceptc;
 		size_t sizeof_exceptv = exceptc * sizeof(struct except_handler);
-		Dee_seraddr_t addrof_out_exceptv = DeeSerial_Malloc(writer, sizeof_exceptv);
+		Dee_seraddr_t addrof_out_exceptv = DeeSerial_Malloc(writer, sizeof_exceptv, in_exceptv);
 		if (!Dee_SERADDR_ISOK(addrof_out_exceptv))
 			goto err;
 		out_exceptv = DeeSerial_Addr2Mem(writer, addrof_out_exceptv, struct except_handler);
-		in_exceptv  = self->co_exceptv;
 		for (i = 0; i < exceptc; ++i) {
 			out_exceptv[i] = in_exceptv[i];
 			if (in_exceptv[i].eh_mask) {

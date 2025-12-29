@@ -3087,7 +3087,7 @@ module_dee_serialize(DeeModuleObject *__restrict self,
 		Dee_seraddr_t out__mo_bucketv;
 		struct Dee_module_symbol *in__mo_bucketv = self->mo_bucketv;
 		struct Dee_module_symbol *ou__mo_bucketv;
-		out__mo_bucketv = DeeSerial_Malloc(writer, count * sizeof(struct Dee_module_symbol));
+		out__mo_bucketv = DeeSerial_Malloc(writer, count * sizeof(struct Dee_module_symbol), in__mo_bucketv);
 		if (!Dee_SERADDR_ISOK(out__mo_bucketv))
 			goto err;
 		if (DeeSerial_PutAddr(writer, out_addr + offsetof(DeeModuleObject, mo_bucketv), out__mo_bucketv))
@@ -3130,13 +3130,14 @@ module_dee_serialize(DeeModuleObject *__restrict self,
 		uint16_t count = self->mo_importc;
 		Dee_seraddr_t out__mo_importv;
 		DREF DeeModuleObject **ou__mo_importv;
-		out__mo_importv = DeeSerial_Malloc(writer, count * sizeof(DREF DeeModuleObject *));
+		DREF DeeModuleObject *const *in__mo_importv = self->mo_importv;
+		out__mo_importv = DeeSerial_Malloc(writer, count * sizeof(DREF DeeModuleObject *), (void *)in__mo_importv);
 		if (!Dee_SERADDR_ISOK(out__mo_importv))
 			goto err;
 		if (DeeSerial_PutAddr(writer, out_addr + offsetof(DeeModuleObject, mo_importv), out__mo_importv))
 			goto err;
 		ou__mo_importv = DeeSerial_Addr2Mem(writer, out__mo_importv, DREF DeeModuleObject *);
-		Dee_Movrefv(ou__mo_importv, self->mo_importv, count);
+		Dee_Movrefv(ou__mo_importv, in__mo_importv, count);
 		if (DeeSerial_InplacePutObjectv(writer, out__mo_importv, count))
 			goto err;
 	}

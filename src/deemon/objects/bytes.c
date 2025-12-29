@@ -787,6 +787,65 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+bytes_serialize(Bytes *__restrict self, DeeSerial *__restrict writer) {
+	Bytes *out;
+	Dee_seraddr_t out_addr;
+#define ADDROF(field) (out_addr + offsetof(Bytes, field))
+	if (self->b_buffer.bb_base == self->b_data) {
+		/* Self-owned bytes object */
+		size_t sizeof_bytes;
+		ASSERT(self->b_orig == (DeeObject *)self);
+		sizeof_bytes = offsetof(Bytes, b_data) + self->b_buffer.bb_size;
+		out_addr = DeeSerial_ObjectMalloc(writer, sizeof_bytes, self);
+		if (!Dee_SERADDR_ISOK(out_addr))
+			goto err;
+		if (DeeSerial_PutAddr(writer, ADDROF(b_orig), out_addr))
+			goto err;
+		if (DeeSerial_PutAddr(writer, ADDROF(b_base),
+		                      ADDROF(b_data) + (size_t)(self->b_base -
+		                                                self->b_data)))
+			goto err;
+		if (DeeSerial_PutAddr(writer, ADDROF(b_buffer.bb_base), ADDROF(b_data)))
+			goto err;
+	} else {
+		/* Externally-referenced bytes object */
+		out_addr = DeeSerial_ObjectMalloc(writer, offsetof(Bytes, b_data), self);
+		if (!Dee_SERADDR_ISOK(out_addr))
+			goto err;
+		if (DeeSerial_PutObject(writer, ADDROF(b_orig), self->b_orig))
+			goto err;
+		if (DeeSerial_PutPointer(writer, ADDROF(b_base), self->b_base))
+			goto err;
+		if (DeeSerial_PutPointer(writer, ADDROF(b_buffer.bb_base), self->b_buffer.bb_base))
+			goto err;
+	}
+	out = DeeSerial_Addr2Mem(writer, out_addr, Bytes);
+	out->b_size = self->b_size;
+	out->b_flags = self->b_flags;
+	out->b_buffer.bb_size = self->b_buffer.bb_size;
+#ifndef __INTELLISENSE__
+	if (self->b_buffer.bb_put) {
+		/* TODO: This doesn't work property because "tp_getbuf" wasn't invoked again.
+		 * Also: we can't invoke it again now since the caller might just dicard all
+		 *       data that we painstakingly put together at this point.
+		 *
+		 * Thinking about it: "bb_put" and "tp_putbuf" should just go away. Nothing
+		 * is actually using them, and they kind-of make serialization impossible...
+		 */
+		if (DeeSerial_PutPointer(writer, ADDROF(b_buffer.bb_put),
+		                         (void const *)self->b_buffer.bb_put))
+			goto err;
+	} else {
+		out->b_buffer.bb_put = NULL;
+	}
+#endif /* !__INTELLISENSE__ */
+#undef ADDROF
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bytes_assign(Bytes *__restrict self,
              DeeObject *__restrict values) {
@@ -2068,7 +2127,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bytes_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &bytes_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bytes_fini,

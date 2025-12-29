@@ -1695,10 +1695,10 @@ again:
 		                                     DeeHashSet_EmptyItems);
 	}
 	sizeof_elem = (out->hs_mask + 1) * sizeof(struct hashset_item);
-	addrof_out__hs_elem = DeeSerial_TryMalloc(writer, sizeof_elem);
+	addrof_out__hs_elem = DeeSerial_TryMalloc(writer, sizeof_elem, NULL);
 	if (!Dee_SERADDR_ISOK(addrof_out__hs_elem)) {
 		DeeHashSet_LockEndRead(self);
-		addrof_out__hs_elem = DeeSerial_Malloc(writer, sizeof_elem);
+		addrof_out__hs_elem = DeeSerial_Malloc(writer, sizeof_elem, NULL);
 		if (!Dee_SERADDR_ISOK(addrof_out__hs_elem))
 			goto err;
 		DeeHashSet_LockRead(self);
@@ -1706,7 +1706,7 @@ again:
 		if unlikely(out->hs_mask != self->hs_mask) {
 free_out_hs_elem__and__again:
 			DeeHashSet_LockEndRead(self);
-			DeeSerial_Free(writer, addrof_out__hs_elem);
+			DeeSerial_Free(writer, addrof_out__hs_elem, NULL);
 			goto again;
 		}
 		if unlikely(out->hs_size != self->hs_size)

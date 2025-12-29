@@ -117,9 +117,9 @@ module_compile(struct Dee_serial *__restrict writer,
 	} else {
 		size_t i, count = current_rootscope->rs_bucketm + 1;
 		Dee_seraddr_t out__mo_bucketv;
-		struct Dee_module_symbol *in__mo_bucketv = current_rootscope->rs_bucketv;
 		struct Dee_module_symbol *ou__mo_bucketv;
-		out__mo_bucketv = DeeSerial_Malloc(writer, count * sizeof(struct Dee_module_symbol));
+		struct Dee_module_symbol *in__mo_bucketv = current_rootscope->rs_bucketv;
+		out__mo_bucketv = DeeSerial_Malloc(writer, count * sizeof(struct Dee_module_symbol), NULL);
 		if (!Dee_SERADDR_ISOK(out__mo_bucketv))
 			goto err;
 		if (DeeSerial_PutAddr(writer, ADDROF(mo_bucketv), out__mo_bucketv))
@@ -162,7 +162,7 @@ module_compile(struct Dee_serial *__restrict writer,
 		uint16_t count = current_rootscope->rs_importc;
 		Dee_seraddr_t out__mo_importv;
 		DREF DeeModuleObject **ou__mo_importv;
-		out__mo_importv = DeeSerial_Malloc(writer, count * sizeof(DREF DeeModuleObject *));
+		out__mo_importv = DeeSerial_Malloc(writer, count * sizeof(DREF DeeModuleObject *), NULL);
 		if (!Dee_SERADDR_ISOK(out__mo_importv))
 			goto err;
 		if (DeeSerial_PutAddr(writer, ADDROF(mo_importv), out__mo_importv))

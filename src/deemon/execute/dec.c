@@ -1290,13 +1290,63 @@ err:
 }
 
 
-/* Encode a reference to `obj' at `DeeDecWriter_Addr2Mem(self, addr, DeeObject)'
+/* Remember that `obj' has been serialized at offset `addr' (s.a. `self->dw_known')
  * @return: 0 : Success
- * @return: -1: An error was thrown */
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-decwriter_putobject(DeeDecWriter *__restrict self,
-                    Dee_seraddr_t addr,
-                    DeeObject *__restrict obj);
+ * @return: -1: Error */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+decwriter_addknown(DeeDecWriter *__restrict self,
+                   void *__restrict ptr,
+                   Dee_dec_addr32_t addr,
+                   Dee_dec_addr32_t size) {
+	size_t lo = 0, hi = self->dw_known.dpt_ptrc;
+	struct Dee_dec_ptrtab_entry *vec = self->dw_known.dpt_ptrv;
+	if (hi >= self->dw_known.dpt_ptra) {
+		size_t new_alloc = self->dw_known.dpt_ptra * 2;
+		if (new_alloc < 16)
+			new_alloc = 16;
+		vec = (struct Dee_dec_ptrtab_entry *)Dee_TryReallocc(vec, new_alloc, sizeof(struct Dee_dec_ptrtab_entry));
+		if unlikely(!vec) {
+			new_alloc = self->dw_known.dpt_ptrc + 1;
+			vec = (struct Dee_dec_ptrtab_entry *)Dee_Reallocc(self->dw_known.dpt_ptrv, new_alloc, sizeof(struct Dee_dec_ptrtab_entry));
+			if unlikely(!vec)
+				goto err;
+		}
+		self->dw_known.dpt_ptrv = vec;
+		self->dw_known.dpt_ptra = new_alloc;
+		hi = self->dw_known.dpt_ptrc;
+	}
+	while (lo < hi) {
+		size_t mid = (lo + hi) / 2;
+		struct Dee_dec_ptrtab_entry *ent = &vec[mid];
+		if ((byte_t *)ptr < (byte_t *)ent->dpte_ptr) {
+			hi = mid;
+		} else {
+			ASSERTF((byte_t *)ptr > (byte_t *)ent->dpte_ptr,
+			        "Reference to %p at %#" PRFxSIZ "-%#" PRFxSIZ " was already "
+			        "serialized into dec file, and API design should have prevented "
+			        "a second copy from being serialized again (the first instance "
+			        "should have been re-used)",
+			        ptr, (size_t)ent->dote_off, (size_t)ent->dote_off + ent->dote_siz - 1);
+			lo = mid + 1;
+		}
+	}
+
+	ASSERT(lo == hi);
+	ASSERT(lo <= self->dw_known.dpt_ptrc);
+	vec += lo;
+	hi = self->dw_known.dpt_ptrc - lo;
+	/* XXX: This "memmoveupc" has worst-case O(N) and average case O(N/2)=O(N) run
+	 *      time. Figure out some way where the average case runs faster than that! */
+	memmoveupc(vec + 1, vec, hi, sizeof(struct Dee_dec_ptrtab_entry));
+	++self->dw_known.dpt_ptrc;
+	vec->dpte_ptr = ptr;
+	vec->dote_off = addr;
+	vec->dote_siz = size;
+	return 0;
+err:
+	return -1;
+}
+
 
 /* Possible values for `decwriter_malloc_impl::flags' */
 #define decwriter_malloc_impl_F_NORMAL 0x0000 /* Normal flags */
@@ -1304,8 +1354,8 @@ decwriter_putobject(DeeDecWriter *__restrict self,
 #define decwriter_malloc_impl_F_BZERO  0x0002 /* Zero-initialize result */
 
 PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
-decwriter_malloc_impl(DeeDecWriter *__restrict self,
-                      size_t num_bytes, unsigned int flags) {
+decwriter_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
+                      void *ref, unsigned int flags) {
 	Dee_seraddr_t result;
 	struct Dee_heapchunk *chunk;
 	size_t avail, nb, req, unused;
@@ -1352,6 +1402,12 @@ decwriter_malloc_impl(DeeDecWriter *__restrict self,
 	if (flags & decwriter_malloc_impl_F_BZERO)
 		bzero(chunk + 1, num_bytes);
 	memset((byte_t *)(chunk + 1) + num_bytes - unused, 0xcc, unused);
+	if (ref) {
+		if unlikely(decwriter_addknown(self, ref,
+		                               seraddr32(result + sizeof(struct Dee_heapchunk)),
+		                               seraddr32(num_bytes)))
+			goto err;
+	}
 	self->dw_used  = result + nb;
 	self->dw_hlast = Dee_HEAPCHUNK_PREV(num_bytes); /* Override with whatever the next chunk will need */
 	result += sizeof(struct Dee_heapchunk);
@@ -1367,12 +1423,16 @@ err:
  * CAUTION: Only the most-recent pointer can *actually* be free'd!
  *          If you pass anything else, this function is a no-op! */
 PRIVATE NONNULL((1)) void DCALL
-decwriter_free(DeeDecWriter *__restrict self, Dee_seraddr_t addr) {
+decwriter_free(DeeDecWriter *__restrict self, Dee_seraddr_t addr, void *ref) {
 	size_t last_bytes = self->dw_hlast - Dee_HEAPCHUNK_PREV(0);
 	Dee_seraddr_t last = self->dw_used - last_bytes;
 	struct Dee_heapchunk *p;
 	if (last != addr)
 		return; /* Cannot free... */
+
+	if (ref) {
+		/* TODO: decwriter_delknown() */
+	}
 
 	/* Undo state changes made by allocation */
 	addr -= sizeof(struct Dee_heapchunk);
@@ -1381,64 +1441,13 @@ decwriter_free(DeeDecWriter *__restrict self, Dee_seraddr_t addr) {
 	self->dw_hlast = p->hc_prevsize;
 }
 
-/* Remember that `obj' has been serialized at offset `addr' (s.a. `self->dw_known')
+/* Encode a reference to `obj' at `DeeDecWriter_Addr2Mem(self, addr, DeeObject)'
  * @return: 0 : Success
- * @return: -1: Error */
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-decwriter_addknown(DeeDecWriter *__restrict self,
-                   DeeObject *__restrict obj,
-                   Dee_dec_addr32_t addr,
-                   Dee_dec_addr32_t size) {
-	size_t lo = 0, hi = self->dw_known.dot_objc;
-	struct Dee_dec_objtab_entry *vec = self->dw_known.dot_objv;
-	if (hi >= self->dw_known.dot_obja) {
-		size_t new_alloc = self->dw_known.dot_obja * 2;
-		if (new_alloc < 16)
-			new_alloc = 16;
-		vec = (struct Dee_dec_objtab_entry *)Dee_TryReallocc(vec, new_alloc, sizeof(struct Dee_dec_objtab_entry));
-		if unlikely(!vec) {
-			new_alloc = self->dw_known.dot_objc + 1;
-			vec = (struct Dee_dec_objtab_entry *)Dee_Reallocc(self->dw_known.dot_objv, new_alloc, sizeof(struct Dee_dec_objtab_entry));
-			if unlikely(!vec)
-				goto err;
-		}
-		self->dw_known.dot_objv = vec;
-		self->dw_known.dot_obja = new_alloc;
-		hi = self->dw_known.dot_objc;
-	}
-	while (lo < hi) {
-		size_t mid = (lo + hi) / 2;
-		struct Dee_dec_objtab_entry *ent = &vec[mid];
-		if (obj < ent->dote_obj) {
-			hi = mid;
-		} else {
-			ASSERTF(obj > ent->dote_obj,
-			        "Reference to instance of %q:%p at %#" PRFxSIZ "-%#" PRFxSIZ " was "
-			        "already serialized into dec file, and API design should have prevented "
-			        "a second copy from being serialized again (the first instance should "
-			        "have been re-used): %r",
-			        DeeType_GetName(Dee_TYPE(obj)), obj,
-			        (size_t)ent->dote_off,
-			        (size_t)ent->dote_off + ent->dote_siz - 1,
-			        obj);
-			lo = mid + 1;
-		}
-	}
-
-	ASSERT(lo == hi);
-	ASSERT(lo <= self->dw_known.dot_objc);
-	vec += lo;
-	hi = self->dw_known.dot_objc - lo;
-	memmoveupc(vec + 1, vec, hi, sizeof(struct Dee_dec_objtab_entry));
-	++self->dw_known.dot_objc;
-	vec->dote_obj = obj;
-	vec->dote_off = addr;
-	vec->dote_siz = size;
-	return 0;
-err:
-	return -1;
-}
-
+ * @return: -1: An error was thrown */
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+decwriter_putobject(DeeDecWriter *__restrict self,
+                    Dee_seraddr_t addr,
+                    DeeObject *__restrict obj);
 
 PRIVATE WUNUSED NONNULL((1, 3)) Dee_seraddr_t DCALL
 decwriter_object_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
@@ -1446,11 +1455,9 @@ decwriter_object_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 	DeeObject *copy;
 	Dee_seraddr_t result;
 	ASSERTF(!DeeType_IsGC(Dee_TYPE(ref)), "Use decwriter_gcobject_malloc_impl()");
-	result = decwriter_malloc_impl(self, num_bytes, flags);
+	result = decwriter_malloc_impl(self, num_bytes, ref, flags);
 	if unlikely(!result)
 		goto err;
-	if unlikely(decwriter_addknown(self, ref, seraddr32(result), seraddr32(num_bytes)))
-		goto err_r;
 
 	/* Initialize "ob_refcnt" and "ob_type" of the newly allocated object */
 	copy = DeeDecWriter_Addr2Mem(self, result, DeeObject);
@@ -1461,10 +1468,10 @@ decwriter_object_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 	if unlikely(decwriter_putobject(self,
 	                                result + offsetof(DeeObject, ob_type),
 	                                Dee_AsObject(Dee_TYPE(ref))))
-		goto err;
+		goto err_r;
 	return result;
 err_r:
-	decwriter_free(self, result);
+	decwriter_free(self, result, ref);
 err:
 	return Dee_SERADDR_INVALID;
 }
@@ -1474,11 +1481,11 @@ decwriter_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
                                DeeObject *__restrict ref, unsigned int flags) {
 	size_t total;
 	Dee_seraddr_t result;
-	DeeObject *copy;
+	struct gc_head *copy;
 	ASSERTF(DeeType_IsGC(Dee_TYPE(ref)), "Use decwriter_object_malloc_impl()");
 	if (OVERFLOW_UADD(num_bytes, sizeof(struct gc_head_link), &total))
 		total = (size_t)-1;
-	result = decwriter_malloc_impl(self, total, flags);
+	result = decwriter_malloc_impl(self, total, DeeGC_Head(ref), flags);
 	if unlikely(!result)
 		goto err;
 
@@ -1495,52 +1502,53 @@ decwriter_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 	} else {
 		/* Append to end of GC list. */
 		if (decwriter_putaddr(self, self->dw_gctail + offsetof(struct gc_head_link, gc_next), result))
-			goto err;
+			goto err_r;
 		if (decwriter_putaddr(self, result + offsetof(struct gc_head_link, gc_pself),
 		                     self->dw_gctail + offsetof(struct gc_head_link, gc_next)))
-			goto err;
+			goto err_r;
 	}
 	self->dw_gctail = result;
-	result += sizeof(struct gc_head_link);
-	if unlikely(decwriter_addknown(self, ref, seraddr32(result), seraddr32(num_bytes)))
-		goto err;
 
 	/* Initialize "ob_refcnt" and "ob_type" of the newly allocated object */
-	copy = DeeDecWriter_Addr2Mem(self, result, DeeObject);
-	copy->ob_refcnt = 1;
+	copy = DeeDecWriter_Addr2Mem(self, result, struct gc_head);
+	copy->gc_object.ob_refcnt = 1;
 #ifdef CONFIG_TRACE_REFCHANGES
-	copy->ob_trace = NULL;
+	copy->gc_object.ob_trace = NULL;
 #endif /* CONFIG_TRACE_REFCHANGES */
-	if unlikely(decwriter_putobject(self, result + offsetof(DeeObject, ob_type),
+	if unlikely(decwriter_putobject(self,
+	                                result + offsetof(struct gc_head, gc_object.ob_type),
 	                                Dee_AsObject(Dee_TYPE(ref))))
-		goto err;
+		goto err_r;
+	result += offsetof(struct gc_head, gc_object);
 	return result;
+err_r:
+	decwriter_free(self, result, ref);
 err:
 	return Dee_SERADDR_INVALID;
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
-decwriter_malloc(DeeDecWriter *__restrict self, size_t num_bytes) {
-	return decwriter_malloc_impl(self, num_bytes,
+decwriter_malloc(DeeDecWriter *__restrict self, size_t num_bytes, void *ref) {
+	return decwriter_malloc_impl(self, num_bytes, ref,
 	                             decwriter_malloc_impl_F_NORMAL);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
-decwriter_trymalloc(DeeDecWriter *__restrict self, size_t num_bytes) {
-	return decwriter_malloc_impl(self, num_bytes,
+decwriter_trymalloc(DeeDecWriter *__restrict self, size_t num_bytes, void *ref) {
+	return decwriter_malloc_impl(self, num_bytes, ref,
 	                             decwriter_malloc_impl_F_TRY);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
-decwriter_calloc(DeeDecWriter *__restrict self, size_t num_bytes) {
-	return decwriter_malloc_impl(self, num_bytes,
+decwriter_calloc(DeeDecWriter *__restrict self, size_t num_bytes, void *ref) {
+	return decwriter_malloc_impl(self, num_bytes, ref,
 	                             decwriter_malloc_impl_F_NORMAL |
 	                             decwriter_malloc_impl_F_BZERO);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
-decwriter_trycalloc(DeeDecWriter *__restrict self, size_t num_bytes) {
-	return decwriter_malloc_impl(self, num_bytes,
+decwriter_trycalloc(DeeDecWriter *__restrict self, size_t num_bytes, void *ref) {
+	return decwriter_malloc_impl(self, num_bytes, ref,
 	                             decwriter_malloc_impl_F_TRY |
 	                             decwriter_malloc_impl_F_BZERO);
 }
@@ -1598,18 +1606,22 @@ decwriter_gcobject_trycalloc(DeeDecWriter *__restrict self, size_t num_bytes, De
 }
 
 PRIVATE NONNULL((1)) void DCALL
-decwriter_object_free(DeeDecWriter *__restrict self, Dee_seraddr_t addr) {
+decwriter_object_free(DeeDecWriter *__restrict self, Dee_seraddr_t addr,
+                      DeeObject *__restrict ref) {
 	/* TODO */
 	(void)self;
 	(void)addr;
+	(void)ref;
 	COMPILER_IMPURE();
 }
 
 PRIVATE NONNULL((1)) void DCALL
-decwriter_gcobject_free(DeeDecWriter *__restrict self, Dee_seraddr_t addr) {
+decwriter_gcobject_free(DeeDecWriter *__restrict self, Dee_seraddr_t addr,
+                        DeeObject *__restrict ref) {
 	/* TODO */
 	(void)self;
 	(void)addr;
+	(void)ref;
 	COMPILER_IMPURE();
 }
 
@@ -1756,20 +1768,23 @@ decwriter_putobject_ex(DeeDecWriter *__restrict self,
 
 	/* Check if "obj" has already been written */
 	{
-		size_t lo = 0, hi = self->dw_known.dot_objc;
-		struct Dee_dec_objtab_entry *known_v = self->dw_known.dot_objv;
+		size_t lo = 0, hi = self->dw_known.dpt_ptrc;
+		struct Dee_dec_ptrtab_entry *known_v = self->dw_known.dpt_ptrv;
 		while (lo < hi) {
 			size_t mid = (lo + hi) / 2;
-			struct Dee_dec_objtab_entry *ent = &known_v[mid];
-			if (obj < ent->dote_obj) {
+			struct Dee_dec_ptrtab_entry *ent = &known_v[mid];
+			if ((byte_t *)obj < Dee_dec_ptrtab_entry_getminaddr(ent)) {
 				hi = mid;
-			} else if (obj > ent->dote_obj) {
+			} else if ((byte_t *)obj > Dee_dec_ptrtab_entry_getmaxaddr(ent)) {
 				lo = mid + 1;
 			} else {
 				/* Found the entry! */
-				DeeObject *known_obj = DeeDecWriter_Addr2Mem(self, ent->dote_off, DeeObject);
+				DeeObject *known_obj;
+				Dee_dec_addr32_t addr = ent->dote_off;
+				addr += (Dee_dec_addr32_t)((byte_t *)obj - Dee_dec_ptrtab_entry_getminaddr(ent));
+				known_obj = DeeDecWriter_Addr2Mem(self, addr, DeeObject);
 				++known_obj->ob_refcnt; /* Because now there is another reference to this known object! */
-				return decwriter_putaddr(self, addrof_object, ent->dote_off + offset_into_ob);
+				return decwriter_putaddr(self, addrof_object, addr + offset_into_ob);
 			}
 		}
 	}
@@ -1846,23 +1861,31 @@ decwriter_putpointer(DeeDecWriter *__restrict self,
 		return reltab_append(&dep->ddm_rel, seraddr32(addrof_pointer));
 	}
 
-	/* Check if "pointer" is part of some already-serialized object */
+	/* Check if "pointer" is part of some already-serialized section of memory
+	 * NOTE: This is why "DeeSerial_Malloc()" must also take a "void *ref" argument!
+	 *
+	 * Reason: >> ClassOperatorTableIterator
+	 *         When being serialized, its "co_iter" and "co_end" pointers point
+	 *         into the associated "ClassDescriptor *co_desc"'s cd_clsop_list,
+	 *         but when "ClassDescriptor" is serialized, 'cd_clsop_list' is
+	 *         copied using 'DeeSerial_Malloc()', meaning that we won't be able
+	 *         to link "co_iter" and "co_end" to 'cd_clsop_list'! */
 	{
-		size_t lo = 0, hi = self->dw_known.dot_objc;
-		struct Dee_dec_objtab_entry *known = self->dw_known.dot_objv;
+		size_t lo = 0, hi = self->dw_known.dpt_ptrc;
+		struct Dee_dec_ptrtab_entry *known = self->dw_known.dpt_ptrv;
 		while (lo < hi) {
 			size_t mid = (lo + hi) / 2;
-			struct Dee_dec_objtab_entry *ent = &known[mid];
-			if ((byte_t *)pointer < Dee_dec_objtab_entry_getminaddr(ent)) {
+			struct Dee_dec_ptrtab_entry *ent = &known[mid];
+			if ((byte_t *)pointer < Dee_dec_ptrtab_entry_getminaddr(ent)) {
 				hi = mid;
 			} else if ((byte_t *)pointer >
 			           /* +1, because we want to include the object's end! */
-			           Dee_dec_objtab_entry_getmaxaddr(ent) + 1) {
+			           Dee_dec_ptrtab_entry_getmaxaddr(ent) + 1) {
 				lo = mid + 1;
 			} else {
 				/* Found the entry! */
 				Dee_seraddr_t addrof_target;
-				addrof_target = (Dee_seraddr_t)((byte_t *)pointer - Dee_dec_objtab_entry_getminaddr(ent));
+				addrof_target = (Dee_seraddr_t)((byte_t *)pointer - Dee_dec_ptrtab_entry_getminaddr(ent));
 				addrof_target += (Dee_seraddr_t)ent->dote_off;
 				return decwriter_putaddr(self, addrof_pointer, addrof_target);
 			}
@@ -1896,21 +1919,21 @@ decwriter_addr2mem(DeeDecWriter *__restrict self, Dee_seraddr_t addr) {
 
 PRIVATE struct Dee_serial_type tpconst decwriter_serial_type = {
 	/* .set_addr2mem           = */ (void *(DCALL *)(DeeSerial *__restrict, Dee_seraddr_t))&decwriter_addr2mem,
-	/* .set_malloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t))&decwriter_malloc,
-	/* .set_calloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t))&decwriter_calloc,
-	/* .set_trymalloc          = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t))&decwriter_trymalloc,
-	/* .set_trycalloc          = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t))&decwriter_trycalloc,
-	/* .set_free               = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t))&decwriter_free,
+	/* .set_malloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void *))&decwriter_malloc,
+	/* .set_calloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void *))&decwriter_calloc,
+	/* .set_trymalloc          = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void *))&decwriter_trymalloc,
+	/* .set_trycalloc          = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void *))&decwriter_trycalloc,
+	/* .set_free               = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, void *))&decwriter_free,
 	/* .set_object_malloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&decwriter_object_malloc,
 	/* .set_object_calloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&decwriter_object_calloc,
 	/* .set_object_trymalloc   = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&decwriter_object_trymalloc,
 	/* .set_object_trycalloc   = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&decwriter_object_trycalloc,
-	/* .set_object_free        = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t))&decwriter_object_free,
+	/* .set_object_free        = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict))&decwriter_object_free,
 	/* .set_gcobject_malloc    = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&decwriter_gcobject_malloc,
 	/* .set_gcobject_calloc    = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&decwriter_gcobject_calloc,
 	/* .set_gcobject_trymalloc = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&decwriter_gcobject_trymalloc,
 	/* .set_gcobject_trycalloc = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&decwriter_gcobject_trycalloc,
-	/* .set_gcobject_free      = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t))&decwriter_gcobject_free,
+	/* .set_gcobject_free      = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict))&decwriter_gcobject_free,
 	/* .set_putaddr            = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, Dee_seraddr_t))&decwriter_putaddr,
 	/* .set_putobject          = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict))&decwriter_putobject,
 	/* .set_putobject_ex       = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict, ptrdiff_t))&decwriter_putobject_ex,
@@ -1948,7 +1971,7 @@ _DeeDecWriter_Init(DeeDecWriter *__restrict self) {
 	Dee_dec_fdeptab_init(&self->dw_fdeps);
 	self->dw_gchead = 0;
 	self->dw_gctail = 0;
-	Dee_dec_objtab_init(&self->dw_known);
+	Dee_dec_ptrtab_init(&self->dw_known);
 	return 0;
 err:
 	return -1;
@@ -1958,7 +1981,7 @@ PUBLIC NONNULL((1)) void DCALL
 DeeDecWriter_Fini(DeeDecWriter *__restrict self) {
 	size_t i;
 	ASSERT(self->ser_type == &decwriter_serial_type);
-	Dee_dec_objtab_fini(&self->dw_known);
+	Dee_dec_ptrtab_fini(&self->dw_known);
 	Dee_dec_fdeptab_fini(&self->dw_fdeps);
 	w_undo_rrela(self->dw_ehdr, self->dw_drrela.drat_relv, self->dw_drrela_miss);
 	Dee_dec_rrelatab_fini(&self->dw_drrela);

@@ -1060,17 +1060,17 @@ again:
 		struct cached_dict_item *out_elem;
 		struct cached_dict_item const *in_elem;
 		sizeof_elem = (used_mask + 1) * sizeof(struct cached_dict_item);
-		addrof_elem = DeeSerial_TryMalloc(writer, sizeof_elem);
+		addrof_elem = DeeSerial_TryMalloc(writer, sizeof_elem, NULL);
 		if (!Dee_SERADDR_ISOK(addrof_elem)) {
 			DeeCachedDict_LockEndRead(self);
-			addrof_elem = DeeSerial_Malloc(writer, sizeof_elem);
+			addrof_elem = DeeSerial_Malloc(writer, sizeof_elem, NULL);
 			if (!Dee_SERADDR_ISOK(addrof_elem))
 				goto err;
 			DeeCachedDict_LockRead(self);
 			if unlikely(used_mask != self->cd_mask ||
 			            used_size != self->cd_size) {
 				DeeCachedDict_LockEndRead(self);
-				DeeSerial_Free(writer, addrof_elem);
+				DeeSerial_Free(writer, addrof_elem, NULL);
 				goto again;
 			}
 		}

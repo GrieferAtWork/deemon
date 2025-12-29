@@ -90,7 +90,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 (DCALL DeeSerial_PutMemdup)(DeeSerial *__restrict self,
                             Dee_seraddr_t addrof_pointer,
                             void const *data, size_t num_bytes) {
-	Dee_seraddr_t addrof_dup = DeeSerial_Malloc(self, num_bytes);
+	Dee_seraddr_t addrof_dup = DeeSerial_Malloc(self, num_bytes, (void *)data);
 	if (!Dee_SERADDR_ISOK(addrof_dup))
 		goto err;
 	memcpy(DeeSerial_Addr2Mem(self, addrof_dup, void), data, num_bytes);
