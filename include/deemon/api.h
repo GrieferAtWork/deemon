@@ -497,7 +497,7 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #define CONFIG_NO_EXPERIMENTAL_MMAP_DEC
 #elif (!defined(CONFIG_EXPERIMENTAL_MMAP_DEC) && \
        !defined(CONFIG_NO_EXPERIMENTAL_MMAP_DEC))
-#if 0 /* TODO: Implementation is complete -- do testing in different environments, then enable by default */
+#if 1 /* TODO: Implementation is complete -- do testing in different environments, then enable by default */
 #define CONFIG_EXPERIMENTAL_MMAP_DEC
 #else
 #define CONFIG_NO_EXPERIMENTAL_MMAP_DEC
