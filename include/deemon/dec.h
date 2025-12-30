@@ -189,6 +189,44 @@ typedef struct dec_rel Dec_Rel;
 typedef struct dec_rrel Dec_RRel;
 typedef struct dec_rrela Dec_RRela;
 
+
+#define DeeDec_Ehdr_OFFSETOF__e_ident                                   0
+#define DeeDec_Ehdr_OFFSETOF__e_mach                                    4
+#define DeeDec_Ehdr_OFFSETOF__e_type                                    5
+#define DeeDec_Ehdr_OFFSETOF__e_version                                 6
+#define DeeDec_Ehdr_OFFSETOF__e_offsetof_eof                            8
+#define DeeDec_Ehdr_OFFSETOF__e_offsetof_gchead                         12
+#define DeeDec_Ehdr_OFFSETOF__e_offsetof_gctail                         16
+#define DeeDec_Ehdr_OFFSETOF__e_typedata                                24
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_deemon_timestamp 24
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_deemon_build_id  32
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_deemon_host_id   48
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_srel    64
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_drel    68
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_drrel   72
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_drrela  76
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_deps    80
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_files   84
+#define DeeDec_Ehdr_OFFSETOF__e_mapping                                 88
+#define DeeDec_Ehdr_OFFSETOF__e_heap \
+	(88 + Dee_SIZEOF_DeeMapFile + ((Dee_HEAPCHUNK_ALIGN - ((88 + Dee_SIZEOF_DeeMapFile) % Dee_HEAPCHUNK_ALIGN)) % Dee_HEAPCHUNK_ALIGN))
+#if DeeDec_Ehdr_OFFSETOF__e_heap == 128
+#undef DeeDec_Ehdr_OFFSETOF__e_heap
+#define DeeDec_Ehdr_OFFSETOF__e_heap 128
+#elif DeeDec_Ehdr_OFFSETOF__e_heap == 120
+#undef DeeDec_Ehdr_OFFSETOF__e_heap
+#define DeeDec_Ehdr_OFFSETOF__e_heap 120
+#elif DeeDec_Ehdr_OFFSETOF__e_heap == 112
+#undef DeeDec_Ehdr_OFFSETOF__e_heap
+#define DeeDec_Ehdr_OFFSETOF__e_heap 112
+#elif DeeDec_Ehdr_OFFSETOF__e_heap == 104
+#undef DeeDec_Ehdr_OFFSETOF__e_heap
+#define DeeDec_Ehdr_OFFSETOF__e_heap 104
+#elif DeeDec_Ehdr_OFFSETOF__e_heap == 96
+#undef DeeDec_Ehdr_OFFSETOF__e_heap
+#define DeeDec_Ehdr_OFFSETOF__e_heap 96
+#endif /* DeeDec_Ehdr_OFFSETOF__e_heap == ... */
+
 typedef struct {
 	uint8_t               e_ident[DI_NIDENT]; /* [AT(0-3)] Identification bytes. (See `DI_*') */
 	uint8_t               e_mach;             /* [AT(4-4)] Machine identification (`Dee_DEC_MACH') */
@@ -197,7 +235,7 @@ typedef struct {
 	Dee_dec_addr32_t      e_offsetof_eof;     /* [1..1] Offset to EOF of file mapping (should also equal the dec file's size) */
 	Dee_dec_addr32_t      e_offsetof_gchead;  /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
 	Dee_dec_addr32_t      e_offsetof_gctail;  /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `e_offsetof_srel') */
-	Dee_dec_addr32_t     _e_pad;              /* Unused / padding */
+	Dee_dec_addr32_t     _e_pad;              /* Unused / padding (to get "e_typedata" offset to 32, which is 16-byte aligned) */
 	union {
 
 		struct {
@@ -225,6 +263,9 @@ typedef struct {
 
 	}                     e_typedata;            /* Data dependent on `e_type' */
 	struct DeeMapFile     e_mapping;             /* Uninitialized/unused in file mappings; when mapped into memory, populated with the dec file's own file map descriptor. */
+#if ((DeeDec_Ehdr_OFFSETOF__e_mapping + Dee_SIZEOF_DeeMapFile) % Dee_HEAPCHUNK_ALIGN) != 0
+	__BYTE_TYPE__ _e_heap_pad[Dee_HEAPCHUNK_ALIGN - ((DeeDec_Ehdr_OFFSETOF__e_mapping + Dee_SIZEOF_DeeMapFile) % Dee_HEAPCHUNK_ALIGN)];
+#endif /* (Dee_SIZEOF_DeeMapFile % Dee_HEAPCHUNK_ALIGN) != 0 */
 	struct Dee_heapregion e_heap;                /* Heap region descriptor for objects embedded within this dec file. The first chunk of
 	                                              * this heap is assumed to point at the `DeeModuleObject' describing the dec file itself. */
 } Dec_Ehdr;

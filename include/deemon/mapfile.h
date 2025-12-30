@@ -73,11 +73,13 @@ DECL_BEGIN
 
 struct DeeMapFile {
 #ifdef DeeMapFile_IS_os_mapfile
+#define Dee_SIZEOF_DeeMapFile (3 * __SIZEOF_POINTER__) /* TODO: Correct, but not portable */
 	struct mapfile dmf_map; /* Underlying mapfile */
 #define DeeMapFile_GetBase(self)  ((void const *)(self)->dmf_map.mf_addr)
 #define DeeMapFile_GetSize(self)  (self)->dmf_map.mf_size
 #define DeeMapFile_UsesMmap(self) mapfile_usesmmap(&(self)->dmf_map)
 #elif defined(DeeMapFile_IS_CreateFileMapping)
+#define Dee_SIZEOF_DeeMapFile (4 * __SIZEOF_POINTER__)
 	void const *dmf_addr; /* [0..dmf_size][owned] Base address of the file mapping. */
 	size_t      dmf_size; /* Mapping size (in bytes, excluding trailing NUL-bytes) */
 	void      *_dmf_hmap; /* [0..1] file mapping handle */
@@ -86,6 +88,7 @@ struct DeeMapFile {
 #define DeeMapFile_GetSize(self)  (self)->dmf_size
 #define DeeMapFile_UsesMmap(self) ((self)->_dmf_hmap != NULL)
 #elif defined(DeeMapFile_IS_mmap)
+#define Dee_SIZEOF_DeeMapFile (3 * __SIZEOF_POINTER__)
 	void const *dmf_addr;    /* [0..dmf_size][owned] Base address of the file mapping. */
 	size_t      dmf_size;    /* Mapping size (in bytes, excluding trailing NUL-bytes) */
 	size_t     _dmf_mapsize; /* Used internally: the mmap'd file size, or `0' if `dmf_addr' was malloc'd */
@@ -93,6 +96,7 @@ struct DeeMapFile {
 #define DeeMapFile_GetSize(self)  (self)->dmf_size
 #define DeeMapFile_UsesMmap(self) ((self)->_dmf_mapsize != 0)
 #else /* ... */
+#define Dee_SIZEOF_DeeMapFile (2 * __SIZEOF_POINTER__)
 	void const *dmf_addr; /* [0..dmf_size][owned] Base address of the file mapping. */
 	size_t      dmf_size; /* Mapping size (in bytes, excluding trailing NUL-bytes) */
 #define DeeMapFile_GetBase(self)  (self)->dmf_addr

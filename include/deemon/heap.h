@@ -104,7 +104,7 @@ DECL_BEGIN
 
 
 #ifdef __CC__
-struct Dee_heapchunk {
+struct /*ATTR_ALIGNED(Dee_HEAPCHUNK_ALIGN)*/ Dee_heapchunk {
 	size_t hc_prevsize; /* Size of previous chunk, or "0" if this is the first chunk; must be multiple of "Dee_HEAPCHUNK_ALIGN" */
 	size_t hc_head;     /* Size of this chunk (including this header), but least significant
 	                     * 3 bits have special meaning and (when the chunk is allocated, which
@@ -112,12 +112,12 @@ struct Dee_heapchunk {
 	                     * initialized to 0b100 (aka. "4") */
 };
 
-struct Dee_heaptail {
+struct /*ATTR_ALIGNED(Dee_HEAPCHUNK_ALIGN)*/ Dee_heaptail {
 	size_t ht_lastsize; /* Size of the last *real* chunk within the region (in bytes); must be multiple of "Dee_HEAPCHUNK_ALIGN" */
 	size_t ht_zero;     /* Always zero */
 };
 
-struct Dee_heapregion {
+struct /*ATTR_ALIGNED(Dee_HEAPCHUNK_ALIGN)*/ Dee_heapregion {
 	size_t               hr_size;  /* [const] Total region size (in bytes, including this header, and the tail) */
 	/* [1..1][const] Destructor invoked once the region's last chunk is Dee_Free()'d */
 	void (DCALL         *hr_destroy)(struct Dee_heapregion *__restrict self);

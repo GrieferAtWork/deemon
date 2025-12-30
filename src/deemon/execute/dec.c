@@ -58,23 +58,26 @@ DECL_BEGIN
 #define ASSERT_FIELD(T, field, offset, size)       \
 	STATIC_ASSERT(offsetof(T, field) == (offset)); \
 	STATIC_ASSERT(sizeof(((T *)0)->field) == (size));
-ASSERT_FIELD(Dec_Ehdr, e_ident, 0, 4);
-ASSERT_FIELD(Dec_Ehdr, e_mach, 4, 1);
-ASSERT_FIELD(Dec_Ehdr, e_type, 5, 1);
-ASSERT_FIELD(Dec_Ehdr, e_version, 6, 2);
-ASSERT_FIELD(Dec_Ehdr, e_offsetof_eof, 8, 4);
-ASSERT_FIELD(Dec_Ehdr, e_offsetof_gchead, 12, 4);
-ASSERT_FIELD(Dec_Ehdr, e_offsetof_gctail, 16, 4);
-ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_deemon_timestamp, 24, 8);
-ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_deemon_build_id, 32, 16);
-ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_deemon_host_id, 48, 16);
-ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_srel, 64, 4);
-ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_drel, 68, 4);
-ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_drrel, 72, 4);
-ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_drrela, 76, 4);
-ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_deps, 80, 4);
-ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_files, 84, 4);
-ASSERT_FIELD(Dec_Ehdr, e_typedata, 24, 64);
+ASSERT_FIELD(Dec_Ehdr, e_ident, DeeDec_Ehdr_OFFSETOF__e_ident, 4);
+ASSERT_FIELD(Dec_Ehdr, e_mach, DeeDec_Ehdr_OFFSETOF__e_mach, 1);
+ASSERT_FIELD(Dec_Ehdr, e_type, DeeDec_Ehdr_OFFSETOF__e_type, 1);
+ASSERT_FIELD(Dec_Ehdr, e_version, DeeDec_Ehdr_OFFSETOF__e_version, 2);
+ASSERT_FIELD(Dec_Ehdr, e_offsetof_eof, DeeDec_Ehdr_OFFSETOF__e_offsetof_eof, 4);
+ASSERT_FIELD(Dec_Ehdr, e_offsetof_gchead, DeeDec_Ehdr_OFFSETOF__e_offsetof_gchead, 4);
+ASSERT_FIELD(Dec_Ehdr, e_offsetof_gctail, DeeDec_Ehdr_OFFSETOF__e_offsetof_gctail, 4);
+ASSERT_FIELD(Dec_Ehdr, e_typedata, DeeDec_Ehdr_OFFSETOF__e_typedata, 64);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_deemon_timestamp, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_deemon_timestamp, 8);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_deemon_build_id, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_deemon_build_id, 16);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_deemon_host_id, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_deemon_host_id, 16);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_srel, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_srel, 4);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_drel, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_drel, 4);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_drrel, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_drrel, 4);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_drrela, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_drrela, 4);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_deps, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_deps, 4);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_files, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_files, 4);
+ASSERT_FIELD(Dec_Ehdr, e_mapping, DeeDec_Ehdr_OFFSETOF__e_mapping, Dee_SIZEOF_DeeMapFile);
+ASSERT_FIELD(Dec_Ehdr, e_heap, DeeDec_Ehdr_OFFSETOF__e_heap, sizeof(struct Dee_heapregion));
+STATIC_ASSERT(IS_ALIGNED(DeeDec_Ehdr_OFFSETOF__e_heap, Dee_HEAPCHUNK_ALIGN));
 
 ASSERT_FIELD(Dec_Rel, r_addr, 0, 4);
 STATIC_ASSERT(sizeof(Dec_Rel) == 4);
