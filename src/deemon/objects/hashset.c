@@ -1180,6 +1180,16 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+hashsetiterator_serialize(HashSetIterator *__restrict self,
+                          DeeSerial *__restrict writer,
+                          Dee_seraddr_t addr) {
+	int result = generic_proxy__serialize((ProxyObject *)self, writer, addr);
+	if likely(result == 0)
+		result = DeeSerial_PutPointer(writer, addr + offsetof(HashSetIterator, hsi_next), READ_ITEM(self));
+	return result;
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 hashsetiterator_bool(HashSetIterator *__restrict self) {
 	struct hashset_item *item = READ_ITEM(self);
@@ -1421,10 +1431,10 @@ INTERN DeeTypeObject HashSetIterator_Type = {
 			/* T:              */ HashSetIterator,
 			/* tp_ctor:        */ &hashsetiterator_ctor,
 			/* tp_copy_ctor:   */ &hashsetiterator_copy,
-			/* tp_deep_ctor:   */ NULL, /* TODO */
+			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &hashsetiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &hashsetiterator_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&hashsetiterator_fini,
 		/* .tp_assign      = */ NULL,

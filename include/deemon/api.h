@@ -771,8 +771,8 @@ DECL_END
 #endif /* !Dee_DPRINT */
 
 #ifndef Dee_CHECKMEMORY
-#define DEE_NO_CHECKMEMORY 1
-#define Dee_CHECKMEMORY()  (void)0
+#define Dee_CHECKMEMORY_IS_NOOP
+#define Dee_CHECKMEMORY() (void)0
 #endif /* !Dee_CHECKMEMORY */
 
 #endif /* __CC__ */

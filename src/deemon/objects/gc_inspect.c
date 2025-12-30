@@ -27,6 +27,7 @@
 #include <deemon/computed-operators.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/set.h>
 #include <deemon/super.h>
 #include <deemon/util/atomic.h>
@@ -244,6 +245,25 @@ err_maker:
 	}
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+gcset_serialize(GCSet *__restrict self,
+                DeeSerial *__restrict writer) {
+	GCSet *out;
+	size_t sizeof_self = offsetof(GCSet, gs_elem) + (self->gs_mask * sizeof(DREF DeeObject *));
+	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	if (!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, GCSet);
+	out->gs_mask = self->gs_mask;
+	out->gs_size = self->gs_size;
+	if (DeeSerial_XPutObjectv(writer, out_addr + offsetof(GCSet, gs_elem),
+	                          self->gs_elem, self->gs_mask + 1))
+		goto err;
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+}
+
 PRIVATE NONNULL((1)) void DCALL
 gcset_fini(GCSet *__restrict self) {
 	Dee_XDecrefv(self->gs_elem, self->gs_mask + 1);
@@ -357,7 +377,7 @@ INTERN DeeTypeObject DeeGCSet_Type = {
 			/* tp_deep_ctor:   */ &gcset_deepcopy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &gcset_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&gcset_fini,
