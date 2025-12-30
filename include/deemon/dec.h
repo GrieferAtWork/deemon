@@ -194,9 +194,10 @@ typedef struct dec_rrela Dec_RRela;
 #define DeeDec_Ehdr_OFFSETOF__e_mach                                    4
 #define DeeDec_Ehdr_OFFSETOF__e_type                                    5
 #define DeeDec_Ehdr_OFFSETOF__e_version                                 6
-#define DeeDec_Ehdr_OFFSETOF__e_offsetof_eof                            8
-#define DeeDec_Ehdr_OFFSETOF__e_offsetof_gchead                         12
-#define DeeDec_Ehdr_OFFSETOF__e_offsetof_gctail                         16
+#define DeeDec_Ehdr_OFFSETOF__e_offsetof_heap                           8
+#define DeeDec_Ehdr_OFFSETOF__e_offsetof_eof                            12
+#define DeeDec_Ehdr_OFFSETOF__e_offsetof_gchead                         16
+#define DeeDec_Ehdr_OFFSETOF__e_offsetof_gctail                         20
 #define DeeDec_Ehdr_OFFSETOF__e_typedata                                24
 #define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_deemon_timestamp 24
 #define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_deemon_build_id  32
@@ -232,10 +233,11 @@ typedef struct {
 	uint8_t               e_mach;             /* [AT(4-4)] Machine identification (`Dee_DEC_MACH') */
 	uint8_t               e_type;             /* [AT(5-5)] EHDR type (one of `Dee_DEC_TYPE_*') */
 	uint16_t              e_version;          /* [AT(6-7)] DEC version number (One of `DVERSION_*') -- NOTE: __MUST__ remain at this specific offset for backwards compatibility! */
+	uint16_t              e_offsetof_heap;    /* Offset from start of this struct to `e_heap' (== `DeeDec_Ehdr_OFFSETOF__e_heap') */
+	uint16_t             _e_unused_zero;      /* Unused; must be set to `0' */
 	Dee_dec_addr32_t      e_offsetof_eof;     /* [1..1] Offset to EOF of file mapping (should also equal the dec file's size) */
 	Dee_dec_addr32_t      e_offsetof_gchead;  /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
 	Dee_dec_addr32_t      e_offsetof_gctail;  /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `e_offsetof_srel') */
-	Dee_dec_addr32_t     _e_pad;              /* Unused / padding (to get "e_typedata" offset to 32, which is 16-byte aligned) */
 	union {
 
 		struct {

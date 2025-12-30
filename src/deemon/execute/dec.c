@@ -62,6 +62,7 @@ ASSERT_FIELD(Dec_Ehdr, e_ident, DeeDec_Ehdr_OFFSETOF__e_ident, 4);
 ASSERT_FIELD(Dec_Ehdr, e_mach, DeeDec_Ehdr_OFFSETOF__e_mach, 1);
 ASSERT_FIELD(Dec_Ehdr, e_type, DeeDec_Ehdr_OFFSETOF__e_type, 1);
 ASSERT_FIELD(Dec_Ehdr, e_version, DeeDec_Ehdr_OFFSETOF__e_version, 2);
+ASSERT_FIELD(Dec_Ehdr, e_offsetof_heap, DeeDec_Ehdr_OFFSETOF__e_offsetof_heap, 2);
 ASSERT_FIELD(Dec_Ehdr, e_offsetof_eof, DeeDec_Ehdr_OFFSETOF__e_offsetof_eof, 4);
 ASSERT_FIELD(Dec_Ehdr, e_offsetof_gchead, DeeDec_Ehdr_OFFSETOF__e_offsetof_gchead, 4);
 ASSERT_FIELD(Dec_Ehdr, e_offsetof_gctail, DeeDec_Ehdr_OFFSETOF__e_offsetof_gctail, 4);
@@ -706,6 +707,10 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 		goto_fail("Bad 'e_type'");
 	if unlikely(ehdr->e_version != DVERSION_CUR)
 		goto_fail("Bad 'e_version'");
+	if unlikely(ehdr->e_offsetof_heap != offsetof(Dec_Ehdr, e_heap))
+		goto_fail("Bad 'e_offsetof_heap'");
+	if unlikely(ehdr->_e_unused_zero != 0)
+		goto_fail("Bad '_e_unused_zero'");
 	if unlikely(ehdr->e_offsetof_eof != DeeMapFile_GetSize(fmap))
 		goto_fail("Bad 'e_offsetof_eof' does not match size of file");
 	if unlikely(ehdr->e_offsetof_eof > DFILE_LIMIT)
@@ -834,7 +839,8 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 	ehdr->e_version = DVERSION_CUR;
 	ehdr->e_offsetof_gchead = self->dw_gchead;
 	ehdr->e_offsetof_gctail = self->dw_gctail;
-	ehdr->_e_pad = 0;
+	ehdr->e_offsetof_heap = offsetof(Dec_Ehdr, e_heap);
+	ehdr->_e_unused_zero = 0;
 
 	/* Space for the heap tail is always pre-allocated! */
 	{
@@ -849,7 +855,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 
 	/* Calculate the total needed buffer size. */
 	total_need = seraddr32(self->dw_used);
-	total_need += sizeof(struct Dee_heaptail); /* Heap tail */
+	total_need += (Dee_dec_addr32_t)sizeof(struct Dee_heaptail); /* Heap tail */
 
 #ifndef CONFIG_NO_DEC
 	if (!(flags & DeeModule_IMPORT_F_NOGDEC) && !(self->dw_flags & DeeDecWriter_F_NRELOC)) {
@@ -869,9 +875,9 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 		/* Module dependency tables. */
 		if (self->dw_deps.ddpt_depc) {
 			ehdr->e_typedata.td_reloc.er_offsetof_deps = total_need;
-			total_need += self->dw_deps.ddpt_depc * sizeof(Dec_Dhdr);
+			total_need += seraddr32(self->dw_deps.ddpt_depc * sizeof(Dec_Dhdr));
 			/* Add space for "terminated by a d_modspec.d_mod==NULL-entry" */
-			total_need += offsetafter(Dec_Dhdr, d_modspec.d_mod);
+			total_need += (Dee_dec_addr32_t)offsetafter(Dec_Dhdr, d_modspec.d_mod);
 		} else {
 			ehdr->e_typedata.td_reloc.er_offsetof_deps = addrof_zero - offsetof(Dec_Dhdr, d_modspec.d_mod);
 		}
@@ -879,7 +885,8 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 		/* Relocations against self. */
 		if (self->dw_srel.drlt_relc) {
 			ehdr->e_typedata.td_reloc.er_offsetof_srel = total_need;
-			total_need += (self->dw_srel.drlt_relc * sizeof(Dec_Rel)) + offsetafter(Dec_Rel, r_addr);
+			total_need += seraddr32(self->dw_srel.drlt_relc * sizeof(Dec_Rel));
+			total_need += (Dee_dec_addr32_t)offsetafter(Dec_Rel, r_addr);
 		} else {
 			ehdr->e_typedata.td_reloc.er_offsetof_srel = addrof_zero;
 		}
@@ -887,20 +894,23 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 		/* Relocations against deemon. */
 		if (self->dw_drel.drlt_relc) {
 			ehdr->e_typedata.td_reloc.er_offsetof_drel = total_need;
-			total_need += (self->dw_drel.drlt_relc * sizeof(Dec_Rel)) + offsetafter(Dec_Rel, r_addr);
+			total_need += seraddr32(self->dw_drel.drlt_relc * sizeof(Dec_Rel));
+			total_need += (Dee_dec_addr32_t)offsetafter(Dec_Rel, r_addr);
 		} else {
 			ehdr->e_typedata.td_reloc.er_offsetof_drel = addrof_zero;
 		}
 		if (self->dw_drrel.drrt_relc) {
 			ehdr->e_typedata.td_reloc.er_offsetof_drrel = total_need;
-			total_need += (self->dw_drrel.drrt_relc * sizeof(Dec_RRel)) + offsetafter(Dec_RRel, r_addr);
+			total_need += seraddr32(self->dw_drrel.drrt_relc * sizeof(Dec_RRel));
+			total_need += (Dee_dec_addr32_t)offsetafter(Dec_RRel, r_addr);
 		} else {
 			ehdr->e_typedata.td_reloc.er_offsetof_drrel = addrof_zero;
 		}
 		ASSERTF(!self->dw_drrela_miss, "This should have been handled by 'DeeDecWriter_F_NRELOC' being checked above!");
 		if (self->dw_drrela.drat_relc) {
 			ehdr->e_typedata.td_reloc.er_offsetof_drrela = total_need;
-			total_need += (self->dw_drrela.drat_relc * sizeof(Dec_RRela)) + offsetafter(Dec_RRela, r_addr);
+			total_need += seraddr32(self->dw_drrela.drat_relc * sizeof(Dec_RRela));
+			total_need += (Dee_dec_addr32_t)offsetafter(Dec_RRela, r_addr);
 		} else {
 			ehdr->e_typedata.td_reloc.er_offsetof_drrela = addrof_zero;
 		}
@@ -909,12 +919,17 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 		addrof_modrel = total_need;
 		for (i = 0; i < self->dw_deps.ddpt_depc; ++i) {
 			struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[i];
-			if (dep->ddm_rel.drlt_relc)
-				total_need += (dep->ddm_rel.drlt_relc * sizeof(Dec_Rel)) + offsetafter(Dec_Rel, r_addr);
-			if (dep->ddm_rrel.drrt_relc)
-				total_need += (dep->ddm_rrel.drrt_relc * sizeof(Dec_RRel)) + offsetafter(Dec_RRel, r_addr);
+			if (dep->ddm_rel.drlt_relc) {
+				total_need += seraddr32(dep->ddm_rel.drlt_relc * sizeof(Dec_Rel));
+				total_need += (Dee_dec_addr32_t)offsetafter(Dec_Rel, r_addr);
+			}
+			if (dep->ddm_rrel.drrt_relc) {
+				total_need += seraddr32(dep->ddm_rrel.drrt_relc * sizeof(Dec_RRel));
+				total_need += (Dee_dec_addr32_t)offsetafter(Dec_RRel, r_addr);
+			}
 			if (dep->ddm_rrela.drat_relc)
-				total_need += (dep->ddm_rrela.drat_relc * sizeof(Dec_RRela)) + offsetafter(Dec_RRela, r_addr);
+				total_need += seraddr32(dep->ddm_rrela.drat_relc * sizeof(Dec_RRela));
+				total_need += (Dee_dec_addr32_t)offsetafter(Dec_RRela, r_addr);
 		}
 
 		/* String tables */
@@ -924,20 +939,20 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 			char const *impstr_utf8;
 			ASSERT(dep->ddm_impstr);
 			total_need = CEIL_ALIGN(total_need, __ALIGNOF_SIZE_T__);
-			total_need += offsetof(Dec_Dstr, ds_string);
+			total_need += (Dee_dec_addr32_t)offsetof(Dec_Dstr, ds_string);
 			impstr_utf8 = DeeString_AsUtf8((DeeObject *)dep->ddm_impstr);
 			if unlikely(!impstr_utf8)
 				goto err;
-			total_need += (WSTR_LENGTH(impstr_utf8) + 1) * sizeof(char);
+			total_need += seraddr32((WSTR_LENGTH(impstr_utf8) + 1) * sizeof(char));
 		}
 
 		/* Additional file dependencies */
 		if (self->dw_fdeps.dfdt_depc) {
 			total_need = CEIL_ALIGN(total_need, __ALIGNOF_SIZE_T__);
 			ehdr->e_typedata.td_reloc.er_offsetof_files = total_need;
-			total_need += self->dw_fdeps.dfdt_depc;
+			total_need += seraddr32(self->dw_fdeps.dfdt_depc);
 			total_need = CEIL_ALIGN(total_need, __ALIGNOF_SIZE_T__);
-			total_need += offsetafter(Dec_Dstr, ds_length); /* For trailing 0 */
+			total_need += (Dee_dec_addr32_t)offsetafter(Dec_Dstr, ds_length); /* For trailing 0 */
 		} else {
 			ehdr->e_typedata.td_reloc.er_offsetof_files = 0;
 		}
@@ -971,7 +986,8 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 					                              dep->ddm_rel.drlt_relc,
 					                              sizeof(Dec_Rel));
 					out_rel->r_addr = 0;
-					addrof_outrel += (dep->ddm_rel.drlt_relc * sizeof(Dec_Rel)) + offsetafter(Dec_Rel, r_addr);
+					addrof_outrel += seraddr32(dep->ddm_rel.drlt_relc * sizeof(Dec_Rel));
+					addrof_outrel += (Dee_dec_addr32_t)offsetafter(Dec_Rel, r_addr);
 				} else {
 					out_deps->d_modspec.d_file.d_offsetof_rel = addrof_zero;
 				}
@@ -984,7 +1000,8 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 					                               dep->ddm_rrel.drrt_relc,
 					                               sizeof(Dec_RRel));
 					out_rel->r_addr = 0;
-					addrof_outrel += (dep->ddm_rrel.drrt_relc * sizeof(Dec_RRel)) + offsetafter(Dec_RRel, r_addr);
+					addrof_outrel += seraddr32(dep->ddm_rrel.drrt_relc * sizeof(Dec_RRel));
+					addrof_outrel += (Dee_dec_addr32_t)offsetafter(Dec_RRel, r_addr);
 				} else {
 					out_deps->d_offsetof_rrel = addrof_zero;
 				}
@@ -997,7 +1014,8 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 					                                dep->ddm_rrela.drat_relc,
 					                                sizeof(Dec_RRela));
 					out_rel->r_addr = 0;
-					addrof_outrel += (dep->ddm_rrela.drat_relc * sizeof(Dec_RRela)) + offsetafter(Dec_RRela, r_addr);
+					addrof_outrel += seraddr32(dep->ddm_rrela.drat_relc * sizeof(Dec_RRela));
+					addrof_outrel += (Dee_dec_addr32_t)offsetafter(Dec_RRela, r_addr);
 				} else {
 					out_deps->d_offsetof_rrela = addrof_zero;
 				}
@@ -1007,7 +1025,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 				ASSERTF(impstr_utf8, "Should have been pre-loaded since was needed to calc buffer size");
 				addrof_outname = CEIL_ALIGN(addrof_outname, __ALIGNOF_SIZE_T__);
 				out_name = (Dec_Dstr *)((byte_t *)ehdr + addrof_outname);
-				out_name->ds_length = WSTR_LENGTH(impstr_utf8);
+				out_name->ds_length = seraddr32(WSTR_LENGTH(impstr_utf8));
 				*(char *)mempcpyc(out_name->ds_string, impstr_utf8, out_name->ds_length, sizeof(char)) = '\0';
 				out_deps->d_modspec.d_file.d_offsetof_modname = addrof_outname;
 				addrof_outname += offsetof(Dec_Dstr, ds_string);
@@ -1536,19 +1554,19 @@ decwriter_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 	if (self->dw_gctail == 0) {
 		/* First GC object... */
 		struct gc_head_link *link;
-		self->dw_gchead = result;
+		self->dw_gchead = seraddr32(result);
 		link = DeeDecWriter_Addr2Mem(self, result, struct gc_head_link);
 		link->gc_next  = NULL;
 		link->gc_pself = NULL;
 	} else {
 		/* Append to end of GC list. */
-		if (decwriter_putaddr(self, self->dw_gctail + offsetof(struct gc_head_link, gc_next), result))
+		if (decwriter_putaddr(self, self->dw_gctail + (Dee_dec_addr32_t)offsetof(struct gc_head_link, gc_next), result))
 			goto err_r;
-		if (decwriter_putaddr(self, result + offsetof(struct gc_head_link, gc_pself),
-		                     self->dw_gctail + offsetof(struct gc_head_link, gc_next)))
+		if (decwriter_putaddr(self, result + (Dee_dec_addr32_t)offsetof(struct gc_head_link, gc_pself),
+		                      self->dw_gctail + (Dee_dec_addr32_t)offsetof(struct gc_head_link, gc_next)))
 			goto err_r;
 	}
-	self->dw_gctail = result;
+	self->dw_gctail = seraddr32(result);
 
 	/* Initialize "ob_refcnt" and "ob_type" of the newly allocated object */
 	copy = DeeDecWriter_Addr2Mem(self, result, struct gc_head);
