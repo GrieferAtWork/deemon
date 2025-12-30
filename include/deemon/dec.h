@@ -182,18 +182,14 @@ typedef int32_t Dee_dec_off32_t;
 #endif /* !... */
 #endif /* !Dee_DEC_MACH */
 
-#ifdef __COMPILER_HAVE_PRAGMA_PACK
-#pragma pack(push, 1)
-#endif /* __COMPILER_HAVE_PRAGMA_PACK */
-
 #define Dee_DEC_TYPE_RELOC 0 /* File contains serializable relocations (that are free'd once `DeeDec_Track()' is called) */
 #define Dee_DEC_TYPE_IMAGE 1 /* File contains non-serializable relocations (that are free'd once `DeeDec_Track()' is called) */
 
-typedef struct ATTR_PACKED dec_rel Dec_Rel;
-typedef struct ATTR_PACKED dec_rrel Dec_RRel;
-typedef struct ATTR_PACKED dec_rrela Dec_RRela;
+typedef struct dec_rel Dec_Rel;
+typedef struct dec_rrel Dec_RRel;
+typedef struct dec_rrela Dec_RRela;
 
-typedef struct ATTR_PACKED {
+typedef struct {
 	uint8_t               e_ident[DI_NIDENT]; /* [AT(0-3)] Identification bytes. (See `DI_*') */
 	uint8_t               e_mach;             /* [AT(4-4)] Machine identification (`Dee_DEC_MACH') */
 	uint8_t               e_type;             /* [AT(5-5)] EHDR type (one of `Dee_DEC_TYPE_*') */
@@ -233,14 +229,14 @@ typedef struct ATTR_PACKED {
 	                                              * this heap is assumed to point at the `DeeModuleObject' describing the dec file itself. */
 } Dec_Ehdr;
 
-struct ATTR_PACKED dec_rel {
+struct dec_rel {
 	/* Non-reference-counted relocation:
 	 * >> byte_t **p_ptr = (byte_t **)((byte_t *)EHDR + r_addr);
 	 * >> *p_ptr += REL_BASE; */
 	Dee_dec_addr32_t r_addr; /* Offset from start of "Dec_Ehdr" to relocated pointer */
 };
 
-struct ATTR_PACKED dec_rrel {
+struct dec_rrel {
 	/* Reference-counted relocation:
 	 * >> byte_t **p_ptr = (byte_t **)((byte_t *)EHDR + r_addr);
 	 * >> DeeObject *obj = (DeeObject *)(*p_ptr += REL_BASE);
@@ -249,7 +245,7 @@ struct ATTR_PACKED dec_rrel {
 	Dee_dec_addr32_t r_addr; /* Offset from start of "Dec_Ehdr" to relocated pointer */
 };
 
-struct ATTR_PACKED dec_rrela {
+struct dec_rrela {
 	/* Reference-counted+addend relocation:
 	 * >> byte_t **p_ptr = (byte_t **)((byte_t *)EHDR + r_addr);
 	 * >> byte_t *pointer = (*p_ptr += REL_BASE);
@@ -260,7 +256,7 @@ struct ATTR_PACKED dec_rrela {
 	Dee_dec_off32_t  r_offs; /* Offset added to resulting pointer to get to base of object that must be incref'd */
 };
 
-typedef struct ATTR_PACKED {
+typedef struct {
 	union {
 		struct {
 			Dee_dec_addr32_t d_offsetof_modname; /* [1..1] Offset to `(Dec_Dstr *)' to pass to `DeeModule_OpenRelative()' in order to load this dependency. The dependency must not be newer than this file! */
@@ -272,14 +268,10 @@ typedef struct ATTR_PACKED {
 	Dee_dec_addr32_t d_offsetof_rrela; /* [1..1] Offset to array of `Dec_RRela[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)d_mod" */
 } Dec_Dhdr;
 
-typedef struct ATTR_PACKED {
-	size_t                        ds_length;  /* Length of `ds_length' (in bytes; excluding trailing NUL) */
+typedef struct {
+	Dee_dec_addr32_t              ds_length;  /* Length of `ds_length' (in bytes; excluding trailing NUL) */
 	COMPILER_FLEXIBLE_ARRAY(char, ds_string); /* [ds_length] UTF-8 string (NUL-terminated) */
 } Dec_Dstr;
-
-#ifdef __COMPILER_HAVE_PRAGMA_PACK
-#pragma pack(pop)
-#endif /* __COMPILER_HAVE_PRAGMA_PACK */
 
 typedef Dec_Ehdr DeeDec_Ehdr;
 

@@ -432,7 +432,7 @@ dex_byaddr_find_addr(void const *addr) {
 #ifdef Dee_DEXBOUNDS_USE_LOADSTRING__dladdr__dli_fname
 	Dl_info dli;
 	if (dladdr(addr, &dli) && ((sizeof(dli.dli_fname) != sizeof(char const *)) || dli.dli_fname)) {
-		Dee_DPRINTF("[debug] dladdr(%p) -> %q\n", addr, dli.dli_fname);
+//		Dee_DPRINTF("[debug] dladdr(%p) -> %q\n", addr, dli.dli_fname);
 		return dex_byaddr_locate(dex_byaddr_tree, (char const *)dli.dli_fname);
 	}
 #endif /* Dee_DEXBOUNDS_USE_LOADSTRING__dladdr__dli_fname */

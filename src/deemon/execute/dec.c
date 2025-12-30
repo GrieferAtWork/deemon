@@ -55,6 +55,45 @@
 
 DECL_BEGIN
 
+#define ASSERT_FIELD(T, field, offset, size)       \
+	STATIC_ASSERT(offsetof(T, field) == (offset)); \
+	STATIC_ASSERT(sizeof(((T *)0)->field) == (size));
+ASSERT_FIELD(Dec_Ehdr, e_ident, 0, 4);
+ASSERT_FIELD(Dec_Ehdr, e_mach, 4, 1);
+ASSERT_FIELD(Dec_Ehdr, e_type, 5, 1);
+ASSERT_FIELD(Dec_Ehdr, e_version, 6, 2);
+ASSERT_FIELD(Dec_Ehdr, e_offsetof_eof, 8, 4);
+ASSERT_FIELD(Dec_Ehdr, e_offsetof_gchead, 12, 4);
+ASSERT_FIELD(Dec_Ehdr, e_offsetof_gctail, 16, 4);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_deemon_timestamp, 24, 8);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_deemon_build_id, 32, 16);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_deemon_host_id, 48, 16);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_srel, 64, 4);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_drel, 68, 4);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_drrel, 72, 4);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_drrela, 76, 4);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_deps, 80, 4);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_files, 84, 4);
+ASSERT_FIELD(Dec_Ehdr, e_typedata, 24, 64);
+
+ASSERT_FIELD(Dec_Rel, r_addr, 0, 4);
+STATIC_ASSERT(sizeof(Dec_Rel) == 4);
+
+ASSERT_FIELD(Dec_RRel, r_addr, 0, 4);
+STATIC_ASSERT(sizeof(Dec_RRel) == 4);
+
+ASSERT_FIELD(Dec_RRela, r_addr, 0, 4);
+ASSERT_FIELD(Dec_RRela, r_offs, 4, 4);
+STATIC_ASSERT(sizeof(Dec_RRela) == 8);
+
+ASSERT_FIELD(Dec_Dhdr, d_modspec.d_file.d_offsetof_modname, 0, 4);
+ASSERT_FIELD(Dec_Dhdr, d_modspec.d_file.d_offsetof_rel, 4, 4);
+ASSERT_FIELD(Dec_Dhdr, d_offsetof_rrel, 8, 4);
+ASSERT_FIELD(Dec_Dhdr, d_offsetof_rrela, 12, 4);
+STATIC_ASSERT(sizeof(Dec_Dhdr) == 16);
+#undef ASSERT_FIELD
+
+
 #ifndef NDEBUG
 #define DBG_memset (void)memset
 #else /* !NDEBUG */
@@ -295,7 +334,7 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 			if unlikely(dep == (DeeModuleObject *)DeeModule_IMPORT_ERROR)
 				goto err_dep_index;
 			Dee_DPRINTF("[LD][dec %q] CORRUPT: Failed to open dependency %$q\n",
-			            context_absname, dependency_name->ds_length, dependency_name->ds_string);
+			            context_absname, (size_t)dependency_name->ds_length, dependency_name->ds_string);
 			goto corrupt_dep_index;
 		}
 
@@ -781,10 +820,9 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
                       unsigned int flags) {
 	Dec_Ehdr *ehdr = self->dw_ehdr;
 	size_t i;
-	Dee_dec_addr32_t total_used, total_need;
+	Dee_dec_addr32_t total_need;
 	Dee_dec_addr32_t addrof_zero;
 
-	total_used = seraddr32(self->dw_used);
 	ehdr->e_ident[DI_MAG0] = DECMAG0;
 	ehdr->e_ident[DI_MAG1] = DECMAG1;
 	ehdr->e_ident[DI_MAG2] = DECMAG2;
@@ -1205,7 +1243,7 @@ DeeDecWriter_AddFileDep(DeeDecWriter *__restrict self,
 		self->dw_fdeps.dfdt_depa = new_alloc;
 	}
 	dst = (Dec_Dstr *)(self->dw_fdeps.dfdt_depv + old_size);
-	dst->ds_length = filename_len;
+	dst->ds_length = seraddr32(filename_len);
 	*(char *)mempcpyc(dst->ds_string, filename, filename_len, sizeof(char)) = '\0';
 	self->dw_fdeps.dfdt_depc = min_size;
 	return 0;
