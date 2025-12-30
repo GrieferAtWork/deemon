@@ -28,6 +28,30 @@
 
 #include <hybrid/typecore.h>
 
+/*
+ * Object serialization is a general-purpose API to:
+ * - Create (potentially deep) copies of objects
+ * - Extract/enumerate relocation positions in objects
+ * - Allow binary images of objects to be written to files
+ *
+ *
+ * The general idea is:
+ * - Every object that *can* be serialized, should implement "tp_serialize"
+ * - The implementation of "tp_serialize" should make use of functions from
+ *   this header
+ * - The general-purpose interface "DeeSerial" can be implemented by many
+ *   feature-consumers and can be used to:
+ *   - Generate object dumps for use in ".dec" files
+ *   - Produce deep copies of objects (because think about it: what's the
+ *     difference between deep-copying an object and writing that same
+ *     object into a .dec file, then loading that .dec file into memory)
+ *   - Doing regular (shallow) copies of an object (same as deep copy, but
+ *     forgoing any kind of recursion)
+ *
+ *
+ * For more information on .dec files, see ./dec.md
+ */
+
 DECL_BEGIN
 
 struct Dee_serial;
