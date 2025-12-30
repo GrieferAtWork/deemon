@@ -1825,7 +1825,7 @@ PRIVATE ATTR_CONST size_t DCALL dee_nt_getpagesize(void) {
 PUBLIC NONNULL((1)) void DCALL
 DeeMapFile_Fini(struct DeeMapFile *__restrict self) {
 #ifdef DeeMapFile_IS_CreateFileMapping
-	if (self->_dmf_hmap != NULL) {
+	if (DeeMapFile_UsesMmap(self)) {
 		void *hmap = self->_dmf_hmap;
 		size_t psm = getpagesize() - 1;
 		void *baseptr = (void *)((uintptr_t)self->dmf_addr & ~psm);
@@ -1839,21 +1839,78 @@ DeeMapFile_Fini(struct DeeMapFile *__restrict self) {
 		/* It is possible that "self" was moved into its own mapping. As
 		 * such, we must no longer dereference `*self' at this point! */
 		(void)CloseHandle(hmap);
-	} else {
-		Dee_Free((void *)self->dmf_addr);
-	}
+	} else
 #elif defined(DeeMapFile_IS_mmap)
 	if (DeeMapFile_UsesMmap(self)) {
 		size_t psm    = getpagesize() - 1;
 		void *baseptr = (void *)((uintptr_t)self->dmf_addr & ~psm);
 		(void)munmap(baseptr, self->_dmf_mapsize);
-	} else {
-		Dee_Free((void *)self->dmf_addr);
+	} else
+#endif /* ... */
+	{
+		Dee_Free(self->dmf_addr);
 	}
-#else /* ... */
-	Dee_Free((void *)self->dmf_addr);
-#endif /* !... */
 }
+
+/* Try to inplace-realloc-truncate the buffer of `self' ("inplace"
+ * meaning that `DeeMapFile_GetAddr(self)' will never change) such
+ * that `DeeMapFile_GetSize(self)' will be set to `newsize'.
+ *
+ * Note that this will **NOT** retain trailing NUL-bytes that may
+ * have been allocated by `DeeMapFile_InitSysFd()', and that more
+ * memory than `newsize' may need to be retained due to pagesize
+ * requirements (though this function will never increase the size
+ * of the file mapping).
+ *
+ * @return: true : Success: `DeeMapFile_GetSize(self)' has been lowered from its
+ *                          previous value to some value that is `>= newsize'.
+ * @return: false: Failure: Mapping size could not be reduced. Note that this is
+ *                          **NOT** an error (and also should not be treated as
+ *                          such), since the mapping is, and remains, up-and-
+ *                          running (but will just remain so with its previous
+ *                          size). */
+PUBLIC NONNULL((1)) bool DCALL
+DeeMapFile_TryTruncate(struct DeeMapFile *__restrict self,
+                       size_t newsize) {
+#ifdef DeeMapFile_IS_CreateFileMapping
+	if (DeeMapFile_UsesMmap(self)) {
+		/* Not possible on windows :(
+		 * https://stackoverflow.com/q/3663911 */
+		return false;
+	} else
+#elif defined(DeeMapFile_IS_mmap)
+	if (DeeMapFile_UsesMmap(self)) {
+		size_t psm    = getpagesize() - 1;
+		void *baseptr = (void *)((uintptr_t)self->dmf_addr & ~psm);
+		size_t old_mapsiz = self->_dmf_mapsize;
+		size_t new_mapsiz = (((byte_t *)self->dmf_addr - (byte_t *)baseptr) + newsize + psm) & ~psm;
+		if (old_mapsiz > new_mapsiz && new_mapsiz) {
+			void *unmap_base  = (byte_t *)baseptr + new_mapsiz;
+			size_t unmap_size = old_mapsiz - new_mapsiz;
+			if (munmap(baseptr, self->_dmf_mapsize) == 0) {
+				self->_dmf_mapsize = new_mapsiz;
+				return true;
+			}
+		}
+	} else
+#endif /* ... */
+	{
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+		if (Dee_TryReallocInPlace(self->dmf_addr, newsize)) {
+			size_t new_usable = Dee_MallocUsableSize(self->dmf_addr);
+			ASSERT(new_usable >= newsize);
+			if (self->dmf_size > new_usable) {
+				self->dmf_size = new_usable;
+				return true;
+			}
+		}
+#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
+	}
+	(void)self;
+	(void)newsize;
+	return false;
+}
+
 
 /* Initialize a file mapping from a given system FD.
  * @param: fd:        The file that should be loaded into memory.

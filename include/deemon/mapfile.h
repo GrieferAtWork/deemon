@@ -27,7 +27,8 @@
 #include "system-features.h" /* E*, CONFIG_HAVE_* */
 /**/
 
-#include <stddef.h> /* size_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
 
 DECL_BEGIN
 
@@ -65,23 +66,23 @@ DECL_BEGIN
 struct DeeMapFile {
 #ifdef DeeMapFile_IS_CreateFileMapping
 #define Dee_SIZEOF_DeeMapFile (4 * __SIZEOF_POINTER__)
-	void const *dmf_addr; /* [0..dmf_size][owned] Base address of the file mapping. */
-	size_t      dmf_size; /* Mapping size (in bytes, excluding trailing NUL-bytes) */
-	void      *_dmf_hmap; /* [0..1] file mapping handle */
-	size_t     _dmf_vfre; /* [valid_if(_dmf_hmap != NULL)] When non-zero, must VirtualFree() this many bytes at `CEIL_ALIGN(dmf_addr + dmf_size, getpagesize())' */
+	void   *dmf_addr;    /* [0..dmf_size][owned] Base address of the file mapping. */
+	size_t  dmf_size;    /* Mapping size (in bytes, excluding trailing NUL-bytes) */
+	void  *_dmf_hmap;    /* [0..1] file mapping handle */
+	size_t _dmf_vfre;    /* [valid_if(_dmf_hmap != NULL)] When non-zero, must VirtualFree() this many bytes at `CEIL_ALIGN(dmf_addr + dmf_size, getpagesize())' */
 #define DeeMapFile_SETHEAP(self)  (void)((self)->_dmf_hmap = NULL)
 #define DeeMapFile_UsesMmap(self) ((self)->_dmf_hmap != NULL)
 #elif defined(DeeMapFile_IS_mmap)
 #define Dee_SIZEOF_DeeMapFile (3 * __SIZEOF_POINTER__)
-	void const *dmf_addr;    /* [0..dmf_size][owned] Base address of the file mapping. */
-	size_t      dmf_size;    /* Mapping size (in bytes, excluding trailing NUL-bytes) */
-	size_t     _dmf_mapsize; /* Used internally: the mmap'd file size, or `0' if `dmf_addr' was malloc'd */
+	void   *dmf_addr;    /* [0..dmf_size][owned] Base address of the file mapping. */
+	size_t  dmf_size;    /* Mapping size (in bytes, excluding trailing NUL-bytes) */
+	size_t _dmf_mapsize; /* Used internally: the mmap'd file size, or `0' if `dmf_addr' was malloc'd */
 #define DeeMapFile_SETHEAP(self)  (void)((self)->_dmf_mapsize = 0)
 #define DeeMapFile_UsesMmap(self) ((self)->_dmf_mapsize != 0)
 #else /* ... */
 #define Dee_SIZEOF_DeeMapFile (2 * __SIZEOF_POINTER__)
-	void const *dmf_addr; /* [0..dmf_size][owned] Base address of the file mapping. */
-	size_t      dmf_size; /* Mapping size (in bytes, excluding trailing NUL-bytes) */
+	void   *dmf_addr;    /* [0..dmf_size][owned] Base address of the file mapping. */
+	size_t  dmf_size;    /* Mapping size (in bytes, excluding trailing NUL-bytes) */
 #define DeeMapFile_SETHEAP(self)  (void)0
 #define DeeMapFile_UsesMmap(self) 0
 #define DeeMapFile_UsesMmap_IS_ALWAYS_ZERO
@@ -90,7 +91,7 @@ struct DeeMapFile {
 
 #define DeeMapFile_GetAddr(self)    (self)->dmf_addr
 #define DeeMapFile_GetSize(self)    (self)->dmf_size
-#define DeeMapFile_SETADDR(self, p) (void)((self)->dmf_addr = (void const *)(p))
+#define DeeMapFile_SETADDR(self, p) (void)((self)->dmf_addr = (void *)(p))
 #define DeeMapFile_SETSIZE(self, s) (void)((self)->dmf_size = (s))
 
 
@@ -98,6 +99,27 @@ struct DeeMapFile {
 DFUNDEF NONNULL((1)) void DCALL
 DeeMapFile_Fini(struct DeeMapFile *__restrict self);
 #define DeeMapFile_Move(dst, src) (void)(*(dst) = *(src))
+
+/* Try to inplace-realloc-truncate the buffer of `self' ("inplace"
+ * meaning that `DeeMapFile_GetAddr(self)' will never change) such
+ * that `DeeMapFile_GetSize(self)' will be set to `newsize'.
+ *
+ * Note that this will **NOT** retain trailing NUL-bytes that may
+ * have been allocated by `DeeMapFile_InitSysFd()', and that more
+ * memory than `newsize' may need to be retained due to pagesize
+ * requirements (though this function will never increase the size
+ * of the file mapping).
+ *
+ * @return: true : Success: `DeeMapFile_GetSize(self)' has been lowered from its
+ *                          previous value to some value that is `>= newsize'.
+ * @return: false: Failure: Mapping size could not be reduced. Note that this is
+ *                          **NOT** an error (and also should not be treated as
+ *                          such), since the mapping is, and remains, up-and-
+ *                          running (but will just remain so with its previous
+ *                          size). */
+DFUNDEF NONNULL((1)) bool DCALL
+DeeMapFile_TryTruncate(struct DeeMapFile *__restrict self,
+                       size_t newsize);
 
 /* Initialize a file mapping from a given system FD.
  * @param: fd:        The file that should be loaded into memory.

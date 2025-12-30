@@ -553,6 +553,7 @@ DeeDecWriter_PackModule(DeeDecWriter *__restrict self,
  *   this type will also try to truncate `self->e_mapping'. */
 INTERN NONNULL((1)) void DCALL
 DeeDec_Ehdr_FreeRelocationData(DeeDec_Ehdr *__restrict self) {
+	Dee_dec_addr32_t heap_end_offset;
 	switch (self->e_type) {
 
 	case Dee_DEC_TYPE_RELOC: {
@@ -595,7 +596,18 @@ DeeDec_Ehdr_FreeRelocationData(DeeDec_Ehdr *__restrict self) {
 	 * Then, have the EHDR reflect the new size in:
 	 * >> self->e_offsetof_eof = DeeMapFile_GetSize(&self->e_mapping);
 	 */
-	/* XXX: Implement trimming */
+	ASSERTF(DeeMapFile_GetAddr(&self->e_mapping) == (void *)self,
+	        "The EHDR should be located at the start of the file mapping");
+	ASSERTF(DeeMapFile_GetSize(&self->e_mapping) == self->e_offsetof_eof,
+	        "The file mappings EOF should match the EOF field in the header");
+	heap_end_offset = seraddr32(offsetof(Dec_Ehdr, e_heap) + self->e_heap.hr_size);
+	ASSERTF(heap_end_offset <= self->e_offsetof_eof,
+	        "The heap should have ended before the EOF as stated by the EHDR");
+	if (DeeMapFile_TryTruncate(&self->e_mapping, heap_end_offset)) {
+		size_t new_eof = DeeMapFile_GetSize(&self->e_mapping);
+		ASSERTF(new_eof >= heap_end_offset, "DeeMapFile_TryTruncate() removed more than it was allowed to?");
+		self->e_offsetof_eof = seraddr32(new_eof);
+	}
 }
 
 /* Destroy a module and all contained objects prior to `DeeDec_Track()' having been called. */
