@@ -371,9 +371,6 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 	result->b_orig  = Dee_AsObject(result);
 	result->b_flags = Dee_BUFFER_FWRITABLE;
 	result->b_buffer.bb_base = result->b_data;
-#ifndef __INTELLISENSE__
-	result->b_buffer.bb_put = NULL;
-#endif /* !__INTELLISENSE__ */
 	DeeObject_Init(result, &DeeBytes_Type);
 	return Dee_AsObject(result);
 err_r:
@@ -461,9 +458,6 @@ DeeBytes_NewBuffer(size_t num_bytes, byte_t init) {
 	result->b_flags          = Dee_BUFFER_FWRITABLE;
 	result->b_buffer.bb_base = result->b_data;
 	result->b_buffer.bb_size = num_bytes;
-#ifndef __INTELLISENSE__
-	result->b_buffer.bb_put = NULL;
-#endif /* !__INTELLISENSE__ */
 	DeeObject_Init(result, &DeeBytes_Type);
 done:
 	return Dee_AsObject(result);
@@ -482,9 +476,6 @@ DeeBytes_NewBufferUninitialized(size_t num_bytes) {
 	result->b_flags          = Dee_BUFFER_FWRITABLE;
 	result->b_buffer.bb_base = result->b_data;
 	result->b_buffer.bb_size = num_bytes;
-#ifndef __INTELLISENSE__
-	result->b_buffer.bb_put = NULL;
-#endif /* !__INTELLISENSE__ */
 	DeeObject_Init(result, &DeeBytes_Type);
 done:
 	return Dee_AsObject(result);
@@ -503,9 +494,6 @@ DeeBytes_TryNewBufferUninitialized(size_t num_bytes) {
 	result->b_flags          = Dee_BUFFER_FWRITABLE;
 	result->b_buffer.bb_base = result->b_data;
 	result->b_buffer.bb_size = num_bytes;
-#ifndef __INTELLISENSE__
-	result->b_buffer.bb_put = NULL;
-#endif /* !__INTELLISENSE__ */
 	DeeObject_Init(result, &DeeBytes_Type);
 done:
 	return Dee_AsObject(result);
@@ -524,9 +512,6 @@ DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes) {
 	result->b_flags = Dee_BUFFER_FWRITABLE;
 	result->b_buffer.bb_base = result->b_data;
 	result->b_buffer.bb_size = num_bytes;
-#ifndef __INTELLISENSE__
-	result->b_buffer.bb_put = NULL;
-#endif /* !__INTELLISENSE__ */
 	DeeObject_Init(result, &DeeBytes_Type);
 done:
 	return Dee_AsObject(result);
@@ -545,9 +530,6 @@ DeeBytes_TryNewBufferData(void const *__restrict data, size_t num_bytes) {
 	result->b_flags = Dee_BUFFER_FWRITABLE;
 	result->b_buffer.bb_base = result->b_data;
 	result->b_buffer.bb_size = num_bytes;
-#ifndef __INTELLISENSE__
-	result->b_buffer.bb_put = NULL;
-#endif /* !__INTELLISENSE__ */
 	DeeObject_Init(result, &DeeBytes_Type);
 done:
 	return Dee_AsObject(result);
@@ -633,9 +615,6 @@ DeeBytes_NewView(DeeObject *owner, void *base,
 	result->b_flags          = flags;
 	result->b_buffer.bb_base = (byte_t *)base;
 	result->b_buffer.bb_size = num_bytes;
-#ifndef __INTELLISENSE__
-	result->b_buffer.bb_put = NULL;
-#endif /* !__INTELLISENSE__ */
 	Dee_Incref(owner);
 	DeeObject_Init(result, &DeeBytes_Type);
 done:
@@ -645,20 +624,15 @@ done:
 
 PRIVATE NONNULL((1)) void DCALL
 bytes_fini(Bytes *__restrict self) {
-	/* Check for special case: we're owning the object buffer outself. */
-	if (self->b_orig == Dee_AsObject(self))
-		return;
-	/* Release the object buffer held on `b_orig' */
-	DeeObject_PutBuf(self->b_orig, &self->b_buffer, self->b_flags);
-	Dee_Decref(self->b_orig);
+	DeeBuffer_Fini(&self->b_buffer);
+	if (self->b_orig != Dee_AsObject(self))
+		Dee_Decref(self->b_orig);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 bytes_visit(Bytes *__restrict self, Dee_visit_t proc, void *arg) {
-	/* Check for special case: we're owning the object buffer outself. */
-	if (self->b_orig == Dee_AsObject(self))
-		return;
-	Dee_Visit(self->b_orig);
+	if (self->b_orig != Dee_AsObject(self))
+		Dee_Visit(self->b_orig);
 }
 
 PRIVATE WUNUSED DREF Bytes *DCALL bytes_ctor(void) {
@@ -742,9 +716,6 @@ err_args:
 				if unlikely(!result)
 					goto err;
 				/* Construct a Bytes object using the buffer interface provided by `ob' */
-#ifndef __INTELLISENSE__
-				result->b_buffer.bb_put = buf->tp_putbuf;
-#endif /* !__INTELLISENSE__ */
 				if unlikely((*buf->tp_getbuf)(ob, &result->b_buffer, Dee_BUFFER_FREADONLY))
 					goto err_r;
 				if (start > result->b_buffer.bb_size)
@@ -824,22 +795,6 @@ bytes_serialize(Bytes *__restrict self, DeeSerial *__restrict writer) {
 	out->b_size = self->b_size;
 	out->b_flags = self->b_flags;
 	out->b_buffer.bb_size = self->b_buffer.bb_size;
-#ifndef __INTELLISENSE__
-	if (self->b_buffer.bb_put) {
-		/* TODO: This doesn't work property because "tp_getbuf" wasn't invoked again.
-		 * Also: we can't invoke it again now since the caller might just dicard all
-		 *       data that we painstakingly put together at this point.
-		 *
-		 * Thinking about it: "bb_put" and "tp_putbuf" should just go away. Nothing
-		 * is actually using them, and they kind-of make serialization impossible...
-		 */
-		if (DeeSerial_PutPointer(writer, ADDROF(b_buffer.bb_put),
-		                         (void const *)self->b_buffer.bb_put))
-			goto err;
-	} else {
-		out->b_buffer.bb_put = NULL;
-	}
-#endif /* !__INTELLISENSE__ */
 #undef ADDROF
 	return out_addr;
 err:
@@ -1141,7 +1096,7 @@ bytes_add(Bytes *self, DeeObject *other) {
 		void *p = mempcpy(result->b_data, DeeBytes_DATA(self), DeeBytes_SIZE(self));
 		memcpy(p, buffer.bb_base, buffer.bb_size);
 	}
-	DeeObject_PutBuf(other, &buffer, Dee_BUFFER_FREADONLY);
+	DeeBuffer_Fini(&buffer);
 	return result;
 err:
 	return NULL;
@@ -1717,7 +1672,6 @@ err_readonly:
 
 PRIVATE struct type_buffer bytes_buffer = {
 	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict, DeeBuffer *__restrict, unsigned int))&bytes_getbuf,
-	/* .tp_putbuf       = */ NULL,
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
 };
 
@@ -2207,9 +2161,6 @@ Dee_bytes_printer_pack(/*inherit(always)*/ struct bytes_printer *__restrict self
 	result->b_flags          = Dee_BUFFER_FWRITABLE;
 	result->b_buffer.bb_base = result->b_data;
 	result->b_buffer.bb_size = self->bp_length;
-#ifndef __INTELLISENSE__
-	result->b_buffer.bb_put = NULL;
-#endif /* !__INTELLISENSE__ */
 	DeeObject_Init(result, &DeeBytes_Type);
 	return Dee_AsObject(result);
 }

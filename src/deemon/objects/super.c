@@ -1099,25 +1099,9 @@ super_getbuf(Super *__restrict self,
 	return DeeObject_TGetBuf(self->s_type, self->s_self, info, flags);
 }
 
-PRIVATE NONNULL((1)) void DCALL
-super_putbuf(Super *__restrict self,
-             DeeBuffer *__restrict info,
-             unsigned int flags) {
-	/* This function should never get called, but implement it anyways. */
-	DeeTypeObject *tp_self = self->s_type;
-	DeeObject *ob_self     = self->s_self;
-	do {
-		if (tp_self->tp_buffer && tp_self->tp_buffer->tp_getbuf) {
-			if (tp_self->tp_buffer->tp_putbuf)
-				(*tp_self->tp_buffer->tp_putbuf)(ob_self, info, flags);
-			break;
-		}
-	} while (DeeType_InheritBuffer(tp_self));
-}
-
 PRIVATE struct type_buffer super_buffer = {
-	/* .tp_getbuf = */ (int (DCALL *)(DeeObject *__restrict, DeeBuffer *__restrict, unsigned int))&super_getbuf,
-	/* .tp_putbuf = */ (void (DCALL *)(DeeObject *__restrict, DeeBuffer *__restrict, unsigned int))&super_putbuf
+	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict, DeeBuffer *__restrict, unsigned int))&super_getbuf,
+	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
 };
 
 

@@ -886,7 +886,6 @@ EXPORTS
 	_DeeObject_PrintFormat@16=DeeObject_PrintFormat@16
 	_DeeObject_PrintFormatString@20=DeeObject_PrintFormatString@20
 	_DeeObject_PrintRepr@12=DeeObject_PrintRepr@12
-	_DeeObject_PutBuf@12=DeeObject_PutBuf@12
 	_DeeObject_Repr@4=DeeObject_Repr@4
 	_DeeObject_ReprInherited@4=DeeObject_ReprInherited@4
 	_DeeObject_SetAttr@12=DeeObject_SetAttr@12

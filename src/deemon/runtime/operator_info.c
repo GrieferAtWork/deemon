@@ -1138,7 +1138,7 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
 		       self->tp_init.tp_var.tp_any_ctor_kw ||
 		       DeeType_InheritConstructors(self);
 	case OPERATOR_GETBUF:
-		return (self->tp_buffer && (self->tp_buffer->tp_getbuf || self->tp_buffer->tp_putbuf)) ||
+		return (self->tp_buffer && self->tp_buffer->tp_getbuf) ||
 		       DeeType_InheritBuffer(self);
 	default:
 		if (name < Dee_OPERATOR_USERCOUNT) {

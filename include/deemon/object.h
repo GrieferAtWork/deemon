@@ -2905,22 +2905,13 @@ struct Dee_type_callable {
 #endif /* ... */
 };
 
-typedef struct dee_bytesbuffer DeeBuffer;
-struct dee_bytesbuffer {
-	void           *bb_base;  /* [0..bb_size][const] Base address of the buffer.
-	                           * NOTE: Only writable if the buffer was acquired with `Dee_BUFFER_FWRITABLE' set. */
-	size_t          bb_size;  /* [const] Size of the buffer (in bytes) */
-#ifndef __INTELLISENSE__
-	/* [0..1][INTERNAL] used to speed up `DeeObject_PutBuf()' */
-	NONNULL_T((1, 2))
-	void    (DCALL *bb_put)(DeeObject *__restrict self, DeeBuffer *__restrict info, unsigned int flags);
-#endif /* !__INTELLISENSE__ */
-};
-#ifdef __INTELLISENSE__
+typedef struct {
+	void  *bb_base; /* [0..bb_size][const] Base address of the buffer.
+	                 * NOTE: Only writable if the buffer was acquired with `Dee_BUFFER_FWRITABLE' set. */
+	size_t bb_size; /* [const] Size of the buffer (in bytes) */
+} DeeBuffer;
 #define DeeBuffer_INIT(base, size) { base, size }
-#else /* __INTELLISENSE__ */
-#define DeeBuffer_INIT(base, size) { base, size, NULL }
-#endif /* !__INTELLISENSE__ */
+#define DeeBuffer_Fini(self) (void)0
 
 
 struct Dee_type_buffer {
@@ -2935,12 +2926,6 @@ struct Dee_type_buffer {
 #define Dee_BUFFER_FREADONLY 0x0000 /* Acquire the buffer for reading. */
 #define Dee_BUFFER_FWRITABLE 0x0001 /* Acquire the buffer for reading / writing. */
 #define Dee_BUFFER_FMASK     0x0001 /* Mask of known buffer flags. */
-	/* Release a previously acquired buffer.
-	 * @param: flags: Set of `DEE_BUFFER_F*' (same as were passed to `tp_getbuf') */
-	NONNULL_T((1, 2))
-	void (DCALL *tp_putbuf)(DeeObject *__restrict self,
-	                        DeeBuffer *__restrict info,
-	                        unsigned int flags);
 
 #define Dee_BUFFER_TYPE_FNORMAL   0x0000 /* Normal buffer type flags. */
 #define Dee_BUFFER_TYPE_FREADONLY 0x0001 /* The buffer can only be used for reading.
@@ -4336,7 +4321,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
  *
  * s.a. `DeeType_InheritOperator()' */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritConstructors(DeeTypeObject *__restrict self); /* tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_assign, tp_move_assign, tp_deepload */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritBuffer(DeeTypeObject *__restrict self);       /* tp_getbuf, tp_putbuf, tp_buffer_flags */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritBuffer(DeeTypeObject *__restrict self);       /* tp_getbuf, tp_buffer_flags */
 #else /* CONFIG_BUILDING_DEEMON */
 #define DeeType_InheritConstructors(self) DeeType_InheritOperator(self, OPERATOR_CONSTRUCTOR)
 #define DeeType_InheritBuffer(self)       DeeType_InheritOperator(self, OPERATOR_GETBUF)
@@ -5297,8 +5282,10 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_Leave)(DeeObject *__restrict s
  * @param: flags: Set of `DEE_BUFFER_F*'
  * @throw: Error.RuntimeError.NotImplemented: The object doesn't implement the buffer protocol.
  * @throw: Error.ValueError.BufferError:      The object is an atomic buffer, or cannot be written to. */
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_GetBuf)(DeeObject *__restrict self, DeeBuffer *__restrict info, unsigned int flags);
-DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_PutBuf)(DeeObject *__restrict self, DeeBuffer *__restrict info, unsigned int flags);
+DFUNDEF WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_GetBuf)(DeeObject *__restrict self,
+                         DeeBuffer *__restrict info,
+                         unsigned int flags);
 
 
 

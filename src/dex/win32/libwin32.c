@@ -1227,12 +1227,12 @@ again:
 				goto err;
 			goto again;
 		}
-		DeeObject_PutBuf(lpBuffer, &buffer, Dee_BUFFER_FREADONLY);
+		DeeBuffer_Fini(&buffer);
 		RETURN_ERROR(dwError, "Failed to write to file %p", hFile);
 	}
 	DBG_ALIGNMENT_ENABLE();
 	result = DeeInt_NewUInt32((uint32_t)dwNumberOfBytesWritten);
-	DeeObject_PutBuf(lpBuffer, &buffer, Dee_BUFFER_FREADONLY);
+	DeeBuffer_Fini(&buffer);
 	return result;
 err:
 	return NULL;
@@ -1294,12 +1294,12 @@ again:
 				goto err;
 			goto again;
 		}
-		DeeObject_PutBuf(lpBuffer, &buffer, Dee_BUFFER_FWRITABLE);
+		DeeBuffer_Fini(&buffer);
 		RETURN_ERROR(dwError, "Failed to read from file %p", hFile);
 	}
 	DBG_ALIGNMENT_ENABLE();
 	result = DeeInt_NewUInt32((uint32_t)dwNumberOfBytesRead);
-	DeeObject_PutBuf(lpBuffer, &buffer, Dee_BUFFER_FWRITABLE);
+	DeeBuffer_Fini(&buffer);
 	return result;
 err:
 	return NULL;
@@ -4912,16 +4912,16 @@ again:
 				goto err_buf;
 			goto again;
 		}
-		DeeObject_PutBuf(lpBuffer, &buf, Dee_BUFFER_FREADONLY);
+		DeeBuffer_Fini(&buf);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to write process %p memory at (nSize: %" PRFuSIZ ")",
 		                      hProcess, (void *)lpBaseAddress, buf.bb_size);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	DeeObject_PutBuf(lpBuffer, &buf, Dee_BUFFER_FREADONLY);
+	DeeBuffer_Fini(&buf);
 	return DeeInt_NewSize(szNumberOfBytesWritten);
 err_buf:
-	DeeObject_PutBuf(lpBuffer, &buf, Dee_BUFFER_FREADONLY);
+	DeeBuffer_Fini(&buf);
 err:
 	return NULL;
 }
@@ -4985,16 +4985,16 @@ again:
 				goto err_buf;
 			goto again;
 		}
-		DeeObject_PutBuf(lpBuffer, &buf, Dee_BUFFER_FREADONLY);
+		DeeBuffer_Fini(&buf);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to write wow64 process %.16" PRFX64 " memory at (nSize: %" PRFuSIZ ")",
 		                      hProcess, lpBaseAddress, buf.bb_size);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	DeeObject_PutBuf(lpBuffer, &buf, Dee_BUFFER_FREADONLY);
+	DeeBuffer_Fini(&buf);
 	return DeeInt_NewUInt64(szNumberOfBytesWritten);
 err_buf:
-	DeeObject_PutBuf(lpBuffer, &buf, Dee_BUFFER_FREADONLY);
+	DeeBuffer_Fini(&buf);
 err:
 	return NULL;
 #endif /* __SIZEOF_POINTER__ < 8 */

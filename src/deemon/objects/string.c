@@ -2788,7 +2788,6 @@ err:
 
 PRIVATE struct type_buffer string_buffer = {
 	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict, DeeBuffer *__restrict, unsigned int))&string_getbuf,
-	/* .tp_putbuf       = */ NULL,
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FREADONLY
 };
 

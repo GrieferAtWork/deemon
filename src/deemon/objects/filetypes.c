@@ -550,7 +550,7 @@ reader_close(Reader *__restrict self) {
 		return err_file_closed();
 
 	/* Decref() the string. */
-	DeeObject_PutBuf(owner, &self->r_buffer, Dee_BUFFER_FREADONLY);
+	DeeBuffer_Fini(&self->r_buffer);
 	Dee_Decref(owner);
 	return 0;
 }
@@ -589,7 +589,7 @@ reader_setowner(Reader *__restrict self,
 	memcpy(&self->r_buffer, &new_buffer, sizeof(DeeBuffer));
 	DeeFileReader_LockEndWrite(self);
 	if (old_value) {
-		DeeObject_PutBuf(old_value, &old_buffer, Dee_BUFFER_FREADONLY);
+		DeeBuffer_Fini(&old_buffer);
 		Dee_Decref(old_value);
 	}
 	return 0;
@@ -652,9 +652,7 @@ reader_ungetc(Reader *__restrict self,
 PRIVATE NONNULL((1)) void DCALL
 reader_fini(Reader *__restrict self) {
 	if (self->r_owner) {
-		DeeObject_PutBuf(self->r_owner,
-		                 &self->r_buffer,
-		                 Dee_BUFFER_FREADONLY);
+		DeeBuffer_Fini(&self->r_buffer);
 		Dee_Decref(self->r_owner);
 	}
 }
@@ -840,9 +838,6 @@ DeeFile_OpenObjectMemory(DeeObject *__restrict data_owner,
 	result->r_begin = (byte_t const *)data;
 	result->r_end   = (byte_t const *)data + data_size;
 	result->r_ptr   = (byte_t const *)data;
-#ifndef __INTELLISENSE__
-	result->r_buffer.bb_put = NULL; /* Hide the buffer interface component. */
-#endif /* !__INTELLISENSE__ */
 	Dee_atomic_rwlock_init(&result->r_lock);
 	DeeFileObject_Init(result, &DeeFileReader_Type);
 done:
@@ -2085,7 +2080,6 @@ mapfile_get_ismmap(DeeMapFileObject *__restrict self) {
 
 PRIVATE struct type_buffer mapfile_buffer = {
 	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict, DeeBuffer *__restrict, unsigned int))&mapfile_getbuf,
-	/* .tp_putbuf       = */ NULL,
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
 };
 

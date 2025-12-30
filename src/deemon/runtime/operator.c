@@ -1471,38 +1471,12 @@ DEFINE_OPERATOR(int, GetBuf, (DeeObject *RESTRICT_IF_NOTYPE self,
 			                tp_self);
 			goto err;
 		}
-#ifndef __INTELLISENSE__
-		info->bb_put = tp_self->tp_buffer->tp_putbuf;
-#endif /* !__INTELLISENSE__ */
 		return (*tp_self->tp_buffer->tp_getbuf)(self, info, flags);
 	}
 	err_unimplemented_operator(tp_self, OPERATOR_GETBUF);
 err:
 	return -1;
 }
-
-#ifndef DEFINE_TYPED_OPERATORS
-DEFINE_OPERATOR(void, PutBuf,
-                (DeeObject *RESTRICT_IF_NOTYPE self,
-                 DeeBuffer *__restrict info,
-                 unsigned int flags)) {
-	ASSERTF(!(flags & ~(Dee_BUFFER_FWRITABLE)),
-	        "Unknown buffers flags in %x", flags);
-#ifdef __INTELLISENSE__
-	(void)self;
-	(void)info;
-	(void)flags;
-#elif !defined(DEFINE_TYPED_OPERATORS)
-	if (info->bb_put)
-		(*info->bb_put)(self, info, flags);
-#else /* !DEFINE_TYPED_OPERATORS */
-	LOAD_TP_SELF;
-	if ((tp_self->tp_buffer && tp_self->tp_buffer->tp_putbuf) ||
-	    (DeeType_InheritBuffer(tp_self) && tp_self->tp_buffer->tp_putbuf))
-		(*tp_self->tp_buffer->tp_putbuf)(self, info, flags);
-#endif /* DEFINE_TYPED_OPERATORS */
-}
-#endif /* !DEFINE_TYPED_OPERATORS */
 
 #undef GET_TP_SELF
 #undef LOAD_TP_SELF

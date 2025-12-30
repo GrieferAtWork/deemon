@@ -1336,7 +1336,6 @@ struct_getbuf(DeeObject *__restrict self,
 
 PRIVATE struct type_buffer struct_buffer = {
 	/* .tp_getbuf       = */ &struct_getbuf,
-	/* .tp_putbuf       = */ NULL,
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
 };
 

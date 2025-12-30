@@ -2137,7 +2137,7 @@ socket_recvinto(Socket *self, size_t argc, DeeObject *const *argv) {
 	                        buffer.bb_base,
 	                        buffer.bb_size,
 	                        flags);
-	DeeObject_PutBuf(args.data, &buffer, Dee_BUFFER_FWRITABLE);
+	DeeBuffer_Fini(&buffer);
 	if unlikely(result < 0)
 		goto err;
 	return DeeInt_NewSize((size_t)result);
@@ -2304,7 +2304,7 @@ socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 	                                 buffer.bb_size,
 	                                 flags,
 	                                 &result_addr->sa_addr);
-	DeeObject_PutBuf(args.data, &buffer, Dee_BUFFER_FWRITABLE);
+	DeeBuffer_Fini(&buffer);
 	if unlikely(result_size < 0)
 		goto err_addr;
 
@@ -2388,7 +2388,7 @@ socket_send(Socket *self, size_t argc, DeeObject *const *argv) {
 	                        buffer.bb_base,
 	                        buffer.bb_size,
 	                        flags);
-	DeeObject_PutBuf(args.data, &buffer, Dee_BUFFER_FREADONLY);
+	DeeBuffer_Fini(&buffer);
 	if unlikely(result < 0) {
 		if (result != -2)
 			goto err;
@@ -2474,7 +2474,7 @@ socket_sendto(Socket *self, size_t argc, DeeObject *const *argv) {
 	                          buffer.bb_size,
 	                          flags,
 	                          &target_addr);
-	DeeObject_PutBuf(args.data, &buffer, Dee_BUFFER_FREADONLY);
+	DeeBuffer_Fini(&buffer);
 	if unlikely(result < 0) {
 		if (result != -2)
 			goto err;

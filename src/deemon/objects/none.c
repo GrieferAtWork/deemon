@@ -541,7 +541,6 @@ DeeNone_OperatorGetBuf(DeeObject *__restrict UNUSED(self),
 
 PRIVATE struct type_buffer none_buffer = {
 	/* .tp_getbuf       = */ &DeeNone_OperatorGetBuf,
-	/* .tp_putbuf       = */ NULL,
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
 };
 

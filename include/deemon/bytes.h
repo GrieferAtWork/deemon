@@ -252,23 +252,17 @@ DeeBytes_ReleaseRef(DREF DeeObject *self);
 	DeeBytes_NewView(Dee_REQUIRES_OBJECT(DeeBytesObject, self)->b_orig, (void *)(base), num_bytes, \
 	                 ((DeeBytesObject *)(self))->b_flags & ~Dee_BUFFER_FWRITABLE)
 #else /* __INTELLISENSE__ */
-#define DeeBytes_NewSubView(self, base, num_bytes)                              \
-	DeeBytes_NewView(Dee_REQUIRES_OBJECT(DeeBytesObject, self)->b_buffer.bb_put \
-	                 ? (DeeObject *)(self)                                      \
-	                 : ((DeeBytesObject *)(self))->b_orig,                      \
+#define DeeBytes_NewSubView(self, base, num_bytes)                      \
+	DeeBytes_NewView(Dee_REQUIRES_OBJECT(DeeBytesObject, self)->b_orig, \
 	                 base, num_bytes, ((DeeBytesObject *)(self))->b_flags)
 #if Dee_BUFFER_FMASK == Dee_BUFFER_FWRITABLE
-#define DeeBytes_NewSubViewRo(self, base, num_bytes)                            \
-	DeeBytes_NewView(Dee_REQUIRES_OBJECT(DeeBytesObject, self)->b_buffer.bb_put \
-	                 ? (DeeObject *)(self)                                      \
-	                 : ((DeeBytesObject *)(self))->b_orig,                      \
+#define DeeBytes_NewSubViewRo(self, base, num_bytes)                    \
+	DeeBytes_NewView(Dee_REQUIRES_OBJECT(DeeBytesObject, self)->b_orig, \
 	                 (void *)(base), num_bytes, Dee_BUFFER_FREADONLY)
 #else /* Dee_BUFFER_FMASK == Dee_BUFFER_FWRITABLE */
-#define DeeBytes_NewSubViewRo(self, base, num_bytes)                            \
-	DeeBytes_NewView(Dee_REQUIRES_OBJECT(DeeBytesObject, self)->b_buffer.bb_put \
-	                 ? (DeeObject *)(self)                                      \
-	                 : ((DeeBytesObject *)(self))->b_orig,                      \
-	                 (void *)(base), num_bytes,                                 \
+#define DeeBytes_NewSubViewRo(self, base, num_bytes)                    \
+	DeeBytes_NewView(Dee_REQUIRES_OBJECT(DeeBytesObject, self)->b_orig, \
+	                 (void *)(base), num_bytes,                         \
 	                 ((DeeBytesObject *)(self))->b_flags & ~Dee_BUFFER_FWRITABLE)
 #endif /* Dee_BUFFER_FMASK != Dee_BUFFER_FWRITABLE */
 #endif /* !__INTELLISENSE__ */

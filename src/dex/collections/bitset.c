@@ -687,12 +687,9 @@ bs_getrange_index(Bitset *self, Dee_ssize_t start, Dee_ssize_t end) {
 	Dee_Incref(self);
 	result->bsv_buf.bb_base = self->bs_bitset;
 	result->bsv_buf.bb_size = BITSET_SIZEOF(self->bs_nbits);
-#ifndef __INTELLISENSE__
-	result->bsv_buf.bb_put = NULL;
-#endif /* !__INTELLISENSE__ */
-	result->bsv_startbit = range.sr_start;
-	result->bsv_endbit   = range.sr_end;
-	result->bsv_bflags   = Dee_BUFFER_FWRITABLE;
+	result->bsv_startbit    = range.sr_start;
+	result->bsv_endbit      = range.sr_end;
+	result->bsv_bflags      = Dee_BUFFER_FWRITABLE;
 	DeeObject_Init(result, &BitsetView_Type);
 	return result;
 err:
@@ -709,12 +706,9 @@ bs_getrange_index_n(Bitset *self, Dee_ssize_t start) {
 	Dee_Incref(self);
 	result->bsv_buf.bb_base = self->bs_bitset;
 	result->bsv_buf.bb_size = BITSET_SIZEOF(self->bs_nbits);
-#ifndef __INTELLISENSE__
-	result->bsv_buf.bb_put = NULL;
-#endif /* !__INTELLISENSE__ */
-	result->bsv_startbit = DeeSeqRange_Clamp_n(start, self->bs_nbits);
-	result->bsv_endbit   = self->bs_nbits;
-	result->bsv_bflags   = Dee_BUFFER_FWRITABLE;
+	result->bsv_startbit    = DeeSeqRange_Clamp_n(start, self->bs_nbits);
+	result->bsv_endbit      = self->bs_nbits;
+	result->bsv_bflags      = Dee_BUFFER_FWRITABLE;
 	DeeObject_Init(result, &BitsetView_Type);
 	return result;
 err:
@@ -1639,7 +1633,6 @@ PRIVATE struct type_seq bs_seq = {
 
 PRIVATE struct type_buffer bs_buffer = {
 	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict, DeeBuffer *__restrict, unsigned int))&bs_getbuf,
-	/* .tp_putbuf       = */ NULL,
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
 };
 
@@ -2066,12 +2059,9 @@ robs_getrange_index(Bitset *self, Dee_ssize_t start, Dee_ssize_t end) {
 	Dee_Incref(self);
 	result->bsv_buf.bb_base = self->bs_bitset;
 	result->bsv_buf.bb_size = BITSET_SIZEOF(self->bs_nbits);
-#ifndef __INTELLISENSE__
-	result->bsv_buf.bb_put = NULL;
-#endif /* !__INTELLISENSE__ */
-	result->bsv_startbit = range.sr_start;
-	result->bsv_endbit   = range.sr_end;
-	result->bsv_bflags   = Dee_BUFFER_FREADONLY;
+	result->bsv_startbit    = range.sr_start;
+	result->bsv_endbit      = range.sr_end;
+	result->bsv_bflags      = Dee_BUFFER_FREADONLY;
 	DeeObject_Init(result, &BitsetView_Type);
 	return result;
 err:
@@ -2088,12 +2078,9 @@ robs_getrange_index_n(Bitset *self, Dee_ssize_t start) {
 	Dee_Incref(self);
 	result->bsv_buf.bb_base = self->bs_bitset;
 	result->bsv_buf.bb_size = BITSET_SIZEOF(self->bs_nbits);
-#ifndef __INTELLISENSE__
-	result->bsv_buf.bb_put = NULL;
-#endif /* !__INTELLISENSE__ */
-	result->bsv_startbit = DeeSeqRange_Clamp_n(start, self->bs_nbits);
-	result->bsv_endbit   = self->bs_nbits;
-	result->bsv_bflags   = Dee_BUFFER_FREADONLY;
+	result->bsv_startbit    = DeeSeqRange_Clamp_n(start, self->bs_nbits);
+	result->bsv_endbit      = self->bs_nbits;
+	result->bsv_bflags      = Dee_BUFFER_FREADONLY;
 	DeeObject_Init(result, &BitsetView_Type);
 	return result;
 err:
@@ -2268,7 +2255,6 @@ PRIVATE struct type_seq robs_seq = {
 
 PRIVATE struct type_buffer robs_buffer = {
 	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict, DeeBuffer *__restrict, unsigned int))&robs_getbuf,
-	/* .tp_putbuf       = */ NULL,
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FREADONLY
 };
 
@@ -2755,15 +2741,10 @@ bsv_getrange_index(BitsetView *self, Dee_ssize_t start, Dee_ssize_t end) {
 	if unlikely(!result)
 		goto err;
 	DeeSeqRange_Clamp(&range, start, end, BitsetView_GetNBits(self));
-	result->bsv_owner = Dee_AsObject(self);
+	result->bsv_owner = self->bsv_owner;
+	Dee_Incref(result->bsv_owner);
 	result->bsv_buf.bb_base = self->bsv_buf.bb_base;
 	result->bsv_buf.bb_size = self->bsv_buf.bb_size;
-#ifndef __INTELLISENSE__
-	result->bsv_buf.bb_put = self->bsv_buf.bb_put;
-	if (!result->bsv_buf.bb_put)
-		result->bsv_owner = self->bsv_owner;
-#endif /* !__INTELLISENSE__ */
-	Dee_Incref(result->bsv_owner);
 	result->bsv_startbit = range.sr_start + self->bsv_startbit;
 	result->bsv_endbit   = range.sr_end + self->bsv_startbit;
 	result->bsv_bflags   = self->bsv_bflags;
@@ -2779,15 +2760,10 @@ bsv_getrange_index_n(BitsetView *self, Dee_ssize_t start) {
 	result = DeeObject_MALLOC(BitsetView);
 	if unlikely(!result)
 		goto err;
-	result->bsv_owner = Dee_AsObject(self);
+	result->bsv_owner = self->bsv_owner;
+	Dee_Incref(result->bsv_owner);
 	result->bsv_buf.bb_base = self->bsv_buf.bb_base;
 	result->bsv_buf.bb_size = self->bsv_buf.bb_size;
-#ifndef __INTELLISENSE__
-	result->bsv_buf.bb_put = self->bsv_buf.bb_put;
-	if (!result->bsv_buf.bb_put)
-		result->bsv_owner = self->bsv_owner;
-#endif /* !__INTELLISENSE__ */
-	Dee_Incref(result->bsv_owner);
 	result->bsv_startbit = DeeSeqRange_Clamp_n(start, BitsetView_GetNBits(self)) + self->bsv_startbit;
 	result->bsv_endbit   = self->bsv_endbit;
 	result->bsv_bflags   = self->bsv_bflags;
@@ -3352,15 +3328,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bsv_bytes(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 	struct bitset_ref ref;
-	DeeObject *owner;
 	DeeArg_Unpack0(err, argc, argv, "bytes");
 	bitset_ref_fromview(&ref, self);
-	owner = Dee_AsObject(self);
-#ifndef __INTELLISENSE__
-	if (!self->bsv_buf.bb_put)
-		owner = self->bsv_owner;
-#endif /* !__INTELLISENSE__ */
-	return DeeBytes_NewView(owner, ref.bsr_bitset,
+	return DeeBytes_NewView(self->bsv_owner, ref.bsr_bitset,
 	                        (ref.bsr_endbit + _BITSET_WORD_BMSK) >> _BITSET_WORD_SHFT,
 	                        self->bsv_bflags);
 err:
@@ -3409,12 +3379,9 @@ bsv_ctor(BitsetView *__restrict self) {
 	self->bsv_owner       = DeeBytes_NewEmpty();
 	self->bsv_buf.bb_base = DeeBytes_DATA(self->bsv_owner);
 	self->bsv_buf.bb_size = 0;
-#ifndef __INTELLISENSE__
-	self->bsv_buf.bb_put = NULL;
-#endif /* !__INTELLISENSE__ */
-	self->bsv_startbit = 0;
-	self->bsv_endbit   = 0;
-	self->bsv_bflags   = Dee_BUFFER_FREADONLY;
+	self->bsv_startbit    = 0;
+	self->bsv_endbit      = 0;
+	self->bsv_bflags      = Dee_BUFFER_FREADONLY;
 	return 0;
 }
 
@@ -3422,14 +3389,9 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsv_copy(BitsetView *__restrict self,
          BitsetView *__restrict other) {
 	self->bsv_owner = other->bsv_owner;
+	Dee_Incref(self->bsv_owner);
 	self->bsv_buf.bb_base = other->bsv_buf.bb_base;
 	self->bsv_buf.bb_size = other->bsv_buf.bb_size;
-#ifndef __INTELLISENSE__
-	self->bsv_buf.bb_put = NULL;
-	if (other->bsv_buf.bb_put)
-		self->bsv_owner = Dee_AsObject(other);
-#endif /* !__INTELLISENSE__ */
-	Dee_Incref(self->bsv_owner);
 	self->bsv_startbit = other->bsv_startbit;
 	self->bsv_endbit   = other->bsv_endbit;
 	self->bsv_bflags   = other->bsv_bflags;
@@ -3492,9 +3454,6 @@ handle_bitset_ob:
 		o = (Bitset *)ob;
 		self->bsv_buf.bb_base = o->bs_bitset;
 		self->bsv_buf.bb_size = BITSET_SIZEOF(o->bs_nbits);
-#ifndef __INTELLISENSE__
-		self->bsv_buf.bb_put = NULL;
-#endif /* !__INTELLISENSE__ */
 		nbits = o->bs_nbits;
 	} else if (RoBitset_Check(ob)) {
 		if (flags & Dee_BUFFER_FWRITABLE)
@@ -3507,11 +3466,7 @@ handle_bitset_ob:
 		nbits = BitsetView_GetNBits(o);
 		start += o->bsv_startbit;
 		end += o->bsv_startbit;
-#ifndef __INTELLISENSE__
-		self->bsv_buf.bb_put = NULL;
-		if (!o->bsv_buf.bb_put)
-			ob = o->bsv_owner; /* Inline owner */
-#endif /* !__INTELLISENSE__ */
+		ob = o->bsv_owner; /* Inline owner */
 	} else {
 		/* Fallback: load byte-aligned buffer from "ob" */
 		if (DeeObject_GetBuf(ob, &self->bsv_buf, flags))
@@ -3547,7 +3502,7 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 bsv_fini(BitsetView *__restrict self) {
-	DeeObject_PutBuf(self->bsv_owner, &self->bsv_buf, self->bsv_bflags);
+	DeeBuffer_Fini(&self->bsv_buf);
 	Dee_Decref(self->bsv_owner);
 }
 
@@ -3917,7 +3872,6 @@ PRIVATE struct type_seq bsv_seq = {
 
 PRIVATE struct type_buffer bsv_buffer = {
 	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict, DeeBuffer *__restrict, unsigned int))&bsv_getbuf,
-	/* .tp_putbuf       = */ NULL,
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
 };
 

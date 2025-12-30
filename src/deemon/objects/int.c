@@ -4821,7 +4821,7 @@ int_frombytes(DeeObject *UNUSED(self), size_t argc,
 	                          buf.bb_size,
 	                          encode_little,
 	                          args.signed_);
-	DeeObject_PutBuf(args.bytes, &buf, Dee_BUFFER_FREADONLY);
+	DeeBuffer_Fini(&buf);
 	return result;
 err:
 	return NULL;

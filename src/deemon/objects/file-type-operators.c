@@ -415,13 +415,13 @@ DEFINE_OPERATOR_INVOKE(operator_read, &instance_read, &filetype_inherit_read) {
 	if (buf_end > buf.bb_size)
 		buf_end = buf.bb_size;
 	if (buf_start >= buf_end) {
-		DeeObject_PutBuf(args.data, &buf, Dee_BUFFER_FWRITABLE);
+		DeeBuffer_Fini(&buf);
 		return DeeInt_NewZero();
 	}
 	result = DeeFileType_invoke_ft_read(tp_self, tp_self->ft_read, self,
 	                                    (byte_t *)buf.bb_base + buf_start,
 	                                    buf_end - buf_start, args.flags);
-	DeeObject_PutBuf(args.data, &buf, Dee_BUFFER_FWRITABLE);
+	DeeBuffer_Fini(&buf);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -475,13 +475,13 @@ DEFINE_OPERATOR_INVOKE(operator_write, &instance_write, &filetype_inherit_write)
 	if (buf_end > buf.bb_size)
 		buf_end = buf.bb_size;
 	if (buf_start >= buf_end) {
-		DeeObject_PutBuf(args.data, &buf, Dee_BUFFER_FREADONLY);
+		DeeBuffer_Fini(&buf);
 		return DeeInt_NewZero();
 	}
 	result = DeeFileType_invoke_ft_write(tp_self, tp_self->ft_write, self,
 	                                     (byte_t const *)buf.bb_base + buf_start,
 	                                     buf_end - buf_start, args.flags);
-	DeeObject_PutBuf(args.data, &buf, Dee_BUFFER_FREADONLY);
+	DeeBuffer_Fini(&buf);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -642,13 +642,13 @@ DEFINE_OPERATOR_INVOKE(operator_pread, &instance_pread, &filetype_inherit_pread)
 	if (end > buf.bb_size)
 		end = buf.bb_size;
 	if (start >= end) {
-		DeeObject_PutBuf(args.a, &buf, Dee_BUFFER_FWRITABLE);
+		DeeBuffer_Fini(&buf);
 		return DeeInt_NewZero();
 	}
 	result = DeeFileType_invoke_ft_pread(tp_self, tp_self->ft_pread, self,
 	                                     (byte_t *)buf.bb_base + start,
 	                                     end - start, pos, args.flags);
-	DeeObject_PutBuf(args.a, &buf, Dee_BUFFER_FWRITABLE);
+	DeeBuffer_Fini(&buf);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -712,13 +712,13 @@ DEFINE_OPERATOR_INVOKE(operator_pwrite, &instance_pwrite, &filetype_inherit_pwri
 	if (end > buf.bb_size)
 		end = buf.bb_size;
 	if (start >= end) {
-		DeeObject_PutBuf(args.a, &buf, Dee_BUFFER_FREADONLY);
+		DeeBuffer_Fini(&buf);
 		return DeeInt_NewZero();
 	}
 	result = DeeFileType_invoke_ft_pwrite(tp_self, tp_self->ft_pwrite, self,
 	                                      (byte_t *)buf.bb_base + start,
 	                                      end - start, pos, args.flags);
-	DeeObject_PutBuf(args.a, &buf, Dee_BUFFER_FREADONLY);
+	DeeBuffer_Fini(&buf);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);

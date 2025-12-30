@@ -304,7 +304,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject *const
 		if (buf.bb_size > args.count)
 			buf.bb_size = args.count;
 		error = posix_read_f_impl(fd_fd, buf.bb_base, buf.bb_size);
-		DeeObject_PutBuf(args.buf_or_count, &buf, Dee_BUFFER_FWRITABLE);
+		DeeBuffer_Fini(&buf);
 		if unlikely(error == (size_t)-1)
 			goto err;
 		return DeeInt_NewSize(error);
@@ -693,7 +693,7 @@ err_bytes_printer:
 		if (buf.bb_size > count)
 			buf.bb_size = count;
 		error = posix_pread_f_impl(fd_fd, buf.bb_base, buf.bb_size, offset);
-		DeeObject_PutBuf(argv[1], &buf, Dee_BUFFER_FWRITABLE);
+		DeeBuffer_Fini(&buf);
 		if unlikely(error == (size_t)-1)
 			goto err;
 		return DeeInt_NewSize(error);
@@ -767,13 +767,13 @@ EINTR_LABEL(again)
 	if unlikely(result_value == (size_t)-1) {
 		int error = DeeSystem_GetErrno();
 		EINTR_HANDLE(error, again, err)
-		DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FREADONLY);
+		DeeBuffer_Fini(&buffer);
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
 		                          "Failed to write to %d", fd);
 		goto err;
 	}
-	DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FREADONLY);
+	DeeBuffer_Fini(&buffer);
 	return DeeInt_NewSize(result_value);
 err:
 	return NULL;
@@ -959,7 +959,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_pwrite_f(size_t argc, DeeObject *con
 	} else {
 		result = posix_pwrite_f_impl(fd_fd, buffer.bb_base, buffer.bb_size, offset);
 	}
-	DeeObject_PutBuf(argv[1], &buffer, Dee_BUFFER_FREADONLY);
+	DeeBuffer_Fini(&buffer);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);

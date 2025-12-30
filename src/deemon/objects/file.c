@@ -1942,7 +1942,7 @@ file_readinto(DeeObject *self, size_t argc,
 	result = args.readall
 	         ? DeeFile_ReadAll(self, buffer.bb_base, buffer.bb_size)
 	         : DeeFile_Read(self, buffer.bb_base, buffer.bb_size);
-	DeeObject_PutBuf(args.dst, &buffer, Dee_BUFFER_FWRITABLE);
+	DeeBuffer_Fini(&buffer);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -1973,7 +1973,7 @@ file_write(DeeObject *self, size_t argc,
 	result = args.writeall
 	         ? DeeFile_WriteAll(self, buffer.bb_base, buffer.bb_size)
 	         : DeeFile_Write(self, buffer.bb_base, buffer.bb_size);
-	DeeObject_PutBuf(args.data, &buffer, Dee_BUFFER_FREADONLY);
+	DeeBuffer_Fini(&buffer);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -2029,7 +2029,7 @@ file_preadinto(DeeObject *self, size_t argc,
 		goto err;
 	result = args.readall ? DeeFile_PReadAll(self, buffer.bb_base, buffer.bb_size, args.pos)
 	                      : DeeFile_PRead(self, buffer.bb_base, buffer.bb_size, args.pos);
-	DeeObject_PutBuf(args.dst, &buffer, Dee_BUFFER_FWRITABLE);
+	DeeBuffer_Fini(&buffer);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -2061,7 +2061,7 @@ file_pwrite(DeeObject *self, size_t argc,
 		goto err;
 	result = args.writeall ? DeeFile_PWriteAll(self, buffer.bb_base, buffer.bb_size, args.pos)
 	                       : DeeFile_PWrite(self, buffer.bb_base, buffer.bb_size, args.pos);
-	DeeObject_PutBuf(args.data, &buffer, Dee_BUFFER_FREADONLY);
+	DeeBuffer_Fini(&buffer);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -2711,7 +2711,7 @@ file_shr(DeeObject *self, DeeObject *some_object) {
 	if (DeeObject_GetBuf(some_object, &buffer, Dee_BUFFER_FWRITABLE))
 		goto err;
 	result = DeeFile_ReadAll(self, buffer.bb_base, buffer.bb_size);
-	DeeObject_PutBuf(some_object, &buffer, Dee_BUFFER_FWRITABLE);
+	DeeBuffer_Fini(&buffer);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	if unlikely(result < buffer.bb_size) {

@@ -2208,7 +2208,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		memset(endp, ASM_RET_NONE, INSTRLEN_MAX);
 #endif /* ASM_RET_NONE != 0 */
 	}
-	DeeObject_PutBuf(args.text, &text_buf, Dee_BUFFER_FREADONLY);
+	DeeBuffer_Fini(&text_buf);
 	/* Load keyword arguments */
 	result->co_keywords = NULL;
 	if (!DeeNone_Check(args.keywords)) {
@@ -2427,7 +2427,7 @@ err_r:
 	DeeCode_Free(result);
 	goto err;
 err_buf:
-	DeeObject_PutBuf(args.text, &text_buf, Dee_BUFFER_FREADONLY);
+	DeeBuffer_Fini(&text_buf);
 err:
 	return NULL;
 }

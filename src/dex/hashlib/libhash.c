@@ -2346,7 +2346,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL libhash_hash_f_impl(cha
 		result = dhashalgo_exec(algo, start,
 		                        buf.bb_base,
 		                        buf.bb_size);
-		DeeObject_PutBuf(data, &buf, Dee_BUFFER_FREADONLY);
+		DeeBuffer_Fini(&buf);
 	}
 	return result;
 err:
