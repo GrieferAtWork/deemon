@@ -272,10 +272,10 @@ generic_proxy3__fini(ProxyObject3 *__restrict self) {
 
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
-serialize_copy_after_getsize(DeeObject *__restrict self) {
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) size_t DCALL
+serialize_copy_after_getsize(DeeObject const *__restrict self) {
 	size_t instance_size;
-	DeeTypeObject *tp_self = Dee_TYPE(self);
+	DeeTypeObject const *tp_self = Dee_TYPE(self);
 	void (DCALL *tp_free)(void *);
 	ASSERT(!(tp_self->tp_flags & TP_FVARIABLE));
 	if ((tp_free = tp_self->tp_init.tp_alloc.tp_free) != NULL) {
