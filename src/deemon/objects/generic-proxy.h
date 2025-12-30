@@ -119,9 +119,9 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy3__serialize_and_copy(Prox
 #else /* CONFIG_NO_THREADS */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__serialize_and_copy_atomic16(ProxyObject *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__serialize_and_copy_atomic32(ProxyObject *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
-#if __SIZEOF_SIZE_T__ >= 8
+#if __SIZEOF_POINTER__ >= 8
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__serialize_and_copy_atomic64(ProxyObject *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
-#endif /* __SIZEOF_SIZE_T__ >= 8 */
+#endif /* __SIZEOF_POINTER__ >= 8 */
 #endif /* !CONFIG_NO_THREADS */
 
 typedef struct {
@@ -137,9 +137,9 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__serialize_and_copy_xptr_
 #define _generic_proxy__serialize_and_copy_atomic_N1 generic_proxy__serialize_and_copy_atomic8
 #define _generic_proxy__serialize_and_copy_atomic_N2 generic_proxy__serialize_and_copy_atomic16
 #define _generic_proxy__serialize_and_copy_atomic_N4 generic_proxy__serialize_and_copy_atomic32
-#ifdef generic_proxy__serialize_and_copy_atomic64
+#if __SIZEOF_POINTER__ >= 8
 #define _generic_proxy__serialize_and_copy_atomic_N8 generic_proxy__serialize_and_copy_atomic64
-#endif /* generic_proxy__serialize_and_copy_atomic64 */
+#endif /* __SIZEOF_POINTER__ >= 8 */
 #define _generic_proxy__serialize_and_copy_atomic_N(word_size) \
 	_generic_proxy__serialize_and_copy_atomic_N##word_size
 #define generic_proxy__serialize_and_copy_atomic(word_size) \

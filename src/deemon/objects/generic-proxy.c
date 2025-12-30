@@ -400,7 +400,7 @@ generic_proxy__serialize_and_copy_atomic32(ProxyObject *__restrict self,
 	return generic_proxy__serialize(self, writer, addr);
 }
 
-#if __SIZEOF_SIZE_T__ >= 8
+#if __SIZEOF_POINTER__ >= 8
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy__serialize_and_copy_atomic64(ProxyObject *__restrict self,
                                            struct Dee_serial *__restrict writer,
@@ -429,8 +429,7 @@ generic_proxy__serialize_and_copy_atomic64(ProxyObject *__restrict self,
 	} while (--instance_size);
 	return generic_proxy__serialize(self, writer, addr);
 }
-
-#endif /* __SIZEOF_SIZE_T__ >= 8 */
+#endif /* __SIZEOF_POINTER__ >= 8 */
 #endif /* !CONFIG_NO_THREADS */
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
