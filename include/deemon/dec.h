@@ -229,6 +229,7 @@ typedef struct dec_rrela Dec_RRela;
 #define DeeDec_Ehdr_OFFSETOF__e_heap 96
 #endif /* DeeDec_Ehdr_OFFSETOF__e_heap == ... */
 
+/* Main header for `.dec` files. For more details, see file ./dec.md */
 typedef struct {
 	uint8_t               e_ident[DI_NIDENT]; /* [AT(0-3)] Identification bytes. (See `DI_*') */
 	uint8_t               e_mach;             /* [AT(4-4)] Machine identification (`Dee_DEC_MACH') */
