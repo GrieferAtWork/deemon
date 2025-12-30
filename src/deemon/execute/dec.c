@@ -677,7 +677,7 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 #define goto_fail(reason) goto fail
 #endif /* Dee_DPRINT_IS_NOOP */
 	uint64_t temp_id[2];
-	Dec_Ehdr *ehdr = (Dec_Ehdr *)DeeMapFile_GetBase(fmap);
+	Dec_Ehdr *ehdr = (Dec_Ehdr *)DeeMapFile_GetAddr(fmap);
 	if unlikely(DeeMapFile_GetSize(fmap) < sizeof(Dec_Ehdr))
 		goto_fail("File is smaller than 'sizeof(Dec_Ehdr)'");
 
@@ -2915,7 +2915,7 @@ DecFile_Init(DecFile *__restrict self,
 		goto end_not_a_dec;
 
 	/* Load file map size. */
-	hdr = (Dec_Ehdr *)DeeMapFile_GetBase(input);
+	hdr = (Dec_Ehdr *)DeeMapFile_GetAddr(input);
 	self->df_ehdr = hdr;
 	self->df_size = DeeMapFile_GetSize(input);
 

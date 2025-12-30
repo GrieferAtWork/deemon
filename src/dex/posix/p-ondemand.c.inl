@@ -4964,7 +4964,7 @@ err_bad_used_bufsize:
 			goto err_progress_info;
 
 		/* Was able to mmap() the source file -> now to write that mapping into the target file. */
-		iter = (byte_t const *)DeeMapFile_GetBase(&mf);
+		iter = (byte_t const *)DeeMapFile_GetAddr(&mf);
 		end  = iter + DeeMapFile_GetSize(&mf);
 		while (iter < end) {
 			size_t ok, remaining, chunk_size;
@@ -4992,7 +4992,7 @@ err_bad_used_bufsize:
 				                "Target file %k indicates EOF after "
 				                "%" PRFuSIZ " of %" PRFuSIZ " bytes",
 				                dst,
-				                (size_t)(iter - (byte_t const *)DeeMapFile_GetBase(&mf)),
+				                (size_t)(iter - (byte_t const *)DeeMapFile_GetAddr(&mf)),
 				                DeeMapFile_GetSize(&mf));
 err_progress_info_mapfile:
 				DeeMapFile_Fini(&mf);
@@ -5019,7 +5019,7 @@ err_progress_info_mapfile:
 
 				/* Update the copied-bytes counter of the progress info object. */
 				progress_info->cfp_copied = transfer_total +
-				                            (size_t)(iter - (byte_t const *)DeeMapFile_GetBase(&mf));
+				                            (size_t)(iter - (byte_t const *)DeeMapFile_GetAddr(&mf));
 
 				/* Invoke the progress-info callback. */
 				progress_status = DeeObject_Call(progress, 1, (DeeObject *const *)&progress_info);

@@ -2055,7 +2055,7 @@ PRIVATE int DCALL
 mapfile_getbuf(DeeMapFileObject *__restrict self,
                DeeBuffer *__restrict info,
                unsigned int UNUSED(flags)) {
-	info->bb_base = (void *)DeeMapFile_GetBase(&self->mf_map);
+	info->bb_base = (void *)DeeMapFile_GetAddr(&self->mf_map);
 	info->bb_size = self->mf_rsize;
 	return 0;
 }
@@ -2066,7 +2066,7 @@ mapfile_bytes(DeeMapFileObject *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack0(err, argc, argv, "bytes");
 /*[[[end]]]*/
 	return DeeBytes_NewView(Dee_AsObject(self),
-	                        (void *)DeeMapFile_GetBase(&self->mf_map),
+	                        (void *)DeeMapFile_GetAddr(&self->mf_map),
 	                        self->mf_rsize, Dee_BUFFER_FWRITABLE);
 err:
 	return NULL;

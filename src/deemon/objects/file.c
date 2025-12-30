@@ -760,7 +760,7 @@ file_read_trymap(Dee_fd_t fd, size_t maxbytes,
 
 	/* Now create the bytes view of the map. */
 	result = DeeBytes_NewView((DeeObject *)mapob,
-	                          (void *)DeeMapFile_GetBase(&mapob->mf_map),
+	                          (void *)DeeMapFile_GetAddr(&mapob->mf_map),
 	                          mapob->mf_rsize, Dee_BUFFER_FREADONLY);
 	Dee_Decref_unlikely(mapob);
 	return result;
@@ -2464,7 +2464,7 @@ file_mmap(DeeObject *self, size_t argc,
 	mapob->mf_rsize = DeeMapFile_GetSize(&mapob->mf_map) + args.nulbytes;
 	DeeObject_Init(mapob, &DeeMapFile_Type);
 	result = DeeBytes_NewView((DeeObject *)mapob,
-	                          (void *)DeeMapFile_GetBase(&mapob->mf_map),
+	                          (void *)DeeMapFile_GetAddr(&mapob->mf_map),
 	                          mapob->mf_rsize, Dee_BUFFER_FWRITABLE);
 	Dee_Decref_unlikely(mapob);
 	return result;

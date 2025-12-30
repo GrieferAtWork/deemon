@@ -1824,9 +1824,7 @@ PRIVATE ATTR_CONST size_t DCALL dee_nt_getpagesize(void) {
 /* Finalize a given file map */
 PUBLIC NONNULL((1)) void DCALL
 DeeMapFile_Fini(struct DeeMapFile *__restrict self) {
-#ifdef DeeMapFile_IS_os_mapfile
-	(void)unmapfile(&self->dmf_map);
-#elif defined(DeeMapFile_IS_CreateFileMapping)
+#ifdef DeeMapFile_IS_CreateFileMapping
 	if (self->_dmf_hmap != NULL) {
 		void *hmap = self->_dmf_hmap;
 		size_t psm = getpagesize() - 1;
@@ -1860,11 +1858,11 @@ DeeMapFile_Fini(struct DeeMapFile *__restrict self) {
 /* Initialize a file mapping from a given system FD.
  * @param: fd:        The file that should be loaded into memory.
  * @param: self:      Filled with mapping information. This structure contains at least 2 fields:
- *                     - DeeMapFile_GetBase: Filled with the base address of a mapping of the file's contents
+ *                     - DeeMapFile_GetAddr: Filled with the base address of a mapping of the file's contents
  *                     - DeeMapFile_GetSize: The actual number of mapped bytes (excluding `num_trailing_nulbytes')
  *                                           This will always be `>= min_bytes && <= max_bytes'.
  *                     - Other fields are implementation-specific
- *                    Note that the memory located at `DeeMapFile_GetBase' is writable, though changes to
+ *                    Note that the memory located at `DeeMapFile_GetAddr' is writable, though changes to
  *                    it are guarantied not to be written back to `fd'. iow: it behaves like MAP_PRIVATE
  *                    mapped as PROT_READ|PROT_WRITE.
  * @param: offset:    File offset / number of leading bytes that should not be mapped
@@ -1887,7 +1885,7 @@ DeeMapFile_Fini(struct DeeMapFile *__restrict self) {
  *                    this many are guarantied to be. - Useful if you want to load a file as a
  *                    string, in which case you can specify `1' to always have a trailing '\0' be
  *                    appended:
- *                    >> bzero(DeeMapFile_GetBase + DeeMapFile_GetSize, num_trailing_nulbytes);
+ *                    >> bzero(DeeMapFile_GetAddr + DeeMapFile_GetSize, num_trailing_nulbytes);
  * @param: flags:     Set of `DEE_MAPFILE_F_*'
  * @return:  1: Both `DEE_MAPFILE_F_MUSTMMAP' and `DEE_MAPFILE_F_TRYMMAP' were set, but mmap failed.
  * @return:  0: Success (`self' must be deleted using `DeeMapFile_Fini(3)')
@@ -1896,40 +1894,7 @@ PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeMapFile_InitSysFd(struct DeeMapFile *__restrict self, Dee_fd_t fd,
                      Dee_pos_t offset, size_t min_bytes, size_t max_bytes,
                      size_t num_trailing_nulbytes, unsigned int flags) {
-#ifdef DeeMapFile_IS_os_mapfile
-	/* Special case: use `fmapfile(3)' */
-	int result;
-again:
-	result = fmapfile(&self->dmf_map, fd,
-	                  offset, min_bytes, max_bytes,
-	                  num_trailing_nulbytes, flags);
-	if (result != 0) {
-		int error = DeeSystem_GetErrno();
-		if (error == ENOMEM && Dee_CollectMemory(1)) {
-			goto again;
-		} else if (error == EINTR) {
-			if (DeeThread_CheckInterrupt())
-				goto done;
-			goto again;
-		} else if (error == EBADF) {
-			result = DeeError_Throwf(&DeeError_FileClosed,
-			                         "File descriptor %d was closed",
-			                         fd);
-		} else if (error == ENOTSUP) {
-			if (flags & DEE_MAPFILE_F_TRYMMAP)
-				return 1;
-			return DeeError_Throwf(&DeeError_UnsupportedAPI,
-			                       "File descriptor %" Dee_PRIpSYSFD " cannot be mmap'd",
-			                       fd);
-		} else {
-			result = DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
-			                                   "Failed to map file %d",
-			                                   fd);
-		}
-	}
-done:
-	return result;
-#elif defined(CONFIG_HOST_WINDOWS) || defined(CONFIG_HAVE_read)
+#if defined(CONFIG_HOST_WINDOWS) || defined(CONFIG_HAVE_read)
 
 	/* General implementation (stolen from KOS's `fmapfile(3)') */
 #if defined(DeeMapFile_IS_CreateFileMapping) || defined(DeeMapFile_IS_mmap)

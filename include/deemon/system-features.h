@@ -840,8 +840,6 @@ func("mmap64", "defined(__USE_LARGEFILE64) && (" + isenabled("_POSIX_MAPPED_FILE
 func("munmap", "defined(CONFIG_HAVE_mmap)", test: 'char buf[] = "foobar"; return munmap(buf, 6);');
 func("mremap", "defined(CONFIG_HAVE_SYS_MMAN_H) && defined(__USE_GNU)", test: 'extern void *p; return mremap(p, 10, 20, 0);');
 func("mprotect", "defined(CONFIG_HAVE_mmap)", test: 'char buf[] = "foobar"; return mprotect(buf, 6, PROT_READ);');
-func("fmapfile", "0", test: 'extern struct mapfile m; return fmapfile(&m, 1, 2, 3, 4, 5, FMAPFILE_READALL);');
-func("unmapfile", "0", test: 'extern struct mapfile m; return unmapfile(&m);');
 func("getpagesize", "defined(CONFIG_HAVE_UNISTD_H) && (defined(__USE_MISC) || !defined(__USE_XOPEN2K))", test: 'return getpagesize() != 0;');
 constant("MREMAP_MAYMOVE");
 constant("MAP_ANONYMOUS");

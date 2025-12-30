@@ -41,23 +41,14 @@ DECL_BEGIN
 /************************************************************************/
 
 /* Implementable via one of:
- * - fmapfile(3)                                (KOS)
- * - CreateFileMapping()+MapViewOfFile()        (Windows)
- * - mmap()                                     (Unix)
- * - malloc()+read()                            (Fallback)
+ * - CreateFileMapping()+MapViewOfFile()  (Windows)
+ * - mmap()                               (Unix)
+ * - malloc()+read()                      (Fallback)
  */
-
-#undef DeeMapFile_IS_os_mapfile        /* KOS's `struct mapfile' */
 #undef DeeMapFile_IS_CreateFileMapping /* Windows's `CreateFileMapping' */
 #undef DeeMapFile_IS_mmap              /* Unix's `mmap(2)' */
 #undef DeeMapFile_IS_malloc            /* Fallback-only support */
-#if (defined(Dee_fd_t_IS_int) && defined(CONFIG_HAVE_fmapfile) &&      \
-     defined(CONFIG_HAVE_unmapfile) && defined(FMAPFILE_READALL) &&    \
-     defined(FMAPFILE_MUSTMMAP) && defined(FMAPFILE_MAPSHARED) &&      \
-     defined(FMAPFILE_ATSTART) && defined(ENOMEM) && defined(EINTR) && \
-     defined(EBADF) && defined(ENOTSUP))
-#define DeeMapFile_IS_os_mapfile
-#elif (defined(Dee_fd_t_IS_HANDLE) && defined(CONFIG_HOST_WINDOWS))
+#if defined(Dee_fd_t_IS_HANDLE) && defined(CONFIG_HOST_WINDOWS)
 #define DeeMapFile_IS_CreateFileMapping
 #elif ((defined(CONFIG_HAVE_fstat) || defined(CONFIG_HAVE_fstat64)) &&       \
        (defined(CONFIG_HAVE_mmap) || defined(CONFIG_HAVE_mmap64)) &&         \
@@ -72,61 +63,35 @@ DECL_BEGIN
 
 
 struct DeeMapFile {
-#ifdef DeeMapFile_IS_os_mapfile
-#define Dee_SIZEOF_DeeMapFile (3 * __SIZEOF_POINTER__) /* TODO: Correct, but not portable */
-	struct mapfile dmf_map; /* Underlying mapfile */
-#define DeeMapFile_GetBase(self)  ((void const *)(self)->dmf_map.mf_addr)
-#define DeeMapFile_GetSize(self)  (self)->dmf_map.mf_size
-#define DeeMapFile_UsesMmap(self) mapfile_usesmmap(&(self)->dmf_map)
-#elif defined(DeeMapFile_IS_CreateFileMapping)
+#ifdef DeeMapFile_IS_CreateFileMapping
 #define Dee_SIZEOF_DeeMapFile (4 * __SIZEOF_POINTER__)
 	void const *dmf_addr; /* [0..dmf_size][owned] Base address of the file mapping. */
 	size_t      dmf_size; /* Mapping size (in bytes, excluding trailing NUL-bytes) */
 	void      *_dmf_hmap; /* [0..1] file mapping handle */
-	size_t     _dmf_vfre; /* When non-zero, must VirtualFree() this many bytes at `CEIL_ALIGN(dmf_addr + dmf_size, getpagesize())' */
-#define DeeMapFile_GetBase(self)  (self)->dmf_addr
-#define DeeMapFile_GetSize(self)  (self)->dmf_size
+	size_t     _dmf_vfre; /* [valid_if(_dmf_hmap != NULL)] When non-zero, must VirtualFree() this many bytes at `CEIL_ALIGN(dmf_addr + dmf_size, getpagesize())' */
+#define DeeMapFile_SETHEAP(self)  (void)((self)->_dmf_hmap = NULL)
 #define DeeMapFile_UsesMmap(self) ((self)->_dmf_hmap != NULL)
 #elif defined(DeeMapFile_IS_mmap)
 #define Dee_SIZEOF_DeeMapFile (3 * __SIZEOF_POINTER__)
 	void const *dmf_addr;    /* [0..dmf_size][owned] Base address of the file mapping. */
 	size_t      dmf_size;    /* Mapping size (in bytes, excluding trailing NUL-bytes) */
 	size_t     _dmf_mapsize; /* Used internally: the mmap'd file size, or `0' if `dmf_addr' was malloc'd */
-#define DeeMapFile_GetBase(self)  (self)->dmf_addr
-#define DeeMapFile_GetSize(self)  (self)->dmf_size
+#define DeeMapFile_SETHEAP(self)  (void)((self)->_dmf_mapsize = 0)
 #define DeeMapFile_UsesMmap(self) ((self)->_dmf_mapsize != 0)
 #else /* ... */
 #define Dee_SIZEOF_DeeMapFile (2 * __SIZEOF_POINTER__)
 	void const *dmf_addr; /* [0..dmf_size][owned] Base address of the file mapping. */
 	size_t      dmf_size; /* Mapping size (in bytes, excluding trailing NUL-bytes) */
-#define DeeMapFile_GetBase(self)  (self)->dmf_addr
-#define DeeMapFile_GetSize(self)  (self)->dmf_size
+#define DeeMapFile_SETHEAP(self)  (void)0
 #define DeeMapFile_UsesMmap(self) 0
 #define DeeMapFile_UsesMmap_IS_ALWAYS_ZERO
 #endif /* !... */
 };
 
-/* Configure `self' as using a heap buffer */
-#ifdef DeeMapFile_IS_os_mapfile
-/* FIXME: This doesn't work because "CONFIG_EXPERIMENTAL_CUSTOM_HEAP"
- *        means that deemon doesn't use libc's heap, also meaning that
- *        this will case unmapfile(3) to call the wrong free(3)! */
-#define DeeMapFile_SETHEAP(self) __mapfile_setheap(&(self)->dmf_map)
-#elif defined(DeeMapFile_IS_CreateFileMapping)
-#define DeeMapFile_SETHEAP(self) ((self)->_dmf_hmap = NULL)
-#elif defined(DeeMapFile_IS_mmap)
-#define DeeMapFile_SETHEAP(self) ((self)->_dmf_mapsize = 0)
-#else /* ... */
-#define DeeMapFile_SETHEAP(self) (void)0
-#endif /* !... */
-
-#ifdef DeeMapFile_IS_os_mapfile
-#define DeeMapFile_SETADDR(self, p) (void)((self)->dmf_map.mf_addr = (unsigned char *)(p))
-#define DeeMapFile_SETSIZE(self, s) (void)((self)->dmf_map.mf_size = (s))
-#else /* DeeMapFile_IS_os_mapfile */
+#define DeeMapFile_GetAddr(self)    (self)->dmf_addr
+#define DeeMapFile_GetSize(self)    (self)->dmf_size
 #define DeeMapFile_SETADDR(self, p) (void)((self)->dmf_addr = (void const *)(p))
 #define DeeMapFile_SETSIZE(self, s) (void)((self)->dmf_size = (s))
-#endif /* !DeeMapFile_IS_os_mapfile */
 
 
 /* Finalize a given file map */
@@ -137,11 +102,11 @@ DeeMapFile_Fini(struct DeeMapFile *__restrict self);
 /* Initialize a file mapping from a given system FD.
  * @param: fd:        The file that should be loaded into memory.
  * @param: self:      Filled with mapping information. This structure contains at least 2 fields:
- *                     - DeeMapFile_GetBase: Filled with the base address of a mapping of the file's contents
+ *                     - DeeMapFile_GetAddr: Filled with the base address of a mapping of the file's contents
  *                     - DeeMapFile_GetSize: The actual number of mapped bytes (excluding `num_trailing_nulbytes')
  *                                           This will always be `>= min_bytes && <= max_bytes'.
  *                     - Other fields are implementation-specific
- *                    Note that the memory located at `DeeMapFile_GetBase' is writable, though changes to
+ *                    Note that the memory located at `DeeMapFile_GetAddr' is writable, though changes to
  *                    it are guarantied not to be written back to `fd'. iow: it behaves like MAP_PRIVATE
  *                    mapped as PROT_READ|PROT_WRITE.
  * @param: offset:    File offset / number of leading bytes that should not be mapped
@@ -164,7 +129,7 @@ DeeMapFile_Fini(struct DeeMapFile *__restrict self);
  *                    this many are guarantied to be. - Useful if you want to load a file as a
  *                    string, in which case you can specify `1' to always have a trailing '\0' be
  *                    appended:
- *                    >> bzero(DeeMapFile_GetBase + DeeMapFile_GetSize, num_trailing_nulbytes);
+ *                    >> bzero(DeeMapFile_GetAddr + DeeMapFile_GetSize, num_trailing_nulbytes);
  * @param: flags:     Set of `DEE_MAPFILE_F_*'
  * @return:  1: Both `DEE_MAPFILE_F_MUSTMMAP' and `DEE_MAPFILE_F_TRYMMAP' were set, but mmap failed.
  * @return:  0: Success (`self' must be deleted using `DeeMapFile_Fini(3)')
@@ -181,19 +146,12 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self,
                     Dee_pos_t offset, size_t min_bytes, size_t max_bytes,
                     size_t num_trailing_nulbytes, unsigned int flags);
 
-/* Bits for the `flags' argument of `DeeMapFile_InitSysFd()' */
-#define DEE_MAPFILE_F_NORMAL    0 /* Normal flags */
-#ifdef DeeMapFile_IS_os_mapfile
-#define DEE_MAPFILE_F_READALL   FMAPFILE_READALL   /* Flag: use `preadall(3)' / `readall(3)' instead of `pread(2)' / `read(2)' */
-#define DEE_MAPFILE_F_MUSTMMAP  FMAPFILE_MUSTMMAP  /* Flag: require the use of a mmap(2) */
-#define DEE_MAPFILE_F_MAPSHARED FMAPFILE_MAPSHARED /* Flag: when using mmap, don't map as MAP_PRIVATE, but use MAP_SHARED (don't pass a non-zero `num_trailing_nulbytes' in this case!) */
-#define DEE_MAPFILE_F_ATSTART   FMAPFILE_ATSTART   /* Flag: assume that the given file's pointer is located at the file's beginning */
-#else /* DeeMapFile_IS_os_mapfile */
+/* Bits for the `flags' argument of `DeeMapFile_InitSysFd()' and `DeeMapFile_InitFile()' */
+#define DEE_MAPFILE_F_NORMAL    0x0000 /* Normal flags */
 #define DEE_MAPFILE_F_READALL   0x0001 /* Flag: use `preadall(3)' / `readall(3)' instead of `pread(2)' / `read(2)' */
 #define DEE_MAPFILE_F_MUSTMMAP  0x0002 /* Flag: require the use of a mmap(2) */
 #define DEE_MAPFILE_F_MAPSHARED 0x0004 /* Flag: when using mmap, don't map as MAP_PRIVATE, but use MAP_SHARED (don't pass a non-zero `num_trailing_nulbytes' in this case!) */
 #define DEE_MAPFILE_F_ATSTART   0x0008 /* Flag: assume that the given file's pointer is located at the file's beginning */
-#endif /* !DeeMapFile_IS_os_mapfile */
 #define DEE_MAPFILE_F_TRYMMAP   0x8000 /* Flag: Don't throw an exception when mmap fails, but return `1' */
 
 
