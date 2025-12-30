@@ -44,6 +44,7 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "generic-proxy.h"
 #include "seq_functions.h"
 /**/
 
@@ -2690,8 +2691,7 @@ PUBLIC DeeObject DeeIterator_EmptyInstance = {
 
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *if_iter; /* [1..1][const] The iterator who's future is viewed. */
+	PROXY_OBJECT_HEAD(if_iter) /* [1..1][const] The iterator who's future is viewed. */
 } IteratorFuture;
 
 INTDEF DeeTypeObject IteratorFuture_Type;
@@ -2708,58 +2708,21 @@ done:
 	return Dee_AsObject(result);
 }
 
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 if_ctor(IteratorFuture *__restrict self) {
 	self->if_iter = DeeObject_Iter(Dee_EmptySeq);
 	return likely(self->if_iter) ? 0 : -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-if_copy(IteratorFuture *__restrict self,
-        IteratorFuture *__restrict other) {
-	self->if_iter = DeeObject_Copy(other->if_iter);
-	if unlikely(!self->if_iter)
-		goto err;
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-if_deep(IteratorFuture *__restrict self,
-        IteratorFuture *__restrict other) {
-	self->if_iter = DeeObject_DeepCopy(other->if_iter);
-	if unlikely(!self->if_iter)
-		goto err;
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-if_init(IteratorFuture *__restrict self,
-        size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_IteratorFuture", &self->if_iter);
-	Dee_Incref(self->if_iter);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-if_bool(IteratorFuture *__restrict self) {
-	return DeeObject_Bool(self->if_iter);
-}
-
-PRIVATE NONNULL((1)) void DCALL
-if_fini(IteratorFuture *__restrict self) {
-	Dee_Decref(self->if_iter);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-if_visit(IteratorFuture *__restrict self, Dee_visit_t proc, void *arg) {
-	Dee_Visit(self->if_iter);
-}
+STATIC_ASSERT(offsetof(IteratorFuture, if_iter) == offsetof(ProxyObject, po_obj));
+#define if_copy      generic_proxy__copy_alias
+#define if_deep      generic_proxy__deepcopy
+#define if_init      generic_proxy__init
+#define if_bool      generic_proxy__bool
+#define if_fini      generic_proxy__fini
+#define if_visit     generic_proxy__visit
+#define if_serialize generic_proxy__serialize
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 if_iter(IteratorFuture *__restrict self) {
@@ -2841,7 +2804,7 @@ INTERN DeeTypeObject IteratorFuture_Type = {
 			/* tp_deep_ctor:   */ &if_deep,
 			/* tp_any_ctor:    */ &if_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &if_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&if_fini,
 		/* .tp_assign      = */ NULL,
