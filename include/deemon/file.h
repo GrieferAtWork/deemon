@@ -255,8 +255,8 @@ DDATDEF DeeTypeObject DeeFileType_Type;
 
 /* Base class for all file types. */
 DDATDEF DeeFileTypeObject DeeFile_Type;
-#define DeeFile_Check(ob)      DeeObject_InstanceOf(ob, (DeeTypeObject *)&DeeFile_Type)
-#define DeeFile_CheckExact(ob) DeeObject_InstanceOfExact(ob, (DeeTypeObject *)&DeeFile_Type)
+#define DeeFile_Check(ob)      DeeObject_InstanceOf(ob, &DeeFile_Type.ft_base)
+#define DeeFile_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeFile_Type.ft_base)
 
 /* Builtin system file sub-classes.
  * NOTE: When not implemented by the host, attempting to use these

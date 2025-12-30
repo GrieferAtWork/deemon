@@ -111,6 +111,39 @@ INTDEF NONNULL((1)) void DCALL generic_proxy3__fini(ProxyObject3 *__restrict sel
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__serialize_and_copy(ProxyObject *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__serialize_and_copy(ProxyObject2 *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy3__serialize_and_copy(ProxyObject3 *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
+#define generic_proxy__serialize_and_copy_atomic8  generic_proxy__serialize_and_copy
+#ifdef CONFIG_NO_THREADS
+#define generic_proxy__serialize_and_copy_atomic16 generic_proxy__serialize_and_copy
+#define generic_proxy__serialize_and_copy_atomic32 generic_proxy__serialize_and_copy
+#define generic_proxy__serialize_and_copy_atomic64 generic_proxy__serialize_and_copy
+#else /* CONFIG_NO_THREADS */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__serialize_and_copy_atomic16(ProxyObject *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__serialize_and_copy_atomic32(ProxyObject *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
+#if __SIZEOF_SIZE_T__ >= 8
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__serialize_and_copy_atomic64(ProxyObject *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
+#endif /* __SIZEOF_SIZE_T__ >= 8 */
+#endif /* !CONFIG_NO_THREADS */
+
+typedef struct {
+	PROXY_OBJECT_HEAD(po_obj) /* [1..1] Wrapped object */
+	void             *po_ptr; /* [0..1][lock(ATOMIC)] Pointer into some struct kept alive by "mo_obj" */
+} ProxyObjectWithPointer;
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__serialize_and_copy_xptr_atomic(ProxyObjectWithPointer *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
+#define generic_proxy__serialize_and_copy_ptr        generic_proxy__serialize_and_copy_xptr_atomic
+#define generic_proxy__serialize_and_copy_xptr       generic_proxy__serialize_and_copy_xptr_atomic
+#define generic_proxy__serialize_and_copy_ptr_atomic generic_proxy__serialize_and_copy_xptr_atomic
+
+
+#define _generic_proxy__serialize_and_copy_atomic_N1 generic_proxy__serialize_and_copy_atomic8
+#define _generic_proxy__serialize_and_copy_atomic_N2 generic_proxy__serialize_and_copy_atomic16
+#define _generic_proxy__serialize_and_copy_atomic_N4 generic_proxy__serialize_and_copy_atomic32
+#ifdef generic_proxy__serialize_and_copy_atomic64
+#define _generic_proxy__serialize_and_copy_atomic_N8 generic_proxy__serialize_and_copy_atomic64
+#endif /* generic_proxy__serialize_and_copy_atomic64 */
+#define _generic_proxy__serialize_and_copy_atomic_N(word_size) \
+	_generic_proxy__serialize_and_copy_atomic_N##word_size
+#define generic_proxy__serialize_and_copy_atomic(word_size) \
+	_generic_proxy__serialize_and_copy_atomic_N(word_size)
 
 
 

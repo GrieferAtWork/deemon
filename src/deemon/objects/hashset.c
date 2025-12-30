@@ -1180,15 +1180,9 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-hashsetiterator_serialize(HashSetIterator *__restrict self,
-                          DeeSerial *__restrict writer,
-                          Dee_seraddr_t addr) {
-	int result = generic_proxy__serialize((ProxyObject *)self, writer, addr);
-	if likely(result == 0)
-		result = DeeSerial_PutPointer(writer, addr + offsetof(HashSetIterator, hsi_next), READ_ITEM(self));
-	return result;
-}
+STATIC_ASSERT(offsetof(HashSetIterator, hsi_set) == offsetof(ProxyObjectWithPointer, po_obj));
+STATIC_ASSERT(offsetof(HashSetIterator, hsi_next) == offsetof(ProxyObjectWithPointer, po_ptr));
+#define hashsetiterator_serialize generic_proxy__serialize_and_copy_ptr_atomic
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 hashsetiterator_bool(HashSetIterator *__restrict self) {

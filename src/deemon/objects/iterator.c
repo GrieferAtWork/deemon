@@ -2716,7 +2716,7 @@ if_ctor(IteratorFuture *__restrict self) {
 }
 
 STATIC_ASSERT(offsetof(IteratorFuture, if_iter) == offsetof(ProxyObject, po_obj));
-#define if_copy      generic_proxy__copy_alias
+#define if_copy      generic_proxy__copy_recursive
 #define if_deep      generic_proxy__deepcopy
 #define if_init      generic_proxy__init
 #define if_bool      generic_proxy__bool
@@ -2841,8 +2841,7 @@ INTERN DeeTypeObject IteratorFuture_Type = {
 
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *ip_iter; /* [1..1][const] The iterator who's remainder is viewed. */
+	PROXY_OBJECT_HEAD(ip_iter) /* [1..1][const] The iterator who's remainder is viewed. */
 } IteratorPending;
 
 INTDEF DeeTypeObject IteratorPending_Type;
@@ -2859,37 +2858,18 @@ done:
 	return Dee_AsObject(result);
 }
 
-STATIC_ASSERT(offsetof(IteratorFuture, if_iter) ==
-              offsetof(IteratorPending, ip_iter));
+STATIC_ASSERT(offsetof(IteratorPending, ip_iter) == offsetof(IteratorFuture, if_iter));
 #define ip_ctor if_ctor
-#define ip_deep if_deep
+#define ip_bool if_bool
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ip_copy(IteratorPending *__restrict self,
-        IteratorPending *__restrict other) {
-	self->ip_iter = other->ip_iter;
-	Dee_Incref(self->ip_iter);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-ip_init(IteratorPending *__restrict self,
-        size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_IteratorPending", &self->ip_iter);
-	Dee_Incref(self->ip_iter);
-	return 0;
-err:
-	return -1;
-}
-
-#define ip_bool  if_bool
-#define ip_fini  if_fini
-#define ip_visit if_visit
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ip_iter(IteratorPending *__restrict self) {
-	return_reference_(self->ip_iter);
-}
+STATIC_ASSERT(offsetof(IteratorPending, ip_iter) == offsetof(ProxyObject, po_obj));
+#define ip_copy      generic_proxy__copy_alias
+#define ip_deep      generic_proxy__deepcopy
+#define ip_init      generic_proxy__init
+#define ip_fini      generic_proxy__fini
+#define ip_visit     generic_proxy__visit
+#define ip_serialize generic_proxy__serialize
+#define ip_iter      generic_proxy__getobj
 
 PRIVATE struct type_seq ip_seq = {
 	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ip_iter,
@@ -2954,7 +2934,7 @@ INTERN DeeTypeObject IteratorPending_Type = {
 			/* tp_deep_ctor:   */ &ip_deep,
 			/* tp_any_ctor:    */ &ip_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &ip_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ip_fini,
 		/* .tp_assign      = */ NULL,

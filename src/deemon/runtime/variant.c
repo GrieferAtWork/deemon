@@ -132,8 +132,8 @@ Dee_variant_serialize(struct Dee_variant *__restrict self,
 		char const *cstr = self->var_data.d_cstr;
 		Dee_variant_unlock(self, type);
 		return DeeSerial_PutPointer(writer,
-		                           addr + offsetof(struct Dee_variant, var_data.d_cstr),
-		                           cstr);
+		                            addr + offsetof(struct Dee_variant, var_data.d_cstr),
+		                            cstr);
 	}	break;
 
 	default: break;

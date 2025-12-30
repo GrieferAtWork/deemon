@@ -30,6 +30,7 @@
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 /**/
@@ -122,6 +123,22 @@ err_zero_rparam:
 	                Dee_TYPE(self));
 err:
 	return -1;
+}
+
+
+#define src_serialize sc_serialize
+#define sp_serialize  sc_serialize
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+sc_serialize(SeqCombinations *__restrict self,
+             DeeSerial *__restrict writer,
+             Dee_seraddr_t addr) {
+	int result = generic_proxy__serialize_and_copy((ProxyObject *)self, writer, addr);
+	if likely(result == 0) {
+		result = DeeSerial_PutPointer(writer,
+		                              addr + offsetof(SeqCombinations, sc_trygetitem_index),
+		                              (void const *)self->sc_trygetitem_index);
+	}
+	return result;
 }
 
 
@@ -440,7 +457,7 @@ INTERN DeeTypeObject SeqCombinations_Type = {
 			/* tp_deep_ctor:   */ &sc_deep,
 			/* tp_any_ctor:    */ &sc_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &sc_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sc_fini,
 		/* .tp_assign      = */ NULL,
@@ -493,7 +510,7 @@ INTERN DeeTypeObject SeqRepeatCombinations_Type = {
 			/* tp_deep_ctor:   */ &src_deep,
 			/* tp_any_ctor:    */ &src_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &src_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&src_fini,
 		/* .tp_assign      = */ NULL,
@@ -544,7 +561,7 @@ INTERN DeeTypeObject SeqPermutations_Type = {
 			/* tp_deep_ctor:   */ &sp_deep,
 			/* tp_any_ctor:    */ &sp_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &sp_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sp_fini,
 		/* .tp_assign      = */ NULL,
@@ -694,6 +711,29 @@ PRIVATE NONNULL((1)) void DCALL
 sci_fini(SeqCombinationsIterator *__restrict self) {
 	Dee_Decref(self->sci_com);
 	Dee_weakref_fini(&self->sci_view);
+}
+
+#define srci_serialize sci_serialize
+#define spi_serialize  sci_serialize
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+sci_serialize(SeqCombinationsIterator *__restrict self,
+              DeeSerial *__restrict writer) {
+	SeqCombinationsIterator *out;
+	size_t i, idx_count = self->sci_com->sc_rparam;
+	size_t sizeof_self = offsetof(SeqCombinationsIterator, sci_idx) + (idx_count * sizeof(size_t));
+	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	if (!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	if (generic_proxy__serialize((ProxyObject *)self, writer, out_addr))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, SeqCombinationsIterator);
+	Dee_weakref_initempty(&out->sci_view);
+	for (i = 0; i < idx_count; ++i) {
+		out->sci_idx[i] = atomic_read(&self->sci_idx[i]);
+	}
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
 }
 
 STATIC_ASSERT(offsetof(SeqCombinationsIterator, sci_com) == offsetof(ProxyObject, po_obj));
@@ -1045,7 +1085,7 @@ INTERN DeeTypeObject SeqCombinationsIterator_Type = {
 			/* tp_deep_ctor:   */ &sci_deep,
 			/* tp_any_ctor:    */ &sci_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &sci_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sci_fini,
@@ -1097,7 +1137,7 @@ INTERN DeeTypeObject SeqRepeatCombinationsIterator_Type = {
 			/* tp_deep_ctor:   */ &srci_deep,
 			/* tp_any_ctor:    */ &srci_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &srci_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&srci_fini,
@@ -1149,7 +1189,7 @@ INTERN DeeTypeObject SeqPermutationsIterator_Type = {
 			/* tp_deep_ctor:   */ &spi_deep,
 			/* tp_any_ctor:    */ &spi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &spi_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&spi_fini,
@@ -1291,6 +1331,32 @@ err_bad_iter_type:
 err:
 	return -1;
 }
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+scv_serialize(SeqCombinationsView *__restrict self,
+              DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	size_t i, *in__scv_idx, *ou__scv_idx;
+	Dee_seraddr_t out__scv_idx;
+	if (generic_proxy__serialize((ProxyObject *)self, writer, addr))
+		goto err;
+	if (DeeSerial_PutPointer(writer, addr + offsetof(SeqCombinationsView, scv_com), self->scv_com))
+		goto err;
+	in__scv_idx = atomic_read(&self->scv_idx);
+	if (in__scv_idx == self->scv_iter->sci_idx)
+		return DeeSerial_PutPointer(writer, addr + offsetof(SeqCombinationsView, scv_idx), in__scv_idx);
+	out__scv_idx = DeeSerial_Malloc(writer, self->scv_com->sc_rparam * sizeof(size_t), NULL);
+	if (!Dee_SERADDR_ISOK(out__scv_idx))
+		goto err;
+	if (DeeSerial_PutAddr(writer, addr + offsetof(SeqCombinationsView, scv_idx), out__scv_idx))
+		goto err;
+	ou__scv_idx = DeeSerial_Addr2Mem(writer, out__scv_idx, size_t);
+	for (i = 0; i < self->scv_com->sc_rparam; ++i)
+		ou__scv_idx[i] = atomic_read(&in__scv_idx[i]);
+	return 0;
+err:
+	return -1;
+}
+
 
 PRIVATE struct type_member tpconst scv_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SeqCombinationsView, scv_iter),
@@ -1506,7 +1572,7 @@ INTERN DeeTypeObject SeqCombinationsView_Type = {
 			/* tp_deep_ctor:   */ &scv_deep,
 			/* tp_any_ctor:    */ &scv_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &scv_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&scv_fini,
 		/* .tp_assign      = */ NULL,

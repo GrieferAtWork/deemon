@@ -31,6 +31,7 @@
 #include <deemon/set.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h>
+#include <deemon/util/atomic.h>
 
 #include <hybrid/typecore.h>
 
@@ -271,11 +272,8 @@ generic_proxy3__fini(ProxyObject3 *__restrict self) {
 
 
 
-PRIVATE NONNULL((1, 2)) void DCALL
-serialize_copy_after(DeeObject *__restrict self,
-                     struct Dee_serial *__restrict writer,
-                     Dee_seraddr_t addr, size_t basic_size) {
-	DeeObject *out;
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+serialize_copy_after_getsize(DeeObject *__restrict self) {
 	size_t instance_size;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	void (DCALL *tp_free)(void *);
@@ -283,7 +281,7 @@ serialize_copy_after(DeeObject *__restrict self,
 	if ((tp_free = tp_self->tp_init.tp_alloc.tp_free) != NULL) {
 #ifdef CONFIG_NO_OBJECT_SLABS
 		Dee_Fatalf("Unable to determine tp_instance_size for %r", tp_self);
-		return;
+		return 0;
 #else /* CONFIG_NO_OBJECT_SLABS */
 		/* Figure out the slab size used by the base-class. */
 		if (tp_self->tp_flags & TP_FGC) {
@@ -295,7 +293,7 @@ serialize_copy_after(DeeObject *__restrict self,
 #undef CHECK_ALLOCATOR
 			{
 				Dee_Fatalf("Unable to determine tp_instance_size for %r", tp_self);
-				return;
+				return 0;
 			}
 		} else {
 #define CHECK_ALLOCATOR(index, size)                    \
@@ -306,17 +304,26 @@ serialize_copy_after(DeeObject *__restrict self,
 #undef CHECK_ALLOCATOR
 			{
 				Dee_Fatalf("Unable to determine tp_instance_size for %r", tp_self);
-				return;
+				return 0;
 			}
 		}
 #endif /* !CONFIG_NO_OBJECT_SLABS */
 	} else {
 		instance_size = tp_self->tp_init.tp_alloc.tp_instance_size;
 	}
+	return instance_size;
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+serialize_copy_after(DeeObject *__restrict self,
+                     struct Dee_serial *__restrict writer,
+                     Dee_seraddr_t addr, size_t basic_size) {
+	DeeObject *out;
+	size_t instance_size = serialize_copy_after_getsize(self);
 	ASSERTF(instance_size >= basic_size,
 	        "Instance size %" PRFuSIZ " of %r is lower than "
 	        /**/ "basic size %" PRFuSIZ " of proxy object",
-	        instance_size, tp_self, basic_size);
+	        instance_size, Dee_TYPE(self), basic_size);
 	out = DeeSerial_Addr2Mem(writer, addr, DeeObject);
 	memcpy((byte_t *)out + basic_size,
 	       (byte_t const *)self + basic_size,
@@ -333,6 +340,111 @@ generic_proxy__serialize_and_copy(ProxyObject *__restrict self,
 	serialize_copy_after(Dee_AsObject(self), writer, addr, sizeof(*self));
 	return generic_proxy__serialize(self, writer, addr);
 }
+
+#ifndef CONFIG_NO_THREADS
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__serialize_and_copy_atomic16(ProxyObject *__restrict self,
+                                           struct Dee_serial *__restrict writer,
+                                           Dee_seraddr_t addr) {
+	uint16_t *out;
+	uint16_t const *in;
+	size_t instance_size = serialize_copy_after_getsize((DeeObject *)self);
+	ASSERTF(instance_size >= sizeof(*self),
+	        "Instance size %" PRFuSIZ " of %r is lower than "
+	        /**/ "basic size %" PRFuSIZ " of proxy object",
+	        instance_size, Dee_TYPE(self), sizeof(*self));
+	instance_size -= sizeof(*self);
+	ASSERTF((instance_size & 1) == 0,
+	        "Remaining instance size %" PRFuSIZ " of %r is not a multiple of 2",
+	        instance_size, Dee_TYPE(self));
+	ASSERTF(instance_size != 0,
+	        "Remaining instance size is 0; why is %r not using 'generic_proxy__serialize()'?",
+	        Dee_TYPE(self));
+	instance_size >>= 1;
+	in = (uint16_t const *)(self + 1);
+	out = DeeSerial_Addr2Mem(writer, addr + sizeof(*self), uint16_t);
+	do {
+		*out = atomic_read(in);
+		++in;
+		++out;
+	} while (--instance_size);
+	return generic_proxy__serialize(self, writer, addr);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__serialize_and_copy_atomic32(ProxyObject *__restrict self,
+                                           struct Dee_serial *__restrict writer,
+                                           Dee_seraddr_t addr) {
+	uint32_t *out;
+	uint32_t const *in;
+	size_t instance_size = serialize_copy_after_getsize((DeeObject *)self);
+	ASSERTF(instance_size >= sizeof(*self),
+	        "Instance size %" PRFuSIZ " of %r is lower than "
+	        /**/ "basic size %" PRFuSIZ " of proxy object",
+	        instance_size, Dee_TYPE(self), sizeof(*self));
+	instance_size -= sizeof(*self);
+	ASSERTF((instance_size & 3) == 0,
+	        "Remaining instance size %" PRFuSIZ " of %r is not a multiple of 4",
+	        instance_size, Dee_TYPE(self));
+	ASSERTF(instance_size != 0,
+	        "Remaining instance size is 0; why is %r not using 'generic_proxy__serialize()'?",
+	        Dee_TYPE(self));
+	instance_size >>= 2;
+	in = (uint32_t const *)(self + 1);
+	out = DeeSerial_Addr2Mem(writer, addr + sizeof(*self), uint32_t);
+	do {
+		*out = atomic_read(in);
+		++in;
+		++out;
+	} while (--instance_size);
+	return generic_proxy__serialize(self, writer, addr);
+}
+
+#if __SIZEOF_SIZE_T__ >= 8
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__serialize_and_copy_atomic64(ProxyObject *__restrict self,
+                                           struct Dee_serial *__restrict writer,
+                                           Dee_seraddr_t addr) {
+	uint64_t *out;
+	uint64_t const *in;
+	size_t instance_size = serialize_copy_after_getsize((DeeObject *)self);
+	ASSERTF(instance_size >= sizeof(*self),
+	        "Instance size %" PRFuSIZ " of %r is lower than "
+	        /**/ "basic size %" PRFuSIZ " of proxy object",
+	        instance_size, Dee_TYPE(self), sizeof(*self));
+	instance_size -= sizeof(*self);
+	ASSERTF((instance_size & 7) == 0,
+	        "Remaining instance size %" PRFuSIZ " of %r is not a multiple of 8",
+	        instance_size, Dee_TYPE(self));
+	ASSERTF(instance_size != 0,
+	        "Remaining instance size is 0; why is %r not using 'generic_proxy__serialize()'?",
+	        Dee_TYPE(self));
+	instance_size >>= 3;
+	in = (uint64_t const *)(self + 1);
+	out = DeeSerial_Addr2Mem(writer, addr + sizeof(*self), uint64_t);
+	do {
+		*out = atomic_read(in);
+		++in;
+		++out;
+	} while (--instance_size);
+	return generic_proxy__serialize(self, writer, addr);
+}
+
+#endif /* __SIZEOF_SIZE_T__ >= 8 */
+#endif /* !CONFIG_NO_THREADS */
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__serialize_and_copy_xptr_atomic(ProxyObjectWithPointer *__restrict self,
+                                              struct Dee_serial *__restrict writer,
+                                              Dee_seraddr_t addr) {
+	int result = generic_proxy__serialize((ProxyObject *)self, writer, addr);
+	if likely(result == 0) {
+		void *pointer = atomic_read(&self->po_ptr);
+		result = DeeSerial_XPutPointer(writer, addr + offsetof(ProxyObjectWithPointer, po_ptr), pointer);
+	}
+	return result;
+}
+
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy2__serialize_and_copy(ProxyObject2 *__restrict self,

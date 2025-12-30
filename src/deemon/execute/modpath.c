@@ -4213,7 +4213,7 @@ DeeModule_LoadSourceStreamEx(DeeModuleObject *__restrict self,
 	uint16_t assembler_flags;
 	uint16_t compiler_flags;
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-	ASSERT_OBJECT_TYPE(input_file, (DeeTypeObject *)&DeeFile_Type);
+	ASSERT_OBJECT_TYPE(input_file, &DeeFile_Type.ft_base);
 	ASSERT_OBJECT_TYPE_EXACT_OPT(input_pathname, &DeeString_Type);
 #if 1 /* Always prefer the manual override */
 	if (options && options->co_pathname)

@@ -452,7 +452,7 @@ typedef struct Dee_dec_writer {
 } DeeDecWriter;
 
 #define DeeDecWriter_F_NORMAL 0x0000 /* Normal flags */
-#define DeeDecWriter_F_FRELOC 0x0002 /* Force the produced dec file to be relocatable: `DeeDecWriter_F_NRELOC' will not be set and `DeeRT_ErrCannotDecSerialize' will be thrown */
+#define DeeDecWriter_F_FRELOC 0x0002 /* Force the produced dec file to be relocatable: `DeeDecWriter_F_NRELOC' will not be set and `DeeRT_ErrCannotSerialize' will be thrown */
 #define DeeDecWriter_F_NRELOC 0x0080 /* Encountered a object/pointer that cannot be serialized.
                                       * Dec generation continues, but resulting image cannot be
                                       * written to a file (iow: is "Dee_DEC_TYPE_IMAGE"). This

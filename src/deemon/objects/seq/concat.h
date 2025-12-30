@@ -37,7 +37,7 @@ typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject     *cti_curr; /* [1..1][lock(cti_lock)] The current iterator. */
 	DeeObject   *const *cti_pseq; /* [1..1][1..1][lock(cti_lock)][in(cti_cat)] The current sequence. */
-	DREF Cat           *cti_cat;  /* [1..1][const] The underly sequence cat. */
+	DREF Cat           *cti_cat;  /* [1..1][const] The underly sequence cat (purr). */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t cti_lock; /* Lock for this iterator. */
 #endif /* !CONFIG_NO_THREADS */

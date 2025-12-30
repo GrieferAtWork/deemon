@@ -120,6 +120,7 @@ struct Dee_dict_item {
 #define Dee_DICT_ITEM_INIT(hash, key, value) { hash, { { key, value } } }
 
 /* Index for "d_vtab" (real and virt version) */
+#define Dee_SIZEOF_DICT_VIDX_T __SIZEOF_SIZE_T__
 typedef size_t Dee_dict_vidx_t;
 
 typedef WUNUSED_T NONNULL_T((1)) /*virt*/Dee_dict_vidx_t (DCALL *Dee_dict_gethidx_t)(void const *__restrict htab, size_t index);

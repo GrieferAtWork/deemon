@@ -591,7 +591,7 @@ DeeFile_Filename(DeeObject *__restrict self) {
 		return DeeSystemFile_Filename(self);
 #if 0 /* There might be non-file types that implement a `filename' member. */
 	/* Check that it's a file at all. */
-	if (DeeObject_AssertType(self, (DeeTypeObject *)&DeeFile_Type))
+	if (DeeObject_AssertType(self, &DeeFile_Type.ft_base))
 		goto err;
 #endif
 	result = DeeObject_GetAttr(self, (DeeObject *)&str_filename);
@@ -2728,7 +2728,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 file_repr(DeeObject *__restrict self) {
-	if (Dee_TYPE(self) == (DeeTypeObject *)&DeeFile_Type)
+	if (Dee_TYPE(self) == &DeeFile_Type.ft_base)
 		return (DREF DeeStringObject *)DeeString_New("File()");
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_REPR);
 	return NULL;

@@ -264,7 +264,7 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
-		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
+		/* .tp_base     = */ &DeeFile_Type.ft_base,
 		/* .tp_init = */ {
 			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 				/* T:              */ MemoryFile,
@@ -718,6 +718,55 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+reader_serialize(Reader *__restrict self,
+                 DeeSerial *__restrict writer,
+                 Dee_seraddr_t addr) {
+	Reader *out;
+	byte_t const *self__r_begin;
+	byte_t const *self__r_ptr;
+	byte_t const *self__r_end;
+	DREF DeeObject *self__r_owner;
+	DeeBuffer self__r_buffer;
+	DeeFileReader_LockRead(self);
+	self__r_owner = self->r_owner;
+	if (!self__r_owner) {
+		DeeFileReader_LockEndRead(self);
+		out = DeeSerial_Addr2Mem(writer, addr, Reader);
+		out->r_begin = NULL;
+		out->r_ptr   = NULL;
+		out->r_end   = NULL;
+		out->r_owner = NULL;
+		out->r_buffer.bb_base = NULL;
+		out->r_buffer.bb_size = 0;
+	} else {
+		Dee_Incref(self__r_owner);
+		self__r_begin  = self->r_begin;
+		self__r_ptr    = self->r_ptr;
+		self__r_end    = self->r_end;
+		self__r_buffer = self->r_buffer;
+		DeeFileReader_LockEndRead(self);
+#define ADDROF(field) (addr + offsetof(Reader, field))
+		if (DeeSerial_PutObjectInherited(writer, ADDROF(r_owner), self__r_owner))
+			goto err;
+		if (DeeSerial_PutPointer(writer, ADDROF(r_begin), self__r_begin))
+			goto err;
+		if (DeeSerial_PutPointer(writer, ADDROF(r_ptr), self__r_ptr))
+			goto err;
+		if (DeeSerial_PutPointer(writer, ADDROF(r_end), self__r_end))
+			goto err;
+		if (DeeSerial_PutPointer(writer, ADDROF(r_buffer.bb_base), self__r_buffer.bb_base))
+			goto err;
+#undef ADDROF
+		out = DeeSerial_Addr2Mem(writer, addr, Reader);
+		out->r_buffer.bb_size = self__r_buffer.bb_size;
+	}
+	Dee_atomic_rwlock_init(&out->r_lock);
+	return 0;
+err:
+	return -1;
+}
+
 PRIVATE NONNULL((1, 2)) Dee_ssize_t DCALL
 reader_printrepr(Reader *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t result, temp;
@@ -762,7 +811,7 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONLOOPING,
-		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
+		/* .tp_base     = */ &DeeFile_Type.ft_base,
 		/* .tp_init = */ {
 			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 				/* T:              */ Reader,
@@ -771,7 +820,7 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ &reader_init_kw,
-				/* tp_serialize:   */ NULL /* TODO */
+				/* tp_serialize:   */ &reader_serialize
 			),
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&reader_fini,
 			/* .tp_assign      = */ NULL,
@@ -917,6 +966,90 @@ writer_init(Writer *__restrict self, size_t argc, DeeObject *const *argv) {
 		self->w_printer.up_length = WSTR_LENGTH(self->w_printer.up_buffer);
 	}
 	Dee_Incref(args.init);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+writer_serialize(Writer *__restrict self,
+                 DeeSerial *__restrict writer,
+                 Dee_seraddr_t addr) {
+	Writer *out;
+	size_t self__up_length;
+	void *self__up_buffer;
+	unsigned char self__up_flags;
+	unsigned char self__up_pend[COMPILER_LENOF(self->w_printer.up_pend)];
+again:
+	DeeFileWriter_LockRead(self);
+	self__up_length = self->w_printer.up_length;
+	self__up_buffer = self->w_printer.up_buffer;
+	self__up_flags  = self->w_printer.up_flags;
+	memcpy(self__up_pend, self->w_printer.up_pend, sizeof(self__up_pend));
+	if (self__up_buffer) {
+		unsigned int width = self__up_flags & Dee_UNICODE_PRINTER_FWIDTH;
+		void *copy_base;
+		size_t copy_size;
+		ptrdiff_t copy_offset;
+		Dee_seraddr_t copy_outaddr;
+		void *copy_out;
+		SWITCH_SIZEOF_WIDTH(width) {
+		Dee_CASE_WIDTH_1BYTE: {
+			copy_base   = COMPILER_CONTAINER_OF((char *)self__up_buffer, DeeStringObject, s_str);
+			copy_size   = offsetof(DeeStringObject, s_str) + ((self__up_length + 1) * sizeof(char));
+			copy_offset = offsetof(DeeStringObject, s_str);
+		}	break;
+
+		Dee_CASE_WIDTH_2BYTE: {
+			copy_base   = (size_t *)self__up_buffer - 1;
+			copy_size   = sizeof(size_t) + ((self__up_length + 1) * 2);
+			copy_offset = sizeof(size_t);
+		}	break;
+
+		Dee_CASE_WIDTH_4BYTE: {
+			copy_base   = (size_t *)self__up_buffer - 1;
+			copy_size   = sizeof(size_t) + ((self__up_length + 1) * 4);
+			copy_offset = sizeof(size_t);
+		}	break;
+		}
+		copy_outaddr = DeeSerial_TryMalloc(writer, copy_size, NULL);
+		if (!Dee_SERADDR_ISOK(copy_outaddr)) {
+			DeeFileWriter_LockEndRead(self);
+			copy_outaddr = DeeSerial_Malloc(writer, copy_size, NULL);
+			if (!Dee_SERADDR_ISOK(copy_outaddr))
+				goto err;
+			DeeFileWriter_LockRead(self);
+			if unlikely(self__up_length != self->w_printer.up_length) {
+free_copy_outaddr_and_again:
+				DeeFileWriter_LockEndRead(self);
+				DeeSerial_Free(writer, copy_outaddr, NULL);
+				goto again;
+			}
+			if unlikely(self__up_buffer != self->w_printer.up_buffer)
+				goto free_copy_outaddr_and_again;
+			if unlikely(self__up_flags != self->w_printer.up_flags)
+				goto free_copy_outaddr_and_again;
+			if unlikely(memcmp(self__up_pend, self->w_printer.up_pend, sizeof(self__up_pend)) != 0)
+				goto free_copy_outaddr_and_again;
+		}
+		copy_out = DeeSerial_Addr2Mem(writer, copy_outaddr, void *);
+		memcpy(copy_out, copy_base, copy_size);
+		((size_t *)((byte_t *)copy_out + copy_offset))[-1] = self__up_length;
+		DeeFileWriter_LockEndRead(self);
+		if (DeeSerial_PutAddr(writer, addr + offsetof(Writer, w_printer.up_buffer),
+		                      copy_outaddr + copy_offset))
+			goto err;
+		out = DeeSerial_Addr2Mem(writer, addr, Writer);
+	} else {
+		DeeFileWriter_LockEndRead(self);
+		out = DeeSerial_Addr2Mem(writer, addr, Writer);
+		out->w_printer.up_buffer = NULL;
+	}
+	Dee_atomic_rwlock_init(&out->w_lock);
+	out->w_string            = NULL;
+	out->w_printer.up_length = self__up_length;
+	out->w_printer.up_flags  = self__up_flags;
+	memcpy(out->w_printer.up_pend, self__up_pend, sizeof(self__up_pend));
 	return 0;
 err:
 	return -1;
@@ -1723,7 +1856,7 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONLOOPING,
-		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
+		/* .tp_base     = */ &DeeFile_Type.ft_base,
 		/* .tp_init = */ {
 			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 				/* T:              */ Writer,
@@ -1732,7 +1865,7 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ &writer_init,
 				/* tp_any_ctor_kw: */ NULL,
-				/* tp_serialize:   */ NULL /* TODO */
+				/* tp_serialize:   */ &writer_serialize
 			),
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&writer_fini,
 			/* .tp_assign      = */ NULL,
@@ -1847,7 +1980,7 @@ PUBLIC DeeFileTypeObject DeeFilePrinter_Type = {
 		/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
-		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
+		/* .tp_base     = */ &DeeFile_Type.ft_base,
 		/* .tp_init = */ {
 			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 				/* T:              */ Printer,
@@ -1856,7 +1989,7 @@ PUBLIC DeeFileTypeObject DeeFilePrinter_Type = {
 				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ NULL,
-				/* tp_serialize:   */ NULL /* TODO */
+				/* tp_serialize:   */ NULL /* Not serializable (wouldn't work with `DeeFile_ClosePrinter()') */
 			),
 			/* .tp_dtor        = */ NULL,
 			/* .tp_assign      = */ NULL,

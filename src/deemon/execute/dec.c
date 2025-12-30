@@ -1354,7 +1354,7 @@ decwriter_getdep(DeeDecWriter *__restrict self,
 		            /**/ "serialized, meaning this one can't be either\n",
 		            DeeModule_GetAbsName((DeeObject *)mod));
 		if (self->dw_flags & DeeDecWriter_F_FRELOC) {
-			DeeRT_ErrCannotDecSerialize(mod);
+			DeeRT_ErrCannotSerialize(mod);
 			goto err;
 		}
 		self->dw_flags |= DeeDecWriter_F_NRELOC;
@@ -1812,7 +1812,7 @@ cannot_serialize:
 	Dee_DPRINTF("[LD][dec@%#" PRFxSIZ "] Warning: Unable to serialize instance of %q at %p%+" PRFdSIZ ": %r\n",
 	            addrof_object, DeeType_GetName(Dee_TYPE(obj)), obj, offset_into_ob, obj);
 	if (self->dw_flags & DeeDecWriter_F_FRELOC)
-		return DeeRT_ErrCannotDecSerialize(obj);
+		return DeeRT_ErrCannotSerialize(obj);
 
 	/* Create a fake RREL relocation that already happened */
 	if (decwriter_insert_drrela_miss(self, seraddr32(addrof_object), -(Dee_dec_off32_t)offset_into_ob))

@@ -686,17 +686,9 @@ ca_copy(ClassAttribute *__restrict self,
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ca_serialize(ClassAttribute *__restrict self,
-             DeeSerial *__restrict writer, Dee_seraddr_t addr) {
-#define ADDROF(field) (addr + offsetof(ClassAttribute, field))
-	if (generic_proxy__serialize((ProxyObject *)self, writer, addr))
-		goto err;
-	return DeeSerial_PutPointer(writer, ADDROF(ca_attr), self->ca_attr);
-#undef ADDROF
-err:
-	return -1;
-}
+STATIC_ASSERT(offsetof(ClassAttribute, ca_desc) == offsetof(ProxyObjectWithPointer, po_obj));
+STATIC_ASSERT(offsetof(ClassAttribute, ca_attr) == offsetof(ProxyObjectWithPointer, po_ptr));
+#define ca_serialize generic_proxy__serialize_and_copy_ptr
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cat_serialize(ClassAttributeTable *__restrict self,
@@ -2617,9 +2609,9 @@ STATIC_ASSERT(offsetof(ObjectTable, ot_owner) == offsetof(ProxyObject, po_obj));
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ot_serialize(ObjectTable *__restrict self,
              DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(ObjectTable, field))
 	ObjectTable *out = DeeSerial_Addr2Mem(writer, addr, ObjectTable);
 	out->ot_size = self->ot_size;
-#define ADDROF(field) (addr + offsetof(ObjectTable, field))
 	if (generic_proxy__serialize((ProxyObject *)self, writer, addr))
 		goto err;
 	return DeeSerial_PutPointer(writer, ADDROF(ot_desc), self->ot_desc);

@@ -129,6 +129,29 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+catiterator_serialize(CatIterator *__restrict self,
+                      DeeSerial *__restrict writer,
+                      Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(CatIterator, field))
+	DREF DeeObject *in__cti_curr;
+	DeeObject *const *in__cti_pseq;
+	Dee_atomic_rwlock_init(&DeeSerial_Addr2Mem(writer, addr, CatIterator)->cti_lock);
+	if (DeeSerial_PutObject(writer, ADDROF(cti_cat), self->cti_cat))
+		goto err;
+	CatIterator_LockRead(self);
+	in__cti_curr = self->cti_curr;
+	in__cti_pseq = self->cti_pseq;
+	Dee_Incref(in__cti_curr);
+	CatIterator_LockEndRead(self);
+	if (DeeSerial_PutObjectInherited(writer, ADDROF(cti_curr), in__cti_curr))
+		goto err;
+	return DeeSerial_PutPointer(writer, ADDROF(cti_pseq), in__cti_pseq);
+err:
+	return -1;
+#undef ADDROF
+}
+
 PRIVATE NONNULL((1)) void DCALL
 catiterator_fini(CatIterator *__restrict self) {
 	Dee_Decref(self->cti_curr);
@@ -363,7 +386,7 @@ INTERN DeeTypeObject SeqConcatIterator_Type = {
 			/* tp_deep_ctor:   */ &catiterator_deep,
 			/* tp_any_ctor:    */ &catiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &catiterator_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&catiterator_fini,
 		/* .tp_assign      = */ NULL,

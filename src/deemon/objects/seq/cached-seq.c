@@ -29,6 +29,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/system-features.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
@@ -163,6 +164,65 @@ cswi_init(CachedSeq_WithIter *__restrict self,
 	Dee_atomic_lock_init(&self->cswi_lock);
 	objectlist_init(&self->cswi_cache);
 	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cswi_serialize(CachedSeq_WithIter *__restrict self,
+               DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	CachedSeq_WithIter *out;
+	size_t sizeof_list;
+	size_t out__cswi_cache_ol_elemc;
+	size_t addrof_out__cswi_cache_ol_elemv;
+	DREF DeeObject **in__cswi_cache_ol_elemv;
+	DREF DeeObject **out__cswi_cache_ol_elemv;
+	DREF DeeObject *in__cswi_iter;
+again:
+	out = DeeSerial_Addr2Mem(writer, addr, CachedSeq_WithIter);
+	CachedSeq_WithIter_LockAcquire(self);
+	out->cswi_cache.ol_elemc = self->cswi_cache.ol_elemc;
+#ifdef DEE_OBJECTLIST_HAVE_ELEMA
+	out->cswi_cache.ol_elema = out->cswi_cache.ol_elemc;
+#endif /* DEE_OBJECTLIST_HAVE_ELEMA */
+	Dee_atomic_lock_init(&out->cswi_lock);
+	if (self->cswi_cache.ol_elemv == NULL) {
+		CachedSeq_WithIter_LockRelease(self);
+		out->cswi_cache.ol_elemv = NULL;
+		return 0;
+	}
+	out__cswi_cache_ol_elemc = out->cswi_cache.ol_elemc;
+	sizeof_list = out__cswi_cache_ol_elemc * sizeof(DREF DeeObject *);
+	addrof_out__cswi_cache_ol_elemv = DeeSerial_TryMalloc(writer, sizeof_list, NULL);
+	if (!Dee_SERADDR_ISOK(addrof_out__cswi_cache_ol_elemv)) {
+		CachedSeq_WithIter_LockRelease(self);
+		addrof_out__cswi_cache_ol_elemv = DeeSerial_Malloc(writer, sizeof_list, NULL);
+		if (!Dee_SERADDR_ISOK(addrof_out__cswi_cache_ol_elemv))
+			goto err;
+		CachedSeq_WithIter_LockAcquire(self);
+		if unlikely(out__cswi_cache_ol_elemc != self->cswi_cache.ol_elemc) {
+			CachedSeq_WithIter_LockRelease(self);
+			goto again;
+		}
+	}
+//	out = DeeSerial_Addr2Mem(writer, addr, List);
+	out__cswi_cache_ol_elemv = DeeSerial_Addr2Mem(writer, addrof_out__cswi_cache_ol_elemv, DREF DeeObject *);
+	in__cswi_cache_ol_elemv  = self->cswi_cache.ol_elemv;
+	Dee_Movrefv(out__cswi_cache_ol_elemv, in__cswi_cache_ol_elemv, out__cswi_cache_ol_elemc);
+	in__cswi_iter = self->cswi_iter;
+	Dee_Incref(in__cswi_iter);
+	CachedSeq_WithIter_LockRelease(self);
+	if (DeeSerial_InplacePutObjectv(writer,
+	                                addrof_out__cswi_cache_ol_elemv,
+	                                out__cswi_cache_ol_elemc))
+		goto err_in__cswi_iter;
+	if (DeeSerial_PutObjectInherited(writer, addr + offsetof(CachedSeq_WithIter, cswi_iter), in__cswi_iter))
+		goto err;
+	return DeeSerial_PutAddr(writer,
+	                         addr + offsetof(CachedSeq_WithIter, cswi_cache.ol_elemv),
+	                         addrof_out__cswi_cache_ol_elemv);
+err_in__cswi_iter:
+	Dee_Decref_unlikely(in__cswi_iter);
 err:
 	return -1;
 }
@@ -576,7 +636,7 @@ INTERN DeeTypeObject CachedSeq_WithIter_Type = {
 			/* tp_deep_ctor:   */ &cswi_deep,
 			/* tp_any_ctor:    */ &cswi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &cswi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswi_fini,
 		/* .tp_assign      = */ NULL,
@@ -611,6 +671,10 @@ INTERN DeeTypeObject CachedSeq_WithIter_Type = {
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
+
+STATIC_ASSERT(offsetof(CachedSeq_WithIter_Iterator, cswii_cache) == offsetof(ProxyObjectWithPointer, po_obj));
+STATIC_ASSERT(offsetof(CachedSeq_WithIter_Iterator, cswii_index) == offsetof(ProxyObjectWithPointer, po_ptr));
+#define cswiiter_serialize generic_proxy__serialize_and_copy_atomic(__SIZEOF_SIZE_T__)
 
 STATIC_ASSERT(offsetof(CachedSeq_WithIter_Iterator, cswii_cache) == offsetof(ProxyObject, po_obj));
 #define cswiiter_fini  generic_proxy__fini
@@ -736,7 +800,7 @@ INTERN DeeTypeObject CachedSeq_WithIter_Iterator_Type = {
 			/* tp_deep_ctor:   */ &cswiiter_deep,
 			/* tp_any_ctor:    */ &cswiiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &cswiiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswiiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1796,7 +1860,7 @@ INTERN DeeTypeObject CachedSeq_WithSizeObAndGetItem_Type = {
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
-			/* T:              */ CachedSeq_WithIter,
+			/* T:              */ CachedSeq_WithGetItem,
 			/* tp_ctor:        */ &cswsogi_ctor,
 			/* tp_copy_ctor:   */ &cswsogi_copy,
 			/* tp_deep_ctor:   */ &cswsogi_deep,
@@ -1844,7 +1908,7 @@ INTERN DeeTypeObject CachedSeq_WithSizeAndGetItem_Type = {
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
-			/* T:              */ CachedSeq_WithIter,
+			/* T:              */ CachedSeq_WithGetItem,
 			/* tp_ctor:        */ &cswsgi_ctor,
 			/* tp_copy_ctor:   */ &cswsgi_copy,
 			/* tp_deep_ctor:   */ &cswsgi_deep,

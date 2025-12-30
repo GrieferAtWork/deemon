@@ -243,7 +243,7 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
 		/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
-		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
+		/* .tp_base     = */ &DeeFile_Type.ft_base,
 		/* .tp_init = */ {
 			Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 				/* tp_ctor:        */ &debugfile_get,
@@ -3208,7 +3208,7 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONLOOPING,
-		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
+		/* .tp_base     = */ &DeeFile_Type.ft_base,
 		/* .tp_init = */ {
 #ifdef deemon_file_HAVE_sysfile_init_kw
 #define PTR_sysfile_init_kw &sysfile_init_kw

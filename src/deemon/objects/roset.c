@@ -106,6 +106,10 @@ rosetiterator_copy(RoSetIterator *__restrict self,
 	return 0;
 }
 
+STATIC_ASSERT(offsetof(RoSetIterator, rosi_set) == offsetof(ProxyObjectWithPointer, po_obj));
+STATIC_ASSERT(offsetof(RoSetIterator, rosi_next) == offsetof(ProxyObjectWithPointer, po_ptr));
+#define rosetiterator_serialize generic_proxy__serialize_and_copy_ptr_atomic
+
 STATIC_ASSERT(offsetof(RoSetIterator, rosi_set) == offsetof(ProxyObject, po_obj));
 #define rosetiterator_fini  generic_proxy__fini
 #define rosetiterator_visit generic_proxy__visit
@@ -202,7 +206,7 @@ INTERN DeeTypeObject RoSetIterator_Type = {
 			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ &rosetiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &rosetiterator_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rosetiterator_fini,
 		/* .tp_assign      = */ NULL,

@@ -82,17 +82,9 @@ INTDEF DeeTypeObject BytesIterator_Type;
 #define bytesiter_fini  generic_proxy__fini
 #define bytesiter_visit generic_proxy__visit
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-bytesiter_serialize(BytesIterator *__restrict self,
-                    DeeSerial *__restrict writer,
-                    Dee_seraddr_t addr) {
-	int result = generic_proxy__serialize((ProxyObject *)self, writer, addr);
-	if likely(result == 0) {
-		byte_t *pointer = BytesIterator_GetIter(self);
-		result = DeeSerial_PutPointer(writer, addr + offsetof(BytesIterator, bi_iter), pointer);
-	}
-	return result;
-}
+STATIC_ASSERT(offsetof(BytesIterator, bi_bytes) == offsetof(ProxyObjectWithPointer, po_obj));
+STATIC_ASSERT(offsetof(BytesIterator, bi_iter) == offsetof(ProxyObjectWithPointer, po_ptr));
+#define bytesiter_serialize generic_proxy__serialize_and_copy_ptr_atomic
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytesiter_next(BytesIterator *__restrict self) {

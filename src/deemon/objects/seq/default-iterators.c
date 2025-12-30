@@ -32,6 +32,7 @@
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
@@ -93,6 +94,26 @@ di_gi_deepcopy(DefaultIterator_WithGetItemIndex *__restrict self,
 	self->digi_tp_getitem_index = other->digi_tp_getitem_index;
 	self->digi_index = atomic_read(&other->digi_index);
 	return 0;
+err:
+	return -1;
+}
+
+#define di_sgi_serialize  di_gi_serialize
+#define di_sgif_serialize di_gi_serialize
+#define di_stgi_serialize di_gi_serialize
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_gi_serialize(DefaultIterator_WithGetItemIndex *__restrict self,
+                DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	int result = generic_proxy__serialize((ProxyObject *)self, writer, addr);
+	if likely(result == 0) {
+		DefaultIterator_WithGetItemIndex *out;
+		if (DeeSerial_PutPointer(writer, addr + offsetof(DefaultIterator_WithGetItemIndex, digi_tp_getitem_index),
+		                         (void const *)self->digi_tp_getitem_index))
+			goto err;
+		out = DeeSerial_Addr2Mem(writer, addr, DefaultIterator_WithGetItemIndex);
+		out->digi_index = atomic_read(&self->digi_index);
+	}
+	return result;
 err:
 	return -1;
 }
@@ -512,7 +533,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemIndex_Type = {
 			/* tp_deep_ctor:   */ &di_gi_deepcopy,
 			/* tp_any_ctor:    */ &di_gi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_gi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_gi_fini,
 		/* .tp_assign      = */ NULL,
@@ -564,7 +585,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemIndexPair_Type = {
 			/* tp_deep_ctor:   */ &di_gi_deepcopy,
 			/* tp_any_ctor:    */ &di_gi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_gi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_gi_fini,
 		/* .tp_assign      = */ NULL,
@@ -614,7 +635,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndex_Type = {
 			/* tp_deep_ctor:   */ &di_sgi_deepcopy,
 			/* tp_any_ctor:    */ &di_sgi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_sgi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_sgi_fini,
 		/* .tp_assign      = */ NULL,
@@ -666,7 +687,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexPair_Type = {
 			/* tp_deep_ctor:   */ &di_sgi_deepcopy,
 			/* tp_any_ctor:    */ &di_sgi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_sgi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_sgi_fini,
 		/* .tp_assign      = */ NULL,
@@ -716,7 +737,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFast_Type = {
 			/* tp_deep_ctor:   */ &di_sgif_deepcopy,
 			/* tp_any_ctor:    */ &di_sgif_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_sgif_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_sgif_fini,
 		/* .tp_assign      = */ NULL,
@@ -768,7 +789,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFastPair_Type = {
 			/* tp_deep_ctor:   */ &di_sgif_deepcopy,
 			/* tp_any_ctor:    */ &di_sgif_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_sgif_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_sgif_fini,
 		/* .tp_assign      = */ NULL,
@@ -818,7 +839,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndTryGetItemIndex_Type = {
 			/* tp_deep_ctor:   */ &di_stgi_deepcopy,
 			/* tp_any_ctor:    */ &di_stgi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_stgi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_stgi_fini,
 		/* .tp_assign      = */ NULL,
@@ -870,7 +891,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndTryGetItemIndexPair_Type = {
 			/* tp_deep_ctor:   */ &di_stgi_deepcopy,
 			/* tp_any_ctor:    */ &di_stgi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_stgi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_stgi_fini,
 		/* .tp_assign      = */ NULL,
@@ -1003,6 +1024,28 @@ di_g_clear(DefaultIterator_WithGetItem *__restrict self) {
 	self->dig_index = DeeNone_NewRef();
 	DefaultIterator_WithGetItem_LockRelease(self);
 	Dee_Decref(index);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_g_serialize(DefaultIterator_WithGetItem *__restrict self,
+               DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	DREF DeeObject *index;
+	Dee_atomic_lock_init(&DeeSerial_Addr2Mem(writer, addr, DefaultIterator_WithGetItem)->dig_lock);
+	if unlikely(generic_proxy__serialize((ProxyObject *)self, writer, addr))
+		goto err;
+	if (DeeSerial_PutPointer(writer, addr + offsetof(DefaultIterator_WithGetItem, dig_tp_getitem),
+	                         (void const *)self->dig_tp_getitem))
+		goto err;
+	if (DeeSerial_PutObject(writer, addr + offsetof(DefaultIterator_WithGetItem, dig_seq),
+	                        self->dig_seq))
+		goto err;
+	DefaultIterator_WithGetItem_LockAcquire(self);
+	index = self->dig_index;
+	Dee_Incref(index);
+	DefaultIterator_WithGetItem_LockRelease(self);
+	return DeeSerial_PutObjectInherited(writer, addr + offsetof(DefaultIterator_WithGetItem, dig_index), index);
+err:
+	return -1;
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -1213,7 +1256,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItem_Type = {
 			/* tp_deep_ctor:   */ &di_g_deepcopy,
 			/* tp_any_ctor:    */ &di_g_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_g_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_g_fini,
 		/* .tp_assign      = */ NULL,
@@ -1264,7 +1307,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemPair_Type = {
 			/* tp_deep_ctor:   */ &di_g_deepcopy,
 			/* tp_any_ctor:    */ &di_g_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_g_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_g_fini,
 		/* .tp_assign      = */ NULL,
@@ -1403,6 +1446,31 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_lock) ==
               offsetof(DefaultIterator_WithGetItem, dig_lock));
 #endif /* !CONFIG_NO_THREADS */
 #define di_sg_deepload di_g_deepload
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_sg_serialize(DefaultIterator_WithSizeObAndGetItem *__restrict self,
+                DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	DREF DeeObject *index;
+	Dee_atomic_lock_init(&DeeSerial_Addr2Mem(writer, addr, DefaultIterator_WithSizeObAndGetItem)->disg_lock);
+	if unlikely(generic_proxy__serialize((ProxyObject *)self, writer, addr))
+		goto err;
+	if (DeeSerial_PutPointer(writer, addr + offsetof(DefaultIterator_WithSizeObAndGetItem, disg_tp_getitem),
+	                         (void const *)self->disg_tp_getitem))
+		goto err;
+	if (DeeSerial_PutObject(writer, addr + offsetof(DefaultIterator_WithSizeObAndGetItem, disg_seq),
+	                        self->disg_seq))
+		goto err;
+	if (DeeSerial_PutObject(writer, addr + offsetof(DefaultIterator_WithSizeObAndGetItem, disg_end),
+	                        self->disg_end))
+		goto err;
+	DefaultIterator_WithSizeAndGetItem_LockAcquire(self);
+	index = self->disg_index;
+	Dee_Incref(index);
+	DefaultIterator_WithSizeAndGetItem_LockRelease(self);
+	return DeeSerial_PutObjectInherited(writer, addr + offsetof(DefaultIterator_WithSizeObAndGetItem, disg_index), index);
+err:
+	return -1;
+}
 
 PRIVATE NONNULL((1)) void DCALL
 di_sg_fini(DefaultIterator_WithSizeObAndGetItem *__restrict self) {
@@ -1552,7 +1620,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type = {
 			/* tp_deep_ctor:   */ &di_sg_deepcopy,
 			/* tp_any_ctor:    */ &di_sg_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_sg_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_sg_fini,
 		/* .tp_assign      = */ NULL,
@@ -1603,7 +1671,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItemPair_Type = {
 			/* tp_deep_ctor:   */ &di_sg_deepcopy,
 			/* tp_any_ctor:    */ &di_sg_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_sg_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_sg_fini,
 		/* .tp_assign      = */ NULL,
@@ -1707,6 +1775,20 @@ di_nl_deepcopy(DefaultIterator_WithNextAndLimit *__restrict self,
 	self->dinl_tp_next = other->dinl_tp_next;
 	self->dinl_limit   = atomic_read(&other->dinl_limit);
 	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_nl_serialize(DefaultIterator_WithNextAndLimit *__restrict self,
+                DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	DefaultIterator_WithNextAndLimit *out;
+	out = DeeSerial_Addr2Mem(writer, addr, DefaultIterator_WithNextAndLimit);
+	out->dinl_limit = atomic_read(&self->dinl_limit);
+	if unlikely(generic_proxy__serialize((ProxyObject *)self, writer, addr))
+		goto err;
+	return DeeSerial_PutPointer(writer, addr + offsetof(DefaultIterator_WithNextAndLimit, dinl_tp_next),
+	                            (void const *)self->dinl_tp_next);
 err:
 	return -1;
 }
@@ -1818,7 +1900,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndLimit_Type = {
 			/* tp_deep_ctor:   */ &di_nl_deepcopy,
 			/* tp_any_ctor:    */ &di_nl_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_nl_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_nl_fini,
 		/* .tp_assign      = */ NULL,
@@ -1965,6 +2047,21 @@ err:
 	return -1;
 }
 
+
+#define di_iktrgim_serialize di_ikgim_serialize
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_ikgim_serialize(DefaultIterator_WithIterKeysAndGetItem *__restrict self,
+                   DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DefaultIterator_WithIterKeysAndGetItem, field))
+	int result = generic_proxy2__serialize((ProxyObject2 *)self, writer, addr);
+	if likely(result == 0)
+		result = DeeSerial_PutPointer(writer, ADDROF(diikgi_tp_next), (void const *)self->diikgi_tp_next);
+	if likely(result == 0)
+		result = DeeSerial_PutPointer(writer, ADDROF(diikgi_tp_getitem), (void const *)self->diikgi_tp_getitem);
+	return result;
+#undef ADDROF
+}
+
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_seq) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_seq) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(ProxyObject2, po_obj1) ||
@@ -2085,7 +2182,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type = {
 			/* tp_deep_ctor:   */ &di_ikgim_deepcopy,
 			/* tp_any_ctor:    */ &di_ikgim_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_ikgim_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_ikgim_fini,
 		/* .tp_assign      = */ NULL,
@@ -2136,7 +2233,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type = {
 			/* tp_deep_ctor:   */ &di_iktrgim_deepcopy,
 			/* tp_any_ctor:    */ &di_iktrgim_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_iktrgim_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_iktrgim_fini,
 		/* .tp_assign      = */ NULL,
@@ -2464,14 +2561,15 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithNextAndCounterAndLimit, dincl_iter) =
 STATIC_ASSERT(offsetof(DefaultIterator_WithNextAndCounterAndLimit, dincl_tp_next) == offsetof(DefaultIterator_WithNextAndCounter, dinc_tp_next));
 STATIC_ASSERT(offsetof(DefaultIterator_WithNextAndCounterAndLimit, dincl_counter) == offsetof(DefaultIterator_WithNextAndCounter, dinc_counter));
 
-#define di_ncp_copy     di_nl_copy
-#define di_ncp_deepcopy di_nl_deepcopy
-#define di_ncp_fini     di_nl_fini
-#define di_ncp_visit    di_nl_visit
-#define di_ncp_hash     di_nl_hash
-#define di_ncpl_fini    di_ncp_fini
-#define di_ncpl_visit   di_ncp_visit
-#define di_ncpl_hash    di_ncp_hash
+#define di_ncp_copy      di_nl_copy
+#define di_ncp_deepcopy  di_nl_deepcopy
+#define di_ncp_serialize di_nl_serialize
+#define di_ncp_fini      di_nl_fini
+#define di_ncp_visit     di_nl_visit
+#define di_ncp_hash      di_nl_hash
+#define di_ncpl_fini     di_ncp_fini
+#define di_ncpl_visit    di_ncp_visit
+#define di_ncpl_hash     di_ncp_hash
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_ncpl_copy(DefaultIterator_WithNextAndCounterAndLimit *__restrict self,
@@ -2487,6 +2585,15 @@ di_ncpl_deepcopy(DefaultIterator_WithNextAndCounterAndLimit *__restrict self,
 	self->dincl_limit = other->dincl_limit;
 	return di_ncp_deepcopy((DefaultIterator_WithNextAndLimit *)self,
 	                       (DefaultIterator_WithNextAndLimit *)other);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_ncpl_serialize(DefaultIterator_WithNextAndCounterAndLimit *__restrict self,
+                  DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	DefaultIterator_WithNextAndCounterAndLimit *out;
+	out = DeeSerial_Addr2Mem(writer, addr, DefaultIterator_WithNextAndCounterAndLimit);
+	out->dincl_limit = self->dincl_limit;
+	return di_ncp_serialize((DefaultIterator_WithNextAndLimit *)self, writer, addr);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2626,7 +2733,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndCounterPair_Type = {
 			/* tp_deep_ctor:   */ &di_ncp_deepcopy,
 			/* tp_any_ctor:    */ &di_ncp_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_ncp_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_ncp_fini,
 		/* .tp_assign      = */ NULL,
@@ -2676,7 +2783,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndCounterAndLimitPair_Type = {
 			/* tp_deep_ctor:   */ &di_ncpl_deepcopy,
 			/* tp_any_ctor:    */ &di_ncpl_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_ncpl_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_ncpl_fini,
 		/* .tp_assign      = */ NULL,
@@ -2755,6 +2862,21 @@ err_iter:
 	Dee_Decref(self->dinuf_iter);
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_nuf_serialize(DefaultIterator_WithNextAndUnpackFilter *__restrict self,
+                 DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DefaultIterator_WithNextAndUnpackFilter, field))
+	int result = DeeSerial_PutObject(writer, ADDROF(dinuf_iter), self->dinuf_iter);
+	if likely(result == 0)
+		result = DeeSerial_PutPointer(writer, ADDROF(dinuf_tp_next), (void const *)self->dinuf_tp_next);
+	if likely(result == 0)
+		result = DeeSerial_PutObject(writer, ADDROF(dinuf_start), self->dinuf_start);
+	if likely(result == 0)
+		result = DeeSerial_PutObject(writer, ADDROF(dinuf_end), self->dinuf_end);
+	return result;
+#undef ADDROF
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2960,7 +3082,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndUnpackFilter_Type = {
 			/* tp_deep_ctor:   */ &di_nuf_deepcopy,
 			/* tp_any_ctor:    */ &di_nuf_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_nuf_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_nuf_fini,
 		/* .tp_assign      = */ NULL,
@@ -3031,6 +3153,11 @@ di_nk_deepcopy(DefaultIterator_PairSubItem *__restrict self,
 err:
 	return -1;
 }
+
+STATIC_ASSERT(offsetof(DefaultIterator_PairSubItem, dipsi_iter) == offsetof(ProxyObjectWithPointer, po_obj));
+STATIC_ASSERT(offsetof(DefaultIterator_PairSubItem, dipsi_next) == offsetof(ProxyObjectWithPointer, po_ptr));
+#define di_nv_serialize generic_proxy__serialize_and_copy_ptr_atomic
+#define di_nk_serialize generic_proxy__serialize_and_copy_ptr_atomic
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_nk_init(DefaultIterator_PairSubItem *__restrict self,
@@ -3145,7 +3272,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextKey = {
 			/* tp_deep_ctor:   */ &di_nk_deepcopy,
 			/* tp_any_ctor:    */ &di_nk_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_nk_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_nk_fini,
 		/* .tp_assign      = */ NULL,
@@ -3195,7 +3322,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextValue = {
 			/* tp_deep_ctor:   */ &di_nv_deepcopy,
 			/* tp_any_ctor:    */ &di_nv_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_nv_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_nv_fini,
 		/* .tp_assign      = */ NULL,

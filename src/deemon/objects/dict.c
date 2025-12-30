@@ -99,7 +99,7 @@ INTDEF DeeTypeObject DictIterator_Type;
 STATIC_ASSERT(offsetof(DictIterator, di_dict) == offsetof(ProxyObject, po_obj));
 #define diter_fini      generic_proxy__fini
 #define diter_visit     generic_proxy__visit
-#define diter_serialize generic_proxy__serialize_and_copy
+#define diter_serialize generic_proxy__serialize_and_copy_atomic(Dee_SIZEOF_DICT_VIDX_T)
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 diter_ctor(DictIterator *__restrict self) {

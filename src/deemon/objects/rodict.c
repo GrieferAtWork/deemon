@@ -598,8 +598,9 @@ typedef struct {
 INTDEF DeeTypeObject RoDictIterator_Type;
 
 STATIC_ASSERT(offsetof(RoDictIterator, rodi_dict) == offsetof(ProxyObject, po_obj));
-#define rditer_fini  generic_proxy__fini
-#define rditer_visit generic_proxy__visit
+#define rditer_fini      generic_proxy__fini
+#define rditer_visit     generic_proxy__visit
+#define rditer_serialize generic_proxy__serialize_and_copy_atomic(Dee_SIZEOF_DICT_VIDX_T)
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rditer_ctor(RoDictIterator *__restrict self) {
@@ -776,7 +777,7 @@ INTERN DeeTypeObject RoDictIterator_Type = {
 			/* tp_deep_ctor:   */ &rditer_deep,
 			/* tp_any_ctor:    */ &rditer_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &rditer_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rditer_fini,
 		/* .tp_assign      = */ NULL,

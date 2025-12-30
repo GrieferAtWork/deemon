@@ -31,6 +31,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system.h> /* DeeSystem_ALTSEP */
 #include <deemon/traceback.h>
@@ -1245,7 +1246,7 @@ PUBLIC DeeTypeObject DeeFrame_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ NULL /* Not serializable (wouldn't work with `DeeFrame_DecrefShared()') */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&frame_fini,
 		/* .tp_assign      = */ NULL,

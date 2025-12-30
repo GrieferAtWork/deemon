@@ -2738,10 +2738,9 @@ PUBLIC ATTR_COLD int (DCALL DeeRT_ErrNoActiveException)(void) {
 }
 
 
-/* Throws a `DeeError_NotImplemented' indicating that `self'
- * cannot be serialized into a ".dec" file */
+/* Throws a `DeeError_NotImplemented' indicating that `self' cannot be serialized */
 PUBLIC ATTR_COLD NONNULL((1)) int
-(DCALL DeeRT_ErrCannotDecSerialize)(DeeObject *__restrict self) {
+(DCALL DeeRT_ErrCannotSerialize)(DeeObject *__restrict self) {
 	return DeeError_Throwf(&DeeError_NotImplemented,
 	                       "Cannot serialize instance of `%s'",
 	                       DeeType_GetName(Dee_TYPE(self)));

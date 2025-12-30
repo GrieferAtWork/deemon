@@ -3104,7 +3104,7 @@ module_dee_serialize(DeeModuleObject *__restrict self,
 					                               ob, offsetof(DeeStringObject, s_str));
 				} else {
 					status = DeeSerial_PutPointer(writer, out__mo_bucketv_i + offsetof(struct Dee_module_symbol, ss_name),
-					                             in__mo_bucketv->ss_name);
+					                              in__mo_bucketv->ss_name);
 				}
 				if unlikely(status)
 					goto err;
@@ -3117,7 +3117,7 @@ module_dee_serialize(DeeModuleObject *__restrict self,
 					                               ob, offsetof(DeeStringObject, s_str));
 				} else {
 					status = DeeSerial_PutPointer(writer, out__mo_bucketv_i + offsetof(struct Dee_module_symbol, ss_doc),
-					                             in__mo_bucketv->ss_doc);
+					                              in__mo_bucketv->ss_doc);
 				}
 				if unlikely(status)
 					goto err;

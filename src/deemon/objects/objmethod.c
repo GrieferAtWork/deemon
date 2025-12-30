@@ -169,18 +169,9 @@ STATIC_ASSERT(offsetof(DeeObjMethodObject, om_this) == offsetof(ProxyObject, po_
 #define objmethod_fini  generic_proxy__fini
 #define objmethod_visit generic_proxy__visit
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-objmethod_serialize(DeeObjMethodObject *__restrict self,
-                    DeeSerial *__restrict writer,
-                    Dee_seraddr_t addr) {
-	int result = DeeSerial_PutObject(writer, addr + offsetof(DeeObjMethodObject, om_this), self->om_this);
-	if likely(result == 0) {
-		result = DeeSerial_PutPointer(writer,
-		                             addr + offsetof(DeeObjMethodObject, om_func.omf_meth),
-		                             (void *)self->om_func.omf_kwmeth);
-	}
-	return result;
-}
+STATIC_ASSERT(offsetof(DeeObjMethodObject, om_this) == offsetof(ProxyObjectWithPointer, po_obj));
+STATIC_ASSERT(offsetof(DeeObjMethodObject, om_func.omf_meth) == offsetof(ProxyObjectWithPointer, po_ptr));
+#define objmethod_serialize generic_proxy__serialize_and_copy_ptr
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 objmethod_call(DeeObjMethodObject *self, size_t argc, DeeObject *const *argv) {
@@ -449,7 +440,7 @@ dockwdsiter_next(DocKwdsIterator *__restrict self) {
 	char const *name_end;
 	bool is_escaped;
 	for (;;) {
-		pos        = atomic_read(&self->dki_iter);
+		pos = DOCKWDSITER_RDITER(self);
 		newpos     = pos;
 		is_escaped = false;
 		for (;; ++newpos) {
@@ -548,6 +539,10 @@ err:
 	return -1;
 }
 
+STATIC_ASSERT(offsetof(DocKwdsIterator, dki_kwds) == offsetof(ProxyObjectWithPointer, po_obj));
+STATIC_ASSERT(offsetof(DocKwdsIterator, dki_iter) == offsetof(ProxyObjectWithPointer, po_ptr));
+#define dockwdsiter_serialize generic_proxy__serialize_and_copy_ptr_atomic
+
 STATIC_ASSERT(offsetof(DocKwdsIterator, dki_kwds) == offsetof(ProxyObject, po_obj));
 #define dockwdsiter_fini  generic_proxy__fini
 #define dockwdsiter_visit generic_proxy__visit
@@ -616,7 +611,7 @@ INTERN DeeTypeObject DocKwdsIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &dockwdsiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &dockwdsiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dockwdsiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -654,6 +649,10 @@ INTERN DeeTypeObject DocKwdsIterator_Type = {
 STATIC_ASSERT(offsetof(DocKwds, dk_owner) == offsetof(ProxyObject, po_obj));
 #define dockwds_fini  generic_proxy__fini
 #define dockwds_visit generic_proxy__visit
+
+STATIC_ASSERT(offsetof(DocKwds, dk_owner) == offsetof(DocKwdsIterator, dki_kwds));
+STATIC_ASSERT(offsetof(DocKwds, dk_start) == offsetof(DocKwdsIterator, dki_iter));
+#define dockwds_serialize dockwdsiter_serialize
 
 PRIVATE WUNUSED NONNULL((1)) DREF DocKwdsIterator *DCALL
 dockwds_iter(DocKwds *__restrict self) {
@@ -791,7 +790,7 @@ INTERN DeeTypeObject DocKwds_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &dockwds_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &dockwds_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dockwds_fini,
 		/* .tp_assign      = */ NULL,
@@ -1047,38 +1046,13 @@ err:
 }
 
 
-#if 1
-STATIC_ASSERT(offsetof(DeeClsMethodObject, clm_type) == offsetof(DeeObjMethodObject, om_this));
-STATIC_ASSERT(offsetof(DeeClsMethodObject, clm_func) == offsetof(DeeObjMethodObject, om_func));
-#define clsmethod_fini     objmethod_fini
-#define clsmethod_visit    objmethod_visit
-#define clsmethod_serialize objmethod_serialize
-#else
-PRIVATE NONNULL((1)) void DCALL
-clsmethod_fini(DeeClsMethodObject *__restrict self) {
-	Dee_Decref(self->clm_type);
-}
+STATIC_ASSERT(offsetof(DeeClsMethodObject, clm_type) == offsetof(ProxyObject, po_obj));
+#define clsmethod_fini  generic_proxy__fini
+#define clsmethod_visit generic_proxy__visit
 
-PRIVATE NONNULL((1, 2)) void DCALL
-clsmethod_visit(DeeClsMethodObject *__restrict self,
-                Dee_visit_t proc, void *arg) {
-	Dee_Visit(self->clm_type);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-clsmethod_serialize(DeeClsMethodObject *__restrict self,
-                    DeeSerial *__restrict writer,
-                    Dee_seraddr_t addr) {
-	int result = DeeSerial_PutObject(writer, addr + offsetof(DeeClsMethodObject, clm_type), self->clm_type);
-	if likely(result == 0) {
-		result = DeeSerial_PutPointer(writer,
-		                             addr + offsetof(DeeClsMethodObject, clm_func.clmf_meth),
-		                             (void *)self->clm_func.clmf_meth);
-	}
-	return result;
-}
-#endif
-
+STATIC_ASSERT(offsetof(DeeClsMethodObject, clm_type) == offsetof(ProxyObjectWithPointer, po_obj));
+STATIC_ASSERT(offsetof(DeeClsMethodObject, clm_func.clmf_meth) == offsetof(ProxyObjectWithPointer, po_ptr));
+#define clsmethod_serialize generic_proxy__serialize_and_copy_ptr
 
 
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) char const *DCALL

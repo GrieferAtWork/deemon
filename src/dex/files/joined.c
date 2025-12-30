@@ -40,7 +40,7 @@ INTERN DeeFileTypeObject Joined_Type = {
 		/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FVARIABLE,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
-		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
+		/* .tp_base     = */ &DeeFile_Type.ft_base,
 		/* .tp_init = */ {
 			Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 				/* tp_ctor:        */ NULL,
