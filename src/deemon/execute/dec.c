@@ -63,6 +63,7 @@ ASSERT_FIELD(Dec_Ehdr, e_mach, DeeDec_Ehdr_OFFSETOF__e_mach, 1);
 ASSERT_FIELD(Dec_Ehdr, e_type, DeeDec_Ehdr_OFFSETOF__e_type, 1);
 ASSERT_FIELD(Dec_Ehdr, e_version, DeeDec_Ehdr_OFFSETOF__e_version, 2);
 ASSERT_FIELD(Dec_Ehdr, e_offsetof_heap, DeeDec_Ehdr_OFFSETOF__e_offsetof_heap, 2);
+ASSERT_FIELD(Dec_Ehdr, e_sizeof_pointer, DeeDec_Ehdr_OFFSETOF__e_sizeof_pointer, 1);
 ASSERT_FIELD(Dec_Ehdr, e_offsetof_eof, DeeDec_Ehdr_OFFSETOF__e_offsetof_eof, 4);
 ASSERT_FIELD(Dec_Ehdr, e_offsetof_gchead, DeeDec_Ehdr_OFFSETOF__e_offsetof_gchead, 4);
 ASSERT_FIELD(Dec_Ehdr, e_offsetof_gctail, DeeDec_Ehdr_OFFSETOF__e_offsetof_gctail, 4);
@@ -318,7 +319,7 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 			 *      is relative, use "context_absname" to resolve it) */
 
 			dep_files = (Dec_Dstr const *)(dep_files->ds_string + dep_files->ds_length + 1);
-			dep_files = (Dec_Dstr const *)CEIL_ALIGN((uintptr_t)dep_files, __ALIGNOF_SIZE_T__);
+			dep_files = (Dec_Dstr const *)CEIL_ALIGN((uintptr_t)dep_files, Dee_ALIGNOF_DEC_DSTR);
 		}
 	}
 
@@ -954,7 +955,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 			struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[i];
 			char const *impstr_utf8;
 			ASSERT(dep->ddm_impstr);
-			total_need = CEIL_ALIGN(total_need, __ALIGNOF_SIZE_T__);
+			total_need = CEIL_ALIGN(total_need, Dee_ALIGNOF_DEC_DSTR);
 			total_need += (Dee_dec_addr32_t)offsetof(Dec_Dstr, ds_string);
 			impstr_utf8 = DeeString_AsUtf8((DeeObject *)dep->ddm_impstr);
 			if unlikely(!impstr_utf8)
@@ -964,10 +965,10 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 
 		/* Additional file dependencies */
 		if (self->dw_fdeps.dfdt_depc) {
-			total_need = CEIL_ALIGN(total_need, __ALIGNOF_SIZE_T__);
+			total_need = CEIL_ALIGN(total_need, Dee_ALIGNOF_DEC_DSTR);
 			ehdr->e_typedata.td_reloc.er_offsetof_files = total_need;
 			total_need += seraddr32(self->dw_fdeps.dfdt_depc);
-			total_need = CEIL_ALIGN(total_need, __ALIGNOF_SIZE_T__);
+			total_need = CEIL_ALIGN(total_need, Dee_ALIGNOF_DEC_DSTR);
 			total_need += (Dee_dec_addr32_t)offsetafter(Dec_Dstr, ds_length); /* For trailing 0 */
 		} else {
 			ehdr->e_typedata.td_reloc.er_offsetof_files = 0;
@@ -1039,7 +1040,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 				/* Emit module name */
 				impstr_utf8 = DeeString_AsUtf8((DeeObject *)dep->ddm_impstr);
 				ASSERTF(impstr_utf8, "Should have been pre-loaded since was needed to calc buffer size");
-				addrof_outname = CEIL_ALIGN(addrof_outname, __ALIGNOF_SIZE_T__);
+				addrof_outname = CEIL_ALIGN(addrof_outname, Dee_ALIGNOF_DEC_DSTR);
 				out_name = (Dec_Dstr *)((byte_t *)ehdr + addrof_outname);
 				out_name->ds_length = seraddr32(WSTR_LENGTH(impstr_utf8));
 				*(char *)mempcpyc(out_name->ds_string, impstr_utf8, out_name->ds_length, sizeof(char)) = '\0';
@@ -1050,7 +1051,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 			/* Emit terminating "d_modspec.d_mod==NULL"-entry */
 			out_deps->d_modspec.d_mod = NULL;
 
-			addrof_outname = CEIL_ALIGN(addrof_outname, __ALIGNOF_SIZE_T__);
+			addrof_outname = CEIL_ALIGN(addrof_outname, Dee_ALIGNOF_DEC_DSTR);
 			out_name = (Dec_Dstr *)((byte_t *)ehdr + addrof_outname);
 			out_name->ds_length = 0; /* "terminated by a ds_length==0-entry" */
 		}
@@ -1091,7 +1092,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 		if (self->dw_fdeps.dfdt_depc) {
 			byte_t *out_deps = (byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_files;
 			memcpy(out_deps, self->dw_fdeps.dfdt_depv, self->dw_fdeps.dfdt_depc);
-			out_deps += CEIL_ALIGN(self->dw_fdeps.dfdt_depc, __ALIGNOF_SIZE_T__);
+			out_deps += CEIL_ALIGN(self->dw_fdeps.dfdt_depc, Dee_ALIGNOF_DEC_DSTR);
 			((Dec_Dstr *)out_deps)->ds_length = 0; /* For trailing 0 */
 		}
 	} else
@@ -1258,8 +1259,9 @@ DeeDecWriter_AddFileDep(DeeDecWriter *__restrict self,
                         char const *filename,
                         size_t filename_len) {
 	Dec_Dstr *dst;
-	size_t old_size = CEIL_ALIGN(self->dw_fdeps.dfdt_depc, __ALIGNOF_SIZE_T__);
-	size_t min_size = old_size + sizeof(size_t) + (filename_len + 1) * sizeof(char);
+	size_t old_size = CEIL_ALIGN(self->dw_fdeps.dfdt_depc, Dee_ALIGNOF_DEC_DSTR);
+	size_t min_size = old_size + offsetof(Dec_Dstr, ds_string) +
+	                  (filename_len + 1) * sizeof(char);
 	ASSERTF(filename_len, "Empty string cannot be appended -- that one is used internally to indicate EOF");
 	if (self->dw_fdeps.dfdt_depa < min_size) {
 		byte_t *new_vector;

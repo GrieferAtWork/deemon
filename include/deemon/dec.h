@@ -195,6 +195,7 @@ typedef struct dec_rrela Dec_RRela;
 #define DeeDec_Ehdr_OFFSETOF__e_type                                    5
 #define DeeDec_Ehdr_OFFSETOF__e_version                                 6
 #define DeeDec_Ehdr_OFFSETOF__e_offsetof_heap                           8
+#define DeeDec_Ehdr_OFFSETOF__e_sizeof_pointer                          10
 #define DeeDec_Ehdr_OFFSETOF__e_offsetof_eof                            12
 #define DeeDec_Ehdr_OFFSETOF__e_offsetof_gchead                         16
 #define DeeDec_Ehdr_OFFSETOF__e_offsetof_gctail                         20
@@ -252,7 +253,7 @@ typedef struct {
 			Dee_dec_addr32_t er_offsetof_drrel;     /* [1..1] Offset to array of `Dec_RRel[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)&DeeModule_Deemon" */
 			Dee_dec_addr32_t er_offsetof_drrela;    /* [1..1] Offset to array of `Dec_RRela[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)&DeeModule_Deemon" */
 			Dee_dec_addr32_t er_offsetof_deps;      /* [1..1] Offset to array of `Dec_Dhdr[]' (terminated by a d_modspec.d_mod==NULL-entry) of other dependent deemon modules */
-			Dee_dec_addr32_t er_offsetof_files;     /* [0..1] Offset to array of `Dec_Dstr[]' (terminated by a ds_length==0-entry, each aligned to __ALIGNOF_SIZE_T__) of extra filenames relative to the directory containing the .dec-file. If any of these files is newer than `e_build_timestamp', don't load dec file */
+			Dee_dec_addr32_t er_offsetof_files;     /* [0..1] Offset to array of `Dec_Dstr[]' (terminated by a ds_length==0-entry, each aligned to Dee_ALIGNOF_DEC_DSTR) of extra filenames relative to the directory containing the .dec-file. If any of these files is newer than `e_build_timestamp', don't load dec file */
 		}                 td_reloc;                 /* [valid_if(e_type == Dee_DEC_TYPE_RELOC)] */
 
 		struct {
@@ -312,6 +313,7 @@ typedef struct {
 	Dee_dec_addr32_t d_offsetof_rrela; /* [1..1] Offset to array of `Dec_RRela[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)d_mod" */
 } Dec_Dhdr;
 
+#define Dee_ALIGNOF_DEC_DSTR 4
 typedef struct {
 	Dee_dec_addr32_t              ds_length;  /* Length of `ds_length' (in bytes; excluding trailing NUL) */
 	COMPILER_FLEXIBLE_ARRAY(char, ds_string); /* [ds_length] UTF-8 string (NUL-terminated) */
