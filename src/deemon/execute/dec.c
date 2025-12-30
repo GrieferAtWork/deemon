@@ -709,6 +709,8 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 		goto_fail("Bad 'e_version'");
 	if unlikely(ehdr->e_offsetof_heap != offsetof(Dec_Ehdr, e_heap))
 		goto_fail("Bad 'e_offsetof_heap'");
+	if unlikely(ehdr->e_sizeof_pointer != sizeof(void *))
+		goto_fail("Bad 'e_sizeof_pointer'");
 	if unlikely(ehdr->_e_unused_zero != 0)
 		goto_fail("Bad '_e_unused_zero'");
 	if unlikely(ehdr->e_offsetof_eof != DeeMapFile_GetSize(fmap))
@@ -840,6 +842,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 	ehdr->e_offsetof_gchead = self->dw_gchead;
 	ehdr->e_offsetof_gctail = self->dw_gctail;
 	ehdr->e_offsetof_heap = offsetof(Dec_Ehdr, e_heap);
+	ehdr->e_sizeof_pointer = sizeof(void *);
 	ehdr->_e_unused_zero = 0;
 
 	/* Space for the heap tail is always pre-allocated! */
