@@ -263,13 +263,13 @@ typedef struct {
 			size_t                 ei_deps_c;   /* # of entries in `ei_deps_v' */
 		}                 td_image;             /* [valid_if(e_type == Dee_DEC_TYPE_IMAGE)] */
 
-	}                     e_typedata;            /* Data dependent on `e_type' */
-	struct DeeMapFile     e_mapping;             /* Uninitialized/unused in file mappings; when mapped into memory, populated with the dec file's own file map descriptor. */
+	}                     e_typedata;         /* Data dependent on `e_type' */
+	struct DeeMapFile     e_mapping;          /* Uninitialized/unused in file mappings; when mapped into memory, populated with the dec file's own file map descriptor. */
 #if ((DeeDec_Ehdr_OFFSETOF__e_mapping + Dee_SIZEOF_DeeMapFile) % Dee_HEAPCHUNK_ALIGN) != 0
 	__BYTE_TYPE__ _e_heap_pad[Dee_HEAPCHUNK_ALIGN - ((DeeDec_Ehdr_OFFSETOF__e_mapping + Dee_SIZEOF_DeeMapFile) % Dee_HEAPCHUNK_ALIGN)];
 #endif /* (Dee_SIZEOF_DeeMapFile % Dee_HEAPCHUNK_ALIGN) != 0 */
-	struct Dee_heapregion e_heap;                /* Heap region descriptor for objects embedded within this dec file. The first chunk of
-	                                              * this heap is assumed to point at the `DeeModuleObject' describing the dec file itself. */
+	struct Dee_heapregion e_heap;             /* Heap region descriptor for objects embedded within this dec file. The first chunk of
+	                                           * this heap is assumed to point at the `DeeModuleObject' describing the dec file itself. */
 } Dec_Ehdr;
 
 struct dec_rel {

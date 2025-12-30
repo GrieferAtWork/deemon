@@ -927,9 +927,10 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 				total_need += seraddr32(dep->ddm_rrel.drrt_relc * sizeof(Dec_RRel));
 				total_need += (Dee_dec_addr32_t)offsetafter(Dec_RRel, r_addr);
 			}
-			if (dep->ddm_rrela.drat_relc)
+			if (dep->ddm_rrela.drat_relc) {
 				total_need += seraddr32(dep->ddm_rrela.drat_relc * sizeof(Dec_RRela));
 				total_need += (Dee_dec_addr32_t)offsetafter(Dec_RRela, r_addr);
+			}
 		}
 
 		/* String tables */
