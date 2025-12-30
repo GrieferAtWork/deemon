@@ -1887,7 +1887,7 @@ DeeMapFile_TryTruncate(struct DeeMapFile *__restrict self,
 		if (old_mapsiz > new_mapsiz && new_mapsiz) {
 			void *unmap_base  = (byte_t *)baseptr + new_mapsiz;
 			size_t unmap_size = old_mapsiz - new_mapsiz;
-			if (munmap(baseptr, self->_dmf_mapsize) == 0) {
+			if (munmap(unmap_base, unmap_size) == 0) {
 				self->_dmf_mapsize = new_mapsiz;
 				return true;
 			}
