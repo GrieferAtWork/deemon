@@ -1232,6 +1232,43 @@ Dee_membercache_fini(struct Dee_membercache *__restrict self) {
 	DBG_memset(self, 0xcc, sizeof(*self));
 }
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+/* Called during finalization of a dee / dex module "mod"
+ * -> used to finalize+remove all statically allocated type member
+ *    caches whose address indicates that they are part of "mod". */
+INTERN NONNULL((1)) void DCALL
+Dee_membercache_clearall_of_module(DeeModuleObject *__restrict mod) {
+	struct membercache_list_struct mod_caches;
+	struct Dee_membercache *cache, *tvar;
+	LIST_INIT(&mod_caches);
+
+	/* Gather all caches belonging to "mod" */
+	membercache_list_lock_acquire();
+	LIST_FOREACH_SAFE (cache, &membercache_list, mc_link, tvar) {
+		if (DeeModule_ContainsPointer((DeeObject *)mod, cache)) {
+			LIST_REMOVE(cache, mc_link);
+			LIST_INSERT_HEAD(&mod_caches, cache, mc_link);
+		}
+	}
+	membercache_list_lock_release();
+
+	/* Finalize all gathered caches */
+	while (!LIST_EMPTY(&mod_caches)) {
+		cache = LIST_FIRST(&mod_caches);
+		LIST_REMOVE(cache, mc_link);
+
+		/* Free cache table. */
+		Dee_Free(cache->mc_table);
+
+		/* Restore the 0-initialization from before the module was loaded.
+		 * This is needed in case the module remains open via external means,
+		 * and the user then goes on to re-initialize deemon without an
+		 * application restart. */
+		bzero(cache, sizeof(*cache));
+	}
+}
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
 INTERN size_t DCALL
 Dee_membercache_clearall(size_t max_clear) {
 	size_t result = 0;

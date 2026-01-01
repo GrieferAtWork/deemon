@@ -856,12 +856,17 @@ DECL_END
 DECL_BEGIN
 
 #ifdef HAVE_Dee_dexataddr_t
+/* Return the `Dee_dexataddr_t *' descriptor of "self". Caller must ensure
+ * that `self' is a DEX module, and that `_Dee_MODULE_FNOADDR' is set. */
+#define DeeModule_GetDexAtAddr(self) \
+	(&Dee_module_dexdata__getinfo((self)->mo_moddata.mo_dexdata)->ddi_ataddr)
+
 /* [0..n][lock(module_byaddr_lock)] */
 PRIVATE RBTREE_ROOT(DREF Dee_module_object) dex_byaddr_tree = NULL;
 #define RBTREE(name)           dex_byaddr_##name
 #define RBTREE_T               DeeModuleObject
 #define RBTREE_Tkey            Dee_dexataddr_t const *
-#define RBTREE_GETKEY(self)    (&Dee_module_dexdata__getinfo((self)->mo_moddata.mo_dexdata)->ddi_ataddr)
+#define RBTREE_GETKEY(self)    DeeModule_GetDexAtAddr(self)
 #define RBTREE_KEY_LO(a, b)    (Dee_dexataddr_compare(a, b) < 0)
 #define RBTREE_KEY_EQ(a, b)    (Dee_dexataddr_compare(a, b) == 0)
 #define RBTREE_NODEFIELD       mo_adrnode
@@ -8973,8 +8978,40 @@ DeeModule_OfObject(DeeObject *__restrict ob) {
 }
 
 
-
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+/* Check if `DeeModule_OfPointer(ptr) == self' (but is a bit faster than that).
+ * Use this function instead of looking at `mo_minaddr' / `mo_maxaddr', because
+ * this function does some necessarily extra handling for certain types of DEX
+ * modules that are loaded in multiple segments (in which case it would not be
+ * defined if `mo_minaddr' / `mo_maxaddr' is union of all segments, or only some
+ * (sub-)set of segments)
+ *
+ * NOTE: Unlike many other functions, this one can actually still be used while `self'
+ *       is being finalized (e.g. while inside of `Dee_module_dexdata::mdx_fini'). It
+ *       also guaranties that no user-code will ever be executed (hence the "PURE")
+ *
+ * @return: true:  Yes, "ptr" is part of "self"
+ * @return: false: No, "ptr" is not part of "self" */
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+DeeModule_ContainsPointer(/*Module*/ DeeObject *__restrict self, void const *ptr) {
+	DeeModuleObject *me = (DeeModuleObject *)self;
+	/* Can't be asserted; we get called during finalization of dex modules */
+//	ASSERT_OBJECT_TYPE(me, &DeeModule_Type);
+#ifdef HAVE_Dee_dexataddr_t
+	if (me->mo_flags & _Dee_MODULE_FNOADDR) {
+		Dee_dexataddr_t daa;
+		if (Dee_dexataddr_init_fromaddr(&daa, ptr)) {
+			if (Dee_dexataddr_compare(DeeModule_GetDexAtAddr(me), &daa) == 0)
+				return true;
+		}
+		return false;
+	}
+#endif /* HAVE_Dee_dexataddr_t */
+	return (byte_t *)ptr >= me->mo_minaddr &&
+	       (byte_t *)ptr <= me->mo_maxaddr;
+}
+
+
 
 /* Lookup an external symbol.
  * Convenience function (same as `DeeObject_GetAttr(DeeModule_Import(...), ...)') */

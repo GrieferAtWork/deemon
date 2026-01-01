@@ -2932,17 +2932,18 @@ module_dee_destroy(DeeModuleObject *__restrict self) {
 
 	/* Destroy common data */
 	module_common_destroy(self);
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-	/* TODO: Custom version of Dee_Free() that doesn't DBG_memset() the payload.
-	 * Reason: the module's "ob_refcnt" must remain set to "0" so that DeeHeap_GetRegionOf()
-	 *         can still locate the module of an object, but see that it's ob_refcnt==0,
-	 *         and then not trying to incref it again (which would be possible if DBG_memset
-	 *         were to fill ob_refcnt with some non-zero debug pattern)
-	 * @see TODO in DeeSerial_AppendModule */
+
+	/* Free module object. Note that this may-or-may-not also free the `DeeMapFile'
+	 * associated with the .dec image. Said image (and thus the backing storage of
+	 * "self" and all other objects belonging to the module) will be freed once the
+	 * last sub-heap-block apart of the image has been freed.
+	 *
+	 * Of course, that **could** be "self", but it might also be some random string
+	 * constant that is still being referenced elsewhere.
+	 *
+	 * For more information on how this whole "last-free-destroys-the-region" thing
+	 * works, take a look at file ../../../include/deemon/heap.h */
 	DeeGCObject_Free(self);
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-	DeeGCObject_Free(self);
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -3146,6 +3147,13 @@ module_dex_visit(DeeModuleObject *__restrict self,
 INTDEF NONNULL((1)) void DCALL
 Dee_module_dexdata_fini(struct Dee_module_dexdata *__restrict self);
 
+/* Called during finalization of a dex module "mod"
+ * -> used to finalize+remove all statically allocated type member
+ *    caches whose address indicates that they are part of "mod". */
+INTDEF NONNULL((1)) void DCALL
+Dee_membercache_clearall_of_module(DeeModuleObject *__restrict mod);
+
+
 PRIVATE NONNULL((1)) void DCALL
 module_dex_destroy(DeeModuleObject *__restrict self) {
 	struct Dee_module_dexdata *dexdata;
@@ -3176,6 +3184,15 @@ module_dex_destroy(DeeModuleObject *__restrict self) {
 
 	/* Destroy common data */
 	module_common_destroy(self);
+
+	/* Go through "membercache_list" and remove all entries
+	 * with static addresses that map into this module.
+	 *
+	 * FIXME: This is an O(N) operation where "N" is the number
+	 *        of member caches registered globally. Instead of
+	 *        having this cache be global, it should be per-module. */
+	Dee_membercache_clearall_of_module(self);
+
 #if 0
 	/* FIXME: Work-around for preventing DEX modules being unloaded
 	 *        while objects referring to statically defined types inside
