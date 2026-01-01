@@ -55,6 +55,10 @@
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
 
+#ifdef CONFIG_HAVE_LINK_H
+#include <link.h>
+#endif /* CONFIG_HAVE_LINK_H */
+
 #ifndef PATH_MAX
 #ifdef PATHMAX
 #   define PATH_MAX PATHMAX
