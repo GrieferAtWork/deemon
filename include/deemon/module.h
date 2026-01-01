@@ -529,6 +529,7 @@ struct Dee_module_object {
 #define Dee_MODULE_FNOSERIAL       0x0008       /* [const] Indicates that this module could not be serialized during compilation, meaning that anything that depends on it can't be serialized, either. */
 #define Dee_MODULE_FABSRED         0x0100       /* [lock(ATOMIC)] is-red-bit for `mo_absnode' */
 #define Dee_MODULE_FADRRED         0x0200       /* [lock(ATOMIC)] is-red-bit for `mo_adrnode' */
+#define _Dee_MODULE_FNOADDR        0x2000       /* [const] Used for dex modules: "mo_minaddr" and "mo_maxaddr" may not be right. Internally, `dex_byaddr_tree' is used instead of `module_byaddr_tree' */
 #define _Dee_MODULE_FLIBALL        0x4000       /* [lock(ATOMIC)] Used internally by `DeeModule_GetLibName()' */
 #define _Dee_MODULE_FCLEARED       0x8000       /* [lock(ATOMIC)] Used internally by `DeeModule_ClearDexModuleCaches()' */
 	uint16_t                       mo_flags;    /* Module flags (Set of `Dee_MODULE_F*') */

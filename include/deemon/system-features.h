@@ -1010,11 +1010,14 @@ func("dlclose", "defined(CONFIG_HAVE_DLFCN_H)", test: 'extern void *dl; return d
 func("dlsym", "defined(CONFIG_HAVE_DLFCN_H)", test: 'extern void *dl; void *s = dlsym(dl, "foo"); return s != NULL;');
 func("dlmodulename", "defined(CONFIG_HAVE_DLFCN_H) && defined(__USE_KOS)", test: 'extern void *dl; char const *n = dlmodulename(dl); return n != NULL;');
 func("dlgethandle", "defined(CONFIG_HAVE_DLFCN_H) && defined(__USE_KOS)", test: 'extern int x; void *dl = dlgethandle(&x, DLGETHANDLE_FNORMAL); return dl != NULL;');
-func("dl_iterate_phdr", "defined(CONFIG_HAVE_LINK_H) && defined(__ELF__)", test: 'extern int my_dl_callback(struct dl_phdr_info *, size_t, void *); extern struct dl_phdr_info info; extern struct link_map lm; return dl_iterate_phdr(&my_dl_callback, NULL) && info.dlpi_phnum && info.dlpi_addr && info.dlpi_phdr[0].p_vaddr && info.dlpi_phdr[0].p_memsz && lm.l_addr;');
+func("dl_iterate_phdr", "defined(CONFIG_HAVE_LINK_H) && defined(__ELF__)", test: 'extern int my_dl_callback(struct dl_phdr_info *, size_t, void *); extern struct dl_phdr_info info; return dl_iterate_phdr(&my_dl_callback, NULL) && info.dlpi_phnum && info.dlpi_addr && info.dlpi_phdr[0].p_vaddr && info.dlpi_phdr[0].p_memsz;');
 func("dladdr", "defined(CONFIG_HAVE_DLFCN_H) && (defined(__USE_GNU) || defined(__USE_NETBSD) || defined(__USE_SOLARIS))", test: 'extern int my_symbol; Dl_info dli; return dladdr(&my_symbol, &dli) && dli.dli_fname;');
+feature("dlinfo__dli_fname__is_size_ptr", "0", test: 'extern int my_symbol; Dl_info dli; extern char *my_dli_fname[(sizeof(dli.dli_fname) == sizeof(void *)) ? 1 : -1]; return dladdr(&my_symbol, &dli) && (my_dli_fname[0] = dli.dli_fname) != 0;');
 feature("dlinfo__RTLD_DI_LINKMAP", "defined(CONFIG_HAVE_DLFCN_H) && defined(RTLD_DI_LINKMAP) && (defined(__USE_GNU) || defined(__USE_NETBSD) || defined(__USE_SOLARIS))", test: 'extern void *handle; void *lm; return dlinfo(handle, RTLD_DI_LINKMAP, (void *)&lm);');
 feature("dladdr1__RTLD_DL_LINKMAP", "defined(CONFIG_HAVE_DLFCN_H) && defined(RTLD_DL_LINKMAP) && defined(__USE_GNU)", test: 'extern void *handle; Dl_info dli; void *lm; return dladdr1(handle, &dli, (void **)&lm, RTLD_DI_LINKMAP);');
+// TODO: Get rid of "struct__link_map__l_name" after "CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES"
 feature("struct__link_map__l_name", "defined(CONFIG_HAVE_LINK_H)", test: 'extern struct link_map *lm; char const *s = lm->l_name; return !!s;');
+feature("struct__link_map__l_addr", "defined(CONFIG_HAVE_LINK_H) && defined(__ELF__)", test: 'extern struct link_map *lm; return !!lm->l_addr;');
 constant("RTLD_GLOBAL");
 constant("RTLD_LOCAL");
 constant("RTLD_LAZY");
@@ -6616,20 +6619,6 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_mprotect
 #endif
 
-#ifdef CONFIG_NO_fmapfile
-#undef CONFIG_HAVE_fmapfile
-#elif !defined(CONFIG_HAVE_fmapfile) && \
-      (defined(fmapfile) || defined(__fmapfile_defined))
-#define CONFIG_HAVE_fmapfile
-#endif
-
-#ifdef CONFIG_NO_unmapfile
-#undef CONFIG_HAVE_unmapfile
-#elif !defined(CONFIG_HAVE_unmapfile) && \
-      (defined(unmapfile) || defined(__unmapfile_defined))
-#define CONFIG_HAVE_unmapfile
-#endif
-
 #ifdef CONFIG_NO_getpagesize
 #undef CONFIG_HAVE_getpagesize
 #elif !defined(CONFIG_HAVE_getpagesize) && \
@@ -7775,6 +7764,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_dladdr
 #endif
 
+#ifdef CONFIG_NO_dlinfo__dli_fname__is_size_ptr
+#undef CONFIG_HAVE_dlinfo__dli_fname__is_size_ptr
+#elif 0
+#define CONFIG_HAVE_dlinfo__dli_fname__is_size_ptr
+#endif
+
 #ifdef CONFIG_NO_dlinfo__RTLD_DI_LINKMAP
 #undef CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP
 #elif !defined(CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP) && \
@@ -7795,6 +7790,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_struct__link_map__l_name) && \
       (defined(CONFIG_HAVE_LINK_H))
 #define CONFIG_HAVE_struct__link_map__l_name
+#endif
+
+#ifdef CONFIG_NO_struct__link_map__l_addr
+#undef CONFIG_HAVE_struct__link_map__l_addr
+#elif !defined(CONFIG_HAVE_struct__link_map__l_addr) && \
+      (defined(CONFIG_HAVE_LINK_H) && defined(__ELF__))
+#define CONFIG_HAVE_struct__link_map__l_addr
 #endif
 
 #ifdef CONFIG_NO_RTLD_GLOBAL

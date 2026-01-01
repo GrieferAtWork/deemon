@@ -3142,6 +3142,10 @@ module_dex_visit(DeeModuleObject *__restrict self,
 	DeeModule_LockEndRead(self);
 }
 
+/* Called during finalization of the associated dex module */
+INTDEF NONNULL((1)) void DCALL
+Dee_module_dexdata_fini(struct Dee_module_dexdata *__restrict self);
+
 PRIVATE NONNULL((1)) void DCALL
 module_dex_destroy(DeeModuleObject *__restrict self) {
 	struct Dee_module_dexdata *dexdata;
@@ -3166,8 +3170,11 @@ module_dex_destroy(DeeModuleObject *__restrict self) {
 	 *       has to mean that the module has already been removed from that
 	 *       tree! */
 
-	/* Destroy common data */
+	/* Cleanup globals and dex data. */
 	Dee_XDecrefv(self->mo_globalv, self->mo_globalc);
+	Dee_module_dexdata_fini(dexdata);
+
+	/* Destroy common data */
 	module_common_destroy(self);
 #if 0
 	/* FIXME: Work-around for preventing DEX modules being unloaded

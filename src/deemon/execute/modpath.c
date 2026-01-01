@@ -23,6 +23,8 @@
 #include <deemon/api.h>
 /**/
 
+#include <deemon/alloc.h>
+#include <deemon/code.h>
 #include <deemon/dec.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -36,6 +38,7 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/thread.h>
+#include <deemon/tuple.h>
 #include <deemon/types.h>
 #include <deemon/util/atomic-ref.h>
 #include <deemon/util/atomic.h>
@@ -44,6 +47,7 @@
 #include <hybrid/align.h>
 #include <hybrid/debug-alignment.h>
 #include <hybrid/sched/yield.h>
+#include <hybrid/typecore.h>
 
 #include <stdbool.h>
 
@@ -75,7 +79,7 @@
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #include <deemon/compiler/compiler.h>
-#include <deemon/dec.h>
+#include <deemon/dex.h>
 #include <deemon/exec.h>
 #include <deemon/file.h>
 #include <deemon/mapfile.h>
@@ -89,83 +93,7 @@
 #include <deemon/compiler/dec.h>
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 
-#ifndef CONFIG_NO_DEX
-#include <deemon/dex.h>
-#endif /* !CONFIG_NO_DEX */
-
 DECL_BEGIN
-
-/* Figure out how `DeeModule_OfPointer()' will be implemented,
- * and what sort of extra data must be stored in dex modules for this
- * to function properly. */
-   
-#undef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
-#undef Dee_MODULE_DEXDATA_HAVE_LOADHANDLE
-#undef Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE
-#undef Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS__link_map__l_addr
-#undef Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS__link_map
-#undef Dee_MODULE_DEXDATA_HAVE_LOADSTRING
-#undef Dee_MODULE_DEXDATA_HAVE_LOADSTRING_IS__dladdr__dli_fname
-#undef Dee_DEXBOUNDS_USE_LOADBOUNDS___dex_start____AND___end
-#undef Dee_DEXBOUNDS_USE_LOADBOUNDS__GetModuleInformation
-#undef Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP
-#undef Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr
-#undef Dee_DEXBOUNDS_USE_LOADBOUNDS__xdlmodule_info
-#undef Dee_DEXBOUNDS_USE_LOADHANDLE__GetModuleHandleExW
-#undef Dee_DEXBOUNDS_USE_LOADHANDLE__dlgethandle
-#undef Dee_DEXBOUNDS_USE_LOADHANDLE__dladdr1__RTLD_DL_LINKMAP
-#undef Dee_DEXBOUNDS_USE_LOADSTRING__dladdr__dli_fname
-#undef Dee_DEXBOUNDS_USE_LOADBOUNDS__EXPORTED_OBJECTS
-#ifdef CONFIG_HAVE___dex_start____AND___end
-/* TODO: This mustn't be the singular implementation -- dex modules might be
- *       built with slightly different configurations, such that the presence
- *       of pre-initialized bounds may not match what is expected by the core */
-#define Dee_DEXBOUNDS_USE_LOADBOUNDS___dex_start____AND___end
-#define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
-#elif defined(DeeSystem_DlOpen_USE_LoadLibrary)
-#define Dee_DEXBOUNDS_USE_LOADBOUNDS__GetModuleInformation
-#define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
-#elif (defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dl_iterate_phdr) && \
-       defined(CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP) && defined(CONFIG_HAVE_struct__link_map__l_name))
-#define Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP
-#define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
-#define Dee_MODULE_DEXDATA_HAVE_LOADHANDLE /* == ((struct link_map *)*)->l_addr */
-#define Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS__link_map__l_addr
-#elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dl_iterate_phdr)
-#define Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr
-#define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
-#elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(__KOS_VERSION__) && (__KOS_VERSION__ >= 300 && __KOS_VERSION__ < 400)
-#define Dee_DEXBOUNDS_USE_LOADBOUNDS__xdlmodule_info
-#define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
-#elif defined(DeeSystem_DlOpen_USE_LoadLibrary)
-#define Dee_DEXBOUNDS_USE_LOADHANDLE__GetModuleHandleExW
-#define Dee_MODULE_DEXDATA_HAVE_LOADHANDLE
-#define Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE
-#elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dlgethandle)
-#define Dee_DEXBOUNDS_USE_LOADHANDLE__dlgethandle
-#define Dee_MODULE_DEXDATA_HAVE_LOADHANDLE
-#define Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE
-#elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP)
-#define Dee_DEXBOUNDS_USE_LOADHANDLE__dladdr1__RTLD_DL_LINKMAP
-#define Dee_MODULE_DEXDATA_HAVE_LOADHANDLE /* struct link_map *mdx_loadhandle */
-#define Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS__link_map
-#elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dladdr)
-#define Dee_DEXBOUNDS_USE_LOADSTRING__dladdr__dli_fname
-#define Dee_MODULE_DEXDATA_HAVE_LOADSTRING
-#define Dee_MODULE_DEXDATA_HAVE_LOADSTRING_IS__dladdr__dli_fname
-#else /* ... */
-#define Dee_DEXBOUNDS_USE_LOADBOUNDS__EXPORTED_OBJECTS /* Might not work: use min/max bounds of known exported objects */
-#define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
-#endif /* !... */
-
-/* Always use os-specific module-at-address to implement
- * "Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS" using binary search,
- * in order to fill in "mo_minaddr" and "mo_maxaddr".
- *
- * TODO: Also provide a config option to always **JUST** use the
- *       binary tree built on-top of "mo_minaddr" / "mo_maxaddr".
- */
-
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -230,6 +158,569 @@ FS_DeeString_LessSTR(DeeStringObject *lhs,
 		return diff < 0;
 	return lhs_len < rhs_len;
 }
+
+
+
+/* Figure out mechanisms that (in addition to `__dex_start__' and `_end')
+ * can be used to determine the bounding min/max address bounds of some
+ * dex module, and (when those bounds shouldn't be used), figure out how
+ * we can ask the OS what module is located at some specific address. */
+
+#undef Dee_DEXBOUNDS_USE__GetModuleInformation
+#undef Dee_DEXBOUNDS_USE__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP
+#undef Dee_DEXBOUNDS_USE__dl_iterate_phdr
+#undef Dee_DEXBOUNDS_USE__xdlmodule_info
+#undef Dee_DEXATADDR_USE__GetModuleHandleExW
+#undef Dee_DEXATADDR_USE__dlgethandle
+#undef Dee_DEXATADDR_USE__dladdr1__RTLD_DL_LINKMAP
+#undef Dee_DEXATADDR_USE__dladdr__dli_fname
+#ifdef DeeSystem_DlOpen_USE_LoadLibrary
+#ifdef CONFIG_HOST_WINDOWS
+#define Dee_DEXBOUNDS_USE__GetModuleInformation
+#define Dee_DEXATADDR_USE__GetModuleHandleExW
+#endif /* CONFIG_HOST_WINDOWS */
+#elif defined(DeeSystem_DlOpen_USE_dlopen)
+#ifdef CONFIG_HAVE_dl_iterate_phdr
+#if defined(CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP) && defined(CONFIG_HAVE_struct__link_map__l_addr)
+#define Dee_DEXBOUNDS_USE__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP
+#endif /* CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP && CONFIG_HAVE_struct__link_map__l_addr */
+#define Dee_DEXBOUNDS_USE__dl_iterate_phdr
+#endif /* CONFIG_HAVE_dl_iterate_phdr */
+#if defined(__KOS_VERSION__) && (__KOS_VERSION__ >= 300 && __KOS_VERSION__ < 400)
+#define Dee_DEXBOUNDS_USE__xdlmodule_info
+#endif /* __KOS_VERSION__ >= 300 && __KOS_VERSION__ < 400 */
+#ifdef CONFIG_HAVE_dlgethandle
+#define Dee_DEXATADDR_USE__dlgethandle
+#endif /* CONFIG_HAVE_dlgethandle */
+#ifdef CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP
+#define Dee_DEXATADDR_USE__dladdr1__RTLD_DL_LINKMAP
+#endif /* CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP */
+#ifdef CONFIG_HAVE_dladdr
+#define Dee_DEXATADDR_USE__dladdr__dli_fname
+#endif /* CONFIG_HAVE_dladdr */
+#endif /* ... */
+
+
+
+
+
+/* Implement `Dee_dexataddr()' using OS APIs (if possible) */
+#undef HAVE_Dee_dexataddr_t
+#undef HAVE_Dee_dexataddr_t_SINGLE_IMPL
+#undef HAVE_Dee_dexataddr_t_IS_POINTER
+
+#define HAVE_Dee_dexataddr_t_IS_POINTER
+#if (defined(Dee_DEXATADDR_USE__GetModuleHandleExW) +       \
+     defined(Dee_DEXATADDR_USE__dlgethandle) +              \
+     defined(Dee_DEXATADDR_USE__dladdr1__RTLD_DL_LINKMAP) + \
+     defined(Dee_DEXATADDR_USE__dladdr__dli_fname)) == 1
+#define HAVE_Dee_dexataddr_t_SINGLE_IMPL
+#endif /* ... */
+#if (defined(Dee_DEXATADDR_USE__GetModuleHandleExW) +       \
+     defined(Dee_DEXATADDR_USE__dlgethandle) +              \
+     defined(Dee_DEXATADDR_USE__dladdr1__RTLD_DL_LINKMAP) + \
+     defined(Dee_DEXATADDR_USE__dladdr__dli_fname)) > 1
+#undef HAVE_Dee_dexataddr_t_IS_POINTER
+#endif /* ... */
+
+typedef struct {
+#ifdef Dee_DEXATADDR_USE__GetModuleHandleExW
+#define HAVE_Dee_dexataddr_t
+	HANDLE daa_ntModule; /* [0..1] */
+#endif /* Dee_DEXATADDR_USE__GetModuleHandleExW */
+#ifdef Dee_DEXATADDR_USE__dlgethandle
+#define HAVE_Dee_dexataddr_t
+	void *daa_dlhandle;  /* [0..1] */
+#endif /* Dee_DEXATADDR_USE__dlgethandle */
+#ifdef Dee_DEXATADDR_USE__dladdr1__RTLD_DL_LINKMAP
+#define HAVE_Dee_dexataddr_t
+	void *daa_linkmap;   /* [0..1] */
+#endif /* Dee_DEXATADDR_USE__dladdr1__RTLD_DL_LINKMAP */
+#ifdef Dee_DEXATADDR_USE__dladdr__dli_fname
+#define HAVE_Dee_dexataddr_t
+#ifndef CONFIG_HAVE_dlinfo__dli_fname__is_size_ptr
+#undef HAVE_Dee_dexataddr_t_IS_POINTER
+#endif /* !CONFIG_HAVE_dlinfo__dli_fname__is_size_ptr */
+	byte_t daa_dlinfo[sizeof(((Dl_info *)0)->dli_fname)];
+#define Dee_dexataddr__dlinfo__getname(self) \
+	((Dl_info *)((self)->daa_dlinfo - offsetof(Dl_info, dli_fname)))->dli_fname
+#define Dee_dexataddr__dlinfo__setinfo(self, v)                                    \
+	(void)memcpy((self)->daa_dlinfo, (byte_t *)(v) + offsetof(Dl_info, dli_fname), \
+	             sizeof(((Dl_info *)0)->dli_fname));
+#endif /* Dee_DEXATADDR_USE__dladdr__dli_fname */
+#ifndef HAVE_Dee_dexataddr_t
+#undef HAVE_Dee_dexataddr_t_IS_POINTER
+	char _daa_placeholder;
+#endif /* !HAVE_Dee_dexataddr_t */
+} Dee_dexataddr_t;
+
+#ifdef HAVE_Dee_dexataddr_t
+#ifdef Dee_DEXATADDR_USE__dladdr__dli_fname
+#ifndef CONFIG_HAVE_strcmp
+#define CONFIG_HAVE_strcmp
+#undef strcmp
+#define strcmp dee_strcmp
+DeeSystem_DEFINE_strcmp(dee_strcmp)
+#endif /* !CONFIG_HAVE_strcmp */
+#endif /* Dee_DEXATADDR_USE__dladdr__dli_fname */
+
+/* Compare `lhs' and `rhs'
+ * Both of the given info-blocks must be initialized */
+LOCAL WUNUSED NONNULL((1, 2)) int DCALL
+Dee_dexataddr_compare(Dee_dexataddr_t const *__restrict lhs,
+                      Dee_dexataddr_t const *__restrict rhs) {
+#ifdef HAVE_Dee_dexataddr_t_SINGLE_IMPL
+#ifdef Dee_DEXATADDR_USE__GetModuleHandleExW
+	return Dee_Compare((uintptr_t)lhs->daa_ntModule,
+	                   (uintptr_t)rhs->daa_ntModule);
+#elif defined(Dee_DEXATADDR_USE__dlgethandle)
+	return Dee_Compare((uintptr_t)lhs->daa_dlhandle,
+	                   (uintptr_t)rhs->daa_dlhandle);
+#elif defined(Dee_DEXATADDR_USE__dladdr1__RTLD_DL_LINKMAP)
+	return Dee_Compare((uintptr_t)lhs->daa_linkmap,
+	                   (uintptr_t)rhs->daa_linkmap);
+#elif defined(Dee_DEXATADDR_USE__dladdr__dli_fname)
+	return strcmp(Dee_dexataddr__dlinfo__getname(lhs),
+	              Dee_dexataddr__dlinfo__getname(rhs));
+#else /* ... */
+#error "Bad configuration"
+#endif /* !... */
+#else /* HAVE_Dee_dexataddr_t_SINGLE_IMPL */
+#ifdef Dee_DEXATADDR_USE__GetModuleHandleExW
+	if (lhs->daa_ntModule && rhs->daa_ntModule) {
+		return Dee_Compare((uintptr_t)lhs->daa_ntModule,
+		                   (uintptr_t)rhs->daa_ntModule);
+	} else
+#endif /* Dee_DEXATADDR_USE__GetModuleHandleExW */
+#ifdef Dee_DEXATADDR_USE__dlgethandle
+	if (lhs->daa_dlhandle && rhs->daa_dlhandle) {
+		return Dee_Compare((uintptr_t)lhs->daa_dlhandle,
+		                   (uintptr_t)rhs->daa_dlhandle);
+	} else
+#endif /* Dee_DEXATADDR_USE__dlgethandle */
+#ifdef Dee_DEXATADDR_USE__dladdr1__RTLD_DL_LINKMAP
+	if (lhs->daa_linkmap && rhs->daa_linkmap) {
+		return Dee_Compare((uintptr_t)lhs->daa_linkmap,
+		                   (uintptr_t)rhs->daa_linkmap);
+	} else
+#endif /* Dee_DEXATADDR_USE__dladdr1__RTLD_DL_LINKMAP */
+#ifdef Dee_DEXATADDR_USE__dladdr__dli_fname
+	if (Dee_dexataddr__dlinfo__getname(lhs) && Dee_dexataddr__dlinfo__getname(rhs)) {
+		return strcmp(Dee_dexataddr__dlinfo__getname(lhs),
+		              Dee_dexataddr__dlinfo__getname(rhs));
+	} else
+#endif /* Dee_DEXATADDR_USE__dladdr__dli_fname */
+	{
+		return memcmp(lhs, rhs, sizeof(Dee_dexataddr_t));
+	}
+#endif /* !HAVE_Dee_dexataddr_t_SINGLE_IMPL */
+}
+
+
+/* Initialize "self" with information about the module at "addr".
+ * @return: true:  Success
+ * @return: false: Failure */
+LOCAL WUNUSED NONNULL((1)) bool DCALL
+Dee_dexataddr_init_fromaddr(Dee_dexataddr_t *__restrict self, void const *addr) {
+#ifdef Dee_DEXATADDR_USE__GetModuleHandleExW
+	BOOL bOk;
+	DBG_ALIGNMENT_DISABLE();
+	bOk = GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+	                         GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+	                         (LPCWSTR)addr, (HMODULE *)&self->daa_ntModule);
+	DBG_ALIGNMENT_ENABLE();
+	if (bOk)
+		return true;
+#endif /* Dee_DEXATADDR_USE__GetModuleHandleExW */
+#ifdef Dee_DEXATADDR_USE__dlgethandle
+	if ((lhs->daa_dlhandle = (void *)dlgethandle(addr, DLGETHANDLE_FNORMAL)) != NULL)
+		return true;
+#endif /* Dee_DEXATADDR_USE__dlgethandle */
+#ifdef Dee_DEXATADDR_USE__dladdr1__RTLD_DL_LINKMAP
+	{
+		Dl_info dli;
+		struct link_map *ptr_lm = NULL;
+		if (dladdr1(addr, &dli, (void **)&ptr_lm, RTLD_DL_LINKMAP) && ptr_lm) {
+			self->daa_linkmap = (void *)ptr_lm;
+			return true;
+		}
+	}
+#endif /* Dee_DEXATADDR_USE__dladdr1__RTLD_DL_LINKMAP */
+#ifdef Dee_DEXATADDR_USE__dladdr__dli_fname
+	{
+		Dl_info dli;
+		if (dladdr(addr, &dli) && dli.dli_fname && *dli.dli_fname) {
+//			Dee_DPRINTF("[debug] dladdr(%p) -> %q\n", addr, dli.dli_fname);
+			Dee_dexataddr__dlinfo__setinfo(self, &dli);
+			return true;
+		}
+	}
+#endif /* Dee_DEXATADDR_USE__dladdr__dli_fname */
+	return false;
+}
+#endif /* HAVE_Dee_dexataddr_t */
+
+
+
+
+
+
+
+
+/* Implement `DeeModule_InitDexBounds()' using OS APIs (if possible) */
+#ifdef Dee_DEXBOUNDS_USE__GetModuleInformation
+typedef struct {
+	LPVOID lpBaseOfDll;
+	DWORD SizeOfImage;
+	LPVOID EntryPoint;
+} NT_MODULEINFO;
+
+typedef int (WINAPI *LPGETMODULEINFORMATION)(void *hProcess, void *hModule,
+                                             NT_MODULEINFO *lpmodinfo, uint32_t cb);
+PRIVATE LPGETMODULEINFORMATION pdyn_GetModuleInformation = NULL;
+PRIVATE char const name_GetModuleInformation[] = "GetModuleInformation";
+PRIVATE LPGETMODULEINFORMATION DCALL get_GetModuleInformation(void) {
+	HMODULE hMod;
+	static WCHAR const wKernel32[] = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
+	static WCHAR const wPsapi[]    = { 'P', 'S', 'A', 'P', 'I', 0 };
+	static WCHAR const wKernel32_dll[] = { 'K', 'e', 'r', 'n', 'e', 'l', '3', '2', '.', 'd', 'l', 'l', 0 };
+	static WCHAR const wPsapi_dll[]    = { 'P', 's', 'A', 'p', 'i', '.', 'd', 'l', 'l', 0 };
+	LPGETMODULEINFORMATION result = atomic_read(&pdyn_GetModuleInformation);
+	HMODULE hModule;
+	if (ITER_ISOK((uintptr_t)(Dee_funptr_t)result))
+		return result;
+	if ((uintptr_t)(Dee_funptr_t)result == (uintptr_t)ITER_DONE)
+		return NULL;
+	hModule = GetModuleHandleW(wKernel32);
+	if (hModule) {
+		*(FARPROC *)&result = GetProcAddress(hModule, name_GetModuleInformation);
+		if (result != NULL)
+			goto remember_result;
+	}
+	hModule = GetModuleHandleW(wPsapi);
+	if (hModule) {
+		*(FARPROC *)&result = GetProcAddress(hModule, name_GetModuleInformation);
+		if (result != NULL)
+			goto remember_result;
+	}
+	hMod = LoadLibraryW(wKernel32_dll);
+	if (hMod != NULL) {
+		*(FARPROC *)&result = GetProcAddress(hMod, name_GetModuleInformation);
+		if (result != NULL)
+			goto remember_result;
+		(void)FreeLibrary(hMod);
+	}
+	hMod = LoadLibraryW(wPsapi_dll);
+	if (hMod != NULL) {
+		*(FARPROC *)&result = GetProcAddress(hMod, name_GetModuleInformation);
+		if (result != NULL)
+			goto remember_result;
+		(void)FreeLibrary(hMod);
+	}
+	Dee_DPRINTF("ERROR: Unable to locate 'GetModuleInformation' in 'Kernel32.dll' or 'PsApi.dll': %R",
+	            DeeSystem_DlError());
+	result = (LPGETMODULEINFORMATION)(Dee_funptr_t)(uintptr_t)(void *)ITER_DONE;
+	atomic_write(&pdyn_GetModuleInformation, result);
+	return NULL;
+remember_result:
+	atomic_write(&pdyn_GetModuleInformation, result);
+	return result;
+}
+#endif /* Dee_DEXBOUNDS_USE__GetModuleInformation */
+
+#if 0 /* TODO */
+
+/* Initialize "mod->mo_minaddr" / "mod->mo_maxaddr" */
+PRIVATE void DCALL
+dex_initialize_loadbounds(DeeModuleObject *__restrict mod) {
+#if (defined(Dee_DEXBOUNDS_USE__dl_iterate_phdr) || \
+     defined(Dee_DEXBOUNDS_USE__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP))
+	mod->mo_minaddr = (byte_t const *)-1;
+	mod->mo_maxaddr = (byte_t const *)0;
+	(void)dl_iterate_phdr(&initialize_dexdata_minmax_iterate_cb, (void *)mod);
+	if unlikely(mod->mo_minaddr > mod->mo_maxaddr) {
+		Dee_DPRINTF("ERROR: Failed to dl_iterate_phdr()-find module %q", mod->mo_absname);
+		dex_initialize_loadbounds_by_exported_objects(mod);
+	}
+#endif /* Dee_DEXBOUNDS_USE__dl_iterate_phdr || Dee_DEXBOUNDS_USE__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP */
+
+#ifdef Dee_DEXBOUNDS_USE__xdlmodule_info
+#endif /* Dee_DEXBOUNDS_USE__xdlmodule_info */
+}
+#endif
+
+
+#undef HAVE_DeeModule_InitDexBounds
+#ifdef Dee_DEXBOUNDS_USE__GetModuleInformation
+#define HAVE_DeeModule_InitDexBounds
+#endif /* Dee_DEXBOUNDS_USE__GetModuleInformation */
+#ifdef Dee_DEXBOUNDS_USE__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP
+#define HAVE_DeeModule_InitDexBounds
+#endif /* Dee_DEXBOUNDS_USE__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP */
+#ifdef Dee_DEXBOUNDS_USE__dl_iterate_phdr
+#define HAVE_DeeModule_InitDexBounds
+#endif /* Dee_DEXBOUNDS_USE__dl_iterate_phdr */
+#ifdef Dee_DEXBOUNDS_USE__xdlmodule_info
+#define HAVE_DeeModule_InitDexBounds
+#endif /* Dee_DEXBOUNDS_USE__xdlmodule_info */
+#ifndef HAVE_DeeModule_InitDexBounds
+#define DeeModule_InitDexBounds(self) false
+#else /* !HAVE_DeeModule_InitDexBounds */
+
+#ifdef Dee_DEXBOUNDS_USE__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP
+struct initialize_dexdata_minmax_iterate_with_linkmap_data {
+	DeeModuleObject *iddmmiwld_mod;  /* [1..1] The module that we're looking for */
+	uintptr_t        iddmmiwld_addr; /* struct link_map::l_addr */
+};
+PRIVATE int
+initialize_dexdata_minmax_iterate_with_linkmap_cb(struct dl_phdr_info *info,
+                                                  size_t size, void *cookie) {
+	__UINTPTR_HALF_TYPE__ i;
+	byte_t const *phdr_minaddr, *phdr_maxaddr;
+	struct initialize_dexdata_minmax_iterate_with_linkmap_data *data;
+	DeeModuleObject *mod;
+	data = (struct initialize_dexdata_minmax_iterate_with_linkmap_data *)cookie;
+	if unlikely(size < COMPILER_OFFSETAFTER(struct dl_phdr_info, dlpi_phnum))
+		return 0;
+	if (data->iddmmiwld_addr != (uintptr_t)info->dlpi_addr)
+		return 0; /* Some other module... */
+	mod = data->iddmmiwld_mod;
+	phdr_minaddr = (byte_t const *)-1;
+	phdr_maxaddr = (byte_t const *)0;
+	for (i = 0; i < info->dlpi_phnum; ++i) {
+		byte_t const *minaddr = (byte_t const *)info->dlpi_phdr[i].p_vaddr + (uintptr_t)info->dlpi_addr;
+		byte_t const *maxaddr = minaddr + (uintptr_t)info->dlpi_phdr[i].p_memsz - 1;
+		if (phdr_minaddr > minaddr)
+			phdr_minaddr = minaddr;
+		if (phdr_maxaddr < maxaddr)
+			phdr_maxaddr = maxaddr;
+	}
+
+	/* Update min/max bounds */
+	if (mod->mo_minaddr > phdr_minaddr)
+		mod->mo_minaddr = phdr_minaddr;
+	if (mod->mo_maxaddr < phdr_maxaddr)
+		mod->mo_maxaddr = phdr_maxaddr;
+	return 0;
+}
+#endif /* Dee_DEXBOUNDS_USE__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP */
+
+
+#ifdef Dee_DEXBOUNDS_USE__dl_iterate_phdr
+PRIVATE int
+initialize_dexdata_minmax_iterate_cb(struct dl_phdr_info *info,
+                                     size_t size, void *cookie) {
+	__UINTPTR_HALF_TYPE__ i;
+	byte_t const *phdr_minaddr, *phdr_maxaddr;
+	DeeModuleObject *mod = (DeeModuleObject *)cookie;
+	if unlikely(size < COMPILER_OFFSETAFTER(struct dl_phdr_info, dlpi_phnum))
+		return 0;
+	phdr_minaddr = (byte_t const *)-1;
+	phdr_maxaddr = (byte_t const *)0;
+	for (i = 0; i < info->dlpi_phnum; ++i) {
+		byte_t const *minaddr = (byte_t const *)info->dlpi_phdr[i].p_vaddr + (uintptr_t)info->dlpi_addr;
+		byte_t const *maxaddr = minaddr + (uintptr_t)info->dlpi_phdr[i].p_memsz - 1;
+		if (phdr_minaddr > minaddr)
+			phdr_minaddr = minaddr;
+		if (phdr_maxaddr < maxaddr)
+			phdr_maxaddr = maxaddr;
+	}
+
+	if ((byte_t const *)mod < phdr_minaddr)
+		return 0; /* Some other module... */
+	if ((byte_t const *)mod > phdr_maxaddr)
+		return 0; /* Some other module... */
+
+	/* Update min/max bounds */
+	if (mod->mo_minaddr > phdr_minaddr)
+		mod->mo_minaddr = phdr_minaddr;
+	if (mod->mo_maxaddr < phdr_maxaddr)
+		mod->mo_maxaddr = phdr_maxaddr;
+	return 0;
+}
+#endif /* Dee_DEXBOUNDS_USE__dl_iterate_phdr */
+
+
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+DeeModule_InitDexBounds(DeeModuleObject *__restrict self) {
+#ifdef Dee_DEXBOUNDS_USE__GetModuleInformation
+	LPGETMODULEINFORMATION pGetModuleInformation = get_GetModuleInformation();
+	if (pGetModuleInformation) {
+		BOOL bOk;
+		NT_MODULEINFO modinfo;
+		DBG_ALIGNMENT_DISABLE();
+		bOk = (*get_GetModuleInformation())(GetCurrentProcess(),
+		                                    self->mo_moddata.mo_dexdata->mdx_handle,
+		                                    &modinfo, sizeof(modinfo));
+		if (!bOk) {
+			DWORD dwError = GetLastError();
+			DBG_ALIGNMENT_ENABLE();
+			Dee_DPRINTF("[RT] Warning: Failed to GetModuleInformation() for module %q: %u",
+			            self->mo_absname, (unsigned int)dwError);
+		} else {
+			DBG_ALIGNMENT_ENABLE();
+			self->mo_minaddr = (byte_t const *)modinfo.lpBaseOfDll;
+			self->mo_maxaddr = (byte_t const *)modinfo.lpBaseOfDll + modinfo.SizeOfImage - 1;
+			return true;
+		}
+	}
+#endif /* Dee_DEXBOUNDS_USE__GetModuleInformation */
+
+#ifdef Dee_DEXBOUNDS_USE__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP
+	{
+		Dl_info dli;
+		struct link_map *ptr_lm = NULL;
+		if (dladdr1((void *)self, &dli, (void **)&ptr_lm, RTLD_DL_LINKMAP) && ptr_lm) {
+			struct initialize_dexdata_minmax_iterate_with_linkmap_data data;
+			data.iddmmiwld_addr = ptr_lm->l_addr;
+			data.iddmmiwld_mod  = self;
+			self->mo_minaddr = (byte_t const *)-1;
+			self->mo_maxaddr = (byte_t const *)0;
+			(void)dl_iterate_phdr(&initialize_dexdata_minmax_iterate_with_linkmap_cb, (void *)self);
+			if likely(self->mo_minaddr <= self->mo_maxaddr)
+				return true;
+			Dee_DPRINTF("[RT] Warning: Failed to dl_iterate_phdr()-with-link_map-find module %q", self->mo_absname);
+		}
+	}
+#endif /* Dee_DEXBOUNDS_USE__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP */
+
+#ifdef Dee_DEXBOUNDS_USE__dl_iterate_phdr
+	self->mo_minaddr = (byte_t const *)-1;
+	self->mo_maxaddr = (byte_t const *)0;
+	(void)dl_iterate_phdr(&initialize_dexdata_minmax_iterate_cb, (void *)self);
+	if likely(self->mo_minaddr <= self->mo_maxaddr)
+		return true;
+	Dee_DPRINTF("[RT] Warning: Failed to dl_iterate_phdr()-find module %q", self->mo_absname);
+#endif /* Dee_DEXBOUNDS_USE__dl_iterate_phdr */
+
+#ifdef Dee_DEXBOUNDS_USE__xdlmodule_info
+	{
+		struct module_basic_info info;
+		if (xdlmodule_info(self->mdx_handle, MODULE_INFO_CLASS_BASIC, &info, sizeof(info)) < sizeof(info)) {
+			Dee_DPRINTF("[RT] Warning: Failed to xdlmodule_info() for module %q", self->mo_absname);
+		} else {
+			self->mo_minaddr = (byte_t const *)info.mi_segstart;
+			self->mo_maxaddr = (byte_t const *)info.mi_segend - 1;
+			return true;
+		}
+	}
+#endif /* Dee_DEXBOUNDS_USE__xdlmodule_info */
+
+	(void)self;
+	return false;
+}
+#endif /* HAVE_DeeModule_InitDexBounds */
+
+
+#ifdef HAVE_Dee_dexataddr_t
+/* Use "Dee_dexataddr_t" to initialize dex-bounds */
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
+DeeModule_InitDexBounds_with_dexataddr(DeeModuleObject *__restrict self,
+                                       Dee_dexataddr_t const *__restrict ref) {
+	Dee_dexataddr_t check;
+	byte_t *minaddr_lo, *minaddr_hi;
+	byte_t *maxaddr_lo, *maxaddr_hi;
+	minaddr_lo = (byte_t *)0;
+	minaddr_hi = (byte_t *)self;
+	while (minaddr_lo < minaddr_hi) {
+		byte_t *mid = minaddr_lo + (minaddr_hi - minaddr_lo) / 2;
+		if (Dee_dexataddr_init_fromaddr(&check, mid) &&
+		    Dee_dexataddr_compare(ref, &check) == 0) {
+			minaddr_hi = mid;
+		} else {
+			minaddr_lo = mid + 1;
+		}
+	}
+
+	maxaddr_lo = (byte_t *)(self + 1);
+	maxaddr_hi = (byte_t *)-1;
+	while (maxaddr_lo < maxaddr_hi) {
+		byte_t *mid = maxaddr_lo + (maxaddr_hi - maxaddr_lo) / 2;
+		if (Dee_dexataddr_init_fromaddr(&check, mid) &&
+		    Dee_dexataddr_compare(ref, &check) == 0) {
+			maxaddr_lo = mid + 1;
+		} else {
+			maxaddr_hi = mid;
+		}
+	}
+
+	if (minaddr_hi < maxaddr_lo) {
+		self->mo_minaddr = minaddr_hi;
+		self->mo_maxaddr = maxaddr_lo;
+		return true;
+	}
+	return false;
+}
+#endif /* HAVE_Dee_dexataddr_t */
+
+struct dexrange {
+	byte_t *dr_minaddr;
+	byte_t *dr_maxaddr;
+};
+
+PRIVATE NONNULL((1)) void DCALL
+dexrange_union(struct dexrange *__restrict self,
+               void const *addr, size_t num_bytes) {
+	byte_t *extra_minaddr = (byte_t *)addr;
+	byte_t *extra_maxaddr = extra_minaddr + num_bytes - 1;
+	if (self->dr_minaddr > extra_minaddr)
+		self->dr_minaddr = extra_minaddr;
+	if (self->dr_maxaddr > extra_maxaddr)
+		self->dr_maxaddr = extra_maxaddr;
+}
+
+/* Fallback function used to calculate dex bounds using the dex module's export table */
+PRIVATE NONNULL((1)) void DCALL
+DeeModule_InitDexBounds_with_exports(DeeModuleObject *__restrict self) {
+	uint16_t i;
+	struct dexrange range;
+	struct Dee_module_dexdata *dd = self->mo_moddata.mo_dexdata;
+	struct Dee_dex_symbol const *exports;
+	range.dr_minaddr = (byte_t *)(self);
+	range.dr_maxaddr = (byte_t *)(self + 1);
+	dexrange_union(&range, dd, sizeof(*dd));
+	exports = dd->mdx_export;
+	if (exports) {
+		dexrange_union(&range, exports, self->mo_globalc * sizeof(struct Dee_dex_symbol));
+		for (i = 0; i < self->mo_globalc; ++i) {
+			struct Dee_dex_symbol const *sym = &exports[i];
+			if (sym->ds_name)
+				dexrange_union(&range, sym->ds_name, (strlen(sym->ds_name) + 1) * sizeof(char));
+			if (sym->ds_doc)
+				dexrange_union(&range, sym->ds_doc, (strlen(sym->ds_doc) + 1) * sizeof(char));
+			if (sym->ds_obj) {
+				DeeObject *obj = sym->ds_obj;
+				size_t size = DeeType_GetInstanceSize(Dee_TYPE(obj));
+				if (size == 0)
+					size = sizeof(DeeObject);
+				dexrange_union(&range, obj, size);
+			}
+		}
+	}
+	if (self->mo_bucketv) {
+		struct Dee_module_symbol *buckets = self->mo_bucketv;
+		dexrange_union(&range, buckets, (self->mo_bucketm + 1) * sizeof(struct Dee_module_symbol));
+		for (i = 0; i <= self->mo_bucketm; ++i) {
+			struct Dee_module_symbol *sym = &buckets[i];
+			if (sym->ss_name)
+				dexrange_union(&range, sym->ss_name, (strlen(sym->ss_name) + 1) * sizeof(char));
+			if (sym->ss_doc)
+				dexrange_union(&range, sym->ss_doc, (strlen(sym->ss_doc) + 1) * sizeof(char));
+		}
+	}
+	for (i = 0; i < self->mo_globalc; ++i) {
+		DeeObject *obj = self->mo_globalv[i];
+		if (obj) {
+			size_t size = DeeType_GetInstanceSize(Dee_TYPE(obj));
+			if (size == 0)
+				size = sizeof(DeeObject);
+			dexrange_union(&range, obj, size);
+		}
+	}
+	self->mo_minaddr = range.dr_minaddr;
+	self->mo_maxaddr = range.dr_maxaddr;
+}
+
 
 DECL_END
 
@@ -319,20 +810,33 @@ PRIVATE Dee_ATOMIC_REF(DeeTupleObject) deemon_path = Dee_ATOMIC_REF_INIT(NULL);
 
 
 
-#undef HAVE_module_byaddr_tree
-#if !defined(CONFIG_NO_DEX) && defined(Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS)
-#define HAVE_module_byaddr_tree
-#define HAVE_module_byaddr_tree_CONTAINS_DEX
-#endif /* !CONFIG_NO_DEX && Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS */
-#if !defined(CONFIG_NO_DEC) && defined(CONFIG_EXPERIMENTAL_MMAP_DEC)
-#define HAVE_module_byaddr_tree
-#define HAVE_module_byaddr_tree_CONTAINS_DEC
-#endif /* !CONFIG_NO_DEC && CONFIG_EXPERIMENTAL_MMAP_DEC */
-#if !defined(CONFIG_NO_DEX) && !defined(Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS)
-#define HAVE_dex_byaddr_tree
-#endif /* !CONFIG_NO_DEX && !Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS */
+/* Define structure for runtime-only dex info */
+#ifdef HAVE_Dee_dexataddr_t
+#define HAVE_Dee_module_dexinfo
+struct Dee_module_dexinfo {
+	Dee_dexataddr_t ddi_ataddr;
+#ifdef HAVE_Dee_dexataddr_t_IS_POINTER
+#define HAVE_Dee_module_dexinfo_IS_POINTER
+#endif /* HAVE_Dee_dexataddr_t_IS_POINTER */
+};
 
-#if defined(HAVE_module_byaddr_tree) || defined(HAVE_dex_byaddr_tree)
+#ifdef HAVE_Dee_module_dexinfo_IS_POINTER
+#ifdef __INTELLISENSE__
+#define Dee_module_dexdata__getinfo(self) ((struct Dee_module_dexinfo *)&(self)->mdx_info)
+#else /* __INTELLISENSE__ */
+#define Dee_module_dexdata__getinfo(self) \
+	((struct Dee_module_dexinfo *)((byte_t *)(self) + offsetof(struct Dee_module_dexdata, mdx_info)))
+#endif /* !__INTELLISENSE__ */
+#else /* HAVE_Dee_module_dexinfo_IS_POINTER */
+#define Dee_module_dexdata__getinfo(self)    ((self)->mdx_info)
+#define Dee_module_dexdata__setinfo(self, v) (void)((self)->mdx_info = (v))
+#define Dee_module_dexinfo_alloc()    DeeObject_MALLOC(struct Dee_module_dexinfo)
+#define Dee_module_dexinfo_free(self) DeeObject_FREE(self)
+#endif /* !HAVE_Dee_module_dexinfo_IS_POINTER */
+#endif /* HAVE_Dee_dexataddr_t */
+
+
+
 #ifndef CONFIG_NO_THREADS
 PRIVATE Dee_atomic_rwlock_t module_byaddr_lock = Dee_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
@@ -352,28 +856,24 @@ PRIVATE Dee_atomic_rwlock_t module_byaddr_lock = Dee_ATOMIC_RWLOCK_INIT;
 #define module_byaddr_lock_endwrite()   Dee_atomic_rwlock_endwrite(&module_byaddr_lock)
 #define module_byaddr_lock_endread()    Dee_atomic_rwlock_endread(&module_byaddr_lock)
 #define module_byaddr_lock_end()        Dee_atomic_rwlock_end(&module_byaddr_lock)
-#endif /* HAVE_module_byaddr_tree || HAVE_dex_byaddr_tree */
 
 
-/* [0..n][lock(module_byaddr_lock)] Tree used by:
- * - !CONFIG_NO_DEX: #ifdef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS  (references here) 
- * - !CONFIG_NO_DEC: #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC        (no references here) */
-#ifdef HAVE_module_byaddr_tree
-#undef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC
-#if defined(Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS) && defined(CONFIG_HAVE___dex_start____AND___end)
-#define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC
+/* [0..n][lock(module_byaddr_lock)]
+ * Tree used by dee module, and dex modules without "_Dee_MODULE_FNOADDR"
+ * NOTE: The "maybe(DREF)" here refers to the fact that:
+ *       - DeeModuleDee_Type are **NOT** DREF
+ *       - DeeModuleDex_Type are DREF
+ *       (other types of modules not appear in this tree) */
+#undef HAVE_module_byaddr_tree_STATIC_INIT
+#ifdef CONFIG_HAVE___dex_start____AND___end
+#define HAVE_module_byaddr_tree_STATIC_INIT
 PRIVATE RBTREE_ROOT(/*maybe(DREF)*/ Dee_module_object) module_byaddr_tree = &DeeModule_Deemon;
-#else /* Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS && CONFIG_HAVE___dex_start____AND___end */
+#else /* CONFIG_HAVE___dex_start____AND___end */
 PRIVATE RBTREE_ROOT(/*maybe(DREF)*/ Dee_module_object) module_byaddr_tree = NULL;
-#endif /* !Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS || !CONFIG_HAVE___dex_start____AND___end */
-
-DECL_END
+#endif /* !CONFIG_HAVE___dex_start____AND___end */
 
 #define RBTREE(name)           module_byaddr_##name
 #define RBTREE_T               DeeModuleObject
-#if !defined(CONFIG_NO_DEX) && defined(Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS)
-#define RBTREE_WANT_RLOCATE
-#endif /* !CONFIG_NO_DEX && Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS */
 #define RBTREE_Tkey            byte_t const *
 #define RBTREE_GETMINKEY(self) (self)->mo_minaddr
 #define RBTREE_GETMAXKEY(self) (self)->mo_maxaddr
@@ -386,56 +886,24 @@ DECL_END
 #define RBTREE_NOTHROW         NOTHROW
 #define RBTREE_DECL            PRIVATE
 #define RBTREE_IMPL            PRIVATE
+#define RBTREE_WANT_RLOCATE
 #define RBTREE_OMIT_REMOVE
 #ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
 #define RBTREE_OMIT_REMOVENODE /* Not needed... */
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
+DECL_END
 #include <hybrid/sequence/rbtree-abi.h>
-
 DECL_BEGIN
-#endif /* HAVE_module_byaddr_tree */
 
-#ifndef CONFIG_NO_DEX
-
-#if defined(Dee_MODULE_DEXDATA_HAVE_LOADHANDLE) && !defined(Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE)
-#define Dee_module_dexdata__get_loadhandle(self)    ((byte_t *)(self)->mdx_info)
-#define Dee_module_dexdata__set_loadhandle(self, v) (void)((self)->mdx_info = (struct Dee_module_dexinfo *)(v))
-#endif /* Dee_MODULE_DEXDATA_HAVE_LOADHANDLE && !Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE */
-#ifdef Dee_MODULE_DEXDATA_HAVE_LOADSTRING
-struct Dee_module_dexinfo {
-	Dl_info mdxi_loadstring; /* [1..1][const] Module load string. */
-};
-#define Dee_module_dexinfo_alloc()    DeeObject_MALLOC(struct Dee_module_dexinfo)
-#define Dee_module_dexinfo_free(self) DeeObject_FREE(self)
-#define Dee_module_dexdata__get_loadstring(self) \
-	(&(self)->mdx_info->mdxi_loadstring)
-#endif /* Dee_MODULE_DEXDATA_HAVE_LOADSTRING */
-
-INTERN NONNULL((1)) void DCALL
-Dee_module_dexdata_fini(struct Dee_module_dexdata *__restrict self) {
-	(void)self;
-#ifdef Dee_module_dexinfo_alloc
-	Dee_module_dexinfo_free(self->mdx_info);
-#endif /* Dee_module_dexinfo_alloc */
-}
-
-#ifdef HAVE_dex_byaddr_tree
+#ifdef HAVE_Dee_dexataddr_t
+/* [0..n][lock(module_byaddr_lock)] */
+PRIVATE RBTREE_ROOT(DREF Dee_module_object) dex_byaddr_tree = NULL;
 #define RBTREE(name)           dex_byaddr_##name
 #define RBTREE_T               DeeModuleObject
-#ifdef Dee_MODULE_DEXDATA_HAVE_LOADHANDLE
-#define RBTREE_Tkey            byte_t *
-#ifdef Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE
-#define RBTREE_GETKEY(self)    ((byte_t *)(self)->mo_moddata.mo_dexdata->mdx_handle)
-#else /* Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE */
-#define RBTREE_GETKEY(self)    Dee_module_dexdata__get_loadhandle((self)->mo_moddata.mo_dexdata)
-#endif /* !Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE */
-#endif /* Dee_MODULE_DEXDATA_HAVE_LOADHANDLE */
-#ifdef Dee_MODULE_DEXDATA_HAVE_LOADSTRING
-#define RBTREE_Tkey            char const *
-#define RBTREE_GETKEY(self)    Dee_module_dexdata__get_loadstring((self)->mo_moddata.mo_dexdata)->dli_fname
-#define RBTREE_KEY_LO(a, b)    (strcmp(a, b) < 0)
-#define RBTREE_KEY_EQ(a, b)    (strcmp(a, b) == 0)
-#endif /* Dee_MODULE_DEXDATA_HAVE_LOADSTRING */
+#define RBTREE_Tkey            Dee_dexataddr_t const *
+#define RBTREE_GETKEY(self)    (&Dee_module_dexdata__getinfo((self)->mo_moddata.mo_dexdata)->ddi_ataddr)
+#define RBTREE_KEY_LO(a, b)    (Dee_dexataddr_compare(a, b) < 0)
+#define RBTREE_KEY_EQ(a, b)    (Dee_dexataddr_compare(a, b) == 0)
 #define RBTREE_NODEFIELD       mo_adrnode
 #define RBTREE_ISRED(self)     (atomic_read(&(self)->mo_flags) & Dee_MODULE_FADRRED)
 #define RBTREE_SETRED(self)    atomic_or(&(self)->mo_flags, Dee_MODULE_FADRRED)
@@ -450,395 +918,112 @@ Dee_module_dexdata_fini(struct Dee_module_dexdata *__restrict self) {
 DECL_END
 #include <hybrid/sequence/rbtree-abi.h>
 DECL_BEGIN
-
-/* [0..n][lock(module_byaddr_lock)] */
-PRIVATE RBTREE_ROOT(DREF Dee_module_object) dex_byaddr_tree = NULL;
-#endif /* HAVE_dex_byaddr_tree */
+#endif /* HAVE_Dee_dexataddr_t */
 
 
-#ifdef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
-#define dex_byaddr_find_module(mod)   module_byaddr_rlocate(module_byaddr_tree, (mod)->mo_minaddr, (mod)->mo_maxaddr)
-#define dex_byaddr_find_addr(addr)    module_byaddr_locate(module_byaddr_tree, (byte_t const *)(addr))
-#define dex_byaddr_insert_module(mod) module_byaddr_insert(&module_byaddr_tree, mod)
-/*#define dex_byaddr_remove_module(mod) module_byaddr_removenode(&module_byaddr_tree, mod)*/
-#else /* Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS */
-#define dex_byaddr_insert_module(mod) dex_byaddr_insert(&dex_byaddr_tree, mod)
-/*#define dex_byaddr_remove_module(mod) dex_byaddr_removenode(&dex_byaddr_tree, mod)*/
-#ifdef Dee_MODULE_DEXDATA_HAVE_LOADHANDLE
-#ifdef Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE
-#define dex_byaddr_find_module(mod) dex_byaddr_locate(dex_byaddr_tree, (byte_t *)(mod)->mo_moddata.mo_dexdata->mdx_handle)
-#else /* Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE */
-#define dex_byaddr_find_module(mod) dex_byaddr_locate(dex_byaddr_tree, Dee_module_dexdata__get_loadhandle((mod)->mo_moddata.mo_dexdata))
-#endif /* !Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE */
-/* Lookup the load-handle of a given "addr" (as returned by `Dee_module_dexdata__get_loadhandle()') */
-PRIVATE ATTR_PURE WUNUSED byte_t *DCALL
-os_addr2loadhandle(void const *addr) {
-#ifdef Dee_DEXBOUNDS_USE_LOADHANDLE__GetModuleHandleExW
-	HMODULE hTypeModule;
-	BOOL bOk;
-	DBG_ALIGNMENT_DISABLE();
-	bOk = GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-	                         GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-	                         (LPCWSTR)addr, &hTypeModule);
-	DBG_ALIGNMENT_ENABLE();
-	return bOk ? (byte_t *)(void *)hTypeModule : NULL;
-#endif /* Dee_DEXBOUNDS_USE_LOADHANDLE__GetModuleHandleExW */
 
-#ifdef Dee_DEXBOUNDS_USE_LOADHANDLE__dlgethandle
-	/* KOS Mk4 changed up the dynlib API somewhat, such that we
-	 * need a different way of translating module pointers.
-	 * In Mk4, this is done by:
-	 * >> #define _KOS_SOURCE 1
-	 * >> #include <dlfcn.h>
-	 * >> 
-	 * >> static int obj = 0;
-	 * >> char const *getNameOfMyModule() {
-	 * >> 	void *h;
-	 * >> 	char const *name;
-	 * >> 	h    = dlgethandle(&obj, DLGETHANDLE_FNORMAL);
-	 * >> 	name = dlmodulename(h);
-	 * >> 	return name;
-	 * >> }
-	 * WARNING: When the given `addr' is invalid, this function
-	 *          will clobber `dlerror()'! */
-	return (byte_t *)dlgethandle(addr, DLGETHANDLE_FNORMAL);
-#endif /* Dee_DEXBOUNDS_USE_LOADHANDLE__dlgethandle */
-
-#ifdef Dee_DEXBOUNDS_USE_LOADHANDLE__dladdr1__RTLD_DL_LINKMAP
-	/* Compare link map pointers. */
-	Dl_info dli;
-	struct link_map *ptr_lm = NULL;
-	if (dladdr1(addr, &dli, (void **)&ptr_lm, RTLD_DL_LINKMAP) && ptr_lm)
-		return (byte_t *)ptr_lm;
-	return NULL;
-#endif /* Dee_DEXBOUNDS_USE_LOADHANDLE__dladdr1__RTLD_DL_LINKMAP */
-}
-
-PRIVATE ATTR_PURE WUNUSED DeeModuleObject *DCALL
-dex_byaddr_find_addr(void const *addr) {
-	byte_t *load_handle = os_addr2loadhandle(addr);
-	if unlikely(!load_handle)
-		return NULL;
-	return dex_byaddr_locate(dex_byaddr_tree, load_handle);
-}
-#elif defined(Dee_MODULE_DEXDATA_HAVE_LOADSTRING)
-#define dex_byaddr_find_module(mod) dex_byaddr_locate(dex_byaddr_tree, Dee_module_dexdata__get_loadstring((mod)->mo_moddata.mo_dexdata)->dli_fname)
-PRIVATE ATTR_PURE WUNUSED DeeModuleObject *DCALL
-dex_byaddr_find_addr(void const *addr) {
-#ifdef Dee_DEXBOUNDS_USE_LOADSTRING__dladdr__dli_fname
-	Dl_info dli;
-	if (dladdr(addr, &dli) && ((sizeof(dli.dli_fname) != sizeof(char const *)) || dli.dli_fname)) {
-//		Dee_DPRINTF("[debug] dladdr(%p) -> %q\n", addr, dli.dli_fname);
-		return dex_byaddr_locate(dex_byaddr_tree, (char const *)dli.dli_fname);
-	}
-#endif /* Dee_DEXBOUNDS_USE_LOADSTRING__dladdr__dli_fname */
-	(void)addr;
-	return NULL;
-}
-#endif /* Dee_MODULE_DEXDATA_HAVE_LOADSTRING */
-#endif /* Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS */
-
-
-#ifdef Dee_DEXBOUNDS_USE_LOADBOUNDS__GetModuleInformation
-typedef struct {
-	LPVOID lpBaseOfDll;
-	DWORD SizeOfImage;
-	LPVOID EntryPoint;
-} NT_MODULEINFO;
-
-typedef int (WINAPI *LPGETMODULEINFORMATION)(void *hProcess, void *hModule, NT_MODULEINFO *lpmodinfo, uint32_t cb);
-PRIVATE LPGETMODULEINFORMATION pdyn_GetModuleInformation = NULL;
-PRIVATE char const name_GetModuleInformation[] = "GetModuleInformation";
-PRIVATE LPGETMODULEINFORMATION DCALL get_GetModuleInformation(void) {
-	HMODULE hMod;
-	static WCHAR const wKernel32[] = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
-	static WCHAR const wPsapi[]    = { 'P', 'S', 'A', 'P', 'I', 0 };
-	static WCHAR const wKernel32_dll[] = { 'K', 'e', 'r', 'n', 'e', 'l', '3', '2', '.', 'd', 'l', 'l', 0 };
-	static WCHAR const wPsapi_dll[]    = { 'P', 's', 'A', 'p', 'i', '.', 'd', 'l', 'l', 0 };
-	LPGETMODULEINFORMATION result = atomic_read(&pdyn_GetModuleInformation);
-	HMODULE hModule;
-	if (result)
-		return result;
-	hModule = GetModuleHandleW(wKernel32);
-	if (hModule) {
-		*(FARPROC *)&result = GetProcAddress(hModule, name_GetModuleInformation);
-		if (result != NULL)
-			goto remember_result;
-	}
-	hModule = GetModuleHandleW(wPsapi);
-	if (hModule) {
-		*(FARPROC *)&result = GetProcAddress(hModule, name_GetModuleInformation);
-		if (result != NULL)
-			goto remember_result;
-	}
-	hMod = LoadLibraryW(wKernel32_dll);
-	if (hMod != NULL) {
-		*(FARPROC *)&result = GetProcAddress(hMod, name_GetModuleInformation);
-		if (result != NULL)
-			goto remember_result;
-		(void)FreeLibrary(hMod);
-	}
-	hMod = LoadLibraryW(wPsapi_dll);
-	if (hMod != NULL) {
-		*(FARPROC *)&result = GetProcAddress(hMod, name_GetModuleInformation);
-		if (result != NULL)
-			goto remember_result;
-		(void)FreeLibrary(hMod);
-	}
-	Dee_DPRINTF("ERROR: Unable to locate 'GetModuleInformation' in 'Kernel32.dll' or 'PsApi.dll': %R",
-	            DeeSystem_DlError());
-	return NULL;
-remember_result:
-	atomic_write(&pdyn_GetModuleInformation, result);
-	return result;
-}
-#endif /* Dee_DEXBOUNDS_USE_LOADBOUNDS__GetModuleInformation */
-
-#ifdef Dee_DEXBOUNDS_USE_LOADBOUNDS__GetModuleInformation
-#ifdef _MSC_VER
-#define HINST_THISCOMPONENT ((HINSTANCE)__ImageBase)
-#else /* _MSC_VER */
-/* XXX: This only works when deemon is the primary
- *      binary, but not if it was loaded as a DLL! */
-#define HINST_THISCOMPONENT GetModuleHandleW(NULL)
-#endif /* !_MSC_VER */
-#endif /* Dee_DEXBOUNDS_USE_LOADBOUNDS__GetModuleInformation */
-
-
-#ifdef CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP
-#define dlinfo_RTLD_DI_LINKMAP(handle, p_result) \
-	(void)(dlinfo(handle, RTLD_DI_LINKMAP, (void *)(p_result)) || (*(p_result) = (struct link_map *)(handle), 1))
-#else /* CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP */
-#define dlinfo_RTLD_DI_LINKMAP(handle, p_result) \
-	(void)(*(p_result) = (struct link_map *)(handle))
-#endif /* !CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP */
-
-
-#if (defined(Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP) || \
-     defined(Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr))
-PRIVATE int
-initialize_dexdata_minmax_iterate_cb(struct dl_phdr_info *info,
-                                     size_t size, void *cookie) {
-	__UINTPTR_HALF_TYPE__ i;
-	byte_t const *phdr_minaddr, *phdr_maxaddr;
-	DeeModuleObject *mod = (DeeModuleObject *)cookie;
-	if unlikely(size < COMPILER_OFFSETAFTER(struct dl_phdr_info, dlpi_phnum))
-		return 0;
-#ifdef Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP
-	{
-		struct Dee_module_dexdata *dexdata = mod->mo_moddata.mo_dexdata;
-		if ((uintptr_t)Dee_module_dexdata__get_loadhandle(dexdata) != (uintptr_t)info->dlpi_addr)
-			return 0; /* Some other module... */
-	}
-#endif /* Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP */
-
-	phdr_minaddr = (byte_t const *)-1;
-	phdr_maxaddr = (byte_t const *)0;
-	for (i = 0; i < info->dlpi_phnum; ++i) {
-		byte_t const *minaddr = (byte_t const *)info->dlpi_phdr[i].p_vaddr + (uintptr_t)info->dlpi_addr;
-		byte_t const *maxaddr = minaddr + (uintptr_t)info->dlpi_phdr[i].p_memsz - 1;
-		if (phdr_minaddr > minaddr)
-			phdr_minaddr = minaddr;
-		if (phdr_maxaddr < maxaddr)
-			phdr_maxaddr = maxaddr;
-	}
-
-#ifdef Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr
-	if ((byte_t const *)mod < phdr_minaddr)
-		return 0; /* Some other module... */
-	if ((byte_t const *)mod > phdr_maxaddr)
-		return 0; /* Some other module... */
-#endif /* Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr */
-
-	/* Update min/max bounds */
-	if (mod->mo_minaddr > phdr_minaddr)
-		mod->mo_minaddr = phdr_minaddr;
-	if (mod->mo_maxaddr < phdr_maxaddr)
-		mod->mo_maxaddr = phdr_maxaddr;
-	return 0;
-}
-#endif /* Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr */
-
-
-/* Initialize "Dee_module_dexdata__set_loadhandle()" */
-#ifndef Dee_MODULE_DEXDATA_HAVE_LOADHANDLE
-#define dex_initialize_loadhandle(dexdata) (void)0
-#elif defined(Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE)
-#define dex_initialize_loadhandle(dexdata) (void)0
-#else /* !... */
-PRIVATE void DCALL
-dex_initialize_loadhandle(struct Dee_module_dexdata *__restrict dexdata) {
-#ifdef Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS__link_map__l_addr
-	struct link_map *lm;
-	dlinfo_RTLD_DI_LINKMAP(dexdata->mdx_handle, &lm);
-	Dee_module_dexdata__set_loadhandle(dexdata, (uintptr_t)lm->l_addr);
-#endif /* Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS__link_map__l_addr */
-
-#ifdef Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS__link_map
-	struct link_map *lm;
-	dlinfo_RTLD_DI_LINKMAP(dexdata->mdx_handle, &lm);
-	Dee_module_dexdata__set_loadhandle(dexdata, (uintptr_t)lm);
-#endif /* Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS__link_map */
-}
-#endif /* ... */
-
-
-/* Initialize "mod->mo_minaddr" / "mod->mo_maxaddr" */
-#ifndef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
-#define dex_initialize_loadbounds(mod) (void)0
-#else /* !Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS */
-#ifndef Dee_DEXBOUNDS_USE_LOADBOUNDS__EXPORTED_OBJECTS
-ATTR_COLD ATTR_NOINLINE
-#endif /* !Dee_DEXBOUNDS_USE_LOADBOUNDS__EXPORTED_OBJECTS */
-PRIVATE void DCALL
-dex_initialize_loadbounds_by_exported_objects(DeeModuleObject *__restrict mod) {
-	struct Dee_dex_symbol *symv = (struct Dee_dex_symbol *)mod->mo_bucketv;
-	uint16_t i, symc = mod->mo_globalc;
-	byte_t const *minaddr = (byte_t const *)-1;
-	byte_t const *maxaddr = (byte_t const *)0;
-	for (i = 0; i < symc; ++i) {
-		DeeObject *obj = symv[i].ds_obj;
-		byte_t const *obj_minaddr = (byte_t const *)obj;
-		byte_t const *obj_maxaddr = (byte_t const *)obj + sizeof(*obj);
-		if (minaddr > obj_minaddr)
-			minaddr = obj_minaddr;
-		if (maxaddr < obj_maxaddr)
-			maxaddr = obj_maxaddr;
-	}
-	mod->mo_minaddr = minaddr;
-	mod->mo_maxaddr = maxaddr;
-}
-
-PRIVATE void DCALL
-dex_initialize_loadbounds(DeeModuleObject *__restrict mod) {
-#ifdef Dee_DEXBOUNDS_USE_LOADBOUNDS__GetModuleInformation
-	NT_MODULEINFO modinfo;
-	struct Dee_module_dexdata *dexdata = mod->mo_moddata.mo_dexdata;
-	if (!(*get_GetModuleInformation())(GetCurrentProcess(), dexdata->mdx_handle, &modinfo, sizeof(modinfo))) {
-		Dee_DPRINTF("ERROR: Failed to GetModuleInformation() for module %q: %u",
-		            mod->mo_absname, (unsigned int)GetLastError());
-		dex_initialize_loadbounds_by_exported_objects(mod);
-	} else {
-		mod->mo_minaddr = (byte_t const *)modinfo.lpBaseOfDll;
-		mod->mo_maxaddr = (byte_t const *)modinfo.lpBaseOfDll + modinfo.SizeOfImage - 1;
-	}
-#endif /* Dee_DEXBOUNDS_USE_LOADBOUNDS__GetModuleInformation */
-
-#if (defined(Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr) || \
-     defined(Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP))
-	mod->mo_minaddr = (byte_t const *)-1;
-	mod->mo_maxaddr = (byte_t const *)0;
-	(void)dl_iterate_phdr(&initialize_dexdata_minmax_iterate_cb, (void *)mod);
-	if unlikely(mod->mo_minaddr > mod->mo_maxaddr) {
-		Dee_DPRINTF("ERROR: Failed to dl_iterate_phdr()-find module %q", mod->mo_absname);
-		dex_initialize_loadbounds_by_exported_objects(mod);
-	}
-#endif /* Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr || Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP */
-
-#ifdef Dee_DEXBOUNDS_USE_LOADBOUNDS__xdlmodule_info
-	struct module_basic_info info;
-	if (xdlmodule_info(mod->mdx_handle, MODULE_INFO_CLASS_BASIC, &info, sizeof(info)) < sizeof(info)) {
-		Dee_DPRINTF("ERROR: Failed to xdlmodule_info() for module %q", mod->mo_absname);
-		dex_initialize_loadbounds_by_exported_objects(mod);
-	} else {
-		mod->mo_minaddr = (byte_t const *)info.mi_segstart;
-		mod->mo_maxaddr = (byte_t const *)info.mi_segend - 1;
-	}
-#endif /* Dee_DEXBOUNDS_USE_LOADBOUNDS__xdlmodule_info */
-
-#ifdef Dee_DEXBOUNDS_USE_LOADBOUNDS__EXPORTED_OBJECTS
-	dex_initialize_loadbounds_by_exported_objects(mod);
-#endif /* Dee_DEXBOUNDS_USE_LOADBOUNDS__EXPORTED_OBJECTS */
-}
-#endif /* Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS */
-
-
-/* Initialize "Dee_module_dexdata__get_loadstring(dexdata)" */
-#ifndef Dee_MODULE_DEXDATA_HAVE_LOADSTRING
-#define dex_initialize_loadstring(dexdata) (void)0
-#else /* !Dee_MODULE_DEXDATA_HAVE_LOADSTRING */
-PRIVATE void DCALL
-dex_initialize_loadstring(struct Dee_module_dexdata *__restrict dexdata) {
-#ifdef Dee_MODULE_DEXDATA_HAVE_LOADSTRING_IS__dladdr__dli_fname
-	Dl_info *info = Dee_module_dexdata__get_loadstring(dexdata);
-	if (!dladdr(dexdata, info))
-		bzero(info, sizeof(*info));
-#endif /* Dee_MODULE_DEXDATA_HAVE_LOADSTRING_IS__dladdr__dli_fname */
-}
-#endif /* Dee_MODULE_DEXDATA_HAVE_LOADSTRING */
-
-
-/* Dex data for the deeemon core. */
-#undef _Dee_MODULE_DEXDATA_INIT_HANDLE_IS_STATIC
+/* Dex data for the deemon core. */
+#undef deemon_dexdata__mdx_module__IS_STATIC
 #if defined(DeeSystem_DlOpen_USE_LoadLibrary) && defined(__PE__) && defined(_MSC_VER)
 extern /*IMAGE_DOS_HEADER*/ __BYTE_TYPE__ const __ImageBase[];
-#define _Dee_MODULE_DEXDATA_INIT_HANDLE (void *)__ImageBase
-#define _Dee_MODULE_DEXDATA_INIT_HANDLE_IS_STATIC
+#define deemon_dexdata__mdx_module__INIT (void *)__ImageBase
+#define deemon_dexdata__mdx_module__IS_STATIC
 #else /* ... */
-#define _Dee_MODULE_DEXDATA_INIT_HANDLE DeeSystem_DlOpen_FAILED
+#define deemon_dexdata__mdx_module__INIT NULL
 #endif /* !... */
 
-#ifdef Dee_MODULE_DEXDATA_HAVE_LOADSTRING
+#if defined(HAVE_Dee_module_dexinfo) && !defined(HAVE_Dee_module_dexinfo_IS_POINTER)
 PRIVATE struct Dee_module_dexinfo deemon_dexinfo = {};
-#endif /* Dee_MODULE_DEXDATA_HAVE_LOADSTRING */
+#endif /* HAVE_Dee_module_dexinfo && !HAVE_Dee_module_dexinfo_IS_POINTER */
 
 INTERN struct Dee_module_dexdata deemon_dexdata = {
 	/* .mdx_module = */ &DeeModule_Deemon,
 	/* .mdx_export = */ NULL,
-	/* .mdx_handle = */ _Dee_MODULE_DEXDATA_INIT_HANDLE,
-#ifdef Dee_MODULE_DEXDATA_HAVE_LOADSTRING
+	/* .mdx_handle = */ deemon_dexdata__mdx_module__INIT,
+#if defined(HAVE_Dee_module_dexinfo) && !defined(HAVE_Dee_module_dexinfo_IS_POINTER)
 	/* .mdx_info   = */ &deemon_dexinfo,
-#else /* Dee_MODULE_DEXDATA_HAVE_LOADSTRING */
+#else /* HAVE_Dee_module_dexinfo && !HAVE_Dee_module_dexinfo_IS_POINTER */
 	/* .mdx_info   = */ NULL,
-#endif /* !Dee_MODULE_DEXDATA_HAVE_LOADSTRING */
+#endif /* !HAVE_Dee_module_dexinfo || HAVE_Dee_module_dexinfo_IS_POINTER */
 	/* .mdx_init   = */ NULL,
 	/* .mdx_fini   = */ NULL,
 	/* .mdx_clear  = */ NULL
 };
 
+/* Called during finalization of the associated dex module */
+INTERN NONNULL((1)) void DCALL
+Dee_module_dexdata_fini(struct Dee_module_dexdata *__restrict self) {
+	(void)self;
+	COMPILER_IMPURE();
+#ifdef Dee_module_dexinfo_alloc
+	Dee_module_dexinfo_free(Dee_module_dexdata__getinfo(self));
+#endif /* Dee_module_dexinfo_alloc */
+}
+
 
 
 /* Ensure that "module_byaddr_tree" has been initialized. */
-#ifdef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC
+#ifdef HAVE_module_byaddr_tree_STATIC_INIT
 #define module_byaddr_is_initialized()          1
 #define module_byaddr_ensure_initialized()      (void)0
 #define module_byaddr_ensure_initialized_impl() (void)0
-#else /* Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC */
-#ifdef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
+#else /* HAVE_module_byaddr_tree_STATIC_INIT */
+#ifdef HAVE_Dee_dexataddr_t
+#define module_byaddr_is_initialized() (module_byaddr_tree != NULL || dex_byaddr_tree != NULL)
+#else /* HAVE_Dee_dexataddr_t */
 #define module_byaddr_is_initialized() (module_byaddr_tree != NULL)
-#else /* Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS */
-#define module_byaddr_is_initialized() (dex_byaddr_tree != NULL)
-#endif /* !Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS */
+#endif /* !HAVE_Dee_dexataddr_t */
 #define module_byaddr_ensure_initialized() \
 	(void)(likely(module_byaddr_is_initialized()) || (module_byaddr_ensure_initialized_impl(), 1))
 PRIVATE ATTR_NOINLINE void DCALL
 module_byaddr_ensure_initialized_impl(void) {
 	/* Load the deemon core dex module into "module_byaddr_tree" */
 	ASSERT(module_byaddr_lock_writing());
+	ASSERT(!module_byaddr_is_initialized());
 
 	/* Initialize "deemon_dexdata.mdx_handle" if it wasn't already initialized statically. */
-#ifndef _Dee_MODULE_DEXDATA_INIT_HANDLE_IS_STATIC
+#ifndef deemon_dexdata__mdx_module__IS_STATIC
 #ifdef DeeSystem_DlOpen_USE_LoadLibrary
-	deemon_dexdata.mdx_handle = HINST_THISCOMPONENT;
-#endif /* DeeSystem_DlOpen_USE_LoadLibrary */
-#ifdef DeeSystem_DlOpen_USE_dlopen
+	deemon_dexdata.mdx_handle = GetModuleHandleW(NULL)
+#elif defined(DeeSystem_DlOpen_USE_dlopen)
 	deemon_dexdata.mdx_handle = dlopen(NULL, DLOPEN_NULL_FLAGS);
 #endif /* DeeSystem_DlOpen_USE_dlopen */
-#endif /* _Dee_MODULE_DEXDATA_INIT_HANDLE_IS_STATIC */
+#endif /* deemon_dexdata__mdx_module__IS_STATIC */
 
 	/* Load different sub-components */
-	dex_initialize_loadhandle(&deemon_dexdata);
-	dex_initialize_loadbounds(&DeeModule_Deemon);
-	dex_initialize_loadstring(&deemon_dexdata);
+	if (!DeeModule_InitDexBounds(&DeeModule_Deemon)) {
+		struct Dee_module_dexinfo *p_deemon_dexinfo = Dee_module_dexdata__getinfo(&deemon_dexdata);
+		if (Dee_dexataddr_init_fromaddr(&p_deemon_dexinfo->ddi_ataddr, &DeeModule_Deemon)) {
+			DeeModule_Deemon.mo_flags |= _Dee_MODULE_FNOADDR;
+			if (!DeeModule_InitDexBounds_with_dexataddr(&DeeModule_Deemon,
+			                                            &p_deemon_dexinfo->ddi_ataddr))
+				goto load_from_export_table;
+		} else {
+load_from_export_table:
+			DeeModule_InitDexBounds_with_exports(&DeeModule_Deemon);
+		}
+	}
 
 	/* Set by-addr tree to consist of exactly the deemon core. */
-#ifdef HAVE_dex_byaddr_tree
-	dex_byaddr_tree = &DeeModule_Deemon;
-#else /* HAVE_dex_byaddr_tree */
-	module_byaddr_tree = &DeeModule_Deemon;
-#endif /* !HAVE_dex_byaddr_tree */
+#ifdef HAVE_Dee_dexataddr_t
+	if (DeeModule_Deemon.mo_flags & _Dee_MODULE_FNOADDR) {
+		dex_byaddr_tree = &DeeModule_Deemon;
+	} else
+#endif /* HAVE_Dee_dexataddr_t */
+	{
+		module_byaddr_tree = &DeeModule_Deemon;
+	}
 }
-#endif /* !Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC */
+#endif /* !HAVE_module_byaddr_tree_STATIC_INIT */
+
+
+
+
+/* As defined by Dee_DEX_END()... */
+struct DEX {
+	struct Dee_gc_head_link       m_head;
+	Dee_MODULE_STRUCT(/**/, 1024) m_dex;
+};
 
 PRIVATE NONNULL((1, 3)) void DCALL
 dex_add_symbol(struct Dee_module_symbol *bucketv, uint16_t bucketm,
@@ -859,14 +1044,6 @@ dex_add_symbol(struct Dee_module_symbol *bucketv, uint16_t bucketm,
 		break;
 	}
 }
-
-
-/* As defined by Dee_DEX_END()... */
-struct DEX {
-	struct Dee_gc_head_link       m_head;
-	Dee_MODULE_STRUCT(/**/, 1024) m_dex;
-};
-
 
 /* Open loaded system "dex_handle" as a module object. The dex module will have
  * already been hooked into "module_abstree_root", as well as having had its
@@ -894,7 +1071,9 @@ DeeModule_OpenDex(/*inherit(always)*/ /*utf-8*/ char *__restrict absname,
 	struct Dee_module_dexinfo *dexinfo = Dee_module_dexinfo_alloc();
 	if unlikely(!dexinfo)
 		goto err_no_dexinfo;
-#endif /* Dee_module_dexinfo_alloc */
+#elif defined(HAVE_Dee_dexataddr_t)
+	struct Dee_module_dexinfo *dexinfo;
+#endif /* ... */
 
 again_acquire_locks:
 	module_abstree_lock_write();
@@ -934,17 +1113,19 @@ again_acquire_locks:
 
 	/* Check if we've already loaded this dex module... */
 	module_byaddr_ensure_initialized();
-	existing_module = dex_byaddr_find_addr((void *)dex);
+	existing_module = module_byaddr_locate(module_byaddr_tree, (byte_t *)dex);
 	if (existing_module) {
+		if (Dee_IncrefIfNotZero(existing_module)) {
 handle_existing_module:
-		Dee_Incref(existing_module);
-		LOCAL_unlock();
+			LOCAL_unlock();
 #ifdef Dee_module_dexinfo_alloc
-		Dee_module_dexinfo_free(dexinfo);
+			Dee_module_dexinfo_free(dexinfo);
 #endif /* Dee_module_dexinfo_alloc */
-		Dee_Free(absname);
-		DeeSystem_DlClose(dex_handle);
-		return existing_module;
+			Dee_Free(absname);
+			DeeSystem_DlClose(dex_handle);
+			return existing_module;
+		}
+		module_byaddr_removenode(&module_byaddr_tree, existing_module);
 	}
 
 	/* Sanity check: does this look like a valid dex object? */
@@ -975,7 +1156,9 @@ handle_existing_module:
 	/* Remember dynamically allocated "dexinfo" data */
 #ifdef Dee_module_dexinfo_alloc
 	dexdata->mdx_info = dexinfo;
-#endif /* Dee_module_dexinfo_alloc */
+#elif defined(HAVE_Dee_dexataddr_t)
+	dexinfo = Dee_module_dexdata__getinfo(dexdata);
+#endif /* ... */
 
 	/* Initialize common data of the module. */
 	result->ob_refcnt   = 2;          /* +1: return; +1: module_byaddr_tree */
@@ -986,14 +1169,31 @@ handle_existing_module:
 	dexdata->mdx_handle = dex_handle; /* Inherit reference */
 
 	/* Initialize OS-specific data of the module... */
-	dex_initialize_loadhandle(dexdata);
-	if (!result->mo_minaddr || !result->mo_maxaddr ||
-	    result->mo_minaddr >= result->mo_maxaddr)
-		dex_initialize_loadbounds(result);
-	dex_initialize_loadstring(dexdata);
+	if (result->mo_minaddr && result->mo_maxaddr &&
+	    result->mo_maxaddr != (byte_t *)-1 &&
+	    result->mo_minaddr < result->mo_maxaddr &&
+	    (result->mo_minaddr <= (byte_t *)(result) &&
+	     result->mo_maxaddr >= (byte_t *)(result + 1) - 1)) {
+		/* Address range already initialized */
+	} else if (DeeModule_InitDexBounds(result)) {
+		/* Exact address range could be determined from OS */
+#ifdef HAVE_Dee_dexataddr_t
+	} else if (Dee_dexataddr_init_fromaddr(&dexinfo->ddi_ataddr, dex)) {
+		/* Use the alternate "dex_byaddr_tree" */
+		result->mo_flags |= _Dee_MODULE_FNOADDR;
+		if (!DeeModule_InitDexBounds_with_dexataddr(result, &dexinfo->ddi_ataddr))
+			DeeModule_InitDexBounds_with_exports(result);
+#endif /* HAVE_Dee_dexataddr_t */
+	} else {
+		DeeModule_InitDexBounds_with_exports(result);
+		Dee_DPRINTF("[RT] Warning: Unable to determine load range or byaddr info "
+		            /**/ "for DEX module %q. Using address range %p-%p obtained "
+		            /**/ "from scan of module exports",
+		            absname, result->mo_minaddr, result->mo_maxaddr);
+	}
 
-	/* Initialize the module's "mo_globalv" and "mo_bucketv" tables. */
-	{
+	/* Initialize the module's "mo_globalv" and "mo_bucketv" tables (if not already done). */
+	if (dexdata->mdx_export) {
 		uint16_t i, c = result->mo_globalc;
 		uint16_t m = result->mo_bucketm;
 		struct Dee_module_symbol *v = result->mo_bucketv;
@@ -1011,16 +1211,48 @@ handle_existing_module:
 				++i;
 			}
 		}
+		dexdata->mdx_export = NULL;
 	}
 
-	/* Safety-check that there really isn't anything at this specific range. */
-	existing_module = dex_byaddr_find_module(result);
-	if unlikely(existing_module)
-		goto handle_existing_module;
+	/* Safety-check that there really isn't anything already
+	 * within the detected address range.
+	 *
+	 * Only if nothing is there, can we insert the new module! */
+#ifdef HAVE_Dee_dexataddr_t
+	if (result->mo_flags & _Dee_MODULE_FNOADDR) {
+		existing_module = dex_byaddr_locate(dex_byaddr_tree, &dexinfo->ddi_ataddr);
+		if (existing_module) {
+			ASSERT_OBJECT_TYPE_EXACT(existing_module, &DeeModuleDex_Type);
+			Dee_Incref(existing_module);
+			goto handle_existing_module;
+		}
+		Dee_DPRINTF("[RT] Add dex module: %q\n", absname);
+		dex_byaddr_insert(&dex_byaddr_tree, result);
+	} else
+#endif /* HAVE_Dee_dexataddr_t */
+	{
+		existing_module = module_byaddr_rlocate(module_byaddr_tree,
+		                                        result->mo_minaddr,
+		                                        result->mo_maxaddr);
+		if unlikely(existing_module) {
+			if (Dee_IncrefIfNotZero(existing_module))
+				goto handle_existing_module;
+			module_byaddr_removenode(&module_byaddr_tree, existing_module);
+		}
+		Dee_DPRINTF("[RT] Add dex module at %p-%p: %q\n",
+		            result->mo_minaddr, result->mo_maxaddr, absname);
+		module_byaddr_insert(&module_byaddr_tree, result);
+
+#ifdef Dee_module_dexinfo_alloc
+		/* If "dexinfo" was allocated but not used, then free it again */
+		ASSERT(dexdata->mdx_info == dexinfo);
+		dexdata->mdx_info = NULL;
+		Dee_module_dexinfo_free(dexinfo);
+#endif /* ... */
+	}
 
 	/* Register the module globally... */
 	Dee_XIncrefv(result->mo_globalv, result->mo_globalc);
-	dex_byaddr_insert_module(result);
 	module_abstree_insert(&module_abstree_root, result);
 	result = DeeGC_TRACK(DeeModuleObject, result);
 	LOCAL_unlock();
@@ -1076,12 +1308,7 @@ again:
 PRIVATE WUNUSED NONNULL((1)) DeeModuleObject *DCALL
 DeeModule_ClearDexModuleCaches_find_uncleared(DeeModuleObject *__restrict root) {
 again:
-#if !defined(HAVE_dex_byaddr_tree) && defined(HAVE_module_byaddr_tree_CONTAINS_DEC)
-	if (Dee_TYPE(root) == &DeeModuleDex_Type)
-#else /* !HAVE_dex_byaddr_tree && HAVE_module_byaddr_tree_CONTAINS_DEC */
-	ASSERT(Dee_TYPE(root) == &DeeModuleDex_Type);
-#endif /* HAVE_dex_byaddr_tree || !HAVE_module_byaddr_tree_CONTAINS_DEC */
-	{
+	if (Dee_TYPE(root) == &DeeModuleDex_Type) {
 		if (!(atomic_read(&root->mo_flags) & _Dee_MODULE_FCLEARED) &&
 		    root->mo_moddata.mo_dexdata->mdx_clear != NULL) {
 			atomic_or(&root->mo_flags, _Dee_MODULE_FCLEARED);
@@ -1108,24 +1335,33 @@ again:
 PRIVATE bool DCALL DeeModule_ClearDexModuleCaches_locked(void) {
 	bool result = false;
 	DeeModuleObject *root;
+	DeeModuleObject *todo;
 	module_byaddr_lock_read();
-#ifdef HAVE_dex_byaddr_tree
-	root = dex_byaddr_tree;
-#else /* HAVE_dex_byaddr_tree */
-	root = module_byaddr_tree;
-#endif /* !HAVE_dex_byaddr_tree */
-	if (root) {
-		DeeModuleObject *todo;
+#ifdef HAVE_Dee_dexataddr_t
+	if ((root = dex_byaddr_tree) != NULL)
 		DeeModule_ClearDexModuleCaches_prepare_at(root);
-		while ((todo = DeeModule_ClearDexModuleCaches_find_uncleared(root)) != NULL) {
-			Dee_Incref(todo);
-			module_byaddr_lock_endread();
-			ASSERT(Dee_TYPE(todo) == &DeeModuleDex_Type);
-			ASSERT(todo->mo_moddata.mo_dexdata->mdx_clear);
-			result |= (*todo->mo_moddata.mo_dexdata->mdx_clear)();
-			Dee_Decref_unlikely(todo);
-			module_byaddr_lock_read();
-		}
+#endif /* !HAVE_Dee_dexataddr_t */
+	if ((root = module_byaddr_tree) != NULL)
+		DeeModule_ClearDexModuleCaches_prepare_at(root);
+again:
+#ifdef HAVE_Dee_dexataddr_t
+	if ((root = dex_byaddr_tree) != NULL &&
+	    (todo = DeeModule_ClearDexModuleCaches_find_uncleared(root)) != NULL)
+		goto handle_todo_module;
+#endif /* !HAVE_Dee_dexataddr_t */
+	if ((root = module_byaddr_tree) != NULL &&
+	    (todo = DeeModule_ClearDexModuleCaches_find_uncleared(root)) != NULL) {
+#ifdef HAVE_Dee_dexataddr_t
+handle_todo_module:
+#endif /* HAVE_Dee_dexataddr_t */
+		Dee_Incref(todo);
+		module_byaddr_lock_endread();
+		ASSERT(Dee_TYPE(todo) == &DeeModuleDex_Type);
+		ASSERT(todo->mo_moddata.mo_dexdata->mdx_clear);
+		result |= (*todo->mo_moddata.mo_dexdata->mdx_clear)();
+		Dee_Decref_unlikely(todo);
+		module_byaddr_lock_read();
+		goto again;
 	}
 	module_byaddr_lock_endread();
 	return result;
@@ -1148,36 +1384,25 @@ INTERN bool DCALL DeeModule_ClearDexModuleCaches(void) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 serialize_tree_without_deemon(DeeModuleObject *root,
-                              DREF DeeModuleObject **p_dexlist
-#if !defined(HAVE_dex_byaddr_tree) && defined(HAVE_module_byaddr_tree_CONTAINS_DEC)
-                              , DeeModuleObject **p_deelist
-#endif /* !HAVE_dex_byaddr_tree && HAVE_module_byaddr_tree_CONTAINS_DEC */
-                              ) {
+                              DREF DeeModuleObject **p_dexlist,
+                              DeeModuleObject **p_deelist) {
 	DeeModuleObject *lhs, *rhs;
 again:
 	lhs = root->mo_adrnode.rb_lhs;
 	rhs = root->mo_adrnode.rb_rhs;
 	if (root != &DeeModule_Deemon) {
-#if !defined(HAVE_dex_byaddr_tree) && defined(HAVE_module_byaddr_tree_CONTAINS_DEC)
 		if (Dee_TYPE(root) == &DeeModuleDee_Type) {
 			root->mo_nextdex = *p_deelist;
 			*p_deelist = root;
-		} else
-#endif /* !HAVE_dex_byaddr_tree && HAVE_module_byaddr_tree_CONTAINS_DEC */
-		{
+		} else {
 			ASSERT(Dee_TYPE(root) == &DeeModuleDex_Type);
 			root->mo_nextdex = *p_dexlist;
 			*p_dexlist = root;
 		}
 	}
 	if (lhs != NULL) {
-		if (rhs != NULL) {
-#if !defined(HAVE_dex_byaddr_tree) && defined(HAVE_module_byaddr_tree_CONTAINS_DEC)
+		if (rhs != NULL)
 			serialize_tree_without_deemon(rhs, p_dexlist, p_deelist);
-#else /* !HAVE_dex_byaddr_tree && HAVE_module_byaddr_tree_CONTAINS_DEC */
-			serialize_tree_without_deemon(rhs, p_dexlist);
-#endif /* HAVE_dex_byaddr_tree || !HAVE_module_byaddr_tree_CONTAINS_DEC */
-		}
 		root = lhs;
 		goto again;
 	}
@@ -1190,40 +1415,29 @@ again:
 /* Unload all loaded dex modules. */
 INTERN void DCALL DeeModule_UnloadAllDexModules(void) {
 	DREF DeeModuleObject *dex_list = NULL;
-#if !defined(HAVE_dex_byaddr_tree) && defined(HAVE_module_byaddr_tree_CONTAINS_DEC)
-	DeeModuleObject *dec_list = NULL;
-#endif /* !HAVE_dex_byaddr_tree && HAVE_module_byaddr_tree_CONTAINS_DEC */
+	DeeModuleObject *dee_list = NULL;
 	module_byaddr_lock_write();
-#ifdef HAVE_dex_byaddr_tree
-	if unlikely(!dex_byaddr_tree) {
-		module_byaddr_lock_endwrite();
-		return;
+	if (module_byaddr_tree)
+		serialize_tree_without_deemon(module_byaddr_tree, &dex_list, &dee_list);
+#ifdef HAVE_Dee_dexataddr_t
+	if (dex_byaddr_tree)
+		serialize_tree_without_deemon(dex_byaddr_tree, &dex_list, &dee_list);
+	if (DeeModule_Deemon.mo_flags & _Dee_MODULE_FNOADDR) {
+		dex_byaddr_tree = &DeeModule_Deemon;
+	} else
+#endif /* HAVE_Dee_dexataddr_t */
+	{
+		module_byaddr_tree = &DeeModule_Deemon;
 	}
-	serialize_tree_without_deemon(dex_byaddr_tree, &dex_list);
-	dex_byaddr_tree = &DeeModule_Deemon;
-#else /* HAVE_dex_byaddr_tree */
-	if unlikely(!module_byaddr_tree) {
-		module_byaddr_lock_endwrite();
-		return;
-	}
-#if !defined(HAVE_dex_byaddr_tree) && defined(HAVE_module_byaddr_tree_CONTAINS_DEC)
-	serialize_tree_without_deemon(module_byaddr_tree, &dex_list, &dec_list);
-#else /* !HAVE_dex_byaddr_tree && HAVE_module_byaddr_tree_CONTAINS_DEC */
-	serialize_tree_without_deemon(module_byaddr_tree, &dex_list);
-#endif /* HAVE_dex_byaddr_tree || !HAVE_module_byaddr_tree_CONTAINS_DEC */
-	module_byaddr_tree = &DeeModule_Deemon;
-#endif /* !HAVE_dex_byaddr_tree */
 	atomic_and(&DeeModule_Deemon.mo_flags, ~Dee_MODULE_FADRRED);
 	DeeModule_Deemon.mo_adrnode.rb_lhs = NULL;
 	DeeModule_Deemon.mo_adrnode.rb_rhs = NULL;
 	DeeModule_Deemon.mo_adrnode.rb_par = NULL;
-#if !defined(HAVE_dex_byaddr_tree) && defined(HAVE_module_byaddr_tree_CONTAINS_DEC)
-	while (dec_list) {
-		DeeModuleObject *next = dec_list->mo_nextdex;
-		module_byaddr_insert(&module_byaddr_tree, dec_list);
-		dec_list = next;
+	while (dee_list) {
+		DeeModuleObject *next = dee_list->mo_nextdex;
+		module_byaddr_insert(&module_byaddr_tree, dee_list);
+		dee_list = next;
 	}
-#endif /* !HAVE_dex_byaddr_tree && HAVE_module_byaddr_tree_CONTAINS_DEC */
 	module_byaddr_lock_endwrite();
 
 	/* Drop references that were stored in the tree. */
@@ -1234,7 +1448,6 @@ INTERN void DCALL DeeModule_UnloadAllDexModules(void) {
 	}
 }
 
-#endif /* !CONFIG_NO_DEX */
 
 #if !defined(CONFIG_NO_DEC) && defined(CONFIG_EXPERIMENTAL_MMAP_DEC)
 /* Unbind from `module_byaddr_tree' */
@@ -1347,7 +1560,7 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
 	if (Dee_TYPE(self) == &DeeModuleDex_Type) {
 		struct Dee_module_dexdata *dexdata;
 		dexdata = ((DeeModuleObject *)self)->mo_moddata.mo_dexdata;
-#ifndef _Dee_MODULE_DEXDATA_INIT_HANDLE_IS_STATIC
+#ifndef deemon_dexdata__mdx_module__IS_STATIC
 		if unlikely(dexdata->mdx_handle == DeeSystem_DlOpen_FAILED) {
 			/* In case "self" is the deemon core module,
 			 * lazily initialize the system handle. */
@@ -1355,7 +1568,7 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
 			module_byaddr_ensure_initialized();
 			module_byaddr_lock_endwrite();
 		}
-#endif /* !_Dee_MODULE_DEXDATA_INIT_HANDLE_IS_STATIC */
+#endif /* !deemon_dexdata__mdx_module__IS_STATIC */
 		return DeeSystem_DlSym_with_decoration(dexdata->mdx_handle, name);
 	}
 #endif /* !CONFIG_NO_DEX */
@@ -8351,55 +8564,44 @@ PUBLIC void DCALL DeeModule_InitPath(void) {
  *                of the deemon core, some dex module, or a some user-code module. */
 PUBLIC WUNUSED DREF /*Module*/ DeeObject *DCALL
 DeeModule_OfPointer(void const *ptr) {
-#if defined(HAVE_module_byaddr_tree) || defined(HAVE_dex_byaddr_tree)
 	DREF DeeModuleObject *result;
 	/* Check for a static pointer and mmap'd .dec files */
 	module_byaddr_lock_read();
-#ifndef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC
+#ifndef HAVE_module_byaddr_tree_STATIC_INIT
 	if unlikely(!module_byaddr_is_initialized()) {
 		module_byaddr_lock_upgrade();
 		module_byaddr_ensure_initialized();
 		module_byaddr_lock_downgrade();
 	}
-#endif /* !Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC */
+#endif /* !HAVE_module_byaddr_tree_STATIC_INIT */
 
 	/* Search "module_byaddr_tree" */
-#ifdef HAVE_module_byaddr_tree
 	result = module_byaddr_locate(module_byaddr_tree, (byte_t const *)ptr);
 	if (result) {
-#ifdef HAVE_module_byaddr_tree_CONTAINS_DEC
-#ifdef HAVE_module_byaddr_tree_CONTAINS_DEX
 		ASSERT(Dee_TYPE(result) == &DeeModuleDee_Type ||
 		       Dee_TYPE(result) == &DeeModuleDex_Type);
-#else /* HAVE_module_byaddr_tree_CONTAINS_DEX */
-		ASSERT(Dee_TYPE(result) == &DeeModuleDee_Type);
-#endif /* !HAVE_module_byaddr_tree_CONTAINS_DEX */
-		if (Dee_IncrefIfNotZero(result))
-#else /* HAVE_module_byaddr_tree_CONTAINS_DEC */
-		ASSERT(Dee_TYPE(result) == &DeeModuleDex_Type);
-		Dee_Incref(result);
-#endif /* !HAVE_module_byaddr_tree_CONTAINS_DEC */
-		{
+		if (Dee_IncrefIfNotZero(result)) {
 			module_byaddr_lock_endread();
 			return Dee_AsObject(result);
 		}
 	}
-#endif /* HAVE_module_byaddr_tree */
 
-	/* Search "dex_byaddr_tree" */
-#ifdef HAVE_dex_byaddr_tree
-	/* NOTE: There are configurations where both "dex_byaddr_tree"
-	 *       and "module_byaddr_tree" must be searched! */
-	result = dex_byaddr_find_addr(ptr);
-	if (result) {
-		ASSERT(Dee_TYPE(result) == &DeeModuleDex_Type);
-		Dee_Incref(result);
-		module_byaddr_lock_endread();
-		return Dee_AsObject(result);
+	/* Search "dex_byaddr_tree" (if present) */
+#ifdef HAVE_Dee_dexataddr_t
+	{
+		Dee_dexataddr_t at_addr;
+		if (Dee_dexataddr_init_fromaddr(&at_addr, ptr)) {
+			result = dex_byaddr_locate(dex_byaddr_tree, &at_addr);
+			if (result) {
+				ASSERT(Dee_TYPE(result) == &DeeModuleDex_Type);
+				Dee_Incref(result);
+				module_byaddr_lock_endread();
+				return Dee_AsObject(result);
+			}
+		}
 	}
-#endif /* HAVE_dex_byaddr_tree */
+#endif /* HAVE_Dee_dexataddr_t */
 	module_byaddr_lock_endread();
-#endif /* HAVE_module_byaddr_tree || HAVE_dex_byaddr_tree */
 
 	/* No such module... */
 	(void)ptr;

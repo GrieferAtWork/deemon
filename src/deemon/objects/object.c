@@ -3052,7 +3052,7 @@ type_serialize(DeeTypeObject *__restrict self,
                DeeSerial *__restrict writer, Dee_seraddr_t addr) {
 #define ADDROF(field) (addr + offsetof(DeeTypeObject, field))
 	DeeTypeObject *out;
-	if (DeeSerial_PutObject(writer, ADDROF(tp_base), self->tp_base))
+	if (DeeSerial_XPutObject(writer, ADDROF(tp_base), self->tp_base))
 		goto err;
 	out = DeeSerial_Addr2Mem(writer, addr, DeeTypeObject);
 	Dee_weakref_initempty(&out->tp_module); /* Module info is lost here */
