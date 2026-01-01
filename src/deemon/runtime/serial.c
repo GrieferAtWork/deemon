@@ -205,6 +205,48 @@ err:
 }
 
 
+/* Encode a field: DREF DeeObject **addrof_pointer_to_objv; // [1..1][0..N][owned][const] */
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeSerial_PutMemdupObjectv)(DeeSerial *__restrict self, Dee_seraddr_t addrof_pointer_to_objv,
+                                   /*[1..1][0..objc]*/ DeeObject *const *objv, size_t objc) {
+	int result;
+	Dee_seraddr_t out_objv;
+	if (!objc) {
+		*DeeSerial_Addr2Mem(self, addrof_pointer_to_objv, DREF DeeObject *) = NULL;
+		return 0;
+	}
+	out_objv = DeeSerial_Malloc(self, objc * sizeof(DREF DeeObject *), objv);
+	if (!Dee_SERADDR_ISOK(out_objv))
+		goto err;
+	result = DeeSerial_PutObjectv(self, out_objv, objv, objc);
+	if likely(result == 0)
+		result = DeeSerial_PutAddr(self, addrof_pointer_to_objv, out_objv);
+	return result;
+err:
+	return -1;
+}
+
+/* Encode a field: DREF DeeObject **addrof_pointer_to_objv; // [0..1][0..N][owned][const] */
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeSerial_XPutMemdupObjectv)(DeeSerial *__restrict self, Dee_seraddr_t addrof_pointer_to_objv,
+                                    /*[0..1][0..objc]*/ DeeObject *const *objv, size_t objc) {
+	int result;
+	Dee_seraddr_t out_objv;
+	if (!objc) {
+		*DeeSerial_Addr2Mem(self, addrof_pointer_to_objv, DREF DeeObject *) = NULL;
+		return 0;
+	}
+	out_objv = DeeSerial_Malloc(self, objc * sizeof(DREF DeeObject *), objv);
+	if (!Dee_SERADDR_ISOK(out_objv))
+		goto err;
+	result = DeeSerial_XPutObjectv(self, out_objv, objv, objc);
+	if likely(result == 0)
+		result = DeeSerial_PutAddr(self, addrof_pointer_to_objv, out_objv);
+	return result;
+err:
+	return -1;
+}
+
 
 DECL_END
 

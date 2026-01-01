@@ -494,11 +494,11 @@ DeeString_DestroyRegex(DeeStringObject const *__restrict self) {
  *                        - "i": DEE_REGEX_COMPILE_ICASE
  * @return: * :   The compiled regex pattern.
  * @return: NULL: An error occurred. */
-PUBLIC WUNUSED NONNULL((1)) struct DeeRegexCode *DCALL
+PUBLIC WUNUSED NONNULL((1)) struct DeeRegexCode const *DCALL
 DeeString_GetRegex(/*String*/ DeeObject *__restrict self,
                    unsigned int compile_flags,
                    DeeObject *rules) {
-	struct DeeRegexCode *result;
+	struct DeeRegexCode const *result;
 	struct regex_cache_entry *first_dummy;
 	DeeStringObject *me = (DeeStringObject *)self;
 	Dee_hash_t i, perturb, hash;
@@ -537,7 +537,7 @@ again_rules_iter:
 		item = regex_cache_hashit(i);
 		if (!item->rce_str)
 			break; /* End-of-hash-chain */
-		if (item->rce_str == (DeeStringObject *)me &&
+		if (item->rce_str == me &&
 		    item->rce_syntax == compile_flags) {
 			result = item->rce_regex;
 			regex_cache_lock_endread();
@@ -581,7 +581,7 @@ again_insert_result:
 			        "String is in regex cache, but doesn't have regex-flag set?");
 			existing_regex = item->rce_regex;
 			regex_cache_lock_endwrite();
-			Dee_Free(result);
+			Dee_Free((void *)result);
 			return existing_regex;
 		}
 	}
@@ -605,7 +605,7 @@ again_insert_result:
 		       first_dummy->rce_str == REGEX_CACHE_DUMMY_STR);
 		wasdummy = first_dummy->rce_str != NULL;
 		first_dummy->rce_str    = me;
-		first_dummy->rce_regex  = (struct DeeRegexCode *)Dee_UntrackAlloc(result);
+		first_dummy->rce_regex  = (struct DeeRegexCode *)Dee_UntrackAlloc((void *)result);
 		first_dummy->rce_syntax = compile_flags;
 		++regex_cache_used;
 		if (!wasdummy) {
@@ -624,11 +624,41 @@ again_insert_result:
 	if (Dee_CollectMemory(1))
 		goto again_lock_and_insert_result;
 err_r:
-	Dee_Free(result);
+	Dee_Free((void *)result);
 err:
 	return NULL;
 }
 
+
+/* Find and return the set of flags that were used to compile `code' for `self'.
+ * Behavior is weak-undefined if `code' wasn't compiled from `self'. */
+PUBLIC WUNUSED NONNULL((1, 2)) unsigned int DCALL
+DeeString_GetRegexFlags(/*String*/ DeeObject *__restrict self,
+                        struct DeeRegexCode const *__restrict code) {
+	DeeStringObject *me = (DeeStringObject *)self;
+	Dee_hash_t i, perturb, hash;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeString_Type);
+
+	/* Lookup regex in cache */
+	hash = regex_cache_entry_hashstr(me);
+	regex_cache_lock_read();
+	perturb = i = regex_cache_hashst(hash);
+	for (;; regex_cache_hashnx(i, perturb)) {
+		struct regex_cache_entry *item;
+		item = regex_cache_hashit(i);
+		if (!item->rce_str)
+			break; /* End-of-hash-chain */
+		if (item->rce_str == me && item->rce_regex == code) {
+			unsigned int result = item->rce_syntax;
+			regex_cache_lock_endread();
+			return result;
+		}
+	}
+	regex_cache_lock_endread();
+
+	/* Shouldn't get here... */
+	return DEE_REGEX_COMPILE_NORMAL;
+}
 
 
 DECL_END

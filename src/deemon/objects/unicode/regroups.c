@@ -28,7 +28,9 @@
 #include <deemon/none-operator.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 /**/
 
 #include "../../runtime/runtime_error.h"
@@ -50,6 +52,23 @@ PRIVATE WUNUSED DREF ReGroups *DCALL rg_ctor(void) {
 		ReGroups_Init(result, 1);
 	}
 	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
+rg_serialize(ReGroups *__restrict self, DeeSerial *__restrict writer) {
+	ReGroups *out;
+	size_t sizeof_self = _Dee_MallococBufsize(offsetof(ReGroups, rg_groups),
+	                                          self->rg_ngroups,
+	                                          sizeof(struct DeeRegexMatch));
+	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	if (!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, ReGroups);
+	out->rg_ngroups = self->rg_ngroups;
+	memcpyc(out->rg_groups, self->rg_groups, self->rg_ngroups, sizeof(ReGroups));
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
 }
 
 #define rg_bool _DeeNone_reti1_1 /* Always non-empty (iow: return "1") */
@@ -125,6 +144,31 @@ PRIVATE WUNUSED DREF ReSubBytes *DCALL rsb_ctor(void) {
 	if likely(result)
 		ReSubBytes_Init(result, Dee_EmptyBytes, NULL, 0);
 	return result;
+}
+
+#define rsb_serialize rss_serialize
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+rss_serialize(ReSubStrings *__restrict self,
+              DeeSerial *__restrict writer) {
+	ReSubStrings *out;
+	size_t sizeof_self = _Dee_MallococBufsize(offsetof(ReSubStrings, rss_groups),
+	                                          self->rss_ngroups,
+	                                          sizeof(struct DeeRegexMatch));
+#define ADDROF(field) (out_addr + offsetof(ReSubStrings, field))
+	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	if (!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	if (DeeSerial_PutObject(writer, ADDROF(rss_baseown), self->rss_baseown))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(rss_baseptr), self->rss_baseptr))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, ReSubStrings);
+	out->rss_ngroups = self->rss_ngroups;
+	memcpyc(out->rss_groups, self->rss_groups, self->rss_ngroups, sizeof(ReGroups));
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+#undef ADDROF
 }
 
 #define rsb_fini rss_fini
@@ -292,7 +336,7 @@ INTERN DeeTypeObject ReGroups_Type = {
 			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &rg_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ NULL,
@@ -342,7 +386,7 @@ INTERN DeeTypeObject ReSubStrings_Type = {
 			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &rss_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rss_fini,
@@ -392,7 +436,7 @@ INTERN DeeTypeObject ReSubBytes_Type = {
 			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &rsb_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rsb_fini,

@@ -542,7 +542,7 @@ string_serialize(String *__restrict self, DeeSerial *__restrict writer) {
 	out->s_hash = self->s_hash;
 #else /* __OPTIMIZE_SIZE__ */
 	/* **always** write with hash-value already loaded */
-	out->s_hash = DeeString_Hash(Dee_AsObject(self));
+	out->s_hash = DeeString_Hash(self);
 #endif /* !__OPTIMIZE_SIZE__ */
 	out->s_len = self->s_len;
 	memcpyc(out->s_str, self->s_str, self->s_len + 1, sizeof(char));
@@ -595,8 +595,8 @@ string_serialize(String *__restrict self, DeeSerial *__restrict writer) {
 			Dee_seraddr_t addrof_wstr = DeeSerial_Malloc(writer, sizeof_wstr, (size_t *)wstr - 1);
 			if (!Dee_SERADDR_ISOK(addrof_wstr))
 				goto err;
-			memcpy(DeeSerial_Addr2Mem(writer, addrof_wstr, uint16_t),
-			       (uint16_t *)((size_t *)wstr - 1), sizeof_wstr);
+			memcpy(DeeSerial_Addr2Mem(writer, addrof_wstr, void),
+			       (size_t *)wstr - 1, sizeof_wstr);
 			addrof_wstr += sizeof(size_t);
 			if (DeeSerial_PutAddr(writer, addrin_data(u_data[STRING_WIDTH_2BYTE]), addrof_wstr))
 				goto err;
@@ -609,8 +609,8 @@ string_serialize(String *__restrict self, DeeSerial *__restrict writer) {
 			Dee_seraddr_t addrof_wstr = DeeSerial_Malloc(writer, sizeof_wstr, (size_t *)wstr - 1);
 			if (!Dee_SERADDR_ISOK(addrof_wstr))
 				goto err;
-			memcpy(DeeSerial_Addr2Mem(writer, addrof_wstr, uint32_t),
-			       (uint32_t *)((size_t *)wstr - 1), sizeof_wstr);
+			memcpy(DeeSerial_Addr2Mem(writer, addrof_wstr, void),
+			       (size_t *)wstr - 1, sizeof_wstr);
 			addrof_wstr += sizeof(size_t);
 			if (DeeSerial_PutAddr(writer, addrin_data(u_data[STRING_WIDTH_4BYTE]), addrof_wstr))
 				goto err;
@@ -1516,6 +1516,23 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+stringiter_serialize(StringIterator *__restrict self,
+                     DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	StringIterator *out;
+#define ADDROF(field) (addr + offsetof(StringIterator, field))
+	out = DeeSerial_Addr2Mem(writer, addr, StringIterator);
+	out->si_width = self->si_width;
+	if (DeeSerial_PutObject(writer, ADDROF(si_string), self->si_string))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(si_iter.ptr), atomic_read(&self->si_iter.ptr)))
+		goto err;
+	return DeeSerial_PutPointer(writer, ADDROF(si_end.ptr), self->si_end.ptr);
+err:
+	return -1;
+#undef ADDROF
+}
+
 PRIVATE struct type_member tpconst stringiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(StringIterator, si_string), "->?Dstring"),
 	TYPE_MEMBER_FIELD("__width__", STRUCT_CONST | STRUCT_INT, offsetof(StringIterator, si_width)),
@@ -1677,7 +1694,7 @@ INTERN DeeTypeObject StringIterator_Type = {
 			/* tp_deep_ctor:   */ &stringiter_copy,
 			/* tp_any_ctor:    */ &stringiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &stringiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&stringiter_fini,
 		/* .tp_assign      = */ NULL, /* TODO */

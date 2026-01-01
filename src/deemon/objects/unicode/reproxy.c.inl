@@ -33,6 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/regex.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy() */
 #include <deemon/util/atomic.h>
@@ -73,15 +74,40 @@ INTDEF DeeTypeObject ReBytesLocateAllIterator_Type;
 INTDEF DeeTypeObject ReBytesSplit_Type;
 INTDEF DeeTypeObject ReBytesSplitIterator_Type;
 
-#define DeeRegexBaseExec_Load(self, result, nmatch, pmatch) \
-	(void)((result)->rx_code     = (self)->rx_code,         \
-	       (result)->rx_inbase   = (self)->rx_inbase,       \
-	       (result)->rx_insize   = (self)->rx_insize,       \
-	       (result)->rx_startoff = (self)->rx_startoff,     \
-	       (result)->rx_endoff   = (self)->rx_endoff,       \
-	       (result)->rx_eflags   = (self)->rx_eflags,       \
-	       (result)->rx_nmatch   = (nmatch),                \
+#define DeeRegexBaseExec_Load(self, code, result, nmatch, pmatch) \
+	(void)((result)->rx_code     = (code),                        \
+	       (result)->rx_inbase   = (self)->rx_inbase,             \
+	       (result)->rx_insize   = (self)->rx_insize,             \
+	       (result)->rx_startoff = (self)->rx_startoff,           \
+	       (result)->rx_endoff   = (self)->rx_endoff,             \
+	       (result)->rx_eflags   = (self)->rx_eflags,             \
+	       (result)->rx_nmatch   = (nmatch),                      \
 	       (result)->rx_pmatch   = (pmatch))
+
+
+#define _DEE_REGEX_COMPILE_MASK \
+	(DEE_REGEX_COMPILE_NORMAL | DEE_REGEX_COMPILE_ICASE | DEE_REGEX_COMPILE_NOUTF8)
+STATIC_ASSERT_MSG(_DEE_REGEX_COMPILE_MASK <= 0xf,
+                  "Keep this low, since no valid pointer must overlap with this range");
+
+/* Return the `struct DeeRegexCode *' of `self'
+ * @return: * :   The regex code of `self'
+ * @return: NULL: An error was thrown */
+#define DeeRegexBaseExec_GetCode(self) \
+	(likely((uintptr_t)(self)->rx_code > _DEE_REGEX_COMPILE_MASK) ? (self)->rx_code : _DeeRegexBaseExec_LoadCode(self))
+PRIVATE ATTR_COLD ATTR_NOINLINE WUNUSED NONNULL((1)) struct DeeRegexCode const *DCALL
+_DeeRegexBaseExec_LoadCode(struct DeeRegexBaseExec *__restrict self) {
+	struct DeeRegexCode const *result = atomic_read(&self->rx_code);
+	if unlikely((uintptr_t)result > _DEE_REGEX_COMPILE_MASK)
+		return result; /* Already loaded */
+	/* Lazily re-load after serialization */
+	result = DeeString_GetRegex((DeeObject *)self->rx_pattern,
+	                            (unsigned int)(uintptr_t)result,
+	                            NULL);
+	if likely(result)
+		atomic_write(&self->rx_code, result);
+	return result;
+}
 
 
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -195,6 +221,66 @@ ReSequence__copy(ReSequence *__restrict self,
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeRegexBaseExec_Serialize(struct DeeRegexBaseExec *__restrict self,
+                           DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(struct DeeRegexBaseExec, field))
+	unsigned int compile_flags;
+	struct DeeRegexBaseExec *out;
+	if (DeeSerial_PutObject(writer, ADDROF(rx_pattern), self->rx_pattern))
+		goto err;
+	if ((uintptr_t)self->rx_code <= _DEE_REGEX_COMPILE_MASK) {
+		compile_flags = (unsigned int)(uintptr_t)self->rx_code;
+	} else {
+		compile_flags = DeeString_GetRegexFlags((DeeObject *)self->rx_pattern, self->rx_code);
+	}
+	out = DeeSerial_Addr2Mem(writer, addr, struct DeeRegexBaseExec);
+	/* Set "rx_code" to the flags that were used to compile it.
+	 * After deserialization, this will be detected by `DeeRegexBaseExec_GetCode()',
+	 * which will then re-compile the regex, meaning it doesn't need to be serialized
+	 * as well! */
+	out->rx_code     = (struct DeeRegexCode const *)(uintptr_t)compile_flags;
+	out->rx_inbase   = NULL;
+	out->rx_insize   = self->rx_insize;
+	out->rx_startoff = self->rx_startoff;
+	out->rx_endoff   = self->rx_endoff;
+	out->rx_eflags   = self->rx_eflags;
+	return DeeSerial_PutPointer(writer, ADDROF(rx_inbase), self->rx_inbase);
+err:
+	return -1;
+#undef ADDROF
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ReSequenceIterator__serialize(ReSequenceIterator *__restrict self,
+                              DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	struct DeeRegexBaseExec self__rsi_exec;
+#define ADDROF(field) (addr + offsetof(ReSequenceIterator, field))
+	ReSequenceIterator *out;
+	if (DeeSerial_PutObject(writer, ADDROF(rsi_data), self->rsi_data))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, addr, ReSequenceIterator);
+	Dee_atomic_rwlock_init(&out->rsi_lock);
+	ReSequenceIterator_LockRead(self);
+	memcpy(&self__rsi_exec, &self->rsi_exec, sizeof(self->rsi_exec));
+	ReSequenceIterator_LockEndRead(self);
+	return DeeRegexBaseExec_Serialize(&self__rsi_exec, writer, ADDROF(rsi_exec));
+err:
+	return -1;
+#undef ADDROF
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ReSequence__serialize(ReSequence *__restrict self,
+                      DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(ReSequence, field))
+	int result = DeeSerial_PutObject(writer, ADDROF(rs_data), self->rs_data);
+	if likely(result == 0)
+		result = DeeRegexBaseExec_Serialize(&self->rs_exec, writer, ADDROF(rs_exec));
+	return result;
+#undef ADDROF
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ReSequenceIterator__init(ReSequenceIterator *__restrict self,
                          size_t argc, DeeObject *const *argv) {
@@ -233,17 +319,19 @@ err:
 	return -1;
 }
 
-#define refaiter_init  ReSequenceIterator__init
-#define refaiter_copy  ReSequenceIterator__copy
-#define refaiter_deep  ReSequenceIterator__deep
-#define refaiter_fini  ReSequenceIterator__fini
-#define refaiter_visit ReSequenceIterator__visit
+#define refaiter_init      ReSequenceIterator__init
+#define refaiter_copy      ReSequenceIterator__copy
+#define refaiter_deep      ReSequenceIterator__deep
+#define refaiter_serialize ReSequenceIterator__serialize
+#define refaiter_fini      ReSequenceIterator__fini
+#define refaiter_visit     ReSequenceIterator__visit
 
-#define rebfaiter_init  ReSequenceIterator__init
-#define rebfaiter_copy  ReSequenceIterator__copy
-#define rebfaiter_deep  ReSequenceIterator__deep /* TODO: Should actually deep-copy the underlying Bytes (since those are mutable...) */
-#define rebfaiter_fini  ReSequenceIterator__fini
-#define rebfaiter_visit ReSequenceIterator__visit
+#define rebfaiter_init      ReSequenceIterator__init
+#define rebfaiter_copy      ReSequenceIterator__copy
+#define rebfaiter_deep      ReSequenceIterator__deep /* XXX: Should actually deep-copy the underlying Bytes (since those are mutable...) */
+#define rebfaiter_serialize ReSequenceIterator__serialize
+#define rebfaiter_fini      ReSequenceIterator__fini
+#define rebfaiter_visit     ReSequenceIterator__visit
 
 #define rebfaiter_bool  refaiter_bool
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -251,8 +339,12 @@ refaiter_bool(ReSequenceIterator *__restrict self) {
 	size_t match_size;
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
+	struct DeeRegexCode const *code;
+	code = DeeRegexBaseExec_GetCode(&self->rsi_exec);
+	if unlikely(!code)
+		goto err;
 	ReSequenceIterator_LockRead(self);
-	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
+	DeeRegexBaseExec_Load(&self->rsi_exec, code, &exec, 0, NULL);
 	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
@@ -268,9 +360,13 @@ refaiter_nextpair(ReSequenceIterator *__restrict self, DREF DeeObject *pair[2]) 
 	size_t match_size;
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
+	struct DeeRegexCode const *code;
+	code = DeeRegexBaseExec_GetCode(&self->rsi_exec);
+	if unlikely(!code)
+		goto err;
 again:
 	ReSequenceIterator_LockRead(self);
-	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
+	DeeRegexBaseExec_Load(&self->rsi_exec, code, &exec, 0, NULL);
 	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
@@ -314,9 +410,13 @@ rebfaiter_nextpair(ReSequenceIterator *__restrict self, DREF DeeObject *pair[2])
 	size_t match_size;
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
+	struct DeeRegexCode const *code;
+	code = DeeRegexBaseExec_GetCode(&self->rsi_exec);
+	if unlikely(!code)
+		goto err;
 again:
 	ReSequenceIterator_LockRead(self);
-	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
+	DeeRegexBaseExec_Load(&self->rsi_exec, code, &exec, 0, NULL);
 	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
@@ -444,7 +544,7 @@ INTERN DeeTypeObject ReFindAllIterator_Type = {
 			/* tp_deep_ctor:   */ &refaiter_deep,
 			/* tp_any_ctor:    */ &refaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &refaiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&refaiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -496,7 +596,7 @@ INTERN DeeTypeObject ReBytesFindAllIterator_Type = {
 			/* tp_deep_ctor:   */ &rebfaiter_deep,
 			/* tp_any_ctor:    */ &rebfaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &rebfaiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rebfaiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -531,25 +631,27 @@ INTERN DeeTypeObject ReBytesFindAllIterator_Type = {
 };
 
 
-#define regfaiter_ctor    refaiter_ctor
-#define regfaiter_copy    refaiter_copy
-#define regfaiter_deep    refaiter_deep
-#define regfaiter_init    refaiter_init
-#define regfaiter_fini    refaiter_fini
-#define regfaiter_bool    refaiter_bool
-#define regfaiter_visit   refaiter_visit
-#define regfaiter_cmp     refaiter_cmp
-#define regfaiter_members refaiter_members
+#define regfaiter_ctor      refaiter_ctor
+#define regfaiter_copy      refaiter_copy
+#define regfaiter_deep      refaiter_deep
+#define regfaiter_serialize refaiter_serialize
+#define regfaiter_init      refaiter_init
+#define regfaiter_fini      refaiter_fini
+#define regfaiter_bool      refaiter_bool
+#define regfaiter_visit     refaiter_visit
+#define regfaiter_cmp       refaiter_cmp
+#define regfaiter_members   refaiter_members
 
-#define regbfaiter_ctor    rebfaiter_ctor
-#define regbfaiter_copy    rebfaiter_copy
-#define regbfaiter_deep    rebfaiter_deep
-#define regbfaiter_init    rebfaiter_init
-#define regbfaiter_fini    rebfaiter_fini
-#define regbfaiter_bool    rebfaiter_bool
-#define regbfaiter_visit   rebfaiter_visit
-#define regbfaiter_cmp     rebfaiter_cmp
-#define regbfaiter_members rebfaiter_members
+#define regbfaiter_ctor      rebfaiter_ctor
+#define regbfaiter_copy      rebfaiter_copy
+#define regbfaiter_deep      rebfaiter_deep
+#define regbfaiter_serialize rebfaiter_serialize
+#define regbfaiter_init      rebfaiter_init
+#define regbfaiter_fini      rebfaiter_fini
+#define regbfaiter_bool      rebfaiter_bool
+#define regbfaiter_visit     rebfaiter_visit
+#define regbfaiter_cmp       rebfaiter_cmp
+#define regbfaiter_members   rebfaiter_members
 
 PRIVATE WUNUSED NONNULL((1)) DREF ReGroups *DCALL
 regfaiter_next(ReSequenceIterator *__restrict self) {
@@ -557,14 +659,17 @@ regfaiter_next(ReSequenceIterator *__restrict self) {
 	size_t match_size;
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
-	groups = ReGroups_Malloc(1 + self->rsi_exec.rx_code->rc_ngrps);
+	struct DeeRegexCode const *code;
+	code = DeeRegexBaseExec_GetCode(&self->rsi_exec);
+	if unlikely(!code)
+		goto err;
+	groups = ReGroups_Malloc(1 + code->rc_ngrps);
 	if unlikely(!groups)
 		goto err;
 again:
 	ReSequenceIterator_LockRead(self);
-	DeeRegexBaseExec_Load(&self->rsi_exec, &exec,
-	                      self->rsi_exec.rx_code->rc_ngrps,
-	                      groups->rg_groups + 1);
+	DeeRegexBaseExec_Load(&self->rsi_exec, code, &exec,
+	                      code->rc_ngrps, groups->rg_groups + 1);
 	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
@@ -581,13 +686,13 @@ again:
 	self->rsi_exec.rx_startoff = (size_t)result + match_size;
 	ReSequenceIterator_LockEndWrite(self);
 	string_bytecnt2charcnt_v((String *)self->rsi_data, (char const *)exec.rx_inbase,
-	                         groups->rg_groups + 1, self->rsi_exec.rx_code->rc_ngrps);
+	                         groups->rg_groups + 1, code->rc_ngrps);
 	match_size = string_bytecnt2charcnt((String *)self->rsi_data, (size_t)match_size, (char const *)exec.rx_inbase + (size_t)result);
 	result     = string_bytecnt2charcnt((String *)self->rsi_data, (size_t)result, (char const *)exec.rx_inbase);
 	match_size += (size_t)result;
 	groups->rg_groups[0].rm_so = result;
 	groups->rg_groups[0].rm_eo = match_size;
-	ReGroups_Init(groups, 1 + self->rsi_exec.rx_code->rc_ngrps);
+	ReGroups_Init(groups, 1 + code->rc_ngrps);
 	return groups;
 return_ITER_DONE:
 	ReGroups_Free(groups);
@@ -604,14 +709,17 @@ regbfaiter_next(ReSequenceIterator *__restrict self) {
 	size_t match_size;
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
-	groups = ReGroups_Malloc(1 + self->rsi_exec.rx_code->rc_ngrps);
+	struct DeeRegexCode const *code;
+	code = DeeRegexBaseExec_GetCode(&self->rsi_exec);
+	if unlikely(!code)
+		goto err;
+	groups = ReGroups_Malloc(1 + code->rc_ngrps);
 	if unlikely(!groups)
 		goto err;
 again:
 	ReSequenceIterator_LockRead(self);
-	DeeRegexBaseExec_Load(&self->rsi_exec, &exec,
-	                      self->rsi_exec.rx_code->rc_ngrps,
-	                      groups->rg_groups + 1);
+	DeeRegexBaseExec_Load(&self->rsi_exec, code, &exec,
+	                      code->rc_ngrps, groups->rg_groups + 1);
 	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
@@ -630,7 +738,7 @@ again:
 	match_size += (size_t)result;
 	groups->rg_groups[0].rm_so = result;
 	groups->rg_groups[0].rm_eo = match_size;
-	ReGroups_Init(groups, 1 + self->rsi_exec.rx_code->rc_ngrps);
+	ReGroups_Init(groups, 1 + code->rc_ngrps);
 	return groups;
 return_ITER_DONE:
 	ReGroups_Free(groups);
@@ -687,7 +795,7 @@ INTERN DeeTypeObject RegFindAllIterator_Type = {
 			/* tp_deep_ctor:   */ &regfaiter_deep,
 			/* tp_any_ctor:    */ &regfaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &regfaiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&regfaiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -739,7 +847,7 @@ INTERN DeeTypeObject RegBytesFindAllIterator_Type = {
 			/* tp_deep_ctor:   */ &regbfaiter_deep,
 			/* tp_any_ctor:    */ &regbfaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &regbfaiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&regbfaiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -776,25 +884,27 @@ INTERN DeeTypeObject RegBytesFindAllIterator_Type = {
 
 
 /* LocateAllIterator wrapper (based on FindAll) */
-#define reglaiter_ctor    regfaiter_ctor
-#define reglaiter_copy    regfaiter_copy
-#define reglaiter_deep    regfaiter_deep
-#define reglaiter_init    regfaiter_init
-#define reglaiter_fini    regfaiter_fini
-#define reglaiter_bool    regfaiter_bool
-#define reglaiter_visit   regfaiter_visit
-#define reglaiter_cmp     regfaiter_cmp
-#define reglaiter_members regfaiter_members
+#define reglaiter_ctor      regfaiter_ctor
+#define reglaiter_copy      regfaiter_copy
+#define reglaiter_deep      regfaiter_deep
+#define reglaiter_serialize regfaiter_serialize
+#define reglaiter_init      regfaiter_init
+#define reglaiter_fini      regfaiter_fini
+#define reglaiter_bool      regfaiter_bool
+#define reglaiter_visit     regfaiter_visit
+#define reglaiter_cmp       regfaiter_cmp
+#define reglaiter_members   regfaiter_members
 
-#define regblaiter_ctor    regbfaiter_ctor
-#define regblaiter_copy    regbfaiter_copy
-#define regblaiter_deep    regbfaiter_deep
-#define regblaiter_init    regbfaiter_init
-#define regblaiter_fini    regbfaiter_fini
-#define regblaiter_bool    regbfaiter_bool
-#define regblaiter_visit   regbfaiter_visit
-#define regblaiter_cmp     regbfaiter_cmp
-#define regblaiter_members regbfaiter_members
+#define regblaiter_ctor      regbfaiter_ctor
+#define regblaiter_copy      regbfaiter_copy
+#define regblaiter_deep      regbfaiter_deep
+#define regblaiter_serialize regbfaiter_serialize
+#define regblaiter_init      regbfaiter_init
+#define regblaiter_fini      regbfaiter_fini
+#define regblaiter_bool      regbfaiter_bool
+#define regblaiter_visit     regbfaiter_visit
+#define regblaiter_cmp       regbfaiter_cmp
+#define regblaiter_members   regbfaiter_members
 
 PRIVATE WUNUSED NONNULL((1)) DREF ReSubStrings *DCALL
 reglaiter_next(ReSequenceIterator *__restrict self) {
@@ -802,14 +912,17 @@ reglaiter_next(ReSequenceIterator *__restrict self) {
 	size_t match_size;
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
-	substrings = ReSubStrings_Malloc(1 + self->rsi_exec.rx_code->rc_ngrps);
+	struct DeeRegexCode const *code;
+	code = DeeRegexBaseExec_GetCode(&self->rsi_exec);
+	if unlikely(!code)
+		goto err;
+	substrings = ReSubStrings_Malloc(1 + code->rc_ngrps);
 	if unlikely(!substrings)
 		goto err;
 again:
 	ReSequenceIterator_LockRead(self);
-	DeeRegexBaseExec_Load(&self->rsi_exec, &exec,
-	                      self->rsi_exec.rx_code->rc_ngrps,
-	                      substrings->rss_groups + 1);
+	DeeRegexBaseExec_Load(&self->rsi_exec, code, &exec,
+	                      code->rc_ngrps, substrings->rss_groups + 1);
 	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
@@ -828,7 +941,7 @@ again:
 	substrings->rss_groups[0].rm_so = (size_t)result;
 	substrings->rss_groups[0].rm_eo = (size_t)result + match_size;
 	ReSubStrings_Init(substrings, self->rsi_data, exec.rx_inbase,
-	                  1 + self->rsi_exec.rx_code->rc_ngrps);
+	                  1 + code->rc_ngrps);
 	return substrings;
 return_ITER_DONE:
 	ReSubStrings_Free(substrings);
@@ -845,14 +958,17 @@ regblaiter_next(ReSequenceIterator *__restrict self) {
 	size_t match_size;
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
-	subbytes = ReSubBytes_Malloc(1 + self->rsi_exec.rx_code->rc_ngrps);
+	struct DeeRegexCode const *code;
+	code = DeeRegexBaseExec_GetCode(&self->rsi_exec);
+	if unlikely(!code)
+		goto err;
+	subbytes = ReSubBytes_Malloc(1 + code->rc_ngrps);
 	if unlikely(!subbytes)
 		goto err;
 again:
 	ReSequenceIterator_LockRead(self);
-	DeeRegexBaseExec_Load(&self->rsi_exec, &exec,
-	                      self->rsi_exec.rx_code->rc_ngrps,
-	                      subbytes->rss_groups + 1);
+	DeeRegexBaseExec_Load(&self->rsi_exec, code, &exec,
+	                      code->rc_ngrps, subbytes->rss_groups + 1);
 	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
@@ -871,7 +987,7 @@ again:
 	subbytes->rss_groups[0].rm_so = (size_t)result;
 	subbytes->rss_groups[0].rm_eo = (size_t)result + match_size;
 	ReSubBytes_Init(subbytes, self->rsi_data, exec.rx_inbase,
-	                1 + self->rsi_exec.rx_code->rc_ngrps);
+	                1 + code->rc_ngrps);
 	return subbytes;
 return_ITER_DONE:
 	ReSubBytes_Free(subbytes);
@@ -932,7 +1048,7 @@ INTERN DeeTypeObject RegLocateAllIterator_Type = {
 			/* tp_deep_ctor:   */ &reglaiter_deep,
 			/* tp_any_ctor:    */ &reglaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &reglaiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&reglaiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -984,7 +1100,7 @@ INTERN DeeTypeObject RegBytesLocateAllIterator_Type = {
 			/* tp_deep_ctor:   */ &regblaiter_deep,
 			/* tp_any_ctor:    */ &regblaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &regblaiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&regblaiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1019,21 +1135,23 @@ INTERN DeeTypeObject RegBytesLocateAllIterator_Type = {
 };
 
 
-#define relaiter_ctor    refaiter_ctor
-#define relaiter_copy    refaiter_copy
-#define relaiter_deep    refaiter_deep
-#define relaiter_fini    refaiter_fini
-#define relaiter_bool    refaiter_bool
-#define relaiter_cmp     refaiter_cmp
-#define relaiter_members refaiter_members
+#define relaiter_ctor      refaiter_ctor
+#define relaiter_copy      refaiter_copy
+#define relaiter_deep      refaiter_deep
+#define relaiter_serialize refaiter_serialize
+#define relaiter_fini      refaiter_fini
+#define relaiter_bool      refaiter_bool
+#define relaiter_cmp       refaiter_cmp
+#define relaiter_members   refaiter_members
 
-#define reblaiter_ctor    rebfaiter_ctor
-#define reblaiter_copy    rebfaiter_copy
-#define reblaiter_deep    rebfaiter_deep
-#define reblaiter_fini    rebfaiter_fini
-#define reblaiter_bool    rebfaiter_bool
-#define reblaiter_cmp     rebfaiter_cmp
-#define reblaiter_members rebfaiter_members
+#define reblaiter_ctor      rebfaiter_ctor
+#define reblaiter_copy      rebfaiter_copy
+#define reblaiter_deep      rebfaiter_deep
+#define reblaiter_serialize rebfaiter_serialize
+#define reblaiter_fini      rebfaiter_fini
+#define reblaiter_bool      rebfaiter_bool
+#define reblaiter_cmp       rebfaiter_cmp
+#define reblaiter_members   rebfaiter_members
 
 #define relaiter_init  ReSequenceIterator__init
 #define reblaiter_init ReSequenceIterator__init
@@ -1071,9 +1189,13 @@ relaiter_next(ReSequenceIterator *__restrict self) {
 	size_t match_size;
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
+	struct DeeRegexCode const *code;
+	code = DeeRegexBaseExec_GetCode(&self->rsi_exec);
+	if unlikely(!code)
+		goto err;
 again:
 	ReSequenceIterator_LockRead(self);
-	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
+	DeeRegexBaseExec_Load(&self->rsi_exec, code, &exec, 0, NULL);
 	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
@@ -1100,9 +1222,13 @@ reblaiter_next(ReSequenceIterator *__restrict self) {
 	size_t match_size;
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
+	struct DeeRegexCode const *code;
+	code = DeeRegexBaseExec_GetCode(&self->rsi_exec);
+	if unlikely(!code)
+		goto err;
 again:
 	ReSequenceIterator_LockRead(self);
-	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
+	DeeRegexBaseExec_Load(&self->rsi_exec, code, &exec, 0, NULL);
 	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
@@ -1143,7 +1269,7 @@ INTERN DeeTypeObject ReLocateAllIterator_Type = {
 			/* tp_deep_ctor:   */ &relaiter_deep,
 			/* tp_any_ctor:    */ &relaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &relaiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&relaiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1195,7 +1321,7 @@ INTERN DeeTypeObject ReBytesLocateAllIterator_Type = {
 			/* tp_deep_ctor:   */ &reblaiter_deep,
 			/* tp_any_ctor:    */ &reblaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &reblaiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&reblaiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1230,21 +1356,23 @@ INTERN DeeTypeObject ReBytesLocateAllIterator_Type = {
 };
 
 
-#define respiter_ctor    refaiter_ctor
-#define respiter_copy    refaiter_copy
-#define respiter_deep    refaiter_deep
-#define respiter_fini    refaiter_fini
-#define respiter_visit   refaiter_visit
-#define respiter_cmp     refaiter_cmp
-#define respiter_members refaiter_members
+#define respiter_ctor      refaiter_ctor
+#define respiter_copy      refaiter_copy
+#define respiter_deep      refaiter_deep
+#define respiter_serialize refaiter_serialize
+#define respiter_fini      refaiter_fini
+#define respiter_visit     refaiter_visit
+#define respiter_cmp       refaiter_cmp
+#define respiter_members   refaiter_members
 
-#define rebspiter_ctor    rebfaiter_ctor
-#define rebspiter_copy    rebfaiter_copy
-#define rebspiter_deep    rebfaiter_deep
-#define rebspiter_fini    rebfaiter_fini
-#define rebspiter_visit   rebfaiter_visit
-#define rebspiter_cmp     rebfaiter_cmp
-#define rebspiter_members rebfaiter_members
+#define rebspiter_ctor      rebfaiter_ctor
+#define rebspiter_copy      rebfaiter_copy
+#define rebspiter_deep      rebfaiter_deep
+#define rebspiter_serialize rebfaiter_serialize
+#define rebspiter_fini      rebfaiter_fini
+#define rebspiter_visit     rebfaiter_visit
+#define rebspiter_cmp       rebfaiter_cmp
+#define rebspiter_members   rebfaiter_members
 
 #define rebspiter_init respiter_init
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1290,9 +1418,13 @@ respiter_next(ReSequenceIterator *__restrict self) {
 	size_t match_size;
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
+	struct DeeRegexCode const *code;
+	code = DeeRegexBaseExec_GetCode(&self->rsi_exec);
+	if unlikely(!code)
+		goto err;
 again:
 	ReSequenceIterator_LockRead(self);
-	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
+	DeeRegexBaseExec_Load(&self->rsi_exec, code, &exec, 0, NULL);
 	ReSequenceIterator_LockEndRead(self);
 	if (!exec.rx_inbase)
 		return ITER_DONE;
@@ -1325,9 +1457,13 @@ rebspiter_next(ReSequenceIterator *__restrict self) {
 	size_t match_size;
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
+	struct DeeRegexCode const *code;
+	code = DeeRegexBaseExec_GetCode(&self->rsi_exec);
+	if unlikely(!code)
+		goto err;
 again:
 	ReSequenceIterator_LockRead(self);
-	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
+	DeeRegexBaseExec_Load(&self->rsi_exec, code, &exec, 0, NULL);
 	ReSequenceIterator_LockEndRead(self);
 	if (!exec.rx_inbase)
 		return ITER_DONE;
@@ -1380,7 +1516,7 @@ INTERN DeeTypeObject ReSplitIterator_Type = {
 			/* tp_deep_ctor:   */ &respiter_deep,
 			/* tp_any_ctor:    */ &respiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &respiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&respiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1432,7 +1568,7 @@ INTERN DeeTypeObject ReBytesSplitIterator_Type = {
 			/* tp_deep_ctor:   */ &rebspiter_deep,
 			/* tp_any_ctor:    */ &rebspiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &rebspiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rebspiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1479,10 +1615,12 @@ refa_ctor(ReSequence *__restrict self) {
 	return 0;
 }
 
-#define refa_copy  ReSequence__copy
-#define refa_deep  ReSequence__deep
-#define rebfa_copy ReSequence__copy
-#define rebfa_deep ReSequence__deep /* TODO: Should actually deep-copy the underlying Bytes (since those are mutable...) */
+#define refa_copy       ReSequence__copy
+#define refa_deep       ReSequence__deep
+#define refa_serialize  ReSequence__serialize
+#define rebfa_copy      ReSequence__copy
+#define rebfa_deep      ReSequence__deep /* TODO: Should actually deep-copy the underlying Bytes (since those are mutable...) */
+#define rebfa_serialize ReSequence__serialize
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rebfa_ctor(ReSequence *__restrict self) {
@@ -1508,7 +1646,11 @@ refa_bool(ReSequence *__restrict self) {
 	size_t match_size;
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
-	DeeRegexBaseExec_Load(&self->rs_exec, &exec, 0, NULL);
+	struct DeeRegexCode const *code;
+	code = DeeRegexBaseExec_GetCode(&self->rs_exec);
+	if unlikely(!code)
+		goto err;
+	DeeRegexBaseExec_Load(&self->rs_exec, code, &exec, 0, NULL);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
@@ -1557,7 +1699,11 @@ refa_size(ReSequence *__restrict self) {
 	size_t match_size;
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
-	DeeRegexBaseExec_Load(&self->rs_exec, &exec, 0, NULL);
+	struct DeeRegexCode const *code;
+	code = DeeRegexBaseExec_GetCode(&self->rs_exec);
+	if unlikely(!code)
+		goto err;
+	DeeRegexBaseExec_Load(&self->rs_exec, code, &exec, 0, NULL);
 	/* Count the # of matches */
 	while (exec.rx_startoff < exec.rx_endoff) {
 		result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
@@ -1700,7 +1846,7 @@ INTERN DeeTypeObject ReFindAll_Type = {
 			/* tp_deep_ctor:   */ &refa_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &refa_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&refa_fini,
 		/* .tp_assign      = */ NULL,
@@ -1750,7 +1896,7 @@ INTERN DeeTypeObject ReBytesFindAll_Type = {
 			/* tp_deep_ctor:   */ &rebfa_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &rebfa_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rebfa_fini,
 		/* .tp_assign      = */ NULL,
@@ -1785,23 +1931,25 @@ INTERN DeeTypeObject ReBytesFindAll_Type = {
 };
 
 
-#define regfa_ctor    refa_ctor
-#define regfa_copy    refa_copy
-#define regfa_deep    refa_deep
-#define regfa_fini    refa_fini
-#define regfa_bool    refa_bool
-#define regfa_visit   refa_visit
-#define regfa_size    refa_size
-#define regfa_members refa_members
+#define regfa_ctor      refa_ctor
+#define regfa_copy      refa_copy
+#define regfa_deep      refa_deep
+#define regfa_serialize refa_serialize
+#define regfa_fini      refa_fini
+#define regfa_bool      refa_bool
+#define regfa_visit     refa_visit
+#define regfa_size      refa_size
+#define regfa_members   refa_members
 
-#define regbfa_ctor    rebfa_ctor
-#define regbfa_copy    rebfa_copy
-#define regbfa_deep    rebfa_deep
-#define regbfa_fini    rebfa_fini
-#define regbfa_bool    rebfa_bool
-#define regbfa_visit   rebfa_visit
-#define regbfa_size    rebfa_size
-#define regbfa_members rebfa_members
+#define regbfa_ctor      rebfa_ctor
+#define regbfa_copy      rebfa_copy
+#define regbfa_deep      rebfa_deep
+#define regbfa_serialize rebfa_serialize
+#define regbfa_fini      rebfa_fini
+#define regbfa_bool      rebfa_bool
+#define regbfa_visit     rebfa_visit
+#define regbfa_size      rebfa_size
+#define regbfa_members   rebfa_members
 
 PRIVATE WUNUSED NONNULL((1)) DREF ReSequenceIterator *DCALL
 regfa_iter(ReSequence *__restrict self) {
@@ -1951,7 +2099,7 @@ INTERN DeeTypeObject RegFindAll_Type = {
 			/* tp_deep_ctor:   */ &regfa_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &regfa_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&regfa_fini,
 		/* .tp_assign      = */ NULL,
@@ -2001,7 +2149,7 @@ INTERN DeeTypeObject RegBytesFindAll_Type = {
 			/* tp_deep_ctor:   */ &regbfa_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &regbfa_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&regbfa_fini,
 		/* .tp_assign      = */ NULL,
@@ -2038,23 +2186,25 @@ INTERN DeeTypeObject RegBytesFindAll_Type = {
 
 
 /* LocateAll wrapper (based on FindAll) */
-#define regla_ctor    regfa_ctor
-#define regla_copy    regfa_copy
-#define regla_deep    regfa_deep
-#define regla_fini    regfa_fini
-#define regla_bool    regfa_bool
-#define regla_visit   regfa_visit
-#define regla_members regfa_members
-#define regla_size    regfa_size
+#define regla_ctor      regfa_ctor
+#define regla_copy      regfa_copy
+#define regla_deep      regfa_deep
+#define regla_serialize regfa_serialize
+#define regla_fini      regfa_fini
+#define regla_bool      regfa_bool
+#define regla_visit     regfa_visit
+#define regla_members   regfa_members
+#define regla_size      regfa_size
 
-#define regbla_ctor    regbfa_ctor
-#define regbla_copy    regbfa_copy
-#define regbla_deep    regbfa_deep
-#define regbla_fini    regbfa_fini
-#define regbla_bool    regbfa_bool
-#define regbla_visit   regbfa_visit
-#define regbla_members regbfa_members
-#define regbla_size    regbfa_size
+#define regbla_ctor      regbfa_ctor
+#define regbla_copy      regbfa_copy
+#define regbla_deep      regbfa_deep
+#define regbla_serialize regbfa_serialize
+#define regbla_fini      regbfa_fini
+#define regbla_bool      regbfa_bool
+#define regbla_visit     regbfa_visit
+#define regbla_members   regbfa_members
+#define regbla_size      regbfa_size
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF ReSequenceIterator *DCALL
@@ -2205,7 +2355,7 @@ INTERN DeeTypeObject RegLocateAll_Type = {
 			/* tp_deep_ctor:   */ &regla_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &regla_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&regla_fini,
 		/* .tp_assign      = */ NULL,
@@ -2255,7 +2405,7 @@ INTERN DeeTypeObject RegBytesLocateAll_Type = {
 			/* tp_deep_ctor:   */ &regbla_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &regbla_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&regbla_fini,
 		/* .tp_assign      = */ NULL,
@@ -2290,23 +2440,25 @@ INTERN DeeTypeObject RegBytesLocateAll_Type = {
 };
 
 
-#define rela_ctor    refa_ctor
-#define rela_copy    refa_copy
-#define rela_deep    refa_deep
-#define rela_fini    refa_fini
-#define rela_visit   refa_visit
-#define rela_bool    refa_bool
-#define rela_members refa_members
-#define rela_size    refa_size
+#define rela_ctor      refa_ctor
+#define rela_copy      refa_copy
+#define rela_deep      refa_deep
+#define rela_serialize refa_serialize
+#define rela_fini      refa_fini
+#define rela_visit     refa_visit
+#define rela_bool      refa_bool
+#define rela_members   refa_members
+#define rela_size      refa_size
 
-#define rebla_ctor    rebfa_ctor
-#define rebla_copy    rebfa_copy
-#define rebla_deep    rebfa_deep
-#define rebla_fini    rebfa_fini
-#define rebla_visit   rebfa_visit
-#define rebla_bool    rebfa_bool
-#define rebla_members rebfa_members
-#define rebla_size    rebfa_size
+#define rebla_ctor      rebfa_ctor
+#define rebla_copy      rebfa_copy
+#define rebla_deep      rebfa_deep
+#define rebla_serialize rebfa_serialize
+#define rebla_fini      rebfa_fini
+#define rebla_visit     rebfa_visit
+#define rebla_bool      rebfa_bool
+#define rebla_members   rebfa_members
+#define rebla_size      rebfa_size
 
 PRIVATE WUNUSED NONNULL((1)) DREF ReSequenceIterator *DCALL
 rela_iter(ReSequence *__restrict self) {
@@ -2457,7 +2609,7 @@ INTERN DeeTypeObject ReLocateAll_Type = {
 			/* tp_deep_ctor:   */ &rela_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &rela_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rela_fini,
 		/* .tp_assign      = */ NULL,
@@ -2507,7 +2659,7 @@ INTERN DeeTypeObject ReBytesLocateAll_Type = {
 			/* tp_deep_ctor:   */ &rebla_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &rebla_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rebla_fini,
 		/* .tp_assign      = */ NULL,
@@ -2541,19 +2693,21 @@ INTERN DeeTypeObject ReBytesLocateAll_Type = {
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
-#define resp_ctor    refa_ctor
-#define resp_copy    refa_copy
-#define resp_deep    refa_deep
-#define resp_fini    refa_fini
-#define resp_visit   refa_visit
-#define resp_members refa_members
+#define resp_ctor      refa_ctor
+#define resp_copy      refa_copy
+#define resp_deep      refa_deep
+#define resp_serialize refa_serialize
+#define resp_fini      refa_fini
+#define resp_visit     refa_visit
+#define resp_members   refa_members
 
-#define rebsp_ctor    rebfa_ctor
-#define rebsp_copy    rebfa_copy
-#define rebsp_deep    rebfa_deep
-#define rebsp_fini    rebfa_fini
-#define rebsp_visit   rebfa_visit
-#define rebsp_members rebfa_members
+#define rebsp_ctor      rebfa_ctor
+#define rebsp_copy      rebfa_copy
+#define rebsp_deep      rebfa_deep
+#define rebsp_serialize rebfa_serialize
+#define rebsp_fini      rebfa_fini
+#define rebsp_visit     rebfa_visit
+#define rebsp_members   rebfa_members
 
 #define rebsp_bool resp_bool
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2730,7 +2884,7 @@ INTERN DeeTypeObject ReSplit_Type = {
 			/* tp_deep_ctor:   */ &resp_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &resp_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&resp_fini,
 		/* .tp_assign      = */ NULL,
@@ -2780,7 +2934,7 @@ INTERN DeeTypeObject ReBytesSplit_Type = {
 			/* tp_deep_ctor:   */ &rebsp_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &rebsp_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rebsp_fini,
 		/* .tp_assign      = */ NULL,

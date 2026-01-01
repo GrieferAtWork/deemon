@@ -517,6 +517,7 @@ struct Dee_module_object {
 	 *       - a hash of the associated binary file
 	 *       - a random number
 	 *       - a timestamp
+	 *       What exactly should be used here should be selected by `./configure`
 	 * -> Then, "Dec_Dhdr" would simply include a copy of the dependent module's "build ID"
 	 * -> And the "Dec_Ehdr::er_deemon_timestamp" field would just go away (replaced with "er_deemon_build_id")
 	 */

@@ -877,8 +877,9 @@ err:
 }
 
 STATIC_ASSERT(offsetof(TupleIterator, ti_tuple) == offsetof(ProxyObject, po_obj));
-#define tuple_iterator_fini  generic_proxy__fini
-#define tuple_iterator_visit generic_proxy__visit
+#define tuple_iterator_serialize generic_proxy__serialize_and_wordcopy_atomic(__SIZEOF_SIZE_T__)
+#define tuple_iterator_fini      generic_proxy__fini
+#define tuple_iterator_visit     generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_iterator_next(TupleIterator *__restrict self) {
@@ -1052,7 +1053,7 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
 			/* tp_deep_ctor:   */ &tuple_iterator_deep,
 			/* tp_any_ctor:    */ &tuple_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &tuple_iterator_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&tuple_iterator_fini,
 		/* .tp_assign      = */ NULL,

@@ -644,6 +644,7 @@ DECL_END
 #endif /* !DPRINTER_CC */
 #endif /* !DPRINTER_CC */
 
+/* TODO: Get rid of `DWEAK' -- code should use comment-annotation "[lock(ATOMIC)]" instead! */
 #ifndef DWEAK
 #define DWEAK /* Annotation for data that is thread-volatile. */
 #endif /* !DWEAK */

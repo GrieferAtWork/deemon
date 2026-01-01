@@ -34,6 +34,7 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
@@ -1584,6 +1585,32 @@ typedef struct {
 #define GCIter_LockWaitFor(self)    Dee_atomic_lock_waitfor(&(self)->gi_lock)
 #define GCIter_LockRelease(self)    Dee_atomic_lock_release(&(self)->gi_lock)
 
+#define gciter_deep gciter_copy
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+gciter_copy(GCIter *__restrict self,
+            GCIter *__restrict other) {
+	GCIter_LockAcquire(other);
+	self->gi_next = other->gi_next;
+	Dee_XIncref(self->gi_next);
+	GCIter_LockRelease(other);
+	Dee_atomic_lock_init(&self->gi_lock);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+gciter_serialize(GCIter *__restrict self,
+                 DeeSerial *__restrict writer,
+                 Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(GCIter, field))
+	DREF DeeObject *self__gi_next;
+	GCIter_LockAcquire(self);
+	self__gi_next = self->gi_next;
+	Dee_XIncref(self__gi_next);
+	GCIter_LockRelease(self);
+	Dee_atomic_lock_init(&DeeSerial_Addr2Mem(writer, addr, GCIter)->gi_lock);
+	return DeeSerial_XPutObjectInherited(writer, ADDROF(gi_next), self__gi_next);
+#undef ADDROF
+}
 
 PRIVATE NONNULL((1)) void DCALL
 gciter_fini(GCIter *__restrict self) {
@@ -1653,11 +1680,11 @@ PRIVATE DeeTypeObject GCIter_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ GCIter,
 			/* tp_ctor:        */ NULL,
-			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
+			/* tp_copy_ctor:   */ &gciter_copy,
+			/* tp_deep_ctor:   */ &gciter_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &gciter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&gciter_fini,
 		/* .tp_assign      = */ NULL,

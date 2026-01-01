@@ -29,6 +29,7 @@
 #include <deemon/int.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/util/atomic.h>
@@ -653,6 +654,31 @@ ssi_copy(StringScanIterator *__restrict self,
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ssi_serialize(StringScanIterator *__restrict self,
+              DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	char const *self__si_datiter;
+	char const *self__si_fmtiter;
+#define ADDROF(field) (addr + offsetof(StringScanIterator, field))
+	Dee_atomic_lock_init(&DeeSerial_Addr2Mem(writer, addr, StringScanIterator)->si_lock);
+	StringScanIterator_LockAcquire(self);
+	self__si_datiter = self->si_datiter;
+	self__si_fmtiter = self->si_fmtiter;
+	StringScanIterator_LockRelease(self);
+	if (DeeSerial_PutObject(writer, ADDROF(si_scanner), self->si_scanner))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(si_datend), self->si_datend))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(si_fmtend), self->si_fmtend))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(si_datiter), self__si_datiter))
+		goto err;
+	return DeeSerial_PutPointer(writer, ADDROF(si_fmtiter), self__si_fmtiter);
+err:
+	return -1;
+#undef ADDROF
+}
+
 
 INTERN DeeTypeObject StringScanIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -673,7 +699,7 @@ INTERN DeeTypeObject StringScanIterator_Type = {
 			/* tp_deep_ctor:   */ &ssi_copy,
 			/* tp_any_ctor:    */ &ssi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &ssi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ssi_fini,
 		/* .tp_assign      = */ NULL,
@@ -716,10 +742,11 @@ STATIC_ASSERT(offsetof(StringScanner, ss_data) == offsetof(ProxyObject2, po_obj1
               offsetof(StringScanner, ss_data) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(StringScanner, ss_format) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(StringScanner, ss_format) == offsetof(ProxyObject2, po_obj2));
-#define ss_copy  generic_proxy2__copy_alias12
-#define ss_deep  generic_proxy2__copy_alias12
-#define ss_fini  generic_proxy2__fini_normal_unlikely /* unlikely: it's probably a string constant */
-#define ss_visit generic_proxy2__visit
+#define ss_copy      generic_proxy2__copy_alias12
+#define ss_deep      generic_proxy2__copy_alias12
+#define ss_fini      generic_proxy2__fini_normal_unlikely /* unlikely: it's probably a string constant */
+#define ss_visit     generic_proxy2__visit
+#define ss_serialize generic_proxy2__serialize
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ss_ctor(StringScanner *__restrict self) {
@@ -838,7 +865,7 @@ INTERN DeeTypeObject StringScan_Type = {
 			/* tp_deep_ctor:   */ &ss_deep,
 			/* tp_any_ctor:    */ &ss_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &ss_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ss_fini,
 		/* .tp_assign      = */ NULL,

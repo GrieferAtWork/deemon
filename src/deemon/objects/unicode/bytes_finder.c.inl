@@ -33,6 +33,7 @@
 #include <deemon/int.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
@@ -87,6 +88,47 @@ INTDEF DeeTypeObject BytesFind_Type;
 INTDEF DeeTypeObject BytesCaseFindIterator_Type;
 INTDEF DeeTypeObject BytesCaseFind_Type;
 
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bf_serialize(BytesFind *__restrict self,
+             DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(BytesFind, field))
+	BytesFind *out = DeeSerial_Addr2Mem(writer, addr, BytesFind);
+	out->bf_ovrlap = self->bf_ovrlap;
+	if (DeeSerial_PutObject(writer, ADDROF(bf_bytes), self->bf_bytes))
+		goto err;
+	if (DeeSerial_PutObject(writer, ADDROF(bf_other), self->bf_other))
+		goto err;
+	if (Needle_Serialize(&self->bf_needle, writer, ADDROF(bf_needle)))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(bf_start), self->bf_start))
+		goto err;
+	return DeeSerial_PutPointer(writer, ADDROF(bf_end), self->bf_end);
+err:
+	return -1;
+#undef ADDROF
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bfi_serialize(BytesFindIterator *__restrict self,
+              DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(BytesFindIterator, field))
+	BytesFindIterator *out = DeeSerial_Addr2Mem(writer, addr, BytesFindIterator);
+	out->bfi_find_delta = self->bfi_find_delta;
+	out->bfi_needle_len = self->bfi_needle_len;
+	if (DeeSerial_PutObject(writer, ADDROF(bfi_find), self->bfi_find))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(bfi_start), self->bfi_start))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(bfi_end), self->bfi_end))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(bfi_ptr), atomic_read(&self->bfi_ptr)))
+		goto err;
+	return DeeSerial_PutPointer(writer, ADDROF(bfi_needle_ptr), self->bfi_needle_ptr);
+err:
+	return -1;
+#undef ADDROF
+}
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bfi_ctor(BytesFindIterator *__restrict self) {
@@ -310,7 +352,7 @@ INTERN DeeTypeObject BytesFindIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bfi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &bfi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bfi_fini,
 		/* .tp_assign      = */ NULL,
@@ -362,7 +404,7 @@ INTERN DeeTypeObject BytesCaseFindIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bcfi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &bfi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bfi_fini,
 		/* .tp_assign      = */ NULL,
@@ -627,7 +669,7 @@ INTERN DeeTypeObject BytesFind_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bf_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &bf_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bf_fini,
 		/* .tp_assign      = */ NULL,
@@ -685,7 +727,7 @@ INTERN DeeTypeObject BytesCaseFind_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bf_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &bf_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bf_fini,
 		/* .tp_assign      = */ NULL,

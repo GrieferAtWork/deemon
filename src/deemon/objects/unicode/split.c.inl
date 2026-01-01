@@ -27,6 +27,7 @@
 #include <deemon/error.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/util/atomic.h>
@@ -195,6 +196,28 @@ casesplititer_next(StringSplitIterator *__restrict self) {
 }
 
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+splititer_serialize(StringSplitIterator *__restrict self,
+                    DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(StringSplitIterator, field))
+	StringSplitIterator *out;
+	out = DeeSerial_Addr2Mem(writer, addr, StringSplitIterator);
+	out->s_sepsz = self->s_sepsz;
+	out->s_width = self->s_width;
+	if (DeeSerial_PutObject(writer, ADDROF(s_split), self->s_split))
+		goto err;
+	if (DeeSerial_XPutPointer(writer, ADDROF(s_next.ptr), atomic_read(&self->s_next.ptr)))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(s_start.ptr), self->s_start.ptr))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(s_end.ptr), self->s_end.ptr))
+		goto err;
+	return DeeSerial_PutPointer(writer, ADDROF(s_sep.ptr), self->s_sep.ptr);
+err:
+	return -1;
+#undef ADDROF
+}
+
 STATIC_ASSERT(offsetof(StringSplitIterator, s_split) == offsetof(ProxyObject, po_obj));
 #define splititer_fini  generic_proxy__fini
 #define splititer_visit generic_proxy__visit
@@ -338,7 +361,7 @@ INTERN DeeTypeObject StringSplitIterator_Type = {
 			/* tp_deep_ctor:   */ &splititer_copy,
 			/* tp_any_ctor:    */ &splititer_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &splititer_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&splititer_fini,
 		/* .tp_assign      = */ NULL,
@@ -390,7 +413,7 @@ INTERN DeeTypeObject StringCaseSplitIterator_Type = {
 			/* tp_deep_ctor:   */ &splititer_copy,
 			/* tp_any_ctor:    */ &splititer_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &splititer_serialize
 		),
 		/* .tp_dtor        = */ NULL, /* INHERITED */
 		/* .tp_assign      = */ NULL,
@@ -430,8 +453,9 @@ STATIC_ASSERT(offsetof(StringSplit, s_str) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(StringSplit, s_str) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(StringSplit, s_sep) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(StringSplit, s_sep) == offsetof(ProxyObject2, po_obj2));
-#define split_fini  generic_proxy2__fini
-#define split_visit generic_proxy2__visit
+#define split_fini      generic_proxy2__fini
+#define split_visit     generic_proxy2__visit
+#define split_serialize generic_proxy2__serialize
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 split_bool(StringSplit *__restrict self) {
@@ -650,7 +674,7 @@ INTERN DeeTypeObject StringSplit_Type = {
 			/* tp_deep_ctor:   */ &split_copy,
 			/* tp_any_ctor:    */ &split_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &split_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&split_fini,
 		/* .tp_assign      = */ NULL,
@@ -700,7 +724,7 @@ INTERN DeeTypeObject StringCaseSplit_Type = {
 			/* tp_deep_ctor:   */ &split_copy,
 			/* tp_any_ctor:    */ &split_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &split_serialize
 		),
 		/* .tp_dtor        = */ NULL, /* INHERITED */
 		/* .tp_assign      = */ NULL,
@@ -960,6 +984,26 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+lineiter_serialize(LineSplitIterator *__restrict self,
+                   DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	LineSplitIterator *out;
+#define ADDROF(field) (addr + offsetof(LineSplitIterator, field))
+	out = DeeSerial_Addr2Mem(writer, addr, LineSplitIterator);
+	out->ls_width = self->ls_width;
+	out->ls_keep = self->ls_keep;
+	if (DeeSerial_PutObject(writer, ADDROF(ls_split), self->ls_split))
+		goto err;
+	if (DeeSerial_XPutPointer(writer, ADDROF(ls_next.ptr), atomic_read(&self->ls_next.ptr)))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(ls_begin.ptr), self->ls_begin.ptr))
+		goto err;
+	return DeeSerial_PutPointer(writer, ADDROF(ls_end.ptr), self->ls_end.ptr);
+err:
+	return -1;
+#undef ADDROF
+}
+
 
 
 INTERN DeeTypeObject StringLineSplitIterator_Type = {
@@ -980,7 +1024,7 @@ INTERN DeeTypeObject StringLineSplitIterator_Type = {
 			/* tp_deep_ctor:   */ &lineiter_copy,
 			/* tp_any_ctor:    */ &lineiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &lineiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&splititer_fini, /* offset:`s_split' == offset:`ls_split' */
 		/* .tp_assign      = */ NULL,
@@ -1144,7 +1188,7 @@ INTERN DeeTypeObject StringLineSplit_Type = {
 			/* tp_deep_ctor:   */ &linesplit_copy,
 			/* tp_any_ctor:    */ &linesplit_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &lineiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&linesplit_fini,
 		/* .tp_assign      = */ NULL,

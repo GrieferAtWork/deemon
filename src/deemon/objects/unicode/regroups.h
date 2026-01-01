@@ -42,7 +42,7 @@ DECL_BEGIN
 typedef struct {
 	OBJECT_HEAD
 	size_t                                        rg_ngroups; /* # of groups (must be >= 1) */
-	COMPILER_FLEXIBLE_ARRAY(struct DeeRegexMatch, rg_groups); /* Array of groups */
+	COMPILER_FLEXIBLE_ARRAY(struct DeeRegexMatch, rg_groups); /* [rg_ngroups] Array of groups */
 } ReGroups;
 
 #define DeeRegexMatch_AsRangeObject(self) \
@@ -68,7 +68,7 @@ typedef struct {
 	size_t                                        rss_ngroups; /* # of groups (may be 0) */
 	DREF DeeObject                               *rss_baseown; /* [1..1][const] Owner of `rss_baseptr' (string or bytes) */
 	__BYTE_TYPE__ const                          *rss_baseptr; /* [1..1][const] Base-pointer. */
-	COMPILER_FLEXIBLE_ARRAY(struct DeeRegexMatch, rss_groups); /* Array of groups */
+	COMPILER_FLEXIBLE_ARRAY(struct DeeRegexMatch, rss_groups); /* [rss_ngroups] Array of groups */
 } ReSubStrings;
 
 #define DeeRegexMatch_AsSubString(self, baseobj, baseptr)           \

@@ -31,6 +31,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/thread.h>
@@ -41,6 +42,7 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "generic-proxy.h"
 /**/
 
 #include <stddef.h> /* size_t, offsetof */
@@ -220,10 +222,9 @@ done:
 
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeTracebackObject *ti_trace; /* [1..1][const] The traceback that is being iterated. */
-	struct code_frame       *ti_next;  /* [1..1][in(ti_trace->tb_frames)][atomic]
-	                                    * The next frame (yielded in reverse order) */
+	PROXY_OBJECT_HEAD_EX(DeeTracebackObject, ti_trace); /* [1..1][const] The traceback that is being iterated. */
+	struct code_frame                       *ti_next;   /* [1..1][in(ti_trace->tb_frames)][atomic]
+	                                                     * The next frame (yielded in reverse order) */
 } TraceIterator;
 #define READ_NEXT(x)     atomic_read(&(x)->ti_next)
 #define WRITE_NEXT(x, y) atomic_write(&(x)->ti_next, y)
@@ -281,15 +282,13 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-traceiter_fini(TraceIterator *__restrict self) {
-	Dee_Decref(self->ti_trace);
-}
+STATIC_ASSERT(offsetof(TraceIterator, ti_trace) == offsetof(ProxyObject, po_obj));
+#define traceiter_fini  generic_proxy__fini
+#define traceiter_visit generic_proxy__visit
 
-PRIVATE NONNULL((1, 2)) void DCALL
-traceiter_visit(TraceIterator *__restrict self, Dee_visit_t proc, void *arg) {
-	Dee_Visit(self->ti_trace);
-}
+STATIC_ASSERT(offsetof(TraceIterator, ti_trace) == offsetof(ProxyObjectWithPointer, po_obj));
+STATIC_ASSERT(offsetof(TraceIterator, ti_next) == offsetof(ProxyObjectWithPointer, po_ptr));
+#define traceiter_serialize generic_proxy_with_pointer__serialize_atomic
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 traceiter_bool(TraceIterator *__restrict self) {
@@ -449,7 +448,7 @@ INTERN DeeTypeObject DeeTracebackIterator_Type = {
 			/* tp_deep_ctor:   */ &traceiter_deep,
 			/* tp_any_ctor:    */ &traceiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &traceiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&traceiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -521,6 +520,76 @@ traceback_fini(DeeTracebackObject *__restrict self) {
 		if (ITER_ISOK(frame->cf_result))
 			Dee_Decref(frame->cf_result);
 	}
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+traceback_serialize(DeeTracebackObject *__restrict self,
+                    DeeSerial *__restrict writer) {
+#define ADDROF(field) (out_addr + offsetof(DeeTracebackObject, field))
+	DeeTracebackObject *out;
+	Dee_seraddr_t out_addr;
+	uint16_t i;
+	size_t sizeof_self = offsetof(DeeTracebackObject, tb_frames) +
+	                     self->tb_numframes * sizeof(struct Dee_code_frame);
+	out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	if (!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	if (DeeSerial_PutObject(writer, ADDROF(tb_thread), self->tb_thread))
+		goto err; /* Main thread can be serialized, plus: deepcopy support */
+	out = DeeSerial_Addr2Mem(writer, out_addr, DeeTracebackObject);
+	Dee_atomic_lock_init(&out->tb_lock);
+	out->tb_numframes = self->tb_numframes;
+	for (i = 0; i < self->tb_numframes; ++i) {
+		Dee_seraddr_t addrof_frame = ADDROF(tb_frames) + i * sizeof(struct Dee_code_frame);
+#define ADDROF_FRAME(field) (addrof_frame + offsetof(struct Dee_code_frame, field))
+		struct Dee_code_frame *in_frame = &self->tb_frames[i];
+		struct Dee_code_frame *out_frame;
+		if (DeeSerial_XPutMemdupObjectv(writer, ADDROF_FRAME(cf_frame),
+		                                in_frame->cf_frame,
+		                                in_frame->cf_func->fo_code->co_localc))
+			goto err;
+
+		/* Fill in misc. default fields. */
+		out_frame = DeeSerial_Addr2Mem(writer, addrof_frame, struct Dee_code_frame);
+		out_frame->cf_stack = NULL;
+		out_frame->cf_stacksz = in_frame->cf_stacksz;
+		out_frame->cf_result = in_frame->cf_result;
+		out_frame->cf_argc = in_frame->cf_argc;
+
+		/* Add argument objects. */
+		if (DeeSerial_PutMemdupObjectv(writer, ADDROF_FRAME(cf_argv),
+		                               in_frame->cf_argv, in_frame->cf_argc))
+			goto err;
+
+		/* Add misc. frame objects. */
+		if (DeeSerial_PutObject(writer, ADDROF_FRAME(cf_func), in_frame->cf_func))
+			goto err;
+		if (DeeSerial_XPutObject(writer, ADDROF_FRAME(cf_this), in_frame->cf_this))
+			goto err;
+		if (DeeSerial_XPutObject(writer, ADDROF_FRAME(cf_vargs), in_frame->cf_vargs))
+			goto err;
+
+		/* Add return value */
+		if (ITER_ISOK(in_frame->cf_result)) {
+			if (DeeSerial_PutObject(writer, ADDROF_FRAME(cf_result), in_frame->cf_result))
+				goto err;
+		}
+
+		/* Add stack values */
+		if (in_frame->cf_stacksz) {
+			if (DeeSerial_PutMemdupObjectv(writer, ADDROF_FRAME(cf_stack),
+			                               in_frame->cf_stack, in_frame->cf_stacksz))
+				goto err;
+		} else if (in_frame->cf_stack) {
+			if (DeeSerial_PutPointer(writer, ADDROF_FRAME(cf_stack), in_frame->cf_stack))
+				goto err;
+		}
+#undef ADDROF_FRAME
+	}
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+#undef ADDROF
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
@@ -863,7 +932,7 @@ PUBLIC DeeTypeObject DeeTraceback_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &traceback_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&traceback_fini,

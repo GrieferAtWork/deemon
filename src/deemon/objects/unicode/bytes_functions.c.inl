@@ -25,8 +25,8 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
-#include <deemon/error.h>
 #include <deemon/error-rt.h>
+#include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
@@ -34,6 +34,7 @@
 #include <deemon/object.h>
 #include <deemon/regex.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/system-features.h> /* memcpy(), memset(), ... */
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
@@ -112,6 +113,20 @@ typedef struct {
 	byte_t       _n_buf[sizeof(size_t)];
 #endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 } Needle;
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+Needle_Serialize(Needle *__restrict self,
+                 DeeSerial *__restrict writer,
+                 Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(Needle, field))
+	Needle *out = DeeSerial_Addr2Mem(writer, addr, Needle);
+	out->n_size = self->n_size;
+	memcpy(out->_n_buf, self->_n_buf, sizeof(self->_n_buf));
+	if (self->n_data == self->_n_buf)
+		return DeeSerial_PutAddr(writer, ADDROF(n_data), ADDROF(_n_buf));
+	return DeeSerial_PutPointer(writer, ADDROF(n_data), self->n_data);
+#undef ADDROF
+}
 
 #ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
 #define release_needle(self) _DeeRefcnt_Dec((self)->n_inuse_p)

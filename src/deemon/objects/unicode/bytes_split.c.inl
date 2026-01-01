@@ -28,6 +28,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bytes.h>
+#include <deemon/serial.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/object.h>
@@ -133,6 +134,27 @@ bsi_deepcopy(BytesSplitIterator *__restrict self,
 	return 0;
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bsi_serialize(BytesSplitIterator *__restrict self,
+              DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(BytesSplitIterator, field))
+	BytesSplitIterator *out;
+	out = DeeSerial_Addr2Mem(writer, addr, BytesSplitIterator);
+	out->bsi_sep_len = self->bsi_sep_len;
+	if (DeeSerial_PutObject(writer, ADDROF(bsi_split), self->bsi_split))
+		goto err;
+	if (DeeSerial_XPutPointer(writer, ADDROF(bsi_iter), atomic_read(&self->bsi_iter)))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(bsi_end), self->bsi_end))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(bsi_bytes), self->bsi_bytes))
+		goto err;
+	return DeeSerial_PutPointer(writer, ADDROF(bsi_sep_ptr), self->bsi_sep_ptr);
+err:
+	return -1;
+#undef ADDROF
 }
 
 STATIC_ASSERT(offsetof(BytesSplitIterator, bsi_split) == offsetof(ProxyObject, po_obj));
@@ -272,7 +294,7 @@ INTERN DeeTypeObject BytesSplitIterator_Type = {
 			/* tp_deep_ctor:   */ &bsi_deepcopy,
 			/* tp_any_ctor:    */ &bsi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &bsi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bsi_fini,
 		/* .tp_assign      = */ NULL,
@@ -324,7 +346,7 @@ INTERN DeeTypeObject BytesCaseSplitIterator_Type = {
 			/* tp_deep_ctor:   */ &bsi_deepcopy,
 			/* tp_any_ctor:    */ &bsi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &bsi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bsi_fini,
 		/* .tp_assign      = */ NULL,
@@ -406,6 +428,33 @@ err_bytes:
 	Dee_Decref(self->bs_bytes);
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bs_serialize(BytesSplit *__restrict self,
+             DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	BytesSplit *out = DeeSerial_Addr2Mem(writer, addr, BytesSplit);
+	out->bs_sep_len = self->bs_sep_len;
+	out->bs_sep_ptr = NULL;
+	memcpy(out->bs_sep_buf, self->bs_sep_buf, sizeof(self->bs_sep_buf));
+#define ADDROF(field) (addr + offsetof(BytesSplit, field))
+	if (DeeSerial_PutObject(writer, ADDROF(bs_bytes), self->bs_bytes))
+		goto err;
+	if (DeeSerial_XPutObject(writer, ADDROF(bs_sep_owner), self->bs_sep_owner))
+		goto err;
+	if (self->bs_sep_len) {
+		if (self->bs_sep_ptr == self->bs_sep_buf) {
+			if (DeeSerial_PutAddr(writer, ADDROF(bs_sep_ptr), ADDROF(bs_sep_buf)))
+				goto err;
+		} else {
+			if (DeeSerial_XPutPointer(writer, ADDROF(bs_sep_ptr), self->bs_sep_ptr))
+				goto err;
+		}
+	}
+	return 0;
+err:
+	return -1;
+#undef ADDROF
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -635,7 +684,7 @@ INTERN DeeTypeObject BytesSplit_Type = {
 			/* tp_deep_ctor:   */ &bs_deepcopy,
 			/* tp_any_ctor:    */ &bs_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &bs_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bs_fini,
 		/* .tp_assign      = */ NULL,
@@ -685,7 +734,7 @@ INTERN DeeTypeObject BytesCaseSplit_Type = {
 			/* tp_deep_ctor:   */ &bs_deepcopy,
 			/* tp_any_ctor:    */ &bs_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &bs_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bs_fini,
 		/* .tp_assign      = */ NULL,
@@ -902,6 +951,23 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+blsi_serialize(BytesLineSplitIterator *__restrict self,
+               DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	BytesLineSplitIterator *out;
+#define ADDROF(field) (addr + offsetof(BytesLineSplitIterator, field))
+	out = DeeSerial_Addr2Mem(writer, addr, BytesLineSplitIterator);
+	out->blsi_keepends = self->blsi_keepends;
+	if (DeeSerial_PutObject(writer, ADDROF(blsi_bytes), self->blsi_bytes))
+		goto err;
+	if (DeeSerial_XPutPointer(writer, ADDROF(blsi_iter), atomic_read(&self->blsi_iter)))
+		goto err;
+	return DeeSerial_PutPointer(writer, ADDROF(blsi_end), self->blsi_end);
+err:
+	return -1;
+#undef ADDROF
+}
+
 STATIC_ASSERT(offsetof(BytesLineSplitIterator, blsi_bytes) == offsetof(ProxyObject, po_obj));
 #define blsi_fini  generic_proxy__fini
 #define blsi_visit generic_proxy__visit
@@ -990,7 +1056,7 @@ INTERN DeeTypeObject BytesLineSplitIterator_Type = {
 			/* tp_deep_ctor:   */ &blsi_deepcopy,
 			/* tp_any_ctor:    */ &blsi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &blsi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blsi_fini,
 		/* .tp_assign      = */ NULL,
@@ -1069,8 +1135,9 @@ err:
 }
 
 STATIC_ASSERT(offsetof(BytesLineSplit, bls_bytes) == offsetof(ProxyObject, po_obj));
-#define bls_fini  generic_proxy__fini
-#define bls_visit generic_proxy__visit
+#define bls_fini      generic_proxy__fini
+#define bls_visit     generic_proxy__visit
+#define bls_serialize generic_proxy__serialize_and_memcpy
 
 STATIC_ASSERT(offsetof(BytesSplit, bs_bytes) == offsetof(BytesLineSplit, bls_bytes));
 #define bls_bool bs_bool
@@ -1165,7 +1232,7 @@ INTERN DeeTypeObject BytesLineSplit_Type = {
 			/* tp_deep_ctor:   */ &bls_deepcopy,
 			/* tp_any_ctor:    */ &bls_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &bls_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bls_fini,
 		/* .tp_assign      = */ NULL,

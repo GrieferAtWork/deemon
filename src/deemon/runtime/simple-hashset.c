@@ -23,6 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/object.h>
+#include <deemon/serial.h>
 #include <deemon/util/simple-hashset.h>
 /**/
 
@@ -247,6 +248,60 @@ err:
 	return -1;
 }
 #endif /* !CONFIG_NO_THREADS */
+
+
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+Dee_simple_hashset_with_lock_serialize(struct Dee_simple_hashset_with_lock *__restrict self,
+                                       struct Dee_serial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(struct Dee_simple_hashset_with_lock, field))
+	size_t i, self__shs_mask;
+	size_t self__shs_size;
+	Dee_seraddr_t out__shs_elem;
+	struct Dee_simple_hashset_with_lock *out;
+	struct Dee_simple_hashset_item *ou__shs_elem;
+	struct Dee_simple_hashset_item *in__shs_elem;
+again:
+	Dee_simple_hashset_with_lock_acquire(self);
+	self__shs_mask = self->shswl_set.shs_mask;
+	self__shs_size = self->shswl_set.shs_size;
+	out__shs_elem  = DeeSerial_TryMalloc(writer, (self__shs_mask + 1) * sizeof(struct Dee_simple_hashset_item), NULL);
+	if (!Dee_SERADDR_ISOK(out__shs_elem)) {
+		Dee_simple_hashset_with_lock_release(self);
+		out__shs_elem = DeeSerial_Malloc(writer, (self__shs_mask + 1) * sizeof(struct Dee_simple_hashset_item), NULL);
+		if (!Dee_SERADDR_ISOK(out__shs_elem))
+			goto err;
+		Dee_simple_hashset_with_lock_acquire(self);
+		if unlikely(self__shs_mask != self->shswl_set.shs_mask ||
+		            self__shs_size != self->shswl_set.shs_size) {
+			Dee_simple_hashset_with_lock_release(self);
+			DeeSerial_Free(writer, out__shs_elem, NULL);
+			goto again;
+		}
+	}
+	ou__shs_elem = DeeSerial_Addr2Mem(writer, out__shs_elem, struct Dee_simple_hashset_item);
+	in__shs_elem = self->shswl_set.shs_elem;
+	memcpyc(ou__shs_elem, in__shs_elem, self__shs_mask + 1, sizeof(struct Dee_simple_hashset_item));
+	for (i = 0; i <= self__shs_mask; ++i)
+		Dee_XIncref(ou__shs_elem[i].shsi_key);
+	Dee_simple_hashset_with_lock_release(self);
+	for (i = 0; i <= self__shs_mask; ++i) {
+		Dee_seraddr_t addrof_elem = out__shs_elem + i * sizeof(struct Dee_simple_hashset_item);
+		if (DeeSerial_InplacePutObject(writer, addrof_elem + offsetof(struct Dee_simple_hashset_item, shsi_key))) {
+			ou__shs_elem = DeeSerial_Addr2Mem(writer, out__shs_elem, struct Dee_simple_hashset_item);
+			for (++i; i <= self__shs_mask; ++i)
+				Dee_XDecref(ou__shs_elem[i].shsi_key);
+			goto err;
+		}
+	}
+	out = DeeSerial_Addr2Mem(writer, addr, struct Dee_simple_hashset_with_lock);
+	out->shswl_set.shs_mask = self__shs_mask;
+	out->shswl_set.shs_size = self__shs_size;
+	Dee_atomic_lock_init(&out->shswl_lock);
+	return DeeSerial_PutAddr(writer, ADDROF(shswl_set.shs_elem), out__shs_elem);
+err:
+	return -1;
+#undef ADDROF
+}
 
 
 DECL_END

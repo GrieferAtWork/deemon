@@ -29,6 +29,7 @@
 #include <deemon/error_types.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
+#include <deemon/serial.h>
 #include <deemon/struct.h>
 /**/
 
@@ -81,6 +82,16 @@ comerr_deep(DeeCompilerErrorObject *__restrict self,
 	/* TODO */
 	(void)self;
 	(void)other;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+comerr_serialize(DeeCompilerErrorObject *__restrict self,
+                 DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	/* TODO */
+	(void)self;
+	(void)writer;
+	(void)addr;
 	return DeeError_NOTIMPLEMENTED();
 }
 
@@ -172,7 +183,7 @@ PUBLIC DeeTypeObject DeeError_CompilerError = {
 			/* tp_deep_ctor:   */ &comerr_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &comerr_init_kw,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &comerr_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&comerr_fini,
 		/* .tp_assign      = */ NULL,
@@ -225,7 +236,7 @@ PUBLIC DeeTypeObject DeeError_CompilerError = {
 				/* tp_deep_ctor:   */ &comerr_deep,                       \
 				/* tp_any_ctor:    */ NULL,                               \
 				/* tp_any_ctor_kw: */ &comerr_init_kw,                    \
-				/* tp_serialize:   */ NULL /* TODO */                     \
+				/* tp_serialize:   */ &comerr_serialize                   \
 			),                                                            \
 			/* .tp_dtor        = */ NULL,                                 \
 			/* .tp_assign      = */ NULL,                                 \

@@ -43,7 +43,7 @@ struct Dee_thread_object;
 
 struct Dee_traceback_object {
 	Dee_OBJECT_HEAD /* GC object. */
-	DREF struct Dee_thread_object                 *tb_thread;     /* [0..1][const] The thread for which this is a traceback. */
+	DREF struct Dee_thread_object                 *tb_thread;     /* [1..1][const] The thread for which this is a traceback. */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_lock_t                              tb_lock;       /* Lock for accessing this traceback. */
 #endif /* !CONFIG_NO_THREADS */

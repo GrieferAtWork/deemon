@@ -76,10 +76,16 @@ struct DeeRegexCode {
  *                        - "i": DEE_REGEX_COMPILE_ICASE
  * @return: * :   The compiled regex pattern.
  * @return: NULL: An error occurred. */
-DFUNDEF WUNUSED NONNULL((1)) struct DeeRegexCode *DCALL
+DFUNDEF WUNUSED NONNULL((1)) struct DeeRegexCode const *DCALL
 DeeString_GetRegex(/*String*/ DeeObject *__restrict self,
                    unsigned int compile_flags,
                    DeeObject *rules);
+
+/* Find and return the set of flags that were used to compile `code' for `self'.
+ * Behavior is weak-undefined if `code' wasn't compiled from `self'. */
+DFUNDEF WUNUSED NONNULL((1, 2)) unsigned int DCALL
+DeeString_GetRegexFlags(/*String*/ DeeObject *__restrict self,
+                        struct DeeRegexCode const *__restrict code);
 
 
 

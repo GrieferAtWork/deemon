@@ -34,6 +34,7 @@
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
@@ -1741,7 +1742,7 @@ __pragma_GCC_diagnostic_pop_ignored(Wmaybe_uninitialized)
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeTypeObject, toi_type); /* [1..1][const] The type who's operators should be enumerated. */
-	DWEAK Dee_operator_t                toi_opid;  /* Next operator ID to check. */
+	Dee_operator_t                      toi_opid;  /* [lock(ATOMIC)] Next operator ID to check. */
 	bool                                toi_name;  /* [const] When true, try to assign human-readable names to operators. */
 } TypeOperatorsIterator;
 
@@ -1754,8 +1755,9 @@ INTDEF DeeTypeObject TypeOperators_Type;
 INTDEF DeeTypeObject TypeOperatorsIterator_Type;
 
 STATIC_ASSERT(offsetof(TypeOperators, to_type) == offsetof(ProxyObject, po_obj));
-#define to_fini  generic_proxy__fini_unlikely
-#define to_visit generic_proxy__visit
+#define to_serialize generic_proxy__serialize_and_memcpy
+#define to_fini      generic_proxy__fini_unlikely
+#define to_visit     generic_proxy__visit
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 to_copy(TypeOperators *__restrict self, TypeOperators *__restrict other) {
@@ -1763,6 +1765,19 @@ to_copy(TypeOperators *__restrict self, TypeOperators *__restrict other) {
 	Dee_Incref(self->to_type);
 	self->to_name = other->to_name;
 	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+toi_serialize(TypeOperatorsIterator *__restrict self,
+              DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	int result = generic_proxy__serialize((ProxyObject *)self, writer, addr);
+	if likely(result == 0) {
+		TypeOperatorsIterator *out;
+		out = DeeSerial_Addr2Mem(writer, addr, TypeOperatorsIterator);
+		out->toi_opid = atomic_read(&self->toi_opid);
+		out->toi_name = self->toi_name;
+	}
+	return result;
 }
 
 STATIC_ASSERT(offsetof(TypeOperatorsIterator, toi_type) == offsetof(ProxyObject, po_obj));
@@ -1899,12 +1914,13 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-toi_hash(TypeOperatorsIterator *self) {
+toi_hash(TypeOperatorsIterator *__restrict self) {
 	return (Dee_hash_t)TOI_GETOPID(self);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-toi_compare(TypeOperatorsIterator *self, TypeOperatorsIterator *other) {
+toi_compare(TypeOperatorsIterator *self,
+            TypeOperatorsIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &TypeOperatorsIterator_Type))
 		goto err;
 	Dee_return_compareT(Dee_operator_t, TOI_GETOPID(self),
@@ -2009,7 +2025,7 @@ INTERN DeeTypeObject TypeOperatorsIterator_Type = {
 			/* tp_deep_ctor:   */ &toi_copy,
 			/* tp_any_ctor:    */ &toi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &toi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&toi_fini,
 		/* .tp_assign      = */ NULL,
@@ -2059,7 +2075,7 @@ INTERN DeeTypeObject TypeOperators_Type = {
 			/* tp_deep_ctor:   */ &to_copy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &to_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&to_fini,
 		/* .tp_assign      = */ NULL,

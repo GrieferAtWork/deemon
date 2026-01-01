@@ -29,6 +29,7 @@
 #include <deemon/int.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 
@@ -62,6 +63,20 @@ stringordinals_ctor(StringOrdinals *__restrict self) {
 	self->so_width   = STRING_WIDTH_1BYTE;
 	self->so_ptr.ptr = DeeString_STR(self->so_str);
 	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+stringordinals_serialize(StringOrdinals *__restrict self,
+                         DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(StringOrdinals, field))
+	StringOrdinals *out = DeeSerial_Addr2Mem(writer, addr, StringOrdinals);
+	out->so_width = self->so_width;
+	if (DeeSerial_PutObject(writer, ADDROF(so_str), self->so_str))
+		goto err;
+	return DeeSerial_PutPointer(writer, ADDROF(so_ptr.ptr), self->so_ptr.ptr);
+err:
+	return -1;
+#undef ADDROF
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -204,7 +219,7 @@ INTERN DeeTypeObject StringOrdinals_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &stringordinals_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &stringordinals_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&stringordinals_fini,
 		/* .tp_assign      = */ NULL,

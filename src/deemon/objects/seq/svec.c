@@ -85,6 +85,19 @@ STATIC_ASSERT(offsetof(RefVectorIterator, rvi_vector) == offsetof(ProxyObject, p
 #define rveciter_fini  generic_proxy__fini
 #define rveciter_visit generic_proxy__visit
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+rveciter_serialize(RefVectorIterator *__restrict self,
+                   DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(RefVectorIterator, field))
+	int result = generic_proxy__serialize((ProxyObject *)self, writer, addr);
+	if likely(result == 0) {
+		DeeObject **pos = atomic_read(&self->rvi_pos);;
+		result = DeeSerial_PutPointer(writer, ADDROF(rvi_pos), pos);
+	}
+	return result;
+#undef ADDROF
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rveciter_next(RefVectorIterator *__restrict self) {
 	DREF DeeObject **p_result, *result;
@@ -213,7 +226,7 @@ INTERN DeeTypeObject RefVectorIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &rveciter_ctor,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &rveciter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rveciter_fini,
 		/* .tp_assign      = */ NULL,
@@ -694,6 +707,27 @@ rvec_copy(RefVector *__restrict self,
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+rvec_serialize(RefVector *__restrict self,
+               DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	RefVector *out;
+#define ADDROF(field) (addr + offsetof(RefVector, field))
+	if (DeeSerial_PutObject(writer, ADDROF(rv_owner), self->rv_owner))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, addr, RefVector);
+	out->rv_length = self->rv_length;
+#ifdef CONFIG_NO_THREADS
+	out->rv_writable = self->rv_writable;
+#else /* CONFIG_NO_THREADS */
+	if (DeeSerial_PutPointer(writer, ADDROF(rv_plock), self->rv_plock))
+		goto err;
+#endif /* !CONFIG_NO_THREADS */
+	return DeeSerial_PutPointer(writer, ADDROF(rv_vector), self->rv_vector);
+err:
+	return -1;
+#undef ADDROF
+}
+
 INTERN DeeTypeObject RefVector_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RefVector",
@@ -710,7 +744,7 @@ INTERN DeeTypeObject RefVector_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &rvec_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rvec_fini,
 		/* .tp_assign      = */ NULL,
@@ -922,7 +956,7 @@ INTERN DeeTypeObject SharedVectorIterator_Type = {
 			/* tp_deep_ctor:   */ &sveciter_deep,
 			/* tp_any_ctor:    */ &sveciter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &sveciter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sveciter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1350,6 +1384,46 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+svec_serialize(SharedVector *__restrict self,
+               DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(SharedVector, field))
+	SharedVector *out;
+	size_t self__sv_length;
+	Dee_seraddr_t out__sv_vector;
+	DREF DeeObject **ou__sv_vector;
+again:
+	SharedVector_LockRead(self);
+	self__sv_length = self->sv_length;
+	out__sv_vector = DeeSerial_TryMalloc(writer, self__sv_length * sizeof(DREF DeeObject *), NULL);
+	if unlikely(!Dee_SERADDR_ISOK(out__sv_vector)) {
+		SharedVector_LockEndRead(self);
+		out__sv_vector = DeeSerial_Malloc(writer, self__sv_length * sizeof(DREF DeeObject *), NULL);
+		if unlikely(!Dee_SERADDR_ISOK(out__sv_vector))
+			goto err;
+		SharedVector_LockRead(self);
+		if unlikely(self__sv_length != self->sv_length) {
+			SharedVector_LockEndRead(self);
+			DeeSerial_Free(writer, out__sv_vector, NULL);
+			goto again;
+		}
+	}
+	ou__sv_vector = DeeSerial_Addr2Mem(writer, out__sv_vector, DREF DeeObject *);
+	Dee_Movrefv(ou__sv_vector, self->sv_vector, self__sv_length);
+	SharedVector_LockEndRead(self);
+	if (DeeSerial_InplacePutObjectv(writer, out__sv_vector, self__sv_length))
+		goto err;
+	if (DeeSerial_PutAddr(writer, ADDROF(sv_vector), out__sv_vector))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, addr, SharedVector);
+	out->sv_length = self__sv_length;
+	Dee_atomic_rwlock_init(&out->sv_lock);
+	return 0;
+err:
+	return -1;
+#undef ADDROF
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 svec_bool(SharedVector *__restrict self) {
 	return atomic_read(&self->sv_length) != 0;
@@ -1371,7 +1445,7 @@ PUBLIC DeeTypeObject DeeSharedVector_Type = {
 			/* tp_deep_ctor:   */ &svec_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &svec_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&svec_fini,
 		/* .tp_assign      = */ NULL,

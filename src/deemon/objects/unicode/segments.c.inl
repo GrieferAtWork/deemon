@@ -32,6 +32,7 @@
 #include <deemon/error-rt.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/util/atomic.h>
 
@@ -133,6 +134,24 @@ STATIC_ASSERT(offsetof(StringSegmentsIterator, s_str) == offsetof(ProxyObject, p
 #define ssegiter_fini  generic_proxy__fini
 #define ssegiter_visit generic_proxy__visit
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ssegiter_serialize(StringSegmentsIterator *__restrict self,
+                   DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(StringSegmentsIterator, field))
+	StringSegmentsIterator *out;
+	out = DeeSerial_Addr2Mem(writer, addr, StringSegmentsIterator);
+	out->s_siz = self->s_siz;
+	out->s_width = self->s_width;
+	if (DeeSerial_PutObject(writer, ADDROF(s_str), self->s_str))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(s_ptr), atomic_read(&self->s_ptr)))
+		goto err;
+	return DeeSerial_PutPointer(writer, ADDROF(s_end), self->s_end);
+err:
+	return -1;
+#undef ADDROF
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssegiter_bool(StringSegmentsIterator *__restrict self) {
 	return READ_PTR(self) < self->s_end;
@@ -198,7 +217,7 @@ INTERN DeeTypeObject StringSegmentsIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &ssegiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &ssegiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ssegiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -263,8 +282,9 @@ err:
 }
 
 STATIC_ASSERT(offsetof(StringSegments, s_str) == offsetof(ProxyObject, po_obj));
-#define sseg_fini  generic_proxy__fini
-#define sseg_visit generic_proxy__visit
+#define sseg_fini      generic_proxy__fini
+#define sseg_visit     generic_proxy__visit
+#define sseg_serialize generic_proxy__serialize_and_memcpy
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sseg_bool(StringSegments *__restrict self) {
@@ -480,7 +500,7 @@ INTERN DeeTypeObject StringSegments_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &sseg_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &sseg_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sseg_fini,
 		/* .tp_assign      = */ NULL,

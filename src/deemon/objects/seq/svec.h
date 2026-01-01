@@ -39,7 +39,7 @@ DECL_BEGIN
 typedef struct {
 	PROXY_OBJECT_HEAD   (rv_owner);   /* [1..1] The object that is actually owning the vector. */
 	size_t               rv_length;   /* [const] The number of items in this vector. */
-	DREF DeeObject     **rv_vector;   /* [0..1][lock(*rv_plock)][0..rv_length][lock(*rv_plock)][const]
+	DREF DeeObject     **rv_vector;   /* [0..1][lock(*rv_plock)][0..rv_length][const]
 	                                   * The vector of objects that is being referenced.
 	                                   * NOTE: Elements of this vector may only be changed when `RefVector_IsWritable()'. */
 #ifndef CONFIG_NO_THREADS
@@ -108,7 +108,7 @@ typedef struct {
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(RefVector, rvi_vector); /* [1..1][const] The underlying vector being iterated. */
-	DREF DeeObject                **rvi_pos;     /* [0..1][lock(*rvi_vector->rv_plock)][1..1][in(rvi_vector->rv_vector)][atomic]
+	DeeObject                     **rvi_pos;     /* [0..1][lock(*rvi_vector->rv_plock)][1..1][in(rvi_vector->rv_vector)][atomic]
 	                                              * The current iterator position. */
 } RefVectorIterator;
 

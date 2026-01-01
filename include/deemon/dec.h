@@ -398,7 +398,7 @@ struct Dee_dec_deptab {
 	(void)((self)->ddpt_depv = NULL, (self)->ddpt_depc = (self)->ddpt_depa = 0)
 
 struct Dee_dec_ptrtab_entry {
-	void            *dpte_ptr; /* [1..1] Source address that was already encoded */
+	void const      *dpte_ptr; /* [1..1] Source address that was already encoded */
 	Dee_dec_addr32_t dote_off; /* Offset from `dw_base' to where "dpte_ptr" was written */
 	Dee_dec_addr32_t dote_siz; /* # of bytes associated with "dpte_ptr" */
 };

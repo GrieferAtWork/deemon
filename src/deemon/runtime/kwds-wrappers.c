@@ -33,6 +33,7 @@
 #include <deemon/map.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/tuple.h>
@@ -59,7 +60,7 @@ DECL_BEGIN
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeBlackListKwdsObject, blki_map); /* [1..1][const] The associated keywords mapping. */
-	DWEAK struct kwds_entry                     *blki_iter; /* [1..1] The next entry to iterate. */
+	struct kwds_entry                           *blki_iter; /* [1..1][lock(ATOMIC)] The next entry to iterate. */
 	struct kwds_entry                           *blki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
 } DeeBlackListKwdsIterator;
 
@@ -95,6 +96,19 @@ blvi_deep(DeeBlackListKwdsIterator *__restrict self,
 	return 0;
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+blvi_serialize(DeeBlackListKwdsIterator *__restrict self,
+               DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DeeBlackListKwdsIterator, field))
+	int result = generic_proxy__serialize((ProxyObject *)self, writer, addr);
+	if likely(result == 0)
+		result = DeeSerial_PutPointer(writer, ADDROF(blki_iter), atomic_read(&self->blki_iter));
+	if likely(result == 0)
+		result = DeeSerial_PutPointer(writer, ADDROF(blki_end), self->blki_end);
+	return result;
+#undef ADDROF
 }
 
 STATIC_ASSERT(offsetof(DeeBlackListKwdsIterator, blki_map) == offsetof(ProxyObject, po_obj));
@@ -232,7 +246,7 @@ INTERN DeeTypeObject DeeBlackListKwdsIterator_Type = {
 			/* tp_deep_ctor:   */ &blvi_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &blvi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blvi_fini,
 		/* .tp_assign      = */ NULL,
@@ -942,6 +956,73 @@ err_r_argv:
 }
 
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+blv_serialize(DeeBlackListKwdsObject *__restrict self,
+              DeeSerial *__restrict writer) {
+#define ADDROF(field) (out_addr + offsetof(DeeBlackListKwdsObject, field))
+	DeeBlackListKwdsObject *out;
+	Dee_seraddr_t out__blkd_args;
+	DREF DeeObject **ou__blkd_args;
+	size_t self__blkd_mask = self->blkd_mask;
+	size_t i, argc = self->blkd_kwds->kw_size;
+	size_t sizeof_self = offsetof(DeeBlackListKwdsObject, blkd_blck) +
+	                     (self__blkd_mask + 1) * sizeof(DeeBlackListKwdsEntry) +
+	                     (argc) * sizeof(DREF DeeObject *);
+	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	if (!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+
+	/* Serialize basic object fields (sub-objects of these will be re-reference below) */
+	if (DeeSerial_PutObject(writer, ADDROF(blkd_code), self->blkd_code))
+		goto err;
+	if (DeeSerial_PutObject(writer, ADDROF(blkd_kwds), self->blkd_kwds))
+		goto err;
+
+	/* Copy "self->blkd_argv" into the scratch buffer within the serialization output */
+	out__blkd_args = out_addr + offsetof(DeeBlackListKwdsObject, blkd_blck) +
+	                 (self__blkd_mask + 1) * sizeof(DeeBlackListKwdsEntry);
+	ou__blkd_args = DeeSerial_Addr2Mem(writer, out__blkd_args, DREF DeeObject *);
+	out = DeeSerial_Addr2Mem(writer, out_addr, DeeBlackListKwdsObject);
+	DeeBlackListKwds_LockRead(self);
+	Dee_Movrefv(ou__blkd_args, self->blkd_argv, argc);
+	out->blkd_load = self->blkd_load;
+	memcpyc(out->blkd_blck, self->blkd_blck, self__blkd_mask + 1, sizeof(DeeBlackListKwdsEntry));
+	DeeBlackListKwds_LockEndRead(self);
+	Dee_atomic_rwlock_init(&out->blkd_lock);
+	out->blkd_ckwc = self->blkd_ckwc;
+	out->blkd_mask = self__blkd_mask;
+
+	/* Serialize arguments in "blkd_args" */
+	if (DeeSerial_InplacePutObjectv(writer, out__blkd_args, argc))
+		goto err;
+
+	/* Serialize string object pointers in "blkd_blck" */
+	for (i = 0; i <= self__blkd_mask; ++i) {
+		Dee_seraddr_t addrof_out__blkd_blck__i = ADDROF(blkd_blck) + i * sizeof(DeeBlackListKwdsEntry);
+		DeeBlackListKwdsEntry *out__blkd_blck__i = DeeSerial_Addr2Mem(writer, addrof_out__blkd_blck__i, DeeBlackListKwdsEntry);
+		DeeStringObject *entry_string = out__blkd_blck__i->blve_str;
+		if (entry_string) {
+			if (DeeSerial_PutPointer(writer,
+			                         addrof_out__blkd_blck__i +
+			                         offsetof(DeeBlackListKwdsEntry, blve_str),
+			                         entry_string))
+				goto err;
+		}
+	}
+
+	/* Serialize misc pointers. */
+	if (DeeSerial_PutPointer(writer, ADDROF(blkd_ckwv), self->blkd_ckwv))
+		goto err;
+	if (DeeSerial_PutAddr(writer, ADDROF(blkd_argv), out__blkd_args))
+		goto err;
+
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+#undef ADDROF
+}
+
+
 PUBLIC DeeTypeObject DeeBlackListKwds_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BlackListKwds",
@@ -972,7 +1053,7 @@ PUBLIC DeeTypeObject DeeBlackListKwds_Type = {
 			/* tp_deep_ctor:   */ &blv_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &blv_init_kw,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &blv_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blv_fini,
@@ -1112,9 +1193,11 @@ INTDEF DeeTypeObject DeeBlackListKwIterator_Type;
 
 STATIC_ASSERT(offsetof(DeeBlackListKwIterator, mi_iter) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(DeeBlackListKwIterator, mi_map) == offsetof(ProxyObject2, po_obj2));
-#define blmi_copy  generic_proxy2__copy_recursive1_alias2
-#define blmi_fini  generic_proxy2__fini
-#define blmi_visit generic_proxy2__visit
+#define blmi_copy      generic_proxy2__copy_recursive1_alias2
+#define blmi_deep      generic_proxy2__deepcopy
+#define blmi_serialize generic_proxy2__serialize
+#define blmi_fini      generic_proxy2__fini
+#define blmi_visit     generic_proxy2__visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 blmi_nextpair(DeeBlackListKwIterator *__restrict self,
@@ -1204,10 +1287,10 @@ INTERN DeeTypeObject DeeBlackListKwIterator_Type = {
 			/* T:              */ DeeBlackListKwIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &blmi_copy,
-			/* tp_deep_ctor:   */ NULL,
-			/* tp_any_ctor:    */ NULL, /* TODO */
+			/* tp_deep_ctor:   */ &blmi_deep,
+			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &blmi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blmi_fini,
 		/* .tp_assign      = */ NULL,
@@ -1790,6 +1873,51 @@ err_r:
 }
 
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+blkw_serialize(DeeBlackListKwObject *__restrict self,
+               DeeSerial *__restrict writer) {
+#define ADDROF(field) (out_addr + offsetof(DeeBlackListKwObject, field))
+	DeeBlackListKwObject *out;
+	size_t i, self__blkw_mask;
+	size_t sizeof_self = offsetof(DeeBlackListKwObject, blkw_blck) +
+	                     (self->blkw_mask + 1) * sizeof(DeeBlackListKwdsEntry);
+	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	if (!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	if (DeeSerial_PutObject(writer, ADDROF(blkw_kw), self->blkw_kw))
+		goto err;
+	if (DeeSerial_PutObject(writer, ADDROF(blkw_code), self->blkw_code))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(blkw_ckwv), self->blkw_ckwv))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, DeeBlackListKwObject);
+	Dee_atomic_rwlock_init(&out->blkw_lock);
+	out->blkw_ckwc = self->blkw_ckwc;
+	out->blkw_mask = self__blkw_mask = self->blkw_mask;
+	DeeBlackListKw_LockRead(self);
+	out->blkw_load = self->blkw_load;
+	memcpyc(out->blkw_blck, self->blkw_blck,
+	        self__blkw_mask + 1, sizeof(DeeBlackListKwdsEntry));
+	DeeBlackListKw_LockEndRead(self);
+	for (i = 0; i <= self__blkw_mask; ++i) {
+		Dee_seraddr_t addrof_out__blkw_blck__i = ADDROF(blkw_blck) + i * sizeof(DeeBlackListKwdsEntry);
+		DeeBlackListKwdsEntry *out__blkw_blck__i = DeeSerial_Addr2Mem(writer, addrof_out__blkw_blck__i, DeeBlackListKwdsEntry);
+		DeeStringObject *entry_string = out__blkw_blck__i->blve_str;
+		if (entry_string) {
+			if (DeeSerial_PutPointer(writer,
+			                         addrof_out__blkw_blck__i +
+			                         offsetof(DeeBlackListKwdsEntry, blve_str),
+			                         entry_string))
+				goto err;
+		}
+	}
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+#undef ADDROF
+}
+
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeBlackListKwObject *DCALL
 blkw_get_frozen(DeeBlackListKwObject *__restrict self) {
 	DREF DeeObject *frozen_kw;
@@ -1870,7 +1998,7 @@ PUBLIC DeeTypeObject DeeBlackListKw_Type = {
 			/* tp_deep_ctor:   */ &blkw_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &blkw_init_kw,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &blkw_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blkw_fini,

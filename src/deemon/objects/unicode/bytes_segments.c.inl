@@ -33,6 +33,7 @@
 #include <deemon/computed-operators.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/util/atomic.h>
 
@@ -56,8 +57,8 @@ DECL_BEGIN
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeBytesObject, b_str) /* [1..1][const] The Bytes object that is being segmented. */
 	size_t                               b_siz; /* [!0][const] The size of a single segment. */
-	DWEAK byte_t const                  *b_ptr; /* [1..1][in(DeeBytes_WSTR(b_str))] Pointer to the start of the next segment. */
-	byte_t const                        *b_end; /* [1..1][== DeeBytes_WEND(b_str)] End pointer. */
+	byte_t const                        *b_ptr; /* [1..1][in(DeeBytes_WSTR(b_str))][lock(ATOMIC)] Pointer to the start of the next segment. */
+	byte_t const                        *b_end; /* [1..1][== DeeBytes_WEND(b_str)][const] End pointer. */
 } BytesSegmentsIterator;
 #define READ_PTR(x) atomic_read(&(x)->b_ptr)
 
@@ -139,6 +140,23 @@ STATIC_ASSERT(offsetof(StringSegmentsIterator, s_end) == offsetof(BytesSegmentsI
 #define bsegiter_bool ssegiter_bool
 #define bsegiter_cmp  ssegiter_cmp
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bsegiter_serialize(BytesSegmentsIterator *__restrict self,
+                   DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(BytesSegmentsIterator, field))
+	BytesSegmentsIterator *out;
+	out = DeeSerial_Addr2Mem(writer, addr, BytesSegmentsIterator);
+	out->b_siz = self->b_siz;
+	if (DeeSerial_PutObject(writer, ADDROF(b_str), self->b_str))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(b_ptr), atomic_read(&self->b_ptr)))
+		goto err;
+	return DeeSerial_PutPointer(writer, ADDROF(b_end), self->b_end);
+err:
+	return -1;
+#undef ADDROF
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF BytesSegments *DCALL
 bsegiter_getseq(BytesSegmentsIterator *__restrict self) {
 	return (DREF BytesSegments *)DeeBytes_Segments(self->b_str,
@@ -168,7 +186,7 @@ INTERN DeeTypeObject BytesSegmentsIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bsegiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &bsegiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bsegiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -230,8 +248,9 @@ err:
 }
 
 STATIC_ASSERT(offsetof(BytesSegments, b_str) == offsetof(ProxyObject, po_obj));
-#define bseg_fini  generic_proxy__fini
-#define bseg_visit generic_proxy__visit
+#define bseg_fini      generic_proxy__fini
+#define bseg_visit     generic_proxy__visit
+#define bseg_serialize generic_proxy__serialize_and_memcpy
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bseg_bool(BytesSegments *__restrict self) {
@@ -422,7 +441,7 @@ INTERN DeeTypeObject BytesSegments_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bseg_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &bseg_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bseg_fini,
 		/* .tp_assign      = */ NULL,

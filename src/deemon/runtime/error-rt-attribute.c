@@ -35,6 +35,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/operator-hints.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/struct.h>
 #include <deemon/super.h>
@@ -1297,6 +1298,59 @@ AttributeError_copy(AttributeError *__restrict self,
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+AttributeError_serialize(AttributeError *__restrict self,
+                         DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	AttributeError *out;
+#define ADDROF(field) (addr + offsetof(AttributeError, field))
+	if (DeeSerial_XPutObject(writer, ADDROF(e_msg), self->e_msg))
+		goto err;
+	if (DeeSerial_XPutObject(writer, ADDROF(e_cause), self->e_cause))
+		goto err;
+	(void)AttributeError_LoadDesc(self); /* Make sure that "self" is stable. */
+	(void)AttributeError_LoadDesc(self); /* ... */
+	if (DeeSerial_XPutObject(writer, ADDROF(ae_obj), self->ae_obj))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, addr, AttributeError);
+	out->ae_flags = self->ae_flags;
+	if (self->ae_obj) {
+		out->ae_desc = self->ae_desc;
+		if (DeeSerial_XPutObject(writer, ADDROF(ae_desc.ad_info.ai_decl),
+		                         self->ae_desc.ad_info.ai_decl))
+			goto err;
+		if (self->ae_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ) {
+			DeeStringObject *name = Dee_attrdesc_nameobj(&self->ae_desc);
+			if (DeeSerial_PutObjectEx(writer, ADDROF(ae_desc.ad_name), name,
+			                          offsetof(DeeStringObject, s_str)))
+				goto err;
+		} else {
+			if (DeeSerial_PutPointer(writer, ADDROF(ae_desc.ad_name), self->ae_desc.ad_name))
+				goto err;
+		}
+		if (self->ae_flags & AttributeError_F_DESCLOADED) {
+			if (self->ae_desc.ad_doc) {
+				if (self->ae_desc.ad_perm & Dee_ATTRPERM_F_DOCOBJ) {
+					DeeStringObject *doc = Dee_attrdesc_docobj(&self->ae_desc);
+					if (DeeSerial_PutObjectEx(writer, ADDROF(ae_desc.ad_doc), doc,
+					                          offsetof(DeeStringObject, s_str)))
+						goto err;
+				} else {
+					if (DeeSerial_PutPointer(writer, ADDROF(ae_desc.ad_doc), self->ae_desc.ad_doc))
+						goto err;
+				}
+			}
+			if (DeeSerial_XPutObject(writer, ADDROF(ae_desc.ad_type), self->ae_desc.ad_type))
+				goto err;
+		}
+		if (DeeSerial_PutObject(writer, ADDROF(ae_obj), self->ae_obj))
+			goto err;
+	}
+	return 0;
+err:
+	return -1;
+#undef ADDROF
+}
+
 PRIVATE NONNULL((1)) void DCALL
 AttributeError_fini(AttributeError *__restrict self) {
 	if (self->ae_obj) {
@@ -1775,7 +1829,7 @@ PUBLIC DeeTypeObject DeeError_AttributeError = {
 			/* tp_deep_ctor:   */ &AttributeError_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &AttributeError_init_kw,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &AttributeError_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&AttributeError_fini,
 		/* .tp_assign      = */ NULL,
@@ -1829,7 +1883,7 @@ PUBLIC DeeTypeObject DeeError_AttributeError = {
 				/* tp_deep_ctor:   */ &AttributeError_deep,                 \
 				/* tp_any_ctor:    */ NULL,                                 \
 				/* tp_any_ctor_kw: */ &AttributeError_init_kw,              \
-				/* tp_serialize:   */ NULL /* TODO */                       \
+				/* tp_serialize:   */ &AttributeError_serialize             \
 			),                                                              \
 			/* .tp_dtor        = */ NULL,                                   \
 			/* .tp_assign      = */ NULL,                                   \

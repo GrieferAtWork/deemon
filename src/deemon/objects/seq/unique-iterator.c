@@ -30,6 +30,7 @@
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/set.h>
 #include <deemon/super.h>
 #include <deemon/thread.h>
@@ -85,6 +86,19 @@ di_init(DistinctIterator *__restrict self, size_t argc, DeeObject *const *argv) 
 	return 0;
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_serialize(DistinctIterator *__restrict self,
+             DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DistinctIterator, field))
+	int result = DeeSerial_PutObject(writer, ADDROF(di_iter), self->di_iter);
+	if likely(result == 0)
+		result = DeeSerial_PutFuncPtr(writer, ADDROF(di_tp_next), self->di_tp_next);
+	if likely(result == 0)
+		result = Dee_simple_hashset_with_lock_serialize(&self->di_encountered, writer, ADDROF(di_encountered));
+	return result;
+#undef ADDROF
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -181,7 +195,7 @@ INTERN DeeTypeObject DistinctIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &di_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &di_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_fini,
 		/* .tp_assign      = */ NULL,
@@ -261,6 +275,37 @@ uqiwk_init(DistinctIteratorWithKey *__restrict self, size_t argc, DeeObject *con
 err:
 	return -1;
 }
+
+#if 1
+STATIC_ASSERT(offsetof(DistinctIteratorWithKey, diwk_iter) == offsetof(DistinctIterator, di_iter));
+STATIC_ASSERT(offsetof(DistinctIteratorWithKey, diwk_tp_next) == offsetof(DistinctIterator, di_tp_next));
+STATIC_ASSERT(offsetof(DistinctIteratorWithKey, diwk_encountered) == offsetof(DistinctIterator, di_encountered));
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+uqiwk_serialize(DistinctIteratorWithKey *__restrict self,
+                DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DistinctIteratorWithKey, field))
+	int result = di_serialize((DistinctIterator *)self, writer, addr);
+	if likely(result == 0)
+		result = DeeSerial_PutObject(writer, ADDROF(diwk_key), self->diwk_key);
+	return result;
+#undef ADDROF
+}
+#else
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+uqiwk_serialize(DistinctIteratorWithKey *__restrict self,
+                DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DistinctIteratorWithKey, field))
+	int result = DeeSerial_PutObject(writer, ADDROF(diwk_iter), self->diwk_iter);
+	if likely(result == 0)
+		result = DeeSerial_PutFuncPtr(writer, ADDROF(diwk_tp_next), self->diwk_tp_next);
+	if likely(result == 0)
+		result = Dee_simple_hashset_with_lock_serialize(&self->diwk_encountered, writer, ADDROF(diwk_encountered));
+	if likely(result == 0)
+		result = DeeSerial_PutObject(writer, ADDROF(diwk_key), self->diwk_key);
+	return result;
+#undef ADDROF
+}
+#endif
 
 PRIVATE NONNULL((1)) void DCALL
 uqiwk_fini(DistinctIteratorWithKey *__restrict self) {
@@ -352,7 +397,7 @@ INTERN DeeTypeObject DistinctIteratorWithKey_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &uqiwk_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &uqiwk_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&uqiwk_fini,
 		/* .tp_assign      = */ NULL,
@@ -545,11 +590,13 @@ INTERN DeeTypeObject DistinctSetWithKey_Type = {
 /* DISTINCT MAP                                                         */
 /************************************************************************/
 STATIC_ASSERT(offsetof(DistinctMappingIterator, dmi_iter) == offsetof(DistinctIterator, di_iter));
+STATIC_ASSERT(offsetof(DistinctMappingIterator, dmi_tp_nextpair) == offsetof(DistinctIterator, di_tp_next));
 STATIC_ASSERT(offsetof(DistinctMappingIterator, dmi_encountered) == offsetof(DistinctIterator, di_encountered));
-#define dmi_copy  di_copy
-#define dmi_fini  di_fini
-#define dmi_visit di_visit
-#define dmi_gc    di_gc
+#define dmi_serialize di_serialize
+#define dmi_copy      di_copy
+#define dmi_fini      di_fini
+#define dmi_visit     di_visit
+#define dmi_gc        di_gc
 
 STATIC_ASSERT(offsetof(DistinctMappingIterator, dmi_iter) == offsetof(ProxyObject, po_obj));
 #define dmi_cmp generic_proxy__cmp_recursive
@@ -628,13 +675,13 @@ INTERN DeeTypeObject DistinctMappingIterator_Type = {
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
-			/* T:              */ DistinctIterator,
+			/* T:              */ DistinctMappingIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &dmi_copy,
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &dmi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &dmi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dmi_fini,
 		/* .tp_assign      = */ NULL,

@@ -47,7 +47,7 @@ typedef struct {
 typedef struct {
 	OBJECT_HEAD
 	size_t               sm_length; /* [lock(sm_lock)] The number of items in this vector. */
-	DeeSharedItem const *sm_vector; /* [1..1][const][0..sv_length][lock(sm_lock)][owned]
+	DeeSharedItem const *sm_vector; /* [1..1][const][0..sm_length][lock(sm_lock)][owned]
 	                                 * The vector of objects that is being referenced.
 	                                 * NOTE: Elements of this vector must not be changed. */
 #ifndef CONFIG_NO_THREADS
@@ -55,8 +55,8 @@ typedef struct {
 #endif /* !CONFIG_NO_THREADS */
 	size_t               sm_loaded; /* [lock(sm_lock)] Set to non-zero once `sm_vector' has been fully loaded. */
 	size_t               sm_mask;   /* [const][> sm_length][!0] Hash-vector mask for `skv_map'. */
-	SharedItemEx         sm_map[1]; /* [lock(WRITE_ONCE)] Hash-vector of cached keys.
-	                                 * This hash-vector is populated lazily as objects are queried by key. */
+	COMPILER_FLEXIBLE_ARRAY(SharedItemEx, sm_map); /* [lock(WRITE_ONCE)][sm_mask + 1] Hash-vector of cached keys.
+	                                                * This hash-vector is populated lazily as objects are queried by key. */
 } SharedMap;
 
 #define SharedMap_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->sm_lock)
@@ -89,7 +89,7 @@ typedef struct {
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(SharedMap, smi_seq);  /* [1..1][const] The shared-vector that is being iterated. */
 	size_t                          smi_index; /* [atomic] The current sequence index.
-	                                            * Should this value be `>= si_seq->sv_length',
+	                                            * Should this value be `>= si_seq->sm_length',
 	                                            * then the iterator has been exhausted. */
 } SharedMapIterator;
 

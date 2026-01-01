@@ -29,6 +29,7 @@
 #include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/system-features.h> /* memcpy */
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
@@ -92,6 +93,34 @@ typebasesiter_init(TypeMROIterator *__restrict self,
 	return 0;
 err:
 	return -1;
+}
+
+#define typebasesiter_serialize typemroiter_serialize
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+typemroiter_serialize(TypeMROIterator *__restrict self,
+                      DeeSerial *__restrict writer,
+                      Dee_seraddr_t addr) {
+	DeeTypeMRO self__tmi_mro;
+	DeeTypeObject *self__tmi_iter;
+#define ADDROF(field) (addr + offsetof(TypeMROIterator, field))
+	TypeMROIterator_LockAcquire(self);
+	self__tmi_iter = self->tmi_iter;
+	memcpy(&self__tmi_mro, &self->tmi_mro, sizeof(self->tmi_mro));
+	TypeMROIterator_LockRelease(self);
+	if (DeeSerial_PutObject(writer, ADDROF(tmi_mro.tp_mro_orig), self__tmi_mro.tp_mro_orig))
+		goto err;
+	if (self__tmi_iter != self__tmi_mro.tp_mro_orig) {
+		if (DeeSerial_PutPointer(writer, ADDROF(tmi_mro.tp_mro_iter), self__tmi_mro.tp_mro_iter))
+			goto err;
+	} else {
+		TypeMROIterator *out;
+		out = DeeSerial_Addr2Mem(writer, addr, TypeMROIterator);
+		out->tmi_mro.tp_mro_iter = NULL;
+	}
+	return DeeSerial_PutPointer(writer, ADDROF(tmi_iter), self__tmi_iter);
+err:
+	return -1;
+#undef ADDROF
 }
 
 STATIC_ASSERT(offsetof(TypeMROIterator, tmi_mro.tp_mro_orig) == offsetof(ProxyObject, po_obj));
@@ -346,7 +375,7 @@ INTERN DeeTypeObject TypeMROIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &typemroiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &typemroiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&typemroiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -397,7 +426,7 @@ INTERN DeeTypeObject TypeBasesIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &typebasesiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &typebasesiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&typebasesiter_fini,
 		/* .tp_assign      = */ NULL,

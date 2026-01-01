@@ -42,8 +42,9 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include "../runtime/runtime_error.h"
-#include "../runtime/strings.h"
+#include "../objects/generic-proxy.h"
+#include "runtime_error.h"
+#include "strings.h"
 /**/
 
 #include <stddef.h> /* offsetof */
@@ -62,10 +63,9 @@ typedef DeeKwdsMappingObject KwdsMapping;
 
 
 typedef struct {
-	OBJECT_HEAD
-	DWEAK struct kwds_entry *ki_iter; /* [1..1] The next entry to iterate. */
-	struct kwds_entry       *ki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
-	DREF Kwds               *ki_map;  /* [1..1][const] The associated keywords table. */
+	PROXY_OBJECT_HEAD_EX(Kwds, ki_map); /* [1..1][const] The associated keywords table. */
+	struct kwds_entry         *ki_iter; /* [1..1][lock(ATOMIC)] The next entry to iterate. */
+	struct kwds_entry         *ki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
 } KwdsIterator;
 
 #define READ_ITER(x) atomic_read(&(x)->ki_iter)
@@ -110,15 +110,23 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-kwdsiter_fini(KwdsIterator *__restrict self) {
-	Dee_Decref(self->ki_map);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+kwdsiter_serialize(KwdsIterator *__restrict self,
+                   DeeSerial *__restrict writer,
+                   Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(KwdsIterator, field))
+	int result = generic_proxy__serialize((ProxyObject *)self, writer, addr);
+	if likely(result == 0)
+		result = DeeSerial_PutPointer(writer, ADDROF(ki_iter), atomic_read(&self->ki_iter));
+	if likely(result == 0)
+		result = DeeSerial_PutPointer(writer, ADDROF(ki_end), self->ki_end);
+	return result;
+#undef ADDROF
 }
 
-PRIVATE NONNULL((1, 2)) void DCALL
-kwdsiter_visit(KwdsIterator *__restrict self, Dee_visit_t proc, void *arg) {
-	Dee_Visit(self->ki_map);
-}
+STATIC_ASSERT(offsetof(KwdsIterator, ki_map) == offsetof(ProxyObject, po_obj));
+#define kwdsiter_fini  generic_proxy__fini
+#define kwdsiter_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 kwdsiter_bool(KwdsIterator *__restrict self) {
@@ -287,7 +295,7 @@ INTERN DeeTypeObject DeeKwdsIterator_Type = {
 			/* tp_deep_ctor:   */ &kwdsiter_deep,
 			/* tp_any_ctor:    */ &kwdsiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &kwdsiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kwdsiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -915,9 +923,9 @@ DeeKwds_IndexOfStringLenHash(DeeObject const *__restrict self,
 
 typedef struct {
 	OBJECT_HEAD
+	DREF KwdsMapping        *ki_map;  /* [1..1][const] The associated keywords mapping. */
 	DWEAK struct kwds_entry *ki_iter; /* [1..1] The next entry to iterate. */
 	struct kwds_entry       *ki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
-	DREF KwdsMapping        *ki_map;  /* [1..1][const] The associated keywords mapping. */
 } KmapIterator;
 
 #define READ_ITER(x) atomic_read(&(x)->ki_iter)
@@ -939,8 +947,9 @@ err:
 	return -1;
 }
 
-#define kmapiter_copy kwdsiter_copy
-#define kmapiter_deep kwdsiter_deep
+#define kmapiter_copy      kwdsiter_copy
+#define kmapiter_deep      kwdsiter_deep
+#define kmapiter_serialize kwdsiter_serialize
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 kmapiter_init(KmapIterator *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack1(err, argc, argv, "_KwdsMappingIterator", &self->ki_map);
@@ -1077,7 +1086,7 @@ PRIVATE DeeTypeObject DeeKwdsMappingIterator_Type = {
 			/* tp_deep_ctor:   */ &kmapiter_deep,
 			/* tp_any_ctor:    */ &kmapiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &kmapiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kmapiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1179,6 +1188,34 @@ err_r_argv:
 /*err_r:*/
 	DeeObject_Free(result);
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+kmap_serialize(KwdsMapping *__restrict self,
+               DeeSerial *__restrict writer) {
+#define ADDROF(field) (out_addr + offsetof(KwdsMapping, field))
+	KwdsMapping *out;
+	size_t argc = self->kmo_kwds->kw_size;
+	size_t sizeof_self = _Dee_MallococBufsize(offsetof(KwdsMapping, kmo_args),
+	                                          argc, sizeof(DREF DeeObject *));
+	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	if (!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	if (DeeSerial_PutObject(writer, ADDROF(kmo_kwds), self->kmo_kwds))
+		goto err;
+	if (DeeSerial_PutAddr(writer, ADDROF(kmo_argv), ADDROF(kmo_args)))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, KwdsMapping);
+	Dee_atomic_rwlock_init(&out->kmo_lock);
+	DeeKwdsMapping_LockRead(self);
+	Dee_Movrefv(out->kmo_args, self->kmo_argv, argc);
+	DeeKwdsMapping_LockEndRead(self);
+	if (DeeSerial_InplacePutObjectv(writer, ADDROF(kmo_args), argc))
+		goto err;
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+#undef ADDROF
 }
 
 PRIVATE WUNUSED DREF KwdsMapping *DCALL
@@ -1529,7 +1566,7 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
 			/* tp_deep_ctor:   */ &kmap_deep,
 			/* tp_any_ctor:    */ &kmap_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &kmap_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kmap_fini,

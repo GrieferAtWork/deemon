@@ -157,6 +157,11 @@ struct Dee_simple_hashset_with_lock {
 	 Dee_simple_hashset_visit(&(self)->shswl_set, proc, arg), \
 	 Dee_simple_hashset_with_lock_release(self))
 
+struct Dee_serial;
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+Dee_simple_hashset_with_lock_serialize(struct Dee_simple_hashset_with_lock *__restrict self,
+                                       struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
+
 #ifdef CONFIG_NO_THREADS
 #define Dee_simple_hashset_with_lock_insert(self, item) \
 	Dee_simple_hashset_insert(&(self)->shswl_set, item)

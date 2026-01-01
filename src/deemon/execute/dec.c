@@ -1372,7 +1372,7 @@ err:
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 decwriter_addknown(DeeDecWriter *__restrict self,
-                   void *__restrict ptr,
+                   void const *__restrict ptr,
                    Dee_dec_addr32_t addr,
                    Dee_dec_addr32_t size) {
 	size_t lo = 0, hi = self->dw_known.dpt_ptrc;
@@ -1432,7 +1432,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
 decwriter_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
-                      void *ref, unsigned int flags) {
+                      void const *ref, unsigned int flags) {
 	Dee_seraddr_t result;
 	struct Dee_heapchunk *chunk;
 	size_t avail, nb, req, unused;
@@ -1500,7 +1500,7 @@ err:
  * CAUTION: Only the most-recent pointer can *actually* be free'd!
  *          If you pass anything else, this function is a no-op! */
 PRIVATE NONNULL((1)) void DCALL
-decwriter_free(DeeDecWriter *__restrict self, Dee_seraddr_t addr, void *ref) {
+decwriter_free(DeeDecWriter *__restrict self, Dee_seraddr_t addr, void const *ref) {
 	size_t last_bytes = self->dw_hlast - Dee_HEAPCHUNK_PREV(0);
 	Dee_seraddr_t last = self->dw_used - last_bytes;
 	struct Dee_heapchunk *p;
@@ -1605,26 +1605,26 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
-decwriter_malloc(DeeDecWriter *__restrict self, size_t num_bytes, void *ref) {
+decwriter_malloc(DeeDecWriter *__restrict self, size_t num_bytes, void const *ref) {
 	return decwriter_malloc_impl(self, num_bytes, ref,
 	                             decwriter_malloc_impl_F_NORMAL);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
-decwriter_trymalloc(DeeDecWriter *__restrict self, size_t num_bytes, void *ref) {
+decwriter_trymalloc(DeeDecWriter *__restrict self, size_t num_bytes, void const *ref) {
 	return decwriter_malloc_impl(self, num_bytes, ref,
 	                             decwriter_malloc_impl_F_TRY);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
-decwriter_calloc(DeeDecWriter *__restrict self, size_t num_bytes, void *ref) {
+decwriter_calloc(DeeDecWriter *__restrict self, size_t num_bytes, void const *ref) {
 	return decwriter_malloc_impl(self, num_bytes, ref,
 	                             decwriter_malloc_impl_F_NORMAL |
 	                             decwriter_malloc_impl_F_BZERO);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
-decwriter_trycalloc(DeeDecWriter *__restrict self, size_t num_bytes, void *ref) {
+decwriter_trycalloc(DeeDecWriter *__restrict self, size_t num_bytes, void const *ref) {
 	return decwriter_malloc_impl(self, num_bytes, ref,
 	                             decwriter_malloc_impl_F_TRY |
 	                             decwriter_malloc_impl_F_BZERO);
@@ -1939,7 +1939,7 @@ decwriter_putpointer(DeeDecWriter *__restrict self,
 	}
 
 	/* Check if "pointer" is part of some already-serialized section of memory
-	 * NOTE: This is why "DeeSerial_Malloc()" must also take a "void *ref" argument!
+	 * NOTE: This is why "DeeSerial_Malloc()" must also take a "void const *ref" argument!
 	 *
 	 * Reason: >> ClassOperatorTableIterator
 	 *         When being serialized, its "co_iter" and "co_end" pointers point
@@ -1996,11 +1996,11 @@ decwriter_addr2mem(DeeDecWriter *__restrict self, Dee_seraddr_t addr) {
 
 PRIVATE struct Dee_serial_type tpconst decwriter_serial_type = {
 	/* .set_addr2mem           = */ (void *(DCALL *)(DeeSerial *__restrict, Dee_seraddr_t))&decwriter_addr2mem,
-	/* .set_malloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void *))&decwriter_malloc,
-	/* .set_calloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void *))&decwriter_calloc,
-	/* .set_trymalloc          = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void *))&decwriter_trymalloc,
-	/* .set_trycalloc          = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void *))&decwriter_trycalloc,
-	/* .set_free               = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, void *))&decwriter_free,
+	/* .set_malloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&decwriter_malloc,
+	/* .set_calloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&decwriter_calloc,
+	/* .set_trymalloc          = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&decwriter_trymalloc,
+	/* .set_trycalloc          = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&decwriter_trycalloc,
+	/* .set_free               = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, void const *))&decwriter_free,
 	/* .set_object_malloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&decwriter_object_malloc,
 	/* .set_object_calloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&decwriter_object_calloc,
 	/* .set_object_trymalloc   = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&decwriter_object_trymalloc,

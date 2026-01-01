@@ -109,16 +109,16 @@ struct Dee_serial_type {
 	 *              to how it can do so for `DeeSerial_ObjectMalloc()'
 	 * @return: * : Serialized address of heap buffer
 	 * @return: Dee_SERADDR_INVALID: Allocation failed (for "set_malloc" and "set_calloc": error was thrown) */
-	WUNUSED_T NONNULL_T((1)) Dee_seraddr_t (DCALL *set_malloc)(DeeSerial *__restrict self, size_t num_bytes, /*0..1*/ void *ref);
-	WUNUSED_T NONNULL_T((1)) Dee_seraddr_t (DCALL *set_calloc)(DeeSerial *__restrict self, size_t num_bytes, /*0..1*/ void *ref);
-	WUNUSED_T NONNULL_T((1)) Dee_seraddr_t (DCALL *set_trymalloc)(DeeSerial *__restrict self, size_t num_bytes, /*0..1*/ void *ref);
-	WUNUSED_T NONNULL_T((1)) Dee_seraddr_t (DCALL *set_trycalloc)(DeeSerial *__restrict self, size_t num_bytes, /*0..1*/ void *ref);
+	WUNUSED_T NONNULL_T((1)) Dee_seraddr_t (DCALL *set_malloc)(DeeSerial *__restrict self, size_t num_bytes, /*0..1*/ void const *ref);
+	WUNUSED_T NONNULL_T((1)) Dee_seraddr_t (DCALL *set_calloc)(DeeSerial *__restrict self, size_t num_bytes, /*0..1*/ void const *ref);
+	WUNUSED_T NONNULL_T((1)) Dee_seraddr_t (DCALL *set_trymalloc)(DeeSerial *__restrict self, size_t num_bytes, /*0..1*/ void const *ref);
+	WUNUSED_T NONNULL_T((1)) Dee_seraddr_t (DCALL *set_trycalloc)(DeeSerial *__restrict self, size_t num_bytes, /*0..1*/ void const *ref);
 
 	/* Free generic heap memory (as per "Dee_Free()")
 	 * Only allowed to be called for the most-recent non-Dee_SERADDR_INVALID
 	 * return value of one of the allocation functions above. Behavior is hard
 	 * undefined if you try to free a buffer that isn't the most recent one. */
-	NONNULL_T((1)) void (DCALL *set_free)(DeeSerial *__restrict self, Dee_seraddr_t addr, /*0..1*/ void *ref);
+	NONNULL_T((1)) void (DCALL *set_free)(DeeSerial *__restrict self, Dee_seraddr_t addr, /*0..1*/ void const *ref);
 
 	/* Allocate generic object heap memory (as per "DeeObject_Malloc()")
 	 * These functions will have automatically pre-initialized:
@@ -244,7 +244,7 @@ struct Dee_serial {
  *
  * NOTE: DON'T call this method for error-cleanup -- On error, the
  *       owner of the serializer will free all allocated memory! */
-#define DeeSerial_ObjectFree(self, addr, ref) (*(self)->ser_type->set_object_free)(self, addr, ref)
+#define DeeSerial_ObjectFree(self, addr, ref) (*(self)->ser_type->set_object_free)(self, addr, Dee_AsObject(ref))
 
 /* Same as above, but must be used for GC-objects (as per "DeeGCObject_Malloc()") */
 #define DeeSerial_GCObjectMalloc(self, num_bytes, ref)    (*(self)->ser_type->set_gcobject_malloc)(self, num_bytes, Dee_AsObject(ref))
@@ -256,7 +256,7 @@ struct Dee_serial {
  *
  * NOTE: DON'T call this method for error-cleanup -- On error, the
  *       owner of the serializer will free all allocated memory! */
-#define DeeSerial_GCObjectFree(self, addr, ref) (*(self)->ser_type->set_gcobject_free)(self, addr, ref)
+#define DeeSerial_GCObjectFree(self, addr, ref) (*(self)->ser_type->set_gcobject_free)(self, addr, Dee_AsObject(ref))
 
 
 /* Serialize a `void *' field at `addrof_pointer' as being populated with the
@@ -412,10 +412,21 @@ DFUNDEF WUNUSED NONNULL((1)) int
 /* Encode an `DREF DeeObject *addrof_objv[objc]' from "objv" */
 DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL DeeSerial_PutObjectv)(DeeSerial *__restrict self, Dee_seraddr_t addrof_objv,
-                             /*1..1*/ DeeObject *const *objv, size_t objc);
+                             /*[1..1][0..objc]*/ DeeObject *const *objv, size_t objc);
 DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL DeeSerial_XPutObjectv)(DeeSerial *__restrict self, Dee_seraddr_t addrof_objv,
-                              /*0..1*/ DeeObject *const *objv, size_t objc);
+                              /*[0..1][0..objc]*/ DeeObject *const *objv, size_t objc);
+
+
+/* Encode a field: DREF DeeObject **addrof_pointer_to_objv; // [1..1][0..N][owned][const] */
+DFUNDEF WUNUSED NONNULL((1)) int
+(DCALL DeeSerial_PutMemdupObjectv)(DeeSerial *__restrict self, Dee_seraddr_t addrof_pointer_to_objv,
+                                   /*[1..1][0..objc]*/ DeeObject *const *objv, size_t objc);
+
+/* Encode a field: DREF DeeObject **addrof_pointer_to_objv; // [0..1][0..N][owned][const] */
+DFUNDEF WUNUSED NONNULL((1)) int
+(DCALL DeeSerial_XPutMemdupObjectv)(DeeSerial *__restrict self, Dee_seraddr_t addrof_pointer_to_objv,
+                                    /*[0..1][0..objc]*/ DeeObject *const *objv, size_t objc);
 
 
 DECL_END

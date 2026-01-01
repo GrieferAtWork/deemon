@@ -323,6 +323,55 @@ smap_fini(SharedMap *__restrict self) {
 	Dee_Free(vector);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+smap_serialize(SharedMap *__restrict self,
+               DeeSerial *__restrict writer) {
+#define ADDROF(field) (out_addr + offsetof(SharedMap, field))
+	SharedMap *out;
+	size_t self__sm_length;
+	Dee_seraddr_t out_addr;
+	Dee_seraddr_t out__sm_vector;
+	size_t sizeof_self = SHAREDMAP_SIZEOF(self->sm_mask);
+	DeeSharedItem *ou__sm_vector;
+	out_addr = DeeSerial_ObjectCalloc(writer, sizeof_self, self);
+	if (!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+again_read:
+	SharedMap_LockRead(self);
+	self__sm_length = self->sm_length;
+	out__sm_vector  = DeeSerial_TryMalloc(writer, self__sm_length * sizeof(DeeSharedItem), NULL);
+	if (!Dee_SERADDR_ISOK(out__sm_vector)) {
+		SharedMap_LockEndRead(self);
+		out__sm_vector = DeeSerial_Malloc(writer, self__sm_length * sizeof(DeeSharedItem), NULL);
+		if (!Dee_SERADDR_ISOK(out__sm_vector))
+			goto err;
+		SharedMap_LockRead(self);
+		if unlikely(self__sm_length != self->sm_length) {
+			SharedMap_LockEndRead(self);
+			DeeSerial_Free(writer, out__sm_vector, NULL);
+			goto again_read;
+		}
+	}
+	ou__sm_vector = DeeSerial_Addr2Mem(writer, out__sm_vector, DeeSharedItem);
+	Dee_Movrefv((DeeObject **)ou__sm_vector,
+	            (DeeObject *const *)self->sm_vector,
+	            self__sm_length * 2);
+	SharedMap_LockEndRead(self);
+	if (DeeSerial_InplacePutObjectv(writer, out__sm_vector, self__sm_length * 2))
+		goto err;
+	if (DeeSerial_PutAddr(writer, ADDROF(sm_vector), out__sm_vector))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, SharedMap);
+	out->sm_length = self__sm_length;
+	Dee_atomic_rwlock_cinit(&out->sm_lock);
+	ASSERT(out->sm_loaded == 0);
+	out->sm_mask = self->sm_mask;
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+#undef ADDROF
+}
+
 PRIVATE NONNULL((1, 2)) void DCALL
 smap_visit(SharedMap *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visitv((DeeObject **)self->sm_vector,
@@ -345,10 +394,8 @@ done:
 
 
 PRIVATE NONNULL((1, 2, 3)) void DCALL
-smap_cache(SharedMap *__restrict self,
-           DeeObject *key,
-           DeeObject *value,
-           Dee_hash_t hash) {
+smap_cache(SharedMap *self, DeeObject *key,
+           DeeObject *value, Dee_hash_t hash) {
 	Dee_hash_t i, perturb;
 	SharedItemEx *item;
 	perturb = i = SMAP_HASHST(self, hash);
@@ -834,7 +881,7 @@ PUBLIC DeeTypeObject DeeSharedMap_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &smap_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&smap_fini,
@@ -950,7 +997,7 @@ DeeSharedMap_Decref(DeeObject *__restrict self) {
 	 * which it will take to its grave. */
 	me->sm_vector = vector_copy;
 	SharedMap_LockEndWrite(me);
-	Dee_Decref(me);
+	Dee_Decref_unlikely(me);
 	return;
 
 err_cannot_inherit:
@@ -965,7 +1012,7 @@ err_cannot_inherit:
 
 	/* Destroy the items that the caller wanted the vector to inherit. */
 	Dee_Decrefv((DREF DeeObject **)vector, length * 2);
-	Dee_Decref(me);
+	Dee_Decref_unlikely(me);
 }
 
 /* Same as `DeeSharedMap_Decref()', but should be used if the caller
