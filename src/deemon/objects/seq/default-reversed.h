@@ -26,15 +26,16 @@
 
 #include <stddef.h> /* size_t */
 
+#include "../generic-proxy.h"
+
 DECL_BEGIN
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *drwgii_seq;  /* [1..1][const] The sequence to reverse */
+	PROXY_OBJECT_HEAD(drwgii_seq) /* [1..1][const] The sequence to reverse */
 	/* [1..1][const] The `tp_getitem_index', `tp_getitem_index_fast' or `tp_trygetitem_index' operator of `drwgii_seq' */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *drwgii_tp_getitem_index)(DeeObject *self, size_t index);
-	size_t          drwgii_max;  /* [const] Index of the 0'th element of the reversed of `drwgii_seq' */
-	size_t          drwgii_size; /* [const][<= (drwgii_max + 1)] Length of the reversed sequence. */
+	size_t          drwgii_max;   /* [const] Index of the 0'th element of the reversed of `drwgii_seq' */
+	size_t          drwgii_size;  /* [const][<= (drwgii_max + 1)] Length of the reversed sequence. */
 } DefaultReversed_WithGetItemIndex;
 
 INTDEF DeeTypeObject DefaultReversed_WithGetItemIndex_Type;     /* DefaultReversed_WithGetItemIndex */

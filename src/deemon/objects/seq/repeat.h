@@ -71,7 +71,7 @@ typedef struct {
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(RepeatItem, rii_rep); /* [1..1][const] The underlying repeat-proxy-sequence. */
 	DeeObject                       *rii_obj;  /* [1..1][const][== rii_rep->rpit_obj] The object being repeated. */
-	DWEAK size_t                     rii_num;  /* The remaining number of repetitions. */
+	DWEAK size_t                     rii_num;  /* [lock(ATOMIC)] The remaining number of repetitions. */
 } RepeatItemIterator;
 
 INTDEF DeeTypeObject SeqRepeat_Type;

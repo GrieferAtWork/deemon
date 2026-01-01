@@ -1182,7 +1182,7 @@ err:
 
 STATIC_ASSERT(offsetof(HashSetIterator, hsi_set) == offsetof(ProxyObjectWithPointer, po_obj));
 STATIC_ASSERT(offsetof(HashSetIterator, hsi_next) == offsetof(ProxyObjectWithPointer, po_ptr));
-#define hashsetiterator_serialize generic_proxy__serialize_and_copy_ptr_atomic
+#define hashsetiterator_serialize generic_proxy_with_pointer__serialize_atomic
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 hashsetiterator_bool(HashSetIterator *__restrict self) {

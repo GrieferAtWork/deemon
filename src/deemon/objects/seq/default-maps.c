@@ -33,6 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/set.h>
 #include <deemon/thread.h>
 #include <deemon/util/lock.h>
@@ -582,6 +583,30 @@ err:
 }
 
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+muiter_serialize(MapUnionIterator *__restrict self,
+                 DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(MapUnionIterator, field))
+	MapUnionIterator *out;
+	bool self__mui_in2nd;
+	DREF DeeObject *self__mui_iter;
+	MapUnionIterator_LockRead(self);
+	self__mui_iter = self->mui_iter;
+	Dee_Incref(self__mui_iter);
+	self__mui_in2nd = self->mui_in2nd;
+	MapUnionIterator_LockEndRead(self);
+	if (DeeSerial_PutObjectInherited(writer, ADDROF(mui_iter), self__mui_iter))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, addr, MapUnionIterator);
+	Dee_atomic_rwlock_init(&out->mui_lock);
+	out->mui_in2nd = self__mui_in2nd;
+	return DeeSerial_PutObject(writer, ADDROF(mui_union), self->mui_union);
+err:
+	return -1;
+#undef ADDROF
+}
+
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 muiter_init(MapUnionIterator *__restrict self,
             size_t argc, DeeObject *const *argv) {
@@ -888,7 +913,7 @@ INTERN DeeTypeObject MapUnionIterator_Type = {
 			/* tp_deep_ctor:   */ &muiter_deep,
 			/* tp_any_ctor:    */ &muiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &muiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&muiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1244,6 +1269,17 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+miiter_serialize(MapIntersectionIterator *self,
+                 DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(MapIntersectionIterator, field))
+	int result = generic_proxy2__serialize((ProxyObject2 *)self, writer, addr);
+	if likely(result == 0)
+		result = DeeSerial_PutPointer(writer, ADDROF(mii_keys), self->mii_keys);
+	return result;
+#undef ADDROF
+}
+
 STATIC_ASSERT(offsetof(MapIntersectionIterator, mii_iter) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapIntersectionIterator, mii_iter) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(MapIntersectionIterator, mii_intersect) == offsetof(ProxyObject2, po_obj1) ||
@@ -1332,7 +1368,7 @@ INTERN DeeTypeObject MapIntersectionIterator_Type = {
 			/* tp_deep_ctor:   */ &miiter_deep,
 			/* tp_any_ctor:    */ &miiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &miiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&miiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1610,10 +1646,11 @@ INTERN DeeTypeObject MapDifference_Type = {
 STATIC_ASSERT(offsetof(MapDifferenceIterator, mdi_iter) == offsetof(MapIntersectionIterator, mii_iter));
 STATIC_ASSERT(offsetof(MapDifferenceIterator, mdi_diff) == offsetof(MapIntersectionIterator, mii_intersect));
 STATIC_ASSERT(offsetof(MapDifferenceIterator, mdi_keys) == offsetof(MapIntersectionIterator, mii_keys));
-#define mditer_ctor miiter_ctor
-#define mditer_copy miiter_copy
-#define mditer_deep miiter_deep
-#define mditer_init miiter_init
+#define mditer_ctor      miiter_ctor
+#define mditer_copy      miiter_copy
+#define mditer_deep      miiter_deep
+#define mditer_serialize miiter_serialize
+#define mditer_init      miiter_init
 
 STATIC_ASSERT(offsetof(MapDifferenceIterator, mdi_iter) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapDifferenceIterator, mdi_iter) == offsetof(ProxyObject2, po_obj2));
@@ -1703,7 +1740,7 @@ INTERN DeeTypeObject MapDifferenceIterator_Type = {
 			/* tp_deep_ctor:   */ &mditer_deep,
 			/* tp_any_ctor:    */ &mditer_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &mditer_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mditer_fini,
 		/* .tp_assign      = */ NULL,
@@ -2405,10 +2442,11 @@ STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_lock) == offsetof(Ma
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_iter) == offsetof(MapUnionIterator, mui_iter));
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_symdiff) == offsetof(MapUnionIterator, mui_union));
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_in2nd) == offsetof(MapUnionIterator, mui_in2nd));
-#define msditer_copy muiter_copy
-#define msditer_deep muiter_deep
-#define msditer_ctor muiter_ctor
-#define msditer_init muiter_init
+#define msditer_copy      muiter_copy
+#define msditer_deep      muiter_deep
+#define msditer_serialize muiter_serialize
+#define msditer_ctor      muiter_ctor
+#define msditer_init      muiter_init
 #else
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 msditer_copy(MapSymmetricDifferenceIterator *__restrict self,
@@ -2451,6 +2489,29 @@ err_iter:
 	Dee_Decref(iter);
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+msditer_serialize(MapSymmetricDifferenceIterator *__restrict self,
+                  DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(MapSymmetricDifferenceIterator, field))
+	MapSymmetricDifferenceIterator *out;
+	bool self__msdi_in2nd;
+	DREF DeeObject *self__msdi_iter;
+	MapSymmetricDifferenceIterator_LockRead(self);
+	self__msdi_iter = self->msdi_iter;
+	Dee_Incref(self__msdi_iter);
+	self__msdi_in2nd = self->msdi_in2nd;
+	MapSymmetricDifferenceIterator_LockEndRead(self);
+	if (DeeSerial_PutObjectInherited(writer, ADDROF(msdi_iter), self__msdi_iter))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, addr, MapSymmetricDifferenceIterator);
+	Dee_atomic_rwlock_init(&out->msdi_lock);
+	out->msdi_in2nd = self__msdi_in2nd;
+	return DeeSerial_PutObject(writer, ADDROF(msdi_symdiff), self->msdi_symdiff);
+err:
+	return -1;
+#undef ADDROF
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2734,7 +2795,7 @@ INTERN DeeTypeObject MapSymmetricDifferenceIterator_Type = {
 			/* tp_deep_ctor:   */ &msditer_deep,
 			/* tp_any_ctor:    */ &msditer_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &msditer_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&msditer_fini,
 		/* .tp_assign      = */ NULL,

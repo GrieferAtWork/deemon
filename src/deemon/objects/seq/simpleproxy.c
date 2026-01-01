@@ -902,6 +902,7 @@ err:
 STATIC_ASSERT(offsetof(SeqSimpleProxyIterator, si_iter) == offsetof(ProxyObject, po_obj));
 #define iter_copy          generic_proxy__copy_recursive
 #define iter_deep          generic_proxy__deepcopy
+#define iter_serialize     generic_proxy__serialize
 #define iter_fini          generic_proxy__fini
 #define iter_visit         generic_proxy__visit
 #define iter_bool          generic_proxy__bool
@@ -1022,7 +1023,7 @@ INTERN DeeTypeObject SeqIdsIterator_Type = {
 			/* tp_deep_ctor:   */ &iter_deep,
 			/* tp_any_ctor:    */ &iter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &iter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&iter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1072,7 +1073,7 @@ INTERN DeeTypeObject SeqTypesIterator_Type = {
 			/* tp_deep_ctor:   */ &iter_deep,
 			/* tp_any_ctor:    */ &iter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &iter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&iter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1122,7 +1123,7 @@ INTERN DeeTypeObject SeqClassesIterator_Type = {
 			/* tp_deep_ctor:   */ &iter_deep,
 			/* tp_any_ctor:    */ &iter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &iter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&iter_fini,
 		/* .tp_assign      = */ NULL,

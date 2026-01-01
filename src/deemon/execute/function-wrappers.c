@@ -179,7 +179,7 @@ err:
 STATIC_ASSERT(offsetof(FunctionStaticsIterator, fsi_func) == offsetof(ProxyObject, po_obj));
 #define funcstaticsiter_fini      generic_proxy__fini
 #define funcstaticsiter_visit     generic_proxy__visit
-#define funcstaticsiter_serialize generic_proxy__serialize_and_copy_atomic16
+#define funcstaticsiter_serialize generic_proxy__serialize_and_wordcopy_atomic16
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 funcstaticsiter_bool(FunctionStaticsIterator *__restrict self) {
@@ -1654,7 +1654,7 @@ err:
 STATIC_ASSERT(offsetof(FunctionSymbolsByName, fsbn_func) == offsetof(ProxyObject, po_obj));
 #define funcsymbolsbyname_fini      generic_proxy__fini
 #define funcsymbolsbyname_visit     generic_proxy__visit
-#define funcsymbolsbyname_serialize generic_proxy__serialize_and_copy_atomic16
+#define funcsymbolsbyname_serialize generic_proxy__serialize_and_wordcopy_atomic16
 
 
 PRIVATE struct type_seq funcsymbolsbyname_seq = {
@@ -1975,7 +1975,7 @@ err:
 STATIC_ASSERT(offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_seq) == offsetof(ProxyObject, po_obj));
 #define yfuncsymbolsbynameiter_fini      generic_proxy__fini
 #define yfuncsymbolsbynameiter_visit     generic_proxy__visit
-#define yfuncsymbolsbynameiter_serialize generic_proxy__serialize_and_copy_atomic32
+#define yfuncsymbolsbynameiter_serialize generic_proxy__serialize_and_wordcopy_atomic32
 
 /* Returns `NULL' if the arg isn't bound. */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) DeeObject *DCALL
@@ -2866,7 +2866,7 @@ err:
 STATIC_ASSERT(offsetof(YieldFunctionSymbolsByName, yfsbn_yfunc) == offsetof(ProxyObject, po_obj));
 #define yfuncsymbolsbyname_fini      generic_proxy__fini
 #define yfuncsymbolsbyname_visit     generic_proxy__visit
-#define yfuncsymbolsbyname_serialize generic_proxy__serialize_and_copy
+#define yfuncsymbolsbyname_serialize generic_proxy__serialize_and_memcpy
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeFunctionObject *DCALL
 yfuncsymbolsbyname_getfunc(YieldFunctionSymbolsByName *__restrict self) {
@@ -3496,7 +3496,7 @@ err:
 STATIC_ASSERT(offsetof(FrameLocals, fl_frame) == offsetof(ProxyObject, po_obj));
 #define framelocals_fini      generic_proxy__fini
 #define framelocals_visit     generic_proxy__visit
-#define framelocals_serialize generic_proxy__serialize_and_copy
+#define framelocals_serialize generic_proxy__serialize_and_memcpy
 
 PRIVATE struct type_method tpconst framelocals_methods[] = {
 	TYPE_METHOD_HINTREF(Sequence_xchitem),
@@ -5511,7 +5511,7 @@ STATIC_ASSERT(offsetof(FrameSymbolsByName, frsbn_func) == offsetof(ProxyObject2,
               offsetof(FrameSymbolsByName, frsbn_func) == offsetof(ProxyObject2, po_obj2));
 #define framesymbolsbyname_fini      generic_proxy2__fini
 #define framesymbolsbyname_visit     generic_proxy2__visit
-#define framesymbolsbyname_serialize generic_proxy2__serialize_and_copy
+#define framesymbolsbyname_serialize generic_proxy2__serialize_and_memcpy
 
 
 PRIVATE struct type_seq framesymbolsbyname_seq = {

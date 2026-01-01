@@ -33,6 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
@@ -122,6 +123,20 @@ soi_deep(SeqOneIterator *__restrict self,
 	return 0;
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+soi_serialize(SeqOneIterator *__restrict self,
+              DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(SeqOneIterator, field))
+	SeqOneIterator *out;
+	DREF DeeObject *item = soi_trygetitemref(self);
+	if (item != ITER_DONE)
+		return DeeSerial_PutObjectInherited(writer, ADDROF(soi_item), item);
+	out = DeeSerial_Addr2Mem(writer, addr, SeqOneIterator);
+	out->soi_item = ITER_DONE;
+	return 0;
+#undef ADDROF
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -249,7 +264,7 @@ INTERN DeeTypeObject SeqOneIterator_Type = {
 			/* tp_deep_ctor:   */ &soi_deep,
 			/* tp_any_ctor:    */ &soi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &soi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&soi_fini,
 		/* .tp_assign      = */ NULL,

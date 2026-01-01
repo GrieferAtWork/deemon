@@ -334,7 +334,7 @@ serialize_copy_after(DeeObject *__restrict self,
 /* Same as `generic_proxy__serialize()', but look at "tp_instance_size" (or
  * "tp_alloc") and memcpy all memory that is located after "ProxyObject". */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy__serialize_and_copy(ProxyObject *__restrict self,
+generic_proxy__serialize_and_memcpy(ProxyObject *__restrict self,
                                   struct Dee_serial *__restrict writer,
                                   Dee_seraddr_t addr) {
 	serialize_copy_after(Dee_AsObject(self), writer, addr, sizeof(*self));
@@ -343,9 +343,9 @@ generic_proxy__serialize_and_copy(ProxyObject *__restrict self,
 
 #ifndef CONFIG_NO_THREADS
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy__serialize_and_copy_atomic16(ProxyObject *__restrict self,
-                                           struct Dee_serial *__restrict writer,
-                                           Dee_seraddr_t addr) {
+generic_proxy__serialize_and_wordcopy_atomic16(ProxyObject *__restrict self,
+                                               struct Dee_serial *__restrict writer,
+                                               Dee_seraddr_t addr) {
 	uint16_t *out;
 	uint16_t const *in;
 	size_t instance_size = serialize_copy_after_getsize((DeeObject *)self);
@@ -372,9 +372,9 @@ generic_proxy__serialize_and_copy_atomic16(ProxyObject *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy__serialize_and_copy_atomic32(ProxyObject *__restrict self,
-                                           struct Dee_serial *__restrict writer,
-                                           Dee_seraddr_t addr) {
+generic_proxy__serialize_and_wordcopy_atomic32(ProxyObject *__restrict self,
+                                               struct Dee_serial *__restrict writer,
+                                               Dee_seraddr_t addr) {
 	uint32_t *out;
 	uint32_t const *in;
 	size_t instance_size = serialize_copy_after_getsize((DeeObject *)self);
@@ -402,9 +402,9 @@ generic_proxy__serialize_and_copy_atomic32(ProxyObject *__restrict self,
 
 #if __SIZEOF_POINTER__ >= 8
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy__serialize_and_copy_atomic64(ProxyObject *__restrict self,
-                                           struct Dee_serial *__restrict writer,
-                                           Dee_seraddr_t addr) {
+generic_proxy__serialize_and_wordcopy_atomic64(ProxyObject *__restrict self,
+                                               struct Dee_serial *__restrict writer,
+                                               Dee_seraddr_t addr) {
 	uint64_t *out;
 	uint64_t const *in;
 	size_t instance_size = serialize_copy_after_getsize((DeeObject *)self);
@@ -433,7 +433,7 @@ generic_proxy__serialize_and_copy_atomic64(ProxyObject *__restrict self,
 #endif /* !CONFIG_NO_THREADS */
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy__serialize_and_copy_xptr_atomic(ProxyObjectWithPointer *__restrict self,
+generic_proxy_with_xpointer__serialize_atomic(ProxyObjectWithPointer *__restrict self,
                                               struct Dee_serial *__restrict writer,
                                               Dee_seraddr_t addr) {
 	int result = generic_proxy__serialize((ProxyObject *)self, writer, addr);
@@ -446,7 +446,7 @@ generic_proxy__serialize_and_copy_xptr_atomic(ProxyObjectWithPointer *__restrict
 
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy2__serialize_and_copy(ProxyObject2 *__restrict self,
+generic_proxy2__serialize_and_memcpy(ProxyObject2 *__restrict self,
                                    struct Dee_serial *__restrict writer,
                                    Dee_seraddr_t addr) {
 	serialize_copy_after(Dee_AsObject(self), writer, addr, sizeof(*self));
@@ -454,7 +454,7 @@ generic_proxy2__serialize_and_copy(ProxyObject2 *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy3__serialize_and_copy(ProxyObject3 *__restrict self,
+generic_proxy3__serialize_and_memcpy(ProxyObject3 *__restrict self,
                                    struct Dee_serial *__restrict writer,
                                    Dee_seraddr_t addr) {
 	serialize_copy_after(Dee_AsObject(self), writer, addr, sizeof(*self));

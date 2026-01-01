@@ -132,13 +132,12 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sc_serialize(SeqCombinations *__restrict self,
              DeeSerial *__restrict writer,
              Dee_seraddr_t addr) {
-	int result = generic_proxy__serialize_and_copy((ProxyObject *)self, writer, addr);
-	if likely(result == 0) {
-		result = DeeSerial_PutPointer(writer,
-		                              addr + offsetof(SeqCombinations, sc_trygetitem_index),
-		                              (void const *)self->sc_trygetitem_index);
-	}
+#define ADDROF(field) (addr + offsetof(SeqCombinations, field))
+	int result = generic_proxy__serialize_and_memcpy((ProxyObject *)self, writer, addr);
+	if likely(result == 0)
+		result = DeeSerial_PutFuncPtr(writer, ADDROF(sc_trygetitem_index), self->sc_trygetitem_index);
 	return result;
+#undef ADDROF
 }
 
 
@@ -1335,19 +1334,20 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 scv_serialize(SeqCombinationsView *__restrict self,
               DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(SeqCombinationsView, field))
 	size_t i, *in__scv_idx, *ou__scv_idx;
 	Dee_seraddr_t out__scv_idx;
 	if (generic_proxy__serialize((ProxyObject *)self, writer, addr))
 		goto err;
-	if (DeeSerial_PutPointer(writer, addr + offsetof(SeqCombinationsView, scv_com), self->scv_com))
+	if (DeeSerial_PutPointer(writer, ADDROF(scv_com), self->scv_com))
 		goto err;
 	in__scv_idx = atomic_read(&self->scv_idx);
 	if (in__scv_idx == self->scv_iter->sci_idx)
-		return DeeSerial_PutPointer(writer, addr + offsetof(SeqCombinationsView, scv_idx), in__scv_idx);
+		return DeeSerial_PutPointer(writer, ADDROF(scv_idx), in__scv_idx);
 	out__scv_idx = DeeSerial_Malloc(writer, self->scv_com->sc_rparam * sizeof(size_t), NULL);
 	if (!Dee_SERADDR_ISOK(out__scv_idx))
 		goto err;
-	if (DeeSerial_PutAddr(writer, addr + offsetof(SeqCombinationsView, scv_idx), out__scv_idx))
+	if (DeeSerial_PutAddr(writer, ADDROF(scv_idx), out__scv_idx))
 		goto err;
 	ou__scv_idx = DeeSerial_Addr2Mem(writer, out__scv_idx, size_t);
 	for (i = 0; i < self->scv_com->sc_rparam; ++i)
@@ -1355,6 +1355,7 @@ scv_serialize(SeqCombinationsView *__restrict self,
 	return 0;
 err:
 	return -1;
+#undef ADDROF
 }
 
 

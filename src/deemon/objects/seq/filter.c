@@ -99,10 +99,11 @@ err:
 	return -1;
 }
 
-#define filteriterator_copy  generic_proxy2__copy_recursive1_alias2
-#define filteriterator_deep  generic_proxy2__deepcopy
-#define filteriterator_fini  generic_proxy2__fini
-#define filteriterator_visit generic_proxy2__visit
+#define filteriterator_copy      generic_proxy2__copy_recursive1_alias2
+#define filteriterator_deep      generic_proxy2__deepcopy
+#define filteriterator_fini      generic_proxy2__fini
+#define filteriterator_visit     generic_proxy2__visit
+#define filteriterator_serialize generic_proxy2__serialize
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 filteriterator_next(FilterIterator *__restrict self) {
@@ -198,7 +199,7 @@ INTERN DeeTypeObject SeqFilterIterator_Type = {
 			/* tp_deep_ctor:   */ &filteriterator_deep,
 			/* tp_any_ctor:    */ &filteriterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &filteriterator_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&filteriterator_fini,
 		/* .tp_assign      = */ NULL,
@@ -859,7 +860,7 @@ INTERN DeeTypeObject SeqFilterAsUnbound_Type = {
 			/* tp_deep_ctor:   */ &filter_deep,
 			/* tp_any_ctor:    */ &filter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &filter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&filter_fini,
 		/* .tp_assign      = */ NULL,

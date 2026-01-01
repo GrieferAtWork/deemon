@@ -32,6 +32,7 @@
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
@@ -126,6 +127,29 @@ repeatiter_init(RepeatIterator *__restrict self,
 	return 0;
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+repeatiter_serialize(RepeatIterator *__restrict self,
+                     DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(RepeatIterator, field))
+	DREF DeeObject *self__rpi_iter;
+	RepeatIterator *out;
+	size_t self__rpi_num;
+	RepeatIterator_LockRead(self);
+	self__rpi_iter = self->rpi_iter;
+	Dee_Incref(self__rpi_iter);
+	self__rpi_num = self->rpi_num;
+	RepeatIterator_LockEndRead(self);
+	out = DeeSerial_Addr2Mem(writer, addr, RepeatIterator);
+	out->rpi_num = self__rpi_num;
+	Dee_atomic_rwlock_init(&out->rpi_lock);
+	if (DeeSerial_PutObjectInherited(writer, ADDROF(rpi_iter), self__rpi_iter))
+		goto err;
+	return DeeSerial_PutObjectInherited(writer, ADDROF(rpi_rep), self->rpi_rep);
+err:
+	return -1;
+#undef ADDROF
 }
 
 STATIC_ASSERT(offsetof(RepeatIterator, rpi_rep) == offsetof(ProxyObject2, po_obj1) ||
@@ -342,7 +366,7 @@ INTERN DeeTypeObject SeqRepeatIterator_Type = {
 			/* tp_deep_ctor:   */ &repeatiter_deep,
 			/* tp_any_ctor:    */ &repeatiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &repeatiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&repeatiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -423,9 +447,10 @@ err:
 
 
 STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(ProxyObject, po_obj));
-#define repeat_fini  generic_proxy__fini
-#define repeat_visit generic_proxy__visit
-#define repeat_bool  generic_proxy__bool
+#define repeat_serialize generic_proxy__serialize_and_memcpy
+#define repeat_fini      generic_proxy__fini
+#define repeat_visit     generic_proxy__visit
+#define repeat_bool      generic_proxy__bool
 
 PRIVATE WUNUSED NONNULL((1)) DREF RepeatIterator *DCALL
 repeat_iter(Repeat *__restrict self) {
@@ -663,7 +688,7 @@ INTERN DeeTypeObject SeqRepeat_Type = {
 			/* tp_deep_ctor:   */ &repeat_deep,
 			/* tp_any_ctor:    */ &repeat_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &repeat_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&repeat_fini,
 		/* .tp_assign      = */ NULL,
@@ -737,6 +762,21 @@ repeatitemiter_deep(RepeatItemIterator *__restrict self,
 	return 0;
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+repeatitemiter_serialize(RepeatItemIterator *__restrict self,
+                         DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(RepeatItemIterator, field))
+	RepeatItemIterator *out = DeeSerial_Addr2Mem(writer, addr, RepeatItemIterator);
+	out->rii_num = REPEATITEMPITER_READ_NUM(self);
+	if (DeeSerial_PutObject(writer, ADDROF(rii_rep), self->rii_rep))
+		goto err;
+	ASSERT(self->rii_rep->rpit_obj == self->rii_obj);
+	return DeeSerial_PutPointer(writer, ADDROF(rii_obj), self->rii_obj);
+err:
+	return -1;
+#undef ADDROF
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -822,7 +862,7 @@ INTERN DeeTypeObject SeqRepeatItemIterator_Type = {
 			/* tp_deep_ctor:   */ &repeatitemiter_deep,
 			/* tp_any_ctor:    */ &repeatitemiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &repeatitemiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&repeatitemiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -897,9 +937,10 @@ err:
 	return -1;
 }
 
-STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(RepeatItem, rpit_obj));
-#define repeatitem_fini  repeat_fini
-#define repeatitem_visit repeat_visit
+STATIC_ASSERT(offsetof(RepeatItem, rpit_obj) == offsetof(ProxyObject, po_obj));
+#define repeatitem_serialize generic_proxy__serialize_and_memcpy
+#define repeatitem_fini      generic_proxy__fini
+#define repeatitem_visit     generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitem_bool(RepeatItem *__restrict self) {
@@ -1109,7 +1150,7 @@ INTERN DeeTypeObject SeqRepeatItem_Type = {
 			/* tp_deep_ctor:   */ &repeatitem_deep,
 			/* tp_any_ctor:    */ &repeatitem_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &repeatitem_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&repeatitem_fini,
 		/* .tp_assign      = */ NULL,

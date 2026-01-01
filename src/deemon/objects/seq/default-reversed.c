@@ -31,6 +31,7 @@
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 
 /**/
 #include "../../runtime/runtime_error.h"
@@ -43,7 +44,7 @@ DECL_BEGIN
 
 #define rs_giif_copy rs_gii_copy
 #define rs_tgii_copy rs_gii_copy
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 rs_gii_copy(DefaultReversed_WithGetItemIndex *__restrict self,
             DefaultReversed_WithGetItemIndex *__restrict other) {
 	Dee_Incref(self->drwgii_seq);
@@ -56,7 +57,7 @@ rs_gii_copy(DefaultReversed_WithGetItemIndex *__restrict self,
 
 #define rs_giif_deepcopy rs_gii_deepcopy
 #define rs_tgii_deepcopy rs_gii_deepcopy
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 rs_gii_deepcopy(DefaultReversed_WithGetItemIndex *__restrict self,
                 DefaultReversed_WithGetItemIndex *__restrict other) {
 	self->drwgii_seq = DeeObject_DeepCopy(other->drwgii_seq);
@@ -68,6 +69,26 @@ rs_gii_deepcopy(DefaultReversed_WithGetItemIndex *__restrict self,
 	return 0;
 err:
 	return -1;
+}
+
+#define rs_giif_serialize rs_gii_serialize
+#define rs_tgii_serialize rs_gii_serialize
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+rs_gii_serialize(DefaultReversed_WithGetItemIndex *__restrict self,
+                 DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DefaultReversed_WithGetItemIndex, field))
+	DefaultReversed_WithGetItemIndex *out;
+	if (DeeSerial_PutObject(writer, ADDROF(drwgii_seq), self->drwgii_seq))
+		goto err;
+	if (DeeSerial_PutFuncPtr(writer, ADDROF(drwgii_tp_getitem_index), self->drwgii_tp_getitem_index))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, addr, DefaultReversed_WithGetItemIndex);
+	out->drwgii_max  = self->drwgii_max;
+	out->drwgii_size = self->drwgii_size;
+	return 0;
+err:
+	return -1;
+#undef ADDROF
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -146,20 +167,13 @@ err:
 	return -1;
 }
 
-#define rs_giif_fini rs_gii_fini
-#define rs_tgii_fini rs_gii_fini
-PRIVATE NONNULL((1)) void DCALL
-rs_gii_fini(DefaultReversed_WithGetItemIndex *__restrict self) {
-	Dee_Decref(self->drwgii_seq);
-}
-
-#define rs_giif_visit rs_gii_visit
-#define rs_tgii_visit rs_gii_visit
-PRIVATE NONNULL((1, 2)) void DCALL
-rs_gii_visit(DefaultReversed_WithGetItemIndex *__restrict self,
-             Dee_visit_t proc, void *arg) {
-	Dee_Visit(self->drwgii_seq);
-}
+STATIC_ASSERT(offsetof(DefaultReversed_WithGetItemIndex, drwgii_seq) == offsetof(ProxyObject, po_obj));
+#define rs_gii_fini   generic_proxy__fini
+#define rs_giif_fini  generic_proxy__fini
+#define rs_tgii_fini  generic_proxy__fini
+#define rs_gii_visit  generic_proxy__visit
+#define rs_giif_visit generic_proxy__visit
+#define rs_tgii_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rs_gii_mh_seq_enumerate_index(DefaultReversed_WithGetItemIndex *__restrict self,
@@ -668,7 +682,7 @@ INTERN DeeTypeObject DefaultReversed_WithGetItemIndex_Type = {
 			/* tp_deep_ctor:   */ &rs_gii_deepcopy,
 			/* tp_any_ctor:    */ &rs_gii_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &rs_gii_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rs_gii_fini,
 		/* .tp_assign      = */ NULL,
@@ -718,7 +732,7 @@ INTERN DeeTypeObject DefaultReversed_WithGetItemIndexFast_Type = {
 			/* tp_deep_ctor:   */ &rs_giif_deepcopy,
 			/* tp_any_ctor:    */ &rs_giif_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &rs_giif_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rs_giif_fini,
 		/* .tp_assign      = */ NULL,
@@ -768,7 +782,7 @@ INTERN DeeTypeObject DefaultReversed_WithTryGetItemIndex_Type = {
 			/* tp_deep_ctor:   */ &rs_tgii_deepcopy,
 			/* tp_any_ctor:    */ &rs_tgii_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &rs_tgii_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rs_tgii_fini,
 		/* .tp_assign      = */ NULL,

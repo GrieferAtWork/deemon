@@ -512,6 +512,14 @@ struct Dee_module_object {
 	struct Dee_thread_object      *mo_init;     /* [0..1][lock(ATOMIC)] Module initialization state (one of `Dee_MODULE_INIT_*', or the thread doing the init)
 	                                             * NOTE: For module types other than `DeeModuleDee_Type' and `DeeModuleDex_Type',
 	                                             *       this must always be `Dee_MODULE_INIT_INITIALIZED' */
+	/* TODO: Instead of this timestamp, modules should have a "build ID", akin to LD's `--build-id' commandline flag.
+	 *       This ID can then either be some combination of:
+	 *       - a hash of the associated binary file
+	 *       - a random number
+	 *       - a timestamp
+	 * -> Then, "Dec_Dhdr" would simply include a copy of the dependent module's "build ID"
+	 * -> And the "Dec_Ehdr::er_deemon_timestamp" field would just go away (replaced with "er_deemon_build_id")
+	 */
 	uint64_t                       mo_ctime;    /* [valid_if(Dee_MODULE_FHASCTIME)][lock(WRITE_ONCE)] Timestamp when this module was compiled (0 for dir-modules) */
 #define Dee_MODULE_FNORMAL         0x0000       /* Normal module flags. */
 #define Dee_MODULE_FABSFILE        0x0001       /* [DeeModuleDee_Type][const] `mo_absname' is the actual, absolute filename of this module (which doesn't end with `.dee') */

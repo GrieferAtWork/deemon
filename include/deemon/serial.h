@@ -335,6 +335,17 @@ DFUNDEF WUNUSED NONNULL((1)) int
 #define DeeSerial_PutStaticDeemon(self, addrof_pointer, pointer)  DeeSerial_PutPointer(self, addrof_pointer, pointer)
 #define DeeSerial_XPutStaticDeemon(self, addrof_pointer, pointer) DeeSerial_XPutPointer(self, addrof_pointer, pointer)
 #endif /* CONFIG_BUILDING_DEEMON */
+#define DeeSerial_PutFuncPtr(self, addrof_pointer, funcptr) \
+	DeeSerial_PutPointer(self, addrof_pointer, (void const *)(Dee_funptr_t)(funcptr))
+#define DeeSerial_XPutFuncPtr(self, addrof_pointer, funcptr) \
+	DeeSerial_XPutPointer(self, addrof_pointer, (void const *)(Dee_funptr_t)(funcptr))
+
+#ifdef CONFIG_BUILDING_DEEMON
+#define DeeSerial_PutStaticDeemon(self, addrof_pointer, pointer)         DeeSerial_PutPointer(self, addrof_pointer, pointer)
+#define DeeSerial_XPutStaticDeemon(self, addrof_pointer, pointer)        DeeSerial_XPutPointer(self, addrof_pointer, pointer)
+#define DeeSerial_PutStaticDeemonFuncPtr(self, addrof_pointer, funcptr)  DeeSerial_PutFuncPtr(self, addrof_pointer, funcptr)
+#define DeeSerial_XPutStaticDeemonFuncPtr(self, addrof_pointer, funcptr) DeeSerial_XPutFuncPtr(self, addrof_pointer, funcptr)
+#endif /* CONFIG_BUILDING_DEEMON */
 
 
 /* Helper wrapper for encoding a pointer to the memdup of `data' at `addrof_pointer':

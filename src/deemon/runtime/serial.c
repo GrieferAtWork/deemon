@@ -71,8 +71,8 @@ PUBLIC WUNUSED NONNULL((1)) int
  * @return: -1: Error */
 PUBLIC WUNUSED NONNULL((1)) int
 (DCALL DeeSerial_XPutPointer)(DeeSerial *__restrict self,
-                             Dee_seraddr_t addrof_pointer,
-                             void const *static_addr) {
+                              Dee_seraddr_t addrof_pointer,
+                              void const *static_addr) {
 	void **p_out_addr;
 	if (static_addr != NULL)
 		return DeeSerial_PutPointer(self, addrof_pointer, static_addr);

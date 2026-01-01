@@ -104,18 +104,17 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_gi_serialize(DefaultIterator_WithGetItemIndex *__restrict self,
                 DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DefaultIterator_WithGetItemIndex, field))
 	int result = generic_proxy__serialize((ProxyObject *)self, writer, addr);
+	if likely(result == 0)
+		result = DeeSerial_PutFuncPtr(writer, ADDROF(digi_tp_getitem_index), self->digi_tp_getitem_index);
 	if likely(result == 0) {
 		DefaultIterator_WithGetItemIndex *out;
-		if (DeeSerial_PutPointer(writer, addr + offsetof(DefaultIterator_WithGetItemIndex, digi_tp_getitem_index),
-		                         (void const *)self->digi_tp_getitem_index))
-			goto err;
 		out = DeeSerial_Addr2Mem(writer, addr, DefaultIterator_WithGetItemIndex);
 		out->digi_index = atomic_read(&self->digi_index);
 	}
 	return result;
-err:
-	return -1;
+#undef ADDROF
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1029,23 +1028,23 @@ di_g_clear(DefaultIterator_WithGetItem *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_g_serialize(DefaultIterator_WithGetItem *__restrict self,
                DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DefaultIterator_WithGetItem, field))
 	DREF DeeObject *index;
 	Dee_atomic_lock_init(&DeeSerial_Addr2Mem(writer, addr, DefaultIterator_WithGetItem)->dig_lock);
 	if unlikely(generic_proxy__serialize((ProxyObject *)self, writer, addr))
 		goto err;
-	if (DeeSerial_PutPointer(writer, addr + offsetof(DefaultIterator_WithGetItem, dig_tp_getitem),
-	                         (void const *)self->dig_tp_getitem))
+	if (DeeSerial_PutFuncPtr(writer, ADDROF(dig_tp_getitem), self->dig_tp_getitem))
 		goto err;
-	if (DeeSerial_PutObject(writer, addr + offsetof(DefaultIterator_WithGetItem, dig_seq),
-	                        self->dig_seq))
+	if (DeeSerial_PutObject(writer, ADDROF(dig_seq), self->dig_seq))
 		goto err;
 	DefaultIterator_WithGetItem_LockAcquire(self);
 	index = self->dig_index;
 	Dee_Incref(index);
 	DefaultIterator_WithGetItem_LockRelease(self);
-	return DeeSerial_PutObjectInherited(writer, addr + offsetof(DefaultIterator_WithGetItem, dig_index), index);
+	return DeeSerial_PutObjectInherited(writer, ADDROF(dig_index), index);
 err:
 	return -1;
+#undef ADDROF
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -1450,26 +1449,25 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_lock) ==
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_sg_serialize(DefaultIterator_WithSizeObAndGetItem *__restrict self,
                 DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DefaultIterator_WithSizeObAndGetItem, field))
 	DREF DeeObject *index;
 	Dee_atomic_lock_init(&DeeSerial_Addr2Mem(writer, addr, DefaultIterator_WithSizeObAndGetItem)->disg_lock);
 	if unlikely(generic_proxy__serialize((ProxyObject *)self, writer, addr))
 		goto err;
-	if (DeeSerial_PutPointer(writer, addr + offsetof(DefaultIterator_WithSizeObAndGetItem, disg_tp_getitem),
-	                         (void const *)self->disg_tp_getitem))
+	if (DeeSerial_PutFuncPtr(writer, ADDROF(disg_tp_getitem), self->disg_tp_getitem))
 		goto err;
-	if (DeeSerial_PutObject(writer, addr + offsetof(DefaultIterator_WithSizeObAndGetItem, disg_seq),
-	                        self->disg_seq))
+	if (DeeSerial_PutObject(writer, ADDROF(disg_seq), self->disg_seq))
 		goto err;
-	if (DeeSerial_PutObject(writer, addr + offsetof(DefaultIterator_WithSizeObAndGetItem, disg_end),
-	                        self->disg_end))
+	if (DeeSerial_PutObject(writer, ADDROF(disg_end), self->disg_end))
 		goto err;
 	DefaultIterator_WithSizeAndGetItem_LockAcquire(self);
 	index = self->disg_index;
 	Dee_Incref(index);
 	DefaultIterator_WithSizeAndGetItem_LockRelease(self);
-	return DeeSerial_PutObjectInherited(writer, addr + offsetof(DefaultIterator_WithSizeObAndGetItem, disg_index), index);
+	return DeeSerial_PutObjectInherited(writer, ADDROF(disg_index), index);
 err:
 	return -1;
+#undef ADDROF
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -1733,6 +1731,8 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItemPair_Type = {
 /************************************************************************/
 
 STATIC_ASSERT(offsetof(DefaultIterator_WithNextAndLimit, dinl_iter) == offsetof(DefaultIterator_WithSizeAndGetItemIndex, disgi_seq));
+#define di_nl_fini  di_sgi_fini
+#define di_nl_visit di_sgi_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_nl_init(DefaultIterator_WithNextAndLimit *__restrict self,
@@ -1782,19 +1782,17 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_nl_serialize(DefaultIterator_WithNextAndLimit *__restrict self,
                 DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DefaultIterator_WithNextAndLimit, field))
 	DefaultIterator_WithNextAndLimit *out;
 	out = DeeSerial_Addr2Mem(writer, addr, DefaultIterator_WithNextAndLimit);
 	out->dinl_limit = atomic_read(&self->dinl_limit);
 	if unlikely(generic_proxy__serialize((ProxyObject *)self, writer, addr))
 		goto err;
-	return DeeSerial_PutPointer(writer, addr + offsetof(DefaultIterator_WithNextAndLimit, dinl_tp_next),
-	                            (void const *)self->dinl_tp_next);
+	return DeeSerial_PutFuncPtr(writer, ADDROF(dinl_tp_next), self->dinl_tp_next);
 err:
 	return -1;
+#undef ADDROF
 }
-
-#define di_nl_fini  di_sgi_fini
-#define di_nl_visit di_sgi_visit
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 di_nl_hash(DefaultIterator_WithNextAndLimit *self) {
@@ -2055,9 +2053,9 @@ di_ikgim_serialize(DefaultIterator_WithIterKeysAndGetItem *__restrict self,
 #define ADDROF(field) (addr + offsetof(DefaultIterator_WithIterKeysAndGetItem, field))
 	int result = generic_proxy2__serialize((ProxyObject2 *)self, writer, addr);
 	if likely(result == 0)
-		result = DeeSerial_PutPointer(writer, ADDROF(diikgi_tp_next), (void const *)self->diikgi_tp_next);
+		result = DeeSerial_PutFuncPtr(writer, ADDROF(diikgi_tp_next), self->diikgi_tp_next);
 	if likely(result == 0)
-		result = DeeSerial_PutPointer(writer, ADDROF(diikgi_tp_getitem), (void const *)self->diikgi_tp_getitem);
+		result = DeeSerial_PutFuncPtr(writer, ADDROF(diikgi_tp_getitem), self->diikgi_tp_getitem);
 	return result;
 #undef ADDROF
 }
@@ -2870,7 +2868,7 @@ di_nuf_serialize(DefaultIterator_WithNextAndUnpackFilter *__restrict self,
 #define ADDROF(field) (addr + offsetof(DefaultIterator_WithNextAndUnpackFilter, field))
 	int result = DeeSerial_PutObject(writer, ADDROF(dinuf_iter), self->dinuf_iter);
 	if likely(result == 0)
-		result = DeeSerial_PutPointer(writer, ADDROF(dinuf_tp_next), (void const *)self->dinuf_tp_next);
+		result = DeeSerial_PutFuncPtr(writer, ADDROF(dinuf_tp_next), self->dinuf_tp_next);
 	if likely(result == 0)
 		result = DeeSerial_PutObject(writer, ADDROF(dinuf_start), self->dinuf_start);
 	if likely(result == 0)
@@ -3156,8 +3154,8 @@ err:
 
 STATIC_ASSERT(offsetof(DefaultIterator_PairSubItem, dipsi_iter) == offsetof(ProxyObjectWithPointer, po_obj));
 STATIC_ASSERT(offsetof(DefaultIterator_PairSubItem, dipsi_next) == offsetof(ProxyObjectWithPointer, po_ptr));
-#define di_nv_serialize generic_proxy__serialize_and_copy_ptr_atomic
-#define di_nk_serialize generic_proxy__serialize_and_copy_ptr_atomic
+#define di_nv_serialize generic_proxy_with_pointer__serialize_atomic
+#define di_nk_serialize generic_proxy_with_pointer__serialize_atomic
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_nk_init(DefaultIterator_PairSubItem *__restrict self,

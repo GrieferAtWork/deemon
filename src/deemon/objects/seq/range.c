@@ -33,6 +33,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
@@ -187,6 +188,32 @@ err_index:
 	Dee_Decref(self->ri_index);
 /*err:*/
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ri_serialize(RangeIterator *__restrict self,
+             DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(RangeIterator, field))
+	DREF DeeObject *self__ri_index;
+	bool self__ri_first;
+	RangeIterator *out;
+	RangeIterator_LockRead(self);
+	Dee_Incref(self->ri_index);
+	self__ri_index = self->ri_index;
+	self__ri_first = self->ri_first;
+	RangeIterator_LockEndRead(self);
+	out = DeeSerial_Addr2Mem(writer, addr, RangeIterator);
+	Dee_atomic_rwlock_init(&out->ri_lock);
+	out->ri_first = self__ri_first;
+	out->ri_rev   = self->ri_rev;
+	if (DeeSerial_PutObjectInherited(writer, ADDROF(ri_index), self__ri_index))
+		goto err;
+	if (DeeSerial_PutObject(writer, ADDROF(ri_end), self->ri_end))
+		goto err;
+	return DeeSerial_XPutObject(writer, ADDROF(ri_step), self->ri_step);
+err:
+	return -1;
+#undef ADDROF
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -444,7 +471,7 @@ INTERN DeeTypeObject SeqRangeIterator_Type = {
 			/* tp_deep_ctor:   */ &ri_deep,
 			/* tp_any_ctor:    */ &ri_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &ri_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ri_fini,
 		/* .tp_assign      = */ NULL,
@@ -1069,6 +1096,22 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+range_serialize(Range *__restrict self,
+                DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(Range, field))
+	Range *out = DeeSerial_Addr2Mem(writer, addr, Range);
+	out->r_rev = self->r_rev;
+	if (DeeSerial_PutObject(writer, ADDROF(r_start), self->r_start))
+		goto err;
+	if (DeeSerial_PutObject(writer, ADDROF(r_end), self->r_end))
+		goto err;
+	return DeeSerial_XPutObject(writer, ADDROF(r_step), self->r_step);
+err:
+	return -1;
+#undef ADDROF
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 range_init(Range *__restrict self,
            size_t argc, DeeObject *const *argv) {
@@ -1111,7 +1154,7 @@ INTERN DeeTypeObject SeqRange_Type = {
 			/* tp_deep_ctor:   */ &range_deep,
 			/* tp_any_ctor:    */ &range_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &range_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&range_fini,
 		/* .tp_assign      = */ NULL,
@@ -1163,6 +1206,16 @@ iri_copy(IntRangeIterator *__restrict self,
 	self->iri_index = READ_INDEX(other);
 	self->iri_end   = other->iri_end;
 	self->iri_step  = other->iri_step;
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+iri_serialize(IntRangeIterator *__restrict self,
+              DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	IntRangeIterator *out = DeeSerial_Addr2Mem(writer, addr, IntRangeIterator);
+	out->iri_index = READ_INDEX(self);
+	out->iri_end   = self->iri_end;
+	out->iri_step  = self->iri_step;
 	return 0;
 }
 
@@ -1272,7 +1325,7 @@ INTERN DeeTypeObject SeqIntRangeIterator_Type = {
 			/* tp_deep_ctor:   */ &iri_copy,
 			/* tp_any_ctor:    */ &iri_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &iri_serialize
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -1575,14 +1628,17 @@ intrange_ctor(IntRange *__restrict self) {
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-intrange_copy(IntRange *__restrict self,
-              IntRange *__restrict other) {
-	self->ir_start = other->ir_start;
-	self->ir_end   = other->ir_end;
-	self->ir_step  = other->ir_step;
-	return 0;
-}
+STATIC_ASSERT(offsetof(IntRange, ir_start) == offsetof(IntRangeIterator, iri_index) ||
+              offsetof(IntRange, ir_start) == offsetof(IntRangeIterator, iri_end) ||
+              offsetof(IntRange, ir_start) == offsetof(IntRangeIterator, iri_step));
+STATIC_ASSERT(offsetof(IntRange, ir_end) == offsetof(IntRangeIterator, iri_index) ||
+              offsetof(IntRange, ir_end) == offsetof(IntRangeIterator, iri_end) ||
+              offsetof(IntRange, ir_end) == offsetof(IntRangeIterator, iri_step));
+STATIC_ASSERT(offsetof(IntRange, ir_step) == offsetof(IntRangeIterator, iri_index) ||
+              offsetof(IntRange, ir_step) == offsetof(IntRangeIterator, iri_end) ||
+              offsetof(IntRange, ir_step) == offsetof(IntRangeIterator, iri_step));
+#define intrange_copy      iri_copy
+#define intrange_serialize iri_serialize
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 intrange_init(IntRange *__restrict self,
@@ -1620,7 +1676,7 @@ INTERN DeeTypeObject SeqIntRange_Type = {
 			/* tp_deep_ctor:   */ &intrange_copy,
 			/* tp_any_ctor:    */ &intrange_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &intrange_serialize
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,

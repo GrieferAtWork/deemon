@@ -84,7 +84,7 @@ INTDEF DeeTypeObject BytesIterator_Type;
 
 STATIC_ASSERT(offsetof(BytesIterator, bi_bytes) == offsetof(ProxyObjectWithPointer, po_obj));
 STATIC_ASSERT(offsetof(BytesIterator, bi_iter) == offsetof(ProxyObjectWithPointer, po_ptr));
-#define bytesiter_serialize generic_proxy__serialize_and_copy_ptr_atomic
+#define bytesiter_serialize generic_proxy_with_pointer__serialize_atomic
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytesiter_next(BytesIterator *__restrict self) {

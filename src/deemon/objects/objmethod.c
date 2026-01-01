@@ -171,7 +171,7 @@ STATIC_ASSERT(offsetof(DeeObjMethodObject, om_this) == offsetof(ProxyObject, po_
 
 STATIC_ASSERT(offsetof(DeeObjMethodObject, om_this) == offsetof(ProxyObjectWithPointer, po_obj));
 STATIC_ASSERT(offsetof(DeeObjMethodObject, om_func.omf_meth) == offsetof(ProxyObjectWithPointer, po_ptr));
-#define objmethod_serialize generic_proxy__serialize_and_copy_ptr
+#define objmethod_serialize generic_proxy_with_funcpointer__serialize
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 objmethod_call(DeeObjMethodObject *self, size_t argc, DeeObject *const *argv) {
@@ -541,7 +541,7 @@ err:
 
 STATIC_ASSERT(offsetof(DocKwdsIterator, dki_kwds) == offsetof(ProxyObjectWithPointer, po_obj));
 STATIC_ASSERT(offsetof(DocKwdsIterator, dki_iter) == offsetof(ProxyObjectWithPointer, po_ptr));
-#define dockwdsiter_serialize generic_proxy__serialize_and_copy_ptr_atomic
+#define dockwdsiter_serialize generic_proxy_with_pointer__serialize_atomic
 
 STATIC_ASSERT(offsetof(DocKwdsIterator, dki_kwds) == offsetof(ProxyObject, po_obj));
 #define dockwdsiter_fini  generic_proxy__fini
@@ -1052,7 +1052,7 @@ STATIC_ASSERT(offsetof(DeeClsMethodObject, clm_type) == offsetof(ProxyObject, po
 
 STATIC_ASSERT(offsetof(DeeClsMethodObject, clm_type) == offsetof(ProxyObjectWithPointer, po_obj));
 STATIC_ASSERT(offsetof(DeeClsMethodObject, clm_func.clmf_meth) == offsetof(ProxyObjectWithPointer, po_ptr));
-#define clsmethod_serialize generic_proxy__serialize_and_copy_ptr
+#define clsmethod_serialize generic_proxy_with_funcpointer__serialize
 
 
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) char const *DCALL
@@ -2306,11 +2306,11 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cmethod_serialize(DeeCMethodObject *__restrict self,
                   DeeSerial *__restrict writer,
                   Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DeeCMethodObject, field))
 	DeeCMethodObject *out = DeeSerial_Addr2Mem(writer, addr, DeeCMethodObject);
 	out->cm_flags = self->cm_flags;
-	return DeeSerial_PutPointer(writer,
-	                           addr + offsetof(DeeCMethodObject, cm_func.cmf_meth),
-	                           (void *)self->cm_func.cmf_meth);
+	return DeeSerial_PutFuncPtr(writer, ADDROF(cm_func.cmf_meth), self->cm_func.cmf_meth);
+#undef ADDROF
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

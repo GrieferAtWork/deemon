@@ -31,6 +31,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/system-features.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
@@ -805,8 +806,9 @@ err:
 }
 
 STATIC_ASSERT(offsetof(SharedVectorIterator, si_seq) == offsetof(ProxyObject, po_obj));
-#define sveciter_fini  generic_proxy__fini
-#define sveciter_visit generic_proxy__visit
+#define sveciter_serialize generic_proxy__serialize_and_wordcopy_atomic(__SIZEOF_SIZE_T__)
+#define sveciter_fini      generic_proxy__fini
+#define sveciter_visit     generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sveciter_next(SharedVectorIterator *__restrict self) {
@@ -849,7 +851,7 @@ sveciter_copy(SharedVectorIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 sveciter_deep(SharedVectorIterator *__restrict self,
               SharedVectorIterator *__restrict other) {
 	self->si_seq = (DREF SharedVector *)DeeObject_DeepCopy((DeeObject *)other->si_seq);

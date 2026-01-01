@@ -131,8 +131,9 @@ PRIVATE struct type_cmp mappediter_cmp = {
 
 STATIC_ASSERT(offsetof(SeqMappedIterator, smi_iter) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(SeqMappedIterator, smi_mapper) == offsetof(ProxyObject2, po_obj2));
-#define mappediter_copy generic_proxy2__copy_recursive1_alias2 /* copy "smi_iter", alias "smi_mapper" */
-#define mappediter_deep generic_proxy2__deepcopy
+#define mappediter_copy      generic_proxy2__copy_recursive1_alias2 /* copy "smi_iter", alias "smi_mapper" */
+#define mappediter_deep      generic_proxy2__deepcopy
+#define mappediter_serialize generic_proxy2__serialize
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mappediter_ctor(SeqMappedIterator *__restrict self) {
@@ -178,7 +179,7 @@ INTERN DeeTypeObject SeqMappedIterator_Type = {
 			/* tp_deep_ctor:   */ &mappediter_deep,
 			/* tp_any_ctor:    */ &mappediter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &mappediter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mappediter_fini,
 		/* .tp_assign      = */ NULL,

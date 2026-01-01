@@ -688,7 +688,7 @@ ca_copy(ClassAttribute *__restrict self,
 
 STATIC_ASSERT(offsetof(ClassAttribute, ca_desc) == offsetof(ProxyObjectWithPointer, po_obj));
 STATIC_ASSERT(offsetof(ClassAttribute, ca_attr) == offsetof(ProxyObjectWithPointer, po_ptr));
-#define ca_serialize generic_proxy__serialize_and_copy_ptr
+#define ca_serialize generic_proxy_with_pointer__serialize
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cat_serialize(ClassAttributeTable *__restrict self,

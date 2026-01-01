@@ -111,7 +111,7 @@ err:
 
 #define modexportsiter_fini      generic_proxy__fini_unlikely
 #define modexportsiter_visit     generic_proxy__visit
-#define modexportsiter_serialize generic_proxy__serialize_and_copy_atomic16
+#define modexportsiter_serialize generic_proxy__serialize_and_wordcopy_atomic16
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 modexportsiter_compare(ModuleExportsIterator *lhs,

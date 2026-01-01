@@ -108,7 +108,7 @@ rosetiterator_copy(RoSetIterator *__restrict self,
 
 STATIC_ASSERT(offsetof(RoSetIterator, rosi_set) == offsetof(ProxyObjectWithPointer, po_obj));
 STATIC_ASSERT(offsetof(RoSetIterator, rosi_next) == offsetof(ProxyObjectWithPointer, po_ptr));
-#define rosetiterator_serialize generic_proxy__serialize_and_copy_ptr_atomic
+#define rosetiterator_serialize generic_proxy_with_pointer__serialize_atomic
 
 STATIC_ASSERT(offsetof(RoSetIterator, rosi_set) == offsetof(ProxyObject, po_obj));
 #define rosetiterator_fini  generic_proxy__fini

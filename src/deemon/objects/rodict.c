@@ -600,7 +600,7 @@ INTDEF DeeTypeObject RoDictIterator_Type;
 STATIC_ASSERT(offsetof(RoDictIterator, rodi_dict) == offsetof(ProxyObject, po_obj));
 #define rditer_fini      generic_proxy__fini
 #define rditer_visit     generic_proxy__visit
-#define rditer_serialize generic_proxy__serialize_and_copy_atomic(Dee_SIZEOF_DICT_VIDX_T)
+#define rditer_serialize generic_proxy__serialize_and_wordcopy_atomic(Dee_SIZEOF_DICT_VIDX_T)
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rditer_ctor(RoDictIterator *__restrict self) {

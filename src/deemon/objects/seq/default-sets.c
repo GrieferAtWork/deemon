@@ -31,6 +31,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/set.h>
 #include <deemon/thread.h>
 #include <deemon/util/lock.h>
@@ -534,6 +535,30 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+suiter_serialize(SetUnionIterator *__restrict self,
+                 DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(SetUnionIterator, field))
+	SetUnionIterator *out;
+	bool self__sui_in2nd;
+	DREF DeeObject *self__sui_iter;
+	SetUnionIterator_LockRead(self);
+	self__sui_iter = self->sui_iter;
+	Dee_Incref(self__sui_iter);
+	self__sui_in2nd = self->sui_in2nd;
+	SetUnionIterator_LockEndRead(self);
+	if (DeeSerial_PutObjectInherited(writer, ADDROF(sui_iter), self__sui_iter))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, addr, SetUnionIterator);
+	Dee_atomic_rwlock_init(&out->sui_lock);
+	out->sui_in2nd = self__sui_in2nd;
+	return DeeSerial_PutObject(writer, ADDROF(sui_union), self->sui_union);
+err:
+	return -1;
+#undef ADDROF
+}
+
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 suiter_ctor(SetUnionIterator *__restrict self) {
 	self->sui_union = (DREF SetUnion *)DeeObject_NewDefault(self->ob_type == &SetUnionIterator_Type
@@ -761,7 +786,7 @@ INTERN DeeTypeObject SetUnionIterator_Type = {
 			/* tp_deep_ctor:   */ &suiter_deep,
 			/* tp_any_ctor:    */ &suiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &suiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&suiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1034,15 +1059,16 @@ STATIC_ASSERT(offsetof(SetUnionIterator, sui_union) == offsetof(SetIntersectionI
 STATIC_ASSERT(offsetof(SetUnionIterator, sui_lock) == offsetof(SetSymmetricDifferenceIterator, ssd_lock));
 #endif /* !CONFIG_NO_THREADS */
 STATIC_ASSERT(offsetof(SetUnionIterator, sui_in2nd) == offsetof(SetSymmetricDifferenceIterator, ssd_in2nd));
-#define ssditer_ctor    suiter_ctor
-#define ssditer_copy    suiter_copy
-#define ssditer_deep    suiter_deep
-#define ssditer_init    suiter_init
-#define ssditer_fini    suiter_fini
-#define ssditer_visit   suiter_visit
-#define ssditer_gc      suiter_gc
-#define ssditer_cmp     suiter_cmp
-#define ssditer_getsets suiter_getsets
+#define ssditer_ctor      suiter_ctor
+#define ssditer_copy      suiter_copy
+#define ssditer_deep      suiter_deep
+#define ssditer_serialize suiter_serialize
+#define ssditer_init      suiter_init
+#define ssditer_fini      suiter_fini
+#define ssditer_visit     suiter_visit
+#define ssditer_gc        suiter_gc
+#define ssditer_cmp       suiter_cmp
+#define ssditer_getsets   suiter_getsets
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ssditer_next(SetSymmetricDifferenceIterator *__restrict self) {
 	DREF DeeObject *result;
@@ -1145,7 +1171,7 @@ INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
 			/* tp_deep_ctor:   */ &ssditer_deep,
 			/* tp_any_ctor:    */ &ssditer_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &ssditer_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ssditer_fini,
 		/* .tp_assign      = */ NULL,
@@ -1429,6 +1455,17 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+siiter_serialize(SetIntersectionIterator *self,
+                 DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(SetIntersectionIterator, field))
+	int result = generic_proxy2__serialize((ProxyObject2 *)self, writer, addr);
+	if likely(result == 0)
+		result = DeeSerial_PutPointer(writer, ADDROF(sii_other), self->sii_other);
+	return result;
+#undef ADDROF
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 siiter_init(SetIntersectionIterator *__restrict self,
             size_t argc, DeeObject *const *argv) {
@@ -1499,7 +1536,7 @@ INTERN DeeTypeObject SetIntersectionIterator_Type = {
 			/* tp_deep_ctor:   */ &siiter_deep,
 			/* tp_any_ctor:    */ &siiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &siiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&siiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1718,13 +1755,14 @@ INTERN DeeTypeObject SetIntersection_Type = {
 STATIC_ASSERT(sizeof(SetIntersectionIterator) == sizeof(SetDifferenceIterator));
 STATIC_ASSERT(offsetof(SetIntersectionIterator, sii_iter) == offsetof(SetDifferenceIterator, sdi_iter));
 STATIC_ASSERT(offsetof(SetIntersectionIterator, sii_other) == offsetof(SetDifferenceIterator, sdi_other));
-#define sditer_ctor    siiter_ctor
-#define sditer_copy    siiter_copy
-#define sditer_deep    siiter_deep
-#define sditer_init    siiter_init
-#define sditer_fini    siiter_fini
-#define sditer_visit   siiter_visit
-#define sditer_cmp     siiter_cmp
+#define sditer_ctor      siiter_ctor
+#define sditer_copy      siiter_copy
+#define sditer_deep      siiter_deep
+#define sditer_serialize siiter_serialize
+#define sditer_init      siiter_init
+#define sditer_fini      siiter_fini
+#define sditer_visit     siiter_visit
+#define sditer_cmp       siiter_cmp
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sditer_next(SetDifferenceIterator *__restrict self) {
 	DREF DeeObject *result;
@@ -1771,7 +1809,7 @@ INTERN DeeTypeObject SetDifferenceIterator_Type = {
 			/* tp_deep_ctor:   */ &sditer_deep,
 			/* tp_any_ctor:    */ &sditer_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &sditer_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sditer_fini,
 		/* .tp_assign      = */ NULL,

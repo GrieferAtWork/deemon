@@ -31,6 +31,7 @@
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
@@ -1013,6 +1014,24 @@ err:
 	return -1;
 }
 
+PRIVATE NONNULL((1, 2)) int DCALL
+sfi_serialize(SeqFlatIterator *__restrict self,
+              DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(SeqFlatIterator, field))
+	DREF DeeObject *self__sfi_curriter;
+	Dee_atomic_lock_init(&DeeSerial_Addr2Mem(writer, addr, SeqFlatIterator)->sfi_currlock);
+	SeqFlatIterator_LockAcquire(self);
+	self__sfi_curriter = self->sfi_curriter;
+	Dee_Incref(self__sfi_curriter);
+	SeqFlatIterator_LockRelease(self);
+	if (DeeSerial_PutObjectInherited(writer, ADDROF(sfi_curriter), self__sfi_curriter))
+		goto err;
+	return DeeSerial_PutObject(writer, ADDROF(sfi_baseiter), self->sfi_baseiter);
+err:
+	return -1;
+#undef ADDROF
+}
+
 PRIVATE NONNULL((1)) int DCALL
 sfi_init(SeqFlatIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
@@ -1307,7 +1326,7 @@ INTERN DeeTypeObject SeqFlatIterator_Type = {
 			/* tp_deep_ctor:   */ &sfi_deep,
 			/* tp_any_ctor:    */ &sfi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &sfi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sfi_fini,
 		/* .tp_assign      = */ NULL,

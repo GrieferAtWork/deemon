@@ -56,14 +56,16 @@ DECL_BEGIN
 /************************************************************************/
 STATIC_ASSERT(offsetof(MapFromKeysIterator, mfki_iter) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(MapFromKeysIterator, mfki_base) == offsetof(ProxyObject2, po_obj2));
-#define mfkvi_copy  generic_proxy2__copy_recursive1_alias2
-#define mfkci_copy  generic_proxy2__copy_recursive1_alias2
-#define mfkvi_deep  generic_proxy2__deepcopy
-#define mfkci_deep  generic_proxy2__deepcopy
-#define mfkvi_fini  generic_proxy2__fini
-#define mfkci_fini  generic_proxy2__fini
-#define mfkvi_visit generic_proxy2__visit
-#define mfkci_visit generic_proxy2__visit
+#define mfkvi_copy      generic_proxy2__copy_recursive1_alias2
+#define mfkci_copy      generic_proxy2__copy_recursive1_alias2
+#define mfkvi_deep      generic_proxy2__deepcopy
+#define mfkci_deep      generic_proxy2__deepcopy
+#define mfkvi_serialize generic_proxy2__serialize
+#define mfkci_serialize generic_proxy2__serialize
+#define mfkvi_fini      generic_proxy2__fini
+#define mfkci_fini      generic_proxy2__fini
+#define mfkvi_visit     generic_proxy2__visit
+#define mfkci_visit     generic_proxy2__visit
 
 STATIC_ASSERT(offsetof(MapFromKeysIterator, mfki_iter) == offsetof(ProxyObject, po_obj));
 #define mfkvi_bool generic_proxy__bool
@@ -225,7 +227,7 @@ INTERN DeeTypeObject MapFromKeysAndValueIterator_Type = {
 			/* tp_deep_ctor:   */ &mfkvi_deep,
 			/* tp_any_ctor:    */ &mfkvi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &mfkvi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mfkvi_fini,
 		/* .tp_assign      = */ NULL,
@@ -278,7 +280,7 @@ INTERN DeeTypeObject MapFromKeysAndCallbackIterator_Type = {
 			/* tp_deep_ctor:   */ &mfkci_deep,
 			/* tp_any_ctor:    */ &mfkci_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &mfkci_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mfkci_fini,
 		/* .tp_assign      = */ NULL,

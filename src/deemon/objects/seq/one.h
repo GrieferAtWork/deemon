@@ -21,12 +21,11 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_ONE_H 1
 
 #include <deemon/api.h>
-#include <deemon/seq.h>
 
 DECL_BEGIN
 
 typedef struct {
-	Dee_OBJECT_HEAD
+	OBJECT_HEAD
 	DREF DeeObject *soi_item; /* [0..1][lock(ATOMIC && CLEAR_ONCE)]
 	                           * The item to yield (or "ITER_DONE" if that already
 	                           * happened, or "NULL" if temporarily locked) */

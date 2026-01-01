@@ -33,6 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/thread.h>
 #include <deemon/util/lock.h>
 
@@ -92,6 +93,26 @@ ds_sgi_deepcopy(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
 	return 0;
 err:
 	return -1;
+}
+
+#define ds_sgif_serialize ds_sgi_serialize
+#define ds_stgi_serialize ds_sgi_serialize
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ds_sgi_serialize(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
+                 DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	DefaultSequence_WithSizeAndGetItemIndex *out;
+#define ADDROF(field) (addr + offsetof(DefaultSequence_WithSizeAndGetItemIndex, field))
+	if (DeeSerial_PutObject(writer, ADDROF(dssgi_seq), self->dssgi_seq))
+		goto err;
+	if (DeeSerial_PutFuncPtr(writer, ADDROF(dssgi_tp_getitem_index), self->dssgi_tp_getitem_index))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, addr, DefaultSequence_WithSizeAndGetItemIndex);
+	out->dssgi_start = self->dssgi_start;
+	out->dssgi_end   = self->dssgi_end;
+	return 0;
+err:
+	return -1;
+#undef ADDROF
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1047,7 +1068,7 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndex_Type = {
 			/* tp_deep_ctor:   */ &ds_sgi_deepcopy,
 			/* tp_any_ctor:    */ &ds_sgi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &ds_sgi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_sgi_fini,
 		/* .tp_assign      = */ NULL,
@@ -1097,7 +1118,7 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type = {
 			/* tp_deep_ctor:   */ &ds_sgif_deepcopy,
 			/* tp_any_ctor:    */ &ds_sgif_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &ds_sgif_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_sgif_fini,
 		/* .tp_assign      = */ NULL,
@@ -1147,7 +1168,7 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndTryGetItemIndex_Type = {
 			/* tp_deep_ctor:   */ &ds_stgi_deepcopy,
 			/* tp_any_ctor:    */ &ds_stgi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &ds_stgi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_stgi_fini,
 		/* .tp_assign      = */ NULL,
@@ -1253,6 +1274,21 @@ err_seq:
 	Dee_Decref(self->dssg_seq);
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ds_sg_serialize(DefaultSequence_WithSizeObAndGetItem *__restrict self,
+                DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DefaultSequence_WithSizeObAndGetItem, field))
+	int result = DeeSerial_PutObject(writer, ADDROF(dssg_seq), self->dssg_seq);
+	if likely(result == 0)
+		result = DeeSerial_PutObject(writer, ADDROF(dssg_start), self->dssg_start);
+	if likely(result == 0)
+		result = DeeSerial_PutObject(writer, ADDROF(dssg_end), self->dssg_end);
+	if likely(result == 0)
+		result = DeeSerial_PutFuncPtr(writer, ADDROF(dssg_tp_getitem), self->dssg_tp_getitem);
+	return result;
+#undef ADDROF
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1822,7 +1858,7 @@ INTERN DeeTypeObject DefaultSequence_WithSizeObAndGetItem_Type = {
 			/* tp_deep_ctor:   */ &ds_sg_deepcopy,
 			/* tp_any_ctor:    */ &ds_sg_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &ds_sg_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_sg_fini,
 		/* .tp_assign      = */ NULL,
@@ -1897,8 +1933,13 @@ STATIC_ASSERT(offsetof(DefaultSequence_WithIterAndLimit, dsial_start) == offseto
               offsetof(DefaultSequence_WithIterAndLimit, dsial_start) == offsetof(DefaultSequence_WithSizeAndGetItemIndex, dssgi_end));
 STATIC_ASSERT(offsetof(DefaultSequence_WithIterAndLimit, dsial_limit) == offsetof(DefaultSequence_WithSizeAndGetItemIndex, dssgi_start) ||
               offsetof(DefaultSequence_WithIterAndLimit, dsial_limit) == offsetof(DefaultSequence_WithSizeAndGetItemIndex, dssgi_end));
-#define ds_ial_copy     ds_sgi_copy
-#define ds_ial_deepcopy ds_sgi_deepcopy
+#define ds_ial_copy      ds_sgi_copy
+#define ds_ial_deepcopy  ds_sgi_deepcopy
+#define ds_ial_serialize ds_sgi_serialize
+
+STATIC_ASSERT(offsetof(DefaultSequence_WithIter, dsi_seq) == offsetof(ProxyObjectWithPointer, po_obj));
+STATIC_ASSERT(offsetof(DefaultSequence_WithIter, dsi_tp_iter) == offsetof(ProxyObjectWithPointer, po_ptr));
+#define ds_i_serialize generic_proxy_with_funcpointer__serialize
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ds_i_copy(DefaultSequence_WithIter *__restrict self,
@@ -2305,7 +2346,7 @@ INTERN DeeTypeObject DefaultSequence_WithIter_Type = {
 			/* tp_deep_ctor:   */ &ds_i_deepcopy,
 			/* tp_any_ctor:    */ &ds_i_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &ds_i_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_i_fini,
 		/* .tp_assign      = */ NULL,
@@ -2355,7 +2396,7 @@ INTERN DeeTypeObject DefaultSequence_WithIterAndLimit_Type = {
 			/* tp_deep_ctor:   */ &ds_ial_deepcopy,
 			/* tp_any_ctor:    */ &ds_ial_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &ds_ial_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_ial_fini,
 		/* .tp_assign      = */ NULL,

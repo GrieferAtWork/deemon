@@ -674,7 +674,7 @@ INTERN DeeTypeObject CachedSeq_WithIter_Type = {
 
 STATIC_ASSERT(offsetof(CachedSeq_WithIter_Iterator, cswii_cache) == offsetof(ProxyObjectWithPointer, po_obj));
 STATIC_ASSERT(offsetof(CachedSeq_WithIter_Iterator, cswii_index) == offsetof(ProxyObjectWithPointer, po_ptr));
-#define cswiiter_serialize generic_proxy__serialize_and_copy_atomic(__SIZEOF_SIZE_T__)
+#define cswiiter_serialize generic_proxy__serialize_and_wordcopy_atomic(__SIZEOF_SIZE_T__)
 
 STATIC_ASSERT(offsetof(CachedSeq_WithIter_Iterator, cswii_cache) == offsetof(ProxyObject, po_obj));
 #define cswiiter_fini  generic_proxy__fini

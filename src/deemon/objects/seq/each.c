@@ -1421,12 +1421,13 @@ err:
 	return NULL;
 }
 
-#define ss_ctor  se_ctor
-#define ss_copy  se_copy
-#define ss_deep  se_deep
-#define ss_init  se_init
-#define ss_fini  se_fini
-#define ss_visit se_visit
+#define ss_ctor      se_ctor
+#define ss_copy      se_copy
+#define ss_deep      se_deep
+#define ss_serialize se_serialize
+#define ss_init      se_init
+#define ss_fini      se_fini
+#define ss_visit     se_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ss_bool(SeqEachBase *__restrict self) {
@@ -2083,7 +2084,7 @@ PUBLIC DeeTypeObject DeeSeqSome_Type = {
 			/* tp_deep_ctor:   */ &ss_deep,
 			/* tp_any_ctor:    */ &ss_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &ss_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ss_fini,
 		/* .tp_assign      = */ NULL,
@@ -3992,10 +3993,11 @@ err:
 
 STATIC_ASSERT(offsetof(SeqEachIterator, ei_iter) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(SeqEachIterator, ei_each) == offsetof(ProxyObject2, po_obj2));
-#define sewi_copy  generic_proxy2__copy_recursive1_alias2 /* Copy "ei_iter", alias "ei_each" */
-#define sewi_deep  generic_proxy2__deepcopy
-#define sewi_fini  generic_proxy2__fini
-#define sewi_visit generic_proxy2__visit
+#define sewi_copy      generic_proxy2__copy_recursive1_alias2 /* Copy "ei_iter", alias "ei_each" */
+#define sewi_deep      generic_proxy2__deepcopy
+#define sewi_serialize generic_proxy2__serialize
+#define sewi_fini      generic_proxy2__fini
+#define sewi_visit     generic_proxy2__visit
 
 STATIC_ASSERT(offsetof(SeqEachIterator, ei_iter) == offsetof(ProxyObject, po_obj));
 #define sewi_bool generic_proxy__bool
@@ -4119,7 +4121,7 @@ INTERN DeeTypeObject SeqEachOperatorIterator_Type = {
 			/* tp_deep_ctor:   */ &sewi_deep,
 			/* tp_any_ctor:    */ &seoi_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &sewi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sewi_fini,
 		/* .tp_assign      = */ NULL,

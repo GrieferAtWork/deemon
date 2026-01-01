@@ -28,6 +28,7 @@
 #include <deemon/map.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
@@ -242,10 +243,16 @@ sveciter_bool(SharedVectorIterator *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 sveciter_copy(SharedVectorIterator *__restrict self,
               SharedVectorIterator *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+sveciter_deep(SharedVectorIterator *__restrict self,
+              SharedVectorIterator *__restrict other);
+#define sveciter_serialize generic_proxy__serialize_and_wordcopy_atomic(__SIZEOF_SIZE_T__)
 INTDEF struct type_cmp sveciter_cmp;
-#define smapiter_bool sveciter_bool
-#define smapiter_copy sveciter_copy
-#define smapiter_cmp  sveciter_cmp
+#define smapiter_bool      sveciter_bool
+#define smapiter_copy      sveciter_copy
+#define smapiter_deep      sveciter_deep
+#define smapiter_serialize sveciter_serialize
+#define smapiter_cmp       sveciter_cmp
 
 PRIVATE struct type_member tpconst smapiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SharedMapIterator, smi_seq), "->?Ert:SharedMap"),
@@ -267,10 +274,10 @@ INTERN DeeTypeObject SharedMapIterator_Type = {
 			/* T:              */ SharedMapIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &smapiter_copy,
-			/* tp_deep_ctor:   */ NULL,
+			/* tp_deep_ctor:   */ &smapiter_deep,
 			/* tp_any_ctor:    */ &smapiter_ctor,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &smapiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&smapiter_fini,
 		/* .tp_assign      = */ NULL,

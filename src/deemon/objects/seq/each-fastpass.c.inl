@@ -19,9 +19,9 @@
  */
 #ifdef __INTELLISENSE__
 #include "each.c"
-#define DEFINE_SeqEachGetAttr
+//#define DEFINE_SeqEachGetAttr
 //#define DEFINE_SeqEachCallAttr
-//#define DEFINE_SeqEachCallAttrKw
+#define DEFINE_SeqEachCallAttrKw
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/alloc.h>
@@ -30,9 +30,10 @@
 #include <deemon/format.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
-#include <deemon/operator-hints.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/system-features.h> /* mempcpyc */
 
 #include "../../runtime/strings.h"
@@ -1278,6 +1279,54 @@ err:
 #error "Unsupported mode"
 #endif /* !... */
 
+
+
+
+#ifdef DEFINE_SeqEachGetAttr
+STATIC_ASSERT(offsetof(LOCAL_SeqEach, se_seq) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(LOCAL_SeqEach, se_seq) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(LOCAL_SeqEach, sg_attr) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(LOCAL_SeqEach, sg_attr) == offsetof(ProxyObject2, po_obj2));
+#define sea_serialize generic_proxy2__serialize
+#elif defined(DEFINE_SeqEachCallAttr) || defined(DEFINE_SeqEachCallAttrKw)
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+LOCAL_seX(serialize)(LOCAL_SeqEach *__restrict self,
+                     DeeSerial *__restrict writer) {
+	LOCAL_SeqEach *out;
+	Dee_seraddr_t out_addr;
+	size_t i, sizeof_self;
+	sizeof_self = _Dee_MallococBufsize(offsetof(LOCAL_SeqEach, sg_argv),
+	                                   self->sg_argc, sizeof(DREF DeeObject *));
+	out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	if (!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+#define ADDROF(field) (out_addr + offsetof(LOCAL_SeqEach, field))
+	if (DeeSerial_PutObject(writer, ADDROF(se_seq), self->se_seq))
+		goto err;
+	if (DeeSerial_PutObject(writer, ADDROF(sg_attr), self->sg_attr))
+		goto err;
+#ifdef DEFINE_SeqEachCallAttrKw
+	if (DeeSerial_PutObject(writer, ADDROF(sg_kw), self->sg_kw))
+		goto err;
+#endif /* DEFINE_SeqEachCallAttrKw */
+	out = DeeSerial_Addr2Mem(writer, out_addr, LOCAL_SeqEach);
+	out->sg_argc = self->sg_argc;
+	for (i = 0; i < out->sg_argc; ++i) {
+		Dee_seraddr_t addrof_argv_i = ADDROF(sg_argv) + i * sizeof(DREF DeeObject *);
+		if (DeeSerial_PutObject(writer, addrof_argv_i, self->sg_argv[i]))
+			goto err;
+	}
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+#undef ADDROF
+}
+#else /* ... */
+#error "Unsupported mode"
+#endif /* !... */
+
+
+
 #ifdef DEFINE_SeqEachGetAttr
 PRIVATE WUNUSED DREF SeqEachCallAttr *DCALL
 LOCAL_seX(call)(LOCAL_SeqEach *__restrict self, size_t argc, DeeObject *const *argv) {
@@ -1345,7 +1394,7 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 			/* tp_deep_ctor:   */ &LOCAL_seX(deep),
 			/* tp_any_ctor:    */ &LOCAL_seX(init),
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &LOCAL_seX(serialize)
 		),
 #else /* !(LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE) */
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
@@ -1354,7 +1403,7 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 			/* tp_deep_ctor:   */ &LOCAL_seX(deep),
 			/* tp_any_ctor:    */ &LOCAL_seX(init),
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &LOCAL_seX(serialize),
 			/* tp_free:        */ NULL
 		),
 #endif /* LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE */
@@ -1470,7 +1519,7 @@ INTERN DeeTypeObject LOCAL_SeqEachIterator_Type = {
 			/* tp_deep_ctor:   */ &sewi_deep,
 			/* tp_any_ctor:    */ &LOCAL_seXi(init),
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &sewi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sewi_fini,
 		/* .tp_assign      = */ NULL,
@@ -1842,7 +1891,7 @@ INTERN DeeTypeObject LOCAL_SeqSome_Type = {
 			/* tp_deep_ctor:   */ &LOCAL_seX(deep),
 			/* tp_any_ctor:    */ &LOCAL_seX(init),
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &LOCAL_seX(serialize)
 		),
 #else /* !(LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE) */
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
@@ -1851,7 +1900,7 @@ INTERN DeeTypeObject LOCAL_SeqSome_Type = {
 			/* tp_deep_ctor:   */ &LOCAL_seX(deep),
 			/* tp_any_ctor:    */ &LOCAL_seX(init),
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &LOCAL_seX(serialize),
 			/* tp_free:        */ NULL
 		),
 #endif /* LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE */
