@@ -580,7 +580,7 @@ DeeModule_InitDexBounds(DeeModuleObject *__restrict self) {
 			data.iddmmiwld_mod  = self;
 			self->mo_minaddr = (byte_t const *)-1;
 			self->mo_maxaddr = (byte_t const *)0;
-			(void)dl_iterate_phdr(&initialize_dexdata_minmax_iterate_with_linkmap_cb, (void *)self);
+			(void)dl_iterate_phdr(&initialize_dexdata_minmax_iterate_with_linkmap_cb, (void *)&data);
 			if likely(self->mo_minaddr <= self->mo_maxaddr)
 				return true;
 			Dee_DPRINTF("[RT] Warning: Failed to dl_iterate_phdr()-with-link_map-find module %q", self->mo_absname);
