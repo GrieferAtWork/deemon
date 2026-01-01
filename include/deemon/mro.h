@@ -625,6 +625,17 @@ struct Dee_membercache_table {
 #define Dee_membercache_tabuse_dec(self) (void)0
 #endif /* CONFIG_NO_THREADS */
 
+#ifndef CONFIG_NO_THREADS
+#define _Dee_membercache_init_tabuse(self) , (self)->mc_tabuse = 0
+#else /* !CONFIG_NO_THREADS */
+#define _Dee_membercache_init_tabuse(self) /* nothing */
+#endif /* CONFIG_NO_THREADS */
+#define Dee_membercache_init(self)   \
+	(void)((self)->mc_link.le_next = NULL, \
+	       (self)->mc_link.le_prev = NULL, \
+	       (self)->mc_table        = NULL  \
+	       _Dee_membercache_init_tabuse(self))
+
 /* Finalize a given member-cache. */
 INTDEF NONNULL((1)) void DCALL Dee_membercache_fini(struct Dee_membercache *__restrict self);
 

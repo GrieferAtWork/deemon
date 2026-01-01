@@ -1,4 +1,4 @@
-																					   /* Copyright (c) 2018-2026 Griefer@Work                                       *
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -58,7 +58,7 @@
 
 DECL_BEGIN
 
-PRIVATE struct type_cmp instance_builtin_cmp = {
+INTERN struct type_cmp instance_builtin_cmp = {
 	/* .tp_hash          = */ &usrtype__hash__with__,
 	/* .tp_compare_eq    = */ &usrtype__compare_eq__with__,
 	/* .tp_compare       = */ &usrtype__compare__with__,
@@ -71,7 +71,7 @@ PRIVATE struct type_cmp instance_builtin_cmp = {
 	/* .tp_ge            = */ &default__ge__with__compare
 };
 
-PRIVATE struct type_callable instance_user_callable = {
+INTERN struct type_callable instance_user_callable = {
 	/* .tp_call_kw     = */ &usrtype__call_kw__with__CALL,
 	/* .tp_thiscall    = */ &default__thiscall__with__call,
 	/* .tp_thiscall_kw = */ &default__thiscall_kw__with__call_kw,
@@ -219,6 +219,34 @@ again:
 			type_type = DeeType_Base(type_type);
 		} while (type_type != &DeeType_Type);
 	}
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+class_desc_serialize(struct class_desc *__restrict self,
+                     DeeSerial *__restrict writer) {
+	struct class_desc *out;
+	uint16_t member_count = self->cd_desc->cd_cmemb_size;
+	size_t sizeof_self = _Dee_MallococBufsize(offsetof(struct class_desc, cd_members),
+	                                          member_count, sizeof(DREF DeeObject *));
+	Dee_seraddr_t out_addr = DeeSerial_Malloc(writer, sizeof_self, self);
+#define ADDROF(field) (out_addr + offsetof(struct class_desc, field))
+	if unlikely(!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	if (DeeSerial_PutObject(writer, ADDROF(cd_desc), self->cd_desc))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, struct class_desc);
+	out->cd_offset = self->cd_offset;
+	Dee_atomic_rwlock_init(&out->cd_lock);
+	bzero(out->cd_ops, sizeof(out->cd_ops));
+	Dee_class_desc_lock_read(self);
+	Dee_XMovrefv(out->cd_members, self->cd_members, member_count);
+	Dee_class_desc_lock_endread(self);
+	if (DeeSerial_XInplacePutObjectv(writer, ADDROF(cd_members), member_count))
+		goto err;
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+#undef ADDROF
 }
 
 INTERN NONNULL((1, 2)) void DCALL
@@ -4173,7 +4201,7 @@ DeeClass_New(DeeObject *bases, DeeObject *descriptor,
 	DREF DeeTypeObject *result;
 	DeeTypeObject *result_type_type;
 	struct class_desc *result_class;
-	size_t result_class_offset;
+	size_t result_class_size;
 	ASSERT_OBJECT_TYPE_EXACT(descriptor, &DeeClassDescriptor_Type);
 	ASSERT_OBJECT_TYPE_OPT(declaring_module, &DeeModule_Type);
 	desc = (DeeClassDescriptorObject *)descriptor;
@@ -4197,26 +4225,27 @@ DeeClass_New(DeeObject *bases, DeeObject *descriptor,
 			goto err_cbases;
 		}
 	}
-	result_class_offset = result_type_type->tp_init.tp_alloc.tp_instance_size;
-	if (result_type_type->tp_init.tp_alloc.tp_free) {
+	result_class_size = DeeType_GetInstanceSize(result_type_type);
+	if (!result_class_size) {
 err_custom_allocator:
 		DeeError_Throwf(&DeeError_TypeError,
 		                "Cannot use `%k' with custom allocator as class base",
 		                cbases.cb_base);
 		goto err_cbases;
 	}
-	result_class_offset += (sizeof(void *) - 1);
-	result_class_offset &= ~(sizeof(void *) - 1);
 
 	/* Allocate the resulting class object. */
-	result = (DREF DeeTypeObject *)DeeGCObject_Callocc(result_class_offset +
-	                                                   offsetof(struct class_desc, cd_members),
-	                                                   desc->cd_cmemb_size, sizeof(DREF DeeObject *));
+	result = (DREF DeeTypeObject *)DeeGCObject_Calloc(result_class_size);
 	if unlikely(!result)
 		goto err_cbases;
 
-	/* Figure out where the class descriptor starts. */
-	result_class     = (struct class_desc *)((uintptr_t)result + result_class_offset);
+	/* Allocate the class descriptor. */
+	result_class = (struct class_desc *)Dee_Callococ(offsetof(struct class_desc, cd_members),
+	                                                 desc->cd_cmemb_size, sizeof(DREF DeeObject *));
+	if unlikely(!result_class) {
+		DeeGCObject_Free(result);
+		goto err_cbases;
+	}
 	result->tp_class = result_class;
 
 	/* Setup flags for the resulting type. */
@@ -4229,41 +4258,11 @@ err_custom_allocator:
 		result_class->cd_offset = sizeof(DeeObject);
 	} else {
 		/* Calculate the offset of instance descriptors. */
-		result_class->cd_offset = cbases.cb_base->tp_init.tp_alloc.tp_instance_size;
-		if (cbases.cb_base->tp_init.tp_alloc.tp_free) {
-#ifndef CONFIG_NO_OBJECT_SLABS
-			void (DCALL *tp_free)(void *__restrict ob);
-			size_t base_size;
-			tp_free = cbases.cb_base->tp_init.tp_alloc.tp_free;
-			/* Figure out the slab size used by the base-class. */
-			if (cbases.cb_base->tp_flags & TP_FGC) {
-#define CHECK_ALLOCATOR(index, size)                          \
-				if (tp_free == &DeeGCObject_SlabFree##size) { \
-					base_size = size * sizeof(void *);        \
-				} else
-				DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
-#undef CHECK_ALLOCATOR
-				{
-					DeeGCObject_Free(result);
-					goto err_custom_allocator;
-				}
-			} else {
-#define CHECK_ALLOCATOR(index, size)                        \
-				if (tp_free == &DeeObject_SlabFree##size) { \
-					base_size = size * sizeof(void *);      \
-				} else
-				DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
-#undef CHECK_ALLOCATOR
-				{
-					DeeGCObject_Free(result);
-					goto err_custom_allocator;
-				}
-			}
-			result_class->cd_offset = base_size;
-#else /* !CONFIG_NO_OBJECT_SLABS */
+		result_class->cd_offset = DeeType_GetInstanceSize(cbases.cb_base);
+		if unlikely(!result_class->cd_offset) {
+			Dee_Free(result_class);
 			DeeGCObject_Free(result);
 			goto err_custom_allocator;
-#endif /* CONFIG_NO_OBJECT_SLABS */
 		}
 		result_class->cd_offset += (sizeof(void *) - 1);
 		result_class->cd_offset &= ~(sizeof(void *) - 1);
@@ -4589,6 +4588,7 @@ err_r_base_cbases:
 	Dee_XDecref_unlikely(desc->cd_doc);
 	Dee_Decref_unlikely(desc);
 /*err_r:*/
+	Dee_Free(result_class);
 	DeeGCObject_Free(result);
 err_cbases:
 	class_bases_fini(&cbases);

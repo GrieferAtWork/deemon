@@ -274,43 +274,10 @@ generic_proxy3__fini(ProxyObject3 *__restrict self) {
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) size_t DCALL
 serialize_copy_after_getsize(DeeObject const *__restrict self) {
-	size_t instance_size;
 	DeeTypeObject const *tp_self = Dee_TYPE(self);
-	void (DCALL *tp_free)(void *);
-	ASSERT(!(tp_self->tp_flags & TP_FVARIABLE));
-	if ((tp_free = tp_self->tp_init.tp_alloc.tp_free) != NULL) {
-#ifdef CONFIG_NO_OBJECT_SLABS
+	size_t instance_size = DeeType_GetInstanceSize(tp_self);
+	if unlikely(!instance_size)
 		Dee_Fatalf("Unable to determine tp_instance_size for %r", tp_self);
-		return 0;
-#else /* CONFIG_NO_OBJECT_SLABS */
-		/* Figure out the slab size used by the base-class. */
-		if (tp_self->tp_flags & TP_FGC) {
-#define CHECK_ALLOCATOR(index, size)                      \
-			if (tp_free == &DeeGCObject_SlabFree##size) { \
-				instance_size = size * sizeof(void *);    \
-			} else
-			DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
-#undef CHECK_ALLOCATOR
-			{
-				Dee_Fatalf("Unable to determine tp_instance_size for %r", tp_self);
-				return 0;
-			}
-		} else {
-#define CHECK_ALLOCATOR(index, size)                    \
-			if (tp_free == &DeeObject_SlabFree##size) { \
-				instance_size = size * sizeof(void *);  \
-			} else
-			DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
-#undef CHECK_ALLOCATOR
-			{
-				Dee_Fatalf("Unable to determine tp_instance_size for %r", tp_self);
-				return 0;
-			}
-		}
-#endif /* !CONFIG_NO_OBJECT_SLABS */
-	} else {
-		instance_size = tp_self->tp_init.tp_alloc.tp_instance_size;
-	}
 	return instance_size;
 }
 

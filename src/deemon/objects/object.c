@@ -46,6 +46,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
@@ -70,6 +71,9 @@
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t, offsetof */
 #include <stdint.h>  /* uintptr_t */
+
+#undef container_of
+#define container_of COMPILER_CONTAINER_OF
 
 DECL_BEGIN
 
@@ -1588,9 +1592,7 @@ object_str(DeeObject *__restrict self) {
 	if (tp_self->tp_name) {
 		if (tp_self->tp_flags & TP_FNAMEOBJECT) {
 			DREF DeeStringObject *result;
-			result = COMPILER_CONTAINER_OF(tp_self->tp_name,
-			                               DeeStringObject,
-			                               s_str);
+			result = container_of(tp_self->tp_name, DeeStringObject, s_str);
 			Dee_Incref(result);
 			return Dee_AsObject(result);
 		}
@@ -1620,6 +1622,7 @@ object_repr(DeeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_sizeof(DeeObject *self) {
 	DeeTypeObject *type;
+	size_t instance_size;
 
 	/* Individual sub-types should override this function and add the proper value.
 	 * This implementation is merely used for any generic fixed-length type that
@@ -1629,28 +1632,10 @@ object_sizeof(DeeObject *self) {
 	/* Variable types lack a standardized way of determining their size in bytes. */
 	if unlikely(type->tp_flags & TP_FVARIABLE)
 		goto err_isvar;
-	if unlikely(type->tp_init.tp_alloc.tp_free) {
-#ifndef CONFIG_NO_OBJECT_SLABS
-		/* Check for slab allocators. */
-		size_t slab_size;
-		void (DCALL *tp_free)(void *__restrict ob);
-		tp_free = type->tp_init.tp_alloc.tp_free;
-#define CHECK_SIZE(index, size)                       \
-		if (tp_free == &DeeObject_SlabFree##size ||   \
-		    tp_free == &DeeGCObject_SlabFree##size) { \
-			slab_size = size * __SIZEOF_POINTER__;    \
-		} else
-		DeeSlab_ENUMERATE(CHECK_SIZE)
-#undef CHECK_SIZE
-		{
-			goto err_iscustom;
-		}
-		return DeeInt_NewSize(slab_size);
-#else /* !CONFIG_NO_OBJECT_SLABS */
+	instance_size = DeeType_GetInstanceSize(type);
+	if unlikely(instance_size == 0)
 		goto err_iscustom;
-#endif /* CONFIG_NO_OBJECT_SLABS */
-	}
-	return DeeInt_NewSize(type->tp_init.tp_alloc.tp_instance_size);
+	return DeeInt_NewSize(instance_size);
 err_iscustom:
 	DeeError_Throwf(&DeeError_TypeError,
 	                "Cannot determine size of Type `%k' with custom allocator",
@@ -2659,9 +2644,7 @@ type_str(DeeObject *__restrict self) {
 	char const *name;
 	if (me->tp_flags & TP_FNAMEOBJECT) {
 		DREF DeeStringObject *result;
-		result = COMPILER_CONTAINER_OF(me->tp_name,
-		                               DeeStringObject,
-		                               s_str);
+		result = container_of(me->tp_name, DeeStringObject, s_str);
 		Dee_Incref(result);
 		return Dee_AsObject(result);
 	}
@@ -2675,9 +2658,7 @@ type_print(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	char const *name;
 	if (me->tp_flags & TP_FNAMEOBJECT) {
 		DREF DeeStringObject *nameob;
-		nameob = COMPILER_CONTAINER_OF(me->tp_name,
-		                               DeeStringObject,
-		                               s_str);
+		nameob = container_of(me->tp_name, DeeStringObject, s_str);
 		return DeeString_PrintUtf8((DeeObject *)nameob, printer, arg);
 	}
 	name = DeeType_GetName(me);
@@ -2768,8 +2749,10 @@ type_fini(DeeTypeObject *__restrict self) {
 		Dee_type_mh_cache_destroy(self->tp_mhcache);
 
 	/* Finalize class data if the type is actually a user-defined class. */
-	if (DeeType_IsClass(self))
+	if (DeeType_IsClass(self)) {
 		class_fini(self);
+		Dee_Free(self->tp_class);
+	}
 
 	/* clang-format off */
 /*[[[deemon (printFreeAllocatedOperatorTables from "..method-hints.method-hints")("self");]]]*/
@@ -2797,10 +2780,433 @@ type_fini(DeeTypeObject *__restrict self) {
 
 	/* Cleanup name & doc objects should those have been used. */
 	if (self->tp_flags & TP_FNAMEOBJECT)
-		Dee_Decref_likely(COMPILER_CONTAINER_OF(self->tp_name, DeeStringObject, s_str));
+		Dee_Decref_likely(container_of(self->tp_name, DeeStringObject, s_str));
 	if (self->tp_flags & TP_FDOCOBJECT)
-		Dee_Decref_likely(COMPILER_CONTAINER_OF(self->tp_doc, DeeStringObject, s_str));
+		Dee_Decref_likely(container_of(self->tp_doc, DeeStringObject, s_str));
 	Dee_XDecref_unlikely(self->tp_base);
+}
+
+
+#ifdef CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS
+#define DeeType_GetAbiOperator(self, id) DeeType_GetNativeOperator(self, id)
+#else /* CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
+#define DeeType_GetAbiOperator(self, id) DeeType_GetNativeOperatorWithoutUnsupported(self, id)
+#endif /* !CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
+
+#define Dee_TNO_UNDEF Dee_TNO_COUNT
+
+#define VTABLE_DESC__tp_math(cb, _)                  \
+	cb(_, 0x00, tp_int32, Dee_TNO_int32)             \
+	cb(_, 0x01, tp_int64, Dee_TNO_int64)             \
+	cb(_, 0x02, tp_double, Dee_TNO_double)           \
+	cb(_, 0x03, tp_int, Dee_TNO_int)                 \
+	cb(_, 0x04, tp_inv, Dee_TNO_inv)                 \
+	cb(_, 0x05, tp_pos, Dee_TNO_pos)                 \
+	cb(_, 0x06, tp_neg, Dee_TNO_neg)                 \
+	cb(_, 0x07, tp_add, Dee_TNO_add)                 \
+	cb(_, 0x08, tp_sub, Dee_TNO_sub)                 \
+	cb(_, 0x09, tp_mul, Dee_TNO_mul)                 \
+	cb(_, 0x0a, tp_div, Dee_TNO_div)                 \
+	cb(_, 0x0b, tp_mod, Dee_TNO_mod)                 \
+	cb(_, 0x0c, tp_shl, Dee_TNO_shl)                 \
+	cb(_, 0x0d, tp_shr, Dee_TNO_shr)                 \
+	cb(_, 0x0e, tp_and, Dee_TNO_and)                 \
+	cb(_, 0x0f, tp_or, Dee_TNO_or)                   \
+	cb(_, 0x10, tp_xor, Dee_TNO_xor)                 \
+	cb(_, 0x11, tp_pow, Dee_TNO_pow)                 \
+	cb(_, 0x12, tp_inc, Dee_TNO_inc)                 \
+	cb(_, 0x13, tp_dec, Dee_TNO_dec)                 \
+	cb(_, 0x14, tp_inplace_add, Dee_TNO_inplace_add) \
+	cb(_, 0x15, tp_inplace_sub, Dee_TNO_inplace_sub) \
+	cb(_, 0x16, tp_inplace_mul, Dee_TNO_inplace_mul) \
+	cb(_, 0x17, tp_inplace_div, Dee_TNO_inplace_div) \
+	cb(_, 0x18, tp_inplace_mod, Dee_TNO_inplace_mod) \
+	cb(_, 0x19, tp_inplace_shl, Dee_TNO_inplace_shl) \
+	cb(_, 0x1a, tp_inplace_shr, Dee_TNO_inplace_shr) \
+	cb(_, 0x1b, tp_inplace_and, Dee_TNO_inplace_and) \
+	cb(_, 0x1c, tp_inplace_or, Dee_TNO_inplace_or)   \
+	cb(_, 0x1d, tp_inplace_xor, Dee_TNO_inplace_xor) \
+	cb(_, 0x1e, tp_inplace_pow, Dee_TNO_inplace_pow)
+
+#define VTABLE_DESC__tp_cmp(cb, _)                       \
+	cb(_, 0x00, tp_hash, Dee_TNO_hash)                   \
+	cb(_, 0x01, tp_compare_eq, Dee_TNO_compare_eq)       \
+	cb(_, 0x02, tp_compare, Dee_TNO_compare)             \
+	cb(_, 0x03, tp_trycompare_eq, Dee_TNO_trycompare_eq) \
+	cb(_, 0x04, tp_eq, Dee_TNO_eq)                       \
+	cb(_, 0x05, tp_ne, Dee_TNO_ne)                       \
+	cb(_, 0x06, tp_lo, Dee_TNO_lo)                       \
+	cb(_, 0x07, tp_le, Dee_TNO_le)                       \
+	cb(_, 0x08, tp_gr, Dee_TNO_gr)                       \
+	cb(_, 0x09, tp_ge, Dee_TNO_ge)                       \
+	cb(_, 0x0a, tp_nii, Dee_TNO_UNDEF)
+
+#define VTABLE_DESC__tp_seq(cb, _)                                                 \
+	cb(_, 0x00, tp_iter, Dee_TNO_iter)                                             \
+	cb(_, 0x01, tp_sizeob, Dee_TNO_sizeob)                                         \
+	cb(_, 0x02, tp_contains, Dee_TNO_contains)                                     \
+	cb(_, 0x03, tp_getitem, Dee_TNO_getitem)                                       \
+	cb(_, 0x04, tp_delitem, Dee_TNO_delitem)                                       \
+	cb(_, 0x05, tp_setitem, Dee_TNO_setitem)                                       \
+	cb(_, 0x06, tp_getrange, Dee_TNO_getrange)                                     \
+	cb(_, 0x07, tp_delrange, Dee_TNO_delrange)                                     \
+	cb(_, 0x08, tp_setrange, Dee_TNO_setrange)                                     \
+	cb(_, 0x09, tp_foreach, Dee_TNO_foreach)                                       \
+	cb(_, 0x0a, tp_foreach_pair, Dee_TNO_foreach_pair)                             \
+	cb(_, 0x0b, tp_bounditem, Dee_TNO_bounditem)                                   \
+	cb(_, 0x0c, tp_hasitem, Dee_TNO_hasitem)                                       \
+	cb(_, 0x0d, tp_size, Dee_TNO_size)                                             \
+	cb(_, 0x0e, tp_size_fast, Dee_TNO_size_fast)                                   \
+	cb(_, 0x0f, tp_getitem_index, Dee_TNO_getitem_index)                           \
+	cb(_, 0x10, tp_getitem_index_fast, Dee_TNO_getitem_index_fast)                 \
+	cb(_, 0x11, tp_delitem_index, Dee_TNO_delitem_index)                           \
+	cb(_, 0x12, tp_setitem_index, Dee_TNO_setitem_index)                           \
+	cb(_, 0x13, tp_bounditem_index, Dee_TNO_bounditem_index)                       \
+	cb(_, 0x14, tp_hasitem_index, Dee_TNO_hasitem_index)                           \
+	cb(_, 0x15, tp_getrange_index, Dee_TNO_getrange_index)                         \
+	cb(_, 0x16, tp_delrange_index, Dee_TNO_delrange_index)                         \
+	cb(_, 0x17, tp_setrange_index, Dee_TNO_setrange_index)                         \
+	cb(_, 0x18, tp_getrange_index_n, Dee_TNO_getrange_index_n)                     \
+	cb(_, 0x19, tp_delrange_index_n, Dee_TNO_delrange_index_n)                     \
+	cb(_, 0x1a, tp_setrange_index_n, Dee_TNO_setrange_index_n)                     \
+	cb(_, 0x1b, tp_trygetitem, Dee_TNO_trygetitem)                                 \
+	cb(_, 0x1c, tp_trygetitem_index, Dee_TNO_trygetitem_index)                     \
+	cb(_, 0x1d, tp_trygetitem_string_hash, Dee_TNO_trygetitem_string_hash)         \
+	cb(_, 0x1e, tp_getitem_string_hash, Dee_TNO_getitem_string_hash)               \
+	cb(_, 0x1f, tp_delitem_string_hash, Dee_TNO_delitem_string_hash)               \
+	cb(_, 0x20, tp_setitem_string_hash, Dee_TNO_setitem_string_hash)               \
+	cb(_, 0x21, tp_bounditem_string_hash, Dee_TNO_bounditem_string_hash)           \
+	cb(_, 0x22, tp_hasitem_string_hash, Dee_TNO_hasitem_string_hash)               \
+	cb(_, 0x23, tp_trygetitem_string_len_hash, Dee_TNO_trygetitem_string_len_hash) \
+	cb(_, 0x24, tp_getitem_string_len_hash, Dee_TNO_getitem_string_len_hash)       \
+	cb(_, 0x25, tp_delitem_string_len_hash, Dee_TNO_delitem_string_len_hash)       \
+	cb(_, 0x26, tp_setitem_string_len_hash, Dee_TNO_setitem_string_len_hash)       \
+	cb(_, 0x27, tp_bounditem_string_len_hash, Dee_TNO_bounditem_string_len_hash)   \
+	cb(_, 0x28, tp_hasitem_string_len_hash, Dee_TNO_hasitem_string_len_hash)       \
+	cb(_, 0x29, tp_asvector, Dee_TNO_UNDEF)                                        \
+	cb(_, 0x2a, tp_asvector_nothrow, Dee_TNO_UNDEF)                                \
+	cb(_, 0x2b, tp_trygetitemnr, Dee_TNO_UNDEF)                                    \
+	cb(_, 0x2c, tp_trygetitemnr_string_hash, Dee_TNO_UNDEF)                        \
+	cb(_, 0x2d, tp_trygetitemnr_string_len_hash, Dee_TNO_UNDEF)
+
+#define VTABLE_DESC__tp_iterator(cb, _)          \
+	cb(_, 0x00, tp_nextpair, Dee_TNO_nextpair)   \
+	cb(_, 0x01, tp_nextkey, Dee_TNO_nextkey)     \
+	cb(_, 0x02, tp_nextvalue, Dee_TNO_nextvalue) \
+	cb(_, 0x03, tp_advance, Dee_TNO_advance)
+
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+#define IF_CONFIG_CALLTUPLE_OPTIMIZATIONS(x) x
+#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#define IF_CONFIG_CALLTUPLE_OPTIMIZATIONS(x) /* nothing */
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#define VTABLE_DESC__tp_attr(cb, _)                                              \
+	cb(_, 0x00, tp_getattr, Dee_TNO_getattr)                                     \
+	cb(_, 0x01, tp_delattr, Dee_TNO_delattr)                                     \
+	cb(_, 0x02, tp_setattr, Dee_TNO_setattr)                                     \
+	cb(_, 0x03, tp_iterattr, Dee_TNO_UNDEF)                                      \
+	cb(_, 0x04, tp_findattr, Dee_TNO_UNDEF)                                      \
+	cb(_, 0x05, tp_hasattr, Dee_TNO_hasattr)                                     \
+	cb(_, 0x06, tp_boundattr, Dee_TNO_boundattr)                                 \
+	cb(_, 0x07, tp_callattr, Dee_TNO_UNDEF)                                      \
+	cb(_, 0x08, tp_callattr_kw, Dee_TNO_UNDEF)                                   \
+	cb(_, 0x09, tp_vcallattrf, Dee_TNO_UNDEF)                                    \
+	cb(_, 0x0a, tp_getattr_string_hash, Dee_TNO_getattr_string_hash)             \
+	cb(_, 0x0b, tp_delattr_string_hash, Dee_TNO_delattr_string_hash)             \
+	cb(_, 0x0c, tp_setattr_string_hash, Dee_TNO_setattr_string_hash)             \
+	cb(_, 0x0d, tp_hasattr_string_hash, Dee_TNO_hasattr_string_hash)             \
+	cb(_, 0x0e, tp_boundattr_string_hash, Dee_TNO_boundattr_string_hash)         \
+	cb(_, 0x0f, tp_callattr_string_hash, Dee_TNO_UNDEF)                          \
+	cb(_, 0x10, tp_callattr_string_hash_kw, Dee_TNO_UNDEF)                       \
+	cb(_, 0x11, tp_vcallattr_string_hashf, Dee_TNO_UNDEF)                        \
+	cb(_, 0x12, tp_getattr_string_len_hash, Dee_TNO_getattr_string_len_hash)     \
+	cb(_, 0x13, tp_delattr_string_len_hash, Dee_TNO_delattr_string_len_hash)     \
+	cb(_, 0x14, tp_setattr_string_len_hash, Dee_TNO_setattr_string_len_hash)     \
+	cb(_, 0x15, tp_hasattr_string_len_hash, Dee_TNO_hasattr_string_len_hash)     \
+	cb(_, 0x16, tp_boundattr_string_len_hash, Dee_TNO_boundattr_string_len_hash) \
+	cb(_, 0x17, tp_callattr_string_len_hash, Dee_TNO_UNDEF)                      \
+	cb(_, 0x18, tp_callattr_string_len_hash_kw, Dee_TNO_UNDEF)                   \
+	cb(_, 0x19, tp_findattr_info_string_len_hash, Dee_TNO_UNDEF)                 \
+	IF_CONFIG_CALLTUPLE_OPTIMIZATIONS(                                           \
+	cb(_, 0x1a, tp_callattr_tuple, Dee_TNO_UNDEF)                                \
+	cb(_, 0x1b, tp_callattr_tuple_kw, Dee_TNO_UNDEF))
+
+#define VTABLE_DESC__tp_with(cb, _)      \
+	cb(_, 0x00, tp_enter, Dee_TNO_enter) \
+	cb(_, 0x01, tp_leave, Dee_TNO_leave)
+
+#define VTABLE_DESC__tp_callable(cb, _)                    \
+	cb(_, 0x00, tp_call_kw, Dee_TNO_call_kw)               \
+	cb(_, 0x01, tp_thiscall, Dee_TNO_thiscall)             \
+	cb(_, 0x02, tp_thiscall_kw, Dee_TNO_thiscall_kw)       \
+	IF_CONFIG_CALLTUPLE_OPTIMIZATIONS(                     \
+	cb(_, 0x03, tp_call_tuple, Dee_TNO_call_tuple)         \
+	cb(_, 0x04, tp_call_tuple_kw, Dee_TNO_call_tuple_kw)   \
+	cb(_, 0x05, tp_thiscall_tuple, Dee_TNO_thiscall_tuple) \
+	cb(_, 0x06, tp_thiscall_tuple_kw, Dee_TNO_thiscall_tuple_kw))
+
+#define _ASSERT_DESC_CB(struct_type, id, field, tno_id) \
+	STATIC_ASSERT(offsetof(struct struct_type, field) == (id) * sizeof(Dee_funptr_t));
+#define _ENUM_TNO_CB(struct_type, id, field, tno_id) tno_id,
+#define DEFINE_DESC(struct_type, desc)                            \
+	desc(_ASSERT_DESC_CB, struct_type)                            \
+	PRIVATE enum Dee_tno_id const struct_type##_vtable_desc[] = { \
+		desc(_ENUM_TNO_CB, ~)                                     \
+	};                                                            \
+	STATIC_ASSERT(sizeof(struct struct_type) ==                   \
+	              COMPILER_LENOF(struct_type##_vtable_desc) *     \
+	              sizeof(Dee_funptr_t))
+DEFINE_DESC(type_math, VTABLE_DESC__tp_math);
+DEFINE_DESC(type_cmp, VTABLE_DESC__tp_cmp);
+DEFINE_DESC(type_seq, VTABLE_DESC__tp_seq);
+DEFINE_DESC(type_iterator, VTABLE_DESC__tp_iterator);
+DEFINE_DESC(type_attr, VTABLE_DESC__tp_attr);
+DEFINE_DESC(type_with, VTABLE_DESC__tp_with);
+DEFINE_DESC(type_callable, VTABLE_DESC__tp_callable);
+#undef DEFINE_DESC
+#undef _ENUM_TNO_CB
+#undef _ASSERT_DESC_CB
+
+PRIVATE WUNUSED NONNULL((1, 3, 5, 6)) int DCALL
+DeeSerial_PutVTable(DeeSerial *__restrict writer, Dee_seraddr_t addr,
+                    enum Dee_tno_id const *__restrict desc, size_t num_functions,
+                    Dee_funptr_t const **p_vtable, DeeTypeObject *__restrict tp) {
+	size_t i;
+	Dee_seraddr_t out_vtable_addr;
+	bool has_any = false;
+	Dee_funptr_t const *in_vtable;
+	/* Pre-load all function pointers. */
+	for (i = 0; i < num_functions; ++i) {
+		if (desc[i] != Dee_TNO_UNDEF) {
+			Dee_funptr_t ptr = DeeType_GetAbiOperator(tp, desc[i]);
+			if (ptr)
+				has_any = true;
+		}
+	}
+	if unlikely(!has_any) {
+		*DeeSerial_Addr2Mem(writer, addr, void *) = NULL;
+		return 0;
+	}
+	in_vtable = *p_vtable;
+	out_vtable_addr = DeeSerial_Malloc(writer, num_functions * sizeof(Dee_funptr_t), in_vtable);
+	if (!Dee_SERADDR_ISOK(out_vtable_addr))
+		goto err;
+	if (DeeSerial_PutAddr(writer, addr, out_vtable_addr))
+		goto err;
+	for (i = 0; i < num_functions; ++i) {
+		Dee_seraddr_t addrof_funptr = out_vtable_addr + i * sizeof(Dee_funptr_t);
+		Dee_funptr_t ptr = NULL;
+		if (desc[i] != Dee_TNO_UNDEF) {
+			ptr = DeeType_GetAbiOperator(tp, desc[i]);
+		} else if (in_vtable) {
+			ptr = in_vtable[i];
+		}
+		if (DeeSerial_XPutFuncPtr(writer, addrof_funptr, ptr))
+			goto err;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+type_serialize_custom_operators(DeeSerial *__restrict writer,
+                                struct Dee_type_operator const *ops,
+                                size_t count) {
+	size_t i;
+	Dee_seraddr_t out_addr = DeeSerial_Malloc(writer, count * sizeof(struct Dee_type_operator), ops);
+	if unlikely(!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	memcpyc(DeeSerial_Addr2Mem(writer, out_addr, void),
+	        ops, count, sizeof(struct Dee_type_operator));
+	for (i = 0; i < count; ++i) {
+		struct Dee_type_operator const *op = &ops[i];
+		Dee_seraddr_t addrof_op = out_addr + i * sizeof(struct Dee_type_operator);
+#define ADDROF(field) (addrof_op + offsetof(struct Dee_type_operator, field))
+		if (Dee_type_operator_isdecl(op)) {
+			if (DeeSerial_PutPointer(writer, ADDROF(to_decl.oi_invoke), op->to_decl.oi_invoke))
+				goto err;
+		} else {
+			ASSERT(Dee_type_operator_iscustom(op));
+			if (DeeSerial_XPutFuncPtr(writer, ADDROF(to_custom.s_invoke), op->to_custom.s_invoke))
+				goto err;
+		}
+#undef ADDROF
+	}
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+}
+
+
+INTDEF WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+class_desc_serialize(struct class_desc *__restrict self,
+                     DeeSerial *__restrict writer);
+
+INTDEF struct type_cmp instance_builtin_cmp;
+INTDEF struct type_callable instance_user_callable;
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+type_serialize(DeeTypeObject *__restrict self,
+               DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DeeTypeObject, field))
+	DeeTypeObject *out;
+	if (DeeSerial_PutObject(writer, ADDROF(tp_base), self->tp_base))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, addr, DeeTypeObject);
+	Dee_weakref_initempty(&out->tp_module); /* Module info is lost here */
+	weakref_support_init(out);
+	out->tp_name     = NULL;
+	out->tp_doc      = NULL;
+	out->tp_flags    = self->tp_flags | TP_FHEAP;
+	out->tp_weakrefs = self->tp_weakrefs;
+	out->tp_features = self->tp_features;
+	out->tp_init.tp_alloc.tp_instance_size = self->tp_init.tp_alloc.tp_instance_size;
+	out->tp_operators      = NULL;
+	out->tp_operators_size = self->tp_operators_size;
+	out->tp_mhcache  = NULL; /* Not serialized (lazily allocated again if needed) */
+	out->tp_mro      = NULL;
+	Dee_membercache_init(&out->tp_cache);
+	Dee_membercache_init(&out->tp_class_cache);
+	out->tp_class = NULL;
+
+	/* Encode name */
+	if (self->tp_name) {
+		if (self->tp_flags & TP_FNAMEOBJECT) {
+			DeeStringObject *name = container_of(self->tp_name, DeeStringObject, s_str);
+			if (DeeSerial_PutObjectEx(writer, ADDROF(tp_name), name, offsetof(DeeStringObject, s_str)))
+				goto err;
+		} else {
+			if (DeeSerial_PutPointer(writer, ADDROF(tp_name), self->tp_name))
+				goto err;
+		}
+	}
+
+	/* Encode doc-string */
+	if (self->tp_doc) {
+		if (self->tp_flags & TP_FDOCOBJECT) {
+			DeeStringObject *doc = container_of(self->tp_doc, DeeStringObject, s_str);
+			if (DeeSerial_PutObjectEx(writer, ADDROF(tp_doc), doc, offsetof(DeeStringObject, s_str)))
+				goto err;
+		} else {
+			if (DeeSerial_PutPointer(writer, ADDROF(tp_doc), self->tp_doc))
+				goto err;
+		}
+	}
+
+	/* Serialize extra MRO types */
+	if (self->tp_mro != NULL) {
+		size_t count = 0;
+		while (self->tp_mro[count])
+			++count;
+		/* Technically, all elements but the last (sentinal) are
+		 * non-NULL, but just re-juse this function for simplicity */
+		if (DeeSerial_XPutMemdupObjectv(writer, ADDROF(tp_mro),
+		                                (DeeObject *const *)self->tp_mro,
+		                                count + 1))
+			goto err;
+	}
+
+	/* Heap-allocated V-tables */
+#define PUT_VTABLE(field, desc)                                          \
+	if (DeeSerial_PutVTable(writer, ADDROF(field), desc,                 \
+	                        sizeof(*self->field) / sizeof(Dee_funptr_t), \
+	                        (Dee_funptr_t const **)&self->field, self))  \
+		goto err
+	PUT_VTABLE(tp_math, type_math_vtable_desc);
+	if (self->tp_cmp == &instance_builtin_cmp) {
+		/* Special handling for built-in operator table */
+		if (DeeSerial_PutStaticDeemon(writer, ADDROF(tp_cmp), &instance_builtin_cmp))
+			goto err;
+	} else {
+		PUT_VTABLE(tp_cmp, type_cmp_vtable_desc);
+	}
+	PUT_VTABLE(tp_seq, type_seq_vtable_desc);
+	PUT_VTABLE(tp_iterator, type_iterator_vtable_desc);
+	PUT_VTABLE(tp_attr, type_attr_vtable_desc);
+	PUT_VTABLE(tp_with, type_with_vtable_desc);
+	if (self->tp_callable == &instance_user_callable) {
+		/* Special handling for built-in operator table */
+		if (DeeSerial_PutStaticDeemon(writer, ADDROF(tp_callable), &instance_user_callable))
+			goto err;
+	} else {
+		PUT_VTABLE(tp_callable, type_callable_vtable_desc);
+	}
+#undef PUT_VTABLE
+
+	/* Directly embedded function pointers */
+#define PUT_FUNPTR(field)                                          \
+	if (DeeSerial_XPutFuncPtr(writer, ADDROF(field), self->field)) \
+		goto err
+	DeeType_InheritConstructors(self);
+	PUT_FUNPTR(tp_init.tp_alloc.tp_ctor);
+	PUT_FUNPTR(tp_init.tp_alloc.tp_copy_ctor);
+	PUT_FUNPTR(tp_init.tp_alloc.tp_deep_ctor);
+	PUT_FUNPTR(tp_init.tp_alloc.tp_any_ctor);
+	PUT_FUNPTR(tp_init.tp_alloc.tp_any_ctor_kw);
+	PUT_FUNPTR(tp_init.tp_alloc.tp_serialize);
+	PUT_FUNPTR(tp_init.tp_alloc.tp_free);
+	if (self->tp_init.tp_alloc.tp_free)
+		PUT_FUNPTR(tp_init.tp_alloc.tp_alloc);
+	PUT_FUNPTR(tp_init.tp_dtor);
+	PUT_FUNPTR(tp_init.tp_deepload);
+	if (DeeSerial_PutFuncPtr(writer, ADDROF(tp_init.tp_destroy), DeeType_RequireDestroy(self)))
+		goto err;
+	PUT_FUNPTR(tp_visit);
+#undef PUT_FUNPTR
+
+	/* Non-owned structure pointers */
+#define PUT_STRUCTPTR(field)                                       \
+	if (DeeSerial_XPutPointer(writer, ADDROF(field), self->field)) \
+		goto err
+	PUT_STRUCTPTR(tp_gc);
+	PUT_STRUCTPTR(tp_buffer);
+	PUT_STRUCTPTR(tp_methods);
+	PUT_STRUCTPTR(tp_getsets);
+	PUT_STRUCTPTR(tp_members);
+	PUT_STRUCTPTR(tp_class_methods);
+	PUT_STRUCTPTR(tp_class_getsets);
+	PUT_STRUCTPTR(tp_class_members);
+	PUT_STRUCTPTR(tp_method_hints);
+#undef PUT_STRUCTPTR
+
+	/* Directly embedded operators */
+#define PUT_TNO(field, id)                                                              \
+	if (DeeSerial_XPutFuncPtr(writer, ADDROF(field), DeeType_GetAbiOperator(self, id))) \
+		goto err
+	PUT_TNO(tp_init.tp_assign, Dee_TNO_assign);
+	PUT_TNO(tp_init.tp_move_assign, Dee_TNO_move_assign);
+	PUT_TNO(tp_cast.tp_str, Dee_TNO_str);
+	PUT_TNO(tp_cast.tp_repr, Dee_TNO_repr);
+	PUT_TNO(tp_cast.tp_bool, Dee_TNO_bool);
+	PUT_TNO(tp_cast.tp_print, Dee_TNO_print);
+	PUT_TNO(tp_cast.tp_printrepr, Dee_TNO_printrepr);
+	PUT_TNO(tp_iter_next, Dee_TNO_iter_next);
+	PUT_TNO(tp_call, Dee_TNO_call);
+#undef PUT_TNO
+	if (self->tp_class) {
+		Dee_seraddr_t cdesc_addr;
+		if (self->tp_operators_size) {
+			Dee_seraddr_t ops_addr;
+			ops_addr = type_serialize_custom_operators(writer, self->tp_operators,
+			                                           self->tp_operators_size);
+			if unlikely(!Dee_SERADDR_ISOK(ops_addr))
+				goto err;
+			if (DeeSerial_PutAddr(writer, ADDROF(tp_operators), ops_addr))
+				goto err;
+		}
+		cdesc_addr = class_desc_serialize(self->tp_class, writer);
+		if unlikely(!Dee_SERADDR_ISOK(cdesc_addr))
+			goto err;
+		return DeeSerial_PutAddr(writer, ADDROF(tp_class), cdesc_addr);
+	} else if (self->tp_operators_size) {
+		ASSERT(self->tp_operators);
+		return DeeSerial_PutPointer(writer, ADDROF(tp_operators), self->tp_operators);
+	}
+	return 0;
+err:
+	return -1;
+#undef ADDROF
 }
 
 
@@ -4058,7 +4464,7 @@ type_getname_impl(DeeTypeObject *__restrict self) {
 	DREF DeeStringObject *result;
 	ASSERT(self->tp_name);
 	if (self->tp_flags & TP_FNAMEOBJECT) {
-		result = COMPILER_CONTAINER_OF(self->tp_name, DeeStringObject, s_str);
+		result = container_of(self->tp_name, DeeStringObject, s_str);
 		Dee_Incref(result);
 	} else {
 		result = (DREF DeeStringObject *)DeeString_New(self->tp_name);
@@ -4307,6 +4713,40 @@ INTERN WUNUSED NONNULL((1)) Dee_funptr_t
 }
 
 
+/* Returns the "instance-size" of a given object "self",
+ * whilst trying to resolve known standard allocators.
+ * The caller must ensure that `!DeeType_IsVariable(Dee_TYPE(self))'
+ * @return: * : The instance size of "self"
+ * @return: 0 : Instance size is unknown (non-standard allocator used) */
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) size_t
+(DCALL DeeType_GetInstanceSize)(DeeTypeObject const *__restrict self) {
+	void (DCALL *tp_free)(void *__restrict ob);
+	ASSERT(!DeeType_IsVariable(Dee_TYPE(self)));
+	if ((tp_free = self->tp_init.tp_alloc.tp_free) == NULL)
+		return self->tp_init.tp_alloc.tp_instance_size;
+#ifndef CONFIG_NO_OBJECT_SLABS
+	if (self->tp_flags & TP_FGC) {
+#define CHECK_ALLOCATOR(index, size)                  \
+		if (tp_free == &DeeGCObject_SlabFree##size) { \
+			return size * sizeof(void *);             \
+		} else
+		DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
+#undef CHECK_ALLOCATOR
+		;
+	} else {
+#define CHECK_ALLOCATOR(index, size)                \
+		if (tp_free == &DeeObject_SlabFree##size) { \
+			return size * sizeof(void *);           \
+		} else
+		DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
+#undef CHECK_ALLOCATOR
+		;
+	}
+#endif /* !CONFIG_NO_OBJECT_SLABS */
+	return 0;
+}
+
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_get_module(DeeTypeObject *__restrict self) {
 	DREF DeeObject *result;
@@ -4336,27 +4776,9 @@ type_get_instancesize(DeeTypeObject *__restrict self) {
 	    !self->tp_init.tp_alloc.tp_any_ctor &&
 	    !self->tp_init.tp_alloc.tp_any_ctor_kw)
 		goto unknown;
-	if unlikely(self->tp_init.tp_alloc.tp_free) {
-#ifndef CONFIG_NO_OBJECT_SLABS
-		/* Check for slab allocators. */
-		void (DCALL *tp_free)(void *__restrict ob);
-		tp_free = self->tp_init.tp_alloc.tp_free;
-#define CHECK_SIZE(index, size)                        \
-		if (tp_free == &DeeObject_SlabFree##size ||    \
-		    tp_free == &DeeGCObject_SlabFree##size) {  \
-			instance_size = size * __SIZEOF_POINTER__; \
-		} else
-		DeeSlab_ENUMERATE(CHECK_SIZE)
-#undef CHECK_SIZE
-		{
-			goto unknown;
-		}
-#else /* !CONFIG_NO_OBJECT_SLABS */
+	instance_size = DeeType_GetInstanceSize(self);
+	if unlikely(!instance_size)
 		goto unknown;
-#endif /* CONFIG_NO_OBJECT_SLABS */
-	} else {
-		instance_size = self->tp_init.tp_alloc.tp_instance_size;
-	}
 	return DeeInt_NewSize(instance_size);
 unknown:
 	DeeRT_ErrTUnboundAttrCStr(&DeeType_Type, Dee_AsObject(self), "__instancesize__");
@@ -4373,24 +4795,8 @@ type_bound_instancesize(DeeTypeObject *__restrict self) {
 	    !self->tp_init.tp_alloc.tp_any_ctor &&
 	    !self->tp_init.tp_alloc.tp_any_ctor_kw)
 		goto unknown;
-	if unlikely(self->tp_init.tp_alloc.tp_free) {
-#ifndef CONFIG_NO_OBJECT_SLABS
-		/* Check for slab allocators. */
-		void (DCALL *tp_free)(void *__restrict ob);
-		tp_free = self->tp_init.tp_alloc.tp_free;
-#define CHECK_SIZE(index, size)                        \
-		if (tp_free == &DeeObject_SlabFree##size ||    \
-		    tp_free == &DeeGCObject_SlabFree##size) {  \
-		} else
-		DeeSlab_ENUMERATE(CHECK_SIZE)
-#undef CHECK_SIZE
-		{
-			goto unknown;
-		}
-#else /* !CONFIG_NO_OBJECT_SLABS */
+	if (DeeType_GetInstanceSize(self) == 0)
 		goto unknown;
-#endif /* CONFIG_NO_OBJECT_SLABS */
-	}
 	return Dee_BOUND_YES;
 unknown:
 	return Dee_BOUND_NO;
@@ -4835,7 +5241,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO (only heap types, though) */
+			/* tp_serialize:   */ &type_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&type_fini,
 		/* .tp_assign      = */ NULL,

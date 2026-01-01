@@ -4072,7 +4072,7 @@ struct Dee_type_object {
 	struct Dee_type_seq                *tp_seq;      /* [0..1][owned_if(tp_class != NULL)] Sequence operators. */
 	WUNUSED_T NONNULL_T((1))
 	DREF DeeObject             *(DCALL *tp_iter_next)(DeeObject *__restrict self);
-	struct Dee_type_iterator           *tp_iterator; /* [0..1] Extra iterator operators (all of these are optional; only `tp_iter_next' is required) */
+	struct Dee_type_iterator           *tp_iterator; /* [0..1][owned_if(tp_class != NULL)] Extra iterator operators (all of these are optional; only `tp_iter_next' is required) */
 	struct Dee_type_attr               *tp_attr;     /* [0..1][owned_if(tp_class != NULL)] Attribute access operators. */
 	struct Dee_type_with               *tp_with;     /* [0..1][owned_if(tp_class != NULL)] __enter__ / __leave__ operators. */
 	struct Dee_type_buffer             *tp_buffer;   /* [0..1] Raw buffer interface. */
@@ -4138,11 +4138,10 @@ struct Dee_type_object {
 	 *    That way, we can greatly optimize the lookup time for already-known members. */
 	struct Dee_membercache  tp_cache;
 	struct Dee_membercache  tp_class_cache;
-	struct Dee_class_desc  *tp_class;    /* [0..1] Class descriptor (Usually points below this type object). */
+	struct Dee_class_desc  *tp_class;    /* [0..1][owned] Class descriptor (Usually points below this type object). */
 	Dee_WEAKREF_SUPPORT                  /* Weak reference support. */
 	struct Dee_weakref      tp_module;   /* [0..1] Weak reference to module that is declaring this type. */
 	/* ... Extended type fields go here (e.g.: `DeeFileTypeObject') */
-	/* ... `struct class_desc' of class types goes here (pointed-to by `tp_class' if present) */
 };
 #define DeeType_IsFinal(x)               (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FFINAL)
 #define DeeType_IsInterrupt(x)           (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FINTERRUPT)
@@ -4173,6 +4172,15 @@ struct Dee_type_object {
 /* Returns the "tp_serialize" operator for "tp". If possible, inherit from base class. */
 INTDEF WUNUSED NONNULL((1)) Dee_funptr_t (DCALL DeeType_GetTpSerialize)(DeeTypeObject *__restrict self);
 #endif /* CONFIG_BUILDING_DEEMON */
+
+/* Returns the "instance-size" of a given object "self",
+ * whilst trying to resolve known standard allocators.
+ * The caller must ensure that `!DeeType_IsVariable(Dee_TYPE(self))'
+ * @return: * : The instance size of "self"
+ * @return: 0 : Instance size is unknown (non-standard allocator used) */
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) size_t
+(DCALL DeeType_GetInstanceSize)(DeeTypeObject const *__restrict self);
+
 
 /* Helpers for allocating/freeing fixed-length (non-variable) type instances. */
 #define DeeType_AllocInstance(tp_self)                                                      \

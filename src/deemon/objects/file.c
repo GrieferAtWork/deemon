@@ -39,6 +39,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/super.h>
@@ -1110,6 +1111,41 @@ filetype_ctor(DeeFileTypeObject *__restrict self) {
 	return type_ctor(&self->ft_base);
 }
 
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+type_serialize(DeeTypeObject *__restrict self,
+               DeeSerial *__restrict writer, Dee_seraddr_t addr);
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+filetype_serialize(DeeFileTypeObject *__restrict self,
+                   DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DeeFileTypeObject, field))
+	int result = type_serialize(&self->ft_base, writer, addr);
+	if likely(result == 0)
+		result = DeeSerial_XPutFuncPtr(writer, ADDROF(ft_read), self->ft_read);
+	if likely(result == 0)
+		result = DeeSerial_XPutFuncPtr(writer, ADDROF(ft_write), self->ft_write);
+	if likely(result == 0)
+		result = DeeSerial_XPutFuncPtr(writer, ADDROF(ft_seek), self->ft_seek);
+	if likely(result == 0)
+		result = DeeSerial_XPutFuncPtr(writer, ADDROF(ft_sync), self->ft_sync);
+	if likely(result == 0)
+		result = DeeSerial_XPutFuncPtr(writer, ADDROF(ft_trunc), self->ft_trunc);
+	if likely(result == 0)
+		result = DeeSerial_XPutFuncPtr(writer, ADDROF(ft_close), self->ft_close);
+	if likely(result == 0)
+		result = DeeSerial_XPutFuncPtr(writer, ADDROF(ft_pread), self->ft_pread);
+	if likely(result == 0)
+		result = DeeSerial_XPutFuncPtr(writer, ADDROF(ft_pwrite), self->ft_pwrite);
+	if likely(result == 0)
+		result = DeeSerial_XPutFuncPtr(writer, ADDROF(ft_getc), self->ft_getc);
+	if likely(result == 0)
+		result = DeeSerial_XPutFuncPtr(writer, ADDROF(ft_ungetc), self->ft_ungetc);
+	if likely(result == 0)
+		result = DeeSerial_XPutFuncPtr(writer, ADDROF(ft_putc), self->ft_putc);
+	return result;
+#undef ADDROF
+}
+
 PRIVATE DeeTypeObject *tpconst filetype_mro[] = {
 	&DeeType_Type,
 	&DeeObject_Type,
@@ -1133,7 +1169,7 @@ PUBLIC DeeTypeObject DeeFileType_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO (only heap types, though) */
+			/* tp_serialize:   */ &filetype_serialize
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,

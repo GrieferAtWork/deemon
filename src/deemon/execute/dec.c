@@ -1764,38 +1764,9 @@ decwriter_appendobject(DeeDecWriter *__restrict self,
 	} else {
 		/* Figure out instance size (with support for slab allocators). */
 		int status;
-		size_t instance_size;
-		void (DCALL *tp_free)(void *__restrict ob);
-		tp_free = tp->tp_init.tp_alloc.tp_free;
-		if (tp_free == NULL) {
-			instance_size = tp->tp_init.tp_alloc.tp_instance_size;
-		} else {
-#ifdef CONFIG_NO_OBJECT_SLABS
+		size_t instance_size = DeeType_GetInstanceSize(tp);
+		if unlikely(!instance_size)
 			goto cannot_serialize;
-#else /* CONFIG_NO_OBJECT_SLABS */
-			if (tp->tp_flags & TP_FGC) {
-#define CHECK_ALLOCATOR(index, size)                          \
-				if (tp_free == &DeeGCObject_SlabFree##size) { \
-					instance_size = size * sizeof(void *);    \
-				} else
-				DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
-#undef CHECK_ALLOCATOR
-				{
-					goto cannot_serialize;
-				}
-			} else {
-#define CHECK_ALLOCATOR(index, size)                        \
-				if (tp_free == &DeeObject_SlabFree##size) { \
-					instance_size = size * sizeof(void *);  \
-				} else
-				DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
-#undef CHECK_ALLOCATOR
-				{
-					goto cannot_serialize;
-				}
-			}
-#endif /* !CONFIG_NO_OBJECT_SLABS */
-		}
 
 		/* Allocate buffer for object. */
 		out_addr = tp->tp_flags & TP_FGC
@@ -1842,6 +1813,7 @@ decwriter_putobject_ex(DeeDecWriter *__restrict self,
 	void **p_pointer;
 	DREF DeeModuleObject *mod;
 	ASSERT(Dee_SERADDR_ISOK(addrof_object));
+	ASSERT_OBJECT(obj);
 
 	/* Check if "obj" has already been written */
 	{
