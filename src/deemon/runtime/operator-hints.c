@@ -1473,14 +1473,29 @@ type_tno_tryset(DeeTypeObject const *__restrict self,
 				Dee_Free(new_table);
 				table = atomic_read((byte_t **)table);
 			} else {
-#ifndef NDEBUG
 				/* If the table was allocated for a static (non-heap) type,
 				 * then untrack it from the memory leak detector, since we
 				 * don't care that it (most definitely) won't be freed on
 				 * program exit. */
-				if (!(self->tp_flags & TP_FHEAP))
-					Dee_UntrackAlloc(new_table);
-#endif /* !NDEBUG */
+				if (!(self->tp_flags & TP_FHEAP)) {
+					new_table = (byte_t *)Dee_UntrackAlloc(new_table);
+					/* TODO: This leaks memory when "self" is statically allocated within a DEX module.
+					 *       When the module gets unloaded, "new_table" won't get free'd.
+					 *
+					 * Solution: Have an API "Dee_MallocStatic()" and "Dee_FreeStatic()" that take
+					 *           an extra "void const **p_target_addr" argument and bind the
+					 *           allocation to that module's lifetime. This only works for DEX
+					 *           modules (since DEE modules cannot contain *truely* static objects),
+					 *           and when the dex module is unloaded, all memory allocated using
+					 *           this API will be automatically free'd, and `*p_target_addr' of
+					 *           every call will be set to `NULL' (in order to restore what was
+					 *           presumably the original allocation state).
+					 *
+					 * The same also goes for pretty much all other instances where "Dee_UntrackAlloc"
+					 * is currently being used to suppress leak notifications with the argument of
+					 * the associated heap memory being meant for a dex module.
+					 */
+				}
 				table = new_table;
 			}
 			ASSERT(table);

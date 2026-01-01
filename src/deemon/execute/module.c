@@ -3190,7 +3190,7 @@ module_dex_destroy(DeeModuleObject *__restrict self) {
 	 *
 	 * FIXME: This is an O(N) operation where "N" is the number
 	 *        of member caches registered globally. Instead of
-	 *        having this cache be global, it should be per-module. */
+	 *        having this cache be global, it should be per-dex-module. */
 	Dee_membercache_clearall_of_module(self);
 
 #if 0
