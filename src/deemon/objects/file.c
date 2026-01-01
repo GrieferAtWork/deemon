@@ -2932,7 +2932,7 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 			/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_repr,
 			/* .tp_bool = */ NULL
 		},
-			/* .tp_visit         = */ NULL,
+		/* .tp_visit         = */ NULL,
 		/* .tp_gc            = */ NULL,
 		/* .tp_math          = */ &file_math,
 		/* .tp_cmp           = */ NULL,

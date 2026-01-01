@@ -263,7 +263,7 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
 			/* .tp_repr = */ NULL,
 			/* .tp_bool = */ NULL
 		},
-			/* .tp_visit         = */ NULL,
+		/* .tp_visit         = */ NULL,
 		/* .tp_gc            = */ NULL,
 		/* .tp_math          = */ NULL,
 		/* .tp_cmp           = */ NULL,
@@ -3240,7 +3240,7 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 			/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&sysfile_print,
 			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&sysfile_printrepr
 		},
-			/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&sysfile_visit,
+		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&sysfile_visit,
 		/* .tp_gc            = */ NULL,
 		/* .tp_math          = */ NULL,
 		/* .tp_cmp           = */ NULL,
@@ -3326,7 +3326,7 @@ PUBLIC DeeFileTypeObject DeeFSFile_Type = {
 			/* .tp_repr = */ NULL,
 			/* .tp_bool = */ NULL
 		},
-			/* .tp_visit         = */ NULL,
+		/* .tp_visit         = */ NULL,
 		/* .tp_gc            = */ NULL,
 		/* .tp_math          = */ NULL,
 		/* .tp_cmp           = */ NULL,

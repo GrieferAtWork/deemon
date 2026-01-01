@@ -326,7 +326,7 @@ INTERN DeePointerTypeObject DeePointer_Type = {
 			/* .tp_repr = */ NULL,
 			/* .tp_bool = */ NULL
 			},
-					/* .tp_visit         = */ NULL,
+			/* .tp_visit         = */ NULL,
 			/* .tp_gc            = */ NULL,
 			/* .tp_math          = */ NULL,
 			/* .tp_cmp           = */ NULL,
@@ -763,7 +763,7 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
 			/* .tp_repr = */ NULL,
 			/* .tp_bool = */ NULL
 			},
-					/* .tp_visit         = */ NULL,
+			/* .tp_visit         = */ NULL,
 			/* .tp_gc            = */ NULL,
 			/* .tp_math          = */ NULL,
 			/* .tp_cmp           = */ NULL,

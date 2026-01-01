@@ -30,9 +30,11 @@
 #include <deemon/format.h>
 #include <deemon/heap.h>
 #include <deemon/list.h>
+#include <deemon/method-hints.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/objmethod.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>
@@ -170,14 +172,53 @@ FS_DeeString_LessSTR(DeeStringObject *lhs,
  * dex module, and (when those bounds shouldn't be used), figure out how
  * we can ask the OS what module is located at some specific address. */
 
-#undef Dee_DEXBOUNDS_USE__GetModuleInformation
-#undef Dee_DEXBOUNDS_USE__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP
-#undef Dee_DEXBOUNDS_USE__dl_iterate_phdr
-#undef Dee_DEXBOUNDS_USE__xdlmodule_info
-#undef Dee_DEXATADDR_USE__GetModuleHandleExW
-#undef Dee_DEXATADDR_USE__dlgethandle
-#undef Dee_DEXATADDR_USE__dladdr1__RTLD_DL_LINKMAP
-#undef Dee_DEXATADDR_USE__dladdr__dli_fname
+/* Supported OS-APIs for getting an opaque identifier(IDENT) for the SHLIB at a specific address(ADDR) */
+#undef Dee_DEXATADDR_USE__GetModuleHandleExW       /* GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, ADDR, &IDENT) */
+#undef Dee_DEXATADDR_USE__dlgethandle              /* IDENT = dlgethandle(ADDR) */
+#undef Dee_DEXATADDR_USE__dladdr1__RTLD_DL_LINKMAP /* IDENT = dlgethandle(ADDR) */
+#undef Dee_DEXATADDR_USE__dladdr__dli_fname        /* dladdr(ADDR) -> IDENT = Dl_info::dli_fname */
+
+/* Supported OS-APIs for determining the bounds of a DEX module.
+ * If none of these are supported / work at runtime:
+ * - DEX modules are allowed to pre-initialize their module's `mo_minaddr' / `mo_maxaddr' fields
+ *   (as is the case when the dex module was built using a compiler/linker combo that supports
+ *   `CONFIG_HAVE___dex_start____AND___end'). If these fields are non-NULL and appear to make
+ *   sense (in regards to the module's "DEX" symbol), then `Dee_DEXBOUNDS_USE__*' isn't used at
+ *   all and the pre-set fields are taken as the truth
+ * - If the DEX does not pre-initialize `mo_minaddr' / `mo_maxaddr', and none of these methods
+ *   are supported / work at runtime, then:
+ *   - Try to determine the "IDENT" of the module from `Dee_DEXATADDR_USE__*' APIs above.
+ *     - If this works, use binary search on the host address space to determine the probable
+ *       bounds of the DEX module ("probable" because we might miss or fail to notice gaps in
+ *       the DEX SHLIB's memory map). As such, this binary search is only used to initialize
+ *       the module's `mo_minaddr' / `mo_maxaddr' fields since those can also be accessed
+ *       directly.
+ *     - At this, set the module's `_Dee_MODULE_FNOADDR' flag and insert the module into
+ *       "dex_byaddr_tree", which works somewhat different from "module_byaddr_tree", in
+ *       that it uses the `Dee_DEXATADDR_USE__*'-based `Dee_dexataddr_t' as its key.
+ *       This tree will still be searched by `DeeModule_OfPointer()', so it effectively
+ *       behaves the same as "module_byaddr_tree", and we're able to support configurations:
+ *       - Where system SHLIB memory mappings contain holes
+ *       - Where the system's SHLIB only allows `Dee_DEXATADDR_USE__*' to be implemented
+ *   - If none of the `Dee_DEXATADDR_USE__*' implementations are supported or work,
+ *     that is is rather unfortunate, but we still try to accommodate this case:
+ *     - In this case, `DeeModule_InitDexBounds_with_exports()' is used to initialize
+ *       `mo_minaddr' / `mo_maxaddr' using a best-effort approach by looking at the
+ *       bounds of everything pointed at by the module's "DEX" symbol.
+ *       The bounds determined using this method are then considered as truthy and are
+ *       the only qualification that will be usable to detect the module's bounds.
+ *
+ * NOTES:
+ * - The fallback `DeeModule_InitDexBounds_with_exports()' impl is VERY MUCH prone to failure
+ * - Both `Dee_DEXBOUNDS_USE__*' amd `Dee_DEXATADDR_USE__*' can deal with multiple implementations
+ *   being active at the same time. The more, the merrier (and the better the chance that get it
+ *   right), so as many implementations as possible should be active.
+ */
+#undef Dee_DEXBOUNDS_USE__GetModuleInformation /* GetModuleInformation(Dee_module_dexdata::mdx_handle) */
+#undef Dee_DEXBOUNDS_USE__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP /* dl_iterate_phdr -> dl_phdr_info::dlpi_addr == link_map::l_addr -> use PHDR bounds */
+#undef Dee_DEXBOUNDS_USE__dl_iterate_phdr      /* dl_iterate_phdr -> Find module with PHDRs containing dlsym("DEX") -> use PHDR bounds */
+#undef Dee_DEXBOUNDS_USE__xdlmodule_info       /* KOSmk3: xdlmodule_info */
+
 #ifdef DeeSystem_DlOpen_USE_LoadLibrary
 #ifdef CONFIG_HOST_WINDOWS
 #define Dee_DEXBOUNDS_USE__GetModuleInformation
@@ -421,7 +462,7 @@ PRIVATE LPGETMODULEINFORMATION DCALL get_GetModuleInformation(void) {
 			goto remember_result;
 		(void)FreeLibrary(hMod);
 	}
-	Dee_DPRINTF("ERROR: Unable to locate 'GetModuleInformation' in 'Kernel32.dll' or 'PsApi.dll': %R",
+	Dee_DPRINTF("[RT][dex] Warning: Unable to locate 'GetModuleInformation' in 'Kernel32.dll' or 'PsApi.dll': %R",
 	            DeeSystem_DlError());
 	result = (LPGETMODULEINFORMATION)(Dee_funptr_t)(uintptr_t)(void *)ITER_DONE;
 	atomic_write(&pdyn_GetModuleInformation, result);
@@ -432,26 +473,6 @@ remember_result:
 }
 #endif /* Dee_DEXBOUNDS_USE__GetModuleInformation */
 
-#if 0 /* TODO */
-
-/* Initialize "mod->mo_minaddr" / "mod->mo_maxaddr" */
-PRIVATE void DCALL
-dex_initialize_loadbounds(DeeModuleObject *__restrict mod) {
-#if (defined(Dee_DEXBOUNDS_USE__dl_iterate_phdr) || \
-     defined(Dee_DEXBOUNDS_USE__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP))
-	mod->mo_minaddr = (byte_t const *)-1;
-	mod->mo_maxaddr = (byte_t const *)0;
-	(void)dl_iterate_phdr(&initialize_dexdata_minmax_iterate_cb, (void *)mod);
-	if unlikely(mod->mo_minaddr > mod->mo_maxaddr) {
-		Dee_DPRINTF("ERROR: Failed to dl_iterate_phdr()-find module %q", mod->mo_absname);
-		dex_initialize_loadbounds_by_exported_objects(mod);
-	}
-#endif /* Dee_DEXBOUNDS_USE__dl_iterate_phdr || Dee_DEXBOUNDS_USE__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP */
-
-#ifdef Dee_DEXBOUNDS_USE__xdlmodule_info
-#endif /* Dee_DEXBOUNDS_USE__xdlmodule_info */
-}
-#endif
 
 
 #undef HAVE_DeeModule_InitDexBounds
@@ -552,6 +573,7 @@ DeeModule_InitDexBounds(DeeModuleObject *__restrict self) {
 	if (pGetModuleInformation) {
 		BOOL bOk;
 		NT_MODULEINFO modinfo;
+		bzero(&modinfo, sizeof(modinfo));
 		DBG_ALIGNMENT_DISABLE();
 		bOk = (*get_GetModuleInformation())(GetCurrentProcess(),
 		                                    self->mo_moddata.mo_dexdata->mdx_handle,
@@ -559,13 +581,14 @@ DeeModule_InitDexBounds(DeeModuleObject *__restrict self) {
 		if (!bOk) {
 			DWORD dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			Dee_DPRINTF("[RT] Warning: Failed to GetModuleInformation() for module %q: %u",
+			Dee_DPRINTF("[RT][dex] Warning: Failed to GetModuleInformation() for module %q: %u",
 			            self->mo_absname, (unsigned int)dwError);
 		} else {
 			DBG_ALIGNMENT_ENABLE();
 			self->mo_minaddr = (byte_t const *)modinfo.lpBaseOfDll;
 			self->mo_maxaddr = (byte_t const *)modinfo.lpBaseOfDll + modinfo.SizeOfImage - 1;
-			return true;
+			if (self->mo_minaddr < self->mo_maxaddr)
+				return true;
 		}
 	}
 #endif /* Dee_DEXBOUNDS_USE__GetModuleInformation */
@@ -583,7 +606,7 @@ DeeModule_InitDexBounds(DeeModuleObject *__restrict self) {
 			(void)dl_iterate_phdr(&initialize_dexdata_minmax_iterate_with_linkmap_cb, (void *)&data);
 			if likely(self->mo_minaddr <= self->mo_maxaddr)
 				return true;
-			Dee_DPRINTF("[RT] Warning: Failed to dl_iterate_phdr()-with-link_map-find module %q", self->mo_absname);
+			Dee_DPRINTF("[RT][dex] Warning: Failed to dl_iterate_phdr()-with-link_map-find module %q", self->mo_absname);
 		}
 	}
 #endif /* Dee_DEXBOUNDS_USE__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP */
@@ -594,14 +617,14 @@ DeeModule_InitDexBounds(DeeModuleObject *__restrict self) {
 	(void)dl_iterate_phdr(&initialize_dexdata_minmax_iterate_cb, (void *)self);
 	if likely(self->mo_minaddr <= self->mo_maxaddr)
 		return true;
-	Dee_DPRINTF("[RT] Warning: Failed to dl_iterate_phdr()-find module %q", self->mo_absname);
+	Dee_DPRINTF("[RT][dex] Warning: Failed to dl_iterate_phdr()-find module %q", self->mo_absname);
 #endif /* Dee_DEXBOUNDS_USE__dl_iterate_phdr */
 
 #ifdef Dee_DEXBOUNDS_USE__xdlmodule_info
 	{
 		struct module_basic_info info;
 		if (xdlmodule_info(self->mdx_handle, MODULE_INFO_CLASS_BASIC, &info, sizeof(info)) < sizeof(info)) {
-			Dee_DPRINTF("[RT] Warning: Failed to xdlmodule_info() for module %q", self->mo_absname);
+			Dee_DPRINTF("[RT][dex] Warning: Failed to xdlmodule_info() for module %q", self->mo_absname);
 		} else {
 			self->mo_minaddr = (byte_t const *)info.mi_segstart;
 			self->mo_maxaddr = (byte_t const *)info.mi_segend - 1;
@@ -623,11 +646,11 @@ DeeModule_InitDexBounds_with_dexataddr(DeeModuleObject *__restrict self,
                                        Dee_dexataddr_t const *__restrict ref) {
 	Dee_dexataddr_t check;
 	byte_t *minaddr_lo, *minaddr_hi;
-	byte_t *maxaddr_lo, *maxaddr_hi;
+	byte_t *endaddr_lo, *endaddr_hi;
 	minaddr_lo = (byte_t *)0;
 	minaddr_hi = (byte_t *)self;
 	while (minaddr_lo < minaddr_hi) {
-		byte_t *mid = minaddr_lo + (minaddr_hi - minaddr_lo) / 2;
+		byte_t *mid = minaddr_lo + (size_t)(minaddr_hi - minaddr_lo) / 2;
 		if (Dee_dexataddr_init_fromaddr(&check, mid) &&
 		    Dee_dexataddr_compare(ref, &check) == 0) {
 			minaddr_hi = mid;
@@ -636,94 +659,27 @@ DeeModule_InitDexBounds_with_dexataddr(DeeModuleObject *__restrict self,
 		}
 	}
 
-	maxaddr_lo = (byte_t *)(self + 1);
-	maxaddr_hi = (byte_t *)-1;
-	while (maxaddr_lo < maxaddr_hi) {
-		byte_t *mid = maxaddr_lo + (maxaddr_hi - maxaddr_lo) / 2;
+	endaddr_lo = (byte_t *)self + offsetof(DeeModuleObject, mo_globalv) +
+	             ((size_t)self->mo_globalc * sizeof(DeeObject *));
+	endaddr_hi = (byte_t *)-1; /* Technically should +1 of this, but that's impossible */
+	while (endaddr_lo < endaddr_hi) {
+		byte_t *mid = endaddr_lo + (size_t)(endaddr_hi - endaddr_lo) / 2;
 		if (Dee_dexataddr_init_fromaddr(&check, mid) &&
 		    Dee_dexataddr_compare(ref, &check) == 0) {
-			maxaddr_lo = mid + 1;
+			endaddr_lo = mid + 1;
 		} else {
-			maxaddr_hi = mid;
+			endaddr_hi = mid;
 		}
 	}
 
-	if (minaddr_hi < maxaddr_lo) {
+	if (minaddr_hi < endaddr_lo) {
 		self->mo_minaddr = minaddr_hi;
-		self->mo_maxaddr = maxaddr_lo;
+		self->mo_maxaddr = endaddr_lo - 1;
 		return true;
 	}
 	return false;
 }
 #endif /* HAVE_Dee_dexataddr_t */
-
-struct dexrange {
-	byte_t *dr_minaddr;
-	byte_t *dr_maxaddr;
-};
-
-PRIVATE NONNULL((1)) void DCALL
-dexrange_union(struct dexrange *__restrict self,
-               void const *addr, size_t num_bytes) {
-	byte_t *extra_minaddr = (byte_t *)addr;
-	byte_t *extra_maxaddr = extra_minaddr + num_bytes - 1;
-	if (self->dr_minaddr > extra_minaddr)
-		self->dr_minaddr = extra_minaddr;
-	if (self->dr_maxaddr > extra_maxaddr)
-		self->dr_maxaddr = extra_maxaddr;
-}
-
-/* Fallback function used to calculate dex bounds using the dex module's export table */
-PRIVATE NONNULL((1)) void DCALL
-DeeModule_InitDexBounds_with_exports(DeeModuleObject *__restrict self) {
-	uint16_t i;
-	struct dexrange range;
-	struct Dee_module_dexdata *dd = self->mo_moddata.mo_dexdata;
-	struct Dee_dex_symbol const *exports;
-	range.dr_minaddr = (byte_t *)(self);
-	range.dr_maxaddr = (byte_t *)(self + 1);
-	dexrange_union(&range, dd, sizeof(*dd));
-	exports = dd->mdx_export;
-	if (exports) {
-		dexrange_union(&range, exports, self->mo_globalc * sizeof(struct Dee_dex_symbol));
-		for (i = 0; i < self->mo_globalc; ++i) {
-			struct Dee_dex_symbol const *sym = &exports[i];
-			if (sym->ds_name)
-				dexrange_union(&range, sym->ds_name, (strlen(sym->ds_name) + 1) * sizeof(char));
-			if (sym->ds_doc)
-				dexrange_union(&range, sym->ds_doc, (strlen(sym->ds_doc) + 1) * sizeof(char));
-			if (sym->ds_obj) {
-				DeeObject *obj = sym->ds_obj;
-				size_t size = DeeType_GetInstanceSize(Dee_TYPE(obj));
-				if (size == 0)
-					size = sizeof(DeeObject);
-				dexrange_union(&range, obj, size);
-			}
-		}
-	}
-	if (self->mo_bucketv) {
-		struct Dee_module_symbol *buckets = self->mo_bucketv;
-		dexrange_union(&range, buckets, (self->mo_bucketm + 1) * sizeof(struct Dee_module_symbol));
-		for (i = 0; i <= self->mo_bucketm; ++i) {
-			struct Dee_module_symbol *sym = &buckets[i];
-			if (sym->ss_name)
-				dexrange_union(&range, sym->ss_name, (strlen(sym->ss_name) + 1) * sizeof(char));
-			if (sym->ss_doc)
-				dexrange_union(&range, sym->ss_doc, (strlen(sym->ss_doc) + 1) * sizeof(char));
-		}
-	}
-	for (i = 0; i < self->mo_globalc; ++i) {
-		DeeObject *obj = self->mo_globalv[i];
-		if (obj) {
-			size_t size = DeeType_GetInstanceSize(Dee_TYPE(obj));
-			if (size == 0)
-				size = sizeof(DeeObject);
-			dexrange_union(&range, obj, size);
-		}
-	}
-	self->mo_minaddr = range.dr_minaddr;
-	self->mo_maxaddr = range.dr_maxaddr;
-}
 
 
 DECL_END
@@ -926,6 +882,344 @@ DECL_BEGIN
 
 
 
+struct dexrange {
+	byte_t          *dr_minaddr;
+	byte_t          *dr_maxaddr;
+	DeeModuleObject *dr_mod;
+};
+
+#undef DEXRANGE_DEBUG
+#if !defined(NDEBUG) && 1
+#define DEXRANGE_DEBUG
+#endif
+
+PRIVATE NONNULL((1)) void DCALL
+dexrange_union(struct dexrange *__restrict self,
+               void const *addr, size_t num_bytes) {
+	byte_t *extra_minaddr = (byte_t *)addr;
+	byte_t *extra_maxaddr = extra_minaddr + num_bytes - 1;
+#ifndef NDEBUG
+	if (self->dr_mod != &DeeModule_Deemon) {
+		DeeModuleObject *existing;
+		existing = module_byaddr_rlocate(module_byaddr_tree, extra_minaddr, extra_maxaddr);
+		ASSERTF(!existing, "Unexpected overlap at %p-%p with %p-%p from %q",
+		        extra_minaddr, extra_maxaddr,
+		        existing->mo_minaddr, existing->mo_maxaddr,
+		        existing->mo_absname);
+	}
+#endif /* !NDEBUG */
+#ifdef DEXRANGE_DEBUG
+	if (self->dr_minaddr > extra_minaddr || self->dr_maxaddr < extra_maxaddr)
+		Dee_DPRINTF("DEBUG: %q: Add range %p-%p\n", self->dr_mod->mo_absname, extra_minaddr, extra_maxaddr);
+#endif /* DEXRANGE_DEBUG */
+	if (self->dr_minaddr > extra_minaddr)
+		self->dr_minaddr = extra_minaddr;
+	if (self->dr_maxaddr < extra_maxaddr)
+		self->dr_maxaddr = extra_maxaddr;
+}
+
+PRIVATE NONNULL((1)) bool DCALL
+dexrange_tryunion(struct dexrange *__restrict self,
+                  void const *addr, size_t num_bytes) {
+	if (self->dr_mod != &DeeModule_Deemon) {
+		byte_t *extra_minaddr = (byte_t *)addr;
+		byte_t *extra_maxaddr = extra_minaddr + num_bytes - 1;
+		if (module_byaddr_rlocate(module_byaddr_tree, extra_minaddr, extra_maxaddr))
+			return false;
+	}
+	dexrange_union(self, addr, num_bytes);
+	return true;
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+dexrange_union_cstr(struct dexrange *__restrict self, char const *cstr) {
+	dexrange_union(self, cstr, (strlen(cstr) + 1) * sizeof(char));
+}
+
+PRIVATE NONNULL((1)) void DCALL
+dexrange_union_cstr_opt(struct dexrange *__restrict self, char const *cstr) {
+	if (cstr != NULL)
+		dexrange_union_cstr(self, cstr);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+dexrange_union_funcptr(struct dexrange *__restrict self, Dee_funptr_t ptr) {
+	/* Many operators can **always** be implementing using exports from the
+	 * demeon core. As such, always check that "ptr" isn't already part of
+	 * another module. */
+	if (self->dr_mod != &DeeModule_Deemon) {
+		if (module_byaddr_locate(module_byaddr_tree, (byte_t *)(void const *)ptr))
+			return; /* Skip if known to be part of a different module */
+	}
+#ifdef DEXRANGE_DEBUG
+	if (self->dr_minaddr > (byte_t *)(void const *)ptr || self->dr_maxaddr < (byte_t *)(void const *)ptr)
+		Dee_DPRINTF("DEBUG: %q: Add range %p\n", self->dr_mod->mo_absname, ptr);
+#endif /* DEXRANGE_DEBUG */
+	if (self->dr_minaddr > (byte_t *)(void const *)ptr)
+		self->dr_minaddr = (byte_t *)(void const *)ptr;
+	if (self->dr_maxaddr < (byte_t *)(void const *)ptr)
+		self->dr_maxaddr = (byte_t *)(void const *)ptr;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+dexrange_union_funcptr_opt(struct dexrange *__restrict self, Dee_funptr_t ptr) {
+	if (ptr != NULL)
+		dexrange_union_funcptr(self, ptr);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+dexrange_union_object_r(DeeObject *__restrict ob, void *arg);
+
+PRIVATE NONNULL((1, 2)) void DCALL
+dexrange_union_vtable(struct dexrange *self, void const *vt, size_t sizeof_vt) {
+	/* The deemon core exports some V-tables (like "DeeObject_GenericCmpByAddr"),
+	 * so don't enumerate vtable contents of the vtable itself is known to be
+	 * part of another module. */
+	if (dexrange_tryunion(self, vt, sizeof_vt)) {
+		size_t i;
+		Dee_funptr_t const *vtable = (Dee_funptr_t const *)vt;
+		for (i = 0; i < sizeof_vt; i += sizeof(Dee_funptr_t), ++vtable)
+			dexrange_union_funcptr_opt(self, *vtable);
+	}
+}
+
+PRIVATE NONNULL((1)) void DCALL
+dexrange_union_vtable_opt(struct dexrange *self, void const *vt, size_t sizeof_vt) {
+	if (vt != NULL)
+		dexrange_union_vtable(self, vt, sizeof_vt);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+dexrange_union_type_method(struct dexrange *self, struct type_method const *method) {
+	dexrange_union_cstr(self, method->m_name);
+	dexrange_union_cstr_opt(self, method->m_doc);
+	dexrange_union_funcptr(self, (Dee_funptr_t)method->m_func);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+dexrange_union_type_getset(struct dexrange *self, struct type_getset const *getset) {
+	dexrange_union_cstr(self, getset->gs_name);
+	dexrange_union_cstr_opt(self, getset->gs_doc);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)getset->gs_get);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)getset->gs_del);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)getset->gs_set);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)getset->gs_bound);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+dexrange_union_type_member(struct dexrange *self, struct type_member const *member) {
+	dexrange_union_cstr(self, member->m_name);
+	dexrange_union_cstr_opt(self, member->m_doc);
+	if (Dee_TYPE_MEMBER_ISCONST(member))
+		dexrange_union_object_r(member->m_desc.md_const, self);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+dexrange_union_type_method_hint(struct dexrange *self, struct type_method_hint const *method_hint) {
+	dexrange_union_funcptr(self, method_hint->tmh_func);
+}
+
+PRIVATE NONNULL((1)) void DCALL
+dexrange_union_type_methods_opt(struct dexrange *self, struct type_method const *methods) {
+	if (methods) {
+		size_t i;
+		for (i = 0; methods[i].m_name; ++i)
+			dexrange_union_type_method(self, &methods[i]);
+		dexrange_union(self, methods, i * sizeof(*methods));
+	}
+}
+
+PRIVATE NONNULL((1)) void DCALL
+dexrange_union_type_getsets_opt(struct dexrange *self, struct type_getset const *getsets) {
+	if (getsets) {
+		size_t i;
+		for (i = 0; getsets[i].gs_name; ++i)
+			dexrange_union_type_getset(self, &getsets[i]);
+		dexrange_union(self, getsets, i * sizeof(*getsets));
+	}
+}
+
+PRIVATE NONNULL((1)) void DCALL
+dexrange_union_type_members_opt(struct dexrange *self, struct type_member const *members) {
+	if (members) {
+		size_t i;
+		for (i = 0; members[i].m_name; ++i)
+			dexrange_union_type_member(self, &members[i]);
+		dexrange_union(self, members, i * sizeof(*members));
+	}
+}
+
+PRIVATE NONNULL((1)) void DCALL
+dexrange_union_type_method_hints_opt(struct dexrange *self, struct type_method_hint const *method_hints) {
+	if (method_hints) {
+		size_t i;
+		for (i = 0; method_hints[i].tmh_func; ++i)
+			dexrange_union_type_method_hint(self, &method_hints[i]);
+		dexrange_union(self, method_hints, i * sizeof(*method_hints));
+	}
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+dexrange_union_typeobject(DeeTypeObject *tp, struct dexrange *self) {
+	dexrange_union_cstr_opt(self, tp->tp_name);
+	dexrange_union_cstr_opt(self, tp->tp_doc);
+	if (tp->tp_base)
+		dexrange_union_object_r(Dee_AsObject(tp->tp_base), self);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_alloc.tp_ctor);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_alloc.tp_copy_ctor);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_alloc.tp_deep_ctor);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_alloc.tp_any_ctor);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_alloc.tp_any_ctor_kw);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_alloc.tp_serialize);
+	if (tp->tp_init.tp_alloc.tp_free) {
+		dexrange_union_funcptr(self, (Dee_funptr_t)tp->tp_init.tp_alloc.tp_free);
+		dexrange_union_funcptr(self, (Dee_funptr_t)tp->tp_init.tp_alloc.tp_alloc);
+	}
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_dtor);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_assign);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_move_assign);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_deepload);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_destroy);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_cast.tp_str);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_cast.tp_repr);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_cast.tp_bool);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_cast.tp_print);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_cast.tp_printrepr);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_visit);
+	dexrange_union_vtable_opt(self, tp->tp_gc, sizeof(*tp->tp_gc));
+	dexrange_union_vtable_opt(self, tp->tp_math, sizeof(*tp->tp_math));
+	dexrange_union_vtable_opt(self, tp->tp_cmp, sizeof(*tp->tp_cmp));
+	dexrange_union_vtable_opt(self, tp->tp_seq, sizeof(*tp->tp_seq));
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_iter_next);
+	dexrange_union_vtable_opt(self, tp->tp_iterator, sizeof(*tp->tp_iterator));
+	dexrange_union_vtable_opt(self, tp->tp_attr, sizeof(*tp->tp_attr));
+	dexrange_union_vtable_opt(self, tp->tp_with, sizeof(*tp->tp_with));
+	if (tp->tp_buffer) {
+		dexrange_union(self, tp->tp_buffer, sizeof(*tp->tp_buffer));
+		dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_buffer->tp_getbuf);
+	}
+	dexrange_union_type_methods_opt(self, tp->tp_methods);
+	dexrange_union_type_getsets_opt(self, tp->tp_getsets);
+	dexrange_union_type_members_opt(self, tp->tp_members);
+	dexrange_union_type_methods_opt(self, tp->tp_class_methods);
+	dexrange_union_type_getsets_opt(self, tp->tp_class_getsets);
+	dexrange_union_type_members_opt(self, tp->tp_class_members);
+	dexrange_union_type_method_hints_opt(self, tp->tp_method_hints);
+	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_call);
+	dexrange_union_vtable_opt(self, tp->tp_callable, sizeof(*tp->tp_callable));
+	if (tp->tp_operators_size)
+		dexrange_union(self, tp->tp_operators, tp->tp_operators_size * sizeof(*tp->tp_operators));
+}
+
+PRIVATE ATTR_NOINLINE NONNULL((1, 2)) void DCALL
+dexrange_union_object(DeeObject *__restrict ob, void *arg) {
+	size_t instance_size;
+	DeeTypeObject *tp;
+	struct dexrange *me = (struct dexrange *)arg;
+	if (me->dr_mod != &DeeModule_Deemon) {
+		if (module_byaddr_locate(module_byaddr_tree, (byte_t *)ob))
+			return; /* Skip if known to be part of a different module */
+	}
+	instance_size = DeeType_GetInstanceSize(Dee_TYPE(ob));
+	if (instance_size == 0)
+		instance_size = sizeof(DeeObject);
+	dexrange_union(me, ob, instance_size);
+
+	/* Special handling for certain types that are often exported from DEX modules. */
+	tp = Dee_TYPE(ob);
+	if (tp == &DeeCMethod_Type || tp == &DeeCMethod0_Type ||
+	    tp == &DeeCMethod1_Type || tp == &DeeKwCMethod_Type) {
+		DeeCMethodObject *obj = (DeeCMethodObject *)ob;
+		dexrange_union_funcptr(me, (Dee_funptr_t)obj->cm_func.cmf_meth);
+	} else if (DeeType_IsTypeType(tp)) {
+		dexrange_union_typeobject((DeeTypeObject *)ob, me);
+	} else if (DeeType_Extends(tp, &DeeModule_Type)) {
+		/* Skip... */
+	} else {
+		/* Recursively visit other (sub-)objects reachable from "ob"
+		 * However, do so using "dexrange_union_object_r" to prevent
+		 * recursion if the object's range was already visited.
+		 *
+		 * This is actually not a very good way to do this. We might
+		 * get better results if we used "dexrange_union_object" and
+		 * had an address-set to keep track of already-visited objects:
+		 * For 3 objects laid out as "A B C D", with only "A" and "C"
+		 * exported from the DEX, and pointers C->B->D, we won't be
+		 * able to find "D" since we won't visit "B", because it is
+		 * already fully contained with the address-range previously
+		 * set-up by "A" and "C".
+		 *
+		 * But since this whole idea of looking at module exports to
+		 * get ~some~ idea of the associated module's boundaries is
+		 * already a wholly flawed approach (there can **always** be
+		 * pointers we missed and thus didn't associated with that
+		 * module), this is "good enough" for a fallback mechanism.
+		 *
+		 * Because in general: there should always be some OS-specific
+		 * was to determine which module some pointer is associated
+		 * with, which is all we need to not have to get here. */
+		DeeObject_Visit(ob, &dexrange_union_object_r, me);
+	}
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+dexrange_union_object_r(DeeObject *__restrict ob, void *arg) {
+	struct dexrange *me = (struct dexrange *)arg;
+	if ((byte_t *)ob >= me->dr_minaddr &&
+	    (byte_t *)ob <= me->dr_maxaddr)
+		return; /* Already tracked... */
+	dexrange_union_object(ob, me);
+}
+
+PRIVATE NONNULL((2)) void DCALL
+dexrange_union_object_opt(DeeObject *ob, void *arg) {
+	if (ob != NULL)
+		dexrange_union_object(ob, arg);
+}
+
+
+/* Fallback function used to calculate dex bounds using the dex module's export table */
+PRIVATE NONNULL((1)) void DCALL
+DeeModule_InitDexBounds_with_exports(DeeModuleObject *__restrict self) {
+	uint16_t i;
+	struct dexrange range;
+	struct Dee_module_dexdata *dd = self->mo_moddata.mo_dexdata;
+	struct Dee_dex_symbol const *exports;
+	range.dr_minaddr = (byte_t *)self;
+	range.dr_maxaddr = (byte_t *)self + offsetof(DeeModuleObject, mo_globalv) +
+	                   ((size_t)self->mo_globalc * sizeof(DeeObject *)) - 1;
+#ifdef DEXRANGE_DEBUG
+	Dee_DPRINTF("DEBUG: %q: Add range %p-%p\n", self->mo_absname, range.dr_minaddr, range.dr_maxaddr);
+#endif /* DEXRANGE_DEBUG */
+	range.dr_mod = self;
+	dexrange_union(&range, dd, sizeof(*dd));
+	exports = dd->mdx_export;
+	if (exports) {
+		dexrange_union(&range, exports, self->mo_globalc * sizeof(struct Dee_dex_symbol));
+		for (i = 0; i < self->mo_globalc; ++i) {
+			struct Dee_dex_symbol const *sym = &exports[i];
+			dexrange_union_cstr_opt(&range, sym->ds_name);
+			dexrange_union_cstr_opt(&range, sym->ds_doc);
+			dexrange_union_object_opt(sym->ds_obj, &range);
+		}
+	}
+	if (self->mo_bucketv) {
+		struct Dee_module_symbol *buckets = self->mo_bucketv;
+		dexrange_union(&range, buckets, (self->mo_bucketm + 1) * sizeof(struct Dee_module_symbol));
+		for (i = 0; i <= self->mo_bucketm; ++i) {
+			struct Dee_module_symbol *sym = &buckets[i];
+			dexrange_union_cstr_opt(&range, sym->ss_name);
+			dexrange_union_cstr_opt(&range, sym->ss_doc);
+		}
+	}
+	for (i = 0; i < self->mo_globalc; ++i)
+		dexrange_union_object_opt(self->mo_globalv[i], &range);
+	self->mo_minaddr = range.dr_minaddr;
+	self->mo_maxaddr = range.dr_maxaddr;
+}
+
+
+
 /* Dex data for the deemon core. */
 #undef deemon_dexdata__mdx_module__IS_STATIC
 #if defined(DeeSystem_DlOpen_USE_LoadLibrary) && defined(__PE__) && defined(_MSC_VER)
@@ -996,15 +1290,24 @@ module_byaddr_ensure_initialized_impl(void) {
 
 	/* Load different sub-components */
 	if (!DeeModule_InitDexBounds(&DeeModule_Deemon)) {
+#ifdef HAVE_Dee_dexataddr_t
 		struct Dee_module_dexinfo *p_deemon_dexinfo = Dee_module_dexdata__getinfo(&deemon_dexdata);
 		if (Dee_dexataddr_init_fromaddr(&p_deemon_dexinfo->ddi_ataddr, &DeeModule_Deemon)) {
 			DeeModule_Deemon.mo_flags |= _Dee_MODULE_FNOADDR;
 			if (!DeeModule_InitDexBounds_with_dexataddr(&DeeModule_Deemon,
 			                                            &p_deemon_dexinfo->ddi_ataddr))
 				goto load_from_export_table;
-		} else {
+		} else
+#endif /* HAVE_Dee_dexataddr_t */
+		{
+#ifdef HAVE_Dee_dexataddr_t
 load_from_export_table:
+#endif /* HAVE_Dee_dexataddr_t */
 			DeeModule_InitDexBounds_with_exports(&DeeModule_Deemon);
+			Dee_DPRINTF("[RT][dex] Warning: Unable to determine load range or byaddr info "
+			            /**/ "for deemon core. Using address range %p-%p obtained "
+			            /**/ "from scan of module exports\n",
+			            DeeModule_Deemon.mo_minaddr, DeeModule_Deemon.mo_maxaddr);
 		}
 	}
 
@@ -1012,10 +1315,14 @@ load_from_export_table:
 #ifdef HAVE_Dee_dexataddr_t
 	if (DeeModule_Deemon.mo_flags & _Dee_MODULE_FNOADDR) {
 		dex_byaddr_tree = &DeeModule_Deemon;
+		Dee_DPRINTF("[RT][dex] Add deemon core. Exposed address range is %p-%p\n",
+		            DeeModule_Deemon.mo_minaddr, DeeModule_Deemon.mo_maxaddr);
 	} else
 #endif /* HAVE_Dee_dexataddr_t */
 	{
 		module_byaddr_tree = &DeeModule_Deemon;
+		Dee_DPRINTF("[RT][dex] Add deemon core at %p-%p\n",
+		            DeeModule_Deemon.mo_minaddr, DeeModule_Deemon.mo_maxaddr);
 	}
 }
 #endif /* !HAVE_module_byaddr_tree_STATIC_INIT */
@@ -1120,6 +1427,12 @@ again_acquire_locks:
 	existing_module = module_byaddr_locate(module_byaddr_tree, (byte_t *)dex);
 	if (existing_module) {
 		if (Dee_IncrefIfNotZero(existing_module)) {
+			Dee_DPRINTF("[RT][dex] Warning: Found existing module %q at %p-%p overlapping with "
+			            /**/ "\"DEX\" symbol of %q at %p. This is very weird a probably a bug\n",
+			            existing_module->mo_absname,
+			            existing_module->mo_minaddr,
+			            existing_module->mo_maxaddr,
+			            absname, dex);
 handle_existing_module:
 			LOCAL_unlock();
 #ifdef Dee_module_dexinfo_alloc
@@ -1190,9 +1503,9 @@ handle_existing_module:
 #endif /* HAVE_Dee_dexataddr_t */
 	} else {
 		DeeModule_InitDexBounds_with_exports(result);
-		Dee_DPRINTF("[RT] Warning: Unable to determine load range or byaddr info "
+		Dee_DPRINTF("[RT][dex] Warning: Unable to determine load range or byaddr info "
 		            /**/ "for DEX module %q. Using address range %p-%p obtained "
-		            /**/ "from scan of module exports",
+		            /**/ "from scan of module exports\n",
 		            absname, result->mo_minaddr, result->mo_maxaddr);
 	}
 
@@ -1230,7 +1543,8 @@ handle_existing_module:
 			Dee_Incref(existing_module);
 			goto handle_existing_module;
 		}
-		Dee_DPRINTF("[RT] Add dex module: %q\n", absname);
+		Dee_DPRINTF("[RT][dex] Add dex module: %q. Exposed address range is %p-%p\n",
+		            absname, result->mo_minaddr, result->mo_maxaddr);
 		dex_byaddr_insert(&dex_byaddr_tree, result);
 	} else
 #endif /* HAVE_Dee_dexataddr_t */
@@ -1239,11 +1553,18 @@ handle_existing_module:
 		                                        result->mo_minaddr,
 		                                        result->mo_maxaddr);
 		if unlikely(existing_module) {
-			if (Dee_IncrefIfNotZero(existing_module))
+			if (Dee_IncrefIfNotZero(existing_module)) {
+				Dee_DPRINTF("[RT][dex] Warning: Found existing module %q at %p-%p overlapping "
+				            /**/ "with %q at %p-%p. This is very weird a probably a bug\n",
+				            existing_module->mo_absname,
+				            existing_module->mo_minaddr,
+				            existing_module->mo_maxaddr,
+				            absname, result->mo_minaddr, result->mo_maxaddr);
 				goto handle_existing_module;
+			}
 			module_byaddr_removenode(&module_byaddr_tree, existing_module);
 		}
-		Dee_DPRINTF("[RT] Add dex module at %p-%p: %q\n",
+		Dee_DPRINTF("[RT][dex] Add dex module at %p-%p: %q\n",
 		            result->mo_minaddr, result->mo_maxaddr, absname);
 		module_byaddr_insert(&module_byaddr_tree, result);
 
@@ -1605,10 +1926,14 @@ module_unbind(DeeModuleObject *__restrict self) {
 		module_libtree_lock_endwrite();
 		iter = &self->mo_libname;
 		Dee_Decref(iter->mle_name);
-		while ((iter = iter->mle_next) != NULL) {
+		iter = iter->mle_next;
+		while (iter) {
+			struct Dee_module_libentry *next;
 			ASSERT(Dee_module_libentry_getmodule(iter) == self);
+			next = iter->mle_next;
 			Dee_Decref(iter->mle_name);
 			Dee_module_libentry_free(iter);
+			iter = next;
 		}
 	}
 }
