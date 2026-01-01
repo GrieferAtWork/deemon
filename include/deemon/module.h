@@ -552,15 +552,9 @@ struct Dee_module_object {
 	/* End of common data (the following fields don't exist for DeeModuleDir_Type-type modules) */
 	union Dee_module_moddata                  mo_moddata;  /* Module-type-specific data */
 	DREF DeeModuleObject              *const *mo_importv;  /* [1..1][const][0..mo_importc][const][owned] Vector of other modules imported by this one. */
-#if !defined(CONFIG_NO_DEC) || !defined(CONFIG_NO_DEX)
-	/* The by-address tree is used by:
-	 * - !CONFIG_NO_DEX: (always, but different tree than by !CONFIG_NO_DEC
-	 *                    if `#ifndef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS')
-	 * - !CONFIG_NO_DEC: #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC */
 	__BYTE_TYPE__ const                      *mo_minaddr;  /* [const] Min address of memory mapped by this module */
 	__BYTE_TYPE__ const                      *mo_maxaddr;  /* [const] Max address of memory mapped by this module */
 	struct Dee_module_treenode                mo_adrnode;  /* [lock(INTERNAL(module_byaddr_lock))] Node in by-address tree */
-#endif /* !CONFIG_NO_DEC || !CONFIG_NO_DEX */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, mo_globalv); /* [0..1][lock(mo_globalv)][mo_globalc] Globals of this module */
 };
 

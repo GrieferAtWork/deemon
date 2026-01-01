@@ -2560,32 +2560,13 @@ PRIVATE struct type_getset tpconst module_dee_getsets[] = {
 	TYPE_GETSET_END
 };
 
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 #define module_dee_members module_addr_members
-#define NEED_module_addr_members
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-
-#ifdef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
 #define module_dex_members module_addr_members
-#define NEED_module_addr_members
-#endif /* Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS */
-
-#ifndef module_dee_members
-#define module_dee_members NULL
-#endif /* !module_dee_members */
-#ifndef module_dex_members
-#define module_dex_members NULL
-#endif /* !module_dex_members */
-
-#ifdef NEED_module_addr_members
-#undef NEED_module_addr_members
 PRIVATE struct type_member tpconst module_addr_members[] = {
 	TYPE_MEMBER_FIELD("__minaddr__", STRUCT_UINTPTR_T | STRUCT_CONST, offsetof(DeeModuleObject, mo_minaddr)),
 	TYPE_MEMBER_FIELD("__maxaddr__", STRUCT_UINTPTR_T | STRUCT_CONST, offsetof(DeeModuleObject, mo_maxaddr)),
 	TYPE_MEMBER_END
 };
-#endif /* NEED_module_addr_members */
-
 #endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES

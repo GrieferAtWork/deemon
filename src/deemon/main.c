@@ -26,10 +26,6 @@
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
 
-#ifdef CONFIG_HAVE_CRTDBG_H
-#include <crtdbg.h>
-#endif /* CONFIG_HAVE_CRTDBG_H */
-
 #include <deemon/compiler/compiler.h>
 
 #include <deemon/alloc.h>
@@ -71,6 +67,19 @@
 /**/
 #include <stddef.h> /* offsetof */
 #include <stdint.h> /* uint8_t */
+
+#ifdef CONFIG_NO_CRTDBG_H
+#undef CONFIG_HAVE_CRTDBG_H
+#elif (!defined(CONFIG_HAVE_CRTDBG_H) && \
+       (__has_include(<crtdbg.h>) ||     \
+        (defined(__NO_has_include) &&    \
+         (defined(_MSC_VER) || defined(__KOS_SYSTEM_HEADERS__)))))
+#define CONFIG_HAVE_CRTDBG_H
+#endif /* ... */
+
+#ifdef CONFIG_HAVE_CRTDBG_H
+#include <crtdbg.h>
+#endif /* CONFIG_HAVE_CRTDBG_H */
 
 DECL_BEGIN
 

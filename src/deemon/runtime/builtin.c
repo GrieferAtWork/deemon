@@ -446,16 +446,7 @@ struct Dee_deemon_module_struct {
 DDATDEF struct Dee_deemon_module_struct DeeModule_Deemon;
 
 #ifndef CONFIG_NO_DEX
-INTERN struct Dee_module_dexdata deemon_dexdata = {
-	/* .mdx_module = */ (DeeModuleObject *)&DeeModule_Deemon.m_module,
-	/* .mdx_export = */ NULL,
-	/* .mdx_handle = */ _Dee_MODULE_DEXDATA_INIT_HANDLE,
-	/* .mdx_init   = */ NULL,
-	/* .mdx_fini   = */ NULL,
-	/* .mdx_clear  = */ NULL
-	_Dee_MODULE_DEXDATA_INIT_LOADHANDLE
-	_Dee_MODULE_DEXDATA_INIT_LOADSTRING
-};
+INTDEF struct Dee_module_dexdata deemon_dexdata;
 #endif /* !CONFIG_NO_DEX */
 
 #undef DeeModule_Deemon

@@ -27,10 +27,6 @@
 #include "gc.h"
 #include "module.h"
 #include "object.h"
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#include "system.h"
-#include "system-features.h"
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 /**/
 
 #include <hybrid/typecore.h>
@@ -90,128 +86,28 @@ struct Dee_dex_symbol {
 	__UINTPTR_HALF_TYPE__     _ds_index; /* Used internally during initialization */
 };
 
-#ifdef CONFIG_NO___dex_start____AND___end
-#undef CONFIG_HAVE___dex_start____AND___end
-#elif !defined(CONFIG_HAVE___dex_start____AND___end)
-#define CONFIG_NO___dex_start____AND___end
-#endif /* ... */
-
-/* Figure out how `DeeModule_OfPointer()' will be implemented,
- * and what sort of extra data must be stored in dex modules for this
- * to function properly. */
-#undef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC
-#undef Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
-#undef Dee_MODULE_DEXDATA_HAVE_LOADHANDLE
-#undef Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE
-#undef Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS__link_map__l_addr
-#undef Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS__link_map
-#undef Dee_MODULE_DEXDATA_HAVE_LOADSTRING
-#undef Dee_MODULE_DEXDATA_HAVE_LOADSTRING_IS__dladdr__dli_fname
-#undef Dee_DEXBOUNDS_USE_LOADBOUNDS___dex_start____AND___end
-#undef Dee_DEXBOUNDS_USE_LOADBOUNDS__GetModuleInformation
-#undef Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP
-#undef Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr
-#undef Dee_DEXBOUNDS_USE_LOADBOUNDS__xdlmodule_info
-#undef Dee_DEXBOUNDS_USE_LOADHANDLE__GetModuleHandleExW
-#undef Dee_DEXBOUNDS_USE_LOADHANDLE__dlgethandle
-#undef Dee_DEXBOUNDS_USE_LOADHANDLE__dladdr1__RTLD_DL_LINKMAP
-#undef Dee_DEXBOUNDS_USE_LOADSTRING__dladdr__dli_fname
-#undef Dee_DEXBOUNDS_USE_LOADBOUNDS__EXPORTED_OBJECTS
-#ifdef CONFIG_HAVE___dex_start____AND___end
-#define Dee_DEXBOUNDS_USE_LOADBOUNDS___dex_start____AND___end
-#define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
-#define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC
-#elif defined(DeeSystem_DlOpen_USE_LoadLibrary)
-#define Dee_DEXBOUNDS_USE_LOADBOUNDS__GetModuleInformation
-#define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
-#elif (defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dl_iterate_phdr) && \
-       defined(CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP) && defined(CONFIG_HAVE_struct__link_map__l_name))
-#define Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP
-#define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
-#define Dee_MODULE_DEXDATA_HAVE_LOADHANDLE /* == ((struct link_map *)*)->l_addr */
-#define Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS__link_map__l_addr
-#elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dl_iterate_phdr)
-#define Dee_DEXBOUNDS_USE_LOADBOUNDS__dl_iterate_phdr
-#define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
-#elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(__KOS_VERSION__) && (__KOS_VERSION__ >= 300 && __KOS_VERSION__ < 400)
-#define Dee_DEXBOUNDS_USE_LOADBOUNDS__xdlmodule_info
-#define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
-#elif defined(DeeSystem_DlOpen_USE_LoadLibrary)
-#define Dee_DEXBOUNDS_USE_LOADHANDLE__GetModuleHandleExW
-#define Dee_MODULE_DEXDATA_HAVE_LOADHANDLE
-#define Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE
-#elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dlgethandle)
-#define Dee_DEXBOUNDS_USE_LOADHANDLE__dlgethandle
-#define Dee_MODULE_DEXDATA_HAVE_LOADHANDLE
-#define Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE
-#elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP)
-#define Dee_DEXBOUNDS_USE_LOADHANDLE__dladdr1__RTLD_DL_LINKMAP
-#define Dee_MODULE_DEXDATA_HAVE_LOADHANDLE /* struct link_map *mdx_loadhandle */
-#define Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS__link_map
-#elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dladdr)
-#define Dee_DEXBOUNDS_USE_LOADSTRING__dladdr__dli_fname
-#define Dee_MODULE_DEXDATA_HAVE_LOADSTRING
-#define Dee_MODULE_DEXDATA_HAVE_LOADSTRING_IS__dladdr__dli_fname
-#else /* ... */
-#define Dee_DEXBOUNDS_USE_LOADBOUNDS__EXPORTED_OBJECTS /* Might not work: use min/max bounds of known exported objects */
-#define Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS
-#endif /* !... */
-
+struct Dee_module_dexinfo;
 struct Dee_module_dexdata {
 	struct Dee_module_object    *mdx_module; /* [1..1][const] Associated dex module descriptor */
 	struct Dee_dex_symbol const *mdx_export; /* [1..mdx_module->mo_globalc][const] Raw export table of this dex module */
 	void                        *mdx_handle; /* [?..?][const][owned] System-specific library handle (filled in during loading) */
+	struct Dee_module_dexinfo   *mdx_info;   /* [0..1][const] Used internally. Initialize to "NULL" in dex modules */
 
 	/* [0..1][const] Optional initializer/finalizer/clear callbacks. */
 	WUNUSED_T int (DCALL *mdx_init)(void);
 	void (DCALL *mdx_fini)(void);
 	bool (DCALL *mdx_clear)(void);
-
-#if defined(Dee_MODULE_DEXDATA_HAVE_LOADHANDLE) && !defined(Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE)
-	__BYTE_TYPE__ *mdx_loadhandle; /* [const] os-specific handle to identify this load-instance.
-	                                * The OS must provide the means to convert an arbitrary static
-	                                * pointer into a "mdx_loadhandle" that can then be searched for
-	                                * in a global tree of loaded dex modules. */
-#endif /* Dee_MODULE_DEXDATA_HAVE_LOADHANDLE && !Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE */
-#ifdef Dee_MODULE_DEXDATA_HAVE_LOADSTRING
-	Dl_info        mdx_loadstring; /* [1..1][const] Module load string. */
-#endif /* Dee_MODULE_DEXDATA_HAVE_LOADSTRING */
 };
 
 #if defined(CONFIG_BUILDING_DEEMON) || defined(CONFIG_BUILDING_DEX)
-#undef _Dee_MODULE_DEXDATA_INIT_HANDLE_IS_STATIC
-#if defined(DeeSystem_DlOpen_USE_LoadLibrary) && defined(_MSC_VER)
-extern /*IMAGE_DOS_HEADER*/ __BYTE_TYPE__ const __ImageBase[];
-#define _Dee_MODULE_DEXDATA_INIT_HANDLE (void *)__ImageBase
-#define _Dee_MODULE_DEXDATA_INIT_HANDLE_IS_STATIC
-#else /* ... */
-#define _Dee_MODULE_DEXDATA_INIT_HANDLE DeeSystem_DlOpen_FAILED
-#endif /* !... */
-
-#if defined(CONFIG_NO_DEC) && defined(CONFIG_NO_DEX)
-#define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS /* nothing */
-#elif (!defined(Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS) || \
-       !defined(Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC))
-#define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS NULL, NULL, { NULL, NULL, NULL },
-#else /* ... */
-#ifdef Dee_DEXBOUNDS_USE_LOADBOUNDS___dex_start____AND___end
+#if (!defined(CONFIG_NO___dex_start____AND___end) && \
+     defined(CONFIG_HAVE___dex_start____AND___end))
 INTDEF __BYTE_TYPE__ __dex_start__[];
 INTDEF __BYTE_TYPE__ _end[];
 #define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS __dex_start__, _end - 1, { NULL, NULL, NULL },
-#else /* Dee_DEXBOUNDS_USE_LOADBOUNDS___dex_start____AND___end */
-#error "Bad configuration: Dee_MODULE_DEXDATA_HAVE_LOADBOUNDS_STATIC, but no way to statically initialize"
-#endif /* !Dee_DEXBOUNDS_USE_LOADBOUNDS___dex_start____AND___end */
-#endif /* !... */
-#if !defined(Dee_MODULE_DEXDATA_HAVE_LOADHANDLE) || defined(Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE)
-#define _Dee_MODULE_DEXDATA_INIT_LOADHANDLE /* nothing */
-#else /* !Dee_MODULE_DEXDATA_HAVE_LOADHANDLE || Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE */
-#define _Dee_MODULE_DEXDATA_INIT_LOADHANDLE , NULL
-#endif /* Dee_MODULE_DEXDATA_HAVE_LOADHANDLE && !Dee_MODULE_DEXDATA_HAVE_LOADHANDLE_IS_HANDLE */
-#ifndef Dee_MODULE_DEXDATA_HAVE_LOADSTRING
-#define _Dee_MODULE_DEXDATA_INIT_LOADSTRING /* nothing */
-#else /* !Dee_MODULE_DEXDATA_HAVE_LOADSTRING */
-#define _Dee_MODULE_DEXDATA_INIT_LOADSTRING , {}
-#endif /* Dee_MODULE_DEXDATA_HAVE_LOADSTRING */
+#else /* CONFIG_HAVE___dex_start____AND___end */
+#define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS NULL, NULL, { NULL, NULL, NULL },
+#endif /* !CONFIG_HAVE___dex_start____AND___end */
 #endif /* CONFIG_BUILDING_DEEMON || CONFIG_BUILDING_DEX */
 
 /* Helpers for defining DEX exports from C */
@@ -260,12 +156,11 @@ INTDEF __BYTE_TYPE__ _end[];
 	PRIVATE struct Dee_module_dexdata _dex_data = {                         \
 		/* .mdx_module = */ (struct Dee_module_object *)&DEX.m_dex,         \
 		/* .mdx_export = */ _dex_symbols,                                   \
-		/* .mdx_handle = */ _Dee_MODULE_DEXDATA_INIT_HANDLE,                \
+		/* .mdx_handle = */ NULL, /* Init doesn't matter */                 \
+		/* .mdx_info   = */ NULL,                                           \
 		/* .mdx_init   = */ init,                                           \
 		/* .mdx_fini   = */ fini,                                           \
 		/* .mdx_clear  = */ clear                                           \
-		_Dee_MODULE_DEXDATA_INIT_LOADHANDLE                                 \
-		_Dee_MODULE_DEXDATA_INIT_LOADSTRING                                 \
 	};                                                                      \
 	PUBLIC struct _dex_object DEX = {{ _Dee_GC_HEAD_UNTRACKED_INIT }, {     \
 		__Dee_DEX_OBJECT_HEAD_INIT,                                         \

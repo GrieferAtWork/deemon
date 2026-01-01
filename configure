@@ -893,6 +893,14 @@ else
 	echo "#define CONFIG_NO___dex_start____AND___end" >> "$CONFINC"
 fi
 
+# TODO: Test to see if `-Wl,--build-id=md5` with linker script:
+# $ cat conftest.ld
+# build_id_start = ADDR(.note.gnu.build-id);
+# ASSERT(SIZEOF(.note.gnu.build-id) == 32, "Bad build-id section size");
+# $ cat conftest.c
+# extern __attribute__((visibility("hidden"))) char build_id_start[];
+# int main() { return (int)((unsigned char)build_id_start[16] + (unsigned char)build_id_start[31]); }
+
 
 ########################################################################################
 ## Also configure libffi (if needed)
