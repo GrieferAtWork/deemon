@@ -23,15 +23,12 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/bool.h>
 #include <deemon/error-rt.h>
-#include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/util/atomic.h>
+#include <deemon/serial.h>
 
 #include "librt.h"
 
@@ -43,34 +40,27 @@ DECL_BEGIN
 
 
 PRIVATE WUNUSED DREF SlabStatObject *DCALL ss_ctor(void) {
-	size_t reqsize;
+	size_t bufsize, reqsize;
 	DREF SlabStatObject *result;
 	DREF SlabStatObject *new_result;
-	result = (DREF SlabStatObject *)DeeObject_Mallocc(offsetof(SlabStatObject, st_stat.st_slabs),
-	                                                  Dee_SLAB_COUNT, sizeof(DeeSlabInfo));
+	bufsize = _Dee_MalloccBufsize(Dee_SLAB_COUNT, sizeof(DeeSlabInfo));
+	result  = (DREF SlabStatObject *)DeeObject_Malloc(offsetof(DeeSlabStat, st_slabs) + bufsize);
 	if unlikely(!result)
 		goto done;
-	reqsize = DeeSlab_Stat(&result->st_stat,
-	                       _Dee_MallococBufsize(offsetof(DeeSlabStat, st_slabs),
-	                                            Dee_SLAB_COUNT, sizeof(DeeSlabInfo)));
-	if unlikely(reqsize >
-	            _Dee_MallococBufsize(offsetof(DeeSlabStat, st_slabs),
-	                                 Dee_SLAB_COUNT, sizeof(DeeSlabInfo))) {
-		size_t oldsize;
+	reqsize = DeeSlab_Stat(&result->st_stat, bufsize);
+	if unlikely(reqsize > bufsize) {
 do_realloc_result:
-		oldsize    = reqsize;
+		bufsize    = reqsize;
 		new_result = (DREF SlabStatObject *)DeeObject_Realloc(result,
 		                                                      offsetof(SlabStatObject, st_stat) +
 		                                                      reqsize);
 		if unlikely(!new_result)
 			goto err_r;
 		result  = new_result;
-		reqsize = DeeSlab_Stat(&result->st_stat, reqsize);
-		if unlikely(reqsize > oldsize)
+		reqsize = DeeSlab_Stat(&result->st_stat, bufsize);
+		if unlikely(reqsize > bufsize)
 			goto do_realloc_result;
-	} else if unlikely(reqsize <
-	                   _Dee_MallococBufsize(offsetof(DeeSlabStat, st_slabs),
-	                                        Dee_SLAB_COUNT, sizeof(DeeSlabInfo))) {
+	} else if unlikely(reqsize < bufsize) {
 		new_result = (DREF SlabStatObject *)DeeObject_TryRealloc(result,
 		                                                         offsetof(SlabStatObject, st_stat) +
 		                                                         reqsize);
@@ -83,6 +73,25 @@ done:
 err_r:
 	DeeObject_Free(result);
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+ss_serialize(SlabStatObject *__restrict self,
+             DeeSerial *__restrict writer) {
+	SlabStatObject *out;
+	size_t sizeof_slab = _Dee_MallococBufsize(offsetof(DeeSlabStat, st_slabs),
+	                                          self->st_stat.st_slabcount, sizeof(DeeSlabInfo));
+	size_t sizeof_self = sizeof_slab + offsetof(SlabStatObject, st_stat);
+	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+#define ADDROF(field) (out_addr + offsetof(SlabStatObject, field))
+	if unlikely(!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, SlabStatObject);
+	memcpy(&out->st_stat, &self->st_stat, sizeof_slab);
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+#undef ADDROF
 }
 
 #define SLABSTAT_DATASIZE(x) \
@@ -180,7 +189,7 @@ INTERN DeeTypeObject SlabStat_Type = {
 			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &ss_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ NULL,
@@ -213,6 +222,18 @@ INTERN DeeTypeObject SlabStat_Type = {
 	/* .tp_class_members = */ ss_class_members
 };
 
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+si_serialize(SlabInfoObject *__restrict self,
+             DeeSerial *__restrict writer,
+             Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(SlabInfoObject, field))
+	int result = DeeSerial_PutObject(writer, ADDROF(si_stat), self->si_stat);
+	if likely(result == 0)
+		result = DeeSerial_PutPointer(writer, ADDROF(si_info), self->si_info);
+	return result;
+#undef ADDROF
+}
 
 PRIVATE NONNULL((1)) void DCALL
 si_fini(SlabInfoObject *__restrict self) {
@@ -344,7 +365,7 @@ INTERN DeeTypeObject SlabInfo_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &si_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&si_fini,
 		/* .tp_assign      = */ NULL,

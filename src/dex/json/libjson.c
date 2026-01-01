@@ -48,6 +48,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
@@ -144,6 +145,27 @@ jiter_copy(DeeJsonIteratorObject *__restrict self,
 	Dee_Incref(self->ji_owner);
 	DeeJsonIterator_GetParser(other, &self->ji_parser);
 	return 0;
+}
+
+#define jseqiter_serialize jiter_serialize
+#define jmapiter_serialize jiter_serialize
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+jiter_serialize(DeeJsonIteratorObject *__restrict self,
+                DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+	DeeJsonIteratorObject *out;
+#define ADDROF(field) (addr + offsetof(DeeJsonIteratorObject, field))
+	out = DeeSerial_Addr2Mem(writer, addr, DeeJsonIteratorObject);
+	out->ji_parser.jp_encoding = self->ji_parser.jp_encoding;
+	if (DeeSerial_PutObject(writer, ADDROF(ji_owner), self->ji_owner))
+		goto err;
+	if (DeeSerial_XPutPointer(writer, ADDROF(ji_parser.jp_start), self->ji_parser.jp_start))
+		goto err;
+	if (DeeSerial_XPutPointer(writer, ADDROF(ji_parser.jp_end), self->ji_parser.jp_end))
+		goto err;
+	return DeeSerial_XPutPointer(writer, ADDROF(ji_parser.jp_pos), atomic_read(&self->ji_parser.jp_pos));
+err:
+	return -1;
+#undef ADDROF
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -664,7 +686,7 @@ PRIVATE struct type_getset tpconst jmapiter_getsets[] = {
 };
 
 
-PRIVATE NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 jseq_ctor(DeeJsonSequenceObject *__restrict self) {
 	self->js_owner              = DeeNone_NewRef();
 	self->js_parser.jp_encoding = JSON_ENCODING_UTF8;
@@ -676,7 +698,7 @@ jseq_ctor(DeeJsonSequenceObject *__restrict self) {
 	return 0;
 }
 
-PRIVATE NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 jseq_copy(DeeJsonSequenceObject *__restrict self,
           DeeJsonSequenceObject *__restrict other) {
 	DeeJsonSequence_LockRead(other);
@@ -690,7 +712,55 @@ jseq_copy(DeeJsonSequenceObject *__restrict self,
 	return 0;
 }
 
-PRIVATE NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+jseq_serialize(DeeJsonSequenceObject *__restrict self,
+               DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DeeJsonSequenceObject, field))
+	DeeJsonSequenceObject *out = DeeSerial_Addr2Mem(writer, addr, DeeJsonSequenceObject);
+	struct json_parser self__js_parser;
+	DeeJsonSequence_LockRead(self);
+	self__js_parser = self->js_parser;
+	out->js_index   = self->js_index;
+	out->js_size    = self->js_size;
+	DeeJsonSequence_LockEndRead(self);
+	out->js_parser.jp_encoding = self__js_parser.jp_encoding;
+	Dee_atomic_rwlock_init(&out->js_lock);
+	if (DeeSerial_PutObject(writer, ADDROF(js_owner), self->js_owner))
+		goto err;
+	if (DeeSerial_XPutPointer(writer, ADDROF(js_parser.jp_start), self__js_parser.jp_start))
+		goto err;
+	if (DeeSerial_XPutPointer(writer, ADDROF(js_parser.jp_end), self__js_parser.jp_end))
+		goto err;
+	return DeeSerial_XPutPointer(writer, ADDROF(js_parser.jp_pos), self__js_parser.jp_pos);
+err:
+	return -1;
+#undef ADDROF
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+jmap_serialize(DeeJsonMappingObject *__restrict self,
+               DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DeeJsonMappingObject, field))
+	DeeJsonMappingObject *out = DeeSerial_Addr2Mem(writer, addr, DeeJsonMappingObject);
+	struct json_parser self__js_parser;
+	DeeJsonMapping_LockRead(self);
+	self__js_parser = self->jm_parser;
+	DeeJsonMapping_LockEndRead(self);
+	out->jm_parser.jp_encoding = self__js_parser.jp_encoding;
+	Dee_atomic_rwlock_init(&out->jm_lock);
+	if (DeeSerial_PutObject(writer, ADDROF(jm_owner), self->jm_owner))
+		goto err;
+	if (DeeSerial_XPutPointer(writer, ADDROF(jm_parser.jp_start), self__js_parser.jp_start))
+		goto err;
+	if (DeeSerial_XPutPointer(writer, ADDROF(jm_parser.jp_end), self__js_parser.jp_end))
+		goto err;
+	return DeeSerial_XPutPointer(writer, ADDROF(jm_parser.jp_pos), self__js_parser.jp_pos);
+err:
+	return -1;
+#undef ADDROF
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 jmap_ctor(DeeJsonMappingObject *__restrict self) {
 	self->jm_owner              = DeeNone_NewRef();
 	self->jm_parser.jp_encoding = JSON_ENCODING_UTF8;
@@ -701,7 +771,7 @@ jmap_ctor(DeeJsonMappingObject *__restrict self) {
 	return 0;
 }
 
-PRIVATE NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 jmap_copy(DeeJsonMappingObject *__restrict self,
           DeeJsonMappingObject *__restrict other) {
 	DeeJsonMapping_LockRead(other);
@@ -716,7 +786,7 @@ jmap_copy(DeeJsonMappingObject *__restrict self,
 
 static_assert(offsetof(DeeJsonSequenceObject, js_owner) == offsetof(DeeJsonMappingObject, jm_owner));
 static_assert(offsetof(DeeJsonSequenceObject, js_owner) == offsetof(DeeJsonIteratorObject, ji_owner));
-PRIVATE NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 jseq_or_map_init_parser(DeeJsonSequenceObject *__restrict self,
                         DeeObject *__restrict data) {
 	if (DeeBytes_Check(data)) {
@@ -775,7 +845,7 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 jseq_init(DeeJsonSequenceObject *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	DeeObject *data;
@@ -798,7 +868,7 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 jmap_init(DeeJsonMappingObject *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	DeeObject *data;
@@ -820,7 +890,7 @@ err:
 }
 
 
-PRIVATE NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 jseq_bool(DeeJsonSequenceObject *__restrict self) {
 	int tok;
 	struct json_parser parser;
@@ -842,7 +912,7 @@ jseq_bool(DeeJsonSequenceObject *__restrict self) {
 	return 1;
 }
 
-PRIVATE NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 jmap_bool(DeeJsonMappingObject *__restrict self) {
 	int tok;
 	struct json_parser parser;
@@ -1314,7 +1384,7 @@ INTERN DeeTypeObject DeeJsonSequenceIterator_Type = {
 			/* tp_deep_ctor:   */ &jseqiter_deep,
 			/* tp_any_ctor:    */ &jseqiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &jseqiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&jseqiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1360,7 +1430,7 @@ INTERN DeeTypeObject DeeJsonMappingIterator_Type = {
 			/* tp_deep_ctor:   */ &jmapiter_deep,
 			/* tp_any_ctor:    */ &jmapiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &jmapiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&jmapiter_fini,
 		/* .tp_assign      = */ NULL,
@@ -1410,7 +1480,7 @@ INTERN DeeTypeObject DeeJsonSequence_Type = {
 			/* tp_deep_ctor:   */ &jseq_copy,
 			/* tp_any_ctor:    */ &jseq_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &jseq_serialize
 		),
 		/* .tp_dtor = */ (void (DCALL *)(DeeObject *__restrict))&jseq_fini
 	},
@@ -1457,7 +1527,7 @@ INTERN DeeTypeObject DeeJsonMapping_Type = {
 			/* tp_deep_ctor:   */ &jmap_copy,
 			/* tp_any_ctor:    */ &jmap_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &jmap_serialize
 		),
 		/* .tp_dtor = */ (void (DCALL *)(DeeObject *__restrict))&jmap_fini
 	},
@@ -3308,7 +3378,7 @@ err:
  *
  * @return: 0 : Success
  * @return: -1: An error was thrown */
-PRIVATE NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 DeeJson_WriteObject(DeeJsonWriter *__restrict self,
                     DeeObject *__restrict obj) {
 	DeeTypeObject *type = Dee_TYPE(obj);

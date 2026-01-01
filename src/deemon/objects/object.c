@@ -45,6 +45,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
+#include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/set.h>
@@ -4732,7 +4733,7 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) size_t
 		} else
 		DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
 #undef CHECK_ALLOCATOR
-		;
+		{}
 	} else {
 #define CHECK_ALLOCATOR(index, size)                \
 		if (tp_free == &DeeObject_SlabFree##size) { \
@@ -4740,7 +4741,7 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) size_t
 		} else
 		DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
 #undef CHECK_ALLOCATOR
-		;
+		{}
 	}
 #endif /* !CONFIG_NO_OBJECT_SLABS */
 	return 0;

@@ -25,14 +25,15 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/bytes.h>
-#include <deemon/float.h>
 #include <deemon/error-rt.h>
+#include <deemon/float.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 
@@ -92,6 +93,18 @@ CellFmt_New(RowFmt *__restrict rowfmt, struct cellfmt const *__restrict cell) {
 		Dee_Incref(rowfmt);
 	}
 	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ob_cellfmt_serialize(CellFmt *__restrict self,
+                     DeeSerial *__restrict writer,
+                     Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(CellFmt, field))
+	int result = DeeSerial_PutObject(writer, ADDROF(cfo_fmt), self->cfo_fmt);
+	if likely(result == 0)
+		result = DeeSerial_PutPointer(writer, ADDROF(cfo_cell), self->cfo_cell);
+	return result;
+#undef ADDROF
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -167,7 +180,7 @@ INTERN DeeTypeObject CellFmt_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &ob_cellfmt_serialize /* TODO */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ob_cellfmt_fini,
 		/* .tp_assign      = */ NULL,
@@ -211,6 +224,15 @@ INTERN DeeTypeObject CellFmt_Type = {
 /*                                                                      */
 /************************************************************************/
 /************************************************************************/
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+rowfmtcolumns_serialize(RowFmtColumns *__restrict self,
+                        DeeSerial *__restrict writer,
+                        Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(RowFmtColumns, field))
+	return DeeSerial_PutObject(writer, ADDROF(rfc_fmt), self->rfc_fmt);
+#undef ADDROF
+}
 
 PRIVATE NONNULL((1)) void DCALL
 rowfmtcolumns_fini(RowFmtColumns *__restrict self) {
@@ -306,7 +328,7 @@ INTERN DeeTypeObject RowFmtColumns_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &rowfmtcolumns_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rowfmtcolumns_fini,
 		/* .tp_assign      = */ NULL,
@@ -351,6 +373,29 @@ INTERN DeeTypeObject RowFmtColumns_Type = {
 /*                                                                      */
 /************************************************************************/
 /************************************************************************/
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+rowfmt_serialize(RowFmt *__restrict self,
+                 DeeSerial *__restrict writer) {
+	RowFmt *out;
+	size_t sizeof_self = _Dee_MallococBufsize(offsetof(RowFmt, rf_cols),
+	                                          self->rf_ncol,
+	                                          sizeof(struct cellfmt));
+	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+#define ADDROF(field) (out_addr + offsetof(RowFmt, field))
+	if unlikely(!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, RowFmt);
+	out->rf_ncol = self->rf_ncol;
+	if (DeeSerial_XPutObjectv(writer, ADDROF(rf_cols),
+	                          (DeeObject *const *)self->rf_cols,
+	                          self->rf_ncol * 2))
+		goto err;
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+#undef ADDROF
+}
 
 PRIVATE NONNULL((1)) void DCALL
 rowfmt_fini(RowFmt *__restrict self) {
@@ -549,7 +594,7 @@ INTERN DeeTypeObject RowFmt_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &rowfmt_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rowfmt_fini,

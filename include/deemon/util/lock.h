@@ -181,6 +181,7 @@ typedef char Dee_event_t;
 #define Dee_EVENT_INIT_EX(set)                             0
 #define Dee_event_init_set(self)                           (void)0
 #define Dee_event_init(self)                               (void)0
+#define Dee_event_init_ex(self, set)                       (void)0
 #define Dee_event_cinit_set(self)                          (void)0
 #define Dee_event_cinit(self)                              (void)0
 #define Dee_event_get(self)                                1
@@ -605,16 +606,17 @@ typedef struct {
 	                        * 2: event has NOT been triggered, and there may be waiting threads */
 } Dee_event_t;
 
-#define Dee_EVENT_INIT_SET        { 0 }
-#define Dee_EVENT_INIT            { 1 }
-#define Dee_EVENT_INIT_EX(set)    { (set) ? 0 : 1 }
-#define Dee_event_init_set(self)  (void)((self)->ev_state = 0)
-#define Dee_event_init(self)      (void)((self)->ev_state = 1)
-#define Dee_event_cinit_set(self) (void)(Dee_ASSERT((self)->ev_state == 0))
-#define Dee_event_cinit(self)     (void)(Dee_ASSERT((self)->ev_state == 0), (self)->ev_state = 1)
-#define Dee_event_get(self)       (__hybrid_atomic_load(&(self)->ev_state, __ATOMIC_ACQUIRE) == 0)
-#define Dee_event_set(self)       (void)Dee_event_set_ex(self)
-#define Dee_event_clear(self)     (void)Dee_event_clear_ex(self)
+#define Dee_EVENT_INIT_SET           { 0 }
+#define Dee_EVENT_INIT               { 1 }
+#define Dee_EVENT_INIT_EX(set)       { (set) ? 0 : 1 }
+#define Dee_event_init_set(self)     (void)((self)->ev_state = 0)
+#define Dee_event_init(self)         (void)((self)->ev_state = 1)
+#define Dee_event_init_ex(self, set) (void)((self)->ev_state = (set) ? 0 : 1)
+#define Dee_event_cinit_set(self)    (void)(Dee_ASSERT((self)->ev_state == 0))
+#define Dee_event_cinit(self)        (void)(Dee_ASSERT((self)->ev_state == 0), (self)->ev_state = 1)
+#define Dee_event_get(self)          (__hybrid_atomic_load(&(self)->ev_state, __ATOMIC_ACQUIRE) == 0)
+#define Dee_event_set(self)          (void)Dee_event_set_ex(self)
+#define Dee_event_clear(self)        (void)Dee_event_clear_ex(self)
 #define Dee_event_set_ex(self)                                       \
 	(__hybrid_atomic_xch(&(self)->ev_state, 0, __ATOMIC_SEQ_CST) > 1 \
 	 ? (DeeFutex_WakeAll(&(self)->ev_state), 1)                      \

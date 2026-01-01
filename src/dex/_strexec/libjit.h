@@ -61,7 +61,7 @@ enum {
 	TOK_ASSIGN    = '=',
 	TOK_AT        = '@',
 	TOK_BACKSLASH = '\\',
-	TOK_COLON    = ':',
+	TOK_COLON     = ':',
 	TOK_COMMA     = ',',
 	TOK_DIV       = '/',
 	TOK_DOT       = '.',
@@ -136,7 +136,7 @@ enum {
 	TOK_NEG           = TOK_SUB,
 	TOK_LOWER         = TOK_LANGLE,
 	TOK_GREATER       = TOK_RANGLE,
-/*	TOK_COLON_COLON = TOK_NAMESPACE, */
+/*	TOK_COLON_COLON   = TOK_NAMESPACE, */
 /*	TOK_LOWER_GREATER = TOK_LOGT, */
 /*	TOK_LANGLE_RANGLE = TOK_LOGT, */
 	TOK_LANGLE1       = TOK_LANGLE,

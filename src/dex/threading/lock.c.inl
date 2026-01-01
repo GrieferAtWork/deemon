@@ -952,7 +952,7 @@ INTERN DeeTypeObject LOCAL_DeeLock_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ LOCAL_lockapi_init_kw_PTR,
-			/* tp_serialize:   */ NULL /* TODO (writes the output lock as unlocked) */
+			/* tp_serialize:   */ NULL /* TODO (writes the output lock matching the "acquired" ctor argument (or unlock if no such argument)) */
 		),
 #undef LOCAL_lockapi_init_kw_PTR
 		/* .tp_dtor        = */ NULL,

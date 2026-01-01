@@ -2495,7 +2495,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 	/* TODO: dropwhile(cond:?DCallble)->?.
 	 * Matches everything not matched by ?#takewhile:
-	 * >> function takeafter(cond: Callble): Sequence {
+	 * >> function dropwhile(cond: Callble): Sequence {
 	 * >>     local iter = (this as Sequence).operator iter();
 	 * >>     foreach (local item: iter) {
 	 * >>         if (!cond(item)) {
@@ -2506,6 +2506,51 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	 * >>     foreach (local item: iter)
 	 * >>         yield item;
 	 * >> } */
+
+	/* TODO: groupby(key:?DCallable)->?M?O?S?O
+	 * Apply @key to every element of @this ?. and use the return value
+	 * as a key into a mapping that will later be returned. Every item
+	 * of that mapping is then another sequence containing all elements
+	 * of @this for that same key. The order of elements within these
+	 * sub-sequences matches the order of those elements in @this.
+	 * >> function groupby(key: Callable): {Object: {Object...}} {
+	 * >>     // Actual impl doesn't use "Dict" and returns an abstract proxy instead
+	 * >>     local result = Dict();
+	 * >>     for (local item: this as Sequence) {
+	 * >>         result.setdefault(key(item), []).append(item);
+	 * >>     }
+	 * >>     return result;
+	 * >> } */
+
+	/* TODO: partitionby(key?:?DCallable)->?S?T2?O?S?O
+	 * Split @this ?. into many smaller, non-empty partition. A new partition
+	 * is started between every 2 adjacent elements of @this for which @key
+	 * returns a different value. When @key isn't given, `x -> x` is used.
+	 * Returns {(PartitionKey, {PartitionItem...})...}
+	 * >> function partitionby(key: Callable): {(Object, {Object...})...} {
+	 * >>     local iter = (this as Sequence).operator iter();
+	 * >>     foreach (local item: iter) {
+	 * >>         local currentPart = [item];
+	 * >>         local currentKey = key(item);
+	 * >>         foreach (item: iter) {
+	 * >>             local newKey = key(item);
+	 * >>             if (currentKey != newKey) {
+	 * >>                 yield currentPart;
+	 * >>                 currentPart = [];
+	 * >>                 currentKey  = newKey;
+	 * >>             }
+	 * >>             currentPart.append(item);
+	 * >>         }
+	 * >>         yield (currentKey, currentPart);
+	 * >>         break;
+	 * >>     }
+	 * >> } */
+
+	/* TODO: get(index:?Dint,def:?O=!N)->?O
+	 * Re-purpose the old (and long-deprecated) "get" function and have
+	 * it implement the equivalent of Mapping.get, but for Sequence (i.e.
+	 * be a high-level wrapper around "seq_operator_trygetitem" that
+	 * returns "def" if "index" doesn't exist or isn't bound) */
 
 	/* TODO: pairwise->?S?T2?O?O
 	 * Yield every element of @this sequence (except for the first) as a pair (predecessor, elem):

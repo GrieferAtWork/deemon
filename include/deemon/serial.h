@@ -26,7 +26,7 @@
 #include "types.h"
 /**/
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __UINTPTR_TYPE__ */
 
 /*
  * Object serialization is a general-purpose API to:
@@ -56,6 +56,41 @@ DECL_BEGIN
 
 struct Dee_serial;
 typedef struct Dee_serial DeeSerial;
+
+#if 0
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+myobject_serialize(MyObject *__restrict self,
+                   DeeSerial *__restrict writer,
+                   Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(MyObject, field))
+	MyObject *out = DeeSerial_Addr2Mem(writer, addr, MyObject);
+	/* ... */
+	return 0;
+err:
+	return -1;
+#undef ADDROF
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+myobject_serialize(MyObject *__restrict self,
+                   DeeSerial *__restrict writer) {
+	MyObject *out;
+	size_t sizeof_self = _Dee_MallococBufsize(offsetof(MyObject, mo_vardata),
+	                                          self->mo_count,
+	                                          sizeof(MyObjectItem));
+	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+#define ADDROF(field) (out_addr + offsetof(MyObject, field))
+	if unlikely(!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, MyObject);
+	out->mo_count = self->mo_count;
+	/* ... */
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+#undef ADDROF
+}
+#endif
 
 /* TODO: "DeeSerial" can also be used to implement "deepcopy" (in a way that
  *       solves the problem of non-GC objects being copied whilst some nested

@@ -2089,7 +2089,7 @@ INTERN DeeTypeObject DeeEnvironIterator_Type = {
 			/* tp_deep_ctor:   */ &environ_iterator_copy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ NULL /* Not serializable (environ strings are under the OS's control) */
 		),
 #ifdef HAVE_environ_iterator_fini
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&environ_iterator_fini,

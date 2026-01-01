@@ -36,6 +36,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 
 /* Include posix dependencies */
@@ -592,7 +593,7 @@ err:
 /* CopyFileProgress                                                     */
 /************************************************************************/
 
-PRIVATE NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 copyfile_progress_copy(DeeCopyFileProgressObject *__restrict self,
                        DeeCopyFileProgressObject *__restrict other) {
 	self->cfp_srcfile = other->cfp_srcfile;
@@ -604,6 +605,23 @@ copyfile_progress_copy(DeeCopyFileProgressObject *__restrict self,
 	Dee_Incref(self->cfp_dstfile);
 	return 0;
 }
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+copyfile_progress_serialize(DeeCopyFileProgressObject *__restrict self,
+                            DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DeeCopyFileProgressObject, field))
+	DeeCopyFileProgressObject *out = DeeSerial_Addr2Mem(writer, addr, DeeCopyFileProgressObject);
+	out->cfp_copied  = self->cfp_copied;
+	out->cfp_total   = self->cfp_total;
+	out->cfp_bufsize = self->cfp_bufsize;
+	if (DeeSerial_PutObject(writer, ADDROF(cfp_srcfile), self->cfp_srcfile))
+		goto err;
+	return DeeSerial_PutObject(writer, ADDROF(cfp_dstfile), self->cfp_dstfile);
+err:
+	return -1;
+#undef ADDROF
+}
+
 
 /*[[[deemon (print_DEFINE_KWLIST from rt.gen.unpack)({ "srcfile", "dstfile", "copied", "total", "bufsize" });]]]*/
 #ifndef DEFINED_kwlist__srcfile_dstfile_copied_total_bufsize
@@ -762,7 +780,7 @@ INTERN DeeTypeObject DeeCopyFileProgress_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &copyfile_progress_init_kw,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &copyfile_progress_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&copyfile_progress_fini,
 		/* .tp_assign      = */ NULL,

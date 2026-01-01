@@ -24,9 +24,11 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/object.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system.h>
 #include <deemon/thread.h>
@@ -79,6 +81,27 @@ sqlerror_init_kw(SQLError *__restrict self, size_t argc,
 	(void)argv;
 	(void)kw;
 	return DeeError_NOTIMPLEMENTED();
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+sqlerror_serialize(SQLError *__restrict self,
+                   DeeSerial *__restrict writer,
+                   Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(SQLError, field))
+	SQLError *out;
+	if unlikely(!DeeError_SystemError.tp_init.tp_alloc.tp_serialize)
+		return DeeRT_ErrCannotSerialize(&self->sqe_system);
+	if ((*DeeError_SystemError.tp_init.tp_alloc.tp_serialize)(Dee_AsObject(&self->sqe_system), writer, addr))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, addr, SQLError);
+	out->sqe_sqloffutf8 = self->sqe_sqloffutf8;
+	out->sqe_ecode      = self->sqe_ecode;
+	if (DeeSerial_XPutObject(writer, ADDROF(sqe_errmsg), self->sqe_errmsg))
+		goto err;
+	return DeeSerial_XPutObject(writer, ADDROF(sqe_sql), self->sqe_sql);
+err:
+	return -1;
+#undef ADDROF
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -190,7 +213,7 @@ INTERN DeeTypeObject SQLError_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &sqlerror_init_kw,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &sqlerror_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sqlerror_fini,
 		/* .tp_assign      = */ NULL,

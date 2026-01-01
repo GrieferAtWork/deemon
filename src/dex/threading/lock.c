@@ -34,6 +34,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memset(), ... */
 #include <deemon/thread.h>
@@ -1326,6 +1327,15 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+rwlock_proxy_serialize(DeeGenericRWLockProxyObject *__restrict self,
+                       DeeSerial *__restrict writer,
+                       Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DeeGenericRWLockProxyObject, field))
+	return DeeSerial_PutObject(writer, ADDROF(grwl_lock), self->grwl_lock);
+#undef ADDROF
+}
+
 PRIVATE NONNULL((1)) void DCALL
 rwlock_proxy_fini(DeeGenericRWLockProxyObject *__restrict self) {
 	Dee_Decref(self->grwl_lock);
@@ -1342,12 +1352,14 @@ PRIVATE struct type_member tpconst rwlock_proxy_members[] = {
 	TYPE_MEMBER_END
 };
 
-#define rwlock_readlock_fini     rwlock_proxy_fini
-#define rwlock_readlock_visit    rwlock_proxy_visit
-#define rwlock_readlock_members  rwlock_proxy_members
-#define rwlock_writelock_fini    rwlock_proxy_fini
-#define rwlock_writelock_visit   rwlock_proxy_visit
-#define rwlock_writelock_members rwlock_proxy_members
+#define rwlock_readlock_serialize  rwlock_proxy_serialize
+#define rwlock_readlock_fini       rwlock_proxy_fini
+#define rwlock_readlock_visit      rwlock_proxy_visit
+#define rwlock_readlock_members    rwlock_proxy_members
+#define rwlock_writelock_serialize rwlock_proxy_serialize
+#define rwlock_writelock_fini      rwlock_proxy_fini
+#define rwlock_writelock_visit     rwlock_proxy_visit
+#define rwlock_writelock_members   rwlock_proxy_members
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rwlock_readlock_print(DeeGenericRWLockProxyObject *__restrict self,
@@ -1575,7 +1587,7 @@ INTERN DeeTypeObject DeeRWLockReadLock_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &rwlock_readlock_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &rwlock_readlock_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rwlock_readlock_fini,
 		/* .tp_assign      = */ NULL,
@@ -1624,7 +1636,7 @@ INTERN DeeTypeObject DeeRWLockWriteLock_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &rwlock_writelock_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &rwlock_writelock_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rwlock_writelock_fini,
 		/* .tp_assign      = */ NULL,
@@ -1684,6 +1696,17 @@ semaphore_init(DeeSemaphoreObject *__restrict self,
 	return 0;
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+semaphore_serialize(DeeSemaphoreObject *__restrict self,
+                    DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DeeSemaphoreObject, field))
+	DeeSemaphoreObject *out = DeeSerial_Addr2Mem(writer, addr, DeeSemaphoreObject);
+	size_t tickets = Dee_semaphore_gettickets(&self->sem_semaphore);
+	Dee_semaphore_init(&out->sem_semaphore, tickets);
+	return 0;
+#undef ADDROF
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1899,7 +1922,7 @@ INTERN DeeTypeObject DeeSemaphore_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &semaphore_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO (writes the output semaphore with its current ticket count) */
+			/* tp_serialize:   */ &semaphore_serialize
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -1941,6 +1964,17 @@ INTERN DeeTypeObject DeeSemaphore_Type = {
 /************************************************************************/
 /* Event                                                                */
 /************************************************************************/
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+event_serialize(DeeEventObject *__restrict self,
+                DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DeeEventObject, field))
+	DeeEventObject *out = DeeSerial_Addr2Mem(writer, addr, DeeEventObject);
+	bool isset = Dee_event_get(&self->e_event);
+	Dee_event_init_ex(&out->e_event, isset);
+	return 0;
+#undef ADDROF
+}
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 event_init_kw(DeeEventObject *__restrict self, size_t argc,
@@ -2085,7 +2119,7 @@ INTERN DeeTypeObject DeeEvent_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &event_init_kw,
-			/* tp_serialize:   */ NULL /* TODO (writes the output event with its current state) */
+			/* tp_serialize:   */ &event_serialize
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -2302,6 +2336,27 @@ lock_union_init(size_t argc, DeeObject *const *argv) {
 	return LockUnion_FromSequence(seq);
 err:
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+lock_union_serialize(LockUnion *__restrict self,
+                     DeeSerial *__restrict writer) {
+	LockUnion *out;
+	size_t sizeof_self = _Dee_MallococBufsize(offsetof(LockUnion, lu_elem),
+	                                          self->lu_size,
+	                                          sizeof(DREF DeeObject *));
+	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+#define ADDROF(field) (out_addr + offsetof(LockUnion, field))
+	if unlikely(!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, LockUnion);
+	out->lu_size = self->lu_size;
+	if (DeeSerial_PutObjectv(writer, ADDROF(lu_elem), self->lu_elem, self->lu_size))
+		goto err;
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+#undef ADDROF
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -2912,7 +2967,7 @@ INTERN DeeTypeObject DeeLockUnion_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &lock_union_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &lock_union_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&lock_union_fini,

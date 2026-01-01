@@ -778,11 +778,19 @@ extern /*IMAGE_DOS_HEADER*/ __BYTE_TYPE__ const __ImageBase[];
 #define _Dee_MODULE_DEXDATA_INIT_HANDLE DeeSystem_DlOpen_FAILED
 #endif /* !... */
 
+#ifdef Dee_MODULE_DEXDATA_HAVE_LOADSTRING
+PRIVATE struct Dee_module_dexinfo deemon_dexinfo = {};
+#endif /* Dee_MODULE_DEXDATA_HAVE_LOADSTRING */
+
 INTERN struct Dee_module_dexdata deemon_dexdata = {
 	/* .mdx_module = */ &DeeModule_Deemon,
 	/* .mdx_export = */ NULL,
 	/* .mdx_handle = */ _Dee_MODULE_DEXDATA_INIT_HANDLE,
+#ifdef Dee_MODULE_DEXDATA_HAVE_LOADSTRING
+	/* .mdx_info   = */ &deemon_dexinfo,
+#else /* Dee_MODULE_DEXDATA_HAVE_LOADSTRING */
 	/* .mdx_info   = */ NULL,
+#endif /* !Dee_MODULE_DEXDATA_HAVE_LOADSTRING */
 	/* .mdx_init   = */ NULL,
 	/* .mdx_fini   = */ NULL,
 	/* .mdx_clear  = */ NULL
