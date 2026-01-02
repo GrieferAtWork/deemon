@@ -341,8 +341,8 @@ next_file:
 		(void)FindClose(self->mdi_data.mdid_find.hFind);
 		self->mdi_data.mdid_find.hFind = INVALID_HANDLE_VALUE;
 		DBG_ALIGNMENT_ENABLE();
-		return ITER_DONE;
 	}
+	return ITER_DONE;
 #endif /* DeeModule_GetDirectory_USE_FindFirstFileExW */
 
 #ifdef DeeModule_GetDirectory_USE_opendir
