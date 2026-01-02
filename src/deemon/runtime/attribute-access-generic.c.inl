@@ -21,7 +21,7 @@
 #include "attribute.c"
 //#define DEFINE_DeeObject_TGenericGetAttrStringHash
 //#define DEFINE_DeeObject_TGenericGetAttrStringLenHash
-//#define DEFINE_DeeObject_TGenericBoundAttrStringHash
+#define DEFINE_DeeObject_TGenericBoundAttrStringHash
 //#define DEFINE_DeeObject_TGenericBoundAttrStringLenHash
 //#define DEFINE_DeeObject_TGenericCallAttrStringHash
 //#define DEFINE_DeeObject_TGenericCallAttrStringLenHash
@@ -44,7 +44,7 @@
 //#define DEFINE_DeeObject_TGenericFindPrivateAttrInfoStringHash
 //#define DEFINE_DeeObject_TGenericFindPrivateAttrInfoStringLenHash
 //#define DEFINE_DeeObject_TGenericFindAttr
-#define DEFINE_DeeObject_TGenericIterAttr
+//#define DEFINE_DeeObject_TGenericIterAttr
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
@@ -105,14 +105,14 @@
 #elif defined(DEFINE_DeeObject_TGenericBoundAttrStringHash)
 #define LOCAL_DeeObject_TGenericAccessAttr                        DeeObject_TGenericBoundAttrStringHash
 #define LOCAL_DeeType_AccessCachedAttr(tp_self, self)             DeeType_BoundCachedAttrStringHash(tp_self, self, attr, hash)
-#define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) (DeeType_HasMethodAttrStringHash(tp_invoker, tp_self, attr, hash) ? 1 : -2)
+#define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_BoundMethodAttrStringHash(tp_invoker, tp_self, self, attr, hash)
 #define LOCAL_DeeType_AccessGetSetAttr(tp_invoker, tp_self, self) DeeType_BoundGetSetAttrStringHash(tp_invoker, tp_self, self, attr, hash)
 #define LOCAL_DeeType_AccessMemberAttr(tp_invoker, tp_self, self) DeeType_BoundMemberAttrStringHash(tp_invoker, tp_self, self, attr, hash)
 #define LOCAL_IS_BOUND
 #elif defined(DEFINE_DeeObject_TGenericBoundAttrStringLenHash)
 #define LOCAL_DeeObject_TGenericAccessAttr                        DeeObject_TGenericBoundAttrStringLenHash
 #define LOCAL_DeeType_AccessCachedAttr(tp_self, self)             DeeType_BoundCachedAttrStringLenHash(tp_self, self, attr, attrlen, hash)
-#define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) (DeeType_HasMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? 1 : -2)
+#define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_BoundMethodAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash)
 #define LOCAL_DeeType_AccessGetSetAttr(tp_invoker, tp_self, self) DeeType_BoundGetSetAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash)
 #define LOCAL_DeeType_AccessMemberAttr(tp_invoker, tp_self, self) DeeType_BoundMemberAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash)
 #define LOCAL_IS_BOUND
