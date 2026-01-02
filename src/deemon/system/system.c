@@ -406,13 +406,13 @@ DeeSystem_IsNormalAndAbsolute(/*utf-8*/ char const *filename, size_t filename_le
 	end = filename + filename_len;
 #ifdef CONFIG_HOST_WINDOWS
 	/* Don't modify special filenames such as `CON' or `NUL' */
-	if (nt_IsSpecialFilename(filename, WSTR_LENGTH(filename)))
+	if (nt_IsSpecialFilename(filename, filename_len))
 		goto yes;
 #endif /* CONFIG_HOST_WINDOWS */
 
 	/* Strip leading space. */
 	filename = unicode_skipspaceutf8_n(filename, end);
-	if (!DeeSystem_IsAbs(filename))
+	if (!DeeSystem_IsAbsN(filename, (size_t)(end - filename)))
 		goto no;
 	iter = flush_start = filename;
 next:
