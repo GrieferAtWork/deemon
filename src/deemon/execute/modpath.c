@@ -26,6 +26,7 @@
 #include <deemon/alloc.h>
 #include <deemon/code.h>
 #include <deemon/dec.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/heap.h>
@@ -3835,7 +3836,7 @@ DeeModule_ImportChildEx(DeeModuleObject *self,
 /************************************************************************/
 /************************************************************************/
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 do_DeeModule_ImportGlobal(/*utf-8*/ char const *__restrict import_str,
                           size_t import_str_size,
                           DeeStringObject *import_str_ob) {
@@ -3845,55 +3846,73 @@ do_DeeModule_ImportGlobal(/*utf-8*/ char const *__restrict import_str,
 		if (DeeModule_Initialize(result) < 0)
 			Dee_Clear(result);
 	}
-	return Dee_AsObject(result);
+	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 do_import_getattr_string_len(char const *__restrict attr, size_t attrlen) {
 	/* Special case: "import_str" is the string "deemon" */
 	if (attrlen == 6 && fs_bcmp(attr, "deemon", 6 * sizeof(char)) == 0)
-		return_reference(DeeModule_GetDeemon());
-	/* TODO: wrap "FileNotFound" errors as "AttributeError" */
+		return_reference_(DeeModule_GetDeemon());
 	return do_DeeModule_ImportGlobal(attr, attrlen, NULL);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 do_import_getattr_string(char const *__restrict attr) {
 	/* Special case: "import_str" is the string "deemon" */
 	if (fs_strcmp(attr, "deemon") == 0)
-		return_reference(DeeModule_GetDeemon());
-	/* TODO: wrap "FileNotFound" errors as "AttributeError" */
+		return_reference_(DeeModule_GetDeemon());
 	return do_DeeModule_ImportGlobal(attr, strlen(attr), NULL);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 do_import_getattr(DeeObject *__restrict attr) {
 	char const *utf8 = DeeString_AsUtf8(attr);
 	if unlikely(!utf8)
 		goto err;
 	if (WSTR_LENGTH(utf8) == 6 && fs_bcmp(utf8, "deemon", 6 * sizeof(char)) == 0)
-		return_reference(DeeModule_GetDeemon());
-	/* TODO: wrap "FileNotFound" errors as "AttributeError" */
+		return_reference_(DeeModule_GetDeemon());
 	return do_DeeModule_ImportGlobal(utf8, WSTR_LENGTH(utf8), (DeeStringObject *)attr);
 err:
 	return NULL;
 }
 
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-import_getattr_string_len_hash(DeeObject *UNUSED(self), char const *attr,
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DCALL
+import_getattr_string_len_hash(DeeObject *self, char const *attr,
                                size_t attrlen, Dee_hash_t UNUSED(hash)) {
-	return do_import_getattr_string_len(attr, attrlen);
+	DREF DeeModuleObject *result;
+	result = do_import_getattr_string_len(attr, attrlen);
+	if unlikely(!result) {
+		DREF DeeObject *fnf;
+		if ((fnf = DeeError_CatchError(&DeeError_FileNotFound)) != NULL)
+			DeeRT_ErrUnknownAttrStrLenWithCause(self, attr, attrlen, DeeRT_ATTRIBUTE_ACCESS_GET, fnf);
+	}
+	return result;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-import_getattr_string_hash(DeeObject *UNUSED(self), char const *attr, Dee_hash_t UNUSED(hash)) {
-	return do_import_getattr_string(attr);
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DCALL
+import_getattr_string_hash(DeeObject *self, char const *attr, Dee_hash_t UNUSED(hash)) {
+	DREF DeeModuleObject *result;
+	result = do_import_getattr_string(attr);
+	if unlikely(!result) {
+		DREF DeeObject *fnf;
+		if ((fnf = DeeError_CatchError(&DeeError_FileNotFound)) != NULL)
+			DeeRT_ErrUnknownAttrStrWithCause(self, attr, DeeRT_ATTRIBUTE_ACCESS_GET, fnf);
+	}
+	return result;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-import_getattr(DeeObject *UNUSED(self), DeeObject *attr) {
-	return do_import_getattr(attr);
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DCALL
+import_getattr(DeeObject *self, DeeObject *attr) {
+	DREF DeeModuleObject *result;
+	result = do_import_getattr(attr);
+	if unlikely(!result) {
+		DREF DeeObject *fnf;
+		if ((fnf = DeeError_CatchError(&DeeError_FileNotFound)) != NULL)
+			DeeRT_ErrUnknownAttrWithCause(self, attr, DeeRT_ATTRIBUTE_ACCESS_GET, fnf);
+	}
+	return result;
 }
 
 

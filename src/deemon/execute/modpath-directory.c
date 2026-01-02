@@ -535,11 +535,11 @@ again:
  *       from elements of "DeeModule_GetLibPath()" */
 
 
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DCALL
 import_getattr(DeeObject *self, DeeObject *attr);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DCALL
 import_getattr_string_hash(DeeObject *self, char const *attr, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DCALL
 import_getattr_string_len_hash(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
@@ -575,7 +575,7 @@ import_hasattr_string_len_hash(DeeObject *self, char const *attr, size_t attrlen
 
 
 PRIVATE struct type_attr import_attr = {
-	/* .tp_getattr                   = */ &import_getattr,
+	/* .tp_getattr                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&import_getattr,
 	/* .tp_delattr                   = */ NULL,
 	/* .tp_setattr                   = */ NULL,
 	/* .tp_iterattr                  = */ NULL, // TODO: &import_iterattr,
@@ -585,7 +585,7 @@ PRIVATE struct type_attr import_attr = {
 	/* .tp_callattr                  = */ NULL,
 	/* .tp_callattr_kw               = */ NULL,
 	/* .tp_vcallattrf                = */ NULL,
-	/* .tp_getattr_string_hash       = */ &import_getattr_string_hash,
+	/* .tp_getattr_string_hash       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&import_getattr_string_hash,
 	/* .tp_delattr_string_hash       = */ NULL,
 	/* .tp_setattr_string_hash       = */ NULL,
 	/* .tp_hasattr_string_hash       = */ &import_hasattr_string_hash,
@@ -593,7 +593,7 @@ PRIVATE struct type_attr import_attr = {
 	/* .tp_callattr_string_hash      = */ NULL,
 	/* .tp_callattr_string_hash_kw   = */ NULL,
 	/* .tp_vcallattr_string_hashf    = */ NULL,
-	/* .tp_getattr_string_len_hash   = */ &import_getattr_string_len_hash,
+	/* .tp_getattr_string_len_hash   = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&import_getattr_string_len_hash,
 	/* .tp_delattr_string_len_hash   = */ NULL,
 	/* .tp_setattr_string_len_hash   = */ NULL,
 	/* .tp_hasattr_string_len_hash   = */ &import_hasattr_string_len_hash,
