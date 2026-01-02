@@ -3853,6 +3853,7 @@ do_import_getattr_string_len(char const *__restrict attr, size_t attrlen) {
 	/* Special case: "import_str" is the string "deemon" */
 	if (attrlen == 6 && fs_bcmp(attr, "deemon", 6 * sizeof(char)) == 0)
 		return_reference(DeeModule_GetDeemon());
+	/* TODO: wrap "FileNotFound" errors as "AttributeError" */
 	return do_DeeModule_ImportGlobal(attr, attrlen, NULL);
 }
 
@@ -3861,6 +3862,7 @@ do_import_getattr_string(char const *__restrict attr) {
 	/* Special case: "import_str" is the string "deemon" */
 	if (fs_strcmp(attr, "deemon") == 0)
 		return_reference(DeeModule_GetDeemon());
+	/* TODO: wrap "FileNotFound" errors as "AttributeError" */
 	return do_DeeModule_ImportGlobal(attr, strlen(attr), NULL);
 }
 
@@ -3871,6 +3873,7 @@ do_import_getattr(DeeObject *__restrict attr) {
 		goto err;
 	if (WSTR_LENGTH(utf8) == 6 && fs_bcmp(utf8, "deemon", 6 * sizeof(char)) == 0)
 		return_reference(DeeModule_GetDeemon());
+	/* TODO: wrap "FileNotFound" errors as "AttributeError" */
 	return do_DeeModule_ImportGlobal(utf8, WSTR_LENGTH(utf8), (DeeStringObject *)attr);
 err:
 	return NULL;
@@ -4224,6 +4227,12 @@ do_DeeModule_PrintRelNameEx_impl(DeeModuleObject *__restrict self,
 		return do_DeeModule_PrintRelNameEx_impl2(self, printer, arg, context_absname,
 		                                         context_absname_size, flags);
 	}
+	if unlikely(!context_absname_size) {
+		result = DeeError_Throwf(&DeeError_ValueError,
+		                         "Cannot form relative name of %k to empty context string",
+		                         self);
+		return result;
+	}
 	if (context_absname_ob) {
 		context_absname_ob = (DREF DeeStringObject *)DeeSystem_MakeNormalAndAbsolute((DeeObject *)context_absname_ob);
 	} else {
@@ -4256,8 +4265,10 @@ PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeModule_CanHaveRelName(DeeModuleObject const *__restrict self) {
 	if (self->mo_absname == NULL)
 		return false;
-	if (self->mo_flags & Dee_MODULE_FABSFILE)
-		return false;
+	if (self->mo_flags & Dee_MODULE_FABSFILE) {
+		if (Dee_TYPE(self) != &DeeModuleDir_Type)
+			return false;
+	}
 	return true;
 }
 
@@ -4320,16 +4331,19 @@ err_printer:
 /* Return the relative import name of `self' when accessed from a file or module
  * `context_absname'. For more information, see `DeeModule_GetRelNameEx()'.
  * 
+ * @param: flags: Set of `DeeModule_RELNAME_F_*'
  * @return: * :        The module's name, written relative to `context_absname'
  * @return: ITER_DONE: The given module is anonymous or has its `Dee_MODULE_FABSFILE' flag set
  * @return: NULL:      An error was thrown. */
 PUBLIC WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeModule_GetRelName(DeeModuleObject *__restrict self,
-                     /*Module|String|Type|None*/ DeeObject *context_absname) {
+                     /*Module|String|Type|None*/ DeeObject *context_absname,
+                     unsigned int flags) {
 	char const *context_absname_utf8;
 	size_t context_absname_size;
 	DeeStringObject *context_absname_ob = NULL;
 	if (context_absname == NULL || DeeNone_Check(context_absname)) {
+no_context:
 		context_absname_utf8 = NULL;
 		context_absname_size = 0;
 	} else if (DeeModule_Check(context_absname)) {
@@ -4338,19 +4352,28 @@ DeeModule_GetRelName(DeeModuleObject *__restrict self,
 			return_reference(&str_dot);
 		context_absname_utf8 = context_mod->mo_absname;
 		context_absname_size = context_absname_utf8 ? strlen(context_absname_utf8) : 0;
+		flags &= ~DeeModule_RELNAME_F_CTXDIR;
 	} else if (DeeString_Check(context_absname)) {
 		context_absname_ob = (DeeStringObject *)context_absname;
 		context_absname_utf8 = DeeString_AsUtf8(context_absname);
 		if unlikely(!context_absname_utf8)
 			goto err;
 		context_absname_size = WSTR_LENGTH(context_absname_utf8);
+	} else if (DeeType_Check(context_absname)) {
+		DREF /*String*/ DeeObject *result;
+		context_absname = Dee_AsObject(DeeType_GetModule((DeeTypeObject *)context_absname));
+		if (!context_absname)
+			goto no_context;
+		result = DeeModule_GetRelName(self, context_absname, flags);
+		Dee_Decref_unlikely(context_absname);
+		return result;
 	} else {
-		DeeObject_TypeAssertFailed2(context_absname, &DeeModule_Type, &DeeString_Type);
+		DeeObject_TypeAssertFailed3(context_absname, &DeeModule_Type, &DeeString_Type, &DeeType_Type);
 		goto err;
 	}
 	return do_DeeModule_GetRelNameEx(self,
 	                                 context_absname_utf8, context_absname_size,
-	                                 context_absname_ob, DeeModule_RELNAME_F_NORMAL);
+	                                 context_absname_ob, flags);
 err:
 	return NULL;
 }
@@ -4360,7 +4383,8 @@ DeeModule_GetRelNameEx(DeeModuleObject *__restrict self,
                        /*utf-8*/ char const *context_absname,
                        size_t context_absname_size, unsigned int flags) {
 	return do_DeeModule_GetRelNameEx(self, context_absname,
-	                                 context_absname_size, NULL, flags);
+	                                 context_absname_size,
+	                                 NULL, flags);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

@@ -874,12 +874,14 @@ DeeModule_GetFileName(DeeModuleObject *__restrict self);
 /* Return the relative import name of `self' when accessed from a file or module
  * `context_absname'. For more information, see `DeeModule_GetRelNameEx()'.
  * 
+ * @param: flags: Set of `DeeModule_RELNAME_F_*'
  * @return: * :        The module's name, written relative to `context_absname'
  * @return: ITER_DONE: The given module is anonymous or has its `Dee_MODULE_FABSFILE' flag set
  * @return: NULL:      An error was thrown. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeModule_GetRelName(DeeModuleObject *__restrict self,
-                     /*Module|String|Type|None*/ DeeObject *context_absname);
+                     /*Module|String|Type|None*/ DeeObject *context_absname,
+                     unsigned int flags);
 
 /* Same as `DeeModule_GetRelName()', but allows you to specify the context
  * path in the same manner as can be specified by `DeeModule_OpenEx()':

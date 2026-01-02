@@ -137,6 +137,7 @@ local kw_lists = {
 	{"total", "more", "weak"},
 	{"reason", "fp", "traceback"},
 	{"reason", "error", "fp", "traceback"},
+	{"to", "libname", "todir"},
 
 	// For runtime errors...
 	{"value", "minval", "maxval", "positive"},
@@ -265,6 +266,7 @@ DECLARE_KWLIST(kwlist__template, { KEX("template", 0xa21c009f, 0xb466762d86160f0
 DECLARE_KWLIST(kwlist__text_module_constants_except_nlocal_nstack_nref_nstatic_argc_keywords_defaults_flags_ddi, { KEX("text", 0xc624ae24, 0x2a28a0084dd3a743), KEX("module", 0xae3684a4, 0xbb78a82535e5801e), KEX("constants", 0x8d73036e, 0xba127eb7623ae369), KEX("except", 0x8aae072b, 0xac70487e4861a6f3), KEX("nlocal", 0xae97b3ed, 0x23bb6e6e6190e9d7), KEX("nstack", 0xb92ec26e, 0x80220c290516f55), KEX("nref", 0x7951b608, 0xb8d28d6292d2f6cb), KEX("nstatic", 0xf17d253b, 0x6229886d9780e339), KEX("argc", 0xe5c6c120, 0xd96a642eb89eed13), KEX("keywords", 0xe751d20, 0x68e3cfd5fbfbc77a), KEX("defaults", 0xd48dea84, 0x2f0dce9444829201), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("ddi", 0xe141111d, 0x958d321a1dacb4ed), KEND });
 DECLARE_KWLIST(kwlist__thisarg, { KEX("thisarg", 0xfeb6b4f, 0xd3f418e6f91d6ac1), KEND });
 DECLARE_KWLIST(kwlist__thisarg_value, { KEX("thisarg", 0xfeb6b4f, 0xd3f418e6f91d6ac1), KEX("value", 0xd9093f6e, 0x69e7413ae0c88471), KEND });
+DECLARE_KWLIST(kwlist__to_libname_todir, { KEX("to", 0x912a85b, 0x17de168783fb672d), KEX("libname", 0x32598baa, 0xb2f989a293116ac3), KEX("todir", 0x85239856, 0xf4df4864111e59f9), KEND });
 DECLARE_KWLIST(kwlist__total_more, { KEX("total", 0x48601e35, 0xd63cdba353c9c786), KEX("more", 0x8a39c376, 0xff9278cf274776cc), KEND });
 DECLARE_KWLIST(kwlist__total_more_weak, { KEX("total", 0x48601e35, 0xd63cdba353c9c786), KEX("more", 0x8a39c376, 0xff9278cf274776cc), KEX("weak", 0x41118332, 0xc8855a0749fb5152), KEND });
 DECLARE_KWLIST(kwlist__tuple_kwds, { KEX("tuple", 0x8abf5ca6, 0x32af754eabcdc75a), KEX("kwds", 0x6dfae69b, 0x66fee9115d75f3ef), KEND });

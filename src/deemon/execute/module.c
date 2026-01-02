@@ -51,6 +51,7 @@
 #include <deemon/dex.h>
 #endif /* !CONFIG_NO_DEX */
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
@@ -2433,6 +2434,72 @@ INTERN struct type_attr module_attr = {
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #define module_get_code DeeModule_GetRootCode
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+module_get_directory(DeeModuleObject *__restrict self) {
+	DREF DeeObject *result = DeeModule_GetDirectory(self);
+	Dee_XIncref(result);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+module_get_filename(DeeModuleObject *__restrict self) {
+	DREF DeeObject *result = DeeModule_GetFileName(self);
+	if (result == ITER_DONE)
+		result = DeeRT_ErrUnboundAttrCStr(self, "__filename__");
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+module_bound_filename(DeeModuleObject *__restrict self) {
+	return Dee_BOUND_FROMBOOL(self->mo_absname != NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+module_get_path(DeeModuleObject *__restrict self) {
+	DREF DeeObject *result = DeeModule_GetFileName(self);
+	if (result == ITER_DONE)
+		result = DeeNone_NewRef();
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+module_relname(DeeModuleObject *__restrict self, size_t argc,
+               DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *result;
+	unsigned int flags;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__relname__", params: """
+	DeeObject *to:?X4?DModule?Dstring?DType?N=!N;
+	bool libname = false;
+	bool todir = false;
+""", docStringPrefix: "module");]]]*/
+#define module___relname___params "to:?X4?DModule?Dstring?DType?N=!N,libname=!f,todir=!f"
+	struct {
+		DeeObject *to;
+		bool libname;
+		bool todir;
+	} args;
+	args.to = Dee_None;
+	args.libname = false;
+	args.todir = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__to_libname_todir, "|obb:__relname__", &args))
+		goto err;
+/*[[[end]]]*/
+	flags = DeeModule_RELNAME_F_NORMAL;
+	if (args.libname)
+		flags |= DeeModule_RELNAME_F_LIBNAM;
+	if (args.todir)
+		flags |= DeeModule_RELNAME_F_CTXDIR;
+	result = DeeModule_GetRelName(self, args.to, flags);
+	if unlikely(result == ITER_DONE)
+		goto err_noname;
+	return result;
+err_noname:
+	DeeError_Throwf(&DeeError_ValueError, "Cannot form relative name for module %k", self);
+err:
+	return NULL;
+}
+
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 PRIVATE NONNULL((1)) int DCALL
 err_module_not_fully_loaded(DeeModuleObject *__restrict self) {
@@ -2483,6 +2550,8 @@ PRIVATE struct type_member tpconst module_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__absname__", STRUCT_STRING, offsetof(DeeModuleObject, mo_absname),
 	                      "The absolute name of this module (as can be passed to "
 	                      /**/ "$import to access this module from any context)"),
+	TYPE_MEMBER_FIELD_DOC("__haspath__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeModuleObject, mo_absname),
+	                      "Deprecated alias for ${this.__filename__ is bound}"),
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	TYPE_MEMBER_FIELD_DOC(STR___name__, STRUCT_OBJECT, offsetof(DeeModuleObject, mo_name),
 	                      "->?Dstring\n"
@@ -2495,6 +2564,23 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_ViewExports(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_ViewGlobals(DeeObject *__restrict self);
+
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+PRIVATE struct type_method tpconst module_methods[] = {
+	TYPE_KWMETHOD_F("__relname__", &module_relname, METHOD_FNOREFESCAPE,
+	                "(to:?X4?DModule?Dstring?DType?N=!N,libname=!f,todir=!f)->?Dstring\n"
+	                "#tValueError{?#__filename__ is unbound, or @to is an empty string and @libname is false, or @this has no libnames}"
+	                "Form the import name of @this module relative to @to. When @to is a string, it "
+	                /**/ "should be the filename (like ?#__filename__) of a deemon script relative to "
+	                /**/ "which the string should be generated. However, when @todir is $true and @to "
+	                /**/ "is a string, then @to is the directory of the reference file instead of the "
+	                /**/ "reference file itself\n"
+	                "When @libname is true, try to return ${__libnames__.first} instead (s.a. ?#__libnames__)"),
+	TYPE_METHOD_END
+};
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#define module_methods NULL
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 PRIVATE struct type_getset tpconst module_getsets[] = {
 	TYPE_GETTER_AB("__exports__", &DeeModule_ViewExports,
@@ -2517,9 +2603,25 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 	TYPE_GETTER_AB("__globals__", &DeeModule_ViewGlobals,
 	               "->?S?O\n"
 	               "Similar to ?#__exports__, however global variables are addressed using their "
-	               /**/ "internal index. Using this, anonymous global variables (such as property callbacks) "
-	               /**/ "can be accessed and modified"),
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	               /**/ "internal index. Using this, anonymous global variables (such as property "
+	               /**/ "callbacks) can be accessed and modified"),
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	TYPE_GETTER_AB_F("__directory__", &module_get_directory, METHOD_FNOREFESCAPE,
+	                 "->?S?Dstring\n"
+	                 "Returns the names of all child-modules located "
+	                 /**/ "within the directory specified by ?#__absname__\n"
+	                 "These strings can be used as attribute names with "
+	                 /**/ "?#{op:getattr} to retrieve the relevant module"),
+	TYPE_GETTER_BOUND_F("__filename__", &module_get_filename, &module_bound_filename, METHOD_FNOREFESCAPE,
+	                    "->?Dstring\n"
+	                    "#tUnboundAttribute{Module does not originate from the filesystem}\n"
+	                    "Returns the actual filename (as opposed to the unique / "
+	                    /**/ "directory-name returned by ?#__absname__) of this module"),
+	TYPE_GETTER_AB_F("__path__", &module_get_path, METHOD_FNOREFESCAPE,
+	                 "->?X2?Dstring?N\n"
+	                 "Deprecated alias for ${this.__filename__ is bound ? this.__filename__ : none}"),
+	/* TODO: __libnames__->?S?Dstring (to expose DeeModule_GetLibName() and DeeModule_GetLibNameCount()) */
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	TYPE_GETTER_F("__code__", &module_get_code, METHOD_FNOREFESCAPE,
 	              "->?Ert:Code\n"
 	              "#tValueError{The Module hasn't been fully loaded}"
@@ -2593,6 +2695,7 @@ module_class_gethome(DeeObject *__restrict UNUSED(self)) {
 }
 
 PRIVATE struct type_getset tpconst module_class_getsets[] = {
+
 	TYPE_GETTER_AB("home", &module_class_gethome,
 	               "->?Dstring\n"
 	               "The deemon home path (usually the path where the deemon executable resides)"),
@@ -2602,6 +2705,9 @@ PRIVATE struct type_getset tpconst module_class_getsets[] = {
 	               "A tuple of strings describing the search path for system libraries"),
 	/* TODO: User-code access to "DeeModule_AddLibPath" */
 	/* TODO: User-code access to "DeeModule_RemoveLibPath" */
+	/* TODO: User-code access to "DeeModule_NextAbsTree" */
+	/* TODO: User-code access to "DeeModule_NextAdrTree" */
+	/* TODO: User-code access to "DeeModule_NextLibTree" */
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	TYPE_GETSET_AB("path", &module_class_getpath, NULL, &module_class_setpath,
 	               "->?DList\n"
@@ -3338,7 +3444,7 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 	/* .tp_attr          = */ &module_attr,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ module_methods,
 	/* .tp_getsets       = */ module_getsets,
 	/* .tp_members       = */ module_members,
 	/* .tp_class_methods = */ module_class_methods,
