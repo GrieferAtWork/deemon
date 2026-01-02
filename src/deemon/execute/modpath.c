@@ -375,15 +375,20 @@ Dee_dexataddr_compare(Dee_dexataddr_t const *__restrict lhs,
  * @return: false: Failure */
 LOCAL WUNUSED NONNULL((1)) bool DCALL
 Dee_dexataddr_init_fromaddr(Dee_dexataddr_t *__restrict self, void const *addr) {
+#ifndef HAVE_Dee_dexataddr_t_SINGLE_IMPL
+	bzero(self, sizeof(*self));
+#endif /* !HAVE_Dee_dexataddr_t_SINGLE_IMPL */
 #ifdef Dee_DEXATADDR_USE__GetModuleHandleExW
-	BOOL bOk;
-	DBG_ALIGNMENT_DISABLE();
-	bOk = GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-	                         GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-	                         (LPCWSTR)addr, (HMODULE *)&self->daa_ntModule);
-	DBG_ALIGNMENT_ENABLE();
-	if (bOk)
-		return true;
+	{
+		BOOL bOk;
+		DBG_ALIGNMENT_DISABLE();
+		bOk = GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+		                         GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+		                         (LPCWSTR)addr, (HMODULE *)&self->daa_ntModule);
+		DBG_ALIGNMENT_ENABLE();
+		if (bOk)
+			return true;
+	}
 #endif /* Dee_DEXATADDR_USE__GetModuleHandleExW */
 #ifdef Dee_DEXATADDR_USE__dlgethandle
 	if ((lhs->daa_dlhandle = (void *)dlgethandle(addr, DLGETHANDLE_FNORMAL)) != NULL)
