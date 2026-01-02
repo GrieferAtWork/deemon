@@ -970,10 +970,8 @@ extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
 /* Keep clearing global hooks while invoking the GC to
  * finalize all user-objects that may still be loaded.
  * This function can be called any number of times, but
- * is intended to be called once before deemon gets unloaded.
- * @return: * : The total number of GC object that were collected. */
-PUBLIC size_t DCALL Dee_Shutdown(void) {
-	size_t result = 0, temp;
+ * is intended to be called once before deemon gets unloaded. */
+PUBLIC void DCALL Dee_Shutdown(unsigned int flags) {
 	size_t num_gc = 0, num_empty_gc = 0;
 	for (;;) {
 		bool must_continue = false;
@@ -1021,9 +1019,7 @@ do_kill_user:
 		must_continue |= shutdown_globals();
 
 		/* Collect as many GC objects as possible. */
-		temp = DeeGC_Collect((size_t)-1);
-		if (temp) {
-			result += temp;
+		if (DeeGC_Collect((size_t)-1)) {
 			num_empty_gc = 0; /* Reset the empty-gc counter. */
 			continue;
 		}
@@ -1052,11 +1048,6 @@ do_kill_user:
 			break;
 	}
 
-	/* Uninstall the keyboard interrupt handler. */
-#ifndef CONFIG_NO_KEYBOARD_INTERRUPT
-	DeeError_UninstallKeyboardInterrupt();
-#endif /* !CONFIG_NO_KEYBOARD_INTERRUPT */
-
 	/* Shutdown all loaded DEX extensions. */
 #ifndef CONFIG_NO_DEX
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
@@ -1065,6 +1056,17 @@ do_kill_user:
 	DeeDex_Finalize();
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #endif /* !CONFIG_NO_DEX */
+
+	/* If the caller indicates a fast shutdown, then we don't have to bother
+	 * doing all the other cleanup below that's only purpose is to prevent
+	 * memory leaks. */
+	if (flags & Dee_Shutdown_F_FAST)
+		return;
+
+	/* Uninstall the keyboard interrupt handler. */
+#ifndef CONFIG_NO_KEYBOARD_INTERRUPT
+	DeeError_UninstallKeyboardInterrupt();
+#endif /* !CONFIG_NO_KEYBOARD_INTERRUPT */
 
 	/* Free up cached objects. They're not actually memory leaks, mkay?
 	 * Any malloc()-ed heap-block at application exit is a pretty broad
@@ -1106,7 +1108,8 @@ do_kill_user:
 #ifndef CONFIG_NO_OBJECT_SLABS
 	DeeSlab_Finalize();
 #endif /* !CONFIG_NO_OBJECT_SLABS */
-	return result;
+
+	/* TODO: Instruct our version of dlmalloc to release all heap segments still in-cache */
 }
 
 

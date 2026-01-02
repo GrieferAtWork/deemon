@@ -1691,10 +1691,10 @@
 		<ClCompile Include="..\src\deemon\execute\modpath.c">
 			<Filter>src\execute</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\execute\module.c">
+		<ClCompile Include="..\src\deemon\execute\module-globals.c">
 			<Filter>src\execute</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\execute\module_globals.c">
+		<ClCompile Include="..\src\deemon\execute\module.c">
 			<Filter>src\execute</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\main.c">
@@ -2098,6 +2098,9 @@
 		<None Include="..\cpp.hint" />
 		<None Include="..\include\deemon\compiler\lexer.def">
 			<Filter>include\compiler</Filter>
+		</None>
+		<None Include="..\include\deemon\dec.md">
+			<Filter>include</Filter>
 		</None>
 		<None Include="..\src\deemon\compiler\asm\userdb.def">
 			<Filter>src\compiler\asm</Filter>

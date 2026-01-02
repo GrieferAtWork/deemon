@@ -1266,9 +1266,7 @@ INTERN struct Dee_module_dexdata deemon_dexdata = {
 	/* .mdx_init   = */ NULL,
 	/* .mdx_fini   = */ NULL,
 	/* .mdx_clear  = */ NULL,
-	/* .mdx_heap   = */ { NULL },
-	/* .mdx_typemc = */ { NULL },
-	/* ._mdx_pad   = */ { NULL, NULL, NULL, NULL, NULL, NULL, NULL }
+	/* ._mdx_pad   = */ { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }
 };
 
 /* Called during finalization of the associated dex module */
@@ -9382,7 +9380,7 @@ PRIVATE NONNULL((2)) Dee_ssize_t DCALL
 module_enumerate_next_cb(void *arg, DeeModuleObject *__restrict mod) {
 	Dee_Incref(mod);
 	*(DeeModuleObject **)arg = mod;
-	return -1;
+	return -1; /* Stop enumeration */
 }
 
 PUBLIC WUNUSED DREF DeeModuleObject *DCALL
@@ -9413,7 +9411,7 @@ module_enumerate_next_lib_cb(void *arg, DeeModuleObject *__restrict mod,
 	data->menld_name = libname;
 	Dee_Incref(mod);
 	Dee_Incref(libname);
-	return -1;
+	return -1; /* Stop enumeration */
 }
 
 PUBLIC WUNUSED NONNULL((4)) DREF DeeModuleObject *DCALL

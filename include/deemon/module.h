@@ -1826,6 +1826,12 @@ DeeModule_EnumerateLibTree(Dee_module_enumerate_lib_cb_t cb, void *arg,
                            DeeModuleObject *start_after_mod,
                            /*String*/ DeeObject *start_after_name,
                            DeeTypeObject *opt_type_filter);
+#ifdef CONFIG_NO_DEX
+#define DeeModule_EnumerateDexModules(cb, arg, start_after) 0
+#else /* CONFIG_NO_DEX */
+#define DeeModule_EnumerateDexModules(cb, arg, start_after) \
+	DeeModule_EnumerateAdrTree(cb, arg, start_after, &DeeModuleDex_Type)
+#endif /* !CONFIG_NO_DEX */
 
 /* Convenience wrappers around `DeeModule_Enumerate*' that return whatever
  * module comes after "prev" (if such a module exists), or "NULL" if no such

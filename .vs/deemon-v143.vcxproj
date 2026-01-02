@@ -573,8 +573,8 @@
 		<ClCompile Include="..\src\deemon\execute\interactive-module.c" />
 		<ClCompile Include="..\src\deemon\execute\modpath-directory.c" />
 		<ClCompile Include="..\src\deemon\execute\modpath.c" />
+		<ClCompile Include="..\src\deemon\execute\module-globals.c" />
 		<ClCompile Include="..\src\deemon\execute\module.c" />
-		<ClCompile Include="..\src\deemon\execute\module_globals.c" />
 		<ClCompile Include="..\src\deemon\main.c" />
 		<ClCompile Include="..\src\deemon\objects\attribute.c" />
 		<ClCompile Include="..\src\deemon\objects\bool.c" />
@@ -721,6 +721,7 @@
 		<None Include="..\README.md" />
 		<None Include="..\cpp.hint" />
 		<None Include="..\include\deemon\compiler\lexer.def" />
+		<None Include="..\include\deemon\dec.md" />
 		<None Include="..\src\deemon\compiler\asm\userdb.def" />
 		<CustomBuild Include="..\src\deemon\execute\asm\altstack.ms-x64.S">
 			<FileType>Document</FileType>

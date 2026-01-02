@@ -1464,6 +1464,11 @@ done:
 	/* Reset the argument vector tuple. */
 	Dee_SetArgv(Dee_EmptyTuple);
 
+#undef CONFIG_ALWAYS_LOG_LEAKS
+#if !defined(NDEBUG) && 0
+#define CONFIG_ALWAYS_LOG_LEAKS
+#endif
+
 	/* Shutdown the deemon core.
 	 * This function does pretty much everything for us:
 	 *  - Interrupt + join all threads but the main one.
@@ -1471,12 +1476,11 @@ done:
 	 *  - Unload all loaded DEX modules.
 	 *  - ...
 	 */
-	Dee_Shutdown();
-
-#undef CONFIG_ALWAYS_LOG_LEAKS
-#if !defined(NDEBUG) && 0
-#define CONFIG_ALWAYS_LOG_LEAKS
-#endif
+#if !defined(NDEBUG) || !defined(CONFIG_ALWAYS_LOG_LEAKS) || defined(CONFIG_TRACE_REFCHANGES)
+	Dee_Shutdown(Dee_Shutdown_F_NORMAL);
+#else /* !NDEBUG || !CONFIG_ALWAYS_LOG_LEAKS || CONFIG_TRACE_REFCHANGES */
+	Dee_Shutdown(Dee_Shutdown_F_FAST);
+#endif /* NDEBUG && CONFIG_ALWAYS_LOG_LEAKS && !CONFIG_TRACE_REFCHANGES */
 
 #ifndef NDEBUG
 #ifndef CONFIG_ALWAYS_LOG_LEAKS

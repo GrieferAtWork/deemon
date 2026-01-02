@@ -3176,10 +3176,67 @@ module_dex_destroy(DeeModuleObject *__restrict self) {
 	/* Go through "membercache_list" and remove all entries
 	 * with static addresses that map into this module.
 	 *
-	 * FIXME: This is an O(N) operation where "N" is the number
-	 *        of member caches registered globally. Instead of
-	 *        having this cache be global, it should be per-dex-module. */
+	 * NOTE: This is an O(N) operation where "N" is the number
+	 *       of member caches registered globally. However:
+	 *       any solution that would make this faster would
+	 *       most definitely end up making the process of
+	 *       registering type member caches slower than the
+	 *       O(1) it currently is:
+	 *       >> membercache_list_lock_acquire();
+	 *       >> LIST_INSERT_HEAD(&membercache_list, mc, mc_link);
+	 *       >> membercache_list_lock_release(); */
 	Dee_membercache_clearall_of_module(self);
+
+	/* TODO: Somehow free all lazily allocated caches of static objects from "self"
+	 * >> PRIVATE DEFINE_STRING(my_string, "Hi there!");
+	 * >> ...
+	 * >> PRIVATE void DCALL i_get_called_from_usercode(void) {
+	 * >>     Dee_wchar_t *wstr = DeeString_AsWide(Dee_AsObject(&my_string));
+	 * >>     ...
+	 * >> }
+	 *
+	 * In the above code, "wstr" will eventually leak, because "my_string" is
+	 * statically allocated and is never freed. Dee modules don't have this
+	 * problem because those use a smarter approach of emulating a proper heap
+	 * across the whole module.
+	 *
+	 * One idea (that I DON'T want to go for) would be to define an API that
+	 * allows one to allocate "static" memory that will be free'd when some
+	 * associated module is unloaded:
+	 * >> void *DCALL Dee_StaticMalloc(void *reference, size_t num_bytes);
+	 *
+	 * Here, "reference" would be a pointer to the "T *" that is being lazily
+	 * allocated, and would be used with `DeeModule_OfPointer(reference)' to
+	 * determine which dex module (if any) must free the heap block once that
+	 * module gets unloaded.
+	 *
+	 * However: therein lies the problem: `DeeModule_OfPointer()' is O(log(N))
+	 *          for the # of currently loaded dex modules, which is simply too
+	 *          slow. The overhead added by this additional tracking *MUST*
+	 *          remain O(1), since it's only needed for the case where the
+	 *          user wants to unload dex modules, but not exit deemon entirely.
+	 *          (Currently, that doesn't even work at all; see FIXME below),
+	 *          but regular (hot) execution can't be made slower just to solve
+	 *          a memory leak that only happens during special-case (cold)
+	 *          execution.
+	 *
+	 * NOTES:
+	 * - The only memory affected by are allocations that currently get
+	 *   piped through `Dee_UntrackAlloc()' right now.
+	 * - The reason why these allocations don't qualify as memory leaks is:
+	 *   - the total sum of memory they can allocate is O(1), because
+	 *   - dex modules are never unloaded, so a cache that was allocated
+	 *     once, will remain allocated until deemon exits
+	 * - however:
+	 *   - by working towards the goal of allowing dex modules to be unloaded
+	 *     prior to deemon exiting, dex modules can be re-loaded an arbitrary
+	 *     number of times,
+	 *   - which means that these cache allocations can be repeated
+	 *   - which means that the O(1) above becomes O(n), where "n" is the
+	 *     number of times that some dex module with a lazily allocated
+	 *     cache was loaded+unloaded
+	 *   - thus turning the allocation into a real leak
+	 */
 
 #if 0
 	/* FIXME: Work-around for preventing DEX modules being unloaded

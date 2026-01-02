@@ -53,7 +53,7 @@ struct Dee_type_struct_cache {
 };
 
 #define Dee_type_struct_cache_alloc() \
-	((struct Dee_type_struct_cache *)Dee_UntrackAlloc(Dee_TryCalloc(sizeof(struct Dee_type_struct_cache))))
+	((struct Dee_type_struct_cache *)Dee_TryCalloc(sizeof(struct Dee_type_struct_cache)))
 #define Dee_type_struct_cache_free(self) Dee_Free(self)
 LOCAL NONNULL((1)) void DCALL
 Dee_type_struct_cache_destroy(struct Dee_type_struct_cache *__restrict self) {

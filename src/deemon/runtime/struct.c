@@ -315,10 +315,8 @@ Dee_type_struct_cache_of(DeeTypeObject *__restrict self) {
 		result = Dee_type_struct_cache_alloc();
 		if likely(result) {
 			if likely(atomic_cmpxch(&mhc->mhc_structcache, NULL, result)) {
-#ifndef NDEBUG
 				if (!(self->tp_flags & TP_FHEAP))
 					Dee_UntrackAlloc(result);
-#endif /* !NDEBUG */
 			} else {
 				Dee_type_struct_cache_free(result);
 				result = atomic_read(&mhc->mhc_structcache);

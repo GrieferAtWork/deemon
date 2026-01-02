@@ -364,8 +364,24 @@ DFUNDEF void DCALL Dee_Initialize(void);
  * finalize all user-objects that may still be loaded.
  * This function can be called any number of times, but
  * is intended to be called once before deemon gets unloaded.
- * @return: * : The total number of GC object that were collected. */
-DFUNDEF size_t DCALL Dee_Shutdown(void);
+ *
+ * After this function was called, `Dee_Initialize()' must
+ * be called before deemon APIs are once again safe to use.
+ *
+ * @param: Set of `Dee_Shutdown_F_*' */
+DFUNDEF void DCALL Dee_Shutdown(unsigned int flags);
+#define Dee_Shutdown_F_NORMAL 0x0000 /* Normal (full) shutdown */
+#define Dee_Shutdown_F_FAST   0x0001 /* Perform a "fast" shutdown that only guaranties that objects whose
+                                      * destructors may have side-effects (including nested side-effects
+                                      * such as destroying a tuple containing an object whose destructor
+                                      * has a side-effect) are destroyed.
+                                      * When this flag is set, deemon **WILL** leak **LOTS** of memory,
+                                      * and it is **NOT** safe to call `Dee_Initialize()' again.
+                                      * Only use this option if you:
+                                      * - are about to exit(2) or return from your main()
+                                      * - Fully unload deemon (i.e.: dlclose() the deemon core), or
+                                      *   are not going to interact with deemon anymore, and don't
+                                      *   care about the memory leaks that this flag causes. */
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Used internally to prevent any further execution of user-code
