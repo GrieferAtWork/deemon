@@ -9288,14 +9288,30 @@ DeeModule_EnumerateLibTree(Dee_module_enumerate_lib_cb_t cb, void *arg,
 	Dee_ssize_t result = 0;
 	struct Dee_module_libentry *iter;
 	DREF DeeStringObject *prev_name = NULL;
+	if (start_after_mod == &DeeModule_Deemon) {
+		start_after_mod  = NULL;
+		start_after_name = NULL;
+	} else if (start_after_mod == NULL) {
+		/* Start by enumerating "deemon" itself */
+		result = (*cb)(arg, &DeeModule_Deemon, Dee_AsObject(&str_deemon));
+		if unlikely(result < 0)
+			return result;
+	}
+
+	/* Enumerate all regular modules */
 	module_libtree_lock_read();
 	if (start_after_mod) {
 		iter = &start_after_mod->mo_libname;
 		if (start_after_name) {
+			ASSERT_OBJECT_TYPE_EXACT(start_after_name, &DeeString_Type);
 			while (iter->mle_name != (DeeStringObject *)start_after_name) {
 				iter = iter->mle_next;
-				if (!iter)
-					goto empty_unlock;
+				if (!iter) {
+					/* This can happen if the caller's libname got removed */
+					prev_name = (DeeStringObject *)start_after_name;
+					Dee_Incref(prev_name);
+					goto continue_after_prev_name;
+				}
 			}
 		}
 		iter = module_libtree_nextnode(iter);
@@ -9337,6 +9353,7 @@ continue_at_iter:
 					 * In this case, use the reference in "prev_name" to find
 					 * the smallest entry that is still `> prev_name' */
 					ASSERT(prev_name);
+continue_after_prev_name:
 					iter = module_libtree_nextafter(module_libtree_root, prev_name);
 					if (!iter)
 						goto done_unlock;
