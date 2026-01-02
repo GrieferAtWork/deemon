@@ -233,7 +233,7 @@ asm_gcall_func(struct ast *__restrict func,
 		 *    itself as a constant. */
 		DREF DeeFunctionObject *function;
 		Dee_Free(refv);
-		function = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs(Dee_AsObject(code));
+		function = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs(code);
 		Dee_Decref(code);
 		if unlikely(!function)
 			goto err_refargv;

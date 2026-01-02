@@ -1848,8 +1848,8 @@ err_oo_class_reinit_lvalue:
 				if (DeeModule_Check(mod)) {
 					struct module_symbol *symbol;
 					symbol = DeeModule_GetSymbolStringLenHash((DREF DeeModuleObject *)mod,
-					                                      symbol_name, symbol_size,
-					                                      symbol_hash);
+					                                          symbol_name, symbol_size,
+					                                          symbol_hash);
 					if unlikely(!symbol) {
 						DeeError_Throwf(&DeeError_SymbolError,
 						                "Symbol `%$s' could not be found in mod `%k'",

@@ -2483,7 +2483,7 @@ PRIVATE int DeeThread_Entry_func(void *arg)
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		else if (exec_code == exec_code->co_module->mo_moddata.mo_rootcode) {
 			char const *short_name;
-			short_name = DeeModule_GetShortName((DeeObject *)exec_code->co_module);
+			short_name = DeeModule_GetShortName(exec_code->co_module);
 			if (short_name) {
 				DBG_ALIGNMENT_DISABLE();
 				DeeThread_SetName(short_name);
@@ -3746,7 +3746,7 @@ thread_print_impl(DeeThreadObject *__restrict self,
 			exec_name     = DeeCode_NAME(exec_code);
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 			if (exec_name == NULL && exec_code == exec_code->co_module->mo_moddata.mo_rootcode)
-				exec_name = DeeModule_GetShortName((DeeObject *)exec_code->co_module);
+				exec_name = DeeModule_GetShortName(exec_code->co_module);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			if (exec_name == NULL && exec_code == exec_code->co_module->mo_root)
 				exec_name = DeeString_STR(exec_code->co_module->mo_name);

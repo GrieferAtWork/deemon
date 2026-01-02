@@ -82,9 +82,9 @@ INTERN WUNUSED NONNULL((1, 2)) int
 		DeeModuleObject *symmod;
 		symmod = SYMBOL_EXTERN_MODULE(sym);
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-		error  = DeeModule_Initialize(Dee_AsObject(symmod));
+		error  = DeeModule_Initialize(symmod);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		error  = DeeModule_RunInit(Dee_AsObject(symmod));
+		error  = DeeModule_RunInit(symmod);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		if unlikely(error < 0)
 			goto err;

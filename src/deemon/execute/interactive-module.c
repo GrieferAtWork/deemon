@@ -664,7 +664,7 @@ gencode_failed:
 			current_code->co_next = NULL;
 			/* Fill in module-field of the new code object. */
 			Dee_Incref(&self->im_module);
-			current_code->co_module = (DREF DeeModuleObject *)self;
+			current_code->co_module = &self->im_module;
 
 			ASSERT((current_code->co_exceptc != 0) ==
 			       (current_code->co_exceptv != 0));
@@ -723,7 +723,7 @@ gencode_failed:
 			if (DeeObject_IsShared(self->im_frame.cf_func)) {
 				DeeFunctionObject *new_self_func;
 				/* Must create a new function-object. */
-				new_self_func = (DeeFunctionObject *)DeeFunction_NewNoRefs(Dee_AsObject(current_code));
+				new_self_func = (DeeFunctionObject *)DeeFunction_NewNoRefs(current_code);
 				Dee_DecrefNokill(current_code);
 				if unlikely(!new_self_func) {
 					result = NULL;
@@ -774,7 +774,7 @@ recover_old_code_object:
 			current_code->co_framesize = old_co_framesize;
 			current_code->co_codebytes = (code_size_t)(preexisting_codesize + 1);
 			Dee_Incref(&self->im_module);
-			current_code->co_module   = (DREF DeeModuleObject *)self;
+			current_code->co_module   = &self->im_module;
 			current_code->co_defaultv = NULL;
 			current_code->co_keywords = NULL;
 			current_code->co_ddi      = old_co_ddi;
@@ -1706,7 +1706,7 @@ err:
  *                          will be bound prior to the initial launch of interactive assembly.
  *                          Thus, provided symbols are made available by name, left to-be used
  *                          by the module however it pleases. */
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 DeeModule_OpenInteractive(DeeObject *source_stream,
                           unsigned int mode,
                           int start_line, int start_col,
@@ -1732,7 +1732,7 @@ DeeModule_OpenInteractive(DeeObject *source_stream,
 	              default_symbols))
 		goto err_r;
 	/* Start tracking the new module as a GC object. */
-	return DeeGC_Track(Dee_AsObject(&result->im_module));
+	return DeeGC_TRACK(DeeModuleObject, &result->im_module);
 err_r:
 	Dee_DecrefNokill(&DeeInteractiveModule_Type);
 	DeeObject_FreeTracker(Dee_AsObject(&result->im_module));
@@ -1741,7 +1741,7 @@ err:
 	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 DeeModule_OpenInteractiveString(DeeObject *source_stream,
                                 unsigned int mode,
                                 int start_line, int start_col,
@@ -1752,7 +1752,7 @@ DeeModule_OpenInteractiveString(DeeObject *source_stream,
                                 size_t module_namesize,
                                 DeeObject *argv,
                                 DeeObject *default_symbols) {
-	DREF DeeObject *result;
+	DREF DeeModuleObject *result;
 	DREF DeeObject *module_name_ob     = NULL;
 	DREF DeeObject *source_pathname_ob = NULL;
 	if (source_pathsize) {

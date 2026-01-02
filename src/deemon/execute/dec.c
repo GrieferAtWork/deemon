@@ -331,12 +331,12 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 		DREF DeeModuleObject *dep;
 		Dec_Dhdr *dependency = &dhdr[dep_index];
 		Dec_Dstr *dependency_name = (Dec_Dstr *)((byte_t *)self + dependency->d_modspec.d_file.d_offsetof_modname);
-		dep = (DREF DeeModuleObject *)DeeModule_OpenEx(dependency_name->ds_string,
-		                                               dependency_name->ds_length,
-		                                               context_absname, context_absname_size,
-		                                               flags, options);
-		if unlikely(!DeeModule_IMPORT_ISOK((DeeObject *)dep)) {
-			if unlikely(dep == (DeeModuleObject *)DeeModule_IMPORT_ERROR)
+		dep = DeeModule_OpenEx(dependency_name->ds_string,
+		                       dependency_name->ds_length,
+		                       context_absname, context_absname_size,
+		                       flags, options);
+		if unlikely(!DeeModule_IMPORT_ISOK(dep)) {
+			if unlikely(dep == DeeModule_IMPORT_ERROR)
 				goto err_dep_index;
 			Dee_DPRINTF("[LD][dec %q] CORRUPT: Failed to open dependency %$q\n",
 			            context_absname, (size_t)dependency_name->ds_length, dependency_name->ds_string);
@@ -349,11 +349,11 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 		++dep_index;
 
 		/* Check timestamp of dependency (must be older than our dec file's timestamp) */
-		dep_timestamp = DeeModule_GetCTime((DeeObject *)dep);
+		dep_timestamp = DeeModule_GetCTime(dep);
 		if (dep_timestamp > result->mo_ctime) {
 			Dee_DPRINTF("[LD][dec %q] CORRUPT: Dependency %q was compiled after "
 			            /**/ ".dec file was created: %" PRFu64 " > %" PRFu64 "\n",
-			            context_absname, DeeModule_GetAbsName((DeeObject *)dep),
+			            context_absname, DeeModule_GetAbsName(dep),
 			            dep_timestamp, result->mo_ctime);
 			goto corrupt_dep_index;
 		}
@@ -797,8 +797,9 @@ decwriter_genimpstr(DeeDecWriter *__restrict self,
 		struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[i];
 		DeeModuleObject *mod = dep->ddm_mod;
 		ASSERT(!dep->ddm_impstr);
-		dep_name = (DREF DeeStringObject *)DeeModule_GetRelNameEx((DeeObject *)mod, context_absname,
-		                                                          context_absname_size, relname_flags);
+		dep_name = (DREF DeeStringObject *)DeeModule_GetRelNameEx(mod, context_absname,
+		                                                          context_absname_size,
+		                                                          relname_flags);
 		if unlikely(!ITER_ISOK(dep_name)) {
 			if (dep_name) {
 				DeeError_Throwf(&DeeError_ValueError,
@@ -1354,7 +1355,7 @@ decwriter_getdep(DeeDecWriter *__restrict self,
 	if unlikely(atomic_read(&mod->mo_flags) & Dee_MODULE_FNOSERIAL) {
 		Dee_DPRINTF("[LD][dec] Warning: dependent module %q could not be "
 		            /**/ "serialized, meaning this one can't be either\n",
-		            DeeModule_GetAbsName((DeeObject *)mod));
+		            DeeModule_GetAbsName(mod));
 		if (self->dw_flags & DeeDecWriter_F_FRELOC) {
 			DeeRT_ErrCannotSerialize(mod);
 			goto err;
@@ -1839,7 +1840,7 @@ decwriter_putobject_ex(DeeDecWriter *__restrict self,
 	}
 
 	/* Check if "obj" points into a dex module, or the deemon core */
-	mod = (DREF DeeModuleObject *)DeeModule_OfPointer(obj);
+	mod = DeeModule_OfPointer(obj);
 	if (mod) {
 		struct Dee_dec_depmod *dep;
 		if (mod == DeeModule_GetDeemon()) {
@@ -1892,7 +1893,7 @@ decwriter_putpointer(DeeDecWriter *__restrict self,
 	DREF DeeModuleObject *mod;
 
 	/* Check if "pointer" is statically allocated. */
-	if ((mod = (DREF DeeModuleObject *)DeeModule_OfPointer(pointer)) != NULL) {
+	if ((mod = DeeModule_OfPointer(pointer)) != NULL) {
 		struct Dee_dec_depmod *dep;
 		void **out_pointer;
 		if (mod == DeeModule_GetDeemon()) {
@@ -3112,15 +3113,15 @@ DecFile_LoadImports(DecFile *__restrict self) {
 		/* Load the imported module. */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		/* Important: don't set "DeeModule_IMPORT_F_CTXDIR" flag since "module_pathstr" still ends with a trailing slash! */
-		module = (DREF DeeModuleObject *)DeeModule_OpenEx(module_name, strlen(module_name),
-		                                                  module_pathstr, module_pathlen,
-		                                                  DeeModule_IMPORT_F_ENOENT /*| DeeModule_IMPORT_F_CTXDIR*/,
-		                                                  self->df_options ? self->df_options->co_inner : NULL);
+		module = DeeModule_OpenEx(module_name, strlen(module_name),
+		                          module_pathstr, module_pathlen,
+		                          DeeModule_IMPORT_F_ENOENT /*| DeeModule_IMPORT_F_CTXDIR*/,
+		                          self->df_options ? self->df_options->co_inner : NULL);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		module = (DREF DeeModuleObject *)DeeModule_OpenRelativeString(module_name, strlen(module_name),
-		                                                              module_pathstr, module_pathlen,
-		                                                              self->df_options ? self->df_options->co_inner : NULL,
-		                                                              false);
+		module = DeeModule_OpenRelativeString(module_name, strlen(module_name),
+		                                      module_pathstr, module_pathlen,
+		                                      self->df_options ? self->df_options->co_inner : NULL,
+		                                      false);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		if unlikely(!ITER_ISOK(module)) {
 			if (!module)
@@ -3158,7 +3159,7 @@ DecFile_LoadImports(DecFile *__restrict self) {
 		if (!self->df_options || !(self->df_options->co_decloader & Dee_DEC_FLOADOUTDATED))
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		{
-			uint64_t modtime = DeeModule_GetCTime(Dee_AsObject(module));
+			uint64_t modtime = DeeModule_GetCTime(module);
 			if unlikely(modtime == (uint64_t)-1)
 				GOTO_CORRUPTED(reader, err_imports_module);
 			/* If the module has changed since the time
@@ -5119,20 +5120,19 @@ done_map:
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PUBLIC WUNUSED NONNULL((1)) uint64_t DCALL
-DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self) {
+DeeModule_GetCTime(DeeModuleObject *__restrict self) {
 	uint64_t result;
-	DeeModuleObject *me = (DeeModuleObject *)self;
-	ASSERT_OBJECT_TYPE(me, &DeeModule_Type);
-	if (me->mo_flags & Dee_MODULE_FHASCTIME) {
-		result = me->mo_ctime;
+	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
+	if (self->mo_flags & Dee_MODULE_FHASCTIME) {
+		result = self->mo_ctime;
 		ASSERT(result != (uint64_t)-1);
-	} else if (me == &DeeModule_Deemon) {
+	} else if (self == &DeeModule_Deemon) {
 		/* `DeeExec_GetTimestamp()' already uses the `mo_ctime' field
 		 *  of `DeeModule_Deemon' as cache if that field is available. */
 		result = DeeExec_GetTimestamp();
 	} else {
 		/* Lookup the last-modified time of the module's path file. */
-		DeeStringObject *path = me->mo_path;
+		DeeStringObject *path = self->mo_path;
 		if unlikely(!path) {
 			result = 0;
 		} else {
@@ -5141,8 +5141,8 @@ DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self) {
 				goto done;
 		}
 		/* Cache the result value in the module itself. */
-		me->mo_ctime = result;
-		atomic_or(&me->mo_flags, Dee_MODULE_FHASCTIME);
+		self->mo_ctime = result;
+		atomic_or(&self->mo_flags, Dee_MODULE_FHASCTIME);
 	}
 done:
 	return result;

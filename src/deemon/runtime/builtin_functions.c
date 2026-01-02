@@ -287,20 +287,20 @@ PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Import, &builtin_functions___import___f, METH
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions___import___f_impl(DeeObject *base, DeeStringObject *name)
 /*[[[end]]]*/
 {
+	DREF DeeModuleObject *result;
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
-	return DeeModule_Import(Dee_AsObject(name), base, DeeModule_IMPORT_F_NORMAL);
+	result = DeeModule_Import(Dee_AsObject(name), base, DeeModule_IMPORT_F_NORMAL);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	DREF DeeObject *result;
 	if (DeeObject_AssertType(base, &DeeModule_Type))
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
-	result = DeeModule_ImportRel(Dee_AsObject(base),
+	result = DeeModule_ImportRel((DeeModuleObject *)base,
 	                             Dee_AsObject(name));
-	return result;
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }
@@ -375,8 +375,8 @@ err:
 }
 
 /* TODO: Use "Dee_atomic_ref_t" here */
-PRIVATE DREF DeeObject *strexec_module = NULL; /* import("_strexec") */
-PRIVATE DREF DeeObject *strexec_exec = NULL;   /* _strexec.exec */
+PRIVATE DREF DeeModuleObject *strexec_module = NULL; /* import("_strexec") */
+PRIVATE DREF DeeObject *strexec_exec = NULL;         /* _strexec.exec */
 
 #ifndef CONFIG_NO_THREADS
 PRIVATE Dee_atomic_rwlock_t strexec_access_lock = Dee_ATOMIC_RWLOCK_INIT;
@@ -400,7 +400,8 @@ PRIVATE Dee_atomic_rwlock_t strexec_access_lock = Dee_ATOMIC_RWLOCK_INIT;
 #define strexec_access_lock_end()        Dee_atomic_rwlock_end(&strexec_access_lock)
 
 INTERN bool DCALL clear_strexec_cache(void) {
-	DREF DeeObject *mod, *exec;
+	DREF DeeModuleObject *mod;
+	DREF DeeObject *exec;
 	strexec_access_lock_write();
 	mod  = strexec_module;
 	exec = strexec_exec;
@@ -418,15 +419,15 @@ INTERN bool DCALL clear_strexec_cache(void) {
 	return true;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL get_strexec_module(void) {
-	DREF DeeObject *result;
+PRIVATE WUNUSED DREF DeeModuleObject *DCALL get_strexec_module(void) {
+	DREF DeeModuleObject *result;
 again:
 	strexec_access_lock_read();
 	result = strexec_module;
 	if unlikely(!result) {
 		strexec_access_lock_endread();
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-		result = DeeModule_Import((DeeObject *)&str__strexec, NULL, DeeModule_IMPORT_F_ENOENT);
+		result = DeeModule_Import(Dee_AsObject(&str__strexec), NULL, DeeModule_IMPORT_F_ENOENT);
 		if unlikely(!ITER_ISOK(result)) {
 			if unlikely(!result)
 				return NULL;
@@ -434,7 +435,7 @@ again:
 			Dee_Incref(result); /* The reference stored in `strexec_module' */
 		}
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		result = DeeModule_OpenGlobal((DeeObject *)&str__strexec, NULL, false);
+		result = DeeModule_OpenGlobal(Dee_AsObject(&str__strexec), NULL, false);
 		if unlikely(!ITER_ISOK(result)) {
 			if (!result)
 				return NULL;
@@ -456,7 +457,7 @@ again:
 		strexec_module = result; /* Inherit reference. */
 		strexec_access_lock_endwrite();
 	} else {
-		if (result != ITER_DONE)
+		if (result != (DREF DeeModuleObject *)ITER_DONE)
 			Dee_Incref(result);
 		strexec_access_lock_endread();
 	}
@@ -483,7 +484,8 @@ do_exec:
 		goto fallback;
 	/* Load the exec function. */
 	{
-		DREF DeeObject *module;
+		DREF DeeModuleObject *module;
+		DREF DeeObject *old_exec;
 		module = get_strexec_module();
 		if unlikely(!ITER_ISOK(module)) {
 			if unlikely(!module)
@@ -505,25 +507,25 @@ do_exec:
 			goto fallback;
 		}
 		/* Load the exec function. */
-		exec = DeeObject_GetAttr(module, (DeeObject *)&str_exec);
+		exec = DeeObject_GetAttr(Dee_AsObject(module), Dee_AsObject(&str_exec));
 		Dee_Decref(module);
 		if unlikely(!exec)
 			goto err;
 		strexec_access_lock_write();
-		module = atomic_read(&strexec_exec);
-		if likely(!module) {
+		old_exec = atomic_read(&strexec_exec);
+		if likely(!old_exec) {
 set_exec_and_run:
 			strexec_exec = exec;
 			Dee_Incref(exec);
 			strexec_access_lock_endwrite();
 			goto do_exec;
 		}
-		if unlikely(module == ITER_DONE)
+		if unlikely(old_exec == ITER_DONE)
 			goto set_exec_and_run;
-		Dee_Incref(module);
+		Dee_Incref(old_exec);
 		strexec_access_lock_endwrite();
 		Dee_Decref(exec);
-		exec = module;
+		exec = old_exec;
 		goto do_exec;
 	}
 fallback:

@@ -1245,7 +1245,7 @@ Dee_membercache_clearall_of_module(DeeModuleObject *__restrict mod) {
 	/* Gather all caches belonging to "mod" */
 	membercache_list_lock_acquire();
 	LIST_FOREACH_SAFE (cache, &membercache_list, mc_link, tvar) {
-		if (DeeModule_ContainsPointer((DeeObject *)mod, cache)) {
+		if (DeeModule_ContainsPointer(mod, cache)) {
 			LIST_REMOVE(cache, mc_link);
 			LIST_INSERT_HEAD(&mod_caches, cache, mc_link);
 		}

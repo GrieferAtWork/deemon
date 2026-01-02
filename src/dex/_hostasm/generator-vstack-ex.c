@@ -388,9 +388,9 @@ DeeModule_CheckStaticAndDecref(struct typexpr_parser *__restrict self,
 	DeeModuleObject *commod;
 	if unlikely(!DeeObject_IsShared(mod))
 		return false;
-	if (mod == (DREF DeeModuleObject *)&DeeModule_Deemon)
+	if (mod == &DeeModule_Deemon)
 		goto ok;
-	if (mod == (DREF DeeModuleObject *)self->txp_info->di_mod)
+	if (mod == self->txp_info->di_mod)
 		goto ok;
 	commod = self->txp_gen->fg_assembler->fa_code->co_module;
 	if (commod == mod)
@@ -415,7 +415,7 @@ ok:
 			Dee_DecrefNokill(type);
 			return true;
 		}
-		type_module = (DREF DeeModuleObject *)DeeType_GetModule(type);
+		type_module = DeeType_GetModule(type);
 		if likely(type_module) {
 			if (DeeModule_CheckStaticAndDecref(self, type_module))
 				goto ok;
@@ -478,17 +478,17 @@ typexpr_parser_parse_object_after_qmark(struct typexpr_parser *__restrict self) 
 		case 'E': {
 			DREF DeeObject *mod_export;
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-			result = DeeModule_ImportString(name.ten_start,
-			                                (size_t)(name.ten_end - name.ten_start),
-			                                Dee_AsObject(self->txp_info->di_typ),
-			                                DeeModule_IMPORT_F_ENOENT);
+			result = Dee_AsObject(DeeModule_ImportString(name.ten_start,
+			                                             (size_t)(name.ten_end - name.ten_start),
+			                                             Dee_AsObject(self->txp_info->di_typ),
+			                                             DeeModule_IMPORT_F_ENOENT));
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			if (name.ten_str) {
-				result = (DeeObject *)DeeModule_OpenGlobal(Dee_AsObject(name.ten_str), NULL, false);
+				result = Dee_AsObject(DeeModule_OpenGlobal(Dee_AsObject(name.ten_str), NULL, false));
 			} else {
-				result = (DeeObject *)DeeModule_OpenGlobalString(name.ten_start,
+				result = Dee_AsObject(DeeModule_OpenGlobalString(name.ten_start,
 				                                                 (size_t)(name.ten_end - name.ten_start),
-				                                                 NULL, false);
+				                                                 NULL, false));
 			}
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			type_expression_name_fini(&name);
@@ -786,7 +786,7 @@ extra_return_type_from_doc(struct fungen *__restrict self,
 	DeeTypeObject *result;
 	ASSERT(info->di_doc != NULL);
 	if (info->di_typ != NULL && info->di_mod == NULL) {
-		info->di_mod = (DeeModuleObject *)DeeType_GetModule(info->di_typ);
+		info->di_mod = DeeType_GetModule(info->di_typ);
 		result = impl_extra_return_type_from_doc(self, argc, info);
 		Dee_XDecref(info->di_mod);
 	} else {

@@ -487,7 +487,7 @@ PRIVATE DEFINE_STRING(str__hostasm, "_hostasm");
  * @return: 0 : Success
  * @return: -1: Error */
 PRIVATE WUNUSED int DCALL hostasm_loadapi(void) {
-	DREF DeeObject *mod_hostasm;
+	DREF DeeModuleObject *mod_hostasm;
 	LPHOSTASM_HOSTFUNC_NEW sym_hostasm_hostfunc_new;
 	LPHOSTASM_HOSTFUNC_DESTROY sym_hostasm_hostfunc_destroy;
 	COMPILER_READ_BARRIER();

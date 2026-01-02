@@ -294,10 +294,9 @@ DeeFunction_GetInfo(/*Function*/ DeeObject *__restrict self,
 
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeFunction_New(DeeObject *code_, size_t refc,
+DeeFunction_New(DeeCodeObject *code, size_t refc,
                 DeeObject *const *refv) {
 	DREF Function *result;
-	DeeCodeObject *code = (DeeCodeObject *)code_;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	ASSERTF(code->co_refc == refc,
 	        "code->co_refc = %" PRFu16 "\n"
@@ -333,9 +332,8 @@ done:
 
 
 INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-DeeFunction_NewInherited(DeeObject *code_, size_t refc,
+DeeFunction_NewInherited(DeeCodeObject *code, size_t refc,
                          /*inherit(on_success)*/ DREF DeeObject *const *__restrict refv) {
-	DeeCodeObject *code = (DeeCodeObject *)code_;
 	DREF Function *result;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	ASSERTF(code->co_refc == refc,
@@ -371,8 +369,7 @@ done:
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeFunction_NewNoRefs(DeeObject *__restrict code_) {
-	DeeCodeObject *code = (DeeCodeObject *)code_;
+DeeFunction_NewNoRefs(DeeCodeObject *__restrict code) {
 	DREF Function *result;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	ASSERT(code->co_refc == 0);

@@ -1644,7 +1644,7 @@ DeeFile_SetStd(unsigned int id, DeeObject *file) {
 }
 
 /* [0..1][lock(WRITE_ONCE)] The `files' module. */
-PRIVATE DREF DeeObject *files_module = NULL;
+PRIVATE DREF DeeModuleObject *files_module = NULL;
 #ifndef CONFIG_NO_THREADS
 PRIVATE Dee_atomic_rwlock_t files_module_lock = Dee_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
@@ -1667,18 +1667,19 @@ PRIVATE Dee_atomic_rwlock_t files_module_lock = Dee_ATOMIC_RWLOCK_INIT;
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 get_files_object(DeeObject *__restrict name) {
-	DREF DeeObject *result, *mod;
+	DREF DeeObject *result;
+	DREF DeeModuleObject *mod;
 again:
 	files_module_lock_read();
 	mod = files_module;
 	if unlikely(!mod) {
 		files_module_lock_endread();
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-		mod = DeeModule_Import((DeeObject *)&str_files, NULL, DeeModule_IMPORT_F_NORMAL);
+		mod = DeeModule_Import(Dee_AsObject(&str_files), NULL, DeeModule_IMPORT_F_NORMAL);
 		if unlikely(!mod)
 			goto err;
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		mod = DeeModule_OpenGlobal((DeeObject *)&str_files, NULL, true);
+		mod = DeeModule_OpenGlobal(Dee_AsObject(&str_files), NULL, true);
 		if unlikely(!mod)
 			goto err;
 		if unlikely(DeeModule_RunInit(mod) < 0)
@@ -1697,7 +1698,7 @@ again:
 		Dee_Incref(mod);
 		files_module_lock_endread();
 	}
-	result = DeeObject_GetAttr(mod, name);
+	result = DeeObject_GetAttr(Dee_AsObject(mod), name);
 	Dee_Decref(mod);
 	return result;
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
@@ -1709,9 +1710,9 @@ err:
 }
 
 PRIVATE bool DCALL clear_files_module(void) {
-	DREF DeeObject *mod;
+	DREF DeeModuleObject *mod;
 	files_module_lock_write();
-	mod          = files_module;
+	mod = files_module;
 	files_module = NULL;
 	files_module_lock_endwrite();
 	Dee_XDecref(mod);
@@ -1723,7 +1724,7 @@ PRIVATE bool DCALL clear_files_module(void) {
  *                 least one of the known standard streams.
  * @return: false: All streams had already been reset. */
 PUBLIC bool DCALL DeeFile_ResetStd(void) {
-	bool result     = clear_files_module();
+	bool result = clear_files_module();
 	unsigned int id = 0;
 	/* Set the default stream for all standard streams. */
 	do {

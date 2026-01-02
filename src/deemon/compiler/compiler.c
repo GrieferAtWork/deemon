@@ -448,7 +448,7 @@ DeeExec_CompileModuleStream_impl(struct Dee_serial *__restrict writer, DeeObject
                                  int start_line, int start_col, unsigned int mode,
                                  struct Dee_compiler_options *options, DeeObject *default_symbols)
 #else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-INTERN WUNUSED NONNULL((1)) DREF /*untracked*/ /*Module*/ DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF /*untracked*/ struct Dee_module_object *DCALL
 DeeExec_CompileModuleStream_impl(DeeObject *source_stream,
                                  int start_line, int start_col, unsigned int mode,
                                  struct Dee_compiler_options *options, DeeObject *default_symbols)
@@ -674,11 +674,7 @@ pack_code_in_return:
 	DeeCompiler_End();
 	Dee_Decref(compiler);
 	DeeCompiler_LockEndWrite();
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 	return result;
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-	return Dee_AsObject(result);
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 err_compiler_code:
 	ast_xdecref(code);
 err_compiler:
@@ -693,7 +689,7 @@ err:
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
 DeeExec_CompileModuleStream(DeeObject *source_stream,
                             int start_line, int start_col, unsigned int mode,
                             struct Dee_compiler_options *options, DeeObject *default_symbols) {
@@ -726,8 +722,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 	DeeDecWriter_Fini(&writer);
 
 	/* Start tracking the newly created module. */
-	result = DeeDec_Track(result);
-	return (DREF DeeObject *)result;
+	return DeeDec_Track(result);
 err_writer_ehdr:
 	DeeDec_Ehdr_Destroy(ehdr);
 err_writer:
@@ -735,11 +730,11 @@ err_writer:
 err:
 	return NULL;
 #else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-	DREF /*Module*/ DeeObject *result;
+	DREF DeeModuleObject *result;
 	result = DeeExec_CompileModuleStream_impl(source_stream, start_line, start_col,
 	                                          mode, options, default_symbols);
 	if likely(result)
-		result = DeeGC_Track(result);
+		result = DeeGC_TRACK(DeeModuleObject, result);
 	return result;
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 }

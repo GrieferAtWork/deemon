@@ -1388,7 +1388,7 @@ decl_ast_parse_unary(struct decl_ast *__restrict self) {
 				self->da_symbol = new_symbol;
 			} else {
 				if (WARN(W_MODULE_IMPORT_NOT_FOUND, token.t_kwd->k_name,
-				         DeeModule_GetShortName(Dee_AsObject(self->da_symbol->s_module))))
+				         DeeModule_GetShortName(self->da_symbol->s_module)))
 					goto err_r;
 			}
 		} else {

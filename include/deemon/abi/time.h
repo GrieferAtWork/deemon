@@ -57,7 +57,7 @@ DECL_BEGIN
 		static PDEETIME_NEWUNIX _c_DeeTime_NewUnix = NULL;                    \
 		if (*(void **)&_c_DeeTime_NewUnix != (void *)-1) {                    \
 			if (_c_DeeTime_NewUnix == NULL) {                                 \
-				DeeObject *time_module = get_time_module();                   \
+				DeeModuleObject *time_module = get_time_module();             \
 				if unlikely(time_module == NULL)                              \
 					return NULL;                                              \
 				*(void **)&_c_DeeTime_NewUnix = DeeModule_GetNativeSymbol(    \
@@ -70,12 +70,13 @@ DECL_BEGIN
 			return (*_c_DeeTime_NewUnix)(seconds_since_01_01_1970,            \
 			                             extra_nanoseconds);                  \
 		} else {                                                              \
-			DeeObject *time_module;                                           \
+			DeeModuleObject *time_module;                                     \
 	fallback:                                                                 \
 			time_module = get_time_module();                                  \
 			if unlikely(time_module == NULL)                                  \
 				return NULL;                                                  \
-			return DeeObject_CallAttrStringf(time_module, "_mkunix",          \
+			return DeeObject_CallAttrStringf(Dee_AsObject(time_module),       \
+			                                 "_mkunix",                       \
 			                                 DEE_PCKd64 DEE_PCKu32,           \
 			                                 seconds_since_01_01_1970,        \
 			                                 extra_nanoseconds);              \
@@ -94,7 +95,7 @@ DECL_BEGIN
 		static PDEETIME_NEWFILETIME _c_DeeTime_NewFILETIME = NULL;                   \
 		if (*(void **)&_c_DeeTime_NewFILETIME != (void *)-1) {                       \
 			if (_c_DeeTime_NewFILETIME == NULL) {                                    \
-				DeeObject *time_module = get_time_module();                          \
+				DeeModuleObject *time_module = get_time_module();                    \
 				if unlikely(time_module == NULL)                                     \
 					return NULL;                                                     \
 				*(void **)&_c_DeeTime_NewFILETIME = DeeModule_GetNativeSymbol(       \
@@ -106,12 +107,13 @@ DECL_BEGIN
 			}                                                                        \
 			return (*_c_DeeTime_NewFILETIME)(p_filetime);                            \
 		} else {                                                                     \
-			DeeObject *time_module;                                                  \
+			DeeModuleObject *time_module;                                            \
 	fallback:                                                                        \
 			time_module = get_time_module();                                         \
 			if unlikely(time_module == NULL)                                         \
 				return NULL;                                                         \
-			return DeeObject_CallAttrStringf(time_module, "_mkFILETIME", DEE_PCKu64, \
+			return DeeObject_CallAttrStringf(Dee_AsObject(time_module),              \
+			                                 "_mkFILETIME", DEE_PCKu64,              \
 			                                 __hybrid_unaligned_get64(p_filetime));  \
 		}                                                                            \
 	}

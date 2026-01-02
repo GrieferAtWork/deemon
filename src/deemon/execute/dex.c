@@ -203,7 +203,7 @@ err:
  * >> // Invoke the native symbol.
  * >> return DeeInt_NewInt((*p_add)(x, y)); */
 PUBLIC WUNUSED NONNULL((1, 2)) void *DCALL
-DeeModule_GetNativeSymbol(DeeObject *__restrict self,
+DeeModule_GetNativeSymbol(DeeModuleObject *__restrict self,
                           char const *__restrict name) {
 	void *result;
 	DeeDexObject *me = (DeeDexObject *)self;
@@ -380,7 +380,7 @@ dex_initialize(DeeDexObject *__restrict self) {
 		dex_chain->d_pself = &self->d_next;
 	self->d_pself = &dex_chain;
 	dex_chain     = self;
-	Dee_Incref(Dee_AsObject(self)); /* The reference stored in the dex chain. */
+	Dee_Incref(&self->d_module); /* The reference stored in the dex chain. */
 	dex_lock_endwrite();
 	return 0;
 err:
@@ -557,7 +557,7 @@ extern /*IMAGE_DOS_HEADER*/ __BYTE_TYPE__ const __ImageBase[];
 
 #ifdef DeeModule_OfPointer_USE_dl_iterate_phdr
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeModuleObject *DCALL
 DeeModule_FromElfLoadAddr(ElfW(Addr) addr) {
 	DeeDexObject *iter;
 	dex_lock_read();
@@ -568,15 +568,15 @@ DeeModule_FromElfLoadAddr(ElfW(Addr) addr) {
 			continue;
 		Dee_Incref(&iter->d_module);
 		dex_lock_endread();
-		return Dee_AsObject(&iter->d_module);
+		return &iter->d_module;
 	}
 	dex_lock_endread();
 	return NULL;
 }
 
 struct iter_modules_data {
-	void const     *search_ptr; /* [const] The pointer who's associated module should be located. */
-	DREF DeeObject *search_res; /* [0..1][lock(WRITE_ONCE)] The module found to be associated with `search_ptr' */
+	void const           *search_ptr; /* [const] The pointer who's associated module should be located. */
+	DREF DeeModuleObject *search_res; /* [0..1][lock(WRITE_ONCE)] The module found to be associated with `search_ptr' */
 };
 
 PRIVATE int
@@ -600,7 +600,7 @@ iter_modules_callback(struct dl_phdr_info *info,
 		/* Check for the special case of this being the deemon core module. */
 		if ((uintptr_t)&DeeObject_Type >= start &&
 		    (uintptr_t)&DeeObject_Type < end) {
-			data->search_res = Dee_AsObject(DeeModule_GetDeemon());
+			data->search_res = DeeModule_GetDeemon();
 			Dee_Incref(data->search_res);
 		} else {
 			/* Given a loaded module, search for its base
@@ -628,7 +628,7 @@ iter_modules_callback(struct dl_phdr_info *info,
  *                as a module, or points to a heap/stack segment.
  *                No matter the case, no error is thrown for this, meaning that
  *                the caller must decide on how to handle this. */
-PUBLIC WUNUSED DREF /*Module*/ DeeObject *DCALL
+PUBLIC WUNUSED DREF /*Module*/ DeeModuleObject *DCALL
 DeeModule_OfPointer(void const *ptr) {
 	/* TODO: This function should cache the address ranges of
 	 *       native modules in order to speed up operations.
@@ -657,7 +657,7 @@ DeeModule_OfPointer(void const *ptr) {
 				continue;
 			Dee_Incref(&iter->d_module);
 			dex_lock_endread();
-			return Dee_AsObject(&iter->d_module);
+			return &iter->d_module;
 		}
 		dex_lock_endread();
 		DBG_ALIGNMENT_DISABLE();
@@ -667,7 +667,7 @@ DeeModule_OfPointer(void const *ptr) {
 			DBG_ALIGNMENT_ENABLE();
 			result = DeeModule_GetDeemon();
 			Dee_Incref(result);
-			return Dee_AsObject(result);
+			return result;
 		}
 		DBG_ALIGNMENT_ENABLE();
 	}
@@ -701,7 +701,7 @@ DeeModule_OfPointer(void const *ptr) {
 			continue;
 		Dee_Incref(Dee_AsObject(&iter->d_module));
 		dex_lock_endread();
-		return Dee_AsObject(&iter->d_module);
+		return &iter->d_module;
 	}
 	dex_lock_endread();
 
@@ -715,8 +715,8 @@ DeeModule_OfPointer(void const *ptr) {
 #endif /* !__pic__ */
 	{
 		/* It is the deemon core. */
-		DREF DeeObject *result;
-		result = Dee_AsObject(DeeModule_GetDeemon());
+		DREF DeeModuleObject *result;
+		result = DeeModule_GetDeemon();
 		Dee_Incref(result);
 		return result;
 	}
@@ -736,7 +736,7 @@ DeeModule_OfPointer(void const *ptr) {
 			continue;
 		Dee_Incref(&iter->d_module);
 		dex_lock_endread();
-		return Dee_AsObject(&iter->d_module);
+		return &iter->d_module;
 	}
 	dex_lock_endread();
 	/* Check if we're dealing with the deemon core itself.
@@ -751,8 +751,8 @@ DeeModule_OfPointer(void const *ptr) {
 			if ((uintptr_t)&DeeObject_Type >= info.mi_segstart &&
 			    (uintptr_t)&DeeObject_Type < info.mi_segend) {
 				/* It is the deemon core. */
-				DREF DeeObject *result;
-				result = Dee_AsObject(DeeModule_GetDeemon());
+				DREF DeeModuleObject *result;
+				result = DeeModule_GetDeemon();
 				Dee_Incref(result);
 				return result;
 			}
@@ -776,7 +776,7 @@ DeeModule_OfPointer(void const *ptr) {
 					continue;
 				Dee_Incref(&iter->d_module);
 				dex_lock_endread();
-				return Dee_AsObject(&iter->d_module);
+				return &iter->d_module;
 			}
 			dex_lock_endread();
 
@@ -784,8 +784,8 @@ DeeModule_OfPointer(void const *ptr) {
 			if (dladdr1((void *)&DeeModule_OfPointer, &dli, (void **)&dex_lm, RTLD_DL_LINKMAP) && dex_lm) {
 				if (ptr_lm == dex_lm) {
 					/* It is the deemon core. */
-					DREF DeeObject *result;
-					result = Dee_AsObject(DeeModule_GetDeemon());
+					DREF DeeModuleObject *result;
+					result = DeeModule_GetDeemon();
 					Dee_Incref(result);
 					return result;
 				}
@@ -813,14 +813,14 @@ DeeModule_OfPointer(void const *ptr) {
 				if (Dl_info__dli_fname__equal(dli.dli_fname, dex_lm->l_name)) {
 					Dee_Incref(&iter->d_module);
 					dex_lock_endread();
-					return Dee_AsObject(&iter->d_module);
+					return &iter->d_module;
 				}
 #else /* CONFIG_HAVE_struct__link_map__l_name */
 				if (dladdr(iter->d_dex, &dex_dli) && dex_dli.dli_fname &&
 				    Dl_info__dli_fname__equal(dli.dli_fname, dex_dli.dli_fname)) {
 					Dee_Incref(&iter->d_module);
 					dex_lock_endread();
-					return Dee_AsObject(&iter->d_module);
+					return &iter->d_module;
 				}
 #endif /* !CONFIG_HAVE_struct__link_map__l_name */
 			}
@@ -830,8 +830,8 @@ DeeModule_OfPointer(void const *ptr) {
 			if (dladdr((void *)&DeeModule_OfPointer, &dex_dli) && dex_dli.dli_fname) {
 				if (Dl_info__dli_fname__equal(dli.dli_fname, dex_dli.dli_fname)) {
 					/* It is the deemon core. */
-					DREF DeeObject *result;
-					result = Dee_AsObject(DeeModule_GetDeemon());
+					DREF DeeModuleObject *result;
+					result = DeeModule_GetDeemon();
 					Dee_Incref(result);
 					return result;
 				}
@@ -880,7 +880,7 @@ DECL_BEGIN
  * >> // Invoke the native symbol.
  * >> return DeeInt_NewInt((*p_add)(x, y)); */
 PUBLIC WUNUSED NONNULL((1, 2)) void *DCALL
-DeeModule_GetNativeSymbol(DeeObject *__restrict self,
+DeeModule_GetNativeSymbol(DeeModuleObject *__restrict self,
                           char const *__restrict name) {
 	(void)self;
 	(void)name;
@@ -901,14 +901,14 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
  *                as a module, or points to a heap/stack segment.
  *                No matter the case, no error is thrown for this, meaning that
  *                the caller must decide on how to handle this. */
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeModuleObject *DCALL
 DeeModule_OfPointer(void const *ptr) {
 	DREF DeeModuleObject *result;
 	(void)ptr;
 	COMPILER_IMPURE();
 	result = DeeModule_GetDeemon();
 	Dee_Incref(result);
-	return Dee_AsObject(result);
+	return result;
 }
 
 DECL_END

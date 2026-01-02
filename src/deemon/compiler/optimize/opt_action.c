@@ -49,7 +49,7 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 is_builtin_object(DeeObject *__restrict ob) {
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-	DREF DeeObject *mod = DeeModule_OfPointer(ob);
+	DREF DeeModuleObject *mod = DeeModule_OfPointer(ob);
 	Dee_XDecref_unlikely(mod);
 	return mod != NULL;
 #else /* CONFIG_EXPERIMENTAL_MMAP_DEC */

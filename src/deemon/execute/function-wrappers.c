@@ -139,7 +139,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 funcstaticsiter_ctor(FunctionStaticsIterator *__restrict self) {
-	self->fsi_func = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs(Dee_AsObject(&DeeCode_Empty));
+	self->fsi_func = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs(&DeeCode_Empty);
 	if unlikely(!self->fsi_func)
 		goto err;
 	self->fsi_sid = 0;
@@ -462,7 +462,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 funcstatics_ctor(FunctionStatics *__restrict self) {
-	self->fs_func = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs(Dee_AsObject(&DeeCode_Empty));
+	self->fs_func = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs(&DeeCode_Empty);
 	if unlikely(!self->fs_func)
 		goto err;
 	return 0;
@@ -1605,7 +1605,7 @@ funcsymbolsbyname_setitem_string_len_hash(FunctionSymbolsByName *self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 funcsymbolsbyname_ctor(FunctionSymbolsByName *__restrict self) {
-	self->fsbn_func = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs(Dee_AsObject(&DeeCode_Empty));
+	self->fsbn_func = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs(&DeeCode_Empty);
 	if unlikely(!self->fsbn_func)
 		goto err;
 	self->fsbn_rid_start = 0;

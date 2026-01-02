@@ -75,21 +75,40 @@ is_generic_sequence_type(DeeTypeObject *self) {
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 is_defined_by_deemon_core(DeeTypeObject *__restrict self) {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	return DeeModule_ContainsPointer(&DeeModule_Deemon, self);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	bool result;
-	DREF DeeObject *type_module;
-	type_module = DeeType_GetModule((DeeTypeObject *)self);
+	DREF DeeModuleObject *type_module;
+	type_module = DeeType_GetModule(self);
 	if unlikely(!type_module) {
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
 		return false;
 	}
-	result = type_module == Dee_AsObject(&DeeModule_Deemon);
+	result = type_module == &DeeModule_Deemon;
 	Dee_Decref(type_module);
 	return result;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 filter_builtin_deemon_types(/*inherit(always)*/ DREF DeeObject *__restrict self) {
-	DREF DeeObject *type_module;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	if (!DeeType_Check(self))
+		goto err_decref_self;
+	if (DeeType_IsCustom(self))
+		goto err_decref_self;
+	if (!DeeModule_ContainsPointer(&DeeModule_Deemon, self))
+		goto err_decref_self;
+	/* Because it's builtin+non-custom, it mustn't be heap-allocated
+	 * (but be allocated statically), so decref-ing it mustn't kill it */
+	Dee_DecrefNokill(self);
+	return (DeeTypeObject *)self;
+err_decref_self:
+	Dee_Decref(self);
+	return NULL;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	DREF DeeModuleObject *type_module;
 	if (!DeeType_Check(self))
 		goto err_decref_self;
 	if (DeeType_IsCustom(self))
@@ -102,7 +121,7 @@ filter_builtin_deemon_types(/*inherit(always)*/ DREF DeeObject *__restrict self)
 	Dee_Decref(type_module);
 
 	/* Only propagate types from the builtin deemon module. */
-	if (type_module != Dee_AsObject(&DeeModule_Deemon))
+	if (type_module != &DeeModule_Deemon)
 		goto err_decref_self;
 
 	/* Because it's builtin+non-custom, it mustn't be heap-allocated
@@ -112,6 +131,7 @@ filter_builtin_deemon_types(/*inherit(always)*/ DREF DeeObject *__restrict self)
 err_decref_self:
 	Dee_Decref(self);
 	return NULL;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DeeTypeObject *DCALL

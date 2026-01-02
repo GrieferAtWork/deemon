@@ -840,19 +840,19 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DFCALL
 do_parse_extern_operands(uint16_t *__restrict pmid,
                          uint16_t *__restrict pgid) {
-	DREF DeeModuleObject *module;
+	DREF DeeModuleObject *mod;
 	int32_t temp;
 	/* Parse a module b
 	 * y name. */
 	if (tok == '@') {
 		if unlikely(yield() < 0)
 			goto err;
-		module = parse_module_byname(true);
-		if unlikely(!module)
+		mod = parse_module_byname(true);
+		if unlikely(!mod)
 			goto err;
 
 		/* Add the module to the assembler's import list. */
-		temp = asm_newmodule(module);
+		temp = asm_newmodule(mod);
 		if unlikely(temp < 0)
 			goto err;
 	} else {
@@ -861,10 +861,10 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
 			goto err;
 
 		/* Check if we can locate the module in our import list. */
-		module = NULL;
+		mod = NULL;
 		if ((uint16_t)temp < current_rootscope->rs_importc) {
-			module = current_rootscope->rs_importv[(uint16_t)temp];
-			Dee_Incref(module);
+			mod = current_rootscope->rs_importv[(uint16_t)temp];
+			Dee_Incref(mod);
 		}
 	}
 	*pmid = (uint16_t)temp;
@@ -874,20 +874,20 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
 		goto err;
 
 	/* If the module name was given, allow the associated symbol to be addressed by name. */
-	if (tok == '@' && module) {
+	if (tok == '@' && mod) {
 		struct TPPKeyword *symbol_name;
 		struct module_symbol *modsym;
 		if unlikely(yield() < 0)
-			goto err_module;
+			goto err_mod;
 		symbol_name = uasm_parse_symnam();
 		if unlikely(!symbol_name)
-			goto err_module;
-		modsym = import_module_symbol(module, symbol_name);
+			goto err_mod;
+		modsym = import_module_symbol(mod, symbol_name);
 		if unlikely(!modsym) {
 			if (WARN(W_MODULE_IMPORT_NOT_FOUND,
 			         symbol_name->k_name,
-			         DeeModule_GetShortName(Dee_AsObject(module))))
-				goto err_module;
+			         DeeModule_GetShortName(mod)))
+				goto err_mod;
 			*pgid = 0;
 		} else {
 			*pgid = Dee_module_symbol_getindex(modsym);
@@ -895,13 +895,13 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
 	} else {
 		temp = uasm_parse_imm16(UASM_INTEXPR_FNORMAL);
 		if unlikely(temp < 0)
-			goto err_module;
+			goto err_mod;
 		*pgid = (uint16_t)temp;
 	}
-	Dee_XDecref(module);
+	Dee_XDecref(mod);
 	return 0;
-err_module:
-	Dee_XDecref(module);
+err_mod:
+	Dee_XDecref(mod);
 err:
 	return -1;
 }

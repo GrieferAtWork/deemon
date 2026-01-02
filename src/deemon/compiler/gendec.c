@@ -105,7 +105,7 @@ decgen_imports(DeeModuleObject *__restrict self) {
 		 * and wouldn't give us any advantage later... */
 		if (!mod->mo_absname) {
 			char const *libname_utf8;
-			DREF DeeObject *libname = DeeModule_GetLibName(Dee_AsObject(mod), 0);
+			DREF DeeObject *libname = DeeModule_GetLibName(mod, 0);
 			if unlikely(!libname)
 				goto err;
 			if (libname == ITER_DONE) {
@@ -1930,7 +1930,7 @@ INTERN WUNUSED NONNULL((1)) int
 		ASSERT(self->mo_flags & Dee_MODULE_FHASCTIME);
 		comtm = self->mo_ctime;
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		comtm = DeeModule_GetCTime(Dee_AsObject(self));
+		comtm = DeeModule_GetCTime(self);
 		if unlikely(comtm == (uint64_t)-1)
 			goto err;
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -1970,7 +1970,7 @@ INTERN WUNUSED NONNULL((1)) int
 	{
 		int temp;
 		DREF /*Code*/ DeeCodeObject *code;
-		code = (DREF /*Code*/ DeeCodeObject *)DeeModule_GetRootCode(Dee_AsObject(self));
+		code = DeeModule_GetRootCode(self);
 		temp = dec_putcode(code);
 		Dee_Decref_unlikely(code);
 		if unlikely(temp)

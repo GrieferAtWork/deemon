@@ -1553,13 +1553,13 @@ err_basev:
 			struct module_symbol *oldbase_sym;
 			struct symbol *base_symbol;
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-			rt_d200_module = (DREF DeeModuleObject *)DeeModule_OpenEx("rt.d200", COMPILER_STRLEN("rt.d200"),
-			                                                          NULL, 0, DeeModule_IMPORT_F_ENOENT,
-			                                                          inner_compiler_options);
+			rt_d200_module = DeeModule_OpenEx("rt.d200", COMPILER_STRLEN("rt.d200"),
+			                                  NULL, 0, DeeModule_IMPORT_F_ENOENT,
+			                                  inner_compiler_options);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-			rt_d200_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal(Dee_AsObject(&str_rt_d200),
-			                                                              inner_compiler_options,
-			                                                              false);
+			rt_d200_module = DeeModule_OpenGlobal(Dee_AsObject(&str_rt_d200),
+			                                      inner_compiler_options,
+			                                      false);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			if unlikely(!ITER_ISOK(rt_d200_module)) {
 				if (rt_d200_module) {

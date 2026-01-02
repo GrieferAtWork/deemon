@@ -251,22 +251,22 @@ objmethod_get_type(DeeObjMethodObject *__restrict self) {
 	return (DREF DeeTypeObject *)DeeRT_ErrUnboundAttr(self, &str___type__);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 objmethod_get_module(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
 	if likely(DeeObjMethod_GetOrigin(Dee_AsObject(self), &origin)) {
-		DREF DeeObject *result = DeeType_GetModule(origin.omo_type);
+		DREF DeeModuleObject *result = DeeType_GetModule(origin.omo_type);
 		if likely(result)
 			return result;
 	}
-	return DeeRT_ErrUnboundAttr(self, &str___module__);
+	return (DREF DeeModuleObject *)DeeRT_ErrUnboundAttr(self, &str___module__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 objmethod_bound_module(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
 	if likely(DeeObjMethod_GetOrigin(Dee_AsObject(self), &origin)) {
-		DREF DeeObject *result = DeeType_GetModule(origin.omo_type);
+		DREF DeeModuleObject *result = DeeType_GetModule(origin.omo_type);
 		if likely(result) {
 			Dee_Decref_unlikely(result);
 			return Dee_BOUND_YES;
@@ -1140,18 +1140,18 @@ kwclsmethod_get_kwds(DeeClsMethodObject *__restrict self) {
 }
 #define kwclsmethod_bound_kwds clsmethod_bound_origin
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 clsmethod_get_module(DeeClsMethodObject *__restrict self) {
-	DREF DeeObject *result;
+	DREF DeeModuleObject *result;
 	result = DeeType_GetModule(self->clm_type);
 	if likely(result)
 		return result;
-	return DeeRT_ErrUnboundAttr(self, &str___module__);
+	return (DREF DeeModuleObject *)DeeRT_ErrUnboundAttr(self, &str___module__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 clsmethod_bound_module(DeeClsMethodObject *__restrict self) {
-	DREF DeeObject *result;
+	DREF DeeModuleObject *result;
 	result = DeeType_GetModule(self->clm_type);
 	if likely(result) {
 		Dee_Decref_unlikely(result);
@@ -1723,18 +1723,18 @@ clsproperty_get_doc(DeeClsPropertyObject *__restrict self) {
 	return_none;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 clsproperty_get_module(DeeClsPropertyObject *__restrict self) {
-	DREF DeeObject *result;
+	DREF DeeModuleObject *result;
 	result = DeeType_GetModule(self->cp_type);
 	if likely(result)
 		return result;
-	return DeeRT_ErrUnboundAttr(self, &str___module__);
+	return (DREF DeeModuleObject *)DeeRT_ErrUnboundAttr(self, &str___module__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 clsproperty_bound_module(DeeClsPropertyObject *__restrict self) {
-	DREF DeeObject *result;
+	DREF DeeModuleObject *result;
 	result = DeeType_GetModule(self->cp_type);
 	if likely(result) {
 		Dee_Decref_unlikely(result);
@@ -2068,18 +2068,18 @@ clsmember_canset(DeeClsMemberObject *__restrict self) {
 	return_bool(!(self->cmb_memb.m_desc.md_field.mdf_type & STRUCT_CONST));
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 clsmember_get_module(DeeClsMemberObject *__restrict self) {
-	DREF DeeObject *result;
+	DREF DeeModuleObject *result;
 	result = DeeType_GetModule(self->cmb_type);
 	if likely(result)
 		return result;
-	return DeeRT_ErrUnboundAttr(self, &str___module__);
+	return (DREF DeeModuleObject *)DeeRT_ErrUnboundAttr(self, &str___module__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 clsmember_bound_module(DeeClsMemberObject *__restrict self) {
-	DREF DeeObject *result;
+	DREF DeeModuleObject *result;
 	result = DeeType_GetModule(self->cmb_type);
 	if likely(result) {
 		Dee_Decref_unlikely(result);
@@ -2273,7 +2273,7 @@ cmethod_gettypefield(DeeModuleObject *mod,
 PUBLIC WUNUSED NONNULL((1, 2)) bool DCALL
 Dee_cmethod_origin_init(struct cmethod_origin *__restrict result, Dee_cmethod_t func) {
 	bzero(result, sizeof(*result));
-	result->cmo_module = (DREF DeeModuleObject *)DeeModule_OfPointer(*(void **)&func);
+	result->cmo_module = DeeModule_OfPointer(*(void **)&func);
 	if likely(result->cmo_module) {
 		result->cmo_modsym = cmethod_getmodsym(result->cmo_module, func);
 		if (result->cmo_modsym) {
@@ -2318,18 +2318,18 @@ cmethod_call(DeeCMethodObject *self, size_t argc, DeeObject *const *argv) {
 	return DeeCMethod_CallFunc(self->cm_func.cmf_meth, argc, argv);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 cmethod_get_module(DeeCMethodObject *__restrict self) {
-	DREF DeeObject *result;
+	DREF DeeModuleObject *result;
 	result = DeeModule_OfPointer(*(void **)&self->cm_func);
 	if likely(result)
 		return result;
-	return DeeRT_ErrUnboundAttr(self, &str___module__);
+	return (DREF DeeModuleObject *)DeeRT_ErrUnboundAttr(self, &str___module__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cmethod_bound_module(DeeCMethodObject *__restrict self) {
-	DREF DeeObject *result;
+	DREF DeeModuleObject *result;
 	result = DeeModule_OfPointer(*(void **)&self->cm_func);
 	if (result) {
 		Dee_Decref_unlikely(result);
@@ -2462,7 +2462,7 @@ cmethod_print(DeeCMethodObject *__restrict self,
 	DREF DeeModuleObject *mod;
 	char const *type_name = cmethod_get_print_typename(self);
 	Dee_ssize_t result;
-	mod = (DREF DeeModuleObject *)DeeModule_OfPointer(*(void **)&self->cm_func);
+	mod = DeeModule_OfPointer(*(void **)&self->cm_func);
 	if (mod != NULL) {
 		DREF DeeTypeObject *type;
 		struct type_member const *member;
@@ -2500,7 +2500,7 @@ cmethod_printrepr(DeeCMethodObject *__restrict self,
                   Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t result;
 	DREF DeeModuleObject *mod;
-	mod = (DREF DeeModuleObject *)DeeModule_OfPointer(*(void **)&self->cm_func);
+	mod = DeeModule_OfPointer(*(void **)&self->cm_func);
 	if (mod) {
 		struct module_symbol *symbol;
 		struct type_member const *member;

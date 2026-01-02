@@ -408,17 +408,17 @@ INTERN ATTR_COLD int
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_unbound_global)(DeeModuleObject *__restrict module,
+(DCALL err_unbound_global)(DeeModuleObject *__restrict mod,
                            uint16_t global_index) {
 	char const *name;
-	ASSERT_OBJECT(module);
-	ASSERT(DeeModule_Check(module));
-	ASSERT(global_index < module->mo_globalc);
-	name = DeeModule_GlobalName((DeeObject *)module, global_index);
+	ASSERT_OBJECT(mod);
+	ASSERT(DeeModule_Check(mod));
+	ASSERT(global_index < mod->mo_globalc);
+	name = DeeModule_GlobalName(mod, global_index);
 	return DeeError_Throwf(&DeeError_UnboundLocal, /* XXX: UnboundGlobal? */
 	                       "Unbound global variable `%s' from `%s'",
 	                       name ? name : Q3,
-	                       DeeModule_GetShortName((DeeObject *)module));
+	                       DeeModule_GetShortName(mod));
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
@@ -592,11 +592,11 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_invalid_refs_size)(DeeObject *__restrict code, size_t num_refs) {
+(DCALL err_invalid_refs_size)(struct code_object *__restrict code, size_t num_refs) {
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Code object expects %" PRFu16 " references when %" PRFuSIZ " were given",
-	                       ((DeeCodeObject *)code)->co_refc, num_refs);
+	                       code->co_refc, num_refs);
 }
 
 

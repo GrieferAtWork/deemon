@@ -58,11 +58,11 @@ libhostasm_rt_err_unbound_global(DeeModuleObject *__restrict mod,
 	ASSERT_OBJECT(mod);
 	ASSERT(DeeModule_Check(mod));
 	ASSERT(global_index < mod->mo_globalc);
-	name = DeeModule_GlobalName((DeeObject *)mod, global_index);
+	name = DeeModule_GlobalName(mod, global_index);
 	return DeeError_Throwf(&DeeError_UnboundLocal, /* XXX: UnboundGlobal? */
 	                       "Unbound global variable `%s' from `%s'",
 	                       name ? name : Q3,
-	                       DeeModule_GetShortName((DeeObject *)mod));
+	                       DeeModule_GetShortName(mod));
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int DCALL

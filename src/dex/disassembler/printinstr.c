@@ -267,7 +267,7 @@ libdisasm_printglobal(Dee_formatprinter_t printer, void *arg,
 				goto print_generic;
 			return DeeFormat_Printf(printer, arg, "global %u /* invalid gid */", (unsigned int)gid);
 		}
-		name = DeeModule_GlobalName(Dee_AsObject(code->co_module), gid);
+		name = DeeModule_GlobalName(code->co_module, gid);
 		if (name)
 			return DeeFormat_Printf(printer, arg, "global " PREFIX_VARNAME "%s", name);
 	}
@@ -280,7 +280,7 @@ PRIVATE WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 print_module_name(Dee_formatprinter_t printer, void *arg,
                   DeeModuleObject *__restrict mod) {
 	Dee_ssize_t result;
-	DREF DeeObject *libname = DeeModule_GetLibName((DeeObject *)mod, 0);
+	DREF DeeObject *libname = DeeModule_GetLibName(mod, 0);
 	if (ITER_ISOK(libname)) {
 		result = DeeString_PrintUtf8(libname, printer, arg);
 		Dee_Decref_unlikely(libname);
@@ -501,7 +501,7 @@ libdisasm_printmembername(Dee_formatprinter_t printer, void *arg,
 						DREF DeeCodeObject *root;
 search_module_root_constants:
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-						root = (DeeCodeObject *)DeeModule_GetRootCode((DeeObject *)mod);
+						root = DeeModule_GetRootCode(mod);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 						DeeModule_LockRead(mod);
 						root = mod->mo_root;

@@ -96,7 +96,7 @@ asm_gpush_function(struct ast *__restrict function_ast) {
 		 *    itself as a constant. */
 		DREF DeeFunctionObject *function;
 		Dee_Free(refv);
-		function = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs(Dee_AsObject(code));
+		function = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs(code);
 		Dee_Decref(code);
 		if unlikely(!function)
 			goto err;
@@ -142,7 +142,7 @@ asm_gmov_function(struct symbol *__restrict dst,
 		 *    itself as a constant. */
 		DREF DeeFunctionObject *function;
 		Dee_Free(refv);
-		function = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs(Dee_AsObject(code));
+		function = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs(code);
 		Dee_Decref(code);
 		if unlikely(!function)
 			goto err;

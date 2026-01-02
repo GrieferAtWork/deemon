@@ -714,7 +714,7 @@ err:
 #define encode_utf32_be  encode_utf32
 #endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 
-PRIVATE DREF DeeObject *g_libcodecs = NULL;
+PRIVATE DREF DeeModuleObject *g_libcodecs = NULL;
 #ifndef CONFIG_NO_THREADS
 PRIVATE Dee_atomic_rwlock_t libcodecs_lock = Dee_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
@@ -736,9 +736,9 @@ PRIVATE Dee_atomic_rwlock_t libcodecs_lock = Dee_ATOMIC_RWLOCK_INIT;
 #define libcodecs_lock_end()        Dee_atomic_rwlock_end(&libcodecs_lock)
 
 INTERN bool DCALL libcodecs_shutdown(void) {
-	DREF DeeObject *old_lib;
+	DREF DeeModuleObject *old_lib;
 	libcodecs_lock_write();
-	old_lib     = g_libcodecs;
+	old_lib = g_libcodecs;
 	g_libcodecs = NULL;
 	libcodecs_lock_endwrite();
 	if (!old_lib)
@@ -748,8 +748,8 @@ INTERN bool DCALL libcodecs_shutdown(void) {
 }
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL libcodecs_get(void) {
-	DREF DeeObject *result;
+PRIVATE WUNUSED DREF DeeModuleObject *DCALL libcodecs_get(void) {
+	DREF DeeModuleObject *result;
 	libcodecs_lock_read();
 	result = g_libcodecs;
 	if (result) {
@@ -759,9 +759,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libcodecs_get(void) {
 	}
 	libcodecs_lock_endread();
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	result = DeeModule_Import((DeeObject *)&str_codecs, NULL, DeeModule_IMPORT_F_NORMAL);
+	result = DeeModule_Import(Dee_AsObject(&str_codecs), NULL, DeeModule_IMPORT_F_NORMAL);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	result = DeeModule_OpenGlobal((DeeObject *)&str_codecs, NULL, true);
+	result = DeeModule_OpenGlobal(Dee_AsObject(&str_codecs), NULL, true);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if likely(result) {
 		libcodecs_lock_write();
@@ -888,7 +888,8 @@ DeeCodec_EncodeIntern(DeeObject *self, DeeObject *name,
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeCodec_Decode(DeeObject *self, DeeObject *name,
                 unsigned int error_mode) {
-	DREF DeeObject *result, *libcodecs;
+	DREF DeeObject *result;
+	DREF DeeModuleObject *libcodecs;
 	ASSERT(error_mode <= COMPILER_LENOF(error_module_names));
 	name = DeeCodec_NormalizeName(name);
 	if unlikely(!name)
@@ -902,8 +903,8 @@ DeeCodec_Decode(DeeObject *self, DeeObject *name,
 			goto err_unknown; /* Codec library not found */ /* TODO: Pass orig error as "cause" */
 		goto err_name;
 	}
-	result = DeeObject_CallAttrPack(libcodecs,
-	                                (DeeObject *)&str___decode,
+	result = DeeObject_CallAttrPack(Dee_AsObject(libcodecs),
+	                                Dee_AsObject(&str___decode),
 	                                3,
 	                                self,
 	                                name,
@@ -932,7 +933,8 @@ err:
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeCodec_Encode(DeeObject *self, DeeObject *name,
                 unsigned int error_mode) {
-	DREF DeeObject *result, *libcodecs;
+	DREF DeeObject *result;
+	DREF DeeModuleObject *libcodecs;
 	char const *name_str;
 	ASSERT(error_mode < COMPILER_LENOF(error_module_names));
 	name = DeeCodec_NormalizeName(name);
@@ -957,8 +959,8 @@ DeeCodec_Encode(DeeObject *self, DeeObject *name,
 			goto err_unknown; /* Codec library not found */ /* TODO: Pass orig error as "cause" */
 		goto err_name;
 	}
-	result = DeeObject_CallAttrPack(libcodecs,
-	                                (DeeObject *)&str___encode,
+	result = DeeObject_CallAttrPack(Dee_AsObject(libcodecs),
+	                                Dee_AsObject(&str___encode),
 	                                3,
 	                                self,
 	                                name,

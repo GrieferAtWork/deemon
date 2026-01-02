@@ -362,9 +362,9 @@ PRIVATE DEFINE_STRING_EX(str_ItemType, "ItemType", 0x6e2bcfbc, 0x930e682d9edfa03
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
 _store_cache(DeeObject **p_cache, DREF DeeObject *result) {
 	if likely(result) {
-		DREF DeeObject *result_module;
+		DREF DeeModuleObject *result_module;
 		result_module = DeeModule_OfPointer(result);
-		if likely(result_module == Dee_AsObject(DeeModule_GetDeemon())) {
+		if likely(result_module == DeeModule_GetDeemon()) {
 			/* Objects statically allocated within the deemon core can never
 			 * be destroyed. - As such, we can store a non-referencing pointer
 			 * to them that will allow us to skip object calculation the next

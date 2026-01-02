@@ -75,25 +75,26 @@ LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
 #endif /* !__INTELLISENSE__ */
 
 #ifdef DEE_SOURCE
-#define Dee_class_desc             class_desc
-#define Dee_type_method            type_method
-#define Dee_type_getset            type_getset
-#define Dee_type_member            type_member
-#define Dee_type_method_hint       type_method_hint
-#define Dee_type_constructor       type_constructor
-#define Dee_type_cast              type_cast
-#define Dee_type_gc                type_gc
-#define Dee_type_math              type_math
-#define Dee_type_cmp               type_cmp
-#define Dee_type_nii               type_nii
-#define Dee_type_seq               type_seq
-#define Dee_type_iterator          type_iterator
-#define Dee_type_attr              type_attr
-#define Dee_type_with              type_with
-#define Dee_type_callable          type_callable
-#define Dee_type_buffer            type_buffer
-#define Dee_type_operator          type_operator
-#define Dee_opinfo                 opinfo
+#define Dee_class_desc       class_desc
+#define Dee_type_method      type_method
+#define Dee_type_getset      type_getset
+#define Dee_type_member      type_member
+#define Dee_type_method_hint type_method_hint
+#define Dee_type_constructor type_constructor
+#define Dee_type_cast        type_cast
+#define Dee_type_gc          type_gc
+#define Dee_type_math        type_math
+#define Dee_type_cmp         type_cmp
+#define Dee_type_nii         type_nii
+#define Dee_type_seq         type_seq
+#define Dee_type_iterator    type_iterator
+#define Dee_type_attr        type_attr
+#define Dee_type_with        type_with
+#define Dee_type_callable    type_callable
+#define Dee_type_buffer      type_buffer
+#define Dee_type_operator    type_operator
+#define Dee_opinfo           opinfo
+#define Dee_module_object    module_object
 #endif /* DEE_SOURCE */
 
 /* Hashing helpers. */
@@ -4526,10 +4527,11 @@ DFUNDEF ATTR_COLD NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_TypeAssertFailed3)(
 DFUNDEF WUNUSED ATTR_RETNONNULL NONNULL((1)) DeeTypeObject *DCALL
 DeeObject_Class(DeeObject *__restrict self);
 
+struct Dee_module_object;
 /* Return the module used to define a given type `self',
  * or `NULL' if that module could not be determined.
  * NOTE: When `NULL' is returned, _NO_ error is thrown! */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
 DeeType_GetModule(DeeTypeObject *__restrict self);
 
 /* Returns the `tp_name' of `self', or the string

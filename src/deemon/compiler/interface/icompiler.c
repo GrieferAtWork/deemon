@@ -80,11 +80,11 @@ compiler_init(DeeCompilerObject *__restrict self,
 		goto err;
 /*[[[end]]]*/
 	if (DeeNone_Check(args.module_)) {
-		args.module_ = DeeModule_New(Dee_EmptyString);
+		args.module_ = (DeeObject *)DeeModule_New(Dee_EmptyString);
 		if unlikely(!args.module_)
 			goto err;
 	} else if (DeeString_Check(args.module_)) {
-		args.module_ = DeeModule_New(args.module_);
+		args.module_ = (DeeObject *)DeeModule_New(args.module_);
 		if unlikely(!args.module_)
 			goto err;
 	} else {

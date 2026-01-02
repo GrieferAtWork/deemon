@@ -2545,17 +2545,17 @@ do_function_c:
 			ASSERT_CONSTimm();
 #ifdef EXEC_SAFE
 			{
-				DeeObject *code_object = CONSTimm;
-				if (DeeObject_AssertTypeExact(code_object, &DeeCode_Type))
+				DeeCodeObject *code_imm = (DeeCodeObject *)CONSTimm;
+				if (DeeObject_AssertTypeExact(code_imm, &DeeCode_Type))
 					HANDLE_EXCEPT();
-				if unlikely(((DeeCodeObject *)code_object)->co_refc != imm_val2) {
-					err_invalid_refs_size(code_object, imm_val2);
+				if unlikely(code_imm->co_refc != imm_val2) {
+					err_invalid_refs_size(code_imm, imm_val2);
 					HANDLE_EXCEPT();
 				}
-				function = DeeFunction_NewInherited(code_object, imm_val2, sp - imm_val2);
+				function = DeeFunction_NewInherited(code_imm, imm_val2, sp - imm_val2);
 			}
 #else /* EXEC_SAFE */
-			function = DeeFunction_NewInherited(CONSTimm, imm_val2, sp - imm_val2);
+			function = DeeFunction_NewInherited((DeeCodeObject *)CONSTimm, imm_val2, sp - imm_val2);
 #endif /* !EXEC_SAFE */
 			if unlikely(!function)
 				HANDLE_EXCEPT();
@@ -6030,17 +6030,17 @@ prefix_do_function_c:
 					ASSERT_CONSTimm();
 #ifdef EXEC_SAFE
 					{
-						DeeObject *code_object = CONSTimm;
-						if (DeeObject_AssertTypeExact(code_object, &DeeCode_Type))
+						DeeCodeObject *code_imm = (DeeCodeObject *)CONSTimm;
+						if (DeeObject_AssertTypeExact(code_imm, &DeeCode_Type))
 							HANDLE_EXCEPT();
-						if unlikely(((DeeCodeObject *)code_object)->co_refc != imm_val2) {
-							err_invalid_refs_size(code_object, imm_val2);
+						if unlikely(code_imm->co_refc != imm_val2) {
+							err_invalid_refs_size(code_imm, imm_val2);
 							HANDLE_EXCEPT();
 						}
-						function = DeeFunction_NewInherited(code_object, imm_val2, sp - imm_val2);
+						function = DeeFunction_NewInherited(code_imm, imm_val2, sp - imm_val2);
 					}
 #else /* EXEC_SAFE */
-					function = DeeFunction_NewInherited(CONSTimm, imm_val2, sp - imm_val2);
+					function = DeeFunction_NewInherited((DeeCodeObject *)CONSTimm, imm_val2, sp - imm_val2);
 #endif /* !EXEC_SAFE */
 					if unlikely(!function)
 						HANDLE_EXCEPT();

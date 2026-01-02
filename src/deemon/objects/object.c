@@ -2669,7 +2669,7 @@ type_print(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_repr(DeeObject *__restrict self) {
 	DeeTypeObject *me = (DeeTypeObject *)self;
-	DREF DeeObject *mod;
+	DREF DeeModuleObject *mod;
 	DREF DeeStringObject *result;
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	DeeStringObject *modname;
@@ -2682,7 +2682,7 @@ type_repr(DeeObject *__restrict self) {
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	result  = (DREF DeeStringObject *)DeeString_Newf("%r.%s", mod, name);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	modname = ((DeeModuleObject *)mod)->mo_name;
+	modname = mod->mo_name;
 	result  = (DREF DeeStringObject *)DeeString_Newf("%k.%s", modname, name);
 	Dee_Decref(mod);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -2695,9 +2695,8 @@ DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 type_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	char const *name;
-	DREF DeeModuleObject *mod;
 	DeeTypeObject *me = (DeeTypeObject *)self;
-	mod = (DREF DeeModuleObject *)DeeType_GetModule(me);
+	DREF DeeModuleObject *mod = DeeType_GetModule(me);
 	if (!mod)
 		goto fallback;
 	name = DeeType_GetName(me);
@@ -2705,11 +2704,10 @@ type_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *ar
 fallback:
 	return type_print(self, printer, arg);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	DeeTypeObject *me = (DeeTypeObject *)self;
 	Dee_ssize_t result, temp;
-	DREF DeeModuleObject *mod;
 	char const *name;
-	mod = (DREF DeeModuleObject *)DeeType_GetModule(me);
+	DeeTypeObject *me = (DeeTypeObject *)self;
+	DREF DeeModuleObject *mod = DeeType_GetModule(me);
 	if (!mod)
 		goto fallback;
 	result = DeeString_PrintUtf8((DeeObject *)mod->mo_name, printer, arg);
@@ -4545,7 +4543,7 @@ type_issingleton(DeeTypeObject *__restrict self) {
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 get_module_from_addr(struct class_desc *__restrict my_class, uint16_t addr) {
 	DeeObject *slot;
 	DREF DeeModuleObject *result = NULL;
@@ -4558,14 +4556,14 @@ get_module_from_addr(struct class_desc *__restrict my_class, uint16_t addr) {
 		Dee_Incref(result);
 	}
 	Dee_class_desc_lock_endread(my_class);
-	return Dee_AsObject(result);
+	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 DeeClass_GetModule(DeeTypeObject *__restrict self) {
 	struct class_desc *my_class    = self->tp_class;
 	DeeClassDescriptorObject *desc = my_class->cd_desc;
-	DREF DeeObject *result;
+	DREF DeeModuleObject *result;
 	size_t i;
 
 	/* Search through the operator bindings table. */
@@ -4645,9 +4643,9 @@ done:
 /* Return the module used to define a given type `self',
  * or `NULL' if that module could not be determined.
  * NOTE: When `NULL' is returned, _NO_ error is thrown! */
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
 DeeType_GetModule(DeeTypeObject *__restrict self) {
-	DREF DeeObject *result;
+	DREF DeeModuleObject *result;
 	/* - For user-defined classes: search though all the operator/method bindings
 	 *   described for the class member table, testing them for functions and
 	 *   returning the module that they are bound to.
@@ -4656,20 +4654,20 @@ DeeType_GetModule(DeeTypeObject *__restrict self) {
 	 *   then simply compare the type pointer against those bounds.
 	 * - All other types are defined as part of the builtin `deemon' module. */
 again:
-	result = Dee_weakref_lock(&self->tp_module);
+	result = (DREF DeeModuleObject *)Dee_weakref_lock(&self->tp_module);
 	if (result != NULL)
 		return result;
 	if (DeeType_IsClass(self)) {
 		result = DeeClass_GetModule(self);
 		if (result != NULL)
-			Dee_weakref_set(&self->tp_module, result);
+			Dee_weakref_set(&self->tp_module, Dee_AsObject(result));
 		return result;
 	}
 	if (!(self->tp_flags & TP_FHEAP)) {
 		/* Lookup the originating module of a statically allocated C-type. */
 		result = DeeModule_OfPointer(self);
 		if (result) {
-			Dee_weakref_set(&self->tp_module, result);
+			Dee_weakref_set(&self->tp_module, Dee_AsObject(result));
 			return result;
 		}
 	}
@@ -4748,9 +4746,9 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) size_t
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 type_get_module(DeeTypeObject *__restrict self) {
-	DREF DeeObject *result;
+	DREF DeeModuleObject *result;
 	result = DeeType_GetModule(self);
 	if likely(result)
 		return result;
@@ -4760,7 +4758,7 @@ type_get_module(DeeTypeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 type_bound_module(DeeTypeObject *__restrict self) {
-	DREF DeeObject *result;
+	DREF DeeModuleObject *result;
 	result = DeeType_GetModule(self);
 	Dee_XDecref_unlikely(result);
 	return Dee_BOUND_FROMBOOL(result != NULL);

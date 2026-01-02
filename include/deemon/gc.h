@@ -112,7 +112,8 @@ DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL DeeGC_Untrack(DeeObject *_
 DFUNDEF NONNULL((1, 2)) void DCALL
 DeeGC_TrackAll(DeeObject *first, DeeObject *last);
 
-#define DeeGC_TRACK(T, ob) ((DREF T *)DeeGC_Track(Dee_AsObject(ob)))
+#define DeeGC_TRACK(T, ob)   ((DREF T *)DeeGC_Track(Dee_AsObject(ob)))
+#define DeeGC_UNTRACK(T, ob) ((DREF T *)DeeGC_Untrack(Dee_AsObject(ob)))
 
 /* Try to collect at most `max_objects' GC-objects,
  * returning the actual amount collected. */

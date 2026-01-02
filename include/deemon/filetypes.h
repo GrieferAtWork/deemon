@@ -280,9 +280,7 @@ DDATDEF DeeFileTypeObject DeeMemoryFile_Type;
  * of action, dependent on whether the file is being shared with some other
  * part of deemon. If it is, it will replace the view's data with a heap-allocated
  * copy of that data, and if that isn't possible, modify the view to represent
- * an empty data set.
- * The main use of this functionality is to allow the use of `DeeModule_LoadSourceStream()'
- * with a stream backed by source code located in memory. */
+ * an empty data set. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenRoMemory(void const *data, size_t data_size);
 DFUNDEF NONNULL((1)) void DCALL

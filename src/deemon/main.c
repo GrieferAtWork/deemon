@@ -1267,7 +1267,7 @@ int main(int argc, char *argv[]) {
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		if (operation_mode == OPERATION_MODE_INTERACTIVE) {
 			DREF DeeObject *interactive_input;
-			DREF DeeObject *interactive_module;
+			DREF DeeModuleObject *interactive_module;
 			DREF DeeObject *interactive_iterator;
 			DREF DeeObject *interactive_output;
 			DREF DeeObject *value;
@@ -1301,7 +1301,7 @@ int main(int argc, char *argv[]) {
 			}
 
 			/* Construct an iterator for the interactive module. */
-			interactive_iterator = DeeObject_Iter(interactive_module);
+			interactive_iterator = DeeObject_Iter(Dee_AsObject(interactive_module));
 			if unlikely(!interactive_iterator) {
 				Dee_Decref(interactive_module);
 				Dee_Decref(interactive_output);
@@ -1339,18 +1339,18 @@ int main(int argc, char *argv[]) {
 
 		/* Run the module passed through argv[0] */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-		user_module = (DREF DeeModuleObject *)DeeModule_OpenEx(argv[0], strlen(argv[0]), NULL, 0,
-		                                                       DeeModule_IMPORT_F_FILNAM |
-		                                                       DeeModule_IMPORT_F_NOLDEC |
-		                                                       DeeModule_IMPORT_F_NOGDEC,
-		                                                       &script_options);
+		user_module = DeeModule_OpenEx(argv[0], strlen(argv[0]), NULL, 0,
+		                               DeeModule_IMPORT_F_FILNAM |
+		                               DeeModule_IMPORT_F_NOLDEC |
+		                               DeeModule_IMPORT_F_NOGDEC,
+		                               &script_options);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		user_module = (DREF DeeModuleObject *)DeeModule_OpenSourceFileString(argv[0],
-		                                                                     strlen(argv[0]),
-		                                                                     NULL,
-		                                                                     0,
-		                                                                     &script_options,
-		                                                                     true);
+		user_module = DeeModule_OpenSourceFileString(argv[0],
+		                                             strlen(argv[0]),
+		                                             NULL,
+		                                             0,
+		                                             &script_options,
+		                                             true);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		if unlikely(!user_module)
 			goto err_discard_compiler_errors;
@@ -1361,7 +1361,7 @@ int main(int argc, char *argv[]) {
 			    (script_output_stream = DeeFile_GetStd(DEE_STDOUT)) == NULL) {
 				/* ... */
 			} else {
-				DREF DeeObject *disassembler_module;
+				DREF DeeModuleObject *disassembler_module;
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 				static char const nameof_disassembler[] = "disassembler";
 				disassembler_module = DeeModule_ImportEx(nameof_disassembler,
@@ -1369,18 +1369,18 @@ int main(int argc, char *argv[]) {
 				                                         NULL, 0, DeeModule_IMPORT_F_NORMAL, NULL);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 				PRIVATE DEFINE_STRING(str_disassembler, "disassembler");
-				disassembler_module = DeeModule_OpenGlobal((DeeObject *)&str_disassembler, NULL, true);
+				disassembler_module = DeeModule_OpenGlobal(Dee_AsObject(&str_disassembler), NULL, true);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 				if unlikely(!disassembler_module) {
 					/* ... */
 				} else {
 					DREF DeeObject *disasm_error;
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-					DREF DeeObject *user_module_root = DeeModule_GetRootCode((DeeObject *)user_module);
+					DREF DeeCodeObject *user_module_root = DeeModule_GetRootCode(user_module);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 					DeeCodeObject *user_module_root = user_module->mo_root;
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-					disasm_error = DeeObject_CallAttrStringf(disassembler_module,
+					disasm_error = DeeObject_CallAttrStringf(Dee_AsObject(disassembler_module),
 					                                         "printcode",
 					                                         emitasm_flags ? "oos" : "oo",
 					                                         user_module_root,
@@ -1408,14 +1408,14 @@ int main(int argc, char *argv[]) {
 			/* The user's module has been loaded. - Now load dependencies and open it's root. */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 			/* Ensure that imports of "user_module" have been initialized */
-			if unlikely(DeeModule_InitializeImports((DeeObject *)user_module)) {
+			if unlikely(DeeModule_InitializeImports(user_module)) {
 				user_module_main = NULL;
 			} else {
-				(void)DeeModule_SetInitialized((DeeObject *)user_module);
-				user_module_main = DeeModule_GetRootFunction((DeeObject *)user_module);
+				(void)DeeModule_SetInitialized(user_module);
+				user_module_main = DeeModule_GetRootFunction(user_module);
 			}
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-			user_module_main = DeeModule_GetRoot((DeeObject *)user_module, true);
+			user_module_main = DeeModule_GetRoot(user_module, true);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			Dee_Decref(user_module);
 			if unlikely(!user_module_main)
@@ -2044,12 +2044,12 @@ exec_module_and_capture_stdout(DeeModuleObject *__restrict mod) {
 
 	/* Open the root of the module. */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	if unlikely(DeeModule_InitializeImports((DeeObject *)mod))
+	if unlikely(DeeModule_InitializeImports(mod))
 		goto err;
-	(void)DeeModule_SetInitialized((DeeObject *)mod);
-	module_root = (DREF DeeFunctionObject *)DeeModule_GetRootFunction((DeeObject *)mod);
+	(void)DeeModule_SetInitialized(mod);
+	module_root = (DREF DeeFunctionObject *)DeeModule_GetRootFunction(mod);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	module_root = (DREF DeeFunctionObject *)DeeModule_GetRoot((DeeObject *)mod, true);
+	module_root = (DREF DeeFunctionObject *)DeeModule_GetRoot(mod, true);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if unlikely(!module_root)
 		goto err;
@@ -2299,22 +2299,22 @@ try_exec_format_impl(DeeObject *__restrict stream,
 			/* Compile the format-script into a module. */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 			opt.co_pathname = filename;
-			script_module = (DREF DeeModuleObject *)DeeExec_CompileModuleMemory(format_code_start,
-			                                                                    (size_t)(format_code_end - format_code_start),
-			                                                                    format_code_start_line,
-			                                                                    format_code_start_col,
-			                                                                    DeeExec_RUNMODE_DEFAULT,
-			                                                                    &opt, NULL);
+			script_module = DeeExec_CompileModuleMemory(format_code_start,
+			                                            (size_t)(format_code_end - format_code_start),
+			                                            format_code_start_line,
+			                                            format_code_start_col,
+			                                            DeeExec_RUNMODE_DEFAULT,
+			                                            &opt, NULL);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-			script_module = (DREF DeeModuleObject *)DeeModule_OpenSourceMemoryString(format_code_start,
-			                                                                         (size_t)(format_code_end - format_code_start),
-			                                                                         format_code_start_line,
-			                                                                         format_code_start_col,
-			                                                                         &opt,
-			                                                                         filename,
-			                                                                         strlen(filename),
-			                                                                         NULL,
-			                                                                         0);
+			script_module = DeeModule_OpenSourceMemoryString(format_code_start,
+			                                                 (size_t)(format_code_end - format_code_start),
+			                                                 format_code_start_line,
+			                                                 format_code_start_col,
+			                                                 &opt,
+			                                                 filename,
+			                                                 strlen(filename),
+			                                                 NULL,
+			                                                 0);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			/* Remove the format-script macro again. */
 			TPPLexer_Undef("__FORMAT_SCRIPT__", 17);

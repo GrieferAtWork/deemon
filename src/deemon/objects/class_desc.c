@@ -3165,14 +3165,13 @@ PRIVATE struct type_method tpconst instancemember_methods[] = {
 	TYPE_METHOD_END
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
 instancemember_get_module(DeeInstanceMemberObject *__restrict self) {
-	DREF DeeObject *result;
+	DREF struct Dee_module_object *result;
 	result = DeeType_GetModule(self->im_type);
 	if (result)
 		return result;
-	DeeRT_ErrTUnboundAttr(&DeeInstanceMember_Type, self, &str___module__);
-	return NULL;
+	return (DREF struct Dee_module_object *)DeeRT_ErrTUnboundAttr(&DeeInstanceMember_Type, self, &str___module__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

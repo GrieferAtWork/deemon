@@ -2166,7 +2166,7 @@ type_expression_parser_parsetype(struct type_expression_parser *__restrict self,
 			break;
 
 		case 'G':
-			base = DeeType_GetModule(self->tep_decl_type);
+			base = Dee_AsObject(DeeType_GetModule(self->tep_decl_type));
 			if unlikely(!base) {
 				DeeError_Throwf(&DeeError_TypeError,
 				                "Unable to determine module of type %r",

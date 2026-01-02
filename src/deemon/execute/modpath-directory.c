@@ -608,7 +608,7 @@ import_str(DeeObject *__restrict UNUSED(self)) {
 }
 
 
-PRIVATE WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeModuleObject *DCALL
 import_call(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("import", params: """
 	DeeObject *base:?X4?DModule?Dstring?DType?N;
@@ -622,13 +622,13 @@ import_call(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
 		goto err;
-	return DeeModule_Import((DeeObject *)args.name, args.base,
+	return DeeModule_Import(Dee_AsObject(args.name), args.base,
 	                        DeeModule_IMPORT_F_NORMAL);
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeModuleObject *DCALL
 import_call_kw(DeeObject *UNUSED(self), size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("import", params: """
@@ -645,14 +645,14 @@ import_call_kw(DeeObject *UNUSED(self), size_t argc,
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
 		goto err;
-	return DeeModule_Import((DeeObject *)args.name, args.base,
+	return DeeModule_Import(Dee_AsObject(args.name), args.base,
 	                        DeeModule_IMPORT_F_NORMAL);
 err:
 	return NULL;
 }
 
 PRIVATE struct type_callable import_callable = {
-	/* .tp_call_kw = */ &import_call_kw,
+	/* .tp_call_kw = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&import_call_kw,
 };
 
 PUBLIC DeeTypeObject DeeBuiltin_ImportType = {
@@ -707,7 +707,7 @@ PUBLIC DeeTypeObject DeeBuiltin_ImportType = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
-	/* .tp_call          = */ &import_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&import_call,
 	/* .tp_callable      = */ &import_callable,
 };
 

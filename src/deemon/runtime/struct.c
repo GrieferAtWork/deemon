@@ -273,6 +273,8 @@ Dee_type_struct_getlocfields_uncached(DeeTypeObject *__restrict self) {
 					size_t new_fielda = result_a * 2;
 					if (new_fielda < 8)
 						new_fielda = 8;
+					if unlikely(new_fielda < result_c + 1)
+						new_fielda = result_c + 1;
 					new_fieldv = (struct Dee_type_member const **)Dee_TryReallocc(result_v, new_fielda,
 					                                                              sizeof(struct Dee_type_member const *));
 					if unlikely(!new_fieldv) {

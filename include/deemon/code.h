@@ -1208,7 +1208,7 @@ DDATDEF DeeTypeObject DeeYieldFunctionIterator_Type; /* foo().operator iter(); *
 
 /* Create a new function object. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeFunction_New(DeeObject *code, size_t refc,
+DeeFunction_New(DeeCodeObject *code, size_t refc,
                 DeeObject *const *refv);
 
 
@@ -1284,10 +1284,10 @@ INTDEF NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL DeeFunction_OptimizeAndThisCa
 #define DeeFunction_ThisCallTupleKw(self, this_arg, args, kw)  DeeObject_ThisCallTupleKw(Dee_AsObject(self), this_arg, args, kw)
 #else /* !CONFIG_BUILDING_DEEMON */
 INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-DeeFunction_NewInherited(DeeObject *code, size_t refc,
+DeeFunction_NewInherited(DeeCodeObject *code, size_t refc,
                          /*inherit(on_success)*/ DREF DeeObject *const *__restrict refv);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeFunction_NewNoRefs(DeeObject *__restrict code);
+DeeFunction_NewNoRefs(DeeCodeObject *__restrict code);
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFunction_Call(DeeFunctionObject *self, size_t argc, DeeObject *const *argv);

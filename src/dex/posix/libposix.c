@@ -79,8 +79,8 @@ DECL_BEGIN
 
 /* Timestamp creation */
 #if defined(NEED_DeeTime_NewUnix) || defined(NEED_DeeTime_NewFILETIME)
-PRIVATE DREF DeeObject *dee_time_module = NULL;
-PRIVATE WUNUSED DREF DeeObject *DCALL get_time_module(void) {
+PRIVATE DREF DeeModuleObject *dee_time_module = NULL;
+PRIVATE WUNUSED DREF DeeModuleObject *DCALL get_time_module(void) {
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (dee_time_module == NULL)
 		dee_time_module = DeeModule_ImportString("time", 4, NULL, DeeModule_IMPORT_F_NORMAL);
