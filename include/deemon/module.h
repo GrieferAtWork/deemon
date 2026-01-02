@@ -1754,6 +1754,92 @@ DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeModule_ContainsPointer(DeeModuleObject *__restrict self, void const *ptr);
 
 
+/* Callback prototypes for `DeeModule_Enumerate*' functions below.
+ * All of these behave in a Dee_formatprinter_t-compatible manner:
+ * @return: >= 0: Success (sum of return values is accumulated and returned by caller)
+ * @return: < 0:  Error (abort enumeration immediately and propagate return value) */
+typedef NONNULL_T((2)) Dee_ssize_t
+(DCALL *Dee_module_enumerate_cb_t)(void *arg, DeeModuleObject *__restrict mod);
+typedef NONNULL_T((2, 3)) Dee_ssize_t
+(DCALL *Dee_module_enumerate_lib_cb_t)(void *arg, DeeModuleObject *__restrict mod,
+                                       /*String*/ DeeObject *libname);
+
+/* Enumerate loaded modules using various different means.
+ *
+ * DeeModule_EnumerateAbsTree:
+ *     Enumerate all non-anonymous modules (i.e. ones with `mo_absname != NULL').
+ *
+ * DeeModule_EnumerateLibTree:
+ *     Enumerate modules via their "lib" names (e.g. "deemon", "rt", etc.)
+ *     Note that this only includes modules whose lib-names are loaded **right now**.
+ *     If any changes are mading to the module LIBPATH (e.g. `DeeModule_AddLibPath()'
+ *     or `DeeModule_RemoveLibPath()' is called), the lib-names of already-loaded
+ *     modules will **NOT** be calculated immediatly, but lazily. And a call to
+ *     `DeeModule_EnumerateLibTree()' will **NOT** do this lazy calculation.
+ *
+ * DeeModule_EnumerateAdrTree:
+ *     Enumerate modules that reside within the address space (i.e.: have an
+ *     address range as per `mo_minaddr' / `mo_maxaddr'). This essentially means
+ *     that all `DeeModuleDee_Type' and `DeeModuleDex_Type' modules (including
+ *     the core `DeeModule_Deemon' module) will be enumerated.
+ *
+ * NOTES:
+ * - The order in which modules are enumerated is undefined but will not change
+ *   for already-enumerated modules (including modules enumerated during a prior
+ *   call to these functions).
+ * - Every qualifying module loaded at the time the `DeeModule_Enumerate*' call
+ *   started, and still-loaded when this call returns has been passed to `*cb'
+ *   exactly once. (Modules that are unloaded and then quickly re-loaded may be
+ *   enumerated multiple times however)
+ * - None of the `DeeModule_Enumerate*' functions can throw errors on their own.
+ *   The only way that some negative value can be returned, is from `cb' returning
+ *   that same negative value.
+ * - The "opt_type_filter" argument can either be "NULL", or one of:
+ *   - DeeModuleDee_Type
+ *   - DeeModuleDir_Type
+ *   - DeeModuleDex_Type
+ *   ... to only enumerate modules with that specific typing.
+ * - The `*cb' callback is allowed to do anything it wants, including invoking any
+ *   user-code, as well as load additional modules. It is however undefined if modules
+ *   that were loaded after the `DeeModule_Enumerate*' call started will also be
+ *   enumerated.
+ *
+ * @param: cb:              The callback that should be invoked
+ * @param: arg:             Cookie argument that should be passed to
+ * @param: start_after:     Start enumeration with whatever module comes after `start_after'.
+ *                          When `NULL', start enumeration at the very beginning.
+ * @param: opt_type_filter: Only enumerate modules of this type (set to "NULL" to not filter).
+ *
+ * @return: * : Sum of return values of `*cb'
+ * @return: 0 : Either `*cb' always returned `0', or it was never invoked
+ * @return: <0: A call to `*cb' returned this same negative value. */
+DFUNDEF NONNULL((1)) Dee_ssize_t DCALL
+DeeModule_EnumerateAbsTree(Dee_module_enumerate_cb_t cb, void *arg,
+                           DeeModuleObject *start_after,
+                           DeeTypeObject *opt_type_filter);
+DFUNDEF NONNULL((1)) Dee_ssize_t DCALL
+DeeModule_EnumerateAdrTree(Dee_module_enumerate_cb_t cb, void *arg,
+                           DeeModuleObject *start_after,
+                           DeeTypeObject *opt_type_filter);
+DFUNDEF NONNULL((1)) Dee_ssize_t DCALL
+DeeModule_EnumerateLibTree(Dee_module_enumerate_lib_cb_t cb, void *arg,
+                           DeeModuleObject *start_after_mod,
+                           /*String*/ DeeObject *start_after_name,
+                           DeeTypeObject *opt_type_filter);
+
+/* Convenience wrappers around `DeeModule_Enumerate*' that return whatever
+ * module comes after "prev" (if such a module exists), or "NULL" if no such
+ * module exists. When "prev" is "NULL", return the first module of that tree. */
+DFUNDEF WUNUSED DREF DeeModuleObject *DCALL
+DeeModule_NextAbsTree(DeeModuleObject *prev, DeeTypeObject *opt_type_filter);
+DFUNDEF WUNUSED DREF DeeModuleObject *DCALL
+DeeModule_NextAdrTree(DeeModuleObject *prev, DeeTypeObject *opt_type_filter);
+DFUNDEF WUNUSED NONNULL((4)) DREF DeeModuleObject *DCALL
+DeeModule_NextLibTree(DeeModuleObject *prev, /*String*/ DeeObject *prev_libname,
+                      DeeTypeObject *opt_type_filter,
+                      DREF /*String*/ DeeObject **__restrict p_libname);
+
+
 /* Lookup an external symbol.
  * Convenience function (same as `DeeObject_GetAttr(DeeModule_Import(...), ...)') */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

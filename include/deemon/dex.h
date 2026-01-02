@@ -86,6 +86,17 @@ struct Dee_dex_symbol {
 	__UINTPTR_HALF_TYPE__     _ds_index; /* Used internally during initialization */
 };
 
+#ifdef CONFIG_BUILDING_DEEMON
+struct Dee_membercache;
+struct Dee_module_dexheap_chunk;
+struct Dee_module_dexheap_slist {
+	struct Dee_module_dexheap_chunk *slh_first;
+};
+struct Dee_membercache_list {
+	struct Dee_membercache *lh_first;
+};
+#endif /* CONFIG_BUILDING_DEEMON */
+
 struct Dee_module_dexinfo;
 struct Dee_module_dexdata {
 	struct Dee_module_object    *mdx_module; /* [1..1][const] Associated dex module descriptor */
@@ -97,7 +108,14 @@ struct Dee_module_dexdata {
 	WUNUSED_T int (DCALL *mdx_init)(void);
 	void (DCALL *mdx_fini)(void);
 	bool (DCALL *mdx_clear)(void);
+
+#ifndef CONFIG_BUILDING_DEEMON
 	void                       *_mdx_pad[9]; /* For future expansion */
+#else /* !CONFIG_BUILDING_DEEMON */
+	struct Dee_module_dexheap   *mdx_heap;   /* [0..n][lock(ATOMIC)] Linked list of memory allocated using `Dee_StaticMalloc()' */
+	struct Dee_membercache_list  mdx_typemc; /* [0..n][lock(INTERNAL(membercache_list_lock))] Linked list of type member caches allocated for this DEX module */
+	void                       *_mdx_pad[7]; /* For future expansion */
+#endif /* CONFIG_BUILDING_DEEMON */
 };
 
 #if defined(CONFIG_BUILDING_DEEMON) || defined(CONFIG_BUILDING_DEX)

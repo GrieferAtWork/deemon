@@ -713,6 +713,7 @@ DECL_END
 #define RBTREE_DECL             PRIVATE
 #define RBTREE_IMPL             PRIVATE
 #define RBTREE_OMIT_REMOVE
+#define RBTREE_WANT_NEXTNODE
 #include <hybrid/sequence/rbtree-abi.h>
 
 #define RBTREE(name)            module_libtree_##name
@@ -729,6 +730,8 @@ DECL_END
 #define RBTREE_DECL             PRIVATE
 #define RBTREE_IMPL             PRIVATE
 #define RBTREE_OMIT_REMOVE
+#define RBTREE_WANT_NEXTNODE
+#define RBTREE_WANT_NEXTAFTER
 #include <hybrid/sequence/rbtree-abi.h>
 
 DECL_BEGIN
@@ -861,6 +864,7 @@ PRIVATE RBTREE_ROOT(/*maybe(DREF)*/ Dee_module_object) module_byaddr_tree = NULL
 #define RBTREE_IMPL            PRIVATE
 #define RBTREE_WANT_RLOCATE
 #define RBTREE_OMIT_REMOVE
+#define RBTREE_WANT_NEXTNODE
 DECL_END
 #include <hybrid/sequence/rbtree-abi.h>
 DECL_BEGIN
@@ -890,6 +894,7 @@ PRIVATE RBTREE_ROOT(DREF Dee_module_object) dex_byaddr_tree = NULL;
 #define RBTREE_IMPL            PRIVATE
 #define RBTREE_OMIT_REMOVE
 #define RBTREE_OMIT_REMOVENODE /* Not needed... */
+#define RBTREE_WANT_NEXTNODE
 DECL_END
 #include <hybrid/sequence/rbtree-abi.h>
 DECL_BEGIN
@@ -1260,7 +1265,10 @@ INTERN struct Dee_module_dexdata deemon_dexdata = {
 #endif /* !HAVE_Dee_module_dexinfo || HAVE_Dee_module_dexinfo_IS_POINTER */
 	/* .mdx_init   = */ NULL,
 	/* .mdx_fini   = */ NULL,
-	/* .mdx_clear  = */ NULL
+	/* .mdx_clear  = */ NULL,
+	/* .mdx_heap   = */ { NULL },
+	/* .mdx_typemc = */ { NULL },
+	/* ._mdx_pad   = */ { NULL, NULL, NULL, NULL, NULL, NULL, NULL }
 };
 
 /* Called during finalization of the associated dex module */
@@ -9019,6 +9027,393 @@ DeeModule_ContainsPointer(DeeModuleObject *__restrict self, void const *ptr) {
 }
 
 
+/* Enumerate loaded modules using various different means.
+ *
+ * DeeModule_EnumerateAbsTree:
+ *     Enumerate all non-anonymous modules (i.e. ones with `mo_absname != NULL').
+ *
+ * DeeModule_EnumerateLibTree:
+ *     Enumerate modules via their "lib" names (e.g. "deemon", "rt", etc.)
+ *     Note that this only includes modules whose lib-names are loaded **right now**.
+ *     If any changes are mading to the module LIBPATH (e.g. `DeeModule_AddLibPath()'
+ *     or `DeeModule_RemoveLibPath()' is called), the lib-names of already-loaded
+ *     modules will **NOT** be calculated immediatly, but lazily. And a call to
+ *     `DeeModule_EnumerateLibTree()' will **NOT** do this lazy calculation.
+ *
+ * DeeModule_EnumerateAdrTree:
+ *     Enumerate modules that reside within the address space (i.e.: have an
+ *     address range as per `mo_minaddr' / `mo_maxaddr'). This essentially means
+ *     that all `DeeModuleDee_Type' and `DeeModuleDex_Type' modules (including
+ *     the core `DeeModule_Deemon' module) will be enumerated.
+ *
+ * NOTES:
+ * - The order in which modules are enumerated is undefined but will not change
+ *   for already-enumerated modules (including modules enumerated during a prior
+ *   call to these functions).
+ * - Every qualifying module loaded at the time the `DeeModule_Enumerate*' call
+ *   started, and still-loaded when this call returns has been passed to `*cb'
+ *   exactly once. (Modules that are unloaded and then quickly re-loaded may be
+ *   enumerated multiple times however)
+ * - None of the `DeeModule_Enumerate*' functions can throw errors on their own.
+ *   The only way that some negative value can be returned, is from `cb' returning
+ *   that same negative value.
+ * - The "opt_type_filter" argument can either be "NULL", or one of:
+ *   - DeeModuleDee_Type
+ *   - DeeModuleDir_Type
+ *   - DeeModuleDex_Type
+ *   ... to only enumerate modules with that specific typing.
+ * - The `*cb' callback is allowed to do anything it wants, including invoking any
+ *   user-code, as well as load additional modules. It is however undefined if modules
+ *   that were loaded after the `DeeModule_Enumerate*' call started will also be
+ *   enumerated.
+ *
+ * @param: cb:              The callback that should be invoked
+ * @param: arg:             Cookie argument that should be passed to
+ * @param: start_after:     Start enumeration with whatever module comes after `start_after'.
+ *                          When `NULL', start enumeration at the very beginning.
+ * @param: opt_type_filter: Only enumerate modules of this type (set to "NULL" to not filter).
+ *
+ * @return: * : Sum of return values of `*cb'
+ * @return: 0 : Either `*cb' always returned `0', or it was never invoked
+ * @return: <0: A call to `*cb' returned this same negative value. */
+PUBLIC NONNULL((1)) Dee_ssize_t DCALL
+DeeModule_EnumerateAbsTree(Dee_module_enumerate_cb_t cb, void *arg,
+                           DeeModuleObject *start_after,
+                           DeeTypeObject *opt_type_filter) {
+	Dee_ssize_t result;
+	DREF DeeModuleObject *prev_module;
+	if (start_after) {
+		prev_module = start_after;
+		if unlikely(!prev_module->mo_absname)
+			return 0; /* Not part of "module_abstree_root" */
+		Dee_Incref(prev_module);
+		module_abstree_lock_read();
+		result = 0;
+	} else {
+		module_abstree_lock_read();
+		prev_module = module_abstree_root;
+		if unlikely(!prev_module)
+			goto empty_unlock; /* Empty tree */
+		while (prev_module->mo_absnode.rb_lhs)
+			prev_module = prev_module->mo_absnode.rb_lhs;
+		while ((opt_type_filter && Dee_TYPE(prev_module) != opt_type_filter) ||
+		       !Dee_IncrefIfNotZero(prev_module)) {
+			prev_module = module_abstree_nextnode(prev_module);
+			if unlikely(!prev_module)
+				goto empty_unlock; /* Empty tree */
+		}
+		module_abstree_lock_endread();
+		result = (*cb)(arg, prev_module);
+		if unlikely(result < 0)
+			goto done_decref;
+		module_abstree_lock_read();
+	}
+	for (;;) {
+		Dee_ssize_t temp;
+		DREF DeeModuleObject *next_module = prev_module;
+		for (;;) {
+			ASSERT(next_module->mo_absname);
+			next_module = module_abstree_nextnode(next_module);
+			if (!next_module)
+				goto done_decref_unlock;
+			ASSERT(next_module->mo_absname);
+			if ((!opt_type_filter || Dee_TYPE(next_module) == opt_type_filter) &&
+			    Dee_IncrefIfNotZero(next_module))
+				break;
+		}
+		module_abstree_lock_endread();
+		Dee_Decref_unlikely(prev_module);
+		temp = (*cb)(arg, next_module);
+		prev_module = next_module; /* Inherit reference */
+		if unlikely(temp < 0) {
+			result = temp;
+			goto done_decref;
+		}
+		result += temp;
+		module_abstree_lock_read();
+	}
+done_decref_unlock:
+	module_abstree_lock_endread();
+done_decref:
+	Dee_Decref_unlikely(prev_module);
+	return result;
+empty_unlock:
+	module_abstree_lock_endread();
+	return 0;
+}
+
+PUBLIC NONNULL((1)) Dee_ssize_t DCALL
+DeeModule_EnumerateAdrTree(Dee_module_enumerate_cb_t cb, void *arg,
+                           DeeModuleObject *start_after,
+                           DeeTypeObject *opt_type_filter) {
+	Dee_ssize_t result;
+	DREF DeeModuleObject *prev_module;
+	if (opt_type_filter) {
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+		if unlikely(opt_type_filter != &DeeModuleDee_Type &&
+		            opt_type_filter != &DeeModuleDex_Type)
+			return 0; /* Not part of "module_byaddr_tree" / "dex_byaddr_tree" */
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+		if unlikely(opt_type_filter != &DeeModuleDex_Type)
+			return 0; /* Not part of "module_byaddr_tree" / "dex_byaddr_tree" */
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
+	}
+	if (start_after) {
+		prev_module = start_after;
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+		if unlikely(Dee_TYPE(prev_module) != &DeeModuleDee_Type &&
+		            Dee_TYPE(prev_module) != &DeeModuleDex_Type)
+			return 0; /* Not part of "module_byaddr_tree" / "dex_byaddr_tree" */
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+		if unlikely(Dee_TYPE(prev_module) != &DeeModuleDex_Type)
+			return 0; /* Not part of "module_byaddr_tree" / "dex_byaddr_tree" */
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
+		Dee_Incref(prev_module);
+#ifdef HAVE_Dee_dexataddr_t
+		if (Dee_TYPE(prev_module) == &DeeModuleDex_Type &&
+		    (prev_module->mo_flags & _Dee_MODULE_FNOADDR)) {
+			result = 0;
+			goto continue_dex_byaddr_tree_after_prev_module; /* Start within "dex_byaddr_tree" */
+		}
+#endif /* HAVE_Dee_dexataddr_t */
+		module_byaddr_lock_read();
+		result = 0;
+	} else {
+		module_byaddr_lock_read();
+		prev_module = module_byaddr_tree;
+		if unlikely(!prev_module)
+			goto empty_unlock; /* Empty tree */
+		while (prev_module->mo_adrnode.rb_lhs)
+			prev_module = prev_module->mo_adrnode.rb_lhs;
+		while ((opt_type_filter && Dee_TYPE(prev_module) != opt_type_filter) ||
+		       !Dee_IncrefIfNotZero(prev_module)) {
+			prev_module = module_byaddr_nextnode(prev_module);
+			if unlikely(!prev_module)
+				goto empty_unlock; /* Empty tree */
+		}
+		module_byaddr_lock_endread();
+		result = (*cb)(arg, prev_module);
+		if unlikely(result < 0)
+			goto done_decref;
+		module_byaddr_lock_read();
+	}
+	for (;;) {
+		Dee_ssize_t temp;
+		DREF DeeModuleObject *next_module = prev_module;
+		for (;;) {
+			ASSERT(!(next_module->mo_flags & _Dee_MODULE_FNOADDR));
+			next_module = module_byaddr_nextnode(next_module);
+			if (!next_module)
+				goto done_decref_unlock;
+			ASSERT(!(next_module->mo_flags & _Dee_MODULE_FNOADDR));
+			if ((!opt_type_filter || Dee_TYPE(next_module) == opt_type_filter) &&
+			    Dee_IncrefIfNotZero(next_module))
+				break;
+		}
+		module_byaddr_lock_endread();
+		Dee_Decref_unlikely(prev_module);
+		temp = (*cb)(arg, next_module);
+		prev_module = next_module; /* Inherit reference */
+		if unlikely(temp < 0) {
+			result = temp;
+			goto done_decref;
+		}
+		result += temp;
+		module_byaddr_lock_read();
+	}
+done_decref_unlock:
+#ifdef HAVE_Dee_dexataddr_t
+	if (!opt_type_filter || opt_type_filter == &DeeModuleDex_Type) {
+		Dee_ssize_t temp;
+		DREF DeeModuleObject *next_module;
+		if (!Dee_DecrefIfNotOne(prev_module)) {
+			module_byaddr_lock_endread();
+			Dee_Decref_unlikely(prev_module);
+			module_byaddr_lock_read();
+		}
+scan_dex_byaddr_tree:
+		prev_module = dex_byaddr_tree;
+		if unlikely(!prev_module)
+			goto dex_empty_unlock;
+		while (prev_module->mo_adrnode.rb_lhs)
+			prev_module = prev_module->mo_adrnode.rb_lhs;
+		Dee_Incref(prev_module);
+		module_byaddr_lock_endread();
+continue_dex_byaddr_tree_at_prev_module:
+		temp = (*cb)(arg, prev_module);
+		if unlikely(temp < 0) {
+			result = temp;
+			goto done_decref;
+		}
+		result += temp;
+continue_dex_byaddr_tree_after_prev_module:
+		module_byaddr_lock_read();
+		ASSERT(prev_module->mo_flags & _Dee_MODULE_FNOADDR);
+		next_module = dex_byaddr_nextnode(prev_module);
+		if (next_module) {
+			ASSERT(next_module->mo_flags & _Dee_MODULE_FNOADDR);
+			Dee_Incref(next_module);
+			module_byaddr_lock_endread();
+			Dee_Decref_unlikely(prev_module);
+			prev_module = next_module;
+			goto continue_dex_byaddr_tree_at_prev_module;
+		}
+	}
+#endif /* HAVE_Dee_dexataddr_t */
+	module_byaddr_lock_endread();
+done_decref:
+	Dee_Decref_unlikely(prev_module);
+	return result;
+empty_unlock:
+#ifdef HAVE_Dee_dexataddr_t
+	if (!opt_type_filter || opt_type_filter == &DeeModuleDex_Type) {
+		result = 0;
+		goto scan_dex_byaddr_tree;
+	}
+#endif /* HAVE_Dee_dexataddr_t */
+	module_byaddr_lock_endread();
+	return 0;
+#ifdef HAVE_Dee_dexataddr_t
+dex_empty_unlock:
+	module_byaddr_lock_endread();
+	return result;
+#endif /* HAVE_Dee_dexataddr_t */
+}
+
+PUBLIC NONNULL((1)) Dee_ssize_t DCALL
+DeeModule_EnumerateLibTree(Dee_module_enumerate_lib_cb_t cb, void *arg,
+                           DeeModuleObject *start_after_mod,
+                           /*String*/ DeeObject *start_after_name,
+                           DeeTypeObject *opt_type_filter) {
+	Dee_ssize_t result = 0;
+	struct Dee_module_libentry *iter;
+	DREF DeeStringObject *prev_name = NULL;
+	module_libtree_lock_read();
+	if (start_after_mod) {
+		iter = &start_after_mod->mo_libname;
+		if (start_after_name) {
+			while (iter->mle_name != (DeeStringObject *)start_after_name) {
+				iter = iter->mle_next;
+				if (!iter)
+					goto empty_unlock;
+			}
+		}
+		iter = module_libtree_nextnode(iter);
+		if unlikely(!iter)
+			goto empty_unlock;
+	} else {
+		iter = module_libtree_root;
+		if unlikely(!iter)
+			goto empty_unlock;
+		while (iter->mle_node.rb_lhs)
+			iter = iter->mle_node.rb_lhs;
+	}
+continue_at_iter:
+	do {
+		DREF DeeModuleObject *iter_mod = Dee_module_libentry_getmodule(iter);
+		if ((!opt_type_filter || Dee_TYPE(iter_mod) == opt_type_filter) &&
+		    Dee_IncrefIfNotZero(iter_mod)) {
+			Dee_ssize_t temp;
+			DREF DeeStringObject *iter_name = iter->mle_name;
+			Dee_Incref(iter_name);
+			module_libtree_lock_endread();
+			Dee_XDecref_unlikely(prev_name);
+			temp = (*cb)(arg, iter_mod, (DeeObject *)iter_name);
+			Dee_Decref_unlikely(iter_mod);
+			prev_name = iter_name;
+			if unlikely(temp < 0) {
+				result = temp;
+				goto done_unlock;
+			}
+			result += temp;
+			module_libtree_lock_read();
+
+			/* Re-discover the entry for "iter_mod" + "iter_name" */
+			iter = &iter_mod->mo_libname;
+			while (iter->mle_name != iter_name) {
+				iter = iter->mle_next;
+				if unlikely(!iter) {
+					/* This can happen when the entry for "iter" was removed.
+					 * In this case, use the reference in "prev_name" to find
+					 * the smallest entry that is still `> prev_name' */
+					ASSERT(prev_name);
+					iter = module_libtree_nextafter(module_libtree_root, prev_name);
+					if (!iter)
+						goto done_unlock;
+					goto continue_at_iter;
+				}
+			}
+		}
+	} while ((iter = module_libtree_nextnode(iter)) != NULL);
+done_unlock:
+	module_libtree_lock_endread();
+/*done:*/
+	Dee_XDecref_unlikely(prev_name);
+	return result;
+empty_unlock:
+	module_libtree_lock_endread();
+	return 0;
+}
+
+
+
+
+/* Convenience wrappers around `DeeModule_Enumerate*' that return whatever
+ * module comes after "prev" (if such a module exists), or "NULL" if no such
+ * module exists. When "prev" is "NULL", return the first module of that tree. */
+PRIVATE NONNULL((2)) Dee_ssize_t DCALL
+module_enumerate_next_cb(void *arg, DeeModuleObject *__restrict mod) {
+	Dee_Incref(mod);
+	*(DeeModuleObject **)arg = mod;
+	return -1;
+}
+
+PUBLIC WUNUSED DREF DeeModuleObject *DCALL
+DeeModule_NextAbsTree(DeeModuleObject *prev, DeeTypeObject *opt_type_filter) {
+	DREF DeeModuleObject *result = NULL;
+	DeeModule_EnumerateAbsTree(&module_enumerate_next_cb, &result, prev, opt_type_filter);
+	return result;
+}
+
+PUBLIC WUNUSED DREF DeeModuleObject *DCALL
+DeeModule_NextAdrTree(DeeModuleObject *prev, DeeTypeObject *opt_type_filter) {
+	DREF DeeModuleObject *result = NULL;
+	DeeModule_EnumerateAdrTree(&module_enumerate_next_cb, &result, prev, opt_type_filter);
+	return result;
+}
+
+struct module_enumerate_next_lib_data {
+	DREF DeeModuleObject *menld_mod;
+	DREF DeeObject       *menld_name;
+};
+
+PRIVATE NONNULL((2)) Dee_ssize_t DCALL
+module_enumerate_next_lib_cb(void *arg, DeeModuleObject *__restrict mod,
+                             /*String*/ DeeObject *libname) {
+	struct module_enumerate_next_lib_data *data;
+	data = (struct module_enumerate_next_lib_data *)arg;
+	data->menld_mod  = mod;
+	data->menld_name = libname;
+	Dee_Incref(mod);
+	Dee_Incref(libname);
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((4)) DREF DeeModuleObject *DCALL
+DeeModule_NextLibTree(DeeModuleObject *prev, /*String*/ DeeObject *prev_libname,
+                      DeeTypeObject *opt_type_filter,
+                      DREF /*String*/ DeeObject **__restrict p_libname) {
+	struct module_enumerate_next_lib_data data;
+	data.menld_mod  = NULL;
+	data.menld_name = NULL;
+	DeeModule_EnumerateLibTree(&module_enumerate_next_lib_cb, &data,
+	                           prev, prev_libname, opt_type_filter);
+	*p_libname = data.menld_name; /* Inherit reference */
+	return data.menld_mod;
+}
+
+
+
 
 /* Lookup an external symbol.
  * Convenience function (same as `DeeObject_GetAttr(DeeModule_Import(...), ...)') */
@@ -9031,7 +9426,7 @@ DeeModule_GetExtern(/*String*/ DeeObject *__restrict module_name,
 	if unlikely(!mod)
 		goto err;
 	result = DeeObject_GetAttr(Dee_AsObject(mod), global_name);
-	Dee_Decref(mod);
+	Dee_Decref_unlikely(mod);
 	return result;
 err:
 	return NULL;
@@ -9047,7 +9442,7 @@ DeeModule_GetExternString(/*utf-8*/ char const *__restrict module_name,
 	if unlikely(!mod)
 		goto err;
 	result = DeeObject_GetAttrString(Dee_AsObject(mod), global_name);
-	Dee_Decref(mod);
+	Dee_Decref_unlikely(mod);
 	return result;
 err:
 	return NULL;
@@ -9065,7 +9460,7 @@ DeeModule_CallExtern(/*String*/ DeeObject *__restrict module_name,
 	if unlikely(!mod)
 		goto err;
 	result = DeeObject_CallAttr(Dee_AsObject(mod), global_name, argc, argv);
-	Dee_Decref(mod);
+	Dee_Decref_unlikely(mod);
 	return result;
 err:
 	return NULL;
@@ -9082,7 +9477,7 @@ DeeModule_CallExternString(/*utf-8*/ char const *__restrict module_name,
 	if unlikely(!mod)
 		goto err;
 	result = DeeObject_CallAttrString(Dee_AsObject(mod), global_name, argc, argv);
-	Dee_Decref(mod);
+	Dee_Decref_unlikely(mod);
 	return result;
 err:
 	return NULL;
@@ -9124,7 +9519,7 @@ DeeModule_VCallExternf(/*String*/ DeeObject *__restrict module_name,
 	if unlikely(!mod)
 		goto err;
 	result = DeeObject_VCallAttrf(Dee_AsObject(mod), global_name, format, args);
-	Dee_Decref(mod);
+	Dee_Decref_unlikely(mod);
 	return result;
 err:
 	return NULL;
@@ -9141,7 +9536,7 @@ DeeModule_VCallExternStringf(/*utf-8*/ char const *__restrict module_name,
 	if unlikely(!mod)
 		goto err;
 	result = DeeObject_VCallAttrStringf(Dee_AsObject(mod), global_name, format, args);
-	Dee_Decref(mod);
+	Dee_Decref_unlikely(mod);
 	return result;
 err:
 	return NULL;
