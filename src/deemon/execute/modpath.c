@@ -3225,7 +3225,8 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 
 	/* Deal with leading parent-directory references */
 	import_str_end = import_str + import_str_size;
-	while (import_str < import_str_end) {
+	for (;;) {
+		ASSERT(import_str < import_str_end);
 		ASSERTF(!DeeSystem_IsSep(*import_str),
 		        "Presence of SEPs should have caused "
 		        "caller to take a different path!");
@@ -3233,7 +3234,24 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 			break;
 
 		/* Move up path by 1 element */
+		++import_str;
+		if (import_str >= import_str_end) {
+			/* No sub-directory references
+			 * -> given import string ends with "."
+			 * -> Do not remove the last parent-directory reference:
+			 *    in /home/me/script.dee
+			 *    import(".")     ->  "/home/me/script.dee"
+			 *    import(".foo")  ->  "/home/me/foo.dee"
+			 *    import("..")    ->  "/home/me"            // << notice how the trailing "/me" isn't removed
+			 *    import("..foo") ->  "/home/foo.dee"
+			 * -> indicated module **must** be a directory */
+			*p_must_be_directory = true;
+			goto done_after_directory_chain;
+		}
+
 		if unlikely(result_end <= result) {
+			if (*import_str != '.')
+				break;
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Bad relative module path %$q tries to reach beyond filesystem root",
 			                (size_t)(import_str_end - import_str), import_str);
@@ -3243,69 +3261,59 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 			--result_end;
 		while ((result_end > result) && result_end[-1] == DeeSystem_SEP)
 			--result_end;
-		++import_str;
 	}
 
 	/* Deal with sub-directory references */
-	if (import_str >= import_str_end) {
-		/* No sub-directory references
-		 * -> given import string ends with "."
-		 * -> indicated module **must** be a directory */
-		*p_must_be_directory = true;
-	} else {
-		for (;;) {
-			char const *segment_end;
-			size_t segment_len;
-			if (import_str >= import_str_end)
-				break;
-			ASSERTF(!DeeSystem_IsSep(*import_str),
-			        "Presence of SEPs should have caused "
-			        "caller to take a different path!");
-			segment_end = (char const *)memchr(import_str, '.', (size_t)(import_str_end - import_str) * sizeof(char));
-			if (segment_end == NULL)
-				segment_end = import_str_end;
-			if ((import_str != Dee_unicode_skipspaceutf8_n(import_str, segment_end)) ||
-			    (segment_end != Dee_unicode_skipspaceutf8_rev_n(segment_end, import_str))) {
-				DeeError_Throwf(&DeeError_ValueError,
-				                "Illegal leading/trailing whitespace in import string segment: %$q",
-				                (size_t)(segment_end - import_str), import_str);
-				goto err_r;
-			}
-			segment_end = Dee_unicode_skipspaceutf8_rev_n(segment_end, import_str);
-			segment_len = (size_t)(segment_end - import_str);
-			if unlikely(segment_len == 0) {
-				DeeError_Throwf(&DeeError_ValueError,
-				                "Bad relative module path %$q contains empty path segment",
-				                (size_t)(import_str_end - import_str), import_str);
-				goto err_r;
-			}
-#ifdef DeeSystem_HAVE_FS_DRIVES
-			if (result_end <= result) {
-				/* Write new drive-string */
-				if unlikely(segment_len != 1) {
-					DeeError_Throwf(&DeeError_ValueError,
-					                "Length of drive name %$q is not 1 character",
-					                segment_len, import_str);
-					goto err_r;
-				}
-				ASSERT(result_end == result);
-				*result_end++ = (char)(unsigned char)toupper((unsigned int)*import_str);
-				*result_end++ = ':';
-			} else
-#endif /* DeeSystem_HAVE_FS_DRIVES */
-			{
-				*result_end++ = DeeSystem_SEP;
-				result_end = (char *)mempcpyc(result_end, import_str, segment_len, sizeof(char));
-			}
-			import_str = segment_end;
-			/* Skip the discovered "." to get to the start of the next segment.
-			 * Also handles the case where import_str ends with "." (in which
-			 * case we simply ignore the trailing ".") */
-			++import_str;
-			if (import_str >= import_str_end)
-				break;
+	do {
+		char const *segment_end;
+		size_t segment_len;
+		ASSERT(import_str < import_str_end);
+		ASSERTF(!DeeSystem_IsSep(*import_str),
+		        "Presence of SEPs should have caused "
+		        "caller to take a different path!");
+		segment_end = (char const *)memchr(import_str, '.', (size_t)(import_str_end - import_str) * sizeof(char));
+		if (segment_end == NULL)
+			segment_end = import_str_end;
+		if ((import_str != Dee_unicode_skipspaceutf8_n(import_str, segment_end)) ||
+		    (segment_end != Dee_unicode_skipspaceutf8_rev_n(segment_end, import_str))) {
+			DeeError_Throwf(&DeeError_ValueError,
+			                "Illegal leading/trailing whitespace in import string segment: %$q",
+			                (size_t)(segment_end - import_str), import_str);
+			goto err_r;
 		}
-	}
+		segment_end = Dee_unicode_skipspaceutf8_rev_n(segment_end, import_str);
+		segment_len = (size_t)(segment_end - import_str);
+		if unlikely(segment_len == 0) {
+			DeeError_Throwf(&DeeError_ValueError,
+			                "Bad relative module path %$q contains empty path segment",
+			                (size_t)(import_str_end - import_str), import_str);
+			goto err_r;
+		}
+#ifdef DeeSystem_HAVE_FS_DRIVES
+		if (result_end <= result) {
+			/* Write new drive-string */
+			if unlikely(segment_len != 1) {
+				DeeError_Throwf(&DeeError_ValueError,
+				                "Length of drive name %$q is not 1 character",
+				                segment_len, import_str);
+				goto err_r;
+			}
+			ASSERT(result_end == result);
+			*result_end++ = (char)(unsigned char)toupper((unsigned int)*import_str);
+			*result_end++ = ':';
+		} else
+#endif /* DeeSystem_HAVE_FS_DRIVES */
+		{
+			*result_end++ = DeeSystem_SEP;
+			result_end = (char *)mempcpyc(result_end, import_str, segment_len, sizeof(char));
+		}
+		import_str = segment_end;
+		/* Skip the discovered "." to get to the start of the next segment.
+		 * Also handles the case where import_str ends with "." (in which
+		 * case we simply ignore the trailing ".") */
+		++import_str;
+	} while (import_str < import_str_end);
+done_after_directory_chain:
 
 	/* Finalize filename and calculate offsets */
 	*result_end = '\0';
@@ -6111,8 +6119,8 @@ again_search_fs_modules:
 				if unlikely(!utf8_path)
 					goto err_buf_r;
 				if (WSTR_LENGTH(utf8_path) == len &&
-				    /* TODO: Support for mixed LATIN-1/UTF-8 strings */
-				    /* TODO: UTF-8 case compare! */
+				    /* TO-DO: Support for mixed LATIN-1/UTF-8 strings */
+				    /* TO-DO: UTF-8 case compare! */
 				    fs_bcmp(utf8_path, buf, len * sizeof(char)) == 0) {
 					goto got_result_set_global;
 				}
@@ -6121,8 +6129,8 @@ again_search_fs_modules:
 			}
 			if (WSTR_LENGTH(utf8_path) != len)
 				continue;
-			/* TODO: Support for mixed LATIN-1/UTF-8 strings */
-			/* TODO: UTF-8 case compare! */
+			/* TO-DO: Support for mixed LATIN-1/UTF-8 strings */
+			/* TO-DO: UTF-8 case compare! */
 			if (fs_bcmp(utf8_path, buf, len * sizeof(char)) != 0)
 				continue;
 			/* Found it! */
@@ -6137,7 +6145,7 @@ again_find_existing_global_module:
 				modules_glob_lock_write();
 				COMPILER_READ_BARRIER();
 				if likely(!LIST_ISBOUND(result, mo_globlink)) {
-					/* TODO: Must change `result->mo_name' to `module_global_name'
+					/* TO-DO: Must change `result->mo_name' to `module_global_name'
 					 * ${LIBPATH}/foo/bar.dee:
 					 * >> global helper = import(".bar");
 					 * ${LIBPATH}/foo/baz.dee:
@@ -7977,7 +7985,7 @@ fallback:
 
 	/* TODO: Check if `main:argv[0]' is an absolute filename. */
 	/* TODO: Check if `main:argv[0]' can be found in $PATH. */
-	return (DREF DeeStringObject *)DeeString_New(".");
+	return_reference_(&str_dot);
 #endif /* !get_default_home_NO_FALLBACK */
 
 #ifdef get_default_home_NEED_ERR
