@@ -73,6 +73,10 @@
  * >> #define RBTREE_MINKEY_EQ_MAXKEY         // Indicate that nodes don't take up key-ranges, but only a single key
  * >> #define RBTREE_WANT_MINMAXLOCATE        // Declare `RBTREE(minmaxlocate)'
  * >> #define RBTREE_WANT_PREV_NEXT_NODE      // Declare `RBTREE(prevnode)' and `RBTREE(nextnode)'
+ * >> #define RBTREE_WANT_PREVNODE            // Declare `RBTREE(prevnode)'
+ * >> #define RBTREE_WANT_NEXTNODE            // Declare `RBTREE(nextnode)'
+ * >> #define RBTREE_WANT_NEXTAFTER           // Declare `RBTREE(nextafter)'
+ * >> #define RBTREE_WANT_LASTBEFORE          // Declare `RBTREE(lastbefore)'
  * >> #define RBTREE_WANT_RREMOVE             // Declare `RBTREE(rremove)'
  * >> #define RBTREE_WANT_RLOCATE             // Declare `RBTREE(rlocate)'
  * >> #define RBTREE_WANT_TRYINSERT           // Declare `RBTREE(tryinsert)'
@@ -164,6 +168,10 @@ struct my_node {
 /* #define RBTREE_MINKEY_EQ_MAXKEY        (Indicate that nodes don't take up key-ranges, but only a single key) */
 /* #define RBTREE_WANT_MINMAXLOCATE       (Declare `RBTREE(minmaxlocate)') */
 /* #define RBTREE_WANT_PREV_NEXT_NODE     (Declare `RBTREE(prevnode)' and `RBTREE(nextnode)') */
+/* #define RBTREE_WANT_PREVNODE           (Declare `RBTREE(prevnode)') */
+/* #define RBTREE_WANT_NEXTNODE           (Declare `RBTREE(nextnode)') */
+/* #define RBTREE_WANT_NEXTAFTER          (Declare `RBTREE(nextafter)') */
+/* #define RBTREE_WANT_LASTBEFORE         (Declare `RBTREE(lastbefore)') */
 /* #define RBTREE_WANT_RREMOVE            (Declare `RBTREE(rremove)') */
 /* #define RBTREE_WANT_RLOCATE            (Declare `RBTREE(rlocate)') */
 /* #define RBTREE_WANT_TRYINSERT          (Declare `RBTREE(tryinsert)') */
@@ -255,9 +263,14 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(removenode))(RBTREE_T **__restrict p_root,
 
 
 #ifdef RBTREE_WANT_PREV_NEXT_NODE
+#define RBTREE_WANT_PREVNODE
+#define RBTREE_WANT_NEXTNODE
+#endif /* RBTREE_WANT_PREV_NEXT_NODE */
+
 /* Return the next node with a key-range located below `node'
  * If  no  such  node exists,  return  `RBTREE_NULL' instead.
  * NOTE: This function takes O(log(N)) to execute. */
+#ifdef RBTREE_WANT_PREVNODE
 #ifdef RBTREE_LEFT_LEANING
 RBTREE_DECL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1, 2)) RBTREE_T *
 RBTREE_NOTHROW(RBTREE_CC RBTREE(prevnode))(RBTREE_T *root, RBTREE_T const *node
@@ -267,10 +280,12 @@ RBTREE_DECL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
 RBTREE_NOTHROW(RBTREE_CC RBTREE(prevnode))(RBTREE_T const *__restrict node
                                            RBTREE_SLOT__PARAMS);
 #endif /* !RBTREE_LEFT_LEANING */
+#endif /* RBTREE_WANT_PREVNODE */
 
 /* Return the next node with a key-range located above `node'
  * If  no  such  node exists,  return  `RBTREE_NULL' instead.
  * NOTE: This function takes O(log(N)) to execute. */
+#ifdef RBTREE_WANT_NEXTNODE
 #ifdef RBTREE_LEFT_LEANING
 RBTREE_DECL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1, 2)) RBTREE_T *
 RBTREE_NOTHROW(RBTREE_CC RBTREE(nextnode))(RBTREE_T *root, RBTREE_T const *node
@@ -280,7 +295,7 @@ RBTREE_DECL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
 RBTREE_NOTHROW(RBTREE_CC RBTREE(nextnode))(RBTREE_T const *__restrict node
                                            RBTREE_SLOT__PARAMS);
 #endif /* !RBTREE_LEFT_LEANING */
-#endif /* RBTREE_WANT_PREV_NEXT_NODE */
+#endif /* RBTREE_WANT_NEXTNODE */
 
 
 #ifdef RBTREE_WANT_MINMAXLOCATE
@@ -298,6 +313,18 @@ RBTREE_DECL __ATTR_NONNULL((4)) void
 RBTREE_NOTHROW_U(RBTREE_CC RBTREE(minmaxlocate))(RBTREE_T *root, RBTREE_Tkey minkey, RBTREE_Tkey maxkey,
                                                  RBTREE(minmax_t) *__restrict result RBTREE_SLOT__PARAMS);
 #endif /* RBTREE_WANT_MINMAXLOCATE */
+
+/* Returns the lowest node that is greater than `minkey' (simplified version of `minmaxlocate()') */
+#ifdef RBTREE_WANT_NEXTAFTER
+RBTREE_DECL __ATTR_PURE __ATTR_WUNUSED RBTREE_T *
+RBTREE_NOTHROW_U(RBTREE_CC RBTREE(nextafter))(RBTREE_T *root, RBTREE_Tkey minkey RBTREE_SLOT__PARAMS);
+#endif /* RBTREE_WANT_NEXTAFTER */
+
+/* Returns the greatest node that is lower than `maxkey' (simplified version of `minmaxlocate()') */
+#ifdef RBTREE_WANT_LASTBEFORE
+RBTREE_DECL __ATTR_PURE __ATTR_WUNUSED RBTREE_T *
+RBTREE_NOTHROW_U(RBTREE_CC RBTREE(lastbefore))(RBTREE_T *root, RBTREE_Tkey maxkey RBTREE_SLOT__PARAMS);
+#endif /* RBTREE_WANT_LASTBEFORE */
 
 __DECL_END
 #endif /* !RBTREE_IMPLEMENTATION_ONLY */
@@ -1707,7 +1734,9 @@ RBTREE_DEFINE_FUNCTION(RBTREE_IMPL, __ATTR_WUNUSED __ATTR_NONNULL((1)), RBTREE_T
 }
 #endif /* RBTREE_WANT_RREMOVE */
 
-#if defined(RBTREE_WANT_PREV_NEXT_NODE) || defined(RBTREE_WANT_MINMAXLOCATE)
+#if (defined(RBTREE_WANT_PREVNODE) || defined(RBTREE_WANT_NEXTNODE) ||      \
+     defined(RBTREE_WANT_MINMAXLOCATE) || defined(RBTREE_WANT_NEXTAFTER) || \
+     defined(RBTREE_WANT_LASTBEFORE))
 
 /* Find the parent  of `node'  by searching through  the given  tree from  `root'
  * Returns `RBTREE_NULL' when `root == node' (in which case `node' has no parent) */
@@ -1738,26 +1767,27 @@ RBTREE_DEFINE_FUNCTION(__PRIVATE, __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1, 
 /* Return the next node with a key-range located below `node'
  * If  no  such  node exists,  return  `RBTREE_NULL' instead.
  * NOTE: This function takes O(log(N)) to execute. */
+#if defined(RBTREE_WANT_PREVNODE) || defined(RBTREE_WANT_NEXTAFTER) || defined(RBTREE_WANT_MINMAXLOCATE)
 #ifdef RBTREE_LEFT_LEANING
-#ifdef RBTREE_WANT_PREV_NEXT_NODE
+#ifdef RBTREE_WANT_PREVNODE
 RBTREE_DEFINE_FUNCTION(RBTREE_IMPL, __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1, 2)), RBTREE_T *,
                        RBTREE_NOTHROW, RBTREE_CC, RBTREE(prevnode),
                        (RBTREE_T *root, RBTREE_T const *node RBTREE_SLOT__PARAMS), (root, node RBTREE_SLOT__ARGS))
-#else /* RBTREE_WANT_PREV_NEXT_NODE */
+#else /* RBTREE_WANT_PREVNODE */
 RBTREE_DEFINE_FUNCTION(__PRIVATE, __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1, 2)), RBTREE_T *,
                        RBTREE_NOTHROW, RBTREE_CC, RBTREE(prevnode),
                        (RBTREE_T *root, RBTREE_T const *node RBTREE_SLOT__PARAMS), (root, node RBTREE_SLOT__ARGS))
-#endif /* !RBTREE_WANT_PREV_NEXT_NODE */
+#endif /* !RBTREE_WANT_PREVNODE */
 #else /* RBTREE_LEFT_LEANING */
-#ifdef RBTREE_WANT_PREV_NEXT_NODE
+#ifdef RBTREE_WANT_PREVNODE
 RBTREE_DEFINE_FUNCTION(RBTREE_IMPL, __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)), RBTREE_T *,
                        RBTREE_NOTHROW, RBTREE_CC, RBTREE(prevnode),
                        (RBTREE_T const *__restrict node RBTREE_SLOT__PARAMS), (node RBTREE_SLOT__ARGS))
-#else /* RBTREE_WANT_PREV_NEXT_NODE */
+#else /* RBTREE_WANT_PREVNODE */
 RBTREE_DEFINE_FUNCTION(__PRIVATE, __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)), RBTREE_T *,
                        RBTREE_NOTHROW, RBTREE_CC, RBTREE(prevnode),
                        (RBTREE_T const *__restrict node RBTREE_SLOT__PARAMS), (node RBTREE_SLOT__ARGS))
-#endif /* !RBTREE_WANT_PREV_NEXT_NODE */
+#endif /* !RBTREE_WANT_PREVNODE */
 #endif /* !RBTREE_LEFT_LEANING */
 {
 	RBTREE_LOCVAR(RBTREE_T *, result);
@@ -1784,30 +1814,32 @@ RBTREE_DEFINE_FUNCTION(__PRIVATE, __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1))
 	}
 	return result;
 }
+#endif /* RBTREE_WANT_PREVNODE || RBTREE_WANT_NEXTAFTER || RBTREE_WANT_MINMAXLOCATE */
 
 /* Return the next node with a key-range located above `node'
  * If  no  such  node exists,  return  `RBTREE_NULL' instead.
  * NOTE: This function takes O(log(N)) to execute. */
+#if defined(RBTREE_WANT_NEXTNODE) || defined(RBTREE_WANT_LASTBEFORE) || defined(RBTREE_WANT_MINMAXLOCATE)
 #ifdef RBTREE_LEFT_LEANING
-#ifdef RBTREE_WANT_PREV_NEXT_NODE
+#ifdef RBTREE_WANT_NEXTNODE
 RBTREE_DEFINE_FUNCTION(RBTREE_IMPL, __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1, 2)), RBTREE_T *,
                        RBTREE_NOTHROW, RBTREE_CC, RBTREE(nextnode),
                        (RBTREE_T *root, RBTREE_T const *node RBTREE_SLOT__PARAMS), (root, node RBTREE_SLOT__ARGS))
-#else /* RBTREE_WANT_PREV_NEXT_NODE */
+#else /* RBTREE_WANT_NEXTNODE */
 RBTREE_DEFINE_FUNCTION(__PRIVATE, __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1, 2)), RBTREE_T *,
                        RBTREE_NOTHROW, RBTREE_CC, RBTREE(nextnode),
                        (RBTREE_T *root, RBTREE_T const *node RBTREE_SLOT__PARAMS), (root, node RBTREE_SLOT__ARGS))
-#endif /* !RBTREE_WANT_PREV_NEXT_NODE */
+#endif /* !RBTREE_WANT_NEXTNODE */
 #else /* RBTREE_LEFT_LEANING */
-#ifdef RBTREE_WANT_PREV_NEXT_NODE
+#ifdef RBTREE_WANT_NEXTNODE
 RBTREE_DEFINE_FUNCTION(RBTREE_IMPL, __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)), RBTREE_T *,
                        RBTREE_NOTHROW, RBTREE_CC, RBTREE(nextnode),
                        (RBTREE_T const *__restrict node RBTREE_SLOT__PARAMS), (node RBTREE_SLOT__ARGS))
-#else /* RBTREE_WANT_PREV_NEXT_NODE */
+#else /* RBTREE_WANT_NEXTNODE */
 RBTREE_DEFINE_FUNCTION(__PRIVATE, __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)), RBTREE_T *,
                        RBTREE_NOTHROW, RBTREE_CC, RBTREE(nextnode),
                        (RBTREE_T const *__restrict node RBTREE_SLOT__PARAMS), (node RBTREE_SLOT__ARGS))
-#endif /* !RBTREE_WANT_PREV_NEXT_NODE */
+#endif /* !RBTREE_WANT_NEXTNODE */
 #endif /* !RBTREE_LEFT_LEANING */
 {
 	RBTREE_LOCVAR(RBTREE_T *, result);
@@ -1834,7 +1866,8 @@ RBTREE_DEFINE_FUNCTION(__PRIVATE, __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1))
 	}
 	return result;
 }
-#endif /* RBTREE_WANT_PREV_NEXT_NODE || RBTREE_WANT_MINMAXLOCATE */
+#endif /* RBTREE_WANT_PREVNODE || RBTREE_WANT_LASTBEFORE || RBTREE_WANT_MINMAXLOCATE */
+#endif /* RBTREE_WANT_PREVNODE || RBTREE_WANT_NEXTNODE || RBTREE_WANT_MINMAXLOCATE || RBTREE_WANT_NEXTAFTER || RBTREE_WANT_LASTBEFORE */
 
 
 #ifdef RBTREE_WANT_MINMAXLOCATE
@@ -1998,6 +2031,138 @@ RBTREE_NOTHROW_U(RBTREE_CC RBTREE(minmaxlocate))(RBTREE_T *root,
 }
 #endif /* RBTREE_WANT_MINMAXLOCATE */
 
+
+#ifdef RBTREE_WANT_NEXTAFTER
+/* Returns the lowest node that is greater than `minkey' (simplified version of `minmaxlocate()') */
+#ifdef RBTREE_DEFINE_FUNCTION
+RBTREE_DEFINE_FUNCTION(RBTREE_IMPL, __ATTR_PURE __ATTR_WUNUSED, RBTREE_T *,
+                       RBTREE_NOTHROW_U, RBTREE_CC, RBTREE(nextafter),
+                       (RBTREE_T *root, RBTREE_Tkey minkey RBTREE_SLOT__PARAMS),
+                       (root, minkey RBTREE_SLOT__ARGS))
+#else /* RBTREE_DEFINE_FUNCTION */
+RBTREE_IMPL __ATTR_PURE __ATTR_WUNUSED RBTREE_T *
+RBTREE_NOTHROW_U(RBTREE_CC RBTREE(nextafter))(RBTREE_T *root, RBTREE_Tkey minkey RBTREE_SLOT__PARAMS)
+#endif /* !RBTREE_DEFINE_FUNCTION */
+{
+	/* Simplified version of "minmaxlocate()" (see above) */
+	_RBTREE_VALIDATE(root);
+	while (root) {
+		RBTREE_LOCVAR(RBTREE_T *, min_node);
+		RBTREE_LOCVAR(RBTREE_T *, iter);
+		if (RBTREE_KEY_GR(minkey, RBTREE_GETMAXKEY(root))) {
+			root = RBTREE_GETRHS(root);
+			continue;
+		}
+		min_node = root;
+		for (;;) {
+			iter = RBTREE_GETLHS(min_node);
+			if (RBTREE_NODE_ISNULL(iter))
+				break;
+			if (!RBTREE_KEY_GR(minkey, RBTREE_GETMAXKEY(iter))) {
+				min_node = iter;
+				continue;
+			}
+			/* Check if we can find an in-range key in iter->RHS[->RHS...] */
+			iter = RBTREE_GETRHS(iter);
+			while (RBTREE_NODE_NOT_ISNULL(iter)) {
+				if (!RBTREE_KEY_GR(minkey, RBTREE_GETMAXKEY(iter))) {
+					min_node = iter;
+					break;
+				}
+				iter = RBTREE_GETRHS(iter);
+			}
+			break;
+		}
+		/* Because the min/max-range may be spread across different sub-trees,
+		 * we must still  check for the  case where the  predecessor/successor
+		 * the min/max node continues to be in-bounds! */
+		for (;;) {
+#ifdef RBTREE_LEFT_LEANING
+			iter = RBTREE(prevnode)(root, min_node RBTREE_SLOT__ARGS);
+#else /* RBTREE_LEFT_LEANING */
+			iter = RBTREE(prevnode)(min_node RBTREE_SLOT__ARGS);
+#endif /* !RBTREE_LEFT_LEANING */
+			if (RBTREE_NODE_ISNULL(iter))
+				break;
+			if (RBTREE_KEY_GR(minkey, RBTREE_GETMAXKEY(iter)))
+				break;
+			min_node = iter;
+		}
+		/* Write-back our results. */
+		return min_node;
+	}
+	/* There aren't any node that are in-bounds. */
+	return RBTREE_NULL;
+}
+#endif /* RBTREE_WANT_NEXTAFTER */
+
+
+
+#ifdef RBTREE_WANT_LASTBEFORE
+/* Returns the greatest node that is lower than `maxkey' (simplified version of `minmaxlocate()') */
+#ifdef RBTREE_DEFINE_FUNCTION
+RBTREE_DEFINE_FUNCTION(RBTREE_IMPL, __ATTR_PURE __ATTR_WUNUSED, RBTREE_T *,
+                       RBTREE_NOTHROW_U, RBTREE_CC, RBTREE(lastbefore),
+                       (RBTREE_T *root, RBTREE_Tkey maxkey RBTREE_SLOT__PARAMS),
+                       (root, maxkey RBTREE_SLOT__ARGS))
+#else /* RBTREE_DEFINE_FUNCTION */
+RBTREE_IMPL __ATTR_PURE __ATTR_WUNUSED RBTREE_T *
+RBTREE_NOTHROW_U(RBTREE_CC RBTREE(lastbefore))(RBTREE_T *root, RBTREE_Tkey maxkey RBTREE_SLOT__PARAMS)
+#endif /* !RBTREE_DEFINE_FUNCTION */
+{
+	/* Simplified version of "minmaxlocate()" (see above) */
+	_RBTREE_VALIDATE(root);
+	while (root) {
+		RBTREE_LOCVAR(RBTREE_T *, max_node);
+		RBTREE_LOCVAR(RBTREE_T *, iter);
+		if (RBTREE_KEY_LO(maxkey, RBTREE_GETMINKEY(root))) {
+			root = RBTREE_GETLHS(root);
+			continue;
+		}
+		max_node = root;
+		for (;;) {
+			iter = RBTREE_GETRHS(max_node);
+			if (RBTREE_NODE_ISNULL(iter))
+				break;
+			if (!RBTREE_KEY_LO(maxkey, RBTREE_GETMINKEY(iter))) {
+				max_node = iter;
+				continue;
+			}
+			/* Check if we can find an in-range key in iter->LHS[->LHS...] */
+			iter = RBTREE_GETLHS(iter);
+			while (RBTREE_NODE_NOT_ISNULL(iter)) {
+				if (!RBTREE_KEY_LO(maxkey, RBTREE_GETMINKEY(iter))) {
+					max_node = iter;
+					break;
+				}
+				iter = RBTREE_GETLHS(iter);
+			}
+			break;
+		}
+		/* Because the min/max-range may be spread across different sub-trees,
+		 * we must still  check for the  case where the  predecessor/successor
+		 * the min/max node continues to be in-bounds! */
+		for (;;) {
+#ifdef RBTREE_LEFT_LEANING
+			iter = RBTREE(nextnode)(root, max_node RBTREE_SLOT__ARGS);
+#else /* RBTREE_LEFT_LEANING */
+			iter = RBTREE(nextnode)(max_node RBTREE_SLOT__ARGS);
+#endif /* !RBTREE_LEFT_LEANING */
+			if (RBTREE_NODE_ISNULL(iter))
+				break;
+			if (RBTREE_KEY_LO(maxkey, RBTREE_GETMINKEY(iter)))
+				break;
+			max_node = iter;
+		}
+		/* Write-back our results. */
+		return max_node;
+	}
+	/* There aren't any node that are in-bounds. */
+	return RBTREE_NULL;
+}
+#endif /* RBTREE_WANT_LASTBEFORE */
+
+
 #undef _RBTREE_OVERLAPPING
 #undef _RBTREE_GETSIBLING
 #undef _RBTREE_VALIDATE
@@ -2072,6 +2237,10 @@ __DECL_END
 
 #undef RBTREE_WANT_MINMAXLOCATE
 #undef RBTREE_WANT_PREV_NEXT_NODE
+#undef RBTREE_WANT_PREVNODE
+#undef RBTREE_WANT_NEXTNODE
+#undef RBTREE_WANT_NEXTAFTER
+#undef RBTREE_WANT_LASTBEFORE
 #undef RBTREE_WANT_RREMOVE
 #undef RBTREE_WANT_RLOCATE
 #undef RBTREE_WANT_TRYINSERT

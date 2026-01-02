@@ -97,6 +97,7 @@ struct Dee_module_dexdata {
 	WUNUSED_T int (DCALL *mdx_init)(void);
 	void (DCALL *mdx_fini)(void);
 	bool (DCALL *mdx_clear)(void);
+	void                       *_mdx_pad[9]; /* For future expansion */
 };
 
 #if defined(CONFIG_BUILDING_DEEMON) || defined(CONFIG_BUILDING_DEX)
@@ -160,7 +161,9 @@ INTDEF __BYTE_TYPE__ _end[];
 		/* .mdx_info   = */ NULL,                                           \
 		/* .mdx_init   = */ init,                                           \
 		/* .mdx_fini   = */ fini,                                           \
-		/* .mdx_clear  = */ clear                                           \
+		/* .mdx_clear  = */ clear,                                          \
+		/* ._mdx_pad   = */ { NULL, NULL, NULL, NULL, NULL,                 \
+		                      NULL, NULL, NULL, NULL }                      \
 	};                                                                      \
 	PUBLIC struct _dex_object DEX = {{ _Dee_GC_HEAD_UNTRACKED_INIT }, {     \
 		__Dee_DEX_OBJECT_HEAD_INIT,                                         \

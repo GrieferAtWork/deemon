@@ -97,7 +97,7 @@ DECL_BEGIN
  * That file in turn is based on the original dlmalloc:
  * >> v2.8.6 Wed Aug 29 06:57:58 2012  Doug Lea
  *
- * Heave modifications have been made:
+ * Heavy modifications have been made:
  * - DL_DEBUG_MEMSET_ALLOC / DL_DEBUG_MEMSET_FREE:
  *   Debug option to fill freshly malloc'd / free'd memory with patterns
  * - GM_ONLY: **only** provide a single, global mspace
@@ -4871,7 +4871,7 @@ again:
  * never Dee_Free()'d, nor untracked using `Dee_UntrackAlloc()'.
  * Information about leaks is printed using `Dee_DPRINTF()'.
  *
- * @return: * : The total amount of memory leaked */
+ * @return: * : The total amount of memory leaked (in bytes) */
 #define DeeHeap_DumpMemoryLeaks_DEFINED
 PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(void) {
 	size_t result = 0;
@@ -4893,7 +4893,8 @@ PRIVATE size_t alloc_id_break = 0;
  *   an attached debugger to break, allowing you to inspect the stack
  *   at the point where the `id'th allocation happened
  * - Allocation IDs are assigned in ascending order during every call
- *   to Dee_Malloc(), Dee_Calloc() and Dee_Realloc() (when ptr==NULL)
+ *   to Dee_Malloc(), Dee_Calloc() and Dee_Realloc() (when ptr==NULL),
+ *   as well as their Dee_Try* equivalents.
  * - When the deemon heap was not built with this feature, this API
  *   is a no-op, and always returns `0'
  * @return: * : The previously set allocation breakpoint */
@@ -5124,7 +5125,7 @@ PUBLIC ATTR_HOT ATTR_MALLOC WUNUSED void *
 /* Given a heap pointer (as could also be passed to `Dee_Free()' or
  * `Dee_MallocUsableSize()'), check if that pointer belongs to a custom
  * heap region, and if so: return a pointer to said heap region.
- * - If `ptr' is a `NULL' or a heap pointer that does not belong
+ * - If `ptr' is `NULL' or a heap pointer that does not belong
  *   to a custom heap region, `NULL' is returned instead.
  * - If `ptr' isn't a heap pointer, behavior is undefined.
  * - Unlike `Dee_MallocUsableSize()', this function has another special
@@ -5548,7 +5549,7 @@ PUBLIC ATTR_COLD void DCALL DeeHeap_CheckMemory(void) {
  * never Dee_Free()'d, nor untracked using `Dee_UntrackAlloc()'.
  * Information about leaks is printed using `Dee_DPRINTF()'.
  *
- * @return: * : The total amount of memory leaked */
+ * @return: * : The total amount of memory leaked (in bytes) */
 PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(void) {
 	/* nothing */
 	return 0;
@@ -5565,7 +5566,8 @@ PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(void) {
  *   an attached debugger to break, allowing you to inspect the stack
  *   at the point where the `id'th allocation happened
  * - Allocation IDs are assigned in ascending order during every call
- *   to Dee_Malloc(), Dee_Calloc() and Dee_Realloc() (when ptr==NULL)
+ *   to Dee_Malloc(), Dee_Calloc() and Dee_Realloc() (when ptr==NULL),
+ *   as well as their Dee_Try* equivalents.
  * - When the deemon heap was not built with this feature, this API
  *   is a no-op, and always returns `0'
  * @return: * : The previously set allocation breakpoint */
