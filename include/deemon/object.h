@@ -564,21 +564,21 @@ typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, voi
 #define Dee_Visit(ob)  (*proc)(Dee_AsObject(ob), arg)
 #define Dee_XVisit(ob) (void)(!(ob) || (Dee_Visit(ob), 0))
 
-#define Dee_Visitv(object_vector, object_count)                                             \
-	do {                                                                                    \
-		size_t _dvv_i;                                                                      \
-		for (_dvv_i = 0; _dvv_i < (size_t)(object_count); ++_dvv_i) {                       \
+#define Dee_Visitv(object_vector, object_count)                         \
+	do {                                                                \
+		size_t _dvv_i;                                                  \
+		for (_dvv_i = 0; _dvv_i < (size_t)(object_count); ++_dvv_i) {   \
 			DeeObject *_dvv_ob = Dee_AsObject((object_vector)[_dvv_i]); \
-			Dee_Visit(_dvv_ob);                                                             \
-		}                                                                                   \
+			Dee_Visit(_dvv_ob);                                         \
+		}                                                               \
 	}	__WHILE0
-#define Dee_XVisitv(object_vector, object_count)                                            \
-	do {                                                                                    \
-		size_t _dvv_i;                                                                      \
-		for (_dvv_i = 0; _dvv_i < (size_t)(object_count); ++_dvv_i) {                       \
+#define Dee_XVisitv(object_vector, object_count)                        \
+	do {                                                                \
+		size_t _dvv_i;                                                  \
+		for (_dvv_i = 0; _dvv_i < (size_t)(object_count); ++_dvv_i) {   \
 			DeeObject *_dvv_ob = Dee_AsObject((object_vector)[_dvv_i]); \
-			Dee_XVisit(_dvv_ob);                                                            \
-		}                                                                                   \
+			Dee_XVisit(_dvv_ob);                                        \
+		}                                                               \
 	}	__WHILE0
 
 

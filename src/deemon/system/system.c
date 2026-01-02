@@ -2051,11 +2051,11 @@ again:
 			/* NOTE: This right here doesn't work in all cases, mainly due to
 			 *       the fact that the `VirtualAlloc()' below fails if passed
 			 *       a base address that isn't a multiple of 0x10000 (and we
-			 *       need it to work if it's a multiple of 0x1000). Also, there
-			 *       can be the case where `VirtualAlloc()' fails because the
-			 *       relevant address is already mapped.
+			 *       need it to work if it isn't a multiple of 0x1000). Also,
+			 *       there can be the case where `VirtualAlloc()' fails because
+			 *       the relevant address is already mapped.
 			 */
-			hMap = CreateFileMappingA(fd, NULL,
+			hMap = CreateFileMappingW(fd, NULL,
 			                          (flags & DEE_MAPFILE_F_MAPSHARED)
 			                          ? PAGE_READWRITE
 			                          : PAGE_WRITECOPY,

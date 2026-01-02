@@ -220,29 +220,37 @@ FS_DeeString_LessSTR(DeeStringObject *lhs,
 #undef Dee_DEXBOUNDS_USE__xdlmodule_info       /* KOSmk3: xdlmodule_info */
 
 #ifdef DeeSystem_DlOpen_USE_LoadLibrary
+
 #ifdef CONFIG_HOST_WINDOWS
 #define Dee_DEXBOUNDS_USE__GetModuleInformation
 #define Dee_DEXATADDR_USE__GetModuleHandleExW
 #endif /* CONFIG_HOST_WINDOWS */
+
 #elif defined(DeeSystem_DlOpen_USE_dlopen)
+
 #ifdef CONFIG_HAVE_dl_iterate_phdr
 #if defined(CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP) && defined(CONFIG_HAVE_struct__link_map__l_addr)
 #define Dee_DEXBOUNDS_USE__dl_iterate_phdr__AND__dladdr1__RTLD_DL_LINKMAP
 #endif /* CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP && CONFIG_HAVE_struct__link_map__l_addr */
 #define Dee_DEXBOUNDS_USE__dl_iterate_phdr
 #endif /* CONFIG_HAVE_dl_iterate_phdr */
+
 #if defined(__KOS_VERSION__) && (__KOS_VERSION__ >= 300 && __KOS_VERSION__ < 400)
 #define Dee_DEXBOUNDS_USE__xdlmodule_info
 #endif /* __KOS_VERSION__ >= 300 && __KOS_VERSION__ < 400 */
+
 #ifdef CONFIG_HAVE_dlgethandle
 #define Dee_DEXATADDR_USE__dlgethandle
 #endif /* CONFIG_HAVE_dlgethandle */
+
 #ifdef CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP
 #define Dee_DEXATADDR_USE__dladdr1__RTLD_DL_LINKMAP
 #endif /* CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP */
+
 #ifdef CONFIG_HAVE_dladdr
 #define Dee_DEXATADDR_USE__dladdr__dli_fname
 #endif /* CONFIG_HAVE_dladdr */
+
 #endif /* ... */
 
 
