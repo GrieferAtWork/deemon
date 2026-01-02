@@ -98,16 +98,16 @@
 #elif defined(DEFINE_DeeType_BoundInstanceAttrStringHash)
 #define LOCAL_DeeType_AccessInstanceAttr                             DeeType_BoundInstanceAttrStringHash
 #define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_BoundCachedInstanceAttrStringHash(self, attr, hash)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) (DeeType_HasIInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash) ? 1 : -2)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) Dee_BOUND_FROMPRESENT_BOUND(DeeType_HasIInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, hash))
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) Dee_BOUND_FROMPRESENT_BOUND(DeeType_HasIInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, hash))
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) Dee_BOUND_FROMPRESENT_BOUND(DeeType_HasIInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash))
 #define LOCAL_IS_BOUND
 #elif defined(DEFINE_DeeType_BoundInstanceAttrStringLenHash)
 #define LOCAL_DeeType_AccessInstanceAttr                             DeeType_BoundInstanceAttrStringLenHash
 #define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_BoundCachedInstanceAttrStringLenHash(self, attr, attrlen, hash)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? 1 : -2)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) (DeeType_HasIInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? 1 : -2)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? 1 : -2)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) Dee_BOUND_FROMPRESENT_BOUND(DeeType_HasIInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash))
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) Dee_BOUND_FROMPRESENT_BOUND(DeeType_HasIInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash))
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) Dee_BOUND_FROMPRESENT_BOUND(DeeType_HasIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash))
 #define LOCAL_IS_BOUND
 #define LOCAL_HAS_len
 #elif defined(DEFINE_DeeType_CallInstanceAttrStringHash)
