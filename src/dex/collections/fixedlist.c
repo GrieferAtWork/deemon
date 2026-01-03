@@ -36,6 +36,7 @@
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
@@ -89,6 +90,31 @@ fl_copy(FixedList *__restrict self) {
 	return DeeGC_TRACK(FixedList, result);
 err:
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+fl_serialize(FixedList *__restrict self,
+             DeeSerial *__restrict writer) {
+	FixedList *out;
+	size_t sizeof_self = _Dee_MallococBufsize(offsetof(FixedList, fl_elem),
+	                                          self->fl_size, sizeof(DREF DeeObject *));
+	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+#define ADDROF(field) (out_addr + offsetof(FixedList, field))
+	if unlikely(!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, FixedList);
+	weakref_support_init(out);
+	Dee_atomic_rwlock_init(&out->fl_lock);
+	out->fl_size = self->fl_size;
+	FixedList_LockRead(self);
+	Dee_XMovrefv(out->fl_elem, self->fl_elem, out->fl_size);
+	FixedList_LockEndRead(self);
+	if (DeeSerial_XInplacePutObjectv(writer, ADDROF(fl_elem), out->fl_size))
+		goto err;
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+#undef ADDROF
 }
 
 #define FixedList_InitEnumerate_GetAllocatedSize(self) \
@@ -1456,7 +1482,7 @@ INTERN DeeTypeObject FixedList_Type = {
 			/* tp_deep_ctor:   */ &fl_copy,
 			/* tp_any_ctor:    */ &fl_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &fl_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&fl_fini,
@@ -1522,6 +1548,17 @@ fli_deep(FixedListIterator *__restrict self,
 	return 0;
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+fli_serialize(FixedListIterator *__restrict self,
+              DeeSerial *__restrict writer,
+              Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(FixedListIterator, field))
+	FixedListIterator *out = DeeSerial_Addr2Mem(writer, addr, FixedListIterator);
+	out->li_iter = FLI_GETITER(self);
+	return DeeSerial_PutObject(writer, ADDROF(li_list), self->li_list);
+#undef ADDROF
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1731,7 +1768,7 @@ INTERN DeeTypeObject FixedListIterator_Type = {
 			/* tp_deep_ctor:   */ &fli_deep,
 			/* tp_any_ctor:    */ &fli_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &fli_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&fli_fini,
 		/* .tp_assign      = */ NULL,
