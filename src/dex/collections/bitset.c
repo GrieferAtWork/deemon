@@ -36,6 +36,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/set.h>
 #include <deemon/system-features.h>
 #include <deemon/util/atomic.h>
@@ -1212,6 +1213,25 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+bs_serialize(Bitset *__restrict self,
+             DeeSerial *__restrict writer) {
+	Bitset *out;
+	size_t sizeof_bits = BITSET_SIZEOF(self->bs_nbits);
+	size_t sizeof_self = offsetof(Bitset, bs_bitset) + sizeof_bits;
+	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+#define ADDROF(field) (out_addr + offsetof(Bitset, field))
+	if unlikely(!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, Bitset);
+	out->bs_nbits = self->bs_nbits;
+	memcpy(out->bs_bitset, self->bs_bitset, sizeof_bits);
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+#undef ADDROF
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF Bitset *DCALL
 bs_frozen(Bitset *__restrict self) {
 	DREF Bitset *result = Bitset_Alloc(self->bs_nbits);
@@ -1929,7 +1949,7 @@ INTERN DeeTypeObject Bitset_Type = {
 			/* tp_deep_ctor:   */ &bs_copy,
 			/* tp_any_ctor:    */ &bs_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &bs_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ NULL, /* No destructor needed! */
@@ -2134,7 +2154,8 @@ err:
 	return NULL;
 }
 
-#define robs_bool bs_bool
+#define robs_serialize bs_serialize
+#define robs_bool      bs_bool
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 robs_printrepr(Bitset *__restrict self, Dee_formatprinter_t printer, void *arg) {
@@ -2446,7 +2467,7 @@ INTERN DeeTypeObject RoBitset_Type = {
 			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ &robs_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &robs_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ NULL, /* No destructor needed! */
@@ -3398,6 +3419,24 @@ bsv_copy(BitsetView *__restrict self,
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bsv_serialize(BitsetView *__restrict self,
+              DeeSerial *__restrict writer,
+              Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(BitsetView, field))
+	BitsetView *out = DeeSerial_Addr2Mem(writer, addr, BitsetView);
+	out->bsv_startbit = self->bsv_startbit;
+	out->bsv_endbit   = self->bsv_endbit;
+	out->bsv_bflags   = self->bsv_bflags;
+	out->bsv_buf.bb_size = self->bsv_buf.bb_size;
+	if (DeeSerial_PutObject(writer, ADDROF(bsv_owner), self->bsv_owner))
+		goto err;
+	return DeeSerial_PutPointer(writer, ADDROF(bsv_buf.bb_base), self->bsv_buf.bb_base);
+err:
+	return -1;
+#undef ADDROF
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsv_init(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeObject *ob;
@@ -4171,7 +4210,7 @@ INTERN DeeTypeObject BitsetView_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bsv_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &bsv_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bsv_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&bsv_assign,
@@ -4390,6 +4429,23 @@ bsiter_copy(BitsetIterator *__restrict self,
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bsiter_serialize(BitsetIterator *__restrict self,
+                 DeeSerial *__restrict writer,
+                 Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(BitsetIterator, field))
+	BitsetIterator *out = DeeSerial_Addr2Mem(writer, addr, BitsetIterator);
+	out->bsi_startbit = self->bsi_startbit;
+	out->bsi_endbit   = self->bsi_endbit;
+	out->bsi_bitno    = atomic_read(&self->bsi_bitno);
+	if (DeeSerial_PutObject(writer, ADDROF(bsi_owner), self->bsi_owner))
+		goto err;
+	return DeeSerial_PutPointer(writer, ADDROF(bsi_bitset), self->bsi_bitset);
+err:
+	return -1;
+#undef ADDROF
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsiter_init(BitsetIterator *__restrict self,
             size_t argc, DeeObject *const *argv) {
@@ -4492,7 +4548,7 @@ INTERN DeeTypeObject BitsetIterator_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bsiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &bsiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bsiter_fini,
 		/* .tp_assign      = */ NULL,
