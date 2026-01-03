@@ -46,7 +46,170 @@
 
 DECL_BEGIN
 
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+
+/*
+ * Module names can be imported using import strings using 1 of 4 flavors:
+ *
+ * #1: Absolute, or relative filesystem names
+ *     Used if:
+ *        The import string contains a "/" (or "\\") character, or
+ *        more specifically: `DeeSystem_SEP' or `DeeSystem_ALTSEP'
+ *     Type:
+ *        If filename ends with ".so" (or ".dll"): DEX module
+ *        Else, deemon source file or directory
+ *     Examples:
+ *        >> import mod = "E:\\projects\\deemon\\script.dee";
+ *        >> import mod = "E:\\projects\\deemon\\file.txt";
+ *        >> import mod = "./script.dee";
+ *        >> import mod = "./file.txt";
+ *
+ * #2: Absolute, or relative filesystem names, without extension
+ *     Examples:
+ *        >> import mod = "E:\\projects\\deemon\\script";
+ *        >> import mod = "./script";
+ *     Same as case #1, but deemon will automatically check for
+ *     relevant extensions ".dee", ".so" (or ".dll"), and then
+ *     one last time without any extension. The first time that
+ *     is found to actually exist during this part is then used,
+ *     with the extension implying the type of module:
+ *        1. ".dee"  Deemon source file (including check/creation of ".*.dec" file)
+ *        2. ".so"   Native DEX module
+ *        3. ""      As-is (can either be a deemon source file, or a directory)
+ *
+ * #3: Relative "dot"-encoded module names
+ *     Used if:
+ *        The import string does not contain "/" (or "\\")
+ *        The import string starts with a leading "."
+ *     Examples:
+ *        >> import mod = ".";     // "./{CURRENT_FILE}.dee"
+ *        >> import mod = "..";    // "./."        (directory containing current file)
+ *        >> import mod = ".foo";  // "./foo.dee"  (sibling file)
+ *        >> import mod = "..";    // when called from a file "/script.dee" on linux:      "<Filesystem root module>"
+ *        >> import mod = "...";   // when called from a file "C:\\script.dee" on windows: "<Filesystem root module>"
+ *     Relative "dot"-encoded module names are used to identify:
+ *      1. The calling module itself when "." is used as import string
+ *      2. The containing directory (recursive) when consisting of only "." characters:
+ *         - 1 dot is handled by case #1
+ *         - 2 dots mean "{headof(CURRENT_FILE)}"
+ *         - 3 dots mean "{headof(CURRENT_FILE)}/.."
+ *         - 4 dots mean "{headof(CURRENT_FILE)}/../.."
+ *         - Trying to go beyond the filesystem root is not allowed, but...
+ *         - ... on windows, the filesystem root is located one folder above
+ *           the root of any any drive
+ *      2. Import strings containing more than just "." characters:
+ *         - Leading dots are handled the as for case #2 to construct the location
+ *           of a "directory" relative to which the remainder of the import string
+ *           is then evaluated
+ *         - The remainder of the import string takes the form "foo.bar.baz", which
+ *           then gets translated to "{BASE_DIR_FROM_LEADING_DOTS}/foo/bar/baz.dee"
+ *         - It is an ERROR for this type of import string to:
+ *           - End with trailing "." characters:            "...dir.script."
+ *           - Contain multiple consecutive "." characters: "...dir..script"
+ *     Note that the initial context of a dot-encoded module name always
+ *     qualifies a **SIBLING** of the context-module: (examples are from "/home/me/script.dee")
+ *     >> import . as me;      // "/home/me/script.dee"
+ *     >> import .foo as sib;  // "/home/me/foo.dee"         // Sibling module!
+ *     >> local sub = me.bar;  // "/home/me/script/bar.dee"  // Child module!
+ *
+ * #4: LIBPATH-based module names (with optional "dot"-sub-references)
+ *     Used if:
+ *        The import string does not contain "/" (or "\\")
+ *        The import string does not starts with a leading "."
+ *     Examples:
+ *        >> import mod = deemon;        // Special case: "DeeModule_Deemon" (always exists, even if LIBPATH is empty)
+ *        >> import mod = util;          // "{LIBPATH}/util.dee"
+ *        >> import mod = rt.gen.unpack; // "{LIBPATH}/rt/gen/unpack.dee"
+ *     This type of import string is resolved alongside a list of path names
+ *     stored within `DeeModule_GetLibPath()'.
+ *        - By default, this list contains only a single element "{DeeExec_GetHome()}/lib"
+ *        - The environ variable $DEEMON_PATH can be used to add more paths
+ *        - The environ variable $DEEMON_HOME can be used to override "DeeExec_GetHome()"
+ *     When resolving LIBPATH-based module names, the list of strings from
+ *     `DeeModule_GetLibPath()' is enumerated in ascending order, and filenames
+ *     are constructed using the same mechanism as documented under #3.2, using
+ *     the string from `DeeModule_GetLibPath()' as the "directory", and the
+ *     given import string as-is as the remainder.
+ *
+ *
+ * Notes on module "children":
+ * - Since directories are considered as valid modules (though the following does not
+ *   only apply to directory modules, but all modules that do not have a non-standard
+ *   extension (e.g. "./script.txt")), the names of modules within a directory matching
+ *   the name of the module (or a properly named directory matching the name of a ".dee"
+ *   or ".so" module with the extension removed) can be accessed
+ *   as attributes of that module:
+ *   Files (in /home/me/deemon):
+ *     |
+ *     +--- main.dee
+ *     |
+ *     +--- script.dee
+ *     |
+ *     +--- script
+ *     |    |
+ *     |    +--- foo.dee
+ *     |    |
+ *     |    +--- bar.dee
+ *     |
+ *     +--- somedir
+ *          |
+ *          +--- baz.dee
+ *    $ cat script.dee
+ *    >> global foo = 42;
+ *
+ *    $ cat main.dee
+ *    >> import . as me;
+ *    >> import .script;
+ *    >> import .script.foo;
+ *    >> import .somedir;
+ *    >> print me;          // <Module /home/me/deemon/main>
+ *    >> print script;      // <Module /home/me/deemon/script>
+ *    >> print script.foo;  // 42                                  <-- *real* globals always overrule module children
+ *    >> print foo;         // <Module /home/me/deemon/script/foo>
+ *    >> print script.bar;  // <Module /home/me/deemon/script/bar>
+ *    >> print somedir;     // <Module /home/me/deemon/somedir>
+ *    >> print somedir.baz; // <Module /home/me/deemon/somedir/baz>
+ *    >>
+ *    >> import * from .script;   // Works, but only imports "global foo = 42"
+ *    >> import bar from .script; // Compile error: "sym from module" cannot be used to import child modules (this may change in the future)
+ *
+ *
+ * Notes on the compiler's "import" keyword:
+ * - The "import" keyword can be used in a number of different ways:
+ *   Statements:
+ *       >> import foo;                           // local foo = import("foo");
+ *       >> import .foo;                          // local foo = import(".foo");
+ *       >> import . as me;                       // local me = import(".");
+ *       >> import me = .;                        // local me = import(".");
+ *       >> import d = deemon;                    // local d = import("deemon");
+ *       >> import deemon as d;                   // local d = import("deemon");
+ *       >> import compare from deemon;           // <alias> local compare = import("deemon").compare;
+ *       >> from deemon import compare;           // <alias> local compare = import("deemon").compare;
+ *       >> import comp = compare from deemon;    // <alias> local comp = import("deemon").compare;
+ *       >> import compare as comp from deemon;   // <alias> local comp = import("deemon").compare;
+ *       >> from deemon import comp = compare;    // <alias> local comp = import("deemon").compare;
+ *       >> from deemon import compare as comp;   // <alias> local comp = import("deemon").compare;
+ *       >> from deemon import *;                 // <alias> <define locals for all symbols from "deemon" that don't already exist>
+ *       >> import * from deemon;                 // <alias> <define locals for all symbols from "deemon" that don't already exist>
+ *     NOTE: "<alias>" means that writes to the symbol that go to the source, rather than override a local
+ *   Expressions:
+ *       >> import("{IMPORT_STRING}");            // Evaluate "{IMPORT_STRING}" (using the caller's module as context for relative imports), and return the result
+ *       >> import.foo;                           // import("foo");
+ *       >> import.foo.bar;                       // import("foo").bar;
+ *     Note the absence of whitespace between "import" and "." in the last 2 cases!
+ *     If the compiler finds there to be whitespace after "import" (and the piece
+ *     of code is found in a context where statements are allowed), then the meaning
+ *     will be different:
+ *       >> import.foo;               // import("foo");
+ *       >> import .foo;              // local foo = import("foo");
+ *       >> (import .foo);            // import("foo");
+ *       >> local foo = import.foo;   // local foo = import("foo");
+ *       >> local foo = import .foo;  // local foo = import("foo");
+ *     As such, you can think of "import." being kind-of a different token than "import"
+ *     TODO: The "import.xxx" syntax is not yet implemented
+ */
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
 /*
  * System module paths:
  *   - import util;
@@ -407,6 +570,7 @@ struct Dee_compiler_options {
  * >> import("./foo.dee");                // DeeModuleDee_Type   (mo_absname = "/path/to/current/file/foo")
  * >> import("./foo.txt");                // DeeModuleDee_Type   (mo_absname = "/path/to/current/file/foo.txt"; this module doesn't do directory enumeration, and has "Dee_MODULE_FABSFILE" set)
  * >> import(".");                        // DeeModuleDee_Type   (mo_absname = "/path/to/current/file/CURRENT_FILE"; the calling module itself)
+ * >> import(".CURRENT_FILE");            // DeeModuleDee_Type   (mo_absname = "/path/to/current/file/CURRENT_FILE"; the calling module itself)
  * >> import(".").foo;                    // DeeModuleDee_Type   (mo_absname = "/path/to/current/file/CURRENT_FILE/foo")
  * >> import(".").operator . ("foo.bar"); // DeeModuleDee_Type   (mo_absname = "/path/to/current/file/CURRENT_FILE/foo.bar")
  * >> import(".foo.bar");                 // DeeModuleDee_Type   (mo_absname = "/path/to/current/file/CURRENT_FILE/foo/bar")

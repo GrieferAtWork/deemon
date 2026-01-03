@@ -1329,8 +1329,8 @@
 #define Dee_DEX_GETSET_NODOC(...){}
 #define DEX_GETTER_NODOC(...){}
 #define Dee_DEX_GETTER_NODOC(...){}
-#define DEX_END(...) };struct Dee_dex DEX={}
-#define Dee_DEX_END(...) };struct Dee_dex DEX={}
+#define DEX_END(...) };struct Dee_module_object DEX={}
+#define Dee_DEX_END(...) };struct Dee_module_object DEX={}
 
 #define appexit_object                 Dee_appexit_object
 #define ascii_printer                  Dee_ascii_printer

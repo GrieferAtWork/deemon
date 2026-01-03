@@ -3158,6 +3158,7 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
                          /*utf-8*/ char const *__restrict import_str, size_t import_str_size,
                          size_t *__restrict p_result_strlen, unsigned int flags,
                          bool *__restrict p_must_be_directory) {
+	char const *import_str_orig = import_str;
 	char const *import_str_end;
 	char *result, *result_end;
 	size_t result_maxlen;
@@ -3251,8 +3252,9 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 				break;
 #endif
 			DeeError_Throwf(&DeeError_ValueError,
-			                "Bad relative module path %$q tries to reach beyond filesystem root",
-			                (size_t)(import_str_end - import_str), import_str);
+			                "Bad module path \".%#$q\" relative to %$q tries to reach beyond filesystem root",
+			                (size_t)(import_str_end - import_str_orig),
+			                import_str_orig, pathname_size, pathname);
 			goto err_r;
 		}
 		while ((result_end > result) && result_end[-1] != DeeSystem_SEP)
@@ -3262,7 +3264,7 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 	}
 
 	/* Deal with sub-directory references */
-	do {
+	for (;;) {
 		char const *segment_end;
 		size_t segment_len;
 		ASSERT(import_str < import_str_end);
@@ -3275,15 +3277,20 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 		if ((import_str != Dee_unicode_skipspaceutf8_n(import_str, segment_end)) ||
 		    (segment_end != Dee_unicode_skipspaceutf8_rev_n(segment_end, import_str))) {
 			DeeError_Throwf(&DeeError_ValueError,
-			                "Illegal leading/trailing whitespace in import string segment: %$q",
-			                (size_t)(segment_end - import_str), import_str);
+			                "Illegal leading/trailing whitespace in import "
+			                "string segment %$q of \".%#$q\" relative to %$q",
+			                (size_t)(segment_end - import_str), import_str,
+			                (size_t)(import_str_end - import_str_orig),
+			                import_str_orig, pathname_size, pathname);
 			goto err_r;
 		}
 		segment_end = Dee_unicode_skipspaceutf8_rev_n(segment_end, import_str);
 		segment_len = (size_t)(segment_end - import_str);
 		if unlikely(segment_len == 0) {
 			DeeError_Throwf(&DeeError_ValueError,
-			                "Bad relative module path %$q contains empty path segment",
+			                "Bad module path \".%#$q\" relative to %$q contains empty path segment at %$q",
+			                (size_t)(import_str_end - import_str_orig),
+			                import_str_orig, pathname_size, pathname,
 			                (size_t)(import_str_end - import_str), import_str);
 			goto err_r;
 		}
@@ -3292,8 +3299,10 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 			/* Write new drive-string */
 			if unlikely(segment_len != 1) {
 				DeeError_Throwf(&DeeError_ValueError,
-				                "Length of drive name %$q is not 1 character",
-				                segment_len, import_str);
+				                "Length of drive name %$q is not 1 character in \".%#$q\" relative to",
+				                segment_len, import_str,
+				                (size_t)(import_str_end - import_str_orig),
+				                import_str_orig, pathname_size, pathname);
 				goto err_r;
 			}
 			ASSERT(result_end == result);
@@ -3306,11 +3315,21 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 			result_end = (char *)mempcpyc(result_end, import_str, segment_len, sizeof(char));
 		}
 		import_str = segment_end;
-		/* Skip the discovered "." to get to the start of the next segment.
-		 * Also handles the case where import_str ends with "." (in which
-		 * case we simply ignore the trailing ".") */
+		/* Skip the discovered "." to get to the start of the next segment. */
 		++import_str;
-	} while (import_str < import_str_end);
+		if (import_str >= import_str_end) {
+			if (import_str == import_str_end) {
+				/* It is an error for the string to end with a dangling "." */
+				--import_str;
+				DeeError_Throwf(&DeeError_ValueError,
+				                "Bad module path \".%#$q\" relative to %$q ends with trailing '.'",
+				                (size_t)(import_str_end - import_str_orig),
+				                import_str_orig, pathname_size, pathname);
+				goto err_r;
+			}
+			break;
+		}
+	}
 done_after_directory_chain:
 
 	/* Finalize filename and calculate offsets */
