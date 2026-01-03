@@ -2547,7 +2547,7 @@ module_get_imports(DeeModuleObject *__restrict self) {
 
 PRIVATE struct type_member tpconst module_members[] = {
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	TYPE_MEMBER_FIELD_DOC("__absname__", STRUCT_STRING, offsetof(DeeModuleObject, mo_absname),
+	TYPE_MEMBER_FIELD_DOC("__absname__", STRUCT_CSTR, offsetof(DeeModuleObject, mo_absname),
 	                      "The absolute name of this module (as can be passed to "
 	                      /**/ "$import to access this module from any context)"),
 	TYPE_MEMBER_FIELD_DOC("__haspath__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeModuleObject, mo_absname),

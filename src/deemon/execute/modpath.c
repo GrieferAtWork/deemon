@@ -3250,8 +3250,14 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 		}
 
 		if unlikely(result_end <= result) {
+			/* Nope: that'd be one too far (the FS root itself cannot be
+			 *       sub-referenced, since sub-references are always in
+			 *       regards to neighbors, and the root itself can't have
+			 *       neighbors since that would imply multiple roots) */
+#if 0
 			if (*import_str != '.')
 				break;
+#endif
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Bad relative module path %$q tries to reach beyond filesystem root",
 			                (size_t)(import_str_end - import_str), import_str);
@@ -4127,19 +4133,37 @@ do_DeeModule_PrintRelNameEx_impl2(DeeModuleObject *__restrict self,
 	char const *context_absname_end = context_absname + context_absname_size;
 	char const *used_module_absname = module_absname;
 	char const *used_context_absname = context_absname;
+	char const *orig_context_absname = context_absname;
 	ASSERT(module_absname);
 
 	/* Skip common prefix between "module_absname" and "context_absname".
 	 * If the filesystem is case-insensitive, then we have to be, too. */
 	for (;;) {
 		uint32_t mod_char, ctx_char;
-		if (*module_absname == '\0' && (context_absname >= context_absname_end)) {
-			if (!(flags & DeeModule_RELNAME_F_CTXDIR))
-				return (*printer)(arg, ".", 1); /* Special case: the module itself */
-			break;
+		if (*module_absname == '\0') {
+			if (context_absname >= context_absname_end) {
+				if (!(flags & DeeModule_RELNAME_F_CTXDIR))
+					return (*printer)(arg, ".", 1); /* Special case: the module itself */
+				break;
+			}
+			mod_char = 0;
+			if (context_absname <= orig_context_absname) {
+				if (*context_absname == DeeSystem_SEP)
+					++context_absname;
+do_handle_parent_directory:
+				/* Special case: "module_absname" is a parent directory of "context_absname" */
+				num_dots = count_fs_seps(context_absname, context_absname_end) + 2;
+				if (flags & DeeModule_RELNAME_F_CTXDIR)
+					++num_dots;
+				return DeeFormat_Repeat(printer, arg, '.', num_dots);
+			}
+			ctx_char = unicode_readutf8_n(&context_absname, context_absname_end);
+			if (ctx_char == DeeSystem_SEP)
+				goto do_handle_parent_directory;
+		} else {
+			mod_char = unicode_readutf8(&module_absname);
+			ctx_char = unicode_readutf8_n(&context_absname, context_absname_end);
 		}
-		mod_char = unicode_readutf8(&module_absname);
-		ctx_char = unicode_readutf8_n(&context_absname, context_absname_end);
 		if (mod_char != ctx_char) {
 #ifdef DeeSystem_HAVE_FS_ICASE
 			mod_char = DeeUni_ToLower(mod_char);
@@ -4161,13 +4185,14 @@ do_DeeModule_PrintRelNameEx_impl2(DeeModuleObject *__restrict self,
 	/* Unless the 'DeeModule_RELNAME_F_CTXDIR' flag is given, `context_absname'
 	 * actually refers to some file **within** the relevant context directory. */
 	if (!(flags & DeeModule_RELNAME_F_CTXDIR)) {
-		while (context_absname_end > context_absname &&
+		while (context_absname_end > used_context_absname &&
 		       context_absname_end[-1] != DeeSystem_SEP)
 			--context_absname_end;
-		while (context_absname_end > context_absname &&
+		while (context_absname_end > used_context_absname &&
 		       context_absname_end[-1] == DeeSystem_SEP)
 			--context_absname_end;
 	}
+
 	module_absname  = used_module_absname;
 	context_absname = used_context_absname;
 	context_absname_size = (size_t)(context_absname_end - context_absname);
@@ -4196,6 +4221,8 @@ do_DeeModule_PrintRelNameEx_impl2(DeeModuleObject *__restrict self,
 	 * But: Must always print 1 extra, leading dot so the module name becomes
 	 *      relative */
 	num_dots = count_fs_seps(context_absname, context_absname_end) + 1;
+	if (context_absname < context_absname_end)
+		++num_dots;
 	result = DeeFormat_Repeat(printer, arg, '.', num_dots);
 	if unlikely(result < 0)
 		goto done;
@@ -4205,7 +4232,7 @@ do_DeeModule_PrintRelNameEx_impl2(DeeModuleObject *__restrict self,
 	if (DeeSystem_IsAbs(module_absname)) {
 		char drive_char = (char)tolower((unsigned char)module_absname[0]);
 		module_absname += 2; /* "C:" (such that "module_absname" now starts with '\') */
-		ASSERT(module_absname[0] == DeeSystem_SEP);
+		ASSERT(module_absname[0] == DeeSystem_SEP || !*module_absname);
 		temp = (*printer)(arg, &drive_char, 1);
 		if unlikely(temp < 0)
 			goto err_temp;
@@ -4213,7 +4240,7 @@ do_DeeModule_PrintRelNameEx_impl2(DeeModuleObject *__restrict self,
 	}
 #endif /* !DeeSystem_HAVE_FS_DRIVES */
 
-	/* Now print the entirety of `module_absname', but with '/' replaced with '.' */
+	/* Now print the entirety of `module_absname', but replace '/' with '.' */
 	while (*module_absname) {
 		char const *chunk_end = module_absname;
 		while (*chunk_end && *chunk_end != DeeSystem_SEP)
