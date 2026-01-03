@@ -2695,7 +2695,6 @@ module_class_gethome(DeeObject *__restrict UNUSED(self)) {
 }
 
 PRIVATE struct type_getset tpconst module_class_getsets[] = {
-
 	TYPE_GETTER_AB("home", &module_class_gethome,
 	               "->?Dstring\n"
 	               "The deemon home path (usually the path where the deemon executable resides)"),
@@ -2708,6 +2707,13 @@ PRIVATE struct type_getset tpconst module_class_getsets[] = {
 	/* TODO: User-code access to "DeeModule_NextAbsTree" */
 	/* TODO: User-code access to "DeeModule_NextAdrTree" */
 	/* TODO: User-code access to "DeeModule_NextLibTree" */
+
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
+	/* Deprecated aliases to emulate the old `dexmodule' builtin type. */
+	TYPE_GETSET_AB("search_path", &module_class_getpath, NULL, &module_class_setpath,
+	               "->?DTuple\n"
+	               "Deprecated alias for ?#path"),
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	TYPE_GETSET_AB("path", &module_class_getpath, NULL, &module_class_setpath,
 	               "->?DList\n"

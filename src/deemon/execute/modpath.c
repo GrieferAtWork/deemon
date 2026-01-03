@@ -3658,9 +3658,25 @@ DeeModule_OpenChildEx(DeeModuleObject *self,
 	                                    sizeof(char));
 	if unlikely(!child_absname)
 		goto err;
-	dst = (char *)mempcpyc(child_absname, context_absname, context_absname_length, sizeof(char));
-	*dst++ = DeeSystem_SEP;
-	dst = (char *)mempcpyc(dst, name, name_size, sizeof(char));
+#ifdef DeeSystem_HAVE_FS_DRIVES
+	if (context_absname_length == 0) {
+		if unlikely(name_size != 1) {
+			Dee_Free(child_absname);
+			DeeError_Throwf(&DeeError_ValueError,
+			                "Length of drive name %$q is not 1 character",
+			                name_size, name);
+			goto err;
+		}
+		dst = child_absname;
+		*dst++ = (char)(unsigned char)toupper((unsigned int)*name);
+		*dst++ = ':';
+	} else
+#endif /* DeeSystem_HAVE_FS_DRIVES */
+	{
+		dst = (char *)mempcpyc(child_absname, context_absname, context_absname_length, sizeof(char));
+		*dst++ = DeeSystem_SEP;
+		dst = (char *)mempcpyc(dst, name, name_size, sizeof(char));
+	}
 	*dst = '\0';
 	ASSERT((size_t)(dst - child_absname) == child_absname_length);
 #if 0
@@ -4277,15 +4293,9 @@ do_DeeModule_PrintRelNameEx_impl(DeeModuleObject *__restrict self,
                                  DeeStringObject *context_absname_ob,
                                  unsigned int flags) {
 	Dee_ssize_t result;
-	if (DeeSystem_IsNormalAndAbsolute(context_absname, context_absname_size)) {
+	if (DeeSystem_IsNormalAndAbsolute(context_absname, context_absname_size) || !context_absname_size) {
 		return do_DeeModule_PrintRelNameEx_impl2(self, printer, arg, context_absname,
 		                                         context_absname_size, flags);
-	}
-	if unlikely(!context_absname_size) {
-		result = DeeError_Throwf(&DeeError_ValueError,
-		                         "Cannot form relative name of %k to empty context string",
-		                         self);
-		return result;
 	}
 	if (context_absname_ob) {
 		context_absname_ob = (DREF DeeStringObject *)DeeSystem_MakeNormalAndAbsolute((DeeObject *)context_absname_ob);
