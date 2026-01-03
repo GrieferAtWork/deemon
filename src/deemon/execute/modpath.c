@@ -3171,19 +3171,11 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 			--pathname_size;
 	}
 
-	if unlikely(pathname_size == 0) {
-		/* Special case: given "import_str" is relative to the filesystem root:
-		 * #ifdef DeeSystem_HAVE_FS_DRIVES
-		 * "c.users.me.projects.deemon.script"  -> "C:\users\me\projects\deemon\script"
-		 * #else // DeeSystem_HAVE_FS_DRIVES
-		 * "home.me.projects.deemon.script"     -> "/home/me/projects/deemon/script"
-		 * #endif // !DeeSystem_HAVE_FS_DRIVES
-		 */
-		/* TODO */
-	}
-
-	/* Check if "pathname" is a properly normalized, absolute path */
-	if (DeeSystem_IsNormalAndAbsolute(pathname, pathname_size)) {
+	/* Check if "pathname" is a properly normalized, absolute path.
+	 * Note the special case when "pathname_size == 0", which gets handled
+	 * further down below and is used to form the filenames of filesystem
+	 * root siblings! */
+	if (DeeSystem_IsNormalAndAbsolute(pathname, pathname_size) || !pathname_size) {
 		pathname_ob = NULL;
 	} else {
 		if (pathname_ob && (flags & DeeModule_IMPORT_F_CTXDIR)) {
@@ -3560,6 +3552,13 @@ do_DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_s
 		}
 
 		if (!(flags & DeeModule_IMPORT_F_CTXDIR)) {
+			if unlikely(!context_absname_size) {
+				DeeError_Throwf(&DeeError_ValueError,
+				                "Cannot import sibling %$q of filesystem root. Root "
+				                "has no siblings (did you mean to import children?)",
+				                import_str_size, import_str);
+				goto err;
+			}
 			/* Trim "context_absname_size" to get rid of everything after the last slash. */
 			while (context_absname_size >= 1 && !DeeSystem_IsSep(context_absname[context_absname_size - 1]))
 				--context_absname_size;
