@@ -2333,7 +2333,7 @@ DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_fil
 		/* Check if file could be opened. */
 		if (!ITER_ISOK(dec_stream)) {
 			if unlikely(!dec_stream)
-				return DeeModule_IMPORT_ERROR;
+				goto err;
 			goto no_dec_file;
 		}
 
@@ -2342,7 +2342,31 @@ DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_fil
 		dee_file_last_modified = DeeSystem_GetLastModifiedString(abs_filename);
 		if unlikely(dee_file_last_modified == (uint64_t)-1) {
 			Dee_Decref_likely(dec_stream);
-			return DeeModule_IMPORT_ERROR;
+			goto err;
+		}
+
+		/* Handle special case: when we're unable to determine the source file's last-modified
+		 * timestamp, that can only be because that source file no longer exists (or is somehow
+		 * inaccessible to us?). Anyways: in either case, the ".dec" file should be deleted (so
+		 * there aren't any leftovers in the likely case of the source having been deleted), and
+		 * if the source actually still exists, then it must be re-compiled! */
+		if unlikely(dee_file_last_modified == 0) {
+			int status;
+			Dee_Decref_likely(dec_stream);
+			Dee_DPRINTF("[LD][dec %q] Cannot query timestamp of associated source file. "
+			            /**/ "Assume file was deleted, and remove .dec file\n",
+			            abs_filename);
+			memmoveupc(basename + 1, basename, basesize - 1, sizeof(char));
+			basename[0] = '.';
+			basename[basesize + 0] = 'c';
+			basename[basesize + 1] = '\0';
+			status = DeeSystem_UnlinkString(abs_filename, false);
+			memmovedownc(basename, basename + 1, basesize - 1, sizeof(char));
+			basename[basesize - 1] = 'e';
+			basename[basesize - 0] = '\0';
+			if (status < 0)
+				goto err;
+			goto no_dec_file;
 		}
 
 		/* Check open file status */
@@ -2520,7 +2544,7 @@ err_compile_writer_ehdr:
 err_compile_writer:
 			DeeDecWriter_Fini(&writer);
 err_compile:
-			result = NULL;
+			result = DeeModule_IMPORT_ERROR;
 		}
 	}
 #else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
@@ -2531,7 +2555,7 @@ err_compile:
 	caller->t_import_curr = frame.if_prev;
 	Dee_Decref_likely(source_stream);
 
-	if (!result) {
+	if (result == DeeModule_IMPORT_ERROR) {
 		if ((flags & (_DeeModule_IMPORT_F_OUT_IS_RAW_FILE | _DeeModule_IMPORT_F_IS_DEE_FILE)) ==
 		    /*    */ (_DeeModule_IMPORT_F_OUT_IS_RAW_FILE)) {
 			/* If compilation failed because "source_stream"
@@ -2588,14 +2612,14 @@ err_compile:
 
 		if unlikely(status) {
 			module_destroy_untracked(result);
-			result = NULL;
+			result = DeeModule_IMPORT_ERROR;
 		}
 	}
 #endif /* !CONFIG_NO_DEC */
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	return result;
 err:
-	return NULL;
+	return DeeModule_IMPORT_ERROR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF /*untracked_if(Dee_TYPE(return) != DeeModuleDex_Type)*/ DeeModuleObject *DCALL
