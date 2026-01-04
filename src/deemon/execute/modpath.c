@@ -3611,7 +3611,11 @@ do_DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_s
 			/* Special handling for directory-module describing the filesystem root. */
 			if unlikely(filename_size == 0)
 				return do_DeeModule_OpenFsRoot(filename);
+#if 0 /* In relative notation, ".." is allowed to open "../../{dirname}.dee"
+       * in addition to "../." == "../../{dirname}", so just fallthu to the
+       * regular code-path below. */
 			return do_DeeModule_OpenDirectory(filename, filename_size, flags);
+#endif
 		}
 		ASSERTF(filename_size, "An empty filename should have caused 'must_be_directory == true'");
 		return DeeModule_OpenFile_impl2(filename, filename_size, flags, options);
