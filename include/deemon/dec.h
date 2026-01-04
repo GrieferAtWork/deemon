@@ -374,8 +374,8 @@ struct Dee_dec_depmod {
 	DREF struct Dee_module_object *ddm_mod;    /* [1..1] The dependent module */
 	DREF struct Dee_string_object *ddm_impstr; /* [0..1] Import string (lazily generated during `DeeDecWriter_PackEhdr()') */
 	struct Dee_dec_reltab          ddm_rel;    /* Relocations against `ddm_mod' */
-	struct Dee_dec_rreltab         ddm_rrel;   /* Incref-relocations against `ddm_mod' */
-	struct Dee_dec_rrelatab        ddm_rrela;  /* Incref-addend-relocations against `ddm_mod' */
+	struct Dee_dec_rreltab         ddm_rrel;   /* Incref-relocations against `ddm_mod' (increfs already happened here) */
+	struct Dee_dec_rrelatab        ddm_rrela;  /* Incref-addend-relocations against `ddm_mod' (increfs already happened here) */
 };
 #define Dee_dec_depmod_init(self, /*inherit(always)*/ mod) \
 	((self)->ddm_mod = (mod), (self)->ddm_impstr = NULL,   \
@@ -443,9 +443,8 @@ typedef struct Dee_dec_writer {
 	size_t                  dw_hlast;  /* Chunk size during the previous call to `DeeDecWriter_Malloc()' */
 	struct Dee_dec_reltab   dw_srel;   /* Table of self-relocations */
 	struct Dee_dec_reltab   dw_drel;   /* Table of relocations against deemon-core objects */
-	struct Dee_dec_rreltab  dw_drrel;  /* Table of incref-relocations against deemon-core objects */
-	struct Dee_dec_rrelatab dw_drrela; /* Table of incref-relocations against deemon-core objects */
-	size_t                  dw_drrela_miss; /* # of leading relocations in `dw_drrela' that already happened (when non-zero, 'DeeDecWriter_F_NRELOC' will also be set) */
+	struct Dee_dec_rreltab  dw_drrel;  /* Table of incref-relocations against deemon-core objects (increfs already happened here) */
+	struct Dee_dec_rrelatab dw_drrela; /* Table of incref-relocations against deemon-core objects (increfs already happened here) */
 	struct Dee_dec_deptab   dw_deps;   /* Table of dependent modules */
 	struct Dee_dec_fdeptab  dw_fdeps;  /* Table of dependent files */
 	Dee_dec_addr32_t        dw_gchead; /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */

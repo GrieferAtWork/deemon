@@ -2080,8 +2080,7 @@ PRIVATE void DCALL DeeModule_ClearLibAllFlag_locked(void) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF /*untracked*/ DeeModuleObject *DCALL
 DeeModule_OpenDecFile_impl(/*inherit(always)*/ DREF DeeObject *dec_stream,
                            /*utf-8*/ char const *__restrict dec_dirname, size_t dec_dirname_len,
-                           unsigned int flags, struct Dee_compiler_options *options,
-                           uint64_t dee_file_last_modified) {
+                           struct Dee_compiler_options *options, uint64_t dee_file_last_modified) {
 	DREF DeeModuleObject *result;
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 	struct DeeMapFile fmap;
@@ -2096,9 +2095,9 @@ DeeModule_OpenDecFile_impl(/*inherit(always)*/ DREF DeeObject *dec_stream,
 		return NULL;
 
 	/* Load file mapping as a .dec file */
-	ASSERT(flags & DeeModule_IMPORT_F_CTXDIR);
 	result = DeeDec_OpenFile(&fmap, dec_dirname, dec_dirname_len,
-	                         flags, options, dee_file_last_modified);
+	                         DeeModule_IMPORT_F_CTXDIR,
+	                         options, dee_file_last_modified);
 
 	/* Cleanup on error */
 	if unlikely(!ITER_ISOK(result))
@@ -2106,7 +2105,6 @@ DeeModule_OpenDecFile_impl(/*inherit(always)*/ DREF DeeObject *dec_stream,
 #else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 	while (dec_dirname_len && dec_dirname[dec_dirname_len - 1] == DeeSystem_SEP)
 		--dec_dirname_len;
-	(void)flags;
 	result = DeeModule_OpenDec(dec_stream, options, dec_dirname, dec_dirname_len, dee_file_last_modified);
 	Dee_Decref_likely(dec_stream);
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
@@ -2373,7 +2371,6 @@ DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_fil
 		pathsize = (size_t)(basename - abs_filename);
 		Dee_DPRINTF("[LD][dec %q] Loading dec file\n", abs_filename);
 		result = DeeModule_OpenDecFile_impl(dec_stream, abs_filename, pathsize,
-		                                    flags | DeeModule_IMPORT_F_CTXDIR,
 		                                    options, dee_file_last_modified);
 //		Dee_Decref(dec_stream); /* Inherited by `DeeModule_OpenDecFile_impl()' */
 		if (result != (DREF DeeModuleObject *)ITER_DONE)
@@ -2452,7 +2449,8 @@ no_dec_file:
 			goto err_compile_writer;
 
 		/* Pack written module into an EHDR */
-		ehdr = DeeDecWriter_PackEhdr(&writer, abs_filename, abs_filename_length, flags);
+		ehdr = DeeDecWriter_PackEhdr(&writer, abs_filename, abs_filename_length,
+		                             flags & ~DeeModule_IMPORT_F_CTXDIR);
 		if unlikely(!ehdr)
 			goto err_compile_writer;
 

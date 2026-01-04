@@ -144,10 +144,86 @@ apply_rel(DeeDec_Ehdr *__restrict self,
 	}
 }
 
+/* @return: * :   Pointer to already-destroyed object
+ * @return: NULL: Success */
+PRIVATE WUNUSED NONNULL((1)) DeeObject *DCALL
+incref_apply_rrel(DeeDec_Ehdr *__restrict self,
+                  Dee_dec_addr32_t offsetof_reltab,
+                  uintptr_t relbase) {
+	Dee_dec_addr32_t reladdr;
+	Dec_RRel const *rel = (Dec_RRel const *)((byte_t *)self + offsetof_reltab);
+	for (; (reladdr = rel->r_addr) != 0; ++rel) {
+		byte_t **p_pointer = (byte_t **)((byte_t *)self + reladdr);
+		DeeObject *obj = (DeeObject *)(*p_pointer += relbase);
+		/* In this case, "obj" is always a statically allocated object within some
+		 * other module. However, if that "other module" is a DEE module, there is
+		 * a possibility that "obj" has since been destroyed. Granted: this should
+		 * not happen, since the compiler should only serialize objects that cannot
+		 * be destroyed before the associated module itself gets destroyed. I.e.:
+		 * Objects from "global final" slots of the module, and any nested objects
+		 * reachable from there-on that are referenced via [const] relations.
+		 *
+		 * However, if "obj" is already dead, then we have to roll-back everything
+		 * and refuse to load the DEX module.
+		 *
+		 * This edge-case is also the reason for the special extension to dlmalloc:
+		 * FLAG4_BIT_INDICATES_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE
+		 *
+		 * Thanks to that extension, dlfree() will never overwrite fields at offsets
+		 * - offsetof(DeeObject, ob_refcnt)
+		 * - offsetof(struct Dee_gc_head, gc_object.ob_refcnt)
+		 * of whatever heap-pointer it is given, meaning that all regular- and GC-
+		 * objects will still be detectable as already-destroyed, even after that
+		 * has happened (but the associated module hasn't been destroyed, yet). */
+		if unlikely(!Dee_IncrefIfNotZero(obj)) {
+			Dec_RRel const *base = (Dec_RRel const *)((byte_t *)self + offsetof_reltab);
+			while (--rel >= base) {
+				DREF DeeObject *sub_obj;
+				p_pointer = (byte_t **)((byte_t *)self + rel->r_addr);
+				sub_obj = (DeeObject *)*p_pointer;
+				ASSERT_OBJECT(sub_obj);
+				Dee_Decref_unlikely(sub_obj);
+			}
+			return obj;
+		}
+		ASSERT_OBJECT(obj);
+	}
+	return NULL;
+}
+
+/* @return: * :   Pointer to already-destroyed object
+ * @return: NULL: Success */
+PRIVATE WUNUSED NONNULL((1)) DeeObject *DCALL
+incref_apply_rrela(DeeDec_Ehdr *__restrict self,
+                   Dee_dec_addr32_t offsetof_reltab,
+                   uintptr_t relbase) {
+	Dee_dec_addr32_t reladdr;
+	Dec_RRela const *rel = (Dec_RRela const *)((byte_t *)self + offsetof_reltab);
+	for (; (reladdr = rel->r_addr) != 0; ++rel) {
+		byte_t **p_pointer = (byte_t **)((byte_t *)self + reladdr);
+		byte_t *pointer = (*p_pointer += relbase);
+		DeeObject *obj = (DeeObject *)(pointer + (ptrdiff_t)rel->r_offs);
+		if unlikely(!Dee_IncrefIfNotZero(obj)) {
+			Dec_RRela const *base = (Dec_RRela const *)((byte_t *)self + offsetof_reltab);
+			while (--rel >= base) {
+				DREF DeeObject *sub_obj;
+				p_pointer = (byte_t **)((byte_t *)self + rel->r_addr);
+				sub_obj = (DeeObject *)(*p_pointer + (ptrdiff_t)rel->r_offs);
+				ASSERT_OBJECT(sub_obj);
+				Dee_Decref_unlikely(sub_obj);
+			}
+			return obj;
+		}
+		ASSERT_OBJECT(obj);
+	}
+	return NULL;
+}
+
+/* Only use this one for rrel against the deemon core, and DEX modules */
 PRIVATE NONNULL((1)) void DCALL
-apply_rrel(DeeDec_Ehdr *__restrict self,
-           Dee_dec_addr32_t offsetof_reltab,
-           uintptr_t relbase) {
+incref_apply_rrel_nofail(DeeDec_Ehdr *__restrict self,
+                         Dee_dec_addr32_t offsetof_reltab,
+                         uintptr_t relbase) {
 	Dee_dec_addr32_t reladdr;
 	Dec_RRel const *rel = (Dec_RRel const *)((byte_t *)self + offsetof_reltab);
 	for (; (reladdr = rel->r_addr) != 0; ++rel) {
@@ -158,24 +234,52 @@ apply_rrel(DeeDec_Ehdr *__restrict self,
 	}
 }
 
+/* Only use this one for rrel against the deemon core, and DEX modules */
 PRIVATE NONNULL((1)) void DCALL
-apply_rrela(DeeDec_Ehdr *__restrict self,
-            Dee_dec_addr32_t offsetof_reltab,
-            uintptr_t relbase) {
+incref_apply_rrela_nofail(DeeDec_Ehdr *__restrict self,
+                          Dee_dec_addr32_t offsetof_reltab,
+                          uintptr_t relbase) {
 	Dee_dec_addr32_t reladdr;
 	Dec_RRela const *rel = (Dec_RRela const *)((byte_t *)self + offsetof_reltab);
 	for (; (reladdr = rel->r_addr) != 0; ++rel) {
 		byte_t **p_pointer = (byte_t **)((byte_t *)self + reladdr);
 		byte_t *pointer = (*p_pointer += relbase);
-		DeeObject *obj = (DeeObject *)(pointer + rel->r_offs);
+		DeeObject *obj = (DeeObject *)(pointer + (ptrdiff_t)rel->r_offs);
 		ASSERT_OBJECT(obj);
 		Dee_Incref(obj);
 	}
 }
 
 PRIVATE NONNULL((1)) void DCALL
-undo_rrel(DeeDec_Ehdr *__restrict self,
-          Dee_dec_addr32_t offsetof_reltab) {
+decref_applied_rrel(DeeDec_Ehdr *__restrict self,
+                    Dee_dec_addr32_t offsetof_reltab) {
+	Dee_dec_addr32_t reladdr;
+	Dec_RRel const *rel = (Dec_RRel const *)((byte_t *)self + offsetof_reltab);
+	for (; (reladdr = rel->r_addr) != 0; ++rel) {
+		byte_t **pointer = (byte_t **)((byte_t *)self + reladdr);
+		DeeObject *obj = (DeeObject *)*pointer;
+		ASSERT_OBJECT(obj);
+		Dee_Decref_unlikely(obj);
+	}
+}
+
+PRIVATE NONNULL((1)) void DCALL
+decref_applied_rrela(DeeDec_Ehdr *__restrict self,
+                     Dee_dec_addr32_t offsetof_reltab) {
+	Dee_dec_addr32_t reladdr;
+	Dec_RRela const *rel = (Dec_RRela const *)((byte_t *)self + offsetof_reltab);
+	for (; (reladdr = rel->r_addr) != 0; ++rel) {
+		byte_t **p_pointer = (byte_t **)((byte_t *)self + reladdr);
+		byte_t *pointer = *p_pointer;
+		DeeObject *obj = (DeeObject *)(pointer + (ptrdiff_t)rel->r_offs);
+		ASSERT_OBJECT(obj);
+		Dee_Decref_unlikely(obj);
+	}
+}
+
+PRIVATE NONNULL((1)) void DCALL
+decref_applied_rrel_nokill(DeeDec_Ehdr *__restrict self,
+                           Dee_dec_addr32_t offsetof_reltab) {
 	Dee_dec_addr32_t reladdr;
 	Dec_RRel const *rel = (Dec_RRel const *)((byte_t *)self + offsetof_reltab);
 	for (; (reladdr = rel->r_addr) != 0; ++rel) {
@@ -187,21 +291,21 @@ undo_rrel(DeeDec_Ehdr *__restrict self,
 }
 
 PRIVATE NONNULL((1)) void DCALL
-undo_rrela(DeeDec_Ehdr *__restrict self,
-           Dee_dec_addr32_t offsetof_reltab) {
+decref_applied_rrela_nokill(DeeDec_Ehdr *__restrict self,
+                            Dee_dec_addr32_t offsetof_reltab) {
 	Dee_dec_addr32_t reladdr;
 	Dec_RRela const *rel = (Dec_RRela const *)((byte_t *)self + offsetof_reltab);
 	for (; (reladdr = rel->r_addr) != 0; ++rel) {
 		byte_t **p_pointer = (byte_t **)((byte_t *)self + reladdr);
 		byte_t *pointer = *p_pointer;
-		DeeObject *obj = (DeeObject *)(pointer + rel->r_offs);
+		DeeObject *obj = (DeeObject *)(pointer + (ptrdiff_t)rel->r_offs);
 		ASSERT_OBJECT(obj);
 		Dee_DecrefNokill(obj);
 	}
 }
 
 PRIVATE NONNULL((1)) void DCALL
-DeeDec_RELOC_undo_rrel_and_decref_deps(DeeDec_Ehdr *__restrict self) {
+DeeDec_RELOC_undo_rrel_and_decref_deps(DeeDec_Ehdr *__restrict self, size_t max_dep_incref_applied_count) {
 	/* Undo incref() operations */
 	size_t i;
 	Dec_Dhdr *dhdr = (Dec_Dhdr *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_deps);
@@ -209,66 +313,25 @@ DeeDec_RELOC_undo_rrel_and_decref_deps(DeeDec_Ehdr *__restrict self) {
 		Dec_Dhdr *dep = &dhdr[i];
 		DREF DeeModuleObject *mod = dep->d_modspec.d_mod;
 		DBG_memset(&dep->d_modspec.d_mod, 0xcc, sizeof(dep->d_modspec.d_mod));
-		undo_rrela(self, dep->d_offsetof_rrela);
-		undo_rrel(self, dep->d_offsetof_rrel);
+		if (i < max_dep_incref_applied_count) {
+#if !defined(CONFIG_NO_DEX) && !defined(__OPTIMIZE_SIZE__)
+			if (Dee_TYPE(mod) == &DeeModuleDex_Type) {
+				/* Statics from DEX modules cannot be destroyed prematurely */
+				decref_applied_rrela_nokill(self, dep->d_offsetof_rrela);
+				decref_applied_rrel_nokill(self, dep->d_offsetof_rrel);
+			} else
+#endif /* !CONFIG_NO_DEX && !__OPTIMIZE_SIZE__ */
+			{
+				decref_applied_rrela(self, dep->d_offsetof_rrela);
+				decref_applied_rrel(self, dep->d_offsetof_rrel);
+			}
+		}
 		Dee_Decref(mod);
 	}
-	undo_rrela(self, self->e_typedata.td_reloc.er_offsetof_drrela);
-	undo_rrel(self, self->e_typedata.td_reloc.er_offsetof_drrel);
+	decref_applied_rrela_nokill(self, self->e_typedata.td_reloc.er_offsetof_drrela);
+	decref_applied_rrel_nokill(self, self->e_typedata.td_reloc.er_offsetof_drrel);
 }
 
-
-/* Called after all dependencies have had "d_offsetof_modname" replaced with "d_mod".
- * On failure, this function will inherit the references all `Dec_Dhdr::d_modspec.d_mod' references */
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF /*untracked*/ DeeModuleObject *DCALL
-DeeDec_Relocate_with_dependencies(DeeDec_Ehdr *__restrict self) {
-	size_t i;
-	Dec_Dhdr *dhdr;
-	DeeModuleObject *result;
-	ASSERTF(self->e_type == Dee_DEC_TYPE_RELOC,
-	        "Bad API usage -- Only use this function with 'DeeDec_OpenFile()', "
-	        "which should have already asserted that 'e_type == Dee_DEC_TYPE_RELOC'");
-
-	/* Self-relocations... */
-	apply_rel(self, self->e_typedata.td_reloc.er_offsetof_srel, (uintptr_t)self);
-
-	/* Deemon-relocations... */
-	apply_rel(self, self->e_typedata.td_reloc.er_offsetof_drel, (uintptr_t)&DeeModule_Deemon);
-	apply_rrel(self, self->e_typedata.td_reloc.er_offsetof_drrel, (uintptr_t)&DeeModule_Deemon);
-	apply_rrela(self, self->e_typedata.td_reloc.er_offsetof_drrela, (uintptr_t)&DeeModule_Deemon);
-
-	/* Dependent-module-relocations... */
-	dhdr = (Dec_Dhdr *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_deps);
-	for (i = 0; dhdr[i].d_modspec.d_mod; ++i) {
-		Dec_Dhdr *dep = &dhdr[i];
-		DeeModuleObject *mod = dep->d_modspec.d_mod;
-		apply_rrel(self, dep->d_offsetof_rrel, (uintptr_t)mod);
-		apply_rrela(self, dep->d_offsetof_rrela, (uintptr_t)mod);
-	}
-
-	/* At this point, the dec file should be fully initialized, and the
-	 * first contained object should be the relevant DeeModuleObject! */
-	result = DeeDec_Ehdr_GetModule(self);
-	if (Dee_TYPE(result) != &DeeModuleDee_Type)
-		goto fail;
-	if (result->ob_refcnt == 0)
-		goto fail;
-
-	/* Link in GC objects (if there are any) */
-#if 0 /* This needs to be done by the caller using `DeeDec_Track()' */
-	if (self->e_offsetof_gchead) {
-		struct gc_head *gc_head = (struct gc_head *)((byte_t *)self + self->e_offsetof_gchead);
-		struct gc_head *gc_tail = (struct gc_head *)((byte_t *)self + self->e_offsetof_gctail);
-		DeeGC_TrackAll(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
-	}
-#endif
-
-	return result;
-fail:
-	/* Undo incref() operations */
-	DeeDec_RELOC_undo_rrel_and_decref_deps(self);
-	return (DeeModuleObject *)ITER_DONE;
-}
 
 
 /* Execute relocations on `self' and return a pointer to the
@@ -359,8 +422,64 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 		}
 	}
 
-	result = DeeDec_Relocate_with_dependencies(self);
+	/* Self-relocations... */
+	apply_rel(self, self->e_typedata.td_reloc.er_offsetof_srel, (uintptr_t)self);
+
+	/* Deemon-relocations... */
+	apply_rel(self, self->e_typedata.td_reloc.er_offsetof_drel, (uintptr_t)&DeeModule_Deemon);
+	incref_apply_rrel_nofail(self, self->e_typedata.td_reloc.er_offsetof_drrel, (uintptr_t)&DeeModule_Deemon);
+	incref_apply_rrela_nofail(self, self->e_typedata.td_reloc.er_offsetof_drrela, (uintptr_t)&DeeModule_Deemon);
+
+	/* Dependent-module-relocations... */
+	ASSERT(dhdr == (Dec_Dhdr *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_deps));
+	for (dep_index = 0; dhdr[dep_index].d_modspec.d_mod; ++dep_index) {
+		Dec_Dhdr *dep = &dhdr[dep_index];
+		DeeModuleObject *mod = dep->d_modspec.d_mod;
+		DeeObject *dead_object;
+		dead_object = incref_apply_rrel(self, dep->d_offsetof_rrel, (uintptr_t)mod);
+		if unlikely(dead_object) {
+corrupt_dep_index_reloc_rrel:
+			Dee_DPRINTF("[LD][dec %q] CORRUPT: Failed to incref dead object in "
+			            /**/ "dependency #%" PRFuSIZ "(%q) at %#" PRFxSIZ " (%p)\n",
+			            context_absname, dep_index, mod->mo_absname,
+			            (uintptr_t)dead_object - (uintptr_t)mod, dead_object);
+			goto corrupt_dep_index_reloc;
+		}
+		dead_object = incref_apply_rrela(self, dep->d_offsetof_rrela, (uintptr_t)mod);
+		if unlikely(dead_object) {
+			decref_applied_rrel(self, dep->d_offsetof_rrel);
+			goto corrupt_dep_index_reloc_rrel;
+		}
+	}
+
+	/* At this point, the dec file should be fully initialized, and the
+	 * first contained object should be the relevant DeeModuleObject! */
+	result = DeeDec_Ehdr_GetModule(self);
+	if (Dee_TYPE(result) != &DeeModuleDee_Type) {
+		Dee_DPRINTF("[LD][dec %q] CORRUPT: Module object has unexpected type %p when %p (DeeModuleDee_Type) was expected\n",
+		            context_absname, Dee_TYPE(result), &DeeModuleDee_Type);
+		goto corrupt_dep_index_reloc;
+	}
+	if (result->ob_refcnt == 0) {
+		Dee_DPRINTF("[LD][dec %q] CORRUPT: Module object has 'ob_refcnt == 0'\n",
+		            context_absname);
+		goto corrupt_dep_index_reloc;
+	}
+
+#if 0 /* This needs to be done by the caller using `DeeDec_Track()' */
+	if (self->e_offsetof_gchead) {
+		/* Link in GC objects (if there are any) */
+		struct gc_head *gc_head = (struct gc_head *)((byte_t *)self + self->e_offsetof_gchead);
+		struct gc_head *gc_tail = (struct gc_head *)((byte_t *)self + self->e_offsetof_gctail);
+		DeeGC_TrackAll(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
+	}
+#endif
+
 	return result;
+corrupt_dep_index_reloc:
+	/* Undo incref() operations */
+	DeeDec_RELOC_undo_rrel_and_decref_deps(self, dep_index);
+	return (DeeModuleObject *)ITER_DONE;
 err_dep_index:
 	while (dep_index--)
 		Dee_Decref(dhdr[dep_index].d_modspec.d_mod);
@@ -389,6 +508,20 @@ w_apply_rel(DeeDec_Ehdr *__restrict self,
 	}
 }
 
+#if 1
+STATIC_ASSERT(sizeof(Dec_RRel) == sizeof(Dec_Rel));
+STATIC_ASSERT(offsetof(Dec_RRel, r_addr) == offsetof(Dec_Rel, r_addr));
+STATIC_ASSERT(offsetafter(Dec_RRel, r_addr) == offsetafter(Dec_Rel, r_addr));
+STATIC_ASSERT(sizeof(struct Dee_dec_rreltab) == sizeof(struct Dee_dec_reltab));
+#ifdef __INTELLISENSE__
+PRIVATE NONNULL((1)) void DCALL
+w_apply_rrel(DeeDec_Ehdr *__restrict self,
+             Dec_RRel const *vec, size_t count,
+             uintptr_t relbase);
+#else /* __INTELLISENSE__ */
+#define w_apply_rrel(self, vec, count, relbase) w_apply_rel(self, (Dec_Rel const *)(vec), count, relbase)
+#endif /* !__INTELLISENSE__ */
+#else
 PRIVATE NONNULL((1)) void DCALL
 w_apply_rrel(DeeDec_Ehdr *__restrict self,
              Dec_RRel const *vec, size_t count,
@@ -397,11 +530,10 @@ w_apply_rrel(DeeDec_Ehdr *__restrict self,
 	for (i = 0; i < count; ++i) {
 		Dee_dec_addr32_t reladdr = vec[i].r_addr;
 		byte_t **p_pointer = (byte_t **)((byte_t *)self + reladdr);
-		DeeObject *obj = (DeeObject *)(*p_pointer += relbase);
-		ASSERT_OBJECT(obj);
-		Dee_Incref(obj);
+		*p_pointer += relbase;
 	}
 }
+#endif
 
 PRIVATE NONNULL((1)) void DCALL
 w_apply_rrela(DeeDec_Ehdr *__restrict self,
@@ -411,16 +543,13 @@ w_apply_rrela(DeeDec_Ehdr *__restrict self,
 	for (i = 0; i < count; ++i) {
 		Dee_dec_addr32_t reladdr = vec[i].r_addr;
 		byte_t **p_pointer = (byte_t **)((byte_t *)self + reladdr);
-		byte_t *pointer = (*p_pointer += relbase);
-		DeeObject *obj = (DeeObject *)(pointer + vec[i].r_offs);
-		ASSERT_OBJECT(obj);
-		Dee_Incref(obj);
+		*p_pointer += relbase;
 	}
 }
 
 PRIVATE NONNULL((1)) void DCALL
-w_undo_rrel(DeeDec_Ehdr *__restrict self,
-            Dec_RRel const *vec, size_t count) {
+w_decref_applied_rrel(DeeDec_Ehdr *__restrict self,
+                      Dec_RRel const *vec, size_t count) {
 	size_t i;
 	for (i = 0; i < count; ++i) {
 		Dee_dec_addr32_t reladdr = vec[i].r_addr;
@@ -432,22 +561,110 @@ w_undo_rrel(DeeDec_Ehdr *__restrict self,
 }
 
 PRIVATE NONNULL((1)) void DCALL
-w_undo_rrela(DeeDec_Ehdr *__restrict self,
-             Dec_RRela const *vec, size_t count) {
+w_decref_applied_rrela(DeeDec_Ehdr *__restrict self,
+                       Dec_RRela const *vec, size_t count) {
 	size_t i;
 	for (i = 0; i < count; ++i) {
 		Dee_dec_addr32_t reladdr = vec[i].r_addr;
 		byte_t **p_pointer = (byte_t **)((byte_t *)self + reladdr);
 		byte_t *pointer = *p_pointer;
-		DeeObject *obj = (DeeObject *)(pointer + vec[i].r_offs);
+		DeeObject *obj = (DeeObject *)(pointer + (ptrdiff_t)vec[i].r_offs);
 		ASSERT_OBJECT(obj);
-#if 1 /* Special case: this might actually kill if it was a "dw_drrela_miss" relocation */
-		Dee_Decref(obj);
-#else
 		Dee_DecrefNokill(obj);
-#endif
 	}
 }
+
+
+PRIVATE NONNULL((1)) void DCALL
+w_decref_applied_rrel_nokill(DeeDec_Ehdr *__restrict self,
+                             Dec_RRel const *vec, size_t count) {
+	size_t i;
+	for (i = 0; i < count; ++i) {
+		Dee_dec_addr32_t reladdr = vec[i].r_addr;
+		byte_t **pointer = (byte_t **)((byte_t *)self + reladdr);
+		DeeObject *obj = (DeeObject *)*pointer;
+		ASSERT_OBJECT(obj);
+		Dee_DecrefNokill(obj);
+	}
+}
+
+#ifndef __OPTIMIZE_SIZE__
+PRIVATE NONNULL((1)) void DCALL
+w_decref_applied_rrela_nokill(DeeDec_Ehdr *__restrict self,
+                              Dec_RRela const *vec, size_t count) {
+	size_t i;
+	for (i = 0; i < count; ++i) {
+		Dee_dec_addr32_t reladdr = vec[i].r_addr;
+		byte_t **p_pointer = (byte_t **)((byte_t *)self + reladdr);
+		byte_t *pointer = *p_pointer;
+		DeeObject *obj = (DeeObject *)(pointer + (ptrdiff_t)vec[i].r_offs);
+		ASSERT_OBJECT(obj);
+		Dee_DecrefNokill(obj);
+	}
+}
+#endif /* !__OPTIMIZE_SIZE__ */
+
+
+PRIVATE NONNULL((1)) void DCALL
+w_decref_rrel(DeeDec_Ehdr *__restrict self,
+              Dec_RRel const *vec, size_t count,
+              uintptr_t relbase) {
+	size_t i;
+	for (i = 0; i < count; ++i) {
+		Dee_dec_addr32_t reladdr = vec[i].r_addr;
+		byte_t **pointer = (byte_t **)((byte_t *)self + reladdr);
+		DeeObject *obj = (DeeObject *)(*pointer + relbase);
+		ASSERT_OBJECT(obj);
+		Dee_DecrefNokill(obj);
+	}
+}
+
+PRIVATE NONNULL((1)) void DCALL
+w_decref_rrela(DeeDec_Ehdr *__restrict self,
+               Dec_RRela const *vec, size_t count,
+               uintptr_t relbase) {
+	size_t i;
+	for (i = 0; i < count; ++i) {
+		Dee_dec_addr32_t reladdr = vec[i].r_addr;
+		byte_t **p_pointer = (byte_t **)((byte_t *)self + reladdr);
+		byte_t *pointer = *p_pointer;
+		DeeObject *obj = (DeeObject *)(pointer + relbase + (ptrdiff_t)vec[i].r_offs);
+		ASSERT_OBJECT(obj);
+		Dee_DecrefNokill(obj);
+	}
+}
+
+
+PRIVATE NONNULL((1)) void DCALL
+w_decref_rrel_nokill(DeeDec_Ehdr *__restrict self,
+                     Dec_RRel const *vec, size_t count,
+                     uintptr_t relbase) {
+	size_t i;
+	for (i = 0; i < count; ++i) {
+		Dee_dec_addr32_t reladdr = vec[i].r_addr;
+		byte_t **pointer = (byte_t **)((byte_t *)self + reladdr);
+		DeeObject *obj = (DeeObject *)(*pointer + relbase);
+		ASSERT_OBJECT(obj);
+		Dee_DecrefNokill(obj);
+	}
+}
+
+#if 0 /* Unused */
+PRIVATE NONNULL((1)) void DCALL
+w_decref_rrela_nokill(DeeDec_Ehdr *__restrict self,
+                      Dec_RRela const *vec, size_t count,
+                      uintptr_t relbase) {
+	size_t i;
+	for (i = 0; i < count; ++i) {
+		Dee_dec_addr32_t reladdr = vec[i].r_addr;
+		byte_t **p_pointer = (byte_t **)((byte_t *)self + reladdr);
+		byte_t *pointer = *p_pointer;
+		DeeObject *obj = (DeeObject *)(pointer + relbase + (ptrdiff_t)vec[i].r_offs);
+		ASSERT_OBJECT(obj);
+		Dee_DecrefNokill(obj);
+	}
+}
+#endif
 
 
 /* Similar to `DeeDec_Relocate()', but also works when `ehdr' is a "simplified" DEC
@@ -480,11 +697,7 @@ DeeDecWriter_PackModule(DeeDecWriter *__restrict self,
 	/* Deemon-relocations... */
 	w_apply_rel(ehdr, self->dw_drel.drlt_relv, self->dw_drel.drlt_relc, (uintptr_t)&DeeModule_Deemon);
 	w_apply_rrel(ehdr, self->dw_drrel.drrt_relv, self->dw_drrel.drrt_relc, (uintptr_t)&DeeModule_Deemon);
-	ASSERT(self->dw_drrela.drat_relc >= self->dw_drrela_miss);
-	w_apply_rrela(ehdr,
-	              self->dw_drrela.drat_relv + self->dw_drrela_miss,
-	              self->dw_drrela.drat_relc - self->dw_drrela_miss,
-	              (uintptr_t)&DeeModule_Deemon);
+	w_apply_rrela(ehdr, self->dw_drrela.drat_relv, self->dw_drrela.drat_relc, (uintptr_t)&DeeModule_Deemon);
 
 	/* Dependent-module-relocations... */
 	for (i = 0; i < self->dw_deps.ddpt_depc; ++i) {
@@ -507,14 +720,15 @@ DeeDecWriter_PackModule(DeeDecWriter *__restrict self,
 	/* Setup the EHDR to own the relocation tables related to externally incref'd objects */
 	ehdr->e_type = Dee_DEC_TYPE_IMAGE;
 
-	/* Steal relocation tables that must be inherited by the EHDR. */
+	/* Steal relocation tables that must be inherited by the EHDR.
+	 * NOTE: This also causes us to steal all the references to objects
+	 *       that were already stored in those relocation tables. */
 	ehdr->e_typedata.td_image.ei_drrel_v = self->dw_drrel.drrt_relv;
 	ehdr->e_typedata.td_image.ei_drrel_c = self->dw_drrel.drrt_relc;
 	Dee_dec_rreltab_init(&self->dw_drrel);
 	ehdr->e_typedata.td_image.ei_drrela_v = self->dw_drrela.drat_relv;
 	ehdr->e_typedata.td_image.ei_drrela_c = self->dw_drrela.drat_relc;
 	Dee_dec_rrelatab_init(&self->dw_drrela);
-	self->dw_drrela_miss = 0; /* These special "already-happened" relocations are inherited, too */
 	ehdr->e_typedata.td_image.ei_deps_v = self->dw_deps.ddpt_depv;
 	ehdr->e_typedata.td_image.ei_deps_c = self->dw_deps.ddpt_depc;
 	Dee_dec_deptab_init(&self->dw_deps);
@@ -635,22 +849,33 @@ DeeDec_DestroyUntracked(DREF /*untracked*/ struct Dee_module_object *__restrict 
 		/* Drop references to dependencies that were stored
 		 * in `Dec_Dhdr::d_modspec.d_mod', as well as undo
 		 * all incref() relocations against that module. */
-		DeeDec_RELOC_undo_rrel_and_decref_deps(ehdr);
+		DeeDec_RELOC_undo_rrel_and_decref_deps(ehdr, (size_t)-1);
 		break;
 
 	case Dee_DEC_TYPE_IMAGE: {
 		struct Dee_dec_depmod *deps_v;
 		size_t i, deps_c;
-		w_undo_rrel(ehdr, ehdr->e_typedata.td_image.ei_drrel_v, ehdr->e_typedata.td_image.ei_drrel_c);
+		w_decref_applied_rrel_nokill(ehdr, ehdr->e_typedata.td_image.ei_drrel_v, ehdr->e_typedata.td_image.ei_drrel_c);
 		Dee_Free(ehdr->e_typedata.td_image.ei_drrel_v);
-		w_undo_rrela(ehdr, ehdr->e_typedata.td_image.ei_drrela_v, ehdr->e_typedata.td_image.ei_drrela_c);
+		/* Special case: this might actually kill if it was a "DeeDecWriter_F_NRELOC" relocation.
+		 *               As such, can't use `w_decref_applied_rrela_nokill' here! */
+		w_decref_applied_rrela(ehdr, ehdr->e_typedata.td_image.ei_drrela_v, ehdr->e_typedata.td_image.ei_drrela_c);
 		Dee_Free(ehdr->e_typedata.td_image.ei_drrela_v);
 		deps_v = ehdr->e_typedata.td_image.ei_deps_v;
 		deps_c = ehdr->e_typedata.td_image.ei_deps_c;
 		for (i = 0; i < deps_c; ++i) {
 			struct Dee_dec_depmod *dep = &deps_v[i];
-			w_undo_rrel(ehdr, dep->ddm_rrel.drrt_relv, dep->ddm_rrel.drrt_relc);
-			w_undo_rrela(ehdr, dep->ddm_rrela.drat_relv, dep->ddm_rrela.drat_relc);
+#ifndef __OPTIMIZE_SIZE__
+			if (Dee_TYPE(dep->ddm_mod) == &DeeModuleDex_Type) {
+				/* Statics from DEX modules cannot be destroyed prematurely */
+				w_decref_applied_rrel_nokill(ehdr, dep->ddm_rrel.drrt_relv, dep->ddm_rrel.drrt_relc);
+				w_decref_applied_rrela_nokill(ehdr, dep->ddm_rrela.drat_relv, dep->ddm_rrela.drat_relc);
+			} else
+#endif /* !__OPTIMIZE_SIZE__ */
+			{
+				w_decref_applied_rrel(ehdr, dep->ddm_rrel.drrt_relv, dep->ddm_rrel.drrt_relc);
+				w_decref_applied_rrela(ehdr, dep->ddm_rrela.drat_relv, dep->ddm_rrela.drat_relc);
+			}
 			Dee_dec_depmod_fini(dep);
 		}
 		Dee_Free(deps_v);
@@ -923,7 +1148,6 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 		} else {
 			ehdr->e_typedata.td_reloc.er_offsetof_drrel = addrof_zero;
 		}
-		ASSERTF(!self->dw_drrela_miss, "This should have been handled by 'DeeDecWriter_F_NRELOC' being checked above!");
 		if (self->dw_drrela.drat_relc) {
 			ehdr->e_typedata.td_reloc.er_offsetof_drrela = total_need;
 			total_need += seraddr32(self->dw_drrela.drat_relc * sizeof(Dec_RRela));
@@ -1704,40 +1928,6 @@ decwriter_gcobject_free(DeeDecWriter *__restrict self, Dee_seraddr_t addr,
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-decwriter_insert_drrela_miss(DeeDecWriter *__restrict self,
-                             Dee_dec_addr32_t addr,
-                             Dee_dec_off32_t offs) {
-	Dec_RRela *rel;
-	ASSERT(self->dw_drrela.drat_relc <= self->dw_drrela.drat_rela);
-	if (self->dw_drrela.drat_relc >= self->dw_drrela.drat_rela) {
-		Dec_RRela *new_relv;
-		size_t new_alloc = self->dw_drrela.drat_rela * 2;
-		if (new_alloc < 16)
-			new_alloc = 16;
-		new_relv = (Dec_RRela *)Dee_TryReallocc(self->dw_drrela.drat_relv, new_alloc, sizeof(Dec_RRela));
-		if unlikely(!new_relv) {
-			new_alloc = self->dw_drrela.drat_relc + 1;
-			new_relv  = (Dec_RRela *)Dee_Reallocc(self->dw_drrela.drat_relv, new_alloc, sizeof(Dec_RRela));
-			if unlikely(!new_relv)
-				goto err;
-		}
-		self->dw_drrela.drat_relv = new_relv;
-		self->dw_drrela.drat_rela = new_alloc;
-	}
-	ASSERT(self->dw_drrela.drat_relc >= self->dw_drrela_miss);
-	rel = &self->dw_drrela.drat_relv[self->dw_drrela_miss];
-	memmoveupc(rel + 1, rel, self->dw_drrela.drat_relc - self->dw_drrela_miss, sizeof(Dec_RRela));
-	++self->dw_drrela_miss;
-	++self->dw_drrela.drat_relc;
-	rel->r_addr = addr;
-	rel->r_offs = offs;
-	return 0;
-err:
-	return -1;
-}
-
-
 /* Append a copy of `obj' to self and write its address to `addrof_object'
  * @return: 0 : Success
  * @return: -1: An error was thrown */
@@ -1788,14 +1978,14 @@ cannot_serialize:
 	if (self->dw_flags & DeeDecWriter_F_FRELOC)
 		return DeeRT_ErrCannotSerialize(obj);
 
-	/* Create a fake RREL relocation that already happened */
-	if (decwriter_insert_drrela_miss(self, seraddr32(addrof_object), -(Dee_dec_off32_t)offset_into_ob))
+	/* Create a fake RRELA relocation against the deemon core */
+	if (rrelatab_append(&self->dw_drrela, seraddr32(addrof_object), -(Dee_dec_off32_t)offset_into_ob))
 		goto err;
 	self->dw_flags |= DeeDecWriter_F_NRELOC; /* Remember that serialization will be impossible */
 	Dee_Incref(obj);
 	{
 		byte_t **p_pointer = DeeDecWriter_Addr2Mem(self, addrof_object, byte_t *);
-		*p_pointer = (byte_t *)obj + offset_into_ob;
+		*p_pointer = (byte_t *)obj + offset_into_ob - (uintptr_t)&DeeModule_Deemon;
 	}
 	return 0;
 err:
@@ -1842,31 +2032,35 @@ decwriter_putobject_ex(DeeDecWriter *__restrict self,
 	/* Check if "obj" points into a dex module, or the deemon core */
 	mod = DeeModule_OfPointer(obj);
 	if (mod) {
-		struct Dee_dec_depmod *dep;
+		int result;
 		if (mod == DeeModule_GetDeemon()) {
 			Dee_DecrefNokill(mod);
 			p_pointer = DeeDecWriter_Addr2Mem(self, addrof_object, void *);
-			if (offset_into_ob) {
-				*p_pointer = (void *)((uintptr_t)obj + offset_into_ob - (uintptr_t)mod);
-				return rrelatab_append(&self->dw_drrela, seraddr32(addrof_object),
-				                       (Dee_dec_off32_t)-offset_into_ob);
+			*p_pointer = (void *)((uintptr_t)obj + offset_into_ob - (uintptr_t)mod);
+			if (offset_into_ob != 0) {
+				result = rrelatab_append(&self->dw_drrela, seraddr32(addrof_object),
+				                         (Dee_dec_off32_t)-offset_into_ob);
+			} else {
+				result = rreltab_append(&self->dw_drrel, seraddr32(addrof_object));
 			}
-			*p_pointer = (void *)((uintptr_t)obj - (uintptr_t)mod);
-			return rreltab_append(&self->dw_drrel, seraddr32(addrof_object));
-		}
-		dep = decwriter_getdep(self, mod);
-		Dee_Decref_unlikely(mod);
-		if unlikely(!dep)
-			goto err;
-		if (offset_into_ob) {
+		} else {
+			struct Dee_dec_depmod *dep;
+			dep = decwriter_getdep(self, mod);
+			Dee_Decref_unlikely(mod);
+			if unlikely(!dep)
+				goto err;
 			p_pointer = DeeDecWriter_Addr2Mem(self, addrof_object, void *);
 			*p_pointer = (void *)((uintptr_t)obj + offset_into_ob - (uintptr_t)mod);
-			return rrelatab_append(&dep->ddm_rrela, seraddr32(addrof_object),
-			                       (Dee_dec_off32_t)-offset_into_ob);
+			if (offset_into_ob != 0) {
+				result = rrelatab_append(&dep->ddm_rrela, seraddr32(addrof_object),
+				                         (Dee_dec_off32_t)-offset_into_ob);
+			} else {
+				result = rreltab_append(&dep->ddm_rrel, seraddr32(addrof_object));
+			}
 		}
-		p_pointer = DeeDecWriter_Addr2Mem(self, addrof_object, void *);
-		*p_pointer = (void *)((uintptr_t)obj - (uintptr_t)mod);
-		return rreltab_append(&dep->ddm_rrel, seraddr32(addrof_object));
+		if likely(result == 0)
+			Dee_Incref(obj);
+		return result;
 	}
 
 	/* Fallback: must embed a copy of the object within the dec file. */
@@ -2016,7 +2210,6 @@ _DeeDecWriter_Init(DeeDecWriter *__restrict self) {
 	Dee_dec_reltab_init(&self->dw_drel);
 	Dee_dec_rreltab_init(&self->dw_drrel);
 	Dee_dec_rrelatab_init(&self->dw_drrela);
-	self->dw_drrela_miss = 0;
 	Dee_dec_deptab_init(&self->dw_deps);
 	Dee_dec_fdeptab_init(&self->dw_fdeps);
 	self->dw_gchead = 0;
@@ -2033,13 +2226,19 @@ DeeDecWriter_Fini(DeeDecWriter *__restrict self) {
 	ASSERT(self->ser_type == &decwriter_serial_type);
 	Dee_dec_ptrtab_fini(&self->dw_known);
 	Dee_dec_fdeptab_fini(&self->dw_fdeps);
-	w_undo_rrela(self->dw_ehdr, self->dw_drrela.drat_relv, self->dw_drrela_miss);
+	w_decref_rrel_nokill(self->dw_ehdr, self->dw_drrel.drrt_relv, self->dw_drrel.drrt_relc, (uintptr_t)&DeeModule_Deemon);
+	/* NOTE: "DeeDecWriter_F_NRELOC"-relocations in `decwriter_putobject' are
+	 *       written to "dw_drrela", so can't use w_decref_rrela_nokill here! */
+	w_decref_rrela(self->dw_ehdr, self->dw_drrela.drat_relv, self->dw_drrela.drat_relc, (uintptr_t)&DeeModule_Deemon);
 	Dee_dec_rrelatab_fini(&self->dw_drrela);
 	Dee_dec_rreltab_fini(&self->dw_drrel);
 	Dee_dec_reltab_fini(&self->dw_drel);
 	Dee_dec_reltab_fini(&self->dw_srel);
 	for (i = 0; i < self->dw_deps.ddpt_depc; ++i) {
 		struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[i];
+		uintptr_t relbase = (uintptr_t)dep->ddm_mod;
+		w_decref_rrel(self->dw_ehdr, dep->ddm_rrel.drrt_relv, dep->ddm_rrel.drrt_relc, relbase);
+		w_decref_rrela(self->dw_ehdr, dep->ddm_rrela.drat_relv, dep->ddm_rrela.drat_relc, relbase);
 		Dee_dec_depmod_fini(dep);
 	}
 	Dee_Free(self->dw_deps.ddpt_depv);

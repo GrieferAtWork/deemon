@@ -38,6 +38,7 @@ ClCompile.BasicRuntimeChecks = Default
 
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 #include <deemon/format.h>
+#include <deemon/gc.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
@@ -151,6 +152,21 @@ DECL_BEGIN
 /* Custom dlmalloc extension:
  * FLAG4_BIT on an allocation means it's part of "struct Dee_heapregion" */
 #define FLAG4_BIT_INDICATES_HEAP_REGION 1
+
+/* Handler special flag: we need to be able to detect if a statically allocated
+ * object from a heap region has been destroyed via its "ob_refcnt" in order to
+ * safely handle (technically illegal) references to static, non-final, constant
+ * objects within another module under "CONFIG_EXPERIMENTAL_MMAP_DEC". If during
+ * object destruction, it is found that a "Dee_refcnt_t"-sized word at one of
+ * the following offsets into a heap block's user-area is "0", then this "0"
+ * must **NOT** be overwritten by "DL_DEBUG_MEMSET_FREE":
+ * - offsetof(DeeObject, ob_refcnt)
+ * - offsetof(struct Dee_gc_head, gc_object.ob_refcnt) */
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+#define FLAG4_BIT_INDICATES_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE 1
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+#define FLAG4_BIT_INDICATES_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE 0
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 
 #if __SIZEOF_POINTER__ > 4
@@ -3221,7 +3237,40 @@ PUBLIC void (DCALL Dee_Free)(void *mem)
 #else /* FOOTERS && !GM_ONLY */
 #define fm gm
 #endif /* FOOTERS || GM_ONLY */
+
+#ifndef DL_DEBUG_MEMSET_FREE
+		/* No debug-memset enabled */
+#elif (FLAG4_BIT_INDICATES_HEAP_REGION && \
+       FLAG4_BIT_INDICATES_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE)
+		{
+			size_t usize = chunksize(p) - overhead_for(p);
+			if (flag4inuse(p)) {
+				/* Special case: don't set the "DL_DEBUG_MEMSET_FREE" word
+				 *               at one of the following offsets, if that
+				 *               word is currently set to "0". */
+#define INDEXOF_WORD(T, field) (offsetof(T, field) / sizeof(Dee_refcnt_t))
+				STATIC_ASSERT(IS_ALIGNED(offsetof(DeeObject, ob_refcnt), sizeof(Dee_refcnt_t)));
+				STATIC_ASSERT(IS_ALIGNED(offsetof(struct Dee_gc_head, gc_object.ob_refcnt), sizeof(Dee_refcnt_t)));
+				size_t i, n_words = usize / sizeof(Dee_refcnt_t);
+				Dee_refcnt_t *iter = (Dee_refcnt_t *)mem;
+				for (i = 0; i < n_words; ++i, ++iter) {
+					if ((i == INDEXOF_WORD(DeeObject, ob_refcnt) ||
+					     i == INDEXOF_WORD(struct Dee_gc_head, gc_object.ob_refcnt)) &&
+					    (atomic_read(iter) == 0)) {
+						/* Skip this word */
+					} else {
+						*iter = DL_DEBUG_MEMSET_FREE;
+					}
+				}
+#undef INDEXOF_WORD
+			} else {
+				dl_setfree_data(mem, usize);
+			}
+		}
+#else /* ... */
 		dl_setfree_data(mem, chunksize(p) - overhead_for(p));
+#endif /* !... */
+
 #if USE_PENDING_FREE_LIST
 		if (!TRY_PREACTION(fm)) {
 			dl_freelist_append(fm, mem);
