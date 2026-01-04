@@ -154,6 +154,23 @@ DeeSystem_GetLastModified(/*String*/ DeeObject *__restrict filename);
 DFUNDEF WUNUSED NONNULL((1)) uint64_t DCALL
 DeeSystem_GetLastModifiedString(/*utf-8*/ char const *__restrict filename);
 
+/* Check if the named file (or directory) exists in some way, shape, or form,
+ * and return the type of that file. If `filename' refers to a symbolic link,
+ * that link is dereferenced, and information about its target is returned.
+ *
+ * @return: DeeSystem_GetFileType_T_NONE: `filename' does not exist
+ * @return: DeeSystem_GetFileType_T_DIR:  `filename' is a directory
+ * @return: DeeSystem_GetFileType_T_REG:  `filename' is a directory
+ * @return: DeeSystem_GetFileType_ERR:    An error was thrown */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
+DeeSystem_GetFileType(/*String*/ DeeObject *__restrict filename);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
+DeeSystem_GetFileTypeString(/*utf-8*/ char const *__restrict filename);
+#define DeeSystem_GetFileType_T_NONE 0 /* File does not exist */
+#define DeeSystem_GetFileType_T_DIR  1 /* File is a directory */
+#define DeeSystem_GetFileType_T_REG  2 /* File is a regular file, a device, or something else (but not a symlink; those are dereferenced) */
+#define DeeSystem_GetFileType_ERR (-1) /* Error was thrown */
+
 /* Try to unlink() the given `filename'
  * WARNING: When `filename' is an empty directory, it is system-specific if
  *          that directory will be removed or not (basically, this function

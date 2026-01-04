@@ -2349,7 +2349,8 @@ DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_fil
 		pathsize = (size_t)(basename - abs_filename);
 		Dee_DPRINTF("[LD][dec %q] Loading dec file\n", abs_filename);
 		result = DeeModule_OpenDecFile_impl(dec_stream, abs_filename, pathsize,
-		                                    flags, options, dee_file_last_modified);
+		                                    flags | DeeModule_IMPORT_F_CTXDIR,
+		                                    options, dee_file_last_modified);
 //		Dee_Decref(dec_stream); /* Inherited by `DeeModule_OpenDecFile_impl()' */
 		if (result != (DREF DeeModuleObject *)ITER_DONE)
 			return result;
@@ -2625,6 +2626,9 @@ DeeModule_OpenFile_impl3(/*utf-8*/ char **p_abs_filename, size_t abs_filename_le
 	                                  *p_flags | DeeModule_IMPORT_F_ENOENT |
 	                                  _DeeModule_IMPORT_F_IS_DEE_FILE,
 	                                  options);
+	/* If the ".dee" file is (for some reason) a directory, move on to check other file types */
+	if (result == DeeModule_IMPORT_ERROR && DeeError_Catch(&DeeError_IsDirectory))
+		result = DeeModule_IMPORT_ENOENT;
 	if (result == DeeModule_IMPORT_ENOENT) {
 		abs_filename_end -= 4;
 #ifndef CONFIG_NO_DEX
@@ -3001,10 +3005,28 @@ do_DeeModule_OpenDirectory_checked(/*inherit(always)*/ /*utf-8*/ char *__restric
 	return do_DeeModule_CreateDirectory(abs_dirname);
 }
 
+#if DeeSystem_SEP == '\\'
+#define DeeSystem_SEP_S_ESCAPED "\\\\"
+#else /* DeeSystem_SEP == '\\' */
+#define DeeSystem_SEP_S_ESCAPED DeeSystem_SEP_S
+#endif /* DeeSystem_SEP != '\\' */
+
+
+PRIVATE ATTR_COLD NONNULL((1, 2)) int DCALL
+err_module_is_not_dir(char *__restrict absname, DeeTypeObject *existing_module_type) {
+	char const *extension = ".dee";
+	if (existing_module_type == &DeeModuleDex_Type)
+		extension = DeeSystem_SOEXT;
+	return DeeError_Throwf(&DeeError_NoDirectory,
+	                       "Cannot open directory module \"%#q" DeeSystem_SEP_S_ESCAPED "\": a file \"%#q%s\" exists",
+	                       absname, absname, extension);
+}
+
 /* Verify that a directory exists, and open it as a cached `DeeModuleDir_Type' */
 PRIVATE WUNUSED DREF /*tracked*/ DeeModuleObject *DCALL
 do_DeeModule_OpenDirectory(/*inherit(always)*/ /*utf-8*/ char *__restrict abs_dirname,
                            size_t abs_dirname_length, unsigned int flags) {
+	int status;
 	DREF /*tracked*/ DeeModuleObject *result;
 	ASSERT(abs_dirname[abs_dirname_length] == '\0');
 
@@ -3014,27 +3036,80 @@ do_DeeModule_OpenDirectory(/*inherit(always)*/ /*utf-8*/ char *__restrict abs_di
 	if (result && Dee_IncrefIfNotZero(result)) {
 		module_abstree_lock_endread();
 		Dee_Free(abs_dirname);
+		if unlikely(Dee_TYPE(result) != &DeeModuleDir_Type) {
+			err_module_is_not_dir(result->mo_absname, Dee_TYPE(result));
+			Dee_Decref_unlikely(result);
+			result = NULL;
+		}
 		return result;
 	}
 	module_abstree_lock_endread();
 
 	/* Verify that:
 	 * - posix.stat.isdir(abs_dirname)
-	 * - !posix.stat.exists(abs_dirname + ".dee")
+	 * - !posix.stat.isreg(abs_dirname + ".dee")
 	 * #ifndef CONFIG_NO_DEX
-	 * - !posix.stat.exists(abs_dirname + DeeSystem_SOEXT)
+	 * - !posix.stat.isreg(abs_dirname + DeeSystem_SOEXT)
 	 * #endif // !CONFIG_NO_DEX
+	 * (Note the use of "stat" instead of "lstat": we look at symlink **targets**)
 	 *
 	 * If not:
 	 * - return `DeeModule_IMPORT_ENOENT' if `flags & DeeModule_IMPORT_F_ENOENT'
 	 * - throw `DeeError_NoDirectory' if "abs_dirname" is actually a regular file
 	 * - throw `DeeError_FileNotFound' if "abs_dirname" doesn't exist at all
 	 * - throw `DeeError_NoDirectory' if one of the other files exists */
-	(void)abs_dirname_length;
-	(void)flags;
-	/* TODO */
+	status = DeeSystem_GetFileTypeString(abs_dirname);
+	if (status != DeeSystem_GetFileType_T_DIR) {
+		if (status == DeeSystem_GetFileType_T_REG) {
+			DeeError_Throwf(&DeeError_NoDirectory,
+			                "Cannot open directory module \"%#q" DeeSystem_SEP_S_ESCAPED "\": "
+			                "path before last \"" DeeSystem_SEP_S_ESCAPED "\" is a regular file",
+			                abs_dirname);
+		} else if (status == DeeSystem_GetFileType_T_NONE) {
+			if (flags & DeeModule_IMPORT_F_ENOENT) {
+				Dee_Free(abs_dirname);
+				return DeeModule_IMPORT_ENOENT;
+			}
+			err_file_not_found_string(abs_dirname);
+		} else {
+			ASSERT(status == DeeSystem_GetFileType_ERR);
+		}
+		goto err_abs_dirname;
+	}
+
+	/* Verify that no ".dee" file exists (but if it's a directory, that's fine) */
+	abs_dirname[abs_dirname_length + 0] = '.';
+	abs_dirname[abs_dirname_length + 1] = 'd';
+	abs_dirname[abs_dirname_length + 2] = 'e';
+	abs_dirname[abs_dirname_length + 3] = 'e';
+	abs_dirname[abs_dirname_length + 4] = '\0';
+	status = DeeSystem_GetFileTypeString(abs_dirname);
+	abs_dirname[abs_dirname_length] = '\0';
+	if (status != DeeSystem_GetFileType_T_NONE &&
+	    status != DeeSystem_GetFileType_T_DIR) {
+		if (status != DeeSystem_GetFileType_ERR)
+			err_module_is_not_dir(abs_dirname, &DeeModuleDee_Type);
+		goto err_abs_dirname;
+	}
+
+	/* Verify that no ".so" file exists (but if it's a directory, that's fine) */
+#ifndef CONFIG_NO_DEX
+	strcpy(abs_dirname + abs_dirname_length, DeeSystem_SOEXT);
+	status = DeeSystem_GetFileTypeString(abs_dirname);
+	abs_dirname[abs_dirname_length] = '\0';
+	if (status != DeeSystem_GetFileType_T_NONE &&
+	    status != DeeSystem_GetFileType_T_DIR) {
+		if (status != DeeSystem_GetFileType_ERR)
+			err_module_is_not_dir(abs_dirname, &DeeModuleDex_Type);
+		goto err_abs_dirname;
+	}
+#endif /* !CONFIG_NO_DEX */
 
 	return do_DeeModule_OpenDirectory_checked(abs_dirname);
+err_abs_dirname:
+	Dee_Free(abs_dirname);
+/*err:*/
+	return DeeModule_IMPORT_ERROR;
 }
 
 PRIVATE WUNUSED DREF /*tracked*/ DeeModuleObject *DCALL

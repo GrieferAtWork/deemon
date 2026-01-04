@@ -996,46 +996,57 @@ PUBLIC void DCALL DeeSystem_DlClose(void *handle) {
 
 
 
+#undef stat__get_mtime_sec
+#undef stat__get_mtime_nsec
+#undef stat64__get_mtime_sec
+#undef stat64__get_mtime_nsec
+#ifdef CONFIG_HAVE_struct_stat_st_mtimespec
+#define stat__get_mtime_sec(st)  (st)->st_mtimespec.tv_sec
+#define stat__get_mtime_nsec(st) (st)->st_mtimespec.tv_nsec
+#elif defined(CONFIG_HAVE_struct_stat_st_mtim)
+#define stat__get_mtime_sec(st)  (st)->st_mtim.tv_sec
+#define stat__get_mtime_nsec(st) (st)->st_mtim.tv_nsec
+#else /* ... */
+#ifdef CONFIG_HAVE_struct_stat_st_mtime
+#define stat__get_mtime_sec(st)  (st)->st_mtime
+#endif /* CONFIG_HAVE_struct_stat_st_mtime */
+#ifdef CONFIG_HAVE_struct_stat_st_mtimensec
+#define stat__get_mtime_nsec(st) (st)->st_mtimensec
+#endif /* CONFIG_HAVE_struct_stat_st_mtimensec */
+#endif /* !... */
+#ifdef CONFIG_HAVE_struct_stat64_st_mtimespec
+#define stat64__get_mtime_sec(st)  (st)->st_mtimespec.tv_sec
+#define stat64__get_mtime_nsec(st) (st)->st_mtimespec.tv_nsec
+#elif defined(CONFIG_HAVE_struct_stat64_st_mtim)
+#define stat64__get_mtime_sec(st)  (st)->st_mtim.tv_sec
+#define stat64__get_mtime_nsec(st) (st)->st_mtim.tv_nsec
+#else /* ... */
+#ifdef CONFIG_HAVE_struct_stat64_st_mtime
+#define stat64__get_mtime_sec(st)  (st)->st_mtime
+#endif /* CONFIG_HAVE_struct_stat64_st_mtime */
+#ifdef CONFIG_HAVE_struct_stat64_st_mtimensec
+#define stat64__get_mtime_nsec(st) (st)->st_mtimensec
+#endif /* CONFIG_HAVE_struct_stat64_st_mtimensec */
+#endif /* !... */
+
 /* Figure out how to implement `DeeSystem_GetLastModified()' */
 #undef DeeSystem_GetLastModified_USE_GetFileAttributesExW
 #undef DeeSystem_GetLastModified_USE_stat
+#undef DeeSystem_GetLastModified_USE_stat64
 #undef DeeSystem_GetLastModified_USE_STUB
 #ifdef CONFIG_HOST_WINDOWS
 #define DeeSystem_GetLastModified_USE_GetFileAttributesExW
-#elif defined(CONFIG_HAVE_stat) || defined(CONFIG_HAVE_stat64)
+#elif defined(CONFIG_HAVE_stat64) && defined(stat64__get_mtime_sec) && defined(stat64__get_mtime_nsec)
+#define DeeSystem_GetLastModified_USE_stat64
+#elif defined(CONFIG_HAVE_stat) && defined(stat__get_mtime_sec) && defined(stat__get_mtime_nsec)
+#define DeeSystem_GetLastModified_USE_stat
+#elif defined(CONFIG_HAVE_stat64) && defined(stat64__get_mtime_sec)
+#define DeeSystem_GetLastModified_USE_stat64
+#elif defined(CONFIG_HAVE_stat) && defined(stat__get_mtime_sec)
 #define DeeSystem_GetLastModified_USE_stat
 #else /* ... */
 #define DeeSystem_GetLastModified_USE_STUB
 #endif /* !... */
-
-
-/* Figure out how to implement `DeeSystem_GetWalltime()' */
-#undef DeeSystem_GetWalltime_USE_GetSystemTimePreciseAsFileTime_OR_GetSystemTimeAsFileTime
-#undef DeeSystem_GetWalltime_USE_gettimeofday64
-#undef DeeSystem_GetWalltime_USE_gettimeofday
-#undef DeeSystem_GetWalltime_USE_clock_gettime64
-#undef DeeSystem_GetWalltime_USE_clock_gettime
-#undef DeeSystem_GetWalltime_USE_time64
-#undef DeeSystem_GetWalltime_USE_time
-#undef DeeSystem_GetWalltime_USE_STUB
-#ifdef CONFIG_HOST_WINDOWS
-#define DeeSystem_GetWalltime_USE_GetSystemTimePreciseAsFileTime_OR_GetSystemTimeAsFileTime
-#elif defined(CONFIG_HAVE_gettimeofday64)
-#define DeeSystem_GetWalltime_USE_gettimeofday64
-#elif defined(CONFIG_HAVE_gettimeofday)
-#define DeeSystem_GetWalltime_USE_gettimeofday
-#elif defined(CONFIG_HAVE_clock_gettime64) && defined(CONFIG_HAVE_CLOCK_REALTIME)
-#define DeeSystem_GetWalltime_USE_clock_gettime64
-#elif defined(CONFIG_HAVE_clock_gettime) && defined(CONFIG_HAVE_CLOCK_REALTIME)
-#define DeeSystem_GetWalltime_USE_clock_gettime
-#elif defined(CONFIG_HAVE_time64)
-#define DeeSystem_GetWalltime_USE_time64
-#elif defined(CONFIG_HAVE_time)
-#define DeeSystem_GetWalltime_USE_time
-#else /* ... */
-#define DeeSystem_GetWalltime_USE_STUB
-#endif /* !... */
-
 
 
 
@@ -1060,7 +1071,7 @@ nt_getunixfiletime(uint64_t filetime) {
 /* @return: 1 : OS indicates success
  * @return: 0 : OS indicates failure
  * @return: -1: Error was thrown */
-PUBLIC WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 DeeNTSystem_GetFileAttributesExW(DeeObject *__restrict lpFileName,
                                  GET_FILEEX_INFO_LEVELS fInfoLevelId,
                                  void *lpFileInformation) {
@@ -1140,12 +1151,12 @@ DeeSystem_GetLastModified(/*String*/ DeeObject *__restrict filename) {
 	return result;
 #endif /* DeeSystem_GetLastModified_USE_GetFileAttributesExW */
 
-#ifdef DeeSystem_GetLastModified_USE_stat
+#if defined(DeeSystem_GetLastModified_USE_stat) || defined(DeeSystem_GetLastModified_USE_stat64)
 	char const *utf8_name = DeeString_AsUtf8(filename);
 	if unlikely(!utf8_name)
 		return (uint64_t)-1;
 	return DeeSystem_GetLastModifiedString(utf8_name);
-#endif /* DeeSystem_GetLastModified_USE_stat */
+#endif /* DeeSystem_GetLastModified_USE_stat || DeeSystem_GetLastModified_USE_stat64 */
 
 #ifdef DeeSystem_GetLastModified_USE_STUB
 	(void)filename;
@@ -1180,22 +1191,22 @@ err:
 	return (uint64_t)-1;
 #endif /* DeeSystem_GetLastModified_USE_GetFileAttributesExW */
 
-#ifdef DeeSystem_GetLastModified_USE_stat
+#if defined(DeeSystem_GetLastModified_USE_stat) || defined(DeeSystem_GetLastModified_USE_stat64)
 	uint64_t result;
-#ifdef CONFIG_HAVE_stat64
+#ifdef DeeSystem_GetLastModified_USE_stat64
 	struct stat64 st;
-#else /* CONFIG_HAVE_stat64 */
+#else /* DeeSystem_GetLastModified_USE_stat64 */
 	struct stat st;
-#endif /* !CONFIG_HAVE_stat64 */
+#endif /* !DeeSystem_GetLastModified_USE_stat64 */
 	DBG_ALIGNMENT_DISABLE();
 #if defined(CONFIG_HAVE_errno) && (defined(EINTR) || defined(ENOMEM))
 again:
 #endif /* CONFIG_HAVE_errno && (EINTR || ENOMEM) */
-#ifdef CONFIG_HAVE_stat64
+#ifdef DeeSystem_GetLastModified_USE_stat64
 	if (stat64(filename, &st))
-#else /* CONFIG_HAVE_stat64 */
+#else /* DeeSystem_GetLastModified_USE_stat64 */
 	if (stat(filename, &st))
-#endif /* !CONFIG_HAVE_stat64 */
+#endif /* !DeeSystem_GetLastModified_USE_stat64 */
 	{
 #if defined(CONFIG_HAVE_errno) && (defined(EINTR) || defined(ENOMEM))
 		int error = DeeSystem_GetErrno();
@@ -1219,26 +1230,256 @@ again:
 #endif /* CONFIG_HAVE_errno && (EINTR || ENOMEM) */
 		return 0;
 	}
-	DBG_ALIGNMENT_ENABLE();
-	result = (uint64_t)st.st_mtime * MICROSECONDS_PER_SECOND;
-	/* Try to get more precision out of this */
-#ifdef CONFIG_HAVE_struct_stat_st_timensec
-	result += st.st_mtimensec / 1000;
-#elif defined(CONFIG_HAVE_struct_stat_st_tim)
-	result += st.st_mtim.tv_nsec / 1000;
-#elif defined(CONFIG_HAVE_struct_stat_st_timespec)
-	result += st.st_mtimespec.tv_nsec / 1000;
-#endif /* ... */
+
+	/* Try to get the most precision out of this */
+#ifdef DeeSystem_GetLastModified_USE_stat64
+	result = (uint64_t)stat64__get_mtime_sec(&st) * MICROSECONDS_PER_SECOND;
+#ifdef stat64__get_mtime_nsec
+	result += stat64__get_mtime_nsec(&st) / 1000;
+#endif /* stat64__get_mtime_nsec */
+#else /* DeeSystem_GetLastModified_USE_stat64 */
+	result = (uint64_t)stat__get_mtime_sec(&st) * MICROSECONDS_PER_SECOND;
+#ifdef stat__get_mtime_nsec
+	result += stat__get_mtime_nsec(&st) / 1000;
+#endif /* stat__get_mtime_nsec */
+#endif /* !DeeSystem_GetLastModified_USE_stat64 */
+
+	/* Prevent overlap with error indicator return value */
 	if unlikely(result == (uint64_t)-1)
 		result = (uint64_t)-2;
 	return result;
-#endif /* DeeSystem_GetLastModified_USE_stat */
+#endif /* DeeSystem_GetLastModified_USE_stat || DeeSystem_GetLastModified_USE_stat64 */
 
 #ifdef DeeSystem_GetLastModified_USE_STUB
 	(void)filename;
 	return 0;
 #endif /* DeeSystem_GetLastModified_USE_STUB */
 }
+
+
+
+/* Figure out how to implement `DeeSystem_GetFileType()' */
+#undef DeeSystem_GetFileType_USE_GetFileAttributesExW
+#undef DeeSystem_GetFileType_USE_stat
+#undef DeeSystem_GetFileType_USE_stat64
+#undef DeeSystem_GetFileType_USE_STUB
+#ifdef CONFIG_HOST_WINDOWS
+#define DeeSystem_GetFileType_USE_GetFileAttributesExW
+#elif defined(CONFIG_HAVE_stat) && defined(CONFIG_HAVE_struct_stat_st_mode)
+#define DeeSystem_GetFileType_USE_stat
+#elif defined(CONFIG_HAVE_stat64) && defined(CONFIG_HAVE_struct_stat64_st_mode)
+#define DeeSystem_GetFileType_USE_stat64
+#else /* ... */
+#define DeeSystem_GetFileType_USE_STUB
+#endif /* !... */
+
+
+/* Check if the named file (or directory) exists in some way, shape, or form,
+ * and return the type of that file. If `filename' refers to a symbolic link,
+ * that link is dereferenced, and information about its target is returned.
+ *
+ * @return: DeeSystem_GetFileType_T_NONE: `filename' does not exist
+ * @return: DeeSystem_GetFileType_T_DIR:  `filename' is a directory
+ * @return: DeeSystem_GetFileType_T_REG:  `filename' is a directory
+ * @return: DeeSystem_GetFileType_ERR:    An error was thrown */
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeSystem_GetFileType(/*String*/ DeeObject *__restrict filename) {
+#ifdef DeeSystem_GetFileType_USE_GetFileAttributesExW
+	WIN32_FILE_ATTRIBUTE_DATA attrib;
+	int status = DeeNTSystem_GetFileAttributesExW(filename, GetFileExInfoStandard, &attrib);
+	if unlikely(status <= 0) {
+		ASSERT(status == 0 || status == -1);
+#if DeeSystem_GetFileType_T_NONE == 0 && DeeSystem_GetFileType_ERR == -1
+		return status;
+#else /* DeeSystem_GetFileType_T_NONE == 0 && DeeSystem_GetFileType_ERR == -1 */
+		if unlikely(status < 0)
+			return DeeSystem_GetFileType_ERR;
+		return DeeSystem_GetFileType_T_NONE;
+#endif /* DeeSystem_GetFileType_T_NONE != 0 || DeeSystem_GetFileType_ERR != -1 */
+	}
+	if (attrib.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		return DeeSystem_GetFileType_T_DIR;
+	if (attrib.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
+		/* TODO: Dereference symlink */
+	}
+	return DeeSystem_GetFileType_T_REG;
+#endif /* DeeSystem_GetFileType_USE_GetFileAttributesExW */
+
+#if defined(DeeSystem_GetFileType_USE_stat) || defined(DeeSystem_GetFileType_USE_stat64)
+	char const *utf8_name = DeeString_AsUtf8(filename);
+	if unlikely(!utf8_name)
+		return DeeSystem_GetFileType_ERR;
+	return DeeSystem_GetFileTypeString(utf8_name);
+#endif /* DeeSystem_GetFileType_USE_stat || DeeSystem_GetFileType_USE_stat64 */
+
+#ifdef DeeSystem_GetFileType_USE_STUB
+	(void)filename;
+	return DeeSystem_GetFileType_T_NONE;
+#endif /* DeeSystem_GetFileType_USE_STUB */
+}
+
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeSystem_GetFileTypeString(/*utf-8*/ char const *__restrict filename) {
+#ifdef DeeSystem_GetFileType_USE_GetFileAttributesExW
+	int result;
+	BOOL bOk;
+	DWORD dwError;
+	WIN32_FILE_ATTRIBUTE_DATA attrib;
+	DREF DeeObject *filename_obj;
+	DBG_ALIGNMENT_DISABLE();
+	bOk = GetFileAttributesExA(filename, GetFileExInfoStandard, &attrib);
+	if (bOk) {
+		DBG_ALIGNMENT_ENABLE();
+		if (attrib.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			return DeeSystem_GetFileType_T_DIR;
+		if (attrib.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
+			/* TODO: Dereference symlink */
+		}
+		return DeeSystem_GetFileType_T_REG;
+	}
+	dwError = GetLastError();
+	if (0
+#ifdef ERROR_FILE_NOT_FOUND
+	    || dwError == ERROR_FILE_NOT_FOUND
+#endif /* ERROR_FILE_NOT_FOUND */
+#ifdef ERROR_PATH_NOT_FOUND
+	    || dwError == ERROR_PATH_NOT_FOUND
+#endif /* ERROR_PATH_NOT_FOUND */
+	    ) {
+		DBG_ALIGNMENT_ENABLE();
+		return DeeSystem_GetFileType_T_NONE;
+	}
+	DBG_ALIGNMENT_ENABLE();
+	filename_obj = DeeString_NewUtf8(filename, strlen(filename), STRING_ERROR_FSTRICT);
+	if unlikely(!filename_obj)
+		goto err;
+	result = DeeSystem_GetFileType(filename_obj);
+	Dee_Decref_likely(filename_obj);
+	return result;
+err:
+	return DeeSystem_GetFileType_ERR;
+#endif /* DeeSystem_GetFileType_USE_GetFileAttributesExW */
+
+#if defined(DeeSystem_GetFileType_USE_stat) || defined(DeeSystem_GetFileType_USE_stat64)
+#ifdef DeeSystem_GetFileType_USE_stat64
+	struct stat64 st;
+#else /* DeeSystem_GetFileType_USE_stat64 */
+	struct stat st;
+#endif /* !DeeSystem_GetFileType_USE_stat64 */
+	DBG_ALIGNMENT_DISABLE();
+#if defined(CONFIG_HAVE_errno) && (defined(EINTR) || defined(ENOMEM))
+again:
+#endif /* CONFIG_HAVE_errno && (EINTR || ENOMEM) */
+#ifdef DeeSystem_GetFileType_USE_stat64
+	if (stat64(filename, &st))
+#else /* DeeSystem_GetFileType_USE_stat64 */
+	if (stat(filename, &st))
+#endif /* !DeeSystem_GetFileType_USE_stat64 */
+	{
+#if defined(CONFIG_HAVE_errno) && (defined(EINTR) || defined(ENOMEM))
+		int error = DeeSystem_GetErrno();
+#endif /* CONFIG_HAVE_errno && (EINTR || ENOMEM) */
+		DBG_ALIGNMENT_ENABLE();
+#if defined(CONFIG_HAVE_errno) && (defined(EINTR) || defined(ENOMEM))
+#ifdef EINTR
+		if (error == EINTR) {
+			if (DeeThread_CheckInterrupt())
+				return DeeSystem_GetFileType_ERR;
+			goto again;
+		}
+#endif /* EINTR */
+#ifdef ENOMEM
+		if (error == ENOMEM) {
+			if (!Dee_CollectMemory(1))
+				return DeeSystem_GetFileType_ERR;
+			goto again;
+		}
+#endif /* ENOMEM */
+#endif /* CONFIG_HAVE_errno && (EINTR || ENOMEM) */
+		return DeeSystem_GetFileType_T_NONE;
+	}
+	DBG_ALIGNMENT_ENABLE();
+
+#ifdef S_ISDIR
+#define STAT_ISDIR(mode) S_ISDIR(mode)
+#elif defined(__S_ISDIR)
+#define STAT_ISDIR(mode) __S_ISDIR(mode)
+#else /* S_ISDIR */
+
+#ifdef CONFIG_HOST_WINDOWS
+#define STAT_IFMT   0170000 /* These bits determine file type. */
+#define STAT_IFDIR  0040000 /* Directory. */
+#else /* CONFIG_HOST_WINDOWS */
+#ifdef S_IFMT
+#define STAT_IFMT S_IFMT
+#elif defined(__S_IFMT)
+#define STAT_IFMT __S_IFMT
+#elif defined(_S_IFMT)
+#define STAT_IFMT _S_IFMT
+#elif defined(_IFMT)
+#define STAT_IFMT _IFMT
+#else /* ... */
+#define STAT_IFMT 0170000
+#endif /* !... */
+#ifdef S_IFDIR
+#define STAT_IFDIR S_IFDIR
+#elif defined(__S_IFDIR)
+#define STAT_IFDIR __S_IFDIR
+#elif defined(_S_IFDIR)
+#define STAT_IFDIR _S_IFDIR
+#elif defined(_IFDIR)
+#define STAT_IFDIR _IFDIR
+#else /* ... */
+#define STAT_IFDIR 0040000 /* Directory. */
+#endif /* !... */
+#endif /* !CONFIG_HOST_WINDOWS */
+
+#define STAT_ISDIR(mode) (((mode) & STAT_IFMT) == STAT_IFDIR)
+#endif /* !S_ISDIR */
+
+	if (STAT_ISDIR(st.st_mode))
+		return DeeSystem_GetFileType_T_DIR;
+	return DeeSystem_GetFileType_T_REG;
+#undef STAT_ISDIR
+#undef STAT_IFDIR
+#undef STAT_IFMT
+#endif /* DeeSystem_GetFileType_USE_stat || DeeSystem_GetFileType_USE_stat64 */
+
+#ifdef DeeSystem_GetFileType_USE_STUB
+	(void)filename;
+	return DeeSystem_GetFileType_T_NONE;
+#endif /* DeeSystem_GetFileType_USE_STUB */
+}
+
+
+
+
+/* Figure out how to implement `DeeSystem_GetWalltime()' */
+#undef DeeSystem_GetWalltime_USE_GetSystemTimePreciseAsFileTime_OR_GetSystemTimeAsFileTime
+#undef DeeSystem_GetWalltime_USE_gettimeofday64
+#undef DeeSystem_GetWalltime_USE_gettimeofday
+#undef DeeSystem_GetWalltime_USE_clock_gettime64
+#undef DeeSystem_GetWalltime_USE_clock_gettime
+#undef DeeSystem_GetWalltime_USE_time64
+#undef DeeSystem_GetWalltime_USE_time
+#undef DeeSystem_GetWalltime_USE_STUB
+#ifdef CONFIG_HOST_WINDOWS
+#define DeeSystem_GetWalltime_USE_GetSystemTimePreciseAsFileTime_OR_GetSystemTimeAsFileTime
+#elif defined(CONFIG_HAVE_gettimeofday64)
+#define DeeSystem_GetWalltime_USE_gettimeofday64
+#elif defined(CONFIG_HAVE_gettimeofday)
+#define DeeSystem_GetWalltime_USE_gettimeofday
+#elif defined(CONFIG_HAVE_clock_gettime64) && defined(CONFIG_HAVE_CLOCK_REALTIME)
+#define DeeSystem_GetWalltime_USE_clock_gettime64
+#elif defined(CONFIG_HAVE_clock_gettime) && defined(CONFIG_HAVE_CLOCK_REALTIME)
+#define DeeSystem_GetWalltime_USE_clock_gettime
+#elif defined(CONFIG_HAVE_time64)
+#define DeeSystem_GetWalltime_USE_time64
+#elif defined(CONFIG_HAVE_time)
+#define DeeSystem_GetWalltime_USE_time
+#else /* ... */
+#define DeeSystem_GetWalltime_USE_STUB
+#endif /* !... */
 
 #ifdef DeeSystem_GetWalltime_USE_GetSystemTimePreciseAsFileTime_OR_GetSystemTimeAsFileTime
 typedef void (WINAPI *LPGETSYSTEMTIMEPRECISEASFILETIME)(LPFILETIME lpSystemTimeAsFileTime);
