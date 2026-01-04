@@ -1022,9 +1022,8 @@ function clientThreadMain(con: socket) {
 			con.close();
 			print "Disconnected:", con;
 		}
-	} catch (e...) {
-		print "Client thread crashed:", e;
-		print Traceback.current;
+	} catch (...) {
+		Error.display("Client thread crashed");
 	}
 
 }

@@ -664,7 +664,7 @@ PUBLIC DeeTypeObject DeeError_Error = {
 	                         "\n"
 
 	                         "(" Error_init_params ")\n"
-	                         "Create a new error object with the given @message and @cause"),
+	                         "Create a new error object with the given @msg and @cause"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ error_tp_features,

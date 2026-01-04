@@ -870,7 +870,7 @@ err:
 PRIVATE struct type_method tpconst traceback_class_methods[] = {
 	TYPE_METHOD("ofthrow", &traceback_ofthrow,
 	            "(" traceback_ofthrow_params ")->?X2?.?N\n"
-	            "Returns the traceback belonging to a current thrown object @error. "
+	            "Returns the traceback belonging to a currently thrown object @error. "
 	            /**/ "If @error is not being thrown at the moment, return ?N instead"),
 	TYPE_METHOD_END
 };
