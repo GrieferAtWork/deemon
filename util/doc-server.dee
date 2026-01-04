@@ -983,7 +983,7 @@ function clientThreadMain(con: socket) {
 						msg = e;
 					} else {
 						errorFp << "<b>" << str(type e) << "</b>";
-						msg = Error.msg(e);
+						msg = Error.message(e);
 						if (msg)
 							errorFp << ": ";
 					}
@@ -1007,6 +1007,7 @@ function clientThreadMain(con: socket) {
 				errorFp = errorFp.string.encode("utf-8");
 				outputFp <<
 					"HTTP/1.1 " << errorCode << " " << {
+						400: "Bad Request",
 						404: "Page Not Found",
 						500: "Internal Server Error",
 					}[errorCode] << "\r\n"

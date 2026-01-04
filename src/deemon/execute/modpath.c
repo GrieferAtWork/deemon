@@ -4221,6 +4221,8 @@ DeeModule_GetShortName(DeeModuleObject *__restrict self) {
 		result = strrchr(result, DeeSystem_SEP);
 		if (result) /* Should always be non-NULL at this point! */
 			++result;
+	} else if (self == &DeeModule_Deemon) {
+		result = STR_deemon;
 	}
 	return result;
 }

@@ -2522,6 +2522,19 @@ INTERN struct type_attr module_attr = {
 #define module_get_code DeeModule_GetRootCode
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+module_get_name(DeeModuleObject *__restrict self) {
+	char const *name;
+	if ((self->mo_flags & Dee_MODULE_FABSFILE) && Dee_TYPE(self) != &DeeModuleDir_Type)
+		goto unbound;
+	name = DeeModule_GetShortName(self);
+	if unlikely(!name)
+		goto unbound;
+	return DeeString_NewUtf8(name, strlen(name), STRING_ERROR_FIGNORE);
+unbound:
+	return DeeRT_ErrUnboundAttrCStr(self, "__name__");
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_get_directory(DeeModuleObject *__restrict self) {
 	DREF DeeObject *result = DeeModule_GetDirectory(self);
 	Dee_XIncref(result);
@@ -2706,6 +2719,9 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 	TYPE_GETTER_AB_F("__path__", &module_get_path, METHOD_FNOREFESCAPE,
 	                 "->?X2?Dstring?N\n"
 	                 "Deprecated alias for ${this.__filename__ is bound ? this.__filename__ : none}"),
+	TYPE_GETTER_AB_F("__name__", &module_get_name, METHOD_FNOREFESCAPE,
+	                 "->?Dstring\n"
+	                 "'Simple' name of the module (that is: the last component of ?#__absname__)"),
 	/* TODO: __libnames__->?S?Dstring (to expose DeeModule_GetLibName() and DeeModule_GetLibNameCount()) */
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	TYPE_GETTER_F("__code__", &module_get_code, METHOD_FNOREFESCAPE,
