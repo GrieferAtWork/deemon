@@ -1166,7 +1166,7 @@ struct Dee_module_object {
 #define Dee_MODULE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
 #define Dee_MODULE_HASHIT(self, i)     (Dee_REQUIRES_OBJECT(DeeModuleObject, self)->mo_bucketv + ((i) & ((DeeModuleObject *)(self))->mo_bucketm))
 	DREF DeeModuleObject   *const *mo_importv;   /* [1..1][const_if(Dee_MODULE_FDIDLOAD)][0..mo_importc][lock(Dee_MODULE_FLOADING)][const_if(Dee_MODULE_FDIDLOAD)][owned] Vector of other modules imported by this one. */
-	/* TODO: Make "Module" a variable-length object and inline "mo_globalv" (== one less indirection necessary for access to globals) */
+	/* TO-DO: Make "Module" a variable-length object and inline "mo_globalv" (== one less indirection necessary for access to globals) */
 	DREF DeeObject               **mo_globalv;   /* [0..1][lock(mo_lock)][0..mo_globalc][valid_if(Dee_MODULE_FDIDLOAD)][owned] Vector of module-private global variables. */
 	DREF struct Dee_code_object   *mo_root;      /* [0..1][lock(mo_lock)][const_if(Dee_MODULE_FDIDLOAD)] Root code object (Also used as constructor).
 	                                              * HINT: Other code objects are addressed through constant/static variables.
@@ -1526,7 +1526,7 @@ DeeModule_OpenSourceStreamString(/*File*/ DeeObject *source_stream,
  *       relinquish their right to modify the module's `mo_importv', `mo_globalv',
  *       `mo_root', `mo_bucketv', etc... fields.
  *     - Interactive code should refrain from starting new threads.
- *       TODO: Currently, not abiding by this rule will result in hard undefined
+ *      TO-DO: Currently, not abiding by this rule will result in hard undefined
  *             behavior, potentially resulting in deemon crashing completely.
  *             >> This is a bug that must be resolved at some point!
  *             The problem are the `mo_globalv', `mo_importv' and `mo_bucketv'

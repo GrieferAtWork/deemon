@@ -1434,7 +1434,9 @@ again_acquire_locks:
 			DeeSystem_DlClose(dex_handle);
 			return result;
 		}
+		ASSERT(result->mo_absnode.rb_par != DeeModule_IMPORT_ENOENT);
 		module_abstree_removenode(&module_abstree_root, result);
+		result->mo_absnode.rb_par = DeeModule_IMPORT_ENOENT;
 	}
 
 	/* Lookup "DEX" descriptor export. */
@@ -1465,6 +1467,7 @@ handle_existing_module:
 			return existing_module;
 		}
 		module_byaddr_removenode(&module_byaddr_tree, existing_module);
+		existing_module->mo_adrnode.rb_par = DeeModule_IMPORT_ENOENT;
 	}
 
 	/* Sanity check: does this look like a valid dex object? */
@@ -1585,6 +1588,7 @@ handle_existing_module:
 				goto handle_existing_module;
 			}
 			module_byaddr_removenode(&module_byaddr_tree, existing_module);
+			existing_module->mo_adrnode.rb_par = DeeModule_IMPORT_ENOENT;
 		}
 		Dee_DPRINTF("[RT][dex] Add dex module at %p-%p: %q\n",
 		            result->mo_minaddr, result->mo_maxaddr, absname);
@@ -1801,7 +1805,8 @@ INTERN void DCALL DeeModule_UnloadAllDexModules(void) {
 INTERN NONNULL((1)) void DCALL
 module_dee_unbind(DeeModuleObject *__restrict self) {
 	module_byaddr_lock_write();
-	module_byaddr_removenode(&module_byaddr_tree, self);
+	if (self->mo_adrnode.rb_par != DeeModule_IMPORT_ENOENT)
+		module_byaddr_removenode(&module_byaddr_tree, self);
 	module_byaddr_lock_endwrite();
 }
 #endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
@@ -1934,28 +1939,33 @@ INTERN NONNULL((1)) void DCALL
 module_unbind(DeeModuleObject *__restrict self) {
 	ASSERT(self->mo_absname);
 	module_abstree_lock_write();
-	module_abstree_removenode(&module_abstree_root, self);
+	if (self->mo_absnode.rb_par != DeeModule_IMPORT_ENOENT)
+		module_abstree_removenode(&module_abstree_root, self);
 	module_abstree_lock_endwrite();
 	if (self->mo_libname.mle_name) {
 		struct Dee_module_libentry *iter = &self->mo_libname;
 		module_libtree_lock_write();
-		ASSERT(Dee_module_libentry_getmodule(iter) == self);
-		module_libtree_removenode(&module_libtree_root, iter);
-		while ((iter = iter->mle_next) != NULL) {
+		if unlikely(!self->mo_libname.mle_name) {
+			module_libtree_lock_endwrite();
+		} else {
 			ASSERT(Dee_module_libentry_getmodule(iter) == self);
 			module_libtree_removenode(&module_libtree_root, iter);
-		}
-		module_libtree_lock_endwrite();
-		iter = &self->mo_libname;
-		Dee_Decref(iter->mle_name);
-		iter = iter->mle_next;
-		while (iter) {
-			struct Dee_module_libentry *next;
-			ASSERT(Dee_module_libentry_getmodule(iter) == self);
-			next = iter->mle_next;
+			while ((iter = iter->mle_next) != NULL) {
+				ASSERT(Dee_module_libentry_getmodule(iter) == self);
+				module_libtree_removenode(&module_libtree_root, iter);
+			}
+			module_libtree_lock_endwrite();
+			iter = &self->mo_libname;
 			Dee_Decref(iter->mle_name);
-			Dee_module_libentry_free(iter);
-			iter = next;
+			iter = iter->mle_next;
+			while (iter) {
+				struct Dee_module_libentry *next;
+				ASSERT(Dee_module_libentry_getmodule(iter) == self);
+				next = iter->mle_next;
+				Dee_Decref(iter->mle_name);
+				Dee_module_libentry_free(iter);
+				iter = next;
+			}
 		}
 	}
 }
@@ -2797,7 +2807,9 @@ remember_dir_module:
 				Dee_Free(abs_filename);
 				return existing;
 			}
+			ASSERT(existing->mo_absnode.rb_par != DeeModule_IMPORT_ENOENT);
 			module_abstree_removenode(&module_abstree_root, existing);
+			existing->mo_absnode.rb_par = DeeModule_IMPORT_ENOENT;
 		}
 		module_abstree_insert(&module_abstree_root, result);
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
@@ -2963,7 +2975,9 @@ do_DeeModule_CreateDirectory(/*inherit(always)*/ /*utf-8*/ char *__restrict abs_
 			Dee_Free(abs_dirname);
 			return existing_result;
 		}
+		ASSERT(existing_result->mo_absnode.rb_par != DeeModule_IMPORT_ENOENT);
 		module_abstree_removenode(&module_abstree_root, existing_result);
+		existing_result->mo_absnode.rb_par = DeeModule_IMPORT_ENOENT;
 	}
 	module_abstree_insert(&module_abstree_root, result);
 	result = DeeGC_TRACK(DeeModuleObject, result);
