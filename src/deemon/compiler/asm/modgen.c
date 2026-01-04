@@ -33,6 +33,8 @@
 #include <deemon/system.h> /* DeeSystem_GetWalltime() */
 #include <deemon/util/atomic.h>
 
+#include <hybrid/int128.h>
+
 #ifndef CONFIG_NO_DEC
 #include <deemon/compiler/dec.h>
 #include <deemon/error.h>
@@ -63,8 +65,7 @@ INTERN DeeObject current_module_marker = {
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 module_compile(struct Dee_serial *__restrict writer,
-               /*inherit(always)*/ DREF DeeCodeObject *__restrict root_code,
-               uint64_t ctime) {
+               /*inherit(always)*/ DREF DeeCodeObject *__restrict root_code) {
 	DeeModuleObject *out_module;
 	Dee_seraddr_t addrof_module;
 	size_t sizeof_module;
@@ -107,8 +108,11 @@ module_compile(struct Dee_serial *__restrict writer,
 	out_module->mo_globalc = current_rootscope->rs_globalc;
 	out_module->mo_importc = current_rootscope->rs_importc;
 	out_module->mo_bucketm = current_rootscope->rs_bucketm;
-	out_module->mo_flags   = current_rootscope->rs_flags | Dee_MODULE_FHASCTIME;
-	out_module->mo_ctime   = ctime;
+	out_module->mo_flags   = current_rootscope->rs_flags | Dee_MODULE_FHASBUILDID;
+
+	/* These get overwritten later (as the MD5 hash of the dec file) */
+	out_module->mo_buildid.mbi_word64[0] = 0;
+	out_module->mo_buildid.mbi_word64[1] = 0;
 
 	/* Output "current_rootscope->rs_bucketv" into "mo_bucketv" */
 	if (current_rootscope->rs_bucketv == empty_module_buckets) {
@@ -193,7 +197,7 @@ err:
 #else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 INTERN WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
-module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code, uint64_t ctime)
+module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code)
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 module_compile(DeeModuleObject *__restrict mod,
@@ -244,8 +248,11 @@ module_compile(DeeModuleObject *__restrict mod,
 	mod->mo_importv = current_rootscope->rs_importv;
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	mod->mo_moddata.mo_rootcode = root_code; /* Inherit reference */
-	mod->mo_flags = current_rootscope->rs_flags | Dee_MODULE_FHASCTIME;
-	mod->mo_ctime = ctime;
+	mod->mo_flags = current_rootscope->rs_flags | Dee_MODULE_FHASBUILDID;
+	{
+		uint64_t ts = DeeSystem_GetWalltime();
+		__hybrid_uint128_set64(mod->mo_buildid, ts);
+	}
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	atomic_or(&mod->mo_flags, current_rootscope->rs_flags);
 	mod->mo_root = root_code;

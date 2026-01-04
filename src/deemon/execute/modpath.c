@@ -2234,16 +2234,33 @@ DeeDec_Track(DREF /*untracked*/ struct Dee_module_object *__restrict self) {
 	module_byaddr_ensure_initialized();
 
 	/* Insert module into by-address tree so allow reverse module lookup by-address */
+	ASSERT(DeeMapFile_GetAddr(&ehdr->e_mapping) == (void *)ehdr);
 	self->mo_minaddr = (byte_t *)ehdr;
-	self->mo_maxaddr = (byte_t *)ehdr + ehdr->e_offsetof_eof - 1;
+	self->mo_maxaddr = (byte_t *)ehdr + DeeMapFile_GetSize(&ehdr->e_mapping) - 1;
 	module_byaddr_insert(&module_byaddr_tree, self);
 
 	/* Link in GC objects (if there are any) */
-	if likely(ehdr->e_offsetof_gchead) {
-		struct gc_head *gc_head = (struct gc_head *)((byte_t *)ehdr + ehdr->e_offsetof_gchead);
-		struct gc_head *gc_tail = (struct gc_head *)((byte_t *)ehdr + ehdr->e_offsetof_gctail);
+#if __SIZEOF_SIZE_T__ == 4
+#define IMAGE_GC_HEADTAIL_MATCH_RELOC                                                                                                  \
+	((offsetof(Dec_Ehdr, e_typedata.td_image.ei_offsetof_gchead) == DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_gchead) && \
+	 (offsetof(Dec_Ehdr, e_typedata.td_image.ei_offsetof_gctail) == DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_gctail))
+#else /* __SIZEOF_SIZE_T__ == 4 */
+#define IMAGE_GC_HEADTAIL_MATCH_RELOC 0
+#endif /* __SIZEOF_SIZE_T__ == 4 */
+	if (ehdr->e_type == Dee_DEC_TYPE_IMAGE && !IMAGE_GC_HEADTAIL_MATCH_RELOC) {
+		struct gc_head *gc_head = (struct gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gchead);
+		struct gc_head *gc_tail = (struct gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gctail);
+		ASSERT(ehdr->e_typedata.td_image.ei_offsetof_gchead);
+		ASSERT(ehdr->e_typedata.td_image.ei_offsetof_gctail);
+		DeeGC_TrackAll(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
+	} else {
+		struct gc_head *gc_head = (struct gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gchead);
+		struct gc_head *gc_tail = (struct gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gctail);
+		ASSERT(ehdr->e_typedata.td_reloc.er_offsetof_gchead);
+		ASSERT(ehdr->e_typedata.td_reloc.er_offsetof_gctail);
 		DeeGC_TrackAll(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
 	}
+#undef IMAGE_GC_HEADTAIL_MATCH_RELOC
 	module_byaddr_lock_endwrite();
 
 	return self;
@@ -2266,8 +2283,9 @@ DeeModule_CreateAnonymousDirectory(void) {
 	result->mo_libname.mle_name = NULL;
 	result->mo_dir = NULL; /* Will be initialized lazily */
 	result->mo_init = Dee_MODULE_INIT_INITIALIZED;
-	result->mo_ctime = 0;
-	result->mo_flags = Dee_MODULE_FABSFILE | Dee_MODULE_FHASCTIME;
+	result->mo_buildid.mbi_word64[0] = 0;
+	result->mo_buildid.mbi_word64[1] = 0;
+	result->mo_flags = Dee_MODULE_FABSFILE | Dee_MODULE_FHASBUILDID;
 	result->mo_importc = 0;
 	result->mo_globalc = 0;
 	result->mo_bucketm = 0;
@@ -2490,7 +2508,8 @@ no_dec_file:
 				                                   0644);
 				if likely(output_stream) {
 					size_t write_status;
-					write_status = DeeFile_WriteAll(output_stream, ehdr, ehdr->e_offsetof_eof);
+					write_status = DeeFile_WriteAll(output_stream, ehdr,
+					                                ehdr->e_typedata.td_reloc.er_offsetof_eof);
 					Dee_Decref_likely(output_stream);
 					if unlikely(write_status == (size_t)-1)
 						output_stream = NULL;

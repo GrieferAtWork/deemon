@@ -173,7 +173,7 @@ INTDEF __BYTE_TYPE__ _end[];
 		/* .mo_libname = */ { NULL, { NULL }, { NULL, NULL, NULL }, NULL }, \
 		/* .mo_dir     = */ NULL,                                           \
 		/* .mo_init    = */ Dee_MODULE_INIT_UNINITIALIZED,                  \
-		/* .mo_ctime   = */ 0,                                              \
+		/* .mo_buildid = */ { {0} },                                        \
 		/* .mo_flags   = */ Dee_MODULE_FNORMAL,                             \
 		/* .mo_importc = */ 0,                                              \
 		/* .mo_globalc = */ COMPILER_LENOF(_dex_symbols),                   \

@@ -276,36 +276,39 @@ DeeModule_GetRootFunction(DeeModuleObject *__restrict self) {
 }
 
 
-PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) uint64_t DCALL
-DeeModule_GetCTime_uncached(DeeModuleObject *__restrict self) {
-	DeeTypeObject *tp = Dee_TYPE(self);
-	if (self == &DeeModule_Deemon)
-		return DeeExec_GetTimestamp();
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) void DCALL
+DeeModule_GetBuildId_uncached(DeeModuleObject *__restrict self) {
+	if (self == &DeeModule_Deemon) {
+		DeeExec_GetBuildId();
+		return;
+	}
 
-	/* TODO: special handling for dex modules (which should embed a build timestamp) */
-	/* TODO: fallback handling: use last-modified timestamp of module filename */
-	(void)tp;
-	return 0;
+	/* TODO: ADDR(.note.gnu.build-id) (s.a. "/configure") */
+	/* TODO: Random UUID embedded within DEX modules during build */
+	/* TODO: Use "TimeDateStamp" from module's PE header on Windows (it's better than nothing) */
+	/* TODO: fallback: use last-modified timestamp of `DeeModule_GetFileName()' */
+
+	/* Fall-fallback: unable to determine Build ID -> set it to all zeroes */
+	self->mo_buildid.mbi_word64[0] = 0;
+	self->mo_buildid.mbi_word64[1] = 0;
 }
 
-/* Returns the compile-time of a given module (in microseconds
- * since 01-01-1970), or (uint64_t)-1 if an error occurred.
- * Use this function instead of directly reading `self->mo_ctime',
- * as this function will lazily initialize the timestamp in cases
- * where it may not be loaded, yet. */
-PUBLIC WUNUSED NONNULL((1)) uint64_t DCALL
-DeeModule_GetCTime(DeeModuleObject *__restrict self) {
-	uint64_t result;
-	uint16_t flags = atomic_read(&self->mo_flags);
-	if (flags & Dee_MODULE_FHASCTIME) {
-		COMPILER_READ_BARRIER();
-		return self->mo_ctime;
+/* Return the "Build ID" of this module, which is an opaque
+ * identifier that can be treated as a hash for the specific version that is
+ * loaded into the module "self". When the module unloads and is then re-loaded,
+ * this hash might change, in which case dependents of "self" should also be
+ * re-build (potentially causing their build IDs to change also).
+ *
+ * @return: * : The module's build ID */
+DFUNDEF WUNUSED ATTR_RETNONNULL NONNULL((1)) union Dee_module_buildid const *DCALL
+DeeModule_GetBuildId(DeeModuleObject *__restrict self) {
+	if (!(atomic_read(&self->mo_flags) & Dee_MODULE_FHASBUILDID)) {
+		DeeModule_GetBuildId_uncached(self);
+		COMPILER_WRITE_BARRIER();
+		atomic_or(&self->mo_flags, Dee_MODULE_FHASBUILDID);
+		COMPILER_BARRIER();
 	}
-	result = DeeModule_GetCTime_uncached(self);
-	self->mo_ctime = result;
-	COMPILER_WRITE_BARRIER();
-	atomic_or(&self->mo_flags, Dee_MODULE_FHASCTIME);
-	return result;
+	return &self->mo_buildid;
 }
 
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -3132,8 +3135,8 @@ module_dee_serialize(DeeModuleObject *__restrict self,
 	memset(&out->mo_libname.mle_node, 0xcc, sizeof(out->mo_libname.mle_node));
 	out->mo_dir   = NULL; /* Will be initialized by dex loader */
 	out->mo_init  = Dee_MODULE_INIT_UNINITIALIZED;
-	out->mo_ctime = DeeModule_GetCTime(self);
-	out->mo_flags = atomic_read(&self->mo_flags) | Dee_MODULE_FHASCTIME;
+	out->mo_buildid = *DeeModule_GetBuildId(self);
+	out->mo_flags = atomic_read(&self->mo_flags);
 	out->mo_flags &= ~(Dee_MODULE_FABSFILE | Dee_MODULE_FWAITINIT |
 	                   Dee_MODULE_FABSRED | Dee_MODULE_FADRRED |
 	                   _Dee_MODULE_FLIBALL | _Dee_MODULE_FCLEARED);
@@ -3640,8 +3643,8 @@ INTERN struct Dee_empty_module_struct DeeModule_Empty = {
 		},
 		/* .mo_dir     = */ (DeeTupleObject *)Dee_EmptyTuple,
 		/* .mo_init    = */ Dee_MODULE_INIT_INITIALIZED,
-		/* .mo_ctime   = */ 0,
-		/* .mo_flags   = */ Dee_MODULE_FNORMAL | Dee_MODULE_FHASCTIME,
+		/* .mo_buildid = */ { {0} },
+		/* .mo_flags   = */ Dee_MODULE_FNORMAL | Dee_MODULE_FHASBUILDID,
 		/* .mo_importc = */ 0,
 		/* .mo_globalc = */ 0,
 		/* .mo_bucketm = */ 0,
@@ -3650,11 +3653,9 @@ INTERN struct Dee_empty_module_struct DeeModule_Empty = {
 		WEAKREF_SUPPORT_INIT,
 		/* .mo_moddata = */ Dee_MODULE_MODDATA_INIT_CODE(&DeeCode_Empty),
 		/* .mo_importv = */ NULL,
-#if !defined(CONFIG_NO_DEC) || !defined(CONFIG_NO_DEX)
 		/* .mo_minaddr = */ NULL,
 		/* .mo_maxaddr = */ NULL,
 		/* .mo_adrnode = */ { NULL, NULL, NULL },
-#endif /* !CONFIG_NO_DEC || !CONFIG_NO_DEX */
 	}
 };
 

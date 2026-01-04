@@ -184,7 +184,6 @@ EXPORTS
 	DeeError_ThrowInherited@4=_DeeError_ThrowInherited@4
 	DeeError_VThrowf@12=_DeeError_VThrowf@12
 	DeeExec_GetHome@0=_DeeExec_GetHome@0
-	DeeExec_GetTimestamp@0=_DeeExec_GetTimestamp@0
 	DeeExec_SetHome@4=_DeeExec_SetHome@4
 	DeeFatal_BadDecref@12=_DeeFatal_BadDecref@12
 	DeeFatal_BadIncref@12=_DeeFatal_BadIncref@12
@@ -616,7 +615,6 @@ EXPORTS
 	DeeModule_DelAttrSymbol@8=_DeeModule_DelAttrSymbol@8
 	DeeModule_OfPointer@4=_DeeModule_OfPointer@4
 	DeeModule_GetAttrSymbol@8=_DeeModule_GetAttrSymbol@8
-	DeeModule_GetCTime@4=_DeeModule_GetCTime@4
 	DeeModule_GetExtern@8=_DeeModule_GetExtern@8
 	DeeModule_GetExternString@8=_DeeModule_GetExternString@8
 	DeeModule_GetNativeSymbol@8=_DeeModule_GetNativeSymbol@8

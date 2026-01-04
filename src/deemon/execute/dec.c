@@ -39,6 +39,7 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/md5.h>
 
 #include <hybrid/align.h>
 #include <hybrid/limitcore.h>
@@ -62,15 +63,14 @@ ASSERT_FIELD(Dec_Ehdr, e_ident, DeeDec_Ehdr_OFFSETOF__e_ident, 4);
 ASSERT_FIELD(Dec_Ehdr, e_mach, DeeDec_Ehdr_OFFSETOF__e_mach, 1);
 ASSERT_FIELD(Dec_Ehdr, e_type, DeeDec_Ehdr_OFFSETOF__e_type, 1);
 ASSERT_FIELD(Dec_Ehdr, e_version, DeeDec_Ehdr_OFFSETOF__e_version, 2);
-ASSERT_FIELD(Dec_Ehdr, e_offsetof_heap, DeeDec_Ehdr_OFFSETOF__e_offsetof_heap, 2);
-ASSERT_FIELD(Dec_Ehdr, e_sizeof_pointer, DeeDec_Ehdr_OFFSETOF__e_sizeof_pointer, 1);
-ASSERT_FIELD(Dec_Ehdr, e_offsetof_eof, DeeDec_Ehdr_OFFSETOF__e_offsetof_eof, 4);
-ASSERT_FIELD(Dec_Ehdr, e_offsetof_gchead, DeeDec_Ehdr_OFFSETOF__e_offsetof_gchead, 4);
-ASSERT_FIELD(Dec_Ehdr, e_offsetof_gctail, DeeDec_Ehdr_OFFSETOF__e_offsetof_gctail, 4);
-ASSERT_FIELD(Dec_Ehdr, e_typedata, DeeDec_Ehdr_OFFSETOF__e_typedata, 64);
-ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_deemon_timestamp, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_deemon_timestamp, 8);
+STATIC_ASSERT(offsetof(Dec_Ehdr, e_typedata) == DeeDec_Ehdr_OFFSETOF__e_typedata);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_heap, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_heap, 2);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_sizeof_pointer, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_sizeof_pointer, 1);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_eof, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_eof, 4);
 ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_deemon_build_id, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_deemon_build_id, 16);
-ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_deemon_host_id, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_deemon_host_id, 16);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_build_timestamp, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_build_timestamp, 8);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_gchead, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_gchead, 4);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_gctail, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_gctail, 4);
 ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_srel, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_srel, 4);
 ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_drel, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_drel, 4);
 ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_drrel, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_drrel, 4);
@@ -95,7 +95,8 @@ ASSERT_FIELD(Dec_Dhdr, d_modspec.d_file.d_offsetof_modname, 0, 4);
 ASSERT_FIELD(Dec_Dhdr, d_modspec.d_file.d_offsetof_rel, 4, 4);
 ASSERT_FIELD(Dec_Dhdr, d_offsetof_rrel, 8, 4);
 ASSERT_FIELD(Dec_Dhdr, d_offsetof_rrela, 12, 4);
-STATIC_ASSERT(sizeof(Dec_Dhdr) == 16);
+ASSERT_FIELD(Dec_Dhdr, d_buildid, 16, 16);
+STATIC_ASSERT(sizeof(Dec_Dhdr) == 32);
 #undef ASSERT_FIELD
 
 
@@ -363,11 +364,11 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 	dhdr = (Dec_Dhdr *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_deps);
 
 	/* Check if source file was modified **after** .dec file */
-	result = DeeDec_Ehdr_GetModule(self);
-	if (result->mo_ctime < dee_file_last_modified) {
+	if (dee_file_last_modified > self->e_typedata.td_reloc.er_build_timestamp) {
 		Dee_DPRINTF("[LD][dec %q] CORRUPT: Source file modified after .dec file "
 		            /**/ "was created: %" PRFu64 " > %" PRFu64 "\n",
-		            context_absname, dee_file_last_modified, result->mo_ctime);
+		            context_absname, dee_file_last_modified,
+		            self->e_typedata.td_reloc.er_build_timestamp);
 		goto corrupt;
 	}
 
@@ -390,8 +391,8 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 	flags &= DeeModule_IMPORT_F_CTXDIR;
 	flags |= DeeModule_IMPORT_F_ENOENT | DeeModule_IMPORT_F_ERECUR;
 	for (dep_index = 0; dhdr[dep_index].d_modspec.d_file.d_offsetof_modname;) {
-		uint64_t dep_timestamp;
 		DREF DeeModuleObject *dep;
+		union Dee_module_buildid const *dep_buildid;
 		Dec_Dhdr *dependency = &dhdr[dep_index];
 		Dec_Dstr *dependency_name = (Dec_Dstr *)((byte_t *)self + dependency->d_modspec.d_file.d_offsetof_modname);
 		dep = DeeModule_OpenEx(dependency_name->ds_string,
@@ -412,12 +413,18 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 		++dep_index;
 
 		/* Check timestamp of dependency (must be older than our dec file's timestamp) */
-		dep_timestamp = DeeModule_GetCTime(dep);
-		if (dep_timestamp > result->mo_ctime) {
-			Dee_DPRINTF("[LD][dec %q] CORRUPT: Dependency %q was compiled after "
-			            /**/ ".dec file was created: %" PRFu64 " > %" PRFu64 "\n",
+		dep_buildid = DeeModule_GetBuildId(dep);
+		if (dep_buildid->mbi_word64[0] != dependency->d_buildid[0] ||
+		    dep_buildid->mbi_word64[1] != dependency->d_buildid[1]) {
+			Dee_uint128_t expected_buildid, actual_buildid;
+			__hybrid_uint128_setword64(expected_buildid, 0, dependency->d_buildid[0]);
+			__hybrid_uint128_setword64(expected_buildid, 1, dependency->d_buildid[1]);
+			__hybrid_uint128_setword64(actual_buildid, 0, dep_buildid->mbi_word64[0]);
+			__hybrid_uint128_setword64(actual_buildid, 1, dep_buildid->mbi_word64[1]);
+			Dee_DPRINTF("[LD][dec %q] CORRUPT: Dependency %q has unexpected build ID. "
+			            /**/ "Expected: %#.32" PRFx128 ", Actual: %#.32" PRFx128 "\n",
 			            context_absname, DeeModule_GetAbsName(dep),
-			            dep_timestamp, result->mo_ctime);
+			            expected_buildid, actual_buildid);
 			goto corrupt_dep_index;
 		}
 	}
@@ -441,7 +448,7 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 corrupt_dep_index_reloc_rrel:
 			Dee_DPRINTF("[LD][dec %q] CORRUPT: Failed to incref dead object in "
 			            /**/ "dependency #%" PRFuSIZ "(%q) at %#" PRFxSIZ " (%p)\n",
-			            context_absname, dep_index, mod->mo_absname,
+			            context_absname, dep_index, DeeModule_GetAbsName(mod),
 			            (uintptr_t)dead_object - (uintptr_t)mod, dead_object);
 			goto corrupt_dep_index_reloc;
 		}
@@ -467,10 +474,10 @@ corrupt_dep_index_reloc_rrel:
 	}
 
 #if 0 /* This needs to be done by the caller using `DeeDec_Track()' */
-	if (self->e_offsetof_gchead) {
+	if (self->e_typedata.td_reloc.er_offsetof_gchead) {
 		/* Link in GC objects (if there are any) */
-		struct gc_head *gc_head = (struct gc_head *)((byte_t *)self + self->e_offsetof_gchead);
-		struct gc_head *gc_tail = (struct gc_head *)((byte_t *)self + self->e_offsetof_gctail);
+		struct gc_head *gc_head = (struct gc_head *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gchead);
+		struct gc_head *gc_tail = (struct gc_head *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gctail);
 		DeeGC_TrackAll(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
 	}
 #endif
@@ -680,7 +687,7 @@ w_decref_rrela_nokill(DeeDec_Ehdr *__restrict self,
 PUBLIC WUNUSED NONNULL((1, 2)) DREF /*untracked*/ struct Dee_module_object *DCALL
 DeeDecWriter_PackModule(DeeDecWriter *__restrict self,
                         /*inherit(on_success)*/ DeeDec_Ehdr *__restrict ehdr) {
-	size_t i;
+	size_t dep_index;
 	DREF /*untracked*/ struct Dee_module_object *result;
 	result = DeeDec_Ehdr_GetModule(ehdr);
 
@@ -700,8 +707,8 @@ DeeDecWriter_PackModule(DeeDecWriter *__restrict self,
 	w_apply_rrela(ehdr, self->dw_drrela.drat_relv, self->dw_drrela.drat_relc, (uintptr_t)&DeeModule_Deemon);
 
 	/* Dependent-module-relocations... */
-	for (i = 0; i < self->dw_deps.ddpt_depc; ++i) {
-		struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[i];
+	for (dep_index = 0; dep_index < self->dw_deps.ddpt_depc; ++dep_index) {
+		struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[dep_index];
 		DeeModuleObject *mod = dep->ddm_mod;
 		w_apply_rel(ehdr, dep->ddm_rel.drlt_relv, dep->ddm_rel.drlt_relc, (uintptr_t)mod);
 		w_apply_rrel(ehdr, dep->ddm_rrel.drrt_relv, dep->ddm_rrel.drrt_relc, (uintptr_t)mod);
@@ -732,6 +739,8 @@ DeeDecWriter_PackModule(DeeDecWriter *__restrict self,
 	ehdr->e_typedata.td_image.ei_deps_v = self->dw_deps.ddpt_depv;
 	ehdr->e_typedata.td_image.ei_deps_c = self->dw_deps.ddpt_depc;
 	Dee_dec_deptab_init(&self->dw_deps);
+	ehdr->e_typedata.td_image.ei_offsetof_gchead = self->dw_gchead;
+	ehdr->e_typedata.td_image.ei_offsetof_gctail = self->dw_gctail;
 
 #if !defined(NDEBUG) && 0
 	/* Debug-print heap blocks */
@@ -768,7 +777,7 @@ DeeDecWriter_PackModule(DeeDecWriter *__restrict self,
  *   this type will also try to truncate `self->e_mapping'. */
 INTERN NONNULL((1)) void DCALL
 DeeDec_Ehdr_FreeRelocationData(DeeDec_Ehdr *__restrict self) {
-	Dee_dec_addr32_t heap_end_offset;
+	size_t heap_end_offset;
 	switch (self->e_type) {
 
 	case Dee_DEC_TYPE_RELOC: {
@@ -794,7 +803,12 @@ DeeDec_Ehdr_FreeRelocationData(DeeDec_Ehdr *__restrict self) {
 			Dee_dec_depmod_fini(dep);
 		}
 		Dee_Free(deps_v);
-		DBG_memset(&self->e_typedata, 0xcc, sizeof(self->e_typedata));
+		DBG_memset(&self->e_typedata.td_image.ei_drrel_v, 0xcc, sizeof(self->e_typedata.td_image.ei_drrel_v));
+		DBG_memset(&self->e_typedata.td_image.ei_drrel_c, 0xcc, sizeof(self->e_typedata.td_image.ei_drrel_c));
+		DBG_memset(&self->e_typedata.td_image.ei_drrela_v, 0xcc, sizeof(self->e_typedata.td_image.ei_drrela_v));
+		DBG_memset(&self->e_typedata.td_image.ei_drrela_c, 0xcc, sizeof(self->e_typedata.td_image.ei_drrela_c));
+		DBG_memset(&self->e_typedata.td_image.ei_deps_v, 0xcc, sizeof(self->e_typedata.td_image.ei_deps_v));
+		DBG_memset(&self->e_typedata.td_image.ei_deps_c, 0xcc, sizeof(self->e_typedata.td_image.ei_deps_c));
 	}	break;
 
 	default: __builtin_unreachable();
@@ -807,21 +821,15 @@ DeeDec_Ehdr_FreeRelocationData(DeeDec_Ehdr *__restrict self) {
 	 * As such, the value of `DeeMapFile_GetSize(&self->e_mapping)' will
 	 * be lowered up until (but not becoming less than) the end of the
 	 * heap: `offsetof(DeeDec_Ehdr, e_heap) + self->e_heap.hr_size'.
-	 *
-	 * Then, have the EHDR reflect the new size in:
-	 * >> self->e_offsetof_eof = DeeMapFile_GetSize(&self->e_mapping);
 	 */
 	ASSERTF(DeeMapFile_GetAddr(&self->e_mapping) == (void *)self,
 	        "The EHDR should be located at the start of the file mapping");
-	ASSERTF(DeeMapFile_GetSize(&self->e_mapping) == self->e_offsetof_eof,
-	        "The file mappings EOF should match the EOF field in the header");
-	heap_end_offset = seraddr32(offsetof(Dec_Ehdr, e_heap) + self->e_heap.hr_size);
-	ASSERTF(heap_end_offset <= self->e_offsetof_eof,
+	heap_end_offset = offsetof(Dec_Ehdr, e_heap) + self->e_heap.hr_size;
+	ASSERTF(heap_end_offset <= DeeMapFile_GetSize(&self->e_mapping),
 	        "The heap should have ended before the EOF as stated by the EHDR");
 	if (DeeMapFile_TryTruncate(&self->e_mapping, heap_end_offset)) {
-		size_t new_eof = DeeMapFile_GetSize(&self->e_mapping);
-		ASSERTF(new_eof >= heap_end_offset, "DeeMapFile_TryTruncate() removed more than it was allowed to?");
-		self->e_offsetof_eof = seraddr32(new_eof);
+		ASSERTF(DeeMapFile_GetSize(&self->e_mapping) >= heap_end_offset,
+		        "DeeMapFile_TryTruncate() removed more than it was allowed to?");
 	}
 }
 
@@ -914,22 +922,16 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 #else /* !Dee_DPRINT_IS_NOOP */
 #define goto_fail(reason) goto fail
 #endif /* Dee_DPRINT_IS_NOOP */
-	uint64_t temp_id[2];
+	union Dee_module_buildid const *deemon_buildid;
 	Dec_Ehdr *ehdr = (Dec_Ehdr *)DeeMapFile_GetAddr(fmap);
 	if unlikely(DeeMapFile_GetSize(fmap) < sizeof(Dec_Ehdr))
 		goto_fail("File is smaller than 'sizeof(Dec_Ehdr)'");
 
 	/* Validate dec file header... */
-	if (ehdr->e_typedata.td_reloc.er_deemon_timestamp != DeeExec_GetTimestamp())
-		goto_fail("Deemon core built timestamp doesn't match");
-	DeeExec_GetBuildId(temp_id);
-	if (ehdr->e_typedata.td_reloc.er_deemon_build_id[0] != temp_id[0] ||
-	    ehdr->e_typedata.td_reloc.er_deemon_build_id[1] != temp_id[1])
-		goto_fail("Deemon build ID doesn't match");
-	DeeExec_GetHostId(temp_id);
-	if unlikely(ehdr->e_typedata.td_reloc.er_deemon_host_id[0] != temp_id[0] ||
-	            ehdr->e_typedata.td_reloc.er_deemon_host_id[1] != temp_id[1])
-		goto_fail("Deemon host ID doesn't match");
+	deemon_buildid = DeeExec_GetBuildId();
+	if (ehdr->e_typedata.td_reloc.er_deemon_build_id[0] != deemon_buildid->mbi_word64[0] ||
+	    ehdr->e_typedata.td_reloc.er_deemon_build_id[1] != deemon_buildid->mbi_word64[1])
+		goto_fail("Deemon core Build ID doesn't match");
 	if unlikely(ehdr->e_ident[DI_MAG0] != DECMAG0)
 		goto_fail("Bad DI_MAG0");
 	if unlikely(ehdr->e_ident[DI_MAG1] != DECMAG1)
@@ -945,34 +947,34 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 		goto_fail("Bad 'e_type'");
 	if unlikely(ehdr->e_version != DVERSION_CUR)
 		goto_fail("Bad 'e_version'");
-	if unlikely(ehdr->e_offsetof_heap != offsetof(Dec_Ehdr, e_heap))
-		goto_fail("Bad 'e_offsetof_heap'");
-	if unlikely(ehdr->e_sizeof_pointer != sizeof(void *))
-		goto_fail("Bad 'e_sizeof_pointer'");
-	if unlikely(ehdr->_e_unused_zero != 0)
-		goto_fail("Bad '_e_unused_zero'");
-	if unlikely(ehdr->e_offsetof_eof != DeeMapFile_GetSize(fmap))
-		goto_fail("Bad 'e_offsetof_eof' does not match size of file");
-	if unlikely(ehdr->e_offsetof_eof > DFILE_LIMIT)
-		goto_fail("Bad 'e_offsetof_eof' is greater than 'DFILE_LIMIT'");
-	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_srel >= ehdr->e_offsetof_eof)
+	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_heap != offsetof(Dec_Ehdr, e_heap))
+		goto_fail("Bad 'er_offsetof_heap'");
+	if unlikely(ehdr->e_typedata.td_reloc.er_sizeof_pointer != sizeof(void *))
+		goto_fail("Bad 'er_sizeof_pointer'");
+	if unlikely(ehdr->e_typedata.td_reloc._er_unused_zero != 0)
+		goto_fail("Bad '_er_unused_zero'");
+	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_eof != DeeMapFile_GetSize(fmap))
+		goto_fail("Bad 'er_offsetof_eof' does not match size of file");
+	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_eof > DFILE_LIMIT)
+		goto_fail("Bad 'er_offsetof_eof' is greater than 'DFILE_LIMIT'");
+	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_srel >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
 		goto_fail("Bad 'er_offsetof_srel'");
-	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_drel >= ehdr->e_offsetof_eof)
+	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_drel >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
 		goto_fail("Bad 'er_offsetof_drel'");
-	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_drrel >= ehdr->e_offsetof_eof)
+	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_drrel >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
 		goto_fail("Bad 'er_offsetof_drrel'");
-	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_deps >= ehdr->e_offsetof_eof)
+	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_deps >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
 		goto_fail("Bad 'er_offsetof_deps'");
 	if unlikely(/*ehdr->e_typedata.td_reloc.er_offsetof_files != 0 &&*/
-	            ehdr->e_typedata.td_reloc.er_offsetof_files >= ehdr->e_offsetof_eof)
+	            ehdr->e_typedata.td_reloc.er_offsetof_files >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
 		goto_fail("Bad 'er_offsetof_files'");
-	if unlikely(/*ehdr->e_offsetof_gchead != 0 &&*/ ehdr->e_offsetof_gchead >= ehdr->e_offsetof_eof)
+	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_gchead == 0 || ehdr->e_typedata.td_reloc.er_offsetof_gchead >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
 		goto_fail("Bad 'e_offsetof_gchead'");
-	if unlikely(/*ehdr->e_offsetof_gctail != 0 &&*/ ehdr->e_offsetof_gctail >= ehdr->e_offsetof_eof)
+	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_gctail == 0 || ehdr->e_typedata.td_reloc.er_offsetof_gctail >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
 		goto_fail("Bad 'e_offsetof_gctail'");
-	if unlikely((ehdr->e_offsetof_gchead != 0) != (ehdr->e_offsetof_gctail != 0))
+	if unlikely((ehdr->e_typedata.td_reloc.er_offsetof_gchead != 0) != (ehdr->e_typedata.td_reloc.er_offsetof_gctail != 0))
 		goto_fail("Presence of 'e_offsetof_gchead' and 'e_offsetof_gctail' do not match");
-	if unlikely(ehdr->e_heap.hr_size >= (ehdr->e_offsetof_eof - offsetof(Dec_Ehdr, e_heap)))
+	if unlikely(ehdr->e_heap.hr_size >= (ehdr->e_typedata.td_reloc.er_offsetof_eof - offsetof(Dec_Ehdr, e_heap)))
 		goto_fail("Bad 'e_heap.hr_size' points past EOF");
 
 	/* Configure the runtime portion of the ehdr */
@@ -1009,7 +1011,7 @@ decwriter_genimpstr(DeeDecWriter *__restrict self,
                     /*utf-8*/ char const *context_absname,
                     size_t context_absname_size,
                     unsigned int flags) {
-	size_t i;
+	size_t dep_index;
 	unsigned int relname_flags;
 #if DeeModule_IMPORT_F_CTXDIR == DeeModule_RELNAME_F_CTXDIR
 	relname_flags = flags & DeeModule_IMPORT_F_CTXDIR;
@@ -1017,9 +1019,9 @@ decwriter_genimpstr(DeeDecWriter *__restrict self,
 	relname_flags = flags & DeeModule_IMPORT_F_CTXDIR ? DeeModule_RELNAME_F_CTXDIR : 0;
 #endif /* DeeModule_IMPORT_F_CTXDIR != DeeModule_RELNAME_F_CTXDIR */
 	relname_flags |= DeeModule_RELNAME_F_LIBNAM; /* Enable libname-based dependencies */
-	for (i = 0; i < self->dw_deps.ddpt_depc; ++i) {
+	for (dep_index = 0; dep_index < self->dw_deps.ddpt_depc; ++dep_index) {
 		DREF DeeStringObject *dep_name;
-		struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[i];
+		struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[dep_index];
 		DeeModuleObject *mod = dep->ddm_mod;
 		ASSERT(!dep->ddm_impstr);
 		dep_name = (DREF DeeStringObject *)DeeModule_GetRelNameEx(mod, context_absname,
@@ -1043,7 +1045,7 @@ err:
 
 /* Pack the dec file into a format where it can easily be written to a file:
  * >> DeeDec_Ehdr *ehdr = DeeDecWriter_PackEhdr(&writer);
- * >> DeeFile_WriteAll(fp, ehdr, ehdr->e_offsetof_eof);
+ * >> DeeFile_WriteAll(fp, ehdr, ehdr->e_typedata.td_reloc.er_offsetof_eof);
  * >> Dee_Free(e_offsetof_eof);
  *
  * The returned pointer should either:
@@ -1068,9 +1070,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
                       size_t context_absname_size,
                       unsigned int flags) {
 	Dec_Ehdr *ehdr = self->dw_ehdr;
-	size_t i;
-	Dee_dec_addr32_t total_need;
-	Dee_dec_addr32_t addrof_zero;
+	size_t total_need;
 
 	ehdr->e_ident[DI_MAG0] = DECMAG0;
 	ehdr->e_ident[DI_MAG1] = DECMAG1;
@@ -1078,37 +1078,53 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 	ehdr->e_ident[DI_MAG3] = DECMAG3;
 	ehdr->e_mach = Dee_DEC_MACH;
 	ehdr->e_version = DVERSION_CUR;
-	ehdr->e_offsetof_gchead = self->dw_gchead;
-	ehdr->e_offsetof_gctail = self->dw_gctail;
-	ehdr->e_offsetof_heap = offsetof(Dec_Ehdr, e_heap);
-	ehdr->e_sizeof_pointer = sizeof(void *);
-	ehdr->_e_unused_zero = 0;
+
+	/* The main module should have been initialize with a 0 build ID. */
+#ifndef NDEBUG
+	{
+		DeeModuleObject *mod = DeeDec_Ehdr_GetModule(ehdr);
+		ASSERT(mod->mo_flags & Dee_MODULE_FHASBUILDID);
+		ASSERT(mod->mo_buildid.mbi_word64[0] == 0);
+		ASSERT(mod->mo_buildid.mbi_word64[1] == 0);
+	}
+#endif /* !NDEBUG */
 
 	/* Space for the heap tail is always pre-allocated! */
 	{
 		size_t offsetof_tail = self->dw_used;
 		struct Dee_heaptail *tail = (struct Dee_heaptail *)((byte_t *)ehdr + offsetof_tail);
-		addrof_zero = seraddr32(offsetof_tail + offsetof(struct Dee_heaptail, ht_zero));
 		offsetof_tail += sizeof(struct Dee_heaptail);
 		tail->ht_lastsize = self->dw_hlast;
 		tail->ht_zero     = 0;
 		ehdr->e_heap.hr_size = offsetof_tail - offsetof(Dec_Ehdr, e_heap);
 	}
 
-	/* Calculate the total needed buffer size. */
-	total_need = seraddr32(self->dw_used);
-	total_need += (Dee_dec_addr32_t)sizeof(struct Dee_heaptail); /* Heap tail */
-
 #ifndef CONFIG_NO_DEC
-	if (!(flags & DeeModule_IMPORT_F_NOGDEC) && !(self->dw_flags & DeeDecWriter_F_NRELOC)) {
+	if (!(flags & DeeModule_IMPORT_F_NOGDEC) &&
+	    !(self->dw_flags & DeeDecWriter_F_NRELOC) &&
+	    likely(self->dw_used < DFILE_LIMIT)) {
 		Dee_dec_addr32_t addrof_modrel; /* Start address for relocation tables pointed to by "Dec_Dhdr" entries. */
 		Dee_dec_addr32_t addrof_modstr; /* Start address of `d_offsetof_modname' string table (possibly unaligned) */
+		size_t dep_index;
+		Dee_dec_addr32_t addrof_zero;
+
+		/* Calculate the total needed buffer size. */
+		total_need = self->dw_used;
+		addrof_zero = (Dee_dec_addr32_t)(total_need + offsetof(struct Dee_heaptail, ht_zero));
+		total_need += sizeof(struct Dee_heaptail); /* Heap tail */
 
 		/* Produce a dec file that includes relocation info */
 		ehdr->e_type = Dee_DEC_TYPE_RELOC;
-		ehdr->e_typedata.td_reloc.er_deemon_timestamp = DeeExec_GetTimestamp();
-		DeeExec_GetBuildId(ehdr->e_typedata.td_reloc.er_deemon_build_id);
-		DeeExec_GetHostId(ehdr->e_typedata.td_reloc.er_deemon_host_id);
+		ehdr->e_typedata.td_reloc.er_offsetof_gchead = (Dee_dec_addr32_t)self->dw_gchead;
+		ehdr->e_typedata.td_reloc.er_offsetof_gctail = (Dee_dec_addr32_t)self->dw_gctail;
+		ehdr->e_typedata.td_reloc.er_offsetof_heap = offsetof(Dec_Ehdr, e_heap);
+		ehdr->e_typedata.td_reloc.er_sizeof_pointer = sizeof(void *);
+		ehdr->e_typedata.td_reloc._er_unused_zero = 0;
+		{
+			union Dee_module_buildid const *deemon_buildid  = DeeExec_GetBuildId();
+			ehdr->e_typedata.td_reloc.er_deemon_build_id[0] = deemon_buildid->mbi_word64[0];
+			ehdr->e_typedata.td_reloc.er_deemon_build_id[1] = deemon_buildid->mbi_word64[1];
+		}
 
 		/* Generate `ddm_impstr' strings for dependencies. */
 		if unlikely(decwriter_genimpstr(self, context_absname, context_absname_size, flags))
@@ -1116,91 +1132,100 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 
 		/* Module dependency tables. */
 		if (self->dw_deps.ddpt_depc) {
-			ehdr->e_typedata.td_reloc.er_offsetof_deps = total_need;
-			total_need += seraddr32(self->dw_deps.ddpt_depc * sizeof(Dec_Dhdr));
+			ASSERT(IS_ALIGNED(total_need, Dee_ALIGNOF_DEC_DHDR));
+			ehdr->e_typedata.td_reloc.er_offsetof_deps = (Dee_dec_addr32_t)total_need;
+			total_need += self->dw_deps.ddpt_depc * sizeof(Dec_Dhdr);
 			/* Add space for "terminated by a d_modspec.d_mod==NULL-entry" */
-			total_need += (Dee_dec_addr32_t)offsetafter(Dec_Dhdr, d_modspec.d_mod);
+			total_need += offsetafter(Dec_Dhdr, d_modspec.d_mod);
 		} else {
 			ehdr->e_typedata.td_reloc.er_offsetof_deps = addrof_zero - offsetof(Dec_Dhdr, d_modspec.d_mod);
 		}
 
 		/* Relocations against self. */
 		if (self->dw_srel.drlt_relc) {
-			ehdr->e_typedata.td_reloc.er_offsetof_srel = total_need;
-			total_need += seraddr32(self->dw_srel.drlt_relc * sizeof(Dec_Rel));
-			total_need += (Dee_dec_addr32_t)offsetafter(Dec_Rel, r_addr);
+			ASSERT(IS_ALIGNED(total_need, Dee_ALIGNOF_DEC_REL));
+			ehdr->e_typedata.td_reloc.er_offsetof_srel = (Dee_dec_addr32_t)total_need;
+			total_need += self->dw_srel.drlt_relc * sizeof(Dec_Rel);
+			total_need += offsetafter(Dec_Rel, r_addr);
 		} else {
 			ehdr->e_typedata.td_reloc.er_offsetof_srel = addrof_zero;
 		}
 
 		/* Relocations against deemon. */
 		if (self->dw_drel.drlt_relc) {
-			ehdr->e_typedata.td_reloc.er_offsetof_drel = total_need;
-			total_need += seraddr32(self->dw_drel.drlt_relc * sizeof(Dec_Rel));
-			total_need += (Dee_dec_addr32_t)offsetafter(Dec_Rel, r_addr);
+			ehdr->e_typedata.td_reloc.er_offsetof_drel = (Dee_dec_addr32_t)total_need;
+			total_need += self->dw_drel.drlt_relc * sizeof(Dec_Rel);
+			total_need += offsetafter(Dec_Rel, r_addr);
 		} else {
 			ehdr->e_typedata.td_reloc.er_offsetof_drel = addrof_zero;
 		}
 		if (self->dw_drrel.drrt_relc) {
-			ehdr->e_typedata.td_reloc.er_offsetof_drrel = total_need;
-			total_need += seraddr32(self->dw_drrel.drrt_relc * sizeof(Dec_RRel));
-			total_need += (Dee_dec_addr32_t)offsetafter(Dec_RRel, r_addr);
+			ehdr->e_typedata.td_reloc.er_offsetof_drrel = (Dee_dec_addr32_t)total_need;
+			total_need += self->dw_drrel.drrt_relc * sizeof(Dec_RRel);
+			total_need += offsetafter(Dec_RRel, r_addr);
 		} else {
 			ehdr->e_typedata.td_reloc.er_offsetof_drrel = addrof_zero;
 		}
 		if (self->dw_drrela.drat_relc) {
-			ehdr->e_typedata.td_reloc.er_offsetof_drrela = total_need;
-			total_need += seraddr32(self->dw_drrela.drat_relc * sizeof(Dec_RRela));
-			total_need += (Dee_dec_addr32_t)offsetafter(Dec_RRela, r_addr);
+			ehdr->e_typedata.td_reloc.er_offsetof_drrela = (Dee_dec_addr32_t)total_need;
+			total_need += self->dw_drrela.drat_relc * sizeof(Dec_RRela);
+			total_need += offsetafter(Dec_RRela, r_addr);
 		} else {
 			ehdr->e_typedata.td_reloc.er_offsetof_drrela = addrof_zero;
 		}
 
 		/* Relocation tables for dependencies. */
-		addrof_modrel = total_need;
-		for (i = 0; i < self->dw_deps.ddpt_depc; ++i) {
-			struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[i];
+		addrof_modrel = (Dee_dec_addr32_t)total_need;
+		for (dep_index = 0; dep_index < self->dw_deps.ddpt_depc; ++dep_index) {
+			struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[dep_index];
 			if (dep->ddm_rel.drlt_relc) {
-				total_need += seraddr32(dep->ddm_rel.drlt_relc * sizeof(Dec_Rel));
-				total_need += (Dee_dec_addr32_t)offsetafter(Dec_Rel, r_addr);
+				ASSERT(IS_ALIGNED(total_need, Dee_ALIGNOF_DEC_REL));
+				total_need += dep->ddm_rel.drlt_relc * sizeof(Dec_Rel);
+				total_need += offsetafter(Dec_Rel, r_addr);
 			}
 			if (dep->ddm_rrel.drrt_relc) {
-				total_need += seraddr32(dep->ddm_rrel.drrt_relc * sizeof(Dec_RRel));
-				total_need += (Dee_dec_addr32_t)offsetafter(Dec_RRel, r_addr);
+				ASSERT(IS_ALIGNED(total_need, Dee_ALIGNOF_DEC_RREL));
+				total_need += dep->ddm_rrel.drrt_relc * sizeof(Dec_RRel);
+				total_need += offsetafter(Dec_RRel, r_addr);
 			}
 			if (dep->ddm_rrela.drat_relc) {
-				total_need += seraddr32(dep->ddm_rrela.drat_relc * sizeof(Dec_RRela));
-				total_need += (Dee_dec_addr32_t)offsetafter(Dec_RRela, r_addr);
+				ASSERT(IS_ALIGNED(total_need, Dee_ALIGNOF_DEC_RRELA));
+				total_need += dep->ddm_rrela.drat_relc * sizeof(Dec_RRela);
+				total_need += offsetafter(Dec_RRela, r_addr);
 			}
 		}
 
 		/* String tables */
-		addrof_modstr = total_need;
-		for (i = 0; i < self->dw_deps.ddpt_depc; ++i) {
-			struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[i];
+		addrof_modstr = (Dee_dec_addr32_t)total_need;
+		for (dep_index = 0; dep_index < self->dw_deps.ddpt_depc; ++dep_index) {
+			struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[dep_index];
 			char const *impstr_utf8;
 			ASSERT(dep->ddm_impstr);
 			total_need = CEIL_ALIGN(total_need, Dee_ALIGNOF_DEC_DSTR);
-			total_need += (Dee_dec_addr32_t)offsetof(Dec_Dstr, ds_string);
+			total_need += offsetof(Dec_Dstr, ds_string);
 			impstr_utf8 = DeeString_AsUtf8((DeeObject *)dep->ddm_impstr);
 			if unlikely(!impstr_utf8)
 				goto err;
-			total_need += seraddr32((WSTR_LENGTH(impstr_utf8) + 1) * sizeof(char));
+			total_need += (WSTR_LENGTH(impstr_utf8) + 1) * sizeof(char);
 		}
 
 		/* Additional file dependencies */
 		if (self->dw_fdeps.dfdt_depc) {
 			total_need = CEIL_ALIGN(total_need, Dee_ALIGNOF_DEC_DSTR);
-			ehdr->e_typedata.td_reloc.er_offsetof_files = total_need;
-			total_need += seraddr32(self->dw_fdeps.dfdt_depc);
+			ehdr->e_typedata.td_reloc.er_offsetof_files = (Dee_dec_addr32_t)total_need;
+			total_need += self->dw_fdeps.dfdt_depc;
 			total_need = CEIL_ALIGN(total_need, Dee_ALIGNOF_DEC_DSTR);
 			total_need += (Dee_dec_addr32_t)offsetafter(Dec_Dstr, ds_length); /* For trailing 0 */
 		} else {
 			ehdr->e_typedata.td_reloc.er_offsetof_files = 0;
 		}
 
+		/* Assert that the image won't be too large */
+		if unlikely(total_need > DFILE_LIMIT)
+			goto output_image;
+
 		/* EOF marker */
-		ehdr->e_offsetof_eof = total_need;
+		ehdr->e_typedata.td_reloc.er_offsetof_eof = (Dee_dec_addr32_t)total_need;
 
 		/* Resize the main buffer to fit. */
 		ehdr = (Dec_Ehdr *)Dee_Realloc(ehdr, total_need);
@@ -1213,17 +1238,23 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 		/* Module dependency tables. */
 		if (self->dw_deps.ddpt_depc) {
 			Dec_Dstr *out_name;
-			Dec_Dhdr *out_deps = (Dec_Dhdr *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_deps);
+			Dec_Dhdr *out_dep = (Dec_Dhdr *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_deps);
 			Dee_dec_addr32_t addrof_outname = addrof_modstr;
 			Dee_dec_addr32_t addrof_outrel  = addrof_modrel;
-			for (i = 0; i < self->dw_deps.ddpt_depc; ++i, ++out_deps) {
-				struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[i];
+			for (dep_index = 0; dep_index < self->dw_deps.ddpt_depc; ++dep_index, ++out_dep) {
+				struct Dee_dec_depmod *dep = &self->dw_deps.ddpt_depv[dep_index];
 				char const *impstr_utf8;
+				union Dee_module_buildid const *dep_buildid;
+
+				/* Remember correct build ID of dependency */
+				dep_buildid = DeeModule_GetBuildId(dep->ddm_mod);
+				out_dep->d_buildid[0] = dep_buildid->mbi_word64[0];
+				out_dep->d_buildid[1] = dep_buildid->mbi_word64[1];
 
 				/* Emit relocations (noref) */
 				if (dep->ddm_rel.drlt_relc) {
 					Dec_Rel *out_rel = (Dec_Rel *)((byte_t *)ehdr + addrof_outrel);
-					out_deps->d_modspec.d_file.d_offsetof_rel = addrof_outrel;
+					out_dep->d_modspec.d_file.d_offsetof_rel = addrof_outrel;
 					out_rel = (Dec_Rel *)mempcpyc(out_rel, dep->ddm_rel.drlt_relv,
 					                              dep->ddm_rel.drlt_relc,
 					                              sizeof(Dec_Rel));
@@ -1231,13 +1262,13 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 					addrof_outrel += seraddr32(dep->ddm_rel.drlt_relc * sizeof(Dec_Rel));
 					addrof_outrel += (Dee_dec_addr32_t)offsetafter(Dec_Rel, r_addr);
 				} else {
-					out_deps->d_modspec.d_file.d_offsetof_rel = addrof_zero;
+					out_dep->d_modspec.d_file.d_offsetof_rel = addrof_zero;
 				}
 
 				/* Emit relocations (ref) */
 				if (dep->ddm_rrel.drrt_relc) {
 					Dec_RRel *out_rel = (Dec_RRel *)((byte_t *)ehdr + addrof_outrel);
-					out_deps->d_offsetof_rrel = addrof_outrel;
+					out_dep->d_offsetof_rrel = addrof_outrel;
 					out_rel = (Dec_RRel *)mempcpyc(out_rel, dep->ddm_rrel.drrt_relv,
 					                               dep->ddm_rrel.drrt_relc,
 					                               sizeof(Dec_RRel));
@@ -1245,13 +1276,13 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 					addrof_outrel += seraddr32(dep->ddm_rrel.drrt_relc * sizeof(Dec_RRel));
 					addrof_outrel += (Dee_dec_addr32_t)offsetafter(Dec_RRel, r_addr);
 				} else {
-					out_deps->d_offsetof_rrel = addrof_zero;
+					out_dep->d_offsetof_rrel = addrof_zero;
 				}
 
 				/* Emit relocations (ref+addend) */
 				if (dep->ddm_rrela.drat_relc) {
 					Dec_RRela *out_rel = (Dec_RRela *)((byte_t *)ehdr + addrof_outrel);
-					out_deps->d_offsetof_rrela = addrof_outrel;
+					out_dep->d_offsetof_rrela = addrof_outrel;
 					out_rel = (Dec_RRela *)mempcpyc(out_rel, dep->ddm_rrela.drat_relv,
 					                                dep->ddm_rrela.drat_relc,
 					                                sizeof(Dec_RRela));
@@ -1259,7 +1290,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 					addrof_outrel += seraddr32(dep->ddm_rrela.drat_relc * sizeof(Dec_RRela));
 					addrof_outrel += (Dee_dec_addr32_t)offsetafter(Dec_RRela, r_addr);
 				} else {
-					out_deps->d_offsetof_rrela = addrof_zero;
+					out_dep->d_offsetof_rrela = addrof_zero;
 				}
 
 				/* Emit module name */
@@ -1269,12 +1300,12 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 				out_name = (Dec_Dstr *)((byte_t *)ehdr + addrof_outname);
 				out_name->ds_length = seraddr32(WSTR_LENGTH(impstr_utf8));
 				*(char *)mempcpyc(out_name->ds_string, impstr_utf8, out_name->ds_length, sizeof(char)) = '\0';
-				out_deps->d_modspec.d_file.d_offsetof_modname = addrof_outname;
+				out_dep->d_modspec.d_file.d_offsetof_modname = addrof_outname;
 				addrof_outname += offsetof(Dec_Dstr, ds_string);
 				addrof_outname += (out_name->ds_length + 1) * sizeof(char);
 			}
 			/* Emit terminating "d_modspec.d_mod==NULL"-entry */
-			out_deps->d_modspec.d_mod = NULL;
+			out_dep->d_modspec.d_mod = NULL;
 
 			addrof_outname = CEIL_ALIGN(addrof_outname, Dee_ALIGNOF_DEC_DSTR);
 			out_name = (Dec_Dstr *)((byte_t *)ehdr + addrof_outname);
@@ -1320,12 +1351,38 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 			out_deps += CEIL_ALIGN(self->dw_fdeps.dfdt_depc, Dee_ALIGNOF_DEC_DSTR);
 			((Dec_Dstr *)out_deps)->ds_length = 0; /* For trailing 0 */
 		}
+
+		/* Generate a build ID for the dec file */
+		{
+			DeeMD5_Context md5;
+			DeeModuleObject *mod = DeeDec_Ehdr_GetModule(ehdr);
+			ehdr->e_typedata.td_reloc.er_build_timestamp = 0;
+			ehdr->e_heap.hr_destroy = NULL;
+			DeeMapFile_SETADDR(&ehdr->e_mapping, NULL);
+			DeeMapFile_SETSIZE(&ehdr->e_mapping, total_need);
+			DeeMapFile_SETHEAP_INITALL(&ehdr->e_mapping);
+#if ((DeeDec_Ehdr_OFFSETOF__e_mapping + Dee_SIZEOF_DeeMapFile) % Dee_HEAPCHUNK_ALIGN) != 0
+			memset(ehdr->_e_heap_pad, 0xff, sizeof(ehdr->_e_heap_pad));
+#endif /* (Dee_SIZEOF_DeeMapFile % Dee_HEAPCHUNK_ALIGN) != 0 */
+			DeeMD5_Init(&md5);
+			DeeMD5_Update(&md5, ehdr, ehdr->e_typedata.td_reloc.er_offsetof_eof);
+			DeeMD5_Finalize(&md5, mod->mo_buildid.mbi_word32);
+		}
+
+		/* Fill in the build timestamp */
+		ehdr->e_typedata.td_reloc.er_build_timestamp = DeeSystem_GetWalltime();
 	} else
 #endif /* !CONFIG_NO_DEC */
 	{
+#ifndef CONFIG_NO_DEC
+output_image:
+#endif /* !CONFIG_NO_DEC */
+		/* Calculate the total needed buffer size. */
+		total_need = self->dw_used;
+		total_need += sizeof(struct Dee_heaptail); /* Heap tail */
+
 		/* Do less when we don't need to generate a .dec file */
 		DBG_memset(&ehdr->e_typedata, 0xcc, sizeof(ehdr->e_typedata));
-		ehdr->e_offsetof_eof = total_need;
 
 		/* Produce a dec file that is only the heap image,
 		 * with space for temporary relocation vectors. */
@@ -1345,7 +1402,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 
 	/* Finish initialization of "ehdr" by setting it up as a HEAP mapping */
 	DeeMapFile_SETADDR(&ehdr->e_mapping, ehdr);
-	DeeMapFile_SETSIZE(&ehdr->e_mapping, ehdr->e_offsetof_eof);
+	DeeMapFile_SETSIZE(&ehdr->e_mapping, total_need);
 	DeeMapFile_SETHEAP(&ehdr->e_mapping);
 
 	/* Finish initialization of the heap region */
@@ -1487,6 +1544,8 @@ DeeDecWriter_AddFileDep(DeeDecWriter *__restrict self,
 	size_t old_size = CEIL_ALIGN(self->dw_fdeps.dfdt_depc, Dee_ALIGNOF_DEC_DSTR);
 	size_t min_size = old_size + offsetof(Dec_Dstr, ds_string) +
 	                  (filename_len + 1) * sizeof(char);
+	if unlikely(filename_len > DFILE_LIMIT)
+		goto err_string_too_large;
 	ASSERTF(filename_len, "Empty string cannot be appended -- that one is used internally to indicate EOF");
 	if (self->dw_fdeps.dfdt_depa < min_size) {
 		byte_t *new_vector;
@@ -1511,6 +1570,8 @@ DeeDecWriter_AddFileDep(DeeDecWriter *__restrict self,
 	*(char *)mempcpyc(dst->ds_string, filename, filename_len, sizeof(char)) = '\0';
 	self->dw_fdeps.dfdt_depc = min_size;
 	return 0;
+err_string_too_large:
+	Dee_BadAlloc(filename_len);
 err:
 	return -1;
 }
@@ -1606,9 +1667,11 @@ decwriter_addknown(DeeDecWriter *__restrict self,
 		size_t new_alloc = self->dw_known.dpt_ptra * 2;
 		if (new_alloc < 16)
 			new_alloc = 16;
+		if (new_alloc < hi + 1)
+			new_alloc = hi + 1;
 		vec = (struct Dee_dec_ptrtab_entry *)Dee_TryReallocc(vec, new_alloc, sizeof(struct Dee_dec_ptrtab_entry));
 		if unlikely(!vec) {
-			new_alloc = self->dw_known.dpt_ptrc + 1;
+			new_alloc = hi + 1;
 			vec = (struct Dee_dec_ptrtab_entry *)Dee_Reallocc(self->dw_known.dpt_ptrv, new_alloc, sizeof(struct Dee_dec_ptrtab_entry));
 			if unlikely(!vec)
 				goto err;
@@ -2020,8 +2083,8 @@ decwriter_putobject_ex(DeeDecWriter *__restrict self,
 			} else {
 				/* Found the entry! */
 				DeeObject *known_obj;
-				Dee_dec_addr32_t addr = ent->dote_off;
-				addr += (Dee_dec_addr32_t)((byte_t *)obj - Dee_dec_ptrtab_entry_getminaddr(ent));
+				size_t addr = ent->dote_off;
+				addr += (byte_t *)obj - Dee_dec_ptrtab_entry_getminaddr(ent);
 				known_obj = DeeDecWriter_Addr2Mem(self, addr, DeeObject);
 				++known_obj->ob_refcnt; /* Because now there is another reference to this known object! */
 				return decwriter_putaddr(self, addrof_object, addr + offset_into_ob);

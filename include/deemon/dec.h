@@ -194,31 +194,28 @@ typedef struct dec_rrela Dec_RRela;
 #define DeeDec_Ehdr_OFFSETOF__e_mach                                    4
 #define DeeDec_Ehdr_OFFSETOF__e_type                                    5
 #define DeeDec_Ehdr_OFFSETOF__e_version                                 6
-#define DeeDec_Ehdr_OFFSETOF__e_offsetof_heap                           8
-#define DeeDec_Ehdr_OFFSETOF__e_sizeof_pointer                          10
-#define DeeDec_Ehdr_OFFSETOF__e_offsetof_eof                            12
-#define DeeDec_Ehdr_OFFSETOF__e_offsetof_gchead                         16
-#define DeeDec_Ehdr_OFFSETOF__e_offsetof_gctail                         20
-#define DeeDec_Ehdr_OFFSETOF__e_typedata                                24
-#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_deemon_timestamp 24
-#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_deemon_build_id  32
-#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_deemon_host_id   48
-#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_srel    64
-#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_drel    68
-#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_drrel   72
-#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_drrela  76
-#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_deps    80
-#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_files   84
-#define DeeDec_Ehdr_OFFSETOF__e_mapping                                 88
-#define DeeDec_Ehdr_OFFSETOF__e_heap \
-	(88 + Dee_SIZEOF_DeeMapFile + ((Dee_HEAPCHUNK_ALIGN - ((88 + Dee_SIZEOF_DeeMapFile) % Dee_HEAPCHUNK_ALIGN)) % Dee_HEAPCHUNK_ALIGN))
-#if DeeDec_Ehdr_OFFSETOF__e_heap == 128
-#undef DeeDec_Ehdr_OFFSETOF__e_heap
-#define DeeDec_Ehdr_OFFSETOF__e_heap 128
-#elif DeeDec_Ehdr_OFFSETOF__e_heap == 120
-#undef DeeDec_Ehdr_OFFSETOF__e_heap
-#define DeeDec_Ehdr_OFFSETOF__e_heap 120
-#elif DeeDec_Ehdr_OFFSETOF__e_heap == 112
+#define DeeDec_Ehdr_OFFSETOF__e_typedata                                8
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_heap    8
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_sizeof_pointer   10
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_eof     12
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_deemon_build_id  16
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_build_timestamp  32
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_gchead  40
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_gctail  44
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_srel    48
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_drel    52
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_drrel   56
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_drrela  60
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_deps    64
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_files   68
+#define DeeDec_Ehdr_OFFSETOF__e_mapping                                 72
+#define DeeDec_Ehdr_OFFSETOF__e_heap                             \
+	(DeeDec_Ehdr_OFFSETOF__e_mapping + Dee_SIZEOF_DeeMapFile +   \
+	 ((Dee_HEAPCHUNK_ALIGN - ((DeeDec_Ehdr_OFFSETOF__e_mapping + \
+	                           Dee_SIZEOF_DeeMapFile) %          \
+	                          Dee_HEAPCHUNK_ALIGN)) %            \
+	  Dee_HEAPCHUNK_ALIGN))
+#if DeeDec_Ehdr_OFFSETOF__e_heap == 112
 #undef DeeDec_Ehdr_OFFSETOF__e_heap
 #define DeeDec_Ehdr_OFFSETOF__e_heap 112
 #elif DeeDec_Ehdr_OFFSETOF__e_heap == 104
@@ -227,35 +224,39 @@ typedef struct dec_rrela Dec_RRela;
 #elif DeeDec_Ehdr_OFFSETOF__e_heap == 96
 #undef DeeDec_Ehdr_OFFSETOF__e_heap
 #define DeeDec_Ehdr_OFFSETOF__e_heap 96
+#elif DeeDec_Ehdr_OFFSETOF__e_heap == 88
+#undef DeeDec_Ehdr_OFFSETOF__e_heap
+#define DeeDec_Ehdr_OFFSETOF__e_heap 88
+#elif DeeDec_Ehdr_OFFSETOF__e_heap == 80
+#undef DeeDec_Ehdr_OFFSETOF__e_heap
+#define DeeDec_Ehdr_OFFSETOF__e_heap 80
 #endif /* DeeDec_Ehdr_OFFSETOF__e_heap == ... */
 
 /* Main header for `.dec` files. For more details, see file ./dec.md */
+#define Dee_ALIGNOF_DEC_EHDR 8
 typedef struct {
 	uint8_t               e_ident[DI_NIDENT]; /* [AT(0-3)] Identification bytes. (See `DI_*') */
 	uint8_t               e_mach;             /* [AT(4-4)] Machine identification (`Dee_DEC_MACH') */
 	uint8_t               e_type;             /* [AT(5-5)] EHDR type (one of `Dee_DEC_TYPE_*') */
-	uint16_t              e_version;          /* [AT(6-7)] DEC version number (One of `DVERSION_*') -- NOTE: __MUST__ remain at this specific offset for backwards compatibility! */
-	uint16_t              e_offsetof_heap;    /* Offset from start of this struct to `e_heap' (== `DeeDec_Ehdr_OFFSETOF__e_heap') */
-	uint8_t               e_sizeof_pointer;   /* Size of pointer (and thus of: relocation targets, and `Dee_refcnt_t') */
-	uint8_t              _e_unused_zero;      /* Unused; must be set to `0' */
-	Dee_dec_addr32_t      e_offsetof_eof;     /* [1..1] Offset to EOF of file mapping (should also equal the dec file's size) */
-	Dee_dec_addr32_t      e_offsetof_gchead;  /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
-	Dee_dec_addr32_t      e_offsetof_gctail;  /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `e_offsetof_srel') */
+	uint16_t              e_version;          /* [AT(6-7)] DEC version number (One of `DVERSION_*') -- NOTE: __MUST__ remain at this specific offset=6 for backwards compatibility! */
 	union {
 
 		struct {
-			/* The following 3 fields are here as validation that the
-			 * dec file wasn't generated by a different deemon version. */
-			uint64_t         er_deemon_timestamp;   /* Microseconds since `01-01-1970', when deemon was compiled. */
-			uint64_t         er_deemon_build_id[2]; /* Deemon build ID (a random UUID generated when compiling deemon) */
-			uint64_t         er_deemon_host_id[2];  /* Deemon host ID (a random UUID generated when installing deemon / starting deemon for the first time) */
-			Dee_dec_addr32_t er_offsetof_srel;      /* [1..1] Offset to array of `Dec_Rel[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)ehdr" */
-			Dee_dec_addr32_t er_offsetof_drel;      /* [1..1] Offset to array of `Dec_Rel[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)&DeeModule_Deemon" */
-			Dee_dec_addr32_t er_offsetof_drrel;     /* [1..1] Offset to array of `Dec_RRel[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)&DeeModule_Deemon" */
-			Dee_dec_addr32_t er_offsetof_drrela;    /* [1..1] Offset to array of `Dec_RRela[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)&DeeModule_Deemon" */
-			Dee_dec_addr32_t er_offsetof_deps;      /* [1..1] Offset to array of `Dec_Dhdr[]' (terminated by a d_modspec.d_mod==NULL-entry) of other dependent deemon modules */
-			Dee_dec_addr32_t er_offsetof_files;     /* [0..1] Offset to array of `Dec_Dstr[]' (terminated by a ds_length==0-entry, each aligned to Dee_ALIGNOF_DEC_DSTR) of extra filenames relative to the directory containing the .dec-file. If any of these files is newer than `e_build_timestamp', don't load dec file */
-		}                 td_reloc;                 /* [valid_if(e_type == Dee_DEC_TYPE_RELOC)] */
+			uint16_t          er_offsetof_heap;      /* Offset from start of this struct to `e_heap' (== `DeeDec_Ehdr_OFFSETOF__e_heap') */
+			uint8_t           er_sizeof_pointer;     /* Size of pointer (and thus of: relocation targets, and `Dee_refcnt_t') */
+			uint8_t          _er_unused_zero;        /* Unused; must be set to `0' */
+			Dee_dec_addr32_t  er_offsetof_eof;       /* [1..1] Offset to EOF of file mapping (should also equal the dec file's size) */
+			uint64_t          er_deemon_build_id[2]; /* Deemon build ID (128-bit unsigned integer) */
+			uint64_t          er_build_timestamp;    /* Microseconds since `01-01-1970', when this dec file was created. */
+			Dee_dec_addr32_t  er_offsetof_gchead;    /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
+			Dee_dec_addr32_t  er_offsetof_gctail;    /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `e_offsetof_srel') */
+			Dee_dec_addr32_t  er_offsetof_srel;      /* [1..1] Offset to array of `Dec_Rel[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)ehdr" */
+			Dee_dec_addr32_t  er_offsetof_drel;      /* [1..1] Offset to array of `Dec_Rel[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)&DeeModule_Deemon" */
+			Dee_dec_addr32_t  er_offsetof_drrel;     /* [1..1] Offset to array of `Dec_RRel[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)&DeeModule_Deemon" */
+			Dee_dec_addr32_t  er_offsetof_drrela;    /* [1..1] Offset to array of `Dec_RRela[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)&DeeModule_Deemon" */
+			Dee_dec_addr32_t  er_offsetof_deps;      /* [1..1] Offset to array of `Dec_Dhdr[]' (terminated by a d_modspec.d_mod==NULL-entry) of other dependent deemon modules */
+			Dee_dec_addr32_t  er_offsetof_files;     /* [0..1] Offset to array of `Dec_Dstr[]' (terminated by a ds_length==0-entry, each aligned to Dee_ALIGNOF_DEC_DSTR) of extra filenames relative to the directory containing the .dec-file. If any of these files is newer than `e_build_timestamp', don't load dec file */
+		}                 td_reloc;                  /* [valid_if(e_type == Dee_DEC_TYPE_RELOC)] */
 
 		struct {
 			Dec_RRel              *ei_drrel_v;  /* [0..ei_drrel_c][owned] List of incref-relocations against deemon-core objects */
@@ -264,6 +265,11 @@ typedef struct {
 			size_t                 ei_drrela_c; /* # of entries in `ei_drrela_v' */
 			struct Dee_dec_depmod *ei_deps_v;   /* [0..ei_deps_c][owned] Vector of dependent modules */
 			size_t                 ei_deps_c;   /* # of entries in `ei_deps_v' */
+#if __SIZEOF_SIZE_T__ == 4 && __SIZEOF_POINTER__ == 4
+			size_t                _ei_pad[2];   /* So "ei_offsetof_gchead" has the same offset as "er_offsetof_gchead" */
+#endif /* __SIZEOF_SIZE_T__ == 4 && __SIZEOF_POINTER__ == 4 */
+			size_t                 ei_offsetof_gchead; /* [1..1] Offset to first `struct gc_head_link' */
+			size_t                 ei_offsetof_gctail; /* [1..1] Offset to last `struct gc_head_link' */
 		}                 td_image;             /* [valid_if(e_type == Dee_DEC_TYPE_IMAGE)] */
 
 	}                     e_typedata;         /* Data dependent on `e_type' */
@@ -275,6 +281,7 @@ typedef struct {
 	                                           * this heap is assumed to point at the `DeeModuleObject' describing the dec file itself. */
 } Dec_Ehdr;
 
+#define Dee_ALIGNOF_DEC_REL 4
 struct dec_rel {
 	/* Non-reference-counted relocation:
 	 * >> byte_t **p_ptr = (byte_t **)((byte_t *)EHDR + r_addr);
@@ -282,6 +289,7 @@ struct dec_rel {
 	Dee_dec_addr32_t r_addr; /* Offset from start of "Dec_Ehdr" to relocated pointer */
 };
 
+#define Dee_ALIGNOF_DEC_RREL 4
 struct dec_rrel {
 	/* Reference-counted relocation:
 	 * >> byte_t **p_ptr = (byte_t **)((byte_t *)EHDR + r_addr);
@@ -291,6 +299,7 @@ struct dec_rrel {
 	Dee_dec_addr32_t r_addr; /* Offset from start of "Dec_Ehdr" to relocated pointer */
 };
 
+#define Dee_ALIGNOF_DEC_RRELA 4
 struct dec_rrela {
 	/* Reference-counted+addend relocation:
 	 * >> byte_t **p_ptr = (byte_t **)((byte_t *)EHDR + r_addr);
@@ -302,6 +311,7 @@ struct dec_rrela {
 	Dee_dec_off32_t  r_offs; /* Offset added to resulting pointer to get to base of object that must be incref'd */
 };
 
+#define Dee_ALIGNOF_DEC_DHDR 8
 typedef struct {
 	union {
 		struct {
@@ -312,6 +322,7 @@ typedef struct {
 	}                d_modspec;
 	Dee_dec_addr32_t d_offsetof_rrel;  /* [1..1] Offset to array of `Dec_RRel[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)d_mod" */
 	Dee_dec_addr32_t d_offsetof_rrela; /* [1..1] Offset to array of `Dec_RRela[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)d_mod" */
+	uint64_t         d_buildid[2];     /* Expected build ID for this dependency */
 } Dec_Dhdr;
 
 #define Dee_ALIGNOF_DEC_DSTR 4
@@ -398,17 +409,17 @@ struct Dee_dec_deptab {
 	(void)((self)->ddpt_depv = NULL, (self)->ddpt_depc = (self)->ddpt_depa = 0)
 
 struct Dee_dec_ptrtab_entry {
-	void const      *dpte_ptr; /* [1..1] Source address that was already encoded */
-	Dee_dec_addr32_t dote_off; /* Offset from `dw_base' to where "dpte_ptr" was written */
-	Dee_dec_addr32_t dote_siz; /* # of bytes associated with "dpte_ptr" */
+	void const *dpte_ptr; /* [1..1] Source address that was already encoded */
+	size_t      dote_off; /* Offset from `dw_base' to where "dpte_ptr" was written */
+	size_t      dote_siz; /* # of bytes associated with "dpte_ptr" */
 };
 #define Dee_dec_ptrtab_entry_getminaddr(self) ((__BYTE_TYPE__ *)(self)->dpte_ptr)
 #define Dee_dec_ptrtab_entry_getmaxaddr(self) ((__BYTE_TYPE__ *)(self)->dpte_ptr + (self)->dote_siz - 1)
 
 struct Dee_dec_ptrtab {
 	struct Dee_dec_ptrtab_entry *dpt_ptrv; /* [0..dpt_ptrc][SORT(dpte_ptr ASC)][owned] List of already-encoded objects */
-	size_t                       dpt_ptrc; /* Amount of non-NULL key-item pairs. */
-	size_t                       dpt_ptra; /* Amount of non-NULL key-item pairs. */
+	size_t                       dpt_ptrc; /* # of serialized pointers */
+	size_t                       dpt_ptra; /* Allocated # of entries in `dpt_ptrv' */
 };
 #define Dee_dec_ptrtab_init(self) \
 	(void)((self)->dpt_ptrv = NULL, (self)->dpt_ptrc = (self)->dpt_ptra = 0)
@@ -416,9 +427,9 @@ struct Dee_dec_ptrtab {
 	Dee_Free((self)->dpt_ptrv)
 
 struct Dee_dec_fdeptab {
-	__BYTE_TYPE__ *dfdt_depv; /* [0..dfdt_depc][owned] Flat array of `Dec_Dstr' (each aligned to `__ALIGNOF_SIZE_T__') */
-	size_t         dfdt_depc; /* # of bytes used in "dfdt_depv" */
-	size_t         dfdt_depa; /* Allocated # of bytes in `dfdt_depv' */
+	__BYTE_TYPE__   *dfdt_depv; /* [0..dfdt_depc][owned] Flat array of `Dec_Dstr' (each aligned to `__ALIGNOF_SIZE_T__') */
+	size_t           dfdt_depc; /* # of bytes used in "dfdt_depv" */
+	size_t           dfdt_depa; /* Allocated # of bytes in `dfdt_depv' */
 };
 
 #define Dee_dec_fdeptab_init(self) \
@@ -447,8 +458,8 @@ typedef struct Dee_dec_writer {
 	struct Dee_dec_rrelatab dw_drrela; /* Table of incref-relocations against deemon-core objects (increfs already happened here) */
 	struct Dee_dec_deptab   dw_deps;   /* Table of dependent modules */
 	struct Dee_dec_fdeptab  dw_fdeps;  /* Table of dependent files */
-	Dee_dec_addr32_t        dw_gchead; /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
-	Dee_dec_addr32_t        dw_gctail; /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `dw_srel') */
+	size_t                  dw_gchead; /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
+	size_t                  dw_gctail; /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `dw_srel') */
 	struct Dee_dec_ptrtab   dw_known;  /* Table of known, already-encoded pointers */
 	unsigned int            dw_flags;  /* Dec writer flags (set of `DeeDecWriter_F_*') */
 } DeeDecWriter;

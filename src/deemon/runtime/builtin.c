@@ -30,6 +30,7 @@
 #include <deemon/tuple.h>
 #include <deemon/util/lock.h>
 
+#include <hybrid/int128.h>
 #include <hybrid/sequence/list.h>
 
 /**/
@@ -467,7 +468,7 @@ PUBLIC struct Dee_deemon_module_struct DeeModule_Deemon = {
 		},
 		/* .mo_dir     = */ (DeeTupleObject *)Dee_EmptyTuple,
 		/* .mo_init    = */ Dee_MODULE_INIT_INITIALIZED,
-		/* .mo_ctime   = */ 0, /* Lazily initialized (from `DeeExec_GetTimestamp()') */
+		/* .mo_buildid = */ { {0} }, /* Lazily initialized (from `DeeExec_GetTimestamp()') */
 		/* .mo_flags   = */ Dee_MODULE_FNORMAL | _Dee_MODULE_FLIBALL,
 		/* .mo_importc = */ 0,
 		/* .mo_globalc = */ num_builtins_obj,

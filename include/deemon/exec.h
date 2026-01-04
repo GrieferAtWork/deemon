@@ -130,16 +130,19 @@ DFUNDEF void DCALL DeeModule_InitPath(void);
 #define DeeModule_GetPath() (DeeModule_InitPath(), &DeeModule_Path)
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
+
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+/* Return the deemon "Build ID" (that is: a 128-bit
+ * number that uniquely identifies this build of deemon) */
+union Dee_module_buildid;
+DDATDEF ATTR_RETNONNULL WUNUSED union Dee_module_buildid const *DCALL DeeExec_GetBuildId(void);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 /* Return the time (in UTC milliseconds since 01-01-1970) when deemon was compiled.
  * This value is also used to initialize the `mo_ctime' value of the builtin
  * `deemon' module, automatically forcing user-code to be recompiled if the
  * associated deemon core has changed, and if they are using the `deemon' module. */
 DDATDEF uint64_t DCALL DeeExec_GetTimestamp(void);
-
-/* Get some unique IDs for this build of deemon,
- * as well as the host that is running deemon. */
-DDATDEF void DCALL DeeExec_GetBuildId(uint64_t build_id[2]);
-DDATDEF void DCALL DeeExec_GetHostId(uint64_t host_id[2]);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 /* High-level functionality for registering at-exit hooks.

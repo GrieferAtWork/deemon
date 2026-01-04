@@ -38,7 +38,9 @@
 #ifdef GUARD_DEEMON_EXECUTE_MODPATH_C
 #include "list.h"
 #endif /* GUARD_DEEMON_EXECUTE_MODPATH_C */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#else /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#include <hybrid/byteorder.h>
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 /**/
 
 #include <stddef.h> /* size_t */
@@ -585,6 +587,14 @@ struct Dee_compiler_options {
  * - DeeModuleDir_Type:  mo_absname           (it's a directory)
  */
 
+union Dee_module_buildid {
+	size_t   mbi_words[16 / __SIZEOF_SIZE_T__];
+	uint64_t mbi_word64[2];
+	uint32_t mbi_word32[4];
+	uint16_t mbi_word16[8];
+	uint8_t  mbi_word8[16];
+};
+
 struct Dee_module_libentry {
 	DREF struct Dee_string_object *mle_name; /* [0..1][lock(INTERNAL(module_libtree_lock))][valid_if(mo_absname)]
 	                                          * LIBPATH-name of module (or "NULL" if not a global module, or not
@@ -676,19 +686,10 @@ struct Dee_module_object {
 	struct Dee_thread_object      *mo_init;     /* [0..1][lock(ATOMIC)] Module initialization state (one of `Dee_MODULE_INIT_*', or the thread doing the init)
 	                                             * NOTE: For module types other than `DeeModuleDee_Type' and `DeeModuleDex_Type',
 	                                             *       this must always be `Dee_MODULE_INIT_INITIALIZED' */
-	/* TODO: Instead of this timestamp, modules should have a "build ID", akin to LD's `--build-id' commandline flag.
-	 *       This ID can then either be some combination of:
-	 *       - a hash of the associated binary file
-	 *       - a random number
-	 *       - a timestamp
-	 *       What exactly should be used here should be selected by `./configure`
-	 * -> Then, "Dec_Dhdr" would simply include a copy of the dependent module's "build ID"
-	 * -> And the "Dec_Ehdr::er_deemon_timestamp" field would just go away (replaced with "er_deemon_build_id")
-	 */
-	uint64_t                       mo_ctime;    /* [valid_if(Dee_MODULE_FHASCTIME)][lock(WRITE_ONCE)] Timestamp when this module was compiled (0 for dir-modules) */
+	union Dee_module_buildid       mo_buildid;  /* [valid_if(Dee_MODULE_FHASBUILDID)][lock(WRITE_ONCE)] Module build ID ({0,0} for DeeModuleDir_Type-modules) */
 #define Dee_MODULE_FNORMAL         0x0000       /* Normal module flags. */
 #define Dee_MODULE_FABSFILE        0x0001       /* [DeeModuleDee_Type][const] `mo_absname' is the actual, absolute filename of this module (which doesn't end with `.dee') */
-#define Dee_MODULE_FHASCTIME       0x0002       /* [lock(WRITE_ONCE)] Field `mo_ctime' has been initialized */
+#define Dee_MODULE_FHASBUILDID     0x0002       /* [lock(WRITE_ONCE)] Field `mo_buildid' has been initialized */
 #define Dee_MODULE_FWAITINIT       0x0004       /* [lock(ATOMIC)] When `mo_init' is set to `Dee_MODULE_INIT_UNINITIALIZED' or `Dee_MODULE_INIT_INITIALIZED', must `DeeFutex_WakeAll(&mo_init)' */
 #define Dee_MODULE_FNOSERIAL       0x0008       /* [const] Indicates that this module could not be serialized during compilation, meaning that anything that depends on it can't be serialized, either. */
 #define Dee_MODULE_FABSRED         0x0100       /* [lock(ATOMIC)] is-red-bit for `mo_absnode' */
@@ -749,7 +750,7 @@ struct Dee_module_object {
 		struct Dee_module_libentry     mo_libname; \
 		struct Dee_tuple_object       *mo_dir;     \
 		struct Dee_thread_object      *mo_init;    \
-		uint64_t                       mo_ctime;   \
+		union Dee_module_buildid       mo_buildid; \
 		uint16_t                       mo_flags;   \
 		uint16_t                       mo_importc; \
 		uint16_t                       mo_globalc; \
@@ -965,13 +966,15 @@ DeeModule_GetRootCode(DeeModuleObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Function*/ DeeObject *DCALL
 DeeModule_GetRootFunction(DeeModuleObject *__restrict self);
 
-/* Returns the compile-time of a given module (in microseconds
- * since 01-01-1970), or (uint64_t)-1 if an error occurred.
- * Use this function instead of directly reading `self->mo_ctime',
- * as this function will lazily initialize the timestamp in cases
- * where it may not be loaded, yet. */
-DFUNDEF WUNUSED NONNULL((1)) uint64_t DCALL
-DeeModule_GetCTime(DeeModuleObject *__restrict self);
+/* Return the "Build ID" of this module, which is an opaque
+ * identifier that can be treated as a hash for the specific version that is
+ * loaded into the module "self". When the module unloads and is then re-loaded,
+ * this hash might change, in which case dependents of "self" should also be
+ * re-build (potentially causing their build IDs to change also).
+ *
+ * @return: * : The module's build ID */
+DFUNDEF WUNUSED ATTR_RETNONNULL NONNULL((1)) union Dee_module_buildid const *DCALL
+DeeModule_GetBuildId(DeeModuleObject *__restrict self);
 
 /* Return the directory view of a given module, that is: the (lexicographically
  * sorted) list of ["*.dee", "*.so", "*.dll", DT_DIR]-files within a directory

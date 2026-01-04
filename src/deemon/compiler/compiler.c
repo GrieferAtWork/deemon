@@ -464,10 +464,6 @@ DeeExec_CompileModuleStream_impl(DeeObject *source_stream,
 	DREF DeeModuleObject *result;
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	uint16_t assembler_flags;
-	uint64_t ctime;
-#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
-	ctime = DeeSystem_GetWalltime();
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 	compiler = DeeCompiler_New(options ? options->co_compiler : COMPILER_FNORMAL);
 	if unlikely(!compiler)
@@ -652,14 +648,9 @@ pack_code_in_return:
 
 	/* Finally, put together the module itself. */
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-	/* Use timestamp of compilation having completed. Otherwise, the .dec file we'd
-	 * eventually produce would have a timestamp less than those of our dependencies,
-	 * which would mean we'd be considered as older than our dependencies and in need
-	 * of a re-compilation. */
-	ctime  = DeeSystem_GetWalltime();
-	result = module_compile(writer, root_code, ctime);
+	result = module_compile(writer, root_code);
 #else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-	result = module_compile(root_code, ctime);
+	result = module_compile(root_code);
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	Dee_Decref(root_code);

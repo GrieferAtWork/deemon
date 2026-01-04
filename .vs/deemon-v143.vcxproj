@@ -232,6 +232,7 @@
 		<ClInclude Include="..\include\deemon\util\kos-compat.h" />
 		<ClInclude Include="..\include\deemon\util\lock-utils.h" />
 		<ClInclude Include="..\include\deemon\util\lock.h" />
+		<ClInclude Include="..\include\deemon\util\md5.h" />
 		<ClInclude Include="..\include\deemon\util\nrlock.h" />
 		<ClInclude Include="..\include\deemon\util\objectlist.h" />
 		<ClInclude Include="..\include\deemon\util\once.h" />
@@ -681,6 +682,7 @@
 		<ClCompile Include="..\src\deemon\runtime\kwds.c" />
 		<ClCompile Include="..\src\deemon\runtime\kwlist.c" />
 		<ClCompile Include="..\src\deemon\runtime\lock.c" />
+		<ClCompile Include="..\src\deemon\runtime\md5.c" />
 		<ClCompile Include="..\src\deemon\runtime\method-hint-defaults.c" />
 		<ClCompile Include="..\src\deemon\runtime\method-hint-select.c" />
 		<ClCompile Include="..\src\deemon\runtime\method-hint-super-invoke.c" />

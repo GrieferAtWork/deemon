@@ -1955,12 +1955,11 @@ code_docompile(struct ast *__restrict code_ast);
 struct Dee_serial;
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 module_compile(struct Dee_serial *__restrict writer,
-               /*inherit(always)*/ DREF DeeCodeObject *__restrict root_code,
-               uint64_t ctime);
+               /*inherit(always)*/ DREF DeeCodeObject *__restrict root_code);
 #else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 INTDEF WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
-module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code, uint64_t ctime);
+module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 module_compile(DREF struct module_object *__restrict module,

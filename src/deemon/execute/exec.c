@@ -38,6 +38,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
+#include <hybrid/byteswap.h>
 #include <hybrid/sched/yield.h>
 
 /* Pull in some header to form artificial dependencies in order
@@ -689,6 +690,7 @@ err:
 
 
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #ifdef CONFIG_NO_DEC
 PRIVATE uint64_t exec_timestamp = (uint64_t)-1;
 #define HAS_EXEC_TIMESTAMP    (exec_timestamp != (uint64_t)-1)
@@ -698,6 +700,7 @@ PRIVATE uint64_t exec_timestamp = (uint64_t)-1;
 #define HAS_EXEC_TIMESTAMP    (DeeModule_Deemon.mo_flags & Dee_MODULE_FHASCTIME)
 #define SET_EXEC_TIMESTAMP(x) (exec_timestamp = (x), atomic_or(&DeeModule_Deemon.mo_flags, Dee_MODULE_FHASCTIME))
 #endif /* !CONFIG_NO_DEC */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 /* A couple of helper macros taken from the libtime DEX. */
@@ -822,10 +825,22 @@ LOCAL uint64_t parse_timestamp(void) {
 #endif /* !... */
 
 
-/* Return the time (in UTC milliseconds since 01-01-1970) when deemon was compiled.
- * This value is also used to initialize the `mo_ctime' value of the builtin
- * `deemon' module, automatically forcing user-code to be recompiled if the
- * associated deemon core has changed, and if they are using the `deemon' module. */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+/* Return the deemon "Build ID" (that is: a 128-bit
+ * number that uniquely identifies this build of deemon) */
+PUBLIC ATTR_RETNONNULL WUNUSED union Dee_module_buildid const *DCALL DeeExec_GetBuildId(void) {
+	if (!(atomic_read(&DeeModule_Deemon.mo_flags) & Dee_MODULE_FHASBUILDID)) {
+		/* TODO: Use a proper build ID, and not just the timestamp */
+		uint64_t ts = parse_timestamp();
+		DeeModule_Deemon.mo_buildid.mbi_word64[0] = ts;
+		DeeModule_Deemon.mo_buildid.mbi_word64[1] = BSWAP64(ts);
+		COMPILER_WRITE_BARRIER();
+		atomic_or(&DeeModule_Deemon.mo_flags, Dee_MODULE_FHASBUILDID);
+		COMPILER_BARRIER();
+	}
+	return &DeeModule_Deemon.mo_buildid;
+}
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 PUBLIC uint64_t DCALL DeeExec_GetTimestamp(void) {
 	uint64_t result = exec_timestamp;
 	if (!HAS_EXEC_TIMESTAMP) {
@@ -834,20 +849,7 @@ PUBLIC uint64_t DCALL DeeExec_GetTimestamp(void) {
 	}
 	return result;
 }
-
-
-/* Get some unique IDs for this build of deemon,
- * as well as the host that is running deemon. */
-PUBLIC void DCALL DeeExec_GetBuildId(uint64_t build_id[2]) {
-	/* TODO */
-	bzero(build_id, 16);
-}
-
-PUBLIC void DCALL DeeExec_GetHostId(uint64_t host_id[2]) {
-	/* TODO */
-	bzero(host_id, 16);
-}
-
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 
