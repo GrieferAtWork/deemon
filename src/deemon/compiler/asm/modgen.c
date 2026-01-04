@@ -143,7 +143,14 @@ module_compile(struct Dee_serial *__restrict writer,
 			}
 			if (in__mo_bucketv->ss_doc) {
 				int status;
-				if (in__mo_bucketv->ss_flags & Dee_MODSYM_FDOCOBJ) {
+				if (*in__mo_bucketv->ss_doc == '\0') {
+					/* No point in saving an empty string; that just bloats the .dec file! */
+					struct Dee_module_symbol *ou_sym;
+					ou_sym = DeeSerial_Addr2Mem(writer, out__mo_bucketv_i, struct Dee_module_symbol);
+					ou_sym->ss_doc = NULL;
+					ou_sym->ss_flags &= ~Dee_MODSYM_FDOCOBJ;
+					status = 0;
+				} else if (in__mo_bucketv->ss_flags & Dee_MODSYM_FDOCOBJ) {
 					DeeStringObject *ob = container_of(in__mo_bucketv->ss_doc, DeeStringObject, s_str);
 					status = DeeSerial_PutObjectEx(writer, out__mo_bucketv_i + offsetof(struct Dee_module_symbol, ss_doc),
 					                               ob, offsetof(DeeStringObject, s_str));
