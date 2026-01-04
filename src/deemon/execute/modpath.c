@@ -2297,6 +2297,32 @@ done:
 	return result;
 }
 
+#ifndef CONFIG_NO_DEC
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeFile_WriteDecEhdr(DeeObject *__restrict stream,
+                     Dec_Ehdr *__restrict ehdr) {
+	size_t result;
+	/* Write the actual file with embedded pointers set to "NULL".
+	 * This is done for multiple reasons:
+	 *  #1: When the Build ID MD5 is calculated, these fields are also "NULL"
+	 *  #2: By not embedding nonsensical pointers within the file, output becomes more reproducible */
+	void (DCALL *saved_hr_destroy)(struct Dee_heapregion *__restrict self) = ehdr->e_heap.hr_destroy;
+	struct DeeMapFile saved_e_mapping = ehdr->e_mapping;
+	ehdr->e_heap.hr_destroy = NULL;
+	bzero(&ehdr->e_mapping, sizeof(ehdr->e_mapping));
+
+	/* Write data to file */
+	result = DeeFile_WriteAll(stream, ehdr, ehdr->e_typedata.td_reloc.er_offsetof_eof);
+
+	/* Restore runtime info. */
+	ehdr->e_heap.hr_destroy = saved_hr_destroy;
+	ehdr->e_mapping = saved_e_mapping;
+	return result;
+}
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+#endif /* !CONFIG_NO_DEC */
+
 PRIVATE WUNUSED NONNULL((1)) DREF /*untracked*/ DeeModuleObject *DCALL
 DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_filename_length,
                          unsigned int flags, struct Dee_compiler_options *options) {
@@ -2508,9 +2534,7 @@ no_dec_file:
 				                                   OPEN_FCLOEXEC,
 				                                   0644);
 				if likely(output_stream) {
-					size_t write_status;
-					write_status = DeeFile_WriteAll(output_stream, ehdr,
-					                                ehdr->e_typedata.td_reloc.er_offsetof_eof);
+					size_t write_status = DeeFile_WriteDecEhdr(output_stream, ehdr);
 					Dee_Decref_likely(output_stream);
 					if unlikely(write_status == (size_t)-1)
 						output_stream = NULL;

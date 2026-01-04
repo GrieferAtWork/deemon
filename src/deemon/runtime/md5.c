@@ -37,6 +37,8 @@
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
+#undef shift_t
+#define shift_t __SHIFT_TYPE__
 
 DECL_BEGIN
 
@@ -48,7 +50,7 @@ DECL_BEGIN
 #define D UINT32_C(0x10325476)
 
 /* clang-format off */
-PRIVATE uint32_t const S[] = {
+PRIVATE shift_t const S[] = {
 	7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
 	5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20,
 	4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
@@ -92,7 +94,7 @@ PRIVATE uint8_t const PADDING[] = {
 #define I(X, Y, Z) (Y ^ (X | ~Z))
 
 PRIVATE ATTR_CONST uint32_t DCALL
-md5_rol(uint32_t x, uint32_t n) {
+md5_rol(uint32_t x, shift_t n) {
 	return (x << n) | (x >> (32 - n));
 }
 
@@ -159,9 +161,6 @@ DeeMD5_Update(DeeMD5_Context *__restrict ctx, void const *data, size_t input_len
 			uint32_t temp[16];
 			unsigned int j;
 			for (j = 0; j < 16; ++j) {
-				// Convert to little-endian
-				// The local variable `input` our 512-bit chunk separated into 32-bit words
-				// we can use in calculations
 				byte_t const *base = &ctx->dmd5_input[j * 4];
 #if 1
 				temp[j] = LETOH32(*(uint32_t const *)base);

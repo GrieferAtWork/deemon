@@ -932,8 +932,17 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 	/* Validate dec file header... */
 	deemon_buildid = DeeExec_GetBuildId();
 	if (ehdr->e_typedata.td_reloc.er_deemon_build_id[0] != deemon_buildid->mbi_word64[0] ||
-	    ehdr->e_typedata.td_reloc.er_deemon_build_id[1] != deemon_buildid->mbi_word64[1])
-		goto_fail("Deemon core Build ID doesn't match");
+	    ehdr->e_typedata.td_reloc.er_deemon_build_id[1] != deemon_buildid->mbi_word64[1]) {
+#ifndef Dee_DPRINT_IS_NOOP
+		Dee_uint128_t expected_buildid, actual_buildid;
+		memcpy(&expected_buildid, deemon_buildid, sizeof(expected_buildid));
+		memcpy(&actual_buildid, ehdr->e_typedata.td_reloc.er_deemon_build_id, sizeof(actual_buildid));
+		Dee_DPRINTF("[LD][dec %q] CORRUPT: Deemon core Build ID doesn't match. "
+		            /**/ "Expected: %#.32" PRFx128 ", Actual: %#.32" PRFx128 "\n",
+		            context_absname, expected_buildid, actual_buildid);
+#endif /* !Dee_DPRINT_IS_NOOP */
+		goto fail_nomsg;
+	}
 	if unlikely(ehdr->e_ident[DI_MAG0] != DECMAG0)
 		goto_fail("Bad DI_MAG0");
 	if unlikely(ehdr->e_ident[DI_MAG1] != DECMAG1)
@@ -979,8 +988,53 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 	if unlikely(ehdr->e_heap.hr_size >= (ehdr->e_typedata.td_reloc.er_offsetof_eof - offsetof(Dec_Ehdr, e_heap)))
 		goto_fail("Bad 'e_heap.hr_size' points past EOF");
 
+#if 1 /* Validate the module's MD5 checksum */
+	{
+		DeeMD5_Context md5;
+		DeeModuleObject *mod = DeeDec_Ehdr_GetModule(ehdr);
+		union Dee_module_buildid true_buildid;
+		union Dee_module_buildid saved_mo_buildid = mod->mo_buildid;
+		uint64_t saved_build_timestamp = ehdr->e_typedata.td_reloc.er_build_timestamp;
+
+		/* The build ID obviously can't participate in its own calculation */
+		mod->mo_buildid.mbi_word64[0] = 0;
+		mod->mo_buildid.mbi_word64[1] = 0;
+
+		/* The build timestamp also doesn't participate (this way, a module source
+		 * being touched without any changes made to the source code (or the only
+		 * changes made not affected the generated code), will not result in a
+		 * cascade of dependent modules also needing to be re-built).
+		 *
+		 * s.a.: the MD5 generation code in `DeeDecWriter_PackEhdr()' */
+		ehdr->e_typedata.td_reloc.er_build_timestamp = 0;
+
+		/* Calculate MD5 checksum */
+		DeeMD5_Init(&md5);
+		DeeMD5_Update(&md5, ehdr, ehdr->e_typedata.td_reloc.er_offsetof_eof);
+		DeeMD5_Finalize(&md5, true_buildid.mbi_word32);
+
+		/* Restore  */
+		ASSERT(mod == DeeDec_Ehdr_GetModule(ehdr));
+		mod->mo_buildid = saved_mo_buildid;
+		ehdr->e_typedata.td_reloc.er_build_timestamp = saved_build_timestamp;
+
+		if unlikely(true_buildid.mbi_word64[0] != saved_mo_buildid.mbi_word64[0] ||
+		            true_buildid.mbi_word64[1] != saved_mo_buildid.mbi_word64[1]) {
+#ifndef Dee_DPRINT_IS_NOOP
+			Dee_uint128_t expected_buildid, actual_buildid;
+			memcpy(&expected_buildid, &saved_mo_buildid, sizeof(expected_buildid));
+			memcpy(&actual_buildid, &true_buildid, sizeof(actual_buildid));
+			Dee_DPRINTF("[LD][dec %q] CORRUPT: Bad checksum. "
+			            /**/ "Expected: %#.32" PRFx128 ", Actual: %#.32" PRFx128 "\n",
+			            context_absname, expected_buildid, actual_buildid);
+#endif /* !Dee_DPRINT_IS_NOOP */
+			goto fail_nomsg;
+		}
+	}
+#endif
+
 	/* Configure the runtime portion of the ehdr */
-	ehdr->e_mapping         = *fmap;
+	ehdr->e_mapping         = *fmap; /* Inherit */
 	ehdr->e_heap.hr_destroy = &DeeDec_heapregion_destroy;
 
 	/* Relocate the dec file to turn it into the embedded module object. */
@@ -992,6 +1046,7 @@ fail:
 	Dee_DPRINTF("[LD][dec %q] CORRUPT: Header verification failed: %s\n",
 	            context_absname, fail_reason);
 #endif /* !Dee_DPRINT_IS_NOOP */
+fail_nomsg:
 	return (DREF DeeModuleObject *)ITER_DONE;
 }
 
@@ -1361,9 +1416,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 			DeeModuleObject *mod = DeeDec_Ehdr_GetModule(ehdr);
 			ehdr->e_typedata.td_reloc.er_build_timestamp = 0;
 			ehdr->e_heap.hr_destroy = NULL;
-			DeeMapFile_SETADDR(&ehdr->e_mapping, NULL);
-			DeeMapFile_SETSIZE(&ehdr->e_mapping, total_need);
-			DeeMapFile_SETHEAP_INITALL(&ehdr->e_mapping);
+			bzero(&ehdr->e_mapping, sizeof(ehdr->e_mapping));
 #if ((DeeDec_Ehdr_OFFSETOF__e_mapping + Dee_SIZEOF_DeeMapFile) % Dee_HEAPCHUNK_ALIGN) != 0
 			memset(ehdr->_e_heap_pad, 0xff, sizeof(ehdr->_e_heap_pad));
 #endif /* (Dee_SIZEOF_DeeMapFile % Dee_HEAPCHUNK_ALIGN) != 0 */

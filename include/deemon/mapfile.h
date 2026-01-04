@@ -72,7 +72,6 @@ struct DeeMapFile {
 	size_t _dmf_vfre;    /* [valid_if(_dmf_hmap != NULL)] When non-zero, must VirtualFree() this many bytes at `CEIL_ALIGN(dmf_addr + dmf_size, getpagesize())' */
 #define DeeMapFile_SETHEAP(self)  (void)((self)->_dmf_hmap = NULL)
 #define DeeMapFile_UsesMmap(self) ((self)->_dmf_hmap != NULL)
-#define DeeMapFile_SETHEAP_INITALL(self)  (void)((self)->_dmf_hmap = NULL, (self)->_dmf_vfre = (size_t)-1)
 #elif defined(DeeMapFile_IS_mmap)
 #define Dee_SIZEOF_DeeMapFile (3 * __SIZEOF_POINTER__)
 	void   *dmf_addr;    /* [0..dmf_size][owned] Base address of the file mapping. */
@@ -94,11 +93,6 @@ struct DeeMapFile {
 #define DeeMapFile_GetSize(self)    (self)->dmf_size
 #define DeeMapFile_SETADDR(self, p) (void)((self)->dmf_addr = (void *)(p))
 #define DeeMapFile_SETSIZE(self, s) (void)((self)->dmf_size = (s))
-
-/* Same as `DeeMapFile_SETHEAP()', but don't leave any fields uninitialized */
-#ifndef DeeMapFile_SETHEAP_INITALL
-#define DeeMapFile_SETHEAP_INITALL(self) DeeMapFile_SETHEAP(self)
-#endif /* !DeeMapFile_SETHEAP_INITALL */
 
 /* Finalize a given file map */
 DFUNDEF NONNULL((1)) void DCALL

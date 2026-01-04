@@ -43,32 +43,28 @@
 /*
  * MMAP-Dec files allow for fast object encode/decode:
  *
- * - General idea is still that only specific object types can be dec-encoded
+ * - General idea is still that only types with specific support
+ *   (ones that implement "tp_serialize") can be dec-encoded
  * - However:
- *   - Give a file mapping of a ".dec" file, that mapping already contains
+ *   - Given a file mapping of a ".dec" file, that mapping already contains
  *     fully functional objects (with reference counters, type headers, and
  *     everything already allocated)
- *   - While the associated module is still loaded, a mapped ".dec" file always
- *     holds 1 reference to every object it contains.
- *   - When the module is unloaded, decref all objects within the file mapping
- *   - Objects that can be dec-encoded need a special free-function that uses
- *     a custom heap that is able to function correctly, even if the pointer
- *     is part of a file mapping
- *     - If this heap needs extra headers for "allocated" pointers, then those
- *       headers are also present within the file mapping
+ *   - The ".dec" file mapping remains allocated as long as at least 1
+ *     contained object still has a non-zero reference counter (or more
+ *     specifically: until the embedded `struct Dee_heapregion' is destroyed)
  *
  *
  * Example: "Tuple { "foo", 42 }"
  * >> ...
  * >>              HEAP_HEADER,           // DeeTupleObject
- * >>my_tuple:     1,                     // ob_refcnt
+ * >>my_tuple:     1,                     // ob_refcnt  (1: referenced somewhere else; e.g.: DeeCodeObject::co_constv)
  * >>              DREL(&DeeType_Type),   // ob_type    (relocated)
  * >>              2,                     // t_size
  * >>              IREL(&tuple_elem_1),   // t_elem[0]  (relocated)
  * >>              IREL(&tuple_elem_2),   // t_elem[1]  (relocated)
  * >>
  * >>              HEAP_HEADER,           // DeeStringObject
- * >>tuple_elem_1: 2,                     // ob_refcnt  (2: +1: my_tuple, +1: file mapping)
+ * >>tuple_elem_1: 1,                     // ob_refcnt  (1: +1: my_tuple)
  * >>              DREL(&DeeString_Type), // ob_type    (relocated)
  * >>              NULL,                  // s_data
  * >>              1234,                  // s_hash
@@ -76,54 +72,29 @@
  * >>              "foo\0",               // s_str
  * >>
  * >>              HEAP_HEADER,           // DeeIntObject
- * >>tuple_elem_2: 2,                     // ob_refcnt  (2: +1: my_tuple, +1: file mapping)
+ * >>tuple_elem_2: 1,                     // ob_refcnt  (1: +1: my_tuple)
  * >>              DREL(&DeeInt_Type),    // ob_type    (relocated)
  * >>              1,                     // ob_size
  * >>              42,                    // ob_digit
  *
- * After the file was mapped into memory:
- * - Parse the header, which contains (at least):
- *   - An exact identification for the deemon build used to create the file
- *   - The address of the root "DeeModule_Type" object of the associated module
- *   - Offsets to D/I-relocation tables
- *   - Offset to a table of all objects within the mapping (for decref on module unload)
- *   - Offset to a table of all HEAP_HEADER within the mapping (so the custom heap knows
- *     it can only free the file mapping once **all** of these have been freed).
- *     - This table should also come in a format where the custom heap can directly
- *       inherit it, without the table needing to be re-parsed/re-interpreted in some
- *       way, shape, or form.
- *     - For this purpose, the custom heap needs a O(1) function "gift_allocations":
- *       >> // @param allocs:    "table of all HEAP_HEADER within the mapping"
- *       >> //                   After all of these are free()'d, `free_fmap(fmap_base, fmap_size)' is called
- *       >> // @param fmap_base: Base address of file mapping
- *       >> // @param fmap_size: Size of file mapping
- *       >> // @param free_fmap: Nested free function to invoke once everything from "allocs" was freed
- *       >> void gift_allocations(struct alloc_list *allocs, void *fmap_base, size_t fmap_size,
- *       >>                       void (*free_fmap)(void *fmap_base, size_t fmap_size));
- *     - Note that "struct alloc_list" can either be:
- *       - An in-place vector with offsets to every "HEAP_HEADER"
- *       - The head of an intrusive linked list with elements embedded within "HEAP_HEADER"
- *       (It'll probably be the later, though...)
- *     - Using this, it would even be possible to implement "DeeModule_OfPointer"
- *       for user-defined modules, just like it's already implemented for dex modules!
- * - Verify that the file was created by the hosting build of deemon
- * - Execute relocations
- *   - DREL: *(uintptr_t *)LOC += (uintptr_t)&DeeModule_Type; // Or some other global symbol in the deemon code
- *   - IREL: *(uintptr_t *)LOC += (uintptr_t)FMAP_ADDR;       // Start address of file mapping
- * - return the now-fully-valid root "DeeModule_Type" object
- *
- *
  * Advantages:
- * - **any** type from the deemon core can be stored in a .dec file
- * - Loading of .dec file becomes much faster, because no additional heap allocations are necessary
+ * - Pretty much all types can be serialized and stored in a .dec file
+ * - Loading of .dec file is **much** faster, because no additional heap allocations are necessary
+ * - Objects that are embedded within a .dec file can be linked to their module via their address in
+ *   memory (similarly to how statically allocated objects from DEX modules can be linked to their
+ *   DEX module). The function to combine DEE and DEX modules here is `DeeModule_OfPointer()'.
  *
  * Disadvantages:
- * - Objects need a custom heap that can work with file mappings as though they were heap memory
+ * - Objects need a custom heap that defines an ABI for serialization. This has been implemented
+ *   in the form of `struct Dee_heapregion', but also means that the system `malloc(3)' can no
+ *   longer be (directly) used by deemon.
  * - No validation during module loading means HARD CRASHES (i.e. SIGSEGV) if file was corrupt
- *   - Because of this, .dec files should at least have a simple checksum that is validated during load
- * - .dec files become **much** larger
- * - Requires its own, custom heap
- *
+ *   - A .dec file can easily contain some invalid relocation that could cause it to wrongfully
+ *     Dee_Incref() a memory location that isn't some object's "ob_refcnt".
+ *   - Because of this, .dec files contain a checksum that is validated during load
+ * - .dec files are **much** larger than they used to be in the old model (which essentially
+ *   boiled down to being a recursive array of <Magic type code> <variable-length data>, where
+ *   "Magic type code" specified the type of object encoded by <variable-length data>).
  */
 
 DECL_BEGIN
@@ -145,8 +116,11 @@ typedef int32_t Dee_dec_off32_t;
 #ifdef DEE_SOURCE
 /* The max size of a DEC file.
  * If a file is larger than this, the loader is allowed to stop its attempts
- * at parsing it and simply act as though it wasn't a DEC file to begin with. */
-#define DFILE_LIMIT  0xfffffff
+ * at parsing it and simply act as though it wasn't a DEC file to begin with.
+ *
+ * Similarly, if the compiler tries to generate a file larger than this, it
+ * will not bother to actually emit it, and will just execute it in-place. */
+#define DFILE_LIMIT 0xfffffff /* 256MiB */
 
 #define DI_MAG0   0    /* File identification byte 0 index */
 #define DECMAG0   0x7f /* Magic number byte 0 */
