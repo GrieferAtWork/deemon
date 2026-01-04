@@ -409,9 +409,9 @@ struct Dee_dec_deptab {
 	(void)((self)->ddpt_depv = NULL, (self)->ddpt_depc = (self)->ddpt_depa = 0)
 
 struct Dee_dec_ptrtab_entry {
-	void const *dpte_ptr; /* [1..1] Source address that was already encoded */
-	size_t      dote_off; /* Offset from `dw_base' to where "dpte_ptr" was written */
-	size_t      dote_siz; /* # of bytes associated with "dpte_ptr" */
+	void const   *dpte_ptr; /* [1..1] Source address that was already encoded */
+	Dee_seraddr_t dote_off; /* Offset from `dw_base' to where "dpte_ptr" was written */
+	size_t        dote_siz; /* # of bytes associated with "dpte_ptr" */
 };
 #define Dee_dec_ptrtab_entry_getminaddr(self) ((__BYTE_TYPE__ *)(self)->dpte_ptr)
 #define Dee_dec_ptrtab_entry_getmaxaddr(self) ((__BYTE_TYPE__ *)(self)->dpte_ptr + (self)->dote_siz - 1)
@@ -450,7 +450,7 @@ typedef struct Dee_dec_writer {
 	__BYTE_TYPE__          *dw_base;   /* [1..1][owned] Base address of memory block of dec file being built */
 #endif /* !DEE_SOURCE */
 	size_t                  dw_alloc;  /* Allocated buffer size for `dw_base' */
-	size_t                  dw_used;   /* [<= dw_alloc] Used buffer size for `dw_base' */
+	Dee_seraddr_t           dw_used;   /* [<= dw_alloc] Used buffer size for `dw_base' */
 	size_t                  dw_hlast;  /* Chunk size during the previous call to `DeeDecWriter_Malloc()' */
 	struct Dee_dec_reltab   dw_srel;   /* Table of self-relocations */
 	struct Dee_dec_reltab   dw_drel;   /* Table of relocations against deemon-core objects */
@@ -458,8 +458,8 @@ typedef struct Dee_dec_writer {
 	struct Dee_dec_rrelatab dw_drrela; /* Table of incref-relocations against deemon-core objects (increfs already happened here) */
 	struct Dee_dec_deptab   dw_deps;   /* Table of dependent modules */
 	struct Dee_dec_fdeptab  dw_fdeps;  /* Table of dependent files */
-	size_t                  dw_gchead; /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
-	size_t                  dw_gctail; /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `dw_srel') */
+	Dee_seraddr_t           dw_gchead; /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
+	Dee_seraddr_t           dw_gctail; /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `dw_srel') */
 	struct Dee_dec_ptrtab   dw_known;  /* Table of known, already-encoded pointers */
 	unsigned int            dw_flags;  /* Dec writer flags (set of `DeeDecWriter_F_*') */
 } DeeDecWriter;
@@ -552,8 +552,8 @@ DeeDecWriter_AddFileDep(DeeDecWriter *__restrict self,
  * `DeeModuleObject' describing the dec file itself).
  * NOTE: Can only be used when `self->e_type == Dee_DEC_TYPE_RELOC'
  *
- * On success, `self' is inherited by `return', such that rather than
- * calling `DeeDec_Ehdr_Destroy(self)', you must `(return)'
+ * On success, `self' is inherited by `return', such that rather than calling
+ * `DeeDec_Ehdr_Destroy(self)', you must `DeeDec_DestroyUntracked(return)'
  *
  * @param: flags: Set of `0 | DeeModule_IMPORT_F_CTXDIR':
  *                - DeeModule_IMPORT_F_CTXDIR: When set, "context_absname...+=context_absname_size" is

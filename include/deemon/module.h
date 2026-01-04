@@ -972,8 +972,9 @@ DeeModule_GetRootFunction(DeeModuleObject *__restrict self);
  * this hash might change, in which case dependents of "self" should also be
  * re-build (potentially causing their build IDs to change also).
  *
- * @return: * : The module's build ID */
-DFUNDEF WUNUSED ATTR_RETNONNULL NONNULL((1)) union Dee_module_buildid const *DCALL
+ * @return: * :   The module's build ID
+ * @return: NULL: An error was thrown */
+DFUNDEF WUNUSED NONNULL((1)) union Dee_module_buildid const *DCALL
 DeeModule_GetBuildId(DeeModuleObject *__restrict self);
 
 /* Return the directory view of a given module, that is: the (lexicographically

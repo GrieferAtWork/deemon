@@ -46,6 +46,7 @@
 
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
 #include <hybrid/sequence/list.h>
+#include <hybrid/typecore.h>
 
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
@@ -55,10 +56,12 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
-DECL_BEGIN
-
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 #undef container_of
 #define container_of COMPILER_CONTAINER_OF
+
+DECL_BEGIN
 
 #ifndef CONFIG_HAVE_strcmp
 #define CONFIG_HAVE_strcmp
@@ -275,24 +278,96 @@ DeeModule_GetRootFunction(DeeModuleObject *__restrict self) {
 	return rootfunc;
 }
 
+/* @return: 0 : File not found?
+ * @return: (uint64_t)-1: Error */
+PRIVATE WUNUSED NONNULL((1)) uint64_t DCALL
+DeeModule_GetFileLastModified(DeeModuleObject *__restrict self) {
+	uint64_t result = (uint64_t)-1;
+	DREF DeeObject *filename = DeeModule_GetFileName(self);
+	if likely(filename) {
+		result = DeeSystem_GetLastModified(filename);
+		Dee_Decref_likely(filename);
+	}
+	return result;
+}
 
-PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) void DCALL
-DeeModule_GetBuildId_uncached(DeeModuleObject *__restrict self) {
-	if (self == &DeeModule_Deemon) {
-		union Dee_module_buildid const *temp;
-		temp = DeeExec_GetBuildId();
-		(void)temp;
-		return;
+#ifndef CONFIG_NO_DEX
+#undef DeeModule_GetBuildId_ofdex_USE__PE_TimeDateStamp /* Look at "TimeDateStamp" field of PE header */
+#if defined(DeeSystem_DlOpen_USE_LoadLibrary) && defined(__PE__)
+#define DeeModule_GetBuildId_ofdex_USE__PE_TimeDateStamp
+#endif /* DeeSystem_DlOpen_USE_LoadLibrary && __PE__ */
+
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) union Dee_module_buildid const *DCALL
+DeeModule_GetBuildId_ofdex_uncached(DeeModuleObject *__restrict self) {
+	struct Dee_module_dexdata const *dexdata = self->mo_moddata.mo_dexdata;
+	/* Check for custom override, as per:
+	 * - ADDR(.note.gnu.build-id) (s.a. "/configure")
+	 * - Random UUID set during build */
+	if (dexdata->mdx_buildid) {
+		self->mo_buildid = *dexdata->mdx_buildid;
+		return &self->mo_buildid;
 	}
 
-	/* TODO: ADDR(.note.gnu.build-id) (s.a. "/configure") */
-	/* TODO: Random UUID embedded within DEX modules during build */
-	/* TODO: Use "TimeDateStamp" from module's PE header on Windows (it's better than nothing) */
-	/* TODO: fallback: use last-modified timestamp of `DeeModule_GetFileName()' */
+#ifdef DeeModule_GetBuildId_ofdex_USE__PE_TimeDateStamp
+	/* Use "TimeDateStamp" from module's PE header on Windows (it's better than nothing) */
+	if (dexdata->mdx_handle != NULL &&
+	    dexdata->mdx_handle != DeeSystem_DlOpen_FAILED) {
+		byte_t *ImageBase      = (byte_t *)dexdata->mdx_handle;
+		uint32_t e_lfanew      = *(uint32_t const *)(ImageBase + 60);
+		uint32_t TimeDateStamp = *(uint32_t const *)(ImageBase + e_lfanew + 8); /* 32-bit timestamp */
+		if (TimeDateStamp != 0) {
+			self->mo_buildid.mbi_word32[0] = self->mo_buildid.mbi_word32[2] = TimeDateStamp;
+			self->mo_buildid.mbi_word32[1] = self->mo_buildid.mbi_word32[3] = ~TimeDateStamp;
+			return &self->mo_buildid;
+		}
+	}
+#endif /* DeeModule_GetBuildId_ofdex_USE__PE_TimeDateStamp */
+
+	/* No build ID embedded :( */
+	(void)self;
+	return NULL;
+}
+#endif /* !CONFIG_NO_DEX */
+
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) union Dee_module_buildid const *DCALL
+DeeModule_GetBuildId_uncached(DeeModuleObject *__restrict self) {
+	ASSERTF(Dee_TYPE(self) != &DeeModuleDir_Type,
+	        "Dir-modules should pre-initialize their build-id "
+	        "to '0' and set their 'Dee_MODULE_FHASBUILDID' flag");
+
+	/* TODO: Handling for 'DeeModule_Deemon' should be done
+	 *       implicitly by `DeeModule_GetBuildId_ofdex_uncached()'! */
+	if (self == &DeeModule_Deemon)
+		return DeeExec_GetBuildId();
+
+	/* Handling for dex modules */
+#ifndef CONFIG_NO_DEX
+	if (Dee_TYPE(self) == &DeeModuleDex_Type) {
+		union Dee_module_buildid const *result;
+		result = DeeModule_GetBuildId_ofdex_uncached(self);
+		if (result)
+			return result;
+	}
+#endif /* !CONFIG_NO_DEX */
+
+	/* Fallback: use last-modified timestamp of `DeeModule_GetFileName()' */
+	{
+		uint64_t ts = DeeModule_GetFileLastModified(self);
+		if unlikely(ts == (uint64_t)-1)
+			goto err;
+		if (ts != 0) {
+			self->mo_buildid.mbi_word64[0] = ts;
+			self->mo_buildid.mbi_word64[1] = ~ts;
+			return &self->mo_buildid;
+		}
+	}
 
 	/* Fall-fallback: unable to determine Build ID -> set it to all zeroes */
 	self->mo_buildid.mbi_word64[0] = 0;
 	self->mo_buildid.mbi_word64[1] = 0;
+	return &self->mo_buildid;
+err:
+	return NULL;
 }
 
 /* Return the "Build ID" of this module, which is an opaque
@@ -301,11 +376,17 @@ DeeModule_GetBuildId_uncached(DeeModuleObject *__restrict self) {
  * this hash might change, in which case dependents of "self" should also be
  * re-build (potentially causing their build IDs to change also).
  *
- * @return: * : The module's build ID */
-DFUNDEF WUNUSED ATTR_RETNONNULL NONNULL((1)) union Dee_module_buildid const *DCALL
+ * @return: * :   The module's build ID
+ * @return: NULL: An error was thrown */
+DFUNDEF WUNUSED NONNULL((1)) union Dee_module_buildid const *DCALL
 DeeModule_GetBuildId(DeeModuleObject *__restrict self) {
-	if (!(atomic_read(&self->mo_flags) & Dee_MODULE_FHASBUILDID)) {
-		DeeModule_GetBuildId_uncached(self);
+	union Dee_module_buildid const *result;
+	if (atomic_read(&self->mo_flags) & Dee_MODULE_FHASBUILDID)
+		return &self->mo_buildid;
+	result = DeeModule_GetBuildId_uncached(self);
+	ASSERT(result == NULL ||
+	       result == &self->mo_buildid);
+	if (result) {
 		COMPILER_WRITE_BARRIER();
 		atomic_or(&self->mo_flags, Dee_MODULE_FHASBUILDID);
 		COMPILER_BARRIER();
@@ -3121,6 +3202,7 @@ PRIVATE struct type_gc tpconst module_dee_gc = {
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 module_dee_serialize(DeeModuleObject *__restrict self,
                      DeeSerial *__restrict writer) {
+	union Dee_module_buildid const *build_id;
 	uint16_t globalc = self->mo_globalc;
 	size_t sizeof_module = offsetof(DeeModuleObject, mo_globalv) +
 	                       globalc * sizeof(DREF DeeObject *);
@@ -3137,7 +3219,10 @@ module_dee_serialize(DeeModuleObject *__restrict self,
 	memset(&out->mo_libname.mle_node, 0xcc, sizeof(out->mo_libname.mle_node));
 	out->mo_dir   = NULL; /* Will be initialized by dex loader */
 	out->mo_init  = Dee_MODULE_INIT_UNINITIALIZED;
-	out->mo_buildid = *DeeModule_GetBuildId(self);
+	build_id = DeeModule_GetBuildId(self);
+	if unlikely(!build_id)
+		goto err;
+	out->mo_buildid = *build_id;
 	out->mo_flags = atomic_read(&self->mo_flags);
 	out->mo_flags &= ~(Dee_MODULE_FABSFILE | Dee_MODULE_FWAITINIT |
 	                   Dee_MODULE_FABSRED | Dee_MODULE_FADRRED |

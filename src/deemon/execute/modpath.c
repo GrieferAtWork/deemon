@@ -1256,18 +1256,19 @@ PRIVATE struct Dee_module_dexinfo deemon_dexinfo = {};
 #endif /* HAVE_Dee_module_dexinfo && !HAVE_Dee_module_dexinfo_IS_POINTER */
 
 INTERN struct Dee_module_dexdata deemon_dexdata = {
-	/* .mdx_module = */ &DeeModule_Deemon,
-	/* .mdx_export = */ NULL,
-	/* .mdx_handle = */ deemon_dexdata__mdx_module__INIT,
+	/* .mdx_module  = */ &DeeModule_Deemon,
+	/* .mdx_export  = */ NULL,
+	/* .mdx_buildid = */ NULL, /* TODO: Build ID of deemon core */
+	/* .mdx_init    = */ NULL,
+	/* .mdx_fini    = */ NULL,
+	/* .mdx_clear   = */ NULL,
+	/* .mdx_handle  = */ deemon_dexdata__mdx_module__INIT,
 #if defined(HAVE_Dee_module_dexinfo) && !defined(HAVE_Dee_module_dexinfo_IS_POINTER)
-	/* .mdx_info   = */ &deemon_dexinfo,
+	/* .mdx_info    = */ &deemon_dexinfo,
 #else /* HAVE_Dee_module_dexinfo && !HAVE_Dee_module_dexinfo_IS_POINTER */
-	/* .mdx_info   = */ NULL,
+	/* .mdx_info    = */ NULL,
 #endif /* !HAVE_Dee_module_dexinfo || HAVE_Dee_module_dexinfo_IS_POINTER */
-	/* .mdx_init   = */ NULL,
-	/* .mdx_fini   = */ NULL,
-	/* .mdx_clear  = */ NULL,
-	/* ._mdx_pad   = */ { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }
+	/* ._mdx_pad    = */ { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }
 };
 
 /* Called during finalization of the associated dex module */
@@ -1378,7 +1379,7 @@ dex_add_symbol(struct Dee_module_symbol *bucketv, uint16_t bucketm,
 	}
 }
 
-/* Open loaded system "dex_handle" as a module object. The dex module will have
+/* Open loaded system "dex_handle" as a module object. The DEX module will have
  * already been hooked into "module_abstree_root", as well as having had its
  * "mo_dexdata" fully initialized.
  * If the system indicates that "dex_handle" had already been loaded under some
@@ -1388,11 +1389,11 @@ dex_add_symbol(struct Dee_module_symbol *bucketv, uint16_t bucketm,
  *
  * @param: absname: The absolute, normalized filesystem name where "dex_handle"
  *                  was loaded from, with its trailing .dll/.so removed (as such,
- *                  this is the name under which a new dex module should appear
+ *                  this is the name under which a new DEX module should appear
  *                  within `module_abstree_root')
  * @param: dex_handle: The system library handle, as returned by `DeeSystem_DlOpenString()'
- * @return: * :   The newly loaded dex module.
- * @return: NULL: An error was thrown (e.g. "dex_handle" does not refer to a dex module) */
+ * @return: * :   The newly loaded DEX module.
+ * @return: NULL: An error was thrown (e.g. "dex_handle" does not refer to a DEX module) */
 INTERN WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 DeeModule_OpenDex(/*inherit(always)*/ /*utf-8*/ char *__restrict absname,
                   /*inherit(always)*/ void *dex_handle) {
@@ -1720,7 +1721,7 @@ handle_todo_module:
 
 PRIVATE Dee_nrshared_lock_t dex_clear_cache_lock = DEE_NRSHARED_LOCK_INIT;
 
-/* Invoke the "mdx_clear" operator on every loaded dex module. */
+/* Invoke the "mdx_clear" operator on every loaded DEX module. */
 INTERN bool DCALL DeeModule_ClearDexModuleCaches(void) {
 	bool result;
 	int status = Dee_nrshared_lock_acquire_noint(&dex_clear_cache_lock);
@@ -1763,7 +1764,7 @@ again:
 	}
 }
 
-/* Unload all loaded dex modules. */
+/* Unload all loaded DEX modules. */
 INTERN void DCALL DeeModule_UnloadAllDexModules(void) {
 	DREF DeeModuleObject *dex_list = NULL;
 	DeeModuleObject *dee_list = NULL;

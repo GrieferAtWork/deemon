@@ -340,8 +340,8 @@ DeeDec_RELOC_undo_rrel_and_decref_deps(DeeDec_Ehdr *__restrict self, size_t max_
  * `DeeModuleObject' describing the dec file itself).
  * NOTE: Can only be used when `self->e_type == Dee_DEC_TYPE_RELOC'
  *
- * On success, `self' is inherited by `return', such that rather
- * than calling `Dee_Free(self)', you must `Dee_Decref(return)'
+ * On success, `self' is inherited by `return', such that rather than calling
+ * `DeeDec_Ehdr_Destroy(self)', you must `DeeDec_DestroyUntracked(return)'
  *
  * @param: flags: Set of `0 | DeeModule_IMPORT_F_CTXDIR':
  *                - DeeModule_IMPORT_F_CTXDIR: When set, "context_absname...+=context_absname_size" is
@@ -414,8 +414,11 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 
 		/* Check timestamp of dependency (must be older than our dec file's timestamp) */
 		dep_buildid = DeeModule_GetBuildId(dep);
+		if unlikely(!dep_buildid)
+			goto err_dep_index;
 		if (dep_buildid->mbi_word64[0] != dependency->d_buildid[0] ||
 		    dep_buildid->mbi_word64[1] != dependency->d_buildid[1]) {
+#ifndef Dee_DPRINT_IS_NOOP
 			Dee_uint128_t expected_buildid, actual_buildid;
 			memcpy(&expected_buildid, dependency->d_buildid, sizeof(expected_buildid));
 			memcpy(&actual_buildid, dep_buildid, sizeof(actual_buildid));
@@ -423,6 +426,7 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 			            /**/ "Expected: %#.32" PRFx128 ", Actual: %#.32" PRFx128 "\n",
 			            context_absname, DeeModule_GetAbsName(dep),
 			            expected_buildid, actual_buildid);
+#endif /* !Dee_DPRINT_IS_NOOP */
 			goto corrupt_dep_index;
 		}
 	}
@@ -620,7 +624,7 @@ w_decref_rrel(DeeDec_Ehdr *__restrict self,
 		byte_t **pointer = (byte_t **)((byte_t *)self + reladdr);
 		DeeObject *obj = (DeeObject *)(*pointer + relbase);
 		ASSERT_OBJECT(obj);
-		Dee_DecrefNokill(obj);
+		Dee_Decref_unlikely(obj);
 	}
 }
 
@@ -635,7 +639,7 @@ w_decref_rrela(DeeDec_Ehdr *__restrict self,
 		byte_t *pointer = *p_pointer;
 		DeeObject *obj = (DeeObject *)(pointer + relbase + (ptrdiff_t)vec[i].r_offs);
 		ASSERT_OBJECT(obj);
-		Dee_DecrefNokill(obj);
+		Dee_Decref_unlikely(obj);
 	}
 }
 
@@ -1089,7 +1093,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 
 	/* Space for the heap tail is always pre-allocated! */
 	{
-		size_t offsetof_tail = self->dw_used;
+		Dee_seraddr_t offsetof_tail = self->dw_used;
 		struct Dee_heaptail *tail = (struct Dee_heaptail *)((byte_t *)ehdr + offsetof_tail);
 		offsetof_tail += sizeof(struct Dee_heaptail);
 		tail->ht_lastsize = self->dw_hlast;
@@ -1099,8 +1103,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 
 #ifndef CONFIG_NO_DEC
 	if (!(flags & DeeModule_IMPORT_F_NOGDEC) &&
-	    !(self->dw_flags & DeeDecWriter_F_NRELOC) &&
-	    likely(self->dw_used < DFILE_LIMIT)) {
+	    !(self->dw_flags & DeeDecWriter_F_NRELOC) && likely(self->dw_used < DFILE_LIMIT)) {
 		Dee_dec_addr32_t addrof_modrel; /* Start address for relocation tables pointed to by "Dec_Dhdr" entries. */
 		Dee_dec_addr32_t addrof_modstr; /* Start address of `d_offsetof_modname' string table (possibly unaligned) */
 		size_t dep_index;
@@ -1246,6 +1249,8 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 
 				/* Remember correct build ID of dependency */
 				dep_buildid = DeeModule_GetBuildId(dep->ddm_mod);
+				if unlikely(!dep_buildid)
+					goto err;
 				out_dep->d_buildid[0] = dep_buildid->mbi_word64[0];
 				out_dep->d_buildid[1] = dep_buildid->mbi_word64[1];
 
@@ -1564,7 +1569,7 @@ DeeDecWriter_AddFileDep(DeeDecWriter *__restrict self,
 		self->dw_fdeps.dfdt_depa = new_alloc;
 	}
 	dst = (Dec_Dstr *)(self->dw_fdeps.dfdt_depv + old_size);
-	dst->ds_length = seraddr32(filename_len);
+	dst->ds_length = seraddr32(filename_len); /* Length was checked against 'DFILE_LIMIT' above */
 	*(char *)mempcpyc(dst->ds_string, filename, filename_len, sizeof(char)) = '\0';
 	self->dw_fdeps.dfdt_depc = min_size;
 	return 0;
@@ -1591,6 +1596,7 @@ decwriter_putaddr(DeeDecWriter *__restrict self,
 	 *               it does make this case here, and applying relocations
 	 *               easier. */
 	*pointer = (void *)(uintptr_t)addrof_target;
+	/* XXX: Support for large (>4GiB) relocation targets on 64-bit hosts */
 	return reltab_append(&self->dw_srel, seraddr32(addrof_pointer));
 }
 
@@ -1657,8 +1663,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 decwriter_addknown(DeeDecWriter *__restrict self,
                    void const *__restrict ptr,
-                   Dee_dec_addr32_t addr,
-                   Dee_dec_addr32_t size) {
+                   Dee_seraddr_t addr, size_t size) {
 	size_t lo = 0, hi = self->dw_known.dpt_ptrc;
 	struct Dee_dec_ptrtab_entry *vec = self->dw_known.dpt_ptrv;
 	if (hi >= self->dw_known.dpt_ptra) {
@@ -1719,6 +1724,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
 decwriter_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
                       void const *ref, unsigned int flags) {
+	void *payload;
 	Dee_seraddr_t result;
 	struct Dee_heapchunk *chunk;
 	size_t avail, nb, req, unused;
@@ -1756,19 +1762,31 @@ decwriter_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 	}
 
 	/* Initialize the heap chunk for the newly made allocation */
-	result = (Dee_seraddr_t)self->dw_used;
+	result = self->dw_used;
 	ASSERT(IS_ALIGNED(result, Dee_HEAPCHUNK_ALIGN));
 	ASSERT(IS_ALIGNED(nb, Dee_HEAPCHUNK_ALIGN));
 	chunk = DeeDecWriter_Addr2Mem(self, result, struct Dee_heapchunk);
 	chunk->hc_prevsize = self->dw_hlast; /* Must be 0 the first time around */
 	chunk->hc_head     = Dee_HEAPCHUNK_HEAD(num_bytes);
-	if (flags & decwriter_malloc_impl_F_BZERO)
-		bzero(chunk + 1, num_bytes);
-	memset((byte_t *)(chunk + 1) + num_bytes - unused, 0xcc, unused);
+	payload = chunk + 1;
+	if (flags & decwriter_malloc_impl_F_BZERO) {
+		bzero(payload, num_bytes);
+	} else {
+		/* Pre-initialize heap user-data to FF bytes (to prevent
+		 * uninitialized bytes from appearing in ".dec" files)
+		 *
+		 * If it is known that no ".dec" file can/will be created,
+		 * then this step is simply skipped. */
+		if (!(self->dw_flags & DeeDecWriter_F_NRELOC))
+			memset(payload, 0xff, num_bytes);
+	}
+
+	/* Fill in padding tail area with FE bytes */
+	memset((byte_t *)payload + num_bytes - unused, 0xfe, unused);
 	if (ref) {
 		if unlikely(decwriter_addknown(self, ref,
-		                               seraddr32(result + sizeof(struct Dee_heapchunk)),
-		                               seraddr32(num_bytes)))
+		                               result + sizeof(struct Dee_heapchunk),
+		                               num_bytes))
 			goto err;
 	}
 	self->dw_used  = result + nb;
@@ -1858,7 +1876,7 @@ decwriter_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 	if (self->dw_gctail == 0) {
 		/* First GC object... */
 		struct gc_head_link *link;
-		self->dw_gchead = seraddr32(result);
+		self->dw_gchead = result;
 		link = DeeDecWriter_Addr2Mem(self, result, struct gc_head_link);
 		link->gc_next  = NULL;
 		link->gc_pself = NULL;
@@ -1870,7 +1888,7 @@ decwriter_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 		                      self->dw_gctail + (Dee_dec_addr32_t)offsetof(struct gc_head_link, gc_next)))
 			goto err_r;
 	}
-	self->dw_gctail = seraddr32(result);
+	self->dw_gctail = result;
 
 	/* Initialize "ob_refcnt" and "ob_type" of the newly allocated object */
 	copy = DeeDecWriter_Addr2Mem(self, result, struct gc_head);
@@ -2040,6 +2058,7 @@ cannot_serialize:
 		return DeeRT_ErrCannotSerialize(obj);
 
 	/* Create a fake RRELA relocation against the deemon core */
+	/* XXX: Support for large (>4GiB) relocation targets on 64-bit hosts */
 	if (rrelatab_append(&self->dw_drrela, seraddr32(addrof_object), -(Dee_dec_off32_t)offset_into_ob))
 		goto err;
 	self->dw_flags |= DeeDecWriter_F_NRELOC; /* Remember that serialization will be impossible */
@@ -2099,9 +2118,11 @@ decwriter_putobject_ex(DeeDecWriter *__restrict self,
 			p_pointer = DeeDecWriter_Addr2Mem(self, addrof_object, void *);
 			*p_pointer = (void *)((uintptr_t)obj + offset_into_ob - (uintptr_t)mod);
 			if (offset_into_ob != 0) {
+				/* XXX: Support for large (>4GiB) relocation targets on 64-bit hosts */
 				result = rrelatab_append(&self->dw_drrela, seraddr32(addrof_object),
 				                         (Dee_dec_off32_t)-offset_into_ob);
 			} else {
+				/* XXX: Support for large (>4GiB) relocation targets on 64-bit hosts */
 				result = rreltab_append(&self->dw_drrel, seraddr32(addrof_object));
 			}
 		} else {
@@ -2113,9 +2134,11 @@ decwriter_putobject_ex(DeeDecWriter *__restrict self,
 			p_pointer = DeeDecWriter_Addr2Mem(self, addrof_object, void *);
 			*p_pointer = (void *)((uintptr_t)obj + offset_into_ob - (uintptr_t)mod);
 			if (offset_into_ob != 0) {
+				/* XXX: Support for large (>4GiB) relocation targets on 64-bit hosts */
 				result = rrelatab_append(&dep->ddm_rrela, seraddr32(addrof_object),
 				                         (Dee_dec_off32_t)-offset_into_ob);
 			} else {
+				/* XXX: Support for large (>4GiB) relocation targets on 64-bit hosts */
 				result = rreltab_append(&dep->ddm_rrel, seraddr32(addrof_object));
 			}
 		}
@@ -2155,6 +2178,7 @@ decwriter_putpointer(DeeDecWriter *__restrict self,
 			Dee_DecrefNokill(mod);
 			out_pointer = DeeDecWriter_Addr2Mem(self, addrof_pointer, void *);
 			*out_pointer = (void *)((uintptr_t)pointer - (uintptr_t)&DeeModule_Deemon);
+			/* XXX: Support for large (>4GiB) relocation targets on 64-bit hosts */
 			return reltab_append(&self->dw_drel, seraddr32(addrof_pointer));
 		}
 		dep = decwriter_getdep(self, mod);
@@ -2163,6 +2187,7 @@ decwriter_putpointer(DeeDecWriter *__restrict self,
 			goto err;
 		out_pointer = DeeDecWriter_Addr2Mem(self, addrof_pointer, void *);
 		*out_pointer = (void *)((uintptr_t)pointer - (uintptr_t)mod);
+		/* XXX: Support for large (>4GiB) relocation targets on 64-bit hosts */
 		return reltab_append(&dep->ddm_rel, seraddr32(addrof_pointer));
 	}
 
@@ -2191,7 +2216,7 @@ decwriter_putpointer(DeeDecWriter *__restrict self,
 				/* Found the entry! */
 				Dee_seraddr_t addrof_target;
 				addrof_target = (Dee_seraddr_t)((byte_t *)pointer - Dee_dec_ptrtab_entry_getminaddr(ent));
-				addrof_target += (Dee_seraddr_t)ent->dote_off;
+				addrof_target += ent->dote_off;
 				return decwriter_putaddr(self, addrof_pointer, addrof_target);
 			}
 		}

@@ -86,19 +86,24 @@ struct Dee_dex_symbol {
 	__UINTPTR_HALF_TYPE__     _ds_index; /* Used internally during initialization */
 };
 
+union Dee_module_buildid;
 struct Dee_module_dexinfo;
 struct Dee_module_dexdata {
-	struct Dee_module_object    *mdx_module; /* [1..1][const] Associated dex module descriptor */
-	struct Dee_dex_symbol const *mdx_export; /* [1..mdx_module->mo_globalc][const] Raw export table of this dex module */
-	void                        *mdx_handle; /* [?..?][const][owned] System-specific library handle (filled in during loading) */
-	struct Dee_module_dexinfo   *mdx_info;   /* [0..1][const] Used internally. Initialize to "NULL" in dex modules */
+	struct Dee_module_object       *mdx_module;  /* [1..1][const] Associated DEX module descriptor */
+	struct Dee_dex_symbol const    *mdx_export;  /* [1..mdx_module->mo_globalc][const] Raw export table of this DEX module */
+	union Dee_module_buildid const *mdx_buildid; /* [0..1][const] 16-byte Build ID of the DEX module (if available) -- set to
+	                                              * "ADDR(.note.gnu.build-id) + 16" if available, or to 16 random bytes if
+	                                              * that is possible */
 
 	/* [0..1][const] Optional initializer/finalizer/clear callbacks. */
 	WUNUSED_T int (DCALL *mdx_init)(void);
 	void (DCALL *mdx_fini)(void);
 	bool (DCALL *mdx_clear)(void);
 
-	void *_mdx_pad[9]; /* For future expansion (must be 0-initialized by dex modules) */
+	/* Internal fields... */
+	void                           *mdx_handle; /* [?..?][const][owned] System-specific library handle (filled in during loading) */
+	struct Dee_module_dexinfo      *mdx_info;   /* [0..1][const] Used internally. Initialize to "NULL" in DEX modules */
+	void *_mdx_pad[8]; /* For future expansion (must be 0-initialized by DEX modules) */
 };
 
 #if defined(CONFIG_BUILDING_DEEMON) || defined(CONFIG_BUILDING_DEX)
@@ -146,7 +151,7 @@ INTDEF __BYTE_TYPE__ _end[];
 #define Dee_DEX_END(init, fini, clear)                                      \
 	};                                                                      \
 	STATIC_ASSERT_MSG(COMPILER_LENOF(_dex_symbols) > 0,                     \
-	                  "A dex module must have at least 1 export");          \
+	                  "A DEX module must have at least 1 export");          \
 	enum { _DEX_BUCKETM = __Dee_NEXT_POWER_OF_2_16(COMPILER_LENOF(_dex_symbols) + 1) - 1 }; \
 	PRIVATE struct Dee_module_symbol _dex_bucketv[_DEX_BUCKETM + 1] = {};   \
 	Dee_MODULE_STRUCT(_dex_object_raw, COMPILER_LENOF(_dex_symbols));       \
@@ -156,15 +161,15 @@ INTDEF __BYTE_TYPE__ _end[];
 	};                                                                      \
 	EXPDEF struct _dex_object DEX;                                          \
 	PRIVATE struct Dee_module_dexdata _dex_data = {                         \
-		/* .mdx_module = */ (struct Dee_module_object *)&DEX.m_dex,         \
-		/* .mdx_export = */ _dex_symbols,                                   \
-		/* .mdx_handle = */ NULL, /* Init doesn't matter */                 \
-		/* .mdx_info   = */ NULL,                                           \
-		/* .mdx_init   = */ init,                                           \
-		/* .mdx_fini   = */ fini,                                           \
-		/* .mdx_clear  = */ clear,                                          \
-		/* ._mdx_pad   = */ { NULL, NULL, NULL, NULL, NULL,                 \
-		                      NULL, NULL, NULL, NULL }                      \
+		/* .mdx_module  = */ (struct Dee_module_object *)&DEX.m_dex,        \
+		/* .mdx_export  = */ _dex_symbols,                                  \
+		/* .mdx_buildid = */ NULL,                                          \
+		/* .mdx_init    = */ init,                                          \
+		/* .mdx_fini    = */ fini,                                          \
+		/* .mdx_clear   = */ clear,                                         \
+		/* .mdx_handle  = */ NULL, /* Init doesn't matter */                \
+		/* .mdx_info    = */ NULL,                                          \
+		/* ._mdx_pad    = */ { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL } \
 	};                                                                      \
 	PUBLIC struct _dex_object DEX = {{ _Dee_GC_HEAD_UNTRACKED_INIT }, {     \
 		__Dee_DEX_OBJECT_HEAD_INIT,                                         \
@@ -190,7 +195,7 @@ INTDEF __BYTE_TYPE__ _end[];
 
 
 #ifdef CONFIG_BUILDING_DEEMON
-/* Open loaded system "dex_handle" as a module object. The dex module will have
+/* Open loaded system "dex_handle" as a module object. The DEX module will have
  * already been hooked into "module_abstree_root", as well as having had its
  * "mo_dexdata" fully initialized.
  * If the system indicates that "dex_handle" had already been loaded under some
@@ -200,19 +205,19 @@ INTDEF __BYTE_TYPE__ _end[];
  *
  * @param: absname: The absolute, normalized filesystem name where "dex_handle"
  *                  was loaded from, with its trailing .dll/.so removed (as such,
- *                  this is the name under which a new dex module should appear
+ *                  this is the name under which a new DEX module should appear
  *                  within `module_abstree_root')
  * @param: dex_handle: The system library handle, as returned by `DeeSystem_DlOpenString()'
- * @return: * :   The newly loaded dex module.
- * @return: NULL: An error was thrown (e.g. "dex_handle" does not refer to a dex module) */
+ * @return: * :   The newly loaded DEX module.
+ * @return: NULL: An error was thrown (e.g. "dex_handle" does not refer to a DEX module) */
 INTDEF WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 DeeModule_OpenDex(/*inherit(always)*/ /*utf-8*/ char *__restrict absname,
                   /*inherit(always)*/ void *dex_handle);
 
-/* Invoke the "mdx_clear" operator on every loaded dex module. */
+/* Invoke the "mdx_clear" operator on every loaded DEX module. */
 INTDEF bool DCALL DeeModule_ClearDexModuleCaches(void);
 
-/* Unload all loaded dex modules. */
+/* Unload all loaded DEX modules. */
 INTDEF void DCALL DeeModule_UnloadAllDexModules(void);
 #endif /* CONFIG_BUILDING_DEEMON */
 
