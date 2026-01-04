@@ -279,7 +279,9 @@ DeeModule_GetRootFunction(DeeModuleObject *__restrict self) {
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) void DCALL
 DeeModule_GetBuildId_uncached(DeeModuleObject *__restrict self) {
 	if (self == &DeeModule_Deemon) {
-		DeeExec_GetBuildId();
+		union Dee_module_buildid const *temp;
+		temp = DeeExec_GetBuildId();
+		(void)temp;
 		return;
 	}
 

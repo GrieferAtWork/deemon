@@ -417,10 +417,8 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 		if (dep_buildid->mbi_word64[0] != dependency->d_buildid[0] ||
 		    dep_buildid->mbi_word64[1] != dependency->d_buildid[1]) {
 			Dee_uint128_t expected_buildid, actual_buildid;
-			__hybrid_uint128_setword64(expected_buildid, 0, dependency->d_buildid[0]);
-			__hybrid_uint128_setword64(expected_buildid, 1, dependency->d_buildid[1]);
-			__hybrid_uint128_setword64(actual_buildid, 0, dep_buildid->mbi_word64[0]);
-			__hybrid_uint128_setword64(actual_buildid, 1, dep_buildid->mbi_word64[1]);
+			memcpy(&expected_buildid, dependency->d_buildid, sizeof(expected_buildid));
+			memcpy(&actual_buildid, dep_buildid, sizeof(actual_buildid));
 			Dee_DPRINTF("[LD][dec %q] CORRUPT: Dependency %q has unexpected build ID. "
 			            /**/ "Expected: %#.32" PRFx128 ", Actual: %#.32" PRFx128 "\n",
 			            context_absname, DeeModule_GetAbsName(dep),
