@@ -30,7 +30,7 @@
 #include <deemon/error.h>
 #include <deemon/exec.h>
 #include <deemon/format.h>
-#include <deemon/list.h>
+#include <deemon/int.h>
 #include <deemon/module.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
@@ -44,9 +44,14 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/typecore.h>
+
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#include <deemon/list.h>
+
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
 #include <hybrid/sequence/list.h>
-#include <hybrid/typecore.h>
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
@@ -2535,6 +2540,19 @@ unbound:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+module_get_buildid(DeeModuleObject *__restrict self) {
+	Dee_uint128_t buildid_int;
+	union Dee_module_buildid const *buildid;
+	buildid = DeeModule_GetBuildId(self);
+	if unlikely(!buildid)
+		goto err;
+	memcpy(&buildid_int, buildid, sizeof(buildid_int));
+	return DeeInt_NewUInt128(buildid_int);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_get_directory(DeeModuleObject *__restrict self) {
 	DREF DeeObject *result = DeeModule_GetDirectory(self);
 	Dee_XIncref(result);
@@ -2719,9 +2737,16 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 	TYPE_GETTER_AB_F("__path__", &module_get_path, METHOD_FNOREFESCAPE,
 	                 "->?X2?Dstring?N\n"
 	                 "Deprecated alias for ${this.__filename__ is bound ? this.__filename__ : none}"),
-	TYPE_GETTER_AB_F("__name__", &module_get_name, METHOD_FNOREFESCAPE,
-	                 "->?Dstring\n"
-	                 "'Simple' name of the module (that is: the last component of ?#__absname__)"),
+	TYPE_GETTER_F("__name__", &module_get_name, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?Dstring\n"
+	              "'Simple' name of the module (that is: the last component of ?#__absname__)"),
+	TYPE_GETTER_AB_F("__buildid__", &module_get_buildid, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "The module's #I{Build ID}, which is a unique, 128-bit "
+	                 /**/ "identifier for this specific build of the module. "
+	                 /**/ "This number may be assumed to change whenever "
+	                 /**/ "something about the underlying structure of the "
+	                 /**/ "module changes."),
 	/* TODO: __libnames__->?S?Dstring (to expose DeeModule_GetLibName() and DeeModule_GetLibNameCount()) */
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	TYPE_GETTER_F("__code__", &module_get_code, METHOD_FNOREFESCAPE,
@@ -2745,10 +2770,10 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE struct type_getset tpconst module_dee_getsets[] = {
-	TYPE_GETTER_F("__code__", &module_get_code, METHOD_FCONSTCALL | METHOD_FNOTHROW,
-	              "->?Ert:Code\n"
-	              "#tValueError{The Module hasn't been fully loaded}"
-	              "Returns the code object for the Module's root initializer"),
+	TYPE_GETTER_AB_F("__code__", &module_get_code, METHOD_FCONSTCALL | METHOD_FNOTHROW,
+	                 "->?Ert:Code\n"
+	                 "#tValueError{The Module hasn't been fully loaded}"
+	                 "Returns the code object for the Module's root initializer"),
 	TYPE_GETSET_END
 };
 
