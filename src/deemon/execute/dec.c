@@ -66,6 +66,7 @@ ASSERT_FIELD(Dec_Ehdr, e_version, DeeDec_Ehdr_OFFSETOF__e_version, 2);
 STATIC_ASSERT(offsetof(Dec_Ehdr, e_typedata) == DeeDec_Ehdr_OFFSETOF__e_typedata);
 ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_heap, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_heap, 2);
 ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_sizeof_pointer, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_sizeof_pointer, 1);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_endian, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_endian, 1);
 ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_eof, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_eof, 4);
 ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_deemon_build_id, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_deemon_build_id, 16);
 ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_build_timestamp, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_build_timestamp, 8);
@@ -962,8 +963,8 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 		goto_fail("Bad 'er_offsetof_heap'");
 	if unlikely(ehdr->e_typedata.td_reloc.er_sizeof_pointer != sizeof(void *))
 		goto_fail("Bad 'er_sizeof_pointer'");
-	if unlikely(ehdr->e_typedata.td_reloc._er_unused_zero != 0)
-		goto_fail("Bad '_er_unused_zero'");
+	if unlikely(ehdr->e_typedata.td_reloc.er_endian != Dee_DEC_ENDIAN)
+		goto_fail("Bad 'er_endian'");
 	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_eof != DeeMapFile_GetSize(fmap))
 		goto_fail("Bad 'er_offsetof_eof' does not match size of file");
 	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_eof > DFILE_LIMIT)
@@ -1175,7 +1176,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 		ehdr->e_typedata.td_reloc.er_offsetof_gctail = (Dee_dec_addr32_t)self->dw_gctail;
 		ehdr->e_typedata.td_reloc.er_offsetof_heap = offsetof(Dec_Ehdr, e_heap);
 		ehdr->e_typedata.td_reloc.er_sizeof_pointer = sizeof(void *);
-		ehdr->e_typedata.td_reloc._er_unused_zero = 0;
+		ehdr->e_typedata.td_reloc.er_endian = Dee_DEC_ENDIAN;
 		{
 			union Dee_module_buildid const *deemon_buildid  = DeeExec_GetBuildId();
 			ehdr->e_typedata.td_reloc.er_deemon_build_id[0] = deemon_buildid->mbi_word64[0];

@@ -34,6 +34,7 @@
 
 #ifdef DEE_SOURCE
 #include <hybrid/host.h>
+#include <hybrid/byteorder.h>
 
 #include "heap.h"
 #include "mapfile.h"
@@ -156,6 +157,21 @@ typedef int32_t Dee_dec_off32_t;
 #endif /* !... */
 #endif /* !Dee_DEC_MACH */
 
+#define Dee_DEC_ENDIAN_UNKNOWN 0
+#define Dee_DEC_ENDIAN_LITTLE  1
+#define Dee_DEC_ENDIAN_BIG     2
+#define Dee_DEC_ENDIAN_PDP     3
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define Dee_DEC_ENDIAN Dee_DEC_ENDIAN_LITTLE
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define Dee_DEC_ENDIAN Dee_DEC_ENDIAN_BIG
+#elif __BYTE_ORDER__ == __ORDER_PDP_ENDIAN__
+#define Dee_DEC_ENDIAN Dee_DEC_ENDIAN_PDP
+#else /* __BYTE_ORDER__ == ... */
+#define Dee_DEC_ENDIAN Dee_DEC_ENDIAN_UNKNOWN
+#endif /* __BYTE_ORDER__ != ... */
+
+
 #define Dee_DEC_TYPE_RELOC 0 /* File contains serializable relocations (that are free'd once `DeeDec_Track()' is called) */
 #define Dee_DEC_TYPE_IMAGE 1 /* File contains non-serializable relocations (that are free'd once `DeeDec_Track()' is called) */
 
@@ -171,6 +187,7 @@ typedef struct dec_rrela Dec_RRela;
 #define DeeDec_Ehdr_OFFSETOF__e_typedata                                8
 #define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_heap    8
 #define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_sizeof_pointer   10
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_endian           11
 #define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_eof     12
 #define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_deemon_build_id  16
 #define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_build_timestamp  32
@@ -218,7 +235,7 @@ typedef struct {
 		struct {
 			uint16_t          er_offsetof_heap;      /* Offset from start of this struct to `e_heap' (== `DeeDec_Ehdr_OFFSETOF__e_heap') */
 			uint8_t           er_sizeof_pointer;     /* Size of pointer (and thus of: relocation targets, and `Dee_refcnt_t') */
-			uint8_t          _er_unused_zero;        /* Unused; must be set to `0' */
+			uint8_t           er_endian;             /* Endian type code, specifying the format of all multi-byte fields (== Dee_DEC_ENDIAN) */
 			Dee_dec_addr32_t  er_offsetof_eof;       /* [1..1] Offset to EOF of file mapping (should also equal the dec file's size) */
 			uint64_t          er_deemon_build_id[2]; /* Deemon build ID (128-bit unsigned integer) */
 			uint64_t          er_build_timestamp;    /* Microseconds since `01-01-1970', when this dec file was created. */
