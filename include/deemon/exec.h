@@ -112,12 +112,12 @@ DFUNDEF WUNUSED int DCALL DeeModule_SetLibPath(/*Tuple*/ DeeObject *new_libpath)
  * @return: 1 : Given path was added (or removed)
  * @return: 0 : Nothing happened (path was already added, or removed)
  * @return: -1: Error */
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_AddLibPath(/*String*/ DeeObject *path);
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_AddLibPathString(/*utf-8*/ char const *path);
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_AddLibPathStringLen(/*utf-8*/ char const *path, size_t path_len);
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_RemoveLibPath(/*String*/ DeeObject *path);
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_RemoveLibPathString(/*utf-8*/ char const *path);
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_RemoveLibPathStringLen(/*utf-8*/ char const *path, size_t path_len);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_AddLibPath(/*String*/ DeeObject *__restrict path);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_AddLibPathString(/*utf-8*/ char const *__restrict path);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_AddLibPathStringLen(/*utf-8*/ char const *__restrict path, size_t path_len);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_RemoveLibPath(/*String*/ DeeObject *__restrict path);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_RemoveLibPathString(/*utf-8*/ char const *__restrict path);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_RemoveLibPathStringLen(/*utf-8*/ char const *__restrict path, size_t path_len);
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF bool DCALL DeeModule_ClearLibPath(void);
 #endif /* CONFIG_BUILDING_DEEMON */

@@ -8989,7 +8989,7 @@ err:
  * @return: 0 : Nothing happened (path was already added, or removed)
  * @return: -1: Error */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
-DeeModule_AddLibPath(/*String*/ DeeObject *path) {
+DeeModule_AddLibPath(/*String*/ DeeObject *__restrict path) {
 	int result;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	path = DeeSystem_MakeNormalAndAbsolute(path);
@@ -9003,7 +9003,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) int DCALL
-DeeModule_RemoveLibPath(/*String*/ DeeObject *path) {
+DeeModule_RemoveLibPath(/*String*/ DeeObject *__restrict path) {
 	int result;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	path = DeeSystem_MakeNormalAndAbsolute(path);
@@ -9018,12 +9018,12 @@ err:
 
 
 PUBLIC WUNUSED NONNULL((1)) int DCALL
-DeeModule_AddLibPathString(/*utf-8*/ char const *path) {
+DeeModule_AddLibPathString(/*utf-8*/ char const *__restrict path) {
 	return DeeModule_AddLibPathStringLen(path, strlen(path));
 }
 
 PUBLIC WUNUSED NONNULL((1)) int DCALL
-DeeModule_AddLibPathStringLen(/*utf-8*/ char const *path, size_t path_len) {
+DeeModule_AddLibPathStringLen(/*utf-8*/ char const *__restrict path, size_t path_len) {
 	int result;
 	DREF DeeObject *pathob;
 	pathob = DeeString_NewUtf8(path, path_len, STRING_ERROR_FSTRICT);
@@ -9037,12 +9037,12 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) int DCALL
-DeeModule_RemoveLibPathString(/*utf-8*/ char const *path) {
+DeeModule_RemoveLibPathString(/*utf-8*/ char const *__restrict path) {
 	return DeeModule_RemoveLibPathStringLen(path, strlen(path));
 }
 
 PUBLIC WUNUSED NONNULL((1)) int DCALL
-DeeModule_RemoveLibPathStringLen(/*utf-8*/ char const *path, size_t path_len) {
+DeeModule_RemoveLibPathStringLen(/*utf-8*/ char const *__restrict path, size_t path_len) {
 	int result;
 	DREF DeeObject *pathob;
 	pathob = DeeString_NewUtf8(path, path_len, STRING_ERROR_FSTRICT);
