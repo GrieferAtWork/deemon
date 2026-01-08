@@ -3323,6 +3323,9 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 		/* Trim "pathname_size" to get rid of everything after the last slash. */
 		while (pathname_size >= 1 && !DeeSystem_IsSep(pathname[pathname_size - 1]))
 			--pathname_size;
+		/* Special case: if the context path somehow becomes empty here, then it mustn't count as the FS root! */
+		if unlikely(!pathname_size)
+			goto make_absolute_path;
 		while (pathname_size >= 1 && DeeSystem_IsSep(pathname[pathname_size - 1]))
 			--pathname_size;
 	}
@@ -3334,6 +3337,7 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 	if (DeeSystem_IsNormalAndAbsolute(pathname, pathname_size) || !pathname_size) {
 		pathname_ob = NULL;
 	} else {
+make_absolute_path:
 		if (pathname_ob && (flags & DeeModule_IMPORT_F_CTXDIR)) {
 			pathname_ob = (DeeStringObject *)DeeSystem_MakeNormalAndAbsolute(Dee_AsObject(pathname_ob));
 		} else {
@@ -3454,7 +3458,7 @@ cat_and_normalize_import(/*utf-8*/ char const *__restrict pathname, size_t pathn
 			/* Write new drive-string */
 			if unlikely(segment_len != 1) {
 				DeeError_Throwf(&DeeError_ValueError,
-				                "Length of drive name %$q is not 1 character in \".%#$q\" relative to",
+				                "Length of drive name %$q is not 1 character in \".%#$q\" relative to %$q",
 				                segment_len, import_str,
 				                (size_t)(import_str_end - import_str_orig),
 				                import_str_orig, pathname_size, pathname);
@@ -3736,9 +3740,11 @@ do_DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_s
 			/* Trim "context_absname_size" to get rid of everything after the last slash. */
 			while (context_absname_size >= 1 && !DeeSystem_IsSep(context_absname[context_absname_size - 1]))
 				--context_absname_size;
+			/* Special case: if the context path somehow becomes empty here, then it mustn't count as the FS root! */
+			if likely(context_absname_size)
+				flags |= DeeModule_IMPORT_F_CTXDIR;
 			while (context_absname_size >= 1 && DeeSystem_IsSep(context_absname[context_absname_size - 1]))
 				--context_absname_size;
-			flags |= DeeModule_IMPORT_F_CTXDIR;
 		}
 		++import_str; /* Skip leading "." */
 		--import_str_size;
