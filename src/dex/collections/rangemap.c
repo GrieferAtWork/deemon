@@ -360,13 +360,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rangemap_get_first(DeeObject *__restrict self) {
-	return DeeObject_CallAttrStringHash((DeeObject *)&DeeSeq_Type, "first",
+	return DeeObject_CallAttrStringHash(Dee_AsObject(&DeeSeq_Type), "first",
 	                                    Dee_HashStr__first, 1, (DeeObject *const *)&self);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rangemap_get_last(DeeObject *__restrict self) {
-	return DeeObject_CallAttrStringHash((DeeObject *)&DeeSeq_Type, "last",
+	return DeeObject_CallAttrStringHash(Dee_AsObject(&DeeSeq_Type), "last",
 	                                    Dee_HashStr__last, 1, (DeeObject *const *)&self);
 }
 

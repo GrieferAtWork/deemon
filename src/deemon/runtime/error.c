@@ -265,7 +265,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	struct except_frame *frame;
 	DeeThreadObject *ts = DeeThread_Self();
 	ASSERT_OBJECT(error);
-	if (error == (DeeObject *)&DeeError_NoMemory_instance) {
+	if (error == Dee_AsObject(&DeeError_NoMemory_instance)) {
 		/* Special handling for throwing a bad-allocation error.
 		 * >> Required to prevent infinite recursion when allocating
 		 *    the exception frame for an out-of-memory error. */
@@ -465,7 +465,7 @@ PRIVATE BOOL WINAPI
 nt_ConsoleControlHandler(DWORD CtrlType) {
 	if (CtrlType == CTRL_C_EVENT) {
 		INC_KEYBOARD_INTERRUPT_COUNTER();
-		DeeThread_Wake((DeeObject *)&DeeThread_Main);
+		DeeThread_Wake(Dee_AsObject(&DeeThread_Main));
 		return TRUE;
 	}
 	return FALSE;
@@ -485,7 +485,7 @@ DeeError_UninstallKeyboardInterrupt(void) {
 
 PRIVATE void sigint_handler(int UNUSED(signo)) {
 	INC_KEYBOARD_INTERRUPT_COUNTER();
-	DeeThread_Wake((DeeObject *)&DeeThread_Main);
+	DeeThread_Wake(Dee_AsObject(&DeeThread_Main));
 }
 
 PRIVATE void (*saved_sigint_handler)(int signo) = NULL;

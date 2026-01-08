@@ -217,7 +217,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_gettmp_f_impl(void)
 #endif /* posix_gettmp_USE_nt_GetTempPath */
 
 #ifdef posix_gettmp_USE_P_tmpdir
-	return_reference_((DeeObject *)&posix_tmpdir_default);
+	return_reference_(Dee_AsObject(&posix_tmpdir_default));
 #endif /* posix_gettmp_USE_P_tmpdir */
 }
 

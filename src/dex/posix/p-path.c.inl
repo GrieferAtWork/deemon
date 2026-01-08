@@ -186,9 +186,9 @@ posix_path_inctrail_f(DeeStringObject *__restrict path) {
 	 * For this, we can always just search DeeString_STR. */
 	if (memchr(DeeString_STR(path), DeeSystem_ALTSEP, DeeString_SIZE(path) * sizeof(char)) != NULL &&
 	    memchr(DeeString_STR(path), DeeSystem_SEP, DeeString_SIZE(path) * sizeof(char)) == NULL)
-		return (DREF DeeStringObject *)DeeObject_Add(Dee_AsObject(path), (DeeObject *)&posix_FS_ALTSEP);
+		return (DREF DeeStringObject *)DeeObject_Add(Dee_AsObject(path), Dee_AsObject(&posix_FS_ALTSEP));
 #endif /* DeeSystem_ALTSEP */
-	return (DREF DeeStringObject *)DeeObject_Add(Dee_AsObject(path), (DeeObject *)&posix_FS_SEP);
+	return (DREF DeeStringObject *)DeeObject_Add(Dee_AsObject(path), Dee_AsObject(&posix_FS_SEP));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL

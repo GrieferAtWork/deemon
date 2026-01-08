@@ -337,7 +337,7 @@ err_shutdown_failed(Socket *__restrict self, neterrno_t error) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_close(Socket *self, size_t argc, DeeObject *const *argv) {
 	sock_t socket_handle;
-	DeeObject *shutdown_mode = (DeeObject *)&shutdown_all;
+	DeeObject *shutdown_mode = Dee_AsObject(&shutdown_all);
 	DeeArg_Unpack0Or1(err, argc, argv, "close", &shutdown_mode);
 	if (!DeeString_Check(shutdown_mode) ||
 	    !DeeString_IsEmpty(shutdown_mode)) {
@@ -405,7 +405,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_shutdown(Socket *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *shutdown_mode = (DeeObject *)&shutdown_all;
+	DeeObject *shutdown_mode = Dee_AsObject(&shutdown_all);
 	DeeArg_Unpack0Or1(err, argc, argv, "shutdown", &shutdown_mode);
 	if (!DeeString_Check(shutdown_mode) ||
 	    !DeeString_IsEmpty(shutdown_mode)) {
@@ -735,7 +735,7 @@ PRIVATE int DCALL get_default_backlog(void) {
 	int status;
 	uint16_t result;
 	DREF DeeObject *value;
-	value = Dee_GetEnv((DeeObject *)&str_DEEMON_MAXBACKLOG);
+	value = Dee_GetEnv(Dee_AsObject(&str_DEEMON_MAXBACKLOG));
 	if unlikely(!ITER_ISOK(value)) {
 		if (!value)
 			goto err;
@@ -2492,12 +2492,12 @@ socket_wasshutdown(Socket *self, size_t argc, DeeObject *const *argv) {
 	int mode;
 	uint16_t state = self->s_state;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("wasshutdown", params: """
-	DeeObject *shutdown_mode=!Prw = (DeeObject *)&shutdown_all;
+	DeeObject *shutdown_mode=!Prw = Dee_AsObject(&shutdown_all);
 """);]]]*/
 	struct {
 		DeeObject *shutdown_mode;
 	} args;
-	args.shutdown_mode = (DeeObject *)&shutdown_all;
+	args.shutdown_mode = Dee_AsObject(&shutdown_all);
 	DeeArg_Unpack0Or1(err, argc, argv, "wasshutdown", &args.shutdown_mode);
 /*[[[end]]]*/
 	if (DeeString_Check(args.shutdown_mode) &&

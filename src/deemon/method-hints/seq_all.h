@@ -168,7 +168,7 @@ int __seq_all__.seq_all_with_key([[nonnull]] DeeObject *self,
 	DREF DeeObject *result;
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	result = LOCAL_CALLATTR(self, 3, args);
 	if unlikely(!result)

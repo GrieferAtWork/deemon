@@ -8638,11 +8638,11 @@ PRIVATE WUNUSED DREF DeeTupleObject *DCALL DeeModule_NewDefaultPath(void) {
 	if unlikely(env_status < 0)
 		goto err_builder;
 #ifdef CONFIG_DEEMON_PATH
-#define append_path_cb(str)                                                                \
-	{                                                                                      \
-		PRIVATE DEFINE_STRING(_libpath_string, str);                                       \
-		if unlikely(Dee_tuple_builder_append(&builder, (DeeObject *)&_libpath_string) < 0) \
-			goto err_builder;                                                              \
+#define append_path_cb(str)                                                                 \
+	{                                                                                       \
+		PRIVATE DEFINE_STRING(_libpath_string, str);                                        \
+		if unlikely(Dee_tuple_builder_append(&builder, Dee_AsObject(&_libpath_string)) < 0) \
+			goto err_builder;                                                               \
 	}
 	CONFIG_DEEMON_PATH(append_path_cb)
 #undef append_path_cb
@@ -8672,12 +8672,12 @@ err_builder:
 	if unlikely(!result)
 		goto err;
 	i = 0;
-#define append_path_cb(str)                                     \
-	{                                                           \
-		PRIVATE DEFINE_STRING(_libpath_string, str);            \
-		DeeTuple_SET(result, i, (DeeObject *)&_libpath_string); \
-		Dee_Incref(&_libpath_string);                           \
-		++i;                                                    \
+#define append_path_cb(str)                                      \
+	{                                                            \
+		PRIVATE DEFINE_STRING(_libpath_string, str);             \
+		DeeTuple_SET(result, i, Dee_AsObject(&_libpath_string)); \
+		Dee_Incref(&_libpath_string);                            \
+		++i;                                                     \
 	}
 	CONFIG_DEEMON_PATH(append_path_cb)
 #undef append_path_cb
@@ -9095,7 +9095,7 @@ PRIVATE void DCALL do_init_module_path(void) {
 				}
 				if unlikely(!path_part)
 					goto init_error;
-				error = DeeList_Append((DeeObject *)&DeeModule_Path, path_part);
+				error = DeeList_Append(Dee_AsObject(&DeeModule_Path), path_part);
 				Dee_Decref(path_part);
 				if unlikely(error)
 					goto init_error;
@@ -9105,13 +9105,13 @@ PRIVATE void DCALL do_init_module_path(void) {
 	}
 #endif /* !CONFIG_NO_DEEMON_PATH_ENVIRON */
 #ifdef CONFIG_DEEMON_PATH
-#define APPEND_PATH(str)                                       \
-	{                                                          \
-		PRIVATE DEFINE_STRING(_libpath_string, str);           \
-		error = DeeList_Append((DeeObject *)&DeeModule_Path,   \
-		                       (DeeObject *)&_libpath_string); \
-		if unlikely(error)                                     \
-			goto init_error;                                   \
+#define APPEND_PATH(str)                                        \
+	{                                                           \
+		PRIVATE DEFINE_STRING(_libpath_string, str);            \
+		error = DeeList_Append(Dee_AsObject(&DeeModule_Path),   \
+		                       Dee_AsObject(&_libpath_string)); \
+		if unlikely(error)                                      \
+			goto init_error;                                    \
 	}
 	CONFIG_DEEMON_PATH(APPEND_PATH)
 #undef APPEND_PATH
@@ -9122,7 +9122,7 @@ PRIVATE void DCALL do_init_module_path(void) {
 		default_path = DeeString_Newf("%Klib", DeeExec_GetHome());
 		if unlikely(!default_path)
 			goto init_error;
-		error = DeeList_Append((DeeObject *)&DeeModule_Path, default_path);
+		error = DeeList_Append(Dee_AsObject(&DeeModule_Path), default_path);
 		Dee_Decref(default_path);
 		if unlikely(error)
 			goto init_error;

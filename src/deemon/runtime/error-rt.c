@@ -2729,12 +2729,12 @@ PUBLIC ATTR_COLD int
 
 PRIVATE DeeErrorObject RT_ErrNoActiveException = {
 	OBJECT_HEAD_INIT(&DeeError_RuntimeError),
-	/* .e_ms	g = */ (DeeObject *)&str_No_active_exception,
-	/* .	e_cause   = */ NULL,
+	/* .e_msg   = */ Dee_AsObject(&str_No_active_exception),
+	/* .e_cause = */ NULL,
 };
 
 PUBLIC ATTR_COLD int (DCALL DeeRT_ErrNoActiveException)(void) {
-	return DeeError_Throw((DeeObject *)&RT_ErrNoActiveException);
+	return DeeError_Throw(&RT_ErrNoActiveException);
 }
 
 

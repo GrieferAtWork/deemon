@@ -1922,7 +1922,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeBlackListKwObject *DCALL
 blkw_get_frozen(DeeBlackListKwObject *__restrict self) {
 	DREF DeeObject *frozen_kw;
 	DREF DeeBlackListKwObject *result;
-	frozen_kw = DeeObject_GetAttr(self->blkw_kw, (DeeObject *)&str_frozen);
+	frozen_kw = DeeObject_GetAttr(self->blkw_kw, Dee_AsObject(&str_frozen));
 	if unlikely(!frozen_kw)
 		goto err;
 	if (frozen_kw == self->blkw_kw) {

@@ -862,7 +862,7 @@ again:
 PRIVATE WUNUSED DREF DeeStringObject *DCALL process_get_shell(void) {
 	DREF DeeStringObject *result;
 	/* Allow overriding the system shell program with the "$SHELL" environment variable. */
-	result = (DREF DeeStringObject *)Dee_GetEnv((DeeObject *)&str_SHELL);
+	result = (DREF DeeStringObject *)Dee_GetEnv(Dee_AsObject(&str_SHELL));
 	if (result == (DREF DeeStringObject *)ITER_DONE) {
 		/* On unix, try to make use of `/etc/shells':
 		 * >> function getDefaultShell(): string {
@@ -1397,7 +1397,7 @@ ipc_exe2path_remember(DeeStringObject *__restrict exe_str,
                       DeeStringObject *__restrict full_exe_str) {
 	if (atomic_read(&ipc_exe2path_cache_listening) > 0) {
 		int error;
-		error = DeeDict_SetItem((DeeObject *)&ipc_exe2path_cache,
+		error = DeeDict_SetItem(Dee_AsObject(&ipc_exe2path_cache),
 		                        (DeeObject *)exe_str,
 		                        (DeeObject *)full_exe_str);
 		if unlikely(error != 0)
@@ -1407,7 +1407,7 @@ ipc_exe2path_remember(DeeStringObject *__restrict exe_str,
 
 PRIVATE int DCALL
 ipc_exe2path_notify(DeeObject *UNUSED(arg)) {
-	DeeDict_Clear((DeeObject *)&ipc_exe2path_cache);
+	DeeDict_Clear(Dee_AsObject(&ipc_exe2path_cache));
 	return 0;
 }
 
@@ -1417,12 +1417,12 @@ PRIVATE bool DCALL
 ipc_exe2path_do_start_listen(void) {
 	int ok;
 	ok = DeeNotify_StartListen(Dee_NOTIFICATION_CLASS_ENVIRON,
-	                           (DeeObject *)&str_PATH,
+	                           Dee_AsObject(&str_PATH),
 	                           &ipc_exe2path_notify, NULL);
 #ifdef ipc_Process_USE_CreateProcessW
 	if likely(ok >= 0) {
 		ok = DeeNotify_StartListen(Dee_NOTIFICATION_CLASS_ENVIRON,
-		                           (DeeObject *)&str_PATHEXT,
+		                           Dee_AsObject(&str_PATHEXT),
 		                           &ipc_exe2path_notify, NULL);
 		if likely(ok >= 0) {
 			/* On windows, also need to be clear the cache when the program's PWD changes! */
@@ -1430,13 +1430,13 @@ ipc_exe2path_do_start_listen(void) {
 			                                &ipc_exe2path_notify, NULL);
 			if unlikely(ok < 0) {
 				DeeNotify_EndListen(Dee_NOTIFICATION_CLASS_ENVIRON,
-				                    (DeeObject *)&str_PATHEXT,
+				                    Dee_AsObject(&str_PATHEXT),
 				                    &ipc_exe2path_notify, NULL);
 			}
 		}
 		if unlikely(ok < 0) {
 			DeeNotify_EndListen(Dee_NOTIFICATION_CLASS_ENVIRON,
-			                    (DeeObject *)&str_PATH,
+			                    Dee_AsObject(&str_PATH),
 			                    &ipc_exe2path_notify, NULL);
 		}
 	}
@@ -1468,11 +1468,11 @@ ipc_exe2path_start_listen(void) {
 
 #define HAVE_ipc_exe2path_fini
 PRIVATE void DCALL ipc_exe2path_fini(void) {
-	(*DeeDict_Type.tp_init.tp_dtor)((DeeObject *)&ipc_exe2path_cache);
+	(*DeeDict_Type.tp_init.tp_dtor)(Dee_AsObject(&ipc_exe2path_cache));
 	if (atomic_read(&ipc_exe2path_cache_listening) > 0) {
-		DeeNotify_EndListen(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)&str_PATH, &ipc_exe2path_notify, NULL);
+		DeeNotify_EndListen(Dee_NOTIFICATION_CLASS_ENVIRON, Dee_AsObject(&str_PATH), &ipc_exe2path_notify, NULL);
 #ifdef ipc_Process_USE_CreateProcessW
-		DeeNotify_EndListen(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)&str_PATHEXT, &ipc_exe2path_notify, NULL);
+		DeeNotify_EndListen(Dee_NOTIFICATION_CLASS_ENVIRON, Dee_AsObject(&str_PATHEXT), &ipc_exe2path_notify, NULL);
 		DeeNotify_EndListenClass(Dee_NOTIFICATION_CLASS_PWD, &ipc_exe2path_notify, NULL);
 #endif /* ipc_Process_USE_CreateProcessW */
 	}
@@ -1582,7 +1582,7 @@ ipc_exe2path_uncached(ipc_exe2path_char_t const *__restrict exe) {
 	DREF DeeStringObject *path;
 	ipc_exe2path_char_t *path_str;
 	Dee_DPRINTF("ipc_exe2path_uncached: lookup %q\n", exe);
-	path = (DREF DeeStringObject *)Dee_GetEnv((DeeObject *)&str_PATH);
+	path = (DREF DeeStringObject *)Dee_GetEnv(Dee_AsObject(&str_PATH));
 	if unlikely(!ITER_ISOK(path)) {
 		if (!path)
 			goto err;
@@ -1618,7 +1618,7 @@ ipc_exe2path(DeeStringObject *__restrict exe_strob) {
 
 	/* Try to lookup the given `exe_strob' within the exe2path cache. */
 	ipc_exe2path_start_listen();
-	result = (DREF DeeStringObject *)DeeDict_TryGetItem((DeeObject *)&ipc_exe2path_cache,
+	result = (DREF DeeStringObject *)DeeDict_TryGetItem(Dee_AsObject(&ipc_exe2path_cache),
 	                                                    (DeeObject *)exe_strob);
 	if (result != (DREF DeeStringObject *)ITER_DONE)
 		return result;
@@ -1873,7 +1873,7 @@ ipc_nt_CreateProcessPathWithoutCache(LPWSTR lpApplicationName, SIZE_T szApplicat
 	DREF DeeStringObject *path, *pathext;
 	LPWSTR pathStr;
 	BOOL bFixUnc = FALSE;
-	path = (DREF DeeStringObject *)Dee_GetEnv((DeeObject *)&str_PATH);
+	path = (DREF DeeStringObject *)Dee_GetEnv(Dee_AsObject(&str_PATH));
 	if unlikely(!ITER_ISOK(path)) {
 		if (!path)
 			goto err_nopath;
@@ -1889,7 +1889,7 @@ again:
 	                                   lpCurrentDirectory, lpStartupInfo, lpProcessInformation);
 	if (result != (DREF DeeStringObject *)ITER_DONE)
 		goto done;
-	pathext = (DREF DeeStringObject *)Dee_GetEnv((DeeObject *)&str_PATHEXT);
+	pathext = (DREF DeeStringObject *)Dee_GetEnv(Dee_AsObject(&str_PATHEXT));
 	if (pathext != (DREF DeeStringObject *)ITER_DONE) {
 		LPWSTR appnameBuffer, iter, next, newAppnameBuffer;
 		SIZE_T appnameBufferSize = szApplicationNameLength + 4; /* Optimize for 4-character long extensions. */
@@ -1989,7 +1989,7 @@ ipc_nt_CreateProcessPath(DeeStringObject *exe_str, LPWSTR lpApplicationName,
 
 	/* Check if we already have the correct expansion of `exe_str' in-cache */
 	ipc_exe2path_start_listen();
-	cached_pathname = (DREF DeeStringObject *)DeeDict_TryGetItem((DeeObject *)&ipc_exe2path_cache,
+	cached_pathname = (DREF DeeStringObject *)DeeDict_TryGetItem(Dee_AsObject(&ipc_exe2path_cache),
 	                                                             (DeeObject *)exe_str);
 	if (cached_pathname != (DREF DeeStringObject *)ITER_DONE) {
 		/* Simply launch via the cached application path. */
@@ -2118,7 +2118,7 @@ ipc_nt_CreateProcessExtWithoutCache(LPWSTR lpApplicationName, SIZE_T szApplicati
                                     LPPROCESS_INFORMATION lpProcessInformation) {
 	DREF DeeStringObject *result = (DREF DeeStringObject *)ITER_DONE;
 	DREF DeeStringObject *pathext_str;
-	pathext_str = (DREF DeeStringObject *)Dee_GetEnv((DeeObject *)&str_PATHEXT);
+	pathext_str = (DREF DeeStringObject *)Dee_GetEnv(Dee_AsObject(&str_PATHEXT));
 	if (pathext_str != (DREF DeeStringObject *)ITER_DONE) {
 		LPWSTR lpPathExt;
 		if unlikely(!pathext_str)
@@ -5267,7 +5267,7 @@ process_class_self(DeeObject *UNUSED(self),
 	DeeArg_Unpack0(err, argc, argv, "self");
 /*[[[end]]]*/
 	Dee_Incref(&this_process);
-	return (DeeObject *)&this_process;
+	return Dee_AsObject(&this_process);
 err:
 	return NULL;
 }

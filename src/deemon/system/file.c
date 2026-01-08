@@ -948,7 +948,7 @@ PUBLIC ATTR_RETNONNULL DeeObject *DCALL
 DeeFile_DefaultStd(unsigned int id) {
 	ASSERT(id <= DEE_STDDBG);
 	(void)id;
-	return (DeeObject *)&std_file;
+	return Dee_AsObject(&std_file);
 }
 
 #else /* DeeSystem_FILE_USE_STUB */
@@ -1016,7 +1016,7 @@ PUBLIC WUNUSED ATTR_RETNONNULL DeeObject *DCALL
 DeeFile_DefaultStd(unsigned int id) {
 #ifdef deemon_file_CAN_STATIC_INITIALIZE_SYSF_STD
 	ASSERT(id < COMPILER_LENOF(sysf_std));
-	return (DeeObject *)&sysf_std[id];
+	return Dee_AsObject(&sysf_std[id]);
 #elif defined(DeeSystem_FILE_USE_stdio_FILE)
 	SystemFile *result;
 	ASSERT(id <= DEE_STDDBG);

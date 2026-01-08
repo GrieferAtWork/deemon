@@ -7721,7 +7721,7 @@ default__seq_any_with_key__with_callattr_any(DeeObject *self, DeeObject *key) {
 	DREF DeeObject *result;
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str_any), 3, args);
 	if unlikely(!result)
@@ -7736,7 +7736,7 @@ default__seq_any_with_key__with_callattr___seq_any__(DeeObject *self, DeeObject 
 	DREF DeeObject *result;
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str___seq_any__), 3, args);
 	if unlikely(!result)
@@ -7754,7 +7754,7 @@ default__seq_any_with_key__with_callobjectcache___seq_any__(DeeObject *self, Dee
 	DREF DeeObject *result;
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_any__, self, 3, args);
 	if unlikely(!result)
@@ -8033,7 +8033,7 @@ default__seq_all_with_key__with_callattr_all(DeeObject *self, DeeObject *key) {
 	DREF DeeObject *result;
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str_all), 3, args);
 	if unlikely(!result)
@@ -8048,7 +8048,7 @@ default__seq_all_with_key__with_callattr___seq_all__(DeeObject *self, DeeObject 
 	DREF DeeObject *result;
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str___seq_all__), 3, args);
 	if unlikely(!result)
@@ -8066,7 +8066,7 @@ default__seq_all_with_key__with_callobjectcache___seq_all__(DeeObject *self, Dee
 	DREF DeeObject *result;
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_all__, self, 3, args);
 	if unlikely(!result)
@@ -8342,7 +8342,7 @@ default__seq_parity_with_key__with_callattr_parity(DeeObject *self, DeeObject *k
 	DREF DeeObject *result;
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str_parity), 3, args);
 	if unlikely(!result)
@@ -8357,7 +8357,7 @@ default__seq_parity_with_key__with_callattr___seq_parity__(DeeObject *self, DeeO
 	DREF DeeObject *result;
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str___seq_parity__), 3, args);
 	if unlikely(!result)
@@ -8375,7 +8375,7 @@ default__seq_parity_with_key__with_callobjectcache___seq_parity__(DeeObject *sel
 	DREF DeeObject *result;
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_parity__, self, 3, args);
 	if unlikely(!result)
@@ -8671,7 +8671,7 @@ default__seq_reduce_with_init__with_callattr_reduce(DeeObject *self, DeeObject *
 	DeeObject *args[4];
 	args[0] = combine;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = init;
 	return DeeObject_CallAttr(self, Dee_AsObject(&str_reduce), 4, args);
 }
@@ -8681,7 +8681,7 @@ default__seq_reduce_with_init__with_callattr___seq_reduce__(DeeObject *self, Dee
 	DeeObject *args[4];
 	args[0] = combine;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = init;
 	return DeeObject_CallAttr(self, Dee_AsObject(&str___seq_reduce__), 4, args);
 }
@@ -8694,7 +8694,7 @@ default__seq_reduce_with_init__with_callobjectcache___seq_reduce__(DeeObject *se
 	DeeObject *args[4];
 	args[0] = combine;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = init;
 	return mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_reduce__, self, 4, args);
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -8994,7 +8994,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__seq_min_with_key__with_callattr_min(DeeObject *self, DeeObject *key) {
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	return DeeObject_CallAttr(self, Dee_AsObject(&str_min), 3, args);
 }
@@ -9003,7 +9003,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__seq_min_with_key__with_callattr___seq_min__(DeeObject *self, DeeObject *key) {
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	return DeeObject_CallAttr(self, Dee_AsObject(&str___seq_min__), 3, args);
 }
@@ -9015,7 +9015,7 @@ default__seq_min_with_key__with_callobjectcache___seq_min__(DeeObject *self, Dee
 #else /* __OPTIMIZE_SIZE__ */
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	return mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_min__, self, 3, args);
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -9362,7 +9362,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__seq_max_with_key__with_callattr_max(DeeObject *self, DeeObject *key) {
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	return DeeObject_CallAttr(self, Dee_AsObject(&str_max), 3, args);
 }
@@ -9371,7 +9371,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__seq_max_with_key__with_callattr___seq_max__(DeeObject *self, DeeObject *key) {
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	return DeeObject_CallAttr(self, Dee_AsObject(&str___seq_max__), 3, args);
 }
@@ -9383,7 +9383,7 @@ default__seq_max_with_key__with_callobjectcache___seq_max__(DeeObject *self, Dee
 #else /* __OPTIMIZE_SIZE__ */
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	return mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_max__, self, 3, args);
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -9835,7 +9835,7 @@ default__seq_count_with_key__with_callattr_count(DeeObject *self, DeeObject *ite
 	DeeObject *args[4];
 	args[0] = item;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = key;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str_count), 4, args);
 	if unlikely(!result)
@@ -9851,7 +9851,7 @@ default__seq_count_with_key__with_callattr___seq_count__(DeeObject *self, DeeObj
 	DeeObject *args[4];
 	args[0] = item;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = key;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str___seq_count__), 4, args);
 	if unlikely(!result)
@@ -9870,7 +9870,7 @@ default__seq_count_with_key__with_callobjectcache___seq_count__(DeeObject *self,
 	DeeObject *args[4];
 	args[0] = item;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = key;
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_count__, self, 4, args);
 	if unlikely(!result)
@@ -10238,7 +10238,7 @@ default__seq_contains_with_key__with_callattr_contains(DeeObject *self, DeeObjec
 	DeeObject *args[4];
 	args[0] = item;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = key;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str_contains), 4, args);
 	if unlikely(!result)
@@ -10254,7 +10254,7 @@ default__seq_contains_with_key__with_callattr___seq_contains__(DeeObject *self, 
 	DeeObject *args[4];
 	args[0] = item;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = key;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str___seq_contains__), 4, args);
 	if unlikely(!result)
@@ -10273,7 +10273,7 @@ default__seq_contains_with_key__with_callobjectcache___seq_contains__(DeeObject 
 	DeeObject *args[4];
 	args[0] = item;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = key;
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_contains__, self, 4, args);
 	if unlikely(!result)
@@ -10969,7 +10969,7 @@ default__seq_startswith_with_key__with_callattr_startswith(DeeObject *self, DeeO
 	DeeObject *args[4];
 	args[0] = item;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = key;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str_startswith), 4, args);
 	if unlikely(!result)
@@ -10985,7 +10985,7 @@ default__seq_startswith_with_key__with_callattr___seq_startswith__(DeeObject *se
 	DeeObject *args[4];
 	args[0] = item;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = key;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str___seq_startswith__), 4, args);
 	if unlikely(!result)
@@ -11004,7 +11004,7 @@ default__seq_startswith_with_key__with_callobjectcache___seq_startswith__(DeeObj
 	DeeObject *args[4];
 	args[0] = item;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = key;
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_startswith__, self, 4, args);
 	if unlikely(!result)
@@ -11247,7 +11247,7 @@ default__seq_endswith_with_key__with_callattr_endswith(DeeObject *self, DeeObjec
 	DeeObject *args[4];
 	args[0] = item;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = key;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str_endswith), 4, args);
 	if unlikely(!result)
@@ -11263,7 +11263,7 @@ default__seq_endswith_with_key__with_callattr___seq_endswith__(DeeObject *self, 
 	DeeObject *args[4];
 	args[0] = item;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = key;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str___seq_endswith__), 4, args);
 	if unlikely(!result)
@@ -11282,7 +11282,7 @@ default__seq_endswith_with_key__with_callobjectcache___seq_endswith__(DeeObject 
 	DeeObject *args[4];
 	args[0] = item;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = key;
 	result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_endswith__, self, 4, args);
 	if unlikely(!result)
@@ -22632,7 +22632,7 @@ tdefault__seq_any_with_key__with_callobjectcache___seq_any__(DeeTypeObject *tp_s
 	DREF DeeObject *result;
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_any__, self, 3, args);
 	if unlikely(!result)
@@ -22681,7 +22681,7 @@ tdefault__seq_all_with_key__with_callobjectcache___seq_all__(DeeTypeObject *tp_s
 	DREF DeeObject *result;
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_all__, self, 3, args);
 	if unlikely(!result)
@@ -22730,7 +22730,7 @@ tdefault__seq_parity_with_key__with_callobjectcache___seq_parity__(DeeTypeObject
 	DREF DeeObject *result;
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_parity__, self, 3, args);
 	if unlikely(!result)
@@ -22774,7 +22774,7 @@ tdefault__seq_reduce_with_init__with_callobjectcache___seq_reduce__(DeeTypeObjec
 	DeeObject *args[4];
 	args[0] = combine;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = init;
 	return mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_reduce__, self, 4, args);
 }
@@ -22802,7 +22802,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tdefault__seq_min_with_key__with_callobjectcache___seq_min__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *key) {
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	return mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_min__, self, 3, args);
 }
@@ -22830,7 +22830,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tdefault__seq_max_with_key__with_callobjectcache___seq_max__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *key) {
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	return mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_max__, self, 3, args);
 }
@@ -22878,7 +22878,7 @@ tdefault__seq_count_with_key__with_callobjectcache___seq_count__(DeeTypeObject *
 	DeeObject *args[4];
 	args[0] = item;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = key;
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_count__, self, 4, args);
 	if unlikely(!result)
@@ -22931,7 +22931,7 @@ tdefault__seq_contains_with_key__with_callobjectcache___seq_contains__(DeeTypeOb
 	DeeObject *args[4];
 	args[0] = item;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = key;
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_contains__, self, 4, args);
 	if unlikely(!result)
@@ -23014,7 +23014,7 @@ tdefault__seq_startswith_with_key__with_callobjectcache___seq_startswith__(DeeTy
 	DeeObject *args[4];
 	args[0] = item;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = key;
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_startswith__, self, 4, args);
 	if unlikely(!result)
@@ -23067,7 +23067,7 @@ tdefault__seq_endswith_with_key__with_callobjectcache___seq_endswith__(DeeTypeOb
 	DeeObject *args[4];
 	args[0] = item;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = key;
 	result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_endswith__, self, 4, args);
 	if unlikely(!result)

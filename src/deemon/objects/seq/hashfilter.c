@@ -202,7 +202,7 @@ filteriterator_seq_get(HashFilterIterator *__restrict self) {
 	DREF HashFilter *result;
 	DREF DeeObject *base_seq;
 	DeeTypeObject *result_type;
-	base_seq = DeeObject_GetAttr(self->fi_iter, (DeeObject *)&str_seq);
+	base_seq = DeeObject_GetAttr(self->fi_iter, Dee_AsObject(&str_seq));
 	if unlikely(!base_seq)
 		goto err;
 	result = DeeObject_MALLOC(HashFilter);
@@ -487,7 +487,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF HashFilter *DCALL
 hashfilter_get_frozen(HashFilter *__restrict self) {
 	DREF DeeObject *inner_frozen;
 	DREF HashFilter *result;
-	inner_frozen = DeeObject_GetAttr(self->f_seq, (DeeObject *)&str_frozen);
+	inner_frozen = DeeObject_GetAttr(self->f_seq, Dee_AsObject(&str_frozen));
 	if unlikely(!inner_frozen)
 		goto err;
 	if (inner_frozen == self->f_seq) {

@@ -401,7 +401,7 @@ INTDEF DeeTypeObject DeeSType_Type;
 #define DeeSType_Sizeof(x)         ((DeeSTypeObject *)(x))->st_sizeof
 #define DeeSType_Alignof(x)        ((DeeSTypeObject *)(x))->st_align
 #define DeeSType_Base(x)           DeeType_AsSType(DeeType_Base(DeeSType_AsType(x)))
-#define DeeSType_AsObject(x)       ((DeeObject *)&(x)->st_base)
+#define DeeSType_AsObject(x)       Dee_AsObject(&(x)->st_base)
 #define DeeType_AsSType(x)         COMPILER_CONTAINER_OF(x, DeeSTypeObject, st_base)
 #define DeeType_AsStructType(x)    COMPILER_CONTAINER_OF(x, DeeStructTypeObject, st_base.st_base)
 #define DeeType_AsCFunctionType(x) COMPILER_CONTAINER_OF(x, DeeCFunctionTypeObject, ft_base.st_base)

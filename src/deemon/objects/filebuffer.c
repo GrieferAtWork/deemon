@@ -1768,7 +1768,7 @@ buffer_size(Buffer *self, size_t argc, DeeObject *const *argv) {
 	Dee_Incref(file);
 	DeeFileBuffer_LockEndWrite(self);
 	/* Forward the to contained file. */
-	result = DeeObject_CallAttr(file, (DeeObject *)&str_size, argc, argv);
+	result = DeeObject_CallAttr(file, Dee_AsObject(&str_size), argc, argv);
 	Dee_Decref(file);
 	return result;
 err_closed_unlock:
@@ -1790,7 +1790,7 @@ buffer_getsysfd(Buffer *__restrict self) {
 	Dee_Incref(file);
 	DeeFileBuffer_LockEndRead(self);
 	/* Forward the to contained file. */
-	result = DeeObject_GetAttr(file, (DeeObject *)&str_getsysfd);
+	result = DeeObject_GetAttr(file, Dee_AsObject(&str_getsysfd));
 	Dee_Decref(file);
 	return result;
 err_closed_unlock:
@@ -1949,7 +1949,7 @@ buffer_filename(Buffer *__restrict self) {
 	Dee_Incref(file);
 	DeeFileBuffer_LockEndWrite(self);
 	/* Forward the to contained file. */
-	result = DeeObject_GetAttr(file, (DeeObject *)&str_filename);
+	result = DeeObject_GetAttr(file, Dee_AsObject(&str_filename));
 	Dee_Decref(file);
 	return result;
 err_closed_unlock:

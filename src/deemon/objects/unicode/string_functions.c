@@ -9697,13 +9697,13 @@ string_pack_utf8_partition_not_found(char const *__restrict utf8_base,
 		str0 = DeeString_NewEmpty();
 	}
 	Dee_Incref_n(&DeeString_Empty, 2);
-	result->t_elem[1] = (DeeObject *)&DeeString_Empty;
+	result->t_elem[1] = Dee_AsObject(&DeeString_Empty);
 	if (is_rpartition) {
-		result->t_elem[0] = (DeeObject *)&DeeString_Empty;
+		result->t_elem[0] = Dee_AsObject(&DeeString_Empty);
 		result->t_elem[2] = str0;
 	} else {
 		result->t_elem[0] = str0;
-		result->t_elem[2] = (DeeObject *)&DeeString_Empty;
+		result->t_elem[2] = Dee_AsObject(&DeeString_Empty);
 	}
 	return result;
 done:

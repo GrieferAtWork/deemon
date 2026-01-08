@@ -43,8 +43,8 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_GetEnv(DeeObject *__restrict name) {
 	DREF DeeObject *result;
 	DREF DeeObject *posix_environ;
-	posix_environ = DeeModule_GetExtern((DeeObject *)&str_posix,
-	                                    (DeeObject *)&str_environ);
+	posix_environ = DeeModule_GetExtern(Dee_AsObject(&str_posix),
+	                                    Dee_AsObject(&str_environ));
 	if unlikely(!posix_environ)
 		goto err_tryhandle;
 	result = DeeObject_TryGetItem(posix_environ, name);

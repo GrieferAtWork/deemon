@@ -56,9 +56,9 @@ err_bad_argc:
 	return NULL;
 }
 
-PRIVATE DeeObject *const bool_strings[2] = {
-	(DeeObject *)&str_false,
-	(DeeObject *)&str_true
+PRIVATE DeeObject *tpconst bool_strings[2] = {
+	Dee_AsObject(&str_false),
+	Dee_AsObject(&str_true)
 };
 #define bool_string(self) bool_strings[DeeBool_IsTrue(self) ? 1 : 0]
 

@@ -315,12 +315,12 @@ PRIVATE DEFINE_STRING(repr_void, "void()");
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 void_str(DeeSTypeObject *__restrict UNUSED(tp_self), void *UNUSED(self)) {
-	return_reference_((DeeObject *)&str_void);
+	return_reference_(Dee_AsObject(&str_void));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 void_repr(DeeSTypeObject *__restrict UNUSED(tp_self), void *UNUSED(self)) {
-	return_reference_((DeeObject *)&repr_void);
+	return_reference_(Dee_AsObject(&repr_void));
 }
 
 PRIVATE int DCALL

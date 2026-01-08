@@ -1875,7 +1875,7 @@ string_foreach(String *self, Dee_foreach_t proc, void *arg) {
 		end.cp8 = ptr.cp8 + WSTR_LENGTH(ptr.cp8);
 		while (ptr.cp8 < end.cp8) {
 #ifdef CONFIG_STRING_LATIN1_STATIC
-			temp = (*proc)(arg, (DeeObject *)&DeeString_Latin1[*ptr.cp8]);
+			temp = (*proc)(arg, Dee_AsObject(&DeeString_Latin1[*ptr.cp8]));
 #else /* CONFIG_STRING_LATIN1_STATIC */
 			DREF DeeObject *elem;
 			elem = DeeString_Chr(*ptr.cp8);
@@ -1944,7 +1944,7 @@ string_foreach_reverse(String *self, Dee_foreach_t proc, void *arg) {
 		while (ptr.cp8 < end.cp8) {
 			--end.cp8;
 #ifdef CONFIG_STRING_LATIN1_STATIC
-			temp = (*proc)(arg, (DeeObject *)&DeeString_Latin1[*end.cp8]);
+			temp = (*proc)(arg, Dee_AsObject(&DeeString_Latin1[*end.cp8]));
 #else /* CONFIG_STRING_LATIN1_STATIC */
 			DREF DeeObject *elem;
 			elem = DeeString_Chr(*end.cp8);
@@ -2015,7 +2015,7 @@ string_mh_seq_enumerate_index(String *self, Dee_seq_enumerate_index_t cb,
 		for (i = start; i < end; ++i) {
 			uint8_t ch = ptr.cp8[i];
 #ifdef CONFIG_STRING_LATIN1_STATIC
-			temp = (*cb)(arg, i, (DeeObject *)&DeeString_Latin1[ch]);
+			temp = (*cb)(arg, i, Dee_AsObject(&DeeString_Latin1[ch]));
 #else /* CONFIG_STRING_LATIN1_STATIC */
 			DREF DeeObject *elem;
 			elem = DeeString_Chr(ch);
@@ -2089,7 +2089,7 @@ string_mh_seq_enumerate_index_reverse(String *self, Dee_seq_enumerate_index_t cb
 		while (end > start) {
 			uint8_t ch = ptr.cp8[--end];
 #ifdef CONFIG_STRING_LATIN1_STATIC
-			temp = (*cb)(arg, end, (DeeObject *)&DeeString_Latin1[ch]);
+			temp = (*cb)(arg, end, Dee_AsObject(&DeeString_Latin1[ch]));
 #else /* CONFIG_STRING_LATIN1_STATIC */
 			DREF DeeObject *elem;
 			elem = DeeString_Chr(ch);
@@ -2163,7 +2163,7 @@ string_asvector(String *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 		for (; ptr.cp8 < end.cp8; ++ptr.cp8) {
 			DREF DeeObject *chr;
 #ifdef CONFIG_STRING_LATIN1_STATIC
-			chr = (DeeObject *)&DeeString_Latin1[*ptr.cp8];
+			chr = Dee_AsObject(&DeeString_Latin1[*ptr.cp8]);
 			Dee_Incref(chr);
 #else /* CONFIG_STRING_LATIN1_STATIC */
 			chr = DeeString_Chr(*ptr.cp8);

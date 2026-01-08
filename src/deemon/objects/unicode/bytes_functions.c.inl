@@ -4125,13 +4125,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_indent(Bytes *self, size_t argc, DeeObject *const *argv) {
 	Needle filler;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("indent", params: "
-	DeeObject *filler: ?X3?DBytes?Dstring?Dint = (DeeObject *)&str_tab = !P{\t}
+	DeeObject *filler: ?X3?DBytes?Dstring?Dint = Dee_AsObject(&str_tab) = !P{\t}
 ", docStringPrefix: "bytes");]]]*/
 #define bytes_indent_params "filler:?X3?.?Dstring?Dint=!P{	}"
 	struct {
 		DeeObject *filler;
 	} args;
-	args.filler = (DeeObject *)&str_tab;
+	args.filler = Dee_AsObject(&str_tab);
 	DeeArg_Unpack0Or1(err, argc, argv, "indent", &args.filler);
 /*[[[end]]]*/
 	if (args.filler) {
@@ -5848,14 +5848,14 @@ bytes_pack_partition_not_found(Bytes *__restrict self,
 	} else {
 		str0 = DeeString_NewEmpty();
 	}
-	result->t_elem[1] = (DeeObject *)&DeeString_Empty;
+	result->t_elem[1] = Dee_AsObject(&DeeString_Empty);
 	Dee_Incref_n(&DeeString_Empty, 2);
 	if (is_rpartition) {
-		result->t_elem[0] = (DeeObject *)&DeeString_Empty;
+		result->t_elem[0] = Dee_AsObject(&DeeString_Empty);
 		result->t_elem[2] = str0;
 	} else {
 		result->t_elem[0] = str0;
-		result->t_elem[2] = (DeeObject *)&DeeString_Empty;
+		result->t_elem[2] = Dee_AsObject(&DeeString_Empty);
 	}
 	return result;
 err_r:

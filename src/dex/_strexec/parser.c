@@ -1440,7 +1440,7 @@ JIT_IsCatchable(DeeObject *thrown_object,
 	 * As such, the special case for `foo is none' applies, such that
 	 * a type mask of `none' must match itself! */
 	if (DeeNone_Check(typemask))
-		typemask = (DeeObject *)&DeeNone_Type;
+		typemask = Dee_AsObject(&DeeNone_Type);
 	thrown_object_type = Dee_TYPE(thrown_object);
 	/* Special case when matching a thrown object that is a super-view */
 	if (thrown_object_type == &DeeSuper_Type)

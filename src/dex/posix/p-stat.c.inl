@@ -1745,7 +1745,7 @@ err:
 
 
 #define STAT_CLASS_ISLSTAT(self) \
-	((self) == (DeeObject *)&DeeLStat_Type)
+	((self) == Dee_AsObject(&DeeLStat_Type))
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_class_exists(DeeObject *self, size_t argc, DeeObject *const *argv) {
@@ -2305,7 +2305,7 @@ stat_is_nt_exe_filename(DeeObject *__restrict path) {
 	if unlikely(!pathext_ob)
 		goto err;
 	if (pathext_ob == ITER_DONE) {
-		pathext_ob = (DeeObject *)&str_PATHEXT_default;
+		pathext_ob = Dee_AsObject(&str_PATHEXT_default);
 		Dee_Incref(pathext_ob);
 	}
 	pathext = DeeString_AsUtf8(pathext_ob);

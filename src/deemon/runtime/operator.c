@@ -924,7 +924,7 @@ missing:
 	err_unimplemented_operator(tp_self, OPERATOR_STR);
 	return NULL;
 recursion:
-	return_reference_((DeeObject *)&str_dots);
+	return_reference_(Dee_AsObject(&str_dots));
 }
 
 DEFINE_OPERATOR(DREF DeeObject *, Repr, (DeeObject *RESTRICT_IF_NOTYPE self)) {
@@ -964,7 +964,7 @@ missing:
 	err_unimplemented_operator(tp_self, OPERATOR_REPR);
 	return NULL;
 recursion:
-	return_reference_((DeeObject *)&str_dots);
+	return_reference_(Dee_AsObject(&str_dots));
 }
 
 DEFINE_OPERATOR(Dee_ssize_t, Print, (DeeObject *RESTRICT_IF_NOTYPE self,

@@ -284,7 +284,7 @@ tls_getvalue(TLS *__restrict self) {
 		goto err;
 	} else if (DeeNone_Check(self->t_factory)) {
 		Dee_Incref_n(&DeeNone_Singleton, 2);
-		result = *p_result = (DeeObject *)&DeeNone_Singleton; /* Save and return `none'. */
+		result = *p_result = Dee_AsObject(&DeeNone_Singleton); /* Save and return `none'. */
 	} else {
 		/* Invoke the factory. */
 		result = DeeObject_Call(self->t_factory, 0, NULL);

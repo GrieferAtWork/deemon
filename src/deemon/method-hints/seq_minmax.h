@@ -181,7 +181,7 @@ err_data:
 }} {
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	return LOCAL_CALLATTR(self, 3, args);
 }
@@ -446,7 +446,7 @@ err_data:
 }} {
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	return LOCAL_CALLATTR(self, 3, args);
 }
@@ -715,7 +715,7 @@ err_data:
 }} {
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
-	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[2] = key;
 	return LOCAL_CALLATTR(self, 3, args);
 }

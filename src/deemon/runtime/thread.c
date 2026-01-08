@@ -1904,7 +1904,7 @@ DeeThread_DecrefInOtherThread(DREF DeeThreadObject *self) {
 
 	/* Tell the main thread that it's got some interrupts to deal with. */
 	atomic_or(&DeeThread_Main.ot_thread.t_state, Dee_THREAD_STATE_INTERRUPTED);
-	DeeThread_Wake((DeeObject *)&DeeThread_Main.ot_thread);
+	DeeThread_Wake(Dee_AsObject(&DeeThread_Main.ot_thread));
 }
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 
@@ -2401,7 +2401,7 @@ forward_appexit_to_main_thread(/*inherit(always)*/ struct thread_interrupt *__re
 	 *       point, we must perform this wait without doing any
 	 *       interrupt checks! */
 	for (;;) {
-		DeeThread_Wake((DeeObject *)&DeeThread_Main.ot_thread);
+		DeeThread_Wake(Dee_AsObject(&DeeThread_Main.ot_thread));
 		state = atomic_read(&DeeThread_Main.ot_thread.t_state);
 		if (!(state & Dee_THREAD_STATE_INTERRUPTED))
 			break;
@@ -2528,8 +2528,8 @@ PRIVATE int DeeThread_Entry_func(void *arg)
 		result = DeeObject_CallTupleInherited(thread_main, thread_args);
 	} else {
 		/* If no thread-main callback has been assigned, invoke the `run()' member function. */
-		result = DeeObject_CallAttrTuple((DeeObject *)&self->ot_thread,
-		                                 (DeeObject *)&str_run,
+		result = DeeObject_CallAttrTuple(Dee_AsObject(&self->ot_thread),
+		                                 Dee_AsObject(&str_run),
 		                                 thread_args);
 	}
 	Dee_Decref(thread_args);
@@ -3633,7 +3633,7 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeThread_FromTid(Dee_pid_t tid) {
 	result->ot_tid = tid;
 	result->ot_thread.t_deepassoc.da_list = empty_deep_assoc;
 	DeeObject_Init(&result->ot_thread, &DeeThread_Type);
-	return DeeGC_Track((DeeObject *)&result->ot_thread);
+	return DeeGC_Track(Dee_AsObject(&result->ot_thread));
 err:
 	return NULL;
 }
@@ -5155,7 +5155,7 @@ DeeThread_Trace(/*Thread*/ DeeObject *__restrict self) {
 #ifdef DeeThread_USE_SINGLE_THREADED
 	/* All threads other than the caller are unmanaged, and thus have empty tracebacks. */
 	if (me != DeeThread_Self()) {
-		return_reference_((DeeObject *)&DeeTraceback_Empty);
+		return_reference_(Dee_AsObject(&DeeTraceback_Empty));
 	} else
 #else /* DeeThread_USE_SINGLE_THREADED */
 	if (me != DeeThread_Self()) {

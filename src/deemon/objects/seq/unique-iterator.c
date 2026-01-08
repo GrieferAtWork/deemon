@@ -160,7 +160,7 @@ PRIVATE struct type_member tpconst uqiwk_members[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 di_getseq(DistinctIterator *__restrict self) {
 	DREF DeeObject *iter_seq, *result;
-	iter_seq = DeeObject_GetAttr(self->di_iter, (DeeObject *)&str_seq);
+	iter_seq = DeeObject_GetAttr(self->di_iter, Dee_AsObject(&str_seq));
 	if unlikely(!iter_seq)
 		goto err;
 	result = DeeSuper_New(&DeeSet_Type, iter_seq);
@@ -357,7 +357,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DistinctSetWithKey *DCALL
 uqiwk_getseq(DistinctIteratorWithKey *__restrict self) {
 	DREF DeeObject *iter_seq;
 	DREF DistinctSetWithKey *result;
-	iter_seq = DeeObject_GetAttr(self->diwk_iter, (DeeObject *)&str_seq);
+	iter_seq = DeeObject_GetAttr(self->diwk_iter, Dee_AsObject(&str_seq));
 	if unlikely(!iter_seq)
 		goto err;
 	result = DeeObject_MALLOC(DistinctSetWithKey);
@@ -647,7 +647,7 @@ PRIVATE struct type_iterator dmi_iterator = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dmi_getseq(DistinctMappingIterator *__restrict self) {
 	DREF DeeObject *iter_seq, *result;
-	iter_seq = DeeObject_GetAttr(self->dmi_iter, (DeeObject *)&str_seq);
+	iter_seq = DeeObject_GetAttr(self->dmi_iter, Dee_AsObject(&str_seq));
 	if unlikely(!iter_seq)
 		goto err;
 	result = DeeSuper_New(&DeeMapping_Type, iter_seq);

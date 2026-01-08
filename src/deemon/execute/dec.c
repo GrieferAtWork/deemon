@@ -307,7 +307,8 @@ applied_rrela_decref_nokill(DeeDec_Ehdr *__restrict self,
 }
 
 PRIVATE NONNULL((1)) void DCALL
-DeeDec_RELOC_undo_rrel_and_decref_deps(DeeDec_Ehdr *__restrict self, size_t max_dep_incref_applied_count) {
+DeeDec_RELOC_undo_rrel_and_decref_deps(DeeDec_Ehdr *__restrict self,
+                                       size_t max_dep_incref_applied_count) {
 	/* Undo incref() operations */
 	size_t i;
 	Dec_Dhdr *dhdr = (Dec_Dhdr *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_deps);
@@ -806,6 +807,7 @@ DeeDec_Ehdr_FreeRelocationData(DeeDec_Ehdr *__restrict self) {
 			Dee_dec_depmod_fini(dep);
 		}
 		Dee_Free(deps_v);
+		/* Don't "DBG_memset()" all of "e_typedata" -- we still need "ei_offsetof_gchead" and "ei_offsetof_gctail" */
 		DBG_memset(&self->e_typedata.td_image.ei_drrel_v, 0xcc, sizeof(self->e_typedata.td_image.ei_drrel_v));
 		DBG_memset(&self->e_typedata.td_image.ei_drrel_c, 0xcc, sizeof(self->e_typedata.td_image.ei_drrel_c));
 		DBG_memset(&self->e_typedata.td_image.ei_drrela_v, 0xcc, sizeof(self->e_typedata.td_image.ei_drrela_v));
@@ -2656,7 +2658,7 @@ for (local setname, setlist: sets) {
 		if (data is none)
 			continue;
 		local name, typeval = data...;
-		print("\t{ (DeeObject *)&", typeval, ", DEC_BUILTINID_MAKE(", setname,
+		print("\t{ Dee_AsObject(&", typeval, "), DEC_BUILTINID_MAKE(", setname,
 		      ", DEC_BUILTIN_SET", setname, "_", name, ") },");
 	}
 }
@@ -2672,7 +2674,7 @@ for (local setname, setlist: sets) {
 			print "\t/" "* 0x%.2x *" "/ NULL," % (i + 0x10);
 		} else {
 			local name, typeval = data...;
-			print "\t/" "* 0x%.2x *" "/ (DeeObject *)&%s, /" "* %s *" "/" % (i+0x10, typeval, name);
+			print "\t/" "* 0x%.2x *" "/ Dee_AsObject(&%s), /" "* %s *" "/" % (i+0x10, typeval, name);
 		}
 	}
 	print "};";
@@ -2681,112 +2683,112 @@ for (local setname, setlist: sets) {
 #define NUM_BUILTIN_OBJECT_SETS 1
 #define NUM_BUILTIN_OBJECTS     64
 PRIVATE struct builtin_desc builtin_descs[NUM_BUILTIN_OBJECTS] = {
-	{ (DeeObject *)&DeeError_Signal, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Signal) },
-	{ (DeeObject *)&DeeError_Interrupt, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Interrupt) },
-	{ (DeeObject *)&DeeError_StopIteration, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_StopIteration) },
-	{ (DeeObject *)&DeeError_Error, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Error) },
-	{ (DeeObject *)&DeeError_AttributeError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_AttributeError) },
-	{ (DeeObject *)&DeeError_UnboundAttribute, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_UnboundAttribute) },
-	{ (DeeObject *)&DeeError_CompilerError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_CompilerError) },
-	{ (DeeObject *)&DeeError_ThreadCrash, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_ThreadCrash) },
-	{ (DeeObject *)&DeeError_RuntimeError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_RuntimeError) },
-	{ (DeeObject *)&DeeError_NotImplemented, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_NotImplemented) },
-	{ (DeeObject *)&DeeError_AssertionError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_AssertionError) },
-	{ (DeeObject *)&DeeError_UnboundLocal, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_UnboundLocal) },
-	{ (DeeObject *)&DeeError_StackOverflow, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_StackOverflow) },
-	{ (DeeObject *)&DeeError_TypeError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_TypeError) },
-	{ (DeeObject *)&DeeError_ValueError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_ValueError) },
-	{ (DeeObject *)&DeeError_ArithmeticError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_ArithmeticError) },
-	{ (DeeObject *)&DeeError_DivideByZero, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_DivideByZero) },
-	{ (DeeObject *)&DeeError_KeyError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_KeyError) },
-	{ (DeeObject *)&DeeError_IndexError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_IndexError) },
-	{ (DeeObject *)&DeeError_UnboundItem, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_UnboundItem) },
-	{ (DeeObject *)&DeeError_SequenceError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_SequenceError) },
-	{ (DeeObject *)&DeeError_UnicodeError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_UnicodeError) },
-	{ (DeeObject *)&DeeError_ReferenceError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_ReferenceError) },
-	{ (DeeObject *)&DeeError_UnpackError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_UnpackError) },
-	{ (DeeObject *)&DeeError_SystemError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_SystemError) },
-	{ (DeeObject *)&DeeError_FSError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_FSError) },
-	{ (DeeObject *)&DeeError_FileAccessError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_FileAccessError) },
-	{ (DeeObject *)&DeeError_FileNotFound, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_FileNotFound) },
-	{ (DeeObject *)&DeeError_FileExists, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_FileExists) },
-	{ (DeeObject *)&DeeError_FileClosed, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_FileClosed) },
-	{ (DeeObject *)&DeeError_NoMemory, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_NoMemory) },
-	{ (DeeObject *)&DeeError_IntegerOverflow, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_IntegerOverflow) },
-	{ (DeeObject *)&DeeError_UnknownKey, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_UnknownKey) },
-	{ (DeeObject *)&DeeError_ItemNotFound, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_ItemNotFound) },
-	{ (DeeObject *)&DeeError_BufferError, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_BufferError) },
+	{ Dee_AsObject(&DeeError_Signal), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Signal) },
+	{ Dee_AsObject(&DeeError_Interrupt), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Interrupt) },
+	{ Dee_AsObject(&DeeError_StopIteration), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_StopIteration) },
+	{ Dee_AsObject(&DeeError_Error), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Error) },
+	{ Dee_AsObject(&DeeError_AttributeError), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_AttributeError) },
+	{ Dee_AsObject(&DeeError_UnboundAttribute), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_UnboundAttribute) },
+	{ Dee_AsObject(&DeeError_CompilerError), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_CompilerError) },
+	{ Dee_AsObject(&DeeError_ThreadCrash), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_ThreadCrash) },
+	{ Dee_AsObject(&DeeError_RuntimeError), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_RuntimeError) },
+	{ Dee_AsObject(&DeeError_NotImplemented), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_NotImplemented) },
+	{ Dee_AsObject(&DeeError_AssertionError), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_AssertionError) },
+	{ Dee_AsObject(&DeeError_UnboundLocal), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_UnboundLocal) },
+	{ Dee_AsObject(&DeeError_StackOverflow), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_StackOverflow) },
+	{ Dee_AsObject(&DeeError_TypeError), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_TypeError) },
+	{ Dee_AsObject(&DeeError_ValueError), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_ValueError) },
+	{ Dee_AsObject(&DeeError_ArithmeticError), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_ArithmeticError) },
+	{ Dee_AsObject(&DeeError_DivideByZero), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_DivideByZero) },
+	{ Dee_AsObject(&DeeError_KeyError), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_KeyError) },
+	{ Dee_AsObject(&DeeError_IndexError), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_IndexError) },
+	{ Dee_AsObject(&DeeError_UnboundItem), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_UnboundItem) },
+	{ Dee_AsObject(&DeeError_SequenceError), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_SequenceError) },
+	{ Dee_AsObject(&DeeError_UnicodeError), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_UnicodeError) },
+	{ Dee_AsObject(&DeeError_ReferenceError), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_ReferenceError) },
+	{ Dee_AsObject(&DeeError_UnpackError), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_UnpackError) },
+	{ Dee_AsObject(&DeeError_SystemError), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_SystemError) },
+	{ Dee_AsObject(&DeeError_FSError), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_FSError) },
+	{ Dee_AsObject(&DeeError_FileAccessError), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_FileAccessError) },
+	{ Dee_AsObject(&DeeError_FileNotFound), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_FileNotFound) },
+	{ Dee_AsObject(&DeeError_FileExists), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_FileExists) },
+	{ Dee_AsObject(&DeeError_FileClosed), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_FileClosed) },
+	{ Dee_AsObject(&DeeError_NoMemory), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_NoMemory) },
+	{ Dee_AsObject(&DeeError_IntegerOverflow), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_IntegerOverflow) },
+	{ Dee_AsObject(&DeeError_UnknownKey), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_UnknownKey) },
+	{ Dee_AsObject(&DeeError_ItemNotFound), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_ItemNotFound) },
+	{ Dee_AsObject(&DeeError_BufferError), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_BufferError) },
 	{ Dee_AsObject(&DeeObject_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Object) },
-	{ (DeeObject *)&DeeSeq_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Sequence) },
-	{ (DeeObject *)&DeeMapping_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Mapping) },
-	{ (DeeObject *)&DeeIterator_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Iterator) },
-	{ (DeeObject *)&DeeCallable_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Callable) },
-	{ (DeeObject *)&DeeNumeric_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Numeric) },
-	{ (DeeObject *)&DeeWeakRefAble_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_WeakRefAble) },
-	{ (DeeObject *)&DeeList_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_List) },
-	{ (DeeObject *)&DeeDict_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Dict) },
-	{ (DeeObject *)&DeeHashSet_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_HashSet) },
-	{ (DeeObject *)&DeeCell_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Cell) },
-	{ (DeeObject *)&Dee_FalseTrue[0], DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_False) },
-	{ (DeeObject *)&Dee_FalseTrue[1], DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_True) },
-	{ (DeeObject *)&DeeSeq_EmptyInstance, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_EmptySeq) },
-	{ (DeeObject *)&DeeSet_EmptyInstance, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_EmptySet) },
-	{ (DeeObject *)&DeeMapping_EmptyInstance, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_EmptyMapping) },
-	{ (DeeObject *)&DeeType_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Type) },
-	{ (DeeObject *)&DeeTraceback_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Traceback) },
-	{ (DeeObject *)&DeeThread_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Thread) },
-	{ (DeeObject *)&DeeSuper_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Super) },
-	{ (DeeObject *)&DeeString_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_String) },
-	{ (DeeObject *)&DeeNone_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_None) },
-	{ (DeeObject *)&DeeInt_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Int) },
-	{ (DeeObject *)&DeeFloat_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Float) },
-	{ (DeeObject *)&DeeModule_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Module) },
-	{ (DeeObject *)&DeeCode_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Code) },
-	{ (DeeObject *)&DeeTuple_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Tuple) },
-	{ (DeeObject *)&DeeBool_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Bool) },
-	{ (DeeObject *)&DeeWeakRef_Type, DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_WeakRef) },
+	{ Dee_AsObject(&DeeSeq_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Sequence) },
+	{ Dee_AsObject(&DeeMapping_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Mapping) },
+	{ Dee_AsObject(&DeeIterator_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Iterator) },
+	{ Dee_AsObject(&DeeCallable_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Callable) },
+	{ Dee_AsObject(&DeeNumeric_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Numeric) },
+	{ Dee_AsObject(&DeeWeakRefAble_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_WeakRefAble) },
+	{ Dee_AsObject(&DeeList_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_List) },
+	{ Dee_AsObject(&DeeDict_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Dict) },
+	{ Dee_AsObject(&DeeHashSet_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_HashSet) },
+	{ Dee_AsObject(&DeeCell_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Cell) },
+	{ Dee_AsObject(&Dee_FalseTrue[0]), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_False) },
+	{ Dee_AsObject(&Dee_FalseTrue[1]), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_True) },
+	{ Dee_AsObject(&DeeSeq_EmptyInstance), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_EmptySeq) },
+	{ Dee_AsObject(&DeeSet_EmptyInstance), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_EmptySet) },
+	{ Dee_AsObject(&DeeMapping_EmptyInstance), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_EmptyMapping) },
+	{ Dee_AsObject(&DeeType_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Type) },
+	{ Dee_AsObject(&DeeTraceback_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Traceback) },
+	{ Dee_AsObject(&DeeThread_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Thread) },
+	{ Dee_AsObject(&DeeSuper_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Super) },
+	{ Dee_AsObject(&DeeString_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_String) },
+	{ Dee_AsObject(&DeeNone_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_None) },
+	{ Dee_AsObject(&DeeInt_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Int) },
+	{ Dee_AsObject(&DeeFloat_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Float) },
+	{ Dee_AsObject(&DeeModule_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Module) },
+	{ Dee_AsObject(&DeeCode_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Code) },
+	{ Dee_AsObject(&DeeTuple_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Tuple) },
+	{ Dee_AsObject(&DeeBool_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Bool) },
+	{ Dee_AsObject(&DeeWeakRef_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_WeakRef) },
 };
 PRIVATE DeeObject *buitlin_set0[DTYPE_BUILTIN_NUM] = {
-	/* 0x10 */ (DeeObject *)&DeeError_Signal, /* Signal */
-	/* 0x11 */ (DeeObject *)&DeeError_Interrupt, /* Interrupt */
-	/* 0x12 */ (DeeObject *)&DeeError_StopIteration, /* StopIteration */
+	/* 0x10 */ Dee_AsObject(&DeeError_Signal), /* Signal */
+	/* 0x11 */ Dee_AsObject(&DeeError_Interrupt), /* Interrupt */
+	/* 0x12 */ Dee_AsObject(&DeeError_StopIteration), /* StopIteration */
 	/* 0x13 */ NULL,
 	/* 0x14 */ NULL,
 	/* 0x15 */ NULL,
 	/* 0x16 */ NULL,
 	/* 0x17 */ NULL,
-	/* 0x18 */ (DeeObject *)&DeeError_Error, /* Error */
-	/* 0x19 */ (DeeObject *)&DeeError_AttributeError, /* AttributeError */
-	/* 0x1a */ (DeeObject *)&DeeError_UnboundAttribute, /* UnboundAttribute */
-	/* 0x1b */ (DeeObject *)&DeeError_CompilerError, /* CompilerError */
-	/* 0x1c */ (DeeObject *)&DeeError_ThreadCrash, /* ThreadCrash */
-	/* 0x1d */ (DeeObject *)&DeeError_RuntimeError, /* RuntimeError */
-	/* 0x1e */ (DeeObject *)&DeeError_NotImplemented, /* NotImplemented */
-	/* 0x1f */ (DeeObject *)&DeeError_AssertionError, /* AssertionError */
-	/* 0x20 */ (DeeObject *)&DeeError_UnboundLocal, /* UnboundLocal */
-	/* 0x21 */ (DeeObject *)&DeeError_StackOverflow, /* StackOverflow */
-	/* 0x22 */ (DeeObject *)&DeeError_TypeError, /* TypeError */
-	/* 0x23 */ (DeeObject *)&DeeError_ValueError, /* ValueError */
-	/* 0x24 */ (DeeObject *)&DeeError_ArithmeticError, /* ArithmeticError */
-	/* 0x25 */ (DeeObject *)&DeeError_DivideByZero, /* DivideByZero */
-	/* 0x26 */ (DeeObject *)&DeeError_KeyError, /* KeyError */
-	/* 0x27 */ (DeeObject *)&DeeError_IndexError, /* IndexError */
-	/* 0x28 */ (DeeObject *)&DeeError_UnboundItem, /* UnboundItem */
-	/* 0x29 */ (DeeObject *)&DeeError_SequenceError, /* SequenceError */
-	/* 0x2a */ (DeeObject *)&DeeError_UnicodeError, /* UnicodeError */
-	/* 0x2b */ (DeeObject *)&DeeError_ReferenceError, /* ReferenceError */
-	/* 0x2c */ (DeeObject *)&DeeError_UnpackError, /* UnpackError */
-	/* 0x2d */ (DeeObject *)&DeeError_SystemError, /* SystemError */
-	/* 0x2e */ (DeeObject *)&DeeError_FSError, /* FSError */
-	/* 0x2f */ (DeeObject *)&DeeError_FileAccessError, /* FileAccessError */
-	/* 0x30 */ (DeeObject *)&DeeError_FileNotFound, /* FileNotFound */
-	/* 0x31 */ (DeeObject *)&DeeError_FileExists, /* FileExists */
-	/* 0x32 */ (DeeObject *)&DeeError_FileClosed, /* FileClosed */
-	/* 0x33 */ (DeeObject *)&DeeError_NoMemory, /* NoMemory */
-	/* 0x34 */ (DeeObject *)&DeeError_IntegerOverflow, /* IntegerOverflow */
-	/* 0x35 */ (DeeObject *)&DeeError_UnknownKey, /* UnknownKey */
-	/* 0x36 */ (DeeObject *)&DeeError_ItemNotFound, /* ItemNotFound */
-	/* 0x37 */ (DeeObject *)&DeeError_BufferError, /* BufferError */
+	/* 0x18 */ Dee_AsObject(&DeeError_Error), /* Error */
+	/* 0x19 */ Dee_AsObject(&DeeError_AttributeError), /* AttributeError */
+	/* 0x1a */ Dee_AsObject(&DeeError_UnboundAttribute), /* UnboundAttribute */
+	/* 0x1b */ Dee_AsObject(&DeeError_CompilerError), /* CompilerError */
+	/* 0x1c */ Dee_AsObject(&DeeError_ThreadCrash), /* ThreadCrash */
+	/* 0x1d */ Dee_AsObject(&DeeError_RuntimeError), /* RuntimeError */
+	/* 0x1e */ Dee_AsObject(&DeeError_NotImplemented), /* NotImplemented */
+	/* 0x1f */ Dee_AsObject(&DeeError_AssertionError), /* AssertionError */
+	/* 0x20 */ Dee_AsObject(&DeeError_UnboundLocal), /* UnboundLocal */
+	/* 0x21 */ Dee_AsObject(&DeeError_StackOverflow), /* StackOverflow */
+	/* 0x22 */ Dee_AsObject(&DeeError_TypeError), /* TypeError */
+	/* 0x23 */ Dee_AsObject(&DeeError_ValueError), /* ValueError */
+	/* 0x24 */ Dee_AsObject(&DeeError_ArithmeticError), /* ArithmeticError */
+	/* 0x25 */ Dee_AsObject(&DeeError_DivideByZero), /* DivideByZero */
+	/* 0x26 */ Dee_AsObject(&DeeError_KeyError), /* KeyError */
+	/* 0x27 */ Dee_AsObject(&DeeError_IndexError), /* IndexError */
+	/* 0x28 */ Dee_AsObject(&DeeError_UnboundItem), /* UnboundItem */
+	/* 0x29 */ Dee_AsObject(&DeeError_SequenceError), /* SequenceError */
+	/* 0x2a */ Dee_AsObject(&DeeError_UnicodeError), /* UnicodeError */
+	/* 0x2b */ Dee_AsObject(&DeeError_ReferenceError), /* ReferenceError */
+	/* 0x2c */ Dee_AsObject(&DeeError_UnpackError), /* UnpackError */
+	/* 0x2d */ Dee_AsObject(&DeeError_SystemError), /* SystemError */
+	/* 0x2e */ Dee_AsObject(&DeeError_FSError), /* FSError */
+	/* 0x2f */ Dee_AsObject(&DeeError_FileAccessError), /* FileAccessError */
+	/* 0x30 */ Dee_AsObject(&DeeError_FileNotFound), /* FileNotFound */
+	/* 0x31 */ Dee_AsObject(&DeeError_FileExists), /* FileExists */
+	/* 0x32 */ Dee_AsObject(&DeeError_FileClosed), /* FileClosed */
+	/* 0x33 */ Dee_AsObject(&DeeError_NoMemory), /* NoMemory */
+	/* 0x34 */ Dee_AsObject(&DeeError_IntegerOverflow), /* IntegerOverflow */
+	/* 0x35 */ Dee_AsObject(&DeeError_UnknownKey), /* UnknownKey */
+	/* 0x36 */ Dee_AsObject(&DeeError_ItemNotFound), /* ItemNotFound */
+	/* 0x37 */ Dee_AsObject(&DeeError_BufferError), /* BufferError */
 	/* 0x38 */ NULL,
 	/* 0x39 */ NULL,
 	/* 0x3a */ NULL,
@@ -2796,12 +2798,12 @@ PRIVATE DeeObject *buitlin_set0[DTYPE_BUILTIN_NUM] = {
 	/* 0x3e */ NULL,
 	/* 0x3f */ NULL,
 	/* 0x40 */ Dee_AsObject(&DeeObject_Type), /* Object */
-	/* 0x41 */ (DeeObject *)&DeeSeq_Type, /* Sequence */
-	/* 0x42 */ (DeeObject *)&DeeMapping_Type, /* Mapping */
-	/* 0x43 */ (DeeObject *)&DeeIterator_Type, /* Iterator */
-	/* 0x44 */ (DeeObject *)&DeeCallable_Type, /* Callable */
-	/* 0x45 */ (DeeObject *)&DeeNumeric_Type, /* Numeric */
-	/* 0x46 */ (DeeObject *)&DeeWeakRefAble_Type, /* WeakRefAble */
+	/* 0x41 */ Dee_AsObject(&DeeSeq_Type), /* Sequence */
+	/* 0x42 */ Dee_AsObject(&DeeMapping_Type), /* Mapping */
+	/* 0x43 */ Dee_AsObject(&DeeIterator_Type), /* Iterator */
+	/* 0x44 */ Dee_AsObject(&DeeCallable_Type), /* Callable */
+	/* 0x45 */ Dee_AsObject(&DeeNumeric_Type), /* Numeric */
+	/* 0x46 */ Dee_AsObject(&DeeWeakRefAble_Type), /* WeakRefAble */
 	/* 0x47 */ NULL,
 	/* 0x48 */ NULL,
 	/* 0x49 */ NULL,
@@ -2827,19 +2829,19 @@ PRIVATE DeeObject *buitlin_set0[DTYPE_BUILTIN_NUM] = {
 	/* 0x5d */ NULL,
 	/* 0x5e */ NULL,
 	/* 0x5f */ NULL,
-	/* 0x60 */ (DeeObject *)&DeeList_Type, /* List */
-	/* 0x61 */ (DeeObject *)&DeeDict_Type, /* Dict */
-	/* 0x62 */ (DeeObject *)&DeeHashSet_Type, /* HashSet */
-	/* 0x63 */ (DeeObject *)&DeeCell_Type, /* Cell */
+	/* 0x60 */ Dee_AsObject(&DeeList_Type), /* List */
+	/* 0x61 */ Dee_AsObject(&DeeDict_Type), /* Dict */
+	/* 0x62 */ Dee_AsObject(&DeeHashSet_Type), /* HashSet */
+	/* 0x63 */ Dee_AsObject(&DeeCell_Type), /* Cell */
 	/* 0x64 */ NULL,
 	/* 0x65 */ NULL,
 	/* 0x66 */ NULL,
 	/* 0x67 */ NULL,
-	/* 0x68 */ (DeeObject *)&Dee_FalseTrue[0], /* False */
-	/* 0x69 */ (DeeObject *)&Dee_FalseTrue[1], /* True */
-	/* 0x6a */ (DeeObject *)&DeeSeq_EmptyInstance, /* EmptySeq */
-	/* 0x6b */ (DeeObject *)&DeeSet_EmptyInstance, /* EmptySet */
-	/* 0x6c */ (DeeObject *)&DeeMapping_EmptyInstance, /* EmptyMapping */
+	/* 0x68 */ Dee_AsObject(&Dee_FalseTrue[0]), /* False */
+	/* 0x69 */ Dee_AsObject(&Dee_FalseTrue[1]), /* True */
+	/* 0x6a */ Dee_AsObject(&DeeSeq_EmptyInstance), /* EmptySeq */
+	/* 0x6b */ Dee_AsObject(&DeeSet_EmptyInstance), /* EmptySet */
+	/* 0x6c */ Dee_AsObject(&DeeMapping_EmptyInstance), /* EmptyMapping */
 	/* 0x6d */ NULL,
 	/* 0x6e */ NULL,
 	/* 0x6f */ NULL,
@@ -2923,25 +2925,25 @@ PRIVATE DeeObject *buitlin_set0[DTYPE_BUILTIN_NUM] = {
 	/* 0xbd */ NULL,
 	/* 0xbe */ NULL,
 	/* 0xbf */ NULL,
-	/* 0xc0 */ (DeeObject *)&DeeType_Type, /* Type */
-	/* 0xc1 */ (DeeObject *)&DeeTraceback_Type, /* Traceback */
-	/* 0xc2 */ (DeeObject *)&DeeThread_Type, /* Thread */
-	/* 0xc3 */ (DeeObject *)&DeeSuper_Type, /* Super */
-	/* 0xc4 */ (DeeObject *)&DeeString_Type, /* String */
-	/* 0xc5 */ (DeeObject *)&DeeNone_Type, /* None */
-	/* 0xc6 */ (DeeObject *)&DeeInt_Type, /* Int */
-	/* 0xc7 */ (DeeObject *)&DeeFloat_Type, /* Float */
-	/* 0xc8 */ (DeeObject *)&DeeModule_Type, /* Module */
-	/* 0xc9 */ (DeeObject *)&DeeCode_Type, /* Code */
+	/* 0xc0 */ Dee_AsObject(&DeeType_Type), /* Type */
+	/* 0xc1 */ Dee_AsObject(&DeeTraceback_Type), /* Traceback */
+	/* 0xc2 */ Dee_AsObject(&DeeThread_Type), /* Thread */
+	/* 0xc3 */ Dee_AsObject(&DeeSuper_Type), /* Super */
+	/* 0xc4 */ Dee_AsObject(&DeeString_Type), /* String */
+	/* 0xc5 */ Dee_AsObject(&DeeNone_Type), /* None */
+	/* 0xc6 */ Dee_AsObject(&DeeInt_Type), /* Int */
+	/* 0xc7 */ Dee_AsObject(&DeeFloat_Type), /* Float */
+	/* 0xc8 */ Dee_AsObject(&DeeModule_Type), /* Module */
+	/* 0xc9 */ Dee_AsObject(&DeeCode_Type), /* Code */
 	/* 0xca */ NULL,
 	/* 0xcb */ NULL,
 	/* 0xcc */ NULL,
 	/* 0xcd */ NULL,
 	/* 0xce */ NULL,
 	/* 0xcf */ NULL,
-	/* 0xd0 */ (DeeObject *)&DeeTuple_Type, /* Tuple */
-	/* 0xd1 */ (DeeObject *)&DeeBool_Type, /* Bool */
-	/* 0xd2 */ (DeeObject *)&DeeWeakRef_Type, /* WeakRef */
+	/* 0xd0 */ Dee_AsObject(&DeeTuple_Type), /* Tuple */
+	/* 0xd1 */ Dee_AsObject(&DeeBool_Type), /* Bool */
+	/* 0xd2 */ Dee_AsObject(&DeeWeakRef_Type), /* WeakRef */
 	/* 0xd3 */ NULL,
 	/* 0xd4 */ NULL,
 	/* 0xd5 */ NULL,

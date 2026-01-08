@@ -2831,10 +2831,10 @@ PRIVATE DEFINE_STRING_EX(str___end__, "__end__", 0x226048a5, 0x5b8da67432fe5d43)
 
 PRIVATE NONNULL((1, 2)) int DCALL
 unpack_range(DeeObject *range, /*out*/ DREF DeeObject *start_end[2]) {
-	start_end[0] = DeeObject_GetAttr(range, (DeeObject *)&str___start__);
+	start_end[0] = DeeObject_GetAttr(range, Dee_AsObject(&str___start__));
 	if unlikely(!start_end[0])
 		goto err;
-	start_end[1] = DeeObject_GetAttr(range, (DeeObject *)&str___end__);
+	start_end[1] = DeeObject_GetAttr(range, Dee_AsObject(&str___end__));
 	if unlikely(!start_end[1])
 		goto err_0;
 	return 0;

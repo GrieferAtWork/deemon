@@ -1617,7 +1617,7 @@ SeqCombinations_New(/*inherit(always)*/ DREF DeeObject *__restrict seq,
 	if unlikely(!rparam) {
 		Dee_Decref(seq);
 		Dee_Incref(&empty_combinations);
-		return (DeeObject *)&empty_combinations;
+		return Dee_AsObject(&empty_combinations);
 	}
 	result = DeeObject_MALLOC(SeqCombinations);
 	if unlikely(!result)

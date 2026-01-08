@@ -293,7 +293,7 @@ stype_init(DeeSTypeObject *__restrict self) {
 	bzero((&self->st_base) + 1,
 	      sizeof(DeeSTypeObject) -
 	      COMPILER_OFFSETAFTER(DeeSTypeObject, st_base));
-	return (*DeeType_Type.tp_init.tp_alloc.tp_ctor)((DeeObject *)&self->st_base);
+	return (*DeeType_Type.tp_init.tp_alloc.tp_ctor)(Dee_AsObject(&self->st_base));
 }
 
 PRIVATE NONNULL((1)) void DCALL

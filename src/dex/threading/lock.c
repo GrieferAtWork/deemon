@@ -469,7 +469,7 @@ DOC_DEF(doc_rwlock_writelock,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_do_acquire(DeeObject *__restrict self) {
 	DeeObject *result;
-	result = DeeObject_CallAttr(self, (DeeObject *)&str_acquire, 0, NULL);
+	result = DeeObject_CallAttr(self, Dee_AsObject(&str_acquire), 0, NULL);
 	Dee_XDecref_unlikely(result);
 	return likely(result) ? 0 : -1;
 }
@@ -477,7 +477,7 @@ lock_do_acquire(DeeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_do_release(DeeObject *__restrict self) {
 	DREF DeeObject *result;
-	result = DeeObject_CallAttr(self, (DeeObject *)&str_release, 0, NULL);
+	result = DeeObject_CallAttr(self, Dee_AsObject(&str_release), 0, NULL);
 	Dee_XDecref_unlikely(result);
 	return likely(result) ? 0 : -1;
 }
@@ -485,7 +485,7 @@ lock_do_release(DeeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_do_tryacquire(DeeObject *__restrict self) {
 	DREF DeeObject *result_ob;
-	result_ob = DeeObject_CallAttr(self, (DeeObject *)&str_tryacquire, 0, NULL);
+	result_ob = DeeObject_CallAttr(self, Dee_AsObject(&str_tryacquire), 0, NULL);
 	if unlikely(!result_ob)
 		goto err;
 	return DeeObject_BoolInherited(result_ob);
@@ -536,7 +536,7 @@ lock_timedacquire(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (args.timeout_nanoseconds == (uint64_t)-1) {
 		DREF DeeObject *result;
 do_infinite_timeout:
-		result = DeeObject_CallAttr(self, (DeeObject *)&str_acquire, 0, NULL);
+		result = DeeObject_CallAttr(self, Dee_AsObject(&str_acquire), 0, NULL);
 		if unlikely(!result)
 			goto err;
 		Dee_Decref(result);
@@ -568,7 +568,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_is_acquired(DeeObject *__restrict self) {
 	DREF DeeObject *result_ob;
-	result_ob = DeeObject_GetAttr(self, (DeeObject *)&str_acquired);
+	result_ob = DeeObject_GetAttr(self, Dee_AsObject(&str_acquired));
 	if unlikely(!result_ob)
 		goto err;
 	return DeeObject_BoolInherited(result_ob);
@@ -624,7 +624,7 @@ lock_timedwaitfor(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (args.timeout_nanoseconds == (uint64_t)-1) {
 		DREF DeeObject *result;
 do_infinite_timeout:
-		result = DeeObject_CallAttr(self, (DeeObject *)&str_waitfor, 0, NULL);
+		result = DeeObject_CallAttr(self, Dee_AsObject(&str_waitfor), 0, NULL);
 		if unlikely(!result)
 			goto err;
 		Dee_Decref(result);
@@ -742,7 +742,7 @@ INTERN DeeTypeObject DeeLock_Type = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_tryread(DeeObject *self) {
 	DREF DeeObject *result_ob;
-	result_ob = DeeObject_CallAttr(self, (DeeObject *)&str_tryread, 0, NULL);
+	result_ob = DeeObject_CallAttr(self, Dee_AsObject(&str_tryread), 0, NULL);
 	if unlikely(!result_ob)
 		goto err;
 	return DeeObject_BoolInherited(result_ob);
@@ -753,7 +753,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_trywrite(DeeObject *self) {
 	DREF DeeObject *result_ob;
-	result_ob = DeeObject_CallAttr(self, (DeeObject *)&str_trywrite, 0, NULL);
+	result_ob = DeeObject_CallAttr(self, Dee_AsObject(&str_trywrite), 0, NULL);
 	if unlikely(!result_ob)
 		goto err;
 	return DeeObject_BoolInherited(result_ob);
@@ -764,7 +764,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_tryupgrade(DeeObject *self) {
 	DREF DeeObject *result_ob;
-	result_ob = DeeObject_CallAttr(self, (DeeObject *)&str_tryupgrade, 0, NULL);
+	result_ob = DeeObject_CallAttr(self, Dee_AsObject(&str_tryupgrade), 0, NULL);
 	if unlikely(!result_ob)
 		goto err;
 	return DeeObject_BoolInherited(result_ob);
@@ -775,7 +775,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_endread(DeeObject *self) {
 	DREF DeeObject *result_ob;
-	result_ob = DeeObject_CallAttr(self, (DeeObject *)&str_endread, 0, NULL);
+	result_ob = DeeObject_CallAttr(self, Dee_AsObject(&str_endread), 0, NULL);
 	if unlikely(!result_ob)
 		goto err;
 	Dee_Decref(result_ob);
@@ -787,7 +787,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_endwrite(DeeObject *self) {
 	DREF DeeObject *result_ob;
-	result_ob = DeeObject_CallAttr(self, (DeeObject *)&str_endwrite, 0, NULL);
+	result_ob = DeeObject_CallAttr(self, Dee_AsObject(&str_endwrite), 0, NULL);
 	if unlikely(!result_ob)
 		goto err;
 	Dee_Decref(result_ob);
@@ -799,7 +799,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_reading(DeeObject *self) {
 	DREF DeeObject *result_ob;
-	result_ob = DeeObject_GetAttr(self, (DeeObject *)&str_reading);
+	result_ob = DeeObject_GetAttr(self, Dee_AsObject(&str_reading));
 	if unlikely(!result_ob)
 		goto err;
 	return DeeObject_BoolInherited(result_ob);
@@ -810,7 +810,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_writing(DeeObject *self) {
 	DREF DeeObject *result_ob;
-	result_ob = DeeObject_GetAttr(self, (DeeObject *)&str_writing);
+	result_ob = DeeObject_GetAttr(self, Dee_AsObject(&str_writing));
 	if unlikely(!result_ob)
 		goto err;
 	return DeeObject_BoolInherited(result_ob);
@@ -1388,7 +1388,7 @@ rwlock_writelock_printrepr(DeeGenericRWLockProxyObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_readlock_enter(DeeGenericRWLockProxyObject *__restrict self) {
 	DREF DeeObject *temp;
-	temp = DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_read, 0, NULL);
+	temp = DeeObject_CallAttr(self->grwl_lock, Dee_AsObject(&str_read), 0, NULL);
 	if unlikely(!temp)
 		goto err;
 	Dee_Decref(temp);
@@ -1400,7 +1400,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_readlock_leave(DeeGenericRWLockProxyObject *__restrict self) {
 	DREF DeeObject *temp;
-	temp = DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_endread, 0, NULL);
+	temp = DeeObject_CallAttr(self->grwl_lock, Dee_AsObject(&str_endread), 0, NULL);
 	if unlikely(!temp)
 		goto err;
 	Dee_Decref(temp);
@@ -1412,7 +1412,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_writelock_enter(DeeGenericRWLockProxyObject *__restrict self) {
 	DREF DeeObject *temp;
-	temp = DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_write, 0, NULL);
+	temp = DeeObject_CallAttr(self->grwl_lock, Dee_AsObject(&str_write), 0, NULL);
 	if unlikely(!temp)
 		goto err;
 	Dee_Decref(temp);
@@ -1424,7 +1424,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_writelock_leave(DeeGenericRWLockProxyObject *__restrict self) {
 	DREF DeeObject *temp;
-	temp = DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_endwrite, 0, NULL);
+	temp = DeeObject_CallAttr(self->grwl_lock, Dee_AsObject(&str_endwrite), 0, NULL);
 	if unlikely(!temp)
 		goto err;
 	Dee_Decref(temp);
@@ -1436,93 +1436,93 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_readlock_tryacquire(DeeGenericRWLockProxyObject *self,
                            size_t argc, DeeObject *const *argv) {
-	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_tryread, argc, argv);
+	return DeeObject_CallAttr(self->grwl_lock, Dee_AsObject(&str_tryread), argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_writelock_tryacquire(DeeGenericRWLockProxyObject *self,
                             size_t argc, DeeObject *const *argv) {
-	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_trywrite, argc, argv);
+	return DeeObject_CallAttr(self->grwl_lock, Dee_AsObject(&str_trywrite), argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_readlock_acquire(DeeGenericRWLockProxyObject *self,
                         size_t argc, DeeObject *const *argv) {
-	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_read, argc, argv);
+	return DeeObject_CallAttr(self->grwl_lock, Dee_AsObject(&str_read), argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_writelock_acquire(DeeGenericRWLockProxyObject *self,
                          size_t argc, DeeObject *const *argv) {
-	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_write, argc, argv);
+	return DeeObject_CallAttr(self->grwl_lock, Dee_AsObject(&str_write), argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_readlock_release(DeeGenericRWLockProxyObject *self,
                         size_t argc, DeeObject *const *argv) {
-	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_endread, argc, argv);
+	return DeeObject_CallAttr(self->grwl_lock, Dee_AsObject(&str_endread), argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_writelock_release(DeeGenericRWLockProxyObject *self,
                          size_t argc, DeeObject *const *argv) {
-	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_endwrite, argc, argv);
+	return DeeObject_CallAttr(self->grwl_lock, Dee_AsObject(&str_endwrite), argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_readlock_timedacquire(DeeGenericRWLockProxyObject *self,
                              size_t argc, DeeObject *const *argv) {
-	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_timedread, argc, argv);
+	return DeeObject_CallAttr(self->grwl_lock, Dee_AsObject(&str_timedread), argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_writelock_timedacquire(DeeGenericRWLockProxyObject *self,
                               size_t argc, DeeObject *const *argv) {
-	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_timedwrite, argc, argv);
+	return DeeObject_CallAttr(self->grwl_lock, Dee_AsObject(&str_timedwrite), argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_readlock_waitfor(DeeGenericRWLockProxyObject *self,
                         size_t argc, DeeObject *const *argv) {
-	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_waitread, argc, argv);
+	return DeeObject_CallAttr(self->grwl_lock, Dee_AsObject(&str_waitread), argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_writelock_waitfor(DeeGenericRWLockProxyObject *self,
                          size_t argc, DeeObject *const *argv) {
-	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_waitwrite, argc, argv);
+	return DeeObject_CallAttr(self->grwl_lock, Dee_AsObject(&str_waitwrite), argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_readlock_timedwaitfor(DeeGenericRWLockProxyObject *self,
                              size_t argc, DeeObject *const *argv) {
-	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_timedwaitread, argc, argv);
+	return DeeObject_CallAttr(self->grwl_lock, Dee_AsObject(&str_timedwaitread), argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_writelock_timedwaitfor(DeeGenericRWLockProxyObject *self,
                               size_t argc, DeeObject *const *argv) {
-	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_timedwaitwrite, argc, argv);
+	return DeeObject_CallAttr(self->grwl_lock, Dee_AsObject(&str_timedwaitwrite), argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_readlock_available_get(DeeGenericRWLockProxyObject *__restrict self) {
-	return DeeObject_GetAttr(self->grwl_lock, (DeeObject *)&str_canread);
+	return DeeObject_GetAttr(self->grwl_lock, Dee_AsObject(&str_canread));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_writelock_available_get(DeeGenericRWLockProxyObject *__restrict self) {
-	return DeeObject_GetAttr(self->grwl_lock, (DeeObject *)&str_canwrite);
+	return DeeObject_GetAttr(self->grwl_lock, Dee_AsObject(&str_canwrite));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_readlock_acquired_get(DeeGenericRWLockProxyObject *__restrict self) {
-	return DeeObject_GetAttr(self->grwl_lock, (DeeObject *)&str_reading);
+	return DeeObject_GetAttr(self->grwl_lock, Dee_AsObject(&str_reading));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_writelock_acquired_get(DeeGenericRWLockProxyObject *__restrict self) {
-	return DeeObject_GetAttr(self->grwl_lock, (DeeObject *)&str_writing);
+	return DeeObject_GetAttr(self->grwl_lock, Dee_AsObject(&str_writing));
 }
 
 
@@ -2514,7 +2514,7 @@ lock_union_do_waitfor(LockUnion *__restrict self) {
 	size_t i = 0;
 	do {
 		DREF DeeObject *result;
-		result = DeeObject_CallAttr(self->lu_elem[i], (DeeObject *)&str_waitfor, 0, NULL);
+		result = DeeObject_CallAttr(self->lu_elem[i], Dee_AsObject(&str_waitfor), 0, NULL);
 		if unlikely(!result)
 			goto err;
 		Dee_Decref(result);
@@ -2551,7 +2551,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_do_timedacquire(DeeObject *__restrict self, uint64_t timeout_nanoseconds) {
 	int status;
 	DeeObject *result;
-	result = DeeObject_CallAttrf(self, (DeeObject *)&str_timedacquire,
+	result = DeeObject_CallAttrf(self, Dee_AsObject(&str_timedacquire),
 	                             PCKu64, timeout_nanoseconds);
 	if unlikely(result == NULL)
 		goto err;
@@ -2567,7 +2567,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_do_timedwaitfor(DeeObject *__restrict self, uint64_t timeout_nanoseconds) {
 	int status;
 	DeeObject *result;
-	result = DeeObject_CallAttrf(self, (DeeObject *)&str_timedwaitfor,
+	result = DeeObject_CallAttrf(self, Dee_AsObject(&str_timedwaitfor),
 	                             PCKu64, timeout_nanoseconds);
 	if unlikely(result == NULL)
 		goto err;
@@ -2729,7 +2729,7 @@ do_infinite_timeout:
 			if (i >= self->lu_size - 1)
 				return 0;
 			/* Check if all other locks are currently available. */
-			ok = lock_union_do_available_or_acquired(self, (DeeObject *)&str_available, i + 1);
+			ok = lock_union_do_available_or_acquired(self, Dee_AsObject(&str_available), i + 1);
 			if (ok > 0)
 				ok = ok ? 0 : 1;
 			return ok;
@@ -2861,7 +2861,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_union_available_get(LockUnion *__restrict self) {
-	int status = lock_union_do_available_or_acquired(self, (DeeObject *)&str_available, 0);
+	int status = lock_union_do_available_or_acquired(self, Dee_AsObject(&str_available), 0);
 	if unlikely(status < 0)
 		goto err;
 	return_bool(status != 0);
@@ -2871,7 +2871,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_union_acquired_get(LockUnion *__restrict self) {
-	int status = lock_union_do_available_or_acquired(self, (DeeObject *)&str_acquired, 0);
+	int status = lock_union_do_available_or_acquired(self, Dee_AsObject(&str_acquired), 0);
 	if unlikely(status < 0)
 		goto err;
 	return_bool(status != 0);

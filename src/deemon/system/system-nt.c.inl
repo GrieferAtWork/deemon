@@ -97,14 +97,14 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 
 
 #if defined(Dee_fd_GETSET) && defined(Dee_fd_t_IS_HANDLE)
-#define GETATTR_osfhandle(ob) DeeObject_GetAttr(ob, (DeeObject *)&str_getsysfd)
+#define GETATTR_osfhandle(ob) DeeObject_GetAttr(ob, Dee_AsObject(&str_getsysfd))
 #else /* Dee_fd_GETSET && Dee_fd_t_IS_HANDLE */
 #define GETATTR_osfhandle(ob) DeeObject_GetAttrString(ob, Dee_fd_osfhandle_GETSET)
 #endif /* !Dee_fd_GETSET || !Dee_fd_t_IS_HANDLE */
 
 #ifndef GETATTR_fileno
 #if defined(Dee_fd_GETSET) && defined(Dee_fd_t_IS_FILE)
-#define GETATTR_fileno(ob) DeeObject_GetAttr(ob, (DeeObject *)&str_getsysfd)
+#define GETATTR_fileno(ob) DeeObject_GetAttr(ob, Dee_AsObject(&str_getsysfd))
 #else /* Dee_fd_GETSET && Dee_fd_t_IS_FILE */
 #define GETATTR_fileno(ob) DeeObject_GetAttrString(ob, Dee_fd_fileno_GETSET)
 #endif /* !Dee_fd_GETSET || !Dee_fd_t_IS_FILE */

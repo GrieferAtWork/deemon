@@ -313,7 +313,7 @@ iterator_do_hasprev(DeeObject *__restrict self,
 	DREF DeeObject *temp;
 	if (nii->nii_common.nii_hasprev)
 		return (*nii->nii_common.nii_hasprev)(self);
-	temp = DeeObject_GetAttr(self, (DeeObject *)&str_hasprev);
+	temp = DeeObject_GetAttr(self, Dee_AsObject(&str_hasprev));
 	if unlikely(!temp)
 		goto err;
 	return DeeObject_BoolInherited(temp);
@@ -415,7 +415,7 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 			Dee_Decref(temp);
 			goto done;
 		}
-		error = has_generic_attribute(tp_self, self, (DeeObject *)&str_revert);
+		error = has_generic_attribute(tp_self, self, Dee_AsObject(&str_revert));
 		if (error != 0) {
 			if unlikely(error < 0)
 				goto err;
@@ -427,7 +427,7 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 				if unlikely(!temp)
 					goto err;
 			}
-			temp2 = DeeObject_CallAttr(self, (DeeObject *)&str_revert, 1, &temp);
+			temp2 = DeeObject_CallAttr(self, Dee_AsObject(&str_revert), 1, &temp);
 			if unlikely(!temp2)
 				goto err_temp;
 			Dee_Decref(temp2);
@@ -456,7 +456,7 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 			Dee_Decref(temp);
 			goto done;
 		}
-		error = has_generic_attribute(tp_self, self, (DeeObject *)&str_advance);
+		error = has_generic_attribute(tp_self, self, Dee_AsObject(&str_advance));
 		if (error != 0) {
 			if unlikely(error < 0)
 				goto err;
@@ -468,14 +468,14 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 				if unlikely(!temp)
 					goto err;
 			}
-			temp2 = DeeObject_CallAttr(self, (DeeObject *)&str_advance, 1, &temp);
+			temp2 = DeeObject_CallAttr(self, Dee_AsObject(&str_advance), 1, &temp);
 			if unlikely(!temp2)
 				goto err_temp;
 			Dee_Decref(temp2);
 			Dee_Decref(temp);
 			goto done;
 		}
-		temp = get_generic_attribute(tp_self, self, (DeeObject *)&str_index);
+		temp = get_generic_attribute(tp_self, self, Dee_AsObject(&str_index));
 		if (temp != ITER_DONE) {
 			size_t old_index;
 			if unlikely(!temp)
@@ -484,14 +484,14 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 				goto err_temp;
 			Dee_Decref(temp);
 			if (old_index <= count) {
-				if unlikely(DeeObject_SetAttr(self, (DeeObject *)&str_index, DeeInt_Zero))
+				if unlikely(DeeObject_SetAttr(self, Dee_AsObject(&str_index), DeeInt_Zero))
 					goto err;
 				return 1;
 			} else {
 				temp = DeeInt_NewSize(old_index - count);
 				if unlikely(!temp)
 					goto err;
-				error = DeeObject_SetAttr(self, (DeeObject *)&str_index, temp);
+				error = DeeObject_SetAttr(self, Dee_AsObject(&str_index), temp);
 				Dee_Decref(temp);
 			}
 			if unlikely(error)
@@ -545,7 +545,7 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 						goto err_temp;
 					if (!--count)
 						break;
-					temp2 = DeeObject_GetAttr(self, (DeeObject *)&str_hasprev);
+					temp2 = DeeObject_GetAttr(self, Dee_AsObject(&str_hasprev));
 					if unlikely(!temp2)
 						goto err_temp;
 					error = DeeObject_BoolInherited(temp2);
@@ -563,16 +563,16 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 				Dee_Decref(temp);
 				goto done;
 			}
-			error = has_generic_attribute(tp_self, self, (DeeObject *)&str_seq);
+			error = has_generic_attribute(tp_self, self, Dee_AsObject(&str_seq));
 			if (error == 0)
-				error = has_generic_attribute(tp_self, self, (DeeObject *)&str_prev);
+				error = has_generic_attribute(tp_self, self, Dee_AsObject(&str_prev));
 			if (error != 0) {
 				if unlikely(error < 0)
 					goto err;
 				for (;;) {
 					if (DeeThread_CheckInterrupt())
 						goto err;
-					temp = DeeObject_CallAttr(self, (DeeObject *)&str_prev, 0, NULL);
+					temp = DeeObject_CallAttr(self, Dee_AsObject(&str_prev), 0, NULL);
 					if unlikely(!temp)
 						goto err;
 					error = DeeObject_BoolInherited(temp);
@@ -668,7 +668,7 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 			Dee_Decref(temp);
 			goto done;
 		}
-		error = has_generic_attribute(tp_self, self, (DeeObject *)&str_advance);
+		error = has_generic_attribute(tp_self, self, Dee_AsObject(&str_advance));
 		if (error != 0) {
 			if unlikely(error < 0)
 				goto err;
@@ -680,7 +680,7 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 				if unlikely(!temp)
 					goto err;
 			}
-			temp2 = DeeObject_CallAttr(self, (DeeObject *)&str_advance, 1, &temp);
+			temp2 = DeeObject_CallAttr(self, Dee_AsObject(&str_advance), 1, &temp);
 			if unlikely(!temp2)
 				goto err_temp;
 			Dee_Decref(temp2);
@@ -709,7 +709,7 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 			Dee_Decref(temp);
 			goto done;
 		}
-		error = has_generic_attribute(tp_self, self, (DeeObject *)&str_revert);
+		error = has_generic_attribute(tp_self, self, Dee_AsObject(&str_revert));
 		if (error != 0) {
 			if unlikely(error < 0)
 				goto err;
@@ -721,14 +721,14 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 				if unlikely(!temp)
 					goto err;
 			}
-			temp2 = DeeObject_CallAttr(self, (DeeObject *)&str_revert, 1, &temp);
+			temp2 = DeeObject_CallAttr(self, Dee_AsObject(&str_revert), 1, &temp);
 			if unlikely(!temp2)
 				goto err_temp;
 			Dee_Decref(temp2);
 			Dee_Decref(temp);
 			goto done;
 		}
-		temp = get_generic_attribute(tp_self, self, (DeeObject *)&str_index);
+		temp = get_generic_attribute(tp_self, self, Dee_AsObject(&str_index));
 		if (temp != ITER_DONE) {
 			size_t old_index;
 			if unlikely(!temp)
@@ -739,7 +739,7 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 			temp = DeeInt_NewSize(old_index + count);
 			if unlikely(!temp)
 				goto err;
-			error = DeeObject_SetAttr(self, (DeeObject *)&str_index, temp);
+			error = DeeObject_SetAttr(self, Dee_AsObject(&str_index), temp);
 			Dee_Decref(temp);
 			if unlikely(error)
 				goto err;
@@ -792,7 +792,7 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 						goto err_temp;
 					if (!--count)
 						break;
-					temp2 = DeeObject_GetAttr(self, (DeeObject *)&str_hasnext);
+					temp2 = DeeObject_GetAttr(self, Dee_AsObject(&str_hasnext));
 					if unlikely(!temp2)
 						goto err_temp;
 					error = DeeObject_BoolInherited(temp2);
@@ -1236,20 +1236,20 @@ DeeIterator_GetIndex(DeeObject *__restrict self) {
 				return (*nii->nii_common.nii_getindex)(self);
 			break;
 		}
-		error = has_generic_attribute(tp_self, self, (DeeObject *)&str_rewind);
+		error = has_generic_attribute(tp_self, self, Dee_AsObject(&str_rewind));
 		if (error != 0) {
 			if unlikely(error < 0)
 				goto err;
 			copy = DeeObject_Copy(self);
 			if unlikely(!copy)
 				goto err;
-			temp = DeeObject_CallAttr(copy, (DeeObject *)&str_rewind, 0, NULL);
+			temp = DeeObject_CallAttr(copy, Dee_AsObject(&str_rewind), 0, NULL);
 			if unlikely(!temp)
 				goto err_copy;
 			Dee_Decref(temp);
 			goto got_rewound_iter;
 		}
-		temp = get_generic_attribute(tp_self, self, (DeeObject *)&str_seq);
+		temp = get_generic_attribute(tp_self, self, Dee_AsObject(&str_seq));
 		if (temp != ITER_DONE) {
 			if unlikely(!temp)
 				goto err;
@@ -1325,7 +1325,7 @@ DeeIterator_SetIndex(DeeObject *__restrict self, size_t new_index) {
 		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 	}
-	temp = DeeObject_CallAttr(self, (DeeObject *)&str_rewind, 0, NULL);
+	temp = DeeObject_CallAttr(self, Dee_AsObject(&str_rewind), 0, NULL);
 	if unlikely(!temp)
 		goto err;
 	Dee_Decref(temp);
@@ -1396,16 +1396,16 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 			}
 			break;
 		}
-		error = has_generic_attribute(tp_self, self, (DeeObject *)&str_index);
+		error = has_generic_attribute(tp_self, self, Dee_AsObject(&str_index));
 		if (error != 0) {
 			if unlikely(error < 0)
 				goto err;
-			error = DeeObject_SetAttr(self, (DeeObject *)&str_index, DeeInt_Zero);
+			error = DeeObject_SetAttr(self, Dee_AsObject(&str_index), DeeInt_Zero);
 			if unlikely(error < 0)
 				goto err;
 			goto done;
 		}
-		temp = get_generic_attribute(tp_self, self, (DeeObject *)&str_seq);
+		temp = get_generic_attribute(tp_self, self, Dee_AsObject(&str_seq));
 		if (temp != ITER_DONE) {
 			if unlikely(!temp)
 				goto err;
@@ -1419,7 +1419,7 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 				goto err;
 			goto done;
 		}
-		temp = get_generic_attribute(tp_self, self, (DeeObject *)&str_prev);
+		temp = get_generic_attribute(tp_self, self, Dee_AsObject(&str_prev));
 		if (temp != ITER_DONE) {
 			if unlikely(!temp)
 				goto err;
@@ -1448,13 +1448,13 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 			Dee_Incref(temp);
 			for (;;) {
 				error = (m->tp_inplace_sub && m->tp_inplace_sub != &iterator_inplace_sub)
-				        ? (*m->tp_inplace_sub)(&temp, (DeeObject *)&int_SIZE_MAX)
+				        ? (*m->tp_inplace_sub)(&temp, Dee_AsObject(&int_SIZE_MAX))
 				        : (m->tp_inplace_add && m->tp_inplace_add != &iterator_inplace_add)
-				          ? (*m->tp_inplace_add)(&temp, (DeeObject *)&int_SIZE_MIN)
+				          ? (*m->tp_inplace_add)(&temp, Dee_AsObject(&int_SIZE_MIN))
 				          : (*m->tp_dec)(&temp);
 				if unlikely(error)
 					goto err_temp;
-				temp2 = DeeObject_GetAttr(temp, (DeeObject *)&str_hasprev);
+				temp2 = DeeObject_GetAttr(temp, Dee_AsObject(&str_hasprev));
 				if unlikely(!temp2)
 					goto err_temp;
 				error = DeeObject_BoolInherited(temp2);
@@ -1470,7 +1470,7 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 			Dee_Decref(temp);
 			goto done;
 		}
-		temp = get_generic_attribute(tp_self, self, (DeeObject *)&str_revert);
+		temp = get_generic_attribute(tp_self, self, Dee_AsObject(&str_revert));
 		if (temp != ITER_DONE) {
 			if unlikely(!temp)
 				goto err;
@@ -1482,7 +1482,7 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 				if unlikely(!temp2)
 					goto err_temp;
 				Dee_Decref(temp2);
-				temp2 = DeeObject_GetAttr(self, (DeeObject *)&str_hasprev);
+				temp2 = DeeObject_GetAttr(self, Dee_AsObject(&str_hasprev));
 				if unlikely(!temp2)
 					goto err_temp;
 				error = DeeObject_BoolInherited(temp2);
@@ -1495,7 +1495,7 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 			Dee_Decref(temp);
 			goto done;
 		}
-		temp = get_generic_attribute(tp_self, self, (DeeObject *)&str_advance);
+		temp = get_generic_attribute(tp_self, self, Dee_AsObject(&str_advance));
 		if (temp != ITER_DONE) {
 			if unlikely(!temp)
 				goto err;
@@ -1507,7 +1507,7 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 				if unlikely(!temp2)
 					goto err_temp;
 				Dee_Decref(temp2);
-				temp2 = DeeObject_GetAttr(self, (DeeObject *)&str_hasprev);
+				temp2 = DeeObject_GetAttr(self, Dee_AsObject(&str_hasprev));
 				if unlikely(!temp2)
 					goto err_temp;
 				error = DeeObject_BoolInherited(temp2);
@@ -1527,13 +1527,13 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 			Dee_Incref(temp);
 			for (;;) {
 				temp2 = (m->tp_sub && m->tp_sub != &iterator_sub)
-				        ? (*m->tp_sub)(temp, (DeeObject *)&int_SIZE_MAX)
-				        : (*m->tp_add)(temp, (DeeObject *)&int_SIZE_MIN);
+				        ? (*m->tp_sub)(temp, Dee_AsObject(&int_SIZE_MAX))
+				        : (*m->tp_add)(temp, Dee_AsObject(&int_SIZE_MIN));
 				if unlikely(error)
 					goto err_temp;
 				Dee_Decref(temp);
 				temp  = temp2;
-				temp2 = DeeObject_GetAttr(temp, (DeeObject *)&str_hasprev);
+				temp2 = DeeObject_GetAttr(temp, Dee_AsObject(&str_hasprev));
 				if unlikely(!temp2)
 					goto err_temp;
 				error = DeeObject_BoolInherited(temp2);
@@ -1624,7 +1624,7 @@ DeeIterator_Prev(DeeObject *__restrict self) {
 			}
 			break;
 		}
-		temp = get_generic_attribute(tp_self, self, (DeeObject *)&str_index);
+		temp = get_generic_attribute(tp_self, self, Dee_AsObject(&str_index));
 		if (temp != ITER_DONE) {
 			/* >> local i = this.index;
 			 * >> if (!i)
@@ -1644,7 +1644,7 @@ DeeIterator_Prev(DeeObject *__restrict self) {
 			Dee_Decref(temp);
 			if unlikely(!temp2)
 				goto err;
-			error = DeeObject_SetAttr(self, (DeeObject *)&str_index, temp2);
+			error = DeeObject_SetAttr(self, Dee_AsObject(&str_index), temp2);
 			Dee_Decref(temp2);
 			return error;
 		}
@@ -1659,7 +1659,7 @@ DeeIterator_Prev(DeeObject *__restrict self) {
 				 * >>     return true;
 				 * >> }
 				 */
-				temp = DeeObject_GetAttr(self, (DeeObject *)&str_hasprev);
+				temp = DeeObject_GetAttr(self, Dee_AsObject(&str_hasprev));
 				if unlikely(!temp)
 					goto err;
 				error = DeeObject_BoolInherited(temp);
@@ -1697,7 +1697,7 @@ err_new_self:
 				 * >>     return true;
 				 * >> }
 				 */
-				temp = DeeObject_GetAttr(self, (DeeObject *)&str_hasprev);
+				temp = DeeObject_GetAttr(self, Dee_AsObject(&str_hasprev));
 				if unlikely(!temp)
 					goto err;
 				error = DeeObject_BoolInherited(temp);
@@ -1719,7 +1719,7 @@ err_new_self:
 				return error;
 			}
 		}
-		error = has_generic_attribute(tp_self, self, (DeeObject *)&str_revert);
+		error = has_generic_attribute(tp_self, self, Dee_AsObject(&str_revert));
 		if (error != 0) {
 			/* >> if (!this.hasprev)
 			 * >>     return false;
@@ -1728,7 +1728,7 @@ err_new_self:
 			 */
 			if unlikely(error < 0)
 				goto err;
-			temp = DeeObject_GetAttr(self, (DeeObject *)&str_hasprev);
+			temp = DeeObject_GetAttr(self, Dee_AsObject(&str_hasprev));
 			if unlikely(!temp)
 				goto err;
 			error = DeeObject_BoolInherited(temp);
@@ -1738,13 +1738,13 @@ err_new_self:
 				return 1;
 			}
 			new_self = DeeInt_One;
-			temp     = DeeObject_CallAttr(self, (DeeObject *)&str_revert, 1, &new_self);
+			temp     = DeeObject_CallAttr(self, Dee_AsObject(&str_revert), 1, &new_self);
 			if unlikely(!temp)
 				goto err;
 			Dee_Decref(temp);
 			return 0;
 		}
-		error = has_generic_attribute(tp_self, self, (DeeObject *)&str_advance);
+		error = has_generic_attribute(tp_self, self, Dee_AsObject(&str_advance));
 		if (error != 0) {
 			/* >> if (!this.hasprev)
 			 * >>     return false;
@@ -1753,7 +1753,7 @@ err_new_self:
 			 */
 			if unlikely(error < 0)
 				goto err;
-			temp = DeeObject_GetAttr(self, (DeeObject *)&str_hasprev);
+			temp = DeeObject_GetAttr(self, Dee_AsObject(&str_hasprev));
 			if unlikely(!temp)
 				goto err;
 			error = DeeObject_BoolInherited(temp);
@@ -1763,20 +1763,20 @@ err_new_self:
 				return 1;
 			}
 			new_self = DeeInt_MinusOne;
-			temp     = DeeObject_CallAttr(self, (DeeObject *)&str_advance, 1, &new_self);
+			temp     = DeeObject_CallAttr(self, Dee_AsObject(&str_advance), 1, &new_self);
 			if unlikely(!temp)
 				goto err;
 			Dee_Decref(temp);
 			return 0;
 		}
-		error = has_generic_attribute(tp_self, self, (DeeObject *)&str_rewind);
+		error = has_generic_attribute(tp_self, self, Dee_AsObject(&str_rewind));
 		if (error != 0) {
 			if unlikely(error < 0)
 				goto err;
 			new_self = DeeObject_Copy(self);
 			if unlikely(!new_self)
 				goto err;
-			temp = DeeObject_CallAttr(new_self, (DeeObject *)&str_rewind, 0, NULL);
+			temp = DeeObject_CallAttr(new_self, Dee_AsObject(&str_rewind), 0, NULL);
 			if unlikely(!temp)
 				goto err_new_self;
 			Dee_Decref(temp);
@@ -1831,7 +1831,7 @@ do_prev_with_rewind_iterator:
 			Dee_Decref(new_self);
 			return error;
 		}
-		temp = get_generic_attribute(tp_self, self, (DeeObject *)&str_seq);
+		temp = get_generic_attribute(tp_self, self, Dee_AsObject(&str_seq));
 		if (temp != ITER_DONE) {
 			if unlikely(!temp)
 				goto err;
@@ -1886,7 +1886,7 @@ DeeIterator_HasPrev(DeeObject *__restrict self) {
 			}
 			break;
 		}
-		temp = get_generic_attribute(tp_self, self, (DeeObject *)&str_index);
+		temp = get_generic_attribute(tp_self, self, Dee_AsObject(&str_index));
 		if (temp != ITER_DONE) {
 			if unlikely(!temp)
 				goto err;
@@ -1896,27 +1896,27 @@ DeeIterator_HasPrev(DeeObject *__restrict self) {
 				error = error ? 0 : 1;
 			return error;
 		}
-		error = has_generic_attribute(tp_self, self, (DeeObject *)&str_prev);
+		error = has_generic_attribute(tp_self, self, Dee_AsObject(&str_prev));
 		if (error != 0) {
 			if unlikely(error < 0)
 				goto err;
 			temp = DeeObject_Copy(self);
 			if unlikely(!temp)
 				goto err;
-			temp2 = DeeObject_CallAttr(temp, (DeeObject *)&str_prev, 0, NULL);
+			temp2 = DeeObject_CallAttr(temp, Dee_AsObject(&str_prev), 0, NULL);
 			Dee_Decref(temp);
 			if unlikely(!temp2)
 				goto err;
 			return DeeObject_BoolInherited(temp2);
 		}
-		error = has_generic_attribute(tp_self, self, (DeeObject *)&str_rewind);
+		error = has_generic_attribute(tp_self, self, Dee_AsObject(&str_rewind));
 		if (error != 0) {
 			if unlikely(error < 0)
 				goto err;
 			temp = DeeObject_Copy(self);
 			if unlikely(!temp)
 				goto err;
-			temp2 = DeeObject_CallAttr(temp, (DeeObject *)&str_rewind, 0, NULL);
+			temp2 = DeeObject_CallAttr(temp, Dee_AsObject(&str_rewind), 0, NULL);
 			if unlikely(!temp2) {
 				Dee_Decref(temp);
 				goto err;
@@ -1928,7 +1928,7 @@ DeeIterator_HasPrev(DeeObject *__restrict self) {
 				error = error ? 0 : 1;
 			return error;
 		}
-		temp = get_generic_attribute(tp_self, self, (DeeObject *)&str_seq);
+		temp = get_generic_attribute(tp_self, self, Dee_AsObject(&str_seq));
 		if (temp != ITER_DONE) {
 			if unlikely(!temp)
 				goto err;
@@ -1992,11 +1992,11 @@ DeeIterator_Peek(DeeObject *__restrict self) {
 			}
 			break;
 		}
-		error = has_generic_attribute(tp_self, self, (DeeObject *)&str_peek);
+		error = has_generic_attribute(tp_self, self, Dee_AsObject(&str_peek));
 		if (error != 0) {
 			if unlikely(error < 0)
 				goto err;
-			result = DeeObject_CallAttr(self, (DeeObject *)&str_peek, 0, NULL);
+			result = DeeObject_CallAttr(self, Dee_AsObject(&str_peek), 0, NULL);
 			if (!result && DeeError_Catch(&DeeError_StopIteration))
 				result = ITER_DONE;
 			return result;
@@ -2041,7 +2041,7 @@ DeeIterator_GetSeq(DeeObject *__restrict self) {
 			if (nii->nii_common.nii_getseq)
 				return (*nii->nii_common.nii_getseq)(self);
 		}
-		result = get_generic_attribute(tp_self, self, (DeeObject *)&str_seq);
+		result = get_generic_attribute(tp_self, self, Dee_AsObject(&str_seq));
 		if (result != ITER_DONE)
 			return result;
 		tp_self = DeeType_Base(tp_self);
@@ -2157,7 +2157,7 @@ iterator_set_index(DeeObject *__restrict self,
 		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 	}
-	temp = DeeObject_CallAttr(self, (DeeObject *)&str_rewind, 0, NULL);
+	temp = DeeObject_CallAttr(self, Dee_AsObject(&str_rewind), 0, NULL);
 	if unlikely(!temp)
 		goto err;
 	Dee_Decref(temp);

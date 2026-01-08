@@ -154,7 +154,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF Filter *DCALL
 filteriterator_seq_get(FilterIterator *__restrict self) {
 	DREF Filter *result;
 	DREF DeeObject *base_seq;
-	base_seq = DeeObject_GetAttr(self->fi_iter, (DeeObject *)&str_seq);
+	base_seq = DeeObject_GetAttr(self->fi_iter, Dee_AsObject(&str_seq));
 	if unlikely(!base_seq)
 		goto err;
 	result = DeeObject_MALLOC(Filter);

@@ -665,14 +665,12 @@ INTDEF DeeIntObject dee_uint128_max;
 
 PRIVATE ATTR_COLD ATTR_NOINLINE NONNULL((1)) int
 (DCALL err_uint128m1_underflow_signed)(DeeObject *__restrict self) {
-	return DeeRT_ErrIntegerOverflow(self, DeeInt_MinusOne,
-	                                (DeeObject *)&dee_uint128_max,
-	                                false);
+	return DeeRT_ErrIntegerOverflow(self, DeeInt_MinusOne, &dee_uint128_max, false);
 }
 
 PRIVATE ATTR_COLD ATTR_NOINLINE int
 (DCALL err_uint128m1_overflow_nest)(void) {
-	return DeeRT_ErrNestedOverflow(DeeInt_MinusOne, (DeeObject *)&dee_uint128_max);
+	return DeeRT_ErrNestedOverflow(DeeInt_MinusOne, &dee_uint128_max);
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int

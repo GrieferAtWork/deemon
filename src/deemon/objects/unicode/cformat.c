@@ -520,7 +520,7 @@ do_length_integer:
 			size_t str_length;
 			GETARG();
 			if (DeeNone_Check(in_arg)) {
-				in_arg = (DeeObject *)&str_lpnullrp;
+				in_arg = Dee_AsObject(&str_lpnullrp);
 				goto do_handle_string_for_percent_s;
 			} else if (DeeBytes_Check(in_arg)) {
 				str_length = DeeBytes_SIZE(in_arg); /* TODO: b_inuse_p */

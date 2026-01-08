@@ -140,7 +140,7 @@ STATIC_ASSERT(offsetof(SegmentsIterator, si_iter) == offsetof(ProxyObject, po_ob
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 segiter_getseq(SegmentsIterator *__restrict self) {
 	DREF DeeObject *base_seq, *result;
-	base_seq = DeeObject_GetAttr(self->si_iter, (DeeObject *)&str_seq);
+	base_seq = DeeObject_GetAttr(self->si_iter, Dee_AsObject(&str_seq));
 	if unlikely(!base_seq)
 		goto err;
 	result = DeeSeq_Segments(base_seq, self->si_len);
@@ -387,7 +387,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF Segments *DCALL
 seg_get_frozen(Segments *__restrict self) {
 	DREF DeeObject *inner_frozen;
 	DREF Segments *result;
-	inner_frozen = DeeObject_GetAttr(self->s_seq, (DeeObject *)&str_frozen);
+	inner_frozen = DeeObject_GetAttr(self->s_seq, Dee_AsObject(&str_frozen));
 	if unlikely(!inner_frozen)
 		goto err;
 	if (inner_frozen == self->s_seq) {

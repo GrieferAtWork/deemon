@@ -501,7 +501,7 @@ DeeFile_IsAtty(DeeObject *__restrict self) {
 	DREF DeeObject *result_ob;
 
 	/* Very simply: Just lookup the `isatty' property. */
-	result_ob = DeeObject_GetAttr(self, (DeeObject *)&str_isatty);
+	result_ob = DeeObject_GetAttr(self, Dee_AsObject(&str_isatty));
 	if unlikely(!result_ob)
 		goto err_call;
 	return DeeObject_BoolInherited(result_ob);
@@ -540,7 +540,7 @@ DeeFile_GetSysFD(DeeObject *__restrict self) {
 		return DeeSystemFile_Fileno(self);
 
 	/* General case: look for a `Dee_fd_GETSET' attribute */
-	result_ob = DeeObject_GetAttr(self, (DeeObject *)&str_getsysfd);
+	result_ob = DeeObject_GetAttr(self, Dee_AsObject(&str_getsysfd));
 	if unlikely(!result_ob) {
 #if defined(Dee_fd_t_IS_HANDLE) && defined(CONFIG_HAVE_get_osfhandle)
 		/* TODO: Also check for an attribute `Dee_fd_fileno_GETSET' */
@@ -595,7 +595,7 @@ DeeFile_Filename(DeeObject *__restrict self) {
 	if (DeeObject_AssertType(self, &DeeFile_Type.ft_base))
 		goto err;
 #endif
-	result = DeeObject_GetAttr(self, (DeeObject *)&str_filename);
+	result = DeeObject_GetAttr(self, Dee_AsObject(&str_filename));
 	/* Validate that `filename' is actually a string. */
 	if (result && DeeObject_AssertTypeExact(result, &DeeString_Type))
 		Dee_Clear(result);
@@ -1802,7 +1802,7 @@ file_class_default_stderr(DeeObject *__restrict UNUSED(self)) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_class_getjoined(DeeObject *__restrict UNUSED(self)) {
-	return get_files_object((DeeObject *)&str_Joined);
+	return get_files_object(Dee_AsObject(&str_Joined));
 }
 
 PRIVATE struct type_getset tpconst file_class_getsets[] = {
@@ -1869,16 +1869,16 @@ PRIVATE struct type_getset tpconst file_class_getsets[] = {
 #if SEEK_SET == 0
 #define OBJ_file_SEEK_SET DeeInt_Zero
 #else /* SEEK_SET == 0 */
-#define OBJ_file_SEEK_SET ((DeeObject *)&file_SEEK_SET)
+#define OBJ_file_SEEK_SET Dee_AsObject(&file_SEEK_SET)
 PRIVATE DEFINE_UINT32(file_SEEK_SET, SEEK_SET);
 #endif /* SEEK_SET != 0 */
 #if SEEK_CUR == 1
 #define OBJ_file_SEEK_CUR DeeInt_One
 #else /* SEEK_CUR == 1 */
-#define OBJ_file_SEEK_CUR ((DeeObject *)&file_SEEK_CUR)
+#define OBJ_file_SEEK_CUR Dee_AsObject(&file_SEEK_CUR)
 PRIVATE DEFINE_UINT32(file_SEEK_CUR, SEEK_CUR);
 #endif /* SEEK_CUR != 1 */
-#define OBJ_file_SEEK_END ((DeeObject *)&file_SEEK_END)
+#define OBJ_file_SEEK_END Dee_AsObject(&file_SEEK_END)
 #if SEEK_END <= ((1 << 15) - 1)
 PRIVATE DEFINE_UINT15(file_SEEK_END, SEEK_END);
 #else /* SEEK_END <= ((1 << 15) - 1) */
@@ -1919,7 +1919,7 @@ PRIVATE struct type_member tpconst file_class_members[] = {
 PUBLIC WUNUSED NONNULL((1)) Dee_pos_t DCALL
 DeeFile_GetSize(DeeObject *__restrict self) {
 	DREF DeeObject *result;
-	result = DeeObject_CallAttr(self, (DeeObject *)&str_size, 0, NULL);
+	result = DeeObject_CallAttr(self, Dee_AsObject(&str_size), 0, NULL);
 	if likely(result)
 		return (Dee_pos_t)DeeObject_AsUInt64DirectInherited(result);
 

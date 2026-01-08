@@ -633,7 +633,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF Repeat *DCALL
 repeat_get_frozen(Repeat *__restrict self) {
 	DREF DeeObject *inner_frozen;
 	DREF Repeat *result;
-	inner_frozen = DeeObject_GetAttr(self->rp_seq, (DeeObject *)&str_frozen);
+	inner_frozen = DeeObject_GetAttr(self->rp_seq, Dee_AsObject(&str_frozen));
 	if unlikely(!inner_frozen)
 		goto err;
 	if (inner_frozen == self->rp_seq) {

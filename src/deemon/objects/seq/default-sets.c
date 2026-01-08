@@ -823,8 +823,8 @@ INTERN DeeTypeObject SetUnionIterator_Type = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 su_ctor(SetUnion *__restrict self) {
 	Dee_Incref_n(&DeeSet_EmptyInstance, 2);
-	self->su_a = (DeeObject *)&DeeSet_EmptyInstance;
-	self->su_b = (DeeObject *)&DeeSet_EmptyInstance;
+	self->su_a = Dee_AsObject(&DeeSet_EmptyInstance);
+	self->su_b = Dee_AsObject(&DeeSet_EmptyInstance);
 	return 0;
 }
 

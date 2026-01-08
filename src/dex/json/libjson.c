@@ -3319,7 +3319,7 @@ libjson_writer_writeattr(void *arg, struct Dee_attrdesc *__restrict attr) {
 
 	/* Skip attributes from low-level base classes. */
 	if (attr->ad_info.ai_decl == Dee_AsObject(&DeeObject_Type) ||
-	    attr->ad_info.ai_decl == (DeeObject *)&DeeType_Type) {
+	    attr->ad_info.ai_decl == Dee_AsObject(&DeeType_Type)) {
 		if (attr->ad_info.ai_decl != me->djw_obj)
 			return 0;
 	}

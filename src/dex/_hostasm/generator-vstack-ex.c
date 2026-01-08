@@ -437,7 +437,7 @@ typexpr_parser_parse_object_after_qmark(struct typexpr_parser *__restrict self) 
 		return Dee_AsObject(self->txp_info->di_typ);
 
 	case 'N':
-		return (DeeObject *)&DeeNone_Type;
+		return Dee_AsObject(&DeeNone_Type);
 	case 'O':
 		return Dee_AsObject(&DeeObject_Type);
 
@@ -450,7 +450,7 @@ typexpr_parser_parse_object_after_qmark(struct typexpr_parser *__restrict self) 
 		 * Idea #2: Just use equivalence classes to equate the returned tuple's t_size
 		 *          with the constant from here!
 		 */
-		return (DeeObject *)&DeeTuple_Type;
+		return Dee_AsObject(&DeeTuple_Type);
 
 	case '#':
 	case 'D':

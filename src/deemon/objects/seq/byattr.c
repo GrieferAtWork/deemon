@@ -133,7 +133,7 @@ again:
 	desc->ad_doc  = NULL;
 	desc->ad_perm = Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET |
 	                Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_PROPERTY | Dee_ATTRPERM_F_NAMEOBJ;
-	desc->ad_info.ai_decl = (DeeObject *)&MapByAttr_Type;
+	desc->ad_info.ai_decl = Dee_AsObject(&MapByAttr_Type);
 	desc->ad_info.ai_type = Dee_ATTRINFO_CUSTOM;
 	desc->ad_info.ai_value.v_custom = &byattr_attr;
 	desc->ad_type = NULL;

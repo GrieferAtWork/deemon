@@ -1414,16 +1414,16 @@ diriter_get_d_type(DeeDirIteratorObject *__restrict self) {
 	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
 		DeeObject *result;
 		if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
-			result = (DeeObject *)&posix_DT_LNK;
+			result = Dee_AsObject(&posix_DT_LNK);
 		} else if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			result = (DeeObject *)&posix_DT_DIR;
+			result = Dee_AsObject(&posix_DT_DIR);
 		} else if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_DEVICE) {
-			result = (DeeObject *)&posix_DT_CHR; /* TODO: Must determine the type of device */
+			result = Dee_AsObject(&posix_DT_CHR); /* TODO: Must determine the type of device */
 		} else if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) {
 			/* TODO: Check if it's an old-style cygwin symlink! */
-			result = (DeeObject *)&posix_DT_REG;
+			result = Dee_AsObject(&posix_DT_REG);
 		} else {
-			result = (DeeObject *)&posix_DT_REG;
+			result = Dee_AsObject(&posix_DT_REG);
 		}
 		return_reference_(result);
 	}

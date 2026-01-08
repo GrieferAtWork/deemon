@@ -68,7 +68,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mappediter_seq_get(SeqMappedIterator *__restrict self) {
 	/* Forward access to this attribute to the pointed-to iterator. */
 	DREF DeeObject *orig, *result;
-	orig = DeeObject_GetAttr(self->smi_iter, (DeeObject *)&str_seq);
+	orig = DeeObject_GetAttr(self->smi_iter, Dee_AsObject(&str_seq));
 	if unlikely(!orig)
 		goto err;
 	result = DeeSeq_Map(orig, self->smi_mapper);

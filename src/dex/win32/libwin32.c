@@ -2394,7 +2394,7 @@ split_nul_string(/*inherit(always)*/ DREF DeeObject *str) {
 	DeeObject *argv[1];
 	if unlikely(!str)
 		goto err;
-	argv[0] = (DeeObject *)&str_nul;
+	argv[0] = Dee_AsObject(&str_nul);
 	result  = DeeObject_CallAttrString(str, "split", 1, argv);
 	Dee_Decref(str);
 	return result;

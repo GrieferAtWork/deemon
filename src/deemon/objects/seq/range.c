@@ -91,8 +91,8 @@ function range(start, end, step?) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ri_ctor(RangeIterator *__restrict self) {
 	Dee_Incref_n(&DeeNone_Singleton, 2);
-	self->ri_index = (DeeObject *)&DeeNone_Singleton;
-	self->ri_end   = (DeeObject *)&DeeNone_Singleton;
+	self->ri_index = Dee_AsObject(&DeeNone_Singleton);
+	self->ri_end   = Dee_AsObject(&DeeNone_Singleton);
 	self->ri_step  = NULL;
 	self->ri_first = true;
 	self->ri_rev   = false;
@@ -1045,8 +1045,8 @@ range_printrepr(Range *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 range_ctor(Range *__restrict self) {
 	Dee_Incref_n(&DeeNone_Singleton, 2);
-	self->r_start = (DeeObject *)&DeeNone_Singleton;
-	self->r_end   = (DeeObject *)&DeeNone_Singleton;
+	self->r_start = Dee_AsObject(&DeeNone_Singleton);
+	self->r_end   = Dee_AsObject(&DeeNone_Singleton);
 	self->r_step  = NULL;
 	self->r_rev   = false;
 	return 0;

@@ -41,6 +41,7 @@
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
+#include "int-8bit.h"
 /**/
 
 #include <stdint.h> /* int8_t */
@@ -589,7 +590,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 DeeObject_IsFloat(DeeObject *__restrict self) {
 	DREF DeeObject *attr;
-	attr = DeeObject_GetAttr(self, (DeeObject *)&str_isfloat);
+	attr = DeeObject_GetAttr(self, Dee_AsObject(&str_isfloat));
 	if unlikely(!attr)
 		goto err;
 	return DeeObject_BoolInherited(attr);
@@ -775,7 +776,7 @@ numeric_get_round(DeeObject *__restrict self) {
 		delta = DeeObject_Sub(self, res);
 		if unlikely(!delta)
 			goto err_res;
-		error = DeeObject_CmpGeAsBool(delta, (DeeObject *)&flt_half);
+		error = DeeObject_CmpGeAsBool(delta, Dee_AsObject(&flt_half));
 		Dee_Decref(delta);
 		if unlikely(error < 0)
 			goto err_res;
@@ -793,7 +794,7 @@ numeric_get_round(DeeObject *__restrict self) {
 		delta = DeeObject_Sub(res, self);
 		if unlikely(!delta)
 			goto err_res;
-		error = DeeObject_CmpGrAsBool(delta, (DeeObject *)&flt_half);
+		error = DeeObject_CmpGrAsBool(delta, Dee_AsObject(&flt_half));
 		Dee_Decref(delta);
 		if unlikely(error < 0)
 			goto err_res;
@@ -1492,11 +1493,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_get_class_isfloat(DeeTypeObject *__restrict self) {
 	DREF DeeObject *instance, *result;
 	DeeObject *args[1];
-	args[0]  = (DeeObject *)&flt_half;
+	args[0]  = Dee_AsObject(&flt_half);
 	instance = DeeObject_New(self, 1, args);
 	if unlikely(!instance)
 		goto err;
-	result = DeeObject_GetAttr(instance, (DeeObject *)&str_isfloat);
+	result = DeeObject_GetAttr(instance, Dee_AsObject(&str_isfloat));
 	Dee_Decref(instance);
 	return result;
 err:
@@ -1552,9 +1553,16 @@ err:
 }
 
 
+#ifdef DeeInt_8bit
+#define int_2  DeeInt_8bit[2]
+#define int_8  DeeInt_8bit[8]
+#define int_16 DeeInt_8bit[16]
+#else /* DeeInt_8bit */
 PRIVATE DEFINE_INT15(int_2, 2);
 PRIVATE DEFINE_INT15(int_8, 8);
 PRIVATE DEFINE_INT15(int_16, 16);
+#endif /* !DeeInt_8bit */
+
 /*[[[deemon
 (PRIVATE_DEFINE_STRING from rt.gen.string)("str_pound", "#");
 ]]]*/
@@ -1564,12 +1572,12 @@ PRIVATE DEFINE_STRING_EX(str_pound, "#", 0x44a5674f, 0xf0e41d188dc355aa);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_hex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *args[3];
-	args[0] = (DeeObject *)&int_16;
+	args[0] = Dee_AsObject(&int_16);
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&str_pound;
+	args[2] = Dee_AsObject(&str_pound);
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__precision, "|o:hex", &args[1]))
 		goto err;
-	return DeeObject_CallAttr(self, (DeeObject *)&str_tostr, 3, args);
+	return DeeObject_CallAttr(self, Dee_AsObject(&str_tostr), 3, args);
 err:
 	return NULL;
 }
@@ -1577,12 +1585,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_bin(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *args[3];
-	args[0] = (DeeObject *)&int_2;
+	args[0] = Dee_AsObject(&int_2);
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&str_pound;
+	args[2] = Dee_AsObject(&str_pound);
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__precision, "|o:bin", &args[1]))
 		goto err;
-	return DeeObject_CallAttr(self, (DeeObject *)&str_tostr, 3, args);
+	return DeeObject_CallAttr(self, Dee_AsObject(&str_tostr), 3, args);
 err:
 	return NULL;
 }
@@ -1590,12 +1598,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_oct(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *args[3];
-	args[0] = (DeeObject *)&int_8;
+	args[0] = Dee_AsObject(&int_8);
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&str_pound;
+	args[2] = Dee_AsObject(&str_pound);
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__precision, "|o:oct", &args[1]))
 		goto err;
-	return DeeObject_CallAttr(self, (DeeObject *)&str_tostr, 3, args);
+	return DeeObject_CallAttr(self, Dee_AsObject(&str_tostr), 3, args);
 err:
 	return NULL;
 }

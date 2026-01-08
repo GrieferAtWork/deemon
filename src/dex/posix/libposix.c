@@ -1528,9 +1528,9 @@ PRIVATE DEFINE_STRING_EX(str_nul, "\0", 0x514e28b7, 0x0);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 pst_iter_self(DeeObject *__restrict UNUSED(self)) {
-	DeeObject *argv[] = { (DeeObject *)&str_nul };
+	DeeObject *argv[] = { Dee_AsObject(&str_nul) };
 	DREF DeeObject *seq, *iter;
-	seq = DeeObject_CallAttrString((DeeObject *)&posix_missing_features,
+	seq = DeeObject_CallAttrString(Dee_AsObject(&posix_missing_features),
 	                               "split", 1, argv);
 	if unlikely(!seq)
 		goto err;

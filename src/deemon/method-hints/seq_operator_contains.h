@@ -214,7 +214,7 @@ err:
 	DeeObject *args[4];
 	args[0] = item;
 	args[1] = DeeInt_Zero;
-	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
+	args[2] = Dee_AsObject(&Dee_int_SIZE_MAX);
 	args[3] = key;
 	result = LOCAL_CALLATTR(self, 4, args);
 	if unlikely(!result)

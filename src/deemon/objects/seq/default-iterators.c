@@ -1869,12 +1869,12 @@ PRIVATE struct type_member tpconst di_nl_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 di_nl_getseq(DefaultIterator_WithNextAndLimit *__restrict self) {
-	return DeeObject_GetAttr(self->dinl_iter, (DeeObject *)&str_seq);
+	return DeeObject_GetAttr(self->dinl_iter, Dee_AsObject(&str_seq));
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_nl_boundseq(DefaultIterator_WithNextAndLimit *__restrict self) {
-	return DeeObject_BoundAttr(self->dinl_iter, (DeeObject *)&str_seq);
+	return DeeObject_BoundAttr(self->dinl_iter, Dee_AsObject(&str_seq));
 }
 
 PRIVATE struct type_getset tpconst di_nl_getsets[] = {

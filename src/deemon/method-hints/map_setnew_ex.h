@@ -30,7 +30,7 @@ __map_setnew_ex__(key,value)->?T2?Dbool?X2?O?N {
 		goto err;
 	if (old_value == ITER_DONE) {
 		Dee_Incref(&setnew_success_result);
-		return (DeeObject *)&setnew_success_result;
+		return Dee_AsObject(&setnew_success_result);
 	}
 	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)

@@ -98,8 +98,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 im_ctor(InstanceMethod *__restrict self) {
 	/* Initialize a stub instance-method. */
 	Dee_Incref_n(&DeeNone_Singleton, 2);
-	self->im_func = (DeeObject *)&DeeNone_Singleton;
-	self->im_this = (DeeObject *)&DeeNone_Singleton;
+	self->im_func = Dee_AsObject(&DeeNone_Singleton);
+	self->im_this = Dee_AsObject(&DeeNone_Singleton);
 	return 0;
 }
 
@@ -227,8 +227,8 @@ instancemethod_get_name(InstanceMethod *__restrict self) {
 	struct class_attribute *attr;
 	attr = instancemethod_getattr(self, NULL, NULL);
 	if (attr)
-		return_reference_((DeeObject *)attr->ca_name);
-	return DeeObject_GetAttr(self->im_func, (DeeObject *)&str___name__);
+		return_reference_(Dee_AsObject(attr->ca_name));
+	return DeeObject_GetAttr(self->im_func, Dee_AsObject(&str___name__));
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -237,7 +237,7 @@ instancemethod_bound_name(InstanceMethod *__restrict self) {
 	attr = instancemethod_getattr(self, NULL, NULL);
 	if (attr)
 		return Dee_BOUND_YES;
-	return DeeObject_BoundAttr(self->im_func, (DeeObject *)&str___name__);
+	return DeeObject_BoundAttr(self->im_func, Dee_AsObject(&str___name__));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -248,11 +248,11 @@ instancemethod_get_doc(InstanceMethod *__restrict self) {
 		goto return_attr;
 	if (!attr->ca_doc)
 		return_none;
-	return_reference_((DeeObject *)attr->ca_doc);
+	return_reference_(Dee_AsObject(attr->ca_doc));
 	{
 		DREF DeeObject *result;
 return_attr:
-		result = DeeObject_GetAttr(self->im_func, (DeeObject *)&str___doc__);
+		result = DeeObject_GetAttr(self->im_func, Dee_AsObject(&str___doc__));
 		if unlikely(!result) {
 			if (DeeError_Catch(&DeeError_AttributeError) ||
 			    DeeError_Catch(&DeeError_NotImplemented))
@@ -264,12 +264,12 @@ return_attr:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemethod_get_kwds(InstanceMethod *__restrict self) {
-	return DeeObject_GetAttr(self->im_func, (DeeObject *)&str___kwds__);
+	return DeeObject_GetAttr(self->im_func, Dee_AsObject(&str___kwds__));
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 instancemethod_bound_kwds(InstanceMethod *__restrict self) {
-	return DeeObject_BoundAttr(self->im_func, (DeeObject *)&str___kwds__);
+	return DeeObject_BoundAttr(self->im_func, Dee_AsObject(&str___kwds__));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
@@ -277,7 +277,7 @@ instancemethod_get_type(InstanceMethod *__restrict self) {
 	DeeTypeObject *result;
 	if (instancemethod_getattr(self, NULL, &result))
 		return_reference_(result);
-	DeeRT_ErrTUnboundAttr(&DeeInstanceMethod_Type, Dee_AsObject(self), (DeeObject *)&str___type__);
+	DeeRT_ErrTUnboundAttr(&DeeInstanceMethod_Type, Dee_AsObject(self), Dee_AsObject(&str___type__));
 	return NULL;
 }
 
@@ -291,12 +291,12 @@ instancemethod_bound_type(InstanceMethod *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemethod_get_module(InstanceMethod *__restrict self) {
-	return DeeObject_GetAttr(self->im_func, (DeeObject *)&str___module__);
+	return DeeObject_GetAttr(self->im_func, Dee_AsObject(&str___module__));
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 instancemethod_bound_module(InstanceMethod *__restrict self) {
-	return DeeObject_BoundAttr(self->im_func, (DeeObject *)&str___module__);
+	return DeeObject_BoundAttr(self->im_func, Dee_AsObject(&str___module__));
 }
 
 PRIVATE struct type_callable im_callable = {

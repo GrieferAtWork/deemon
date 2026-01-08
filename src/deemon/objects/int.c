@@ -3499,7 +3499,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	return 0;
 err_overflow:
 	return DeeRT_ErrIntegerOverflow(self, DeeInt_MinusOne,
-	                                (DeeObject *)&dee_uint128_max,
+	                                Dee_AsObject(&dee_uint128_max),
 	                                false);
 }
 

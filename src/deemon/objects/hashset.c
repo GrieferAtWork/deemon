@@ -1865,7 +1865,7 @@ PRIVATE DEFINE_FLOAT(float_1_point_0, 1.0);
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deprecated_d100_get_maxloadfactor(DeeObject *__restrict UNUSED(self)) {
 	Dee_Incref(&float_1_point_0);
-	return (DeeObject *)&float_1_point_0;
+	return Dee_AsObject(&float_1_point_0);
 }
 #define deprecated_d100_del_maxloadfactor (*(int (DCALL *)(DeeObject *))&_DeeNone_reti0_1)
 #define deprecated_d100_set_maxloadfactor (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti0_2)

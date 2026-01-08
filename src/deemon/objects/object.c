@@ -4752,7 +4752,7 @@ type_get_module(DeeTypeObject *__restrict self) {
 	result = DeeType_GetModule(self);
 	if likely(result)
 		return result;
-	DeeRT_ErrTUnboundAttr(&DeeType_Type, Dee_AsObject(self), (DeeObject *)&str___module__);
+	DeeRT_ErrTUnboundAttr(&DeeType_Type, self, &str___module__);
 	return NULL;
 }
 

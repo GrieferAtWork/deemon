@@ -2106,8 +2106,8 @@ err_result_copy:
 					ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
 					self->jl_lvalue.lv_kind           = JIT_LVALUE_RANGE;
 					self->jl_lvalue.lv_range.lr_base  = lhs; /* Inherit reference. */
-					self->jl_lvalue.lv_range.lr_start = (DeeObject *)&DeeNone_Singleton;
-					self->jl_lvalue.lv_range.lr_end   = (DeeObject *)&DeeNone_Singleton;
+					self->jl_lvalue.lv_range.lr_start = Dee_AsObject(&DeeNone_Singleton);
+					self->jl_lvalue.lv_range.lr_end   = Dee_AsObject(&DeeNone_Singleton);
 					Dee_Incref_n(&DeeNone_Singleton, 2);
 					lhs = JIT_LVALUE;
 #endif /* JIT_EVAL */

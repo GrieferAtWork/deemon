@@ -87,7 +87,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_sync_f_impl(void)
 	return_none;
 #else  /* CONFIG_HAVE_sync */
 	/* deemon.File.System.sync(); */
-	return DeeObject_CallAttrString((DeeObject *)&DeeSystemFile_Type,
+	return DeeObject_CallAttrString(Dee_AsObject(&DeeSystemFile_Type.ft_base),
 	                                "sync", 0, NULL);
 #endif /* !CONFIG_HAVE_sync */
 }

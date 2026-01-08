@@ -1916,9 +1916,9 @@ PUBLIC DeeTypeObject DeeError_AttributeError = {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 unwrap_decl_and_ob(DeeObject **p_decl, DeeObject **p_ob) {
-	if (*p_decl == (DeeObject *)&DeeSuper_Type &&
+	if (*p_decl == Dee_AsObject(&DeeSuper_Type) &&
 	    DeeObject_InstanceOf(*p_ob, &DeeSuper_Type)) {
-		*p_decl = (DeeObject *)DeeSuper_TYPE(*p_ob);
+		*p_decl = Dee_AsObject(DeeSuper_TYPE(*p_ob));
 		*p_ob   = DeeSuper_SELF(*p_ob);
 	}
 }

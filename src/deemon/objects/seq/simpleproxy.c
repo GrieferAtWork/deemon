@@ -67,7 +67,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF SeqSimpleProxy *DCALL
 proxy_get_frozen(SeqSimpleProxy *__restrict self) {
 	DREF DeeObject *inner_frozen;
 	DREF SeqSimpleProxy *result;
-	inner_frozen = DeeObject_GetAttr(self->sp_seq, (DeeObject *)&str_frozen);
+	inner_frozen = DeeObject_GetAttr(self->sp_seq, Dee_AsObject(&str_frozen));
 	if unlikely(!inner_frozen)
 		goto err;
 	if (inner_frozen == self->sp_seq) {
@@ -958,7 +958,7 @@ classesiter_next(SeqSimpleProxyIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 idsiter_getseq(SeqSimpleProxyIterator *__restrict self) {
-	DREF DeeObject *result = DeeObject_GetAttr(self->si_iter, (DeeObject *)&str_seq);
+	DREF DeeObject *result = DeeObject_GetAttr(self->si_iter, Dee_AsObject(&str_seq));
 	if (ITER_ISOK(result)) {
 		DREF DeeObject *baseseq = result;
 		result = SeqIds_New(baseseq);
@@ -969,7 +969,7 @@ idsiter_getseq(SeqSimpleProxyIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 typesiter_getseq(SeqSimpleProxyIterator *__restrict self) {
-	DREF DeeObject *result = DeeObject_GetAttr(self->si_iter, (DeeObject *)&str_seq);
+	DREF DeeObject *result = DeeObject_GetAttr(self->si_iter, Dee_AsObject(&str_seq));
 	if (ITER_ISOK(result)) {
 		DREF DeeObject *baseseq = result;
 		result = SeqTypes_New(baseseq);
@@ -980,7 +980,7 @@ typesiter_getseq(SeqSimpleProxyIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 classesiter_getseq(SeqSimpleProxyIterator *__restrict self) {
-	DREF DeeObject *result = DeeObject_GetAttr(self->si_iter, (DeeObject *)&str_seq);
+	DREF DeeObject *result = DeeObject_GetAttr(self->si_iter, Dee_AsObject(&str_seq));
 	if (ITER_ISOK(result)) {
 		DREF DeeObject *baseseq = result;
 		result = SeqClasses_New(baseseq);

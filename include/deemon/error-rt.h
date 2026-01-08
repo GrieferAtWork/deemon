@@ -140,6 +140,7 @@ DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowU128)(Dee_uint128_t value, 
 DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNestedOverflow)(/*Numeric*/ /*0..1*/ DeeObject *minval, /*Numeric*/ /*0..1*/ DeeObject *maxval);
 DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNestedOverflowS)(Dee_ssize_t minval, Dee_ssize_t maxval);
 DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNestedOverflowU)(size_t maxval);
+#define DeeRT_ErrNestedOverflow(minval, maxval) Dee_ASSUMED_VALUE((DeeRT_ErrNestedOverflow)(Dee_AsObject(minval), Dee_AsObject(maxval)), -1)
 #if __SIZEOF_SIZE_T__ >= 8
 #define DeeRT_ErrNestedOverflowS64(minval, maxval) DeeRT_ErrNestedOverflowS(minval, maxval)
 #define DeeRT_ErrNestedOverflowU64(maxval)         DeeRT_ErrNestedOverflowU(maxval)
