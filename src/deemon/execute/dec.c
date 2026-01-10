@@ -1365,12 +1365,9 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 				addrof_outname += offsetof(Dec_Dstr, ds_string);
 				addrof_outname += (out_name->ds_length + 1) * sizeof(char);
 			}
+
 			/* Emit terminating "d_modspec.d_mod==NULL"-entry */
 			out_dep->d_modspec.d_mod = NULL;
-
-			addrof_outname = CEIL_ALIGN(addrof_outname, Dee_ALIGNOF_DEC_DSTR);
-			out_name = (Dec_Dstr *)((byte_t *)ehdr + addrof_outname);
-			out_name->ds_length = 0; /* "terminated by a ds_length==0-entry" */
 		}
 
 		/* Relocations against self. */

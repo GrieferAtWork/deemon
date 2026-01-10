@@ -97,6 +97,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{2360741E-FB4
 		..\lib\LANGUAGE.txt = ..\lib\LANGUAGE.txt
 		..\lib\annotations.dee = ..\lib\annotations.dee
 		..\lib\codecs.dee = ..\lib\codecs.dee
+		..\lib\d200.dee = ..\lib\d200.dee
 		..\lib\doc.dee = ..\lib\doc.dee
 		..\lib\doctext.dee = ..\lib\doctext.dee
 		..\lib\errors.dee = ..\lib\errors.dee
