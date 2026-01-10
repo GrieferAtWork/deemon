@@ -5014,8 +5014,11 @@ leak_lock_acquire_and_reap(void) {
 
 LOCAL void DCALL
 _leak_lock_reap(void) {
-	if (leak_lock_tryacquire())
+	do {
+		if (!leak_lock_tryacquire())
+			break;
 		_leaks_pending_reap_and_unlock();
+	} while (leaks_pending_mustreap());
 }
 
 #define leak_lock_reap() \
