@@ -102,6 +102,11 @@ function withStdout(newStdout: File, cb: Callable): Object {
 	}
 }
 
+function withDefaultStdout(cb: Callable): Object {
+	with (stdoutLock)
+		return cb();
+}
+
 function captureStdout(cb: Callable): string {
 	File.Writer fp;
 	withStdout(fp, cb);
@@ -934,22 +939,30 @@ final class StructInitializer {
 		local exportSymbolname = typeTpName.lstrip("_");
 		local typ: Type |  none = findTypeByName(exportSymbolname);
 		if (typ is none) {
-			print("Type ", repr symbolName, " not found: ", repr exportSymbolname);
+			withDefaultStdout(() -> {
+				print("Type ", repr symbolName, " not found: ", repr exportSymbolname);
+			});
 			return;
 		}
 		local rtTypeName = Type.__name__(typ);
 		if (rtTypeName != typeTpName) {
-			print("Type ", repr symbolName, " with name ", repr exportSymbolname,
-			      " has a different name ", repr typeTpName, " in exports");
+			withDefaultStdout(() -> {
+				print("Type ", repr symbolName, " with name ", repr exportSymbolname,
+				      " has a different name ", repr typeTpName, " in exports");
+			});
 			return;
 		}
 		try {
 			optimizeBodyImpl(allParts, typ);
 		} catch (InitAbortWarning as e) {
-			print("Precomputation failed in ", symbolName, ": ", e);
+			withDefaultStdout(() -> {
+				print("Precomputation failed in ", symbolName, ": ", e);
+			});
 		} catch (InitAbort as e) {
-			print("Precomputation failed in ", symbolName, ": ", e);
-			print Traceback.current;
+			withDefaultStdout(() -> {
+				print("Precomputation failed in ", symbolName, ": ", e);
+				print Traceback.current;
+			});
 		}
 	}
 
@@ -1030,8 +1043,10 @@ final class StructInitializer {
 						continue; /* No attribute needed here! */
 					local nativeMethod: mh.NativeMethod | none = mh.NATIVE_METHOD_HINTS.get(hint);
 					if (nativeMethod is none) {
-						print("WARNING: ", structTyp, " ", symbolName,
-								": 'tp_method_hints' defines unknown hint: '", hint, "'");
+						withDefaultStdout(() -> {
+							print("WARNING: ", structTyp, " ", symbolName,
+									": 'tp_method_hints' defines unknown hint: '", hint, "'");
+						});
 						continue;
 					}
 					local methodHint: mh.MethodHint | none = nativeMethod.methodHint;
@@ -1044,10 +1059,12 @@ final class StructInitializer {
 							for (local x: requiredAttributes)
 								x in tpGetsets
 						) || ...)) {
-							print("WARNING: ", structTyp, " ", symbolName,
-									": 'tp_method_hints' defines '", hint, "', but "
-									"'tp_getsets' does NOT contain one of ",
-									repr requiredAttributes, " ", repr tpGetsets);
+							withDefaultStdout(() -> {
+								print("WARNING: ", structTyp, " ", symbolName,
+										": 'tp_method_hints' defines '", hint, "', but "
+										"'tp_getsets' does NOT contain one of ",
+										repr requiredAttributes, " ", repr tpGetsets);
+							});
 						}
 						continue;
 					}
@@ -1058,10 +1075,12 @@ final class StructInitializer {
 						for (local x: requiredNames)
 							x in tpMethods
 					) || ...)) {
-						print("WARNING: ", structTyp, " ", symbolName,
-								": 'tp_method_hints' defines '", hint, "', but "
-								"'tp_methods' does NOT contain one of ",
-								repr requiredNames);
+						withDefaultStdout(() -> {
+							print("WARNING: ", structTyp, " ", symbolName,
+									": 'tp_method_hints' defines '", hint, "', but "
+									"'tp_methods' does NOT contain one of ",
+									repr requiredNames);
+						});
 					}
 				}
 			}
@@ -1158,14 +1177,18 @@ find_structTypStart:
 
 function updateFile(filename: string, cb: Callable with Bytes) {
 	/* Load file data */
-	print "Checking file:", repr filename, "...";
+	withDefaultStdout(() -> {
+		print "Checking file:", repr filename, "...";
+	});
 	local oldBytes: Bytes = File.open(filename, "rb").readall();
 	local newBytes: Bytes | string = cb(oldBytes);
 	if (newBytes is string)
 		newBytes = newBytes.encode("utf-8");
 	assert newBytes is Bytes;
 	if (oldBytes != newBytes) {
-		print "Updating file:", repr filename;
+		withDefaultStdout(() -> {
+			print "Updating file:", repr filename;
+		});
 #ifndef DRY_RUN
 		with (local fp = File.open(filename, "wb"))
 			fp.write(newBytes);
@@ -1198,8 +1221,10 @@ function processSourceFile(filename: string) {
 			return parts + ...;
 		});
 	} catch (e...) {
-		print("Unhandled error while processing ", repr filename, ": ", e);
-		print(Traceback.current);
+		withDefaultStdout(() -> {
+			print("Unhandled error while processing ", repr filename, ": ", e);
+			print(Traceback.current);
+		});
 	}
 }
 
