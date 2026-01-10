@@ -2874,9 +2874,8 @@ DeeThread_InvokeUserInterruptHooks(DeeThreadObject *__restrict self);
 PUBLIC NONNULL((1)) void DCALL
 DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
 #ifdef DeeThread_USE_SINGLE_THREADED
-	/* No-op in all situations */
-	(void)self;
-	COMPILER_IMPURE();
+	DeeOSThreadObject *me = DeeThread_AsOSThread((DeeThreadObject *)self);
+	ASSERT_OBJECT_TYPE(&me->ot_thread, &DeeThread_Type);
 #else /* DeeThread_USE_SINGLE_THREADED */
 	uint32_t state;
 	DeeOSThreadObject *me = DeeThread_AsOSThread((DeeThreadObject *)self);
@@ -2991,9 +2990,9 @@ DeeThread_Interrupt(/*Thread*/ DeeObject *self,
 	uint32_t state;
 #ifndef DeeThread_USE_SINGLE_THREADED
 	uintptr_t version;
+	DeeThreadObject *caller = DeeThread_Self();
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 	struct thread_interrupt *interrupt = NULL;
-	DeeThreadObject *caller = DeeThread_Self();
 	DeeThreadObject *me = (DeeThreadObject *)self;
 	ASSERT_OBJECT_TYPE(me, &DeeThread_Type);
 	ASSERT_OBJECT_TYPE_EXACT_OPT(interrupt_args, &DeeTuple_Type);
