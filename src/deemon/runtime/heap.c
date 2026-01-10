@@ -115,19 +115,26 @@ DECL_BEGIN
 
 /* Implementation Configuration */
 #define ONLY_MSPACES            0
-#define MSPACES                 0
 #define MALLOC_ALIGNMENT        (size_t)(__SIZEOF_POINTER__ * 2)
 #define PROCEED_ON_ERROR        0
 #define MALLOC_INSPECT_ALL      0
 #define MALLOC_FAILURE_ACTION   /* nothing */
-#define GM_ONLY                 1
 
 #ifdef CONFIG_NO_THREADS
-#define USE_LOCKS 0
+#define USE_LOCKS             0
 #else /* CONFIG_NO_THREADS */
-#define USE_LOCKS 2
+#define USE_LOCKS             2
 #define USE_PENDING_FREE_LIST 1
+#if !defined(__OPTIMIZE_SIZE__) && 0 /* TODO */
+#define USE_PER_THREAD_MSTATE 1 /* Provide a per-thread "mstate" that is used when the global state is locked */
+#endif /* !__OPTIMIZE_SIZE__ */
 #endif /* !CONFIG_NO_THREADS */
+#ifndef USE_PER_THREAD_MSTATE
+#define USE_PER_THREAD_MSTATE 0
+#endif /* !USE_PER_THREAD_MSTATE */
+
+#define MSPACES  (USE_PER_THREAD_MSTATE)
+#define GM_ONLY  (!USE_PER_THREAD_MSTATE)
 
 /* Enable external debugging (footers, usage checks, debug-memset patterns, leak detector) */
 #if !defined(NDEBUG) && 1
@@ -147,7 +154,11 @@ DECL_BEGIN
  * since their presence causes allocations to require an additional word of memory, there
  * is a chance that alignment requirements ceil this to enough memory such that buffer-
  * overruns don't end up being detected. */
+#if USE_PER_THREAD_MSTATE
+#define FOOTERS USE_PER_THREAD_MSTATE /* Needed for `Dee_Free()' to detect source mspace! */
+#else
 #define FOOTERS 0
+#endif
 
 #define INSECURE             (!DL_DEBUG_EXTERNAL)
 #define LEAK_DETECTION       DL_DEBUG_EXTERNAL
