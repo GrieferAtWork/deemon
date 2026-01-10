@@ -404,6 +404,12 @@ struct Dee_thread_object {
 		                                       * [valid_if(Dee_THREAD_STATE_STARTED && !Dee_THREAD_STATE_TERMINATED)]
 		                                       * Thread TLS data controller. (Set to NULL during thread creation / clear) */
 	} t_context; /* Contextual data */
+#ifndef CONFIG_NO_THREADS
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+	void *t_heap; /* [0..1][lock(WRITE_ONCE && PRIVATE(DeeThread_Self()))] Thread-local heap (for faster Dee_Malloc()) */
+#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
+#endif /* !CONFIG_NO_THREADS */
+
 	/* OS-specific thread data goes here. */
 };
 

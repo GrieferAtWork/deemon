@@ -39,6 +39,7 @@ ClCompile.BasicRuntimeChecks = Default
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 #include <deemon/format.h>
 #include <deemon/gc.h>
+#include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
@@ -229,6 +230,8 @@ DECL_BEGIN
 #define NO_MSPACE_MAX_FOOTPRINT       1
 #define NO_MSPACE_FOOTPRINT_LIMIT     1
 #define NO_MSPACE_SET_FOOTPRINT_LIMIT 1
+#define NO_MSPACE_TRIM                1 /* TODO: Call from DeeHeap_Trim() */
+#define NO_DESTROY_MSPACE             1 /* Per-thread heaps are re-used as needed */
 
 #undef M_TRIM_THRESHOLD
 #undef M_GRANULARITY
@@ -449,7 +452,9 @@ static void dlmalloc_stats(void);
 #if MSPACES
 typedef void *mspace;
 static mspace create_mspace(size_t capacity/*, int locked*/);
+#if !NO_DESTROY_MSPACE
 static size_t destroy_mspace(mspace msp);
+#endif /* NO_DESTROY_MSPACE */
 #if !NO_CREATE_MSPACE_WITH_BASE
 static mspace create_mspace_with_base(void *base, size_t capacity/*, int locked*/);
 #endif /* !NO_CREATE_MSPACE_WITH_BASE */
@@ -500,7 +505,9 @@ static size_t mspace_usable_size(void const *mem);
 #if !NO_MALLOC_STATS
 static void mspace_malloc_stats(mspace msp);
 #endif /* NO_MALLOC_STATS */
+#if !NO_MSPACE_TRIM
 static int mspace_trim(mspace msp, size_t pad);
+#endif /* NO_MSPACE_TRIM */
 #if !NO_MALLOPT && !EXPOSE_AS_DEEMON_API
 static int mspace_mallopt(int param_number, int value);
 #endif /* !NO_MALLOPT && !EXPOSE_AS_DEEMON_API */
@@ -1009,6 +1016,9 @@ struct malloc_state {
 	struct freelist flist;
 #endif /* USE_PENDING_FREE_LIST */
 	msegment  seg;
+#if USE_PER_THREAD_MSTATE
+	SLIST_ENTRY(malloc_state) ms_link; /* Link for "free_tls_mspace" / "used_tls_mspace" */
+#endif /* USE_PER_THREAD_MSTATE */
 #if 0
 	void     *extp; /* Unused but available for extensions */
 	size_t    exts;
@@ -1726,8 +1736,8 @@ static void do_check_memset_free(PARAM_mstate_m_ mchunkptr p) {
 	}
 	for (i = 0; i < num_words; ++i) {
 		ASSERTF(words[i] == DL_DEBUG_MEMSET_FREE,
-		        "Free pointer %p has bad patter %IX",
-		        &words[i], words[i]);
+		        "Free pointer %p at offset %" PRFxSIZ " from %p-%p has bad pattern %#" PRFXSIZ "",
+		        &words[i], i * sizeof(size_t), p, (char *)p + num_bytes - 1, words[i]);
 	}
 }
 #endif /* DL_DEBUG_MEMSET_FREE */
@@ -2545,7 +2555,7 @@ static void add_segment(PARAM_mstate_m_ char *tbase, size_t tsize, flag_t mmappe
 	int nfences       = 0;
 
 	/* reset top to new space */
-	init_top(ARG_mstate_m_(mchunkptr) tbase, tsize - TOP_FOOT_SIZE);
+	init_top(ARG_mstate_m_ (mchunkptr)tbase, tsize - TOP_FOOT_SIZE);
 
 	/* Set up segment record */
 	dl_assert(is_aligned(ss));
@@ -2739,11 +2749,11 @@ static void *sys_alloc(PARAM_mstate_m_ size_t nb) {
 			mstate_release_checks(m) = MAX_RELEASE_CHECK_RATE;
 			init_bins(ARG_mstate_m);
 #if GM_ONLY
-			init_top(ARG_mstate_m_(mchunkptr) tbase, tsize - TOP_FOOT_SIZE);
+			init_top(ARG_mstate_m_ (mchunkptr)tbase, tsize - TOP_FOOT_SIZE);
 #else /* GM_ONLY */
 #if !ONLY_MSPACES
 			if (is_global(m)) {
-				init_top(ARG_mstate_m_(mchunkptr) tbase, tsize - TOP_FOOT_SIZE);
+				init_top(ARG_mstate_m_ (mchunkptr)tbase, tsize - TOP_FOOT_SIZE);
 			} else
 #endif /* !ONLY_MSPACES */
 			{
@@ -4463,10 +4473,14 @@ static int dlmallopt(int param_number, int value) {
 #if MSPACES
 
 static mstate init_user_mstate(char *tbase, size_t tsize) {
-	size_t msize = pad_request(sizeof(struct malloc_state));
+	size_t msize;
 	mchunkptr mn;
-	mchunkptr msp = align_as_chunk(tbase);
-	mstate m = (mstate)(chunk2mem(msp));
+	mchunkptr msp;
+	mstate m;
+	dl_setfree_data(tbase, tsize);
+	msize = pad_request(sizeof(struct malloc_state));
+	msp = align_as_chunk(tbase);
+	m = (mstate)(chunk2mem(msp));
 	bzero(m, msize);
 	msp->head = (msize | INUSE_BITS);
 	mstate_seg(m).base = mstate_least_addr(m) = tbase;
@@ -4505,15 +4519,6 @@ static mspace create_mspace(size_t capacity/*, int locked*/) {
 	return (mspace)m;
 }
 
-#if USE_PER_THREAD_MSTATE
-/* Return the calling thread's thread-local mspace (or "0" if not available) */
-static mspace tls_mspace(void) {
-	/* TODO */
-	return 0;
-}
-#endif /* USE_PER_THREAD_MSTATE */
-
-
 #if !NO_CREATE_MSPACE_WITH_BASE
 static mspace create_mspace_with_base(void *base, size_t capacity/*, int locked*/) {
 	mstate m = 0;
@@ -4547,6 +4552,7 @@ static int mspace_track_large_chunks(mspace msp, int enable) {
 }
 #endif /* !NO_MSPACE_TRACK_LARGE_CHUNKS */
 
+#if !NO_DESTROY_MSPACE
 static size_t destroy_mspace(mspace msp) {
 	size_t freed = 0;
 	mstate ms = (mstate)msp;
@@ -4572,6 +4578,64 @@ static size_t destroy_mspace(mspace msp) {
 #endif /* !DL_MUNMAP_ALWAYS_FAILS */
 	return freed;
 }
+#endif /* NO_DESTROY_MSPACE */
+
+
+#if USE_PER_THREAD_MSTATE
+SLIST_HEAD(malloc_state_slist, malloc_state);
+PRIVATE struct malloc_state_slist free_tls_mspace = SLIST_HEAD_INITIALIZER(free_tls_mspace);
+PRIVATE struct malloc_state_slist used_tls_mspace = SLIST_HEAD_INITIALIZER(used_tls_mspace);
+#ifndef CONFIG_NO_THREADS
+PRIVATE Dee_atomic_lock_t tls_mspace_lock = Dee_ATOMIC_LOCK_INIT;
+#endif /* !CONFIG_NO_THREADS */
+#define tls_mspace_lock_available()  Dee_atomic_lock_available(&tls_mspace_lock)
+#define tls_mspace_lock_acquired()   Dee_atomic_lock_acquired(&tls_mspace_lock)
+#define tls_mspace_lock_tryacquire() Dee_atomic_lock_tryacquire(&tls_mspace_lock)
+#define tls_mspace_lock_acquire()    Dee_atomic_lock_acquire(&tls_mspace_lock)
+#define tls_mspace_lock_waitfor()    Dee_atomic_lock_waitfor(&tls_mspace_lock)
+#define tls_mspace_lock_release()    Dee_atomic_lock_release(&tls_mspace_lock)
+
+PRIVATE WUNUSED mspace DCALL create_tls_mspace(void) {
+	struct malloc_state *result;
+	tls_mspace_lock_acquire();
+	if (!SLIST_EMPTY(&free_tls_mspace)) {
+		result = SLIST_FIRST(&free_tls_mspace);
+		SLIST_REMOVE_HEAD(&free_tls_mspace, ms_link);
+	} else {
+		result = (struct malloc_state *)create_mspace(0);
+	}
+	if likely(result)
+		SLIST_INSERT(&used_tls_mspace, result, ms_link);
+	tls_mspace_lock_release();
+	return (mspace)result;
+}
+
+PRIVATE NONNULL((1)) void DCALL destroy_tls_mspace(mspace ms) {
+	struct malloc_state *state = (struct malloc_state *)ms;
+	tls_mspace_lock_acquire();
+	SLIST_REMOVE(&used_tls_mspace, state, struct malloc_state, ms_link);
+	SLIST_INSERT(&free_tls_mspace, state, ms_link);
+	tls_mspace_lock_release();
+}
+
+/* Return the calling thread's thread-local mspace (or "0" if not available) */
+static mspace tls_mspace(void) {
+	DeeThreadObject *me = DeeThread_Self();
+	mspace result = (mspace)me->t_heap;
+	if unlikely(!result) {
+		result = create_tls_mspace();
+		me->t_heap = (void *)result;
+	}
+	return result;
+}
+
+#define thread_heap_destroy_DEFINED
+INTERN NONNULL((1)) void DCALL
+thread_heap_destroy(void *heap) {
+	destroy_tls_mspace((mspace)heap);
+}
+#endif /* USE_PER_THREAD_MSTATE */
+
 
 /*
   mspace versions of routines are near-clones of the global
@@ -4922,6 +4986,7 @@ static void mspace_inspect_all(mspace msp,
 }
 #endif /* MALLOC_INSPECT_ALL */
 
+#if !NO_MSPACE_TRIM
 static int mspace_trim(mspace msp, size_t pad) {
 	int result = 0;
 	mstate ms  = (mstate)msp;
@@ -4931,6 +4996,7 @@ static int mspace_trim(mspace msp, size_t pad) {
 	POSTACTION(ms);
 	return result;
 }
+#endif /* NO_MSPACE_TRIM */
 
 #if !NO_MALLOC_STATS
 static void mspace_malloc_stats(mspace msp) {
@@ -5445,7 +5511,6 @@ handle_leak_lock_blocking:
 			if (new_block) {
 				node = (struct leaknode *)dlmalloc(sizeof(struct leaknode));
 				if (node) {
-					struct lfrelist_entry *ent;
 					size_t common;
 
 					/* Insert new block */
@@ -5455,12 +5520,8 @@ handle_leak_lock_blocking:
 					common = n_bytes < usable ? n_bytes : usable;
 					memcpy(new_block, ptr, common);
 
-					/* Schedule freeing of old block */
-					ent = (struct lfrelist_entry *)ptr;
-					ent->lfle_file = file;
-					ent->lfle_line = line;
-					SLIST_ATOMIC_INSERT(&leaks_pending_remove, ent, lfle_link);
-					leak_lock_reap();
+					/* Free the old block */
+					DeeDbg_Free(ptr, file, line);
 					return new_block;
 				}
 				dlfree(new_block);
@@ -6076,6 +6137,19 @@ DeeHeap_SetAllocBreakpoint(size_t id) {
 	return 0;
 }
 #endif /* !DeeHeap_GetAllocBreakpoint_DEFINED */
+
+
+
+#ifndef CONFIG_NO_THREADS
+#ifndef thread_heap_destroy_DEFINED
+#define thread_heap_destroy_DEFINED
+INTERN NONNULL((1)) void DCALL
+thread_heap_destroy(void *heap) {
+	COMPILER_IMPURE();
+	(void)heap;
+}
+#endif /* !thread_heap_destroy_DEFINED */
+#endif /* !CONFIG_NO_THREADS */
 
 
 DECL_END

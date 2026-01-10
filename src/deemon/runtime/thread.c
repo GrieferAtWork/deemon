@@ -1174,6 +1174,9 @@ INTERN DeeOSThreadObject DeeThread_Main = {
 		/* .t_threadname = */ (DeeStringObject *)&main_thread_name,
 		/* .t_inout      = */ { NULL },
 		/* .t_context    = */ { NULL },
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+		/* .t_heap       = */ NULL,
+#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 #endif /* !CONFIG_NO_THREADS */
 	},
 #ifdef Dee_pid_t
@@ -1186,6 +1189,13 @@ INTERN DeeOSThreadObject DeeThread_Main = {
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 };
 
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+#ifdef CONFIG_NO_THREADS
+#define thread_heap_destroy(heap) (void)0
+#else /* CONFIG_NO_THREADS */
+INTDEF NONNULL((1)) void DCALL thread_heap_destroy(void *heap);
+#endif /* !CONFIG_NO_THREADS */
+#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
 
 
@@ -1999,6 +2009,10 @@ again_cleanup:
 	/* ==== POINT OF NO RETURN ====
 	 *
 	 * from this point forth, no deemon code may be executed by the thread anymore */
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+	if (self->t_heap)
+		thread_heap_destroy(self->t_heap);
+#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
 	/* Must act as though the thread had exited. */
 	_DeeThread_AcquireSetup(self);
@@ -2460,6 +2474,9 @@ PRIVATE int DeeThread_Entry_func(void *arg)
 	DBG_memset(&self->ot_thread.t_inout.io_main, 0xcc,
 	           sizeof(self->ot_thread.t_inout.io_main));
 	self->ot_thread.t_context.d_tls = NULL;
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+	self->ot_thread.t_heap = NULL;
+#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
 	/* Set the thread's name if the OS provides a means to do so */
 #ifdef DeeThread_SetName
@@ -2568,6 +2585,10 @@ do_cleanup_and_set_result:
 	/* ==== POINT OF NO RETURN ====
 	 *
 	 * from this point forth, no deemon code may be executed by the thread anymore */
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+	if (self->ot_thread.t_heap)
+		thread_heap_destroy(self->ot_thread.t_heap);
+#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
 	/* Set-up the thread as having exited */
 	_DeeThread_AcquireSetup(&self->ot_thread);
@@ -3846,6 +3867,9 @@ thread_init(DeeThreadObject *__restrict self,
 		DBG_memset(&me->ot_thread.t_inout, 0xcc, sizeof(me->ot_thread.t_inout));
 #endif /* !CONFIG_NO_THREADS */
 		me->ot_thread.t_context.d_tls = NULL;
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+		me->ot_thread.t_heap = NULL;
+#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 		return DeeInt_AsIntX(argv[0], &me->ot_tid);
 	}
 #endif /* Dee_pid_t */
@@ -3914,6 +3938,9 @@ thread_init(DeeThreadObject *__restrict self,
 	self->t_deepassoc.da_mask      = 0;
 	self->t_deepassoc.da_list      = empty_deep_assoc;
 	self->t_deepassoc.da_recursion = 0;
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+	self->t_heap = NULL;
+#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	return 0;
 err_main:
 	Dee_XDecref(self->t_inout.io_main);
