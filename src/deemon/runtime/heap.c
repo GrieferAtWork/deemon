@@ -3197,7 +3197,7 @@ postaction:
  * Tail:       prev_foot == prev_size
  *             head = 0
  */
-static ATTR_NOINLINE int free_flag4_mem(PARAM_mstate_m_ mchunkptr p) {
+static ATTR_NOINLINE void free_flag4_mem(mchunkptr p) {
 	size_t psize    = chunksize(p);
 	mchunkptr next  = chunk_plus_offset(p, psize);
 	size_t prevsize = p->prev_foot;
@@ -3232,7 +3232,6 @@ static ATTR_NOINLINE int free_flag4_mem(PARAM_mstate_m_ mchunkptr p) {
 		/* Last chunk of user-defined "struct Dee_heapregion" just got free'd! */
 		struct Dee_heapregion *region;
 #define REGION_OVERHEAD (offsetof(struct Dee_heapregion, hr_first) + sizeof(struct Dee_heaptail))
-		POSTACTION(m);
 		region = COMPILER_CONTAINER_OF((struct Dee_heapchunk *)p,
 		                               struct Dee_heapregion, hr_first);
 		ASSERT(region->hr_size == (psize + REGION_OVERHEAD));
@@ -3241,9 +3240,7 @@ static ATTR_NOINLINE int free_flag4_mem(PARAM_mstate_m_ mchunkptr p) {
 		ASSERT(region->hr_first.hc_head == (psize | PINUSE_BIT));
 		(*region->hr_destroy)(region);
 #undef REGION_OVERHEAD
-		return 1;
 	}
-	return 0;
 }
 #endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
 
@@ -3259,172 +3256,99 @@ PUBLIC void (DCALL Dee_Free)(void *mem)
 	   free chunks, if they exist, and then place in a bin.  Intermixed
 	   with special cases for top, dv, mmapped chunks, and usage errors.
 	*/
-
-	if (mem != 0) {
-		mchunkptr p = mem2chunk(mem);
+	size_t psize;
+	mchunkptr next;
+	mchunkptr p;
 #if FOOTERS && !GM_ONLY
-		mstate fm = get_mstate_for(p);
-		ext_assert__ok_magic(fm);
+	mstate fm;
 #else /* FOOTERS && !GM_ONLY */
 #define fm gm
 #endif /* FOOTERS || GM_ONLY */
-		validate_footer(p);
+	if unlikely(!mem)
+		return;
 
-#ifndef DL_DEBUG_MEMSET_FREE
-		/* No debug-memset enabled */
-#elif (FLAG4_BIT_INDICATES_HEAP_REGION && \
-       FLAG4_BIT_INDICATES_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE)
-		{
-			size_t usize = chunksize(p) - overhead_for(p);
-			if (flag4inuse(p)) {
-				/* Special case: don't set the "DL_DEBUG_MEMSET_FREE" word
-				 *               at one of the following offsets, if that
-				 *               word is currently set to "0". */
+	p = mem2chunk(mem);
+#if FOOTERS && !GM_ONLY
+	fm = get_mstate_for(p);
+	ext_assert__ok_magic(fm);
+#else /* FOOTERS && !GM_ONLY */
+#define fm gm
+#endif /* FOOTERS || GM_ONLY */
+	validate_footer(p);
+
+	ext_assert__ok_inuse(p);
+	psize = chunksize(p);
+	next  = chunk_plus_offset(p, psize);
+
+#if FLAG4_BIT_INDICATES_HEAP_REGION
+	if unlikely(is_mmapped(p)) {
+#ifndef DL_MUNMAP_ALWAYS_FAILS
+		size_t prevsize;
+#endif /* !DL_MUNMAP_ALWAYS_FAILS */
+		if unlikely(flag4inuse(p)) {
+#if defined(DL_DEBUG_MEMSET_FREE) && FLAG4_BIT_INDICATES_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE
+			/* Special case: don't set the "DL_DEBUG_MEMSET_FREE" word
+			 *               at one of the following offsets, if that
+			 *               word is currently set to "0". */
 #define INDEXOF_WORD(T, field) (offsetof(T, field) / sizeof(Dee_refcnt_t))
-				STATIC_ASSERT(IS_ALIGNED(offsetof(DeeObject, ob_refcnt), sizeof(Dee_refcnt_t)));
-				STATIC_ASSERT(IS_ALIGNED(offsetof(struct Dee_gc_head, gc_object.ob_refcnt), sizeof(Dee_refcnt_t)));
-				size_t i, n_words = usize / sizeof(Dee_refcnt_t);
-				Dee_refcnt_t *iter = (Dee_refcnt_t *)mem;
-				for (i = 0; i < n_words; ++i, ++iter) {
-					if ((i == INDEXOF_WORD(DeeObject, ob_refcnt) ||
-					     i == INDEXOF_WORD(struct Dee_gc_head, gc_object.ob_refcnt)) &&
-					    (atomic_read(iter) == 0)) {
-						/* Skip this word */
-					} else {
-						*iter = DL_DEBUG_MEMSET_FREE;
-					}
+			size_t usize = chunksize(p) - overhead_for(p);
+			STATIC_ASSERT(IS_ALIGNED(offsetof(DeeObject, ob_refcnt), sizeof(Dee_refcnt_t)));
+			STATIC_ASSERT(IS_ALIGNED(offsetof(struct Dee_gc_head, gc_object.ob_refcnt), sizeof(Dee_refcnt_t)));
+			size_t i, n_words = usize / sizeof(Dee_refcnt_t);
+			Dee_refcnt_t *iter = (Dee_refcnt_t *)mem;
+			for (i = 0; i < n_words; ++i, ++iter) {
+				if ((i == INDEXOF_WORD(DeeObject, ob_refcnt) ||
+				     i == INDEXOF_WORD(struct Dee_gc_head, gc_object.ob_refcnt)) &&
+				    (atomic_read(iter) == 0)) {
+					/* Skip this word */
+				} else {
+					*iter = DL_DEBUG_MEMSET_FREE;
 				}
-#undef INDEXOF_WORD
-			} else {
-				dl_setfree_data(mem, usize);
 			}
+#undef INDEXOF_WORD
+#else /* DL_DEBUG_MEMSET_FREE && FLAG4_BIT_INDICATES_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE */
+			dl_setfree_data(mem, chunksize(p) - overhead_for(p));
+#endif /* !DL_DEBUG_MEMSET_FREE || !FLAG4_BIT_INDICATES_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE */
+			free_flag4_mem(p);
+			return;
 		}
-#else /* ... */
 		dl_setfree_data(mem, chunksize(p) - overhead_for(p));
-#endif /* !... */
-
+#ifdef DL_MUNMAP_ALWAYS_FAILS
+		return;
+#else /* DL_MUNMAP_ALWAYS_FAILS */
 #if USE_PENDING_FREE_LIST
-		if (!TRY_PREACTION(fm)) {
-			dl_freelist_append(fm, mem);
-		} else
+		if (!TRY_PREACTION(fm))
+			goto do_dl_freelist_append;
+#define NEED_do_dl_freelist_append
 #else /* USE_PENDING_FREE_LIST */
 		PREACTION(fm);
 #endif /* !USE_PENDING_FREE_LIST */
-		{
-			size_t psize;
-			mchunkptr next;
-#if FLAG4_BIT_INDICATES_HEAP_REGION
-#if DL_DEBUG_INTERNAL
-			if (!flag4inuse(p))
-				check_inuse_chunk(fm, p);
-#endif /* DL_DEBUG_INTERNAL */
-#else /* FLAG4_BIT_INDICATES_HEAP_REGION */
-			check_inuse_chunk(fm, p);
-			ext_assert__ok_address(fm, p);
-#endif /* !FLAG4_BIT_INDICATES_HEAP_REGION */
-			ext_assert__ok_inuse(p);
-			psize = chunksize(p);
-			next  = chunk_plus_offset(p, psize);
-			if (!pinuse(p)) {
-				size_t prevsize = p->prev_foot;
-				if (is_mmapped(p)) {
-#if FLAG4_BIT_INDICATES_HEAP_REGION
-					if unlikely(flag4inuse(p)) {
-						if (free_flag4_mem(ARG_mstate_X_(fm) p))
-							return;
-						goto postaction;
-					}
+		check_inuse_chunk(fm, p);
+		ext_assert__ok_address(fm, p);
+		prevsize = p->prev_foot;
+		psize += prevsize + MMAP_FOOT_PAD;
+		if (DL_MUNMAP((char *)p - prevsize, psize) == 0)
+			mstate_footprint(fm) -= psize;
+		goto postaction;
+#endif /* !DL_MUNMAP_ALWAYS_FAILS */
+	}
 #endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
 
-					psize += prevsize + MMAP_FOOT_PAD;
-#ifndef DL_MUNMAP_ALWAYS_FAILS
-					if (DL_MUNMAP((char *)p - prevsize, psize) == 0)
-						mstate_footprint(fm) -= psize;
-#endif /* !DL_MUNMAP_ALWAYS_FAILS */
-					goto postaction;
-				} else {
-					mchunkptr prev = chunk_minus_offset(p, prevsize);
-					psize += prevsize;
-					ext_assert__ok_address(fm, prev);
-					/* consolidate backward */
-					if (prev != mstate_dv(fm)) {
-						unlink_chunk(fm, prev, prevsize);
-					} else if ((next->head & INUSE_BITS) == INUSE_BITS) {
-						mstate_dvsize(fm) = psize;
-						set_free_with_pinuse(prev, psize, next);
-						dl_setfree_word(p->prev_foot, size_t);
-						dl_setfree_word(p->head, size_t);
-						goto postaction;
-					}
-					dl_setfree_word(p->prev_foot, size_t);
-					dl_setfree_word(p->head, size_t);
-					p = prev;
-				}
-			}
+	/* memset() the payload area to the debug pattern for FREE memory. */
+	dl_setfree_data(mem, chunksize(p) - overhead_for(p));
 
-			ext_assert__ok_next(p, next);
-			ext_assert__ok_pinuse(next);
-			if (!cinuse(next)) { /* consolidate forward */
-				if (next == mstate_top(fm)) {
-					size_t tsize   = mstate_topsize(fm) += psize;
-					mstate_top(fm) = p;
-					p->head        = tsize | PINUSE_BIT;
-					dl_setfree_word(next->prev_foot, size_t);
-					dl_setfree_word(next->head, size_t);
-					if (p == mstate_dv(fm)) {
-						mstate_dv(fm)     = 0;
-						mstate_dvsize(fm) = 0;
-					}
-					if (should_trim(fm, tsize))
-						sys_trim(ARG_mstate_X_(fm) 0);
-					goto postaction;
-				} else if (next == mstate_dv(fm)) {
-					size_t dsize  = mstate_dvsize(fm) += psize;
-					mstate_dv(fm) = p;
-					dl_setfree_word(next->prev_foot, size_t);
-					dl_setfree_word(next->head, size_t);
-					set_size_and_pinuse_of_free_chunk(p, dsize);
-					goto postaction;
-				} else {
-					size_t nsize = chunksize(next);
-					psize += nsize;
-					unlink_chunk(fm, next, nsize);
-					dl_setfree_word(next->prev_foot, size_t);
-					dl_setfree_word(next->head, size_t);
-					set_size_and_pinuse_of_free_chunk(p, psize);
-					if (p == mstate_dv(fm)) {
-						mstate_dvsize(fm) = psize;
-						goto postaction;
-					}
-				}
-			} else
-				set_free_with_pinuse(p, psize, next);
-
-			if (is_small(psize)) {
-				insert_small_chunk(fm, p, psize);
-				check_free_chunk(fm, p);
-			} else {
-				tchunkptr tp = (tchunkptr)p;
-				insert_large_chunk(fm, tp, psize);
-				check_free_chunk(fm, p);
-				if (--mstate_release_checks(fm) == 0)
-					release_unused_segments(ARG_mstate_X(fm));
-			}
-postaction:
-			POSTACTION(fm);
-		}
+#if USE_PENDING_FREE_LIST
+	if (!TRY_PREACTION(fm)) {
+#ifdef NEED_do_dl_freelist_append
+#undef NEED_do_dl_freelist_append
+do_dl_freelist_append:
+#endif /* NEED_do_dl_freelist_append */
+		dl_freelist_append(fm, mem);
+		return;
 	}
-#undef fm
-}
-
-#ifdef NEED_dl_freelist_do_reap
-PRIVATE NONNULL((1)) void
-dl_freelist_do_reap_item(void *__restrict mem) {
-	size_t psize;
-	mchunkptr next;
-	mchunkptr p = mem2chunk(mem);
-
-	/* BEGIN: Copy-paste from `dlfree()' above */
+#else /* USE_PENDING_FREE_LIST */
+	PREACTION(fm);
+#endif /* !USE_PENDING_FREE_LIST */
 #if FLAG4_BIT_INDICATES_HEAP_REGION
 #if DL_DEBUG_INTERNAL
 	if (!flag4inuse(p))
@@ -3434,44 +3358,138 @@ dl_freelist_do_reap_item(void *__restrict mem) {
 	check_inuse_chunk(fm, p);
 	ext_assert__ok_address(fm, p);
 #endif /* !FLAG4_BIT_INDICATES_HEAP_REGION */
+
+	if (!pinuse(p)) {
+		mchunkptr prev;
+		size_t prevsize = p->prev_foot;
+#if !FLAG4_BIT_INDICATES_HEAP_REGION
+		if unlikely(is_mmapped(p)) {
+#ifndef DL_MUNMAP_ALWAYS_FAILS
+			psize += prevsize + MMAP_FOOT_PAD;
+			if (DL_MUNMAP((char *)p - prevsize, psize) == 0)
+				mstate_footprint(fm) -= psize;
+#endif /* !DL_MUNMAP_ALWAYS_FAILS */
+			goto postaction;
+		}
+#endif /* !FLAG4_BIT_INDICATES_HEAP_REGION */
+
+		prev = chunk_minus_offset(p, prevsize);
+		psize += prevsize;
+		ext_assert__ok_address(fm, prev);
+		/* consolidate backward */
+		if (prev != mstate_dv(fm)) {
+			unlink_chunk(fm, prev, prevsize);
+		} else if ((next->head & INUSE_BITS) == INUSE_BITS) {
+			mstate_dvsize(fm) = psize;
+			set_free_with_pinuse(prev, psize, next);
+			dl_setfree_word(p->prev_foot, size_t);
+			dl_setfree_word(p->head, size_t);
+			goto postaction;
+		}
+		dl_setfree_word(p->prev_foot, size_t);
+		dl_setfree_word(p->head, size_t);
+		p = prev;
+	}
+
+	ext_assert__ok_next(p, next);
+	ext_assert__ok_pinuse(next);
+	if (!cinuse(next)) { /* consolidate forward */
+		if (next == mstate_top(fm)) {
+			size_t tsize   = mstate_topsize(fm) += psize;
+			mstate_top(fm) = p;
+			p->head        = tsize | PINUSE_BIT;
+			dl_setfree_word(next->prev_foot, size_t);
+			dl_setfree_word(next->head, size_t);
+			if (p == mstate_dv(fm)) {
+				mstate_dv(fm)     = 0;
+				mstate_dvsize(fm) = 0;
+			}
+			if (should_trim(fm, tsize))
+				sys_trim(ARG_mstate_X_(fm) 0);
+			goto postaction;
+		} else if (next == mstate_dv(fm)) {
+			size_t dsize  = mstate_dvsize(fm) += psize;
+			mstate_dv(fm) = p;
+			dl_setfree_word(next->prev_foot, size_t);
+			dl_setfree_word(next->head, size_t);
+			set_size_and_pinuse_of_free_chunk(p, dsize);
+			goto postaction;
+		} else {
+			size_t nsize = chunksize(next);
+			psize += nsize;
+			unlink_chunk(fm, next, nsize);
+			dl_setfree_word(next->prev_foot, size_t);
+			dl_setfree_word(next->head, size_t);
+			set_size_and_pinuse_of_free_chunk(p, psize);
+			if (p == mstate_dv(fm)) {
+				mstate_dvsize(fm) = psize;
+				goto postaction;
+			}
+		}
+	} else
+		set_free_with_pinuse(p, psize, next);
+
+	if (is_small(psize)) {
+		insert_small_chunk(fm, p, psize);
+		check_free_chunk(fm, p);
+	} else {
+		tchunkptr tp = (tchunkptr)p;
+		insert_large_chunk(fm, tp, psize);
+		check_free_chunk(fm, p);
+		if (--mstate_release_checks(fm) == 0)
+			release_unused_segments(ARG_mstate_X(fm));
+	}
+postaction:
+	POSTACTION(fm);
+#undef fm
+}
+
+#ifdef NEED_dl_freelist_do_reap
+PRIVATE NONNULL((1)) void
+dl_freelist_do_reap_item(void *__restrict mem) {
+	size_t psize;
+	mchunkptr next;
+	mchunkptr p = mem2chunk(mem);
+#if FOOTERS && !GM_ONLY
+	mstate fm = get_mstate_for(p);
+	ext_assert__ok_magic(fm);
+#else /* FOOTERS && !GM_ONLY */
+#define fm gm
+#endif /* FOOTERS || GM_ONLY */
+
+	/* BEGIN: Copy-paste from `dlfree()' above */
+	check_inuse_chunk(fm, p);
+	ext_assert__ok_address(fm, p);
 	ext_assert__ok_inuse(p);
 	psize = chunksize(p);
 	next  = chunk_plus_offset(p, psize);
 	if (!pinuse(p)) {
 		size_t prevsize = p->prev_foot;
-		if (is_mmapped(p)) {
-#if FLAG4_BIT_INDICATES_HEAP_REGION
-			if unlikely(flag4inuse(p)) {
-				if (free_flag4_mem(ARG_mstate_X_(fm) p))
-					return;
-				goto postaction;
-			}
-#endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
-
-			psize += prevsize + MMAP_FOOT_PAD;
+		mchunkptr prev;
+		if unlikely(is_mmapped(p)) {
 #ifndef DL_MUNMAP_ALWAYS_FAILS
+			psize += prevsize + MMAP_FOOT_PAD;
 			if (DL_MUNMAP((char *)p - prevsize, psize) == 0)
 				mstate_footprint(fm) -= psize;
 #endif /* !DL_MUNMAP_ALWAYS_FAILS */
 			goto postaction;
-		} else {
-			mchunkptr prev = chunk_minus_offset(p, prevsize);
-			psize += prevsize;
-			ext_assert__ok_address(fm, prev);
-			/* consolidate backward */
-			if (prev != mstate_dv(fm)) {
-				unlink_chunk(fm, prev, prevsize);
-			} else if ((next->head & INUSE_BITS) == INUSE_BITS) {
-				mstate_dvsize(fm) = psize;
-				set_free_with_pinuse(prev, psize, next);
-				dl_setfree_word(p->prev_foot, size_t);
-				dl_setfree_word(p->head, size_t);
-				goto postaction;
-			}
+		}
+		prev = chunk_minus_offset(p, prevsize);
+		psize += prevsize;
+		ext_assert__ok_address(fm, prev);
+		/* consolidate backward */
+		if (prev != mstate_dv(fm)) {
+			unlink_chunk(fm, prev, prevsize);
+		} else if ((next->head & INUSE_BITS) == INUSE_BITS) {
+			mstate_dvsize(fm) = psize;
+			set_free_with_pinuse(prev, psize, next);
 			dl_setfree_word(p->prev_foot, size_t);
 			dl_setfree_word(p->head, size_t);
-			p = prev;
+			goto postaction;
 		}
+		dl_setfree_word(p->prev_foot, size_t);
+		dl_setfree_word(p->head, size_t);
+		p = prev;
 	}
 
 	ext_assert__ok_next(p, next);
@@ -3525,6 +3543,7 @@ dl_freelist_do_reap_item(void *__restrict mem) {
 postaction:
 	/* END: Copy-paste from `dlfree()' above */
 	;
+#undef fm
 }
 
 PRIVATE ATTR_NOINLINE NONNULL((1)) void
