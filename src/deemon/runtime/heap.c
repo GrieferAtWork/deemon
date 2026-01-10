@@ -3026,6 +3026,16 @@ PUBLIC ATTR_MALLOC WUNUSED void *(DCALL Dee_TryMalloc)(size_t bytes)
 #endif
 #endif /* !HOOK_AFTER_INIT_MALLOC */
 
+	/* FIXME: This "PREACTION(gm)" right here is ****THE**** biggest bottleneck in
+	 *        all of deemon when it comes to executing heavily parallelized user-code!
+	 * Potential solutions:
+	 * - Thread-local heap [cache]?
+	 *   - including per-thread free lists, since it isn't
+	 *     actually that likely for the allocating thread to
+	 *     also be the one that free's memory, thanks to the
+	 *     design of the "leaks" detector's pending lists
+	 * - ...
+	 */
 	if (!PREACTION(gm)) {
 		void *mem;
 		size_t nb;
@@ -4840,6 +4850,16 @@ DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbg_Memalign)(size_t min_alignment, 
 
 
 #if !DIRECTLY_DEFINE_DEEMON_PUBLIC_API
+
+/* Memory leak detector:
+ * - Built directory on-top of dlmalloc(), dlrealloc(), dlfree() (meaning no
+ *   extra dependencies on any internals of the underlying malloc implementation)
+ * - No extra headers added to- or required for heap chunks allocated by underlying
+ *   memory allocator.
+ * - Heavily optimized for massively parallel execution environments (unlike
+ *   dlmalloc itself, you won't see all of your threads except one waiting
+ *   for some kind of global lock to become available)
+ */
 #if LEAK_DETECTION
 DECL_END
 #include <hybrid/sequence/rbtree.h>
