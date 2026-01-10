@@ -1383,12 +1383,12 @@ got_callback_id:
 	ast_annotations_get(&annotations);
 	if (is_class_property) {
 		/* Parse a new function in the class scope. */
-		callback = ast_parse_function(NULL, &need_semi, false, &loc, &decl);
+		callback = ast_parse_function(NULL, &need_semi, false, &loc, &decl, NULL);
 	} else {
 		if unlikely(class_maker_push_methscope(maker))
 			goto err;
 		/* Parse a new function in its own member-method scope. */
-		callback = ast_parse_function_noscope(NULL, &need_semi, false, &loc, &decl);
+		callback = ast_parse_function_noscope(NULL, &need_semi, false, &loc, &decl, NULL);
 		basescope_pop();
 	}
 	if unlikely(!ast_setddi(callback, &loc))
@@ -1965,7 +1965,7 @@ define_operator:
 				 *                                                          AST_SYM(this)]))))' */
 				if unlikely(class_maker_push_methscope(&maker))
 					goto err_anno;
-				yield_function = ast_parse_function_noscope(NULL, &need_semi, false, &loc, &decl);
+				yield_function = ast_parse_function_noscope(NULL, &need_semi, false, &loc, &decl, NULL);
 				basescope_pop();
 				if unlikely(!yield_function) {
 err_operator_ast_ddi:
@@ -2042,7 +2042,7 @@ err_yield_function_temp:
 					goto err_anno;
 				/* Parse a new function in its own member-method scope. */
 				current_basescope->bs_name = operator_name_kwd;
-				operator_ast = ast_parse_function_noscope(NULL, &need_semi, false, &loc, &decl);
+				operator_ast = ast_parse_function_noscope(NULL, &need_semi, false, &loc, &decl, NULL);
 			}
 got_operator_ast:
 			basescope_pop();
@@ -2630,7 +2630,7 @@ err_property:
 					if unlikely(basescope_push())
 						goto err_anno;
 					current_basescope->bs_flags |= current_tags.at_code_flags;
-					init_ast = ast_parse_function_noscope(member_name, &need_semi, false, &loc, &decl);
+					init_ast = ast_parse_function_noscope(member_name, &need_semi, false, &loc, &decl, NULL);
 					if (init_ast && unlikely(doctext_compile(&temp.at_doc))) {
 						ast_decref(init_ast);
 						init_ast = NULL;
@@ -2643,7 +2643,7 @@ err_property:
 
 					/* Parse a new function in its own member-method scope. */
 					AST_TAGS_BACKUP_PRINTERS(temp);
-					init_ast = ast_parse_function_noscope(member_name, &need_semi, false, &loc, &decl);
+					init_ast = ast_parse_function_noscope(member_name, &need_semi, false, &loc, &decl, NULL);
 					AST_TAGS_RESTORE_PRINTERS(temp);
 					if (init_ast && unlikely(doctext_compile(&current_tags.at_doc))) {
 						ast_decref(init_ast);

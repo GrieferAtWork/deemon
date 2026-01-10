@@ -1075,7 +1075,7 @@ do_else_branch:
 			if unlikely(yield() < 0)
 				goto err;
 		}
-		result = ast_parse_function(function_name, NULL, false, &loc, NULL);
+		result = ast_parse_function(function_name, NULL, false, &loc, NULL, NULL);
 	}	break;
 
 	case KWD_final: {
@@ -1502,7 +1502,7 @@ do_lambda:
 				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 				if unlikely(parse_tags_block())
 					goto err_flags;
-				result = ast_parse_function(NULL, NULL, true, &loc, NULL);
+				result = ast_parse_function(NULL, NULL, true, &loc, NULL, NULL);
 				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 				break;
 			}

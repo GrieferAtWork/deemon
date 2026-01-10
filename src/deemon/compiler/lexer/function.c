@@ -486,14 +486,16 @@ INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_function(struct TPPKeyword *name, bool *p_need_semi,
                    bool allow_missing_params,
                    struct ast_loc *name_loc,
-                   struct decl_ast *decl) {
+                   struct decl_ast *decl,
+                   /*[0..1]*/ struct symbol *function_symbol) {
 	DREF struct ast *result;
 	struct ast_annotations annotations;
 	ast_annotations_get(&annotations);
 	if unlikely(basescope_push())
 		goto err_anno;
 	current_basescope->bs_flags |= current_tags.at_code_flags;
-	result = ast_parse_function_noscope(name, p_need_semi, allow_missing_params, name_loc, decl);
+	result = ast_parse_function_noscope(name, p_need_semi, allow_missing_params,
+	                                    name_loc, decl, function_symbol);
 	basescope_pop();
 	if unlikely(!result)
 		goto err_anno;
@@ -508,7 +510,8 @@ ast_parse_function_noscope(struct TPPKeyword *name,
                            bool *p_need_semi,
                            bool allow_missing_params,
                            struct ast_loc *name_loc,
-                           struct decl_ast *decl) {
+                           struct decl_ast *decl,
+                           /*[0..1]*/ struct symbol *function_symbol) {
 	struct decl_ast my_decl;
 	struct symbol *funcself_symbol = NULL;
 	uint32_t old_flags;
@@ -642,6 +645,12 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		 */
 		if (WARN(W_EXPECTED_LBRACE_AFTER_FUNCTION))
 			goto err;
+		/* Make the symbol that the function will be stored
+		 * in as "varying" so it can be reassigned later. */
+		if (function_symbol) {
+			function_symbol->s_flag |= SYMBOL_FVARYING;
+			function_symbol->s_flag &= ~SYMBOL_FFINAL;
+		}
 		code = ast_multiple(AST_FMULTIPLE_KEEPLAST, 0, NULL);
 		if (p_need_semi)
 			*p_need_semi = true;

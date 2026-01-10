@@ -331,11 +331,11 @@ ast_parse_loopexpr(void);
 INTDEF WUNUSED DREF struct ast *DCALL
 ast_parse_function(struct TPPKeyword *name, bool *p_need_semi,
                    bool allow_missing_params, struct ast_loc *name_loc,
-                   struct decl_ast *decl);
+                   struct decl_ast *decl, /*[0..1]*/ struct symbol *function_symbol);
 INTDEF WUNUSED DREF struct ast *DCALL
 ast_parse_function_noscope(struct TPPKeyword *name, bool *p_need_semi,
                            bool allow_missing_params, struct ast_loc *name_loc,
-                           struct decl_ast *decl);
+                           struct decl_ast *decl, /*[0..1]*/ struct symbol *function_symbol);
 INTDEF WUNUSED DREF struct ast *DCALL
 ast_parse_function_noscope_noargs(bool *p_need_semi);
 

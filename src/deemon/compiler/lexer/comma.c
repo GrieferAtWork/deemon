@@ -415,7 +415,8 @@ err_function_anno:
 					goto err;
 				}
 				current_basescope->bs_flags |= current_tags.at_code_flags;
-				current = ast_parse_function_noscope(function_name, &need_semi, false, &loc, &decl);
+				current = ast_parse_function_noscope(function_name, &need_semi, false,
+				                                     &loc, &decl, function_symbol);
 				/* Compile documentation text */
 				if (current && unlikely(doctext_compile(&temp.at_doc))) {
 					ast_decref(current);
