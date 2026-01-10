@@ -4613,7 +4613,7 @@ PRIVATE WUNUSED mspace DCALL create_tls_mspace(void) {
 PRIVATE NONNULL((1)) void DCALL destroy_tls_mspace(mspace ms) {
 	struct malloc_state *state = (struct malloc_state *)ms;
 	tls_mspace_lock_acquire();
-	SLIST_REMOVE(&used_tls_mspace, state, struct malloc_state, ms_link);
+	SLIST_REMOVE(&used_tls_mspace, state, malloc_state, ms_link);
 	SLIST_INSERT(&free_tls_mspace, state, ms_link);
 	tls_mspace_lock_release();
 }
