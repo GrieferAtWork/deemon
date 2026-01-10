@@ -4850,12 +4850,17 @@ struct leaknode {
 	 *       call can succeed if there wouldn't be a node where it wants to expand
 	 *       to, meaning there'd never be any reason to change anything about the
 	 *       leaknode-tree, no matter what `Dee_TryReallocInPlace' ends up doing. */
-	LLRBTREE_NODE(leaknode) ln_node;    /* [1..1] Node in tree of allocations */
-	mchunkptr               ln_chunk;   /* Chunk pointer */
-	size_t                  ln_id;      /* Allocation ID */
-	char const             *ln_file;    /* Allocation source file */
-	__UINTPTR_HALF_TYPE__   ln_line;    /* Allocation source line */
-	__UINTPTR_HALF_TYPE__   ln_flags;   /* Allocation flags (set of `LEAKNODE_F_*') */
+	union {
+		LLRBTREE_NODE(leaknode) ln_node;    /* [1..1] Node in tree of allocations */
+#if USE_PENDING_FREE_LIST
+		SLIST_ENTRY(leaknode)   ln_pend;    /* [0..1] Link in internal list of pending nodes */
+#endif /* USE_PENDING_FREE_LIST */
+	} ln_link;
+	mchunkptr                   ln_chunk;   /* Chunk pointer */
+	size_t                      ln_id;      /* Allocation ID */
+	char const                 *ln_file;    /* Allocation source file */
+	__UINTPTR_HALF_TYPE__       ln_line;    /* Allocation source line */
+	__UINTPTR_HALF_TYPE__       ln_flags;   /* Allocation flags (set of `LEAKNODE_F_*') */
 #define LEAKNODE_F_NORMAL 0x0000 /* Default flags */
 #define LEAKNODE_F_RED    0x0001 /* Red node (for LLRBTREE) */
 #define LEAKNODE_F_NOLEAK 0x0002 /* Do not consider as a leak */
@@ -4866,7 +4871,7 @@ DECL_END
 #define RBTREE(name)            leaknode_tree_##name
 #define RBTREE_T                struct leaknode
 #define RBTREE_Tkey             char *
-#define RBTREE_GETNODE(self)    (self)->ln_node
+#define RBTREE_GETNODE(self)    (self)->ln_link.ln_node
 #define RBTREE_GETMINKEY(self)  ((char *)(self)->ln_chunk)
 #define RBTREE_GETMAXKEY(self)  ((char *)(self)->ln_chunk + chunksize((self)->ln_chunk) - 1)
 #define RBTREE_REDFIELD         ln_flags
@@ -4890,7 +4895,119 @@ PRIVATE Dee_atomic_lock_t leak_lock = Dee_ATOMIC_LOCK_INIT;
 #define leak_lock_tryacquire() Dee_atomic_lock_tryacquire(&leak_lock)
 #define leak_lock_acquire()    Dee_atomic_lock_acquire(&leak_lock)
 #define leak_lock_waitfor()    Dee_atomic_lock_waitfor(&leak_lock)
+#define _leak_lock_release()   Dee_atomic_lock_release(&leak_lock)
 #define leak_lock_release()    Dee_atomic_lock_release(&leak_lock)
+
+#if USE_PENDING_FREE_LIST
+SLIST_HEAD(leaklist, leaknode);
+struct lfrelist_entry {
+	SLIST_ENTRY(lfrelist_entry) lfle_link;
+	char const                 *lfle_file;
+	int                         lfle_line;
+};
+SLIST_HEAD(lfrelist, lfrelist_entry);
+
+PRIVATE struct leaklist leaks_pending_insert = SLIST_HEAD_INITIALIZER(leaks_pending_insert);
+PRIVATE struct lfrelist leaks_pending_remove = SLIST_HEAD_INITIALIZER(leaks_pending_remove);
+
+#define leaks_pending_mustreap()                             \
+	(atomic_read(&leaks_pending_insert.slh_first) != NULL || \
+	 atomic_read(&leaks_pending_remove.slh_first) != NULL)
+
+PRIVATE ATTR_NOINLINE void DCALL
+_leaks_pending_reap_and_unlock(void) {
+	struct freelist freeme;
+	struct leaklist insert;
+	struct lfrelist remove;
+	/* Important: must reap "leaks_pending_remove" **BEFORE** "leaks_pending_insert"!
+	 * Reason: "leaks_pending_remove" may contain pointers to blocks that are also
+	 *         present within "leaks_pending_insert" (this is the case for short-
+	 *         lived allocated). As such, if we were to clear "leaks_pending_remove"
+	 *         only **after** "leaks_pending_insert", some other thread may have added
+	 *         another pointer to both "leaks_pending_insert" and "leaks_pending_remove"
+	 *         (meaning we'd also be freeing that one), but then we would only see the
+	 *         remove request, without ever having complied with the insert request! */
+	remove.slh_first = SLIST_ATOMIC_CLEAR(&leaks_pending_remove);
+
+	/* Reap "leaks_pending_insert" */
+	insert.slh_first = SLIST_ATOMIC_CLEAR(&leaks_pending_insert);
+	while (!SLIST_EMPTY(&insert)) {
+		struct leaknode *node = SLIST_FIRST(&insert);
+		SLIST_REMOVE_HEAD(&insert, ln_link.ln_pend);
+		leaknode_tree_insert(&leak_nodes, node);
+	}
+
+	SLIST_INIT(&freeme);
+	while (!SLIST_EMPTY(&remove)) {
+		struct leaknode *node;
+		struct lfrelist_entry *ptr = SLIST_FIRST(&remove);
+		char const *file = ptr->lfle_file;
+		int line = ptr->lfle_line;
+		SLIST_REMOVE_HEAD(&remove, lfle_link);
+		node = leaknode_tree_remove(&leak_nodes, (char *)ptr);
+		if unlikely(node && (void *)ptr != chunk2mem(node->ln_chunk)) {
+			/* This can happen if "ptr" is a custom flag4 sub-region of a bigger heap region */
+			leaknode_tree_insert(&leak_nodes, node);
+			node = NULL;
+		}
+		if (!node) {
+			mchunkptr p = mem2chunk(ptr);
+			if (!flag4inuse(p)) {
+				_DeeAssert_Failf("Dee_Free(ptr)", file, line,
+				                 "Bad pointer %p does not map to any node, or custom heap region",
+				                 ptr);
+				Dee_BREAKPOINT();
+			}
+		} else {
+#if 0 /* Never happens -- see "leaknode_tree_insert" above */
+			if (ptr != chunk2mem(node->ln_chunk)) {
+				_DeeAssert_Failf("Dee_Free(ptr)", file, line,
+				                 "Bad pointer %p does not map to start of node at %p-%p",
+				                 ptr, chunk2mem(node->ln_chunk),
+				                 (char *)chunk2mem(node->ln_chunk) +
+				                 (chunksize(node->ln_chunk) - overhead_for(node->ln_chunk) - 1));
+				Dee_BREAKPOINT();
+			}
+#endif
+			SLIST_INSERT(&freeme, (struct freelist_entry *)node, fle_link); /* dlfree(node); */
+		}
+		SLIST_INSERT(&freeme, (struct freelist_entry *)ptr, fle_link); /* dlfree(ptr); */
+	}
+	_leak_lock_release();
+
+	/* Pass along pointers that need to be free'd to the dlmalloc core */
+	while (!SLIST_EMPTY(&freeme)) {
+		struct freelist_entry *ent = SLIST_FIRST(&freeme);
+		SLIST_REMOVE_HEAD(&freeme, fle_link);
+		dlfree(ent);
+	}
+}
+
+LOCAL void DCALL
+leak_lock_acquire_and_reap(void) {
+	leak_lock_acquire();
+	if (leaks_pending_mustreap()) {
+		_leaks_pending_reap_and_unlock();
+		leak_lock_acquire();
+	}
+}
+
+LOCAL void DCALL
+_leak_lock_reap(void) {
+	if (leak_lock_tryacquire())
+		_leaks_pending_reap_and_unlock();
+}
+
+#define leak_lock_reap() \
+	(void)(!leaks_pending_mustreap() || (_leak_lock_reap(), 0))
+#undef leak_lock_release
+#define leak_lock_release() (_leak_lock_release(), leak_lock_reap())
+#else /* USE_PENDING_FREE_LIST */
+#define leak_lock_reap()             (void)0
+#define leak_lock_acquire_and_reap() leak_lock_acquire()
+#endif /* !USE_PENDING_FREE_LIST */
+
+
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 dump_leaks_node(struct leaknode *__restrict self) {
@@ -4903,14 +5020,14 @@ again:
 		            self->ln_file, self->ln_line, self->ln_id, size, base, base + size - 1);
 		result += size;
 	}
-	if (self->ln_node.rb_lhs) {
-		if (self->ln_node.rb_rhs)
-			result += dump_leaks_node(self->ln_node.rb_rhs);
-		self = self->ln_node.rb_lhs;
+	if (self->ln_link.ln_node.rb_lhs) {
+		if (self->ln_link.ln_node.rb_rhs)
+			result += dump_leaks_node(self->ln_link.ln_node.rb_rhs);
+		self = self->ln_link.ln_node.rb_lhs;
 		goto again;
 	}
-	if (self->ln_node.rb_rhs) {
-		self = self->ln_node.rb_rhs;
+	if (self->ln_link.ln_node.rb_rhs) {
+		self = self->ln_link.ln_node.rb_rhs;
 		goto again;
 	}
 	return result;
@@ -4924,7 +5041,7 @@ again:
 #define DeeHeap_DumpMemoryLeaks_DEFINED
 PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(void) {
 	size_t result = 0;
-	leak_lock_acquire();
+	leak_lock_acquire_and_reap();
 	if (leak_nodes)
 		result = dump_leaks_node(leak_nodes);
 	leak_lock_release();
@@ -4961,14 +5078,22 @@ DeeHeap_SetAllocBreakpoint(size_t id) {
 PRIVATE ATTR_HOT NONNULL((1, 2)) void DCALL
 leaks_insert_p(struct leaknode *node, void *ptr,
                char const *file, int line) {
-	node->ln_id = ++alloc_id_count;
+	node->ln_id = atomic_incfetch(&alloc_id_count);
 	if (node->ln_id == alloc_id_break)
 		Dee_BREAKPOINT();
 	node->ln_chunk = mem2chunk(ptr);
 	node->ln_file  = file;
 	node->ln_line  = (__UINTPTR_HALF_TYPE__)line;
 	node->ln_flags = LEAKNODE_F_NORMAL;
+#if USE_PENDING_FREE_LIST
+	if (!leak_lock_tryacquire()) {
+		SLIST_ATOMIC_INSERT(&leaks_pending_insert, node, ln_link.ln_pend);
+		leak_lock_reap();
+		return;
+	}
+#else /* USE_PENDING_FREE_LIST */
 	leak_lock_acquire();
+#endif /* !USE_PENDING_FREE_LIST */
 	leaknode_tree_insert(&leak_nodes, node);
 	leak_lock_release();
 }
@@ -5008,7 +5133,33 @@ PUBLIC ATTR_HOT void
 	struct leaknode *node;
 	if (!ptr)
 		return;
+#if USE_PENDING_FREE_LIST
+	if (!leak_lock_tryacquire()) {
+		mchunkptr p;
+		size_t usable;
+handle_leak_lock_blocking:
+		p = mem2chunk(ptr);
+		ASSERT(is_inuse(p));
+		usable = chunksize(p) - overhead_for(p);
+		if (usable >= sizeof(struct lfrelist_entry)) {
+			struct lfrelist_entry *ent = (struct lfrelist_entry *)ptr;
+			ent->lfle_file = file;
+			ent->lfle_line = line;
+			SLIST_ATOMIC_INSERT(&leaks_pending_remove, ent, lfle_link);
+			leak_lock_reap();
+			return;
+		}
+		leak_lock_acquire();
+	}
+	/* Make sure that "ptr" isn't still pending insertion! */
+	if (atomic_read(&leaks_pending_insert.slh_first) != NULL) {
+		_leaks_pending_reap_and_unlock();
+		if (!leak_lock_tryacquire())
+			goto handle_leak_lock_blocking;
+	}
+#else /* USE_PENDING_FREE_LIST */
 	leak_lock_acquire();
+#endif /* !USE_PENDING_FREE_LIST */
 	node = leaknode_tree_remove(&leak_nodes, (char *)ptr);
 	if unlikely(node && ptr != chunk2mem(node->ln_chunk)) {
 		/* This can happen if "ptr" is a custom flag4 sub-region of a bigger heap region */
@@ -5047,7 +5198,62 @@ PUBLIC ATTR_HOT WUNUSED void *
 	struct leaknode *node;
 	if (!ptr)
 		return DeeDbg_TryMalloc(n_bytes, file, line);
+#if USE_PENDING_FREE_LIST
+	if (!leak_lock_tryacquire()) {
+		mchunkptr p;
+		size_t usable;
+handle_leak_lock_blocking:
+		p = mem2chunk(ptr);
+		ASSERT(is_inuse(p));
+		usable = chunksize(p) - overhead_for(p);
+
+		/* See how "usable" compares to "n_bytes". Dependent on that,
+		 * we might be able to fulfill the request without blocking */
+		if (n_bytes <= usable) {
+			size_t unused = usable - n_bytes;
+			if (unused < (16 * sizeof(void *)))
+				return ptr; /* Don't bother reclaiming tiny amounts of memory */
+		}
+		if (usable >= sizeof(struct lfrelist_entry) && (n_bytes < 32 * sizeof(void *))) {
+			/* Try to emulate as "malloc()+memcpy()+free()" (all of
+			 * which can be done without blocking at the "leaks" layer) */
+			void *new_block = dlmalloc(n_bytes);
+			if (new_block) {
+				node = (struct leaknode *)dlmalloc(sizeof(struct leaknode));
+				if (node) {
+					struct lfrelist_entry *ent;
+					size_t common;
+
+					/* Insert new block */
+					leaks_insert_p(node, new_block, file, line);
+
+					/* Copy over data into new block */
+					common = n_bytes < usable ? n_bytes : usable;
+					memcpy(new_block, ptr, common);
+
+					/* Schedule freeing of old block */
+					ent = (struct lfrelist_entry *)ptr;
+					ent->lfle_file = file;
+					ent->lfle_line = line;
+					SLIST_ATOMIC_INSERT(&leaks_pending_remove, ent, lfle_link);
+					leak_lock_reap();
+					return new_block;
+				}
+				dlfree(new_block);
+			}
+		}
+		/* Fallback: must get a proper lock and use the serialized code-path below... */
+		leak_lock_acquire();
+	}
+	/* Make sure that "ptr" isn't still pending insertion! */
+	if (atomic_read(&leaks_pending_insert.slh_first) != NULL) {
+		_leaks_pending_reap_and_unlock();
+		if (!leak_lock_tryacquire())
+			goto handle_leak_lock_blocking;
+	}
+#else /* USE_PENDING_FREE_LIST */
 	leak_lock_acquire();
+#endif /* !USE_PENDING_FREE_LIST */
 	node = leaknode_tree_remove(&leak_nodes, (char *)ptr);
 	if unlikely(node && ptr != chunk2mem(node->ln_chunk)) {
 		/* This can happen if "ptr" is a custom flag4 sub-region of a bigger heap region */
@@ -5091,9 +5297,18 @@ PUBLIC ATTR_HOT WUNUSED void *
 				node->ln_line = (__UINTPTR_HALF_TYPE__)line;
 			}
 			node->ln_chunk = mem2chunk(ptr);
+#if USE_PENDING_FREE_LIST
+			if (!leak_lock_tryacquire()) {
+				SLIST_ATOMIC_INSERT(&leaks_pending_insert, node, ln_link.ln_pend);
+				leak_lock_reap();
+			} else
+#else /* USE_PENDING_FREE_LIST */
 			leak_lock_acquire();
-			leaknode_tree_insert(&leak_nodes, node);
-			leak_lock_release();
+#endif /* !USE_PENDING_FREE_LIST */
+			{
+				leaknode_tree_insert(&leak_nodes, node);
+				leak_lock_release();
+			}
 		} else {
 			dlfree(node);
 		}
@@ -5116,7 +5331,7 @@ PUBLIC void *
 (DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line) {
 	if (ptr) {
 		struct leaknode *node;
-		leak_lock_acquire();
+		leak_lock_acquire_and_reap();
 		node = leaknode_tree_locate(leak_nodes, (char *)ptr);
 		if (!node) {
 			_DeeAssert_Failf("Dee_UntrackAlloc(ptr)", file, line,
