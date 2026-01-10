@@ -310,12 +310,6 @@ DECL_BEGIN
 #define MAX_RELEASE_CHECK_RATE SIZE_MAX
 #endif /* !HAVE_MMAP */
 
-#if DL_DEBUG_EXTERNAL
-#define USAGE_ERROR_ACTION(m, p)   Dee_XFatal()
-#else /* DL_DEBUG_EXTERNAL */
-#define USAGE_ERROR_ACTION(m, p)   __builtin_unreachable()
-#endif /* !DL_DEBUG_EXTERNAL */
-
 
 
 
@@ -1192,11 +1186,6 @@ again:
 int malloc_corruption_error_count;
 /* default corruption action */
 static void reset_on_error(PARAM_mstate_m);
-#define USAGE_ERROR_ACTION(m, p)
-#else /* PROCEED_ON_ERROR */
-#ifndef USAGE_ERROR_ACTION
-#define USAGE_ERROR_ACTION(m, p) ABORT
-#endif /* USAGE_ERROR_ACTION */
 #endif /* PROCEED_ON_ERROR */
 
 
@@ -1381,6 +1370,9 @@ static size_t traverse_and_check(PARAM_mstate_m);
 #define ok_magic(M) (1)
 #endif /* (FOOTERS && !INSECURE) */
 
+#define ext_assert__ok_magic(M) ext_assert(ok_magic(M))
+
+
 /* macros to set up inuse chunks with or without footers */
 
 #if !FOOTERS
@@ -1549,7 +1541,7 @@ static int init_mparams(void) {
 		mparams.trim_threshold = DEFAULT_TRIM_THRESHOLD;
 #if MORECORE_CONTIGUOUS
 		mparams.default_mflags = USE_MMAP_BIT;
-#else  /* MORECORE_CONTIGUOUS */
+#else /* MORECORE_CONTIGUOUS */
 		mparams.default_mflags = USE_MMAP_BIT | USE_NONCONTIGUOUS_BIT;
 #endif /* MORECORE_CONTIGUOUS */
 
@@ -1593,7 +1585,7 @@ DFUNDEF int DCALL DeeHeap_SetOpt(int param_number, size_t val)
 #endif /* !EXPOSE_AS_DEEMON_API */
 #ifdef HOOK_AFTER_INIT_MALLOPT
 	ensure_initialization_for(HOOK_AFTER_INIT_MALLOPT(param_number, value));
-#else  /* HOOK_AFTER_INIT_MALLOPT */
+#else /* HOOK_AFTER_INIT_MALLOPT */
 	ensure_initialization();
 #endif /* !HOOK_AFTER_INIT_MALLOPT */
 	switch (param_number) {
@@ -1928,7 +1920,7 @@ PUBLIC ATTR_PURE WUNUSED struct Dee_heap_mallinfo DCALL DeeHeap_MallInfo(void)
 #endif /* !EXPOSE_AS_DEEMON_API */
 #ifdef HOOK_AFTER_INIT_MALLINFO
 	ensure_initialization_for(HOOK_AFTER_INIT_MALLINFO());
-#else  /* HOOK_AFTER_INIT_MALLINFO */
+#else /* HOOK_AFTER_INIT_MALLINFO */
 	ensure_initialization();
 #endif /* !HOOK_AFTER_INIT_MALLINFO */
 	PREACTION(lm);
@@ -3046,7 +3038,7 @@ PUBLIC ATTR_MALLOC WUNUSED void *(DCALL Dee_TryMalloc)(size_t bytes)
 
 #ifdef HOOK_AFTER_INIT_MALLOC
 	ensure_initialization_for(HOOK_AFTER_INIT_MALLOC(bytes));
-#else  /* HOOK_AFTER_INIT_MALLOC */
+#else /* HOOK_AFTER_INIT_MALLOC */
 #if USE_LOCKS && !GM_STATIC_INIT_MUTEX
 	ensure_initialization(); /* initialize in sys_alloc if not using locks */
 #endif
@@ -3261,10 +3253,7 @@ PUBLIC void (DCALL Dee_Free)(void *mem)
 		mchunkptr p = mem2chunk(mem);
 #if FOOTERS && !GM_ONLY
 		mstate fm = get_mstate_for(p);
-		if (!ok_magic(fm)) {
-			USAGE_ERROR_ACTION(fm, p);
-			return;
-		}
+		ext_assert__ok_magic(fm);
 #else /* FOOTERS && !GM_ONLY */
 #define fm gm
 #endif /* FOOTERS || GM_ONLY */
@@ -3986,30 +3975,28 @@ PUBLIC WUNUSED void *(DCALL Dee_TryRealloc)(void *oldmem, size_t bytes)
 		size_t nb      = request2size(bytes);
 		mchunkptr oldp = mem2chunk(oldmem);
 		mchunkptr newp;
-#if !FOOTERS && !GM_ONLY
-		mstate m = gm;
-#elif !GM_ONLY
-		mstate m = get_mstate_for(oldp);
-		if (!ok_magic(m)) {
-			USAGE_ERROR_ACTION(m, oldmem);
-			return 0;
-		}
-#endif /* FOOTERS */
+#if FOOTERS && !GM_ONLY
+		mstate fm = get_mstate_for(oldp);
+		ext_assert__ok_magic(fm);
+#else /* FOOTERS && !GM_ONLY */
+#define fm gm
+#endif /* FOOTERS || GM_ONLY */
 		validate_footer(oldp);
-		PREACTION(m);
+		PREACTION(fm);
 		newp = try_realloc_chunk(ARG_mstate_m_ oldp, nb, 1);
-		POSTACTION(m);
+		POSTACTION(fm);
 		if (newp != 0) {
-			check_inuse_chunk(m, newp);
+			check_inuse_chunk(fm, newp);
 			mem = chunk2mem(newp);
 		} else {
-			mem = internal_malloc(m, bytes);
+			mem = internal_malloc(fm, bytes);
 			if (mem != 0) {
 				size_t oc = chunksize(oldp) - overhead_for(oldp);
 				mem = memcpy(mem, oldmem, (oc < bytes) ? oc : bytes);
-				internal_free(m, oldmem);
+				internal_free(fm, oldmem);
 			}
 		}
+#undef fm
 	}
 	return mem;
 }
@@ -4024,22 +4011,20 @@ PUBLIC WUNUSED void *
 			size_t nb      = request2size(bytes);
 			mchunkptr oldp = mem2chunk(oldmem);
 			mchunkptr newp;
-#if !FOOTERS && !GM_ONLY
-			mstate m = gm;
-#elif !GM_ONLY
-			mstate m = get_mstate_for(oldp);
-			if (!ok_magic(m)) {
-				USAGE_ERROR_ACTION(m, oldmem);
-				return 0;
-			}
-#endif /* FOOTERS */
-			PREACTION(m);
+#if FOOTERS && !GM_ONLY
+			mstate fm = get_mstate_for(oldp);
+			ext_assert__ok_magic(fm);
+#else /* FOOTERS && !GM_ONLY */
+#define fm gm
+#endif /* FOOTERS || GM_ONLY */
+			PREACTION(fm);
 			newp = try_realloc_chunk(ARG_mstate_m_ oldp, nb, 0);
-			POSTACTION(m);
+			POSTACTION(fm);
 			if (newp == oldp) {
-				check_inuse_chunk(m, newp);
+				check_inuse_chunk(fm, newp);
 				mem = oldmem;
 			}
+#undef fm
 		}
 	}
 	return mem;
@@ -4093,7 +4078,7 @@ static void *dlvalloc(size_t bytes) {
 	size_t pagesz;
 #ifdef HOOK_AFTER_INIT_VALLOC
 	ensure_initialization_for(HOOK_AFTER_INIT_VALLOC(bytes));
-#else  /* HOOK_AFTER_INIT_VALLOC */
+#else /* HOOK_AFTER_INIT_VALLOC */
 #if !GM_STATIC_INIT_MUTEX
 	ensure_initialization();
 #endif /* !GM_STATIC_INIT_MUTEX */
@@ -4108,7 +4093,7 @@ static void *dlpvalloc(size_t bytes) {
 	size_t pagesz;
 #ifdef HOOK_AFTER_INIT_PVALLOC
 	ensure_initialization_for(HOOK_AFTER_INIT_PVALLOC(bytes));
-#else  /* HOOK_AFTER_INIT_PVALLOC */
+#else /* HOOK_AFTER_INIT_PVALLOC */
 #if !GM_STATIC_INIT_MUTEX
 	ensure_initialization();
 #endif /* !GM_STATIC_INIT_MUTEX */
@@ -4165,7 +4150,7 @@ PUBLIC size_t DCALL DeeHeap_Trim(size_t pad)
 #endif /* EXPOSE_AS_DEEMON_API */
 #ifdef HOOK_AFTER_INIT_MALLOC_TRIM
 	ensure_initialization_for(HOOK_AFTER_INIT_MALLOC_TRIM(pad));
-#else  /* HOOK_AFTER_INIT_MALLOC_TRIM */
+#else /* HOOK_AFTER_INIT_MALLOC_TRIM */
 #if !GM_STATIC_INIT_MUTEX
 	ensure_initialization();
 #endif /* !GM_STATIC_INIT_MUTEX */
@@ -4325,24 +4310,21 @@ static int mspace_track_large_chunks(mspace msp, int enable) {
 
 static size_t destroy_mspace(mspace msp) {
 	size_t freed = 0;
-	mstate ms    = (mstate)msp;
-	if (ok_magic(ms)) {
+	mstate ms = (mstate)msp;
+	ext_assert__ok_magic(ms);
 #ifndef DL_MUNMAP_ALWAYS_FAILS
-		msegmentptr sp = &ms->seg;
-		while (sp != 0) {
-			char *base  = sp->base;
-			size_t size = sp->size;
-			flag_t flag = sp->sflags;
-			(void)base; /* placate people compiling -Wunused-variable */
-			sp = sp->next;
-			if ((flag & USE_MMAP_BIT) && !(flag & EXTERN_BIT) &&
-			    DL_MUNMAP(base, size) == 0)
-				freed += size;
-		}
-#endif /* !DL_MUNMAP_ALWAYS_FAILS */
-	} else {
-		USAGE_ERROR_ACTION(ms, ms);
+	msegmentptr sp = &ms->seg;
+	while (sp != 0) {
+		char *base  = sp->base;
+		size_t size = sp->size;
+		flag_t flag = sp->sflags;
+		(void)base; /* placate people compiling -Wunused-variable */
+		sp = sp->next;
+		if ((flag & USE_MMAP_BIT) && !(flag & EXTERN_BIT) &&
+		    DL_MUNMAP(base, size) == 0)
+			freed += size;
 	}
+#endif /* !DL_MUNMAP_ALWAYS_FAILS */
 	return freed;
 }
 
@@ -4355,10 +4337,7 @@ static void *mspace_malloc(mspace msp, size_t bytes) {
 	void *mem;
 	size_t nb;
 	mstate ms = (mstate)msp;
-	if (!ok_magic(ms)) {
-		USAGE_ERROR_ACTION(ms, ms);
-		return 0;
-	}
+	ext_assert__ok_magic(ms);
 	PREACTION(ms);
 	if (bytes <= MAX_SMALL_REQUEST) {
 		bindex_t idx;
@@ -4471,10 +4450,7 @@ static void mspace_free(mspace msp, void *mem) {
 #else /* FOOTERS */
 		mstate fm = (mstate)msp;
 #endif /* !FOOTERS */
-		if (!ok_magic(fm)) {
-			USAGE_ERROR_ACTION(fm, p);
-			return;
-		}
+		ext_assert__ok_magic(fm);
 		PREACTION(fm);
 		check_inuse_chunk(fm, p);
 		ext_assert__ok_address(fm, p);
@@ -4556,11 +4532,8 @@ postaction:
 static void *mspace_calloc(mspace msp, size_t n_elements, size_t elem_size) {
 	void *mem;
 	size_t req = 0;
-	mstate ms  = (mstate)msp;
-	if (!ok_magic(ms)) {
-		USAGE_ERROR_ACTION(ms, ms);
-		return 0;
-	}
+	mstate ms = (mstate)msp;
+	ext_assert__ok_magic(ms);
 	if (n_elements != 0) {
 		req = n_elements * elem_size;
 		if (((n_elements | elem_size) & ~(size_t)0xffff) &&
@@ -4591,12 +4564,9 @@ static void *mspace_realloc(mspace msp, void *oldmem, size_t bytes) {
 		mchunkptr newp;
 #if !FOOTERS
 		mstate m = (mstate)msp;
-#else  /* FOOTERS */
+#else /* FOOTERS */
 		mstate m = get_mstate_for(oldp);
-		if (!ok_magic(m)) {
-			USAGE_ERROR_ACTION(m, oldmem);
-			return 0;
-		}
+		ext_assert__ok_magic(m);
 #endif /* FOOTERS */
 		PREACTION(m);
 		newp = try_realloc_chunk(m, oldp, nb, 1);
@@ -4627,13 +4597,10 @@ static void *mspace_realloc_in_place(mspace msp, void *oldmem, size_t bytes) {
 			mchunkptr newp;
 #if !FOOTERS
 			mstate m = (mstate)msp;
-#else  /* FOOTERS */
+#else /* FOOTERS */
 			mstate m = get_mstate_for(oldp);
 			(void)msp; /* placate people compiling -Wunused */
-			if (!ok_magic(m)) {
-				USAGE_ERROR_ACTION(m, oldmem);
-				return 0;
-			}
+			ext_assert__ok_magic(m);
 #endif /* FOOTERS */
 			PREACTION(m);
 			newp = try_realloc_chunk(m, oldp, nb, 0);
@@ -4649,10 +4616,7 @@ static void *mspace_realloc_in_place(mspace msp, void *oldmem, size_t bytes) {
 
 static void *mspace_memalign(mspace msp, size_t alignment, size_t bytes) {
 	mstate ms = (mstate)msp;
-	if (!ok_magic(ms)) {
-		USAGE_ERROR_ACTION(ms, ms);
-		return 0;
-	}
+	ext_assert__ok_magic(ms);
 	if (alignment <= MALLOC_ALIGNMENT)
 		return mspace_malloc(msp, bytes);
 	return internal_memalign(ms, alignment, bytes);
@@ -4662,20 +4626,14 @@ static void **mspace_independent_calloc(mspace msp, size_t n_elements,
                                         size_t elem_size, void *chunks[]) {
 	size_t sz = elem_size; /* serves as 1-element array */
 	mstate ms = (mstate)msp;
-	if (!ok_magic(ms)) {
-		USAGE_ERROR_ACTION(ms, ms);
-		return 0;
-	}
+	ext_assert__ok_magic(ms);
 	return ialloc(ms, n_elements, &sz, 3, chunks);
 }
 
 static void **mspace_independent_comalloc(mspace msp, size_t n_elements,
                                           size_t sizes[], void *chunks[]) {
 	mstate ms = (mstate)msp;
-	if (!ok_magic(ms)) {
-		USAGE_ERROR_ACTION(ms, ms);
-		return 0;
-	}
+	ext_assert__ok_magic(ms);
 	return ialloc(ms, n_elements, sizes, 0, chunks);
 }
 
@@ -4691,97 +4649,69 @@ static void mspace_inspect_all(mspace msp,
                                                void *callback_arg),
                                void *arg) {
 	mstate ms = (mstate)msp;
-	if (ok_magic(ms)) {
-		PREACTION(ms);
-		internal_inspect_all(ms, handler, arg);
-		POSTACTION(ms);
-	} else {
-		USAGE_ERROR_ACTION(ms, ms);
-	}
+	ext_assert__ok_magic(ms);
+	PREACTION(ms);
+	internal_inspect_all(ms, handler, arg);
+	POSTACTION(ms);
 }
 #endif /* MALLOC_INSPECT_ALL */
 
 static int mspace_trim(mspace msp, size_t pad) {
 	int result = 0;
 	mstate ms  = (mstate)msp;
-	if (ok_magic(ms)) {
-		PREACTION(ms);
-		result = sys_trim(ms, pad);
-		POSTACTION(ms);
-	} else {
-		USAGE_ERROR_ACTION(ms, ms);
-	}
+	ext_assert__ok_magic(ms);
+	PREACTION(ms);
+	result = sys_trim(ms, pad);
+	POSTACTION(ms);
 	return result;
 }
 
 #if !NO_MALLOC_STATS
 static void mspace_malloc_stats(mspace msp) {
 	mstate ms = (mstate)msp;
-	if (ok_magic(ms)) {
-		internal_malloc_stats(ms);
-	} else {
-		USAGE_ERROR_ACTION(ms, ms);
-	}
+	ext_assert__ok_magic(ms);
+	internal_malloc_stats(ms);
 }
 #endif /* NO_MALLOC_STATS */
 
 static size_t mspace_footprint(mspace msp) {
-	size_t result = 0;
-	mstate ms     = (mstate)msp;
-	if (ok_magic(ms)) {
-		result = ms->footprint;
-	} else {
-		USAGE_ERROR_ACTION(ms, ms);
-	}
-	return result;
+	mstate ms = (mstate)msp;
+	ext_assert__ok_magic(ms);
+	return ms->footprint;
 }
 
 static size_t mspace_max_footprint(mspace msp) {
-	size_t result = 0;
-	mstate ms     = (mstate)msp;
-	if (ok_magic(ms)) {
-		result = ms->max_footprint;
-	} else {
-		USAGE_ERROR_ACTION(ms, ms);
-	}
-	return result;
+	mstate ms = (mstate)msp;
+	ext_assert__ok_magic(ms);
+	return ms->max_footprint;
 }
 
 static size_t mspace_footprint_limit(mspace msp) {
-	size_t result = 0;
-	mstate ms     = (mstate)msp;
-	if (ok_magic(ms)) {
-		size_t maf = ms->footprint_limit;
-		result     = (maf == 0) ? SIZE_MAX : maf;
-	} else {
-		USAGE_ERROR_ACTION(ms, ms);
-	}
-	return result;
+	size_t maf;
+	mstate ms = (mstate)msp;
+	ext_assert__ok_magic(ms);
+	maf = ms->footprint_limit;
+	return (maf == 0) ? SIZE_MAX : maf;
 }
 
 static size_t mspace_set_footprint_limit(mspace msp, size_t bytes) {
 	size_t result = 0;
-	mstate ms     = (mstate)msp;
-	if (ok_magic(ms)) {
-		if (bytes == 0)
-			result = granularity_align(1); /* Use minimal size */
-		if (bytes == SIZE_MAX)
-			result = 0; /* disable */
-		else
-			result = granularity_align(bytes);
-		ms->footprint_limit = result;
-	} else {
-		USAGE_ERROR_ACTION(ms, ms);
-	}
+	mstate ms = (mstate)msp;
+	ext_assert__ok_magic(ms);
+	if (bytes == 0)
+		result = granularity_align(1); /* Use minimal size */
+	if (bytes == SIZE_MAX)
+		result = 0; /* disable */
+	else
+		result = granularity_align(bytes);
+	ms->footprint_limit = result;
 	return result;
 }
 
 #if !NO_MALLINFO
 static struct dlmalloc_mallinfo mspace_mallinfo(mspace msp) {
 	mstate ms = (mstate)msp;
-	if (!ok_magic(ms)) {
-		USAGE_ERROR_ACTION(ms, ms);
-	}
+	ext_assert__ok_magic(ms);
 	return internal_mallinfo(ms);
 }
 #endif /* NO_MALLINFO */
@@ -5437,10 +5367,7 @@ DeeHeap_GetRegionOf(void *ptr) {
 		} else {
 #if FOOTERS && !GM_ONLY
 			mstate fm = get_mstate_for(p);
-			if (!ok_magic(fm)) {
-				USAGE_ERROR_ACTION(fm, p);
-				return;
-			}
+			ext_assert__ok_magic(fm);
 #else /* FOOTERS && !GM_ONLY */
 #define fm gm
 #endif /* FOOTERS || GM_ONLY */
