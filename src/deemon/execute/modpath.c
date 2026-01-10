@@ -441,9 +441,9 @@ PRIVATE char const name_GetModuleInformation[] = "GetModuleInformation";
 PRIVATE LPGETMODULEINFORMATION DCALL get_GetModuleInformation(void) {
 	HMODULE hMod;
 	static WCHAR const wKernel32[] = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
-	static WCHAR const wPsapi[]    = { 'P', 'S', 'A', 'P', 'I', 0 };
+	static WCHAR const wPsapi[] = { 'P', 'S', 'A', 'P', 'I', 0 };
 	static WCHAR const wKernel32_dll[] = { 'K', 'e', 'r', 'n', 'e', 'l', '3', '2', '.', 'd', 'l', 'l', 0 };
-	static WCHAR const wPsapi_dll[]    = { 'P', 's', 'A', 'p', 'i', '.', 'd', 'l', 'l', 0 };
+	static WCHAR const wPsapi_dll[] = { 'P', 's', 'A', 'p', 'i', '.', 'd', 'l', 'l', 0 };
 	LPGETMODULEINFORMATION result = atomic_read(&pdyn_GetModuleInformation);
 	HMODULE hModule;
 	if (ITER_ISOK((uintptr_t)(Dee_funptr_t)result))

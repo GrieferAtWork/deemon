@@ -474,6 +474,12 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+frame_printrepr(Frame *__restrict self,
+                Dee_formatprinter_t printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "<Frame %k>", self);
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeCodeObject *DCALL
 frame_getddi(Frame *__restrict self,
              struct ddi_state *__restrict state,
@@ -1253,11 +1259,11 @@ PUBLIC DeeTypeObject DeeFrame_Type = {
 		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ DEFIMPL(&default__str__with__print),
-		/* .tp_repr = */ DEFIMPL(&object_repr),
-		/* .tp_bool = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
-		/* .tp_print = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&frame_print,
-		/* .tp_printrepr = */ DEFIMPL(&default__printrepr__with__repr),
+		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&frame_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&frame_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&frame_visit,
 	/* .tp_gc            = */ NULL,
