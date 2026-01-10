@@ -145,8 +145,10 @@ comerr_visit(DeeCompilerErrorObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 comerr_print(DeeCompilerErrorObject *__restrict self,
              Dee_formatprinter_t printer, void *arg) {
+#if 0 /* This breaks printing of compiler warnings */
 	if (self->e_msg)
 		return DeeObject_Print(self->e_msg, printer, arg);
+#endif
 	return DeeCompilerError_Print(Dee_AsObject(self), printer, arg);
 }
 
