@@ -5300,11 +5300,13 @@ handle_leak_lock_blocking:
 		/* See how "usable" compares to "n_bytes". Dependent on that,
 		 * we might be able to fulfill the request without blocking */
 		if (n_bytes <= usable) {
-			if (n_bytes == usable)
+			size_t unused = usable - n_bytes;
+			if (unused <= (usable / 256)) {
+				/* When very little memory is being free'd,
+				 * skip the call for the sake of performance */
 				return ptr;
-			return Dee_TryReallocInPlace(ptr, n_bytes);
-		}
-		if (usable >= sizeof(struct lfrelist_entry)/* && (n_bytes < 32 * sizeof(void *))*/) {
+			}
+		} else if (usable >= sizeof(struct lfrelist_entry)/* && (n_bytes < 32 * sizeof(void *))*/) {
 			/* Try to emulate as "malloc()+memcpy()+free()" (all of
 			 * which can be done without blocking at the "leaks" layer) */
 			void *new_block = dlmalloc(n_bytes);
