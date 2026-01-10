@@ -1106,10 +1106,10 @@ err:
 /* Pack the dec file into a format where it can easily be written to a file:
  * >> DeeDec_Ehdr *ehdr = DeeDecWriter_PackEhdr(&writer);
  * >> DeeFile_WriteAll(fp, ehdr, ehdr->e_typedata.td_reloc.er_offsetof_eof);
- * >> Dee_Free(e_offsetof_eof);
+ * >> DeeDec_Ehdr_Destroy(ehdr);
  *
  * The returned pointer should either:
- * - be free'd using `Dee_Free(return)'
+ * - be free'd using `DeeDec_Ehdr_Destroy(return)'
  * - be passed to `DeeDecWriter_PackModule()'
  *   to turn it into a `DeeModuleObject'
  *

@@ -27,9 +27,9 @@
 #include <stdint.h> /* uintX_t */
 
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-#include "serial.h"
 #include <hybrid/typecore.h>
 
+#include "serial.h"
 #include "types.h"
 
 #ifdef DEE_SOURCE
@@ -178,6 +178,9 @@ typedef int32_t Dee_dec_off32_t;
 typedef struct dec_rel Dec_Rel;
 typedef struct dec_rrel Dec_RRel;
 typedef struct dec_rrela Dec_RRela;
+#if 0 /* TODO */
+typedef struct dec_xrel Dec_XRel;
+#endif
 
 
 #define DeeDec_Ehdr_OFFSETOF__e_ident                                   0
@@ -225,6 +228,7 @@ typedef struct dec_rrela Dec_RRela;
 
 /* Main header for `.dec` files. For more details, see file ./dec.md */
 #define Dee_ALIGNOF_DEC_EHDR 8
+struct Dee_dec_depmod;
 typedef struct {
 	uint8_t               e_ident[DI_NIDENT]; /* [AT(0-3)] Identification bytes. (See `DI_*') */
 	uint8_t               e_mach;             /* [AT(4-4)] Machine identification (`Dee_DEC_MACH') */
@@ -246,7 +250,11 @@ typedef struct {
 			Dee_dec_addr32_t  er_offsetof_drrel;     /* [1..1] Offset to array of `Dec_RRel[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)&DeeModule_Deemon" */
 			Dee_dec_addr32_t  er_offsetof_drrela;    /* [1..1] Offset to array of `Dec_RRela[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)&DeeModule_Deemon" */
 			Dee_dec_addr32_t  er_offsetof_deps;      /* [1..1] Offset to array of `Dec_Dhdr[]' (terminated by a d_modspec.d_mod==NULL-entry) of other dependent deemon modules */
+#if 0 /* TODO */
+			Dee_dec_addr32_t  er_offsetof_xrel;      /* [0..1] Offset to array of `Dec_XRel[]' (terminated by a xr_addr==0-entry) of extended relocations */
+#else
 			Dee_dec_addr32_t  er_offsetof_files;     /* [0..1] Offset to array of `Dec_Dstr[]' (terminated by a ds_length==0-entry, each aligned to Dee_ALIGNOF_DEC_DSTR) of extra filenames relative to the directory containing the .dec-file. If any of these files is newer than `e_build_timestamp', don't load dec file */
+#endif
 		}                 td_reloc;                  /* [valid_if(e_type == Dee_DEC_TYPE_RELOC)] */
 
 		struct {
@@ -259,8 +267,8 @@ typedef struct {
 #if __SIZEOF_SIZE_T__ == 4 && __SIZEOF_POINTER__ == 4
 			size_t                _ei_pad[2];   /* So "ei_offsetof_gchead" has the same offset as "er_offsetof_gchead" */
 #endif /* __SIZEOF_SIZE_T__ == 4 && __SIZEOF_POINTER__ == 4 */
-			size_t                 ei_offsetof_gchead; /* [1..1] Offset to first `struct gc_head_link' */
-			size_t                 ei_offsetof_gctail; /* [1..1] Offset to last `struct gc_head_link' */
+			Dee_seraddr_t          ei_offsetof_gchead; /* [1..1] Offset to first `struct gc_head_link' */
+			Dee_seraddr_t          ei_offsetof_gctail; /* [1..1] Offset to last `struct gc_head_link' */
 		}                 td_image;             /* [valid_if(e_type == Dee_DEC_TYPE_IMAGE)] */
 
 	}                     e_typedata;         /* Data dependent on `e_type' */
@@ -302,6 +310,41 @@ struct dec_rrela {
 	Dee_dec_off32_t  r_offs; /* Offset added to resulting pointer to get to base of object that must be incref'd */
 };
 
+#if 0 /* TODO */
+#define Dec_XREL_R_NONE    0 /* End-of-extended-relocation-table (`xr_addr' is unused and not necessarily allocated) */
+#define Dec_XREL_R_FILE    1 /* "xr_addr" points at a `Dec_Dstr' which is a relative (to the dir containing
+                              * the .dec file), or absolute filename of a file that was `#include'ed by the
+                              * associated ".dee" file, and similarly to said ".dee" file, must not be newer
+                              * than `er_build_timestamp' */
+#define Dec_XREL_R_WEAKREF 2 /* "xr_addr" points at a `struct Dee_weakref' currently initialized as:
+                              * - wr_pself: NULL
+                              * - wr_next:  NULL
+                              * - wr_obj:   &SOME_OBJECT
+                              * - wr_del:   <IGNORED>
+                              *
+                              * This relocation will now try to initialize "wr_pself" and "wr_next" such that
+                              * they become part of "SOME_OBJECT" (which should have been initialized by some
+                              * other relocation against a weakref-able object from some dependent module).
+                              * - If it turns out that "SOME_OBJECT" has already been destroyed (which can be
+                              *   detected by its "ob_refcnt" already being "0"), nothing is done, and `wr_obj'
+                              *   is set to NULL.
+                              *
+                              * Implementation note: the actual inserting into the "ob_weakrefs" of "wr_obj"
+                              * must **ONLY** happen after/during `DeeDec_Track()'. If it were done before
+                              * then, parts of the incomplete dec file would already be visible to objects
+                              * outside the dec file (which mustn't happen since dec files must become visible
+                              * all-at-once, and not one-piece-at-a-time)
+                              */
+#define Dec_XREL_R_NUM     3 /* # of valid extended relocations (values >= this must be interpreted as a corrupted dec file) */
+
+
+#define Dee_ALIGNOF_DEC_XREL 4
+struct dec_xrel {
+	Dee_dec_addr32_t xr_type; /* Extended relocation type (one of `Dec_XREL_R_*') */
+	Dee_dec_addr32_t xr_addr; /* Address of relocation or payload (what's at that address depends on `xr_type') */
+};
+#endif
+
 #define Dee_ALIGNOF_DEC_DHDR 8
 typedef struct {
 	union {
@@ -313,6 +356,8 @@ typedef struct {
 	}                d_modspec;
 	Dee_dec_addr32_t d_offsetof_rrel;  /* [1..1] Offset to array of `Dec_RRel[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)d_mod" */
 	Dee_dec_addr32_t d_offsetof_rrela; /* [1..1] Offset to array of `Dec_RRela[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)d_mod" */
+	/* TODO: Dec_XRel Extended relocations against this module (for stuff like "Dee_weakref")
+	 * Though, maybe just have a single "Dec_XRel" array per dec file... */
 	uint64_t         d_buildid[2];     /* Expected build ID for this dependency */
 } Dec_Dhdr;
 
@@ -482,7 +527,8 @@ DeeDecWriter_Init(DeeDecWriter *__restrict self, unsigned int flags);
 #endif /* !__INTELLISENSE__ */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
 _DeeDecWriter_Init(DeeDecWriter *__restrict self);
-DFUNDEF NONNULL((1)) void DCALL DeeDecWriter_Fini(DeeDecWriter *__restrict self);
+DFUNDEF NONNULL((1)) void DCALL
+DeeDecWriter_Fini(DeeDecWriter *__restrict self);
 
 
 /* Pack the dec file into a format where it can easily be written to a file:

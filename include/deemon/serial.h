@@ -219,6 +219,25 @@ struct Dee_serial_type {
 	WUNUSED_T NONNULL_T((1, 3)) int
 	(DCALL *set_putpointer)(DeeSerial *__restrict self, Dee_seraddr_t addrof_pointer,
 	                        void const *__restrict pointer);
+
+#if 0 /* TODO */
+	/* Serialize initialization of a `struct Dee_weakref *addrof_weakref' to `ob':
+	 * - The caller must ensure that `ob' support weak referencing.
+	 * - If "ob" is statically allocated within a DEE or DEX module,
+	 *   "addrof_weakref" will be injected at runtime.
+	 * - If "ob" is not statically allocated, and if "ob" has already
+	 *   been-, or will be serialized, then the weakref will point at
+	 *   the serialized instance of "ob"
+	 * - else: if "ob" is neither static, or ends up serialized within
+	 *   the same "DeeSerial *self", then "addrof_weakref" will be set-
+	 *   up as an empty (NULL) weakref
+	 */
+	WUNUSED_T NONNULL_T((1, 3)) int
+	(DCALL *set_putweakref_raw)(DeeSerial *__restrict self,
+	                            Dee_seraddr_t addrof_weakref,
+	                            DeeObject *__restrict ob,
+	                            Dee_weakref_callback_t del);
+#endif
 };
 
 #define Dee_SERIAL_HEAD \
