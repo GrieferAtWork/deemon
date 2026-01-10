@@ -143,7 +143,12 @@ DECL_BEGIN
 #define DL_DEBUG_INTERNAL 0
 #endif
 
-#define FOOTERS              DL_DEBUG_EXTERNAL
+/* Always keep (unnecessary) footers disabled -- they don't really improve safety when on,
+ * since their presence causes allocations to require an additional word of memory, there
+ * is a chance that alignment requirements ceil this to enough memory such that buffer-
+ * overruns don't end up being detected. */
+#define FOOTERS 0
+
 #define INSECURE             (!DL_DEBUG_EXTERNAL)
 #define LEAK_DETECTION       DL_DEBUG_EXTERNAL
 #define DETECT_USE_AFTER_FREE DL_DEBUG_EXTERNAL
@@ -1411,7 +1416,7 @@ static size_t traverse_and_check(PARAM_mstate_m);
 #define mark_inuse_foot(M, p, s) \
 	(((mchunkptr)((char *)(p) + (s)))->prev_foot = mparams.magic)
 #define get_mstate_for(p)
-#else
+#else /* GM_ONLY */
 #define mark_inuse_foot(M, p, s) \
 	(((mchunkptr)((char *)(p) + (s)))->prev_foot = ((size_t)(M) ^ mparams.magic))
 #define get_mstate_for(p)                   \
@@ -1419,7 +1424,7 @@ static size_t traverse_and_check(PARAM_mstate_m);
 	                       (chunksize(p)))) \
 	          ->prev_foot ^                 \
 	          mparams.magic))
-#endif
+#endif /* !GM_ONLY */
 
 
 #define set_inuse(M, p, s)                                     \
@@ -1437,6 +1442,66 @@ static size_t traverse_and_check(PARAM_mstate_m);
 	 mark_inuse_foot(M, p, s))
 
 #endif /* !FOOTERS */
+
+#if FLAG4_BIT_INDICATES_HEAP_REGION
+#define do_validate_flag4_footer(p)                                        \
+	do {                                                                   \
+		size_t _ps = chunksize(p);                                         \
+		size_t *_pval = &chunk_plus_offset(p, _ps)->prev_foot;             \
+		ASSERTF(*_pval == _ps,                                             \
+		        "flag4 mchunk footer at %p of chunk %p-%p has unexpected " \
+		        "value %#" PRFxSIZ " when %#" PRFxSIZ " was expected",     \
+		        _pval, p, (char *)(p) + _ps - 1, *_pval, _ps);             \
+	}	__WHILE0
+#else /* FLAG4_BIT_INDICATES_HEAP_REGION */
+#define do_validate_flag4_footer_IS_NOOP
+#define do_validate_flag4_footer(p) (void)0
+#endif /* !FLAG4_BIT_INDICATES_HEAP_REGION */
+#if FOOTERS && GM_ONLY
+#define do_validate_inuse_footer(p)                                        \
+	do {                                                                   \
+		size_t _ps = chunksize(p);                                         \
+		size_t *_pval = &chunk_plus_offset(p, _ps)->prev_foot;             \
+		ASSERTF(*_pval == mparams.magic,                                   \
+		        "inuse mchunk footer at %p of chunk %p-%p has unexpected " \
+		        "value %#" PRFxSIZ " when %#" PRFxSIZ " was expected",     \
+		        _pval, p, (char *)(p) + _ps - 1, *_pval, mparams.magic);   \
+	}	__WHILE0
+#else /* FOOTERS && GM_ONLY */
+#define do_validate_inuse_footer_IS_NOOP
+#define do_validate_inuse_footer(p) (void)0
+#endif /* !FOOTERS || !GM_ONLY */
+
+#if !defined(do_validate_flag4_footer_IS_NOOP) && !defined(do_validate_inuse_footer_IS_NOOP)
+#define do_validate_footer(p)            \
+	do {                                 \
+		if (!is_mmapped(p)) {            \
+			do_validate_inuse_footer(p); \
+		} else if (flag4inuse(p)) {      \
+			do_validate_flag4_footer(p); \
+		}                                \
+	}	__WHILE0
+#elif !defined(do_validate_flag4_footer_IS_NOOP)
+#define do_validate_footer(p)            \
+	do {                                 \
+		if (flag4inuse(p))               \
+			do_validate_flag4_footer(p); \
+	}	__WHILE0
+#elif !defined(do_validate_inuse_footer_IS_NOOP)
+#define do_validate_footer(p)            \
+	do {                                 \
+		if (!is_mmapped(p))              \
+			do_validate_inuse_footer(p); \
+	}	__WHILE0
+#else /* ... */
+#define do_validate_footer(p) (void)0
+#endif /* !... */
+#if DL_DEBUG_EXTERNAL
+#define validate_footer(p) do_validate_footer(p)
+#else /* DL_DEBUG_EXTERNAL */
+#define validate_footer(p) (void)0
+#endif /* !DL_DEBUG_EXTERNAL */
+
 
 /* ---------------------------- setting mparams -------------------------- */
 
@@ -3247,6 +3312,7 @@ PUBLIC void (DCALL Dee_Free)(void *mem)
 #else /* FOOTERS && !GM_ONLY */
 #define fm gm
 #endif /* FOOTERS || GM_ONLY */
+		validate_footer(p);
 
 #ifndef DL_DEBUG_MEMSET_FREE
 		/* No debug-memset enabled */
@@ -3595,7 +3661,7 @@ static mchunkptr try_realloc_chunk(PARAM_mstate_m_ mchunkptr p, size_t nb,
 			size_t rsize = oldsize - nb;
 			if (rsize >= MIN_CHUNK_SIZE) { /* split off remainder */
 				mchunkptr r = chunk_plus_offset(p, nb);
-				dl_setfree_data((char *)r + TWO_SIZE_T_SIZES, rsize - TWO_SIZE_T_SIZES);
+				dl_setfree_data((char *)r + TWO_SIZE_T_SIZES, rsize - CHUNK_OVERHEAD);
 				set_inuse(m, p, nb);
 				set_inuse(m, r, rsize);
 				dispose_chunk(ARG_mstate_m_ r, rsize);
@@ -3711,7 +3777,7 @@ static void *internal_memalign(PARAM_mstate_m_ size_t alignment, size_t bytes) {
 					newp->head      = newsize;
 				} else { /* Otherwise, give back leader, use the rest */
 					dl_setfree_data_untested((char *)p + TWO_SIZE_T_SIZES,
-					                         leadsize - TWO_SIZE_T_SIZES);
+					                         leadsize - CHUNK_OVERHEAD);
 					set_inuse(m, newp, newsize);
 					set_inuse(m, p, leadsize);
 					dispose_chunk(ARG_mstate_m_ p, leadsize);
@@ -3726,7 +3792,7 @@ static void *internal_memalign(PARAM_mstate_m_ size_t alignment, size_t bytes) {
 					size_t remainder_size = size - nb;
 					mchunkptr remainder   = chunk_plus_offset(p, nb);
 					dl_setfree_data_untested((char *)remainder + TWO_SIZE_T_SIZES,
-					                         remainder_size - TWO_SIZE_T_SIZES);
+					                         remainder_size - CHUNK_OVERHEAD);
 					set_inuse(m, p, nb);
 					set_inuse(m, remainder, remainder_size);
 					dispose_chunk(ARG_mstate_m_ remainder, remainder_size);
@@ -3993,6 +4059,7 @@ PUBLIC WUNUSED void *(DCALL Dee_TryRealloc)(void *oldmem, size_t bytes)
 			return 0;
 		}
 #endif /* FOOTERS */
+		validate_footer(oldp);
 		if (!PREACTION(m)) {
 			mchunkptr newp = try_realloc_chunk(ARG_mstate_m_ oldp, nb, 1);
 			POSTACTION(m);
@@ -5233,11 +5300,11 @@ handle_leak_lock_blocking:
 		/* See how "usable" compares to "n_bytes". Dependent on that,
 		 * we might be able to fulfill the request without blocking */
 		if (n_bytes <= usable) {
-			size_t unused = usable - n_bytes;
-			if (unused < (16 * sizeof(void *)))
-				return ptr; /* Don't bother reclaiming tiny amounts of memory */
+			if (n_bytes == usable)
+				return ptr;
+			return Dee_TryReallocInPlace(ptr, n_bytes);
 		}
-		if (usable >= sizeof(struct lfrelist_entry) && (n_bytes < 32 * sizeof(void *))) {
+		if (usable >= sizeof(struct lfrelist_entry)/* && (n_bytes < 32 * sizeof(void *))*/) {
 			/* Try to emulate as "malloc()+memcpy()+free()" (all of
 			 * which can be done without blocking at the "leaks" layer) */
 			void *new_block = dlmalloc(n_bytes);
