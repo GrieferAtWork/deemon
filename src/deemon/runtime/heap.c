@@ -212,6 +212,15 @@ DECL_BEGIN
 #define M_GRANULARITY    Dee_HEAP_M_GRANULARITY
 #define M_MMAP_THRESHOLD Dee_HEAP_M_MMAP_THRESHOLD
 
+#undef ext_assert
+#if DL_DEBUG_EXTERNAL
+#define ext_assert Dee_ASSERT
+#elif !defined(__NO_builtin_assume)
+#define ext_assert __builtin_assume
+#else /* ... */
+#define ext_assert(expr) (void)0
+#endif
+
 #undef dl_assert
 #if DL_DEBUG_INTERNAL
 #define dl_assert Dee_ASSERT
@@ -302,10 +311,8 @@ DECL_BEGIN
 #endif /* !HAVE_MMAP */
 
 #if DL_DEBUG_EXTERNAL
-#define CORRUPTION_ERROR_ACTION(m) Dee_XFatal()
 #define USAGE_ERROR_ACTION(m, p)   Dee_XFatal()
 #else /* DL_DEBUG_EXTERNAL */
-#define CORRUPTION_ERROR_ACTION(m) __builtin_unreachable()
 #define USAGE_ERROR_ACTION(m, p)   __builtin_unreachable()
 #endif /* !DL_DEBUG_EXTERNAL */
 
@@ -1180,25 +1187,13 @@ again:
 #endif /* !USE_PENDING_FREE_LIST */
 
 
-/*
-  CORRUPTION_ERROR_ACTION is triggered upon detected bad addresses.
-  USAGE_ERROR_ACTION is triggered on detected bad frees and
-  reallocs. The argument p is an address that might have triggered the
-  fault. It is ignored by the two predefined actions, but might be
-  useful in custom actions that try to help diagnose errors.
-*/
-
 #if PROCEED_ON_ERROR
 /* A count of the number of corruption errors causing resets */
 int malloc_corruption_error_count;
 /* default corruption action */
 static void reset_on_error(PARAM_mstate_m);
-#define CORRUPTION_ERROR_ACTION(m) reset_on_error(m)
 #define USAGE_ERROR_ACTION(m, p)
 #else /* PROCEED_ON_ERROR */
-#ifndef CORRUPTION_ERROR_ACTION
-#define CORRUPTION_ERROR_ACTION(m) ABORT
-#endif /* CORRUPTION_ERROR_ACTION */
 #ifndef USAGE_ERROR_ACTION
 #define USAGE_ERROR_ACTION(m, p) ABORT
 #endif /* USAGE_ERROR_ACTION */
@@ -1373,6 +1368,11 @@ static size_t traverse_and_check(PARAM_mstate_m);
 #define ok_inuse(p)      (1)
 #define ok_pinuse(p)     (1)
 #endif /* !INSECURE */
+#define ext_assert__ok_address(M, a) ext_assert(ok_address(M, a))
+#define ext_assert__ok_next(p, n)    ext_assert(ok_next(p, n))
+#define ext_assert__ok_inuse(p)      ext_assert(ok_inuse(p))
+#define ext_assert__ok_pinuse(p)     ext_assert(ok_pinuse(p))
+
 
 #if (FOOTERS && !INSECURE)
 /* Check if (alleged) mstate m has expected magic field */
@@ -1380,12 +1380,6 @@ static size_t traverse_and_check(PARAM_mstate_m);
 #else /* (FOOTERS && !INSECURE) */
 #define ok_magic(M) (1)
 #endif /* (FOOTERS && !INSECURE) */
-
-#if !INSECURE
-#define RTCHECK(e) __builtin_expect(e, 1)
-#else /* !INSECURE */
-#define RTCHECK(e) (1)
-#endif /* !INSECURE */
 
 /* macros to set up inuse chunks with or without footers */
 
@@ -2026,68 +2020,62 @@ static void internal_malloc_stats(PARAM_mstate_m) {
 */
 
 /* Link a free chunk into a smallbin  */
-#define insert_small_chunk(M, P, S)             \
-	{                                           \
-		bindex_t I  = small_index(S);           \
-		mchunkptr B = smallbin_at(M, I);        \
-		mchunkptr F = B;                        \
-		dl_assert(S >= MIN_CHUNK_SIZE);         \
-		if (!smallmap_is_marked(M, I))          \
-			mark_smallmap(M, I);                \
-		else if (RTCHECK(ok_address(M, B->fd))) \
-			F = B->fd;                          \
-		else {                                  \
-			CORRUPTION_ERROR_ACTION(M);         \
-		}                                       \
-		B->fd = P;                              \
-		F->bk = P;                              \
-		P->fd = F;                              \
-		P->bk = B;                              \
+#define insert_small_chunk(M, P, S)           \
+	{                                         \
+		bindex_t I  = small_index(S);         \
+		mchunkptr B = smallbin_at(M, I);      \
+		mchunkptr F = B;                      \
+		dl_assert(S >= MIN_CHUNK_SIZE);       \
+		if (!smallmap_is_marked(M, I))        \
+			mark_smallmap(M, I);              \
+		else {                                \
+			ext_assert__ok_address(M, B->fd); \
+			F = B->fd;                        \
+		}                                     \
+		B->fd = P;                            \
+		F->bk = P;                            \
+		P->fd = F;                            \
+		P->bk = B;                            \
 	}
 
 /* Unlink a chunk from a smallbin  */
-#define unlink_small_chunk(M, P, S)                                                \
-	{                                                                              \
-		mchunkptr F = P->fd;                                                       \
-		mchunkptr B = P->bk;                                                       \
-		bindex_t I  = small_index(S);                                              \
-		dl_assert(P != B);                                                         \
-		dl_assert(P != F);                                                         \
-		dl_assert(chunksize(P) == small_index2size(I));                            \
-		if (RTCHECK(F == smallbin_at(M, I) || (ok_address(M, F) && F->bk == P))) { \
-			if (B == F) {                                                          \
-				clear_smallmap(M, I);                                              \
-			} else if (RTCHECK(B == smallbin_at(M, I) ||                           \
-			                   (ok_address(M, B) && B->fd == P))) {                \
-				F->bk = B;                                                         \
-				B->fd = F;                                                         \
-			} else {                                                               \
-				CORRUPTION_ERROR_ACTION(M);                                        \
-			}                                                                      \
-		} else {                                                                   \
-			CORRUPTION_ERROR_ACTION(M);                                            \
-		}                                                                          \
-		dl_setfree_word(P->fd, struct malloc_chunk *);                             \
-		dl_setfree_word(P->bk, struct malloc_chunk *);                             \
+#define unlink_small_chunk(M, P, S)                                                 \
+	{                                                                               \
+		mchunkptr F = P->fd;                                                        \
+		mchunkptr B = P->bk;                                                        \
+		bindex_t I  = small_index(S);                                               \
+		dl_assert(P != B);                                                          \
+		dl_assert(P != F);                                                          \
+		dl_assert(chunksize(P) == small_index2size(I));                             \
+		ext_assert(F == smallbin_at(M, I) || (ok_address(M, F) && F->bk == P));     \
+		if (B == F) {                                                               \
+			clear_smallmap(M, I);                                                   \
+		} else {                                                                    \
+			ext_assert(B == smallbin_at(M, I) || (ok_address(M, B) && B->fd == P)); \
+			F->bk = B;                                                              \
+			B->fd = F;                                                              \
+		}                                                                           \
+		dl_setfree_word(P->fd, struct malloc_chunk *);                              \
+		dl_setfree_word(P->bk, struct malloc_chunk *);                              \
 	}
 
 /* Unlink the first chunk from a smallbin */
-#define unlink_first_small_chunk(M, B, P, I)                  \
-	{                                                         \
-		mchunkptr F = P->fd;                                  \
-		dl_assert(P != B);                                    \
-		dl_assert(P != F);                                    \
-		dl_assert(chunksize(P) == small_index2size(I));       \
-		if (B == F) {                                         \
-			clear_smallmap(M, I);                             \
-		} else if (RTCHECK(ok_address(M, F) && F->bk == P)) { \
-			F->bk = B;                                        \
-			B->fd = F;                                        \
-		} else {                                              \
-			CORRUPTION_ERROR_ACTION(M);                       \
-		}                                                     \
-		dl_setfree_word(P->fd, struct malloc_chunk *);        \
-		dl_setfree_word(P->bk, struct malloc_chunk *);        \
+#define unlink_first_small_chunk(M, B, P, I)            \
+	{                                                   \
+		mchunkptr F = P->fd;                            \
+		dl_assert(P != B);                              \
+		dl_assert(P != F);                              \
+		dl_assert(chunksize(P) == small_index2size(I)); \
+		if (B == F) {                                   \
+			clear_smallmap(M, I);                       \
+		} else {                                        \
+			ext_assert__ok_address(M, F);               \
+			ext_assert(F->bk == P);                     \
+			F->bk = B;                                  \
+			B->fd = F;                                  \
+		}                                               \
+		dl_setfree_word(P->fd, struct malloc_chunk *);  \
+		dl_setfree_word(P->bk, struct malloc_chunk *);  \
 	}
 
 /* Replace dv node, binning the old one */
@@ -2129,27 +2117,22 @@ static void internal_malloc_stats(PARAM_mstate_m) {
 					K <<= 1;                                                              \
 					if (*C != 0)                                                          \
 						T = *C;                                                           \
-					else if (RTCHECK(ok_address(M, C))) {                                 \
+					else {                                                                \
+						ext_assert__ok_address(M, C);                                     \
 						*C        = X;                                                    \
 						X->parent = T;                                                    \
 						X->fd = X->bk = X;                                                \
 						break;                                                            \
-					} else {                                                              \
-						CORRUPTION_ERROR_ACTION(M);                                       \
-						break;                                                            \
 					}                                                                     \
 				} else {                                                                  \
 					tchunkptr F = T->fd;                                                  \
-					if (RTCHECK(ok_address(M, T) && ok_address(M, F))) {                  \
-						T->fd = F->bk = X;                                                \
-						X->fd         = F;                                                \
-						X->bk         = T;                                                \
-						X->parent     = 0;                                                \
-						break;                                                            \
-					} else {                                                              \
-						CORRUPTION_ERROR_ACTION(M);                                       \
-						break;                                                            \
-					}                                                                     \
+					ext_assert__ok_address(M, T);                                         \
+					ext_assert__ok_address(M, F);                                         \
+					T->fd = F->bk = X;                                                    \
+					X->fd         = F;                                                    \
+					X->bk         = T;                                                    \
+					X->parent     = 0;                                                    \
+					break;                                                                \
 				}                                                                         \
 			}                                                                             \
 		}                                                                                 \
@@ -2172,75 +2155,65 @@ static void internal_malloc_stats(PARAM_mstate_m) {
      x's parent and children to x's replacement (or null if none).
 */
 
-#define unlink_large_chunk(M, X)                                         \
-	{                                                                    \
-		tchunkptr XP = X->parent;                                        \
-		tchunkptr R;                                                     \
-		if (X->bk != X) {                                                \
-			tchunkptr F = X->fd;                                         \
-			R           = X->bk;                                         \
-			if (RTCHECK(ok_address(M, F) && F->bk == X && R->fd == X)) { \
-				F->bk = R;                                               \
-				R->fd = F;                                               \
-			} else {                                                     \
-				CORRUPTION_ERROR_ACTION(M);                              \
-			}                                                            \
-		} else {                                                         \
-			tchunkptr *RP;                                               \
-			if (((R = *(RP = &(X->child[1]))) != 0) ||                   \
-			    ((R = *(RP = &(X->child[0]))) != 0)) {                   \
-				tchunkptr *CP;                                           \
-				while ((*(CP = &(R->child[1])) != 0) ||                  \
-				       (*(CP = &(R->child[0])) != 0)) {                  \
-					R = *(RP = CP);                                      \
-				}                                                        \
-				if (RTCHECK(ok_address(M, RP)))                          \
-					*RP = 0;                                             \
-				else {                                                   \
-					CORRUPTION_ERROR_ACTION(M);                          \
-				}                                                        \
-			}                                                            \
-		}                                                                \
-		if (XP != 0) {                                                   \
-			tbinptr *H = treebin_at(M, X->index);                        \
-			if (X == *H) {                                               \
-				if ((*H = R) == 0)                                       \
-					clear_treemap(M, X->index);                          \
-			} else if (RTCHECK(ok_address(M, XP))) {                     \
-				if (XP->child[0] == X)                                   \
-					XP->child[0] = R;                                    \
-				else                                                     \
-					XP->child[1] = R;                                    \
-			} else                                                       \
-				CORRUPTION_ERROR_ACTION(M);                              \
-			if (R != 0) {                                                \
-				if (RTCHECK(ok_address(M, R))) {                         \
-					tchunkptr C0, C1;                                    \
-					R->parent = XP;                                      \
-					if ((C0 = X->child[0]) != 0) {                       \
-						if (RTCHECK(ok_address(M, C0))) {                \
-							R->child[0] = C0;                            \
-							C0->parent  = R;                             \
-						} else                                           \
-							CORRUPTION_ERROR_ACTION(M);                  \
-					}                                                    \
-					if ((C1 = X->child[1]) != 0) {                       \
-						if (RTCHECK(ok_address(M, C1))) {                \
-							R->child[1] = C1;                            \
-							C1->parent  = R;                             \
-						} else                                           \
-							CORRUPTION_ERROR_ACTION(M);                  \
-					}                                                    \
-				} else                                                   \
-					CORRUPTION_ERROR_ACTION(M);                          \
-			}                                                            \
-		}                                                                \
-		dl_setfree_word(X->fd, struct malloc_tree_chunk *);              \
-		dl_setfree_word(X->bk, struct malloc_tree_chunk *);              \
-		dl_setfree_word(X->child[0], struct malloc_tree_chunk *);        \
-		dl_setfree_word(X->child[1], struct malloc_tree_chunk *);        \
-		dl_setfree_word(X->parent, struct malloc_tree_chunk *);          \
-		dl_setfree_word(X->index_word, size_t);                          \
+#define unlink_large_chunk(M, X)                                  \
+	{                                                             \
+		tchunkptr XP = X->parent;                                 \
+		tchunkptr R;                                              \
+		if (X->bk != X) {                                         \
+			tchunkptr F = X->fd;                                  \
+			R           = X->bk;                                  \
+			ext_assert__ok_address(M, F);                         \
+			ext_assert(F->bk == X);                               \
+			ext_assert(R->fd == X);                               \
+			F->bk = R;                                            \
+			R->fd = F;                                            \
+		} else {                                                  \
+			tchunkptr *RP;                                        \
+			if (((R = *(RP = &(X->child[1]))) != 0) ||            \
+			    ((R = *(RP = &(X->child[0]))) != 0)) {            \
+				tchunkptr *CP;                                    \
+				while ((*(CP = &(R->child[1])) != 0) ||           \
+				       (*(CP = &(R->child[0])) != 0)) {           \
+					R = *(RP = CP);                               \
+				}                                                 \
+				ext_assert__ok_address(M, RP);                    \
+				*RP = 0;                                          \
+			}                                                     \
+		}                                                         \
+		if (XP != 0) {                                            \
+			tbinptr *H = treebin_at(M, X->index);                 \
+			if (X == *H) {                                        \
+				if ((*H = R) == 0)                                \
+					clear_treemap(M, X->index);                   \
+			} else {                                              \
+				ext_assert__ok_address(M, XP);                    \
+				if (XP->child[0] == X)                            \
+					XP->child[0] = R;                             \
+				else                                              \
+					XP->child[1] = R;                             \
+			}                                                     \
+			if (R != 0) {                                         \
+				tchunkptr C0, C1;                                 \
+				ext_assert__ok_address(M, R);                     \
+				R->parent = XP;                                   \
+				if ((C0 = X->child[0]) != 0) {                    \
+					ext_assert__ok_address(M, C0);                \
+					R->child[0] = C0;                             \
+					C0->parent  = R;                              \
+				}                                                 \
+				if ((C1 = X->child[1]) != 0) {                    \
+					ext_assert__ok_address(M, C1);                \
+					R->child[1] = C1;                             \
+					C1->parent  = R;                              \
+				}                                                 \
+			}                                                     \
+		}                                                         \
+		dl_setfree_word(X->fd, struct malloc_tree_chunk *);       \
+		dl_setfree_word(X->bk, struct malloc_tree_chunk *);       \
+		dl_setfree_word(X->child[0], struct malloc_tree_chunk *); \
+		dl_setfree_word(X->child[1], struct malloc_tree_chunk *); \
+		dl_setfree_word(X->parent, struct malloc_tree_chunk *);   \
+		dl_setfree_word(X->index_word, size_t);                   \
 	}
 
 /* Relays to large vs small bin operations */
@@ -2880,58 +2853,54 @@ static void dispose_chunk(PARAM_mstate_m_ mchunkptr p, size_t psize) {
 		dl_setfree_word(p->prev_foot, size_t);
 		dl_setfree_word(p->head, size_t);
 		p = prev;
-		if (RTCHECK(ok_address(m, prev))) { /* consolidate backward */
-			if (p != mstate_dv(m)) {
-				unlink_chunk(m, p, prevsize);
-			} else if ((next->head & INUSE_BITS) == INUSE_BITS) {
-				mstate_dvsize(m) = psize;
-				set_free_with_pinuse(p, psize, next);
-				return;
-			}
-		} else {
-			CORRUPTION_ERROR_ACTION(m);
+		ext_assert__ok_address(m, prev);
+		/* consolidate backward */
+		if (p != mstate_dv(m)) {
+			unlink_chunk(m, p, prevsize);
+		} else if ((next->head & INUSE_BITS) == INUSE_BITS) {
+			mstate_dvsize(m) = psize;
+			set_free_with_pinuse(p, psize, next);
 			return;
 		}
 	}
-	if (RTCHECK(ok_address(m, next))) {
-		if (!cinuse(next)) { /* consolidate forward */
-			if (next == mstate_top(m)) {
-				size_t tsize  = mstate_topsize(m) += psize;
-				mstate_top(m) = p;
-				p->head       = tsize | PINUSE_BIT;
-				dl_setfree_word(next->prev_foot, size_t); 
-				dl_setfree_word(next->head, size_t); 
-				if (p == mstate_dv(m)) {
-					mstate_dv(m)     = 0;
-					mstate_dvsize(m) = 0;
-				}
-				return;
-			} else if (next == mstate_dv(m)) {
-				size_t dsize = mstate_dvsize(m) += psize;
-				mstate_dv(m) = p;
-				dl_setfree_word(next->prev_foot, size_t); 
-				dl_setfree_word(next->head, size_t); 
-				set_size_and_pinuse_of_free_chunk(p, dsize);
-				return;
-			} else {
-				size_t nsize = chunksize(next);
-				psize += nsize;
-				unlink_chunk(m, next, nsize);
-				dl_setfree_word(next->prev_foot, size_t); 
-				dl_setfree_word(next->head, size_t); 
-				set_size_and_pinuse_of_free_chunk(p, psize);
-				if (p == mstate_dv(m)) {
-					mstate_dvsize(m) = psize;
-					return;
-				}
+
+	ext_assert__ok_address(m, next);
+	if (!cinuse(next)) {
+		/* consolidate forward */
+		if (next == mstate_top(m)) {
+			size_t tsize  = mstate_topsize(m) += psize;
+			mstate_top(m) = p;
+			p->head       = tsize | PINUSE_BIT;
+			dl_setfree_word(next->prev_foot, size_t); 
+			dl_setfree_word(next->head, size_t); 
+			if (p == mstate_dv(m)) {
+				mstate_dv(m)     = 0;
+				mstate_dvsize(m) = 0;
 			}
+			return;
+		} else if (next == mstate_dv(m)) {
+			size_t dsize = mstate_dvsize(m) += psize;
+			mstate_dv(m) = p;
+			dl_setfree_word(next->prev_foot, size_t); 
+			dl_setfree_word(next->head, size_t); 
+			set_size_and_pinuse_of_free_chunk(p, dsize);
+			return;
 		} else {
-			set_free_with_pinuse(p, psize, next);
+			size_t nsize = chunksize(next);
+			psize += nsize;
+			unlink_chunk(m, next, nsize);
+			dl_setfree_word(next->prev_foot, size_t); 
+			dl_setfree_word(next->head, size_t); 
+			set_size_and_pinuse_of_free_chunk(p, psize);
+			if (p == mstate_dv(m)) {
+				mstate_dvsize(m) = psize;
+				return;
+			}
 		}
-		insert_chunk(m, p, psize);
 	} else {
-		CORRUPTION_ERROR_ACTION(m);
+		set_free_with_pinuse(p, psize, next);
 	}
+	insert_chunk(m, p, psize);
 }
 
 /* ---------------------------- malloc --------------------------- */
@@ -2987,23 +2956,21 @@ static void *tmalloc_large(PARAM_mstate_m_ size_t nb) {
 
 	/*  If dv is a better fit, return 0 so malloc will use it */
 	if (v != 0 && rsize < (size_t)(mstate_dvsize(m) - nb)) {
-		if (RTCHECK(ok_address(m, v))) { /* split */
-			mchunkptr r = chunk_plus_offset(v, nb);
-			dl_assert(chunksize(v) == rsize + nb);
-			if (RTCHECK(ok_next(v, r))) {
-				unlink_large_chunk(m, v);
-				if (rsize < MIN_CHUNK_SIZE)
-					set_inuse_and_pinuse(m, v, (rsize + nb));
-				else {
-					set_size_and_pinuse_of_inuse_chunk(m, v, nb);
-					set_size_and_pinuse_of_free_chunk(r, rsize);
-					insert_chunk(m, r, rsize);
-				}
-				check_memset_use_after_free(m, (mchunkptr)v);
-				return chunk2mem(v);
-			}
+		mchunkptr r;
+		ext_assert__ok_address(m, v);
+		r = chunk_plus_offset(v, nb); /* split */
+		dl_assert(chunksize(v) == rsize + nb);
+		ext_assert__ok_next(v, r);
+		unlink_large_chunk(m, v);
+		if (rsize < MIN_CHUNK_SIZE)
+			set_inuse_and_pinuse(m, v, (rsize + nb));
+		else {
+			set_size_and_pinuse_of_inuse_chunk(m, v, nb);
+			set_size_and_pinuse_of_free_chunk(r, rsize);
+			insert_chunk(m, r, rsize);
 		}
-		CORRUPTION_ERROR_ACTION(m);
+		check_memset_use_after_free(m, (mchunkptr)v);
+		return chunk2mem(v);
 	}
 	return 0;
 }
@@ -3011,6 +2978,7 @@ static void *tmalloc_large(PARAM_mstate_m_ size_t nb) {
 /* allocate a small request from the best fitting chunk in a treebin */
 static void *tmalloc_small(PARAM_mstate_m_ size_t nb) {
 	tchunkptr t, v;
+	mchunkptr r;
 	size_t rsize;
 	bindex_t i;
 	binmap_t leastbit = least_bit(mstate_treemap(m));
@@ -3026,27 +2994,20 @@ static void *tmalloc_small(PARAM_mstate_m_ size_t nb) {
 		}
 	}
 
-	if (RTCHECK(ok_address(m, v))) {
-		mchunkptr r = chunk_plus_offset(v, nb);
-		dl_assert(chunksize(v) == rsize + nb);
-		if (RTCHECK(ok_next(v, r))) {
-			unlink_large_chunk(m, v);
-			if (rsize < MIN_CHUNK_SIZE)
-				set_inuse_and_pinuse(m, v, (rsize + nb));
-			else {
-				set_size_and_pinuse_of_inuse_chunk(m, v, nb);
-				set_size_and_pinuse_of_free_chunk(r, rsize);
-				replace_dv(m, r, rsize);
-			}
-			check_memset_use_after_free(m, (mchunkptr)v);
-			return chunk2mem(v);
-		}
+	ext_assert__ok_address(m, v);
+	r = chunk_plus_offset(v, nb);
+	dl_assert(chunksize(v) == rsize + nb);
+	ext_assert__ok_next(v, r);
+	unlink_large_chunk(m, v);
+	if (rsize < MIN_CHUNK_SIZE)
+		set_inuse_and_pinuse(m, v, (rsize + nb));
+	else {
+		set_size_and_pinuse_of_inuse_chunk(m, v, nb);
+		set_size_and_pinuse_of_free_chunk(r, rsize);
+		replace_dv(m, r, rsize);
 	}
-
-	CORRUPTION_ERROR_ACTION(m);
-#if 0
-	return 0;
-#endif
+	check_memset_use_after_free(m, (mchunkptr)v);
+	return chunk2mem(v);
 }
 
 #if !ONLY_MSPACES
@@ -3350,162 +3311,42 @@ PUBLIC void (DCALL Dee_Free)(void *mem)
 		PREACTION(fm);
 #endif /* !USE_PENDING_FREE_LIST */
 		{
+			size_t psize;
+			mchunkptr next;
 #if FLAG4_BIT_INDICATES_HEAP_REGION
 #if DL_DEBUG_INTERNAL
 			if (!flag4inuse(p))
 				check_inuse_chunk(fm, p);
 #endif /* DL_DEBUG_INTERNAL */
-			if (RTCHECK(ok_inuse(p)))
 #else /* FLAG4_BIT_INDICATES_HEAP_REGION */
 			check_inuse_chunk(fm, p);
-			if (RTCHECK(ok_address(fm, p) && ok_inuse(p)))
+			ext_assert__ok_address(fm, p);
 #endif /* !FLAG4_BIT_INDICATES_HEAP_REGION */
-			{
-				size_t psize;
-				mchunkptr next;
-				psize = chunksize(p);
-				next  = chunk_plus_offset(p, psize);
-				if (!pinuse(p)) {
-					size_t prevsize = p->prev_foot;
-					if (is_mmapped(p)) {
+			ext_assert__ok_inuse(p);
+			psize = chunksize(p);
+			next  = chunk_plus_offset(p, psize);
+			if (!pinuse(p)) {
+				size_t prevsize = p->prev_foot;
+				if (is_mmapped(p)) {
 #if FLAG4_BIT_INDICATES_HEAP_REGION
-						if unlikely(flag4inuse(p)) {
-							if (free_flag4_mem(ARG_mstate_X_(fm) p))
-								return;
-							goto postaction;
-						}
-#endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
-
-						psize += prevsize + MMAP_FOOT_PAD;
-#ifndef DL_MUNMAP_ALWAYS_FAILS
-						if (DL_MUNMAP((char *)p - prevsize, psize) == 0)
-							mstate_footprint(fm) -= psize;
-#endif /* !DL_MUNMAP_ALWAYS_FAILS */
+					if unlikely(flag4inuse(p)) {
+						if (free_flag4_mem(ARG_mstate_X_(fm) p))
+							return;
 						goto postaction;
-					} else {
-						mchunkptr prev = chunk_minus_offset(p, prevsize);
-						psize += prevsize;
-						if (RTCHECK(ok_address(fm, prev))) { /* consolidate backward */
-							if (prev != mstate_dv(fm)) {
-								unlink_chunk(fm, prev, prevsize);
-							} else if ((next->head & INUSE_BITS) == INUSE_BITS) {
-								mstate_dvsize(fm) = psize;
-								set_free_with_pinuse(prev, psize, next);
-								dl_setfree_word(p->prev_foot, size_t);
-								dl_setfree_word(p->head, size_t);
-								goto postaction;
-							}
-						} else
-							goto erroraction;
-						dl_setfree_word(p->prev_foot, size_t);
-						dl_setfree_word(p->head, size_t);
-						p = prev;
 					}
-				}
-
-				if (RTCHECK(ok_next(p, next) && ok_pinuse(next))) {
-					if (!cinuse(next)) { /* consolidate forward */
-						if (next == mstate_top(fm)) {
-							size_t tsize   = mstate_topsize(fm) += psize;
-							mstate_top(fm) = p;
-							p->head        = tsize | PINUSE_BIT;
-							dl_setfree_word(next->prev_foot, size_t);
-							dl_setfree_word(next->head, size_t);
-							if (p == mstate_dv(fm)) {
-								mstate_dv(fm)     = 0;
-								mstate_dvsize(fm) = 0;
-							}
-							if (should_trim(fm, tsize))
-								sys_trim(ARG_mstate_X_(fm) 0);
-							goto postaction;
-						} else if (next == mstate_dv(fm)) {
-							size_t dsize  = mstate_dvsize(fm) += psize;
-							mstate_dv(fm) = p;
-							dl_setfree_word(next->prev_foot, size_t);
-							dl_setfree_word(next->head, size_t);
-							set_size_and_pinuse_of_free_chunk(p, dsize);
-							goto postaction;
-						} else {
-							size_t nsize = chunksize(next);
-							psize += nsize;
-							unlink_chunk(fm, next, nsize);
-							dl_setfree_word(next->prev_foot, size_t);
-							dl_setfree_word(next->head, size_t);
-							set_size_and_pinuse_of_free_chunk(p, psize);
-							if (p == mstate_dv(fm)) {
-								mstate_dvsize(fm) = psize;
-								goto postaction;
-							}
-						}
-					} else
-						set_free_with_pinuse(p, psize, next);
-
-					if (is_small(psize)) {
-						insert_small_chunk(fm, p, psize);
-						check_free_chunk(fm, p);
-					} else {
-						tchunkptr tp = (tchunkptr)p;
-						insert_large_chunk(fm, tp, psize);
-						check_free_chunk(fm, p);
-						if (--mstate_release_checks(fm) == 0)
-							release_unused_segments(ARG_mstate_X(fm));
-					}
-					goto postaction;
-				}
-			}
-erroraction:
-			USAGE_ERROR_ACTION(fm, p);
-postaction:
-			POSTACTION(fm);
-		}
-	}
-#if !FOOTERS
-#undef fm
-#endif /* FOOTERS */
-}
-
-#ifdef NEED_dl_freelist_do_reap
-PRIVATE NONNULL((1)) void
-dl_freelist_do_reap_item(void *__restrict mem) {
-	mchunkptr p = mem2chunk(mem);
-
-	/* BEGIN: Copy-paste from `dlfree()' above */
-#if FLAG4_BIT_INDICATES_HEAP_REGION
-#if DL_DEBUG_INTERNAL
-	if (!flag4inuse(p))
-		check_inuse_chunk(fm, p);
-#endif /* DL_DEBUG_INTERNAL */
-	if (RTCHECK(ok_inuse(p)))
-#else /* FLAG4_BIT_INDICATES_HEAP_REGION */
-	check_inuse_chunk(fm, p);
-	if (RTCHECK(ok_address(fm, p) && ok_inuse(p)))
-#endif /* !FLAG4_BIT_INDICATES_HEAP_REGION */
-	{
-		size_t psize;
-		mchunkptr next;
-		psize = chunksize(p);
-		next  = chunk_plus_offset(p, psize);
-		if (!pinuse(p)) {
-			size_t prevsize = p->prev_foot;
-			if (is_mmapped(p)) {
-#if FLAG4_BIT_INDICATES_HEAP_REGION
-				if unlikely(flag4inuse(p)) {
-					if (free_flag4_mem(ARG_mstate_X_(fm) p))
-						return;
-					goto postaction;
-				}
 #endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
 
-				psize += prevsize + MMAP_FOOT_PAD;
+					psize += prevsize + MMAP_FOOT_PAD;
 #ifndef DL_MUNMAP_ALWAYS_FAILS
-				if (DL_MUNMAP((char *)p - prevsize, psize) == 0)
-					mstate_footprint(fm) -= psize;
+					if (DL_MUNMAP((char *)p - prevsize, psize) == 0)
+						mstate_footprint(fm) -= psize;
 #endif /* !DL_MUNMAP_ALWAYS_FAILS */
-				goto postaction;
-			} else {
-				mchunkptr prev = chunk_minus_offset(p, prevsize);
-				psize += prevsize;
-				if (RTCHECK(ok_address(fm, prev))) { /* consolidate backward */
+					goto postaction;
+				} else {
+					mchunkptr prev = chunk_minus_offset(p, prevsize);
+					psize += prevsize;
+					ext_assert__ok_address(fm, prev);
+					/* consolidate backward */
 					if (prev != mstate_dv(fm)) {
 						unlink_chunk(fm, prev, prevsize);
 					} else if ((next->head & INUSE_BITS) == INUSE_BITS) {
@@ -3515,15 +3356,14 @@ dl_freelist_do_reap_item(void *__restrict mem) {
 						dl_setfree_word(p->head, size_t);
 						goto postaction;
 					}
-				} else
-					goto erroraction;
-				dl_setfree_word(p->prev_foot, size_t);
-				dl_setfree_word(p->head, size_t);
-				p = prev;
+					dl_setfree_word(p->prev_foot, size_t);
+					dl_setfree_word(p->head, size_t);
+					p = prev;
+				}
 			}
-		}
 
-		if (RTCHECK(ok_next(p, next) && ok_pinuse(next))) {
+			ext_assert__ok_next(p, next);
+			ext_assert__ok_pinuse(next);
 			if (!cinuse(next)) { /* consolidate forward */
 				if (next == mstate_top(fm)) {
 					size_t tsize   = mstate_topsize(fm) += psize;
@@ -3570,11 +3410,118 @@ dl_freelist_do_reap_item(void *__restrict mem) {
 				if (--mstate_release_checks(fm) == 0)
 					release_unused_segments(ARG_mstate_X(fm));
 			}
-			goto postaction;
+postaction:
+			POSTACTION(fm);
 		}
 	}
-erroraction:
-	USAGE_ERROR_ACTION(fm, p);
+#undef fm
+}
+
+#ifdef NEED_dl_freelist_do_reap
+PRIVATE NONNULL((1)) void
+dl_freelist_do_reap_item(void *__restrict mem) {
+	size_t psize;
+	mchunkptr next;
+	mchunkptr p = mem2chunk(mem);
+
+	/* BEGIN: Copy-paste from `dlfree()' above */
+#if FLAG4_BIT_INDICATES_HEAP_REGION
+#if DL_DEBUG_INTERNAL
+	if (!flag4inuse(p))
+		check_inuse_chunk(fm, p);
+#endif /* DL_DEBUG_INTERNAL */
+#else /* FLAG4_BIT_INDICATES_HEAP_REGION */
+	check_inuse_chunk(fm, p);
+	ext_assert__ok_address(fm, p);
+#endif /* !FLAG4_BIT_INDICATES_HEAP_REGION */
+	ext_assert__ok_inuse(p);
+	psize = chunksize(p);
+	next  = chunk_plus_offset(p, psize);
+	if (!pinuse(p)) {
+		size_t prevsize = p->prev_foot;
+		if (is_mmapped(p)) {
+#if FLAG4_BIT_INDICATES_HEAP_REGION
+			if unlikely(flag4inuse(p)) {
+				if (free_flag4_mem(ARG_mstate_X_(fm) p))
+					return;
+				goto postaction;
+			}
+#endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
+
+			psize += prevsize + MMAP_FOOT_PAD;
+#ifndef DL_MUNMAP_ALWAYS_FAILS
+			if (DL_MUNMAP((char *)p - prevsize, psize) == 0)
+				mstate_footprint(fm) -= psize;
+#endif /* !DL_MUNMAP_ALWAYS_FAILS */
+			goto postaction;
+		} else {
+			mchunkptr prev = chunk_minus_offset(p, prevsize);
+			psize += prevsize;
+			ext_assert__ok_address(fm, prev);
+			/* consolidate backward */
+			if (prev != mstate_dv(fm)) {
+				unlink_chunk(fm, prev, prevsize);
+			} else if ((next->head & INUSE_BITS) == INUSE_BITS) {
+				mstate_dvsize(fm) = psize;
+				set_free_with_pinuse(prev, psize, next);
+				dl_setfree_word(p->prev_foot, size_t);
+				dl_setfree_word(p->head, size_t);
+				goto postaction;
+			}
+			dl_setfree_word(p->prev_foot, size_t);
+			dl_setfree_word(p->head, size_t);
+			p = prev;
+		}
+	}
+
+	ext_assert__ok_next(p, next);
+	ext_assert__ok_pinuse(next);
+	if (!cinuse(next)) { /* consolidate forward */
+		if (next == mstate_top(fm)) {
+			size_t tsize   = mstate_topsize(fm) += psize;
+			mstate_top(fm) = p;
+			p->head        = tsize | PINUSE_BIT;
+			dl_setfree_word(next->prev_foot, size_t);
+			dl_setfree_word(next->head, size_t);
+			if (p == mstate_dv(fm)) {
+				mstate_dv(fm)     = 0;
+				mstate_dvsize(fm) = 0;
+			}
+			if (should_trim(fm, tsize))
+				sys_trim(ARG_mstate_X_(fm) 0);
+			goto postaction;
+		} else if (next == mstate_dv(fm)) {
+			size_t dsize  = mstate_dvsize(fm) += psize;
+			mstate_dv(fm) = p;
+			dl_setfree_word(next->prev_foot, size_t);
+			dl_setfree_word(next->head, size_t);
+			set_size_and_pinuse_of_free_chunk(p, dsize);
+			goto postaction;
+		} else {
+			size_t nsize = chunksize(next);
+			psize += nsize;
+			unlink_chunk(fm, next, nsize);
+			dl_setfree_word(next->prev_foot, size_t);
+			dl_setfree_word(next->head, size_t);
+			set_size_and_pinuse_of_free_chunk(p, psize);
+			if (p == mstate_dv(fm)) {
+				mstate_dvsize(fm) = psize;
+				goto postaction;
+			}
+		}
+	} else
+		set_free_with_pinuse(p, psize, next);
+
+	if (is_small(psize)) {
+		insert_small_chunk(fm, p, psize);
+		check_free_chunk(fm, p);
+	} else {
+		tchunkptr tp = (tchunkptr)p;
+		insert_large_chunk(fm, tp, psize);
+		check_free_chunk(fm, p);
+		if (--mstate_release_checks(fm) == 0)
+			release_unused_segments(ARG_mstate_X(fm));
+	}
 postaction:
 	/* END: Copy-paste from `dlfree()' above */
 	;
@@ -3633,98 +3580,94 @@ static mchunkptr try_realloc_chunk(PARAM_mstate_m_ mchunkptr p, size_t nb,
 	mchunkptr newp = 0;
 	size_t oldsize = chunksize(p);
 	mchunkptr next = chunk_plus_offset(p, oldsize);
-#if FLAG4_BIT_INDICATES_HEAP_REGION
-	if (RTCHECK(ok_inuse(p) && ok_next(p, next)))
-#else /* FLAG4_BIT_INDICATES_HEAP_REGION */
-	if (RTCHECK(ok_address(m, p) && ok_inuse(p) &&
-	            ok_next(p, next) && ok_pinuse(next)))
-#endif /* !FLAG4_BIT_INDICATES_HEAP_REGION */
-	{
 #ifdef DL_DEBUG_MEMSET_ALLOC
-		size_t oldsize_usable = oldsize - overhead_for(p);
+	size_t oldsize_usable = oldsize - overhead_for(p);
 #endif /* DL_DEBUG_MEMSET_ALLOC */
-		if (is_mmapped(p)) {
+	ext_assert__ok_inuse(p);
+	ext_assert__ok_next(p, next);
+#if !FLAG4_BIT_INDICATES_HEAP_REGION
+	ext_assert__ok_address(m, p);
+	ext_assert__ok_pinuse(next);
+#endif /* !FLAG4_BIT_INDICATES_HEAP_REGION */
+	if (is_mmapped(p)) {
 #if FLAG4_BIT_INDICATES_HEAP_REGION
-			if unlikely(flag4inuse(p)) {
-				/* Don't realloc pointers from user-defined "struct Dee_heapregion" */
-			} else
+		if unlikely(flag4inuse(p)) {
+			/* Don't realloc pointers from user-defined "struct Dee_heapregion" */
+		} else
 #endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
-			{
-				newp = mmap_resize(ARG_mstate_m_ p, nb, can_move);
-			}
-		} else if (oldsize >= nb) { /* already big enough */
-			size_t rsize = oldsize - nb;
-			if (rsize >= MIN_CHUNK_SIZE) { /* split off remainder */
+		{
+			newp = mmap_resize(ARG_mstate_m_ p, nb, can_move);
+		}
+	} else if (oldsize >= nb) { /* already big enough */
+		size_t rsize = oldsize - nb;
+		if (rsize >= MIN_CHUNK_SIZE) { /* split off remainder */
+			mchunkptr r = chunk_plus_offset(p, nb);
+			dl_setfree_data((char *)r + TWO_SIZE_T_SIZES, rsize - CHUNK_OVERHEAD);
+			set_inuse(m, p, nb);
+			set_inuse(m, r, rsize);
+			dispose_chunk(ARG_mstate_m_ r, rsize);
+		}
+		newp = p;
+	} else if (next == mstate_top(m)) { /* extend into top */
+		if (oldsize + mstate_topsize(m) > nb) {
+			size_t newsize    = oldsize + mstate_topsize(m);
+			size_t newtopsize = newsize - nb;
+			mchunkptr newtop  = chunk_plus_offset(p, nb);
+			check_memset_use_after_free(m, next);
+			set_inuse(m, p, nb);
+			newtop->head      = newtopsize | PINUSE_BIT;
+			mstate_top(m)     = newtop;
+			mstate_topsize(m) = newtopsize;
+			newp = p;
+		}
+	} else if (next == mstate_dv(m)) { /* extend into dv */
+		size_t dvs = mstate_dvsize(m);
+		if (oldsize + dvs >= nb) {
+			size_t dsize = oldsize + dvs - nb;
+			check_memset_use_after_free(m, next);
+			if (dsize >= MIN_CHUNK_SIZE) {
 				mchunkptr r = chunk_plus_offset(p, nb);
-				dl_setfree_data((char *)r + TWO_SIZE_T_SIZES, rsize - CHUNK_OVERHEAD);
+				mchunkptr n = chunk_plus_offset(r, dsize);
+				set_inuse(m, p, nb);
+				set_size_and_pinuse_of_free_chunk(r, dsize);
+				clear_pinuse(n);
+				mstate_dvsize(m) = dsize;
+				mstate_dv(m)     = r;
+			} else { /* exhaust dv */
+				size_t newsize = oldsize + dvs;
+				set_inuse(m, p, newsize);
+				mstate_dvsize(m) = 0;
+				mstate_dv(m)     = 0;
+			}
+			newp = p;
+		}
+	} else if (!cinuse(next)) { /* extend into next free chunk */
+		size_t nextsize = chunksize(next);
+		if (oldsize + nextsize >= nb) {
+			size_t rsize = oldsize + nextsize - nb;
+			check_memset_use_after_free(m, next);
+			unlink_chunk(m, next, nextsize);
+			if (rsize < MIN_CHUNK_SIZE) {
+				size_t newsize = oldsize + nextsize;
+				set_inuse(m, p, newsize);
+			} else {
+				mchunkptr r = chunk_plus_offset(p, nb);
 				set_inuse(m, p, nb);
 				set_inuse(m, r, rsize);
 				dispose_chunk(ARG_mstate_m_ r, rsize);
 			}
 			newp = p;
-		} else if (next == mstate_top(m)) { /* extend into top */
-			if (oldsize + mstate_topsize(m) > nb) {
-				size_t newsize    = oldsize + mstate_topsize(m);
-				size_t newtopsize = newsize - nb;
-				mchunkptr newtop  = chunk_plus_offset(p, nb);
-				check_memset_use_after_free(m, next);
-				set_inuse(m, p, nb);
-				newtop->head      = newtopsize | PINUSE_BIT;
-				mstate_top(m)     = newtop;
-				mstate_topsize(m) = newtopsize;
-				newp = p;
-			}
-		} else if (next == mstate_dv(m)) { /* extend into dv */
-			size_t dvs = mstate_dvsize(m);
-			if (oldsize + dvs >= nb) {
-				size_t dsize = oldsize + dvs - nb;
-				check_memset_use_after_free(m, next);
-				if (dsize >= MIN_CHUNK_SIZE) {
-					mchunkptr r = chunk_plus_offset(p, nb);
-					mchunkptr n = chunk_plus_offset(r, dsize);
-					set_inuse(m, p, nb);
-					set_size_and_pinuse_of_free_chunk(r, dsize);
-					clear_pinuse(n);
-					mstate_dvsize(m) = dsize;
-					mstate_dv(m)     = r;
-				} else { /* exhaust dv */
-					size_t newsize = oldsize + dvs;
-					set_inuse(m, p, newsize);
-					mstate_dvsize(m) = 0;
-					mstate_dv(m)     = 0;
-				}
-				newp = p;
-			}
-		} else if (!cinuse(next)) { /* extend into next free chunk */
-			size_t nextsize = chunksize(next);
-			if (oldsize + nextsize >= nb) {
-				size_t rsize = oldsize + nextsize - nb;
-				check_memset_use_after_free(m, next);
-				unlink_chunk(m, next, nextsize);
-				if (rsize < MIN_CHUNK_SIZE) {
-					size_t newsize = oldsize + nextsize;
-					set_inuse(m, p, newsize);
-				} else {
-					mchunkptr r = chunk_plus_offset(p, nb);
-					set_inuse(m, p, nb);
-					set_inuse(m, r, rsize);
-					dispose_chunk(ARG_mstate_m_ r, rsize);
-				}
-				newp = p;
-			}
 		}
-#ifdef DL_DEBUG_MEMSET_ALLOC
-		if (newp) {
-			size_t newsize_usable = chunksize(newp) - overhead_for(newp);
-			if (newsize_usable > oldsize_usable) {
-				dl_setalloc_data((char *)chunk2mem(newp) + oldsize_usable,
-				                 newsize_usable - oldsize_usable);
-			}
-		}
-#endif /* DL_DEBUG_MEMSET_ALLOC */
-	} else {
-		USAGE_ERROR_ACTION(m, chunk2mem(p));
 	}
+#ifdef DL_DEBUG_MEMSET_ALLOC
+	if (newp) {
+		size_t newsize_usable = chunksize(newp) - overhead_for(newp);
+		if (newsize_usable > oldsize_usable) {
+			dl_setalloc_data((char *)chunk2mem(newp) + oldsize_usable,
+			                 newsize_usable - oldsize_usable);
+		}
+	}
+#endif /* DL_DEBUG_MEMSET_ALLOC */
 	return newp;
 }
 
@@ -3943,6 +3886,8 @@ static size_t internal_bulk_free(PARAM_mstate_m_ void *array[], size_t nelem) {
 	for (a = array; a != fence; ++a) {
 		void *mem = *a;
 		if (mem != 0) {
+			void **b;
+			mchunkptr next;
 			mchunkptr p  = mem2chunk(mem);
 			size_t psize = chunksize(p);
 #if FOOTERS && !GM_ONLY
@@ -3953,19 +3898,16 @@ static size_t internal_bulk_free(PARAM_mstate_m_ void *array[], size_t nelem) {
 #endif /* FOOTERS && !GM_ONLY */
 			check_inuse_chunk(m, p);
 			*a = 0;
-			if (RTCHECK(ok_address(m, p) && ok_inuse(p))) {
-				void **b       = a + 1; /* try to merge with next chunk */
-				mchunkptr next = next_chunk(p);
-				if (b != fence && *b == chunk2mem(next)) {
-					size_t newsize = chunksize(next) + psize;
-					set_inuse(m, p, newsize);
-					*b = chunk2mem(p);
-				} else
-					dispose_chunk(ARG_mstate_m_ p, psize);
-			} else {
-				CORRUPTION_ERROR_ACTION(m);
-				break;
-			}
+			ext_assert__ok_address(m, p);
+			ext_assert__ok_inuse(p);
+			b = a + 1; /* try to merge with next chunk */
+			next = next_chunk(p);
+			if (b != fence && *b == chunk2mem(next)) {
+				size_t newsize = chunksize(next) + psize;
+				set_inuse(m, p, newsize);
+				*b = chunk2mem(p);
+			} else
+				dispose_chunk(ARG_mstate_m_ p, psize);
 		}
 	}
 	if (should_trim(m, mstate_topsize(m)))
@@ -4520,6 +4462,8 @@ postaction:
 
 static void mspace_free(mspace msp, void *mem) {
 	if (mem != 0) {
+		size_t psize;
+		mchunkptr next;
 		mchunkptr p = mem2chunk(mem);
 #if FOOTERS
 		mstate fm = get_mstate_for(p);
@@ -4533,81 +4477,77 @@ static void mspace_free(mspace msp, void *mem) {
 		}
 		PREACTION(fm);
 		check_inuse_chunk(fm, p);
-		if (RTCHECK(ok_address(fm, p) && ok_inuse(p))) {
-			size_t psize   = chunksize(p);
-			mchunkptr next = chunk_plus_offset(p, psize);
-			if (!pinuse(p)) {
-				size_t prevsize = p->prev_foot;
-				if (is_mmapped(p)) {
-					psize += prevsize + MMAP_FOOT_PAD;
+		ext_assert__ok_address(fm, p);
+		ext_assert__ok_inuse(p);
+		psize   = chunksize(p);
+		next = chunk_plus_offset(p, psize);
+		if (!pinuse(p)) {
+			size_t prevsize = p->prev_foot;
+			if (is_mmapped(p)) {
+				psize += prevsize + MMAP_FOOT_PAD;
 #ifndef DL_MUNMAP_ALWAYS_FAILS
-					if (DL_MUNMAP((char *)p - prevsize, psize) == 0)
-						fm->footprint -= psize;
+				if (DL_MUNMAP((char *)p - prevsize, psize) == 0)
+					fm->footprint -= psize;
 #endif /* !DL_MUNMAP_ALWAYS_FAILS */
-					goto postaction;
-				} else {
-					mchunkptr prev = chunk_minus_offset(p, prevsize);
-					psize += prevsize;
-					p = prev;
-					if (RTCHECK(ok_address(fm, prev))) { /* consolidate backward */
-						if (p != mstate_dv(fm)) {
-							unlink_chunk(fm, p, prevsize);
-						} else if ((next->head & INUSE_BITS) == INUSE_BITS) {
-							mstate_dvsize(fm) = psize;
-							set_free_with_pinuse(p, psize, next);
-							goto postaction;
-						}
-					} else
-						goto erroraction;
-				}
-			}
-
-			if (RTCHECK(ok_next(p, next) && ok_pinuse(next))) {
-				if (!cinuse(next)) { /* consolidate forward */
-					if (next == mstate_top(fm)) {
-						size_t tsize   = mstate_topsize(fm) += psize;
-						mstate_top(fm) = p;
-						p->head        = tsize | PINUSE_BIT;
-						if (p == mstate_dv(fm)) {
-							mstate_dv(fm)     = 0;
-							mstate_dvsize(fm) = 0;
-						}
-						if (should_trim(fm, tsize))
-							sys_trim(fm, 0);
-						goto postaction;
-					} else if (next == mstate_dv(fm)) {
-						size_t dsize  = mstate_dvsize(fm) += psize;
-						mstate_dv(fm) = p;
-						set_size_and_pinuse_of_free_chunk(p, dsize);
-						goto postaction;
-					} else {
-						size_t nsize = chunksize(next);
-						psize += nsize;
-						unlink_chunk(fm, next, nsize);
-						set_size_and_pinuse_of_free_chunk(p, psize);
-						if (p == mstate_dv(fm)) {
-							mstate_dvsize(fm) = psize;
-							goto postaction;
-						}
-					}
-				} else
-					set_free_with_pinuse(p, psize, next);
-
-				if (is_small(psize)) {
-					insert_small_chunk(fm, p, psize);
-					check_free_chunk(fm, p);
-				} else {
-					tchunkptr tp = (tchunkptr)p;
-					insert_large_chunk(fm, tp, psize);
-					check_free_chunk(fm, p);
-					if (--mstate_release_checks(fm) == 0)
-						release_unused_segments(fm);
-				}
 				goto postaction;
+			} else {
+				mchunkptr prev = chunk_minus_offset(p, prevsize);
+				psize += prevsize;
+				p = prev;
+				ext_assert__ok_address(fm, prev);
+				/* consolidate backward */
+				if (p != mstate_dv(fm)) {
+					unlink_chunk(fm, p, prevsize);
+				} else if ((next->head & INUSE_BITS) == INUSE_BITS) {
+					mstate_dvsize(fm) = psize;
+					set_free_with_pinuse(p, psize, next);
+					goto postaction;
+				}
 			}
 		}
-erroraction:
-		USAGE_ERROR_ACTION(fm, p);
+
+		ext_assert__ok_next(p, next);
+		ext_assert__ok_pinuse(next);
+		if (!cinuse(next)) { /* consolidate forward */
+			if (next == mstate_top(fm)) {
+				size_t tsize   = mstate_topsize(fm) += psize;
+				mstate_top(fm) = p;
+				p->head        = tsize | PINUSE_BIT;
+				if (p == mstate_dv(fm)) {
+					mstate_dv(fm)     = 0;
+					mstate_dvsize(fm) = 0;
+				}
+				if (should_trim(fm, tsize))
+					sys_trim(fm, 0);
+				goto postaction;
+			} else if (next == mstate_dv(fm)) {
+				size_t dsize  = mstate_dvsize(fm) += psize;
+				mstate_dv(fm) = p;
+				set_size_and_pinuse_of_free_chunk(p, dsize);
+				goto postaction;
+			} else {
+				size_t nsize = chunksize(next);
+				psize += nsize;
+				unlink_chunk(fm, next, nsize);
+				set_size_and_pinuse_of_free_chunk(p, psize);
+				if (p == mstate_dv(fm)) {
+					mstate_dvsize(fm) = psize;
+					goto postaction;
+				}
+			}
+		} else
+			set_free_with_pinuse(p, psize, next);
+
+		if (is_small(psize)) {
+			insert_small_chunk(fm, p, psize);
+			check_free_chunk(fm, p);
+		} else {
+			tchunkptr tp = (tchunkptr)p;
+			insert_large_chunk(fm, tp, psize);
+			check_free_chunk(fm, p);
+			if (--mstate_release_checks(fm) == 0)
+				release_unused_segments(fm);
+		}
 postaction:
 		POSTACTION(fm);
 	}
