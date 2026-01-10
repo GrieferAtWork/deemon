@@ -2992,13 +2992,10 @@ DeeThread_Interrupt(/*Thread*/ DeeObject *self,
 #ifndef DeeThread_USE_SINGLE_THREADED
 	uintptr_t version;
 #endif /* !DeeThread_USE_SINGLE_THREADED */
-	struct thread_interrupt *interrupt;
-	DeeThreadObject *caller;
-	DeeThreadObject *me;
-	interrupt = NULL;
-	caller    = DeeThread_Self();
-	me        = (DeeThreadObject *)self;
-	ASSERT_OBJECT_TYPE(self, &DeeThread_Type);
+	struct thread_interrupt *interrupt = NULL;
+	DeeThreadObject *caller = DeeThread_Self();
+	DeeThreadObject *me = (DeeThreadObject *)self;
+	ASSERT_OBJECT_TYPE(me, &DeeThread_Type);
 	ASSERT_OBJECT_TYPE_EXACT_OPT(interrupt_args, &DeeTuple_Type);
 
 again:
@@ -3056,6 +3053,7 @@ again:
 		interrupt->ti_intr = interrupt_main;
 		interrupt->ti_args = (DREF DeeTupleObject *)interrupt_args;
 		interrupt->ti_next = NULL;
+		interrupt = NULL; /* Inherited by target thread, so don't free below */
 	}
 
 	/* References as inherited by the interrupt descriptor. */
