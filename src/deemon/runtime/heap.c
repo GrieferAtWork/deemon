@@ -58,6 +58,7 @@ ClCompile.BasicRuntimeChecks = Default
 #undef Dee_TryCalloc
 #undef Dee_TryRealloc
 #undef Dee_TryReallocInPlace
+#undef Dee_TryMemalign
 #undef Dee_MallocUsableSize
 #undef Dee_Free
 
@@ -161,8 +162,23 @@ DECL_BEGIN
 #define FOOTERS 0
 #endif
 
-#define INSECURE             (!DL_DEBUG_EXTERNAL)
-#define LEAK_DETECTION       DL_DEBUG_EXTERNAL
+#define INSECURE              (!DL_DEBUG_EXTERNAL)
+/* FIXME: Despite everything, leak detection is still a **MAJOR** bottleneck:
+ *
+ * With LEAK_DETECTION=0
+ * >> time make computed-operators
+ *    real    0m4.482s
+ *
+ * With LEAK_DETECTION=1
+ * >> time make computed-operators
+ *    real    0m27.545s
+ *
+ * Doing random inspections of the stacks of threads results in lots of
+ * threads needing to do blocking-waits at:
+ * - DeeDbg_Free:        leak_lock_acquire();
+ * - DeeDbg_TryRealloc:  leak_lock_acquire();
+ */
+#define LEAK_DETECTION        DL_DEBUG_EXTERNAL
 #define DETECT_USE_AFTER_FREE DL_DEBUG_EXTERNAL
 #undef REALLOC_ZERO_BYTES_FREES
 
@@ -653,10 +669,8 @@ FORCELOCAL void *native_malloc_mmap(size_t size) {
 	return (ptr != 0) ? ptr : MFAIL;
 }
 
-/* XXX: While pretty much every system malloc() impl should be incapable of returning
- *      perfectly adjacent blocks of memory, in theory one could write such an impl,
- *      in which case dlmalloc() would happily merge those mappings, at which point
- *      we'd only free the first chunk here... */
+/* NOTE: We can just use "free()" if it's available
+ *       because we configure "NO_SEGMENT_TRAVERSAL"! */
 #ifdef CONFIG_HAVE_free
 #define DL_MUNMAP(a, s) native_malloc_munmap((a), (s))
 FORCELOCAL int native_malloc_munmap(void *ptr, size_t size) {
@@ -4139,9 +4153,9 @@ PUBLIC WUNUSED void *(DCALL Dee_TryRealloc)(void *oldmem, size_t bytes)
 #endif /* !FOOTERS || GM_ONLY */
 		validate_footer(oldp);
 #if FLAG4_BIT_INDICATES_HEAP_REGION
-		if (is_mmapped(oldp)) {
+		if unlikely(is_mmapped(oldp)) {
 			/* Don't realloc pointers from user-defined "struct Dee_heapregion" */
-			if (flag4inuse(oldp)) {
+			if unlikely(flag4inuse(oldp)) {
 #if FOOTERS && !GM_ONLY
 				fm = gm;
 #endif /* FOOTERS && !GM_ONLY */
@@ -4235,9 +4249,9 @@ PUBLIC WUNUSED void *
 #define fm gm
 #endif /* !FOOTERS || GM_ONLY */
 #if FLAG4_BIT_INDICATES_HEAP_REGION
-		if (is_mmapped(oldp)) {
+		if unlikely(is_mmapped(oldp)) {
 			/* Don't realloc pointers from user-defined "struct Dee_heapregion" */
-			if (flag4inuse(oldp))
+			if unlikely(flag4inuse(oldp))
 				return NULL;
 #if FOOTERS && !GM_ONLY
 			fm = get_mstate_for(oldp);
@@ -5121,9 +5135,6 @@ DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbg_Memalign)(size_t min_alignment, 
  *   extra dependencies on any internals of the underlying malloc implementation)
  * - No extra headers added to- or required for heap chunks allocated by underlying
  *   memory allocator.
- * - Heavily optimized for massively parallel execution environments (unlike
- *   dlmalloc itself, you won't see all of your threads except one waiting
- *   for some kind of global lock to become available)
  */
 #if LEAK_DETECTION
 DECL_END

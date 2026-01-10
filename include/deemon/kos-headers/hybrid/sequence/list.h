@@ -235,15 +235,15 @@
 #define __HYBRID_Q_BADPTR(field) (void)0
 #endif /* __SIZEOF_POINTER__ != ... */
 #endif /* !NDEBUG && !NDEBUG_QUEUE */
-#if defined(__cplusplus) && !defined(__HYBRID_LIST_RESTRICT_API)
+#if defined(__cplusplus) && !defined(__INTELLISENSE__) && !defined(__HYBRID_LIST_RESTRICT_API)
 #undef __HYBRID_Q_STRUCT
 #undef __HYBRID_Q_CLASS
 #define __HYBRID_Q_STRUCT /* nothing */
 #define __HYBRID_Q_CLASS  /* nothing */
-#else /* __cplusplus && !__HYBRID_LIST_RESTRICT_API */
+#else /* __cplusplus && !__INTELLISENSE__ && !__HYBRID_LIST_RESTRICT_API */
 #define __HYBRID_Q_STRUCT struct
 #define __HYBRID_Q_CLASS  class
-#endif /* !__cplusplus || __HYBRID_LIST_RESTRICT_API */
+#endif /* !__cplusplus || __INTELLISENSE__ || __HYBRID_LIST_RESTRICT_API */
 
 
 

@@ -29,6 +29,7 @@
 #ifndef GUARD_DEEMON_OBJECTS_INT_LOGIC_H
 #define GUARD_DEEMON_OBJECTS_INT_LOGIC_H 1
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/int.h>
 #include <deemon/object.h>
