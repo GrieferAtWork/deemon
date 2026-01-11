@@ -147,7 +147,11 @@ DECL_BEGIN
  * This is a minor optimization on-top of "USE_PER_THREAD_MSTATE", since it allows `dlmalloc()' to select
  * either the "tls" or "gm" allocator, based on whichever becomes available first, rather than having to
  * unconditionally rely on "tls" as soon as "gm" cannot be locked event once. */
+#if 0
+#define USE_MSPACE_MALLOC_LOCKLESS 0
+#else
 #define USE_MSPACE_MALLOC_LOCKLESS USE_PER_THREAD_MSTATE
+#endif
 
 #define MSPACES  (USE_PER_THREAD_MSTATE)
 #define GM_ONLY  (!USE_PER_THREAD_MSTATE)
@@ -5707,9 +5711,19 @@ PRIVATE struct leak_footer leaks = {
 	       ((leak)->lf_next = leaks.lf_next)->lf_prev = (leak),      /* 2, 3 */ \
 	       leaks.lf_next = (leak), leaks_assert_linkage(leak))                                   /* 4 */
 #endif
-	
 
 
+/* TODO: Have multiple instances of these pending lists.
+ * Specifically:
+ * - The first time one of these lists is needed, use dlmalloc() to allocate a
+ *   vector of pending lists that is "NEXT_POWER_OF_2(import.posix.cpu_count())"
+ *   elements long, with every element being a pair of "leak_footer_slist" that
+ *   are used for insert/remove
+ * - Whenever a "leak_footer" must be scheduled for insert/remove, choose the
+ *   pending list at "((uintptr_t)p >> 3) & MASK", where:
+ *     - 3    == log2(MALLOC_ALIGNMENT)
+ *     - MASK == NEXT_POWER_OF_2(import.posix.cpu_count()) - 1
+ */
 PRIVATE struct leak_footer_slist leaks_pending_insert = SLIST_HEAD_INITIALIZER(leaks_pending_insert);
 PRIVATE struct leak_footer_slist leaks_pending_remove = SLIST_HEAD_INITIALIZER(leaks_pending_remove);
 
@@ -5925,7 +5939,34 @@ PUBLIC ATTR_MALLOC WUNUSED void *
 	(_DeeAssert_Failf(expr, file, line, __VA_ARGS__), Dee_BREAKPOINT())
 #endif /* !Dee_BREAKPOINT_IS_NOOP */
 
-#define leak_addrok(p) ((uintptr_t)(p) != 0) /* TODO: Exclude more known-non-sense addresses */
+#ifndef __ARCH_PAGESIZE_MIN
+#ifdef __ARCH_PAGESIZE
+#define __ARCH_PAGESIZE_MIN __ARCH_PAGESIZE
+#endif /* __ARCH_PAGESIZE */
+#endif /* !__ARCH_PAGESIZE_MIN */
+
+#ifdef __ARCH_PAGESIZE_MIN
+#define _lo_leak_addrok(p) ((uintptr_t)(p) >= __ARCH_PAGESIZE_MIN)
+#else /* __ARCH_PAGESIZE_MIN */
+#define _lo_leak_addrok(p) ((uintptr_t)(p) != 0)
+#endif /* !__ARCH_PAGESIZE_MIN */
+
+/* Try to figure out some known-bad address ranges so we can detect bad pointers. */
+#if defined(__i386__) || defined(__x86_64__) || defined(__arm__)
+#if (defined(__i386__) && __SIZEOF_POINTER__ == 4) && (defined(__linux__) || defined(__KOS__))
+/* Kernel lives in high 3/4 of address space */
+#define _hi_leak_addrok(p) ((uintptr_t)(p) < UINT32_C(0xC0000000))
+#elif defined(CONFIG_HOST_WINDOWS) || (!defined(__arm__) && (defined(__linux__) || defined(__KOS__)))
+/* Kernel lives in high 1/2 of address space */
+#define _hi_leak_addrok(p) ((uintptr_t)(p) < ((((size_t)-1) >> 1) + 1))
+#endif /* ... */
+#endif /* ... */
+
+#ifdef _hi_leak_addrok
+#define leak_addrok(p) (_lo_leak_addrok(p) && _hi_leak_addrok(p))
+#else /* _hi_leak_addrok */
+#define leak_addrok(p) _lo_leak_addrok(p)
+#endif /* !_hi_leak_addrok */
 
 #define DeeDbg_Free_DEFINED
 PUBLIC ATTR_HOT void
