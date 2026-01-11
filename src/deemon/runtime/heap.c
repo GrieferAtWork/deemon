@@ -250,7 +250,7 @@ DECL_BEGIN
 #define NO_MSPACE_MAX_FOOTPRINT       1
 #define NO_MSPACE_FOOTPRINT_LIMIT     1
 #define NO_MSPACE_SET_FOOTPRINT_LIMIT 1
-#define NO_MSPACE_TRIM                1 /* TODO: Call from DeeHeap_Trim() */
+#define NO_MSPACE_TRIM                1
 #define NO_DESTROY_MSPACE             1 /* Per-thread heaps are re-used as needed */
 
 #undef M_TRIM_THRESHOLD
@@ -535,6 +535,8 @@ static int mspace_mallopt(int param_number, int value);
 #if USE_PER_THREAD_MSTATE
 /* Return the calling thread's thread-local mspace (or "0" if not available) */
 static mspace tls_mspace(void);
+/* Invoke `cb' for every existing `tls_mspace()' ("cb" must still PREACTION()-lock said space) */
+static size_t tls_mspace_foreach(size_t (*cb)(mspace ms, void *arg), void *arg);
 #endif /* USE_PER_THREAD_MSTATE */
 
 #endif /* MSPACES */
@@ -2045,34 +2047,23 @@ static void do_check_malloc_state(PARAM_mstate_m) {
 
 #if !NO_MALLINFO
 #if !EXPOSE_AS_DEEMON_API
-static struct dlmalloc_mallinfo internal_mallinfo(PARAM_mstate_m)
-#define lm m
+#define STRUCT_dlmalloc_mallinfo struct dlmalloc_mallinfo
 #else /* !EXPOSE_AS_DEEMON_API */
-PUBLIC ATTR_PURE WUNUSED struct Dee_heap_mallinfo DCALL DeeHeap_MallInfo(void)
-#define lm gm
+#define STRUCT_dlmalloc_mallinfo struct Dee_heap_mallinfo
 #endif /* EXPOSE_AS_DEEMON_API */
-{
-#if EXPOSE_AS_DEEMON_API
-	struct Dee_heap_mallinfo nm = { 0, 0, 0, 0, 0, 0, 0 };
-#else /* EXPOSE_AS_DEEMON_API */
-	struct dlmalloc_mallinfo nm = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-#endif /* !EXPOSE_AS_DEEMON_API */
-#ifdef HOOK_AFTER_INIT_MALLINFO
-	ensure_initialization_for(HOOK_AFTER_INIT_MALLINFO());
-#else /* HOOK_AFTER_INIT_MALLINFO */
-	ensure_initialization();
-#endif /* !HOOK_AFTER_INIT_MALLINFO */
-	PREACTION(lm);
-	check_malloc_state(lm);
-	if (is_initialized(lm)) {
+
+static void do_gather_internal_mallinfo(PARAM_mstate_m_ STRUCT_dlmalloc_mallinfo *nm) {
+	PREACTION(m);
+	check_malloc_state(m);
+	if (is_initialized(m)) {
 		size_t nfree  = SIZE_T_ONE; /* top always free */
-		size_t mfree  = mstate_topsize(lm) + TOP_FOOT_SIZE;
+		size_t mfree  = mstate_topsize(m) + TOP_FOOT_SIZE;
 		size_t sum    = mfree;
-		msegmentptr s = &mstate_seg(lm);
+		msegmentptr s = &mstate_seg(m);
 		while (s != 0) {
 			mchunkptr q = align_as_chunk(s->base);
 			while (segment_holds(s, q) &&
-			       q != mstate_top(lm) && q->head != FENCEPOST_HEAD) {
+			       q != mstate_top(m) && q->head != FENCEPOST_HEAD) {
 				size_t sz = chunksize(q);
 				sum += sz;
 				if (!is_inuse(q)) {
@@ -2083,27 +2074,61 @@ PUBLIC ATTR_PURE WUNUSED struct Dee_heap_mallinfo DCALL DeeHeap_MallInfo(void)
 			}
 			s = s->next;
 		}
-
 #if EXPOSE_AS_DEEMON_API
-		nm.hmi_arena    = sum;
-		nm.hmi_ordblks  = nfree;
-		nm.hmi_hblkhd   = mstate_footprint(lm) - sum;
-		nm.hmi_usmblks  = mstate_max_footprint(lm);
-		nm.hmi_uordblks = mstate_footprint(lm) - mfree;
-		nm.hmi_fordblks = mfree;
-		nm.hmi_keepcost = mstate_topsize(lm);
+#define nm__hmi_(x) nm->hmi_##x
 #else /* EXPOSE_AS_DEEMON_API */
-		nm.arena    = sum;
-		nm.ordblks  = nfree;
-		nm.hblkhd   = mstate_footprint(lm) - sum;
-		nm.usmblks  = mstate_max_footprint(lm);
-		nm.uordblks = mstate_footprint(lm) - mfree;
-		nm.fordblks = mfree;
-		nm.keepcost = mstate_topsize(lm);
+#define nm__hmi_(x) nm->x
 #endif /* !EXPOSE_AS_DEEMON_API */
+#if USE_PER_THREAD_MSTATE
+#define nm__hmi_account(x, v) nm__hmi_(x) += v
+#else /* USE_PER_THREAD_MSTATE */
+#define nm__hmi_account(x, v) nm__hmi_(x) = v
+#endif /* !USE_PER_THREAD_MSTATE */
+		nm__hmi_account(arena, sum);
+		nm__hmi_account(ordblks, nfree);
+		nm__hmi_account(hblkhd, mstate_footprint(m) - sum);
+		nm__hmi_account(usmblks, mstate_max_footprint(m));
+		nm__hmi_account(uordblks, mstate_footprint(m) - mfree);
+		nm__hmi_account(fordblks, mfree);
+		nm__hmi_account(keepcost, mstate_topsize(m));
+#undef nm__hmi_account
+#undef nm__hmi_
 	}
+	POSTACTION(m);
+}
 
-	POSTACTION(lm);
+#if USE_PER_THREAD_MSTATE
+PRIVATE size_t do_gather_internal_mallinfo_cb(mspace ms, void *arg) {
+	do_gather_internal_mallinfo(ARG_mstate_X_((mstate)ms) (STRUCT_dlmalloc_mallinfo *)arg);
+	return 0;
+}
+#endif /* USE_PER_THREAD_MSTATE */
+
+#if !EXPOSE_AS_DEEMON_API
+static STRUCT_dlmalloc_mallinfo internal_mallinfo(PARAM_mstate_m)
+#define lm m
+#else /* !EXPOSE_AS_DEEMON_API */
+PUBLIC ATTR_PURE WUNUSED STRUCT_dlmalloc_mallinfo DCALL DeeHeap_MallInfo(void)
+#define lm gm
+#endif /* EXPOSE_AS_DEEMON_API */
+{
+#if EXPOSE_AS_DEEMON_API
+	STRUCT_dlmalloc_mallinfo nm = { 0, 0, 0, 0, 0, 0, 0 };
+#else /* EXPOSE_AS_DEEMON_API */
+	STRUCT_dlmalloc_mallinfo nm = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+#endif /* !EXPOSE_AS_DEEMON_API */
+#ifdef HOOK_AFTER_INIT_MALLINFO
+	ensure_initialization_for(HOOK_AFTER_INIT_MALLINFO());
+#else /* HOOK_AFTER_INIT_MALLINFO */
+	ensure_initialization();
+#endif /* !HOOK_AFTER_INIT_MALLINFO */
+	do_gather_internal_mallinfo(ARG_mstate_X_(lm) &nm);
+
+	/* Include info from "tls_mspace()" */
+#if USE_PER_THREAD_MSTATE
+	tls_mspace_foreach(&do_gather_internal_mallinfo_cb, &nm);
+#endif /* USE_PER_THREAD_MSTATE */
+
 	return nm;
 }
 #undef lm
@@ -4407,6 +4432,21 @@ static void dlmalloc_inspect_all(void (*handler)(void *start,
 #endif /* MALLOC_INSPECT_ALL */
 
 #if !NO_MALLOC_TRIM
+
+PRIVATE size_t do_mspace_sys_trim(PARAM_mstate_m_ size_t pad) {
+	size_t result;
+	PREACTION(gm);
+	result = sys_trim(ARG_mstate_m_ pad);
+	POSTACTION(gm);
+	return result;
+}
+
+#if USE_PER_THREAD_MSTATE
+PRIVATE size_t do_mspace_sys_trim_cb(mspace ms, void *arg) {
+	return do_mspace_sys_trim(ARG_mstate_X_((mstate)ms) (size_t)(uintptr_t)arg);
+}
+#endif /* USE_PER_THREAD_MSTATE */
+
 #if !EXPOSE_AS_DEEMON_API
 static int dlmalloc_trim(size_t pad)
 #else /* !EXPOSE_AS_DEEMON_API */
@@ -4425,22 +4465,48 @@ PUBLIC size_t DCALL DeeHeap_Trim(size_t pad)
 	ensure_initialization();
 #endif /* !GM_STATIC_INIT_MUTEX */
 #endif /* !HOOK_AFTER_INIT_MALLOC_TRIM */
-	result = 0;
-	PREACTION(gm);
-	result = sys_trim(ARG_mstate_gm_ pad);
-	POSTACTION(gm);
+	result = do_mspace_sys_trim(ARG_mstate_gm_ pad);
+
+	/* Also trim every "tls_mspace()" (add sum from that to result) */
+#if USE_PER_THREAD_MSTATE
+	result += tls_mspace_foreach(&do_mspace_sys_trim_cb, (void *)(uintptr_t)pad);
+#endif /* USE_PER_THREAD_MSTATE */
+
 	return result;
 }
 #endif /* !NO_MALLOC_TRIM */
 
 #if !NO_MALLOC_FOOTPRINT
+#if USE_PER_THREAD_MSTATE
+PRIVATE size_t do_mspace_footprint_cb(mspace ms, void *arg) {
+	(void)arg;
+	return atomic_read(&mstate_footprint((mstate)ms));
+}
+
+PRIVATE size_t do_mspace_max_footprint_cb(mspace ms, void *arg) {
+	(void)arg;
+	return atomic_read(&mstate_max_footprint((mstate)ms));
+}
+
+PRIVATE size_t do_mspace_set_footprint_limit_cb(mspace ms, void *arg) {
+	size_t limit = (size_t)(uintptr_t)arg;
+	atomic_write(&mstate_footprint_limit((mstate)ms), limit);
+	return 0;
+}
+#endif /* USE_PER_THREAD_MSTATE */
+
 #if !EXPOSE_AS_DEEMON_API
 static size_t dlmalloc_footprint(void)
 #else /* !EXPOSE_AS_DEEMON_API */
 PUBLIC ATTR_PURE WUNUSED size_t DCALL DeeHeap_Footprint(void)
 #endif /* EXPOSE_AS_DEEMON_API */
 {
-	return gm__footprint;
+	size_t result = atomic_read(&gm__footprint);
+	/* Include info from "tls_mspace()" (add sum from tls) */
+#if USE_PER_THREAD_MSTATE
+	result += tls_mspace_foreach(&do_mspace_footprint_cb, NULL);
+#endif /* USE_PER_THREAD_MSTATE */
+	return result;
 }
 
 #if !EXPOSE_AS_DEEMON_API
@@ -4449,7 +4515,12 @@ static size_t dlmalloc_max_footprint(void)
 PUBLIC ATTR_PURE WUNUSED size_t DCALL DeeHeap_MaxFootprint(void)
 #endif /* EXPOSE_AS_DEEMON_API */
 {
-	return gm__max_footprint;
+	size_t result = atomic_read(&gm__max_footprint);
+	/* Include info from "tls_mspace()" (add sum from tls) */
+#if USE_PER_THREAD_MSTATE
+	result += tls_mspace_foreach(&do_mspace_max_footprint_cb, NULL);
+#endif /* USE_PER_THREAD_MSTATE */
+	return result;
 }
 
 #if !EXPOSE_AS_DEEMON_API
@@ -4468,18 +4539,27 @@ static size_t dlmalloc_set_footprint_limit(size_t bytes)
 PUBLIC size_t DCALL DeeHeap_SetFootprintLimit(size_t bytes)
 #endif /* EXPOSE_AS_DEEMON_API */
 {
-	size_t result; /* invert sense of 0 */
+	size_t result;
+	size_t newval; /* invert sense of 0 */
 	if (bytes == 0)
-		result = granularity_align(1); /* Use minimal size */
+		newval = granularity_align(1); /* Use minimal size */
 	if (bytes == SIZE_MAX)
-		result = 0; /* disable */
+		newval = 0; /* disable */
 	else
-		result = granularity_align(bytes);
+		newval = granularity_align(bytes);
 #if EXPOSE_AS_DEEMON_API
-	return atomic_xch(&gm__footprint_limit, result);
+	result = atomic_xch(&gm__footprint_limit, newval);
 #else /* EXPOSE_AS_DEEMON_API */
-	return gm__footprint_limit = result;
+	atomic_write(&gm__footprint_limit, newval);
+	result = newval;
 #endif /* !EXPOSE_AS_DEEMON_API */
+
+	/* Also set value in every "tls_mspace()" (set the same value everywhere) */
+#if USE_PER_THREAD_MSTATE
+	tls_mspace_foreach(&do_mspace_set_footprint_limit_cb, (void *)(uintptr_t)newval);
+#endif /* USE_PER_THREAD_MSTATE */
+
+	return result;
 }
 #endif /* !NO_MALLOC_FOOTPRINT */
 
@@ -4712,21 +4792,23 @@ static mstate find_not_visited_tls_mspace(uintptr_t mask) {
 	return NULL;
 }
 
-static void foreach_tls_mspace(void (*cb)(mstate ms, void *arg), void *arg) {
+static size_t tls_mspace_foreach(size_t (*cb)(mspace ms, void *arg), void *arg) {
 	uintptr_t mask;
 	mstate ms;
+	size_t result = 0;
 	Dee_rshared_lock_acquire_noint(&foreach_lock);
 	mask = foreach_bitset_inuse_alloc();
 	tls_mspace_lock_acquire();
 	reset_not_visited_tls_mspace(mask);
 	while ((ms = find_not_visited_tls_mspace(mask)) != NULL) {
 		tls_mspace_lock_release();
-		(*cb)(ms, arg);
+		result += (*cb)((mspace)ms, arg);
 		tls_mspace_lock_acquire();
 	}
 	tls_mspace_lock_release();
 	foreach_bitset_inuse_free(mask);
 	Dee_rshared_lock_release(&foreach_lock);
+	return result;
 }
 
 #define thread_heap_destroy_DEFINED
@@ -5879,12 +5961,12 @@ PRIVATE void lock_and_do_check_malloc_state(PARAM_mstate_m) {
 }
 
 #if USE_PER_THREAD_MSTATE
-PRIVATE void lock_and_do_check_malloc_state_2(PARAM_mstate_m_ void *arg) {
+PRIVATE size_t lock_and_do_check_malloc_state_foreach_cb(mspace ms, void *arg) {
 	(void)arg;
-	lock_and_do_check_malloc_state(ARG_mstate_m);
+	lock_and_do_check_malloc_state(ARG_mstate_X((mstate)ms));
+	return 0;
 }
 #endif /* USE_PER_THREAD_MSTATE */
-
 
 /* Validate heap memory, asserting the absence of corruptions from
  * various common heap mistakes (write-past-end, use-after-free, etc.).
@@ -5894,7 +5976,7 @@ PRIVATE void lock_and_do_check_malloc_state_2(PARAM_mstate_m_ void *arg) {
 PUBLIC ATTR_COLD void DCALL DeeHeap_CheckMemory(void) {
 	lock_and_do_check_malloc_state(ARG_mstate_gm);
 #if USE_PER_THREAD_MSTATE
-	foreach_tls_mspace(&lock_and_do_check_malloc_state_2, NULL);
+	tls_mspace_foreach(&lock_and_do_check_malloc_state_foreach_cb, NULL);
 #endif /* USE_PER_THREAD_MSTATE */
 }
 #endif /* DL_DEBUG_EXTERNAL */

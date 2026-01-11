@@ -4424,7 +4424,7 @@ PRIVATE struct type_getset tpconst thread_class_getsets[] = {
 	               "True if there are at least 2 running threads"),
 	/* TODO: property enumerate: {Thread...} = {...}
 	 * >> Returns a proxy sequence for enumerating all
-	 *    deemon-threads; s.a. `add_running_thread()' */
+	 *    deemon-threads; s.a. `DeeThread_FOREACH()' */
 	TYPE_GETSET_END
 };
 #else /* !DeeThread_USE_SINGLE_THREADED */
