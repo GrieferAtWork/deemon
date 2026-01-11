@@ -4156,7 +4156,7 @@ done:
 function loadMethodHints() {
 	/* Prevent GC-slowdown during exit (I really need to re-write
 	 * the GC search system so it runs in linear time...) */
-//	Error.AppExit.atexit(() -> Error.AppExit.exit(0));
+	Error.AppExit.atexit(() -> Error.AppExit.exit(0));
 
 	final local FILENAME = posix.joinpath(posix.headof(__FILE__), "method-hints.h");
 	final local SPEC_DATA = File.open(FILENAME, "rb").readall().unifylines().decode("utf-8");
