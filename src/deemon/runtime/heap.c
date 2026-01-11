@@ -135,7 +135,7 @@ DECL_BEGIN
 #else /* CONFIG_NO_THREADS */
 #define USE_LOCKS             2
 #define USE_PENDING_FREE_LIST 1
-#if !defined(__OPTIMIZE_SIZE__) && 1
+#if 1 /*!defined(__OPTIMIZE_SIZE__) && 1*/ /* Always enable in SMP -- performance gain is too significant to ignore */
 #define USE_PER_THREAD_MSTATE 1 /* Provide a per-thread "mstate" that is used when the global state is locked */
 #endif /* !__OPTIMIZE_SIZE__ */
 #endif /* !CONFIG_NO_THREADS */
@@ -6312,20 +6312,21 @@ _leaks_pending_reap_and_unlock(void) {
 		if (!node) {
 			mchunkptr p = mem2chunk(ptr);
 			if (!flag4inuse(p)) {
-				/* XXX: This check right here has been seen to fail for unexplained reasons in the past
-				 *      When it failed, "file" was 0xCCCCCCCC or 0xDEADBEEF (or file=0xDEADBEEF, and 
-				 *      ptr->lfle_file=0xDEADBEEF, indicating another thread having free'd the pointer
-				 *      while our thread was trying to do the same).
+				/* X-X-X: This check right here has been seen to fail for unexplained reasons in the past
+				 *        When it failed, "file" was 0xCCCCCCCC or 0xDEADBEEF (or file=0xDEADBEEF, and 
+				 *        ptr->lfle_file=0xDEADBEEF, indicating another thread having free'd the pointer
+				 *        while our thread was trying to do the same).
 				 * It seemed to happen under:
 				 * - USE_PER_THREAD_MSTATE=0
 				 * - FOOTERS=0/1
 				 * when running `make computed-operators`, and then usually during the app finalization
 				 *
-				 * XXX: After further testing, I can no longer re-create this :/
-				 *      Combined with the fact that "LEAK_DETECTION" will probably
-				 *      need to be re-written anyways (since it's way too slow for
-				 *      SMP), I think further research is unnecessary.
-				 */
+				 * X-X-X: After further testing, I can no longer re-create this :/
+				 *        Combined with the fact that "LEAK_DETECTION" will probably
+				 *        need to be re-written anyways (since it's way too slow for
+				 *        SMP), I think further research is unnecessary.
+				 * -----------------------------------------------------------------------------
+				 * Irrelevant: new "LEAK_DETECTION_IN_TAIL" impl never exhibited this problem */
 				_DeeAssert_Failf("Dee_Free(ptr)", file, line,
 				                 "Bad pointer %p does not map to any node, or custom heap region",
 				                 ptr);
@@ -7257,6 +7258,7 @@ DeeHeap_GetAllocBreakpoint(void) {
 
 PUBLIC ATTR_COLD size_t DCALL
 DeeHeap_SetAllocBreakpoint(size_t id) {
+	COMPILER_IMPURE();
 	(void)id;
 	return 0;
 }

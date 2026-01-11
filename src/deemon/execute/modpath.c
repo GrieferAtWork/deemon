@@ -9209,7 +9209,7 @@ DeeModule_OfPointer(void const *ptr) {
 
 	/* Search "dex_byaddr_tree" (if present) */
 #ifdef HAVE_Dee_dexataddr_t
-	{
+	if (dex_byaddr_tree != NULL) {
 		Dee_dexataddr_t at_addr;
 		if (Dee_dexataddr_init_fromaddr(&at_addr, ptr)) {
 			result = dex_byaddr_locate(dex_byaddr_tree, &at_addr);
