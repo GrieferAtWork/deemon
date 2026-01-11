@@ -112,6 +112,7 @@ DECL_BEGIN
  * - Change dlcalloc (Dee_TryCalloc) to take only a single argument
  * - Assert in-use in dlmalloc_usable_size (Dee_MallocUsableSize)
  * - Use-after-free detection when re-used memory is allocated again
+ * - USE_PER_THREAD_MSTATE: Support for thread-local heaps
  */
 
 
@@ -1267,7 +1268,11 @@ static int has_segment_link(PARAM_mstate_m_ msegmentptr ss) {
   failure. If you are not using locking, you can redefine these to do
   anything you like.
 */
-#if USE_PENDING_FREE_LIST
+#if !USE_LOCKS
+#define TRY_PREACTION(M) 1
+#define PREACTION(M)     (void)0
+#define POSTACTION(M)    (void)0
+#elif USE_PENDING_FREE_LIST
 PRIVATE ATTR_NOINLINE void
 dl_freelist_do_reap(PARAM_mstate_m_ struct freelist_entry *__restrict flist);
 #define NEED_dl_freelist_do_reap
@@ -1299,8 +1304,9 @@ again:
 			POSTACTION(M);                                         \
 	}
 #else /* USE_PENDING_FREE_LIST */
-#define PREACTION(M)  Dee_atomic_lock_acquire(&mstate_mutex(M))
-#define POSTACTION(M) Dee_atomic_lock_release(&mstate_mutex(M))
+#define TRY_PREACTION(M) Dee_atomic_lock_tryacquire(&mstate_mutex(M))
+#define PREACTION(M)     Dee_atomic_lock_acquire(&mstate_mutex(M))
+#define POSTACTION(M)    Dee_atomic_lock_release(&mstate_mutex(M))
 #endif /* !USE_PENDING_FREE_LIST */
 
 
@@ -5183,9 +5189,8 @@ DECL_BEGIN
  * for the purpose of being considered leaks if not freed
  * at application exit. */
 PRIVATE LLRBTREE_ROOT(leaknode) leak_nodes = NULL;
-#ifndef CONFIG_NO_THREADS
+#if USE_LOCKS
 PRIVATE Dee_atomic_lock_t leak_lock = Dee_ATOMIC_LOCK_INIT;
-#endif /* !CONFIG_NO_THREADS */
 #define leak_lock_available()  Dee_atomic_lock_available(&leak_lock)
 #define leak_lock_acquired()   Dee_atomic_lock_acquired(&leak_lock)
 #define leak_lock_tryacquire() Dee_atomic_lock_tryacquire(&leak_lock)
@@ -5193,6 +5198,15 @@ PRIVATE Dee_atomic_lock_t leak_lock = Dee_ATOMIC_LOCK_INIT;
 #define leak_lock_waitfor()    Dee_atomic_lock_waitfor(&leak_lock)
 #define _leak_lock_release()   Dee_atomic_lock_release(&leak_lock)
 #define leak_lock_release()    Dee_atomic_lock_release(&leak_lock)
+#else /* USE_LOCKS */
+#define leak_lock_available()  1
+#define leak_lock_acquired()   1
+#define leak_lock_tryacquire() 1
+#define leak_lock_acquire()    (void)0
+#define leak_lock_waitfor()    (void)0
+#define _leak_lock_release()   (void)0
+#define leak_lock_release()    (void)0
+#endif /* !USE_LOCKS */
 
 #if USE_PENDING_FREE_LIST
 SLIST_HEAD(leaklist, leaknode);
@@ -5256,7 +5270,13 @@ _leaks_pending_reap_and_unlock(void) {
 				 * It seemed to happen under:
 				 * - USE_PER_THREAD_MSTATE=0
 				 * - FOOTERS=0/1
-				 * when running `make computed-operators`, and then usually during the app finalization */
+				 * when running `make computed-operators`, and then usually during the app finalization
+				 *
+				 * XXX: After further testing, I can no longer re-create this :/
+				 *      Combined with the fact that "LEAK_DETECTION" will probably
+				 *      need to be re-written anyways (since it's way too slow for
+				 *      SMP), I think further research is unnecessary.
+				 */
 				_DeeAssert_Failf("Dee_Free(ptr)", file, line,
 				                 "Bad pointer %p does not map to any node, or custom heap region",
 				                 ptr);
@@ -5275,6 +5295,12 @@ _leaks_pending_reap_and_unlock(void) {
 #endif
 			SLIST_INSERT(&freeme, (struct freelist_entry *)node, fle_link); /* dlfree(node); */
 		}
+#if 0
+		COMPILER_BARRIER();
+		ASSERT(file == atomic_read(&ptr->lfle_file));
+		ASSERT(*file == 'E');
+		COMPILER_BARRIER();
+#endif
 		SLIST_INSERT(&freeme, (struct freelist_entry *)ptr, fle_link); /* dlfree(ptr); */
 	}
 	_leak_lock_release();
@@ -5440,6 +5466,11 @@ PUBLIC ATTR_HOT void
 	struct leaknode *node;
 	if (!ptr)
 		return;
+#if 0
+	if unlikely(!file)
+		file = "E:dummy";
+	ASSERT(*file == 'E');
+#endif
 #if USE_PENDING_FREE_LIST
 	if (!leak_lock_tryacquire()) {
 		mchunkptr p;
