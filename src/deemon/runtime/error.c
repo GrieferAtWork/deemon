@@ -295,7 +295,12 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 		 * >>     operator repr() {
 		 * >>         throw this; // or "throw MyError();"
 		 * >>     }
-		 * >> } */
+		 * >> }
+		 *
+		 * TODO: Limit amount of characters printed of repr to 1024. User-defined classes
+		 *       have a default "operator repr" that includes the nested "repr" of every
+		 *       contained member. And while this is guarantied to terminate (eventually),
+		 *       it can *very* easily spiral out of control before then. */
 		Dee_DPRINTF("[RT] Throw exception: %r (%" PRFu16 ")\n", error, ts->t_exceptsz);
 	}
 #endif /* !Dee_DPRINT_IS_NOOP */

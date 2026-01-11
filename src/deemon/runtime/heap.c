@@ -209,6 +209,7 @@ DECL_BEGIN
 #endif
 #define DETECT_USE_AFTER_FREE  DL_DEBUG_EXTERNAL
 #define INSECURE               (!DL_DEBUG_EXTERNAL)
+#define XOR_MASK_MCHUNK_FOOT   DL_DEBUG_EXTERNAL /* xor-mask footers of heap chunks with "mparams.magic" when using them as mspace indicator */
 #if 1 /* Use the new approach for "LEAK_DETECTION" that doesn't store data out-of-band */
 #define LEAK_DETECTION_IN_TAIL LEAK_DETECTION
 #else
@@ -898,19 +899,19 @@ typedef unsigned int flag_t;          /* The type of various bit flag sets */
 #define clear_flag4(p)  ((p)->head &= ~FLAG4_BIT)
 
 /* Treat space at ptr +/- offset as a chunk */
-#define chunk_plus_offset(p, s)  ((mchunkptr)(((char *)(p)) + (s)))
-#define chunk_minus_offset(p, s) ((mchunkptr)(((char *)(p)) - (s)))
+#define chunk_plus_offset(p, s)  ((mchunkptr)((char *)(p) + (s)))
+#define chunk_minus_offset(p, s) ((mchunkptr)((char *)(p) - (s)))
 
 /* Ptr to next or previous physical malloc_chunk. */
-#define next_chunk(p) ((mchunkptr)(((char *)(p)) + ((p)->head & ~FLAG_BITS)))
-#define prev_chunk(p) ((mchunkptr)(((char *)(p)) - ((p)->prev_foot)))
+#define next_chunk(p) ((mchunkptr)((char *)(p) + chunksize(p)))
+#define prev_chunk(p) ((mchunkptr)((char *)(p) - (p)->prev_foot))
 
 /* extract next chunk's pinuse bit */
 #define next_pinuse(p) ((next_chunk(p)->head) & PINUSE_BIT)
 
 /* Get/set size at footer */
-#define get_foot(p, s) (((mchunkptr)((char *)(p) + (s)))->prev_foot)
-#define set_foot(p, s) (((mchunkptr)((char *)(p) + (s)))->prev_foot = (s))
+#define get_foot(p, s) (chunk_plus_offset(p, s)->prev_foot)
+#define set_foot(p, s) (chunk_plus_offset(p, s)->prev_foot = (s))
 
 /* Set size, pinuse bit, and foot */
 #define set_size_and_pinuse_of_free_chunk(p, s) \
@@ -1581,12 +1582,12 @@ static size_t traverse_and_check(PARAM_mstate_m);
 /* Set cinuse bit and pinuse bit of next chunk */
 #define set_inuse(M, p, s)                                    \
 	((p)->head = (((p)->head & PINUSE_BIT) | s | CINUSE_BIT), \
-	 ((mchunkptr)(((char *)(p)) + (s)))->head |= PINUSE_BIT)
+	 chunk_plus_offset(p, s)->head |= PINUSE_BIT)
 
 /* Set cinuse and pinuse of this chunk and pinuse of next chunk */
 #define set_inuse_and_pinuse(M, p, s)           \
 	((p)->head = (s | PINUSE_BIT | CINUSE_BIT), \
-	 ((mchunkptr)(((char *)(p)) + (s)))->head |= PINUSE_BIT)
+	 chunk_plus_offset(p, s)->head |= PINUSE_BIT)
 
 /* Set size, cinuse and pinuse bit of this chunk */
 #define set_size_and_pinuse_of_inuse_chunk(M, p, s) \
@@ -1596,28 +1597,29 @@ static size_t traverse_and_check(PARAM_mstate_m);
 
 /* Set foot of inuse chunk to be xor of mstate and seed */
 #if GM_ONLY
-#define mark_inuse_foot(M, p, s) \
-	(((mchunkptr)((char *)(p) + (s)))->prev_foot = mparams.magic)
+#define mark_inuse_foot(M, p, s) (chunk_plus_offset(p, s)->prev_foot = mparams.magic)
 #define get_mstate_for(p)
 #else /* GM_ONLY */
-#define mark_inuse_foot(M, p, s) \
-	(((mchunkptr)((char *)(p) + (s)))->prev_foot = ((size_t)(M) ^ mparams.magic))
-#define get_mstate_for(p)                   \
-	((mstate)(((mchunkptr)((char *)(p) +    \
-	                       (chunksize(p)))) \
-	          ->prev_foot ^                 \
-	          mparams.magic))
+#if XOR_MASK_MCHUNK_FOOT
+#define mstate_encode_for_footer(M) ((size_t)(M) ^ mparams.magic)
+#define mstate_decode_for_footer(M) ((mstate)((size_t)(M) ^ mparams.magic))
+#else /* XOR_MASK_MCHUNK_FOOT */
+#define mstate_encode_for_footer(M) ((size_t)(M))
+#define mstate_decode_for_footer(M) ((mstate)(M))
+#endif /* !XOR_MASK_MCHUNK_FOOT */
+#define mark_inuse_foot(M, p, s) (chunk_plus_offset(p, s)->prev_foot = mstate_encode_for_footer(M))
+#define get_mstate_for(p) mstate_decode_for_footer(next_chunk(p)->prev_foot)
 #endif /* !GM_ONLY */
 
 
-#define set_inuse(M, p, s)                                     \
-	((p)->head = (((p)->head & PINUSE_BIT) | s | CINUSE_BIT),  \
-	 (((mchunkptr)(((char *)(p)) + (s)))->head |= PINUSE_BIT), \
+#define set_inuse(M, p, s)                                    \
+	((p)->head = (((p)->head & PINUSE_BIT) | s | CINUSE_BIT), \
+	 (chunk_plus_offset(p, s)->head |= PINUSE_BIT),           \
 	 mark_inuse_foot(M, p, s))
 
-#define set_inuse_and_pinuse(M, p, s)                          \
-	((p)->head = (s | PINUSE_BIT | CINUSE_BIT),                \
-	 (((mchunkptr)(((char *)(p)) + (s)))->head |= PINUSE_BIT), \
+#define set_inuse_and_pinuse(M, p, s)               \
+	((p)->head = (s | PINUSE_BIT | CINUSE_BIT),     \
+	 (chunk_plus_offset(p, s)->head |= PINUSE_BIT), \
 	 mark_inuse_foot(M, p, s))
 
 #define set_size_and_pinuse_of_inuse_chunk(M, p, s) \
@@ -1838,7 +1840,7 @@ static void do_check_any_chunk(PARAM_mstate_m_ mchunkptr p) {
 
 /* Check properties of top chunk */
 static void do_check_top_chunk(PARAM_mstate_m_ mchunkptr p) {
-	msegmentptr sp = segment_holding(ARG_mstate_m_(char *) p);
+	msegmentptr sp = segment_holding(ARG_mstate_m_ (char *)p);
 	size_t sz      = p->head & ~INUSE_BITS; /* third-lowest bit can be set! */
 	ASSERT(sp != 0);
 	ASSERT((is_aligned(chunk2mem(p))) || (p->head == FENCEPOST_HEAD));
@@ -5817,7 +5819,12 @@ PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(void) {
 	size_t result = 0;
 	struct leak_footer *iter;
 	leaks_lock_acquire_and_reap();
-	for (iter = leaks.lf_next; iter != &leaks; iter = iter->lf_next) {
+#if 1 /* 1: Enumerate from oldest-to-newest; 0: newest-to-oldest */
+	for (iter = leaks.lf_prev; iter != &leaks; iter = iter->lf_prev)
+#else
+	for (iter = leaks.lf_next; iter != &leaks; iter = iter->lf_next)
+#endif
+	{
 		void *mem = atomic_read(&iter->lf_chunk);
 		mchunkptr p = mem2chunk(mem);
 		size_t size = chunksize(p) - overhead_for(p);
