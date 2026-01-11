@@ -73,6 +73,8 @@ assertTraits(collections.BitsetView, seq_getitem: true);
 #if __DEEMON_VARIANT__ == "gatw"
 import rt;
 
+local CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES = hasattr(rt, "ModuleDir");
+
 assertTraits(rt.SeqCombinations, seq_getitem: true);
 assertTraits(rt.SeqRepeatCombinations, seq_getitem: true);
 assertTraits(rt.SeqPermutations, seq_getitem: true);
@@ -192,6 +194,8 @@ assertTraits(rt.ReBytesSplit, seq_getitem: true);
 
 assertTraits(rt.ModuleExports, seq_getitem: false, map_getitem: false);
 assertTraits(rt.ModuleGlobals, seq_getitem: false);
+if (CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES)
+	assertTraits(rt.ModuleLibNames, seq_getitem: true);
 
 assertTraits(rt.ClassOperatorTable, seq_getitem: true, map_getitem: true);
 assertTraits(rt.ClassAttributeTable, seq_getitem: true, map_getitem: true);

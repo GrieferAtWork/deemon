@@ -115,6 +115,7 @@ print define_Dee_HashStr("__args__");
 print define_Dee_HashStr("__bases__");
 print define_Dee_HashStr("__exports__");
 print define_Dee_HashStr("__globals__");
+print define_Dee_HashStr("__libnames__");
 print define_Dee_HashStr("__kwds__");
 print define_Dee_HashStr("__locals__");
 print define_Dee_HashStr("__mro__");
@@ -179,6 +180,7 @@ print define_Dee_HashStr("__IterWithEnumerateIndexMap__");
 #define Dee_HashStr____bases__ _Dee_HashSelectC(0xff4ac0d2, 0x56bdc053fa64e4c9)
 #define Dee_HashStr____exports__ _Dee_HashSelectC(0x1d7df2db, 0x304ed10433cd0d26)
 #define Dee_HashStr____globals__ _Dee_HashSelectC(0x6bd07fac, 0x3114153efd2ae18d)
+#define Dee_HashStr____libnames__ _Dee_HashSelectC(0x85e6e948, 0x336325b0f423421)
 #define Dee_HashStr____kwds__ _Dee_HashSelectC(0xd3926a14, 0xa90825b224a7262b)
 #define Dee_HashStr____locals__ _Dee_HashSelectC(0x9afc687c, 0x5b2c71a072cbe841)
 #define Dee_HashStr____mro__ _Dee_HashSelectC(0x4b5e22f6, 0x8dbbdb5c2f99ff7a)
@@ -2104,6 +2106,13 @@ librt_get_ModuleGlobals_f(void) {
 	return_cached(get_type_of(DeeObject_GetAttrStringHash((DeeObject *)DeeModule_GetDeemon(), STR_AND_HASH(__globals__))));
 }
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_ModuleLibNames_f(void) {
+	return_cached(get_type_of(DeeObject_GetAttrStringHash((DeeObject *)DeeModule_GetDeemon(), STR_AND_HASH(__libnames__))));
+}
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
 PRIVATE DEFINE_BYTES(small_bytes, Dee_BUFFER_FREADONLY, 1, { 0 });
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -2952,6 +2961,9 @@ PRIVATE DEFINE_CMETHOD0(librt_get_TypeOperatorsIterator, &librt_get_TypeOperator
 PRIVATE DEFINE_CMETHOD0(librt_get_ModuleExports, &librt_get_ModuleExports_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_ModuleExportsIterator, &librt_get_ModuleExportsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_ModuleGlobals, &librt_get_ModuleGlobals_f, METHOD_FCONSTCALL);
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+PRIVATE DEFINE_CMETHOD0(librt_get_ModuleLibNames, &librt_get_ModuleLibNames_f, METHOD_FCONSTCALL);
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 PRIVATE DEFINE_CMETHOD0(librt_get_BytesFind, &librt_get_BytesFind_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_BytesFindIterator, &librt_get_BytesFindIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_BytesCaseFind, &librt_get_BytesCaseFind_f, METHOD_FCONSTCALL);
@@ -3388,6 +3400,9 @@ DEX_GETTER_F_NODOC("ReBytesSplitIterator", &librt_get_ReBytesSplitIterator, DEXS
 DEX_GETTER_F_NODOC("ModuleExports", &librt_get_ModuleExports, DEXSYM_CONSTEXPR),                 /* ModuleExports_Type */
 DEX_GETTER_F_NODOC("ModuleExportsIterator", &librt_get_ModuleExportsIterator, DEXSYM_CONSTEXPR), /* ModuleExportsIterator_Type */
 DEX_GETTER_F_NODOC("ModuleGlobals", &librt_get_ModuleGlobals, DEXSYM_CONSTEXPR),                 /* ModuleGlobals_Type */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+DEX_GETTER_F_NODOC("ModuleLibNames", &librt_get_ModuleLibNames, DEXSYM_CONSTEXPR),               /* ModuleLibNames_Type */
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 /* Internal types used to drive user-defined classes */
 DEX_GETTER_F_NODOC("ClassOperatorTable", &librt_get_ClassOperatorTable, DEXSYM_CONSTEXPR),                   /* ClassOperatorTable_Type */

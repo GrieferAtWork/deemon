@@ -2701,11 +2701,14 @@ PRIVATE struct type_member tpconst module_members[] = {
 };
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeModule_ViewExports(DeeObject *__restrict self);
+DeeModule_ViewExports(DeeModuleObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeModule_ViewGlobals(DeeObject *__restrict self);
+DeeModule_ViewGlobals(DeeModuleObject *__restrict self);
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeModule_LibNames(DeeModuleObject *__restrict self);
+
 PRIVATE struct type_method tpconst module_methods[] = {
 	TYPE_KWMETHOD_F("__relname__", &module_relname, METHOD_FNOREFESCAPE,
 	                "(to:?X4?DModule?Dstring?DType?N=!N,libname=!f,todir=!f)->?Dstring\n"
@@ -2775,7 +2778,10 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 	                    "#tUnboundAttribute{Module isn't located in a directory reachable from any ?#{c:path}}\n"
 	                    "Returns the #Cfirst libname for this module. Note that the order of "
 	                    /**/ "?#__libnames__ of a module is random. Same as ${this.__libnames__.first}"),
-	/* TODO: __libnames__->?S?Dstring (to expose DeeModule_GetLibName() and DeeModule_GetLibNameCount()) */
+	TYPE_GETTER_AB_F("__libnames__", &DeeModule_LibNames, METHOD_FCONSTCALL,
+	                 "->?S?Dstring\n"
+	                 "Returns a sequence of all lib names assigned to this "
+	                 /**/ "module. These come in no particular order"),
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	TYPE_GETTER_F("__code__", &module_get_code, METHOD_FNOREFESCAPE,
 	              "->?Ert:Code\n"

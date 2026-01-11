@@ -269,6 +269,8 @@ assertRtTypeName("ReBytesSplitIterator");
 assertRtTypeName("ModuleExports");
 assertRtTypeName("ModuleExportsIterator");
 assertRtTypeName("ModuleGlobals");
+if (CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES)
+	assertRtTypeName("ModuleLibNames");
 
 assertRtTypeName("ClassOperatorTable");
 assertRtTypeName("ClassOperatorTableIterator");

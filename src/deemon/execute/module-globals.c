@@ -23,6 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/bool.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
@@ -1237,7 +1238,7 @@ modglobals_init(ModuleGlobals *__restrict self,
 	DeeArg_Unpack1(err, argc, argv, "_ModuleGlobals", &self->mg_module);
 	if (DeeObject_AssertType(self->mg_module, &DeeModule_Type))
 		goto err;
-	Dee_Incref(&DeeModule_Empty);
+	Dee_Incref(self->mg_module);
 	return 0;
 err:
 	return -1;
@@ -1464,7 +1465,8 @@ PRIVATE struct type_seq modglobals_seq = {
 INTERN DeeTypeObject ModuleGlobals_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ModuleGlobals",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(mod:?DModule)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1524,6 +1526,175 @@ DeeModule_ViewGlobals(DeeModuleObject *__restrict self) {
 done:
 	return result;
 }
+
+
+
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+typedef struct {
+	PROXY_OBJECT_HEAD_EX(DeeModuleObject, mln_module); /* [1..1] The module who's libnames are being viewed. */
+} ModuleLibNames;
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+modlibnames_init(ModuleLibNames *__restrict self,
+                 size_t argc, DeeObject *const *argv) {
+	DeeArg_Unpack1(err, argc, argv, "_ModuleLibNames", &self->mln_module);
+	if (DeeObject_AssertType(self->mln_module, &DeeModule_Type))
+		goto err;
+	Dee_Incref(self->mln_module);
+	return 0;
+err:
+	return -1;
+}
+
+STATIC_ASSERT(offsetof(ModuleLibNames, mln_module) == offsetof(ProxyObject, po_obj));
+#define modlibnames_copy      generic_proxy__copy_alias
+#define modlibnames_deep      generic_proxy__copy_alias /* Don't deep-copy modules */
+#define modlibnames_fini      generic_proxy__fini_unlikely
+#define modlibnames_visit     generic_proxy__visit
+#define modlibnames_serialize generic_proxy__serialize
+
+STATIC_ASSERT(offsetof(ModuleLibNames, mln_module) == offsetof(ModuleExports, me_module));
+#define modlibnames_ctor    modexports_ctor
+#define modlibnames_members modexports_members
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+modlibnames_size(ModuleLibNames *__restrict self) {
+	return DeeModule_GetLibNameCount(self->mln_module);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+modlibnames_getitem_index(ModuleLibNames *self, size_t index) {
+	size_t size;
+	DeeModuleObject *mod = self->mln_module;
+	DREF DeeObject *result;
+again:
+	result = DeeModule_GetLibName(mod, index);
+	if (result != ITER_DONE)
+		return result;
+	size = DeeModule_GetLibNameCount(mod);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if unlikely(index < size)
+		goto again;
+	DeeRT_ErrIndexOutOfBounds(self, index, size);
+err:
+	return NULL;
+}
+
+PRIVATE struct type_member tpconst modlibnames_class_members[] = {
+	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
+	TYPE_MEMBER_CONST(STR_ItemType, &DeeString_Type),
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_seq modlibnames_seq = {
+	/* .tp_iter                       = */ DEFIMPL(&default__seq_operator_iter__with__seq_operator_size__and__seq_operator_getitem_index),
+	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
+	/* .tp_contains                   = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains),
+	/* .tp_getitem                    = */ DEFIMPL(&default__getitem__with__getitem_index),
+	/* .tp_delitem                    = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
+	/* .tp_setitem                    = */ DEFIMPL(&default__seq_operator_setitem__unsupported),
+	/* .tp_getrange                   = */ DEFIMPL(&default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n),
+	/* .tp_delrange                   = */ DEFIMPL(&default__seq_operator_delrange__unsupported),
+	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
+	/* .tp_foreach                    = */ DEFIMPL(&default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index),
+	/* .tp_foreach_pair               = */ DEFIMPL(&default__seq_operator_foreach_pair__with__seq_operator_foreach),
+	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__getitem),
+	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__bounditem),
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&modlibnames_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&modlibnames_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported),
+	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
+	/* .tp_bounditem_index            = */ DEFIMPL(&default__bounditem_index__with__getitem_index),
+	/* .tp_hasitem_index              = */ DEFIMPL(&default__hasitem_index__with__bounditem_index),
+	/* .tp_getrange_index             = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_getitem_index),
+	/* .tp_delrange_index             = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
+	/* .tp_setrange_index             = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),
+	/* .tp_getrange_index_n           = */ DEFIMPL(&default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operator_getitem_index),
+	/* .tp_delrange_index_n           = */ DEFIMPL(&default__seq_operator_delrange_index_n__unsupported),
+	/* .tp_setrange_index_n           = */ DEFIMPL(&default__seq_operator_setrange_index_n__unsupported),
+	/* .tp_trygetitem                 = */ DEFIMPL(&default__trygetitem__with__trygetitem_index),
+	/* .tp_trygetitem_index           = */ DEFIMPL(&default__trygetitem_index__with__getitem_index),
+	/* .tp_trygetitem_string_hash     = */ DEFIMPL(&default__trygetitem_string_hash__with__getitem_string_hash),
+	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__getitem),
+	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__delitem_string_hash__with__delitem),
+	/* .tp_setitem_string_hash        = */ DEFIMPL(&default__setitem_string_hash__with__setitem),
+	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__getitem_string_hash),
+	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__bounditem_string_hash),
+	/* .tp_trygetitem_string_len_hash = */ DEFIMPL(&default__trygetitem_string_len_hash__with__getitem_string_len_hash),
+	/* .tp_getitem_string_len_hash    = */ DEFIMPL(&default__getitem_string_len_hash__with__getitem),
+	/* .tp_delitem_string_len_hash    = */ DEFIMPL(&default__delitem_string_len_hash__with__delitem),
+	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__setitem_string_len_hash__with__setitem),
+	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__getitem_string_len_hash),
+	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__bounditem_string_len_hash),
+};
+
+INTERN DeeTypeObject ModuleLibNames_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_ModuleLibNames",
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(mod:?DModule)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ ModuleExports,
+			/* tp_ctor:        */ &modlibnames_ctor,
+			/* tp_copy_ctor:   */ &modlibnames_copy,
+			/* tp_deep_ctor:   */ &modlibnames_deep,
+			/* tp_any_ctor:    */ &modlibnames_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &modlibnames_serialize
+		),
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&modlibnames_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ DEFIMPL(&object_str),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool      = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_size),
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
+	},
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&modlibnames_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
+	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__DC202CECA797EF15),
+	/* .tp_seq           = */ &modlibnames_seq,
+	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
+	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ modlibnames_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ modlibnames_class_members,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
+};
+
+INTERN WUNUSED NONNULL((1)) DREF ModuleLibNames *DCALL
+DeeModule_LibNames(DeeModuleObject *__restrict self) {
+	DREF ModuleLibNames *result;
+	result = DeeObject_MALLOC(ModuleLibNames);
+	if unlikely(!result)
+		goto done;
+	result->mln_module = self;
+	Dee_Incref(self);
+	DeeObject_Init(result, &ModuleLibNames_Type);
+done:
+	return result;
+}
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 DECL_END
