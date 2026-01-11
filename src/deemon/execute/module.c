@@ -2553,6 +2553,29 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+module_get_libname(DeeModuleObject *__restrict self) {
+	DREF /*String*/ DeeObject *result;
+	result = DeeModule_GetLibName(self, 0);
+	if unlikely(result == ITER_DONE)
+		goto err_unbound;
+	return result;
+err_unbound:
+	return DeeRT_ErrUnboundAttrCStr(self, "__libname__");
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+module_bound_libname(DeeModuleObject *__restrict self) {
+	DREF /*String*/ DeeObject *result;
+	result = DeeModule_GetLibName(self, 0);
+	if (result == ITER_DONE)
+		return Dee_BOUND_NO;
+	if unlikely(!result)
+		return Dee_BOUND_ERR;
+	Dee_Decref(result);
+	return Dee_BOUND_YES;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_get_directory(DeeModuleObject *__restrict self) {
 	DREF DeeObject *result = DeeModule_GetDirectory(self);
 	Dee_XIncref(result);
@@ -2747,6 +2770,11 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 	                 /**/ "This number may be assumed to change whenever "
 	                 /**/ "something about the underlying structure of the "
 	                 /**/ "module changes."),
+	TYPE_GETTER_BOUND_F("__libname__", &module_get_libname, &module_bound_libname, METHOD_FNOREFESCAPE,
+	                    "->?Dstring\n"
+	                    "#tUnboundAttribute{Module isn't located in a directory reachable from any ?#{c:path}}\n"
+	                    "Returns the #Cfirst libname for this module. Note that the order of "
+	                    /**/ "?#__libnames__ of a module is random. Same as ${this.__libnames__.first}"),
 	/* TODO: __libnames__->?S?Dstring (to expose DeeModule_GetLibName() and DeeModule_GetLibNameCount()) */
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	TYPE_GETTER_F("__code__", &module_get_code, METHOD_FNOREFESCAPE,
