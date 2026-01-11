@@ -123,7 +123,11 @@ DECL_BEGIN
 #define MALLOC_ALIGNMENT        (size_t)(__SIZEOF_POINTER__ * 2)
 #define PROCEED_ON_ERROR        0
 #define MALLOC_INSPECT_ALL      0
-#define MALLOC_FAILURE_ACTION   /* nothing */
+#if 1
+#define MALLOC_FAILURE_ACTION   /* Nothing */
+#else
+#define MALLOC_FAILURE_ACTION   Dee_BREAKPOINT()
+#endif
 
 #ifdef CONFIG_NO_THREADS
 #define USE_LOCKS             0
@@ -166,7 +170,31 @@ DECL_BEGIN
  * LEAK_DETECTION=1          time deemon util/test.dee       real    0m1.207s   137% (left-leaning RBTREE)
  * LEAK_DETECTION=1          time deemon util/test.dee       real    0m1.013s   115% (RBTREE)
  * LEAK_DETECTION_IN_TAIL=1  time deemon util/test.dee       real    0m0.965s   110%
- */
+ *
+ * As you can see, `LEAK_DETECTION_IN_TAIL=1' is ****MUCH**** faster than the old
+ * method of using an out-of-band RBTREE to describe memory leaks. It is however
+ * still noticeably slower (but not as painfully so) than LEAK_DETECTION=0.
+ *
+ * Inspecting of threads during heavy parallel computation (make computed-operators)
+ * reveals that at any moment, about 20% of threads are in the "SLIST_ATOMIC_INSERT"
+ * calls in `leak_insert_p()' and `DeeDbg_Free()' (iow: are failing to insert their
+ * relevant descriptors into the appropriate async-list for the purpose of either
+ * inserting, or removing a leak from said list).
+ *
+ * This observation actually makes, since the relevant lists:
+ * - leaks_pending_insert
+ * - leaks_pending_remove
+ *
+ * exist as global singletons, meaning that in situations where all 32 of my machine's
+ * core try to insert elements at the same time, there is only a 1/32 chance for that
+ * insert succeeding for any one of those threads.
+ *
+ * XXX: This could also be improved upon further by having multiple pending lists, and
+ *      selecting one at random based on the address of the "leak_footer" that's being
+ *      inserted into these lists (though that would require hard-coding the # of
+ *      lists that should exist -- or maybe not: why not allocate the vector of lists
+ *      dynamically once it is first needed, and then have it's element count match
+ *      the next-power-of-2 of the # of CPU in the system?) */
 #if 0
 #define LEAK_DETECTION 0
 #else
@@ -5723,6 +5751,8 @@ leak_insert(void *ptr, char const *file, unsigned int line) {
 		leak_insert_p(ptr, foot, file, line);
 		return ptr;
 	}
+	Dee_DPRINTF("[RT] Failed to allocate 'leak_footer' for %" PRFuSIZ "-byte large heap pointer %p\n",
+	            Dee_MallocUsableSize(ptr), ptr);
 	dlfree(ptr);
 	return NULL;
 }
