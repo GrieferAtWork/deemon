@@ -5638,8 +5638,8 @@ leak_footer_free(struct leak_footer *__restrict self) {
 #define leak_footer_free(self) leak_footer_free_uncached(self)
 #endif
 
-PRIVATE size_t alloc_id_count = 0;
-PRIVATE size_t alloc_id_break = 0;
+PRIVATE size_t alloc_id_count = 0; /* Last-assigned allocation id (for alloc breakpoints) */
+PRIVATE size_t alloc_id_break = 0; /* ID of allocation which (when allocated) must break into a debugger */
 
 /* Get/set the memory allocation breakpoint.
  * - When the deemon heap was built to track memory leaks, an optional
@@ -5873,8 +5873,16 @@ leak_insert_p(void *ptr, struct leak_footer *leak,
 
 	/* Allocate ID */
 	leak->lf_id = atomic_incfetch(&alloc_id_count);
-	if (leak->lf_id == alloc_id_break)
+	if (leak->lf_id == alloc_id_break && alloc_id_break != 0) {
+#ifndef Dee_BREAKPOINT_IS_NOOP
 		Dee_BREAKPOINT();
+#elif __has_builtin(__builtin_trap)
+		__builtin_trap();
+#else /* ... */
+		char volatile *volatile P = (char volatile *)0;
+		*P = 'B';
+#endif /* !... */
+	}
 
 	/* Insert into list of memory leaks (without ever blocking) */
 	leaks_insert_begin(leak);
