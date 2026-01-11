@@ -112,6 +112,7 @@ DECL_BEGIN
  * - Change dlcalloc (Dee_TryCalloc) to take only a single argument
  * - Assert in-use in dlmalloc_usable_size (Dee_MallocUsableSize)
  * - Use-after-free detection when re-used memory is allocated again
+ * - USE_PENDING_FREE_LIST: Support for guarantied non-blocking dlfree()
  * - USE_PER_THREAD_MSTATE: Support for thread-local heaps
  */
 
@@ -163,7 +164,6 @@ DECL_BEGIN
 #define FOOTERS 0
 #endif
 
-#define INSECURE              (!DL_DEBUG_EXTERNAL)
 /* FIXME: Despite everything, leak detection is still a **MAJOR** bottleneck:
  *
  * With LEAK_DETECTION=0
@@ -181,7 +181,9 @@ DECL_BEGIN
  */
 #define LEAK_DETECTION        DL_DEBUG_EXTERNAL
 #define DETECT_USE_AFTER_FREE DL_DEBUG_EXTERNAL
-#undef REALLOC_ZERO_BYTES_FREES
+#define INSECURE              (!DL_DEBUG_EXTERNAL)
+#undef REALLOC_ZERO_BYTES_FREES /* Nope: Dee_Realloc(p, 0) resizes to 0-sized block, but returns non-NULL */
+#undef MALLOC_ZERO_RETURNS_NULL /* Nope: Dee_Malloc(0) returns 0-sized, but non-NULL, block */
 
 /* Custom dlmalloc extension:
  * FLAG4_BIT on an allocation means it's part of "struct Dee_heapregion" */
@@ -861,12 +863,18 @@ typedef unsigned int flag_t;          /* The type of various bit flag sets */
 
 /* Get the internal overhead associated with chunk p */
 #if FLAG4_BIT_INDICATES_HEAP_REGION
-#define overhead_for(p) \
-	(is_mmapped(p) ? MMAP_CHUNK_OVERHEAD : flag4inuse(p) ? TWO_SIZE_T_SIZES : CHUNK_OVERHEAD)
-#else /* FLAG4_BIT_INDICATES_HEAP_REGION */
-#define overhead_for(p) \
-	(is_mmapped(p) ? MMAP_CHUNK_OVERHEAD : CHUNK_OVERHEAD)
-#endif /* !FLAG4_BIT_INDICATES_HEAP_REGION */
+#if MMAP_CHUNK_OVERHEAD == TWO_SIZE_T_SIZES && MMAP_CHUNK_OVERHEAD == CHUNK_OVERHEAD
+#define overhead_for(p) MMAP_CHUNK_OVERHEAD
+#elif MMAP_CHUNK_OVERHEAD == TWO_SIZE_T_SIZES
+#define overhead_for(p) (is_mmapped(p) ? MMAP_CHUNK_OVERHEAD : CHUNK_OVERHEAD)
+#else /* ... */
+#define overhead_for(p) (is_mmapped(p) ? (flag4inuse(p) ? TWO_SIZE_T_SIZES : MMAP_CHUNK_OVERHEAD) : CHUNK_OVERHEAD)
+#endif /* !... */
+#elif MMAP_CHUNK_OVERHEAD == CHUNK_OVERHEAD
+#define overhead_for(p) MMAP_CHUNK_OVERHEAD
+#else /* ... */
+#define overhead_for(p) (is_mmapped(p) ? MMAP_CHUNK_OVERHEAD : CHUNK_OVERHEAD)
+#endif /* !... */
 
 /* Return true if malloced space is not necessarily cleared */
 #if HAVE_MMAP_CLEARS && !defined(DL_DEBUG_MEMSET_ALLOC)
@@ -3177,6 +3185,10 @@ PUBLIC ATTR_MALLOC WUNUSED void *(DCALL Dee_TryMalloc)(size_t bytes)
 	void *mem;
 	size_t nb;
 
+#ifdef MALLOC_ZERO_RETURNS_NULL
+	if unlikely(!bytes)
+		return NULL;
+#endif /* MALLOC_ZERO_RETURNS_NULL */
 #ifdef HOOK_AFTER_INIT_MALLOC
 	ensure_initialization_for(HOOK_AFTER_INIT_MALLOC(bytes));
 #else /* HOOK_AFTER_INIT_MALLOC */
@@ -4667,6 +4679,10 @@ static void *mspace_malloc(mspace msp, size_t bytes) {
 	size_t nb;
 	mstate ms = (mstate)msp;
 	ext_assert__ok_magic(ms);
+#ifdef MALLOC_ZERO_RETURNS_NULL
+	if unlikely(!bytes)
+		return NULL;
+#endif /* MALLOC_ZERO_RETURNS_NULL */
 	PREACTION(ms);
 	if (bytes <= MAX_SMALL_REQUEST) {
 		bindex_t idx;
