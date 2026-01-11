@@ -194,18 +194,84 @@ DECL_BEGIN
  *
  * -------------------------------------------------------------------------
  *
- * The only real solution that I see is so scrap the idea of storing info
- * about memory leaks out-of-band, and instead use+extend dlmalloc's FOOTER
- * mechanism to store a whole bunch of extra data in the footer of allocated
- * heap chunks (that don't have FLAG4_BIT set):
- * >> size_t prev_foot; // s.a. mchunk::prev_foot
- * >> size_t head;      // s.a. mchunk::head
- * >> ...               // Payload
- * >> char const *file; // LEAK_DETECTION: allocation file
- * >> int         line; // LEAK_DETECTION: allocation line
- * >> mchunkptr   prev; // LEAK_DETECTION: prev. allocation
- * >> mchunkptr   next; // LEAK_DETECTION: next. allocation
- * >> <prev_foot>       // If dlmalloc native footers are also enabled
+ * >> Scrap the idea of storing info about memory leaks out-of-band
+ *
+ * Possible solutions:
+ * - Use+extend dlmalloc's FOOTER mechanism to store a whole bunch of extra data
+ *   in the footer of allocated heap chunks (that don't have FLAG4_BIT set):
+ *   >> size_t prev_foot; // s.a. mchunk::prev_foot
+ *   >> size_t head;      // s.a. mchunk::head
+ *   >> ...               // Payload
+ *   >> char const *file; // LEAK_DETECTION: allocation file
+ *   >> int         line; // LEAK_DETECTION: allocation line
+ *   >> mchunkptr   prev; // LEAK_DETECTION: prev. allocation
+ *   >> mchunkptr   next; // LEAK_DETECTION: next. allocation
+ *   >> <prev_foot>       // If dlmalloc native footers are also enabled
+ *
+ * - Force-enable `FOOTERS', thus causing dlmalloc to always make space for
+ *   a pointer-sized field at the tail of an malloc chunk (the address of
+ *   this tail can easily be calculated as it is `p + Dee_MallocUsableSize(p)').
+ *   - Then, allocate another, small heap block that will contain the debug info
+ *     needed to track the pointer as a potential memory leak. This struct has
+ *     a fixed length (meaning it can also have a dedicated slab-style cache),
+ *     and looks like this:
+ *     >> struct leak_footer {
+ *     >>     size_t              lf_foot;  // Original value of the chunk's footer
+ *     >>     void               *lf_chunk; // [1..1] Pointer, as returned by dlmalloc() for linked memory
+ *     >>     struct leak_footer *lf_prev;  // [1..1] Prev tracked heap chunk
+ *     >>     struct leak_footer *lf_next;  // [1..1] Next tracked heap chunk
+ *     >>     char const         *lf_file;  // [0..1] File where "lf_chunk" was allocated
+ *     >>     unsigned int        lf_line;  // Line where "lf_chunk" was allocated
+ *     >> };
+ *   - Dee_Malloc(size) is then implemented like (simplified):
+ *     >> void *result = dlmalloc(size);
+ *     >> struct leak_footer *foot = dlmalloc(sizeof(struct leak_footer));
+ *     >> size_t usable = Dee_MallocUsableSize(result);
+ *     >> size_t *p_foot = (size_t *)((char *)result + usable);
+ *     >> foot->lf_foot = *p_foot;
+ *     >> *p_foot = (size_t)(uintptr_t)foot;
+ *     >> foot->lf_chunk = result;
+ *     >> foot->lf_file = __FILE__;
+ *     >> foot->lf_line = __LINE__;
+ *     >> // When this blocks, have an ATOMIC_SLIST of pending inserts (the
+ *     >> // "foot->lf_prev" field can be re-used as linked list pointer)
+ *     >> LOCK_TRACKED_LEAKS();
+ *     >> INSERT_INTO_GLOBAL_LIST_OF_LEAKS(foot);
+ *     >> UNLOCK_TRACKED_LEAKS();
+ *     >> return result;
+ *   - Dee_Free(ptr) is then implemented like (simplified):
+ *     >> mchunkptr p = mem2chunk(ptr);
+ *     >> if (!flag4inuse(p)) {
+ *     >>     size_t *p_foot = (size_t *)chunk_plus_offset(p, chunksize(p) - sizeof(size_t));
+ *     >>     struct leak_footer *foot = (struct leak_footer *)(uintptr_t)(*p_foot);
+ *     >>     // When this blocks, have an ATOMIC_SLIST of pending removes (the
+ *     >>     // "foot->lf_file" field can be re-used as linked list pointer)
+ *     >>     LOCK_TRACKED_LEAKS();
+ *     >>     REMOVE_FROM_GLOBAL_LIST_OF_LEAKS(foot);
+ *     >>     UNLOCK_TRACKED_LEAKS();
+ *     >>     *p_foot = foot->lf_foot; // Restore, so dlfree() doesn't break
+ *     >>     dlfree(foot);
+ *     >> }
+ *     >> dlfree(ptr);
+ *
+ *   - NOTE: I've already checked, and since dlmalloc has no way of tracking currently
+ *           allocated heap chunks, so-long as the original value is always restored,
+ *           there is no harm in temporarily overriding one's own chunk footer:
+ *     >> void *a = Dee_Malloc(0);
+ *     >> void *p = Dee_Malloc(16);
+ *     >> void *c = Dee_Malloc(0);
+ *     >> size_t s = Dee_MallocUsableSize(p);
+ *     >> void *tail = (char *)p + s;
+ *     >> size_t tail_ptr = *(size_t *)tail;
+ *     >> *(size_t *)tail = 42;
+ *     >> Dee_CHECKMEMORY();
+ *     >> Dee_Free(a);
+ *     >> Dee_CHECKMEMORY();
+ *     >> Dee_Free(c);
+ *     >> Dee_CHECKMEMORY();                   // This never fails (under FOOTERS=1), even though our "tail" is corrupt
+ *     >> *(size_t *)tail = tail_ptr;          // ... but without this, the following Dee_Free() *would* fail
+ *     >> Dee_Free(p);
+ *
  */
 #if 0
 #define LEAK_DETECTION        0
