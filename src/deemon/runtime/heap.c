@@ -155,135 +155,48 @@ DECL_BEGIN
 #define DL_DEBUG_INTERNAL 0
 #endif
 
-/* Always keep (unnecessary) footers disabled -- they don't really improve safety when on,
+/* CAUTION: Leak detection is a bit of a bottleneck:
+ *
+ * LEAK_DETECTION=0          time make computed-operators    real    0m4.482s
+ * LEAK_DETECTION=1          time make computed-operators    real    0m27.545s  615% (left-leaning RBTREE)
+ * LEAK_DETECTION=1          time make computed-operators    real    0m20.685s  462% (RBTREE)
+ * LEAK_DETECTION_IN_TAIL=1  time make computed-operators    real    0m7.234s   161%
+ *
+ * LEAK_DETECTION=0          time deemon util/test.dee       real    0m0.881s   100%
+ * LEAK_DETECTION=1          time deemon util/test.dee       real    0m1.207s   137% (left-leaning RBTREE)
+ * LEAK_DETECTION=1          time deemon util/test.dee       real    0m1.013s   115% (RBTREE)
+ * LEAK_DETECTION_IN_TAIL=1  time deemon util/test.dee       real    0m0.965s   110%
+ */
+#if 0
+#define LEAK_DETECTION 0
+#else
+#define LEAK_DETECTION DL_DEBUG_EXTERNAL
+#endif
+#define DETECT_USE_AFTER_FREE  DL_DEBUG_EXTERNAL
+#define INSECURE               (!DL_DEBUG_EXTERNAL)
+#if 1 /* Use the new approach for "LEAK_DETECTION" that doesn't store data out-of-band */
+#define LEAK_DETECTION_IN_TAIL LEAK_DETECTION
+#else
+#define LEAK_DETECTION_IN_TAIL 0
+#endif
+#undef REALLOC_ZERO_BYTES_FREES /* Nope: Dee_Realloc(p, 0) resizes to 0-sized block, but returns non-NULL */
+#undef MALLOC_ZERO_RETURNS_NULL /* Nope: Dee_Malloc(0) returns 0-sized, but non-NULL, block */
+
+
+ /* Always keep (unnecessary) footers disabled -- they don't really improve safety when on,
  * since their presence causes allocations to require an additional word of memory, there
  * is a chance that alignment requirements ceil this to enough memory such that buffer-
  * overruns don't end up being detected. */
 #if USE_PER_THREAD_MSTATE
 #define FOOTERS 1 /* Needed for `Dee_Free()' to detect source mspace! */
+#elif LEAK_DETECTION && LEAK_DETECTION_IN_TAIL
+#define FOOTERS 1 /* Needed for `DeeDbg_Malloc()' to store debug info in the tail of heap blocks */
 #else
 #define FOOTERS 0
 #endif
 
-/* FIXME: Despite everything, leak detection is still a **MAJOR** bottleneck:
- *
- * LEAK_DETECTION=0    time make computed-operators    real    0m4.482s
- * LEAK_DETECTION=1    time make computed-operators    real    0m27.545s
- *
- * Doing random inspections of the stacks of threads results in lots of
- * threads needing to do blocking-waits at:
- * - DeeDbg_Free:        leak_lock_acquire();
- * - DeeDbg_TryRealloc:  leak_lock_acquire();
- *
- * Even single-threaded code is significantly sped up when this is disabled:
- *
- * LEAK_DETECTION=0    time deemon util/test.dee       real    0m0.881s
- * LEAK_DETECTION=1    time deemon util/test.dee       real    0m1.207s
- *
- * !!! That a 33% speed difference !!!
- *
- *
- * After changing LEAK_DETECTION to use a regular RBTREE (instead of a
- * left-leaning one), numbers have improved somewhat:
- *
- * LEAK_DETECTION=1    time make computed-operators    real    0m20.685s  (-7s;   -25%)
- * LEAK_DETECTION=1    time deemon util/test.dee       real    0m1.013s   (-0.2s  -20%)
- *
- * But it's still between 20% (single-threaded) and 400% (multi-threaded)
- * slower than deemon built with LEAK_DETECTION=0
- *
- * -------------------------------------------------------------------------
- *
- * >> Scrap the idea of storing info about memory leaks out-of-band
- *
- * Possible solutions:
- * - Use+extend dlmalloc's FOOTER mechanism to store a whole bunch of extra data
- *   in the footer of allocated heap chunks (that don't have FLAG4_BIT set):
- *   >> size_t prev_foot; // s.a. mchunk::prev_foot
- *   >> size_t head;      // s.a. mchunk::head
- *   >> ...               // Payload
- *   >> char const *file; // LEAK_DETECTION: allocation file
- *   >> int         line; // LEAK_DETECTION: allocation line
- *   >> mchunkptr   prev; // LEAK_DETECTION: prev. allocation
- *   >> mchunkptr   next; // LEAK_DETECTION: next. allocation
- *   >> <prev_foot>       // If dlmalloc native footers are also enabled
- *
- * - Force-enable `FOOTERS', thus causing dlmalloc to always make space for
- *   a pointer-sized field at the tail of an malloc chunk (the address of
- *   this tail can easily be calculated as it is `p + Dee_MallocUsableSize(p)').
- *   - Then, allocate another, small heap block that will contain the debug info
- *     needed to track the pointer as a potential memory leak. This struct has
- *     a fixed length (meaning it can also have a dedicated slab-style cache),
- *     and looks like this:
- *     >> struct leak_footer {
- *     >>     size_t              lf_foot;  // Original value of the chunk's footer
- *     >>     void               *lf_chunk; // [1..1] Pointer, as returned by dlmalloc() for linked memory
- *     >>     struct leak_footer *lf_prev;  // [1..1] Prev tracked heap chunk
- *     >>     struct leak_footer *lf_next;  // [1..1] Next tracked heap chunk
- *     >>     char const         *lf_file;  // [0..1] File where "lf_chunk" was allocated
- *     >>     unsigned int        lf_line;  // Line where "lf_chunk" was allocated
- *     >> };
- *   - Dee_Malloc(size) is then implemented like (simplified):
- *     >> void *result = dlmalloc(size);
- *     >> struct leak_footer *foot = dlmalloc(sizeof(struct leak_footer));
- *     >> size_t usable = Dee_MallocUsableSize(result);
- *     >> size_t *p_foot = (size_t *)((char *)result + usable);
- *     >> foot->lf_foot = *p_foot;
- *     >> *p_foot = (size_t)(uintptr_t)foot;
- *     >> foot->lf_chunk = result;
- *     >> foot->lf_file = __FILE__;
- *     >> foot->lf_line = __LINE__;
- *     >> // When this blocks, have an ATOMIC_SLIST of pending inserts (the
- *     >> // "foot->lf_prev" field can be re-used as linked list pointer)
- *     >> LOCK_TRACKED_LEAKS();
- *     >> INSERT_INTO_GLOBAL_LIST_OF_LEAKS(foot);
- *     >> UNLOCK_TRACKED_LEAKS();
- *     >> return result;
- *   - Dee_Free(ptr) is then implemented like (simplified):
- *     >> mchunkptr p = mem2chunk(ptr);
- *     >> if (!flag4inuse(p)) {
- *     >>     size_t *p_foot = (size_t *)chunk_plus_offset(p, chunksize(p) - sizeof(size_t));
- *     >>     struct leak_footer *foot = (struct leak_footer *)(uintptr_t)(*p_foot);
- *     >>     // When this blocks, have an ATOMIC_SLIST of pending removes (the
- *     >>     // "foot->lf_file" field can be re-used as linked list pointer)
- *     >>     LOCK_TRACKED_LEAKS();
- *     >>     REMOVE_FROM_GLOBAL_LIST_OF_LEAKS(foot);
- *     >>     UNLOCK_TRACKED_LEAKS();
- *     >>     *p_foot = foot->lf_foot; // Restore, so dlfree() doesn't break
- *     >>     dlfree(foot);
- *     >> }
- *     >> dlfree(ptr);
- *
- *   - NOTE: I've already checked, and since dlmalloc has no way of tracking currently
- *           allocated heap chunks, so-long as the original value is always restored,
- *           there is no harm in temporarily overriding one's own chunk footer:
- *     >> void *a = Dee_Malloc(0);
- *     >> void *p = Dee_Malloc(16);
- *     >> void *c = Dee_Malloc(0);
- *     >> size_t s = Dee_MallocUsableSize(p);
- *     >> void *tail = (char *)p + s;
- *     >> size_t tail_ptr = *(size_t *)tail;
- *     >> *(size_t *)tail = 42;
- *     >> Dee_CHECKMEMORY();
- *     >> Dee_Free(a);
- *     >> Dee_CHECKMEMORY();
- *     >> Dee_Free(c);
- *     >> Dee_CHECKMEMORY();                   // This never fails (under FOOTERS=1), even though our "tail" is corrupt
- *     >> *(size_t *)tail = tail_ptr;          // ... but without this, the following Dee_Free() *would* fail
- *     >> Dee_Free(p);
- *
- */
-#if 0
-#define LEAK_DETECTION        0
-#else
-#define LEAK_DETECTION        DL_DEBUG_EXTERNAL
-#endif
-#define DETECT_USE_AFTER_FREE DL_DEBUG_EXTERNAL
-#define INSECURE              (!DL_DEBUG_EXTERNAL)
-#undef REALLOC_ZERO_BYTES_FREES /* Nope: Dee_Realloc(p, 0) resizes to 0-sized block, but returns non-NULL */
-#undef MALLOC_ZERO_RETURNS_NULL /* Nope: Dee_Malloc(0) returns 0-sized, but non-NULL, block */
 
-/* Custom dlmalloc extension:
+ /* Custom dlmalloc extension:
  * FLAG4_BIT on an allocation means it's part of "struct Dee_heapregion" */
 #define FLAG4_BIT_INDICATES_HEAP_REGION 1
 
@@ -499,14 +412,22 @@ DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL Dee_TryCalloc)(size_t n_bytes);
 DFUNDEF void (DCALL Dee_Free)(void *ptr);
 DFUNDEF WUNUSED void *(DCALL Dee_TryRealloc)(void *ptr, size_t n_bytes);
 DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL Dee_TryMemalign)(size_t min_alignment, size_t n_bytes);
+DFUNDEF WUNUSED void *(DCALL Dee_TryReallocInPlace)(void *ptr, size_t n_bytes);
 #else /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
+#define DLFREE_CHECKS_NULL    0 /* Not needed (already done by caller) */
+#define DLREALLOC_CHECKS_NULL 0 /* Not needed (already done by caller) */
 static ATTR_MALLOC WUNUSED void *dlmalloc(size_t n_bytes);
 static ATTR_MALLOC WUNUSED void *dlcalloc(size_t n_bytes);
 static void dlfree(void *ptr);
 static WUNUSED void *dlrealloc(void *ptr, size_t n_bytes);
 static ATTR_MALLOC WUNUSED void *dlmemalign(size_t min_alignment, size_t n_bytes);
-#endif /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
+#if LEAK_DETECTION_IN_TAIL
+#define DLREALLOC_IN_PLACE_CHECKS_NULL 0 /* Not needed (already done by caller) */
+static WUNUSED void *dlrealloc_in_place(void *ptr, size_t n_bytes);
+#else /* LEAK_DETECTION_IN_TAIL */
 DFUNDEF WUNUSED void *(DCALL Dee_TryReallocInPlace)(void *ptr, size_t n_bytes);
+#endif /* !LEAK_DETECTION_IN_TAIL */
+#endif /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
 
 #if !NO_POSIX_MEMALIGN
 static int dlposix_memalign(void **, size_t, size_t);
@@ -3528,6 +3449,10 @@ static void dlfree(void *mem)
 PUBLIC void (DCALL Dee_Free)(void *mem)
 #endif /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
 {
+#ifndef DLFREE_CHECKS_NULL
+#define DLFREE_CHECKS_NULL 1
+#endif /* !DLFREE_CHECKS_NULL */
+
 	/*
 	   Consolidate freed chunks with preceeding or succeeding bordering
 	   free chunks, if they exist, and then place in a bin.  Intermixed
@@ -3543,8 +3468,10 @@ PUBLIC void (DCALL Dee_Free)(void *mem)
 #endif /* !FOOTERS || GM_ONLY */
 
 	/* Ignore "NULL"-pointers */
+#if DLFREE_CHECKS_NULL
 	if unlikely(!mem)
 		return;
+#endif /* DLFREE_CHECKS_NULL */
 
 	p = mem2chunk(mem);
 	validate_footer(p);
@@ -4272,21 +4199,27 @@ static WUNUSED void *dlrealloc(void *oldmem, size_t bytes)
 PUBLIC WUNUSED void *(DCALL Dee_TryRealloc)(void *oldmem, size_t bytes)
 #endif /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
 {
+#ifndef DLREALLOC_CHECKS_NULL
+#define DLREALLOC_CHECKS_NULL 1
+#endif /* !DLREALLOC_CHECKS_NULL */
 	void *mem = 0;
+#if DLREALLOC_CHECKS_NULL
 	if (oldmem == 0) {
 #ifdef HOOK_AFTER_INIT_REALLOC
 		ensure_initialization_for(HOOK_AFTER_INIT_REALLOC(oldmem, bytes));
 #endif /* HOOK_AFTER_INIT_REALLOC */
 		mem = dlmalloc(bytes);
-	} else if (bytes >= MAX_REQUEST) {
+	} else
+#endif /* DLREALLOC_CHECKS_NULL */
+	if (bytes >= MAX_REQUEST) {
 		MALLOC_FAILURE_ACTION;
-	}
+	} else
 #ifdef REALLOC_ZERO_BYTES_FREES
-	else if (bytes == 0) {
+	if (bytes == 0) {
 		dlfree(oldmem);
-	}
+	} else
 #endif /* REALLOC_ZERO_BYTES_FREES */
-	else {
+	{
 		size_t nb      = request2size(bytes);
 		mchunkptr oldp = mem2chunk(oldmem);
 		mchunkptr newp;
@@ -4376,12 +4309,23 @@ after_internal_malloc:
 	return mem;
 }
 
-PUBLIC WUNUSED void *
-(DCALL Dee_TryReallocInPlace)(void *oldmem, size_t bytes) {
+#if !DIRECTLY_DEFINE_DEEMON_PUBLIC_API && LEAK_DETECTION_IN_TAIL
+static WUNUSED void *dlrealloc_in_place(void *oldmem, size_t bytes)
+#else /* LEAK_DETECTION_IN_TAIL */
+#define Dee_TryReallocInPlace_DEFINED
+PUBLIC WUNUSED void *(DCALL Dee_TryReallocInPlace)(void *oldmem, size_t bytes)
+#endif /* !LEAK_DETECTION_IN_TAIL */
+{
 	void *mem = 0;
+#ifndef DLREALLOC_IN_PLACE_CHECKS_NULL
+#define DLREALLOC_IN_PLACE_CHECKS_NULL 1
+#endif /* !DLREALLOC_IN_PLACE_CHECKS_NULL */
+#if DLREALLOC_IN_PLACE_CHECKS_NULL
 	if (oldmem == 0) {
 		/* ... */
-	} else if (bytes >= MAX_REQUEST) {
+	} else
+#endif /* DLREALLOC_IN_PLACE_CHECKS_NULL */
+	if (bytes >= MAX_REQUEST) {
 		MALLOC_FAILURE_ACTION;
 	} else {
 		size_t nb      = request2size(bytes);
@@ -5407,7 +5351,637 @@ DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbg_Memalign)(size_t min_alignment, 
  * - No extra headers added to- or required for heap chunks allocated by underlying
  *   memory allocator.
  */
-#if LEAK_DETECTION
+#if LEAK_DETECTION && LEAK_DETECTION_IN_TAIL
+
+/* Alternative implementation to the leak detector below, that:
+ * - Stores debug info in-band, by
+ * - overriding dlmalloc's heap tail
+ *
+ * ------------------------------------------------------------------------
+ *
+ * Force-enable `FOOTERS', thus causing dlmalloc to always make space for
+ * a pointer-sized field at the tail of an malloc chunk (the address of
+ * this tail can easily be calculated as it is `p + Dee_MallocUsableSize(p)').
+ * - Then, allocate another, small heap block that will contain the debug info
+ *   needed to track the pointer as a potential memory leak. This struct has
+ *   a fixed length (meaning it can also have a dedicated slab-style cache),
+ *   and looks like this:
+ *   >> struct leak_footer {
+ *   >>     size_t              lf_foot;  // Original value of the chunk's footer
+ *   >>     void               *lf_chunk; // [1..1] Pointer, as returned by dlmalloc() for linked memory
+ *   >>     struct leak_footer *lf_prev;  // [1..1] Prev tracked heap chunk
+ *   >>     struct leak_footer *lf_next;  // [1..1] Next tracked heap chunk
+ *   >>     char const         *lf_file;  // [0..1] File where "lf_chunk" was allocated
+ *   >>     unsigned int        lf_line;  // Line where "lf_chunk" was allocated
+ *   >> };
+ * - Dee_Malloc(size) is then implemented like (simplified):
+ *   >> void *result = dlmalloc(size);
+ *   >> struct leak_footer *foot = dlmalloc(sizeof(struct leak_footer));
+ *   >> size_t usable = Dee_MallocUsableSize(result);
+ *   >> size_t *p_foot = (size_t *)((char *)result + usable);
+ *   >> foot->lf_foot = *p_foot;
+ *   >> *p_foot = (size_t)(uintptr_t)foot;
+ *   >> foot->lf_chunk = result;
+ *   >> foot->lf_file = __FILE__;
+ *   >> foot->lf_line = __LINE__;
+ *   >> // When this blocks, have an ATOMIC_SLIST of pending inserts (the
+ *   >> // "foot->lf_prev" field can be re-used as linked list pointer)
+ *   >> LOCK_TRACKED_LEAKS();
+ *   >> INSERT_INTO_GLOBAL_LIST_OF_LEAKS(foot);
+ *   >> UNLOCK_TRACKED_LEAKS();
+ *   >> return result;
+ * - Dee_Free(ptr) is then implemented like (simplified):
+ *   >> mchunkptr p = mem2chunk(ptr);
+ *   >> if (!flag4inuse(p)) {
+ *   >>     size_t *p_foot = (size_t *)chunk_plus_offset(p, chunksize(p) - sizeof(size_t));
+ *   >>     struct leak_footer *foot = (struct leak_footer *)(uintptr_t)(*p_foot);
+ *   >>     // When this blocks, have an ATOMIC_SLIST of pending removes (the
+ *   >>     // "foot->lf_file" field can be re-used as linked list pointer)
+ *   >>     LOCK_TRACKED_LEAKS();
+ *   >>     REMOVE_FROM_GLOBAL_LIST_OF_LEAKS(foot);
+ *   >>     UNLOCK_TRACKED_LEAKS();
+ *   >>     *p_foot = foot->lf_foot; // Restore, so dlfree() doesn't break
+ *   >>     dlfree(foot);
+ *   >> }
+ *   >> dlfree(ptr);
+ *
+ * - NOTE: I've already checked, and since dlmalloc has no way of tracking currently
+ *         allocated heap chunks, so-long as the original value is always restored,
+ *         there is no harm in temporarily overriding one's own chunk footer:
+ *   >> void *a = Dee_Malloc(0);
+ *   >> void *p = Dee_Malloc(16);
+ *   >> void *c = Dee_Malloc(0);
+ *   >> size_t s = Dee_MallocUsableSize(p);
+ *   >> void *tail = (char *)p + s;
+ *   >> size_t tail_ptr = *(size_t *)tail;
+ *   >> *(size_t *)tail = 42;
+ *   >> Dee_CHECKMEMORY();
+ *   >> Dee_Free(a);
+ *   >> Dee_CHECKMEMORY();
+ *   >> Dee_Free(c);
+ *   >> Dee_CHECKMEMORY();                   // This never fails (under FOOTERS=1), even though our "tail" is corrupt
+ *   >> *(size_t *)tail = tail_ptr;          // ... but without this, the following Dee_Free() *would* fail
+ *   >> Dee_Free(p);
+ */
+
+struct leak_footer {
+	union {
+		size_t            lf_foot;  /* [lock(OWNER(lf_chunk))] Original value of the chunk's footer */
+		SLIST_ENTRY(leak_footer) lf_unused; /* Used internally for cache of unused footers */
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion1
+#define lf_foot   _dee_aunion1.lf_foot
+#define lf_unused _dee_aunion1.lf_unused
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
+	void                 *lf_chunk; /* [1..1][lock(OWNER(lf_chunk))] Pointer, as returned by dlmalloc() for linked memory */
+	struct leak_footer   *lf_prev;  /* [1..1][lock(leaks_lock)] Prev tracked heap chunk (forming a ring) */
+	union {
+		struct leak_footer *lf_next;  /* [1..1][lock(leaks_lock)]  Next tracked heap chunk (forming a ring) */
+		SLIST_ENTRY(leak_footer) lf_inslink; /* Used internally for async insertion */
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion2
+#define lf_next    _dee_aunion2.lf_next
+#define lf_inslink _dee_aunion2.lf_inslink
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
+	union {
+		char const       *lf_file;  /* [0..1][lock(OWNER(lf_chunk))] File where "lf_chunk" was allocated */
+		SLIST_ENTRY(leak_footer) lf_remlink; /* Used internally for async removal */
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion3
+#define lf_file    _dee_aunion3.lf_file
+#define lf_remlink _dee_aunion3.lf_remlink
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
+	unsigned int          lf_line;  /* [lock(OWNER(lf_chunk))] Line where "lf_chunk" was allocated */
+	size_t                lf_id;    /* Allocation ID (I hate that this field prevents this thing from aligning nicely) */
+};
+
+/* Return pointer to "prev_foot" field of next chunk (i.e. the "footer" field of this chunk) */
+#define chunk_p_foot(X) ((size_t *)chunk_plus_offset(X, chunksize(X)))
+
+SLIST_HEAD(leak_footer_slist, leak_footer);
+
+//TODO:PRIVATE struct leak_footer_slist leak_footer_freelist = SLIST_HEAD_INITIALIZER(leak_footer_freelist);
+
+PRIVATE ATTR_MALLOC WUNUSED struct leak_footer *DCALL
+leak_footer_alloc(void) {
+	/* TODO: Use cache */
+	return (struct leak_footer *)dlmalloc(sizeof(struct leak_footer));
+}
+
+PRIVATE NONNULL((1)) void DCALL
+leak_footer_free(struct leak_footer *__restrict self) {
+	/* TODO: Use cache */
+	dlfree(self);
+}
+
+PRIVATE size_t alloc_id_count = 0;
+PRIVATE size_t alloc_id_break = 0;
+
+/* Get/set the memory allocation breakpoint.
+ * - When the deemon heap was built to track memory leaks, an optional
+ *   allocation breakpoint can be defined which, when reached, causes
+ *   an attached debugger to break, allowing you to inspect the stack
+ *   at the point where the `id'th allocation happened
+ * - Allocation IDs are assigned in ascending order during every call
+ *   to Dee_Malloc(), Dee_Calloc() and Dee_Realloc() (when ptr==NULL),
+ *   as well as their Dee_Try* equivalents.
+ * - When the deemon heap was not built with this feature, this API
+ *   is a no-op, and always returns `0'
+ * @return: * : The previously set allocation breakpoint */
+#define DeeHeap_GetAllocBreakpoint_DEFINED
+PUBLIC ATTR_COLD ATTR_PURE WUNUSED size_t DCALL
+DeeHeap_GetAllocBreakpoint(void) {
+	return atomic_read(&alloc_id_break);
+}
+
+PUBLIC ATTR_COLD size_t DCALL
+DeeHeap_SetAllocBreakpoint(size_t id) {
+	return atomic_xch(&alloc_id_break, id);
+}
+
+
+#ifndef CONFIG_NO_THREADS
+PRIVATE Dee_atomic_lock_t leaks_lock = Dee_ATOMIC_LOCK_INIT;
+#endif /* !CONFIG_NO_THREADS */
+#define leaks_lock_available()  Dee_atomic_lock_available(&leaks_lock)
+#define leaks_lock_acquired()   Dee_atomic_lock_acquired(&leaks_lock)
+#define leaks_lock_tryacquire() Dee_atomic_lock_tryacquire(&leaks_lock)
+#define leaks_lock_acquire()    Dee_atomic_lock_acquire(&leaks_lock)
+#define leaks_lock_waitfor()    Dee_atomic_lock_waitfor(&leaks_lock)
+#define _leaks_lock_release()   Dee_atomic_lock_release(&leaks_lock)
+
+/* [lock(leaks_lock)] Ring of memory leaks */
+PRIVATE struct leak_footer leaks = {
+	/* .lf_foot  = */ { 0 },      /* [const] */
+	/* .lf_chunk = */ NULL,       /* [const] */
+	/* .lf_prev  = */ &leaks,     /* [1..1][lock(leaks_lock)] */
+	/* .lf_next  = */ { &leaks }, /* [1..1][lock(leaks_lock)] */
+	/* .lf_file  = */ { NULL },   /* [const] */
+	/* .lf_line  = */ 0,          /* [const] */
+	/* .lf_id    = */ 0           /* [const] */
+};
+
+#define leaks_assert_linkage(leak)               \
+	(ASSERT((leak)->lf_prev->lf_next == (leak)), \
+	 ASSERT((leak)->lf_next->lf_prev == (leak)))
+
+#define leaks_remove(leak)                             \
+	(void)(leaks_assert_linkage(leak),                 \
+	       (leak)->lf_prev->lf_next = (leak)->lf_next, \
+	       (leak)->lf_next->lf_prev = (leak)->lf_prev)
+#if 1
+#define leaks_insert_begin(leak)         (void)((leak)->lf_prev = NULL)
+#define leaks_insert_is_unfinished(leak) (atomic_read(&(leak)->lf_prev) == NULL)
+#define leaks_insert_finish(leak)                                          \
+	(void)(ASSERTF((leak)->lf_prev == NULL,                                \
+	               "Should have been done by leaks_insert_begin()"),       \
+	       (leak)->lf_prev = &leaks,                            /* 1 */    \
+	       ((leak)->lf_next = leaks.lf_next)->lf_prev = (leak), /* 2, 3 */ \
+	       leaks.lf_next = (leak), leaks_assert_linkage(leak))  /* 4 */
+#else
+#define leaks_insert_begin(leak) \
+	(void)((leak)->lf_prev = &leaks) /* 1 */
+#define leaks_insert_finish(leak)                                               \
+	(void)(ASSERTF((leak)->lf_prev == &leaks,                                   \
+	               "Should have been done by leaks_insert_begin()"), /* 1 */    \
+	       ((leak)->lf_next = leaks.lf_next)->lf_prev = (leak),      /* 2, 3 */ \
+	       leaks.lf_next = (leak), leaks_assert_linkage(leak))                                   /* 4 */
+#endif
+	
+
+
+PRIVATE struct leak_footer_slist leaks_pending_insert = SLIST_HEAD_INITIALIZER(leaks_pending_insert);
+PRIVATE struct leak_footer_slist leaks_pending_remove = SLIST_HEAD_INITIALIZER(leaks_pending_remove);
+
+#define leaks_pending_mustreap()                             \
+	(atomic_read(&leaks_pending_insert.slh_first) != NULL || \
+	 atomic_read(&leaks_pending_remove.slh_first) != NULL)
+#define leaks_pending_mustreap_insert() \
+	(atomic_read(&leaks_pending_insert.slh_first) != NULL)
+
+/* Reap "leaks_pending_insert" only */
+PRIVATE void DCALL leaks_lock_reap_insert_locked(void) {
+	struct leak_footer_slist insert;
+	struct leak_footer *leak;
+	insert.slh_first = SLIST_ATOMIC_CLEAR(&leaks_pending_insert);
+	while (!SLIST_EMPTY(&insert)) {
+		leak = SLIST_FIRST(&insert);
+		SLIST_REMOVE_HEAD(&insert, lf_inslink);
+		leaks_insert_finish(leak);
+//		leaks_assert_linkage(leak);
+	}
+}
+
+PRIVATE ATTR_NOINLINE void DCALL leaks_lock_reap_and_unlock(void) {
+	struct leak_footer_slist remove;
+	struct leak_footer *leak;
+
+	/* Order here is important: must reap "remove" **BEFORE** "insert"!
+	 *
+	 * In case a pointer ends up added to both lists, it is guarantied
+	 * that if it appears in "remove", it will either:
+	 * - Already be within "leaks"
+	 * - or: have been added to "insert" previously
+	 *
+	 * Combine that with is executing "insert" first, the removal code
+	 * is allowed to assume that everything from "remove" will currently
+	 * be present somewhere within "leaks"! */
+	remove.slh_first = SLIST_ATOMIC_CLEAR(&leaks_pending_remove);
+
+	/* Execute "insert" tasks */
+	leaks_lock_reap_insert_locked();
+
+	/* Execute "remove" tasks */
+	SLIST_FOREACH (leak, &remove, lf_remlink) {
+		leaks_remove(leak);
+	}
+
+	/* Release lock */
+	_leaks_lock_release();
+
+	/* Free underlying memory blocks from "remove" */
+	while (!SLIST_EMPTY(&remove)) {
+		void *mem;
+		mchunkptr p;
+		size_t *p_foot;
+		leak = SLIST_FIRST(&remove);
+		SLIST_REMOVE_HEAD(&remove, lf_remlink);
+		mem    = leak->lf_chunk;
+		p      = mem2chunk(mem);
+		p_foot = chunk_p_foot(p);
+		*p_foot = leak->lf_foot; /* Restore original footer */
+		leak_footer_free(leak);
+		dlfree(mem);
+	}
+}
+
+
+PRIVATE void DCALL leaks_lock_release(void) {
+#ifdef __OPTIMIZE_SIZE__
+	if (0)
+#else /* __OPTIMIZE_SIZE__ */
+	if (leaks_pending_mustreap())
+#endif /* !__OPTIMIZE_SIZE__ */
+	{
+again_reap:
+		leaks_lock_reap_and_unlock();
+	} else {
+		_leaks_lock_release();
+	}
+	/* Check if more needs to be reaped... */
+	if (leaks_pending_mustreap()) {
+		if (leaks_lock_tryacquire())
+			goto again_reap;
+	}
+}
+
+PRIVATE void DCALL leaks_lock_reap(void) {
+	if (leaks_lock_tryacquire())
+		leaks_lock_reap_and_unlock();
+}
+
+
+PRIVATE void DCALL leaks_lock_acquire_and_reap(void) {
+	leaks_lock_acquire();
+	if (leaks_pending_mustreap()) {
+		leaks_lock_reap_and_unlock();
+		leaks_lock_acquire();
+	}
+}
+
+/* Dump info about all heap allocations that were allocated, but
+ * never Dee_Free()'d, nor untracked using `Dee_UntrackAlloc()'.
+ * Information about leaks is printed using `Dee_DPRINTF()'.
+ *
+ * @return: * : The total amount of memory leaked (in bytes) */
+#define DeeHeap_DumpMemoryLeaks_DEFINED
+PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(void) {
+	size_t result = 0;
+	struct leak_footer *iter;
+	leaks_lock_acquire_and_reap();
+	for (iter = leaks.lf_next; iter != &leaks; iter = iter->lf_next) {
+		void *mem = atomic_read(&iter->lf_chunk);
+		mchunkptr p = mem2chunk(mem);
+		size_t size = chunksize(p) - overhead_for(p);
+		char const *file = atomic_read(&iter->lf_file);
+		/* FIXME: If "iter" was added to "leaks_pending_remove", then the "file" we must read is invalid!
+		 * Solution is: reap "leaks_pending_remove" after reading "lf_file" (iow: right here),
+		 *              but don't release lock and keep skip ahead to next chunk when "iter"
+		 *              ends up being removed via "leaks_pending_remove" */
+		Dee_DPRINTF("%s(%d) : %" PRFuSIZ " : Leaked %" PRFuSIZ " bytes of memory: %p-%p\n",
+		            file, iter->lf_line, iter->lf_id, size, (char *)mem, (char *)mem + size - 1);
+		result += size;
+	}
+	return result;
+}
+
+
+
+
+
+
+PRIVATE NONNULL((1, 2)) void DCALL
+leak_insert_p(void *ptr, struct leak_footer *leak,
+              char const *file, unsigned int line) {
+	/* Hook "leak" into "ptr" */
+	mchunkptr p = mem2chunk(ptr);
+	size_t *p_tail = chunk_p_foot(p);
+	leak->lf_foot  = *p_tail;
+	leak->lf_chunk = ptr;
+	leak->lf_file  = file;
+	leak->lf_line  = line;
+	*p_tail = (size_t)(uintptr_t)leak;
+
+	/* Allocate ID */
+	leak->lf_id = atomic_incfetch(&alloc_id_count);
+	if (leak->lf_id == alloc_id_break)
+		Dee_BREAKPOINT();
+
+	/* Insert into list of memory leaks (without ever blocking) */
+	leaks_insert_begin(leak);
+	if (leaks_lock_tryacquire()) {
+		leaks_insert_finish(leak);
+		leaks_lock_release();
+	} else {
+		/* Schedule "insert" to happen asynchronously */
+		SLIST_ATOMIC_INSERT(&leaks_pending_insert, leak, lf_inslink);
+		leaks_lock_reap();
+	}
+}
+
+/* Amend debug into to "ptr" and re-return. On error, dlfree(ptr) and return "NULL" */
+PRIVATE WUNUSED NONNULL((1)) void *DCALL
+leak_insert(void *ptr, char const *file, unsigned int line) {
+	struct leak_footer *foot = leak_footer_alloc();
+	if likely(foot) {
+		leak_insert_p(ptr, foot, file, line);
+		return ptr;
+	}
+	dlfree(ptr);
+	return NULL;
+}
+
+
+#define DeeDbg_TryMalloc_DEFINED
+PUBLIC ATTR_HOT ATTR_MALLOC WUNUSED void *
+(DCALL DeeDbg_TryMalloc)(size_t n_bytes, char const *file, int line) {
+	void *result = dlmalloc(n_bytes);
+	if (result)
+		result = leak_insert(result, file, line);
+	return result;
+}
+
+#define DeeDbg_TryCalloc_DEFINED
+PUBLIC ATTR_HOT ATTR_MALLOC WUNUSED void *
+(DCALL DeeDbg_TryCalloc)(size_t n_bytes, char const *file, int line) {
+	void *result = dlcalloc(n_bytes);
+	if (result)
+		result = leak_insert(result, file, line);
+	return result;
+}
+
+#define DeeDbg_TryMemalign_DEFINED
+PUBLIC ATTR_MALLOC WUNUSED void *
+(DCALL DeeDbg_TryMemalign)(size_t min_alignment, size_t n_bytes,
+                           char const *file, int line) {
+	void *result = dlmemalign(min_alignment, n_bytes);
+	if (result)
+		result = leak_insert(result, file, line);
+	return result;
+}
+
+
+#ifdef Dee_BREAKPOINT_IS_NOOP
+#define fatal _DeeAssert_XFailf
+#else /* Dee_BREAKPOINT_IS_NOOP */
+#define fatal(expr, file, line, ...) \
+	(_DeeAssert_Failf(expr, file, line, __VA_ARGS__), Dee_BREAKPOINT())
+#endif /* !Dee_BREAKPOINT_IS_NOOP */
+
+#define leak_addrok(p) ((uintptr_t)(p) != 0) /* TODO: Exclude more known-non-sense addresses */
+
+#define DeeDbg_Free_DEFINED
+PUBLIC ATTR_HOT void
+(DCALL DeeDbg_Free)(void *ptr, char const *file, int line) {
+	struct leak_footer *leak;
+	size_t *p_foot;
+	mchunkptr p;
+	if unlikely(!ptr)
+		return;
+	p = mem2chunk(ptr);
+
+	/* Special handling required for flag4 memory */
+#if FLAG4_BIT_INDICATES_HEAP_REGION
+	if unlikely(flag4inuse(p)) {
+		dlfree(ptr);
+		return;
+	}
+#endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
+
+	p_foot = chunk_p_foot(p);
+	leak = *(struct leak_footer **)p_foot;
+	if unlikely(!leak_addrok(leak)) {
+		fatal("Dee_Free(ptr)", file, line,
+		      "%p: Linked chunk %p-%p has bad footer=%p",
+		      ptr, p, chunk_plus_offset(p, chunksize(p) - 1), leak);
+	}
+	if unlikely(leak->lf_chunk != ptr) {
+		fatal("Dee_Free(ptr)", file, line,
+		      "%p: Linked chunk %p-%p footer %p has bad chunk pointer %p",
+		      ptr, p, chunk_plus_offset(p, chunksize(p) - 1),
+		      leak, leak->lf_chunk);
+	}
+
+	if (!leaks_lock_tryacquire()) {
+		/* Schedule "remove" to happen asynchronously */
+		SLIST_ATOMIC_INSERT(&leaks_pending_remove, leak, lf_remlink);
+		leaks_lock_reap();
+		return;
+	}
+
+	/* If the leak hasn't finished being inserted into the leaks list,
+	 * then we have to ensure that all pending inserts have been reaped! */
+#ifdef leaks_insert_is_unfinished
+	if (leaks_insert_is_unfinished(leak)) {
+		leaks_lock_reap_insert_locked();
+		ASSERT(!leaks_insert_is_unfinished(leak));
+//		leaks_assert_linkage(leak);
+	}
+#else /* leaks_insert_is_unfinished */
+	if (leaks_pending_mustreap_insert())
+		leaks_lock_reap_insert_locked();
+#endif /* !leaks_insert_is_unfinished */
+	leaks_assert_linkage(leak); // TODO: Comment out
+
+	/* Remove from list of leaks */
+	leaks_remove(leak);
+	leaks_lock_release();
+
+	/* Restore original footer */
+	*p_foot = leak->lf_foot;
+
+	/* Free memory... */
+	leak_footer_free(leak);
+	dlfree(ptr);
+}
+
+#define DeeDbg_TryRealloc_DEFINED
+PUBLIC ATTR_HOT WUNUSED void *
+(DCALL DeeDbg_TryRealloc)(void *ptr, size_t n_bytes,
+                          char const *file, int line) {
+	void *result;
+	struct leak_footer *leak;
+	size_t *p_foot;
+	mchunkptr p;
+	if (!ptr)
+		return DeeDbg_TryMalloc(n_bytes, file, line);
+	p = mem2chunk(ptr);
+
+	/* Special handling required for flag4 memory */
+#if FLAG4_BIT_INDICATES_HEAP_REGION
+	if unlikely(flag4inuse(p))
+		return dlrealloc(ptr, n_bytes);
+#endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
+
+	p_foot = chunk_p_foot(p);
+	leak = *(struct leak_footer **)p_foot;
+	if unlikely(!leak_addrok(leak)) {
+		fatal("Dee_Realloc(ptr, n_bytes)", file, line,
+		      "%p: Linked chunk %p-%p has bad footer=%p",
+		      ptr, p, chunk_plus_offset(p, chunksize(p) - 1), leak);
+	}
+	if unlikely(leak->lf_chunk != ptr) {
+		fatal("Dee_Realloc(ptr, n_bytes)", file, line,
+		      "%p: Linked chunk %p-%p footer %p has bad chunk pointer %p",
+		      ptr, p, chunk_plus_offset(p, chunksize(p) - 1),
+		      leak, leak->lf_chunk);
+	}
+
+	/* Amend debug info if "leak" doesn't have any, yet.
+	 * Since we're the owner of the heap chunk, we can just do this! */
+	if (leak->lf_file == NULL) {
+		leak->lf_file = file;
+		leak->lf_line = line;
+	}
+
+	/* Restore original footer */
+	*p_foot = leak->lf_foot;
+
+	/* Do the realloc */
+	result = dlrealloc(ptr, n_bytes);
+
+	/* Check for error */
+	if likely(result) {
+		p = mem2chunk(result);
+		p_foot = chunk_p_foot(p);
+		leak->lf_chunk = result;
+	}
+
+	/* Re-override the footer (after backing up its (possibly changed) current value) */
+	leak->lf_foot = *p_foot;
+	*p_foot = (size_t)(uintptr_t)leak;
+	return result;
+}
+
+#define Dee_TryReallocInPlace_DEFINED
+PUBLIC WUNUSED void *
+(DCALL Dee_TryReallocInPlace)(void *ptr, size_t n_bytes) {
+	void *result;
+	struct leak_footer *leak;
+	size_t *p_foot;
+	mchunkptr p;
+	if unlikely(!ptr)
+		return NULL;
+	p = mem2chunk(ptr);
+
+	/* Special handling required for flag4 memory */
+#if FLAG4_BIT_INDICATES_HEAP_REGION
+	if unlikely(flag4inuse(p))
+		return NULL; /* Cannot be done */
+#endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
+
+	p_foot = chunk_p_foot(p);
+	leak = *(struct leak_footer **)p_foot;
+	if unlikely(!leak_addrok(leak)) {
+		fatal("Dee_TryReallocInPlace(ptr, n_bytes)", NULL, 0,
+		      "%p: Linked chunk %p-%p has bad footer=%p",
+		      ptr, p, chunk_plus_offset(p, chunksize(p) - 1), leak);
+	}
+	if unlikely(leak->lf_chunk != ptr) {
+		fatal("Dee_TryReallocInPlace(ptr, n_bytes)", NULL, 0,
+		      "%p: Linked chunk %p-%p footer %p has bad chunk pointer %p",
+		      ptr, p, chunk_plus_offset(p, chunksize(p) - 1),
+		      leak, leak->lf_chunk);
+	}
+
+	/* Restore original footer */
+	*p_foot = leak->lf_foot;
+
+	/* Do the realloc */
+	result = dlrealloc_in_place(ptr, n_bytes);
+	ASSERT(result == NULL || result == ptr);
+	ASSERT(p == mem2chunk(ptr));
+	p_foot = chunk_p_foot(p);
+
+	/* Re-override the footer (after backing up its (possibly changed) current value) */
+	leak->lf_foot = *p_foot;
+	*p_foot = (size_t)(uintptr_t)leak;
+	return result;
+}
+
+#define DeeDbg_UntrackAlloc_DEFINED
+PUBLIC void *
+(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line) {
+	struct leak_footer *leak;
+	size_t *p_foot;
+	mchunkptr p;
+	if unlikely(!ptr)
+		return NULL;
+	p = mem2chunk(ptr);
+
+	/* Special handling required for flag4 memory */
+#if FLAG4_BIT_INDICATES_HEAP_REGION
+	if unlikely(flag4inuse(p)) {
+		fatal("Dee_UntrackAlloc(ptr)", file, line,
+		      "%p: Not allowed to untrack FLAG4 memory", ptr);
+	}
+#endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
+
+	p_foot = chunk_p_foot(p);
+	leak = *(struct leak_footer **)p_foot;
+	if unlikely(!leak_addrok(leak)) {
+		fatal("Dee_UntrackAlloc(ptr)", file, line,
+		      "%p: Linked chunk %p-%p has bad footer=%p",
+		      ptr, p, chunk_plus_offset(p, chunksize(p) - 1), leak);
+	}
+	if unlikely(leak->lf_chunk != ptr) {
+		fatal("Dee_UntrackAlloc(ptr)", file, line,
+		      "%p: Linked chunk %p-%p footer %p has bad chunk pointer %p",
+		      ptr, p, chunk_plus_offset(p, chunksize(p) - 1),
+		      leak, leak->lf_chunk);
+	}
+
+	/* This operation cannot be done asynchronously (but
+	 * that is fine, since it doesn't happen that often) */
+	leaks_lock_acquire_and_reap();
+	leaks_remove(leak);
+	leaks_lock_release();
+
+	/* For a dummy loop that will satisfy `Dee_Free()' and `Dee_Realloc()',
+	 * but won't show up in `DeeHeap_DumpMemoryLeaks()' */
+	leak->lf_prev = leak;
+	leak->lf_next = leak;
+	return ptr;
+}
+
+
+#elif LEAK_DETECTION
 DECL_END
 #include <hybrid/sequence/rbtree.h>
 DECL_BEGIN
@@ -5982,6 +6556,10 @@ PUBLIC ATTR_HOT ATTR_MALLOC WUNUSED void *
 #define Dee_Free_DEFINED
 PUBLIC ATTR_HOT void
 (DCALL Dee_Free)(void *ptr) {
+#if !DLFREE_CHECKS_NULL
+	if unlikely(!ptr)
+		return;
+#endif /* !DLFREE_CHECKS_NULL */
 	dlfree(ptr);
 }
 #endif /* !Dee_Free_DEFINED */
@@ -5990,6 +6568,10 @@ PUBLIC ATTR_HOT void
 #define Dee_TryRealloc_DEFINED
 PUBLIC ATTR_HOT WUNUSED void *
 (DCALL Dee_TryRealloc)(void *ptr, size_t n_bytes) {
+#if !DLFREE_CHECKS_NULL
+	if unlikely(!ptr)
+		return dlmalloc(n_bytes);
+#endif /* !DLFREE_CHECKS_NULL */
 	return dlrealloc(ptr, n_bytes);
 }
 #endif /* !Dee_TryRealloc_DEFINED */
@@ -6129,6 +6711,10 @@ PUBLIC ATTR_HOT_NDEBUG WUNUSED void *
 #ifdef DeeDbg_TryRealloc_DEFINED
 	return (DeeDbg_TryRealloc)(ptr, n_bytes, NULL, 0);
 #else /* DeeDbg_TryRealloc_DEFINED */
+#if !DLFREE_CHECKS_NULL
+	if unlikely(!ptr)
+		return dlmalloc(n_bytes);
+#endif /* !DLFREE_CHECKS_NULL */
 	return dlrealloc(ptr, n_bytes);
 #endif /* !DeeDbg_TryRealloc_DEFINED */
 }
