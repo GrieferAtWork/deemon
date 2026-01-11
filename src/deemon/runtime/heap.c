@@ -4828,8 +4828,12 @@ PRIVATE WUNUSED mspace DCALL create_tls_mspace(void) {
 	} else {
 		result = (struct malloc_state *)create_mspace(0);
 	}
-	if likely(result)
+	if likely(result) {
 		SLIST_INSERT(&used_tls_mspace, result, ms_link);
+
+		/* Copy runtime-configurable settings from "gm" */
+		result->footprint_limit = atomic_read(&gm__footprint_limit);
+	}
 	tls_mspace_lock_release();
 	return (mspace)result;
 }
