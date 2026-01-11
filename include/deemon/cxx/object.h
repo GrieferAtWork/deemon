@@ -3680,6 +3680,40 @@ public:
 	WUNUSED _Wrap___itable__ (__itable__)() DEE_CXX_NOTHROW {
 		return this;
 	}
+	class _Wrap___module__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___module__, Object> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___module__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__module__", _Dee_HashSelectC(0x3bea6c9f, 0x183a20d7d6c28dbb));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__module__", _Dee_HashSelectC(0x3bea6c9f, 0x183a20d7d6c28dbb)));
+		}
+	};
+	WUNUSED _Wrap___module__ (__module__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___true_module__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___true_module__, Object> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___true_module__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__true_module__", _Dee_HashSelectC(0xca437364, 0x7a345f9bcf4328b6));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__true_module__", _Dee_HashSelectC(0xca437364, 0x7a345f9bcf4328b6)));
+		}
+	};
+	WUNUSED _Wrap___true_module__ (__true_module__)() DEE_CXX_NOTHROW {
+		return this;
+	}
 	class _Wrap_id
 		: public deemon::detail::ConstGetRefProxy<_Wrap_id, deemon::int_> {
 	private:

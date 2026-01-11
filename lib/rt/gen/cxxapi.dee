@@ -178,8 +178,8 @@ global final cxxParameterPackFormat: {string: string} = {
 	"int"          : repr "d",
 	"unsigned int" : repr "u",
 	"char const *" : repr "s",
-	"size_t"       : "DEE_PCKuSIZ",
-	"Dee_ssize_t"  : "DEE_PCKdSIZ",
+	"size_t"       : "Dee_PCKuSIZ",
+	"Dee_ssize_t"  : "Dee_PCKdSIZ",
 	"double"       : repr "f",
 	"DeeObject *"  : repr "o",
 	"bool"         : repr "b",
@@ -248,7 +248,7 @@ function packCxxParameterListFormatString(cxxTypes: {string...}): string {
 		result += '"';
 	if (!result)
 		result = '""';
-	return result;
+	return result.strip();
 }
 
 @@Given a list of parameters, and their possible types, yield all possible permutations

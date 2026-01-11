@@ -595,7 +595,7 @@ computed-operators:
 .PHONY: computed-operators
 
 cxx-generated:
-	$(DEEMON) -F -Wno-user \
+	$(DEEMON) -F -Wno-user -Wno-usage \
 		include/deemon/cxx/bool.h \
 		include/deemon/cxx/bytes.h \
 		include/deemon/cxx/callable.h \

@@ -2347,8 +2347,11 @@ INTERN WUNUSED NONNULL((1)) DeeTypeObject *
 		for (; impls->ohisi_impl; ++impls) {
 			if (impls->ohisi_impl == funptr) {
 				/* TODO: What should we return when dependencies come from different types? */
-				if (impls->ohisi_deps[0] < Dee_TNO_COUNT)
+				if (impls->ohisi_deps[0] < Dee_TNO_COUNT) {
+					/* TODO: Stack overflow here between Dee_TNO_enter / Dee_TNO_leave when running:
+					 *       >> deemon -F -Wno-usage -Wno-user include/deemon/cxx/none.h */
 					return DeeType_GetNativeOperatorOrigin(self, (enum Dee_tno_id)impls->ohisi_deps[0]);
+				}
 				if (impls->ohisi_deps[1] < Dee_TNO_COUNT)
 					return DeeType_GetNativeOperatorOrigin(self, (enum Dee_tno_id)impls->ohisi_deps[1]);
 				return self;

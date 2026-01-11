@@ -371,117 +371,117 @@ Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
  * - DeeTuple_Newf()
  * - DeeObject_CallAttrStringf()
  * - ... */
-#define DEE_PCKu8 "u" /* Due to integer promotions, we can assume that any 8-bit integral always
+#define Dee_PCKu8 "u" /* Due to integer promotions, we can assume that any 8-bit integral always
                        * gets promoted to an integer, because we can assume that `sizeof(int) >= 1' */
-#define DEE_PCKd8 "d" /* *ditto* */
+#define Dee_PCKd8 "d" /* *ditto* */
 #if __VA_SIZE >= 2
-#define DEE_PCKu16 "u"
-#define DEE_PCKd16 "d"
+#define Dee_PCKu16 "u"
+#define Dee_PCKd16 "d"
 #elif __SIZEOF_SHORT__ == 2
-#define DEE_PCKu16 "hu"
-#define DEE_PCKd16 "hd"
+#define Dee_PCKu16 "hu"
+#define Dee_PCKd16 "hd"
 #elif __SIZEOF_LONG__ == 2
-#define DEE_PCKu16 "lu"
-#define DEE_PCKd16 "ld"
+#define Dee_PCKu16 "lu"
+#define Dee_PCKd16 "ld"
 #elif __SIZEOF_POINTER__ == 2
-#define DEE_PCKu16 "Iu"
-#define DEE_PCKd16 "Id"
+#define Dee_PCKu16 "Iu"
+#define Dee_PCKd16 "Id"
 #elif __SIZEOF_CHAR__ == 2
-#define DEE_PCKu16 "hhu"
-#define DEE_PCKd16 "hhd"
+#define Dee_PCKu16 "hhu"
+#define Dee_PCKd16 "hhd"
 #elif defined(__SIZEOF_LONG_LONG__) && __SIZEOF_LONG_LONG__ == 2
-#define DEE_PCKu16 "llu"
-#define DEE_PCKd16 "lld"
+#define Dee_PCKu16 "llu"
+#define Dee_PCKd16 "lld"
 #else /* ... == 2 */
-#define DEE_PCKu16 "I16u"
-#define DEE_PCKd16 "I16d"
+#define Dee_PCKu16 "I16u"
+#define Dee_PCKd16 "I16d"
 #endif /* ... != 2 */
 #if __VA_SIZE >= 4
-#define DEE_PCKu32 "u"
-#define DEE_PCKd32 "d"
+#define Dee_PCKu32 "u"
+#define Dee_PCKd32 "d"
 #elif __SIZEOF_LONG__ == 4
-#define DEE_PCKu32 "lu"
-#define DEE_PCKd32 "ld"
+#define Dee_PCKu32 "lu"
+#define Dee_PCKd32 "ld"
 #elif __SIZEOF_SHORT__ == 4
-#define DEE_PCKu32 "hu"
-#define DEE_PCKd32 "hd"
+#define Dee_PCKu32 "hu"
+#define Dee_PCKd32 "hd"
 #elif __SIZEOF_POINTER__ == 4
-#define DEE_PCKu32 "Iu"
-#define DEE_PCKd32 "Id"
+#define Dee_PCKu32 "Iu"
+#define Dee_PCKd32 "Id"
 #elif __SIZEOF_CHAR__ == 4
-#define DEE_PCKu32 "hhu"
-#define DEE_PCKd32 "hhd"
+#define Dee_PCKu32 "hhu"
+#define Dee_PCKd32 "hhd"
 #elif defined(__SIZEOF_LONG_LONG__) && __SIZEOF_LONG_LONG__ == 4
-#define DEE_PCKu32 "llu"
-#define DEE_PCKd32 "lld"
+#define Dee_PCKu32 "llu"
+#define Dee_PCKd32 "lld"
 #else /* ... == 4 */
-#define DEE_PCKu32 "I32u"
-#define DEE_PCKd32 "I32d"
+#define Dee_PCKu32 "I32u"
+#define Dee_PCKd32 "I32d"
 #endif /* ... != 4 */
 #if __VA_SIZE >= 8
-#define DEE_PCKu64 "u"
-#define DEE_PCKd64 "d"
+#define Dee_PCKu64 "u"
+#define Dee_PCKd64 "d"
 #elif __SIZEOF_LONG__ == 8
-#define DEE_PCKu64 "lu"
-#define DEE_PCKd64 "ld"
+#define Dee_PCKu64 "lu"
+#define Dee_PCKd64 "ld"
 #elif __SIZEOF_POINTER__ == 8
-#define DEE_PCKu64 "Iu"
-#define DEE_PCKd64 "Id"
+#define Dee_PCKu64 "Iu"
+#define Dee_PCKd64 "Id"
 #elif __SIZEOF_SHORT__ == 8
-#define DEE_PCKu64 "hu"
-#define DEE_PCKd64 "hd"
+#define Dee_PCKu64 "hu"
+#define Dee_PCKd64 "hd"
 #elif __SIZEOF_CHAR__ == 8
-#define DEE_PCKu64 "hhu"
-#define DEE_PCKd64 "hhd"
+#define Dee_PCKu64 "hhu"
+#define Dee_PCKd64 "hhd"
 #elif defined(__SIZEOF_LONG_LONG__) && __SIZEOF_LONG_LONG__ == 8
-#define DEE_PCKu64 "llu"
-#define DEE_PCKd64 "lld"
+#define Dee_PCKu64 "llu"
+#define Dee_PCKd64 "lld"
 #else /* ... == 8 */
-#define DEE_PCKu64 "I64u"
-#define DEE_PCKd64 "I64d"
+#define Dee_PCKu64 "I64u"
+#define Dee_PCKd64 "I64d"
 #endif /* ... != 8 */
-#define DEE_PCKu128 "I128u"
-#define DEE_PCKd128 "I128d"
+#define Dee_PCKu128 "I128u"
+#define Dee_PCKd128 "I128d"
 
-#define DEE_PRIVATE_PCKu1         DEE_PCKu8
-#define DEE_PRIVATE_PCKd1         DEE_PCKd8
-#define DEE_PRIVATE_PCKu2         DEE_PCKu16
-#define DEE_PRIVATE_PCKd2         DEE_PCKd16
-#define DEE_PRIVATE_PCKu4         DEE_PCKu32
-#define DEE_PRIVATE_PCKd4         DEE_PCKd32
-#define DEE_PRIVATE_PCKu8         DEE_PCKu64
-#define DEE_PRIVATE_PCKd8         DEE_PCKd64
-#define DEE_PRIVATE_PCKu16        DEE_PCKu128
-#define DEE_PRIVATE_PCKd16        DEE_PCKd128
+#define DEE_PRIVATE_PCKu1         Dee_PCKu8
+#define DEE_PRIVATE_PCKd1         Dee_PCKd8
+#define DEE_PRIVATE_PCKu2         Dee_PCKu16
+#define DEE_PRIVATE_PCKd2         Dee_PCKd16
+#define DEE_PRIVATE_PCKu4         Dee_PCKu32
+#define DEE_PRIVATE_PCKd4         Dee_PCKd32
+#define DEE_PRIVATE_PCKu8         Dee_PCKu64
+#define DEE_PRIVATE_PCKd8         Dee_PCKd64
+#define DEE_PRIVATE_PCKu16        Dee_PCKu128
+#define DEE_PRIVATE_PCKd16        Dee_PCKd128
 #define DEE_PRIVATE_PCKuN(sizeof) DEE_PRIVATE_PCKu##sizeof
 #define DEE_PRIVATE_PCKdN(sizeof) DEE_PRIVATE_PCKd##sizeof
-#define DEE_PCKuN(sizeof)         DEE_PRIVATE_PCKuN(sizeof)
-#define DEE_PCKdN(sizeof)         DEE_PRIVATE_PCKdN(sizeof)
+#define Dee_PCKuN(sizeof)         DEE_PRIVATE_PCKuN(sizeof)
+#define Dee_PCKdN(sizeof)         DEE_PRIVATE_PCKdN(sizeof)
 
 /* Helpful aliases */
-#define DEE_PCKuSIZ DEE_PCKuN(__SIZEOF_SIZE_T__)
-#define DEE_PCKdSIZ DEE_PCKdN(__SIZEOF_SIZE_T__)
-#define DEE_PCKuPTR DEE_PCKuN(__SIZEOF_POINTER__)
-#define DEE_PCKdPTR DEE_PCKdN(__SIZEOF_POINTER__)
+#define Dee_PCKuSIZ Dee_PCKuN(__SIZEOF_SIZE_T__)
+#define Dee_PCKdSIZ Dee_PCKdN(__SIZEOF_SIZE_T__)
+#define Dee_PCKuPTR Dee_PCKuN(__SIZEOF_POINTER__)
+#define Dee_PCKdPTR Dee_PCKdN(__SIZEOF_POINTER__)
 
 /* Unescaped names. */
 #ifdef DEE_SOURCE
-#define PCKu8   DEE_PCKu8
-#define PCKd8   DEE_PCKd8
-#define PCKu16  DEE_PCKu16
-#define PCKd16  DEE_PCKd16
-#define PCKu32  DEE_PCKu32
-#define PCKd32  DEE_PCKd32
-#define PCKu64  DEE_PCKu64
-#define PCKd64  DEE_PCKd64
-#define PCKu128 DEE_PCKu128
-#define PCKd128 DEE_PCKd128
-#define PCKuN   DEE_PCKuN
-#define PCKdN   DEE_PCKdN
-#define PCKuSIZ DEE_PCKuSIZ
-#define PCKdSIZ DEE_PCKdSIZ
-#define PCKuPTR DEE_PCKuPTR
-#define PCKdPTR DEE_PCKdPTR
+#define PCKu8   Dee_PCKu8
+#define PCKd8   Dee_PCKd8
+#define PCKu16  Dee_PCKu16
+#define PCKd16  Dee_PCKd16
+#define PCKu32  Dee_PCKu32
+#define PCKd32  Dee_PCKd32
+#define PCKu64  Dee_PCKu64
+#define PCKd64  Dee_PCKd64
+#define PCKu128 Dee_PCKu128
+#define PCKd128 Dee_PCKd128
+#define PCKuN   Dee_PCKuN
+#define PCKdN   Dee_PCKdN
+#define PCKuSIZ Dee_PCKuSIZ
+#define PCKdSIZ Dee_PCKdSIZ
+#define PCKuPTR Dee_PCKuPTR
+#define PCKdPTR Dee_PCKdPTR
 #endif /* DEE_SOURCE */
 
 

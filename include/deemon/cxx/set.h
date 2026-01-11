@@ -130,6 +130,9 @@ public:
 	WUNUSED Ref<deemon::int_> (__size__)() {
 		return inherit(DeeObject_CallAttrStringHash(this, "__size__", _Dee_HashSelectC(0x543ba3b5, 0xd416117435cce357), 0, NULL));
 	}
+	WUNUSED Ref<deemon::bool_> (__bool__)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "__bool__", _Dee_HashSelectC(0x1d6e29c8, 0x7d5655cb5b8aa88b), 0, NULL));
+	}
 	WUNUSED Ref<deemon::int_> (__hash__)() {
 		return inherit(DeeObject_CallAttrStringHash(this, "__hash__", _Dee_HashSelectC(0xc088645e, 0xbc5b5b1504b9d2d8), 0, NULL));
 	}
@@ -221,6 +224,56 @@ public:
 		args[0] = rhs;
 		return inherit(DeeObject_CallAttrStringHash(this, "__inplace_or__", _Dee_HashSelectC(0x2ebbbb19, 0xe07a9de59b5dfa47), 1, args));
 	}
+	class _Wrap_first
+		: public deemon::detail::ConstGetRefProxy<_Wrap_first, T>
+		, public deemon::detail::ConstSetRefProxy<_Wrap_first, T> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		using deemon::detail::ConstSetRefProxy<_Wrap_first, T>::operator =;
+		_Wrap_first(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "first", _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "first", _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7)));
+		}
+		void del() const {
+			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "first", _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7)));
+		}
+		int _setref(DeeObject *value) const DEE_CXX_NOTHROW {
+			return DeeObject_SetAttrStringHash(m_self, "first", _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7), value);
+		}
+	};
+	WUNUSED _Wrap_first (first)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap_last
+		: public deemon::detail::ConstGetRefProxy<_Wrap_last, T>
+		, public deemon::detail::ConstSetRefProxy<_Wrap_last, T> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		using deemon::detail::ConstSetRefProxy<_Wrap_last, T>::operator =;
+		_Wrap_last(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "last", _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "last", _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc)));
+		}
+		void del() const {
+			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "last", _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc)));
+		}
+		int _setref(DeeObject *value) const DEE_CXX_NOTHROW {
+			return DeeObject_SetAttrStringHash(m_self, "last", _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc), value);
+		}
+	};
+	WUNUSED _Wrap_last (last)() DEE_CXX_NOTHROW {
+		return this;
+	}
 	class _Wrap_frozen
 		: public deemon::detail::ConstGetRefProxy<_Wrap_frozen, Set<T> > {
 	private:
@@ -287,6 +340,23 @@ public:
 		}
 	};
 	WUNUSED _Wrap_asmap (asmap)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap_length
+		: public deemon::detail::ConstGetRefProxy<_Wrap_length, deemon::int_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap_length(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "length", _Dee_HashSelectC(0xecef0c1, 0x2993e8eb119cab21));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "length", _Dee_HashSelectC(0xecef0c1, 0x2993e8eb119cab21)));
+		}
+	};
+	WUNUSED _Wrap_length (length)() DEE_CXX_NOTHROW {
 		return this;
 	}
 /*[[[end]]]*/

@@ -517,6 +517,23 @@ public:
 	WUNUSED _Wrap_asmap (asmap)() DEE_CXX_NOTHROW {
 		return this;
 	}
+	class _Wrap_length
+		: public deemon::detail::ConstGetRefProxy<_Wrap_length, deemon::int_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap_length(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "length", _Dee_HashSelectC(0xecef0c1, 0x2993e8eb119cab21));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "length", _Dee_HashSelectC(0xecef0c1, 0x2993e8eb119cab21)));
+		}
+	};
+	WUNUSED _Wrap_length (length)() DEE_CXX_NOTHROW {
+		return this;
+	}
 /*[[[end]]]*/
 };
 

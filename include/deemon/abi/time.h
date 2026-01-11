@@ -23,7 +23,7 @@
 #include "../api.h"
 /**/
 
-#include "../format.h" /* DEE_PCKuPTR */
+#include "../format.h" /* Dee_PCKuPTR */
 #include "../module.h"
 #include "../object.h"
 /**/
@@ -77,7 +77,7 @@ DECL_BEGIN
 				return NULL;                                                  \
 			return DeeObject_CallAttrStringf(Dee_AsObject(time_module),       \
 			                                 "_mkunix",                       \
-			                                 DEE_PCKd64 DEE_PCKu32,           \
+			                                 Dee_PCKd64 Dee_PCKu32,           \
 			                                 seconds_since_01_01_1970,        \
 			                                 extra_nanoseconds);              \
 		}                                                                     \
@@ -113,7 +113,7 @@ DECL_BEGIN
 			if unlikely(time_module == NULL)                                         \
 				return NULL;                                                         \
 			return DeeObject_CallAttrStringf(Dee_AsObject(time_module),              \
-			                                 "_mkFILETIME", DEE_PCKu64,              \
+			                                 "_mkFILETIME", Dee_PCKu64,              \
 			                                 __hybrid_unaligned_get64(p_filetime));  \
 		}                                                                            \
 	}

@@ -115,13 +115,13 @@ public:
 		return inherit(DeeObject_CallAttrStringHash(this, "isunordered", _Dee_HashSelectC(0x3907db0d, 0xb0d4b15ee21e7ffb), 1, args));
 	}
 	WUNUSED Ref<deemon::bool_> (isunordered)(Dee_ssize_t y) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "isunordered", _Dee_HashSelectC(0x3907db0d, 0xb0d4b15ee21e7ffb),  DEE_PCKdSIZ, y));
+		return inherit(DeeObject_CallAttrStringHashf(this, "isunordered", _Dee_HashSelectC(0x3907db0d, 0xb0d4b15ee21e7ffb), Dee_PCKdSIZ, y));
 	}
 	WUNUSED Ref<deemon::bool_> (isunordered)(double y) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "isunordered", _Dee_HashSelectC(0x3907db0d, 0xb0d4b15ee21e7ffb), "f", y));
 	}
 	WUNUSED Ref<deemon::bool_> (isunordered)(size_t y) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "isunordered", _Dee_HashSelectC(0x3907db0d, 0xb0d4b15ee21e7ffb),  DEE_PCKuSIZ, y));
+		return inherit(DeeObject_CallAttrStringHashf(this, "isunordered", _Dee_HashSelectC(0x3907db0d, 0xb0d4b15ee21e7ffb), Dee_PCKuSIZ, y));
 	}
 	class _Wrap_abs
 		: public deemon::detail::ConstGetRefProxy<_Wrap_abs, deemon::float_> {

@@ -79,10 +79,10 @@ public:
 		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "revert", _Dee_HashSelectC(0x98ca826, 0x626b4fca0d39dcf2), 1, args)));
 	}
 	void (revert)(Dee_ssize_t step) {
-		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "revert", _Dee_HashSelectC(0x98ca826, 0x626b4fca0d39dcf2),  DEE_PCKdSIZ, step)));
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "revert", _Dee_HashSelectC(0x98ca826, 0x626b4fca0d39dcf2), Dee_PCKdSIZ, step)));
 	}
 	void (revert)(size_t step) {
-		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "revert", _Dee_HashSelectC(0x98ca826, 0x626b4fca0d39dcf2),  DEE_PCKuSIZ, step)));
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "revert", _Dee_HashSelectC(0x98ca826, 0x626b4fca0d39dcf2), Dee_PCKuSIZ, step)));
 	}
 	NONNULL_CXX((1)) void (advance)(DeeObject *step) {
 		DeeObject *args[1];
@@ -90,10 +90,10 @@ public:
 		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "advance", _Dee_HashSelectC(0xdd1157a0, 0x8667ad2c6ab8d35d), 1, args)));
 	}
 	void (advance)(Dee_ssize_t step) {
-		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "advance", _Dee_HashSelectC(0xdd1157a0, 0x8667ad2c6ab8d35d),  DEE_PCKdSIZ, step)));
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "advance", _Dee_HashSelectC(0xdd1157a0, 0x8667ad2c6ab8d35d), Dee_PCKdSIZ, step)));
 	}
 	void (advance)(size_t step) {
-		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "advance", _Dee_HashSelectC(0xdd1157a0, 0x8667ad2c6ab8d35d),  DEE_PCKuSIZ, step)));
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "advance", _Dee_HashSelectC(0xdd1157a0, 0x8667ad2c6ab8d35d), Dee_PCKuSIZ, step)));
 	}
 	class _Wrap_seq
 		: public deemon::detail::ConstGetRefProxy<_Wrap_seq, Sequence<T> > {
