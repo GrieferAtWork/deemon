@@ -167,20 +167,51 @@ DECL_BEGIN
 
 /* FIXME: Despite everything, leak detection is still a **MAJOR** bottleneck:
  *
- * With LEAK_DETECTION=0
- * >> time make computed-operators
- *    real    0m4.482s
- *
- * With LEAK_DETECTION=1
- * >> time make computed-operators
- *    real    0m27.545s
+ * LEAK_DETECTION=0    time make computed-operators    real    0m4.482s
+ * LEAK_DETECTION=1    time make computed-operators    real    0m27.545s
  *
  * Doing random inspections of the stacks of threads results in lots of
  * threads needing to do blocking-waits at:
  * - DeeDbg_Free:        leak_lock_acquire();
  * - DeeDbg_TryRealloc:  leak_lock_acquire();
+ *
+ * Even single-threaded code is significantly sped up when this is disabled:
+ *
+ * LEAK_DETECTION=0    time deemon util/test.dee       real    0m0.881s
+ * LEAK_DETECTION=1    time deemon util/test.dee       real    0m1.207s
+ *
+ * !!! That a 33% speed difference !!!
+ *
+ *
+ * After changing LEAK_DETECTION to use a regular RBTREE (instead of a
+ * left-leaning one), numbers have improved somewhat:
+ *
+ * LEAK_DETECTION=1    time make computed-operators    real    0m20.685s  (-7s;   -25%)
+ * LEAK_DETECTION=1    time deemon util/test.dee       real    0m1.013s   (-0.2s  -20%)
+ *
+ * But it's still between 20% (single-threaded) and 400% (multi-threaded)
+ * slower than deemon built with LEAK_DETECTION=0
+ *
+ * -------------------------------------------------------------------------
+ *
+ * The only real solution that I see is so scrap the idea of storing info
+ * about memory leaks out-of-band, and instead use+extend dlmalloc's FOOTER
+ * mechanism to store a whole bunch of extra data in the footer of allocated
+ * heap chunks (that don't have FLAG4_BIT set):
+ * >> size_t prev_foot; // s.a. mchunk::prev_foot
+ * >> size_t head;      // s.a. mchunk::head
+ * >> ...               // Payload
+ * >> char const *file; // LEAK_DETECTION: allocation file
+ * >> int         line; // LEAK_DETECTION: allocation line
+ * >> mchunkptr   prev; // LEAK_DETECTION: prev. allocation
+ * >> mchunkptr   next; // LEAK_DETECTION: next. allocation
+ * >> <prev_foot>       // If dlmalloc native footers are also enabled
  */
+#if 0
+#define LEAK_DETECTION        0
+#else
 #define LEAK_DETECTION        DL_DEBUG_EXTERNAL
+#endif
 #define DETECT_USE_AFTER_FREE DL_DEBUG_EXTERNAL
 #define INSECURE              (!DL_DEBUG_EXTERNAL)
 #undef REALLOC_ZERO_BYTES_FREES /* Nope: Dee_Realloc(p, 0) resizes to 0-sized block, but returns non-NULL */
@@ -3444,6 +3475,8 @@ PUBLIC void (DCALL Dee_Free)(void *mem)
 #else /* FOOTERS && !GM_ONLY */
 #define fm gm
 #endif /* !FOOTERS || GM_ONLY */
+
+	/* Ignore "NULL"-pointers */
 	if unlikely(!mem)
 		return;
 
@@ -5312,6 +5345,11 @@ DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbg_Memalign)(size_t min_alignment, 
 DECL_END
 #include <hybrid/sequence/rbtree.h>
 DECL_BEGIN
+
+#if 0 /* Significantly slower */
+#define RBTREE_LEFT_LEANING
+#endif
+
 struct leaknode {
 	/* NOTE: We reference the heap chunks directly. That way, we don't have to do
 	 *       anything extra for `Dee_TryReallocInPlace', since the only way that
@@ -5319,7 +5357,11 @@ struct leaknode {
 	 *       to, meaning there'd never be any reason to change anything about the
 	 *       leaknode-tree, no matter what `Dee_TryReallocInPlace' ends up doing. */
 	union {
+#ifdef RBTREE_LEFT_LEANING
 		LLRBTREE_NODE(leaknode) ln_node;    /* [1..1] Node in tree of allocations */
+#else /* RBTREE_LEFT_LEANING */
+		RBTREE_NODE(leaknode)   ln_node;    /* [1..1] Node in tree of allocations */
+#endif /* !RBTREE_LEFT_LEANING */
 #if USE_PENDING_FREE_LIST
 		SLIST_ENTRY(leaknode)   ln_pend;    /* [0..1] Link in internal list of pending nodes */
 #endif /* USE_PENDING_FREE_LIST */
@@ -5335,7 +5377,6 @@ struct leaknode {
 };
 
 DECL_END
-#define RBTREE_LEFT_LEANING
 #define RBTREE(name)            leaknode_tree_##name
 #define RBTREE_T                struct leaknode
 #define RBTREE_Tkey             char *
