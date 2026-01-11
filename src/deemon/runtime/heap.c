@@ -5249,6 +5249,14 @@ _leaks_pending_reap_and_unlock(void) {
 		if (!node) {
 			mchunkptr p = mem2chunk(ptr);
 			if (!flag4inuse(p)) {
+				/* XXX: This check right here has been seen to fail for unexplained reasons in the past
+				 *      When it failed, "file" was 0xCCCCCCCC or 0xDEADBEEF (or file=0xDEADBEEF, and 
+				 *      ptr->lfle_file=0xDEADBEEF, indicating another thread having free'd the pointer
+				 *      while our thread was trying to do the same).
+				 * It seemed to happen under:
+				 * - USE_PER_THREAD_MSTATE=0
+				 * - FOOTERS=0/1
+				 * when running `make computed-operators`, and then usually during the app finalization */
 				_DeeAssert_Failf("Dee_Free(ptr)", file, line,
 				                 "Bad pointer %p does not map to any node, or custom heap region",
 				                 ptr);
@@ -5649,35 +5657,47 @@ PUBLIC void *
 }
 
 #else /* LEAK_DETECTION */
+
+#ifndef Dee_TryMalloc_DEFINED
 #define Dee_TryMalloc_DEFINED
 PUBLIC ATTR_HOT ATTR_MALLOC WUNUSED void *
 (DCALL Dee_TryMalloc)(size_t n_bytes) {
 	return dlmalloc(n_bytes);
 }
+#endif /* !Dee_TryMalloc_DEFINED */
 
+#ifndef Dee_TryCalloc_DEFINED
 #define Dee_TryCalloc_DEFINED
 PUBLIC ATTR_HOT ATTR_MALLOC WUNUSED void *
 (DCALL Dee_TryCalloc)(size_t n_bytes) {
 	return dlcalloc(n_bytes);
 }
+#endif /* !Dee_TryCalloc_DEFINED */
 
+#ifndef Dee_Free_DEFINED
 #define Dee_Free_DEFINED
 PUBLIC ATTR_HOT void
 (DCALL Dee_Free)(void *ptr) {
 	dlfree(ptr);
 }
+#endif /* !Dee_Free_DEFINED */
 
+#ifndef Dee_TryRealloc_DEFINED
 #define Dee_TryRealloc_DEFINED
 PUBLIC ATTR_HOT WUNUSED void *
 (DCALL Dee_TryRealloc)(void *ptr, size_t n_bytes) {
 	return dlrealloc(ptr, n_bytes);
 }
+#endif /* !Dee_TryRealloc_DEFINED */
 
+#ifndef Dee_TryMemalign_DEFINED
 #define Dee_TryMemalign_DEFINED
 PUBLIC ATTR_HOT ATTR_MALLOC WUNUSED void *
 (DCALL Dee_TryMemalign)(size_t min_alignment, size_t n_bytes) {
 	return dlmemalign(min_alignment, n_bytes);
 }
+#endif /* !Dee_TryMemalign_DEFINED */
+
 #endif /* LEAK_DETECTION */
 #endif /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
 
@@ -5746,12 +5766,18 @@ PUBLIC ATTR_COLD void DCALL DeeHeap_CheckMemory(void) {
 #endif /* DL_DEBUG_EXTERNAL */
 
 
+#if defined(DeeDbg_TryMalloc_DEFINED) || defined(DeeDbg_Malloc_DEFINED)
+#define ATTR_HOT_DEBUG  ATTR_HOT
+#define ATTR_HOT_NDEBUG ATTR_COLD
+#else /* DeeDbg_TryMalloc_DEFINED || DeeDbg_Malloc_DEFINED */
+#define ATTR_HOT_DEBUG  ATTR_COLD
+#define ATTR_HOT_NDEBUG ATTR_HOT
+#endif /* !DeeDbg_TryMalloc_DEFINED && !DeeDbg_Malloc_DEFINED */
+
+
 #ifndef Dee_TryMalloc_DEFINED
 #define Dee_TryMalloc_DEFINED
-#ifdef NDEBUG
-ATTR_HOT
-#endif /* NDEBUG */
-PUBLIC ATTR_MALLOC WUNUSED void *
+PUBLIC ATTR_HOT_NDEBUG ATTR_MALLOC WUNUSED void *
 (DCALL Dee_TryMalloc)(size_t n_bytes) {
 #ifdef DeeDbg_TryMalloc_DEFINED
 	return (DeeDbg_TryMalloc)(n_bytes, NULL, 0);
@@ -5763,10 +5789,7 @@ PUBLIC ATTR_MALLOC WUNUSED void *
 
 #ifndef Dee_TryCalloc_DEFINED
 #define Dee_TryCalloc_DEFINED
-#ifdef NDEBUG
-ATTR_HOT
-#endif /* NDEBUG */
-PUBLIC ATTR_MALLOC WUNUSED void *
+PUBLIC ATTR_HOT_NDEBUG ATTR_MALLOC WUNUSED void *
 (DCALL Dee_TryCalloc)(size_t n_bytes) {
 #ifdef DeeDbg_TryCalloc_DEFINED
 	return (DeeDbg_TryCalloc)(n_bytes, NULL, 0);
@@ -5778,10 +5801,7 @@ PUBLIC ATTR_MALLOC WUNUSED void *
 
 #ifndef Dee_TryRealloc_DEFINED
 #define Dee_TryRealloc_DEFINED
-#ifdef NDEBUG
-ATTR_HOT
-#endif /* NDEBUG */
-PUBLIC WUNUSED void *
+PUBLIC ATTR_HOT_NDEBUG WUNUSED void *
 (DCALL Dee_TryRealloc)(void *ptr, size_t n_bytes) {
 #ifdef DeeDbg_TryRealloc_DEFINED
 	return (DeeDbg_TryRealloc)(ptr, n_bytes, NULL, 0);
@@ -5793,7 +5813,7 @@ PUBLIC WUNUSED void *
 
 #ifndef Dee_TryMemalign_DEFINED
 #define Dee_TryMemalign_DEFINED
-PUBLIC ATTR_MALLOC WUNUSED void *
+PUBLIC /*ATTR_HOT_NDEBUG*/ ATTR_MALLOC WUNUSED void *
 (DCALL Dee_TryMemalign)(size_t min_alignment, size_t n_bytes) {
 #ifdef DeeDbg_TryMemalign_DEFINED
 	return (DeeDbg_TryMemalign)(min_alignment, n_bytes, NULL, 0);
@@ -5824,7 +5844,7 @@ PUBLIC ATTR_PURE WUNUSED size_t
  * NOTE: Upon allocation failure, caches are cleared and an `Error.NoMemory' is thrown. */
 #ifndef Dee_Malloc_DEFINED
 #define Dee_Malloc_DEFINED
-PUBLIC ATTR_HOT ATTR_MALLOC WUNUSED void *
+PUBLIC ATTR_HOT_NDEBUG ATTR_MALLOC WUNUSED void *
 (DCALL Dee_Malloc)(size_t n_bytes) {
 #ifdef DeeDbg_Malloc_DEFINED
 	return (DeeDbg_Malloc)(n_bytes, NULL, 0);
@@ -5847,7 +5867,7 @@ again:
 
 #ifndef Dee_Calloc_DEFINED
 #define Dee_Calloc_DEFINED
-PUBLIC ATTR_HOT ATTR_MALLOC WUNUSED void *
+PUBLIC ATTR_HOT_NDEBUG ATTR_MALLOC WUNUSED void *
 (DCALL Dee_Calloc)(size_t n_bytes) {
 #ifdef DeeDbg_Calloc_DEFINED
 	return (DeeDbg_Calloc)(n_bytes, NULL, 0);
@@ -5870,7 +5890,7 @@ again:
 
 #ifndef Dee_Realloc_DEFINED
 #define Dee_Realloc_DEFINED
-PUBLIC ATTR_HOT WUNUSED void *
+PUBLIC ATTR_HOT_NDEBUG WUNUSED void *
 (DCALL Dee_Realloc)(void *ptr, size_t n_bytes) {
 #ifdef DeeDbg_Realloc_DEFINED
 	return (DeeDbg_Realloc)(ptr, n_bytes, NULL, 0);
@@ -5893,7 +5913,7 @@ again:
 
 #ifndef Dee_Memalign_DEFINED
 #define Dee_Memalign_DEFINED
-PUBLIC ATTR_HOT ATTR_MALLOC WUNUSED void *
+PUBLIC /*ATTR_HOT_NDEBUG*/ ATTR_MALLOC WUNUSED void *
 (DCALL Dee_Memalign)(size_t min_alignment, size_t n_bytes) {
 #ifdef DeeDbg_Memalign_DEFINED
 	return (DeeDbg_Memalign)(min_alignment, n_bytes, NULL, 0);
@@ -5919,7 +5939,7 @@ again:
 
 #ifndef Dee_Free_DEFINED
 #define Dee_Free_DEFINED
-PUBLIC ATTR_HOT void (DCALL Dee_Free)(void *ptr) {
+PUBLIC ATTR_HOT_NDEBUG void (DCALL Dee_Free)(void *ptr) {
 	return (DeeDbg_Free)(ptr, NULL, 0);
 }
 #endif /* !Dee_Free_DEFINED */
@@ -5929,10 +5949,7 @@ PUBLIC ATTR_HOT void (DCALL Dee_Free)(void *ptr) {
 /* Fallback: The host does not provide a debug-allocation API. */
 #ifndef DeeDbg_Malloc_DEFINED
 #define DeeDbg_Malloc_DEFINED
-#ifndef NDEBUG
-ATTR_HOT
-#endif /* !NDEBUG */
-PUBLIC ATTR_MALLOC WUNUSED void *
+PUBLIC ATTR_HOT_DEBUG ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbg_Malloc)(size_t n_bytes, char const *file, int line) {
 #ifdef DeeDbg_TryMalloc_DEFINED
 	void *result;
@@ -5953,10 +5970,7 @@ again:
 
 #ifndef DeeDbg_Calloc_DEFINED
 #define DeeDbg_Calloc_DEFINED
-#ifndef NDEBUG
-ATTR_HOT
-#endif /* !NDEBUG */
-PUBLIC ATTR_MALLOC WUNUSED void *
+PUBLIC ATTR_HOT_DEBUG ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbg_Calloc)(size_t n_bytes, char const *file, int line) {
 #ifdef DeeDbg_TryCalloc_DEFINED
 	void *result;
@@ -5977,10 +5991,7 @@ again:
 
 #ifndef DeeDbg_Realloc_DEFINED
 #define DeeDbg_Realloc_DEFINED
-#ifndef NDEBUG
-ATTR_HOT
-#endif /* !NDEBUG */
-PUBLIC WUNUSED void *
+PUBLIC ATTR_HOT_DEBUG WUNUSED void *
 (DCALL DeeDbg_Realloc)(void *ptr, size_t n_bytes, char const *file, int line) {
 #ifdef DeeDbg_TryRealloc_DEFINED
 	void *result;
@@ -6001,7 +6012,7 @@ again:
 
 #ifndef DeeDbg_Memalign_DEFINED
 #define DeeDbg_Memalign_DEFINED
-PUBLIC ATTR_MALLOC WUNUSED void *
+PUBLIC /*ATTR_HOT_DEBUG*/ ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbg_Memalign)(size_t min_alignment, size_t n_bytes, char const *file, int line) {
 #ifdef DeeDbg_TryMemalign_DEFINED
 	void *result;
@@ -6025,10 +6036,7 @@ again:
 
 #ifndef DeeDbg_TryMalloc_DEFINED
 #define DeeDbg_TryMalloc_DEFINED
-#ifndef NDEBUG
-ATTR_HOT
-#endif /* !NDEBUG */
-PUBLIC ATTR_MALLOC WUNUSED void *
+PUBLIC ATTR_HOT_DEBUG ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbg_TryMalloc)(size_t n_bytes, char const *file, int line) {
 	(void)file;
 	(void)line;
@@ -6038,10 +6046,7 @@ PUBLIC ATTR_MALLOC WUNUSED void *
 
 #ifndef DeeDbg_TryCalloc_DEFINED
 #define DeeDbg_TryCalloc_DEFINED
-#ifndef NDEBUG
-ATTR_HOT
-#endif /* !NDEBUG */
-PUBLIC ATTR_MALLOC WUNUSED void *
+PUBLIC ATTR_HOT_DEBUG ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbg_TryCalloc)(size_t n_bytes, char const *file, int line) {
 	(void)file;
 	(void)line;
@@ -6051,10 +6056,7 @@ PUBLIC ATTR_MALLOC WUNUSED void *
 
 #ifndef DeeDbg_TryRealloc_DEFINED
 #define DeeDbg_TryRealloc_DEFINED
-#ifndef NDEBUG
-ATTR_HOT
-#endif /* !NDEBUG */
-PUBLIC WUNUSED void *
+PUBLIC ATTR_HOT_DEBUG WUNUSED void *
 (DCALL DeeDbg_TryRealloc)(void *ptr, size_t n_bytes,
                           char const *file, int line) {
 	(void)file;
@@ -6065,7 +6067,7 @@ PUBLIC WUNUSED void *
 
 #ifndef DeeDbg_TryMemalign_DEFINED
 #define DeeDbg_TryMemalign_DEFINED
-PUBLIC ATTR_MALLOC WUNUSED void *
+PUBLIC /*ATTR_HOT_DEBUG*/ ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbg_TryMemalign)(size_t min_alignment, size_t n_bytes, char const *file, int line) {
 	(void)file;
 	(void)line;
@@ -6075,10 +6077,7 @@ PUBLIC ATTR_MALLOC WUNUSED void *
 
 #ifndef DeeDbg_Free_DEFINED
 #define DeeDbg_Free_DEFINED
-#ifndef NDEBUG
-ATTR_HOT
-#endif /* !NDEBUG */
-PUBLIC void
+PUBLIC ATTR_HOT_DEBUG void
 (DCALL DeeDbg_Free)(void *ptr, char const *file, int line) {
 	(void)file;
 	(void)line;
@@ -6095,6 +6094,9 @@ PUBLIC void *
 	return ptr;
 }
 #endif /* !DeeDbg_UntrackAlloc_DEFINED */
+
+#undef ATTR_HOT_DEBUG
+#undef ATTR_HOT_NDEBUG
 
 
 #ifndef DeeHeap_CheckMemory_DEFINED
