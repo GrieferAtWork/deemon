@@ -49,6 +49,7 @@ ClCompile.BasicRuntimeChecks = Default
 #include <hybrid/host.h>
 #include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
+#include <hybrid/sched/yield.h>
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
 
@@ -141,6 +142,12 @@ DECL_BEGIN
 #ifndef USE_PER_THREAD_MSTATE
 #define USE_PER_THREAD_MSTATE 0
 #endif /* !USE_PER_THREAD_MSTATE */
+
+/* Define a new method "mspace_malloc_lockless" (same as "mspace_malloc", but caller must do "PREACTION")
+ * This is a minor optimization on-top of "USE_PER_THREAD_MSTATE", since it allows `dlmalloc()' to select
+ * either the "tls" or "gm" allocator, based on whichever becomes available first, rather than having to
+ * unconditionally rely on "tls" as soon as "gm" cannot be locked event once. */
+#define USE_MSPACE_MALLOC_LOCKLESS USE_PER_THREAD_MSTATE
 
 #define MSPACES  (USE_PER_THREAD_MSTATE)
 #define GM_ONLY  (!USE_PER_THREAD_MSTATE)
@@ -528,6 +535,9 @@ static mspace create_mspace_with_base(void *base, size_t capacity/*, int locked*
 static int mspace_track_large_chunks(mspace msp, int enable);
 #endif /* !NO_MSPACE_TRACK_LARGE_CHUNKS */
 static void *mspace_malloc(mspace msp, size_t bytes);
+#if USE_MSPACE_MALLOC_LOCKLESS
+static void *mspace_malloc_lockless(mspace msp, size_t bytes);
+#endif /* USE_MSPACE_MALLOC_LOCKLESS */
 #if !NO_MSPACE_FREE
 static void mspace_free(mspace msp, void *mem);
 #endif /* !NO_MSPACE_FREE */
@@ -3283,9 +3293,25 @@ PUBLIC ATTR_MALLOC WUNUSED void *(DCALL Dee_TryMalloc)(size_t bytes)
 #if USE_PER_THREAD_MSTATE
 	if (!TRY_PREACTION(gm)) {
 		mspace tls = tls_mspace();
-		if (tls)
+		if (tls) {
+#if USE_MSPACE_MALLOC_LOCKLESS
+			/* Lock whichever mspace becomes available first ("tls" or "gm") */
+			for (;;) {
+				if (TRY_PREACTION((mstate)tls)) {
+					mem = mspace_malloc_lockless(tls, bytes);
+					POSTACTION((mstate)tls);
+					return mem;
+				}
+				if (TRY_PREACTION(gm))
+					break;
+				SCHED_YIELD();
+			}
+#else /* USE_MSPACE_MALLOC_LOCKLESS */
 			return mspace_malloc(tls, bytes);
-		PREACTION(gm);
+#endif /* !USE_MSPACE_MALLOC_LOCKLESS */
+		} else {
+			PREACTION(gm);
+		}
 	}
 #else /* USE_PER_THREAD_MSTATE */
 	PREACTION(gm);
@@ -4272,15 +4298,23 @@ PUBLIC WUNUSED void *(DCALL Dee_TryRealloc)(void *oldmem, size_t bytes)
 #endif /* FOOTERS && !GM_ONLY */
 #if USE_PER_THREAD_MSTATE
 			if (!TRY_PREACTION(fm)) {
+				mspace mtls;
 				if (fm != gm) {
+do_dlmalloc_fallback:
 					mem = dlmalloc(bytes);
 					goto after_internal_malloc;
-				} else {
-					mspace mtls = tls_mspace();
-					if (mtls) {
-						mem = mspace_malloc(mtls, bytes);
-						goto after_internal_malloc;
-					}
+				}
+				mtls = tls_mspace();
+				if (mtls) {
+#if USE_MSPACE_MALLOC_LOCKLESS
+					if (!TRY_PREACTION((mstate)mtls))
+						goto do_dlmalloc_fallback;
+					mem = mspace_malloc_lockless(mtls, bytes);
+					POSTACTION((mstate)mtls);
+#else /* USE_MSPACE_MALLOC_LOCKLESS */
+					mem = mspace_malloc(mtls, bytes);
+#endif /* !USE_MSPACE_MALLOC_LOCKLESS */
+					goto after_internal_malloc;
 				}
 				PREACTION(fm);
 			}
@@ -4297,15 +4331,20 @@ PUBLIC WUNUSED void *(DCALL Dee_TryRealloc)(void *oldmem, size_t bytes)
 #endif /* FOOTERS && !GM_ONLY */
 #if USE_PER_THREAD_MSTATE
 			if (!TRY_PREACTION(fm)) {
-				if (fm != gm) {
-					mem = dlmalloc(bytes);
+				mspace mtls;
+				if (fm != gm)
+					goto do_dlmalloc_fallback;
+				mtls = tls_mspace();
+				if (mtls) {
+#if USE_MSPACE_MALLOC_LOCKLESS
+					if (!TRY_PREACTION((mstate)mtls))
+						goto do_dlmalloc_fallback;
+					mem = mspace_malloc_lockless(mtls, bytes);
+					POSTACTION((mstate)mtls);
+#else /* USE_MSPACE_MALLOC_LOCKLESS */
+					mem = mspace_malloc(mtls, bytes);
+#endif /* !USE_MSPACE_MALLOC_LOCKLESS */
 					goto after_internal_malloc;
-				} else {
-					mspace mtls = tls_mspace();
-					if (mtls) {
-						mem = mspace_malloc(mtls, bytes);
-						goto after_internal_malloc;
-					}
 				}
 				PREACTION(fm);
 			}
@@ -4895,9 +4934,9 @@ thread_heap_destroy(void *heap) {
   versions. This is not so nice but better than the alternatives.
 */
 
+#if USE_MSPACE_MALLOC_LOCKLESS
 static void *mspace_malloc(mspace msp, size_t bytes) {
-	void *mem;
-	size_t nb;
+	void *result;
 	mstate ms = (mstate)msp;
 	ext_assert__ok_magic(ms);
 #ifdef MALLOC_ZERO_RETURNS_NULL
@@ -4905,6 +4944,26 @@ static void *mspace_malloc(mspace msp, size_t bytes) {
 		return NULL;
 #endif /* MALLOC_ZERO_RETURNS_NULL */
 	PREACTION(ms);
+	result = mspace_malloc_lockless(ms, bytes);
+	POSTACTION(ms);
+	return result;
+}
+static void *mspace_malloc_lockless(mspace msp, size_t bytes)
+#else /* USE_MSPACE_MALLOC_LOCKLESS */
+static void *mspace_malloc(mspace msp, size_t bytes)
+#endif /* !USE_MSPACE_MALLOC_LOCKLESS */
+{
+	void *mem;
+	size_t nb;
+	mstate ms = (mstate)msp;
+#if !USE_MSPACE_MALLOC_LOCKLESS
+	ext_assert__ok_magic(ms);
+#ifdef MALLOC_ZERO_RETURNS_NULL
+	if unlikely(!bytes)
+		return NULL;
+#endif /* MALLOC_ZERO_RETURNS_NULL */
+	PREACTION(ms);
+#endif /* !USE_MSPACE_MALLOC_LOCKLESS */
 	if (bytes <= MAX_SMALL_REQUEST) {
 		bindex_t idx;
 		binmap_t smallbits;
@@ -5004,7 +5063,9 @@ static void *mspace_malloc(mspace msp, size_t bytes) {
 	mem = sys_alloc(ms, nb);
 
 postaction:
+#if !USE_MSPACE_MALLOC_LOCKLESS
 	POSTACTION(ms);
+#endif /* !USE_MSPACE_MALLOC_LOCKLESS */
 	return mem;
 }
 
