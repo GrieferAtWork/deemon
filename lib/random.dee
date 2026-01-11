@@ -48,7 +48,7 @@ class Random {
 	}
 
 	@@The current Pseudo-RNG seed
-	public final member seed: int;
+	public member seed: int;
 
 	this(seed: int = none) {
 		if (seed !is none) {
