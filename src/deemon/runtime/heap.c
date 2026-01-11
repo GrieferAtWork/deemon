@@ -42,6 +42,7 @@ ClCompile.BasicRuntimeChecks = Default
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
+#include <deemon/util/rlock.h>
 
 #include <hybrid/align.h>
 #include <hybrid/bit.h>
@@ -1041,6 +1042,7 @@ struct malloc_state {
 	msegment  seg;
 #if USE_PER_THREAD_MSTATE
 	SLIST_ENTRY(malloc_state) ms_link; /* Link for "free_tls_mspace" / "used_tls_mspace" */
+	uintptr_t ms_foreach_bitset; /* Atomic bitset of visit contexts */
 #endif /* USE_PER_THREAD_MSTATE */
 #if 0
 	void     *extp; /* Unused but available for extensions */
@@ -4661,6 +4663,72 @@ static mspace tls_mspace(void) {
 	return result;
 }
 
+#ifndef CONFIG_NO_THREADS
+PRIVATE Dee_rshared_lock_t foreach_lock = Dee_RSHARED_LOCK_INIT;
+#endif /* !CONFIG_NO_THREADS */
+
+PRIVATE uintptr_t foreach_bitset_inuse = 0;
+PRIVATE uintptr_t foreach_bitset_inuse_alloc(void) {
+	unsigned int i;
+	uintptr_t result, state;
+again:
+	state = atomic_read(&foreach_bitset_inuse);
+	for (i = 0, result = 1; i < (sizeof(state) * __CHAR_BIT__); ++i, result <<= 1) {
+		if (!(state & result)) {
+			if (!(atomic_fetchor(&foreach_bitset_inuse, result) & result))
+				return result;
+			goto again;
+		}
+	}
+	return 0;
+}
+
+PRIVATE void foreach_bitset_inuse_free(uintptr_t mask) {
+	atomic_and(&foreach_bitset_inuse, ~mask);
+}
+
+static void reset_not_visited_tls_mspace(uintptr_t mask) {
+	mstate ms;
+	SLIST_FOREACH (ms, &free_tls_mspace, ms_link)
+		ms->ms_foreach_bitset &= ~mask;
+	SLIST_FOREACH (ms, &used_tls_mspace, ms_link)
+		ms->ms_foreach_bitset &= ~mask;
+}
+
+static mstate find_not_visited_tls_mspace(uintptr_t mask) {
+	mstate ms;
+	SLIST_FOREACH (ms, &free_tls_mspace, ms_link) {
+		if (!(ms->ms_foreach_bitset & mask)) {
+			ms->ms_foreach_bitset |= mask;
+			return ms;
+		}
+	}
+	SLIST_FOREACH (ms, &used_tls_mspace, ms_link) {
+		if (!(ms->ms_foreach_bitset & mask)) {
+			ms->ms_foreach_bitset |= mask;
+			return ms;
+		}
+	}
+	return NULL;
+}
+
+static void foreach_tls_mspace(void (*cb)(mstate ms, void *arg), void *arg) {
+	uintptr_t mask;
+	mstate ms;
+	Dee_rshared_lock_acquire_noint(&foreach_lock);
+	mask = foreach_bitset_inuse_alloc();
+	tls_mspace_lock_acquire();
+	reset_not_visited_tls_mspace(mask);
+	while ((ms = find_not_visited_tls_mspace(mask)) != NULL) {
+		tls_mspace_lock_release();
+		(*cb)(ms, arg);
+		tls_mspace_lock_acquire();
+	}
+	tls_mspace_lock_release();
+	foreach_bitset_inuse_free(mask);
+	Dee_rshared_lock_release(&foreach_lock);
+}
+
 #define thread_heap_destroy_DEFINED
 INTERN NONNULL((1)) void DCALL
 thread_heap_destroy(void *heap) {
@@ -5782,6 +5850,7 @@ DeeHeap_GetRegionOf(void *ptr) {
 			                               struct Dee_heapregion, hr_first);
 			ASSERT(result->hr_size >= (size_t)((char *)mem2chunk(ptr) - (char *)result));
 		} else {
+#if DL_DEBUG_INTERNAL
 #if FOOTERS && !GM_ONLY
 			mstate fm = get_mstate_for(p);
 			ext_assert__ok_magic(fm);
@@ -5792,6 +5861,7 @@ DeeHeap_GetRegionOf(void *ptr) {
 			check_inuse_chunk(fm, p);
 			POSTACTION(fm);
 #undef fm
+#endif /* DL_DEBUG_INTERNAL */
 		}
 	}
 	return result;
@@ -5802,13 +5872,30 @@ DeeHeap_GetRegionOf(void *ptr) {
 }
 
 #if DL_DEBUG_EXTERNAL
+PRIVATE void lock_and_do_check_malloc_state(PARAM_mstate_m) {
+	PREACTION(m);
+	do_check_malloc_state(ARG_mstate_m);
+	POSTACTION(m);
+}
+
+#if USE_PER_THREAD_MSTATE
+PRIVATE void lock_and_do_check_malloc_state_2(PARAM_mstate_m_ void *arg) {
+	(void)arg;
+	lock_and_do_check_malloc_state(ARG_mstate_m);
+}
+#endif /* USE_PER_THREAD_MSTATE */
+
+
 /* Validate heap memory, asserting the absence of corruptions from
  * various common heap mistakes (write-past-end, use-after-free, etc.).
  *
  * When deemon was not built for debugging, this is a no-op. */
 #define DeeHeap_CheckMemory_DEFINED
 PUBLIC ATTR_COLD void DCALL DeeHeap_CheckMemory(void) {
-	do_check_malloc_state(ARG_mstate_gm);
+	lock_and_do_check_malloc_state(ARG_mstate_gm);
+#if USE_PER_THREAD_MSTATE
+	foreach_tls_mspace(&lock_and_do_check_malloc_state_2, NULL);
+#endif /* USE_PER_THREAD_MSTATE */
 }
 #endif /* DL_DEBUG_EXTERNAL */
 
