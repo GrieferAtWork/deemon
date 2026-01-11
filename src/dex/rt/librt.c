@@ -3121,12 +3121,12 @@ DEX_MEMBER_F("stacklimitunlimited", VALUEOF_stacklimitunlimited, DEXSYM_READONLY
 
 DEX_MEMBER_F("getcalloptimizethreshold", &librt_getcalloptimizethreshold, DEXSYM_READONLY,
              "->?Dint\n"
-             "Get the threshold specifying how often a ?DFunction or ?DCode object "
+             "Get the threshold specifying how often a ?DFunction or ?GCode object "
              /**/ "needs to be called before deemon will automatically try to optimize it."),
 DEX_MEMBER_F("setcalloptimizethreshold", &librt_setcalloptimizethreshold, DEXSYM_READONLY,
              "(" librt_setcalloptimizethreshold_params ")->?Dint\n"
              "#r{The old threshold}"
-             "Set the threshold specifying how often a ?DFunction or ?DCode object "
+             "Set the threshold specifying how often a ?DFunction or ?GCode object "
              /**/ "needs to be called before deemon will automatically try to optimize it."),
 
 /* Access to slab allocator statistics. */

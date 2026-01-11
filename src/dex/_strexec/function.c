@@ -1275,7 +1275,7 @@ PRIVATE struct type_member tpconst jf_members[] = {
 	                      "Returns the module used for relative module imports"),
 	TYPE_MEMBER_FIELD_DOC("__import__", STRUCT_OBJECT_OPT, offsetof(JITFunction, jf_import),
 	                      "->?X2?DCallable?N\n"
-	                      "Function used to resolve $import statements, or ?N when ?Dimport is used instead"),
+	                      "Function used to resolve $import statements, or ?N when ?D__import__ is used instead"),
 	TYPE_MEMBER_FIELD_DOC("__globals__", STRUCT_OBJECT_OPT, offsetof(JITFunction, jf_globals),
 	                      "->?X2?M?Dstring?O?N"),
 	TYPE_MEMBER_FIELD_DOC("__module__", STRUCT_OBJECT_OPT, offsetof(JITFunction, jf_impbase),

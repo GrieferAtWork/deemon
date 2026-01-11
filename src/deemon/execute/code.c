@@ -1555,7 +1555,7 @@ INTERN_CONST char const code_optimize_doc[] =
 "#pasync{When !t, allow the optimization to happen asynchronously"
 #ifdef CONFIG_HAVE_CODE_METRICS
 /*   */ " (this is the default when optimization happens as a result of"
-/*   */ " ?A__stat_call__?DCode exceeding ?Ert:getcalloptimizethreshold)"
+/*   */ " ?A__stat_call__?Ert:Code exceeding ?Ert:getcalloptimizethreshold)"
 #endif /* CONFIG_HAVE_CODE_METRICS */
 /*   */ "}"
 "#tValueError{@tuple is true, but the tuple call optimizations are disabled ("

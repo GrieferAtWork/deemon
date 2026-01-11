@@ -2757,7 +2757,7 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 	                 /**/ "?#{op:getattr} to retrieve the relevant module"),
 	TYPE_GETTER_BOUND_F("__filename__", &module_get_filename, &module_bound_filename, METHOD_FNOREFESCAPE,
 	                    "->?Dstring\n"
-	                    "#tUnboundAttribute{Module does not originate from the filesystem}\n"
+	                    "#tUnboundAttribute{Module does not originate from the filesystem}"
 	                    "Returns the actual filename (as opposed to the unique / "
 	                    /**/ "directory-name returned by ?#__absname__) of this module"),
 	TYPE_GETTER_AB_F("__path__", &module_get_path, METHOD_FNOREFESCAPE,
@@ -2775,7 +2775,7 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 	                 /**/ "module changes."),
 	TYPE_GETTER_BOUND_F("__libname__", &module_get_libname, &module_bound_libname, METHOD_FNOREFESCAPE,
 	                    "->?Dstring\n"
-	                    "#tUnboundAttribute{Module isn't located in a directory reachable from any ?#{c:path}}\n"
+	                    "#tUnboundAttribute{Module isn't located in a directory reachable from any ?#{c:path}}"
 	                    "Returns the #Cfirst libname for this module. Note that the order of "
 	                    /**/ "?#__libnames__ of a module is random. Same as ${this.__libnames__.first}"),
 	TYPE_GETTER_AB_F("__libnames__", &DeeModule_LibNames, METHOD_FCONSTCALL,
@@ -2964,7 +2964,7 @@ PRIVATE struct type_method tpconst module_class_methods[] = {
 	/* Deprecated aliases to emulate the old `dexmodule' builtin type. */
 	TYPE_METHOD("open", &module_class_open,
 	            "(name:?Dstring)->?DModule\n"
-	            "Deprecated alias for ?Dimport"),
+	            "Deprecated alias for ?D__import__ and the $import statement"),
 	TYPE_METHOD_END
 };
 
@@ -3575,10 +3575,18 @@ PRIVATE struct type_gc tpconst module_dex_gc = {
 };
 #endif /* !CONFIG_NO_DEX */
 
+#ifdef CONFIG_NO_DEX
+#define module_doc_kind_listing "?Ert:ModuleDee and ?Ert:ModuleDir"
+#else /* CONFIG_NO_DEX */
+#define module_doc_kind_listing "?Ert:ModuleDee, ?Ert:ModuleDir and ?Ert:ModuleDex"
+#endif /* !CONFIG_NO_DEX */
+
 PUBLIC DeeTypeObject DeeModule_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Module),
-	/* .tp_doc      = */ DOC("str->\n"
+	/* .tp_doc      = */ DOC("Abstract base-class for " module_doc_kind_listing "\n"
+	                         "\n"
+	                         "str->\n"
 	                         "Returns the name of the module"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT | TP_FVARIABLE,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeModuleObject),

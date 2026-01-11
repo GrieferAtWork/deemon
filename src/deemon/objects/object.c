@@ -2490,6 +2490,43 @@ PRIVATE struct type_member tpconst object_class_members[] = {
 };
 
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+object_get_module(DeeObject *__restrict self) {
+	DREF DeeModuleObject *result = DeeModule_OfObject(self);
+	if unlikely(!result)
+		result = (DREF DeeModuleObject *)DeeRT_ErrTUnboundAttr(&DeeObject_Type, self, &str___module__);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+object_bound_module(DeeObject *__restrict self) {
+	DREF DeeModuleObject *result = DeeModule_OfObject(self);
+	if (!result)
+		return Dee_BOUND_NO;
+	Dee_Decref_unlikely(result);
+	return Dee_BOUND_YES;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
+object_get_true_module(DeeObject *__restrict self) {
+	DREF DeeModuleObject *result = DeeModule_OfPointer(self);
+	if unlikely(!result)
+		result = (DREF DeeModuleObject *)DeeRT_ErrTUnboundAttrCStr(&DeeObject_Type, self, "__true_module__");
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+object_bound_true_module(DeeObject *__restrict self) {
+	DREF DeeModuleObject *result = DeeModule_OfPointer(self);
+	if (!result)
+		return Dee_BOUND_NO;
+	Dee_Decref_unlikely(result);
+	return Dee_BOUND_YES;
+}
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
+
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instance_get_itable(DeeObject *__restrict self);
 
@@ -2516,6 +2553,53 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	                 "For non-user-defined classes (aka. when ${this.class.__isclass__} is ?f), "
 	                 /**/ "an empty sequence is returned.\n"
 	                 "The class-attribute table can be accessed through ?A__ctable__?DType."),
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	TYPE_GETTER_BOUND_F(STR___module__, &object_get_module, &object_bound_module,
+	                    METHOD_FCONSTCALL,
+	                    "->?DModule\n"
+	                    "#tUnboundAttribute{Object is dynamically allocated, as "
+	                    /*              */ "opposed to a constant within some module, "
+	                    /*              */ "and also does not expose its module in some "
+	                    /*              */ "known, type-specific manner}"
+	                    "Returns the module whose address space this object resides within, "
+	                    /**/ "or the module that may be embedded within @this object via some "
+	                    /**/ "type-specific method (e.g. ?A__module__?DType or ?A__module__?Ert:Code). "
+	                    /**/ "Similar functionality is also provided by ?#__true_module__, which does "
+	                    /**/ "the same as this property, but #Bonly looks at @this object's address "
+	                    /**/ "to try and find the containing module.\n"
+	                    "If @this is dynamically allocated, and does not expose a bound module "
+	                    /**/ "via some type-specific method, :UnboundAttribute is thrown\n"
+	                    "Be careful when relying on this property for the result of expressions "
+	                    /**/ "that may or may not get evaluated at compile-time:\n"
+	                    "${"
+	                    /**/ "print \"foo\".__module__;           /* Always works: same as `import(\".\")' */\n"
+	                    /**/ "print (\"foo\" + \"bar\").__module__; /* Only works when compiled with `-O3' */\n"
+	                    "}\n"
+	                    "With this in mind, the address-based determination of a linked ?DModule "
+	                    /**/ "only works for true compile-time constant expressions (or more specific: "
+	                    /**/ "cases where @this object is embedded within the heap of a #C{.dec} file, "
+	                    /**/ "or was statically defined within a #BDEX module or the deemon core).\n"
+	                    "Also note that depending on how deemon was built, and whether or not there are "
+	                    /**/ "any references to outside variables, lambda functions and/or user-defined "
+	                    /**/ "classes may or may not be statically allocated and thus able to query their "
+	                    /**/ "linked module based on their address. However, in these cases, there is usually "
+	                    /**/ "a way to access the object's relevant compile-time constant portion (which "
+	                    /**/ "will then #Balways be usable with this property, such as ?A__code__?DFunction "
+	                    /**/ "to return the (usually compile-time constant) ?Ert:Code of a function, or "
+	                    /**/ "?A__class__?DType to return the (usually compile-time constant) ?Ert:ClassDescriptor "
+	                    /**/ "of a class. But note that behavior, presence, and typing of all of these "
+	                    /**/ "attributes is implementation-specific, the same as this attribute ?#__module__ "
+	                    /**/ "and its sibling ?#__true_module__ are, too"),
+	TYPE_GETTER_BOUND_F("__true_module__", &object_get_true_module, &object_bound_true_module,
+	                    METHOD_FCONSTCALL,
+	                    "->?DModule\n"
+	                    "#tUnboundAttribute{Object is dynamically allocated, as "
+	                    /*              */ "opposed to a constant within some module}"
+	                    "Similar to ?#__module__, but #Bonly look at @this object's address in order to "
+	                    /**/ "try and return the module whose address space this object resides within. "
+	                    /**/ "If @this is dynamically allocated, :UnboundAttribute is thrown\n"
+	                    "For more information, see ?#__module__"),
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Helper function: `foo.id' returns a unique id for any object. */
 	TYPE_GETTER_AB_F("id", &object_id_get,
