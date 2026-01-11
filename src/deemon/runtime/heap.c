@@ -5559,19 +5559,78 @@ struct leak_footer {
 
 SLIST_HEAD(leak_footer_slist, leak_footer);
 
-//TODO:PRIVATE struct leak_footer_slist leak_footer_freelist = SLIST_HEAD_INITIALIZER(leak_footer_freelist);
+#define leak_footer_alloc_uncached() \
+	((struct leak_footer *)dlmalloc(sizeof(struct leak_footer)))
+#define leak_footer_free_uncached(self) \
+	dlfree(self)
 
-PRIVATE ATTR_MALLOC WUNUSED struct leak_footer *DCALL
+/* XXX: Somehow, the idea of "leak_footer_freelist" is **SLOWER** than the alternative
+ *      of just always using dlmalloc() / dlfree() directly:
+ *
+ * Disabled: time make computed-operators    real    0m7.234s   161%
+ * Enabled:  time make computed-operators    real    0m8.745s   195%
+ *
+ * I'm guessing it's once again that problem where there's only a **single**, global
+ * cache leak footers, whereas dlmalloc() and dlfree() will automatically make use of
+ * per-thread caches (meaning that there's much less conflicts when doing atomic ops)
+ */
+#if 0
+PRIVATE size_t leak_footer_freesize_max = 4096; /* XXX: Configure somehow? */
+
+/* Lazily updated to reflect length of "leak_footer_freelist" (may not be up-to-date) */
+PRIVATE size_t leak_footer_freesize = 0;
+
+/* [0..n][lock(APPEND(ATOMIC), REMOVE(leak_footer_freelock))] */
+PRIVATE struct leak_footer_slist leak_footer_freelist = SLIST_HEAD_INITIALIZER(leak_footer_freelist);
+
+/* Lock needed to remove items from "leak_footer_freelist" */
+#ifndef CONFIG_NO_THREADS
+PRIVATE Dee_atomic_lock_t leak_footer_freelock = Dee_ATOMIC_LOCK_INIT;
+#endif /* !CONFIG_NO_THREADS */
+#define leak_footer_freelock_available()  Dee_atomic_lock_available(&leak_footer_freelock)
+#define leak_footer_freelock_acquired()   Dee_atomic_lock_acquired(&leak_footer_freelock)
+#define leak_footer_freelock_tryacquire() Dee_atomic_lock_tryacquire(&leak_footer_freelock)
+#define leak_footer_freelock_acquire()    Dee_atomic_lock_acquire(&leak_footer_freelock)
+#define leak_footer_freelock_waitfor()    Dee_atomic_lock_waitfor(&leak_footer_freelock)
+#define leak_footer_freelock_release()    Dee_atomic_lock_release(&leak_footer_freelock)
+
+PRIVATE ATTR_HOT ATTR_MALLOC WUNUSED struct leak_footer *DCALL
 leak_footer_alloc(void) {
-	/* TODO: Use cache */
-	return (struct leak_footer *)dlmalloc(sizeof(struct leak_footer));
+	struct leak_footer *result;
+	result = atomic_read(&leak_footer_freelist.slh_first);
+	if (result && leak_footer_freelock_tryacquire()) {
+		result = atomic_read(&leak_footer_freelist.slh_first);
+		if (result && atomic_cmpxch(&leak_footer_freelist.slh_first,
+		                            result, result->lf_unused.sle_next)) {
+			leak_footer_freelock_release();
+			atomic_dec(&leak_footer_freesize);
+			return result;
+		}
+		leak_footer_freelock_release();
+	}
+	return leak_footer_alloc_uncached();
 }
 
-PRIVATE NONNULL((1)) void DCALL
+PRIVATE ATTR_HOT NONNULL((1)) void DCALL
 leak_footer_free(struct leak_footer *__restrict self) {
-	/* TODO: Use cache */
-	dlfree(self);
+	if (atomic_read(&leak_footer_freesize) < leak_footer_freesize_max) {
+		/* Only try to append to free list **once**
+		 * atomic_cmpxch-loops can become a bottleneck when many CPUs are hammering away! */
+		self->lf_unused.sle_next = atomic_read(&leak_footer_freelist.slh_first);
+		if (atomic_cmpxch(&leak_footer_freelist.slh_first,
+		                  self->lf_unused.sle_next, self)) {
+			atomic_inc(&leak_footer_freesize);
+			return;
+		}
+	}
+
+	/* Just free the footer and ignore the cache */
+	leak_footer_free_uncached(self);
 }
+#else
+#define leak_footer_alloc()    leak_footer_alloc_uncached()
+#define leak_footer_free(self) leak_footer_free_uncached(self)
+#endif
 
 PRIVATE size_t alloc_id_count = 0;
 PRIVATE size_t alloc_id_break = 0;
@@ -5779,7 +5838,7 @@ PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(void) {
 
 
 
-PRIVATE NONNULL((1, 2)) void DCALL
+PRIVATE ATTR_HOT NONNULL((1, 2)) void DCALL
 leak_insert_p(void *ptr, struct leak_footer *leak,
               char const *file, unsigned int line) {
 	/* Hook "leak" into "ptr" */
@@ -5809,7 +5868,7 @@ leak_insert_p(void *ptr, struct leak_footer *leak,
 }
 
 /* Amend debug into to "ptr" and re-return. On error, dlfree(ptr) and return "NULL" */
-PRIVATE WUNUSED NONNULL((1)) void *DCALL
+PRIVATE ATTR_HOT WUNUSED NONNULL((1)) void *DCALL
 leak_insert(void *ptr, char const *file, unsigned int line) {
 	struct leak_footer *foot = leak_footer_alloc();
 	if likely(foot) {
