@@ -119,72 +119,163 @@ DECL_BEGIN
  */
 
 
-/* Implementation Configuration */
-#define ONLY_MSPACES            0
-#define MALLOC_ALIGNMENT        (size_t)(__SIZEOF_POINTER__ * 2)
-#define PROCEED_ON_ERROR        0
-#define MALLOC_INSPECT_ALL      0
-#if 1
-#define MALLOC_FAILURE_ACTION   /* Nothing */
-#else
-#define MALLOC_FAILURE_ACTION   Dee_BREAKPOINT()
-#endif
-
+/* Threading configuration:
+ *
+ * - USE_LOCKS -------------------------------------------------
+ *   Same as already defined by the original dlmalloc: adds
+ *   locking to guard against multi-threaded access to globals
+ *
+ *
+ * - USE_PENDING_FREE_LIST -------------------------------------
+ *   Makes use of SLIST_ATOMIC_INSERT to form a queue of pending
+ *   heap pointers when dlfree() is unable to acquire the lock
+ *   added by USE_LOCKS. When this extension is enabled, freeing
+ *   memory is a guarantied non-blocking operation.
+ *
+ *
+ * - USE_PER_THREAD_MSTATE -------------------------------------
+ *   Provide a per-thread "mstate" that is used when the global
+ *   state is locked.
+ *
+ *   Makes use of thread-local memory, MSPACES and FOOTERS to:
+ *   - Allow for an arbitrary number of lazily allocated, extra
+ *     mspaces that can be used to memory from a thread-local
+ *     mspace when the global mspace ("gm") cannot be locked
+ *   - When a thread that had previously allocated a private
+ *     mspace exits, that mspace is added to a global queue of
+ *     available mspaces, such that another thread can re-use
+ *     it (actually freeing these mspaces isn't possible, since
+ *     a thread exiting doesn't mean that memory it allocated is
+ *     no longer in-use)
+ *   - When dlmalloc() fails to acquire the USE_LOCKS lock, then
+ *     the calling thread's tls_mspace() is used (if available)
+ *   - Since FOOTERS=1 + MSPACES=1 stores the originating mspace
+ *     within the returned heap pointer, Dee_Free() is able to
+ *     free memory from a thread-local mspace, even when free'd
+ *     from another thread!
+ *   This extension provides an **EXTREMELY** significant boost
+ *   in performance when API consumers make heavy use of threads
+ *
+ *
+ * - USE_MSPACE_MALLOC_LOCKLESS --------------------------------
+ *   Define a new method "mspace_malloc_lockless" (same as
+ *   "mspace_malloc", but caller must do "PREACTION") This is a
+ *   minor optimization on-top of "USE_PER_THREAD_MSTATE", since
+ *   it allows `dlmalloc()' to select either the "tls" or "gm"
+ *   allocator, based on whichever becomes available first,
+ *   rather than having to unconditionally rely on "tls" as soon
+ *   as "gm" cannot be locked event once.
+ */
 #ifdef CONFIG_NO_THREADS
 #define USE_LOCKS             0
 #else /* CONFIG_NO_THREADS */
 #define USE_LOCKS             2
 #define USE_PENDING_FREE_LIST 1
-#if 1 /*!defined(__OPTIMIZE_SIZE__) && 1*/ /* Always enable in SMP -- performance gain is too significant to ignore */
-#define USE_PER_THREAD_MSTATE 1 /* Provide a per-thread "mstate" that is used when the global state is locked */
+/* Always enable in SMP -- performance gain is too significant to
+ * ignore, even when compared to the slight increase in code size */
+#if 1 /*&& !defined(__OPTIMIZE_SIZE__)*/
+#define USE_PER_THREAD_MSTATE 1
 #endif /* !__OPTIMIZE_SIZE__ */
 #endif /* !CONFIG_NO_THREADS */
 #ifndef USE_PER_THREAD_MSTATE
 #define USE_PER_THREAD_MSTATE 0
 #endif /* !USE_PER_THREAD_MSTATE */
-
-/* Define a new method "mspace_malloc_lockless" (same as "mspace_malloc", but caller must do "PREACTION")
- * This is a minor optimization on-top of "USE_PER_THREAD_MSTATE", since it allows `dlmalloc()' to select
- * either the "tls" or "gm" allocator, based on whichever becomes available first, rather than having to
- * unconditionally rely on "tls" as soon as "gm" cannot be locked event once. */
-#if 0
-#define USE_MSPACE_MALLOC_LOCKLESS 0
-#else
 #define USE_MSPACE_MALLOC_LOCKLESS USE_PER_THREAD_MSTATE
-#endif
 
-#define MSPACES  (USE_PER_THREAD_MSTATE)
-#define GM_ONLY  (!USE_PER_THREAD_MSTATE)
 
-/* Enable external debugging (footers, usage checks, debug-memset patterns, leak detector) */
+
+/* Debug configuration:
+ *
+ * - DL_DEBUG_EXTERNAL -----------------------------------------
+ *   Main switch for enabling debug features meant to protect
+ *   against, and check for errors that may be made by code
+ *   outside of this (modified) dlmalloc implementation. Also
+ *   defines the default state of a number of individually
+ *   configurable debug features:
+ *   - footers
+ *   - usage checks
+ *   - debug-memset patterns
+ *   - leak detector
+ *   - ...
+ *
+ *
+ * - DL_DEBUG_INTERNAL -----------------------------------------
+ *   internal debugging (self-consistency assertions).
+ *
+ *   Enable debug checks/assertions that are internal to this
+ *   (modified) dlmalloc implementation. This mainly includes
+ *   checks to ensure consistency during/after the internal
+ *   state transitions made during dlmalloc() or dlfree().
+ *   Generally, this switch can be kept off, but it may be of
+ *   when debugging bugs introduced by one of the many additions
+ *   made to dlmalloc here.
+ *
+ *
+ * - DL_DEBUG_MEMSET_ALLOC / DL_DEBUG_MEMSET_FREE --------------
+ *   Special word-sized patterns with which to fill memory after
+ *   it was allocated by dlmalloc(). This not only makes a lot
+ *   of bad-api-usage-related bugs fully consistent and easily
+ *   reproducible, but it also makes it very easy to spot memory
+ *   that was:
+ *   - Bytes that were allocated but not initialized  (CCCCCCCC)
+ *   - Memory that was free'd but is still referenced (DEADBEEF)
+ *   Note that the pattern for newly allocated memory was chosen
+ *   to repeat itself across all bytes of some word. This way,
+ *   it becomes trivial to spot uninitialized memory when only
+ *   parts of some word were initialized.
+ *
+ *
+ * - DETECT_USE_AFTER_FREE -------------------------------------
+ *   When memory is allocated that was previously free'd, check
+ *   that its contents still reflect `DL_DEBUG_MEMSET_FREE'.
+ *   This feature requires `DL_DEBUG_MEMSET_FREE' to work.
+ *
+ *
+ * - LEAK_DETECTION --------------------------------------------
+ *   Enables a memory leak detector suitable for dumping all
+ *   memory that is (still) allocated at the time of leaks being
+ *   dumped. See below for more details and implementations.
+ *
+ */
 #if !defined(NDEBUG) && 1
 #define DL_DEBUG_EXTERNAL 1
 #else
 #define DL_DEBUG_EXTERNAL 0
 #endif
-
-/* Enable internal debugging (self-consistency assertions) */
 #if !defined(NDEBUG) && 0
 #define DL_DEBUG_INTERNAL 1
 #else
 #define DL_DEBUG_INTERNAL 0
 #endif
+#undef DL_DEBUG_MEMSET_ALLOC
+#undef DL_DEBUG_MEMSET_FREE
+#if DL_DEBUG_EXTERNAL
+#define DL_DEBUG_MEMSET_ALLOC DEBUG_WORD4(CCCCCCCC) /* Set by Dee_Malloc() */
+#define DL_DEBUG_MEMSET_FREE  DEBUG_WORD4(DEADBEEF) /* Set by Dee_Free() */
+#endif /* DL_DEBUG_EXTERNAL */
+#ifdef DL_DEBUG_MEMSET_FREE
+#define DETECT_USE_AFTER_FREE 1
+#else /* DL_DEBUG_MEMSET_FREE */
+#define DETECT_USE_AFTER_FREE 0
+#endif /* !DL_DEBUG_MEMSET_FREE */
+
+
 
 /* CAUTION: Leak detection is a bit of a bottleneck:
  *
- * LEAK_DETECTION=0          time make computed-operators    real    0m4.482s
- * LEAK_DETECTION=1          time make computed-operators    real    0m27.545s  615% (left-leaning RBTREE)
- * LEAK_DETECTION=1          time make computed-operators    real    0m20.685s  462% (RBTREE)
- * LEAK_DETECTION_IN_TAIL=1  time make computed-operators    real    0m7.234s   161%
+ * LEAK_DETECTION_METHOD_NONE         time make computed-operators    real    0m4.482s   100%
+ * LEAK_DETECTION_METHOD_IN_TAIL      time make computed-operators    real    0m7.234s   161%
+ * LEAK_DETECTION_METHOD_OOB_RBTREE   time make computed-operators    real    0m20.685s  462%
+ * LEAK_DETECTION_METHOD_OOB_LLRBTREE time make computed-operators    real    0m27.545s  615%
  *
- * LEAK_DETECTION=0          time deemon util/test.dee       real    0m0.881s   100%
- * LEAK_DETECTION=1          time deemon util/test.dee       real    0m1.207s   137% (left-leaning RBTREE)
- * LEAK_DETECTION=1          time deemon util/test.dee       real    0m1.013s   115% (RBTREE)
- * LEAK_DETECTION_IN_TAIL=1  time deemon util/test.dee       real    0m0.965s   110%
+ * LEAK_DETECTION_METHOD_NONE         time deemon util/test.dee       real    0m0.881s   100%
+ * LEAK_DETECTION_METHOD_IN_TAIL      time deemon util/test.dee       real    0m0.965s   110%
+ * LEAK_DETECTION_METHOD_OOB_RBTREE   time deemon util/test.dee       real    0m1.013s   115%
+ * LEAK_DETECTION_METHOD_OOB_LLRBTREE time deemon util/test.dee       real    0m1.207s   137%
  *
- * As you can see, `LEAK_DETECTION_IN_TAIL=1' is ****MUCH**** faster than the old
- * method of using an out-of-band RBTREE to describe memory leaks. It is however
- * still noticeably slower (but not as painfully so) than LEAK_DETECTION=0.
+ * As you can see, `LEAK_DETECTION_METHOD_IN_TAIL=1' is ****MUCH**** faster than the
+ * old methods of using an out-of-band RBTREE to describe memory leaks. It is however
+ * still noticeably slower (but not as painfully so) than LEAK_DETECTION_METHOD_NONE.
  *
  * Inspecting of threads during heavy parallel computation (make computed-operators)
  * reveals that at any moment, about 20% of threads are in the "SLIST_ATOMIC_INSERT"
@@ -206,37 +297,56 @@ DECL_BEGIN
  *      lists that should exist -- or maybe not: why not allocate the vector of lists
  *      dynamically once it is first needed, and then have it's element count match
  *      the next-power-of-2 of the # of CPU in the system?) */
-#if 0
-#define LEAK_DETECTION 0
-#else
-#define LEAK_DETECTION DL_DEBUG_EXTERNAL
+#define LEAK_DETECTION_METHOD_NONE         0 /* Don't do any leak detection */
+#define LEAK_DETECTION_METHOD_IN_TAIL      1 /* Requires FOOTERS=1, and store debug info in a secondary heap block there */
+#define LEAK_DETECTION_METHOD_OOB_RBTREE   2 /* Use an out-of-band R/B-Tree */
+#define LEAK_DETECTION_METHOD_OOB_LLRBTREE 3 /* Use an out-of-band left-leaning R/B-Tree */
+#if DL_DEBUG_EXTERNAL
+#if 1 /* With how much faster this method is, there's really no reason to ever use the other methods,
+       * except to maybe test with FOOTERS=0 after also disabling 'USE_PER_THREAD_MSTATE=1'. */
+#define LEAK_DETECTION LEAK_DETECTION_METHOD_IN_TAIL
+#elif 1
+#define LEAK_DETECTION LEAK_DETECTION_METHOD_OOB_RBTREE
+#elif 1
+#define LEAK_DETECTION LEAK_DETECTION_METHOD_OOB_LLRBTREE
 #endif
-#define DETECT_USE_AFTER_FREE  DL_DEBUG_EXTERNAL
-#define INSECURE               (!DL_DEBUG_EXTERNAL)
-#define XOR_MASK_MCHUNK_FOOT   DL_DEBUG_EXTERNAL /* xor-mask footers of heap chunks with "mparams.magic" when using them as mspace indicator */
-#if 1 /* Use the new approach for "LEAK_DETECTION" that doesn't store data out-of-band */
-#define LEAK_DETECTION_IN_TAIL LEAK_DETECTION
-#else
-#define LEAK_DETECTION_IN_TAIL 0
-#endif
+#endif /* DL_DEBUG_EXTERNAL */
+#ifndef LEAK_DETECTION
+#define LEAK_DETECTION LEAK_DETECTION_METHOD_NONE
+#endif /* !LEAK_DETECTION */
+
+/* Configure some of dlmalloc's remaining builtin config options. */
+#define MALLOC_ALIGNMENT       (size_t)(__SIZEOF_POINTER__ * 2) /* It may not be __ALIGNOF_MAX_ALIGN_T__, but it's "just what 'a needed" */
+#define ONLY_MSPACES           0                                /* The whole idea is to implement `Dee_Malloc()', so we'll need more than MSPACES (but see `USE_PER_THREAD_MSTATE') */
+#define PROCEED_ON_ERROR       0                                /* Wouldn't even work anymore since RTCHECK was replaced with "ext_assert()" */
+#define MALLOC_INSPECT_ALL     0                                /* Not needed (and probably wouldn't work for one reason of another) */
+#define MSPACES                (USE_PER_THREAD_MSTATE)          /* Need to enable MSPACES support for `tls_mspace()' */
+#define GM_ONLY                (!MSPACES)                       /* Without MSPACES, we only need the "gm" mspace */
+#define INSECURE               0                                /* Set to `1' to disable some asserts/assumptions that were originally used to implement `RTCHECK'. These were turned into assertions/__builtin_assume, so this option kind-of does the opposite now... */
+#define XOR_MASK_MCHUNK_FOOT   DL_DEBUG_EXTERNAL                /* xor-mask footers of heap chunks with "mparams.magic" when using them as mspace indicator */
 #undef REALLOC_ZERO_BYTES_FREES /* Nope: Dee_Realloc(p, 0) resizes to 0-sized block, but returns non-NULL */
 #undef MALLOC_ZERO_RETURNS_NULL /* Nope: Dee_Malloc(0) returns 0-sized, but non-NULL, block */
+#if 1
+#define MALLOC_FAILURE_ACTION  /* Nothing */
+#else
+#define MALLOC_FAILURE_ACTION  Dee_BREAKPOINT()
+#endif
 
 
- /* Always keep (unnecessary) footers disabled -- they don't really improve safety when on,
+/* Always keep (unnecessary) footers disabled -- they don't really improve safety when on,
  * since their presence causes allocations to require an additional word of memory, there
  * is a chance that alignment requirements ceil this to enough memory such that buffer-
  * overruns don't end up being detected. */
 #if USE_PER_THREAD_MSTATE
 #define FOOTERS 1 /* Needed for `Dee_Free()' to detect source mspace! */
-#elif LEAK_DETECTION && LEAK_DETECTION_IN_TAIL
+#elif LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL
 #define FOOTERS 1 /* Needed for `DeeDbg_Malloc()' to store debug info in the tail of heap blocks */
 #else
 #define FOOTERS 0
 #endif
 
 
- /* Custom dlmalloc extension:
+/* Custom dlmalloc extension:
  * FLAG4_BIT on an allocation means it's part of "struct Dee_heapregion" */
 #define FLAG4_BIT_INDICATES_HEAP_REGION 1
 
@@ -262,15 +372,6 @@ DECL_BEGIN
 #define DEBUG_WORD4(x) UINT32_C(0x##x)
 #endif /*__SIZEOF_POINTER__ <= 4 */
 
-/* Custom dlmalloc extension:
- * fill free'd / newly allocated memory with patterns */
-#undef DL_DEBUG_MEMSET_FREE
-#undef DL_DEBUG_MEMSET_ALLOC
-#if !defined(NDEBUG) && 1
-#define DL_DEBUG_MEMSET_FREE  DEBUG_WORD4(DEADBEEF)
-#define DL_DEBUG_MEMSET_ALLOC DEBUG_WORD4(CCCCCCCC)
-#endif
-
 
 /* API Configuration */
 #define NO_MALLINFO          0
@@ -293,16 +394,18 @@ DECL_BEGIN
 #define NO_MSPACE_REALLOC_IN_PLACE    1 /* ... */
 #define NO_MSPACE_USABLE_SIZE         1 /* Unnecessary dummy (same as `Dee_MallocUsableSize()') */
 #define NO_MSPACE_TRACK_LARGE_CHUNKS  1 /* Not needed (default init by `create_mspace()' is what we want) */
-#define NO_CREATE_MSPACE_WITH_BASE    1
-#define NO_MSPACE_CALLOC              1
-#define NO_MSPACE_MEMALIGN            1
-#define NO_MSPACE_FOOTPRINT           1
-#define NO_MSPACE_MAX_FOOTPRINT       1
-#define NO_MSPACE_FOOTPRINT_LIMIT     1
-#define NO_MSPACE_SET_FOOTPRINT_LIMIT 1
-#define NO_MSPACE_TRIM                1
-#define NO_DESTROY_MSPACE             1 /* Per-thread heaps are re-used as needed */
+#define NO_CREATE_MSPACE_WITH_BASE    1 /* Unused: only need create_mspace() */
+#define NO_MSPACE_CALLOC              1 /* Unused: the dlcalloc() -> dlmalloc() -> mspace_malloc() chain already does the right thing */
+#define NO_MSPACE_MEMALIGN            1 /* Unused: only dlmemalign() is needed */
+#define NO_MSPACE_FOOTPRINT           1 /* Unused: integrated into dlmalloc_footprint() */
+#define NO_MSPACE_MAX_FOOTPRINT       1 /* Unused: integrated into dlmalloc_max_footprint() */
+#define NO_MSPACE_FOOTPRINT_LIMIT     1 /* Unused: integrated into dlmalloc_footprint_limit() */
+#define NO_MSPACE_SET_FOOTPRINT_LIMIT 1 /* Unused: integrated into dlmalloc_set_footprint_limit() */
+#define NO_MSPACE_TRIM                1 /* Unused: integrated into dlmalloc_trim() */
+#define NO_DESTROY_MSPACE             1 /* Per-thread heaps must be re-used as needed and cannot be destroyed (if there's a way to get rid of Dee_UntrackAlloc(), this might come back one day...) */
 
+
+/* Use the configuration constants exposed by our API */
 #undef M_TRIM_THRESHOLD
 #undef M_GRANULARITY
 #undef M_MMAP_THRESHOLD
@@ -310,23 +413,34 @@ DECL_BEGIN
 #define M_GRANULARITY    Dee_HEAP_M_GRANULARITY
 #define M_MMAP_THRESHOLD Dee_HEAP_M_MMAP_THRESHOLD
 
+/* EXTernal_ASSERT  (for external assertions; i.e. API usage, use-after-free, etc.) */
 #undef ext_assert
+#undef ext_assertf
 #if DL_DEBUG_EXTERNAL
-#define ext_assert Dee_ASSERT
+#define ext_assert  Dee_ASSERT
+#define ext_assertf Dee_ASSERTF
 #elif !defined(__NO_builtin_assume)
-#define ext_assert __builtin_assume
+#define ext_assert             __builtin_assume
+#define ext_assertf(expr, ...) __builtin_assume(expr)
 #else /* ... */
 #define ext_assert(expr) (void)0
+#define ext_assertf(...) (void)0
 #endif
 
+/* DLmalloc_ASSERT  (for internal assertions; i.e. self-consistency checks) */
 #undef dl_assert
+#undef dl_assertf
 #if DL_DEBUG_INTERNAL
-#define dl_assert Dee_ASSERT
+#define dl_assert  Dee_ASSERT
+#define dl_assertf Dee_ASSERTF
 #elif !defined(__NO_builtin_assume)
-#define dl_assert __builtin_assume
+#define dl_assert             __builtin_assume
+#define dl_assertf(expr, ...) __builtin_assume(expr)
 #else /* ... */
 #define dl_assert(expr) (void)0
+#define dl_assertf(...) (void)0
 #endif
+
 
 
 #if !defined(CONFIG_HAVE_mmap) && defined(CONFIG_HAVE_mmap64)
@@ -334,7 +448,6 @@ DECL_BEGIN
 #undef mmap
 #define mmap mmap64
 #endif /* mmap = mmap64 */
-
 
 /* System configuration -- figure out how we want to implement the heap backend */
 #undef HAVE_MMAP
@@ -365,7 +478,6 @@ DECL_BEGIN
 #else /* ... */
 /* No way to implement dlmalloc() -- memory allocation will just fail at runtime :( */
 #endif /* !... */
-
 
 #ifndef HAVE_MMAP_CLEARS
 #define HAVE_MMAP_CLEARS 1
@@ -440,7 +552,8 @@ struct dlmalloc_mallinfo {
 /* ------------------- Declarations of public routines ------------------- */
 
 #if !ONLY_MSPACES
-#define DIRECTLY_DEFINE_DEEMON_PUBLIC_API (!LEAK_DETECTION)
+/* When not doing any leak detection, then dlmalloc's internal methods can be exposed directly! */
+#define DIRECTLY_DEFINE_DEEMON_PUBLIC_API (LEAK_DETECTION == LEAK_DETECTION_METHOD_NONE)
 #if DIRECTLY_DEFINE_DEEMON_PUBLIC_API
 #define dlmalloc           Dee_TryMalloc
 #define dlcalloc           Dee_TryCalloc
@@ -461,12 +574,12 @@ static ATTR_MALLOC WUNUSED void *dlcalloc(size_t n_bytes);
 static void dlfree(void *ptr);
 static WUNUSED void *dlrealloc(void *ptr, size_t n_bytes);
 static ATTR_MALLOC WUNUSED void *dlmemalign(size_t min_alignment, size_t n_bytes);
-#if LEAK_DETECTION_IN_TAIL
+#if LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL
 #define DLREALLOC_IN_PLACE_CHECKS_NULL 0 /* Not needed (already done by caller) */
 static WUNUSED void *dlrealloc_in_place(void *ptr, size_t n_bytes);
-#else /* LEAK_DETECTION_IN_TAIL */
+#else /* LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL */
 DFUNDEF WUNUSED void *(DCALL Dee_TryReallocInPlace)(void *ptr, size_t n_bytes);
-#endif /* !LEAK_DETECTION_IN_TAIL */
+#endif /* LEAK_DETECTION != LEAK_DETECTION_METHOD_IN_TAIL */
 #endif /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
 
 #if !NO_POSIX_MEMALIGN
@@ -1553,26 +1666,29 @@ static size_t traverse_and_check(PARAM_mstate_m);
 #define ok_inuse(p)      is_inuse(p)
 /* Check if p has its pinuse bit on */
 #define ok_pinuse(p)     pinuse(p)
-#else /* !INSECURE */
-#define ok_address(M, a) (1)
-#define ok_next(b, n)    (1)
-#define ok_inuse(p)      (1)
-#define ok_pinuse(p)     (1)
-#endif /* !INSECURE */
 #define ext_assert__ok_address(M, a) ext_assert(ok_address(M, a))
 #define ext_assert__ok_next(p, n)    ext_assert(ok_next(p, n))
 #define ext_assert__ok_inuse(p)      ext_assert(ok_inuse(p))
 #define ext_assert__ok_pinuse(p)     ext_assert(ok_pinuse(p))
-
+#else /* !INSECURE */
+#define ok_address(M, a)             1
+#define ok_next(b, n)                1
+#define ok_inuse(p)                  1
+#define ok_pinuse(p)                 1
+#define ext_assert__ok_address(M, a) (void)0
+#define ext_assert__ok_next(p, n)    (void)0
+#define ext_assert__ok_inuse(p)      (void)0
+#define ext_assert__ok_pinuse(p)     (void)0
+#endif /* !INSECURE */
 
 #if (FOOTERS && !INSECURE)
 /* Check if (alleged) mstate m has expected magic field */
 #define ok_magic(M) ((M)->magic == mparams.magic)
-#else /* (FOOTERS && !INSECURE) */
-#define ok_magic(M) (1)
-#endif /* (FOOTERS && !INSECURE) */
-
 #define ext_assert__ok_magic(M) ext_assert(ok_magic(M))
+#else /* (FOOTERS && !INSECURE) */
+#define ok_magic(M)             1
+#define ext_assert__ok_magic(M) (void)0
+#endif /* (FOOTERS && !INSECURE) */
 
 
 /* macros to set up inuse chunks with or without footers */
@@ -1633,28 +1749,28 @@ static size_t traverse_and_check(PARAM_mstate_m);
 #endif /* !FOOTERS */
 
 #if FLAG4_BIT_INDICATES_HEAP_REGION
-#define do_validate_flag4_footer(p)                                        \
-	do {                                                                   \
-		size_t _ps = chunksize(p);                                         \
-		size_t *_pval = &chunk_plus_offset(p, _ps)->prev_foot;             \
-		ASSERTF(*_pval == _ps,                                             \
-		        "flag4 mchunk footer at %p of chunk %p-%p has unexpected " \
-		        "value %#" PRFxSIZ " when %#" PRFxSIZ " was expected",     \
-		        _pval, p, (char *)(p) + _ps - 1, *_pval, _ps);             \
+#define do_validate_flag4_footer(p)                                            \
+	do {                                                                       \
+		size_t _ps = chunksize(p);                                             \
+		size_t *_pval = &chunk_plus_offset(p, _ps)->prev_foot;                 \
+		ext_assertf(*_pval == _ps,                                             \
+		            "flag4 mchunk footer at %p of chunk %p-%p has unexpected " \
+		            "value %#" PRFxSIZ " when %#" PRFxSIZ " was expected",     \
+		            _pval, p, (char *)(p) + _ps - 1, *_pval, _ps);             \
 	}	__WHILE0
 #else /* FLAG4_BIT_INDICATES_HEAP_REGION */
 #define do_validate_flag4_footer_IS_NOOP
 #define do_validate_flag4_footer(p) (void)0
 #endif /* !FLAG4_BIT_INDICATES_HEAP_REGION */
 #if FOOTERS && GM_ONLY
-#define do_validate_inuse_footer(p)                                        \
-	do {                                                                   \
-		size_t _ps = chunksize(p);                                         \
-		size_t *_pval = &chunk_plus_offset(p, _ps)->prev_foot;             \
-		ASSERTF(*_pval == mparams.magic,                                   \
-		        "inuse mchunk footer at %p of chunk %p-%p has unexpected " \
-		        "value %#" PRFxSIZ " when %#" PRFxSIZ " was expected",     \
-		        _pval, p, (char *)(p) + _ps - 1, *_pval, mparams.magic);   \
+#define do_validate_inuse_footer(p)                                            \
+	do {                                                                       \
+		size_t _ps = chunksize(p);                                             \
+		size_t *_pval = &chunk_plus_offset(p, _ps)->prev_foot;                 \
+		ext_assertf(*_pval == mparams.magic,                                   \
+		            "inuse mchunk footer at %p of chunk %p-%p has unexpected " \
+		            "value %#" PRFxSIZ " when %#" PRFxSIZ " was expected",     \
+		            _pval, p, (char *)(p) + _ps - 1, *_pval, mparams.magic);   \
 	}	__WHILE0
 #else /* FOOTERS && GM_ONLY */
 #define do_validate_inuse_footer_IS_NOOP
@@ -3458,8 +3574,8 @@ static ATTR_NOINLINE void free_flag4_mem(mchunkptr p) {
 	mchunkptr next  = chunk_plus_offset(p, psize);
 	size_t prevsize = p->prev_foot;
 	mchunkptr prev  = chunk_minus_offset(p, prevsize);
-	ASSERT(pinuse(next) || flag4inuse(next) || next->head == 0);
-	ASSERT(pinuse(prev) || flag4inuse(prev));
+	ext_assert(pinuse(next) || flag4inuse(next) || next->head == 0);
+	ext_assert(pinuse(prev) || flag4inuse(prev));
 #if 0
 	dl_assert(p != gm__top);
 	dl_assert(p != gm__dv);
@@ -3492,10 +3608,10 @@ static ATTR_NOINLINE void free_flag4_mem(mchunkptr p) {
 #define REGION_OVERHEAD (offsetof(struct Dee_heapregion, hr_first) + sizeof(struct Dee_heaptail))
 		region = COMPILER_CONTAINER_OF((struct Dee_heapchunk *)p,
 		                               struct Dee_heapregion, hr_first);
-		ASSERT(region->hr_size == (psize + REGION_OVERHEAD));
-		ASSERT(region->hr_destroy);
-		ASSERT(region->hr_first.hc_prevsize == 0);
-		ASSERT(region->hr_first.hc_head == (psize | PINUSE_BIT));
+		ext_assert(region->hr_size == (psize + REGION_OVERHEAD));
+		ext_assert(region->hr_destroy);
+		ext_assert(region->hr_first.hc_prevsize == 0);
+		ext_assert(region->hr_first.hc_head == (psize | PINUSE_BIT));
 		(*region->hr_destroy)(region);
 #undef REGION_OVERHEAD
 	}
@@ -4382,12 +4498,12 @@ after_internal_malloc:
 	return mem;
 }
 
-#if !DIRECTLY_DEFINE_DEEMON_PUBLIC_API && LEAK_DETECTION_IN_TAIL
+#if !DIRECTLY_DEFINE_DEEMON_PUBLIC_API && (LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL)
 static WUNUSED void *dlrealloc_in_place(void *oldmem, size_t bytes)
-#else /* LEAK_DETECTION_IN_TAIL */
+#else /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API && (LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL) */
 #define Dee_TryReallocInPlace_DEFINED
 PUBLIC WUNUSED void *(DCALL Dee_TryReallocInPlace)(void *oldmem, size_t bytes)
-#endif /* !LEAK_DETECTION_IN_TAIL */
+#endif /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API || (LEAK_DETECTION != LEAK_DETECTION_METHOD_IN_TAIL) */
 {
 	void *mem = 0;
 #ifndef DLREALLOC_IN_PLACE_CHECKS_NULL
@@ -5450,7 +5566,7 @@ DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbg_Memalign)(size_t min_alignment, 
  * - No extra headers added to- or required for heap chunks allocated by underlying
  *   memory allocator.
  */
-#if LEAK_DETECTION && LEAK_DETECTION_IN_TAIL
+#if LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL
 
 /* Alternative implementation to the leak detector below, that:
  * - Stores debug info in-band, by
@@ -5685,9 +5801,9 @@ PRIVATE struct leak_footer leaks = {
 	/* .lf_id    = */ 0           /* [const] */
 };
 
-#define leaks_assert_linkage(leak)               \
-	(ASSERT((leak)->lf_prev->lf_next == (leak)), \
-	 ASSERT((leak)->lf_next->lf_prev == (leak)))
+#define leaks_assert_linkage(leak)                  \
+	(dl_assert((leak)->lf_prev->lf_next == (leak)), \
+	 dl_assert((leak)->lf_next->lf_prev == (leak)))
 
 #define leaks_remove(leak)                             \
 	(void)(leaks_assert_linkage(leak),                 \
@@ -5697,19 +5813,19 @@ PRIVATE struct leak_footer leaks = {
 #define leaks_insert_begin(leak)         (void)((leak)->lf_prev = NULL)
 #define leaks_insert_is_unfinished(leak) (atomic_read(&(leak)->lf_prev) == NULL)
 #define leaks_insert_finish(leak)                                          \
-	(void)(ASSERTF((leak)->lf_prev == NULL,                                \
-	               "Should have been done by leaks_insert_begin()"),       \
+	(void)(dl_assertf((leak)->lf_prev == NULL,                             \
+	                  "Should have been done by leaks_insert_begin()"),    \
 	       (leak)->lf_prev = &leaks,                            /* 1 */    \
 	       ((leak)->lf_next = leaks.lf_next)->lf_prev = (leak), /* 2, 3 */ \
-	       leaks.lf_next = (leak), leaks_assert_linkage(leak))  /* 4 */
+	       leaks.lf_next = (leak))                              /* 4 */
 #else
 #define leaks_insert_begin(leak) \
 	(void)((leak)->lf_prev = &leaks) /* 1 */
-#define leaks_insert_finish(leak)                                               \
-	(void)(ASSERTF((leak)->lf_prev == &leaks,                                   \
-	               "Should have been done by leaks_insert_begin()"), /* 1 */    \
-	       ((leak)->lf_next = leaks.lf_next)->lf_prev = (leak),      /* 2, 3 */ \
-	       leaks.lf_next = (leak), leaks_assert_linkage(leak))                                   /* 4 */
+#define leaks_insert_finish(leak)                                                  \
+	(void)(dl_assertf((leak)->lf_prev == &leaks,                                   \
+	                  "Should have been done by leaks_insert_begin()"), /* 1 */    \
+	       ((leak)->lf_next = leaks.lf_next)->lf_prev = (leak),         /* 2, 3 */ \
+	       leaks.lf_next = (leak))                                      /* 4 */
 #endif
 
 
@@ -5742,7 +5858,6 @@ PRIVATE void DCALL leaks_lock_reap_insert_locked(void) {
 		leak = SLIST_FIRST(&insert);
 		SLIST_REMOVE_HEAD(&insert, lf_inslink);
 		leaks_insert_finish(leak);
-//		leaks_assert_linkage(leak);
 	}
 }
 
@@ -6020,14 +6135,12 @@ PUBLIC ATTR_HOT void
 #ifdef leaks_insert_is_unfinished
 	if (leaks_insert_is_unfinished(leak)) {
 		leaks_lock_reap_insert_locked();
-		ASSERT(!leaks_insert_is_unfinished(leak));
-//		leaks_assert_linkage(leak);
+		dl_assert(!leaks_insert_is_unfinished(leak));
 	}
 #else /* leaks_insert_is_unfinished */
 	if (leaks_pending_mustreap_insert())
 		leaks_lock_reap_insert_locked();
 #endif /* !leaks_insert_is_unfinished */
-	leaks_assert_linkage(leak); // TODO: Comment out
 
 	/* Remove from list of leaks */
 	leaks_remove(leak);
@@ -6135,8 +6248,8 @@ PUBLIC WUNUSED void *
 
 	/* Do the realloc */
 	result = dlrealloc_in_place(ptr, n_bytes);
-	ASSERT(result == NULL || result == ptr);
-	ASSERT(p == mem2chunk(ptr));
+	dl_assert(result == NULL || result == ptr);
+	dl_assert(p == mem2chunk(ptr));
 	p_foot = chunk_p_foot(p);
 
 	/* Re-override the footer (after backing up its (possibly changed) current value) */
@@ -6191,14 +6304,15 @@ PUBLIC void *
 }
 
 
-#elif LEAK_DETECTION
+#elif (LEAK_DETECTION == LEAK_DETECTION_METHOD_OOB_RBTREE || \
+       LEAK_DETECTION == LEAK_DETECTION_METHOD_OOB_LLRBTREE)
 DECL_END
 #include <hybrid/sequence/rbtree.h>
 DECL_BEGIN
 
-#if 0 /* Significantly slower */
-#define RBTREE_LEFT_LEANING
-#endif
+#if LEAK_DETECTION == LEAK_DETECTION_METHOD_OOB_LLRBTREE
+#define RBTREE_LEFT_LEANING /* Significantly slower */
+#endif /* LEAK_DETECTION == LEAK_DETECTION_METHOD_OOB_LLRBTREE */
 
 struct leaknode {
 	/* NOTE: We reference the heap chunks directly. That way, we don't have to do
@@ -6334,7 +6448,7 @@ _leaks_pending_reap_and_unlock(void) {
 				 *        need to be re-written anyways (since it's way too slow for
 				 *        SMP), I think further research is unnecessary.
 				 * -----------------------------------------------------------------------------
-				 * Irrelevant: new "LEAK_DETECTION_IN_TAIL" impl never exhibited this problem */
+				 * Irrelevant: new "LEAK_DETECTION_METHOD_IN_TAIL" impl never exhibited this problem */
 				_DeeAssert_Failf("Dee_Free(ptr)", file, line,
 				                 "Bad pointer %p does not map to any node, or custom heap region",
 				                 ptr);
@@ -6535,7 +6649,7 @@ PUBLIC ATTR_HOT void
 		size_t usable;
 handle_leak_lock_blocking:
 		p = mem2chunk(ptr);
-		ASSERT(is_inuse(p));
+		ext_assert(is_inuse(p));
 		usable = chunksize(p) - overhead_for(p);
 		if (usable >= sizeof(struct lfrelist_entry)) {
 			struct lfrelist_entry *ent = (struct lfrelist_entry *)ptr;
@@ -6600,7 +6714,7 @@ PUBLIC ATTR_HOT WUNUSED void *
 handle_leak_lock_blocking:
 		{
 			mchunkptr p = mem2chunk(ptr);
-			ASSERT(is_inuse(p));
+			ext_assert(is_inuse(p));
 			usable = chunksize(p) - overhead_for(p);
 		}
 
@@ -6745,7 +6859,12 @@ PUBLIC void *
 	return ptr;
 }
 
-#else /* LEAK_DETECTION */
+#else /* LEAK_DETECTION == ... */
+
+#if LEAK_DETECTION != LEAK_DETECTION_METHOD_NONE
+#error "Unknown 'LEAK_DETECTION' method selection"
+#endif /* LEAK_DETECTION != LEAK_DETECTION_METHOD_NONE */
+
 
 #ifndef Dee_TryMalloc_DEFINED
 #define Dee_TryMalloc_DEFINED
@@ -6795,7 +6914,7 @@ PUBLIC ATTR_HOT ATTR_MALLOC WUNUSED void *
 }
 #endif /* !Dee_TryMemalign_DEFINED */
 
-#endif /* LEAK_DETECTION */
+#endif /* LEAK_DETECTION != ... */
 #endif /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
 
 
@@ -6825,12 +6944,12 @@ DeeHeap_GetRegionOf(void *ptr) {
 			/* Traverse the chain of chunks until we find one
 			 * with "prev_foot" (aka. "hc_prevsize") == 0 */
 			while (p->prev_foot) {
-				ASSERT(IS_ALIGNED(p->prev_foot, Dee_HEAPCHUNK_ALIGN));
+				ext_assert(IS_ALIGNED(p->prev_foot, Dee_HEAPCHUNK_ALIGN));
 				p = chunk_minus_offset(p, p->prev_foot);
 			}
 			result = COMPILER_CONTAINER_OF((struct Dee_heapchunk *)p,
 			                               struct Dee_heapregion, hr_first);
-			ASSERT(result->hr_size >= (size_t)((char *)mem2chunk(ptr) - (char *)result));
+			ext_assert(result->hr_size >= (size_t)((char *)mem2chunk(ptr) - (char *)result));
 		} else {
 #if DL_DEBUG_INTERNAL
 #if FOOTERS && !GM_ONLY
@@ -6950,7 +7069,7 @@ PUBLIC ATTR_PURE WUNUSED size_t
 	if (mem != 0) {
 		mchunkptr p = mem2chunk(mem);
 #if 1
-		ASSERT(is_inuse(p));
+		ext_assert(is_inuse(p));
 		return chunksize(p) - overhead_for(p);
 #else
 		if (is_inuse(p))

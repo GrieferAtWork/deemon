@@ -546,13 +546,15 @@ constant("RENAME_WHITEOUT");
 
 func("malloc", "(defined(CONFIG_HAVE_MALLOC_H) || defined(CONFIG_HAVE_STDLIB_H)) && " + addparen(stdc), test: 'extern size_t s; return malloc(s) != (void *)0;');
 func("calloc", "(defined(CONFIG_HAVE_MALLOC_H) || defined(CONFIG_HAVE_STDLIB_H)) && " + addparen(stdc), test: 'extern size_t s; return calloc(s, s) != (void *)0;');
-func("realloc", "(defined(CONFIG_HAVE_MALLOC_H) || defined(CONFIG_HAVE_STDLIB_H)) && " + addparen(stdc), test: 'extern void *p; extern size_t s; return realloc(p, s) != (void *)0;');
 func("free", "(defined(CONFIG_HAVE_MALLOC_H) || defined(CONFIG_HAVE_STDLIB_H)) && " + addparen(stdc), test: 'extern void *p; free(p); return 0;');
+
+// #ifndef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+func("realloc", "(defined(CONFIG_HAVE_MALLOC_H) || defined(CONFIG_HAVE_STDLIB_H)) && " + addparen(stdc), test: 'extern void *p; extern size_t s; return realloc(p, s) != (void *)0;');
 func("_msize", "defined(CONFIG_HAVE_MALLOC_H) && " + addparen(msvc), test: 'void *p = 0; extern size_t s; return (s = _msize(p)) == 0;');
 func("malloc_usable_size", "defined(CONFIG_HAVE_MALLOC_H) && " + addparen(unix), test: 'void *p = 0; extern size_t s; return (s = malloc_usable_size(p)) == 0;');
 func("_expand", "defined(CONFIG_HAVE_MALLOC_H) && " + addparen(msvc), test: 'void *p = 0; extern size_t s; return (p = _expand(p, s)) == p;');
-func("realloc_in_place", "defined(CONFIG_HAVE_MALLOC_H) && " + addparen(unix), test: 'void *p = 0; extern size_t s; return (p = _expand(p, s)) == p;');
-func("sbrk", "defined(CONFIG_HAVE_UNISTD_H) && ((defined(__USE_XOPEN_EXTENDED) && !defined(__USE_XOPEN2K)) || defined(__USE_MISC))", test: 'void *p = sbrk(42); return p != (void *)0;');
+func("realloc_in_place", "defined(CONFIG_HAVE_MALLOC_H) && " + addparen(unix), test: 'void *p = 0; extern size_t s; return (p = realloc_in_place(p, s)) == p;');
+// #endif // !CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 
 func("read", unix, test: 'char buf[7]; return (int)read(0, buf, 7);');
 func("_read", msvc, test: 'char buf[7]; return (int)_read(0, buf, 7);');
@@ -835,6 +837,7 @@ functest("setpgid(0, 0)", isenabled("_POSIX_JOB_CONTROL"));
 functest("setreuid(0, 0)", isenabled("_POSIX_SAVED_IDS") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + ")");
 functest("nice(0)", "defined(__USE_MISC) || defined(__USE_XOPEN) || (" + isenabled("_POSIX_PRIORITY_SCHEDULING") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + "))");
 
+func("sbrk", "defined(CONFIG_HAVE_UNISTD_H) && ((defined(__USE_XOPEN_EXTENDED) && !defined(__USE_XOPEN2K)) || defined(__USE_MISC))", test: 'void *p = sbrk(42); return p != (void *)0;');
 func("mmap", isenabled("_POSIX_MAPPED_FILES") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + ")", test: "return mmap(NULL, 1, 0, 0, -1, 0) == (void *)0;");
 func("mmap64", "defined(__USE_LARGEFILE64) && (" + isenabled("_POSIX_MAPPED_FILES") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + "))", test: "return mmap64(NULL, 1, 0, 0, -1, 0) == (void *)0;");
 func("munmap", "defined(CONFIG_HAVE_mmap)", test: 'char buf[] = "foobar"; return munmap(buf, 6);');
@@ -4710,20 +4713,20 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_calloc
 #endif
 
-#ifdef CONFIG_NO_realloc
-#undef CONFIG_HAVE_realloc
-#elif !defined(CONFIG_HAVE_realloc) && \
-      (defined(realloc) || defined(__realloc_defined) || (defined(CONFIG_HAVE_MALLOC_H) || \
-       defined(CONFIG_HAVE_STDLIB_H)))
-#define CONFIG_HAVE_realloc
-#endif
-
 #ifdef CONFIG_NO_free
 #undef CONFIG_HAVE_free
 #elif !defined(CONFIG_HAVE_free) && \
       (defined(free) || defined(__free_defined) || (defined(CONFIG_HAVE_MALLOC_H) || \
        defined(CONFIG_HAVE_STDLIB_H)))
 #define CONFIG_HAVE_free
+#endif
+
+#ifdef CONFIG_NO_realloc
+#undef CONFIG_HAVE_realloc
+#elif !defined(CONFIG_HAVE_realloc) && \
+      (defined(realloc) || defined(__realloc_defined) || (defined(CONFIG_HAVE_MALLOC_H) || \
+       defined(CONFIG_HAVE_STDLIB_H)))
+#define CONFIG_HAVE_realloc
 #endif
 
 #ifdef CONFIG_NO__msize
@@ -4758,14 +4761,6 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix))))
 #define CONFIG_HAVE_realloc_in_place
-#endif
-
-#ifdef CONFIG_NO_sbrk
-#undef CONFIG_HAVE_sbrk
-#elif !defined(CONFIG_HAVE_sbrk) && \
-      (defined(sbrk) || defined(__sbrk_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
-       ((defined(__USE_XOPEN_EXTENDED) && !defined(__USE_XOPEN2K)) || defined(__USE_MISC))))
-#define CONFIG_HAVE_sbrk
 #endif
 
 #ifdef CONFIG_NO_read
@@ -6575,6 +6570,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
        0) || (!defined(CONFIG_HAVE_UNISTD_H) && (defined(__linux__) || defined(__linux) || \
        defined(linux) || defined(__unix__) || defined(__unix) || defined(unix))))))
 #define CONFIG_HAVE_nice
+#endif
+
+#ifdef CONFIG_NO_sbrk
+#undef CONFIG_HAVE_sbrk
+#elif !defined(CONFIG_HAVE_sbrk) && \
+      (defined(sbrk) || defined(__sbrk_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       ((defined(__USE_XOPEN_EXTENDED) && !defined(__USE_XOPEN2K)) || defined(__USE_MISC))))
+#define CONFIG_HAVE_sbrk
 #endif
 
 #ifdef CONFIG_NO_mmap
