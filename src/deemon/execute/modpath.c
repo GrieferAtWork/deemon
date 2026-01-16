@@ -738,8 +738,8 @@ DECL_END
 DECL_BEGIN
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t module_abstree_lock = Dee_ATOMIC_RWLOCK_INIT;
-PRIVATE Dee_atomic_rwlock_t module_libtree_lock = Dee_ATOMIC_RWLOCK_INIT;
+INTERN Dee_atomic_rwlock_t module_abstree_lock = Dee_ATOMIC_RWLOCK_INIT;
+INTERN Dee_atomic_rwlock_t module_libtree_lock = Dee_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define module_abstree_lock_reading()    Dee_atomic_rwlock_reading(&module_abstree_lock)
 #define module_abstree_lock_writing()    Dee_atomic_rwlock_writing(&module_abstree_lock)
@@ -777,10 +777,10 @@ PRIVATE Dee_atomic_rwlock_t module_libtree_lock = Dee_ATOMIC_RWLOCK_INIT;
 
 
 /* [0..n][lock(module_abstree_lock)] Tree of module abs names (absolute, normalized filesystem paths) */
-PRIVATE RBTREE_ROOT(Dee_module_object) module_abstree_root = NULL;
+INTERN RBTREE_ROOT(Dee_module_object) module_abstree_root = NULL;
 
 /* [0..n][lock(module_libtree_lock)] Tree of module lib names (based on `DeeModule_GetLibPath()') */
-PRIVATE RBTREE_ROOT(Dee_module_libentry) module_libtree_root = NULL;
+INTERN RBTREE_ROOT(Dee_module_libentry) module_libtree_root = NULL;
 
 /* [0..1] The currently set deemon LIBPATH */
 PRIVATE Dee_ATOMIC_REF(DeeTupleObject) deemon_path = Dee_ATOMIC_REF_INIT(NULL);
@@ -815,7 +815,7 @@ struct Dee_module_dexinfo {
 
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t module_byaddr_lock = Dee_ATOMIC_RWLOCK_INIT;
+INTERN Dee_atomic_rwlock_t module_byaddr_lock = Dee_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define module_byaddr_lock_reading()    Dee_atomic_rwlock_reading(&module_byaddr_lock)
 #define module_byaddr_lock_writing()    Dee_atomic_rwlock_writing(&module_byaddr_lock)
@@ -844,9 +844,9 @@ PRIVATE Dee_atomic_rwlock_t module_byaddr_lock = Dee_ATOMIC_RWLOCK_INIT;
 #undef HAVE_module_byaddr_tree_STATIC_INIT
 #ifdef CONFIG_HAVE___dex_start____AND___end
 #define HAVE_module_byaddr_tree_STATIC_INIT
-PRIVATE RBTREE_ROOT(/*maybe(DREF)*/ Dee_module_object) module_byaddr_tree = &DeeModule_Deemon;
+INTERN RBTREE_ROOT(/*maybe(DREF)*/ Dee_module_object) module_byaddr_tree = &DeeModule_Deemon;
 #else /* CONFIG_HAVE___dex_start____AND___end */
-PRIVATE RBTREE_ROOT(/*maybe(DREF)*/ Dee_module_object) module_byaddr_tree = NULL;
+INTERN RBTREE_ROOT(/*maybe(DREF)*/ Dee_module_object) module_byaddr_tree = NULL;
 #endif /* !CONFIG_HAVE___dex_start____AND___end */
 
 #define RBTREE(name)           module_byaddr_##name
@@ -877,7 +877,7 @@ DECL_BEGIN
 	(&Dee_module_dexdata__getinfo((self)->mo_moddata.mo_dexdata)->ddi_ataddr)
 
 /* [0..n][lock(module_byaddr_lock)] */
-PRIVATE RBTREE_ROOT(DREF Dee_module_object) dex_byaddr_tree = NULL;
+INTERN RBTREE_ROOT(DREF Dee_module_object) dex_byaddr_tree = NULL;
 #define RBTREE(name)           dex_byaddr_##name
 #define RBTREE_T               DeeModuleObject
 #define RBTREE_Tkey            Dee_dexataddr_t const *
@@ -2262,8 +2262,14 @@ DeeDec_Track(DREF /*untracked*/ struct Dee_module_object *__restrict self) {
 		DeeGC_TrackAll(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
 	}
 #undef IMAGE_GC_HEADTAIL_MATCH_RELOC
-	module_byaddr_lock_endwrite();
 
+	/* Add debug info to every object from the module's heap (s.a. runtime/heap.c:gcscan__pointer())
+	 *    -> Needed so the GC-based leak detector is able to recursively scan the bodies of
+	 *       static heap allocations of the module, as well as display those allocations as
+	 *       memory leaks if they aren't referenced anywhere.
+	 *    -> Also needed so failure to free the entire heap counts as memory leaks. */
+	DeeDbgHeap_AddHeapRegion(&ehdr->e_heap, self->mo_absname);
+	module_byaddr_lock_endwrite();
 	return self;
 }
 #endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
@@ -9642,6 +9648,12 @@ empty_unlock:
 	module_libtree_lock_endread();
 	return 0;
 }
+
+#if 1 /* Needed for GC memory leak detector */
+#ifndef HAVE_Dee_dexataddr_t
+INTERN RBTREE_ROOT(DREF Dee_module_object) dex_byaddr_tree = NULL;
+#endif /* !HAVE_Dee_dexataddr_t */
+#endif
 
 
 

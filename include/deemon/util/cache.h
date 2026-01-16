@@ -116,6 +116,7 @@ struct Dee_cache_object {
 		return result;                                                                \
 	}                                                                                 \
 	INTERN void DCALL name##_free(ALLOC_TYPE *__restrict ob) {                        \
+		DEE_OBJECT_CACHE_IFDBG(memset(ob, 0xcc, object_size);)                        \
 		Dee_atomic_lock_acquire(&structcache_##name##_lock);                          \
 		if (structcache_##name##_size < limit) {                                      \
 			++structcache_##name##_size;                                              \
@@ -181,6 +182,7 @@ struct Dee_cache_object {
 		return result;                                                            \
 	}                                                                             \
 	INTERN void DCALL name##_free(ALLOC_TYPE *__restrict ob) {                    \
+		DEE_OBJECT_CACHE_IFDBG(memset(ob, 0xcc, object_size);)                    \
 		Dee_atomic_lock_acquire(&obcache_##name##_lock);                          \
 		if (obcache_##name##_size < limit) {                                      \
 			++obcache_##name##_size;                                              \
@@ -268,6 +270,7 @@ struct Dee_cache_object {
 		return result;                                                                \
 	}                                                                                 \
 	INTERN void DCALL name##_free(ALLOC_TYPE *__restrict ob) {                        \
+		DEE_OBJECT_CACHE_IFDBG(memset(ob, 0xcc, object_size);)                        \
 		if (structcache_##name##_size < limit) {                                      \
 			++structcache_##name##_size;                                              \
 			((struct Dee_cache_struct *)ob)->cs_next = structcache_##name##_list;     \
@@ -322,6 +325,7 @@ struct Dee_cache_object {
 		return result;                                                               \
 	}                                                                                \
 	INTERN void DCALL name##_free(ALLOC_TYPE *__restrict ob) {                       \
+		DEE_OBJECT_CACHE_IFDBG(memset(ob, 0xcc, object_size);)                       \
 		if (obcache_##name##_size < limit) {                                         \
 			++obcache_##name##_size;                                                 \
 			((struct Dee_cache_object *)ob)->co_next = obcache_##name##_list;        \

@@ -1501,7 +1501,7 @@ done:
 #endif /* CONFIG_TRACE_REFCHANGES */
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 		DeeHeap_CheckMemory();
-		if (DeeHeap_DumpMemoryLeaks())
+		if (DeeHeap_DumpMemoryLeaks(DeeHeap_DumpMemoryLeaks_ALL))
 			_DeeAssert_Fail("!DeeHeap_DumpMemoryLeaks()", __FILE__, __LINE__);
 #else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 		DBG_ALIGNMENT_DISABLE();

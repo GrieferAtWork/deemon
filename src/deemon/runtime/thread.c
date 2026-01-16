@@ -1124,7 +1124,7 @@ PRIVATE HANDLE DCALL DeeThread_GetCurrentHThread(void) {
 
 /* Lock for the global list of threads */
 #ifndef DeeThread_USE_SINGLE_THREADED
-PRIVATE Dee_shared_lock_t thread_list_lock = Dee_SHARED_LOCK_INIT;
+INTERN Dee_shared_lock_t thread_list_lock = Dee_SHARED_LOCK_INIT;
 #define thread_list_lock_available()     Dee_shared_lock_available(&thread_list_lock)
 #define thread_list_lock_acquired()      Dee_shared_lock_acquired(&thread_list_lock)
 #define thread_list_lock_tryacquire()    Dee_shared_lock_tryacquire(&thread_list_lock)
@@ -1140,6 +1140,9 @@ PRIVATE Dee_shared_lock_t thread_list_lock = Dee_SHARED_LOCK_INIT;
 #define thread_list_lock_acquire_noint() (void)0
 #define thread_list_lock_waitfor()       0
 #define thread_list_lock_release()       (void)0
+#ifndef CONFIG_NO_THREADS
+INTERN Dee_shared_lock_t thread_list_lock = Dee_SHARED_LOCK_INIT; /* Needed for GC leak detector */
+#endif /* !CONFIG_NO_THREADS */
 #endif /* DeeThread_USE_SINGLE_THREADED */
 
 

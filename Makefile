@@ -125,10 +125,10 @@ BIN_MANDATORY += deemon$(EXE)           # The deemon core is a mandatory binary
 # Dex modules
 CC_src_dex  := $(DEX_CC)                   # Everything in /src/dex
 CFLAGS_src_dex += $(DEX_CFLAGS) -DCONFIG_BUILDING_DEX
-LD_lib      := $(CC_src_dex)               # Default linker is for dex modules
+LD_lib      := $(CC_src_dex)               # Default linker for dex modules
 LDFLAGS_lib := $(LDFLAGS) $(DEX_LDFLAGS)   # Linker flags for dex modules
 LIBS_lib    := $(DEX_LIBS)                 # Lib dependencies for dex modules
-LIBDEPS_lib := $(BIN_RELPATH)/deemon$(EXE) # Files to built before building /lib  (iow: build deemon core before dex modules)
+LIBDEPS_lib := $(BIN_RELPATH)/deemon$(EXE) # Files to build before linking /lib/foo.so  (iow: build deemon core before dex modules)
 
 
 # Dex modules...

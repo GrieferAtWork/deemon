@@ -1997,7 +1997,8 @@ DeeModule_EnumerateLibTree(Dee_module_enumerate_lib_cb_t cb, void *arg,
                            /*String*/ DeeObject *start_after_name,
                            DeeTypeObject *opt_type_filter);
 #ifdef CONFIG_NO_DEX
-#define DeeModule_EnumerateDexModules(cb, arg, start_after) 0
+#define DeeModule_EnumerateDexModules(cb, arg, start_after) \
+	((start_after) ? 0 : (*(cb))(arg, &DeeModule_Deemon))
 #else /* CONFIG_NO_DEX */
 #define DeeModule_EnumerateDexModules(cb, arg, start_after) \
 	DeeModule_EnumerateAdrTree(cb, arg, start_after, &DeeModuleDex_Type)
@@ -2179,4 +2180,4 @@ DeeModule_GlobalName(DeeModuleObject *__restrict self, uint16_t gid);
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_CODE_H */
+#endif /* !GUARD_DEEMON_MODULE_H */

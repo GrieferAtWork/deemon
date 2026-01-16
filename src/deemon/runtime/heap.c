@@ -39,6 +39,7 @@ ClCompile.BasicRuntimeChecks = Default
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 #include <deemon/format.h>
 #include <deemon/gc.h>
+#include <deemon/module.h>
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
@@ -86,6 +87,9 @@ ClCompile.BasicRuntimeChecks = Default
 #ifdef _MSC_VER
 #pragma optimize("ts", on)
 #endif /* _MSC_VER */
+
+#undef container_of
+#define container_of COMPILER_CONTAINER_OF
 
 DECL_BEGIN
 
@@ -250,8 +254,8 @@ DECL_BEGIN
 #undef DL_DEBUG_MEMSET_ALLOC
 #undef DL_DEBUG_MEMSET_FREE
 #if DL_DEBUG_EXTERNAL
-#define DL_DEBUG_MEMSET_ALLOC DEBUG_WORD4(CCCCCCCC) /* Set by Dee_Malloc() */
-#define DL_DEBUG_MEMSET_FREE  DEBUG_WORD4(DEADBEEF) /* Set by Dee_Free() */
+#define DL_DEBUG_MEMSET_ALLOC WORD_4BYTE(CCCCCCCC) /* Set by Dee_Malloc() */
+#define DL_DEBUG_MEMSET_FREE  WORD_4BYTE(DEADBEEF) /* Set by Dee_Free() */
 #endif /* DL_DEBUG_EXTERNAL */
 #ifdef DL_DEBUG_MEMSET_FREE
 #define DETECT_USE_AFTER_FREE 1
@@ -315,6 +319,25 @@ DECL_BEGIN
 #define LEAK_DETECTION LEAK_DETECTION_METHOD_NONE
 #endif /* !LEAK_DETECTION */
 
+/* Special extension to leak detection that uses a GC-based approach to discover leaks,
+ * where the contents of static variables and the stack/registers of all threads are
+ * searched for what (look like) pointers to heap structures, which are then used to
+ * check which heap blocks are still reachable.
+ *
+ * Since this relies on some arch-specific (mainly: stack/register enumeration), this
+ * sort of leak detection might not be possible all the time, but when it is possible,
+ * it allows one to check for memory leaks in a running system, as opposed to only at
+ * the very end, just before deemon exits. */
+#if (LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL && \
+     defined(CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES) && \
+     !defined(CONFIG_NO_DEX) && 0) /* TODO */
+#define LEAK_DETECTION_GC 1
+#endif /* ... */
+#ifndef LEAK_DETECTION_GC
+#define LEAK_DETECTION_GC 0
+#endif /* !LEAK_DETECTION_GC */
+
+
 /* Configure some of dlmalloc's remaining builtin config options. */
 #define MALLOC_ALIGNMENT       (size_t)(__SIZEOF_POINTER__ * 2) /* It may not be __ALIGNOF_MAX_ALIGN_T__, but it's "just what 'a needed" */
 #define ONLY_MSPACES           0                                /* The whole idea is to implement `Dee_Malloc()', so we'll need more than MSPACES (but see `USE_PER_THREAD_MSTATE') */
@@ -365,11 +388,17 @@ DECL_BEGIN
 #define FLAG4_BIT_INDICATES_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE 0
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 
+/* HAVE_DBG_HEAP_REGION: Make provisioning for:
+ * - DeeDbgHeap_AddHeapRegion
+ * - DeeDbgHeap_DelHeapRegion */
+#undef HAVE_DBG_HEAP_REGION
+#define HAVE_DBG_HEAP_REGION ((LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL) && FLAG4_BIT_INDICATES_HEAP_REGION)
+
 
 #if __SIZEOF_POINTER__ > 4
-#define DEBUG_WORD4(x) UINT64_C(0x##x##x)
+#define WORD_4BYTE(x) UINT64_C(0x##x##x)
 #else /* __SIZEOF_POINTER__ > 4 */
-#define DEBUG_WORD4(x) UINT32_C(0x##x)
+#define WORD_4BYTE(x) UINT32_C(0x##x)
 #endif /*__SIZEOF_POINTER__ <= 4 */
 
 
@@ -1020,8 +1049,8 @@ typedef unsigned int flag_t;          /* The type of various bit flag sets */
 #define chunk_minus_offset(p, s) ((mchunkptr)((char *)(p) - (s)))
 
 /* Ptr to next or previous physical malloc_chunk. */
-#define next_chunk(p) ((mchunkptr)((char *)(p) + chunksize(p)))
-#define prev_chunk(p) ((mchunkptr)((char *)(p) - (p)->prev_foot))
+#define next_chunk(p) chunk_plus_offset(p, chunksize(p))
+#define prev_chunk(p) chunk_minus_offset(p, (p)->prev_foot)
 
 /* extract next chunk's pinuse bit */
 #define next_pinuse(p) ((next_chunk(p)->head) & PINUSE_BIT)
@@ -3554,6 +3583,11 @@ postaction:
 /* ---------------------------- free --------------------------- */
 
 #if FLAG4_BIT_INDICATES_HEAP_REGION
+#if HAVE_DBG_HEAP_REGION
+PRIVATE ATTR_RETNONNULL NONNULL((1)) struct Dee_heapregion *DCALL
+DeeDbgHeap_DelHeapRegion_locked(struct Dee_heapregion *__restrict region);
+#endif /* HAVE_DBG_HEAP_REGION */
+
 /* Meaning of flags when "struct Dee_heapregion" comes into play:
  *                 ALLOCATED    FREED
  * - 1 PINUSE_BIT  clear        set
@@ -3574,7 +3608,9 @@ static ATTR_NOINLINE void free_flag4_mem(mchunkptr p) {
 	mchunkptr next  = chunk_plus_offset(p, psize);
 	size_t prevsize = p->prev_foot;
 	mchunkptr prev  = chunk_minus_offset(p, prevsize);
+#if !HAVE_DBG_HEAP_REGION
 	ext_assert(pinuse(next) || flag4inuse(next) || next->head == 0);
+#endif /* !HAVE_DBG_HEAP_REGION */
 	ext_assert(pinuse(prev) || flag4inuse(prev));
 #if 0
 	dl_assert(p != gm__top);
@@ -3602,6 +3638,28 @@ static ATTR_NOINLINE void free_flag4_mem(mchunkptr p) {
 	}
 	p->head = (psize | PINUSE_BIT);
 	set_foot(p, psize);
+#if HAVE_DBG_HEAP_REGION
+	if (prevsize == 0) {
+		/* Last chunk of user-defined "struct Dee_heapregion" just got free'd! */
+		struct Dee_heapregion *region;
+#define REGION_OVERHEAD (offsetof(struct Dee_heapregion, hr_first) + sizeof(struct Dee_heaptail))
+		region = COMPILER_CONTAINER_OF((struct Dee_heapchunk *)p,
+		                               struct Dee_heapregion, hr_first);
+		if (region->hr_size == (psize + REGION_OVERHEAD)) {
+			ext_assert(region->hr_destroy);
+			ext_assert(region->hr_first.hc_prevsize == 0);
+			ext_assert(region->hr_first.hc_head == (psize | PINUSE_BIT));
+			if (next->head != 0) {
+				/* Free dynamically allocated debug info from `DeeDbgHeap_AddHeapRegion()',
+				 * and remove "region" (or its debug info) from the global list of known,
+				 * custom heap regions */
+				region = DeeDbgHeap_DelHeapRegion_locked(region);
+			}
+			(*region->hr_destroy)(region);
+		}
+#undef REGION_OVERHEAD
+	}
+#else /* HAVE_DBG_HEAP_REGION */
 	if (prevsize == 0 && next->head == 0) {
 		/* Last chunk of user-defined "struct Dee_heapregion" just got free'd! */
 		struct Dee_heapregion *region;
@@ -3615,6 +3673,7 @@ static ATTR_NOINLINE void free_flag4_mem(mchunkptr p) {
 		(*region->hr_destroy)(region);
 #undef REGION_OVERHEAD
 	}
+#endif /* !HAVE_DBG_HEAP_REGION */
 }
 #endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
 
@@ -5587,7 +5646,7 @@ DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbg_Memalign)(size_t min_alignment, 
  *   >>     struct leak_footer *lf_prev;  // [1..1] Prev tracked heap chunk
  *   >>     struct leak_footer *lf_next;  // [1..1] Next tracked heap chunk
  *   >>     char const         *lf_file;  // [0..1] File where "lf_chunk" was allocated
- *   >>     unsigned int        lf_line;  // Line where "lf_chunk" was allocated
+ *   >>     int                 lf_line;  // Line where "lf_chunk" was allocated
  *   >> };
  * - Dee_Malloc(size) is then implemented like (simplified):
  *   >> void *result = dlmalloc(size);
@@ -5672,9 +5731,80 @@ struct leak_footer {
 #define lf_remlink _dee_aunion3.lf_remlink
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
-	unsigned int          lf_line;  /* [lock(OWNER(lf_chunk))] Line where "lf_chunk" was allocated */
+#if LEAK_DETECTION_GC || HAVE_DBG_HEAP_REGION
+#define leak_footer_line_t __INTPTR_HALF_TYPE__
+	__INTPTR_HALF_TYPE__  lf_line;  /* [lock(OWNER(lf_chunk))] Line where "lf_chunk" was allocated */
+	__UINTPTR_HALF_TYPE__ lf_gcflags; /* [lock(leaks_gc_lock)] Flags used to track state during GC leak search */
+#define LEAK_FOOTER_GCFLAG_NORMAL  0x0000 /* Normal flags */
+#define LEAK_FOOTER_GCFLAG_REACH   0x0001 /* Reachable */
+#define LEAK_FOOTER_GCFLAG_SCANNED 0x0002 /* Scanned for pointers */
+#define LEAK_FOOTER_GCFLAG_RED     ((__UINTPTR_HALF_TYPE__)1 << (sizeof(__UINTPTR_HALF_TYPE__) * __CHAR_BIT__ - 1)) /* Red node */
+#define LEAK_FOOTER_GCFLAG_HITMASK (~LEAK_FOOTER_GCFLAG_RED)
+#define LEAK_FOOTER_GCFLAG_ONEHIT  1
+#else /* LEAK_DETECTION_GC || HAVE_DBG_HEAP_REGION */
+#define leak_footer_line_t int
+	int                   lf_line;  /* [lock(OWNER(lf_chunk))] Line where "lf_chunk" was allocated */
+#endif /* !LEAK_DETECTION_GC && !HAVE_DBG_HEAP_REGION */
 	size_t                lf_id;    /* Allocation ID (I hate that this field prevents this thing from aligning nicely) */
 };
+
+#if HAVE_DBG_HEAP_REGION
+#define leak_footer_isregion(self)  ((self)->lf_foot == 1) /* Values [1,3] can never be set due to: alignment of "malloc_state", and initialization of "mparams.magic" */
+#define leak_footer_setregion(self) (void)((self)->lf_foot = 1)
+#define leak_footer_asregion(self)  ((struct region_leak_footer *)(self))
+
+struct region_leak_footer {
+	/* Underlying leak footer:
+	 * - "leak_footer_isregion(&rlf_leak) == true"
+	 * - "lf_chunk" is actually "struct Dee_heapregion *"
+	 * - "lf_id" is the ID of the region's first (still-allocated) chunk
+	 * - "lf_file" is actually [1..1][const][owned]
+	 */
+	struct leak_footer                     rlf_leak;       /* Underlying leak footer */
+	LIST_ENTRY(region_leak_footer)         rlf_link;       /* [1..1] Link in global list of region leaks */
+#if LEAK_DETECTION_GC
+	COMPILER_FLEXIBLE_ARRAY(unsigned char, rlf_reachable); /* [CEILDIV(region_leak_footer_getwordcount(self), __CHAR_BIT__)]
+	                                                        * Bitset of reachable word in "Dee_heapregion::hr_data" (used by
+	                                                        * GC leak detector) */
+#endif /* LEAK_DETECTION_GC */
+};
+
+#if LEAK_DETECTION_GC
+#define region_leak_footer_sizeof(bitcnt) \
+	(offsetof(struct region_leak_footer, rlf_reachable) + CEILDIV(bitcnt, __CHAR_BIT__))
+#else /* LEAK_DETECTION_GC */
+#define region_leak_footer_sizeof(bitcnt) sizeof(struct region_leak_footer)
+#endif /* !LEAK_DETECTION_GC */
+#define region_leak_footer_alloc(bitcnt) \
+	((struct region_leak_footer *)dlmalloc(region_leak_footer_sizeof(bitcnt)))
+#define region_leak_footer_free(self) \
+	dlfree(self)
+#define region_leak_footer_destroy(self)       \
+	(dlfree((char *)(self)->rlf_leak.lf_file), \
+	 region_leak_footer_free(self))
+
+#define Dee_heapregion_getusize(self)      ((self)->hr_size - sizeof(struct Dee_heaptail))
+#define Dee_heapregion_getuminaddr(self)   ((char *)Dee_heapregion_gethead(self))
+#define Dee_heapregion_getumaxaddr(self)   (Dee_heapregion_getuminaddr(self) + Dee_heapregion_getusize(self) - 1)
+#define Dee_heapregion_getuwordcount(self) (Dee_heapregion_getusize(self) / sizeof(void *))
+
+#define chunk2region(self) container_of(&(self)->head, struct Dee_heapregion, hr_size)
+#define region2chunk(self) container_of(&(self)->hr_size, struct malloc_chunk, head)
+
+#define region_leak_footer_getregion(self)    chunk2region(mem2chunk((self)->rlf_leak.lf_chunk))
+#define region_leak_footer_getsize(self)      Dee_heapregion_getusize(region_leak_footer_getregion(self))
+#define region_leak_footer_getminaddr(self)   Dee_heapregion_getuminaddr(region_leak_footer_getregion(self))
+#define region_leak_footer_getmaxaddr(self)   Dee_heapregion_getumaxaddr(region_leak_footer_getregion(self))
+#define region_leak_footer_getwordcount(self) Dee_heapregion_getuwordcount(region_leak_footer_getregion(self))
+#if LEAK_DETECTION_GC
+#define region_leak_footer_clearreachable(self) \
+	bzero((self)->rlf_reachable, CEILDIV(region_leak_footer_getwordcount(self), __CHAR_BIT__))
+#define region_leak_footer_getreachable(self, word) ((self)->rlf_reachable[(word) / __CHAR_BIT__] & ((unsigned char)1 << ((word) % __CHAR_BIT__)))
+#define region_leak_footer_setreachable(self, word) (void)((self)->rlf_reachable[(word) / __CHAR_BIT__] |= ((unsigned char)1 << ((word) % __CHAR_BIT__)))
+#endif /* LEAK_DETECTION_GC */
+
+#endif /* HAVE_DBG_HEAP_REGION */
+
 
 /* Return pointer to "prev_foot" field of next chunk (i.e. the "footer" field of this chunk) */
 #define chunk_p_foot(X) ((size_t *)chunk_plus_offset(X, chunksize(X)))
@@ -5693,7 +5823,7 @@ SLIST_HEAD(leak_footer_slist, leak_footer);
  * Enabled:  time make computed-operators    real    0m8.745s   195%
  *
  * I'm guessing it's once again that problem where there's only a **single**, global
- * cache leak footers, whereas dlmalloc() and dlfree() will automatically make use of
+ * leak footers cache, whereas dlmalloc() and dlfree() will automatically make use of
  * per-thread caches (meaning that there's much less conflicts when doing atomic ops)
  */
 #if 0
@@ -5798,6 +5928,9 @@ PRIVATE struct leak_footer leaks = {
 	/* .lf_next  = */ { &leaks }, /* [1..1][lock(leaks_lock)] */
 	/* .lf_file  = */ { NULL },   /* [const] */
 	/* .lf_line  = */ 0,          /* [const] */
+#if LEAK_DETECTION_GC
+	/* .lf_gcflags = */ 0,        /* [const] */
+#endif /* LEAK_DETECTION_GC */
 	/* .lf_id    = */ 0           /* [const] */
 };
 
@@ -5828,8 +5961,10 @@ PRIVATE struct leak_footer leaks = {
 	       leaks.lf_next = (leak))                                      /* 4 */
 #endif
 
+#define leaks_insert(leak) (leaks_insert_begin(leak), leaks_insert_finish(leak))
 
-/* TODO: Have multiple instances of these pending lists.
+
+/* XXX: Have multiple instances of these pending lists.
  * Specifically:
  * - The first time one of these lists is needed, use dlmalloc() to allocate a
  *   vector of pending lists that is "NEXT_POWER_OF_2(import.posix.cpu_count())"
@@ -5938,37 +6073,1440 @@ PRIVATE void DCALL leaks_lock_acquire_and_reap(void) {
 	}
 }
 
-/* Dump info about all heap allocations that were allocated, but
- * never Dee_Free()'d, nor untracked using `Dee_UntrackAlloc()'.
- * Information about leaks is printed using `Dee_DPRINTF()'.
+#ifdef Dee_BREAKPOINT_IS_NOOP
+#define fatal _DeeAssert_XFailf
+#else /* Dee_BREAKPOINT_IS_NOOP */
+#define fatal(expr, file, line, ...) \
+	(_DeeAssert_Failf(expr, file, line, __VA_ARGS__), Dee_BREAKPOINT())
+#endif /* !Dee_BREAKPOINT_IS_NOOP */
+
+#ifndef __ARCH_PAGESIZE_MIN
+#ifdef __ARCH_PAGESIZE
+#define __ARCH_PAGESIZE_MIN __ARCH_PAGESIZE
+#endif /* __ARCH_PAGESIZE */
+#endif /* !__ARCH_PAGESIZE_MIN */
+
+#ifdef __ARCH_PAGESIZE_MIN
+#define _lo_leak_addrok(p) ((uintptr_t)(p) >= __ARCH_PAGESIZE_MIN)
+#else /* __ARCH_PAGESIZE_MIN */
+#define _lo_leak_addrok(p) ((uintptr_t)(p) != 0)
+#endif /* !__ARCH_PAGESIZE_MIN */
+
+/* Try to figure out some known-bad address ranges so we can detect bad pointers. */
+#if defined(__i386__) || defined(__x86_64__) || defined(__arm__)
+#if (defined(__i386__) && __SIZEOF_POINTER__ == 4) && (defined(__linux__) || defined(__KOS__))
+/* Kernel lives in high 3/4 of address space */
+#define _hi_leak_addrok(p) ((uintptr_t)(p) < UINT32_C(0xC0000000))
+#elif defined(CONFIG_HOST_WINDOWS) || (!defined(__arm__) && (defined(__linux__) || defined(__KOS__)))
+/* Kernel lives in high 1/2 of address space */
+#define _hi_leak_addrok(p) ((uintptr_t)(p) < ((((size_t)-1) >> 1) + 1))
+#endif /* ... */
+#endif /* ... */
+
+#ifdef _hi_leak_addrok
+#define _leak_addrok(p) (_lo_leak_addrok(p) && _hi_leak_addrok(p))
+#else /* _hi_leak_addrok */
+#define _leak_addrok(p) _lo_leak_addrok(p)
+#endif /* !_hi_leak_addrok */
+
+#define leak_addrok(p) (_leak_addrok(p) && IS_ALIGNED((uintptr_t)(p), sizeof(void *)))
+
+
+#if HAVE_DBG_HEAP_REGION
+
+#define _Dee_heapregion__p_uptr(T, self) \
+	(*(T *)((char *)(self) + (self)->hr_size - sizeof(size_t)))
+#define Dee_heapregion_hasfooter_or_next(self) (_Dee_heapregion__p_uptr(uintptr_t, self) != 0)
+#define Dee_heapregion_hasnext(self)           (_Dee_heapregion__p_uptr(uintptr_t, self) & 1)
+#define Dee_heapregion_getfooter(self)    _Dee_heapregion__p_uptr(struct region_leak_footer *const, self)
+#define Dee_heapregion_setfooter(self, v) (void)(_Dee_heapregion__p_uptr(struct region_leak_footer *, self) = (v))
+#define Dee_heapregion_getnext(self)      ((struct Dee_heapregion *)(_Dee_heapregion__p_uptr(uintptr_t const, self) & ~(Dee_HEAPCHUNK_ALIGN - 1)))
+#define Dee_heapregion_setnext(self, v)   (void)(_Dee_heapregion__p_uptr(uintptr_t, self) = (uintptr_t)(v) | 1)
+#define Dee_heapregion_unsetfooter(self)  (void)(_Dee_heapregion__p_uptr(uintptr_t, self) = 0)
+#if 1 /* Does the same... */
+#define Dee_heapregion_getnext_opt(self) Dee_heapregion_getnext(self)
+#else
+#define Dee_heapregion_getnext_opt(self) (Dee_heapregion_hasnext(self) ? Dee_heapregion_getnext(self) : NULL;)
+#endif
+
+#if LEAK_DETECTION_GC
+STATIC_ASSERT_MSG(Dee_HEAPCHUNK_ALIGN > 4, "bit 0 is needed for 'Dee_heapregion_hasnext'; bit 1,2 are needed for gcleak-visit");
+#define Dee_heapregion_cleargcflags(self)     (void)(_Dee_heapregion__p_uptr(uintptr_t, self) &= ~(2 | 4))
+#define Dee_heapregion_get_gc_reachable(self) (_Dee_heapregion__p_uptr(uintptr_t const, self) & 2)
+#define Dee_heapregion_get_gc_visited(self)   (_Dee_heapregion__p_uptr(uintptr_t const, self) & 4)
+#define Dee_heapregion_set_gc_reachable(self) (void)(_Dee_heapregion__p_uptr(uintptr_t, self) |= 2)
+#define Dee_heapregion_set_gc_visited(self)   (void)(_Dee_heapregion__p_uptr(uintptr_t, self) |= 4)
+#endif /* LEAK_DETECTION_GC */
+
+
+LIST_HEAD(region_leak_list, region_leak_footer);
+
+/* [0..n][lock(leaks_lock)][LINK(rlf_link)] List of heap region leak footers */
+PRIVATE struct region_leak_list region_leak_flist = LIST_HEAD_INITIALIZER(region_leak_flist);
+
+/* [0..n][lock(leaks_lock)][LINK(Dee_heapregion_getnext)]
+ * List of heap regions without leak footers (used as fallback
+ * when 'DeeDbgHeap_AddHeapRegion()' can't allocate memory, so
+ * reachable-semantics can be retained in a sufficient manner) */
+PRIVATE struct Dee_heapregion *region_leak_mlist = NULL;
+
+PRIVATE NONNULL((1)) struct Dee_heapregion *DCALL
+region_leak_mlist_insert(struct Dee_heapregion *__restrict region) {
+	Dee_heapregion_setnext(region, region_leak_mlist);
+	region_leak_mlist = region;
+	return region;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+region_leak_mlist_remove(struct Dee_heapregion *__restrict region) {
+	if (region_leak_mlist == region) {
+		region_leak_mlist = Dee_heapregion_getnext(region);
+	} else {
+		struct Dee_heapregion *next;
+		struct Dee_heapregion *prev = region_leak_mlist;
+		ASSERT(prev);
+		for (;;) {
+			ASSERT(Dee_heapregion_hasnext(prev));
+			next = Dee_heapregion_getnext(prev);
+			if (next == region)
+				break;
+			prev = next;
+		}
+		next = Dee_heapregion_getnext_opt(region);
+		Dee_heapregion_setnext(prev, next);
+	}
+}
+
+/* Remove debug info attached to "region" -- caller must be holding "leaks_lock" */
+PRIVATE ATTR_RETNONNULL NONNULL((1)) struct Dee_heapregion *DCALL
+DeeDbgHeap_DelHeapRegion_locked(struct Dee_heapregion *__restrict region) {
+	ASSERT(leaks_lock_acquired());
+	if (Dee_heapregion_hasfooter_or_next(region)) {
+		if (Dee_heapregion_hasnext(region)) {
+			region_leak_mlist_remove(region);
+		} else {
+			struct region_leak_footer *footer;
+			footer = Dee_heapregion_getfooter(region);
+			leaks_remove(&footer->rlf_leak); /* Remove from "leaks" */
+			LIST_REMOVE(footer, rlf_link);   /* Remove from "region_leak_flist" */
+			region_leak_footer_destroy(footer);
+		}
+		Dee_heapregion_unsetfooter(region);
+	}
+	return region;
+}
+
+/* Return the # of chunks defined by "self" */
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) size_t DCALL
+Dee_heapregion_chunkcount(struct Dee_heapregion *__restrict self) {
+	size_t result = 0;
+	mchunkptr tail = (mchunkptr)((char *)self + self->hr_size - sizeof(struct Dee_heaptail));
+	mchunkptr iter = (mchunkptr)&self->hr_first;
+	while (iter < tail) {
+		iter = chunk_plus_offset(iter, chunksize(iter));
+		++result;
+	}
+	return result;
+}
+
+PRIVATE ATTR_RETNONNULL NONNULL((1, 2)) struct Dee_heapregion *DCALL
+DeeDbgHeap_AddHeapRegion_locked_p(struct Dee_heapregion *__restrict region,
+                                  struct region_leak_footer *__restrict footer,
+                                  /*inherit(always)*/ char const *file) {
+	size_t chunk_count;
+	mchunkptr region_as_chunk = region2chunk(region);
+	ASSERT(is_mmapped(region_as_chunk));
+	ASSERT(!flag4inuse(region_as_chunk));
+	ASSERT(overhead_for(region_as_chunk) == MMAP_CHUNK_OVERHEAD);
+
+	/* Hook "leak" into "ptr" */
+	leak_footer_setregion(&footer->rlf_leak);
+	footer->rlf_leak.lf_chunk = chunk2mem(region_as_chunk);
+	footer->rlf_leak.lf_file  = file; /* Inherit */
+	footer->rlf_leak.lf_line  = (leak_footer_line_t)-1; /* Unused by region leaks */
+	Dee_heapregion_setfooter(region, footer);
+	ASSERT(leak_footer_isregion(&footer->rlf_leak));
+
+	/* Allocate ID(s) */
+	chunk_count = Dee_heapregion_chunkcount(region);
+	footer->rlf_leak.lf_id = atomic_fetchadd(&alloc_id_count, chunk_count) + 1;
+	if (((size_t)(footer->rlf_leak.lf_id /*         */) <= alloc_id_break) &&
+	    ((size_t)(footer->rlf_leak.lf_id + chunk_count) > alloc_id_break) &&
+	    (alloc_id_break != 0)) {
+#ifndef Dee_BREAKPOINT_IS_NOOP
+		Dee_BREAKPOINT();
+#elif __has_builtin(__builtin_trap)
+		__builtin_trap();
+#else /* ... */
+		char volatile *volatile P = (char volatile *)0;
+		*P = 'B';
+#endif /* !... */
+	}
+
+	/* Insert into list of memory leaks + regions */
+	leaks_insert(&footer->rlf_leak);
+	LIST_INSERT_HEAD(&region_leak_flist, footer, rlf_link);
+	return region;
+}
+
+/* Check if any tracked "leaks" contains "ptr". If so, untrack and return it. */
+PRIVATE struct leak_footer *DCALL
+leaks_untrack_chunk_containing(void const *ptr) {
+	struct leak_footer *iter;
+	for (iter = leaks.lf_next; iter != &leaks; iter = iter->lf_next) {
+		/* XXX: This read may return an invalid pointer if another thread just did a dlrealloc(chunk)! */
+		void *mem = atomic_read(&iter->lf_chunk);
+		mchunkptr p = mem2chunk(mem);
+		size_t size = chunksize(p) - overhead_for(p);
+		if ((char *)ptr >= mem && (char *)ptr < ((char *)mem + size)) {
+			/* Do the same that's done by `Dee_UntrackAlloc()' below. */
+			leaks_remove(iter);
+			iter->lf_prev = iter;
+			iter->lf_next = iter;
+			return iter;
+		}
+	}
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) char *DCALL try_strdup(char const *str) {
+	size_t len = (strlen(str) + 1) * sizeof(char);
+	char *result = (char *)dlmalloc(len);
+	if (result)
+		result = (char *)memcpy(result, str, len);
+	return result;
+}
+
+#define DeeDbgHeap_AddHeapRegion_DEFINED
+/* Attach debug info (for the sake of memory leaks as reported by `DeeHeap_DumpMemoryLeaks()',
+ * as well as `DeeHeap_DumpMemoryLeaks_GC' being able to recursively scan the payload areas of
+ * reachable heap chunks) to a custom "struct Dee_heapregion"
  *
- * @return: * : The total amount of memory leaked (in bytes) */
-#define DeeHeap_DumpMemoryLeaks_DEFINED
-PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(void) {
+ * These calls are entirely OPTIONAL, but if not called, `DeeHeap_DumpMemoryLeaks()' will not
+ * be able to inform you about heap chunks from `region' that are never free'd, or be able to
+ * identify `Dee_Malloc()' pointers stored in the payload areas of reachable chunks within the
+ * given `region' when those chunks are reachable and called using `DeeHeap_DumpMemoryLeaks_GC'
+ *
+ * WARNING: `DeeDbgHeap_DelHeapRegion()' is thread-safe, but only in those cases where you can
+ *          guaranty that at least 1 of `region's heap-chunks has not yet been freed, and will
+ *          not be freed by another thread during the call to this function. (iow: it may only
+ *          be called when there is chance that `hr_destroy' has been- or will be called before
+ *          the call has a chance to return)
+ *
+ * @param: file:   A filename that should appear when memory leaks are dumped.
+ *                 Note that unlike other debug-heap functions, this string is actually
+ *                 strdup()'d, meaning it's allowed to point to a dynamically allocated
+ *                 memory location.
+ * @param: region: The region to register/unregister debug information for.
+ *                 Even when not registered, `Dee_Free()' works as it should!
+ *                 These functions are only necessary for `DeeHeap_DumpMemoryLeaks()'!
+ * @return: * : Always re-returns "region". These APIs are intentionally designed to never fail
+ *              (or rather: to fail-safe), never block (indefinitely), and never return an error.
+ *              These API *may* however modify the given `region's `hr_tail.ht_zero' field. */
+PUBLIC ATTR_RETNONNULL NONNULL((1)) struct Dee_heapregion *DCALL
+DeeDbgHeap_AddHeapRegion(struct Dee_heapregion *__restrict region, char const *file) {
+	struct region_leak_footer *footer;
+	footer = region_leak_footer_alloc(Dee_heapregion_getuwordcount(region));
+	file = file ? try_strdup(file) : NULL;
+	leaks_lock_acquire_and_reap();
+
+	/* Check if "region" is embedded within some larger heap chunk,
+	 * as is the case when it is part of a file mapping that could
+	 * not be mmap'd, and had to be malloc()+read()'d. */
+	{
+		struct leak_footer *embedded_leak;
+		embedded_leak = leaks_untrack_chunk_containing((void *)region);
+		if (embedded_leak && !file) {
+			file = embedded_leak->lf_file; /* Inherit debug info if caller didn't specify any */
+			file = file ? try_strdup(file) : NULL;
+		}
+	}
+
+	region = DeeDbgHeap_DelHeapRegion_locked(region); /* For safety -- should not be bound, yet */
+	if likely(footer) {
+		region = DeeDbgHeap_AddHeapRegion_locked_p(region, footer, file);
+		file = NULL; /* Inherited */
+	} else {
+		region = region_leak_mlist_insert(region);
+	}
+	leaks_lock_release();
+#if !DLFREE_CHECKS_NULL
+	if (file)
+#endif /* !DLFREE_CHECKS_NULL */
+	{
+		dlfree((char *)file);
+	}
+	return region;
+}
+
+PUBLIC ATTR_RETNONNULL NONNULL((1)) struct Dee_heapregion *DCALL
+DeeDbgHeap_DelHeapRegion(struct Dee_heapregion *__restrict region) {
+	leaks_lock_acquire_and_reap();
+	region = DeeDbgHeap_DelHeapRegion_locked(region);
+	leaks_lock_release();
+	return region;
+}
+#endif /* HAVE_DBG_HEAP_REGION */
+
+
+
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+leaks_pending_remove__contains(struct leak_footer *leak) {
+	struct leak_footer *remove;
+	remove = atomic_read(&leaks_pending_remove.slh_first);
+	for (; remove; remove = SLIST_NEXT(remove, lf_remlink)) {
+		if (remove == leak)
+			return true;
+	}
+	return false;
+}
+
+
+
+PRIVATE void DCALL dumpleaks_acquire_locks(void) {
+	/* Need a whole bunch of locks here:
+	 * - leaks_lock_acquire_and_reap()     -- prevent tracked leaks from changing
+	 * - PREACTION(gm)                     -- prevent dlrealloc() from changing "leak_footer::lf_chunk"
+	 * - tls_mspace_lock_acquire()         -- prevent dlrealloc() from changing "leak_footer::lf_chunk"
+	 * - PREACTION(used_tls_mspace.each)   -- prevent dlrealloc() from changing "leak_footer::lf_chunk"
+	 *
+	 * For GC only:
+	 * - gc_lock                           -- need to skew GC list and links
+	 * - module_abstree_lock               -- need to skew "module_abstree_root"
+	 * - module_libtree_lock               -- need to skew "module_libtree_root"
+	 * - module_byaddr_lock                -- need to skew "module_byaddr_tree"
+	 */
+#define local_unlock_0() (void)0
+#define local_unlock_1() (void)0
+#define local_unlock_2() (void)0
+#define local_unlock_3() (void)0
+#define local_unlock_4() (void)0
+#define local_unlock_5() (void)0
+#define local_unlock_6() (void)0
+#define local_unlock_7() (void)0
+#define local_unlock_8() (void)0
+#define local_unlock_9() (void)0
+#define local_unlock()    \
+	do {                  \
+		local_unlock_9(); \
+		local_unlock_8(); \
+		local_unlock_7(); \
+		local_unlock_6(); \
+		local_unlock_5(); \
+		local_unlock_4(); \
+		local_unlock_3(); \
+		local_unlock_2(); \
+		local_unlock_1(); \
+		local_unlock_0(); \
+	}	__WHILE0
+
+
+again:
+	/* Lock leak system */
+	leaks_lock_acquire_and_reap();
+#undef local_unlock_0
+#define local_unlock_0() leaks_lock_release()
+
+	/* Lock "gm" */
+	if (!TRY_PREACTION(gm)) {
+		local_unlock();
+		Dee_atomic_lock_waitfor(&mstate_mutex(gm));
+		goto again;
+#undef local_unlock_1
+#define local_unlock_1() POSTACTION(gm)
+	}
+
+	/* Lock TLS mspace allocator (prevent more mspaces from appearing) */
+#if USE_PER_THREAD_MSTATE
+	if (!tls_mspace_lock_tryacquire()) {
+		local_unlock();
+		tls_mspace_lock_waitfor();
+		goto again;
+#undef local_unlock_2
+#define local_unlock_2() tls_mspace_lock_release()
+	}
+
+	/* Lock every (in-use) TLS mspace */
+	{
+		struct malloc_state *tls;
+		SLIST_FOREACH (tls, &used_tls_mspace, ms_link) {
+			if (!TRY_PREACTION(tls)) {
+				struct malloc_state *tls2;
+				SLIST_FOREACH (tls2, &used_tls_mspace, ms_link) {
+					if (tls2 == tls)
+						break;
+					POSTACTION(tls2);
+				}
+				local_unlock();
+				/* TLS mspaces are never free'd, so no need to worry about "tls" going away here... */
+				Dee_atomic_lock_waitfor(&mstate_mutex(tls));
+			}
+		}
+	}
+#undef local_unlock_3
+#define local_unlock_3()                                 \
+	do {                                                 \
+		struct malloc_state *tls;                        \
+		SLIST_FOREACH (tls, &used_tls_mspace, ms_link) { \
+			POSTACTION(tls);                             \
+		}                                                \
+	}	__WHILE0
+#endif /* USE_PER_THREAD_MSTATE */
+}
+
+PRIVATE void DCALL dumpleaks_release_locks(void) {
+	local_unlock();
+}
+
+#if LEAK_DETECTION_GC
+#ifdef CONFIG_NO_THREADS
+#define dumpleaks_acquire_locks_gc() dumpleaks_acquire_locks()
+#define dumpleaks_release_locks_gc() dumpleaks_release_locks()
+#else /* CONFIG_NO_THREADS */
+INTDEF Dee_rshared_lock_t gc_lock;
+INTDEF Dee_atomic_rwlock_t module_abstree_lock;
+INTDEF Dee_atomic_rwlock_t module_libtree_lock;
+INTDEF Dee_atomic_rwlock_t module_byaddr_lock;
+INTDEF Dee_shared_lock_t thread_list_lock;
+
+
+PRIVATE void DCALL dumpleaks_acquire_locks_gc(void) {
+	/* Need a whole bunch of locks here:
+	 * - gc_lock                           -- need to skew GC list and links
+	 * - module_abstree_lock               -- need to skew "module_abstree_root"
+	 * - module_libtree_lock               -- need to skew "module_libtree_root"
+	 * - module_byaddr_lock                -- need to skew "module_byaddr_tree"
+	 * - thread_list_lock                  -- needed to enumerate threads and prevent more from appearing
+	 */
+again:
+	dumpleaks_acquire_locks();
+
+	if (!Dee_rshared_lock_tryacquire(&gc_lock)) {
+		local_unlock();
+		Dee_rshared_lock_waitfor_noint(&gc_lock);
+#undef local_unlock_4
+#define local_unlock_4() Dee_rshared_lock_release(&gc_lock)
+		goto again;
+	}
+
+	if (!Dee_atomic_rwlock_trywrite(&module_abstree_lock)) {
+		local_unlock();
+		Dee_atomic_rwlock_waitwrite(&module_abstree_lock);
+#undef local_unlock_5
+#define local_unlock_5() Dee_atomic_rwlock_endwrite(&module_abstree_lock)
+		goto again;
+	}
+
+	if (!Dee_atomic_rwlock_trywrite(&module_libtree_lock)) {
+		local_unlock();
+		Dee_atomic_rwlock_waitwrite(&module_libtree_lock);
+#undef local_unlock_6
+#define local_unlock_6() Dee_atomic_rwlock_endwrite(&module_libtree_lock)
+		goto again;
+	}
+
+	if (!Dee_atomic_rwlock_trywrite(&module_byaddr_lock)) {
+		local_unlock();
+		Dee_atomic_rwlock_waitwrite(&module_byaddr_lock);
+#undef local_unlock_7
+#define local_unlock_7() Dee_atomic_rwlock_endwrite(&module_byaddr_lock)
+		goto again;
+	}
+
+	if (!Dee_shared_lock_tryacquire(&thread_list_lock)) {
+		local_unlock();
+		Dee_shared_lock_waitfor(&thread_list_lock);
+#undef local_unlock_7
+#define local_unlock_7() Dee_shared_lock_release(&thread_list_lock)
+		goto again;
+	}
+}
+
+PRIVATE void DCALL dumpleaks_release_locks_gc(void) {
+	local_unlock();
+}
+#endif /* !CONFIG_NO_THREADS */
+#endif /* LEAK_DETECTION_GC */
+
+#undef local_unlock
+#undef local_unlock_9
+#undef local_unlock_8
+#undef local_unlock_7
+#undef local_unlock_6
+#undef local_unlock_5
+#undef local_unlock_4
+#undef local_unlock_3
+#undef local_unlock_2
+#undef local_unlock_1
+#undef local_unlock_0
+
+
+PRIVATE NONNULL((1)) size_t DCALL
+do_DeeHeap_DumpMemoryLeaks_one(struct leak_footer *leak
+#if LEAK_DETECTION_GC
+                               , bool print_gc_hits
+#endif /* LEAK_DETECTION_GC */
+                               ) {
+	/* XXX: This read may return an invalid pointer if another thread just did a dlrealloc(chunk)! */
+	void *mem = atomic_read(&leak->lf_chunk);
+	mchunkptr p = mem2chunk(mem);
+	size_t size = chunksize(p) - overhead_for(p);
+	char const *file = atomic_read(&leak->lf_file);
+
+	/* If "leak" is part of "leaks_pending_remove", skip it.
+	 * This must be checked **AFTER** reading  */
+	if (leaks_pending_remove__contains(leak))
+		return 0;
+
+#if HAVE_DBG_HEAP_REGION
+	if (leak_footer_isregion(leak)) {
+		/* Print 1 line for every unreachable chunk within the region of "leak" */
+		struct region_leak_footer *footer = leak_footer_asregion(leak);
+		struct Dee_heapregion *region = region_leak_footer_getregion(footer);
+		struct Dee_heapchunk *start = Dee_heapregion_getstart(region);
+		struct Dee_heapchunk *end = Dee_heapregion_getend(region);
+		struct Dee_heapchunk *iter;
+		char *region_maxaddr = (char *)region + region->hr_size - 1;
+		size_t index = 0;
+		ASSERT((char *)start == Dee_heapregion_getuminaddr(region));
+		size = 0;
+		for (iter = start; iter < end; iter = Dee_heapchunk_getnext(iter)) {
+			size_t offset = (size_t)((char *)iter - (char *)start);
+			size_t chunk_size = iter->hc_head & ~7;
+			size_t chunk_head_word = offset / sizeof(void *);
+			size_t chunk_body_word = chunk_head_word + (sizeof(struct Dee_heapchunk) / sizeof(void *));
+			char *payload_start = (char *)start + (chunk_body_word * sizeof(void *));
+			size_t payload_size = chunk_size - sizeof(struct Dee_heapchunk);
+#if LEAK_DETECTION_GC
+			if (!(iter->hc_head & PINUSE_BIT) &&
+			    (!print_gc_hits || !region_leak_footer_getreachable(footer, chunk_head_word + 0)))
+#else /* LEAK_DETECTION_GC */
+			if (!(iter->hc_head & PINUSE_BIT))
+#endif /* !LEAK_DETECTION_GC */
+			{
+				Dee_DPRINTF("%s : %" PRFuSIZ " : Leaked %" PRFuSIZ " bytes: %p-%p [in Dee_heapregion %p-%p]\n",
+				            file, leak->lf_id + index, payload_size,
+				            payload_start, (char *)payload_start + payload_size - 1,
+				            region, region_maxaddr);
+				size += payload_size;
+			}
+			++index;
+		}
+	} else
+#endif /* HAVE_DBG_HEAP_REGION */
+#if LEAK_DETECTION_GC
+	if (print_gc_hits) {
+		Dee_DPRINTF("%s(%d) : %" PRFuSIZ " : Leaked %" PRFuSIZ " bytes of memory: "
+		            /**/ "%p-%p (referenced %" PRFuSIZ " by other leaks)\n",
+		            file, (int)leak->lf_line, leak->lf_id,
+		            size, (char *)mem, (char *)mem + size - 1,
+		            (size_t)(leak->lf_gcflags & LEAK_FOOTER_GCFLAG_HITMASK));
+	} else
+#endif /* LEAK_DETECTION_GC */
+	{
+		Dee_DPRINTF("%s(%d) : %" PRFuSIZ " : Leaked %" PRFuSIZ " bytes of memory: %p-%p\n",
+		            file, (int)leak->lf_line, leak->lf_id,
+		            size, (char *)mem, (char *)mem + size - 1);
+	}
+	return size;
+}
+
+PRIVATE size_t DCALL do_DeeHeap_DumpMemoryLeaks_ALL(void) {
 	size_t result = 0;
 	struct leak_footer *iter;
-	leaks_lock_acquire_and_reap();
+	dumpleaks_acquire_locks();
 #if 1 /* 1: Enumerate from oldest-to-newest; 0: newest-to-oldest */
 	for (iter = leaks.lf_prev; iter != &leaks; iter = iter->lf_prev)
 #else
 	for (iter = leaks.lf_next; iter != &leaks; iter = iter->lf_next)
 #endif
 	{
-		void *mem = atomic_read(&iter->lf_chunk);
-		mchunkptr p = mem2chunk(mem);
-		size_t size = chunksize(p) - overhead_for(p);
-		char const *file = atomic_read(&iter->lf_file);
-		/* FIXME: If "iter" was added to "leaks_pending_remove", then the "file" we must read is invalid!
-		 * Solution is: reap "leaks_pending_remove" after reading "lf_file" (iow: right here),
-		 *              but don't release lock and keep skip ahead to next chunk when "iter"
-		 *              ends up being removed via "leaks_pending_remove" */
-		Dee_DPRINTF("%s(%d) : %" PRFuSIZ " : Leaked %" PRFuSIZ " bytes of memory: %p-%p\n",
-		            file, iter->lf_line, iter->lf_id, size, (char *)mem, (char *)mem + size - 1);
-		result += size;
+#if LEAK_DETECTION_GC
+		result += do_DeeHeap_DumpMemoryLeaks_one(iter, false);
+#else /* LEAK_DETECTION_GC */
+		result += do_DeeHeap_DumpMemoryLeaks_one(iter);
+#endif /* !LEAK_DETECTION_GC */
+	}
+
+#if HAVE_DBG_HEAP_REGION
+	if (region_leak_mlist) {
+		struct Dee_heapregion *region = region_leak_mlist;
+		do {
+			result += region->hr_size;
+			Dee_DPRINTF("? : ? : Leaked %" PRFuSIZ " bytes: %p-%p [in Dee_heapregion %p-%p]\n",
+			            region->hr_size,
+			            (char *)region, (char *)region + region->hr_size - 1,
+			            (char *)region, (char *)region + region->hr_size - 1);
+		} while ((region = Dee_heapregion_getnext_opt(region)) != NULL);
+	}
+#endif /* HAVE_DBG_HEAP_REGION */
+	dumpleaks_release_locks();
+	return result;
+}
+
+#if LEAK_DETECTION_GC
+LOCAL ATTR_PURE WUNUSED NONNULL((1))
+size_t DFCALL fast_usable_size(void *mem) {
+	mchunkptr p = mem2chunk(mem);
+	return chunksize(p) - overhead_for(p);
+}
+
+DECL_END
+#include <hybrid/sequence/rbtree.h>
+
+#define RBTREE_LEFT_LEANING
+#define RBTREE(name)            gcleak_byaddr_##name
+#define RBTREE_T                struct leak_footer
+#define RBTREE_Tkey             char *
+#define RBTREE_GETLHS(self)     (self)->lf_prev
+#define RBTREE_GETRHS(self)     (self)->lf_next
+#define RBTREE_SETLHS(self, v)  (void)((self)->lf_prev = (v))
+#define RBTREE_SETRHS(self, v)  (void)((self)->lf_next = (v))
+#define RBTREE_GETMINKEY(self)  ((char *)(self)->lf_chunk)
+#define RBTREE_GETMAXKEY(self)  ((char *)(self)->lf_chunk + fast_usable_size((self)->lf_chunk) - 1)
+#define RBTREE_REDFIELD         lf_gcflags
+#define RBTREE_REDBIT           LEAK_FOOTER_GCFLAG_RED
+#define RBTREE_CC               DFCALL
+#define RBTREE_NOTHROW          NOTHROW
+#define RBTREE_DECL             PRIVATE
+#define RBTREE_IMPL             PRIVATE
+#define RBTREE_OMIT_REMOVE
+#define RBTREE_DEBUG
+#include <hybrid/sequence/rbtree-abi.h>
+
+#define RBTREE_LEFT_LEANING
+#define RBTREE(name)            gcleak_byhit_##name
+#define RBTREE_T                struct leak_footer
+#define RBTREE_Tkey             struct leak_footer const *
+#define RBTREE_GETLHS(self)     (self)->lf_prev
+#define RBTREE_GETRHS(self)     (self)->lf_next
+#define RBTREE_SETLHS(self, v)  (void)((self)->lf_prev = (v))
+#define RBTREE_SETRHS(self, v)  (void)((self)->lf_next = (v))
+#define RBTREE_GETKEY(self)     (self)
+#define RBTREE_KEY_LO(a, b)                                                                         \
+	((((a)->lf_gcflags & ~LEAK_FOOTER_GCFLAG_RED) < ((b)->lf_gcflags & ~LEAK_FOOTER_GCFLAG_RED)) || \
+	 (((a)->lf_gcflags & ~LEAK_FOOTER_GCFLAG_RED) == ((b)->lf_gcflags & ~LEAK_FOOTER_GCFLAG_RED) && ((a) < (b))))
+#define RBTREE_KEY_EQ(a, b)     ((a) == (b))
+#define RBTREE_REDFIELD         lf_gcflags
+#define RBTREE_REDBIT           LEAK_FOOTER_GCFLAG_RED
+#define RBTREE_CC               DFCALL
+#define RBTREE_NOTHROW          NOTHROW
+#define RBTREE_DECL             PRIVATE
+#define RBTREE_IMPL             PRIVATE
+#define RBTREE_WANT_NEXTNODE
+#define RBTREE_OMIT_REMOVE
+#define RBTREE_OMIT_LOCATE
+#define RBTREE_OMIT_REMOVENODE
+#include <hybrid/sequence/rbtree-abi.h>
+
+#define RBTREE_LEFT_LEANING
+#define RBTREE(name)            gcleak_byid_##name
+#define RBTREE_T                struct leak_footer
+#define RBTREE_Tkey             struct leak_footer const *
+#define RBTREE_GETLHS(self)     (self)->lf_prev
+#define RBTREE_GETRHS(self)     (self)->lf_next
+#define RBTREE_SETLHS(self, v)  (void)((self)->lf_prev = (v))
+#define RBTREE_SETRHS(self, v)  (void)((self)->lf_next = (v))
+#define RBTREE_GETKEY(self)     (self)
+#define RBTREE_KEY_LO(a, b)     (((a)->lf_id < (b)->lf_id) || ((a)->lf_id == (b)->lf_id && ((a) < (b))))
+#define RBTREE_KEY_EQ(a, b)     ((a) == (b))
+#define RBTREE_REDFIELD         lf_gcflags
+#define RBTREE_REDBIT           LEAK_FOOTER_GCFLAG_RED
+#define RBTREE_CC               DFCALL
+#define RBTREE_NOTHROW          NOTHROW
+#define RBTREE_DECL             PRIVATE
+#define RBTREE_IMPL             PRIVATE
+#define RBTREE_OMIT_REMOVE
+#define RBTREE_OMIT_LOCATE
+#include <hybrid/sequence/rbtree-abi.h>
+DECL_BEGIN
+
+PRIVATE LLRBTREE_ROOT(leak_footer) gcleak_byaddr_tree = NULL;        /* [0..n] gcleak_byaddr_* -- Used internally by GC leak detection */
+PRIVATE LLRBTREE_ROOT(leak_footer) gcleak_byaddr_nreach_tree = NULL; /* [0..n] gcleak_byaddr_* -- Used internally by GC leak detection */
+PRIVATE LLRBTREE_ROOT(leak_footer) gcleak_byhit_tree = NULL;         /* [0..n] gcleak_byhit_*  -- Used internally by GC leak detection */
+PRIVATE LLRBTREE_ROOT(leak_footer) gcleak_byid_tree = NULL;          /* [0..n] gcleak_byid_*   -- Used internally by GC leak detection */
+
+
+PRIVATE void DCALL gcmove__leaks__into__gcleak_byaddr_tree(void) {
+	struct leak_footer *iter, *next;
+	for (iter = leaks.lf_next; iter != &leaks; iter = next) {
+		next = iter->lf_next;
+		iter->lf_gcflags = LEAK_FOOTER_GCFLAG_NORMAL; /* Reset visibility flags */
+		gcleak_byaddr_insert(&gcleak_byaddr_tree, iter);
+#if HAVE_DBG_HEAP_REGION
+		if (leak_footer_isregion(iter)) {
+			struct region_leak_footer *footer = leak_footer_asregion(iter);
+			region_leak_footer_clearreachable(footer);
+		}
+#endif /* HAVE_DBG_HEAP_REGION */
+	}
+	leaks.lf_next = &leaks;
+	leaks.lf_prev = &leaks;
+#if HAVE_DBG_HEAP_REGION
+	if (region_leak_mlist) {
+		struct Dee_heapregion *region = region_leak_mlist;
+		do {
+			Dee_heapregion_cleargcflags(region);
+		} while ((region = Dee_heapregion_getnext_opt(region)) != NULL);
+	}
+#endif /* HAVE_DBG_HEAP_REGION */
+}
+
+
+#if !defined(NDEBUG) && 1
+#define GCSCAN_LOGF(...) Dee_DPRINTF(__VA_ARGS__)
+#else
+#define GCSCAN_LOGF(...) (void)0
+#endif
+
+
+PRIVATE void DFCALL gcscan__range(void const *base, size_t num_bytes) {
+	size_t i, num_words;
+	if (!IS_ALIGNED((uintptr_t)base, sizeof(void *))) {
+		size_t miss = sizeof(void *) - ((uintptr_t)base & (sizeof(void *) - 1));
+		base = (char *)base + miss;
+		if (miss >= num_bytes)
+			return;
+		num_bytes -= miss;
+	}
+	num_words = num_bytes / sizeof(void *);
+	for (i = 0; i < num_words; ++i) {
+		void const *const *p_pointer = &((void const *const *)base)[i];
+		void const *pointer = atomic_read(p_pointer);
+		if (leak_addrok(pointer)) {
+			struct leak_footer *leak;
+			leak = gcleak_byaddr_locate(gcleak_byaddr_tree, (char *)pointer);
+			if (leak) {
+				GCSCAN_LOGF("%s(%d) : HIT @%p -> %p (in %p-%p)\n",
+				            leak->lf_file, leak->lf_line, p_pointer, pointer,
+				            (char *)leak->lf_chunk,
+				            (char *)leak->lf_chunk + fast_usable_size(leak->lf_chunk) - 1);
+				leak->lf_gcflags |= LEAK_FOOTER_GCFLAG_REACH;
+#if HAVE_DBG_HEAP_REGION
+				if (leak_footer_isregion(leak)) {
+					struct region_leak_footer *footer = leak_footer_asregion(leak);
+					struct Dee_heapregion *region = region_leak_footer_getregion(footer);
+					char *umin = Dee_heapregion_getuminaddr(region);
+					if likely((char *)pointer >= umin) {
+						size_t uoffset = (size_t)((char *)pointer - umin);
+						size_t uword = uoffset / sizeof(void *);
+						size_t words = Dee_heapregion_getuwordcount(region);
+						if likely(uword < words)
+							region_leak_footer_setreachable(footer, uword);
+					}
+				}
+#endif /* HAVE_DBG_HEAP_REGION */
+			}
+#if HAVE_DBG_HEAP_REGION
+			if (region_leak_mlist) {
+				struct Dee_heapregion *region = region_leak_mlist;
+				do {
+					if ((char *)pointer > ((char *)region) &&
+					    (char *)pointer < ((char *)region + region->hr_size)) {
+						Dee_heapregion_set_gc_reachable(region);
+						break;
+					}
+				} while ((region = Dee_heapregion_getnext_opt(region)) != NULL);
+			}
+#endif /* HAVE_DBG_HEAP_REGION */
+		}
+	}
+}
+
+#define SKEWMASK             WORD_4BYTE(FFFFAAAA)
+#define skew(T, p)           ((T)((uintptr_t)(p) ^ SKEWMASK))
+#define unskew(T, p)         ((T)((uintptr_t)(p) ^ SKEWMASK))
+#define inplace_skew(T, p)   (void)((p) = skew(T, p))
+#define inplace_unskew(T, p) (void)((p) = unskew(T, p))
+
+
+/* SKEW: gc_root */
+INTDEF struct gc_head *gc_root;
+PRIVATE void DCALL gcscan__skew__gc_root(void) {
+	struct gc_head *next, *iter = gc_root;
+	while (iter) {
+		next = iter->gc_next;
+		inplace_skew(struct gc_head *, iter->gc_next);
+		inplace_skew(struct gc_head **, iter->gc_pself);
+		iter = next;
+	}
+	inplace_skew(struct gc_head *, gc_root);
+}
+PRIVATE void DCALL gcscan__unskew__gc_root(void) {
+	struct gc_head *iter;
+	inplace_unskew(struct gc_head *, gc_root);
+	iter = gc_root;
+	while (iter) {
+		inplace_unskew(struct gc_head *, iter->gc_next);
+		inplace_unskew(struct gc_head **, iter->gc_pself);
+		iter = iter->gc_next;
+	}
+}
+
+
+/* SKEW: module_abstree_root */
+INTDEF RBTREE_ROOT(Dee_module_object) module_abstree_root;
+PRIVATE NONNULL((1)) void DCALL
+gcscan__skew__module_abstree_root_at(DeeModuleObject *mod) {
+	DeeModuleObject *lhs, *rhs;
+again:
+	lhs = mod->mo_absnode.rb_lhs;
+	rhs = mod->mo_absnode.rb_rhs;
+	inplace_skew(DeeModuleObject *, mod->mo_absnode.rb_lhs);
+	inplace_skew(DeeModuleObject *, mod->mo_absnode.rb_rhs);
+	if (lhs) {
+		if (rhs)
+			gcscan__skew__module_abstree_root_at(rhs);
+		mod = lhs;
+		goto again;
+	}
+	if (rhs) {
+		mod = rhs;
+		goto again;
+	}
+}
+PRIVATE NONNULL((1)) void DCALL
+gcscan__unskew__module_abstree_root_at(DeeModuleObject *mod) {
+again:
+	inplace_unskew(DeeModuleObject *, mod->mo_absnode.rb_lhs);
+	inplace_unskew(DeeModuleObject *, mod->mo_absnode.rb_rhs);
+	if (mod->mo_absnode.rb_lhs) {
+		if (mod->mo_absnode.rb_rhs)
+			gcscan__unskew__module_abstree_root_at(mod->mo_absnode.rb_rhs);
+		mod = mod->mo_absnode.rb_lhs;
+		goto again;
+	}
+	if (mod->mo_absnode.rb_rhs) {
+		mod = mod->mo_absnode.rb_rhs;
+		goto again;
+	}
+}
+PRIVATE void DCALL gcscan__skew__module_abstree_root(void) {
+	if (module_abstree_root)
+		gcscan__skew__module_abstree_root_at(module_abstree_root);
+	inplace_skew(DeeModuleObject *, module_abstree_root);
+}
+PRIVATE void DCALL gcscan__unskew__module_abstree_root(void) {
+	inplace_unskew(DeeModuleObject *, module_abstree_root);
+	if (module_abstree_root)
+		gcscan__unskew__module_abstree_root_at(module_abstree_root);
+}
+
+
+/* SKEW: module_libtree_root */
+INTDEF RBTREE_ROOT(Dee_module_libentry) module_libtree_root;
+PRIVATE NONNULL((1)) void DCALL
+gcscan__skew__module_libtree_root_at(struct Dee_module_libentry *mod) {
+	struct Dee_module_libentry *lhs, *rhs;
+again:
+	lhs = mod->mle_node.rb_lhs;
+	rhs = mod->mle_node.rb_rhs;
+	inplace_skew(struct Dee_module_libentry *, mod->mle_node.rb_lhs);
+	inplace_skew(struct Dee_module_libentry *, mod->mle_node.rb_rhs);
+	if (lhs) {
+		if (rhs)
+			gcscan__skew__module_libtree_root_at(rhs);
+		mod = lhs;
+		goto again;
+	}
+	if (rhs) {
+		mod = rhs;
+		goto again;
+	}
+}
+PRIVATE NONNULL((1)) void DCALL
+gcscan__unskew__module_libtree_root_at(struct Dee_module_libentry *mod) {
+again:
+	inplace_unskew(struct Dee_module_libentry *, mod->mle_node.rb_lhs);
+	inplace_unskew(struct Dee_module_libentry *, mod->mle_node.rb_rhs);
+	if (mod->mle_node.rb_lhs) {
+		if (mod->mle_node.rb_rhs)
+			gcscan__unskew__module_libtree_root_at(mod->mle_node.rb_rhs);
+		mod = mod->mle_node.rb_lhs;
+		goto again;
+	}
+	if (mod->mle_node.rb_rhs) {
+		mod = mod->mle_node.rb_rhs;
+		goto again;
+	}
+}
+PRIVATE void DCALL gcscan__skew__module_libtree_root(void) {
+	if (module_libtree_root)
+		gcscan__skew__module_libtree_root_at(module_libtree_root);
+	inplace_skew(struct Dee_module_libentry *, module_libtree_root);
+}
+PRIVATE void DCALL gcscan__unskew__module_libtree_root(void) {
+	inplace_unskew(struct Dee_module_libentry *, module_libtree_root);
+	if (module_libtree_root)
+		gcscan__unskew__module_libtree_root_at(module_libtree_root);
+}
+
+
+/* SKEW: module_abstree_root */
+INTDEF RBTREE_ROOT(/*maybe(DREF)*/ Dee_module_object) module_byaddr_tree;
+PRIVATE NONNULL((1)) void DCALL
+gcscan__skew__module_byaddr_tree_at(DeeModuleObject *mod) {
+	DeeModuleObject *lhs, *rhs;
+again:
+	lhs = mod->mo_adrnode.rb_lhs;
+	rhs = mod->mo_adrnode.rb_rhs;
+	inplace_skew(DeeModuleObject *, mod->mo_adrnode.rb_lhs);
+	inplace_skew(DeeModuleObject *, mod->mo_adrnode.rb_rhs);
+	if (lhs) {
+		if (rhs)
+			gcscan__skew__module_byaddr_tree_at(rhs);
+		mod = lhs;
+		goto again;
+	}
+	if (rhs) {
+		mod = rhs;
+		goto again;
+	}
+}
+PRIVATE NONNULL((1)) void DCALL
+gcscan__unskew__module_byaddr_tree_at(DeeModuleObject *mod) {
+again:
+	inplace_unskew(DeeModuleObject *, mod->mo_adrnode.rb_lhs);
+	inplace_unskew(DeeModuleObject *, mod->mo_adrnode.rb_rhs);
+	if (mod->mo_adrnode.rb_lhs) {
+		if (mod->mo_adrnode.rb_rhs)
+			gcscan__unskew__module_byaddr_tree_at(mod->mo_adrnode.rb_rhs);
+		mod = mod->mo_adrnode.rb_lhs;
+		goto again;
+	}
+	if (mod->mo_adrnode.rb_rhs) {
+		mod = mod->mo_adrnode.rb_rhs;
+		goto again;
+	}
+}
+PRIVATE void DCALL gcscan__skew__module_byaddr_tree(void) {
+	if (module_byaddr_tree)
+		gcscan__skew__module_byaddr_tree_at(module_byaddr_tree);
+	inplace_skew(DeeModuleObject *, module_byaddr_tree);
+}
+PRIVATE void DCALL gcscan__unskew__module_byaddr_tree(void) {
+	inplace_unskew(DeeModuleObject *, module_byaddr_tree);
+	if (module_byaddr_tree)
+		gcscan__unskew__module_byaddr_tree_at(module_byaddr_tree);
+}
+
+
+
+
+PRIVATE void DCALL gcscan__skew(void) {
+	/* (intentionally) skew certain globals that shouldn't be considered
+	 * as reasons why some allocations should be reachable:
+	 *
+	 * - module_abstree_root, and "DeeModuleObject::mo_absnode"
+	 *   doesn't contain object references
+	 *
+	 * - module_libtree_root, and "Dee_module_libentry::mle_node"
+	 *   doesn't contain object references
+	 *
+	 * - module_byaddr_tree, and "DeeModuleObject::mo_adrnode"
+	 *   doesn't contain object references in case of DeeModuleDee_Type,
+	 *   and even though it does contain references for DeeModuleDex_Type,
+	 *   native dex modules are explicitly scanned anyways, so nothing is
+	 *   gained if these objects were reachable.
+	 *
+	 * - gc_root, and "struct gc_head" of every tracked GC object */
+	gcscan__skew__gc_root();
+	gcscan__skew__module_abstree_root();
+	gcscan__skew__module_libtree_root();
+	gcscan__skew__module_byaddr_tree();
+}
+
+PRIVATE void DCALL gcscan__unskew(void) {
+	gcscan__unskew__module_byaddr_tree();
+	gcscan__unskew__module_libtree_root();
+	gcscan__unskew__module_abstree_root();
+	gcscan__unskew__gc_root();
+}
+
+PRIVATE bool DCALL gcscan__statics_from_core(void) {
+	if (DeeModule_Deemon.mo_flags & _Dee_MODULE_FNOADDR)
+		return false;
+	gcscan__skew();
+	GCSCAN_LOGF("DEEMON CORE: Scan %p-%p\n", DeeModule_Deemon.mo_minaddr, DeeModule_Deemon.mo_maxaddr);
+	gcscan__range(DeeModule_Deemon.mo_minaddr, (DeeModule_Deemon.mo_maxaddr - DeeModule_Deemon.mo_minaddr) + 1);
+	GCSCAN_LOGF("Scan end %p-%p\n", DeeModule_Deemon.mo_minaddr, DeeModule_Deemon.mo_maxaddr);
+	gcscan__unskew();
+	return true;
+}
+
+#ifndef CONFIG_NO_DEX
+PRIVATE void DCALL gcscan__statics_at(DeeModuleObject *mod) {
+again:
+	if (Dee_TYPE(mod) == &DeeModuleDex_Type && mod != &DeeModule_Deemon) {
+		GCSCAN_LOGF("DEX %q: Scan %p-%p\n", mod->mo_absname, mod->mo_minaddr, mod->mo_maxaddr);
+		gcscan__range(mod->mo_minaddr, (mod->mo_maxaddr - mod->mo_minaddr) + 1);
+		GCSCAN_LOGF("Scan end %p-%p\n", mod->mo_minaddr, mod->mo_maxaddr);
+	}
+	if (mod->mo_adrnode.rb_lhs) {
+		if (mod->mo_adrnode.rb_rhs)
+			gcscan__statics_at(mod->mo_adrnode.rb_rhs);
+		mod = mod->mo_adrnode.rb_lhs;
+		goto again;
+	}
+	if (mod->mo_adrnode.rb_rhs) {
+		mod = mod->mo_adrnode.rb_rhs;
+		goto again;
+	}
+}
+#endif /* !CONFIG_NO_DEX */
+
+#ifndef CONFIG_NO_DEX
+INTDEF RBTREE_ROOT(DREF Dee_module_object) dex_byaddr_tree;
+#endif /* !CONFIG_NO_DEX */
+
+PRIVATE bool DCALL gcscan__statics(void) {
+#ifndef CONFIG_NO_DEX
+	if (dex_byaddr_tree) {
+		/* Address ranges for these modules can't be
+		 * determined, so scanning is impossible :( */
+		return false;
+	}
+	if (module_byaddr_tree)
+		gcscan__statics_at(module_byaddr_tree);
+#endif /* !CONFIG_NO_DEX */
+	gcscan__statics_from_core();
+	return true;
+}
+
+PRIVATE NONNULL((1)) bool DCALL
+gcscan__thread(DeeThreadObject *thread) {
+	/* Scan memory from thread's stack base to its current SP
+	 * (it's OK if the SP becomes outdated during the scan, so
+	 * long as the thread doesn't switch to a different thread
+	 * and deallocate its current one) */
+	/* TODO */
+
+	/* Scan the thread's register file */
+	/* TODO */
+	return true;
+}
+
+INTDEF DeeThreadObject DeeThread_Main;
+#ifdef CONFIG_NO_THREADS
+#define gcscan__threads() gcscan__thread(&DeeThread_Main)
+#else /* CONFIG_NO_THREADS */
+PRIVATE bool DCALL gcscan__threads(void) {
+	DeeThreadObject *iter = &DeeThread_Main;
+	do {
+		if (!gcscan__thread(iter))
+			return false;
+	} while ((iter = iter->t_global.le_next) != NULL);
+	return true;
+}
+#endif /* !CONFIG_NO_THREADS */
+
+PRIVATE void DCALL gcscan__visit__leaks_pending_remove(void) {
+	struct leak_footer *remove;
+	remove = atomic_read(&leaks_pending_remove.slh_first);
+	for (; remove; remove = SLIST_NEXT(remove, lf_remlink))
+		remove->lf_gcflags |= LEAK_FOOTER_GCFLAG_REACH;
+}
+
+PRIVATE NONNULL((1)) bool DCALL
+gcscan__visit__reachable_at(struct leak_footer *root) {
+	bool result = false;
+again:
+	if ((root->lf_gcflags & (LEAK_FOOTER_GCFLAG_REACH | LEAK_FOOTER_GCFLAG_SCANNED)) ==
+	    /*                */(LEAK_FOOTER_GCFLAG_REACH)) {
+		void *chunk;
+		root->lf_gcflags |= LEAK_FOOTER_GCFLAG_SCANNED;
+		/* XXX: This read may return an invalid pointer if another thread just did a dlrealloc(chunk)! */
+		chunk = atomic_read(&root->lf_chunk);
+#if HAVE_DBG_HEAP_REGION
+		if (leak_footer_isregion(root)) {
+			/* Use reachable bits associated with "hc_prevsize" and
+			 * "hc_head" of  payload chunks as GC control bits:
+			 * - hc_prevsize: reachable
+			 * - hc_head:     visited */
+			struct region_leak_footer *footer = leak_footer_asregion(root);
+			struct Dee_heapregion *region = region_leak_footer_getregion(footer);
+			struct Dee_heapchunk *start = Dee_heapregion_getstart(region);
+			struct Dee_heapchunk *end = Dee_heapregion_getend(region);
+			struct Dee_heapchunk *iter;
+			bool has_unreachable_chunk = false;
+			ASSERT((char *)start == Dee_heapregion_getuminaddr(region));
+			for (iter = start; iter < end; iter = Dee_heapchunk_getnext(iter)) {
+				size_t offset = (size_t)((char *)iter - (char *)start);
+				size_t chunk_size = iter->hc_head & ~7;
+				size_t chunk_head_word = offset / sizeof(void *);
+				size_t chunk_body_word = chunk_head_word + (sizeof(struct Dee_heapchunk) / sizeof(void *));
+				size_t chunk_tail_word = chunk_head_word + (chunk_size / sizeof(void *));
+				if (!region_leak_footer_getreachable(footer, chunk_head_word + 0)) {
+					bool payload_reachable = false;
+					size_t i;
+					for (i = chunk_body_word; i < chunk_tail_word; ++i) {
+						if (region_leak_footer_getreachable(footer, i)) {
+							payload_reachable = true;
+							break;
+						}
+					}
+					if (!payload_reachable) {
+						has_unreachable_chunk = true;
+						continue;
+					}
+					/* Remember that this chunk is reachable */
+					region_leak_footer_setreachable(footer, chunk_head_word + 0);
+				}
+				if (!region_leak_footer_getreachable(footer, chunk_head_word + 1)) {
+					/* Visit payload area now */
+					char *payload_start = (char *)start + (chunk_body_word * sizeof(void *));
+					size_t payload_size = chunk_size - sizeof(struct Dee_heapchunk);
+					region_leak_footer_setreachable(footer, chunk_head_word + 1);
+					gcscan__range(payload_start, payload_size);
+					result = true;
+				}
+			}
+			if (has_unreachable_chunk) /* Keep checking if there are unscanned parts... */
+				root->lf_gcflags &= ~LEAK_FOOTER_GCFLAG_SCANNED;
+		} else
+#endif /* HAVE_DBG_HEAP_REGION */
+		{
+			GCSCAN_LOGF("%s(%d) : Scan %p-%p\n", root->lf_file, root->lf_line,
+			            chunk, (char *)chunk + fast_usable_size(chunk) - 1);
+			gcscan__range(chunk, fast_usable_size(chunk));
+			GCSCAN_LOGF("Scan end %p-%p\n", chunk, (char *)chunk + fast_usable_size(chunk) - 1);
+			result = true;
+		}
+	}
+	if (root->lf_prev) {
+		if (root->lf_next)
+			result |= gcscan__visit__reachable_at(root->lf_next);
+		root = root->lf_prev;
+		goto again;
+	}
+	if (root->lf_next) {
+		root = root->lf_next;
+		goto again;
 	}
 	return result;
 }
 
+PRIVATE bool DCALL gcscan__visit__reachable(void) {
+	bool result = false;
+	if (gcleak_byaddr_tree)
+		result = gcscan__visit__reachable_at(gcleak_byaddr_tree);
+#if HAVE_DBG_HEAP_REGION
+	if (region_leak_mlist) {
+		struct Dee_heapregion *region = region_leak_mlist;
+		do {
+			if (Dee_heapregion_get_gc_reachable(region) &&
+			    !Dee_heapregion_get_gc_visited(region)) {
+				Dee_heapregion_set_gc_visited(region);
+				gcscan__range(Dee_heapregion_getdata(region),
+				              Dee_heapregion_getdatasize(region));
+				result = true;
+			}
+		} while ((region = Dee_heapregion_getnext_opt(region)) != NULL);
+	}
+#endif /* HAVE_DBG_HEAP_REGION */
+	return result;
+}
+
+
+PRIVATE NONNULL((1)) bool DCALL
+gcmove__byaddr__into__nreach_at(struct leak_footer *root) {
+again:
+	/* Check the "LEAK_FOOTER_GCFLAG_SCANNED" flag instead of "LEAK_FOOTER_GCFLAG_REACH".
+	 * This way, when `leak_footer_isregion(root)', we move the region into the set of
+	 * unreachable chunks if at least one of the embedded chunk is unreachable, since
+	 * `gcscan__visit__reachable_at()' will only set "LEAK_FOOTER_GCFLAG_SCANNED" if
+	 * **all** embedded chunks are reachable. */
+	if (!(root->lf_gcflags & LEAK_FOOTER_GCFLAG_SCANNED)) {
+		gcleak_byaddr_removenode(&gcleak_byaddr_tree, root);
+		root->lf_gcflags = 0; /* Reset hit-counter (though should already be 0) */
+		gcleak_byaddr_insert(&gcleak_byaddr_nreach_tree, root);
+		return true;
+	}
+	if (root->lf_prev) {
+		if (root->lf_next && gcmove__byaddr__into__nreach_at(root->lf_next))
+			return true;
+		root = root->lf_prev;
+		goto again;
+	}
+	if (root->lf_next) {
+		root = root->lf_next;
+		goto again;
+	}
+	return false;
+}
+
+PRIVATE void DCALL gcmove__byaddr__into__nreach(void) {
+	while (gcleak_byaddr_tree) {
+		if (!gcmove__byaddr__into__nreach_at(gcleak_byaddr_tree))
+			break;
+	}
+}
+
+
+PRIVATE NONNULL((1)) void DCALL
+gccount__nreach__crossrefs_at(struct leak_footer *root) {
+	void *chunk;
+	size_t i, csize, words;
+again:
+	chunk = atomic_read(&root->lf_chunk);
+	csize = fast_usable_size(chunk);
+	ASSERT(IS_ALIGNED((uintptr_t)chunk, sizeof(void *)));
+	ASSERT(IS_ALIGNED((uintptr_t)csize, sizeof(void *)));
+	words = csize / sizeof(void *);
+	for (i = 0; i < words; ++i) {
+		void const *const *p_pointer = &((void const *const *)chunk)[i];
+		void const *pointer = atomic_read(p_pointer);
+		if (leak_addrok(pointer)) {
+			struct leak_footer *leak;
+			leak = gcleak_byaddr_locate(gcleak_byaddr_nreach_tree, (char *)pointer);
+			if (leak && (leak->lf_gcflags & LEAK_FOOTER_GCFLAG_HITMASK) != LEAK_FOOTER_GCFLAG_HITMASK)
+				leak->lf_gcflags += LEAK_FOOTER_GCFLAG_ONEHIT;
+		}
+	}
+	if (root->lf_prev) {
+		if (root->lf_next)
+			gccount__nreach__crossrefs_at(root->lf_next);
+		root = root->lf_prev;
+		goto again;
+	}
+	if (root->lf_next) {
+		root = root->lf_next;
+		goto again;
+	}
+}
+
+PRIVATE void DCALL gccount__nreach__crossrefs(void) {
+	if (gcleak_byaddr_nreach_tree)
+		gccount__nreach__crossrefs_at(gcleak_byaddr_nreach_tree);
+}
+
+
+PRIVATE NONNULL((1)) void DCALL
+gcmove__nreach__into__byhit_at(struct leak_footer *root) {
+	struct leak_footer *lhs, *rhs;
+again:
+	lhs = root->lf_prev;
+	rhs = root->lf_next;
+	gcleak_byhit_insert(&gcleak_byhit_tree, root);
+	if (lhs) {
+		if (rhs)
+			gcmove__nreach__into__byhit_at(rhs);
+		root = lhs;
+		goto again;
+	}
+	if (rhs) {
+		root = rhs;
+		goto again;
+	}
+}
+
+PRIVATE void DCALL gcmove__nreach__into__byhit(void) {
+	if (gcleak_byaddr_nreach_tree) {
+		gcmove__nreach__into__byhit_at(gcleak_byaddr_nreach_tree);
+		gcleak_byaddr_nreach_tree = NULL;
+	}
+}
+
+
+PRIVATE NONNULL((1)) void DCALL
+gcmove__foo__into__byid_at(struct leak_footer *root) {
+	struct leak_footer *lhs, *rhs;
+again:
+	lhs = root->lf_prev;
+	rhs = root->lf_next;
+	gcleak_byid_insert(&gcleak_byid_tree, root);
+	if (lhs) {
+		if (rhs)
+			gcmove__foo__into__byid_at(rhs);
+		root = lhs;
+		goto again;
+	}
+	if (rhs) {
+		root = rhs;
+		goto again;
+	}
+}
+
+PRIVATE void DCALL gcmove__byhit__into__byid(void) {
+	if (gcleak_byhit_tree) {
+		gcmove__foo__into__byid_at(gcleak_byhit_tree);
+		gcleak_byhit_tree = NULL;
+	}
+}
+
+PRIVATE void DCALL gcmove__byaddr__into__byid(void) {
+	if (gcleak_byaddr_tree) {
+		gcmove__foo__into__byid_at(gcleak_byaddr_tree);
+		gcleak_byaddr_tree = NULL;
+	}
+}
+
+PRIVATE void DCALL gcmove__byid__into__leaks(void) {
+	struct leak_footer *iter;
+	while ((iter = gcleak_byid_tree) != NULL) {
+		while (iter->lf_prev)
+			iter = iter->lf_prev;
+		gcleak_byid_removenode(&gcleak_byid_tree, iter);
+		leaks_insert(iter);
+	}
+}
+
+
+PRIVATE size_t DCALL gcdump__byhit(void) {
+	size_t result = 0;
+	if (gcleak_byhit_tree) {
+		struct leak_footer *iter = gcleak_byhit_tree;
+		while (iter->lf_prev)
+			iter = iter->lf_prev;
+		do {
+			result += do_DeeHeap_DumpMemoryLeaks_one(iter, true);
+		} while ((iter = gcleak_byhit_nextnode(gcleak_byhit_tree, iter)) != NULL);
+	}
+
+#if HAVE_DBG_HEAP_REGION
+	if (region_leak_mlist) {
+		struct Dee_heapregion *region = region_leak_mlist;
+		do {
+			if (!Dee_heapregion_get_gc_reachable(region)) {
+				result += region->hr_size;
+				Dee_DPRINTF("? : ? : Leaked %" PRFuSIZ " bytes from a custom 'Dee_heapregion': %p-%p\n",
+				            region->hr_size, (char *)region, (char *)region + region->hr_size - 1);
+			}
+		} while ((region = Dee_heapregion_getnext_opt(region)) != NULL);
+	}
+#endif /* HAVE_DBG_HEAP_REGION */
+	return result;
+}
+
+
+
+/* @return: (size_t)-1: Unsupported :( */
+PRIVATE size_t DCALL do_DeeHeap_DumpMemoryLeaks_GC_locked(void) {
+	size_t result = (size_t)-1;
+
+	/* #0: Reset state */
+	gcleak_byaddr_tree        = NULL;
+	gcleak_byaddr_nreach_tree = NULL;
+	gcleak_byhit_tree         = NULL;
+	gcleak_byid_tree          = NULL;
+
+	/* #1: Convert "leaks" into a by-address R/B-tree "gcleak_byaddr_tree" */
+	gcmove__leaks__into__gcleak_byaddr_tree();
+
+	/* #2: Scan static memory locations of the deemon core and all dex modules for
+	 *     stuff that looks like pointers. Every pointer found is checked for being
+	 *     located within "gcleak_byaddr_tree". If so: "LEAK_FOOTER_GCFLAG_REACH" */
+	if (!gcscan__statics())
+		goto convert_trees_to_byid;
+
+	/* #3: Same as #2, but repeat for stack memory, and contents of GP registers
+	 *     of every running thread. This is the aforementioned arch-/os-specific
+	 *     part of this whole process. */
+	if (!gcscan__threads())
+		goto convert_trees_to_byid;
+
+	/* #4: Enumerate "leaks_pending_remove" (by atomically reading its current head
+	 *     and walking its "lf_remlink" chain) and set "LEAK_FOOTER_GCFLAG_REACH"
+	 *     of every contained leak. -- this is needed to exclude pointers that were
+	 *     since freed in other threads from the list of leaks. */
+	gcscan__visit__leaks_pending_remove();
+
+	/* #5: Recursively check the bodies of "LEAK_FOOTER_GCFLAG_REACH"-nodes for
+	 *     other more pointers to other (not already reached) nodes apart of
+	 *     "gcleak_byaddr_tree". Only do this if "LEAK_FOOTER_GCFLAG_SCANNED"
+	 *     is not set, and always set "LEAK_FOOTER_GCFLAG_SCANNED" during this
+	 *     part. Repeat until no reachable, but not-scanned nodes remain. */
+	do {
+		/* ... */
+	} while (gcscan__visit__reachable());
+
+	/* #6: Take all nodes without "LEAK_FOOTER_GCFLAG_REACH" set out of
+	 *     "gcleak_byaddr_tree" and move them into "gcleak_byaddr_nreach_tree" */
+	gcmove__byaddr__into__nreach();
+
+	/* #7: Go every element of "gcleak_byaddr_nreach_tree" exactly once, and scan the
+	 *     body of every leak found within for nested pointers to other elements also
+	 *     found within "gcleak_byaddr_nreach_tree". For every such hit, increment the
+	 *     referenced leak's `lf_gcflags' field by 1, but don't increment so far that
+	 *     "LEAK_FOOTER_GCFLAG_RED" would be modified (stop one short of that
+	 *     potentially happening) */
+	gccount__nreach__crossrefs();
+
+	/* #8: Convert "gcleak_byaddr_nreach_tree" into "gcleak_byhit_tree", thus
+	 *     sorting all memory leaks by how often they reference each other. Here,
+	 *     leaks that are referenced less often than others are more interesting
+	 *     since those leaks represent leaked control structures, as opposed to
+	 *     leaked strings or similarly boring things... */
+	gcmove__nreach__into__byhit();
+
+	/* #9: Enumerate the elements of "gcleak_byhit_tree" from its minimum to
+	 *     its maximum, and print every encountered element as a leak. Also
+	 *     include info about how often each leak was referenced by some other
+	 *     leak, but otherwise do the same as `do_DeeHeap_DumpMemoryLeaks_ALL()'.
+	 *     Also like that function, must explicitly check "leaks_pending_remove"
+	 *     for containing discovered leaks **after** reading the "lf_file"
+	 *     pointer to every leak, so-as to exclude leaks that were since freed. */
+	result = gcdump__byhit();
+
+convert_trees_to_byid:
+	/* #10: Convert both "gcleak_byhit_tree" and "gcleak_byaddr_tree" (from #6)
+	 *      into "gcleak_byid_tree", thus re-sorting all still-allocated nodes
+	 *      into a form where they can easily be enumerated from oldest->newest
+	 *      in terms of when the specific allocation happened. */
+	gcmove__byhit__into__byid();
+	gcmove__byaddr__into__byid();
+
+	/* #11: Convert "gcleak_byid_tree" back into "leaks" such that the most-
+	 *      recently allocated chunk is at `leaks.lf_next', and the least-
+	 *      recently allocated chunk is at `leaks.lf_prev'. */
+	gcmove__byid__into__leaks();
+
+	return result;
+}
+
+/* @return: (size_t)-1: Unsupported :( */
+PRIVATE size_t DCALL do_DeeHeap_DumpMemoryLeaks_GC(void) {
+	size_t result;
+	dumpleaks_acquire_locks_gc();
+	result = do_DeeHeap_DumpMemoryLeaks_GC_locked();
+	dumpleaks_release_locks_gc();
+	return result;
+}
+#endif /* LEAK_DETECTION_GC */
+
+/* Dump info about all heap allocations that were allocated, but
+ * never Dee_Free()'d, nor untracked using `Dee_UntrackAlloc()'.
+ * Information about leaks is printed using `Dee_DPRINTF()'.
+ *
+ * @param: method: How One of `DeeHeap_DumpMemoryLeaks_*'
+ * @return: * : The total amount of memory leaked (in bytes) */
+#define DeeHeap_DumpMemoryLeaks_DEFINED
+PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(unsigned int method) {
+	size_t result = 0;
+	switch (method) {
+	case DeeHeap_DumpMemoryLeaks_GC_OR_ALL:
+#if LEAK_DETECTION_GC
+	case DeeHeap_DumpMemoryLeaks_GC:
+		result = do_DeeHeap_DumpMemoryLeaks_GC();
+		if (result != (size_t)-1)
+			break;
+		result = 0;
+		if (method == DeeHeap_DumpMemoryLeaks_GC)
+			break;
+		ATTR_FALLTHROUGH
+#endif /* LEAK_DETECTION_GC */
+	case DeeHeap_DumpMemoryLeaks_ALL:
+		result = do_DeeHeap_DumpMemoryLeaks_ALL();
+		break;
+	default: break;
+	}
+	return result;
+}
+
+
+#if LEAK_DETECTION_GC
+PRIVATE Dee_shared_lock_t leaks_gc_lock = Dee_SHARED_LOCK_INIT;
+#endif /* LEAK_DETECTION_GC */
 
 
 
@@ -5976,14 +7514,14 @@ PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(void) {
 
 PRIVATE ATTR_HOT NONNULL((1, 2)) void DCALL
 leak_insert_p(void *ptr, struct leak_footer *leak,
-              char const *file, unsigned int line) {
+              char const *file, int line) {
 	/* Hook "leak" into "ptr" */
 	mchunkptr p = mem2chunk(ptr);
 	size_t *p_tail = chunk_p_foot(p);
 	leak->lf_foot  = *p_tail;
 	leak->lf_chunk = ptr;
 	leak->lf_file  = file;
-	leak->lf_line  = line;
+	leak->lf_line  = (leak_footer_line_t)line;
 	*p_tail = (size_t)(uintptr_t)leak;
 
 	/* Allocate ID */
@@ -6013,7 +7551,7 @@ leak_insert_p(void *ptr, struct leak_footer *leak,
 
 /* Amend debug into to "ptr" and re-return. On error, dlfree(ptr) and return "NULL" */
 PRIVATE ATTR_HOT WUNUSED NONNULL((1)) void *DCALL
-leak_insert(void *ptr, char const *file, unsigned int line) {
+leak_insert(void *ptr, char const *file, int line) {
 	struct leak_footer *foot = leak_footer_alloc();
 	if likely(foot) {
 		leak_insert_p(ptr, foot, file, line);
@@ -6055,42 +7593,6 @@ PUBLIC ATTR_MALLOC WUNUSED void *
 }
 
 
-#ifdef Dee_BREAKPOINT_IS_NOOP
-#define fatal _DeeAssert_XFailf
-#else /* Dee_BREAKPOINT_IS_NOOP */
-#define fatal(expr, file, line, ...) \
-	(_DeeAssert_Failf(expr, file, line, __VA_ARGS__), Dee_BREAKPOINT())
-#endif /* !Dee_BREAKPOINT_IS_NOOP */
-
-#ifndef __ARCH_PAGESIZE_MIN
-#ifdef __ARCH_PAGESIZE
-#define __ARCH_PAGESIZE_MIN __ARCH_PAGESIZE
-#endif /* __ARCH_PAGESIZE */
-#endif /* !__ARCH_PAGESIZE_MIN */
-
-#ifdef __ARCH_PAGESIZE_MIN
-#define _lo_leak_addrok(p) ((uintptr_t)(p) >= __ARCH_PAGESIZE_MIN)
-#else /* __ARCH_PAGESIZE_MIN */
-#define _lo_leak_addrok(p) ((uintptr_t)(p) != 0)
-#endif /* !__ARCH_PAGESIZE_MIN */
-
-/* Try to figure out some known-bad address ranges so we can detect bad pointers. */
-#if defined(__i386__) || defined(__x86_64__) || defined(__arm__)
-#if (defined(__i386__) && __SIZEOF_POINTER__ == 4) && (defined(__linux__) || defined(__KOS__))
-/* Kernel lives in high 3/4 of address space */
-#define _hi_leak_addrok(p) ((uintptr_t)(p) < UINT32_C(0xC0000000))
-#elif defined(CONFIG_HOST_WINDOWS) || (!defined(__arm__) && (defined(__linux__) || defined(__KOS__)))
-/* Kernel lives in high 1/2 of address space */
-#define _hi_leak_addrok(p) ((uintptr_t)(p) < ((((size_t)-1) >> 1) + 1))
-#endif /* ... */
-#endif /* ... */
-
-#ifdef _hi_leak_addrok
-#define leak_addrok(p) (_lo_leak_addrok(p) && _hi_leak_addrok(p))
-#else /* _hi_leak_addrok */
-#define leak_addrok(p) _lo_leak_addrok(p)
-#endif /* !_hi_leak_addrok */
-
 #define DeeDbg_Free_DEFINED
 PUBLIC ATTR_HOT void
 (DCALL DeeDbg_Free)(void *ptr, char const *file, int line) {
@@ -6104,7 +7606,13 @@ PUBLIC ATTR_HOT void
 	/* Special handling required for flag4 memory */
 #if FLAG4_BIT_INDICATES_HEAP_REGION
 	if unlikely(flag4inuse(p)) {
+#if HAVE_DBG_HEAP_REGION
+		leaks_lock_acquire_and_reap(); /* Acquire+reap required for "DeeDbgHeap_DelHeapRegion_locked()" */
 		dlfree(ptr);
+		leaks_lock_release();
+#else /* HAVE_DBG_HEAP_REGION */
+		dlfree(ptr);
+#endif /* !HAVE_DBG_HEAP_REGION */
 		return;
 	}
 #endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
@@ -6168,8 +7676,16 @@ PUBLIC ATTR_HOT WUNUSED void *
 
 	/* Special handling required for flag4 memory */
 #if FLAG4_BIT_INDICATES_HEAP_REGION
-	if unlikely(flag4inuse(p))
+	if unlikely(flag4inuse(p)) {
+#if HAVE_DBG_HEAP_REGION
+		leaks_lock_acquire_and_reap(); /* Acquire+reap required for "DeeDbgHeap_DelHeapRegion_locked()" */
+		result = dlrealloc(ptr, n_bytes);
+		leaks_lock_release();
+		return result;
+#else /* HAVE_DBG_HEAP_REGION */
 		return dlrealloc(ptr, n_bytes);
+#endif /* !HAVE_DBG_HEAP_REGION */
+	}
 #endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
 
 	p_foot = chunk_p_foot(p);
@@ -6190,7 +7706,7 @@ PUBLIC ATTR_HOT WUNUSED void *
 	 * Since we're the owner of the heap chunk, we can just do this! */
 	if (leak->lf_file == NULL) {
 		leak->lf_file = file;
-		leak->lf_line = line;
+		leak->lf_line = (leak_footer_line_t)line;
 	}
 
 	/* Restore original footer */
@@ -6542,14 +8058,18 @@ again:
  * never Dee_Free()'d, nor untracked using `Dee_UntrackAlloc()'.
  * Information about leaks is printed using `Dee_DPRINTF()'.
  *
+ * @param: method: How One of `DeeHeap_DumpMemoryLeaks_*'
  * @return: * : The total amount of memory leaked (in bytes) */
 #define DeeHeap_DumpMemoryLeaks_DEFINED
-PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(void) {
+PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(unsigned int method) {
 	size_t result = 0;
-	leak_lock_acquire_and_reap();
-	if (leak_nodes)
-		result = dump_leaks_node(leak_nodes);
-	leak_lock_release();
+	if (method == DeeHeap_DumpMemoryLeaks_ALL ||
+	    method == DeeHeap_DumpMemoryLeaks_GC_OR_ALL) {
+		leak_lock_acquire_and_reap();
+		if (leak_nodes)
+			result = dump_leaks_node(leak_nodes);
+		leak_lock_release();
+	}
 	return result;
 }
 
@@ -7356,8 +8876,10 @@ PUBLIC ATTR_COLD void DCALL DeeHeap_CheckMemory(void) {
  * never Dee_Free()'d, nor untracked using `Dee_UntrackAlloc()'.
  * Information about leaks is printed using `Dee_DPRINTF()'.
  *
+ * @param: method: How One of `DeeHeap_DumpMemoryLeaks_*'
  * @return: * : The total amount of memory leaked (in bytes) */
-PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(void) {
+PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(unsigned int method) {
+	(void)method;
 	/* nothing */
 	return 0;
 }
@@ -7390,6 +8912,46 @@ DeeHeap_SetAllocBreakpoint(size_t id) {
 	return 0;
 }
 #endif /* !DeeHeap_GetAllocBreakpoint_DEFINED */
+
+
+#ifndef DeeDbgHeap_AddHeapRegion_DEFINED
+#define DeeDbgHeap_AddHeapRegion_DEFINED
+/* Attach debug info (for the sake of memory leaks as reported by `DeeHeap_DumpMemoryLeaks()',
+ * as well as `DeeHeap_DumpMemoryLeaks_GC' being able to recursively scan the payload areas of
+ * reachable heap chunks) to a custom "struct Dee_heapregion"
+ *
+ * These calls are entirely OPTIONAL, but if not called, `DeeHeap_DumpMemoryLeaks()' will not
+ * be able to inform you about heap chunks from `region' that are never free'd, or be able to
+ * identify `Dee_Malloc()' pointers stored in the payload areas of reachable chunks within the
+ * given `region' when those chunks are reachable and called using `DeeHeap_DumpMemoryLeaks_GC'
+ *
+ * WARNING: `DeeDbgHeap_DelHeapRegion()' is thread-safe, but only in those cases where you can
+ *          guaranty that at least 1 of `region's heap-chunks has not yet been freed, and will
+ *          not be freed by another thread during the call to this function. (iow: it may only
+ *          be called when there is chance that `hr_destroy' has been- or will be called before
+ *          the call has a chance to return)
+ *
+ * @param: file:   A filename that should appear when memory leaks are dumped.
+ *                 Note that unlike other debug-heap functions, this string is actually
+ *                 strdup()'d, meaning it's allowed to point to a dynamically allocated
+ *                 memory location.
+ * @param: region: The region to register/unregister debug information for.
+ *                 Even when not registered, `Dee_Free()' works as it should!
+ *                 These functions are only necessary for `DeeHeap_DumpMemoryLeaks()'!
+ * @return: * : Always re-returns "region". These APIs are intentionally designed to never fail
+ *              (or rather: to fail-safe), never block (indefinitely), and never return an error.
+ *              These API *may* however modify the given `region's `hr_tail.ht_zero' field. */
+PUBLIC ATTR_RETNONNULL NONNULL((1)) struct Dee_heapregion *DCALL
+DeeDbgHeap_AddHeapRegion(struct Dee_heapregion *__restrict region, char const *file) {
+	(void)file;
+	return region;
+}
+
+PUBLIC ATTR_RETNONNULL NONNULL((1)) struct Dee_heapregion *DCALL
+DeeDbgHeap_DelHeapRegion(struct Dee_heapregion *__restrict region) {
+	return region;
+}
+#endif /* !DeeDbgHeap_AddHeapRegion_DEFINED */
 
 
 

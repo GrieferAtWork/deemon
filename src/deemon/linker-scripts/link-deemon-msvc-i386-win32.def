@@ -121,6 +121,8 @@ EXPORTS
 	DeeDbgGCObject_TryCalloc@12=_DeeDbgGCObject_TryCalloc@12
 	DeeDbgGCObject_TryMalloc@12=_DeeDbgGCObject_TryMalloc@12
 	DeeDbgGCObject_TryRealloc@16=_DeeDbgGCObject_TryRealloc@16
+	DeeDbgHeap_AddHeapRegion@8=_DeeDbgHeap_AddHeapRegion@8
+	DeeDbgHeap_DelHeapRegion@4=_DeeDbgHeap_DelHeapRegion@4
 	DeeDbgObject_Free@12=_DeeDbgObject_Free@12
 	DeeDbgObject_UntrackAlloc@12=_DeeDbgObject_UntrackAlloc@12
 	DeeDbgSlab_Calloc10@8=_DeeDbgSlab_Calloc10@8
@@ -344,7 +346,7 @@ EXPORTS
 	DeeHashSet_Remove@8=_DeeHashSet_Remove@8
 	DeeHashSet_Unify@8=_DeeHashSet_Unify@8
 	DeeHeap_CheckMemory@0=_DeeHeap_CheckMemory@0
-	DeeHeap_DumpMemoryLeaks@0=_DeeHeap_DumpMemoryLeaks@0
+	DeeHeap_DumpMemoryLeaks@4=_DeeHeap_DumpMemoryLeaks@4
 	DeeHeap_Footprint@0=_DeeHeap_Footprint@0
 	DeeHeap_GetAllocBreakpoint@0=_DeeHeap_GetAllocBreakpoint@0
 	DeeHeap_GetFootprintLimit@0=_DeeHeap_GetFootprintLimit@0

@@ -1162,8 +1162,8 @@ struct Dee_yield_function_iterator_object {
 	                                        * [OVERRIDE(.cf_argv, DREF [0..1][(!= NULL) == (:yi_func != NULL)])]
 	                                        * [OVERRIDE(.cf_ip, [?..1][valid_if(:yi_func != NULL)])]
 	                                        * [OVERRIDE(.cf_this, DREF [0..1])]
-	                                        * [.cf_argc == yi_func->yf_this || 0]
-	                                        * [.cf_argv == yi_func->yf_this || NULL]
+	                                        * [.cf_argc == yi_func->yf_argc || 0]
+	                                        * [.cf_argv == yi_func->yf_argv || NULL]
 	                                        * [.cf_this == yi_func->yf_this || NULL]
 	                                        * Execution frame of this iterator. */
 #ifndef CONFIG_NO_THREADS

@@ -116,7 +116,7 @@ struct /*ATTR_ALIGNED(Dee_HEAPCHUNK_ALIGN)*/ Dee_heapchunk {
 
 struct /*ATTR_ALIGNED(Dee_HEAPCHUNK_ALIGN)*/ Dee_heaptail {
 	size_t ht_lastsize; /* Size of the last *real* chunk within the region (in bytes); must be multiple of "Dee_HEAPCHUNK_ALIGN" */
-	size_t ht_zero;     /* Always zero */
+	size_t ht_zero;     /* Always zero (but see `DeeDbgHeap_AddHeapRegion()') */
 };
 
 struct /*ATTR_ALIGNED(Dee_HEAPCHUNK_ALIGN)*/ Dee_heapregion {
@@ -128,6 +128,16 @@ struct /*ATTR_ALIGNED(Dee_HEAPCHUNK_ALIGN)*/ Dee_heapregion {
 //	byte_t               hr_data[hr_size - (6 * sizeof(void *))]; /* Region payload (containing more chunks...) */
 //	struct Dee_heaptail  hr_tail;                                 /* Region tail (see above) */
 };
+
+#define Dee_heapregion_gettail(self) \
+	((struct Dee_heaptail *)((__BYTE_TYPE__ *)(self) + (self)->hr_size - sizeof(struct Dee_heaptail)))
+#define Dee_heapregion_gethead(self)  (&(self)->hr_first)
+#define Dee_heapregion_getstart(self) Dee_heapregion_gethead(self)
+#define Dee_heapregion_getend(self)   ((struct Dee_heapchunk *)Dee_heapregion_gettail(self))
+#define Dee_heapchunk_getnext(self)   ((struct Dee_heapchunk *)((__BYTE_TYPE__ *)(self) + ((self)->hc_head & ~7)))
+
+#define Dee_heapregion_getdata(self)     ((__BYTE_TYPE__ *)(&(self)->hr_first + 1))
+#define Dee_heapregion_getdatasize(self) ((self)->hr_size - (sizeof(struct Dee_heapregion) + sizeof(struct Dee_heaptail)))
 
 /* ============================================================================== */
 
@@ -148,8 +158,14 @@ DFUNDEF void DCALL DeeHeap_CheckMemory(void);
  * never Dee_Free()'d, nor untracked using `Dee_UntrackAlloc()'.
  * Information about leaks is printed using `Dee_DPRINTF()'.
  *
+ * @param: method: How One of `DeeHeap_DumpMemoryLeaks_*'
  * @return: * : The total amount of memory leaked (in bytes) */
-DFUNDEF size_t DCALL DeeHeap_DumpMemoryLeaks(void);
+DFUNDEF size_t DCALL DeeHeap_DumpMemoryLeaks(unsigned int method);
+#define DeeHeap_DumpMemoryLeaks_ALL       0 /* Consider all allocated memory (except Dee_UntrackAlloc) as leaks */
+#define DeeHeap_DumpMemoryLeaks_GC        1 /* Try to do some arch-/os- specific GC-style checking to exclude chunks that
+                                             * *appear* referenced by host "static", "stack", or "registers" storage locations
+                                             * May not be supported by all hosts. If unsupported, this method is a no-op. */
+#define DeeHeap_DumpMemoryLeaks_GC_OR_ALL 2 /* `DeeHeap_DumpMemoryLeaks_GC' (if supported), else `DeeHeap_DumpMemoryLeaks_ALL' */
 
 /* Get/set the memory allocation breakpoint.
  * - When the deemon heap was built to track memory leaks, an optional
@@ -221,6 +237,36 @@ DFUNDEF int DCALL DeeHeap_SetOpt(int option, size_t value);
  * @return: * : The # of bytes released back to the system. */
 DFUNDEF size_t DCALL DeeHeap_Trim(size_t pad);
 
+
+/* Attach debug info (for the sake of memory leaks as reported by `DeeHeap_DumpMemoryLeaks()',
+ * as well as `DeeHeap_DumpMemoryLeaks_GC' being able to recursively scan the payload areas of
+ * reachable heap chunks) to a custom "struct Dee_heapregion"
+ *
+ * These calls are entirely OPTIONAL, but if not called, `DeeHeap_DumpMemoryLeaks()' will not
+ * be able to inform you about heap chunks from `region' that are never free'd, or be able to
+ * identify `Dee_Malloc()' pointers stored in the payload areas of reachable chunks within the
+ * given `region' when those chunks are reachable and called using `DeeHeap_DumpMemoryLeaks_GC'
+ *
+ * WARNING: `DeeDbgHeap_DelHeapRegion()' is thread-safe, but only in those cases where you can
+ *          guaranty that at least 1 of `region's heap-chunks has not yet been freed, and will
+ *          not be freed by another thread during the call to this function. (iow: it may only
+ *          be called when there is chance that `hr_destroy' has been- or will be called before
+ *          the call has a chance to return)
+ *
+ * @param: file:   A filename that should appear when memory leaks are dumped.
+ *                 Note that unlike other debug-heap functions, this string is actually
+ *                 strdup()'d, meaning it's allowed to point to a dynamically allocated
+ *                 memory location.
+ * @param: region: The region to register/unregister debug information for.
+ *                 Even when not registered, `Dee_Free()' works as it should!
+ *                 These functions are only necessary for `DeeHeap_DumpMemoryLeaks()'!
+ * @return: * : Always re-returns "region". These APIs are intentionally designed to never fail
+ *              (or rather: to fail-safe), never block (indefinitely), and never return an error.
+ *              These API *may* however modify the given `region's `hr_tail.ht_zero' field. */
+DFUNDEF ATTR_RETNONNULL NONNULL((1)) struct Dee_heapregion *DCALL
+DeeDbgHeap_AddHeapRegion(struct Dee_heapregion *__restrict region, char const *file);
+DFUNDEF ATTR_RETNONNULL NONNULL((1)) struct Dee_heapregion *DCALL
+DeeDbgHeap_DelHeapRegion(struct Dee_heapregion *__restrict region);
 
 #endif /* __CC__ */
 
