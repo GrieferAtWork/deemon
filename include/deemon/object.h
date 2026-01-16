@@ -358,8 +358,11 @@ DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExactOpt(DeeObject const *ob
 
 
 struct Dee_weakref;
+#ifndef Dee_weakref_callback_t_DEFINED
+#define Dee_weakref_callback_t_DEFINED
 /* Prototype for callbacks to-be invoked when a weakref'd object gets destroyed. */
 typedef NONNULL_T((1)) void (DCALL *Dee_weakref_callback_t)(struct Dee_weakref *__restrict self);
+#endif /* !Dee_weakref_callback_t_DEFINED */
 
 
 /* Object weak reference tracing. */
@@ -475,6 +478,27 @@ DFUNDEF NONNULL((1, 2)) bool
 (DCALL Dee_weakref_init)(struct Dee_weakref *__restrict self,
                          DeeObject *__restrict ob);
 #endif /* !__INTELLISENSE__ */
+
+/* Advanced API to atomically initialize many weak references all at once:
+ * >> size_t weakref_c = ...;
+ * >> struct Dee_weakref **weakref_v = ...;
+ * >> weakref_v[0].wr_obj = (DREF DeeObject *)obj; // Inherited by "Dee_weakref_initmany_unlock_and_inherit"
+ * >> weakref_v[0].wr_del = ...;
+ * >> ...
+ * >> Dee_weakref_initmany_lock(weakref_v, weakref_c);
+ * >> // Potentially do some stuff that needs to happen atomically...
+ * >> Dee_weakref_initmany_exec(weakref_v, weakref_c);
+ * >> Dee_weakref_initmany_unlock_and_inherit(weakref_v, weakref_c);
+ *
+ * WARNING: `Dee_weakref_initmany_unlock_and_inherit()' will clobber the contents of
+ *          `weakref_v' as a vector of object references that is returned (and must
+ *          be decref'd by the caller) */
+DFUNDEF WUNUSED bool DCALL Dee_weakref_initmany_trylock(struct Dee_weakref *const *weakref_v, size_t weakref_c, struct Dee_unlockinfo *unlock);
+DFUNDEF void DCALL Dee_weakref_initmany_lock(struct Dee_weakref *const *weakref_v, size_t weakref_c);
+DFUNDEF void DCALL Dee_weakref_initmany_exec(struct Dee_weakref *const *weakref_v, size_t weakref_c);
+DFUNDEF DREF DeeObject **DCALL Dee_weakref_initmany_unlock_and_inherit(struct Dee_weakref **weakref_v, size_t weakref_c);
+DFUNDEF void DCALL Dee_weakref_initmany_unlock(struct Dee_weakref *const *weakref_v, size_t weakref_c);
+
 
 /* Finalize a given weak reference. */
 DFUNDEF NONNULL((1)) void DCALL Dee_weakref_fini(struct Dee_weakref *__restrict self);
@@ -3972,7 +3996,7 @@ struct Dee_type_operator {
                                         * or secondary exceptions in user-code functions)
                                         * WARNING: This flag must be inherited explicitly by sub-classes! */
 #define Dee_TP_FMOVEANY         0x0008 /* The type accepts any other object as second operator to `tp_move_assign' */
-/*      Dee_TP_F                0x0010  * ... */
+#define Dee_TP_FDEEPIMMUTABLE   0x0010 /* Instances of this type are deeply immutable, meaning "deepcopy INSTANCE" is allowed to just re-return "INSTANCE" */
 /*      Dee_TP_F                0x0020  * ... */
 #define Dee_TP_FINHERITCTOR     0x0040 /* This type inherits its constructor from `tp_base'.
                                         * Additionally, if no assign/move-assign operator is defined, those are inherited as well. */
@@ -4026,6 +4050,7 @@ struct Dee_type_operator {
 #define TP_FTRUNCATE        Dee_TP_FTRUNCATE
 #define TP_FINTERRUPT       Dee_TP_FINTERRUPT
 #define TP_FMOVEANY         Dee_TP_FMOVEANY
+#define TP_FDEEPIMMUTABLE   Dee_TP_FDEEPIMMUTABLE
 #define TP_FINHERITCTOR     Dee_TP_FINHERITCTOR
 #define TP_FABSTRACT        Dee_TP_FABSTRACT
 #define TP_FNAMEOBJECT      Dee_TP_FNAMEOBJECT
@@ -4155,6 +4180,7 @@ struct Dee_type_object {
 #define DeeType_IsSequence(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_seq != NULL)
 #define DeeType_IsIntTruncated(x)        (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FTRUNCATE)
 #define DeeType_HasMoveAny(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FMOVEANY)
+#define DeeType_IsDeepImmutable(x)       (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FDEEPIMMUTABLE)
 #define DeeType_IsIterator(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_iter_next != NULL)
 #define DeeType_IsTypeType(x)            DeeType_Extends(Dee_REQUIRES_OBJECT(DeeTypeObject const, x), &DeeType_Type)
 #define DeeType_IsCustom(x)              (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FHEAP) /* Custom types are those not pre-defined, but created dynamically. */
@@ -4181,6 +4207,13 @@ INTDEF WUNUSED NONNULL((1)) Dee_funptr_t (DCALL DeeType_GetTpSerialize)(DeeTypeO
  * @return: 0 : Instance size is unknown (non-standard allocator used) */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) size_t
 (DCALL DeeType_GetInstanceSize)(DeeTypeObject const *__restrict self);
+
+/* Check if "self" may be considered as deep-immutable.
+ * This is a (somewhat smarter) helper-wrapper around "DeeType_IsDeepImmutable()"
+ * that does a couple of extra checks for certain types of shallow-immutable
+ * objects, like "Tuple" of "_SeqOne". */
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool
+(DCALL DeeObject_IsDeepImmutable)(DeeObject const *__restrict self);
 
 
 /* Helpers for allocating/freeing fixed-length (non-variable) type instances. */

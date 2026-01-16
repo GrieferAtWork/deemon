@@ -726,7 +726,7 @@ sci_serialize(SeqCombinationsIterator *__restrict self,
 	if (generic_proxy__serialize((ProxyObject *)self, writer, out_addr))
 		goto err;
 	out = DeeSerial_Addr2Mem(writer, out_addr, SeqCombinationsIterator);
-	Dee_weakref_initempty(&out->sci_view);
+	Dee_weakref_initempty(&out->sci_view); /* No need to serialize -- only used as a lazy cache */
 	for (i = 0; i < idx_count; ++i) {
 		out->sci_idx[i] = atomic_read(&self->sci_idx[i]);
 	}

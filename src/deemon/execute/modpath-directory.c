@@ -665,7 +665,7 @@ PUBLIC DeeTypeObject DeeBuiltin_ImportType = {
 	                         "getattr->?DModule\n"
 	                         "\n"
 	                         "call(" import_import_params ")->?DModule"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FFINAL | TP_FNAMEOBJECT,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FFINAL | TP_FNAMEOBJECT | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeCallable_Type,

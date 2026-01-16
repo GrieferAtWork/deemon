@@ -83,7 +83,9 @@ DeeSuper_Of(DeeObject *__restrict self);
 
 /* Constructor-related operators */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TCopy(DeeTypeObject *tp_self, DeeObject *self);
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDeepCopy(DeeTypeObject *tp_self, DeeObject *self);
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TAssign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TMoveAssign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 

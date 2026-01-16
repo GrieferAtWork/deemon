@@ -34,6 +34,9 @@
 #include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#ifdef CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
+#include <deemon/deepcopy.h>
+#endif /* CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
 
 #include <hybrid/host.h> /* __ARCH_VA_LIST_IS_STACK_POINTER */
 
@@ -598,6 +601,24 @@ DeeObject_Newf(DeeTypeObject *object_type,
 STATIC_ASSERT(offsetof(DeeTypeObject, tp_init.tp_alloc.tp_deep_ctor) ==
               offsetof(DeeTypeObject, tp_init.tp_var.tp_deep_ctor));
 
+#ifdef CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
+#ifndef DEFINE_TYPED_OPERATORS
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeObject_DeepCopy(DeeObject *__restrict self) {
+	DeeObject *result;
+	DeeDeepCopyContext ctx;
+	DeeDeepCopy_Init(&ctx);
+	result = DeeDeepCopy_CopyObject(&ctx, self);
+	if unlikely(!result)
+		goto err;
+	DeeDeepCopy_Pack(&ctx);
+	return result;
+err:
+	DeeDeepCopy_Fini(&ctx);
+	return NULL;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+#else /* CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
 DEFINE_OPERATOR(DREF DeeObject *, DeepCopy, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	DREF DeeObject *result;
 	DeeThreadObject *thread_self = DeeThread_Self();
@@ -740,6 +761,7 @@ err_result:
 	Dee_Clear(result);
 	goto done;
 }
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
 
 DEFINE_OPERATOR(DREF DeeObject *, Copy, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	DREF DeeObject *result;
@@ -751,11 +773,15 @@ do_invoke_var_copy:
 		}
 		if (tp_self->tp_init.tp_var.tp_deep_ctor) {
 do_invoke_var_deep:
+#ifdef CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
+			return DeeObject_DeepCopy(self);
+#else /* CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
 #ifdef DEFINE_TYPED_OPERATORS
 			return DeeObject_TDeepCopy(tp_self, self);
 #else /* DEFINE_TYPED_OPERATORS */
 			return DeeObject_DeepCopy(self);
 #endif /* !DEFINE_TYPED_OPERATORS */
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
 		}
 		if (tp_self->tp_init.tp_var.tp_any_ctor) {
 do_invoke_var_any_ctor:

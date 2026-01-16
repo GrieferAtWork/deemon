@@ -536,7 +536,7 @@ INTERN DeeTypeObject DeeSType_Type = {
 	                         "call(types!:?GStructuredType)->?GFunction\n"
 	                         "Construct a new function type using this type as return type, "
 	                         /**/ "or construct a new instance of @this ?GStructuredType"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeType_Type,

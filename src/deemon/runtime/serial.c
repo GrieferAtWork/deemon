@@ -248,6 +248,26 @@ err:
 }
 
 
+
+/* Helper wrapper around `DeeSerial_PutWeakrefEx()' */
+PUBLIC WUNUSED NONNULL((1, 3)) int
+(DCALL DeeSerial_PutWeakref)(DeeSerial *__restrict self,
+                             Dee_seraddr_t addrof_weakref,
+                             struct Dee_weakref *__restrict value) {
+	int result;
+	DREF DeeObject *ob = Dee_weakref_lock(value);
+	if (!ob) {
+		struct Dee_weakref *out;
+		out = DeeSerial_Addr2Mem(self, addrof_weakref, struct Dee_weakref);
+		Dee_weakref_initempty(out);
+		return 0;
+	}
+	result = DeeSerial_PutWeakrefEx(self, addrof_weakref, ob, value->wr_del);
+	Dee_Decref_unlikely(ob);
+	return result;
+}
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_RUNTIME_SERIAL_C */

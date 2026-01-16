@@ -109,8 +109,10 @@ DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL DeeGC_Untrack(DeeObject *_
 
 /* Track all GC objects in range [first,last], all of which have
  * already been linked together using their `struct gc_head_link' */
-DFUNDEF NONNULL((1, 2)) void DCALL
-DeeGC_TrackAll(DeeObject *first, DeeObject *last);
+DFUNDEF WUNUSED bool DCALL DeeGC_TrackMany_TryLock(void);
+DFUNDEF void DCALL DeeGC_TrackMany_Lock(void);
+DFUNDEF NONNULL((1, 2)) void DCALL DeeGC_TrackMany_Exec(DeeObject *first, DeeObject *last);
+DFUNDEF void DCALL DeeGC_TrackMany_Unlock(void);
 
 #define DeeGC_TRACK(T, ob)   ((DREF T *)DeeGC_Track(Dee_AsObject(ob)))
 #define DeeGC_UNTRACK(T, ob) ((DREF T *)DeeGC_Untrack(Dee_AsObject(ob)))

@@ -46,6 +46,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/operator-hints.h>
+#include <deemon/property.h>
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/set.h>
@@ -344,6 +345,128 @@ again:
 	atomic_write(&list->wl_nodes, self);  /* WEAKREF_UNLOCK(list) */
 	return true;
 }
+
+PRIVATE NONNULL((3)) bool DCALL
+Dee_weakref_initmany_contains_ob(struct Dee_weakref *const *weakref_v,
+                                 size_t weakref_c, DeeObject *ob) {
+	size_t i;
+	for (i = 0; i < weakref_c; ++i) {
+		struct Dee_weakref *wref = weakref_v[i];
+		if (wref->wr_obj == ob)
+			return true;
+	}
+	return false;
+}
+
+/* Advanced API to atomically initialize many weak references all at once:
+ * >> size_t weakref_c = ...;
+ * >> struct Dee_weakref **weakref_v = ...;
+ * >> weakref_v[0].wr_obj = (DREF DeeObject *)obj; // Inherited by "Dee_weakref_initmany_unlock_and_inherit"
+ * >> weakref_v[0].wr_del = ...;
+ * >> ...
+ * >> Dee_weakref_initmany_lock(weakref_v, weakref_c);
+ * >> // Potentially do some stuff that needs to happen atomically...
+ * >> Dee_weakref_initmany_exec(weakref_v, weakref_c);
+ * >> Dee_weakref_initmany_unlock_and_inherit(weakref_v, weakref_c);
+ *
+ * WARNING: `Dee_weakref_initmany_unlock_and_inherit()' will clobber the contents of
+ *          `weakref_v' as a vector of object references that is returned (and must
+ *          be decref'd by the caller) */
+PUBLIC WUNUSED bool DCALL
+Dee_weakref_initmany_trylock(struct Dee_weakref *const *weakref_v, size_t weakref_c,
+                             struct Dee_unlockinfo *unlock) {
+	size_t i;
+	for (i = 0; i < weakref_c; ++i) {
+		struct Dee_weakref *wref = weakref_v[i];
+		DeeObject *ob = wref->wr_obj;
+		struct weakref_list *list = WEAKREFS_GET(ob);
+		struct weakref *next;
+		if (!TRYLOCK_POINTER(list->wl_nodes)) {
+			if (Dee_weakref_initmany_contains_ob(weakref_v, weakref_c, ob))
+				continue;
+			Dee_weakref_initmany_unlock(weakref_v, i);
+			Dee_unlockinfo_xunlock(unlock);
+			WAITFOR_POINTER(list->wl_nodes);
+			return false;
+		}
+		next = (struct weakref *)GET_POINTER(list->wl_nodes);
+		if (next && unlikely(!WEAKREF_TRYLOCK(next))) {
+			UNLOCK_POINTER(list->wl_nodes);
+			Dee_weakref_initmany_unlock(weakref_v, i);
+			Dee_unlockinfo_xunlock(unlock);
+			SCHED_YIELD();
+			return false;
+		}
+	}
+	return true;
+}
+
+PUBLIC void DCALL
+Dee_weakref_initmany_lock(struct Dee_weakref *const *weakref_v, size_t weakref_c) {
+	while (!Dee_weakref_initmany_trylock(weakref_v, weakref_c, NULL)) {
+		/* ... */
+	}
+}
+
+PUBLIC void DCALL
+Dee_weakref_initmany_exec(struct Dee_weakref *const *weakref_v, size_t weakref_c) {
+	size_t i;
+	for (i = 0; i < weakref_c; ++i) {
+		struct Dee_weakref *wref = weakref_v[i];
+		DeeObject *ob = wref->wr_obj;
+		struct weakref_list *list = WEAKREFS_GET(ob);
+		struct weakref *next = (struct weakref *)GET_POINTER(list->wl_nodes);
+		wref->wr_pself = &list->wl_nodes;
+		wref->wr_next = (struct weakref *)((uintptr_t)next | PTRLOCK_LOCK_MASK);
+		if (next) {
+			ASSERT(next->wr_pself == &list->wl_nodes);
+			ASSERT(next->wr_obj == ob);
+			next->wr_pself = &wref->wr_next;
+			WEAKREF_UNLOCK(next);
+		}
+	}
+}
+
+PUBLIC DREF DeeObject **DCALL
+Dee_weakref_initmany_unlock_and_inherit(struct Dee_weakref **weakref_v, size_t weakref_c) {
+	DREF DeeObject **result = (DREF DeeObject **)weakref_v;
+	while (weakref_c--) {
+		struct Dee_weakref *wref = weakref_v[weakref_c];
+		DREF DeeObject *ob = wref->wr_obj;
+		struct weakref_list *list;
+		struct weakref *next;
+		result[weakref_c] = ob; /* Inherit reference */
+		if (Dee_weakref_initmany_contains_ob(weakref_v, weakref_c, ob))
+			continue; /* Happens later... */
+		list = WEAKREFS_GET(ob);
+		next = (struct weakref *)GET_POINTER(list->wl_nodes);
+		ASSERTF(next, "How is there no node? We just added (at least) one!");
+		ASSERT(next->wr_pself == &list->wl_nodes);
+		ASSERT(next->wr_obj == ob);
+		WEAKREF_UNLOCK(next);
+		UNLOCK_POINTER(list->wl_nodes);
+	}
+	return result;
+}
+
+PUBLIC void DCALL
+Dee_weakref_initmany_unlock(struct Dee_weakref *const *weakref_v, size_t weakref_c) {
+	while (weakref_c--) {
+		struct Dee_weakref *wref = weakref_v[weakref_c];
+		DeeObject *ob = wref->wr_obj;
+		struct weakref_list *list;
+		struct weakref *next;
+		if (Dee_weakref_initmany_contains_ob(weakref_v, weakref_c, ob))
+			continue; /* Happens later... */
+		list = WEAKREFS_GET(ob);
+		next = (struct weakref *)GET_POINTER(list->wl_nodes);
+		if (next)
+			WEAKREF_UNLOCK(next);
+		UNLOCK_POINTER(list->wl_nodes);
+	}
+}
+
+
 
 #ifdef __INTELLISENSE__
 PUBLIC NONNULL((1, 2)) void
@@ -2530,6 +2653,11 @@ object_bound_true_module(DeeObject *__restrict self) {
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instance_get_itable(DeeObject *__restrict self);
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+object_get_deep_immutable(DeeObject *__restrict self) {
+	return_bool(DeeObject_IsDeepImmutable(self));
+}
+
 /* Runtime-versions of compiler-intrinsic standard attributes. */
 PRIVATE struct type_getset tpconst object_getsets[] = {
 	TYPE_GETTER_AB_F(STR_this, &DeeObject_NewRef,
@@ -2553,6 +2681,11 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	                 "For non-user-defined classes (aka. when ${this.class.__isclass__} is ?f), "
 	                 /**/ "an empty sequence is returned.\n"
 	                 "The class-attribute table can be accessed through ?A__ctable__?DType."),
+	TYPE_GETTER_AB_F("__deep_immutable__", &object_get_deep_immutable,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Dbool\n"
+	                 "True if this object is deep immutable (meaning "
+	                 /**/ "that $deepcopy would return re-return $this)"),
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	TYPE_GETTER_BOUND_F(STR___module__, &object_get_module, &object_bound_module,
 	                    METHOD_FCONSTCALL,
@@ -3136,8 +3269,9 @@ type_serialize(DeeTypeObject *__restrict self,
 	DeeTypeObject *out;
 	if (DeeSerial_XPutObject(writer, ADDROF(tp_base), self->tp_base))
 		goto err;
+	if (DeeSerial_PutWeakref(writer, ADDROF(tp_module), &self->tp_module))
+		goto err;
 	out = DeeSerial_Addr2Mem(writer, addr, DeeTypeObject);
-	Dee_weakref_initempty(&out->tp_module); /* Module info is lost here */
 	weakref_support_init(out);
 	out->tp_name     = NULL;
 	out->tp_doc      = NULL;
@@ -4830,6 +4964,97 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) size_t
 }
 
 
+/* Check if "self" may be considered as deep-immutable.
+ * This is a (somewhat smarter) helper-wrapper around "DeeType_IsDeepImmutable()"
+ * that does a couple of extra checks for certain types of shallow-immutable
+ * objects, like "Tuple" of "_SeqOne". */
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) bool
+(DCALL DeeObject_IsDeepImmutable)(DeeObject const *__restrict self) {
+	DeeTypeObject *tp;
+again:
+	tp = Dee_TYPE(self);
+	if (DeeType_IsDeepImmutable(tp))
+		return true;
+	ASSERTF(!DeeType_IsTypeType(tp), "All type-types must be marked with 'TP_FDEEPIMMUTABLE'");
+
+	/* Special handling for certain types... */
+	if (tp == &DeeTuple_Type) {
+		size_t i;
+		DeeTupleObject *me = (DeeTupleObject *)self;
+		for (i = 0; i < me->t_size; ++i) {
+			if (!DeeObject_IsDeepImmutable(me->t_elem[i]))
+				return false;
+		}
+		return true;
+	} else if (tp == &DeeNullableTuple_Type) {
+		size_t i;
+		DeeTupleObject *me = (DeeTupleObject *)self;
+		for (i = 0; i < me->t_size; ++i) {
+			if (me->t_elem[i] && !DeeObject_IsDeepImmutable(me->t_elem[i]))
+				return false;
+		}
+		return true;
+	} else if (tp == &DeeRoDict_Type) {
+		DeeRoDictObject *me = (DeeRoDictObject *)self;
+		Dee_dict_vidx_t i;
+		for (i = 0; i < me->rd_vsize; ++i) {
+			struct Dee_dict_item *it = &me->rd_vtab[i];
+			if (it->di_key) {
+				if (!DeeObject_IsDeepImmutable(it->di_key))
+					return false;
+				if (!DeeObject_IsDeepImmutable(it->di_value))
+					return false;
+			}
+		}
+		return true;
+	} else if (tp == &DeeRoSet_Type) {
+		DeeRoSetObject *me = (DeeRoSetObject *)self;
+		size_t i;
+		for (i = 0; i <= me->rs_mask; ++i) {
+			struct Dee_roset_item *it = &me->rs_elem[i];
+			if (it->rsi_key && !DeeObject_IsDeepImmutable(it->rsi_key))
+				return false;
+		}
+		return true;
+#if 0 /* Already handled by "ProxyObject" below */
+	} else if (tp == &DeeSeqOne_Type) {
+		self = DeeSeqOne_GET(self);
+		goto again;
+#endif
+	} else if (tp == &DeeProperty_Type) {
+		DeePropertyObject *me = (DeePropertyObject *)self;
+		return (!me->p_get || DeeObject_IsDeepImmutable(me->p_get)) &&
+		       (!me->p_del || DeeObject_IsDeepImmutable(me->p_del)) &&
+		       (!me->p_set || DeeObject_IsDeepImmutable(me->p_set));
+	} else if (tp == &DeeSuper_Type) {
+		self = DeeSuper_SELF(self);
+		goto again;
+	} else if (!(tp->tp_flags & TP_FVARIABLE)) {
+		/* Check if "tp" uses special, known copy-operator (this catches a bunch of sequence proxy types) */
+		if (tp->tp_init.tp_alloc.tp_copy_ctor == (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&generic_proxy__copy_alias) {
+			ProxyObject *me = (ProxyObject *)self;
+			self = me->po_obj;
+			goto again;
+		} else if (tp->tp_init.tp_alloc.tp_copy_ctor == (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&generic_proxy2__copy_alias12) {
+			ProxyObject2 *me = (ProxyObject2 *)self;
+			if (!DeeObject_IsDeepImmutable(me->po_obj1))
+				return false;
+			self = me->po_obj2;
+			goto again;
+		} else if (tp->tp_init.tp_alloc.tp_copy_ctor == (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&generic_proxy3__copy_alias123) {
+			ProxyObject3 *me = (ProxyObject3 *)self;
+			if (!DeeObject_IsDeepImmutable(me->po_obj1))
+				return false;
+			if (!DeeObject_IsDeepImmutable(me->po_obj2))
+				return false;
+			self = me->po_obj3;
+			goto again;
+		}
+	}
+	return false;
+}
+
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 type_get_module(DeeTypeObject *__restrict self) {
 	DREF DeeModuleObject *result;
@@ -4943,6 +5168,9 @@ PRIVATE struct type_member tpconst type_members[] = {
 	                         "True if this type is #Iabstract, meaning it can be used as an interface"),
 	TYPE_MEMBER_BITFIELD_DOC("__isvariable__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FVARIABLE,
 	                         "True if instances of this type have a variable size (s.a. ?#__instancesize__)"),
+	TYPE_MEMBER_BITFIELD_DOC("__deep_immutable__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FDEEPIMMUTABLE,
+	                         "True if instances of this type are deep immutable (meaning "
+	                         /**/ "that $deepcopy always re-returns the original object)"),
 	TYPE_MEMBER_BITFIELD("__isgc__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FGC),
 	TYPE_MEMBER_FIELD_DOC("__isclass__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_class),
 	                      "True if this type is a user-defined class (s.a. ?#__class__)"),
@@ -5312,7 +5540,11 @@ PUBLIC DeeTypeObject DeeType_Type = {
 	/* .tp_name     = */ DeeString_STR(&str_Type),
 	/* .tp_doc      = */ DOC("The so-called Type-Type, that is the type of anything that is "
 	                         /**/ "also a Type, such as ?Dint or ?DList, or even ?. itself"),
-	/* .tp_flags    = */ TP_FGC | TP_FNAMEOBJECT,
+	/* NOTE: The "TP_FDEEPIMMUTABLE" flag here is actually kind-of wrong: Types can have
+	 *       static members that might in turn not be immutable. However, it is expected
+	 *       behavior that "deepcopy MyClass()" will just return another instance of
+	 *       `MyClass', and not an instance of a new class that is a copy of MyClass! */
+	/* .tp_flags    = */ TP_FGC | TP_FNAMEOBJECT | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeTypeObject),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type, /* class Type: Object { ... } */

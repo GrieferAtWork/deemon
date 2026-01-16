@@ -135,7 +135,12 @@ DEFINE_OPERATOR_INVOKE(operator_deepcopy, &instance_deepcopy, &do_inherit_constr
 	(void)p_self;
 	(void)opname;
 	DeeArg_Unpack0(err, argc, argv, OPNAME("deepcopy"));
+#ifdef CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
+	(void)tp_self;
+	return DeeObject_DeepCopy(self);
+#else /* CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
 	return DeeObject_TDeepCopy(tp_self, self);
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
 err:
 	return NULL;
 }

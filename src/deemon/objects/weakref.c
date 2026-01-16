@@ -89,6 +89,18 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ob_weakref_serialize(WeakRef *__restrict self,
+                     DeeSerial *__restrict writer,
+                     Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(WeakRef, field))
+	int result = DeeSerial_XPutObject(writer, ADDROF(wr_del), self->wr_del);
+	if likely(result == 0)
+		result = DeeSerial_PutWeakref(writer, ADDROF(wr_ref), &self->wr_ref);
+	return result;
+#undef ADDROF
+}
+
 PRIVATE NONNULL((1)) void DCALL
 ob_weakref_invoke_callback(struct weakref *__restrict self) {
 	DREF WeakRef *me;
@@ -431,7 +443,7 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 			/* tp_deep_ctor:   */ &ob_weakref_deep,
 			/* tp_any_ctor:    */ &ob_weakref_init,
 			/* tp_any_ctor_kw: */ &ob_weakref_init_kw,
-			/* tp_serialize:   */ NULL /* XXX: Serializable weak references? */
+			/* tp_serialize:   */ &ob_weakref_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ob_weakref_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&ob_weakref_assign,

@@ -248,15 +248,31 @@ DeeGC_Untrack(DeeObject *__restrict ob) {
 
 /* Track all GC objects in range [first,last], all of which have
  * already been linked together using their `struct gc_head_link' */
-PUBLIC NONNULL((1, 2)) void DCALL
-DeeGC_TrackAll(DeeObject *first, DeeObject *last) {
+/* Track all GC objects in range [first,last], all of which have
+ * already been linked together using their `struct gc_head_link' */
+PUBLIC WUNUSED bool DCALL DeeGC_TrackMany_TryLock(void) {
+	bool result = GCLOCK_TRYACQUIRE();
+#ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
+	if (result)
+		gc_pending_service();
+#endif /* CONFIG_HAVE_PENDING_GC_OBJECTS */
+	return result;
+}
+
+PUBLIC void DCALL DeeGC_TrackMany_Lock(void) {
+	GCLOCK_ACQUIRE_S();
+}
+
+PUBLIC NONNULL((1, 2)) void DCALL DeeGC_TrackMany_Exec(DeeObject *first, DeeObject *last) {
 	struct gc_head *first_head = DeeGC_Head(first);
 	struct gc_head *last_head  = DeeGC_Head(last);
-	GCLOCK_ACQUIRE_S();
 	if ((last_head->gc_next = gc_root) != NULL)
 		gc_root->gc_pself = &last_head->gc_next;
 	first_head->gc_pself = &gc_root;
 	gc_root = first_head;
+}
+
+PUBLIC void DCALL DeeGC_TrackMany_Unlock(void) {
 	GCLOCK_RELEASE_S();
 }
 

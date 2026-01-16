@@ -482,7 +482,9 @@ corrupt_dep_index_reloc_rrel:
 		/* Link in GC objects (if there are any) */
 		struct gc_head *gc_head = (struct gc_head *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gchead);
 		struct gc_head *gc_tail = (struct gc_head *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gctail);
-		DeeGC_TrackAll(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
+		DeeGC_TrackMany_Lock();
+		DeeGC_TrackMany_Exec(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
+		DeeGC_TrackMany_Unlock();
 	}
 #endif
 
@@ -2095,10 +2097,10 @@ decwriter_appendobject(DeeDecWriter *__restrict self,
 		out_addr = tp->tp_flags & TP_FGC
 		           ? decwriter_gcobject_malloc(self, instance_size, obj)
 		           : decwriter_object_malloc(self, instance_size, obj);
-		if unlikely(!out_addr)
+		if unlikely(!Dee_SERADDR_ISOK(out_addr))
 			goto err;
 	
-		/* NOTE: Standard fields have already been initialized by "DeeDecWriter_[GC]Object_Malloc" */
+		/* NOTE: Standard fields have already been initialized by "decwriter_[gc]object_malloc" */
 		status = (*(Dee_tp_serialize_obj_t)tp_serialize)(obj, (DeeSerial *)self, out_addr);
 		if unlikely(status)
 			goto err;
@@ -2292,6 +2294,20 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+decwriter_putweakref_ex(DeeDecWriter *__restrict self,
+                        Dee_seraddr_t addrof_weakref,
+                        DeeObject *__restrict ob,
+                        Dee_weakref_callback_t del) {
+	struct Dee_weakref *out;
+	/* TODO: Proper support serializing for weak references */
+	(void)ob;
+	(void)del;
+	out = DeeDecWriter_Addr2Mem(self, addrof_weakref, struct Dee_weakref);
+	Dee_weakref_initempty(out);
+	return 0;
+}
+
 
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) void *DCALL
@@ -2321,6 +2337,7 @@ PRIVATE struct Dee_serial_type tpconst decwriter_serial_type = {
 	/* .set_putobject          = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict))&decwriter_putobject,
 	/* .set_putobject_ex       = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict, ptrdiff_t))&decwriter_putobject_ex,
 	/* .set_putpointer         = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, void const *__restrict))&decwriter_putpointer,
+	/* .set_putweakref_ex      = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict, Dee_weakref_callback_t))&decwriter_putweakref_ex,
 };
 
 

@@ -324,8 +324,8 @@ PRIVATE struct type_member tpconst rg_class_members[] = {
 INTERN DeeTypeObject ReGroups_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ReGroups",
-	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
+	/* .tp_doc      = */ DOC("getitem->?X2?T2?Dint?Dint?N"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
@@ -374,8 +374,8 @@ INTERN DeeTypeObject ReGroups_Type = {
 INTERN DeeTypeObject ReSubStrings_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ReSubStrings",
-	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
+	/* .tp_doc      = */ DOC("getitem->?X2?Dstring?N"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
@@ -424,7 +424,7 @@ INTERN DeeTypeObject ReSubStrings_Type = {
 INTERN DeeTypeObject ReSubBytes_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ReSubBytes",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("getitem->?X2?DBytes?N"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

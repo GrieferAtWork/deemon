@@ -918,7 +918,7 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 	                         "\n"
 	                         "(" float_float_params ")\n"
 	                         "Parse a string into a floating point number, or convert a ?DNumeric @ob into a ?."),
-	/* .tp_flags    = */ TP_FFINAL | TP_FNAMEOBJECT,
+	/* .tp_flags    = */ TP_FFINAL | TP_FNAMEOBJECT | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeNumeric_Type,
@@ -974,7 +974,7 @@ PUBLIC DeeTypeObject _nofpu_DeeFloat_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ _nofpu_DeeFloat_name,
 	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FFINAL | TP_FNAMEOBJECT,
+	/* .tp_flags    = */ TP_FFINAL | TP_FNAMEOBJECT | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeNumeric_Type,

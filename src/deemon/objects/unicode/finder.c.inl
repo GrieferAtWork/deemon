@@ -820,7 +820,7 @@ INTERN DeeTypeObject StringFind_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringFind",
 	/* .tp_doc      = */ DOC("(s:?Dstring,needle:?Dstring,start=!0,end=!-1)"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeSeq_Type,
@@ -872,7 +872,7 @@ INTERN DeeTypeObject StringCaseFind_Type = {
 	/* .tp_doc      = */ DOC("(s:?Dstring,needle:?Dstring,start=!0,end=!-1)\n"
 	                         "\n"
 	                         "[](index:?Dint)->?T2?Dint?Dint"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeSeq_Type,

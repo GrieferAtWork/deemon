@@ -1164,7 +1164,7 @@ INTERN DeeTypeObject ModuleExports_Type = {
 	                         "(mod:?DModule)\n"
 	                         "\n"
 	                         "[](key:?X2?Dstring?Dint)->"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeMapping_Type,
@@ -1467,7 +1467,7 @@ INTERN DeeTypeObject ModuleGlobals_Type = {
 	/* .tp_name     = */ "_ModuleGlobals",
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(mod:?DModule)"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
@@ -1636,7 +1636,7 @@ INTERN DeeTypeObject ModuleLibNames_Type = {
 	/* .tp_name     = */ "_ModuleLibNames",
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(mod:?DModule)"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,

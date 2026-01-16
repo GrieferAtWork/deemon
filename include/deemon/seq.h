@@ -493,6 +493,7 @@ typedef struct {
 DDATDEF DeeTypeObject DeeSeqOne_Type;
 #define DeeSeqOne_Check(self)      DeeObject_InstanceOfExact(self, &DeeSeqSome_Type)
 #define DeeSeqOne_CheckExact(self) DeeObject_InstanceOfExact(self, &DeeSeqSome_Type)
+#define DeeSeqOne_GET(self)        Dee_REQUIRES_OBJECT(DeeSeqOneObject, self)->so_item
 
 /* Construct a some-wrapper for `self' */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_PackOne(DeeObject *__restrict item);

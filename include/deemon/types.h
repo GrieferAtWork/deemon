@@ -87,6 +87,15 @@ typedef __hybrid_int128_t /*     */ Dee_int128_t;  /* signed, 128-bit integer */
 typedef WUNUSED_T ATTR_INS_T(2, 3) Dee_ssize_t
 (DPRINTER_CC *Dee_formatprinter_t)(void *arg, char const *__restrict data, size_t datalen);
 
+struct Dee_unlockinfo;
+struct Dee_unlockinfo {
+	NONNULL_T((1)) void (DCALL *dui_unlock)(struct Dee_unlockinfo *__restrict self);
+};
+#define Dee_unlockinfo_unlock(self)  ((*(self)->dui_unlock)(self))
+#define Dee_unlockinfo_xunlock(self) (void)(!(self) || (Dee_unlockinfo_unlock(self), 0))
+
+
+
 #ifdef __cplusplus
 typedef void (*Dee_funptr_t)(void);
 #else /* __cplusplus */

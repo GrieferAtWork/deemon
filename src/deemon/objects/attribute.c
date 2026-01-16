@@ -745,7 +745,7 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 	                         "#tTypeError{The given @decl does not define custom attribute operators}"
 	                         "#pperm{Attribute permissions (s.a. ?#perm)}"
 	                         "Construct a descriptor for an attribute @name of type @decl"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,

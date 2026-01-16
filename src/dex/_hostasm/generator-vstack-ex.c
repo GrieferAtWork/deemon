@@ -5511,7 +5511,11 @@ struct host_operator_specs {
 PRIVATE struct host_operator_specs const operator_apis[] = {
 	/* [OPERATOR_CONSTRUCTOR]  = */ { (void const *)NULL },
 	/* [OPERATOR_COPY]         = */ { (void const *)&DeeObject_Copy, (void const *)&DeeObject_TCopy, 1, VCALL_CC_OBJECT, false },
+#ifdef CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
+	/* [OPERATOR_DEEPCOPY]     = */ { (void const *)&DeeObject_DeepCopy, NULL, 1, VCALL_CC_OBJECT, false },
+#else /* CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
 	/* [OPERATOR_DEEPCOPY]     = */ { (void const *)&DeeObject_DeepCopy, (void const *)&DeeObject_TDeepCopy, 1, VCALL_CC_OBJECT, false },
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
 	/* [OPERATOR_DESTRUCTOR]   = */ { (void const *)NULL },
 	/* [OPERATOR_ASSIGN]       = */ { (void const *)&DeeObject_Assign, (void const *)&DeeObject_TAssign, 2, VCALL_CC_INT, false },
 	/* [OPERATOR_MOVEASSIGN]   = */ { (void const *)&DeeObject_MoveAssign, (void const *)&DeeObject_TMoveAssign, 2, VCALL_CC_INT, false },

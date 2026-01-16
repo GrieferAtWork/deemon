@@ -497,12 +497,23 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #define CONFIG_NO_EXPERIMENTAL_MMAP_DEC
 #elif (!defined(CONFIG_EXPERIMENTAL_MMAP_DEC) && \
        !defined(CONFIG_NO_EXPERIMENTAL_MMAP_DEC))
-#if 1 /* TODO: Implementation is complete -- do testing in different environments, then enable by default */
+#if 1
 #define CONFIG_EXPERIMENTAL_MMAP_DEC
 #else
 #define CONFIG_NO_EXPERIMENTAL_MMAP_DEC
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_MMAP_DEC */
+
+
+/* Experimental feature switch: Use "tp_serialize" to implement "deepcopy" */
+#if (!defined(CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_SERIALIZED_DEEPCOPY))
+#if 0 /* TODO: Doesn't work, yet */
+#define CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
+#else
+#define CONFIG_NO_EXPERIMENTAL_SERIALIZED_DEEPCOPY
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_SERIALIZED_DEEPCOPY */
 /************************************************************************/
 
 

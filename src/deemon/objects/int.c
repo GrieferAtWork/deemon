@@ -5639,7 +5639,7 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 
 	                         "**->\n"
 	                         "Return @this by the power of @other"),
-	/* .tp_flags    = */ TP_FVARIABLE | TP_FFINAL | TP_FNAMEOBJECT,
+	/* .tp_flags    = */ TP_FVARIABLE | TP_FFINAL | TP_FNAMEOBJECT | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeNumeric_Type,

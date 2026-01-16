@@ -759,9 +759,11 @@ struct_serialize_cb(void *arg, DeeTypeObject *declaring_type,
 		DeeObject *obj = *(DeeObject *const *)src;
 		return DeeSerial_XPutObject(data->scd_dst_writer, dst_addr, obj);
 	}	break;
-	//TODO:case STRUCT_WOBJECT_OPT:
-	//TODO:case STRUCT_WOBJECT:
-	//TODO:	break;
+	case STRUCT_WOBJECT_OPT:
+	case STRUCT_WOBJECT: {
+		struct Dee_weakref *wref = (struct Dee_weakref *)src;
+		return DeeSerial_PutWeakref(data->scd_dst_writer, dst_addr, wref);
+	}	break;
 	case STRUCT_VARIANT:
 		return Dee_variant_serialize((struct Dee_variant *)src, data->scd_dst_writer, dst_addr);
 	case STRUCT_CHAR:

@@ -3588,7 +3588,8 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 	                         "\n"
 	                         "str->\n"
 	                         "Returns the name of the module"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT | TP_FVARIABLE,
+	/* Same as with DeeType_Type: Modules may not be immutable, but still shouldn't be replicated during deepcopy */
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT | TP_FVARIABLE | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeModuleObject),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
@@ -3638,7 +3639,8 @@ PUBLIC DeeTypeObject DeeModuleDir_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ModuleDir",
 	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FVARIABLE | TP_FFINAL,
+	/* Same as with DeeType_Type: Modules may not be immutable, but still shouldn't be replicated during deepcopy */
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FVARIABLE | TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeModuleObject),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeModule_Type,
@@ -3690,7 +3692,8 @@ PUBLIC DeeTypeObject DeeModuleDee_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ModuleDee",
 	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FVARIABLE | TP_FFINAL,
+	/* Same as with DeeType_Type: Modules may not be immutable, but still shouldn't be replicated during deepcopy */
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FVARIABLE | TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeModuleObject),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeModule_Type,
@@ -3743,7 +3746,8 @@ PUBLIC DeeTypeObject DeeModuleDex_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ModuleDex",
 	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FVARIABLE | TP_FFINAL,
+	/* Same as with DeeType_Type: Modules may not be immutable, but still shouldn't be replicated during deepcopy */
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FVARIABLE | TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeModuleObject),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeModule_Type,
@@ -3835,7 +3839,8 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 	/* .tp_name     = */ DeeString_STR(&str_Module),
 	/* .tp_doc      = */ DOC("str->\n"
 	                         "Returns the name of the module"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
+	/* Same as with DeeType_Type: Modules may not be immutable, but still shouldn't be replicated during deepcopy */
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeModuleObject),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,

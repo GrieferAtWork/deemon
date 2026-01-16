@@ -175,6 +175,10 @@ EXPORTS
 	DeeDec_OpenFile@28=_DeeDec_OpenFile@28
 	DeeDec_Relocate@28=_DeeDec_Relocate@28
 	DeeDec_Track@4=_DeeDec_Track@4
+	DeeDeepCopy_CopyObject@8=_DeeDeepCopy_CopyObject@8
+	DeeDeepCopy_Fini@4=_DeeDeepCopy_Fini@4
+	DeeDeepCopy_Init@4=_DeeDeepCopy_Init@4
+	DeeDeepCopy_Pack@4=_DeeDeepCopy_Pack@4
 	DeeDict_FromRoDict@4=_DeeDict_FromRoDict@4
 	DeeDict_FromSequence@4=_DeeDict_FromSequence@4
 	DeeDict_FromSequenceInheritedOnSuccess@4=_DeeDict_FromSequenceInheritedOnSuccess@4
@@ -334,7 +338,10 @@ EXPORTS
 	DeeGCObject_TryRealloc@8=_DeeGCObject_TryRealloc@8
 	DeeGC_Collect@4=_DeeGC_Collect@4
 	DeeGC_Track@4=_DeeGC_Track@4
-	DeeGC_TrackAll@8=_DeeGC_TrackAll@8
+	DeeGC_TrackMany_Exec@8=_DeeGC_TrackMany_Exec@8
+	DeeGC_TrackMany_Lock@0=_DeeGC_TrackMany_Lock@0
+	DeeGC_TrackMany_TryLock@0=_DeeGC_TrackMany_TryLock@0
+	DeeGC_TrackMany_Unlock@0=_DeeGC_TrackMany_Unlock@0
 	DeeGC_Untrack@4=_DeeGC_Untrack@4
 	DeeHashSet_Contains@8=_DeeHashSet_Contains@8
 	DeeHashSet_FromRoSet@4=_DeeHashSet_FromRoSet@4
@@ -915,6 +922,7 @@ EXPORTS
 	DeeObject_IntInheritedOnSuccess@4=_DeeObject_IntInheritedOnSuccess@4
 	DeeObject_Inv@4=_DeeObject_Inv@4
 	DeeObject_InvokeOperator@16=_DeeObject_InvokeOperator@16
+	DeeObject_IsDeepImmutable@4=_DeeObject_IsDeepImmutable@4
 	DeeObject_Iter@4=_DeeObject_Iter@4
 	DeeObject_IterAdvance@8=_DeeObject_IterAdvance@8
 	DeeObject_IterAttr@20=_DeeObject_IterAttr@20
@@ -1288,6 +1296,7 @@ EXPORTS
 	DeeSerial_PutMemdupObjectv@16=_DeeSerial_PutMemdupObjectv@16
 	DeeSerial_PutObjectInherited@12=_DeeSerial_PutObjectInherited@12
 	DeeSerial_PutObjectv@16=_DeeSerial_PutObjectv@16
+	DeeSerial_PutWeakref@12=_DeeSerial_PutWeakref@12
 	DeeSerial_XInplacePutObject@8=_DeeSerial_XInplacePutObject@8
 	DeeSerial_XInplacePutObjectv@12=_DeeSerial_XInplacePutObjectv@12
 	DeeSerial_XPutMemdupObjectv@16=_DeeSerial_XPutMemdupObjectv@16
@@ -1759,6 +1768,11 @@ EXPORTS
 	Dee_weakref_copyassign@8=_Dee_weakref_copyassign@8
 	Dee_weakref_fini@4=_Dee_weakref_fini@4
 	Dee_weakref_init@8=_Dee_weakref_init@8
+	Dee_weakref_initmany_exec@8=_Dee_weakref_initmany_exec@8
+	Dee_weakref_initmany_lock@8=_Dee_weakref_initmany_lock@8
+	Dee_weakref_initmany_trylock@12=_Dee_weakref_initmany_trylock@12
+	Dee_weakref_initmany_unlock@8=_Dee_weakref_initmany_unlock@8
+	Dee_weakref_initmany_unlock_and_inherit@8=_Dee_weakref_initmany_unlock_and_inherit@8
 	Dee_weakref_lock@4=_Dee_weakref_lock@4
 	Dee_weakref_move@8=_Dee_weakref_move@8
 	Dee_weakref_moveassign@8=_Dee_weakref_moveassign@8

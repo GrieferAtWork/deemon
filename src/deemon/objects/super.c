@@ -156,7 +156,11 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_deepcopy(Super *__restrict self,
                Super *__restrict other) {
 	ASSERT_OBJECT(self);
+#ifdef CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
+	self->s_self = DeeObject_DeepCopy(other->s_self);
+#else /* CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
 	self->s_self = DeeObject_TDeepCopy(other->s_type, other->s_self);
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
 	if unlikely(!self->s_self)
 		goto err;
 	self->s_type = Dee_TYPE(self->s_self);

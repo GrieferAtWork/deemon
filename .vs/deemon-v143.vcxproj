@@ -91,6 +91,7 @@
 		<ClInclude Include="..\include\deemon\cxx\tuple.h" />
 		<ClInclude Include="..\include\deemon\cxx\type.h" />
 		<ClInclude Include="..\include\deemon\dec.h" />
+		<ClInclude Include="..\include\deemon\deepcopy.h" />
 		<ClInclude Include="..\include\deemon\dex.h" />
 		<ClInclude Include="..\include\deemon\dict.h" />
 		<ClInclude Include="..\include\deemon\error-rt.h" />
@@ -665,6 +666,7 @@
 		<ClCompile Include="..\src\deemon\runtime\builtin.c" />
 		<ClCompile Include="..\src\deemon\runtime\builtin_functions.c" />
 		<ClCompile Include="..\src\deemon\runtime\computed-operators.c" />
+		<ClCompile Include="..\src\deemon\runtime\deepcopy.c" />
 		<ClCompile Include="..\src\deemon\runtime\error-rt-attribute.c" />
 		<ClCompile Include="..\src\deemon\runtime\error-rt-compiler.c" />
 		<ClCompile Include="..\src\deemon\runtime\error-rt.c" />

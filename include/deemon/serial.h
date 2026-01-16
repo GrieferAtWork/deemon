@@ -92,19 +92,13 @@ err:
 }
 #endif
 
-/* TODO: "DeeSerial" can also be used to implement "deepcopy" (in a way that
- *       solves the problem of non-GC objects being copied whilst some nested
- *       GC object holding another reference to the original object; in the
- *       current deepcopy impl, this causes the original object to be copied
- *       twice).
- *
- * Even beyond this, "DeeSerial" can also be used to implement "copy", too.
- * For that, simply do what "deepcopy" does, but rather than recurse on each
- * nested object, simply re-encode a reference to the source object instead!
- * (though in this regard, this can only be a fallback "copy", since certain
- * types of objects; specifically certain Iterator types; still need to do
- * certain nested copy operations to ensure the copied iterator is detached
- * from the original iterator). */
+
+#ifndef Dee_weakref_callback_t_DEFINED
+#define Dee_weakref_callback_t_DEFINED
+/* Prototype for callbacks to-be invoked when a weakref'd object gets destroyed. */
+typedef NONNULL_T((1)) void (DCALL *Dee_weakref_callback_t)(struct Dee_weakref *__restrict self);
+#endif /* !Dee_weakref_callback_t_DEFINED */
+
 
 
 /* Serialization address (points into the abstract serialization buffer) */
@@ -197,7 +191,7 @@ struct Dee_serial_type {
 	                       Dee_seraddr_t addrof_object,
 	                       DeeObject *__restrict ob);
 
-	/* Same as `set_putobject', but encode a reference ob "ob",
+	/* Same as `set_putobject', but encode a reference to "ob",
 	 * but have the pointer be at `(byte_t *)ob + offset_into_ob'
 	 * @return: 0 : Success
 	 * @return: -1: Error */
@@ -220,7 +214,6 @@ struct Dee_serial_type {
 	(DCALL *set_putpointer)(DeeSerial *__restrict self, Dee_seraddr_t addrof_pointer,
 	                        void const *__restrict pointer);
 
-#if 0 /* TODO */
 	/* Serialize initialization of a `struct Dee_weakref *addrof_weakref' to `ob':
 	 * - The caller must ensure that `ob' support weak referencing.
 	 * - If "ob" is statically allocated within a DEE or DEX module,
@@ -228,16 +221,14 @@ struct Dee_serial_type {
 	 * - If "ob" is not statically allocated, and if "ob" has already
 	 *   been-, or will be serialized, then the weakref will point at
 	 *   the serialized instance of "ob"
-	 * - else: if "ob" is neither static, or ends up serialized within
+	 * - else: if "ob" is neither static, nor ends up serialized within
 	 *   the same "DeeSerial *self", then "addrof_weakref" will be set-
-	 *   up as an empty (NULL) weakref
-	 */
+	 *   up as an empty (NULL) weakref */
 	WUNUSED_T NONNULL_T((1, 3)) int
-	(DCALL *set_putweakref_raw)(DeeSerial *__restrict self,
-	                            Dee_seraddr_t addrof_weakref,
-	                            DeeObject *__restrict ob,
-	                            Dee_weakref_callback_t del);
-#endif
+	(DCALL *set_putweakref_ex)(DeeSerial *__restrict self,
+	                           Dee_seraddr_t addrof_weakref,
+	                           DeeObject *__restrict ob,
+	                           Dee_weakref_callback_t del);
 };
 
 #define Dee_SERIAL_HEAD \
@@ -333,7 +324,7 @@ DFUNDEF WUNUSED NONNULL((1)) int
 #define DeeSerial_PutObject(self, addrof_object, ob) \
 	__builtin_expect((*(self)->ser_type->set_putobject)(self, addrof_object, Dee_AsObject(ob)), 0)
 
-/* Same as `DeeSerial_PutObject', but encode a reference ob "ob",
+/* Same as `DeeSerial_PutObject', but encode a reference to "ob",
  * but have the pointer be at `(byte_t *)ob + offset_into_ob'
  * @return: 0 : Success
  * @return: -1: Error */
@@ -482,6 +473,33 @@ DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL DeeSerial_XPutMemdupObjectv)(DeeSerial *__restrict self, Dee_seraddr_t addrof_pointer_to_objv,
                                     /*[0..1][0..objc]*/ DeeObject *const *objv, size_t objc);
 
+
+/* Serialize initialization of a `struct Dee_weakref *addrof_weakref' to `ob':
+ * - The caller must ensure that `ob' support weak referencing.
+ * - If "ob" is statically allocated within a DEE or DEX module,
+ *   "addrof_weakref" will be injected at runtime.
+ * - If "ob" is not statically allocated, and if "ob" has already
+ *   been-, or will be serialized, then the weakref will point at
+ *   the serialized instance of "ob"
+ * - else: if "ob" is neither static, nor ends up serialized within
+ *   the same "DeeSerial *self", then "addrof_weakref" will be set-
+ *   up as an empty (NULL) weakref */
+#ifdef __INTELLISENSE__
+DFUNDEF WUNUSED NONNULL((1, 3)) int
+(DCALL DeeSerial_PutWeakrefEx)(DeeSerial *__restrict self,
+                               Dee_seraddr_t addrof_weakref,
+                               DeeObject *__restrict ob,
+                               Dee_weakref_callback_t del);
+#else /* __INTELLISENSE__ */
+#define DeeSerial_PutWeakrefEx(self, addrof_weakref, ob, del) \
+	__builtin_expect((*(self)->ser_type->set_putweakref_ex)(self, addrof_weakref, ob, del), 0)
+#endif /* !__INTELLISENSE__ */
+
+/* Helper wrapper around `DeeSerial_PutWeakrefEx()' */
+DFUNDEF WUNUSED NONNULL((1, 3)) int
+(DCALL DeeSerial_PutWeakref)(DeeSerial *__restrict self,
+                             Dee_seraddr_t addrof_weakref,
+                             struct Dee_weakref *__restrict value);
 
 DECL_END
 
