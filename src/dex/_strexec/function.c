@@ -33,6 +33,7 @@
 #include <deemon/format.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy() */
 #include <deemon/thread.h>
@@ -544,6 +545,132 @@ err_r:
 	return NULL;
 }
 
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+jit_object_entry_serialize(struct jit_object_entry *__restrict self,
+                           DeeSerial *__restrict writer,
+                           Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(struct jit_object_entry, field))
+	struct jit_object_entry *out;
+	if (DeeSerial_XPutObject(writer, ADDROF(oe_value), self->oe_value))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(oe_namestr), self->oe_namestr))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, addr, struct jit_object_entry);
+	out->oe_namelen = self->oe_namelen;
+	out->oe_namehsh = self->oe_namehsh;
+	out->oe_type    = self->oe_type;
+	switch (self->oe_type) {
+
+	case JIT_OBJECT_ENTRY_TYPE_ATTR_FIXED:
+		if (DeeSerial_PutPointer(writer, ADDROF(oe_attr_fixed.af_desc), self->oe_attr_fixed.af_desc))
+			goto err;
+		__IF0 {
+	case JIT_OBJECT_ENTRY_EXTERN_ATTRSTR:
+			out->oe_extern_attrstr.eas_size = self->oe_extern_attrstr.eas_size;
+			out->oe_extern_attrstr.eas_hash = self->oe_extern_attrstr.eas_hash;
+		}
+		ATTR_FALLTHROUGH
+	case JIT_OBJECT_ENTRY_TYPE_ATTR:
+	case JIT_OBJECT_ENTRY_EXTERN_SYMBOL:
+		return DeeSerial_PutPointer(writer, ADDROF(oe_attr.a_attr), self->oe_attr.a_attr);
+
+	case JIT_OBJECT_ENTRY_EXTERN_ATTR:
+		return DeeSerial_PutObject(writer, ADDROF(oe_extern_attr.ea_name), self->oe_extern_attr.ea_name);
+
+	default: break;
+	}
+	return 0;
+err:
+	return -1;
+#undef ADDROF
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+JITObjectTable_Serialize(JITObjectTable *__restrict self,
+                         DeeSerial *__restrict writer,
+                         Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(JITObjectTable, field))
+	JITObjectTable *out = DeeSerial_Addr2Mem(writer, addr, JITObjectTable);
+	out->ot_mask = self->ot_mask;
+	out->ot_size = self->ot_size;
+	out->ot_used = self->ot_used;
+	out->ot_prev.otp_ind = self->ot_prev.otp_ind;
+	out->ot_prev.otp_tab = NULL; /* Overwritten if needed */
+	out->ot_star_importc = self->ot_star_importc;
+	out->ot_star_importv = NULL; /* Overwritten if needed */
+	if (self->ot_list == jit_empty_object_list) {
+		if (DeeSerial_PutPointer(writer, ADDROF(ot_list), jit_empty_object_list))
+			goto err;
+	} else {
+		size_t i;
+		Dee_seraddr_t out__ot_list;
+		size_t sizeof__ot_list;
+		sizeof__ot_list = (self->ot_mask + 1) * sizeof(struct jit_object_entry);
+		out__ot_list = DeeSerial_Malloc(writer, sizeof__ot_list, self->ot_list);
+		if (!Dee_SERADDR_ISOK(out__ot_list))
+			goto err;
+		if (DeeSerial_PutAddr(writer, ADDROF(ot_list), out__ot_list))
+			goto err;
+		memcpy(DeeSerial_Addr2Mem(writer, out__ot_list, void),
+		       self->ot_list, sizeof__ot_list);
+		for (i = 0; i <= self->ot_mask; ++i) {
+			if (!ITER_ISOK(self->ot_list[i].oe_namestr))
+				continue;
+			if (jit_object_entry_serialize(&self->ot_list[i], writer,
+			                               out__ot_list + i * sizeof(struct jit_object_entry)))
+				goto err;
+		}
+	}
+	if unlikely(self->ot_star_importc) {
+		if (DeeSerial_PutMemdupObjectv(writer, ADDROF(ot_star_importv),
+		                               self->ot_star_importv, self->ot_star_importc))
+			goto err;
+	} else {
+		ASSERT(!self->ot_star_importv);
+	}
+	return DeeSerial_XPutPointer(writer, ADDROF(ot_prev.otp_tab), self->ot_prev.otp_tab);
+err:
+	return -1;
+#undef ADDROF
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+jf_serialize(JITFunction *__restrict self,
+             DeeSerial *__restrict writer,
+             Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(JITFunction, field))
+	JITFunction *out;
+	if (DeeSerial_PutObject(writer, ADDROF(jf_source), self->jf_source))
+		goto err;
+	if (DeeSerial_XPutObject(writer, ADDROF(jf_import), self->jf_import))
+		goto err;
+	if (DeeSerial_XPutObject(writer, ADDROF(jf_impbase), self->jf_impbase))
+		goto err;
+	if (DeeSerial_XPutObject(writer, ADDROF(jf_globals), self->jf_globals))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(jf_source_start), self->jf_source_start))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(jf_source_end), self->jf_source_end))
+		goto err;
+	if (DeeSerial_PutMemdup(writer, ADDROF(jf_argv), self->jf_argv, self->jf_argc_max * sizeof(size_t)))
+		goto err;
+	if (JITObjectTable_Serialize(&self->jf_refs, writer, ADDROF(jf_refs)))
+		goto err; /* Important: mustt be serialized first, because "jf_args" points to it */
+	if (JITObjectTable_Serialize(&self->jf_args, writer, ADDROF(jf_args)))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, addr, JITFunction);
+	out->jf_selfarg  = self->jf_selfarg;
+	out->jf_varargs  = self->jf_varargs;
+	out->jf_varkwds  = self->jf_varkwds;
+	out->jf_argc_min = self->jf_argc_min;
+	out->jf_argc_max = self->jf_argc_max;
+	out->jf_flags    = self->jf_flags;
+	return 0;
+err:
+	return -1;
+#undef ADDROF
+}
 
 PRIVATE NONNULL((1)) void DCALL
 jf_fini(JITFunction *__restrict self) {
@@ -1313,7 +1440,7 @@ INTERN DeeTypeObject JITFunction_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &jf_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&jf_fini,
 		/* .tp_assign      = */ NULL,
