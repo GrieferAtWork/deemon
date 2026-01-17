@@ -1688,6 +1688,7 @@ hashset_serialize(HashSet *__restrict self,
 	struct hashset_item *in__hs_elem;
 again:
 	out = DeeSerial_Addr2Mem(writer, addr, HashSet);
+	weakref_support_init(out);
 	Dee_atomic_rwlock_init(&out->hs_lock);
 	DeeHashSet_LockRead(self);
 	out->hs_mask = self->hs_mask;
@@ -1729,9 +1730,9 @@ free_out_hs_elem__and__again:
 		Dee_XIncref(out__hs_elem[i].hsi_key);
 	DeeHashSet_LockEndRead(self);
 	for (i = 0; i <= out__hs_mask; ++i) {
-		if (DeeSerial_InplacePutObject(writer,
-		                               addrof_out__hs_elem +
-		                               i * sizeof(struct hashset_item) +
+		if (DeeSerial_XInplacePutObject(writer,
+		                                addrof_out__hs_elem +
+		                                i * sizeof(struct hashset_item) +
 		                               offsetof(struct hashset_item, hsi_key))) {
 			out__hs_elem = DeeSerial_Addr2Mem(writer, addrof_out__hs_elem, struct hashset_item);
 			while (++i <= out__hs_mask)
