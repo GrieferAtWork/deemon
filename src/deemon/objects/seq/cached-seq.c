@@ -210,19 +210,19 @@ again:
 	in__cswi_cache_ol_elemv  = self->cswi_cache.ol_elemv;
 	Dee_Movrefv(out__cswi_cache_ol_elemv, in__cswi_cache_ol_elemv, out__cswi_cache_ol_elemc);
 	in__cswi_iter = self->cswi_iter;
-	Dee_Incref(in__cswi_iter);
+	Dee_XIncref(in__cswi_iter);
 	CachedSeq_WithIter_LockRelease(self);
 	if (DeeSerial_InplacePutObjectv(writer,
 	                                addrof_out__cswi_cache_ol_elemv,
 	                                out__cswi_cache_ol_elemc))
 		goto err_in__cswi_iter;
-	if (DeeSerial_PutObjectInherited(writer, addr + offsetof(CachedSeq_WithIter, cswi_iter), in__cswi_iter))
+	if (DeeSerial_XPutObjectInherited(writer, addr + offsetof(CachedSeq_WithIter, cswi_iter), in__cswi_iter))
 		goto err;
 	return DeeSerial_PutAddr(writer,
 	                         addr + offsetof(CachedSeq_WithIter, cswi_cache.ol_elemv),
 	                         addrof_out__cswi_cache_ol_elemv);
 err_in__cswi_iter:
-	Dee_Decref_unlikely(in__cswi_iter);
+	Dee_XDecref_unlikely(in__cswi_iter);
 err:
 	return -1;
 }
