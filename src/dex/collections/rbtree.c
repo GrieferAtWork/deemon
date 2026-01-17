@@ -30,12 +30,13 @@
 #include <deemon/bool.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
-#include <deemon/int.h>
 #include <deemon/format.h>
+#include <deemon/int.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
@@ -1025,6 +1026,33 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+rbtreeiter_serialize(RBTreeIterator *__restrict self,
+                     DeeSerial *__restrict writer,
+                     Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(RBTreeIterator, field))
+	RBTreeIterator *out;
+	uintptr_t self__rbti_version;
+	struct rbtree_node *self__rbti_next;
+	bool is_up_to_date;
+	RBTree_LockRead(self->rbti_tree);
+	self__rbti_version = self->rbti_version;
+	self__rbti_next    = RBTreeIterator_GetNext(self);
+	RBTree_LockEndRead(self->rbti_tree);
+	if (DeeSerial_PutObject(writer, ADDROF(rbti_tree), self->rbti_tree))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, addr, RBTreeIterator);
+	out->rbti_version = self__rbti_version;
+	out->rbti_next = NULL;
+	RBTree_LockRead(self->rbti_tree);
+	is_up_to_date = self__rbti_version == self->rbti_version;
+	RBTree_LockEndRead(self->rbti_tree);
+	return is_up_to_date ? DeeSerial_PutPointer(writer, ADDROF(rbti_next), self__rbti_next) : 0;
+err:
+	return -1;
+#undef ADDROF
+}
+
 PRIVATE NONNULL((1)) void DCALL
 rbtreeiter_fini(RBTreeIterator *__restrict self) {
 	Dee_Decref(self->rbti_tree);
@@ -1135,7 +1163,7 @@ INTERN DeeTypeObject RBTreeIterator_Type = {
 			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ &rbtreeiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &rbtreeiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rbtreeiter_fini,
 		/* .tp_assign      = */ NULL,

@@ -785,7 +785,7 @@ try_serialize_bucket(DeeSerial *__restrict writer,
 	size_t sizeof_bucket = SIZEOF_BUCKET(bucket_size);
 	ASSERT(start + used_size >= start);
 	ASSERT(start + used_size <= bucket_size);
-	result_addr = DeeSerial_TryMalloc(writer, sizeof_bucket, NULL);
+	result_addr = DeeSerial_TryMalloc(writer, sizeof_bucket, self);
 	if unlikely(!Dee_SERADDR_ISOK(result_addr))
 		goto done;
 	out = DeeSerial_Addr2Mem(writer, result_addr, DequeBucket);
@@ -843,12 +843,11 @@ again:
 				goto err_unlock_restart_collect;
 			out_bucket = DeeSerial_Addr2Mem(writer, copy_tail_addr, DequeBucket);
 			out_bucket->db_next = (struct deque_bucket *)next_addr;
+			out_bucket->db_pself = (struct deque_bucket **)iter;
 			out_bucket = DeeSerial_Addr2Mem(writer, next_addr, DequeBucket);
 			out_bucket->db_pself = (struct deque_bucket **)(copy_tail_addr + offsetof(DequeBucket, db_next));
 			copy_tail_addr = next_addr;
 		}
-		out_bucket = DeeSerial_Addr2Mem(writer, copy_tail_addr, DequeBucket);
-		out_bucket->db_next = NULL;
 	}
 	Deque_LockEndRead(self);
 	out = DeeSerial_Addr2Mem(writer, addr, Deque);
@@ -927,8 +926,6 @@ err_unlock_restart_collect:
 		for (;;) {
 			size_t start, count;
 			Dee_seraddr_t prev;
-			out_bucket = DeeSerial_Addr2Mem(writer, copy_tail_addr, DequeBucket);
-			prev = (Dee_seraddr_t)out_bucket->db_pself - offsetof(DequeBucket, db_next);
 			if (copy_tail_addr == copy_addr) {
 				start = self__d_head_idx;
 				count = self__d_head_use;
@@ -936,10 +933,20 @@ err_unlock_restart_collect:
 				start = 0;
 				count = self__d_bucket_sz;
 			}
+			out_bucket = DeeSerial_Addr2Mem(writer, copy_tail_addr, DequeBucket);
 			Dee_Decrefv(out_bucket->db_items + start, count);
-			DeeSerial_Free(writer, copy_tail_addr, NULL);
+			DeeSerial_Free(writer, copy_tail_addr, (void *)out_bucket->db_pself);
 			if (copy_tail_addr == copy_addr)
 				break;
+			prev = copy_addr;
+			for (;;) {
+				Dee_seraddr_t next;
+				out_bucket = DeeSerial_Addr2Mem(writer, prev, DequeBucket);
+				next = (Dee_seraddr_t)out_bucket->db_next;
+				if (next == copy_tail_addr)
+					break;
+				prev = next;
+			}
 			copy_tail_addr = prev;
 		}
 	}
