@@ -5021,6 +5021,16 @@ again:
 		self = DeeSeqOne_GET(self);
 		goto again;
 #endif
+	} else if (tp == &DeeFunction_Type) {
+		/* Functions are deep immutable if they do not contain "static" variables */
+		DeeFunctionObject *me = (DeeFunctionObject *)self;
+		DeeCodeObject *code = me->fo_code;
+		return code->co_refc <= code->co_refstaticc;
+	} else if (tp == &DeeYieldFunction_Type) {
+		/* Yield functions invocations are immutable if their function does not contain "static" variables */
+		DeeYieldFunctionObject *me = (DeeYieldFunctionObject *)self;
+		DeeCodeObject *code = me->yf_func->fo_code;
+		return code->co_refc <= code->co_refstaticc;
 	} else if (tp == &DeeProperty_Type) {
 		DeePropertyObject *me = (DeePropertyObject *)self;
 		return (!me->p_get || DeeObject_IsDeepImmutable(me->p_get)) &&
