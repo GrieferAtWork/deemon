@@ -33,6 +33,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/thread.h>
 #include <deemon/util/rlock.h>
@@ -95,6 +96,29 @@ jy_visit(JITYieldFunction *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visitv(self->jy_argv, self->jy_argc);
 	Dee_XVisit(self->jy_kw);
 	Dee_Visit(self->jy_func);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+jy_serialize(JITYieldFunction *__restrict self, DeeSerial *__restrict writer) {
+	JITYieldFunction *out;
+	size_t sizeof_self = _Dee_MallococBufsize(offsetof(JITYieldFunction, jy_argv),
+	                                          self->jy_argc, sizeof(DREF DeeObject *));
+	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+#define ADDROF(field) (out_addr + offsetof(JITYieldFunction, field))
+	if unlikely(!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, JITYieldFunction);
+	out->jy_argc = self->jy_argc;
+	if (DeeSerial_PutObject(writer, ADDROF(jy_func), self->jy_func))
+		goto err;
+	if (DeeSerial_XPutObject(writer, ADDROF(jy_kw), self->jy_kw))
+		goto err;
+	if (DeeSerial_PutObjectv(writer, ADDROF(jy_argv), self->jy_argv, self->jy_argc))
+		goto err;
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+#undef ADDROF
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF JITYieldFunctionIterator *DCALL
@@ -316,7 +340,7 @@ INTERN DeeTypeObject JITYieldFunction_Type = {
 			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &jy_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&jy_fini,
