@@ -1028,6 +1028,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 cdict_init(CachedDict *__restrict self,
            size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack1(err, argc, argv, "CachedDict", &self->cd_map);
+	Dee_Incref(self->cd_map);
 	self->cd_mask = 0;
 	self->cd_size = 0;
 	self->cd_elem = empty_cdict_items;
@@ -1041,6 +1042,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cdict_serialize(CachedDict *__restrict self,
                 DeeSerial *__restrict writer,
                 Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(CachedDict, field))
 	CachedDict *out;
 	size_t used_mask, used_size;
 	Dee_seraddr_t addrof_elem;
@@ -1051,9 +1053,7 @@ again:
 	used_size = self->cd_size;
 	if (self->cd_elem == DeeCachedDict_EmptyItems) {
 		DeeCachedDict_LockEndRead(self);
-		if (DeeSerial_PutStaticDeemon(writer,
-		                              addr + offsetof(CachedDict, cd_elem),
-		                              DeeCachedDict_EmptyItems))
+		if (DeeSerial_PutStaticDeemon(writer, ADDROF(cd_elem), DeeCachedDict_EmptyItems))
 			goto err;
 	} else {
 		size_t i;
@@ -1086,9 +1086,7 @@ again:
 			++in_elem;
 		}
 		DeeCachedDict_LockEndRead(self);
-		if (DeeSerial_PutAddr(writer,
-		                      addr + offsetof(CachedDict, cd_elem),
-		                      addrof_elem))
+		if (DeeSerial_PutAddr(writer, ADDROF(cd_elem), addrof_elem))
 			goto err;
 
 		/* Serialize cached items. */
@@ -1124,11 +1122,10 @@ again:
 	out->cd_mask = used_mask;
 	out->cd_size = used_size;
 	Dee_atomic_rwlock_init(&out->cd_lock);
-	return DeeSerial_PutObject(writer,
-	                           addr + offsetof(CachedDict, cd_map),
-	                           self->cd_map);
+	return DeeSerial_PutObject(writer, ADDROF(cd_map), self->cd_map);
 err:
 	return -1;
+#undef ADDROF
 }
 
 PRIVATE struct type_gc tpconst cdict_gc = {
