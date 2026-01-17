@@ -98,7 +98,7 @@ fl_serialize(FixedList *__restrict self,
 	FixedList *out;
 	size_t sizeof_self = _Dee_MallococBufsize(offsetof(FixedList, fl_elem),
 	                                          self->fl_size, sizeof(DREF DeeObject *));
-	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	Dee_seraddr_t out_addr = DeeSerial_GCObjectMalloc(writer, sizeof_self, self);
 #define ADDROF(field) (out_addr + offsetof(FixedList, field))
 	if unlikely(!Dee_SERADDR_ISOK(out_addr))
 		goto err;
