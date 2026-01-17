@@ -549,14 +549,13 @@ again_SetFileTime:
 
 		/* Handle some common system errors. */
 		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again_SetFileTime;
-		}
-		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (!Dee_CollectMemory(1))
-				goto err;
-			goto again_SetFileTime;
+			if (DeeThread_CheckInterrupt() == 0)
+				goto again_SetFileTime;
+			goto err;
+		} else if (DeeNTSystem_IsBadAllocError(dwError)) {
+			if (Dee_ReleaseSystemMemory())
+				goto again_SetFileTime;
+			goto err;
 		}
 
 		/* Check for special case: the given `hFile' isn't opened with enough permissions.
@@ -959,14 +958,13 @@ again_SetSecurityInfo:
 
 	/* Handle some other common errors. */
 	if (DeeNTSystem_IsBadAllocError(dwError)) {
-		if (Dee_CollectMemory(1))
+		if (Dee_ReleaseSystemMemory())
 			goto again_SetSecurityInfo;
 		goto err;
-	}
-	if (DeeNTSystem_IsIntr(dwError)) {
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again_SetSecurityInfo;
+	} else if (DeeNTSystem_IsIntr(dwError)) {
+		if (DeeThread_CheckInterrupt() == 0)
+			goto again_SetSecurityInfo;
+		goto err;
 	}
 
 	/* System error */
@@ -1098,14 +1096,13 @@ again_SetNamedSecurityInfoW:
 
 	/* Handle some common errors. */
 	if (DeeNTSystem_IsBadAllocError(dwError)) {
-		if (Dee_CollectMemory(1))
+		if (Dee_ReleaseSystemMemory())
 			goto again_SetNamedSecurityInfoW;
 		goto err;
-	}
-	if (DeeNTSystem_IsIntr(dwError)) {
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again_SetNamedSecurityInfoW;
+	} else if (DeeNTSystem_IsIntr(dwError)) {
+		if (DeeThread_CheckInterrupt() == 0)
+			goto again_SetNamedSecurityInfoW;
+		goto err;
 	}
 
 	/* System error */
@@ -4057,12 +4054,12 @@ again:
 			goto again;
 		}
 		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again;
-			goto err_result;
+		} else {
+			DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+			                        "Failed to retrieve the name of the hosting machine");
 		}
-		DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
-		                        "Failed to retrieve the name of the hosting machine");
 		goto err_result;
 	}
 	DBG_ALIGNMENT_ENABLE();

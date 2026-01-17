@@ -923,7 +923,7 @@ again_skipdots:
 				DBG_ALIGNMENT_ENABLE();
 				if unlikely(dwError != ERROR_NO_MORE_FILES) {
 					if (DeeNTSystem_IsBadAllocError(dwError)) {
-						if (Dee_CollectMemory(1))
+						if (Dee_ReleaseSystemMemory())
 							goto again_skipdots;
 					} else {
 						DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
@@ -1056,7 +1056,7 @@ again:
 			if unlikely(dwError != ERROR_NO_MORE_FILES) {
 				DeeDirIterator_LockEndWrite(self);
 				if (DeeNTSystem_IsBadAllocError(dwError)) {
-					if (Dee_CollectMemory(1))
+					if (Dee_ReleaseSystemMemory())
 						goto again;
 				} else {
 					DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,

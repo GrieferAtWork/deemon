@@ -102,6 +102,16 @@ DECL_BEGIN
 #define LOCAL_futex_ataddr_create futex_ataddr_create
 #endif /* !LOCAL_IS_NO_INTERRUPT */
 
+#ifdef LOCAL_IS_NO_INTERRUPT
+#define LOCAL_CollectMemory(n_bytes, on_success) \
+	if (Dee_TryReleaseSystemMemory())            \
+		goto on_success
+#else /* LOCAL_IS_NO_INTERRUPT */
+#define LOCAL_CollectMemory(n_bytes, on_success) \
+	if (Dee_ReleaseSystemMemory())               \
+		goto on_success
+#endif /* !LOCAL_IS_NO_INTERRUPT */
+
 /* Blocking wait if `*(uintNN_t *)addr == expected', until someone calls `DeeFutex_Wake*(addr)'
  * @return: 1 : [DeeFutex_WaitNNTimed] The given `timeout_nanoseconds' expired.
  * @return: 0 : Success (someone called `DeeFutex_Wake*(addr)', or `*addr != expected', or spurious wake-up)
@@ -226,19 +236,10 @@ again_futex_wait:
 			return 1;
 		});
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
-#ifdef LOCAL_IS_NO_INTERRUPT
 		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_TryCollectMemory(1))
-				goto again_futex_wait;
-			LOCAL_return_0;
-		});
-#else /* LOCAL_IS_NO_INTERRUPT */
-		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_CollectMemory(1))
-				goto again_futex_wait;
+			LOCAL_CollectMemory(1, again_futex_wait);
 			LOCAL_return_error(-1);
 		});
-#endif /* !LOCAL_IS_NO_INTERRUPT */
 		LOCAL_return_error(DeeUnixSystem_ThrowErrorf(NULL, error, "Futex wait operation failed"));
 	}
 	LOCAL_return_0;
@@ -291,15 +292,8 @@ again_futex_wait:
 			if (DeeNTSystem_IsIntr(dwError))
 				goto again_futex_wait;
 			if (DeeNTSystem_IsBadAllocError(dwError)) {
-#ifdef LOCAL_IS_NO_INTERRUPT
-				if (Dee_TryCollectMemory(1))
-					goto again_futex_wait;
-				LOCAL_return_0;
-#else /* LOCAL_IS_NO_INTERRUPT */
-				if (Dee_CollectMemory(1))
-					goto again_futex_wait;
+				LOCAL_CollectMemory(1, again_futex_wait);
 				LOCAL_return_error(-1);
-#endif /* !LOCAL_IS_NO_INTERRUPT */
 			}
 			LOCAL_return_error(DeeNTSystem_ThrowErrorf(NULL, dwError, "WaitOnAddress failed"));
 		}
@@ -357,13 +351,7 @@ again_call_AcquireSRWLockShared:
 				goto again_call_AcquireSRWLockShared;
 			}
 			if (DeeNTSystem_IsBadAllocError(dwError)) {
-#ifdef LOCAL_IS_NO_INTERRUPT
-				if (Dee_TryCollectMemory(1))
-					goto again_call_AcquireSRWLockShared;
-#else /* LOCAL_IS_NO_INTERRUPT */
-				if (Dee_CollectMemory(1))
-					goto again_call_AcquireSRWLockShared;
-#endif /* !LOCAL_IS_NO_INTERRUPT */
+				LOCAL_CollectMemory(1, again_call_AcquireSRWLockShared);
 				futex_controller_decref(ctrl);
 				LOCAL_return_error(-1);
 			}
@@ -423,13 +411,7 @@ again_call_inc_dwThreads:
 				goto again_call_inc_dwThreads;
 			}
 			if (DeeNTSystem_IsBadAllocError(dwError)) {
-#ifdef LOCAL_IS_NO_INTERRUPT
-				if (Dee_TryCollectMemory(1))
-					goto again_call_inc_dwThreads;
-#else /* LOCAL_IS_NO_INTERRUPT */
-				if (Dee_CollectMemory(1))
-					goto again_call_inc_dwThreads;
-#endif /* !LOCAL_IS_NO_INTERRUPT */
+				LOCAL_CollectMemory(1, again_call_inc_dwThreads);
 				futex_controller_decref(ctrl);
 				LOCAL_return_error(-1);
 			}
@@ -529,21 +511,11 @@ again_read_ctrl_word:
 			return 1;
 		});
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
-#ifdef LOCAL_IS_NO_INTERRUPT
 		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_TryCollectMemory(1))
-				goto again_read_ctrl_word;
+			LOCAL_CollectMemory(1, again_read_ctrl_word);
 			futex_controller_decref(ctrl);
 			LOCAL_return_error(-1);
 		});
-#else /* LOCAL_IS_NO_INTERRUPT */
-		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_CollectMemory(1))
-				goto again_read_ctrl_word;
-			futex_controller_decref(ctrl);
-			LOCAL_return_error(-1);
-		});
-#endif /* !LOCAL_IS_NO_INTERRUPT */
 		futex_controller_decref(ctrl);
 		LOCAL_return_error(DeeUnixSystem_ThrowErrorf(NULL, error, "Futex wait operation failed"));
 	}
@@ -640,21 +612,11 @@ again_pthread_mutex_lock:
 			return 1;
 		});
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
-#ifdef LOCAL_IS_NO_INTERRUPT
 		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_TryCollectMemory(1))
-				goto again_pthread_mutex_lock;
+			LOCAL_CollectMemory(1, again_pthread_mutex_lock);
 			futex_controller_decref(ctrl);
 			LOCAL_return_error(-1);
 		});
-#else /* LOCAL_IS_NO_INTERRUPT */
-		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_CollectMemory(1))
-				goto again_pthread_mutex_lock;
-			futex_controller_decref(ctrl);
-			LOCAL_return_error(-1);
-		});
-#endif /* !LOCAL_IS_NO_INTERRUPT */
 		futex_controller_decref(ctrl);
 		LOCAL_return_error(DeeUnixSystem_ThrowErrorf(NULL, error, "pthread_cond_wait failed"));
 	}
@@ -758,13 +720,7 @@ again_mtx_lock:
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
 #ifdef CONFIG_HAVE_thrd_nomem
 		if (error == thrd_nomem) {
-#ifdef LOCAL_IS_NO_INTERRUPT
-			if (Dee_TryCollectMemory(1))
-				goto again_mtx_lock;
-#else /* LOCAL_IS_NO_INTERRUPT */
-			if (Dee_CollectMemory(1))
-				goto again_mtx_lock;
-#endif /* !LOCAL_IS_NO_INTERRUPT */
+			LOCAL_CollectMemory(1, again_mtx_lock);
 			futex_controller_decref(ctrl);
 			LOCAL_return_error(-1);
 		}
@@ -778,7 +734,7 @@ again_mtx_lock:
 #endif /* EINTR */
 #ifdef ENOMEM
 			if (error == ENOMEM) {
-				if (Dee_CollectMemory(1))
+				if (Dee_ReleaseSystemMemory())
 					goto again_mtx_lock;
 				futex_controller_decref(ctrl);
 				LOCAL_return_error(-1);
@@ -885,21 +841,11 @@ again_inc_n_threads:
 			return 1;
 		});
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
-#ifdef LOCAL_IS_NO_INTERRUPT
 		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_TryCollectMemory(1))
-				goto again_inc_n_threads;
+			LOCAL_CollectMemory(1, again_inc_n_threads);
 			futex_controller_decref(ctrl);
 			LOCAL_return_error(-1);
 		});
-#else /* LOCAL_IS_NO_INTERRUPT */
-		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_CollectMemory(1))
-				goto again_inc_n_threads;
-			futex_controller_decref(ctrl);
-			LOCAL_return_error(-1);
-		});
-#endif /* !LOCAL_IS_NO_INTERRUPT */
 		futex_controller_decref(ctrl);
 		LOCAL_return_error(DeeUnixSystem_ThrowErrorf(NULL, error, "sem_wait failed"));
 	}
@@ -927,6 +873,7 @@ again_inc_n_threads:
 #undef LOCAL_HAVE_timeout_nanoseconds
 #undef LOCAL_sizeof_expected
 #undef LOCAL_IS_NO_INTERRUPT
+#undef LOCAL_CollectMemory
 
 DECL_END
 

@@ -215,7 +215,7 @@ DECL_BEGIN
 	again:
 #define ENOMEM_HANDLE(error, again, err_label) \
 	if ((error) == ENOMEM) {                   \
-		if (Dee_CollectMemory(1))              \
+		if (Dee_ReleaseSystemMemory())         \
 			goto again;                        \
 		goto err_label;                        \
 	}

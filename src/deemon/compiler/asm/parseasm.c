@@ -126,11 +126,8 @@ rehash_realloc:
 			new_size = 1;
 			goto rehash_realloc;
 		}
-		if (old_size) {
-			if (Dee_TryCollectMemory(sizeof(struct symbol *)))
-				goto rehash_realloc;
+		if (old_size)
 			return true;
-		}
 		if (Dee_CollectMemory(sizeof(struct symbol *)))
 			goto rehash_realloc;
 		return false;

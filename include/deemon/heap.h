@@ -237,7 +237,6 @@ DFUNDEF int DCALL DeeHeap_SetOpt(int option, size_t value);
  * @return: * : The # of bytes released back to the system. */
 DFUNDEF size_t DCALL DeeHeap_Trim(size_t pad);
 
-
 /* Attach debug info (for the sake of memory leaks as reported by `DeeHeap_DumpMemoryLeaks()',
  * as well as `DeeHeap_DumpMemoryLeaks_GC' being able to recursively scan the payload areas of
  * reachable heap chunks) to a custom "struct Dee_heapregion"

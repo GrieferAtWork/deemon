@@ -677,7 +677,7 @@ again_setenv:
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endwrite();
 		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again_setenv;
 		} else {
 			DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
@@ -711,7 +711,7 @@ again_setenv:
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endwrite();
 		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again_setenv;
 			goto err;
 		});
@@ -745,7 +745,7 @@ again_setenv:
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endwrite();
 		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again_setenv;
 			goto err;
 		});
@@ -805,7 +805,7 @@ again_setenv:
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endwrite();
 		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again_setenv;
 			goto err;
 		});
@@ -865,7 +865,7 @@ again_setenv:
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endwrite();
 		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again_setenv;
 			goto err;
 		});
@@ -1422,8 +1422,14 @@ again_alloc_empty:
 		new_environ = (char **)calloc(1, sizeof(char *));
 #endif /* !HAVE_system_environ_is_dee_heap_allocated */
 		if unlikely(!new_environ) {
-			if (Dee_TryCollectMemory(1))
+#ifdef HAVE_system_environ_is_dee_heap_allocated
+			if (Dee_CollectMemory(1))
+#else /* HAVE_system_environ_is_dee_heap_allocated */
+			if (Dee_ReleaseSystemMemory())
+#endif /* !HAVE_system_environ_is_dee_heap_allocated */
+			{
 				goto again_alloc_empty;
+			}
 			return -1;
 		}
 		environ_lock_write();
@@ -1462,8 +1468,14 @@ again_alloc_empty:
 		new_wenviron = (Dee_wchar_t **)calloc(1, sizeof(Dee_wchar_t *));
 #endif /* !HAVE_system_wenviron_is_dee_heap_allocated */
 		if unlikely(!new_wenviron) {
-			if (Dee_TryCollectMemory(1))
+#ifdef HAVE_system_environ_is_dee_heap_allocated
+			if (Dee_CollectMemory(1))
+#else /* HAVE_system_environ_is_dee_heap_allocated */
+			if (Dee_ReleaseSystemMemory())
+#endif /* !HAVE_system_environ_is_dee_heap_allocated */
+			{
 				goto again_alloc_empty;
+			}
 			return -1;
 		}
 		environ_lock_write();
@@ -1609,7 +1621,7 @@ again_GetEnvironmentStringsW:
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again_GetEnvironmentStringsW;
 		} else {
 			DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,

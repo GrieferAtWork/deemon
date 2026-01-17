@@ -384,17 +384,27 @@ _Dee_MallococBufsizeSafe(size_t base_offset, size_t elem_count, size_t elem_size
 /* Reclaim free memory by going through internal pre-allocation caches,
  * freeing up to (but potentially exceeding by a bit) `max_collect' bytes of memory.
  * The actual amount freed is returned in bytes.
- * NOTE: This function is automatically called by `Dee_TryCollectMemory()' */
+ * NOTE: This function is automatically called by `Dee_CollectMemory()' */
 DFUNDEF size_t DCALL DeeMem_ClearCaches(size_t max_collect);
 
-/* Try to clear caches and free up available memory.
+/* Try to clear caches and free up at most "req_bytes" memory. If
+ * no memory could be free'd at all, Dee_BadAlloc() is called. Note
+ * that this function is also allowed to invoke arbitrary user-code!
+ *
  * @return: true:  Caches were cleared. - You should try to allocate memory again.
- * @return: false: Nope. - We're completely out of memory... */
-DFUNDEF ATTR_COLD bool DCALL Dee_TryCollectMemory(size_t req_bytes);
-
-/* Same as `Dee_TryCollectMemory()', but raise an
-* `Error.NoMemory' if memory could not be collected. */
+ * @return: false: Nope. - We're completely out of memory... (error was thrown) */
 DFUNDEF WUNUSED ATTR_COLD bool DCALL Dee_CollectMemory(size_t req_bytes);
+
+/* Try to release as much memory as possible back to the host system.
+ * @return: * : Amount of memory that was released back to the system.
+ * @return: 0 : No memory could be released back to the system (no error was thrown) */
+DFUNDEF ATTR_COLD size_t DCALL Dee_TryReleaseSystemMemory(void);
+
+/* Same as `Dee_TryReleaseSystemMemory()', but also tries to free
+ * @return: * : Amount of memory that was released back to the system.
+ * @return: 0 : No memory could be released back to the system (an error was thrown) */
+DFUNDEF ATTR_COLD WUNUSED size_t DCALL Dee_ReleaseSystemMemory(void);
+
 #define Dee_CollectMemoryc(elem_count, elem_size) \
 	Dee_CollectMemory(_Dee_MalloccBufsize(elem_count, elem_size))
 #define Dee_CollectMemoryoc(base_offset, elem_count, elem_size) \

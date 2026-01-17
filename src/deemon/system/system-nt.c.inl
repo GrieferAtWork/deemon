@@ -2065,9 +2065,9 @@ again_createfile:
 			goto again_createfile;
 		} else if (DeeNTSystem_IsBadAllocError(dwError)) {
 			DBG_ALIGNMENT_ENABLE();
-			if (!Dee_CollectMemory(1))
-				goto err;
-			goto again_createfile;
+			if (Dee_ReleaseSystemMemory())
+				goto again_createfile;
+			goto err;
 		}
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -2212,7 +2212,7 @@ again:
 
 		/* Throw the error as an NT error. */
 		if (DeeNTSystem_IsBadAllocError(error)) {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again;
 		} else if (DeeNTSystem_IsNotDir(error) ||
 		           DeeNTSystem_IsFileNotFoundError(error)) {
@@ -3297,7 +3297,7 @@ again:
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again;
 		} else {
 			/* MSDN says that this string cannot exceed 32*1024

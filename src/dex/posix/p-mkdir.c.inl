@@ -151,12 +151,11 @@ again:
 	dwError = GetLastError();
 	DBG_ALIGNMENT_ENABLE();
 	if (DeeNTSystem_IsIntr(dwError)) {
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again;
-	}
-	if (DeeNTSystem_IsBadAllocError(dwError)) {
-		if (Dee_CollectMemory(1))
+		if (DeeThread_CheckInterrupt() == 0)
+			goto again;
+		goto err;
+	} else if (DeeNTSystem_IsBadAllocError(dwError)) {
+		if (Dee_ReleaseSystemMemory())
 			goto again;
 		goto err;
 	}

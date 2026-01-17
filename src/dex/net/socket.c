@@ -1069,7 +1069,7 @@ handle_accept_error_neterror:
 #endif /* EINTR */
 #ifdef ENOMEM
 	if (error == ENOMEM) {
-		if (Dee_CollectMemory(1))
+		if (Dee_ReleaseSystemMemory())
 			goto restart;
 		goto err;
 	}
@@ -1532,7 +1532,7 @@ again:
 		}
 #ifdef ENOMEM
 		if (error == ENOMEM) {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again;
 			goto err;
 		}
@@ -1646,7 +1646,7 @@ again:
 		}
 #ifdef ENOMEM
 		if (error == ENOMEM) {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again;
 			goto err;
 		}
@@ -1775,7 +1775,7 @@ again:
 		}
 #ifdef ENOMEM
 		if (error == ENOMEM) {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again;
 			goto err;
 		}

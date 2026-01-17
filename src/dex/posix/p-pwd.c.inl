@@ -356,18 +356,16 @@ again:
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again;
 			goto err;
-		}
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
-		if (DeeNTSystem_IsNotDir(dwError))
+		} else if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt() == 0)
+				goto again;
+			goto err;
+		} else if (DeeNTSystem_IsNotDir(dwError)) {
 			goto do_throw_not_dir;
-		if (dwError == ERROR_ACCESS_DENIED) {
+		} else if (dwError == ERROR_ACCESS_DENIED) {
 			DWORD dwAttributes;
 			/* Check if the path is actually a directory. */
 			result = nt_GetFileAttributes(path, &dwAttributes);
@@ -380,8 +378,7 @@ do_throw_not_dir:
 #define NEED_err_nt_path_not_dir
 				goto err;
 			}
-		}
-		if (DeeNTSystem_IsFileNotFoundError(dwError)) {
+		} else if (DeeNTSystem_IsFileNotFoundError(dwError)) {
 			err_nt_path_not_found(dwError, path);
 #define NEED_err_nt_path_not_found
 		} else if (DeeNTSystem_IsAccessDeniedError(dwError)) {

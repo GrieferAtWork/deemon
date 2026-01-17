@@ -458,9 +458,6 @@ ENOMEM_LABEL(again_wrap)
 	if unlikely(resfd == -1) {
 		resfd = DeeSystem_GetErrno();
 		ENOMEM_HANDLE(resfd, again_wrap, err_fp)
-		if (Dee_CollectMemory(1))
-			goto again_wrap;
-
 	}
 
 	result = DeeInt_NewUInt((unsigned int)resfd);

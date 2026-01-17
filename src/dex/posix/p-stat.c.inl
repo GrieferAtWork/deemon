@@ -726,7 +726,7 @@ err_nt:
 			return 1; /* File not found. */
 
 		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again;
 		} else if (DeeNTSystem_IsNotDir(dwError)) {
 			if (atflags & DEE_STAT_F_TRY)

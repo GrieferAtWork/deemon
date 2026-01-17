@@ -219,7 +219,7 @@ again_rmdir:
 			dwError = (int)GetLastError();
 			DBG_ALIGNMENT_ENABLE();
 			if (DeeNTSystem_IsBadAllocError(dwError)) {
-				if (Dee_CollectMemory(1))
+				if (Dee_ReleaseSystemMemory())
 					goto again_rmdir;
 				goto err;
 			}
@@ -231,14 +231,14 @@ again_rmdir:
 		dwError = (int)GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again_getattr;
 			goto err;
 		}
 		dwError = ERROR_ACCESS_DENIED;
 	}
 	if (DeeNTSystem_IsBadAllocError(dwError)) {
-		if (Dee_CollectMemory(1))
+		if (Dee_ReleaseSystemMemory())
 			goto again_deletefile;
 		goto err;
 	}
@@ -327,12 +327,11 @@ again:
 	dwError = GetLastError();
 	DBG_ALIGNMENT_ENABLE();
 	if (DeeNTSystem_IsIntr(dwError)) {
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again;
-	}
-	if (DeeNTSystem_IsBadAllocError(dwError)) {
-		if (Dee_CollectMemory(1))
+		if (DeeThread_CheckInterrupt() == 0)
+			goto again;
+		goto err;
+	} else if (DeeNTSystem_IsBadAllocError(dwError)) {
+		if (Dee_ReleaseSystemMemory())
 			goto again;
 		goto err;
 	}
@@ -433,12 +432,11 @@ again:
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
-		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_CollectMemory(1))
+			if (DeeThread_CheckInterrupt() == 0)
+				goto again;
+			goto err;
+		} else if (DeeNTSystem_IsBadAllocError(dwError)) {
+			if (Dee_ReleaseSystemMemory())
 				goto again;
 			goto err;
 		}
@@ -447,12 +445,11 @@ again:
 		goto err;
 	}
 	if (DeeNTSystem_IsIntr(dwError)) {
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again;
-	}
-	if (DeeNTSystem_IsBadAllocError(dwError)) {
-		if (Dee_CollectMemory(1))
+		if (DeeThread_CheckInterrupt() == 0)
+			goto again;
+		goto err;
+	} else if (DeeNTSystem_IsBadAllocError(dwError)) {
+		if (Dee_ReleaseSystemMemory())
 			goto again;
 		goto err;
 	}

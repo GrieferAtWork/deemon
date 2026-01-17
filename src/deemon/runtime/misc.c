@@ -1175,7 +1175,7 @@ DeeMem_ClearCaches(size_t max_collect) {
 /* Threshold before OOM is forced (without trying to collect memory) */
 #define FORCED_OOM_THRESHOLD ((size_t)-1 / 3)
 
-PUBLIC bool DCALL Dee_TryCollectMemory(size_t req_bytes) {
+PRIVATE bool DCALL Dee_TryCollectMemory(size_t req_bytes) {
 	size_t collect_bytes;
 
 	/* Check for likely case: intentional allocation overflow.
@@ -1208,7 +1208,13 @@ PUBLIC bool DCALL Dee_TryCollectMemory(size_t req_bytes) {
 	return collect_bytes != 0;
 }
 
-PUBLIC bool DCALL Dee_CollectMemory(size_t req_bytes) {
+/* Try to clear caches and free up at most "req_bytes" memory. If
+ * no memory could be free'd at all, Dee_BadAlloc() is called. Note
+ * that this function is also allowed to invoke arbitrary user-code!
+ *
+ * @return: true:  Caches were cleared. - You should try to allocate memory again.
+ * @return: false: Nope. - We're completely out of memory... (error was thrown) */
+PUBLIC WUNUSED ATTR_COLD bool DCALL Dee_CollectMemory(size_t req_bytes) {
 	void *_test;
 	if unlikely(!Dee_TryCollectMemory(req_bytes))
 		goto err_badalloc;
@@ -1238,6 +1244,43 @@ PUBLIC bool DCALL Dee_CollectMemory(size_t req_bytes) {
 err_badalloc:
 	Dee_BadAlloc(req_bytes);
 	return false;
+}
+
+/* Try to release as much memory as possible back to the host system.
+ * @return: * : Amount of memory that was released back to the system.
+ * @return: 0 : No memory could be released back to the system (no error was thrown) */
+PUBLIC ATTR_COLD size_t DCALL Dee_TryReleaseSystemMemory(void) {
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+	size_t trim = DeeHeap_Trim((size_t)-1);
+	if (trim == 0) {
+		Dee_TryCollectMemory((size_t)-1);
+		trim = DeeHeap_Trim((size_t)-1);
+	}
+	return trim;
+#else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
+	return Dee_TryCollectMemory((size_t)-1) ? 1 : 0;
+#endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
+}
+
+/* Same as `Dee_TryReleaseSystemMemory()', but also tries to free
+ * @return: * : Amount of memory that was released back to the system.
+ * @return: 0 : No memory could be released back to the system (an error was thrown) */
+PUBLIC ATTR_COLD WUNUSED size_t DCALL Dee_ReleaseSystemMemory(void) {
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+	size_t trim = DeeHeap_Trim((size_t)-1);
+	if unlikely(trim == 0) {
+		Dee_TryCollectMemory((size_t)-1);
+		trim = DeeHeap_Trim((size_t)-1);
+		if (trim == 0 && Dee_CollectMemory((size_t)-1)) {
+			trim = DeeHeap_Trim((size_t)-1);
+			if unlikely(trim == 0)
+				Dee_BadAlloc(1);
+		}
+	}
+	return trim;
+#else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
+	return Dee_CollectMemory((size_t)-1) ? 1 : 0;
+#endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 }
 
 

@@ -486,7 +486,7 @@ DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again;
 		} else if (DeeNTSystem_IsIntr(dwError)) {
 			goto again;
@@ -1085,7 +1085,7 @@ again:
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsBadAllocError(dwError)) {
 handle_nomem:
-			if (!Dee_CollectMemory(1))
+			if (!Dee_ReleaseSystemMemory())
 				goto err;
 			goto again;
 		} else if (DeeNTSystem_IsIntr(dwError)) {
@@ -1222,7 +1222,7 @@ again:
 #endif /* EINTR */
 #ifdef ENOMEM
 		if (error == ENOMEM) {
-			if (!Dee_CollectMemory(1))
+			if (!Dee_ReleaseSystemMemory())
 				return (uint64_t)-1;
 			goto again;
 		}
@@ -1390,7 +1390,7 @@ again:
 #endif /* EINTR */
 #ifdef ENOMEM
 		if (error == ENOMEM) {
-			if (!Dee_CollectMemory(1))
+			if (!Dee_ReleaseSystemMemory())
 				return DeeSystem_GetFileType_ERR;
 			goto again;
 		}
@@ -2812,9 +2812,11 @@ empty_file:
 		DWORD error;
 system_err_buf:
 		error = GetLastError();
-		if (DeeNTSystem_IsBadAllocError(error) && Dee_CollectMemory(1)) {
-			offset = orig_offset;
-			goto again;
+		if (DeeNTSystem_IsBadAllocError(error)) {
+			if (Dee_ReleaseSystemMemory()) {
+				offset = orig_offset;
+				goto again;
+			}
 		} else if (DeeNTSystem_IsIntr(error)) {
 			if (DeeThread_CheckInterrupt() == 0) {
 				offset = orig_offset;
@@ -2834,7 +2836,7 @@ system_err_buf:
 		error = DeeSystem_GetErrno();
 #ifdef ENOMEM
 		if (error == ENOMEM) {
-			if (Dee_CollectMemory(1)) {
+			if (Dee_ReleaseSystemMemory()) {
 				offset = orig_offset;
 				goto again;
 			}

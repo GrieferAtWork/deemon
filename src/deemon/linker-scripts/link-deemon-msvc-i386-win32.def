@@ -1021,6 +1021,7 @@ EXPORTS
 	DeeObject_TContains@12=_DeeObject_TContains@12
 	DeeObject_TCopy@8=_DeeObject_TCopy@8
 	DeeObject_TDec@8=_DeeObject_TDec@8
+	DeeObject_TDeepCopy@8=_DeeObject_TDeepCopy@8
 	DeeObject_TDelAttr@12=_DeeObject_TDelAttr@12
 	DeeObject_TDelAttrStringHash@16=_DeeObject_TDelAttrStringHash@16
 	DeeObject_TDelAttrStringLenHash@20=_DeeObject_TDelAttrStringLenHash@20
@@ -1555,6 +1556,7 @@ EXPORTS
 	Dee_Movrefv_traced@20=_Dee_Movrefv_traced@20
 	Dee_PUnpackStruct@12=_Dee_PUnpackStruct@12
 	Dee_Realloc@8=_Dee_Realloc@8
+	Dee_ReleaseSystemMemory@0=_Dee_ReleaseSystemMemory@0
 	Dee_RunAtExit@4=_Dee_RunAtExit@4
 	Dee_SetArgv@4=_Dee_SetArgv@4
 	Dee_Setrefv@12=_Dee_Setrefv@12
@@ -1563,11 +1565,11 @@ EXPORTS
 	Dee_Strtod@8=_Dee_Strtod@8
 	Dee_Strtold@8=_Dee_Strtold@8
 	Dee_TryCalloc@4=_Dee_TryCalloc@4
-	Dee_TryCollectMemory@4=_Dee_TryCollectMemory@4
 	Dee_TryMalloc@4=_Dee_TryMalloc@4
 	Dee_TryMemalign@8=_Dee_TryMemalign@8
 	Dee_TryRealloc@8=_Dee_TryRealloc@8
 	Dee_TryReallocInPlace@8=_Dee_TryReallocInPlace@8
+	Dee_TryReleaseSystemMemory@0=_Dee_TryReleaseSystemMemory@0
 	Dee_UnpackStruct@12=_Dee_UnpackStruct@12
 	Dee_VPPackf@8=_Dee_VPPackf@8
 	Dee_VPPackf_Cleanup@8=_Dee_VPPackf_Cleanup@8

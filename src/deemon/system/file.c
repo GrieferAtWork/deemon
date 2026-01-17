@@ -1580,7 +1580,7 @@ again:
 			goto again;
 		}
 		if (DeeNTSystem_IsBadAllocError(error)) {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again;
 			goto err;
 		}
@@ -1629,7 +1629,7 @@ again:
 	if unlikely(result == (size_t)-1) {
 		int error = DeeSystem_GetErrno();
 		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again;
 			return (size_t)-1;
 		});
@@ -1742,7 +1742,7 @@ again:
 			goto again;
 		}
 		if (DeeNTSystem_IsBadAllocError(error)) {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again;
 			goto err;
 		}
@@ -1781,7 +1781,7 @@ again:
 	if unlikely(result == (size_t)-1) {
 		int error = DeeSystem_GetErrno();
 		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_CollectMemory(1))
+			if (Dee_ReleaseSystemMemory())
 				goto again;
 			return (size_t)-1;
 		});
@@ -3081,7 +3081,7 @@ again_setbuf:
 	DBG_ALIGNMENT_DISABLE();
 	if (setvbuf((FILE *)self->sf_handle, NULL, mode, size)) {
 		DBG_ALIGNMENT_ENABLE();
-		if (Dee_CollectMemory(size))
+		if (Dee_ReleaseSystemMemory())
 			goto again_setbuf;
 		goto err;
 	}

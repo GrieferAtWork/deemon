@@ -384,7 +384,7 @@ handle_eacces:
 	case SQLITE_NOMEM:
 handle_nomem:
 		LOCAL_UNLOCK();
-		return Dee_CollectMemory(4096) ? 0 : -1;
+		return Dee_CollectMemory((size_t)-1) ? 0 : -1;
 		break;
 	case SQLITE_READONLY:
 		type = &SQLError_Type;

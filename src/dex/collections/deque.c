@@ -381,9 +381,9 @@ again:
 		size_t bucket_size;
 		bucket_size = self->d_bucket_sz;
 		Deque_LockEndWrite(self);
-		if (!Dee_CollectMemory(SIZEOF_BUCKET(bucket_size)))
-			goto err;
-		goto again;
+		if (Dee_CollectMemory(SIZEOF_BUCKET(bucket_size)))
+			goto again;
+		goto err;
 	}
 	Deque_LockEndWrite(self);
 	return 0;
@@ -399,9 +399,9 @@ again:
 		size_t bucket_size;
 		bucket_size = self->d_bucket_sz;
 		Deque_LockEndWrite(self);
-		if (!Dee_CollectMemory(SIZEOF_BUCKET(bucket_size)))
-			goto err;
-		goto again;
+		if (Dee_CollectMemory(SIZEOF_BUCKET(bucket_size)))
+			goto again;
+		goto err;
 	}
 	Deque_LockEndWrite(self);
 	return 0;
@@ -448,9 +448,9 @@ again:
 		size_t bucket_size;
 		bucket_size = self->d_bucket_sz;
 		Deque_LockEndWrite(self);
-		if (!Dee_CollectMemory(SIZEOF_BUCKET(bucket_size)))
-			goto err;
-		goto again;
+		if (Dee_CollectMemory(SIZEOF_BUCKET(bucket_size)))
+			goto again;
+		goto err;
 	}
 	Deque_LockEndWrite(self);
 	return 0;
@@ -697,10 +697,8 @@ err_restart_collect:
 		}
 	}
 	/* Collect memory for the missing bucket. */
-	if (!Dee_CollectMemory(SIZEOF_BUCKET(self->d_bucket_sz)))
-		goto err;
-	goto again;
-err:
+	if (Dee_CollectMemory(SIZEOF_BUCKET(self->d_bucket_sz)))
+		goto again;
 	return -1;
 }
 

@@ -1029,7 +1029,7 @@ retry_addrinfo:
 #endif /* EAI_AGAIN */
 #ifdef EAI_MEMORY
 			if (error == EAI_MEMORY) {
-				if (Dee_CollectMemory(1))
+				if (Dee_ReleaseSystemMemory())
 					goto retry_addrinfo;
 				goto err;
 			}
