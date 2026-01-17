@@ -5123,12 +5123,12 @@ again:
 
 					/* Check if this is a duplicate key. */
 					temp = DeeObject_TryCompareEq(key, it->ti_key);
-					if unlikely(temp == Dee_COMPARE_ERR) {
+					if (Dee_COMPARE_ISERR(temp)) {
 						if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR))
 							goto err;
 						DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
 						goto next_key;
-					} else if (temp == 0) {
+					} else if (Dee_COMPARE_ISEQ(temp)) {
 						/* Duplicate key (just get rid of this second instance by removing it from the v-stack) */
 						if (asmap) {
 							ASSERT(key_voffset >= 2);

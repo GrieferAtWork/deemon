@@ -85,9 +85,9 @@ next_keyitem:
 				if likely(item->hsi_hash != hash)
 					continue;
 				temp = DeeObject_TryCompareEq(item->hsi_key, key);
-				if unlikely(temp == Dee_COMPARE_ERR)
+				if (Dee_COMPARE_ISERR(temp))
 					goto err;
-				if likely(temp != 0)
+				if likely(Dee_COMPARE_ISNE(temp))
 					continue;
 
 				/* Another duplicate key. */
@@ -189,9 +189,9 @@ DeeHashSet_NewItemsInherited(size_t num_items,
 					if likely(item->hsi_hash != hash)
 						continue;
 					temp = DeeObject_TryCompareEq(item->hsi_key, key);
-					if unlikely(temp == Dee_COMPARE_ERR)
+					if (Dee_COMPARE_ISERR(temp))
 						goto err_r_elem;
-					if likely(temp != 0)
+					if likely(Dee_COMPARE_ISNE(temp))
 						continue;
 
 					/* Duplicate key. */
@@ -523,9 +523,9 @@ remove_duplicate_key:
 				}
 				if (Dee_TYPE(item->hsi_key) == Dee_TYPE(items[i])) {
 					int error = DeeObject_TryCompareEq(item->hsi_key, items[i]);
-					if unlikely(error == Dee_COMPARE_ERR)
+					if (Dee_COMPARE_ISERR(error))
 						goto err_items_v_new_map;
-					if (error == 0)
+					if (Dee_COMPARE_ISEQ(error))
 						goto remove_duplicate_key;
 				}
 
@@ -755,9 +755,9 @@ again:
 		/* Invoke the compare operator outside of any lock. */
 		error = DeeObject_TryCompareEq(search_item, item_key);
 		Dee_Decref(item_key);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err; /* Error in compare operator. */
-		if (error == 0) {
+		if (Dee_COMPARE_ISEQ(error)) {
 			DeeHashSet_LockWrite(me);
 
 			/* Check if the set was modified. */
@@ -860,7 +860,7 @@ again:
 		/* Invoke the compare operator outside of any lock. */
 		error = DeeObject_TryCompareEq(search_item, item_key);
 		Dee_Decref(item_key);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err; /* Error in compare operator. */
 		DeeHashSet_LockRead(me);
 
@@ -869,7 +869,7 @@ again:
 		    me->hs_mask != mask ||
 		    item->hsi_key != item_key)
 			goto again;
-		if (error == 0) {
+		if (Dee_COMPARE_ISEQ(error)) {
 			DeeHashSet_LockEndRead(me);
 			return 0; /* Already exists. */
 		}
@@ -944,9 +944,9 @@ restart:
 		/* Invoke the compare operator outside of any lock. */
 		error = DeeObject_TryCompareEq(search_item, item_key);
 		Dee_Decref(item_key);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err; /* Error in compare operator. */
-		if (error == 0) {
+		if (Dee_COMPARE_ISEQ(error)) {
 			/* Found it! */
 			DeeHashSet_LockWrite(me);
 
@@ -1016,9 +1016,9 @@ restart:
 		/* Invoke the compare operator outside of any lock. */
 		error = DeeObject_TryCompareEq(search_item, item_key);
 		Dee_Decref(item_key);
-		if (error == 0)
+		if (Dee_COMPARE_ISEQ_NO_ERR(error))
 			return 1; /* Found the item. */
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err; /* Error in compare operator. */
 		DeeHashSet_LockRead(me);
 		/* Check if the set was modified. */

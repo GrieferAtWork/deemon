@@ -42,9 +42,9 @@ set_unify_foreach_cb(void *arg, DeeObject *key) {
 	struct set_unify_foreach_data *data;
 	data = (struct set_unify_foreach_data *)arg;
 	temp = DeeObject_TryCompareEq(data->sufd_key, key);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		goto err;
-	if (temp == 0) {
+	if (Dee_COMPARE_ISEQ(temp)) {
 		Dee_Incref(key);
 		data->sufd_result = key;
 		return SET_UNIFY_FOREACH_FOUND;
@@ -68,9 +68,9 @@ seq_locate_item_foreach_cb(void *arg, DeeObject *key) {
 	int temp;
 	DeeObject *search_key = *(DeeObject **)arg;
 	temp = DeeObject_TryCompareEq(search_key, key);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		goto err;
-	if (temp == 0) {
+	if (Dee_COMPARE_ISEQ(temp)) {
 		Dee_Incref(key);
 		*(DeeObject **)arg = key;
 		return SET_LOCATE_ITEM_FOREACH_FOUND;

@@ -3622,9 +3622,9 @@ PRIVATE struct type_math ssw_math = {
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 ss_trycompare_eq_cb(void *arg, DeeObject *elem) {
 	int result = DeeObject_TryCompareEq(elem, (DeeObject *)arg);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	if (result == 0)
+	if (Dee_COMPARE_ISEQ(result))
 		return SEQSOME_FOREACH_YES;
 	return SEQSOME_FOREACH_NO;
 err:

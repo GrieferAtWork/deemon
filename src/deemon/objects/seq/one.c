@@ -348,9 +348,9 @@ so_sizeob(SeqOne *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 so_contains(SeqOne *__restrict self, DeeObject *item) {
 	int cmp = DeeObject_TryCompareEq(item, self->so_item);
-	if (cmp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(cmp))
 		goto err;
-	return_bool(cmp == 0);
+	return_bool(Dee_COMPARE_ISEQ(cmp));
 err:
 	return NULL;
 }
@@ -685,9 +685,9 @@ so_mh_seq_reduce_with_range_and_init(SeqOne *self, DeeObject *combine,
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 so_mh_seq_count(SeqOne *self, DeeObject *item) {
 	int cmp = DeeObject_TryCompareEq(item, self->so_item);
-	if (cmp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(cmp))
 		goto err;
-	return cmp == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(cmp) ? 1 : 0;
 err:
 	return (size_t)-1;
 }
@@ -701,9 +701,9 @@ so_mh_seq_count_with_key(SeqOne *self, DeeObject *item, DeeObject *key) {
 		goto err;
 	cmp = DeeObject_TryCompareKeyEq(keyed_item, self->so_item, key);
 	Dee_Decref(keyed_item);
-	if (cmp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(cmp))
 		goto err;
-	return cmp == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(cmp) ? 1 : 0;
 err:
 	return (size_t)-1;
 }
@@ -860,9 +860,9 @@ PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 so_mh_seq_bposition(SeqOne *self, DeeObject *item, size_t start, size_t end) {
 	if (start == 0 && end >= 1) {
 		int cmp = DeeObject_Compare(item, self->so_item);
-		if unlikely(cmp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(cmp))
 			goto err;
-		if (cmp <= 0)
+		if (Dee_COMPARE_ISLE(cmp))
 			return 0;
 		return 1;
 	}
@@ -876,9 +876,9 @@ so_mh_seq_bposition_with_key(SeqOne *self, DeeObject *item,
                              size_t start, size_t end, DeeObject *key) {
 	if (start == 0 && end >= 1) {
 		int cmp = DeeObject_CompareKey2(item, self->so_item, key);
-		if unlikely(cmp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(cmp))
 			goto err;
-		if (cmp <= 0)
+		if (Dee_COMPARE_ISLE(cmp))
 			return 0;
 		return 1;
 	}
@@ -894,12 +894,12 @@ so_mh_seq_brange(SeqOne *self, DeeObject *item,
                  size_t result_range[2]) {
 	if (start == 0 && end >= 1) {
 		int cmp = DeeObject_Compare(item, self->so_item);
-		if unlikely(cmp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(cmp))
 			goto err;
-		if (cmp < 0) {
+		if (Dee_COMPARE_ISLO(cmp)) {
 			result_range[0] = 0;
 			result_range[1] = 0;
-		} else if (cmp == 0) {
+		} else if (Dee_COMPARE_ISEQ(cmp)) {
 			result_range[0] = 0;
 			result_range[1] = 1;
 		} else {
@@ -921,12 +921,12 @@ so_mh_seq_brange_with_key(SeqOne *self, DeeObject *item,
                           size_t result_range[2]) {
 	if (start == 0 && end >= 1) {
 		int cmp = DeeObject_CompareKey2(item, self->so_item, key);
-		if unlikely(cmp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(cmp))
 			goto err;
-		if (cmp < 0) {
+		if (Dee_COMPARE_ISLO(cmp)) {
 			result_range[0] = 0;
 			result_range[1] = 0;
-		} else if (cmp == 0) {
+		} else if (Dee_COMPARE_ISEQ(cmp)) {
 			result_range[0] = 0;
 			result_range[1] = 1;
 		} else {

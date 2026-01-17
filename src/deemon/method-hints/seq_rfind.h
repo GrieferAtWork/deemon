@@ -51,10 +51,11 @@ default_seq_rfind_foreach_cb(void *arg, size_t index, /*nullable*/ DeeObject *va
 	if (!value)
 		return 0;
 	cmp = DeeObject_TryCompareEq(data->dsrf_elem, value);
-	if (cmp == 0)
+	if (Dee_COMPARE_ISEQ_NO_ERR(cmp)) {
 		data->dsrf_result = index;
-	if unlikely(cmp == Dee_COMPARE_ERR)
+	} else if (Dee_COMPARE_ISERR(cmp)) {
 		goto err;
+	}
 	return 0;
 err:
 	return -1;
@@ -144,10 +145,11 @@ default_seq_rfind_with_key_foreach_cb(void *arg, size_t index, /*nullable*/ DeeO
 	if (!value)
 		return 0;
 	cmp = DeeObject_TryCompareEq(data->dsrfwk_kelem, value);
-	if (cmp == 0)
+	if (Dee_COMPARE_ISEQ_NO_ERR(cmp)) {
 		data->dsrfwk_result = index;
-	if unlikely(cmp == Dee_COMPARE_ERR)
+	} else if (Dee_COMPARE_ISERR(cmp)) {
 		goto err;
+	}
 	return 0;
 err:
 	return -1;

@@ -62,9 +62,9 @@ srwrip_call(SeqRemoveWithRemoveIfPredicate *self, size_t argc, DeeObject *const 
 	DeeObject *item;
 	DeeArg_Unpack1(err, argc, argv, "_SeqRemoveWithRemoveIfPredicate", &item);
 	equals = DeeObject_TryCompareEq(self->srwrip_item, item);
-	if unlikely(equals == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(equals))
 		goto err;
-	return_bool(equals == 0);
+	return_bool(Dee_COMPARE_ISEQ(equals));
 err:
 	return NULL;
 }
@@ -75,9 +75,9 @@ srwripwk_call(SeqRemoveWithRemoveIfPredicateWithKey *self, size_t argc, DeeObjec
 	DeeObject *item;
 	DeeArg_Unpack1(err, argc, argv, "_SeqRemoveWithRemoveIfPredicateWithKey", &item);
 	equals = DeeObject_TryCompareKeyEq(self->srwripwk_item, item, self->srwripwk_key);
-	if unlikely(equals == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(equals))
 		goto err;
-	return_bool(equals == 0);
+	return_bool(Dee_COMPARE_ISEQ(equals));
 err:
 	return NULL;
 }

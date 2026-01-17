@@ -383,9 +383,9 @@ same_constant_value(DeeObject *__restrict a,
 	if (Dee_TYPE(a) != Dee_TYPE(b))
 		return false;
 	temp = DeeObject_TryCompareEq(a, b);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
-	return temp == 0;
+	return Dee_COMPARE_ISEQ_NO_ERR(temp);
 }
 
 /* Merge assumptions made in `child' and `sibling', such that

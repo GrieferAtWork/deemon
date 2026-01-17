@@ -228,10 +228,12 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions_compa
 {
 	DeeObject *result;
 	int diff = DeeObject_Compare(lhs, rhs);
-	if unlikely(diff == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(diff))
 		goto err;
-	ASSERT(diff == -1 || diff == 0 || diff == 1);
-	result = DeeInt_FromSign(diff);
+	ASSERT(diff == Dee_COMPARE_LO ||
+	       diff == Dee_COMPARE_EQ ||
+	       diff == Dee_COMPARE_GR);
+	result = DeeInt_FromCompare(diff);
 	return_reference_(result);
 err:
 	return NULL;
@@ -258,9 +260,9 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions_equal
 /*[[[end]]]*/
 {
 	int diff = DeeObject_TryCompareEq(a, b);
-	if unlikely(diff == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(diff))
 		goto err;
-	return_bool(diff == 0);
+	return_bool(Dee_COMPARE_ISEQ(diff));
 err:
 	return NULL;
 }

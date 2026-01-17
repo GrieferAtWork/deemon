@@ -2650,7 +2650,7 @@ INTERN WUNUSED NONNULL((1)) int32_t
 			elem = vec[i];
 			if (Dee_TYPE(elem) == Dee_TYPE(constvalue)) {
 				int error = DeeObject_TryCompareEq(constvalue, elem);
-				if unlikely(Dee_COMPARE_ISERR(error))
+				if (Dee_COMPARE_ISERR(error))
 					goto err;
 				if (Dee_COMPARE_ISEQ(error)) {
 					Dee_Decref_unlikely(constvalue);

@@ -126,9 +126,9 @@ err:
 			int equal;
 			equal = DeeObject_TryCompareEq(item, elem);
 			Dee_Decref(elem);
-			if unlikely(equal == Dee_COMPARE_ERR)
+			if (Dee_COMPARE_ISERR(equal))
 				goto err;
-			if (equal == 0) {
+			if (Dee_COMPARE_ISEQ(equal)) {
 				/* Found one! (delete it) */
 				if unlikely(CALL_DEPENDENCY(seq_operator_delitem_index, self, start))
 					goto err;
@@ -271,9 +271,9 @@ err:
 			int equal;
 			equal = DeeObject_TryCompareKeyEq(item, elem, key);
 			Dee_Decref(elem);
-			if unlikely(equal == Dee_COMPARE_ERR)
+			if (Dee_COMPARE_ISERR(equal))
 				goto err_item;
-			if (equal == 0) {
+			if (Dee_COMPARE_ISEQ(equal)) {
 				/* Found one! (delete it) */
 				if unlikely(CALL_DEPENDENCY(seq_operator_delitem_index, self, start))
 					goto err_item;

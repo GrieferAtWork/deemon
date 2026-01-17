@@ -1195,9 +1195,9 @@ tuple_contains(Tuple *self, DeeObject *item) {
 		DeeObject *ob;
 		ob = DeeTuple_GET(self, i);
 		error = DeeObject_TryCompareEq(item, ob);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err;
-		if (error == 0)
+		if (Dee_COMPARE_ISEQ(error))
 			return_true;
 	}
 	return_false;
@@ -1624,9 +1624,9 @@ tuple_mh_find(Tuple *self, DeeObject *item, size_t start, size_t end) {
 		end = self->t_size;
 	for (; start < end; ++start) {
 		int temp = DeeObject_TryCompareEq(item, self->t_elem[start]);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err;
-		if (temp == 0)
+		if (Dee_COMPARE_ISEQ(temp))
 			return start;
 	}
 	return (size_t)-1;
@@ -1643,9 +1643,9 @@ tuple_mh_find_with_key(Tuple *self, DeeObject *item, size_t start, size_t end, D
 		end = self->t_size;
 	for (; start < end; ++start) {
 		int temp = DeeObject_TryCompareKeyEq(item, self->t_elem[start], key);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err_item;
-		if (temp == 0)
+		if (Dee_COMPARE_ISEQ(temp))
 			return start;
 	}
 	Dee_Decref(item);
@@ -1664,9 +1664,9 @@ tuple_mh_rfind(Tuple *self, DeeObject *item, size_t start, size_t end) {
 		int temp;
 		--end;
 		temp = DeeObject_TryCompareEq(item, self->t_elem[end]);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err;
-		if (temp == 0)
+		if (Dee_COMPARE_ISEQ(temp))
 			return end;
 	}
 	return (size_t)-1;
@@ -1685,9 +1685,9 @@ tuple_mh_rfind_with_key(Tuple *self, DeeObject *item, size_t start, size_t end, 
 		int temp;
 		--end;
 		temp = DeeObject_TryCompareKeyEq(item, self->t_elem[end], key);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err_item;
-		if (temp == 0)
+		if (Dee_COMPARE_ISEQ(temp))
 			return end;
 	}
 	Dee_Decref(item);
@@ -2484,9 +2484,9 @@ nullable_tuple_contains(Tuple *self, DeeObject *item) {
 		if (!ob)
 			continue;
 		error = DeeObject_TryCompareEq(item, ob);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err;
-		if (error == 0)
+		if (Dee_COMPARE_ISEQ(error))
 			return_true;
 	}
 	return_false;

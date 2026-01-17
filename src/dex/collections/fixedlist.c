@@ -506,9 +506,9 @@ fl_contains(FixedList *self, DeeObject *value) {
 		FixedList_LockEndRead(self);
 		temp = DeeObject_TryCompareEq(value, elem);
 		Dee_Decref(elem);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err;
-		if (temp == 0)
+		if (Dee_COMPARE_ISEQ(temp))
 			return_true;
 	}
 	return_false;
@@ -799,9 +799,9 @@ fl_mh_find(FixedList *self, DeeObject *item, size_t start, size_t end) {
 			continue;
 		error = DeeObject_TryCompareEq(item, elem);
 		Dee_Decref(elem);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err;
-		if (error == 0)
+		if (Dee_COMPARE_ISEQ(error))
 			return start;
 	}
 	return (size_t)-1;
@@ -828,9 +828,9 @@ fl_mh_find_with_key(FixedList *self, DeeObject *item,
 			continue;
 		error = DeeObject_TryCompareKeyEq(item, elem, key);
 		Dee_Decref(elem);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err_item;
-		if (error == 0) {
+		if (Dee_COMPARE_ISEQ(error)) {
 			Dee_Decref(item);
 			return start;
 		}
@@ -859,9 +859,9 @@ fl_mh_rfind(FixedList *self, DeeObject *item, size_t start, size_t end) {
 			continue;
 		error = DeeObject_TryCompareEq(item, elem);
 		Dee_Decref(elem);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err;
-		if (error == 0)
+		if (Dee_COMPARE_ISEQ(error))
 			return end;
 	}
 	return (size_t)-1;
@@ -889,9 +889,9 @@ fl_mh_rfind_with_key(FixedList *self, DeeObject *item,
 			continue;
 		error = DeeObject_TryCompareKeyEq(item, elem, key);
 		Dee_Decref(elem);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err_item;
-		if (error == 0) {
+		if (Dee_COMPARE_ISEQ(error)) {
 			/* Found it! */
 			Dee_Decref(item);
 			return end;
@@ -921,9 +921,9 @@ again_elem:
 			continue;
 		error = DeeObject_TryCompareEq(item, elem);
 		Dee_Decref(elem);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err;
-		if (error == 0) {
+		if (Dee_COMPARE_ISEQ(error)) {
 			/* Found it! */
 			FixedList_LockWrite(self);
 			if unlikely(self->fl_elem[start] != elem) {
@@ -963,9 +963,9 @@ again_elem:
 			continue;
 		error = DeeObject_TryCompareKeyEq(item, elem, key);
 		Dee_Decref(elem);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err_item;
-		if (error == 0) {
+		if (Dee_COMPARE_ISEQ(error)) {
 			/* Found it! */
 			FixedList_LockWrite(self);
 			if unlikely(self->fl_elem[start] != elem) {
@@ -1006,9 +1006,9 @@ again_elem:
 			continue;
 		error = DeeObject_TryCompareEq(item, elem);
 		Dee_Decref(elem);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err;
-		if (error == 0) {
+		if (Dee_COMPARE_ISEQ(error)) {
 			/* Found it! */
 			FixedList_LockWrite(self);
 			if unlikely(self->fl_elem[end] != elem) {
@@ -1049,9 +1049,9 @@ again_elem:
 			continue;
 		error = DeeObject_TryCompareKeyEq(item, elem, key);
 		Dee_Decref(elem);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err_item;
-		if (error == 0) {
+		if (Dee_COMPARE_ISEQ(error)) {
 			/* Found it! */
 			FixedList_LockWrite(self);
 			if unlikely(self->fl_elem[end] != elem) {
@@ -1095,9 +1095,9 @@ again_elem:
 			continue;
 		error = DeeObject_TryCompareEq(item, elem);
 		Dee_Decref(elem);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err;
-		if (error == 0) {
+		if (Dee_COMPARE_ISEQ(error)) {
 			/* Found it! */
 			FixedList_LockWrite(self);
 			if unlikely(self->fl_elem[start] != elem) {
@@ -1142,9 +1142,9 @@ again_elem:
 			continue;
 		error = DeeObject_TryCompareKeyEq(item, elem, key);
 		Dee_Decref(elem);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err_item;
-		if (error == 0) {
+		if (Dee_COMPARE_ISEQ(error)) {
 			/* Found it! */
 			FixedList_LockWrite(self);
 			if unlikely(self->fl_elem[start] != elem) {

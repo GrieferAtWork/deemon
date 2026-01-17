@@ -163,11 +163,15 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase4Byte)(ui
 #define Dee_COMPARE_LO  (-1)
 #define Dee_COMPARE_GR  1
 
-#define Dee_COMPARE_ISERR(x) ((x) == Dee_COMPARE_ERR)
-#define Dee_COMPARE_ISEQ(x)  ((x) == 0)
-#define Dee_COMPARE_ISNE(x)  ((x) != 0)
-#define Dee_COMPARE_ISLO(x)  ((x) < 0)
-#define Dee_COMPARE_ISGR(x)  ((x) > 0)
+#define Dee_COMPARE_ISERR(x)       __builtin_expect((x) == Dee_COMPARE_ERR, 0)
+#define Dee_COMPARE_ISEQ_NO_ERR(x) ((x) == 0) /* Never matches "Dee_COMPARE_ERR" */
+#define Dee_COMPARE_ISEQ(x)        ((x) == 0) /* Undefined if matches "Dee_COMPARE_ERR" */
+#define Dee_COMPARE_ISNE_OR_ERR(x) ((x) != 0) /* Guarantied to match "Dee_COMPARE_ERR" */
+#define Dee_COMPARE_ISNE(x)        ((x) != 0) /* Undefined if matches "Dee_COMPARE_ERR" */
+#define Dee_COMPARE_ISLO(x)        ((x) < 0)  /* Undefined if matches "Dee_COMPARE_ERR" */
+#define Dee_COMPARE_ISLE(x)        ((x) <= 0) /* Undefined if matches "Dee_COMPARE_ERR" */
+#define Dee_COMPARE_ISGR(x)        ((x) > 0)  /* Undefined if matches "Dee_COMPARE_ERR" */
+#define Dee_COMPARE_ISGE(x)        ((x) >= 0) /* Undefined if matches "Dee_COMPARE_ERR" */
 
 /* #define Dee_COMPARE_FROMBOOL(is_equal)            ((is_equal) ? Dee_COMPARE_EQ : Dee_COMPARE_NE)
  * #define Dee_COMPARE_FROM_NOT_EQUALS(is_not_equal) ((is_not_equal) ? Dee_COMPARE_NE : Dee_COMPARE_EQ) */

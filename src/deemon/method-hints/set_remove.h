@@ -53,14 +53,17 @@ __set_remove__.set_remove([[nonnull]] DeeObject *self,
 	if (current_value == ITER_DONE) {
 		/* map-key doesn't exist -> can't remove */
 		Dee_Decref(map_key_and_value[1]);
+neq_map_key:
 		Dee_Decref(map_key_and_value[0]);
 		return 0;
 	}
 	temp = DeeObject_TryCompareEq(map_key_and_value[1], current_value);
 	Dee_Decref(map_key_and_value[1]);
 	Dee_Decref(current_value);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		goto err_map_key;
+	if (Dee_COMPARE_ISNE(temp))
+		goto neq_map_key;
 	temp = CALL_DEPENDENCY(map_operator_delitem, self, map_key_and_value[0]);
 	Dee_Decref(map_key_and_value[0]);
 	if unlikely(temp)

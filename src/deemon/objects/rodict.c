@@ -429,9 +429,9 @@ Dee_rodict_builder_setitem_inherited(/*struct Dee_rodict_builder*/ void *__restr
 		if (item->di_hash != hash)
 			continue;
 		key_cmp = DeeObject_TryCompareEq(key, item->di_key);
-		if unlikely(key_cmp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(key_cmp))
 			goto err;
-		if (key_cmp == 0) {
+		if (Dee_COMPARE_ISEQ(key_cmp)) {
 			/* Found the key -> override it */
 			ASSERT(Dee_dict_vidx_toreal(vtab_idx) <= dict->rd_vsize - 1);
 			Dee_Decref(item->di_key);
@@ -1751,12 +1751,12 @@ rodict_compare_seq_foreach(void *arg, DeeObject *rhs_item) {
 		return RODICT_COMPARE_SEQ_FOREACH_LESS;
 	lhs_item = &_DeeRoDict_GetRealVTab(dict)[data->rdcsfd_index];
 	cmp_result = seq_docompare__lhs_vector(lhs_item->di_key_and_value, 2, rhs_item);
-	if unlikely(cmp_result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(cmp_result))
 		goto err;
 	++data->rdcsfd_index;
-	if (cmp_result < 0)
+	if (Dee_COMPARE_ISLO(cmp_result))
 		return RODICT_COMPARE_SEQ_FOREACH_LESS;
-	if (cmp_result > 0)
+	if (Dee_COMPARE_ISGR(cmp_result))
 		return RODICT_COMPARE_SEQ_FOREACH_GREATER;
 	return RODICT_COMPARE_SEQ_FOREACH_EQUAL;
 err:
@@ -1777,10 +1777,10 @@ rodict_compare_eq_seq_foreach(void *arg, DeeObject *rhs_item) {
 		return RODICT_COMPARE_SEQ_FOREACH_NOTEQUAL;
 	lhs_item = &_DeeRoDict_GetRealVTab(dict)[data->rdcsfd_index];
 	cmp_result = seq_docompareeq__lhs_vector(lhs_item->di_key_and_value, 2, rhs_item);
-	if unlikely(cmp_result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(cmp_result))
 		goto err;
 	++data->rdcsfd_index;
-	if (cmp_result != 0)
+	if (Dee_COMPARE_ISNE(cmp_result))
 		return RODICT_COMPARE_SEQ_FOREACH_NOTEQUAL;
 	return RODICT_COMPARE_SEQ_FOREACH_EQUAL;
 err:

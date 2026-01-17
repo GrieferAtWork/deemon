@@ -53,9 +53,9 @@ default_remove_with_enumerate_index_and_delitem_index_cb(void *arg, size_t index
 	if (!value)
 		return 0;
 	equal = DeeObject_TryCompareEq(data->drweiadiid_item, value);
-	if unlikely(equal == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(equal))
 		goto err;
-	if (equal != 0)
+	if (Dee_COMPARE_ISNE(equal))
 		return 0;
 	if unlikely((*Dee_TYPE(data->drweiadiid_self)->tp_seq->tp_delitem_index)(data->drweiadiid_self, index))
 		goto err;
@@ -142,9 +142,9 @@ default_remove_with_key_with_enumerate_index_and_delitem_index_cb(void *arg, siz
 	if (!value)
 		return 0;
 	equal = DeeObject_TryCompareKeyEq(data->drwkweiadiid_item, value, data->drwkweiadiid_key);
-	if unlikely(equal == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(equal))
 		goto err;
-	if (equal != 0)
+	if (Dee_COMPARE_ISNE(equal))
 		return 0;
 	if unlikely((*Dee_TYPE(data->drwkweiadiid_self)->tp_seq->tp_delitem_index)(data->drwkweiadiid_self, index))
 		goto err;

@@ -24,7 +24,7 @@
 [[alias(Set.equals)]]
 __set_compare_eq__(rhs:?X2?DSet?S?O)->?X2?Dbool?Dint {
 	int result = CALL_DEPENDENCY(set_operator_compare_eq, self, rhs);
-	if unlikely(Dee_COMPARE_ISERR(result))
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	/* We always return "bool" here, but user-code is also allowed to return "int" */
 	return_bool(Dee_COMPARE_ISEQ(result));
@@ -133,7 +133,7 @@ __set_compare_eq__.set_operator_trycompare_eq([[nonnull]] DeeObject *lhs,
 %{$empty = "default__seq_operator_trycompare_eq__empty"}
 %{using set_operator_compare_eq: {
 	int result = CALL_DEPENDENCY(set_operator_compare_eq, lhs, rhs);
-	if unlikely(Dee_COMPARE_ISERR(result)) {
+	if (Dee_COMPARE_ISERR(result)) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))
@@ -170,7 +170,7 @@ __set_eq__.set_operator_eq([[nonnull]] DeeObject *lhs,
 %{$empty = "$with__set_operator_compare_eq"}
 %{$with__set_operator_compare_eq = {
 	int result = CALL_DEPENDENCY(set_operator_compare_eq, lhs, rhs);
-	if unlikely(Dee_COMPARE_ISERR(result))
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	return_bool(Dee_COMPARE_ISEQ(result));
 err:
@@ -201,7 +201,7 @@ __set_ne__.set_operator_ne([[nonnull]] DeeObject *lhs,
 %{$empty = "$with__set_operator_compare_eq"}
 %{$with__set_operator_compare_eq = {
 	int result = CALL_DEPENDENCY(set_operator_compare_eq, lhs, rhs);
-	if unlikely(Dee_COMPARE_ISERR(result))
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	return_bool(Dee_COMPARE_ISNE(result));
 err:

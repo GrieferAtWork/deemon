@@ -255,8 +255,8 @@ LOCAL_rodict_getitem(RoDict *self, LOCAL_KEY_PARAMS) {
 #else /* LOCAL_boolcmp */
 		{
 			int status = LOCAL_compare(item->di_key);
-			if unlikely(status != 0) {
-				if unlikely(status == Dee_COMPARE_ERR)
+			if unlikely(Dee_COMPARE_ISNE_OR_ERR(status)) {
+				if (Dee_COMPARE_ISERR(status))
 					goto err;
 #define NEED_err
 				continue;

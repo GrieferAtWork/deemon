@@ -464,6 +464,13 @@ DDATDEF struct _Dee_int_1digit_object DeeInt_MinusOne_Zero_One[3];
 	(Dee_ASSERTF((sign) >= -1 && (sign) <= 1, "Invalid sign value: %d", (int)(sign)), \
 	 (DeeObject *)((DeeInt_MinusOne_Zero_One + 1) + (sign)))
 
+#if Dee_COMPARE_EQ == 0 && Dee_COMPARE_LO == -1 && Dee_COMPARE_GR == 1
+#define DeeInt_FromCompare(cmp) DeeInt_FromSign(cmp)
+#else /* Dee_COMPARE_EQ == 0 && Dee_COMPARE_LO == -1 && Dee_COMPARE_GR == 1 */
+#define DeeInt_FromCompare(cmp) \
+	(Dee_COMPARE_ISEQ(cmp) ? DeeInt_Zero : Dee_COMPARE_ISLO(cmp) ? DeeInt_MinusOne : DeeInt_One)
+#endif /* Dee_COMPARE_EQ != 0 || Dee_COMPARE_LO != -1 || Dee_COMPARE_GR != 1 */
+
 /* Return an integer object for small values */
 #define _DeeInt_ForSmallInt(val) (DeeInt_MinusOne_Zero_One + 1 + (val))
 #define DeeInt_ForSmallInt(val) ((DeeObject *)_DeeInt_ForSmallInt(val))

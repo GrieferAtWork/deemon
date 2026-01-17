@@ -140,12 +140,12 @@ if (hasKey) {
 	print('				cmp_result = DeeObject_Compare(item, seq_item);');
 }
 	print('				Dee_Decref(seq_item);');
-	print('				if unlikely(cmp_result == Dee_COMPARE_ERR)');
+	print('				if (Dee_COMPARE_ISERR(cmp_result))');
 	print('					goto ', err_item, ';');
 	print('			}');
-	print('			if (cmp_result < 0) {');
+	print('			if (Dee_COMPARE_ISLO(cmp_result)) {');
 	print('				end = mid;');
-	print('			} else if (cmp_result > 0) {');
+	print('			} else if (Dee_COMPARE_ISGR(cmp_result)) {');
 	print('				start = mid + 1;');
 	print('			} else {');
 	print('				/' '* Found it! (at "mid") *' '/');
@@ -170,7 +170,7 @@ if (hasKey)
 	print('					if unlikely(!ITER_ISOK(seq_item)) {');
 	print('						if unlikely(!seq_item)');
 	print('							goto ', err_item, ';');
-	print('						cmp_result = 1; /' '* item > <unbound> *' '/');
+	print('						cmp_result = Dee_COMPARE_GR; /' '* item > <unbound> *' '/');
 	print('					} else {');
 if (hasKey) {
 	print('						cmp_result = DeeObject_TryCompareKeyEq(item, seq_item, key);');
@@ -178,10 +178,10 @@ if (hasKey) {
 	print('						cmp_result = DeeObject_TryCompareEq(item, seq_item);');
 }
 	print('						Dee_Decref(seq_item);');
-	print('						if unlikely(cmp_result == Dee_COMPARE_ERR)');
+	print('						if (Dee_COMPARE_ISERR(cmp_result))');
 	print('							goto ', err_item, ';');
 	print('					}');
-	print('					if (cmp_result == 0) {');
+	print('					if (Dee_COMPARE_ISEQ(cmp_result)) {');
 	print('						/' '* Still part of returned range! *' '/');
 	print('						result_range_start = mid;');
 	print('					} else {');
@@ -198,7 +198,7 @@ if (hasKey) {
 	print('					if unlikely(!ITER_ISOK(seq_item)) {');
 	print('						if unlikely(!seq_item)');
 	print('							goto ', err_item, ';');
-	print('						cmp_result = 1; /' '* item > <unbound> *' '/');
+	print('						cmp_result = Dee_COMPARE_GR; /' '* item > <unbound> *' '/');
 	print('					} else {');
 if (hasKey) {
 	print('						cmp_result = DeeObject_TryCompareKeyEq(item, seq_item, key);');
@@ -206,10 +206,10 @@ if (hasKey) {
 	print('						cmp_result = DeeObject_TryCompareEq(item, seq_item);');
 }
 	print('						Dee_Decref(seq_item);');
-	print('						if unlikely(cmp_result == Dee_COMPARE_ERR)');
+	print('						if (Dee_COMPARE_ISERR(cmp_result))');
 	print('							goto ', err_item, ';');
 	print('					}');
-	print('					if (cmp_result == 0) {');
+	print('					if (Dee_COMPARE_ISEQ(cmp_result)) {');
 	print('						/' '* Still part of returned range! *' '/');
 	print('						result_range_end = mid + 1;');
 	print('					} else {');
@@ -385,12 +385,12 @@ __seq_bfind__.seq_bfind([[nonnull]] DeeObject *self,
 			} else {
 				cmp_result = DeeObject_Compare(item, seq_item);
 				Dee_Decref(seq_item);
-				if unlikely(cmp_result == Dee_COMPARE_ERR)
+				if (Dee_COMPARE_ISERR(cmp_result))
 					goto err;
 			}
-			if (cmp_result < 0) {
+			if (Dee_COMPARE_ISLO(cmp_result)) {
 				end = mid;
-			} else if (cmp_result > 0) {
+			} else if (Dee_COMPARE_ISGR(cmp_result)) {
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
@@ -475,12 +475,12 @@ __seq_bfind__.seq_bfind_with_key([[nonnull]] DeeObject *self,
 			} else {
 				cmp_result = DeeObject_CompareKey(item, seq_item, key);
 				Dee_Decref(seq_item);
-				if unlikely(cmp_result == Dee_COMPARE_ERR)
+				if (Dee_COMPARE_ISERR(cmp_result))
 					goto err_item;
 			}
-			if (cmp_result < 0) {
+			if (Dee_COMPARE_ISLO(cmp_result)) {
 				end = mid;
-			} else if (cmp_result > 0) {
+			} else if (Dee_COMPARE_ISGR(cmp_result)) {
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
@@ -565,12 +565,12 @@ __seq_bposition__.seq_bposition([[nonnull]] DeeObject *self,
 			} else {
 				cmp_result = DeeObject_Compare(item, seq_item);
 				Dee_Decref(seq_item);
-				if unlikely(cmp_result == Dee_COMPARE_ERR)
+				if (Dee_COMPARE_ISERR(cmp_result))
 					goto err;
 			}
-			if (cmp_result < 0) {
+			if (Dee_COMPARE_ISLO(cmp_result)) {
 				end = mid;
-			} else if (cmp_result > 0) {
+			} else if (Dee_COMPARE_ISGR(cmp_result)) {
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
@@ -657,12 +657,12 @@ __seq_bposition__.seq_bposition_with_key([[nonnull]] DeeObject *self,
 			} else {
 				cmp_result = DeeObject_CompareKey(item, seq_item, key);
 				Dee_Decref(seq_item);
-				if unlikely(cmp_result == Dee_COMPARE_ERR)
+				if (Dee_COMPARE_ISERR(cmp_result))
 					goto err_item;
 			}
-			if (cmp_result < 0) {
+			if (Dee_COMPARE_ISLO(cmp_result)) {
 				end = mid;
-			} else if (cmp_result > 0) {
+			} else if (Dee_COMPARE_ISGR(cmp_result)) {
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
@@ -751,12 +751,12 @@ __seq_brange__.seq_brange([[nonnull]] DeeObject *self,
 			} else {
 				cmp_result = DeeObject_Compare(item, seq_item);
 				Dee_Decref(seq_item);
-				if unlikely(cmp_result == Dee_COMPARE_ERR)
+				if (Dee_COMPARE_ISERR(cmp_result))
 					goto err;
 			}
-			if (cmp_result < 0) {
+			if (Dee_COMPARE_ISLO(cmp_result)) {
 				end = mid;
-			} else if (cmp_result > 0) {
+			} else if (Dee_COMPARE_ISGR(cmp_result)) {
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
@@ -770,14 +770,14 @@ __seq_brange__.seq_brange([[nonnull]] DeeObject *self,
 					if unlikely(!ITER_ISOK(seq_item)) {
 						if unlikely(!seq_item)
 							goto err;
-						cmp_result = 1; /* item > <unbound> */
+						cmp_result = Dee_COMPARE_GR; /* item > <unbound> */
 					} else {
 						cmp_result = DeeObject_TryCompareEq(item, seq_item);
 						Dee_Decref(seq_item);
-						if unlikely(cmp_result == Dee_COMPARE_ERR)
+						if (Dee_COMPARE_ISERR(cmp_result))
 							goto err;
 					}
-					if (cmp_result == 0) {
+					if (Dee_COMPARE_ISEQ(cmp_result)) {
 						/* Still part of returned range! */
 						result_range_start = mid;
 					} else {
@@ -794,14 +794,14 @@ __seq_brange__.seq_brange([[nonnull]] DeeObject *self,
 					if unlikely(!ITER_ISOK(seq_item)) {
 						if unlikely(!seq_item)
 							goto err;
-						cmp_result = 1; /* item > <unbound> */
+						cmp_result = Dee_COMPARE_GR; /* item > <unbound> */
 					} else {
 						cmp_result = DeeObject_TryCompareEq(item, seq_item);
 						Dee_Decref(seq_item);
-						if unlikely(cmp_result == Dee_COMPARE_ERR)
+						if (Dee_COMPARE_ISERR(cmp_result))
 							goto err;
 					}
-					if (cmp_result == 0) {
+					if (Dee_COMPARE_ISEQ(cmp_result)) {
 						/* Still part of returned range! */
 						result_range_end = mid + 1;
 					} else {
@@ -898,12 +898,12 @@ __seq_brange__.seq_brange_with_key([[nonnull]] DeeObject *self,
 			} else {
 				cmp_result = DeeObject_CompareKey(item, seq_item, key);
 				Dee_Decref(seq_item);
-				if unlikely(cmp_result == Dee_COMPARE_ERR)
+				if (Dee_COMPARE_ISERR(cmp_result))
 					goto err_item;
 			}
-			if (cmp_result < 0) {
+			if (Dee_COMPARE_ISLO(cmp_result)) {
 				end = mid;
-			} else if (cmp_result > 0) {
+			} else if (Dee_COMPARE_ISGR(cmp_result)) {
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
@@ -917,14 +917,14 @@ __seq_brange__.seq_brange_with_key([[nonnull]] DeeObject *self,
 					if unlikely(!ITER_ISOK(seq_item)) {
 						if unlikely(!seq_item)
 							goto err_item;
-						cmp_result = 1; /* item > <unbound> */
+						cmp_result = Dee_COMPARE_GR; /* item > <unbound> */
 					} else {
 						cmp_result = DeeObject_TryCompareKeyEq(item, seq_item, key);
 						Dee_Decref(seq_item);
-						if unlikely(cmp_result == Dee_COMPARE_ERR)
+						if (Dee_COMPARE_ISERR(cmp_result))
 							goto err_item;
 					}
-					if (cmp_result == 0) {
+					if (Dee_COMPARE_ISEQ(cmp_result)) {
 						/* Still part of returned range! */
 						result_range_start = mid;
 					} else {
@@ -941,14 +941,14 @@ __seq_brange__.seq_brange_with_key([[nonnull]] DeeObject *self,
 					if unlikely(!ITER_ISOK(seq_item)) {
 						if unlikely(!seq_item)
 							goto err_item;
-						cmp_result = 1; /* item > <unbound> */
+						cmp_result = Dee_COMPARE_GR; /* item > <unbound> */
 					} else {
 						cmp_result = DeeObject_TryCompareKeyEq(item, seq_item, key);
 						Dee_Decref(seq_item);
-						if unlikely(cmp_result == Dee_COMPARE_ERR)
+						if (Dee_COMPARE_ISERR(cmp_result))
 							goto err_item;
 					}
-					if (cmp_result == 0) {
+					if (Dee_COMPARE_ISEQ(cmp_result)) {
 						/* Still part of returned range! */
 						result_range_end = mid + 1;
 					} else {

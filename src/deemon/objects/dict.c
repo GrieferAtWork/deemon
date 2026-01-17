@@ -1892,9 +1892,9 @@ dict_insert_items_inherited_after_first_duplicate(Dict *self, struct Dee_dict_it
 			if unlikely(!item->di_key)
 				continue; /* Deleted key (highly unlikely, but *could* happen) */
 			key_cmp = DeeObject_TryCompareEq(key, item->di_key);
-			if unlikely(key_cmp == Dee_COMPARE_ERR)
+			if (Dee_COMPARE_ISERR(key_cmp))
 				goto err_duplicates;
-			if likely(key_cmp != 0)
+			if likely(Dee_COMPARE_ISNE(key_cmp))
 				continue;
 
 			/* Another duplicate -> override it like before... */
@@ -1967,9 +1967,9 @@ DeeDict_NewKeyValuesInherited(size_t num_items,
 			if unlikely(!item->di_key)
 				continue; /* Deleted key (highly unlikely, but *could* happen) */
 			key_cmp = DeeObject_TryCompareEq(key, item->di_key);
-			if unlikely(key_cmp == Dee_COMPARE_ERR)
+			if (Dee_COMPARE_ISERR(key_cmp))
 				goto err_r;
-			if likely(key_cmp != 0)
+			if likely(Dee_COMPARE_ISNE(key_cmp))
 				continue;
 
 			/* Damn it! there are duplicate keys in the caller-given items.
@@ -3888,12 +3888,12 @@ dict_compare_seq_foreach(void *arg, DeeObject *rhs_item) {
 	cmp_result = seq_docompare__lhs_vector(lhs_key_and_value, 2, rhs_item);
 	Dee_Decref_unlikely(lhs_key_and_value[1]);
 	Dee_Decref_unlikely(lhs_key_and_value[0]);
-	if unlikely(cmp_result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(cmp_result))
 		goto err;
 	++data->dcsfd_index;
-	if (cmp_result < 0)
+	if (Dee_COMPARE_ISLE(cmp_result))
 		return DICT_COMPARE_SEQ_FOREACH_LESS;
-	if (cmp_result > 0)
+	if (Dee_COMPARE_ISGR(cmp_result))
 		return DICT_COMPARE_SEQ_FOREACH_GREATER;
 	return DICT_COMPARE_SEQ_FOREACH_EQUAL;
 err:
@@ -3926,10 +3926,10 @@ dict_compare_eq_seq_foreach(void *arg, DeeObject *rhs_item) {
 	cmp_result = seq_docompareeq__lhs_vector(lhs_key_and_value, 2, rhs_item);
 	Dee_Decref_unlikely(lhs_key_and_value[1]);
 	Dee_Decref_unlikely(lhs_key_and_value[0]);
-	if unlikely(cmp_result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(cmp_result))
 		goto err;
 	++data->dcsfd_index;
-	if (cmp_result != 0)
+	if (Dee_COMPARE_ISNE(cmp_result))
 		return DICT_COMPARE_SEQ_FOREACH_NOTEQUAL;
 	return DICT_COMPARE_SEQ_FOREACH_EQUAL;
 err:

@@ -107,9 +107,9 @@ Dee_simple_hashset_insert(struct Dee_simple_hashset *__restrict self,
 		if (slot->shsi_hash != hash)
 			continue;
 		cmp = DeeObject_TryCompareEq(item, slot->shsi_key);
-		if (cmp == 0)
+		if (Dee_COMPARE_ISEQ_NO_ERR(cmp))
 			return 0; /* Identical item exists */
-		if unlikely(cmp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(cmp))
 			goto err;
 	}
 
@@ -197,9 +197,9 @@ again_locked:
 		Dee_simple_hashset_with_lock_release(self);
 		cmp = DeeObject_TryCompareEq(item, slot_key);
 		Dee_Decref_unlikely(slot_key);
-		if (cmp == 0)
+		if (Dee_COMPARE_ISEQ_NO_ERR(cmp))
 			return 0; /* Identical item exists */
-		if unlikely(cmp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(cmp))
 			goto err;
 		Dee_simple_hashset_with_lock_acquire(self);
 		if unlikely(slot->shsi_key != slot_key)

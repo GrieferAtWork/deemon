@@ -47,12 +47,12 @@ map_pop_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *value) {
 			goto err;
 		status = DeeObject_TryCompareEq(data->mpwse_key, this_key_and_value[0]);
 		Dee_Decref(this_key_and_value[0]);
-		if unlikely(status == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(status))
 			goto err_this_value;
-		if (status == 0) {
+		if (Dee_COMPARE_ISEQ(status)) {
 			/* Found it! */
 			status = DeeObject_InvokeMethodHint(seq_operator_delitem, data->mpwse_seq, index);
-			if unlikely(status < 0)
+			if unlikely(status)
 				goto err_this_value;
 			data->mpwse_key = this_key_and_value[1]; /* Inherit reference */
 			return MAP_POP_WITH_SEQ_ENUMERATE__SUCCESS;
@@ -88,12 +88,12 @@ map_pop_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
 			goto err;
 		status = DeeObject_TryCompareEq(data->mpwsei_key, this_key_and_value[0]);
 		Dee_Decref(this_key_and_value[0]);
-		if unlikely(status == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(status))
 			goto err_this_value;
-		if (status == 0) {
+		if (Dee_COMPARE_ISEQ(status)) {
 			/* Found it! */
 			status = DeeObject_InvokeMethodHint(seq_operator_delitem_index, data->mpwsei_seq, index);
-			if unlikely(status < 0)
+			if unlikely(status)
 				goto err_this_value;
 			data->mpwsei_key = this_key_and_value[1]; /* Inherit reference */
 			return MAP_POP_WITH_SEQ_ENUMERATE_INDEX__SUCCESS;

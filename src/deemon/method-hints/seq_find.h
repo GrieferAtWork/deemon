@@ -51,12 +51,12 @@ default_seq_find_foreach_cb(void *arg, size_t index, /*nullable*/ DeeObject *val
 	if (!value)
 		return 0;
 	cmp = DeeObject_TryCompareEq(data->dsff_elem, value);
-	if (cmp == 0) {
+	if (Dee_COMPARE_ISEQ_NO_ERR(cmp)) {
 		/* Found the index! */
 		data->dsff_index = index;
 		return -2;
 	}
-	if unlikely(cmp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(cmp))
 		goto err;
 	return 0;
 err:
@@ -128,12 +128,12 @@ default_seq_find_with_key_foreach_cb(void *arg, size_t index, /*nullable*/ DeeOb
 	if (!value)
 		return 0;
 	cmp = DeeObject_TryCompareKeyEq(data->dsfwkf_base.dsff_elem, value, data->dsfwkf_key);
-	if (cmp == 0) {
+	if (Dee_COMPARE_ISEQ_NO_ERR(cmp)) {
 		/* Found the index! */
 		data->dsfwkf_base.dsff_index = index;
 		return -2;
 	}
-	if unlikely(cmp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(cmp))
 		goto err;
 	return 0;
 err:

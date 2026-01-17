@@ -3140,11 +3140,11 @@ static size_t release_unused_segments(PARAM_mstate_m) {
 }
 
 #if !EXPOSE_AS_DEEMON_API
-static int sys_trim(PARAM_mstate_m_ size_t pad)
+#define sys_trim_return_t int
 #else /* !EXPOSE_AS_DEEMON_API */
-static size_t sys_trim(PARAM_mstate_m_ size_t pad)
+#define sys_trim_return_t size_t
 #endif /* EXPOSE_AS_DEEMON_API */
-{
+static sys_trim_return_t sys_trim(PARAM_mstate_m_ size_t pad) {
 	size_t released = 0;
 	if (pad < MAX_REQUEST && is_initialized(m)) {
 		pad += TOP_FOOT_SIZE; /* ensure enough room for segment overhead */
@@ -4742,8 +4742,8 @@ static void dlmalloc_inspect_all(void (*handler)(void *start,
 
 #if !NO_MALLOC_TRIM
 
-PRIVATE size_t do_mspace_sys_trim(PARAM_mstate_m_ size_t pad) {
-	size_t result;
+PRIVATE sys_trim_return_t do_mspace_sys_trim(PARAM_mstate_m_ size_t pad) {
+	sys_trim_return_t result;
 	PREACTION(gm);
 	result = sys_trim(ARG_mstate_m_ pad);
 	POSTACTION(gm);
@@ -4762,11 +4762,7 @@ static int dlmalloc_trim(size_t pad)
 PUBLIC size_t DCALL DeeHeap_Trim(size_t pad)
 #endif /* EXPOSE_AS_DEEMON_API */
 {
-#if !EXPOSE_AS_DEEMON_API
-	int result;
-#else /* !EXPOSE_AS_DEEMON_API */
-	size_t result;
-#endif /* EXPOSE_AS_DEEMON_API */
+	sys_trim_return_t result;
 #ifdef HOOK_AFTER_INIT_MALLOC_TRIM
 	ensure_initialization_for(HOOK_AFTER_INIT_MALLOC_TRIM(pad));
 #else /* HOOK_AFTER_INIT_MALLOC_TRIM */
@@ -4778,7 +4774,7 @@ PUBLIC size_t DCALL DeeHeap_Trim(size_t pad)
 
 	/* Also trim every "tls_mspace()" (add sum from that to result) */
 #if USE_PER_THREAD_MSTATE
-	result += tls_mspace_foreach(&do_mspace_sys_trim_cb, (void *)(uintptr_t)pad);
+	result += (sys_trim_return_t)tls_mspace_foreach(&do_mspace_sys_trim_cb, (void *)(uintptr_t)pad);
 #endif /* USE_PER_THREAD_MSTATE */
 
 	return result;

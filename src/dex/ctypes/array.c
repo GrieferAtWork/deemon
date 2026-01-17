@@ -235,9 +235,9 @@ array_contains(DeeArrayTypeObject *tp_self, void *base, DeeObject *other) {
 		temp->l_ptr.ptr = iter.ptr;
 		iter.uint += siz;
 		error = DeeObject_TryCompareEq(other, (DeeObject *)temp);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err_lval_type_temp;
-		if (error == 0) {
+		if (Dee_COMPARE_ISEQ(error)) {
 			/* Item was found! */
 			Dee_Decref(temp);
 			Dee_Decref(DeeLValueType_AsType(lval_type));

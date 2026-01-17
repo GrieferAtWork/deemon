@@ -1283,9 +1283,9 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssd_bool(SetSymmetricDifference *__restrict self) {
 	/* `(a ^ b) != {}'    <=>    `a != b' */
 	int result = DeeObject_InvokeMethodHint(set_operator_compare_eq, self->ssd_a, self->ssd_b);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 0 : 1;
+	return Dee_COMPARE_ISEQ(result) ? 0 : 1;
 err:
 	return -1;
 }

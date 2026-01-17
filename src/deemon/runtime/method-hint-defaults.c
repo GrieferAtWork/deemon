@@ -425,9 +425,9 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__seq_operator_bool__with__seq_operator_compare_eq(DeeObject *__restrict self) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_compare_eq))(self, Dee_EmptySeq);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err:
 	return -1;
 }
@@ -435,9 +435,9 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__seq_operator_bool__with__set_operator_compare_eq(DeeObject *__restrict self) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_compare_eq))(self, Dee_EmptySet);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err:
 	return -1;
 }
@@ -445,9 +445,9 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__seq_operator_bool__with__map_operator_compare_eq(DeeObject *__restrict self) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_compare_eq))(self, Dee_EmptyMapping);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err:
 	return -1;
 }
@@ -1369,9 +1369,9 @@ default_map_getitem_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject *
 	struct default_map_getitem_with_map_enumerate_data *data;
 	data = (struct default_map_getitem_with_map_enumerate_data *)arg;
 	temp = DeeObject_TryCompareEq(data->dmgiwme_key, key);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		goto err;
-	if (temp == 0) {
+	if (Dee_COMPARE_ISEQ(temp)) {
 		if unlikely(!value)
 			return -3;
 		Dee_Incref(value);
@@ -1773,9 +1773,9 @@ default_bounditem_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *
 	int cmp;
 	(void)value;
 	cmp = DeeObject_TryCompareEq((DeeObject *)arg, index);
-	if unlikely(cmp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(cmp))
 		goto err;
-	if (cmp == 0)
+	if (Dee_COMPARE_ISEQ(cmp))
 		return value ? -3 : -2;
 	return 0;
 err:
@@ -4578,7 +4578,7 @@ default__seq_operator_trycompare_eq(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_operator_trycompare_eq__with__seq_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_compare_eq))(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR) {
+	if (Dee_COMPARE_ISERR(result)) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))
@@ -4651,9 +4651,9 @@ default__seq_operator_eq__with__seq_operator_ne(DeeObject *lhs, DeeObject *rhs) 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__seq_operator_eq__with__seq_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_compare_eq))(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result == 0);
+	return_bool(Dee_COMPARE_ISEQ(result));
 err:
 	return NULL;
 }
@@ -4694,9 +4694,9 @@ default__seq_operator_ne__with__seq_operator_eq(DeeObject *lhs, DeeObject *rhs) 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__seq_operator_ne__with__seq_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_compare_eq))(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result != 0);
+	return_bool(Dee_COMPARE_ISNE(result));
 err:
 	return NULL;
 }
@@ -4737,9 +4737,9 @@ default__seq_operator_lo__with__seq_operator_ge(DeeObject *lhs, DeeObject *rhs) 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__seq_operator_lo__with__seq_operator_compare(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_compare))(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result < 0);
+	return_bool(Dee_COMPARE_ISLO(result));
 err:
 	return NULL;
 }
@@ -4780,9 +4780,9 @@ default__seq_operator_le__with__seq_operator_gr(DeeObject *lhs, DeeObject *rhs) 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__seq_operator_le__with__seq_operator_compare(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_compare))(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result <= 0);
+	return_bool(Dee_COMPARE_ISLE(result));
 err:
 	return NULL;
 }
@@ -4823,9 +4823,9 @@ default__seq_operator_gr__with__seq_operator_le(DeeObject *lhs, DeeObject *rhs) 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__seq_operator_gr__with__seq_operator_compare(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_compare))(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result > 0);
+	return_bool(Dee_COMPARE_ISGR(result));
 err:
 	return NULL;
 }
@@ -4866,9 +4866,9 @@ default__seq_operator_ge__with__seq_operator_lo(DeeObject *lhs, DeeObject *rhs) 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__seq_operator_ge__with__seq_operator_compare(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_compare))(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result >= 0);
+	return_bool(Dee_COMPARE_ISGE(result));
 err:
 	return NULL;
 }
@@ -9812,9 +9812,9 @@ err:
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 seq_count_foreach_cb(void *arg, DeeObject *item) {
 	int temp = DeeObject_TryCompareEq((DeeObject *)arg, item);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		return -1;
-	return temp == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(temp) ? 1 : 0;
 }
 #endif /* !DEFINED_seq_count_foreach_cb */
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
@@ -9899,9 +9899,9 @@ seq_count_with_key_foreach_cb(void *arg, DeeObject *item) {
 	struct seq_count_with_key_data *data;
 	data = (struct seq_count_with_key_data *)arg;
 	temp = DeeObject_TryCompareKeyEq(data->gscwk_kelem, item, data->gscwk_key);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		return -1;
-	return temp == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(temp) ? 1 : 0;
 }
 #endif /* !DEFINED_seq_count_with_key_foreach_cb */
 INTERN WUNUSED NONNULL((1, 2, 3)) size_t DCALL
@@ -9973,9 +9973,9 @@ default__seq_count_with_range__unsupported(DeeObject *self, DeeObject *item, siz
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 seq_count_foreach_cb(void *arg, DeeObject *item) {
 	int temp = DeeObject_TryCompareEq((DeeObject *)arg, item);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		return -1;
-	return temp == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(temp) ? 1 : 0;
 }
 #endif /* !DEFINED_seq_count_foreach_cb */
 #ifndef DEFINED_seq_count_enumerate_cb
@@ -10070,9 +10070,9 @@ seq_count_with_key_foreach_cb(void *arg, DeeObject *item) {
 	struct seq_count_with_key_data *data;
 	data = (struct seq_count_with_key_data *)arg;
 	temp = DeeObject_TryCompareKeyEq(data->gscwk_kelem, item, data->gscwk_key);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		return -1;
-	return temp == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(temp) ? 1 : 0;
 }
 #endif /* !DEFINED_seq_count_with_key_foreach_cb */
 #ifndef DEFINED_seq_count_with_key_enumerate_cb
@@ -10192,9 +10192,9 @@ default__seq_contains__with__map_operator_trygetitem(DeeObject *self, DeeObject 
 	result = DeeObject_TryCompareEq(key_and_value[1], real_value);
 	Dee_Decref(real_value);
 	Dee_Decref(key_and_value[1]);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err_trycatch:
 	if (DeeError_Catch(&DeeError_NotImplemented))
 		return 0;
@@ -10207,9 +10207,9 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_contains_with_foreach_cb(void *arg, DeeObject *elem) {
 	int temp = DeeObject_TryCompareEq((DeeObject *)arg, elem);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		return -1;
-	if (temp == 0)
+	if (Dee_COMPARE_ISEQ(temp))
 		return -2;
 	return 0;
 }
@@ -10302,9 +10302,9 @@ seq_count_with_key_foreach_cb(void *arg, DeeObject *item) {
 	struct seq_count_with_key_data *data;
 	data = (struct seq_count_with_key_data *)arg;
 	temp = DeeObject_TryCompareKeyEq(data->gscwk_kelem, item, data->gscwk_key);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		return -1;
-	return temp == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(temp) ? 1 : 0;
 }
 #endif /* !DEFINED_seq_count_with_key_foreach_cb */
 #ifndef DEFINED_seq_contains_with_key_foreach_cb
@@ -10315,9 +10315,9 @@ seq_contains_with_key_foreach_cb(void *arg, DeeObject *item) {
 	struct seq_count_with_key_data *data;
 	data = (struct seq_count_with_key_data *)arg;
 	temp = DeeObject_TryCompareKeyEq(data->gscwk_kelem, item, data->gscwk_key);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		return -1;
-	return temp == 0 ? -2 : 0;
+	return Dee_COMPARE_ISEQ(temp) ? -2 : 0;
 }
 #endif /* !DEFINED_seq_contains_with_key_foreach_cb */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -10394,9 +10394,9 @@ default__seq_contains_with_range__unsupported(DeeObject *self, DeeObject *item, 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_contains_with_foreach_cb(void *arg, DeeObject *elem) {
 	int temp = DeeObject_TryCompareEq((DeeObject *)arg, elem);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		return -1;
-	if (temp == 0)
+	if (Dee_COMPARE_ISEQ(temp))
 		return -2;
 	return 0;
 }
@@ -10488,9 +10488,9 @@ seq_count_with_key_foreach_cb(void *arg, DeeObject *item) {
 	struct seq_count_with_key_data *data;
 	data = (struct seq_count_with_key_data *)arg;
 	temp = DeeObject_TryCompareKeyEq(data->gscwk_kelem, item, data->gscwk_key);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		return -1;
-	return temp == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(temp) ? 1 : 0;
 }
 #endif /* !DEFINED_seq_count_with_key_foreach_cb */
 #ifndef DEFINED_seq_contains_with_key_foreach_cb
@@ -10501,9 +10501,9 @@ seq_contains_with_key_foreach_cb(void *arg, DeeObject *item) {
 	struct seq_count_with_key_data *data;
 	data = (struct seq_count_with_key_data *)arg;
 	temp = DeeObject_TryCompareKeyEq(data->gscwk_kelem, item, data->gscwk_key);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		return -1;
-	return temp == 0 ? -2 : 0;
+	return Dee_COMPARE_ISEQ(temp) ? -2 : 0;
 }
 #endif /* !DEFINED_seq_contains_with_key_foreach_cb */
 #ifndef DEFINED_seq_contains_with_key_enumerate_cb
@@ -10954,9 +10954,9 @@ default__seq_startswith__with__seq_trygetfirst(DeeObject *self, DeeObject *item)
 		goto err;
 	result = DeeObject_TryCompareEq(item, first);
 	Dee_Decref(first);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err:
 	return -1;
 }
@@ -11035,9 +11035,9 @@ default__seq_startswith_with_key__with__seq_trygetfirst(DeeObject *self, DeeObje
 	result = DeeObject_TryCompareKeyEq(item, first, key);
 	Dee_Decref(item);
 	Dee_Decref(first);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err_first:
 	Dee_Decref(first);
 err:
@@ -11101,9 +11101,9 @@ default__seq_startswith_with_range__with__seq_operator_trygetitem_index(DeeObjec
 		return 0;
 	result = DeeObject_TryCompareEq(item, selfitem);
 	Dee_Decref(selfitem);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err:
 	return -1;
 }
@@ -11169,9 +11169,9 @@ default__seq_startswith_with_range_and_key__with__seq_operator_trygetitem_index(
 	result = DeeObject_TryCompareKeyEq(item, selfitem, key);
 	Dee_Decref(item);
 	Dee_Decref(selfitem);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err_selfitem:
 	Dee_Decref(selfitem);
 err:
@@ -11232,9 +11232,9 @@ default__seq_endswith__with__seq_trygetlast(DeeObject *self, DeeObject *item) {
 		goto err;
 	result = DeeObject_TryCompareEq(item, last);
 	Dee_Decref(last);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err:
 	return -1;
 }
@@ -11313,9 +11313,9 @@ default__seq_endswith_with_key__with__seq_trygetlast(DeeObject *self, DeeObject 
 	result = DeeObject_TryCompareKeyEq(item, last, key);
 	Dee_Decref(item);
 	Dee_Decref(last);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err_last:
 	Dee_Decref(last);
 err:
@@ -11388,9 +11388,9 @@ default__seq_endswith_with_range__with__seq_operator_size__and__operator_trygeti
 		return 0;
 	result = DeeObject_TryCompareEq(item, selfitem);
 	Dee_Decref(selfitem);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err:
 	return -1;
 }
@@ -11461,9 +11461,9 @@ default__seq_endswith_with_range_and_key__with__seq_operator_size__and__operator
 	result = DeeObject_TryCompareKeyEq(item, selfitem, key);
 	Dee_Decref(item);
 	Dee_Decref(selfitem);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err_selfitem:
 	Dee_Decref(selfitem);
 err:
@@ -11554,12 +11554,12 @@ default_seq_find_foreach_cb(void *arg, size_t index, /*nullable*/ DeeObject *val
 	if (!value)
 		return 0;
 	cmp = DeeObject_TryCompareEq(data->dsff_elem, value);
-	if (cmp == 0) {
+	if (Dee_COMPARE_ISEQ_NO_ERR(cmp)) {
 		/* Found the index! */
 		data->dsff_index = index;
 		return -2;
 	}
-	if unlikely(cmp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(cmp))
 		goto err;
 	return 0;
 err:
@@ -11668,12 +11668,12 @@ default_seq_find_with_key_foreach_cb(void *arg, size_t index, /*nullable*/ DeeOb
 	if (!value)
 		return 0;
 	cmp = DeeObject_TryCompareKeyEq(data->dsfwkf_base.dsff_elem, value, data->dsfwkf_key);
-	if (cmp == 0) {
+	if (Dee_COMPARE_ISEQ_NO_ERR(cmp)) {
 		/* Found the index! */
 		data->dsfwkf_base.dsff_index = index;
 		return -2;
 	}
-	if unlikely(cmp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(cmp))
 		goto err;
 	return 0;
 err:
@@ -11807,10 +11807,11 @@ default_seq_rfind_foreach_cb(void *arg, size_t index, /*nullable*/ DeeObject *va
 	if (!value)
 		return 0;
 	cmp = DeeObject_TryCompareEq(data->dsrf_elem, value);
-	if (cmp == 0)
+	if (Dee_COMPARE_ISEQ_NO_ERR(cmp)) {
 		data->dsrf_result = index;
-	if unlikely(cmp == Dee_COMPARE_ERR)
+	} else if (Dee_COMPARE_ISERR(cmp)) {
 		goto err;
+	}
 	return 0;
 err:
 	return -1;
@@ -11943,10 +11944,11 @@ default_seq_rfind_with_key_foreach_cb(void *arg, size_t index, /*nullable*/ DeeO
 	if (!value)
 		return 0;
 	cmp = DeeObject_TryCompareEq(data->dsrfwk_kelem, value);
-	if (cmp == 0)
+	if (Dee_COMPARE_ISEQ_NO_ERR(cmp)) {
 		data->dsrfwk_result = index;
-	if unlikely(cmp == Dee_COMPARE_ERR)
+	} else if (Dee_COMPARE_ISERR(cmp)) {
 		goto err;
+	}
 	return 0;
 err:
 	return -1;
@@ -12650,9 +12652,9 @@ default_remove_with_enumerate_index_and_delitem_index_cb(void *arg, size_t index
 	if (!value)
 		return 0;
 	equal = DeeObject_TryCompareEq(data->drweiadiid_item, value);
-	if unlikely(equal == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(equal))
 		goto err;
-	if (equal != 0)
+	if (Dee_COMPARE_ISNE(equal))
 		return 0;
 	if unlikely((*Dee_TYPE(data->drweiadiid_self)->tp_seq->tp_delitem_index)(data->drweiadiid_self, index))
 		goto err;
@@ -12762,9 +12764,9 @@ default_remove_with_key_with_enumerate_index_and_delitem_index_cb(void *arg, siz
 	if (!value)
 		return 0;
 	equal = DeeObject_TryCompareKeyEq(data->drwkweiadiid_item, value, data->drwkweiadiid_key);
-	if unlikely(equal == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(equal))
 		goto err;
-	if (equal != 0)
+	if (Dee_COMPARE_ISNE(equal))
 		return 0;
 	if unlikely((*Dee_TYPE(data->drwkweiadiid_self)->tp_seq->tp_delitem_index)(data->drwkweiadiid_self, index))
 		goto err;
@@ -13094,9 +13096,9 @@ default__seq_removeall__with__seq_operator_size__and__seq_operator_trygetitem_in
 			int equal;
 			equal = DeeObject_TryCompareEq(item, elem);
 			Dee_Decref(elem);
-			if unlikely(equal == Dee_COMPARE_ERR)
+			if (Dee_COMPARE_ISERR(equal))
 				goto err;
-			if (equal == 0) {
+			if (Dee_COMPARE_ISEQ(equal)) {
 				/* Found one! (delete it) */
 				if unlikely((*cached_seq_operator_delitem_index)(self, start))
 					goto err;
@@ -13270,9 +13272,9 @@ default__seq_removeall_with_key__with__seq_operator_size__and__seq_operator_tryg
 			int equal;
 			equal = DeeObject_TryCompareKeyEq(item, elem, key);
 			Dee_Decref(elem);
-			if unlikely(equal == Dee_COMPARE_ERR)
+			if (Dee_COMPARE_ISERR(equal))
 				goto err_item;
-			if (equal == 0) {
+			if (Dee_COMPARE_ISEQ(equal)) {
 				/* Found one! (delete it) */
 				if unlikely((*cached_seq_operator_delitem_index)(self, start))
 					goto err_item;
@@ -14457,12 +14459,12 @@ default__seq_bfind__with__seq_operator_size__and__seq_operator_trygetitem_index(
 			} else {
 				cmp_result = DeeObject_Compare(item, seq_item);
 				Dee_Decref(seq_item);
-				if unlikely(cmp_result == Dee_COMPARE_ERR)
+				if (Dee_COMPARE_ISERR(cmp_result))
 					goto err;
 			}
-			if (cmp_result < 0) {
+			if (Dee_COMPARE_ISLO(cmp_result)) {
 				end = mid;
-			} else if (cmp_result > 0) {
+			} else if (Dee_COMPARE_ISGR(cmp_result)) {
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
@@ -14579,12 +14581,12 @@ default__seq_bfind_with_key__with__seq_operator_size__and__seq_operator_trygetit
 			} else {
 				cmp_result = DeeObject_CompareKey(item, seq_item, key);
 				Dee_Decref(seq_item);
-				if unlikely(cmp_result == Dee_COMPARE_ERR)
+				if (Dee_COMPARE_ISERR(cmp_result))
 					goto err_item;
 			}
-			if (cmp_result < 0) {
+			if (Dee_COMPARE_ISLO(cmp_result)) {
 				end = mid;
-			} else if (cmp_result > 0) {
+			} else if (Dee_COMPARE_ISGR(cmp_result)) {
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
@@ -14702,12 +14704,12 @@ default__seq_bposition__with__seq_operator_size__and__seq_operator_trygetitem_in
 			} else {
 				cmp_result = DeeObject_Compare(item, seq_item);
 				Dee_Decref(seq_item);
-				if unlikely(cmp_result == Dee_COMPARE_ERR)
+				if (Dee_COMPARE_ISERR(cmp_result))
 					goto err;
 			}
-			if (cmp_result < 0) {
+			if (Dee_COMPARE_ISLO(cmp_result)) {
 				end = mid;
-			} else if (cmp_result > 0) {
+			} else if (Dee_COMPARE_ISGR(cmp_result)) {
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
@@ -14826,12 +14828,12 @@ default__seq_bposition_with_key__with__seq_operator_size__and__seq_operator_tryg
 			} else {
 				cmp_result = DeeObject_CompareKey(item, seq_item, key);
 				Dee_Decref(seq_item);
-				if unlikely(cmp_result == Dee_COMPARE_ERR)
+				if (Dee_COMPARE_ISERR(cmp_result))
 					goto err_item;
 			}
-			if (cmp_result < 0) {
+			if (Dee_COMPARE_ISLO(cmp_result)) {
 				end = mid;
-			} else if (cmp_result > 0) {
+			} else if (Dee_COMPARE_ISGR(cmp_result)) {
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
@@ -14975,12 +14977,12 @@ default__seq_brange__with__seq_operator_size__and__seq_operator_trygetitem_index
 			} else {
 				cmp_result = DeeObject_Compare(item, seq_item);
 				Dee_Decref(seq_item);
-				if unlikely(cmp_result == Dee_COMPARE_ERR)
+				if (Dee_COMPARE_ISERR(cmp_result))
 					goto err;
 			}
-			if (cmp_result < 0) {
+			if (Dee_COMPARE_ISLO(cmp_result)) {
 				end = mid;
-			} else if (cmp_result > 0) {
+			} else if (Dee_COMPARE_ISGR(cmp_result)) {
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
@@ -14994,14 +14996,14 @@ default__seq_brange__with__seq_operator_size__and__seq_operator_trygetitem_index
 					if unlikely(!ITER_ISOK(seq_item)) {
 						if unlikely(!seq_item)
 							goto err;
-						cmp_result = 1; /* item > <unbound> */
+						cmp_result = Dee_COMPARE_GR; /* item > <unbound> */
 					} else {
 						cmp_result = DeeObject_TryCompareEq(item, seq_item);
 						Dee_Decref(seq_item);
-						if unlikely(cmp_result == Dee_COMPARE_ERR)
+						if (Dee_COMPARE_ISERR(cmp_result))
 							goto err;
 					}
-					if (cmp_result == 0) {
+					if (Dee_COMPARE_ISEQ(cmp_result)) {
 						/* Still part of returned range! */
 						result_range_start = mid;
 					} else {
@@ -15018,14 +15020,14 @@ default__seq_brange__with__seq_operator_size__and__seq_operator_trygetitem_index
 					if unlikely(!ITER_ISOK(seq_item)) {
 						if unlikely(!seq_item)
 							goto err;
-						cmp_result = 1; /* item > <unbound> */
+						cmp_result = Dee_COMPARE_GR; /* item > <unbound> */
 					} else {
 						cmp_result = DeeObject_TryCompareEq(item, seq_item);
 						Dee_Decref(seq_item);
-						if unlikely(cmp_result == Dee_COMPARE_ERR)
+						if (Dee_COMPARE_ISERR(cmp_result))
 							goto err;
 					}
-					if (cmp_result == 0) {
+					if (Dee_COMPARE_ISEQ(cmp_result)) {
 						/* Still part of returned range! */
 						result_range_end = mid + 1;
 					} else {
@@ -15170,12 +15172,12 @@ default__seq_brange_with_key__with__seq_operator_size__and__seq_operator_trygeti
 			} else {
 				cmp_result = DeeObject_CompareKey(item, seq_item, key);
 				Dee_Decref(seq_item);
-				if unlikely(cmp_result == Dee_COMPARE_ERR)
+				if (Dee_COMPARE_ISERR(cmp_result))
 					goto err_item;
 			}
-			if (cmp_result < 0) {
+			if (Dee_COMPARE_ISLO(cmp_result)) {
 				end = mid;
-			} else if (cmp_result > 0) {
+			} else if (Dee_COMPARE_ISGR(cmp_result)) {
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
@@ -15189,14 +15191,14 @@ default__seq_brange_with_key__with__seq_operator_size__and__seq_operator_trygeti
 					if unlikely(!ITER_ISOK(seq_item)) {
 						if unlikely(!seq_item)
 							goto err_item;
-						cmp_result = 1; /* item > <unbound> */
+						cmp_result = Dee_COMPARE_GR; /* item > <unbound> */
 					} else {
 						cmp_result = DeeObject_TryCompareKeyEq(item, seq_item, key);
 						Dee_Decref(seq_item);
-						if unlikely(cmp_result == Dee_COMPARE_ERR)
+						if (Dee_COMPARE_ISERR(cmp_result))
 							goto err_item;
 					}
-					if (cmp_result == 0) {
+					if (Dee_COMPARE_ISEQ(cmp_result)) {
 						/* Still part of returned range! */
 						result_range_start = mid;
 					} else {
@@ -15213,14 +15215,14 @@ default__seq_brange_with_key__with__seq_operator_size__and__seq_operator_trygeti
 					if unlikely(!ITER_ISOK(seq_item)) {
 						if unlikely(!seq_item)
 							goto err_item;
-						cmp_result = 1; /* item > <unbound> */
+						cmp_result = Dee_COMPARE_GR; /* item > <unbound> */
 					} else {
 						cmp_result = DeeObject_TryCompareKeyEq(item, seq_item, key);
 						Dee_Decref(seq_item);
-						if unlikely(cmp_result == Dee_COMPARE_ERR)
+						if (Dee_COMPARE_ISERR(cmp_result))
 							goto err_item;
 					}
-					if (cmp_result == 0) {
+					if (Dee_COMPARE_ISEQ(cmp_result)) {
 						/* Still part of returned range! */
 						result_range_end = mid + 1;
 					} else {
@@ -15646,7 +15648,7 @@ default__set_operator_trycompare_eq(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__set_operator_trycompare_eq__with__set_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), set_operator_compare_eq))(lhs, rhs);
-	if unlikely(Dee_COMPARE_ISERR(result)) {
+	if (Dee_COMPARE_ISERR(result)) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))
@@ -15685,7 +15687,7 @@ default__set_operator_eq__unsupported(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__set_operator_eq__with__set_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), set_operator_compare_eq))(lhs, rhs);
-	if unlikely(Dee_COMPARE_ISERR(result))
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	return_bool(Dee_COMPARE_ISEQ(result));
 err:
@@ -15722,7 +15724,7 @@ default__set_operator_ne__unsupported(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__set_operator_ne__with__set_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), set_operator_compare_eq))(lhs, rhs);
-	if unlikely(Dee_COMPARE_ISERR(result))
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	return_bool(Dee_COMPARE_ISNE(result));
 err:
@@ -16647,9 +16649,9 @@ set_unify_foreach_cb(void *arg, DeeObject *key) {
 	struct set_unify_foreach_data *data;
 	data = (struct set_unify_foreach_data *)arg;
 	temp = DeeObject_TryCompareEq(data->sufd_key, key);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		goto err;
-	if (temp == 0) {
+	if (Dee_COMPARE_ISEQ(temp)) {
 		Dee_Incref(key);
 		data->sufd_result = key;
 		return SET_UNIFY_FOREACH_FOUND;
@@ -16691,9 +16693,9 @@ seq_locate_item_foreach_cb(void *arg, DeeObject *key) {
 	int temp;
 	DeeObject *search_key = *(DeeObject **)arg;
 	temp = DeeObject_TryCompareEq(search_key, key);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		goto err;
-	if (temp == 0) {
+	if (Dee_COMPARE_ISEQ(temp)) {
 		Dee_Incref(key);
 		*(DeeObject **)arg = key;
 		return SET_LOCATE_ITEM_FOREACH_FOUND;
@@ -16946,14 +16948,17 @@ default__set_remove__with__map_operator_trygetitem__and__map_operator_delitem(De
 	if (current_value == ITER_DONE) {
 		/* map-key doesn't exist -> can't remove */
 		Dee_Decref(map_key_and_value[1]);
+neq_map_key:
 		Dee_Decref(map_key_and_value[0]);
 		return 0;
 	}
 	temp = DeeObject_TryCompareEq(map_key_and_value[1], current_value);
 	Dee_Decref(map_key_and_value[1]);
 	Dee_Decref(current_value);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		goto err_map_key;
+	if (Dee_COMPARE_ISNE(temp))
+		goto neq_map_key;
 	temp = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_delitem))(self, map_key_and_value[0]);
 	Dee_Decref(map_key_and_value[0]);
 	if unlikely(temp)
@@ -18674,9 +18679,9 @@ default_map_bounditem_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *va
 	int temp;
 	(void)value;
 	temp = DeeObject_TryCompareEq((DeeObject *)arg, key);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		goto err;
-	if (temp == 0)
+	if (Dee_COMPARE_ISEQ(temp))
 		return value ? -2 : -3; /* Stop iteration */
 	return 0;
 err:
@@ -19226,9 +19231,9 @@ map_setold_ex_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *valu
 			goto err;
 		status = DeeObject_TryCompareEq(data->msoxwse_key_and_value[0], this_key_and_value[0]);
 		Dee_Decref(this_key_and_value[0]);
-		if unlikely(status == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(status))
 			goto err_this_value;
-		if (status == 0) {
+		if (Dee_COMPARE_ISEQ(status)) {
 			/* Found it! (now to override it) */
 			DREF DeeObject *new_pair;
 			new_pair = DeeTuple_NewVector(2, data->msoxwse_key_and_value);
@@ -19236,7 +19241,7 @@ map_setold_ex_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *valu
 				goto err_this_value;
 			status = DeeObject_InvokeMethodHint(seq_operator_setitem, data->msoxwse_seq, index, new_pair);
 			Dee_Decref_unlikely(new_pair);
-			if unlikely(status < 0)
+			if unlikely(status)
 				goto err_this_value;
 			data->msoxwse_key_and_value[1] = this_key_and_value[1]; /* Inherit reference */
 			return MAP_SETOLD_EX_WITH_SEQ_ENUMERATE__SUCCESS;
@@ -19296,9 +19301,9 @@ map_setold_ex_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *va
 			goto err;
 		status = DeeObject_TryCompareEq(data->msoxwsei_key_and_value[0], this_key_and_value[0]);
 		Dee_Decref(this_key_and_value[0]);
-		if unlikely(status == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(status))
 			goto err_this_value;
-		if (status == 0) {
+		if (Dee_COMPARE_ISEQ(status)) {
 			/* Found it! (now to override it) */
 			DREF DeeObject *new_pair;
 			new_pair = DeeTuple_NewVector(2, data->msoxwsei_key_and_value);
@@ -19306,7 +19311,7 @@ map_setold_ex_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *va
 				goto err_this_value;
 			status = DeeObject_InvokeMethodHint(seq_operator_setitem_index, data->msoxwsei_seq, index, new_pair);
 			Dee_Decref_unlikely(new_pair);
-			if unlikely(status < 0)
+			if unlikely(status)
 				goto err_this_value;
 			data->msoxwsei_key_and_value[1] = this_key_and_value[1]; /* Inherit reference */
 			return MAP_SETOLD_EX_WITH_SEQ_ENUMERATE_INDEX__SUCCESS;
@@ -20146,7 +20151,7 @@ default__map_operator_trycompare_eq(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__map_operator_trycompare_eq__with__map_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), map_operator_compare_eq))(lhs, rhs);
-	if unlikely(Dee_COMPARE_ISERR(result)) {
+	if (Dee_COMPARE_ISERR(result)) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))
@@ -20185,7 +20190,7 @@ default__map_operator_eq__unsupported(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__map_operator_eq__with__map_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), map_operator_compare_eq))(lhs, rhs);
-	if unlikely(Dee_COMPARE_ISERR(result))
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	return_bool(Dee_COMPARE_ISEQ(result));
 err:
@@ -20222,7 +20227,7 @@ default__map_operator_ne__unsupported(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__map_operator_ne__with__map_operator_compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), map_operator_compare_eq))(lhs, rhs);
-	if unlikely(Dee_COMPARE_ISERR(result))
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	return_bool(result != 0);
 err:
@@ -21687,12 +21692,12 @@ map_pop_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *value) {
 			goto err;
 		status = DeeObject_TryCompareEq(data->mpwse_key, this_key_and_value[0]);
 		Dee_Decref(this_key_and_value[0]);
-		if unlikely(status == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(status))
 			goto err_this_value;
-		if (status == 0) {
+		if (Dee_COMPARE_ISEQ(status)) {
 			/* Found it! */
 			status = DeeObject_InvokeMethodHint(seq_operator_delitem, data->mpwse_seq, index);
-			if unlikely(status < 0)
+			if unlikely(status)
 				goto err_this_value;
 			data->mpwse_key = this_key_and_value[1]; /* Inherit reference */
 			return MAP_POP_WITH_SEQ_ENUMERATE__SUCCESS;
@@ -21739,12 +21744,12 @@ map_pop_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
 			goto err;
 		status = DeeObject_TryCompareEq(data->mpwsei_key, this_key_and_value[0]);
 		Dee_Decref(this_key_and_value[0]);
-		if unlikely(status == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(status))
 			goto err_this_value;
-		if (status == 0) {
+		if (Dee_COMPARE_ISEQ(status)) {
 			/* Found it! */
 			status = DeeObject_InvokeMethodHint(seq_operator_delitem_index, data->mpwsei_seq, index);
-			if unlikely(status < 0)
+			if unlikely(status)
 				goto err_this_value;
 			data->mpwsei_key = this_key_and_value[1]; /* Inherit reference */
 			return MAP_POP_WITH_SEQ_ENUMERATE_INDEX__SUCCESS;

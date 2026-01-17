@@ -56,9 +56,9 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_contains_with_foreach_cb(void *arg, DeeObject *elem) {
 	int temp = DeeObject_TryCompareEq((DeeObject *)arg, elem);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		return -1;
-	if (temp == 0)
+	if (Dee_COMPARE_ISEQ(temp))
 		return -2;
 	return 0;
 }
@@ -100,9 +100,9 @@ err:
 	result = DeeObject_TryCompareEq(key_and_value[1], real_value);
 	Dee_Decref(real_value);
 	Dee_Decref(key_and_value[1]);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err_trycatch:
 	if (DeeError_Catch(&DeeError_NotImplemented))
 		return 0;
@@ -170,9 +170,9 @@ seq_contains_with_key_foreach_cb(void *arg, DeeObject *item) {
 	struct seq_count_with_key_data *data;
 	data = (struct seq_count_with_key_data *)arg;
 	temp = DeeObject_TryCompareKeyEq(data->gscwk_kelem, item, data->gscwk_key);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		return -1;
-	return temp == 0 ? -2 : 0;
+	return Dee_COMPARE_ISEQ(temp) ? -2 : 0;
 }
 #endif /* !DEFINED_seq_contains_with_key_foreach_cb */
 )]

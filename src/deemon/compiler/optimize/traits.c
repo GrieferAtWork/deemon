@@ -1415,9 +1415,9 @@ ast_equal_impl(struct ast const *a,
 		if (Dee_TYPE(a->a_constexpr) != Dee_TYPE(b->a_constexpr))
 			goto ne;
 		temp = DeeObject_TryCompareEq(a->a_constexpr, b->a_constexpr);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			DeeError_Handled(ERROR_HANDLED_RESTORE);
-		return temp == 0;
+		return Dee_COMPARE_ISEQ_NO_ERR(temp);
 	}	break;
 
 	case AST_SYM:

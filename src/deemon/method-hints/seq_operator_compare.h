@@ -23,10 +23,13 @@
 /************************************************************************/
 [[alias(Sequence.compare)]]
 __seq_compare__(rhs:?X2?DSequence?S?O)->?Dint {
-	int result = CALL_DEPENDENCY(seq_operator_compare, self, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	int diff = CALL_DEPENDENCY(seq_operator_compare, self, rhs);
+	if (Dee_COMPARE_ISERR(diff))
 		goto err;
-	return_reference(DeeInt_FromSign(result));
+	ASSERT(diff == Dee_COMPARE_LO ||
+	       diff == Dee_COMPARE_EQ ||
+	       diff == Dee_COMPARE_GR);
+	return_reference(DeeInt_FromCompare(diff));
 err:
 	return NULL;
 }
@@ -38,10 +41,10 @@ err:
 [[alias(Sequence.equals)]]
 __seq_compare_eq__(rhs:?X2?DSequence?S?O)->?X2?Dbool?Dint {
 	int result = CALL_DEPENDENCY(seq_operator_compare_eq, self, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	/* We always return "bool" here, but user-code is also allowed to return "int" */
-	return_bool(result == 0);
+	return_bool(Dee_COMPARE_ISEQ(result));
 err:
 	return NULL;
 }
@@ -2022,7 +2025,7 @@ err:
 }}
 %{using seq_operator_compare_eq: {
 	int result = CALL_DEPENDENCY(seq_operator_compare_eq, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR) {
+	if (Dee_COMPARE_ISERR(result)) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))

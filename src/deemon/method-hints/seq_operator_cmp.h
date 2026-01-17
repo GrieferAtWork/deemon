@@ -46,9 +46,9 @@ for (local op, eq, ne, Eq, EQ, isEq: {
 	print('}}');
 	print('%{$with__seq_operator_compare', isEq ? '_eq' : '', ' = {');
 	print('	int result = CALL_DEPENDENCY(seq_operator_compare', isEq ? '_eq' : '', ', lhs, rhs);');
-	print('	if unlikely(result == Dee_COMPARE_ERR)');
+	print('	if (Dee_COMPARE_ISERR(result))');
 	print('		goto err;');
-	print('	return_bool(result ', op, ' 0);');
+	print('	return_bool(Dee_COMPARE_IS', EQ, '(result));');
 	print('err:');
 	print('	return NULL;');
 	print('}} {');
@@ -85,9 +85,9 @@ __seq_eq__.seq_operator_eq([[nonnull]] DeeObject *lhs,
 }}
 %{$with__seq_operator_compare_eq = {
 	int result = CALL_DEPENDENCY(seq_operator_compare_eq, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result == 0);
+	return_bool(Dee_COMPARE_ISEQ(result));
 err:
 	return NULL;
 }} {
@@ -122,9 +122,9 @@ __seq_ne__.seq_operator_ne([[nonnull]] DeeObject *lhs,
 }}
 %{$with__seq_operator_compare_eq = {
 	int result = CALL_DEPENDENCY(seq_operator_compare_eq, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result != 0);
+	return_bool(Dee_COMPARE_ISNE(result));
 err:
 	return NULL;
 }} {
@@ -159,9 +159,9 @@ __seq_lo__.seq_operator_lo([[nonnull]] DeeObject *lhs,
 }}
 %{$with__seq_operator_compare = {
 	int result = CALL_DEPENDENCY(seq_operator_compare, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result < 0);
+	return_bool(Dee_COMPARE_ISLO(result));
 err:
 	return NULL;
 }} {
@@ -196,9 +196,9 @@ __seq_le__.seq_operator_le([[nonnull]] DeeObject *lhs,
 }}
 %{$with__seq_operator_compare = {
 	int result = CALL_DEPENDENCY(seq_operator_compare, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result <= 0);
+	return_bool(Dee_COMPARE_ISLE(result));
 err:
 	return NULL;
 }} {
@@ -233,9 +233,9 @@ __seq_gr__.seq_operator_gr([[nonnull]] DeeObject *lhs,
 }}
 %{$with__seq_operator_compare = {
 	int result = CALL_DEPENDENCY(seq_operator_compare, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result > 0);
+	return_bool(Dee_COMPARE_ISGR(result));
 err:
 	return NULL;
 }} {
@@ -270,9 +270,9 @@ __seq_ge__.seq_operator_ge([[nonnull]] DeeObject *lhs,
 }}
 %{$with__seq_operator_compare = {
 	int result = CALL_DEPENDENCY(seq_operator_compare, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result >= 0);
+	return_bool(Dee_COMPARE_ISGE(result));
 err:
 	return NULL;
 }} {

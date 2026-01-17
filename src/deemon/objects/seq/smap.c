@@ -467,9 +467,9 @@ again_search:
 		SharedMap_LockEndRead(self);
 		temp = DeeObject_TryCompareEq(key, item->si_key);
 		Dee_Decref(item_key);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err;
-		if (temp == 0)
+		if (Dee_COMPARE_ISEQ(temp))
 			return_true;
 	}
 
@@ -502,9 +502,9 @@ again_search:
 			if (item_hash == hash) {
 				int temp = DeeObject_TryCompareEq(key, item_key);
 				Dee_Decref(item_key);
-				if unlikely(temp == Dee_COMPARE_ERR)
+				if (Dee_COMPARE_ISERR(temp))
 					goto err;
-				if (temp == 0)
+				if (Dee_COMPARE_ISEQ(temp))
 					return_true; /* Found it! */
 			} else {
 				Dee_Decref(item_key);
@@ -556,10 +556,10 @@ again_search:
 		SharedMap_LockEndRead(self);
 		temp = DeeObject_TryCompareEq(key, item_key);
 		Dee_Decref(item_key);
-		if (temp == 0)
+		if (Dee_COMPARE_ISEQ_NO_ERR(temp))
 			return item_value;
 		Dee_Decref(item_value);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err;
 	}
 
@@ -591,10 +591,10 @@ again_search:
 			if (item_hash == hash) {
 				int temp = DeeObject_TryCompareEq(key, item_key);
 				Dee_Decref(item_key);
-				if (temp == 0)
+				if (Dee_COMPARE_ISEQ_NO_ERR(temp))
 					return item_value;
 				Dee_Decref(item_value);
-				if unlikely(temp == Dee_COMPARE_ERR)
+				if (Dee_COMPARE_ISERR(temp))
 					goto err;
 			} else {
 				Dee_Decref(item_key);

@@ -299,9 +299,9 @@ rvec_contains(RefVector *self, DeeObject *other) {
 			continue;
 		temp = DeeObject_TryCompareEq(other, item);
 		Dee_Decref(item);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err;
-		if (temp == 0)
+		if (Dee_COMPARE_ISEQ(temp))
 			return_true;
 	}
 	return_false;
@@ -1154,9 +1154,9 @@ svec_mh_find(SharedVector *self, DeeObject *item, size_t start, size_t end) {
 		SharedVector_LockEndRead(self);
 		temp = DeeObject_TryCompareEq(item, myitem);
 		Dee_Decref(myitem);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err;
-		if (temp == 0)
+		if (Dee_COMPARE_ISEQ(temp))
 			return i;
 		SharedVector_LockRead(self);
 	}
@@ -1181,9 +1181,9 @@ svec_mh_find_with_key(SharedVector *self, DeeObject *item, size_t start, size_t 
 		SharedVector_LockEndRead(self);
 		temp = DeeObject_TryCompareKeyEq(item, myitem, key);
 		Dee_Decref(myitem);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err_item;
-		if (temp == 0)
+		if (Dee_COMPARE_ISEQ(temp))
 			return i;
 		SharedVector_LockRead(self);
 	}
@@ -1213,9 +1213,9 @@ svec_mh_rfind(SharedVector *self, DeeObject *item, size_t start, size_t end) {
 		SharedVector_LockEndRead(self);
 		temp = DeeObject_TryCompareEq(item, myitem);
 		Dee_Decref(myitem);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err;
-		if (temp == 0)
+		if (Dee_COMPARE_ISEQ(temp))
 			return i;
 		SharedVector_LockRead(self);
 	}
@@ -1245,9 +1245,9 @@ svec_mh_rfind_with_key(SharedVector *self, DeeObject *item, size_t start, size_t
 		SharedVector_LockEndRead(self);
 		temp = DeeObject_TryCompareKeyEq(item, myitem, key);
 		Dee_Decref(myitem);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err_item;
-		if (temp == 0)
+		if (Dee_COMPARE_ISEQ(temp))
 			return i;
 		SharedVector_LockRead(self);
 	}

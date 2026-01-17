@@ -39,9 +39,9 @@ default_map_getitem_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject *
 	struct default_map_getitem_with_map_enumerate_data *data;
 	data = (struct default_map_getitem_with_map_enumerate_data *)arg;
 	temp = DeeObject_TryCompareEq(data->dmgiwme_key, key);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		goto err;
-	if (temp == 0) {
+	if (Dee_COMPARE_ISEQ(temp)) {
 		if unlikely(!value)
 			return -3;
 		Dee_Incref(value);
@@ -671,9 +671,9 @@ default_map_bounditem_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *va
 	int temp;
 	(void)value;
 	temp = DeeObject_TryCompareEq((DeeObject *)arg, key);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		goto err;
-	if (temp == 0)
+	if (Dee_COMPARE_ISEQ(temp))
 		return value ? -2 : -3; /* Stop iteration */
 	return 0;
 err:

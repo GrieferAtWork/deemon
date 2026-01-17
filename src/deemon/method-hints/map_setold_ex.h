@@ -66,9 +66,9 @@ map_setold_ex_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *valu
 			goto err;
 		status = DeeObject_TryCompareEq(data->msoxwse_key_and_value[0], this_key_and_value[0]);
 		Dee_Decref(this_key_and_value[0]);
-		if unlikely(status == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(status))
 			goto err_this_value;
-		if (status == 0) {
+		if (Dee_COMPARE_ISEQ(status)) {
 			/* Found it! (now to override it) */
 			DREF DeeObject *new_pair;
 			new_pair = DeeTuple_NewVector(2, data->msoxwse_key_and_value);
@@ -76,7 +76,7 @@ map_setold_ex_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *valu
 				goto err_this_value;
 			status = DeeObject_InvokeMethodHint(seq_operator_setitem, data->msoxwse_seq, index, new_pair);
 			Dee_Decref_unlikely(new_pair);
-			if unlikely(status < 0)
+			if unlikely(status)
 				goto err_this_value;
 			data->msoxwse_key_and_value[1] = this_key_and_value[1]; /* Inherit reference */
 			return MAP_SETOLD_EX_WITH_SEQ_ENUMERATE__SUCCESS;
@@ -113,9 +113,9 @@ map_setold_ex_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *va
 			goto err;
 		status = DeeObject_TryCompareEq(data->msoxwsei_key_and_value[0], this_key_and_value[0]);
 		Dee_Decref(this_key_and_value[0]);
-		if unlikely(status == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(status))
 			goto err_this_value;
-		if (status == 0) {
+		if (Dee_COMPARE_ISEQ(status)) {
 			/* Found it! (now to override it) */
 			DREF DeeObject *new_pair;
 			new_pair = DeeTuple_NewVector(2, data->msoxwsei_key_and_value);
@@ -123,7 +123,7 @@ map_setold_ex_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *va
 				goto err_this_value;
 			status = DeeObject_InvokeMethodHint(seq_operator_setitem_index, data->msoxwsei_seq, index, new_pair);
 			Dee_Decref_unlikely(new_pair);
-			if unlikely(status < 0)
+			if unlikely(status)
 				goto err_this_value;
 			data->msoxwsei_key_and_value[1] = this_key_and_value[1]; /* Inherit reference */
 			return MAP_SETOLD_EX_WITH_SEQ_ENUMERATE_INDEX__SUCCESS;

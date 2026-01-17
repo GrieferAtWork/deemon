@@ -51,9 +51,9 @@ err:
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 seq_count_foreach_cb(void *arg, DeeObject *item) {
 	int temp = DeeObject_TryCompareEq((DeeObject *)arg, item);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		return -1;
-	return temp == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(temp) ? 1 : 0;
 }
 #endif /* !DEFINED_seq_count_foreach_cb */
 )]
@@ -108,9 +108,9 @@ seq_count_with_key_foreach_cb(void *arg, DeeObject *item) {
 	struct seq_count_with_key_data *data;
 	data = (struct seq_count_with_key_data *)arg;
 	temp = DeeObject_TryCompareKeyEq(data->gscwk_kelem, item, data->gscwk_key);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(temp))
 		return -1;
-	return temp == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(temp) ? 1 : 0;
 }
 #endif /* !DEFINED_seq_count_with_key_foreach_cb */
 )]

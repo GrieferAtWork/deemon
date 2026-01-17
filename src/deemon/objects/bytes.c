@@ -1030,7 +1030,7 @@ bytes_eq(Bytes *lhs, DeeObject *rhs) {
 		return_bool(string_eq_bytes((DeeStringObject *)rhs, lhs));
 	{
 		int temp = bytes_compare_seq(lhs, rhs);
-		if unlikely(Dee_COMPARE_ISERR(temp))
+		if (Dee_COMPARE_ISERR(temp))
 			goto err;
 		return_bool(Dee_COMPARE_ISEQ(temp));
 	}
@@ -1051,7 +1051,7 @@ bytes_ne(Bytes *lhs, DeeObject *rhs) {
 		return_bool(!string_eq_bytes((DeeStringObject *)rhs, lhs));
 	{
 		int temp = bytes_compare_seq(lhs, rhs);
-		if unlikely(Dee_COMPARE_ISERR(temp))
+		if (Dee_COMPARE_ISERR(temp))
 			goto err;
 		return_bool(Dee_COMPARE_ISNE(temp));
 	}
@@ -1064,7 +1064,7 @@ err:
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
 	name(Bytes *self, DeeObject *other) {                 \
 		int diff = bytes_compare(self, other);            \
-		if unlikely(Dee_COMPARE_ISERR(diff))              \
+		if (Dee_COMPARE_ISERR(diff))              \
 			goto err;                                     \
 		return_bool(diff op 0);                           \
 	err:                                                  \

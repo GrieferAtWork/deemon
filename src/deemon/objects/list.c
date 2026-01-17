@@ -1178,9 +1178,9 @@ again:
 		DeeList_LockEndRead(me);
 		error = DeeObject_TryCompareEq(elem, list_elem);
 		Dee_Decref_unlikely(list_elem);
-		if (error == 0)
+		if (Dee_COMPARE_ISEQ_NO_ERR(error))
 			return_true;
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err;
 		DeeList_LockRead(me);
 		/* Check if the list was changed. */
@@ -2592,9 +2592,9 @@ again:
 		DeeList_LockEndRead(me);
 		temp = DeeObject_TryCompareEq(item, this_elem);
 		Dee_Decref(this_elem);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err;
-		if (temp == 0) {
+		if (Dee_COMPARE_ISEQ(temp)) {
 			/* This is the element we're supposed to remove. */
 			DeeList_LockWrite(me);
 
@@ -2654,9 +2654,9 @@ again:
 		DeeList_LockEndRead(me);
 		temp = DeeObject_TryCompareKeyEq(item, this_elem, key);
 		Dee_Decref(this_elem);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err_item;
-		if (temp == 0) {
+		if (Dee_COMPARE_ISEQ(temp)) {
 			/* This is the element we're supposed to remove. */
 			DeeList_LockWrite(me);
 
@@ -2722,9 +2722,9 @@ again:
 		DeeList_LockEndRead(me);
 		temp = DeeObject_TryCompareEq(item, this_elem);
 		Dee_Decref(this_elem);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err;
-		if (temp == 0) {
+		if (Dee_COMPARE_ISEQ(temp)) {
 			/* This is the element we're supposed to remove. */
 			DeeList_LockWrite(me);
 
@@ -2789,9 +2789,9 @@ again:
 		DeeList_LockEndRead(me);
 		temp = DeeObject_TryCompareKeyEq(item, this_elem, key);
 		Dee_Decref(this_elem);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err_item;
-		if (temp == 0) {
+		if (Dee_COMPARE_ISEQ(temp)) {
 			/* This is the element we're supposed to remove. */
 			DeeList_LockWrite(me);
 
@@ -2854,9 +2854,9 @@ again:
 
 		/* Invoke a predicate. */
 		temp = DeeObject_TryCompareEq(item, this_elem);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err;
-		if (temp == 0) {
+		if (Dee_COMPARE_ISEQ(temp)) {
 			/* This is the element we're supposed to remove. */
 			DeeList_LockWrite(me);
 
@@ -2923,9 +2923,9 @@ again:
 
 		/* Invoke a predicate. */
 		temp = DeeObject_TryCompareKeyEq(item, this_elem, key);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err_item;
-		if (temp == 0) {
+		if (Dee_COMPARE_ISEQ(temp)) {
 			/* This is the element we're supposed to remove. */
 			DeeList_LockWrite(me);
 
@@ -3038,9 +3038,9 @@ list_mh_find(List *self, DeeObject *item, size_t start, size_t end) {
 		DeeList_LockEndRead(self);
 		temp = DeeObject_TryCompareEq(item, myitem);
 		Dee_Decref(myitem);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err;
-		if (temp == 0)
+		if (Dee_COMPARE_ISEQ(temp))
 			return i;
 		DeeList_LockRead(self);
 	}
@@ -3065,9 +3065,9 @@ list_mh_find_with_key(List *self, DeeObject *item, size_t start, size_t end, Dee
 		DeeList_LockEndRead(self);
 		temp = DeeObject_TryCompareKeyEq(item, myitem, key);
 		Dee_Decref(myitem);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err_item;
-		if (temp == 0)
+		if (Dee_COMPARE_ISEQ(temp))
 			return i;
 		DeeList_LockRead(self);
 	}
@@ -3097,9 +3097,9 @@ list_mh_rfind(List *self, DeeObject *item, size_t start, size_t end) {
 		DeeList_LockEndRead(self);
 		temp = DeeObject_TryCompareEq(item, myitem);
 		Dee_Decref(myitem);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err;
-		if (temp == 0)
+		if (Dee_COMPARE_ISEQ(temp))
 			return i;
 		DeeList_LockRead(self);
 	}
@@ -3129,9 +3129,9 @@ list_mh_rfind_with_key(List *self, DeeObject *item, size_t start, size_t end, De
 		DeeList_LockEndRead(self);
 		temp = DeeObject_TryCompareKeyEq(item, myitem, key);
 		Dee_Decref(myitem);
-		if unlikely(temp == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(temp))
 			goto err_item;
-		if (temp == 0)
+		if (Dee_COMPARE_ISEQ(temp))
 			return i;
 		DeeList_LockRead(self);
 	}

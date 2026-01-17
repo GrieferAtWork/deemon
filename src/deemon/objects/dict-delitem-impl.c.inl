@@ -231,7 +231,7 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 #endif /* !LOCAL_slowcmp */
 
 		/* Case: keys are equal, meaning we must override this item! */
-		if likely(item_key_cmp_caller_key == 0)
+		if likely(Dee_COMPARE_ISEQ_NO_ERR(item_key_cmp_caller_key))
 #endif /* !LOCAL_boolcmp */
 		{
 			DREF DeeObject *old_value;
@@ -295,7 +295,7 @@ delete_item_after_consistency_check:
 #ifndef LOCAL_boolcmp
 		/* Check for error during compare. */
 		Dee_Decref_unlikely(item_key);
-		if unlikely(item_key_cmp_caller_key == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(item_key_cmp_caller_key))
 			goto err;
 #define NEED_err
 

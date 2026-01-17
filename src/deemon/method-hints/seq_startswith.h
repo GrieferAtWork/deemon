@@ -66,9 +66,9 @@ __seq_startswith__.seq_startswith([[nonnull]] DeeObject *self,
 		goto err;
 	result = DeeObject_TryCompareEq(item, first);
 	Dee_Decref(first);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err:
 	return -1;
 }} {
@@ -118,9 +118,9 @@ __seq_startswith__.seq_startswith_with_key([[nonnull]] DeeObject *self,
 	result = DeeObject_TryCompareKeyEq(item, first, key);
 	Dee_Decref(item);
 	Dee_Decref(first);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err_first:
 	Dee_Decref(first);
 err:
@@ -176,9 +176,9 @@ __seq_startswith__.seq_startswith_with_range([[nonnull]] DeeObject *self,
 		return 0;
 	result = DeeObject_TryCompareEq(item, selfitem);
 	Dee_Decref(selfitem);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err:
 	return -1;
 }} {
@@ -230,9 +230,9 @@ __seq_startswith__.seq_startswith_with_range_and_key([[nonnull]] DeeObject *self
 	result = DeeObject_TryCompareKeyEq(item, selfitem, key);
 	Dee_Decref(item);
 	Dee_Decref(selfitem);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err_selfitem:
 	Dee_Decref(selfitem);
 err:

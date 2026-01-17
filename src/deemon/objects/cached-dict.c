@@ -267,9 +267,9 @@ again:
 		/* Invoke the compare operator outside of any lock. */
 		error = DeeObject_TryCompareEq(key, item_key);
 		Dee_Decref(item_key);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err; /* Error in compare operator. */
-		if (error == 0) {
+		if (Dee_COMPARE_ISEQ(error)) {
 			DREF DeeObject *item_value;
 			/* Found an existing item. */
 			DeeCachedDict_LockWrite(self);
@@ -480,9 +480,9 @@ restart:
 
 		/* Invoke the compare operator outside of any lock. */
 		error = DeeObject_TryCompareEq(key, item_key);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err; /* Error in compare operator. */
-		if (error == 0)
+		if (Dee_COMPARE_ISEQ(error))
 			return item_value; /* Found the item. */
 		DeeCachedDict_LockRead(self);
 
@@ -577,9 +577,9 @@ restart:
 
 		/* Invoke the compare operator outside of any lock. */
 		error = DeeObject_TryCompareEq(key, item_key);
-		if unlikely(error == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(error))
 			goto err; /* Error in compare operator. */
-		if (error == 0)
+		if (Dee_COMPARE_ISEQ(error))
 			return item_value; /* Found the item. */
 		DeeCachedDict_LockRead(self);
 
@@ -671,7 +671,7 @@ restart:
 
 		/* Invoke the compare operator outside of any lock. */
 		error = DeeObject_TryCompareEq(key, item_key);
-		if unlikely(Dee_COMPARE_ISERR(error))
+		if (Dee_COMPARE_ISERR(error))
 			goto err; /* Error in compare operator. */
 		if (Dee_COMPARE_ISEQ(error))
 			return Dee_HAS_YES; /* Found the item. */

@@ -1116,28 +1116,28 @@
 /*      ASM_                  0xf00a  *               --------                            - ------------------ */
 #define ASM16_PUSH_BND_ARG    0xf00b /* [4][-0,+1]   `push bound arg <imm16>'             - Check if the argument variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
 #define ASM16_PUSH_BND_EXTERN 0xf00c /* [6][-0,+1]   `push bound extern <imm16>:<imm16>'  - Check if the extern variable indexed by `<imm16>:<imm16>' is bound, pushing true/false indicative of that state. */
-#define ASM16_PUSH_BND_STATIC 0xf00d /* [2][-0,+1]   `push bound static <imm16>'           - Check if the static variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
+#define ASM16_PUSH_BND_STATIC 0xf00d /* [2][-0,+1]   `push bound static <imm16>'          - Check if the static variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
 #define ASM16_PUSH_BND_GLOBAL 0xf00e /* [4][-0,+1]   `push bound global <imm16>'          - Check if the global variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
 #define ASM16_PUSH_BND_LOCAL  0xf00f /* [4][-0,+1]   `push bound local <imm16>'           - Check if the local variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
 #define ASM_FOREACH_KEY       0xf010 /* [3][-1,+2|0] `foreach_key top, <Sdisp8>'
-                                      * [3][-0,+1|0] `foreach_key PREFIX, <Sdisp8>'           - `PREFIX: foreach_key <Sdisp8>'
+                                      * [3][-0,+1|0] `foreach_key PREFIX, <Sdisp8>'       - `PREFIX: foreach_key <Sdisp8>'
                                       * Same as `foreach top, <Sdisp8>; unpack pop, #2; pop' */
 #define ASM_FOREACH_KEY16     0xf011 /* [4][-1,+2|0] `foreach_key top, <Sdisp16>'
-                                      * [4][-0,+1|0] `foreach_key PREFIX, <Sdisp16>'          - `PREFIX: foreach_key <Sdisp16>'
+                                      * [4][-0,+1|0] `foreach_key PREFIX, <Sdisp16>'      - `PREFIX: foreach_key <Sdisp16>'
                                       * Same as `foreach top, <Sdisp16>; unpack pop, #2; pop' */
 #define ASM_FOREACH_VALUE     0xf012 /* [3][-1,+2|0] `foreach_value top, <Sdisp8>'
-                                      * [3][-0,+1|0] `foreach_value PREFIX, <Sdisp8>'           - `PREFIX: foreach_value <Sdisp8>'
+                                      * [3][-0,+1|0] `foreach_value PREFIX, <Sdisp8>'     - `PREFIX: foreach_value <Sdisp8>'
                                       * Same as `foreach top, <Sdisp8>; unpack pop, #2; pop #SP-2' */
 #define ASM_FOREACH_VALUE16   0xf013 /* [4][-1,+2|0] `foreach_value top, <Sdisp16>'
-                                      * [4][-0,+1|0] `foreach_value PREFIX, <Sdisp16>'          - `PREFIX: foreach_value <Sdisp16>'
+                                      * [4][-0,+1|0] `foreach_value PREFIX, <Sdisp16>'    - `PREFIX: foreach_value <Sdisp16>'
                                       * Same as `foreach top, <Sdisp16>; unpack pop, #2; pop #SP-2' */
 #define ASM32_JMP             0xf014 /* [6][-0,+0]   `jmp <Sdisp32>'                      - Unconditionally add `<Sdisp32>' (little endian) to the `REG_PC' of the next instruction. */
 /*      ASM_                  0xf015  *               --------                            - ------------------ */
 #define ASM_FOREACH_PAIR      0xf016 /* [3][-1,+3|0] `foreach_pair top, <Sdisp8>'
-                                      * [3][-0,+2|0] `foreach_pair PREFIX, <Sdisp8>'           - `PREFIX: foreach_pair <Sdisp8>'
+                                      * [3][-0,+2|0] `foreach_pair PREFIX, <Sdisp8>'      - `PREFIX: foreach_pair <Sdisp8>'
                                       * Same as `foreach top, <Sdisp8>; unpack pop, #2' */
 #define ASM_FOREACH_PAIR16    0xf017 /* [4][-1,+3|0] `foreach_pair top, <Sdisp16>'
-                                      * [4][-0,+2|0] `foreach_pair PREFIX, <Sdisp16>'          - `PREFIX: foreach_pair <Sdisp16>'
+                                      * [4][-0,+2|0] `foreach_pair PREFIX, <Sdisp16>'     - `PREFIX: foreach_pair <Sdisp16>'
                                       * Same as `foreach top, <Sdisp16>; unpack pop, #2' */
 #define ASM_JMP_POP_POP       0xf018 /* [2][-2,+0]   `jmp pop, #pop'                      - Similar to `ASM_JMP_POP', but pop a second integer that describes the absolute stack-depth that should be adjusted for before jumping.
                                       * >> int new_sp = int(POP());
@@ -1172,7 +1172,7 @@
                                       * [4][-1,+1]   `PREFIX: push op $<imm16>, pop...' */
 #define ASM_CALL_SEQ          0xf01b /* [3][-1-n,+1] `call top, [#<imm8>]'                - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific sequence type as a single argument. Used to implement sequence-initializers. */
 #define ASM_CALL_MAP          0xf01c /* [3][-1-n*2,+1] `call top, {#<imm8>*2}'            - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific Dict-style sequence type as a single argument. Used to implement mapping-initializers. */
-#define ASM16_DEL_STATIC      0xf01d /* [4][-0,+0]   `del static <imm16>'                  - Unlink the static variable indexed by `<imm16>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with. */
+#define ASM16_DEL_STATIC      0xf01d /* [4][-0,+0]   `del static <imm16>'                 - Unlink the static variable indexed by `<imm16>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with. */
 #define ASM16_DEL_GLOBAL      0xf01e /* [4][-0,+0]   `del global <imm16>'                 - Unlink the global variable indexed by `<imm16>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with. */
 #define ASM16_DEL_LOCAL       0xf01f /* [4][-0,+0]   `del local <imm16>'                  - Unlink the local variable indexed by `<imm16>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with. */
 #define ASM_CALL_TUPLE_KWDS   0xf020 /* [2][-3,+1]   `call top, pop..., pop'              - The universal call-with-keywords instruction that also takes keywords from the stack. */

@@ -479,7 +479,7 @@ tp_cmp->tp_trycompare_eq([[nonnull]] DeeObject *lhs,
 }}
 %{using tp_cmp->tp_compare_eq: {
 	int result = CALL_DEPENDENCY(tp_cmp->tp_compare_eq, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR) {
+	if (Dee_COMPARE_ISERR(result)) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))
@@ -527,9 +527,9 @@ function gen(eq: string, ne: string, cmp: string, iseq: bool) {
 	print("}}");
 	print("%{using tp_cmp->tp_compare", _eq, ": {");
 	print("	int result = CALL_DEPENDENCY(tp_cmp->tp_compare", _eq, ", lhs, rhs);");
-	print("	if unlikely(result == Dee_COMPARE_ERR)");
+	print("	if (Dee_COMPARE_ISERR(result))");
 	print("		goto err;");
-	print("	return_bool(result ", cmp, " 0);");
+	print("	return_bool(Dee_COMPARE_IS", EQ, "(result));");
 	print("err:");
 	print("	return NULL;");
 	print("}} = OPERATOR_", EQ, ";");
@@ -557,9 +557,9 @@ tp_cmp->tp_eq([[nonnull]] DeeObject *lhs,
 }}
 %{using tp_cmp->tp_compare_eq: {
 	int result = CALL_DEPENDENCY(tp_cmp->tp_compare_eq, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result == 0);
+	return_bool(Dee_COMPARE_ISEQ(result));
 err:
 	return NULL;
 }} = OPERATOR_EQ;
@@ -579,9 +579,9 @@ tp_cmp->tp_ne([[nonnull]] DeeObject *lhs,
 }}
 %{using tp_cmp->tp_compare_eq: {
 	int result = CALL_DEPENDENCY(tp_cmp->tp_compare_eq, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result != 0);
+	return_bool(Dee_COMPARE_ISNE(result));
 err:
 	return NULL;
 }} = OPERATOR_NE;
@@ -601,9 +601,9 @@ tp_cmp->tp_lo([[nonnull]] DeeObject *lhs,
 }}
 %{using tp_cmp->tp_compare: {
 	int result = CALL_DEPENDENCY(tp_cmp->tp_compare, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result < 0);
+	return_bool(Dee_COMPARE_ISLO(result));
 err:
 	return NULL;
 }} = OPERATOR_LO;
@@ -623,9 +623,9 @@ tp_cmp->tp_le([[nonnull]] DeeObject *lhs,
 }}
 %{using tp_cmp->tp_compare: {
 	int result = CALL_DEPENDENCY(tp_cmp->tp_compare, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result <= 0);
+	return_bool(Dee_COMPARE_ISLE(result));
 err:
 	return NULL;
 }} = OPERATOR_LE;
@@ -645,9 +645,9 @@ tp_cmp->tp_gr([[nonnull]] DeeObject *lhs,
 }}
 %{using tp_cmp->tp_compare: {
 	int result = CALL_DEPENDENCY(tp_cmp->tp_compare, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result > 0);
+	return_bool(Dee_COMPARE_ISGR(result));
 err:
 	return NULL;
 }} = OPERATOR_GR;
@@ -667,9 +667,9 @@ tp_cmp->tp_ge([[nonnull]] DeeObject *lhs,
 }}
 %{using tp_cmp->tp_compare: {
 	int result = CALL_DEPENDENCY(tp_cmp->tp_compare, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result >= 0);
+	return_bool(Dee_COMPARE_ISGE(result));
 err:
 	return NULL;
 }} = OPERATOR_GE;

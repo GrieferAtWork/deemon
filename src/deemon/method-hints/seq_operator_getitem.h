@@ -473,9 +473,9 @@ default_bounditem_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *
 	int cmp;
 	(void)value;
 	cmp = DeeObject_TryCompareEq((DeeObject *)arg, index);
-	if unlikely(cmp == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(cmp))
 		goto err;
-	if (cmp == 0)
+	if (Dee_COMPARE_ISEQ(cmp))
 		return value ? -3 : -2;
 	return 0;
 err:

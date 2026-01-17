@@ -112,25 +112,25 @@ err:
 }}
 %{$with__seq_operator_compare_eq = {
 	int result = CALL_DEPENDENCY(seq_operator_compare_eq, self, Dee_EmptySeq);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err:
 	return -1;
 }}
 %{$with__set_operator_compare_eq = {
 	int result = CALL_DEPENDENCY(set_operator_compare_eq, self, Dee_EmptySet);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err:
 	return -1;
 }}
 %{$with__map_operator_compare_eq = {
 	int result = CALL_DEPENDENCY(map_operator_compare_eq, self, Dee_EmptyMapping);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return result == 0 ? 1 : 0;
+	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
 err:
 	return -1;
 }}

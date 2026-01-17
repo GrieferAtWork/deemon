@@ -67,9 +67,9 @@ map_compare__lhs_foreach__rhs__cb(void *arg, DeeObject *lhs_key, DeeObject *lhs_
 		return -2; /* Missing key */
 	values_eq = DeeObject_TryCompareEq(lhs_value, rhs_value);
 	Dee_Decref(rhs_value);
-	if unlikely(values_eq == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(values_eq))
 		goto err;
-	if (values_eq != 0)
+	if (Dee_COMPARE_ISNE(values_eq))
 		return -2; /* Non-equal values */
 	return 1;
 err:

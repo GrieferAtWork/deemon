@@ -194,10 +194,13 @@ DeeMA___seq_compare__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	} args;
 	DeeArg_Unpack1(err, argc, argv, "__seq_compare__", &args.rhs);
 {
-	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_compare))(self, args.rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	int diff = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_compare))(self, args.rhs);
+	if (Dee_COMPARE_ISERR(diff))
 		goto err;
-	return_reference(DeeInt_FromSign(result));
+	ASSERT(diff == Dee_COMPARE_LO ||
+	       diff == Dee_COMPARE_EQ ||
+	       diff == Dee_COMPARE_GR);
+	return_reference(DeeInt_FromCompare(diff));
 err:
 	return NULL;
 }}
@@ -210,10 +213,10 @@ DeeMA___seq_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *con
 	DeeArg_Unpack1(err, argc, argv, "__seq_compare_eq__", &args.rhs);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_compare_eq))(self, args.rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	/* We always return "bool" here, but user-code is also allowed to return "int" */
-	return_bool(result == 0);
+	return_bool(Dee_COMPARE_ISEQ(result));
 err:
 	return NULL;
 }}
@@ -1568,7 +1571,7 @@ DeeMA___set_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *con
 	DeeArg_Unpack1(err, argc, argv, "__set_compare_eq__", &args.rhs);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_compare_eq))(self, args.rhs);
-	if unlikely(Dee_COMPARE_ISERR(result))
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	/* We always return "bool" here, but user-code is also allowed to return "int" */
 	return_bool(Dee_COMPARE_ISEQ(result));
@@ -1991,7 +1994,7 @@ DeeMA___map_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *con
 	DeeArg_Unpack1(err, argc, argv, "__map_compare_eq__", &args.rhs);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_compare_eq))(self, args.rhs);
-	if unlikely(Dee_COMPARE_ISERR(result))
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	/* We always return "bool" here, but user-code is also allowed to return "int" */
 	return_bool(Dee_COMPARE_ISEQ(result));

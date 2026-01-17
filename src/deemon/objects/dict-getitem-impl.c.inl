@@ -301,7 +301,7 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 		Dee_Decref_unlikely(item_key);
 
 		/* Case: keys are equal, meaning we must override this item! */
-		if likely(item_key_cmp_caller_key == 0) {
+		if likely(Dee_COMPARE_ISEQ_NO_ERR(item_key_cmp_caller_key)) {
 #ifdef LOCAL_PRESENT
 			return LOCAL_PRESENT;
 #else /* LOCAL_PRESENT */
@@ -314,7 +314,7 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 #endif /* LOCAL_PRESENT */
 
 		/* Check for error during compare. */
-		if unlikely(item_key_cmp_caller_key == Dee_COMPARE_ERR)
+		if (Dee_COMPARE_ISERR(item_key_cmp_caller_key))
 			goto err;
 #define NEED_err
 

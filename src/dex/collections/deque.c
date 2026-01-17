@@ -1182,9 +1182,9 @@ deq_contains(Deque *self, DeeObject *item) {
 			Deque_LockEndRead(self);
 			temp = DeeObject_TryCompareEq(item, elem);
 			Dee_Decref(elem);
-			if unlikely(temp == Dee_COMPARE_ERR)
+			if (Dee_COMPARE_ISERR(temp))
 				goto err;
-			if (temp == 0)
+			if (Dee_COMPARE_ISEQ(temp))
 				return_true; /* Found it! */
 			Deque_LockRead(self);
 			if (self->d_version != version)

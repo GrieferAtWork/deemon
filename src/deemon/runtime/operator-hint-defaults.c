@@ -2936,7 +2936,7 @@ tusrtype__trycompare_eq__with__(DeeTypeObject *tp_self, DeeObject *lhs, DeeObjec
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__trycompare_eq__with__compare_eq(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 	int result = (*(tp_self->tp_cmp->tp_compare_eq == &default__compare_eq__with__compare ? &tdefault__compare_eq__with__compare : tp_self->tp_cmp->tp_compare_eq == &default__compare_eq__with__eq ? &tdefault__compare_eq__with__eq : tp_self->tp_cmp->tp_compare_eq == &default__compare_eq__with__ne ? &tdefault__compare_eq__with__ne : tp_self->tp_cmp->tp_compare_eq == &default__compare_eq__with__lo__and__gr ? &tdefault__compare_eq__with__lo__and__gr : tp_self->tp_cmp->tp_compare_eq == &default__compare_eq__with__le__and__ge ? &tdefault__compare_eq__with__le__and__ge : &tdefault__compare_eq))(tp_self, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR) {
+	if (Dee_COMPARE_ISERR(result)) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))
@@ -2974,7 +2974,7 @@ default__trycompare_eq__with__compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	return tdefault__trycompare_eq__with__compare_eq(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	int result = (*Dee_TYPE(lhs)->tp_cmp->tp_compare_eq)(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR) {
+	if (Dee_COMPARE_ISERR(result)) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
 		    DeeError_Catch(&DeeError_ValueError))
@@ -3015,9 +3015,9 @@ tdefault__eq__with__ne(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tdefault__eq__with__compare_eq(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 	int result = (*(tp_self->tp_cmp->tp_compare_eq == &default__compare_eq__with__compare ? &tdefault__compare_eq__with__compare : tp_self->tp_cmp->tp_compare_eq == &default__compare_eq__with__ne ? &tdefault__compare_eq__with__ne : tp_self->tp_cmp->tp_compare_eq == &default__compare_eq__with__lo__and__gr ? &tdefault__compare_eq__with__lo__and__gr : tp_self->tp_cmp->tp_compare_eq == &default__compare_eq__with__le__and__ge ? &tdefault__compare_eq__with__le__and__ge : &tdefault__compare_eq))(tp_self, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result == 0);
+	return_bool(Dee_COMPARE_ISEQ(result));
 err:
 	return NULL;
 }
@@ -3052,9 +3052,9 @@ default__eq__with__compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	return tdefault__eq__with__compare_eq(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	int result = (*Dee_TYPE(lhs)->tp_cmp->tp_compare_eq)(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result == 0);
+	return_bool(Dee_COMPARE_ISEQ(result));
 err:
 	return NULL;
 #endif /* __OPTIMIZE_SIZE__ */
@@ -3075,9 +3075,9 @@ tdefault__ne__with__eq(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tdefault__ne__with__compare_eq(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 	int result = (*(tp_self->tp_cmp->tp_compare_eq == &default__compare_eq__with__compare ? &tdefault__compare_eq__with__compare : tp_self->tp_cmp->tp_compare_eq == &default__compare_eq__with__eq ? &tdefault__compare_eq__with__eq : tp_self->tp_cmp->tp_compare_eq == &default__compare_eq__with__lo__and__gr ? &tdefault__compare_eq__with__lo__and__gr : tp_self->tp_cmp->tp_compare_eq == &default__compare_eq__with__le__and__ge ? &tdefault__compare_eq__with__le__and__ge : &tdefault__compare_eq))(tp_self, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result != 0);
+	return_bool(Dee_COMPARE_ISNE(result));
 err:
 	return NULL;
 }
@@ -3112,9 +3112,9 @@ default__ne__with__compare_eq(DeeObject *lhs, DeeObject *rhs) {
 	return tdefault__ne__with__compare_eq(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	int result = (*Dee_TYPE(lhs)->tp_cmp->tp_compare_eq)(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result != 0);
+	return_bool(Dee_COMPARE_ISNE(result));
 err:
 	return NULL;
 #endif /* __OPTIMIZE_SIZE__ */
@@ -3135,9 +3135,9 @@ tdefault__lo__with__ge(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tdefault__lo__with__compare(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 	int result = (*(tp_self->tp_cmp->tp_compare == &default__compare__with__eq__and__lo ? &tdefault__compare__with__eq__and__lo : tp_self->tp_cmp->tp_compare == &default__compare__with__eq__and__le ? &tdefault__compare__with__eq__and__le : tp_self->tp_cmp->tp_compare == &default__compare__with__eq__and__gr ? &tdefault__compare__with__eq__and__gr : tp_self->tp_cmp->tp_compare == &default__compare__with__eq__and__ge ? &tdefault__compare__with__eq__and__ge : tp_self->tp_cmp->tp_compare == &default__compare__with__ne__and__lo ? &tdefault__compare__with__ne__and__lo : tp_self->tp_cmp->tp_compare == &default__compare__with__ne__and__le ? &tdefault__compare__with__ne__and__le : tp_self->tp_cmp->tp_compare == &default__compare__with__ne__and__gr ? &tdefault__compare__with__ne__and__gr : tp_self->tp_cmp->tp_compare == &default__compare__with__ne__and__ge ? &tdefault__compare__with__ne__and__ge : tp_self->tp_cmp->tp_compare == &default__compare__with__lo__and__gr ? &tdefault__compare__with__lo__and__gr : tp_self->tp_cmp->tp_compare == &default__compare__with__le__and__ge ? &tdefault__compare__with__le__and__ge : &tdefault__compare))(tp_self, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result < 0);
+	return_bool(Dee_COMPARE_ISLO(result));
 err:
 	return NULL;
 }
@@ -3172,9 +3172,9 @@ default__lo__with__compare(DeeObject *lhs, DeeObject *rhs) {
 	return tdefault__lo__with__compare(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	int result = (*Dee_TYPE(lhs)->tp_cmp->tp_compare)(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result < 0);
+	return_bool(Dee_COMPARE_ISLO(result));
 err:
 	return NULL;
 #endif /* __OPTIMIZE_SIZE__ */
@@ -3195,9 +3195,9 @@ tdefault__le__with__gr(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tdefault__le__with__compare(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 	int result = (*(tp_self->tp_cmp->tp_compare == &default__compare__with__eq__and__lo ? &tdefault__compare__with__eq__and__lo : tp_self->tp_cmp->tp_compare == &default__compare__with__eq__and__le ? &tdefault__compare__with__eq__and__le : tp_self->tp_cmp->tp_compare == &default__compare__with__eq__and__gr ? &tdefault__compare__with__eq__and__gr : tp_self->tp_cmp->tp_compare == &default__compare__with__eq__and__ge ? &tdefault__compare__with__eq__and__ge : tp_self->tp_cmp->tp_compare == &default__compare__with__ne__and__lo ? &tdefault__compare__with__ne__and__lo : tp_self->tp_cmp->tp_compare == &default__compare__with__ne__and__le ? &tdefault__compare__with__ne__and__le : tp_self->tp_cmp->tp_compare == &default__compare__with__ne__and__gr ? &tdefault__compare__with__ne__and__gr : tp_self->tp_cmp->tp_compare == &default__compare__with__ne__and__ge ? &tdefault__compare__with__ne__and__ge : tp_self->tp_cmp->tp_compare == &default__compare__with__lo__and__gr ? &tdefault__compare__with__lo__and__gr : tp_self->tp_cmp->tp_compare == &default__compare__with__le__and__ge ? &tdefault__compare__with__le__and__ge : &tdefault__compare))(tp_self, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result <= 0);
+	return_bool(Dee_COMPARE_ISLE(result));
 err:
 	return NULL;
 }
@@ -3232,9 +3232,9 @@ default__le__with__compare(DeeObject *lhs, DeeObject *rhs) {
 	return tdefault__le__with__compare(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	int result = (*Dee_TYPE(lhs)->tp_cmp->tp_compare)(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result <= 0);
+	return_bool(Dee_COMPARE_ISLE(result));
 err:
 	return NULL;
 #endif /* __OPTIMIZE_SIZE__ */
@@ -3255,9 +3255,9 @@ tdefault__gr__with__le(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tdefault__gr__with__compare(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 	int result = (*(tp_self->tp_cmp->tp_compare == &default__compare__with__eq__and__lo ? &tdefault__compare__with__eq__and__lo : tp_self->tp_cmp->tp_compare == &default__compare__with__eq__and__le ? &tdefault__compare__with__eq__and__le : tp_self->tp_cmp->tp_compare == &default__compare__with__eq__and__gr ? &tdefault__compare__with__eq__and__gr : tp_self->tp_cmp->tp_compare == &default__compare__with__eq__and__ge ? &tdefault__compare__with__eq__and__ge : tp_self->tp_cmp->tp_compare == &default__compare__with__ne__and__lo ? &tdefault__compare__with__ne__and__lo : tp_self->tp_cmp->tp_compare == &default__compare__with__ne__and__le ? &tdefault__compare__with__ne__and__le : tp_self->tp_cmp->tp_compare == &default__compare__with__ne__and__gr ? &tdefault__compare__with__ne__and__gr : tp_self->tp_cmp->tp_compare == &default__compare__with__ne__and__ge ? &tdefault__compare__with__ne__and__ge : tp_self->tp_cmp->tp_compare == &default__compare__with__lo__and__gr ? &tdefault__compare__with__lo__and__gr : tp_self->tp_cmp->tp_compare == &default__compare__with__le__and__ge ? &tdefault__compare__with__le__and__ge : &tdefault__compare))(tp_self, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result > 0);
+	return_bool(Dee_COMPARE_ISGR(result));
 err:
 	return NULL;
 }
@@ -3292,9 +3292,9 @@ default__gr__with__compare(DeeObject *lhs, DeeObject *rhs) {
 	return tdefault__gr__with__compare(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	int result = (*Dee_TYPE(lhs)->tp_cmp->tp_compare)(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result > 0);
+	return_bool(Dee_COMPARE_ISGR(result));
 err:
 	return NULL;
 #endif /* __OPTIMIZE_SIZE__ */
@@ -3315,9 +3315,9 @@ tdefault__ge__with__lo(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tdefault__ge__with__compare(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs) {
 	int result = (*(tp_self->tp_cmp->tp_compare == &default__compare__with__eq__and__lo ? &tdefault__compare__with__eq__and__lo : tp_self->tp_cmp->tp_compare == &default__compare__with__eq__and__le ? &tdefault__compare__with__eq__and__le : tp_self->tp_cmp->tp_compare == &default__compare__with__eq__and__gr ? &tdefault__compare__with__eq__and__gr : tp_self->tp_cmp->tp_compare == &default__compare__with__eq__and__ge ? &tdefault__compare__with__eq__and__ge : tp_self->tp_cmp->tp_compare == &default__compare__with__ne__and__lo ? &tdefault__compare__with__ne__and__lo : tp_self->tp_cmp->tp_compare == &default__compare__with__ne__and__le ? &tdefault__compare__with__ne__and__le : tp_self->tp_cmp->tp_compare == &default__compare__with__ne__and__gr ? &tdefault__compare__with__ne__and__gr : tp_self->tp_cmp->tp_compare == &default__compare__with__ne__and__ge ? &tdefault__compare__with__ne__and__ge : tp_self->tp_cmp->tp_compare == &default__compare__with__lo__and__gr ? &tdefault__compare__with__lo__and__gr : tp_self->tp_cmp->tp_compare == &default__compare__with__le__and__ge ? &tdefault__compare__with__le__and__ge : &tdefault__compare))(tp_self, lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result >= 0);
+	return_bool(Dee_COMPARE_ISGE(result));
 err:
 	return NULL;
 }
@@ -3352,9 +3352,9 @@ default__ge__with__compare(DeeObject *lhs, DeeObject *rhs) {
 	return tdefault__ge__with__compare(Dee_TYPE(lhs), lhs, rhs);
 #else /* __OPTIMIZE_SIZE__ */
 	int result = (*Dee_TYPE(lhs)->tp_cmp->tp_compare)(lhs, rhs);
-	if unlikely(result == Dee_COMPARE_ERR)
+	if (Dee_COMPARE_ISERR(result))
 		goto err;
-	return_bool(result >= 0);
+	return_bool(Dee_COMPARE_ISGE(result));
 err:
 	return NULL;
 #endif /* __OPTIMIZE_SIZE__ */
