@@ -37,6 +37,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/set.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
@@ -871,6 +872,15 @@ proxy_deepcopy(RangeMapProxy *__restrict self,
 	return 0;
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+proxy_serialize(RangeMapProxy *__restrict self,
+                DeeSerial *__restrict writer,
+                Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(RangeMapProxy, field))
+	return DeeSerial_PutObject(writer, ADDROF(rmp_rmap), self->rmp_rmap);
+#undef ADDROF
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -1772,7 +1782,7 @@ INTERN DeeTypeObject RangeMapProxy_Type = {
 			/* tp_deep_ctor:   */ &proxy_deepcopy,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &proxy_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_fini,
 		/* .tp_assign      = */ NULL,
@@ -1826,7 +1836,7 @@ INTERN DeeTypeObject RangeMapKeys_Type = {
 			/* tp_deep_ctor:   */ &proxy_deepcopy,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &proxy_serialize
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -1876,7 +1886,7 @@ INTERN DeeTypeObject RangeMapValues_Type = {
 			/* tp_deep_ctor:   */ &proxy_deepcopy,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &proxy_serialize
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -1922,7 +1932,7 @@ INTERN DeeTypeObject RangeMapItems_Type = {
 			/* tp_deep_ctor:   */ &proxy_deepcopy,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &proxy_serialize
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -1968,7 +1978,7 @@ INTERN DeeTypeObject RangeMapNodes_Type = {
 			/* tp_deep_ctor:   */ &proxy_deepcopy,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &proxy_serialize
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -2014,7 +2024,7 @@ INTERN DeeTypeObject RangeMapRanges_Type = {
 			/* tp_deep_ctor:   */ &proxy_deepcopy,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &proxy_serialize
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -2060,7 +2070,7 @@ INTERN DeeTypeObject RangeMapMapItems_Type = {
 			/* tp_deep_ctor:   */ &proxy_deepcopy,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &proxy_serialize
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -2114,7 +2124,7 @@ INTERN DeeTypeObject RangeMapAsMap_Type = {
 			/* tp_deep_ctor:   */ &proxy_deepcopy,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &proxy_serialize
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
@@ -2240,6 +2250,18 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+proxy_iterator_serialize(RangeMapProxyIterator *__restrict self,
+                         DeeSerial *__restrict writer,
+                         Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(RangeMapProxyIterator, field))
+	int result = DeeSerial_PutObject(writer, ADDROF(rmpi_rmap), self->rmpi_rmap);
+	if likely(result == 0)
+		result = DeeSerial_PutObject(writer, ADDROF(rmpi_iter), self->rmpi_iter);
+	return result;
+#undef ADDROF
+}
+
 PRIVATE NONNULL((1)) void DCALL
 proxy_iterator_fini(RangeMapProxyIterator *__restrict self) {
 	Dee_Decref(self->rmpi_iter);
@@ -2311,6 +2333,8 @@ err_iter:
 err:
 	return -1;
 }
+
+#define proxy_items_iterator_serialize proxy_iterator_serialize
 
 PRIVATE struct type_member tpconst proxy_iterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__rangemap__", STRUCT_OBJECT, offsetof(RangeMapProxyIterator, rmpi_rmap), "->?GRangeMap"),
@@ -2436,7 +2460,7 @@ INTERN DeeTypeObject RangeMapProxyIterator_Type = {
 			/* tp_deep_ctor:   */ &proxy_iterator_deepcopy,
 			/* tp_any_ctor:    */ &proxy_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &proxy_iterator_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_iterator_fini,
 		/* .tp_assign      = */ NULL,
@@ -2481,7 +2505,7 @@ INTERN DeeTypeObject RangeMapValuesIterator_Type = {
 			/* tp_deep_ctor:   */ &proxy_items_iterator_deepcopy,
 			/* tp_any_ctor:    */ &proxy_items_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &proxy_items_iterator_serialize
 		),
 		/* .tp_dtor        = */ NULL, /* Inherited... */
 		/* .tp_assign      = */ NULL,
@@ -2526,7 +2550,7 @@ INTERN DeeTypeObject RangeMapItemsIterator_Type = {
 			/* tp_deep_ctor:   */ &proxy_items_iterator_deepcopy,
 			/* tp_any_ctor:    */ &proxy_items_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &proxy_items_iterator_serialize
 		),
 		/* .tp_dtor        = */ NULL, /* Inherited... */
 		/* .tp_assign      = */ NULL,
@@ -2571,7 +2595,7 @@ INTERN DeeTypeObject RangeMapRangesIterator_Type = {
 			/* tp_deep_ctor:   */ &proxy_items_iterator_deepcopy,
 			/* tp_any_ctor:    */ &proxy_items_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &proxy_items_iterator_serialize
 		),
 		/* .tp_dtor        = */ NULL, /* Inherited... */
 		/* .tp_assign      = */ NULL,
@@ -2616,7 +2640,7 @@ INTERN DeeTypeObject RangeMapNodesIterator_Type = {
 			/* tp_deep_ctor:   */ &proxy_iterator_deepcopy,
 			/* tp_any_ctor:    */ &proxy_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &proxy_iterator_serialize
 		),
 		/* .tp_dtor        = */ NULL, /* Inherited... */
 		/* .tp_assign      = */ NULL,
@@ -2735,6 +2759,39 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+proxy_keys_iterator_serialize(RangeMapProxyKeysIterator *__restrict self,
+                              DeeSerial *__restrict writer,
+                              Dee_seraddr_t addr) {
+	DREF DeeObject *self__rmpki_prvkey;
+	DREF DeeObject *self__rmpki_maxkey;
+#define ADDROF(field) (addr + offsetof(RangeMapProxyKeysIterator, field))
+	RangeMapProxyKeysIterator *out;
+	if (DeeSerial_PutObject(writer, ADDROF(rmpki_base.rmpii_base.rmpi_rmap),
+	                        self->rmpki_base.rmpii_base.rmpi_rmap))
+		goto err;
+	if (DeeSerial_PutObject(writer, ADDROF(rmpki_base.rmpii_base.rmpi_iter),
+	                        self->rmpki_base.rmpii_base.rmpi_iter))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, addr, RangeMapProxyKeysIterator);
+	Dee_atomic_lock_init(&out->rmpki_lock);
+	RangeMapProxyKeysIterator_LockAcquire(self);
+	out->rmpki_first   = self->rmpki_first;
+	self__rmpki_prvkey = self->rmpki_prvkey;
+	self__rmpki_maxkey = self->rmpki_maxkey;
+	Dee_Incref(self__rmpki_prvkey);
+	Dee_Incref(self__rmpki_maxkey);
+	RangeMapProxyKeysIterator_LockRelease(self);
+	if (DeeSerial_PutObjectInherited(writer, ADDROF(rmpki_prvkey), self__rmpki_prvkey))
+		goto err_self__rmpki_maxkey;
+	return DeeSerial_PutObjectInherited(writer, ADDROF(rmpki_maxkey), self__rmpki_maxkey);
+err_self__rmpki_maxkey:
+	Dee_Decref(self__rmpki_maxkey);
+err:
+	return -1;
+#undef ADDROF
+}
+
 PRIVATE NONNULL((1)) void DCALL
 proxy_keys_iterator_fini(RangeMapProxyKeysIterator *__restrict self) {
 	Dee_Decref(self->rmpki_prvkey);
@@ -2845,6 +2902,45 @@ err_rmap:
 	Dee_Decref(self->rmpki_base.rmpii_base.rmpi_rmap);
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+proxy_mapitems_iterator_serialize(RangeMapProxyKeysIterator *__restrict self,
+                                  DeeSerial *__restrict writer,
+                                  Dee_seraddr_t addr) {
+	DREF DeeObject *self__rmpki_prvkey;
+	DREF DeeObject *self__rmpki_maxkey;
+	DREF DeeObject *self__rmpki_base_rmpii_value;
+#define ADDROF(field) (addr + offsetof(RangeMapProxyKeysIterator, field))
+	RangeMapProxyKeysIterator *out;
+	if (DeeSerial_PutObject(writer, ADDROF(rmpki_base.rmpii_base.rmpi_rmap),
+	                        self->rmpki_base.rmpii_base.rmpi_rmap))
+		goto err;
+	if (DeeSerial_PutObject(writer, ADDROF(rmpki_base.rmpii_base.rmpi_iter),
+	                        self->rmpki_base.rmpii_base.rmpi_iter))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, addr, RangeMapProxyKeysIterator);
+	Dee_atomic_lock_init(&out->rmpki_lock);
+	RangeMapProxyKeysIterator_LockAcquire(self);
+	out->rmpki_first   = self->rmpki_first;
+	self__rmpki_prvkey = self->rmpki_prvkey;
+	self__rmpki_maxkey = self->rmpki_maxkey;
+	self__rmpki_base_rmpii_value = self->rmpki_base.rmpii_value;
+	Dee_Incref(self__rmpki_prvkey);
+	Dee_Incref(self__rmpki_maxkey);
+	RangeMapProxyKeysIterator_LockRelease(self);
+	if (DeeSerial_PutObjectInherited(writer, ADDROF(rmpki_base.rmpii_value), self__rmpki_base_rmpii_value))
+		goto err_self__rmpki_maxkey__self__rmpki_prvkey;
+	if (DeeSerial_PutObjectInherited(writer, ADDROF(rmpki_prvkey), self__rmpki_prvkey))
+		goto err_self__rmpki_maxkey;
+	return DeeSerial_PutObjectInherited(writer, ADDROF(rmpki_maxkey), self__rmpki_maxkey);
+err_self__rmpki_maxkey__self__rmpki_prvkey:
+	Dee_Decref(self__rmpki_prvkey);
+err_self__rmpki_maxkey:
+	Dee_Decref(self__rmpki_maxkey);
+err:
+	return -1;
+#undef ADDROF
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -3213,7 +3309,7 @@ INTERN DeeTypeObject RangeMapKeysIterator_Type = {
 			/* tp_deep_ctor:   */ &proxy_keys_iterator_deepcopy,
 			/* tp_any_ctor:    */ &proxy_keys_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &proxy_keys_iterator_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_keys_iterator_fini,
 		/* .tp_assign      = */ NULL,
@@ -3258,7 +3354,7 @@ INTERN DeeTypeObject RangeMapMapItemsIterator_Type = {
 			/* tp_deep_ctor:   */ &proxy_mapitems_iterator_deepcopy,
 			/* tp_any_ctor:    */ &proxy_mapitems_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &proxy_mapitems_iterator_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_mapitems_iterator_fini,
 		/* .tp_assign      = */ NULL,
@@ -3303,7 +3399,7 @@ INTERN DeeTypeObject RangeMapAsMapIterator_Type = {
 			/* tp_deep_ctor:   */ &proxy_mapitems_iterator_deepcopy,
 			/* tp_any_ctor:    */ &proxy_mapitems_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &proxy_mapitems_iterator_serialize
 		),
 		/* .tp_dtor        = */ NULL, /* Inherited... */
 		/* .tp_assign      = */ NULL,
