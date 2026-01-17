@@ -1046,6 +1046,7 @@ list_serialize(List *__restrict self,
 	DREF DeeObject **out__l_list_ol_elemv;
 again:
 	out = DeeSerial_Addr2Mem(writer, addr, List);
+	weakref_support_init(out);
 	DeeList_LockRead(self);
 	out->l_list.ol_elemc = self->l_list.ol_elemc;
 #ifdef DEE_OBJECTLIST_HAVE_ELEMA
