@@ -2332,13 +2332,15 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 dict_serialize(Dict *__restrict self,
                DeeSerial *__restrict writer,
                Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(Dict, field))
 	Dict *out;
 	Dee_dict_gethidx_t out__d_hidxget;
 	Dee_dict_sethidx_t out__d_hidxset;
+	Dee_dict_vidx_t self__d_valloc;
 again:
 	out = DeeSerial_Addr2Mem(writer, addr, Dict);
 	DeeDict_LockRead(self);
-	out->d_valloc  = self->d_valloc;
+	out->d_valloc  = self__d_valloc = self->d_valloc;
 	out->d_vsize   = self->d_vsize;
 	out->d_vused   = self->d_vused;
 	out->d_hmask   = self->d_hmask;
@@ -2348,9 +2350,9 @@ again:
 	if (self->d_vtab == DeeDict_EmptyVTab) {
 		ASSERT(self->d_htab == DeeDict_EmptyHTab);
 		DeeDict_LockEndRead(self);
-		if (DeeSerial_PutStaticDeemon(writer, addr + offsetof(Dict, d_vtab), DeeDict_EmptyVTab))
+		if (DeeSerial_PutStaticDeemon(writer, ADDROF(d_vtab), DeeDict_EmptyVTab))
 			goto err;
-		if (DeeSerial_PutStaticDeemon(writer, addr + offsetof(Dict, d_htab), DeeDict_EmptyHTab))
+		if (DeeSerial_PutStaticDeemon(writer, ADDROF(d_htab), DeeDict_EmptyHTab))
 			goto err;
 	} else {
 		size_t out__d_vsize;
@@ -2358,8 +2360,8 @@ again:
 		size_t i, sizeof_out__d_vtab;
 		struct dict_item *out__d_vtab;
 		struct dict_item *in__d_vtab;
-		shift_t hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
-		sizeof_out__d_vtab = self->d_valloc * sizeof(struct dict_item);
+		shift_t hidxio = DEE_DICT_HIDXIO_FROMALLOC(self__d_valloc);
+		sizeof_out__d_vtab = self__d_valloc * sizeof(struct dict_item);
 		sizeof_out__d_vtab += (self->d_hmask + 1) << hidxio;
 		addrof_out__d_vtab = DeeSerial_TryMalloc(writer, sizeof_out__d_vtab, NULL);
 		if (!Dee_SERADDR_ISOK(addrof_out__d_vtab)) {
@@ -2368,13 +2370,13 @@ again:
 			if (!Dee_SERADDR_ISOK(addrof_out__d_vtab))
 				goto err;
 			DeeDict_LockRead(self);
-			out = DeeSerial_Addr2Mem(writer, addr, Dict);
-			if unlikely(out->d_valloc != self->d_valloc) {
+			if unlikely(self__d_valloc != self->d_valloc) {
 free_out__d_vtab__and__again:
 				DeeDict_LockEndRead(self);
 				DeeSerial_Free(writer, addrof_out__d_vtab, NULL);
 				goto again;
 			}
+			out = DeeSerial_Addr2Mem(writer, addr, Dict);
 			if unlikely(out->d_vsize != self->d_vsize)
 				goto free_out__d_vtab__and__again;
 			if unlikely(out->d_vused != self->d_vused)
@@ -2403,17 +2405,12 @@ free_out__d_vtab__and__again:
 		for (i = 0; i < out__d_vsize; ++i) {
 			if (out__d_vtab[i].di_key) {
 				int error;
-				DREF DeeObject *key, *value;
-				key   = out__d_vtab[i].di_key;
-				value = out__d_vtab[i].di_value;
-				error = DeeSerial_PutObject(writer,
-				                            addrof_out__d_vtab + offsetof(struct dict_item, di_key),
-				                            key);
-				if likely(error == 0) {
-					error = DeeSerial_PutObject(writer,
-					                            addrof_out__d_vtab + offsetof(struct dict_item, di_value),
-					                            value);
-				}
+				Dee_seraddr_t addrof_out__d_vtab_i = addrof_out__d_vtab + i * sizeof(struct dict_item);
+				DREF DeeObject *key   = out__d_vtab[i].di_key;
+				DREF DeeObject *value = out__d_vtab[i].di_value;
+				error = DeeSerial_PutObject(writer, addrof_out__d_vtab_i + offsetof(struct dict_item, di_key), key);
+				if likely(error == 0)
+					error = DeeSerial_PutObject(writer, addrof_out__d_vtab_i + offsetof(struct dict_item, di_value), value);
 				Dee_Decref_unlikely(key);
 				Dee_Decref_unlikely(value);
 				out__d_vtab = DeeSerial_Addr2Mem(writer, addrof_out__d_vtab, struct dict_item);
@@ -2428,21 +2425,19 @@ free_out__d_vtab__and__again:
 				}
 			}
 		}
-		if (DeeSerial_PutAddr(writer, addr + offsetof(Dict, d_vtab),
-		                      addrof_out__d_vtab - sizeof(struct Dee_dict_item)))
+		if (DeeSerial_PutAddr(writer, ADDROF(d_vtab), addrof_out__d_vtab - sizeof(struct Dee_dict_item)))
 			goto err;
-		out = DeeSerial_Addr2Mem(writer, addr, Dict);
-		if (DeeSerial_PutAddr(writer, addr + offsetof(Dict, d_htab),
-		                      addrof_out__d_vtab + (out->d_valloc * sizeof(struct dict_item))))
+		if (DeeSerial_PutAddr(writer, ADDROF(d_htab), addrof_out__d_vtab + (self__d_valloc * sizeof(struct dict_item))))
 			goto err;
 	}
-	if (DeeSerial_PutStaticDeemon(writer, addr + offsetof(Dict, d_hidxget), (void *)out__d_hidxget))
+	if (DeeSerial_PutStaticDeemon(writer, ADDROF(d_hidxget), (void *)out__d_hidxget))
 		goto err;
-	if (DeeSerial_PutStaticDeemon(writer, addr + offsetof(Dict, d_hidxset), (void *)out__d_hidxset))
+	if (DeeSerial_PutStaticDeemon(writer, ADDROF(d_hidxset), (void *)out__d_hidxset))
 		goto err;
 	return 0;
 err:
 	return -1;
+#undef ADDROF
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
