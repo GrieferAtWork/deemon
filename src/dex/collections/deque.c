@@ -35,6 +35,7 @@
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/util/atomic.h>
 
@@ -773,6 +774,183 @@ deq_fini(Deque *__restrict self) {
 	Dee_Free(iter);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+try_serialize_bucket(DeeSerial *__restrict writer,
+                     DequeBucket *__restrict self,
+                     size_t bucket_size,
+                     size_t start, size_t used_size,
+                     Dee_seraddr_t p_self) {
+	Dee_seraddr_t result_addr;
+	DequeBucket *out;
+	size_t sizeof_bucket = SIZEOF_BUCKET(bucket_size);
+	ASSERT(start + used_size >= start);
+	ASSERT(start + used_size <= bucket_size);
+	result_addr = DeeSerial_TryMalloc(writer, sizeof_bucket, NULL);
+	if unlikely(!Dee_SERADDR_ISOK(result_addr))
+		goto done;
+	out = DeeSerial_Addr2Mem(writer, result_addr, DequeBucket);
+	Dee_Movrefv(out->db_items + start, self->db_items + start, used_size);
+	out->db_pself = (struct deque_bucket **)p_self;
+done:
+	return result_addr;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+deq_serialize(Deque *__restrict self,
+              DeeSerial *__restrict writer,
+              Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(Deque, field))
+	Deque *out;
+	DequeBucket *out_bucket;
+	Dee_seraddr_t copy_addr = Dee_SERADDR_INVALID;
+	Dee_seraddr_t copy_tail_addr = Dee_SERADDR_INVALID;
+	size_t self__d_version, self__d_bucket_sz, self__d_size;
+	size_t self__d_head_idx, self__d_head_use, self__d_tail_sz;
+	bool collect_result;
+again:
+	Deque_LockRead(self);
+	self__d_version   = self->d_version;
+	self__d_bucket_sz = self->d_bucket_sz;
+	self__d_size      = self->d_size;
+	self__d_head_idx  = self->d_head_idx;
+	self__d_head_use  = self->d_head_use;
+	self__d_tail_sz   = self->d_tail_sz;
+	if (self->d_head == NULL) {
+		copy_addr      = Dee_SERADDR_INVALID;
+		copy_tail_addr = Dee_SERADDR_INVALID;
+	} else {
+		DequeBucket *iter = self->d_head;
+		copy_addr = try_serialize_bucket(writer, iter,
+		                                 self__d_bucket_sz,
+		                                 self__d_head_idx,
+		                                 self__d_head_use,
+		                                 ADDROF(d_head));
+		if unlikely(!Dee_SERADDR_ISOK(copy_addr))
+			goto err_unlock_restart_collect;
+		copy_tail_addr = copy_addr;
+
+		/* Copy all the inner buckets of the other deque. */
+		while (iter != self->d_tail) {
+			Dee_seraddr_t next_addr;
+			size_t copy_count;
+			iter       = iter->db_next;
+			copy_count = self__d_bucket_sz;
+			if (iter == self->d_tail) /* Special case for the last bucket. */
+				copy_count = self__d_tail_sz;
+			next_addr = try_serialize_bucket(writer, iter, self__d_bucket_sz, 0, copy_count,
+			                                 copy_tail_addr + offsetof(DequeBucket, db_next));
+			if unlikely(!Dee_SERADDR_ISOK(next_addr))
+				goto err_unlock_restart_collect;
+			out_bucket = DeeSerial_Addr2Mem(writer, copy_tail_addr, DequeBucket);
+			out_bucket->db_next = (struct deque_bucket *)next_addr;
+			out_bucket = DeeSerial_Addr2Mem(writer, next_addr, DequeBucket);
+			out_bucket->db_pself = (struct deque_bucket **)(copy_tail_addr + offsetof(DequeBucket, db_next));
+			copy_tail_addr = next_addr;
+		}
+		out_bucket = DeeSerial_Addr2Mem(writer, copy_tail_addr, DequeBucket);
+		out_bucket->db_next = NULL;
+	}
+	Deque_LockEndRead(self);
+	out = DeeSerial_Addr2Mem(writer, addr, Deque);
+	Dee_atomic_rwlock_init(&out->d_lock);
+	weakref_support_init(out);
+	out->d_version   = self__d_version;
+	out->d_bucket_sz = self__d_bucket_sz;
+	out->d_size      = self__d_size;
+	out->d_head_idx  = self__d_head_idx;
+	out->d_head_use  = self__d_head_use;
+	out->d_tail_sz   = self__d_tail_sz;
+	ASSERT(!!Dee_SERADDR_ISOK(copy_addr) == !!Dee_SERADDR_ISOK(copy_tail_addr));
+	if (!Dee_SERADDR_ISOK(copy_addr)) {
+		out->d_head = NULL;
+		out->d_tail = NULL;
+	} else {
+		Dee_seraddr_t bucket__db_pself, next;
+		if (DeeSerial_PutAddr(writer, ADDROF(d_head), copy_addr))
+			goto err_copied_buckets_first;
+		if (DeeSerial_PutAddr(writer, ADDROF(d_tail), copy_tail_addr))
+			goto err_copied_buckets_first;
+		if (DeeSerial_InplacePutObjectv(writer,
+		                                (copy_addr + offsetof(DequeBucket, db_items)) +
+		                                (self__d_head_idx * sizeof(DREF DeeObject *)),
+		                                self__d_head_use))
+			goto err_copied_buckets_next;
+		bucket__db_pself = ADDROF(d_head);
+		for (;;) {
+			size_t bucket_count;
+			out_bucket = DeeSerial_Addr2Mem(writer, copy_addr, DequeBucket);
+			next = (Dee_seraddr_t)out_bucket->db_next;
+			out_bucket->db_next = NULL;
+			if (DeeSerial_PutAddr(writer, copy_addr + offsetof(DequeBucket, db_pself), bucket__db_pself))
+				goto err_copied_buckets_next;
+			bucket__db_pself = copy_addr + offsetof(DequeBucket, db_next);
+			if (copy_addr == copy_tail_addr)
+				break;
+			if (DeeSerial_PutAddr(writer, copy_addr + offsetof(DequeBucket, db_next), next))
+				goto err_copied_buckets_next;
+			copy_addr = next;
+			bucket_count = self__d_bucket_sz;
+			if (copy_addr == copy_tail_addr)
+				bucket_count = self__d_tail_sz;
+			if (DeeSerial_InplacePutObjectv(writer,
+			                                copy_addr + offsetof(DequeBucket, db_items),
+			                                bucket_count))
+				goto err_copied_buckets_next;
+		}
+	}
+	return 0;
+err_copied_buckets_first:
+	out_bucket = DeeSerial_Addr2Mem(writer, copy_addr, DequeBucket);
+	Dee_Decrefv(out_bucket->db_items + self__d_head_idx, self__d_head_use);
+err_copied_buckets_next:
+	if (copy_addr == copy_tail_addr)
+		goto err;
+	out_bucket = DeeSerial_Addr2Mem(writer, copy_addr, DequeBucket);
+	copy_addr = (Dee_seraddr_t)out_bucket->db_next;
+/*err_copied_buckets:*/
+	for (;;) {
+		size_t bucket_count = self__d_bucket_sz;
+		if (copy_addr == copy_tail_addr)
+			bucket_count = self__d_tail_sz;
+		out_bucket = DeeSerial_Addr2Mem(writer, copy_addr, DequeBucket);
+		Dee_Decrefv(out_bucket->db_items, bucket_count);
+		if (copy_addr == copy_tail_addr)
+			break;
+		copy_addr = (Dee_seraddr_t)out_bucket->db_next;
+	}
+	goto err;
+err_unlock_restart_collect:
+	COMPILER_READ_BARRIER();
+	Deque_LockEndRead(self);
+	collect_result = Dee_CollectMemory(SIZEOF_BUCKET(self__d_bucket_sz));
+	if (Dee_SERADDR_ISOK(copy_tail_addr)) {
+		for (;;) {
+			size_t start, count;
+			Dee_seraddr_t prev;
+			out_bucket = DeeSerial_Addr2Mem(writer, copy_tail_addr, DequeBucket);
+			prev = (Dee_seraddr_t)out_bucket->db_pself - offsetof(DequeBucket, db_next);
+			if (copy_tail_addr == copy_addr) {
+				start = self__d_head_idx;
+				count = self__d_head_use;
+			} else {
+				start = 0;
+				count = self__d_bucket_sz;
+			}
+			Dee_Decrefv(out_bucket->db_items + start, count);
+			DeeSerial_Free(writer, copy_tail_addr, NULL);
+			if (copy_tail_addr == copy_addr)
+				break;
+			copy_tail_addr = prev;
+		}
+	}
+	/* Collect memory for the missing bucket. */
+	if (collect_result)
+		goto again;
+err:
+	return -1;
+#undef ADDROF
+}
+
 
 #if __SIZEOF_INT__ != __SIZEOF_SIZE_T__
 PRIVATE NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1468,7 +1646,7 @@ INTERN DeeTypeObject Deque_Type = {
 			/* tp_deep_ctor:   */ &deq_copy,
 			/* tp_any_ctor:    */ &deq_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &deq_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&deq_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&deq_assign,
@@ -1604,6 +1782,36 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+deqiter_serialize(DequeIteratorObject *__restrict self,
+                  DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DequeIteratorObject, field))
+	size_t self__di_ver, correct_version;
+	DequeIterator self__di_iter;
+	DequeIteratorObject *out;
+	DequeIterator_LockRead(self);
+	self__di_iter = self->di_iter;
+	self__di_ver  = self->di_ver;
+	DequeIterator_LockEndRead(self);
+	if (DeeSerial_PutObject(writer, ADDROF(di_deq), self->di_deq))
+		goto err;
+	/* Only write the bucket pointer if the version is still correct.
+	 * If it isn't, then the bucket pointer may be invalid. */
+	Deque_LockRead(self->di_deq);
+	correct_version = self->di_deq->d_version;
+	Deque_LockEndRead(self->di_deq);
+	out = DeeSerial_Addr2Mem(writer, addr, DequeIteratorObject);
+	Dee_atomic_rwlock_init(&out->di_lock);
+	out->di_ver           = self__di_ver;
+	out->di_iter.di_index = self__di_iter.di_index;
+	if (self__di_ver == correct_version)
+		return DeeSerial_PutPointer(writer, ADDROF(di_iter.di_bucket), self__di_iter.di_bucket);
+	return 0;
+err:
+	return -1;
+#undef ADDROF
+}
+
 PRIVATE NONNULL((1)) void DCALL
 deqiter_fini(DequeIteratorObject *__restrict self) {
 	Dee_Decref(self->di_deq);
@@ -1695,7 +1903,7 @@ INTERN DeeTypeObject DequeIterator_Type = {
 			/* tp_deep_ctor:   */ &deqiter_deep,
 			/* tp_any_ctor:    */ &deqiter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &deqiter_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&deqiter_fini,
 		/* .tp_assign      = */ NULL,
