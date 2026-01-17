@@ -47,6 +47,7 @@ ClCompile.BasicRuntimeChecks = Default
 
 #include <hybrid/align.h>
 #include <hybrid/bit.h>
+#include <hybrid/debug-alignment.h>
 #include <hybrid/host.h>
 #include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
@@ -490,17 +491,17 @@ DECL_BEGIN
 #define HAVE_MMAP_IS_VirtualAlloc /* Windows: use VirtualAlloc() */
 #elif defined(CONFIG_HAVE_mmap) || defined(CONFIG_HAVE_sbrk)
 #ifdef CONFIG_HAVE_mmap
-#define HAVE_MMAP 1               /* Unix: use mmap()... */
+#define HAVE_MMAP 1               /* Unix: use mmap(2)... */
 #endif /* CONFIG_HAVE_mmap */
 #ifdef CONFIG_HAVE_mremap
 #define HAVE_MREMAP 1
 #endif /* CONFIG_HAVE_mremap */
-#ifdef CONFIG_HAVE_sbrk           /* Unix: ... and sbrk() */
-#define HAVE_MORECORE 1
+#ifdef CONFIG_HAVE_sbrk
+#define HAVE_MORECORE 1           /* Unix: ... and sbrk(2) */
 #endif /* CONFIG_HAVE_sbrk */
 #elif defined(CONFIG_HAVE_malloc) || defined(CONFIG_HAVE_calloc)
 #define HAVE_MMAP 1
-#define HAVE_MMAP_IS_malloc       /* Generic: use the system's malloc() */
+#define HAVE_MMAP_IS_malloc       /* Generic: use the host's native malloc(3) */
 #ifndef CONFIG_HAVE_calloc
 #define HAVE_MMAP_CLEARS 0
 #endif /* !CONFIG_HAVE_calloc */
@@ -821,13 +822,19 @@ DECL_BEGIN
 #ifdef HAVE_MMAP_IS_VirtualAlloc
 /* Win32 MMAP via VirtualAlloc */
 FORCELOCAL void *win32mmap(size_t size) {
-	void *ptr = VirtualAlloc(0, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+	void *ptr;
+	DBG_ALIGNMENT_DISABLE();
+	ptr = VirtualAlloc(0, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+	DBG_ALIGNMENT_ENABLE();
 	return (ptr != 0) ? ptr : MFAIL;
 }
 
 /* For direct MMAP, use MEM_TOP_DOWN to minimize interference */
 FORCELOCAL void *win32direct_mmap(size_t size) {
-	void *ptr = VirtualAlloc(0, size, MEM_RESERVE | MEM_COMMIT | MEM_TOP_DOWN, PAGE_READWRITE);
+	void *ptr;
+	DBG_ALIGNMENT_DISABLE();
+	ptr = VirtualAlloc(0, size, MEM_RESERVE | MEM_COMMIT | MEM_TOP_DOWN, PAGE_READWRITE);
+	DBG_ALIGNMENT_ENABLE();
 	return (ptr != 0) ? ptr : MFAIL;
 }
 
@@ -836,8 +843,12 @@ FORCELOCAL int win32munmap(void *ptr, size_t size) {
 	MEMORY_BASIC_INFORMATION minfo;
 	char *cptr = (char *)ptr;
 	while (size) {
-		if (VirtualQuery(cptr, &minfo, sizeof(minfo)) == 0)
+		DBG_ALIGNMENT_DISABLE();
+		if (VirtualQuery(cptr, &minfo, sizeof(minfo)) == 0) {
+			DBG_ALIGNMENT_ENABLE();
 			return -1;
+		}
+		DBG_ALIGNMENT_ENABLE();
 		if (minfo.BaseAddress != cptr || minfo.AllocationBase != cptr ||
 		    minfo.State != MEM_COMMIT || minfo.RegionSize > size)
 			return -1;
@@ -870,11 +881,14 @@ FORCELOCAL int win32munmap(void *ptr, size_t size) {
 /* Use native malloc() to simulate mmap() */
 #define DL_MMAP(s) native_malloc_mmap(s)
 FORCELOCAL void *native_malloc_mmap(size_t size) {
+	void *ptr;
+	DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_calloc
-	void *ptr = calloc(1, size);
+	ptr = calloc(1, size);
 #else /* CONFIG_HAVE_calloc */
-	void *ptr = malloc(size);
+	ptr = malloc(size);
 #endif /* !CONFIG_HAVE_calloc */
+	DBG_ALIGNMENT_ENABLE();
 	return (ptr != 0) ? ptr : MFAIL;
 }
 
@@ -884,7 +898,9 @@ FORCELOCAL void *native_malloc_mmap(size_t size) {
 #define DL_MUNMAP(a, s) native_malloc_munmap((a), (s))
 FORCELOCAL int native_malloc_munmap(void *ptr, size_t size) {
 	(void)size;
+	DBG_ALIGNMENT_DISABLE();
 	free(ptr);
+	DBG_ALIGNMENT_ENABLE();
 	return 0;
 }
 #endif /* CONFIG_HAVE_free */
@@ -2713,7 +2729,7 @@ static mchunkptr mmap_resize(PARAM_mstate_m_ mchunkptr oldp, size_t nb, int flag
 static void init_top(PARAM_mstate_m_ mchunkptr p, size_t psize) {
 	/* Ensure alignment */
 	size_t offset = align_offset(chunk2mem(p));
-	p             = (mchunkptr)((char *)p + offset);
+	p = (mchunkptr)((char *)p + offset);
 	psize -= offset;
 
 	mstate_top(m)     = p;
@@ -5021,6 +5037,11 @@ PRIVATE WUNUSED mspace DCALL create_tls_mspace(void) {
 
 PRIVATE NONNULL((1)) void DCALL destroy_tls_mspace(mspace ms) {
 	struct malloc_state *state = (struct malloc_state *)ms;
+	/* Since the mstate is about to go on ice, trim whatever amount of memory we can from it. */
+	PREACTION(state);
+	sys_trim(state, 0);
+	POSTACTION(state);
+
 	tls_mspace_lock_acquire();
 	SLIST_REMOVE(&used_tls_mspace, state, malloc_state, ms_link);
 	SLIST_INSERT(&free_tls_mspace, state, ms_link);
@@ -5038,9 +5059,29 @@ static mspace tls_mspace(void) {
 	return result;
 }
 
+#if 1 /* Use atomic locks -- shared locks use futex, which might require Dee_TryMalloc() for its impl! */
+#ifndef CONFIG_NO_THREADS
+PRIVATE Dee_ratomic_lock_t foreach_lock = Dee_RATOMIC_LOCK_INIT;
+#endif /* !CONFIG_NO_THREADS */
+#define foreach_lock_available()     Dee_ratomic_lock_available(&foreach_lock)
+#define foreach_lock_acquired()      Dee_ratomic_lock_acquired(&foreach_lock)
+#define foreach_lock_tryacquire()    Dee_ratomic_lock_tryacquire(&foreach_lock)
+#define foreach_lock_acquire()       Dee_ratomic_lock_acquire(&foreach_lock)
+#define foreach_lock_acquire_noint() Dee_ratomic_lock_acquire(&foreach_lock)
+#define foreach_lock_waitfor()       Dee_ratomic_lock_waitfor(&foreach_lock)
+#define foreach_lock_release()       Dee_ratomic_lock_release(&foreach_lock)
+#else
 #ifndef CONFIG_NO_THREADS
 PRIVATE Dee_rshared_lock_t foreach_lock = Dee_RSHARED_LOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
+#define foreach_lock_available()     Dee_rshared_lock_available(&foreach_lock)
+#define foreach_lock_acquired()      Dee_rshared_lock_acquired(&foreach_lock)
+#define foreach_lock_tryacquire()    Dee_rshared_lock_tryacquire(&foreach_lock)
+#define foreach_lock_acquire()       Dee_rshared_lock_acquire(&foreach_lock)
+#define foreach_lock_acquire_noint() Dee_rshared_lock_acquire_noint(&foreach_lock)
+#define foreach_lock_waitfor()       Dee_rshared_lock_waitfor(&foreach_lock)
+#define foreach_lock_release()       Dee_rshared_lock_release(&foreach_lock)
+#endif
 
 PRIVATE uintptr_t foreach_bitset_inuse = 0;
 PRIVATE uintptr_t foreach_bitset_inuse_alloc(void) {
@@ -5091,7 +5132,7 @@ static size_t tls_mspace_foreach(size_t (*cb)(mspace ms, void *arg), void *arg) 
 	uintptr_t mask;
 	mstate ms;
 	size_t result = 0;
-	Dee_rshared_lock_acquire_noint(&foreach_lock);
+	foreach_lock_acquire_noint();
 	mask = foreach_bitset_inuse_alloc();
 	tls_mspace_lock_acquire();
 	reset_not_visited_tls_mspace(mask);
@@ -5102,7 +5143,7 @@ static size_t tls_mspace_foreach(size_t (*cb)(mspace ms, void *arg), void *arg) 
 	}
 	tls_mspace_lock_release();
 	foreach_bitset_inuse_free(mask);
-	Dee_rshared_lock_release(&foreach_lock);
+	foreach_lock_release();
 	return result;
 }
 
@@ -5734,7 +5775,7 @@ struct leak_footer {
 #if LEAK_DETECTION_GC || HAVE_DBG_HEAP_REGION
 #define leak_footer_line_t __INTPTR_HALF_TYPE__
 	__INTPTR_HALF_TYPE__  lf_line;  /* [lock(OWNER(lf_chunk))] Line where "lf_chunk" was allocated */
-	__UINTPTR_HALF_TYPE__ lf_gcflags; /* [lock(leaks_gc_lock)] Flags used to track state during GC leak search */
+	__UINTPTR_HALF_TYPE__ lf_gcflags; /* [lock(leaks_lock)] Flags used to track state during GC leak search */
 #define LEAK_FOOTER_GCFLAG_NORMAL  0x0000 /* Normal flags */
 #define LEAK_FOOTER_GCFLAG_REACH   0x0001 /* Reachable */
 #define LEAK_FOOTER_GCFLAG_SCANNED 0x0002 /* Scanned for pointers */
@@ -5811,6 +5852,7 @@ struct region_leak_footer {
 
 SLIST_HEAD(leak_footer_slist, leak_footer);
 
+/* TODO: See what happens to performance when "leak_footer_alloc_uncached()" uses a dedicated slab cache */
 #define leak_footer_alloc_uncached() \
 	((struct leak_footer *)dlmalloc(sizeof(struct leak_footer)))
 #define leak_footer_free_uncached(self) \
@@ -7502,12 +7544,6 @@ PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(unsigned int method) {
 	}
 	return result;
 }
-
-
-#if LEAK_DETECTION_GC
-PRIVATE Dee_shared_lock_t leaks_gc_lock = Dee_SHARED_LOCK_INIT;
-#endif /* LEAK_DETECTION_GC */
-
 
 
 
