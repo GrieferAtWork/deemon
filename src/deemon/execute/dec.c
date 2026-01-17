@@ -5390,7 +5390,7 @@ DeeModule_OpenDec(struct Dee_module_object *__restrict mod,
 	/* Initialize the file */
 	if unlikely(DeeMapFile_InitFile(&filemap, input_stream,
 	                                0, 0, DFILE_LIMIT + 1, DECFILE_PADDING,
-	                                DEE_MAPFILE_F_READALL | DEE_MAPFILE_F_ATSTART)) {
+	                                DeeMapFile_F_READALL | DeeMapFile_F_ATSTART)) {
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		return NULL;
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */

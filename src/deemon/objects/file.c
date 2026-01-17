@@ -743,8 +743,8 @@ file_read_trymap(Dee_fd_t fd, size_t maxbytes,
 	DREF DeeMapFileObject *mapob;
 
 	error = DeeMapFile_InitSysFd(&map, fd, pos, 0, maxbytes, 0,
-	                             readall ? (DEE_MAPFILE_F_MUSTMMAP | DEE_MAPFILE_F_TRYMMAP | DEE_MAPFILE_F_READALL)
-	                                     : (DEE_MAPFILE_F_MUSTMMAP | DEE_MAPFILE_F_TRYMMAP));
+	                             readall ? (DeeMapFile_F_MUSTMMAP | DeeMapFile_F_TRYMMAP | DeeMapFile_F_READALL)
+	                                     : (DeeMapFile_F_MUSTMMAP | DeeMapFile_F_TRYMMAP));
 	if (error != 0) {
 		if unlikely(error < 0)
 			return NULL;
@@ -2484,11 +2484,11 @@ file_mmap(DeeObject *self, size_t argc,
 
 	/* Package flags */
 	if (args.readall)
-		mapflags |= DEE_MAPFILE_F_READALL;
+		mapflags |= DeeMapFile_F_READALL;
 	if (args.mustmmap)
-		mapflags |= DEE_MAPFILE_F_MUSTMMAP;
+		mapflags |= DeeMapFile_F_MUSTMMAP;
 	if (args.mapshared)
-		mapflags |= DEE_MAPFILE_F_MUSTMMAP | DEE_MAPFILE_F_MAPSHARED;
+		mapflags |= DeeMapFile_F_MUSTMMAP | DeeMapFile_F_MAPSHARED;
 	mapob = DeeObject_MALLOC(DREF DeeMapFileObject);
 	if unlikely(!mapob)
 		goto err;

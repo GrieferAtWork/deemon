@@ -4814,7 +4814,7 @@ PRIVATE bool host_sendfile_is_ENOSYS = false;
 #endif /* !LINUX_SENDFILE_MAXCOUNT */
 
 /* Copy all data from `src' to `dst', both of with are deemon File objects.
- * @param: src_mmap_hints: Set of `0 | DEE_MAPFILE_F_ATSTART'
+ * @param: src_mmap_hints: Set of `0 | DeeMapFile_F_ATSTART'
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
@@ -4934,7 +4934,7 @@ err_bad_used_bufsize:
 	 *    buffer of one file into that of another file, which might allow it to perform
 	 *    the copy operations more quickly. */
 #ifdef HAVE_posix_copyfile_fileio_sendfile
-	if (src_mmap_hints & DEE_MAPFILE_F_ATSTART) {
+	if (src_mmap_hints & DeeMapFile_F_ATSTART) {
 		/* Special handling needed for when the caller originally indicated
 		 * that the source-file was located at its beginning, yet due to us
 		 * possibly having been able to copy *some* file data using `sendfile',
@@ -4946,16 +4946,16 @@ err_bad_used_bufsize:
 		 * byte-offset. */
 		mf_status = DeeMapFile_InitFile(&mf, src, transfer_total,
 		                                0, (size_t)-1, 0,
-		                                DEE_MAPFILE_F_MUSTMMAP |
-		                                DEE_MAPFILE_F_TRYMMAP);
+		                                DeeMapFile_F_MUSTMMAP |
+		                                DeeMapFile_F_TRYMMAP);
 	} else
 #endif /* HAVE_posix_copyfile_fileio_sendfile */
 	{
 		/* Map the remainder of the given `src' file into memory. */
 		mf_status = DeeMapFile_InitFile(&mf, src, (Dee_pos_t)-1,
 		                                0, (size_t)-1, 0,
-		                                DEE_MAPFILE_F_MUSTMMAP |
-		                                DEE_MAPFILE_F_TRYMMAP |
+		                                DeeMapFile_F_MUSTMMAP |
+		                                DeeMapFile_F_TRYMMAP |
 		                                src_mmap_hints);
 	}
 	if (mf_status <= 0) {

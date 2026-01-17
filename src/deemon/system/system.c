@@ -2184,8 +2184,8 @@ DeeMapFile_TryTruncate(struct DeeMapFile *__restrict self,
  *                    string, in which case you can specify `1' to always have a trailing '\0' be
  *                    appended:
  *                    >> bzero(DeeMapFile_GetAddr + DeeMapFile_GetSize, num_trailing_nulbytes);
- * @param: flags:     Set of `DEE_MAPFILE_F_*'
- * @return:  1: Both `DEE_MAPFILE_F_MUSTMMAP' and `DEE_MAPFILE_F_TRYMMAP' were set, but mmap failed.
+ * @param: flags:     Set of `DeeMapFile_F_*'
+ * @return:  1: Both `DeeMapFile_F_MUSTMMAP' and `DeeMapFile_F_TRYMMAP' were set, but mmap failed.
  * @return:  0: Success (`self' must be deleted using `DeeMapFile_Fini(3)')
  * @return: -1: Error (an exception was thrown) */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
@@ -2224,7 +2224,7 @@ again:
 		Dee_pos_t map_offset = offset;
 		size_t map_bytes     = max_bytes;
 		if (map_offset == (Dee_pos_t)-1) {
-			if unlikely(flags & DEE_MAPFILE_F_ATSTART) {
+			if unlikely(flags & DeeMapFile_F_ATSTART) {
 				map_offset = 0;
 			} else {
 				/* Use the file descriptors current offset. */
@@ -2257,7 +2257,7 @@ again:
 				true_size = STRUCT_STAT_FOR_SIZE_GETSIZE(st) - map_offset;
 				if (true_size > (Dee_pos_t)(size_t)-1) {
 					/* File is too large to be loaded into memory in its entirety. */
-					if (flags & DEE_MAPFILE_F_MUSTMMAP)
+					if (flags & DeeMapFile_F_MUSTMMAP)
 						goto err_mmap_impossible;
 #define WANT_err_mmap_impossible
 
@@ -2297,14 +2297,14 @@ again:
 			 *       the relevant address is already mapped.
 			 */
 			hMap = CreateFileMappingW(fd, NULL,
-			                          (flags & DEE_MAPFILE_F_MAPSHARED)
+			                          (flags & DeeMapFile_F_MAPSHARED)
 			                          ? PAGE_READWRITE
 			                          : PAGE_WRITECOPY,
 			                          0, 0, NULL);
 			if (hMap == NULL || hMap == INVALID_HANDLE_VALUE)
 				goto after_mmap_attempt;
 			buf = (unsigned char *)MapViewOfFile(hMap,
-			                                     (flags & DEE_MAPFILE_F_MAPSHARED)
+			                                     (flags & DeeMapFile_F_MAPSHARED)
 			                                     ? (FILE_MAP_READ | FILE_MAP_WRITE)
 			                                     : (FILE_MAP_COPY),
 			                                     (DWORD)(map_offset >> 32),
@@ -2317,13 +2317,13 @@ again:
 			mapsize += used_nulbytes;
 			mapsize = (mapsize + psm) & ~psm;
 #ifndef CONFIG_HAVE_MAP_SHARED
-			if unlikely(flags & DEE_MAPFILE_F_MAPSHARED) {
+			if unlikely(flags & DeeMapFile_F_MAPSHARED) {
 				return DeeError_Throwf(&DeeError_UnsupportedAPI,
 				                       "MAP_SHARED isn't supported");
 			}
 #define LOCAL_USED_mmap_flags MAP_PRIVATE
 #else /* !CONFIG_HAVE_MAP_SHARED */
-#define LOCAL_USED_mmap_flags (flags & DEE_MAPFILE_F_MAPSHARED ? MAP_SHARED : MAP_PRIVATE)
+#define LOCAL_USED_mmap_flags (flags & DeeMapFile_F_MAPSHARED ? MAP_SHARED : MAP_PRIVATE)
 #endif /* CONFIG_HAVE_MAP_SHARED */
 
 #if defined(__CYGWIN__)
@@ -2497,12 +2497,12 @@ again:
 	}
 after_mmap_attempt:
 #endif /* DeeMapFile_IS_CreateFileMapping || DeeMapFile_IS_mmap */
-	if (flags & DEE_MAPFILE_F_MUSTMMAP) {
+	if (flags & DeeMapFile_F_MUSTMMAP) {
 #ifdef WANT_err_mmap_impossible
 #undef WANT_err_mmap_impossible
 err_mmap_impossible:
 #endif /* WANT_err_mmap_impossible */
-		if (flags & DEE_MAPFILE_F_TRYMMAP)
+		if (flags & DeeMapFile_F_TRYMMAP)
 			return 1;
 		return DeeError_Throwf(&DeeError_UnsupportedAPI,
 		                       "File descriptor %" Dee_PRIpSYSFD " cannot be mmap'd",
@@ -2535,7 +2535,7 @@ err_mmap_impossible:
 	bufused = 0;
 	buffree = bufsize;
 
-	if (offset != (Dee_pos_t)-1 && (offset != 0 || !(flags & DEE_MAPFILE_F_ATSTART))) {
+	if (offset != (Dee_pos_t)-1 && (offset != 0 || !(flags & DeeMapFile_F_ATSTART))) {
 		/* Try to use pread(2) */
 #if defined(CONFIG_HOST_WINDOWS) || defined(PREAD)
 		for (;;) {
@@ -2556,7 +2556,7 @@ err_mmap_impossible:
 				/* Read error */
 				goto system_err_buf;
 			}
-			if (error == 0 || (!(flags & DEE_MAPFILE_F_READALL) && error < (DWORD)readsize)) {
+			if (error == 0 || (!(flags & DeeMapFile_F_READALL) && error < (DWORD)readsize)) {
 				/* End-of-file! */
 				unsigned char *newbuf;
 				size_t used_nulbytes;
@@ -2576,7 +2576,7 @@ err_mmap_impossible:
 #else /* CONFIG_HOST_WINDOWS */
 			Dee_ssize_t error;
 			error = PREAD(fd, buf + bufused, buffree, offset);
-			if (error <= 0 || (!(flags & DEE_MAPFILE_F_READALL) && (size_t)error < buffree)) {
+			if (error <= 0 || (!(flags & DeeMapFile_F_READALL) && (size_t)error < buffree)) {
 				if ((size_t)error < buffree) {
 					/* End-of-file! */
 					unsigned char *newbuf;
@@ -2670,12 +2670,12 @@ err_mmap_impossible:
 #endif /* __SIZEOF_SIZE_T__ > 4 */
 						if (!ReadFile(fd, buf, (DWORD)readsize, &error, NULL))
 							goto system_err_buf;
-						if (!error || (!(flags & DEE_MAPFILE_F_READALL) && error < (DWORD)readsize))
+						if (!error || (!(flags & DeeMapFile_F_READALL) && error < (DWORD)readsize))
 							goto empty_file; /* EOF reached before `offset' */
 #else /* CONFIG_HOST_WINDOWS */
 						Dee_ssize_t error;
 						error = read(fd, buf, skip);
-						if (error <= 0 || (!(flags & DEE_MAPFILE_F_READALL) && (size_t)error < skip)) {
+						if (error <= 0 || (!(flags & DeeMapFile_F_READALL) && (size_t)error < skip)) {
 							if (error < 0)
 								goto system_err_buf;
 							goto empty_file; /* EOF reached before `offset' */
@@ -2699,7 +2699,7 @@ err_mmap_impossible:
 #endif /* __SIZEOF_SIZE_T__ > 4 */
 		if (!ReadFile(fd, buf, (DWORD)readsize, &error, NULL))
 			goto system_err_buf;
-		if (!error || (!(flags & DEE_MAPFILE_F_READALL) && error < (DWORD)readsize)) {
+		if (!error || (!(flags & DeeMapFile_F_READALL) && error < (DWORD)readsize)) {
 			/* End-of-file! */
 			unsigned char *newbuf;
 			size_t used_nulbytes;
@@ -2719,7 +2719,7 @@ err_mmap_impossible:
 #else /* CONFIG_HOST_WINDOWS */
 		Dee_ssize_t error;
 		error = read(fd, buf + bufused, buffree);
-		if (error <= 0 || (!(flags & DEE_MAPFILE_F_READALL) && (size_t)error < buffree)) {
+		if (error <= 0 || (!(flags & DeeMapFile_F_READALL) && (size_t)error < buffree)) {
 			if (error >= 0) {
 				/* End-of-file! */
 				unsigned char *newbuf;
@@ -2903,8 +2903,8 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict fi
 		return 0;
 	}
 
-	if (flags & DEE_MAPFILE_F_MUSTMMAP) {
-		if (flags & DEE_MAPFILE_F_TRYMMAP)
+	if (flags & DeeMapFile_F_MUSTMMAP) {
+		if (flags & DeeMapFile_F_TRYMMAP)
 			return 1;
 		return DeeError_Throwf(&DeeError_UnsupportedAPI,
 		                       "Cannot mmap objects of type %r",
@@ -2937,11 +2937,11 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict fi
 	bufused = 0;
 	buffree = bufsize;
 
-	if (offset != (Dee_pos_t)-1 && (offset != 0 || !(flags & DEE_MAPFILE_F_ATSTART))) {
+	if (offset != (Dee_pos_t)-1 && (offset != 0 || !(flags & DeeMapFile_F_ATSTART))) {
 		/* Try to use pread(2) */
 		for (;;) {
 			size_t error;
-			error = (flags & DEE_MAPFILE_F_READALL)
+			error = (flags & DeeMapFile_F_READALL)
 			        ? DeeFile_PReadAll(file, buf + bufused, buffree, offset)
 			        : DeeFile_PRead(file, buf + bufused, buffree, offset);
 			if unlikely(error == (size_t)-1) {
@@ -3016,7 +3016,7 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict fi
 				size_t skip = bufsize + num_trailing_nulbytes;
 				if ((Dee_pos_t)skip > offset)
 					skip = (size_t)offset;
-				error = (flags & DEE_MAPFILE_F_READALL)
+				error = (flags & DeeMapFile_F_READALL)
 				        ? DeeFile_ReadAll(file, buf, skip)
 				        : DeeFile_Read(file, buf, skip);
 				if unlikely(error == (size_t)-1)
@@ -3031,7 +3031,7 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict fi
 	/* Use read(2) as fallback */
 	for (;;) {
 		size_t error;
-		error = (flags & DEE_MAPFILE_F_READALL)
+		error = (flags & DeeMapFile_F_READALL)
 		        ? DeeFile_ReadAll(file, buf + bufused, buffree)
 		        : DeeFile_Read(file, buf + bufused, buffree);
 		if unlikely(error == (size_t)-1)

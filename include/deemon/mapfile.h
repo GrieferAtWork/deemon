@@ -151,8 +151,8 @@ DeeMapFile_TryTruncate(struct DeeMapFile *__restrict self,
  *                    string, in which case you can specify `1' to always have a trailing '\0' be
  *                    appended:
  *                    >> bzero(DeeMapFile_GetAddr + DeeMapFile_GetSize, num_trailing_nulbytes);
- * @param: flags:     Set of `DEE_MAPFILE_F_*'
- * @return:  1: Both `DEE_MAPFILE_F_MUSTMMAP' and `DEE_MAPFILE_F_TRYMMAP' were set, but mmap failed.
+ * @param: flags:     Set of `DeeMapFile_F_*'
+ * @return:  1: Both `DeeMapFile_F_MUSTMMAP' and `DeeMapFile_F_TRYMMAP' were set, but mmap failed.
  * @return:  0: Success (`self' must be deleted using `DeeMapFile_Fini(3)')
  * @return: -1: Error (an exception was thrown) */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
@@ -168,12 +168,12 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self,
                     size_t num_trailing_nulbytes, unsigned int flags);
 
 /* Bits for the `flags' argument of `DeeMapFile_InitSysFd()' and `DeeMapFile_InitFile()' */
-#define DEE_MAPFILE_F_NORMAL    0x0000 /* Normal flags */
-#define DEE_MAPFILE_F_READALL   0x0001 /* Flag: use `preadall(3)' / `readall(3)' instead of `pread(2)' / `read(2)' */
-#define DEE_MAPFILE_F_MUSTMMAP  0x0002 /* Flag: require the use of a mmap(2) */
-#define DEE_MAPFILE_F_MAPSHARED 0x0004 /* Flag: when using mmap, don't map as MAP_PRIVATE, but use MAP_SHARED (don't pass a non-zero `num_trailing_nulbytes' in this case!) */
-#define DEE_MAPFILE_F_ATSTART   0x0008 /* Flag: assume that the given file's pointer is located at the file's beginning */
-#define DEE_MAPFILE_F_TRYMMAP   0x8000 /* Flag: Don't throw an exception when mmap fails, but return `1' */
+#define DeeMapFile_F_NORMAL    0x0000 /* Normal flags */
+#define DeeMapFile_F_READALL   0x0001 /* Flag: use `preadall(3)' / `readall(3)' instead of `pread(2)' / `read(2)' */
+#define DeeMapFile_F_MUSTMMAP  0x0002 /* Flag: require the use of a mmap(2) */
+#define DeeMapFile_F_MAPSHARED 0x0004 /* Flag: when using mmap, don't map as MAP_PRIVATE, but use MAP_SHARED (don't pass a non-zero `num_trailing_nulbytes' in this case!) */
+#define DeeMapFile_F_ATSTART   0x0008 /* Flag: assume that the given file's pointer is located at the file's beginning */
+#define DeeMapFile_F_TRYMMAP   0x8000 /* Flag: Don't throw an exception when mmap fails, but return `1' */
 
 
 

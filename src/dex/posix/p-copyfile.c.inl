@@ -163,7 +163,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_fcopyfile_f
 		goto err_src_file;
 
 	/* Do the actual copy. */
-	if unlikely(posix_copyfile_fileio(src_file, dst_file, progress, bufsize, DEE_MAPFILE_F_NORMAL))
+	if unlikely(posix_copyfile_fileio(src_file, dst_file, progress, bufsize, DeeMapFile_F_NORMAL))
 		goto err_src_file_dst_file;
 #define NEED_posix_copyfile_fileio
 
@@ -224,7 +224,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_copyfile_f_
 #ifdef posix_copyfile_USE_posix_copyfile_fileio
 	DREF DeeObject *src_file;
 	DREF DeeObject *dst_file;
-	unsigned int src_file_mmap_hints = DEE_MAPFILE_F_NORMAL;
+	unsigned int src_file_mmap_hints = DeeMapFile_F_NORMAL;
 	if (flags & ~(RENAME_NOREPLACE)) {
 		DeeError_Throwf(&DeeError_ValueError, "Invalid flags argument %#x", flags);
 		goto err;
@@ -239,7 +239,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_copyfile_f_
 		}
 
 		/* We opened the source-file, so we can assume that it's file-pointer is at the start. */
-		src_file_mmap_hints |= DEE_MAPFILE_F_ATSTART;
+		src_file_mmap_hints |= DeeMapFile_F_ATSTART;
 	} else {
 		src_file = posix_fd_openfile(oldpath, OPEN_FRDONLY | OPEN_FCLOEXEC);
 #define NEED_posix_fd_openfile
@@ -376,7 +376,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_lcopyfile_f
 #ifdef posix_lcopyfile_USE_posix_copyfile_fileio
 	DREF DeeObject *src_file;
 	DREF DeeObject *dst_file;
-	unsigned int src_file_mmap_hints = DEE_MAPFILE_F_NORMAL;
+	unsigned int src_file_mmap_hints = DeeMapFile_F_NORMAL;
 	if (flags & ~(RENAME_NOREPLACE)) {
 		DeeError_Throwf(&DeeError_ValueError, "Invalid flags argument %#x", flags);
 		goto err;
@@ -409,7 +409,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_lcopyfile_f
 		}
 
 		/* We opened the source-file, so we can assume that it's file-pointer is at the start. */
-		src_file_mmap_hints |= DEE_MAPFILE_F_ATSTART;
+		src_file_mmap_hints |= DeeMapFile_F_ATSTART;
 	} else {
 		src_file = posix_fd_openfile(oldpath, OPEN_FRDONLY | OPEN_FNOFOLLOW | OPEN_FCLOEXEC);
 #define NEED_posix_fd_openfile

@@ -2090,7 +2090,7 @@ DeeModule_OpenDecFile_impl(/*inherit(always)*/ DREF DeeObject *dec_stream,
 	/* Map file into memory */
 	while (dec_dirname_len && dec_dirname[dec_dirname_len - 1] == DeeSystem_SEP)
 		--dec_dirname_len;
-	fmap_status = DeeMapFile_InitFile(&fmap, dec_stream, 0, 0, DFILE_LIMIT, 0, DEE_MAPFILE_F_READALL);
+	fmap_status = DeeMapFile_InitFile(&fmap, dec_stream, 0, 0, DFILE_LIMIT, 0, DeeMapFile_F_READALL);
 	Dee_Decref_likely(dec_stream);
 	if unlikely(fmap_status)
 		return NULL;

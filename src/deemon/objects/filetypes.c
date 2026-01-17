@@ -2111,11 +2111,11 @@ mapfile_init_kw(DeeMapFileObject *__restrict self, size_t argc,
 	mapflags = 0;
 	/* Package flags */
 	if (args.readall)
-		mapflags |= DEE_MAPFILE_F_READALL;
+		mapflags |= DeeMapFile_F_READALL;
 	if (args.mustmmap)
-		mapflags |= DEE_MAPFILE_F_MUSTMMAP;
+		mapflags |= DeeMapFile_F_MUSTMMAP;
 	if (args.mapshared) {
-		mapflags |= DEE_MAPFILE_F_MUSTMMAP | DEE_MAPFILE_F_MAPSHARED;
+		mapflags |= DeeMapFile_F_MUSTMMAP | DeeMapFile_F_MAPSHARED;
 		if (args.nulbytes != 0) {
 			return DeeError_Throwf(&DeeError_ValueError,
 			                       "Cannot use `mapshared = true' with non-zero `nulbytes = %" PRFuSIZ "'",

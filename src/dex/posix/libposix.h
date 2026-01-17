@@ -652,7 +652,7 @@ INTDEF WUNUSED NONNULL((1)) /*File*/ DREF DeeObject *DCALL
 posix_fd_openfile(DeeObject *__restrict fd, int oflags);
 
 /* Copy all data from `src' to `dst', both of with are deemon File objects.
- * @param: src_mmap_hints: Set of `0 | DEE_MAPFILE_F_ATSTART'
+ * @param: src_mmap_hints: Set of `0 | DeeMapFile_F_ATSTART'
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
