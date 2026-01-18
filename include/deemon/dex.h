@@ -111,10 +111,21 @@ struct Dee_module_dexdata {
      defined(CONFIG_HAVE___dex_start____AND___end))
 INTDEF __BYTE_TYPE__ __dex_start__[];
 INTDEF __BYTE_TYPE__ _end[];
-#define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS __dex_start__, _end - 1, { NULL, NULL, NULL },
+#define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS __dex_start__, _end - 1, { NULL, NULL, NULL }
 #else /* CONFIG_HAVE___dex_start____AND___end */
-#define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS NULL, NULL, { NULL, NULL, NULL },
+#define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS NULL, NULL, { NULL, NULL, NULL }
 #endif /* !CONFIG_HAVE___dex_start____AND___end */
+
+#if (!defined(CONFIG_NO___dex_build_id__) && \
+     defined(CONFIG_HAVE___dex_build_id__))
+#ifndef __ATTR_WEAK_IS_ATTR_SELECTANY
+__ATTR_WEAK
+#endif /* !__ATTR_WEAK_IS_ATTR_SELECTANY */
+INTDEF __BYTE_TYPE__ __dex_build_id__[];
+#define _Dee_MODULE_DEXDATA_INIT_BUILDID (union Dee_module_buildid const *)(__dex_build_id__ + 16)
+#else /* CONFIG_HAVE___dex_build_id__ */
+#define _Dee_MODULE_DEXDATA_INIT_BUILDID NULL
+#endif /* !CONFIG_HAVE___dex_build_id__ */
 #endif /* CONFIG_BUILDING_DEEMON || CONFIG_BUILDING_DEX */
 
 /* Helpers for defining DEX exports from C */
@@ -163,7 +174,7 @@ INTDEF __BYTE_TYPE__ _end[];
 	PRIVATE struct Dee_module_dexdata _dex_data = {                         \
 		/* .mdx_module  = */ (struct Dee_module_object *)&DEX.m_dex,        \
 		/* .mdx_export  = */ _dex_symbols,                                  \
-		/* .mdx_buildid = */ NULL,                                          \
+		/* .mdx_buildid = */ _Dee_MODULE_DEXDATA_INIT_BUILDID,              \
 		/* .mdx_init    = */ init,                                          \
 		/* .mdx_fini    = */ fini,                                          \
 		/* .mdx_clear   = */ clear,                                         \
@@ -188,7 +199,7 @@ INTDEF __BYTE_TYPE__ _end[];
 		Dee_WEAKREF_SUPPORT_INIT,                                           \
 		/* .mo_moddata = */ { &_dex_data },                                 \
 		/* .mo_importv = */ NULL,                                           \
-		_Dee_MODULE_DEXDATA_INIT_LOADBOUNDS                                 \
+		_Dee_MODULE_DEXDATA_INIT_LOADBOUNDS,                                \
 		/* .mo_globalv = */ { /* ... */ }                                   \
 	}}
 #endif /* CONFIG_BUILDING_DEX */

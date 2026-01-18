@@ -307,8 +307,17 @@ DeeModule_GetBuildId_ofdex_uncached(DeeModuleObject *__restrict self) {
 	struct Dee_module_dexdata const *dexdata = self->mo_moddata.mo_dexdata;
 	/* Check for custom override, as per:
 	 * - ADDR(.note.gnu.build-id) (s.a. "/configure")
-	 * - Random UUID set during build */
-	if (dexdata->mdx_buildid) {
+	 * - Random UUID set during build
+	 *
+	 * Must also check (and ignore) the special value "16", since
+	 * that one can happen when '__dex_build_id__' wasn't defined,
+	 * by a DEX module compiled with 'CONFIG_HAVE___dex_build_id__'.
+	 *
+	 * Admittedly, that shouldn't happen, but we want to be robust
+	 * when it comes to detection of build IDs, and since we allow
+	 * for ATTR_WEAK to deal with '__dex_build_id__' missing, that
+	 * is something that can happen. */
+	if (dexdata->mdx_buildid && (uintptr_t)dexdata->mdx_buildid != 16) {
 		self->mo_buildid = *dexdata->mdx_buildid;
 		return &self->mo_buildid;
 	}

@@ -893,13 +893,20 @@ else
 	echo "#define CONFIG_NO___dex_start____AND___end" >> "$CONFINC"
 fi
 
-# TODO: Test to see if `-Wl,--build-id=md5` with linker script:
-# $ cat conftest.ld
-# build_id_start = ADDR(.note.gnu.build-id);
-# ASSERT(SIZEOF(.note.gnu.build-id) == 32, "Bad build-id section size");
-# $ cat conftest.c
-# extern __attribute__((visibility("hidden"))) char build_id_start[];
-# int main() { return (int)((unsigned char)build_id_start[16] + (unsigned char)build_id_start[31]); }
+
+log_checking_begin "Checking if '-Wl,--build-id=md5' and 'src/deemon/linker-scripts/dex-build-id.ld' works"
+cat > "$CONFTEST" <<EOF
+extern __attribute__((visibility("hidden"))) char __dex_build_id__[];
+$CONFTEST_MAIN{return (int)(__dex_build_id__[0] + __dex_build_id__[15]);}
+EOF
+if try_compile_raw && try_link_raw "-Wl,--build-id=md5 $(realpath -s --relative-to="$OUT_ROOT" "${SRC_ROOT}/src/deemon/linker-scripts/dex-build-id.ld")"; then
+	log_checking_yes
+	CONFIG_LDFLAGS="$CONFIG_LDFLAGS -Wl,--build-id=md5 $(realpath -s --relative-to="$OUT_ROOT" "${SRC_ROOT}/src/deemon/linker-scripts/dex-build-id.ld")"
+	echo "#define CONFIG_HAVE___dex_build_id__" >> "$CONFINC"
+else
+	log_checking_no
+	echo "#define CONFIG_NO___dex_build_id__" >> "$CONFINC"
+fi
 
 
 ########################################################################################

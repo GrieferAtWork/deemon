@@ -482,7 +482,7 @@ PUBLIC struct Dee_deemon_module_struct DeeModule_Deemon = {
 		/* .mo_moddata = */ { &deemon_dexdata },
 #endif /* !CONFIG_NO_DEX */
 		/* .mo_importv = */ NULL,
-		_Dee_MODULE_DEXDATA_INIT_LOADBOUNDS
+		_Dee_MODULE_DEXDATA_INIT_LOADBOUNDS,
 		/* .mo_globalv = */ {
 #define BUILTIN(name, object, flags) (DeeObject *)object,
 #define BUILTIN_NO_INCLUDES
