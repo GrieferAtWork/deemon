@@ -177,6 +177,11 @@ __pragma_GCC_diagnostic_ignored(Wmissing_field_initializers)
 __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif /* DEE_SOURCE */
 
+#undef ATTR_ALLOC_SIZE
+#define ATTR_ALLOC_SIZE(ppars) /* Nothing */
+#undef ATTR_ALLOC_ALIGN
+#define ATTR_ALLOC_ALIGN(pari) /* Nothing */
+
 
 /* Evaluate `expr' at runtime, and instruct compile-time optimizations
  * under the assumption that it always evaluates to `value'. Used to
