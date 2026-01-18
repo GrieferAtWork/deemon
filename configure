@@ -896,16 +896,16 @@ fi
 
 log_checking_begin "Checking if '-Wl,--build-id=md5' and 'src/deemon/linker-scripts/dex-build-id.ld' works"
 cat > "$CONFTEST" <<EOF
-extern __attribute__((visibility("hidden"))) char __dex_build_id__[];
-$CONFTEST_MAIN{return (int)(__dex_build_id__[0] + __dex_build_id__[15]);}
+extern __attribute__((visibility("hidden"))) char __dex_buildid__[];
+$CONFTEST_MAIN{return (int)(__dex_buildid__[16] + __dex_buildid__[31]);}
 EOF
 if try_compile_raw && try_link_raw "-Wl,--build-id=md5 $(realpath -s --relative-to="$OUT_ROOT" "${SRC_ROOT}/src/deemon/linker-scripts/dex-build-id.ld")"; then
 	log_checking_yes
 	CONFIG_LDFLAGS="$CONFIG_LDFLAGS -Wl,--build-id=md5 $(realpath -s --relative-to="$OUT_ROOT" "${SRC_ROOT}/src/deemon/linker-scripts/dex-build-id.ld")"
-	echo "#define CONFIG_HAVE___dex_build_id__" >> "$CONFINC"
+	echo "#define CONFIG_HAVE___dex_buildid__" >> "$CONFINC"
 else
 	log_checking_no
-	echo "#define CONFIG_NO___dex_build_id__" >> "$CONFINC"
+	echo "#define CONFIG_NO___dex_buildid__" >> "$CONFINC"
 fi
 
 

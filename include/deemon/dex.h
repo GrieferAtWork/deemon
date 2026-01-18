@@ -118,13 +118,13 @@ INTDEF __BYTE_TYPE__ _end[];
 #define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS NULL, NULL, { NULL, NULL, NULL }
 #endif /* !CONFIG_HAVE___dex_start____AND___end */
 
-#if (!defined(CONFIG_NO___dex_build_id__) && \
-     defined(CONFIG_HAVE___dex_build_id__))
+#if (!defined(CONFIG_NO___dex_buildid__) && \
+     defined(CONFIG_HAVE___dex_buildid__))
 #ifndef __ATTR_WEAK_IS_ATTR_SELECTANY
 __ATTR_WEAK
 #endif /* !__ATTR_WEAK_IS_ATTR_SELECTANY */
-INTDEF __BYTE_TYPE__ __dex_build_id__[];
-#define _Dee_MODULE_DEXDATA_INIT_BUILDID (union Dee_module_buildid const *)(__dex_build_id__ + 16)
+INTDEF __BYTE_TYPE__ __dex_buildid__[];
+#define _Dee_MODULE_DEXDATA_INIT_BUILDID (union Dee_module_buildid const *)(__dex_buildid__ + 16)
 #define _Dee_MODULE_DEXDATA_INIT_BUILDTS NULL
 #elif defined(CONFIG_HOST_WINDOWS) && defined(__PE__)
 #define _Dee_MODULE_DEXDATA_INIT_BUILDID NULL /* Need neither since we can use "TimeDateStamp" from the PE header */

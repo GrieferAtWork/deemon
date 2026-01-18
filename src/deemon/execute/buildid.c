@@ -57,12 +57,12 @@ DeeModule_GetFileLastModified(DeeModuleObject *__restrict self) {
 
 
 #ifdef CONFIG_NO_DEX
-#if !defined(CONFIG_NO___dex_build_id__) && defined(CONFIG_HAVE___dex_build_id__)
-INTDEF __BYTE_TYPE__ __dex_build_id__[];
+#if !defined(CONFIG_NO___dex_buildid__) && defined(CONFIG_HAVE___dex_buildid__)
+INTDEF __BYTE_TYPE__ __dex_buildid__[];
 #define HAVE_DeeModule_GetBuildId_ofcore
 PRIVATE ATTR_RETNONNULL WUNUSED union Dee_module_buildid const *DCALL
 DeeModule_GetBuildId_ofcore(void) {
-	memcpy(&DeeModule_Deemon.mo_buildid, __dex_build_id__ + 16, 16);
+	memcpy(&DeeModule_Deemon.mo_buildid, __dex_buildid__ + 16, 16);
 	return &DeeModule_Deemon.mo_buildid;
 }
 #elif defined(_MSC_VER) && !defined(__clang__) && defined(__PE__)
@@ -236,12 +236,12 @@ DeeModule_GetBuildId_ofdex_uncached(DeeModuleObject *__restrict self) {
 	 * - Random UUID set during build
 	 *
 	 * Must also check (and ignore) the special value "16", since
-	 * that one can happen when '__dex_build_id__' wasn't defined,
-	 * by a DEX module compiled with 'CONFIG_HAVE___dex_build_id__'.
+	 * that one can happen when '__dex_buildid__' wasn't defined,
+	 * by a DEX module compiled with 'CONFIG_HAVE___dex_buildid__'.
 	 *
 	 * Admittedly, that shouldn't happen, but we want to be robust
 	 * when it comes to detection of build IDs, and since we allow
-	 * for ATTR_WEAK to deal with '__dex_build_id__' missing, that
+	 * for ATTR_WEAK to deal with '__dex_buildid__' missing, that
 	 * is something that can happen. */
 	if (dexdata->mdx_buildid && (uintptr_t)dexdata->mdx_buildid != 16) {
 		self->mo_buildid = *dexdata->mdx_buildid;
