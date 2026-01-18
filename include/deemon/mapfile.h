@@ -54,9 +54,8 @@ DECL_BEGIN
 #elif ((defined(CONFIG_HAVE_fstat) || defined(CONFIG_HAVE_fstat64)) &&       \
        (defined(CONFIG_HAVE_mmap) || defined(CONFIG_HAVE_mmap64)) &&         \
        (defined(CONFIG_HAVE_lseek) || defined(CONFIG_HAVE_lseek64)) &&       \
-       defined(Dee_fd_t_IS_int) && defined(CONFIG_HAVE_munmap) &&            \
        defined(CONFIG_HAVE_MAP_PRIVATE) && defined(CONFIG_HAVE_PROT_READ) && \
-       defined(CONFIG_HAVE_PROT_WRITE))
+       defined(CONFIG_HAVE_PROT_WRITE) && defined(Dee_fd_t_IS_int))
 #define DeeMapFile_IS_mmap
 #else /* ... */
 #define DeeMapFile_IS_malloc

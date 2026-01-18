@@ -2121,6 +2121,7 @@ DeeMapFile_TryTruncate(struct DeeMapFile *__restrict self,
 	} else
 #elif defined(DeeMapFile_IS_mmap)
 	if (DeeMapFile_UsesMmap(self)) {
+#ifdef CONFIG_HAVE_munmap
 		size_t psm    = getpagesize() - 1;
 		void *baseptr = (void *)((uintptr_t)self->dmf_addr & ~psm);
 		size_t old_mapsiz = self->_dmf_mapsize;
@@ -2139,6 +2140,7 @@ DeeMapFile_TryTruncate(struct DeeMapFile *__restrict self,
 				return true;
 			}
 		}
+#endif /* CONFIG_HAVE_munmap */
 	} else
 #endif /* ... */
 	{
