@@ -176,7 +176,6 @@ __pragma_GCC_diagnostic_ignored(Wmissing_field_initializers)
  * Sorry GCC, but that region _IS_ larger than 4 bytes (you dumb f%ck) */
 __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 
-#if 0 /* Unnecessary (for now) -- see disabled `ATTR_ALLOC_*' attributes below... */
 /* This warning is utterly useless with how we're using
  * our heap when it comes to forcing downstream failures:
  * >> include/deemon/alloc.h:250:38: warning: argument 1 value ‘18446744073709551615’ exceeds maximum object size 9223372036854775807 [-Walloc-size-larger-than=]
@@ -191,18 +190,7 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
  * Luckily there's a specific compiler warning for this, so we can just disable that one
  * specifically. */
 __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
-#endif
 #endif /* DEE_SOURCE */
-
-/* TODO: These attributes result in "*** buffer overflow detected ***: terminated"
- * I think this is due to GCC intentionally crashing the program in places where
- * we intentionally write past the end of a heap block in "heap.c" to overwrite
- * the block's footer with extra debug info...
- */
-#undef ATTR_ALLOC_SIZE
-#define ATTR_ALLOC_SIZE(ppars) /* Nothing */
-#undef ATTR_ALLOC_ALIGN
-#define ATTR_ALLOC_ALIGN(pari) /* Nothing */
 
 
 /* Evaluate `expr' at runtime, and instruct compile-time optimizations

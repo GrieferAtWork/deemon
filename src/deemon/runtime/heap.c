@@ -28,6 +28,21 @@ ClCompile.BasicRuntimeChecks = Default
 #define GUARD_DEEMON_RUNTIME_HEAP_C 1
 
 #include <deemon/api.h>
+
+/* Disable these attributes in here -- we must routinely write pack the end
+ * of our own allocations, because how else are we supposed to manage adjacent
+ * heap blocks and/or initialize footers!
+ *
+ * Without this, we get crashes: "*** buffer overflow detected ***: terminated"
+ *
+ * I think this is due to GCC intentionally crashing the program in places where
+ * we intentionally write past the end of a heap block in "heap.c" to overwrite
+ * the block's footer with extra debug info... */
+#undef ATTR_ALLOC_SIZE
+#define ATTR_ALLOC_SIZE(ppars) /* Nothing */
+#undef ATTR_ALLOC_ALIGN
+#define ATTR_ALLOC_ALIGN(pari) /* Nothing */
+
 #include <deemon/alloc.h>
 #include <deemon/heap.h>
 #include <deemon/system-features.h>
