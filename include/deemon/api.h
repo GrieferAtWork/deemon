@@ -177,6 +177,11 @@ __pragma_GCC_diagnostic_ignored(Wmissing_field_initializers)
 __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif /* DEE_SOURCE */
 
+/* TODO: These attributes result in "*** buffer overflow detected ***: terminated"
+ * I think this is due to GCC intentionally crashing the program in places where
+ * we intentionally write past the end of a heap block in "heap.c" to overwrite
+ * the block's footer with extra debug info...
+ */
 #undef ATTR_ALLOC_SIZE
 #define ATTR_ALLOC_SIZE(ppars) /* Nothing */
 #undef ATTR_ALLOC_ALIGN
