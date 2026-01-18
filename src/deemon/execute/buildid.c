@@ -46,23 +46,47 @@ DECL_BEGIN
  * @return: (uint64_t)-1: Error */
 PRIVATE WUNUSED NONNULL((1)) uint64_t DCALL
 DeeModule_GetFileLastModified(DeeModuleObject *__restrict self) {
-	uint64_t result = (uint64_t)-1;
+	uint64_t result;
 	DREF DeeObject *filename = DeeModule_GetFileName(self);
-	if likely(filename) {
-		result = DeeSystem_GetLastModified(filename);
-		Dee_Decref_likely(filename);
-	}
+	if unlikely(!ITER_ISOK(filename))
+		return filename == NULL ? (uint64_t)-1 : 0;
+	result = DeeSystem_GetLastModified(filename);
+	Dee_Decref_likely(filename);
 	return result;
 }
 
 
 #ifdef CONFIG_NO_DEX
-#if !defined(CONFIG_NO___dex_buildid__) && defined(CONFIG_HAVE___dex_buildid__)
+#ifdef CONFIG_HAVE___dex_buildid__
 INTDEF __BYTE_TYPE__ __dex_buildid__[];
 #define HAVE_DeeModule_GetBuildId_ofcore
 PRIVATE ATTR_RETNONNULL WUNUSED union Dee_module_buildid const *DCALL
 DeeModule_GetBuildId_ofcore(void) {
 	memcpy(&DeeModule_Deemon.mo_buildid, __dex_buildid__ + 16, 16);
+	return &DeeModule_Deemon.mo_buildid;
+}
+#elif defined(CONFIG_HAVE___dex_builduuid64__)
+INTDEF __BYTE_TYPE__ __dex_builduuid64_0__[];
+INTDEF __BYTE_TYPE__ __dex_builduuid64_1__[];
+#define HAVE_DeeModule_GetBuildId_ofcore
+PRIVATE ATTR_RETNONNULL WUNUSED union Dee_module_buildid const *DCALL
+DeeModule_GetBuildId_ofcore(void) {
+	DeeModule_Deemon.mo_buildid.mbi_word64[0] = (uint64_t)__dex_builduuid64_0__;
+	DeeModule_Deemon.mo_buildid.mbi_word64[1] = (uint64_t)__dex_builduuid64_1__;
+	return &DeeModule_Deemon.mo_buildid;
+}
+#elif defined(CONFIG_HAVE___dex_builduuid32__)
+INTDEF __BYTE_TYPE__ __dex_builduuid32_0__[];
+INTDEF __BYTE_TYPE__ __dex_builduuid32_1__[];
+INTDEF __BYTE_TYPE__ __dex_builduuid32_2__[];
+INTDEF __BYTE_TYPE__ __dex_builduuid32_3__[];
+#define HAVE_DeeModule_GetBuildId_ofcore
+PRIVATE ATTR_RETNONNULL WUNUSED union Dee_module_buildid const *DCALL
+DeeModule_GetBuildId_ofcore(void) {
+	DeeModule_Deemon.mo_buildid.mbi_word32[0] = (uint32_t)__dex_builduuid32_0__;
+	DeeModule_Deemon.mo_buildid.mbi_word32[1] = (uint32_t)__dex_builduuid32_1__;
+	DeeModule_Deemon.mo_buildid.mbi_word32[2] = (uint32_t)__dex_builduuid32_2__;
+	DeeModule_Deemon.mo_buildid.mbi_word32[3] = (uint32_t)__dex_builduuid32_3__;
 	return &DeeModule_Deemon.mo_buildid;
 }
 #elif defined(_MSC_VER) && !defined(__clang__) && defined(__PE__)

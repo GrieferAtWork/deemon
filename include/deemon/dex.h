@@ -109,8 +109,7 @@ struct Dee_module_dexdata {
 };
 
 #if defined(CONFIG_BUILDING_DEEMON) || defined(CONFIG_BUILDING_DEX)
-#if (!defined(CONFIG_NO___dex_start____AND___end) && \
-     defined(CONFIG_HAVE___dex_start____AND___end))
+#ifdef CONFIG_HAVE___dex_start____AND___end
 INTDEF __BYTE_TYPE__ __dex_start__[];
 INTDEF __BYTE_TYPE__ _end[];
 #define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS __dex_start__, _end - 1, { NULL, NULL, NULL }
@@ -118,25 +117,72 @@ INTDEF __BYTE_TYPE__ _end[];
 #define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS NULL, NULL, { NULL, NULL, NULL }
 #endif /* !CONFIG_HAVE___dex_start____AND___end */
 
-#if (!defined(CONFIG_NO___dex_buildid__) && \
-     defined(CONFIG_HAVE___dex_buildid__))
+#ifdef CONFIG_HAVE___dex_buildid__
 #ifndef __ATTR_WEAK_IS_ATTR_SELECTANY
 __ATTR_WEAK
 #endif /* !__ATTR_WEAK_IS_ATTR_SELECTANY */
 INTDEF __BYTE_TYPE__ __dex_buildid__[];
 #define _Dee_MODULE_DEXDATA_INIT_BUILDID (union Dee_module_buildid const *)(__dex_buildid__ + 16)
-#define _Dee_MODULE_DEXDATA_INIT_BUILDTS NULL
+#elif defined(CONFIG_HAVE___dex_builduuid64__)
+DECL_END
+#include <hybrid/host.h>
+DECL_BEGIN
+INTDEF __BYTE_TYPE__ __dex_builduuid64_0__[];
+INTDEF __BYTE_TYPE__ __dex_builduuid64_1__[];
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define _Dee_MODULE_DEXDATA_INIT_BUILDID_PREHOOK      \
+	PRIVATE __UINT64_TYPE__ const _dex_buildid[2] = { \
+		(__UINT64_TYPE__)__dex_builduuid64_1__,       \
+		(__UINT64_TYPE__)__dex_builduuid64_0__        \
+	}
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
+#define _Dee_MODULE_DEXDATA_INIT_BUILDID_PREHOOK      \
+	PRIVATE __UINT64_TYPE__ const _dex_buildid[2] = { \
+		(__UINT64_TYPE__)__dex_builduuid64_0__,       \
+		(__UINT64_TYPE__)__dex_builduuid64_1__        \
+	}
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
+#define _Dee_MODULE_DEXDATA_INIT_BUILDID (union Dee_module_buildid const *)_dex_buildid
+#elif defined(CONFIG_HAVE___dex_builduuid32__)
+DECL_END
+#include <hybrid/host.h>
+DECL_BEGIN
+INTDEF __BYTE_TYPE__ __dex_builduuid32_0__[];
+INTDEF __BYTE_TYPE__ __dex_builduuid32_1__[];
+INTDEF __BYTE_TYPE__ __dex_builduuid32_2__[];
+INTDEF __BYTE_TYPE__ __dex_builduuid32_3__[];
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define _Dee_MODULE_DEXDATA_INIT_BUILDID_PREHOOK      \
+	PRIVATE __UINT32_TYPE__ const _dex_buildid[4] = { \
+		(__UINT32_TYPE__)__dex_builduuid32_3__,       \
+		(__UINT32_TYPE__)__dex_builduuid32_2__,       \
+		(__UINT32_TYPE__)__dex_builduuid32_1__,       \
+		(__UINT32_TYPE__)__dex_builduuid32_0__        \
+	}
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
+#define _Dee_MODULE_DEXDATA_INIT_BUILDID_PREHOOK      \
+	PRIVATE __UINT32_TYPE__ const _dex_buildid[4] = { \
+		(__UINT32_TYPE__)__dex_builduuid32_0__,       \
+		(__UINT32_TYPE__)__dex_builduuid32_1__,       \
+		(__UINT32_TYPE__)__dex_builduuid32_2__,       \
+		(__UINT32_TYPE__)__dex_builduuid32_3__        \
+	}
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
+#define _Dee_MODULE_DEXDATA_INIT_BUILDID (union Dee_module_buildid const *)_dex_buildid
 #elif defined(CONFIG_HOST_WINDOWS) && defined(__PE__)
 #define _Dee_MODULE_DEXDATA_INIT_BUILDID NULL /* Need neither since we can use "TimeDateStamp" from the PE header */
-#define _Dee_MODULE_DEXDATA_INIT_BUILDTS NULL
 #else /* ... */
 #define _Dee_MODULE_DEXDATA_INIT_BUILDID NULL
 #if defined(__DATE__) && defined(__TIME__)
 #define _Dee_MODULE_DEXDATA_INIT_BUILDTS __DATE__ "|" __TIME__
-#else /* __DATE__ && __TIME__ */
-#define _Dee_MODULE_DEXDATA_INIT_BUILDTS NULL
-#endif /* !__DATE__ || !__TIME__ */
+#endif /* __DATE__ && __TIME__ */
 #endif /* !... */
+#ifndef _Dee_MODULE_DEXDATA_INIT_BUILDTS
+#define _Dee_MODULE_DEXDATA_INIT_BUILDTS NULL
+#endif /* !_Dee_MODULE_DEXDATA_INIT_BUILDTS */
+#ifndef _Dee_MODULE_DEXDATA_INIT_BUILDID_PREHOOK
+#define _Dee_MODULE_DEXDATA_INIT_BUILDID_PREHOOK /* nothing */
+#endif /* !_Dee_MODULE_DEXDATA_INIT_BUILDID_PREHOOK */
 #endif /* CONFIG_BUILDING_DEEMON || CONFIG_BUILDING_DEX */
 
 /* Helpers for defining DEX exports from C */
@@ -182,6 +228,7 @@ INTDEF __BYTE_TYPE__ __dex_buildid__[];
 		struct _dex_object_raw  m_dex;                                      \
 	};                                                                      \
 	EXPDEF struct _dex_object DEX;                                          \
+	_Dee_MODULE_DEXDATA_INIT_BUILDID_PREHOOK;                               \
 	PRIVATE struct Dee_module_dexdata _dex_data = {                         \
 		/* .mdx_module  = */ (struct Dee_module_object *)&DEX.m_dex,        \
 		/* .mdx_export  = */ _dex_symbols,                                  \

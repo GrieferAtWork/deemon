@@ -1255,6 +1255,8 @@ extern /*IMAGE_DOS_HEADER*/ __BYTE_TYPE__ const __ImageBase[];
 PRIVATE struct Dee_module_dexinfo deemon_dexinfo = {};
 #endif /* HAVE_Dee_module_dexinfo && !HAVE_Dee_module_dexinfo_IS_POINTER */
 
+_Dee_MODULE_DEXDATA_INIT_BUILDID_PREHOOK;
+
 INTERN struct Dee_module_dexdata deemon_dexdata = {
 	/* .mdx_module  = */ &DeeModule_Deemon,
 	/* .mdx_export  = */ NULL,

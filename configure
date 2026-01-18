@@ -899,6 +899,7 @@ cat > "$CONFTEST" <<EOF
 extern __attribute__((visibility("hidden"))) char __dex_buildid__[];
 $CONFTEST_MAIN{return (int)(__dex_buildid__[16] + __dex_buildid__[31]);}
 EOF
+_NEED_BUILDID_ALTERNATIVE=""
 if try_compile_raw && try_link_raw "-Wl,--build-id=md5 $(realpath -s --relative-to="$OUT_ROOT" "${SRC_ROOT}/src/deemon/linker-scripts/dex-build-id.ld")"; then
 	log_checking_yes
 	CONFIG_LDFLAGS="$CONFIG_LDFLAGS -Wl,--build-id=md5 $(realpath -s --relative-to="$OUT_ROOT" "${SRC_ROOT}/src/deemon/linker-scripts/dex-build-id.ld")"
@@ -906,7 +907,91 @@ if try_compile_raw && try_link_raw "-Wl,--build-id=md5 $(realpath -s --relative-
 else
 	log_checking_no
 	echo "#define CONFIG_NO___dex_buildid__" >> "$CONFINC"
+	_NEED_BUILDID_ALTERNATIVE="y"
 fi
+
+
+# Try to come up with an alternative to `-Wl,--build-id`
+if ! test -z "$_NEED_BUILDID_ALTERNATIVE"; then
+	UUIDGEN=""
+	log_checking_begin "Checking if 'uuidgen' works"
+	if uuidgen > /dev/null 2>&1; then
+		log_checking_yes
+		UUIDGEN="uuidgen"
+	else
+		log_checking_no
+	fi
+	if test -z "$UUIDGEN"; then
+		log_checking_begin "Checking if 'cat /proc/sys/kernel/random/uuid' works"
+		if cat /proc/sys/kernel/random/uuid > /dev/null 2>&1; then
+			log_checking_yes
+			UUIDGEN="cat /proc/sys/kernel/random/uuid"
+		else
+			log_checking_no
+		fi
+	fi
+	if ! test -z "$UUIDGEN"; then
+		log_checking_begin "Checking if '-Wl,-defsym=__dex_builduuid64_0__=...' works"
+		cat > "$CONFTEST" <<EOF
+#ifndef __UINT64_TYPE__
+#define __UINT64_TYPE__ unsigned long long int
+#endif
+extern __attribute__((visibility("hidden"))) char __dex_builduuid64_0__[];
+extern __attribute__((visibility("hidden"))) char __dex_builduuid64_1__[];
+__UINT64_TYPE__ const my_build_uuid[2] = {
+	(__UINT64_TYPE__)__dex_builduuid64_0__,
+	(__UINT64_TYPE__)__dex_builduuid64_1__
+};
+$CONFTEST_MAIN{return my_build_uuid != 0;}
+EOF
+		_UUID_LDFLAGS="V=\"\$($UUIDGEN)\" && V=\"\${V//-/}\" && echo \"-Wl,-defsym=__dex_builduuid64_0__=0x\${V:0:16} -Wl,-defsym=__dex_builduuid64_1__=0x\${V:16:16}\""
+		if try_compile_raw && try_link_raw "$(eval $_UUID_LDFLAGS)"; then
+			log_checking_yes
+			CONFIG_LDFLAGS="$CONFIG_LDFLAGS \$(shell ${_UUID_LDFLAGS//\$/\$\$})"
+			echo "#define CONFIG_HAVE___dex_builduuid64__" >> "$CONFINC"
+			_NEED_BUILDID_ALTERNATIVE=""
+		else
+			log_checking_no
+			echo "#define CONFIG_NO___dex_builduuid64__" >> "$CONFINC"
+			exit 1
+		fi
+		if ! test -z "$_NEED_BUILDID_ALTERNATIVE"; then
+			log_checking_begin "Checking if '-Wl,-defsym=__dex_builduuid32_0__=...' works"
+			cat > "$CONFTEST" <<EOF
+#ifndef __UINT32_TYPE__
+#define __UINT32_TYPE__ unsigned int
+#endif
+extern __attribute__((visibility("hidden"))) char __dex_builduuid32_0__[];
+extern __attribute__((visibility("hidden"))) char __dex_builduuid32_1__[];
+extern __attribute__((visibility("hidden"))) char __dex_builduuid32_2__[];
+extern __attribute__((visibility("hidden"))) char __dex_builduuid32_3__[];
+__UINT32_TYPE__ const my_build_uuid[4] = {
+	(__UINT32_TYPE__)__dex_builduuid32_0__,
+	(__UINT32_TYPE__)__dex_builduuid32_1__,
+	(__UINT32_TYPE__)__dex_builduuid32_2__,
+	(__UINT32_TYPE__)__dex_builduuid32_3__,
+};
+$CONFTEST_MAIN{return my_build_uuid != 0;}
+EOF
+			_UUID_LDFLAGS="V=\"\$($UUIDGEN)\" && V=\"\${V//-/}\" && echo \"-Wl,-defsym=__dex_builduuid32_0__=0x\${V:0:8} -Wl,-defsym=__dex_builduuid32_1__=0x\${V:8:8} -Wl,-defsym=__dex_builduuid32_2__=0x\${V:16:8} -Wl,-defsym=__dex_builduuid32_3__=0x\${V:24:8}\""
+			if try_compile_raw && try_link_raw "$(eval $_UUID_LDFLAGS)"; then
+				log_checking_yes
+				CONFIG_LDFLAGS="$CONFIG_LDFLAGS \$(shell ${_UUID_LDFLAGS//\$/\$\$})"
+				echo "#define CONFIG_HAVE___dex_builduuid32__" >> "$CONFINC"
+				_NEED_BUILDID_ALTERNATIVE=""
+			else
+				log_checking_no
+				echo "#define CONFIG_NO___dex_builduuid32__" >> "$CONFINC"
+			fi
+		fi
+	fi
+fi
+
+if ! test -z "$_NEED_BUILDID_ALTERNATIVE"; then
+	echo "[!] No linker-based method of embedding build IDs. Will use timestamps in sources," | tee -a "$CONFIG_LOG"
+	echo "    but module build IDs will only change when certain files are re-compiled" | tee -a "$CONFIG_LOG"
+fi
+
 
 
 ########################################################################################
@@ -1337,6 +1422,10 @@ fi
 #echo "    WITH_KOS_SYSTEM_HEADERS:   '$WITH_KOS_SYSTEM_HEADERS'"
 
 
+if [[ "$WITH_KOS_SYSTEM_HEADERS" == "1" ]]; then
+	CONFIG_CFLAGS="$CONFIG_CFLAGS -I$(realpath -s --relative-to="$OUT_ROOT" "${SRC_ROOT}/include/deemon/kos-headers")"
+fi
+
 unlink "$OUT_ROOT/config.mk" > /dev/null 2>&1
 cat > "$OUT_ROOT/config.mk" <<EOF
 # Automatically generated file (by ./configure). - Do not edit!
@@ -1344,31 +1433,28 @@ SRC_ROOT := $SRC_ROOT
 BIN_ROOT := $BIN_ROOT
 BLD_ROOT := $BLD_ROOT
 
-CC := $CONFIG_CC
-CXX := $CONFIG_CXX
-EXE := $CONFIG_EXE
-DLL := $CONFIG_DLL
-CFLAGS := $CONFIG_CFLAGS
-LDFLAGS := $CONFIG_LDFLAGS
-LIBS := $CONFIG_LIBS
-LIBM := $CONFIG_LIBM
-LIBDL := $CONFIG_LIBDL
-LIBSOCKET := $CONFIG_LIBSOCKET
+CC = $CONFIG_CC
+CXX = $CONFIG_CXX
+EXE = $CONFIG_EXE
+DLL = $CONFIG_DLL
+CFLAGS = $CONFIG_CFLAGS
+LDFLAGS = $CONFIG_LDFLAGS
+LIBS = $CONFIG_LIBS
+LIBM = $CONFIG_LIBM
+LIBDL = $CONFIG_LIBDL
+LIBSOCKET = $CONFIG_LIBSOCKET
 
-DEX_CC := $CONFIG_DEX_CC
-DEX_CFLAGS := $CONFIG_DEX_CFLAGS
-DEX_LDFLAGS := $CONFIG_DEX_LDFLAGS
-DEX_LIBS := $CONFIG_DEX_LIBS
-CORE_CFLAGS := $CONFIG_CORE_CFLAGS
-CORE_LDFLAGS := $CONFIG_CORE_LDFLAGS
-CORE_LIBS := $CONFIG_CORE_LIBS
+DEX_CC = $CONFIG_DEX_CC
+DEX_CFLAGS = $CONFIG_DEX_CFLAGS
+DEX_LDFLAGS = $CONFIG_DEX_LDFLAGS
+DEX_LIBS = $CONFIG_DEX_LIBS
+CORE_CFLAGS = $CONFIG_CORE_CFLAGS
+CORE_LDFLAGS = $CONFIG_CORE_LDFLAGS
+CORE_LIBS = $CONFIG_CORE_LIBS
 EOF
 
 if ! [ -z "$WITH_ASSEMBLY_INTERPRETER" ]; then
 	echo "DEEMON_CORE_OBJECTS += $WITH_ASSEMBLY_INTERPRETER" >> "$OUT_ROOT/config.mk"
-fi
-if [[ "$WITH_KOS_SYSTEM_HEADERS" == "1" ]]; then
-	echo "CFLAGS += -I$(realpath -s --relative-to="$OUT_ROOT" "${SRC_ROOT}/include/deemon/kos-headers")" >> "$OUT_ROOT/config.mk"
 fi
 if [[ "$WITH_DEX" == "0" ]]; then
 	echo "CONFIG_WITHOUT_DEX :=" >> "$OUT_ROOT/config.mk"
@@ -1379,15 +1465,14 @@ if ! [ -z "$WITHOUT_DEX_SPECIFIC" ]; then
 	done
 fi
 if ! [ -z "$CONFIG_DEX_CTYPES_CC" ]; then
-	echo "DEX_CTYPES_CC := $CONFIG_DEX_CTYPES_CC" >> "$OUT_ROOT/config.mk"
+	echo "DEX_CTYPES_CC = $CONFIG_DEX_CTYPES_CC" >> "$OUT_ROOT/config.mk"
 fi
 if ! [ -z "$CONFIG_DEX_CTYPES_CFLAGS" ]; then
-	echo "DEX_CTYPES_CFLAGS := $CONFIG_DEX_CTYPES_CFLAGS" >> "$OUT_ROOT/config.mk"
+	echo "DEX_CTYPES_CFLAGS = $CONFIG_DEX_CTYPES_CFLAGS" >> "$OUT_ROOT/config.mk"
 fi
 if ! [ -z "$CONFIG_DEX_CTYPES_LDFLAGS" ]; then
-	echo "DEX_CTYPES_LDFLAGS := $CONFIG_DEX_CTYPES_LDFLAGS" >> "$OUT_ROOT/config.mk"
+	echo "DEX_CTYPES_LDFLAGS = $CONFIG_DEX_CTYPES_LDFLAGS" >> "$OUT_ROOT/config.mk"
 fi
 if ! [ -z "$CONFIG_DEX_CTYPES_LIBS" ]; then
-	echo "DEX_CTYPES_LIBS := $CONFIG_DEX_CTYPES_LIBS" >> "$OUT_ROOT/config.mk"
+	echo "DEX_CTYPES_LIBS = $CONFIG_DEX_CTYPES_LIBS" >> "$OUT_ROOT/config.mk"
 fi
-
