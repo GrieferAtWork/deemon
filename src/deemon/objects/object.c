@@ -47,6 +47,8 @@
 #include <deemon/objmethod.h>
 #include <deemon/operator-hints.h>
 #include <deemon/property.h>
+#include <deemon/rodict.h>
+#include <deemon/roset.h>
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/set.h>
