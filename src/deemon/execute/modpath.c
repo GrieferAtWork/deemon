@@ -1258,7 +1258,9 @@ PRIVATE struct Dee_module_dexinfo deemon_dexinfo = {};
 INTERN struct Dee_module_dexdata deemon_dexdata = {
 	/* .mdx_module  = */ &DeeModule_Deemon,
 	/* .mdx_export  = */ NULL,
-	/* .mdx_buildid = */ NULL, /* TODO: Build ID of deemon core */
+	/* .mdx_buildid = */ _Dee_MODULE_DEXDATA_INIT_BUILDID,
+	/* .mdx_buildts = */ _Dee_MODULE_DEXDATA_INIT_BUILDTS,
+	/* ._mdx_pad1   = */ { NULL, NULL, NULL, NULL },
 	/* .mdx_init    = */ NULL,
 	/* .mdx_fini    = */ NULL,
 	/* .mdx_clear   = */ NULL,
@@ -1268,8 +1270,9 @@ INTERN struct Dee_module_dexdata deemon_dexdata = {
 #else /* HAVE_Dee_module_dexinfo && !HAVE_Dee_module_dexinfo_IS_POINTER */
 	/* .mdx_info    = */ NULL,
 #endif /* !HAVE_Dee_module_dexinfo || HAVE_Dee_module_dexinfo_IS_POINTER */
-	/* ._mdx_pad    = */ { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }
+	/* ._mdx_pad2   = */ { NULL, NULL, NULL }
 };
+
 
 /* Called during finalization of the associated dex module */
 INTERN NONNULL((1)) void DCALL

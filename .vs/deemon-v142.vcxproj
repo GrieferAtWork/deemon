@@ -565,6 +565,7 @@
 		<ClCompile Include="..\src\deemon\compiler\symbol.c" />
 		<ClCompile Include="..\src\deemon\compiler\tpp.c" />
 		<ClCompile Include="..\src\deemon\compiler\traits.c" />
+		<ClCompile Include="..\src\deemon\execute\buildid.c" />
 		<ClCompile Include="..\src\deemon\execute\code.c" />
 		<ClCompile Include="..\src\deemon\execute\ddi.c" />
 		<ClCompile Include="..\src\deemon\execute\dec.c" />
@@ -759,6 +760,7 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-deemon-execute-asm-altstack.m
 			<ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">true</ExcludedFromBuild>
 		</CustomBuild>
 		<None Include="..\src\deemon\execute\asm\exec.gas-386.S" />
+		<None Include="..\src\deemon\linker-scripts\dex-build-id.ld" />
 		<None Include="..\src\deemon\linker-scripts\link-deemon-gcc-i386-cygwin.def" />
 		<None Include="..\src\deemon\linker-scripts\link-deemon-msvc-i386-win32.def" />
 		<None Include="..\src\deemon\linker-scripts\link-deemon.dee" />

@@ -112,10 +112,6 @@ SRC_deemon$(EXE) := \
 	src/deemon/objects/seq/*.c \
 	src/deemon/objects/unicode/*.c \
 	src/deemon/runtime/*.c
-# Special rule for building "exec.c" (try to embed a build timestamp within that file)
-ifndef CONFIG_SH_NO_DATE_TIMESTAMP
-CFLAGS_src_deemon_execute_exec.c = -DBUILD_TIMESTAMP=$(shell date -u +%s)
-endif
 LDFLAGS_deemon$(EXE) := $(LDFLAGS) $(CORE_LDFLAGS)
 LIBS_deemon$(EXE)    := $(CORE_LIBS) $(LIBDL)
 OPTLIBS_deemon$(EXE) := $(LIBM)         # Optional library dependency (if link fails w/o, try with)

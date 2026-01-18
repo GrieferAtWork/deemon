@@ -131,12 +131,7 @@ DFUNDEF void DCALL DeeModule_InitPath(void);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-/* Return the deemon "Build ID" (that is: a 128-bit
- * number that uniquely identifies this build of deemon) */
-union Dee_module_buildid;
-DDATDEF ATTR_RETNONNULL WUNUSED union Dee_module_buildid const *DCALL DeeExec_GetBuildId(void);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 /* Return the time (in UTC milliseconds since 01-01-1970) when deemon was compiled.
  * This value is also used to initialize the `mo_ctime' value of the builtin
  * `deemon' module, automatically forcing user-code to be recompiled if the

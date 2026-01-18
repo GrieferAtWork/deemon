@@ -94,6 +94,8 @@ struct Dee_module_dexdata {
 	union Dee_module_buildid const *mdx_buildid; /* [0..1][const] 16-byte Build ID of the DEX module (if available) -- set to
 	                                              * "ADDR(.note.gnu.build-id) + 16" if available, or to 16 random bytes if
 	                                              * that is possible */
+	char const                     *mdx_buildts; /* [0..1][const] Build timestamp string (optional, takes the form of `__DATE__ "|" __TIME__') */
+	void *_mdx_pad1[4]; /* For future expansion (must be 0-initialized by DEX modules) */
 
 	/* [0..1][const] Optional initializer/finalizer/clear callbacks. */
 	WUNUSED_T int (DCALL *mdx_init)(void);
@@ -103,7 +105,7 @@ struct Dee_module_dexdata {
 	/* Internal fields... */
 	void                           *mdx_handle; /* [?..?][const][owned] System-specific library handle (filled in during loading) */
 	struct Dee_module_dexinfo      *mdx_info;   /* [0..1][const] Used internally. Initialize to "NULL" in DEX modules */
-	void *_mdx_pad[8]; /* For future expansion (must be 0-initialized by DEX modules) */
+	void *_mdx_pad2[3]; /* For future expansion (must be 0-initialized by DEX modules) */
 };
 
 #if defined(CONFIG_BUILDING_DEEMON) || defined(CONFIG_BUILDING_DEX)
@@ -123,9 +125,18 @@ __ATTR_WEAK
 #endif /* !__ATTR_WEAK_IS_ATTR_SELECTANY */
 INTDEF __BYTE_TYPE__ __dex_build_id__[];
 #define _Dee_MODULE_DEXDATA_INIT_BUILDID (union Dee_module_buildid const *)(__dex_build_id__ + 16)
-#else /* CONFIG_HAVE___dex_build_id__ */
+#define _Dee_MODULE_DEXDATA_INIT_BUILDTS NULL
+#elif defined(CONFIG_HOST_WINDOWS) && defined(__PE__)
+#define _Dee_MODULE_DEXDATA_INIT_BUILDID NULL /* Need neither since we can use "TimeDateStamp" from the PE header */
+#define _Dee_MODULE_DEXDATA_INIT_BUILDTS NULL
+#else /* ... */
 #define _Dee_MODULE_DEXDATA_INIT_BUILDID NULL
-#endif /* !CONFIG_HAVE___dex_build_id__ */
+#if defined(__DATE__) && defined(__TIME__)
+#define _Dee_MODULE_DEXDATA_INIT_BUILDTS __DATE__ "|" __TIME__
+#else /* __DATE__ && __TIME__ */
+#define _Dee_MODULE_DEXDATA_INIT_BUILDTS NULL
+#endif /* !__DATE__ || !__TIME__ */
+#endif /* !... */
 #endif /* CONFIG_BUILDING_DEEMON || CONFIG_BUILDING_DEX */
 
 /* Helpers for defining DEX exports from C */
@@ -175,12 +186,14 @@ INTDEF __BYTE_TYPE__ __dex_build_id__[];
 		/* .mdx_module  = */ (struct Dee_module_object *)&DEX.m_dex,        \
 		/* .mdx_export  = */ _dex_symbols,                                  \
 		/* .mdx_buildid = */ _Dee_MODULE_DEXDATA_INIT_BUILDID,              \
+		/* .mdx_buildts = */ _Dee_MODULE_DEXDATA_INIT_BUILDTS,              \
+		/* ._mdx_pad1   = */ { NULL, NULL, NULL, NULL },                    \
 		/* .mdx_init    = */ init,                                          \
 		/* .mdx_fini    = */ fini,                                          \
 		/* .mdx_clear   = */ clear,                                         \
 		/* .mdx_handle  = */ NULL, /* Init doesn't matter */                \
 		/* .mdx_info    = */ NULL,                                          \
-		/* ._mdx_pad    = */ { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL } \
+		/* ._mdx_pad2   = */ { NULL, NULL, NULL }                           \
 	};                                                                      \
 	PUBLIC struct _dex_object DEX = {{ _Dee_GC_HEAD_UNTRACKED_INIT }, {     \
 		__Dee_DEX_OBJECT_HEAD_INIT,                                         \

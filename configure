@@ -1391,12 +1391,3 @@ if ! [ -z "$CONFIG_DEX_CTYPES_LIBS" ]; then
 	echo "DEX_CTYPES_LIBS := $CONFIG_DEX_CTYPES_LIBS" >> "$OUT_ROOT/config.mk"
 fi
 
-# Check if `date -u +%s` works
-log_checking_begin "Checking if 'date -u +%s' works"
-if date -u +%s > /dev/null 2>&1; then
-	log_checking_yes
-else
-	log_checking_no
-	echo "CONFIG_SH_NO_DATE_TIMESTAMP := true" >> "$OUT_ROOT/config.mk"
-fi
-

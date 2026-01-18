@@ -935,7 +935,9 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 		goto_fail("File is smaller than 'sizeof(Dec_Ehdr)'");
 
 	/* Validate dec file header... */
-	deemon_buildid = DeeExec_GetBuildId();
+	deemon_buildid = DeeModule_GetBuildId(&DeeModule_Deemon);
+	if unlikely(!deemon_buildid)
+		goto err;
 	if (ehdr->e_typedata.td_reloc.er_deemon_build_id[0] != deemon_buildid->mbi_word64[0] ||
 	    ehdr->e_typedata.td_reloc.er_deemon_build_id[1] != deemon_buildid->mbi_word64[1]) {
 #ifndef Dee_DPRINT_IS_NOOP
@@ -1053,6 +1055,8 @@ fail:
 #endif /* !Dee_DPRINT_IS_NOOP */
 fail_nomsg:
 	return (DREF DeeModuleObject *)ITER_DONE;
+err:
+	return NULL;
 }
 
 
@@ -1168,6 +1172,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 		Dee_dec_addr32_t addrof_modstr; /* Start address of `d_offsetof_modname' string table (possibly unaligned) */
 		size_t dep_index;
 		Dee_dec_addr32_t addrof_zero;
+		union Dee_module_buildid const *deemon_buildid;
 
 		/* Calculate the total needed buffer size. */
 		total_need = self->dw_used;
@@ -1181,11 +1186,11 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 		ehdr->e_typedata.td_reloc.er_offsetof_heap   = offsetof(Dec_Ehdr, e_heap);
 		ehdr->e_typedata.td_reloc.er_sizeof_pointer  = sizeof(void *);
 		ehdr->e_typedata.td_reloc.er_endian          = Dee_DEC_ENDIAN;
-		{
-			union Dee_module_buildid const *deemon_buildid  = DeeExec_GetBuildId();
-			ehdr->e_typedata.td_reloc.er_deemon_build_id[0] = deemon_buildid->mbi_word64[0];
-			ehdr->e_typedata.td_reloc.er_deemon_build_id[1] = deemon_buildid->mbi_word64[1];
-		}
+		deemon_buildid = DeeModule_GetBuildId(&DeeModule_Deemon);
+		if unlikely(!deemon_buildid)
+			goto err;
+		ehdr->e_typedata.td_reloc.er_deemon_build_id[0] = deemon_buildid->mbi_word64[0];
+		ehdr->e_typedata.td_reloc.er_deemon_build_id[1] = deemon_buildid->mbi_word64[1];
 
 		/* Generate `ddm_impstr' strings for dependencies. */
 		if unlikely(decwriter_genimpstr(self, context_absname, context_absname_size, flags))
@@ -1451,6 +1456,10 @@ output_image:
 		if unlikely(!ehdr)
 			goto err;
 		self->dw_ehdr = ehdr;
+
+		/* NOTE: Leave the zero-initialized build-id, as well as
+		 *       the 'Dee_MODULE_FHASBUILDID' flag in "mod" as-is.
+		 * The module will just return `0' as its `__buildid__'. */
 	}
 
 	/* Steal the ehdr from `self' */

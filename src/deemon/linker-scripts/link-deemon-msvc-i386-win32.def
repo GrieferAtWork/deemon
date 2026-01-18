@@ -202,7 +202,6 @@ EXPORTS
 	DeeExec_CompileFunctionStream@24=_DeeExec_CompileFunctionStream@24
 	DeeExec_CompileModuleMemory@28=_DeeExec_CompileModuleMemory@28
 	DeeExec_CompileModuleStream@24=_DeeExec_CompileModuleStream@24
-	DeeExec_GetBuildId@0=_DeeExec_GetBuildId@0
 	DeeExec_GetHome@0=_DeeExec_GetHome@0
 	DeeExec_RunMemory@36=_DeeExec_RunMemory@36
 	DeeExec_RunStream@32=_DeeExec_RunStream@32
