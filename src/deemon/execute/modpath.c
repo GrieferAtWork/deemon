@@ -1463,6 +1463,18 @@ handle_existing_module:
 #ifdef Dee_module_dexinfo_alloc
 			Dee_module_dexinfo_free(dexinfo);
 #endif /* Dee_module_dexinfo_alloc */
+
+			/* If "existing_module" is a DEE module, then our caller will eventually
+			 * fail an assertion check in `DeeModule_OpenFile_impl2()', because the
+			 * module will probably already have a name...
+			 * >> remember_dir_module:
+			 * >> 		ASSERT(!result->mo_absname);
+			 * >> 		if (flags & _DeeModule_IMPORT_F_NO_INHERIT_FILENAME) { */
+			ASSERTF(Dee_TYPE(existing_module) == &DeeModuleDex_Type,
+			        "Existing module %q (while loading %q handle %p) isn't a dex module (is %q). "
+			        "If we didn't already assert that here, another assertion would just fail later.",
+			        existing_module->mo_absname, absname, dex_handle,
+			        DeeType_GetName(Dee_TYPE(existing_module)));
 			Dee_Free(absname);
 			DeeSystem_DlClose(dex_handle);
 			return existing_module;
@@ -1565,8 +1577,16 @@ handle_existing_module:
 	if (result->mo_flags & _Dee_MODULE_FNOADDR) {
 		existing_module = dex_byaddr_locate(dex_byaddr_tree, &dexinfo->ddi_ataddr);
 		if (existing_module) {
+			struct Dee_module_dexdata *existing_dexdata;
 			ASSERT_OBJECT_TYPE_EXACT(existing_module, &DeeModuleDex_Type);
 			Dee_Incref(existing_module);
+			existing_dexdata = existing_module->mo_moddata.mo_dexdata;
+			if (existing_dexdata->mdx_handle != dex_handle) {
+				Dee_DPRINTF("[RT][dex] Warning: Found existing module %q (handle %p) sharing its at-addr "
+				            /**/ "key with with %q (handle %p). This is very weird a probably a bug\n",
+				            existing_module->mo_absname, existing_dexdata->mdx_handle,
+				            absname, dex_handle);
+			}
 			goto handle_existing_module;
 		}
 		Dee_DPRINTF("[RT][dex] Add dex module: %q. Exposed address range is %p-%p\n",
