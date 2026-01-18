@@ -50,6 +50,7 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/host.h>
 #include <hybrid/overflow.h>
+#include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
 #include <stdint.h>
@@ -69,6 +70,8 @@
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 #ifdef CONFIG_HAVE_EXEC_ALTSTACK
 
@@ -1685,9 +1688,8 @@ code_hash(DeeCodeObject *__restrict self) {
 		for (i = 0; i < self->co_exceptc; ++i) {
 			Dee_hash_t spec;
 			DeeTypeObject *mask;
-			spec = Dee_HashPtr(&self->co_exceptv[i].eh_start,
-			                   sizeof(struct except_handler) -
-			                   offsetof(struct except_handler, eh_start));
+			spec = Dee_HashPtr((byte_t *)&self->co_exceptv[i] + offsetof(struct except_handler, eh_start),
+			                   sizeof(struct except_handler) - offsetof(struct except_handler, eh_start));
 			result = Dee_HashCombine(result, spec);
 			mask   = self->co_exceptv[i].eh_mask;
 			if (mask != NULL)

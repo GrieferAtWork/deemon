@@ -32,10 +32,14 @@
 #include <deemon/system-features.h> /* memcpyc(), ... */
 
 #include <hybrid/minmax.h>
+#include <hybrid/typecore.h>
 /**/
 
 #include <stddef.h> /* size_t, offsetof */
 #include <stdint.h> /* uint8_t, uint16_t, int16_t */
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 DECL_BEGIN
 
@@ -701,10 +705,8 @@ PRIVATE WUNUSED DREF DeeDDIObject *DCALL ddi_ctor(void) {
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 ddi_hash(DeeDDIObject *__restrict self) {
 	Dee_hash_t result;
-	result = Dee_HashPtr(&self->d_ddisize,
-	                     self->d_ddisize +
-	                     (offsetof(DeeDDIObject, d_ddi) -
-	                      offsetof(DeeDDIObject, d_ddisize)));
+	result = Dee_HashPtr((byte_t *)self + offsetof(DeeDDIObject, d_ddisize),
+	                     self->d_ddisize + (offsetof(DeeDDIObject, d_ddi) - offsetof(DeeDDIObject, d_ddisize)));
 	result = Dee_HashCombine(result, Dee_HashPtr(self->d_strings,
 	                                             self->d_nstring *
 	                                             sizeof(*self->d_strings)));

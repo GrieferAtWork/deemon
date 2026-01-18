@@ -224,26 +224,26 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase4Byte)(ui
 		T _rc_b = (b);                    \
 		return Dee_Compare(_rc_a, _rc_b); \
 	}	__WHILE0
-#define Dee_return_DeeObject_Compare_if_ne(a, b)                                    \
-	do {                                                                            \
+#define Dee_return_DeeObject_Compare_if_ne(a, b)                \
+	do {                                                        \
 		int _rtceqin_temp = DeeObject_Compare(Dee_AsObject(a),  \
 		                                      Dee_AsObject(b)); \
-		if (_rtceqin_temp != Dee_COMPARE_EQ)                                        \
-			return _rtceqin_temp;                                                   \
+		if (_rtceqin_temp != Dee_COMPARE_EQ)                    \
+			return _rtceqin_temp;                               \
 	}	__WHILE0
-#define Dee_return_DeeObject_CompareEq_if_ne(a, b)                                    \
-	do {                                                                              \
+#define Dee_return_DeeObject_CompareEq_if_ne(a, b)                \
+	do {                                                          \
 		int _rtceqin_temp = DeeObject_CompareEq(Dee_AsObject(a),  \
 		                                        Dee_AsObject(b)); \
-		if (_rtceqin_temp != Dee_COMPARE_EQ)                                          \
-			return _rtceqin_temp;                                                     \
+		if (_rtceqin_temp != Dee_COMPARE_EQ)                      \
+			return _rtceqin_temp;                                 \
 	}	__WHILE0
-#define Dee_return_DeeObject_TryCompareEq_if_ne(a, b)                                    \
-	do {                                                                                 \
+#define Dee_return_DeeObject_TryCompareEq_if_ne(a, b)                \
+	do {                                                             \
 		int _rtceqin_temp = DeeObject_TryCompareEq(Dee_AsObject(a),  \
 		                                           Dee_AsObject(b)); \
-		if (_rtceqin_temp != Dee_COMPARE_EQ)                                             \
-			return _rtceqin_temp;                                                        \
+		if (_rtceqin_temp != Dee_COMPARE_EQ)                         \
+			return _rtceqin_temp;                                    \
 	}	__WHILE0
 
 
@@ -277,12 +277,23 @@ DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 
 /* >> DeeTypeObject *DeeObject_InitInherited(DeeObject *self, / *inherit(always)* / DREF DeeTypeObject *type); */
 #ifdef CONFIG_TRACE_REFCHANGES
-#define DeeObject_DATA(self)                ((void *)(&(self)->ob_trace + 1))
 #define DeeObject_InitInherited(self, type) ((self)->ob_refcnt = 1, (self)->ob_type = (type), (self)->ob_trace = NULL)
 #else /* CONFIG_TRACE_REFCHANGES */
-#define DeeObject_DATA(self)                ((void *)(&(self)->ob_type + 1))
 #define DeeObject_InitInherited(self, type) ((self)->ob_refcnt = 1, (self)->ob_type = (type))
 #endif /* !CONFIG_TRACE_REFCHANGES */
+
+/* >> void *DeeObject_DATA(DeeObject *self);
+ * Returns a pointer to the object-specific data-area of "self" */
+#ifdef __INTELLISENSE__
+#ifdef CONFIG_TRACE_REFCHANGES
+#define DeeObject_DATA(self) ((void *)(&(self)->ob_trace + 1))
+#else /* CONFIG_TRACE_REFCHANGES */
+#define DeeObject_DATA(self) ((void *)(&(self)->ob_type + 1))
+#endif /* !CONFIG_TRACE_REFCHANGES */
+#else /* __INTELLISENSE__ */
+#define DeeObject_DATA(self) ((void *)((__BYTE_TYPE__ *)(self) + DEE_OBJECT_OFFSETOF_DATA))
+#endif /* !__INTELLISENSE__ */
+
 
 /* >> DeeTypeObject *DeeObject_Init(DeeObject *self, DeeTypeObject *type);
  * Initialize the standard objects fields of a freshly allocated object.

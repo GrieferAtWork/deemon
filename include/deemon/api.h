@@ -165,17 +165,6 @@ __pragma_GCC_diagnostic_ignored(Wcast_function_type)
  * initialize some fields, but don't initialize _all_ fields. */
 __pragma_GCC_diagnostic_ignored(Wmissing_field_initializers)
 
-/* This warning is broken because for some f-ing reason, it doesn't
- * understand that struct fields are continuous:
- * >> warning: 'Dee_HashPtr' reading 16 bytes from a region of size 4 [-Wstringop-overread]
- * >> spec = Dee_HashPtr(&self->co_exceptv[i].eh_start,
- * >>        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * >>                    sizeof(struct except_handler) -
- * >>                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * >>                    offsetof(struct except_handler, eh_start));
- * Sorry GCC, but that region _IS_ larger than 4 bytes (you dumb f%ck) */
-__pragma_GCC_diagnostic_ignored(Wstringop_overread)
-
 /* This warning is utterly useless with how we're using
  * our heap when it comes to forcing downstream failures:
  * >> include/deemon/alloc.h:250:38: warning: argument 1 value ‘18446744073709551615’ exceeds maximum object size 9223372036854775807 [-Walloc-size-larger-than=]
