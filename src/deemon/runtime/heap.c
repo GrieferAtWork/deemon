@@ -6298,7 +6298,8 @@ leaks_untrack_chunk_containing(void const *ptr) {
 		void *mem = atomic_read(&iter->lf_chunk);
 		mchunkptr p = mem2chunk(mem);
 		size_t size = chunksize(p) - overhead_for(p);
-		if ((char *)ptr >= mem && (char *)ptr < ((char *)mem + size)) {
+		if ((char *)ptr >= (char *)mem &&
+		    (char *)ptr < ((char *)mem + size)) {
 			/* Do the same that's done by `Dee_UntrackAlloc()' below. */
 			leaks_remove(iter);
 			iter->lf_prev = iter;
