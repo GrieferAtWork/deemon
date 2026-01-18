@@ -148,30 +148,86 @@ DECL_BEGIN
 
 #ifdef __CC__
 /* Default malloc/free functions used for heap allocation.
- * NOTE: Upon allocation failure, caches are cleared and an `Error.NoMemory' is thrown. */
-DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL Dee_Malloc)(size_t n_bytes);
-DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL Dee_Calloc)(size_t n_bytes);
+ * NOTE: Upon allocation failure, allocation functions call `Dee_CollectMemory()'.
+ *       If memory was collected successfully, the allocation is attempted again. */
+DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL Dee_Malloc)(size_t n_bytes);
+DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL Dee_Calloc)(size_t n_bytes);
 DFUNDEF WUNUSED void *(DCALL Dee_Realloc)(void *ptr, size_t n_bytes);
-DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL Dee_TryMalloc)(size_t n_bytes);
-DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL Dee_TryCalloc)(size_t n_bytes);
+
+/* Same as the non-*Try* versions above, but these functions don't call `Dee_CollectMemory()' */
+DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL Dee_TryMalloc)(size_t n_bytes);
+DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL Dee_TryCalloc)(size_t n_bytes);
 DFUNDEF WUNUSED void *(DCALL Dee_TryRealloc)(void *ptr, size_t n_bytes);
+
+/* Free heap memory at the given "ptr". No-op when "ptr" is "NULL" */
 DFUNDEF void (DCALL Dee_Free)(void *ptr);
-DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbg_Malloc)(size_t n_bytes, char const *file, int line);
-DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbg_Calloc)(size_t n_bytes, char const *file, int line);
+
+/* Same as functions above, but instrument the allocation with file/line
+ * debug information for use when `DeeHeap_DumpMemoryLeaks()' is called. */
+DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL DeeDbg_Malloc)(size_t n_bytes, char const *file, int line);
+DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL DeeDbg_Calloc)(size_t n_bytes, char const *file, int line);
 DFUNDEF WUNUSED void *(DCALL DeeDbg_Realloc)(void *ptr, size_t n_bytes, char const *file, int line);
-DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbg_TryMalloc)(size_t n_bytes, char const *file, int line);
-DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbg_TryCalloc)(size_t n_bytes, char const *file, int line);
+DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL DeeDbg_TryMalloc)(size_t n_bytes, char const *file, int line);
+DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL DeeDbg_TryCalloc)(size_t n_bytes, char const *file, int line);
 DFUNDEF WUNUSED void *(DCALL DeeDbg_TryRealloc)(void *ptr, size_t n_bytes, char const *file, int line);
 DFUNDEF void (DCALL DeeDbg_Free)(void *ptr, char const *file, int line);
+
+/* Mark "ptr" (if non-NULL) as not-to-be-considered a memory leak, even
+ * if it is never free'd. This is meant for allocations that are made for
+ * the purpose of caches of (possibly statically allocated) objects. One
+ * example might be alternative UTF representations of strings. Because
+ * strings can be defined statically, these alternate UTF representations
+ * would never be free'd, but since these representations can only ever
+ * be allocated once, they shouldn't be considered a leak, either.
+ *
+ * @return: * : Always re-returns "ptr" */
 DFUNDEF void *(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line);
 
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+/* Try to change the size of a memory block, without changing its position in memory.
+ * Just like `Dee_TryRealloc()', this function can be used to both shrink a block of
+ * memory, as well as grow one (though this function has a high likelihood of failing
+ * in the later case, since another allocation may have already consumed memory that
+ * would have been needed to grow "ptr")
+ *
+ * @param: ptr:     Heap pointer, as previously returned by another allocation API
+ * @param: n_bytes: The intended new memory size for "ptr"
+ * @return: ptr:  Success: memory block was resized in-place.
+ * @return: NULL: Failure: unable to shrink/grow memory. In this case, "ptr" remains
+ *                         sized at whatever it was sized at before. Note that even
+ *                         when shrinking a heap pointer, this function can still
+ *                         fail for any number of reasons, including the heap system
+ *                         simply not wanting to shrink "ptr". */
 DFUNDEF WUNUSED void *(DCALL Dee_TryReallocInPlace)(void *ptr, size_t n_bytes);
-DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL Dee_Memalign)(size_t min_alignment, size_t n_bytes);
-DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL Dee_TryMemalign)(size_t min_alignment, size_t n_bytes);
-DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbg_Memalign)(size_t min_alignment, size_t n_bytes, char const *file, int line);
-DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbg_TryMemalign)(size_t min_alignment, size_t n_bytes, char const *file, int line);
+
+/* Same as `Dee_Malloc()', but the returned pointer is guaranted to be aligned by
+ * at least some multiple of `min_alignment'. For this purpose, `min_alignment'
+ * must be a power-of-2. The returned pointer can be free'd as normal by simply
+ * passing it to `Dee_Free()'. When passed to `Dee_Realloc()', the alignment that
+ * was requested here will be lost (`Dee_Realloc()' only guaranties default heap
+ * alignment)
+ *
+ * @param: min_alignment: Minimum alignment for returned pointer (power-of-2)
+ * @param: n_bytes:       Minimum usable memory size for returned pointer
+ * @return: * :   Success: Base address of newly allocated memory (address is a multiple of `min_alignment')
+ * @return: NULL: Failure: Insufficient memory. */
+DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *(DCALL Dee_Memalign)(size_t min_alignment, size_t n_bytes);
+DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *(DCALL Dee_TryMemalign)(size_t min_alignment, size_t n_bytes);
+DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *(DCALL DeeDbg_Memalign)(size_t min_alignment, size_t n_bytes, char const *file, int line);
+DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *(DCALL DeeDbg_TryMemalign)(size_t min_alignment, size_t n_bytes, char const *file, int line);
+
+/* Return the usable memory size (in bytes) of a heap "ptr" returned by any of the
+ * other heap functions, including `Dee_Malloc()', `Dee_Realloc()' and `Dee_Memalign()'
+ * When "ptr" points at the start of the payload area of a `struct Dee_heapchunk', the
+ * return value is the value that was passed to `Dee_HEAPCHUNK_HEAD()'.
+ *
+ * @param: ptr: Base address as returned by one of the other heap functions, or "NULL".
+ *              Behavior is undefined if "ptr" isn't a heap pointer, or doesn't point
+ *              at the start of a heap allocation.
+ * @return: 0 : Given "ptr" is either "NULL" or doesn't have any writable bytes
+ * @return: * : The amount of memory (in bytes) that the caller is free to use, starting at "ptr" */
 DFUNDEF ATTR_PURE WUNUSED size_t (DCALL Dee_MallocUsableSize)(void *ptr);
+
 #define DeeDbg_TryReallocInPlace(ptr, n_bytes, file, line) Dee_TryReallocInPlace(ptr, n_bytes)
 #define Dee_MallocUsableSize(ptr)        Dee_MallocUsableSize(ptr)
 #define Dee_MallocUsableSizeNonNull(ptr) Dee_MallocUsableSize(ptr)
