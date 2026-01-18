@@ -2129,6 +2129,12 @@ DeeMapFile_TryTruncate(struct DeeMapFile *__restrict self,
 			void *unmap_base  = (byte_t *)baseptr + new_mapsiz;
 			size_t unmap_size = old_mapsiz - new_mapsiz;
 			if (munmap(unmap_base, unmap_size) == 0) {
+				/* If the usable map size is greater than the truncated new size (likely),
+				 * the we must also update the usable size value. Otherwise, other pieces
+				 * of code will continue to believe that the mapping is larger than it
+				 * actually is! */
+				if likely(self->dmf_size > new_mapsiz)
+					self->dmf_size = new_mapsiz;
 				self->_dmf_mapsize = new_mapsiz;
 				return true;
 			}
