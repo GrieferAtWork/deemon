@@ -29,9 +29,9 @@ ClCompile.BasicRuntimeChecks = Default
 
 #include <deemon/api.h>
 
-/* Disable these attributes in here -- we must routinely write pack the end
+/* Disable these attributes in here -- we must routinely write past the end
  * of our own allocations, because how else are we supposed to manage adjacent
- * heap blocks and/or initialize footers!
+ * heap blocks and/or initialize footers.
  *
  * Without this, we get crashes: "*** buffer overflow detected ***: terminated"
  *
