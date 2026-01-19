@@ -30,7 +30,7 @@
 #include <deemon/object.h>
 #include <deemon/tuple.h>
 
-#include <stddef.h> /* size_t, offsetof, NULL */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

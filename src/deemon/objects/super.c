@@ -36,8 +36,8 @@
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
 
-#include <stddef.h> /* size_t, offsetof */
-#include <stdint.h> /* int32_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* int32_t, int64_t */
 
 
 /* Define type-specific object operators. */

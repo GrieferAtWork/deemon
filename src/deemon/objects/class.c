@@ -47,9 +47,9 @@
 
 #include "../runtime/runtime_error.h"
 
-#include <stdarg.h>  /* va_start */
-#include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t */
+#include <stdarg.h>  /* va_end, va_list, va_start */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* uint16_t */
 
 #undef byte_t

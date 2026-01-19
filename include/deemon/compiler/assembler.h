@@ -34,8 +34,8 @@
 #include "symbol.h"
 #include "tpp.h"
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* intN_t, uintN_t, uintptr_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* INT8_MAX, INT8_MIN, UINT8_MAX, UINT16_MAX, int8_t, int16_t, int32_t, uintN_t, uintptr_t */
 
 DECL_BEGIN
 

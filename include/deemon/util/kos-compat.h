@@ -36,7 +36,7 @@
 #include "../stringutils.h"
 #include "../system-features.h"
 
-#include <stdint.h>
+#include <stdint.h> /* uint8_t, uint32_t */
 
 /* Compatibility header for porting KOS system libraries for use with deemon */
 

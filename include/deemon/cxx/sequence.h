@@ -29,7 +29,7 @@
 #include "../types.h"
 #include "object.h"
 
-#include <stddef.h> /* size_t, NULL */
+#include <stddef.h> /* NULL, size_t */
 
 /*#include "iterator.h"*/ /* Don't include! */
 /*#include "mapping.h"*/  /* Don't include! */

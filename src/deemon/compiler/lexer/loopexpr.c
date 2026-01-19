@@ -32,7 +32,7 @@
 #include <deemon/tuple.h>
 
 #include <stddef.h> /* NULL */
-#include <stdint.h> /* uint16_t, uint32_t */
+#include <stdint.h> /* int32_t, uint16_t, uint32_t */
 
 
 /* Loop statements in expressions are compiled as yield-function lambda expressions:

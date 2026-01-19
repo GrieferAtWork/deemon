@@ -31,8 +31,8 @@
 #include "object.h"
 #include "sequence.h"
 
-#include <stddef.h> /* size_t, NULL */
-#include <stdarg.h> /* va_list */
+#include <stddef.h> /* NULL, size_t */
+#include <stdarg.h> /* va_end, va_list, va_start */
 
 DEE_CXX_BEGIN
 

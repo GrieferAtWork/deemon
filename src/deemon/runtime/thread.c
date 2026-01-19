@@ -59,9 +59,9 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
-#include <stdbool.h> /* true, false, bool */
-#include <stddef.h>  /* offsetof */
-#include <stdint.h>  /* UINT32_C */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* UINT16_C, UINT32_C, int64_t, uintN_t, uintptr_t */
 
 #ifdef _WIN32_WCE
 #undef GetProcAddress

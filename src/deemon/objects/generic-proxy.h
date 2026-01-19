@@ -26,7 +26,7 @@
 
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* size_t, offsetof */
+#include <stddef.h> /* offsetof, size_t */
 
 DECL_BEGIN
 

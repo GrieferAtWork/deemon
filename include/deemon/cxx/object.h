@@ -34,7 +34,7 @@
 
 #include <exception>
 #include <initializer_list>
-#include <stddef.h> /* size_t, NULL */
+#include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* intN_t, uintN_t */
 #include <type_traits>
 

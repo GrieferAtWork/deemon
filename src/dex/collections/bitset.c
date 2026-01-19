@@ -46,7 +46,7 @@
 #include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
 
-#include <stddef.h>
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__

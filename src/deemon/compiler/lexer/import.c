@@ -35,7 +35,7 @@
 #include <deemon/system-features.h> /* memrchr(), memcpy(), ... */
 #include <deemon/thread.h>
 
-#include <stddef.h> /* size_t, NULL */
+#include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t, uint32_t */
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES

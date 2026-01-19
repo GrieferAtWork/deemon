@@ -30,7 +30,7 @@
 #include <hybrid/host.h>
 #include <hybrid/typecore.h>
 
-#include <stdint.h>
+#include <stdint.h> /* uint8_t, uintptr_t */
 
 #ifndef __INTELLISENSE__
 #include <deemon/alloc.h>

@@ -37,7 +37,7 @@
 #include <hybrid/debug-alignment.h>
 
 #include <stddef.h> /* NULL */
-#include <stdint.h> /* uint16_t */
+#include <stdint.h> /* uint16_t, uint32_t, uint64_t */
 
 DECL_BEGIN
 

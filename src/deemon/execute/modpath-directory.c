@@ -39,7 +39,7 @@
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint8_t, uint16_t, uint32_t */
 
 #ifdef CONFIG_HOST_WINDOWS

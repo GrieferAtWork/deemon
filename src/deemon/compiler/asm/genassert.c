@@ -33,7 +33,7 @@
 #include "../../runtime/builtin.h"
 
 #include <stddef.h> /* NULL */
-#include <stdint.h> /* uint16_t */
+#include <stdint.h> /* int16_t, int32_t, uint8_t, uint16_t */
 
 DECL_BEGIN
 

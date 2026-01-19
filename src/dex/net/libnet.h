@@ -111,7 +111,7 @@
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 
-#include <stdint.h>
+#include <stdint.h> /* uint16_t, uint64_t, uintptr_t */
 
 #ifdef CONFIG_HOST_WINDOWS
 #undef EWOULDBLOCK

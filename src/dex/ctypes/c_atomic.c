@@ -42,8 +42,8 @@
 
 #include "c_api.h" /* Prototypes... */
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* intN_t, uintN_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* intN_t, uintN_t, uintptr_t */
 
 DECL_BEGIN
 

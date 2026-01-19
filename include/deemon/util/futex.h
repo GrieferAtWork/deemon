@@ -41,7 +41,7 @@
 
 #else /* CONFIG_NO_THREADS */
 
-#include <stdint.h>
+#include <stdint.h> /* uint32_t, uint64_t */
 
 DECL_BEGIN
 

@@ -32,7 +32,7 @@
 /**/
 
 #include <stdarg.h> /* va_list */
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL, size_t */
 
 DECL_BEGIN
 

@@ -32,7 +32,7 @@
 #include <deemon/object.h>
 #include <deemon/thread.h>
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t */
 
 #ifdef JIT_HYBRID

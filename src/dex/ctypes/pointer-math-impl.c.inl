@@ -38,8 +38,8 @@
 
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* NULL */
-#include <stdint.h> /* uintptr_t */
+#include <stddef.h> /* NULL, ptrdiff_t */
+#include <stdint.h> /* int32_t, int64_t, uint32_t, uint64_t, uintptr_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

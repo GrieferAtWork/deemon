@@ -53,8 +53,8 @@
 #include "../../objects/dict.h"
 #include "../../runtime/builtin.h"
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint16_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* int16_t, int32_t, uint8_t, uint16_t, uint32_t */
 
 #undef shift_t
 #define shift_t __SHIFT_TYPE__

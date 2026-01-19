@@ -42,7 +42,7 @@
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
 
-#include <stddef.h> /* size_t, offsetof */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 #undef token
 #undef tok

@@ -1,0 +1,342 @@
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import posix;
+import functools;
+
+global final HEADER_KWDS: {string: {string...}} = {
+	"<stdarg.h>": {
+		"va_list",
+		"va_start",
+		"va_arg",
+		"va_end",
+	},
+	"<stddef.h>": {
+		"NULL",
+		"size_t",
+		"ptrdiff_t",
+		"offsetof",
+	},
+	"<stdint.h>": {
+		"int8_t", "int16_t", "int32_t", "int64_t", "intptr_t",
+		"uint8_t", "uint16_t", "uint32_t", "uint64_t", "uintptr_t",
+		"INT8_C", "INT16_C", "INT32_C", "INT64_C",
+		"UINT8_C", "UINT16_C", "UINT32_C", "UINT64_C",
+		"INT8_MIN", "INT16_MIN", "INT32_MIN", "INT64_MIN",
+		"INT8_MAX", "INT16_MAX", "INT32_MAX", "INT64_MAX",
+		"UINT8_MAX", "UINT16_MAX", "UINT32_MAX", "UINT64_MAX",
+	},
+	"<stdbool.h>": {
+		"bool",
+		"true",
+		"false",
+	},
+};
+
+global final KWD2HEADER: {string: string} = Dict.Frozen(
+	for (local header, kwds: HEADER_KWDS)
+		for (local kwd: kwds)
+			(kwd, header)
+);
+
+class IncludeInfo {
+	this = default;
+	public final member include: string;
+	public member includeStringOffset: int;
+	public member includeStringEndOffset: int;
+	public member commentStartOffset: int | none;
+	public member commentEndOffset: int | none;
+
+	public patchOffsets(deltaStart: int, deltaOffset: int) {
+		if (includeStringOffset >= deltaStart)
+			includeStringOffset += deltaOffset;
+		if (includeStringEndOffset >= deltaStart)
+			includeStringEndOffset += deltaOffset;
+		if (commentStartOffset !is none &&
+		    commentStartOffset >= deltaStart)
+			commentStartOffset += deltaOffset;
+		if (commentEndOffset !is none &&
+		    commentEndOffset >= deltaStart)
+			commentEndOffset += deltaOffset;
+	}
+};
+
+class FileInfo {
+	this = default;
+	public final member filename: string;
+	public final member includes: {string: IncludeInfo};
+	public final member keywords: {string...};
+	public member data: Bytes;
+	public member dataChanged: bool = false;
+
+	@@Return mapping {include: {keyword...}}
+	public function getMissingIncludesAndKeywords(): {string: {string...}} {
+		local result: {string: {string...}} = Dict();
+		for (local kwd: keywords) {
+			local hdr = KWD2HEADER.get(kwd);
+			if (hdr !is none && hdr !in includes.keys)
+				result.setdefault(hdr, []).append(kwd);
+		}
+		return result;
+	}
+
+	private patchOffsets(deltaStart: int, deltaOffset: int) {
+		for (local inc: includes.values) {
+			inc.patchOffsets(deltaStart, deltaOffset);
+		}
+	}
+
+	private overwrite(offset: int, count: int, more: string | Bytes) {
+		if (count || more) {
+			if (more is string)
+				more = more.encode("utf-8");
+			data = data[:offset] + more + data[offset+count:];
+			dataChanged = true;
+			patchOffsets(offset, #more - count);
+		}
+	}
+
+	private insert(offset: int, more: string | Bytes) {
+		return overwrite(offset, 0, more);
+	}
+
+	private delete(offset: int, count: int) {
+		return overwrite(offset, 0, "");
+	}
+
+	private lc(offset: int): (int, int) {
+		local sol = data.rfind("\n", 0, offset) + 1;
+		local lno = data.count("\n", 0, sol) + 1;
+		return (lno, 1 + offset - sol);
+	}
+
+	public fix() {
+//TODO:		local missing = getMissingIncludesAndKeywords();
+//TODO:		for (local include, keywords: missing) {
+//TODO:			print File.stddbg: (filename, ": Missing include: #include ", include,
+//TODO:				" /* ", ", ".join(keywords.sorted()), " */");
+//TODO:		}
+
+		for (local inc: includes.values) {
+			local kwds = HEADER_KWDS.get(inc.include);
+			if (kwds !is none) {
+				local usedKwds = HashSet(
+					for (local k: kwds)
+						if (k in this.keywords)
+							k
+				);
+				if (!usedKwds) {
+//TODO:					print(filename, ": Removing unnecessary include ", inc.include);
+				} else {
+					for (local repGroup, repWith: {
+						{ {"int8_t", "int16_t", "int32_t", "int64_t"}, "intN_t" },
+						{ {"uint8_t", "uint16_t", "uint32_t", "uint64_t"}, "uintN_t" },
+						{ {"INT8_C", "INT16_C", "INT32_C", "INT64_C"}, "INTn_C" },
+						{ {"UINT8_C", "UINT16_C", "UINT32_C", "UINT64_C"}, "UINTn_C" },
+						{ {"INT8_MIN", "INT16_MIN", "INT32_MIN", "INT64_MIN"}, "INTn_MIN" },
+						{ {"INT8_MAX", "INT16_MAX", "INT32_MAX", "INT64_MAX"}, "INTn_MAX" },
+						{ {"UINT8_MAX", "UINT16_MAX", "UINT32_MAX", "UINT64_MAX"}, "UINTn_MAX" },
+					}) {
+						local hasGroup = !!repGroup.map(usedKwds.contains).each;
+						if (hasGroup) {
+							for (local g: repGroup)
+								usedKwds.remove(g);
+							usedKwds.insert(repWith);
+						}
+					}
+
+					local correctKwdsComment = ", ".join(usedKwds.sorted(
+						functools.predcmp2key(string.vercompare)
+					));
+					local actualKwdsComment = "";
+					if (inc.commentStartOffset !is none) {
+						actualKwdsComment = data[
+							inc.commentStartOffset:
+							inc.commentEndOffset
+						].decode("utf-8");
+					}
+					if (actualKwdsComment != correctKwdsComment) {
+						print(filename, ": Fixing bad comment for ", inc.include,
+							": ", repr actualKwdsComment, " -> ", repr correctKwdsComment);
+						if (inc.commentStartOffset !is none) {
+							overwrite(
+								inc.commentStartOffset,
+								inc.commentEndOffset - inc.commentStartOffset,
+								correctKwdsComment);
+						} else {
+							insert(
+								inc.includeStringEndOffset,
+								f" /* {correctKwdsComment} */");
+						}
+					}
+				}
+			}
+		}
+
+		if (dataChanged) {
+			with (local fp = File.open(filename, "wb"))
+				fp.write(data);
+		}
+	}
+}
+
+function scanFile(filename: string): FileInfo {
+	local data: Bytes;
+	with (local fp = File.open(filename, "rb"))
+		data = fp.readall();
+	local i = 0, len = #data;
+	local includes: {string: IncludeInfo} = Dict();
+	local keywords: {string...} = HashSet();
+	while (i < len) {
+		if (data.isspace(i)) {
+			++i;
+			continue;
+		} else if (data.startswith("//", i)) {
+			i += 2;
+seek_eol:
+			i = data.find("\n", i);
+			if (i < 0)
+				break;
+			++i;
+		} else if (data.startswith("/*", i)) {
+			i = data.find("*/", i + 2);
+			if (i < 0)
+				break;
+			i += 2;
+		} else if (data.startswith("#", i)) {
+			local sol = data.rfind("\n", 0, i) + 1;
+			if ((sol >= i) || data.isspace(sol, i)) {
+				do {
+					++i;
+				} while (i < len && data.isspace(i));
+				if (data.startswith("include ", i)) {
+					i += #"include ";
+					while (i < len && data.isspace(i))
+						++i;
+					local includeStart = i;
+					if (data.startswith('"', i)) {
+						i = data.find('"', i + 1);
+						if (i < 0)
+							break;
+					} else if (data.startswith('<', i)) {
+						i = data.find('>', i + 1);
+						if (i < 0)
+							break;
+					} else {
+						goto seek_eol;
+					}
+					++i;
+					local includeEnd = i;
+					local includeString = data[includeStart:includeEnd].decode("utf-8");
+					while (i < len && data.isspacexlf(i))
+						++i;
+					local commentStartOffset: int | none = none;
+					local commentEndOffset: int | none = none;
+					if (data.startswith("/*", i)) {
+						i += 2;
+						commentStartOffset = i;
+						i = data.find("*/", i);
+						if (i < 0)
+							break;
+						commentEndOffset = i;
+						i += 2;
+					} else if (data.startswith("//", i)) {
+						i += 2;
+						commentStartOffset = i;
+						i = data.find("\n", i);
+						if (i < 0)
+							break;
+						commentEndOffset = i;
+						i += 1;
+					}
+					if (commentStartOffset !is none) {
+						while (commentStartOffset < commentEndOffset && data.isspace(commentStartOffset))
+							++commentStartOffset;
+						while (commentEndOffset > commentStartOffset && data.isspace(commentEndOffset - 1))
+							--commentEndOffset;
+					}
+					if (includeString !in includes) {
+						includes[includeString] = IncludeInfo(
+							include: includeString,
+							includeStringOffset: includeStart,
+							includeStringEndOffset: includeEnd,
+							commentStartOffset: commentStartOffset,
+							commentEndOffset: commentEndOffset,
+						);
+					}
+					goto seek_eol;
+				}
+			}
+			++i;
+		} else if (data.issymstrt(i)) {
+			local kwdStart = i;
+			do {
+				++i;
+			} while (i < len && data.issymcont(i));
+			keywords.insert(data[kwdStart:i].decode("utf-8"));
+		} else {
+			++i;
+		}
+	}
+
+	return FileInfo(
+		filename: filename,
+		includes: includes.frozen,
+		keywords: keywords.frozen,
+		data: data
+	);
+}
+
+
+function fixFile(filename: string) {
+	scanFile(filename).fix();
+}
+
+function fixPath(path: string) {
+	if (path.endswith("src/dex/ctypes/ffi"))
+		return;
+	if (path.endswith("src/deemon/method-hints"))
+		return;
+	if (path.endswith("src/dex/hashlib/algorithms"))
+		return;
+	if (path.endswith("include/deemon/kos-headers"))
+		return;
+	for (local ent: posix.opendir(path)) {
+		local name = ent.d_fullname.replace(r"\", "/");
+		if (ent.d_type == posix.DT_REG) {
+			if (name.rpartition(".").last in ["c", "h", "inl"])
+				fixFile(name);
+		} else if (ent.d_type == posix.DT_DIR) {
+			fixPath(name);
+		}
+	}
+}
+
+
+function main() {
+	fixPath(posix.joinpath(posix.headof(__FILE__), r"../../src/deemon"));
+	fixPath(posix.joinpath(posix.headof(__FILE__), r"../../src/dex"));
+	fixPath(posix.joinpath(posix.headof(__FILE__), r"../../include"));
+}
+
+#ifdef __MAIN__
+main();
+#endif /* __MAIN__ */

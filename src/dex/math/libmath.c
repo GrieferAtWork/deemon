@@ -43,7 +43,7 @@
 #include <hybrid/limitcore.h>
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL, size_t */
 
 #ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h>

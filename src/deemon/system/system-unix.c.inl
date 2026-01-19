@@ -31,8 +31,8 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 
-#include <stdarg.h> /* va_list */
-#include <stddef.h> /* size_t */
+#include <stdarg.h> /* va_end, va_list, va_start */
+#include <stddef.h> /* NULL, size_t */
 /**/
 
 #ifdef CONFIG_HOST_WINDOWS

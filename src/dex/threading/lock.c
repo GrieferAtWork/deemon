@@ -52,9 +52,9 @@
 #include <hybrid/sched/yield.h>
 #include <hybrid/typecore.h>
 
-#include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t */
-#include <stdint.h>  /* uint64_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uint64_t, uintptr_t */
 
 #ifdef CONFIG_NO_THREADS
 /* Override the lock-API to emulate semantically correct LOCK functions. */

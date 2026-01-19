@@ -32,7 +32,7 @@
 #include <deemon/serial.h>
 #include <deemon/struct.h>
 
-#include <stddef.h>
+#include <stddef.h> /* NULL, size_t */
 
 DECL_BEGIN
 

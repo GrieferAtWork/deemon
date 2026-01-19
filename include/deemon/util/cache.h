@@ -23,7 +23,7 @@
 #include "../api.h"
 #include "lock.h"
 
-#include <stddef.h>
+#include <stddef.h> /* NULL, size_t */
 
 DECL_BEGIN
 

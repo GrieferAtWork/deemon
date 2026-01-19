@@ -30,8 +30,8 @@
 #include <hybrid/host.h> /* __ARCH_VA_LIST_IS_STACK_POINTER */
 /**/
 
-#include <stdarg.h> /* va_list */
-#include <stddef.h> /* size_t */
+#include <stdarg.h> /* va_end, va_list, va_start */
+#include <stddef.h> /* NULL, size_t */
 
 DECL_BEGIN
 

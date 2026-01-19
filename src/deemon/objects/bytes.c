@@ -54,8 +54,8 @@
 #include "generic-proxy.h"
 #include "int-8bit.h"
 
-#include <stddef.h> /* offsetof */
-#include <stdint.h> /* uint32_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__

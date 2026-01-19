@@ -43,8 +43,8 @@
 
 #include "sqlite3-external.h"
 
-#include <stddef.h> /* size_t, NULL */
-#include <stdint.h>
+#include <stddef.h> /* NULL, ptrdiff_t, size_t */
+#include <stdint.h> /* int64_t */
 
 DECL_BEGIN
 

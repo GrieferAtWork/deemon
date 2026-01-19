@@ -33,7 +33,7 @@
 
 #include "../runtime/strings.h"
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint8_t */
 
 DECL_BEGIN

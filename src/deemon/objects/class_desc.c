@@ -56,7 +56,7 @@
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
 
-#include <stddef.h> /* offsetof, size_t */
+#include <stddef.h> /* NULL, offsetof, ptrdiff_t, size_t */
 #include <stdint.h> /* uint16_t */
 
 #undef byte_t

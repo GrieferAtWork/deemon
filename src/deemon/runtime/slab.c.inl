@@ -32,7 +32,7 @@
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 /**/
 
-#include <stddef.h> /* size_t, offsetof, NULL */
+#include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uintptr_t */
 
 #ifdef CONFIG_HAVE_PATHS_H

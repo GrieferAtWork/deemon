@@ -41,7 +41,7 @@
 #endif /* !CONFIG_NO_DEC */
 /**/
 
-#include <stdint.h> /* uint16_t */
+#include <stdint.h> /* uint16_t, uint64_t */
 
 DECL_BEGIN
 

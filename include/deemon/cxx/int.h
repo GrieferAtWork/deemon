@@ -33,8 +33,8 @@
 #include "numeric.h"
 #include "object.h"
 
-#include <stddef.h> /* size_t, NULL */
-#include <stdint.h> /* uint32_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* intN_t, uintN_t */
 
 DEE_CXX_BEGIN
 

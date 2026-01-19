@@ -45,8 +45,8 @@
 
 #include "../../runtime/builtin.h"
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint16_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* UINT8_MAX, int32_t, uint8_t, uint16_t */
 
 DECL_BEGIN
 

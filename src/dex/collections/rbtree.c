@@ -46,7 +46,7 @@
 
 #include <hybrid/sequence/list.h>
 
-#include <stdbool.h> /* bool */
+#include <stdbool.h> /* bool, false, true */
 
 #undef SWAP
 #define SWAP(p_a, p_b)     \

@@ -62,8 +62,8 @@
 #include "seq/default-map-proxy.h"
 #include "dict.h"
 
-#include <stddef.h> /* size_t, offsetof */
-#include <stdint.h> /* uint8_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* uintN_t, uintptr_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

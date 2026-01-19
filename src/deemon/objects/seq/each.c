@@ -42,8 +42,8 @@
 #include "../seq_functions.h"
 #include "each.h"
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint16_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* uint16_t, uintptr_t */
 
 DECL_BEGIN
 

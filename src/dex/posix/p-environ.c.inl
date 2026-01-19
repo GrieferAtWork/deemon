@@ -46,7 +46,7 @@
 
 #include <hybrid/debug-alignment.h>
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

@@ -49,8 +49,8 @@
 
 #include "../../runtime/builtin.h"
 
-#include <stddef.h> /* size_t, NULL, offsetof */
-#include <stdint.h> /* uint16_t, uint32_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* INT8_MAX, INT8_MIN, INT16_MAX, INT16_MIN, INT32_MAX, INT32_MIN, UINT8_MAX, UINT16_MAX, int8_t, int16_t, int32_t, uintN_t */
 
 #ifndef PP_CAT2
 #define PP_PRIVATE_CAT2(a, b) a##b

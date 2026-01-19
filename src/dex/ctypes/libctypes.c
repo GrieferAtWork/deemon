@@ -55,7 +55,7 @@
 
 #include "c_api.h"
 
-#include <stdint.h> /* intN_t, uintN_t */
+#include <stdint.h> /* intN_t, intptr_t, uintN_t, uintptr_t */
 
 DECL_BEGIN
 

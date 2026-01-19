@@ -39,7 +39,7 @@
 #include "../generic-proxy.h"
 #include "typemro.h"
 
-#include <stddef.h> /* size_t, offsetof, NULL */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

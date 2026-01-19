@@ -44,7 +44,7 @@
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* size_t, offsetof */
+#include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* int32_t, int64_t */
 
 #undef byte_t

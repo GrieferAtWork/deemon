@@ -39,8 +39,8 @@
 
 #include <hybrid/limitcore.h>
 
-#include <stddef.h> /* size_t, offsetof */
-#include <stdint.h> /* intN_t, uintN_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* INT32_MAX, INT32_MIN, INT64_MAX, INT64_MIN, UINT32_MAX, UINT64_MAX, int32_t, int64_t, uint32_t, uint64_t */
 
 #ifndef INT32_MIN
 #define INT32_MIN __INT32_MIN__

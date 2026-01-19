@@ -58,8 +58,8 @@
 #include "cmdline.h"
 #include "runtime/runtime_error.h"
 
-#include <stddef.h> /* size_t, NULL, offsetof */
-#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
+#include <stddef.h> /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t, uintptr_t */
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #include <deemon/compiler/dec.h>

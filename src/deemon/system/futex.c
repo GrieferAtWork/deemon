@@ -35,9 +35,9 @@
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
 
-#include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t, NULL */
-#include <stdint.h>  /* uint32_t, uint64_t, uintptr_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* UINT32_C, uint32_t, uint64_t, uintptr_t */
 
 #ifdef CONFIG_HAVE_LINUX_FUTEX_H
 #include <linux/futex.h>

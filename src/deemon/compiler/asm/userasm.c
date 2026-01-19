@@ -37,8 +37,8 @@
 
 #include <hybrid/byteorder.h>
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint16_t, UINT8_MAX, UINT16_MAX, UINT32_MAX */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* INTn_MAX, INTn_MIN, UINTn_MAX, int32_t, int64_t, uintN_t, uintptr_t */
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
 #include <deemon/asm.h>

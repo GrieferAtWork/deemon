@@ -47,7 +47,7 @@
 #include "../../runtime/builtin.h"
 
 #include <stddef.h> /* NULL */
-#include <stdint.h> /* uint16_t */
+#include <stdint.h> /* INT8_MAX, INT8_MIN, INT16_MAX, INT16_MIN, UINT8_MAX, UINT16_MAX, int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t */
 
 
 #ifndef __INTELLISENSE__

@@ -44,7 +44,7 @@
 #include "p-remove.c.inl"   /* Needed for `lcopyfile()' to remove existing files when `RENAME_NOREPLACE' isn't given. */
 #include "p-symlink.c.inl"  /* Needed for `lcopyfile()' to create copies of symbolic links. */
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uint64_t */
 
 DECL_BEGIN

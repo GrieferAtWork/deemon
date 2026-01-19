@@ -33,7 +33,7 @@
 #include <hybrid/sched/__gettid.h>
 
 #include <stddef.h> /* size_t */
-#include <stdint.h> /* uint64_t, uintptr_t */
+#include <stdint.h> /* uint32_t, uint64_t, uintptr_t */
 
 DECL_BEGIN
 

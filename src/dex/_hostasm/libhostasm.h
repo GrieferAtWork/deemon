@@ -38,8 +38,8 @@
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <stdbool.h> /* bool, false, true */
+#include <stdint.h> /* int8_t, int16_t, int32_t, intptr_t, uint8_t, uint16_t, uint32_t, uintptr_t */
 
 /* Convert compiled deemon code to host machine assembly (currently: only x86)
  *

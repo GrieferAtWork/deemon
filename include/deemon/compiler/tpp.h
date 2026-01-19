@@ -26,8 +26,8 @@
 #include "../alloc.h"
 
 #include <stdarg.h>  /* va_list */
-#include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t */
+#include <stdbool.h> /* bool, true */
+#include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* uint32_t */
 
 #ifdef GUARD_TPP_H

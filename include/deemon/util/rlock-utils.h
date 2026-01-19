@@ -43,7 +43,7 @@
 #include "../thread.h"
 #include "rlock.h"
 
-#include <stdint.h> /* uintptr_t */
+#include <stdint.h> /* uint64_t, uintptr_t */
 
 DECL_BEGIN
 

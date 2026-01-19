@@ -40,8 +40,8 @@
 #include "../objects/generic-proxy.h"
 #include "../runtime/strings.h"
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint16_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* UINT16_MAX, uint16_t */
 
 DECL_BEGIN
 

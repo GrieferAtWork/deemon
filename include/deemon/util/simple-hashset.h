@@ -20,7 +20,7 @@
 #ifndef GUARD_DEEMON_UTIL_SIMPLE_HASHSET_H
 #define GUARD_DEEMON_UTIL_SIMPLE_HASHSET_H 1
 
-#include <stddef.h>
+#include <stddef.h> /* NULL, size_t */
 
 #include "../alloc.h"
 #include "../api.h"

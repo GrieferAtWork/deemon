@@ -37,9 +37,9 @@
 
 #include "runtime_error.h"
 
-#include <stdarg.h> /* va_list, va_arg */
-#include <stddef.h> /* size_t, offsetof */
-#include <stdint.h> /* uintN_t */
+#include <stdarg.h> /* va_arg, va_end, va_list, va_start */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* intN_t, uintN_t */
 
 DECL_BEGIN
 

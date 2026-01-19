@@ -34,7 +34,7 @@
 
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* size_t, NULL */
+#include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uintptr_t */
 
 #undef byte_t

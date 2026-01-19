@@ -32,7 +32,7 @@
 
 #include <hybrid/limitcore.h>
 
-#include <stddef.h> /* size_t, NULL */
+#include <stddef.h> /* NULL, size_t */
 
 #undef SSIZE_MIN
 #undef SSIZE_MAX

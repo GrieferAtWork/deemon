@@ -34,7 +34,7 @@
 #include "../../runtime/method-hint-defaults.h"
 #include "default-compare.h"
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL, size_t */
 
 #if (defined(DEFINE_compare) + defined(DEFINE_compareeq) != 1)
 #error "Must #define exactly one of these macros"

@@ -53,8 +53,8 @@
 #include "../runtime/strings.h"
 #include "function-wrappers.h"
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint16_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
 
 #ifdef __OPTIMIZE_SIZE__
 #define NULL_if_Os(x) NULL

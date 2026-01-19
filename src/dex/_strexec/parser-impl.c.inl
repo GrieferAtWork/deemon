@@ -48,8 +48,8 @@
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint16_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* int32_t, uint16_t, uint32_t */
 
 #if !defined(JIT_SKIP) && !defined(JIT_EVAL)
 #error "Must either #define JIT_SKIP or JIT_EVAL before #including this file"

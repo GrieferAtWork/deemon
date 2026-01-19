@@ -31,7 +31,7 @@
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
 
-#include <stdbool.h> /* bool */
+#include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* size_t */
 #include <stdint.h>  /* uint32_t */
 

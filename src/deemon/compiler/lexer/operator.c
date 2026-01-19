@@ -39,8 +39,8 @@
 
 #include "../../runtime/strings.h"
 
-#include <stddef.h> /* size_t, NULL */
-#include <stdint.h> /* uint16_t, uint32_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* int32_t, uint8_t, uint16_t, uint32_t */
 
 DECL_BEGIN
 

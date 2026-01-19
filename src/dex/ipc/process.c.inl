@@ -54,8 +54,8 @@
 #include <hybrid/sched/yield.h>
 #include <hybrid/sequence/list.h>
 
-#include <stdbool.h> /* bool, true, false */
-#include <stddef.h>  /* size_t, NULL */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
 #ifdef CONFIG_HAVE_PATHS_H
 #include <paths.h> /* _PATH_SHELLS */
 #endif /* CONFIG_HAVE_PATHS_H */

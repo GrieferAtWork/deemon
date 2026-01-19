@@ -42,7 +42,7 @@
 #include "p-readlink.c.inl" /* For `posix_utime_USE_posix_readlink__AND__posix_lutime()' */
 #include "p-stat.c.inl"     /* For `DEE_STAT_F_LSTAT', `stat_get_ctime_IS_stat_get_mtime' */
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL, size_t */
 
 DECL_BEGIN
 

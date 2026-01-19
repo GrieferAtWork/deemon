@@ -48,7 +48,7 @@
 #include "regroups.h"
 #include "string_functions.h"
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uintptr_t */
 
 DECL_BEGIN

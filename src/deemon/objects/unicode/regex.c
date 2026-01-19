@@ -38,7 +38,7 @@
 #include <hybrid/overflow.h>
 #include <hybrid/unaligned.h>
 
-#include <stdbool.h>
+#include <stdbool.h> /* bool, false, true */
 #include <stdint.h>
 /**/
 

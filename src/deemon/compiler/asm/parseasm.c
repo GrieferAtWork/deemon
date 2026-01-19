@@ -43,8 +43,8 @@
 
 #include "../../runtime/strings.h"
 
-#include <stddef.h> /* size_t, NULL */
-#include <stdint.h> /* UINT16_MAX, ... */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* INT8_MIN, INT16_MIN, UINT8_MAX, UINT16_MAX, int32_t, uint8_t, uint16_t, uint32_t, uintptr_t */
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
 DECL_BEGIN

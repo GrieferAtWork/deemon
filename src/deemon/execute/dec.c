@@ -48,8 +48,8 @@
 #include <hybrid/sequence/bsearch.h>
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint64_t */
+#include <stddef.h> /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h> /* UINT32_MAX, int32_t, uintN_t, uintptr_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -2460,7 +2460,7 @@ DECL_END
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
-#include <stdarg.h> /* va_list */
+#include <stdarg.h> /* va_end, va_list, va_start */
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */
 

@@ -38,8 +38,8 @@
 #include <deemon/thread.h>
 #include <deemon/traceback.h> /* Dee_Decref(iter->ef_trace) */
 
-#include <stdarg.h> /* va_list */
-#include <stddef.h> /* size_t */
+#include <stdarg.h> /* va_arg, va_end, va_list, va_start */
+#include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t */
 
 /* Includes for TPP */

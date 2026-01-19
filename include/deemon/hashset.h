@@ -35,7 +35,7 @@
 #endif /* !__INTELLISENSE__ */
 /**/
 
-#include <stdbool.h> /* bool */
+#include <stdbool.h> /*  */
 #include <stddef.h>  /* size_t */
 
 DECL_BEGIN

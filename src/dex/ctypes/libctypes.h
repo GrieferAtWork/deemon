@@ -36,8 +36,8 @@
 #endif /* !CONFIG_NO_CFUNCTION */
 /**/
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uintptr_t, intN_t, uintN_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* intN_t, intptr_t, uintN_t, uintptr_t */
 
 
 DECL_BEGIN

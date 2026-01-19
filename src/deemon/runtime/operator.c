@@ -46,9 +46,9 @@
 #include "runtime_error.h"
 #include "strings.h"
 
-#include <stdarg.h> /* va_list */
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* intN_t, uintN_t */
+#include <stdarg.h> /* va_end, va_list, va_start */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* int8_t, uint8_t, uint32_t, uint64_t */
 
 /************************************************************************/
 /* Operator invocation.                                                 */

@@ -29,7 +29,7 @@
 #include <hybrid/byteswap.h>  /* UNALIGNED_GETLE16 */
 #include <hybrid/unaligned.h> /* UNALIGNED_GETLE16 */
 
-#include <stdint.h> /* uint16_t */
+#include <stdint.h> /* uint8_t, uint16_t */
 
 DECL_BEGIN
 

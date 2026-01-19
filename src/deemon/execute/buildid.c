@@ -33,8 +33,8 @@
 #include <hybrid/host.h>
 #include <hybrid/typecore.h>
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stddef.h> /* NULL */
+#include <stdint.h> /* UINT16_C, UINT32_C, UINT64_C, uint32_t, uint64_t, uintptr_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

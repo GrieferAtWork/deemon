@@ -36,8 +36,8 @@
 #include <deemon/tuple.h>
 #include <deemon/util/objectlist.h>
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint32_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* uint16_t, uint32_t */
 
 DECL_BEGIN
 

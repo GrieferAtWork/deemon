@@ -36,7 +36,7 @@
 #include "method-hints.h"
 
 #include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* uint16_t */
+#include <stdint.h> /* uint16_t, uintptr_t */
 
 DECL_BEGIN
 

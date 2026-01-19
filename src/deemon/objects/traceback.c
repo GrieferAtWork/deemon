@@ -43,7 +43,7 @@
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
 
-#include <stddef.h> /* size_t, offsetof */
+#include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN

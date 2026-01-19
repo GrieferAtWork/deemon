@@ -28,8 +28,8 @@
 #endif /* !__OPTIMIZE_SIZE__ && !__INTELLISENSE__ */
 /**/
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint32_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /*  */
 
 DECL_BEGIN
 

@@ -64,7 +64,7 @@
 #include "seq/simpleproxy.h"
 #include "seq/unique-iterator.h"
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint32_t */
 
 #undef SSIZE_MAX

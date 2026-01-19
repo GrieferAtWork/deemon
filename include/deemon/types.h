@@ -25,7 +25,7 @@
 #include <hybrid/int128.h>
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* size_t, NULL */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

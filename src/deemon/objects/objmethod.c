@@ -47,9 +47,9 @@
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
 
-#include <stdarg.h> /* va_list */
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint16_t */
+#include <stdarg.h> /* va_end, va_list, va_start */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* uint16_t, uintptr_t */
 
 DECL_BEGIN
 

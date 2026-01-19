@@ -35,7 +35,7 @@
 #include "../../runtime/runtime_error.h"
 
 #include <stddef.h> /* size_t */
-#include <stdint.h> /* int64_t */
+#include <stdint.h> /* intN_t, uintN_t */
 
 DECL_BEGIN
 

@@ -47,9 +47,9 @@
 
 #include "../runtime/strings.h"
 
-#include <stdarg.h> /* va_list */
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uintptr_t */
+#include <stdarg.h> /* va_end, va_list, va_start */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* UINT32_C, uint8_t, uint16_t, uint32_t, uintptr_t */
 /**/
 
 #include <Windows.h>

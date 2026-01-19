@@ -33,7 +33,7 @@
 
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* size_t, offsetof, NULL */
+#include <stddef.h> /* NULL, offsetof, ptrdiff_t, size_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

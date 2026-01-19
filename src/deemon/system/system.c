@@ -43,8 +43,8 @@
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
 
-#include <stdbool.h> /* bool, true, false */
-#include <stdint.h>
+#include <stdbool.h> /* bool, false, true */
+#include <stdint.h> /* UINT64_C, int64_t, uint32_t, uint64_t, uintptr_t */
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>

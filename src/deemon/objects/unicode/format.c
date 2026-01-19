@@ -29,8 +29,8 @@
 #include <deemon/stringutils.h>
 #include <deemon/tuple.h>
 
-#include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t, NULL */
+#include <stdbool.h> /* bool, false */
+#include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* uint32_t */
 
 DECL_BEGIN

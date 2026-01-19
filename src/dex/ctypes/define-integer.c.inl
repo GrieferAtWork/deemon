@@ -49,8 +49,8 @@
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* intN_t, uintN_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* INTn_C, INTn_MAX, INTn_MIN, UINTn_C, UINTn_MAX, intN_t, uintN_t */
 
 DECL_BEGIN
 

@@ -40,8 +40,8 @@
 #include <hybrid/unaligned.h> /* UNALIGNED_SETLE16(), UNALIGNED_SETLE32() */
 #include <hybrid/wordbits.h>
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* intN_t, uintN_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* UINT16_MAX, uintN_t */
 
 DECL_BEGIN
 

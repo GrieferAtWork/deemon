@@ -45,8 +45,8 @@
 
 #include "runtime_error.h"
 
-#include <stddef.h> /* size_t, NULL */
-#include <stdint.h> /* int64_t, uintptr_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* INT32_MAX, INT32_MIN, INT64_MAX, INT64_MIN, UINT32_MAX, UINT64_MAX, int32_t, int64_t, uint16_t, uint32_t, uint64_t, uintptr_t */
 
 #define do_fix_negative_range_index(index, size) \
 	((size) - ((size_t)(-(index)) % (size)))

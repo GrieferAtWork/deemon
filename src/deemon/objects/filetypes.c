@@ -51,8 +51,8 @@
 #include "../runtime/strings.h"
 #include "gc_inspect.h"
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uintptr_t */
+#include <stddef.h> /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t, uintptr_t */
 
 DECL_BEGIN
 

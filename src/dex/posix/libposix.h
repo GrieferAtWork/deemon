@@ -33,7 +33,7 @@
 #include <deemon/system.h>
 #include <deemon/thread.h>
 
-#include <stdbool.h> /* bool */
+#include <stdbool.h> /* bool, false, true */
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>

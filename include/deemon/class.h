@@ -27,7 +27,7 @@
 #include "util/lock.h"
 
 #include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t */
+#include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* uint16_t, uintptr_t */
 #endif /* !_DEE_WITHOUT_INCLUDES */
 

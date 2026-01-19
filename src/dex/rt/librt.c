@@ -77,7 +77,7 @@
 
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uint16_t */
 
 #undef byte_t

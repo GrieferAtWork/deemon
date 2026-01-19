@@ -36,9 +36,9 @@
 
 #include "../../runtime/strings.h"
 
-#include <stdarg.h> /* va_list */
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint16_t */
+#include <stdarg.h> /* va_end, va_list, va_start */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* INT8_MAX, INT8_MIN, INT16_MAX, INT16_MIN, INT32_MAX, INT32_MIN, UINT8_MAX, int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t */
 
 DECL_BEGIN
 

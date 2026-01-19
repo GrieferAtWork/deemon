@@ -48,8 +48,8 @@
 #include "method-hint-defaults.h"
 #include "strings.h"
 
-#include <stdarg.h> /* va_start */
-#include <stddef.h> /* size_t, NULL */
+#include <stdarg.h> /* va_end, va_list, va_start */
+#include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uintptr_t */
 
 DECL_BEGIN

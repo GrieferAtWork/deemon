@@ -55,8 +55,8 @@
 #include "seq/map-fromkeys.h"
 #include "seq/unique-iterator.h"
 
-#include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN
 

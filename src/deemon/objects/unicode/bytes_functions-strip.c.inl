@@ -55,7 +55,7 @@
 
 #include "string_functions.h"
 
-#include <stdint.h> /* SIZE_MAX */
+#include <stdint.h> /*  */
 
 DECL_BEGIN
 

@@ -41,7 +41,7 @@
 #include "mapped.h"
 #include "repeat.h"
 
-#include <stddef.h> /* size_t, offsetof */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

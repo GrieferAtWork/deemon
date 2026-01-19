@@ -43,7 +43,7 @@
 #include "../runtime/strings.h"
 #include "int-8bit.h"
 
-#include <stdint.h> /* int8_t */
+#include <stdint.h> /* intN_t, uintN_t */
 
 #ifdef CONFIG_HAVE_MATH_H
 #include <math.h>

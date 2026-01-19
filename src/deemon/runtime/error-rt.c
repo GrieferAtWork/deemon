@@ -55,8 +55,8 @@
 #include "strings.h"
 #include "kwlist.h"
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* UINT32_MAX, UINT64_MAX, int32_t, int64_t, uint32_t, uint64_t */
 
 DECL_BEGIN
 

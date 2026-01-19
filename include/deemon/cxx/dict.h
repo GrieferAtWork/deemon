@@ -30,7 +30,7 @@
 #include "mapping.h"
 #include "object.h"
 
-#include <stddef.h> /* size_t, NULL */
+#include <stddef.h> /* NULL, size_t */
 
 DEE_CXX_BEGIN
 

@@ -55,7 +55,7 @@
 
 #include "runtime_error.h"
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL, size_t */
 
 #if (defined(DEFINE_DeeType_GetAttrStringHash) +            \
      defined(DEFINE_DeeType_GetAttrStringLenHash) +         \

@@ -25,7 +25,7 @@
 #include "../typecore.h"
 #include "../pp/__bubble.h"
 #include "../pp/__va_nargs.h"
-#include <stddef.h>
+#include <stddef.h> /* NULL */
 
 #ifdef __CC__
 

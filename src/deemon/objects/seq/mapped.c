@@ -35,7 +35,7 @@
 #include "../generic-proxy.h"
 #include "mapped.h"
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

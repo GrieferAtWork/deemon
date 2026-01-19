@@ -43,7 +43,7 @@
 #include "../generic-proxy.h"
 #include "default-sets.h"
 
-#include <stddef.h> /* size_t, NULL */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 #undef SSIZE_MIN
 #define SSIZE_MIN __SSIZE_MIN__

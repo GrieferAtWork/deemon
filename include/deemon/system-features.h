@@ -26,8 +26,8 @@
 #include <hybrid/host.h>
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* size_t, NULL */
-#include <stdint.h> /* uintptr_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* intptr_t, uintN_t, uintptr_t */
 
 #ifdef CONFIG_NO_FPU
 #undef CONFIG_HAVE_FPU
@@ -216,7 +216,6 @@ header("unistd.h", unix);
 header("sys/unistd.h", cygwin);
 header("errno.h", addparen(msvc) + " || " + addparen(unix));
 header("sys/errno.h");
-header("stdarg.h", stdc);
 header("stdio.h", stdc);
 header("stdlib.h", stdc);
 header("features.h", unix);
@@ -1445,6 +1444,7 @@ feature("CONSTANT_DBL_ROUNDS", "0", test: "extern int val[DBL_ROUNDS >= 0 ? 1 : 
 feature("CONSTANT_HUGE_VAL", "1", test: "extern int val[HUGE_VAL != 0.0 ? 1 : -1]; return val[0];");
 feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return val[0];");
 
+//The following line is needed by the configure script.
 //END:FEATURES
 
 // NOTE: Other config features used in deemon source files:
@@ -1578,13 +1578,6 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_SYS_ERRNO_H) && \
       (__has_include(<sys/errno.h>))
 #define CONFIG_HAVE_SYS_ERRNO_H
-#endif
-
-#ifdef CONFIG_NO_STDARG_H
-#undef CONFIG_HAVE_STDARG_H
-#elif !defined(CONFIG_HAVE_STDARG_H) && \
-      (defined(__NO_has_include) || __has_include(<stdarg.h>))
-#define CONFIG_HAVE_STDARG_H
 #endif
 
 #ifdef CONFIG_NO_STDIO_H
@@ -2050,10 +2043,6 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #ifdef CONFIG_HAVE_SYS_ERRNO_H
 #include <sys/errno.h>
 #endif /* CONFIG_HAVE_SYS_ERRNO_H */
-
-#ifdef CONFIG_HAVE_STDARG_H
-#include <stdarg.h>
-#endif /* CONFIG_HAVE_STDARG_H */
 
 #ifdef CONFIG_HAVE_STDIO_H
 #include <stdio.h>

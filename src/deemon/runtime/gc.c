@@ -47,8 +47,8 @@
 #include "../objects/gc_inspect.h"
 #include "strings.h"
 
-#include <stddef.h> /* size_t, NULL, offsetof */
-#include <stdint.h> /* UINT32_C */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* UINT32_C, uint16_t */
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #ifndef CONFIG_NO_DEX

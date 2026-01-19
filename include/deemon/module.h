@@ -25,8 +25,8 @@
 #include "gc.h"
 #include "types.h"
 #include "util/lock.h"
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint16_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* uintN_t, uintptr_t */
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #include "system-features.h" /* bcmp */

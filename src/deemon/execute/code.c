@@ -54,8 +54,8 @@
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint16_t, ... */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t, uintptr_t */
 
 #include "../objects/seq/svec.h"
 #include "../runtime/kwlist.h"

@@ -34,7 +34,7 @@
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
 
-#include <stdbool.h> /* bool, true, false */
+#include <stdbool.h> /* bool, false, true */
 
 DECL_BEGIN
 

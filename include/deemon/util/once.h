@@ -27,12 +27,12 @@
  */
 
 #ifdef CONFIG_NO_THREADS
-#include <stdbool.h>
+#include <stdbool.h> /* bool, false */
 #else /* CONFIG_NO_THREADS */
 #include <hybrid/atomic.h>
 #include <hybrid/typecore.h>
 
-#include <stdint.h>
+#include <stdint.h> /* UINT32_C, uint32_t */
 #endif /* !CONFIG_NO_THREADS */
 
 DECL_BEGIN

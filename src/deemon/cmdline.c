@@ -28,8 +28,8 @@
 
 #include "cmdline.h"
 
-#include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t, NULL */
+#include <stdbool.h> /* bool, true */
+#include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* uint16_t */
 
 DECL_BEGIN

@@ -33,7 +33,7 @@
 
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* size_t, offsetof */
+#include <stddef.h> /* offsetof, size_t */
 
 /* Proxy sequence objects for `struct DeeRegexMatch'-arrays */
 

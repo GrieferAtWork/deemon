@@ -30,7 +30,7 @@
 #include <deemon/error.h>
 #include <deemon/util/objectlist.h>
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL */
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN

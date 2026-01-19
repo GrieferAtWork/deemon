@@ -31,9 +31,9 @@
 #include "util/lock.h"
 
 #include <stdarg.h>  /* va_list */
-#include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t, NULL */
-#include <stdint.h>  /* intX_t, uintX_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h>  /* UINTn_C, intN_t, intptr_t, uintN_t, uintptr_t */
 
 #ifndef __INTELLISENSE__
 #ifdef CONFIG_NO_STRING_H

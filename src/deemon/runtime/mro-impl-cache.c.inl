@@ -181,8 +181,8 @@
 #include "kwlist.h" /* kwlist__thisarg */
 #include "runtime_error.h"
 
-#include <stddef.h> /* size_t, offsetof, NULL */
-#include <stdint.h>
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* uint16_t */
 
 
 #if (defined(DEFINE_DeeType_GetCachedAttrStringHash) +                    \

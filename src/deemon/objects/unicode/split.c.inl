@@ -39,7 +39,7 @@
 #include "../generic-proxy.h"
 #include "string_functions.h"
 
-#include <stddef.h> /* size_t, offsetof, NULL */
+#include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uint8_t, uint16_t, uint32_t */
 
 #undef byte_t

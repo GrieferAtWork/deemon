@@ -74,9 +74,9 @@
 #include "type-operators.h"
 
 #include <stdarg.h>  /* va_list */
-#include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t, offsetof */
-#include <stdint.h>  /* uintptr_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* UINT32_C, UINT64_C, uint16_t, uintptr_t */
 
 #undef container_of
 #define container_of COMPILER_CONTAINER_OF

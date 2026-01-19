@@ -38,8 +38,8 @@ DECL_END
 #endif /* __INTELLISENSE__ */
 /**/
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uintptr_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* UINT32_C, UINT64_C, uintptr_t */
 
 DECL_BEGIN
 

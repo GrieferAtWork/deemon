@@ -28,7 +28,7 @@
 #include <hybrid/int128.h>
 
 #include <stdbool.h> /* bool */
-#include <stdint.h>  /* uint8_t, uint16_t, uint32_t, uint64_t, int64_t */
+#include <stdint.h>  /* UINTn_C, int64_t, uintN_t */
 
 DECL_BEGIN
 

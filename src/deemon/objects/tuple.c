@@ -51,8 +51,8 @@
 #include "seq/default-compare.h"
 #include "seq/sort.h"
 
-#include <stdarg.h> /* va_list */
-#include <stddef.h> /* size_t, offsetof */
+#include <stdarg.h> /* va_arg, va_end, va_list, va_start */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 #undef SSIZE_MIN
 #undef SSIZE_MAX

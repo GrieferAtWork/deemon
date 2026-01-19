@@ -46,7 +46,7 @@
 #include "../generic-proxy.h"
 #include "flat.h"
 
-#include <stddef.h> /* size_t, NULL, offsetof */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 #undef SSIZE_MIN
 #undef SSIZE_MAX

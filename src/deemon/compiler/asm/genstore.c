@@ -39,8 +39,8 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint16_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* int16_t, int32_t, uint16_t */
 
 DECL_BEGIN
 

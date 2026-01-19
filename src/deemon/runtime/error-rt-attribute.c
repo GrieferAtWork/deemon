@@ -49,8 +49,8 @@
 #include <hybrid/minmax.h>
 #include <hybrid/sched/yield.h>
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* uint8_t, uint16_t, uintptr_t */
 
 DECL_BEGIN
 

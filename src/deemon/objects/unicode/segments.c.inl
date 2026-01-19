@@ -44,7 +44,7 @@
 #include "../generic-proxy.h"
 #include "string_functions.h"
 
-#include <stddef.h> /* size_t, offsetof, NULL */
+#include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uint8_t */
 
 DECL_BEGIN

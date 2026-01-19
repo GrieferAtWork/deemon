@@ -33,7 +33,7 @@
 #include <deemon/system-features.h>
 
 #include <stddef.h> /* size_t */
-#include <stdint.h> /* uint32_t */
+#include <stdint.h> /* uint8_t, uint32_t */
 
 DECL_BEGIN
 

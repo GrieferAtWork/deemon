@@ -30,8 +30,8 @@
 #endif /* CONFIG_BUILDING_DEEMON */
 /**/
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

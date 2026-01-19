@@ -48,7 +48,7 @@
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
-#include <stddef.h> /* size_t, NULL */
+#include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN

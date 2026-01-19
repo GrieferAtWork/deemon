@@ -27,8 +27,8 @@
 #include "types.h"
 
 #include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t */
-#include <stdint.h>  /* int64_t, uint64_t */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* int64_t, uint16_t, uint64_t */
 
 DECL_BEGIN
 

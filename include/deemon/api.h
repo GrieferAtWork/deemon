@@ -95,7 +95,7 @@
 #include <__stdinc.h> /* __CC__ */
 
 #if defined(__CC__) && !defined(__INTELLISENSE__)
-#include <stddef.h>
+#include <stddef.h> /* NULL, size_t */
 #endif /* __CC__ && !__INTELLISENSE__ */
 #endif /* !__DEEMON__ */
 
@@ -132,7 +132,7 @@
 #include <hybrid/typecore.h> /* __SSIZE_TYPE__ */
 
 #if defined(__CC__) && !defined(__INTELLISENSE__)
-#include <stdarg.h>
+#include <stdarg.h> /* va_list */
 
 #if 1 /* TODO: Remove this block once "CONFIG_EXPERIMENTAL_CUSTOM_HEAP" becomes mandatory */
 #if (defined(_CRTDBG_MAP_ALLOC) && \

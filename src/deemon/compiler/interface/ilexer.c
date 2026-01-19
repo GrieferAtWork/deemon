@@ -48,8 +48,8 @@
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint16_t */
+#include <stddef.h> /* NULL, ptrdiff_t, size_t */
+#include <stdint.h> /* int64_t, uint8_t, uint16_t, uint32_t, uintptr_t */
 
 DECL_BEGIN
 

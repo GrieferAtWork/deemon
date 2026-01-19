@@ -41,8 +41,8 @@
 
 #include <hybrid/typecore.h>
 
-#include <stdarg.h> /* va_list */
-#include <stddef.h> /* size_t, NULL, offsetof */
+#include <stdarg.h> /* va_end, va_list, va_start */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 
 #define PRIVDEF PRIVATE

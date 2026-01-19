@@ -33,7 +33,7 @@
 #include "builtin.h"
 #include "strings.h"
 
-#include <stdint.h> /* UINT32_C */
+#include <stdint.h> /* UINT32_C, UINT64_C */
 
 DECL_BEGIN
 

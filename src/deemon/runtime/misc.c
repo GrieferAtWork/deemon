@@ -45,9 +45,9 @@
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
-#include <stdarg.h> /* va_list */
-#include <stddef.h> /* size_t, NULL */
-#include <stdint.h> /* UINT16_C, UINT32_C, uintptr_t */
+#include <stdarg.h> /* va_end, va_list, va_start */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* UINT16_C, UINT32_C, UINT64_C, uint8_t, uint16_t, uint32_t, uintptr_t */
 
 #ifndef NDEBUG
 #ifndef CONFIG_HOST_WINDOWS

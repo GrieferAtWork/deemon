@@ -39,7 +39,7 @@
 #include "default-enumerate.h"
 #include "default-iterators.h"
 
-#include <stddef.h> /* size_t, offsetof */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

@@ -35,8 +35,8 @@
 #include <hybrid/minmax.h>
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* size_t, offsetof */
-#include <stdint.h> /* uint8_t, uint16_t, int16_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* int16_t, uint8_t, uint16_t, uint32_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

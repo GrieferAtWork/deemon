@@ -44,7 +44,7 @@
 #include "../generic-proxy.h"
 #include "each.h"
 
-#include <stddef.h> /* size_t, offsetof, NULL */
+#include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uintptr_t */
 
 #ifdef DEFINE_SeqEachGetAttr

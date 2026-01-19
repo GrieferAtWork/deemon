@@ -42,7 +42,7 @@
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* memcpyc */
 
-#include <stddef.h> /* size_t, NULL */
+#include <stddef.h> /* NULL, size_t */
 
 DECL_BEGIN
 

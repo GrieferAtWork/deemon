@@ -26,7 +26,7 @@
 #include "system-features.h" /* CONFIG_HAVE_* */
 
 #include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t */
+#include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN
 

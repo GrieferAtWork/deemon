@@ -22,9 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <stdbool.h> /* bool */
-#include <stddef.h>  /* NULL */
-#include <stdint.h>  /* uint16_t */
+#include <stddef.h> /* NULL */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

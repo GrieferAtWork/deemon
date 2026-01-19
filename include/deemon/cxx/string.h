@@ -31,8 +31,8 @@
 #include "object.h"
 #include "sequence.h"
 
-#include <stdarg.h> /* va_list */
-#include <stddef.h> /* size_t, NULL */
+#include <stdarg.h> /* va_end, va_list, va_start */
+#include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint8_t, uint16_t, uint32_t */
 
 /*#include "bytes.h"*/ /* Don't include! */

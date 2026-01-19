@@ -47,7 +47,7 @@
 #include "kwlist.h"
 #include "strings.h"
 
-#include <stddef.h> /* offsetof, size_t, NULL */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

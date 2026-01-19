@@ -28,8 +28,8 @@
 #include "serial.h"
 #include "types.h"
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uintX_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* int32_t, uintN_t, uintptr_t */
 
 #ifdef DEE_SOURCE
 #include <hybrid/host.h>

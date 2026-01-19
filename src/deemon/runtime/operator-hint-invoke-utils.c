@@ -35,10 +35,10 @@
 #include <hybrid/limitcore.h> /* __INT32_MAX__, __INT64_MAX__ */
 /**/
 
-#include <stdarg.h>  /* va_list */
+#include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* false */
-#include <stddef.h>  /* size_t */
-#include <stdint.h>  /* intN_t */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* INTn_MAX, INTn_MIN, UINTn_MAX, intN_t, uintN_t */
 
 #ifndef INT8_MIN
 #define INT8_MIN __INT8_MIN__

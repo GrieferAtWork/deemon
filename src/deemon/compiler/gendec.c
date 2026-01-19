@@ -51,8 +51,8 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
 
-#include <stddef.h> /* size_t, offsetof */
-#include <stdint.h> /* uintN_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* UINT8_MAX, UINT16_MAX, uintN_t */
 
 DECL_BEGIN
 

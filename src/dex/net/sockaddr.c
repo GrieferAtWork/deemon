@@ -40,8 +40,8 @@
 
 #include <hybrid/debug-alignment.h>
 
-#include <stddef.h> /* size_t, NULL, offsetof */
-#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* int32_t, uint8_t, uint16_t, uint32_t */
 
 DECL_BEGIN
 

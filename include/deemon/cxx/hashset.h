@@ -30,7 +30,7 @@
 #include "object.h"
 #include "set.h"
 
-#include <stddef.h> /* size_t, NULL */
+#include <stddef.h> /* NULL, size_t */
 
 DEE_CXX_BEGIN
 

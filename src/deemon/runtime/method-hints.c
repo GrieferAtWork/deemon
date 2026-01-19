@@ -41,7 +41,7 @@
 #include "method-hints.h"
 #include "strings.h"
 
-#include <stddef.h> /* offsetof */
+#include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uint16_t */
 
 #undef byte_t

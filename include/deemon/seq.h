@@ -30,8 +30,8 @@
 #endif /* !__INTELLISENSE__ */
 /**/
 
-#include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t */
+#include <stdbool.h> /* bool, false */
+#include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN
 

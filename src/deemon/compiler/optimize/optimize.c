@@ -34,7 +34,7 @@
 #include <deemon/object.h>
 #include <deemon/thread.h>
 
-#include <stdarg.h> /* va_list */
+#include <stdarg.h> /* va_end, va_list, va_start */
 #include <stddef.h> /* NULL */
 #include <stdint.h> /* uint16_t */
 

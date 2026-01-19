@@ -25,8 +25,8 @@
 #include "none-operator.h"
 #include "types.h"
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* int32_t, int64_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* int32_t, int64_t, uint8_t */
 
 DECL_BEGIN
 

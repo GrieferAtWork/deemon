@@ -30,7 +30,7 @@
 #include "object.h"
 #include "sequence.h"
 
-#include <stddef.h> /* size_t, NULL */
+#include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint8_t */
 
 DEE_CXX_BEGIN

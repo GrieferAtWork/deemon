@@ -31,7 +31,7 @@
 #include <hybrid/typecore.h> /* __CHAR_BIT__ */
 
 #include <stddef.h> /* size_t */
-#include <stdint.h> /* uint64_t, uintptr_t */
+#include <stdint.h> /* uint8_t, uint64_t, uintptr_t */
 
 DECL_BEGIN
 

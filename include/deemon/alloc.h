@@ -28,8 +28,8 @@
 #include <hybrid/__debug-alignment.h>
 
 #include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t */
-#include <stdint.h>  /* uintptr_t */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uint8_t, uintptr_t */
 
 #ifdef CONFIG_NO_STRING_H
 #undef CONFIG_HAVE_STRING_H

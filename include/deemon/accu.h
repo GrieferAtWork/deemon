@@ -27,7 +27,7 @@
 #include "string.h" /* struct Dee_unicode_printer */
 #include "tuple.h"  /* struct Dee_tuple_builder */
 
-#include <stdint.h> /* uintptr_t */
+#include <stdint.h> /* int64_t, uintptr_t */
 
 DECL_BEGIN
 

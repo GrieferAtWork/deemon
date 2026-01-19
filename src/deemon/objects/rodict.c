@@ -54,8 +54,8 @@
 #include "seq/default-compare.h"
 #include "seq/default-map-proxy.h"
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint8_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* uintN_t */
 
 #ifdef __OPTIMIZE_SIZE__
 #define NULL_IF_Os(v) NULL

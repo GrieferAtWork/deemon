@@ -48,7 +48,7 @@
 #endif /* CONFIG_HOST_WINDOWS */
 /**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint64_t, uintptr_t */
 
 DECL_BEGIN

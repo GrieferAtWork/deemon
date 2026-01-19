@@ -54,9 +54,9 @@
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
 
-#include <stdarg.h> /* va_list */
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint8_t */
+#include <stdarg.h> /* va_end, va_list, va_start */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t, uintptr_t */
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__

@@ -76,7 +76,7 @@ DECL_END
 
 #include "futex.h"
 
-#include <stdint.h> /* uintptr_t */
+#include <stdint.h> /* uint32_t, uint64_t */
 
 #if (defined(__hybrid_tid_t_IS_NUMERIC) && \
      (__HYBRID_SIZEOF_TID__ == 4 ||        \

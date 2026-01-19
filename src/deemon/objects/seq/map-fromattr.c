@@ -43,7 +43,7 @@
 #include "../generic-proxy.h"
 #include "map-fromattr.h"
 
-#include <stddef.h> /* size_t, offsetof, NULL */
+#include <stddef.h> /* NULL, offsetof, ptrdiff_t, size_t */
 
 DECL_BEGIN
 

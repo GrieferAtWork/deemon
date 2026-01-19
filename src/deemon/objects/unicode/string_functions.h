@@ -31,7 +31,7 @@
 /**/
 
 #include <stddef.h> /* size_t */
-#include <stdint.h> /* uint8_t, uint16_t, uint32_t, int64_t */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

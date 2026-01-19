@@ -70,9 +70,9 @@
 #include "method-hints.h"
 #include "strings.h"
 
-#include <stdarg.h> /* va_list */
-#include <stddef.h> /* size_t, NULL */
-#include <stdint.h> /* uint32_t, uintptr_t */
+#include <stdarg.h> /* va_end, va_list, va_start */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* uintN_t, uintptr_t */
 
 #undef SSIZE_MAX
 #include <hybrid/limitcore.h>

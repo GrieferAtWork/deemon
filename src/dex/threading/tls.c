@@ -38,7 +38,7 @@
 #include <deemon/thread.h>
 #include <deemon/util/lock.h>
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uint8_t */
 
 DECL_BEGIN

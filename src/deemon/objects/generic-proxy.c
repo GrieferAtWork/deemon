@@ -38,8 +38,8 @@
 #include "../runtime/runtime_error.h"
 #include "generic-proxy.h"
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint32_t, uint64_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* uint16_t, uint32_t, uint64_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

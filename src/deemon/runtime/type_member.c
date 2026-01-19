@@ -44,8 +44,8 @@
 #include "../runtime/runtime_error.h"
 
 #include <stdarg.h> /* va_list */
-#include <stddef.h> /* size_t, NULL */
-#include <stdint.h> /* uint16_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* intN_t, uintN_t, uintptr_t */
 
 /* Type member access. */
 

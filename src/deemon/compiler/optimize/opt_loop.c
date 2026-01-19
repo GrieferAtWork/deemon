@@ -25,7 +25,7 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 
-#include <stddef.h> /* size_t, NULL */
+#include <stddef.h> /* NULL, size_t */
 
 DECL_BEGIN
 

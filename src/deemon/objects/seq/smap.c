@@ -44,7 +44,7 @@
 #include "smap.h"
 #include "svec.h"
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 #undef si_key
 #undef si_value

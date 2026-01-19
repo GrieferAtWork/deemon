@@ -28,8 +28,8 @@
 #include "util/lock.h"
 #include "util/rlock.h"
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uintptr_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* int32_t, uint8_t, uint16_t, uint32_t, uintptr_t */
 
 DECL_BEGIN
 

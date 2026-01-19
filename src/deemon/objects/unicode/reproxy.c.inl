@@ -46,7 +46,7 @@
 #include "regroups.h"
 #include "string_functions.h"
 
-#include <stddef.h> /* size_t, offsetof */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 
 /* Proxy sequence objects for `string.refindall',

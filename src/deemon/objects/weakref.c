@@ -39,8 +39,8 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
-#include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t, offsetof */
+#include <stdbool.h> /* bool, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

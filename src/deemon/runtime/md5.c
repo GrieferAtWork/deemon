@@ -27,7 +27,7 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/typecore.h>
 
-#include <stdint.h>
+#include <stdint.h> /* UINT32_C, uint8_t, uint32_t, uint64_t */
 
 #ifndef UINT32_C
 #define UINT32_C __UINT32_C

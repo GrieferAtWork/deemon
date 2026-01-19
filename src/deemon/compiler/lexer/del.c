@@ -29,7 +29,7 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>
 
-#include <stddef.h> /* size_t, NULL */
+#include <stddef.h> /* NULL, size_t */
 
 DECL_BEGIN
 

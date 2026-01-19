@@ -37,8 +37,8 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* size_t, NULL */
-#include <stdint.h> /* intN_t, uintN_t, uintptr_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* UINT8_MAX, UINT16_MAX, UINT32_MAX, int32_t, uint8_t, uint16_t, uint32_t, uintptr_t */
 
 DECL_BEGIN
 

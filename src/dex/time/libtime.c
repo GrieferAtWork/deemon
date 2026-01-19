@@ -52,8 +52,8 @@
 #include <hybrid/int128.h>
 #include <hybrid/unaligned.h>
 
-#include <stddef.h> /* size_t, NULL */
-#include <stdint.h> /* uint8_t, uint16_t, uint32_t, uint64_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* INT32_MAX, INT32_MIN, INT64_C, UINT16_C, UINT32_C, UINT64_C, int8_t, int32_t, int64_t, uintN_t, uintptr_t */
 
 #ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h>

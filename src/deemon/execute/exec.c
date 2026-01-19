@@ -41,7 +41,7 @@
 
 #include <hybrid/sched/yield.h>
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN

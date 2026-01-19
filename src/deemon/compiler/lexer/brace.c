@@ -31,7 +31,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 
-#include <stddef.h> /* size_t, NULL */
+#include <stddef.h> /* NULL, size_t */
 
 DECL_BEGIN
 

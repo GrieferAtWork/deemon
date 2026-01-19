@@ -29,7 +29,7 @@
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_init */
 #include <deemon/util/simple-hashset.h>
 
-#include <stddef.h> /* size_t, NULL, offsetof */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

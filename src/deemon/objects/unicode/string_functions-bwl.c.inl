@@ -35,9 +35,9 @@
 
 #include <hybrid/limitcore.h>
 
-#include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t, NULL */
-#include <stdint.h>  /* uintN_t, intN_t */
+#include <stdbool.h> /* bool, false */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t, uintptr_t */
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__

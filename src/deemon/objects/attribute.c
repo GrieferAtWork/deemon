@@ -43,7 +43,7 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
-#include <stddef.h> /* offsetof */
+#include <stddef.h> /* NULL, offsetof, ptrdiff_t, size_t */
 
 DECL_BEGIN
 
