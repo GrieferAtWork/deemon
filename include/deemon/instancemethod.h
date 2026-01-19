@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_INSTANCEMETHOD_H 1
 
 #include "api.h"
-/**/
 
 #include "types.h"
 

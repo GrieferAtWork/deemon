@@ -20,18 +20,22 @@
 #ifndef GUARD_DEEMON_CXX_STRING_H
 #define GUARD_DEEMON_CXX_STRING_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
-
-#include "object.h"
-#include "sequence.h"
-/**/
 
 #include "../format.h"
+#include "../object.h"
 #include "../string.h"
-/**/
+#include "../system-features.h" /* CONFIG_HAVE_wcslen */
+#include "../types.h"
+#include "object.h"
+#include "sequence.h"
 
-#include <stdarg.h>
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t, NULL */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
+
+/*#include "bytes.h"*/ /* Don't include! */
 
 #ifndef CONFIG_HAVE_wcslen
 #define CONFIG_HAVE_wcslen
@@ -43,6 +47,12 @@ DECL_END
 #endif /* !CONFIG_HAVE_wcslen */
 
 DEE_CXX_BEGIN
+
+class Bytes;
+class Type;
+class Numeric;
+class bool_;
+class int_;
 
 class string
 	: public Sequence<deemon::string>

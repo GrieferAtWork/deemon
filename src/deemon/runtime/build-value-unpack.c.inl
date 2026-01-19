@@ -23,22 +23,20 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 #include <deemon/error-rt.h>
-#include <deemon/format.h>
 #include <deemon/kwds.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>
-#include <deemon/thread.h>
 
+#include <hybrid/host.h>
 #include <hybrid/int128.h>
 #include <hybrid/typecore.h>
-/**/
 
 #include "runtime_error.h"
-/**/
 
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* size_t */
@@ -107,7 +105,7 @@
  * >> file_seek(DeeObject *self, size_t argc,
  * >>           DeeObject *const *argv, DeeObject *kw) {
  * >>	Dee_pos_t result;
- * >>	int whence = SEEK_SET;
+ * >>	int whence = Dee_SEEK_SET;
  * >>	struct {
  * >>		Dee_off_t off;
  * >>		DeeObject *whence;

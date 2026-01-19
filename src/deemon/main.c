@@ -25,48 +25,50 @@
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
-
-#include <deemon/compiler/compiler.h>
+/**/
 
 #include <deemon/alloc.h>
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
-#include <deemon/compiler/dec.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/compiler/error.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/exec.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
 #include <deemon/format.h>
-#include <deemon/gc.h>
 #include <deemon/heap.h>
 #include <deemon/int.h>
-#include <deemon/list.h>
 #include <deemon/module.h>
-#include <deemon/none.h>
 #include <deemon/notify.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* strend() */
 #include <deemon/system.h>
-#include <deemon/thread.h>
 #include <deemon/tuple.h>
 
 #include <hybrid/byteorder.h>
 #include <hybrid/debug-alignment.h>
-#include <hybrid/typecore.h>
 #include <hybrid/host.h>
+#include <hybrid/typecore.h>
 
 #include "cmdline.h"
 #include "runtime/runtime_error.h"
 
-/**/
-#include <stddef.h> /* offsetof */
-#include <stdint.h> /* uint8_t */
+#include <stddef.h> /* size_t, NULL, offsetof */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
+
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#include <deemon/compiler/dec.h>
+#include <deemon/dex.h>
+#include <deemon/gc.h>
+#include <deemon/list.h>
+#include <deemon/none.h>
+#include <deemon/thread.h>
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 #ifdef CONFIG_NO_CRTDBG_H
 #undef CONFIG_HAVE_CRTDBG_H

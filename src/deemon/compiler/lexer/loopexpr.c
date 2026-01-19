@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_COMPILER_LEXER_LOOPEXPR_C
 #define GUARD_DEEMON_COMPILER_LEXER_LOOPEXPR_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/code.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
@@ -29,8 +30,8 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>
 #include <deemon/tuple.h>
-/**/
 
+#include <stddef.h> /* NULL */
 #include <stdint.h> /* uint16_t, uint32_t */
 
 

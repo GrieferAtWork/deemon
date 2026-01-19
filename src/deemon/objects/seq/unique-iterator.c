@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_UNIQUE_ITERATOR_C
 #define GUARD_DEEMON_OBJECTS_SEQ_UNIQUE_ITERATOR_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/computed-operators.h>
 #include <deemon/gc.h>
@@ -35,15 +36,13 @@
 #include <deemon/super.h>
 #include <deemon/thread.h>
 #include <deemon/util/simple-hashset.h>
-/**/
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "unique-iterator.h"
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, offsetof, NULL */
 
 DECL_BEGIN
 

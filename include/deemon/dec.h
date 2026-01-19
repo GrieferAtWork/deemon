@@ -21,16 +21,15 @@
 #define GUARD_DEEMON_DEC_H 1
 
 #include "api.h"
-/**/
-
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uintX_t */
 
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 #include <hybrid/typecore.h>
 
 #include "serial.h"
 #include "types.h"
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uintX_t */
 
 #ifdef DEE_SOURCE
 #include <hybrid/host.h>
@@ -39,7 +38,6 @@
 #include "heap.h"
 #include "mapfile.h"
 #endif /* DEE_SOURCE */
-
 
 /*
  * MMAP-Dec files allow for fast object encode/decode:
@@ -638,17 +636,15 @@ DECL_END
 #else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 #include <hybrid/byteorder.h>
-/**/
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uintX_t */
 
 #ifdef CONFIG_BUILDING_DEEMON
 #ifndef CONFIG_NO_DEC
 #include "types.h"
 #endif /* !CONFIG_NO_DEC */
 #endif /* CONFIG_BUILDING_DEEMON */
-/**/
-
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uintX_t */
 
 DECL_BEGIN
 

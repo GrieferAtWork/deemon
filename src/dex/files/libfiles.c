@@ -25,6 +25,7 @@
 /**/
 
 #include <deemon/api.h>
+
 #include <deemon/dex.h>
 
 DECL_BEGIN

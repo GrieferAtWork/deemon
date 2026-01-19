@@ -21,6 +21,7 @@
 #define GUARD_DEX_JSON_LIBJSON_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/float.h> /* CONFIG_HAVE_FPU */
 #include <deemon/hashset.h>
 #include <deemon/object.h>

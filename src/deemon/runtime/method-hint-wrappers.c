@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_RUNTIME_METHOD_HINT_WRAPPERS_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
@@ -30,12 +31,13 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/tuple.h>
+/**/
 
 #include "../objects/seq/enumerate-cb.h"
 #include "runtime_error.h"
-
-/**/
 #include "kwlist.h"
+
+#include <stddef.h> /* NULL, size_t */
 
 DECL_BEGIN
 

@@ -20,19 +20,31 @@
 #ifndef GUARD_DEEMON_CXX_SEQUENCE_H
 #define GUARD_DEEMON_CXX_SEQUENCE_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
-
-#include "object.h"
-/**/
 
 #include "../format.h"
+#include "../object.h"
 #include "../seq.h"
+#include "../types.h"
+#include "object.h"
+
+#include <stddef.h> /* size_t, NULL */
+
+/*#include "iterator.h"*/ /* Don't include! */
+/*#include "mapping.h"*/  /* Don't include! */
+/*#include "set.h"*/      /* Don't include! */
+/*#include "tuple.h"*/    /* Don't include! */
+/*#include "type.h"*/     /* Don't include! */
 
 DEE_CXX_BEGIN
 
 template<class T = Object> class Set;
 template<class Key = Object, class Value = Object> class Mapping;
+
+class Type;
+class int_;
+class bool_;
 
 template<class T>
 class Sequence

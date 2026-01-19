@@ -24,9 +24,8 @@
 
 #ifndef CONFIG_NO_DEC
 #ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
-#include <deemon/compiler/compiler.h>
-
 #include <deemon/alloc.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/compiler/dec.h>
 #include <deemon/dec.h>
 #include <deemon/error.h>
@@ -40,7 +39,6 @@
 #include <hybrid/byteswap.h>  /* UNALIGNED_SETLE16(), UNALIGNED_SETLE32() */
 #include <hybrid/unaligned.h> /* UNALIGNED_SETLE16(), UNALIGNED_SETLE32() */
 #include <hybrid/wordbits.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* intN_t, uintN_t */

@@ -21,8 +21,6 @@
 #define __GUARD_HYBRID_SPCALL_H 1
 
 #include "../__stdinc.h"
-/**/
-
 #include "host.h"
 #include "typecore.h"
 

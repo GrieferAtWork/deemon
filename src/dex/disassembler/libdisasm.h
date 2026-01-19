@@ -21,9 +21,9 @@
 #define GUARD_DEX_FS_LIBDISASM_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/code.h>
 #include <deemon/object.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

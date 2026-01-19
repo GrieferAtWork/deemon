@@ -22,11 +22,9 @@
 
 #ifndef _DEE_WITHOUT_INCLUDES
 #include "api.h"
-/**/
 
 #include "object.h"
 #include "util/lock.h"
-/**/
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
@@ -962,8 +960,10 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_tassign(DeeTypeObje
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_assign(DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_tmoveassign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_moveassign(DeeObject *self, DeeObject *other);
+#if 0
 struct Dee_serial;
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_serialize(DeeObject *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
+#endif
 
 #ifdef CLASS_TP_FAUTOINIT
 /* No predefined construction operators (with `CLASS_TP_FAUTOINIT'). */

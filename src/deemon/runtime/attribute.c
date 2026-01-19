@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_RUNTIME_ATTRIBUTE_C
 #define GUARD_DEEMON_RUNTIME_ATTRIBUTE_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/attribute.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* bzero(), ... */

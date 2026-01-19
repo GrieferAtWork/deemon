@@ -21,9 +21,6 @@
 #define GUARD_DEEMON_COMPILER_OPTIMIZE_CONSTANT_TRAITS_C 1
 
 #include <deemon/api.h>
-/**/
-
-#include <deemon/compiler/compiler.h>
 
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/optimize.h>
@@ -61,7 +58,7 @@
 #endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 /**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, NULL */
 
 DECL_BEGIN
 

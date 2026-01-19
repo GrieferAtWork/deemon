@@ -21,11 +21,9 @@
 #define GUARD_DEEMON_ATTRIBUTE_H 1
 
 #include "api.h"
-/**/
 
-#include "types.h"
 #include "mro.h"
-/**/
+#include "types.h"
 
 #include <stddef.h> /* size_t */
 

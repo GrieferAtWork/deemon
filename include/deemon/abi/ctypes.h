@@ -21,12 +21,10 @@
 #define GUARD_DEEMON_ABI_CTYPES_H 1
 
 #include "../api.h"
-/**/
 
 #include "../format.h" /* Dee_PCKuPTR */
 #include "../module.h"
 #include "../object.h"
-/**/
 
 #include <stdint.h> /* uintptr_t */
 

@@ -21,10 +21,8 @@
 #define GUARD_DEEMON_SUPER_H 1
 
 #include "api.h"
-/**/
 
 #include "types.h"
-/**/
 
 #include <stddef.h> /* size_t */
 

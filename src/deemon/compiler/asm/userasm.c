@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_COMPILER_ASM_USERASM_C
 #define GUARD_DEEMON_COMPILER_ASM_USERASM_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
@@ -36,6 +37,9 @@
 
 #include <hybrid/byteorder.h>
 
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t, UINT8_MAX, UINT16_MAX, UINT32_MAX */
+
 #ifndef CONFIG_LANGUAGE_NO_ASM
 #include <deemon/asm.h>
 #include <deemon/bool.h>
@@ -45,7 +49,7 @@
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/none.h> /* AST_ISNONE -> DeeNone_Check */
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/tuple.h>
@@ -55,11 +59,6 @@
 
 #include "../../runtime/strings.h"
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
-/**/
-
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint16_t, UINT8_MAX, UINT16_MAX, UINT32_MAX */
-
 
 DECL_BEGIN
 

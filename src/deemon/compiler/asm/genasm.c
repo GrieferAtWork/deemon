@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_COMPILER_ASM_GENASM_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/code.h>
@@ -44,19 +45,18 @@
 #include <deemon/tuple.h>
 
 #include "../../runtime/builtin.h"
-/**/
 
+#include <stddef.h> /* NULL */
 #include <stdint.h> /* uint16_t */
+
 
 #ifndef __INTELLISENSE__
 #include "genasm-yield.c.inl"
 #else /* !__INTELLISENSE__ */
 DECL_BEGIN
-
 PRIVATE WUNUSED NONNULL((1, 2)) int
 (DCALL ast_genasm_yield)(struct ast *__restrict yieldexpr,
                          struct ast *__restrict ddi);
-
 DECL_END
 #endif /* __INTELLISENSE__ */
 

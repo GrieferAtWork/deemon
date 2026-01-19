@@ -21,7 +21,11 @@
 #define GUARD_DEX_COLLECTIONS_KWLIST_C 1
 #define DEE_SOURCE
 
+#include "libcollections.h"
+/**/
+
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 
 #define DECLARE_KWLIST INTERN DEFINE_KWLIST

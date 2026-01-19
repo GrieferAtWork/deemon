@@ -24,8 +24,9 @@
 #include "libcollections.h"
 /**/
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/dex.h>
@@ -44,7 +45,6 @@
 #include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
 
-/**/
 #include "kwlist.h"
 
 #undef SSIZE_MAX

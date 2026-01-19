@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_COMPILER_LEXER_BRACE_C
 #define GUARD_DEEMON_COMPILER_LEXER_BRACE_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
@@ -29,9 +30,8 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, NULL */
 
 DECL_BEGIN
 

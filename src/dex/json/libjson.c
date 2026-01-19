@@ -25,8 +25,9 @@
 #include "libjson.h" /* Must be first to configure libjson */
 /**/
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
@@ -56,7 +57,6 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 #include <deemon/util/objectlist.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint8_t, uint16_t, uint32_t */

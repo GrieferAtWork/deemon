@@ -25,8 +25,9 @@
 #include "libthreading.h"
 /**/
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
@@ -40,7 +41,6 @@
 #include <deemon/util/once.h>
 
 #include <hybrid/sched/yield.h>
-/**/
 
 #include <stddef.h> /* size_t */
 

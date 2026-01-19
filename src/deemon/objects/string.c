@@ -20,15 +20,16 @@
 #ifndef GUARD_DEEMON_OBJECTS_STRING_C
 #define GUARD_DEEMON_OBJECTS_STRING_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
-#include <deemon/format.h>
+#include <deemon/format.h> /* unicode_printer_vprintf -> DeeFormat_VPrintf */
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
 #include <deemon/none-operator.h> /* _DeeNone_reti1_3 */
@@ -52,7 +53,6 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
-/**/
 
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* size_t */
@@ -299,6 +299,11 @@ PUBLIC WUNUSED NONNULL((1, 2)) char *
 		goto err;
 	ASSERT(self->ap_string || (!self->ap_length && !length));
 	ASSERT(self->ap_length >= length);
+	/* Not an NPE: "s_str" is an inline array, so doesn't deref "ap_string".
+	 * When "length == 0" and nothing is within the printer, then "ap_string"
+	 * may be "NULL". In this case, we return a pointer like "(char *)0x12",
+	 * but that is actually intended since we must return a 0-length, but
+	 * non-NULL (since no error was thrown) buffer pointer. */
 	return self->ap_string->s_str + (self->ap_length - length);
 err:
 	return NULL;

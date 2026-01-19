@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_COMPILER_ASM_PEEPHOLE_C
 #define GUARD_DEEMON_COMPILER_ASM_PEEPHOLE_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
@@ -34,7 +35,6 @@
 #include <hybrid/unaligned.h>
 
 #include "../../runtime/strings.h"
-/**/
 
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* size_t */

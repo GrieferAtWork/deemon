@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_COMPILER_ASM_GENTRY_C
 #define GUARD_DEEMON_COMPILER_ASM_GENTRY_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
@@ -30,7 +31,6 @@
 #include <deemon/object.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

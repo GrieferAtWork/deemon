@@ -23,6 +23,24 @@
 #define DEFINE_futex_ataddr_trycreate
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+
+#include <deemon/types.h>
+#include <deemon/util/atomic.h>
+#include <deemon/system.h> /* DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
+
+#include <hybrid/sequence/list.h>
+
+#include <stddef.h> /* NULL */
+#include <stdint.h> /* INT32_MAX, uintptr_t */
+
+#ifndef INT32_MAX
+#include <hybrid/limitcore.h>
+#ifndef INT32_MAX
+#define INT32_MAX __INT32_MAX__
+#endif /* !INT32_MAX */
+#endif /* !INT32_MAX */
+
 #if (defined(DEFINE_futex_ataddr_create) + \
      defined(DEFINE_futex_ataddr_trycreate)) != 1
 #error "Must #define exactly one of these macros"

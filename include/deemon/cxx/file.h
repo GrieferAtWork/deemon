@@ -20,19 +20,19 @@
 #ifndef GUARD_DEEMON_CXX_FILE_H
 #define GUARD_DEEMON_CXX_FILE_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
 
+#include "../file.h"
+#include "../format.h"
+#include "../object.h"
+#include "../system-features.h"
+#include "../types.h"
 #include "object.h"
 #include "sequence.h"
-/**/
 
-#include "../format.h"
-#include "../file.h"
-#include "../system-features.h"
-/**/
-
-#include <stdarg.h>
+#include <stddef.h> /* size_t, NULL */
+#include <stdarg.h> /* va_list */
 
 DEE_CXX_BEGIN
 
@@ -43,6 +43,11 @@ DEE_CXX_BEGIN
 #undef ungetc
 #undef printf
 #undef vprintf
+
+class Bytes;
+class Type;
+class int_;
+class bool_;
 
 class File
 	: public Sequence<Bytes>

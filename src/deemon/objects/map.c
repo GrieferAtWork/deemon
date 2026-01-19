@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_MAP_C
 #define GUARD_DEEMON_OBJECTS_MAP_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
@@ -38,13 +39,13 @@
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
-/**/
 
 #include "../runtime/kwlist.h"
 #include "../runtime/method-hint-defaults.h"
 #include "../runtime/method-hints.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "generic-proxy.h"
 #include "seq/byattr.h"
 #include "seq/default-iterators.h"
 #include "seq/default-map-proxy.h"
@@ -53,8 +54,6 @@
 #include "seq/map-fromattr.h"
 #include "seq/map-fromkeys.h"
 #include "seq/unique-iterator.h"
-#include "generic-proxy.h"
-/**/
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

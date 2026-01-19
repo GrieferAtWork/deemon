@@ -21,12 +21,12 @@
 #define GUARD_DEEMON_RUNTIME_METHOD_HINT_DEFAULTS_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/method-hints.h>
 #include <deemon/none-operator.h>
 #include <deemon/object.h>
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
-#include <deemon/tuple.h>
 /**/
 
 #include "../objects/generic-proxy.h" /* generic_obj__asmap */

@@ -24,12 +24,11 @@
 #endif /* DEE_SOURCE */
 
 #include "host.h"
-/**/
-
 #include "unwind.h"
 /**/
 
 #include <deemon/api.h>
+
 #include <deemon/code.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h> /* Dee_cmethod_t */

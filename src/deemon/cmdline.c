@@ -20,16 +20,17 @@
 #ifndef GUARD_CMDLINE_C
 #define GUARD_CMDLINE_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/error.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
-/**/
 
 #include "cmdline.h"
-/**/
 
-#include <stdint.h> /* uint16_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t, NULL */
+#include <stdint.h>  /* uint16_t */
 
 DECL_BEGIN
 

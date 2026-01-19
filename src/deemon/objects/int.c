@@ -29,8 +29,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_INT_C
 #define GUARD_DEEMON_OBJECTS_INT_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
@@ -48,8 +49,6 @@
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
 
 #include <hybrid/__byteswap.h>
 #include <hybrid/align.h>
@@ -58,19 +57,22 @@
 #include <hybrid/host.h>
 #include <hybrid/int128.h>
 #include <hybrid/overflow.h>
-#include <hybrid/sched/yield.h>
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
 #include "../runtime/kwlist.h"
-#include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "int-8bit.h"
 #include "int_logic.h"
-/**/
 
 #include <stddef.h> /* size_t, offsetof */
 #include <stdint.h> /* uint8_t */
+
+#if CONFIG_INT_CACHE_MAXCOUNT != 0
+#include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
+#include <hybrid/sched/yield.h>
+#endif /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
 
 #undef SSIZE_MAX
 #include <hybrid/limitcore.h>

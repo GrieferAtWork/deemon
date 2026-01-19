@@ -20,15 +20,16 @@
 #ifndef GUARD_DEEMON_RUNTIME_MISC_C
 #define GUARD_DEEMON_RUNTIME_MISC_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/code.h>
-#include <deemon/compiler/ast.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
+#include <deemon/heap.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
@@ -39,16 +40,14 @@
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
 
-#ifndef CONFIG_NO_DEC
-#include <deemon/dec.h>
-#endif /* !CONFIG_NO_DEC */
+#include <hybrid/byteorder.h>
+#include <hybrid/byteswap.h>
+#include <hybrid/typecore.h>
+#include <hybrid/unaligned.h>
 
-#undef token
-#undef tok
-#undef yield
-#undef yieldnb
-#undef yieldnbif
-#undef skip
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t, NULL */
+#include <stdint.h> /* UINT16_C, UINT32_C, uintptr_t */
 
 #ifndef NDEBUG
 #ifndef CONFIG_HOST_WINDOWS
@@ -57,28 +56,27 @@
 #include <hybrid/host.h> /* __ARCH_PAGESIZE_MIN */
 #include <hybrid/minmax.h>
 
-#include <Windows.h>
+#undef token
+#undef tok
+#undef yield
+#undef yieldnb
+#undef yieldnbif
+#undef skip
 
+#include <Windows.h> /* OutputDebugStringA */
 #ifndef __ARCH_PAGESIZE_MIN
 #ifdef __ARCH_PAGESIZE
 #define __ARCH_PAGESIZE_MIN __ARCH_PAGESIZE
 #endif /* __ARCH_PAGESIZE */
 #endif /* !__ARCH_PAGESIZE_MIN */
-
 #endif /* CONFIG_HOST_WINDOWS */
 #endif /* !NDEBUG */
 
-#include <hybrid/byteorder.h>
-#include <hybrid/byteswap.h>
-#include <hybrid/typecore.h>
-#include <hybrid/unaligned.h>
-
-#include "runtime_error.h"
-/**/
-
-#include <stdarg.h> /* va_list */
-#include <stddef.h> /* uintptr_t */
-#include <stdint.h> /* UINT16_C, UINT32_C */
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#ifndef CONFIG_NO_DEC
+#include <deemon/dec.h>
+#endif /* !CONFIG_NO_DEC */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_BEGIN
 
@@ -1136,11 +1134,11 @@ PRIVATE pcacheclr caches[] = {
 	&Dee_latincache_clearall,
 #endif /* CONFIG_STRING_LATIN1_CACHED */
 	&Dee_membercache_clearall,
-#ifndef CONFIG_NO_DEC
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#ifndef CONFIG_NO_DEC
 	&DecTime_ClearCache,
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #endif /* !CONFIG_NO_DEC */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #ifndef CONFIG_NO_THREADS
 	&Dee_futex_clearall,
 #endif /* !CONFIG_NO_THREADS */

@@ -21,11 +21,9 @@
 #define GUARD_DEEMON_CACHED_DICT_H 1
 
 #include "api.h"
-/**/
 
 #include "object.h"
 #include "util/lock.h"
-/**/
 
 #include <stddef.h> /* size_t */
 

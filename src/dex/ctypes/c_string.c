@@ -25,6 +25,7 @@
 /**/
 
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
@@ -36,10 +37,8 @@
 
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
-/**/
 
 #include "c_api.h" /* Prototypes */
-/**/
 
 #include <stddef.h> /* size_t */
 

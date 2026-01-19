@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_RUNTIME_SLAB_C_INL
 #define GUARD_DEEMON_RUNTIME_SLAB_C_INL 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/gc.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* sscanf(), bzero(), ... */
@@ -29,6 +30,10 @@
 
 #include <hybrid/host.h>
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
+/**/
+
+#include <stddef.h> /* size_t, offsetof, NULL */
+#include <stdint.h> /* uintptr_t */
 
 #ifdef CONFIG_HAVE_PATHS_H
 #include <paths.h> /* _PATH_DEVNULL */
@@ -84,7 +89,6 @@
 
 /* Figure out the alignment in which to allocate slab pages. */
 #ifndef CONFIG_SLAB_PAGESIZE
-#include <hybrid/host.h>
 #ifdef __ARCH_PAGESIZE
 #define CONFIG_SLAB_PAGESIZE __ARCH_PAGESIZE
 #elif defined(__ARCH_PAGESIZE_MIN)

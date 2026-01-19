@@ -21,18 +21,28 @@
 #define GUARD_DEEMON_COMPILER_TPP_C 1
 #define TPP_SYMARRAY_SIZE 1
 
-#include <deemon/compiler/compiler.h>
+#include <deemon/api.h>
 
 #include <deemon/alloc.h>
-#include <deemon/api.h>
+#include <deemon/compiler/ast.h>
+#include <deemon/compiler/compiler.h>
+#include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/exec.h>
 #include <deemon/file.h>
 #include <deemon/format.h>
-#include <deemon/list.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
+#include <deemon/thread.h>
+#include <deemon/tuple.h>
+#include <deemon/types.h>
+
+#include <hybrid/typecore.h>
+
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t, NULL, offsetof */
 
 
 #define PRIVDEF PRIVATE

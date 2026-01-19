@@ -144,16 +144,12 @@ typedef char Dee_rshared_rwlock_t;
 DECL_END
 #else /* CONFIG_NO_THREADS */
 
-#include "../system-features.h"
-#include "../thread.h"
 #include "futex.h"
 #include "lock.h"
-/**/
 
 #include <hybrid/__atomic.h>
 #include <hybrid/sched/__gettid.h>
 #include <hybrid/sched/__yield.h>
-/**/
 
 #include <stdbool.h> /* bool */
 #include <stdint.h>  /* uintptr_t */

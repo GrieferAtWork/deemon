@@ -21,12 +21,10 @@
 #define GUARD_DEEMON_ERROR_TYPES_H 1
 
 #include "api.h"
-/**/
 
 #include "error.h"
 #include "object.h" /* Dee_WEAKREF */
 #include "types.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #ifdef CONFIG_HOST_WINDOWS

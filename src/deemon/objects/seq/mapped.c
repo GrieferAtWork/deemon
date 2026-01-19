@@ -20,21 +20,20 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_MAPPED_C
 #define GUARD_DEEMON_OBJECTS_SEQ_MAPPED_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/computed-operators.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
-/**/
 
 #include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "mapped.h"
-/**/
 
 #include <stddef.h> /* size_t */
 

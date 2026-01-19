@@ -22,6 +22,8 @@
 
 #include <deemon/api.h>
 
+#include <deemon/types.h>
+
 DECL_BEGIN
 
 typedef struct {

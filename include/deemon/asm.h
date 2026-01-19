@@ -1653,9 +1653,8 @@
 #ifdef __CC__
 #include <hybrid/typecore.h>
 
-/**/
-#include <stdint.h>
-#include <stdbool.h>
+#include <stdint.h>  /* uint16_t */
+#include <stdbool.h> /* bool */
 
 DECL_BEGIN
 

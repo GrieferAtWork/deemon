@@ -21,13 +21,9 @@
 #define GUARD_DEEMON_OPERATOR_HINTS_H 1
 
 #include "api.h"
-/**/
-
-#include "types.h"
-/**/
 
 #include "none-operator.h"
-/**/
+#include "types.h"
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* int32_t, int64_t */

@@ -21,13 +21,13 @@
 #define GUARD_DEEMON_RUNTIME_METHOD_HINT_SELECT_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/method-hints.h>
 #include <deemon/none-operator.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 
-/**/
 #include "method-hint-defaults.h"
 #include "method-hint-select.h"
 #include "method-hints.h"

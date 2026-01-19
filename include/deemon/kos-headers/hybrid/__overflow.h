@@ -21,8 +21,6 @@
 #define __GUARD_HYBRID___OVERFLOW_H 1
 
 #include "../__stdinc.h"
-/**/
-
 #include "__assert.h"
 #include "typecore.h"
 

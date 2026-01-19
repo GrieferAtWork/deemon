@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_EACH_C
 #define GUARD_DEEMON_OBJECTS_SEQ_EACH_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
@@ -33,7 +34,6 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
-/**/
 
 #include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/runtime_error.h"
@@ -41,7 +41,6 @@
 #include "../generic-proxy.h"
 #include "../seq_functions.h"
 #include "each.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

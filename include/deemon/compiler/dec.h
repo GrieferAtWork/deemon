@@ -25,13 +25,11 @@
 #ifdef CONFIG_BUILDING_DEEMON
 #ifndef CONFIG_NO_DEC
 #ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
+#include <hybrid/typecore.h>
+
 #include "../code.h"
 #include "../module.h"
 #include "../object.h"
-/**/
-
-#include <hybrid/typecore.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

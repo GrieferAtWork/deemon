@@ -21,7 +21,11 @@
 #define GUARD_DEX_FS_LIBDISASM_C 1
 #define DEE_SOURCE
 
+#include "libdisasm.h"
+/**/
+
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 #include <deemon/code.h>
 #include <deemon/dex.h>
@@ -35,10 +39,6 @@
 #include <deemon/system-features.h> /* memcmp(), strend() */
 
 #include <hybrid/debug-alignment.h>
-/**/
-
-#include "libdisasm.h"
-/**/
 
 #include <stddef.h> /* size_t */
 

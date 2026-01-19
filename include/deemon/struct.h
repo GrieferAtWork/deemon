@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_STRUCT_H 1
 
 #include "api.h"
-/**/
 
 #include "object.h"
 #include "types.h"

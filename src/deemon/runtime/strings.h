@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_RUNTIME_STRINGS_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/file.h>
 #include <deemon/object.h>
 #include <deemon/string.h>

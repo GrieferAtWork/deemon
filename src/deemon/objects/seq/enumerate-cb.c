@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_ENUMERATE_CB_C
 #define GUARD_DEEMON_OBJECTS_SEQ_ENUMERATE_CB_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/callable.h>
 #include <deemon/computed-operators.h>
@@ -35,12 +36,10 @@
 
 #include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
-/**/
 
 #include "enumerate-cb.h"
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, NULL */
 #include <stdint.h> /* uint16_t */
 
 #undef SSIZE_MAX

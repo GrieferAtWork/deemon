@@ -20,10 +20,9 @@
 #ifndef GUARD_DEEMON_COMPILER_OPTIMIZE_OPTIMIZE_C
 #define GUARD_DEEMON_COMPILER_OPTIMIZE_OPTIMIZE_C 1
 
-#include <deemon/compiler/compiler.h>
+#include <deemon/api.h>
 
 #include <deemon/alloc.h>
-#include <deemon/api.h>
 #include <deemon/bool.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
@@ -34,9 +33,9 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/thread.h>
-/**/
 
 #include <stdarg.h> /* va_list */
+#include <stddef.h> /* NULL */
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN

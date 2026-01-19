@@ -25,14 +25,14 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
+
 #include <deemon/error.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 
 #include <hybrid/limitcore.h>
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, NULL */
 
 #undef SSIZE_MIN
 #undef SSIZE_MAX

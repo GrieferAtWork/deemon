@@ -20,9 +20,10 @@
 #ifndef GUARD_DEEMON_RUNTIME_METHOD_HINT_DEFAULTS_C
 #define GUARD_DEEMON_RUNTIME_METHOD_HINT_DEFAULTS_C 1
 
+#include <deemon/api.h>
+
 #include <deemon/accu.h>
 #include <deemon/alloc.h>
-#include <deemon/api.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/class.h>
@@ -50,7 +51,6 @@
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
 
-/**/
 #include "../objects/int_logic.h" /* int_inc() */
 #include "../objects/seq/cached-seq.h"
 #include "../objects/seq/default-compare.h"
@@ -68,13 +68,11 @@
 #include "../objects/seq/unique-iterator.h"
 #include "method-hint-defaults.h"
 #include "method-hints.h"
-#include "runtime_error.h"
 #include "strings.h"
 
-/**/
 #include <stdarg.h> /* va_list */
-#include <stddef.h> /* uintptr_t */
-#include <stdint.h> /* uint32_t */
+#include <stddef.h> /* size_t, NULL */
+#include <stdint.h> /* uint32_t, uintptr_t */
 
 #undef SSIZE_MAX
 #include <hybrid/limitcore.h>

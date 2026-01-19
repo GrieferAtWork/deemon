@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_NONE_OPERATOR_H 1
 
 #include "api.h"
-/**/
 
 #include "types.h"
 

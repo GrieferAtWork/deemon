@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_MAP_PROXY_C
 #define GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_MAP_PROXY_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
 #include <deemon/method-hints.h>
@@ -30,12 +31,8 @@
 #include <deemon/seq.h>
 #include <deemon/set.h>
 
-#include "../../runtime/runtime_error.h"
 #include "../generic-proxy.h"
-
-/**/
 #include "default-map-proxy.h"
-/**/
 
 #include <stddef.h> /* size_t */
 

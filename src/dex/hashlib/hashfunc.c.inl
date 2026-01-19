@@ -35,6 +35,14 @@
 #error "'OUT_REFLECTED' must be defined as 0|1"
 #endif
 
+#include "libhash.h"
+/**/
+
+#include <deemon/api.h>
+
+#include <hybrid/typecore.h>
+
+#include <stdint.h> /* uintN_t */
 
 #if WIDTH > 32
 #define SIZE   64

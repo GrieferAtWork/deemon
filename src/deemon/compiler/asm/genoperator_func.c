@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_COMPILER_ASM_GENOPERATOR_FUNC_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
@@ -31,8 +32,8 @@
 
 #include "../../runtime/builtin.h"
 #include "../../runtime/strings.h"
-/**/
 
+#include <stddef.h> /* NULL */
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN

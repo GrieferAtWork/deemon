@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_OBJECTS_UNICODE_CFORMAT_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/bytes.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
@@ -32,7 +33,6 @@
 /**/
 
 #include "../../runtime/runtime_error.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* int64_t */

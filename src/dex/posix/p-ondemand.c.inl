@@ -23,6 +23,7 @@
 #define DEE_SOURCE
 
 #include "libposix.h"
+/**/
 
 #if defined(__INTELLISENSE__) || defined(__DEEMON__)
 #include "p-path.c.inl"
@@ -195,8 +196,9 @@
 #define NEED_nt_SetSecurityInfo
 #endif /* __INTELLISENSE__ */
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
@@ -215,9 +217,9 @@
 #include <hybrid/int128.h>
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
-/**/
 
 #include <stddef.h> /* size_t */
+
 #ifdef CONFIG_HAVE_sendfile
 #ifdef CONFIG_HAVE_SYS_SENDFILE_H
 #include <sys/sendfile.h>

@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_RUNTIME_NOTIFY_C
 #define GUARD_DEEMON_RUNTIME_NOTIFY_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/error.h>
 #include <deemon/module.h>
 #include <deemon/notify.h>
@@ -32,8 +33,8 @@
 /**/
 
 #include "strings.h"
-/**/
 
+#include <stddef.h> /* size_t, NULL */
 #include <stdint.h> /* uint16_t */
 
 #ifndef CONFIG_NO_NOTIFICATIONS

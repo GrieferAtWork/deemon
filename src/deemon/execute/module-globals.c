@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_EXECUTE_MODULE_GLOBALS_C
 #define GUARD_DEEMON_EXECUTE_MODULE_GLOBALS_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
@@ -35,12 +36,9 @@
 #include <deemon/string.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
-/**/
 
 #include "../objects/generic-proxy.h"
-#include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

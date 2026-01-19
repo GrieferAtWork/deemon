@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_NOTIFY_H 1
 
 #include "api.h"
-/**/
 
 #include "object.h"
 

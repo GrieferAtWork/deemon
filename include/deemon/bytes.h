@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_BYTES_H 1
 
 #include "api.h"
-/**/
 
 #ifndef __INTELLISENSE__
 #include "object.h"

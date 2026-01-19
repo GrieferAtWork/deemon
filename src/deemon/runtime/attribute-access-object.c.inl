@@ -87,20 +87,21 @@
 //#define DEFINE_DeeObject_IterAttr
 #endif /* __INTELLISENSE__ */
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/class.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/mro.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
+#include <deemon/string.h> /* LOCAL_DeeType_AccessMemberAttr -> DeeType_GetMemberAttrHash -> DeeString_STR */
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 /**/
 
 #include "runtime_error.h"
-/**/
 
 #include <stddef.h> /* size_t */
 

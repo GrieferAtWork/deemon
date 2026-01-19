@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_RUNTIME_COMPUTED_OPERATORS_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/computed-operators.h>
 
 #ifndef CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS
@@ -31,9 +32,8 @@
 #include "../objects/seq/concat.h"
 #include "method-hint-defaults.h"
 #include "operator-hint-errors.h"
-/**/
 
-#include <stddef.h> /* NULL */
+#include <stddef.h> /* size_t, NULL */
 
 DECL_BEGIN
 

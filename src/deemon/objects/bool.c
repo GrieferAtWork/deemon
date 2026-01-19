@@ -21,7 +21,7 @@
 #define GUARD_DEEMON_OBJECTS_BOOL_C 1
 
 #include <deemon/api.h>
-#include <deemon/arg.h>
+
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
@@ -34,12 +34,16 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
-/**/
 
 #include <stdint.h> /* int32_t */
 
 DECL_BEGIN
 
+#if (10 == 10) == 1 && (10 == 20) == 0
+#define DeeBool_IsTrue_10(self) DeeBool_IsTrue(self)
+#else /* ... */
+#define DeeBool_IsTrue_10(self) (DeeBool_IsTrue(self) ? 1 : 0)
+#endif /* !... */
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 bool_return_false(void) {
@@ -60,7 +64,7 @@ PRIVATE DeeObject *tpconst bool_strings[2] = {
 	Dee_AsObject(&str_false),
 	Dee_AsObject(&str_true)
 };
-#define bool_string(self) bool_strings[DeeBool_IsTrue(self) ? 1 : 0]
+#define bool_string(self) bool_strings[DeeBool_IsTrue_10(self)]
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bool_str(DeeObject *__restrict self) {
@@ -76,7 +80,7 @@ bool_print(DeeObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bool_bool(DeeObject *__restrict self) {
-	return DeeBool_IsTrue(self);
+	return DeeBool_IsTrue_10(self);
 }
 
 #if __SIZEOF_INT__ == Dee_SIZEOF_HASH_T
@@ -85,7 +89,7 @@ bool_bool(DeeObject *__restrict self) {
 #define bool_hash_PTR &bool_hash
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 bool_hash(DeeObject *__restrict self) {
-	return DeeBool_IsTrue(self);
+	return DeeBool_IsTrue_10(self);
 }
 #endif /* __SIZEOF_INT__ != Dee_SIZEOF_HASH_T */
 
@@ -93,27 +97,27 @@ bool_hash(DeeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bool_int32(DeeObject *__restrict self,
            int32_t *__restrict result) {
-	*result = DeeBool_IsTrue(self);
+	*result = DeeBool_IsTrue_10(self);
 	return INT_UNSIGNED;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bool_int64(DeeObject *__restrict self,
            int64_t *__restrict result) {
-	*result = DeeBool_IsTrue(self);
+	*result = DeeBool_IsTrue_10(self);
 	return INT_UNSIGNED;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bool_double(DeeObject *__restrict self,
             double *__restrict result) {
-	*result = DeeBool_IsTrue(self);
+	*result = DeeBool_IsTrue(self) ? 1.0 : 0.0;
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bool_int(DeeObject *__restrict self) {
-	Dee_return_smallint(DeeBool_IsTrue(self) ? 1 : 0);
+	Dee_return_smallint(DeeBool_IsTrue_10(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -140,7 +144,7 @@ bool_xor(DeeObject *self, DeeObject *other) {
 	int temp = DeeObject_Bool(other);
 	if unlikely(temp < 0)
 		goto err;
-	return_bool(DeeBool_IsTrue(self) ^ !!temp);
+	return_bool(!!DeeBool_IsTrue(self) ^ !!temp);
 err:
 	return NULL;
 }
@@ -279,7 +283,7 @@ bool_compare_eq(DeeObject *self, DeeObject *other) {
 	error = DeeObject_Bool(other);
 	if unlikely(error < 0)
 		goto err;
-	return (!error) != DeeBool_IsTrue(self) ? 0 : 1;
+	return !!DeeBool_IsTrue(self) == !!error;
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -292,7 +296,7 @@ bool_compare(DeeObject *self, DeeObject *other) {
 	error = DeeObject_Bool(other);
 	if unlikely(error < 0)
 		goto err;
-	Dee_return_compare(DeeBool_IsTrue(self), !!error);
+	Dee_return_compare(!!DeeBool_IsTrue(self), !!error);
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -302,7 +306,7 @@ bool_eq(DeeObject *self, DeeObject *other) {
 	int error = DeeObject_Bool(other);
 	if unlikely(error < 0)
 		goto err;
-	return_bool((!error) != DeeBool_IsTrue(self));
+	return_bool(DeeBool_IsTrue(self) == !!error);
 err:
 	return NULL;
 }
@@ -312,7 +316,7 @@ bool_ne(DeeObject *self, DeeObject *other) {
 	int error = DeeObject_Bool(other);
 	if unlikely(error < 0)
 		goto err;
-	return_bool((!error) == DeeBool_IsTrue(self));
+	return_bool(DeeBool_IsTrue(self) != !!error);
 err:
 	return NULL;
 }

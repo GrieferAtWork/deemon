@@ -26,8 +26,12 @@
 #define DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type
 #endif /* __INTELLISENSE__ */
 
-#include <deemon/alloc.h>
+#include "libthreading.h"
+/**/
+
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/dex.h>
@@ -46,10 +50,6 @@
 
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
-/**/
-
-#include "libthreading.h"
-/**/
 
 #include <stdbool.h> /* bool */
 #include <stddef.h> /* size_t */

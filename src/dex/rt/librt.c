@@ -22,12 +22,12 @@
 #define DEE_SOURCE
 
 #include "librt.h"
+/**/
 
-#include <deemon/compiler/compiler.h>
+#include <deemon/api.h>
 
 #include <deemon/abi/ctypes.h>
 #include <deemon/alloc.h>
-#include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/asm.h>
 #include <deemon/attribute.h>
@@ -38,6 +38,7 @@
 #include <deemon/cell.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/dex.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
@@ -75,7 +76,6 @@
 #include <deemon/weakref.h>
 
 #include <hybrid/typecore.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_RUNTIME_METHOD_HINTS_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/alloc.h>
 #include <deemon/class.h>
 #include <deemon/map.h>
@@ -34,13 +35,11 @@
 #include <deemon/util/atomic.h>
 
 #include <hybrid/typecore.h>
-/**/
 
 #include "method-hint-defaults.h"
 #include "method-hint-select.h"
 #include "method-hints.h"
 #include "strings.h"
-/**/
 
 #include <stddef.h> /* offsetof */
 #include <stdint.h> /* uint16_t */

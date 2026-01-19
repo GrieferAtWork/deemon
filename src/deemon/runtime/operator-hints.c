@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_RUNTIME_OPERATOR_HINTS_C
 #define GUARD_DEEMON_RUNTIME_OPERATOR_HINTS_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/class.h>
 #include <deemon/format.h>
 #include <deemon/method-hints.h>
@@ -33,12 +34,10 @@
 
 #include <hybrid/typecore.h>
 
-/**/
 #include "method-hint-defaults.h"
 #include "method-hints.h"
 
-/**/
-#include <stddef.h> /* offsetof */
+#include <stddef.h> /* offsetof, size_t, NULL */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

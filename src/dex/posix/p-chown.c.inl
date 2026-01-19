@@ -25,21 +25,20 @@
 #include "libposix.h"
 /**/
 
-#include "p-readlink.c.inl" /* For `posix_chown_USE_posix_readlink__AND__posix_lchown()' */
-#include "p-path.c.inl"     /* For `posix_chown_USE_posix_readlink__AND__posix_lchown()' */
-/**/
+#include <deemon/api.h>
 
 #include <deemon/alloc.h>
-#include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/dex.h>
 #include <deemon/error.h>
-#include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
-/**/
+
+#include "p-path.c.inl"     /* For `posix_chown_USE_posix_readlink__AND__posix_lchown()' */
+#include "p-readlink.c.inl" /* For `posix_chown_USE_posix_readlink__AND__posix_lchown()' */
 
 #include <stddef.h> /* size_t */
 

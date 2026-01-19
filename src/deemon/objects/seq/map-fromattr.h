@@ -20,11 +20,11 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_MAP_FROMATTR_H
 #define GUARD_DEEMON_OBJECTS_SEQ_MAP_FROMATTR_H 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/attribute.h>
+
+#include <deemon/alloc.h>
+#include <deemon/mro.h> /* struct Dee_attriter */
 #include <deemon/object.h>
-/**/
 
 #include "../generic-proxy.h"
 

@@ -21,14 +21,14 @@
 #define GUARD_DEX_TIME_LIBTIME_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/object.h>
 
 #include <hybrid/byteorder.h>
 #include <hybrid/int128.h>
 
-/**/
 #include <stdbool.h> /* bool */
-#include <stdint.h>
+#include <stdint.h>  /* uint8_t, uint16_t, uint32_t, uint64_t, int64_t */
 
 DECL_BEGIN
 

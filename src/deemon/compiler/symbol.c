@@ -20,14 +20,13 @@
 #ifndef GUARD_DEEMON_COMPILER_SYMBOL_C
 #define GUARD_DEEMON_COMPILER_SYMBOL_C 1
 
-#include <deemon/compiler/compiler.h>
+#include <deemon/api.h>
 
 #include <deemon/alloc.h>
-#include <deemon/api.h>
-#include <deemon/arg.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/module.h>
@@ -37,10 +36,8 @@
 #include <deemon/util/cache.h>
 
 #include <hybrid/minmax.h>
-/**/
 
 #include "../runtime/strings.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint8_t, uint16_t */

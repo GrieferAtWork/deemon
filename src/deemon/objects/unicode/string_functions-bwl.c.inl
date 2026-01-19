@@ -25,18 +25,18 @@
 //#define DEFINE_STRING_FUNCTIONS_L
 #endif /* __INTELLISENSE__ */
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>
-#include <deemon/types.h>
 
 #include <hybrid/limitcore.h>
 
-/**/
 #include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t */
+#include <stddef.h>  /* size_t, NULL */
 #include <stdint.h>  /* uintN_t, intN_t */
 
 #undef SSIZE_MAX

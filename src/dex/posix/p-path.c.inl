@@ -29,9 +29,10 @@
 /**/
 
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 #include <deemon/bool.h>
-#include <deemon/module.h>
+#include <deemon/dex.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
@@ -40,7 +41,6 @@
 #include <deemon/system.h>
 
 #include <hybrid/minmax.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint32_t */

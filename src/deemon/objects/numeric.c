@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_NUMERIC_C
 #define GUARD_DEEMON_OBJECTS_NUMERIC_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
@@ -37,12 +38,10 @@
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/int128.h>
-/**/
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
 #include "int-8bit.h"
-/**/
 
 #include <stdint.h> /* int8_t */
 

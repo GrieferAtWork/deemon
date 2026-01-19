@@ -27,9 +27,6 @@
 #include "libctypes.h"
 /**/
 
-#include "c_api.h"
-/**/
-
 #ifdef CONFIG_HAVE_CTYPES_SEH_GUARD
 #include <Windows.h>
 #endif /* CONFIG_HAVE_CTYPES_SEH_GUARD */
@@ -38,8 +35,9 @@
 #include <kos/except.h>
 #endif /* CONFIG_HAVE_CTYPES_KOS_GUARD */
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bytes.h>
 #include <deemon/dex.h>
@@ -54,7 +52,8 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/int128.h>
 #include <hybrid/typecore.h>
-/**/
+
+#include "c_api.h"
 
 #include <stdint.h> /* intN_t, uintN_t */
 

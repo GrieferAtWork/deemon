@@ -21,23 +21,25 @@
 #define GUARD_DEEMON_RUNTIME_VARIANT_C 1
 
 #include <deemon/api.h>
-#include <deemon/bool.h>
+
 #include <deemon/float.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
+#include <deemon/object.h>
 #include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
+#include <deemon/types.h>
 #include <deemon/util/atomic.h>
 #include <deemon/variant.h>
 
+#include <hybrid/int128.h>
 #include <hybrid/minmax.h>
 #include <hybrid/sched/yield.h>
+#include <hybrid/typecore.h>
 
-#include "runtime_error.h"
-
-/**/
+#include <stddef.h> /* size_t, NULL */
 #include <stdint.h> /* uint16_t */
 
 /* Variant deemon/C value wrapper. */

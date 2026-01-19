@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_COMPILER_ASM_GENASSERT_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/asm.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
@@ -30,8 +31,8 @@
 #include <deemon/object.h>
 
 #include "../../runtime/builtin.h"
-/**/
 
+#include <stddef.h> /* NULL */
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN

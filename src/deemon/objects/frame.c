@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_FRAME_C
 #define GUARD_DEEMON_OBJECTS_FRAME_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
@@ -31,7 +32,6 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
-#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system.h> /* DeeSystem_ALTSEP */
 #include <deemon/traceback.h>
@@ -39,13 +39,9 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include "../runtime/runtime_error.h"
+#include "../execute/function-wrappers.h"
 #include "../runtime/strings.h"
 
-/**/
-#include "../execute/function-wrappers.h"
-
-/**/
 #include <stddef.h> /* size_t, offsetof */
 #include <stdint.h> /* UINT16_MAX */
 

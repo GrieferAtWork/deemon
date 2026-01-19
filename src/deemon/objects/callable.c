@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_CALLABLE_C
 #define GUARD_DEEMON_OBJECTS_CALLABLE_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/callable.h>
 #include <deemon/computed-operators.h>
 #include <deemon/none-operator.h>

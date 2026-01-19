@@ -51,14 +51,14 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
+
 #include <deemon/object.h>
 #include <deemon/string.h>
 /**/
 
 #include "string_functions.h"
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, NULL */
 #include <stdint.h> /* uint8_t */
 
 DECL_BEGIN

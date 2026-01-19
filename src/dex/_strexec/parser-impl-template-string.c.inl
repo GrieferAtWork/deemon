@@ -25,12 +25,12 @@
 /**/
 
 #include <deemon/api.h>
+
 #include <deemon/error.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint32_t */

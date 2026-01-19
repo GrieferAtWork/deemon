@@ -21,8 +21,12 @@
 #define GUARD_DEX_IPC_PROCESS_C_INL 1
 #define DEE_SOURCE
 
-#include <deemon/alloc.h>
+#include "libipc.h"
+/**/
+
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
@@ -49,13 +53,9 @@
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
 #include <hybrid/sequence/list.h>
-/**/
 
-#include "libipc.h"
-/**/
-
-#include <stdbool.h>
-#include <stddef.h> /* size_t */
+#include <stdbool.h> /* bool, true, false */
+#include <stddef.h>  /* size_t, NULL */
 #ifdef CONFIG_HAVE_PATHS_H
 #include <paths.h> /* _PATH_SHELLS */
 #endif /* CONFIG_HAVE_PATHS_H */

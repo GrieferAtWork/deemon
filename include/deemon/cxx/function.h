@@ -20,20 +20,23 @@
 #ifndef GUARD_DEEMON_CXX_FUNCTION_H
 #define GUARD_DEEMON_CXX_FUNCTION_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
 
+#include "../code.h"
+#include "../object.h"
+#include "../types.h"
 #include "callable.h"
 #include "object.h"
-/**/
 
-#include "../format.h"
-#include "../code.h"
-/**/
-
-#include <hybrid/typecore.h>
+#include <stddef.h> /* size_t, NULL */
 
 DEE_CXX_BEGIN
+
+class Type;
+class bool_;
+class int_;
+class string;
 
 class Function
 	: public Callable
@@ -50,7 +53,7 @@ public:
 	}
 
 public:
-	static Ref<Function> of(DeeObject *code, size_t refc,
+	static Ref<Function> of(DeeCodeObject *code, size_t refc,
 	                        DeeObject *const *refv) {
 		return inherit(DeeFunction_New(code, refc, refv));
 	}

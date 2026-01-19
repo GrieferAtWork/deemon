@@ -21,10 +21,8 @@
 #define GUARD_DEEMON_FILE_H 1
 
 #include "api.h"
-/**/
 
 #include "object.h"
-/**/
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
@@ -60,16 +58,34 @@
 #endif /* !... */
 #endif /* !... */
 
-#ifndef SEEK_SET
-#define SEEK_SET 0
+#if !defined(SEEK_SET) || !defined(SEEK_CUR) || !defined(SEEK_END)
+#ifdef CONFIG_NO_STDIO_H
+#undef CONFIG_HAVE_STDIO_H
+#elif !defined(CONFIG_HAVE_STDIO_H) && \
+      (defined(__NO_has_include) || __has_include(<stdio.h>))
+#define CONFIG_HAVE_STDIO_H
+#endif
+#ifdef CONFIG_HAVE_STDIO_H
+#include <stdio.h> /* Use system definitions of SEEK_* if possible */
+#endif /* CONFIG_HAVE_STDIO_H */
+#endif /* !SEEK_SET || !SEEK_CUR || !SEEK_END */
+
+#ifdef SEEK_SET
+#define Dee_SEEK_SET SEEK_SET
+#else /* SEEK_SET */
+#define Dee_SEEK_SET 0
 #endif /* !SEEK_SET */
 
-#ifndef SEEK_CUR
-#define SEEK_CUR 1
+#ifdef SEEK_CUR
+#define Dee_SEEK_CUR SEEK_CUR
+#else /* SEEK_CUR */
+#define Dee_SEEK_CUR 0
 #endif /* !SEEK_CUR */
 
-#ifndef SEEK_END
-#define SEEK_END 2
+#ifdef SEEK_END
+#define Dee_SEEK_END SEEK_END
+#else /* SEEK_END */
+#define Dee_SEEK_END 0
 #endif /* !SEEK_END */
 
 DECL_BEGIN
@@ -303,9 +319,9 @@ DFUNDEF WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL DeeFile_PWriteAll(DeeOb
 /* @throw NotImplemented: The file does not support seeking.
  * @return: (Dee_pos_t)-1: Error */
 DFUNDEF WUNUSED NONNULL((1)) Dee_pos_t DCALL DeeFile_Seek(DeeObject *__restrict self, Dee_off_t off, int whence);
-#define DeeFile_Tell(self)        DeeFile_Seek(self, 0, SEEK_CUR)
-#define DeeFile_Rewind(self)      DeeFile_Seek(self, 0, SEEK_SET)
-#define DeeFile_SetPos(self, pos) DeeFile_Seek(self, (Dee_pos_t)(pos), SEEK_SET)
+#define DeeFile_Tell(self)        DeeFile_Seek(self, 0, Dee_SEEK_CUR)
+#define DeeFile_Rewind(self)      DeeFile_Seek(self, 0, Dee_SEEK_SET)
+#define DeeFile_SetPos(self, pos) DeeFile_Seek(self, (Dee_pos_t)(pos), Dee_SEEK_SET)
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Sync(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Trunc(DeeObject *__restrict self, Dee_pos_t size);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_TruncHere(DeeObject *__restrict self, Dee_pos_t *p_size);

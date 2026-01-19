@@ -21,16 +21,18 @@
 #define GUARD_DEX_RT_SLAB_C 1
 #define DEE_SOURCE
 
-#include <deemon/alloc.h>
+#include "librt.h"
+/**/
+
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/error-rt.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/serial.h>
-
-#include "librt.h"
 
 DECL_BEGIN
 

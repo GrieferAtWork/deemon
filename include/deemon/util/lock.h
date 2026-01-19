@@ -205,13 +205,11 @@ DECL_END
 
 #else /* CONFIG_NO_THREADS */
 
-#include "futex.h"
-/**/
-
 #include <hybrid/__atomic.h>
 #include <hybrid/sched/__atomic-lock.h>
 #include <hybrid/sched/__atomic-rwlock.h>
-/**/
+
+#include "futex.h"
 
 #include <stdbool.h> /* bool */
 #include <stdint.h>  /* uintptr_t */

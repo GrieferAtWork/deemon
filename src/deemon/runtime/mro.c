@@ -21,10 +21,11 @@
 #define GUARD_DEEMON_RUNTIME_MRO_C 1
 #define DEE_SOURCE
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/attribute.h>
+
+#include <deemon/alloc.h>
 #include <deemon/class.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/instancemethod.h>
@@ -44,10 +45,8 @@
 #include <hybrid/sched/yield.h>
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
-/**/
 
 #include "runtime_error.h"
-/**/
 
 #include <stddef.h>
 #include <stdarg.h>

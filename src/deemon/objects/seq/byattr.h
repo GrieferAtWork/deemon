@@ -21,9 +21,9 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_BYATTR_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/object.h>
 
-/**/
 #include "../generic-proxy.h"
 
 DECL_BEGIN

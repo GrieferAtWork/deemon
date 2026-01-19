@@ -24,6 +24,7 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
+
 #include <deemon/bool.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
@@ -34,9 +35,8 @@
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/tuple.h>
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, NULL */
 
 #if (defined(DEFINE_sfa_skipexpr) + defined(DEFINE_sfa_evalexpr)) != 1
 #error "Must #define exactly one of these macros"

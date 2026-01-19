@@ -25,7 +25,6 @@
 #ifdef CONFIG_BUILDING_DEEMON
 #include "../alloc.h"
 
-/**/
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

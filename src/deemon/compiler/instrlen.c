@@ -21,13 +21,13 @@
 #define GUARD_DEEMON_COMPILER_INSTRLEN_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/asm.h>
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 
-#include <hybrid/byteswap.h> /* UNALIGNED_GETLE16 */
+#include <hybrid/byteswap.h>  /* UNALIGNED_GETLE16 */
 #include <hybrid/unaligned.h> /* UNALIGNED_GETLE16 */
-/**/
 
 #include <stdint.h> /* uint16_t */
 

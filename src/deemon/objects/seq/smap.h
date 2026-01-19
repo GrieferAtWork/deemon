@@ -21,13 +21,13 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_SMAP_H 1
 
 #include <deemon/api.h>
+
+#include <deemon/alloc.h> /* _Dee_MallococBufsize */
 #include <deemon/map.h>
 #include <deemon/object.h>
 #include <deemon/util/lock.h>
-/**/
 
 #include "../generic-proxy.h"
-/**/
 
 #include <stddef.h> /* size_t */
 

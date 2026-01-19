@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_RUNTIME_ERROR_RT_ATTRIBUTE_C
 #define GUARD_DEEMON_RUNTIME_ERROR_RT_ATTRIBUTE_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/attribute.h>
 #include <deemon/class.h>
@@ -44,9 +45,9 @@
 #include <deemon/util/atomic.h>
 
 #include <hybrid/host.h>
+#include <hybrid/typecore.h>
 #include <hybrid/minmax.h>
 #include <hybrid/sched/yield.h>
-/**/
 
 #include <stddef.h>
 #include <stdint.h>
@@ -197,7 +198,8 @@ STATIC_ASSERT_MSG((COMPILER_OFFSETAFTER(struct Dee_attrdesc, ad_name) == offseto
                   "The 'ad_name' and 'ad_doc' fields must be adjacent, so that "
                   "we're able to overlay then with 'struct type_member_buffer'");
 #define Dee_attrdesc__offsetof__type_member_buffer \
-	__hybrid_min_c2(offsetof(struct Dee_attrdesc, ad_name), offsetof(struct Dee_attrdesc, ad_doc))
+	MIN_C(offsetof(struct Dee_attrdesc, ad_name),  \
+	      offsetof(struct Dee_attrdesc, ad_doc))
 
 /* Returns a pointer to the "struct type_member_buffer" that may be embedded into
  * "struct Dee_attrdesc" by "AttributeError" when "AttributeError_F_LAZYDECL" is

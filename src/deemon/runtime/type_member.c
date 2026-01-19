@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_RUNTIME_TYPE_MEMBER_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error-rt.h>
@@ -32,17 +33,18 @@
 #include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
+#include <deemon/objmethod.h> /* type_method_vcallf() -> DeeObjMethod_VCallFuncf() */
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* strlen() */
 #include <deemon/util/atomic.h>
 #include <deemon/variant.h>
+/**/
 
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 
-/**/
 #include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t, NULL */
 #include <stdint.h> /* uint16_t */
 
 /* Type member access. */

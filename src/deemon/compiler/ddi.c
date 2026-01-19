@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_COMPILER_DDI_C
 #define GUARD_DEEMON_COMPILER_DDI_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
@@ -35,9 +36,8 @@
 
 #include <hybrid/byteswap.h>
 #include <hybrid/typecore.h>
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, NULL */
 #include <stdint.h> /* intN_t, uintN_t, uintptr_t */
 
 DECL_BEGIN

@@ -20,10 +20,10 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_MAP_FROMKEYS_H
 #define GUARD_DEEMON_OBJECTS_SEQ_MAP_FROMKEYS_H 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/object.h>
-/**/
 
 #include "../generic-proxy.h"
 

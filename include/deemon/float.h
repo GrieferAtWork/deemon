@@ -21,13 +21,10 @@
 #define GUARD_DEEMON_FLOAT_H 1
 
 #include "api.h"
-/**/
-
-#include "types.h"
-/**/
 
 #include <hybrid/typecore.h>
-/**/
+
+#include "types.h"
 
 #include <stddef.h> /* size_t */
 

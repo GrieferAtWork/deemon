@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_COMPILER_LEXER_IMPORT_C
 #define GUARD_DEEMON_COMPILER_LEXER_IMPORT_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
@@ -32,11 +33,14 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memrchr(), memcpy(), ... */
-#include <deemon/system.h>          /* DeeSystem_BaseName() */
-/**/
+#include <deemon/thread.h>
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, NULL */
 #include <stdint.h> /* uint16_t, uint32_t */
+
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#include <deemon/system.h> /* DeeSystem_BaseName() */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_BEGIN
 

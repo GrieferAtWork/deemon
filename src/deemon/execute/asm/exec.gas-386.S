@@ -51,6 +51,7 @@
  * success-branch uses 1 less instruction! */
 
 #include <deemon/api.h>
+
 #include <deemon/asm.h>
 #include <deemon/alloc.h>
 

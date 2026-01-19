@@ -20,10 +20,10 @@
 #ifndef GUARD_DEEMON_OBJECTS_CLASS_DESC_C
 #define GUARD_DEEMON_OBJECTS_CLASS_DESC_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
-#include <deemon/attribute.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
@@ -47,6 +47,7 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/typecore.h>
 
@@ -54,7 +55,6 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
-/**/
 
 #include <stddef.h> /* offsetof, size_t */
 #include <stdint.h> /* uint16_t */

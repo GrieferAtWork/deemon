@@ -22,7 +22,6 @@
 
 #include <deemon/api.h>
 
-/**/
 #include <deemon/alloc.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
@@ -38,12 +37,10 @@
 #include <deemon/system-features.h> /* memset(), bzero(), ... */
 #include <deemon/tuple.h>
 
-/**/
 #include "../../runtime/strings.h"
 
-/**/
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint32_t */
+#include <stddef.h> /* size_t, offsetof, NULL */
+#include <stdint.h> /* uint16_t, uint32_t, int32_t */
 
 DECL_BEGIN
 

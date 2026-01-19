@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_RUNTIME_OPERATOR_C
 #define GUARD_DEEMON_RUNTIME_OPERATOR_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/gc.h>
@@ -30,6 +31,7 @@
 #include <deemon/list.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
+#include <deemon/seq.h> /* DeeSharedVector_NewShared */
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/thread.h>
@@ -43,7 +45,6 @@
 #include "../objects/int_logic.h"
 #include "runtime_error.h"
 #include "strings.h"
-/**/
 
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* size_t */

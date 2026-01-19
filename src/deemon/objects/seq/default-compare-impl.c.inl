@@ -24,6 +24,7 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
+
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/object.h>
@@ -31,7 +32,7 @@
 #include <deemon/thread.h>
 
 #include "../../runtime/method-hint-defaults.h"
-/**/
+#include "default-compare.h"
 
 #include <stddef.h> /* size_t */
 

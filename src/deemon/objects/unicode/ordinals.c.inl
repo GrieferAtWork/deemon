@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_UNICODE_ORDINALS_C_INL
 #define GUARD_DEEMON_OBJECTS_UNICODE_ORDINALS_C_INL 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
@@ -32,11 +33,10 @@
 #include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
+/**/
 
-#include "../../runtime/runtime_error.h"
 #include "../generic-proxy.h"
 #include "string_functions.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint32_t */

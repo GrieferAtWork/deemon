@@ -21,13 +21,11 @@
 #define GUARD_DEEMON_TYPES_H 1
 
 #include "api.h"
-/**/
 
 #include <hybrid/int128.h>
 #include <hybrid/typecore.h>
-/**/
 
-#include <stddef.h>  /* size_t, NULL */
+#include <stddef.h> /* size_t, NULL */
 
 DECL_BEGIN
 

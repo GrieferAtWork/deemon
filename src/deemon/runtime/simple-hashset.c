@@ -20,14 +20,16 @@
 #ifndef GUARD_DEEMON_RUNTIME_SIMPLE_HASHSET_C
 #define GUARD_DEEMON_RUNTIME_SIMPLE_HASHSET_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/serial.h>
+#include <deemon/system-features.h> /* memcpyc */
+#include <deemon/util/lock.h>       /* Dee_atomic_lock_init */
 #include <deemon/util/simple-hashset.h>
-/**/
 
-#include <stddef.h> /* size-t */
+#include <stddef.h> /* size_t, NULL, offsetof */
 
 DECL_BEGIN
 

@@ -21,12 +21,12 @@
 #define GUARD_DEEMON_COMPILER_ASM_GENASM_YIELD_C_INL 1
 
 #include <deemon/api.h>
+
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/object.h>
 #include <deemon/tuple.h>
-/**/
 
 #include <stddef.h> /* size_t */
 

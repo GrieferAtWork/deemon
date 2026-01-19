@@ -21,10 +21,8 @@
 #define GUARD_DEEMON_ERROR_H 1
 
 #include "api.h"
-/**/
 
 #include "types.h"
-/**/
 
 #include <stdbool.h> /* bool */
 

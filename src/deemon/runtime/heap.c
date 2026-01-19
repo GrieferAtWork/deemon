@@ -43,19 +43,20 @@ ClCompile.BasicRuntimeChecks = Default
 #undef ATTR_ALLOC_ALIGN
 #define ATTR_ALLOC_ALIGN(pari) /* Nothing */
 
-#include <deemon/alloc.h>
-#include <deemon/heap.h>
-#include <deemon/system-features.h>
-
 #ifndef __INTELLISENSE__
 #include "slab.c.inl"
 #endif /* !__INTELLISENSE__ */
 
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+#include <deemon/alloc.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
+#include <deemon/heap.h>
 #include <deemon/module.h>
+#include <deemon/object.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
+#include <deemon/types.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 #include <deemon/util/rlock.h>
@@ -64,14 +65,13 @@ ClCompile.BasicRuntimeChecks = Default
 #include <hybrid/bit.h>
 #include <hybrid/debug-alignment.h>
 #include <hybrid/host.h>
-#include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* uintptr_t */
-#include <stdint.h> /* intX_t, uintX_t */
+#include <stddef.h> /* size_t, NULL */
+#include <stdint.h> /* intX_t, uintX_t, uintptr_t */
 
 #undef Dee_TryMalloc
 #undef Dee_TryCalloc
@@ -82,6 +82,7 @@ ClCompile.BasicRuntimeChecks = Default
 #undef Dee_Free
 
 #ifndef SIZE_MAX
+#include <hybrid/limitcore.h>
 #define SIZE_MAX __SIZE_MAX__
 #endif /* !SIZE_MAX */
 #ifndef SIZE_C
@@ -9020,13 +9021,16 @@ thread_heap_destroy(void *heap) {
 DECL_END
 #else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
+#include <deemon/alloc.h>
+#include <deemon/heap.h>
+#include <deemon/system-features.h>
+
 #include <hybrid/align.h>
 #include <hybrid/debug-alignment.h>
 #include <hybrid/typecore.h>
-/**/
 
-#include <stddef.h> /* uintptr_t */
-#include <stdint.h> /* UINT16_C, UINT32_C */
+#include <stddef.h> /* size_t, NULL */
+#include <stdint.h> /* uintptr_t, UINT16_C, UINT32_C */
 
 #ifdef CONFIG_HAVE_STDLIB_H
 #include <stdlib.h>

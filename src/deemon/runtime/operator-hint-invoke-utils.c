@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_RUNTIME_OPERATOR_HINT_INVOKE_UTILS_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/error-rt.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
@@ -32,13 +33,10 @@
 
 #include <hybrid/int128.h>
 #include <hybrid/limitcore.h> /* __INT32_MAX__, __INT64_MAX__ */
-
 /**/
-#include "runtime_error.h"
 
-/**/
 #include <stdarg.h>  /* va_list */
-#include <stdbool.h> /* true/false */
+#include <stdbool.h> /* false */
 #include <stddef.h>  /* size_t */
 #include <stdint.h>  /* intN_t */
 

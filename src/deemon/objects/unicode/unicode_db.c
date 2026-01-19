@@ -22,10 +22,10 @@
 #define unitraits db_unitraits /* Prevent clashes with system names. */
 
 #include <deemon/api.h>
+
 #include <deemon/string.h>
 
 #include <hybrid/byteorder.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* UINT64_C */

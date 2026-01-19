@@ -20,13 +20,13 @@
 #ifndef GUARD_DEEMON_COMPILER_INTERFACE_IPARSER_C
 #define GUARD_DEEMON_COMPILER_INTERFACE_IPARSER_C 1
 
-#include <deemon/compiler/compiler.h>
+#include <deemon/api.h>
 
 #include <deemon/alloc.h>
-#include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/compiler/interface.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/tpp.h>
@@ -34,10 +34,8 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
-/**/
 
 #include "../../runtime/kwlist.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

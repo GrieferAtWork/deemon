@@ -25,13 +25,14 @@
 #include "libposix.h"
 /**/
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bytes.h>
+#include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
-#include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/system-features.h>
@@ -41,7 +42,6 @@
 #include <hybrid/byteorder.h>
 #include <hybrid/debug-alignment.h>
 #include <hybrid/typecore.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint64_t */

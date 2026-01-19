@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_COMPILER_OPTIMIZE_OPT_OPERATOR_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 #include <deemon/bytes.h>
 #include <deemon/compiler/ast.h>
@@ -37,9 +38,8 @@
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, NULL */
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN

@@ -21,13 +21,11 @@
 #define GUARD_DEEMON_TRACEBACK_H 1
 
 #include "api.h"
-/**/
 
 #include "code.h" /* struct Dee_code_frame */
 #include "types.h"
 #include "util/lock.h"
 #include "util/rlock.h"
-/**/
 
 #include <stdint.h> /* uint16_t */
 

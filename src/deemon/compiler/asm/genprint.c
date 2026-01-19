@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_COMPILER_ASM_GENPRINT_C
 #define GUARD_DEEMON_COMPILER_ASM_GENPRINT_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/bytes.h>
 #include <deemon/compiler/assembler.h>
@@ -33,7 +34,6 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memset, ... */
 #include <deemon/tuple.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

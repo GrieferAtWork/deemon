@@ -21,8 +21,9 @@
 #define EXEC_SAFE 1
 #endif /* __INTELLISENSE__ */
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
@@ -58,7 +59,6 @@
 #include <hybrid/unaligned.h>
 
 #include "../runtime/runtime_error.h"
-/**/
 
 #include <stddef.h> /* size_t, NULL */
 #include <stdint.h> /* int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t */

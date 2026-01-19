@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_EXECUTE_FUNCTION_WRAPPERS_C
 #define GUARD_DEEMON_EXECUTE_FUNCTION_WRAPPERS_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/code.h>
@@ -46,17 +47,12 @@
 #include <hybrid/overflow.h>
 #include <hybrid/unaligned.h>
 
-/**/
 #include "../objects/generic-proxy.h"
 #include "../objects/seq/default-map-proxy.h"
 #include "../runtime/kwlist.h"
-#include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
-
-/**/
 #include "function-wrappers.h"
 
-/**/
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */
 

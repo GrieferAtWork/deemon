@@ -29,6 +29,21 @@
 //#define DEFINE_DeeFutex_Wait64NoIntTimed
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+
+#include <deemon/alloc.h>
+#include <deemon/system-features.h> /* DeeSystem_IF_E1 */
+#include <deemon/system.h>          /* DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
+#include <deemon/thread.h>
+#include <deemon/types.h>
+#include <deemon/util/atomic.h>
+
+#include <hybrid/overflow.h> /* OVERFLOW_UCAST */
+/**/
+
+#include <stddef.h> /* NULL */
+#include <stdint.h> /* uint32_t, uint64_t, uintptr_t */
+
 DECL_BEGIN
 
 #if (defined(DEFINE_DeeFutex_Wait32) +           \

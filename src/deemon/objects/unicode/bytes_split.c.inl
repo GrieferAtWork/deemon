@@ -24,8 +24,9 @@
 #include "bytes_functions.c.inl"
 #endif /* __INTELLISENSE__ */
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bytes.h>
 #include <deemon/serial.h>
@@ -39,14 +40,12 @@
 #include <deemon/util/atomic.h>
 
 #include <hybrid/typecore.h>
-/**/
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "string_functions.h"
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, offsetof, NULL */
 
 DECL_BEGIN
 

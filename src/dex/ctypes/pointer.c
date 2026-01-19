@@ -24,8 +24,9 @@
 #include "libctypes.h"
 /**/
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
@@ -42,7 +43,6 @@
 
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
-/**/
 
 #include <stddef.h> /* size_t, offsetof */
 #include <stdint.h> /* int32_t, int64_t */

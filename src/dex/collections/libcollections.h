@@ -21,6 +21,7 @@
 #define GUARD_DEX_COLLECTIONS_LIBCOLLECTIONS_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/dex.h>
 #include <deemon/file.h>
 #include <deemon/object.h>

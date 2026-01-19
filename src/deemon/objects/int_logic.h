@@ -29,13 +29,14 @@
 #ifndef GUARD_DEEMON_OBJECTS_INT_LOGIC_H
 #define GUARD_DEEMON_OBJECTS_INT_LOGIC_H 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/int.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* memsetw/memsetl/... */
-/**/
 
+#include <stddef.h> /* size_t */
 #include <stdint.h> /* uint32_t */
 
 DECL_BEGIN

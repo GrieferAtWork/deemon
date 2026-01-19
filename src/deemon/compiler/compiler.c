@@ -20,12 +20,13 @@
 #ifndef GUARD_DEEMON_COMPILER_COMPILER_C
 #define GUARD_DEEMON_COMPILER_COMPILER_C 1
 
-#include <deemon/compiler/compiler.h>
+#include <deemon/api.h>
 
 #include <deemon/alloc.h>
-#include <deemon/api.h>
+#include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/compiler/error.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/optimize.h>
@@ -39,11 +40,9 @@
 #include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
-#include <deemon/system.h>
 #include <deemon/util/rlock.h>
 
 #include <hybrid/typecore.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint8_t */

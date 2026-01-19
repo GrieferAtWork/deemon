@@ -20,8 +20,10 @@
 #ifndef GUARD_DEX_COLLECTIONS_ACCU_H
 #define GUARD_DEX_COLLECTIONS_ACCU_H 1
 
-#include <deemon/api.h>
+#include "libcollections.h"
 /**/
+
+#include <deemon/api.h>
 
 #include <deemon/accu.h>
 #include <deemon/object.h>

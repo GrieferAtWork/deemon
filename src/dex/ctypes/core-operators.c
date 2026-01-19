@@ -25,6 +25,7 @@
 /**/
 
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
@@ -37,7 +38,6 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/limitcore.h>
-/**/
 
 #include <stddef.h> /* size_t, offsetof */
 #include <stdint.h> /* intN_t, uintN_t */

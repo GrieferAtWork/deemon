@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_SYSTEM_FILE_C
 #define GUARD_DEEMON_SYSTEM_FILE_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
@@ -40,15 +41,12 @@
 
 #include <hybrid/byteorder.h>
 #include <hybrid/debug-alignment.h>
-#include <hybrid/host.h>
+#include <hybrid/host.h> /* __ARCH_PAGESIZE_MIN */
 #include <hybrid/minmax.h>
 #include <hybrid/typecore.h>
-#include <hybrid/wordbits.h>
-/**/
+#include <hybrid/wordbits.h> /* ENCODE_INT32 */
 
-#include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uintptr_t */
@@ -2216,11 +2214,11 @@ sysfile_trunc(SystemFile *__restrict self, Dee_pos_t size) {
 
 	/* Windows implementation */
 #ifdef DeeSystem_FILE_USE_nt_HANDLE
-	Dee_pos_t old_pos = sysfile_seek(self, 0, SEEK_CUR);
+	Dee_pos_t old_pos = sysfile_seek(self, 0, Dee_SEEK_CUR);
 	if unlikely(old_pos == (Dee_pos_t)-1)
 		goto err;
 	if ((Dee_pos_t)old_pos != size) {
-		if unlikely(sysfile_seek(self, (Dee_off_t)size, SEEK_SET) == (Dee_pos_t)-1)
+		if unlikely(sysfile_seek(self, (Dee_off_t)size, Dee_SEEK_SET) == (Dee_pos_t)-1)
 			goto err;
 	}
 	DBG_ALIGNMENT_DISABLE();
@@ -2230,7 +2228,7 @@ sysfile_trunc(SystemFile *__restrict self, Dee_pos_t size) {
 	}
 	DBG_ALIGNMENT_ENABLE();
 	if ((Dee_pos_t)old_pos != size) {
-		if unlikely(sysfile_seek(self, old_pos, SEEK_SET) == (Dee_pos_t)-1)
+		if unlikely(sysfile_seek(self, old_pos, Dee_SEEK_SET) == (Dee_pos_t)-1)
 			goto err;
 	}
 	return 0;

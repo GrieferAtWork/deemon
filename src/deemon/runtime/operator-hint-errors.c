@@ -21,13 +21,16 @@
 #define GUARD_DEEMON_RUNTIME_OPERATOR_HINT_ERRORS_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
-
 /**/
+
 #include "operator-hint-errors.h"
 #include "runtime_error.h"
+
+#include <stddef.h> /* NULL */
 
 DECL_BEGIN
 

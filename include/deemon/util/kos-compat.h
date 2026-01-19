@@ -21,26 +21,22 @@
 #define GUARD_DEEMON_UTIL_KOS_COMPAT_H 1
 
 #include "../api.h"
-/**/
 
 #ifndef DEE_SOURCE
 #error "This header should only be used when `DEE_SOURCE' is also enabled"
 #endif /* !DEE_SOURCE */
 
+#include <hybrid/__alloca.h>
+#include <hybrid/__bit.h>
+#include <hybrid/bitset.h> /* bitset_*  (to replace <sys/bitstr.h>) */
+#include <hybrid/typecore.h>
+
 #include "../format.h"
 #include "../string.h"
 #include "../stringutils.h"
 #include "../system-features.h"
-/**/
 
 #include <stdint.h>
-/**/
-
-#include <hybrid/__alloca.h>
-#include <hybrid/__bit.h>
-#include <hybrid/bitset.h>
-#include <hybrid/typecore.h>
-/**/
 
 /* Compatibility header for porting KOS system libraries for use with deemon */
 

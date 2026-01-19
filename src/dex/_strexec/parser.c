@@ -25,6 +25,7 @@
 /**/
 
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
@@ -42,7 +43,6 @@
 
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t, uint32_t */

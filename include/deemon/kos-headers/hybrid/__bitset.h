@@ -21,8 +21,6 @@
 #define __GUARD_HYBRID___BITSET_H 1
 
 #include "../__stdinc.h"
-/**/
-
 #include "__assert.h"
 #include "__bit.h"
 #include "__overflow.h"

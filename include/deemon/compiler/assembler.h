@@ -25,7 +25,6 @@
 #ifdef CONFIG_BUILDING_DEEMON
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
-/**/
 
 #include "../asm.h"
 #include "../code.h"
@@ -34,7 +33,6 @@
 #include "ast.h"
 #include "symbol.h"
 #include "tpp.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* intN_t, uintN_t, uintptr_t */

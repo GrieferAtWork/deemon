@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_SYSTEM_SYSTEM_UNIX_C_INL
 #define GUARD_DEEMON_SYSTEM_SYSTEM_UNIX_C_INL 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>
 #include <deemon/format.h>
@@ -29,7 +30,6 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
-/**/
 
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* size_t */

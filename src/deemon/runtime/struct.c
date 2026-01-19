@@ -20,19 +20,22 @@
 #ifndef GUARD_DEEMON_RUNTIME_STRUCT_C
 #define GUARD_DEEMON_RUNTIME_STRUCT_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/arg.h>
+
+#include <deemon/alloc.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
 #include <deemon/format.h>
 #include <deemon/kwds.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/serial.h>
 #include <deemon/struct.h>
 #include <deemon/system-features.h>
+#include <deemon/types.h>
+#include <deemon/util/atomic.h>
 #include <deemon/variant.h>
 
 #include <hybrid/host.h> /* __pic__ */
@@ -42,6 +45,9 @@
 
 #include "method-hints.h"
 #include "runtime_error.h"
+
+#include <stddef.h> /* size_t, NULL */
+#include <stdint.h> /* intN_t, uintN_t */
 
 DECL_BEGIN
 

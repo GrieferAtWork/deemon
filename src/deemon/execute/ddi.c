@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_EXECUTE_DDI_C
 #define GUARD_DEEMON_EXECUTE_DDI_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
@@ -33,7 +34,6 @@
 
 #include <hybrid/minmax.h>
 #include <hybrid/typecore.h>
-/**/
 
 #include <stddef.h> /* size_t, offsetof */
 #include <stdint.h> /* uint8_t, uint16_t, int16_t */

@@ -30,8 +30,9 @@
 #include "libctypes.h"
 /**/
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error-rt.h>
@@ -47,7 +48,6 @@
 #include <hybrid/int128.h>
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* intN_t, uintN_t */

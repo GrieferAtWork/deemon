@@ -20,12 +20,12 @@
 #ifndef GUARD_DEEMON_COMPILER_AST_C
 #define GUARD_DEEMON_COMPILER_AST_C 1
 
-#include <deemon/compiler/compiler.h>
+#include <deemon/api.h>
 
 #include <deemon/alloc.h>
-#include <deemon/api.h>
 #include <deemon/code.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
@@ -36,9 +36,8 @@
 #include <deemon/set.h>
 #include <deemon/tuple.h>
 #include <deemon/util/cache.h>
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, NULL */
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN

@@ -20,18 +20,21 @@
 #ifndef GUARD_DEEMON_CXX_TYPE_H
 #define GUARD_DEEMON_CXX_TYPE_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
-
-#include "object.h"
-#include "numeric.h"
-/**/
 
 #include "../format.h"
 #include "../object.h"
-/**/
+#include "../types.h"
+#include "object.h"
+
+#include <stddef.h> /* size_t, NULL */
 
 DEE_CXX_BEGIN
+
+class bool_;
+class int_;
+class string;
 
 class Type
 	: public Object
@@ -119,10 +122,10 @@ public:
 	WUNUSED bool cgcpriority() const DEE_CXX_NOTHROW {
 		return DeeType_GCPriority(this);
 	}
-	WUNUSED bool chasoperator(uint16_t name) const DEE_CXX_NOTHROW {
+	WUNUSED bool chasoperator(Dee_operator_t name) const DEE_CXX_NOTHROW {
 		return DeeType_HasOperator((DeeTypeObject *)this, name);
 	}
-	WUNUSED bool chasprivateoperator(uint16_t name) const DEE_CXX_NOTHROW {
+	WUNUSED bool chasprivateoperator(Dee_operator_t name) const DEE_CXX_NOTHROW {
 		return DeeType_HasPrivateOperator((DeeTypeObject *)this, name);
 	}
 	WUNUSED bool cbaseof(DeeTypeObject *subclass_type) const DEE_CXX_NOTHROW {

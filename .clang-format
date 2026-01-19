@@ -249,9 +249,9 @@ IfMacros:
   - __THROWS
 IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex:           '\"api.h\"'
+  - Regex:           '\"([.][.]/)*api[.]h\"'
     Priority:        1
-  - Regex:           '<(.*/compiler|__stdinc|__stdcxx|__crt|features)[.]h>'
+  - Regex:           '<(deemon/api|__stdinc|__stdcxx|__crt|features)[.]h>'
     Priority:        2
   - Regex:           '<deemon/.*>'
     Priority:        3
@@ -259,15 +259,13 @@ IncludeCategories:
     Priority:        4
   - Regex:           '<lib.*>'
     Priority:        7
-  - Regex:           '<.*/.*>'
-    Priority:        5
-  - Regex:           '<.*>'
-    Priority:        6
   - Regex:           '\".*\"'
+    Priority:        6
+  - Regex:           '<.*>'
     Priority:        9
   - Regex:           '.*'
     Priority:        8
-IncludeIsMainRegex: '$'
+IncludeIsMainRegex: '^'
 IndentAccessModifiers: false
 IndentCaseLabels: false
 IndentExternBlock: NoIndent

@@ -21,8 +21,8 @@
 #define GUARD_DEEMON_COMPILER_ASM_USERDB_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/compiler/assembler.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

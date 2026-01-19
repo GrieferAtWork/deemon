@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_RUNTIME_METHOD_HINT_TRAITS_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/bool.h>
 #include <deemon/class.h>
 #include <deemon/int.h>
@@ -31,9 +32,11 @@
 
 #include <hybrid/typecore.h>
 
-/**/
 #include "method-hint-defaults.h"
 #include "method-hints.h"
+
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

@@ -21,8 +21,12 @@
 #define GUARD_DEX_IPC_PIPE_C_INL 1
 #define DEE_SOURCE
 
-#include <deemon/alloc.h>
+#include "libipc.h"
+/**/
+
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
@@ -32,9 +36,6 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/debug-alignment.h>
-/**/
-
-#include "libipc.h"
 
 #undef ipc_Pipe_USE_CreatePipe
 #undef ipc_Pipe_USE_pipe_OR_pipe2

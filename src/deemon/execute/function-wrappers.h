@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_EXECUTE_FUNCTION_WRAPPERS_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/code.h>
 #include <deemon/object.h>
 #include <deemon/traceback.h>

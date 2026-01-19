@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_CONCAT_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/object.h>
 #include <deemon/tuple.h>
 #include <deemon/util/lock.h>

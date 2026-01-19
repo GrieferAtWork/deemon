@@ -29,11 +29,11 @@
 #endif /* ... */
 
 #include <deemon/api.h>
+
 #include <deemon/float.h>
 #include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uintmax_t */

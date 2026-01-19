@@ -159,13 +159,11 @@
 #endif /* !... */
 
 #include <deemon/api.h>
+
 #include <deemon/dict.h>
+#include <deemon/error-rt.h>
 #include <deemon/object.h>
 #include <deemon/rodict.h>
-/**/
-
-#include "../runtime/runtime_error.h"
-/**/
 
 #include <stddef.h> /* size_t */
 

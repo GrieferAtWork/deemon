@@ -25,6 +25,7 @@
 /**/
 
 #include <deemon/api.h>
+
 #include <deemon/list.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -32,7 +33,6 @@
 
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint32_t */
@@ -709,4 +709,4 @@ DECL_END
 #include "parser-impl-hybrid-parts.c.inl"
 /**/
 #include "parser-impl-hybrid-parts.c.inl"
-#endif
+#endif /* !__INTELLISENSE__ */

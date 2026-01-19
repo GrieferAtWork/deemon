@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_RUNTIME_BUILTIN_FUNCTIONS_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
@@ -45,8 +46,8 @@
 #include "kwlist.h"
 #include "runtime_error.h"
 #include "strings.h"
-/**/
 
+#include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN

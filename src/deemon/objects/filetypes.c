@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_FILETYPES_C
 #define GUARD_DEEMON_OBJECTS_FILETYPES_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
@@ -44,13 +45,11 @@
 
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
-/**/
 
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "gc_inspect.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uintptr_t */
@@ -145,7 +144,7 @@ again_locked:
 	ASSERT(old_pointer >= self->mf_begin);
 	switch (whence) {
 
-	case SEEK_SET:
+	case Dee_SEEK_SET:
 		if unlikely(off < 0)
 			goto err_invalid;
 		if unlikely(self->mf_begin + (size_t)off < self->mf_begin)
@@ -154,7 +153,7 @@ again_locked:
 		result      = (Dee_pos_t)off;
 		break;
 
-	case SEEK_CUR:
+	case Dee_SEEK_CUR:
 		result = (size_t)(old_pointer - self->mf_begin);
 		result += (Dee_ssize_t)off;
 		if unlikely((Dee_off_t)result < 0)
@@ -164,7 +163,7 @@ again_locked:
 			goto err_overflow;
 		break;
 
-	case SEEK_END:
+	case Dee_SEEK_END:
 		result = (size_t)(self->mf_end - self->mf_begin);
 		result += (Dee_ssize_t)off;
 		if unlikely((Dee_off_t)result < 0)
@@ -456,7 +455,7 @@ again_locked:
 	}
 	switch (whence) {
 
-	case SEEK_SET:
+	case Dee_SEEK_SET:
 		if unlikely(off < 0)
 			goto err_invalid;
 		if unlikely(self->r_begin + (size_t)off < self->r_begin)
@@ -465,7 +464,7 @@ again_locked:
 		result      = (Dee_pos_t)off;
 		break;
 
-	case SEEK_CUR:
+	case Dee_SEEK_CUR:
 		result = (size_t)(old_pointer - self->r_begin);
 		result += (Dee_ssize_t)off;
 		if unlikely((Dee_off_t)result < 0)
@@ -475,7 +474,7 @@ again_locked:
 			goto err_overflow;
 		break;
 
-	case SEEK_END:
+	case Dee_SEEK_END:
 		result = (size_t)(self->r_end - self->r_begin);
 		result += (Dee_ssize_t)off;
 		if unlikely((Dee_off_t)result < 0)

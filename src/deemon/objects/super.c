@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_SUPER_C
 #define GUARD_DEEMON_OBJECTS_SUPER_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
@@ -34,7 +35,6 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
-/**/
 
 #include <stddef.h> /* size_t, offsetof */
 #include <stdint.h> /* int32_t */

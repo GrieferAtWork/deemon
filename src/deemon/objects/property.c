@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_PROPERTY_C
 #define GUARD_DEEMON_OBJECTS_PROPERTY_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/code.h>
@@ -37,9 +38,7 @@
 #include <deemon/string.h>
 
 #include "../runtime/kwlist.h"
-#include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

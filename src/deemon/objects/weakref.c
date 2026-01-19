@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_WEAKREF_C
 #define GUARD_DEEMON_OBJECTS_WEAKREF_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
@@ -32,11 +33,11 @@
 #include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/weakref.h>
+/**/
 
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
-/**/
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t, offsetof */

@@ -21,8 +21,11 @@
 #define GUARD_DEEMON_OBJECTS_FILE_TYPE_OPERATORS_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/file.h>
 #include <deemon/object.h>
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

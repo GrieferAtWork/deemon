@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_EXECUTE_CODE_C
 #define GUARD_DEEMON_EXECUTE_CODE_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/asm.h>
 #include <deemon/bool.h>
@@ -53,7 +54,8 @@
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
-#include <stdint.h>
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t, ... */
 
 #include "../objects/seq/svec.h"
 #include "../runtime/kwlist.h"

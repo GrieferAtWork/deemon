@@ -46,7 +46,6 @@
 #include <hybrid/wordbits.h>
 
 #include "../runtime/strings.h"
-/**/
 
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* size_t */

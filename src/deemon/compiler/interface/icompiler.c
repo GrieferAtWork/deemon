@@ -20,13 +20,13 @@
 #ifndef GUARD_DEEMON_COMPILER_INTERFACE_ICOMPILER_C
 #define GUARD_DEEMON_COMPILER_INTERFACE_ICOMPILER_C 1
 
-#include <deemon/compiler/compiler.h>
+#include <deemon/api.h>
 
 #include <deemon/alloc.h>
-#include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/code.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/compiler/error.h>
 #include <deemon/compiler/interface.h>
 #include <deemon/compiler/lexer.h>
@@ -37,7 +37,6 @@
 #include <deemon/hashset.h>
 #include <deemon/list.h>
 #include <deemon/map.h>
-#include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -49,7 +48,6 @@
 #include "../../runtime/kwlist.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

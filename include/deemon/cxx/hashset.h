@@ -20,16 +20,25 @@
 #ifndef GUARD_DEEMON_CXX_HASHSET_H
 #define GUARD_DEEMON_CXX_HASHSET_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
-
-#include "object.h"
-#include "set.h"
-/**/
 
 #include "../hashset.h"
+#include "../object.h"
+#include "../system-features.h" /* strlen */
+#include "../types.h"
+#include "object.h"
+#include "set.h"
+
+#include <stddef.h> /* size_t, NULL */
 
 DEE_CXX_BEGIN
+
+class Type;
+class bool_;
+class int_;
+class float_;
+class string;
 
 template<class T = Object>
 class HashSet: public Set<T> {

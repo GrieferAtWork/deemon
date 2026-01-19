@@ -29,14 +29,14 @@
 #include "libctypes.h"
 /**/
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 
 #include <hybrid/typecore.h>
-/**/
 
 #include <stddef.h> /* NULL */
 #include <stdint.h> /* uintptr_t */

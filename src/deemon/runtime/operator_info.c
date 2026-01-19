@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_RUNTIME_OPERATOR_INFO_C
 #define GUARD_DEEMON_RUNTIME_OPERATOR_INFO_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/cached-dict.h>
@@ -46,10 +47,10 @@
 
 #include "method-hint-defaults.h"
 #include "strings.h"
-/**/
 
 #include <stdarg.h> /* va_start */
-#include <stddef.h> /* uintptr_t */
+#include <stddef.h> /* size_t, NULL */
+#include <stdint.h> /* uintptr_t */
 
 DECL_BEGIN
 
@@ -1759,7 +1760,7 @@ STATIC_ASSERT(offsetof(TypeOperators, to_type) == offsetof(ProxyObject, po_obj))
 #define to_fini      generic_proxy__fini_unlikely
 #define to_visit     generic_proxy__visit
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 to_copy(TypeOperators *__restrict self, TypeOperators *__restrict other) {
 	self->to_type = other->to_type;
 	Dee_Incref(self->to_type);

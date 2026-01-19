@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_OBJECTS_UNICODE_STRING_FUNCTIONS_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memrchr(), memmem(), ... */

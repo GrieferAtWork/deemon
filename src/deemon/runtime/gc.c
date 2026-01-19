@@ -21,8 +21,9 @@
 #define GUARD_DEEMON_RUNTIME_GC_C 1
 #define DEE_SOURCE
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/asm.h>
 #include <deemon/bool.h>
@@ -43,15 +44,17 @@
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
 
+#include "../objects/gc_inspect.h"
+#include "strings.h"
+
+#include <stddef.h> /* size_t, NULL, offsetof */
+#include <stdint.h> /* UINT32_C */
+
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
 #endif /* !CONFIG_NO_DEX */
-
-#include "../objects/gc_inspect.h"
-#include "strings.h"
-/**/
-
-#include <stdint.h> /* UINT32_C */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_BEGIN
 

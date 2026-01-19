@@ -20,28 +20,32 @@
 #ifndef GUARD_DEEMON_OBJECTS_FILEBUFFER_C
 #define GUARD_DEEMON_OBJECTS_FILEBUFFER_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
 #include <deemon/format.h>
-#include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* atexit(), memcpy(), ... */
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
+#include <deemon/util/rlock.h>
 
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
 
 #include "../runtime/kwlist.h"
-#include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 #ifdef DeeSystem_FILE_USE_stdio_FILE
 #include <stdio.h>
@@ -820,12 +824,12 @@ did_unlock:
 	return (size_t)BUFFER_IO_DID_UNLOCK;
 }
 
-PRIVATE Dee_pos_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_pos_t DCALL
 buffer_seek_or_unlock(Buffer *__restrict self,
                       Dee_off_t off, int whence) {
 	Dee_pos_t result;
 	DREF DeeObject *file;
-	if (whence == SEEK_SET || whence == SEEK_CUR) {
+	if (whence == Dee_SEEK_SET || whence == Dee_SEEK_CUR) {
 		Dee_pos_t old_abspos;
 		Dee_pos_t new_abspos;
 		byte_t *new_pos;
@@ -836,7 +840,7 @@ buffer_seek_or_unlock(Buffer *__restrict self,
 		 * allowing for in-buffer seek, as well as delayed seek. */
 		old_abspos = self->fb_fblk;
 		old_abspos += (self->fb_ptr - self->fb_base);
-		if (whence == SEEK_SET) {
+		if (whence == Dee_SEEK_SET) {
 			new_abspos = (Dee_pos_t)off;
 		} else {
 			/* Special case: position-query */

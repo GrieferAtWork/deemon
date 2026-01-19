@@ -21,8 +21,8 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_MAP_PROXY_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/object.h>
-/**/
 
 #include "../generic-proxy.h"
 

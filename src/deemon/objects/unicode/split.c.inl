@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_UNICODE_SPLIT_C_INL
 #define GUARD_DEEMON_OBJECTS_UNICODE_SPLIT_C_INL 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
@@ -37,9 +38,8 @@
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "string_functions.h"
-/**/
 
-#include <stddef.h> /* size_t, offsetof */
+#include <stddef.h> /* size_t, offsetof, NULL */
 #include <stdint.h> /* uint8_t, uint16_t, uint32_t */
 
 #undef byte_t

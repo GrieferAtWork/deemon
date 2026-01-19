@@ -21,16 +21,13 @@
 #define GUARD_DEEMON_DEX_H 1
 
 #include "api.h"
-/**/
 
 #ifndef CONFIG_NO_DEX
+#include <hybrid/typecore.h>
+
 #include "gc.h"
 #include "module.h"
 #include "object.h"
-/**/
-
-#include <hybrid/typecore.h>
-/**/
 
 #include <stdbool.h> /* bool */
 #include <stdint.h>  /* uintptr_t */
@@ -117,18 +114,21 @@ INTDEF __BYTE_TYPE__ _end[];
 #define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS NULL, NULL, { NULL, NULL, NULL }
 #endif /* !CONFIG_HAVE___dex_start____AND___end */
 
-#ifdef CONFIG_HAVE___dex_buildid__
 #ifndef __ATTR_WEAK_IS_ATTR_SELECTANY
-__ATTR_WEAK
-#endif /* !__ATTR_WEAK_IS_ATTR_SELECTANY */
-INTDEF __BYTE_TYPE__ __dex_buildid__[];
+#define _DEE_ELF_ATTR_WEAK __ATTR_WEAK
+#else /* !__ATTR_WEAK_IS_ATTR_SELECTANY */
+#define _DEE_ELF_ATTR_WEAK /* nothing */
+#endif /* __ATTR_WEAK_IS_ATTR_SELECTANY */
+
+#ifdef CONFIG_HAVE___dex_buildid__
+INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_buildid__[];
 #define _Dee_MODULE_DEXDATA_INIT_BUILDID (union Dee_module_buildid const *)(__dex_buildid__ + 16)
 #elif defined(CONFIG_HAVE___dex_builduuid64__)
 DECL_END
 #include <hybrid/host.h>
 DECL_BEGIN
-INTDEF __BYTE_TYPE__ __dex_builduuid64_0__[];
-INTDEF __BYTE_TYPE__ __dex_builduuid64_1__[];
+INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid64_0__[];
+INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid64_1__[];
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define _Dee_MODULE_DEXDATA_INIT_BUILDID_PREHOOK      \
 	PRIVATE __UINT64_TYPE__ const _dex_buildid[2] = { \
@@ -147,10 +147,10 @@ INTDEF __BYTE_TYPE__ __dex_builduuid64_1__[];
 DECL_END
 #include <hybrid/host.h>
 DECL_BEGIN
-INTDEF __BYTE_TYPE__ __dex_builduuid32_0__[];
-INTDEF __BYTE_TYPE__ __dex_builduuid32_1__[];
-INTDEF __BYTE_TYPE__ __dex_builduuid32_2__[];
-INTDEF __BYTE_TYPE__ __dex_builduuid32_3__[];
+INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_0__[];
+INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_1__[];
+INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_2__[];
+INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_3__[];
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define _Dee_MODULE_DEXDATA_INIT_BUILDID_PREHOOK      \
 	PRIVATE __UINT32_TYPE__ const _dex_buildid[4] = { \
@@ -177,6 +177,8 @@ INTDEF __BYTE_TYPE__ __dex_builduuid32_3__[];
 #define _Dee_MODULE_DEXDATA_INIT_BUILDTS __DATE__ "|" __TIME__
 #endif /* __DATE__ && __TIME__ */
 #endif /* !... */
+#undef _DEE_ELF_ATTR_WEAK
+
 #ifndef _Dee_MODULE_DEXDATA_INIT_BUILDTS
 #define _Dee_MODULE_DEXDATA_INIT_BUILDTS NULL
 #endif /* !_Dee_MODULE_DEXDATA_INIT_BUILDTS */

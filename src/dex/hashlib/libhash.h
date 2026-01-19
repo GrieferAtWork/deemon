@@ -21,10 +21,9 @@
 #define GUARD_DEX_HASHLIB_LIBHASH_H 1
 
 #include <deemon/api.h>
-#include <deemon/dex.h>
+
 #include <deemon/object.h>
-#include <stdint.h>
-#include <stdbool.h>
+#include <stdint.h> /* uintN_t */
 
 DECL_BEGIN
 

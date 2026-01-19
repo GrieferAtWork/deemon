@@ -21,8 +21,9 @@
 #define GUARD_DEEMON_OBJECTS_GC_INSPECT_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/object.h>
-/**/
+#include <deemon/types.h>
 
 #include <stddef.h> /* size_t */
 

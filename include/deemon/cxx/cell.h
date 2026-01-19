@@ -20,16 +20,21 @@
 #ifndef GUARD_DEEMON_CXX_CELL_H
 #define GUARD_DEEMON_CXX_CELL_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
-
-#include "object.h"
-#include "sequence.h"
-/**/
 
 #include "../cell.h"
+#include "../object.h"
+#include "../types.h"
+#include "object.h"
+#include "sequence.h"
+
+#include <stddef.h> /* NULL */
 
 DEE_CXX_BEGIN
+
+class Type;
+class bool_;
 
 template<class T = Object>
 class Cell: public Sequence<T> {

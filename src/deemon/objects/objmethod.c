@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_OBJMETHOD_C
 #define GUARD_DEEMON_OBJECTS_OBJMETHOD_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
@@ -43,10 +44,8 @@
 #include <deemon/util/atomic.h>
 
 #include "../runtime/kwlist.h"
-#include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
-/**/
 
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* size_t */

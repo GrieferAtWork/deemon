@@ -21,12 +21,12 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_REVERSED_H 1
 
 #include <deemon/api.h>
-#include <deemon/object.h>
-/**/
 
-#include <stddef.h> /* size_t */
+#include <deemon/object.h>
 
 #include "../generic-proxy.h"
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

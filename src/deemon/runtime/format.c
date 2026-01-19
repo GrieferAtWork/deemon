@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_RUNTIME_FORMAT_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/bytes.h>
 #include <deemon/float.h>
 #include <deemon/format.h>

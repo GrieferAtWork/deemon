@@ -33,7 +33,6 @@
 #endif /* !CONFIG_NO_THREADS */
 #endif /* CONFIG_BUILDING_DEEMON */
 #include <hybrid/typecore.h>
-/**/
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

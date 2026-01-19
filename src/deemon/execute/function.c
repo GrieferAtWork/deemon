@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_EXECUTE_FUNCTION_C
 #define GUARD_DEEMON_EXECUTE_FUNCTION_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
@@ -51,9 +52,10 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
-
-/**/
 #include "function-wrappers.h"
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

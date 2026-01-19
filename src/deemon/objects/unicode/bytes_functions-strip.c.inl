@@ -46,6 +46,7 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 #include <deemon/bytes.h>
 #include <deemon/object.h>
@@ -53,7 +54,6 @@
 /**/
 
 #include "string_functions.h"
-/**/
 
 #include <stdint.h> /* SIZE_MAX */
 

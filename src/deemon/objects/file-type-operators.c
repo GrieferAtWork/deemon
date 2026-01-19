@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_OBJECTS_FILE_TYPE_OPERATORS_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
@@ -34,10 +35,12 @@
 #include <deemon/super.h>
 
 #include <hybrid/typecore.h>
-/**/
 
 #include "../runtime/runtime_error.h"
 #include "file-type-operators.h"
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint64_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

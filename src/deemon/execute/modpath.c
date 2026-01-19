@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_EXECUTE_MODPATH_C 1
 
 #include <deemon/api.h>
-/**/
 
 #include <deemon/alloc.h>
 #include <deemon/code.h>
@@ -29,13 +28,14 @@
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
+#include <deemon/gc.h>
 #include <deemon/heap.h>
-#include <deemon/list.h>
 #include <deemon/method-hints.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>
@@ -45,14 +45,18 @@
 #include <deemon/types.h>
 #include <deemon/util/atomic-ref.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 #include <deemon/util/nrlock.h>
 
 #include <hybrid/align.h>
 #include <hybrid/debug-alignment.h>
-#include <hybrid/sched/yield.h>
+#include <hybrid/host.h>
 #include <hybrid/typecore.h>
 
+#include <stdarg.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
@@ -85,7 +89,6 @@
 #endif /* !DLOPEN_NULL_FLAGS */
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#include <deemon/compiler/compiler.h>
 #include <deemon/dex.h>
 #include <deemon/exec.h>
 #include <deemon/file.h>
@@ -106,7 +109,7 @@ DECL_BEGIN
 #define byte_t __BYTE_TYPE__
 
 #ifdef __ARCH_PAGESIZE_MIN
-#define SAMEPAGE(a, b) (((uintptr_t)(a) & (__ARCH_PAGESIZE_MIN - 1)) == ((uintptr_t)(b) & (__ARCH_PAGESIZE_MIN - 1)))
+#define SAMEPAGE(a, b) (((uintptr_t)(a) & ~(__ARCH_PAGESIZE_MIN - 1)) == ((uintptr_t)(b) & ~(__ARCH_PAGESIZE_MIN - 1)))
 #else /* __ARCH_PAGESIZE_MIN */
 #define SAMEPAGE(a, b) false
 #endif /* !__ARCH_PAGESIZE_MIN */
@@ -5027,11 +5030,13 @@ DECL_END
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
 #include <deemon/gc.h>
+#include <deemon/list.h>
 #include <deemon/none.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
 #include <hybrid/minmax.h>
+#include <hybrid/sched/yield.h>
 
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
@@ -5041,7 +5046,6 @@ DECL_END
 #include <deemon/dec.h>
 #endif /* !CONFIG_NO_DEC */
 
-/**/
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
@@ -9450,28 +9454,21 @@ PUBLIC NONNULL((1)) Dee_ssize_t DCALL
 DeeModule_EnumerateAdrTree(Dee_module_enumerate_cb_t cb, void *arg,
                            DeeModuleObject *start_after,
                            DeeTypeObject *opt_type_filter) {
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+#define module_type_hasaddr(t) ((t) == &DeeModuleDee_Type || (t) == &DeeModuleDex_Type)
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+#define module_type_hasaddr(t) ((t) == &DeeModuleDex_Type)
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	Dee_ssize_t result;
 	DREF DeeModuleObject *prev_module;
 	if (opt_type_filter) {
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-		if unlikely(opt_type_filter != &DeeModuleDee_Type &&
-		            opt_type_filter != &DeeModuleDex_Type)
+		if unlikely(!module_type_hasaddr(opt_type_filter))
 			return 0; /* Not part of "module_byaddr_tree" / "dex_byaddr_tree" */
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-		if unlikely(opt_type_filter != &DeeModuleDex_Type)
-			return 0; /* Not part of "module_byaddr_tree" / "dex_byaddr_tree" */
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	}
 	if (start_after) {
 		prev_module = start_after;
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-		if unlikely(Dee_TYPE(prev_module) != &DeeModuleDee_Type &&
-		            Dee_TYPE(prev_module) != &DeeModuleDex_Type)
+		if unlikely(!module_type_hasaddr(Dee_TYPE(prev_module)))
 			return 0; /* Not part of "module_byaddr_tree" / "dex_byaddr_tree" */
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-		if unlikely(Dee_TYPE(prev_module) != &DeeModuleDex_Type)
-			return 0; /* Not part of "module_byaddr_tree" / "dex_byaddr_tree" */
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 		Dee_Incref(prev_module);
 #ifdef HAVE_Dee_dexataddr_t
 		if (Dee_TYPE(prev_module) == &DeeModuleDex_Type &&
@@ -9582,6 +9579,7 @@ dex_empty_unlock:
 	module_byaddr_lock_endread();
 	return result;
 #endif /* HAVE_Dee_dexataddr_t */
+#undef module_type_hasaddr
 }
 
 PUBLIC NONNULL((1)) Dee_ssize_t DCALL

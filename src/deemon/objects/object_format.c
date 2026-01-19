@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_OBJECTS_OBJECT_FORMAT_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -30,9 +31,7 @@
 
 #include <hybrid/overflow.h>
 
-#include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint8_t */

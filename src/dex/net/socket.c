@@ -24,8 +24,9 @@
 #include "libnet.h"
 /**/
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
@@ -44,7 +45,6 @@
 #include <deemon/util/lock.h>
 
 #include <hybrid/debug-alignment.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uintptr_t */

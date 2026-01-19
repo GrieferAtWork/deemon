@@ -24,8 +24,9 @@
 #include "libctypes.h"
 /**/
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/callable.h>
 #include <deemon/error.h>
 #include <deemon/gc.h>
@@ -37,7 +38,6 @@
 #include <hybrid/debug-alignment.h>
 #include <hybrid/minmax.h>
 #include <hybrid/sequence/list.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* intN_t, uintN_t */

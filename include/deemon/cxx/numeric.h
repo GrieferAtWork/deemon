@@ -20,16 +20,25 @@
 #ifndef GUARD_DEEMON_CXX_NUMERIC_H
 #define GUARD_DEEMON_CXX_NUMERIC_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
-
-#include "object.h"
-/**/
 
 #include "../format.h"
 #include "../numeric.h"
+#include "../object.h"
+#include "../types.h"
+#include "object.h"
+
+#include <stddef.h> /* size_t, NULL */
 
 DEE_CXX_BEGIN
+
+class Type;
+class Bytes;
+class bool_;
+class int_;
+class float_;
+class string;
 
 class Numeric
 	: public Object

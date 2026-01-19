@@ -30,14 +30,20 @@
 #include <deemon/types.h>
 #include <deemon/util/atomic.h>
 
-/**/
+#include <hybrid/host.h>
 #include <hybrid/typecore.h>
 
-/**/
+#include <stddef.h>
 #include <stdint.h>
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
+
+#ifndef __ARCH_PAGESIZE_MIN
+#ifdef __ARCH_PAGESIZE
+#define __ARCH_PAGESIZE_MIN __ARCH_PAGESIZE
+#endif /* __ARCH_PAGESIZE */
+#endif /* !__ARCH_PAGESIZE_MIN */
 
 DECL_BEGIN
 
@@ -125,7 +131,7 @@ parse_build_ts(char const *build_ts)
 #endif /* !CONFIG_NO_DEX || !HAVE_deemon_build_ts */
 {
 	/* A couple of helper macros taken from the libtime DEX. */
-#define time_year2day(value) ((146097 * (value)) / 400) /* TODO: REMOVE ME */
+#define time_year2day(value) ((146097 * (value)) / 400) /* Not exact, but go enough for our purpose */
 #define SECONDS_PER_MINUTE UINT64_C(60)
 #define MINUTES_PER_HOUR   UINT64_C(60)
 #define HOURS_PER_DAY      UINT64_C(24)
@@ -267,7 +273,12 @@ DeeModule_GetBuildId_ofdex_uncached(DeeModuleObject *__restrict self) {
 	 * when it comes to detection of build IDs, and since we allow
 	 * for ATTR_WEAK to deal with '__dex_buildid__' missing, that
 	 * is something that can happen. */
-	if (dexdata->mdx_buildid && (uintptr_t)dexdata->mdx_buildid != 16) {
+#if defined(__ARCH_PAGESIZE_MIN) && __ARCH_PAGESIZE_MIN > 16
+	if (dexdata->mdx_buildid && (uintptr_t)dexdata->mdx_buildid >= __ARCH_PAGESIZE_MIN)
+#else /* __ARCH_PAGESIZE_MIN > 16 */
+	if (dexdata->mdx_buildid && (uintptr_t)dexdata->mdx_buildid != 16)
+#endif /* !__ARCH_PAGESIZE_MIN <= 16 */
+	{
 		self->mo_buildid = *dexdata->mdx_buildid;
 		if (self->mo_buildid.mbi_word64[0] != 0 || self->mo_buildid.mbi_word64[1] != 0)
 			return &self->mo_buildid;
@@ -395,7 +406,7 @@ PRIVATE uint64_t exec_timestamp = (uint64_t)-1;
 
 
 /* A couple of helper macros taken from the libtime DEX. */
-#define time_year2day(value) ((146097 * (value)) / 400) /* TODO: REMOVE ME */
+#define time_year2day(value) ((146097 * (value)) / 400) /* Not exact, but go enough for our purpose */
 #define MICROSECONDS_PER_MILLISECOND UINT64_C(1000)
 #define MILLISECONDS_PER_SECOND      UINT64_C(1000)
 #define SECONDS_PER_MINUTE           UINT64_C(60)

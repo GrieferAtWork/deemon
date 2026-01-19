@@ -48,13 +48,13 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
+
 #include <deemon/error.h>
 #include <deemon/mro.h>
 #include <deemon/object.h>
 /**/
 
 #include "runtime_error.h"
-/**/
 
 #include <stddef.h> /* size_t */
 

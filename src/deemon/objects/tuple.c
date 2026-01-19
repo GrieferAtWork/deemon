@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_TUPLE_C
 #define GUARD_DEEMON_OBJECTS_TUPLE_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
@@ -37,24 +38,18 @@
 #include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
-#include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
 
 #include <hybrid/host.h> /* __ARCH_VA_LIST_IS_STACK_POINTER */
 #include <hybrid/limitcore.h>
-#include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
-#include <hybrid/sequence/list.h>
-/**/
+#include <hybrid/typecore.h>
 
-#include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
 #include "seq/default-compare.h"
 #include "seq/sort.h"
-/**/
 
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* size_t, offsetof */
@@ -99,6 +94,13 @@
 #undef CONFIG_TUPLE_CACHE_MAXCOUNT
 #define CONFIG_TUPLE_CACHE_MAXCOUNT 0
 #endif /* !CONFIG_TUPLE_CACHE_MAXSIZE */
+
+#if CONFIG_TUPLE_CACHE_MAXCOUNT != 0
+#include <deemon/util/lock.h>
+
+#include <hybrid/minmax.h>
+#include <hybrid/sequence/list.h>
+#endif /* CONFIG_TUPLE_CACHE_MAXCOUNT != 0 */
 
 DECL_BEGIN
 

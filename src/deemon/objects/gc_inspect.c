@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_GC_INSPECT_C
 #define GUARD_DEEMON_OBJECTS_GC_INSPECT_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
@@ -31,12 +32,12 @@
 #include <deemon/set.h>
 #include <deemon/super.h>
 #include <deemon/util/atomic.h>
-/**/
+
+#include <hybrid/typecore.h>
 
 #include "../runtime/strings.h"
 #include "gc_inspect.h"
 #include "generic-proxy.h"
-/**/
 
 #include <stddef.h> /* size_t, offsetof */
 

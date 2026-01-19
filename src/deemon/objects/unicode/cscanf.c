@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_UNICODE_CSCANF_C
 #define GUARD_DEEMON_OBJECTS_UNICODE_CSCANF_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
@@ -36,13 +37,11 @@
 #include <deemon/util/lock.h>
 
 #include <hybrid/typecore.h>
-/**/
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, offsetof, NULL */
 #include <stdint.h> /* uint32_t */
 
 #undef byte_t

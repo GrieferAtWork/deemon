@@ -22,14 +22,16 @@
 #define CONFIG_BUILDING_LIBSQLITE3
 #define DEE_SOURCE
 
+#include "libsqlite3.h"
+/**/
+
 #include <deemon/api.h>
+
 #include <deemon/dex.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/util/lock.h>
 
-/**/
-#include "libsqlite3.h"
 #include "sqlite3-external.h"
 
 DECL_BEGIN

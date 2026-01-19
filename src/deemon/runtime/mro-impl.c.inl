@@ -22,8 +22,17 @@
 //#define DEFINE_MRO_ATTRLEN_FUNCTIONS
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+
+#include <deemon/class.h>
 #include <deemon/error.h>
-#include <deemon/none.h>
+#include <deemon/mro.h>
+#include <deemon/none.h> /* type_member_del -> Dee_None */
+#include <deemon/object.h>
+#include <deemon/types.h>
+
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t, NULL */
 
 DECL_BEGIN
 

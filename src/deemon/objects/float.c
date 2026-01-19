@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_FLOAT_C
 #define GUARD_DEEMON_OBJECTS_FLOAT_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
@@ -35,16 +36,16 @@
 #include <deemon/system-features.h>
 
 #include <hybrid/typecore.h>
-/**/
 
 #include "../runtime/strings.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* INTPTR_MIN */
 
 #ifdef CONFIG_HAVE_FPU
 #include <hybrid/floatcore.h>
+
+#include "int_logic.h" /* `DeeInt_Alloc()' */
 
 #ifdef CONFIG_HAVE_FLOAT_H
 #include <float.h>
@@ -53,9 +54,6 @@
 #ifdef CONFIG_HAVE_MATH_H
 #include <math.h>
 #endif /* CONFIG_HAVE_MATH_H */
-/**/
-
-#include "int_logic.h" /* `DeeInt_Alloc()' */
 #endif /* CONFIG_HAVE_FPU */
 
 DECL_BEGIN

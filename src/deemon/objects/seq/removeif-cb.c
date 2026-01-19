@@ -20,18 +20,17 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_REMOVEIF_CB_C
 #define GUARD_DEEMON_OBJECTS_SEQ_REMOVEIF_CB_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
 #include <deemon/format.h>
 #include <deemon/object.h>
-/**/
 
 #include "../generic-proxy.h"
 #include "removeif-cb.h"
-/**/
 
 #include <stddef.h> /* size_t */
 

@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_HASHSET_C
 #define GUARD_DEEMON_OBJECTS_HASHSET_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
@@ -50,7 +51,6 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
-/**/
 
 #include <stddef.h> /* size_t */
 

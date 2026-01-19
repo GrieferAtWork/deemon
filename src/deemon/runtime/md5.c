@@ -20,14 +20,12 @@
 #ifndef GUARD_DEEMON_RUNTIME_MD5_C
 #define GUARD_DEEMON_RUNTIME_MD5_C 1
 
-#include "../api.h"
-/**/
+#include <deemon/api.h>
 
 #include <deemon/util/md5.h>
 
 #include <hybrid/byteswap.h>
 #include <hybrid/typecore.h>
-/**/
 
 #include <stdint.h>
 

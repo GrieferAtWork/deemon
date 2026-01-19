@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_COMPILER_OPTIMIZE_TRAITS_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/callable.h>
@@ -29,7 +30,6 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
-#include <deemon/compiler/tpp.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
@@ -47,9 +47,8 @@
 #include <deemon/super.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, NULL */
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN

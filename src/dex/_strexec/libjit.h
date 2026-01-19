@@ -20,8 +20,9 @@
 #ifndef GUARD_DEX_STREXEC_LIBJIT_H
 #define GUARD_DEX_STREXEC_LIBJIT_H 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/class.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
@@ -30,7 +31,6 @@
 #include <deemon/util/rlock.h>
 
 #include <hybrid/typecore.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

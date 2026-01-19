@@ -24,13 +24,13 @@
 #include "libjit.h"
 /**/
 
-#include <deemon/error.h>
 #include <deemon/api.h>
+
+#include <deemon/error.h>
 
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
 
-/**/
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
 #include <stdint.h>  /* uint32_t */

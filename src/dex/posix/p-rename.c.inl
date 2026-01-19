@@ -25,11 +25,12 @@
 #include "libposix.h"
 /**/
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
+#include <deemon/dex.h>
 #include <deemon/error.h>
-#include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
@@ -38,7 +39,6 @@
 #include <deemon/thread.h>
 
 #include <hybrid/debug-alignment.h>
-/**/
 
 #include <stddef.h> /* size_t */
 

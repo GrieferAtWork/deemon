@@ -24,6 +24,7 @@
 #endif
 
 #include <deemon/api.h>
+
 #include <deemon/system-features.h> /* isdigit */
 
 #if (defined(DEFINE_Dee_Strtold) + \

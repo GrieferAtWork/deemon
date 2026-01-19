@@ -24,8 +24,9 @@
 #include "libjit.h"
 /**/
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
 #include <deemon/dict.h>
@@ -38,7 +39,6 @@
 #include <deemon/system-features.h> /* memcpy() */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

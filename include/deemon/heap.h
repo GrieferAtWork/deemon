@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_HEAP_H 1
 
 #include "api.h"
-/**/
 
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 #include <stddef.h>  /* size_t */

@@ -25,6 +25,7 @@
 /**/
 
 #include <deemon/api.h>
+
 #include <deemon/cached-dict.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>

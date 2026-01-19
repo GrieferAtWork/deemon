@@ -46,6 +46,7 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
+
 #include <deemon/class.h>
 #include <deemon/error-rt.h>
 #include <deemon/mro.h>
@@ -53,7 +54,6 @@
 /**/
 
 #include "runtime_error.h"
-/**/
 
 #include <stddef.h> /* size_t */
 

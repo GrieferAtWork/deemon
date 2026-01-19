@@ -33,7 +33,6 @@
 #include "ast.h"
 #include "symbol.h"
 #include "tpp.h"
-/**/
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

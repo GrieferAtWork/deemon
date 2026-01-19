@@ -20,19 +20,25 @@
 #ifndef GUARD_DEEMON_CXX_DICT_H
 #define GUARD_DEEMON_CXX_DICT_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
-
-#include "mapping.h"
-#include "object.h"
-#include "tuple.h"
-/**/
 
 #include "../dict.h"
 #include "../format.h"
-/**/
+#include "../object.h"
+#include "../types.h"
+#include "mapping.h"
+#include "object.h"
+
+#include <stddef.h> /* size_t, NULL */
 
 DEE_CXX_BEGIN
+
+class Type;
+class bool_;
+class int_;
+class Numeric;
+class float_;
 
 template<class Key = Object, class Value = Object>
 class Dict

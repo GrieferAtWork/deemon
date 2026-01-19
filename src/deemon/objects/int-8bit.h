@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_OBJECTS_INT_8BIT_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/int.h>
 
 /* Config option to statically pre-allocate all 8-bit integer constants (that is: [-128,255]). */

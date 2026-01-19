@@ -20,8 +20,9 @@
 #ifndef GUARD_DEX_SQLITE3_LIBSQLITE3_H
 #define GUARD_DEX_SQLITE3_LIBSQLITE3_H 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/bytes.h>
 #include <deemon/error_types.h>
 #include <deemon/gc.h>
@@ -35,11 +36,10 @@
 
 #include <hybrid/sequence/list.h>
 
+#include "sqlite3-external.h"
+
 #include <stddef.h>
 #include <stdint.h>
-/**/
-
-#include "sqlite3-external.h"
 
 DECL_BEGIN
 

@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_RUNTIME_OPERATOR_HINT_INVOKE_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/bool.h>
 #include <deemon/int.h>
 #include <deemon/object.h>
@@ -28,11 +29,8 @@
 
 #include <hybrid/host.h>
 
-/**/
 #include "operator-hint-errors.h"
-#include "runtime_error.h"
 
-/**/
 #include <stddef.h>  /* size_t */
 #include <stdint.h>  /* intN_t */
 

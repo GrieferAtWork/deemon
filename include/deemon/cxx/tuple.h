@@ -20,18 +20,23 @@
 #ifndef GUARD_DEEMON_CXX_TUPLE_H
 #define GUARD_DEEMON_CXX_TUPLE_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
-
-#include "object.h"
-#include "sequence.h"
-/**/
 
 #include "../format.h"
+#include "../object.h"
 #include "../tuple.h"
-/**/
+#include "../types.h"
+#include "object.h"
+#include "sequence.h"
+
+#include <stddef.h>    /* size_t, NULL */
+#include <type_traits> /* std::enable_if */
 
 DEE_CXX_BEGIN
+
+class Type;
+class int_;
 
 namespace detail {
 template<size_t Index, class ...Types>

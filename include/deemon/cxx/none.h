@@ -20,19 +20,16 @@
 #ifndef GUARD_DEEMON_CXX_NONE_H
 #define GUARD_DEEMON_CXX_NONE_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
-
-#include "numeric.h"
-#include "object.h"
-/**/
-
-#include "../format.h"
-/**/
 
 #include "../none.h"
+#include "../types.h"
+#include "object.h"
 
 DEE_CXX_BEGIN
+
+class Type;
 
 class None
 	: public Object

@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_UTIL_BYTEWRITER_H 1
 
 #include "../api.h"
-/**/
 
 #include "../alloc.h"
 #include "../object.h"

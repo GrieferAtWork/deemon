@@ -19,6 +19,7 @@
  */
 #ifndef __GUARD_HYBRID_PP_BUBBLE_H
 #define __GUARD_HYBRID_PP_BUBBLE_H 1
+/**/
 
 #include <hybrid/compiler.h>
 #include "__bubble.h"

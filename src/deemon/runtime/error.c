@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_RUNTIME_ERROR_C
 #define GUARD_DEEMON_RUNTIME_ERROR_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/format.h>
@@ -32,11 +33,11 @@
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/util/atomic.h>
-/**/
 
 #include <stddef.h> /* offsetof, size_t */
 #include <stdarg.h> /* va_list */
 #include <stdint.h> /* uint8_t */
+
 #ifndef CONFIG_NO_KEYBOARD_INTERRUPT
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>

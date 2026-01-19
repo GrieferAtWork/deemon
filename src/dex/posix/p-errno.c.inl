@@ -26,15 +26,14 @@
 /**/
 
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 #include <deemon/dex.h>
 #include <deemon/int.h>
-#include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/system-features.h>
-/**/
 
 #include <stddef.h> /* size_t */
 

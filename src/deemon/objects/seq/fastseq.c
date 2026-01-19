@@ -20,19 +20,16 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_FASTSEQ_C
 #define GUARD_DEEMON_OBJECTS_SEQ_FASTSEQ_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/super.h>
 #include <deemon/util/objectlist.h>
 
 #include <hybrid/overflow.h>
-/**/
 
 #include "../../runtime/runtime_error.h"
-/**/
 
 #include <stddef.h> /* size_t */
 

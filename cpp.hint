@@ -1003,7 +1003,7 @@
 #define DOC_GET(n) n
 #define DEE_CXX_BEGIN namespace deemon{
 #define DEE_CXX_END }
-#define DEE_CXX_NOTHROW
+#define DEE_CXX_NOTHROW noexcept
 
 #define TPPCALL
 #define TPPVCALL

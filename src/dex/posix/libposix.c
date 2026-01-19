@@ -62,6 +62,7 @@
 #endif /* !__INTELLISENSE__ */
 
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/dex.h>

@@ -20,8 +20,11 @@
 #ifndef GUARD_DEX_CTYPES_C_API_H
 #define GUARD_DEX_CTYPES_C_API_H 1
 
+#include "libctypes.h"
+/**/
+
 #include <deemon/api.h>
-#include <deemon/object.h>
+
 #include <deemon/objmethod.h>
 
 DECL_BEGIN

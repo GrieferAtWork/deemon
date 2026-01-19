@@ -21,12 +21,10 @@
 #define GUARD_DEEMON_SYSTEM_FEATURES_H 1
 
 #include "api.h"
-/**/
 
 #include <hybrid/byteorder.h>
 #include <hybrid/host.h>
 #include <hybrid/typecore.h>
-/**/
 
 #include <stddef.h> /* size_t, NULL */
 #include <stdint.h> /* uintptr_t */

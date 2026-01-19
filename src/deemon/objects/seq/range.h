@@ -21,9 +21,9 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_RANGE_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/object.h>
 #include <deemon/util/lock.h>
-/**/
 
 #include <stdbool.h> /* bool */
 

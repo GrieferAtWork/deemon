@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_BYATTR_C
 #define GUARD_DEEMON_OBJECTS_SEQ_BYATTR_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/computed-operators.h>
 #include <deemon/format.h>
 #include <deemon/map.h>
@@ -30,11 +31,9 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
-/**/
 
 #include "../generic-proxy.h"
 #include "byattr.h"
-/**/
 
 #include <stddef.h> /* size_t, offsetof */
 

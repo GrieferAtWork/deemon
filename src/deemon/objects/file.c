@@ -20,14 +20,14 @@
 #ifndef GUARD_DEEMON_OBJECTS_FILE_C
 #define GUARD_DEEMON_OBJECTS_FILE_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/callable.h>
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
@@ -38,13 +38,11 @@
 #include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
-#include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
@@ -57,6 +55,10 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "file-type-operators.h"
+
+#include <stdarg.h> /* va_list */
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint64_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -1866,25 +1868,41 @@ PRIVATE struct type_getset tpconst file_class_getsets[] = {
 };
 
 
-#if SEEK_SET == 0
+#if Dee_SEEK_SET == 0
 #define OBJ_file_SEEK_SET DeeInt_Zero
-#else /* SEEK_SET == 0 */
+#elif Dee_SEEK_SET == 1
+#define OBJ_file_SEEK_SET DeeInt_One
+#elif Dee_SEEK_SET <= ((1 << 15) - 1)
 #define OBJ_file_SEEK_SET Dee_AsObject(&file_SEEK_SET)
-PRIVATE DEFINE_UINT32(file_SEEK_SET, SEEK_SET);
-#endif /* SEEK_SET != 0 */
-#if SEEK_CUR == 1
-#define OBJ_file_SEEK_CUR DeeInt_One
-#else /* SEEK_CUR == 1 */
-#define OBJ_file_SEEK_CUR Dee_AsObject(&file_SEEK_CUR)
-PRIVATE DEFINE_UINT32(file_SEEK_CUR, SEEK_CUR);
-#endif /* SEEK_CUR != 1 */
-#define OBJ_file_SEEK_END Dee_AsObject(&file_SEEK_END)
-#if SEEK_END <= ((1 << 15) - 1)
-PRIVATE DEFINE_UINT15(file_SEEK_END, SEEK_END);
-#else /* SEEK_END <= ((1 << 15) - 1) */
-PRIVATE DEFINE_UINT32(file_SEEK_END, SEEK_END);
-#endif /* SEEK_END > ((1 << 15) - 1) */
+PRIVATE DEFINE_UINT15(file_SEEK_SET, Dee_SEEK_SET);
+#else /* ... */
+#define OBJ_file_SEEK_SET Dee_AsObject(&file_SEEK_SET)
+PRIVATE DEFINE_UINT32(file_SEEK_SET, Dee_SEEK_SET);
+#endif /* !... */
 
+#if Dee_SEEK_CUR == 0
+#define OBJ_file_SEEK_CUR DeeInt_Zero
+#elif Dee_SEEK_CUR == 1
+#define OBJ_file_SEEK_CUR DeeInt_One
+#elif Dee_SEEK_CUR <= ((1 << 15) - 1)
+#define OBJ_file_SEEK_CUR Dee_AsObject(&file_SEEK_CUR)
+PRIVATE DEFINE_UINT15(file_SEEK_CUR, Dee_SEEK_CUR);
+#else /* ... */
+#define OBJ_file_SEEK_CUR Dee_AsObject(&file_SEEK_CUR)
+PRIVATE DEFINE_UINT32(file_SEEK_CUR, Dee_SEEK_CUR);
+#endif /* !... */
+
+#if Dee_SEEK_END == 0
+#define OBJ_file_SEEK_END DeeInt_Zero
+#elif Dee_SEEK_END == 1
+#define OBJ_file_SEEK_END DeeInt_One
+#elif Dee_SEEK_END <= ((1 << 15) - 1)
+#define OBJ_file_SEEK_END Dee_AsObject(&file_SEEK_END)
+PRIVATE DEFINE_UINT15(file_SEEK_END, Dee_SEEK_END);
+#else /* ... */
+#define OBJ_file_SEEK_END Dee_AsObject(&file_SEEK_END)
+PRIVATE DEFINE_UINT32(file_SEEK_END, Dee_SEEK_END);
+#endif /* !... */
 
 PRIVATE struct type_member tpconst file_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DeeFile_Type.ft_base),
@@ -2112,9 +2130,9 @@ struct whence_name {
 };
 
 PRIVATE struct whence_name whence_names[] = {
-	{ "set", SEEK_SET },
-	{ "cur", SEEK_CUR },
-	{ "end", SEEK_END },
+	{ "set", Dee_SEEK_SET },
+	{ "cur", Dee_SEEK_CUR },
+	{ "end", Dee_SEEK_END },
 };
 
 
@@ -2122,7 +2140,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_seek(DeeObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
 	Dee_pos_t result;
-	int whence = SEEK_SET;
+	int whence = Dee_SEEK_SET;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("seek", params: "
 	Dee_off_t off;
 	DeeObject *whence = NULL;
@@ -2368,13 +2386,13 @@ file_size(DeeObject *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("size", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "size");
 /*[[[end]]]*/
-	old_pos = DeeFile_Seek(self, 0, SEEK_CUR);
+	old_pos = DeeFile_Seek(self, 0, Dee_SEEK_CUR);
 	if unlikely(old_pos == (Dee_pos_t)-1)
 		goto err;
-	result = DeeFile_Seek(self, 0, SEEK_END);
+	result = DeeFile_Seek(self, 0, Dee_SEEK_END);
 	if unlikely(result == (Dee_pos_t)-1)
 		goto err;
-	if (DeeFile_Seek(self, old_pos, SEEK_SET) == (Dee_pos_t)-1)
+	if (DeeFile_Seek(self, old_pos, Dee_SEEK_SET) == (Dee_pos_t)-1)
 		goto err;
 
 	/* Return the size of the file. */

@@ -22,8 +22,12 @@
 #define CONFIG_BUILDING_LIBSQLITE3
 #define DEE_SOURCE
 
-#include <deemon/alloc.h>
+#include "libsqlite3.h"
+/**/
+
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -39,11 +43,9 @@
 
 #include <hybrid/sequence/list.h>
 
-#include <stdint.h>
-
-/**/
-#include "libsqlite3.h"
 #include "sqlite3-external.h"
+
+#include <stdint.h>
 
 #ifndef INT_MAX
 #include <hybrid/limitcore.h>

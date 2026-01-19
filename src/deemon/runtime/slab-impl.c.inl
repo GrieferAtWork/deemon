@@ -23,11 +23,16 @@
 #define NEXT_LARGER  7
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/format.h>
+#include <deemon/system-features.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
 #include <hybrid/sched/yield.h>
+#include <hybrid/typecore.h>
 
 #define FUNC3(x, y) x##y
 #define FUNC2(x, y) FUNC3(x, y)

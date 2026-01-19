@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_UNICODE_REGROUPS_H
 #define GUARD_DEEMON_OBJECTS_UNICODE_REGROUPS_H 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/bytes.h>
 #include <deemon/format.h> /* PCKuSIZ */
 #include <deemon/none.h>
@@ -31,9 +32,8 @@
 #include <deemon/tuple.h> /* DeeTuple_Newf */
 
 #include <hybrid/typecore.h>
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, offsetof */
 
 /* Proxy sequence objects for `struct DeeRegexMatch'-arrays */
 

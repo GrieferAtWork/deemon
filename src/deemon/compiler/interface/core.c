@@ -20,17 +20,16 @@
 #ifndef GUARD_DEEMON_COMPILER_INTERFACE_CORE_C
 #define GUARD_DEEMON_COMPILER_INTERFACE_CORE_C 1
 
-#include <deemon/compiler/compiler.h>
+#include <deemon/api.h>
 
 #include <deemon/alloc.h>
-#include <deemon/api.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/compiler/interface.h>
 #include <deemon/error.h>
 #include <deemon/object.h>
 #include <deemon/util/atomic.h>
 
 #include <hybrid/sequence/list.h>
-/**/
 
 #include <stddef.h> /* size_t */
 

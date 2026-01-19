@@ -22,8 +22,12 @@
 #define CONFIG_BUILDING_LIBSQLITE3
 #define DEE_SOURCE
 
-#include <deemon/alloc.h>
+#include "libsqlite3.h"
+/**/
+
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -32,10 +36,10 @@
 #include <deemon/string.h>
 #include <deemon/system.h>
 #include <deemon/thread.h>
-/**/
 
-#include "libsqlite3.h"
 #include "sqlite3-external.h"
+
+#include <stddef.h> /* size_t, NULL, offsetof */
 
 DECL_BEGIN
 

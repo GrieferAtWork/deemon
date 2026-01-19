@@ -25,6 +25,7 @@
 /**/
 
 #include <deemon/api.h>
+
 #include <deemon/class.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
@@ -34,7 +35,6 @@
 #include <hybrid/minmax.h>
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
-/**/
 
 #include <stddef.h> /* size_t, offsetof */
 #include <stdint.h> /* uint32_t */

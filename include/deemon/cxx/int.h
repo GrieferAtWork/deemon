@@ -20,21 +20,27 @@
 #ifndef GUARD_DEEMON_CXX_INT_H
 #define GUARD_DEEMON_CXX_INT_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
-
-#include "numeric.h"
-#include "object.h"
-/**/
-
-#include "../format.h"
-#include "../int.h"
-#include "../system-features.h" /* strlen */
-/**/
 
 #include <hybrid/typecore.h>
 
+#include "../format.h"
+#include "../int.h"
+#include "../object.h"
+#include "../system-features.h" /* strlen */
+#include "../types.h"
+#include "numeric.h"
+#include "object.h"
+
+#include <stddef.h> /* size_t, NULL */
+#include <stdint.h> /* uint32_t */
+
 DEE_CXX_BEGIN
+
+class Type;
+class Bytes;
+class bool_;
 
 class int_
 	: public Numeric

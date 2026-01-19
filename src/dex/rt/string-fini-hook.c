@@ -21,8 +21,12 @@
 #define GUARD_DEX_RT_STRING_FINI_HOOK_C 1
 #define DEE_SOURCE
 
-#include <deemon/alloc.h>
+#include "librt.h"
+/**/
+
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -30,9 +34,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 
-#include <stddef.h>
-
-#include "librt.h"
+#include <stddef.h> /* size_t, NULL, offsetof */
 
 DECL_BEGIN
 

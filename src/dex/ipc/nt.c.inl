@@ -21,7 +21,11 @@
 #define GUARD_DEX_IPC_NT_C_INL 1
 #define DEE_SOURCE
 
+#include "libipc.h"
+/**/
+
 #include <deemon/api.h>
+
 #include <deemon/error.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
@@ -31,7 +35,6 @@
 
 #include <Windows.h>
 
-#include "libipc.h"
 //#include <Winternl.h>
 
 #ifdef _WIN32_WCE

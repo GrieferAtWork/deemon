@@ -30,6 +30,10 @@
 
 #define DEE_CXX_BEGIN   __CXXDECL_BEGIN namespace deemon {
 #define DEE_CXX_END     } __CXXDECL_END
+#ifdef __COMPILER_HAVE_CXX11_NOEXCEPT
+#define DEE_CXX_NOTHROW noexcept
+#else /* __COMPILER_HAVE_CXX11_NOEXCEPT */
 #define DEE_CXX_NOTHROW throw()
+#endif /* !__COMPILER_HAVE_CXX11_NOEXCEPT */
 
 #endif /* !GUARD_DEEMON_CXX_API_H */

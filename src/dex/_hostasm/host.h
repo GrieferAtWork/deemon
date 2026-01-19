@@ -21,6 +21,7 @@
 #define GUARD_DEX_HOSTASM_HOST_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/object.h>
 #include <deemon/system-features.h>
 

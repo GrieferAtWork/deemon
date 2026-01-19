@@ -22,8 +22,12 @@
 #define CONFIG_BUILDING_LIBTIME
 #define DEE_SOURCE
 
-#include <deemon/alloc.h>
+#include "libtime.h"
+/**/
+
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/dex.h>
@@ -47,12 +51,8 @@
 #include <hybrid/debug-alignment.h>
 #include <hybrid/int128.h>
 #include <hybrid/unaligned.h>
-/**/
 
-#include "libtime.h"
-/**/
-
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, NULL */
 #include <stdint.h> /* uint8_t, uint16_t, uint32_t, uint64_t */
 
 #ifdef CONFIG_HAVE_LIMITS_H

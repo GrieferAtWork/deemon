@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_ITERATOR_C
 #define GUARD_DEEMON_OBJECTS_ITERATOR_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
@@ -42,11 +43,9 @@
 #include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
 
-#include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
 #include "seq_functions.h"
-/**/
 
 #include <stddef.h> /* size_t, offsetof */
 #include <stdint.h> /* uintptr_t */

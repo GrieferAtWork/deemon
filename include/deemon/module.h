@@ -21,30 +21,23 @@
 #define GUARD_DEEMON_MODULE_H 1
 
 #include "api.h"
-/**/
 
 #include "gc.h"
 #include "types.h"
+#include "util/lock.h"
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
+
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #include "system-features.h" /* bcmp */
 #include "system.h" /* DeeSystem_HAVE_FS_ICASE */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-#include "util/lock.h"
-/**/
-
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#include <hybrid/byteorder.h>
 #include <hybrid/sequence/list.h>
 
 #ifdef GUARD_DEEMON_EXECUTE_MODPATH_C
 #include "list.h"
 #endif /* GUARD_DEEMON_EXECUTE_MODPATH_C */
-#else /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-#include <hybrid/byteorder.h>
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-/**/
-
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint16_t */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_BEGIN
 

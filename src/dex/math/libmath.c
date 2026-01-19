@@ -22,7 +22,11 @@
 #define DEE_SOURCE
 #define _USE_MATH_DEFINES 1
 
+#include "libmath.h"
+/**/
+
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/dex.h>
@@ -38,10 +42,6 @@
 
 #include <hybrid/limitcore.h>
 #include <hybrid/typecore.h>
-/**/
-
-#include "libmath.h"
-/**/
 
 #include <stddef.h> /* size_t */
 

@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_CACHED_DICT_C
 #define GUARD_DEEMON_OBJECTS_CACHED_DICT_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/cached-dict.h>
@@ -38,7 +39,6 @@
 #include <deemon/util/lock.h>
 
 #include <hybrid/sched/yield.h>
-/**/
 
 #include <stddef.h> /* size_t */
 

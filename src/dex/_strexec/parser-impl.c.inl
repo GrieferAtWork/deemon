@@ -23,6 +23,9 @@
 #define JIT_EVAL 1
 #endif /* __INTELLISENSE__ */
 
+#include "libjit.h"
+/**/
+
 #include <deemon/bool.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/tpp.h>
@@ -44,7 +47,6 @@
 
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */
@@ -3893,17 +3895,9 @@ DECL_END
 #ifndef __INTELLISENSE__
 
 #include "parser-impl-template-string.c.inl"
-/**/
-
 #include "parser-impl-class.c.inl"
-/**/
-
 #include "parser-impl-comma.c.inl"
-/**/
-
 #include "parser-impl-statement.c.inl"
-/**/
-
 #include "parser-impl-hybrid.c.inl"
 /**/
 

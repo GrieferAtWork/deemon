@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_UNICODE_STRING_FUNCTIONS_C
 #define GUARD_DEEMON_OBJECTS_UNICODE_STRING_FUNCTIONS_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
@@ -42,16 +43,14 @@
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
-/**/
 
 #include "../../runtime/kwlist.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "regroups.h"
 #include "string_functions.h"
-/**/
 
-#include <stddef.h> /* size_t, offsetof */
+#include <stddef.h> /* size_t, offsetof, NULL */
 #include <stdint.h> /* uint8_t, uint16_t, uint32_t */
 
 #undef byte_t

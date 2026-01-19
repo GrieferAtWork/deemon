@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_OBJECTS_UNICODE_CODEC_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/bytes.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -34,13 +35,11 @@
 #include <hybrid/unaligned.h>
 #include <hybrid/typecore.h>
 #include <hybrid/wordbits.h>
-/**/
 
 #include "../../runtime/strings.h"
 #include "codec.h"
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, NULL */
 #include <stdint.h> /* uint8_t */
 
 #undef byte_t

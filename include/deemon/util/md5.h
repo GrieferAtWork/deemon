@@ -21,11 +21,11 @@
 #define GUARD_DEEMON_UTIL_MD5_H 1
 
 #include "../api.h"
-/**/
 
 #include <hybrid/typecore.h>
 
-#include <stdint.h>
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint32_t, uint64_t */
 
 DECL_BEGIN
 

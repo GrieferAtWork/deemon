@@ -21,9 +21,8 @@
 #define GUARD_DEEMON_RUNTIME_RUNTIME_ERROR_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/object.h>
-#include <deemon/string.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */
@@ -103,6 +102,7 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_expected_string_for_attribute(DeeObj
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_not_loaded_attr_string(struct module_object *__restrict self, char const *__restrict name, int access);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_not_loaded_attr_string_len(struct module_object *__restrict self, char const *__restrict name, size_t namelen, int access);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+/* TODO: Get rid of `err_module_*' -- must use DeeRT_Err* functions! */
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_no_such_global(struct module_object *self, DeeObject *name, int access);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_no_such_global_string(struct module_object *__restrict self, char const *__restrict name, int access);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_no_such_global_string_len(struct module_object *__restrict self, char const *__restrict name, size_t namelen, int access);

@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_EXECUTE_EXEC_C
 #define GUARD_DEEMON_EXECUTE_EXEC_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/exec.h>
@@ -31,22 +32,17 @@
 #include <deemon/module.h>
 #include <deemon/notify.h>
 #include <deemon/object.h>
-#include <deemon/string.h>
+#include <deemon/code.h>
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/byteswap.h>
 #include <hybrid/sched/yield.h>
 
-/* Pull in some header to form artificial dependencies in order
- * to force the timestamp of the builtin `deemon' module to be
- * incremented if anything in these headers changed. */
-#include <deemon/asm.h>
-#include "../runtime/builtin.h"
-/**/
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

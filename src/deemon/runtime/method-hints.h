@@ -20,13 +20,13 @@
 #ifndef GUARD_DEEMON_RUNTIME_METHOD_HINTS_H
 #define GUARD_DEEMON_RUNTIME_METHOD_HINTS_H 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
 
 #include <hybrid/byteorder.h>
-/**/
 
 #include <stdint.h> /* uint16_t */
 

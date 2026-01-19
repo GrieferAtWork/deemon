@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_OBJMETHOD_H 1
 
 #include "api.h"
-/**/
 
 #include "types.h"
 #ifndef __INTELLISENSE__

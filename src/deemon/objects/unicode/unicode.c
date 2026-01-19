@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_UNICODE_UNICODE_C
 #define GUARD_DEEMON_OBJECTS_UNICODE_UNICODE_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/bytes.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -32,10 +33,9 @@
 #include <deemon/util/atomic.h>
 
 #include <hybrid/typecore.h>
-/**/
 
 #include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t, offsetof */
+#include <stddef.h>  /* size_t, offsetof, NULL */
 #include <stdint.h>  /* uint32_t */
 
 #undef byte_t

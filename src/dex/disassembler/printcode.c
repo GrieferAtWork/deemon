@@ -21,8 +21,12 @@
 #define GUARD_DEX_FS_PRINTCODE_C 1
 #define DEE_SOURCE
 
-#include <deemon/alloc.h>
+#include "libdisasm.h"
+/**/
+
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
@@ -36,10 +40,6 @@
 #include <hybrid/minmax.h>
 #include <hybrid/unaligned.h>
 
-/**/
-#include "libdisasm.h"
-
-/**/
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */
 

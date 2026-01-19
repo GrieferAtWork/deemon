@@ -21,19 +21,16 @@
 #define GUARD_DEEMON_THREAD_H 1
 
 #include "api.h"
-/**/
 
 #include "types.h"
 #include "util/futex.h"
 #ifndef __INTELLISENSE__
 #include "object.h" /* DeeObject_NewPack */
 #endif /* !__INTELLISENSE__ */
-/**/
 
 #include <hybrid/__atomic.h>
 #include <hybrid/host.h>
 #include <hybrid/typecore.h>
-/**/
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

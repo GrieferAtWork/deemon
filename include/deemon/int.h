@@ -30,15 +30,12 @@
 #define GUARD_DEEMON_INT_H 1
 
 #include "api.h"
-/**/
-
-#include "types.h"
-/**/
 
 #include <hybrid/byteorder.h>
 #include <hybrid/limitcore.h>
 #include <hybrid/typecore.h>
-/**/
+
+#include "types.h"
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

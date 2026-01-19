@@ -20,25 +20,24 @@
 #ifndef GUARD_DEEMON_SYSTEM_FUTEX_C
 #define GUARD_DEEMON_SYSTEM_FUTEX_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
-#include <deemon/system.h>
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/futex.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/overflow.h>
 #include <hybrid/sched/atomic-once.h>
 #include <hybrid/sched/yield.h>
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
 
 #include <stdbool.h> /* bool */
-#include <stddef.h>  /* uintptr_t */
-#include <stdint.h>  /* INT32_MAX */
+#include <stddef.h>  /* size_t, NULL */
+#include <stdint.h>  /* uint32_t, uint64_t, uintptr_t */
 
 #ifdef CONFIG_HAVE_LINUX_FUTEX_H
 #include <linux/futex.h>
@@ -59,13 +58,6 @@
 #ifdef CONFIG_HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif /* CONFIG_HAVE_SYS_TIME_H */
-
-#ifndef INT32_MAX
-#include <hybrid/limitcore.h>
-#ifndef INT32_MAX
-#define INT32_MAX __INT32_MAX__
-#endif /* !INT32_MAX */
-#endif /* !INT32_MAX */
 
 #if !defined(SYS_futex) && defined(__NR_futex)
 #define SYS_futex __NR_futex

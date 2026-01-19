@@ -21,11 +21,9 @@
 #define GUARD_DEEMON_KWDS_H 1
 
 #include "api.h"
-/**/
 
 #include "types.h"
 #include "util/lock.h"
-/**/
 
 #include <stddef.h> /* size_t */
 

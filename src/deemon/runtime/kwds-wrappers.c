@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_RUNTIME_KWDS_WRAPPERS_C
 #define GUARD_DEEMON_RUNTIME_KWDS_WRAPPERS_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/code.h>
@@ -41,15 +42,12 @@
 #include <deemon/util/lock.h>
 
 #include <hybrid/typecore.h>
-/**/
 
 #include "../objects/generic-proxy.h"
 #include "kwlist.h"
-#include "runtime_error.h"
 #include "strings.h"
-/**/
 
-#include <stddef.h> /* offsetof */
+#include <stddef.h> /* offsetof, size_t, NULL */
 
 DECL_BEGIN
 

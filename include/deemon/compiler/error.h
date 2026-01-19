@@ -21,14 +21,12 @@
 #define GUARD_DEEMON_COMPILER_ERROR_H 1
 
 #include "../api.h"
-/**/
 
 #define PARSE_FNORMAL 0x0000 /* Normal parser flags. */
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include <deemon/types.h>
-#include <deemon/system-features.h> /* bzero */
-/**/
+#include "../system-features.h" /* bzero */
+#include "../types.h"
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

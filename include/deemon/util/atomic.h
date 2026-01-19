@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_UTIL_ATOMIC_H 1
 
 #include "../api.h"
-/**/
 
 #ifdef CONFIG_NO_THREADS
 #define Dee_ATOMIC_RELAXED 0

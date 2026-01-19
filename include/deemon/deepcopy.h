@@ -21,13 +21,11 @@
 #define GUARD_DEEMON_DEEPCOPY_H 1
 
 #include "api.h"
-/**/
+
+#include <hybrid/typecore.h>
 
 #include "serial.h"
 #include "types.h"
-/**/
-
-#include <hybrid/typecore.h>
 
 DECL_BEGIN
 

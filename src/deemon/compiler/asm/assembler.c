@@ -20,10 +20,10 @@
 #ifndef GUARD_DEEMON_COMPILER_ASM_ASSEMBER_C
 #define GUARD_DEEMON_COMPILER_ASM_ASSEMBER_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/asm.h>
-#include <deemon/bool.h>
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
@@ -49,9 +49,7 @@
 
 #include "../../runtime/builtin.h"
 
-/**/
-
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, NULL, offsetof */
 #include <stdint.h> /* uint16_t, uint32_t */
 
 #ifndef PP_CAT2

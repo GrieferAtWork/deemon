@@ -21,15 +21,11 @@
 #define GUARD_DEEMON_ACCU_H 1
 
 #include "api.h"
-/**/
 
+#include "bytes.h" /* struct Dee_bytes_printer */
 #include "object.h"
-/**/
-
-#include "bytes.h"  /* struct Dee_bytes_printer */
 #include "string.h" /* struct Dee_unicode_printer */
 #include "tuple.h"  /* struct Dee_tuple_builder */
-/**/
 
 #include <stdint.h> /* uintptr_t */
 

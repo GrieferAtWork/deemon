@@ -20,20 +20,17 @@
 #ifndef GUARD_DEEMON_CXX_BOOL_H
 #define GUARD_DEEMON_CXX_BOOL_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
 
+#include "../bool.h"
+#include "../types.h"
 #include "numeric.h"
 #include "object.h"
-/**/
-
-#include "../format.h"
-#include "../bool.h"
-/**/
-
-#include <hybrid/typecore.h>
 
 DEE_CXX_BEGIN
+
+class Type;
 
 class bool_
 	: public Numeric

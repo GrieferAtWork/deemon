@@ -20,6 +20,9 @@
 #ifndef GUARD_DEX_NET__RES_H
 #define GUARD_DEX_NET__RES_H 1
 
+#include "libnet.h"
+/**/
+
 #include <deemon/api.h>
 
 DECL_BEGIN

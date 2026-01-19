@@ -24,8 +24,9 @@
 #include "libnet.h"
 /**/
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h> /* DeeSystemErrorObject */
 #include <deemon/object.h>

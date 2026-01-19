@@ -21,17 +21,14 @@
 #define GUARD_DEEMON_DICT_H 1
 
 #include "api.h"
-/**/
 
 #include "types.h"
 #include "util/lock.h"
 #ifndef __INTELLISENSE__
 #include "util/atomic.h"
 #endif /* !__INTELLISENSE__ */
-/**/
 
 #include <hybrid/typecore.h>
-/**/
 
 #include <stddef.h> /* size_t */
 

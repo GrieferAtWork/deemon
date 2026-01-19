@@ -26,24 +26,23 @@
 /**/
 
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
+#include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
 #include <deemon/int.h>
 #include <deemon/mapfile.h>
-#include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/serial.h>
 #include <deemon/string.h>
 
-/* Include posix dependencies */
 #include "p-readlink.c.inl" /* Needed for `lcopyfile()' to check for symbolic links. */
 #include "p-remove.c.inl"   /* Needed for `lcopyfile()' to remove existing files when `RENAME_NOREPLACE' isn't given. */
 #include "p-symlink.c.inl"  /* Needed for `lcopyfile()' to create copies of symbolic links. */
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint64_t */

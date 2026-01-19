@@ -21,15 +21,14 @@
 #define GUARD_DEEMON_MAP_H 1
 
 #include "api.h"
-/**/
+
+#include "types.h"
+
+#include <stddef.h> /* size_t */
 
 #ifndef __INTELLISENSE__
 #include "object.h"
 #endif /* !__INTELLISENSE__ */
-#include "types.h"
-/**/
-
-#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

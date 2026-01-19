@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_RUNTIME_SERIAL_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/object.h>
 #include <deemon/serial.h>
 #include <deemon/system-features.h>

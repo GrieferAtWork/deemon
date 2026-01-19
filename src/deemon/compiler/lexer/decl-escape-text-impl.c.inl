@@ -22,9 +22,9 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
+
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy */
-/**/
 
 #include <stddef.h> /* size_t */
 

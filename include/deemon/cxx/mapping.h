@@ -20,18 +20,22 @@
 #ifndef GUARD_DEEMON_CXX_MAPPING_H
 #define GUARD_DEEMON_CXX_MAPPING_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
 
-#include "object.h"
-#include "tuple.h"
-/**/
-
-#include "../format.h"
 #include "../map.h"
-/**/
+#include "../object.h"
+#include "../types.h"
+#include "object.h"
+#include "sequence.h"
+
+#include <stddef.h> /* NULL */
 
 DEE_CXX_BEGIN
+
+class Type;
+class bool_;
+class int_;
 
 template<class Key, class Value>
 class Mapping

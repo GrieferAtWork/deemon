@@ -26,11 +26,11 @@
 /**/
 
 #include <deemon/api.h>
+
 #include <deemon/error.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/thread.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

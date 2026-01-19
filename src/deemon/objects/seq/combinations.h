@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_COMBINATIONS_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
 #include <deemon/util/atomic.h>

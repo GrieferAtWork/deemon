@@ -21,17 +21,19 @@
 #define GUARD_DEEMON_RUNTIME_DEEPCOPY_C 1
 
 #include <deemon/api.h>
-/**/
 
 #include <deemon/alloc.h>
 #include <deemon/deepcopy.h>
 #include <deemon/error-rt.h>
 #include <deemon/gc.h>
 #include <deemon/object.h>
+#include <deemon/serial.h>
 #include <deemon/system-features.h> /* memset, memcpy, ... */
 #include <deemon/types.h>
 
 #include <hybrid/typecore.h>
+
+#include <stddef.h> /* size_t, offsetof, NULL */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

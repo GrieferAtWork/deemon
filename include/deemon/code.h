@@ -21,15 +21,12 @@
 #define GUARD_DEEMON_CODE_H 1
 
 #include "api.h"
-/**/
+
+#include <hybrid/typecore.h>
 
 #include "types.h"
 #include "util/lock.h"
 #include "util/rlock.h"
-/**/
-
-#include <hybrid/typecore.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uintptr_t */
@@ -1211,6 +1208,10 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFunction_New(DeeCodeObject *code, size_t refc,
                 DeeObject *const *refv);
 
+#ifndef Dee_operator_t_DEFINED
+#define Dee_operator_t_DEFINED
+typedef uint16_t Dee_operator_t;
+#endif /* !Dee_operator_t_DEFINED */
 
 struct Dee_function_info {
 	DREF DeeTypeObject            *fi_type;   /* [0..1] The type as part of which a function is implemented. */

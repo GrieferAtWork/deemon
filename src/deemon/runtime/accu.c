@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_RUNTIME_ACCU_C 1
 
 #include <deemon/api.h>
-/**/
 
 #include <deemon/accu.h>
 #include <deemon/bytes.h>
@@ -37,10 +36,8 @@
 
 #include <hybrid/overflow.h>
 
-/**/
 #include "../objects/int_logic.h"
 
-/**/
 #include <stdint.h>
 
 #ifndef INT32_MIN

@@ -21,12 +21,12 @@
 #define GUARD_DEEMON_SERIAL_H 1
 
 #include "api.h"
-/**/
 
 #include "types.h"
-/**/
 
+#ifndef Dee_seraddr_t_DEFINED
 #include <hybrid/typecore.h> /* __UINTPTR_TYPE__ */
+#endif /* !Dee_seraddr_t_DEFINED */
 
 /*
  * Object serialization is a general-purpose API to:

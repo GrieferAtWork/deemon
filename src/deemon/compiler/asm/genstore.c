@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_COMPILER_ASM_GENSTORE_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
@@ -37,7 +38,6 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

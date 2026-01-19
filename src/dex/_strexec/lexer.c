@@ -25,10 +25,10 @@
 /**/
 
 #include <deemon/api.h>
+
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>
-/**/
 
 #include <stdint.h> /* uint32_t */
 

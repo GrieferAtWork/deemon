@@ -20,6 +20,9 @@
 #ifndef GUARD_DEX_CTYPES__RES_H
 #define GUARD_DEX_CTYPES__RES_H 1
 
+#include "libctypes.h"
+/**/
+
 #include <deemon/api.h>
 
 DECL_BEGIN

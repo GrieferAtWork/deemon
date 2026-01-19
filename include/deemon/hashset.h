@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_HASHSET_H 1
 
 #include "api.h"
-/**/
 
 #ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 #include "dict.h" /* Dee_dict_vidx_t, Dee_dict_gethidx_t, Dee_dict_sethidx_t */

@@ -21,15 +21,15 @@
 #define GUARD_DEEMON_COMPILER_ASM_SCOPE_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/format.h>
-#include <deemon/module.h>
+#include <deemon/module.h> /* Dee_Decref(SYMBOL_MODULE_MODULE(...)) */
 #include <deemon/object.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

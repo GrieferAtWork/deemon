@@ -20,17 +20,17 @@
 #ifndef GUARD_DEEMON_COMPILER_LEXER_TRY_C
 #define GUARD_DEEMON_COMPILER_LEXER_TRY_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/code.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, NULL */
 #include <stdint.h> /* uint32_t */
 
 DECL_BEGIN

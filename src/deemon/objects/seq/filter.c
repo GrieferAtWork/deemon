@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_FILTER_C
 #define GUARD_DEEMON_OBJECTS_SEQ_FILTER_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
@@ -33,20 +34,15 @@
 #include <deemon/seq.h>
 #include <deemon/thread.h>
 
-#include <hybrid/limitcore.h>
-/**/
-
-#include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "filter.h"
-/**/
 
 #include <stddef.h> /* size_t */
 
 DECL_BEGIN
 
-LOCAL WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 invoke_filter(DeeObject *filter, DeeObject *elem) {
 	DREF DeeObject *filter_result;
 	filter_result = DeeObject_Call(filter, 1, &elem);

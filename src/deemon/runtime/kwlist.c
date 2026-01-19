@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_RUNTIME_KWLIST_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 
 #define DECLARE_KWLIST INTERN DEFINE_KWLIST

@@ -20,19 +20,18 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_HASHFILTER_C
 #define GUARD_DEEMON_OBJECTS_SEQ_HASHFILTER_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/computed-operators.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/thread.h>
-/**/
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "hashfilter.h"
-/**/
 
 #include <stddef.h> /* size_t */
 

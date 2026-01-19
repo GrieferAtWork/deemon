@@ -17,25 +17,22 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
+
 #include <deemon/error-rt.h>
 #include <deemon/file.h>
 #include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/mapfile.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/stringutils.h>
 #include <deemon/super.h>
-/**/
 
-#include "file-type-operators.h"
-/**/
+#include <hybrid/typecore.h>
 
 #include "../runtime/runtime_error.h"
+#include "file-type-operators.h"
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint64_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -147,7 +144,7 @@ DeeFile_DefaultPreadWithSeekAndRead(DeeFileObject *__restrict self,
 	Dee_pos_t (DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
 	ft_seek = Dee_TYPE(self)->ft_seek;
 	ASSERT(ft_seek != NULL);
-	if unlikely((*ft_seek)(self, (Dee_off_t)pos, SEEK_SET) == (Dee_pos_t)-1)
+	if unlikely((*ft_seek)(self, (Dee_off_t)pos, Dee_SEEK_SET) == (Dee_pos_t)-1)
 		goto err;
 	ft_read = Dee_TYPE(self)->ft_read;
 	ASSERT(ft_read != NULL);
@@ -168,7 +165,7 @@ DeeFile_DefaultPwriteWithSeekAndWrite(DeeFileObject *__restrict self,
 	Dee_pos_t (DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
 	ft_seek = Dee_TYPE(self)->ft_seek;
 	ASSERT(ft_seek != NULL);
-	if unlikely((*ft_seek)(self, (Dee_off_t)pos, SEEK_SET) == (Dee_pos_t)-1)
+	if unlikely((*ft_seek)(self, (Dee_off_t)pos, Dee_SEEK_SET) == (Dee_pos_t)-1)
 		goto err;
 	ft_write = Dee_TYPE(self)->ft_write;
 	ASSERT(ft_write != NULL);
@@ -184,7 +181,7 @@ DeeFile_DefaultUngetcWithSeek(DeeFileObject *__restrict self, int ch) {
 	Dee_pos_t (DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
 	ft_seek = Dee_TYPE(self)->ft_seek;
 	ASSERT(ft_seek != NULL);
-	result = (*ft_seek)(self, (Dee_off_t)-1, SEEK_CUR);
+	result = (*ft_seek)(self, (Dee_off_t)-1, Dee_SEEK_CUR);
 	if unlikely(result == (Dee_pos_t)-1)
 		goto err;
 	return ch;
@@ -540,7 +537,7 @@ do_handle_filetype:
 				int result;
 				Dee_pos_t trunc_pos;
 				/* Determine the current position and truncate the file there. */
-				trunc_pos = LOCAL_DeeFileType_invoke_ft_seek(tp_self, ft_seek, self, 0, SEEK_CUR);
+				trunc_pos = LOCAL_DeeFileType_invoke_ft_seek(tp_self, ft_seek, self, 0, Dee_SEEK_CUR);
 				if unlikely(trunc_pos == (Dee_pos_t)-1) {
 					result = -1;
 				} else {

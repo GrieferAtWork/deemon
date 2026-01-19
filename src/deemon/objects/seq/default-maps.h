@@ -20,13 +20,13 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_MAPS_H
 #define GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_MAPS_H 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/map.h>
 #include <deemon/object.h>
 #include <deemon/util/lock.h>
 
-/**/
 #include "../generic-proxy.h"
 
 DECL_BEGIN

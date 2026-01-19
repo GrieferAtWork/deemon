@@ -20,7 +20,11 @@
 #ifndef GUARD_DEX_COLLECTIONS_KWLIST_H
 #define GUARD_DEX_COLLECTIONS_KWLIST_H 1
 
+#include "libcollections.h"
+/**/
+
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 
 #ifndef DECLARE_KWLIST

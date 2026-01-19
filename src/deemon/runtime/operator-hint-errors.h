@@ -21,9 +21,9 @@
 #define GUARD_DEEMON_RUNTIME_OPERATOR_HINT_ERRORS_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/object.h>
 
-/**/
 #include "method-hint-defaults.h"
 
 DECL_BEGIN

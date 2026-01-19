@@ -24,8 +24,9 @@
 #include "libjit.h"
 /**/
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/none.h>
@@ -38,7 +39,6 @@
 
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint32_t */

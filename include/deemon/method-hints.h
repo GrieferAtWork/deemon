@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_METHOD_HINTS_H 1
 
 #include "api.h"
-/**/
 
 #include "types.h"
 #if !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__)

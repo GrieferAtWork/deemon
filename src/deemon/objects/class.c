@@ -20,10 +20,10 @@
 #ifndef GUARD_DEEMON_OBJECTS_CLASS_C
 #define GUARD_DEEMON_OBJECTS_CLASS_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/class.h>
-#include <deemon/serial.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -33,7 +33,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
-#include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h>
@@ -46,10 +46,9 @@
 #include <hybrid/typecore.h>
 
 #include "../runtime/runtime_error.h"
-/**/
 
-#include <stdbool.h> /* bool */
 #include <stdarg.h>  /* va_start */
+#include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
 #include <stdint.h>  /* uint16_t */
 
@@ -788,7 +787,7 @@ instance_builtin_serialize_enabled(DeeTypeObject *base) {
 	return true;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 instance_builtin_serialize(DeeObject *__restrict self,
                            DeeSerial *__restrict writer,
                            Dee_seraddr_t addr) {
@@ -1382,7 +1381,7 @@ instance_builtin_moveassign(DeeObject *self, DeeObject *other) {
 
 
 
-LOCAL WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 instance_initsuper_as_ctor(DeeTypeObject *__restrict tp_super,
                            DeeObject *__restrict self) {
 	int result;
@@ -1415,7 +1414,7 @@ instance_initsuper_as_ctor(DeeTypeObject *__restrict tp_super,
 	return result;
 }
 
-LOCAL WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 instance_initsuper_as_init(DeeTypeObject *tp_super,
                            DeeObject *self, size_t argc,
                            DeeObject *const *argv) {
@@ -1449,7 +1448,7 @@ instance_initsuper_as_init(DeeTypeObject *tp_super,
 	return result;
 }
 
-LOCAL WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 instance_initsuper_as_initkw(DeeTypeObject *tp_super,
                              DeeObject *self, size_t argc,
                              DeeObject *const *argv, DeeObject *kw) {
@@ -3108,7 +3107,7 @@ instance_builtin_inherited_initkw(DeeObject *__restrict self, size_t argc,
 
 
 #ifdef CLASS_TP_FAUTOINIT
-LOCAL WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
 find_next_attribute(DeeClassDescriptorObject *__restrict self,
                     uint16_t *__restrict pnext_table_index) {
 	size_t i;
@@ -3133,7 +3132,7 @@ done:
 	return result;
 }
 
-LOCAL WUNUSED NONNULL((1, 2, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_autoload_members(DeeTypeObject *tp_self,
                           struct class_desc *__restrict desc,
                           struct instance_desc *__restrict instance,

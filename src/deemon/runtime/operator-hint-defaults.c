@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_RUNTIME_OPERATOR_HINT_DEFAULTS_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/alloc.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
@@ -40,13 +41,12 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-
 /**/
+
 #include "runtime_error.h"
 
-/**/
-#include <stddef.h> /* uintptr_t */
-#include <stdint.h> /* int64_t */
+#include <stddef.h> /* size_t, NULL */
+#include <stdint.h> /* int64_t, uintptr_t */
 
 #define do_fix_negative_range_index(index, size) \
 	((size) - ((size_t)(-(index)) % (size)))

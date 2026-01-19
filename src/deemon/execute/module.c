@@ -20,16 +20,17 @@
 #ifndef GUARD_DEEMON_EXECUTE_MODULE_C
 #define GUARD_DEEMON_EXECUTE_MODULE_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
-#include <deemon/attribute.h>
-#include <deemon/bool.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
+#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/exec.h>
 #include <deemon/format.h>
+#include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/module.h>
 #include <deemon/mro.h>
@@ -43,23 +44,30 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/futex.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/typecore.h>
 
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#include <deemon/list.h>
+#include "../runtime/kwlist.h"
+#include "../runtime/runtime_error.h"
+#include "../runtime/strings.h"
 
-#include <hybrid/sched/yield.h> /* SCHED_YIELD */
-#include <hybrid/sequence/list.h>
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
 #endif /* !CONFIG_NO_DEX */
 
-#include "../runtime/kwlist.h"
-#include "../runtime/runtime_error.h"
-#include "../runtime/strings.h"
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#include <deemon/attribute.h>
+#include <deemon/bool.h>
+#include <deemon/list.h>
+
+#include <hybrid/sched/yield.h> /* SCHED_YIELD */
+#include <hybrid/sequence/list.h>
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

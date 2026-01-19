@@ -24,9 +24,9 @@
 #include "string_functions.c"
 #endif /* !__INTELLISENSE__ */
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/arg.h>
+
+#include <deemon/alloc.h>
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
 #include <deemon/int.h>
@@ -38,12 +38,13 @@
 #include <deemon/system-features.h> /* memcpy() */
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
+/**/
 
+#include "../../runtime/runtime_error.h" /* err_invalid_argc */
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "regroups.h"
 #include "string_functions.h"
-/**/
 
 #include <stddef.h> /* size_t, offsetof */
 

@@ -25,6 +25,7 @@
 /**/
 
 #include <deemon/api.h>
+
 #include <deemon/error.h>
 #include <deemon/list.h>
 #include <deemon/object.h>
@@ -34,7 +35,6 @@
 #include <deemon/system-features.h> /* memcpy */
 #include <deemon/tuple.h>
 #include <deemon/util/objectlist.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint32_t */

@@ -21,10 +21,10 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_UNIQUE_ITERATOR_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/util/simple-hashset.h>
-/**/
 
 #include "../generic-proxy.h"
 

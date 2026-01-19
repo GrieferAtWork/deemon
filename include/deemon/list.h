@@ -21,20 +21,17 @@
 #define GUARD_DEEMON_LIST_H 1
 
 #include "api.h"
-/**/
 
 #include "types.h"
 #include "util/atomic.h"
 #include "util/lock.h"
 #include "util/objectlist.h"
-/**/
+
+#include <stddef.h> /* size_t */
 
 #ifndef __INTELLISENSE__
 #include "gc.h" /* DeeGC_Track */
-#endif /* !__INTELLISENSE__ */
-/**/
-
-#include <stddef.h> /* size_t */
+#endif          /* !__INTELLISENSE__ */
 
 DECL_BEGIN
 

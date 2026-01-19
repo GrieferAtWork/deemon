@@ -20,14 +20,14 @@
 #ifndef GUARD_DEEMON_COMPILER_INTERFACE_IAST_C
 #define GUARD_DEEMON_COMPILER_INTERFACE_IAST_C 1
 
-#include <deemon/compiler/compiler.h>
+#include <deemon/api.h>
 
 #include <deemon/alloc.h>
-#include <deemon/api.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/compiler/interface.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
@@ -49,9 +49,7 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
-#include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

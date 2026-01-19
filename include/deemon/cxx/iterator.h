@@ -20,19 +20,22 @@
 #ifndef GUARD_DEEMON_CXX_ITERATOR_H
 #define GUARD_DEEMON_CXX_ITERATOR_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
-
-#include "numeric.h"
-#include "object.h"
-/**/
 
 #include "../format.h"
-/**/
-
+#include "../object.h"
 #include "../seq.h"
+#include "../types.h"
+#include "object.h"
+
+#include <stddef.h> /* size_t, NULL */
 
 DEE_CXX_BEGIN
+
+class Type;
+class bool_;
+class int_;
 
 template<class T>
 class Iterator

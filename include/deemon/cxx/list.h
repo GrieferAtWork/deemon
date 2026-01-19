@@ -20,16 +20,23 @@
 #ifndef GUARD_DEEMON_CXX_LIST_H
 #define GUARD_DEEMON_CXX_LIST_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
-
-#include "object.h"
-/**/
 
 #include "../format.h"
 #include "../list.h"
+#include "../object.h"
+#include "../types.h"
+#include "object.h"
+#include "sequence.h"
+
+#include <stddef.h> /* size_t, NULL */
 
 DEE_CXX_BEGIN
+
+class Type;
+class bool_;
+class int_;
 
 template<class T = Object>
 class List

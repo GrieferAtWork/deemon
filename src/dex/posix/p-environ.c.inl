@@ -25,13 +25,14 @@
 #include "libposix.h"
 /**/
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/map.h>
-#include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/notify.h>
 #include <deemon/object.h>
@@ -41,11 +42,9 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
-/**/
+#include <deemon/util/lock.h> /* Dee_atomic_rwlock_t */
 
 #include <hybrid/debug-alignment.h>
-/**/
 
 #include <stddef.h> /* size_t */
 

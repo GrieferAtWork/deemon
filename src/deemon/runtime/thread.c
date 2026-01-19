@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_RUNTIME_THREAD_C
 #define GUARD_DEEMON_RUNTIME_THREAD_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/code.h>
@@ -54,11 +55,9 @@
 #include <hybrid/sched/yield.h>
 #include <hybrid/sequence/bsearch.h>
 #include <hybrid/sequence/list.h>
-/**/
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
-/**/
 
 #include <stdbool.h> /* true, false, bool */
 #include <stddef.h>  /* offsetof */

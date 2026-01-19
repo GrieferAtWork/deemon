@@ -21,13 +21,10 @@
 #define GUARD_DEEMON_ARG_H 1
 
 #include "api.h"
-/**/
-
-#include "types.h"
-/**/
 
 #include <hybrid/typecore.h>
-/**/
+
+#include "types.h"
 
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* size_t */

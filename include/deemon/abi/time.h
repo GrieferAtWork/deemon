@@ -21,15 +21,12 @@
 #define GUARD_DEEMON_ABI_TIME_H 1
 
 #include "../api.h"
-/**/
+
+#include <hybrid/__unaligned.h>
 
 #include "../format.h" /* Dee_PCKuPTR */
 #include "../module.h"
 #include "../object.h"
-/**/
-
-#include <hybrid/__unaligned.h>
-/**/
 
 #include <stdint.h> /* int64_t, uint32_t */
 

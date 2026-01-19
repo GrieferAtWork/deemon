@@ -21,16 +21,16 @@
 #define GUARD_DEEMON_OBJECTS_UNICODE_FORMAT_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/tuple.h>
-/**/
 
 #include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t */
+#include <stddef.h>  /* size_t, NULL */
 #include <stdint.h>  /* uint32_t */
 
 DECL_BEGIN

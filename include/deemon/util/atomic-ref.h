@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_UTIL_ATOMIC_REF_H 1
 
 #include "../api.h"
-/**/
 
 #include "../types.h"
 #include "../object.h"

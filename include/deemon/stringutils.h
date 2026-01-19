@@ -21,15 +21,12 @@
 #define GUARD_DEEMON_STRINGUTILS_H 1
 
 #include "api.h"
-/**/
+
+#include <hybrid/__byteswap.h>
+#include <hybrid/byteorder.h>
 
 #include "string.h" /* DeeUni_IsSpace */
 #include "types.h"
-/**/
-
-#include <hybrid/byteorder.h>
-#include <hybrid/__byteswap.h>
-/**/
 
 #include <stddef.h> /* size_t */
 

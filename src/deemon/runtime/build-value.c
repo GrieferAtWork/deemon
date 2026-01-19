@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_RUNTIME_BUILD_VALUE_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/bool.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -35,7 +36,6 @@
 #include <hybrid/typecore.h>
 
 #include "runtime_error.h"
-/**/
 
 #include <stdarg.h> /* va_list, va_arg */
 #include <stddef.h> /* size_t, offsetof */

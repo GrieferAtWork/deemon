@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_COMPILER_TRAITS_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/traits.h>
 

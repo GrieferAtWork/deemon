@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_SEQ_H 1
 
 #include "api.h"
-/**/
 
 #include "alloc.h" /* Dee_MallocUsableSize */
 #include "types.h"

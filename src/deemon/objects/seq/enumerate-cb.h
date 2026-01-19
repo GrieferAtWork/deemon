@@ -21,9 +21,9 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_ENUMERATE_CB_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/object.h>
 #include <deemon/util/rlock.h>
-/**/
 
 #include <stddef.h> /* size_t */
 

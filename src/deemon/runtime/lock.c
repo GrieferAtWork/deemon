@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_RUNTIME_LOCK_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
@@ -30,10 +31,9 @@
 
 #include <hybrid/overflow.h>
 #include <hybrid/sched/__gettid.h>
-/**/
 
-#include <stddef.h> /* uintptr_t */
-#include <stdint.h> /* uint64_t */
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint64_t, uintptr_t */
 
 DECL_BEGIN
 

@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_C
 #define GUARD_DEEMON_OBJECTS_SEQ_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
@@ -63,13 +64,12 @@
 #include "seq/simpleproxy.h"
 #include "seq/unique-iterator.h"
 
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint32_t */
+
 #undef SSIZE_MAX
 #include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
-/**/
-
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint32_t */
 
 /* Provide aliases for certain Set operators in Sequence */
 #undef CONFIG_HAVE_SET_OPERATORS_IN_SEQ

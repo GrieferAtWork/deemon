@@ -37,13 +37,11 @@
 #define Dee_ratomic_rwlock_waitwrite_timed_p(self, timeout_nanoseconds, err_label, timeout_label) (void)0
 #else /* CONFIG_NO_THREADS */
 
-#include "../thread.h"
-#include "rlock.h"
-/**/
-
 #include <hybrid/__overflow.h>
 #include <hybrid/sched/__yield.h>
-/**/
+
+#include "../thread.h"
+#include "rlock.h"
 
 #include <stdint.h> /* uintptr_t */
 

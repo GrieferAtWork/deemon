@@ -20,16 +20,24 @@
 #ifndef GUARD_DEEMON_CXX_SET_H
 #define GUARD_DEEMON_CXX_SET_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
 
+#include "../object.h"
+#include "../set.h"
+#include "../types.h"
 #include "object.h"
 #include "sequence.h"
-/**/
 
-#include "../set.h"
+#include <stddef.h> /* NULL */
+
+/*#include "type.h"*/ /* Don't include! */
 
 DEE_CXX_BEGIN
+
+class Type;
+class bool_;
+class int_;
 
 template<class T>
 class Set: public Sequence<T> {

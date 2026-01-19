@@ -22,7 +22,6 @@
 
 #include <deemon/api.h>
 
-/**/
 #include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/compiler/ast.h>
@@ -37,10 +36,8 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
 
-/**/
 #include "../../runtime/builtin.h"
 
-/**/
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t, uint32_t */
 

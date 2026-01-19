@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_BYTES_C
 #define GUARD_DEEMON_OBJECTS_BYTES_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
@@ -39,7 +40,6 @@
 #include <deemon/stringutils.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
-#include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
@@ -52,13 +52,10 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
-/**/
+#include "int-8bit.h"
 
 #include <stddef.h> /* offsetof */
 #include <stdint.h> /* uint32_t */
-/**/
-
-#include "int-8bit.h"
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__

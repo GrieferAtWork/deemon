@@ -24,8 +24,9 @@
 #include "libnet.h" /* Must come first to configure includes */
 /**/
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -38,6 +39,9 @@
 #include <deemon/util/lock.h>
 
 #include <hybrid/debug-alignment.h>
+
+#include <stddef.h> /* size_t, NULL, offsetof */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
 
 DECL_BEGIN
 

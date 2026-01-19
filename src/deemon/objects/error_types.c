@@ -20,36 +20,29 @@
 #ifndef GUARD_DEEMON_OBJECTS_ERROR_TYPES_C
 #define GUARD_DEEMON_OBJECTS_ERROR_TYPES_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
-#include <deemon/compiler/tpp.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>
 #include <deemon/exec.h>
 #include <deemon/format.h>
-#include <deemon/kwds.h>
 #include <deemon/module.h>
 #include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/struct.h>
 #include <deemon/system-features.h> /* bzero(), ... */
 #include <deemon/system.h>
 #include <deemon/tuple.h>
 
-#include <hybrid/typecore.h>
-/**/
-
-#include <stddef.h> /* size_t, offsetof */
-/**/
-
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
-#include "generic-proxy.h"
+
+#include <stddef.h> /* size_t, offsetof */
 
 #undef token
 #undef tok

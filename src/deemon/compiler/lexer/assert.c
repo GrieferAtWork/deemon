@@ -21,11 +21,14 @@
 #define GUARD_DEEMON_COMPILER_LEXER_ASSERT_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/types.h>
+
+#include <stddef.h> /* NULL */
 
 DECL_BEGIN
 

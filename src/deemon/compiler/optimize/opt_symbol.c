@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_COMPILER_OPTIMIZE_OPT_SYMBOL_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
@@ -28,6 +29,8 @@
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+
+#include <stddef.h> /* NULL */
 
 DECL_BEGIN
 

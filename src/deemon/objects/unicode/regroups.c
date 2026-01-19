@@ -21,23 +21,24 @@
 #define GUARD_DEEMON_OBJECTS_UNICODE_REGROUPS_C 1
 
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
 #include <deemon/none-operator.h>
 #include <deemon/object.h>
+#include <deemon/regex.h>
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 /**/
 
-#include "../../runtime/runtime_error.h"
 #include "regroups.h"
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, offsetof, NULL */
 
 DECL_BEGIN
 

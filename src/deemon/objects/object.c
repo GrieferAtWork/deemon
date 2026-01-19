@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_OBJECT_C
 #define GUARD_DEEMON_OBJECTS_OBJECT_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
@@ -29,6 +30,7 @@
 #include <deemon/class.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
+#include <deemon/dict.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
@@ -67,9 +69,9 @@
 #include "../runtime/method-hints.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "generic-proxy.h"
 #include "seq/typemro.h"
 #include "type-operators.h"
-/**/
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
@@ -3786,6 +3788,7 @@ type_new_extended(DeeTypeObject *self, DeeObject *initializer) {
 	int temp;
 	DREF DeeObject *init_fields, *init_args, *init_kw;
 	DeeTypeObject *first_base, *iter;
+	ASSERT(self);
 	if unlikely(self->tp_flags & TP_FVARIABLE) {
 		err_init_var_type(self);
 		goto err;

@@ -21,23 +21,18 @@
 #define GUARD_DEEMON_RUNTIME_BUILTIN_C 1
 
 #include <deemon/api.h>
-#include <deemon/code.h>
+
+#include <deemon/gc.h>
 #include <deemon/dex.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system.h>
 #include <deemon/tuple.h>
-#include <deemon/util/lock.h>
-
-#include <hybrid/int128.h>
-#include <hybrid/sequence/list.h>
-
 /**/
+
 #include "builtin.h"
 #include "strings.h"
 
-/**/
 #include <stdint.h> /* UINT32_C */
 
 DECL_BEGIN

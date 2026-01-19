@@ -26,8 +26,9 @@
 /**/
 
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
@@ -38,10 +39,8 @@
 #include <deemon/system-features.h> /* strnlen() */
 
 #include <hybrid/overflow.h>
-/**/
 
 #include "c_api.h" /* Prototypes... */
-/**/
 
 #include <stddef.h> /* size_t */
 

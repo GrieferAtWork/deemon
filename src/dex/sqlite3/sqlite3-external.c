@@ -29,7 +29,6 @@ ClCompile.CompileAs = CompileAsC
 #else /* __cplusplus */
 
 #include <deemon/api.h>
-/**/
 
 #ifndef __ATTR_NORETURN_IS__Noreturn
 #undef _Noreturn
@@ -45,7 +44,6 @@ ClCompile.CompileAs = CompileAsC
 #include <hybrid/__alloca.h>
 #include <hybrid/byteorder.h>
 #include <hybrid/typecore.h>
-/**/
 
 #include "sqlite3-external.h"
 

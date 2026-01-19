@@ -20,12 +20,15 @@
 #ifndef GUARD_DEEMON_RUNTIME_LOCK_NO_THREADS_C_INL
 #define GUARD_DEEMON_RUNTIME_LOCK_NO_THREADS_C_INL
 
+#include "libthreading.h"
+/**/
+
 #include <deemon/api.h>
+
 #include <deemon/error.h>
 #include <deemon/thread.h>
 
 #include <hybrid/typecore.h> /* __CHAR_BIT__ */
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint64_t, uintptr_t */

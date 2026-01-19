@@ -20,13 +20,13 @@
 #ifndef GUARD_DEEMON_COMPILER_INTERFACE_ISCOPE_C
 #define GUARD_DEEMON_COMPILER_INTERFACE_ISCOPE_C 1
 
-#include <deemon/compiler/compiler.h>
+#include <deemon/api.h>
 
 #include <deemon/alloc.h>
-#include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/compiler/interface.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/error-rt.h>
@@ -38,12 +38,9 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
-/**/
 
 #include "../../runtime/kwlist.h"
-#include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
-/**/
 
 #include <stddef.h> /* size_t */
 

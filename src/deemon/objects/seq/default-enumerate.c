@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_ENUMERATE_C
 #define GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_ENUMERATE_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/error.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
@@ -32,13 +33,11 @@
 #include <deemon/serial.h>
 #include <deemon/util/lock.h>
 
-/**/
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "default-enumerate.h"
 #include "default-iterators.h"
-/**/
 
 #include <stddef.h> /* size_t, offsetof */
 

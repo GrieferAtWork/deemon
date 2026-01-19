@@ -20,18 +20,17 @@
 #ifndef GUARD_DEEMON_RUNTIME_ERROR_RT_COMPILER_C
 #define GUARD_DEEMON_RUNTIME_ERROR_RT_COMPILER_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/serial.h>
 #include <deemon/struct.h>
-/**/
 
 #include <stddef.h>
 

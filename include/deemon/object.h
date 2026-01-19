@@ -21,18 +21,14 @@
 #define GUARD_DEEMON_OBJECT_H 1
 
 #include "api.h"
-/**/
-
-#include "types.h"
-#include "util/lock.h"
-/**/
 
 #include <hybrid/__atomic.h>
 #include <hybrid/byteorder.h>
-#include <hybrid/int128.h>
 #include <hybrid/host.h>
 #include <hybrid/typecore.h>
-/**/
+
+#include "types.h"
+#include "util/lock.h"
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */

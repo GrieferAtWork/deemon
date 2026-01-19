@@ -70,15 +70,13 @@ typedef Dee_nratomic_lock_t Dee_nrshared_lock_t;
 DECL_END
 #else /* CONFIG_NO_THREADS */
 
-#include "futex.h"
-/**/
-
 #include <hybrid/__atomic.h>
 #include <hybrid/sched/__gettid.h>
 #include <hybrid/sched/__yield.h>
-/**/
 
-#include <stdint.h>  /* uintptr_t */
+#include "futex.h"
+
+#include <stdint.h> /* uintptr_t */
 
 #if (defined(__hybrid_tid_t_IS_NUMERIC) && \
      (__HYBRID_SIZEOF_TID__ == 4 ||        \

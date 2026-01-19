@@ -21,8 +21,8 @@
 #define GUARD_DEEMON_OBJECTS_NONE_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/bool.h>
-#include <deemon/error-rt.h>
 #include <deemon/file.h>
 #include <deemon/int.h>
 #include <deemon/mro.h>
@@ -35,9 +35,7 @@
 
 #include "../runtime/method-hint-defaults.h"
 #include "../runtime/method-hints.h"
-#include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* int32_t */

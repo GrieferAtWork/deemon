@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_OBJECTS_TYPE_OPERATORS_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/arg.h>
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
@@ -37,11 +38,9 @@
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/tuple.h>
-/**/
 
 #include "gc_inspect.h"
 #include "type-operators.h"
-/**/
 
 #include <stddef.h> /* size_t, offsetof */
 

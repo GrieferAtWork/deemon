@@ -20,18 +20,18 @@
 #ifndef GUARD_DEEMON_COMPILER_ASM_GENFUNCTION_C
 #define GUARD_DEEMON_COMPILER_ASM_GENFUNCTION_C 1
 
-#include <deemon/compiler/compiler.h>
+#include <deemon/api.h>
 
 #include <deemon/alloc.h>
-#include <deemon/api.h>
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
-/**/
 
+#include <stddef.h> /* NULL */
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN

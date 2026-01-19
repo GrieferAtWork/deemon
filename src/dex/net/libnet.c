@@ -25,20 +25,18 @@
 /**/
 
 #include <deemon/api.h>
-#include <deemon/arg.h>
+
 #include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/module.h>
-#include <deemon/notify.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 
 #include <hybrid/byteswap.h>
 #include <hybrid/debug-alignment.h>
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* NULL */
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN

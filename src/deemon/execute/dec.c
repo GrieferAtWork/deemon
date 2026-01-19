@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_EXECUTE_DEC_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/dec.h>
 #include <deemon/object.h>
 
@@ -46,6 +47,9 @@
 #include <hybrid/overflow.h>
 #include <hybrid/sequence/bsearch.h>
 #include <hybrid/typecore.h>
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint64_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -2455,7 +2459,6 @@ DECL_END
 #include <hybrid/byteswap.h>
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
-/**/
 
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* size_t */

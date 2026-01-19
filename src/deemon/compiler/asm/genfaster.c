@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_COMPILER_ASM_GENFASTER_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/dict.h>
@@ -33,6 +34,8 @@
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
 #include <deemon/tuple.h>
+
+#include <stddef.h> /* NULL */
 
 DECL_BEGIN
 

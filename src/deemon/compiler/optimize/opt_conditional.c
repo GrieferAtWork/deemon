@@ -20,17 +20,17 @@
 #ifndef GUARD_DEEMON_COMPILER_OPTIMIZE_OPT_CONDITIONAL_C
 #define GUARD_DEEMON_COMPILER_OPTIMIZE_OPT_CONDITIONAL_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/bool.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/tuple.h>
-/**/
 
-#include <stddef.h> /* size_t, offsetof */
+#include <stddef.h> /* size_t, offsetof, NULL */
 
 DECL_BEGIN
 

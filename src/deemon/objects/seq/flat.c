@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_FLAT_C
 #define GUARD_DEEMON_OBJECTS_SEQ_FLAT_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
@@ -40,15 +41,12 @@
 #include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
 
-/**/
 #include "../../runtime/method-hint-defaults.h"
-#include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "flat.h"
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, NULL, offsetof */
 
 #undef SSIZE_MIN
 #undef SSIZE_MAX

@@ -20,20 +20,20 @@
 #ifndef GUARD_DEX_POSIX_LIBPOSIX_H
 #define GUARD_DEX_POSIX_LIBPOSIX_H 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/int.h>
-#include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/thread.h>
 
-#include <stdbool.h>
+#include <stdbool.h> /* bool */
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>

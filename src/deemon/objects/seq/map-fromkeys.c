@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_MAP_FROMKEYS_C
 #define GUARD_DEEMON_OBJECTS_SEQ_MAP_FROMKEYS_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
@@ -33,23 +34,16 @@
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/super.h>
-/**/
 
-#include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "map-fromkeys.h"
 #include "mapped.h"
 #include "repeat.h"
-/**/
 
 #include <stddef.h> /* size_t, offsetof */
 
 DECL_BEGIN
-
-
-
-
 
 /************************************************************************/
 /* MapFromKeysIterator                                                  */

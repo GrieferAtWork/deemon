@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_SYSTEM_SYSTEM_C
 #define GUARD_DEEMON_SYSTEM_SYSTEM_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/format.h>
@@ -41,9 +42,8 @@
 #include <hybrid/host.h>
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
-/**/
 
-#include <stdbool.h>
+#include <stdbool.h> /* bool, true, false */
 #include <stdint.h>
 
 #ifdef CONFIG_HOST_WINDOWS
@@ -2245,7 +2245,7 @@ again:
 				map_offset = (Dee_pos_t)(((uint64_t)lo) |
 				                         ((uint64_t)hi << 32));
 #else /* DeeMapFile_IS_CreateFileMapping */
-				map_offset = (Dee_pos_t)LSEEK(fd, 0, SEEK_CUR);
+				map_offset = (Dee_pos_t)LSEEK(fd, 0, Dee_SEEK_CUR);
 				if (map_offset == (Dee_pos_t)-1)
 					goto after_mmap_attempt;
 #endif /* !DeeMapFile_IS_CreateFileMapping */
@@ -3015,7 +3015,7 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict fi
 		}
 
 		/* For a custom offset, try to use lseek() (or read()) */
-		if (DeeFile_Seek(file, offset, SEEK_SET) != (Dee_pos_t)-1) {
+		if (DeeFile_Seek(file, offset, Dee_SEEK_SET) != (Dee_pos_t)-1) {
 			/* Was able to lseek(2) */
 		} else {
 			if (!DeeError_Handled(ERROR_HANDLED_NORMAL))

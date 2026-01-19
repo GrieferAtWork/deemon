@@ -25,8 +25,9 @@
 #include "libctypes.h"
 /**/
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
@@ -37,7 +38,6 @@
 #include <deemon/system-features.h>
 
 #include <hybrid/typecore.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uintptr_t */

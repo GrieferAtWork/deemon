@@ -24,8 +24,9 @@
 #include "libjit.h"
 /**/
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h>

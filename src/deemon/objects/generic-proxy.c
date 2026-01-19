@@ -20,8 +20,8 @@
 #ifndef GUARD_DEEMON_OBJECTS_GENERIC_PROXY_C
 #define GUARD_DEEMON_OBJECTS_GENERIC_PROXY_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
 #include <deemon/format.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
@@ -36,12 +36,10 @@
 #include <hybrid/typecore.h>
 
 #include "../runtime/runtime_error.h"
-
-/**/
 #include "generic-proxy.h"
-/**/
 
 #include <stddef.h> /* size_t */
+#include <stdint.h> /* uint32_t, uint64_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

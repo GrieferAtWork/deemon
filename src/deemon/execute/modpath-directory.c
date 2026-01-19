@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_EXECUTE_MODPATH_DIRECTORY_C 1
 
 #include <deemon/api.h>
-/**/
 
 #include <deemon/alloc.h>
 #include <deemon/arg.h>
@@ -37,11 +36,12 @@
 
 #include <hybrid/debug-alignment.h>
 
-/**/
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
 
-/**/
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
+
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */

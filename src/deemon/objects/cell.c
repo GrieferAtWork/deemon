@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_CELL_C
 #define GUARD_DEEMON_OBJECTS_CELL_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/cell.h>
@@ -35,7 +36,6 @@
 #include <deemon/util/lock.h>
 
 #include "../runtime/strings.h"
-/**/
 
 #include <stddef.h> /* size_t */
 

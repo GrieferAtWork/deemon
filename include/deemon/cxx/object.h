@@ -20,28 +20,23 @@
 #ifndef GUARD_DEEMON_CXX_OBJECT_H
 #define GUARD_DEEMON_CXX_OBJECT_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
 
-#include <hybrid/typecore.h>
+#include <hybrid/compiler.h>
+
+#include "../error.h"
+#include "../none.h"
+#include "../object.h"
+#include "../super.h"
+#include "../system-features.h" /* strlen(), wcslen() */
+#include "../tuple.h"           /* DeeObject_CallAttrStringTuple -> DeeTuple_ELEM */
 
 #include <exception>
 #include <initializer_list>
-#include <stddef.h>
+#include <stddef.h> /* size_t, NULL */
+#include <stdint.h> /* intN_t, uintN_t */
 #include <type_traits>
-
-#include "../bool.h"
-#include "../error.h"
-#include "../float.h"
-#include "../int.h"
-#include "../none.h"
-#include "../object.h"
-#include "../string.h"
-#include "../super.h"
-#include "../tuple.h"
-
-/**/
-#include "../system-features.h" /* strlen(), wcslen() */
 
 DEE_CXX_BEGIN
 
@@ -64,101 +59,101 @@ template<class T = Object> class WeakRef;
 
 
 
-FORCELOCAL WUNUSED DREF DeeObject *(incref)(DeeObject *__restrict obj) {
+FORCELOCAL WUNUSED DREF DeeObject *(incref)(DeeObject *__restrict obj) DEE_CXX_NOTHROW {
 	Dee_Incref(obj);
 	return obj;
 }
 
-FORCELOCAL WUNUSED DREF DeeObject *(xincref)(DeeObject *obj) {
+FORCELOCAL WUNUSED DREF DeeObject *(xincref)(DeeObject *obj) DEE_CXX_NOTHROW {
 	Dee_XIncref(obj);
 	return obj;
 }
 
-FORCELOCAL void (decref)(DREF DeeObject *__restrict obj) {
+FORCELOCAL void (decref)(DREF DeeObject *__restrict obj) DEE_CXX_NOTHROW {
 	Dee_Decref(obj);
 }
 
-FORCELOCAL void (decref_likely)(DREF DeeObject *__restrict obj) {
+FORCELOCAL void (decref_likely)(DREF DeeObject *__restrict obj) DEE_CXX_NOTHROW {
 	Dee_Decref_likely(obj);
 }
 
-FORCELOCAL void (decref_unlikely)(DREF DeeObject *__restrict obj) {
+FORCELOCAL void (decref_unlikely)(DREF DeeObject *__restrict obj) DEE_CXX_NOTHROW {
 	Dee_Decref_unlikely(obj);
 }
 
-FORCELOCAL void (decref_nokill)(DREF DeeObject *__restrict obj) {
+FORCELOCAL void (decref_nokill)(DREF DeeObject *__restrict obj) DEE_CXX_NOTHROW {
 	Dee_DecrefNokill(obj);
 }
 
-FORCELOCAL void (decref_dokill)(DREF DeeObject *__restrict obj) {
+FORCELOCAL void (decref_dokill)(DREF DeeObject *__restrict obj) DEE_CXX_NOTHROW {
 	Dee_DecrefDokill(obj);
 }
 
-FORCELOCAL bool (decref_ifone)(DREF DeeObject *__restrict obj) {
+FORCELOCAL bool (decref_ifone)(DREF DeeObject *__restrict obj) DEE_CXX_NOTHROW {
 	return Dee_DecrefIfOne(obj);
 }
 
-FORCELOCAL bool (decref_ifnotone)(DREF DeeObject *__restrict obj) {
+FORCELOCAL bool (decref_ifnotone)(DREF DeeObject *__restrict obj) DEE_CXX_NOTHROW {
 	return Dee_DecrefIfNotOne(obj);
 }
 
-FORCELOCAL void (xdecref)(DREF DeeObject *obj) {
+FORCELOCAL void (xdecref)(DREF DeeObject *obj) DEE_CXX_NOTHROW {
 	Dee_XDecref(obj);
 }
 
-FORCELOCAL void (xdecref_nokill)(DREF DeeObject *obj) {
+FORCELOCAL void (xdecref_nokill)(DREF DeeObject *obj) DEE_CXX_NOTHROW {
 	Dee_XDecrefNokill(obj);
 }
 #ifdef CONFIG_TRACE_REFCHANGES
-FORCELOCAL WUNUSED DREF DeeObject *(incref_traced)(DeeObject *__restrict obj, char const *file, int line) {
+FORCELOCAL WUNUSED DREF DeeObject *(incref_traced)(DeeObject *__restrict obj, char const *file, int line) DEE_CXX_NOTHROW {
 	Dee_Incref_traced(obj, file, line);
 	return obj;
 }
 
-FORCELOCAL WUNUSED DREF DeeObject *(xincref_traced)(DeeObject *obj, char const *file, int line) {
+FORCELOCAL WUNUSED DREF DeeObject *(xincref_traced)(DeeObject *obj, char const *file, int line) DEE_CXX_NOTHROW {
 	if (obj)
 		Dee_Incref_traced(obj, file, line);
 	return obj;
 }
 
-FORCELOCAL DeeObject *(decref_traced)(DREF DeeObject *__restrict obj, char const *file, int line) {
+FORCELOCAL DeeObject *(decref_traced)(DREF DeeObject *__restrict obj, char const *file, int line) DEE_CXX_NOTHROW {
 	Dee_Decref_traced(obj, file, line);
 	return obj;
 }
 
-FORCELOCAL DeeObject *(decref_likely_traced)(DREF DeeObject *__restrict obj, char const *file, int line) {
+FORCELOCAL DeeObject *(decref_likely_traced)(DREF DeeObject *__restrict obj, char const *file, int line) DEE_CXX_NOTHROW {
 	Dee_Decref_likely_traced(obj, file, line);
 	return obj;
 }
 
-FORCELOCAL DeeObject *(decref_unlikely_traced)(DREF DeeObject *__restrict obj, char const *file, int line) {
+FORCELOCAL DeeObject *(decref_unlikely_traced)(DREF DeeObject *__restrict obj, char const *file, int line) DEE_CXX_NOTHROW {
 	Dee_Decref_unlikely_traced(obj, file, line);
 	return obj;
 }
 
-FORCELOCAL DeeObject *(decref_nokill_traced)(DREF DeeObject *__restrict obj, char const *file, int line) {
+FORCELOCAL DeeObject *(decref_nokill_traced)(DREF DeeObject *__restrict obj, char const *file, int line) DEE_CXX_NOTHROW {
 	Dee_DecrefNokill_traced(obj, file, line);
 	return obj;
 }
 
-FORCELOCAL void (decref_dokill_traced)(DREF DeeObject *__restrict obj, char const *file, int line) {
+FORCELOCAL void (decref_dokill_traced)(DREF DeeObject *__restrict obj, char const *file, int line) DEE_CXX_NOTHROW {
 	Dee_DecrefDokill_traced(obj, file, line);
 }
 
-FORCELOCAL bool (decref_ifone_traced)(DREF DeeObject *__restrict obj, char const *file, int line) {
+FORCELOCAL bool (decref_ifone_traced)(DREF DeeObject *__restrict obj, char const *file, int line) DEE_CXX_NOTHROW {
 	return Dee_DecrefIfOne_traced(obj, file, line);
 }
 
-FORCELOCAL bool (decref_ifnotone_traced)(DREF DeeObject *__restrict obj, char const *file, int line) {
+FORCELOCAL bool (decref_ifnotone_traced)(DREF DeeObject *__restrict obj, char const *file, int line) DEE_CXX_NOTHROW {
 	return Dee_DecrefIfNotOne_traced(obj, file, line);
 }
 
-FORCELOCAL void (xdecref_traced)(DREF DeeObject *obj, char const *file, int line) {
+FORCELOCAL void (xdecref_traced)(DREF DeeObject *obj, char const *file, int line) DEE_CXX_NOTHROW {
 	if (obj)
 		Dee_Decref_traced(obj, file, line);
 }
 
-FORCELOCAL void (xdecref_nokill_traced)(DREF DeeObject *obj, char const *file, int line) {
+FORCELOCAL void (xdecref_nokill_traced)(DREF DeeObject *obj, char const *file, int line) DEE_CXX_NOTHROW {
 	if (obj)
 		Dee_DecrefNokill_traced(obj, file, line);
 }

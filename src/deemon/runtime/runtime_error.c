@@ -20,12 +20,11 @@
 #ifndef GUARD_DEEMON_RUNTIME_RUNTIME_ERROR_C
 #define GUARD_DEEMON_RUNTIME_RUNTIME_ERROR_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/bytes.h>
-#include <deemon/class.h>
 #include <deemon/code.h>
-#include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>
 #include <deemon/format.h>
@@ -33,10 +32,10 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-/**/
+
+#include <hybrid/typecore.h>
 
 #include "runtime_error.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

@@ -23,12 +23,18 @@
 #define DEE_SOURCE
 
 #include "libhash.h"
+/**/
+
+#include <deemon/api.h>
 
 #include <deemon/arg.h>
+#include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
+
+#include <stdbool.h> /* bool, true, false */
 
 DECL_BEGIN
 

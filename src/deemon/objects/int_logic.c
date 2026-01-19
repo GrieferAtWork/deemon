@@ -14,9 +14,8 @@
 #ifndef GUARD_DEEMON_OBJECTS_INT_LOGIC_C
 #define GUARD_DEEMON_OBJECTS_INT_LOGIC_C 1
 
-#include "int_logic.h"
-
 #include <deemon/api.h>
+
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
@@ -29,8 +28,7 @@
 #include <hybrid/minmax.h>
 #include <hybrid/typecore.h>
 
-#include "../runtime/runtime_error.h"
-/**/
+#include "int_logic.h"
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint32_t */
@@ -596,7 +594,7 @@ x_sub_int3(DeeIntObject *__restrict a, uint32_t b) {
 			if unlikely(!z)
 				goto err;
 			z->ob_digit[0] = (digit)a_value;
-		} else if (a_value <= (((twodigits)1 << (DIGIT_BITS * 2)) - 1)) {
+		} else if (a_value <= (uint64_t)(((twodigits)1 << (DIGIT_BITS * 2)) - 1)) {
 			z = DeeInt_Alloc(2);
 			if unlikely(!z)
 				goto err;

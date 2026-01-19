@@ -25,7 +25,6 @@
 #include "../types.h"
 #include "ast.h"
 #include "symbol.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

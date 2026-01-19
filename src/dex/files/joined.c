@@ -25,8 +25,8 @@
 /**/
 
 #include <deemon/api.h>
+
 #include <deemon/object.h>
-#include <deemon/string.h>
 
 DECL_BEGIN
 

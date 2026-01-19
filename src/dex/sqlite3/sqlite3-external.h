@@ -21,9 +21,8 @@
 #define GUARD_DEX_SQLITE3_SQLITE3_EXTERNAL_H 1
 
 #include <deemon/api.h>
-/**/
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __INT64_TYPE__ */
 
 /* Configure sqlite */
 #define SQLITE_EXTERN                   INTDEF

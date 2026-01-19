@@ -31,15 +31,14 @@
  */
 
 #ifndef BUILTIN_NO_INCLUDES
-#include <deemon/compiler/compiler.h>
-
 #include <deemon/api.h>
+
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/callable.h>
 #include <deemon/cell.h>
-#include <deemon/class.h>
+#include <deemon/gc.h>
 #include <deemon/code.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>

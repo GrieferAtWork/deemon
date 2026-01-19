@@ -21,8 +21,10 @@
 #define GUARD_DEX_COLLECTIONS_ACCU_C 1
 #define DEE_SOURCE
 
-#include <deemon/api.h>
+#include "libcollections.h"
 /**/
+
+#include <deemon/api.h>
 
 #include <deemon/accu.h>
 #include <deemon/alloc.h>

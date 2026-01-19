@@ -20,31 +20,30 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_MAP_FROMATTR_C
 #define GUARD_DEEMON_OBJECTS_SEQ_MAP_FROMATTR_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/map.h>
-#include <deemon/method-hints.h>
+#include <deemon/mro.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
-#include <deemon/super.h>
 #include <deemon/system-features.h> /* memset */
+#include <deemon/types.h>
 
 #include <hybrid/typecore.h>
-/**/
 
-#include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "map-fromattr.h"
-/**/
 
-#include <stddef.h> /* size_t, offsetof */
+#include <stddef.h> /* size_t, offsetof, NULL */
 
 DECL_BEGIN
 

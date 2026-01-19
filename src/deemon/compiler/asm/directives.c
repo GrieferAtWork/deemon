@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_COMPILER_ASM_DIRECTIVES_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/asm.h>
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
@@ -37,9 +38,8 @@
 #include <deemon/types.h>
 
 #include "../../runtime/strings.h"
-/**/
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* size_t, NULL */
 #include <stdint.h> /* uint16_t, INT8_MAX, INT16_MAX, INT32_MAX */
 
 #ifndef CONFIG_LANGUAGE_NO_ASM

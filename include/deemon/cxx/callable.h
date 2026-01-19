@@ -20,20 +20,16 @@
 #ifndef GUARD_DEEMON_CXX_CALLABLE_H
 #define GUARD_DEEMON_CXX_CALLABLE_H 1
 
+#include "../api.h"
 #include "api.h"
-/**/
 
-#include "numeric.h"
-#include "object.h"
-/**/
-
-#include "../format.h"
 #include "../callable.h"
-/**/
-
-#include <hybrid/typecore.h>
+#include "../types.h"
+#include "object.h"
 
 DEE_CXX_BEGIN
+
+class Type;
 
 class Callable
 	: public Object

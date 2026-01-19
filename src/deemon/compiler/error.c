@@ -20,24 +20,23 @@
 #ifndef GUARD_DEEMON_COMPILER_ERROR_C
 #define GUARD_DEEMON_COMPILER_ERROR_C 1
 
-#include <deemon/compiler/compiler.h>
+#include <deemon/api.h>
 
 #include <deemon/alloc.h>
-#include <deemon/api.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/compiler/error.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>
 #include <deemon/file.h>
-#include <deemon/format.h>
+#include <deemon/format.h> /* unicode_printer_printf() -> DeeFormat_Printf() */
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
-#include <deemon/traceback.h>
-/**/
+#include <deemon/traceback.h> /* Dee_Decref(iter->ef_trace) */
 
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* size_t */

@@ -21,16 +21,15 @@
 #define GUARD_DEEMON_RODICT_H 1
 
 #include "api.h"
-/**/
 
 #include "dict.h" /* struct Dee_dict_item */
+#include "types.h"
+
+#include <stddef.h> /* size_t */
+
 #ifndef __INTELLISENSE__
 #include "object.h"
 #endif /* !__INTELLISENSE__ */
-#include "types.h"
-/**/
-
-#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

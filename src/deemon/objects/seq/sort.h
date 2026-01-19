@@ -21,8 +21,8 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_SORT_H 1
 
 #include <deemon/api.h>
+
 #include <deemon/object.h>
-/**/
 
 #include <stddef.h> /* size_t */
 

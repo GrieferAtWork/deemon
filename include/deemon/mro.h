@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_MRO_H 1
 
 #include "api.h"
-/**/
 
 #include "types.h"
 #include "util/lock.h"
@@ -32,10 +31,8 @@
 #ifndef __INTELLISENSE__
 #include "none.h"
 #endif /* !__INTELLISENSE__ */
-/**/
 
 #include <hybrid/sched/__yield.h>
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uintptr_t */

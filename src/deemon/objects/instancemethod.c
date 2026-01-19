@@ -20,8 +20,9 @@
 #ifndef GUARD_DEEMON_OBJECTS_INSTANCEMETHOD_C
 #define GUARD_DEEMON_OBJECTS_INSTANCEMETHOD_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/callable.h>
 #include <deemon/class.h>
@@ -35,10 +36,8 @@
 #include <deemon/string.h>
 
 #include "../runtime/kwlist.h"
-#include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

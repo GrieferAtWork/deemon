@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_RUNTIME_OPERATOR_CONSTCALL_C 1
 
 #include <deemon/api.h>
+
 #include <deemon/bytes.h>
 #include <deemon/dict.h>
 #include <deemon/instancemethod.h>
@@ -32,9 +33,9 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/typecore.h>
-/**/
 
-#include <stddef.h> /* uintptr_t */
+#include <stddef.h> /* size_t, NULL */
+#include <stdint.h> /* uintptr_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

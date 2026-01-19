@@ -22,6 +22,9 @@
 #define DEE_SOURCE
 
 #include "libcollections.h"
+/**/
+
+#include <deemon/api.h>
 
 DECL_BEGIN
 

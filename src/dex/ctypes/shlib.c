@@ -24,9 +24,10 @@
 #include "libctypes.h"
 /**/
 
+#include <deemon/api.h>
+
 #include <deemon/alloc.h>
 #include <deemon/arg.h>
-#include <deemon/api.h>
 #include <deemon/mro.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
