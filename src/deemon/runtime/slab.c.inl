@@ -28,8 +28,7 @@
 #include <deemon/system-features.h> /* sscanf(), bzero(), ... */
 #include <deemon/util/lock.h>
 
-#include <hybrid/host.h>
-#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
+#include <hybrid/host.h> /* __ARCH_PAGESIZE, __i386__, __x86_64__ */
 /**/
 
 #include <stddef.h> /* NULL, offsetof, size_t */
@@ -257,7 +256,7 @@ print "#undef NEXT_LARGER";
 #endif /* __INTELLISENSE__ */
 
 #ifndef NO_OBJECT_SLABS
-#include <hybrid/overflow.h>
+#include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_UMUL */
 #endif /* !NO_OBJECT_SLABS */
 
 DECL_BEGIN

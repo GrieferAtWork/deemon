@@ -49,10 +49,12 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/debug-alignment.h>
-#include <hybrid/overflow.h>
-#include <hybrid/sched/yield.h>
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+#include <hybrid/host.h>            /* __linux__ */
+#include <hybrid/overflow.h>        /* OVERFLOW_UADD, OVERFLOW_UCAST, OVERFLOW_USUB */
+#include <hybrid/sched/yield.h>     /* SCHED_YIELD */
 #include <hybrid/sequence/list.h>
+#include <hybrid/typecore.h>        /* __BYTE_TYPE__, __SIZEOF_INT__, __SSIZE_TYPE__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

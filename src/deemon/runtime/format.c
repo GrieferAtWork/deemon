@@ -33,8 +33,8 @@
 #include <deemon/variant.h>
 
 #include <hybrid/int128.h>
-#include <hybrid/minmax.h>
-#include <hybrid/typecore.h>
+#include <hybrid/minmax.h>   /* MIN */
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_CHAR__, __SIZEOF_INT__, __SIZEOF_LONG_LONG__, __SIZEOF_LONG__, __SIZEOF_POINTER__, __SIZEOF_SHORT__, __SIZEOF_WCHAR_T__ */
 
 #include <stdarg.h>  /* va_arg, va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */

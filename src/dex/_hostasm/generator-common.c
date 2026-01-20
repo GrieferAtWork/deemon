@@ -35,7 +35,7 @@
 #include <deemon/tuple.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/overflow.h>
+#include <hybrid/overflow.h> /* OVERFLOW_SADD, OVERFLOW_SMUL, OVERFLOW_SSUB, OVERFLOW_UADD, OVERFLOW_UMUL, OVERFLOW_USUB */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */

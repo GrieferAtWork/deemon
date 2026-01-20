@@ -44,9 +44,9 @@
 #include <deemon/system-features.h> /* bzero(), ... */
 #include <deemon/util/lock.h>
 
-#include <hybrid/overflow.h>
+#include <hybrid/overflow.h>      /* OVERFLOW_UADD, OVERFLOW_USUB */
 #include <hybrid/sequence/list.h>
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h>      /* __BYTE_TYPE__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

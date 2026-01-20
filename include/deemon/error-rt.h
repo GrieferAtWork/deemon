@@ -22,7 +22,7 @@
 
 #include "api.h"
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __SIZEOF_SIZE_T__ */
 
 #include "types.h"
 

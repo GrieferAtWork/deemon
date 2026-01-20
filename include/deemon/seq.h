@@ -22,6 +22,8 @@
 
 #include "api.h"
 
+#include <hybrid/typecore.h> /* __UINTPTR_HALF_TYPE__ */
+
 #include "alloc.h"     /* Dee_MallocUsableSize */
 #include "types.h"
 #include "util/lock.h"

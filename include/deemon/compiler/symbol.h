@@ -30,10 +30,10 @@
 #ifdef CONFIG_BUILDING_DEEMON
 #include "tpp.h"
 #ifndef CONFIG_NO_THREADS
-#include <hybrid/__atomic.h>
+#include <hybrid/__atomic.h> /* __ATOMIC_SEQ_CST, __hybrid_atomic_decfetch, __hybrid_atomic_fetchinc */
 #endif /* !CONFIG_NO_THREADS */
 #endif /* CONFIG_BUILDING_DEEMON */
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */

@@ -30,7 +30,7 @@
 #include <deemon/object.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __CHAR_BIT__ */
 
 #include "method-hint-defaults.h"
 #include "method-hints.h"

@@ -32,6 +32,7 @@
 
 #include <hybrid/byteswap.h>
 #include <hybrid/sequence/list.h>
+#include <hybrid/typecore.h>      /* __SIZEOF_CHAR__ */
 #include <hybrid/unaligned.h>
 
 #include "../../runtime/strings.h"

@@ -61,9 +61,9 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/align.h>
-#include <hybrid/sched/yield.h>
-#include <hybrid/typecore.h>
+#include <hybrid/align.h>       /* IS_ALIGNED */
+#include <hybrid/sched/yield.h> /* SCHED_YIELD */
+#include <hybrid/typecore.h>    /* __SIZEOF_POINTER__, __UINTPTR_TYPE__ */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/method-hints.h"

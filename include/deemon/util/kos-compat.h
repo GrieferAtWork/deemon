@@ -26,10 +26,9 @@
 #error "This header should only be used when `DEE_SOURCE' is also enabled"
 #endif /* !DEE_SOURCE */
 
-#include <hybrid/__alloca.h>
-#include <hybrid/__bit.h>
+#include <hybrid/__alloca.h> /* __hybrid_alloca */
 #include <hybrid/bitset.h>   /* bitset_*  (to replace <sys/bitstr.h>) */
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __INTPTR_TYPE__, __INTn_TYPE__, __SIZE_TYPE__, __SSIZE_TYPE__, __UINTPTR_TYPE__, __UINTn_TYPE__ */
 
 #include "../format.h"
 #include "../string.h"

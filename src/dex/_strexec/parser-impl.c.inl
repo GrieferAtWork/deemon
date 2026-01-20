@@ -46,7 +46,7 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/unaligned.h>
-#include <hybrid/wordbits.h>
+#include <hybrid/wordbits.h>  /* ENCODE_INT16, ENCODE_INT32 */
 
 #include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL, size_t */

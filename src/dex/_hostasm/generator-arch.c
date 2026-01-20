@@ -38,8 +38,9 @@
 #include <deemon/super.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/align.h>         /* CEIL_ALIGN, IS_ALIGNED */
 #include <hybrid/bitset.h>
-#include <hybrid/sched/__yield.h>
+#include <hybrid/sched/__yield.h> /* __NO_hybrid_yield, __hybrid_yield, __hybrid_yield_IS_SleepEx, __hybrid_yield_IS_pthread_yield, __hybrid_yield_IS_sched_yield, __hybrid_yield_IS_thrd_yield */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */

@@ -22,6 +22,8 @@
 
 #include "api.h"
 
+#include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
+
 #include "types.h"
 
 #include <stddef.h> /* size_t */

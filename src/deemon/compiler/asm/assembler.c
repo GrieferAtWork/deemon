@@ -44,7 +44,7 @@
 
 #include <hybrid/byteswap.h>
 #include <hybrid/sequence/list.h>
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h>      /* __SIZEOF_POINTER__ */
 #include <hybrid/unaligned.h>
 
 #include "../../runtime/builtin.h"

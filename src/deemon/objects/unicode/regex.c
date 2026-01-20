@@ -31,12 +31,14 @@
 #include <deemon/util/lock.h>
 
 /* Includes for libregex... */
+/* clang-format off */
 #include <hybrid/align.h>
 #include <hybrid/bit.h>
 #include <hybrid/host.h>
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
 #include <hybrid/unaligned.h>
+/* clang-format on */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

@@ -42,6 +42,7 @@
 #include <deemon/util/lock.h>
 
 #include <hybrid/sequence/list.h>
+#include <hybrid/typecore.h>      /* __UINTPTR_TYPE__ */
 
 #include "sqlite3-external.h"
 
@@ -50,7 +51,7 @@
 #include <stdint.h>  /* uint64_t */
 
 #ifndef INT_MAX
-#include <hybrid/limitcore.h>
+#include <hybrid/limitcore.h> /* __INT_MAX__ */
 #define INT_MAX __INT_MAX__
 #endif /* !INT_MAX */
 

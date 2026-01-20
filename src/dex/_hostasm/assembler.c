@@ -34,9 +34,8 @@
 
 #include <hybrid/bitset.h>
 #include <hybrid/byteswap.h>
-#include <hybrid/limitcore.h>
-#include <hybrid/minmax.h>
-#include <hybrid/overflow.h>
+#include <hybrid/limitcore.h> /* __INT8_MAX__, __INT8_MIN__ */
+#include <hybrid/overflow.h>  /* OVERFLOW_SADD */
 #include <hybrid/unaligned.h>
 
 #include <stdbool.h> /* bool, false, true */

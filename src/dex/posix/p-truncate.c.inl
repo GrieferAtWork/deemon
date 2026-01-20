@@ -36,7 +36,8 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 
-#include <hybrid/debug-alignment.h>
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+#include <hybrid/typecore.h>        /* __ULONGPTR_TYPE__ */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint64_t */

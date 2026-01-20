@@ -23,7 +23,7 @@
 #include "api.h"
 
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__, __SIZEOF_SIZE_T__ */
 
 #include "serial.h"
 #include "types.h"
@@ -32,8 +32,8 @@
 #include <stdint.h> /* int32_t, uintN_t, uintptr_t */
 
 #ifdef DEE_SOURCE
-#include <hybrid/byteorder.h>
-#include <hybrid/host.h>
+#include <hybrid/byteorder.h> /* __BYTE_ORDER__, __FLOAT_WORD_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__, __ORDER_PDP_ENDIAN__ */
+#include <hybrid/host.h>      /* __arm__, __i386__, __x86_64__ */
 
 #include "heap.h"
 #include "mapfile.h"

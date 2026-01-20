@@ -41,8 +41,8 @@
 #include <deemon/system-features.h> /* memcpy() */
 #include <deemon/util/lock.h>
 
-#include <hybrid/overflow.h>
-#include <hybrid/typecore.h>
+#include <hybrid/overflow.h> /* OVERFLOW_USUB */
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_WCHAR_T__ */
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* int32_t, int64_t */

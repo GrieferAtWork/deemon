@@ -23,9 +23,10 @@
 #include "api.h"
 
 #ifdef __CC__
-#include <hybrid/__debug-alignment.h>
-#include <hybrid/__overflow.h>
-#include <hybrid/typecore.h>
+#include <hybrid/__debug-alignment.h> /* __NO_hybrid_dbg_alignment, __hybrid_dbg_alignment_disable, __hybrid_dbg_alignment_enable */
+#include <hybrid/__overflow.h>        /* __hybrid_overflow_uadd, __hybrid_overflow_umul */
+#include <hybrid/host.h>              /* __linux__, __pic__, __unix__ */
+#include <hybrid/typecore.h>          /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
@@ -134,7 +135,7 @@
 #elif __has_builtin(__builtin_alloca)
 #define alloca __builtin_alloca
 #else /* ... */
-#include <hybrid/__alloca.h>
+#include <hybrid/__alloca.h> /* __hybrid_alloca */
 #ifdef __hybrid_alloca
 #define CONFIG_HAVE_alloca
 #define alloca __hybrid_alloca

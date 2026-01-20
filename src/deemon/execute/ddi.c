@@ -32,8 +32,8 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>    /* memcpyc(), ... */
 
-#include <hybrid/minmax.h>
-#include <hybrid/typecore.h>
+#include <hybrid/minmax.h>   /* MIN */
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* int16_t, uint8_t, uint16_t, uint32_t */

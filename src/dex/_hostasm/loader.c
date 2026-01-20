@@ -30,7 +30,6 @@
 #include <deemon/error.h>
 #include <deemon/format.h>
 
-#include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
 

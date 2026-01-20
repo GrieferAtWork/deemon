@@ -41,8 +41,8 @@
 #include <deemon/util/lock.h>
 #include <deemon/util/rlock.h>
 
-#include <hybrid/overflow.h>
-#include <hybrid/typecore.h>
+#include <hybrid/overflow.h> /* OVERFLOW_UADD */
+#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
 #include "../objects/gc_inspect.h"
 #include "strings.h"

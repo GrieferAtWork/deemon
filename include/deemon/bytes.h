@@ -28,7 +28,7 @@
 #include "types.h"
 /**/
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 /**/
 
 #include <stdarg.h> /* va_list */

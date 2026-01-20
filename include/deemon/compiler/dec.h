@@ -25,7 +25,7 @@
 #ifdef CONFIG_BUILDING_DEEMON
 #ifndef CONFIG_NO_DEC
 #ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
 #include "../code.h"
 #include "../module.h"

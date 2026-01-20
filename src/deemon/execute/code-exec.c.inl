@@ -54,8 +54,8 @@
 #include <deemon/util/futex.h>
 
 #include <hybrid/byteswap.h>
-#include <hybrid/overflow.h>
-#include <hybrid/typecore.h>
+#include <hybrid/overflow.h>  /* OVERFLOW_UADD */
+#include <hybrid/typecore.h>  /* __SIZEOF_SIZE_T__ */
 #include <hybrid/unaligned.h>
 
 #include "../runtime/runtime_error.h"
@@ -65,7 +65,7 @@
 #include <stdint.h>  /* int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t, uintptr_t */
 
 #undef SSIZE_MAX
-#include <hybrid/limitcore.h>
+#include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
 #define SSIZE_MAX __SSIZE_MAX__
 
 __pragma_GCC_diagnostic_push

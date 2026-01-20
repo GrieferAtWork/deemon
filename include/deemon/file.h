@@ -22,6 +22,8 @@
 
 #include "api.h"
 
+#include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_POINTER__ */
+
 #include "object.h"
 
 #include <stdarg.h>  /* va_list */

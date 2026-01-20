@@ -30,7 +30,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __SIZEOF_INT__ */
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"

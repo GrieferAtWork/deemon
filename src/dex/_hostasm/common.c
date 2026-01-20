@@ -33,7 +33,7 @@
 #include <deemon/format.h>
 #include <deemon/int.h>
 
-#include <hybrid/align.h>
+#include <hybrid/align.h> /* CEILDIV */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
@@ -42,7 +42,7 @@
 DECL_BEGIN
 
 #ifndef CHAR_BIT
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __CHAR_BIT__ */
 #define CHAR_BIT __CHAR_BIT__
 #endif /* !CHAR_BIT */
 

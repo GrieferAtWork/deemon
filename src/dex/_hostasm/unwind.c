@@ -35,8 +35,8 @@
 #include <deemon/error.h>
 #include <deemon/format.h>
 
-#include <hybrid/align.h>
-#include <hybrid/debug-alignment.h>
+#include <hybrid/align.h>           /* CEIL_ALIGN */
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, ptrdiff_t, size_t */

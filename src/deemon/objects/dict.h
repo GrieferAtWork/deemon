@@ -31,9 +31,9 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* CONFIG_HAVE_strcmp */
 
-#include <hybrid/bit.h>
-#include <hybrid/overflow.h>
-#include <hybrid/typecore.h>
+#include <hybrid/bit.h>      /* CLZ */
+#include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_UMUL */
+#include <hybrid/typecore.h> /* __CHAR_BIT__, __SHIFT_TYPE__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
@@ -42,7 +42,7 @@
 #define shift_t __SHIFT_TYPE__
 
 #ifndef SIZE_MAX
-#include <hybrid/limitcore.h>
+#include <hybrid/limitcore.h> /* __SIZE_MAX__ */
 #ifndef SIZE_MAX
 #define SIZE_MAX __SIZE_MAX__
 #endif /* !SIZE_MAX */

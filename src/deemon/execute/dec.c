@@ -42,11 +42,11 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/md5.h>
 
-#include <hybrid/align.h>
-#include <hybrid/limitcore.h>
-#include <hybrid/overflow.h>
+#include <hybrid/align.h>            /* CEIL_ALIGN, IS_ALIGNED */
+#include <hybrid/limitcore.h>        /* __UINT32_MAX__ */
+#include <hybrid/overflow.h>         /* OVERFLOW_UADD, OVERFLOW_USUB */
 #include <hybrid/sequence/bsearch.h>
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h>         /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
@@ -2456,7 +2456,7 @@ DECL_END
 #include <deemon/util/lock.h>
 #include <deemon/weakref.h>
 
-#include <hybrid/byteorder.h>
+#include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/byteswap.h>
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>

@@ -70,9 +70,10 @@ typedef Dee_nratomic_lock_t Dee_nrshared_lock_t;
 DECL_END
 #else /* CONFIG_NO_THREADS */
 
-#include <hybrid/__atomic.h>
-#include <hybrid/sched/__gettid.h>
-#include <hybrid/sched/__yield.h>
+#include <hybrid/__atomic.h>       /* __ATOMIC_ACQUIRE, __ATOMIC_RELAXED, __ATOMIC_RELEASE, __hybrid_atomic_cmpxch_val, __hybrid_atomic_load, __hybrid_atomic_store */
+#include <hybrid/sched/__gettid.h> /* __HYBRID_GETTID_INVALID, __HYBRID_GETTID_INVALID_IS_ZERO, __HYBRID_SIZEOF_TID__, __hybrid_gettid, __hybrid_gettid_iscaller, __hybrid_tid_t, __hybrid_tid_t_IS_NUMERIC */
+#include <hybrid/sched/__yield.h>  /* __hybrid_yield */
+#include <hybrid/typecore.h>       /* __SIZEOF_POINTER__ */
 
 #include "futex.h"
 

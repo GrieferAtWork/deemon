@@ -43,8 +43,8 @@
 #include <deemon/util/atomic.h>
 
 #include <hybrid/bitset.h>
-#include <hybrid/limitcore.h>
-#include <hybrid/overflow.h>
+#include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
+#include <hybrid/overflow.h>  /* OVERFLOW_UADD, OVERFLOW_USUB */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

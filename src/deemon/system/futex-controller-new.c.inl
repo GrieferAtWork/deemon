@@ -35,7 +35,7 @@
 #include <stdint.h> /* INT32_MAX, uintptr_t */
 
 #ifndef INT32_MAX
-#include <hybrid/limitcore.h>
+#include <hybrid/limitcore.h> /* __INT32_MAX__ */
 #ifndef INT32_MAX
 #define INT32_MAX __INT32_MAX__
 #endif /* !INT32_MAX */

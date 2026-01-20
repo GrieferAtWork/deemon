@@ -50,14 +50,14 @@
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
-#include <hybrid/__byteswap.h>
-#include <hybrid/align.h>
-#include <hybrid/bit.h>
-#include <hybrid/byteorder.h>
-#include <hybrid/host.h>
+#include <hybrid/__byteswap.h> /* __hybrid_bswap16, __hybrid_bswap32, __hybrid_bswap64 */
+#include <hybrid/align.h>      /* CEILDIV */
+#include <hybrid/bit.h>        /* CLZ, CTZ, PARITY, POPCOUNT */
+#include <hybrid/byteorder.h>  /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */
+#include <hybrid/host.h>       /* __ARCH_HAVE_UNALIGNED_MEMORY_ACCESS */
 #include <hybrid/int128.h>
-#include <hybrid/overflow.h>
-#include <hybrid/typecore.h>
+#include <hybrid/overflow.h>   /* OVERFLOW_UADD, OVERFLOW_UMUL */
+#include <hybrid/typecore.h>   /* __BYTE_TYPE__, __CHAR_BIT__, __SHIFT_TYPE__, __SIZEOF_REGISTER__, __SIZEOF_SIZE_T__ */
 #include <hybrid/unaligned.h>
 
 #include "../runtime/kwlist.h"
@@ -73,11 +73,11 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/sched/yield.h>
+#include <hybrid/sched/yield.h> /* SCHED_YIELD */
 #endif /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
 
 #undef SSIZE_MAX
-#include <hybrid/limitcore.h>
+#include <hybrid/limitcore.h> /* __INTn_MAX__, __INTn_MIN__, __SIZE_MAX__, __SSIZE_MAX__, __UINTn_MAX__ */
 #define SSIZE_MAX __SSIZE_MAX__
 
 #ifndef SIZE_MAX

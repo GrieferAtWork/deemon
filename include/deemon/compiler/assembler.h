@@ -24,7 +24,7 @@
 
 #ifdef CONFIG_BUILDING_DEEMON
 #include <hybrid/sequence/list.h>
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h>      /* __BYTE_TYPE__, __SIZEOF_POINTER__, __UINTPTR_C */
 
 #include "../asm.h"
 #include "../code.h"

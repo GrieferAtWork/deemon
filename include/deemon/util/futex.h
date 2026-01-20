@@ -22,6 +22,8 @@
 
 #include "../api.h"
 
+#include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_POINTER__ */
+
 #ifdef CONFIG_NO_THREADS
 /* No-op out the futex API (with only a single thread, the below is
  * actually equivalent, so-long as you assume that dead-locks are

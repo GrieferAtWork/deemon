@@ -29,8 +29,8 @@
 #include <deemon/util/once.h>
 #include <deemon/util/rlock.h>
 
-#include <hybrid/overflow.h>
-#include <hybrid/sched/__gettid.h>
+#include <hybrid/overflow.h>       /* OVERFLOW_UADD, OVERFLOW_USUB */
+#include <hybrid/sched/__gettid.h> /* __hybrid_gettid, __hybrid_gettid_iscaller */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* size_t */

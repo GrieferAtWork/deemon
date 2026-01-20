@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>
 #include <deemon/object.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
 #include "../generic-proxy.h"
 

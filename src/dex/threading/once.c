@@ -40,7 +40,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/once.h>
 
-#include <hybrid/sched/yield.h>
+#include <hybrid/sched/yield.h> /* SCHED_YIELD */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

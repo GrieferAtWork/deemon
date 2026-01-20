@@ -40,7 +40,7 @@
 #include <deemon/system.h>          /* DeeSystem_HAVE_FS_DRIVES */
 #include <deemon/thread.h>
 
-#include <hybrid/debug-alignment.h>
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 
 #include <stdbool.h> /* false, true */
 #include <stddef.h>  /* NULL, size_t */

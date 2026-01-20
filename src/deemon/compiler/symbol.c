@@ -35,7 +35,7 @@
 #include <deemon/system-features.h>   /* memcpy(), bzero(), ... */
 #include <deemon/util/cache.h>
 
-#include <hybrid/minmax.h>
+#include <hybrid/minmax.h> /* MAX_C */
 
 #include "../runtime/strings.h"
 

@@ -22,7 +22,8 @@
 
 #include "api.h"
 
-#include <hybrid/typecore.h>
+#include <hybrid/byteorder.h> /* __FLOAT_WORD_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */
+#include <hybrid/typecore.h>  /* __SIZEOF_DOUBLE__ */
 
 #include "types.h"
 

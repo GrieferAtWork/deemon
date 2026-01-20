@@ -48,7 +48,7 @@
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __SHIFT_TYPE__ */
 
 #include "../../objects/dict.h"
 #include "../../runtime/builtin.h"

@@ -42,9 +42,9 @@
 #include <deemon/util/atomic.h>
 
 #include <hybrid/host.h>      /* __ARCH_VA_LIST_IS_STACK_POINTER */
-#include <hybrid/limitcore.h>
-#include <hybrid/overflow.h>
-#include <hybrid/typecore.h>
+#include <hybrid/limitcore.h> /* __SSIZE_MAX__, __SSIZE_MIN__ */
+#include <hybrid/overflow.h>  /* OVERFLOW_UADD, OVERFLOW_UMUL, OVERFLOW_USUB */
+#include <hybrid/typecore.h>  /* __SIZEOF_SIZE_T__ */
 
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
@@ -99,7 +99,7 @@
 #if CONFIG_TUPLE_CACHE_MAXCOUNT != 0
 #include <deemon/util/lock.h>
 
-#include <hybrid/minmax.h>
+#include <hybrid/minmax.h>        /* MIN */
 #include <hybrid/sequence/list.h>
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT != 0 */
 

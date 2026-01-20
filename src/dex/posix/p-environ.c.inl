@@ -44,7 +44,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_t */
 
-#include <hybrid/debug-alignment.h>
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

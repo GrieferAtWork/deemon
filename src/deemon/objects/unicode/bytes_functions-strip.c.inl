@@ -86,7 +86,7 @@ DECL_BEGIN
 #endif /* ... */
 
 #ifndef SIZE_MAX
-#include <hybrid/limitcore.h>
+#include <hybrid/limitcore.h> /* __SIZE_MAX__ */
 #ifndef SIZE_MAX
 #define SIZE_MAX __SIZE_MAX__
 #endif /* !SIZE_MAX */

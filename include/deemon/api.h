@@ -124,11 +124,12 @@
 #define DEE_VERSION_REVISION 0
 
 #ifndef __DEEMON__
+#include <hybrid/__assert.h> /* __hybrid_assert, __hybrid_assertf */
 #include <hybrid/compiler.h> /* TODO: Get rid of this include (<__stdinc.h> is fine, but this one
                               *       clobbers too much of the global namespace and can break compat
                               *       with 3rd party code that uses identifiers defined here) */
-#include <hybrid/host.h>
-#include <hybrid/typecore.h> /* __SSIZE_TYPE__ */
+#include <hybrid/host.h>     /* _WIN16, _WIN32, _WIN64, __arm__, __i386__, __linux__, __pic__, __unix__, __x86_64__ */
+#include <hybrid/typecore.h> /* __SIZE_TYPE__, __SSIZE_TYPE__ */
 
 #if defined(__CC__) && !defined(__INTELLISENSE__)
 #include <stdarg.h> /* va_list */
@@ -674,7 +675,7 @@ DECL_END
 #ifdef __INTELLISENSE__
 #define Dee_CHECKMEMORY() Dee_ASSERT((_CrtCheckMemory)())
 #else /* __INTELLISENSE__ */
-#include <hybrid/debug-alignment.h>
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #define Dee_CHECKMEMORY() (DBG_ALIGNMENT_DISABLE(), Dee_ASSERT((_CrtCheckMemory)()), DBG_ALIGNMENT_ENABLE())
 #endif /* !__INTELLISENSE__ */
 DECL_BEGIN

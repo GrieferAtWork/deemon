@@ -35,8 +35,8 @@
 #include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/util/lock.h>
 
-#include <hybrid/debug-alignment.h>
-#include <hybrid/minmax.h>
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+#include <hybrid/minmax.h>          /* MAX */
 #include <hybrid/sequence/list.h>
 
 #include <stdbool.h> /* bool, false, true */

@@ -31,9 +31,9 @@
 #include <deemon/system-features.h> /* strnlen() */
 #include <deemon/tuple.h>
 
-#include <hybrid/__va_size.h>
+#include <hybrid/__va_size.h> /* __VA_SIZE */
 #include <hybrid/int128.h>
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h>  /* __ALIGNOF_DOUBLE__, __ALIGNOF_FLOAT__, __ALIGNOF_INT128__, __ALIGNOF_INTn__, __ALIGNOF_LONG_DOUBLE__, __BYTE_TYPE__, __SIZEOF_INT__, __SIZEOF_LONG_LONG__, __SIZEOF_SIZE_T__ */
 
 #include "runtime_error.h"
 

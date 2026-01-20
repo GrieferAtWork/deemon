@@ -36,8 +36,8 @@
 #include <deemon/system-features.h> /* strlen(), bzero(), memcpy(), ... */
 
 #include <hybrid/byteswap.h>
-#include <hybrid/debug-alignment.h>
-#include <hybrid/minmax.h>
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+#include <hybrid/minmax.h>          /* MAX, MIN */
 #include <hybrid/unaligned.h>
 
 #include <stdbool.h> /* bool, false, true */

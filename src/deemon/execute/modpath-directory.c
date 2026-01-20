@@ -34,7 +34,7 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/debug-alignment.h>
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"

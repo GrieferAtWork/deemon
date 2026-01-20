@@ -40,8 +40,9 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/debug-alignment.h>
-#include <hybrid/host.h>
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+#include <hybrid/host.h>            /* __ARCH_PAGESIZE, __i386__, __pic__, __x86_64__ */
+#include <hybrid/typecore.h>        /* __BYTE_TYPE__ */
 
 #ifndef CONFIG_NO_DEC
 #include <deemon/dec.h>

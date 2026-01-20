@@ -22,6 +22,10 @@
 #define LOCAL_HIDXIO_NBITS 16
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+
+#include <hybrid/typecore.h> /* __CHAR_BIT__ */
+
 #include <stddef.h> /* size_t */
 
 DECL_BEGIN

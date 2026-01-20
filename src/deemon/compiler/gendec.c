@@ -47,7 +47,7 @@
 #include <deemon/system.h>          /* DeeSystem_SEP, */
 #include <deemon/tuple.h>
 
-#include <hybrid/byteorder.h>
+#include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
 

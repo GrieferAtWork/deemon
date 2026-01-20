@@ -27,7 +27,7 @@
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 
-#include <hybrid/host.h>
+#include <hybrid/host.h> /* __ARCH_VA_LIST_IS_STACK_POINTER */
 
 #include "operator-hint-errors.h"
 

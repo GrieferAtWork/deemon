@@ -40,9 +40,9 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/byteswap.h>
-#include <hybrid/minmax.h>
-#include <hybrid/overflow.h>
-#include <hybrid/typecore.h>
+#include <hybrid/minmax.h>   /* MIN */
+#include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_UMUL */
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __UINTPTR_TYPE__ */
 
 #include "../../runtime/kwlist.h"
 #include "../../runtime/runtime_error.h"

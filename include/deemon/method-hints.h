@@ -22,6 +22,8 @@
 
 #include "api.h"
 
+#include <hybrid/typecore.h> /* __UINTPTR_HALF_TYPE__ */
+
 #include "types.h"
 #if !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__)
 #include "object.h" /* struct Dee_type_object::tp_mhcache */

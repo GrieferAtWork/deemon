@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <hybrid/typecore.h> /* __INT64_TYPE__ */
+#include <hybrid/typecore.h> /* __INT64_TYPE__, __UINT64_TYPE__ */
 
 /* Configure sqlite */
 #define SQLITE_EXTERN                   INTDEF

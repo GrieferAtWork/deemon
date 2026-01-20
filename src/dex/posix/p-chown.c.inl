@@ -37,6 +37,8 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+
 #include "p-path.c.inl"     /* For `posix_chown_USE_posix_readlink__AND__posix_lchown()' */
 #include "p-readlink.c.inl" /* For `posix_chown_USE_posix_readlink__AND__posix_lchown()' */
 

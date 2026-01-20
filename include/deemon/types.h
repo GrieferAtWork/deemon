@@ -23,7 +23,7 @@
 #include "api.h"
 
 #include <hybrid/int128.h>
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __LONG64_TYPE__, __SIZEOF_POINTER__, __SSIZE_TYPE__, __UINT32_C, __UINT64_C, __UINTPTR_TYPE__, __ULONG64_TYPE__ */
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uintptr_t */
@@ -259,7 +259,7 @@ DFUNDEF NONNULL((1)) void (DCALL Dee_weakref_support_fini)(struct Dee_weakref_li
 #define Dee_weakref_support_fini(x) (Dee_weakref_support_fini)(&(x)->ob_weakrefs)
 #else /* __OPTIMIZE_SIZE__ || __INTELLISENSE__ */
 DECL_END
-#include <hybrid/__atomic.h>
+#include <hybrid/__atomic.h> /* __ATOMIC_ACQUIRE, __hybrid_atomic_load */
 DECL_BEGIN
 #define Dee_weakref_support_fini(x)                                     \
 	(__hybrid_atomic_load(&(x)->ob_weakrefs.wl_nodes, __ATOMIC_ACQUIRE) \

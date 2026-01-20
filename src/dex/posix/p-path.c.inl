@@ -40,7 +40,7 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 
-#include <hybrid/minmax.h>
+#include <hybrid/minmax.h> /* MIN */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

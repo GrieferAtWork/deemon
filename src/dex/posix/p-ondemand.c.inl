@@ -213,10 +213,10 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/once.h>
 
-#include <hybrid/debug-alignment.h>
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/int128.h>
-#include <hybrid/overflow.h>
-#include <hybrid/typecore.h>
+#include <hybrid/overflow.h>        /* OVERFLOW_SCAST */
+#include <hybrid/typecore.h>        /* __BYTE_TYPE__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

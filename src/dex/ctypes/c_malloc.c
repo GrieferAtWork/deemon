@@ -38,7 +38,7 @@
 #include <deemon/objmethod.h>
 #include <deemon/system-features.h> /* strnlen() */
 
-#include <hybrid/overflow.h>
+#include <hybrid/overflow.h> /* OVERFLOW_UMUL */
 
 #include "c_api.h" /* Prototypes... */
 

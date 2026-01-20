@@ -40,8 +40,8 @@
 #include <deemon/string.h>
 #include <deemon/thread.h>
 
-#include <hybrid/limitcore.h>
-#include <hybrid/overflow.h>
+#include <hybrid/limitcore.h> /* __SSIZE_MAX__, __SSIZE_MIN__ */
+#include <hybrid/overflow.h>  /* OVERFLOW_UADD */
 
 #include "../runtime/strings.h"
 #include "generic-proxy.h"

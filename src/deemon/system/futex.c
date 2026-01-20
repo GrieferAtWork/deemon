@@ -31,9 +31,9 @@
 #include <deemon/util/lock.h>
 
 #include <hybrid/sched/atomic-once.h>
-#include <hybrid/sched/yield.h>
+#include <hybrid/sched/yield.h>       /* SCHED_YIELD */
 #include <hybrid/sequence/list.h>
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h>          /* __SIZEOF_INT__, __SIZEOF_POINTER__, __ULONGPTR_TYPE__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

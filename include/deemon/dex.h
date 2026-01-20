@@ -23,7 +23,7 @@
 #include "api.h"
 
 #ifndef CONFIG_NO_DEX
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __UINT32_TYPE__, __UINT64_TYPE__, __UINTPTR_HALF_TYPE__, __UINTPTR_QUARTER_TYPE__ */
 
 #include "gc.h"
 #include "module.h"
@@ -126,7 +126,7 @@ INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_buildid__[];
 #define _Dee_MODULE_DEXDATA_INIT_BUILDID (union Dee_module_buildid const *)(__dex_buildid__ + 16)
 #elif defined(CONFIG_HAVE___dex_builduuid64__)
 DECL_END
-#include <hybrid/host.h>
+#include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 DECL_BEGIN
 INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid64_0__[];
 INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid64_1__[];
@@ -146,7 +146,7 @@ INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid64_1__[];
 #define _Dee_MODULE_DEXDATA_INIT_BUILDID (union Dee_module_buildid const *)_dex_buildid
 #elif defined(CONFIG_HAVE___dex_builduuid32__)
 DECL_END
-#include <hybrid/host.h>
+#include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 DECL_BEGIN
 INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_0__[];
 INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_1__[];

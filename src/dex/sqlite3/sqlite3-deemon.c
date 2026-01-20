@@ -39,7 +39,7 @@
 #include <deemon/super.h>
 #include <deemon/system-features.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_SIZE_T__ */
 
 #include "sqlite3-external.h"
 

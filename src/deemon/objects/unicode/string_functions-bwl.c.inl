@@ -33,7 +33,8 @@
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>
 
-#include <hybrid/limitcore.h>
+#include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
+#include <hybrid/typecore.h>  /* __SBYTE_TYPE__ */
 
 #include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL, size_t */

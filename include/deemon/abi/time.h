@@ -22,7 +22,7 @@
 
 #include "../api.h"
 
-#include <hybrid/__unaligned.h>
+#include <hybrid/__unaligned.h> /* __hybrid_unaligned_get64 */
 
 #include "../format.h" /* Dee_PCKuPTR */
 #include "../module.h"

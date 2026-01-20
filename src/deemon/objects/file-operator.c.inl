@@ -26,7 +26,7 @@
 #include <deemon/object.h>
 #include <deemon/super.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include "../runtime/runtime_error.h"
 #include "file-type-operators.h"

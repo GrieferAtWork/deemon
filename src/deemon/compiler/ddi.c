@@ -35,7 +35,7 @@
 #include <deemon/util/bytewriter.h>
 
 #include <hybrid/byteswap.h>
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __SIZEOF_INT__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

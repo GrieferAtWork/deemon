@@ -35,9 +35,9 @@
 #include <deemon/variant.h>
 
 #include <hybrid/int128.h>
-#include <hybrid/minmax.h>
-#include <hybrid/sched/yield.h>
-#include <hybrid/typecore.h>
+#include <hybrid/minmax.h>      /* MIN */
+#include <hybrid/sched/yield.h> /* SCHED_YIELD */
+#include <hybrid/typecore.h>    /* __ALIGNOF_POINTER__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

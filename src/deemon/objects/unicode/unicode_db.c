@@ -25,7 +25,8 @@
 
 #include <deemon/string.h>
 
-#include <hybrid/byteorder.h>
+#include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
+#include <hybrid/typecore.h>  /* __CHAR32_TYPE__ */
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* UINT32_C, UINT64_C, int32_t, uintN_t */

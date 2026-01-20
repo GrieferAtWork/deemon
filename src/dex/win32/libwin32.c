@@ -46,8 +46,8 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/debug-alignment.h>
-#include <hybrid/typecore.h>
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+#include <hybrid/typecore.h>        /* __SIZEOF_POINTER__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

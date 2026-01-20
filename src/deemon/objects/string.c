@@ -44,10 +44,10 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/limitcore.h>
-#include <hybrid/minmax.h>
+#include <hybrid/limitcore.h>        /* __SSIZE_MAX__ */
+#include <hybrid/minmax.h>           /* MIN */
 #include <hybrid/sequence/bsearch.h>
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h>         /* __BYTE_TYPE__, __UINTPTR_HALF_TYPE__ */
 
 #include "../runtime/method-hint-defaults.h"
 #include "../runtime/runtime_error.h"

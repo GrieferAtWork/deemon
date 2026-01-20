@@ -33,6 +33,8 @@
 #include <deemon/system.h>
 #include <deemon/thread.h>
 
+#include <hybrid/host.h> /* _WIN32 */
+
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* offsetof, size_t */
 #include <stdint.h>  /* int64_t, uint32_t, uint64_t */

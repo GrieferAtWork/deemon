@@ -39,7 +39,7 @@
 #include <deemon/system-features.h>    /* memcpy */
 #include <deemon/util/atomic.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"

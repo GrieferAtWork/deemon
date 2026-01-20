@@ -22,8 +22,8 @@
 
 #include "api.h"
 
-#include <hybrid/__byteswap.h>
-#include <hybrid/byteorder.h>
+#include <hybrid/__byteswap.h> /* __hybrid_bswap16, __hybrid_bswap32 */
+#include <hybrid/byteorder.h>  /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */
 
 #include "string.h" /* DeeUni_IsSpace */
 #include "types.h"

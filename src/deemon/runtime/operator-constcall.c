@@ -32,7 +32,7 @@
 #include <deemon/roset.h>
 #include <deemon/tuple.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

@@ -48,9 +48,9 @@
 #include <deemon/util/lock.h>
 #include <deemon/util/rlock.h>
 
-#include <hybrid/overflow.h>
-#include <hybrid/sched/yield.h>
-#include <hybrid/typecore.h>
+#include <hybrid/overflow.h>    /* OVERFLOW_UADD, OVERFLOW_USUB */
+#include <hybrid/sched/yield.h> /* SCHED_YIELD */
+#include <hybrid/typecore.h>    /* __SIZEOF_POINTER__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

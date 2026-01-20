@@ -35,7 +35,8 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/limitcore.h> /* __INTPTR_MAX__, __INTPTR_MIN__ */
+#include <hybrid/typecore.h>  /* __SIZEOF_DOUBLE__, __UINT32_C */
 
 #include "../runtime/strings.h"
 

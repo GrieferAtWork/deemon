@@ -39,9 +39,9 @@
 #include <deemon/system.h>
 #include <deemon/thread.h>
 
-#include <hybrid/byteorder.h>
-#include <hybrid/debug-alignment.h>
-#include <hybrid/typecore.h>
+#include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+#include <hybrid/typecore.h>        /* __SIZEOF_SIZE_T__ */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* UINT32_MAX, int32_t, int64_t, uint8_t, uint32_t, uint64_t, uintptr_t */

@@ -29,8 +29,7 @@
 #ifdef CONFIG_NO_THREADS
 #include <stdbool.h> /* bool, false */
 #else /* CONFIG_NO_THREADS */
-#include <hybrid/atomic.h>
-#include <hybrid/typecore.h>
+#include <hybrid/__atomic.h> /* __ATOMIC_ACQUIRE, __hybrid_atomic_load */
 
 #include <stdint.h> /* UINT32_C, uint32_t */
 #endif /* !CONFIG_NO_THREADS */

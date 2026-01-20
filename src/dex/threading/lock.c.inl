@@ -48,9 +48,6 @@
 #include <deemon/util/rlock-utils.h>
 #include <deemon/util/rlock.h>
 
-#include <hybrid/overflow.h>
-#include <hybrid/sched/yield.h>
-
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* uint64_t, uintptr_t */

@@ -42,8 +42,9 @@
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/limitcore.h>
-#include <hybrid/overflow.h>
+#include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
+#include <hybrid/overflow.h>  /* OVERFLOW_UADD, OVERFLOW_USUB */
+#include <hybrid/typecore.h>  /* __UINTPTR_TYPE__ */
 
 #include "kwlist.h"
 

@@ -22,6 +22,8 @@
 
 #include "api.h"
 
+#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
+
 #include "file.h"
 #include "system-features.h" /* CONFIG_HAVE_* */
 

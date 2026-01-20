@@ -43,10 +43,10 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/limitcore.h>
-#include <hybrid/minmax.h>
-#include <hybrid/overflow.h>
-#include <hybrid/typecore.h>
+#include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
+#include <hybrid/minmax.h>    /* MIN */
+#include <hybrid/overflow.h>  /* OVERFLOW_UADD, OVERFLOW_UMUL */
+#include <hybrid/typecore.h>  /* __BYTE_TYPE__ */
 #include <hybrid/unaligned.h>
 
 #include "../runtime/runtime_error.h"

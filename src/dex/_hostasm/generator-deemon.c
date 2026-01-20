@@ -47,7 +47,7 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
-#include <hybrid/align.h>
+#include <hybrid/align.h>     /* CEILDIV */
 #include <hybrid/bitset.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
@@ -59,7 +59,7 @@
 DECL_BEGIN
 
 #ifndef CHAR_BIT
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __CHAR_BIT__ */
 #define CHAR_BIT __CHAR_BIT__
 #endif /* !CHAR_BIT */
 

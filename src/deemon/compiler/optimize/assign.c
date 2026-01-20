@@ -30,7 +30,7 @@
 #include <deemon/object.h>
 #include <deemon/system-features.h>   /* memcpy(), bzero(), ... */
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 

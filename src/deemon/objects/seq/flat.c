@@ -38,8 +38,8 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/limitcore.h>
-#include <hybrid/overflow.h>
+#include <hybrid/limitcore.h> /* __SSIZE_MAX__, __SSIZE_MIN__ */
+#include <hybrid/overflow.h>  /* OVERFLOW_UADD */
 
 #include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/strings.h"

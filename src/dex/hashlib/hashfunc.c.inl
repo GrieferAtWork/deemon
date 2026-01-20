@@ -40,7 +40,7 @@
 
 #include <deemon/api.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uintN_t */

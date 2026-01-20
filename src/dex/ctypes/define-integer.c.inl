@@ -46,7 +46,7 @@
 #include <deemon/variant.h>
 
 #include <hybrid/int128.h>
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h>  /* __BYTE_TYPE__, __INT128_TYPE__, __SHIFT_TYPE__, __SIZEOF_INT__, __SIZEOF_LONG__, __UINT128_TYPE__ */
 #include <hybrid/unaligned.h>
 
 #include <stdbool.h> /* false, true */

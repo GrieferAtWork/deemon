@@ -27,7 +27,7 @@
 #include <deemon/operator-hints.h>
 #include <deemon/util/objectlist.h>
 
-#include <hybrid/overflow.h>
+#include <hybrid/overflow.h> /* OVERFLOW_UADD */
 
 #include "../../runtime/runtime_error.h"
 

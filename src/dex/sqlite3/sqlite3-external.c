@@ -41,9 +41,9 @@ ClCompile.CompileAs = CompileAsC
 
 #include <deemon/system-features.h>
 
-#include <hybrid/__alloca.h>
-#include <hybrid/byteorder.h>
-#include <hybrid/typecore.h>
+#include <hybrid/__alloca.h>  /* __hybrid_alloca, __hybrid_alloca_IS_alloca */
+#include <hybrid/byteorder.h> /* __BYTE_ORDER__ */
+#include <hybrid/typecore.h>  /* __INT8_TYPE__, __INT16_TYPE__, __INT32_TYPE__, __UINT8_TYPE__, __UINT16_TYPE__, __UINT32_TYPE__ */
 
 #include "sqlite3-external.h"
 

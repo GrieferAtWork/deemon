@@ -24,7 +24,7 @@
 
 #include <deemon/object.h>
 
-#include <hybrid/byteorder.h>
+#include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/int128.h>
 
 #include <stdbool.h> /* bool */

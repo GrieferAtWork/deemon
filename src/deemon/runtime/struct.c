@@ -40,7 +40,7 @@
 
 #include <hybrid/host.h>      /* __pic__ */
 #include <hybrid/int128.h>
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h>  /* __BYTE_TYPE__, __SIZEOF_DOUBLE__, __SIZEOF_FLOAT__, __SIZEOF_LONG_DOUBLE__, __UINTPTR_HALF_TYPE__ */
 #include <hybrid/unaligned.h>
 
 #include "method-hints.h"

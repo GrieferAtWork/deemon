@@ -31,9 +31,9 @@
 
 #include "api.h"
 
-#include <hybrid/byteorder.h>
-#include <hybrid/limitcore.h>
-#include <hybrid/typecore.h>
+#include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
+#include <hybrid/limitcore.h> /* __INTMAX_MIN__, __UINTMAX_MAX__ */
+#include <hybrid/typecore.h>  /* __BYTE_TYPE__, __CHAR_UNSIGNED__, __SIZEOF_CHAR__, __SIZEOF_INT__, __SIZEOF_LONG_LONG__, __SIZEOF_LONG__, __SIZEOF_POINTER__, __SIZEOF_PTRDIFF_T__, __SIZEOF_SHORT__, __SIZEOF_SIZE_T__ */
 
 #include "types.h"
 

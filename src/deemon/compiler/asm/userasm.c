@@ -35,7 +35,7 @@
 #include <deemon/system-features.h>    /* memmoveupc(), ... */
 #include <deemon/types.h>
 
-#include <hybrid/byteorder.h>
+#include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

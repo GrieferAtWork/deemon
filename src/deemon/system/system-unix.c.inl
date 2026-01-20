@@ -31,6 +31,8 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+
 #include <stdarg.h> /* va_end, va_list, va_start */
 #include <stddef.h> /* NULL, size_t */
 /**/

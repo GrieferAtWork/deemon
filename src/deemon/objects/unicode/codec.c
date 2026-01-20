@@ -31,10 +31,10 @@
 #include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/util/lock.h>
 
-#include <hybrid/byteorder.h>
-#include <hybrid/typecore.h>
+#include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
+#include <hybrid/typecore.h>  /* __BYTE_TYPE__ */
 #include <hybrid/unaligned.h>
-#include <hybrid/wordbits.h>
+#include <hybrid/wordbits.h>  /* ENCODE_INT16, ENCODE_INT32 */
 
 #include "../../runtime/strings.h"
 #include "codec.h"

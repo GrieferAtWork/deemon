@@ -205,7 +205,7 @@ DECL_END
 
 #else /* CONFIG_NO_THREADS */
 
-#include <hybrid/__atomic.h>
+#include <hybrid/__atomic.h>              /* __ATOMIC_ACQUIRE, __ATOMIC_RELAXED, __ATOMIC_RELEASE, __ATOMIC_SEQ_CST, __hybrid_atomic_cmpxch, __hybrid_atomic_cmpxch_weak, __hybrid_atomic_dec, __hybrid_atomic_fetchinc, __hybrid_atomic_inc, __hybrid_atomic_load, __hybrid_atomic_store, __hybrid_atomic_xch */
 #include <hybrid/sched/__atomic-lock.h>
 #include <hybrid/sched/__atomic-rwlock.h>
 

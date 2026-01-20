@@ -39,7 +39,7 @@
 #include <deemon/util/rlock.h>
 
 #include <hybrid/sequence/list.h>
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h>      /* __BYTE_TYPE__, __SIZEOF_SIZE_T__ */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"

@@ -37,7 +37,7 @@
 #include <deemon/string.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/align.h>
+#include <hybrid/align.h> /* CEILDIV */
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"

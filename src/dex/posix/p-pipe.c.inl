@@ -37,7 +37,7 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
-#include <hybrid/debug-alignment.h>
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* intptr_t, uintptr_t */

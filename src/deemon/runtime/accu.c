@@ -34,7 +34,7 @@
 #include <deemon/string.h>
 #include <deemon/tuple.h>
 
-#include <hybrid/overflow.h>
+#include <hybrid/overflow.h> /* OVERFLOW_SADD, OVERFLOW_UADD */
 
 #include "../objects/int_logic.h"
 
@@ -42,7 +42,7 @@
 #include <stdint.h> /* INT32_MAX, INT32_MIN, int32_t, int64_t */
 
 #ifndef INT32_MIN
-#include <hybrid/limitcore.h>
+#include <hybrid/limitcore.h> /* __INT32_MAX__, __INT32_MIN__ */
 #define INT32_MIN __INT32_MIN__
 #endif /* !INT32_MIN */
 

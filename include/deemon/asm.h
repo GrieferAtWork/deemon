@@ -1651,7 +1651,7 @@
                              * `DDI_DEFLCNAME', which define 2 ULEBs (3 == 2*ULEB+1*STOP). */
 
 #ifdef __CC__
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include <stdbool.h> /* bool */
 #include <stdint.h>  /* uint16_t */

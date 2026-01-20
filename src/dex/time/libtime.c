@@ -47,8 +47,8 @@
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/byteorder.h>
-#include <hybrid/debug-alignment.h>
+#include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__ */
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/int128.h>
 #include <hybrid/unaligned.h>
 
@@ -65,7 +65,7 @@
 #endif /* CONFIG_HOST_WINDOWS */
 
 #ifndef INT32_MIN
-#include <hybrid/limitcore.h>
+#include <hybrid/limitcore.h> /* __INT32_MAX__, __INT32_MIN__ */
 #define INT32_MIN __INT32_MIN__
 #endif /* !INT32_MIN */
 

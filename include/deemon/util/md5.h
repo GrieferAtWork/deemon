@@ -22,7 +22,7 @@
 
 #include "../api.h"
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint32_t, uint64_t */

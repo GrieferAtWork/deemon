@@ -31,8 +31,8 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/sched/yield.h>
-#include <hybrid/typecore.h>
+#include <hybrid/sched/yield.h> /* SCHED_YIELD */
+#include <hybrid/typecore.h>    /* __SIZEOF_POINTER__ */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint8_t, uintptr_t */

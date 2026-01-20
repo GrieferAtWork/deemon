@@ -48,7 +48,7 @@
 #include <deemon/util/futex.h>
 #include <deemon/util/rlock.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"

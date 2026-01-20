@@ -23,10 +23,10 @@
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/thread.h>
 
-#include <hybrid/align.h>
-#include <hybrid/bit.h>
-#include <hybrid/minmax.h>
-#include <hybrid/typecore.h>
+#include <hybrid/align.h>    /* CEILDIV */
+#include <hybrid/bit.h>      /* PDEP, PEXT, POPCOUNT */
+#include <hybrid/minmax.h>   /* MIN */
+#include <hybrid/typecore.h> /* __SHIFT_TYPE__ */
 
 #include "int_logic.h"
 

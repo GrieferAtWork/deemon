@@ -26,6 +26,8 @@
 
 #include <deemon/kwds.h>
 
+#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
+
 #include <stdbool.h> /* true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* UINT32_C, UINT64_C, uintptr_t */

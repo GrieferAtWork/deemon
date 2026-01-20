@@ -22,10 +22,10 @@
 
 #include "api.h"
 
-#include <hybrid/__atomic.h>
-#include <hybrid/byteorder.h>
-#include <hybrid/host.h>
-#include <hybrid/typecore.h>
+#include <hybrid/__atomic.h>  /* __ATOMIC_ACQUIRE, __ATOMIC_RELEASE, __ATOMIC_SEQ_CST, __hybrid_atomic_add, __hybrid_atomic_addfetch, __hybrid_atomic_cmpxch, __hybrid_atomic_cmpxch_weak, __hybrid_atomic_dec, __hybrid_atomic_decfetch, __hybrid_atomic_fetchadd, __hybrid_atomic_fetchdec, __hybrid_atomic_fetchinc, __hybrid_atomic_fetchsub, __hybrid_atomic_inc, __hybrid_atomic_incfetch, __hybrid_atomic_load, __hybrid_atomic_store, __hybrid_atomic_sub, __hybrid_atomic_subfetch */
+#include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */
+#include <hybrid/host.h>      /* __i386__, __pic__, __x86_64__ */
+#include <hybrid/typecore.h>  /* __BYTE_TYPE__, __CHAR_UNSIGNED__, __SBYTE_TYPE__, __SIZEOF_CHAR__, __SIZEOF_INT__, __SIZEOF_LONG_LONG__, __SIZEOF_LONG__, __SIZEOF_POINTER__, __SIZEOF_PTRDIFF_T__, __SIZEOF_SHORT__, __SIZEOF_SIZE_T__, __UINT8_TYPE__, __UINT32_C, __UINT64_C, __UINTPTR_HALF_TYPE__, __UINTPTR_TYPE__ */
 
 #include "types.h"
 #include "util/lock.h"

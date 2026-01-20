@@ -50,6 +50,7 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/align.h>  /* CEILDIV */
 #include <hybrid/bitset.h>
 
 #include <stdbool.h> /* bool, false, true */

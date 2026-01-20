@@ -28,8 +28,8 @@
 #include <stddef.h> /* NULL */
 
 #ifndef CONFIG_NO_THREADS
-#include <hybrid/__atomic.h>
-#include <hybrid/sched/__yield.h>
+#include <hybrid/__atomic.h>      /* __ATOMIC_ACQUIRE, __ATOMIC_RELAXED, __ATOMIC_RELEASE, __ATOMIC_SEQ_CST, __hybrid_atomic_cmpxch, __hybrid_atomic_dec, __hybrid_atomic_inc, __hybrid_atomic_load, __hybrid_atomic_xch */
+#include <hybrid/sched/__yield.h> /* __hybrid_yield */
 #endif /* !CONFIG_NO_THREADS */
 
 DECL_BEGIN

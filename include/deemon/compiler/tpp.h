@@ -246,7 +246,9 @@ DECL_END
 
 /* TODO: Use `DeeStringObject *' for `struct TPPString' */
 /* TODO: Use `DeeObject *' (String/Int) for `struct TPPConst' */
-#include <hybrid/typecore.h>
+/* clang-format off */
+#include <hybrid/typecore.h> /* Needed for better integration of tpp */
+/* clang-format on */
 #define TPP_NO_INCLUDE_STDLIB_H 1
 #include "../../../src/tpp/src/tpp.h"
 

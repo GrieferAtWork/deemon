@@ -39,11 +39,11 @@
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/byteorder.h>
-#include <hybrid/debug-alignment.h>
-#include <hybrid/host.h>            /* __ARCH_PAGESIZE_MIN */
-#include <hybrid/minmax.h>
-#include <hybrid/typecore.h>
+#include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+#include <hybrid/host.h>            /* __ARCH_PAGESIZE, __linux__ */
+#include <hybrid/minmax.h>          /* MIN */
+#include <hybrid/typecore.h>        /* __BYTE_TYPE__, __SIZEOF_SIZE_T__ */
 #include <hybrid/wordbits.h>        /* ENCODE_INT32 */
 
 #include "../runtime/strings.h"
@@ -63,7 +63,7 @@
 #endif /* !__ARCH_PAGESIZE_MIN */
 
 #ifndef UINT32_MAX
-#include <hybrid/limitcore.h>
+#include <hybrid/limitcore.h> /* __UINT32_MAX__ */
 #define UINT32_MAX __UINT32_MAX__
 #endif /* !UINT32_MAX */
 

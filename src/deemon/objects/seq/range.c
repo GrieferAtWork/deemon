@@ -38,7 +38,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/overflow.h>
+#include <hybrid/overflow.h> /* OVERFLOW_SADD, OVERFLOW_SMUL */
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"

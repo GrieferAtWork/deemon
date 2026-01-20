@@ -43,10 +43,10 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/limitcore.h>
-#include <hybrid/overflow.h>
+#include <hybrid/limitcore.h>     /* __SSIZE_MAX__ */
+#include <hybrid/overflow.h>      /* OVERFLOW_UMUL */
 #include <hybrid/sequence/list.h>
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h>      /* __BYTE_TYPE__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, ptrdiff_t, size_t */

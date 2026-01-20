@@ -37,7 +37,7 @@
 #include <deemon/object.h>
 #include <deemon/system-features.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_INT__ */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* int32_t, uintN_t */

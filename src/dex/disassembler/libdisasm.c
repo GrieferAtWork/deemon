@@ -38,7 +38,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcmp(), strend() */
 
-#include <hybrid/debug-alignment.h>
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_ENABLE */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

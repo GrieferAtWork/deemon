@@ -37,8 +37,8 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/limitcore.h>
-#include <hybrid/overflow.h>
+#include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
+#include <hybrid/overflow.h>  /* OVERFLOW_UMUL */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"

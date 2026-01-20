@@ -33,6 +33,8 @@
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
+
 #include <Windows.h>
 #include <stddef.h>  /* NULL, offsetof */
 #include <stdint.h>  /* uint32_t, uint64_t */

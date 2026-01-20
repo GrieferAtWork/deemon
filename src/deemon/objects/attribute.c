@@ -37,7 +37,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SHIFT_TYPE__ */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"

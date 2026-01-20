@@ -39,7 +39,7 @@
 #include <deemon/tuple.h>
 #include <deemon/types.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_POINTER__ */
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */

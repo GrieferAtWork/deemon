@@ -31,7 +31,7 @@
 #include <deemon/string.h>
 #include <deemon/tuple.h>  /* DeeTuple_Newf */
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include <stddef.h> /* offsetof, size_t */
 

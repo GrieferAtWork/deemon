@@ -36,7 +36,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include <stddef.h> /* NULL, ptrdiff_t */
 #include <stdint.h> /* int32_t, int64_t, uint32_t, uint64_t, uintptr_t */

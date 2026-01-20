@@ -30,7 +30,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 
-#include <hybrid/limitcore.h>
+#include <hybrid/limitcore.h> /* __SSIZE_MAX__, __SSIZE_MIN__ */
 
 #include <stddef.h> /* NULL, size_t */
 

@@ -38,7 +38,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/futex.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
 #include "c_api.h" /* Prototypes... */
 

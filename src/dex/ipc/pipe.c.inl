@@ -35,7 +35,8 @@
 #include <deemon/system.h>
 #include <deemon/tuple.h>
 
-#include <hybrid/debug-alignment.h>
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+#include <hybrid/typecore.h>        /* __SIZEOF_SIZE_T__ */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* UINT32_MAX, uint32_t */
@@ -67,7 +68,7 @@
 #endif /* !... */
 
 #ifndef UINT32_MAX
-#include <hybrid/limitcore.h>
+#include <hybrid/limitcore.h> /* __UINT32_MAX__ */
 #define UINT32_MAX __UINT32_MAX__
 #endif /* !UINT32_MAX */
 

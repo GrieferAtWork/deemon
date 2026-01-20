@@ -38,9 +38,9 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/overflow.h>
-#include <hybrid/sched/yield.h>
-#include <hybrid/typecore.h>
+#include <hybrid/overflow.h>    /* OVERFLOW_UADD */
+#include <hybrid/sched/yield.h> /* SCHED_YIELD */
+#include <hybrid/typecore.h>    /* __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"

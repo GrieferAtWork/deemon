@@ -110,7 +110,7 @@
 #include <deemon/types.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/byteorder.h>
+#include <hybrid/byteorder.h> /* __BYTE_ORDER__ */
 #include <hybrid/byteswap.h>
 
 #include <stdbool.h> /* bool */

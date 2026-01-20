@@ -32,7 +32,7 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/unaligned.h>
-#include <hybrid/wordbits.h>
+#include <hybrid/wordbits.h>  /* ENCODE_INT16, ENCODE_INT32 */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t, uint32_t */

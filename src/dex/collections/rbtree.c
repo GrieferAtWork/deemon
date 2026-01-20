@@ -45,6 +45,7 @@
 #include <deemon/util/lock.h>
 
 #include <hybrid/sequence/list.h>
+#include <hybrid/typecore.h>      /* __UINTPTR_TYPE__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

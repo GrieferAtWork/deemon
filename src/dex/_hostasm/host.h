@@ -25,10 +25,10 @@
 #include <deemon/object.h>
 #include <deemon/system-features.h>
 
-#include <hybrid/align.h>
-#include <hybrid/byteorder.h>
-#include <hybrid/host.h>
-#include <hybrid/typecore.h>
+#include <hybrid/align.h>     /* CEIL_ALIGN */
+#include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
+#include <hybrid/host.h>      /* __ARCH_PAGESIZE, __i386__, __x86_64__ */
+#include <hybrid/typecore.h>  /* __BYTE_TYPE__ */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint8_t, uintptr_t */

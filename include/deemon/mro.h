@@ -32,7 +32,9 @@
 #include "none.h"
 #endif /* !__INTELLISENSE__ */
 
-#include <hybrid/sched/__yield.h>
+#include <hybrid/__atomic.h>      /* __ATOMIC_ACQUIRE, __ATOMIC_RELEASE, __ATOMIC_SEQ_CST, __hybrid_atomic_dec, __hybrid_atomic_decfetch, __hybrid_atomic_inc, __hybrid_atomic_load */
+#include <hybrid/sched/__yield.h> /* __hybrid_yield */
+#include <hybrid/typecore.h>      /* __ALIGNOF_POINTER__, __SIZEOF_POINTER__ */
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */

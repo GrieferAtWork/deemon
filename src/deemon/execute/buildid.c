@@ -30,8 +30,8 @@
 #include <deemon/types.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/host.h>
-#include <hybrid/typecore.h>
+#include <hybrid/host.h>     /* __ARCH_PAGESIZE */
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include <stddef.h> /* NULL */
 #include <stdint.h> /* UINT16_C, UINT32_C, UINT64_C, uint32_t, uint64_t, uintptr_t */

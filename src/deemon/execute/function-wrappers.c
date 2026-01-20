@@ -44,7 +44,7 @@
 #include <deemon/util/lock.h>
 
 #include <hybrid/byteswap.h>
-#include <hybrid/overflow.h>
+#include <hybrid/overflow.h>  /* OVERFLOW_UADD */
 #include <hybrid/unaligned.h>
 
 #include "../objects/generic-proxy.h"

@@ -32,9 +32,10 @@
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>
 
-#include <hybrid/host.h>
+#include <hybrid/host.h>      /* __i386__, __x86_64__ */
 #include <hybrid/int128.h>
-#include <hybrid/typecore.h>
+#include <hybrid/limitcore.h> /* __INTn_MAX__, __INTn_MIN__, __UINTn_MAX__ */
+#include <hybrid/typecore.h>  /* __ALIGNOF_DOUBLE__, __ALIGNOF_FLOAT__, __ALIGNOF_INT128__, __ALIGNOF_INTn__, __ALIGNOF_LONG_DOUBLE__, __ALIGNOF_POINTER__, __ALIGNOF_SIZE_T__, __SIZEOF_CHAR__, __SIZEOF_INT__, __SIZEOF_LONG_LONG__, __SIZEOF_LONG__, __SIZEOF_SHORT__, __SIZEOF_SIZE_T__ */
 
 #include "runtime_error.h"
 

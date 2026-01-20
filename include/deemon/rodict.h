@@ -22,6 +22,8 @@
 
 #include "api.h"
 
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
+
 #include "dict.h"  /* struct Dee_dict_item */
 #include "types.h"
 

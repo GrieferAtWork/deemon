@@ -32,9 +32,9 @@
 #include <deemon/module.h>
 #include <deemon/none.h>
 
+#include <hybrid/align.h>     /* IS_ALIGNED */
 #include <hybrid/bitset.h>
-#include <hybrid/overflow.h>
-#include <hybrid/typecore.h>
+#include <hybrid/overflow.h>  /* OVERFLOW_USUB */
 #include <hybrid/unaligned.h>
 
 #include <stdbool.h> /* bool, false, true */
@@ -42,7 +42,7 @@
 #include <stdint.h>  /* UINT16_MAX, uint8_t */
 
 #ifndef UINT16_MAX
-#include <hybrid/limitcore.h>
+#include <hybrid/limitcore.h> /* __UINT16_MAX__ */
 #define UINT16_MAX __UINT16_MAX__
 #endif /* !UINT16_MAX */
 

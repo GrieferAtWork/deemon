@@ -33,7 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __SIZE_WIDTH__ */
 
 #include "runtime_error.h"
 

@@ -36,12 +36,12 @@
 #include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/thread.h>
 
-#include <hybrid/byteorder.h>
+#include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/byteswap.h>
-#include <hybrid/debug-alignment.h>
-#include <hybrid/overflow.h>
-#include <hybrid/sched/yield.h>
-#include <hybrid/typecore.h>
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+#include <hybrid/overflow.h>        /* OVERFLOW_UADD, OVERFLOW_UMUL */
+#include <hybrid/sched/yield.h>     /* SCHED_YIELD */
+#include <hybrid/typecore.h>        /* __BYTE_TYPE__, __SIZEOF_SIZE_T__ */
 #include <hybrid/unaligned.h>
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
@@ -53,8 +53,8 @@
 #ifndef CONFIG_HOST_WINDOWS
 #include <deemon/file.h>
 #else /* !CONFIG_HOST_WINDOWS */
-#include <hybrid/host.h>   /* __ARCH_PAGESIZE_MIN */
-#include <hybrid/minmax.h>
+#include <hybrid/host.h>   /* __ARCH_PAGESIZE */
+#include <hybrid/minmax.h> /* MIN */
 
 #undef token
 #undef tok

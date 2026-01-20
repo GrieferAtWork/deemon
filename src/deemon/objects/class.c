@@ -43,7 +43,7 @@
 #include <deemon/util/lock.h>
 #include <deemon/util/objectlist.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include "../runtime/runtime_error.h"
 

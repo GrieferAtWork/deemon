@@ -22,9 +22,9 @@
 
 #include "api.h"
 
-#include <hybrid/byteorder.h>
-#include <hybrid/host.h>
-#include <hybrid/typecore.h>
+#include <hybrid/byteorder.h> /* __FLOAT_WORD_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */
+#include <hybrid/host.h>      /* __hpux__, __i386__, __linux__, __unix__, __x86_64__ */
+#include <hybrid/typecore.h>  /* __BYTE_TYPE__, __SIZEOF_DOUBLE__, __SIZEOF_LONG__, __SIZEOF_POINTER__, __UINT8_TYPE__, __WINT_TYPE__ */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* intptr_t, uintN_t, uintptr_t */
@@ -11676,7 +11676,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #include <hybrid/typecore.h>
 #define alloca(s) __builtin_alloca_with_align(s, __SIZEOF_POINTER__)
 #else /* ... */
-#include <hybrid/__alloca.h>
+#include <hybrid/__alloca.h> /* __hybrid_alloca */
 #ifdef __hybrid_alloca
 #define CONFIG_HAVE_alloca
 #define alloca __hybrid_alloca

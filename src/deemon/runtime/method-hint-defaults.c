@@ -48,8 +48,8 @@
 #include <deemon/util/lock.h>
 #include <deemon/util/simple-hashset.h>
 
-#include <hybrid/overflow.h>
-#include <hybrid/typecore.h>
+#include <hybrid/overflow.h> /* OVERFLOW_UADD */
+#include <hybrid/typecore.h> /* __CHAR_BIT__, __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
 
 #include "../objects/int_logic.h"             /* int_inc() */
 #include "../objects/seq/cached-seq.h"
@@ -76,7 +76,7 @@
 #include <stdint.h>  /* uintN_t, uintptr_t */
 
 #undef SSIZE_MAX
-#include <hybrid/limitcore.h>
+#include <hybrid/limitcore.h> /* __SSIZE_MAX__, __SSIZE_MIN__ */
 #define SSIZE_MAX __SSIZE_MAX__
 
 #ifndef CHAR_BIT

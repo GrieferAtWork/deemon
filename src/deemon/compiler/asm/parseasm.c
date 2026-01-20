@@ -39,7 +39,7 @@
 #include <deemon/system-features.h>
 
 #include <hybrid/sequence/list.h>
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h>      /* __BYTE_TYPE__ */
 
 #include "../../runtime/strings.h"
 

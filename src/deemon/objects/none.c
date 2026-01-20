@@ -31,7 +31,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_POINTER__, __SIZEOF_REGISTER__, __SIZEOF_SIZE_T__ */
 
 #include "../runtime/method-hint-defaults.h"
 #include "../runtime/method-hints.h"

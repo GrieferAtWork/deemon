@@ -47,7 +47,7 @@
 #include <stdint.h>  /* UINT16_MAX, int32_t, uint8_t, uint16_t */
 
 #ifndef UINT16_MAX
-#include <hybrid/limitcore.h>
+#include <hybrid/limitcore.h> /* __UINT16_MAX__ */
 #define UINT16_MAX __UINT16_MAX__
 #endif /* !UINT16_MAX */
 

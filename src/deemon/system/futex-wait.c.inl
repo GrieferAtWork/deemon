@@ -38,7 +38,8 @@
 #include <deemon/types.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/overflow.h> /* OVERFLOW_UCAST */
+#include <hybrid/overflow.h>    /* OVERFLOW_UCAST */
+#include <hybrid/sched/yield.h> /* SCHED_YIELD */
 
 #include <stddef.h> /* NULL */
 #include <stdint.h> /* uint32_t, uint64_t, uintptr_t */

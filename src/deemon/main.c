@@ -50,10 +50,10 @@
 #include <deemon/system.h>
 #include <deemon/tuple.h>
 
-#include <hybrid/byteorder.h>
-#include <hybrid/debug-alignment.h>
-#include <hybrid/host.h>
-#include <hybrid/typecore.h>
+#include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__, __ORDER_PDP_ENDIAN__ */
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+#include <hybrid/host.h>            /* __arm__, __i386__, __i486__, __i586__, __i686__, __x86_64__ */
+#include <hybrid/typecore.h>        /* __BYTE_TYPE__ */
 
 #include "cmdline.h"
 #include "runtime/runtime_error.h"

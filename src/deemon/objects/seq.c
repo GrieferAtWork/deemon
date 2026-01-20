@@ -69,7 +69,7 @@
 #include <stdint.h>  /* uint32_t */
 
 #undef SSIZE_MAX
-#include <hybrid/limitcore.h>
+#include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
 #define SSIZE_MAX __SSIZE_MAX__
 
 /* Provide aliases for certain Set operators in Sequence */

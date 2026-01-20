@@ -22,6 +22,8 @@
 
 #include "api.h"
 
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
+
 #include "types.h"
 
 #include <stddef.h> /* size_t */

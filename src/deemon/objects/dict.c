@@ -49,9 +49,9 @@
 #include <deemon/util/lock.h>
 #include <deemon/util/objectlist.h>
 
-#include <hybrid/align.h>
-#include <hybrid/overflow.h>
-#include <hybrid/typecore.h>
+#include <hybrid/align.h>    /* CEILDIV, IS_POWER_OF_TWO */
+#include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_USUB */
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/method-hint-defaults.h"

@@ -30,7 +30,7 @@
 #include <deemon/system-features.h> /* bzero(), bcmpc(), ... */
 #include <deemon/util/rlock.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */

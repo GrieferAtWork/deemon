@@ -32,8 +32,7 @@
 #include <deemon/util/lock.h>
 
 #include <hybrid/int128.h>
-#include <hybrid/limitcore.h> /* __INT32_MAX__, __INT64_MAX__ */
-/**/
+#include <hybrid/limitcore.h> /* __INTn_MAX__, __INTn_MIN__, __UINTn_MAX__ */
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* false */

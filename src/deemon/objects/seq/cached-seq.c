@@ -36,8 +36,9 @@
 #include <deemon/util/lock.h>
 #include <deemon/util/objectlist.h>
 
-#include <hybrid/overflow.h>
-#include <hybrid/typecore.h>
+#include <hybrid/align.h>    /* CEILDIV */
+#include <hybrid/overflow.h> /* OVERFLOW_UADD */
+#include <hybrid/typecore.h> /* __CHAR_BIT__, __SIZEOF_SIZE_T__ */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"

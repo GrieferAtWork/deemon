@@ -4142,7 +4142,7 @@ default__getitem_string_hash__with__trygetitem_string_hash(DeeObject *self, char
 
 /* tp_seq->tp_getitem_string_len_hash */
 #ifndef WITH_ZSTRING
-#include <hybrid/host.h>
+#include <hybrid/host.h> /* __ARCH_PAGESIZE */
 #if defined(__ARCH_PAGESIZE) && !defined(__OPTIMIZE_SIZE__)
 #define is_nulterm_string(str, len)                              \
 	((len) > 0 &&                                                \

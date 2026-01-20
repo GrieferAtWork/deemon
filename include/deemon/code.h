@@ -22,7 +22,8 @@
 
 #include "api.h"
 
-#include <hybrid/typecore.h>
+#include <hybrid/host.h>     /* __i386__, __x86_64__ */
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
 #include "types.h"
 #include "util/lock.h"

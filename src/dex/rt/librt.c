@@ -75,7 +75,7 @@
 #include <deemon/util/rlock.h>
 #include <deemon/weakref.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__, __SIZEOF_SIZE_T__ */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, offsetof, size_t */

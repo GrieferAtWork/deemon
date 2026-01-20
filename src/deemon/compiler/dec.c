@@ -38,7 +38,7 @@
 
 #include <hybrid/byteswap.h>  /* UNALIGNED_SETLE16(), UNALIGNED_SETLE32() */
 #include <hybrid/unaligned.h> /* UNALIGNED_SETLE16(), UNALIGNED_SETLE32() */
-#include <hybrid/wordbits.h>
+#include <hybrid/wordbits.h>  /* ENCODE_INT32 */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

@@ -39,7 +39,7 @@
 #include <deemon/thread.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/limitcore.h>
+#include <hybrid/limitcore.h> /* __SSIZE_MIN__ */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"

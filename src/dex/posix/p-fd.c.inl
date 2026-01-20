@@ -39,7 +39,7 @@
 #include <deemon/system.h>
 #include <deemon/thread.h>
 
-#include <hybrid/debug-alignment.h>
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uintptr_t */

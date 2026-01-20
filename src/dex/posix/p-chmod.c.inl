@@ -35,7 +35,7 @@
 #include <deemon/objmethod.h>
 #include <deemon/system-features.h>
 
-#include <hybrid/debug-alignment.h>
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 
 #include "p-path.c.inl"     /* For `posix_chmod_USE_posix_readlink__AND__posix_lchmod()' */
 #include "p-readlink.c.inl" /* For `posix_chmod_USE_posix_readlink__AND__posix_lchmod()' */

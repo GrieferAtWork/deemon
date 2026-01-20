@@ -34,7 +34,7 @@
 #include <deemon/objmethod.h>
 
 #include <hybrid/byteswap.h>
-#include <hybrid/debug-alignment.h>
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 
 #include <stddef.h> /* NULL */
 #include <stdint.h> /* uint16_t, uint32_t, uint64_t */

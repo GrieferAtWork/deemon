@@ -38,7 +38,7 @@
 #include <deemon/thread.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/overflow.h>
+#include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_USUB */
 
 #include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/runtime_error.h"

@@ -32,7 +32,7 @@
 #include <deemon/string.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/overflow.h>
+#include <hybrid/overflow.h> /* OVERFLOW_USUB */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"

@@ -37,7 +37,7 @@
 #include <deemon/system-features.h>    /* memset */
 #include <deemon/types.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"

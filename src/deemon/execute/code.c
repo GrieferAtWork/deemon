@@ -47,11 +47,11 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
-#include <hybrid/host.h>
-#include <hybrid/overflow.h>
-#include <hybrid/typecore.h>
+#include <hybrid/host.h>      /* __ARCH_STACK_GROWS_DOWNWARDS, __i386__, __x86_64__ */
+#include <hybrid/limitcore.h> /* __UINT16_MAX__, __UINT32_MAX__ */
+#include <hybrid/overflow.h>  /* OVERFLOW_UADD */
+#include <hybrid/typecore.h>  /* __BYTE_TYPE__, __SIZEOF_SIZE_T__ */
 #include <hybrid/unaligned.h>
 
 #include "../objects/seq/svec.h"

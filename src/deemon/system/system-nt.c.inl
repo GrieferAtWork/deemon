@@ -39,11 +39,11 @@
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/align.h>
-#include <hybrid/debug-alignment.h>
-#include <hybrid/typecore.h>
+#include <hybrid/align.h>           /* CEILDIV */
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+#include <hybrid/typecore.h>        /* __BYTE_TYPE__ */
 #include <hybrid/unaligned.h>
-#include <hybrid/wordbits.h>
+#include <hybrid/wordbits.h>        /* ENCODE_INT32 */
 
 #include "../runtime/strings.h"
 

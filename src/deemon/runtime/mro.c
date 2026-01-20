@@ -41,10 +41,10 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/overflow.h>
-#include <hybrid/sched/yield.h>
+#include <hybrid/overflow.h>      /* OVERFLOW_USUB */
+#include <hybrid/sched/yield.h>   /* SCHED_YIELD */
 #include <hybrid/sequence/list.h>
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h>      /* __BYTE_TYPE__ */
 
 #include "runtime_error.h"
 

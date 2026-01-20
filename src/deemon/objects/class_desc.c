@@ -49,7 +49,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"

@@ -26,7 +26,7 @@
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
 
-#include <hybrid/byteorder.h>
+#include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 
 #include <stdint.h> /* uint16_t, uintptr_t */
 

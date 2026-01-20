@@ -48,10 +48,10 @@
 #include <deemon/util/lock.h>
 #include <deemon/util/nrlock.h>
 
-#include <hybrid/align.h>
-#include <hybrid/debug-alignment.h>
-#include <hybrid/host.h>
-#include <hybrid/typecore.h>
+#include <hybrid/align.h>           /* IS_POWER_OF_TWO */
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+#include <hybrid/host.h>            /* __i386__, __x86_64__ */
+#include <hybrid/typecore.h>        /* __BYTE_TYPE__, __SIZEOF_SIZE_T__, __UINTPTR_HALF_TYPE__ */
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */
@@ -5035,8 +5035,8 @@ DECL_END
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/minmax.h>
-#include <hybrid/sched/yield.h>
+#include <hybrid/minmax.h>      /* MAX_C */
+#include <hybrid/sched/yield.h> /* SCHED_YIELD */
 
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>

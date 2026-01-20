@@ -24,7 +24,7 @@
 
 #include <deemon/object.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
 #include <stddef.h> /* offsetof, size_t */
 

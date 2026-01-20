@@ -35,8 +35,8 @@
 #include <deemon/system-features.h> /* memmem(), tolower(), toupper(), ... */
 #include <deemon/system.h>
 
-#include <hybrid/overflow.h>
-#include <hybrid/typecore.h>
+#include <hybrid/overflow.h> /* OVERFLOW_UMUL */
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include "c_api.h" /* Prototypes */
 

@@ -33,7 +33,7 @@
 #include <deemon/system-features.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
 #include "../runtime/runtime_error.h"
 #include "generic-proxy.h"

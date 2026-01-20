@@ -50,9 +50,10 @@
 #include <deemon/util/lock.h>
 #include <deemon/util/once.h>
 
-#include <hybrid/debug-alignment.h>
-#include <hybrid/overflow.h>
-#include <hybrid/sched/yield.h>
+#include <hybrid/debug-alignment.h>  /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+#include <hybrid/host.h>             /* __i386__, __x86_64__ */
+#include <hybrid/overflow.h>         /* OVERFLOW_UADD, OVERFLOW_UMUL, OVERFLOW_USUB */
+#include <hybrid/sched/yield.h>      /* SCHED_YIELD */
 #include <hybrid/sequence/bsearch.h>
 #include <hybrid/sequence/list.h>
 

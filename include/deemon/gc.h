@@ -22,6 +22,8 @@
 
 #include "api.h"
 
+#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
+
 #include "types.h"
 
 #ifndef __INTELLISENSE__

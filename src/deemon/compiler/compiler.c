@@ -42,7 +42,7 @@
 #include <deemon/system-features.h>    /* memcpy(), ... */
 #include <deemon/util/rlock.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __REGISTER_TYPE__ */
 
 #include <stdbool.h> /* false, true */
 #include <stddef.h>  /* NULL, size_t */

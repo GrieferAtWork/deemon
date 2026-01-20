@@ -67,9 +67,11 @@
 #include <deemon/util/kos-compat.h>
 
 /* Extra includes needed by libjson */
+/* clang-format off */
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
+/* clang-format on */
 
 /* Define everything with PRIVATE scoping. */
 #undef INTDEF

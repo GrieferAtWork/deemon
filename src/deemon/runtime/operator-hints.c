@@ -32,7 +32,7 @@
 #include <deemon/system-features.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __CHAR_BIT__, __UINTPTR_HALF_TYPE__ */
 
 #include "method-hint-defaults.h"
 #include "method-hints.h"

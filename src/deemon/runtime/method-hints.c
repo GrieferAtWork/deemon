@@ -34,7 +34,7 @@
 #include <deemon/string.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __UINTPTR_HALF_TYPE__ */
 
 #include "method-hint-defaults.h"
 #include "method-hint-select.h"

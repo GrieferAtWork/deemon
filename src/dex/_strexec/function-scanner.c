@@ -32,9 +32,9 @@
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>
 
-#include <hybrid/minmax.h>
+#include <hybrid/minmax.h>    /* MAX_C */
 #include <hybrid/unaligned.h>
-#include <hybrid/wordbits.h>
+#include <hybrid/wordbits.h>  /* ENCODE_INT16, ENCODE_INT32 */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* offsetof, size_t */

@@ -38,7 +38,7 @@
 #include <deemon/system-features.h>    /* bcmpc(), ... */
 #include <deemon/util/lock.h>
 
-#include <hybrid/sched/yield.h>
+#include <hybrid/sched/yield.h> /* SCHED_YIELD */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

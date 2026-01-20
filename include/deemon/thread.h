@@ -28,9 +28,10 @@
 #include "object.h" /* DeeObject_NewPack */
 #endif /* !__INTELLISENSE__ */
 
-#include <hybrid/__atomic.h>
-#include <hybrid/host.h>
-#include <hybrid/typecore.h>
+#include <hybrid/__atomic.h>      /* __ATOMIC_ACQUIRE, __ATOMIC_RELEASE, __hybrid_atomic_and, __hybrid_atomic_fetchor, __hybrid_atomic_load */
+#include <hybrid/host.h>          /* __arm__, __i386__, __linux__, __unix__, __x86_64__ */
+#include <hybrid/sched/__yield.h> /* __hybrid_yield */
+#include <hybrid/typecore.h>      /* __ULONG32_TYPE__ */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

@@ -22,6 +22,8 @@
 
 #include "../api.h"
 
+#include <hybrid/typecore.h> /* __UINT64_TYPE__ */
+
 #include "../alloc.h"
 #include "../object.h"
 

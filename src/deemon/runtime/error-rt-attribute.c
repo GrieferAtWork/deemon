@@ -44,10 +44,10 @@
 #include <deemon/system.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/host.h>
-#include <hybrid/minmax.h>
-#include <hybrid/sched/yield.h>
-#include <hybrid/typecore.h>
+#include <hybrid/host.h>        /* __ARCH_PAGESIZE */
+#include <hybrid/minmax.h>      /* MIN, MIN_C */
+#include <hybrid/sched/yield.h> /* SCHED_YIELD */
+#include <hybrid/typecore.h>    /* __BYTE_TYPE__, __SIZEOF_CHAR__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

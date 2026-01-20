@@ -44,8 +44,8 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/overflow.h>
-#include <hybrid/typecore.h>
+#include <hybrid/overflow.h> /* OVERFLOW_UADD */
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"

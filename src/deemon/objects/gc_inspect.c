@@ -33,7 +33,7 @@
 #include <deemon/super.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __SIZEOF_SIZE_T__ */
 
 #include "../runtime/strings.h"
 #include "gc_inspect.h"

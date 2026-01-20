@@ -29,7 +29,7 @@
 #include <deemon/string.h>
 #include <deemon/super.h>
 
-#include <hybrid/overflow.h>
+#include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_UMUL */
 
 #include "../runtime/strings.h"
 

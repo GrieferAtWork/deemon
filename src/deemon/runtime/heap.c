@@ -61,14 +61,14 @@ ClCompile.BasicRuntimeChecks = Default
 #include <deemon/util/lock.h>
 #include <deemon/util/rlock.h>
 
-#include <hybrid/align.h>
-#include <hybrid/bit.h>
-#include <hybrid/debug-alignment.h>
-#include <hybrid/host.h>
-#include <hybrid/overflow.h>
-#include <hybrid/sched/yield.h>
+#include <hybrid/align.h>           /* CEILDIV, IS_ALIGNED */
+#include <hybrid/bit.h>             /* CLZ, CTZ */
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+#include <hybrid/host.h>            /* __ARCH_PAGESIZE, __arm__, __i386__, __linux__, __x86_64__ */
+#include <hybrid/overflow.h>        /* OVERFLOW_UADD */
+#include <hybrid/sched/yield.h>     /* SCHED_YIELD */
 #include <hybrid/sequence/list.h>
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h>        /* __BYTE_TYPE__, __CHAR_BIT__, __INTPTR_HALF_TYPE__, __SIZEOF_POINTER__, __SIZEOF_SIZE_T__, __SIZE_C, __UINTPTR_HALF_TYPE__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
@@ -83,7 +83,7 @@ ClCompile.BasicRuntimeChecks = Default
 #undef Dee_Free
 
 #ifndef SIZE_MAX
-#include <hybrid/limitcore.h>
+#include <hybrid/limitcore.h> /* __SIZE_MAX__ */
 #define SIZE_MAX __SIZE_MAX__
 #endif /* !SIZE_MAX */
 #ifndef SIZE_C
