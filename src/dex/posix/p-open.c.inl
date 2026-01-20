@@ -28,8 +28,8 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>
-#include <deemon/error.h>
 #include <deemon/dex.h>
+#include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/int.h>
 #include <deemon/module.h>
@@ -41,6 +41,7 @@
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE(), DBG_ALIGNMENT_ENABLE() */
 
 #include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* intptr_t */
 
 DECL_BEGIN
 

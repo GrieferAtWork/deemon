@@ -25,6 +25,10 @@
 
 #include <deemon/api.h>
 
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* ptrdiff_t, size_t */
+#include <stdint.h>  /* uint8_t, uint16_t, uint32_t */
+
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #undef CONFIG_host_unwind_USES_NT_UNWIND_INFO
 #undef CONFIG_host_unwind_USES_NOOP

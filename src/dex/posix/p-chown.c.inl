@@ -40,7 +40,8 @@
 #include "p-path.c.inl"     /* For `posix_chown_USE_posix_readlink__AND__posix_lchown()' */
 #include "p-readlink.c.inl" /* For `posix_chown_USE_posix_readlink__AND__posix_lchown()' */
 
-#include <stddef.h> /* NULL, size_t */
+#include <stdbool.h> /* false, true */
+#include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN
 

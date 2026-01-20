@@ -62,6 +62,10 @@
 #include <deemon/tuple.h>
 #include <deemon/weakref.h>
 
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h>  /* uint8_t, uint16_t, uintptr_t */
+
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_strchrnul

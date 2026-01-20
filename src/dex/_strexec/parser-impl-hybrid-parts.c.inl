@@ -32,8 +32,9 @@
 #include <deemon/object.h>
 #include <deemon/thread.h>
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* uint16_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uint16_t */
 
 #ifdef JIT_HYBRID
 #define JIT_ARGS       unsigned int *p_was_expression

@@ -32,6 +32,9 @@
 #include <deemon/string.h>
 #include <deemon/util/lock.h>
 
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL, size_t */
+
 #undef FORMAT_TYP
 #undef FORMAT_STR
 #undef SIGNED_TYPE_NAME

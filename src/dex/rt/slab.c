@@ -34,6 +34,8 @@
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 
+#include <stddef.h> /* NULL, offsetof, size_t */
+
 DECL_BEGIN
 
 #ifndef Dee_SLAB_COUNT

@@ -44,6 +44,9 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+
 DECL_BEGIN
 
 #define DO(err, expr)                    \

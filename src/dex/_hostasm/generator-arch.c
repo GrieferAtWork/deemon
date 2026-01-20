@@ -41,6 +41,10 @@
 #include <hybrid/bitset.h>
 #include <hybrid/sched/__yield.h>
 
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h>  /* INT32_MAX, INT32_MIN, int8_t, int32_t, intptr_t, uintN_t, uintptr_t */
+
 #ifdef HOSTASM_X86
 #include "libgen86/gen.h"
 #include "libgen86/register.h"

@@ -31,6 +31,9 @@
 #include <deemon/object.h>
 #include <deemon/system-features.h>
 
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+
 DECL_BEGIN
 
 INTERN struct jit_object_entry jit_empty_object_list[1] = {

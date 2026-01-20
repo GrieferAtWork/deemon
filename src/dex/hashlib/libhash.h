@@ -23,6 +23,8 @@
 #include <deemon/api.h>
 
 #include <deemon/object.h>
+
+#include <stddef.h> /* size_t */
 #include <stdint.h> /* uintN_t */
 
 DECL_BEGIN

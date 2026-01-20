@@ -28,6 +28,8 @@
 
 #include <deemon/dex.h>
 
+#include <stddef.h> /* NULL */
+
 DECL_BEGIN
 
 DEX_BEGIN

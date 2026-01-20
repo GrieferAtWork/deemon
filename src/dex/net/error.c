@@ -31,6 +31,8 @@
 #include <deemon/error_types.h> /* DeeSystemErrorObject */
 #include <deemon/object.h>
 
+#include <stddef.h> /* NULL */
+
 DECL_BEGIN
 
 #define INIT_ERROR(name, base, children)                       \

@@ -75,6 +75,9 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 
+#include <stdbool.h> /* true */
+#include <stddef.h>  /* NULL, size_t */
+
 DECL_BEGIN
 
 

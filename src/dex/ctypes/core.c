@@ -48,8 +48,9 @@
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* int32_t, int64_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* int32_t, int64_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

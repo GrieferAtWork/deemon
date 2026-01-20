@@ -37,6 +37,9 @@
 
 #include "accu.h"
 
+#include <stdbool.h> /* bool, true */
+#include <stddef.h>  /* NULL, size_t */
+
 DECL_BEGIN
 
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL

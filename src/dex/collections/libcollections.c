@@ -34,6 +34,8 @@
 
 #include "accu.h"
 
+#include <stddef.h> /* NULL */
+
 DECL_BEGIN
 
 #define Q3  "??" "?"

@@ -35,6 +35,8 @@
 #include <deemon/string.h>
 
 #include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* UINTn_C, uintN_t */
 
 DECL_BEGIN
 

@@ -38,6 +38,10 @@
 #include <hybrid/align.h>
 #include <hybrid/debug-alignment.h>
 
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL, ptrdiff_t, size_t */
+#include <stdint.h>  /* uintN_t, uintptr_t */
+
 DECL_BEGIN
 
 #ifdef CONFIG_host_unwind_USES_NT_UNWIND_INFO

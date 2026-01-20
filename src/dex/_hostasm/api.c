@@ -26,6 +26,8 @@
 
 #include <deemon/alloc.h>
 
+#include <stddef.h> /* NULL, offsetof */
+
 
 /* Public API, as used by the deemon core in "code.c" */
 #ifdef CONFIG_HAVE_LIBHOSTASM

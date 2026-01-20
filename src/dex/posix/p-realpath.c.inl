@@ -36,15 +36,16 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/system-features.h>
-#include <deemon/system.h> /* DeeSystem_HAVE_FS_DRIVES */
+#include <deemon/system.h>          /* DeeSystem_HAVE_FS_DRIVES */
 
 #include <hybrid/debug-alignment.h>
 
 #include "p-path.c.inl"     /* For `DeeString_IsAbsPath()' */
 #include "p-readlink.c.inl" /* For `posix_readlink()' */
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* uint8_t, uint32_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uint8_t, uint32_t */
 
 DECL_BEGIN
 

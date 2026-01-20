@@ -52,6 +52,10 @@
 
 #include <hybrid/bitset.h>
 
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h>  /* intptr_t, uint8_t, uint16_t, uintptr_t */
+
 DECL_BEGIN
 
 #define DeeInt_NEWSFUNC(n) DEE_PRIVATE_NEWINT(n)

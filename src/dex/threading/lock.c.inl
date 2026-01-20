@@ -52,8 +52,8 @@
 #include <hybrid/sched/yield.h>
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* uint64_t, uintptr_t */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uint64_t, uintptr_t */
 
 #if (defined(DEFINE_DeeAtomicLock_Type__AND__DeeAtomicRWLock_Type) +   \
      defined(DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type) +   \

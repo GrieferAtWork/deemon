@@ -37,12 +37,13 @@
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
-#include <deemon/system.h> /* DeeSystem_HAVE_FS_DRIVES */
+#include <deemon/system.h>          /* DeeSystem_HAVE_FS_DRIVES */
 #include <deemon/thread.h>
 
 #include <hybrid/debug-alignment.h>
 
-#include <stddef.h> /* NULL, size_t */
+#include <stdbool.h> /* false, true */
+#include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN
 

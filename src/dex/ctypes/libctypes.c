@@ -27,14 +27,6 @@
 #include "libctypes.h"
 /**/
 
-#ifdef CONFIG_HAVE_CTYPES_SEH_GUARD
-#include <Windows.h>
-#endif /* CONFIG_HAVE_CTYPES_SEH_GUARD */
-
-#ifdef CONFIG_HAVE_CTYPES_KOS_GUARD
-#include <kos/except.h>
-#endif /* CONFIG_HAVE_CTYPES_KOS_GUARD */
-
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>
@@ -55,7 +47,17 @@
 
 #include "c_api.h"
 
-#include <stdint.h> /* intN_t, intptr_t, uintN_t, uintptr_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, ptrdiff_t, size_t */
+#include <stdint.h>  /* intN_t, intptr_t, uintN_t, uintptr_t */
+
+#ifdef CONFIG_HAVE_CTYPES_SEH_GUARD
+#include <Windows.h>
+#endif /* CONFIG_HAVE_CTYPES_SEH_GUARD */
+
+#ifdef CONFIG_HAVE_CTYPES_KOS_GUARD
+#include <kos/except.h>
+#endif /* CONFIG_HAVE_CTYPES_KOS_GUARD */
 
 DECL_BEGIN
 

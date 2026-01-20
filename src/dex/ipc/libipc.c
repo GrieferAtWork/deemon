@@ -31,6 +31,8 @@
 #include <deemon/objmethod.h>
 #include <deemon/system.h>
 
+#include <stddef.h> /* NULL */
+
 #ifndef __INTELLISENSE__
 #include "pipe.c.inl"
 #include "process.c.inl"

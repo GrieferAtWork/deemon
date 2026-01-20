@@ -40,7 +40,8 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/objectlist.h>
 
-#include <stddef.h> /* NULL, size_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN
 

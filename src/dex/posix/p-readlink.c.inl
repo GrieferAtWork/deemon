@@ -39,7 +39,9 @@
 
 #include <hybrid/debug-alignment.h>
 
-#include <stddef.h> /* NULL, size_t */
+#include <stdbool.h> /* true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uint8_t */
 
 DECL_BEGIN
 

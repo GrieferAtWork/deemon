@@ -56,6 +56,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uint8_t, uint16_t, uint64_t, uintptr_t */
 #ifdef CONFIG_HAVE_PATHS_H
 #include <paths.h> /* _PATH_SHELLS */
 #endif /* CONFIG_HAVE_PATHS_H */

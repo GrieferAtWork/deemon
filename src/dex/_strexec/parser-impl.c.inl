@@ -48,8 +48,9 @@
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* int32_t, uint16_t, uint32_t */
+#include <stdbool.h> /* bool, false */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* int32_t, uint16_t, uint32_t */
 
 #if !defined(JIT_SKIP) && !defined(JIT_EVAL)
 #error "Must either #define JIT_SKIP or JIT_EVAL before #including this file"
@@ -3894,11 +3895,11 @@ DECL_END
 
 #ifndef __INTELLISENSE__
 
-#include "parser-impl-template-string.c.inl"
 #include "parser-impl-class.c.inl"
 #include "parser-impl-comma.c.inl"
-#include "parser-impl-statement.c.inl"
 #include "parser-impl-hybrid.c.inl"
+#include "parser-impl-statement.c.inl"
+#include "parser-impl-template-string.c.inl"
 /**/
 
 #undef LOAD_LVALUE

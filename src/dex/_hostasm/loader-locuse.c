@@ -32,6 +32,10 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
 
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uint16_t */
+
 DECL_BEGIN
 
 /* NOTE: These limits apply to:

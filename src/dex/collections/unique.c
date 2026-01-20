@@ -26,6 +26,8 @@
 
 #include <deemon/api.h>
 
+#include <stddef.h> /* NULL */
+
 DECL_BEGIN
 
 INTERN struct udict_item empty_dict_items[1] = { { NULL, NULL } };

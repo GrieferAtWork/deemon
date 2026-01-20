@@ -22,11 +22,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/float.h> /* CONFIG_HAVE_FPU */
+#include <deemon/float.h>       /* CONFIG_HAVE_FPU */
 #include <deemon/hashset.h>
 #include <deemon/object.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
+
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
 
 /* =======================================================================================
  * === JSON SUPPORT                                                                    ===

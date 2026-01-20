@@ -39,11 +39,11 @@
 #include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
-#include <deemon/object.h>
-#include <deemon/util/lock.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/util/lock.h>
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* int32_t, int64_t */

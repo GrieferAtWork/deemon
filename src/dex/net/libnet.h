@@ -62,11 +62,13 @@
      defined(CONFIG_HAVE_BLUETOOTH_L2CAP_H) && \
      defined(CONFIG_HAVE_BLUETOOTH_SCO_H) && \
      defined(CONFIG_HAVE_BLUETOOTH_HCI_H))
+/* clang-format off */
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>
 #include <bluetooth/l2cap.h>
 #include <bluetooth/sco.h>
 #include <bluetooth/hci.h>
+/* clang-format on */
 #else /* ... */
 #undef AF_BLUETOOTH
 #endif /* !... */
@@ -111,7 +113,9 @@
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 
-#include <stdint.h> /* uint16_t, uint64_t, uintptr_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
+#include <stdint.h>  /* uint16_t, uint64_t, uintptr_t */
 
 #ifdef CONFIG_HOST_WINDOWS
 #undef EWOULDBLOCK

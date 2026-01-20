@@ -46,6 +46,9 @@
 
 #include <hybrid/overflow.h>
 
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+
 DECL_BEGIN
 
 #define Dee_EmptyRangeMap (&_Dee_EmptyRangeMap)

@@ -46,8 +46,9 @@
 
 #include <hybrid/debug-alignment.h>
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* UINT64_C, int64_t, uintN_t, uintptr_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* UINT64_C, int64_t, uintN_t, uintptr_t */
 
 DECL_BEGIN
 

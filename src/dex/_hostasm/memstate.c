@@ -37,6 +37,10 @@
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h>  /* UINT16_MAX, uint8_t */
+
 #ifndef UINT16_MAX
 #include <hybrid/limitcore.h>
 #define UINT16_MAX __UINT16_MAX__

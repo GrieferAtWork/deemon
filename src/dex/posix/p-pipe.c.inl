@@ -40,6 +40,7 @@
 #include <hybrid/debug-alignment.h>
 
 #include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* intptr_t, uintptr_t */
 
 DECL_BEGIN
 

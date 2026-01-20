@@ -30,6 +30,8 @@
 #include <deemon/objmethod.h>
 #include <deemon/tuple.h>
 
+#include <stddef.h> /* NULL, size_t */
+
 DECL_BEGIN
 
 #ifdef CONFIG_HAVE_LIBHOSTASM

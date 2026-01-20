@@ -28,6 +28,9 @@
 #include <deemon/string.h>
 #include <deemon/util/lock.h>
 
+#include <stdbool.h> /* bool, true */
+#include <stddef.h>  /* offsetof, size_t */
+
 DECL_BEGIN
 
 #define DEQUE_BUCKET_DEFAULT_SIZE  62 /* 64-2 */

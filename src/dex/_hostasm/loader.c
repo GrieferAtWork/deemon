@@ -34,6 +34,10 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
 
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* int8_t, int16_t, int32_t, uint16_t */
+
 DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

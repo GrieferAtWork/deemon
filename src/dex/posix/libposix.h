@@ -34,6 +34,8 @@
 #include <deemon/thread.h>
 
 #include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* offsetof, size_t */
+#include <stdint.h>  /* int64_t, uint32_t, uint64_t */
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>

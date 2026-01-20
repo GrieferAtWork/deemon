@@ -37,6 +37,9 @@
 #include <deemon/string.h>
 #include <deemon/thread.h>
 
+#include <stdbool.h> /* true */
+#include <stddef.h>  /* NULL, size_t */
+
 DECL_BEGIN
 
 /* !!! THIS MODULE IS NON-STANDARD AND DRIVES THE BUILTIN `exec' FUNCTION FOR !!!

@@ -48,7 +48,8 @@
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* NULL, ptrdiff_t, size_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, ptrdiff_t, size_t */
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__

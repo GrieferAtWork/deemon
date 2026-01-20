@@ -44,6 +44,9 @@
 
 #include "kwlist.h"
 
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+
 DECL_BEGIN
 
 

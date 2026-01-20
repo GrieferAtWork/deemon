@@ -39,8 +39,9 @@
 #include <hybrid/minmax.h>
 #include <hybrid/sequence/list.h>
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* intN_t, uintN_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* intN_t, uintN_t */
 
 DECL_BEGIN
 

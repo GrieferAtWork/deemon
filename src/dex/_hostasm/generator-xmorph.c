@@ -28,6 +28,10 @@
 #include <deemon/alloc.h>
 #include <deemon/none.h>
 
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h>  /* uint8_t */
+
 DECL_BEGIN
 
 STATIC_ASSERT(sizeof(struct memval) == sizeof(struct memref));

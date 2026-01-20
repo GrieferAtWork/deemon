@@ -42,7 +42,8 @@
 
 #include <hybrid/sched/yield.h>
 
-#include <stddef.h> /* NULL, size_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN
 

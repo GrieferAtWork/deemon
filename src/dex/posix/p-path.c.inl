@@ -42,8 +42,9 @@
 
 #include <hybrid/minmax.h>
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* uint32_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uint32_t */
 
 DECL_BEGIN
 

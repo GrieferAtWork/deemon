@@ -42,11 +42,13 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/util/atomic.h>
-#include <deemon/util/lock.h> /* Dee_atomic_rwlock_t */
+#include <deemon/util/lock.h>       /* Dee_atomic_rwlock_t */
 
 #include <hybrid/debug-alignment.h>
 
-#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uint8_t */
 
 DECL_BEGIN
 

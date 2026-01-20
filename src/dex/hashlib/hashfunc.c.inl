@@ -42,6 +42,7 @@
 
 #include <hybrid/typecore.h>
 
+#include <stddef.h> /* size_t */
 #include <stdint.h> /* uintN_t */
 
 #if WIDTH > 32

@@ -35,7 +35,8 @@
 #include <deemon/objmethod.h>
 #include <deemon/tuple.h>
 
-#include <stddef.h> /* NULL, size_t */
+#include <stdbool.h> /* false, true */
+#include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN
 

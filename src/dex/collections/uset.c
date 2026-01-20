@@ -29,7 +29,7 @@
 #include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
-#include <deemon/dict.h> /* DeeDict_Dummy */
+#include <deemon/dict.h>            /* DeeDict_Dummy */
 #include <deemon/error-rt.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
@@ -44,6 +44,9 @@
 #include <deemon/util/atomic.h>
 
 #include <hybrid/sched/yield.h>
+
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

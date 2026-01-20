@@ -33,6 +33,8 @@
 #include <deemon/system-features.h> /* memcpy */
 #include <deemon/thread.h>
 
+#include <stddef.h> /* NULL */
+
 DECL_BEGIN
 
 INTDEF DeeCMethodObject libthreading_lockunion_all;

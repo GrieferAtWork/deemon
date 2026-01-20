@@ -30,15 +30,14 @@
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
 
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* intN_t, intptr_t, uintN_t, uintptr_t */
+
 #ifndef CONFIG_NO_CFUNCTION
 #include <ffi.h>
 #include <ffitarget.h>
 #endif /* !CONFIG_NO_CFUNCTION */
-/**/
-
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* intN_t, intptr_t, uintN_t, uintptr_t */
-
 
 DECL_BEGIN
 

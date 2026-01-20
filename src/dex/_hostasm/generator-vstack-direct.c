@@ -44,6 +44,10 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
+#include <stdbool.h> /* bool, false */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t */
+#include <stdint.h>  /* uint8_t */
+
 DECL_BEGIN
 
 /************************************************************************/

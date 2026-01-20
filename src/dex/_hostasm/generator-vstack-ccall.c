@@ -45,6 +45,9 @@
 #include <deemon/tuple.h>
 #include <deemon/weakref.h>
 
+#include <stddef.h> /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h> /* uintptr_t */
+
 DECL_BEGIN
 
 /************************************************************************/

@@ -34,6 +34,8 @@
 
 #include "sqlite3-external.h"
 
+#include <stddef.h> /* NULL */
+
 DECL_BEGIN
 
 PRIVATE Dee_refcnt_t libsqlite3_initialized = 0;

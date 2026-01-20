@@ -31,6 +31,9 @@
 
 #include <hybrid/sequence/list.h>
 
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, ptrdiff_t, size_t */
+
 DECL_BEGIN
 
 #ifndef NDEBUG

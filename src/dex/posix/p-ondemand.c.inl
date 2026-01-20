@@ -218,7 +218,9 @@
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* UINT64_C, int64_t, uint32_t, uint64_t, uintptr_t */
 
 #ifdef CONFIG_HAVE_sendfile
 #ifdef CONFIG_HAVE_SYS_SENDFILE_H

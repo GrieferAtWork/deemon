@@ -37,6 +37,9 @@
 
 #include <hybrid/debug-alignment.h>
 
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* UINT32_MAX, uint32_t */
+
 #undef ipc_Pipe_USE_CreatePipe
 #undef ipc_Pipe_USE_pipe_OR_pipe2
 #undef ipc_Pipe_USE_STUB

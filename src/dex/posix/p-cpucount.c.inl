@@ -33,7 +33,8 @@
 #include <deemon/objmethod.h>
 #include <deemon/system-features.h> /* CONFIG_HAVE_* */
 
-#include <stddef.h> /* NULL, size_t */
+#include <stdbool.h> /* false */
+#include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN
 

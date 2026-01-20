@@ -52,6 +52,10 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
 
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* int8_t, int16_t, uint8_t, uint16_t, uint32_t */
+
 DECL_BEGIN
 
 #ifndef CHAR_BIT
