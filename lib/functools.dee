@@ -27,13 +27,13 @@ import * from deemon;
 function predcmp2key(cmp: Callable): Callable {
 	class KeyClass {
 		private member m_self;
-		this(self) { m_self = self; }
-		operator <  (other) -> cmp(this.m_self, other.m_self) <  0;
-		operator <= (other) -> cmp(this.m_self, other.m_self) <= 0;
-		operator == (other) -> cmp(this.m_self, other.m_self) == 0;
-		operator != (other) -> cmp(this.m_self, other.m_self) != 0;
-		operator >  (other) -> cmp(this.m_self, other.m_self) >  0;
-		operator >= (other) -> cmp(this.m_self, other.m_self) >= 0;
+		this(self): m_self(self) {}
+		public operator <  (other) -> cmp(this.m_self, other.m_self) <  0;
+		public operator <= (other) -> cmp(this.m_self, other.m_self) <= 0;
+		public operator == (other) -> cmp(this.m_self, other.m_self) == 0;
+		public operator != (other) -> cmp(this.m_self, other.m_self) != 0;
+		public operator >  (other) -> cmp(this.m_self, other.m_self) >  0;
+		public operator >= (other) -> cmp(this.m_self, other.m_self) >= 0;
 	}
 	return KeyClass;
 }
@@ -48,7 +48,7 @@ function predcmp2key(cmp: Callable): Callable {
 function predlo2key(pred_lo: Callable): Callable {
 	class KeyClass {
 		private member m_self;
-		this(self) { m_self = self; }
+		this(self): m_self(self) {}
 		operator == (other) -> !pred_lo(this.m_self, other.m_self) && !pred_lo(other.m_self, this.m_self);
 		operator != (other) -> pred_lo(this.m_self, other.m_self) || pred_lo(other.m_self, this.m_self);
 		operator <  (other) -> pred_lo(this.m_self, other.m_self);
@@ -69,7 +69,7 @@ function predlo2key(pred_lo: Callable): Callable {
 function predeq2key(pred_eq: Callable): Callable {
 	class KeyClass {
 		private member m_self;
-		this(self) { m_self = self; }
+		this(self): m_self(self) {}
 		operator == (other) -> pred_eq(this.m_self, other.m_self);
 		operator != (other) -> !pred_eq(this.m_self, other.m_self);
 	}

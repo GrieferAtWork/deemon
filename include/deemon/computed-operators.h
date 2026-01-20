@@ -77,17 +77,22 @@
  * #2: `$ make computed-operators`
  */
 #define DEFIMPL(x) x
+/* clang-format off */
 #ifdef CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS
 #define DEFIMPL_UNSUPPORTED(x) x
 #include "../../src/deemon/runtime/operator-hint-errors.h" /*!KEEPME*/
 #else /* CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
+#include <stddef.h> /* NULL */
 #define DEFIMPL_UNSUPPORTED(x) NULL
 #endif /* !CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 #include "../../src/deemon/runtime/method-hint-defaults.h" /*!KEEPME*/
 #include "operator-hints.h"                                /*!KEEPME*/
+/* clang-format on */
 
 #define DEFAULT_OPDEF INTDEF
 #define DEFAULT_OPIMP INTERN
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

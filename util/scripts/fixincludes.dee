@@ -22,6 +22,8 @@ import * from deemon;
 import posix;
 import functools;
 
+local final ROOTDIR = posix.joinpath(posix.headof(__FILE__), r"../..");
+
 global final HEADER_KWDS: {string: {string...}} = {
 	"<stdarg.h>": {
 		"va_list",
@@ -57,6 +59,229 @@ global final KWD2HEADER: {string: string} = Dict.Frozen(
 			(kwd, header)
 );
 
+
+class YamlParser {
+	this = default;
+	public member filename: string;
+	public member data: Bytes;
+	public member iter: int;
+	public member end: int;
+
+	private lc(offset: int): (int, int) {
+		local sol = data.rfind("\n", 0, offset) + 1;
+		local lno = data.count("\n", 0, sol) + 1;
+		return (lno, 1 + offset - sol);
+	}
+
+	private skipCommentLines() {
+again:
+		while (iter < end && data.islf(iter))
+			++iter;
+		local afterSpace = iter;
+		while (afterSpace < end && data.isspace(afterSpace))
+			++afterSpace;
+		if (data.startswith("#", afterSpace) || (afterSpace < end && data.islf(afterSpace))) {
+			iter = (data.find("\n", afterSpace) + 1) ?: end;
+			goto again;
+		}
+	}
+
+	public function parseBlock(
+			minIndent: int = 0,
+			atStartOfLine: bool = true
+	): Dict | List | string | int | none {
+		if (!atStartOfLine) {
+			while (iter < end && data.isspacexlf(iter))
+				++iter;
+			if (iter < end && data.islf(iter)) {
+				atStartOfLine = true;
+				++iter;
+			}
+		}
+		local indentEnd: int;
+		local indent: int;
+		if (atStartOfLine) {
+			skipCommentLines();
+			indentEnd = iter;
+			while (indentEnd < end && data.isspace(indentEnd))
+				++indentEnd;
+			indent = indentEnd - iter;
+			if (indent < minIndent)
+				return none;
+		} else {
+			indent = 0;
+			indentEnd = iter;
+		}
+		if (indentEnd >= end)
+			return none;
+		local result;
+		local indentEndCh: string = string.chr(data[indentEnd]);
+		local blockPrefix: string = " " * indent;
+		if (data.startswith("- ", indentEnd)) {
+			/* List */
+			local listItemPrefix = blockPrefix + "- ";
+			result = List();
+			indent += 2;
+			do {
+				iter += #listItemPrefix;
+				local item = parseBlock(indent, false);
+				if (item is none)
+					break;
+				result.append(item);
+			} while (data.startswith(listItemPrefix, iter));
+		} else if (data.issymstrt(indentEnd)) {
+			/* Object */
+			result = Dict();
+			for (;;) {
+				local identEnd = indentEnd + 1;
+				while (identEnd < end && data.issymcont(identEnd))
+					++identEnd;
+				local key = data[indentEnd:identEnd].decode("utf-8");
+				while (identEnd < end && data.isspacexlf(identEnd))
+					++identEnd;
+				if (identEnd >= end || data[identEnd] != ':'.ord()) {
+					if (!result && identEnd < end) {
+						/* Might be an unquoted string! */
+						if (data.islf(identEnd) || data.startswith("#", identEnd)) {
+							result = key;
+							iter = identEnd;
+							goto done;
+						}
+					}
+					local d = lc(identEnd);
+					throw Error(f"{filename}({d[0]}, {d[1]}) : Expected ':' after {repr key}");
+				}
+				++identEnd;
+				while (identEnd < end && data.isspacexlf(identEnd))
+					++identEnd;
+				local value;
+				if (!indent) {
+					indent = minIndent;
+					blockPrefix = " " * indent;
+				}
+				if (identEnd < end && (data.islf(identEnd) || data.startswith("#", identEnd))) {
+					iter = identEnd + 1;
+					value = parseBlock(indent + 1, true);
+				} else {
+					local valueIndent = identEnd - iter;
+					iter = identEnd;
+					value = parseBlock(valueIndent, false);
+				}
+				result[key] = value;
+				if (!data.startswith(blockPrefix, iter))
+					break;
+				indentEnd = iter + indent;
+				if (indentEnd >= end)
+					break;
+				if (!data.issymstrt(indentEnd))
+					break;
+			}
+		} else if (data.isdigit(indentEnd) || indentEndCh in "-+") {
+			local digitEnd = indentEnd + 1;
+			while (digitEnd < end && data.isdigit(digitEnd))
+				++digitEnd;
+			result = int(data[indentEnd:digitEnd]);
+			iter = digitEnd;
+skip_comment_after_literal:
+			while (iter < end && data.isspacexlf(iter))
+				++iter;
+			if (data.startswith("#", iter)) {
+				skipCommentLines();
+			} else if (iter >= end) {
+				/* OK */
+			} else if(data.islf(iter)) {
+				++iter;
+			} else {
+				local d = lc(indentEnd);
+				local eol = data.find("\n", iter);
+				if (eol < 0)
+					eol = end;
+				local untilEol = data[iter:eol];
+				local d = lc(iter);
+				throw Error(f"{filename}({d[0]}, {d[1]}) : encountered garbage {
+					repr untilEol.decode("utf-8")} after literal {repr result}");
+			}
+		} else if (indentEndCh == '"') {
+			local stop = data[indentEnd];
+			local stringStart = indentEnd + 1;
+			local stringEnd = stringStart;
+			while (stringEnd < end && (data[stringEnd] != '"'.ord() || data[stringEnd - 1] == '\\'.ord()))
+				++stringEnd;
+			iter = stringEnd + 1;
+			result = data[stringStart:stringEnd].decode("c-escape");
+			goto skip_comment_after_literal;
+		} else if (indentEndCh == "'") {
+			local stop = data[indentEnd];
+			local stringStart = indentEnd + 1;
+			local stringEnd = stringStart;
+			while (stringEnd < end && data[stringEnd] != "'".ord())
+				++stringEnd;
+			iter = stringEnd + 1;
+			result = data[stringStart:stringEnd].decode("utf-8");
+			goto skip_comment_after_literal;
+		} else {
+			local d = lc(indentEnd);
+			throw Error(f"{filename}({d[0]}, {d[1]}) : Unexpected character {
+				repr string.chr(data[indentEnd])}");
+		}
+done:
+		skipCommentLines();
+		return result;
+	}
+
+	public function parse(): Dict {
+		local result = parseBlock();
+		if (iter < end) {
+			local d = lc(iter);
+			throw Error(f"{filename}({d[0]}, {d[1]}) : Unable to parse from this point forth");
+		}
+		if (result !is Mapping)
+			throw Error(f"{filename}(1, 0) : Yaml contents do not parse as an object");
+		return result;
+	}
+}
+
+
+function parseYaml(filename: string): Dict {
+	local data: Bytes;
+	with (local fp = File.open(filename, "rb"))
+		data = fp.read();
+	return YamlParser(
+		filename: filename,
+		data: data,
+		iter: 0,
+		end: #data,
+	).parse();
+}
+
+function getClangFormat(): Dict {
+	static local clangFormatConfig = parseYaml(ROOTDIR + "/.clang-format");
+	return clangFormatConfig;
+}
+
+
+function getClangIncludeCategoryRegexPriorities(): {string: int} {
+	static local regexToPriority: {string: int} = (
+		for (local desc: getClangFormat()["IncludeCategories"])
+			(desc["Regex"], desc["Priority"])
+	).asmap.frozen;
+	return regexToPriority;
+}
+
+function getClangIncludePriorty(includeString: string): int {
+	local regexToPriority = getClangIncludeCategoryRegexPriorities();
+	for (local regex, priority: regexToPriority) {
+		if (includeString.rematch(regex))
+			return priority;
+	}
+	throw Error(f"Unable to match include string {repr includeString} to "
+	            f"any priority via clang-format's 'IncludeCategories'");
+}
+
+
+
+
+
 class IncludeInfo {
 	this = default;
 	public final member include: string;
@@ -64,6 +289,7 @@ class IncludeInfo {
 	public member includeStringEndOffset: int;
 	public member commentStartOffset: int | none;
 	public member commentEndOffset: int | none;
+	public member comment: Bytes | string | none;
 
 	public patchOffsets(deltaStart: int, deltaOffset: int) {
 		if (includeStringOffset >= deltaStart)
@@ -79,13 +305,163 @@ class IncludeInfo {
 	}
 };
 
+class IncludeGroup {
+	this = default;
+	public final member includes: {IncludeInfo...} = [];
+	public member groupStartOffset: int;
+	public member groupEndOffset: int;
+
+	public patchOffsets(deltaStart: int, deltaOffset: int) {
+		if (groupStartOffset >= deltaStart)
+			groupStartOffset += deltaOffset;
+		if (groupEndOffset >= deltaStart)
+			groupEndOffset += deltaOffset;
+	}
+
+	public function containsIncludePriority(priority: int) {
+		for (local include: includes) {
+			if (priority == getClangIncludePriorty(include.include))
+				return true;
+		}
+		return false;
+	}
+
+	public function reformat(): Bytes | none {
+		if (!includes)
+			return none;
+		local regexToPriority: {string: int} = getClangIncludeCategoryRegexPriorities();
+		local includesByPriority: {int: {IncludeInfo...}} = Dict();
+		for (local include: includes) {
+			local priority = getClangIncludePriorty(include.include);
+			includesByPriority.setdefault(priority, []).append(include);
+		}
+		if (getClangFormat()["SortIncludes"] == "true") {
+			for (local none, includes: includesByPriority)
+				includes.sort();
+		}
+		File.Writer result;
+		for (local prio: includesByPriority.keys.sorted()) {
+			local includes = includesByPriority[prio];
+			local maxIncludeStringLength = includes.each.include.length > ...;
+			for (local include: includes) {
+				local includeString = include.include;
+				result << "#include " << includeString;
+				if (include.comment !is none) {
+					result << " " * (maxIncludeStringLength - #includeString);
+					result << " /* " << include.comment << " */";
+				}
+				result << "\n";
+			}
+			result << "\n"; /* Group separator */
+		}
+		return result.string.encode("utf-8").rstrip(); /* Strip unnecessary, trailing linefeeds */
+	}
+
+	public function addInclude(include: string, comment: string) {
+		includes.append(IncludeInfo(
+			include: include,
+			includeStringOffset: -1,
+			includeStringEndOffset: -1,
+			commentStartOffset: none,
+			commentEndOffset: none,
+			comment: comment,
+		));
+	}
+}
+
+function simplifyKeywordUseList(usedKwds: Set with string) {
+	for (local repGroup, repWith: {
+		{ {"int8_t", "int16_t", "int32_t", "int64_t"}, "intN_t" },
+		{ {"uint8_t", "uint16_t", "uint32_t", "uint64_t"}, "uintN_t" },
+		{ {"INT8_C", "INT16_C", "INT32_C", "INT64_C"}, "INTn_C" },
+		{ {"UINT8_C", "UINT16_C", "UINT32_C", "UINT64_C"}, "UINTn_C" },
+		{ {"INT8_MIN", "INT16_MIN", "INT32_MIN", "INT64_MIN"}, "INTn_MIN" },
+		{ {"INT8_MAX", "INT16_MAX", "INT32_MAX", "INT64_MAX"}, "INTn_MAX" },
+		{ {"UINT8_MAX", "UINT16_MAX", "UINT32_MAX", "UINT64_MAX"}, "UINTn_MAX" },
+	}) {
+		if (repGroup.map(usedKwds.contains) && ...) {
+			for (local g: repGroup)
+				usedKwds.remove(g);
+			usedKwds.insert(repWith);
+		}
+	}
+}
+
 class FileInfo {
 	this = default;
 	public final member filename: string;
 	public final member includes: {string: IncludeInfo};
 	public final member keywords: {string...};
+	public final member noFormatRegions: {(int, int)...};
 	public member data: Bytes;
 	public member dataChanged: bool = false;
+
+	private member m_includeGroups: {IncludeGroup...};
+
+	private function getIncludeLineStart(inc: IncludeInfo): int {
+		return data.rfind("\n", 0, inc.includeStringOffset) + 1;
+	}
+	private function getIncludeLineEnd(inc: IncludeInfo): int {
+		local result;
+		if (inc.commentEndOffset is none) {
+			result = inc.includeStringEndOffset;
+		} else {
+			result = data.index("*/", inc.commentEndOffset) + 2;
+		}
+		while (result < #data && data.isspacexlf(result))
+			++result;
+		return result;
+	}
+
+	public property includeGroups: {IncludeGroup...} = {
+		get(): {IncludeGroup...} {
+			if (m_includeGroups is bound)
+				return m_includeGroups;
+			local sortedIncludes: {IncludeInfo...} = includes.values.sorted(e -> e.includeStringOffset);
+			local result: {IncludeGroup...} = List();
+			local currentGroup = IncludeGroup();
+			for (local inc: sortedIncludes) {
+				if (!currentGroup.includes) {
+insert_first_include:
+					currentGroup.includes.append(inc); /* First include of group */
+					currentGroup.groupStartOffset = getIncludeLineStart(inc);
+					currentGroup.groupEndOffset = getIncludeLineEnd(inc);
+				} else {
+					local prevIncludeEnd = currentGroup.groupEndOffset;
+					local thisIncludeLine = getIncludeLineStart(inc);
+					while (prevIncludeEnd < thisIncludeLine && data.isspace(prevIncludeEnd))
+						++prevIncludeEnd;
+					if (prevIncludeEnd >= thisIncludeLine) {
+						/* Same group */
+						currentGroup.includes.append(inc);
+						currentGroup.groupEndOffset = getIncludeLineEnd(inc);
+					} else {
+//						print "NEW GROUP:";
+//						print "	prev:", prevIncludeEnd, repr lc(prevIncludeEnd);
+//						print "	curr:", thisIncludeLine, repr lc(thisIncludeLine);
+//						print "	data:", repr data[prevIncludeEnd:thisIncludeLine];
+						
+						/* New group */
+						result.append(currentGroup);
+						currentGroup = IncludeGroup();
+						goto insert_first_include;
+					}
+				}
+			}
+			if (currentGroup.includes)
+				result.append(currentGroup);
+			m_includeGroups = result;
+			return result;
+		}
+	}
+
+	public function isFormattingDisabledAt(offset: int): bool {
+		for (local start, end: noFormatRegions) {
+			if (offset >= start && offset < end)
+				return true;
+		}
+		return false;
+	}
 
 	@@Return mapping {include: {keyword...}}
 	public function getMissingIncludesAndKeywords(): {string: {string...}} {
@@ -102,16 +478,33 @@ class FileInfo {
 		for (local inc: includes.values) {
 			inc.patchOffsets(deltaStart, deltaOffset);
 		}
+		if (m_includeGroups is bound) {
+			for (local group: m_includeGroups)
+				group.patchOffsets(deltaStart, deltaOffset);
+		}
+		for (local i: [:#noFormatRegions]) {
+			local start, end = noFormatRegions[i]...;
+			if (start >= deltaStart)
+				start += deltaOffset;
+			if (end >= deltaStart)
+				end += deltaOffset;
+			noFormatRegions[i] = (start, end);
+		}
 	}
 
-	private overwrite(offset: int, count: int, more: string | Bytes) {
+	private overwrite(offset: int, count: int, more: string | Bytes): bool {
 		if (count || more) {
 			if (more is string)
 				more = more.encode("utf-8");
-			data = data[:offset] + more + data[offset+count:];
-			dataChanged = true;
-			patchOffsets(offset, #more - count);
+			local oldData = data[offset:offset + count];
+			if (oldData != more) {
+				data = data[:offset] + more + data[offset+count:];
+				dataChanged = true;
+				patchOffsets(offset, #more - count);
+				return true;
+			}
 		}
+		return false;
 	}
 
 	private insert(offset: int, more: string | Bytes) {
@@ -119,7 +512,7 @@ class FileInfo {
 	}
 
 	private delete(offset: int, count: int) {
-		return overwrite(offset, 0, "");
+		return overwrite(offset, count, "");
 	}
 
 	private lc(offset: int): (int, int) {
@@ -129,12 +522,7 @@ class FileInfo {
 	}
 
 	public fix() {
-//TODO:		local missing = getMissingIncludesAndKeywords();
-//TODO:		for (local include, keywords: missing) {
-//TODO:			print File.stddbg: (filename, ": Missing include: #include ", include,
-//TODO:				" /* ", ", ".join(keywords.sorted()), " */");
-//TODO:		}
-
+		local removedIncludes: {string...} = HashSet();
 		for (local inc: includes.values) {
 			local kwds = HEADER_KWDS.get(inc.include);
 			if (kwds !is none) {
@@ -144,25 +532,17 @@ class FileInfo {
 							k
 				);
 				if (!usedKwds) {
-//TODO:					print(filename, ": Removing unnecessary include ", inc.include);
-				} else {
-					for (local repGroup, repWith: {
-						{ {"int8_t", "int16_t", "int32_t", "int64_t"}, "intN_t" },
-						{ {"uint8_t", "uint16_t", "uint32_t", "uint64_t"}, "uintN_t" },
-						{ {"INT8_C", "INT16_C", "INT32_C", "INT64_C"}, "INTn_C" },
-						{ {"UINT8_C", "UINT16_C", "UINT32_C", "UINT64_C"}, "UINTn_C" },
-						{ {"INT8_MIN", "INT16_MIN", "INT32_MIN", "INT64_MIN"}, "INTn_MIN" },
-						{ {"INT8_MAX", "INT16_MAX", "INT32_MAX", "INT64_MAX"}, "INTn_MAX" },
-						{ {"UINT8_MAX", "UINT16_MAX", "UINT32_MAX", "UINT64_MAX"}, "UINTn_MAX" },
-					}) {
-						local hasGroup = !!repGroup.map(usedKwds.contains).each;
-						if (hasGroup) {
-							for (local g: repGroup)
-								usedKwds.remove(g);
-							usedKwds.insert(repWith);
-						}
+					if (!isFormattingDisabledAt(inc.includeStringOffset)) {
+						print(filename, ": Removing unnecessary include ", inc.include);
+						local sol = getIncludeLineStart(inc);
+						local eol = getIncludeLineEnd(inc);
+						if (eol < #data && data.islf(eol))
+							++eol;
+						delete(sol, eol - sol);
+						removedIncludes.insert(inc.include);
 					}
-
+				} else {
+					simplifyKeywordUseList(usedKwds);
 					local correctKwdsComment = ", ".join(usedKwds.sorted(
 						functools.predcmp2key(string.vercompare)
 					));
@@ -173,7 +553,8 @@ class FileInfo {
 							inc.commentEndOffset
 						].decode("utf-8");
 					}
-					if (actualKwdsComment != correctKwdsComment) {
+					if (actualKwdsComment != correctKwdsComment &&
+					    !isFormattingDisabledAt(inc.commentStartOffset)) {
 						print(filename, ": Fixing bad comment for ", inc.include,
 							": ", repr actualKwdsComment, " -> ", repr correctKwdsComment);
 						if (inc.commentStartOffset !is none) {
@@ -182,11 +563,66 @@ class FileInfo {
 								inc.commentEndOffset - inc.commentStartOffset,
 								correctKwdsComment);
 						} else {
-							insert(
-								inc.includeStringEndOffset,
-								f" /* {correctKwdsComment} */");
+							local data = f" /* {correctKwdsComment} */".encode("utf-8");
+							local index = inc.includeStringEndOffset;
+							insert(index, data);
+							inc.commentStartOffset = index + 4;
+							inc.commentEndOffset = index + #data - 3;
 						}
+						inc.comment = correctKwdsComment;
 					}
+				}
+			}
+		}
+		for (local x: removedIncludes)
+			del includes[x];
+
+		/* Check for missing includes, insert into groups, and re-format groups */
+		local missing = getMissingIncludesAndKeywords();
+		local includeGroups = this.includeGroups;
+		for (local include, keywords: missing) {
+			keywords = HashSet(keywords);
+			simplifyKeywordUseList(keywords);
+			local comment = ", ".join(keywords.sorted(
+				functools.predcmp2key(string.vercompare)
+			));
+			local preferredIncludeGroup: IncludeGroup | none = none;
+			local includePriority: int | none = none;
+			for (local grp: includeGroups) {
+				if (isFormattingDisabledAt(grp.groupStartOffset))
+					continue;
+				if (includePriority is none)
+					includePriority = getClangIncludePriorty(include);
+				if (grp.containsIncludePriority(includePriority)) {
+					preferredIncludeGroup = grp;
+					break;
+				}
+				if (preferredIncludeGroup is none)
+					preferredIncludeGroup = grp;
+			}
+			if (preferredIncludeGroup is none) {
+				print(filename, ": Cannot automatically add missing include: #include ",
+					include, " /* ", comment, " */");
+			} else {
+				preferredIncludeGroup.addInclude(include, comment);
+				print(filename, ": Adding missing include: #include ",
+					include, " /* ", comment, " */");
+			}
+		}
+
+		/* Re-format groups */
+		for (local grp: includeGroups) {
+			if (isFormattingDisabledAt(grp.groupStartOffset))
+				continue;
+			local reformattedBytes = grp.reformat();
+			if (reformattedBytes !is none) {
+				if (overwrite(
+						grp.groupStartOffset,
+						grp.groupEndOffset - grp.groupStartOffset,
+						reformattedBytes
+				)) {
+					local d = lc(grp.groupStartOffset);
+					print(f"{filename}({d[0]}, {d[1]}): Re-formatted #include group");
 				}
 			}
 		}
@@ -205,6 +641,8 @@ function scanFile(filename: string): FileInfo {
 	local i = 0, len = #data;
 	local includes: {string: IncludeInfo} = Dict();
 	local keywords: {string...} = HashSet();
+	local noFormatRegions: {(int, int)...} = List();
+	local currentNoFormatRegionStart: int | none = none;
 	while (i < len) {
 		if (data.isspace(i)) {
 			++i;
@@ -217,6 +655,14 @@ seek_eol:
 				break;
 			++i;
 		} else if (data.startswith("/*", i)) {
+			if (data.startswith("/* clang-format off */", i)) {
+				currentNoFormatRegionStart = i;
+			} else if (data.startswith("/* clang-format on */", i)) {
+				if (currentNoFormatRegionStart !is none) {
+					noFormatRegions.append((currentNoFormatRegionStart, i));
+					currentNoFormatRegionStart = none;
+				}
+			}
 			i = data.find("*/", i + 2);
 			if (i < 0)
 				break;
@@ -267,11 +713,13 @@ seek_eol:
 						commentEndOffset = i;
 						i += 1;
 					}
+					local comment = none;
 					if (commentStartOffset !is none) {
 						while (commentStartOffset < commentEndOffset && data.isspace(commentStartOffset))
 							++commentStartOffset;
 						while (commentEndOffset > commentStartOffset && data.isspace(commentEndOffset - 1))
 							--commentEndOffset;
+						comment = data[commentStartOffset:commentEndOffset];
 					}
 					if (includeString !in includes) {
 						includes[includeString] = IncludeInfo(
@@ -280,6 +728,7 @@ seek_eol:
 							includeStringEndOffset: includeEnd,
 							commentStartOffset: commentStartOffset,
 							commentEndOffset: commentEndOffset,
+							comment: comment,
 						);
 					}
 					goto seek_eol;
@@ -299,9 +748,10 @@ seek_eol:
 
 	return FileInfo(
 		filename: filename,
-		includes: includes.frozen,
+		includes: includes,
 		keywords: keywords.frozen,
-		data: data
+		data: data,
+		noFormatRegions: noFormatRegions,
 	);
 }
 
@@ -332,9 +782,9 @@ function fixPath(path: string) {
 
 
 function main() {
-	fixPath(posix.joinpath(posix.headof(__FILE__), r"../../src/deemon"));
-	fixPath(posix.joinpath(posix.headof(__FILE__), r"../../src/dex"));
-	fixPath(posix.joinpath(posix.headof(__FILE__), r"../../include"));
+	fixPath(ROOTDIR + r"/src/deemon");
+	fixPath(ROOTDIR + r"/src/dex");
+	fixPath(ROOTDIR + r"/include");
 }
 
 #ifdef __MAIN__
