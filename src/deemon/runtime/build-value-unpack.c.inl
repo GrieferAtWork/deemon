@@ -38,9 +38,10 @@
 
 #include "runtime_error.h"
 
-#include <stdarg.h> /* va_arg, va_end, va_list, va_start */
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* INTn_MAX, INTn_MIN, UINTn_MAX, intN_t, uintN_t, uintptr_t */
+#include <stdarg.h>  /* va_arg, va_end, va_list, va_start */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* INTn_MAX, INTn_MIN, UINTn_MAX, intN_t, uintN_t, uintptr_t */
 
 #if (defined(DEFINE_DeeArg_Unpack) + defined(DEFINE_DeeArg_UnpackStruct)) != 1
 #error "Must #define exactly one of these macros"

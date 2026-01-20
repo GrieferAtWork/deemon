@@ -35,12 +35,13 @@
 #include <deemon/object.h>
 #include <deemon/serial.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* bcmpc(), ... */
+#include <deemon/system-features.h>    /* bcmpc(), ... */
 #include <deemon/util/lock.h>
 
 #include <hybrid/sched/yield.h>
 
-#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

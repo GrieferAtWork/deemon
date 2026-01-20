@@ -23,19 +23,18 @@
 #include <deemon/api.h>
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#include <deemon/compiler/compiler.h>
-
 #include <deemon/alloc.h>
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
-#include <deemon/system.h>          /* DeeSystem_SEP */
+#include <deemon/system-features.h>    /* memcpy(), bzero(), ... */
+#include <deemon/system.h>             /* DeeSystem_SEP */
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
@@ -43,6 +42,10 @@
 #include <deemon/util/rlock.h>
 
 #include "../runtime/runtime_error.h"
+
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uint8_t, uint16_t, uint32_t */
 
 DECL_BEGIN
 

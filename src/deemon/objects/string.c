@@ -29,10 +29,10 @@
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
-#include <deemon/format.h> /* unicode_printer_vprintf -> DeeFormat_VPrintf */
+#include <deemon/format.h>             /* unicode_printer_vprintf -> DeeFormat_VPrintf */
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
-#include <deemon/none-operator.h> /* _DeeNone_reti1_3 */
+#include <deemon/none-operator.h>      /* _DeeNone_reti1_3 */
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
@@ -40,7 +40,7 @@
 #include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <deemon/system-features.h> /* memmem() */
+#include <deemon/system-features.h>    /* memmem() */
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
@@ -54,9 +54,10 @@
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
 
-#include <stdarg.h> /* va_end, va_list, va_start */
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* uint8_t, uint16_t, uint32_t, uintptr_t */
+#include <stdarg.h>  /* va_end, va_list, va_start */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uint8_t, uint16_t, uint32_t, uintptr_t */
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__

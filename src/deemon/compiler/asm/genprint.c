@@ -32,11 +32,12 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* memset, ... */
+#include <deemon/system-features.h>    /* memset, ... */
 #include <deemon/tuple.h>
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* int32_t, uint16_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* int32_t, uint16_t */
 
 DECL_BEGIN
 

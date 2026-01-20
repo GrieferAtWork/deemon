@@ -39,8 +39,9 @@
 
 #include "enumerate-cb.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* uint16_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uint16_t */
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__

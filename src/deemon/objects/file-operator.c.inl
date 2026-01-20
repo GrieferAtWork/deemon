@@ -31,8 +31,9 @@
 #include "../runtime/runtime_error.h"
 #include "file-type-operators.h"
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* int64_t, uint64_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* int64_t, uint64_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

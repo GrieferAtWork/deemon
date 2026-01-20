@@ -32,6 +32,8 @@
 #include "method-hint-select.h"
 #include "method-hints.h"
 
+#include <stddef.h> /* NULL */
+
 DECL_BEGIN
 
 /* clang-format off */

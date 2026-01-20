@@ -51,11 +51,10 @@
 #include <deemon/bytes.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-/**/
 
 #include "string_functions.h"
 
-#include <stdint.h> /*  */
+#include <stddef.h> /* NULL, size_t */
 
 DECL_BEGIN
 

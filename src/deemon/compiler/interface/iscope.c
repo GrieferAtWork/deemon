@@ -42,7 +42,8 @@
 #include "../../runtime/kwlist.h"
 #include "../../runtime/strings.h"
 
-#include <stddef.h> /* NULL, size_t */
+#include <stdbool.h> /* bool, true */
+#include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN
 

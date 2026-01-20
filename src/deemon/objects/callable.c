@@ -31,6 +31,8 @@
 
 #include "../runtime/strings.h"
 
+#include <stddef.h> /* NULL */
+
 DECL_BEGIN
 
 /* `Callable from deemon'

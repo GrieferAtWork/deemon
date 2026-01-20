@@ -56,7 +56,9 @@
 
 #include "runtime_error.h"
 
-#include <stddef.h> /* NULL, size_t */
+#include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool, false */
+#include <stddef.h>  /* NULL, size_t */
 
 #if (defined(DEFINE_DeeObject_TGenericGetAttrStringHash) +                \
      defined(DEFINE_DeeObject_TGenericGetAttrStringLenHash) +             \

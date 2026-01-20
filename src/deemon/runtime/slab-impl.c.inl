@@ -34,6 +34,9 @@
 #include <hybrid/sched/yield.h>
 #include <hybrid/typecore.h>
 
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* uint8_t, uintptr_t */
+
 #define FUNC3(x, y) x##y
 #define FUNC2(x, y) FUNC3(x, y)
 #define FUNC(x) FUNC2(x, SIZE)

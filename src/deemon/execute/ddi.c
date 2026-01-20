@@ -30,7 +30,7 @@
 #include <deemon/object.h>
 #include <deemon/serial.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* memcpyc(), ... */
+#include <deemon/system-features.h>    /* memcpyc(), ... */
 
 #include <hybrid/minmax.h>
 #include <hybrid/typecore.h>

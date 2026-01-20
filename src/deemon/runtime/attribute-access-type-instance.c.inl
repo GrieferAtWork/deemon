@@ -53,8 +53,9 @@
 
 #include "runtime_error.h"
 
-#include <stdarg.h> /* va_list */
-#include <stddef.h> /* NULL, size_t */
+#include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
 
 #if (defined(DEFINE_DeeType_GetInstanceAttrStringHash) +            \
      defined(DEFINE_DeeType_GetInstanceAttrStringLenHash) +         \

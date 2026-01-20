@@ -34,13 +34,14 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* memset(), bzero(), ... */
+#include <deemon/system-features.h>  /* memset(), bzero(), ... */
 #include <deemon/tuple.h>
 
 #include "../../runtime/strings.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* UINT16_MAX, int32_t, uint8_t, uint16_t, uint32_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* UINT16_MAX, int32_t, uint8_t, uint16_t, uint32_t */
 
 DECL_BEGIN
 

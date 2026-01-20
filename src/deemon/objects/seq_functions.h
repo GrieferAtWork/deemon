@@ -24,6 +24,8 @@
 
 #include <deemon/object.h>
 
+#include <stddef.h> /* size_t */
+
 DECL_BEGIN
 
 /* TODO: All of the following also needs to go eventually... */

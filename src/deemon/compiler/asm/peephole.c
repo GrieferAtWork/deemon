@@ -28,7 +28,7 @@
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/format.h>
-#include <deemon/system-features.h> /* memcpyc(), abort(), ... */
+#include <deemon/system-features.h>    /* memcpyc(), abort(), ... */
 
 #include <hybrid/byteswap.h>
 #include <hybrid/sequence/list.h>
@@ -36,9 +36,10 @@
 
 #include "../../runtime/strings.h"
 
-#include <stdarg.h> /* va_end, va_list, va_start */
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* INT8_MAX, INT8_MIN, INT16_MAX, INT16_MIN, INT32_MAX, INT32_MIN, UINT8_MAX, int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t */
+#include <stdarg.h>  /* va_end, va_list, va_start */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* INT8_MAX, INT8_MIN, INT16_MAX, INT16_MIN, INT32_MAX, INT32_MIN, UINT8_MAX, int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t */
 
 DECL_BEGIN
 

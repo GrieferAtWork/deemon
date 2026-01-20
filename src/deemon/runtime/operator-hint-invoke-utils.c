@@ -27,7 +27,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
-#include <deemon/super.h> /* DeeObject_TCall, ... */
+#include <deemon/super.h>          /* DeeObject_TCall, ... */
 #include <deemon/tuple.h>
 #include <deemon/util/lock.h>
 

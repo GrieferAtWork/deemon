@@ -25,6 +25,9 @@
 #define DEFINE_dict_htab_incrange
 #endif /* __INTELLISENSE__ */
 
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uintN_t */
+
 #if (defined(DEFINE_dict_htab_decafter) + \
      defined(DEFINE_dict_htab_incafter) + \
      defined(DEFINE_dict_htab_decrange) + \

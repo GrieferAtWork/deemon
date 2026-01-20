@@ -53,10 +53,10 @@
 #include <hybrid/host.h>
 #include <hybrid/typecore.h>
 
-#include <stdarg.h> /* va_end, va_list, va_start */
+#include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* uint16_t, uint32_t, uint64_t, uintptr_t */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uint16_t, uint32_t, uint64_t, uintptr_t */
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>

@@ -30,8 +30,9 @@
 
 #include "int_logic.h"
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* int64_t, uint32_t, uint64_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* int64_t, uint32_t, uint64_t */
 
 #undef shift_t
 #define shift_t __SHIFT_TYPE__

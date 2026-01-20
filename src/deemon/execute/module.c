@@ -53,8 +53,9 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* uint16_t, uintptr_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uint16_t, uintptr_t */
 
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
@@ -65,7 +66,7 @@
 #include <deemon/bool.h>
 #include <deemon/list.h>
 
-#include <hybrid/sched/yield.h> /* SCHED_YIELD */
+#include <hybrid/sched/yield.h>   /* SCHED_YIELD */
 #include <hybrid/sequence/list.h>
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 

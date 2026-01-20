@@ -39,7 +39,7 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/super.h>
-#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
+#include <deemon/system-features.h>    /* memcpy(), bzero(), ... */
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
@@ -54,8 +54,9 @@
 #include "generic-proxy.h"
 #include "int-8bit.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
+#include <stdbool.h> /* bool, false */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uint8_t, uint16_t, uint32_t */
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__

@@ -47,8 +47,9 @@
 #include "generic-proxy.h"
 #include "seq_functions.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* INT32_MIN, uintptr_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* INT32_MIN, uintptr_t */
 
 #undef SSIZE_MIN
 #undef SSIZE_MAX

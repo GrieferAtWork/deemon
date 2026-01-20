@@ -27,6 +27,8 @@
 #include <deemon/object.h>
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
+
+#include <stddef.h> /* size_t */
 /**/
 
 #include "../objects/generic-proxy.h" /* generic_obj__asmap */

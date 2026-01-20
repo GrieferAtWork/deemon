@@ -23,6 +23,10 @@
 //#define KW_IS_MAPPING 1
 #endif /* __INTELLISENSE__ */
 
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* UINT32_C, UINT64_C, uintptr_t */
+
+
 #if (CODE_FLAGS & ~(CODE_FVARKWDS | CODE_FYIELDING)) != 0
 #error "Unsupported code flags for keyword invocation (must be a set of `CODE_FVARKWDS | CODE_FYIELDING')"
 #endif /* (CODE_FLAGS & ~(CODE_FVARKWDS | CODE_FYIELDING)) != 0 */

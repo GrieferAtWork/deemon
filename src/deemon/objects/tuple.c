@@ -41,7 +41,7 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/host.h> /* __ARCH_VA_LIST_IS_STACK_POINTER */
+#include <hybrid/host.h>      /* __ARCH_VA_LIST_IS_STACK_POINTER */
 #include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
@@ -51,8 +51,9 @@
 #include "seq/default-compare.h"
 #include "seq/sort.h"
 
-#include <stdarg.h> /* va_arg, va_end, va_list, va_start */
-#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdarg.h>  /* va_arg, va_end, va_list, va_start */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 
 #undef SSIZE_MIN
 #undef SSIZE_MAX

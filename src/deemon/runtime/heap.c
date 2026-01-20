@@ -70,8 +70,9 @@ ClCompile.BasicRuntimeChecks = Default
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* UINT32_C, UINT64_C, uintptr_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* UINT32_C, UINT64_C, uintptr_t */
 
 #undef Dee_TryMalloc
 #undef Dee_TryCalloc

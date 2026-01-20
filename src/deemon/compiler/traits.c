@@ -25,6 +25,9 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/traits.h>
 
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* size_t */
+
 DECL_BEGIN
 
 INTERN WUNUSED NONNULL((1)) bool DCALL

@@ -28,7 +28,7 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/format.h>
-#include <deemon/module.h> /* Dee_Decref(SYMBOL_MODULE_MODULE(...)) */
+#include <deemon/module.h>             /* Dee_Decref(SYMBOL_MODULE_MODULE(...)) */
 #include <deemon/object.h>
 
 #include <stddef.h> /* NULL, size_t */

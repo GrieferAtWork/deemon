@@ -30,7 +30,7 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/serial.h>
-#include <deemon/system.h> /* DeeSystem_GetWalltime() */
+#include <deemon/system.h>             /* DeeSystem_GetWalltime() */
 #include <deemon/util/atomic.h>
 
 #include <hybrid/int128.h>
@@ -41,6 +41,7 @@
 #endif /* !CONFIG_NO_DEC */
 /**/
 
+#include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uint16_t, uint64_t */
 
 DECL_BEGIN

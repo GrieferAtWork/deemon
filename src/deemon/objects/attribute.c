@@ -43,7 +43,8 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
-#include <stddef.h> /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdbool.h> /* false, true */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
 
 DECL_BEGIN
 

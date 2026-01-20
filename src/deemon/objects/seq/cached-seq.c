@@ -44,6 +44,7 @@
 #include "cached-seq.h"
 
 #include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* uintptr_t */
 
 DECL_BEGIN
 

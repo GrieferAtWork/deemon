@@ -37,15 +37,16 @@
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/serial.h>
-#include <deemon/system-features.h> /* mempcpyc */
+#include <deemon/system-features.h>    /* mempcpyc */
 #include <deemon/tuple.h>
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "each.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* uintptr_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uintptr_t */
 
 #ifdef DEFINE_SeqEachGetAttr
 #define LOCAL_ssX(x)               ssa_##x

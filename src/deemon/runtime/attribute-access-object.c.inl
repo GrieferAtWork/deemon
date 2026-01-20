@@ -96,14 +96,16 @@
 #include <deemon/mro.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
-#include <deemon/string.h> /* LOCAL_DeeType_AccessMemberAttr -> DeeType_GetMemberAttrHash -> DeeString_STR */
+#include <deemon/string.h>          /* LOCAL_DeeType_AccessMemberAttr -> DeeType_GetMemberAttrHash -> DeeString_STR */
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 /**/
 
 #include "runtime_error.h"
 
-#include <stddef.h> /* NULL, size_t */
+#include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
 
 #if (defined(DEFINE_DeeObject_GetAttr) +                           \
      defined(DEFINE_DeeObject_TGetAttr) +                          \

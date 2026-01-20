@@ -41,15 +41,16 @@
 
 #include <hybrid/byteorder.h>
 #include <hybrid/debug-alignment.h>
-#include <hybrid/host.h> /* __ARCH_PAGESIZE_MIN */
+#include <hybrid/host.h>            /* __ARCH_PAGESIZE_MIN */
 #include <hybrid/minmax.h>
 #include <hybrid/typecore.h>
-#include <hybrid/wordbits.h> /* ENCODE_INT32 */
+#include <hybrid/wordbits.h>        /* ENCODE_INT32 */
 
 #include "../runtime/strings.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* UINT32_MAX, int64_t, uint8_t, uint32_t, uint64_t, uintptr_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* UINT32_MAX, int64_t, uint8_t, uint32_t, uint64_t, uintptr_t */
 
 #ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h>

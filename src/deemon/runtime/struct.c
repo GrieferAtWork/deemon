@@ -38,7 +38,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/variant.h>
 
-#include <hybrid/host.h> /* __pic__ */
+#include <hybrid/host.h>      /* __pic__ */
 #include <hybrid/int128.h>
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
@@ -46,8 +46,9 @@
 #include "method-hints.h"
 #include "runtime_error.h"
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* intN_t, uintN_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* intN_t, uintN_t */
 
 DECL_BEGIN
 

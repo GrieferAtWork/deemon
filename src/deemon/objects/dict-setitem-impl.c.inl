@@ -31,6 +31,9 @@
 //#define DEFINE_dict_mh_setdefault
 #endif /* __INTELLISENSE__ */
 
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+
 
 #if (defined(DEFINE_dict_setitem) +                         \
      defined(DEFINE_dict_setitem_at) +                      \

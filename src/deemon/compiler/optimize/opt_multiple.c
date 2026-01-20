@@ -40,7 +40,8 @@
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
-#include <stddef.h> /* NULL, size_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN
 

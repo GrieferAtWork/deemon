@@ -29,7 +29,7 @@
 #include <deemon/object.h>
 #include <deemon/regex.h>
 #include <deemon/string.h>
-#include <deemon/tuple.h> /* DeeTuple_Newf */
+#include <deemon/tuple.h>  /* DeeTuple_Newf */
 
 #include <hybrid/typecore.h>
 

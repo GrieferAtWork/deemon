@@ -32,8 +32,8 @@
 #include <deemon/file.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
-#include <deemon/string.h>
 #include <deemon/object.h>
+#include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/thread.h>
@@ -41,15 +41,16 @@
 
 #include <hybrid/align.h>
 #include <hybrid/debug-alignment.h>
-#include <hybrid/unaligned.h>
 #include <hybrid/typecore.h>
+#include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
 
 #include "../runtime/strings.h"
 
-#include <stdarg.h> /* va_end, va_list, va_start */
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* UINT32_C, uint8_t, uint16_t, uint32_t, uintptr_t */
+#include <stdarg.h>  /* va_end, va_list, va_start */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* UINT32_C, uint8_t, uint16_t, uint32_t, uintptr_t */
 /**/
 
 #include <Windows.h>

@@ -33,7 +33,7 @@
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/set.h>
-#include <deemon/system-features.h> /* memcpy */
+#include <deemon/system-features.h>    /* memcpy */
 #include <deemon/util/atomic.h>
 
 #include <hybrid/typecore.h>
@@ -41,7 +41,8 @@
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

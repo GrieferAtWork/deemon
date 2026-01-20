@@ -29,6 +29,8 @@
 //#define DEFINE_dict_mh_pop_with_default
 #endif /* __INTELLISENSE__ */
 
+#include <stddef.h> /* NULL, size_t */
+
 #if (defined(DEFINE_dict_delitem) +                 \
      defined(DEFINE_dict_delitem_string_hash) +     \
      defined(DEFINE_dict_delitem_string_len_hash) + \

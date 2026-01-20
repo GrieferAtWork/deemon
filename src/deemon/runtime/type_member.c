@@ -33,7 +33,7 @@
 #include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/objmethod.h> /* type_method_vcallf() -> DeeObjMethod_VCallFuncf() */
+#include <deemon/objmethod.h>       /* type_method_vcallf() -> DeeObjMethod_VCallFuncf() */
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* strlen() */
 #include <deemon/util/atomic.h>
@@ -43,9 +43,10 @@
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 
-#include <stdarg.h> /* va_list */
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* intN_t, uintN_t, uintptr_t */
+#include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* intN_t, uintN_t, uintptr_t */
 
 /* Type member access. */
 

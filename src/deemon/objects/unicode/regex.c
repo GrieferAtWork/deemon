@@ -39,7 +39,7 @@
 #include <hybrid/unaligned.h>
 
 #include <stdbool.h> /* bool, false, true */
-#include <stdint.h>
+#include <stddef.h>  /* NULL, size_t */
 /**/
 
 DECL_BEGIN

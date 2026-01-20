@@ -23,6 +23,9 @@
 #define DEFINE_dict_init_fromcopy_keysonly
 #endif /* __INTELLISENSE__ */
 
+#include <stdbool.h> /* false, true */
+#include <stddef.h>  /* size_t */
+
 #if (defined(DEFINE_dict_init_fromcopy) + \
      defined(DEFINE_dict_init_fromcopy_keysonly)) != 1
 #error "Must #define exactly one of these macros"

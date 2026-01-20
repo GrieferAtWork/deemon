@@ -36,8 +36,10 @@
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* int32_t, int64_t */
+#include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* int32_t, int64_t */
 
 
 /* Define type-specific object operators. */

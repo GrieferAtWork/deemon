@@ -35,8 +35,8 @@
 #include <deemon/gc.h>
 #include <deemon/notify.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* DeeSystem_DlOpen_USE_LoadLibrary, memcpyc(), ... */
-#include <deemon/system.h>          /* DeeSystem_Dl* */
+#include <deemon/system-features.h>    /* DeeSystem_DlOpen_USE_LoadLibrary, memcpyc(), ... */
+#include <deemon/system.h>             /* DeeSystem_Dl* */
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
@@ -49,6 +49,9 @@
 
 #ifdef DeeSystem_DlOpen_USE_LoadLibrary
 #include <Windows.h>
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* UINT16_MAX, uint8_t, uint16_t, uintptr_t */
 #endif /* DeeSystem_DlOpen_USE_LoadLibrary */
 
 #ifdef CONFIG_HAVE_LINK_H

@@ -29,7 +29,9 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>
 
-#include <stdint.h> /* uint32_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL */
+#include <stdint.h>  /* uint32_t */
 
 DECL_BEGIN
 

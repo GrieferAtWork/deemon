@@ -22,6 +22,8 @@
 #define LOCAL_HIDXIO_NBITS 16
 #endif /* __INTELLISENSE__ */
 
+#include <stddef.h> /* size_t */
+
 DECL_BEGIN
 
 #define F(x) PP_CAT2(x, LOCAL_HIDXIO_NBITS)

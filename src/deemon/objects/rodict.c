@@ -40,7 +40,7 @@
 #include <deemon/roset.h>
 #include <deemon/seq.h>
 #include <deemon/serial.h>
-#include <deemon/system-features.h> /* bcmpc(), ... */
+#include <deemon/system-features.h>    /* bcmpc(), ... */
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
@@ -54,8 +54,9 @@
 #include "seq/default-compare.h"
 #include "seq/default-map-proxy.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* uintN_t */
+#include <stdbool.h> /* false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uintN_t */
 
 #ifdef __OPTIMIZE_SIZE__
 #define NULL_IF_Os(v) NULL

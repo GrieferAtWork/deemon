@@ -35,7 +35,8 @@
 #include <deemon/roset.h>
 #include <deemon/tuple.h>
 
-#include <stddef.h> /* NULL */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL */
 
 DECL_BEGIN
 

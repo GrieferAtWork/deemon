@@ -28,18 +28,18 @@
 #include <deemon/bool.h>
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
-#include <deemon/serial.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
-#include <deemon/seq.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
@@ -54,13 +54,14 @@
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* uint8_t, uint16_t, uint32_t, uintptr_t */
-
 #include "../objects/seq/svec.h"
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uint8_t, uint16_t, uint32_t, uintptr_t */
 
 #ifdef CONFIG_HAVE_PATHS_H
 #include <paths.h> /* _PATH_DEVNULL */

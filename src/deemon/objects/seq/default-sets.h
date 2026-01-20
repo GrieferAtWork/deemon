@@ -29,6 +29,9 @@
 
 #include "../generic-proxy.h"
 
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL */
+
 DECL_BEGIN
 
 /* Set proxy types used to implement set operations on the C-level. */

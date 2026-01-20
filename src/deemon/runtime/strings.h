@@ -26,6 +26,8 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 
+#include <stdbool.h> /* bool, false, true */
+
 DECL_BEGIN
 
 #ifndef DEF_STRING

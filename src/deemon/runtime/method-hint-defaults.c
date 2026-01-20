@@ -51,7 +51,7 @@
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
 
-#include "../objects/int_logic.h" /* int_inc() */
+#include "../objects/int_logic.h"             /* int_inc() */
 #include "../objects/seq/cached-seq.h"
 #include "../objects/seq/default-compare.h"
 #include "../objects/seq/default-enumerate.h"
@@ -70,9 +70,10 @@
 #include "method-hints.h"
 #include "strings.h"
 
-#include <stdarg.h> /* va_end, va_list, va_start */
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* uintN_t, uintptr_t */
+#include <stdarg.h>  /* va_end, va_list, va_start */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uintN_t, uintptr_t */
 
 #undef SSIZE_MAX
 #include <hybrid/limitcore.h>

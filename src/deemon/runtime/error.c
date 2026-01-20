@@ -34,9 +34,10 @@
 #include <deemon/traceback.h>
 #include <deemon/util/atomic.h>
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdarg.h> /* va_end, va_list, va_start */
-#include <stdint.h> /* uint8_t, uint32_t */
+#include <stdarg.h>  /* va_end, va_list, va_start */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uint8_t, uint32_t */
 
 #ifndef CONFIG_NO_KEYBOARD_INTERRUPT
 #ifdef CONFIG_HOST_WINDOWS

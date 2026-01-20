@@ -33,7 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
-#include <deemon/system.h> /* DeeSystem_ALTSEP */
+#include <deemon/system.h>             /* DeeSystem_ALTSEP */
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
@@ -42,8 +42,9 @@
 #include "../execute/function-wrappers.h"
 #include "../runtime/strings.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* UINT16_MAX, int32_t, uint8_t, uint16_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* UINT16_MAX, int32_t, uint8_t, uint16_t */
 
 #ifndef UINT16_MAX
 #include <hybrid/limitcore.h>

@@ -35,8 +35,8 @@
 #include <deemon/object.h>
 #include <deemon/system-features.h>
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /*  */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* size_t */
 
 #ifdef CONFIG_HAVE_MATH_H
 #include <math.h>

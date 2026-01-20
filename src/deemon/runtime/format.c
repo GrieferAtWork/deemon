@@ -36,9 +36,10 @@
 #include <hybrid/minmax.h>
 #include <hybrid/typecore.h>
 
-#include <stdarg.h> /* va_arg, va_end, va_list, va_start */
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* UINT16_C, UINT32_C, intN_t, uintN_t */
+#include <stdarg.h>  /* va_arg, va_end, va_list, va_start */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* UINT16_C, UINT32_C, intN_t, uintN_t */
 
 #ifndef PP_CAT2
 #define PP_PRIVATE_CAT2(a, b)    a##b

@@ -33,8 +33,9 @@
 #include "../../runtime/builtin.h"
 #include "../../runtime/strings.h"
 
-#include <stddef.h> /* NULL */
-#include <stdint.h> /* int32_t, uint16_t */
+#include <stdbool.h> /* false */
+#include <stddef.h>  /* NULL */
+#include <stdint.h>  /* int32_t, uint16_t */
 
 DECL_BEGIN
 

@@ -40,7 +40,7 @@
 #include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <deemon/system-features.h> /* memcpyc(), ... */
+#include <deemon/system-features.h>    /* memcpyc(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
@@ -48,8 +48,9 @@
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 
-#include <stddef.h> /* NULL, ptrdiff_t, size_t */
-#include <stdint.h> /* int64_t, uint8_t, uint16_t, uint32_t, uintptr_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, ptrdiff_t, size_t */
+#include <stdint.h>  /* int64_t, uint8_t, uint16_t, uint32_t, uintptr_t */
 
 DECL_BEGIN
 

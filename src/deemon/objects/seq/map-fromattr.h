@@ -23,10 +23,12 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>
-#include <deemon/mro.h> /* struct Dee_attriter */
+#include <deemon/mro.h>    /* struct Dee_attriter */
 #include <deemon/object.h>
 
 #include "../generic-proxy.h"
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

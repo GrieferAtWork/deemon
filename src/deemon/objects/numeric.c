@@ -43,7 +43,9 @@
 #include "../runtime/strings.h"
 #include "int-8bit.h"
 
-#include <stdint.h> /* intN_t, uintN_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* intN_t, uintN_t */
 
 #ifdef CONFIG_HAVE_MATH_H
 #include <math.h>

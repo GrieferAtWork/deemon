@@ -41,7 +41,8 @@
 #include "../generic-proxy.h"
 #include "combinations.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

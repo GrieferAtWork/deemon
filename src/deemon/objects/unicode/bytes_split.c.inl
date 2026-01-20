@@ -29,14 +29,14 @@
 #include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bytes.h>
-#include <deemon/serial.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
-#include <deemon/system-features.h> /* memcpy */
+#include <deemon/system-features.h>    /* memcpy */
 #include <deemon/util/atomic.h>
 
 #include <hybrid/typecore.h>
@@ -45,7 +45,8 @@
 #include "../generic-proxy.h"
 #include "string_functions.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdbool.h> /* bool, false */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

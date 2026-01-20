@@ -35,8 +35,8 @@
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /*  */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 
 #undef shift_t
 #define shift_t __SHIFT_TYPE__

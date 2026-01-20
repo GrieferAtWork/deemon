@@ -48,9 +48,9 @@
 
 #include "runtime_error.h"
 
-#include <stddef.h> /* NULL, offsetof, ptrdiff_t, size_t */
-#include <stdarg.h>
-#include <stdint.h> /* uint16_t, uintptr_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h>  /* uint16_t, uintptr_t */
 
 #ifdef CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY
 #define VALIST_ADDR(x) (&(x))

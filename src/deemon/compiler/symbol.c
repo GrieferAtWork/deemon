@@ -32,15 +32,16 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
+#include <deemon/system-features.h>   /* memcpy(), bzero(), ... */
 #include <deemon/util/cache.h>
 
 #include <hybrid/minmax.h>
 
 #include "../runtime/strings.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* uint8_t, uint16_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uint8_t, uint16_t */
 
 
 DECL_BEGIN

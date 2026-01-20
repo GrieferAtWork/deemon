@@ -46,7 +46,8 @@
 #include "default-maps.h"
 #include "default-sets.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 
 #undef SSIZE_MIN
 #define SSIZE_MIN __SSIZE_MIN__

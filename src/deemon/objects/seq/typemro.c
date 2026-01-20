@@ -31,7 +31,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/serial.h>
-#include <deemon/system-features.h> /* memcpy */
+#include <deemon/system-features.h>    /* memcpy */
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 

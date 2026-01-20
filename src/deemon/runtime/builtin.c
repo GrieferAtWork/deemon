@@ -22,8 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/gc.h>
 #include <deemon/dex.h>
+#include <deemon/gc.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
@@ -33,6 +33,7 @@
 #include "builtin.h"
 #include "strings.h"
 
+#include <stddef.h> /* NULL */
 #include <stdint.h> /* UINT32_C, UINT64_C */
 
 DECL_BEGIN

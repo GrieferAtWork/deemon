@@ -39,13 +39,14 @@
 #include <deemon/object.h>
 #include <deemon/serial.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* memcpy(), ... */
+#include <deemon/system-features.h>    /* memcpy(), ... */
 #include <deemon/util/rlock.h>
 
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* uint8_t, uint16_t */
+#include <stdbool.h> /* false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uint8_t, uint16_t */
 
 DECL_BEGIN
 

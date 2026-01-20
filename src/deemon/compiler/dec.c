@@ -33,15 +33,16 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* memmem(), bzero(), ... */
-#include <deemon/system.h>          /* DeeSystem_SEP, DeeSystem_Unlink() */
+#include <deemon/system-features.h>   /* memmem(), bzero(), ... */
+#include <deemon/system.h>            /* DeeSystem_SEP, DeeSystem_Unlink() */
 
 #include <hybrid/byteswap.h>  /* UNALIGNED_SETLE16(), UNALIGNED_SETLE32() */
 #include <hybrid/unaligned.h> /* UNALIGNED_SETLE16(), UNALIGNED_SETLE32() */
 #include <hybrid/wordbits.h>
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* UINT16_MAX, uintN_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* UINT16_MAX, uintN_t */
 
 DECL_BEGIN
 

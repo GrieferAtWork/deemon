@@ -39,8 +39,9 @@
 #include "../generic-proxy.h"
 #include "string_functions.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
+#include <stdbool.h> /* bool, false */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uint8_t, uint16_t, uint32_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

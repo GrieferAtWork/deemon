@@ -28,6 +28,8 @@
 
 #include "method-hints.h"
 
+#include <stddef.h> /* size_t */
+
 DECL_BEGIN
 
 /* clang-format off */

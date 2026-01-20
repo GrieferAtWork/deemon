@@ -37,6 +37,8 @@
 //#define DEFINE_dict_bounditem_index
 #endif /* __INTELLISENSE__ */
 
+#include <stddef.h> /* NULL, size_t */
+
 #if (defined(DEFINE_dict_trygetitem) +                 \
      defined(DEFINE_dict_trygetitem_string_hash) +     \
      defined(DEFINE_dict_trygetitem_string_len_hash) + \

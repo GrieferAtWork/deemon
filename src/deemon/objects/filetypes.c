@@ -38,7 +38,7 @@
 #include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <deemon/system-features.h> /* memcpy(), ... */
+#include <deemon/system-features.h>    /* memcpy(), ... */
 #include <deemon/system.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
@@ -51,8 +51,9 @@
 #include "../runtime/strings.h"
 #include "gc_inspect.h"
 
-#include <stddef.h> /* NULL, offsetof, ptrdiff_t, size_t */
-#include <stdint.h> /* uint8_t, uint16_t, uint32_t, uintptr_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h>  /* uint8_t, uint16_t, uint32_t, uintptr_t */
 
 DECL_BEGIN
 

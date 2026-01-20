@@ -39,7 +39,7 @@
 #include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
-#include <deemon/system-features.h> /* memcpyc(), ... */
+#include <deemon/system-features.h>    /* memcpyc(), ... */
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
@@ -48,9 +48,10 @@
 #include "method-hint-defaults.h"
 #include "strings.h"
 
-#include <stdarg.h> /* va_end, va_list, va_start */
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* uintptr_t */
+#include <stdarg.h>  /* va_end, va_list, va_start */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uintptr_t */
 
 DECL_BEGIN
 

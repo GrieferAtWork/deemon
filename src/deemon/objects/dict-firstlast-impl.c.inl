@@ -27,8 +27,10 @@
 //#define DEFINE_dict_lastvalue
 #endif /* __INTELLISENSE__ */
 
-#include <deemon/seq.h>
 #include <deemon/error-rt.h>
+#include <deemon/seq.h>
+
+#include <stddef.h> /* NULL */
 
 #if (defined(DEFINE_dict_first) +      \
      defined(DEFINE_dict_firstkey) +   \

@@ -29,6 +29,9 @@
 
 #include "../generic-proxy.h"
 
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL */
+
 DECL_BEGIN
 
 /* Map proxy types used to implement map operations on the C-level. */

@@ -35,14 +35,16 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/struct.h>
-#include <deemon/system-features.h> /* bzero(), ... */
+#include <deemon/system-features.h>    /* bzero(), ... */
 #include <deemon/system.h>
 #include <deemon/tuple.h>
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uintptr_t */
 
 #undef token
 #undef tok

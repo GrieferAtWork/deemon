@@ -48,8 +48,9 @@
 #include "regroups.h"
 #include "string_functions.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* uintptr_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uintptr_t */
 
 DECL_BEGIN
 
@@ -7709,9 +7710,9 @@ INTERN_TPCONST struct type_method_hint tpconst bytes_method_hints[] = {
 DECL_END
 
 #ifndef __INTELLISENSE__
-#include "bytes_split.c.inl"
-#include "bytes_segments.c.inl"
 #include "bytes_finder.c.inl"
+#include "bytes_segments.c.inl"
+#include "bytes_split.c.inl"
 #endif /* !__INTELLISENSE__ */
 
 #endif /* !GUARD_DEEMON_OBJECTS_UNICODE_BYTES_FUNCTIONS_C_INL */

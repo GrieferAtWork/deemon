@@ -36,7 +36,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/serial.h>
-#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
+#include <deemon/system-features.h>    /* memcpy(), bzero(), ... */
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 #include <deemon/util/rlock.h>
@@ -47,8 +47,9 @@
 #include "../objects/gc_inspect.h"
 #include "strings.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* UINT32_C, uint16_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* UINT32_C, uint16_t */
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #ifndef CONFIG_NO_DEX

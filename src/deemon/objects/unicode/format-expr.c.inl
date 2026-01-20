@@ -36,7 +36,8 @@
 #include <deemon/super.h>
 #include <deemon/tuple.h>
 
-#include <stddef.h> /* NULL, size_t */
+#include <stdbool.h> /* bool, true */
+#include <stddef.h>  /* NULL, size_t */
 
 #if (defined(DEFINE_sfa_skipexpr) + defined(DEFINE_sfa_evalexpr)) != 1
 #error "Must #define exactly one of these macros"

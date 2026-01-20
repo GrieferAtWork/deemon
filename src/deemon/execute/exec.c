@@ -23,6 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>
+#include <deemon/code.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/exec.h>
@@ -32,7 +33,6 @@
 #include <deemon/module.h>
 #include <deemon/notify.h>
 #include <deemon/object.h>
-#include <deemon/code.h>
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
@@ -41,8 +41,9 @@
 
 #include <hybrid/sched/yield.h>
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* uint16_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uint16_t */
 
 DECL_BEGIN
 

@@ -46,17 +46,18 @@
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
 #include <deemon/types.h>
-#include <deemon/variant.h>
 #include <deemon/util/atomic.h>
+#include <deemon/variant.h>
 
 #include <hybrid/int128.h>
 #include <hybrid/typecore.h>
 
-#include "strings.h"
 #include "kwlist.h"
+#include "strings.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* UINT32_MAX, UINT64_MAX, int32_t, int64_t, uint32_t, uint64_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* UINT32_MAX, UINT64_MAX, int32_t, int64_t, uint32_t, uint64_t */
 
 DECL_BEGIN
 

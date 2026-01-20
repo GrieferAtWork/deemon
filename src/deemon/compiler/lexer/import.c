@@ -35,8 +35,9 @@
 #include <deemon/system-features.h> /* memrchr(), memcpy(), ... */
 #include <deemon/thread.h>
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* uint16_t, uint32_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uint16_t, uint32_t */
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #include <deemon/system.h> /* DeeSystem_BaseName() */

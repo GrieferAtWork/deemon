@@ -23,6 +23,9 @@
 //#define DEFINE_DeeFutex_WakeAll
 #endif /* __INTELLISENSE__ */
 
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* uintptr_t */
+
 DECL_BEGIN
 
 #if (defined(DEFINE_DeeFutex_WakeOne) + defined(DEFINE_DeeFutex_WakeAll)) != 1

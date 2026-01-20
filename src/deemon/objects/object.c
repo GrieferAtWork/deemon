@@ -56,7 +56,7 @@
 #include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
-#include <deemon/system-features.h> /* bzero(), ... */
+#include <deemon/system-features.h>    /* bzero(), ... */
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>

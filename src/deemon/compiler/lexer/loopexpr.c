@@ -31,8 +31,9 @@
 #include <deemon/object.h>
 #include <deemon/tuple.h>
 
-#include <stddef.h> /* NULL */
-#include <stdint.h> /* int32_t, uint16_t, uint32_t */
+#include <stdbool.h> /* bool, false */
+#include <stddef.h>  /* NULL */
+#include <stdint.h>  /* int32_t, uint16_t, uint32_t */
 
 
 /* Loop statements in expressions are compiled as yield-function lambda expressions:

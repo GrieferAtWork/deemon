@@ -23,23 +23,24 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>
-#include <deemon/object.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
-#include <deemon/compiler/symbol.h>
 #include <deemon/compiler/optimize.h>
+#include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* memcpy(), ... */
+#include <deemon/system-features.h>   /* memcpy(), ... */
 
 #include "../../runtime/builtin.h"
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uint8_t, uint16_t, uint32_t */
 
 DECL_BEGIN
 

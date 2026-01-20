@@ -168,21 +168,23 @@
 #include <deemon/api.h>
 
 #include <deemon/class.h>
-#include <deemon/error.h>  /* DeeError_Catch */
-#include <deemon/format.h> /* Dee_VPPackf */
-#include <deemon/kwds.h>   /* DeeKwds_Check */
+#include <deemon/error.h>           /* DeeError_Catch */
+#include <deemon/format.h>          /* Dee_VPPackf */
+#include <deemon/kwds.h>            /* DeeKwds_Check */
 #include <deemon/mro.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h>
-#include <deemon/tuple.h> /* DeeTuple_SIZE, DeeTuple_ELEM */
+#include <deemon/tuple.h>           /* DeeTuple_SIZE, DeeTuple_ELEM */
 #include <deemon/util/atomic.h>
 /**/
 
-#include "kwlist.h" /* kwlist__thisarg */
+#include "kwlist.h"        /* kwlist__thisarg */
 #include "runtime_error.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* uint16_t */
+#include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uint16_t */
 
 
 #if (defined(DEFINE_DeeType_GetCachedAttrStringHash) +                    \

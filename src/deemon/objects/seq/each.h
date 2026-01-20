@@ -24,6 +24,7 @@
 
 #include <deemon/alloc.h>
 #include <deemon/object.h>
+
 #include <hybrid/typecore.h>
 
 #include "../generic-proxy.h"

@@ -43,7 +43,7 @@
 #include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
-#include <deemon/system-features.h> /* memcpy(), ... */
+#include <deemon/system-features.h>    /* memcpy(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
@@ -56,8 +56,10 @@
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
 
-#include <stddef.h> /* NULL, offsetof, ptrdiff_t, size_t */
-#include <stdint.h> /* uint16_t */
+#include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h>  /* uint16_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

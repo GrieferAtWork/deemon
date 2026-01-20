@@ -44,15 +44,16 @@
 #include <deemon/roset.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memmovedownc(), ... */
-#include <deemon/system.h>          /* DeeSystem_SEP,  */
+#include <deemon/system.h>          /* DeeSystem_SEP, */
 #include <deemon/tuple.h>
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* UINT8_MAX, UINT16_MAX, uintN_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* UINT8_MAX, UINT16_MAX, uintN_t */
 
 DECL_BEGIN
 

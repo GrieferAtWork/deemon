@@ -27,7 +27,8 @@
 #include <deemon/compiler/optimize.h>
 #include <deemon/object.h>
 
-#include <stddef.h> /* NULL */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL */
 
 DECL_BEGIN
 

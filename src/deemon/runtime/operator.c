@@ -31,7 +31,7 @@
 #include <deemon/list.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
-#include <deemon/seq.h> /* DeeSharedVector_NewShared */
+#include <deemon/seq.h>             /* DeeSharedVector_NewShared */
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/thread.h>
@@ -46,9 +46,10 @@
 #include "runtime_error.h"
 #include "strings.h"
 
-#include <stdarg.h> /* va_end, va_list, va_start */
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* int8_t, uint8_t, uint32_t, uint64_t */
+#include <stdarg.h>  /* va_end, va_list, va_start */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* int8_t, uint8_t, uint32_t, uint64_t */
 
 /************************************************************************/
 /* Operator invocation.                                                 */

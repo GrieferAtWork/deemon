@@ -32,13 +32,14 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>
 #include <deemon/object.h>
-#include <deemon/system-features.h> /* memmoveupc(), ... */
+#include <deemon/system-features.h>    /* memmoveupc(), ... */
 #include <deemon/types.h>
 
 #include <hybrid/byteorder.h>
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* INTn_MAX, INTn_MIN, UINTn_MAX, int32_t, int64_t, uintN_t, uintptr_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* INTn_MAX, INTn_MIN, UINTn_MAX, int32_t, int64_t, uintN_t, uintptr_t */
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
 #include <deemon/asm.h>
@@ -49,7 +50,7 @@
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/module.h>
-#include <deemon/none.h> /* AST_ISNONE -> DeeNone_Check */
+#include <deemon/none.h>        /* AST_ISNONE -> DeeNone_Check */
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/tuple.h>

@@ -27,6 +27,7 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/object.h>
 
+#include <stddef.h> /* NULL */
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN

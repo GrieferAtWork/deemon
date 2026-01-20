@@ -31,6 +31,8 @@
 
 #include "operator-hint-errors.h"
 
+#include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* int32_t, int64_t */
 

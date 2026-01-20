@@ -24,16 +24,17 @@
 
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/futex.h>
 #include <deemon/util/lock.h>
 #include <deemon/util/once.h>
-#include <deemon/util/futex.h>
 #include <deemon/util/rlock.h>
 
 #include <hybrid/overflow.h>
 #include <hybrid/sched/__gettid.h>
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint32_t, uint64_t, uintptr_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* size_t */
+#include <stdint.h>  /* uint32_t, uint64_t, uintptr_t */
 
 DECL_BEGIN
 

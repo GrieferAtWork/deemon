@@ -32,8 +32,9 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* uint16_t */
+#include <stdbool.h> /* bool, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uint16_t */
 
 DECL_BEGIN
 

@@ -38,6 +38,7 @@
 
 #include "../objects/int_logic.h"
 
+#include <stddef.h> /* size_t */
 #include <stdint.h> /* INT32_MAX, INT32_MIN, int32_t, int64_t */
 
 #ifndef INT32_MIN

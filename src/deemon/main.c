@@ -46,7 +46,7 @@
 #include <deemon/notify.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* strend() */
+#include <deemon/system-features.h>    /* strend() */
 #include <deemon/system.h>
 #include <deemon/tuple.h>
 
@@ -58,8 +58,9 @@
 #include "cmdline.h"
 #include "runtime/runtime_error.h"
 
-#include <stddef.h> /* NULL, offsetof, ptrdiff_t, size_t */
-#include <stdint.h> /* uint8_t, uint16_t, uint32_t, uintptr_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h>  /* uint8_t, uint16_t, uint32_t, uintptr_t */
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #include <deemon/compiler/dec.h>

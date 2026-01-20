@@ -30,6 +30,9 @@
 #include "method-hint-defaults.h"
 #include "method-hints.h"
 
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL */
+
 DECL_BEGIN
 
 /************************************************************************/

@@ -34,7 +34,7 @@
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* memcpy(), ... */
+#include <deemon/system-features.h>    /* memcpy(), ... */
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/util/atomic.h>

@@ -34,8 +34,9 @@
 
 #include "strings.h"
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* uint8_t, uint16_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uint8_t, uint16_t */
 
 #ifndef CONFIG_NO_NOTIFICATIONS
 DECL_BEGIN

@@ -35,7 +35,7 @@
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* memcpy() */
+#include <deemon/system-features.h>    /* memcpy() */
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 /**/
@@ -47,6 +47,7 @@
 #include "string_functions.h"
 
 #include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* uintptr_t */
 
 
 /* Proxy sequence objects for `string.refindall',

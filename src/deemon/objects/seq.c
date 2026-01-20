@@ -40,7 +40,7 @@
 #include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
-#include <deemon/system-features.h> /* memset */
+#include <deemon/system-features.h>    /* memset */
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
@@ -64,8 +64,9 @@
 #include "seq/simpleproxy.h"
 #include "seq/unique-iterator.h"
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* uint32_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uint32_t */
 
 #undef SSIZE_MAX
 #include <hybrid/limitcore.h>

@@ -31,7 +31,8 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 
-#include <stdint.h> /* INT16_MAX, INT16_MIN, int16_t, int32_t, uint16_t */
+#include <stdbool.h> /* bool */
+#include <stdint.h>  /* INT16_MAX, INT16_MIN, int16_t, int32_t, uint16_t */
 
 DECL_BEGIN
 

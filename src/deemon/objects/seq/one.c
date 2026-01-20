@@ -49,7 +49,8 @@
 #include "one.h"
 #include "repeat.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

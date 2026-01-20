@@ -27,12 +27,14 @@
 #include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/mro.h>
-#include <deemon/none.h> /* type_member_del -> Dee_None */
+#include <deemon/none.h>   /* type_member_del -> Dee_None */
 #include <deemon/object.h>
 #include <deemon/types.h>
 
-#include <stdarg.h> /* va_list */
-#include <stddef.h> /* NULL, size_t */
+#include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uintptr_t */
 
 DECL_BEGIN
 

@@ -51,8 +51,9 @@
 
 #include "../../runtime/strings.h"
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* int32_t, uint8_t, uint16_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* int32_t, uint8_t, uint16_t */
 
 DECL_BEGIN
 

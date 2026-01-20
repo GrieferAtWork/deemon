@@ -41,7 +41,7 @@
 #include <deemon/serial.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* memcpyc(), ... */
+#include <deemon/system-features.h>    /* memcpyc(), ... */
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
@@ -52,7 +52,8 @@
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

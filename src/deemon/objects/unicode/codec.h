@@ -24,6 +24,8 @@
 
 #include <deemon/system-features.h> /* bcmp(), ... */
 
+#include <stdint.h> /* uint8_t */
+
 DECL_BEGIN
 
 /*[[[deemon

@@ -31,16 +31,17 @@
 #include <deemon/error.h>
 #include <deemon/error_types.h>
 #include <deemon/file.h>
-#include <deemon/format.h> /* unicode_printer_printf() -> DeeFormat_Printf() */
+#include <deemon/format.h>            /* unicode_printer_printf() -> DeeFormat_Printf() */
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
-#include <deemon/traceback.h> /* Dee_Decref(iter->ef_trace) */
+#include <deemon/traceback.h>         /* Dee_Decref(iter->ef_trace) */
 
-#include <stdarg.h> /* va_arg, va_end, va_list, va_start */
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* uint16_t */
+#include <stdarg.h>  /* va_arg, va_end, va_list, va_start */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uint16_t */
 
 /* Includes for TPP */
 #include <deemon/class.h>

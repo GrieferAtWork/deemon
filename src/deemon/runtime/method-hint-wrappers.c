@@ -34,8 +34,8 @@
 /**/
 
 #include "../objects/seq/enumerate-cb.h"
-#include "runtime_error.h"
 #include "kwlist.h"
+#include "runtime_error.h"
 
 #include <stddef.h> /* NULL, size_t */
 

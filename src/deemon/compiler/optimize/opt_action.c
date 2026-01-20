@@ -34,12 +34,13 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/super.h>
-#include <deemon/system-features.h> /* memmovedownc() */
+#include <deemon/system-features.h>   /* memmovedownc() */
 #include <deemon/tuple.h>
 
 #include "../../runtime/builtin.h"
 
-#include <stddef.h> /* NULL, size_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN
 

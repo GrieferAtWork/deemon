@@ -28,7 +28,8 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/types.h>
 
-#include <stddef.h> /* NULL */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL */
 
 DECL_BEGIN
 

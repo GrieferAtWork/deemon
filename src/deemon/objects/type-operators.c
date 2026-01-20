@@ -42,7 +42,8 @@
 #include "gc_inspect.h"
 #include "type-operators.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdbool.h> /* bool, false */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

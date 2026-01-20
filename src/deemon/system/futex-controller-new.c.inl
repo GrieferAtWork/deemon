@@ -25,9 +25,9 @@
 
 #include <deemon/api.h>
 
+#include <deemon/system.h>      /* DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
 #include <deemon/types.h>
 #include <deemon/util/atomic.h>
-#include <deemon/system.h> /* DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
 
 #include <hybrid/sequence/list.h>
 

@@ -29,9 +29,10 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>
 #include <deemon/object.h>
-#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
+#include <deemon/system-features.h>   /* memcpy(), bzero(), ... */
 
-#include <stddef.h> /* NULL, size_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN
 

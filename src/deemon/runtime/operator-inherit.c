@@ -25,7 +25,8 @@
 #include <deemon/object.h>
 #include <deemon/system-features.h>
 
-#include <stddef.h> /* NULL */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL */
 
 /************************************************************************/
 /* Operator inheritance (or what's left of it...)                       */

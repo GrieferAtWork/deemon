@@ -30,15 +30,16 @@
 #include <deemon/error.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* qsort(), bzero(), ... */
-#include <deemon/system.h>          /* DeeSystem_BaseName() */
+#include <deemon/system-features.h>    /* qsort(), bzero(), ... */
+#include <deemon/system.h>             /* DeeSystem_BaseName() */
 #include <deemon/util/bytewriter.h>
 
 #include <hybrid/byteswap.h>
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* UINT8_MAX, UINT16_MAX, UINT32_MAX, int32_t, uint8_t, uint16_t, uint32_t, uintptr_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* UINT8_MAX, UINT16_MAX, UINT32_MAX, int32_t, uint8_t, uint16_t, uint32_t, uintptr_t */
 
 DECL_BEGIN
 

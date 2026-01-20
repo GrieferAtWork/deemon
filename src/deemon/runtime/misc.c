@@ -36,24 +36,24 @@
 #include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/thread.h>
 
+#include <hybrid/byteorder.h>
+#include <hybrid/byteswap.h>
 #include <hybrid/debug-alignment.h>
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
-
-#include <hybrid/byteorder.h>
-#include <hybrid/byteswap.h>
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
-#include <stdarg.h> /* va_end, va_list, va_start */
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* UINT16_C, UINT32_C, UINT64_C, uint8_t, uint16_t, uint32_t, uintptr_t */
+#include <stdarg.h>  /* va_end, va_list, va_start */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* UINT16_C, UINT32_C, UINT64_C, uint8_t, uint16_t, uint32_t, uintptr_t */
 
 #ifndef NDEBUG
 #ifndef CONFIG_HOST_WINDOWS
 #include <deemon/file.h>
 #else /* !CONFIG_HOST_WINDOWS */
-#include <hybrid/host.h> /* __ARCH_PAGESIZE_MIN */
+#include <hybrid/host.h>   /* __ARCH_PAGESIZE_MIN */
 #include <hybrid/minmax.h>
 
 #undef token

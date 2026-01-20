@@ -25,7 +25,8 @@
 #include <deemon/object.h>
 #include <deemon/types.h>
 
-#include <stddef.h> /* NULL, size_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN
 

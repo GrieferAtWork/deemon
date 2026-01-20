@@ -29,6 +29,8 @@
 #include "method-hint-super.h"
 #include "method-hints.h"
 
+#include <stddef.h> /* NULL, size_t */
+
 DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((2, 3)) int DCALL

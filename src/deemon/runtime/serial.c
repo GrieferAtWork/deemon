@@ -27,6 +27,8 @@
 #include <deemon/system-features.h>
 #include <deemon/types.h>
 
+#include <stddef.h> /* NULL, size_t */
+
 DECL_BEGIN
 
 /* Serialize a `DREF DeeObject *' field at `addrof_object' as being populated with a reference to `ob'

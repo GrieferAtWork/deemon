@@ -85,6 +85,8 @@
 #include <deemon/alloc.h>
 #include <deemon/object.h>
 
+#include <stddef.h> /* NULL */
+
 DECL_BEGIN
 
 

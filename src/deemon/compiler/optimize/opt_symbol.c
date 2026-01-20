@@ -30,7 +30,8 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 
-#include <stddef.h> /* NULL */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL */
 
 DECL_BEGIN
 

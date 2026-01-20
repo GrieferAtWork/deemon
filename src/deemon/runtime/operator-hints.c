@@ -37,7 +37,8 @@
 #include "method-hint-defaults.h"
 #include "method-hints.h"
 
-#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

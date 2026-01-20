@@ -48,8 +48,9 @@
 #include <hybrid/sequence/bsearch.h>
 #include <hybrid/typecore.h>
 
-#include <stddef.h> /* NULL, offsetof, ptrdiff_t, size_t */
-#include <stdint.h> /* UINT32_MAX, int32_t, uintN_t, uintptr_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h>  /* UINT32_MAX, int32_t, uintN_t, uintptr_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
