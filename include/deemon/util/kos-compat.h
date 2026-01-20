@@ -28,7 +28,7 @@
 
 #include <hybrid/__alloca.h>
 #include <hybrid/__bit.h>
-#include <hybrid/bitset.h> /* bitset_*  (to replace <sys/bitstr.h>) */
+#include <hybrid/bitset.h>   /* bitset_*  (to replace <sys/bitstr.h>) */
 #include <hybrid/typecore.h>
 
 #include "../format.h"
@@ -36,7 +36,8 @@
 #include "../stringutils.h"
 #include "../system-features.h"
 
-#include <stdint.h> /* uint8_t, uint32_t */
+#include <stdbool.h> /* false, true */
+#include <stdint.h>  /* uint8_t, uint32_t */
 
 /* Compatibility header for porting KOS system libraries for use with deemon */
 

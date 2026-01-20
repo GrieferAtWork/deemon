@@ -23,7 +23,7 @@
 #include "api.h"
 
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
-#include <stddef.h>  /* size_t */
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

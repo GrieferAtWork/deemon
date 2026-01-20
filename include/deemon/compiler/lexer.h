@@ -26,7 +26,7 @@
 #define PARSE_FLFSTMT 0x0001 /* Parse line-feeds as statement terminators in certain places. */
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include "../object.h" /* Dee_operator_t */
+#include "../object.h"          /* Dee_operator_t */
 #include "../string.h"
 #include "../system-features.h" /* memcpy */
 #include "../types.h"

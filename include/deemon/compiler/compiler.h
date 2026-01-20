@@ -21,21 +21,23 @@
 #define GUARD_DEEMON_COMPILER_COMPILER_H 1
 
 #include "../api.h"
+
 #include "../object.h"
 #include "../util/lock.h"
 #include "../util/rlock.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include "symbol.h"
 #include "error.h"
 #include "lexer.h"
+#include "symbol.h"
 #include "tpp.h"
 #endif /* CONFIG_BUILDING_DEEMON */
 
 #include <hybrid/sequence/list.h>
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint16_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
+#include <stdint.h>  /* uint16_t */
 
 DECL_BEGIN
 

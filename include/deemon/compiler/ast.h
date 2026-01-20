@@ -21,8 +21,9 @@
 #define GUARD_DEEMON_COMPILER_AST_H 1
 
 #include "../api.h"
-#include "../types.h"
+
 #include "../object.h"
+#include "../types.h"
 #include "symbol.h"
 
 #ifdef CONFIG_BUILDING_DEEMON

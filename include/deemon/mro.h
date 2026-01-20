@@ -34,8 +34,10 @@
 
 #include <hybrid/sched/__yield.h>
 
-#include <stddef.h> /* NULL, offsetof, ptrdiff_t, size_t */
-#include <stdint.h> /* uint16_t, uintptr_t */
+#include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h>  /* uint16_t, uintptr_t */
 
 DECL_BEGIN
 

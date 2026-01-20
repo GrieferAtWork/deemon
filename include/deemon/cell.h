@@ -25,6 +25,8 @@
 #include "types.h"
 #include "util/lock.h"
 
+#include <stddef.h> /* NULL */
+
 DECL_BEGIN
 
 #ifdef DEE_SOURCE

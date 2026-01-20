@@ -34,8 +34,9 @@
 
 #include <exception>
 #include <initializer_list>
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* intN_t, uintN_t */
+#include <stdbool.h>        /* bool, false, true */
+#include <stddef.h>         /* NULL, size_t */
+#include <stdint.h>         /* intN_t, uintN_t */
 #include <type_traits>
 
 DEE_CXX_BEGIN

@@ -24,6 +24,9 @@
 
 #include "object.h"
 
+#include <stdbool.h> /* bool */
+#include <stdint.h>  /* uint16_t */
+
 #ifndef CONFIG_NO_NOTIFICATIONS
 #include "int.h"
 #include "string.h" /* DeeString_AsUtf8 */

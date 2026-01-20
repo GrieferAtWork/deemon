@@ -28,6 +28,7 @@
 #include "../module.h"
 #include "../object.h"
 
+#include <stddef.h> /* NULL */
 #include <stdint.h> /* int64_t, uint32_t */
 
 /* Helpers for interfacing with Time-like objects, as defined by the `time' module */

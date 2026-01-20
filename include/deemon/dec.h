@@ -32,8 +32,8 @@
 #include <stdint.h> /* int32_t, uintN_t, uintptr_t */
 
 #ifdef DEE_SOURCE
-#include <hybrid/host.h>
 #include <hybrid/byteorder.h>
+#include <hybrid/host.h>
 
 #include "heap.h"
 #include "mapfile.h"

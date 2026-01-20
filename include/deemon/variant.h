@@ -30,8 +30,9 @@
 #include "types.h"
 #include "util/atomic.h"
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* int32_t, int64_t, uint32_t, uint64_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
+#include <stdint.h>  /* int32_t, int64_t, uint32_t, uint64_t */
 
 DECL_BEGIN
 

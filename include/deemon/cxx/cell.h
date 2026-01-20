@@ -29,7 +29,8 @@
 #include "object.h"
 #include "sequence.h"
 
-#include <stddef.h> /* NULL */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL */
 
 DEE_CXX_BEGIN
 

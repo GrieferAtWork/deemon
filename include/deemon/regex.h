@@ -25,6 +25,7 @@
 #include "types.h"
 
 #include <stddef.h> /* size_t */
+#include <stdint.h> /* uint8_t, uint16_t */
 
 DECL_BEGIN
 

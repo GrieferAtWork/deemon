@@ -28,8 +28,9 @@
 #include "../system-features.h" /* bzero */
 #include "../types.h"
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint16_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
+#include <stdint.h>  /* uint16_t */
 
 DECL_BEGIN
 

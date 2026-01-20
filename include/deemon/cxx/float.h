@@ -30,7 +30,8 @@
 #include "numeric.h"
 #include "object.h"
 
-#include <stddef.h> /* size_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
 
 DEE_CXX_BEGIN
 

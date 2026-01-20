@@ -26,6 +26,7 @@
 
 #include "types.h"
 
+#include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
 #include <stdint.h>  /* uint64_t, uintptr_t */

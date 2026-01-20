@@ -33,8 +33,9 @@
 #include "numeric.h"
 #include "object.h"
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* intN_t, uintN_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* intN_t, uintN_t */
 
 DEE_CXX_BEGIN
 

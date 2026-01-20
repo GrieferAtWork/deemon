@@ -24,7 +24,9 @@
 
 #include "types.h"
 
+#include <stdarg.h> /* va_list */
 #include <stddef.h> /* size_t */
+#include <stdint.h> /* int32_t, int64_t */
 
 DECL_BEGIN
 

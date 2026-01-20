@@ -23,9 +23,9 @@
 #include "api.h"
 
 #ifdef __CC__
+#include <hybrid/__debug-alignment.h>
 #include <hybrid/__overflow.h>
 #include <hybrid/typecore.h>
-#include <hybrid/__debug-alignment.h>
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */

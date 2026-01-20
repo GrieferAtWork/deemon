@@ -26,6 +26,7 @@
 #include "object.h"
 #include "util/lock.h"
 
+#include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* uint16_t, uintptr_t */

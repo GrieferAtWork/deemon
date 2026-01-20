@@ -26,8 +26,9 @@
 #include "ast.h"
 #include "symbol.h"
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* uint16_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
+#include <stdint.h>  /* uint16_t */
 #endif /* CONFIG_BUILDING_DEEMON */
 
 DECL_BEGIN

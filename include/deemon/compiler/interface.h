@@ -28,8 +28,9 @@
 #include "symbol.h"
 #include "tpp.h"
 
-#include <stddef.h> /* size_t */
-#include <stdint.h> /* int32_t, uint16_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
+#include <stdint.h>  /* int32_t, uint16_t */
 
 DECL_BEGIN
 

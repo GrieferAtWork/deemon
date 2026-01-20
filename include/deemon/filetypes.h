@@ -25,8 +25,8 @@
 #include <hybrid/typecore.h>
 
 #include "file.h"
-#include "object.h" /* DeeBuffer */
-#include "string.h" /* struct Dee_unicode_printer */
+#include "object.h"     /* DeeBuffer */
+#include "string.h"     /* struct Dee_unicode_printer */
 #include "types.h"
 #include "util/lock.h"
 #include "util/rlock.h"

@@ -22,11 +22,12 @@
 
 #include "api.h"
 
-#include "code.h" /* struct Dee_code_frame */
+#include "code.h"       /* struct Dee_code_frame */
 #include "types.h"
 #include "util/lock.h"
 #include "util/rlock.h"
 
+#include <stddef.h> /* NULL */
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN

@@ -22,8 +22,10 @@
 
 #include "../api.h"
 
-#include "../types.h"
 #include "../object.h"
+#include "../types.h"
+
+#include <stddef.h> /* NULL */
 
 #ifndef CONFIG_NO_THREADS
 #include <hybrid/__atomic.h>

@@ -20,13 +20,14 @@
 #ifndef GUARD_DEEMON_UTIL_SIMPLE_HASHSET_H
 #define GUARD_DEEMON_UTIL_SIMPLE_HASHSET_H 1
 
-#include <stddef.h> /* NULL, size_t */
+#include "../api.h"
 
 #include "../alloc.h"
-#include "../api.h"
 #include "../object.h"
 #include "../system-features.h"
 #include "lock.h"
+
+#include <stddef.h> /* NULL, size_t */
 
 DECL_BEGIN
 

@@ -24,6 +24,8 @@
 
 #include "types.h"
 
+#include <stddef.h> /* offsetof, ptrdiff_t, size_t */
+
 #ifndef Dee_seraddr_t_DEFINED
 #include <hybrid/typecore.h> /* __UINTPTR_TYPE__ */
 #endif /* !Dee_seraddr_t_DEFINED */

@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_COMPILER_SYMBOL_H 1
 
 #include "../api.h"
+
 #include "../code.h"
 #include "../object.h"          /* Dee_WEAKREF */
 #include "../system-features.h" /* memcpy */

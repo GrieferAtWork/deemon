@@ -30,6 +30,7 @@
 #include "object.h"
 #include "sequence.h"
 
+#include <stdbool.h>   /* bool, true */
 #include <stddef.h>    /* NULL, size_t */
 #include <type_traits> /* std::enable_if */
 

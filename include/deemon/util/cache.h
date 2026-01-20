@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_UTIL_CACHE_H 1
 
 #include "../api.h"
+
 #include "lock.h"
 
 #include <stddef.h> /* NULL, size_t */

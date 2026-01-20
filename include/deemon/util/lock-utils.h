@@ -22,6 +22,8 @@
 
 #include "../api.h"
 
+#include <stdint.h> /* uint64_t */
+
 #ifdef CONFIG_NO_THREADS
 #define Dee_atomic_lock_acquire_p(self, err_label)                                               (void)0
 #define Dee_atomic_lock_waitfor_p(self, err_label)                                               (void)0

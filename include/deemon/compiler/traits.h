@@ -21,8 +21,11 @@
 #define GUARD_DEEMON_COMPILER_TRAITS_H 1
 
 #include "../api.h"
+
 #include "../types.h"
 #include "ast.h"
+
+#include <stdbool.h> /* bool */
 
 #ifdef CONFIG_BUILDING_DEEMON
 DECL_BEGIN

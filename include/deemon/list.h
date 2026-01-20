@@ -27,7 +27,8 @@
 #include "util/lock.h"
 #include "util/objectlist.h"
 
-#include <stddef.h> /* size_t */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
 
 #ifndef __INTELLISENSE__
 #include "gc.h" /* DeeGC_Track */

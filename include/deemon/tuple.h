@@ -28,8 +28,8 @@
 #endif /* !__INTELLISENSE__ */
 /**/
 
-#include <stdbool.h> /* bool */
 #include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN

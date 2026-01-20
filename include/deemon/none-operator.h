@@ -24,6 +24,8 @@
 
 #include "types.h"
 
+#include <stddef.h> /* size_t */
+
 DECL_BEGIN
 
 #ifdef DCALL_CALLER_CLEANUP

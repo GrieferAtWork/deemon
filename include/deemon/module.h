@@ -25,14 +25,18 @@
 #include "gc.h"
 #include "types.h"
 #include "util/lock.h"
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* uintN_t, uintptr_t */
+
+#include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uintN_t, uintptr_t */
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#include "system-features.h" /* bcmp */
-#include "system.h" /* DeeSystem_HAVE_FS_ICASE */
 #include <hybrid/byteorder.h>
 #include <hybrid/sequence/list.h>
+
+#include "system-features.h" /* bcmp */
+#include "system.h"          /* DeeSystem_HAVE_FS_ICASE */
 
 #ifdef GUARD_DEEMON_EXECUTE_MODPATH_C
 #include "list.h"

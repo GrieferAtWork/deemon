@@ -25,6 +25,9 @@
 #include "../alloc.h"
 #include "../object.h"
 
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
+
 DECL_BEGIN
 
 #ifdef DEE_SOURCE

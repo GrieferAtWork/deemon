@@ -28,6 +28,8 @@
 #include "numeric.h"
 #include "object.h"
 
+#include <stdbool.h> /* bool */
+
 DEE_CXX_BEGIN
 
 class Type;

@@ -22,7 +22,7 @@
 
 #include "api.h"
 
-#include "dict.h" /* struct Dee_dict_item */
+#include "dict.h"  /* struct Dee_dict_item */
 #include "types.h"
 
 #include <stddef.h> /* NULL, size_t */

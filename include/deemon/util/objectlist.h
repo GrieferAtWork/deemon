@@ -28,7 +28,9 @@
 #include "../system-features.h" /* memchrp */
 #include "../tuple.h"
 
-#include <stdint.h> /* uintptr_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uintptr_t */
 
 DECL_BEGIN
 

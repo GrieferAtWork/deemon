@@ -29,6 +29,7 @@
 #include "types.h"
 
 #include <stddef.h> /* size_t */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
 
 #ifdef DEE_SOURCE
 #ifdef CONFIG_NO_UNICODE_H

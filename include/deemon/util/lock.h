@@ -212,6 +212,7 @@ DECL_END
 #include "futex.h"
 
 #include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* size_t */
 #include <stdint.h>  /* uint64_t, uintptr_t */
 
 DECL_BEGIN

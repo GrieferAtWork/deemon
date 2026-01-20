@@ -22,7 +22,7 @@
 
 #include "api.h"
 
-#include "bytes.h" /* struct Dee_bytes_printer */
+#include "bytes.h"  /* struct Dee_bytes_printer */
 #include "object.h"
 #include "string.h" /* struct Dee_unicode_printer */
 #include "tuple.h"  /* struct Dee_tuple_builder */

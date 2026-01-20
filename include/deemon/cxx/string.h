@@ -31,9 +31,10 @@
 #include "object.h"
 #include "sequence.h"
 
-#include <stdarg.h> /* va_end, va_list, va_start */
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
+#include <stdarg.h>  /* va_end, va_list, va_start */
+#include <stdbool.h> /* bool, false */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uint8_t, uint16_t, uint32_t */
 
 /*#include "bytes.h"*/ /* Don't include! */
 

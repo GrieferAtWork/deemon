@@ -30,6 +30,7 @@
 #include "object.h"
 
 #include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL */
 #include <stdint.h>  /* uintptr_t */
 
 DECL_BEGIN

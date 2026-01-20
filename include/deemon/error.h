@@ -24,6 +24,7 @@
 
 #include "types.h"
 
+#include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
 
 DECL_BEGIN

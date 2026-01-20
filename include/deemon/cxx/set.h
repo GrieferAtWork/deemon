@@ -29,7 +29,8 @@
 #include "object.h"
 #include "sequence.h"
 
-#include <stddef.h> /* NULL */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL */
 
 /*#include "type.h"*/ /* Don't include! */
 

@@ -26,6 +26,7 @@
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
+#include <stdint.h>  /* uint16_t, uint64_t */
 
 DECL_BEGIN
 

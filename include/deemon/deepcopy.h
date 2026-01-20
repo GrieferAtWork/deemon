@@ -27,6 +27,8 @@
 #include "serial.h"
 #include "types.h"
 
+#include <stddef.h> /* size_t */
+
 DECL_BEGIN
 
 /* "DeeSerial" can also be used to implement "deepcopy" (in a way that

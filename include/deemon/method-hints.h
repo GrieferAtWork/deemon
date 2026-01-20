@@ -28,8 +28,8 @@
 #endif /* !__OPTIMIZE_SIZE__ && !__INTELLISENSE__ */
 /**/
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /*  */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN
 
