@@ -28,7 +28,7 @@
 #include <deemon/util/lock.h>
 
 #include <hybrid/sequence/list.h>
-#include <hybrid/typecore.h>      /* __ALIGNOF_INTn__, __ALIGNOF_POINTER__, __BYTE_TYPE__, __CHAR_UNSIGNED__, __HYBRID_ALIGNOF, __SIZEOF_CHAR__, __SIZEOF_INT__, __SIZEOF_LONG_LONG__, __SIZEOF_LONG__, __SIZEOF_POINTER__, __SIZEOF_SHORT__, __SIZEOF_WCHAR_T__, __WCHAR_UNSIGNED__ */
+#include <hybrid/typecore.h>      /* __ALIGNOF_INTn__, __ALIGNOF_POINTER__, __BYTE_TYPE__, __CHAR_UNSIGNED__, __HYBRID_ALIGNOF, __SIZEOF_*, __WCHAR_UNSIGNED__ */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */

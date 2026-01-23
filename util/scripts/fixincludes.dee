@@ -989,6 +989,55 @@ global final KWD2HEADER: {string: string} = Dict.Frozen(
 );
 
 
+function simplifyKeywordUseList(usedKwds: Set with string) {
+	for (local repGroup, repWith: {
+		{ {"int8_t", "int16_t", "int32_t", "int64_t"}, "intN_t" },
+		{ {"uint8_t", "uint16_t", "uint32_t", "uint64_t"}, "uintN_t" },
+		{ {"INT8_C", "INT16_C", "INT32_C", "INT64_C"}, "INTn_C" },
+		{ {"UINT8_C", "UINT16_C", "UINT32_C", "UINT64_C"}, "UINTn_C" },
+		{ {"INT8_MIN", "INT16_MIN", "INT32_MIN", "INT64_MIN"}, "INTn_MIN" },
+		{ {"INT8_MAX", "INT16_MAX", "INT32_MAX", "INT64_MAX"}, "INTn_MAX" },
+		{ {"UINT8_MAX", "UINT16_MAX", "UINT32_MAX", "UINT64_MAX"}, "UINTn_MAX" },
+		{ {"__INT8_MIN__", "__INT16_MIN__", "__INT32_MIN__", "__INT64_MIN__"}, "__INTn_MIN__" },
+		{ {"__INT8_MAX__", "__INT16_MAX__", "__INT32_MAX__", "__INT64_MAX__"}, "__INTn_MAX__" },
+		{ {"__UINT8_MAX__", "__UINT16_MAX__", "__UINT32_MAX__", "__UINT64_MAX__"}, "__UINTn_MAX__" },
+		{ {"__INT8_C_SUFFIX__", "__INT16_C_SUFFIX__", "__INT32_C_SUFFIX__", "__INT64_C_SUFFIX__"}, "__INTn_C_SUFFIX__" },
+		{ {"__UINT8_C_SUFFIX__", "__UINT16_C_SUFFIX__", "__UINT32_C_SUFFIX__", "__UINT64_C_SUFFIX__"}, "__UINTn_C_SUFFIX__" },
+		{ {"__INT8_C", "__INT16_C", "__INT32_C", "__INT64_C"}, "__INTn_C" },
+		{ {"__UINT8_C", "__UINT16_C", "__UINT32_C", "__UINT64_C"}, "__UINTn_C" },
+		{ {"__SIZEOF_INT_FAST8_T__", "__SIZEOF_INT_FAST16_T__", "__SIZEOF_INT_FAST32_T__", "__SIZEOF_INT_FAST64_T__"}, "__SIZEOF_INT_FASTn_T__" },
+		{ {"__INT8_TYPE__", "__INT16_TYPE__", "__INT32_TYPE__", "__INT64_TYPE__"}, "__INTn_TYPE__" },
+		{ {"__UINT8_TYPE__", "__UINT16_TYPE__", "__UINT32_TYPE__", "__UINT64_TYPE__"}, "__UINTn_TYPE__" },
+		{ {"__SIZEOF_INT_LEAST8_T__", "__SIZEOF_INT_LEAST16_T__", "__SIZEOF_INT_LEAST32_T__", "__SIZEOF_INT_LEAST64_T__"}, "__SIZEOF_INT_LEASTn_T__" },
+		{ {"__INT_LEAST8_TYPE__", "__INT_LEAST16_TYPE__", "__INT_LEAST32_TYPE__", "__INT_LEAST64_TYPE__"}, "__INT_LEASTn_TYPE__" },
+		{ {"__UINT_LEAST8_TYPE__", "__UINT_LEAST16_TYPE__", "__UINT_LEAST32_TYPE__", "__UINT_LEAST64_TYPE__"}, "__UINT_LEASTn_TYPE__" },
+		{ {"__INT_FAST8_TYPE__", "__INT_FAST16_TYPE__", "__INT_FAST32_TYPE__", "__INT_FAST64_TYPE__"}, "__INT_FASTn_TYPE__" },
+		{ {"__UINT_FAST8_TYPE__", "__UINT_FAST16_TYPE__", "__UINT_FAST32_TYPE__", "__UINT_FAST64_TYPE__"}, "__UINT_FASTn_TYPE__" },
+		{ {"__ALIGNOF_INT8__", "__ALIGNOF_INT16__", "__ALIGNOF_INT32__", "__ALIGNOF_INT64__"}, "__ALIGNOF_INTn__" },
+		{ {"__INT_LEAST8_WIDTH__", "__INT_LEAST16_WIDTH__", "__INT_LEAST32_WIDTH__", "__INT_LEAST64_WIDTH__"}, "__INT_LEASTn_WIDTH__" },
+		{ {"__INT_FAST8_WIDTH__", "__INT_FAST16_WIDTH__", "__INT_FAST32_WIDTH__", "__INT_FAST64_WIDTH__"}, "__INT_FASTn_WIDTH__" },
+	}) {
+		if (repGroup.map(usedKwds.contains) && ...) {
+			for (local g: repGroup)
+				usedKwds.remove(g);
+			usedKwds.insert(repWith);
+		}
+	}
+	for (local prefix: {
+		"UNP",
+		"Dee_UNP",
+		"DeeArg_Unpack",
+		"__SIZEOF_",
+		"__ALIGNOF_",
+	}) {
+		local toRemove = usedKwds.filter(e -> e.startswith(prefix));
+		if (#toRemove >= 3) {
+			usedKwds.removeall(toRemove.frozen);
+			usedKwds.insert(f"{prefix}*");
+		}
+	}
+}
+
 class YamlParser {
 	this = default;
 	public member filename: string;
@@ -1298,42 +1347,6 @@ class IncludeGroup {
 	}
 }
 
-function simplifyKeywordUseList(usedKwds: Set with string) {
-	for (local repGroup, repWith: {
-		{ {"int8_t", "int16_t", "int32_t", "int64_t"}, "intN_t" },
-		{ {"uint8_t", "uint16_t", "uint32_t", "uint64_t"}, "uintN_t" },
-		{ {"INT8_C", "INT16_C", "INT32_C", "INT64_C"}, "INTn_C" },
-		{ {"UINT8_C", "UINT16_C", "UINT32_C", "UINT64_C"}, "UINTn_C" },
-		{ {"INT8_MIN", "INT16_MIN", "INT32_MIN", "INT64_MIN"}, "INTn_MIN" },
-		{ {"INT8_MAX", "INT16_MAX", "INT32_MAX", "INT64_MAX"}, "INTn_MAX" },
-		{ {"UINT8_MAX", "UINT16_MAX", "UINT32_MAX", "UINT64_MAX"}, "UINTn_MAX" },
-		{ {"__INT8_MIN__", "__INT16_MIN__", "__INT32_MIN__", "__INT64_MIN__"}, "__INTn_MIN__" },
-		{ {"__INT8_MAX__", "__INT16_MAX__", "__INT32_MAX__", "__INT64_MAX__"}, "__INTn_MAX__" },
-		{ {"__UINT8_MAX__", "__UINT16_MAX__", "__UINT32_MAX__", "__UINT64_MAX__"}, "__UINTn_MAX__" },
-		{ {"__INT8_C_SUFFIX__", "__INT16_C_SUFFIX__", "__INT32_C_SUFFIX__", "__INT64_C_SUFFIX__"}, "__INTn_C_SUFFIX__" },
-		{ {"__UINT8_C_SUFFIX__", "__UINT16_C_SUFFIX__", "__UINT32_C_SUFFIX__", "__UINT64_C_SUFFIX__"}, "__UINTn_C_SUFFIX__" },
-		{ {"__INT8_C", "__INT16_C", "__INT32_C", "__INT64_C"}, "__INTn_C" },
-		{ {"__UINT8_C", "__UINT16_C", "__UINT32_C", "__UINT64_C"}, "__UINTn_C" },
-		{ {"__SIZEOF_INT_FAST8_T__", "__SIZEOF_INT_FAST16_T__", "__SIZEOF_INT_FAST32_T__", "__SIZEOF_INT_FAST64_T__"}, "__SIZEOF_INT_FASTn_T__" },
-		{ {"__INT8_TYPE__", "__INT16_TYPE__", "__INT32_TYPE__", "__INT64_TYPE__"}, "__INTn_TYPE__" },
-		{ {"__UINT8_TYPE__", "__UINT16_TYPE__", "__UINT32_TYPE__", "__UINT64_TYPE__"}, "__UINTn_TYPE__" },
-		{ {"__SIZEOF_INT_LEAST8_T__", "__SIZEOF_INT_LEAST16_T__", "__SIZEOF_INT_LEAST32_T__", "__SIZEOF_INT_LEAST64_T__"}, "__SIZEOF_INT_LEASTn_T__" },
-		{ {"__INT_LEAST8_TYPE__", "__INT_LEAST16_TYPE__", "__INT_LEAST32_TYPE__", "__INT_LEAST64_TYPE__"}, "__INT_LEASTn_TYPE__" },
-		{ {"__UINT_LEAST8_TYPE__", "__UINT_LEAST16_TYPE__", "__UINT_LEAST32_TYPE__", "__UINT_LEAST64_TYPE__"}, "__UINT_LEASTn_TYPE__" },
-		{ {"__INT_FAST8_TYPE__", "__INT_FAST16_TYPE__", "__INT_FAST32_TYPE__", "__INT_FAST64_TYPE__"}, "__INT_FASTn_TYPE__" },
-		{ {"__UINT_FAST8_TYPE__", "__UINT_FAST16_TYPE__", "__UINT_FAST32_TYPE__", "__UINT_FAST64_TYPE__"}, "__UINT_FASTn_TYPE__" },
-		{ {"__ALIGNOF_INT8__", "__ALIGNOF_INT16__", "__ALIGNOF_INT32__", "__ALIGNOF_INT64__"}, "__ALIGNOF_INTn__" },
-		{ {"__INT_LEAST8_WIDTH__", "__INT_LEAST16_WIDTH__", "__INT_LEAST32_WIDTH__", "__INT_LEAST64_WIDTH__"}, "__INT_LEASTn_WIDTH__" },
-		{ {"__INT_FAST8_WIDTH__", "__INT_FAST16_WIDTH__", "__INT_FAST32_WIDTH__", "__INT_FAST64_WIDTH__"}, "__INT_FASTn_WIDTH__" },
-	}) {
-		if (repGroup.map(usedKwds.contains) && ...) {
-			for (local g: repGroup)
-				usedKwds.remove(g);
-			usedKwds.insert(repWith);
-		}
-	}
-}
-
 class FileInfo {
 	this = default;
 	public final member filename: string;
@@ -1415,8 +1428,11 @@ insert_first_include:
 		local result: {string: {string...}} = Dict();
 		for (local kwd: keywords) {
 			local hdr = KWD2HEADER.get(kwd);
-			if (hdr !is none && hdr !in includes.keys)
+			if (hdr !is none && hdr !in includes.keys) {
+				if (filename.endswith(hdr.strip("<>")))
+					continue;
 				result.setdefault(hdr, []).append(kwd);
+			}
 		}
 		return result;
 	}

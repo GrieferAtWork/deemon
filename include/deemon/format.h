@@ -23,7 +23,7 @@
 #include "api.h"
 
 #include <hybrid/__va_size.h> /* __VA_SIZE */
-#include <hybrid/typecore.h>  /* __SIZEOF_CHAR__, __SIZEOF_LONG_LONG__, __SIZEOF_LONG__, __SIZEOF_POINTER__, __SIZEOF_SHORT__, __SIZEOF_SIZE_T__ */
+#include <hybrid/typecore.h>  /* __SIZEOF_* */
 
 #include "types.h"
 

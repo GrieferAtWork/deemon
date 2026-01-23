@@ -24,7 +24,7 @@
 
 #include <hybrid/__unaligned.h> /* __hybrid_unaligned_get32, __hybrid_unaligned_get64, __hybrid_unaligned_set32, __hybrid_unaligned_set64 */
 #include <hybrid/int128.h>
-#include <hybrid/typecore.h>    /* __ALIGNOF_DOUBLE__, __ALIGNOF_INT32__, __ALIGNOF_INT64__, __ALIGNOF_INT128__, __ALIGNOF_POINTER__, __BYTE_TYPE__, __SIZEOF_DOUBLE__, __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
+#include <hybrid/typecore.h>    /* __ALIGNOF_*, __BYTE_TYPE__, __SIZEOF_* */
 
 #include "object.h"
 #include "types.h"
