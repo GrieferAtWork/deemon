@@ -74,9 +74,9 @@ __NAMESPACE_INT_END
 #endif /* ... */
 
 #ifndef __hybrid_dbg_alignment_enable
-#define __NO_hybrid_dbg_alignment 1
-#define __hybrid_dbg_alignment_enable()  (void)0
-#define __hybrid_dbg_alignment_disable() (void)0
+#define __NO_hybrid_dbg_alignment        1       /*!export*/
+#define __hybrid_dbg_alignment_enable()  (void)0 /*!export*/
+#define __hybrid_dbg_alignment_disable() (void)0 /*!export*/
 #endif /* !__hybrid_dbg_alignment_enable */
 
 

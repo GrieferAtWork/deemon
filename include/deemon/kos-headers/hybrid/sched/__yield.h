@@ -17,6 +17,9 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __hybrid_yield_IS_**/
+/*!export __hybrid_yield __hybrid_yield_nx*/
+/*!export __NO_hybrid_yield __NO_hybrid_yield_nx*/
 #ifndef __GUARD_HYBRID_SCHED___YIELD_H
 #define __GUARD_HYBRID_SCHED___YIELD_H 1
 

@@ -17,7 +17,6 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!always_includes <hybrid/__bit.h>*/
 #ifndef __GUARD_HYBRID_BIT_H
 #define __GUARD_HYBRID_BIT_H 1
 
@@ -31,44 +30,44 @@
  *     1-bit in given value, or ZERO(0) if the given value is ZERO(0).
  *     >> assert(!x ||  (x &  (1 << (ffs(x)-1))));    // FFS-bit is set
  *     >> assert(!x || !(x & ((1 << (ffs(x)-1))-1))); // Less significant bits are clear */
-#define FFS __hybrid_ffs
+#define FFS __hybrid_ffs /*!export*/
 
 /* shift_t CLZ(UNSIGNED i):
  *     CountLeadingZeroes
  *     Return  the number of  leading ZEROes in `i',  starting at the most
  *     significant bit. When `i' is ZERO(0), then the result is undefined. */
-#define CLZ __hybrid_clz
+#define CLZ __hybrid_clz /*!export*/
 
 /* shift_t CTZ(UNSIGNED i):
  *     CounTrailingZeroes
  *     Return the number of trailing ZEROes in `i', starting at the  least
  *     significant bit. When `i' is ZERO(0), then the result is undefined. */
-#define CTZ __hybrid_ctz
+#define CTZ __hybrid_ctz /*!export*/
 
 /* shift_t POPCOUNT(UNSIGNED i):
  *     POPulationCOUNT
  *     Return the number of 1-bits in `i' */
-#define POPCOUNT __hybrid_popcount
+#define POPCOUNT __hybrid_popcount /*!export*/
 
 /* shift_t PARITY(UNSIGNED i):
  *     Return the parity of `i', that is `POPCOUNT(i) % 2' */
-#define PARITY __hybrid_parity
+#define PARITY __hybrid_parity /*!export*/
 
 /* shift_t CLRSB(signed Integer i):
  *     CoultLeadingRedundantSignBits
  *     Return the number of leading, redundant sign-bits,
  *     that is:  The number  of bits  following the  most
  *     significant bit that are identical to it. */
-#define CLRSB __hybrid_clrsb
+#define CLRSB __hybrid_clrsb /*!export*/
 
 /* UNSIGNED PEXT(UNSIGNED value, UNSIGNED mask):
  *     Parallel bit EXTract
  *     Return a compressed stream of bits from `value', selected by `mask'. */
-#define PEXT __hybrid_pext
+#define PEXT __hybrid_pext /*!export*/
 
 /* UNSIGNED PDEP(UNSIGNED value, UNSIGNED mask):
  *     Parallel bit DEPosit
  *     Decompress compressed bitset `value' by depositing as data selected by `mask'. */
-#define PDEP __hybrid_pdep
+#define PDEP __hybrid_pdep /*!export*/
 
 #endif /* !__GUARD_HYBRID_BIT_H */

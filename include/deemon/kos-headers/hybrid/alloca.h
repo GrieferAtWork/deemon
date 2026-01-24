@@ -17,15 +17,14 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!always_includes <hybrid/__alloca.h>*/
 #ifndef __GUARD_HYBRID_ALLOCA_H
 #define __GUARD_HYBRID_ALLOCA_H 1
 
 #include "__alloca.h"
 
 #ifdef __hybrid_alloca
-#define __ALLOCA __hybrid_alloca
-#define ALLOCA   __hybrid_alloca
+#define __ALLOCA __hybrid_alloca /*!export*/
+#define ALLOCA   __hybrid_alloca /*!export*/
 #endif /* __hybrid_alloca */
 
 #endif /* !__GUARD_HYBRID_ALLOCA_H */

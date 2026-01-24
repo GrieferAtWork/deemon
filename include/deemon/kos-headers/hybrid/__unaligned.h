@@ -17,6 +17,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __hybrid_unaligned_get* __hybrid_unaligned_get*_swap*/
+/*!export __hybrid_unaligned_getle* __hybrid_unaligned_getbe**/
+/*!export __hybrid_unaligned_set* __hybrid_unaligned_set*_swap*/
+/*!export __hybrid_unaligned_setle* __hybrid_unaligned_setbe**/
 #ifndef __GUARD_HYBRID___UNALIGNED_H
 #define __GUARD_HYBRID___UNALIGNED_H 1
 

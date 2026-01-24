@@ -17,6 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __hybrid_alloca __hybrid_alloca_IS_**/
 #ifndef __GUARD_HYBRID___ALLOCA_H
 #define __GUARD_HYBRID___ALLOCA_H 1
 

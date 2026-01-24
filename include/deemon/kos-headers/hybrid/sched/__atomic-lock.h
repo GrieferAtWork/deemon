@@ -17,6 +17,11 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __HYBRID_ATOMIC_LOCK**/
+/*!export __hybrid_atomic_lock*/
+/*!export __hybrid_atomic_lock_**/
+/*!export ___hybrid_atomic_lock_**/
+/*!export __hybrid_atomic_load*_with_atomic_lock*/
 #ifndef __GUARD_HYBRID_SCHED___ATOMIC_LOCK_H
 #define __GUARD_HYBRID_SCHED___ATOMIC_LOCK_H 1
 
@@ -47,7 +52,7 @@
 #define __NOPREEMPT /* Annotation for functions that may only be called with preemption disabled. */
 #endif /* !__NOPREEMPT */
 
-#define __SIZEOF_HYBRID_ATOMIC_LOCK __SIZEOF_INT__
+#define __SIZEOF_HYBRID_ATOMIC_LOCK __SIZEOF_INT__ /*!export*/
 
 #if defined(__CC__) || defined(__DEEMON__)
 __DECL_BEGIN

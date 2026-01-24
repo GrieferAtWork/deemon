@@ -17,6 +17,12 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __hybrid_bswap* __hybrid_bswap*_c*/
+/*!export __HYBRID_*_IS_**/
+/*!export __hybrid_htole* __hybrid_htole*_c*/
+/*!export __hybrid_htobe* __hybrid_htobe*_c*/
+/*!export __hybrid_letoh* __hybrid_letoh*_c*/
+/*!export __hybrid_betoh* __hybrid_betoh*_c*/
 #ifndef __GUARD_HYBRID___BYTESWAP_H
 #define __GUARD_HYBRID___BYTESWAP_H 1
 

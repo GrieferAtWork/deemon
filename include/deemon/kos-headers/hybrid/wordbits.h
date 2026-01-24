@@ -17,7 +17,12 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!always_includes <hybrid/__wordbits.h>*/
+/*!export INT16_I8 INT32_I8 INT64_I8*/
+/*!export INT32_I16 INT64_I16 INT64_I32*/
+/*!export ENCODE_INT**/
+/*!export INT16_BYTE INT32_BYTE INT64_BYTE*/
+/*!export INT32_WORD INT64_WORD*/
+/*!export INT64_DWORD*/
 #ifndef __GUARD_HYBRID_WORDBITS_H
 #define __GUARD_HYBRID_WORDBITS_H 1
 

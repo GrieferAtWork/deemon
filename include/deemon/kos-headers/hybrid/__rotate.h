@@ -17,6 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __hybrid_rol* __hybrid_rol*_c*/
+/*!export __hybrid_ror* __hybrid_ror*_c*/
 #ifndef __GUARD_HYBRID___ROTATE_H
 #define __GUARD_HYBRID___ROTATE_H 1
 

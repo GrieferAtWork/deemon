@@ -24,17 +24,17 @@
 
 #if (defined(_MSC_VER) && !defined(__clang__)) || defined(__CHECKER__)
 /* MSVC already has this kind of functionality built into the compiler. */
-#define __HYBRID_FUNCPTR32(return, cc, name, args) return (cc *__ptr32 name) args
-#define __HYBRID_FUNCPTR64(return, cc, name, args) return (cc *__ptr64 name) args
+#define __HYBRID_FUNCPTR32(return, cc, name, args) return (cc *__ptr32 name) args /*!export*/
+#define __HYBRID_FUNCPTR64(return, cc, name, args) return (cc *__ptr64 name) args /*!export*/
 #ifdef __PREPROCESSOR_HAVE_VA_ARGS
-#define __HYBRID_PTR32(...) __VA_ARGS__ *__ptr32
-#define __HYBRID_PTR64(...) __VA_ARGS__ *__ptr64
+#define __HYBRID_PTR32(...) __VA_ARGS__ *__ptr32 /*!export*/
+#define __HYBRID_PTR64(...) __VA_ARGS__ *__ptr64 /*!export*/
 #else /* __PREPROCESSOR_HAVE_VA_ARGS */
 #define __HYBRID_PTR32(T) T *__ptr32
 #define __HYBRID_PTR64(T) T *__ptr64
 #endif /* !__PREPROCESSOR_HAVE_VA_ARGS */
-#define __HYBRID_PTR32_IN_TRANSPARENT_STRUCT
-#define __HYBRID_PTR64_IN_TRANSPARENT_STRUCT
+#define __HYBRID_PTR32_IN_TRANSPARENT_STRUCT /*!export*/
+#define __HYBRID_PTR64_IN_TRANSPARENT_STRUCT /*!export*/
 #elif defined(__cplusplus)
 /* Use C++ features to implement fixed-length pointer types. */
 

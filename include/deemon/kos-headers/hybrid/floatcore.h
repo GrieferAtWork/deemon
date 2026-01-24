@@ -17,6 +17,9 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __FLT_*__ __DBL_*__ __LDBL_*__*/
+/*!export __DECIMAL_DIG__ __DEC_EVAL_METHOD__*/
+/*!export __DEC32_*__ __DEC64_*__ __DEC128_*__*/
 #ifndef __GUARD_HYBRID_FLOATCORE_H
 #define __GUARD_HYBRID_FLOATCORE_H 1
 

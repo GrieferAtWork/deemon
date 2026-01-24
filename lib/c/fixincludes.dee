@@ -1,0 +1,1547 @@
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from ..errors;
+import getClangFormatSpecs, ClangFormatSpecs from .clangformat;
+import ThreadPool, Task from ..threading.pool;
+import ..posix;
+import ..functools;
+
+local final ROOTDIR = posix.joinpath(posix.headof(__FILE__), r"../..");
+
+global Header;
+
+function printStderr(msg: string) {
+	File.stderr.write(msg + "\n");
+}
+
+class DependentFile {
+	this = default;
+	@@Filename (relative to caller's @Header)
+	public member filename: string | none = none;
+	@@Raw #include string that is required (in the form like `stddef.h` for `<stddef.h>`)
+	public member include: string | none = none;
+
+	public operator str(): string {
+		if (include !is none)
+			return f'<{include}>';
+		return f'"{filename}"';
+	}
+
+	public static ofIncludeString(inc: string): DependentFile {
+		if (inc.startswith('"')) {
+			assert inc.endswith('"');
+			return DependentFile(filename: inc[1:-1]);
+		}
+		assert inc.startswith('<');
+		assert inc.endswith('>');
+		return DependentFile(include: inc[1:-1]);
+	}
+
+	public property asDummyHeader: Header = {
+		get(): Header {
+			return Header(
+				filename: filename,
+				includes: include ? Set.frozen{include} : Set(),
+			);
+		}
+	}
+}
+
+class Header {
+	this = default;
+
+	@@Filename of this header (for forming relative/system include strings)
+	public member filename: string | none = none;
+
+	@@Raw #include-string that must be written after `#include ...`
+	@@When set to @none, the #include string is determined automatically
+	public member includes: Set with string = HashSet();
+
+	@@Disable use-comments for keywords from @exports from this @Header and included by source files
+	@@>>/*!fixincludes no_include_comments*/
+	public member noIncludeComments: bool = false;
+
+	@@Disable warning in IDE regarding unnecessary #includes
+	@@>>/*!fixincludes ignore_unnecessary_include*/
+	public member ignoreUnnecessaryInclude: bool = false;
+
+	@@Discourage #include-s to this header (instead: suggest other headers that `/*!always*/` include this one)
+	@@>>/*!fixincludes discourage_include*/
+	public member discourageInclude: bool = false;
+
+	@@Other files that are always included by this one (as specified by ``)
+	@@>>/*!always include <stdio.h>*/
+	@@>>#include <stdio.h> /*!always*/
+	public member alwaysIncludes: Set with DependentFile = HashSet();
+
+	@@Names of header files that always include this header
+	public member alwaysIncludedBy: Set with string = HashSet();
+
+	@@Keywords marked as being exported by this header
+	@@NOTE: When this set is empty, includes of this header must **NOT** be removed automatically,
+	@@      because that means that this header either serves a special purpose (e.g.: is a multi-
+	@@      include / code-generating header), or doesn't define any fixincludes specifications.
+	public member exports: Set with string = HashSet();
+
+	@@Sub-set of @exports that are inherited from @alwaysIncludes
+	public member exportsFromAlwaysIncludes: Set with string = HashSet();
+
+	@@Keywords group wildcard patterns for simplifying include strings
+	@@Groups are sorted by the length of their pattern, with longer
+	@@patterns being matched before shorter patterns are
+	public member exportGroups: {string...} = List();
+
+	@@Mapping for `{keyword: {{extraInclude...}...}}` where "extraInclude"
+	@@are the names of sets of additional headers of which at least one
+	@@set must be fully included (in addition to this header) in order
+	@@for the associated `keyword` to truly be exported.
+	@@
+	@@Used to implement the `!export(include(...))` directive
+	public member exportsAfterExtraIncludes: {string: Set with Set with DependentFile} = Dict();
+
+	public operator str(): string {
+		local inc: string | none = shortestInclude;
+		if (inc !is none)
+			return f"<{inc}>";
+		return f'"{filename}"';
+	}
+
+	public property shortestInclude: string | none = {
+		get(): string | none {
+			local result = none;
+			for (local inc: includes) {
+				if (result is none || #result > #inc)
+					result = inc;
+			}
+			return result;
+		}
+	}
+
+	@@Simplify a list of used exports from this header, by replacing matching elements with @exportGroups
+	function simplifyKeywordUseList(usedKwds: Set with string) {
+		for (local exportGroup: exportGroups) {
+			local matchedKeywords = usedKwds.filter(e -> e.wmatch(exportGroup));
+			if (#matchedKeywords >= 2) {
+				matchedKeywords = matchedKeywords.frozen;
+				usedKwds.removeall(matchedKeywords);
+				usedKwds.insert(exportGroup);
+			}
+		}
+	}
+}
+
+@@Mapping of default headers
+global final DEFAULT_HEADERS_BY_INCLUDE: {string: Header} = {
+#define DEFAULT_HEADER(inc, ...) inc: Header(includes: Set.frozen{inc}, __VA_ARGS__)
+	DEFAULT_HEADER("stdarg.h", exports: Set.frozen { "va_list", "va_start", "va_arg", "va_end" }),
+	DEFAULT_HEADER("stddef.h", exports: Set.frozen { "NULL", "size_t", "ptrdiff_t", "offsetof" }),
+	DEFAULT_HEADER("stdint.h", exports: Set.frozen {
+		"int8_t", "int16_t", "int32_t", "int64_t", "intptr_t",
+		"uint8_t", "uint16_t", "uint32_t", "uint64_t", "uintptr_t",
+		"INT8_C", "INT16_C", "INT32_C", "INT64_C",
+		"UINT8_C", "UINT16_C", "UINT32_C", "UINT64_C",
+		"INT8_MIN", "INT16_MIN", "INT32_MIN", "INT64_MIN",
+		"INT8_MAX", "INT16_MAX", "INT32_MAX", "INT64_MAX",
+		"UINT8_MAX", "UINT16_MAX", "UINT32_MAX", "UINT64_MAX",
+	}, exportGroups: {
+		"UINT*_MAX",
+		"INT*_MAX",
+		"UINT*_C",
+		"uint*_t",
+		"INT*_C",
+		"INT*_MIN",
+		"int*_t",
+	}),
+	DEFAULT_HEADER("stdbool.h", exports: Set.frozen { "bool", "true", "false" }),
+#undef DEFAULT_HEADER
+}.frozen;
+
+
+class HeaderParser {
+	public member filename: string;
+	public member header: Header;
+	public member data: Bytes;
+	public member pos: int = 0;
+	public member end: int;
+	public member allKeywords: {string...} = HashSet();
+	public member exportWildcards: {string...} = HashSet();
+	public member exportWildcardsAfterExtraIncludes: {string: Set with Set with DependentFile} = Dict();
+	public member notExportedKeywords: {string...} = HashSet();
+	public member notExportedWildcards: {string...} = HashSet();
+
+	public member lastExport: string | none = none;
+	public member lastExportPos: int = 0;
+	public member lastIncludeString: Bytes | none = none;
+	public member lastIncludeStringPos: int = 0;
+
+	this(filename: string) {
+		with (local fp = File.open(filename, "rb"))
+			data = fp.read();
+		end = #data;
+		header = Header(filename: filename);
+		this.filename = filename;
+	}
+
+	public lc(at: int): (int, int) {
+		local sol = data.rfind("\n", 0, at) + 1;
+		local lno = data.count("\n", 0, sol) + 1;
+		return (lno, 1 + at - sol);
+	}
+
+	public warn(at: int, msg: string): string {
+		local d = lc(at);
+		local text = f"{filename}({d[0]}, {d[1]}) : {msg}";
+		printStderr(text);
+		return text;
+	}
+
+	public err(at: int, msg: string) {
+		throw Error(warn(at, msg));
+	}
+
+	public addKeyword(kwd: string, pos: int) {
+		allKeywords.insert(kwd);
+		lastExport = kwd;
+		lastExportPos = pos;
+	}
+
+	public parseIncludeString(): Bytes {
+		while (pos < end && data.isspacexlf(pos))
+			++pos;
+		local includeStringStart: int = pos;
+		local includeStringEnd: int;
+		if (data.startswith('"', pos, end)) {
+			includeStringEnd = data.find('"', pos + 1, end);
+		} else if (data.startswith('<', pos, end)) {
+			includeStringEnd = data.find('>', pos + 1, end);
+		} else {
+			err(includeStringStart, "Expected '\"' or '<' after '#include'");
+		}
+		if (includeStringEnd < 0)
+			err(includeStringStart, "Unterminated #include string");
+		++includeStringEnd;
+		pos = includeStringEnd;
+		return data[includeStringStart:includeStringEnd];
+	}
+
+	@@Parse and return the next token (yield @"/*" or @"//" for comment start tokens)
+	public nextRawNoComment(extraSymbolChars: string = ""): string {
+		for (;;) {
+			if (pos >= end)
+				return "";
+			if (!data.isspace(pos))
+				break;
+			++pos;
+		}
+		for (local prefix: { "/*", "//" }) {
+			if (data.startswith(prefix, pos, end)) {
+				pos += #prefix;
+				return prefix;
+			}
+		}
+		local result = string.chr(data[pos]);
+		if (data.issymstrt(pos) || data.isdigit(pos) || result in extraSymbolChars) {
+			local kwdStart = pos;
+			do {
+				++pos;
+			} while (pos < end && (data.issymcont(pos) || (string.chr(data[pos]) in extraSymbolChars)));
+			return data[kwdStart:pos].decode("utf-8");
+		}
+		++pos;
+		switch (result) {
+
+		case "'":
+		case '"': {
+			local stop = result.ord();
+			local stringStart = pos;
+			local stringEnd = stringStart;
+			while (stringEnd < end &&
+			       (data[stringEnd] != stop || data[stringEnd - 1] == '\\'.ord()))
+				++stringEnd;
+			pos = stringEnd + 1;
+			/* Normalize to double-quote to simplify processing by caller */
+			return f'"{data[stringStart:stringEnd].decode("utf-8")}"';
+		}	break;
+
+		}
+		return result;
+	}
+
+	private findEol(pos: int): int {
+		local eol = data.find("\n", pos, end);
+		while (eol >= 0) {
+			local before = data[eol - 1];
+			if ((before == '\\'.ord()) ||
+				(before == '\r'.ord() && data[eol - 2] == '\\'.ord())) {
+				eol = data.find("\n", eol + 1, end);
+			} else {
+				break;
+			}
+		}
+		if (eol < 0)
+			eol = end;
+		return eol;
+	}
+
+	public nextExportKeyword(): string {
+		return nextRawNoComment("-*?");
+	}
+
+	public parseComment() {
+		if (!data.startswith("!", pos, end))
+			return;
+		local directiveStart = pos;
+		++pos;
+		local tok = nextRawNoComment();
+		switch (tok) {
+
+		case "export": {
+			tok = nextExportKeyword();
+again_export_directive:
+			local isWildcard: bool;
+			local keywordOrWildcard: string;
+			if (!tok) {
+				if (!lastExport)
+					err(directiveStart, f"Got /*!export*/ directive without preceding keyword");
+				isWildcard = false;
+				keywordOrWildcard = lastExport;
+			} else if (tok == "-") {
+				if (!lastExport)
+					err(directiveStart, f"Got /*!export-*/ directive without preceding keyword");
+				isWildcard = false;
+				keywordOrWildcard = "-" + lastExport;
+				tok = nextExportKeyword();
+			} else if ("*" in tok || "?" in tok) {
+				isWildcard = true;
+				keywordOrWildcard = tok;
+				tok = nextExportKeyword();
+			} else if (tok.issymbol() || (tok.startswith("-") && tok[1:].issymbol())) {
+				isWildcard = false;
+				keywordOrWildcard = tok;
+				tok = nextExportKeyword();
+			} else if (tok == "(") {
+				if (!lastExport)
+					err(directiveStart, f"Got /*!export(...)*/ directive without preceding keyword");
+				isWildcard = false;
+				keywordOrWildcard = lastExport;
+			} else {
+				err(directiveStart, f"Unexpected token after '/*!export': {repr tok}");
+			}
+
+			/* Deal with negative exports */
+			if (keywordOrWildcard.startswith("-")) {
+				(isWildcard ? notExportedWildcards : notExportedKeywords)
+					.insert(keywordOrWildcard[1:]);
+				if (tok)
+					goto again_export_directive;
+				break;
+			}
+
+			/* Remember export */
+			(isWildcard ? exportWildcards : header.exports)
+				.insert(keywordOrWildcard);
+
+			/* Process extra export parameters */
+			if (tok == "(") {
+				tok = nextRawNoComment();
+				for (;;) {
+					if (tok == "include") {
+						tok = nextRawNoComment();
+						if (tok != "(") {
+							err(directiveStart, f"Expected '(' after '/*!export {
+								keywordOrWildcard}(include', but got {repr tok}");
+						}
+						local reqIncludes: {DependentFile...} = HashSet();
+						for (;;) {
+							local incString = parseIncludeString().decode("utf-8");
+							reqIncludes.insert(DependentFile.ofIncludeString(incString));
+							tok = nextRawNoComment();
+							if (tok != ",")
+								break;
+						}
+						if (tok != ")") {
+							err(directiveStart, f"Expected ')' after '/*!export {
+									keywordOrWildcard}(include(...', but got {repr tok}");
+						}
+						(isWildcard ? exportWildcardsAfterExtraIncludes
+						            : header.exportsAfterExtraIncludes
+						).setdefault(keywordOrWildcard, HashSet()).insert(reqIncludes);
+						tok = nextRawNoComment();
+					} else {
+						err(directiveStart, f"Unexpected parameter {
+							repr tok} '/*!export {keywordOrWildcard}('");
+					}
+					if (tok != ",")
+						break;
+					tok = nextRawNoComment();
+					if (tok == ")")
+						break;
+				}
+				if (tok != ")") {
+					err(directiveStart, f"Expected ')' after '/*!export {
+						keywordOrWildcard}(include(...', but got {repr tok}");
+				}
+				tok = nextExportKeyword();
+			}
+			if (tok)
+				goto again_export_directive;
+		}	break;
+
+		case "fixincludes": {
+			tok = nextRawNoComment();
+			switch (tok) {
+			case "no_include_comments":
+				header.noIncludeComments = true;
+				break;
+			case "ignore_unnecessary_include":
+				header.ignoreUnnecessaryInclude = true;
+				break;
+			case "discourage_include":
+				header.discourageInclude = true;
+				break;
+			default:
+				err(directiveStart, f"Unsupported command: '/*!fixinclude {tok}...'");
+				break;
+			}
+			tok = nextRawNoComment();
+			if (tok)
+				err(directiveStart, f"Encountered garbage after '/*!fixinclude...*/': {repr tok}");
+		}	break;
+
+		case "always": {
+			tok = nextRawNoComment();
+			local includeString: Bytes;
+			if (!tok) {
+				includeString = lastIncludeString;
+				if (!includeString)
+					err(directiveStart, f"Got '/*!always*/' directive without preceding #include");
+				local sol = data.rfind("\n", 0, pos) + 1;
+				if (lastIncludeStringPos < sol) {
+					err(directiveStart,
+						f"Last include string {repr includeString} is on "
+						f"different line than '/*!always*/' directive");
+				}
+			} else if (tok == "include") {
+				includeString = parseIncludeString();
+			} else {
+				err(directiveStart, f"Unexpected token after '/*!always': {repr tok}");
+			}
+			local dep = DependentFile.ofIncludeString(includeString.decode("utf-8"));
+			header.alwaysIncludes.insert(dep);
+			tok = nextRawNoComment();
+			if (tok)
+				err(directiveStart, f"Encountered garbage after '/*!export ...*/': {repr tok}");
+		}	break;
+
+		case "KEEPME":
+			break;
+
+		case "always_includes": {
+			local includeString = parseIncludeString();
+			local dep = DependentFile.ofIncludeString(includeString.decode("utf-8"));
+			header.alwaysIncludes.insert(dep);
+			tok = nextRawNoComment();
+			if (tok)
+				err(directiveStart, f"Encountered garbage after '/*!always_includes ...*/': {repr tok}");
+		}	break;
+
+		case "included_by":
+			/* TODO: Legacy -- remove */
+			break;
+
+		default:
+			warn(directiveStart, f"Unknown fixincludes directive {repr tok}");
+			break;
+		}
+	}
+
+	@@Parse and return the next token (handles comments)
+	public nextRaw(): string {
+again:
+		local result = nextRawNoComment();
+		switch (result) {
+
+		case "/*": {
+			local commentEnd = data.find("*/", pos, end);
+			if (commentEnd < 0)
+				commentEnd = end;
+			local oldEnd = end;
+			end = commentEnd;
+			parseComment();
+			end = oldEnd;
+			pos = commentEnd + 2;
+			goto again;
+		}	break;
+
+		case "//": {
+			local eol = findEol(pos);
+			local oldEnd = end;
+			end = eol;
+			parseComment();
+			end = oldEnd;
+			pos = eol + 1;
+			goto again;
+		}	break;
+
+		default: break;
+		}
+		return result;
+	}
+
+	public parseDirective() {
+		local cmd = nextRaw();
+		switch (cmd) {
+
+		case "define": {
+			local kwdStart = pos;
+			local kwd = nextRaw();
+			if (!kwd.issymbol())
+				err(kwdStart, f"Expected keyword after '#define', but got {repr kwd}");
+			addKeyword(kwd, kwdStart);
+		}	break;
+
+		case "include":
+			lastIncludeStringPos = pos;
+			lastIncludeString = parseIncludeString();
+			break;
+
+		default: break;
+		}
+	}
+
+	@@Parse and return the next token (handles comments + PP directives)
+	public next(): string {
+again:
+		local result = nextRaw();
+		if (result == "#") {
+			local sol = data.rfind("\n", 0, pos) + 1;
+			if (data.isspace(sol, pos - 1)) {
+				local eol = findEol(pos);
+				local oldEnd = end;
+				end = eol;
+				parseDirective();
+				while (nextRaw()); /* Parse additional comments found within... */
+				end = oldEnd;
+				pos = eol + 1;
+				goto again;
+			}
+		}
+		return result;
+	}
+
+	@@Returns the last token before the final, closing paren
+	private skipParenBlock(open: string): (string, int) {
+		local close = {
+			"{" : "}",
+			"(" : ")",
+			"[" : "]",
+		}[open];
+		local count = 1;
+		local result = (open, pos);
+		for (;;) {
+			local tokPos = pos;
+			local tok = next();
+			if (tok == open) {
+				++count;
+				result = (tok, tokPos);
+			} else if (tok == close) {
+				--count;
+				if (count == 0)
+					break;
+			} else if (!tok) {
+				break;
+			} else {
+				result = (tok, tokPos);
+			}
+		}
+		return result;
+	}
+
+	public parseAll(): HeaderParser {
+again:
+		local tok = next();
+again_tok:
+		if (!tok)
+			return this;
+
+		/* Skip paren-blocks */
+		switch (tok) {
+
+		case "{":
+		case "[":
+skip_paren_block:
+			skipParenBlock(tok);
+			goto again;
+
+		case "(": {
+			local keyword, keywordPos = skipParenBlock(tok)...;
+			tok = next();
+			if (tok == "(" && keyword.issymbol()) {
+				/* This matches the "foo" in: "DECL int NOTHROW(LIBCCALL foo)(void);" */
+				addKeyword(keyword, keywordPos);
+				do {
+					skipParenBlock("(");
+					tok = next();
+				} while (tok == "(");
+			}
+			goto again_tok;
+		}	break;
+
+		case "struct":
+		case "union":
+		case "enum": {
+			local keywordPos = pos;
+			local keyword = next();
+			if (keyword in "([{") {
+				tok = keyword;
+				goto skip_paren_block;
+			}
+			for (;;) {
+				tok = next();
+				if (!tok || tok == "{")
+					break;
+				keyword = tok;
+			}
+			if (keyword.issymbol())
+				addKeyword(keyword, keywordPos);
+			goto again_tok;
+		}	break;
+
+		default: break;
+		}
+
+		if (!tok.issymbol())
+			goto again;
+		local keyword = tok;
+		local keywordPos = pos - #keyword; /* Hacky, but good enough */
+		tok = next();
+
+		/* This matches the "foo" in: "DECL int foo;" */
+		if (tok == ";") {
+			addKeyword(keyword, keywordPos);
+			goto again;
+		}
+
+		/* This matches the "foo" in: "DECL int foo();", but not "int" in "DECL int (foo)();" */
+		if (tok == "(") {
+			do {
+				local lastKwdInParen, lastKwdInParenPos = skipParenBlock("(")...;
+				tok = next();
+				if (tok == ";") {
+					/*     "DECL int foo();"
+					 * or: "DECL int (foo)();" */
+					addKeyword(keyword, keywordPos);
+					goto again;
+				}
+				if (!lastKwdInParen.issymbol())
+					goto again;
+				keyword = lastKwdInParen;
+				keywordPos = lastKwdInParenPos;
+			} while (tok == "(");
+		}
+		goto again_tok;
+	}
+
+	public finish(): Header {
+		local exports: HashSet with string = header.exports;
+		/* Add exports that were specified via wildcards */
+		if (exportWildcards.remove("*")) {
+			exports.insertall(allKeywords);
+		} else {
+			for (local kwd: allKeywords) {
+				if (exportWildcards.any(kwd.wmatch))
+					exports.insert(kwd);
+			}
+			for (local wc: exportWildcards) {
+				if (wc !in header.exportGroups)
+					header.exportGroups.append(wc);
+			}
+		}
+
+		/* Remove symbols that are explicitly NOT exported */
+		if (notExportedWildcards) {
+			for (local kwd: exports) {
+				if (notExportedWildcards.any(kwd.wmatch))
+					notExportedKeywords.insert(kwd);
+			}
+		}
+		exports.removeall(notExportedKeywords);
+
+		/* Add extra-include-requirements that were specified via wildcards */
+		for (local wc, incGroups: exportWildcardsAfterExtraIncludes) {
+			for (local kwd: allKeywords) {
+				if (kwd.wmatch(wc)) {
+					header.exportsAfterExtraIncludes
+						.setdefault(kwd, HashSet())
+						.insert(incGroups);
+				}
+			}
+		}
+		header.exportGroups.sort(e -> (-e.length, e)); /* group.length DESC, group ASC */
+		return header;
+	}
+}
+
+function loadHeader(filename: string): Header {
+	return HeaderParser(filename).parseAll().finish();
+}
+
+
+
+
+class SrcIncludeInfo {
+	this = default;
+	public final member include: string;
+	public member includeStringOffset: int;
+	public member includeStringEndOffset: int;
+	public member commentStartOffset: int | none;
+	public member commentEndOffset: int | none;
+	public member comment: Bytes | string | none;
+
+	public property asDependentFile: DependentFile = {
+		get(): DependentFile {
+			return DependentFile.ofIncludeString(include);
+		}
+	}
+
+	public patchOffsets(deltaStart: int, deltaOffset: int) {
+		if (includeStringOffset >= deltaStart)
+			includeStringOffset += deltaOffset;
+		if (includeStringEndOffset >= deltaStart)
+			includeStringEndOffset += deltaOffset;
+		if (commentStartOffset !is none &&
+		    commentStartOffset >= deltaStart)
+			commentStartOffset += deltaOffset;
+		if (commentEndOffset !is none &&
+		    commentEndOffset >= deltaStart)
+			commentEndOffset += deltaOffset;
+	}
+};
+
+class SrcIncludeGroup {
+	this = default;
+	public final member includes: {SrcIncludeInfo...} = [];
+	public member groupStartOffset: int;
+	public member groupEndOffset: int;
+
+	public patchOffsets(deltaStart: int, deltaOffset: int) {
+		if (groupStartOffset >= deltaStart)
+			groupStartOffset += deltaOffset;
+		if (groupEndOffset >= deltaStart)
+			groupEndOffset += deltaOffset;
+	}
+
+	public function containsIncludePriority(specs: ClangFormatSpecs, priority: int) {
+		for (local include: includes) {
+			if (priority == specs.getIncludePriorty(include.include))
+				return true;
+		}
+		return false;
+	}
+
+	public function reformat(specs: ClangFormatSpecs): Bytes | none {
+		if (!includes)
+			return none;
+		local regexToPriority: {string: int} = specs.IncludeCategories;
+		local includesByPriority: {int: {SrcIncludeInfo...}} = Dict();
+		for (local include: includes) {
+			local priority = specs.getIncludePriorty(include.include);
+			includesByPriority.setdefault(priority, []).append(include);
+		}
+		if (specs.SortIncludes) {
+			for (local none, includes: includesByPriority)
+				includes.sort();
+		}
+		File.Writer result;
+		for (local prio: includesByPriority.keys.sorted()) {
+			local includes = includesByPriority[prio];
+			local maxIncludeStringLength = includes.each.include.length > ...;
+			for (local include: includes) {
+				local includeString = include.include;
+				result << "#include " << includeString;
+				if (include.comment !is none) {
+					result << " " * (maxIncludeStringLength - #includeString);
+					result << " /* " << include.comment << " */";
+				}
+				result << "\n";
+			}
+			result << "\n"; /* Group separator */
+		}
+		return result.string.encode("utf-8").rstrip(); /* Strip unnecessary, trailing linefeeds */
+	}
+
+	public function addInclude(include: string, comment: string) {
+		includes.append(SrcIncludeInfo(
+			include: include,
+			includeStringOffset: -1,
+			includeStringEndOffset: -1,
+			commentStartOffset: none,
+			commentEndOffset: none,
+			comment: comment,
+		));
+	}
+}
+
+global FixIncludes;
+
+class SrcFileInfo {
+	this = default;
+	public final member filename: string;
+	public final member includes: {string: SrcIncludeInfo};
+	public final member keywords: {string...};
+	public final member noFormatRegions: {(int, int)...};
+	public member data: Bytes;
+	public member dataChanged: bool = false;
+
+	private member m_clangFormatSpecs: ClangFormatSpecs;
+	public property clangFormatSpecs: ClangFormatSpecs = {
+		get(): ClangFormatSpecs {
+			if (m_clangFormatSpecs !is bound)
+				m_clangFormatSpecs = getClangFormatSpecs(posix.headof(filename));
+			return m_clangFormatSpecs;
+		}
+	}
+
+
+	private function getIncludeLineStart(inc: SrcIncludeInfo): int {
+		return data.rfind("\n", 0, inc.includeStringOffset) + 1;
+	}
+	private function getIncludeLineEnd(inc: SrcIncludeInfo): int {
+		local result;
+		if (inc.commentEndOffset is none) {
+			result = inc.includeStringEndOffset;
+		} else {
+			result = data.index("*/", inc.commentEndOffset) + 2;
+		}
+		while (result < #data && data.isspacexlf(result))
+			++result;
+		return result;
+	}
+
+	private member m_includeGroups: {SrcIncludeGroup...};
+	public property includeGroups: {SrcIncludeGroup...} = {
+		get(): {SrcIncludeGroup...} {
+			if (m_includeGroups is bound)
+				return m_includeGroups;
+			local sortedIncludes: {SrcIncludeInfo...} = includes.values.sorted(e -> e.includeStringOffset);
+			local result: {SrcIncludeGroup...} = List();
+			local currentGroup = SrcIncludeGroup();
+			for (local inc: sortedIncludes) {
+				if (!currentGroup.includes) {
+insert_first_include:
+					currentGroup.includes.append(inc); /* First include of group */
+					currentGroup.groupStartOffset = getIncludeLineStart(inc);
+					currentGroup.groupEndOffset = getIncludeLineEnd(inc);
+				} else {
+					local prevIncludeEnd = currentGroup.groupEndOffset;
+					local thisIncludeLine = getIncludeLineStart(inc);
+					while (prevIncludeEnd < thisIncludeLine && data.isspace(prevIncludeEnd))
+						++prevIncludeEnd;
+					if (prevIncludeEnd >= thisIncludeLine) {
+						/* Same group */
+						currentGroup.includes.append(inc);
+						currentGroup.groupEndOffset = getIncludeLineEnd(inc);
+					} else {
+//						printStderr("NEW GROUP:");
+//						printStderr(f"	prev: {prevIncludeEnd} {repr lc(prevIncludeEnd)}");
+//						printStderr(f"	curr: {thisIncludeLine} {repr lc(thisIncludeLine)}");
+//						printStderr(f"	data: {repr data[prevIncludeEnd:thisIncludeLine]}");
+
+						/* New group */
+						result.append(currentGroup);
+						currentGroup = SrcIncludeGroup();
+						goto insert_first_include;
+					}
+				}
+			}
+			if (currentGroup.includes)
+				result.append(currentGroup);
+			m_includeGroups = result;
+			return result;
+		}
+	}
+
+	public function isFormattingDisabledAt(offset: int): bool {
+		for (local start, end: noFormatRegions) {
+			if (offset >= start && offset < end)
+				return true;
+		}
+		return false;
+	}
+
+	private patchOffsets(deltaStart: int, deltaOffset: int) {
+		for (local inc: includes.values) {
+			inc.patchOffsets(deltaStart, deltaOffset);
+		}
+		if (m_includeGroups is bound) {
+			for (local group: m_includeGroups)
+				group.patchOffsets(deltaStart, deltaOffset);
+		}
+		for (local i: [:#noFormatRegions]) {
+			local start, end = noFormatRegions[i]...;
+			if (start >= deltaStart)
+				start += deltaOffset;
+			if (end >= deltaStart)
+				end += deltaOffset;
+			noFormatRegions[i] = (start, end);
+		}
+	}
+
+	private overwrite(offset: int, count: int, more: string | Bytes): bool {
+		if (count || more) {
+			if (more is string)
+				more = more.encode("utf-8");
+			local oldData = data[offset:offset + count];
+			if (oldData != more) {
+				data = data[:offset] + more + data[offset+count:];
+				dataChanged = true;
+				patchOffsets(offset, #more - count);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private insert(offset: int, more: string | Bytes) {
+		return overwrite(offset, 0, more);
+	}
+
+	private delete(offset: int, count: int) {
+		return overwrite(offset, count, "");
+	}
+
+	private lc(offset: int): (int, int) {
+		local sol = data.rfind("\n", 0, offset) + 1;
+		local lno = data.count("\n", 0, sol) + 1;
+		return (lno, 1 + offset - sol);
+	}
+
+	@@Returns sequence {(missingHeader, {usedKeywordFromheader...})...}
+	@@@param keywordsFromIncludes Keywords that belong to known includes
+	public function getMissingHeadersAndKeywords(
+			fixIncludes: FixIncludes,
+			keywordsFromIncludes: {string...},
+			includedFilenames: {string...}
+	): {(Header, Set with string)...} {
+		local missingHeaders: {Header...} = [];
+		local missingByFilename: {string: Set with string} = Dict();
+		for (local kwd: keywords) {
+			if (kwd in keywordsFromIncludes)
+				continue; /* From known include... */
+			local missingHeaderCombinations: Set with {Header...} = fixIncludes.getHeaderByExport(kwd);
+			if (!missingHeaderCombinations)
+				continue;
+			if (missingHeaderCombinations.flatten.any(e -> e.filename == filename))
+				continue; /* Symbol is defined by the file we're trying to fix -> ignore */
+
+			local usedCombination: {Header...} | none = none;
+			local usedCombinationScore: int = 99999999999999;
+			for (local combination: missingHeaderCombinations) {
+				local combinationFilenames: {string...} = combination.each.filename;
+				local stillMissingIncludes = 0;
+				for (local hdr: combination) {
+					local hdrFilename = hdr.filename;
+					if (hdrFilename !in includedFilenames &&
+					    hdrFilename !in missingByFilename)
+						stillMissingIncludes += 2;
+					if (kwd in hdr.exportsFromAlwaysIncludes)
+						stillMissingIncludes += 1; /* Discourage this inclusion over the original header */
+				}
+				local score = stillMissingIncludes + #combination * 4;
+				if (usedCombination is none || usedCombinationScore > score) {
+					usedCombination = combination;
+					usedCombinationScore = score;
+				}
+			}
+			assert usedCombination !is none;
+			for (local hdr: usedCombination) {
+				local hdrFilename = hdr.filename;
+				local importedKeywords: (Set with string) | none = missingByFilename.get(hdrFilename);
+				if (importedKeywords is none) {
+					missingByFilename[hdrFilename] = importedKeywords = HashSet();
+					missingHeaders.append(hdr);
+				}
+				importedKeywords.insert(kwd);
+			}
+		}
+		return (
+			for (local hdr: missingHeaders)
+				(hdr, missingByFilename[hdr.filename])
+		);
+	}
+
+	public fix(fixIncludes: FixIncludes) {
+		local removedIncludes: {string...} = HashSet();
+		local keywordsFromIncludes: {string...} = HashSet();
+		local includedFilenames: {string...} = HashSet();
+		for (local inc: includes.values) {
+			local incHdr = fixIncludes.getDependentHeader(filename, inc.asDependentFile);
+			if (incHdr !is none) {
+				includedFilenames.insert(incHdr.filename);
+				local usedKwds = HashSet(
+					for (local k: incHdr.exports)
+						if (k in this.keywords)
+							k
+				);
+				if (!usedKwds) {
+					if (!isFormattingDisabledAt(inc.includeStringOffset)) {
+						printStderr(f"{filename}: Removing unnecessary include {inc.include}");
+						local sol = getIncludeLineStart(inc);
+						local eol = getIncludeLineEnd(inc);
+						if (eol < #data && data.islf(eol))
+							++eol;
+						delete(sol, eol - sol);
+						removedIncludes.insert(inc.include);
+					}
+				} else {
+					keywordsFromIncludes.insertall(usedKwds);
+					incHdr.simplifyKeywordUseList(usedKwds);
+					local correctKwdsComment = ", ".join(usedKwds.sorted(
+						functools.predcmp2key(string.vercompare)
+					));
+					local actualKwdsComment = "";
+					if (inc.commentStartOffset !is none) {
+						actualKwdsComment = data[
+							inc.commentStartOffset:
+							inc.commentEndOffset
+						].decode("utf-8");
+					}
+					if (actualKwdsComment != correctKwdsComment &&
+					    !isFormattingDisabledAt(inc.commentStartOffset)) {
+						printStderr(f"{filename}: Fixing bad comment for {inc.include}: {
+							repr actualKwdsComment} -> {repr correctKwdsComment}");
+						if (inc.commentStartOffset !is none) {
+							overwrite(
+								inc.commentStartOffset,
+								inc.commentEndOffset - inc.commentStartOffset,
+								correctKwdsComment);
+						} else {
+							local data = f" /* {correctKwdsComment} */".encode("utf-8");
+							local index = inc.includeStringEndOffset;
+							insert(index, data);
+							inc.commentStartOffset = index + 4;
+							inc.commentEndOffset = index + #data - 3;
+						}
+						inc.comment = correctKwdsComment;
+					}
+				}
+			}
+		}
+		for (local x: removedIncludes)
+			del includes[x];
+
+		/* Check for missing includes, insert into groups, and re-format groups */
+		local missing = getMissingHeadersAndKeywords(
+				fixIncludes: fixIncludes,
+				keywordsFromIncludes: keywordsFromIncludes,
+				includedFilenames: includedFilenames,
+		);
+		local includeGroups = this.includeGroups;
+		for (local hdr, keywords: missing) {
+			local bestSystemIncludeString: string | none = hdr.shortestInclude;
+			local missingIncludeString: string = bestSystemIncludeString !is none
+				? f"<{bestSystemIncludeString}>"
+				: f'"{posix.relpath(hdr.filename, posix.headof(filename))}"';
+			keywords = HashSet(keywords);
+			hdr.simplifyKeywordUseList(keywords);
+			local comment = ", ".join(keywords.sorted(
+				functools.predcmp2key(string.vercompare)
+			));
+			local preferredIncludeGroup: SrcIncludeGroup | none = none;
+			local includePriority: int | none = none;
+			for (local grp: includeGroups) {
+				if (isFormattingDisabledAt(grp.groupStartOffset))
+					continue;
+				if (includePriority is none)
+					includePriority = clangFormatSpecs.getIncludePriorty(missingIncludeString);
+				if (grp.containsIncludePriority(clangFormatSpecs, includePriority)) {
+					preferredIncludeGroup = grp;
+					break;
+				}
+				if (preferredIncludeGroup is none)
+					preferredIncludeGroup = grp;
+			}
+			if (preferredIncludeGroup is none) {
+				printStderr(f"{filename}: Cannot automatically add missing include: #include {
+					missingIncludeString} /* {comment} */");
+			} else {
+				preferredIncludeGroup.addInclude(missingIncludeString, comment);
+				printStderr(f"{filename}: Adding missing include: #include {
+					missingIncludeString} /* {comment} */");
+			}
+		}
+
+		/* Re-format groups */
+		for (local grp: includeGroups) {
+			if (isFormattingDisabledAt(grp.groupStartOffset))
+				continue;
+			local reformattedBytes = grp.reformat(clangFormatSpecs);
+			if (reformattedBytes !is none) {
+				if (overwrite(
+						grp.groupStartOffset,
+						grp.groupEndOffset - grp.groupStartOffset,
+						reformattedBytes
+				)) {
+					local d = lc(grp.groupStartOffset);
+					printStderr(f"{filename}({d[0]}, {d[1]}): Re-formatted #include group");
+				}
+			}
+		}
+
+		if (dataChanged) {
+			with (local fp = File.open(filename, "wb"))
+				fp.write(data);
+		}
+	}
+}
+
+function loadSrcFileInfo(filename: string): SrcFileInfo {
+	local data: Bytes;
+	with (local fp = File.open(filename, "rb"))
+		data = fp.readall();
+	local i = 0, len = #data;
+	local includes: {string: SrcIncludeInfo} = Dict();
+	local keywords: {string...} = HashSet();
+	local noFormatRegions: {(int, int)...} = List();
+	local currentNoFormatRegionStart: int | none = none;
+	while (i < len) {
+		if (data.isspace(i)) {
+			++i;
+			continue;
+		} else if (data.startswith("//", i)) {
+			i += 2;
+seek_eol:
+			i = data.find("\n", i);
+			if (i < 0)
+				break;
+			++i;
+		} else if (data.startswith("/*", i)) {
+			if (data.startswith("/* clang-format off */", i)) {
+				currentNoFormatRegionStart = i;
+			} else if (data.startswith("/* clang-format on */", i)) {
+				if (currentNoFormatRegionStart !is none) {
+					noFormatRegions.append((currentNoFormatRegionStart, i));
+					currentNoFormatRegionStart = none;
+				}
+			}
+			i = data.find("*/", i + 2);
+			if (i < 0)
+				break;
+			i += 2;
+		} else if (data.startswith("#", i)) {
+			local sol = data.rfind("\n", 0, i) + 1;
+			if ((sol >= i) || data.isspace(sol, i)) {
+				do {
+					++i;
+				} while (i < len && data.isspace(i));
+				if (data.startswith("include ", i)) {
+					i += #"include ";
+					while (i < len && data.isspace(i))
+						++i;
+					local includeStart = i;
+					if (data.startswith('"', i)) {
+						i = data.find('"', i + 1);
+						if (i < 0)
+							break;
+					} else if (data.startswith('<', i)) {
+						i = data.find('>', i + 1);
+						if (i < 0)
+							break;
+					} else {
+						goto seek_eol;
+					}
+					++i;
+					local includeEnd = i;
+					local includeString = data[includeStart:includeEnd].decode("utf-8");
+					while (i < len && data.isspacexlf(i))
+						++i;
+					local commentStartOffset: int | none = none;
+					local commentEndOffset: int | none = none;
+					if (data.startswith("/*", i)) {
+						i += 2;
+						commentStartOffset = i;
+						i = data.find("*/", i);
+						if (i < 0)
+							break;
+						commentEndOffset = i;
+						i += 2;
+					} else if (data.startswith("//", i)) {
+						i += 2;
+						commentStartOffset = i;
+						i = data.find("\n", i);
+						if (i < 0)
+							break;
+						commentEndOffset = i;
+						i += 1;
+					}
+					local comment = none;
+					if (commentStartOffset !is none) {
+						while (commentStartOffset < commentEndOffset && data.isspace(commentStartOffset))
+							++commentStartOffset;
+						while (commentEndOffset > commentStartOffset && data.isspace(commentEndOffset - 1))
+							--commentEndOffset;
+						comment = data[commentStartOffset:commentEndOffset];
+					}
+					if (includeString !in includes) {
+						includes[includeString] = SrcIncludeInfo(
+							include: includeString,
+							includeStringOffset: includeStart,
+							includeStringEndOffset: includeEnd,
+							commentStartOffset: commentStartOffset,
+							commentEndOffset: commentEndOffset,
+							comment: comment,
+						);
+					}
+					goto seek_eol;
+				}
+			}
+			++i;
+		} else if (data.issymstrt(i)) {
+			local kwdStart = i;
+			do {
+				++i;
+			} while (i < len && data.issymcont(i));
+			keywords.insert(data[kwdStart:i].decode("utf-8"));
+		} else {
+			++i;
+		}
+	}
+
+	return SrcFileInfo(
+		filename: filename,
+		includes: includes,
+		keywords: keywords.frozen,
+		data: data,
+		noFormatRegions: noFormatRegions,
+	);
+}
+
+
+
+@@Main FixIncludes controller
+class FixIncludes {
+	this = default;
+
+	@@Headers mapped by their system include names
+	public member headersByInclude: {string: Header} = Dict();
+
+	@@Headers mapped by their (normalized) filesystem names
+	public member headersByFilename: {string: Header} = Dict();
+
+	@@Exports mapped to the sets of headers that must be
+	@@included in order to get those exports
+	public member headersByExport: {string: Set with {Header...}} = Dict();
+
+	public function getHeaderByInclude(include: string): Header | none {
+		local result = headersByInclude.get(include);
+		if (result is none)
+			result = DEFAULT_HEADERS_BY_INCLUDE.get(include);
+		return result;
+	}
+
+	public function getHeaderByFilename(filename: string): Header | none {
+		return headersByFilename.get(filename);
+	}
+
+	@@Return groups of headers which (when combined) make @keyword available
+	@@Headers marked as `/*!fixincludes discourage_include*/` and that are
+	@@always included by other headers are replace with those other headers
+	@@in the returned sequence.
+	public function getHeaderByExport(keyword: string): Set with {Header...} {
+		return headersByExport.get(keyword, {});
+	}
+
+	@@Return the header specified by @dep and included by @base
+	public function getDependentHeader(base: Header | string, dep: DependentFile): Header | none {
+		if (dep.filename !is none) {
+			local depFilename = posix.resolvepath(
+				posix.joinpath(posix.headof(base is string ? base : base.filename), dep.filename));
+			local result = getHeaderByFilename(depFilename);
+			if (result !is none)
+				return result;
+		}
+		if (dep.include !is none)
+			return getHeaderByInclude(dep.include);
+		return none;
+	}
+
+	private doLoadHeaderInPath(
+			relPath: string, absPath: string,
+			pool: ThreadPool, fileTasks: {string: Task},
+			excludedPaths: {string...}) {
+		for (local ent: posix.opendir(absPath)) {
+			local name = ent.d_name;
+			local relName = f'{relPath}/{name}'.lstrip("/");
+			local absName = posix.joinpath(absPath, name);
+			if (absName in excludedPaths)
+				continue;
+			if (ent.d_type == posix.DT_REG) {
+				if (name.endswith(".h")) {
+					local existingTask: Task | none = fileTasks.get(absName);
+					if (existingTask !is none) {
+						local hdr = existingTask.waitfor();
+						hdr.includes.insert(relName);
+						headersByInclude[relName] = hdr;
+					} else {
+						fileTasks[absName] = pool.run(() -> {
+							printStderr(f"Scan header {repr absName}...");
+							local hdr = loadHeader(absName);
+							hdr.includes.insert(relName);
+							headersByFilename[absName] = hdr;
+							headersByInclude[relName] = hdr;
+							printStderr(f"Done header {repr absName}");
+							return hdr;
+						});
+					}
+				}
+			} else if (ent.d_type == posix.DT_DIR) {
+				doLoadHeaderInPath(relName, absName, pool, fileTasks, excludedPaths);
+			}
+		}
+	}
+
+	@@Load files from the given set to system include paths
+	public addIncludePaths(paths: {string...}, excludedPaths: {string...} = ()): FixIncludes {
+		local pool = ThreadPool();
+		local fileTasks: {string: Task} = Dict();
+		excludedPaths = Set.frozen(for (local xp: excludedPaths) posix.resolvepath(posix.abspath(xp)));
+		for (local path: paths.sorted()) {
+			path = posix.resolvepath(posix.abspath(path));
+			doLoadHeaderInPath("", path, pool, fileTasks, excludedPaths);
+		}
+		pool.waitfor();
+		for (local task: fileTasks.values)
+			task.waitfor();
+		return this;
+	}
+
+
+
+	@@Recursively resolve `#include ... /*!always*/` directives by
+	@@adding the always-included header of one header to another
+	@@header that always includes the first. Then, add the exports
+	@@to of all always-included headers to headers that always include
+	@@those other headers.
+	public addImplicitIncludesAndExports() {
+		/* Transfer implicit always-includes */
+		local foundNestedRecursiveIncludes;
+		do {
+			foundNestedRecursiveIncludes = false;
+			for (local hdr: headersByFilename.values) {
+				local more: {DependentFile...} = HashSet();
+				for (local always: hdr.alwaysIncludes) {
+					local dep: Header | none = getDependentHeader(hdr, always);
+					if (dep !is none) {
+						for (local a: dep.alwaysIncludes) {
+							if (a.filename !is none) {
+								local srcDir = posix.headof(dep.filename);
+								local dstDir = posix.headof(hdr.filename);
+								local newFilename = a.filename;
+								if (!posix.isabs(newFilename))
+									newFilename = posix.abspath(newFilename, srcDir);
+								newFilename = posix.relpath(newFilename, dstDir);
+								if (posix.FS_SEP != "/")
+									newFilename = newFilename.replace(posix.FS_SEP, "/");
+								a = DependentFile(filename: newFilename, include: a.include);
+							}
+							if (a !in hdr.alwaysIncludes)
+								more.insert(a);
+						}
+					}
+				}
+				if (more) {
+					hdr.alwaysIncludes.insertall(more);
+					foundNestedRecursiveIncludes = true;
+				}
+			}
+		} while (foundNestedRecursiveIncludes);
+
+		/* Populate the "alwaysIncludedBy" attributes of headers */
+		for (local hdr: headersByFilename.values) {
+			for (local always: hdr.alwaysIncludes) {
+				local dep: Header | none = getDependentHeader(hdr, always);
+				if (dep !is none)
+					dep.alwaysIncludedBy.insert(hdr.filename);
+			}
+		}
+
+		/* Add implicit always-exports */
+		local foundNestedRecursiveExports;
+		do {
+			foundNestedRecursiveExports = false;
+			for (local hdr: headersByFilename.values) {
+				local more: {string...} = HashSet();
+				for (local always: hdr.alwaysIncludes) {
+					local dep: Header | none = getDependentHeader(hdr, always);
+					if (dep !is none) {
+						for (local a: dep.exports) {
+							if (a !in hdr.exports)
+								more.insert(a);
+						}
+					}
+				}
+				if (more) {
+					hdr.exports.insertall(more);
+					hdr.exportsFromAlwaysIncludes.insertall(more);
+					foundNestedRecursiveExports = true;
+				}
+			}
+		} while (foundNestedRecursiveExports);
+	}
+
+	@@Populate @headersByExport
+	public buildHeadersByExport() {
+		local headersByExport: {string: Set with {Header...}} = Dict();
+		for (local hdr: headersByFilename.values) {
+			if (hdr.alwaysIncludedBy && hdr.discourageInclude) {
+				/* Ignore these types of headers (another
+				 * header that should be included instead) */
+				continue;
+			}
+			local exportsAfterExtraIncludes: {string: Set with Set with DependentFile}
+				= hdr.exportsAfterExtraIncludes;
+			for (local export: hdr.exports) {
+				local extraIncludesCombinations: Set with Set with DependentFile
+					= exportsAfterExtraIncludes.get(export, Set());
+				local exportHeaders: Set with {Header...} | none = headersByExport.get(export);
+				if (exportHeaders is none)
+					headersByExport[export] = exportHeaders = HashSet();
+				if (!extraIncludesCombinations) {
+					/* Likely case: no extra includes necessary */
+					exportHeaders.insert({ hdr });
+				} else {
+					/* Complicated case: more headers are needed */
+					for (local dependentIncludes: extraIncludesCombinations) {
+						local neededHeaders: {Header...} = List({ hdr });
+						for (local dependentInclude: dependentIncludes) {
+							local depHdr: Header | none = getDependentHeader(hdr, dependentInclude);
+							if (depHdr is none)
+								depHdr = dependentInclude.asDummyHeader;
+							neededHeaders.append(depHdr);
+						}
+						neededHeaders.sort(e -> e.filename ?? "");
+						exportHeaders.insert(neededHeaders);
+					}
+				}
+			}
+		}
+		for (local inclusionSets: headersByExport.values) {
+			assert inclusionSets;
+			if (#inclusionSets >= 2) {
+				/* Check if we can simplify the set:
+				 *
+				 */
+			}
+		}
+		this.headersByExport = headersByExport;
+	}
+
+	@@Helper method that does all calls necessary once
+	@@all calls to @addIncludePaths have been placed:
+	@@ - @addImplicitIncludesAndExports
+	@@ - @buildHeadersByExport
+	public finish(): FixIncludes {
+		addImplicitIncludesAndExports();
+		buildHeadersByExport();
+		return this;
+	}
+
+	@@Print a dump of @headersByExport, which essentially dumps info
+	@@describing which keyword is exported by which set of headers.
+	public dumpExports(): FixIncludes {
+		local longestKeywordLength = headersByExport.keys.each.length > ...;
+		for (local kwd: headersByExport.keys.sorted()) {
+			local hdrCombinations: Set with {Header...} = headersByExport[kwd];
+			print(kwd.ljust(longestKeywordLength), " : ", f"\{ {", ".join(hdrCombinations.map(
+				(hdrs: {Header...}) -> f"\{ {", ".join(hdrs.map(operator str))} \}"
+			))} \}");
+		}
+		return this;
+	}
+
+	@@Print a dump of loaded headers, and their configurations (useful to
+	@@see what was actually loaded, and debug weird behavior when includes
+	@@appear to be linked incorrectly)
+	public dumpHeaders(): FixIncludes {
+		for (local filename: headersByFilename.keys.sorted()) {
+			local hdr: Header = headersByFilename[filename];
+			print(filename, ":");
+			if (hdr.includes) {
+				print("	includes:");
+				for (local inc: hdr.includes.sorted())
+					print("		- ", inc);
+			}
+			if (hdr.noIncludeComments)
+				print("	noIncludeComments");
+			if (hdr.ignoreUnnecessaryInclude)
+				print("	ignoreUnnecessaryInclude");
+			if (hdr.discourageInclude)
+				print("	discourageInclude");
+			if (hdr.alwaysIncludes) {
+				print("	alwaysIncludes:");
+				for (local x: hdr.alwaysIncludes.map(operator str).sorted())
+					print("		- ", x);
+			}
+			if (hdr.exports) {
+				print("	exports:");
+				local longestExportLength: int = hdr.exports.each.length > ...;
+				for (local x: hdr.exports.sorted()) {
+					print("		- ", x),;
+					if (x in hdr.exportsFromAlwaysIncludes)
+						print(" " * (longestExportLength - #x), " !inherited"),;
+					print;
+				}
+			}
+			if (hdr.exportGroups) {
+				print("	exportGroups:");
+				for (local x: hdr.exportGroups)
+					print("		- ", x);
+			}
+			if (hdr.exportsAfterExtraIncludes) {
+				print("	exportsAfterExtraIncludes:");
+				for (local x: hdr.exportsAfterExtraIncludes.keys.sorted()) {
+					local extra: Set with Set with DependentFile = hdr.exportsAfterExtraIncludes[x];
+					print("		- ", x, ": ", ", ".join((
+						for (local includeGroup: extra)
+							f'\{ {", ".join(includeGroup.map(e -> str e))} \}'
+					).sorted()));
+				}
+			}
+		}
+		return this;
+	}
+
+
+	@@Fix `#include`-s in @filename based on information loaded into @this @FixIncludes
+	public fixFile(filename: string): FixIncludes {
+		loadSrcFileInfo(filename).fix(this);
+		return this;
+	}
+}
+
+
+/* TODO: Combination of "/util/scripts/fixincludes.dee" and KOS's "/misc/build/editorconfig.dee"
+ * Should be a fully-featured program that can be used to:
+ * - Find missing #include-s
+ * - Generate a ".editorconfig" suitable for use with visual studio
+ */
+

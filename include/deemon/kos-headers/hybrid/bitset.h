@@ -17,7 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!always_includes <hybrid/__bitset.h>*/
+/*!export _BITSET_* BITSET_* bitset_**/
 #ifndef __GUARD_HYBRID_BITSET_H
 #define __GUARD_HYBRID_BITSET_H 1
 
@@ -425,12 +425,12 @@ __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1, 2)) __BOOL bitset_ncmpgr0(bitset_t
 
 /* Atomic bitset operations. */
 #ifdef __GUARD_HYBRID___ATOMIC_H
-#define bitset_atomic_set(self, bitno)        __hybrid_bitset_atomic_set(self, bitno)
-#define bitset_atomic_clear(self, bitno)      __hybrid_bitset_atomic_clear(self, bitno)
-#define bitset_atomic_flip(self, bitno)       __hybrid_bitset_atomic_flip(self, bitno)
-#define bitset_atomic_fetchset(self, bitno)   __hybrid_bitset_atomic_fetchset(self, bitno)
-#define bitset_atomic_fetchclear(self, bitno) __hybrid_bitset_atomic_fetchclear(self, bitno)
-#define bitset_atomic_fetchflip(self, bitno)  __hybrid_bitset_atomic_fetchflip(self, bitno)
+#define bitset_atomic_set(self, bitno)        __hybrid_bitset_atomic_set(self, bitno)        /*!export(include("__atomic.h"), include("atomic.h"))*/
+#define bitset_atomic_clear(self, bitno)      __hybrid_bitset_atomic_clear(self, bitno)      /*!export(include("__atomic.h"), include("atomic.h"))*/
+#define bitset_atomic_flip(self, bitno)       __hybrid_bitset_atomic_flip(self, bitno)       /*!export(include("__atomic.h"), include("atomic.h"))*/
+#define bitset_atomic_fetchset(self, bitno)   __hybrid_bitset_atomic_fetchset(self, bitno)   /*!export(include("__atomic.h"), include("atomic.h"))*/
+#define bitset_atomic_fetchclear(self, bitno) __hybrid_bitset_atomic_fetchclear(self, bitno) /*!export(include("__atomic.h"), include("atomic.h"))*/
+#define bitset_atomic_fetchflip(self, bitno)  __hybrid_bitset_atomic_fetchflip(self, bitno)  /*!export(include("__atomic.h"), include("atomic.h"))*/
 #endif /* __GUARD_HYBRID___ATOMIC_H */
 
 __DECL_END

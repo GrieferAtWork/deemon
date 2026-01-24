@@ -17,7 +17,9 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!included_by <__stdinc.h>*/
+/*!fixincludes no_include_comments*/
+/*!fixincludes discourage_include*/
+/*!export **/
 #ifdef __NO_PROTOTYPES
 #undef __NO_PROTOTYPES
 #undef __P
@@ -159,6 +161,7 @@
 #define __NAMESPACE_STD_END                 }
 #define __NAMESPACE_STD_SYM                 ::std::
 #ifdef __COMPILER_HAVE_BUG_BLOATY_CXX_USING
+/*!export -std*/
 namespace std { }
 using namespace std; /* Overlay */
 #define __NAMESPACE_STD_USING(x)            /* nothing (already done by the overlay) */

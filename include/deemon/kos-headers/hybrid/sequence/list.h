@@ -17,6 +17,14 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export LIST_**/
+/*!export SLIST_**/
+/*!export STAILQ_**/
+/*!export TAILQ_**/
+/*!export CIRCLEQ_**/
+/*!export RINGQ_**/
+/*!export DLIST_**/
+/*!export XSIMPLEQ_**/
 #ifndef __GUARD_HYBRID_SEQUENCE_LIST_H
 #define __GUARD_HYBRID_SEQUENCE_LIST_H 1
 

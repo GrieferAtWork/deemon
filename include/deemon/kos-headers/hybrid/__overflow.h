@@ -17,6 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __hybrid_overflow_**/
 #ifndef __GUARD_HYBRID___OVERFLOW_H
 #define __GUARD_HYBRID___OVERFLOW_H 1
 

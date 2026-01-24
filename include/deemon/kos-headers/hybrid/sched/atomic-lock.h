@@ -17,6 +17,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export atomic_lock*/
+/*!export atomic_lock_**/
+/*!export ATOMIC_LOCK_**/
+/*!export _atomic_lock**/
 #ifndef __GUARD_HYBRID_SCHED_ATOMIC_LOCK_H
 #define __GUARD_HYBRID_SCHED_ATOMIC_LOCK_H 1
 

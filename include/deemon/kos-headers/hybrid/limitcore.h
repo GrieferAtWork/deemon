@@ -17,6 +17,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __*_MIN__ __*_MAX__*/
+/*!export __INT*_MIN__ __INT*_MAX__ __UINT*_MAX__*/
+/*!export __INT_LEAST*_MIN__ __INT_LEAST*_MAX__ __UINT_LEAST*_MAX__*/
+/*!export __INT_FAST*_MIN__ __INT_FAST*_MAX__ __UINT_FAST*_MAX__*/
 #ifndef __GUARD_HYBRID_LIMITCORE_H
 #define __GUARD_HYBRID_LIMITCORE_H 1
 

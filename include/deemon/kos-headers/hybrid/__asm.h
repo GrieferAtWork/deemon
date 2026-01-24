@@ -24,10 +24,10 @@
 
 
 #ifdef __INTELLISENSE__
-#define __ASM_BEGIN      /* nothing */
-#define __ASM_END        /* nothing */
-#define __ASM_ARG(x)     /* nothing */
-#define __ASM_L(...)     /* nothing */
+#define __ASM_BEGIN      /* nothing */ /*!export*/
+#define __ASM_END        /* nothing */ /*!export*/
+#define __ASM_ARG(x)     /* nothing */ /*!export*/
+#define __ASM_L(...)     /* nothing */ /*!export*/
 #elif defined(__ASSEMBLER__)
 #define __ASM_BEGIN      /* nothing */
 #define __ASM_END        /* nothing */

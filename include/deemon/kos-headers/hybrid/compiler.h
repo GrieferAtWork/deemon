@@ -18,10 +18,12 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 /*!always_includes <__stdinc.h>*/
+/*!fixincludes no_include_comments*/
+/*!export **/
 #ifndef __GUARD_HYBRID_COMPILER_H
 #define __GUARD_HYBRID_COMPILER_H 1
 
-#include "../__stdinc.h"
+#include "../__stdinc.h" /*!always*/
 
 /*
  * ATTR_LEAF:
@@ -260,21 +262,21 @@
 #endif /* __ASSEMBLER__ */
 
 #if !defined(__NO_KOS_SYSTEM_HEADERS__) && defined(_KOS_ANNO_H)
-#define PHYS            __PHYS
-#define VIRT            __VIRT
-#define NCX             __NCX
-#define UNCHECKED       __UNCHECKED
-#define REF             __REF
-#define REF_IF          __REF_IF
-#define NOBLOCK         __NOBLOCK
-#define NOBLOCK_IF      __NOBLOCK_IF
-#define BLOCKING        __BLOCKING
-#define BLOCKING_IF     __BLOCKING_IF
-#define NOPREEMPT       __NOPREEMPT
-#define ABNORMAL_RETURN __ABNORMAL_RETURN
-#define THROWS          __THROWS
+#define PHYS            __PHYS            /*!export(include(<kos/anno.h>))*/
+#define VIRT            __VIRT            /*!export(include(<kos/anno.h>))*/
+#define NCX             __NCX             /*!export(include(<kos/anno.h>))*/
+#define UNCHECKED       __UNCHECKED       /*!export(include(<kos/anno.h>))*/
+#define REF             __REF             /*!export(include(<kos/anno.h>))*/
+#define REF_IF          __REF_IF          /*!export(include(<kos/anno.h>))*/
+#define NOBLOCK         __NOBLOCK         /*!export(include(<kos/anno.h>))*/
+#define NOBLOCK_IF      __NOBLOCK_IF      /*!export(include(<kos/anno.h>))*/
+#define BLOCKING        __BLOCKING        /*!export(include(<kos/anno.h>))*/
+#define BLOCKING_IF     __BLOCKING_IF     /*!export(include(<kos/anno.h>))*/
+#define NOPREEMPT       __NOPREEMPT       /*!export(include(<kos/anno.h>))*/
+#define ABNORMAL_RETURN __ABNORMAL_RETURN /*!export(include(<kos/anno.h>))*/
+#define THROWS          __THROWS          /*!export(include(<kos/anno.h>))*/
 #ifndef WEAK
-#define WEAK __WEAK
+#define WEAK __WEAK /*!export(include(<kos/anno.h>))*/
 #endif /* !WEAK */
 #endif /* !__NO_KOS_SYSTEM_HEADERS__ && _KOS_ANNO_H */
 

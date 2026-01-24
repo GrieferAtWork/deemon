@@ -1,0 +1,275 @@
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+import posix;
+
+class ClangFormatYamlParser {
+	this = default;
+	public member filename: string;
+	public member data: Bytes;
+	public member iter: int;
+	public member end: int;
+
+	private lc(offset: int): (int, int) {
+		local sol = data.rfind("\n", 0, offset) + 1;
+		local lno = data.count("\n", 0, sol) + 1;
+		return (lno, 1 + offset - sol);
+	}
+
+	private skipCommentLines() {
+again:
+		while (iter < end && data.islf(iter))
+			++iter;
+		local afterSpace = iter;
+		while (afterSpace < end && data.isspace(afterSpace))
+			++afterSpace;
+		if (data.startswith("#", afterSpace) || (afterSpace < end && data.islf(afterSpace))) {
+			iter = (data.find("\n", afterSpace) + 1) ?: end;
+			goto again;
+		}
+	}
+
+	public function parseBlock(
+			minIndent: int = 0,
+			atStartOfLine: bool = true
+	): Dict | List | string | int | none {
+		if (!atStartOfLine) {
+			while (iter < end && data.isspacexlf(iter))
+				++iter;
+			if (iter < end && data.islf(iter)) {
+				atStartOfLine = true;
+				++iter;
+			}
+		}
+		local indentEnd: int;
+		local indent: int;
+		if (atStartOfLine) {
+			skipCommentLines();
+			indentEnd = iter;
+			while (indentEnd < end && data.isspace(indentEnd))
+				++indentEnd;
+			indent = indentEnd - iter;
+			if (indent < minIndent)
+				return none;
+		} else {
+			indent = 0;
+			indentEnd = iter;
+		}
+		if (indentEnd >= end)
+			return none;
+		local result;
+		local indentEndCh: string = string.chr(data[indentEnd]);
+		local blockPrefix: string = " " * indent;
+		if (data.startswith("- ", indentEnd)) {
+			/* List */
+			local listItemPrefix = blockPrefix + "- ";
+			result = List();
+			indent += 2;
+			do {
+				iter += #listItemPrefix;
+				local item = parseBlock(indent, false);
+				if (item is none)
+					break;
+				result.append(item);
+			} while (data.startswith(listItemPrefix, iter));
+		} else if (data.issymstrt(indentEnd)) {
+			/* Object */
+			result = Dict();
+			for (;;) {
+				local identEnd = indentEnd + 1;
+				while (identEnd < end && data.issymcont(identEnd))
+					++identEnd;
+				local key = data[indentEnd:identEnd].decode("utf-8");
+				while (identEnd < end && data.isspacexlf(identEnd))
+					++identEnd;
+				if (identEnd >= end || data[identEnd] != ':'.ord()) {
+					if (!result && identEnd < end) {
+						/* Might be an unquoted string! */
+						if (data.islf(identEnd) || data.startswith("#", identEnd)) {
+							result = key;
+							iter = identEnd;
+							goto done;
+						}
+					}
+					local d = lc(identEnd);
+					throw Error(f"{filename}({d[0]}, {d[1]}) : Expected ':' after {repr key}");
+				}
+				++identEnd;
+				while (identEnd < end && data.isspacexlf(identEnd))
+					++identEnd;
+				local value;
+				if (!indent) {
+					indent = minIndent;
+					blockPrefix = " " * indent;
+				}
+				if (identEnd < end && (data.islf(identEnd) || data.startswith("#", identEnd))) {
+					iter = identEnd + 1;
+					value = parseBlock(indent + 1, true);
+				} else {
+					local valueIndent = identEnd - iter;
+					iter = identEnd;
+					value = parseBlock(valueIndent, false);
+				}
+				result[key] = value;
+				if (!data.startswith(blockPrefix, iter))
+					break;
+				indentEnd = iter + indent;
+				if (indentEnd >= end)
+					break;
+				if (!data.issymstrt(indentEnd))
+					break;
+			}
+		} else if (data.isdigit(indentEnd) || indentEndCh in "-+") {
+			local digitEnd = indentEnd + 1;
+			while (digitEnd < end && data.isdigit(digitEnd))
+				++digitEnd;
+			result = int(data[indentEnd:digitEnd]);
+			iter = digitEnd;
+skip_comment_after_literal:
+			while (iter < end && data.isspacexlf(iter))
+				++iter;
+			if (data.startswith("#", iter)) {
+				skipCommentLines();
+			} else if (iter >= end) {
+				/* OK */
+			} else if(data.islf(iter)) {
+				++iter;
+			} else {
+				local d = lc(indentEnd);
+				local eol = data.find("\n", iter);
+				if (eol < 0)
+					eol = end;
+				local untilEol = data[iter:eol];
+				local d = lc(iter);
+				throw Error(f"{filename}({d[0]}, {d[1]}) : encountered garbage {
+					repr untilEol.decode("utf-8")} after literal {repr result}");
+			}
+		} else if (indentEndCh == '"') {
+			local stop = data[indentEnd];
+			local stringStart = indentEnd + 1;
+			local stringEnd = stringStart;
+			while (stringEnd < end && (data[stringEnd] != '"'.ord() || data[stringEnd - 1] == '\\'.ord()))
+				++stringEnd;
+			iter = stringEnd + 1;
+			result = data[stringStart:stringEnd].decode("c-escape");
+			goto skip_comment_after_literal;
+		} else if (indentEndCh == "'") {
+			local stop = data[indentEnd];
+			local stringStart = indentEnd + 1;
+			local stringEnd = stringStart;
+			while (stringEnd < end && data[stringEnd] != "'".ord())
+				++stringEnd;
+			iter = stringEnd + 1;
+			result = data[stringStart:stringEnd].decode("utf-8");
+			goto skip_comment_after_literal;
+		} else {
+			local d = lc(indentEnd);
+			throw Error(f"{filename}({d[0]}, {d[1]}) : Unexpected character {
+				repr string.chr(data[indentEnd])}");
+		}
+done:
+		skipCommentLines();
+		return result;
+	}
+
+	public function parse(): Dict {
+		local result = parseBlock();
+		if (iter < end) {
+			local d = lc(iter);
+			throw Error(f"{filename}({d[0]}, {d[1]}) : Unable to parse from this point forth");
+		}
+		if (result !is Mapping)
+			throw Error(f"{filename}(1, 0) : Yaml contents do not parse as an object");
+		return result;
+	}
+}
+
+function parseClangFormatYaml(filename: string): Dict {
+	local data: Bytes;
+	with (local fp = File.open(filename, "rb"))
+		data = fp.read();
+	return ClangFormatYamlParser(
+		filename: filename,
+		data: data,
+		iter: 0,
+		end: #data,
+	).parse();
+}
+
+
+class ClangFormatSpecs {
+	this = default;
+	public final member specs: Dict;
+
+	public property SortIncludes: bool = {
+		get(): bool {
+			return specs.get("SortIncludes", "false") == "true";
+		}
+	}
+
+	private member m_regexToPriority: {string: int};
+	public property IncludeCategories: {string: int} = {
+		get(): {string: int} {
+			if (m_regexToPriority !is bound) {
+				m_regexToPriority = (
+					for (local desc: specs.get("IncludeCategories"))
+						(desc["Regex"], desc["Priority"])
+				).asmap.frozen;
+			}
+			return m_regexToPriority;
+		}
+	}
+
+	function getIncludePriorty(includeString: string): int {
+		for (local regex, priority: IncludeCategories) {
+			if (includeString.rematch(regex))
+				return priority;
+		}
+		throw Error(f"Unable to match include string {repr includeString} to "
+					f"any priority via clang-format's 'IncludeCategories'");
+	}
+}
+
+function getClangFormatSpecs(dir: string): ClangFormatSpecs {
+	dir = posix.resolvepath(posix.abspath(dir));
+	local head = posix.headof(dir);
+	local base: Dict | none = head ? getClangFormatSpecs(head).specs : none;
+	local absFilename = posix.joinpath(dir, ".clang-format");
+	static local CACHE: {string: ClangFormatSpecs} = Dict();
+	local result: ClangFormatSpecs | none = CACHE.get(absFilename);
+	if (result is none) {
+		local overrides: Dict | none;
+		try {
+			overrides = parseClangFormatYaml(absFilename);
+		} catch (FileNotFound) {
+			overrides = none;
+		}
+		local resultSpecs = Dict();
+		if (base !is none)
+			resultSpecs.update(base);
+		if (overrides !is none)
+			resultSpecs.update(overrides);
+		result = ClangFormatSpecs(specs: resultSpecs);
+		CACHE[absFilename] = result;
+	}
+	return result;
+}

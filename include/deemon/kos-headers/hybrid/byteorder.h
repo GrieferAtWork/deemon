@@ -17,19 +17,20 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __BYTE_ORDER__ __FLOAT_WORD_ORDER__*/
 #ifndef __GUARD_HYBRID_BYTEORDER_H
 #define __GUARD_HYBRID_BYTEORDER_H 1
 
 #include "../__stdinc.h"
 
 #ifndef __ORDER_LITTLE_ENDIAN__
-#define __ORDER_LITTLE_ENDIAN__ 1234
+#define __ORDER_LITTLE_ENDIAN__ 1234 /*!export*/
 #endif /* !__ORDER_LITTLE_ENDIAN__ */
 #ifndef __ORDER_BIG_ENDIAN__
-#define __ORDER_BIG_ENDIAN__ 4321
+#define __ORDER_BIG_ENDIAN__ 4321 /*!export*/
 #endif /* !__ORDER_BIG_ENDIAN__ */
 #ifndef __ORDER_PDP_ENDIAN__
-#define __ORDER_PDP_ENDIAN__ 3412
+#define __ORDER_PDP_ENDIAN__ 3412 /*!export*/
 #endif /* !__ORDER_PDP_ENDIAN__ */
 
 #ifndef __BYTE_ORDER__

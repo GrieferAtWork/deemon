@@ -17,6 +17,9 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export atomic_owner_rwlock*/
+/*!export atomic_owner_rwlock_**/
+/*!export ATOMIC_OWNER_RWLOCK_**/
 #ifndef __GUARD_HYBRID_SCHED_ATOMIC_OWNER_RWLOCK_H
 #define __GUARD_HYBRID_SCHED_ATOMIC_OWNER_RWLOCK_H 1
 

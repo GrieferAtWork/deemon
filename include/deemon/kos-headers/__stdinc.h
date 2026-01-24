@@ -17,6 +17,9 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!fixincludes no_include_comments*/
+/*!fixincludes discourage_include*/
+/*!export **/
 #ifndef ___STDINC_H
 #define ___STDINC_H 1
 
@@ -73,28 +76,28 @@
 #endif /* !... */
 #endif /* !__PE__ && !__ELF__ */
 
-#include "compiler/pp-generic.h"
+#include "compiler/pp-generic.h" /*!always*/
 
 #ifndef __CC__
-#include "compiler/other.h"
+#include "compiler/other.h" /*!always*/
 #else /* !__CC__ */
 #define __COMPILER_LENOF(arr)  (sizeof(arr) / sizeof(*(arr)))
 #define __COMPILER_ENDOF(arr)  ((arr) + sizeof(arr) / sizeof(*(arr)))
 #define __COMPILER_STRLEN(str) (sizeof(str) / sizeof(char) - 1)
 #define __COMPILER_STREND(str) ((str) + sizeof(str) / sizeof(char) - 1)
 #if defined(__clang__)
-#include "compiler/clang.h"
+#include "compiler/clang.h" /*!always*/
 #elif defined(__GNUC__)
-#include "compiler/gcc.h"
+#include "compiler/gcc.h" /*!always*/
 #elif defined(_MSC_VER)
-#include "compiler/msvc.h"
+#include "compiler/msvc.h" /*!always*/
 #else /* ... */
-#include "compiler/generic.h"
+#include "compiler/generic.h" /*!always*/
 #endif /* !... */
 #ifdef __cplusplus
-#include "compiler/c++.h"
+#include "compiler/c++.h" /*!always*/
 #else /* __cplusplus */
-#include "compiler/c.h"
+#include "compiler/c.h" /*!always*/
 #endif /* !__cplusplus */
 #endif /* __CC__ */
 
@@ -126,22 +129,22 @@
 #define __NOTHROW /* Nothing */
 #elif defined(__cplusplus)
 #ifdef __PREPROCESSOR_HAVE_VA_ARGS
-#define __PRIVATE_NOTHROW2(...) (__VA_ARGS__) __CXX_NOEXCEPT
-#define __NOTHROW(...)          (__VA_ARGS__) __PRIVATE_NOTHROW2
+#define __COMPILER_PRIVATE_NOTHROW2(...) (__VA_ARGS__) __CXX_NOEXCEPT /*!export-*/
+#define __NOTHROW(...)                   (__VA_ARGS__) __COMPILER_PRIVATE_NOTHROW2
 #else /* __PREPROCESSOR_HAVE_VA_ARGS */
-#define __PRIVATE_NOTHROW2(a...) (a) __CXX_NOEXCEPT
-#define __NOTHROW(a...)          (a) __PRIVATE_NOTHROW2
+#define __COMPILER_PRIVATE_NOTHROW2(a...) (a) __CXX_NOEXCEPT /*!export-*/
+#define __NOTHROW(a...)                   (a) __COMPILER_PRIVATE_NOTHROW2
 #endif /* !__PREPROCESSOR_HAVE_VA_ARGS */
 #elif defined(__NO_ATTR_NOTHROW)
 #ifdef __STDC__
 #define __NOTHROW /* Nothing */
 #else /* __STDC__ */
 #ifdef __PREPROCESSOR_HAVE_VA_ARGS
-#define __PRIVATE_NOTHROW2(...) ()
-#define __NOTHROW(...)          (__VA_ARGS__) __PRIVATE_NOTHROW2
+#define __COMPILER_PRIVATE_NOTHROW2(...) () /*!export-*/
+#define __NOTHROW(...)                   (__VA_ARGS__) __COMPILER_PRIVATE_NOTHROW2
 #else /* __PREPROCESSOR_HAVE_VA_ARGS */
-#define __PRIVATE_NOTHROW2(a...) ()
-#define __NOTHROW(a...)          (a) __PRIVATE_NOTHROW2
+#define __COMPILER_PRIVATE_NOTHROW2(a...) () /*!export-*/
+#define __NOTHROW(a...)                   (a) __COMPILER_PRIVATE_NOTHROW2
 #endif /* !__PREPROCESSOR_HAVE_VA_ARGS */
 #endif /* !__STDC__ */
 #else /* ... */
@@ -998,7 +1001,7 @@
 
 #ifdef __KOS_SYSTEM_HEADERS__
 #if __has_include(<asm/__stdinc.h>)
-#include <asm/__stdinc.h>
+#include <asm/__stdinc.h> /*!always*/
 #endif /* __has_include(<asm/__stdinc.h>) */
 #endif /* __KOS_SYSTEM_HEADERS__ */
 

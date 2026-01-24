@@ -22,17 +22,17 @@
 
 #include "../__stdinc.h"
 
-#define IS_ALIGNED(x, align)  (!((x) % (align)))
-#define IS_POWER_OF_TWO(x)    (((x) & ((x)-1)) == 0)
+#define IS_ALIGNED(x, align)  (!((x) % (align)))     /*!export*/
+#define IS_POWER_OF_TWO(x)    (((x) & ((x)-1)) == 0) /*!export*/
 #if 0 /* Assuming `align' is constant, this is 2 ops: `add $(align - 1), %x; and $(~(align - 1)), %x' */
-#define CEIL_ALIGN(x, align)  (((x) + ((align)-1)) & ~((align)-1))
+#define CEIL_ALIGN(x, align)  (((x) + ((align)-1)) & ~((align)-1)) /*!export*/
 #else /* Assuming `align' is constant, this is 3 ops: `dec %x; or $(align - 1), %x; inc %x'
        * But  because inc/dec are  much easier to  execute than immediate-instruction, this
        * method id probably still the better one when it comes to speed. */
-#define CEIL_ALIGN(x, align)  ((((x) - 1) | ((align) - 1)) + 1)
+#define CEIL_ALIGN(x, align)  ((((x) - 1) | ((align) - 1)) + 1) /*!export*/
 #endif
-#define FLOOR_ALIGN(x, align) ((x) & ~((align)-1))
-#define FLOORDIV(x, y)        ((x) / (y))
-#define CEILDIV(x, y)         (((x) + (y)-1) / (y))
+#define FLOOR_ALIGN(x, align) ((x) & ~((align)-1))  /*!export*/
+#define FLOORDIV(x, y)        ((x) / (y))           /*!export*/
+#define CEILDIV(x, y)         (((x) + (y)-1) / (y)) /*!export*/
 
 #endif /* !__GUARD_HYBRID_ALIGN_H */

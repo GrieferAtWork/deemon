@@ -17,6 +17,15 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __HYBRID_SIZEOF_TID__*/
+/*!export __HYBRID_GETTID_INVALID_IS_ZERO*/
+/*!export __HYBRID_GETTID_INVALID*/
+/*!export __HYBRID_GETTID_PRINTF_**/
+/*!export __hybrid_tid_t*/
+/*!export __hybrid_tid_t_IS_NUMERIC*/
+/*!export __hybrid_gettid*/
+/*!export __hybrid_gettid_equal*/
+/*!export __hybrid_gettid_iscaller*/
 #ifndef __GUARD_HYBRID_SCHED___GETTID_H
 #define __GUARD_HYBRID_SCHED___GETTID_H 1
 

@@ -28,8 +28,8 @@ __NAMESPACE_INT_BEGIN
 extern void (__hybrid_check_assertion)(__BOOL __expr);
 extern void (__hybrid_check_assertionf)(__BOOL __expr, char const *__restrict __format, ...);
 __NAMESPACE_INT_END
-#define __hybrid_assert  __NAMESPACE_INT_SYM __hybrid_check_assertion
-#define __hybrid_assertf __NAMESPACE_INT_SYM __hybrid_check_assertionf
+#define __hybrid_assert  __NAMESPACE_INT_SYM __hybrid_check_assertion  /*!export*/
+#define __hybrid_assertf __NAMESPACE_INT_SYM __hybrid_check_assertionf /*!export*/
 #elif defined(NDEBUG)
 #ifdef __NO_builtin_assume
 #define __hybrid_assert __builtin_assume
@@ -61,11 +61,11 @@ __NAMESPACE_INT_END
 #endif /* !__hybrid_assert */
 
 #ifndef __hybrid_assertion_failed
-#define __hybrid_assertion_failed(message) __hybrid_assert(!message)
+#define __hybrid_assertion_failed(message) __hybrid_assert(!message) /*!export*/
 #endif /* !__hybrid_assertion_failed */
 #ifndef __hybrid_assertion_failedf
 #ifdef __PREPROCESSOR_HAVE_VA_ARGS
-#define __hybrid_assertion_failedf(message, ...) __hybrid_assertf(!message, __VA_ARGS__)
+#define __hybrid_assertion_failedf(message, ...) __hybrid_assertf(!message, __VA_ARGS__) /*!export*/
 #elif defined(__PREPROCESSOR_HAVE_NAMED_VA_ARGS)
 #define __hybrid_assertion_failedf(message, format...) __hybrid_assertf(!message, format)
 #endif /* ... */
@@ -75,7 +75,7 @@ __NAMESPACE_INT_END
 #ifdef NDEBUG
 #define __hybrid_asserte (void)
 #else /* NDEBUG */
-#define __hybrid_asserte __hybrid_assert
+#define __hybrid_asserte __hybrid_assert /*!export*/
 #endif /* !NDEBUG */
 
 

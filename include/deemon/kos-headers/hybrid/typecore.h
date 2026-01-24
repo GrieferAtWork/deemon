@@ -17,6 +17,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __SIZEOF_*__ __ALIGNOF_*__ __*_WIDTH__*/
+/*!export __*_TYPE__ __*_TYPE_IS_*__*/
+/*!export __INT*_C __UINT*_C __SIZE_C __SSIZE_C*/
+/*!export __INT*_C_SUFFIX__ __UINT*_C_SUFFIX__*/
 #ifndef __GUARD_HYBRID_TYPECORE_H
 #define __GUARD_HYBRID_TYPECORE_H 1
 
@@ -352,7 +356,7 @@
 #endif /* __INT128_C */
 
 #if !defined(__CHAR_BIT__) && defined(__SCHAR_WIDTH__)
-#define __CHAR_BIT__ __SCHAR_WIDTH__
+#define __CHAR_BIT__ __SCHAR_WIDTH__ /*!export*/
 #endif /* !__CHAR_BIT__ && __SCHAR_WIDTH__ */
 
 #ifndef __SIZEOF_CHAR__
@@ -915,7 +919,7 @@
                                       __SIG_ATOMIC_MAX__ == __PRIVATE_MAX_U8 || \
                                       __SIG_ATOMIC_MAX__ == __PRIVATE_MAX_U2 || \
                                       __SIG_ATOMIC_MAX__ == __PRIVATE_MAX_U1)))
-#define __SIG_ATOMIC_UNSIGNED__ 1
+#define __SIG_ATOMIC_UNSIGNED__ 1 /*!export*/
 #endif /* ... */
 #endif /* __SIZEOF_SIG_ATOMIC_T__ */
 
@@ -997,7 +1001,7 @@
                                __WINT_MAX__ == __PRIVATE_MAX_U2 || \
                                __WINT_MAX__ == __PRIVATE_MAX_U1 || \
                                __WINT_MAX__ == __PRIVATE_MAX_U8))
-#define __WINT_UNSIGNED__ 1
+#define __WINT_UNSIGNED__ 1 /*!export*/
 #endif /* ... */
 #endif /* !__WINT_UNSIGNED__ */
 #endif /* __SIZEOF_WINT_T__ */
@@ -1082,7 +1086,7 @@
                                  __WCHAR_MAX__ == __PRIVATE_MAX_U8)))
 #define __WCHAR_UNSIGNED__ 1
 #elif !defined(__WCHAR_MIN__) && !defined(__WCHAR_MAX__)
-#define __WCHAR_UNSIGNED__ 1 /* Guess... */
+#define __WCHAR_UNSIGNED__ 1 /* Guess... */ /*!export*/
 #endif /* ... */
 #endif /* !__WCHAR_UNSIGNED__ */
 #endif /* __SIZEOF_WCHAR_T__ */
@@ -1185,7 +1189,7 @@
 #elif '\xff' <= 0
 /* #undef __CHAR_UNSIGNED__ */
 #else /* ... */
-#define __CHAR_UNSIGNED__ 1
+#define __CHAR_UNSIGNED__ 1 /*!export*/
 #endif /* !... */
 #endif /* !__CHAR_UNSIGNED__ */
 
@@ -1716,7 +1720,7 @@
 #ifdef __SIZEOF_LONG_DOUBLE__
 #undef __ARCH_LONG_DOUBLE_IS_DOUBLE
 #if __SIZEOF_LONG_DOUBLE__ == __SIZEOF_DOUBLE__
-#define __ARCH_LONG_DOUBLE_IS_DOUBLE
+#define __ARCH_LONG_DOUBLE_IS_DOUBLE /*!export*/
 #endif /* __SIZEOF_LONG_DOUBLE__ == __SIZEOF_DOUBLE__ */
 
 #ifndef __ALIGNOF_LONG_DOUBLE__
@@ -2615,7 +2619,7 @@ __NAMESPACE_INT_END
 #define __HYBRID_PRIVATE_ALIGNOF16 __ALIGNOF_INT64__
 #endif /* __ALIGNOF_INT128__ */
 #define __HYBRID_PRIVATE_ALIGNOF(sizeof) __HYBRID_PRIVATE_ALIGNOF##sizeof
-#define __HYBRID_ALIGNOF(sizeof)         __HYBRID_PRIVATE_ALIGNOF(sizeof)
+#define __HYBRID_ALIGNOF(sizeof)         __HYBRID_PRIVATE_ALIGNOF(sizeof) /*!export*/
 
 
 /************************************************************************/
@@ -2639,7 +2643,7 @@ __NAMESPACE_INT_END
  */
 #undef __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC
 #if 1
-#define __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC __SIZEOF_BUSINT__
+#define __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC __SIZEOF_BUSINT__ /*!export*/
 #else
 #define __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC 0
 #endif

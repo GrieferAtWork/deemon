@@ -17,7 +17,9 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!included_by <__stdinc.h>*/
+/*!fixincludes no_include_comments*/
+/*!fixincludes discourage_include*/
+/*!export **/
 #ifndef __PP_STR
 #include "pp-generic.h"
 #endif /* !__PP_STR */
@@ -346,20 +348,20 @@
 
 #ifdef __LINKER__
 /* Help figure out the origin of illegal preprocessor content in linker scripts. */
-#define struct    <<__FILE__:__LINE__:ERROR: Invalid keyword: 'struct'>>
-#define union     <<__FILE__:__LINE__:ERROR: Invalid keyword: 'union'>>
-#define typedef   <<__FILE__:__LINE__:ERROR: Invalid keyword: 'typedef'>>
-#define enum      <<__FILE__:__LINE__:ERROR: Invalid keyword: 'enum'>>
+#define struct    <<__FILE__:__LINE__:ERROR: Invalid keyword: 'struct'>>  /*!export-*/
+#define union     <<__FILE__:__LINE__:ERROR: Invalid keyword: 'union'>>   /*!export-*/
+#define typedef   <<__FILE__:__LINE__:ERROR: Invalid keyword: 'typedef'>> /*!export-*/
+#define enum      <<__FILE__:__LINE__:ERROR: Invalid keyword: 'enum'>>    /*!export-*/
 #ifdef __INTELLISENSE__
-#define ENTRY(...)
-#define PROVIDE(...)
-#define PROVIDE_HIDDEN(...)
-#define SECTIONS int foo()
-#define ABSOLUTE(...) __VA_ARGS__
-#define KEEP(...)
-#define BLOCK(...) __VA_ARGS__
-#define AT(...)
-#define ADDR(...)
-#define ALIGN(...) __VA_ARGS__
+#define ENTRY(...)                      /*!export-*/
+#define PROVIDE(...)                    /*!export-*/
+#define PROVIDE_HIDDEN(...)             /*!export-*/
+#define SECTIONS            int foo()   /*!export-*/
+#define ABSOLUTE(...)       __VA_ARGS__ /*!export-*/
+#define KEEP(...)                       /*!export-*/
+#define BLOCK(...)          __VA_ARGS__ /*!export-*/
+#define AT(...)                         /*!export-*/
+#define ADDR(...)                       /*!export-*/
+#define ALIGN(...)          __VA_ARGS__ /*!export-*/
 #endif /* __INTELLISENSE__ */
 #endif /* __LINKER__ */

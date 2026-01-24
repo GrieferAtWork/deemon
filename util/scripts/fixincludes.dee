@@ -1260,7 +1260,7 @@ function getClangIncludePriorty(includeString: string): int {
 
 
 
-class IncludeInfo {
+class SrcIncludeInfo {
 	this = default;
 	public final member include: string;
 	public member includeStringOffset: int;
@@ -1283,9 +1283,9 @@ class IncludeInfo {
 	}
 };
 
-class IncludeGroup {
+class SrcIncludeGroup {
 	this = default;
-	public final member includes: {IncludeInfo...} = [];
+	public final member includes: {SrcIncludeInfo...} = [];
 	public member groupStartOffset: int;
 	public member groupEndOffset: int;
 
@@ -1308,7 +1308,7 @@ class IncludeGroup {
 		if (!includes)
 			return none;
 		local regexToPriority: {string: int} = getClangIncludeCategoryRegexPriorities();
-		local includesByPriority: {int: {IncludeInfo...}} = Dict();
+		local includesByPriority: {int: {SrcIncludeInfo...}} = Dict();
 		for (local include: includes) {
 			local priority = getClangIncludePriorty(include.include);
 			includesByPriority.setdefault(priority, []).append(include);
@@ -1336,7 +1336,7 @@ class IncludeGroup {
 	}
 
 	public function addInclude(include: string, comment: string) {
-		includes.append(IncludeInfo(
+		includes.append(SrcIncludeInfo(
 			include: include,
 			includeStringOffset: -1,
 			includeStringEndOffset: -1,
@@ -1347,21 +1347,21 @@ class IncludeGroup {
 	}
 }
 
-class FileInfo {
+class SrcFileInfo {
 	this = default;
 	public final member filename: string;
-	public final member includes: {string: IncludeInfo};
+	public final member includes: {string: SrcIncludeInfo};
 	public final member keywords: {string...};
 	public final member noFormatRegions: {(int, int)...};
 	public member data: Bytes;
 	public member dataChanged: bool = false;
 
-	private member m_includeGroups: {IncludeGroup...};
+	private member m_includeGroups: {SrcIncludeGroup...};
 
-	private function getIncludeLineStart(inc: IncludeInfo): int {
+	private function getIncludeLineStart(inc: SrcIncludeInfo): int {
 		return data.rfind("\n", 0, inc.includeStringOffset) + 1;
 	}
-	private function getIncludeLineEnd(inc: IncludeInfo): int {
+	private function getIncludeLineEnd(inc: SrcIncludeInfo): int {
 		local result;
 		if (inc.commentEndOffset is none) {
 			result = inc.includeStringEndOffset;
@@ -1373,13 +1373,13 @@ class FileInfo {
 		return result;
 	}
 
-	public property includeGroups: {IncludeGroup...} = {
-		get(): {IncludeGroup...} {
+	public property includeGroups: {SrcIncludeGroup...} = {
+		get(): {SrcIncludeGroup...} {
 			if (m_includeGroups is bound)
 				return m_includeGroups;
-			local sortedIncludes: {IncludeInfo...} = includes.values.sorted(e -> e.includeStringOffset);
-			local result: {IncludeGroup...} = List();
-			local currentGroup = IncludeGroup();
+			local sortedIncludes: {SrcIncludeInfo...} = includes.values.sorted(e -> e.includeStringOffset);
+			local result: {SrcIncludeGroup...} = List();
+			local currentGroup = SrcIncludeGroup();
 			for (local inc: sortedIncludes) {
 				if (!currentGroup.includes) {
 insert_first_include:
@@ -1403,7 +1403,7 @@ insert_first_include:
 
 						/* New group */
 						result.append(currentGroup);
-						currentGroup = IncludeGroup();
+						currentGroup = SrcIncludeGroup();
 						goto insert_first_include;
 					}
 				}
@@ -1549,7 +1549,7 @@ insert_first_include:
 			local comment = ", ".join(keywords.sorted(
 				functools.predcmp2key(string.vercompare)
 			));
-			local preferredIncludeGroup: IncludeGroup | none = none;
+			local preferredIncludeGroup: SrcIncludeGroup | none = none;
 			local includePriority: int | none = none;
 			for (local grp: includeGroups) {
 				if (isFormattingDisabledAt(grp.groupStartOffset))
@@ -1597,12 +1597,12 @@ insert_first_include:
 	}
 }
 
-function scanFile(filename: string): FileInfo {
+function loadSrcFileInfo(filename: string): SrcFileInfo {
 	local data: Bytes;
 	with (local fp = File.open(filename, "rb"))
 		data = fp.readall();
 	local i = 0, len = #data;
-	local includes: {string: IncludeInfo} = Dict();
+	local includes: {string: SrcIncludeInfo} = Dict();
 	local keywords: {string...} = HashSet();
 	local noFormatRegions: {(int, int)...} = List();
 	local currentNoFormatRegionStart: int | none = none;
@@ -1685,7 +1685,7 @@ seek_eol:
 						comment = data[commentStartOffset:commentEndOffset];
 					}
 					if (includeString !in includes) {
-						includes[includeString] = IncludeInfo(
+						includes[includeString] = SrcIncludeInfo(
 							include: includeString,
 							includeStringOffset: includeStart,
 							includeStringEndOffset: includeEnd,
@@ -1709,7 +1709,7 @@ seek_eol:
 		}
 	}
 
-	return FileInfo(
+	return SrcFileInfo(
 		filename: filename,
 		includes: includes,
 		keywords: keywords.frozen,
@@ -1720,7 +1720,7 @@ seek_eol:
 
 
 function fixFile(filename: string) {
-	scanFile(filename).fix();
+	loadSrcFileInfo(filename).fix();
 }
 
 function fixPath(path: string) {

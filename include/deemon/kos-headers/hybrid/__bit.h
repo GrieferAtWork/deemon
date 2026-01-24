@@ -17,6 +17,14 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __hybrid_ffs**/
+/*!export __hybrid_clz**/
+/*!export __hybrid_ctz**/
+/*!export __hybrid_popcount**/
+/*!export __hybrid_parity**/
+/*!export __hybrid_clrsb**/
+/*!export __hybrid_pdep**/
+/*!export __hybrid_pext**/
 #ifndef __GUARD_HYBRID___BIT_H
 #define __GUARD_HYBRID___BIT_H 1
 
@@ -33,7 +41,7 @@
 __DECL_BEGIN
 
 /* Generic implementations. */
-#define ____IMPL_DO_CLRSB(T, i)                   \
+#define __HYBRID_PRIVATE_CLRSB_IMPL(T, i)         \
 	{                                             \
 		__SHIFT_TYPE__ __result;                  \
 		T __mask, __sbit;                         \
@@ -53,7 +61,7 @@ __DECL_BEGIN
 	}
 
 /* Parallel bit deposit (s.a. `https://www.felixcloutier.com/x86/pdep') */
-#define ____IMPL_DO_PDEP(T, value, mask)                  \
+#define __HYBRID_PRIVATE_PDEP_IMPL(T, value, mask)        \
 	{                                                     \
 		T __result             = 0;                       \
 		__SHIFT_TYPE__ __shift = 0;                       \
@@ -67,7 +75,7 @@ __DECL_BEGIN
 	}
 
 /* Parallel bit extract (s.a. `https://www.felixcloutier.com/x86/pext') */
-#define ____IMPL_DO_PEXT(T, value, mask)                  \
+#define __HYBRID_PRIVATE_PEXT_IMPL(T, value, mask)        \
 	{                                                     \
 		T __result             = 0;                       \
 		__SHIFT_TYPE__ __shift = 0;                       \
@@ -943,7 +951,7 @@ __NOTHROW(__hybrid_parity64)(__UINT64_TYPE__ __i) {
 #define __hybrid_clrsb8(i) (__SHIFT_TYPE__)(__hybrid_clrsb64((__INT64_TYPE__)(__INT8_TYPE__)(i)) - 56)
 #else /* ... */
 #define __hybrid_clrsb8(i) __hybrid_clrsb8((__INT8_TYPE__)(i))
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __SHIFT_TYPE__ __NOTHROW(__hybrid_clrsb8)(__INT8_TYPE__ __i) ____IMPL_DO_CLRSB(__UINT8_TYPE__, __i)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __SHIFT_TYPE__ __NOTHROW(__hybrid_clrsb8)(__INT8_TYPE__ __i) __HYBRID_PRIVATE_CLRSB_IMPL(__UINT8_TYPE__, __i)
 #endif /* !... */
 #endif /* !__hybrid_clrsb8 */
 
@@ -954,7 +962,7 @@ __LOCAL __ATTR_WUNUSED __ATTR_CONST __SHIFT_TYPE__ __NOTHROW(__hybrid_clrsb8)(__
 #define __hybrid_clrsb16(i) (__SHIFT_TYPE__)(__hybrid_clrsb64((__INT64_TYPE__)(__INT16_TYPE__)(i)) - 48)
 #else /* ... */
 #define __hybrid_clrsb16(i) __hybrid_clrsb16((__INT16_TYPE__)(i))
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __SHIFT_TYPE__ __NOTHROW(__hybrid_clrsb16)(__INT16_TYPE__ __i) ____IMPL_DO_CLRSB(__UINT16_TYPE__, __i)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __SHIFT_TYPE__ __NOTHROW(__hybrid_clrsb16)(__INT16_TYPE__ __i) __HYBRID_PRIVATE_CLRSB_IMPL(__UINT16_TYPE__, __i)
 #endif /* !... */
 #endif /* !__hybrid_clrsb16 */
 
@@ -963,14 +971,14 @@ __LOCAL __ATTR_WUNUSED __ATTR_CONST __SHIFT_TYPE__ __NOTHROW(__hybrid_clrsb16)(_
 #define __hybrid_clrsb32(i) (__SHIFT_TYPE__)(__hybrid_clrsb64((__INT64_TYPE__)(__INT32_TYPE__)(i)) - 32)
 #else /* __hybrid_clrsb64 */
 #define __hybrid_clrsb32(i) __hybrid_clrsb32((__INT32_TYPE__)(i))
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __SHIFT_TYPE__ __NOTHROW(__hybrid_clrsb32)(__INT32_TYPE__ __i) ____IMPL_DO_CLRSB(__UINT32_TYPE__, __i)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __SHIFT_TYPE__ __NOTHROW(__hybrid_clrsb32)(__INT32_TYPE__ __i) __HYBRID_PRIVATE_CLRSB_IMPL(__UINT32_TYPE__, __i)
 #endif /* !__hybrid_clrsb64 */
 #endif /* !__hybrid_clrsb32 */
 
 #ifdef __UINT64_TYPE__
 #ifndef __hybrid_clrsb64
 #define __hybrid_clrsb64(i) __hybrid_clrsb64((__INT64_TYPE__)(i))
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __SHIFT_TYPE__ __NOTHROW(__hybrid_clrsb64)(__INT64_TYPE__ __i) ____IMPL_DO_CLRSB(__UINT64_TYPE__, __i)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __SHIFT_TYPE__ __NOTHROW(__hybrid_clrsb64)(__INT64_TYPE__ __i) __HYBRID_PRIVATE_CLRSB_IMPL(__UINT64_TYPE__, __i)
 #endif /* !__hybrid_clrsb64 */
 #endif /* __UINT64_TYPE__ */
 
@@ -988,36 +996,36 @@ extern "C++" {
 #define __hybrid_pext8  __hybrid_pext
 #define __hybrid_pext16 __hybrid_pext
 #define __hybrid_pext32 __hybrid_pext
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT8_TYPE__ __NOTHROW(__hybrid_pdep)(__UINT8_TYPE__ __val, __UINT8_TYPE__ __mask) ____IMPL_DO_PDEP(__UINT8_TYPE__, __val, __mask)
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT8_TYPE__ __NOTHROW(__hybrid_pext)(__UINT8_TYPE__ __val, __UINT8_TYPE__ __mask) ____IMPL_DO_PEXT(__UINT8_TYPE__, __val, __mask)
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT16_TYPE__ __NOTHROW(__hybrid_pdep)(__UINT16_TYPE__ __val, __UINT16_TYPE__ __mask) ____IMPL_DO_PDEP(__UINT16_TYPE__, __val, __mask)
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT16_TYPE__ __NOTHROW(__hybrid_pext)(__UINT16_TYPE__ __val, __UINT16_TYPE__ __mask) ____IMPL_DO_PEXT(__UINT16_TYPE__, __val, __mask)
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT32_TYPE__ __NOTHROW(__hybrid_pdep)(__UINT32_TYPE__ __val, __UINT32_TYPE__ __mask) ____IMPL_DO_PDEP(__UINT32_TYPE__, __val, __mask)
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT32_TYPE__ __NOTHROW(__hybrid_pext)(__UINT32_TYPE__ __val, __UINT32_TYPE__ __mask) ____IMPL_DO_PEXT(__UINT32_TYPE__, __val, __mask)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT8_TYPE__ __NOTHROW(__hybrid_pdep)(__UINT8_TYPE__ __val, __UINT8_TYPE__ __mask) __HYBRID_PRIVATE_PDEP_IMPL(__UINT8_TYPE__, __val, __mask)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT8_TYPE__ __NOTHROW(__hybrid_pext)(__UINT8_TYPE__ __val, __UINT8_TYPE__ __mask) __HYBRID_PRIVATE_PEXT_IMPL(__UINT8_TYPE__, __val, __mask)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT16_TYPE__ __NOTHROW(__hybrid_pdep)(__UINT16_TYPE__ __val, __UINT16_TYPE__ __mask) __HYBRID_PRIVATE_PDEP_IMPL(__UINT16_TYPE__, __val, __mask)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT16_TYPE__ __NOTHROW(__hybrid_pext)(__UINT16_TYPE__ __val, __UINT16_TYPE__ __mask) __HYBRID_PRIVATE_PEXT_IMPL(__UINT16_TYPE__, __val, __mask)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT32_TYPE__ __NOTHROW(__hybrid_pdep)(__UINT32_TYPE__ __val, __UINT32_TYPE__ __mask) __HYBRID_PRIVATE_PDEP_IMPL(__UINT32_TYPE__, __val, __mask)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT32_TYPE__ __NOTHROW(__hybrid_pext)(__UINT32_TYPE__ __val, __UINT32_TYPE__ __mask) __HYBRID_PRIVATE_PEXT_IMPL(__UINT32_TYPE__, __val, __mask)
 #ifdef __UINT64_TYPE__
 #define __hybrid_pdep64 __hybrid_pdep
 #define __hybrid_pext64 __hybrid_pext
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT64_TYPE__ __NOTHROW(__hybrid_pdep)(__UINT64_TYPE__ __val, __UINT64_TYPE__ __mask) ____IMPL_DO_PDEP(__UINT64_TYPE__, __val, __mask)
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT64_TYPE__ __NOTHROW(__hybrid_pext)(__UINT64_TYPE__ __val, __UINT64_TYPE__ __mask) ____IMPL_DO_PEXT(__UINT64_TYPE__, __val, __mask)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT64_TYPE__ __NOTHROW(__hybrid_pdep)(__UINT64_TYPE__ __val, __UINT64_TYPE__ __mask) __HYBRID_PRIVATE_PDEP_IMPL(__UINT64_TYPE__, __val, __mask)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT64_TYPE__ __NOTHROW(__hybrid_pext)(__UINT64_TYPE__ __val, __UINT64_TYPE__ __mask) __HYBRID_PRIVATE_PEXT_IMPL(__UINT64_TYPE__, __val, __mask)
 #endif /* __UINT64_TYPE__ */
 } /* extern "C++" */
 #else /* __cplusplus */
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT8_TYPE__ __NOTHROW(__hybrid_pdep8)(__UINT8_TYPE__ __val, __UINT8_TYPE__ __mask) ____IMPL_DO_PDEP(__UINT8_TYPE__, __val, __mask)
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT8_TYPE__ __NOTHROW(__hybrid_pext8)(__UINT8_TYPE__ __val, __UINT8_TYPE__ __mask) ____IMPL_DO_PEXT(__UINT8_TYPE__, __val, __mask)
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT16_TYPE__ __NOTHROW(__hybrid_pdep16)(__UINT16_TYPE__ __val, __UINT16_TYPE__ __mask) ____IMPL_DO_PDEP(__UINT16_TYPE__, __val, __mask)
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT16_TYPE__ __NOTHROW(__hybrid_pext16)(__UINT16_TYPE__ __val, __UINT16_TYPE__ __mask) ____IMPL_DO_PEXT(__UINT16_TYPE__, __val, __mask)
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT32_TYPE__ __NOTHROW(__hybrid_pdep32)(__UINT32_TYPE__ __val, __UINT32_TYPE__ __mask) ____IMPL_DO_PDEP(__UINT32_TYPE__, __val, __mask)
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT32_TYPE__ __NOTHROW(__hybrid_pext32)(__UINT32_TYPE__ __val, __UINT32_TYPE__ __mask) ____IMPL_DO_PEXT(__UINT32_TYPE__, __val, __mask)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT8_TYPE__ __NOTHROW(__hybrid_pdep8)(__UINT8_TYPE__ __val, __UINT8_TYPE__ __mask) __HYBRID_PRIVATE_PDEP_IMPL(__UINT8_TYPE__, __val, __mask)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT8_TYPE__ __NOTHROW(__hybrid_pext8)(__UINT8_TYPE__ __val, __UINT8_TYPE__ __mask) __HYBRID_PRIVATE_PEXT_IMPL(__UINT8_TYPE__, __val, __mask)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT16_TYPE__ __NOTHROW(__hybrid_pdep16)(__UINT16_TYPE__ __val, __UINT16_TYPE__ __mask) __HYBRID_PRIVATE_PDEP_IMPL(__UINT16_TYPE__, __val, __mask)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT16_TYPE__ __NOTHROW(__hybrid_pext16)(__UINT16_TYPE__ __val, __UINT16_TYPE__ __mask) __HYBRID_PRIVATE_PEXT_IMPL(__UINT16_TYPE__, __val, __mask)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT32_TYPE__ __NOTHROW(__hybrid_pdep32)(__UINT32_TYPE__ __val, __UINT32_TYPE__ __mask) __HYBRID_PRIVATE_PDEP_IMPL(__UINT32_TYPE__, __val, __mask)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT32_TYPE__ __NOTHROW(__hybrid_pext32)(__UINT32_TYPE__ __val, __UINT32_TYPE__ __mask) __HYBRID_PRIVATE_PEXT_IMPL(__UINT32_TYPE__, __val, __mask)
 #ifdef __UINT64_TYPE__
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT64_TYPE__ __NOTHROW(__hybrid_pdep64)(__UINT64_TYPE__ __val, __UINT64_TYPE__ __mask) ____IMPL_DO_PDEP(__UINT64_TYPE__, __val, __mask)
-__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT64_TYPE__ __NOTHROW(__hybrid_pext64)(__UINT64_TYPE__ __val, __UINT64_TYPE__ __mask) ____IMPL_DO_PEXT(__UINT64_TYPE__, __val, __mask)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT64_TYPE__ __NOTHROW(__hybrid_pdep64)(__UINT64_TYPE__ __val, __UINT64_TYPE__ __mask) __HYBRID_PRIVATE_PDEP_IMPL(__UINT64_TYPE__, __val, __mask)
+__LOCAL __ATTR_WUNUSED __ATTR_CONST __UINT64_TYPE__ __NOTHROW(__hybrid_pext64)(__UINT64_TYPE__ __val, __UINT64_TYPE__ __mask) __HYBRID_PRIVATE_PEXT_IMPL(__UINT64_TYPE__, __val, __mask)
 #endif /* __UINT64_TYPE__ */
 #endif /* !__cplusplus */
 
 
-#undef ____IMPL_DO_CLRSB
-#undef ____IMPL_DO_PDEP
-#undef ____IMPL_DO_PEXT
+#undef __HYBRID_PRIVATE_CLRSB_IMPL
+#undef __HYBRID_PRIVATE_PDEP_IMPL
+#undef __HYBRID_PRIVATE_PEXT_IMPL
 
 
 #ifdef __UINT64_TYPE__

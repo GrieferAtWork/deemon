@@ -17,10 +17,13 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!fixincludes no_include_comments*/
+/*!fixincludes discourage_include*/
+/*!export **/
 #ifndef ___STDCXX_H
 #define ___STDCXX_H 1
 
-#include "__stdinc.h"
+#include "__stdinc.h" /*!always*/
 
 #ifndef __cplusplus
 #error "A C++ compiler is required"

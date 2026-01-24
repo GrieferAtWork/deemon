@@ -17,6 +17,9 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __ALIGNOF_INT128__*/
+/*!export __HYBRID_INT128_* __hybrid_int128_**/
+/*!export __HYBRID_UINT128_* __hybrid_uint128_**/
 #ifndef __GUARD_HYBRID_INT128_H
 #define __GUARD_HYBRID_INT128_H 1
 

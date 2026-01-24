@@ -17,6 +17,11 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __ENCODE_INT**/
+/*!export __INT16_I8 __INT32_I8 __INT64_I8*/
+/*!export __INT32_I16 __INT64_I16 __INT64_I32*/
+/*!export __INT16_BYTE __INT32_BYTE __INT64_BYTE*/
+/*!export __INT32_WORD __INT64_WORD __INT64_DWORD*/
 #ifndef __GUARD_HYBRID___WORDBITS_H
 #define __GUARD_HYBRID___WORDBITS_H 1
 

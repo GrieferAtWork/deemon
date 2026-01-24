@@ -17,6 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __hybrid_preemption_**/
+/*!export __HYBRID_PREEMPTION_NO_**/
 #ifndef __GUARD_HYBRID_SCHED___PREEMPTION_H
 #define __GUARD_HYBRID_SCHED___PREEMPTION_H 1
 

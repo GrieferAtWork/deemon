@@ -17,16 +17,15 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!always_includes <hybrid/__debug-alignment.h>*/
 #ifndef __GUARD_HYBRID_DEBUG_ALIGNMENT_H
 #define __GUARD_HYBRID_DEBUG_ALIGNMENT_H 1
 
 #include "__debug-alignment.h"
 
 #ifdef __NO_hybrid_dbg_alignment
-#define NO_DBG_ALIGNMENT 1
+#define NO_DBG_ALIGNMENT 1                                   /*!export*/
 #endif /* __NO_hybrid_dbg_alignment */
-#define DBG_ALIGNMENT_ENABLE  __hybrid_dbg_alignment_enable
-#define DBG_ALIGNMENT_DISABLE __hybrid_dbg_alignment_disable
+#define DBG_ALIGNMENT_ENABLE  __hybrid_dbg_alignment_enable  /*!export*/
+#define DBG_ALIGNMENT_DISABLE __hybrid_dbg_alignment_disable /*!export*/
 
 #endif /* !__GUARD_HYBRID_DEBUG_ALIGNMENT_H */

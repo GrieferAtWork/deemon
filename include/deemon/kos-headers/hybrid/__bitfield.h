@@ -17,6 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __HYBRID_BITFIELD*_T*/
 #ifndef __GUARD_HYBRID___BITFIELD_H
 #define __GUARD_HYBRID___BITFIELD_H 1
 

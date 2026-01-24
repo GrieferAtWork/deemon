@@ -17,6 +17,11 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __HYBRID_ATOMIC_RWLOCK**/
+/*!export __hybrid_atomic_rwlock*/
+/*!export __hybrid_atomic_rwlock_**/
+/*!export ___hybrid_atomic_rwlock_**/
+/*!export __hybrid_atomic_load*_with_atomic_rwlock*/
 #ifndef __GUARD_HYBRID_SCHED___ATOMIC_RWLOCK_H
 #define __GUARD_HYBRID_SCHED___ATOMIC_RWLOCK_H 1
 
@@ -42,7 +47,7 @@
 #endif /* !... */
 #endif /* !__THROWS */
 
-#define __SIZEOF_HYBRID_ATOMIC_RWLOCK __SIZEOF_POINTER__
+#define __SIZEOF_HYBRID_ATOMIC_RWLOCK __SIZEOF_POINTER__ /*!export*/
 
 #if defined(__CC__) || defined(__DEEMON__)
 __DECL_BEGIN

@@ -17,6 +17,11 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!fixincludes no_include_comments*/
+/*!fixincludes ignore_unnecessary_include*/
+/*!always include <__stdinc.h>*/
+/*!always include <hybrid/compiler.h>*/
+/*!export **/
 #ifndef GUARD_DEEMON_API_H
 #define GUARD_DEEMON_API_H 1
 
@@ -92,7 +97,7 @@
 #define _CRT_DECLARE_NONSTDC_NAMES 1
 
 #ifndef __DEEMON__
-#include <__stdinc.h> /* __CC__ */
+#include <__stdinc.h> /*!always*/ /* __CC__ */
 
 #if defined(__CC__) && !defined(__INTELLISENSE__)
 #include <stddef.h> /* NULL, size_t */
@@ -680,7 +685,7 @@ DECL_END
 #endif /* !__INTELLISENSE__ */
 DECL_BEGIN
 #if !defined(_MSC_VER) || defined(_DLL)
-extern __ATTR_DLLIMPORT int (ATTR_CDECL _CrtCheckMemory)(void);
+extern __ATTR_DLLIMPORT int (ATTR_CDECL _CrtCheckMemory)(void); /*!export-*/
 #else /* !_MSC_VER || _DLL */
 extern int (ATTR_CDECL _CrtCheckMemory)(void);
 #endif /* _MSC_VER && !_DLL */
@@ -691,7 +696,7 @@ DECL_END
 
 DECL_BEGIN
 #if defined(__INTELLISENSE__) && defined(__cplusplus)
-extern "C++" template<class __ITS_T> __ITS_T ____INTELLISENSE_req_type(__ITS_T x);
+extern "C++" template<class __ITS_T> __ITS_T ____INTELLISENSE_req_type(__ITS_T x); /*!export-*/
 #define Dee_REQUIRES_TYPE(T, x) ____INTELLISENSE_req_type<T>(x)
 #else /* __INTELLISENSE__ && __cplusplus */
 #define Dee_REQUIRES_TYPE(T, x) (x)

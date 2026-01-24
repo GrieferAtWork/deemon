@@ -17,6 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __HYBRID_BITSET_**/
+/*!export __hybrid_bitset_**/
 #ifndef __GUARD_HYBRID___BITSET_H
 #define __GUARD_HYBRID___BITSET_H 1
 
@@ -204,12 +206,12 @@ __DECL_BEGIN
 
 /* Atomic bitset operations. */
 #ifdef __GUARD_HYBRID___ATOMIC_H
-#define __hybrid_bitset_atomic_set(self, bitno)        __hybrid_atomic_or(&(self)[__HYBRID_BITSET_WORD(bitno)], __HYBRID_BITSET_MASK(bitno), __ATOMIC_SEQ_CST)
-#define __hybrid_bitset_atomic_clear(self, bitno)      __hybrid_atomic_and(&(self)[__HYBRID_BITSET_WORD(bitno)], ~__HYBRID_BITSET_MASK(bitno), __ATOMIC_SEQ_CST)
-#define __hybrid_bitset_atomic_flip(self, bitno)       __hybrid_atomic_xor(&(self)[__HYBRID_BITSET_WORD(bitno)], __HYBRID_BITSET_MASK(bitno), __ATOMIC_SEQ_CST)
-#define __hybrid_bitset_atomic_fetchset(self, bitno)   (__hybrid_atomic_fetchor(&(self)[__HYBRID_BITSET_WORD(bitno)], __HYBRID_BITSET_MASK(bitno), __ATOMIC_SEQ_CST) & __HYBRID_BITSET_MASK(bitno))
-#define __hybrid_bitset_atomic_fetchclear(self, bitno) (__hybrid_atomic_fetchand(&(self)[__HYBRID_BITSET_WORD(bitno)], ~__HYBRID_BITSET_MASK(bitno), __ATOMIC_SEQ_CST) & __HYBRID_BITSET_MASK(bitno))
-#define __hybrid_bitset_atomic_fetchflip(self, bitno)  (__hybrid_atomic_fetchxor(&(self)[__HYBRID_BITSET_WORD(bitno)], __HYBRID_BITSET_MASK(bitno), __ATOMIC_SEQ_CST) & __HYBRID_BITSET_MASK(bitno))
+#define __hybrid_bitset_atomic_set(self, bitno)        __hybrid_atomic_or(&(self)[__HYBRID_BITSET_WORD(bitno)], __HYBRID_BITSET_MASK(bitno), __ATOMIC_SEQ_CST)                                        /*!export(include("__atomic.h"))*/
+#define __hybrid_bitset_atomic_clear(self, bitno)      __hybrid_atomic_and(&(self)[__HYBRID_BITSET_WORD(bitno)], ~__HYBRID_BITSET_MASK(bitno), __ATOMIC_SEQ_CST)                                      /*!export(include("__atomic.h"))*/
+#define __hybrid_bitset_atomic_flip(self, bitno)       __hybrid_atomic_xor(&(self)[__HYBRID_BITSET_WORD(bitno)], __HYBRID_BITSET_MASK(bitno), __ATOMIC_SEQ_CST)                                       /*!export(include("__atomic.h"))*/
+#define __hybrid_bitset_atomic_fetchset(self, bitno)   (__hybrid_atomic_fetchor(&(self)[__HYBRID_BITSET_WORD(bitno)], __HYBRID_BITSET_MASK(bitno), __ATOMIC_SEQ_CST) & __HYBRID_BITSET_MASK(bitno))   /*!export(include("__atomic.h"))*/
+#define __hybrid_bitset_atomic_fetchclear(self, bitno) (__hybrid_atomic_fetchand(&(self)[__HYBRID_BITSET_WORD(bitno)], ~__HYBRID_BITSET_MASK(bitno), __ATOMIC_SEQ_CST) & __HYBRID_BITSET_MASK(bitno)) /*!export(include("__atomic.h"))*/
+#define __hybrid_bitset_atomic_fetchflip(self, bitno)  (__hybrid_atomic_fetchxor(&(self)[__HYBRID_BITSET_WORD(bitno)], __HYBRID_BITSET_MASK(bitno), __ATOMIC_SEQ_CST) & __HYBRID_BITSET_MASK(bitno))  /*!export(include("__atomic.h"))*/
 #endif /* __GUARD_HYBRID___ATOMIC_H */
 
 /* >> size_t bitno;

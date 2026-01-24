@@ -17,7 +17,9 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!included_by <__stdinc.h>*/
+/*!fixincludes no_include_comments*/
+/*!fixincludes discourage_include*/
+/*!export **/
 #define __builtin_expect(x, y) (x)
 #define __NO_builtin_expect
 #define __likely   /* Nothing */
@@ -423,7 +425,7 @@ extern "C" {
      defined(__x86_64) || defined(_M_X64) || defined(_M_AMD64) ||      \
      defined(_WIN64) || defined(WIN64))
 #ifndef _m_prefetch
-#define _m_prefetch _m_prefetch
+#define _m_prefetch _m_prefetch /*!export-*/
 extern void (__cdecl _m_prefetch)(void *);
 #pragma intrinsic(_m_prefetch)
 #endif /* !_m_prefetch */
@@ -494,16 +496,16 @@ typedef System::ArgIterator __builtin_va_list;
 #define __builtin_va_list char *
 #endif  /* _M_CEE_PURE */
 #ifdef __cplusplus
-#define __MSVC_VA_ADDROF(v) &reinterpret_cast<char const &>(v)
+#define __MSVC_VA_ADDROF(v) &reinterpret_cast<char const &>(v) /*!export-*/
 #else /* __cplusplus */
-#define __MSVC_VA_ADDROF(v) &(v)
+#define __MSVC_VA_ADDROF(v) &(v) /*!export-*/
 #endif /* !__cplusplus */
 #if (defined(__i386__) || defined(__i386) || defined(i386) || \
      defined(__I86__) || defined(_M_IX86) || defined(__X86__) || \
      defined(_X86_) || defined(__THW_INTEL__) || defined(__INTEL__))
-#define __VA_SIZEOF(n)                   ((sizeof(n) + 3) & ~3)
-#define __builtin_va_start(ap, last_arg) (void)((ap) = (__builtin_va_list)__MSVC_VA_ADDROF(last_arg) + __VA_SIZEOF(last_arg))
-#define __builtin_va_arg(ap, T)          (*(T *)(((ap) += __VA_SIZEOF(T)) - __VA_SIZEOF(T)))
+#define __MSVC_VA_SIZEOF(n)              ((sizeof(n) + 3) & ~3) /*!export-*/
+#define __builtin_va_start(ap, last_arg) (void)((ap) = (__builtin_va_list)__MSVC_VA_ADDROF(last_arg) + __MSVC_VA_SIZEOF(last_arg))
+#define __builtin_va_arg(ap, T)          (*(T *)(((ap) += __MSVC_VA_SIZEOF(T)) - __MSVC_VA_SIZEOF(T)))
 #define __builtin_va_end(ap)             (void)0
 #elif (defined(__x86_64__) || defined(__amd64__) || defined(__amd64) || \
        defined(__x86_64) || defined(_M_X64) || defined(_M_AMD64) || \
@@ -511,15 +513,27 @@ typedef System::ArgIterator __builtin_va_list;
 #ifdef __cplusplus
 namespace __intern {
 extern "C" {
+#ifndef __va_start
+#define __va_start __va_start /*!export-*/
 extern void (__cdecl __va_start)(__builtin_va_list *, ...);
+#endif /* !__va_start */
+#ifndef _vacopy
+#define _vacopy _vacopy /*!export-*/
 extern __declspec(dllimport) void (__cdecl _vacopy)(__builtin_va_list *, __builtin_va_list);
+#endif /* !_vacopy */
 } /* extern "C" */
 } /* namespace __intern */
 #define __builtin_va_start(ap, x)       ::__intern::__va_start(&ap, x)
 #define __builtin_va_copy(dstap, srcap) ::__intern::_vacopy(&(dstap), srcap)
 #else /* __cplusplus */
+#ifndef __va_start
+#define __va_start __va_start /*!export-*/
 extern void (__cdecl __va_start)(__builtin_va_list *, ...);
+#endif /* !__va_start */
+#ifndef _vacopy
+#define _vacopy _vacopy /*!export-*/
 extern __declspec(dllimport) void (__cdecl _vacopy)(__builtin_va_list *, __builtin_va_list);
+#endif /* !_vacopy */
 #define __builtin_va_start(ap, x)       __va_start(&ap, x)
 #define __builtin_va_copy(dstap, srcap) _vacopy(&(dstap), srcap)
 #endif /* !__cplusplus */
@@ -529,9 +543,9 @@ extern __declspec(dllimport) void (__cdecl _vacopy)(__builtin_va_list *, __built
 	 : *(T *)((ap += 8) - 8))
 #define __builtin_va_end(ap) (void)0
 #else /* ... */
-#define __VA_SIZEOF(n)            ((sizeof(n) + 3) & ~3)
-#define __builtin_va_start(ap, v) (ap = (__builtin_va_list)__MSVC_VA_ADDROF(v) + __VA_SIZEOF(v)))
-#define __builtin_va_arg(ap, T)   (*(T *)((ap += __VA_SIZEOF(T)) - __VA_SIZEOF(T)))
+#define __MSVC_VA_SIZEOF(n)       ((sizeof(n) + 3) & ~3) /*!export-*/
+#define __builtin_va_start(ap, v) (ap = (__builtin_va_list)__MSVC_VA_ADDROF(v) + __MSVC_VA_SIZEOF(v)))
+#define __builtin_va_arg(ap, T)   (*(T *)((ap += __MSVC_VA_SIZEOF(T)) - __MSVC_VA_SIZEOF(T)))
 #define __builtin_va_end(ap)      (void)0
 #endif /* !... */
 #ifndef __builtin_va_copy

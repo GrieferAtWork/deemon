@@ -17,7 +17,6 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!always_includes <hybrid/__altint.h>*/
 #ifndef __GUARD_HYBRID_ALTINT_H
 #define __GUARD_HYBRID_ALTINT_H 1
 
@@ -30,9 +29,9 @@
  * >> ALTINT_COMPAT(my_uint32_t, my_uint32_alt_t)
  */
 #include "__altint.h"
-#define ALTINT         __HYBRID_ALTINT
-#define ALTINT_UID     __HYBRID_ALTINT_UID
-#define ALTINT_COMPAT  __HYBRID_ALTINT_COMPAT
-#define ALTINT_TYPEDEF __HYBRID_ALTINT_TYPEDEF
+#define ALTINT         __HYBRID_ALTINT         /*!export*/
+#define ALTINT_UID     __HYBRID_ALTINT_UID    /*!export*/
+#define ALTINT_COMPAT  __HYBRID_ALTINT_COMPAT  /*!export*/
+#define ALTINT_TYPEDEF __HYBRID_ALTINT_TYPEDEF /*!export*/
 
 #endif /* !__GUARD_HYBRID_ALTINT_H */

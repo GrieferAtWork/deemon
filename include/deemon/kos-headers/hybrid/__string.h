@@ -17,6 +17,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export __hybrid_memcpy**/
+/*!export __hybrid_memmove**/
+/*!export __hybrid_bzero**/
+/*!export __hybrid_memset __hybrid_bcmp*/
 #ifndef __GUARD_HYBRID___MEMSET_H
 #define __GUARD_HYBRID___MEMSET_H 1
 

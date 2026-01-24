@@ -17,13 +17,12 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!always_includes <hybrid/__atomic.h>*/
+/*!export ATOMIC_**/
 #ifndef __GUARD_HYBRID_ATOMIC_H
 #define __GUARD_HYBRID_ATOMIC_H 1
 
 #include "../__stdinc.h"
 #include "__atomic.h"
-#include "host.h"
 
 #ifdef __CC__
 

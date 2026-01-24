@@ -17,6 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export RBTREE_**/
+/*!export LLRBTREE_**/
 #ifndef __GUARD_HYBRID_SEQUENCE_RBTREE_H
 #define __GUARD_HYBRID_SEQUENCE_RBTREE_H 1
 

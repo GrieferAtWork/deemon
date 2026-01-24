@@ -17,6 +17,9 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!fixincludes no_include_comments*/
+/*!fixincludes discourage_include*/
+/*!export __has_GCC_warning*/
 /* !!! GENERATED FILE -- DO NOT EDIT
  * Generator: kos/misc/scripts/gcc_builtins/gcc_warnings.dee
  */

@@ -17,7 +17,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!always_includes <hybrid/__unaligned.h>*/
+/*!export UNALIGNED_GET* UNALIGNED_GET*_SWAP*/
+/*!export UNALIGNED_SET* UNALIGNED_SET*_SWAP*/
+/*!export UNALIGNED_GETLE* UNALIGNED_GETBE**/
+/*!export UNALIGNED_SETLE* UNALIGNED_SETBE**/
 #ifndef __GUARD_HYBRID_UNALIGNED_H
 #define __GUARD_HYBRID_UNALIGNED_H 1
 
@@ -75,32 +78,32 @@
 #endif /* __UINT64_TYPE__ */
 
 #ifdef __GUARD_HYBRID_BYTESWAP_H
-#define UNALIGNED_GETLE   __hybrid_unaligned_getle
-#define UNALIGNED_SETLE   __hybrid_unaligned_setle
-#define UNALIGNED_GETBE   __hybrid_unaligned_getbe
-#define UNALIGNED_SETBE   __hybrid_unaligned_setbe
-#define UNALIGNED_GETLE8  __hybrid_unaligned_getle8
-#define UNALIGNED_SETLE8  __hybrid_unaligned_setle8
-#define UNALIGNED_GETBE8  __hybrid_unaligned_getbe8
-#define UNALIGNED_SETBE8  __hybrid_unaligned_setbe8
-#define UNALIGNED_GETLE16 __hybrid_unaligned_getle16
-#define UNALIGNED_SETLE16 __hybrid_unaligned_setle16
-#define UNALIGNED_GETBE16 __hybrid_unaligned_getbe16
-#define UNALIGNED_SETBE16 __hybrid_unaligned_setbe16
-#define UNALIGNED_GETLE32 __hybrid_unaligned_getle32
-#define UNALIGNED_SETLE32 __hybrid_unaligned_setle32
-#define UNALIGNED_GETBE32 __hybrid_unaligned_getbe32
-#define UNALIGNED_SETBE32 __hybrid_unaligned_setbe32
+#define UNALIGNED_GETLE   __hybrid_unaligned_getle   /*!export(include("byteswap.h"))*/
+#define UNALIGNED_SETLE   __hybrid_unaligned_setle   /*!export(include("byteswap.h"))*/
+#define UNALIGNED_GETBE   __hybrid_unaligned_getbe   /*!export(include("byteswap.h"))*/
+#define UNALIGNED_SETBE   __hybrid_unaligned_setbe   /*!export(include("byteswap.h"))*/
+#define UNALIGNED_GETLE8  __hybrid_unaligned_getle8  /*!export(include("byteswap.h"))*/
+#define UNALIGNED_SETLE8  __hybrid_unaligned_setle8  /*!export(include("byteswap.h"))*/
+#define UNALIGNED_GETBE8  __hybrid_unaligned_getbe8  /*!export(include("byteswap.h"))*/
+#define UNALIGNED_SETBE8  __hybrid_unaligned_setbe8  /*!export(include("byteswap.h"))*/
+#define UNALIGNED_GETLE16 __hybrid_unaligned_getle16 /*!export(include("byteswap.h"))*/
+#define UNALIGNED_SETLE16 __hybrid_unaligned_setle16 /*!export(include("byteswap.h"))*/
+#define UNALIGNED_GETBE16 __hybrid_unaligned_getbe16 /*!export(include("byteswap.h"))*/
+#define UNALIGNED_SETBE16 __hybrid_unaligned_setbe16 /*!export(include("byteswap.h"))*/
+#define UNALIGNED_GETLE32 __hybrid_unaligned_getle32 /*!export(include("byteswap.h"))*/
+#define UNALIGNED_SETLE32 __hybrid_unaligned_setle32 /*!export(include("byteswap.h"))*/
+#define UNALIGNED_GETBE32 __hybrid_unaligned_getbe32 /*!export(include("byteswap.h"))*/
+#define UNALIGNED_SETBE32 __hybrid_unaligned_setbe32 /*!export(include("byteswap.h"))*/
 #ifdef __UINT64_TYPE__
-#define UNALIGNED_GETLE64 __hybrid_unaligned_getle64
-#define UNALIGNED_SETLE64 __hybrid_unaligned_setle64
-#define UNALIGNED_GETBE64 __hybrid_unaligned_getbe64
-#define UNALIGNED_SETBE64 __hybrid_unaligned_setbe64
+#define UNALIGNED_GETLE64 __hybrid_unaligned_getle64 /*!export(include("byteswap.h"))*/
+#define UNALIGNED_SETLE64 __hybrid_unaligned_setle64 /*!export(include("byteswap.h"))*/
+#define UNALIGNED_GETBE64 __hybrid_unaligned_getbe64 /*!export(include("byteswap.h"))*/
+#define UNALIGNED_SETBE64 __hybrid_unaligned_setbe64 /*!export(include("byteswap.h"))*/
 #ifdef __UINT128_TYPE__
-#define UNALIGNED_GETLE128 __hybrid_unaligned_getle128
-#define UNALIGNED_SETLE128 __hybrid_unaligned_setle128
-#define UNALIGNED_GETBE128 __hybrid_unaligned_getbe128
-#define UNALIGNED_SETBE128 __hybrid_unaligned_setbe128
+#define UNALIGNED_GETLE128 __hybrid_unaligned_getle128 /*!export(include("byteswap.h"))*/
+#define UNALIGNED_SETLE128 __hybrid_unaligned_setle128 /*!export(include("byteswap.h"))*/
+#define UNALIGNED_GETBE128 __hybrid_unaligned_getbe128 /*!export(include("byteswap.h"))*/
+#define UNALIGNED_SETBE128 __hybrid_unaligned_setbe128 /*!export(include("byteswap.h"))*/
 #endif /* __UINT128_TYPE__ */
 #endif /* __UINT64_TYPE__ */
 #endif /* __GUARD_HYBRID_BYTESWAP_H */

@@ -17,6 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export atomic_once*/
+/*!export atomic_once_**/
 #ifndef __GUARD_HYBRID_SCHED_ATOMIC_ONCE_H
 #define __GUARD_HYBRID_SCHED_ATOMIC_ONCE_H 1
 
@@ -213,9 +215,7 @@ __NOTHROW(atomic_once_abort)(struct atomic_once *__restrict __self) {
 
 #endif /* !__INTELLISENSE__ */
 
-
 #endif /* __CC__ */
-
 
 __DECL_END
 
