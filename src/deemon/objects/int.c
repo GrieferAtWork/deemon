@@ -56,6 +56,7 @@
 #include <hybrid/byteorder.h>  /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/host.h>       /* __ARCH_HAVE_UNALIGNED_MEMORY_ACCESS */
 #include <hybrid/int128.h>     /* __HYBRID_UINT128_INIT16N, __hybrid_int128_*, __hybrid_uint128_* */
+#include <hybrid/limitcore.h>  /* __*_MAX__, __INTn_MIN__ */
 #include <hybrid/overflow.h>   /* OVERFLOW_UADD, OVERFLOW_UMUL */
 #include <hybrid/typecore.h>   /* __BYTE_TYPE__, __CHAR_BIT__, __SHIFT_TYPE__, __SIZEOF_REGISTER__, __SIZEOF_SIZE_T__ */
 #include <hybrid/unaligned.h>  /* UNALIGNED_GET* */
@@ -77,7 +78,6 @@
 #endif /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
 
 #undef SSIZE_MAX
-#include <hybrid/limitcore.h> /* __*_MAX__, __INT*_MIN__ */
 #define SSIZE_MAX __SSIZE_MAX__
 
 #ifndef SIZE_MAX

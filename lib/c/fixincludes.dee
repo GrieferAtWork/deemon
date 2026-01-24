@@ -78,6 +78,8 @@ function wildcard2regex(wcard: string): string {
 		.replace(r"?", r".");
 }
 
+global final DEFAULT_MIN_COUNT_FOR_EXPORT_GROUP_REPLACEMENT = 3;
+
 class HeaderExportGroup {
 	this = default;
 	@@Regex that has to match an export, for that export to be part of this group
@@ -85,7 +87,7 @@ class HeaderExportGroup {
 	@@Replacement when this export group is matched.
 	public member replacement: string;
 	@@The min # of exports that must be matched before @replacement is injected
-	public member minCountForReplacement: int = 3;
+	public member minCountForReplacement: int = DEFAULT_MIN_COUNT_FOR_EXPORT_GROUP_REPLACEMENT;
 
 	public operator str(): string {
 		return f"{repr regex} -> {repr replacement} (match >= {minCountForReplacement})";
@@ -220,6 +222,8 @@ class HeaderParser {
 	public member exportRegexesAfterExtraIncludes: {string: Set with Set with DependentFile} = Dict();
 	public member notExportedKeywords: {string...} = HashSet();
 	public member notExportedWildcards: {string...} = HashSet();
+	public member hasCustomRegexGroups: bool = false;
+	public member keepDefaultRegexGroups: bool = false;
 
 	public member lastExport: string | none = none;
 	public member lastExportPos: int = 0;
@@ -339,6 +343,32 @@ class HeaderParser {
 		return nextRawNoComment("-*?");
 	}
 
+	public nextString(opt: bool = false): string | none {
+		local stringStart = pos;
+		local result = nextRawNoComment();
+		if (opt && !result)
+			return none;
+		if (!result.startswith('"') || !result.endswith('"'))
+			err(stringStart, f"Expected string literal, but got {repr result}");
+		try {
+			return result.decode("c-escape");
+		} catch (Error as e) {
+			err(stringStart, f"Failed to parse string {repr result}: {e.message}");
+		}
+	}
+
+	public nextInt(opt: bool = false): int | none {
+		local intStart = pos;
+		local result = nextRawNoComment();
+		if (opt && !result)
+			return none;
+		try {
+			return int(result);
+		} catch (Error as e) {
+			err(intStart, f"Failed to parse integer {repr result}: {e.message}");
+		}
+	}
+
 	public parseComment() {
 		if (!data.startswith("!", pos, end))
 			return;
@@ -394,7 +424,7 @@ again_export_directive:
 			/* Remember export */
 			if (isRegex) {
 				exportRegexes.insert(keywordOrRegex);
-				if (keywordOrRegex != ".*" &&
+				if (keywordOrRegex != ".*" && (!hasCustomRegexGroups || keepDefaultRegexGroups) &&
 				    !header.exportGroups.any(e -> e.regex == keywordOrRegex)) {
 					header.exportGroups.append(HeaderExportGroup(
 						regex:       keywordOrRegex,
@@ -464,17 +494,46 @@ again_export_directive:
 				header.discourageInclude = true;
 				break;
 			case "regex": {
-				/* TODO: //!fixincludes regex group "__INT(8|16|32|64)_TYPE__" "__INTn_TYPE__" 4
-				 *
-				 * Define custom "header.exportGroups". Also causes all automatically generated
-				 * export groups (e.g. `//!export __INT*_TYPE__`) to be deleted, and any further
-				 * wildcard-export directives within the same file no longer create automatic
-				 * groups. */
-				/* TODO: //!fixincludes regex export "__INT(8|16|32|64)_TYPE__" "__INTn_TYPE__" 4
-				 *
-				 * Same as "fixincludes regex group", but also causes all symbols matching the
-				 * specified regex to be added to "header.exports" at the end. This can be done
-				 * by simply adding the regex string to "this.exportRegexes". */
+				local regexCommand = nextRawNoComment();
+				switch (regexCommand) {
+				case "keep_default_groups":
+					keepDefaultRegexGroups = true;
+					break;
+				case "group":
+					/* //!fixincludes regex group "__INT(8|16|32|64)_TYPE__" "__INTn_TYPE__" 4
+					 *
+					 * Define custom "header.exportGroups". Also causes all automatically generated
+					 * export groups (e.g. `//!export __INT*_TYPE__`) to be deleted, and any further
+					 * wildcard-export directives within the same file no longer create automatic
+					 * groups. */
+				case "export": {
+					/* //!fixincludes regex export "__INT(8|16|32|64)_TYPE__" "__INTn_TYPE__" 4
+					 *
+					 * Same as "fixincludes regex group", but also causes all symbols matching the
+					 * specified regex to be added to "header.exports" at the end. This can be done
+					 * by simply adding the regex string to "this.exportRegexes". */
+					local regex: string = nextString();
+					local replacement: string = nextString();
+					local minCount: int = nextInt(opt: true)
+						?? DEFAULT_MIN_COUNT_FOR_EXPORT_GROUP_REPLACEMENT;
+					if (!hasCustomRegexGroups) {
+						if (!keepDefaultRegexGroups)
+							header.exportGroups.clear();
+						hasCustomRegexGroups = true;
+					}
+					header.exportGroups.append(HeaderExportGroup(
+							regex:                  regex,
+							replacement:            replacement,
+							minCountForReplacement: minCount,
+					));
+					if (regexCommand == "export")
+						exportRegexes.insert(regex);
+				}	break;
+
+				default:
+					err(directiveStart, f"Unsupported regex command: '/*!fixinclude regex {regexCommand}...'");
+					break;
+				}
 			}	break;
 
 			default:

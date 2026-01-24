@@ -21,6 +21,10 @@
 /*!export __INT*_MIN__ __INT*_MAX__ __UINT*_MAX__*/
 /*!export __INT_LEAST*_MIN__ __INT_LEAST*_MAX__ __UINT_LEAST*_MAX__*/
 /*!export __INT_FAST*_MIN__ __INT_FAST*_MAX__ __UINT_FAST*_MAX__*/
+/*!fixincludes regex keep_default_groups*/
+/*!fixincludes regex group "__INT(8|16|32|64)_MIN__"  "__INTn_MIN__"  4*/
+/*!fixincludes regex group "__INT(8|16|32|64)_MAX__"  "__INTn_MAX__"  4*/
+/*!fixincludes regex group "__UINT(8|16|32|64)_MAX__" "__UINTn_MAX__" 4*/
 #ifndef __GUARD_HYBRID_LIMITCORE_H
 #define __GUARD_HYBRID_LIMITCORE_H 1
 

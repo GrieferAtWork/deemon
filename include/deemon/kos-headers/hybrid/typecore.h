@@ -21,6 +21,22 @@
 /*!export __*_TYPE__ __*_TYPE_IS_*__*/
 /*!export __INT*_C __UINT*_C __SIZE_C __SSIZE_C*/
 /*!export __INT*_C_SUFFIX__ __UINT*_C_SUFFIX__*/
+/*!fixincludes regex keep_default_groups*/
+/*!fixincludes regex group "__INT(8|16|32|64)_C_SUFFIX__"        "__INTn_C_SUFFIX__"       4*/
+/*!fixincludes regex group "__UINT(8|16|32|64)_C_SUFFIX__"       "__UINTn_C_SUFFIX__"      4*/
+/*!fixincludes regex group "__INT(8|16|32|64)_C"                 "__INTn_C"                4*/
+/*!fixincludes regex group "__UINT(8|16|32|64)_C"                "__UINTn_C"               4*/
+/*!fixincludes regex group "__SIZEOF_INT_FAST(8|16|32|64)_T__"   "__SIZEOF_INT_FASTn_T__"  4*/
+/*!fixincludes regex group "__SIZEOF_INT_LEAST(8|16|32|64)_T__"  "__SIZEOF_INT_LEASTn_T__" 4*/
+/*!fixincludes regex group "__INT(8|16|32|64)_TYPE__"            "__INTn_TYPE__"           4*/
+/*!fixincludes regex group "__UINT(8|16|32|64)_TYPE__"           "__UINTn_TYPE__"          4*/
+/*!fixincludes regex group "__INT_LEAST(8|16|32|64)_TYPE__"      "__INT_LEASTn_TYPE__"     4*/
+/*!fixincludes regex group "__UINT_LEAST(8|16|32|64)_TYPE__"     "__UINT_LEASTn_TYPE__"    4*/
+/*!fixincludes regex group "__INT_FAST(8|16|32|64)_TYPE__"       "__INT_FASTn_TYPE__"      4*/
+/*!fixincludes regex group "__UINT_FAST(8|16|32|64)_TYPE__"      "__UINT_FASTn_TYPE__"     4*/
+/*!fixincludes regex group "__ALIGNOF_INT(8|16|32|64)__"         "__ALIGNOF_INTn__"        4*/
+/*!fixincludes regex group "__INT_LEAST(8|16|32|64)_WIDTH__"     "__INT_LEASTn_WIDTH__"    4*/
+/*!fixincludes regex group "__INT_FAST(8|16|32|64)_WIDTH__"      "__INT_FASTn_WIDTH__"     4*/
 #ifndef __GUARD_HYBRID_TYPECORE_H
 #define __GUARD_HYBRID_TYPECORE_H 1
 

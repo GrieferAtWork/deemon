@@ -108,7 +108,7 @@ _Dee_atomic_fetchnand_no_threads(T *p, S value) {
 #define Dee_atomic_fetchor_explicit(p, value, order)   _Dee_atomic_fetchor_no_threads(p, value)
 #define Dee_atomic_fetchnand_explicit(p, value, order) _Dee_atomic_fetchnand_no_threads(p, value)
 #else /* ... */
-#include <hybrid/typecore.h> /* __*_TYPE__ */
+#include <hybrid/typecore.h> /* __UINTPTR_TYPE__, __UINTn_TYPE__ */
 
 #define DEE_DEFINE_ATOMIC_HELPERS(n, T)                   \
 	LOCAL WUNUSED NONNULL((1)) T                          \
