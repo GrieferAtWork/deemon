@@ -57,9 +57,9 @@ ClCompile.BasicRuntimeChecks = Default
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/types.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
-#include <deemon/util/rlock.h>
+#include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/lock.h>       /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_*, Dee_atomic_rwlock_*, Dee_shared_lock_* */
+#include <deemon/util/rlock.h>      /* Dee_RATOMIC_LOCK_INIT, Dee_RSHARED_LOCK_INIT, Dee_ratomic_lock_*, Dee_rshared_lock_* */
 
 #include <hybrid/align.h>           /* CEILDIV, IS_ALIGNED */
 #include <hybrid/bit.h>             /* CLZ, CTZ */

@@ -25,6 +25,8 @@
 
 #include <deemon/api.h>
 
+#include <deemon/util/lock.h> /* Dee_atomic_rwlock_init */
+
 #include <stdbool.h> /* false, true */
 #include <stddef.h>  /* size_t */
 

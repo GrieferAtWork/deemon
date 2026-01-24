@@ -43,8 +43,8 @@
 #include <deemon/stringutils.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h>    /* bcmpc(), ... */
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>        /* atomic_read */
+#include <deemon/util/lock.h>          /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 
 #include <hybrid/host.h>      /* __ARCH_PAGESIZE */
 #include <hybrid/minmax.h>    /* MIN */

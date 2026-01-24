@@ -35,7 +35,7 @@
 #include <deemon/set.h>
 #include <deemon/super.h>
 #include <deemon/thread.h>
-#include <deemon/util/simple-hashset.h>
+#include <deemon/util/simple-hashset.h> /* Dee_simple_hashset_with_lock_* */
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"

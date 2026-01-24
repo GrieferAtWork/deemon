@@ -35,8 +35,8 @@
 #include <deemon/serial.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>        /* atomic_read */
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */
 

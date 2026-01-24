@@ -34,9 +34,9 @@
 #include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* atexit(), memcpy(), ... */
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
-#include <deemon/util/rlock.h>
+#include <deemon/util/atomic.h>     /* atomic_read */
+#include <deemon/util/lock.h>       /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_* */
+#include <deemon/util/rlock.h>      /* Dee_rshared_rwlock_init */
 
 #include <hybrid/sequence/list.h> /* LIST_* */
 #include <hybrid/typecore.h>      /* __BYTE_TYPE__, __SIZEOF_SIZE_T__ */

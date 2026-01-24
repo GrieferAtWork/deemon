@@ -24,7 +24,7 @@
 
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>  /* atomic_cmpxch, atomic_read */
 
 #include "../generic-proxy.h"
 

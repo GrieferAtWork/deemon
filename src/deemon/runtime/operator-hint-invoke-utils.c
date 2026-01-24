@@ -29,7 +29,7 @@
 #include <deemon/operator-hints.h>
 #include <deemon/super.h>          /* DeeObject_TCall, ... */
 #include <deemon/tuple.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h>      /* Dee_atomic_lock_*, Dee_atomic_rwlock_* */
 
 #include <hybrid/int128.h>    /* __hybrid_int128_*, __hybrid_uint128_set64 */
 #include <hybrid/limitcore.h> /* __INT*_MAX__, __INT*_MIN__, __UINT*_MAX__ */

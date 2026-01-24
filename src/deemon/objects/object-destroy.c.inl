@@ -84,6 +84,7 @@
 
 #include <deemon/alloc.h>
 #include <deemon/object.h>
+#include <deemon/util/atomic.h> /* atomic_fetchdec */
 
 #include <stddef.h> /* NULL */
 

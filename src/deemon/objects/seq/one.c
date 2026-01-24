@@ -36,7 +36,7 @@
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>        /* atomic_* */
 
 #include <hybrid/overflow.h>    /* OVERFLOW_UADD */
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */

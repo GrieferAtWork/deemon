@@ -23,8 +23,8 @@
 #include "../api.h"
 
 #include "../object.h"
-#include "../util/lock.h"
-#include "../util/rlock.h"
+#include "../util/lock.h"  /* Dee_atomic_rwlock_* */
+#include "../util/rlock.h" /* Dee_rshared_rwlock_* */
 
 #ifdef CONFIG_BUILDING_DEEMON
 #include "error.h"

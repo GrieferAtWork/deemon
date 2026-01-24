@@ -23,7 +23,7 @@
 
 #include "../api.h"
 
-#include "lock.h"
+#include "lock.h" /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_* */
 
 #include <stddef.h> /* NULL, size_t */
 

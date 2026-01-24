@@ -36,8 +36,8 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/lock.h>       /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_* */
 
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
 

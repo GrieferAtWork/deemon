@@ -28,7 +28,7 @@
 #include <deemon/regex.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 
 /* Includes for libregex... */
 /* clang-format off */

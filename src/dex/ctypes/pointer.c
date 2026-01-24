@@ -39,7 +39,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy() */
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
 
 #include <hybrid/overflow.h> /* OVERFLOW_USUB */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_WCHAR_T__ */

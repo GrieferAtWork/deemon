@@ -43,10 +43,10 @@
 #include <deemon/system-features.h> /* memset(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/futex.h>
-#include <deemon/util/lock.h>
-#include <deemon/util/rlock.h>
+#include <deemon/util/atomic.h>     /* Dee_ATOMIC_RELAXED, Dee_ATOMIC_SEQ_CST, atomic_* */
+#include <deemon/util/futex.h>      /* DeeFutex_WakeAll, DeeFutex_WakeOne */
+#include <deemon/util/lock.h>       /* Dee_atomic_lock_t, Dee_atomic_rwlock_t, Dee_event_*, Dee_semaphore_*, Dee_shared_lock_t, Dee_shared_rwlock_t */
+#include <deemon/util/rlock.h>      /* Dee_ratomic_lock_t, Dee_ratomic_rwlock_t, Dee_rshared_lock_t, Dee_rshared_rwlock_t */
 
 #include <hybrid/overflow.h>    /* OVERFLOW_UADD, OVERFLOW_USUB */
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */

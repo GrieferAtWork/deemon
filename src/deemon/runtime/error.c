@@ -32,7 +32,7 @@
 #include <deemon/system-features.h> /* fprintf(stderr, ...) */
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>     /* atomic_* */
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */

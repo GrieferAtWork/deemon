@@ -38,7 +38,7 @@
 #include <deemon/serial.h>
 #include <deemon/system-features.h> /* memcpy(), memset(), ... */
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>     /* atomic_xch */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __UINTPTR_TYPE__ */
 

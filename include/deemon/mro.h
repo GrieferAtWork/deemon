@@ -23,7 +23,7 @@
 #include "api.h"
 
 #include "types.h"
-#include "util/lock.h"
+#include "util/lock.h" /* Dee_shared_rwlock_t */
 #ifdef CONFIG_BUILDING_DEEMON
 #include "error-rt.h"
 #include "object.h"

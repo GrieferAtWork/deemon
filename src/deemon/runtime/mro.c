@@ -38,8 +38,8 @@
 #include <deemon/property.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/lock.h>       /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_*, Dee_shared_rwlock_* */
 
 #include <hybrid/overflow.h>      /* OVERFLOW_USUB */
 #include <hybrid/sched/yield.h>   /* SCHED_YIELD */

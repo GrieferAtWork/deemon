@@ -26,7 +26,7 @@
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
 #include "object.h"
-#include "util/lock.h"
+#include "util/lock.h" /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */

@@ -44,9 +44,10 @@
 #include <deemon/system-features.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/futex.h>
-#include <deemon/util/rlock.h>
+#include <deemon/util/atomic.h>        /* atomic_inc */
+#include <deemon/util/futex.h>         /* DeeFutex_WakeAll */
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
+#include <deemon/util/rlock.h>         /* Dee_rshared_rwlock_init */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

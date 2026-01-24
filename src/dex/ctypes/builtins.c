@@ -30,7 +30,7 @@
 #include <deemon/numeric.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h> /* Dee_ATOMIC_RWLOCK_INIT */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */

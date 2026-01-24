@@ -50,8 +50,8 @@
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/futex.h>
+#include <deemon/util/atomic.h>     /* atomic_cmpxch_val */
+#include <deemon/util/futex.h>      /* DeeFutex_WaitPtr, DeeFutex_WakeAll */
 
 #include <hybrid/byteswap.h>  /* UNALIGNED_GETLE* */
 #include <hybrid/overflow.h>  /* OVERFLOW_UADD */

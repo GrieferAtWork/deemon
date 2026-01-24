@@ -37,7 +37,7 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/thread.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>     /* atomic_* */
 
 #include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

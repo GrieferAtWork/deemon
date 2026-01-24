@@ -42,7 +42,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
 #include <deemon/variant.h>
 
 #include <hybrid/int128.h>    /* __HYBRID_INT128_INIT32N, __HYBRID_UINT128_INIT32N, __hybrid_int128_*, __hybrid_uint128_* */

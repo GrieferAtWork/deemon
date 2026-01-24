@@ -37,7 +37,7 @@
 #include <deemon/serial.h>
 #include <deemon/set.h>
 #include <deemon/thread.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MIN__ */
 

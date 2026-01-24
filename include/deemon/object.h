@@ -28,7 +28,7 @@
 #include <hybrid/typecore.h>  /* __*_TYPE__, __CHAR_UNSIGNED__, __SIZEOF_*__, __UINT32_C, __UINT64_C */
 
 #include "types.h"
-#include "util/lock.h"
+#include "util/lock.h" /* Dee_atomic_lock_t, Dee_atomic_rwlock_t */
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool, false, true */

@@ -36,7 +36,7 @@
 #include <deemon/system-features.h> /* memcasecmp(), bzero(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 

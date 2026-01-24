@@ -31,7 +31,7 @@
 #include <deemon/set.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>     /* atomic_read */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 

@@ -37,8 +37,8 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/once.h>
+#include <deemon/util/atomic.h> /* atomic_* */
+#include <deemon/util/once.h>   /* Dee_once_* */
 
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
 

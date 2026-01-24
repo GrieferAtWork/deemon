@@ -39,6 +39,7 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
+#include <deemon/util/atomic.h> /* atomic_* */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/byteswap.h>  /* BSWAP* */

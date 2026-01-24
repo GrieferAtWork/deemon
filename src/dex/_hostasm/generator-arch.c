@@ -39,6 +39,7 @@
 #include <deemon/seq.h>
 #include <deemon/super.h>
 #include <deemon/tuple.h>
+#include <deemon/util/lock.h> /* Dee_atomic_rwlock_t */
 
 #include <hybrid/align.h>         /* CEIL_ALIGN, IS_ALIGNED */
 #include <hybrid/bitset.h>        /* BITSET_LENGTHOF, bitset_* */

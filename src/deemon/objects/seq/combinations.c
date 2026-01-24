@@ -33,7 +33,7 @@
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>        /* atomic_read, atomic_write */
 
 #include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/runtime_error.h"

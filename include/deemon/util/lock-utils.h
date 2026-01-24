@@ -46,7 +46,7 @@
 #include <hybrid/sched/__yield.h> /* __hybrid_yield */
 
 #include "../thread.h"
-#include "lock.h"
+#include "lock.h"      /* Dee_atomic_lock_available, Dee_atomic_lock_tryacquire, Dee_atomic_rwlock_* */
 
 DECL_BEGIN
 

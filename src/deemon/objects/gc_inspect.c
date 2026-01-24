@@ -31,7 +31,7 @@
 #include <deemon/serial.h>
 #include <deemon/set.h>
 #include <deemon/super.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 
 #include <hybrid/typecore.h> /* __SIZEOF_SIZE_T__ */
 

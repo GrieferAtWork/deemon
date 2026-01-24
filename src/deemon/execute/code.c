@@ -45,7 +45,7 @@
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>     /* atomic_* */
 
 #include <hybrid/byteswap.h>  /* UNALIGNED_GETLE* */
 #include <hybrid/host.h>      /* __ARCH_STACK_GROWS_DOWNWARDS, __i386__, __x86_64__ */

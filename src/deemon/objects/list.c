@@ -40,9 +40,9 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
-#include <deemon/util/objectlist.h>
+#include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
+#include <deemon/util/objectlist.h>    /* Dee_OBJECTLIST_*, Dee_objectlist, Dee_objectlist_* */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
 #include <hybrid/overflow.h>  /* OVERFLOW_* */

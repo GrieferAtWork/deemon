@@ -28,8 +28,8 @@
 #include "object.h"     /* DeeBuffer */
 #include "string.h"     /* struct Dee_unicode_printer */
 #include "types.h"
-#include "util/lock.h"
-#include "util/rlock.h"
+#include "util/lock.h"  /* Dee_atomic_rwlock_*, Dee_shared_rwlock_* */
+#include "util/rlock.h" /* Dee_rshared_rwlock_* */
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t, uint32_t */

@@ -47,7 +47,7 @@
 #include <hybrid/sched/__yield.h>  /* __hybrid_yield */
 
 #include "../thread.h"
-#include "rlock.h"
+#include "rlock.h"     /* Dee_ratomic_lock_t, Dee_ratomic_rwlock_t */
 
 #include <stdint.h> /* uint64_t, uintptr_t */
 

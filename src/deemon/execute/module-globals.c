@@ -35,7 +35,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>        /* atomic_cmpxch_weak, atomic_read */
 
 #include "../objects/generic-proxy.h"
 #include "../runtime/strings.h"

@@ -30,7 +30,7 @@
 #include <deemon/dex.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h> /* Dee_SHARED_LOCK_INIT, Dee_shared_lock_* */
 
 #include "sqlite3-external.h"
 

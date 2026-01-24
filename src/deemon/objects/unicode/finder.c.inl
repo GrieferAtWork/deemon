@@ -30,7 +30,7 @@
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/string.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>        /* atomic_cmpxch_weak, atomic_read */
 
 #include <hybrid/overflow.h> /* OVERFLOW_USUB */
 

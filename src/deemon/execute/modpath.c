@@ -43,10 +43,11 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/types.h>
-#include <deemon/util/atomic-ref.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
-#include <deemon/util/nrlock.h>
+#include <deemon/util/atomic-ref.h> /* Dee_ATOMIC_REF, Dee_ATOMIC_REF_INIT, Dee_atomic_ref* */
+#include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
+#include <deemon/util/nrlock.h>     /* Dee_NRLOCK_OK, Dee_NRSHARED_LOCK_INIT, Dee_nrshared_lock_* */
+#include <deemon/util/objectlist.h> /* Dee_OBJECTLIST_INIT */
 
 #include <hybrid/align.h>           /* IS_POWER_OF_TWO */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
@@ -1748,7 +1749,7 @@ handle_todo_module:
 	return result;
 }
 
-PRIVATE Dee_nrshared_lock_t dex_clear_cache_lock = DEE_NRSHARED_LOCK_INIT;
+PRIVATE Dee_nrshared_lock_t dex_clear_cache_lock = Dee_NRSHARED_LOCK_INIT;
 
 /* Invoke the "mdx_clear" operator on every loaded DEX module. */
 INTERN bool DCALL DeeModule_ClearDexModuleCaches(void) {

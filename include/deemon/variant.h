@@ -28,7 +28,7 @@
 
 #include "object.h"
 #include "types.h"
-#include "util/atomic.h"
+#include "util/atomic.h" /* Dee_atomic_read */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

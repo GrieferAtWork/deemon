@@ -58,8 +58,8 @@
 #include <deemon/super.h>
 #include <deemon/system-features.h>    /* bzero(), ... */
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>        /* Dee_ATOMIC_ACQ_REL, atomic_* */
+#include <deemon/util/lock.h>          /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_*, Dee_atomic_rwlock_init */
 
 #include <hybrid/align.h>       /* IS_ALIGNED */
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */

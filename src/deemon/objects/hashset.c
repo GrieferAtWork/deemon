@@ -42,8 +42,8 @@
 #include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>    /* memcpyc(), ... */
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
 #include <hybrid/typecore.h>    /* __SIZEOF_INT__, __SIZEOF_SIZE_T__ */

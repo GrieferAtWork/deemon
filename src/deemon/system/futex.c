@@ -26,9 +26,8 @@
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/thread.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/futex.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>     /* Dee_ATOMIC_RELAXED, Dee_ATOMIC_SEQ_CST, atomic_* */
+#include <deemon/util/lock.h>       /* Dee_ATOMIC_LOCK_INIT, Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_lock_*, Dee_atomic_rwlock_* */
 
 #include <hybrid/sched/atomic-once.h> /* atomic_once */
 #include <hybrid/sched/yield.h>       /* SCHED_YIELD */

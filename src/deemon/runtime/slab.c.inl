@@ -26,10 +26,9 @@
 #include <deemon/gc.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* sscanf(), bzero(), ... */
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h>       /* Dee_atomic_lock_t */
 
 #include <hybrid/host.h> /* __ARCH_PAGESIZE, __i386__, __x86_64__ */
-/**/
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uintptr_t */

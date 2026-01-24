@@ -33,7 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/serial.h>
 #include <deemon/string.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include "../runtime/strings.h"
 

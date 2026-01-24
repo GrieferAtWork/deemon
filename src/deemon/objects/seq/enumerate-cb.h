@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/object.h>
-#include <deemon/util/rlock.h>
+#include <deemon/util/rlock.h> /* Dee_rshared_lock_t */
 
 #include <stddef.h> /* size_t */
 

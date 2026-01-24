@@ -38,8 +38,8 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>    /* memcpyc(), ... */
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_cinit, Dee_atomic_rwlock_init */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

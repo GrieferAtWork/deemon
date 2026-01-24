@@ -27,7 +27,7 @@
 #include <deemon/compiler/interface.h>
 #include <deemon/error.h>
 #include <deemon/object.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>        /* atomic_read */
 
 #include <hybrid/sequence/list.h> /* LIST_* */
 

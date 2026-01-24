@@ -25,7 +25,7 @@
 #include <deemon/mro.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
 
 #include <hybrid/sequence/list.h> /* LIST_ENTRY, LIST_HEAD */
 #include <hybrid/typecore.h>      /* __ALIGNOF_*__, __BYTE_TYPE__, __CHAR_UNSIGNED__, __HYBRID_ALIGNOF, __SIZEOF_*__, __WCHAR_UNSIGNED__ */

@@ -36,7 +36,7 @@
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* bzeroc(), ... */
 #include <deemon/thread.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h>       /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_* */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, offsetof, size_t */

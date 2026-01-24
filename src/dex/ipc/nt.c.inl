@@ -31,7 +31,6 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>          /* DeeNTSystem_IsIntr() */
 #include <deemon/thread.h>
-#include <deemon/util/atomic.h>
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 

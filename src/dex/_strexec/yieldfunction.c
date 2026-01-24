@@ -37,7 +37,7 @@
 #include <deemon/serial.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/thread.h>
-#include <deemon/util/rlock.h>
+#include <deemon/util/rlock.h>      /* Dee_rshared_lock_init */
 
 #include <hybrid/unaligned.h> /* UNALIGNED_GET* */
 #include <hybrid/wordbits.h>  /* ENCODE_INT16, ENCODE_INT32 */

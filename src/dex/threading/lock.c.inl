@@ -42,11 +42,11 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock-utils.h>
-#include <deemon/util/lock.h>
-#include <deemon/util/rlock-utils.h>
-#include <deemon/util/rlock.h>
+#include <deemon/util/atomic.h>      /* atomic_read */
+#include <deemon/util/lock-utils.h>  /* Dee_atomic_lock_*, Dee_atomic_rwlock_* */
+#include <deemon/util/lock.h>        /* Dee_ATOMIC_RWLOCK_MAX_READERS, Dee_SHARED_RWLOCK_MAX_READERS, Dee_SIZEOF_ATOMIC_LOCK, Dee_atomic_lock_*, Dee_atomic_rwlock_*, Dee_shared_lock_*, Dee_shared_rwlock_*, _Dee_atomic_lock_release_NDEBUG, _Dee_atomic_rwlock_*, _Dee_shared_rwlock_* */
+#include <deemon/util/rlock-utils.h> /* Dee_ratomic_lock_*, Dee_ratomic_rwlock_* */
+#include <deemon/util/rlock.h>       /* Dee_ratomic_lock_*, Dee_ratomic_rwlock_*, Dee_rshared_lock_*, Dee_rshared_rwlock_*, _Dee_ratomic_lock_release_NDEBUG, _Dee_ratomic_rwlock_*, _Dee_rshared_lock_release_NDEBUG, _Dee_rshared_rwlock_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
-#include <deemon/util/objectlist.h>
+#include <deemon/util/objectlist.h> /* Dee_objectlist_* */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */
 

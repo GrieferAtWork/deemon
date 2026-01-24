@@ -25,8 +25,8 @@
 #include <deemon/float.h>       /* CONFIG_HAVE_FPU */
 #include <deemon/hashset.h>
 #include <deemon/object.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h> /* atomic_read */
+#include <deemon/util/lock.h>   /* Dee_atomic_rwlock_* */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

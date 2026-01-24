@@ -35,7 +35,7 @@
 #include <deemon/struct.h>
 #include <deemon/system-features.h>
 #include <deemon/types.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
 #include <deemon/variant.h>
 
 #include <hybrid/host.h>      /* __pic__ */

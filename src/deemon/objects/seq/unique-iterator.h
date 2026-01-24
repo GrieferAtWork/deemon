@@ -24,7 +24,7 @@
 
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
-#include <deemon/util/simple-hashset.h>
+#include <deemon/util/simple-hashset.h> /* Dee_simple_hashset_with_lock */
 
 #include "../generic-proxy.h"
 

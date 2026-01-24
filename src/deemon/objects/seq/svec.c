@@ -34,8 +34,8 @@
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/system-features.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_init, Dee_atomic_rwlock_t */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
 #include <hybrid/typecore.h>  /* __SIZEOF_SIZE_T__ */

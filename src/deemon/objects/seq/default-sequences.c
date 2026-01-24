@@ -36,7 +36,7 @@
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/thread.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_USUB */
 

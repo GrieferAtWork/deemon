@@ -31,7 +31,7 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/types.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>     /* atomic_write, atomic_xch */
 #include <deemon/variant.h>
 
 #include <hybrid/int128.h>      /* __hybrid_int128_gr128, __hybrid_int128_lo128, __hybrid_uint128_* */

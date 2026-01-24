@@ -37,8 +37,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>    /* DeeSystem_DlOpen_USE_LoadLibrary, memcpyc(), ... */
 #include <deemon/system.h>             /* DeeSystem_Dl* */
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h>          /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/host.h>            /* __ARCH_PAGESIZE, __i386__, __pic__, __x86_64__ */

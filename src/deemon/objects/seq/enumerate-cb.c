@@ -32,7 +32,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/thread.h>
-#include <deemon/util/rlock.h>
+#include <deemon/util/rlock.h>         /* Dee_rshared_lock_* */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
 #include <hybrid/overflow.h>  /* OVERFLOW_SADD */

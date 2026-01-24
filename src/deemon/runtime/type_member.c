@@ -36,9 +36,8 @@
 #include <deemon/objmethod.h>       /* type_method_vcallf() -> DeeObjMethod_VCallFuncf() */
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* strlen() */
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/variant.h>
-/**/
 
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"

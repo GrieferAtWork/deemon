@@ -175,8 +175,7 @@
 #include <deemon/object.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>           /* DeeTuple_SIZE, DeeTuple_ELEM */
-#include <deemon/util/atomic.h>
-/**/
+#include <deemon/util/atomic.h>     /* atomic_read */
 
 #include "kwlist.h"        /* kwlist__thisarg */
 #include "runtime_error.h"

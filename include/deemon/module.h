@@ -24,7 +24,7 @@
 
 #include "gc.h"
 #include "types.h"
-#include "util/lock.h"
+#include "util/lock.h" /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */

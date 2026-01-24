@@ -37,9 +37,10 @@
 #include <deemon/system.h>             /* DeeSystem_SEP */
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/cache.h>
-#include <deemon/util/rlock.h>
+#include <deemon/util/atomic.h>        /* atomic_inc, atomic_read */
+#include <deemon/util/cache.h>         /* DECLARE_STRUCT_CACHE */
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
+#include <deemon/util/rlock.h>         /* Dee_rshared_rwlock_* */
 
 #include <hybrid/sequence/list.h> /* LIST_ENTRY_UNBOUND_INIT */
 

@@ -24,8 +24,8 @@
 
 #include "code.h"       /* struct Dee_code_frame */
 #include "types.h"
-#include "util/lock.h"
-#include "util/rlock.h"
+#include "util/lock.h"  /* Dee_atomic_lock_*, Dee_atomic_rwlock_*, Dee_shared_rwlock_* */
+#include "util/rlock.h" /* Dee_ratomic_rwlock_*, Dee_rshared_rwlock_* */
 
 #include <stddef.h> /* NULL */
 #include <stdint.h> /* uint16_t */

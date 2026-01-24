@@ -32,9 +32,9 @@
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/system-features.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
-#include <deemon/util/objectlist.h>
+#include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
+#include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
+#include <deemon/util/objectlist.h>    /* Dee_OBJECTLIST_*, Dee_objectlist_*, _Dee_objectlist_setalloc, objectlist_fini, objectlist_init */
 
 #include <hybrid/align.h>    /* CEILDIV */
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */

@@ -40,7 +40,7 @@
 #include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>    /* memcpy(), ... */
-#include <deemon/util/rlock.h>
+#include <deemon/util/rlock.h>         /* Dee_RSHARED_RWLOCK_INIT, Dee_rshared_rwlock_t */
 
 #include <hybrid/typecore.h> /* __REGISTER_TYPE__ */
 

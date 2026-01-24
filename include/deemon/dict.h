@@ -23,10 +23,7 @@
 #include "api.h"
 
 #include "types.h"
-#include "util/lock.h"
-#ifndef __INTELLISENSE__
-#include "util/atomic.h"
-#endif /* !__INTELLISENSE__ */
+#include "util/lock.h" /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_SIZE_T__, __UINT*_C */
 

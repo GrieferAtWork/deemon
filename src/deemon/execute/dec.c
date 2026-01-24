@@ -39,8 +39,8 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/md5.h>
+#include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/md5.h>        /* DeeMD5_Context, DeeMD5_Finalize, DeeMD5_Init, DeeMD5_Update */
 
 #include <hybrid/align.h>            /* CEIL_ALIGN, IS_ALIGNED */
 #include <hybrid/limitcore.h>        /* __UINT32_MAX__ */
@@ -2453,7 +2453,7 @@ DECL_END
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h> /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 #include <deemon/weakref.h>
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */

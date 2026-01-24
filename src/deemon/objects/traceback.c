@@ -37,8 +37,8 @@
 #include <deemon/system-features.h>    /* memcpy(), ... */
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/lock.h>          /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_init */
 
 #include "../runtime/strings.h"
 #include "generic-proxy.h"

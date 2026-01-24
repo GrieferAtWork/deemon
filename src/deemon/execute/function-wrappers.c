@@ -39,9 +39,9 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/traceback.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/futex.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/futex.h>         /* DeeFutex_WakeAll */
+#include <deemon/util/lock.h>          /* DeeLock_Acquire2, Dee_atomic_lock_* */
 
 #include <hybrid/byteswap.h>  /* UNALIGNED_GETLE* */
 #include <hybrid/overflow.h>  /* OVERFLOW_UADD */

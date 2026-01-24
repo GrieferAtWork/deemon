@@ -30,7 +30,8 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

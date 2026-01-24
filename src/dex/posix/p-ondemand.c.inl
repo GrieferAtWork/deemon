@@ -210,8 +210,8 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/thread.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/once.h>
+#include <deemon/util/atomic.h>     /* atomic_and, atomic_read */
+#include <deemon/util/once.h>       /* Dee_ONCE */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/int128.h>          /* __HYBRID_INT128_INIT16N, __hybrid_int128_* */

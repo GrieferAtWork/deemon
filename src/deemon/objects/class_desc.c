@@ -46,8 +46,8 @@
 #include <deemon/system-features.h>    /* memcpy(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

@@ -36,8 +36,8 @@
 #include <deemon/system.h>             /* DeeSystem_ALTSEP */
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>        /* atomic_or, atomic_read */
+#include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_init, Dee_atomic_rwlock_t */
 
 #include "../execute/function-wrappers.h"
 #include "../runtime/strings.h"

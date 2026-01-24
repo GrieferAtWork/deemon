@@ -45,9 +45,9 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>    /* bcmpc(), ... */
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
-#include <deemon/util/objectlist.h>
+#include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
+#include <deemon/util/lock.h>          /* DeeLock_Acquire2, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
+#include <deemon/util/objectlist.h>    /* Dee_objectlist, Dee_objectlist_* */
 
 #include <hybrid/align.h>    /* CEILDIV, IS_POWER_OF_TWO */
 #include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_USUB */

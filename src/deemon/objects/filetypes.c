@@ -40,8 +40,8 @@
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>    /* memcpy(), ... */
 #include <deemon/system.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>        /* atomic_add, atomic_read */
+#include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_init, Dee_shared_rwlock_init */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

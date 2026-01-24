@@ -45,8 +45,8 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/lock.h>
-#include <deemon/util/simple-hashset.h>
+#include <deemon/util/lock.h>           /* Dee_atomic_lock_init */
+#include <deemon/util/simple-hashset.h> /* Dee_simple_hashset, Dee_simple_hashset_* */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */
 #include <hybrid/typecore.h> /* __CHAR_BIT__, __SIZEOF_INT__, __SIZEOF_SIZE_T__ */

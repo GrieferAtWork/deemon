@@ -36,7 +36,8 @@
 #include <deemon/system.h>          /* DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
 #include <deemon/thread.h>
 #include <deemon/types.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/futex.h>      /* DeeFutex_* */
 
 #include <hybrid/overflow.h>    /* OVERFLOW_UCAST */
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */

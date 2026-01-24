@@ -41,7 +41,7 @@
 #include <deemon/system-features.h>    /* _Exit(), abort() */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"

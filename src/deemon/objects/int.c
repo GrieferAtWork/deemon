@@ -70,8 +70,8 @@
 #include <stdint.h>  /* INTn_MAX, INTn_MIN, UINT16_C, UINT32_C, UINT64_C, UINTn_MAX, intN_t, uintN_t */
 
 #if CONFIG_INT_CACHE_MAXCOUNT != 0
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h> /* atomic_read */
+#include <deemon/util/lock.h>   /* Dee_atomic_lock_* */
 
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
 #endif /* CONFIG_INT_CACHE_MAXCOUNT != 0 */

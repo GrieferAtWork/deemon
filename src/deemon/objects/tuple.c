@@ -39,7 +39,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>        /* atomic_* */
 
 #include <hybrid/host.h>      /* __ARCH_VA_LIST_IS_STACK_POINTER */
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__, __SSIZE_MIN__ */
@@ -97,7 +97,7 @@
 #endif /* !CONFIG_TUPLE_CACHE_MAXSIZE */
 
 #if CONFIG_TUPLE_CACHE_MAXCOUNT != 0
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h> /* Dee_atomic_lock_* */
 
 #include <hybrid/minmax.h>        /* MIN */
 #include <hybrid/sequence/list.h> /* SLIST_* */

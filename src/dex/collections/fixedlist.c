@@ -40,7 +40,8 @@
 #include <deemon/serial.h>
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/lock.h>       /* Dee_atomic_rwlock_cinit, Dee_atomic_rwlock_init */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
 #include <hybrid/overflow.h>  /* OVERFLOW_UADD, OVERFLOW_USUB */

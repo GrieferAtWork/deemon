@@ -28,7 +28,6 @@
 
 #include <deemon/error.h>
 #include <deemon/object.h>
-#include <deemon/util/objectlist.h>
 
 #include <stddef.h> /* NULL */
 #include <stdint.h> /* uint16_t */

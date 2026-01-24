@@ -33,8 +33,8 @@
 #include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>        /* atomic_read */
+#include <deemon/util/lock.h>          /* Dee_atomic_lock_* */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

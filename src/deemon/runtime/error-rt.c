@@ -46,7 +46,7 @@
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
 #include <deemon/types.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/variant.h>
 
 #include <hybrid/int128.h>    /* __hybrid_int128_*, __hybrid_uint128_* */

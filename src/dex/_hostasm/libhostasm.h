@@ -33,6 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>       /* Dee_cmethod_t */
 #include <deemon/system-features.h>
+#include <deemon/util/lock.h>       /* Dee_atomic_rwlock_t */
 
 #include <hybrid/bitset.h>        /* BITSET_SIZEOF, bitset_t */
 #include <hybrid/byteorder.h>     /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */

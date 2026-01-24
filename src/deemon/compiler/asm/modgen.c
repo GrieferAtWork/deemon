@@ -31,7 +31,7 @@
 #include <deemon/object.h>
 #include <deemon/serial.h>
 #include <deemon/system.h>             /* DeeSystem_GetWalltime() */
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>        /* atomic_or */
 
 #include <hybrid/int128.h> /* __hybrid_uint128_set64 */
 

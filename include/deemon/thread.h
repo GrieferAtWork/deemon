@@ -23,7 +23,7 @@
 #include "api.h"
 
 #include "types.h"
-#include "util/futex.h"
+#include "util/futex.h" /* DeeFutex_WakeAll */
 #ifndef __INTELLISENSE__
 #include "object.h" /* DeeObject_NewPack */
 #endif /* !__INTELLISENSE__ */

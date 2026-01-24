@@ -27,7 +27,7 @@
 #include <deemon/serial.h>
 #include <deemon/system-features.h>     /* memcpyc */
 #include <deemon/util/lock.h>           /* Dee_atomic_lock_init */
-#include <deemon/util/simple-hashset.h>
+#include <deemon/util/simple-hashset.h> /* Dee_simple_hashset, Dee_simple_hashset_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

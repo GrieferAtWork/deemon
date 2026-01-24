@@ -34,6 +34,7 @@
 #include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/types.h>
+#include <deemon/util/nrlock.h> /* Dee_NRLOCK_ALREADY, Dee_NRLOCK_OK, Dee_nrshared_lock_* */
 
 #include "accu.h"
 

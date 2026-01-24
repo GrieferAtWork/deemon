@@ -54,9 +54,9 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
-#include <deemon/util/objectlist.h>
+#include <deemon/util/atomic.h>     /* atomic_cmpxch_or_write, atomic_read */
+#include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
+#include <deemon/util/objectlist.h> /* objectlist, objectlist_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

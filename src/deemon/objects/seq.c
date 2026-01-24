@@ -42,7 +42,7 @@
 #include <deemon/super.h>
 #include <deemon/system-features.h>    /* memset */
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>        /* atomic_or */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/method-hint-defaults.h"

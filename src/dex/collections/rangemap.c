@@ -42,7 +42,7 @@
 #include <deemon/set.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h>     /* Dee_atomic_lock_* */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */
 

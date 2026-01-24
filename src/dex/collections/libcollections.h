@@ -26,7 +26,7 @@
 #include <deemon/file.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
 
 #include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* offsetof, size_t */

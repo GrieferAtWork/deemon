@@ -33,7 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>   /* memcpy(), bzero(), ... */
-#include <deemon/util/cache.h>
+#include <deemon/util/cache.h>        /* DEFINE_STRUCT_CACHE_EX */
 
 #include <hybrid/minmax.h> /* MAX_C */
 

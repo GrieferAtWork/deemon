@@ -28,7 +28,7 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/types.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>     /* atomic_or, atomic_read */
 
 #include <hybrid/host.h>     /* __ARCH_PAGESIZE */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

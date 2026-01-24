@@ -24,8 +24,8 @@
 
 #include <deemon/gc.h>
 #include <deemon/object.h>
-#include <deemon/util/lock.h>
-#include <deemon/util/objectlist.h>
+#include <deemon/util/lock.h>       /* Dee_atomic_lock_* */
+#include <deemon/util/objectlist.h> /* objectlist, objectlist_init */
 
 #include "../generic-proxy.h"
 

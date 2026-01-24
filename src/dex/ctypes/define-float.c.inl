@@ -43,7 +43,7 @@
 #include <deemon/int.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h> /* Dee_ATOMIC_RWLOCK_INIT */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* int32_t, int64_t */

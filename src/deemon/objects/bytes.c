@@ -41,7 +41,7 @@
 #include <deemon/super.h>
 #include <deemon/system-features.h>    /* memcpy(), bzero(), ... */
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
 #include <hybrid/minmax.h>    /* MIN */

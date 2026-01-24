@@ -34,7 +34,7 @@
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memcpy */
 #include <deemon/tuple.h>
-#include <deemon/util/objectlist.h>
+#include <deemon/util/objectlist.h> /* OBJECTLIST_INIT, objectlist, objectlist_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

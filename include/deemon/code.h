@@ -26,8 +26,8 @@
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
 #include "types.h"
-#include "util/lock.h"
-#include "util/rlock.h"
+#include "util/lock.h"  /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
+#include "util/rlock.h" /* Dee_rshared_rwlock_* */
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* int32_t, uint8_t, uint16_t, uint32_t, uintptr_t */

@@ -45,10 +45,10 @@
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/futex.h>
-#include <deemon/util/lock.h>
-#include <deemon/util/once.h>
+#include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/futex.h>         /* DeeFutex_* */
+#include <deemon/util/lock.h>          /* Dee_ATOMIC_RWLOCK_INIT, Dee_SHARED_LOCK_INIT, Dee_atomic_lock_init, Dee_atomic_rwlock_*, Dee_shared_lock_* */
+#include <deemon/util/once.h>          /* Dee_ONCE */
 
 #include <hybrid/debug-alignment.h>  /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/host.h>             /* __i386__, __x86_64__ */

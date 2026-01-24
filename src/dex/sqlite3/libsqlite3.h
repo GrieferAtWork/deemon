@@ -31,8 +31,8 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/types.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>     /* atomic_read */
+#include <deemon/util/lock.h>       /* Dee_atomic_rwlock_*, Dee_shared_lock_t, Dee_shared_lock_waitfor */
 
 #include <hybrid/sequence/list.h> /* TAILQ_* */
 

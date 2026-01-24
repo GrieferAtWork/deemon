@@ -38,7 +38,8 @@
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>     /* atomic_read */
+#include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 
 #include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
 

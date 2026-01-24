@@ -36,9 +36,8 @@
 #include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>    /* memcpy() */
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
-/**/
+#include <deemon/util/atomic.h>        /* atomic_read, atomic_write */
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_* */
 
 #include "../../runtime/runtime_error.h" /* err_invalid_argc */
 #include "../../runtime/strings.h"

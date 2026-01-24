@@ -44,7 +44,6 @@
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
 
 #include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t */

@@ -35,8 +35,8 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* memcpy, ... */
-#include <deemon/util/atomic.h>
-#include <deemon/util/futex.h>
+#include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/futex.h>      /* DeeFutex_* */
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 

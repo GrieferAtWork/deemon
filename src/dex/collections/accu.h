@@ -27,7 +27,7 @@
 
 #include <deemon/accu.h>
 #include <deemon/object.h>
-#include <deemon/util/nrlock.h>
+#include <deemon/util/nrlock.h> /* Dee_nrshared_lock_t */
 
 DECL_BEGIN
 

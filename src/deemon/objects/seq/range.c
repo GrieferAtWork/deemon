@@ -35,8 +35,8 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/serial.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include <hybrid/overflow.h> /* OVERFLOW_SADD, OVERFLOW_SMUL */
 

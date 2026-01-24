@@ -32,7 +32,7 @@
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>    /* atomic_* */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __UINTPTR_HALF_TYPE__ */
 

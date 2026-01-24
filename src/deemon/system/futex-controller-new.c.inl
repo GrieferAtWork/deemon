@@ -27,7 +27,7 @@
 
 #include <deemon/system.h>      /* DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
 #include <deemon/types.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h> /* atomic_read */
 
 #include <hybrid/sequence/list.h> /* SLIST_FIRST, SLIST_REMOVE_HEAD */
 

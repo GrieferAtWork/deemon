@@ -27,6 +27,7 @@
 #include <deemon/api.h>
 
 #include <deemon/kwds.h>
+#include <deemon/util/atomic.h> /* atomic_inc, atomic_read */
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 

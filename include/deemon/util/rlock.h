@@ -160,8 +160,8 @@ DECL_END
 #include <hybrid/sched/__gettid.h> /* __HYBRID_GETTID_INVALID, __HYBRID_GETTID_INVALID_IS_ZERO, __hybrid_gettid, __hybrid_gettid_iscaller, __hybrid_tid_t */
 #include <hybrid/sched/__yield.h>  /* __hybrid_yield */
 
-#include "futex.h"
-#include "lock.h"
+#include "futex.h" /* DeeFutex_* */
+#include "lock.h"  /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stdint.h>  /* uint64_t, uintptr_t */

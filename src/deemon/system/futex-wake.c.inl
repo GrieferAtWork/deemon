@@ -25,6 +25,9 @@
 
 #include <deemon/api.h>
 
+#include <deemon/util/atomic.h> /* atomic_inc, atomic_read */
+#include <deemon/util/futex.h>  /* DeeFutex_WakeAll, DeeFutex_WakeOne */
+
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uintptr_t */
 

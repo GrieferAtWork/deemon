@@ -23,7 +23,7 @@
 #include "api.h"
 
 #include "types.h"
-#include "util/lock.h"
+#include "util/lock.h" /* Dee_atomic_rwlock_* */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

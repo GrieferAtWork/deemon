@@ -62,6 +62,7 @@
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/tuple.h>
+#include <deemon/util/objectlist.h> /* Dee_OBJECTLIST_HAVE_ELEMA */
 #include <deemon/weakref.h>
 
 #include <stdbool.h> /* bool, false, true */

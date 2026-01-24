@@ -25,7 +25,7 @@
 #include <hybrid/__atomic.h> /* __ATOMIC_ACQUIRE, __hybrid_atomic_load */
 
 #include "types.h"
-#include "util/lock.h"
+#include "util/lock.h" /* Dee_atomic_rwlock_* */
 
 #include <stddef.h> /* NULL */
 

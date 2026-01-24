@@ -41,7 +41,8 @@
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */
+#include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
 

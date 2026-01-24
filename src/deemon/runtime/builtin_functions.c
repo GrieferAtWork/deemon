@@ -39,9 +39,8 @@
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
-/**/
+#include <deemon/util/atomic.h> /* atomic_read */
+#include <deemon/util/lock.h>   /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 
 #include "kwlist.h"
 #include "runtime_error.h"

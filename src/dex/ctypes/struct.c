@@ -39,8 +39,8 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bzero(), ... */
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>     /* atomic_cmpxch_or_write, atomic_read */
+#include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_cinit */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

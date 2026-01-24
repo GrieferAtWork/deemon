@@ -42,7 +42,7 @@
 #include <deemon/super.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>        /* atomic_* */
 
 #include <hybrid/host.h>        /* __ARCH_PAGESIZE */
 #include <hybrid/minmax.h>      /* MIN, MIN_C */

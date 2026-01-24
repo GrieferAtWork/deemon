@@ -38,8 +38,8 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init, Dee_shared_lock_* */
 
 #include <hybrid/sequence/list.h> /* TAILQ_* */
 #include <hybrid/typecore.h>      /* __UINTPTR_TYPE__ */

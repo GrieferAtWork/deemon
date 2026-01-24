@@ -23,9 +23,9 @@
 #include "api.h"
 
 #include "types.h"
-#include "util/atomic.h"
-#include "util/lock.h"
-#include "util/objectlist.h"
+#include "util/atomic.h"     /* Dee_atomic_read */
+#include "util/lock.h"       /* Dee_atomic_rwlock_* */
+#include "util/objectlist.h" /* Dee_OBJECTLIST_HAVE_ELEMA, Dee_objectlist, Dee_objectlist_getalloc, _Dee_objectlist_setalloc */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

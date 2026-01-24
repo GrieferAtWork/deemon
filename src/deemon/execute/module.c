@@ -43,9 +43,9 @@
 #include <deemon/system.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/futex.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>        /* Dee_ATOMIC_ACQUIRE, Dee_atomic_cmpxch_val, atomic_* */
+#include <deemon/util/futex.h>         /* DeeFutex_WaitPtr, DeeFutex_WakeAll */
+#include <deemon/util/lock.h>          /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_init */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

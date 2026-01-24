@@ -26,9 +26,8 @@
 #include "dict.h" /* Dee_dict_vidx_t, Dee_dict_gethidx_t, Dee_dict_sethidx_t */
 #endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 #include "types.h"
-#include "util/lock.h"
+#include "util/lock.h" /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 #ifndef __INTELLISENSE__
-#include "util/atomic.h"
 #ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 #include "method-hints.h"
 #endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */

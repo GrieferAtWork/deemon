@@ -36,8 +36,8 @@
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"

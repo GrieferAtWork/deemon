@@ -37,8 +37,8 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/system-features.h> /* memcpy() */
-#include <deemon/util/atomic.h>
-#include <deemon/util/objectlist.h>
+#include <deemon/util/atomic.h>     /* atomic_read */
+#include <deemon/util/objectlist.h> /* objectlist, objectlist_alloc */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

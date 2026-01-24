@@ -36,7 +36,7 @@
 #include <deemon/serial.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>    /* bcmpc(), ... */
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
 

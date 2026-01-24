@@ -28,7 +28,8 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bzero(), bcmpc(), ... */
-#include <deemon/util/rlock.h>
+#include <deemon/util/objectlist.h> /* objectlist */
+#include <deemon/util/rlock.h>      /* Dee_rshared_lock_* */
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 

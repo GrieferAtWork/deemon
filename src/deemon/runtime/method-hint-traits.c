@@ -28,7 +28,7 @@
 #include <deemon/method-hints.h>
 #include <deemon/mro.h>
 #include <deemon/object.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>  /* atomic_or, atomic_read */
 
 #include <hybrid/typecore.h> /* __CHAR_BIT__ */
 

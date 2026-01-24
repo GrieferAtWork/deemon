@@ -35,7 +35,7 @@
 #include <deemon/int.h>
 #include <deemon/module.h>
 #include <deemon/tuple.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h> /* Dee_atomic_rwlock_t */
 
 #include <hybrid/compiler.h>
 #include <hybrid/overflow.h> /* OVERFLOW_* */

@@ -36,7 +36,7 @@
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>        /* atomic_cmpxch_weak, atomic_read */
 
 #include <hybrid/overflow.h> /* OVERFLOW_USUB */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

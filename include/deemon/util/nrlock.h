@@ -17,9 +17,20 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!export **/
+/*!export Dee_NRLOCK_**/
+/*!export Dee_NRATOMIC_LOCK_**/
+/*!export Dee_nratomic_lock_**/
+/*!export _Dee_nratomic_lock_**/
+/*!export Dee_NRSHARED_LOCK_**/
+/*!export Dee_nrshared_lock_**/
+/*!export _Dee_nrshared_lock_**/
+/*!export _Dee_NRLOCK_TID_**/
+/*!export _Dee_SIZEOF_NRLOCK_TID_T*/
+/*!export _Dee_nrlock_gettid*/
+/*!export _Dee_nrlock_gettid_**/
+/*!export _Dee_nrlock_tid_t*/
 #ifndef GUARD_DEEMON_UTIL_NRLOCK_H
-#define GUARD_DEEMON_UTIL_NRLOCK_H 1 /*!export-*/
+#define GUARD_DEEMON_UTIL_NRLOCK_H 1
 
 #include "../api.h"
 
@@ -43,7 +54,7 @@
 DECL_BEGIN
 
 typedef char Dee_nratomic_lock_t;
-#define DEE_NRATOMIC_LOCK_INIT             0
+#define Dee_NRATOMIC_LOCK_INIT             0
 #define Dee_nratomic_lock_init(self)       (void)(*(self) = 0)
 #define Dee_nratomic_lock_cinit(self)      (void)Dee_ASSERT(*(self) == 0)
 #define Dee_nratomic_lock_available(self)  (*(self) == 0)
@@ -54,7 +65,7 @@ typedef char Dee_nratomic_lock_t;
 #define Dee_nratomic_lock_acquire(self)    Dee_nratomic_lock_tryacquire(self)
 
 typedef Dee_nratomic_lock_t Dee_nrshared_lock_t;
-#define DEE_NRSHARED_LOCK_INIT       DEE_NRATOMIC_LOCK_INIT
+#define Dee_NRSHARED_LOCK_INIT       Dee_NRATOMIC_LOCK_INIT
 #define Dee_nrshared_lock_init       Dee_nratomic_lock_init
 #define Dee_nrshared_lock_cinit      Dee_nratomic_lock_cinit
 #define Dee_nrshared_lock_available  Dee_nratomic_lock_available
@@ -76,7 +87,7 @@ DECL_END
 #include <hybrid/sched/__yield.h>  /* __hybrid_yield */
 #include <hybrid/typecore.h>       /* __SIZEOF_POINTER__ */
 
-#include "futex.h"
+#include "futex.h" /* DeeFutex_* */
 
 #include <stddef.h> /* NULL */
 #include <stdint.h> /* uint32_t, uint64_t */
@@ -124,7 +135,7 @@ typedef struct {
 	_Dee_nrlock_tid_t nra_tid; /* Lock owner (`_Dee_NRLOCK_TID_INVALID' if not held) */
 } Dee_nratomic_lock_t;
 
-#define DEE_NRATOMIC_LOCK_INIT        { _Dee_NRLOCK_TID_INVALID }
+#define Dee_NRATOMIC_LOCK_INIT        { _Dee_NRLOCK_TID_INVALID }
 #define Dee_nratomic_lock_init(self)  (void)((self)->nra_tid = _Dee_NRLOCK_TID_INVALID)
 #ifdef _Dee_NRLOCK_TID_INVALID_IS_ZERO
 #define Dee_nratomic_lock_cinit(self) Dee_ASSERT((self)->nra_tid == _Dee_NRLOCK_TID_INVALID)
@@ -187,7 +198,7 @@ typedef struct {
 	 ? (__hybrid_atomic_store(&(self)->nrs_waiting, 0, __ATOMIC_RELEASE), \
 	    DeeFutex_WakeAll(&(self)->nrs_lock.nra_tid))                      \
 	 : (void)0)
-#define DEE_NRSHARED_LOCK_INIT            { DEE_NRATOMIC_LOCK_INIT, 0 }
+#define Dee_NRSHARED_LOCK_INIT            { Dee_NRATOMIC_LOCK_INIT, 0 }
 #define Dee_nrshared_lock_init(self)      (void)(Dee_nratomic_lock_init(&(self)->nrs_lock), (self)->nrs_waiting = 0)
 #define Dee_nrshared_lock_cinit(self)     (void)(Dee_nratomic_lock_cinit(&(self)->nrs_lock), Dee_ASSERT((self)->nrs_waiting == 0))
 #define Dee_nrshared_lock_available(self) Dee_nratomic_lock_available(&(self)->nrs_lock)

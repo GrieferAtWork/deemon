@@ -70,9 +70,9 @@
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
-#include <deemon/util/rlock.h>
+#include <deemon/util/atomic.h>       /* atomic_* */
+#include <deemon/util/lock.h>         /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_t */
+#include <deemon/util/rlock.h>        /* Dee_RSHARED_RWLOCK_INIT */
 #include <deemon/weakref.h>
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__, __SIZEOF_SIZE_T__ */

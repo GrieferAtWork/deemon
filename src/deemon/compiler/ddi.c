@@ -32,7 +32,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>    /* qsort(), bzero(), ... */
 #include <deemon/system.h>             /* DeeSystem_BaseName() */
-#include <deemon/util/bytewriter.h>
+#include <deemon/util/bytewriter.h>    /* BYTEWRITER_INIT, bytewriter, bytewriter_alloc, bytewriter_fini, bytewriter_flush, bytewriter_putb, bytewriter_putl, bytewriter_putw */
 
 #include <hybrid/byteswap.h> /* HTOLE16, HTOLE32 */
 #include <hybrid/typecore.h> /* __SIZEOF_INT__ */

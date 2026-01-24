@@ -108,7 +108,7 @@
 
 #include <deemon/format.h>
 #include <deemon/types.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__ */
 #include <hybrid/byteswap.h>  /* BSWAP* */

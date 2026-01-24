@@ -42,7 +42,7 @@
 #include <deemon/serial.h>
 #include <deemon/system-features.h>    /* bcmpc(), ... */
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

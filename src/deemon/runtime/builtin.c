@@ -28,6 +28,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
+#include <deemon/util/lock.h> /* Dee_ATOMIC_RWLOCK_INIT */
 
 #include <hybrid/sequence/list.h> /* LIST_ENTRY_UNBOUND_INITIALIZER */
 

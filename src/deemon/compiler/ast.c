@@ -35,7 +35,7 @@
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/tuple.h>
-#include <deemon/util/cache.h>
+#include <deemon/util/cache.h>        /* DECLARE_STRUCT_CACHE, DEFINE_OBJECT_CACHE, DEFINE_STRUCT_CACHE */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t */

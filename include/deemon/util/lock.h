@@ -34,6 +34,7 @@
 /*!export Dee_SHARED_RWLOCK_**/
 /*!export Dee_shared_rwlock_**/
 /*!export _Dee_shared_rwlock_**/
+/*!export Dee_atomic_read_with_**/
 #ifndef GUARD_DEEMON_UTIL_LOCK_H
 #define GUARD_DEEMON_UTIL_LOCK_H 1 /*!export-*/
 
@@ -227,8 +228,9 @@ DECL_END
 #include <hybrid/__atomic.h>              /* __ATOMIC_ACQUIRE, __ATOMIC_RELAXED, __ATOMIC_RELEASE, __ATOMIC_SEQ_CST, __hybrid_atomic_* */
 #include <hybrid/sched/__atomic-lock.h>   /* __HYBRID_ATOMIC_LOCK_INIT, __HYBRID_ATOMIC_LOCK_INIT_ACQUIRED, __SIZEOF_HYBRID_ATOMIC_LOCK, ___hybrid_atomic_lock_release_NDEBUG, __hybrid_atomic_load_with_atomic_lock, __hybrid_atomic_lock, __hybrid_atomic_lock_* */
 #include <hybrid/sched/__atomic-rwlock.h> /* __HYBRID_ATOMIC_RWLOCK*, __SIZEOF_HYBRID_ATOMIC_RWLOCK, ___hybrid_atomic_rwlock_*, __hybrid_atomic_load_with_atomic_rwlock, __hybrid_atomic_rwlock, __hybrid_atomic_rwlock_* */
+#include <hybrid/typecore.h>              /* __SIZEOF_CHAR__ */
 
-#include "futex.h"
+#include "futex.h" /* DeeFutex_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* size_t */

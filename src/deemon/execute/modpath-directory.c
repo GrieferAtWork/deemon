@@ -32,7 +32,7 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 

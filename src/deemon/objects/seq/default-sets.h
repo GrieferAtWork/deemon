@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/set.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
 
 #include "../generic-proxy.h"
 

@@ -42,8 +42,8 @@
 #include <deemon/seq.h>
 #include <deemon/system-features.h>    /* strend() */
 #include <deemon/tuple.h>
-#include <deemon/util/cache.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/cache.h>         /* DECLARE_OBJECT_CACHE, DECLARE_STRUCT_CACHE */
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_cinit */
 
 #include "../../runtime/kwlist.h"
 #include "../../runtime/runtime_error.h"

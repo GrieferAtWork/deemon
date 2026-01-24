@@ -26,7 +26,7 @@
 
 #include "alloc.h"     /* Dee_MallocUsableSize */
 #include "types.h"
-#include "util/lock.h"
+#include "util/lock.h" /* Dee_atomic_rwlock_t */
 #ifndef __INTELLISENSE__
 #include "object.h"
 #endif /* !__INTELLISENSE__ */

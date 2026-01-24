@@ -37,9 +37,9 @@
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/system-features.h>    /* memcpy(), bzero(), ... */
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
-#include <deemon/util/rlock.h>
+#include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/lock.h>          /* Dee_atomic_lock_* */
+#include <deemon/util/rlock.h>         /* Dee_RSHARED_LOCK_INIT, Dee_rshared_lock_* */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */

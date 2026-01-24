@@ -24,7 +24,7 @@
 
 #include <deemon/object.h>
 #include <deemon/tuple.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
 
 DECL_BEGIN
 

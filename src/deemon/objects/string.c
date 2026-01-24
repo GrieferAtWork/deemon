@@ -41,8 +41,8 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>    /* memmem() */
-#include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/lock.h>          /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 
 #include <hybrid/limitcore.h>        /* __SSIZE_MAX__ */
 #include <hybrid/minmax.h>           /* MIN */

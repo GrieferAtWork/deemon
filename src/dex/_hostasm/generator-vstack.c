@@ -50,7 +50,7 @@
 #include <deemon/super.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/atomic.h>
+#include <deemon/util/atomic.h> /* atomic_read */
 
 #include <hybrid/align.h>    /* CEILDIV */
 #include <hybrid/bitset.h>   /* BITSET_SIZEOF, bitset_* */
