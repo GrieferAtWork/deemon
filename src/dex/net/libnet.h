@@ -111,7 +111,7 @@
 #include <deemon/util/lock.h>
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__ */
-#include <hybrid/byteswap.h>
+#include <hybrid/byteswap.h>  /* BSWAP* */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

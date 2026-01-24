@@ -37,7 +37,7 @@
 #include <deemon/string.h>
 #include <deemon/tuple.h>
 
-#include <hybrid/limitcore.h> /* __INT32_MAX__, __INT32_MIN__, __INT64_MAX__, __INT64_MIN__, __UINT32_MAX__, __UINT64_MAX__ */
+#include <hybrid/limitcore.h> /* __*_MAX__, __INT32_MIN__, __INT64_MIN__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

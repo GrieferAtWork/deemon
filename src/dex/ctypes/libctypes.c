@@ -41,9 +41,9 @@
 #include <deemon/objmethod.h>
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */
-#include <hybrid/byteswap.h>
-#include <hybrid/int128.h>
-#include <hybrid/typecore.h>  /* __SIZEOF_* */
+#include <hybrid/byteswap.h>  /* BSWAP* */
+#include <hybrid/int128.h>    /* __hybrid_uint128_getword64, __hybrid_uint128_setword64 */
+#include <hybrid/typecore.h>  /* __SIZEOF_*__ */
 
 #include "c_api.h"
 

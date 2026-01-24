@@ -42,7 +42,7 @@
 #include <hybrid/align.h>           /* CEILDIV */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/typecore.h>        /* __BYTE_TYPE__ */
-#include <hybrid/unaligned.h>
+#include <hybrid/unaligned.h>       /* UNALIGNED_GET32, UNALIGNED_SET32 */
 #include <hybrid/wordbits.h>        /* ENCODE_INT32 */
 
 #include "../runtime/strings.h"

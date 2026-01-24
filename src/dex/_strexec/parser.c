@@ -41,7 +41,7 @@
 #include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/tuple.h>
 
-#include <hybrid/unaligned.h>
+#include <hybrid/unaligned.h> /* UNALIGNED_GET* */
 #include <hybrid/wordbits.h>  /* ENCODE_INT16, ENCODE_INT32 */
 
 #include <stdbool.h> /* bool, false, true */

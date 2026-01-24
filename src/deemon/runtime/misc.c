@@ -37,12 +37,12 @@
 #include <deemon/thread.h>
 
 #include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
-#include <hybrid/byteswap.h>
+#include <hybrid/byteswap.h>        /* UNALIGNED_GETLE32, UNALIGNED_GETLE64 */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/overflow.h>        /* OVERFLOW_UADD, OVERFLOW_UMUL */
 #include <hybrid/sched/yield.h>     /* SCHED_YIELD */
 #include <hybrid/typecore.h>        /* __BYTE_TYPE__, __SIZEOF_SIZE_T__ */
-#include <hybrid/unaligned.h>
+#include <hybrid/unaligned.h>       /* UNALIGNED_GETLE32, UNALIGNED_GETLE64 */
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */

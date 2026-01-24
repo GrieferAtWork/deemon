@@ -24,7 +24,7 @@
 
 #include <deemon/util/md5.h>
 
-#include <hybrid/byteswap.h>
+#include <hybrid/byteswap.h> /* HTOLE32, LETOH32 */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SHIFT_TYPE__, __UINT32_C */
 
 #include <stddef.h> /* size_t */

@@ -45,7 +45,7 @@
 
 #include <hybrid/limitcore.h>     /* __SSIZE_MAX__ */
 #include <hybrid/overflow.h>      /* OVERFLOW_UMUL */
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/list.h> /* LIST_* */
 #include <hybrid/typecore.h>      /* __BYTE_TYPE__ */
 
 #include <stdbool.h> /* bool, false, true */

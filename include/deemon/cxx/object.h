@@ -23,6 +23,8 @@
 #include "../api.h"
 #include "api.h"
 
+#include <__stdcxx.h>
+
 #include <hybrid/compiler.h>
 
 #include "../error.h"

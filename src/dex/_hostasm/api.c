@@ -24,6 +24,8 @@
 #include "libhostasm.h"
 /**/
 
+#include <deemon/api.h>
+
 #include <deemon/alloc.h>
 
 #include <stddef.h> /* NULL, offsetof */

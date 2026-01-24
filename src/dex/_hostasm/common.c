@@ -25,6 +25,8 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/api.h>
+
 #include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/bool.h>
@@ -33,7 +35,8 @@
 #include <deemon/format.h>
 #include <deemon/int.h>
 
-#include <hybrid/align.h> /* CEILDIV */
+#include <hybrid/align.h>         /* CEILDIV */
+#include <hybrid/sequence/list.h> /* RINGQ_*, TAILQ_ISBOUND */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */

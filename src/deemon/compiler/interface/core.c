@@ -29,7 +29,7 @@
 #include <deemon/object.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/list.h> /* LIST_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

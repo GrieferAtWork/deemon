@@ -23,8 +23,9 @@
 #include "api.h"
 
 #include <hybrid/byteorder.h> /* __FLOAT_WORD_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */
+#include <hybrid/floatcore.h> /* __FLT_RADIX__ */
 #include <hybrid/host.h>      /* __hpux__, __i386__, __linux__, __unix__, __x86_64__ */
-#include <hybrid/typecore.h>  /* __BYTE_TYPE__, __SIZEOF_*, __UINT8_TYPE__, __WINT_TYPE__ */
+#include <hybrid/typecore.h>  /* __*_TYPE__, __SIZEOF_*__ */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* intptr_t, uintN_t, uintptr_t */

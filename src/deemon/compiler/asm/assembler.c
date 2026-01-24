@@ -42,10 +42,10 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
-#include <hybrid/byteswap.h>
-#include <hybrid/sequence/list.h>
+#include <hybrid/byteswap.h>      /* UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SETLE* */
+#include <hybrid/sequence/list.h> /* SLIST_* */
 #include <hybrid/typecore.h>      /* __SIZEOF_POINTER__ */
-#include <hybrid/unaligned.h>
+#include <hybrid/unaligned.h>     /* UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SETLE* */
 
 #include "../../runtime/builtin.h"
 

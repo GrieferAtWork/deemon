@@ -18,6 +18,8 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 /*!export __hybrid_atomic_**/
+/*!export __hybrid_bitset_atomic_**/
+/*!export bitset_atomic_**/
 /*!export __GCC_ATOMIC_*_LOCK_FREE*/
 #ifndef __GUARD_HYBRID___ATOMIC_H
 #define __GUARD_HYBRID___ATOMIC_H 1

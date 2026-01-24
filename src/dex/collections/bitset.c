@@ -42,7 +42,9 @@
 #include <deemon/system-features.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/bitset.h>
+#include <hybrid/__atomic.h>  /* __hybrid_bitset_atomic_*, bitset_atomic_* */
+#include <hybrid/__bitset.h>  /* __hybrid_bitset_* */
+#include <hybrid/bitset.h>    /* BITSET_*, _BITSET_*, bitset_* */
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
 #include <hybrid/overflow.h>  /* OVERFLOW_UADD, OVERFLOW_USUB */
 

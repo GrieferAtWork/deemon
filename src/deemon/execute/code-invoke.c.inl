@@ -24,6 +24,8 @@
 #define CALL_KW    1
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+
 #include <deemon/kwds.h>
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */

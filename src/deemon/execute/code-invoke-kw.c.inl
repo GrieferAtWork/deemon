@@ -23,6 +23,8 @@
 //#define KW_IS_MAPPING 1
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
 #include <stddef.h> /* NULL, offsetof, size_t */

@@ -52,10 +52,10 @@
 
 #include <hybrid/debug-alignment.h>  /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/host.h>             /* __i386__, __x86_64__ */
-#include <hybrid/overflow.h>         /* OVERFLOW_UADD, OVERFLOW_UMUL, OVERFLOW_USUB */
+#include <hybrid/overflow.h>         /* OVERFLOW_* */
 #include <hybrid/sched/yield.h>      /* SCHED_YIELD */
-#include <hybrid/sequence/bsearch.h>
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/bsearch.h> /* BSEARCH */
+#include <hybrid/sequence/list.h>    /* LIST_* */
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"

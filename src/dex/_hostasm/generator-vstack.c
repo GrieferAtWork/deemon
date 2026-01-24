@@ -25,6 +25,8 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/api.h>
+
 #include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/bool.h>
@@ -50,8 +52,9 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/align.h>  /* CEILDIV */
-#include <hybrid/bitset.h>
+#include <hybrid/align.h>    /* CEILDIV */
+#include <hybrid/bitset.h>   /* BITSET_SIZEOF, bitset_* */
+#include <hybrid/compiler.h>
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */

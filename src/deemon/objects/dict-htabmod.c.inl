@@ -25,6 +25,8 @@
 #define DEFINE_dict_htab_incrange
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uintN_t */
 

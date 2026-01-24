@@ -23,7 +23,7 @@
 #include "api.h"
 
 #ifndef CONFIG_NO_DEX
-#include <hybrid/typecore.h> /* __BYTE_TYPE__, __UINT32_TYPE__, __UINT64_TYPE__, __UINTPTR_HALF_TYPE__, __UINTPTR_QUARTER_TYPE__ */
+#include <hybrid/typecore.h> /* __*_TYPE__ */
 
 #include "gc.h"
 #include "module.h"

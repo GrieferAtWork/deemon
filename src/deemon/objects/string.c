@@ -46,7 +46,7 @@
 
 #include <hybrid/limitcore.h>        /* __SSIZE_MAX__ */
 #include <hybrid/minmax.h>           /* MIN */
-#include <hybrid/sequence/bsearch.h>
+#include <hybrid/sequence/bsearch.h> /* BSEARCH */
 #include <hybrid/typecore.h>         /* __BYTE_TYPE__, __UINTPTR_HALF_TYPE__ */
 
 #include "../runtime/method-hint-defaults.h"

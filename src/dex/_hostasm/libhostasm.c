@@ -24,6 +24,8 @@
 #include "libhostasm.h"
 /**/
 
+#include <deemon/api.h>
+
 #include <deemon/arg.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>

@@ -62,7 +62,7 @@
 #include <deemon/error_types.h>
 #include <deemon/module.h>
 
-#include <hybrid/byteswap.h>
+#include <hybrid/byteswap.h> /* BSWAP* */
 
 DECL_BEGIN
 

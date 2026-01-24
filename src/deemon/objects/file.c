@@ -49,7 +49,7 @@
 #include <hybrid/host.h>      /* __ARCH_PAGESIZE */
 #include <hybrid/minmax.h>    /* MIN */
 #include <hybrid/typecore.h>  /* __BYTE_TYPE__, __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
-#include <hybrid/unaligned.h>
+#include <hybrid/unaligned.h> /* UNALIGNED_GET32 */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"

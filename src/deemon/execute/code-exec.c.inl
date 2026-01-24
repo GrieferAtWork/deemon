@@ -53,10 +53,10 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/futex.h>
 
-#include <hybrid/byteswap.h>
+#include <hybrid/byteswap.h>  /* UNALIGNED_GETLE* */
 #include <hybrid/overflow.h>  /* OVERFLOW_UADD */
 #include <hybrid/typecore.h>  /* __SIZEOF_SIZE_T__ */
-#include <hybrid/unaligned.h>
+#include <hybrid/unaligned.h> /* UNALIGNED_GETLE* */
 
 #include "../runtime/runtime_error.h"
 

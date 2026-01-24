@@ -44,7 +44,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/list.h> /* SLIST_* */
 #include <hybrid/typecore.h>      /* __UINTPTR_TYPE__ */
 
 #include <stdbool.h> /* bool, false, true */

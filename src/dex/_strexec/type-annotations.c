@@ -28,7 +28,7 @@
 
 #include <deemon/error.h>
 
-#include <hybrid/unaligned.h>
+#include <hybrid/unaligned.h> /* UNALIGNED_GET* */
 #include <hybrid/wordbits.h>  /* ENCODE_INT16, ENCODE_INT32 */
 
 #include <stdbool.h> /* bool, false, true */

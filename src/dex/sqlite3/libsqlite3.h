@@ -34,7 +34,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/list.h> /* TAILQ_* */
 
 #include "sqlite3-external.h"
 

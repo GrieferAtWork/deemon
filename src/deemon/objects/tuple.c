@@ -43,7 +43,7 @@
 
 #include <hybrid/host.h>      /* __ARCH_VA_LIST_IS_STACK_POINTER */
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__, __SSIZE_MIN__ */
-#include <hybrid/overflow.h>  /* OVERFLOW_UADD, OVERFLOW_UMUL, OVERFLOW_USUB */
+#include <hybrid/overflow.h>  /* OVERFLOW_* */
 #include <hybrid/typecore.h>  /* __SIZEOF_SIZE_T__ */
 
 #include "../runtime/strings.h"
@@ -100,7 +100,7 @@
 #include <deemon/util/lock.h>
 
 #include <hybrid/minmax.h>        /* MIN */
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/list.h> /* SLIST_* */
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT != 0 */
 
 DECL_BEGIN

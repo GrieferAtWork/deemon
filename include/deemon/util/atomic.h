@@ -105,7 +105,7 @@ _Dee_atomic_fetchnand_no_threads(T *p, S value) {
 #define Dee_atomic_fetchor_explicit(p, value, order)   _Dee_atomic_fetchor_no_threads(p, value)
 #define Dee_atomic_fetchnand_explicit(p, value, order) _Dee_atomic_fetchnand_no_threads(p, value)
 #else /* ... */
-#include <hybrid/typecore.h> /* __UINTPTR_TYPE__, __UINTn_TYPE__ */
+#include <hybrid/typecore.h> /* __*_TYPE__ */
 
 #define DEE_DEFINE_ATOMIC_HELPERS(n, T)                   \
 	LOCAL WUNUSED NONNULL((1)) T                          \
@@ -176,7 +176,7 @@ DEE_DEFINE_ATOMIC_HELPERS(64, __UINT64_TYPE__)
 #endif /* !... */
 
 #else /* CONFIG_NO_THREADS */
-#include <hybrid/__atomic.h> /* __ATOMIC_ACQUIRE, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME, __ATOMIC_RELAXED, __ATOMIC_RELEASE, __ATOMIC_SEQ_CST, __hybrid_atomic_add, __hybrid_atomic_addfetch, __hybrid_atomic_and, __hybrid_atomic_andfetch, __hybrid_atomic_cmpxch, __hybrid_atomic_cmpxch_val, __hybrid_atomic_cmpxch_weak, __hybrid_atomic_dec, __hybrid_atomic_decfetch, __hybrid_atomic_fetchadd, __hybrid_atomic_fetchand, __hybrid_atomic_fetchdec, __hybrid_atomic_fetchinc, __hybrid_atomic_fetchnand, __hybrid_atomic_fetchor, __hybrid_atomic_fetchsub, __hybrid_atomic_fetchxor, __hybrid_atomic_inc, __hybrid_atomic_incfetch, __hybrid_atomic_load, __hybrid_atomic_nand, __hybrid_atomic_nandfetch, __hybrid_atomic_or, __hybrid_atomic_orfetch, __hybrid_atomic_signal_fence, __hybrid_atomic_store, __hybrid_atomic_sub, __hybrid_atomic_subfetch, __hybrid_atomic_thread_fence, __hybrid_atomic_xch, __hybrid_atomic_xor, __hybrid_atomic_xorfetch */
+#include <hybrid/__atomic.h> /* __ATOMIC_ACQUIRE, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME, __ATOMIC_RELAXED, __ATOMIC_RELEASE, __ATOMIC_SEQ_CST, __hybrid_atomic_* */
 
 #define Dee_ATOMIC_RELAXED __ATOMIC_RELAXED
 #define Dee_ATOMIC_CONSUME __ATOMIC_CONSUME

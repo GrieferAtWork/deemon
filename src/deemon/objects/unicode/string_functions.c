@@ -39,7 +39,7 @@
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/tuple.h>
 
-#include <hybrid/byteswap.h>
+#include <hybrid/byteswap.h> /* BSWAP16, BSWAP32 */
 #include <hybrid/minmax.h>   /* MIN */
 #include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_UMUL */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __UINTPTR_TYPE__ */

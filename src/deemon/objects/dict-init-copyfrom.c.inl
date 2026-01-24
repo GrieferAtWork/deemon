@@ -23,6 +23,8 @@
 #define DEFINE_dict_init_fromcopy_keysonly
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+
 #include <stdbool.h> /* false, true */
 #include <stddef.h>  /* size_t */
 

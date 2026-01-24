@@ -36,8 +36,8 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
-#include <hybrid/byteswap.h>
-#include <hybrid/int128.h>
+#include <hybrid/byteswap.h>  /* BSWAP* */
+#include <hybrid/int128.h>    /* __hybrid_int128_bswap, __hybrid_uint128_bswap */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"

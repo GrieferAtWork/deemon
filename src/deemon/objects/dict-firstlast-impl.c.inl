@@ -27,6 +27,8 @@
 //#define DEFINE_dict_lastvalue
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+
 #include <deemon/error-rt.h>
 #include <deemon/seq.h>
 

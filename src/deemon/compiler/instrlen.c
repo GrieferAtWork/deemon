@@ -26,8 +26,8 @@
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 
-#include <hybrid/byteswap.h>  /* UNALIGNED_GETLE16 */
-#include <hybrid/unaligned.h> /* UNALIGNED_GETLE16 */
+#include <hybrid/byteswap.h>  /* UNALIGNED_GETLE8, UNALIGNED_GETLE16 */
+#include <hybrid/unaligned.h> /* UNALIGNED_GETLE8, UNALIGNED_GETLE16 */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stdint.h>  /* uint8_t, uint16_t */

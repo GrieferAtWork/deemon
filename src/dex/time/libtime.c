@@ -49,8 +49,8 @@
 
 #include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__ */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
-#include <hybrid/int128.h>
-#include <hybrid/unaligned.h>
+#include <hybrid/int128.h>          /* __HYBRID_UINT128_INIT16N, __hybrid_int128_*, __hybrid_uint128_* */
+#include <hybrid/unaligned.h>       /* UNALIGNED_GET64 */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

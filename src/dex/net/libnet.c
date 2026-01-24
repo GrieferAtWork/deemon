@@ -33,7 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 
-#include <hybrid/byteswap.h>
+#include <hybrid/byteswap.h>        /* BETOH*, HTOBE* */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 
 #include <stddef.h> /* NULL */

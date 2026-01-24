@@ -22,8 +22,8 @@
 
 #include "api.h"
 
-#include <hybrid/int128.h>
-#include <hybrid/typecore.h> /* __LONG64_TYPE__, __SIZEOF_POINTER__, __SSIZE_TYPE__, __UINT32_C, __UINT64_C, __UINTPTR_TYPE__, __ULONG64_TYPE__ */
+#include <hybrid/int128.h>   /* __hybrid_int128_t, __hybrid_uint128_t */
+#include <hybrid/typecore.h> /* __*_TYPE__, __SIZEOF_POINTER__, __UINT32_C, __UINT64_C */
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uintptr_t */

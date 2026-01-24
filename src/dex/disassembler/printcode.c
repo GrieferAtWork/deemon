@@ -35,10 +35,10 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* strlen(), bzero(), memcpy(), ... */
 
-#include <hybrid/byteswap.h>
+#include <hybrid/byteswap.h>        /* UNALIGNED_GETLE* */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/minmax.h>          /* MAX, MIN */
-#include <hybrid/unaligned.h>
+#include <hybrid/unaligned.h>       /* UNALIGNED_GETLE* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

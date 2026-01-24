@@ -25,6 +25,8 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/api.h>
+
 #include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/asm.h>

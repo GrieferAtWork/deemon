@@ -51,6 +51,7 @@
 #include <hybrid/align.h>           /* IS_POWER_OF_TWO */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/host.h>            /* __i386__, __x86_64__ */
+#include <hybrid/sequence/list.h>   /* LIST_* */
 #include <hybrid/typecore.h>        /* __BYTE_TYPE__, __SIZEOF_SIZE_T__, __UINTPTR_HALF_TYPE__ */
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
@@ -94,7 +95,7 @@
 #include <deemon/file.h>
 #include <deemon/mapfile.h>
 
-#include <hybrid/sequence/rbtree.h>
+#include <hybrid/sequence/rbtree.h> /* RBTREE_ROOT */
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"

@@ -23,6 +23,8 @@
 //#define DEFINE_DeeFutex_WakeAll
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uintptr_t */
 

@@ -33,7 +33,7 @@
 #include "tpp.h"
 #endif /* CONFIG_BUILDING_DEEMON */
 
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/list.h> /* LIST_ENTRY, LIST_HEAD */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

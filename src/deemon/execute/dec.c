@@ -45,7 +45,7 @@
 #include <hybrid/align.h>            /* CEIL_ALIGN, IS_ALIGNED */
 #include <hybrid/limitcore.h>        /* __UINT32_MAX__ */
 #include <hybrid/overflow.h>         /* OVERFLOW_UADD, OVERFLOW_USUB */
-#include <hybrid/sequence/bsearch.h>
+#include <hybrid/sequence/bsearch.h> /* BSEARCH */
 #include <hybrid/typecore.h>         /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
 #include <stdbool.h> /* bool, false, true */
@@ -2457,9 +2457,9 @@ DECL_END
 #include <deemon/weakref.h>
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
-#include <hybrid/byteswap.h>
+#include <hybrid/byteswap.h>  /* HTOLE16_C, LETOH16, LETOH32, UNALIGNED_GETLE* */
 #include <hybrid/typecore.h>
-#include <hybrid/unaligned.h>
+#include <hybrid/unaligned.h> /* UNALIGNED_GETLE* */
 
 #include <stdarg.h> /* va_end, va_list, va_start */
 #include <stddef.h> /* size_t */

@@ -37,6 +37,7 @@
 
 #include <hybrid/align.h>           /* CEIL_ALIGN */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+#include <hybrid/sequence/list.h>   /* TAILQ_FOREACH */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, ptrdiff_t, size_t */

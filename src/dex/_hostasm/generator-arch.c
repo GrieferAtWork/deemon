@@ -25,6 +25,8 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/api.h>
+
 #include <deemon/bool.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
@@ -39,8 +41,9 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/align.h>         /* CEIL_ALIGN, IS_ALIGNED */
-#include <hybrid/bitset.h>
-#include <hybrid/sched/__yield.h> /* __NO_hybrid_yield, __hybrid_yield, __hybrid_yield_IS_SleepEx, __hybrid_yield_IS_pthread_yield, __hybrid_yield_IS_sched_yield, __hybrid_yield_IS_thrd_yield */
+#include <hybrid/bitset.h>        /* BITSET_LENGTHOF, bitset_* */
+#include <hybrid/compiler.h>
+#include <hybrid/sched/__yield.h> /* __NO_hybrid_yield, __hybrid_yield, __hybrid_yield_IS_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */

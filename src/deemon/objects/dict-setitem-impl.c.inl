@@ -31,6 +31,8 @@
 //#define DEFINE_dict_mh_setdefault
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
 

@@ -21,6 +21,8 @@
 #define GUARD_DEX_CTYPES_POINTER_MATH_C 1
 #define DEE_SOURCE
 
+#include <deemon/api.h>
+
 #ifndef __INTELLISENSE__
 #define N 1
 #include "pointer-math-impl.c.inl"

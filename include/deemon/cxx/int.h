@@ -23,7 +23,7 @@
 #include "../api.h"
 #include "api.h"
 
-#include <hybrid/typecore.h> /* __FIFTHINT_TYPE__, __INTn_TYPE__, __UFIFTHINT_TYPE__, __UINTn_TYPE__ */
+#include <hybrid/typecore.h> /* __*_TYPE__ */
 
 #include "../format.h"
 #include "../int.h"

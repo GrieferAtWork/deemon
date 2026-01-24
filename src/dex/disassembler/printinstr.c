@@ -36,11 +36,11 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* strlen(), ... */
 
-#include <hybrid/byteswap.h>
+#include <hybrid/byteswap.h>  /* UNALIGNED_GETLE16, UNALIGNED_GETLE32 */
 #include <hybrid/limitcore.h> /* __UINT16_MAX__ */
 #include <hybrid/minmax.h>    /* MIN */
 #include <hybrid/typecore.h>  /* __SIZEOF_CHAR__ */
-#include <hybrid/unaligned.h>
+#include <hybrid/unaligned.h> /* UNALIGNED_GETLE16, UNALIGNED_GETLE32 */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

@@ -23,7 +23,7 @@
 #include "../api.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/list.h> /* SLIST_ENTRY, SLIST_HEAD */
 #include <hybrid/typecore.h>      /* __BYTE_TYPE__, __SIZEOF_POINTER__, __UINTPTR_C */
 
 #include "../asm.h"

@@ -19,11 +19,11 @@
  */
 
 import * from deemon;
-import * from ..errors;
+import * from errors;
 import getClangFormatSpecs, ClangFormatSpecs from .clangformat;
-import ThreadPool, Task from ..threading.pool;
-import ..posix;
-import ..functools;
+import ThreadPool, Task from threading.pool;
+import posix;
+import functools;
 
 local final ROOTDIR = posix.joinpath(posix.headof(__FILE__), r"../..");
 
@@ -192,13 +192,13 @@ global final DEFAULT_HEADERS_BY_INCLUDE: {string: Header} = {
 		"INT8_MAX", "INT16_MAX", "INT32_MAX", "INT64_MAX",
 		"UINT8_MAX", "UINT16_MAX", "UINT32_MAX", "UINT64_MAX",
 	}, exportGroups: {
-		HeaderExportGroup(regex: "UINT(8|16|32|64)_MAX", replacement: "UINTn_MAX"),
-		HeaderExportGroup(regex: "INT(8|16|32|64)_MAX", replacement: "INTn_MAX"),
-		HeaderExportGroup(regex: "INT(8|16|32|64)_MIN", replacement: "INTn_MIN"),
-		HeaderExportGroup(regex: "UINT(8|16|32|64)_C", replacement: "UINTn_C"),
-		HeaderExportGroup(regex: "INT(8|16|32|64)_C", replacement: "INTn_C"),
-		HeaderExportGroup(regex: "uint(8|16|32|64)_t", replacement: "uintN_t"),
-		HeaderExportGroup(regex: "int(8|16|32|64)_t", replacement: "intN_t"),
+		HeaderExportGroup("UINT(8|16|32|64)_MAX", "UINTn_MAX", 4),
+		HeaderExportGroup("INT(8|16|32|64)_MAX", "INTn_MAX", 4),
+		HeaderExportGroup("INT(8|16|32|64)_MIN", "INTn_MIN", 4),
+		HeaderExportGroup("UINT(8|16|32|64)_C", "UINTn_C", 4),
+		HeaderExportGroup("INT(8|16|32|64)_C", "INTn_C", 4),
+		HeaderExportGroup("uint(8|16|32|64)_t", "uintN_t", 4),
+		HeaderExportGroup("int(8|16|32|64)_t", "intN_t", 4),
 	}),
 	DEFAULT_HEADER("stdbool.h", exports: Set.frozen { "bool", "true", "false" }),
 #undef DEFAULT_HEADER
@@ -1658,5 +1658,6 @@ class FixIncludes {
  * Should be a fully-featured program that can be used to:
  * - Find missing #include-s
  * - Generate a ".editorconfig" suitable for use with visual studio
+ *   (TODO: This part still has to be implemented)
  */
 

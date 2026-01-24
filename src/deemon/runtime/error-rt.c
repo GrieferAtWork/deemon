@@ -49,7 +49,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/variant.h>
 
-#include <hybrid/int128.h>
+#include <hybrid/int128.h>    /* __hybrid_int128_*, __hybrid_uint128_* */
 #include <hybrid/limitcore.h> /* __UINT32_MAX__, __UINT64_MAX__ */
 #include <hybrid/typecore.h>  /* __SIZEOF_CHAR__, __SIZEOF_SIZE_T__ */
 

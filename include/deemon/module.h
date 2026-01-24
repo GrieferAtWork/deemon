@@ -32,8 +32,8 @@
 #include <stdint.h>  /* uintN_t, uintptr_t */
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#include <hybrid/sequence/list.h>
-#include <hybrid/typecore.h>      /* __BYTE_TYPE__, __SIZEOF_SIZE_T__, __UINTPTR_HALF_TYPE__, __UINTPTR_QUARTER_TYPE__, __UINTPTR_TYPE__ */
+#include <hybrid/sequence/list.h> /* LIST_ENTRY, LIST_ISBOUND */
+#include <hybrid/typecore.h>      /* __*_TYPE__, __SIZEOF_SIZE_T__ */
 
 #include "system-features.h" /* bcmp */
 #include "system.h"          /* DeeSystem_HAVE_FS_ICASE */

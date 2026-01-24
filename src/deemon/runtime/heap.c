@@ -67,8 +67,8 @@ ClCompile.BasicRuntimeChecks = Default
 #include <hybrid/host.h>            /* __ARCH_PAGESIZE, __arm__, __i386__, __linux__, __x86_64__ */
 #include <hybrid/overflow.h>        /* OVERFLOW_UADD */
 #include <hybrid/sched/yield.h>     /* SCHED_YIELD */
-#include <hybrid/sequence/list.h>
-#include <hybrid/typecore.h>        /* __BYTE_TYPE__, __CHAR_BIT__, __INTPTR_HALF_TYPE__, __SIZEOF_POINTER__, __SIZEOF_SIZE_T__, __SIZE_C, __UINTPTR_HALF_TYPE__ */
+#include <hybrid/sequence/list.h>   /* LIST_*, SLIST_* */
+#include <hybrid/typecore.h>        /* __*_TYPE__, __CHAR_BIT__, __SIZEOF_POINTER__, __SIZEOF_SIZE_T__, __SIZE_C */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
@@ -6710,7 +6710,7 @@ size_t DFCALL fast_usable_size(void *mem) {
 }
 
 DECL_END
-#include <hybrid/sequence/rbtree.h>
+#include <hybrid/sequence/rbtree.h> /* LLRBTREE_NODE, LLRBTREE_ROOT, RBTREE_NODE, RBTREE_ROOT */
 
 #define RBTREE_LEFT_LEANING
 #define RBTREE(name)            gcleak_byaddr_##name

@@ -45,7 +45,7 @@
 #include <deemon/util/lock.h>
 
 #include <hybrid/overflow.h>      /* OVERFLOW_UADD, OVERFLOW_USUB */
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/list.h> /* LIST_ISBOUND, LIST_REMOVE */
 #include <hybrid/typecore.h>      /* __BYTE_TYPE__ */
 
 #include <stdbool.h> /* bool, false, true */

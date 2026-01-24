@@ -43,7 +43,7 @@
 
 #include <hybrid/overflow.h>      /* OVERFLOW_USUB */
 #include <hybrid/sched/yield.h>   /* SCHED_YIELD */
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/list.h> /* LIST_* */
 #include <hybrid/typecore.h>      /* __BYTE_TYPE__ */
 
 #include "runtime_error.h"

@@ -33,7 +33,7 @@
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/limitcore.h> /* __INTMAX_MIN__, __UINTMAX_MAX__ */
-#include <hybrid/typecore.h>  /* __BYTE_TYPE__, __CHAR_UNSIGNED__, __SIZEOF_* */
+#include <hybrid/typecore.h>  /* __BYTE_TYPE__, __CHAR_UNSIGNED__, __SIZEOF_*__ */
 
 #include "types.h"
 

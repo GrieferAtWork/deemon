@@ -30,10 +30,10 @@
 #include <deemon/format.h>
 #include <deemon/system-features.h>    /* memcpyc(), abort(), ... */
 
-#include <hybrid/byteswap.h>
-#include <hybrid/sequence/list.h>
+#include <hybrid/byteswap.h>      /* UNALIGNED_GETLE*, UNALIGNED_SETLE* */
+#include <hybrid/sequence/list.h> /* SLIST_FOREACH */
 #include <hybrid/typecore.h>      /* __SIZEOF_CHAR__ */
-#include <hybrid/unaligned.h>
+#include <hybrid/unaligned.h>     /* UNALIGNED_GETLE*, UNALIGNED_SETLE* */
 
 #include "../../runtime/strings.h"
 

@@ -38,7 +38,7 @@
 #include <deemon/util/lock.h>
 #include <deemon/util/rlock.h>
 
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/list.h> /* LIST_* */
 #include <hybrid/typecore.h>      /* __BYTE_TYPE__, __SIZEOF_SIZE_T__ */
 
 #include "../runtime/kwlist.h"

@@ -33,9 +33,9 @@
 #include <deemon/system-features.h>
 
 #include <hybrid/host.h>      /* __i386__, __x86_64__ */
-#include <hybrid/int128.h>
-#include <hybrid/limitcore.h> /* __INTn_MAX__, __INTn_MIN__, __UINTn_MAX__ */
-#include <hybrid/typecore.h>  /* __ALIGNOF_*, __SIZEOF_* */
+#include <hybrid/int128.h>    /* __ALIGNOF_INT128__, __hybrid_uint128_set32 */
+#include <hybrid/limitcore.h> /* __INT*_MAX__, __INT*_MIN__, __UINT*_MAX__ */
+#include <hybrid/typecore.h>  /* __ALIGNOF_*__, __SIZEOF_*__ */
 
 #include "runtime_error.h"
 

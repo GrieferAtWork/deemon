@@ -45,7 +45,7 @@
 #include <deemon/util/objectlist.h>
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
-#include <hybrid/overflow.h>  /* OVERFLOW_UADD, OVERFLOW_UMUL, OVERFLOW_USUB */
+#include <hybrid/overflow.h>  /* OVERFLOW_* */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/method-hint-defaults.h"

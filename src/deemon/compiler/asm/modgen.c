@@ -33,7 +33,7 @@
 #include <deemon/system.h>             /* DeeSystem_GetWalltime() */
 #include <deemon/util/atomic.h>
 
-#include <hybrid/int128.h>
+#include <hybrid/int128.h> /* __hybrid_uint128_set64 */
 
 #ifndef CONFIG_NO_DEC
 #include <deemon/compiler/dec.h>

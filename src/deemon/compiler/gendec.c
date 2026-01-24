@@ -48,8 +48,8 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
-#include <hybrid/byteswap.h>
-#include <hybrid/unaligned.h>
+#include <hybrid/byteswap.h>  /* HTOLE16, HTOLE32, UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SETLE16, UNALIGNED_SETLE32 */
+#include <hybrid/unaligned.h> /* UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SET* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

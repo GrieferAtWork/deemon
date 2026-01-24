@@ -34,7 +34,7 @@
 #include <deemon/system.h>             /* DeeSystem_BaseName() */
 #include <deemon/util/bytewriter.h>
 
-#include <hybrid/byteswap.h>
+#include <hybrid/byteswap.h> /* HTOLE16, HTOLE32 */
 #include <hybrid/typecore.h> /* __SIZEOF_INT__ */
 
 #include <stdbool.h> /* bool, false, true */

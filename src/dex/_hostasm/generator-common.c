@@ -25,6 +25,8 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/api.h>
+
 #include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/bool.h>
@@ -35,7 +37,8 @@
 #include <deemon/tuple.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/overflow.h> /* OVERFLOW_SADD, OVERFLOW_SMUL, OVERFLOW_SSUB, OVERFLOW_UADD, OVERFLOW_UMUL, OVERFLOW_USUB */
+#include <hybrid/compiler.h>
+#include <hybrid/overflow.h> /* OVERFLOW_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */

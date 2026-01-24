@@ -45,9 +45,9 @@
 #include <deemon/util/lock.h>
 #include <deemon/variant.h>
 
-#include <hybrid/int128.h>
-#include <hybrid/typecore.h>  /* __BYTE_TYPE__, __INT128_TYPE__, __SHIFT_TYPE__, __SIZEOF_INT__, __SIZEOF_LONG__, __UINT128_TYPE__ */
-#include <hybrid/unaligned.h>
+#include <hybrid/int128.h>    /* __HYBRID_INT128_INIT32N, __HYBRID_UINT128_INIT32N, __hybrid_int128_*, __hybrid_uint128_* */
+#include <hybrid/typecore.h>  /* __*_TYPE__, __SIZEOF_INT__, __SIZEOF_LONG__ */
+#include <hybrid/unaligned.h> /* UNALIGNED_GET*, UNALIGNED_SET* */
 
 #include <stdbool.h> /* false, true */
 #include <stddef.h>  /* NULL, size_t */

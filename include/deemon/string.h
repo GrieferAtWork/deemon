@@ -31,7 +31,7 @@
 #include <hybrid/__overflow.h> /* __hybrid_overflow_uadd, __hybrid_overflow_umul */
 #include <hybrid/byteorder.h>  /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/host.h>       /* __ARCH_PAGESIZE, __linux__, __unix__ */
-#include <hybrid/typecore.h>   /* __BYTE_TYPE__, __CHAR32_TYPE__, __SIZEOF_WCHAR_T__, __UINTPTR_HALF_TYPE__, __WCHAR_TYPE__ */
+#include <hybrid/typecore.h>   /* __*_TYPE__, __SIZEOF_WCHAR_T__ */
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */

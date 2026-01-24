@@ -25,12 +25,15 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/api.h>
+
 #include <deemon/alloc.h>
 #include <deemon/asm.h>
 
-#include <hybrid/bitset.h>
-#include <hybrid/byteswap.h>
-#include <hybrid/unaligned.h>
+#include <hybrid/bitset.h>    /* BITSET_LENGTHOF, bitset_* */
+#include <hybrid/byteswap.h>  /* UNALIGNED_GETLE16 */
+#include <hybrid/compiler.h>
+#include <hybrid/unaligned.h> /* UNALIGNED_GETLE16 */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

@@ -55,8 +55,8 @@
 #include <deemon/stringutils.h>
 #include <deemon/tuple.h>
 
-#include <hybrid/byteswap.h>
-#include <hybrid/unaligned.h>
+#include <hybrid/byteswap.h>  /* BSWAP16, BSWAP32 */
+#include <hybrid/unaligned.h> /* UNALIGNED_GET16 */
 
 #include "../../runtime/strings.h"
 #endif /* !CONFIG_LANGUAGE_NO_ASM */

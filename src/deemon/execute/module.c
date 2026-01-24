@@ -67,7 +67,7 @@
 #include <deemon/list.h>
 
 #include <hybrid/sched/yield.h>   /* SCHED_YIELD */
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/list.h> /* LIST_ENTRY_UNBOUND_INITIALIZER */
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 #undef byte_t

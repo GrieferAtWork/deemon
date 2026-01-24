@@ -28,7 +28,7 @@
 #include "util/atomic.h"
 #endif /* !__INTELLISENSE__ */
 
-#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_SIZE_T__, __UINT8_C, __UINT16_C, __UINT32_C */
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_SIZE_T__, __UINT*_C */
 
 #include <stddef.h> /* size_t */
 

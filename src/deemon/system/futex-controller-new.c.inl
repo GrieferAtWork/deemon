@@ -29,7 +29,7 @@
 #include <deemon/types.h>
 #include <deemon/util/atomic.h>
 
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/list.h> /* SLIST_FIRST, SLIST_REMOVE_HEAD */
 
 #include <stddef.h> /* NULL */
 #include <stdint.h> /* INT32_MAX, uintptr_t */

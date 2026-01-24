@@ -25,6 +25,8 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/api.h>
+
 #include <deemon/alloc.h>
 #include <deemon/code.h>
 #include <deemon/error.h>
@@ -32,11 +34,12 @@
 #include <deemon/none.h>
 #include <deemon/tuple.h>
 
-#include <hybrid/bitset.h>
-#include <hybrid/byteswap.h>
-#include <hybrid/limitcore.h> /* __INT8_MAX__, __INT8_MIN__ */
-#include <hybrid/overflow.h>  /* OVERFLOW_SADD */
-#include <hybrid/unaligned.h>
+#include <hybrid/bitset.h>        /* bitset_test */
+#include <hybrid/byteswap.h>      /* UNALIGNED_GETLE32 */
+#include <hybrid/limitcore.h>     /* __INT8_MAX__, __INT8_MIN__ */
+#include <hybrid/overflow.h>      /* OVERFLOW_SADD */
+#include <hybrid/sequence/list.h> /* TAILQ_* */
+#include <hybrid/unaligned.h>     /* UNALIGNED_GETLE32 */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */

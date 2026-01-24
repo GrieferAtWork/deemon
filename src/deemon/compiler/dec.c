@@ -36,8 +36,8 @@
 #include <deemon/system-features.h>   /* memmem(), bzero(), ... */
 #include <deemon/system.h>            /* DeeSystem_SEP, DeeSystem_Unlink() */
 
-#include <hybrid/byteswap.h>  /* UNALIGNED_SETLE16(), UNALIGNED_SETLE32() */
-#include <hybrid/unaligned.h> /* UNALIGNED_SETLE16(), UNALIGNED_SETLE32() */
+#include <hybrid/byteswap.h>  /* UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SETLE* */
+#include <hybrid/unaligned.h> /* UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SET32, UNALIGNED_SETLE* */
 #include <hybrid/wordbits.h>  /* ENCODE_INT32 */
 
 #include <stdbool.h> /* bool, false, true */

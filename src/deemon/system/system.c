@@ -40,7 +40,7 @@
 #include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__ */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/host.h>            /* __ARCH_PAGESIZE */
-#include <hybrid/overflow.h>        /* OVERFLOW_UADD, OVERFLOW_UMUL, OVERFLOW_USUB */
+#include <hybrid/overflow.h>        /* OVERFLOW_* */
 #include <hybrid/typecore.h>        /* __BYTE_TYPE__, __SIZEOF_SIZE_T__ */
 
 #include <stdbool.h> /* bool, false, true */

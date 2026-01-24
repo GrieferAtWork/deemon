@@ -34,9 +34,9 @@
 #include <deemon/objmethod.h>       /* Dee_cmethod_t */
 #include <deemon/system-features.h>
 
-#include <hybrid/bitset.h>
+#include <hybrid/bitset.h>        /* BITSET_SIZEOF, bitset_t */
 #include <hybrid/byteorder.h>     /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/list.h> /* RINGQ_ENTRY, RINGQ_NEXT, TAILQ_* */
 #include <hybrid/typecore.h>      /* __SIZEOF_POINTER__ */
 
 #include <stdbool.h> /* bool, false, true */

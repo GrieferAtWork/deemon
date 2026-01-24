@@ -28,7 +28,8 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
-/**/
+
+#include <hybrid/sequence/list.h> /* LIST_ENTRY_UNBOUND_INITIALIZER */
 
 #include "builtin.h"
 #include "strings.h"

@@ -43,9 +43,9 @@
 #include <deemon/util/futex.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/byteswap.h>
+#include <hybrid/byteswap.h>  /* UNALIGNED_GETLE* */
 #include <hybrid/overflow.h>  /* OVERFLOW_UADD */
-#include <hybrid/unaligned.h>
+#include <hybrid/unaligned.h> /* UNALIGNED_GETLE* */
 
 #include "../objects/generic-proxy.h"
 #include "../objects/seq/default-map-proxy.h"

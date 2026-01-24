@@ -26,6 +26,8 @@
 #include "libjit.h"
 /**/
 
+#include <deemon/api.h>
+
 #include <deemon/bool.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/tpp.h>
@@ -45,7 +47,8 @@
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
-#include <hybrid/unaligned.h>
+#include <hybrid/compiler.h>
+#include <hybrid/unaligned.h> /* UNALIGNED_GET* */
 #include <hybrid/wordbits.h>  /* ENCODE_INT16, ENCODE_INT32 */
 
 #include <stdbool.h> /* bool, false */

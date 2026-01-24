@@ -47,7 +47,7 @@
 #include <hybrid/minmax.h>    /* MIN */
 #include <hybrid/overflow.h>  /* OVERFLOW_UADD, OVERFLOW_UMUL */
 #include <hybrid/typecore.h>  /* __BYTE_TYPE__ */
-#include <hybrid/unaligned.h>
+#include <hybrid/unaligned.h> /* UNALIGNED_GET* */
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"

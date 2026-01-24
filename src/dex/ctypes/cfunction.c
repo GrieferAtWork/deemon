@@ -37,7 +37,7 @@
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/minmax.h>          /* MAX */
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/list.h>   /* LIST_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

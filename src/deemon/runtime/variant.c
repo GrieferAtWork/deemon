@@ -34,7 +34,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/variant.h>
 
-#include <hybrid/int128.h>
+#include <hybrid/int128.h>      /* __hybrid_int128_gr128, __hybrid_int128_lo128, __hybrid_uint128_* */
 #include <hybrid/minmax.h>      /* MIN */
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
 #include <hybrid/typecore.h>    /* __ALIGNOF_POINTER__ */

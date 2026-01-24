@@ -32,9 +32,9 @@
 #include <deemon/system-features.h> /* strnlen(), memcpyc(), ... */
 #include <deemon/variant.h>
 
-#include <hybrid/int128.h>
+#include <hybrid/int128.h>   /* __hybrid_int128_isneg, __hybrid_int128_neg, __hybrid_uint128_* */
 #include <hybrid/minmax.h>   /* MIN */
-#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_* */
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_*__ */
 
 #include <stdarg.h>  /* va_arg, va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */

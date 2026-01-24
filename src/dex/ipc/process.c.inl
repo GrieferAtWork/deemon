@@ -51,9 +51,9 @@
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/host.h>            /* __linux__ */
-#include <hybrid/overflow.h>        /* OVERFLOW_UADD, OVERFLOW_UCAST, OVERFLOW_USUB */
+#include <hybrid/overflow.h>        /* OVERFLOW_* */
 #include <hybrid/sched/yield.h>     /* SCHED_YIELD */
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/list.h>   /* SLIST_* */
 #include <hybrid/typecore.h>        /* __BYTE_TYPE__, __SIZEOF_INT__, __SSIZE_TYPE__ */
 
 #include <stdbool.h> /* bool, false, true */

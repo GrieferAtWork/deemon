@@ -41,6 +41,8 @@
 #include <deemon/util/cache.h>
 #include <deemon/util/rlock.h>
 
+#include <hybrid/sequence/list.h> /* LIST_ENTRY_UNBOUND_INIT */
+
 #include "../runtime/runtime_error.h"
 
 #include <stdbool.h> /* bool, false, true */

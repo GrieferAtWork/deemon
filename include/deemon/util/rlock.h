@@ -144,7 +144,7 @@ typedef char Dee_rshared_rwlock_t;
 DECL_END
 #else /* CONFIG_NO_THREADS */
 
-#include <hybrid/__atomic.h>       /* __ATOMIC_ACQUIRE, __ATOMIC_RELEASE, __hybrid_atomic_cmpxch, __hybrid_atomic_cmpxch_weak, __hybrid_atomic_dec, __hybrid_atomic_fetchdec, __hybrid_atomic_inc, __hybrid_atomic_load, __hybrid_atomic_store */
+#include <hybrid/__atomic.h>       /* __ATOMIC_ACQUIRE, __ATOMIC_RELEASE, __hybrid_atomic_* */
 #include <hybrid/sched/__gettid.h> /* __HYBRID_GETTID_INVALID, __HYBRID_GETTID_INVALID_IS_ZERO, __hybrid_gettid, __hybrid_gettid_iscaller, __hybrid_tid_t */
 #include <hybrid/sched/__yield.h>  /* __hybrid_yield */
 

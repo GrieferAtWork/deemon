@@ -31,8 +31,8 @@
 #include <deemon/tuple.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/int128.h>
-#include <hybrid/limitcore.h> /* __INTn_MAX__, __INTn_MIN__, __UINTn_MAX__ */
+#include <hybrid/int128.h>    /* __hybrid_int128_*, __hybrid_uint128_set64 */
+#include <hybrid/limitcore.h> /* __INT*_MAX__, __INT*_MIN__, __UINT*_MAX__ */
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* false */

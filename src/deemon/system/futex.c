@@ -30,9 +30,9 @@
 #include <deemon/util/futex.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/sched/atomic-once.h>
+#include <hybrid/sched/atomic-once.h> /* atomic_once */
 #include <hybrid/sched/yield.h>       /* SCHED_YIELD */
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/list.h>     /* LIST_*, SLIST_* */
 #include <hybrid/typecore.h>          /* __SIZEOF_INT__, __SIZEOF_POINTER__, __ULONGPTR_TYPE__ */
 
 #include <stdbool.h> /* bool, false, true */
@@ -366,7 +366,7 @@ DECL_BEGIN
 #endif /* ... */
 
 #ifdef DeeFutex_USES_CONTROL_STRUCTURE
-#include <hybrid/sequence/rbtree.h>
+#include <hybrid/sequence/rbtree.h> /* LLRBTREE_NODE, LLRBTREE_ROOT */
 
 struct futex_controller;
 SLIST_HEAD(futex_controller_slist, futex_controller);

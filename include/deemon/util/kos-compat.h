@@ -27,8 +27,7 @@
 #endif /* !DEE_SOURCE */
 
 #include <hybrid/__alloca.h> /* __hybrid_alloca */
-#include <hybrid/bitset.h>   /* bitset_*  (to replace <sys/bitstr.h>) */
-#include <hybrid/typecore.h> /* __BYTE_TYPE__, __INTPTR_TYPE__, __INTn_TYPE__, __SIZE_TYPE__, __SSIZE_TYPE__, __UINTPTR_TYPE__, __UINTn_TYPE__ */
+#include <hybrid/typecore.h> /* __*_TYPE__ */
 
 #include "../format.h"
 #include "../string.h"
@@ -39,6 +38,10 @@
 #include <stdint.h>  /* uint8_t, uint32_t */
 
 /* Compatibility header for porting KOS system libraries for use with deemon */
+
+/* clang-format off */
+#include <hybrid/bitset.h> /* bitset_*  (to replace <sys/bitstr.h>) */
+/* clang-format on */
 
 DECL_BEGIN
 

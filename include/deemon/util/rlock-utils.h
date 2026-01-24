@@ -37,7 +37,7 @@
 #define Dee_ratomic_rwlock_waitwrite_timed_p(self, timeout_nanoseconds, err_label, timeout_label) (void)0
 #else /* CONFIG_NO_THREADS */
 
-#include <hybrid/__atomic.h>       /* __ATOMIC_ACQUIRE, __hybrid_atomic_cmpxch, __hybrid_atomic_cmpxch_weak, __hybrid_atomic_inc, __hybrid_atomic_load */
+#include <hybrid/__atomic.h>       /* __ATOMIC_ACQUIRE, __hybrid_atomic_* */
 #include <hybrid/__overflow.h>     /* __hybrid_overflow_uadd, __hybrid_overflow_usub */
 #include <hybrid/sched/__gettid.h> /* __hybrid_gettid, __hybrid_gettid_iscaller */
 #include <hybrid/sched/__yield.h>  /* __hybrid_yield */

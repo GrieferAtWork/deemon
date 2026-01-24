@@ -39,9 +39,9 @@
 #include <deemon/variant.h>
 
 #include <hybrid/host.h>      /* __pic__ */
-#include <hybrid/int128.h>
-#include <hybrid/typecore.h>  /* __BYTE_TYPE__, __SIZEOF_*, __UINTPTR_HALF_TYPE__ */
-#include <hybrid/unaligned.h>
+#include <hybrid/int128.h>    /* __hybrid_int128_*, __hybrid_uint128_* */
+#include <hybrid/typecore.h>  /* __BYTE_TYPE__, __SIZEOF_*__, __UINTPTR_HALF_TYPE__ */
+#include <hybrid/unaligned.h> /* UNALIGNED_GET* */
 
 #include "method-hints.h"
 #include "runtime_error.h"

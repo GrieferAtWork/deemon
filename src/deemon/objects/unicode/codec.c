@@ -33,7 +33,7 @@
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/typecore.h>  /* __BYTE_TYPE__ */
-#include <hybrid/unaligned.h>
+#include <hybrid/unaligned.h> /* UNALIGNED_GET16, UNALIGNED_GET32, UNALIGNED_SET* */
 #include <hybrid/wordbits.h>  /* ENCODE_INT16, ENCODE_INT32 */
 
 #include "../../runtime/strings.h"

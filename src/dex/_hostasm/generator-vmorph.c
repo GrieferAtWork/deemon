@@ -25,11 +25,13 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/api.h>
+
 #include <deemon/alloc.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/list.h> /* SLIST_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, ptrdiff_t, size_t */

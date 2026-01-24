@@ -38,7 +38,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 
-#include <hybrid/sequence/list.h>
+#include <hybrid/sequence/list.h> /* SLIST_EMPTY, SLIST_FIRST */
 #include <hybrid/typecore.h>      /* __BYTE_TYPE__ */
 
 #include "../../runtime/strings.h"

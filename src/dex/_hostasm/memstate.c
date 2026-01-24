@@ -25,6 +25,8 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/api.h>
+
 #include <deemon/alloc.h>
 #include <deemon/code.h>
 #include <deemon/error.h>
@@ -32,10 +34,11 @@
 #include <deemon/module.h>
 #include <deemon/none.h>
 
-#include <hybrid/align.h>     /* IS_ALIGNED */
-#include <hybrid/bitset.h>
-#include <hybrid/overflow.h>  /* OVERFLOW_USUB */
-#include <hybrid/unaligned.h>
+#include <hybrid/align.h>         /* IS_ALIGNED */
+#include <hybrid/bitset.h>        /* BITSET_LENGTHOF, bitset_* */
+#include <hybrid/compiler.h>
+#include <hybrid/overflow.h>      /* OVERFLOW_USUB */
+#include <hybrid/sequence/list.h> /* RINGQ_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */

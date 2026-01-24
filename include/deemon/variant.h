@@ -22,9 +22,9 @@
 
 #include "api.h"
 
-#include <hybrid/__unaligned.h> /* __hybrid_unaligned_get32, __hybrid_unaligned_get64, __hybrid_unaligned_set32, __hybrid_unaligned_set64 */
-#include <hybrid/int128.h>
-#include <hybrid/typecore.h>    /* __ALIGNOF_*, __BYTE_TYPE__, __SIZEOF_* */
+#include <hybrid/__unaligned.h> /* __hybrid_unaligned_get*, __hybrid_unaligned_set32, __hybrid_unaligned_set64 */
+#include <hybrid/int128.h>      /* __ALIGNOF_INT128__, __hybrid_int128_getword8, __hybrid_int128_setword8, __hybrid_uint128_getword8, __hybrid_uint128_setword8 */
+#include <hybrid/typecore.h>    /* __ALIGNOF_*__, __BYTE_TYPE__, __SIZEOF_*__ */
 
 #include "object.h"
 #include "types.h"

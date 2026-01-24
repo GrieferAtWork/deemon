@@ -205,9 +205,9 @@ DECL_END
 
 #else /* CONFIG_NO_THREADS */
 
-#include <hybrid/__atomic.h>              /* __ATOMIC_ACQUIRE, __ATOMIC_RELAXED, __ATOMIC_RELEASE, __ATOMIC_SEQ_CST, __hybrid_atomic_cmpxch, __hybrid_atomic_cmpxch_weak, __hybrid_atomic_dec, __hybrid_atomic_fetchinc, __hybrid_atomic_inc, __hybrid_atomic_load, __hybrid_atomic_store, __hybrid_atomic_xch */
-#include <hybrid/sched/__atomic-lock.h>
-#include <hybrid/sched/__atomic-rwlock.h>
+#include <hybrid/__atomic.h>              /* __ATOMIC_ACQUIRE, __ATOMIC_RELAXED, __ATOMIC_RELEASE, __ATOMIC_SEQ_CST, __hybrid_atomic_* */
+#include <hybrid/sched/__atomic-lock.h>   /* __HYBRID_ATOMIC_LOCK_INIT, __HYBRID_ATOMIC_LOCK_INIT_ACQUIRED, __SIZEOF_HYBRID_ATOMIC_LOCK, ___hybrid_atomic_lock_release_NDEBUG, __hybrid_atomic_load_with_atomic_lock, __hybrid_atomic_lock, __hybrid_atomic_lock_* */
+#include <hybrid/sched/__atomic-rwlock.h> /* __HYBRID_ATOMIC_RWLOCK*, __SIZEOF_HYBRID_ATOMIC_RWLOCK, ___hybrid_atomic_rwlock_*, __hybrid_atomic_load_with_atomic_rwlock, __hybrid_atomic_rwlock, __hybrid_atomic_rwlock_* */
 
 #include "futex.h"
 

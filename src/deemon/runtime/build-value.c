@@ -32,8 +32,8 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/__va_size.h> /* __VA_SIZE */
-#include <hybrid/int128.h>
-#include <hybrid/typecore.h>  /* __ALIGNOF_*, __BYTE_TYPE__, __SIZEOF_* */
+#include <hybrid/int128.h>    /* __ALIGNOF_INT128__, __hybrid_uint128_iszero */
+#include <hybrid/typecore.h>  /* __ALIGNOF_*__, __BYTE_TYPE__, __SIZEOF_*__ */
 
 #include "runtime_error.h"
 
