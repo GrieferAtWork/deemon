@@ -17,6 +17,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export Dee_ONCE*/
+/*!export Dee_ONCE_**/
+/*!export _Dee_ONCE_**/
+/*!export Dee_once_**/
 #ifndef GUARD_DEEMON_UTIL_ONCE_H
 #define GUARD_DEEMON_UTIL_ONCE_H 1
 
@@ -37,24 +41,24 @@
 DECL_BEGIN
 
 #ifdef CONFIG_NO_THREADS
-#define _DEE_ONCE_PENDING 0
-#define _DEE_ONCE_RUNNING 1
-#define _DEE_ONCE_DONE    2
+#define _Dee_ONCE_PENDING 0
+#define _Dee_ONCE_RUNNING 1
+#define _Dee_ONCE_DONE    2
 typedef unsigned char Dee_once_t; /* 0: not yet run; 1: running; 2: did run. */
-#define DEE_ONCE_INIT              _DEE_ONCE_PENDING
-#define Dee_once_init(self)        (void)(*(self) = _DEE_ONCE_PENDING)
-#define Dee_once_init_didrun(self) (void)(*(self) = _DEE_ONCE_DONE)
+#define Dee_ONCE_INIT              _Dee_ONCE_PENDING
+#define Dee_once_init(self)        (void)(*(self) = _Dee_ONCE_PENDING)
+#define Dee_once_init_didrun(self) (void)(*(self) = _Dee_ONCE_DONE)
 #else /* CONFIG_NO_THREADS */
-#define _DEE_ONCE_COMPLETED_THRESHOLD UINT32_C(0x80000000)
+#define _Dee_ONCE_COMPLETED_THRESHOLD UINT32_C(0x80000000)
 typedef struct {
 	uint32_t oc_didrun; /* 0: Not run
 	                     * 1: running
-	                     * [2, _DEE_ONCE_COMPLETED_THRESHOLD - 1]: Running, and threads are waiting for completion 
-	                     * [_DEE_ONCE_COMPLETED_THRESHOLD, (uint32_t)-1]: Did run */
+	                     * [2, _Dee_ONCE_COMPLETED_THRESHOLD - 1]: Running, and threads are waiting for completion 
+	                     * [_Dee_ONCE_COMPLETED_THRESHOLD, (uint32_t)-1]: Did run */
 } Dee_once_t;
-#define DEE_ONCE_INIT { 0 }
+#define Dee_ONCE_INIT { 0 }
 #define Dee_once_init(self)        (void)((self)->oc_didrun = 0)
-#define Dee_once_init_didrun(self) (void)((self)->oc_didrun = _DEE_ONCE_COMPLETED_THRESHOLD)
+#define Dee_once_init_didrun(self) (void)((self)->oc_didrun = _Dee_ONCE_COMPLETED_THRESHOLD)
 #endif /* !CONFIG_NO_THREADS */
 
 /* Enter the once-block
@@ -85,9 +89,9 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_once_trybegin)(Dee_once_t *__restric
 #ifndef CONFIG_NO_THREADS
 /* Check if `self' has already been executed. */
 #define Dee_once_hasrun(self) \
-	(__hybrid_atomic_load(&(self)->oc_didrun, __ATOMIC_ACQUIRE) >= _DEE_ONCE_COMPLETED_THRESHOLD)
+	(__hybrid_atomic_load(&(self)->oc_didrun, __ATOMIC_ACQUIRE) >= _Dee_ONCE_COMPLETED_THRESHOLD)
 #define Dee_once_isrunning(self) \
-	((uint32_t)(__hybrid_atomic_load(&(self)->oc_didrun, __ATOMIC_ACQUIRE) - 1) <= (_DEE_ONCE_COMPLETED_THRESHOLD - 2))
+	((uint32_t)(__hybrid_atomic_load(&(self)->oc_didrun, __ATOMIC_ACQUIRE) - 1) <= (_Dee_ONCE_COMPLETED_THRESHOLD - 2))
 #define Dee_once_ispending(self) \
 	(__hybrid_atomic_load(&(self)->oc_didrun, __ATOMIC_ACQUIRE) == 0)
 #ifndef __OPTIMIZE_SIZE__
@@ -95,12 +99,12 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_once_trybegin)(Dee_once_t *__restric
 #define Dee_once_begin_noint(self) (Dee_once_hasrun(self) ? false : (Dee_once_begin_noint)(self))
 #endif /* !__OPTIMIZE_SIZE__ */
 #else /* !CONFIG_NO_THREADS */
-#define Dee_once_trybegin(self)    (*(self) == _DEE_ONCE_PENDING ? (*(self) = _DEE_ONCE_RUNNING, 1) : *(self) == _DEE_ONCE_DONE ? 0 : 2)
-#define Dee_once_commit(self)      (void)(*(self) = _DEE_ONCE_DONE)
-#define Dee_once_abort(self)       (void)(*(self) = _DEE_ONCE_PENDING)
-#define Dee_once_hasrun(self)      (*(self) == _DEE_ONCE_DONE)
-#define Dee_once_isrunning(self)   (*(self) == _DEE_ONCE_RUNNING)
-#define Dee_once_ispending(self)   (*(self) == _DEE_ONCE_PENDING)
+#define Dee_once_trybegin(self)    (*(self) == _Dee_ONCE_PENDING ? (*(self) = _Dee_ONCE_RUNNING, 1) : *(self) == _Dee_ONCE_DONE ? 0 : 2)
+#define Dee_once_commit(self)      (void)(*(self) = _Dee_ONCE_DONE)
+#define Dee_once_abort(self)       (void)(*(self) = _Dee_ONCE_PENDING)
+#define Dee_once_hasrun(self)      (*(self) == _Dee_ONCE_DONE)
+#define Dee_once_isrunning(self)   (*(self) == _Dee_ONCE_RUNNING)
+#define Dee_once_ispending(self)   (*(self) == _Dee_ONCE_PENDING)
 #endif /* CONFIG_NO_THREADS */
 
 DECL_END
@@ -108,7 +112,7 @@ DECL_END
 /* Helper macro to perform some action exactly once. */
 #define Dee_ONCE(...)                            \
 	do {                                         \
-		static Dee_once_t _once = DEE_ONCE_INIT; \
+		static Dee_once_t _once = Dee_ONCE_INIT; \
 		if (Dee_once_begin_noint(&_once)) {      \
 			__VA_ARGS__;                         \
 			Dee_once_commit(&_once);             \

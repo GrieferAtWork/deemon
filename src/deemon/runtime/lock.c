@@ -1288,11 +1288,11 @@ do_wait_with_timeout:
 PUBLIC WUNUSED NONNULL((1)) int
 (DCALL Dee_once_begin)(Dee_once_t *__restrict self) {
 #ifdef CONFIG_NO_THREADS
-	if (*self == _DEE_ONCE_PENDING) {
-		*self = _DEE_ONCE_RUNNING;
+	if (*self == _Dee_ONCE_PENDING) {
+		*self = _Dee_ONCE_RUNNING;
 		return 1; /* You're now responsible for executing the once-function */
 	}
-	if unlikely(*self != _DEE_ONCE_DONE) {
+	if unlikely(*self != _Dee_ONCE_DONE) {
 		return DeeError_Throwf(&DeeError_RuntimeError,
 		                       "Deadlock detected: Once function is already "
 		                       "being run by the calling thread");
@@ -1301,16 +1301,16 @@ PUBLIC WUNUSED NONNULL((1)) int
 #else /* CONFIG_NO_THREADS */
 	uint32_t state;
 	state = atomic_read(&self->oc_didrun);
-	if (state >= _DEE_ONCE_COMPLETED_THRESHOLD)
+	if (state >= _Dee_ONCE_COMPLETED_THRESHOLD)
 		return 0; /* Already executed */
 
 	/* Start trying to run the once-controller. */
 again_start_waiting:
 	state = atomic_fetchinc(&self->oc_didrun);
-	if unlikely(state >= _DEE_ONCE_COMPLETED_THRESHOLD) {
+	if unlikely(state >= _Dee_ONCE_COMPLETED_THRESHOLD) {
 		/* Race condition: the once-block finished in
 		 * another thread while we were trying to start it. */
-		atomic_write(&self->oc_didrun, _DEE_ONCE_COMPLETED_THRESHOLD);
+		atomic_write(&self->oc_didrun, _Dee_ONCE_COMPLETED_THRESHOLD);
 		return 0;
 	}
 
@@ -1334,7 +1334,7 @@ again_start_waiting:
 		if unlikely(status != 0)
 			return status;
 		state = atomic_read(&self->oc_didrun);
-		if (state >= _DEE_ONCE_COMPLETED_THRESHOLD)
+		if (state >= _Dee_ONCE_COMPLETED_THRESHOLD)
 			return 0; /* Once-block completed. */
 
 		/* Check for another case: once-block was aborted. */
@@ -1350,11 +1350,11 @@ again_start_waiting:
 PUBLIC WUNUSED NONNULL((1)) bool
 (DCALL Dee_once_begin_noint)(Dee_once_t *__restrict self) {
 #ifdef CONFIG_NO_THREADS
-	if (*self == _DEE_ONCE_PENDING) {
-		*self = _DEE_ONCE_RUNNING;
+	if (*self == _Dee_ONCE_PENDING) {
+		*self = _Dee_ONCE_RUNNING;
 		return true; /* You're now responsible for executing the once-function */
 	}
-	if unlikely(*self != _DEE_ONCE_DONE) {
+	if unlikely(*self != _Dee_ONCE_DONE) {
 		Dee_Fatalf("Deadlock detected: Once function %p is "
 		           "already being run by the calling thread",
 		           self);
@@ -1363,16 +1363,16 @@ PUBLIC WUNUSED NONNULL((1)) bool
 #else /* CONFIG_NO_THREADS */
 	uint32_t state;
 	state = atomic_read(&self->oc_didrun);
-	if (state >= _DEE_ONCE_COMPLETED_THRESHOLD)
+	if (state >= _Dee_ONCE_COMPLETED_THRESHOLD)
 		return false; /* Already executed */
 
 	/* Start trying to run the once-controller. */
 again_start_waiting:
 	state = atomic_fetchinc(&self->oc_didrun);
-	if unlikely(state >= _DEE_ONCE_COMPLETED_THRESHOLD) {
+	if unlikely(state >= _Dee_ONCE_COMPLETED_THRESHOLD) {
 		/* Race condition: the once-block finished in
 		 * another thread while we were trying to start it. */
-		atomic_write(&self->oc_didrun, _DEE_ONCE_COMPLETED_THRESHOLD);
+		atomic_write(&self->oc_didrun, _Dee_ONCE_COMPLETED_THRESHOLD);
 		return false;
 	}
 
@@ -1392,7 +1392,7 @@ again_start_waiting:
 	for (;;) {
 		DeeFutex_Wait32NoInt(&self->oc_didrun, state);
 		state = atomic_read(&self->oc_didrun);
-		if (state >= _DEE_ONCE_COMPLETED_THRESHOLD)
+		if (state >= _Dee_ONCE_COMPLETED_THRESHOLD)
 			return false; /* Once-block completed. */
 
 		/* Check for another case: once-block was aborted. */
@@ -1413,15 +1413,15 @@ PUBLIC WUNUSED NONNULL((1)) int
 #else /* CONFIG_NO_THREADS */
 	uint32_t state;
 	state = atomic_read(&self->oc_didrun);
-	if (state >= _DEE_ONCE_COMPLETED_THRESHOLD)
+	if (state >= _Dee_ONCE_COMPLETED_THRESHOLD)
 		return 0; /* Already executed */
 
 	/* Start trying to run the once-controller. */
 	state = atomic_fetchinc(&self->oc_didrun);
-	if unlikely(state >= _DEE_ONCE_COMPLETED_THRESHOLD) {
+	if unlikely(state >= _Dee_ONCE_COMPLETED_THRESHOLD) {
 		/* Race condition: the once-block finished in
 		 * another thread while we were trying to start it. */
-		atomic_write(&self->oc_didrun, _DEE_ONCE_COMPLETED_THRESHOLD);
+		atomic_write(&self->oc_didrun, _Dee_ONCE_COMPLETED_THRESHOLD);
 		return 0;
 	}
 
@@ -1450,7 +1450,7 @@ PUBLIC NONNULL((1)) void
 #else /* CONFIG_NO_THREADS */
 	/* Change state to COMPLETED */
 	uint32_t old_state;
-	old_state = atomic_xch(&self->oc_didrun, _DEE_ONCE_COMPLETED_THRESHOLD);
+	old_state = atomic_xch(&self->oc_didrun, _Dee_ONCE_COMPLETED_THRESHOLD);
 	ASSERTF(old_state != 0, "Once-block committed, but never stated?");
 	if (old_state >= 2)
 		DeeFutex_WakeAll(&self->oc_didrun);

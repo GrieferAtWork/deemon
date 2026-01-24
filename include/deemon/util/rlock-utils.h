@@ -17,6 +17,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export Dee_ratomic_lock_**/
+/*!export Dee_ratomic_rwlock_**/
+/*!export _Dee_ratomic_lock_**/
+/*!export _Dee_ratomic_rwlock_**/
 #ifndef GUARD_DEEMON_UTIL_RLOCK_UTILS_H
 #define GUARD_DEEMON_UTIL_RLOCK_UTILS_H 1
 

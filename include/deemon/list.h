@@ -47,9 +47,9 @@ struct Dee_list_object {
 	struct Dee_objectlist l_list; /* [owned][lock(l_lock)] Object list. */
 #define DeeList_GetAlloc(self)     Dee_objectlist_getalloc(&(self)->l_list)
 #define _DeeList_SetAlloc(self, v) _Dee_objectlist_setalloc(&(self)->l_list, v)
-#ifdef DEE_OBJECTLIST_HAVE_ELEMA
+#ifdef Dee_OBJECTLIST_HAVE_ELEMA
 #define DeeList_GetAlloc_ATOMIC(ob) Dee_atomic_read(&(ob)->l_list.ol_elema)
-#endif /* DEE_OBJECTLIST_HAVE_ELEMA */
+#endif /* Dee_OBJECTLIST_HAVE_ELEMA */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t l_lock;  /* Lock used for accessing this list. */
 #endif /* !CONFIG_NO_THREADS */
@@ -93,11 +93,11 @@ DeeList_NewVectorInherited(size_t objc, /*inherit(on_success)*/ DREF DeeObject *
 DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeList_NewVectorInheritedHeap(/*inherit(on_success)*/ DREF DeeObject **objv,
                                size_t objc, size_t obja);
-#ifndef DEE_OBJECTLIST_HAVE_ELEMA
+#ifndef Dee_OBJECTLIST_HAVE_ELEMA
 DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeList_NewVectorInheritedHeap2(/*inherit(on_success)*/ DREF DeeObject **objv,
                                 size_t objc);
-#endif /* !DEE_OBJECTLIST_HAVE_ELEMA */
+#endif /* !Dee_OBJECTLIST_HAVE_ELEMA */
 
 /* Create a new List object. */
 #define DeeList_New() DeeObject_NewDefault(&DeeList_Type)

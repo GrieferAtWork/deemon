@@ -17,7 +17,6 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!export **/
 #ifndef __GUARD_HYBRID_MINMAX_H
 #define __GUARD_HYBRID_MINMAX_H 1
 
@@ -27,9 +26,9 @@
 #undef MAX
 #undef MIN_C
 #undef MAX_C
-#define MIN   __hybrid_min
-#define MAX   __hybrid_max
-#define MIN_C __hybrid_min_c
-#define MAX_C __hybrid_max_c
+#define MIN   __hybrid_min   /*!export*/
+#define MAX   __hybrid_max   /*!export*/
+#define MIN_C __hybrid_min_c /*!export*/
+#define MAX_C __hybrid_max_c /*!export*/
 
 #endif /* !__GUARD_HYBRID_MINMAX_H */

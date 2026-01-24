@@ -21,7 +21,7 @@
 /*!fixincludes discourage_include*/
 /*!export **/
 #ifndef ___STDINC_H
-#define ___STDINC_H 1
+#define ___STDINC_H 1 /*!export-*/
 
 #ifndef __NO_KOS_SYSTEM_HEADERS__
 /* Indicator for user-applications that KOS's system headers are available.

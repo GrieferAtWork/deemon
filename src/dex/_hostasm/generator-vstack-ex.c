@@ -1527,10 +1527,10 @@ vcall_Type_tp_ctor_unchecked(struct fungen *__restrict self, DeeTypeObject *type
 		DO(fg_vpopind(self, offsetof(DeeListObject, l_list.ol_elemv))); /* instance */
 		DO(fg_vpush_immSIZ(self, 0));                                   /* instance, 0 */
 		DO(fg_vpopind(self, offsetof(DeeListObject, l_list.ol_elemc))); /* instance */
-#ifdef DEE_OBJECTLIST_HAVE_ELEMA
+#ifdef Dee_OBJECTLIST_HAVE_ELEMA
 		DO(fg_vpush_immSIZ(self, 0));                                   /* instance, 0 */
 		DO(fg_vpopind(self, offsetof(DeeListObject, l_list.ol_elema))); /* instance */
-#endif /* DEE_OBJECTLIST_HAVE_ELEMA */
+#endif /* Dee_OBJECTLIST_HAVE_ELEMA */
 #ifndef CONFIG_NO_THREADS
 		DO(fg_vpush_ATOMIC_RWLOCK_INIT(self));                          /* instance, ATOMIC_RWLOCK_INIT */
 		DO(fg_vpopind(self, offsetof(DeeListObject, l_lock)));          /* instance */

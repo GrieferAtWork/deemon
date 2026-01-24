@@ -17,6 +17,12 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export Dee_simple_hashset*/
+/*!export Dee_simple_hashset_**/
+/*!export Dee_SIMPLE_HASHSET_**/
+/*!export Dee_simple_hashset_with_lock*/
+/*!export Dee_simple_hashset_with_lock_**/
+/*!export Dee_SIMPLE_HASHSET_WITH_LOCK_**/
 #ifndef GUARD_DEEMON_UTIL_SIMPLE_HASHSET_H
 #define GUARD_DEEMON_UTIL_SIMPLE_HASHSET_H 1
 
@@ -42,7 +48,7 @@ struct Dee_simple_hashset {
 	size_t                          shs_size; /* [<= shs_mask] Amount of non-NULL keys. */
 };
 
-#define DEE_SIMPLE_HASHSET_INIT { NULL, 0, 0 }
+#define Dee_SIMPLE_HASHSET_INIT { NULL, 0, 0 }
 #define Dee_simple_hashset_init(self) \
 	(void)((self)->shs_elem = NULL, (self)->shs_mask = (self)->shs_size = 0)
 #define Dee_simple_hashset_cinit(self)           \
@@ -130,9 +136,9 @@ struct Dee_simple_hashset_with_lock {
 };
 
 #ifndef CONFIG_NO_THREADS
-#define DEE_SIMPLE_HASHSET_WITH_LOCK_INIT { DEE_SIMPLE_HASHSET_INIT, Dee_ATOMIC_LOCK_INIT }
+#define Dee_SIMPLE_HASHSET_WITH_LOCK_INIT { Dee_SIMPLE_HASHSET_INIT, Dee_ATOMIC_LOCK_INIT }
 #else /* !CONFIG_NO_THREADS */
-#define DEE_SIMPLE_HASHSET_WITH_LOCK_INIT { DEE_SIMPLE_HASHSET_INIT }
+#define Dee_SIMPLE_HASHSET_WITH_LOCK_INIT { Dee_SIMPLE_HASHSET_INIT }
 #endif /* CONFIG_NO_THREADS */
 #define Dee_simple_hashset_with_lock_init(self) \
 	(Dee_simple_hashset_init(&(self)->shswl_set), Dee_atomic_lock_init(&(self)->shswl_lock))

@@ -181,9 +181,9 @@ again:
 	out = DeeSerial_Addr2Mem(writer, addr, CachedSeq_WithIter);
 	CachedSeq_WithIter_LockAcquire(self);
 	out->cswi_cache.ol_elemc = self->cswi_cache.ol_elemc;
-#ifdef DEE_OBJECTLIST_HAVE_ELEMA
+#ifdef Dee_OBJECTLIST_HAVE_ELEMA
 	out->cswi_cache.ol_elema = out->cswi_cache.ol_elemc;
-#endif /* DEE_OBJECTLIST_HAVE_ELEMA */
+#endif /* Dee_OBJECTLIST_HAVE_ELEMA */
 	Dee_atomic_lock_init(&out->cswi_lock);
 	if (self->cswi_cache.ol_elemv == NULL) {
 		CachedSeq_WithIter_LockRelease(self);
@@ -300,9 +300,9 @@ lock_and_append_to_cache:
 		ASSERT(alloc >= self->cswi_cache.ol_elemc);
 		if unlikely(alloc <= self->cswi_cache.ol_elemc) {
 			DREF DeeObject **new_elemv;
-			size_t new_alloc = DEE_OBJECTLIST_MOREALLOC(alloc);
-			if (new_alloc < DEE_OBJECTLIST_MINALLOC)
-				new_alloc = DEE_OBJECTLIST_MINALLOC;
+			size_t new_alloc = Dee_OBJECTLIST_MOREALLOC(alloc);
+			if (new_alloc < Dee_OBJECTLIST_MINALLOC)
+				new_alloc = Dee_OBJECTLIST_MINALLOC;
 			new_elemv = Dee_objectlist_elemv_tryrealloc_safe(self->cswi_cache.ol_elemv, new_alloc);
 			if unlikely(!new_elemv) {
 				size_t min_alloc = self->cswi_cache.ol_elemc;
@@ -311,9 +311,9 @@ lock_and_append_to_cache:
 				if unlikely(!new_elemv) {
 					/* Cannot realloc -> try again while not holding any locks. */
 					CachedSeq_WithIter_LockRelease(self);
-					new_alloc = DEE_OBJECTLIST_MOREALLOC(alloc);
-					if (new_alloc < DEE_OBJECTLIST_MINALLOC)
-						new_alloc = DEE_OBJECTLIST_MINALLOC;
+					new_alloc = Dee_OBJECTLIST_MOREALLOC(alloc);
+					if (new_alloc < Dee_OBJECTLIST_MINALLOC)
+						new_alloc = Dee_OBJECTLIST_MINALLOC;
 					new_elemv = Dee_objectlist_elemv_trymalloc_safe(new_alloc);
 					if unlikely(!new_elemv) {
 						new_alloc = min_alloc + 1;

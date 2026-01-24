@@ -9103,7 +9103,7 @@ err:
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 PUBLIC DeeListObject DeeModule_Path = {
 	OBJECT_HEAD_INIT(&DeeList_Type),
-	/* .l_list = */ DEE_OBJECTLIST_INIT
+	/* .l_list = */ Dee_OBJECTLIST_INIT
 #ifndef CONFIG_NO_THREADS
 	,
 	/* .l_lock = */ Dee_ATOMIC_RWLOCK_INIT

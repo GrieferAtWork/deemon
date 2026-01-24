@@ -17,8 +17,9 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
 #ifndef GUARD_DEEMON_UTIL_BYTEWRITER_H
-#define GUARD_DEEMON_UTIL_BYTEWRITER_H 1
+#define GUARD_DEEMON_UTIL_BYTEWRITER_H 1 /*!export -*/
 
 #include "../api.h"
 
@@ -33,7 +34,7 @@
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
-#define Dee_bytewriter   bytewriter
+#define Dee_bytewriter   bytewriter /*!export bytewriter*/
 #define BYTEWRITER_INIT  DEE_BYTEWRITER_INIT
 #define bytewriter_init  Dee_bytewriter_init
 #define bytewriter_cinit Dee_bytewriter_cinit

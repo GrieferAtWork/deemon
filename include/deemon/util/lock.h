@@ -17,8 +17,25 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export DeeLock_**/
+/*!export Dee_ATOMIC_LOCK_**/
+/*!export Dee_atomic_lock_**/
+/*!export _Dee_atomic_lock_**/
+/*!export Dee_ATOMIC_RWLOCK_**/
+/*!export Dee_atomic_rwlock_**/
+/*!export _Dee_atomic_rwlock_**/
+/*!export Dee_EVENT_**/
+/*!export Dee_event_**/
+/*!export Dee_SEMAPHORE_**/
+/*!export Dee_semaphore_**/
+/*!export _Dee_semaphore_**/
+/*!export Dee_SHARED_LOCK_**/
+/*!export Dee_shared_lock_**/
+/*!export Dee_SHARED_RWLOCK_**/
+/*!export Dee_shared_rwlock_**/
+/*!export _Dee_shared_rwlock_**/
 #ifndef GUARD_DEEMON_UTIL_LOCK_H
-#define GUARD_DEEMON_UTIL_LOCK_H 1
+#define GUARD_DEEMON_UTIL_LOCK_H 1 /*!export-*/
 
 #include "../api.h"
 
@@ -34,6 +51,7 @@
 #ifdef CONFIG_NO_THREADS
 DECL_BEGIN
 
+#define Dee_SIZEOF_ATOMIC_LOCK __SIZEOF_CHAR__ /*!export*/
 typedef char Dee_atomic_lock_t;
 #define Dee_ATOMIC_LOCK_INIT                  0
 #define Dee_ATOMIC_LOCK_INIT_ACQUIRED         0
@@ -50,6 +68,7 @@ typedef char Dee_atomic_lock_t;
 #define _Dee_atomic_lock_release_NDEBUG(self) (void)0
 #define Dee_atomic_read_with_atomic_lock(p, self) (*(p))
 
+#define Dee_SIZEOF_ATOMIC_RWLOCK __SIZEOF_CHAR__ /*!export*/
 typedef char Dee_atomic_rwlock_t;
 #define Dee_ATOMIC_RWLOCK_MAX_READERS              1
 #define Dee_ATOMIC_RWLOCK_INIT                     0
@@ -218,7 +237,7 @@ DECL_END
 DECL_BEGIN
 
 /* Simply implement atomic locks using the hybrid-API */
-#define Dee_SIZEOF_ATOMIC_LOCK __SIZEOF_HYBRID_ATOMIC_LOCK
+#define Dee_SIZEOF_ATOMIC_LOCK __SIZEOF_HYBRID_ATOMIC_LOCK /*!export*/
 typedef struct __hybrid_atomic_lock Dee_atomic_lock_t;
 #define Dee_ATOMIC_LOCK_INIT            __HYBRID_ATOMIC_LOCK_INIT
 #define Dee_ATOMIC_LOCK_INIT_ACQUIRED   __HYBRID_ATOMIC_LOCK_INIT_ACQUIRED
@@ -237,7 +256,7 @@ typedef struct __hybrid_atomic_lock Dee_atomic_lock_t;
 	__hybrid_atomic_load_with_atomic_lock(p, __ATOMIC_ACQUIRE, self)
 
 /* Simply implement atomic R/W-locks using the hybrid-API */
-#define Dee_SIZEOF_ATOMIC_RWLOCK __SIZEOF_HYBRID_ATOMIC_RWLOCK
+#define Dee_SIZEOF_ATOMIC_RWLOCK __SIZEOF_HYBRID_ATOMIC_RWLOCK /*!export*/
 typedef struct __hybrid_atomic_rwlock Dee_atomic_rwlock_t;
 #define Dee_ATOMIC_RWLOCK_MAX_READERS        __HYBRID_ATOMIC_RWLOCK_MAX_READERS
 #define Dee_ATOMIC_RWLOCK_INIT               __HYBRID_ATOMIC_RWLOCK_INIT

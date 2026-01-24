@@ -17,6 +17,11 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export Dee_atomic_ref*/
+/*!export Dee_atomic_ref**/
+/*!export Dee_ATOMIC_REF**/
+/*!export _Dee_atomic_ref**/
+/*!export _Dee_ATOMIC_REF**/
 #ifndef GUARD_DEEMON_UTIL_ATOMIC_REF_H
 #define GUARD_DEEMON_UTIL_ATOMIC_REF_H 1
 

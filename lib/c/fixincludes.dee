@@ -87,6 +87,10 @@ class HeaderExportGroup {
 	@@The min # of exports that must be matched before @replacement is injected
 	public member minCountForReplacement: int = 3;
 
+	public operator str(): string {
+		return f"{repr regex} -> {repr replacement} (match >= {minCountForReplacement})";
+	}
+
 	public static fromWildcard(wcard: string): HeaderExportGroup {
 		return HeaderExportGroup(
 			regex: wildcard2regex(wcard),
@@ -369,10 +373,6 @@ again_export_directive:
 				isRegex = false;
 				keywordOrRegex = tok;
 				tok = nextExportKeyword();
-			} else if (tok.startswith('"')) {
-				isRegex = true;
-				keywordOrRegex = tok.decode("c-escape");
-				tok = nextExportKeyword();
 			} else if (tok == "(") {
 				if (!lastExport)
 					err(directiveStart, f"Got /*!export(...)*/ directive without preceding keyword");
@@ -394,7 +394,8 @@ again_export_directive:
 			/* Remember export */
 			if (isRegex) {
 				exportRegexes.insert(keywordOrRegex);
-				if (!header.exportGroups.any(e -> e.regex == keywordOrRegex)) {
+				if (keywordOrRegex != ".*" &&
+				    !header.exportGroups.any(e -> e.regex == keywordOrRegex)) {
 					header.exportGroups.append(HeaderExportGroup(
 						regex:       keywordOrRegex,
 						replacement: regexReplacement,
@@ -462,6 +463,20 @@ again_export_directive:
 			case "discourage_include":
 				header.discourageInclude = true;
 				break;
+			case "regex": {
+				/* TODO: //!fixincludes regex group "__INT(8|16|32|64)_TYPE__" "__INTn_TYPE__" 4
+				 *
+				 * Define custom "header.exportGroups". Also causes all automatically generated
+				 * export groups (e.g. `//!export __INT*_TYPE__`) to be deleted, and any further
+				 * wildcard-export directives within the same file no longer create automatic
+				 * groups. */
+				/* TODO: //!fixincludes regex export "__INT(8|16|32|64)_TYPE__" "__INTn_TYPE__" 4
+				 *
+				 * Same as "fixincludes regex group", but also causes all symbols matching the
+				 * specified regex to be added to "header.exports" at the end. This can be done
+				 * by simply adding the regex string to "this.exportRegexes". */
+			}	break;
+
 			default:
 				err(directiveStart, f"Unsupported command: '/*!fixinclude {tok}...'");
 				break;
@@ -679,7 +694,12 @@ skip_paren_block:
 		local keywordPos = pos - #keyword; /* Hacky, but good enough */
 		tok = next();
 
-		/* This matches the "foo" in: "DECL int foo;" */
+		/* This matches the "foo" in: "DECL int foo;"
+		 *
+		 * TODO: Find a way so we're able to match "foo" in:
+		 * >> int foo __attribute__((aligned(42)));
+		 *
+		 * Current, we'd actually match "__attribute__" as an export name! */
 		if (tok == ";") {
 			addKeyword(keyword, keywordPos);
 			goto again;
@@ -711,7 +731,7 @@ skip_paren_block:
 	public finish(): Header {
 		local exports: HashSet with string = header.exports;
 		/* Add exports that were specified via wildcards */
-		if (exportRegexes.remove("*")) {
+		if (exportRegexes.remove(".*")) {
 			exports.insertall(allKeywords);
 		} else {
 			for (local kwd: allKeywords) {

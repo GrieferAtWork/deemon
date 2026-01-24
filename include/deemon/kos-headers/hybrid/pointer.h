@@ -17,13 +17,12 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!export **/
 #ifndef __GUARD_HYBRID_POINTER_H
 #define __GUARD_HYBRID_POINTER_H 1
 
 #include "__pointer.h"
 
-#define PTR32 __HYBRID_PTR32
-#define PTR64 __HYBRID_PTR64
+#define PTR32 __HYBRID_PTR32 /*!export*/
+#define PTR64 __HYBRID_PTR64 /*!export*/
 
 #endif /* !__GUARD_HYBRID_POINTER_H */

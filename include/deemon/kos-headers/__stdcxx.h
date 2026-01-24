@@ -21,7 +21,7 @@
 /*!fixincludes discourage_include*/
 /*!export **/
 #ifndef ___STDCXX_H
-#define ___STDCXX_H 1
+#define ___STDCXX_H 1 /*!export-*/
 
 #include "__stdinc.h" /*!always*/
 

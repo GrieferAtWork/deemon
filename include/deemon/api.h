@@ -23,7 +23,7 @@
 /*!always include <hybrid/compiler.h>*/
 /*!export **/
 #ifndef GUARD_DEEMON_API_H
-#define GUARD_DEEMON_API_H 1
+#define GUARD_DEEMON_API_H 1 /*!export-*/
 
 /* Since we use and include a small portable sub-set of KOS system headers, we
  * still need to tell those headers that the remainder of the KOS system header
@@ -770,7 +770,7 @@ DECL_END
 
 /* Override hooks from `<hybrid/__assert.h>' */
 #ifndef __GUARD_HYBRID___ASSERT_H
-#define __GUARD_HYBRID___ASSERT_H
+#define __GUARD_HYBRID___ASSERT_H /*!export-*/
 #endif /* !__GUARD_HYBRID___ASSERT_H */
 #undef __hybrid_assert
 #undef __hybrid_assertf

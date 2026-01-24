@@ -21,7 +21,7 @@
 /*!fixincludes no_include_comments*/
 /*!export **/
 #ifndef __GUARD_HYBRID_COMPILER_H
-#define __GUARD_HYBRID_COMPILER_H 1
+#define __GUARD_HYBRID_COMPILER_H 1 /*!export-*/
 
 #include "../__stdinc.h" /*!always*/
 
