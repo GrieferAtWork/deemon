@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>             /* Dee_Free, Dee_Reallocc */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>

@@ -22,8 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/accu.h>
-#include <deemon/alloc.h>
+#include <deemon/accu.h>                /* Dee_accu, Dee_accu_* */
+#include <deemon/alloc.h>               /* DeeObject_FREE, DeeObject_MALLOC */
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/class.h>

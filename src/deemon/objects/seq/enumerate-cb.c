@@ -22,8 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
-#include <deemon/arg.h>
+#include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
+#include <deemon/arg.h>                /* DeeArg_Unpack1Or2 */
 #include <deemon/callable.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>

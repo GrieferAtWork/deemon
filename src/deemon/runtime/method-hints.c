@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>          /* Dee_Free, Dee_UntrackAlloc */
 #include <deemon/class.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>

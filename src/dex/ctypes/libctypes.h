@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 
+#include <deemon/alloc.h>     /* DeeObject_Free, DeeObject_Malloc */
 #include <deemon/mro.h>
 #include <deemon/object.h>
 #include <deemon/string.h>

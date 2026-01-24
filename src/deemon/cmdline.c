@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* Dee_*alloc*, Dee_CollectMemoryc, Dee_Freea, Dee_UntrackAlloc */
 #include <deemon/error.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
 

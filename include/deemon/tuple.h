@@ -23,14 +23,15 @@
 #include "api.h"
 
 #include "types.h"
-#ifndef __INTELLISENSE__
-#include "object.h"
-#endif /* !__INTELLISENSE__ */
-/**/
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
+
+#ifndef __INTELLISENSE__
+#include "alloc.h"  /* _Dee_MallococBufsize, _Dee_MallococBufsizeSafe */
+#include "object.h"
+#endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN
 
@@ -48,9 +49,22 @@ struct Dee_tuple_object {
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, t_elem); /* [1..1][const][t_size] Tuple elements. */
 };
 
+#ifdef __INTELLISENSE__
+#define DeeTuple_SIZEOF(n_items) \
+	(COMPILER_OFFSETOF(DeeTupleObject, t_elem) + (n_items) * sizeof(DREF DeeObject *))
+/* Same as `DeeTuple_SIZEOF()', but makes sure that no overflow takes place. */
+#define DeeTuple_SIZEOF_SAFE(n_items) \
+	(COMPILER_OFFSETOF(DeeTupleObject, t_elem) + (n_items) * sizeof(DREF DeeObject *))
+#else /* __INTELLISENSE__ */
 #define DeeTuple_SIZEOF(n_items)                                    \
 	_Dee_MallococBufsize(COMPILER_OFFSETOF(DeeTupleObject, t_elem), \
 	                     n_items, sizeof(DREF DeeObject *))
+/* Same as `DeeTuple_SIZEOF()', but makes sure that no overflow takes place. */
+#define DeeTuple_SIZEOF_SAFE(n_items)                                   \
+	_Dee_MallococBufsizeSafe(COMPILER_OFFSETOF(DeeTupleObject, t_elem), \
+	                         n_items, sizeof(DREF DeeObject *))
+#endif /* !__INTELLISENSE__ */
+
 #define DeeTuple_IsEmpty(ob)   (Dee_AsObject(ob) == Dee_EmptyTuple)
 #define DeeTuple_SIZE(ob)      Dee_REQUIRES_OBJECT(DeeTupleObject, ob)->t_size
 #define DeeTuple_ELEM(ob)      Dee_REQUIRES_OBJECT(DeeTupleObject, ob)->t_elem
@@ -58,10 +72,6 @@ struct Dee_tuple_object {
 #define DeeTuple_GET(ob, i)    Dee_REQUIRES_OBJECT(DeeTupleObject, ob)->t_elem[i]
 #define DeeTuple_SET(ob, i, v) (void)(Dee_REQUIRES_OBJECT(DeeTupleObject, ob)->t_elem[i] = Dee_AsObject(v))
 
-/* Same as `DeeTuple_SIZEOF()', but makes sure that no overflow takes place. */
-#define DeeTuple_SIZEOF_SAFE(n_items)                                   \
-	_Dee_MallococBufsizeSafe(COMPILER_OFFSETOF(DeeTupleObject, t_elem), \
-	                         n_items, sizeof(DREF DeeObject *))
 
 
 /* Define a statically allocated tuple:

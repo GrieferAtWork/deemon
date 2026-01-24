@@ -32,6 +32,10 @@
 #include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* int32_t, uint8_t, uint16_t, uint32_t, uintptr_t */
 
+#ifndef __INTELLISENSE__
+#include "alloc.h" /* DeeObject_*alloc*, DeeObject_Free */
+#endif /* !__INTELLISENSE__ */
+
 DECL_BEGIN
 
 /* Explanation: Global variables:
@@ -176,10 +180,10 @@ typedef struct Dee_function_object DeeFunctionObject;
 typedef struct Dee_yield_function_object DeeYieldFunctionObject;
 typedef struct Dee_yield_function_iterator_object DeeYieldFunctionIteratorObject;
 typedef struct Dee_ddi_object DeeDDIObject;
-#ifndef DEE_INSTRUCTION_T_DEFINED
-#define DEE_INSTRUCTION_T_DEFINED 1
+#ifndef Dee_instruction_t_DEFINED
+#define Dee_instruction_t_DEFINED 1
 typedef __BYTE_TYPE__ Dee_instruction_t;
-#endif /* !DEE_INSTRUCTION_T_DEFINED */
+#endif /* !Dee_instruction_t_DEFINED */
 #define DEE_SIZEOF_CODE_ADDR_T 4
 #define DEE_SIZEOF_CODE_SIZE_T 4
 typedef uint32_t Dee_code_addr_t;
@@ -187,10 +191,10 @@ typedef uint32_t Dee_code_size_t;
 typedef int32_t Dee_code_saddr_t;
 
 #ifdef DEE_SOURCE
-#ifndef INSTRUCTION_T_DEFINED
-#define INSTRUCTION_T_DEFINED 1
+#ifndef instruction_t_DEFINED
+#define instruction_t_DEFINED 1
 typedef Dee_instruction_t instruction_t;
-#endif /* !INSTRUCTION_T_DEFINED */
+#endif /* !instruction_t_DEFINED */
 typedef Dee_code_addr_t   code_addr_t;
 typedef Dee_code_size_t   code_size_t;
 typedef Dee_code_saddr_t  code_saddr_t;
@@ -690,11 +694,19 @@ struct Dee_code_object {
 	                                                         *          instruction is always executed, no matter what. */
 };
 
+#ifdef __INTELLISENSE__
+#define DeeCode_Malloc(co_codebytes)          ((DREF DeeCodeObject *)(offsetof(DeeCodeObject, co_code) + (co_codebytes)))
+#define DeeCode_Realloc(ptr, co_codebytes)    ((DREF DeeCodeObject *)(ptr, offsetof(DeeCodeObject, co_code) + (co_codebytes)))
+#define DeeCode_TryMalloc(co_codebytes)       ((DREF DeeCodeObject *)(offsetof(DeeCodeObject, co_code) + (co_codebytes)))
+#define DeeCode_TryRealloc(ptr, co_codebytes) ((DREF DeeCodeObject *)(ptr, offsetof(DeeCodeObject, co_code) + (co_codebytes)))
+#define DeeCode_Free(ptr)                     (void)(ptr)
+#else /* __INTELLISENSE__ */
 #define DeeCode_Malloc(co_codebytes)          ((DREF DeeCodeObject *)DeeObject_Malloc(offsetof(DeeCodeObject, co_code) + (co_codebytes)))
 #define DeeCode_Realloc(ptr, co_codebytes)    ((DREF DeeCodeObject *)DeeObject_Realloc(ptr, offsetof(DeeCodeObject, co_code) + (co_codebytes)))
 #define DeeCode_TryMalloc(co_codebytes)       ((DREF DeeCodeObject *)DeeObject_TryMalloc(offsetof(DeeCodeObject, co_code) + (co_codebytes)))
 #define DeeCode_TryRealloc(ptr, co_codebytes) ((DREF DeeCodeObject *)DeeObject_TryRealloc(ptr, offsetof(DeeCodeObject, co_code) + (co_codebytes)))
 #define DeeCode_Free(ptr)                     DeeObject_Free(ptr)
+#endif /* !__INTELLISENSE__ */
 
 #ifdef CONFIG_HAVE_CODE_METRICS
 #define _DEE_CODE_CO_METRICS_FIELD struct Dee_code_metrics co_metrics;

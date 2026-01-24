@@ -47,7 +47,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>
+#include <deemon/arg.h>    /* DeeArg_Unpack*, UNPuSIZ */
 #include <deemon/bytes.h>
 #include <deemon/object.h>
 #include <deemon/string.h>

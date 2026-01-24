@@ -125,11 +125,11 @@ typedef WUNUSED_T NONNULL_T((2, 3)) Dee_ssize_t (DCALL *Dee_foreach_pair_t)(void
 #ifdef CONFIG_TRACE_REFCHANGES
 struct Dee_reftracker;
 #define DEE_REFTRACKER_UNTRACKED ((struct Dee_reftracker  *)(uintptr_t)-1l)
-#define DEE_PRIVATE_REFCHANGE_PRIVATE_DATA \
+#define _Dee_PRIVATE_REFCHANGE_PRIVATE_DATA \
 	struct Dee_reftracker *ob_trace; /* [0..1][owned][lock(WRITE_ONCE)] Tracked reference counter data. */
 #define DEE_OBJECT_OFFSETOF_DATA (__SIZEOF_POINTER__ * 3)
 #else /* CONFIG_TRACE_REFCHANGES */
-#define DEE_PRIVATE_REFCHANGE_PRIVATE_DATA  /* nothing */
+#define _Dee_PRIVATE_REFCHANGE_PRIVATE_DATA  /* nothing */
 #define DEE_OBJECT_OFFSETOF_DATA (__SIZEOF_POINTER__ * 2)
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
@@ -141,7 +141,7 @@ struct Dee_reftracker;
 #define Dee_OBJECT_HEAD_EX(Ttype) \
 	Dee_refcnt_t ob_refcnt;       \
 	DREF Ttype  *ob_type;         \
-	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
+	_Dee_PRIVATE_REFCHANGE_PRIVATE_DATA
 #define Dee_OBJECT_HEAD \
 	Dee_OBJECT_HEAD_EX(DeeTypeObject)
 
@@ -155,7 +155,7 @@ struct Dee_reftracker;
 struct Dee_object {
 	Dee_refcnt_t                          ob_refcnt; /* [lock(ATOMIC)] Object reference counter */
 	DREF DeeTypeObject *Dee_ob_type_const ob_type;   /* [1..1][const] Object type */
-	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
+	_Dee_PRIVATE_REFCHANGE_PRIVATE_DATA
 };
 
 

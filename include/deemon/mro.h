@@ -22,24 +22,28 @@
 
 #include "api.h"
 
-#include "types.h"
-#include "util/lock.h" /* Dee_shared_rwlock_t */
-#ifdef CONFIG_BUILDING_DEEMON
-#include "error-rt.h"
-#include "object.h"
-#endif /* CONFIG_BUILDING_DEEMON */
-#ifndef __INTELLISENSE__
-#include "none.h"
-#endif /* !__INTELLISENSE__ */
-
 #include <hybrid/__atomic.h>      /* __ATOMIC_ACQUIRE, __ATOMIC_RELEASE, __ATOMIC_SEQ_CST, __hybrid_atomic_* */
 #include <hybrid/sched/__yield.h> /* __hybrid_yield */
 #include <hybrid/typecore.h>      /* __ALIGNOF_POINTER__, __SIZEOF_POINTER__ */
+
+#include "types.h"
+#include "util/lock.h" /* Dee_shared_rwlock_t */
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
 #include <stdint.h>  /* uint16_t, uintptr_t */
+
+#ifdef CONFIG_BUILDING_DEEMON
+#include "error-rt.h"
+#include "object.h"
+#ifndef __INTELLISENSE__
+#include "alloc.h" /* Dee_Free */
+#endif /* !__INTELLISENSE__ */
+#endif /* CONFIG_BUILDING_DEEMON */
+#ifndef __INTELLISENSE__
+#include "none.h"
+#endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN
 
@@ -607,7 +611,11 @@ struct Dee_membercache_table {
 #define Dee_membercache_table_hashit(self, i)     ((self)->mc_table+((i) & (self)->mc_mask))
 
 /* Member-cache table reference counting functions. */
+#ifdef __INTELLISENSE__
+#define Dee_membercache_table_destroy(self) (void)(self)
+#else /* __INTELLISENSE__ */
 #define Dee_membercache_table_destroy(self) Dee_Free(self)
+#endif /* !__INTELLISENSE__ */
 #define Dee_membercache_table_incref(self)  __hybrid_atomic_inc(&(self)->mc_refcnt, __ATOMIC_SEQ_CST)
 #define Dee_membercache_table_decref(self)  (void)(__hybrid_atomic_decfetch(&(self)->mc_refcnt, __ATOMIC_SEQ_CST) || (Dee_membercache_table_destroy(self), 0))
 

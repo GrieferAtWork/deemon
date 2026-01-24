@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
 #include <deemon/deepcopy.h>
 #include <deemon/error-rt.h>
 #include <deemon/gc.h>

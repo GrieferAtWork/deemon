@@ -23,6 +23,7 @@
 #include "api.h"
 
 #ifndef __INTELLISENSE__
+#include "alloc.h"  /* DeeObject_Free */
 #include "object.h"
 #endif /* !__INTELLISENSE__ */
 #include "types.h"
@@ -324,7 +325,11 @@ struct Dee_bytes_printer {
 #define Dee_BYTES_PRINTER_INIT       { 0, NULL, 0 }
 #define Dee_BYTES_PRINTER_SIZE(x)    ((x)->bp_length)
 #define Dee_bytes_printer_init(self) ((self)->bp_length = 0, (self)->bp_bytes = NULL, (self)->bp_numpend = 0)
+#ifdef __INTELLISENSE__
+#define Dee_bytes_printer_fini(self) (void)((self)->bp_bytes)
+#else /* __INTELLISENSE__ */
 #define Dee_bytes_printer_fini(self) DeeObject_Free((self)->bp_bytes)
+#endif /* !__INTELLISENSE__ */
 
 #ifdef DEE_SOURCE
 #define BYTES_PRINTER_INIT  Dee_BYTES_PRINTER_INIT

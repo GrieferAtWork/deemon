@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>              /* DeeObject_Free, Dee_Callocc, Dee_Free, Dee_TryReallococ */
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>

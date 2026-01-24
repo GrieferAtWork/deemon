@@ -89,7 +89,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* Dee_Freea, Dee_Malloca */
 #include <deemon/class.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>

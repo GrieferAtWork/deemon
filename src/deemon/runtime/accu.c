@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/accu.h>
+#include <deemon/accu.h>           /* Dee_accu, Dee_accu_*, HAVE_Dee_ACCU_FLOAT, HAVE_Dee_ACCU_INT64 */
 #include <deemon/bytes.h>
 #include <deemon/float.h>
 #include <deemon/int.h>

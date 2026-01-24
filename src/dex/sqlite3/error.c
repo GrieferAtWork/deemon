@@ -27,7 +27,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>    /* DeeObject_MALLOC, Dee_CollectMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>

@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>
+#include <deemon/arg.h>             /* DeeArg_UnpackStruct*, UNPuSIZ */
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/int.h>

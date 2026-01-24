@@ -35,6 +35,11 @@
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
 #include <stdint.h>  /* UINTn_C, intN_t, intptr_t, uintN_t, uintptr_t */
 
+
+#if 0 /* To satisfy "fixincludes" */
+#include "alloc.h" /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO, DeeObject_Free, DeeObject_Malloc, DeeSlab_Invoke, Dee_TYPE_CONSTRUCTOR_INIT_* */
+#endif
+
 #ifndef __INTELLISENSE__
 #ifdef CONFIG_NO_STRING_H
 #undef CONFIG_HAVE_STRING_H
@@ -407,17 +412,17 @@ struct Dee_weakref {
  * easier to detect invalid uses of weakref controllers. */
 #ifndef NDEBUG
 #if __SIZEOF_POINTER__ == 4
-#define _DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR \
+#define _Dee_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR \
 	(__UINT32_C(0xcccccccc) & ~__UINT32_C(1))
 #elif __SIZEOF_POINTER__ == 8
-#define _DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR \
+#define _Dee_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR \
 	(__UINT64_C(0xcccccccccccccccc) & ~__UINT64_C(1))
 #else /* ... */
-#define _DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR \
+#define _Dee_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR \
 	((uintptr_t)-1 & ~(uintptr_t)1)
 #endif /* !... */
 #else /* !NDEBUG */
-#define _DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR \
+#define _Dee_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR \
 	0
 #endif /* NDEBUG */
 
@@ -461,10 +466,10 @@ struct Dee_weakref {
  */
 #ifdef __cplusplus
 #define DeeWeakref_UnlockCallback(x) \
-	__hybrid_atomic_store(&(x)->wr_next, (struct ::Dee_weakref *)_DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR, __ATOMIC_RELEASE)
+	__hybrid_atomic_store(&(x)->wr_next, (struct ::Dee_weakref *)_Dee_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR, __ATOMIC_RELEASE)
 #else /* __cplusplus */
 #define DeeWeakref_UnlockCallback(x) \
-	__hybrid_atomic_store(&(x)->wr_next, (struct Dee_weakref *)_DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR, __ATOMIC_RELEASE)
+	__hybrid_atomic_store(&(x)->wr_next, (struct Dee_weakref *)_Dee_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR, __ATOMIC_RELEASE)
 #endif /* !__cplusplus */
 
 
@@ -1052,11 +1057,11 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 #endif /* !CONFIG_[NO_]INLINE_INCREFV */
 
 
-/* Try to define `DEE_PRIVATE_MEMSETP' with platform-specific optimizations (if possible) */
-#undef DEE_PRIVATE_MEMSETP
+/* Try to define `_Dee_PRIVATE_MEMSETP' with platform-specific optimizations (if possible) */
+#undef _Dee_PRIVATE_MEMSETP
 #ifdef CONFIG_INLINE_INCREFV
 #ifdef CONFIG_HAVE_memsetp
-#define DEE_PRIVATE_MEMSETP memsetp
+#define _Dee_PRIVATE_MEMSETP memsetp
 #elif __SIZEOF_POINTER__ == 4
 #ifdef CONFIG_NO_memsetl
 #undef CONFIG_HAVE_memsetl
@@ -1090,7 +1095,7 @@ DECL_END
 #endif /* _MSC_VER && (__i386__ || __x86_64__) */
 #endif /* !CONFIG_HAVE_memsetl */
 #ifdef CONFIG_HAVE_memsetl
-#define DEE_PRIVATE_MEMSETP(dst, pointer, num_pointers) \
+#define _Dee_PRIVATE_MEMSETP(dst, pointer, num_pointers) \
 	memsetl(dst, (uint32_t)(pointer), num_pointers)
 #endif /* CONFIG_HAVE_memsetl */
 #elif __SIZEOF_POINTER__ == 8
@@ -1117,7 +1122,7 @@ DECL_END
 #endif /* _MSC_VER && __x86_64__ */
 #endif /* !CONFIG_HAVE_memsetq */
 #ifdef CONFIG_HAVE_memsetq
-#define DEE_PRIVATE_MEMSETP(dst, pointer, num_pointers) \
+#define _Dee_PRIVATE_MEMSETP(dst, pointer, num_pointers) \
 	memsetq(dst, (uint64_t)(pointer), num_pointers)
 #endif /* CONFIG_HAVE_memsetq */
 #elif __SIZEOF_POINTER__ == 2
@@ -1153,7 +1158,7 @@ DECL_END
 #endif /* _MSC_VER && (__i386__ || __x86_64__) */
 #endif /* !CONFIG_HAVE_memsetw */
 #ifdef CONFIG_HAVE_memsetw
-#define DEE_PRIVATE_MEMSETP(dst, pointer, num_pointers) \
+#define _Dee_PRIVATE_MEMSETP(dst, pointer, num_pointers) \
 	memsetw(dst, (uint16_t)(pointer), num_pointers)
 #endif /* CONFIG_HAVE_memsetw */
 #elif __SIZEOF_POINTER__ == 1
@@ -1176,7 +1181,7 @@ dee_memset(void *__restrict dst, int byte, size_t num_bytes) {
 }
 DECL_END
 #endif /* !CONFIG_HAVE_memset */
-#define DEE_PRIVATE_MEMSETP(dst, pointer, num_pointers) \
+#define _Dee_PRIVATE_MEMSETP(dst, pointer, num_pointers) \
 	memset(dst, (int)(unsigned int)(__UINT8_TYPE__)(pointer), num_pointers)
 #endif /* ... */
 #endif /* CONFIG_INLINE_INCREFV */
@@ -1236,16 +1241,16 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) NONNULL((2)) DREF DeeObject **
 (DCALL Dee_Setrefv_untraced)(/*out:ref*/ DeeObject **__restrict dst,
                              /*in*/ DeeObject *obj, size_t object_count) {
-#ifdef DEE_PRIVATE_MEMSETP
+#ifdef _Dee_PRIVATE_MEMSETP
 	Dee_Incref_n_untraced(obj, object_count);
-	return (DREF DeeObject **)DEE_PRIVATE_MEMSETP(dst, obj, object_count);
-#else /* DEE_PRIVATE_MEMSETP */
+	return (DREF DeeObject **)_Dee_PRIVATE_MEMSETP(dst, obj, object_count);
+#else /* _Dee_PRIVATE_MEMSETP */
 	size_t i;
 	Dee_Incref_n_untraced(obj, object_count);
 	for (i = 0; i < object_count; ++i)
 		dst[i] = obj;
 	return dst;
-#endif /* !DEE_PRIVATE_MEMSETP */
+#endif /* !_Dee_PRIVATE_MEMSETP */
 }
 #else /* CONFIG_INLINE_INCREFV */
 #define Dee_Increfv_untraced(object_vector, object_count) (Dee_Increfv)((DeeObject *const *)(object_vector), object_count)
@@ -3340,20 +3345,20 @@ struct Dee_type_getset {
 #define Dee_STRUCT_ATOMIC      0x4000 /* FLAG: Atomic read/write access (Use with `STRUCT_INT*'). */
 #define Dee_STRUCT_CONST       0x8000 /* FLAG: Read-only field. */
 
-#define DEE_PRIVATE_STRUCT_INT1  Dee_STRUCT_INT8
-#define DEE_PRIVATE_STRUCT_INT2  Dee_STRUCT_INT16
-#define DEE_PRIVATE_STRUCT_INT4  Dee_STRUCT_INT32
-#define DEE_PRIVATE_STRUCT_INT8  Dee_STRUCT_INT64
-#define DEE_PRIVATE_STRUCT_INT16 Dee_STRUCT_INT128
-#define DEE_PRIVATE_STRUCT_INT(sizeof) DEE_PRIVATE_STRUCT_INT##sizeof
-#define Dee_STRUCT_INTEGER(sizeof) DEE_PRIVATE_STRUCT_INT(sizeof)
+#define _Dee_PRIVATE_STRUCT_INT1  Dee_STRUCT_INT8
+#define _Dee_PRIVATE_STRUCT_INT2  Dee_STRUCT_INT16
+#define _Dee_PRIVATE_STRUCT_INT4  Dee_STRUCT_INT32
+#define _Dee_PRIVATE_STRUCT_INT8  Dee_STRUCT_INT64
+#define _Dee_PRIVATE_STRUCT_INT16 Dee_STRUCT_INT128
+#define _Dee_PRIVATE_STRUCT_INT(sizeof) _Dee_PRIVATE_STRUCT_INT##sizeof
+#define Dee_STRUCT_INTEGER(sizeof) _Dee_PRIVATE_STRUCT_INT(sizeof)
 
-#define DEE_PRIVATE_STRUCT_BOOL1 Dee_STRUCT_BOOL8
-#define DEE_PRIVATE_STRUCT_BOOL2 Dee_STRUCT_BOOL16
-#define DEE_PRIVATE_STRUCT_BOOL4 Dee_STRUCT_BOOL32
-#define DEE_PRIVATE_STRUCT_BOOL8 Dee_STRUCT_BOOL64
-#define DEE_PRIVATE_STRUCT_BOOL(sizeof) DEE_PRIVATE_STRUCT_BOOL##sizeof
-#define Dee_STRUCT_BOOL(sizeof) DEE_PRIVATE_STRUCT_BOOL(sizeof)
+#define _Dee_PRIVATE_STRUCT_BOOL1 Dee_STRUCT_BOOL8
+#define _Dee_PRIVATE_STRUCT_BOOL2 Dee_STRUCT_BOOL16
+#define _Dee_PRIVATE_STRUCT_BOOL4 Dee_STRUCT_BOOL32
+#define _Dee_PRIVATE_STRUCT_BOOL8 Dee_STRUCT_BOOL64
+#define _Dee_PRIVATE_STRUCT_BOOL(sizeof) _Dee_PRIVATE_STRUCT_BOOL##sizeof
+#define Dee_STRUCT_BOOL(sizeof) _Dee_PRIVATE_STRUCT_BOOL(sizeof)
 
 #ifdef DEE_SOURCE
 #define STRUCT_NONE        Dee_STRUCT_NONE        /* Ignore offset and always return `none' (Useful for forward/backward no-op compatibility) */
@@ -4796,49 +4801,49 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_Int)(DeeObject *__
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IntInherited)(/*inherit(always)*/ DREF DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IntInheritedOnSuccess)(/*inherit(on_success)*/ DREF DeeObject *__restrict self);
 
-#define DEE_PRIVATE_OBJECT_AS_INT_1(self, result)     DeeObject_AsInt8(self, (int8_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_INT_2(self, result)     DeeObject_AsInt16(self, (int16_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_INT_4(self, result)     DeeObject_AsInt32(self, (int32_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_INT_8(self, result)     DeeObject_AsInt64(self, (int64_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_INT_16(self, result)    DeeObject_AsInt128(self, (Dee_int128_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_INT(size)               DEE_PRIVATE_OBJECT_AS_INT_##size
-#define DEE_PRIVATE_OBJECT_AS_UINT_1(self, result)    DeeObject_AsUInt8(self, (uint8_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINT_2(self, result)    DeeObject_AsUInt16(self, (uint16_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINT_4(self, result)    DeeObject_AsUInt32(self, (uint32_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINT_8(self, result)    DeeObject_AsUInt64(self, (uint64_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINT_16(self, result)   DeeObject_AsUInt128(self, (Dee_uint128_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINT(size)              DEE_PRIVATE_OBJECT_AS_UINT_##size
-#define DEE_PRIVATE_OBJECT_AS_UINTM1_1(self, result)  DeeObject_AsUInt8M1(self, (uint8_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINTM1_2(self, result)  DeeObject_AsUInt16M1(self, (uint16_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINTM1_4(self, result)  DeeObject_AsUInt32M1(self, (uint32_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINTM1_8(self, result)  DeeObject_AsUInt64M1(self, (uint64_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINTM1_16(self, result) DeeObject_AsUInt128M1(self, (Dee_uint128_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINTM1(size)            DEE_PRIVATE_OBJECT_AS_UINTM1_##size
+#define _Dee_PRIVATE_OBJECT_AS_INT_1(self, result)     DeeObject_AsInt8(self, (int8_t *)(result))
+#define _Dee_PRIVATE_OBJECT_AS_INT_2(self, result)     DeeObject_AsInt16(self, (int16_t *)(result))
+#define _Dee_PRIVATE_OBJECT_AS_INT_4(self, result)     DeeObject_AsInt32(self, (int32_t *)(result))
+#define _Dee_PRIVATE_OBJECT_AS_INT_8(self, result)     DeeObject_AsInt64(self, (int64_t *)(result))
+#define _Dee_PRIVATE_OBJECT_AS_INT_16(self, result)    DeeObject_AsInt128(self, (Dee_int128_t *)(result))
+#define _Dee_PRIVATE_OBJECT_AS_INT(size)               _Dee_PRIVATE_OBJECT_AS_INT_##size
+#define _Dee_PRIVATE_OBJECT_AS_UINT_1(self, result)    DeeObject_AsUInt8(self, (uint8_t *)(result))
+#define _Dee_PRIVATE_OBJECT_AS_UINT_2(self, result)    DeeObject_AsUInt16(self, (uint16_t *)(result))
+#define _Dee_PRIVATE_OBJECT_AS_UINT_4(self, result)    DeeObject_AsUInt32(self, (uint32_t *)(result))
+#define _Dee_PRIVATE_OBJECT_AS_UINT_8(self, result)    DeeObject_AsUInt64(self, (uint64_t *)(result))
+#define _Dee_PRIVATE_OBJECT_AS_UINT_16(self, result)   DeeObject_AsUInt128(self, (Dee_uint128_t *)(result))
+#define _Dee_PRIVATE_OBJECT_AS_UINT(size)              _Dee_PRIVATE_OBJECT_AS_UINT_##size
+#define _Dee_PRIVATE_OBJECT_AS_UINTM1_1(self, result)  DeeObject_AsUInt8M1(self, (uint8_t *)(result))
+#define _Dee_PRIVATE_OBJECT_AS_UINTM1_2(self, result)  DeeObject_AsUInt16M1(self, (uint16_t *)(result))
+#define _Dee_PRIVATE_OBJECT_AS_UINTM1_4(self, result)  DeeObject_AsUInt32M1(self, (uint32_t *)(result))
+#define _Dee_PRIVATE_OBJECT_AS_UINTM1_8(self, result)  DeeObject_AsUInt64M1(self, (uint64_t *)(result))
+#define _Dee_PRIVATE_OBJECT_AS_UINTM1_16(self, result) DeeObject_AsUInt128M1(self, (Dee_uint128_t *)(result))
+#define _Dee_PRIVATE_OBJECT_AS_UINTM1(size)            _Dee_PRIVATE_OBJECT_AS_UINTM1_##size
 
-#define DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_1(self) DeeObject_AsUInt8Direct(self)
-#define DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_2(self) DeeObject_AsUInt16Direct(self)
-#define DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_4(self) DeeObject_AsUInt32Direct(self)
-#define DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_8(self) DeeObject_AsUInt64Direct(self)
-#define DEE_PRIVATE_OBJECT_AS_DIRECT_UINT(size)   DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_##size
+#define _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT_1(self) DeeObject_AsUInt8Direct(self)
+#define _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT_2(self) DeeObject_AsUInt16Direct(self)
+#define _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT_4(self) DeeObject_AsUInt32Direct(self)
+#define _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT_8(self) DeeObject_AsUInt64Direct(self)
+#define _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT(size)   _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT_##size
 
-#define DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED_1(self) DeeObject_AsUInt8DirectInherited(self)
-#define DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED_2(self) DeeObject_AsUInt16DirectInherited(self)
-#define DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED_4(self) DeeObject_AsUInt32DirectInherited(self)
-#define DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED_8(self) DeeObject_AsUInt64DirectInherited(self)
-#define DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED(size)   DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED_##size
+#define _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED_1(self) DeeObject_AsUInt8DirectInherited(self)
+#define _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED_2(self) DeeObject_AsUInt16DirectInherited(self)
+#define _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED_4(self) DeeObject_AsUInt32DirectInherited(self)
+#define _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED_8(self) DeeObject_AsUInt64DirectInherited(self)
+#define _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED(size)   _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED_##size
 
-#define DeeObject_MapAsXInt(size)                 DEE_PRIVATE_OBJECT_AS_INT(size)
-#define DeeObject_MapAsXUInt(size)                DEE_PRIVATE_OBJECT_AS_UINT(size)
-#define DeeObject_MapAsXUIntM1(size)              DEE_PRIVATE_OBJECT_AS_UINTM1(size)
-#define DeeObject_MapAsXUIntDirect(size)          DEE_PRIVATE_OBJECT_AS_DIRECT_UINT(size)
-#define DeeObject_MapAsXUIntDirectInherited(size) DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED(size)
+#define DeeObject_MapAsXInt(size)                 _Dee_PRIVATE_OBJECT_AS_INT(size)
+#define DeeObject_MapAsXUInt(size)                _Dee_PRIVATE_OBJECT_AS_UINT(size)
+#define DeeObject_MapAsXUIntM1(size)              _Dee_PRIVATE_OBJECT_AS_UINTM1(size)
+#define DeeObject_MapAsXUIntDirect(size)          _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT(size)
+#define DeeObject_MapAsXUIntDirectInherited(size) _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED(size)
 
 /* Helper macros for converting objects to integers */
-#define DeeObject_AsXInt(size, self, result)         DEE_PRIVATE_OBJECT_AS_INT(size)(self, result)
-#define DeeObject_AsXUInt(size, self, result)        DEE_PRIVATE_OBJECT_AS_UINT(size)(self, result)
-#define DeeObject_AsXUIntM1(size, self, result)      DEE_PRIVATE_OBJECT_AS_UINTM1(size)(self, result)
-#define DeeObject_AsXUIntDirect(size, self)          DEE_PRIVATE_OBJECT_AS_DIRECT_UINT(size)(self)
-#define DeeObject_AsXUIntDirectInherited(size, self) DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED(size)(self)
+#define DeeObject_AsXInt(size, self, result)         _Dee_PRIVATE_OBJECT_AS_INT(size)(self, result)
+#define DeeObject_AsXUInt(size, self, result)        _Dee_PRIVATE_OBJECT_AS_UINT(size)(self, result)
+#define DeeObject_AsXUIntM1(size, self, result)      _Dee_PRIVATE_OBJECT_AS_UINTM1(size)(self, result)
+#define DeeObject_AsXUIntDirect(size, self)          _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT(size)(self)
+#define DeeObject_AsXUIntDirectInherited(size, self) _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED(size)(self)
 #ifdef __CHAR_UNSIGNED__
 #define DeeObject_AsChar(self, result)    DeeObject_AsXUInt(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(char *, result))
 #else /* __CHAR_UNSIGNED__ */
@@ -4882,11 +4887,11 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IntInheritedOnSucc
 #define DeeObject_AsUIntptrM1(self, result)      DeeObject_AsXUIntM1(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(uintptr_t *, result))
 #define DeeObject_AsUIntptrDirect(self)          DeeObject_AsXUIntDirect(__SIZEOF_POINTER__, self)
 #define DeeObject_AsUIntptrDirectInherited(self) DeeObject_AsXUIntDirectInherited(__SIZEOF_POINTER__, self)
-#define DeeObject_AsSByte(self, result)          DEE_PRIVATE_OBJECT_AS_INT_1(self, Dee_REQUIRES_TYPE(__SBYTE_TYPE__ *, result))
-#define DeeObject_AsByte(self, result)           DEE_PRIVATE_OBJECT_AS_UINT_1(self, Dee_REQUIRES_TYPE(__BYTE_TYPE__ *, result))
-#define DeeObject_AsByteM1(self, result)         DEE_PRIVATE_OBJECT_AS_UINTM1_1(self, Dee_REQUIRES_TYPE(__BYTE_TYPE__ *, result))
-#define DeeObject_AsByteDirect(self)             DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_1(self)
-#define DeeObject_AsByteDirectInherited(self)    DEE_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED_1(self)
+#define DeeObject_AsSByte(self, result)          _Dee_PRIVATE_OBJECT_AS_INT_1(self, Dee_REQUIRES_TYPE(__SBYTE_TYPE__ *, result))
+#define DeeObject_AsByte(self, result)           _Dee_PRIVATE_OBJECT_AS_UINT_1(self, Dee_REQUIRES_TYPE(__BYTE_TYPE__ *, result))
+#define DeeObject_AsByteM1(self, result)         _Dee_PRIVATE_OBJECT_AS_UINTM1_1(self, Dee_REQUIRES_TYPE(__BYTE_TYPE__ *, result))
+#define DeeObject_AsByteDirect(self)             _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT_1(self)
+#define DeeObject_AsByteDirectInherited(self)    _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED_1(self)
 
 /* Helper wrapper around `DeeObject_Bool()' that writes
  * the value to `*result' rather than use the return value. */

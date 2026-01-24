@@ -25,7 +25,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* DeeDbgObject_Free, DeeDbgObject_UntrackAlloc, DeeDbgSlab_*, DeeDbg_*, DeeObject_Free, DeeSlabInfo, DeeSlab_*, Dee_*alloc*, Dee_Free, Dee_SLAB_MINSIZE */
 #include <deemon/format.h>
 #include <deemon/system-features.h>
 #include <deemon/util/atomic.h>     /* atomic_* */

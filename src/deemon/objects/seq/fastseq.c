@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* Dee_BadAlloc, Dee_Free, Dee_MallocUsableSize */
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>
 #include <deemon/util/objectlist.h> /* Dee_objectlist_* */

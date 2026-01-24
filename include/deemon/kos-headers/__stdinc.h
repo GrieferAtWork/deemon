@@ -625,7 +625,7 @@
 
 
 #ifdef __PREPROCESSOR_HAVE_VA_ARGS
-#define ____PRIVATE_VREDIRECT_UNPACK(...) __VA_ARGS__
+#define ____PRIVATE_VREDIRECT_UNPACK(...) __VA_ARGS__ /*!export-*/
 #elif defined(__PREPROCESSOR_HAVE_NAMED_VA_ARGS)
 #define ____PRIVATE_VREDIRECT_UNPACK(a...) a
 #endif /* ... */

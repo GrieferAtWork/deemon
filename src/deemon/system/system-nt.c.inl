@@ -26,7 +26,7 @@
 
 #ifdef CONFIG_HOST_WINDOWS
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_Free, Dee_Freea, Dee_ReleaseSystemMemory */
 #include <deemon/error.h>
 #include <deemon/error_types.h>
 #include <deemon/file.h>

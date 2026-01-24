@@ -27,7 +27,7 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>   /* Dee_Calloc, Dee_Free, _Dee_MallococBufsize */
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>

@@ -26,9 +26,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/accu.h>
-#include <deemon/alloc.h>
-#include <deemon/arg.h>
+#include <deemon/accu.h>        /* Dee_accu_* */
+#include <deemon/alloc.h>       /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/arg.h>         /* DeeArg_Unpack1 */
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>

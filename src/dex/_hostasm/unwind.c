@@ -31,7 +31,7 @@
 #include "libhostasm.h"
 /**/
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>  /* Dee_Reallocc, Dee_TryReallocc */
 #include <deemon/error.h>
 #include <deemon/format.h>
 

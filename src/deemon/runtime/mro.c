@@ -23,7 +23,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free, Dee_Freea, Dee_MALLOCA_MAX */
 #include <deemon/class.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
@@ -872,11 +872,11 @@ DeeObject_EnumAttr(DeeTypeObject *tp_self, DeeObject *self,
                    Dee_enumattr_t cb, void *arg) {
 #undef DeeObject_EnumAttr_USES_MALLOCA
 #undef DeeObject_EnumAttr_USES_MALLOC
-#if DEE_MALLOCA_MAX >= Dee_ITERATTR_DEFAULT_BUFSIZE
+#if Dee_MALLOCA_MAX >= Dee_ITERATTR_DEFAULT_BUFSIZE
 #define DeeObject_EnumAttr_USES_MALLOCA
-#else /* DEE_MALLOCA_MAX >= Dee_ITERATTR_DEFAULT_BUFSIZE */
+#else /* Dee_MALLOCA_MAX >= Dee_ITERATTR_DEFAULT_BUFSIZE */
 #define DeeObject_EnumAttr_USES_MALLOC
-#endif /* DEE_MALLOCA_MAX < Dee_ITERATTR_DEFAULT_BUFSIZE */
+#endif /* Dee_MALLOCA_MAX < Dee_ITERATTR_DEFAULT_BUFSIZE */
 	int status;
 	struct Dee_attrdesc desc;
 	Dee_ssize_t temp, result = 0;

@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* DeeObject_Free, DeeSlabStat, DeeSlab_*, Dee_*alloc*, Dee_Free, Dee_SLAB_COUNT */
 #include <deemon/gc.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* sscanf(), bzero(), ... */

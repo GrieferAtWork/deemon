@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* DeeObject_TryMallocc, Dee_CollectMemoryoc, Dee_Mallocac, Dee_ReleaseSystemMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XFreea */
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>

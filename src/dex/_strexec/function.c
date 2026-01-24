@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* DeeObject_MALLOC, DeeObject_Mallocc, Dee_*alloc*, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/bool.h>
 #include <deemon/callable.h>
 #include <deemon/dict.h>

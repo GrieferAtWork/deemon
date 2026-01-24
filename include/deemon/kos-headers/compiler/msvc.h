@@ -435,17 +435,17 @@ extern void (__cdecl _m_prefetch)(void *);
 #define __builtin_prefetch(...) (void)0
 #endif /* !... */
 #ifndef _ReadBarrier
-#define _ReadBarrier _ReadBarrier
+#define _ReadBarrier _ReadBarrier /*!export-*/
 extern void (__cdecl _ReadBarrier)(void);
 #pragma intrinsic(_ReadBarrier)
 #endif /* !_ReadBarrier */
 #ifndef _WriteBarrier
-#define _WriteBarrier _WriteBarrier
+#define _WriteBarrier _WriteBarrier /*!export-*/
 extern void (__cdecl _WriteBarrier)(void);
 #pragma intrinsic(_WriteBarrier)
 #endif /* !_WriteBarrier */
 #ifndef _ReadWriteBarrier
-#define _ReadWriteBarrier _ReadWriteBarrier
+#define _ReadWriteBarrier _ReadWriteBarrier /*!export-*/
 extern void (__cdecl _ReadWriteBarrier)(void);
 #pragma intrinsic(_ReadWriteBarrier)
 #endif /* !_ReadWriteBarrier */
@@ -471,7 +471,7 @@ extern void (__cdecl _ReadWriteBarrier)(void);
 /* Emulate the `__OPTIMIZE__' predefined macro, used in various headers. */
 #if defined(RELEASE) || defined(_RELEASE)
 #ifndef _RELEASE
-#define _RELEASE RELEASE
+#define _RELEASE RELEASE /*!export-*/
 #endif /* !_RELEASE */
 #ifndef __OPTIMIZE__
 #if (_RELEASE+0) >= 1
@@ -486,7 +486,7 @@ extern void (__cdecl _ReadWriteBarrier)(void);
 #define __native_wchar_t_defined
 #endif /* _NATIVE_WCHAR_T_DEFINED */
 #ifdef _WCHAR_T_DEFINED
-#define __wchar_t_defined
+#define __wchar_t_defined /*!export-*/
 #endif /* _WCHAR_T_DEFINED */
 
 /* Define varargs macros expected by system headers. */

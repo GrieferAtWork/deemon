@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>
+#include <deemon/arg.h>               /* DeeArg_UnpackStruct */
 #include <deemon/bytes.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>

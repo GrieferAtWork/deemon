@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>
+#include <deemon/arg.h> /* DEFINE_KWLIST */
 
 #define DECLARE_KWLIST INTERN DEFINE_KWLIST
 #include "kwlist.h"

@@ -27,7 +27,7 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>  /* Dee_BadAlloc, Dee_CollectMemory, Dee_Freea, Dee_MallocUsableSize, Dee_Mallocac */
 #include <deemon/code.h>
 #include <deemon/error.h>
 #include <deemon/format.h>

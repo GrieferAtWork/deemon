@@ -31,6 +31,10 @@
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* uintN_t, uintptr_t */
 
+#ifndef __INTELLISENSE__
+#include "alloc.h" /* Dee_Free, Dee_Malloc, Dee_TryMalloc */
+#endif /* !__INTELLISENSE__ */
+
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #include <hybrid/sequence/list.h> /* LIST_ENTRY, LIST_ISBOUND */
 #include <hybrid/typecore.h>      /* __*_TYPE__, __SIZEOF_SIZE_T__ */
@@ -612,9 +616,15 @@ struct Dee_module_libentry {
 
 #define Dee_module_libentry_getmodule(self) \
 	((DeeModuleObject *)((__UINTPTR_TYPE__)(self)->mle_dat.mle_mod & ~1))
+#ifdef __INTELLISENSE__
+#define Dee_module_libentry_tryalloc() ((struct Dee_module_libentry *)(sizeof(struct Dee_module_libentry)))
+#define Dee_module_libentry_alloc()    ((struct Dee_module_libentry *)(sizeof(struct Dee_module_libentry)))
+#define Dee_module_libentry_free(self) (void)(self)
+#else /* __INTELLISENSE__ */
 #define Dee_module_libentry_tryalloc() ((struct Dee_module_libentry *)Dee_TryMalloc(sizeof(struct Dee_module_libentry)))
 #define Dee_module_libentry_alloc()    ((struct Dee_module_libentry *)Dee_Malloc(sizeof(struct Dee_module_libentry)))
 #define Dee_module_libentry_free(self) Dee_Free(self)
+#endif /* !__INTELLISENSE__ */
 
 #ifndef CONFIG_NO_DEX
 struct Dee_module_dexdata;

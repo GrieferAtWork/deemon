@@ -27,7 +27,7 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h> /* Dee_Callocac, Dee_Freea, Dee_Mallocac */
 #include <deemon/none.h>
 
 #include <stdbool.h> /* bool, false, true */

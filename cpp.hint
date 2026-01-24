@@ -954,7 +954,7 @@
 #define DeeSystem_IF_E4(errno,e1,e2,e3,e4,...)
 
 #define DeeSlab_ENUMERATE(func) func(0,4) func(1,5) func(2,6) func(3,8) func(4,10)
-#define DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS(index,size) \
+#define _Dee_PRIVATE_DEFINE_SLAB_FUNCTIONS(index,size) \
 	void*DeeSlab_Malloc##size(void);\
 	void*DeeSlab_Calloc##size(void);\
 	void*DeeSlab_TryMalloc##size(void);\
@@ -1023,7 +1023,7 @@
 #define FILE_OBJECT_HEAD          Dee_refcnt_t ob_refcnt;DeeFileTypeObject*ob_type;
 #define Dee_FILE_OBJECT_HEAD      Dee_refcnt_t ob_refcnt;DeeFileTypeObject*ob_type;
 
-#define DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
+#define _Dee_PRIVATE_REFCHANGE_PRIVATE_DATA
 #define WEAKREF_SUPPORT           struct Dee_weakref_list ob_weakrefs;
 #define Dee_WEAKREF_SUPPORT       struct Dee_weakref_list ob_weakrefs;
 #define WEAKREF(T)                struct Dee_weakref

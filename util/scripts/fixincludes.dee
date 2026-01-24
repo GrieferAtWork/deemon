@@ -34,7 +34,7 @@ function main() {
 			ROOTDIR + "/include/deemon/cxx",
 		})
 		.finishSetup()
-#if 0
+#if 1
 		.dumpExports()
 		.dumpHeaders()
 #else

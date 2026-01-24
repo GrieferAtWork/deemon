@@ -27,7 +27,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* Dee_Freea, Dee_Mallocac */
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>

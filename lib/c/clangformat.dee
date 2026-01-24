@@ -22,7 +22,7 @@ import * from deemon;
 import * from errors;
 import posix;
 
-class ClangFormatYamlParser {
+local class ClangFormatYamlParser {
 	this = default;
 	public member filename: string;
 	public member data: Bytes;

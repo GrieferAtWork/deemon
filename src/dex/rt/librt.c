@@ -27,8 +27,7 @@
 #include <deemon/api.h>
 
 #include <deemon/abi/ctypes.h>
-#include <deemon/alloc.h>
-#include <deemon/arg.h>
+#include <deemon/arg.h>               /* DEFINE_KWLIST, DeeArg_Unpack0Or1X, DeeArg_UnpackStructKw, UNPu16 */
 #include <deemon/asm.h>
 #include <deemon/attribute.h>
 #include <deemon/bool.h>

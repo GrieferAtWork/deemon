@@ -27,7 +27,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>
+#include <deemon/alloc.h>     /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/arg.h>       /* DEFINE_KWLIST, DeeArg_UnpackStructKw, UNP* */
 #include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
@@ -35,6 +36,7 @@
 #include <deemon/int.h>
 #include <deemon/mapfile.h>
 #include <deemon/none.h>
+#include <deemon/object.h>    /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/serial.h>

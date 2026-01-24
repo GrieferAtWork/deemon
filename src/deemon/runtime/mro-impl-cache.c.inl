@@ -167,6 +167,7 @@
 
 #include <deemon/api.h>
 
+#include <deemon/arg.h>             /* DeeArg_Unpack1, DeeArg_UnpackStructKw */
 #include <deemon/class.h>
 #include <deemon/error.h>           /* DeeError_Catch */
 #include <deemon/format.h>          /* Dee_VPPackf */

@@ -22,8 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
-#include <deemon/arg.h>
+#include <deemon/alloc.h>              /* Dee_Free, Dee_Reallocc, Dee_TryReallocc */
+#include <deemon/arg.h>                /* DeeArg_UnpackStructKw */
 #include <deemon/code.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/compiler.h>

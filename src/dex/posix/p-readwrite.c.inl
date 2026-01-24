@@ -27,8 +27,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
-#include <deemon/arg.h>
+#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_*, UNP* */
 #include <deemon/bytes.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>

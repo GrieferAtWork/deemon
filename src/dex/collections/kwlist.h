@@ -25,7 +25,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>
+#include <deemon/arg.h> /* Dee_keyword */
 
 #ifndef DECLARE_KWLIST
 #define DECLARE_KWLIST(name, ...) INTDEF struct Dee_keyword name[];

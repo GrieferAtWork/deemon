@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>
+#include <deemon/arg.h>       /* DeeArg_Unpack* */
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>

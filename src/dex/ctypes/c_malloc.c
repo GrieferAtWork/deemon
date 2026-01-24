@@ -28,8 +28,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
-#include <deemon/arg.h>
+#include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
+#include <deemon/arg.h>             /* DeeArg_UnpackStruct1XOr2X, DeeArg_UnpackStruct2X, UNPuSIZ, UNPxSIZ */
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
 #include <deemon/format.h>

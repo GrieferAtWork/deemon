@@ -25,6 +25,8 @@
 
 #include <deemon/api.h>
 
+#include <deemon/alloc.h> /* DeeObject_FREE, DeeObject_Malloc, Dee_*alloc*, Dee_Alloca*, Dee_Free */
+
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
 #include <stddef.h> /* NULL, offsetof, size_t */

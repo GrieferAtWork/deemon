@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>     /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
 #include <deemon/numeric.h>
 #include <deemon/object.h>
 #include <deemon/string.h>

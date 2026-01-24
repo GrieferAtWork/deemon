@@ -27,7 +27,7 @@
 #include "types.h"
 
 #ifndef __INTELLISENSE__
-#include "alloc.h"
+#include "alloc.h" /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO, DeeSlab_ENUMERATE, DeeSlab_Invoke, _Dee_Malloc*Bufsize* */
 #else /* !__INTELLISENSE__ */
 DECL_BEGIN
 #define _Dee_MalloccBufsize(elem_count, elem_size)                              ((elem_count) * (elem_size))
@@ -265,14 +265,14 @@ DFUNDEF void (DCALL DeeDbgGCObject_Free)(void *p, char const *file, int line);
 #define DeeGCObject_FTryCalloc(size) DeeGCObject_TryCalloc(size)
 #define DeeGCObject_FFree(ptr, size) (DeeGCObject_Free(ptr), (void)(size))
 #else /* CONFIG_NO_OBJECT_SLABS */
-#define DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS(index, size)                               \
+#define _Dee_PRIVATE_DEFINE_SLAB_FUNCTIONS(index, size)                              \
 	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_SlabMalloc##size)(void);    \
 	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_SlabCalloc##size)(void);    \
 	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_SlabTryMalloc##size)(void); \
 	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_SlabTryCalloc##size)(void); \
 	DFUNDEF void (DCALL DeeGCObject_SlabFree##size)(void *__restrict ptr);
-DeeSlab_ENUMERATE(DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS)
-#undef DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS
+DeeSlab_ENUMERATE(_Dee_PRIVATE_DEFINE_SLAB_FUNCTIONS)
+#undef _Dee_PRIVATE_DEFINE_SLAB_FUNCTIONS
 #define DeeGCObject_FMalloc(size)    DeeSlab_Invoke(DeeGCObject_SlabMalloc, size, (), DeeGCObject_Malloc(size))
 #define DeeGCObject_FCalloc(size)    DeeSlab_Invoke(DeeGCObject_SlabCalloc, size, (), DeeGCObject_Calloc(size))
 #define DeeGCObject_FTryMalloc(size) DeeSlab_Invoke(DeeGCObject_SlabTryMalloc, size, (), DeeGCObject_TryMalloc(size))

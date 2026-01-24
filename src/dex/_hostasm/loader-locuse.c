@@ -27,7 +27,7 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h> /* Dee_*alloc*, Dee_Freea */
 #include <deemon/asm.h>
 
 #include <hybrid/bitset.h>    /* BITSET_LENGTHOF, bitset_* */

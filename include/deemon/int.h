@@ -129,25 +129,25 @@ struct Dee_int_object {
 	                                                 * which is negative if the value of the integer is too. */
 };
 
-#define DEE_PRIVATE_ABS(value)              \
+#define _Dee_PRIVATE_ABS(value)             \
 	((value) < 0                            \
 	 ? ((intmax_t)(value) == __INTMAX_MIN__ \
 	    ? __UINTMAX_MAX__                   \
 	    : (uintmax_t)(-(intmax_t)(value)))  \
 	 : (uintmax_t)(value))
-#define Dee_DEFINE_INT_1DIGIT(name, value)          \
-	struct {                                        \
-		Dee_OBJECT_HEAD                             \
-		Dee_ssize_t _size;                          \
-		Dee_digit_t _digits[1];                     \
-	} name = {                                      \
-		Dee_OBJECT_HEAD_INIT(&DeeInt_Type),         \
-		(value) < 0                                 \
-		? -1                                        \
-		: (value) > 0                               \
-		  ? 1                                       \
-		  : 0,                                      \
-		{ DEE_PRIVATE_ABS(value) & Dee_DIGIT_MASK } \
+#define Dee_DEFINE_INT_1DIGIT(name, value)           \
+	struct {                                         \
+		Dee_OBJECT_HEAD                              \
+		Dee_ssize_t _size;                           \
+		Dee_digit_t _digits[1];                      \
+	} name = {                                       \
+		Dee_OBJECT_HEAD_INIT(&DeeInt_Type),          \
+		(value) < 0                                  \
+		? -1                                         \
+		: (value) > 0                                \
+		  ? 1                                        \
+		  : 0,                                       \
+		{ _Dee_PRIVATE_ABS(value) & Dee_DIGIT_MASK } \
 	}
 #define Dee_DEFINE_UINT_1DIGIT(name, value) \
 	struct {                                \
@@ -177,8 +177,8 @@ struct Dee_int_object {
 		      ? 2                                                                \
 		      : 1)                                                               \
 		   : 0),                                                                 \
-		{ DEE_PRIVATE_ABS(value) & Dee_DIGIT_MASK,                               \
-		  (DEE_PRIVATE_ABS(value) >> Dee_DIGIT_BITS) & Dee_DIGIT_MASK }          \
+		{ _Dee_PRIVATE_ABS(value) & Dee_DIGIT_MASK,                              \
+		  (_Dee_PRIVATE_ABS(value) >> Dee_DIGIT_BITS) & Dee_DIGIT_MASK }         \
 	}
 #define Dee_DEFINE_UINT_2DIGITS(name, value)                                     \
 	struct {                                                                     \
@@ -216,9 +216,9 @@ struct Dee_int_object {
 		        ? 2                                                                  \
 		        : 1)                                                                 \
 		   : 0),                                                                     \
-		{ DEE_PRIVATE_ABS(value) & Dee_DIGIT_MASK,                                   \
-		  (DEE_PRIVATE_ABS(value) >> Dee_DIGIT_BITS) & Dee_DIGIT_MASK,               \
-		  (DEE_PRIVATE_ABS(value) >> 2 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK }          \
+		{ _Dee_PRIVATE_ABS(value) & Dee_DIGIT_MASK,                                  \
+		  (_Dee_PRIVATE_ABS(value) >> Dee_DIGIT_BITS) & Dee_DIGIT_MASK,              \
+		  (_Dee_PRIVATE_ABS(value) >> 2 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK }         \
 	}
 #define Dee_DEFINE_INT_4DIGITS(name, value)                                           \
 	struct {                                                                          \
@@ -246,10 +246,10 @@ struct Dee_int_object {
 		         ? 2                                                                  \
 		         : 1)                                                                 \
 		  : 0,                                                                        \
-		{ DEE_PRIVATE_ABS(value) & Dee_DIGIT_MASK,                                    \
-		  (DEE_PRIVATE_ABS(value) >> Dee_DIGIT_BITS) & Dee_DIGIT_MASK,                \
-		  (DEE_PRIVATE_ABS(value) >> 2 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK,            \
-		  (DEE_PRIVATE_ABS(value) >> 3 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK }           \
+		{ _Dee_PRIVATE_ABS(value) & Dee_DIGIT_MASK,                                   \
+		  (_Dee_PRIVATE_ABS(value) >> Dee_DIGIT_BITS) & Dee_DIGIT_MASK,               \
+		  (_Dee_PRIVATE_ABS(value) >> 2 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK,           \
+		  (_Dee_PRIVATE_ABS(value) >> 3 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK }          \
 	}
 #define Dee_DEFINE_INT_5DIGITS(name, value)                                             \
 	struct {                                                                            \
@@ -281,11 +281,11 @@ struct Dee_int_object {
 		           ? 2                                                                  \
 		           : 1)                                                                 \
 		  : 0,                                                                          \
-		{ DEE_PRIVATE_ABS(value) & Dee_DIGIT_MASK,                                      \
-		  (DEE_PRIVATE_ABS(value) >> Dee_DIGIT_BITS) & Dee_DIGIT_MASK,                  \
-		  (DEE_PRIVATE_ABS(value) >> 2 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK,              \
-		  (DEE_PRIVATE_ABS(value) >> 3 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK,              \
-		  (DEE_PRIVATE_ABS(value) >> 4 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK }             \
+		{ _Dee_PRIVATE_ABS(value) & Dee_DIGIT_MASK,                                     \
+		  (_Dee_PRIVATE_ABS(value) >> Dee_DIGIT_BITS) & Dee_DIGIT_MASK,                 \
+		  (_Dee_PRIVATE_ABS(value) >> 2 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK,             \
+		  (_Dee_PRIVATE_ABS(value) >> 3 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK,             \
+		  (_Dee_PRIVATE_ABS(value) >> 4 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK }            \
 	}
 #define Dee_DEFINE_UINT_3DIGITS(name, value)                 \
 	struct {                                                 \
@@ -644,49 +644,49 @@ DFUNDEF WUNUSED ATTR_INS(1, 2) DREF /*Int*/ DeeObject *
 #define DeeInt_FromNativeBytes(buf, length, as_signed)     DeeInt_FromBytes(buf, length, false, as_signed)
 #endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 
-#define DEE_PRIVATE_INT_TRYASSINT_1(self, result)    DeeInt_TryAsInt8(self, (int8_t *)(result))
-#define DEE_PRIVATE_INT_TRYASSINT_2(self, result)    DeeInt_TryAsInt16(self, (int16_t *)(result))
-#define DEE_PRIVATE_INT_TRYASSINT_4(self, result)    DeeInt_TryAsInt32(self, (int32_t *)(result))
-#define DEE_PRIVATE_INT_TRYASSINT_8(self, result)    DeeInt_TryAsInt64(self, (int64_t *)(result))
-#define DEE_PRIVATE_INT_TRYASSINT_16(self, result)   DeeInt_TryAsInt128(self, (Dee_int128_t *)(result))
-#define DEE_PRIVATE_INT_TRYASUINT_1(self, result)    DeeInt_TryAsUInt8(self, (uint8_t *)(result))
-#define DEE_PRIVATE_INT_TRYASUINT_2(self, result)    DeeInt_TryAsUInt16(self, (uint16_t *)(result))
-#define DEE_PRIVATE_INT_TRYASUINT_4(self, result)    DeeInt_TryAsUInt32(self, (uint32_t *)(result))
-#define DEE_PRIVATE_INT_TRYASUINT_8(self, result)    DeeInt_TryAsUInt64(self, (uint64_t *)(result))
-#define DEE_PRIVATE_INT_TRYASUINT_16(self, result)   DeeInt_TryAsUInt128(self, (Dee_uint128_t *)(result))
-#define DEE_PRIVATE_INT_TRYASUINTM1_1(self, result)  DeeInt_TryAsUInt8M1(self, (uint8_t *)(result))
-#define DEE_PRIVATE_INT_TRYASUINTM1_2(self, result)  DeeInt_TryAsUInt16M1(self, (uint16_t *)(result))
-#define DEE_PRIVATE_INT_TRYASUINTM1_4(self, result)  DeeInt_TryAsUInt32M1(self, (uint32_t *)(result))
-#define DEE_PRIVATE_INT_TRYASUINTM1_8(self, result)  DeeInt_TryAsUInt64M1(self, (uint64_t *)(result))
-#define DEE_PRIVATE_INT_TRYASUINTM1_16(self, result) DeeInt_TryAsUInt128M1(self, (Dee_uint128_t *)(result))
-#define DEE_PRIVATE_INT_TRYASSINT(size)              DEE_PRIVATE_INT_TRYASSINT_##size
-#define DEE_PRIVATE_INT_TRYASUINT(size)              DEE_PRIVATE_INT_TRYASUINT_##size
-#define DEE_PRIVATE_INT_TRYASUINTM1(size)            DEE_PRIVATE_INT_TRYASUINTM1_##size
-#define DeeInt_TryAsIntN(size, self, result)         DEE_PRIVATE_INT_TRYASSINT(size)(self, result)
-#define DeeInt_TryAsUIntN(size, self, result)        DEE_PRIVATE_INT_TRYASUINT(size)(self, result)
-#define DeeInt_TryAsUIntNM1(size, self, result)      DEE_PRIVATE_INT_TRYASUINTM1(size)(self, result)
+#define _Dee_PRIVATE_INT_TRYASSINT_1(self, result)    DeeInt_TryAsInt8(self, (int8_t *)(result))
+#define _Dee_PRIVATE_INT_TRYASSINT_2(self, result)    DeeInt_TryAsInt16(self, (int16_t *)(result))
+#define _Dee_PRIVATE_INT_TRYASSINT_4(self, result)    DeeInt_TryAsInt32(self, (int32_t *)(result))
+#define _Dee_PRIVATE_INT_TRYASSINT_8(self, result)    DeeInt_TryAsInt64(self, (int64_t *)(result))
+#define _Dee_PRIVATE_INT_TRYASSINT_16(self, result)   DeeInt_TryAsInt128(self, (Dee_int128_t *)(result))
+#define _Dee_PRIVATE_INT_TRYASUINT_1(self, result)    DeeInt_TryAsUInt8(self, (uint8_t *)(result))
+#define _Dee_PRIVATE_INT_TRYASUINT_2(self, result)    DeeInt_TryAsUInt16(self, (uint16_t *)(result))
+#define _Dee_PRIVATE_INT_TRYASUINT_4(self, result)    DeeInt_TryAsUInt32(self, (uint32_t *)(result))
+#define _Dee_PRIVATE_INT_TRYASUINT_8(self, result)    DeeInt_TryAsUInt64(self, (uint64_t *)(result))
+#define _Dee_PRIVATE_INT_TRYASUINT_16(self, result)   DeeInt_TryAsUInt128(self, (Dee_uint128_t *)(result))
+#define _Dee_PRIVATE_INT_TRYASUINTM1_1(self, result)  DeeInt_TryAsUInt8M1(self, (uint8_t *)(result))
+#define _Dee_PRIVATE_INT_TRYASUINTM1_2(self, result)  DeeInt_TryAsUInt16M1(self, (uint16_t *)(result))
+#define _Dee_PRIVATE_INT_TRYASUINTM1_4(self, result)  DeeInt_TryAsUInt32M1(self, (uint32_t *)(result))
+#define _Dee_PRIVATE_INT_TRYASUINTM1_8(self, result)  DeeInt_TryAsUInt64M1(self, (uint64_t *)(result))
+#define _Dee_PRIVATE_INT_TRYASUINTM1_16(self, result) DeeInt_TryAsUInt128M1(self, (Dee_uint128_t *)(result))
+#define _Dee_PRIVATE_INT_TRYASSINT(size)              _Dee_PRIVATE_INT_TRYASSINT_##size
+#define _Dee_PRIVATE_INT_TRYASUINT(size)              _Dee_PRIVATE_INT_TRYASUINT_##size
+#define _Dee_PRIVATE_INT_TRYASUINTM1(size)            _Dee_PRIVATE_INT_TRYASUINTM1_##size
+#define DeeInt_TryAsIntN(size, self, result)          _Dee_PRIVATE_INT_TRYASSINT(size)(self, result)
+#define DeeInt_TryAsUIntN(size, self, result)         _Dee_PRIVATE_INT_TRYASUINT(size)(self, result)
+#define DeeInt_TryAsUIntNM1(size, self, result)       _Dee_PRIVATE_INT_TRYASUINTM1(size)(self, result)
 
-#define DEE_PRIVATE_INT_ASSINT_1(self, result)    DeeInt_AsInt8(self, (int8_t *)(result))
-#define DEE_PRIVATE_INT_ASSINT_2(self, result)    DeeInt_AsInt16(self, (int16_t *)(result))
-#define DEE_PRIVATE_INT_ASSINT_4(self, result)    DeeInt_AsInt32(self, (int32_t *)(result))
-#define DEE_PRIVATE_INT_ASSINT_8(self, result)    DeeInt_AsInt64(self, (int64_t *)(result))
-#define DEE_PRIVATE_INT_ASSINT_16(self, result)   DeeInt_AsInt128(self, (Dee_int128_t *)(result))
-#define DEE_PRIVATE_INT_ASUINT_1(self, result)    DeeInt_AsUInt8(self, (uint8_t *)(result))
-#define DEE_PRIVATE_INT_ASUINT_2(self, result)    DeeInt_AsUInt16(self, (uint16_t *)(result))
-#define DEE_PRIVATE_INT_ASUINT_4(self, result)    DeeInt_AsUInt32(self, (uint32_t *)(result))
-#define DEE_PRIVATE_INT_ASUINT_8(self, result)    DeeInt_AsUInt64(self, (uint64_t *)(result))
-#define DEE_PRIVATE_INT_ASUINT_16(self, result)   DeeInt_AsUInt128(self, (Dee_uint128_t *)(result))
-#define DEE_PRIVATE_INT_ASUINTM1_1(self, result)  DeeInt_AsUInt8M1(self, (uint8_t *)(result))
-#define DEE_PRIVATE_INT_ASUINTM1_2(self, result)  DeeInt_AsUInt16M1(self, (uint16_t *)(result))
-#define DEE_PRIVATE_INT_ASUINTM1_4(self, result)  DeeInt_AsUInt32M1(self, (uint32_t *)(result))
-#define DEE_PRIVATE_INT_ASUINTM1_8(self, result)  DeeInt_AsUInt64M1(self, (uint64_t *)(result))
-#define DEE_PRIVATE_INT_ASUINTM1_16(self, result) DeeInt_AsUInt128M1(self, (Dee_uint128_t *)(result))
-#define DEE_PRIVATE_INT_ASSINT(size)              DEE_PRIVATE_INT_ASSINT_##size
-#define DEE_PRIVATE_INT_ASUINT(size)              DEE_PRIVATE_INT_ASUINT_##size
-#define DEE_PRIVATE_INT_ASUINTM1(size)            DEE_PRIVATE_INT_ASUINTM1_##size
-#define DeeInt_AsIntN(size, self, result)         DEE_PRIVATE_INT_ASSINT(size)(self, result)
-#define DeeInt_AsUIntN(size, self, result)        DEE_PRIVATE_INT_ASUINT(size)(self, result)
-#define DeeInt_AsUIntNM1(size, self, result)      DEE_PRIVATE_INT_ASUINTM1(size)(self, result)
+#define _Dee_PRIVATE_INT_ASSINT_1(self, result)    DeeInt_AsInt8(self, (int8_t *)(result))
+#define _Dee_PRIVATE_INT_ASSINT_2(self, result)    DeeInt_AsInt16(self, (int16_t *)(result))
+#define _Dee_PRIVATE_INT_ASSINT_4(self, result)    DeeInt_AsInt32(self, (int32_t *)(result))
+#define _Dee_PRIVATE_INT_ASSINT_8(self, result)    DeeInt_AsInt64(self, (int64_t *)(result))
+#define _Dee_PRIVATE_INT_ASSINT_16(self, result)   DeeInt_AsInt128(self, (Dee_int128_t *)(result))
+#define _Dee_PRIVATE_INT_ASUINT_1(self, result)    DeeInt_AsUInt8(self, (uint8_t *)(result))
+#define _Dee_PRIVATE_INT_ASUINT_2(self, result)    DeeInt_AsUInt16(self, (uint16_t *)(result))
+#define _Dee_PRIVATE_INT_ASUINT_4(self, result)    DeeInt_AsUInt32(self, (uint32_t *)(result))
+#define _Dee_PRIVATE_INT_ASUINT_8(self, result)    DeeInt_AsUInt64(self, (uint64_t *)(result))
+#define _Dee_PRIVATE_INT_ASUINT_16(self, result)   DeeInt_AsUInt128(self, (Dee_uint128_t *)(result))
+#define _Dee_PRIVATE_INT_ASUINTM1_1(self, result)  DeeInt_AsUInt8M1(self, (uint8_t *)(result))
+#define _Dee_PRIVATE_INT_ASUINTM1_2(self, result)  DeeInt_AsUInt16M1(self, (uint16_t *)(result))
+#define _Dee_PRIVATE_INT_ASUINTM1_4(self, result)  DeeInt_AsUInt32M1(self, (uint32_t *)(result))
+#define _Dee_PRIVATE_INT_ASUINTM1_8(self, result)  DeeInt_AsUInt64M1(self, (uint64_t *)(result))
+#define _Dee_PRIVATE_INT_ASUINTM1_16(self, result) DeeInt_AsUInt128M1(self, (Dee_uint128_t *)(result))
+#define _Dee_PRIVATE_INT_ASSINT(size)              _Dee_PRIVATE_INT_ASSINT_##size
+#define _Dee_PRIVATE_INT_ASUINT(size)              _Dee_PRIVATE_INT_ASUINT_##size
+#define _Dee_PRIVATE_INT_ASUINTM1(size)            _Dee_PRIVATE_INT_ASUINTM1_##size
+#define DeeInt_AsIntN(size, self, result)          _Dee_PRIVATE_INT_ASSINT(size)(self, result)
+#define DeeInt_AsUIntN(size, self, result)         _Dee_PRIVATE_INT_ASUINT(size)(self, result)
+#define DeeInt_AsUIntNM1(size, self, result)       _Dee_PRIVATE_INT_ASUINTM1(size)(self, result)
 
 #ifdef __CHAR_UNSIGNED__
 #define DeeInt_AsChar(self, result)      DeeInt_AsUIntN(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(char *, result))
@@ -838,26 +838,26 @@ DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atou64)(/*utf-8*/ char const *__r
 #endif /* !__INTELLISENSE__ */
 
 #ifdef __NO_builtin_choose_expr
-#define DEE_PRIVATE_ATOI_FLAGS(T, flags) \
+#define _Dee_PRIVATE_ATOI_FLAGS(T, flags) \
 	(((T)-1) < (T)0 ? (flags) | DEEATOI_STRING_FSIGNED : (flags))
-#define Dee_TAtoi(T, str, len, radix_and_flags, value)                                                       \
-	(sizeof(T) <= 1 ? Dee_Atoi8(str, len, DEE_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int8_t *)(value)) :   \
-	 sizeof(T) <= 2 ? Dee_Atoi16(str, len, DEE_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int16_t *)(value)) : \
-	 sizeof(T) <= 4 ? Dee_Atoi32(str, len, DEE_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int32_t *)(value)) : \
-	                  Dee_Atoi64(str, len, DEE_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int64_t *)(value)))
+#define Dee_TAtoi(T, str, len, radix_and_flags, value)                                                        \
+	(sizeof(T) <= 1 ? Dee_Atoi8(str, len, _Dee_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int8_t *)(value)) :   \
+	 sizeof(T) <= 2 ? Dee_Atoi16(str, len, _Dee_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int16_t *)(value)) : \
+	 sizeof(T) <= 4 ? Dee_Atoi32(str, len, _Dee_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int32_t *)(value)) : \
+	                  Dee_Atoi64(str, len, _Dee_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int64_t *)(value)))
 #define Dee_TAtoiu(str, len, radix_and_flags, value)                                \
 	(sizeof(T) <= 1 ? Dee_Atoi8(str, len, (radix_and_flags), (int8_t *)(value)) :   \
 	 sizeof(T) <= 2 ? Dee_Atoi16(str, len, (radix_and_flags), (int16_t *)(value)) : \
 	 sizeof(T) <= 4 ? Dee_Atoi32(str, len, (radix_and_flags), (int32_t *)(value)) : \
 	                  Dee_Atoi64(str, len, (radix_and_flags), (int64_t *)(value)))
 #else /* __NO_builtin_choose_expr */
-#define DEE_PRIVATE_ATOI_FLAGS(T, flags) \
+#define _Dee_PRIVATE_ATOI_FLAGS(T, flags) \
 	__builtin_choose_expr(((T)-1) < (T)0, (flags) | DEEATOI_STRING_FSIGNED, (flags))
-#define Dee_TAtoi(T, str, len, radix_and_flags, value)                                                                           \
-	__builtin_choose_expr(sizeof(T) <= 1, Dee_Atoi8(str, len, DEE_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int8_t *)(value)),    \
-	__builtin_choose_expr(sizeof(T) <= 2, Dee_Atoi16(str, len, DEE_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int16_t *)(value)),  \
-	__builtin_choose_expr(sizeof(T) <= 4, Dee_Atoi32(str, len, DEE_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int32_t *)(value)),  \
-	                                      Dee_Atoi64(str, len, DEE_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int64_t *)(value)))))
+#define Dee_TAtoi(T, str, len, radix_and_flags, value)                                                                            \
+	__builtin_choose_expr(sizeof(T) <= 1, Dee_Atoi8(str, len, _Dee_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int8_t *)(value)),    \
+	__builtin_choose_expr(sizeof(T) <= 2, Dee_Atoi16(str, len, _Dee_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int16_t *)(value)),  \
+	__builtin_choose_expr(sizeof(T) <= 4, Dee_Atoi32(str, len, _Dee_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int32_t *)(value)),  \
+	                                      Dee_Atoi64(str, len, _Dee_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int64_t *)(value)))))
 #define Dee_TAtoiu(str, len, radix_and_flags, value)                                                           \
 	__builtin_choose_expr(sizeof(*(value)) <= 1, Dee_Atoi8(str, len, (radix_and_flags), (int8_t *)(value)),    \
 	__builtin_choose_expr(sizeof(*(value)) <= 2, Dee_Atoi16(str, len, (radix_and_flags), (int16_t *)(value)),  \
@@ -895,18 +895,18 @@ DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
 	DeeInt_Print(self, DEEINT_PRINT_DEC, 0, printer, arg)
 
 
-#define DEE_PRIVATE_NEWINT_1      DeeInt_NewInt8
-#define DEE_PRIVATE_NEWINT_2      DeeInt_NewInt16
-#define DEE_PRIVATE_NEWINT_4      DeeInt_NewInt32
-#define DEE_PRIVATE_NEWINT_8      DeeInt_NewInt64
-#define DEE_PRIVATE_NEWINT_16     DeeInt_NewInt128
-#define DEE_PRIVATE_NEWUINT_1     DeeInt_NewUInt8
-#define DEE_PRIVATE_NEWUINT_2     DeeInt_NewUInt16
-#define DEE_PRIVATE_NEWUINT_4     DeeInt_NewUInt32
-#define DEE_PRIVATE_NEWUINT_8     DeeInt_NewUInt64
-#define DEE_PRIVATE_NEWUINT_16    DeeInt_NewUInt128
-#define DEE_PRIVATE_NEWINT(size)  DEE_PRIVATE_NEWINT_##size
-#define DEE_PRIVATE_NEWUINT(size) DEE_PRIVATE_NEWUINT_##size
+#define _Dee_PRIVATE_NEWINT_1      DeeInt_NewInt8
+#define _Dee_PRIVATE_NEWINT_2      DeeInt_NewInt16
+#define _Dee_PRIVATE_NEWINT_4      DeeInt_NewInt32
+#define _Dee_PRIVATE_NEWINT_8      DeeInt_NewInt64
+#define _Dee_PRIVATE_NEWINT_16     DeeInt_NewInt128
+#define _Dee_PRIVATE_NEWUINT_1     DeeInt_NewUInt8
+#define _Dee_PRIVATE_NEWUINT_2     DeeInt_NewUInt16
+#define _Dee_PRIVATE_NEWUINT_4     DeeInt_NewUInt32
+#define _Dee_PRIVATE_NEWUINT_8     DeeInt_NewUInt64
+#define _Dee_PRIVATE_NEWUINT_16    DeeInt_NewUInt128
+#define _Dee_PRIVATE_NEWINT(size)  _Dee_PRIVATE_NEWINT_##size
+#define _Dee_PRIVATE_NEWUINT(size) _Dee_PRIVATE_NEWUINT_##size
 
 /* Create a new integer object by looking at sizeof(v). */
 #ifdef __NO_builtin_choose_expr
@@ -936,8 +936,8 @@ DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
 
 
 /* Create a new integer object with an input integral value `val' of `size' bytes. */
-#define _DeeInt_NewS(size, val) DEE_PRIVATE_NEWINT(size)(val)
-#define _DeeInt_NewU(size, val) DEE_PRIVATE_NEWUINT(size)(val)
+#define _DeeInt_NewS(size, val) _Dee_PRIVATE_NEWINT(size)(val)
+#define _DeeInt_NewU(size, val) _Dee_PRIVATE_NEWUINT(size)(val)
 
 #ifndef __CHAR_UNSIGNED__
 #define DeeInt_NewChar(val)    _DeeInt_NewS(__SIZEOF_CHAR__, val)

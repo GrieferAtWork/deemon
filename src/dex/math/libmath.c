@@ -27,7 +27,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>
+#include <deemon/arg.h>             /* DeeArg_Unpack1X, DeeArg_Unpack2X, UNPdN */
 #include <deemon/bool.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>

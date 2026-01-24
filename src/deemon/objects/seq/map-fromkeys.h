@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>  /* DeeObject_MALLOC */
 #include <deemon/object.h>
 
 #include "../generic-proxy.h"

@@ -22,8 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
-#include <deemon/arg.h>
+#include <deemon/alloc.h>              /* DeeMem_ClearCaches, Dee_*alloc*, Dee_BadAlloc, Dee_Free */
+#include <deemon/arg.h>                /* DeeArg_UnpackStructKw, UNPu16, UNPuN */
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/code.h>

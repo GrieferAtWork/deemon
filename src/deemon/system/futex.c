@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* DeeObject_* */
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/thread.h>

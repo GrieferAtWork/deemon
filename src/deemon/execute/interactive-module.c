@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>              /* DeeObject_Free, DeeObject_FreeTracker, Dee_*alloc*, Dee_CollectMemoryoc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/compiler.h>

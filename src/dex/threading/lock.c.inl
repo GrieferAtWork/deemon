@@ -31,8 +31,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
-#include <deemon/arg.h>
+#include <deemon/alloc.h>            /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/arg.h>              /* DEFINE_KWLIST, DeeArg_Unpack*, UNPu64, UNPuPTR */
 #include <deemon/bool.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>

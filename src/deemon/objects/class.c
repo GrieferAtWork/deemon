@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free, Dee_Freea, _Dee_MallococBufsize */
 #include <deemon/class.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>

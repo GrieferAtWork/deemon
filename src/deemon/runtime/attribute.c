@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* Dee_Freea, Dee_Mallocac */
 #include <deemon/attribute.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* bzero(), ... */

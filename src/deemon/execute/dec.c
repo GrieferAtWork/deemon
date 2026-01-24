@@ -27,7 +27,7 @@
 
 #ifndef CONFIG_NO_DEC
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* DeeObject_Callocc, DeeObject_Free, Dee_*alloc*, Dee_BadAlloc, Dee_Free, _Dee_MallococBufsize */
 #include <deemon/dex.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>

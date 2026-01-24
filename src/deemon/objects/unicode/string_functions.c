@@ -22,8 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
-#include <deemon/arg.h>
+#include <deemon/alloc.h>           /* DeeObject_Free, DeeObject_Mallocc */
+#include <deemon/arg.h>             /* DeeArg_Unpack*, UNPuSIZ, UNPxSIZ */
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/error-rt.h>

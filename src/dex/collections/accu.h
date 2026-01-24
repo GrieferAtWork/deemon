@@ -25,7 +25,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/accu.h>
+#include <deemon/accu.h>        /* Dee_accu */
 #include <deemon/object.h>
 #include <deemon/util/nrlock.h> /* Dee_nrshared_lock_t */
 

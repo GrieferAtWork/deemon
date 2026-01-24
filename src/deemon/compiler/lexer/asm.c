@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* Dee_CollectMemoryc, Dee_CollectMemoryoc, Dee_Free, Dee_Try*alloc* */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>

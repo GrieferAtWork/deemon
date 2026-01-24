@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>
+#include <deemon/arg.h>            /* DeeArg_Unpack*, UNPuSIZ, UNPxSIZ */
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>

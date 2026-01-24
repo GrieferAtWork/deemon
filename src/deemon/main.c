@@ -27,7 +27,7 @@
 #endif /* CONFIG_HOST_WINDOWS */
 /**/
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>              /* Dee_CollectMemoryoc, Dee_Free, Dee_Freea, Dee_Mallocac, Dee_TryMallocc */
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/compiler.h>

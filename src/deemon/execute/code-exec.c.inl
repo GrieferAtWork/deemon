@@ -23,7 +23,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* Dee_Mallocc, Dee_Reallocc */
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>

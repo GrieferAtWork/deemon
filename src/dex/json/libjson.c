@@ -27,8 +27,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
-#include <deemon/arg.h>
+#include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack1, DeeArg_UnpackStructKw */
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/class.h>

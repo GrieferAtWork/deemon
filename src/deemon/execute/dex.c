@@ -28,7 +28,7 @@
 #include <deemon/object.h>
 
 #ifndef CONFIG_NO_DEX
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>              /* Dee_*alloc*, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>
 #include <deemon/format.h>

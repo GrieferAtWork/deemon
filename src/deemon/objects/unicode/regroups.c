@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>              /* _Dee_MallococBufsize */
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>

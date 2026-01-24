@@ -827,7 +827,7 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 /* clang-tidy causes problems with extern-inline, so just disable it for now... */
 #undef __NO_EXTERN_INLINE
 #define __NO_EXTERN_INLINE
-#define typeof __typeof__
+#define typeof __typeof__ /*!export-*/
 #define __typeof __typeof__
 #define __auto_type auto
 #ifdef __cplusplus
@@ -846,25 +846,32 @@ extern "C" {
 #endif /* !__SIZE_TYPE__ */
 
 /* Builtin heap functions for static analysis (use these for static detection of leaks and bad usage) */
-#define __builtin_malloc(num_bytes)                        malloc(num_bytes)
-#define __builtin_pvalloc(num_bytes)                       malloc(num_bytes)
-#define __builtin_valloc(num_bytes)                        malloc(num_bytes)
-#define __builtin_memalign(alignment, num_bytes)           ((void)(alignment), malloc(num_bytes))
-#define __builtin_free(ptr)                                free(ptr)
-#define __builtin_calloc(item_size, item_count)            calloc(item_size, item_count)
-#define __builtin_realloc(ptr, num_bytes)                  realloc(ptr, num_bytes)
-#define __builtin_recalloc(ptr, num_bytes)                 realloc(ptr, num_bytes)
-#define __builtin_recallocv(ptr, item_size, item_count)    realloc(ptr, (item_size) * (item_count))
-#define __builtin_malloc_usable_size(ptr)                  malloc_usable_size(ptr)
-#define __builtin_realloc_in_place(ptr, num_bytes)         realloc_in_place(ptr, num_bytes)
-#define __builtin_memdup(ptr, num_bytes)                   __builtin_memcpy(malloc(num_bytes), ptr, num_bytes)
-#define __builtin_reallocarray(ptr, item_size, item_count) realloc(ptr, (item_size) * (item_count))
-#define __malloc_defined
-#define __free_defined
-#define __calloc_defined
-#define __realloc_defined
-#define __malloc_usable_size_defined
-#define __realloc_in_place_defined
+#define __builtin_malloc(num_bytes)                        malloc(num_bytes)                                   /*!export-*/
+#define __builtin_pvalloc(num_bytes)                       malloc(num_bytes)                                   /*!export-*/
+#define __builtin_valloc(num_bytes)                        malloc(num_bytes)                                   /*!export-*/
+#define __builtin_memalign(alignment, num_bytes)           ((void)(alignment), malloc(num_bytes))              /*!export-*/
+#define __builtin_free(ptr)                                free(ptr)                                           /*!export-*/
+#define __builtin_calloc(item_size, item_count)            calloc(item_size, item_count)                       /*!export-*/
+#define __builtin_realloc(ptr, num_bytes)                  realloc(ptr, num_bytes)                             /*!export-*/
+#define __builtin_recalloc(ptr, num_bytes)                 realloc(ptr, num_bytes)                             /*!export-*/
+#define __builtin_recallocv(ptr, item_size, item_count)    realloc(ptr, (item_size) * (item_count))            /*!export-*/
+#define __builtin_malloc_usable_size(ptr)                  malloc_usable_size(ptr)                             /*!export-*/
+#define __builtin_realloc_in_place(ptr, num_bytes)         realloc_in_place(ptr, num_bytes)                    /*!export-*/
+#define __builtin_memdup(ptr, num_bytes)                   __builtin_memcpy(malloc(num_bytes), ptr, num_bytes) /*!export-*/
+#define __builtin_reallocarray(ptr, item_size, item_count) realloc(ptr, (item_size) * (item_count))            /*!export-*/
+#define __malloc_defined                                                                                       /*!export-*/
+#define __free_defined                                                                                         /*!export-*/
+#define __calloc_defined                                                                                       /*!export-*/
+#define __realloc_defined                                                                                      /*!export-*/
+#define __malloc_usable_size_defined                                                                           /*!export-*/
+#define __realloc_in_place_defined                                                                             /*!export-*/
+
+#define free               free               /*!export-*/
+#define malloc             malloc             /*!export-*/
+#define calloc             calloc             /*!export-*/
+#define realloc            realloc            /*!export-*/
+#define malloc_usable_size malloc_usable_size /*!export-*/
+#define realloc_in_place   realloc_in_place   /*!export-*/
 extern void free(void *);
 extern void *malloc(__SIZE_TYPE__);
 extern void *calloc(__SIZE_TYPE__, __SIZE_TYPE__);
@@ -911,7 +918,7 @@ extern void *realloc_in_place(void *, __SIZE_TYPE__);
 /* Mark the wchar_t type as already being defined when pre-defined by the compiler */
 #ifdef __cplusplus
 #define __native_wchar_t_defined
-#define __wchar_t_defined
+#define __wchar_t_defined /*!export-*/
 #endif /* __cplusplus */
 
 #ifndef __builtin_va_list

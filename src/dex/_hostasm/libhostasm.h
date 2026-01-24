@@ -29,6 +29,7 @@
 
 #include <deemon/api.h>
 
+#include <deemon/alloc.h>           /* Dee_Free, Dee_Malloc, _Dee_MallococBufsize */
 #include <deemon/code.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>       /* Dee_cmethod_t */

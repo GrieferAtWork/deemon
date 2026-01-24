@@ -27,7 +27,6 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
@@ -63,8 +62,8 @@ DECL_BEGIN
 #define EDO(err, x) if unlikely(x) goto err
 
 
-#define DeeInt_NEWSFUNC(n) DEE_PRIVATE_NEWINT(n)
-#define DeeInt_NEWUFUNC(n) DEE_PRIVATE_NEWUINT(n)
+#define DeeInt_NEWSFUNC(n) _Dee_PRIVATE_NEWINT(n)
+#define DeeInt_NEWUFUNC(n) _Dee_PRIVATE_NEWUINT(n)
 
 /* Try to figure out the guarantied runtime object type of `vdirect()' */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL

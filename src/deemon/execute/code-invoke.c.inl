@@ -26,6 +26,7 @@
 
 #include <deemon/api.h>
 
+#include <deemon/alloc.h>       /* DeeObject_Malloc, Dee_Alloca, Dee_Free, Dee_Malloc */
 #include <deemon/kwds.h>
 #include <deemon/util/atomic.h> /* atomic_inc, atomic_read */
 

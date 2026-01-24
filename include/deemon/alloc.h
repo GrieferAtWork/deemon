@@ -17,6 +17,38 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export DeeDbgObject_**/
+/*!export DeeDbgSlab_**/
+/*!export DeeDbg_**/
+/*!export DeeMem_**/
+/*!export DeeSlab**/
+/*!export DeeSlab_**/
+/*!export Dee_Alloca**/
+/*!export Dee_*alloc**/
+/*!export Dee_Try*alloc**/
+/*!export Dee_Free**/
+/*!export Dee_XFreea*/
+/*!export DeeObject_*ALLOC**/
+/*!export DeeObject_TRY*ALLOC**/
+/*!export DeeObject_*alloc**/
+/*!export DeeObject_Try*alloc**/
+/*!export DeeObject_F*alloc**/
+/*!export DeeObject_FTry*alloc**/
+/*!export DeeObject_FFree*/
+/*!export DeeObject_Free*/
+/*!export DeeObject_FREE*/
+/*!export DeeObject_Slab**/
+/*!export DeeObject_**/
+/*!export Dee_BadAlloc*/
+/*!export Dee_CollectMemory**/
+/*!export Dee_MALLOCA_**/
+/*!export Dee_Memalign*/
+/*!export Dee_TryMemalign*/
+/*!export Dee_UntrackAlloc*/
+/*!export Dee_ReleaseSystemMemory*/
+/*!export Dee_SLAB_**/
+/*!export Dee_TYPE_CONSTRUCTOR_INIT_**/
+/*!export _Dee_Malloc*Bufsize**/
 #ifndef GUARD_DEEMON_ALLOC_H
 #define GUARD_DEEMON_ALLOC_H 1
 
@@ -607,10 +639,10 @@ DFUNDEF NONNULL((1)) void
  */
 
 
-#define DEE_PRIVATE_SLAB_INDEXOF_CALLBACK(index, size) <= size *__SIZEOF_POINTER__ ? index##u:
-#define DEE_PRIVATE_SLAB_HASSIZE_CALLBACK(index, size) size
-#define DeeSlab_IndexOf(size) (DeeSlab_ENUMERATE((size) DEE_PRIVATE_SLAB_INDEXOF_CALLBACK) 0xffu)
-#define DeeSlab_HasSize(size) (0 DeeSlab_ENUMERATE(|| (size) == DEE_PRIVATE_SLAB_HASSIZE_CALLBACK))
+#define _Dee_PRIVATE_SLAB_INDEXOF_CALLBACK(index, size) <= size *__SIZEOF_POINTER__ ? index##u:
+#define _Dee_PRIVATE_SLAB_HASSIZE_CALLBACK(index, size) size
+#define DeeSlab_IndexOf(size) (DeeSlab_ENUMERATE((size) _Dee_PRIVATE_SLAB_INDEXOF_CALLBACK) 0xffu)
+#define DeeSlab_HasSize(size) (0 DeeSlab_ENUMERATE(|| (size) == _Dee_PRIVATE_SLAB_HASSIZE_CALLBACK))
 
 /* Define slab-enabled object memory allocators, and override regular
  * slab allocator function to either include, or exclude debug information. */
@@ -880,7 +912,7 @@ for (local n: usedSizes.sorted()) {
 
 
 #ifdef __CC__
-#define DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS(index, size)                                                        \
+#define _Dee_PRIVATE_DEFINE_SLAB_FUNCTIONS(index, size)                                                        \
 	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeSlab_Malloc##size)(void);                                     \
 	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeSlab_Calloc##size)(void);                                     \
 	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeSlab_TryMalloc##size)(void);                                  \
@@ -901,8 +933,8 @@ for (local n: usedSizes.sorted()) {
 	DFUNDEF void (DCALL DeeDbgSlab_Free##size)(void *ptr, char const *file, int line);                        \
 	DFUNDEF void (DCALL DeeGCObject_SlabFree##size)(void *__restrict ptr);                                    \
 	DFUNDEF void (DCALL DeeDbgGCObject_SlabFree##size)(void *__restrict ptr, char const *file, int line);
-DeeSlab_ENUMERATE(DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS)
-#undef DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS
+DeeSlab_ENUMERATE(_Dee_PRIVATE_DEFINE_SLAB_FUNCTIONS)
+#undef _Dee_PRIVATE_DEFINE_SLAB_FUNCTIONS
 
 
 /* Allocate fixed-size, general-purpose slab memory.
@@ -946,12 +978,12 @@ DFUNDEF void (DCALL DeeDbgSlab_Free)(void *ptr, char const *file, int line);
 #define DeeSlab_Free      DeeSlab_Free4
 #define DeeDbgSlab_Free   DeeDbgSlab_Free4
 #else /* Dee_SLAB_MINSIZE == 4 */
-#define DEE_PRIVATE_DeeSlab_Free2(x) DeeSlab_Free##x
-#define DEE_PRIVATE_DeeSlab_Free(x) DEE_PRIVATE_DeeSlab_Free2(x)
-#define DEE_PRIVATE_DeeDbgSlab_Free2(x) DeeDbgSlab_Free##x
-#define DEE_PRIVATE_DeeDbgSlab_Free(x) DEE_PRIVATE_DeeDbgSlab_Free2(x)
-#define DeeSlab_Free      DEE_PRIVATE_DeeSlab_Free(Dee_SLAB_MINSIZE)
-#define DeeDbgSlab_Free   DEE_PRIVATE_DeeDbgSlab_Free(Dee_SLAB_MINSIZE)
+#define _Dee_PRIVATE_DeeSlab_Free2(x) DeeSlab_Free##x
+#define _Dee_PRIVATE_DeeSlab_Free(x) _Dee_PRIVATE_DeeSlab_Free2(x)
+#define _Dee_PRIVATE_DeeDbgSlab_Free2(x) DeeDbgSlab_Free##x
+#define _Dee_PRIVATE_DeeDbgSlab_Free(x) _Dee_PRIVATE_DeeDbgSlab_Free2(x)
+#define DeeSlab_Free      _Dee_PRIVATE_DeeSlab_Free(Dee_SLAB_MINSIZE)
+#define DeeDbgSlab_Free   _Dee_PRIVATE_DeeDbgSlab_Free(Dee_SLAB_MINSIZE)
 #endif /* Dee_SLAB_MINSIZE != 4 */
 
 #else /* !CONFIG_NO_OBJECT_SLABS */
@@ -1140,16 +1172,38 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 #define DeeObject_TRYREALLOCC_SAFE(p, T, m, c) ((T *)DeeObject_TryRealloccSafe(Dee_REQUIRES_TYPE(T *, p), __builtin_offsetof(T, m), c, sizeof(*(((T *)0)->m))))
 
 
+/* Same as `Dee_TYPE_CONSTRUCTOR_INIT_FIXED()', but don't link agains
+ * dedicated allocator functions when doing so would require the creation
+ * of relocations that might cause loading times to become larger. */
+#undef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
+#if (!defined(CONFIG_BUILDING_DEEMON) || defined(__PIE__) ||     \
+     defined(__PIC__) || defined(__pie__) || defined(__pic__) || \
+     defined(CONFIG_NO_OBJECT_SLABS))
+#define CONFIG_FIXED_ALLOCATOR_S_IS_AUTO /*!export*/
+#define DeeObject_MALLOC_S(T)    ((T *)DeeObject_Malloc(sizeof(T)))
+#define DeeObject_CALLOC_S(T)    ((T *)DeeObject_Calloc(sizeof(T)))
+#define DeeObject_TRYMALLOC_S(T) ((T *)DeeObject_TryMalloc(sizeof(T)))
+#define DeeObject_TRYCALLOC_S(T) ((T *)DeeObject_TryCalloc(sizeof(T)))
+#define DeeObject_FREE_S               DeeObject_Free
+#else /* !CONFIG_BUILDING_DEEMON || __pic__ */
+#define DeeObject_FMALLOC_S    DeeObject_MALLOC
+#define DeeObject_FCALLOC_S    DeeObject_CALLOC
+#define DeeObject_TRYFMALLOC_S DeeObject_TRYMALLOC
+#define DeeObject_TRYFCALLOC_S DeeObject_TRYCALLOC
+#define DeeObject_FREE_S       DeeObject_FREE
+#endif /* CONFIG_BUILDING_DEEMON && !__pic__ */
+
+
 #ifdef GUARD_DEEMON_OBJECT_H
 /* Specifies an allocator that may provides optimizations
  * for types with a FIXED size (which most objects have). */
 #ifdef CONFIG_NO_OBJECT_SLABS
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC_R Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R /*!export(include("object.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC_R Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R /*!export(include("object.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED   /*!export(include("object.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED   /*!export(include("object.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO        /*!export(include("object.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO        /*!export(include("object.h"))*/
 #else /* CONFIG_NO_OBJECT_SLABS */
 #define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R(min_tp_instance_size, max_tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
 	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize,                                                   \
@@ -1173,36 +1227,14 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
  * dedicated allocator functions when doing so would require the creation
  * of relocations that might cause loading times to become larger. */
 #ifdef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO /*!export(include("object.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO /*!export(include("object.h"))*/
 #else /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S    Dee_TYPE_CONSTRUCTOR_INIT_FIXED
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S    Dee_TYPE_CONSTRUCTOR_INIT_FIXED      /*!export(include("object.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC   /*!export(include("object.h"))*/
 #endif /* !CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
 
 #endif /* GUARD_DEEMON_OBJECT_H */
-
-/* Same as `Dee_TYPE_CONSTRUCTOR_INIT_FIXED()', but don't link agains
- * dedicated allocator functions when doing so would require the creation
- * of relocations that might cause loading times to become larger. */
-#undef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
-#if (!defined(CONFIG_BUILDING_DEEMON) || defined(__PIE__) ||     \
-     defined(__PIC__) || defined(__pie__) || defined(__pic__) || \
-     defined(CONFIG_NO_OBJECT_SLABS))
-#define CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
-#define DeeObject_MALLOC_S(T)    ((T *)DeeObject_Malloc(sizeof(T)))
-#define DeeObject_CALLOC_S(T)    ((T *)DeeObject_Calloc(sizeof(T)))
-#define DeeObject_TRYMALLOC_S(T) ((T *)DeeObject_TryMalloc(sizeof(T)))
-#define DeeObject_TRYCALLOC_S(T) ((T *)DeeObject_TryCalloc(sizeof(T)))
-#define DeeObject_FREE_S               DeeObject_Free
-#else /* !CONFIG_BUILDING_DEEMON || __pic__ */
-#define DeeObject_FMALLOC_S    DeeObject_MALLOC
-#define DeeObject_FCALLOC_S    DeeObject_CALLOC
-#define DeeObject_TRYFMALLOC_S DeeObject_TRYMALLOC
-#define DeeObject_TRYFCALLOC_S DeeObject_TRYCALLOC
-#define DeeObject_FREE_S       DeeObject_FREE
-#endif /* CONFIG_BUILDING_DEEMON && !__pic__ */
-
 
 /* Define the deemon api's alloca() function (if it can be implemented) */
 #if !defined(Dee_Alloca) && defined(CONFIG_HAVE_alloca)
@@ -1240,11 +1272,11 @@ FORCELOCAL WUNUSED void *DCALL DeeDbg_AllocaCleanup(void *ptr) {
 
 #ifdef __SIZEOF_POINTER__
 /* WARNING: This makes Dee_Malloca() unsuitable for floating point allocations. */
-#define DEE_MALLOCA_ALIGN __SIZEOF_POINTER__
+#define Dee_MALLOCA_ALIGN __SIZEOF_POINTER__
 #else /* __SIZEOF_POINTER__ */
-#define DEE_MALLOCA_ALIGN 8
+#define Dee_MALLOCA_ALIGN 8
 #endif /* !__SIZEOF_POINTER__ */
-#define DEE_MALLOCA_MAX   512
+#define Dee_MALLOCA_MAX   512
 
 #ifndef CONFIG_HAVE_memset
 #define CONFIG_HAVE_memset
@@ -1270,162 +1302,162 @@ DECL_END
 
 
 #ifdef NDEBUG
-#define DEE_MALLOCA_KEY_ALLOCA        0
-#define DEE_MALLOCA_KEY_MALLOC        1
-#define DEE_MALLOCA_SKEW_ALLOCA(p, s) (p)
-#define DEE_MALLOCA_GETKEY(p)         ((__BYTE_TYPE__ *)(p))[-DEE_MALLOCA_ALIGN]
-#define DEE_MALLOCA_MUSTFREE(p)       (DEE_MALLOCA_GETKEY(p) != DEE_MALLOCA_KEY_ALLOCA)
+#define Dee_MALLOCA_KEY_ALLOCA        0
+#define Dee_MALLOCA_KEY_MALLOC        1
+#define Dee_MALLOCA_SKEW_ALLOCA(p, s) (p)
+#define Dee_MALLOCA_GETKEY(p)         ((__BYTE_TYPE__ *)(p))[-Dee_MALLOCA_ALIGN]
+#define Dee_MALLOCA_MUSTFREE(p)       (Dee_MALLOCA_GETKEY(p) != Dee_MALLOCA_KEY_ALLOCA)
 #else /* NDEBUG */
-#define DEE_MALLOCA_KEY_ALLOCA 0x7c
-#define DEE_MALLOCA_KEY_MALLOC 0xb3
-#define DEE_MALLOCA_GETKEY(p)  ((__BYTE_TYPE__ *)(p))[-DEE_MALLOCA_ALIGN]
-#define DEE_MALLOCA_MUSTFREE(p)                                    \
-	(Dee_ASSERT(DEE_MALLOCA_GETKEY(p) == DEE_MALLOCA_KEY_ALLOCA || \
-	            DEE_MALLOCA_GETKEY(p) == DEE_MALLOCA_KEY_MALLOC),  \
-	 DEE_MALLOCA_GETKEY(p) == DEE_MALLOCA_KEY_MALLOC)
-#define DEE_MALLOCA_SKEW_ALLOCA(p, s) memset(p, 0xcd, s)
+#define Dee_MALLOCA_KEY_ALLOCA 0x7c
+#define Dee_MALLOCA_KEY_MALLOC 0xb3
+#define Dee_MALLOCA_GETKEY(p)  ((__BYTE_TYPE__ *)(p))[-Dee_MALLOCA_ALIGN]
+#define Dee_MALLOCA_MUSTFREE(p)                                    \
+	(Dee_ASSERT(Dee_MALLOCA_GETKEY(p) == Dee_MALLOCA_KEY_ALLOCA || \
+	            Dee_MALLOCA_GETKEY(p) == Dee_MALLOCA_KEY_MALLOC),  \
+	 Dee_MALLOCA_GETKEY(p) == Dee_MALLOCA_KEY_MALLOC)
+#define Dee_MALLOCA_SKEW_ALLOCA(p, s) memset(p, 0xcd, s)
 #endif /* !NDEBUG */
 #ifndef __NO_XBLOCK
 #define Dee_MallocaStack(s)                                            \
 	XBLOCK({                                                           \
-		size_t const _s_     = (s) + DEE_MALLOCA_ALIGN;                \
+		size_t const _s_     = (s) + Dee_MALLOCA_ALIGN;                \
 		__BYTE_TYPE__ *_res_ = (__BYTE_TYPE__ *)Dee_Alloca(_s_);       \
-		*_res_               = DEE_MALLOCA_KEY_ALLOCA;                 \
-		_res_ += DEE_MALLOCA_ALIGN;                                    \
-		(void)DEE_MALLOCA_SKEW_ALLOCA(_res_, _s_ - DEE_MALLOCA_ALIGN); \
+		*_res_               = Dee_MALLOCA_KEY_ALLOCA;                 \
+		_res_ += Dee_MALLOCA_ALIGN;                                    \
+		(void)Dee_MALLOCA_SKEW_ALLOCA(_res_, _s_ - Dee_MALLOCA_ALIGN); \
 		XRETURN((void *)_res_);                                        \
 	})
 #define Dee_MallocaHeap(s)                                       \
 	XBLOCK({                                                     \
-		size_t const _s_     = (s) + DEE_MALLOCA_ALIGN;          \
+		size_t const _s_     = (s) + Dee_MALLOCA_ALIGN;          \
 		__BYTE_TYPE__ *_res_ = (__BYTE_TYPE__ *)Dee_Malloc(_s_); \
 		if (_res_)                                               \
-			*_res_ = DEE_MALLOCA_KEY_MALLOC;                     \
-		_res_ += DEE_MALLOCA_ALIGN;                              \
+			*_res_ = Dee_MALLOCA_KEY_MALLOC;                     \
+		_res_ += Dee_MALLOCA_ALIGN;                              \
 		XRETURN((void *)_res_);                                  \
 	})
 #define Dee_TryMallocaHeap(s)                                       \
 	XBLOCK({                                                        \
-		size_t const _s_     = (s) + DEE_MALLOCA_ALIGN;             \
+		size_t const _s_     = (s) + Dee_MALLOCA_ALIGN;             \
 		__BYTE_TYPE__ *_res_ = (__BYTE_TYPE__ *)Dee_TryMalloc(_s_); \
 		if (_res_)                                                  \
-			*_res_ = DEE_MALLOCA_KEY_MALLOC;                        \
-		_res_ += DEE_MALLOCA_ALIGN;                                 \
+			*_res_ = Dee_MALLOCA_KEY_MALLOC;                        \
+		_res_ += Dee_MALLOCA_ALIGN;                                 \
 		XRETURN((void *)_res_);                                     \
 	})
 #define Dee_Malloca(s)                                                     \
 	XBLOCK({                                                               \
-		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;                        \
+		size_t const _s_ = (s) + Dee_MALLOCA_ALIGN;                        \
 		__BYTE_TYPE__ *_res_;                                              \
-		if (_s_ > DEE_MALLOCA_MAX) {                                       \
+		if (_s_ > Dee_MALLOCA_MAX) {                                       \
 			_res_ = (__BYTE_TYPE__ *)Dee_Malloc(_s_);                      \
 			if (_res_) {                                                   \
-				*_res_ = DEE_MALLOCA_KEY_MALLOC;                           \
-				_res_ += DEE_MALLOCA_ALIGN;                                \
+				*_res_ = Dee_MALLOCA_KEY_MALLOC;                           \
+				_res_ += Dee_MALLOCA_ALIGN;                                \
 			}                                                              \
 		} else {                                                           \
 			_res_  = (__BYTE_TYPE__ *)Dee_Alloca(_s_);                     \
-			*_res_ = DEE_MALLOCA_KEY_ALLOCA;                               \
-			_res_ += DEE_MALLOCA_ALIGN;                                    \
-			(void)DEE_MALLOCA_SKEW_ALLOCA(_res_, _s_ - DEE_MALLOCA_ALIGN); \
+			*_res_ = Dee_MALLOCA_KEY_ALLOCA;                               \
+			_res_ += Dee_MALLOCA_ALIGN;                                    \
+			(void)Dee_MALLOCA_SKEW_ALLOCA(_res_, _s_ - Dee_MALLOCA_ALIGN); \
 		}                                                                  \
 		XRETURN((void *)_res_);                                            \
 	})
 #define Dee_TryMalloca(s)                                                  \
 	XBLOCK({                                                               \
-		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;                        \
+		size_t const _s_ = (s) + Dee_MALLOCA_ALIGN;                        \
 		__BYTE_TYPE__ *_res_;                                              \
-		if (_s_ > DEE_MALLOCA_MAX) {                                       \
+		if (_s_ > Dee_MALLOCA_MAX) {                                       \
 			_res_ = (__BYTE_TYPE__ *)Dee_TryMalloc(_s_);                   \
 			if (_res_) {                                                   \
-				*_res_ = DEE_MALLOCA_KEY_MALLOC;                           \
-				_res_ += DEE_MALLOCA_ALIGN;                                \
+				*_res_ = Dee_MALLOCA_KEY_MALLOC;                           \
+				_res_ += Dee_MALLOCA_ALIGN;                                \
 			}                                                              \
 		} else {                                                           \
 			_res_  = (__BYTE_TYPE__ *)Dee_Alloca(_s_);                     \
-			*_res_ = DEE_MALLOCA_KEY_ALLOCA;                               \
-			_res_ += DEE_MALLOCA_ALIGN;                                    \
-			(void)DEE_MALLOCA_SKEW_ALLOCA(_res_, _s_ - DEE_MALLOCA_ALIGN); \
+			*_res_ = Dee_MALLOCA_KEY_ALLOCA;                               \
+			_res_ += Dee_MALLOCA_ALIGN;                                    \
+			(void)Dee_MALLOCA_SKEW_ALLOCA(_res_, _s_ - Dee_MALLOCA_ALIGN); \
 		}                                                                  \
 		XRETURN((void *)_res_);                                            \
 	})
 #define Dee_CallocaStack(s)                                      \
 	XBLOCK({                                                     \
-		size_t const _s_     = (s) + DEE_MALLOCA_ALIGN;          \
+		size_t const _s_     = (s) + Dee_MALLOCA_ALIGN;          \
 		__BYTE_TYPE__ *_res_ = (__BYTE_TYPE__ *)Dee_Alloca(_s_); \
-		*_res_               = DEE_MALLOCA_KEY_ALLOCA;           \
-		_res_ += DEE_MALLOCA_ALIGN;                              \
-		bzero(_res_, _s_ - DEE_MALLOCA_ALIGN);                   \
+		*_res_               = Dee_MALLOCA_KEY_ALLOCA;           \
+		_res_ += Dee_MALLOCA_ALIGN;                              \
+		bzero(_res_, _s_ - Dee_MALLOCA_ALIGN);                   \
 		XRETURN((void *)_res_);                                  \
 	})
 #define Dee_CallocaHeap(s)                                       \
 	XBLOCK({                                                     \
-		size_t const _s_     = (s) + DEE_MALLOCA_ALIGN;          \
+		size_t const _s_     = (s) + Dee_MALLOCA_ALIGN;          \
 		__BYTE_TYPE__ *_res_ = (__BYTE_TYPE__ *)Dee_Calloc(_s_); \
 		if (_res_) {                                             \
-			*_res_ = DEE_MALLOCA_KEY_MALLOC;                     \
-			_res_ += DEE_MALLOCA_ALIGN;                          \
+			*_res_ = Dee_MALLOCA_KEY_MALLOC;                     \
+			_res_ += Dee_MALLOCA_ALIGN;                          \
 		}                                                        \
 		XRETURN((void *)_res_);                                  \
 	})
 #define Dee_TryCallocaHeap(s)                                       \
 	XBLOCK({                                                        \
-		size_t const _s_     = (s) + DEE_MALLOCA_ALIGN;             \
+		size_t const _s_     = (s) + Dee_MALLOCA_ALIGN;             \
 		__BYTE_TYPE__ *_res_ = (__BYTE_TYPE__ *)Dee_TryCalloc(_s_); \
 		if (_res_) {                                                \
-			*_res_ = DEE_MALLOCA_KEY_MALLOC;                        \
-			_res_ += DEE_MALLOCA_ALIGN;                             \
+			*_res_ = Dee_MALLOCA_KEY_MALLOC;                        \
+			_res_ += Dee_MALLOCA_ALIGN;                             \
 		}                                                           \
 		XRETURN((void *)_res_);                                     \
 	})
 #define Dee_Calloca(s)                                 \
 	XBLOCK({                                           \
-		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;    \
+		size_t const _s_ = (s) + Dee_MALLOCA_ALIGN;    \
 		__BYTE_TYPE__ *_res_;                          \
-		if (_s_ > DEE_MALLOCA_MAX) {                   \
+		if (_s_ > Dee_MALLOCA_MAX) {                   \
 			_res_ = (__BYTE_TYPE__ *)Dee_Calloc(_s_);  \
 			if (_res_) {                               \
-				*_res_ = DEE_MALLOCA_KEY_MALLOC;       \
-				_res_ += DEE_MALLOCA_ALIGN;            \
+				*_res_ = Dee_MALLOCA_KEY_MALLOC;       \
+				_res_ += Dee_MALLOCA_ALIGN;            \
 			}                                          \
 		} else {                                       \
 			_res_  = (__BYTE_TYPE__ *)Dee_Alloca(_s_); \
-			*_res_ = DEE_MALLOCA_KEY_ALLOCA;           \
-			_res_ += DEE_MALLOCA_ALIGN;                \
-			bzero(_res_, _s_ - DEE_MALLOCA_ALIGN);     \
+			*_res_ = Dee_MALLOCA_KEY_ALLOCA;           \
+			_res_ += Dee_MALLOCA_ALIGN;                \
+			bzero(_res_, _s_ - Dee_MALLOCA_ALIGN);     \
 		}                                              \
 		XRETURN((void *)_res_);                        \
 	})
 #define Dee_TryCalloca(s)                                \
 	XBLOCK({                                             \
-		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;      \
+		size_t const _s_ = (s) + Dee_MALLOCA_ALIGN;      \
 		__BYTE_TYPE__ *_res_;                            \
-		if (_s_ > DEE_MALLOCA_MAX) {                     \
+		if (_s_ > Dee_MALLOCA_MAX) {                     \
 			_res_ = (__BYTE_TYPE__ *)Dee_TryCalloc(_s_); \
 			if (_res_) {                                 \
-				*_res_ = DEE_MALLOCA_KEY_MALLOC;         \
-				_res_ += DEE_MALLOCA_ALIGN;              \
+				*_res_ = Dee_MALLOCA_KEY_MALLOC;         \
+				_res_ += Dee_MALLOCA_ALIGN;              \
 			}                                            \
 		} else {                                         \
 			_res_  = (__BYTE_TYPE__ *)Dee_Alloca(_s_);   \
-			*_res_ = DEE_MALLOCA_KEY_ALLOCA;             \
-			_res_ += DEE_MALLOCA_ALIGN;                  \
-			bzero(_res_, _s_ - DEE_MALLOCA_ALIGN);       \
+			*_res_ = Dee_MALLOCA_KEY_ALLOCA;             \
+			_res_ += Dee_MALLOCA_ALIGN;                  \
+			bzero(_res_, _s_ - Dee_MALLOCA_ALIGN);       \
 		}                                                \
 		XRETURN((void *)_res_);                          \
 	})
 #define Dee_Freea(p)                                                      \
 	XBLOCK({                                                              \
 		void *const _p_ = (p);                                            \
-		if (DEE_MALLOCA_MUSTFREE(_p_))                                    \
-			Dee_Free((void *)((__BYTE_TYPE__ *)_p_ - DEE_MALLOCA_ALIGN)); \
+		if (Dee_MALLOCA_MUSTFREE(_p_))                                    \
+			Dee_Free((void *)((__BYTE_TYPE__ *)_p_ - Dee_MALLOCA_ALIGN)); \
 		(void)0;                                                          \
 	})
 #define Dee_XFreea(p)                                                     \
 	XBLOCK({                                                              \
 		void *const _p_ = (p);                                            \
-		if (_p_ && DEE_MALLOCA_MUSTFREE(_p_))                             \
-			Dee_Free((void *)((__BYTE_TYPE__ *)_p_ - DEE_MALLOCA_ALIGN)); \
+		if (_p_ && Dee_MALLOCA_MUSTFREE(_p_))                             \
+			Dee_Free((void *)((__BYTE_TYPE__ *)_p_ - Dee_MALLOCA_ALIGN)); \
 		(void)0;                                                          \
 	})
 #else /* !__NO_XBLOCK */
@@ -1433,40 +1465,40 @@ DECL_END
 #define Dee_MallocaHeap(s)  Dee_MallocaHeap(s)
 LOCAL void *(DCALL Dee_MallocaHeap)(size_t s) {
 	__BYTE_TYPE__ *res;
-	res = (__BYTE_TYPE__ *)Dee_Malloc(s + DEE_MALLOCA_ALIGN);
+	res = (__BYTE_TYPE__ *)Dee_Malloc(s + Dee_MALLOCA_ALIGN);
 	if likely(res) {
-		*res = DEE_MALLOCA_KEY_MALLOC;
-		res += DEE_MALLOCA_ALIGN;
+		*res = Dee_MALLOCA_KEY_MALLOC;
+		res += Dee_MALLOCA_ALIGN;
 	}
 	return (void *)res;
 }
 #define Dee_TryMallocaHeap(s)  Dee_TryMallocaHeap(s)
 LOCAL void *(DCALL Dee_TryMallocaHeap)(size_t s) {
 	__BYTE_TYPE__ *res;
-	res = (__BYTE_TYPE__ *)Dee_TryMalloc(s + DEE_MALLOCA_ALIGN);
+	res = (__BYTE_TYPE__ *)Dee_TryMalloc(s + Dee_MALLOCA_ALIGN);
 	if likely(res) {
-		*res = DEE_MALLOCA_KEY_MALLOC;
-		res += DEE_MALLOCA_ALIGN;
+		*res = Dee_MALLOCA_KEY_MALLOC;
+		res += Dee_MALLOCA_ALIGN;
 	}
 	return (void *)res;
 }
 #define Dee_CallocaHeap(s)  Dee_CallocaHeap(s)
 LOCAL void *(DCALL Dee_CallocaHeap)(size_t s) {
 	__BYTE_TYPE__ *res;
-	res = (__BYTE_TYPE__ *)Dee_Calloc(s + DEE_MALLOCA_ALIGN);
+	res = (__BYTE_TYPE__ *)Dee_Calloc(s + Dee_MALLOCA_ALIGN);
 	if likely(res) {
-		*res = DEE_MALLOCA_KEY_MALLOC;
-		res += DEE_MALLOCA_ALIGN;
+		*res = Dee_MALLOCA_KEY_MALLOC;
+		res += Dee_MALLOCA_ALIGN;
 	}
 	return (void *)res;
 }
 #define Dee_TryCallocaHeap(s)  Dee_TryCallocaHeap(s)
 LOCAL void *(DCALL Dee_TryCallocaHeap)(size_t s) {
 	__BYTE_TYPE__ *res;
-	res = (__BYTE_TYPE__ *)Dee_TryCalloc(s + DEE_MALLOCA_ALIGN);
+	res = (__BYTE_TYPE__ *)Dee_TryCalloc(s + Dee_MALLOCA_ALIGN);
 	if likely(res) {
-		*res = DEE_MALLOCA_KEY_MALLOC;
-		res += DEE_MALLOCA_ALIGN;
+		*res = Dee_MALLOCA_KEY_MALLOC;
+		res += Dee_MALLOCA_ALIGN;
 	}
 	return (void *)res;
 }
@@ -1474,69 +1506,69 @@ LOCAL void *(DCALL Dee_TryCallocaHeap)(size_t s) {
 #define Dee_MallocaHeap(s) DeeDbg_AMallocHeap(s, __FILE__, __LINE__)
 LOCAL WUNUSED void *(DCALL DeeDbg_AMallocHeap)(size_t s, char const *file, int line) {
 	__BYTE_TYPE__ *res;
-	res = (__BYTE_TYPE__ *)DeeDbg_Malloc(s + DEE_MALLOCA_ALIGN, file, line);
+	res = (__BYTE_TYPE__ *)DeeDbg_Malloc(s + Dee_MALLOCA_ALIGN, file, line);
 	if likely(res) {
-		*res = DEE_MALLOCA_KEY_MALLOC;
-		res += DEE_MALLOCA_ALIGN;
+		*res = Dee_MALLOCA_KEY_MALLOC;
+		res += Dee_MALLOCA_ALIGN;
 	}
 	return (void *)res;
 }
 #define Dee_TryMallocaHeap(s) DeeDbg_ATryMallocHeap(s, __FILE__, __LINE__)
 LOCAL WUNUSED void *(DCALL DeeDbg_ATryMallocHeap)(size_t s, char const *file, int line) {
 	__BYTE_TYPE__ *res;
-	res = (__BYTE_TYPE__ *)DeeDbg_TryMalloc(s + DEE_MALLOCA_ALIGN, file, line);
+	res = (__BYTE_TYPE__ *)DeeDbg_TryMalloc(s + Dee_MALLOCA_ALIGN, file, line);
 	if likely(res) {
-		*res = DEE_MALLOCA_KEY_MALLOC;
-		res += DEE_MALLOCA_ALIGN;
+		*res = Dee_MALLOCA_KEY_MALLOC;
+		res += Dee_MALLOCA_ALIGN;
 	}
 	return (void *)res;
 }
 #define Dee_CallocaHeap(s) DeeDbg_ACallocHeap(s, __FILE__, __LINE__)
 LOCAL WUNUSED void *(DCALL DeeDbg_ACallocHeap)(size_t s, char const *file, int line) {
 	__BYTE_TYPE__ *res;
-	res = (__BYTE_TYPE__ *)DeeDbg_Calloc(s + DEE_MALLOCA_ALIGN, file, line);
+	res = (__BYTE_TYPE__ *)DeeDbg_Calloc(s + Dee_MALLOCA_ALIGN, file, line);
 	if likely(res) {
-		*res = DEE_MALLOCA_KEY_MALLOC;
-		res += DEE_MALLOCA_ALIGN;
+		*res = Dee_MALLOCA_KEY_MALLOC;
+		res += Dee_MALLOCA_ALIGN;
 	}
 	return (void *)res;
 }
 #define Dee_TryCallocaHeap(s) DeeDbg_ATryCallocHeap(s, __FILE__, __LINE__)
 LOCAL WUNUSED void *(DCALL DeeDbg_ATryCallocHeap)(size_t s, char const *file, int line) {
 	__BYTE_TYPE__ *res;
-	res = (__BYTE_TYPE__ *)DeeDbg_TryCalloc(s + DEE_MALLOCA_ALIGN, file, line);
+	res = (__BYTE_TYPE__ *)DeeDbg_TryCalloc(s + Dee_MALLOCA_ALIGN, file, line);
 	if likely(res) {
-		*res = DEE_MALLOCA_KEY_MALLOC;
-		res += DEE_MALLOCA_ALIGN;
+		*res = Dee_MALLOCA_KEY_MALLOC;
+		res += Dee_MALLOCA_ALIGN;
 	}
 	return (void *)res;
 }
 #endif /* !NDEBUG */
-#define Dee_MallocaStack(s) Dee_MallocaStack_init(Dee_Alloca((s) + DEE_MALLOCA_ALIGN), (s))
-#define Dee_Malloca(s)      ((s) > DEE_MALLOCA_MAX - DEE_MALLOCA_ALIGN ? Dee_MallocaHeap(s) : Dee_MallocaStack(s))
-#define Dee_TryMalloca(s)   ((s) > DEE_MALLOCA_MAX - DEE_MALLOCA_ALIGN ? Dee_TryMallocaHeap(s) : Dee_MallocaStack(s))
+#define Dee_MallocaStack(s) Dee_MallocaStack_init(Dee_Alloca((s) + Dee_MALLOCA_ALIGN), (s))
+#define Dee_Malloca(s)      ((s) > Dee_MALLOCA_MAX - Dee_MALLOCA_ALIGN ? Dee_MallocaHeap(s) : Dee_MallocaStack(s))
+#define Dee_TryMalloca(s)   ((s) > Dee_MALLOCA_MAX - Dee_MALLOCA_ALIGN ? Dee_TryMallocaHeap(s) : Dee_MallocaStack(s))
 #ifdef NDEBUG
-#define Dee_MallocaStack_init(p, s) Dee_MallocaStack_init_(p)
+#define Dee_MallocaStack_init(p, s) _Dee_PRIVATE_MallocaStack_init_(p)
 LOCAL WUNUSED NONNULL((1)) void *
-(DCALL Dee_MallocaStack_init_)(void *p) {
-	*(__BYTE_TYPE__ *)p = DEE_MALLOCA_KEY_ALLOCA;
-	return (__BYTE_TYPE__ *)p + DEE_MALLOCA_ALIGN;
+(DCALL _Dee_PRIVATE_MallocaStack_init_)(void *p) {
+	*(__BYTE_TYPE__ *)p = Dee_MALLOCA_KEY_ALLOCA;
+	return (__BYTE_TYPE__ *)p + Dee_MALLOCA_ALIGN;
 }
 #else /* NDEBUG */
 LOCAL WUNUSED NONNULL((1)) void *
 (DCALL Dee_MallocaStack_init)(void *p, size_t s) {
-	*(__BYTE_TYPE__ *)p = DEE_MALLOCA_KEY_ALLOCA;
-	return DEE_MALLOCA_SKEW_ALLOCA((__BYTE_TYPE__ *)p + DEE_MALLOCA_ALIGN, s);
+	*(__BYTE_TYPE__ *)p = Dee_MALLOCA_KEY_ALLOCA;
+	return Dee_MALLOCA_SKEW_ALLOCA((__BYTE_TYPE__ *)p + Dee_MALLOCA_ALIGN, s);
 }
 #endif /* !NDEBUG */
-#define Dee_CallocaStack(s) Dee_CallocaStack_init(Dee_Alloca((s) + DEE_MALLOCA_ALIGN), (s))
-#define Dee_Calloca(s)      ((s) > DEE_MALLOCA_MAX - DEE_MALLOCA_ALIGN ? Dee_CallocaHeap(s) : Dee_CallocaStack(s))
-#define Dee_TryCalloca(s)   ((s) > DEE_MALLOCA_MAX - DEE_MALLOCA_ALIGN ? Dee_TryCallocaHeap(s) : Dee_CallocaStack(s))
+#define Dee_CallocaStack(s) Dee_CallocaStack_init(Dee_Alloca((s) + Dee_MALLOCA_ALIGN), (s))
+#define Dee_Calloca(s)      ((s) > Dee_MALLOCA_MAX - Dee_MALLOCA_ALIGN ? Dee_CallocaHeap(s) : Dee_CallocaStack(s))
+#define Dee_TryCalloca(s)   ((s) > Dee_MALLOCA_MAX - Dee_MALLOCA_ALIGN ? Dee_TryCallocaHeap(s) : Dee_CallocaStack(s))
 LOCAL WUNUSED NONNULL((1)) void *
 (DCALL Dee_CallocaStack_init)(void *p, size_t s) {
 	void *result;
-	*(__BYTE_TYPE__ *)p = DEE_MALLOCA_KEY_ALLOCA;
-	result = (__BYTE_TYPE__ *)p + DEE_MALLOCA_ALIGN;
+	*(__BYTE_TYPE__ *)p = Dee_MALLOCA_KEY_ALLOCA;
+	result = (__BYTE_TYPE__ *)p + Dee_MALLOCA_ALIGN;
 	bzero(result, s);
 	return result;
 }
@@ -1544,70 +1576,70 @@ LOCAL WUNUSED NONNULL((1)) void *
 #define Dee_Freea(p)  Dee_Freea(p)
 #define Dee_XFreea(p) Dee_XFreea(p) 
 LOCAL NONNULL((1)) void (DCALL Dee_Freea)(void *p) {
-	if (DEE_MALLOCA_MUSTFREE(p))
-		Dee_Free((void *)((__BYTE_TYPE__ *)p - DEE_MALLOCA_ALIGN));
+	if (Dee_MALLOCA_MUSTFREE(p))
+		Dee_Free((void *)((__BYTE_TYPE__ *)p - Dee_MALLOCA_ALIGN));
 }
 
 LOCAL void (DCALL Dee_XFreea)(void *p) {
-	if (p && DEE_MALLOCA_MUSTFREE(p))
-		Dee_Free((void *)((__BYTE_TYPE__ *)p - DEE_MALLOCA_ALIGN));
+	if (p && Dee_MALLOCA_MUSTFREE(p))
+		Dee_Free((void *)((__BYTE_TYPE__ *)p - Dee_MALLOCA_ALIGN));
 }
 #endif /* __NO_XBLOCK */
 
 #define Dee_MallocaNoFail(p, s)                                                  \
 	do {                                                                         \
-		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;                              \
-		if (_s_ > DEE_MALLOCA_MAX &&                                             \
+		size_t const _s_ = (s) + Dee_MALLOCA_ALIGN;                              \
+		if (_s_ > Dee_MALLOCA_MAX &&                                             \
 		    (*(void **)&(p) = Dee_Malloc(_s_)) != __NULLPTR) {                   \
-			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_MALLOC;                      \
-			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + DEE_MALLOCA_ALIGN;           \
+			*(__BYTE_TYPE__ *)(p) = Dee_MALLOCA_KEY_MALLOC;                      \
+			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + Dee_MALLOCA_ALIGN;           \
 		} else {                                                                 \
 			*(void **)&(p)        = Dee_Alloca(_s_);                             \
-			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_ALLOCA;                      \
-			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + DEE_MALLOCA_ALIGN;           \
-			(void)DEE_MALLOCA_SKEW_ALLOCA((void *)(p), _s_ - DEE_MALLOCA_ALIGN); \
+			*(__BYTE_TYPE__ *)(p) = Dee_MALLOCA_KEY_ALLOCA;                      \
+			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + Dee_MALLOCA_ALIGN;           \
+			(void)Dee_MALLOCA_SKEW_ALLOCA((void *)(p), _s_ - Dee_MALLOCA_ALIGN); \
 		}                                                                        \
 	}	__WHILE0
 #define Dee_TryMallocaNoFail(p, s)                                               \
 	do {                                                                         \
-		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;                              \
-		if (_s_ > DEE_MALLOCA_MAX &&                                             \
+		size_t const _s_ = (s) + Dee_MALLOCA_ALIGN;                              \
+		if (_s_ > Dee_MALLOCA_MAX &&                                             \
 		    (*(void **)&(p) = Dee_TryMalloc(_s_)) != __NULLPTR) {                \
-			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_MALLOC;                      \
-			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + DEE_MALLOCA_ALIGN;           \
+			*(__BYTE_TYPE__ *)(p) = Dee_MALLOCA_KEY_MALLOC;                      \
+			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + Dee_MALLOCA_ALIGN;           \
 		} else {                                                                 \
 			*(void **)&(p)        = Dee_Alloca(_s_);                             \
-			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_ALLOCA;                      \
-			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + DEE_MALLOCA_ALIGN;           \
-			(void)DEE_MALLOCA_SKEW_ALLOCA((void *)(p), _s_ - DEE_MALLOCA_ALIGN); \
+			*(__BYTE_TYPE__ *)(p) = Dee_MALLOCA_KEY_ALLOCA;                      \
+			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + Dee_MALLOCA_ALIGN;           \
+			(void)Dee_MALLOCA_SKEW_ALLOCA((void *)(p), _s_ - Dee_MALLOCA_ALIGN); \
 		}                                                                        \
 	}	__WHILE0
 #define Dee_CallocaNoFail(p, s)                                        \
 	do {                                                               \
-		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;                    \
-		if (_s_ > DEE_MALLOCA_MAX &&                                   \
+		size_t const _s_ = (s) + Dee_MALLOCA_ALIGN;                    \
+		if (_s_ > Dee_MALLOCA_MAX &&                                   \
 		    (*(void **)&(p) = Dee_Calloc(_s_)) != __NULLPTR) {         \
-			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_MALLOC;            \
-			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + DEE_MALLOCA_ALIGN; \
+			*(__BYTE_TYPE__ *)(p) = Dee_MALLOCA_KEY_MALLOC;            \
+			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + Dee_MALLOCA_ALIGN; \
 		} else {                                                       \
 			*(void **)&(p)        = Dee_Alloca(_s_);                   \
-			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_ALLOCA;            \
-			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + DEE_MALLOCA_ALIGN; \
-			bzero((void *)(p), _s_ - DEE_MALLOCA_ALIGN);               \
+			*(__BYTE_TYPE__ *)(p) = Dee_MALLOCA_KEY_ALLOCA;            \
+			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + Dee_MALLOCA_ALIGN; \
+			bzero((void *)(p), _s_ - Dee_MALLOCA_ALIGN);               \
 		}                                                              \
 	}	__WHILE0
 #define Dee_TryCallocaNoFail(p, s)                                     \
 	do {                                                               \
-		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;                    \
-		if (_s_ > DEE_MALLOCA_MAX &&                                   \
+		size_t const _s_ = (s) + Dee_MALLOCA_ALIGN;                    \
+		if (_s_ > Dee_MALLOCA_MAX &&                                   \
 		    (*(void **)&(p) = Dee_TryCalloc(_s_)) != __NULLPTR) {      \
-			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_MALLOC;            \
-			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + DEE_MALLOCA_ALIGN; \
+			*(__BYTE_TYPE__ *)(p) = Dee_MALLOCA_KEY_MALLOC;            \
+			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + Dee_MALLOCA_ALIGN; \
 		} else {                                                       \
 			*(void **)&(p)        = Dee_Alloca(_s_);                   \
-			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_ALLOCA;            \
-			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + DEE_MALLOCA_ALIGN; \
-			bzero((void *)(p), _s_ - DEE_MALLOCA_ALIGN);               \
+			*(__BYTE_TYPE__ *)(p) = Dee_MALLOCA_KEY_ALLOCA;            \
+			*(void **)&(p) = (__BYTE_TYPE__ *)(p) + Dee_MALLOCA_ALIGN; \
+			bzero((void *)(p), _s_ - Dee_MALLOCA_ALIGN);               \
 		}                                                              \
 	}	__WHILE0
 #endif /* Dee_Alloca && __NO_hybrid_dbg_alignment */

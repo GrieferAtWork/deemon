@@ -82,7 +82,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>       /* DeeObject_Free */
 #include <deemon/object.h>
 #include <deemon/util/atomic.h> /* atomic_fetchdec */
 

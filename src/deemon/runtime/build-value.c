@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 
+#include <deemon/arg.h>             /* DeeArg_* */
 #include <deemon/bool.h>
 #include <deemon/format.h>
 #include <deemon/int.h>

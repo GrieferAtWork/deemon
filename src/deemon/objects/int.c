@@ -31,8 +31,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
-#include <deemon/arg.h>
+#include <deemon/alloc.h>              /* DeeDbgObject_Mallocc, DeeObject_Free, DeeObject_Mallocc, Dee_Freea, Dee_Mallocac, _Dee_MallococBufsize */
+#include <deemon/arg.h>                /* DeeArg_Unpack*, UNP* */
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/computed-operators.h>

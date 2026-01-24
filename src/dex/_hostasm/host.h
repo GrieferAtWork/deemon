@@ -34,7 +34,7 @@
 #include <stdint.h> /* uint8_t, uintptr_t */
 
 #ifndef __INTELLISENSE__
-#include <deemon/alloc.h>
+#include <deemon/alloc.h> /* Dee_Free, Dee_TryMalloc */
 #endif /* !__INTELLISENSE__ */
 
 #undef byte_t

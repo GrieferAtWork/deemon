@@ -25,11 +25,9 @@ import ThreadPool, Task from threading.pool;
 import posix;
 import functools;
 
-local final ROOTDIR = posix.joinpath(posix.headof(__FILE__), r"../..");
-
 global Header;
 
-function printStderr(msg: string) {
+local function printStderr(msg: string) {
 	File.stderr.write(msg + "\n");
 }
 
@@ -66,7 +64,7 @@ class DependentFile {
 	}
 }
 
-function wildcard2regex(wcard: string): string {
+local function wildcard2regex(wcard: string): string {
 	return wcard
 		.replace(r"\", r"\\")
 		.replace(r"[", r"\[")
@@ -78,7 +76,7 @@ function wildcard2regex(wcard: string): string {
 		.replace(r"?", r".");
 }
 
-global final DEFAULT_MIN_COUNT_FOR_EXPORT_GROUP_REPLACEMENT = 3;
+local final DEFAULT_MIN_COUNT_FOR_EXPORT_GROUP_REPLACEMENT = 3;
 
 class HeaderExportGroup {
 	this = default;
@@ -185,7 +183,7 @@ class Header {
 }
 
 @@Mapping of default headers
-global final DEFAULT_HEADERS_BY_INCLUDE: {string: Header} = {
+local final DEFAULT_HEADERS_BY_INCLUDE: {string: Header} = {
 #define DEFAULT_HEADER(inc, ...) inc: Header(includes: Set.frozen{inc}, __VA_ARGS__)
 	DEFAULT_HEADER("stdarg.h", exports: Set.frozen { "va_list", "va_start", "va_arg", "va_end" }),
 	DEFAULT_HEADER("stddef.h", exports: Set.frozen { "NULL", "size_t", "ptrdiff_t", "offsetof" }),
@@ -211,7 +209,7 @@ global final DEFAULT_HEADERS_BY_INCLUDE: {string: Header} = {
 }.frozen;
 
 
-class HeaderParser {
+local class HeaderParser {
 	public member filename: string;
 	public member header: Header;
 	public member data: Bytes;
@@ -642,6 +640,8 @@ again:
 			lastIncludeString = parseIncludeString();
 			break;
 
+		/* TODO: "#if 0 ... #endif" -- skip block (parse //!comments, but don't scan for keyword definitions) */
+
 		default: break;
 		}
 	}
@@ -944,7 +944,6 @@ class SrcFileInfo {
 		}
 	}
 
-
 	private function getIncludeLineStart(inc: SrcIncludeInfo): int {
 		return data.rfind("\n", 0, inc.includeStringOffset) + 1;
 	}
@@ -1003,7 +1002,7 @@ insert_first_include:
 		}
 	}
 
-	public function isFormattingDisabledAt(offset: int): bool {
+	private function isFormattingDisabledAt(offset: int): bool {
 		for (local start, end: noFormatRegions) {
 			if (offset >= start && offset < end)
 				return true;
@@ -1060,7 +1059,7 @@ insert_first_include:
 
 	@@Returns sequence {(missingHeader, {usedKeywordFromheader...})...}
 	@@@param keywordsFromIncludes Keywords that belong to known includes
-	public function getMissingHeadersAndKeywords(
+	private function getMissingHeadersAndKeywords(
 			fixIncludes: FixIncludes,
 			keywordsFromIncludes: {string...},
 			includedFilenames: {string...},
@@ -1265,6 +1264,8 @@ next_keyword:;
 	}
 }
 
+
+@@Parse a source file, determining symbols used, and includes present
 function loadSrcFileInfo(filename: string): SrcFileInfo {
 	filename = posix.resolvepath(posix.abspath(filename));
 	local data: Bytes;

@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>
+#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack1, DeeArg_UnpackKw */
 #include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/file.h>

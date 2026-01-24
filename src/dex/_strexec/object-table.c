@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* Dee_*alloc*, Dee_CollectMemoryc, Dee_Free */
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h>

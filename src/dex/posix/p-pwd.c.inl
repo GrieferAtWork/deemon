@@ -27,8 +27,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
-#include <deemon/arg.h>
+#include <deemon/alloc.h>           /* Dee_ReleaseSystemMemory */
+#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
 #include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/none.h>

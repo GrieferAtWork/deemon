@@ -28,7 +28,7 @@
 
 #include "../api.h"
 
-#include "../alloc.h"
+#include "../alloc.h"           /* Dee_*alloc*, Dee_Free */
 #include "../object.h"
 #include "../seq.h"
 #include "../system-features.h" /* memchrp */

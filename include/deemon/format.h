@@ -156,34 +156,34 @@ DeeFormat_VPrintf(Dee_formatprinter_t printer, void *arg,
 #define Dee_PRFx128 _Dee_PRF128 "x"
 #define Dee_PRFX128 _Dee_PRF128 "X"
 
-#define DEE_PRIVATE_PRFu1         Dee_PRFu8
-#define DEE_PRIVATE_PRFd1         Dee_PRFd8
-#define DEE_PRIVATE_PRFx1         Dee_PRFx8
-#define DEE_PRIVATE_PRFX1         Dee_PRFX8
-#define DEE_PRIVATE_PRFu2         Dee_PRFu16
-#define DEE_PRIVATE_PRFd2         Dee_PRFd16
-#define DEE_PRIVATE_PRFx2         Dee_PRFx16
-#define DEE_PRIVATE_PRFX2         Dee_PRFX16
-#define DEE_PRIVATE_PRFu4         Dee_PRFu32
-#define DEE_PRIVATE_PRFd4         Dee_PRFd32
-#define DEE_PRIVATE_PRFx4         Dee_PRFx32
-#define DEE_PRIVATE_PRFX4         Dee_PRFX32
-#define DEE_PRIVATE_PRFu8         Dee_PRFu64
-#define DEE_PRIVATE_PRFd8         Dee_PRFd64
-#define DEE_PRIVATE_PRFx8         Dee_PRFx64
-#define DEE_PRIVATE_PRFX8         Dee_PRFX64
-#define DEE_PRIVATE_PRFu16        Dee_PRFu128
-#define DEE_PRIVATE_PRFd16        Dee_PRFd128
-#define DEE_PRIVATE_PRFx16        Dee_PRFx128
-#define DEE_PRIVATE_PRFX16        Dee_PRFX128
-#define DEE_PRIVATE_PRFuN(sizeof) DEE_PRIVATE_PRFu##sizeof
-#define DEE_PRIVATE_PRFdN(sizeof) DEE_PRIVATE_PRFd##sizeof
-#define DEE_PRIVATE_PRFxN(sizeof) DEE_PRIVATE_PRFx##sizeof
-#define DEE_PRIVATE_PRFXN(sizeof) DEE_PRIVATE_PRFX##sizeof
-#define Dee_PRFuN(sizeof)         DEE_PRIVATE_PRFuN(sizeof)
-#define Dee_PRFdN(sizeof)         DEE_PRIVATE_PRFdN(sizeof)
-#define Dee_PRFxN(sizeof)         DEE_PRIVATE_PRFxN(sizeof)
-#define Dee_PRFXN(sizeof)         DEE_PRIVATE_PRFXN(sizeof)
+#define _Dee_PRIVATE_PRFu1         Dee_PRFu8
+#define _Dee_PRIVATE_PRFd1         Dee_PRFd8
+#define _Dee_PRIVATE_PRFx1         Dee_PRFx8
+#define _Dee_PRIVATE_PRFX1         Dee_PRFX8
+#define _Dee_PRIVATE_PRFu2         Dee_PRFu16
+#define _Dee_PRIVATE_PRFd2         Dee_PRFd16
+#define _Dee_PRIVATE_PRFx2         Dee_PRFx16
+#define _Dee_PRIVATE_PRFX2         Dee_PRFX16
+#define _Dee_PRIVATE_PRFu4         Dee_PRFu32
+#define _Dee_PRIVATE_PRFd4         Dee_PRFd32
+#define _Dee_PRIVATE_PRFx4         Dee_PRFx32
+#define _Dee_PRIVATE_PRFX4         Dee_PRFX32
+#define _Dee_PRIVATE_PRFu8         Dee_PRFu64
+#define _Dee_PRIVATE_PRFd8         Dee_PRFd64
+#define _Dee_PRIVATE_PRFx8         Dee_PRFx64
+#define _Dee_PRIVATE_PRFX8         Dee_PRFX64
+#define _Dee_PRIVATE_PRFu16        Dee_PRFu128
+#define _Dee_PRIVATE_PRFd16        Dee_PRFd128
+#define _Dee_PRIVATE_PRFx16        Dee_PRFx128
+#define _Dee_PRIVATE_PRFX16        Dee_PRFX128
+#define _Dee_PRIVATE_PRFuN(sizeof) _Dee_PRIVATE_PRFu##sizeof
+#define _Dee_PRIVATE_PRFdN(sizeof) _Dee_PRIVATE_PRFd##sizeof
+#define _Dee_PRIVATE_PRFxN(sizeof) _Dee_PRIVATE_PRFx##sizeof
+#define _Dee_PRIVATE_PRFXN(sizeof) _Dee_PRIVATE_PRFX##sizeof
+#define Dee_PRFuN(sizeof)          _Dee_PRIVATE_PRFuN(sizeof)
+#define Dee_PRFdN(sizeof)          _Dee_PRIVATE_PRFdN(sizeof)
+#define Dee_PRFxN(sizeof)          _Dee_PRIVATE_PRFxN(sizeof)
+#define Dee_PRFXN(sizeof)          _Dee_PRIVATE_PRFXN(sizeof)
 
 /* Helpful aliases */
 #define Dee_PRFuSIZ Dee_PRFuN(__SIZEOF_SIZE_T__)
@@ -440,20 +440,20 @@ Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
 #define Dee_PCKu128 "I128u"
 #define Dee_PCKd128 "I128d"
 
-#define DEE_PRIVATE_PCKu1         Dee_PCKu8
-#define DEE_PRIVATE_PCKd1         Dee_PCKd8
-#define DEE_PRIVATE_PCKu2         Dee_PCKu16
-#define DEE_PRIVATE_PCKd2         Dee_PCKd16
-#define DEE_PRIVATE_PCKu4         Dee_PCKu32
-#define DEE_PRIVATE_PCKd4         Dee_PCKd32
-#define DEE_PRIVATE_PCKu8         Dee_PCKu64
-#define DEE_PRIVATE_PCKd8         Dee_PCKd64
-#define DEE_PRIVATE_PCKu16        Dee_PCKu128
-#define DEE_PRIVATE_PCKd16        Dee_PCKd128
-#define DEE_PRIVATE_PCKuN(sizeof) DEE_PRIVATE_PCKu##sizeof
-#define DEE_PRIVATE_PCKdN(sizeof) DEE_PRIVATE_PCKd##sizeof
-#define Dee_PCKuN(sizeof)         DEE_PRIVATE_PCKuN(sizeof)
-#define Dee_PCKdN(sizeof)         DEE_PRIVATE_PCKdN(sizeof)
+#define _Dee_PRIVATE_PCKu1         Dee_PCKu8
+#define _Dee_PRIVATE_PCKd1         Dee_PCKd8
+#define _Dee_PRIVATE_PCKu2         Dee_PCKu16
+#define _Dee_PRIVATE_PCKd2         Dee_PCKd16
+#define _Dee_PRIVATE_PCKu4         Dee_PCKu32
+#define _Dee_PRIVATE_PCKd4         Dee_PCKd32
+#define _Dee_PRIVATE_PCKu8         Dee_PCKu64
+#define _Dee_PRIVATE_PCKd8         Dee_PCKd64
+#define _Dee_PRIVATE_PCKu16        Dee_PCKu128
+#define _Dee_PRIVATE_PCKd16        Dee_PCKd128
+#define _Dee_PRIVATE_PCKuN(sizeof) _Dee_PRIVATE_PCKu##sizeof
+#define _Dee_PRIVATE_PCKdN(sizeof) _Dee_PRIVATE_PCKd##sizeof
+#define Dee_PCKuN(sizeof)          _Dee_PRIVATE_PCKuN(sizeof)
+#define Dee_PCKdN(sizeof)          _Dee_PRIVATE_PCKdN(sizeof)
 
 /* Helpful aliases */
 #define Dee_PCKuSIZ Dee_PCKuN(__SIZEOF_SIZE_T__)

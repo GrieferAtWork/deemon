@@ -38,7 +38,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* Dee_Free, Dee_TryMallocc */
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* memcpyc */
 

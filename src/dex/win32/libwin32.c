@@ -28,8 +28,8 @@
 #include <deemon/api.h>
 
 #include <deemon/abi/ctypes.h>
-#include <deemon/alloc.h>
-#include <deemon/arg.h>
+#include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_*alloc*, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw, UNP* */
 #include <deemon/bytes.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>

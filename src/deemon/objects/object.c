@@ -22,8 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
-#include <deemon/arg.h>
+#include <deemon/alloc.h>              /* DeeObject_FreeTracker, DeeSlab_ENUMERATE, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_TryCalloc */
+#include <deemon/arg.h>                /* DeeArg_BadArgc0, DeeArg_Unpack*, UNPuSIZ */
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>

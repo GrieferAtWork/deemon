@@ -28,7 +28,7 @@
 
 #include "../api.h"
 
-#include "../alloc.h"
+#include "../alloc.h"           /* Dee_Free, Dee_Mallocc, Dee_TryMallocc */
 #include "../object.h"
 #include "../system-features.h"
 #include "lock.h"               /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_* */

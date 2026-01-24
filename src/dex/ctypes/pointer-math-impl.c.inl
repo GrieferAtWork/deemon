@@ -31,7 +31,6 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>

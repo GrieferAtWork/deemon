@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>       /* DeeObject_TRYMALLOC, Dee_BadAlloc */
 #include <deemon/bytes.h>
 #include <deemon/code.h>
 #include <deemon/error.h>

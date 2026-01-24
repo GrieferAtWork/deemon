@@ -1658,16 +1658,16 @@
 
 DECL_BEGIN
 
-#ifndef DEE_INSTRUCTION_T_DEFINED
-#define DEE_INSTRUCTION_T_DEFINED 1
+#ifndef Dee_instruction_t_DEFINED
+#define Dee_instruction_t_DEFINED 1
 typedef __BYTE_TYPE__ Dee_instruction_t;
-#endif /* !DEE_INSTRUCTION_T_DEFINED */
+#endif /* !Dee_instruction_t_DEFINED */
 
 #ifdef DEE_SOURCE
-#ifndef INSTRUCTION_T_DEFINED
-#define INSTRUCTION_T_DEFINED 1
+#ifndef instruction_t_DEFINED
+#define instruction_t_DEFINED 1
 typedef Dee_instruction_t instruction_t;
-#endif /* !INSTRUCTION_T_DEFINED */
+#endif /* !instruction_t_DEFINED */
 #endif /* DEE_SOURCE */
 
 /* Return a pointer to the instruction, given the base address of the previous one.

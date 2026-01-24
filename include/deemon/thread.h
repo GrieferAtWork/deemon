@@ -22,20 +22,22 @@
 
 #include "api.h"
 
-#include "types.h"
-#include "util/futex.h" /* DeeFutex_WakeAll */
-#ifndef __INTELLISENSE__
-#include "object.h" /* DeeObject_NewPack */
-#endif /* !__INTELLISENSE__ */
-
 #include <hybrid/__atomic.h>      /* __ATOMIC_ACQUIRE, __ATOMIC_RELEASE, __hybrid_atomic_* */
 #include <hybrid/host.h>          /* __arm__, __i386__, __linux__, __unix__, __x86_64__ */
 #include <hybrid/sched/__yield.h> /* __hybrid_yield */
 #include <hybrid/typecore.h>      /* __ULONG32_TYPE__ */
 
+#include "types.h"
+#include "util/futex.h" /* DeeFutex_WakeAll */
+
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
 #include <stdint.h>  /* uint16_t, uint32_t, uint64_t, uintptr_t */
+
+#ifndef __INTELLISENSE__
+#include "alloc.h"  /* DeeSlab_* */
+#include "object.h" /* DeeObject_NewPack */
+#endif /* !__INTELLISENSE__ */
 
 #undef Dee_pid_t
 #ifdef CONFIG_HOST_WINDOWS
@@ -104,10 +106,18 @@ struct Dee_except_frame {
 	                                             * NOTE: When `ITER_DONE' the traceback has yet to be allocated.
 	                                             * NOTE: Set to `NULL' when there is no traceback. */
 };
+
+#ifdef __INTELLISENSE__
+#define Dee_except_frame_tryalloc() ((struct Dee_except_frame *)sizeof(struct Dee_except_frame))
+#define Dee_except_frame_alloc()    ((struct Dee_except_frame *)sizeof(struct Dee_except_frame))
+#define Dee_except_frame_free(ptr)  (void)(Dee_REQUIRES_TYPE(struct Dee_except_frame *, ptr))
+#define Dee_except_frame_xfree(ptr) (void)(Dee_REQUIRES_TYPE(struct Dee_except_frame *, ptr))
+#else /* __INTELLISENSE__ */
 #define Dee_except_frame_tryalloc() DeeSlab_TRYMALLOC(struct Dee_except_frame)
 #define Dee_except_frame_alloc()    DeeSlab_MALLOC(struct Dee_except_frame)
 #define Dee_except_frame_free(ptr)  DeeSlab_FREE(Dee_REQUIRES_TYPE(struct Dee_except_frame *, ptr))
 #define Dee_except_frame_xfree(ptr) DeeSlab_XFREE(Dee_REQUIRES_TYPE(struct Dee_except_frame *, ptr))
+#endif /* !__INTELLISENSE__ */
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Returns the traceback of a given exception-frame, or
@@ -244,8 +254,13 @@ struct Dee_thread_interrupt {
 };
 
 /* NOTE: It is important that thread interrupts and exceptions can be reused for one-another! */
+#ifdef __INTELLISENSE__
+#define Dee_thread_interrupt_alloc()     ((struct Dee_thread_interrupt *)sizeof(struct Dee_thread_interrupt))
+#define _Dee_thread_interrupt_free(self) (void)(self)
+#else /* __INTELLISENSE__ */
 #define Dee_thread_interrupt_alloc()     DeeSlab_MALLOC(struct Dee_thread_interrupt)
 #define _Dee_thread_interrupt_free(self) DeeSlab_FREE(self)
+#endif /* !__INTELLISENSE__ */
 #define Dee_thread_interrupt_free(self)  (likely((self)->ti_args != (DREF struct Dee_tuple_object *)ITER_DONE) ? _Dee_thread_interrupt_free(self) : (void)0)
 #define Dee_thread_interrupt_xfree(self) (void)((self) && (Dee_thread_interrupt_free(self), 0))
 

@@ -1026,7 +1026,7 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 #ifdef __cplusplus
 #if !defined(__MWERKS__) || __option(wchar_type)
 #define __native_wchar_t_defined
-#define __wchar_t_defined
+#define __wchar_t_defined /*!export-*/
 #endif /* !__MWERKS__ || __option(wchar_type) */
 #endif /* __cplusplus */
 

@@ -24,7 +24,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>
+#include <deemon/arg.h>             /* DeeArg_*, Dee_keyword */
 #include <deemon/error-rt.h>
 #include <deemon/kwds.h>
 #include <deemon/object.h>

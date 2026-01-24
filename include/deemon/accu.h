@@ -17,6 +17,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export Dee_accu*/
+/*!export Dee_accu_**/
+/*!export Dee_ACCU_**/
+/*!export HAVE_Dee_ACCU_**/
 #ifndef GUARD_DEEMON_ACCU_H
 #define GUARD_DEEMON_ACCU_H 1
 

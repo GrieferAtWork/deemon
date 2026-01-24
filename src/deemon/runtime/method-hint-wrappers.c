@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>
+#include <deemon/arg.h>          /* DeeArg_BadArgcEx, DeeArg_Unpack*, UNP* */
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/format.h>

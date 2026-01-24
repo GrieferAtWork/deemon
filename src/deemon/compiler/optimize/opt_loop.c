@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 
+#include <deemon/alloc.h>             /* Dee_Free, Dee_Mallocc */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 

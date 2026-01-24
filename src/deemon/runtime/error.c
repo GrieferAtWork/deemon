@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* Dee_TryRealloc */
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/format.h>

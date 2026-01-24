@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>
+#include <deemon/arg.h>       /* DeeArg_Unpack1Or2 */
 #include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/objmethod.h>

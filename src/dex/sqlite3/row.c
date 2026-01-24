@@ -27,7 +27,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, _Dee_MallococBufsize */
 #include <deemon/bytes.h>
 #include <deemon/error-rt.h>
 #include <deemon/float.h>

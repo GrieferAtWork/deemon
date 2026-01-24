@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* DeeObject_FreeTracker */
 #include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/gc.h>

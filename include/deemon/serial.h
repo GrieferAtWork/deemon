@@ -30,6 +30,10 @@
 #include <hybrid/typecore.h> /* __UINTPTR_TYPE__ */
 #endif /* !Dee_seraddr_t_DEFINED */
 
+#if 0 /* To satisfy fixincludes (at least until fixincludes understands "#if 0" blocks) */
+#include "alloc.h" /* _Dee_MallococBufsize */
+#endif
+
 /*
  * Object serialization is a general-purpose API to:
  * - Create (potentially deep) copies of objects

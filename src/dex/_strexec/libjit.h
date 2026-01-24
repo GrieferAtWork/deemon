@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* DeeObject_FFree, DeeObject_MALLOC, DeeSlab_FREE, DeeSlab_MALLOC */
 #include <deemon/class.h>
 #include <deemon/module.h>
 #include <deemon/object.h>

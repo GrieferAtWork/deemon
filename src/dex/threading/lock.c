@@ -27,8 +27,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
-#include <deemon/arg.h>
+#include <deemon/alloc.h>           /* DeeObject_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, _Dee_MallococBufsize */
+#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack*, UNPu64, UNPuSIZ */
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/format.h>

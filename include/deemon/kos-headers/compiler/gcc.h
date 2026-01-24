@@ -889,7 +889,7 @@ __extension__ typedef unsigned long long __ulonglong_t;
 #if (!defined(__INTEL_VERSION__) || __INTEL_VERSION__ >= 600 || \
      (_WCHAR_T_DEFINED + 0 != 0) || (_WCHAR_T + 0 != 0))
 #define __native_wchar_t_defined
-#define __wchar_t_defined
+#define __wchar_t_defined /*!export-*/
 #endif /* ... */
 #endif /* __cplusplus */
 

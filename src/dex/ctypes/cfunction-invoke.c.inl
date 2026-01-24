@@ -27,7 +27,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* Dee_Freea, Dee_Malloca */
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/float.h>

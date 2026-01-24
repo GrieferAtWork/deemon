@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>              /* DeeDbgSlab_MALLOC, DeeObject_Free, DeeObject_MALLOC, DeeSlab_FREE, DeeSlab_MALLOC, Dee_*alloc*, Dee_CollectMemory*, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/asm.h>
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>

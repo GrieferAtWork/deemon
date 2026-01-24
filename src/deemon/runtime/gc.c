@@ -23,8 +23,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
-#include <deemon/arg.h>
+#include <deemon/alloc.h>              /* DeeDbgObject_*, DeeMem_ClearCaches, DeeObject_*, DeeSlab_ENUMERATE, DeeSlab_Invoke, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_TryCallocc, Dee_TryReallocc */
+#include <deemon/arg.h>                /* DeeArg_Unpack*, UNPxSIZ */
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/code.h>

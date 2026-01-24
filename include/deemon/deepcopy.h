@@ -29,6 +29,10 @@
 
 #include <stddef.h> /* size_t */
 
+#ifndef __INTELLISENSE__
+#include "alloc.h" /* Dee_*alloc*, Dee_Free */
+#endif /* !__INTELLISENSE__ */
+
 DECL_BEGIN
 
 /* "DeeSerial" can also be used to implement "deepcopy" (in a way that
@@ -56,23 +60,39 @@ struct Dee_deepcopy_mapitem {
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 typedef void Dee_deepcopy_heap_t;
 #define Dee_deepcopy_heap_getbase(self)    (self)
+#ifdef __INTELLISENSE__
+#define Dee_deepcopy_heap_getnext(self)    (*(void *const *)((__BYTE_TYPE__ *)(self) + (size_t)(self) - sizeof(void *)))
+#define Dee_deepcopy_heap_setnext(self, v) (*(void **)((__BYTE_TYPE__ *)(self) + (size_t)(self) - sizeof(void *)) = (v))
+#define Dee_deepcopy_heap_destroy(self)    (void)(self)
+#else /* __INTELLISENSE__ */
 #define Dee_deepcopy_heap_getnext(self)    (*(void *const *)((__BYTE_TYPE__ *)(self) + Dee_MallocUsableSize(self) - sizeof(void *)))
 #define Dee_deepcopy_heap_setnext(self, v) (*(void **)((__BYTE_TYPE__ *)(self) + Dee_MallocUsableSize(self) - sizeof(void *)) = (v))
 #define Dee_deepcopy_heap_destroy(self)    Dee_Free(self)
+#endif /* !__INTELLISENSE__ */
 #else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 typedef struct Dee_deepcopy_heap Dee_deepcopy_heap_t;
 struct Dee_deepcopy_heap {
 	Dee_deepcopy_heap_t *ddch_next; /* [0..1][owned] Next heap chunk */
 	void                *ddch_base; /* [1..1][owned] Heap item base address */
 };
+#ifdef __INTELLISENSE__
+#define Dee_deepcopy_heap_tryallocchunk() ((Dee_deepcopy_heap_t *)(sizeof(Dee_deepcopy_heap_t)))
+#define Dee_deepcopy_heap_allocchunk()    ((Dee_deepcopy_heap_t *)(sizeof(Dee_deepcopy_heap_t)))
+#define Dee_deepcopy_heap_freechunk(p)    (void)(p)
+#else /* __INTELLISENSE__ */
 #define Dee_deepcopy_heap_tryallocchunk() ((Dee_deepcopy_heap_t *)Dee_TryMalloc(sizeof(Dee_deepcopy_heap_t)))
 #define Dee_deepcopy_heap_allocchunk()    ((Dee_deepcopy_heap_t *)Dee_Malloc(sizeof(Dee_deepcopy_heap_t)))
 #define Dee_deepcopy_heap_freechunk(p)    Dee_Free(p)
+#endif /* !__INTELLISENSE__ */
 
 #define Dee_deepcopy_heap_getbase(self)    (self)->ddch_base
 #define Dee_deepcopy_heap_getnext(self)    (self)->ddch_next
 #define Dee_deepcopy_heap_setnext(self, v) (void)((self)->ddch_next = (v))
+#ifdef __INTELLISENSE__
+#define Dee_deepcopy_heap_destroy(self)    (void)(self)->ddch_base
+#else /* __INTELLISENSE__ */
 #define Dee_deepcopy_heap_destroy(self)    (Dee_Free((self)->ddch_base), Dee_Free(self))
+#endif /* !__INTELLISENSE__ */
 #endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
 #ifdef DEE_SOURCE

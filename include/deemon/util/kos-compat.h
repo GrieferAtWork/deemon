@@ -22,13 +22,10 @@
 
 #include "../api.h"
 
-#ifndef DEE_SOURCE
-#error "This header should only be used when `DEE_SOURCE' is also enabled"
-#endif /* !DEE_SOURCE */
-
 #include <hybrid/__alloca.h> /* __hybrid_alloca */
 #include <hybrid/typecore.h> /* __*_TYPE__ */
 
+#include "../alloc.h"           /* Dee_Free, Dee_Try*alloc* */
 #include "../format.h"
 #include "../string.h"
 #include "../stringutils.h"
@@ -42,6 +39,10 @@
 /* clang-format off */
 #include <hybrid/bitset.h> /* bitset_*  (to replace <sys/bitstr.h>) */
 /* clang-format on */
+
+#ifndef DEE_SOURCE
+#error "This header should only be used when `DEE_SOURCE' is also enabled"
+#endif /* !DEE_SOURCE */
 
 DECL_BEGIN
 

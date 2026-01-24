@@ -26,8 +26,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
-#include <deemon/arg.h>
+#include <deemon/alloc.h>              /* DeeObject_*, Dee_Freea, Dee_Mallocac, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, _Dee_MallococBufsize */
+#include <deemon/arg.h>                /* DeeArg_Unpack* */
 #include <deemon/computed-operators.h>
 #include <deemon/format.h>
 #include <deemon/map.h>

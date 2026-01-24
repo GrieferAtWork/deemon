@@ -17,6 +17,15 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export DeeArg_**/
+/*!export DeeArg_Unpack**/
+/*!export DeeArg_UnpackStruct**/
+/*!export DeeArg_VUnpack**/
+/*!export Dee_keyword*/
+/*!export Dee_KEYWORD*/
+/*!export Dee_KEYWORD_**/
+/*!export Dee_UNP**/
+/*!export UNP**/
 #ifndef GUARD_DEEMON_ARG_H
 #define GUARD_DEEMON_ARG_H 1
 
@@ -37,7 +46,7 @@ DECL_BEGIN
 #define KS            Dee_KEYWORD_STR
 #define KEX           Dee_KEYWORD_EX
 #define KEND          Dee_KEYWORD_END
-#define DEFINE_KWLIST Dee_DEFINE_KWLIST
+#define DEFINE_KWLIST Dee_DEFINE_KWLIST /*!export*/
 #endif /* DEE_SOURCE */
 
 
@@ -587,7 +596,7 @@ struct Dee_keyword {
 #define Dee_KEYWORD_STR(s)           { s, (Dee_hash_t)-1 }
 #define Dee_KEYWORD_EX(s, h32, h64)  { s, _Dee_HashSelectC(h32, h64) }
 #define Dee_KEYWORD_END              { NULL }
-#define Dee_DEFINE_KWLIST(name, ...) struct Dee_keyword name[] = __VA_ARGS__
+#define Dee_DEFINE_KWLIST(name, ...) struct Dee_keyword name[] = __VA_ARGS__ /*!export*/
 
 /* Same as the regular unpack functions above, however these are enabled to
  * support keyword lists in the event that the calling function has been
@@ -800,30 +809,30 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4, 5, 6)) int
 #define Dee_UNPu8 "u" /* DeeObject_AsUInt8(...) */
 #define Dee_UNPx8 "x" /* DeeObject_AsUInt8M1(...) */
 #endif /* __SIZEOF_INT__ == ... */
-#define DEE_PRIVATE_UNPd1         Dee_UNPd8
-#define DEE_PRIVATE_UNPu1         Dee_UNPu8
-#define DEE_PRIVATE_UNPx1         Dee_UNPx8
-#define DEE_PRIVATE_UNPd2         Dee_UNPd16
-#define DEE_PRIVATE_UNPu2         Dee_UNPu16
-#define DEE_PRIVATE_UNPx2         Dee_UNPx16
-#define DEE_PRIVATE_UNPd4         Dee_UNPd32
-#define DEE_PRIVATE_UNPu4         Dee_UNPu32
-#define DEE_PRIVATE_UNPx4         Dee_UNPx32
-#define DEE_PRIVATE_UNPd8         Dee_UNPd64
-#define DEE_PRIVATE_UNPu8         Dee_UNPu64
-#define DEE_PRIVATE_UNPx8         Dee_UNPx64
-#define DEE_PRIVATE_UNPd16        Dee_UNPd128
-#define DEE_PRIVATE_UNPu16        Dee_UNPu128
-#define DEE_PRIVATE_UNPx16        Dee_UNPx128
-#define DEE_PRIVATE_UNPdN(sizeof) DEE_PRIVATE_UNPd##sizeof
-#define DEE_PRIVATE_UNPuN(sizeof) DEE_PRIVATE_UNPu##sizeof
-#define DEE_PRIVATE_UNPxN(sizeof) DEE_PRIVATE_UNPx##sizeof
-#define Dee_UNPdN(sizeof)         DEE_PRIVATE_UNPdN(sizeof) /* DeeObject_AsXInt(sizeof, ...) */
-#define Dee_UNPuN(sizeof)         DEE_PRIVATE_UNPuN(sizeof) /* DeeObject_AsXUInt(sizeof, ...) */
-#define Dee_UNPxN(sizeof)         DEE_PRIVATE_UNPxN(sizeof) /* DeeObject_AsXUIntM1(sizeof, ...) */
+#define _Dee_PRIVATE_UNPd1         Dee_UNPd8
+#define _Dee_PRIVATE_UNPu1         Dee_UNPu8
+#define _Dee_PRIVATE_UNPx1         Dee_UNPx8
+#define _Dee_PRIVATE_UNPd2         Dee_UNPd16
+#define _Dee_PRIVATE_UNPu2         Dee_UNPu16
+#define _Dee_PRIVATE_UNPx2         Dee_UNPx16
+#define _Dee_PRIVATE_UNPd4         Dee_UNPd32
+#define _Dee_PRIVATE_UNPu4         Dee_UNPu32
+#define _Dee_PRIVATE_UNPx4         Dee_UNPx32
+#define _Dee_PRIVATE_UNPd8         Dee_UNPd64
+#define _Dee_PRIVATE_UNPu8         Dee_UNPu64
+#define _Dee_PRIVATE_UNPx8         Dee_UNPx64
+#define _Dee_PRIVATE_UNPd16        Dee_UNPd128
+#define _Dee_PRIVATE_UNPu16        Dee_UNPu128
+#define _Dee_PRIVATE_UNPx16        Dee_UNPx128
+#define _Dee_PRIVATE_UNPdN(sizeof) _Dee_PRIVATE_UNPd##sizeof
+#define _Dee_PRIVATE_UNPuN(sizeof) _Dee_PRIVATE_UNPu##sizeof
+#define _Dee_PRIVATE_UNPxN(sizeof) _Dee_PRIVATE_UNPx##sizeof
+#define Dee_UNPdN(sizeof)          _Dee_PRIVATE_UNPdN(sizeof) /* DeeObject_AsXInt(sizeof, ...) */
+#define Dee_UNPuN(sizeof)          _Dee_PRIVATE_UNPuN(sizeof) /* DeeObject_AsXUInt(sizeof, ...) */
+#define Dee_UNPxN(sizeof)          _Dee_PRIVATE_UNPxN(sizeof) /* DeeObject_AsXUIntM1(sizeof, ...) */
 
 /* Helpful aliases */
-#define Dee_UNPdSIZ Dee_UNPdN(__SIZEOF_SIZE_T__)  /* DeeObject_AsSSize(...) */
+#define Dee_UNPdSIZ Dee_UNPdN(__SIZEOF_SIZE_T__) /* DeeObject_AsSSize(...) */
 #define Dee_UNPuSIZ Dee_UNPuN(__SIZEOF_SIZE_T__)  /* DeeObject_AsSize(...) */
 #define Dee_UNPxSIZ Dee_UNPxN(__SIZEOF_SIZE_T__)  /* DeeObject_AsSizeM1(...) */
 #define Dee_UNPdPTR Dee_UNPdN(__SIZEOF_POINTER__) /* DeeObject_AsIntptr(...) */

@@ -27,7 +27,7 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>       /* DeeObject_*alloc*, DeeSlab_ENUMERATE, Dee_Calloca, Dee_Freea, Dee_Mallocac, _Dee_MallococBufsize */
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
@@ -62,8 +62,8 @@
 
 DECL_BEGIN
 
-#define DeeInt_NEWSFUNC(n) DEE_PRIVATE_NEWINT(n)
-#define DeeInt_NEWUFUNC(n) DEE_PRIVATE_NEWUINT(n)
+#define DeeInt_NEWSFUNC(n) _Dee_PRIVATE_NEWINT(n)
+#define DeeInt_NEWUFUNC(n) _Dee_PRIVATE_NEWUINT(n)
 
 #ifndef NDEBUG
 #define DBG_memset (void)memset

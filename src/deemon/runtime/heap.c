@@ -48,7 +48,7 @@ ClCompile.BasicRuntimeChecks = Default
 #endif /* !__INTELLISENSE__ */
 
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
-#include <deemon/alloc.h>
+#include <deemon/alloc.h>           /* DeeDbg_*, DeeMem_ClearCaches, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_Memalign, Dee_TryMemalign, Dee_UntrackAlloc */
 #include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/heap.h>
