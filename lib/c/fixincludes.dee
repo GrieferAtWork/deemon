@@ -18,6 +18,88 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
+/*
+ * ============== Documentation for fixincludes annotations ==============
+ *
+ * - Source files are separated into 2 categories:
+ *   - Headers
+ *   - Sources
+ * - Headers define "exports" using various annotations
+ * - Sources (as well as headers) will automatically #include the relevant headers
+ * - All annotations are written as "//!foo" or "/ *!foo* /" (without the whitespace after "/")
+ * - Only instrumented headers are automatically added/removed from source files.
+ *   Headers without exports are always kept as-is!
+ * - wildcard exports line-based export annotations always work on a pool of symbols
+ *   defined by the associated header file. This pool consists of:
+ *   - All C macro definitions (#define foo)
+ *   - A best-effort scan of what are probably "symbol" names:
+ *     >> int symbol(void);
+ *     >> int symbol;
+ *     >> int (symbol);
+ *     >> int (symbol)(void);
+ *     >> int (CC symbol)(void);
+ *     >> int CC symbol(void);
+ *     >> struct symbol;
+ *     >> struct symbol { ... };
+ *
+ *
+ * ======================== Available annotations ========================
+ *
+ * >> //!export symbol
+ * >> //!export wildcard*pattern
+ * >> //!export -not_this_one
+ * >> //!export -not_these_*_ones
+ * >> #define foo 42           //!export
+ * >> extern int bar;          //!export
+ * >> extern int baz(void);    //!export
+ * >> extern int not_me(void); //!export-
+ * >> #ifdef GUARD_SOME_OTHER_HEADER_H
+ * >> #define COMBINED_SYMBOL 42 //!export(include("<some/other/header.h>"))
+ * >> #endif
+ *    Specify symbols exported by the header. Source files that make use
+ *    of symbols named by this mechanism will automatically receive the
+ *    necessary #include for the header(s) that exports the symbol. When
+ *    a symbol requires multiple headers, all required headers will be
+ *    included by the relevant source file.
+ *
+ * >> //!fixincludes no_include_comments
+ *    Disable comments describing the reason when this header is #include'ed
+ *    Useful for headers that are included pretty much always, or define so
+ *    many symbols that an include comment wouldn't be readable.
+ *
+ * >> //!fixincludes ignore_unnecessary_include
+ *    Always retain #include-s to this header, even if they appear to be
+ *    unnecessary.
+ *
+ * >> //!fixincludes discourage_include
+ *    For use when another header //!always includes this one: try not to
+ *    automatically #include this header, but instead include another header
+ *    that //!always includes this one.
+ *
+ * >> //!fixincludes regex group "__INT(8|16|32|64)_TYPE__" "__INTn_TYPE__" 4
+ * >> //!fixincludes regex export "__INT(8|16|32|64)_TYPE__" "__INTn_TYPE__" 4
+ *    Add custom patterns and abbreviations used for building include comments
+ *    the syntax here is:
+ *    //!fixincludes regex [group|export] "REGEX_PATTERN" "REPLACEMENT" MIN_REGEX_MATCHES
+ *
+ * >> //!always include <__stdinc.h>
+ * >> //!always_includes <__stdinc.h>          // DEPRECATED
+ * >> #include <__stdinc.h> //!always
+ *    Specify that a header is always #include-ing another header. When this
+ *    annotation is used, **all** symbols exported by the specified header
+ *    are implicitly inherited into the instrumented header, (preety much) as
+ *    though those symbols had always been defined by the instrumented header
+ *    This annotation may be combined with "//!fixincludes discourage_include"
+ *    being annotated in the included header, to further encourage the header
+ *    that always #include's another to be injected when a header is missing.
+ *
+ *
+ * The following annotations are ignored:
+ * //!KEEPME
+ * //!included_by <__stdinc.h>                 // DEPRECATED
+ *
+ */
+
 import * from deemon;
 import * from errors;
 import getClangFormatSpecs, ClangFormatSpecs from .clangformat;
@@ -569,6 +651,9 @@ again_export_directive:
 		}	break;
 
 		case "KEEPME":
+			/* Marker unrelated to fixincludes headers, used to annotate lines that should not be removed */
+			/* TODO: This annotation should cause the annotated line to
+			 *       be treated as "noFormatRegions" in "SrcFileInfo"! */
 			break;
 
 		case "always_includes": {
@@ -581,7 +666,7 @@ again_export_directive:
 		}	break;
 
 		case "included_by":
-			/* TODO: Legacy -- remove */
+			/* Deprecated (related to legacy KOS-style .editorconfig generator) */
 			break;
 
 		default:
