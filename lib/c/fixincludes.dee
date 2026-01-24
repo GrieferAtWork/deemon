@@ -690,11 +690,14 @@ skip_paren_block:
 			do {
 				local lastKwdInParen, lastKwdInParenPos = skipParenBlock("(")...;
 				tok = next();
-				if (tok == ";") {
+				if (tok in ";{") {
 					/*     "DECL int foo();"
-					 * or: "DECL int (foo)();" */
+					 * or: "DECL int foo() { ... }"
+					 * or: "DECL int (foo)();"
+					 * or: "DECL int (foo)() { ... }"
+					 */
 					addKeyword(keyword, keywordPos);
-					goto again;
+					goto again_tok;
 				}
 				if (!lastKwdInParen.issymbol())
 					goto again;
@@ -1357,12 +1360,12 @@ class FixIncludes {
 	private doLoadHeaderInPath(
 			relPath: string, absPath: string,
 			pool: ThreadPool, fileTasks: {string: Task},
-			excludedPaths: {string...}) {
+			exclude: {string...}) {
 		for (local ent: posix.opendir(absPath)) {
 			local name = ent.d_name;
 			local relName = f'{relPath}/{name}'.lstrip("/");
 			local absName = posix.joinpath(absPath, name);
-			if (absName in excludedPaths)
+			if (absName in exclude)
 				continue;
 			if (ent.d_type == posix.DT_REG) {
 				if (name.endswith(".h")) {
@@ -1384,19 +1387,19 @@ class FixIncludes {
 					}
 				}
 			} else if (ent.d_type == posix.DT_DIR) {
-				doLoadHeaderInPath(relName, absName, pool, fileTasks, excludedPaths);
+				doLoadHeaderInPath(relName, absName, pool, fileTasks, exclude);
 			}
 		}
 	}
 
 	@@Load files from the given set to system include paths
-	public addIncludePaths(paths: {string...}, excludedPaths: {string...} = ()): FixIncludes {
+	public addIncludePaths(include: {string...}, exclude: {string...} = ()): FixIncludes {
 		local pool = ThreadPool();
 		local fileTasks: {string: Task} = Dict();
-		excludedPaths = Set.frozen(for (local xp: excludedPaths) posix.resolvepath(posix.abspath(xp)));
-		for (local path: paths.sorted()) {
+		exclude = Set.frozen(for (local xp: exclude) posix.resolvepath(posix.abspath(xp)));
+		for (local path: include.sorted()) {
 			path = posix.resolvepath(posix.abspath(path));
-			doLoadHeaderInPath("", path, pool, fileTasks, excludedPaths);
+			doLoadHeaderInPath("", path, pool, fileTasks, exclude);
 		}
 		pool.waitfor();
 		for (local task: fileTasks.values)
