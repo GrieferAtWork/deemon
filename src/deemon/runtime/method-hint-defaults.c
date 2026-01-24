@@ -73,7 +73,7 @@
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* uintN_t, uintptr_t */
+#include <stdint.h>  /* SIZE_MAX, uintN_t, uintptr_t */
 
 #undef SSIZE_MAX
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__, __SSIZE_MIN__ */

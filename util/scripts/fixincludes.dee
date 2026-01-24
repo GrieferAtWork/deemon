@@ -28,26 +28,26 @@ function main() {
 	fixincludes
 		.FixIncludes()
 		.addIncludePaths(include: {
-			ROOTDIR + "/include",
-			ROOTDIR + "/include/deemon/kos-headers",
+			f"{ROOTDIR}/include",
+			f"{ROOTDIR}/include/deemon/kos-headers",
 		}, exclude: {
-			ROOTDIR + "/include/deemon/cxx",
+			f"{ROOTDIR}/include/deemon/cxx",
 		})
 		.finishSetup()
-#if 1
+#if 0
 		.dumpExports()
 		.dumpHeaders()
 #else
 		.fixPaths(include: {
-			ROOTDIR + "/src/deemon",
-			ROOTDIR + "/src/dex",
-			ROOTDIR + "/include/deemon",
+			f"{ROOTDIR}/src/deemon",
+			f"{ROOTDIR}/src/dex",
+			f"{ROOTDIR}/include/deemon",
 		}, exclude: {
-			ROOTDIR + "/include/deemon/kos-headers",
-			ROOTDIR + "/src/dex/ctypes/ffi",
-			ROOTDIR + "/src/deemon/method-hints",
-			ROOTDIR + "/src/dex/hashlib/algorithms",
-			ROOTDIR + "/src/dex/_hostasm/libgen86",
+			f"{ROOTDIR}/include/deemon/kos-headers",
+			f"{ROOTDIR}/src/dex/ctypes/ffi",
+			f"{ROOTDIR}/src/deemon/method-hints",
+			f"{ROOTDIR}/src/dex/hashlib/algorithms",
+			f"{ROOTDIR}/src/dex/_hostasm/libgen86",
 		})
 #endif
 		;

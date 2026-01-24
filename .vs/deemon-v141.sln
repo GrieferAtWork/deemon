@@ -168,6 +168,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_codecs", "_codecs", "{2360
 		..\lib\_codecs\nextstep.dee = ..\lib\_codecs\nextstep.dee
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "c", "c", "{2360741E-FB49-40D4-B684-000000060803}"
+	ProjectSection(SolutionItems) = preProject
+		..\lib\c\clangformat.dee = ..\lib\c\clangformat.dee
+		..\lib\c\fixincludes.dee = ..\lib\c\fixincludes.dee
+	EndProjectSection
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "include", "include", "{2360741E-FB49-40D4-B684-00182015F605}"
 	ProjectSection(SolutionItems) = preProject
 		..\lib\include\README.txt = ..\lib\include\README.txt
@@ -335,6 +341,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{2360
 	ProjectSection(SolutionItems) = preProject
 		..\util\scripts\computed-operators.dee = ..\util\scripts\computed-operators.dee
 		..\util\scripts\fib.dee = ..\util\scripts\fib.dee
+		..\util\scripts\fixincludes.dee = ..\util\scripts\fixincludes.dee
 		..\util\scripts\fixlinefeeds.dee = ..\util\scripts\fixlinefeeds.dee
 		..\util\scripts\migrate-tag-descriptions.dee = ..\util\scripts\migrate-tag-descriptions.dee
 	EndProjectSection
@@ -884,6 +891,7 @@ Global
 		{85DE4E2D-552A-48E3-A320-00000000F14D} = {2360741E-FB49-40D4-B684-000000001A50}
 		{85DE4E2D-552A-48E3-A320-00000007B82A} = {2360741E-FB49-40D4-B684-000000001A50}
 		{2360741E-FB49-40D4-B684-001820CBA22B} = {2360741E-FB49-40D4-B684-00000000182A}
+		{2360741E-FB49-40D4-B684-000000060803} = {2360741E-FB49-40D4-B684-00000000182A}
 		{2360741E-FB49-40D4-B684-00182015F605} = {2360741E-FB49-40D4-B684-00000000182A}
 		{2360741E-FB49-40D4-B684-0000018200DC} = {2360741E-FB49-40D4-B684-00000000182A}
 		{2360741E-FB49-40D4-B684-0003040F6116} = {2360741E-FB49-40D4-B684-00000000182A}

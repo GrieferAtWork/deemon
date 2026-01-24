@@ -41,7 +41,7 @@
 #include "../runtime/strings.h"
 
 #include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* UINT32_C, int32_t, int64_t, intptr_t, uintN_t */
+#include <stdint.h> /* INTPTR_MAX, INTPTR_MIN, UINT32_C, int32_t, int64_t, intptr_t, uintN_t */
 
 #ifdef CONFIG_HAVE_FPU
 #include "int_logic.h" /* `DeeInt_Alloc()' */

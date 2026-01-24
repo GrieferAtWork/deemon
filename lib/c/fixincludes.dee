@@ -41,6 +41,7 @@
  *     >> int CC symbol(void);
  *     >> struct symbol;
  *     >> struct symbol { ... };
+ *     None of these match when inside of a {...}-block (iow: when inside of an inline function)
  *
  *
  * ======================== Available annotations ========================
@@ -110,6 +111,7 @@ import functools;
 global Header;
 
 local function printStderr(msg: string) {
+	__asm__("" : "+X" (msg));
 	File.stderr.write(msg + "\n");
 }
 
@@ -173,12 +175,12 @@ class HeaderExportGroup {
 		return f"{repr regex} -> {repr replacement} (match >= {minCountForReplacement})";
 	}
 
-	public static fromWildcard(wcard: string): HeaderExportGroup {
-		return HeaderExportGroup(
-			regex: wildcard2regex(wcard),
-			replacement: wcard,
-		);
-	}
+//	public static fromWildcard(wcard: string): HeaderExportGroup {
+//		return HeaderExportGroup(
+//			regex: wildcard2regex(wcard),
+//			replacement: wcard,
+//		);
+//	}
 }
 
 class Header {
@@ -270,13 +272,15 @@ local final DEFAULT_HEADERS_BY_INCLUDE: {string: Header} = {
 	DEFAULT_HEADER("stdarg.h", exports: Set.frozen { "va_list", "va_start", "va_arg", "va_end" }),
 	DEFAULT_HEADER("stddef.h", exports: Set.frozen { "NULL", "size_t", "ptrdiff_t", "offsetof" }),
 	DEFAULT_HEADER("stdint.h", exports: Set.frozen {
-		"int8_t", "int16_t", "int32_t", "int64_t", "intptr_t",
-		"uint8_t", "uint16_t", "uint32_t", "uint64_t", "uintptr_t",
-		"INT8_C", "INT16_C", "INT32_C", "INT64_C",
-		"UINT8_C", "UINT16_C", "UINT32_C", "UINT64_C",
-		"INT8_MIN", "INT16_MIN", "INT32_MIN", "INT64_MIN",
-		"INT8_MAX", "INT16_MAX", "INT32_MAX", "INT64_MAX",
-		"UINT8_MAX", "UINT16_MAX", "UINT32_MAX", "UINT64_MAX",
+		"int8_t", "int16_t", "int32_t", "int64_t", "intptr_t", "intmax_t",
+		"uint8_t", "uint16_t", "uint32_t", "uint64_t", "uintptr_t", "uintmax_t",
+		"INT8_C", "INT16_C", "INT32_C", "INT64_C", "INTMAX_C",
+		"UINT8_C", "UINT16_C", "UINT32_C", "UINT64_C", "UINTMAX_C",
+		"INT8_MIN", "INT16_MIN", "INT32_MIN", "INT64_MIN", "INTMAX_MIN", "INTPTR_MIN", "PTRDIFF_MIN",
+		"INT8_MAX", "INT16_MAX", "INT32_MAX", "INT64_MAX", "INTMAX_MAX", "INTPTR_MAX", "PTRDIFF_MAX",
+		"UINT8_MAX", "UINT16_MAX", "UINT32_MAX", "UINT64_MAX", "UINTMAX_MAX", "UINTPTR_MAX", "SIZE_MAX",
+		"SIG_ATOMIC_MIN", "WCHAR_MIN", "WINT_MIN",
+		"SIG_ATOMIC_MAX", "WCHAR_MAX", "WINT_MAX",
 	}, exportGroups: {
 		HeaderExportGroup("UINT(8|16|32|64)_MAX", "UINTn_MAX", 4),
 		HeaderExportGroup("INT(8|16|32|64)_MAX", "INTn_MAX", 4),

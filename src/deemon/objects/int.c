@@ -68,7 +68,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
-#include <stdint.h>  /* INTn_MAX, INTn_MIN, UINT16_C, UINT32_C, UINT64_C, UINTn_MAX, intN_t, uintN_t */
+#include <stdint.h>  /* INTn_MAX, INTn_MIN, SIZE_MAX, UINT16_C, UINT32_C, UINT64_C, UINTn_MAX, intN_t, uintN_t */
 
 #if CONFIG_INT_CACHE_MAXCOUNT != 0
 #include <deemon/util/atomic.h> /* atomic_read */

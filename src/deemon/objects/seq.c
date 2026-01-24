@@ -66,7 +66,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* uint32_t */
+#include <stdint.h>  /* SIZE_MAX, uint32_t */
 
 #undef SSIZE_MAX
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */

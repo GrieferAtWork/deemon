@@ -46,7 +46,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
-#include <stdint.h>  /* INT64_MAX, uint16_t, uint32_t */
+#include <stdint.h>  /* INT64_MAX, SIZE_MAX, uint16_t, uint32_t */
 
 #ifdef DeeSystem_FILE_USE_stdio_FILE
 #include <stdio.h>

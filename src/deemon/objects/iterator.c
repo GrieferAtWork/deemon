@@ -49,7 +49,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
-#include <stdint.h>  /* INT32_MIN, uintptr_t */
+#include <stdint.h>  /* INT32_MIN, SIZE_MAX, uintptr_t */
 
 #undef SSIZE_MIN
 #undef SSIZE_MAX

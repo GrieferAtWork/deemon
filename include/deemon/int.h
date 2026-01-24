@@ -39,7 +39,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* ptrdiff_t, size_t */
-#include <stdint.h>  /* intN_t, intptr_t, uintN_t, uintptr_t */
+#include <stdint.h>  /* intN_t, intmax_t, intptr_t, uintN_t, uintmax_t, uintptr_t */
 
 /* NOTE: Integer objects have been completely reworked in deemon 2.0,
  *       no longer being split between 8 different types for different
