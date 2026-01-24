@@ -252,7 +252,7 @@ class ClangFormatSpecs {
 function getClangFormatSpecs(dir: string): ClangFormatSpecs {
 	dir = posix.resolvepath(posix.abspath(dir));
 	local head = posix.headof(dir);
-	local base: Dict | none = head ? getClangFormatSpecs(head).specs : none;
+	local base: Dict | none = (head && head != dir) ? getClangFormatSpecs(head).specs : none;
 	local absFilename = posix.joinpath(dir, ".clang-format");
 	static local CACHE: {string: ClangFormatSpecs} = Dict();
 	local result: ClangFormatSpecs | none = CACHE.get(absFilename);
