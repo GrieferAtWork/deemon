@@ -44,7 +44,7 @@
 #include <hybrid/typecore.h>        /* __BYTE_TYPE__, __SIZEOF_SIZE_T__ */
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, size_t */
+#include <stddef.h>  /* NULL, size_t, wchar_t */
 #include <stdint.h>  /* UINT64_C, int64_t, uint32_t, uint64_t, uintptr_t */
 
 #ifdef CONFIG_HOST_WINDOWS

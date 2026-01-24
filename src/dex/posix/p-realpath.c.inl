@@ -44,7 +44,7 @@
 #include "p-readlink.c.inl" /* For `posix_readlink()' */
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, size_t */
+#include <stddef.h>  /* NULL, size_t, wchar_t */
 #include <stdint.h>  /* uint8_t, uint32_t */
 
 DECL_BEGIN

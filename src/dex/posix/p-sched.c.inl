@@ -41,7 +41,7 @@
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/sched/yield.h>     /* SCHED_YIELD */
 
-#include <stddef.h> /* NULL, size_t */
+#include <stddef.h> /* NULL, size_t, wchar_t */
 
 DECL_BEGIN
 

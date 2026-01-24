@@ -49,7 +49,7 @@
 #include "c_api.h"
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, ptrdiff_t, size_t */
+#include <stddef.h>  /* NULL, ptrdiff_t, size_t, wchar_t */
 #include <stdint.h>  /* intN_t, intptr_t, uintN_t, uintptr_t */
 
 #ifdef CONFIG_HAVE_CTYPES_SEH_GUARD

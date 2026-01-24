@@ -43,7 +43,7 @@
 #include "p-readlink.c.inl" /* For `posix_chown_USE_posix_readlink__AND__posix_lchown()' */
 
 #include <stdbool.h> /* false, true */
-#include <stddef.h>  /* NULL, size_t */
+#include <stddef.h>  /* NULL, size_t, wchar_t */
 
 DECL_BEGIN
 

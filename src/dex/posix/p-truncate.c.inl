@@ -39,7 +39,7 @@
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/typecore.h>        /* __ULONGPTR_TYPE__ */
 
-#include <stddef.h> /* NULL, size_t */
+#include <stddef.h> /* NULL, size_t, wchar_t */
 #include <stdint.h> /* uint64_t */
 
 DECL_BEGIN

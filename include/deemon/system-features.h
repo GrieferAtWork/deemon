@@ -27,7 +27,7 @@
 #include <hybrid/host.h>      /* __hpux__, __i386__, __linux__, __unix__, __x86_64__ */
 #include <hybrid/typecore.h>  /* __*_TYPE__, __SIZEOF_*__ */
 
-#include <stddef.h> /* NULL, size_t */
+#include <stddef.h> /* NULL, size_t, wchar_t */
 #include <stdint.h> /* intptr_t, uintN_t, uintptr_t */
 
 #ifdef CONFIG_NO_FPU

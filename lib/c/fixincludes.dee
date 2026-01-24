@@ -270,7 +270,10 @@ class Header {
 local final DEFAULT_HEADERS_BY_INCLUDE: {string: Header} = {
 #define DEFAULT_HEADER(inc, ...) inc: Header(includes: Set.frozen{inc}, __VA_ARGS__)
 	DEFAULT_HEADER("stdarg.h", exports: Set.frozen { "va_list", "va_start", "va_arg", "va_end" }),
-	DEFAULT_HEADER("stddef.h", exports: Set.frozen { "NULL", "size_t", "ptrdiff_t", "offsetof" }),
+	DEFAULT_HEADER("stddef.h", exports: Set.frozen {
+		"NULL", "size_t", "ptrdiff_t", "offsetof",
+		"wchar_t", "max_align_t",
+	}),
 	DEFAULT_HEADER("stdint.h", exports: Set.frozen {
 		"int8_t", "int16_t", "int32_t", "int64_t", "intptr_t", "intmax_t",
 		"uint8_t", "uint16_t", "uint32_t", "uint64_t", "uintptr_t", "uintmax_t",

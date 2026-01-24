@@ -33,7 +33,7 @@
 #include <deemon/util/lock.h> /* Dee_ATOMIC_RWLOCK_INIT */
 
 #include <stdbool.h> /* bool */
-#include <stddef.h>  /* NULL, size_t */
+#include <stddef.h>  /* NULL, size_t, wchar_t */
 
 #undef FORMAT_TYP
 #undef FORMAT_STR

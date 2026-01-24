@@ -47,7 +47,7 @@
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stddef.h>  /* NULL, offsetof, size_t, wchar_t */
 #include <stdint.h>  /* uint8_t */
 
 DECL_BEGIN

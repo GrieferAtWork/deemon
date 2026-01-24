@@ -35,7 +35,7 @@
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
-#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stddef.h>  /* NULL, offsetof, size_t, wchar_t */
 #include <stdint.h>  /* int32_t, uintN_t, uintptr_t */
 
 #ifdef CONFIG_NO_STRING_H

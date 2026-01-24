@@ -57,7 +57,7 @@
 #include <hybrid/typecore.h>        /* __BYTE_TYPE__, __SIZEOF_INT__, __SSIZE_TYPE__ */
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, size_t */
+#include <stddef.h>  /* NULL, size_t, wchar_t */
 #include <stdint.h>  /* uint8_t, uint16_t, uint64_t, uintptr_t */
 #ifdef CONFIG_HAVE_PATHS_H
 #include <paths.h> /* _PATH_SHELLS */
