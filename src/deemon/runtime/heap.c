@@ -7729,14 +7729,20 @@ PUBLIC ATTR_HOT WUNUSED void *
 	/* Special handling required for flag4 memory */
 #if FLAG4_BIT_INDICATES_HEAP_REGION
 	if unlikely(flag4inuse(p)) {
+		/* Muse use "DeeDbg_TryMalloc()" so the new chunk gets a "struct leak_footer" */
+		result = DeeDbg_TryMalloc(n_bytes, file, line);
+		if likely(result) {
+			size_t oc = chunksize(p) - overhead_for(p);
+			result = memcpy(result, ptr, (oc < n_bytes) ? oc : n_bytes);
 #if HAVE_DBG_HEAP_REGION
-		leaks_lock_acquire_and_reap(); /* Acquire+reap required for "DeeDbgHeap_DelHeapRegion_locked()" */
-		result = dlrealloc(ptr, n_bytes);
-		leaks_lock_release();
-		return result;
+			leaks_lock_acquire_and_reap(); /* Acquire+reap required for "DeeDbgHeap_DelHeapRegion_locked()" */
+			dlfree(ptr);
+			leaks_lock_release();
 #else /* HAVE_DBG_HEAP_REGION */
-		return dlrealloc(ptr, n_bytes);
+			dlfree(ptr);
 #endif /* !HAVE_DBG_HEAP_REGION */
+		}
+		return result;
 	}
 #endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
 

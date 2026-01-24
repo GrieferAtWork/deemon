@@ -2357,10 +2357,10 @@ again:
 		size_t out__d_vsize;
 		Dee_seraddr_t addrof_out__d_vtab;
 		size_t i, sizeof_out__d_vtab;
-		struct dict_item *out__d_vtab;
-		struct dict_item *in__d_vtab;
+		struct Dee_dict_item *out__d_vtab;
+		struct Dee_dict_item *in__d_vtab;
 		shift_t hidxio = DEE_DICT_HIDXIO_FROMALLOC(self__d_valloc);
-		sizeof_out__d_vtab = self__d_valloc * sizeof(struct dict_item);
+		sizeof_out__d_vtab = self__d_valloc * sizeof(struct Dee_dict_item);
 		sizeof_out__d_vtab += (self->d_hmask + 1) << hidxio;
 		addrof_out__d_vtab = DeeSerial_TryMalloc(writer, sizeof_out__d_vtab, NULL);
 		if (!Dee_SERADDR_ISOK(addrof_out__d_vtab)) {
@@ -2391,7 +2391,7 @@ free_out__d_vtab__and__again:
 		}
 		out          = DeeSerial_Addr2Mem(writer, addr, Dict);
 		out__d_vsize = out->d_vsize;
-		out__d_vtab  = DeeSerial_Addr2Mem(writer, addrof_out__d_vtab, struct dict_item);
+		out__d_vtab  = DeeSerial_Addr2Mem(writer, addrof_out__d_vtab, struct Dee_dict_item);
 		in__d_vtab   = _DeeDict_GetRealVTab(self);
 		memcpy(out__d_vtab, in__d_vtab, sizeof_out__d_vtab);
 		for (i = 0; i < out__d_vsize; ++i) {
@@ -2404,15 +2404,15 @@ free_out__d_vtab__and__again:
 		for (i = 0; i < out__d_vsize; ++i) {
 			if (out__d_vtab[i].di_key) {
 				int error;
-				Dee_seraddr_t addrof_out__d_vtab_i = addrof_out__d_vtab + i * sizeof(struct dict_item);
+				Dee_seraddr_t addrof_out__d_vtab_i = addrof_out__d_vtab + i * sizeof(struct Dee_dict_item);
 				DREF DeeObject *key   = out__d_vtab[i].di_key;
 				DREF DeeObject *value = out__d_vtab[i].di_value;
-				error = DeeSerial_PutObject(writer, addrof_out__d_vtab_i + offsetof(struct dict_item, di_key), key);
+				error = DeeSerial_PutObject(writer, addrof_out__d_vtab_i + offsetof(struct Dee_dict_item, di_key), key);
 				if likely(error == 0)
-					error = DeeSerial_PutObject(writer, addrof_out__d_vtab_i + offsetof(struct dict_item, di_value), value);
+					error = DeeSerial_PutObject(writer, addrof_out__d_vtab_i + offsetof(struct Dee_dict_item, di_value), value);
 				Dee_Decref_unlikely(key);
 				Dee_Decref_unlikely(value);
-				out__d_vtab = DeeSerial_Addr2Mem(writer, addrof_out__d_vtab, struct dict_item);
+				out__d_vtab = DeeSerial_Addr2Mem(writer, addrof_out__d_vtab, struct Dee_dict_item);
 				if unlikely(error) {
 					for (; i < out__d_vsize; ++i) {
 						if (out__d_vtab[i].di_key) {
@@ -2426,7 +2426,7 @@ free_out__d_vtab__and__again:
 		}
 		if (DeeSerial_PutAddr(writer, ADDROF(d_vtab), addrof_out__d_vtab - sizeof(struct Dee_dict_item)))
 			goto err;
-		if (DeeSerial_PutAddr(writer, ADDROF(d_htab), addrof_out__d_vtab + (self__d_valloc * sizeof(struct dict_item))))
+		if (DeeSerial_PutAddr(writer, ADDROF(d_htab), addrof_out__d_vtab + (self__d_valloc * sizeof(struct Dee_dict_item))))
 			goto err;
 	}
 	if (DeeSerial_PutStaticDeemon(writer, ADDROF(d_hidxget), (void *)out__d_hidxget))
