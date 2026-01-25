@@ -738,28 +738,28 @@ DFUNDEF WUNUSED ATTR_INS(1, 2) DREF /*Int*/ DeeObject *
 	__builtin_choose_expr(sizeof(*(result)) == 4,  DeeInt_TryAsInt32(self, (int32_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 8,  DeeInt_TryAsInt64(self, (int64_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 16, DeeInt_TryAsInt128(self, (Dee_int128_t *)(result)), \
-	                                               _Dee_invalid_integer_size())))))
+	                                               _Dee_PRIVATE_invalid_integer_size())))))
 #define DeeInt_TryAsUIntX(self, result)                                                                  \
 	__builtin_choose_expr(sizeof(*(result)) == 1,  DeeInt_TryAsUInt8(self, (uint8_t *)(result)),         \
 	__builtin_choose_expr(sizeof(*(result)) == 2,  DeeInt_TryAsUInt16(self, (uint16_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 4,  DeeInt_TryAsUInt32(self, (uint32_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 8,  DeeInt_TryAsUInt64(self, (uint64_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 16, DeeInt_TryAsUInt128(self, (Dee_uint128_t *)(result)), \
-	                                               _Dee_invalid_integer_size())))))
+	                                               _Dee_PRIVATE_invalid_integer_size())))))
 #define DeeInt_AsIntX(self, result)                                                                 \
 	__builtin_choose_expr(sizeof(*(result)) == 1,  DeeInt_AsInt8(self, (int8_t *)(result)),         \
 	__builtin_choose_expr(sizeof(*(result)) == 2,  DeeInt_AsInt16(self, (int16_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 4,  DeeInt_AsInt32(self, (int32_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 8,  DeeInt_AsInt64(self, (int64_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 16, DeeInt_AsInt128(self, (Dee_int128_t *)(result)), \
-	                                               _Dee_invalid_integer_size())))))
+	                                               _Dee_PRIVATE_invalid_integer_size())))))
 #define DeeInt_AsUIntX(self, result)                                                                  \
 	__builtin_choose_expr(sizeof(*(result)) == 1,  DeeInt_AsUInt8(self, (uint8_t *)(result)),         \
 	__builtin_choose_expr(sizeof(*(result)) == 2,  DeeInt_AsUInt16(self, (uint16_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 4,  DeeInt_AsUInt32(self, (uint32_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 8,  DeeInt_AsUInt64(self, (uint64_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 16, DeeInt_AsUInt128(self, (Dee_uint128_t *)(result)), \
-	                                               _Dee_invalid_integer_size())))))
+	                                               _Dee_PRIVATE_invalid_integer_size())))))
 #else /* !__NO_builtin_choose_expr */
 #define DeeInt_TryAsIntX(self, result)                                              \
 	(sizeof(*(result)) == 1 ?  DeeInt_TryAsInt8(self, (int8_t *)(result)) :         \
@@ -767,28 +767,28 @@ DFUNDEF WUNUSED ATTR_INS(1, 2) DREF /*Int*/ DeeObject *
 	 sizeof(*(result)) == 4 ?  DeeInt_TryAsInt32(self, (int32_t *)(result)) :       \
 	 sizeof(*(result)) == 8 ?  DeeInt_TryAsInt64(self, (int64_t *)(result)) :       \
 	 sizeof(*(result)) == 16 ? DeeInt_TryAsInt128(self, (Dee_int128_t *)(result)) : \
-	                           _Dee_invalid_integer_size())
+	                           _Dee_PRIVATE_invalid_integer_size())
 #define DeeInt_TryAsUIntX(self, result)                                               \
 	(sizeof(*(result)) == 1 ?  DeeInt_TryAsUInt8(self, (uint8_t *)(result)) :         \
 	 sizeof(*(result)) == 2 ?  DeeInt_TryAsUInt16(self, (uint16_t *)(result)) :       \
 	 sizeof(*(result)) == 4 ?  DeeInt_TryAsUInt32(self, (uint32_t *)(result)) :       \
 	 sizeof(*(result)) == 8 ?  DeeInt_TryAsUInt64(self, (uint64_t *)(result)) :       \
 	 sizeof(*(result)) == 16 ? DeeInt_TryAsUInt128(self, (Dee_uint128_t *)(result)) : \
-	                           _Dee_invalid_integer_size())
+	                           _Dee_PRIVATE_invalid_integer_size())
 #define DeeInt_AsIntX(self, result)                                              \
 	(sizeof(*(result)) == 1 ?  DeeInt_AsInt8(self, (int8_t *)(result)) :         \
 	 sizeof(*(result)) == 2 ?  DeeInt_AsInt16(self, (int16_t *)(result)) :       \
 	 sizeof(*(result)) == 4 ?  DeeInt_AsInt32(self, (int32_t *)(result)) :       \
 	 sizeof(*(result)) == 8 ?  DeeInt_AsInt64(self, (int64_t *)(result)) :       \
 	 sizeof(*(result)) == 16 ? DeeInt_AsInt128(self, (Dee_int128_t *)(result)) : \
-	                           _Dee_invalid_integer_size())
+	                           _Dee_PRIVATE_invalid_integer_size())
 #define DeeInt_AsUIntX(self, result)                                               \
 	(sizeof(*(result)) == 1 ?  DeeInt_AsUInt8(self, (uint8_t *)(result)) :         \
 	 sizeof(*(result)) == 2 ?  DeeInt_AsUInt16(self, (uint16_t *)(result)) :       \
 	 sizeof(*(result)) == 4 ?  DeeInt_AsUInt32(self, (uint32_t *)(result)) :       \
 	 sizeof(*(result)) == 8 ?  DeeInt_AsUInt64(self, (uint64_t *)(result)) :       \
 	 sizeof(*(result)) == 16 ? DeeInt_AsUInt128(self, (Dee_uint128_t *)(result)) : \
-	                           _Dee_invalid_integer_size())
+	                           _Dee_PRIVATE_invalid_integer_size())
 #endif /* __NO_builtin_choose_expr */
 
 
