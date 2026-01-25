@@ -26,13 +26,12 @@
 
 #include <deemon/api.h>
 
-#include <deemon/dex.h>             /* DEX_* */
-#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/dex.h>       /* DEX_* */
+#include <deemon/error.h>     /* DeeError_* */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_CMETHOD0 */
-#include <deemon/string.h>          /* DeeStringObject, DeeString_Check */
-#include <deemon/system-features.h> /* read, system */
-#include <deemon/system.h>          /* DeeNTSystem_GetFilenameOfHandle, DeeNTSystem_GetHandle, DeeSystem_GetFilenameOfFD, DeeUnixSystem_GetFD */
+#include <deemon/objmethod.h> /* DEFINE_CMETHOD0 */
+#include <deemon/string.h>    /* DeeStringObject, DeeString_Check */
+#include <deemon/system.h>    /* DeeNTSystem_GetFilenameOfHandle, DeeNTSystem_GetHandle, DeeSystem_GetFilenameOfFD, DeeUnixSystem_GetFD */
 
 #include <stddef.h> /* NULL */
 

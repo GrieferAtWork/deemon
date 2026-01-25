@@ -40,7 +40,7 @@
 #include <deemon/roset.h>              /* DeeRoSet_Type */
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
-#include <deemon/system-features.h>    /* EOF, bzero, memcpy, memmovedownc, mempcpyc, memset */
+#include <deemon/system-features.h>    /* bzero, memcpy, memmovedownc, mempcpyc, memset */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
 
@@ -56,7 +56,7 @@
 
 #include <stdbool.h> /* false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
-#include <stdint.h>  /* uintN_t */
+#include <stdint.h>  /* uint8_t */
 
 #ifdef __OPTIMIZE_SIZE__
 #define NULL_IF_Os(v) NULL

@@ -43,7 +43,7 @@
 #include <deemon/string.h>             /* DeeString*, DeeUni_ToLower, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* Dee_UNICODE_UTF8_CURLEN, Dee_unicode_utf8seqlen, Dee_unicode_writeutf8 */
 #include <deemon/super.h>              /* DeeSuper* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_get_osfhandle, CONFIG_HAVE_memcasecmp, EOF, access, bcmpc, close, creat, getc, memcasecmp, mmap, open, pread, putc, pwrite, read, readall, remainder, stderr, stdin, stdout, strchr, strend, sync, system, time, trunc, ungetc, write, writeall */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_get_osfhandle, CONFIG_HAVE_memcasecmp, bcmpc, memcasecmp, readall, stderr, stdin, stdout, strchr, strend, writeall */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/lock.h>          /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 

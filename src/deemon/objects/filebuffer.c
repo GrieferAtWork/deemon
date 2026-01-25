@@ -33,7 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeUni_ToLower */
-#include <deemon/system-features.h> /* CONFIG_HAVE_atexit, access, atexit, close, exit, fflush, getc, isatty, memchr, memcpy, mempcpy, open, read, stderr, stdin, stdout, stpcpy, sync, time, ungetc, write */
+#include <deemon/system-features.h> /* CONFIG_HAVE_atexit, atexit, fflush, memchr, memcpy, mempcpy, stpcpy */
 #include <deemon/util/atomic.h>     /* atomic_read */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_* */
 #include <deemon/util/rlock.h>      /* Dee_rshared_rwlock_init */

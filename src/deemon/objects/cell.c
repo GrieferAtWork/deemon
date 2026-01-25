@@ -33,7 +33,6 @@
 #include <deemon/object.h>
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_STR */
-#include <deemon/system-features.h>    /* access, read, write */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include "../runtime/strings.h"

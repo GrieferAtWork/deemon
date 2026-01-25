@@ -42,7 +42,7 @@
 #include <deemon/objmethod.h>       /* DEFINE_CMETHOD0, DEFINE_KWCMETHOD */
 #include <deemon/seq.h>             /* DeeSeq_AsHeapVector */
 #include <deemon/string.h>          /* DEFINE_STRING_EX, DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FREPLAC */
-#include <deemon/system-features.h> /* close, exit, frealpath, free, get_osfhandle, mempcpyc, open, openat, pipe, read, remove, signal, strlen, system, truncate, wait, write */
+#include <deemon/system-features.h> /* mempcpyc, strlen */
 #include <deemon/system.h>          /* DeeNTSystem_* */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>           /* DeeTuple* */

@@ -32,7 +32,6 @@
 #include <deemon/object.h>
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_STR */
-#include <deemon/system-features.h>    /* time */
 #include <deemon/weakref.h>            /* DeeWeakRef* */
 /**/
 
@@ -40,7 +39,7 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
-#include <stdbool.h> /* bool, true */
+#include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, offsetof, size_t */
 
 DECL_BEGIN

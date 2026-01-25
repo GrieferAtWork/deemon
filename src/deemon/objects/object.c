@@ -56,7 +56,7 @@
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/string.h>             /* DEFINE_STRING, DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, WSTR_LENGTH */
 #include <deemon/super.h>              /* DeeSuper* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memsetp, abort, access, bzero*, memcpyc, memsetp, pow, stat, strlen, time */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memsetp, abort, bzero*, memcpyc, memsetp, strlen */
 #include <deemon/tuple.h>              /* DeeNullableTuple_Type, DeeTuple*, Dee_EmptyTuple */
 #include <deemon/util/atomic.h>        /* Dee_ATOMIC_ACQ_REL, atomic_* */
 #include <deemon/util/lock.h>          /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_*, Dee_atomic_rwlock_init */

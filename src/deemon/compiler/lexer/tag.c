@@ -30,7 +30,7 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeUni_IsLF, Dee_UNICODE_PRINTER_ISEMPTY, Dee_unicode_printer* */
-#include <deemon/system-features.h> /* bcmpc, bzero, memcpy, memmoveupc, truncate */
+#include <deemon/system-features.h> /* bcmpc, bzero, memcpy, memmoveupc */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

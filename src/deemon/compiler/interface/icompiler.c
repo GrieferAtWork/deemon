@@ -42,7 +42,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>                /* DeeSeq_* */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString */
-#include <deemon/system-features.h>    /* bcmp, bcmpc, bzero, stdout, strchr, strend, write */
+#include <deemon/system-features.h>    /* bcmp, bcmpc, bzero, strchr, strend */
 #include <deemon/tuple.h>              /* DeeTuple_Type */
 #include <deemon/util/cache.h>         /* DECLARE_OBJECT_CACHE, DECLARE_STRUCT_CACHE */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_cinit */

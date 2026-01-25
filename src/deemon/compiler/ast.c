@@ -34,7 +34,6 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>               /* Dee_EmptySeq */
 #include <deemon/set.h>               /* Dee_EmptySet */
-#include <deemon/system-features.h>   /* write */
 #include <deemon/tuple.h>             /* Dee_EmptyTuple */
 #include <deemon/util/cache.h>        /* DECLARE_STRUCT_CACHE, DEFINE_OBJECT_CACHE, DEFINE_STRUCT_CACHE */
 

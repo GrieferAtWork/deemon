@@ -37,7 +37,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type, Dee_EmptySeq */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
-#include <deemon/system-features.h> /* bzero, floor, memcpy */
+#include <deemon/system-features.h> /* bzero, memcpy */
 #include <deemon/util/atomic.h>     /* atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 

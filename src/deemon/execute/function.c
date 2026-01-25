@@ -41,7 +41,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeRefVector_NewReadonly, DeeSeq_* */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
-#include <deemon/system-features.h>    /* access, bzero, memcpy*, memset, read */
+#include <deemon/system-features.h>    /* bzero, memcpy*, memset */
 #include <deemon/traceback.h>          /* DeeFrameObject, DeeFrame_NewReferenceWithLock, Dee_FRAME_F* */
 #include <deemon/tuple.h>              /* DeeTuple_Type, Dee_EmptyTuple */
 #include <deemon/util/atomic.h>        /* atomic_inc */

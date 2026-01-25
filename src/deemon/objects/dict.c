@@ -43,7 +43,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Unpack */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_STR */
-#include <deemon/system-features.h>    /* EOF, bzero*, memcpy*, memmovedownc, memmoveupc, memset, remove, time */
+#include <deemon/system-features.h>    /* bzero*, memcpy*, memmovedownc, memmoveupc, memset */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/lock.h>          /* DeeLock_Acquire2, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */

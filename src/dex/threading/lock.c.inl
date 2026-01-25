@@ -44,7 +44,7 @@
 #include <deemon/util/rlock-utils.h> /* Dee_ratomic_lock_*, Dee_ratomic_rwlock_* */
 #include <deemon/util/rlock.h>       /* Dee_ratomic_lock_*, Dee_ratomic_rwlock_*, Dee_rshared_lock_*, Dee_rshared_rwlock_*, _Dee_ratomic_lock_release_NDEBUG, _Dee_ratomic_rwlock_*, _Dee_rshared_lock_release_NDEBUG, _Dee_rshared_rwlock_* */
 
-#include <stdbool.h> /* bool, false, true */
+#include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* uint64_t, uintptr_t */
 

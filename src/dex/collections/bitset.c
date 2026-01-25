@@ -40,7 +40,7 @@
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/set.h>             /* DeeSet_Type */
 #include <deemon/string.h>          /* DeeString_Check, DeeString_STR, WSTR_LENGTH */
-#include <deemon/system-features.h> /* access, memcpy*, read, remove, write */
+#include <deemon/system-features.h> /* memcpy* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 
 #include <hybrid/__atomic.h>  /* __hybrid_bitset_atomic_*, bitset_atomic_* */

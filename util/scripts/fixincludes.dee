@@ -39,7 +39,7 @@ function main() {
 #if 0
 //		.dumpExports()
 		.dumpHeaders()
-#elif 1
+#elif 0
 		.fixFile(f"{ROOTDIR}/src/deemon/compiler/lexer/expression.c")
 #else
 		.fixPaths(include: {

@@ -32,7 +32,7 @@
 #include <deemon/module.h>          /* DeeModule*, Dee_module_object */
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
-#include <deemon/system-features.h> /* access, read, write */
+#include <deemon/system-features.h> /* access */
 
 #include <hybrid/typecore.h> /* __SIZE_WIDTH__ */
 

@@ -40,7 +40,7 @@
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/string.h>             /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FIGNORE, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* DeeString_GetChar */
-#include <deemon/system-features.h>    /* EOF, access, memcpyc, open, read, remove, strlen, system, time, write */
+#include <deemon/system-features.h>    /* memcpyc, strlen */
 #include <deemon/thread.h>             /* DeeThread_Self */
 #include <deemon/tuple.h>              /* DeeTuple_Newf */
 

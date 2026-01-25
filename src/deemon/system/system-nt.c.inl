@@ -34,7 +34,7 @@
 #include <deemon/none.h>            /* DeeNone_Check */
 #include <deemon/object.h>
 #include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_*, Dee_UNICODE_PRINTER_*, Dee_charptr, Dee_unicode_printer*, STRING_WIDTH_1BYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_DEFINE_memcasecmp, DeeSystem_DEFINE_wcslen, DeeSystem_GetErrno, DeeSystem_SetErrno, _doserrno, _dosmaperr, errno_kos2nt, errno_nt2kos, get_osfhandle, memcasecmp, memmovedownw, memmoveupc, pipe, wcslen */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_DEFINE_memcasecmp, DeeSystem_DEFINE_wcslen, DeeSystem_GetErrno, DeeSystem_SetErrno, _doserrno, _dosmaperr, errno_kos2nt, errno_nt2kos, get_osfhandle, memcasecmp, memmovedownw, memmoveupc, wcslen */
 #include <deemon/system.h>          /* CONFIG_WANT_WINDOWS_STD_FILES, DeeNTSystem_*, DeeNT_DWORD, DeeSystem_MakeNormalAndAbsolute, Dee_SYSTEM_ERROR_UNKNOWN */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/util/atomic.h>     /* atomic_write */

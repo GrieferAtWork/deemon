@@ -39,7 +39,7 @@
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeRange_New, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>          /* DEFINE_STRING_EX, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
-#include <deemon/system-features.h> /* CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memsetp, access, memsetp, remove */
+#include <deemon/system-features.h> /* CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memsetp, memsetp */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/atomic.h>     /* atomic_* */

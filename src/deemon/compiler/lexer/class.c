@@ -34,7 +34,7 @@
 #include <deemon/none.h>             /* Dee_None */
 #include <deemon/object.h>
 #include <deemon/string.h>           /* DeeString*, Dee_UNICODE_PRINTER_LENGTH, Dee_unicode_printer* */
-#include <deemon/system-features.h>  /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, bcmpc, bzero, memcpy, mempcpyc, memset, read, strcmp, strlen, write */
+#include <deemon/system-features.h>  /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, bcmpc, bzero, memcpy, mempcpyc, memset, strcmp, strlen */
 #include <deemon/tuple.h>            /* Dee_EmptyTuple */
 
 #include "../../runtime/strings.h"

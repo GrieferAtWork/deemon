@@ -52,7 +52,7 @@
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/set.h>             /* DeeSet_Type */
 #include <deemon/string.h>          /* DeeString*, DeeUni_AsDigit, DeeUni_IsSymCont, Dee_ASCII_PRINTER_INIT, Dee_STRING_MUL_SIZEOF_WIDTH, Dee_UNICODE_PRINTER_INIT, Dee_ascii_printer*, Dee_string_utf, Dee_unicode_printer*, STRING_ERROR_FSTRICT, WSTR_LENGTH */
-#include <deemon/system-features.h> /* bcmpc, memchr, strchr, strlen, write */
+#include <deemon/system-features.h> /* bcmpc, memchr, strchr, strlen */
 #include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */

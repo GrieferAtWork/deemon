@@ -33,7 +33,7 @@
 #include <deemon/format.h>          /* DeeFormat_*, PRF* */
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeAscii_ItoaUpperDigit, DeeStringObject, Dee_EmptyString */
-#include <deemon/system-features.h> /* bzero, memcpy, memmoveupc, memset, strlen, truncate */
+#include <deemon/system-features.h> /* bzero, memcpy, memmoveupc, memset, strlen */
 
 #include <hybrid/byteswap.h>        /* UNALIGNED_GETLE* */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

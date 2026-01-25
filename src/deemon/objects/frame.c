@@ -33,7 +33,6 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>                /* DeeRefVector_NewReadonly */
 #include <deemon/string.h>             /* DeeString* */
-#include <deemon/system-features.h>    /* access, read, write */
 #include <deemon/system.h>             /* DeeSystem_* */
 #include <deemon/traceback.h>          /* DeeFrame*, Dee_CODE_FRAME_DEAD, Dee_FRAME_F*, _DeeFrame_* */
 #include <deemon/tuple.h>              /* DeeTuple* */

@@ -40,7 +40,7 @@
 #include <deemon/serial.h>             /* DeeSerial, DeeSerial_XPutObject, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString */
 #include <deemon/struct.h>             /* DeeStructObject_* */
-#include <deemon/system-features.h>    /* memcpy, memset, read, stderr */
+#include <deemon/system-features.h>    /* memcpy, memset */
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self, Dee_THREAD_STATE_TERMINATED, Dee_except_frame */
 #include <deemon/traceback.h>          /* DeeTracebackObject, DeeTraceback_Type */
 #include <deemon/tuple.h>              /* DeeTuple* */

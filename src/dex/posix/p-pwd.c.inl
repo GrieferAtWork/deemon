@@ -38,7 +38,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>       /* DEFINE_CMETHOD0, DEFINE_KWCMETHOD */
 #include <deemon/string.h>          /* DEFINE_STRING, DEFINE_STRING_EX, DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FREPLAC */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_strnlen, DeeSystem_GetErrno, chdir, fchdir, fchdirat, getcwd, gethostname, strnlen, wchdir */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_strnlen, DeeSystem_GetErrno, chdir, fchdir, fchdirat, gethostname, strnlen, wchdir */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_HAVE_FS_DRIVES, DeeSystem_PrintPwd, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 

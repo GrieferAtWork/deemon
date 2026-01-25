@@ -28,7 +28,7 @@
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/format.h>             /* PRF* */
-#include <deemon/system-features.h>    /* abort, dup, memcpyc, memmoveupc, memset */
+#include <deemon/system-features.h>    /* abort, memcpyc, memmoveupc, memset */
 
 #include <hybrid/byteswap.h>      /* UNALIGNED_GETLE*, UNALIGNED_SETLE* */
 #include <hybrid/sequence/list.h> /* SLIST_FOREACH */

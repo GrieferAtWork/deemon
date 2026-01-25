@@ -38,7 +38,7 @@
 #include <deemon/notify.h>          /* Dee_GetEnv */
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DEFINE_STRING, DeeString*, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_PRINT, Dee_EmptyString, Dee_ascii_printer* */
-#include <deemon/system-features.h> /* close, environ, memcpy, read, select, system, wait */
+#include <deemon/system-features.h> /* memcpy, select */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds, DeeThread_SleepNoInt */
 #include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/atomic.h>     /* atomic_* */

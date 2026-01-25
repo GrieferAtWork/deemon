@@ -39,7 +39,7 @@
 #include <deemon/objmethod.h>          /* DeeCMethod_Check, DeeKwCMethod_Check */
 #include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Check, _DeeRoDict_GetRealVTab */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString, STRING_ERROR_FIGNORE */
-#include <deemon/system-features.h>    /* bcmpc, bzero, link, memcpy*, memmovedownc, memmoveupc, mempcpyc, memset, trunc */
+#include <deemon/system-features.h>    /* bcmpc, bzero, memcpy*, memmovedownc, memmoveupc, mempcpyc, memset, trunc */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>              /* DeeTuple* */
 

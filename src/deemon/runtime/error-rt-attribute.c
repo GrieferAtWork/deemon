@@ -38,7 +38,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, WSTR_LENGTH */
 #include <deemon/super.h>              /* DeeSuper* */
-#include <deemon/system-features.h>    /* access, memcmp, memset, read, stpcpy, strlen, write */
+#include <deemon/system-features.h>    /* access, memcmp, memset, stpcpy, strlen */
 #include <deemon/system.h>             /* DeeSystem_IsStaticPointer */
 #include <deemon/util/atomic.h>        /* atomic_* */
 

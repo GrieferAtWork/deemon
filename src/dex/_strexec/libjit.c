@@ -26,17 +26,16 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
-#include <deemon/bytes.h>           /* DeeBytes* */
-#include <deemon/dex.h>             /* DEX_*, Dee_DEXSYM_READONLY */
-#include <deemon/error.h>           /* DeeError_*, ERROR_PRINT_DOHANDLE */
-#include <deemon/file.h>            /* DeeFile_ReadBytes */
-#include <deemon/module.h>          /* DeeModuleObject */
+#include <deemon/arg.h>       /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
+#include <deemon/bytes.h>     /* DeeBytes* */
+#include <deemon/dex.h>       /* DEX_*, Dee_DEXSYM_READONLY */
+#include <deemon/error.h>     /* DeeError_*, ERROR_PRINT_DOHANDLE */
+#include <deemon/file.h>      /* DeeFile_ReadBytes */
+#include <deemon/module.h>    /* DeeModuleObject */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
-#include <deemon/string.h>          /* DeeString_AsUtf8, DeeString_Check, WSTR_LENGTH */
-#include <deemon/system-features.h> /* EOF */
-#include <deemon/thread.h>          /* DeeThreadObject, DeeThread_Self */
+#include <deemon/objmethod.h> /* DEFINE_KWCMETHOD */
+#include <deemon/string.h>    /* DeeString_AsUtf8, DeeString_Check, WSTR_LENGTH */
+#include <deemon/thread.h>    /* DeeThreadObject, DeeThread_Self */
 
 #include <stdbool.h> /* true */
 #include <stddef.h>  /* NULL, size_t */

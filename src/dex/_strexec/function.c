@@ -35,7 +35,7 @@
 #include <deemon/object.h>
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer*, STRING_ERROR_FIGNORE, STRING_ERROR_FSTRICT */
-#include <deemon/system-features.h> /* CONFIG_HAVE_FPU, EOF, bcmpc, memcmp, memcpy*, mempcpy */
+#include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bcmpc, memcmp, memcpy*, mempcpy */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_Self */
 #include <deemon/tuple.h>           /* DeeTuple*, Dee_EmptyTuple */
 

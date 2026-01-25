@@ -34,7 +34,6 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type, Dee_SEQCLASS_SET */
 #include <deemon/set.h>                /* DeeSet_EmptyInstance, DeeSet_Type */
 #include <deemon/string.h>             /* DeeString_STR */
-#include <deemon/system-features.h>    /* write */
 
 #include "../runtime/method-hint-defaults.h"
 #include "../runtime/method-hints.h"
@@ -43,8 +42,7 @@
 #include "seq/default-sets.h"
 #include "seq/unique-iterator.h"
 
-#include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, size_t */
+#include <stddef.h> /* NULL, size_t */
 
 DECL_BEGIN
 

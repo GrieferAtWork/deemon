@@ -32,7 +32,7 @@
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
 #include <deemon/object.h>
 #include <deemon/string.h>             /* DEFINE_STRING_EX, DeeString_STR */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_*, ceil, floor, isfinite, isgreater, isgreaterequal, isinf, isless, islessequal, islessgreater, isnan, isnormal, isunordered, nextafter, round, trunc */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_*, isgreater, isgreaterequal, isless, islessequal, islessgreater */
 #include <deemon/tuple.h>              /* DeeTuple* */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
@@ -43,7 +43,7 @@
 #include "../runtime/strings.h"
 #include "int-8bit.h"
 
-#include <stdbool.h> /* bool, false, true */
+#include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* intN_t, uintN_t */
 

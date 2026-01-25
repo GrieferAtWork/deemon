@@ -32,8 +32,7 @@
 #include <deemon/string.h>    /* DEFINE_STRING, DeeString_STR */
 #include <deemon/util/lock.h> /* Dee_ATOMIC_RWLOCK_INIT */
 
-#include <stdbool.h> /* bool */
-#include <stddef.h>  /* NULL, size_t, wchar_t */
+#include <stddef.h> /* NULL, size_t */
 
 #undef FORMAT_TYP
 #undef FORMAT_STR

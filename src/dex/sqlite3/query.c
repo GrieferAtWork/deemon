@@ -36,7 +36,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/string.h>          /* DeeString*, STRING_ERROR_FIGNORE */
-#include <deemon/system-features.h> /* read, strlen */
+#include <deemon/system-features.h> /* strlen */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 

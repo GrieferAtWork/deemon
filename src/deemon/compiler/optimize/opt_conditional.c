@@ -30,7 +30,7 @@
 #include <deemon/object.h>
 #include <deemon/tuple.h>             /* DeeTuple_Pack */
 
-#include <stdbool.h> /* bool, false, true */
+#include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
 
 DECL_BEGIN

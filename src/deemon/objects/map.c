@@ -39,7 +39,6 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type, Dee_SEQCLASS_MAP */
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/string.h>             /* DeeString_STR */
-#include <deemon/system-features.h>    /* read */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/method-hint-defaults.h"

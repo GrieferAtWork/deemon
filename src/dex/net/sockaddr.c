@@ -33,7 +33,7 @@
 #include <deemon/none.h>            /* DeeNone_Check */
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeString*, DeeUni_*, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_LEN, Dee_ascii_printer* */
-#include <deemon/system-features.h> /* CONFIG_HAVE_memcasecmp, bcmp, bzero, errno, memcasecmp, memcpy*, mempcpyc, pipe, strchr, strend, strlen */
+#include <deemon/system-features.h> /* CONFIG_HAVE_memcasecmp, bcmp, bzero, errno, memcasecmp, memcpy*, mempcpyc, strchr, strend, strlen */
 #include <deemon/thread.h>          /* DeeThread_Sleep */
 #include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */

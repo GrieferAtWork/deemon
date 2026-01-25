@@ -44,7 +44,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_LEN, Dee_EmptyString, Dee_ascii_printer* */
 #include <deemon/super.h>              /* DeeSuper* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, bcmpc, memcpy*, memset, read, strchr, strcmp, strlen, unlink */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, bcmpc, memcpy*, memset, strchr, strcmp, strlen */
 #include <deemon/thread.h>             /* DeeThread_Self */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
 #include <deemon/util/atomic.h>        /* atomic_* */

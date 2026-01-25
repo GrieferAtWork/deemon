@@ -35,7 +35,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_STR */
 #include <deemon/system-features.h>    /* memcpy */
-#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self, DeeThread_Trace, Dee_except_frame, Dee_thread_object, except_frame_gettb */
+#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self, Dee_except_frame, Dee_thread_object, except_frame_gettb */
 #include <deemon/traceback.h>          /* DeeFrame_NewReferenceWithLock, DeeFrame_Type, DeeTraceback*, Dee_FRAME_FREADONLY, empty_traceback_object */
 #include <deemon/tuple.h>              /* DeeTupleObject */
 #include <deemon/util/atomic.h>        /* atomic_* */

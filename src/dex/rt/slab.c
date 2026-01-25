@@ -33,7 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>             /* DeeSeq_Type */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
-#include <deemon/system-features.h> /* free, memcmp, memcpy, time */
+#include <deemon/system-features.h> /* memcmp, memcpy */
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 

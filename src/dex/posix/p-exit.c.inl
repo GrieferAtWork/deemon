@@ -33,7 +33,7 @@
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
 #include <deemon/objmethod.h>       /* DEFINE_CMETHOD0, DEFINE_KWCMETHOD */
-#include <deemon/system-features.h> /* EXIT_FAILURE, _Exit, abort, atexit, exit */
+#include <deemon/system-features.h> /* EXIT_FAILURE */
 #include <deemon/tuple.h>           /* DeeTuple_Type, Dee_EmptyTuple */
 
 #include <stdbool.h> /* false, true */

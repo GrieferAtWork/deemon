@@ -29,7 +29,6 @@
 #include <deemon/module.h>            /* DeeModule*, Dee_MODSYM_FCONSTEXPR, Dee_MODSYM_FPROPERTY, Dee_module_symbol_getindex */
 #include <deemon/none.h>              /* DeeNone_NewRef */
 #include <deemon/object.h>
-#include <deemon/system-features.h>   /* read */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL */

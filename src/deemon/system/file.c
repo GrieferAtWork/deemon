@@ -35,7 +35,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeString*, DeeUni_ToLower */
 #include <deemon/stringutils.h>     /* Dee_unicode_utf8seqlen_safe */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_SetErrno, EOF, O_APPEND, O_BINARY, O_CLOEXEC, O_CREAT, O_DIRECT, O_EXCL, O_NOATIME, O_NOFOLLOW, O_NONBLOCK, O_OBTAIN_DIR, O_RDONLY, O_RDWR, O_SYNC, O_TRUNC, O_WRONLY, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO, _IOFBF, _IOLBF, _IONBF, __acrt_iob_func, __iob_func, access, bzero, close, dup, fclose, fdatasync, ferror, fflush, fftruncate64, fgetc, fileno, fisatty, fopen, fopen64, fputc, fread, fseek, fseeko, fseeko64, fsync, ftello, ftello64, ftruncate, ftruncate64, fwrite, isatty, lseek, lseek64, memcpyc, mempcpyc, open, open64, pread, pread64, pwrite, pwrite64, read, setvbuf, stderr, stdin, stdout, sync, system, truncate, truncate64, ungetc, wopen, wopen64, write */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_SetErrno, EOF, O_APPEND, O_BINARY, O_CLOEXEC, O_CREAT, O_DIRECT, O_EXCL, O_NOATIME, O_NOFOLLOW, O_NONBLOCK, O_OBTAIN_DIR, O_RDONLY, O_RDWR, O_SYNC, O_TRUNC, O_WRONLY, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO, _IOFBF, _IOLBF, _IONBF, __acrt_iob_func, __iob_func, bzero, close, dup, fclose, fdatasync, ferror, fflush, fftruncate64, fgetc, fileno, fisatty, fopen, fopen64, fputc, fread, fseek, fseeko, fseeko64, fsync, ftello, ftello64, ftruncate, ftruncate64, fwrite, isatty, lseek, lseek64, memcpyc, mempcpyc, open, open64, pread, pread64, pwrite, pwrite64, read, setvbuf, stderr, stdin, stdout, sync, truncate, truncate64, ungetc, wopen, wopen64, write */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_GetFilenameOfFD, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/util/atomic.h>     /* atomic_* */
@@ -49,7 +49,7 @@
 
 #include "../runtime/strings.h"
 
-#include <stdbool.h> /* bool, false, true */
+#include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL, offsetof, size_t, wchar_t */
 #include <stdint.h>  /* UINT32_MAX, int64_t, uint8_t, uint32_t, uint64_t, uintptr_t */
 

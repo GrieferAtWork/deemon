@@ -40,7 +40,7 @@
 #include <deemon/seq.h>             /* DeeSeq_Type */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeString*, STRING_ERROR_FIGNORE */
-#include <deemon/system-features.h> /* read, strcmp */
+#include <deemon/system-features.h> /* strcmp */
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* int64_t */

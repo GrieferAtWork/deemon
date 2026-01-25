@@ -34,13 +34,12 @@
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf */
 #include <deemon/none.h>            /* DeeNone_Check, DeeNone_Singleton, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/system-features.h> /* access, bzeroc, read, write */
+#include <deemon/system-features.h> /* bzeroc */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_Self, Dee_THREAD_STATE_TERMINATING */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_* */
 
-#include <stdbool.h> /* bool */
-#include <stddef.h>  /* NULL, offsetof, size_t */
-#include <stdint.h>  /* uint8_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* uint8_t */
 
 DECL_BEGIN
 

@@ -35,7 +35,7 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
-#include <stdbool.h> /* bool, false, true */
+#include <stdbool.h> /* false, true */
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* int32_t, int64_t */
 

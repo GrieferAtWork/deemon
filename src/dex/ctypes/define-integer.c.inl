@@ -49,9 +49,8 @@
 #include <hybrid/typecore.h>  /* __*_TYPE__, __SIZEOF_INT__, __SIZEOF_LONG__ */
 #include <hybrid/unaligned.h> /* UNALIGNED_GET*, UNALIGNED_SET* */
 
-#include <stdbool.h> /* false, true */
-#include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* INTn_C, INTn_MAX, INTn_MIN, UINTn_C, UINTn_MAX, intN_t, uintN_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* INTn_C, INTn_MAX, INTn_MIN, UINTn_C, UINTn_MAX, intN_t, uintN_t */
 
 DECL_BEGIN
 

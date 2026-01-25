@@ -42,7 +42,7 @@
 #include <deemon/objmethod.h>       /* DEFINE_*CMETHOD* */
 #include <deemon/serial.h>          /* DeeSerial, DeeSerial_Addr2Mem, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeUni_ToLower, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
-#include <deemon/system-features.h> /* CLOCK_REALTIME, CONFIG_HAVE_*, clock_gettime, clock_gettime64, gettimeofday, gettimeofday64, memcasecmp, remainder, strlen, system, time, time64, timezone, tzset, write */
+#include <deemon/system-features.h> /* CLOCK_REALTIME, CONFIG_HAVE_*, clock_gettime, clock_gettime64, gettimeofday, gettimeofday64, memcasecmp, strlen, time, time64, timezone, tzset */
 #include <deemon/system.h>          /* DeeSystem_GetWalltime */
 #include <deemon/thread.h>          /* DeeThread_GetTimeMicroSeconds */
 #include <deemon/util/atomic.h>     /* atomic_write */

@@ -28,7 +28,7 @@
 #include <deemon/format.h>          /* Dee_sprintf */
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
-#include <deemon/system-features.h> /* AT_FDCWD, CONFIG_HAVE_*, DeeSystem_DEFINE_strnlen, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_IF_E3, frealpath, frealpath4, get_osfhandle, link, lstat, read, readlink, stat, strnlen */
+#include <deemon/system-features.h> /* AT_FDCWD, CONFIG_HAVE_*, DeeSystem_DEFINE_strnlen, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_IF_E3, frealpath, frealpath4, get_osfhandle, lstat, readlink, stat, strnlen */
 #include <deemon/system.h>          /* DeeNTSystem_PrintFilenameOfHandle, DeeNTSystem_TranslateNtError, DeeSystem_GetFilenameOfFD, DeeSystem_PrintFilenameOfFD, DeeUnixSystem_* */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 

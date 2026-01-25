@@ -41,7 +41,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/string.h>             /* DeeString_STR, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
-#include <deemon/system-features.h>    /* memcpyc, memmovedownc, read, remove */
+#include <deemon/system-features.h>    /* memcpyc, memmovedownc */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 

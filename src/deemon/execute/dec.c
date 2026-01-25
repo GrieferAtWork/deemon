@@ -37,7 +37,7 @@
 #include <deemon/heap.h>            /* DeeHeap_GetRegionOf, Dee_HEAPCHUNK_*, Dee_heapchunk, Dee_heapregion, Dee_heaptail */
 #include <deemon/module.h>          /* DeeModule*, Dee_DEC_FLOADOUTDATED, Dee_DEC_FUNTRUSTED, Dee_MODSYM_F*, Dee_MODULE_F*, Dee_MODULE_HASHNX, Dee_compiler_options, Dee_module_* */
 #include <deemon/string.h>          /* DeeString*, Dee_EmptyString, Dee_string_object, STRING_ERROR_FSTRICT, WSTR_LENGTH */
-#include <deemon/system-features.h> /* CONFIG_HAVE_memcasecmp, DeeSystem_DEFINE_memcasecmp, EOF, bcmp, bzero, link, memcasecmp, memcmp, memcpy*, memmoveupc, mempcpy*, memset, open, strlen */
+#include <deemon/system-features.h> /* CONFIG_HAVE_memcasecmp, DeeSystem_DEFINE_memcasecmp, bcmp, bzero, link, memcasecmp, memcmp, memcpy*, memmoveupc, mempcpy*, memset, strlen */
 #include <deemon/system.h>          /* DeeSystem_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/md5.h>        /* DeeMD5_* */

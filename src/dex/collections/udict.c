@@ -39,7 +39,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Unpack */
 #include <deemon/string.h>          /* Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
-#include <deemon/system-features.h> /* memcpy*, memmovedownc, read */
+#include <deemon/system-features.h> /* memcpy*, memmovedownc */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */

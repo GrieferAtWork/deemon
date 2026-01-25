@@ -35,7 +35,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, access, memcpy, memset, read, stat, strcmp */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, memcpy, memset, strcmp */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SHIFT_TYPE__ */
 
@@ -43,8 +43,7 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
-#include <stdbool.h> /* false, true */
-#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stddef.h> /* NULL, offsetof, ptrdiff_t, size_t */
 
 DECL_BEGIN
 

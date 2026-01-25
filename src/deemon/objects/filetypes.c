@@ -38,7 +38,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, Dee_CASE_WIDTH_nBYTE, Dee_STRING_HASH_UNSET, Dee_UNICODE_PRINTER_*, Dee_string_utf*, Dee_unicode_printer*, STRING_SIZEOF_WIDTH, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* Dee_UNICODE_UTF8_CURLEN, Dee_unicode_utf8seqlen */
-#include <deemon/system-features.h>    /* memcmp, memcpy*, mempcpy, mmap, read, readall, ungetc */
+#include <deemon/system-features.h>    /* memcmp, memcpy*, mempcpy, readall */
 #include <deemon/system.h>             /* DeeNTSystem_GetHandle, DeeUnixSystem_GetFD */
 #include <deemon/util/atomic.h>        /* atomic_add, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_init, Dee_shared_rwlock_init */

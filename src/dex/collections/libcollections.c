@@ -26,12 +26,11 @@
 
 #include <deemon/api.h>
 
-#include <deemon/cached-dict.h>     /* DeeCachedDict_Type */
-#include <deemon/dex.h>             /* DEX_*, Dee_DEXSYM_READONLY */
-#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/cached-dict.h> /* DeeCachedDict_Type */
+#include <deemon/dex.h>         /* DEX_*, Dee_DEXSYM_READONLY */
+#include <deemon/error.h>       /* DeeError_* */
 #include <deemon/object.h>
-#include <deemon/seq.h>             /* DeeSeq_Type */
-#include <deemon/system-features.h> /* access */
+#include <deemon/seq.h>         /* DeeSeq_Type */
 
 #include "accu.h"
 

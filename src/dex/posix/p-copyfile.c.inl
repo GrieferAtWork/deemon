@@ -37,7 +37,7 @@
 #include <deemon/mapfile.h>         /* DeeMapFile_F_ATSTART, DeeMapFile_F_NORMAL */
 #include <deemon/none.h>            /* DeeNone_Check, Dee_None, return_none */
 #include <deemon/object.h>          /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/system-features.h> /* AT_EMPTY_PATH, AT_SYMLINK_NOFOLLOW, RENAME_NOREPLACE, read */
+#include <deemon/system-features.h> /* AT_EMPTY_PATH, AT_SYMLINK_NOFOLLOW, RENAME_NOREPLACE */
 #include <deemon/object.h>
 #include <deemon/objmethod.h> /* DEFINE_KWCMETHOD */
 #include <deemon/serial.h>    /* DeeSerial*, Dee_seraddr_t */

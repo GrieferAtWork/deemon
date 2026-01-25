@@ -39,7 +39,7 @@
 #include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_AsDigit, DeeUni_IsSpace, Dee_ASCII_PRINTER_INIT, Dee_ascii_printer*, Dee_charptr_const, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* DeeString_GetChar */
 #include <deemon/super.h>              /* DeeObject_TGetBuf, DeeSuper* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_*, bcmp, bzero, memcmp, memcpy, memmove, mempcpy, memset, memsetb, memsetl, memsetq, memsetw, read, write */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_*, bcmp, bzero, memcmp, memcpy, memmove, mempcpy, memset, memsetb, memsetl, memsetq, memsetw */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 

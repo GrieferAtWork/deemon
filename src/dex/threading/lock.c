@@ -40,7 +40,7 @@
 #include <deemon/seq.h>             /* DeeRefVector_NewReadonly */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>          /* DEFINE_STRING_EX, DeeString_STR */
-#include <deemon/system-features.h> /* memset, read, time, wait, write */
+#include <deemon/system-features.h> /* memset */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds */
 #include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/atomic.h>     /* Dee_ATOMIC_RELAXED, Dee_ATOMIC_SEQ_CST, atomic_* */
@@ -52,7 +52,7 @@
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
 #include <hybrid/typecore.h>    /* __SIZEOF_POINTER__ */
 
-#include <stdbool.h> /* bool, false, true */
+#include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* uint64_t, uintptr_t */
 

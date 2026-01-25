@@ -34,7 +34,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>       /* DEFINE_*CMETHOD* */
 #include <deemon/string.h>          /* DeeString_New, DeeString_NewUtf8, STRING_ERROR_FIGNORE */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_SetErrno, EOK, errno, isdigit, isupper, strerror, strerrordesc_np, strerrorname_np, strlen, sys_errlist, sys_nerr */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_SetErrno, EOK, isdigit, isupper, strerror, strerrordesc_np, strerrorname_np, strlen, sys_errlist, sys_nerr */
 
 #include <stddef.h> /* NULL, size_t */
 

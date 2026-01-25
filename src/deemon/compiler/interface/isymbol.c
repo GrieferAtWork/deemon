@@ -32,13 +32,11 @@
 #include <deemon/none.h>               /* DeeNone_NewRef */
 #include <deemon/object.h>
 #include <deemon/string.h>             /* DeeString*, STRING_ERROR_FIGNORE */
-#include <deemon/system-features.h>    /* access, read, write */
 
 #include "../../runtime/strings.h"
 
-#include <stdbool.h> /* bool */
-#include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* uint16_t */
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

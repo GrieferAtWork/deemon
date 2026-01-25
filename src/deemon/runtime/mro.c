@@ -37,7 +37,7 @@
 #include <deemon/objmethod.h>       /* DeeClsMember_New, DeeClsMember_Type, DeeClsMethod_New, DeeClsMethod_Type, DeeClsProperty_New, DeeClsProperty_Type, DeeKwClsMethod_New, DeeKwClsMethod_Type, DeeKwObjMethod_CallFunc, DeeKwObjMethod_New, DeeKwObjMethod_Type, DeeObjMethod* */
 #include <deemon/property.h>        /* DeeProperty_Type */
 #include <deemon/string.h>          /* DeeString_New, DeeString_STR */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_DEFINE_strcmp, DeeSystem_DEFINE_strcmpz, access, bzero, calloc, memcpy, memset, strcmp, strcmpz */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_DEFINE_strcmp, DeeSystem_DEFINE_strcmpz, bzero, memcpy, memset, strcmp, strcmpz */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_*, Dee_shared_rwlock_* */
 

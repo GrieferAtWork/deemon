@@ -34,7 +34,7 @@
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
 #include <deemon/objmethod.h>       /* DEFINE_CMETHOD, DEFINE_CMETHOD1 */
-#include <deemon/system-features.h> /* CONFIG_HAVE_strnlen, DeeSystem_DEFINE_strnlen, calloc, memcpyc, realloc, strnlen */
+#include <deemon/system-features.h> /* CONFIG_HAVE_strnlen, DeeSystem_DEFINE_strnlen, memcpyc, strnlen */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UMUL */
 

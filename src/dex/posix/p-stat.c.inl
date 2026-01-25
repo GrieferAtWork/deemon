@@ -39,7 +39,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
 #include <deemon/string.h>          /* DEFINE_STRING_EX, DeeString*, DeeUni_ToLower, Dee_wchar_t, WSTR_LENGTH */
-#include <deemon/system-features.h> /* AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, access, bzero, clearerr, fclose, ferror, fopen, fopen64, fseek, fseeko, fseeko64, fstat, fstatat, fstatat64, fstat64, ftell, ftello, ftello64, link, lstat, lstat64, memcasecmp, open, pipe, stat, stat64, strchr, strend, system, time, wlstat, wlstat64, wstat, wstat64 */
+#include <deemon/system-features.h> /* AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, bzero, clearerr, fclose, ferror, fopen, fopen64, fseek, fseeko, fseeko64, fstat, fstatat, fstatat64, fstat64, ftell, ftello, ftello64, lstat, lstat64, memcasecmp, stat, stat64, strchr, strend, wlstat, wlstat64, wstat, wstat64 */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_GetFilenameOfFD, DeeSystem_IsSep, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_val */

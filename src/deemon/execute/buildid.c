@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/dex.h>             /* DEX, Dee_module_dexdata */
+#include <deemon/dex.h>             /* Dee_module_dexdata */
 #include <deemon/exec.h>            /* DeeExec_GetTimestamp */
 #include <deemon/module.h>          /* DeeModule*, Dee_MODULE_FHASBUILDID, Dee_MODULE_FHASCTIME, Dee_module_buildid */
 #include <deemon/object.h>

@@ -28,7 +28,7 @@
 #include <deemon/gc.h>              /* DeeGC_*, Dee_GC_HEAD_SIZE, Dee_gc_head */
 #include <deemon/object.h>
 #include <deemon/serial.h>          /* DeeSerial, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t, Dee_serial_type */
-#include <deemon/system-features.h> /* free, memmovedownc, memmoveupc, memset */
+#include <deemon/system-features.h> /* memmovedownc, memmoveupc, memset */
 #include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, Dee_TYPE, Dee_funptr_t, Dee_unlockinfo, OBJECT_HEAD */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

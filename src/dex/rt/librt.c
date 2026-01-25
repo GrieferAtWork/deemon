@@ -66,7 +66,6 @@
 #include <deemon/set.h>               /* DeeSet_Type, Dee_EmptySet, Dee_UniversalSet */
 #include <deemon/string.h>            /* DEFINE_STRING_EX, DeeStringObject, DeeString_Type, Dee_EmptyString */
 #include <deemon/super.h>             /* DeeSuper_Type */
-#include <deemon/system-features.h>   /* access, mmap, read, system, time */
 #include <deemon/thread.h>            /* DeeExec_StackLimit, DeeThread_Type, Dee_EXEC_DEFAULT_STACK_LIMIT */
 #include <deemon/traceback.h>         /* DeeFrameObject, DeeFrame_Type, DeeTraceback_Type, Dee_FRAME_F* */
 #include <deemon/tuple.h>             /* DEFINE_TUPLE, DeeNullableTuple_Type, DeeTuple*, Dee_EmptyTuple */
@@ -77,9 +76,8 @@
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__, __SIZEOF_SIZE_T__ */
 
-#include <stdbool.h> /* bool */
-#include <stddef.h>  /* NULL, offsetof, size_t */
-#include <stdint.h>  /* uint16_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* uint16_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

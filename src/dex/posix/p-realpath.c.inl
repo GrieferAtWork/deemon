@@ -36,7 +36,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FNORMAL, STRING_ERROR_FREPLAC */
-#include <deemon/system-features.h> /* AT_EMPTY_PATH, AT_FDCWD, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, DeeSystem_DEFINE_strnlen, DeeSystem_GetErrno, canonicalize_file_name, freadlinkat, frealpath, frealpath4, free, link, lrealpath, read, readlink, realpath, realpath3, realpathat, strlen, strnlen */
+#include <deemon/system-features.h> /* AT_EMPTY_PATH, AT_FDCWD, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, DeeSystem_DEFINE_strnlen, DeeSystem_GetErrno, canonicalize_file_name, freadlinkat, frealpath, frealpath4, free, lrealpath, readlink, realpath3, realpathat, strlen, strnlen */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_*, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

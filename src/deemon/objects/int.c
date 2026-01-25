@@ -47,7 +47,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeAscii_ItoaDigits, DeeString*, DeeUni_*, Dee_ASCII_PRINTER_*, Dee_UNICODE_*, Dee_ascii_printer*, Dee_unicode_printer*, Dee_unitraits, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* Dee_unicode_readutf8_n, Dee_unicode_readutf8_rev_n */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_*, DeeSystem_DEFINE_memend, bzero*, ceil, floor, isfinite, isgreater, isgreaterequal, isinf, isless, islessequal, islessgreater, isnan, isnormal, isunordered, log, memcpy*, memend, mempcpyc, memset, nextafter, read, remainder, round, system, trunc */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_*, DeeSystem_DEFINE_memend, bzero*, isgreater, isgreaterequal, isless, islessequal, islessgreater, log, memcpy*, memend, mempcpyc, memset */
 #include <deemon/tuple.h>              /* DeeTuple* */
 
 #include <hybrid/__byteswap.h> /* __hybrid_bswap* */

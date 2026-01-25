@@ -47,7 +47,7 @@
 #include <deemon/notify.h>             /* DeeNotify_BroadcastClass, Dee_NOTIFICATION_CLASS_PWD */
 #include <deemon/object.h>
 #include <deemon/string.h>             /* DEFINE_STRING, DeeString*, DeeUni_IsSpace, STRING_ERROR_FIGNORE */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_*, DeeSystem_DEFINE_strcmp, EXIT_FAILURE, EXIT_SUCCESS, _Exit, atoi, bcmpc, bzero, chdir, memcpy, mempcpyc, stdin, strchr, strcmp, strend, strlen, system */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_*, DeeSystem_DEFINE_strcmp, EXIT_FAILURE, EXIT_SUCCESS, _Exit, atoi, bcmpc, bzero, chdir, memcpy, mempcpyc, strchr, strcmp, strend, strlen */
 #include <deemon/system.h>             /* DeeNTSystem_FixUncPath, DeeNTSystem_IsUncError, DeeSystem_IsSep, DeeSystem_SEP */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
 

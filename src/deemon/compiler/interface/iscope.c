@@ -38,7 +38,6 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>                /* DeeSeq_Unpack */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString, WSTR_LENGTH */
-#include <deemon/system-features.h>    /* time */
 
 #include "../../runtime/kwlist.h"
 #include "../../runtime/strings.h"

@@ -36,7 +36,7 @@
 #include <deemon/seq.h>               /* DeeSeq_* */
 #include <deemon/string.h>            /* DeeString_Check, DeeString_EQUALS_ASCII */
 #include <deemon/super.h>             /* DeeSuper_New */
-#include <deemon/system-features.h>   /* memmovedownc, read, stdout */
+#include <deemon/system-features.h>   /* memmovedownc */
 #include <deemon/tuple.h>             /* DeeTuple* */
 
 #include "../../runtime/builtin.h"

@@ -208,7 +208,7 @@
 #include <deemon/none.h>            /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeString*, Dee_STRING_ERROR_FREPLAC, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FIGNORE, STRING_ERROR_FREPLAC, WSTR_LENGTH */
-#include <deemon/system-features.h> /* AT_FDCWD, CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E2, EOF, access, bcmp, bzero, chmod, chown, fchown, lchmod, lchown, link, memcpy, mempcpyc, read, remove, rename, sendfile, stat, strchr, strlen, symlink, system, truncate, unlink, utimbuf, utimbuf32, utimbuf64 */
+#include <deemon/system-features.h> /* AT_FDCWD, CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E2, bcmp, bzero, memcpy, mempcpyc, sendfile, strchr, strlen, utimbuf, utimbuf32, utimbuf64 */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_*, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/util/atomic.h>     /* atomic_and, atomic_read */

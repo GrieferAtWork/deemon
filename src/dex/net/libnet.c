@@ -31,7 +31,7 @@
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/object.h>
 #include <deemon/objmethod.h>       /* DEFINE_CMETHOD1 */
-#include <deemon/system-features.h> /* CONFIG_HAVE_signal, signal, system */
+#include <deemon/system-features.h> /* CONFIG_HAVE_signal, signal */
 
 #include <hybrid/byteswap.h>        /* BETOH*, HTOBE* */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

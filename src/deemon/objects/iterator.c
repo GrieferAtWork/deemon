@@ -38,7 +38,6 @@
 #include <deemon/operator-hints.h>     /* DeeNO_iter_next_t, DeeNO_nextpair_t, DeeType_RequireNativeOperator, maketyped__getattr */
 #include <deemon/seq.h>                /* DeeIterator_*, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, type_nii */
 #include <deemon/string.h>             /* DeeString* */
-#include <deemon/system-features.h>    /* access */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__, __SSIZE_MIN__ */
@@ -50,7 +49,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
-#include <stdint.h>  /* INT32_MIN, SIZE_MAX, uintptr_t */
+#include <stdint.h>  /* INT32_MIN, uintptr_t */
 
 #undef SSIZE_MIN
 #undef SSIZE_MAX

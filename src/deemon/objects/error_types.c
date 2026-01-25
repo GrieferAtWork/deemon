@@ -35,7 +35,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/struct.h>             /* DeeStructObject_* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE__Exit, CONFIG_HAVE_exit, DeeSystem_GetErrno, EXIT_SUCCESS, _Exit, access, atexit, errno, exit, link, read, readlink, remove, strerror, system */
+#include <deemon/system-features.h>    /* CONFIG_HAVE__Exit, CONFIG_HAVE_exit, DeeSystem_GetErrno, EXIT_SUCCESS, _Exit, exit */
 #include <deemon/system.h>             /* DeeNTSystem_*, Dee_SYSTEM_ERROR_UNKNOWN */
 #include <deemon/tuple.h>              /* DeeTuple_Type, Dee_EmptyTuple */
 

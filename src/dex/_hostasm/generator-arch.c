@@ -40,7 +40,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>             /* DeeRange_New, DeeRange_NewInt, DeeSeq_Unpack, DeeSharedVector_Decref, DeeSharedVector_NewShared */
 #include <deemon/super.h>           /* DeeSuper_New, DeeSuper_Of */
-#include <deemon/system-features.h> /* bzero, stdout */
+#include <deemon/system-features.h> /* bzero */
 #include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_t */
 

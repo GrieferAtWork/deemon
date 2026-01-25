@@ -38,7 +38,7 @@
 #include <deemon/serial.h>          /* DeeSerial */
 #include <deemon/string.h>          /* DEFINE_STRING, DeeString*, DeeUni_*, Dee_EmptyString, Dee_UNICODE_IS*, Dee_UNICODE_PRINTER_*, Dee_string_object, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_F*, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* DeeString_GetChar, DeeString_SetChar, Dee_unicode_* */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_*, DeeSystem_DlOpen_USE_LoadLibrary, DeeSystem_DlOpen_USE_dlopen, ENV_LOCK, ENV_UNLOCK, RTLD_GLOBAL, RTLD_LOCAL, basename, bcmp, bcmpc, bzero*, dl_iterate_phdr, dladdr, dlgethandle, dlmodulename, dlopen, environ, getenv, memcasecmp, memchr, memcmp, memcpy*, memmovedownc, memmoveupc, mempcpyc, memrchr, memset, open, remove, strcasecmp, strchr, strcmp, strcpy, strend, strlen, strrchr, to(lower|upper), wcslen, wenviron, wgetenv */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_*, DeeSystem_DlOpen_USE_LoadLibrary, DeeSystem_DlOpen_USE_dlopen, ENV_LOCK, ENV_UNLOCK, RTLD_GLOBAL, RTLD_LOCAL, basename, bcmp, bcmpc, bzero*, dl_iterate_phdr, dladdr, dlgethandle, dlmodulename, dlopen, environ, getenv, memcasecmp, memchr, memcmp, memcpy*, memmovedownc, memmoveupc, mempcpyc, memrchr, memset, strcasecmp, strchr, strcmp, strcpy, strend, strlen, strrchr, to(lower|upper), wcslen, wenviron, wgetenv */
 #include <deemon/system.h>          /* DeeNTSystem_IsBufferTooSmall, DeeNTSystem_IsIntr, DeeSystem_*, DeeUnixSystem_PrintLinkString */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_Self, Dee_import_frame */
 #include <deemon/tuple.h>           /* DeeTuple*, Dee_TUPLE_BUILDER_INIT, Dee_tuple_builder* */

@@ -39,7 +39,7 @@
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/string.h>             /* DeeString_STR */
 #include <deemon/super.h>              /* DeeSuper_New */
-#include <deemon/system-features.h>    /* access, memset, open, read, remainder, remove, stdout, time */
+#include <deemon/system-features.h>    /* memset */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_or */
 
@@ -65,7 +65,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* SIZE_MAX, uint32_t */
+#include <stdint.h>  /* uint32_t */
 
 #undef SSIZE_MAX
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */

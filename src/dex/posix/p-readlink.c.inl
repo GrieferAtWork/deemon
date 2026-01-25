@@ -34,7 +34,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
 #include <deemon/string.h>          /* DeeString*, Dee_wchar_t, STRING_ERROR_FREPLAC */
-#include <deemon/system-features.h> /* AT_FDCWD, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, freadlinkat, link, read, readlink, readlinkat */
+#include <deemon/system-features.h> /* AT_FDCWD, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, freadlinkat, readlink, readlinkat */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

@@ -22,23 +22,22 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>             /* DeeArg_Unpack*, UNPuSIZ, UNPxSIZ */
-#include <deemon/attribute.h>       /* DeeEnumAttr_Type */
-#include <deemon/bool.h>            /* return_bool */
-#include <deemon/bytes.h>           /* DeeObject_TBytes */
-#include <deemon/class.h>           /* instance_* */
-#include <deemon/error.h>           /* DeeError_* */
-#include <deemon/file.h>            /* DeeFile_WriteAll */
-#include <deemon/float.h>           /* DeeFloat_New */
-#include <deemon/int.h>             /* DeeInt_NewHash */
-#include <deemon/kwds.h>            /* DeeKw_Wrap */
-#include <deemon/none.h>            /* return_none */
+#include <deemon/arg.h>            /* DeeArg_Unpack*, UNPuSIZ, UNPxSIZ */
+#include <deemon/attribute.h>      /* DeeEnumAttr_Type */
+#include <deemon/bool.h>           /* return_bool */
+#include <deemon/bytes.h>          /* DeeObject_TBytes */
+#include <deemon/class.h>          /* instance_* */
+#include <deemon/error.h>          /* DeeError_* */
+#include <deemon/file.h>           /* DeeFile_WriteAll */
+#include <deemon/float.h>          /* DeeFloat_New */
+#include <deemon/int.h>            /* DeeInt_NewHash */
+#include <deemon/kwds.h>           /* DeeKw_Wrap */
+#include <deemon/none.h>           /* return_none */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>  /* DeeType_GetNativeOperatorWithoutUnsupported, DeeType_GetTnoOfOperator, Dee_tno_id, usrtype__* */
-#include <deemon/string.h>          /* DeeStringObject, DeeString_Type */
-#include <deemon/super.h>           /* DeeObject_T* */
-#include <deemon/system-features.h> /* pow */
-#include <deemon/tuple.h>           /* DeeTuple_Type */
+#include <deemon/operator-hints.h> /* DeeType_GetNativeOperatorWithoutUnsupported, DeeType_GetTnoOfOperator, Dee_tno_id, usrtype__* */
+#include <deemon/string.h>         /* DeeStringObject, DeeString_Type */
+#include <deemon/super.h>          /* DeeObject_T* */
+#include <deemon/tuple.h>          /* DeeTuple_Type */
 
 #include "gc_inspect.h"
 #include "type-operators.h"
