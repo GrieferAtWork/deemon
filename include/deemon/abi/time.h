@@ -27,8 +27,8 @@
 
 #include <hybrid/__unaligned.h> /* __hybrid_unaligned_get64 */
 
-#include "../format.h" /* Dee_PCKuPTR */
-#include "../module.h"
+#include "../format.h" /* Dee_PCK* */
+#include "../module.h" /* DeeModuleObject, DeeModule_GetNativeSymbol */
 #include "../object.h"
 
 #include <stddef.h> /* NULL */

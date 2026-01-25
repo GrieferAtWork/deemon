@@ -31,14 +31,14 @@
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
-#include "types.h"
+#include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_REQUIRES_OBJECT, Dee_formatprinter_t, Dee_refcnt_t, Dee_ssize_t */
 
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* NULL, size_t */
 
 #ifndef __INTELLISENSE__
-#include "alloc.h" /* DeeObject_Free */
-#include "format.h"
+#include "alloc.h"  /* DeeObject_Free */
+#include "format.h" /* DeeFormat_Printf, DeeFormat_VPrintf */
 #include "object.h"
 #endif /* !__INTELLISENSE__ */
 

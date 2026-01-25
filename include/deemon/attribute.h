@@ -26,8 +26,8 @@
 
 #include "api.h"
 
-#include "mro.h"
-#include "types.h"
+#include "mro.h"   /* Dee_attrdesc, Dee_attrhint, Dee_attriter */
+#include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD */
 
 #include <stddef.h> /* size_t */
 

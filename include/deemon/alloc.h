@@ -52,6 +52,9 @@
 
 #include "api.h"
 
+/*!fixincludes fake_include "object.h" // */
+/*!fixincludes fake_include "system-features.h" // */
+
 #ifdef __CC__
 #include <hybrid/__debug-alignment.h> /* __NO_hybrid_dbg_alignment, __hybrid_dbg_alignment_disable, __hybrid_dbg_alignment_enable */
 #include <hybrid/__overflow.h>        /* __hybrid_overflow_uadd, __hybrid_overflow_umul */
@@ -165,7 +168,7 @@
 #elif __has_builtin(__builtin_alloca)
 #define alloca __builtin_alloca /*!export-*/
 #else /* ... */
-#include <hybrid/__alloca.h> /* __hybrid_alloca */
+#include <hybrid/__alloca.h> /* __hybrid_alloca, __hybrid_alloca_IS_alloca */
 #ifdef __hybrid_alloca
 #define CONFIG_HAVE_alloca
 #ifndef __hybrid_alloca_IS_alloca

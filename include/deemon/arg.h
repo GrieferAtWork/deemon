@@ -35,7 +35,7 @@
 
 #include <hybrid/typecore.h> /* __SIZEOF_*__ */
 
-#include "types.h"
+#include "types.h" /* DeeObject, Dee_hash_t, _Dee_HashSelectC */
 
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* NULL, size_t */

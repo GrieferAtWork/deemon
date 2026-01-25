@@ -44,6 +44,13 @@
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* uint16_t, uintptr_t */
+
+#ifndef __INTELLISENSE__
+#include "string.h" /* DeeString_Hash */
+#if !defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) && !defined(__OPTIMIZE_SIZE__)
+#include "tuple.h"  /* DeeTuple_ELEM, DeeTuple_SIZE */
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS && !__OPTIMIZE_SIZE__ */
+#endif /* !__INTELLISENSE__ */
 #endif /* !_DEE_WITHOUT_INCLUDES */
 
 /*
@@ -631,12 +638,12 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *
                                          DeeObject *this_arg,
                                          struct Dee_class_attribute const *__restrict attr,
                                          DeeObject *args, DeeObject *kw);
-#if !defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) && !defined(__OPTIMIZE_SIZE__)
+#if !defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) && !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__)
 #define DeeInstance_CallAttributeTuple(desc, self, this_arg, attr, args) \
 	DeeInstance_CallAttribute(desc, self, this_arg, attr, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeInstance_CallAttributeTupleKw(desc, self, this_arg, attr, args, kw) \
 	DeeInstance_CallAttributeKw(desc, self, this_arg, attr, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
-#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS && !__OPTIMIZE_SIZE__ */
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS && !__OPTIMIZE_SIZE__ && !__INTELLISENSE__ */
 
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeInstance_DelAttribute(struct Dee_class_desc *__restrict desc,
@@ -675,6 +682,7 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeClass_BoundMemberSafe(DeeTypeObject *_
 #ifdef CONFIG_BUILDING_DEEMON
 struct Dee_attribute_info;
 struct Dee_attribute_lookup_rules;
+struct Dee_attriter;
 
 /* Iterate user-defined class or instance attributes. */
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL
@@ -689,6 +697,9 @@ DeeClass_IterInstanceAttributes(DeeTypeObject *__restrict self, DeeObject *insta
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL
 DeeClass_IterClassInstanceAttributes(DeeTypeObject *__restrict self,
                                      struct Dee_attriter *iterbuf, size_t bufsize);
+
+struct Dee_attrspec;
+struct Dee_attrdesc;
 
 /* Find a specific class-, instance- or
  * instance-through-class-attribute, matching the given lookup rules.
@@ -991,6 +1002,8 @@ INTDEF NONNULL((1)) void DCALL instance_clear(DeeObject *__restrict self);
 INTDEF NONNULL((1, 2)) void DCALL instance_tpclear(DeeTypeObject *tp_self, DeeObject *__restrict self, unsigned int gc_priority);
 INTDEF NONNULL((1)) void DCALL instance_pclear(DeeObject *__restrict self, unsigned int gc_priority);
 INTDEF struct type_gc Dee_tpconst instance_gc;
+
+struct Dee_attrhint;
 
 INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL instance_iterattr(DeeTypeObject *tp_self, DeeObject *__restrict self, struct Dee_attriter *iterbuf, size_t bufsize, struct Dee_attrhint const *__restrict hint);
 #endif /* CONFIG_BUILDING_DEEMON */

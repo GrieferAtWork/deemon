@@ -23,11 +23,11 @@
 
 #include "../api.h"
 
-#include "../types.h"
+#include "../types.h" /* DREF, DeeObject */
 
 #ifndef __INTELLISENSE__
 #include "../format.h" /* Dee_PCKuPTR */
-#include "../module.h"
+#include "../module.h" /* DeeModule_GetExternString */
 #include "../object.h"
 
 #include <stdint.h> /* uintptr_t */
