@@ -56,6 +56,8 @@ struct include_me {};
 //!export custom_symbol
 //!export ignored*symbol
 
+int assigned_value = 42;
+
 int include_me_10;
 int ignore_me_10;  //!export-
 
@@ -90,6 +92,7 @@ local expectedSymbols = Set.frozen({
 	"my_enum",
 	"DeeNO_assign_t",
 	"ignore_me_13", /* TODO: This one shouldn't be exported! */
+	"assigned_value",
 });
 
 assert hdr.exports == expectedSymbols, f"\n"

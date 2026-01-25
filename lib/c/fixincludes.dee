@@ -1134,7 +1134,7 @@ skip_paren_block:
 		 * >> int foo __attribute__((aligned(42)));
 		 *
 		 * Current, we'd actually match "__attribute__" as an export name! */
-		if (tok in ";") {
+		if (tok in ";=") {
 			addPotentiallyExportedKeyword(keyword, keywordPos);
 			goto again;
 		}
@@ -1517,7 +1517,8 @@ next_keyword:;
 		);
 	}
 
-	public isIncludingDependentFile(fixIncludes: FixIncludes, base: Header, dep: DependentFile): bool {
+	@@Check if @dep (relative to @base) is included by @this file in the context of @fixIncludes
+	private isIncludingDependentFile(fixIncludes: FixIncludes, base: Header, dep: DependentFile): bool {
 		local absDepFilename: string | none = none;
 		if (base.filename !is none && dep.filename !is none) {
 			absDepFilename = dep.filename;
