@@ -24,22 +24,22 @@
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, _Dee_MallococBufsize */
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_Unpack2 */
-#include <deemon/bool.h>
-#include <deemon/cached-dict.h>
-#include <deemon/code.h>
+#include <deemon/bool.h>               /* Dee_True, return_bool, return_false */
+#include <deemon/cached-dict.h>        /* DeeCachedDict_New, DeeCachedDict_NewInheritedOnSuccess */
+#include <deemon/code.h>               /* Dee_code_object */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/kwds.h>
-#include <deemon/map.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
+#include <deemon/int.h>                /* DeeInt_NewSize, DeeInt_Type */
+#include <deemon/kwds.h>               /* DeeArg_TryGetKwNR*, DeeBlackListKw_New, DeeBlackListKwds*, DeeKwArgs*, DeeKwBlackList_Decref, DeeKwBlackList_New, DeeKwMapping_Decref, DeeKwMapping_New, DeeKw_*, DeeKwds*, DeeObject_IsKw, DeeType_IsKw, Dee_kwds_entry */
+#include <deemon/map.h>                /* DeeMapping_Type */
 #include <deemon/object.h>
-#include <deemon/rodict.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/tuple.h>
+#include <deemon/rodict.h>             /* DeeRoDict_NewEmpty, Dee_EmptyRoDict */
+#include <deemon/seq.h>                /* DeeIterator_Type */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString* */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, memcpy*, strcmp */
+#include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 

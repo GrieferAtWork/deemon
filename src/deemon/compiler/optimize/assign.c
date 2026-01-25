@@ -28,7 +28,7 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>
-#include <deemon/system-features.h>   /* memcpy(), bzero(), ... */
+#include <deemon/system-features.h>   /* bzero, memcpy */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

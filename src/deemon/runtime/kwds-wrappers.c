@@ -24,20 +24,20 @@
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_UnpackStructKw, UNPuSIZ */
-#include <deemon/bool.h>
-#include <deemon/code.h>
+#include <deemon/bool.h>               /* Dee_True, return_false, return_true */
+#include <deemon/code.h>               /* DeeCodeObject, DeeCode_Type, Dee_code_object */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/kwds.h>
-#include <deemon/map.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/error.h>              /* DeeError_Throwf, DeeError_ValueError */
+#include <deemon/format.h>             /* PRFu16, PRFuSIZ */
+#include <deemon/kwds.h>               /* DeeBlackListKw*, DeeKw_*, DeeKwds*, Dee_kwds_entry */
+#include <deemon/map.h>                /* DeeMapping_Type */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>    /* memcpyc(), ... */
-#include <deemon/tuple.h>
+#include <deemon/seq.h>                /* DeeIterator_Type */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString* */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, bcmpc, memcpyc, strcmp */
+#include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_cinit, Dee_atomic_rwlock_init */
 

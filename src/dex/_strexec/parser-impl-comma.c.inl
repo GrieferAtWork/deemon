@@ -26,15 +26,15 @@
 
 #include <deemon/api.h>
 
-#include <deemon/error.h>
-#include <deemon/list.h>
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/list.h>            /* DeeList_* */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
+#include <deemon/seq.h>             /* DeeSeq_NewEmpty, DeeSeq_Unpack */
+#include <deemon/string.h>          /* DeeUni_IsSpace */
+#include <deemon/stringutils.h>     /* Dee_unicode_readutf8_rev_n */
 #include <deemon/system-features.h> /* memcpy */
-#include <deemon/tuple.h>
-#include <deemon/util/objectlist.h> /* Dee_OBJECTLIST_INIT, objectlist, objectlist_* */
+#include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/util/objectlist.h> /* Dee_OBJECTLIST_INIT, Dee_objectlist, Dee_objectlist_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

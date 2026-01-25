@@ -27,12 +27,12 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>  /* Dee_Free, Dee_Reallocc */
-#include <deemon/code.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/alloc.h>           /* Dee_Free, Dee_Reallocc */
+#include <deemon/code.h>            /* code_addr_t */
+#include <deemon/error.h>           /* DeeError_IllegalInstruction, DeeError_Throwf */
+#include <deemon/format.h>          /* PRFu16, PRFx32 */
+#include <deemon/system-features.h> /* bzero, memcmp, memmovedownc, memmoveupc, memset */
+#include <deemon/types.h>           /* DeeObject, DeeTypeObject */
 
 #include <hybrid/align.h>         /* IS_ALIGNED */
 #include <hybrid/bitset.h>        /* BITSET_LENGTHOF, bitset_* */

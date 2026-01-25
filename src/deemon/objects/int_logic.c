@@ -16,12 +16,13 @@
 
 #include <deemon/api.h>
 
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/int.h>
+#include <deemon/error-rt.h>        /* DeeRT_ErrDivideByZero, DeeRT_ErrNegativeShiftOverflow */
+#include <deemon/error.h>           /* DeeError_NOTIMPLEMENTED */
+#include <deemon/float.h>           /* DeeFloat_Type */
+#include <deemon/int.h>             /* DeeIntObject, DeeInt_*, Dee_*digit*_t, Dee_DIGIT_* */
 #include <deemon/object.h>
-#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
-#include <deemon/thread.h>
+#include <deemon/system-features.h> /* bzeroc, memcpyc, memset */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 
 #include <hybrid/align.h>    /* CEILDIV */
 #include <hybrid/bit.h>      /* PDEP, PEXT, POPCOUNT */

@@ -23,18 +23,19 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>             /* Dee_Free, Dee_Mallocc */
-#include <deemon/code.h>
+#include <deemon/code.h>              /* Dee_EXCEPTION_HANDLER_FFINALLY, Dee_operator_t */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/map.h>
-#include <deemon/none.h>
+#include <deemon/map.h>               /* Dee_EmptyMapping */
+#include <deemon/none.h>              /* Dee_None */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/set.h>
-#include <deemon/tuple.h>
+#include <deemon/seq.h>               /* Dee_EmptySeq */
+#include <deemon/set.h>               /* Dee_EmptySet */
+#include <deemon/system-features.h>   /* write */
+#include <deemon/tuple.h>             /* Dee_EmptyTuple */
 #include <deemon/util/cache.h>        /* DECLARE_STRUCT_CACHE, DEFINE_OBJECT_CACHE, DEFINE_STRUCT_CACHE */
 
 #include <stddef.h> /* NULL, size_t */

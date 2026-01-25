@@ -27,13 +27,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>       /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
-#include <deemon/dex.h>
-#include <deemon/exec.h>
-#include <deemon/none.h>
+#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
+#include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
+#include <deemon/exec.h>            /* Dee_AtExit, Dee_Exit */
+#include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/tuple.h>
+#include <deemon/objmethod.h>       /* DEFINE_CMETHOD0, DEFINE_KWCMETHOD */
+#include <deemon/system-features.h> /* EXIT_FAILURE, _Exit, abort, atexit, exit */
+#include <deemon/tuple.h>           /* DeeTuple_Type, Dee_EmptyTuple */
 
 #include <stdbool.h> /* false, true */
 #include <stddef.h>  /* NULL, size_t */

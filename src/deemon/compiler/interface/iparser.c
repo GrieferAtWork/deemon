@@ -24,16 +24,16 @@
 
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_UnpackStructKw */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* DeeBool_For */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/interface.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/none.h>
+#include <deemon/none.h>               /* Dee_None */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/thread.h>
+#include <deemon/string.h>             /* DeeStringObject, Dee_EmptyString */
+#include <deemon/thread.h>             /* DeeThread_Self */
 
 #include "../../runtime/kwlist.h"
 

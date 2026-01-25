@@ -47,9 +47,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/class.h>
-#include <deemon/error-rt.h>
-#include <deemon/mro.h>
+#include <deemon/class.h>    /* DeeClass_*, Dee_class_attribute, class_attribute_mayaccess */
+#include <deemon/error-rt.h> /* DeeRT_ATTRIBUTE_ACCESS_*, DeeRT_Err* */
+#include <deemon/mro.h>      /* DeeObject_GenericFind*Attr*, DeeObject_GenericIterAttr, DeeType_Bound*Attr*, DeeType_Call*Attr*, DeeType_Del*Attr*, DeeType_Find*Attr*, DeeType_Get*Attr*, DeeType_Has*Attr*, DeeType_IterAttr, DeeType_Query*Attribute*, DeeType_Set*Attr*, DeeType_VCall*Attr*f, Dee_ATTRINFO_ATTR, Dee_ATTRINFO_INSTANCE_ATTR, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrhint, Dee_attrinfo, Dee_attriter, Dee_attriterchain_builder, Dee_attriterchain_builder_*, Dee_attrspec, type_getset_iterattr, type_member_iterattr, type_method_iterattr, type_obmemb_iterattr, type_obmeth_iterattr, type_obprop_iterattr */
 #include <deemon/object.h>
 /**/
 

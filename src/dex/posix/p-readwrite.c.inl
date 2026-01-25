@@ -28,15 +28,15 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_*, UNP* */
-#include <deemon/bytes.h>
-#include <deemon/dex.h>
-#include <deemon/error.h>
-#include <deemon/int.h>
+#include <deemon/bytes.h>           /* DeeBytes*, Dee_BYTES_PRINTER_INIT, Dee_bytes_printer, Dee_bytes_printer_* */
+#include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER, DEX_MEMBER_F */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
-#include <deemon/thread.h>
+#include <deemon/objmethod.h>       /* DEFINE_CMETHOD, DEFINE_KWCMETHOD */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, bzero, get_osfhandle, lseek, lseek64, pread, pread64, pwrite, pwrite64, read, write */
+#include <deemon/system.h>          /* DeeNTSystem_IsIntr, DeeNTSystem_ThrowErrorf, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 
 #include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

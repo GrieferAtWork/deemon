@@ -24,23 +24,23 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_* */
-#include <deemon/bool.h>
-#include <deemon/callable.h>
+#include <deemon/bool.h>               /* Dee_True, return_bool, return_false */
+#include <deemon/callable.h>           /* DeeCallable_Type */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/module.h>
-#include <deemon/mro.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_CALL, DeeRT_Err* */
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/format.h>             /* DeeFormat_Printf */
+#include <deemon/module.h>             /* DeeModule*, Dee_module_symbol */
+#include <deemon/mro.h>                /* type_member_* */
+#include <deemon/none.h>               /* return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>    /* _Exit(), abort() */
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/objmethod.h>          /* DeeCMethod*_*, DeeCMethodObject, DeeClsMember*, DeeClsMethod*, DeeClsProperty*, DeeKwCMethod*, DeeKwClsMethod*, DeeKwObjMethod_CallFunc, DeeKwObjMethod_CallFunc_d, DeeKwObjMethod_CallFuncf, DeeKwObjMethod_Check, DeeKwObjMethod_GetOrigin, DeeKwObjMethod_New, DeeKwObjMethod_Type, DeeKwObjMethod_VCallFuncf, DeeObjMethod*, Dee_clsproperty_origin, Dee_cmethod*, Dee_kwcmethod_t, Dee_objmethod_origin */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FIGNORE */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_*, EXIT_FAILURE, _Exit, abort, bzero, stpcpy, strcpy */
+#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self */
+#include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 
 #include "../runtime/kwlist.h"

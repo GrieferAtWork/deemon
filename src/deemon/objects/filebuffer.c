@@ -24,16 +24,16 @@
 
 #include <deemon/alloc.h>           /* DeeDbg_*, DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DeeArg_Unpack*, UNPuSIZ */
-#include <deemon/bool.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/filetypes.h>
-#include <deemon/format.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* return_bool */
+#include <deemon/error.h>           /* DeeError_*, ERROR_PRINT_DOHANDLE, ERROR_PRINT_HANDLEINTR */
+#include <deemon/file.h>            /* DeeFileBuffer_Type, DeeFileObject, DeeFileObject_Init, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, DeeSystem_FILE_USE_stdio_FILE, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_fd_GETSET, Dee_ioflag_t, GETC_EOF, GETC_ERR */
+#include <deemon/filetypes.h>       /* DeeFileBufferObject, DeeFileBuffer_*, Dee_FILE_BUFFER_F*, Dee_FILE_BUFFER_MODE_*, Dee_FILE_BUFSIZ_MAX, Dee_FILE_BUFSIZ_MIN, Dee_file_buffer_object */
+#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
+#include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h> /* atexit(), memcpy(), ... */
+#include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>          /* DeeUni_ToLower */
+#include <deemon/system-features.h> /* CONFIG_HAVE_atexit, access, atexit, close, exit, fflush, getc, isatty, memchr, memcpy, mempcpy, open, read, stderr, stdin, stdout, stpcpy, sync, time, ungetc, write */
 #include <deemon/util/atomic.h>     /* atomic_read */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_* */
 #include <deemon/util/rlock.h>      /* Dee_rshared_rwlock_init */

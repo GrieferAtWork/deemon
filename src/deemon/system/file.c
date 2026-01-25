@@ -24,19 +24,20 @@
 
 #include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_Free, Dee_Mallocc, Dee_ReleaseSystemMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack* */
-#include <deemon/bool.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/filetypes.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* return_bool, return_false, return_true */
+#include <deemon/error-rt.h>        /* DeeRT_ErrTUnboundAttr */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/file.h>            /* DeeFSFile_Type, DeeFileObject, DeeFileObject_Init, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, DeeSystemFile_*, DeeSystem_FILE_USE_*, Dee_FILEIO_FNONBLOCKING, Dee_FILE_OBJECT_HEAD_INIT, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_STD*, Dee_fd_*, Dee_ioflag_t, FILE_OPERATOR_*, GETC_EOF, GETC_ERR, OPEN_F* */
+#include <deemon/filetypes.h>       /* DeeSystemFileObject, DeeSystemFile_HAVE_sf_filename */
+#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFxPTR */
+#include <deemon/int.h>             /* DeeInt_NewInt, DeeInt_NewUIntptr */
+#include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
-#include <deemon/thread.h>
+#include <deemon/string.h>          /* DeeString*, DeeUni_ToLower */
+#include <deemon/stringutils.h>     /* Dee_unicode_utf8seqlen_safe */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_SetErrno, EOF, O_APPEND, O_BINARY, O_CLOEXEC, O_CREAT, O_DIRECT, O_EXCL, O_NOATIME, O_NOFOLLOW, O_NONBLOCK, O_OBTAIN_DIR, O_RDONLY, O_RDWR, O_SYNC, O_TRUNC, O_WRONLY, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO, _IOFBF, _IOLBF, _IONBF, __acrt_iob_func, __iob_func, access, bzero, close, dup, fclose, fdatasync, ferror, fflush, fftruncate64, fgetc, fileno, fisatty, fopen, fopen64, fputc, fread, fseek, fseeko, fseeko64, fsync, ftello, ftello64, ftruncate, ftruncate64, fwrite, isatty, lseek, lseek64, memcpyc, mempcpyc, open, open64, pread, pread64, pwrite, pwrite64, read, setvbuf, stderr, stdin, stdout, sync, system, truncate, truncate64, ungetc, wopen, wopen64, write */
+#include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_GetFilenameOfFD, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/util/atomic.h>     /* atomic_* */
 
 #include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */

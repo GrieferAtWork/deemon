@@ -29,17 +29,18 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>       /* Dee_Free */
-#include <deemon/arg.h>         /* DeeArg_UnpackStruct1XOr2X, DeeArg_UnpackStruct1Or2, UNPuSIZ */
-#include <deemon/bytes.h>
-#include <deemon/dex.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/module.h>
+#include <deemon/alloc.h>           /* Dee_Free */
+#include <deemon/arg.h>             /* DeeArg_UnpackStruct1Or2, DeeArg_UnpackStruct1XOr2X, UNPuSIZ */
+#include <deemon/bytes.h>           /* DeeBytes_Check, DeeBytes_SIZE */
+#include <deemon/dex.h>             /* DEX_*, Dee_DEXSYM_READONLY */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/format.h>          /* PRFuSIZ */
+#include <deemon/int.h>             /* DeeInt_NewSize */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/util/atomic.h> /* atomic_* */
+#include <deemon/objmethod.h>       /* DEFINE_CMETHOD, DEFINE_CMETHOD1 */
+#include <deemon/string.h>          /* DeeString_Type */
+#include <deemon/system-features.h> /* access, basename, bcmp, bzero, calloc, dlopen, free, futex_wakeall, malloc, memcasecmp, memcasemem, memcasermem, memccpy, memchr, memcmp, memcpy, memend, memfrob, memlen, memmem, memmove, mempcpy, mempmove, mempset, memrchr, memrend, memrev, memrlen, memrmem, memrxchr, memrxend, memrxlen, memset, memxchr, memxend, memxlen, rawmemchr, rawmemlen, rawmemrchr, rawmemrlen, rawmemrxchr, rawmemrxlen, rawmemxchr, rawmemxlen, read, realloc, stpcpy, stpncpy, strcasecmp, strcasestr, strcat, strchr, strchrnul, strcmp, strcpy, strcspn, strend, stresep, strfry, strlen, strlwr, strncasestr, strncat, strnchr, strnchrnul, strncmp, strncpy, strnend, strnlen, strnlwr, strnrchr, strnrchrnul, strnrev, strnset, strnstr, strnupr, strpbrk, strrchr, strrchrnul, strrev, strsep, strset, strspn, strstr, strtok, strtok_r, strupr, strverscmp, wait */
+#include <deemon/util/atomic.h>     /* atomic_* */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/byteswap.h>  /* BSWAP* */

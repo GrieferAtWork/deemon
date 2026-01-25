@@ -23,16 +23,15 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* Dee_Free, Dee_Mallocc */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* DeeBool_For, DeeBool_Type */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/none.h>               /* DeeNone_NewRef */
 #include <deemon/object.h>
-#include <deemon/thread.h>
+#include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */

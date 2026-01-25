@@ -26,21 +26,22 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>       /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>         /* DeeArg_Unpack* */
-#include <deemon/bool.h>
-#include <deemon/error.h>
-#include <deemon/int.h>
-#include <deemon/map.h>
-#include <deemon/mro.h>
-#include <deemon/none.h>
+#include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/arg.h>             /* DeeArg_Unpack* */
+#include <deemon/bool.h>            /* return_bool */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/int.h>             /* DeeInt_NewUInt64 */
+#include <deemon/map.h>             /* DeeMapping_Type */
+#include <deemon/mro.h>             /* Dee_attrhint, Dee_attriter */
+#include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system.h>
-#include <deemon/tuple.h>
-#include <deemon/util/atomic.h> /* atomic_cmpxch, atomic_read */
-#include <deemon/util/lock.h>   /* Dee_ATOMIC_RWLOCK_INIT, Dee_SHARED_LOCK_INIT, Dee_atomic_rwlock_*, Dee_shared_lock_* */
-#include <deemon/util/once.h>   /* Dee_ONCE */
+#include <deemon/string.h>          /* DeeString* */
+#include <deemon/system-features.h> /* DeeSystem_DlOpen_USE_STUB, open, system */
+#include <deemon/system.h>          /* DeeSystem_* */
+#include <deemon/tuple.h>           /* DeeTupleObject, DeeTuple_NewUninitialized */
+#include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
+#include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_SHARED_LOCK_INIT, Dee_atomic_rwlock_*, Dee_shared_lock_* */
+#include <deemon/util/once.h>       /* Dee_ONCE */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

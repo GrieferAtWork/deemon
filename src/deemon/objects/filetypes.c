@@ -24,22 +24,22 @@
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_CollectMemory, Dee_CollectMemoryoc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryMalloc */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNP* */
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
+#include <deemon/bool.h>               /* return_bool, return_false */
+#include <deemon/bytes.h>              /* DeeBytes_NewView */
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/filetypes.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/mapfile.h>
-#include <deemon/none.h>
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/file.h>               /* DeeFileObject, DeeFileObject_Init, DeeFileTypeObject, DeeFileType_AsType, DeeFileType_Type, DeeFile_Check, DeeFile_Type, Dee_SEEK_*, Dee_fd_t_IS_HANDLE, Dee_fd_t_IS_int, Dee_ioflag_t, GETC_EOF, GETC_ERR */
+#include <deemon/filetypes.h>          /* DeeFilePrinterObject, DeeFilePrinter_*, DeeFileReaderObject, DeeFileReader_*, DeeFileWriterObject, DeeFileWriter_*, DeeFile_*, DeeMemoryFileObject, DeeMemoryFile_* */
+#include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
+#include <deemon/int.h>                /* DeeInt_NewSize */
+#include <deemon/mapfile.h>            /* DeeMapFile* */
+#include <deemon/none.h>               /* DeeNone_Check */
 #include <deemon/object.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/system-features.h>    /* memcpy(), ... */
-#include <deemon/system.h>
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, Dee_CASE_WIDTH_nBYTE, Dee_STRING_HASH_UNSET, Dee_UNICODE_PRINTER_*, Dee_string_utf*, Dee_unicode_printer*, STRING_SIZEOF_WIDTH, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
+#include <deemon/stringutils.h>        /* Dee_UNICODE_UTF8_CURLEN, Dee_unicode_utf8seqlen */
+#include <deemon/system-features.h>    /* memcmp, memcpy*, mempcpy, mmap, read, readall, ungetc */
+#include <deemon/system.h>             /* DeeNTSystem_GetHandle, DeeUnixSystem_GetFD */
 #include <deemon/util/atomic.h>        /* atomic_add, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_init, Dee_shared_rwlock_init */
 

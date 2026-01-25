@@ -25,8 +25,10 @@
 
 #include <deemon/api.h>
 
-#include <deemon/util/atomic.h> /* atomic_inc, atomic_read */
-#include <deemon/util/futex.h>  /* DeeFutex_WakeAll, DeeFutex_WakeOne */
+#include <deemon/system-features.h> /* CONFIG_HAVE_sem_post_multiple, cnd_broadcast, cnd_signal, mtx_lock, mtx_unlock, pthread_cond_broadcast, pthread_cond_signal, pthread_mutex_lock, pthread_mutex_unlock, sem_post, sem_post_multiple */
+#include <deemon/types.h>           /* DREF */
+#include <deemon/util/atomic.h>     /* atomic_inc, atomic_read */
+#include <deemon/util/futex.h>      /* DeeFutex_WakeAll, DeeFutex_WakeOne */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uintptr_t */

@@ -24,19 +24,18 @@
 
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>                /* DeeArg_BadArgc1, DeeArg_Unpack1 */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* return_bool, return_false */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/gc.h>
-#include <deemon/map.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
+#include <deemon/map.h>                /* DeeMap_OperatorContainsAsBool, DeeMapping_NewEmpty, DeeMapping_Type, Dee_EmptyMapping */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
+#include <deemon/none.h>               /* DeeNone_NewRef */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/set.h>
-#include <deemon/thread.h>
+#include <deemon/seq.h>                /* DeeIterator_Type */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/set.h>                /* DeeSet_NewEmpty */
+#include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MIN__ */
@@ -48,6 +47,10 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
+
+/* clang-format off */
+#include <deemon/operator-hints.h> /* default__* (must be included manually) */
+/* clang-format on */
 
 #undef SSIZE_MIN
 #define SSIZE_MIN __SSIZE_MIN__

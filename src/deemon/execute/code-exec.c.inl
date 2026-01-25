@@ -24,32 +24,32 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Mallocc, Dee_Reallocc */
-#include <deemon/asm.h>
-#include <deemon/bool.h>
-#include <deemon/class.h>
-#include <deemon/code.h>
-#include <deemon/dict.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/format.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/kwds.h>
-#include <deemon/list.h>
-#include <deemon/map.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/asm.h>             /* ASM16_*, ASM32_JMP, ASM_*, instruction_t */
+#include <deemon/bool.h>            /* DeeBool*, Dee_False, Dee_FalseTrue, Dee_True */
+#include <deemon/class.h>           /* DeeClassDescriptor_Type, DeeClass_*, DeeInstance_* */
+#include <deemon/code.h>            /* CONFIG_HAVE_EXEC_ALTSTACK, DeeCodeObject, DeeCode_*, DeeFunction_*, Dee_CODE_F*, Dee_DDI_STATE_*, Dee_EXCEPTION_HANDLER_F*, Dee_EXEC_ALTSTACK_PERIOD, Dee_TRIGGER_BREAKPOINT_*, Dee_code_frame, Dee_ddi_*, Dee_except_handler, code_addr_t, instruction_t */
+#include <deemon/dict.h>            /* DeeDict_FromSequenceInheritedOnSuccess, DeeDict_NewKeyValuesInherited */
+#include <deemon/error-rt.h>        /* DeeRT_Err* */
+#include <deemon/error.h>           /* DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_PRINT_DOHANDLE */
+#include <deemon/file.h>            /* DeeFile_*, Dee_STDOUT */
+#include <deemon/format.h>          /* PRFu16 */
+#include <deemon/hashset.h>         /* DeeHashSet_FromSequenceInheritedOnSuccess, DeeHashSet_NewItemsInherited */
+#include <deemon/int.h>             /* DeeInt_* */
+#include <deemon/kwds.h>            /* DeeKwBlackList_Decref, DeeKwBlackList_New, DeeKw_WrapInheritedOnSuccess */
+#include <deemon/list.h>            /* DeeList_FromSequenceInheritedOnSuccess, DeeList_NewVectorInherited */
+#include <deemon/map.h>             /* DeeSharedItem, DeeSharedMap_Decref, DeeSharedMap_NewShared */
+#include <deemon/module.h>          /* DeeModule* */
+#include <deemon/none.h>            /* DeeNone_Check, DeeNone_NewRef, Dee_None */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/rodict.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
-#include <deemon/system-features.h>
-#include <deemon/thread.h>
-#include <deemon/traceback.h>
-#include <deemon/tuple.h>
+#include <deemon/operator-hints.h>  /* DeeNO_shl_t, DeeType_RequireNativeOperator */
+#include <deemon/rodict.h>          /* Dee_EmptyRoDict */
+#include <deemon/seq.h>             /* DeeRange_New, DeeRange_NewInt, DeeSeq_*, DeeSharedVector_Decref, DeeSharedVector_NewShared */
+#include <deemon/string.h>          /* DeeString* */
+#include <deemon/super.h>           /* DeeObject_TCallAttr, DeeObject_TGetAttr, DeeSuper* */
+#include <deemon/system-features.h> /* memcpyc, memmovedownc, memmoveupc */
+#include <deemon/thread.h>          /* DeeExec_StackLimit, DeeThreadObject, DeeThread_CheckInterruptSelf, DeeThread_Self, Dee_except_frame, Dee_except_frame_free */
+#include <deemon/traceback.h>       /* DeeTraceback* */
+#include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_val */
 #include <deemon/util/futex.h>      /* DeeFutex_WaitPtr, DeeFutex_WakeAll */
 

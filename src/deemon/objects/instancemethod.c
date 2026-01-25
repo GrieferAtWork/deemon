@@ -24,16 +24,16 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_UnpackStructKw */
-#include <deemon/callable.h>
-#include <deemon/class.h>
+#include <deemon/callable.h>           /* DeeCallable_Type */
+#include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClass_DESC, Dee_CLASS_ATTRIBUTE_*, Dee_CLASS_GETSET_COUNT, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endread, Dee_class_desc_lock_read */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/instancemethod.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_ErrTUnboundAttr */
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/format.h>             /* DeeFormat_Printf */
+#include <deemon/instancemethod.h>     /* DeeInstanceMethodObject, DeeInstanceMethod_* */
+#include <deemon/none.h>               /* DeeNone_Singleton, return_none */
 #include <deemon/object.h>
-#include <deemon/string.h>
+#include <deemon/string.h>             /* DeeString_STR */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"

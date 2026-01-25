@@ -28,20 +28,20 @@
 
 #include <deemon/alloc.h>           /* DeeObject_*ALLOC*, DeeObject_Free, Dee_*alloc*, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, _Dee_MallococBufsize */
 #include <deemon/arg.h>             /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
-#include <deemon/dict.h>
-#include <deemon/error-rt.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/map.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* Dee_True, return_false, return_true */
+#include <deemon/dict.h>            /* DeeDict_Dummy */
+#include <deemon/error-rt.h>        /* DeeRT_ErrEmptySequence, DeeRT_ErrUnknownKey */
+#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf */
+#include <deemon/int.h>             /* DeeInt_NewSize */
+#include <deemon/map.h>             /* DeeMapping_Type */
+#include <deemon/method-hints.h>    /* TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/none.h>            /* Dee_None */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Unpack */
+#include <deemon/string.h>          /* Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
+#include <deemon/system-features.h> /* memcpy*, memmovedownc, read */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
+#include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 

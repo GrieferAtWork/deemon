@@ -26,15 +26,15 @@
 
 #include <deemon/api.h>
 
-#include <deemon/asm.h>
-#include <deemon/class.h>
-#include <deemon/code.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/module.h>
+#include <deemon/asm.h>             /* ASM16_*, ASM32_JMP, ASM_*, DeeAsm_NextInstr, DeeAsm_SkipPrefix, instruction_t */
+#include <deemon/class.h>           /* DeeClassDescriptorObject, DeeClassDescriptor_Check, DeeClass_DESC, Dee_CLASS_*, Dee_class_attribute */
+#include <deemon/code.h>            /* DeeCodeObject, DeeCode_*, DeeFunction_CheckExact, Dee_CODE_FYIELDING, Dee_DDI_STATE_DO, Dee_DDI_STATE_WHILE, Dee_ddi_state, Dee_ddi_xregs, code_addr_t, instruction_t */
+#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRF* */
+#include <deemon/int.h>             /* DeeIntObject, DeeInt_*, Dee_INT_PRINT, Dee_INT_PRINT_FNUMSYS */
+#include <deemon/module.h>          /* DeeInteractiveModule_Check, DeeModule*, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_SET, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h> /* strlen(), ... */
+#include <deemon/string.h>          /* DeeString_PrintUtf8, DeeString_STR */
+#include <deemon/system-features.h> /* CONFIG_HAVE_strcmp, CONFIG_HAVE_strstr, DeeSystem_DEFINE_strcmp, memcmp, strchr, strcmp, strstr */
 
 #include <hybrid/byteswap.h>  /* UNALIGNED_GETLE16, UNALIGNED_GETLE32 */
 #include <hybrid/limitcore.h> /* __UINT16_MAX__ */

@@ -25,16 +25,16 @@
 #include <deemon/alloc.h>               /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>                 /* DeeArg_Unpack1, DeeArg_Unpack2 */
 #include <deemon/computed-operators.h>
-#include <deemon/gc.h>
-#include <deemon/map.h>
-#include <deemon/method-hints.h>
+#include <deemon/gc.h>                  /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
+#include <deemon/map.h>                 /* DeeMapping_Type */
+#include <deemon/method-hints.h>        /* DeeObject_InvokeMethodHint */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/set.h>
-#include <deemon/super.h>
-#include <deemon/thread.h>
+#include <deemon/operator-hints.h>      /* DeeType_RequireSupportedNativeOperator */
+#include <deemon/seq.h>                 /* DeeIterator_Type */
+#include <deemon/serial.h>              /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/set.h>                 /* DeeSet_Type */
+#include <deemon/super.h>               /* DeeSuper_New */
+#include <deemon/thread.h>              /* DeeThread_CheckInterrupt */
 #include <deemon/util/simple-hashset.h> /* Dee_simple_hashset_with_lock_* */
 
 #include "../../runtime/runtime_error.h"

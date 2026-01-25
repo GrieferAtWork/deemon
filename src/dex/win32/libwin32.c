@@ -27,23 +27,25 @@
 
 #include <deemon/api.h>
 
-#include <deemon/abi/ctypes.h>
+#include <deemon/abi/ctypes.h>      /* DeeCTypes_CreateVoidPointer, DeeCTypes_GetPointer */
 #include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_*alloc*, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw, UNP* */
-#include <deemon/bytes.h>
-#include <deemon/dex.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* return_false, return_true */
+#include <deemon/bytes.h>           /* DeeBytes* */
+#include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_* */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/file.h>            /* Dee_fd_fileno_GETSET, Dee_fd_osfhandle_GETSET */
+#include <deemon/format.h>          /* DeeFormat_Printf, PCKu32, PCKu64, PRF* */
+#include <deemon/int.h>             /* DeeInt_*, INT_UNSIGNED */
+#include <deemon/none.h>            /* DeeNone_Check, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/seq.h>
-#include <deemon/system-features.h> /* memcpyc(), ... */
-#include <deemon/system.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/objmethod.h>       /* DEFINE_CMETHOD0, DEFINE_KWCMETHOD */
+#include <deemon/seq.h>             /* DeeSeq_AsHeapVector */
+#include <deemon/string.h>          /* DEFINE_STRING_EX, DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FREPLAC */
+#include <deemon/system-features.h> /* close, exit, frealpath, free, get_osfhandle, mempcpyc, open, openat, pipe, read, remove, signal, strlen, system, truncate, wait, write */
+#include <deemon/system.h>          /* DeeNTSystem_* */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
+#include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/atomic.h>     /* atomic_read, atomic_write */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

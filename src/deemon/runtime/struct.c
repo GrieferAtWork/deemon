@@ -23,20 +23,19 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_TryReallocc, Dee_UntrackAlloc */
-#include <deemon/error.h>
-#include <deemon/float.h>
-#include <deemon/format.h>
-#include <deemon/kwds.h>
-#include <deemon/mro.h>
-#include <deemon/none.h>
+#include <deemon/error.h>           /* DeeError_NOTIMPLEMENTED */
+#include <deemon/float.h>           /* DeeFloatObject */
+#include <deemon/format.h>          /* DeeFormat_*, PRFd128, PRFu128 */
+#include <deemon/kwds.h>            /* DeeKwArgs* */
+#include <deemon/mro.h>             /* Dee_type_member_tryget */
+#include <deemon/none.h>            /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/serial.h>
-#include <deemon/struct.h>
-#include <deemon/system-features.h>
-#include <deemon/types.h>
+#include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t, Dee_serial */
+#include <deemon/struct.h>          /* DeeStructObject_*, Dee_struct_object_foreach_field_cb_t, Dee_struct_object_foreach_field_undo_t */
+#include <deemon/system-features.h> /* bzero, memcpy */
+#include <deemon/types.h>           /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_SIZEOF_HASH_T, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, ITER_DONE, ITER_ISOK */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
-#include <deemon/variant.h>
+#include <deemon/variant.h>         /* Dee_variant, Dee_variant_* */
 
 #include <hybrid/host.h>      /* __pic__ */
 #include <hybrid/int128.h>    /* __hybrid_int128_*, __hybrid_uint128_* */
@@ -49,6 +48,10 @@
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* intN_t, uintN_t */
+
+/* clang-format off */
+#include <deemon/operator-hints.h> /* default__* (must be included manually) */
+/* clang-format on */
 
 DECL_BEGIN
 

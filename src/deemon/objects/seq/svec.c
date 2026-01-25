@@ -24,16 +24,16 @@
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryMallocc */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* Dee_True, return_bool, return_false, return_true */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/error.h>              /* DeeError_Throwf, DeeError_ValueError */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/none.h>               /* DeeNone_NewRef */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/system-features.h>
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeRefVector_New, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, DeeSharedVector_*, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, Dee_seq_range, type_nii */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/system-features.h>    /* memcpyc */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_init, Dee_atomic_rwlock_t */
 

@@ -27,15 +27,15 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>        /* DeeRT_ErrNoActiveException */
+#include <deemon/error.h>           /* DeeError_NOTIMPLEMENTED, DeeError_ThrowInherited */
+#include <deemon/none.h>            /* DeeNone_NewRef, return_none */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/system-features.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/string.h>          /* DeeString*, DeeUni_Flags, DeeUni_IsSpace, Dee_UNICODE_ISSYMCONT, Dee_UNICODE_ISSYMSTRT, Dee_unicode_printer*, Dee_uniflag_t, STRING_ERROR_FSTRICT, WSTR_LENGTH */
+#include <deemon/stringutils.h>     /* DeeString_GetChar, Dee_unicode_readutf8_n */
+#include <deemon/system-features.h> /* CONFIG_HAVE_memrend, DeeSystem_DEFINE_memrend, bcmpc, memrend */
+#include <deemon/thread.h>          /* DeeThread_Self */
+#include <deemon/tuple.h>           /* DeeTuple_Type */
 
 #include <hybrid/unaligned.h> /* UNALIGNED_GET* */
 #include <hybrid/wordbits.h>  /* ENCODE_INT16, ENCODE_INT32 */

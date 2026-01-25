@@ -28,9 +28,9 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/system-features.h>
+#include <deemon/string.h>          /* DeeUniTrait_AsDigit, DeeUni_AsDigit, DeeUni_Descriptor, Dee_UNICODE_ISLF, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, Dee_unitraits */
+#include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n */
+#include <deemon/system-features.h> /* memchr */
 
 #include "../../runtime/strings.h"
 

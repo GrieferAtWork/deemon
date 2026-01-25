@@ -26,15 +26,16 @@
 
 #include <deemon/api.h>
 
-#include <deemon/accu.h>        /* Dee_accu_* */
-#include <deemon/alloc.h>       /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>         /* DeeArg_Unpack1 */
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
+#include <deemon/accu.h>            /* Dee_accu_* */
+#include <deemon/alloc.h>           /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/arg.h>             /* DeeArg_Unpack1 */
+#include <deemon/error-rt.h>        /* DeeRT_ErrUnboundAttrCStr */
+#include <deemon/error.h>           /* DeeError_RuntimeError, DeeError_Throwf */
+#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf */
 #include <deemon/object.h>
-#include <deemon/types.h>
-#include <deemon/util/nrlock.h> /* Dee_NRLOCK_ALREADY, Dee_NRLOCK_OK, Dee_nrshared_lock_* */
+#include <deemon/system-features.h> /* access, time */
+#include <deemon/types.h>           /* DREF, DeeObject, DeeObject_InstanceOf, DeeTypeObject, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
+#include <deemon/util/nrlock.h>     /* Dee_NRLOCK_ALREADY, Dee_NRLOCK_OK, Dee_nrshared_lock_* */
 
 #include "accu.h"
 

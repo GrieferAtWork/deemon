@@ -24,24 +24,22 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_BadArgcEx */
-#include <deemon/attribute.h>
-#include <deemon/class.h>
+#include <deemon/attribute.h>          /* DeeAttributeObject, DeeAttribute_Type */
+#include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClass_DESC, DeeInstance_DESC, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc_as_instance, Dee_instance_desc, Dee_instance_desc_lock_endread, Dee_instance_desc_lock_read */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/kwds.h>
-#include <deemon/module.h>
-#include <deemon/mro.h>
+#include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_*, DeeRT_Err* */
+#include <deemon/error.h>              /* DeeError_*, Dee_ERROR_OBJECT_HEAD */
+#include <deemon/format.h>             /* DeeFormat_* */
+#include <deemon/kwds.h>               /* DeeKwArgs* */
+#include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_FDIDINIT, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/mro.h>                /* DeeObject_FindAttrInfoStringLenHash, DeeObject_TFindPrivateAttrInfoStringLenHash, Dee_ATTRINFO_*, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrdesc_*, Dee_attrinfo */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/operator-hints.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/struct.h>
-#include <deemon/super.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
+#include <deemon/objmethod.h>          /* DeeClsMemberObject, DeeClsMember_Type, DeeClsMethodObject, DeeClsMethod_Type, DeeClsPropertyObject, DeeClsProperty_Type, DeeKwClsMethod_Type, DeeKwObjMethod_Type, DeeObjMethodObject, DeeObjMethod_Type */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString*, WSTR_LENGTH */
+#include <deemon/super.h>              /* DeeSuper* */
+#include <deemon/system-features.h>    /* access, memcmp, memset, read, stpcpy, strlen, write */
+#include <deemon/system.h>             /* DeeSystem_IsStaticPointer */
 #include <deemon/util/atomic.h>        /* atomic_* */
 
 #include <hybrid/host.h>        /* __ARCH_PAGESIZE */

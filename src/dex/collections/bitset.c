@@ -28,18 +28,19 @@
 
 #include <deemon/alloc.h>           /* DeeObject_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_BadArgcEx, DeeArg_Unpack*, UNPuSIZ, UNPxSIZ */
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* DeeBool_Check, DeeBool_IsTrue, return_bool, return_false, return_true */
+#include <deemon/bytes.h>           /* DeeBytes* */
+#include <deemon/error-rt.h>        /* DeeRT_ErrIndexOutOfBounds, DeeRT_ErrIndexOverflow */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
+#include <deemon/int.h>             /* DeeInt_* */
+#include <deemon/none.h>            /* DeeNone_Check, return_none */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/set.h>
-#include <deemon/system-features.h>
+#include <deemon/seq.h>             /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, Dee_seq_range, type_nii */
+#include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/set.h>             /* DeeSet_Type */
+#include <deemon/string.h>          /* DeeString_Check, DeeString_STR, WSTR_LENGTH */
+#include <deemon/system-features.h> /* access, memcpy*, read, remove, write */
 #include <deemon/util/atomic.h>     /* atomic_* */
 
 #include <hybrid/__atomic.h>  /* __hybrid_bitset_atomic_*, bitset_atomic_* */

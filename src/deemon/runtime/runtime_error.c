@@ -22,16 +22,17 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>       /* DeeObject_TRYMALLOC, Dee_BadAlloc */
-#include <deemon/bytes.h>
-#include <deemon/code.h>
-#include <deemon/error.h>
-#include <deemon/error_types.h>
-#include <deemon/format.h>
-#include <deemon/kwds.h>
-#include <deemon/module.h>
+#include <deemon/alloc.h>           /* DeeObject_TRYMALLOC, Dee_BadAlloc */
+#include <deemon/bytes.h>           /* DeeBytes_Check, DeeBytes_SIZE */
+#include <deemon/code.h>            /* DeeCode_*, Dee_DDI_ISOK, Dee_DDI_STATE_*, Dee_code_frame, Dee_code_object, Dee_ddi_*, Dee_operator_t, code_addr_t, instruction_t */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/error_types.h>     /* DeeError_NoMemory_instance, DeeNoMemoryErrorObject */
+#include <deemon/format.h>          /* DeeFormat_PrintArgumentTypesKw, PRF* */
+#include <deemon/kwds.h>            /* DeeKwds*, Dee_kwds_object */
+#include <deemon/module.h>          /* DeeModule*, Dee_module_object */
 #include <deemon/object.h>
-#include <deemon/string.h>
+#include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
+#include <deemon/system-features.h> /* access, read, write */
 
 #include <hybrid/typecore.h> /* __SIZE_WIDTH__ */
 

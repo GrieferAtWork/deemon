@@ -22,17 +22,17 @@
 
 #include <deemon/api.h>
 
-#include <deemon/accu.h>           /* Dee_accu, Dee_accu_*, Dee_ACCU_FLOAT_DEFINED, Dee_ACCU_INT64_DEFINED */
-#include <deemon/bytes.h>
-#include <deemon/float.h>
-#include <deemon/int.h>
-#include <deemon/list.h>
-#include <deemon/none-operator.h>
-#include <deemon/none.h>
+#include <deemon/accu.h>           /* Dee_ACCU_FLOAT_DEFINED, Dee_ACCU_INT64_DEFINED, Dee_accu, Dee_accu_* */
+#include <deemon/bytes.h>          /* DeeBytes*, Dee_bytes_printer_* */
+#include <deemon/float.h>          /* DeeFloatObject, DeeFloat_New, DeeFloat_VALUE */
+#include <deemon/int.h>            /* DeeInt_* */
+#include <deemon/list.h>           /* DeeListObject, DeeList_* */
+#include <deemon/none-operator.h>  /* _DeeNone_NewRef2 */
+#include <deemon/none.h>           /* return_none */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/string.h>
-#include <deemon/tuple.h>
+#include <deemon/operator-hints.h> /* DeeNO_add_t, DeeType_RequireNativeOperator */
+#include <deemon/string.h>         /* DeeStringObject, Dee_unicode_printer* */
+#include <deemon/tuple.h>          /* DeeTuple*, Dee_tuple_builder* */
 
 #include <hybrid/overflow.h> /* OVERFLOW_SADD, OVERFLOW_UADD */
 

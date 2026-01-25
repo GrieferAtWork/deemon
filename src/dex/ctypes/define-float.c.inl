@@ -38,11 +38,11 @@
 
 #include <deemon/alloc.h>     /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>       /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
-#include <deemon/error.h>
-#include <deemon/int.h>
+#include <deemon/bool.h>      /* return_bool */
+#include <deemon/error.h>     /* DeeError_NOTIMPLEMENTED */
+#include <deemon/int.h>       /* DeeInt_NewInt64, INT_SIGNED */
 #include <deemon/object.h>
-#include <deemon/string.h>
+#include <deemon/string.h>    /* DeeString_Newf */
 #include <deemon/util/lock.h> /* Dee_ATOMIC_RWLOCK_INIT */
 
 #include <stddef.h> /* NULL, size_t */

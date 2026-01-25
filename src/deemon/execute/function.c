@@ -24,26 +24,26 @@
 
 #include <deemon/alloc.h>              /* DeeObject_Free, DeeObject_Malloc, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, _Dee_MallococBufsize */
 #include <deemon/arg.h>                /* DeeArg_Unpack0Or1Or2, DeeArg_Unpack1 */
-#include <deemon/bool.h>
-#include <deemon/callable.h>
-#include <deemon/class.h>
-#include <deemon/code.h>
+#include <deemon/bool.h>               /* DeeBool_Check, return_bool */
+#include <deemon/callable.h>           /* DeeCallable_Type */
+#include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClass_DESC, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endread, Dee_class_desc_lock_read, Dee_class_operator */
+#include <deemon/code.h>               /* DeeCodeObject, DeeCode_*, DeeFunctionObject, DeeFunction_*, DeeYieldFunctionIteratorObject, DeeYieldFunctionIterator_*, DeeYieldFunctionObject, DeeYieldFunction_Sizeof, DeeYieldFunction_Type, Dee_CODE_F*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_code_frame, Dee_code_frame_kwds, Dee_except_handler, Dee_function_info, Dee_hostasm_function_data_destroy, Dee_hostasm_function_init, Dee_operator_t, code_addr_t */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/int.h>
-#include <deemon/kwds.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_ErrUnboundAttr, DeeRT_ErrUnboundAttrCStr */
+#include <deemon/error.h>              /* DeeError_*, ERROR_PRINT_DOHANDLE */
+#include <deemon/format.h>             /* DeeFormat_*, PRFu16 */
+#include <deemon/gc.h>                 /* DeeGCObject_*alloc*, DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
+#include <deemon/int.h>                /* DeeInt_* */
+#include <deemon/kwds.h>               /* DeeKwBlackList_Decref, DeeKw_TryGetItemNR, DeeKwds_Check, DeeKwds_IndexOf */
+#include <deemon/module.h>             /* DeeInteractiveModule_Check, DeeModule*, Dee_module_* */
+#include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, return_none */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/traceback.h>
-#include <deemon/tuple.h>
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeRefVector_NewReadonly, DeeSeq_* */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString* */
+#include <deemon/system-features.h>    /* access, bzero, memcpy*, memset, read */
+#include <deemon/traceback.h>          /* DeeFrameObject, DeeFrame_NewReferenceWithLock, Dee_FRAME_F* */
+#include <deemon/tuple.h>              /* DeeTuple_Type, Dee_EmptyTuple */
 #include <deemon/util/atomic.h>        /* atomic_inc */
 #include <deemon/util/futex.h>         /* DeeFutex_WakeAll */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */

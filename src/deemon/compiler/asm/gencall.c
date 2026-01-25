@@ -23,25 +23,26 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* Dee_Free */
-#include <deemon/bool.h>
-#include <deemon/class.h>
-#include <deemon/code.h>
+#include <deemon/bool.h>               /* DeeBool_Type */
+#include <deemon/class.h>              /* Dee_CLASS_ATTRIBUTE_*, Dee_CLASS_GETSET_GET, Dee_class_attribute */
+#include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject, DeeFunction_NewNoRefs, Dee_CODE_FTHISCALL */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/traits.h>
-#include <deemon/dict.h>
-#include <deemon/hashset.h>
-#include <deemon/kwds.h>
-#include <deemon/list.h>
-#include <deemon/module.h>
-#include <deemon/numeric.h>
+#include <deemon/dict.h>               /* DeeDict_Type */
+#include <deemon/hashset.h>            /* DeeHashSet_Type */
+#include <deemon/int.h>                /* DeeInt_Type */
+#include <deemon/kwds.h>               /* DeeObject_IsKw, DeeType_IsKw */
+#include <deemon/list.h>               /* DeeList_Type */
+#include <deemon/module.h>             /* DeeModule_GetDeemon, DeeModule_GetSymbol, Dee_MODSYM_FEXTERN, Dee_MODSYM_FPROPERTY, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/numeric.h>            /* DeeNumeric_Type */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/string.h>
-#include <deemon/tuple.h>
+#include <deemon/objmethod.h>          /* DeeKwObjMethod_Check, DeeObjMethod*, Dee_objmethod_origin */
+#include <deemon/string.h>             /* DeeString* */
+#include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
 
 #include "../../runtime/builtin.h"
 

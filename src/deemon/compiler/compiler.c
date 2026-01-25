@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/code.h>
+#include <deemon/code.h>               /* DeeCodeObject, Dee_CODE_FVARARGS */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/compiler.h>
@@ -33,13 +33,14 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/computed-operators.h>
-#include <deemon/dec.h>
-#include <deemon/exec.h>
-#include <deemon/module.h>
+#include <deemon/dec.h>                /* DeeDecWriter, DeeDecWriter_*, DeeDec_* */
+#include <deemon/exec.h>               /* DeeExec_* */
+#include <deemon/gc.h>                 /* DeeGC_TRACK */
+#include <deemon/module.h>             /* DeeModule*, Dee_compiler_options, Dee_module_object */
 #include <deemon/object.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>    /* memcpy(), ... */
+#include <deemon/serial.h>             /* DeeSerial, Dee_serial */
+#include <deemon/string.h>             /* DeeString*, Dee_unicode_printer_fini */
+#include <deemon/system-features.h>    /* bzero, memcpy, memset */
 #include <deemon/util/rlock.h>         /* Dee_RSHARED_RWLOCK_INIT, Dee_rshared_rwlock_t */
 
 #include <hybrid/typecore.h> /* __REGISTER_TYPE__ */

@@ -26,11 +26,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/error.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>          /* DeeNTSystem_IsIntr() */
-#include <deemon/thread.h>
+#include <deemon/error.h> /* DeeError_NOTIMPLEMENTED */
+#include <deemon/types.h> /* DREF, DeeObject */
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 

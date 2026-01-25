@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>     /* _Dee_MallococBufsize */
-#include <deemon/map.h>
+#include <deemon/map.h>       /* DeeSharedItem */
 #include <deemon/object.h>
 #include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
 

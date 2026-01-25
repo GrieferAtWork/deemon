@@ -25,12 +25,12 @@
 #include <deemon/alloc.h>              /* Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/compiler/tpp.h>
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>
-#include <deemon/error_types.h>
+#include <deemon/error.h>              /* DeeErrorObject, DeeError_* */
+#include <deemon/error_types.h>        /* DeeCompilerErrorObject, DeeCompilerError_Print, Dee_compiler_error_loc */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/serial.h>
-#include <deemon/struct.h>
+#include <deemon/operator-hints.h>     /* DeeNO_print_t */
+#include <deemon/serial.h>             /* DeeSerial, Dee_seraddr_t */
+#include <deemon/struct.h>             /* DeeStructObject_Cmp, DeeStructObject_PrintRepr */
 
 #include <stddef.h> /* NULL, size_t */
 

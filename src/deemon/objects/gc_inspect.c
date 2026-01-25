@@ -24,13 +24,13 @@
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_CollectMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* return_false, return_true */
 #include <deemon/computed-operators.h>
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/set.h>
-#include <deemon/super.h>
+#include <deemon/seq.h>                /* DeeIterator_Type */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/set.h>                /* DeeSet_Type */
+#include <deemon/super.h>              /* DeeObject_TVisit, DeeSuper* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 
 #include <hybrid/typecore.h> /* __SIZEOF_SIZE_T__ */

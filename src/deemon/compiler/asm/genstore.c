@@ -22,10 +22,10 @@
 
 #include <deemon/api.h>
 
-#include <deemon/asm.h>
-#include <deemon/bool.h>
-#include <deemon/class.h>
-#include <deemon/code.h>
+#include <deemon/asm.h>                /* ASM_* */
+#include <deemon/bool.h>               /* Dee_False, Dee_True */
+#include <deemon/class.h>              /* Dee_CLASS_ATTRIBUTE_*, Dee_CLASS_GETSET_SET, Dee_class_attribute */
+#include <deemon/code.h>               /* Dee_CODE_FFINALLY, Dee_CODE_FTHISCALL, Dee_EXCEPTION_HANDLER_FFINALLY, code_addr_t */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
@@ -33,11 +33,11 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/compiler/traits.h>
-#include <deemon/int.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/int.h>                /* DeeInt_Check, DeeInt_TryAsInt16 */
+#include <deemon/module.h>             /* DeeModule_GetSymbol, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/none.h>               /* DeeNone_Check */
 #include <deemon/object.h>
-#include <deemon/string.h>
+#include <deemon/string.h>             /* DeeString* */
 
 #include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* NULL, size_t */

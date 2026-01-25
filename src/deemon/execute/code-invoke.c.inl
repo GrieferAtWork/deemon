@@ -26,9 +26,13 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>       /* DeeObject_Malloc, Dee_Alloca, Dee_Free, Dee_Malloc */
-#include <deemon/kwds.h>
-#include <deemon/util/atomic.h> /* atomic_inc, atomic_read */
+#include <deemon/alloc.h>           /* DeeObject_Malloc, Dee_Alloca, Dee_Free, Dee_Malloc */
+#include <deemon/code.h>            /* DeeCodeObject, DeeCode_*, DeeFunctionObject, DeeFunction_*, DeeYieldFunctionObject, DeeYieldFunction_Sizeof, DeeYieldFunction_Type, Dee_CODE_F*, Dee_code_frame, Dee_code_frame_kwds */
+#include <deemon/kwds.h>            /* DeeKwds_Check */
+#include <deemon/object.h>
+#include <deemon/system-features.h> /* bzeroc, memcpyc */
+#include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/util/atomic.h>     /* atomic_inc, atomic_read */
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 

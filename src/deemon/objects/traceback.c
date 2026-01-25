@@ -22,24 +22,24 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h> /* DeeObject_MALLOC, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryMallocc, _Dee_MallococBufsize */
-#include <deemon/arg.h>   /* DeeArg_Unpack, DeeArg_Unpack1, UNPuSIZ */
-#include <deemon/code.h>
+#include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryMallocc, _Dee_MallococBufsize */
+#include <deemon/arg.h>                /* DeeArg_Unpack, DeeArg_Unpack1, UNPuSIZ */
+#include <deemon/code.h>               /* DeeCodeObject, DeeCode_Type, DeeFunction_Type, Dee_CODE_F*, Dee_code_frame, code_addr_t */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/gc.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_ErrUnboundAttrCStr */
+#include <deemon/gc.h>                 /* DeeGCObject_TryMallocc, DeeGC_TRACK */
+#include <deemon/int.h>                /* DeeInt_NewSize */
+#include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h> /* memcpy(), ... */
-#include <deemon/thread.h>
-#include <deemon/traceback.h>
-#include <deemon/tuple.h>
-#include <deemon/util/atomic.h> /* atomic_* */
-#include <deemon/util/lock.h>   /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_init */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString_STR */
+#include <deemon/system-features.h>    /* memcpy */
+#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self, DeeThread_Trace, Dee_except_frame, Dee_thread_object, except_frame_gettb */
+#include <deemon/traceback.h>          /* DeeFrame_NewReferenceWithLock, DeeFrame_Type, DeeTraceback*, Dee_FRAME_FREADONLY, empty_traceback_object */
+#include <deemon/tuple.h>              /* DeeTupleObject */
+#include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/lock.h>          /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_init */
 
 #include "../runtime/strings.h"
 #include "generic-proxy.h"

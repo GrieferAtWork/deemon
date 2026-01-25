@@ -23,17 +23,17 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_Free, Dee_Callocc, Dee_Free, Dee_TryReallococ */
-#include <deemon/code.h>
+#include <deemon/code.h>               /* Dee_CODE_FASSEMBLY, Dee_CODE_FYIELDING, code_addr_t, instruction_t */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/error.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/error.h>
+#include <deemon/error.h>              /* DeeError_* */
 #include <deemon/object.h>
-#include <deemon/system-features.h>    /* memmoveupc(), ... */
-#include <deemon/types.h>
+#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, memmovedownc, memmoveupc, memset, strcmp, strlen */
+#include <deemon/types.h>              /* DREF, DeeObject, Dee_AsObject, Dee_ssize_t, ITER_DONE */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__ */
 
@@ -42,18 +42,17 @@
 #include <stdint.h>  /* INTn_MAX, INTn_MIN, UINTn_MAX, int32_t, int64_t, uintN_t, uintptr_t */
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
-#include <deemon/asm.h>
-#include <deemon/bool.h>
-#include <deemon/dict.h>
-#include <deemon/format.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/list.h>
-#include <deemon/module.h>
-#include <deemon/none.h>        /* AST_ISNONE -> DeeNone_Check */
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/tuple.h>
+#include <deemon/asm.h>         /* ASM_*, DeeAsm_NextInstrEf, instruction_t */
+#include <deemon/bool.h>        /* DeeBool_Type, Dee_False, Dee_True */
+#include <deemon/dict.h>        /* DeeDictObject, DeeDict_*, Dee_dict_vidx_tovirt, Dee_dict_vidx_virt_lt_real, _DeeDict_GetVirtVTab */
+#include <deemon/format.h>      /* Dee_sprintf, PRF* */
+#include <deemon/hashset.h>     /* DeeHashSet_Type */
+#include <deemon/int.h>         /* DeeInt_* */
+#include <deemon/list.h>        /* DeeList_Type */
+#include <deemon/module.h>      /* Dee_MODSYM_FPROPERTY, Dee_module_symbol_getindex */
+#include <deemon/string.h>      /* DeeString*, DeeUni_*, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_PRINT, Dee_ascii_printer* */
+#include <deemon/stringutils.h> /* Dee_unicode_skipspaceutf8_n */
+#include <deemon/tuple.h>       /* DeeTuple_Type */
 
 #include <hybrid/byteswap.h>  /* BSWAP16, BSWAP32 */
 #include <hybrid/unaligned.h> /* UNALIGNED_GET16 */

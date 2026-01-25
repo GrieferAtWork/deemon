@@ -27,9 +27,9 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>     /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
-#include <deemon/numeric.h>
+#include <deemon/numeric.h>   /* DeeNumeric_Type */
 #include <deemon/object.h>
-#include <deemon/string.h>
+#include <deemon/string.h>    /* DEFINE_STRING, DeeString_STR */
 #include <deemon/util/lock.h> /* Dee_ATOMIC_RWLOCK_INIT */
 
 #include <stdbool.h> /* bool */

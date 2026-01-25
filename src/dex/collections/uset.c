@@ -28,19 +28,20 @@
 
 #include <deemon/alloc.h>           /* DeeObject_*, Dee_*alloc*, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, _Dee_MallococBufsize */
 #include <deemon/arg.h>             /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
+#include <deemon/bool.h>            /* return_bool */
 #include <deemon/dict.h>            /* DeeDict_Dummy */
-#include <deemon/error-rt.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/method-hints.h>
+#include <deemon/error-rt.h>        /* DeeRT_ErrEmptySequence */
+#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_PrintObjectRepr */
+#include <deemon/gc.h>              /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
+#include <deemon/hashset.h>         /* DeeHashSetObject, DeeHashSet_* */
+#include <deemon/int.h>             /* DeeInt_NewSize */
+#include <deemon/method-hints.h>    /* TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/object.h>
-#include <deemon/roset.h>
-#include <deemon/seq.h>
-#include <deemon/set.h>
-#include <deemon/system-features.h> /* memcpyc(), ... */
+#include <deemon/roset.h>           /* DeeRoSetObject, DeeRoSet_Type */
+#include <deemon/seq.h>             /* DeeIterator_Type */
+#include <deemon/set.h>             /* DeeSet_Type */
+#include <deemon/string.h>          /* Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
+#include <deemon/system-features.h> /* memcpyc, read */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 

@@ -160,10 +160,12 @@
 
 #include <deemon/api.h>
 
-#include <deemon/dict.h>
-#include <deemon/error-rt.h>
+#include <deemon/bool.h>     /* return_false, return_true */
+#include <deemon/dict.h>     /* Dee_DICT_HTAB_EOF, Dee_dict_* */
+#include <deemon/error-rt.h> /* DeeRT_Err* */
+#include <deemon/int.h>      /* DeeInt_Size_TryCompareEq */
 #include <deemon/object.h>
-#include <deemon/rodict.h>
+#include <deemon/rodict.h>   /* _DeeRoDict_* */
 
 #include <stddef.h> /* NULL, size_t */
 

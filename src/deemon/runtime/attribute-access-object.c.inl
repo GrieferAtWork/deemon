@@ -90,15 +90,16 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Freea, Dee_Malloca */
-#include <deemon/class.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/mro.h>
+#include <deemon/class.h>           /* DeeClass_*, DeeInstance_*, Dee_class_attribute, Dee_class_desc, class_attribute_mayaccess */
+#include <deemon/error-rt.h>        /* DeeRT_ATTRIBUTE_ACCESS_*, DeeRT_Err* */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/mro.h>             /* DeeObject_FindAttr, DeeObject_IterAttr, DeeObject_TFind*Attr*, DeeType_Bound*Attr*, DeeType_Call*Attr*, DeeType_Del*Attr*, DeeType_Find*Attr*, DeeType_Get*Attr*, DeeType_Has*Attr*, DeeType_Query*Attribute*, DeeType_Set*Attr*, DeeType_VCall*Attr*f, Dee_ATTRINFO_ATTR, Dee_ATTRINFO_CUSTOM, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrdesc_fini, Dee_attrhint, Dee_attrinfo, Dee_attriter, Dee_attriter_fini, Dee_attriter_next, Dee_attriterchain_builder, Dee_attriterchain_builder_*, Dee_attrspec, Dee_attrspec_ashint, type_getset_iterattr, type_member_iterattr, type_method_iterattr */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/string.h>          /* LOCAL_DeeType_AccessMemberAttr -> DeeType_GetMemberAttrHash -> DeeString_STR */
-#include <deemon/system-features.h>
-#include <deemon/tuple.h>
+#include <deemon/operator-hints.h>  /* maketyped__* */
+#include <deemon/string.h>          /* DeeString* */
+#include <deemon/super.h>           /* DeeObject_T* */
+#include <deemon/system-features.h> /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, access, strcmp, strlen */
+#include <deemon/tuple.h>           /* DeeTuple_ELEM, DeeTuple_SIZE */
 /**/
 
 #include "runtime_error.h"

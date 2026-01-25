@@ -24,16 +24,16 @@
 
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/hashset.h>
-#include <deemon/list.h>
-#include <deemon/map.h>
-#include <deemon/method-hints.h>
+#include <deemon/dict.h>               /* DeeDict_Type */
+#include <deemon/error.h>              /* DeeError_Handled, ERROR_HANDLED_RESTORE */
+#include <deemon/hashset.h>            /* DeeHashSet_FromSequence, DeeHashSet_Type */
+#include <deemon/list.h>               /* DeeList_Type */
+#include <deemon/map.h>                /* DeeMapping_Check */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
 #include <deemon/object.h>
-#include <deemon/rodict.h>
-#include <deemon/roset.h>
-#include <deemon/tuple.h>
+#include <deemon/rodict.h>             /* DeeRoDict_Type */
+#include <deemon/roset.h>              /* DeeRoSet_FromSequence, DeeRoSet_Type */
+#include <deemon/tuple.h>              /* DeeTuple* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL */

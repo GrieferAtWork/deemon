@@ -27,8 +27,8 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/format.h>
-#include <deemon/module.h>             /* Dee_Decref(SYMBOL_MODULE_MODULE(...)) */
+#include <deemon/format.h>             /* PRFu16 */
+#include <deemon/module.h>             /* DeeModuleObject */
 #include <deemon/object.h>
 
 #include <stddef.h> /* NULL, size_t */
@@ -77,7 +77,7 @@ check_symbol:
 				goto err;
 			if (asm_gpush_module_p((uint16_t)mid))
 				goto err;
-			Dee_Decref(SYMBOL_MODULE_MODULE(sym));
+			Dee_Decref((DeeModuleObject *)SYMBOL_MODULE_MODULE(sym));
 		} else {
 			ASSERT(sym->s_type == SYMBOL_TYPE_EXCEPT);
 			if (asm_gpush_except_p())

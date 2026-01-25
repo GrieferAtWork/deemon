@@ -24,13 +24,13 @@
 
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack, UNPuSIZ */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* Dee_True */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
+#include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds */
+#include <deemon/error.h>              /* DeeError_* */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/tuple.h>
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq */
+#include <deemon/tuple.h>              /* DeeTuple* */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"

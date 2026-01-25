@@ -23,12 +23,12 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* Dee_Free */
-#include <deemon/code.h>
+#include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject, DeeFunction_NewNoRefs */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/symbol.h>
-#include <deemon/module.h>
+#include <deemon/module.h>             /* Dee_compiler_options */
 #include <deemon/object.h>
 
 #include <stdbool.h> /* false */
@@ -45,6 +45,7 @@ ast_assemble_function(struct ast *__restrict function_ast,
                       struct asm_symbol_ref **__restrict p_refv) {
 	DREF DeeCodeObject *result;
 	DeeScopeObject *prev_scope;
+	struct Dee_compiler_options *options;
 	ASSERT(function_ast->a_type == AST_FUNCTION);
 	/* This is where it gets interesting, because this will
 	 * create a temporary sub-assembler, allowing for recursion! */
@@ -60,12 +61,11 @@ ast_assemble_function(struct ast *__restrict function_ast,
 	current_basescope = function_ast->a_function.f_scope;
 
 	/* HINT: `code_compile' will safe and restore our own assembler context. */
+	options = DeeCompiler_Current->cp_options;
 	result = code_compile(function_ast->a_function.f_code,
 	                      /* Don't propagate `ASM_FBIGCODE' */
 	                      (current_assembler.a_flag & ~ASM_FBIGCODE) |
-	                      (DeeCompiler_Current->cp_options
-	                       ? (DeeCompiler_Current->cp_options->co_assembler & ASM_FBIGCODE)
-	                       : 0),
+	                      (options ? (options->co_assembler & ASM_FBIGCODE) : 0),
 	                      false, p_refc, p_refv);
 	/* Now that the code has been generated, it's time to
 	 * register it as a constant variable of our own code. */

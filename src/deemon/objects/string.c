@@ -24,23 +24,22 @@
 
 #include <deemon/alloc.h>              /* DeeDbgObject_Mallocc, DeeObject_*alloc*, DeeObject_MALLOC, Dee_CollectMemoryoc, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryReallocc */
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_Unpack1X, UNPu32 */
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
+#include <deemon/bool.h>               /* return_bool, return_false */
+#include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>             /* Dee_unicode_printer_vprintf -> DeeFormat_VPrintf */
-#include <deemon/int.h>
-#include <deemon/method-hints.h>
-#include <deemon/none-operator.h>      /* _DeeNone_reti1_3 */
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/error.h>              /* DeeError_Throwf, DeeError_UnicodeEncodeError */
+#include <deemon/int.h>                /* DeeInt_NewSize */
+#include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/none-operator.h>      /* _DeeNone_reti1_1, _DeeNone_reti1_3 */
+#include <deemon/none.h>               /* DeeNone_Check, return_none */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/system-features.h>    /* memmem() */
+#include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, Dee_seq_range, type_nii */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeDbgString_*, DeeString*, Dee_ASCII_PRINTER_INIT, Dee_EmptyString, Dee_STRING_*, Dee_UNICODE_PRINTER_INIT, Dee_ascii_printer*, Dee_charptr_const, Dee_empty_string_struct, Dee_string_fini_hook*, Dee_string_utf*, Dee_unicode_printer*, STRING_ERROR_FSTRICT, STRING_MUL_SIZEOF_WIDTH, STRING_SIZEOF_WIDTH, STRING_WIDTH_COUNT, STRING_WIDTH_GETCHAR, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
+#include <deemon/stringutils.h>        /* DeeString_GetChar */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_*, DeeSystem_DEFINE_*, bzero, memcmp, memcmpl, memcmpw, memcpy*, memmem, memmovedownc, memmoveupc, memset, strlen */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/lock.h>          /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 

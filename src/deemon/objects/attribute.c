@@ -24,18 +24,18 @@
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
-#include <deemon/attribute.h>
-#include <deemon/bool.h>
+#include <deemon/attribute.h>          /* DeeAttributeObject, DeeAttribute_Type, DeeEnumAttr* */
+#include <deemon/bool.h>               /* return_bool, return_false, return_true */
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/mro.h>
-#include <deemon/none.h>
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/format.h>             /* DeeFormat_Printf */
+#include <deemon/mro.h>                /* DeeObject_FindAttr, DeeObject_IterAttr, Dee_ATTRINFO_CUSTOM, Dee_ATTRPERM_F_*, Dee_ITERATTR_DEFAULT_BUFSIZE, Dee_SIZEOF_ATTRPERM_T, Dee_attrdesc, Dee_attrdesc_*, Dee_attrhint, Dee_attrhint_matches, Dee_attrinfo_typeof, Dee_attriter_*, Dee_attrperm_t, Dee_attrspec */
+#include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString* */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, access, memcpy, memset, read, stat, strcmp */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SHIFT_TYPE__ */
 

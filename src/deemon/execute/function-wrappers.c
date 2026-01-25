@@ -24,21 +24,21 @@
 
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryMallocc */
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStructKw, UNPu16, UNPx16 */
-#include <deemon/bool.h>
-#include <deemon/code.h>
+#include <deemon/bool.h>               /* Dee_True, return_bool */
+#include <deemon/code.h>               /* DeeCodeObject, DeeCode_*, DeeDDIObject, DeeDDI_Type, DeeFunctionObject, DeeFunction_*, DeeYieldFunctionObject, DeeYieldFunction_Type, Dee_CODE_FLENIENT, Dee_DDI_*, Dee_code_*, Dee_ddi_*, code_addr_t */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/map.h>
-#include <deemon/method-hints.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/format.h>             /* PRFxSIZ */
+#include <deemon/int.h>                /* DeeInt_NEWU, DeeInt_NewUInt16 */
+#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/traceback.h>
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString* */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmpz, DeeSystem_DEFINE_strcmpz, bcmp, memcpy*, memmovedownc, memmoveupc, strcmpz, strlen */
+#include <deemon/traceback.h>          /* DeeFrame* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/futex.h>         /* DeeFutex_WakeAll */
 #include <deemon/util/lock.h>          /* DeeLock_Acquire2, Dee_atomic_lock_* */

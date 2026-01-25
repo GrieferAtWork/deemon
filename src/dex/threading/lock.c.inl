@@ -33,18 +33,14 @@
 
 #include <deemon/alloc.h>            /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>              /* DEFINE_KWLIST, DeeArg_Unpack*, UNPu64, UNPuPTR */
-#include <deemon/bool.h>
-#include <deemon/dex.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>             /* return_bool, return_false, return_true */
+#include <deemon/format.h>           /* DeeFormat_PRINT, DeeFormat_Printf, PRFuPTR */
+#include <deemon/none.h>             /* return_none */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/thread.h>
+#include <deemon/system-features.h>  /* read, write */
 #include <deemon/util/atomic.h>      /* atomic_read */
 #include <deemon/util/lock-utils.h>  /* Dee_atomic_lock_*, Dee_atomic_rwlock_* */
-#include <deemon/util/lock.h>        /* Dee_ATOMIC_RWLOCK_MAX_READERS, Dee_SHARED_RWLOCK_MAX_READERS, Dee_SIZEOF_ATOMIC_LOCK, Dee_atomic_lock_*, Dee_atomic_rwlock_*, Dee_shared_lock_*, Dee_shared_rwlock_*, _Dee_atomic_lock_release_NDEBUG, _Dee_atomic_rwlock_*, _Dee_shared_rwlock_* */
+#include <deemon/util/lock.h>        /* Dee_ATOMIC_RWLOCK_MAX_READERS, Dee_SHARED_RWLOCK_MAX_READERS, Dee_SIZEOF_ATOMIC_LOCK, Dee_atomic_lock_*, Dee_atomic_rwlock_*, Dee_shared_lock_*, Dee_shared_rwlock_*, _Dee_atomic_lock_release_NDEBUG, _Dee_atomic_rwlock_*, _Dee_shared_lock_release_NDEBUG, _Dee_shared_rwlock_* */
 #include <deemon/util/rlock-utils.h> /* Dee_ratomic_lock_*, Dee_ratomic_rwlock_* */
 #include <deemon/util/rlock.h>       /* Dee_ratomic_lock_*, Dee_ratomic_rwlock_*, Dee_rshared_lock_*, Dee_rshared_rwlock_*, _Dee_ratomic_lock_release_NDEBUG, _Dee_ratomic_rwlock_*, _Dee_rshared_lock_release_NDEBUG, _Dee_rshared_rwlock_* */
 

@@ -27,18 +27,18 @@
 
 #include <deemon/api.h>
 
-#include <deemon/abi/time.h>
+#include <deemon/abi/time.h>        /* DECLARE_DeeTime_NewFILETIME, DECLARE_DeeTime_NewUnix */
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_Freea, Dee_Malloca, Dee_ReleaseSystemMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw, UNP* */
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/int.h>
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/file.h>            /* DeeFile_Check, DeeFile_Close */
+#include <deemon/int.h>             /* DEFINE_*INT*, DeeInt_* */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
+#include <deemon/objmethod.h>       /* DEFINE_CMETHOD1, DEFINE_KWCMETHOD */
+#include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type */
+#include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, STRING_ERROR_FREPLAC, WSTR_LENGTH */
+#include <deemon/system-features.h> /* AT_FDCWD, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, DTTOIF, DT_BLK, DT_CHR, DT_DIR, DT_FIFO, DT_LNK, DT_REG, DT_SOCK, DT_UNKNOWN, DT_WHT, DeeSystem_DEFINE_wcslen, DeeSystem_GetErrno, DeeSystem_SetErrno, IFTODT, close, closedir, dirfd, dup, fdopendir, fstatat, fstatat64, lstat, lstat64, open, opendir, read, readdir, readdir64, stat, stat64, strlen, wcslen */
+#include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_GetFilenameOfFD, DeeSystem_SEP, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
 

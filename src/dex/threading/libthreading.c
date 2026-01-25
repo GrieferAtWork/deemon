@@ -27,11 +27,10 @@
 
 #include <deemon/api.h>
 
-#include <deemon/dex.h>
-#include <deemon/module.h>
-#include <deemon/objmethod.h>
-#include <deemon/system-features.h> /* memcpy */
-#include <deemon/thread.h>
+#include <deemon/dex.h>             /* DEX_*, Dee_DEXSYM_READONLY */
+#include <deemon/objmethod.h>       /* DeeCMethodObject */
+#include <deemon/system-features.h> /* memcpy, time */
+#include <deemon/thread.h>          /* Dee_tls_callback_hooks, _DeeThread_TlsCallbacks */
 
 #include <stddef.h> /* NULL */
 

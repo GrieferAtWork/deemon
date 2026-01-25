@@ -31,9 +31,10 @@
 #include "libhostasm.h"
 /**/
 
-#include <deemon/alloc.h>  /* Dee_Reallocc, Dee_TryReallocc */
-#include <deemon/error.h>
-#include <deemon/format.h>
+#include <deemon/alloc.h>           /* Dee_Reallocc, Dee_TryReallocc */
+#include <deemon/error.h>           /* DeeError_IllegalInstruction, DeeError_Throwf */
+#include <deemon/format.h>          /* PRFdSIZ */
+#include <deemon/system-features.h> /* bzero, memmovedownc */
 
 #include <hybrid/align.h>           /* CEIL_ALIGN */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

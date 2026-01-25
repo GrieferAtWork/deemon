@@ -22,14 +22,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/bool.h>
-#include <deemon/file.h>
-#include <deemon/int.h>
-#include <deemon/mro.h>
-#include <deemon/none-operator.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>          /* return_bool */
+#include <deemon/file.h>          /* GETC_EOF, OPERATOR_FILE_* */
+#include <deemon/int.h>           /* DeeInt_*, INT_UNSIGNED */
+#include <deemon/mro.h>           /* Dee_attrdesc, Dee_attrhint, Dee_attrinfo, Dee_attriter, Dee_attriter_initempty, Dee_attrspec */
+#include <deemon/none-operator.h> /* _DeeNone_* */
+#include <deemon/none.h>          /* DeeNone*, return_none */
 #include <deemon/object.h>
-#include <deemon/string.h>
+#include <deemon/string.h>        /* DeeString_STR */
 
 #include <hybrid/typecore.h> /* __SIZEOF_*__ */
 

@@ -27,9 +27,10 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/format.h>
-#include <deemon/system-features.h> /* bzero(), memcpyc(), ... */
-#include <deemon/types.h>
+#include <deemon/format.h>          /* DeeFormat_Printf */
+#include <deemon/string.h>          /* DeeUni_IsSpace */
+#include <deemon/system-features.h> /* bcmpc, bzero, memcpyc, memset */
+#include <deemon/types.h>           /* DREF, Dee_ssize_t */
 
 #include "../../runtime/strings.h"
 

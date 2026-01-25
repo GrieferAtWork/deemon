@@ -24,23 +24,23 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
-#include <deemon/cached-dict.h>
+#include <deemon/bool.h>               /* return_bool, return_false */
+#include <deemon/cached-dict.h>        /* DeeCachedDict_Check, DeeCachedDict_MAP */
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/kwds.h>
-#include <deemon/none.h>
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/format.h>             /* DeeFormat_*, PRFu16 */
+#include <deemon/int.h>                /* DeeInt_NewUInt16, DeeInt_Type */
+#include <deemon/kwds.h>               /* DeeKwds*, Dee_kwds_entry */
+#include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type, return_none */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/set.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
-#include <deemon/system-features.h>    /* memcpyc(), ... */
-#include <deemon/tuple.h>
+#include <deemon/operator-hints.h>     /* DeeType_GetNativeOperator*, DeeType_GetTnoOfOperator, Dee_tno_id */
+#include <deemon/seq.h>                /* DeeIterator_Type */
+#include <deemon/serial.h>             /* DeeSerial, DeeSerial_Addr2Mem, Dee_seraddr_t */
+#include <deemon/set.h>                /* DeeSet_Type */
+#include <deemon/string.h>             /* DeeString* */
+#include <deemon/super.h>              /* DeeSuper* */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, bcmp, mempcpyc, memset, pow, strcmp */
+#include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

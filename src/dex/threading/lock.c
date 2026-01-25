@@ -29,20 +29,20 @@
 
 #include <deemon/alloc.h>           /* DeeObject_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, _Dee_MallococBufsize */
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack*, UNPu64, UNPuSIZ */
-#include <deemon/bool.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/none-operator.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* return_bool, return_false, return_true */
+#include <deemon/error.h>           /* DeeError_*, ERROR_PRINT_DOHANDLE */
+#include <deemon/format.h>          /* DeeFormat_*, PCKu64, PRFuPTR */
+#include <deemon/int.h>             /* DeeInt_NewSize */
+#include <deemon/none-operator.h>   /* DeeNone_OperatorCtor, DeeNone_OperatorSerialize */
+#include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h> /* memset(), ... */
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/objmethod.h>       /* DEFINE_CMETHOD, DeeCMethodObject */
+#include <deemon/seq.h>             /* DeeRefVector_NewReadonly */
+#include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>          /* DEFINE_STRING_EX, DeeString_STR */
+#include <deemon/system-features.h> /* memset, read, time, wait, write */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds */
+#include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/atomic.h>     /* Dee_ATOMIC_RELAXED, Dee_ATOMIC_SEQ_CST, atomic_* */
 #include <deemon/util/futex.h>      /* DeeFutex_WakeAll, DeeFutex_WakeOne */
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_t, Dee_atomic_rwlock_t, Dee_event_*, Dee_semaphore_*, Dee_shared_lock_t, Dee_shared_rwlock_t */

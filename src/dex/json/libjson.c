@@ -29,34 +29,34 @@
 
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack1, DeeArg_UnpackStructKw */
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
-#include <deemon/class.h>
-#include <deemon/dex.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/float.h>
-#include <deemon/format.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/list.h>
-#include <deemon/map.h>
-#include <deemon/module.h>
-#include <deemon/mro.h>
-#include <deemon/none.h>
-#include <deemon/numeric.h>
+#include <deemon/bool.h>            /* DeeBool_Type, Dee_False, Dee_True, return_false, return_true */
+#include <deemon/bytes.h>           /* DeeBytes* */
+#include <deemon/class.h>           /* DeeClassDesc_QueryInstanceAttribute, DeeClass_DESC, DeeInstance_DESC, DeeInstance_SetAttribute, Dee_class_attribute, Dee_class_desc, Dee_instance_desc */
+#include <deemon/dex.h>             /* DEX_*, Dee_DEXSYM_READONLY */
+#include <deemon/error-rt.h>        /* DeeRT_ErrIndexOutOfBounds */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/file.h>            /* DeeFile_* */
+#include <deemon/float.h>           /* DeeFloat_New, DeeFloat_Type */
+#include <deemon/format.h>          /* PRFuSIZ */
+#include <deemon/hashset.h>         /* DeeHashSet_Type */
+#include <deemon/int.h>             /* DeeInt_*, Dee_INT_STRING, Dee_INT_STRING_FNOSEPS */
+#include <deemon/list.h>            /* DeeListObject, DeeList_Type */
+#include <deemon/map.h>             /* DeeMapping_Type */
+#include <deemon/module.h>          /* DeeModule_GetDeemon, DeeModule_GetExtern */
+#include <deemon/mro.h>             /* DeeObject_EnumAttr, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrdesc_nameobj, Dee_attrhint */
+#include <deemon/none.h>            /* DeeNone*, Dee_None, return_none */
+#include <deemon/numeric.h>         /* DeeNumeric_Type */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/set.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/tuple.h>
+#include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
+#include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type, DeeSharedVector_Decref, DeeSharedVector_NewShared, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
+#include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/set.h>             /* DeeSet_Type */
+#include <deemon/string.h>          /* DeeString*, DeeUni_AsDigit, DeeUni_IsSymCont, Dee_ASCII_PRINTER_INIT, Dee_STRING_MUL_SIZEOF_WIDTH, Dee_UNICODE_PRINTER_INIT, Dee_ascii_printer*, Dee_string_utf, Dee_unicode_printer*, STRING_ERROR_FSTRICT, WSTR_LENGTH */
+#include <deemon/system-features.h> /* bcmpc, memchr, strchr, strlen, write */
+#include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
-#include <deemon/util/objectlist.h> /* objectlist, objectlist_* */
+#include <deemon/util/objectlist.h> /* Dee_objectlist, Dee_objectlist_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

@@ -27,9 +27,9 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_CollectMemoryc, Dee_Free */
-#include <deemon/module.h>
+#include <deemon/module.h>          /* DeeModule*, Dee_module_symbol */
 #include <deemon/object.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* memcpy */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

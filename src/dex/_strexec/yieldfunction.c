@@ -27,16 +27,16 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, _Dee_MallococBufsize */
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/kwds.h>
-#include <deemon/none.h>
+#include <deemon/error.h>           /* DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_PRINT_DOHANDLE */
+#include <deemon/format.h>          /* PRFu16 */
+#include <deemon/gc.h>              /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
+#include <deemon/kwds.h>            /* DeeKwds_Check, DeeKwds_SIZE */
+#include <deemon/none.h>            /* DeeNone_Check */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/system-features.h> /* memcpyc(), ... */
-#include <deemon/thread.h>
+#include <deemon/seq.h>             /* DeeIterator_Type, DeeRefVector_NewReadonly, DeeSeq_Type */
+#include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/system-features.h> /* memcpy* */
+#include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_Self, Dee_except_frame, Dee_except_frame_free */
 #include <deemon/util/rlock.h>      /* Dee_rshared_lock_init */
 
 #include <hybrid/unaligned.h> /* UNALIGNED_GET* */

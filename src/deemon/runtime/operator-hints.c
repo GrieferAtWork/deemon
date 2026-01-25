@@ -23,13 +23,13 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Allocac, Dee_Free, Dee_TryCalloc, Dee_UntrackAlloc */
-#include <deemon/class.h>
-#include <deemon/format.h>
-#include <deemon/method-hints.h>
+#include <deemon/class.h>           /* DeeClass_TryGetPrivateOperatorPtr, Dee_CLASS_OPERATOR_PRINT, Dee_CLASS_OPERATOR_PRINTREPR */
+#include <deemon/format.h>          /* PRFuSIZ */
+#include <deemon/method-hints.h>    /* DeeType_*MethodHint*, Dee_tmh_id */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/system-features.h>
+#include <deemon/operator-hints.h>  /* DeeType_GetNativeOperator*, DeeType_GetOperatorOfTno, Dee_compact_tno_id_t, Dee_tno_id, _DeeType_GetOperatorOfTno, _DeeType_GetTnoOfOperator, usrtype__* */
+#include <deemon/seq.h>             /* DeeType_GetSeqClass, Dee_SEQCLASS_* */
+#include <deemon/system-features.h> /* memcpyc, memmovedownc, memset */
 #include <deemon/util/atomic.h>     /* atomic_* */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __CHAR_BIT__, __UINTPTR_HALF_TYPE__ */

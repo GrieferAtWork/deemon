@@ -22,15 +22,15 @@
 
 #include <deemon/api.h>
 
-#include <deemon/format.h>
-#include <deemon/map.h>
-#include <deemon/method-hints.h>
+#include <deemon/format.h>          /* PRFuSIZ */
+#include <deemon/map.h>             /* DeeMapping_Type */
+#include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/set.h>
-#include <deemon/super.h>
-#include <deemon/system-features.h>
+#include <deemon/seq.h>             /* DeeSeq_Type */
+#include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t, Dee_serial */
+#include <deemon/set.h>             /* DeeSet_Type */
+#include <deemon/super.h>           /* DeeSuper_New */
+#include <deemon/system-features.h> /* memcpy */
 #include <deemon/util/atomic.h>     /* atomic_read */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__ */

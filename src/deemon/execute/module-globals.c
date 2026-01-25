@@ -24,17 +24,17 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* Dee_True */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/map.h>
-#include <deemon/method-hints.h>
-#include <deemon/module.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_GET, Dee_module_* */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/tuple.h>
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
+#include <deemon/string.h>             /* DeeString* */
+#include <deemon/tuple.h>              /* DeeTuple_PackSymbolic */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak, atomic_read */
 
 #include "../objects/generic-proxy.h"

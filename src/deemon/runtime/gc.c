@@ -25,18 +25,19 @@
 
 #include <deemon/alloc.h>              /* DeeDbgObject_*, DeeMem_ClearCaches, DeeObject_*, DeeSlab_ENUMERATE, DeeSlab_Invoke, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_TryCallocc, Dee_TryReallocc */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPxSIZ */
-#include <deemon/asm.h>
-#include <deemon/bool.h>
-#include <deemon/code.h>
+#include <deemon/asm.h>                /* ASM_RET_NONE, instruction_t */
+#include <deemon/bool.h>               /* return_bool, return_false, return_true */
+#include <deemon/code.h>               /* DeeCodeObject, DeeCode_NAME, DeeCode_Type, DeeFunctionObject, DeeFunction_*, Dee_CODE_FFINALLY, instruction_t */
 #include <deemon/computed-operators.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/int.h>
-#include <deemon/module.h>
+#include <deemon/exec.h>               /* DeeExec_KillUserCode */
+#include <deemon/format.h>             /* PRFuSIZ */
+#include <deemon/gc.h>                 /* DeeDbgGCObject_*alloc*, DeeDbgGCObject_Free, DeeGCEnumTracked_Singleton, DeeGCObject_*alloc*, DeeGCObject_Free, DeeGC_*, Dee_GC_HEAD_SIZE, Dee_gc_head */
+#include <deemon/int.h>                /* DeeInt_NewSize */
+#include <deemon/module.h>             /* DeeModule* */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/system-features.h>    /* memcpy(), bzero(), ... */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/system-features.h>    /* bzeroc, link, memcpy*, memmovedownc, memmoveupc, memset */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_* */
 #include <deemon/util/rlock.h>         /* Dee_RSHARED_LOCK_INIT, Dee_rshared_lock_* */
@@ -53,7 +54,7 @@
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #ifndef CONFIG_NO_DEX
-#include <deemon/dex.h>
+#include <deemon/dex.h> /* DeeDex_Check */
 #endif /* !CONFIG_NO_DEX */
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 

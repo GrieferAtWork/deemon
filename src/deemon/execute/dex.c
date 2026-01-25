@@ -23,20 +23,19 @@
 #include <deemon/api.h>
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#include <deemon/dex.h>
-#include <deemon/module.h>
+#include <deemon/dex.h>    /* DEX, DeeDexObject, DeeDex_Check, DeeDex_Cleanup, DeeDex_Finalize, DeeDex_New, DeeDex_Type, Dee_dex, Dee_dex_symbol, dex_initialize, dex_load_handle */
+#include <deemon/module.h> /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_FDIDINIT, Dee_MODULE_FDIDLOAD, Dee_MODULE_HASHNX, Dee_module_symbol */
 #include <deemon/object.h>
 
 #ifndef CONFIG_NO_DEX
 #include <deemon/alloc.h>              /* Dee_*alloc*, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/notify.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>    /* DeeSystem_DlOpen_USE_LoadLibrary, memcpyc(), ... */
-#include <deemon/system.h>             /* DeeSystem_Dl* */
+#include <deemon/error.h>              /* DeeError_*, Dee_ERROR_HANDLED_RESTORE */
+#include <deemon/format.h>             /* Dee_sprintf, PRFuSIZ */
+#include <deemon/gc.h>                 /* DeeGCObject_CALLOC, DeeGC_Track */
+#include <deemon/string.h>             /* DeeString* */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_*, DeeSystem_DlOpen_USE_LoadLibrary, DeeSystem_DlOpen_USE_dlopen, dl_iterate_phdr, dladdr, dlgethandle, dlopen, memcpyc, strcmp, strlen */
+#include <deemon/system.h>             /* DeeSystem_DlClose, DeeSystem_DlSym */
 #include <deemon/util/lock.h>          /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
@@ -44,7 +43,6 @@
 #include <hybrid/typecore.h>        /* __BYTE_TYPE__ */
 
 #ifndef CONFIG_NO_DEC
-#include <deemon/dec.h>
 #endif /* !CONFIG_NO_DEC */
 
 #ifdef DeeSystem_DlOpen_USE_LoadLibrary

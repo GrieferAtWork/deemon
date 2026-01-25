@@ -24,16 +24,16 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* Dee_False, Dee_True, return_bool */
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>
-#include <deemon/float.h>
-#include <deemon/int.h>
-#include <deemon/numeric.h>
+#include <deemon/error.h>              /* DeeError_Throwf, DeeError_ValueError */
+#include <deemon/float.h>              /* CONFIG_HAVE_FPU, CONFIG_HAVE_IEEE754, CONFIG_HAVE_IEEE754_LE, DEFINE_FLOAT, DeeFloatObject, DeeFloat_*, Dee_Strtod */
+#include <deemon/int.h>                /* DEFINE_INT15, DeeIntObject, DeeInt_*, Dee_DIGIT_BITS, Dee_digit_t */
+#include <deemon/numeric.h>            /* DeeNumeric_Type */
 #include <deemon/object.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/serial.h>             /* DeeSerial, DeeSerial_Addr2Mem, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString* */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_*, DBL_RADIX, DBL_ROUNDS, ceil, exp, fabs, floor, frexp, isfinite, isgreater, isgreaterequal, isinf, isless, islessequal, islessgreater, isnan, isnormal, isunordered, ldexp, nan, nextafter, nexttoward, round, trunc */
 
 #include <hybrid/limitcore.h> /* __INTPTR_MAX__, __INTPTR_MIN__ */
 #include <hybrid/typecore.h>  /* __SIZEOF_DOUBLE__, __UINT32_C */

@@ -22,10 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/dex.h>
-#include <deemon/file.h>
+#include <deemon/file.h>   /* DeeFileTypeObject, Dee_FILE_OBJECT_HEAD */
 #include <deemon/object.h>
-#include <deemon/string.h>
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

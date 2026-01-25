@@ -79,6 +79,8 @@
 #endif /* CONFIG_BUILDING_DEEMON */
 #ifndef __INTELLISENSE__
 #include "none.h"
+#include "string.h"
+#include "objmethod.h" /* DeeObjMethod_VCallFuncfDeeObjMethod_VCallFuncf */
 #endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN
@@ -2158,10 +2160,18 @@ INTDEF WUNUSED NONNULL((1)) size_t DCALL type_obprop_iterattr(DeeTypeObject *__r
 INTDEF WUNUSED NONNULL((1)) size_t DCALL type_obmemb_iterattr(DeeTypeObject *__restrict tp_self, struct Dee_attriter *iterbuf, size_t bufsize);
 
 /* Helper functions for accessing type attributes. */
+#ifdef __INTELLISENSE__
+#define type_method_doc(desc)                           ((DeeObject *)(desc)->m_doc)
+#define type_method_get(desc, self)                     ((void)(self), (DeeObject *)(desc)->m_func)
+#define type_method_call(desc, self, argc, argv)        ((void)(self), (void)(argc), (void)(argv), (DeeObject *)(desc)->m_func)
+#define type_method_vcallf(desc, self, format, args)    ((void)(self), (void)(format), (void)(args), (DeeObject *)(desc)->m_func)
+#define type_method_call_kw(desc, self, argc, argv, kw) ((void)(self), (void)(argc), (void)(argv), (void)(kw), (DeeObject *)(desc)->m_func)
+#define type_obmeth_get(cls_type, desc)                 (Dee_REQUIRES_TYPE(DeeTypeObject *, cls_type), (DeeObject *)(desc)->m_func)
+#else /* __INTELLISENSE__ */
+#define type_method_doc(desc) DeeString_NewUtf8((desc)->m_doc, strlen((desc)->m_doc), STRING_ERROR_FIGNORE)
 #define type_method_get(desc, self)                                                                  \
 	(((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwObjMethod_New((Dee_kwobjmethod_t)(desc)->m_func, self) \
 	                                      : DeeObjMethod_New((desc)->m_func, self))
-#define type_method_doc(desc) DeeString_NewUtf8((desc)->m_doc, strlen((desc)->m_doc), STRING_ERROR_FIGNORE)
 #define type_method_call(desc, self, argc, argv)                                                                            \
 	(((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwObjMethod_CallFunc((Dee_kwobjmethod_t)(desc)->m_func, self, argc, argv, NULL) \
 	                                      : DeeObjMethod_CallFunc((desc)->m_func, self, argc, argv))
@@ -2171,10 +2181,11 @@ INTDEF WUNUSED NONNULL((1)) size_t DCALL type_obmemb_iterattr(DeeTypeObject *__r
 #define type_method_call_kw(desc, self, argc, argv, kw)                                                                   \
 	(((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwObjMethod_CallFunc((Dee_kwobjmethod_t)(desc)->m_func, self, argc, argv, kw) \
 	                                      : type_method_call_kw_normal(desc, self, argc, argv, kw))
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_method_call_kw_normal(struct type_method const *desc, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define type_obmeth_get(cls_type, desc)                                                                  \
 	(((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwClsMethod_New(cls_type, (Dee_kwobjmethod_t)(desc)->m_func) \
 	                                      : DeeClsMethod_New(cls_type, (desc)->m_func))
+#endif /* !__INTELLISENSE__ */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_method_call_kw_normal(struct type_method const *desc, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define type_obmeth_doc(desc) DeeString_NewUtf8((desc)->m_doc, strlen((desc)->m_doc), STRING_ERROR_FIGNORE)
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_obmeth_call(DeeTypeObject *cls_type, struct type_method const *desc, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_obmeth_call_kw(DeeTypeObject *cls_type, struct type_method const *desc, size_t argc, DeeObject *const *argv, DeeObject *kw);

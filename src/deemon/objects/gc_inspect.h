@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/object.h>
-#include <deemon/types.h>
+#include <deemon/types.h>  /* DREF, DeeObject, DeeTypeObject, OBJECT_HEAD */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */

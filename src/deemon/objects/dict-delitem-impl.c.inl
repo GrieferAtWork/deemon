@@ -18,6 +18,10 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
+#include <deemon/dict.h>     /* DeeDict_*, Dee_DICT_HTAB_EOF, Dee_dict_*, _DeeDict_* */
+#include <deemon/error-rt.h> /* DeeRT_Err* */
+#include <deemon/object.h>
+
 #include "dict.c"
 //#define DEFINE_dict_delitem
 //#define DEFINE_dict_delitem_string_hash

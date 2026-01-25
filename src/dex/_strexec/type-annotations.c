@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/error.h>
+#include <deemon/error.h> /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 
 #include <hybrid/unaligned.h> /* UNALIGNED_GET* */
 #include <hybrid/wordbits.h>  /* ENCODE_INT16, ENCODE_INT32 */

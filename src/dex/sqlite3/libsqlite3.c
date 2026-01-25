@@ -27,8 +27,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/dex.h>
-#include <deemon/module.h>
+#include <deemon/dex.h>       /* DEX_*, Dee_DEXSYM_READONLY */
 #include <deemon/object.h>
 #include <deemon/util/lock.h> /* Dee_SHARED_LOCK_INIT, Dee_shared_lock_* */
 

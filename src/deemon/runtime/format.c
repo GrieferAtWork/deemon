@@ -22,15 +22,15 @@
 
 #include <deemon/api.h>
 
-#include <deemon/bytes.h>
-#include <deemon/float.h>
-#include <deemon/format.h>
-#include <deemon/kwds.h>
+#include <deemon/bytes.h>           /* Dee_bytes_* */
+#include <deemon/float.h>           /* DeeFloat_LPrint, DeeFloat_Print, Dee_FLOAT_PRINT_F* */
+#include <deemon/format.h>          /* DeeFormat_*, Dee_*s*printf* */
+#include <deemon/kwds.h>            /* DeeKwds*, Dee_kwds_entry */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/system-features.h> /* strnlen(), memcpyc(), ... */
-#include <deemon/variant.h>
+#include <deemon/string.h>          /* DeeAscii_ItoaDigits, DeeAscii_ItoaUpperDigit, DeeString_PrintUtf8, DeeUni_AsDigitVal, DeeUni_IsPrint, Dee_ascii_printer*, Dee_unicode_printer* */
+#include <deemon/stringutils.h>     /* Dee_unicode_* */
+#include <deemon/system-features.h> /* CONFIG_HAVE_strnlen, DeeSystem_DEFINE_strnlen, memcpyc, mempcpyc, memset, strchr, strnlen */
+#include <deemon/variant.h>         /* Dee_variant, Dee_variant_print, Dee_variant_printrepr */
 
 #include <hybrid/int128.h>   /* __hybrid_int128_isneg, __hybrid_int128_neg, __hybrid_uint128_* */
 #include <hybrid/minmax.h>   /* MIN */

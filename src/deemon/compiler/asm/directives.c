@@ -22,20 +22,20 @@
 
 #include <deemon/api.h>
 
-#include <deemon/asm.h>
-#include <deemon/code.h>
+#include <deemon/asm.h>                /* DeeAsm_IsNoreturn */
+#include <deemon/code.h>               /* Dee_CODE_F*, Dee_EXCEPTION_HANDLER_F* */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/error.h>
-#include <deemon/none.h>
+#include <deemon/error.h>              /* DeeError_CompilerError, DeeError_Throwf */
+#include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type, Dee_None */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/types.h>
+#include <deemon/string.h>             /* DeeString*, DeeUni_ToLower */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_memcasecmp, CONFIG_HAVE_strcasecmp, bcmp, bcmpc, memcasecmp, strcasecmp, strlen */
+#include <deemon/types.h>              /* DREF, DeeObject, DeeTypeObject, Dee_AsObject */
 
 #include "../../runtime/strings.h"
 

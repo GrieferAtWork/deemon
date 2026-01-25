@@ -24,28 +24,29 @@
 
 #ifndef CONFIG_NO_DEC
 #ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
-#include <deemon/cell.h>
-#include <deemon/class.h>
-#include <deemon/code.h>
+#include <deemon/cell.h>            /* DeeCell_TryGet, DeeCell_Type */
+#include <deemon/class.h>           /* DeeClassDescriptorObject, DeeClassDescriptor_Type, Dee_CLASS_ATTRIBUTE_FCLASSMEM, Dee_CLASS_ATTRIBUTE_FMASK, Dee_class_attribute */
+#include <deemon/code.h>            /* DeeCodeObject, DeeCode_Empty, DeeCode_Type, DeeDDIObject, DeeFunctionObject, DeeFunction_Type, Dee_CODE_FDEC_8BIT, Dee_CODE_FMASK, Dee_DDI_EXDAT_*, Dee_ddi_exdat, Dee_except_handler, Dee_operator_t */
 #include <deemon/compiler/dec.h>
-#include <deemon/dec.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/float.h>
-#include <deemon/format.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/kwds.h>
-#include <deemon/list.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/dec.h>             /* DECMAG*, DEC_BUILTINID_IDOF, DEC_BUILTINID_SETOF, DEC_BUILTINID_UNKNOWN, DI_MAG*, DTYPE16_BUILTIN_MIN, DTYPE16_CELL, DTYPE16_CLASSDESC, DTYPE16_DICT, DTYPE16_HASHSET, DTYPE16_RODICT, DTYPE16_ROSET, DTYPE_CLASSDESC, DTYPE_CODE, DTYPE_FUNCTION, DTYPE_IEEE754, DTYPE_KWDS, DTYPE_LIST, DTYPE_NONE, DTYPE_NULL, DTYPE_SLEB, DTYPE_STRING, DTYPE_TUPLE, DTYPE_ULEB, DVERSION_CUR, Dec_* */
+#include <deemon/dict.h>            /* DeeDictObject, DeeDict_*, Dee_dict_*, _DeeDict_GetVirtVTab */
+#include <deemon/error.h>           /* DeeError_NotImplemented, DeeError_Throwf */
+#include <deemon/float.h>           /* DeeFloat_Type, DeeFloat_VALUE */
+#include <deemon/format.h>          /* PRFuSIZ */
+#include <deemon/hashset.h>         /* DeeHashSetObject, DeeHashSet_* */
+#include <deemon/int.h>             /* DeeInt_* */
+#include <deemon/kwds.h>            /* DeeKwdsObject, DeeKwds_Type */
+#include <deemon/list.h>            /* DeeListObject, DeeList_* */
+#include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_FHASCTIME, Dee_MODULE_SYMBOL_GETDOCLEN, Dee_MODULE_SYMBOL_GETDOCSTR, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/none.h>            /* DeeNone_Type, Dee_None */
 #include <deemon/object.h>
-#include <deemon/rodict.h>
-#include <deemon/roset.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h> /* memmovedownc(), ... */
-#include <deemon/system.h>          /* DeeSystem_SEP, */
-#include <deemon/tuple.h>
+#include <deemon/rodict.h>          /* DeeRoDictObject, DeeRoDict_Type, _DeeRoDict_GetRealVTab */
+#include <deemon/roset.h>           /* DeeRoSetObject, DeeRoSet_Type */
+#include <deemon/seq.h>             /* DeeSeqOneObject, DeeSeqOne_Type */
+#include <deemon/string.h>          /* DeeString*, DeeUni_ToLower, WSTR_LENGTH */
+#include <deemon/system-features.h> /* memcpy, memmovedownc, memmoveup, memset, strlen */
+#include <deemon/system.h>          /* DeeSystem_HAVE_FS_ICASE, DeeSystem_SEP */
+#include <deemon/tuple.h>           /* DeeTuple* */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/byteswap.h>  /* HTOLE16, HTOLE32, UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SETLE16, UNALIGNED_SETLE32 */

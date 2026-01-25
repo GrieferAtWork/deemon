@@ -24,12 +24,11 @@
 
 #include <deemon/api.h>
 
-#include <deemon/class.h>
-#include <deemon/error.h>
-#include <deemon/mro.h>
-#include <deemon/none.h>   /* type_member_del -> Dee_None */
+#include <deemon/class.h>  /* DeeClass_*, Dee_class_attribute */
+#include <deemon/error.h>  /* DeeError_Catch, DeeError_UnboundAttribute */
+#include <deemon/mro.h>    /* DeeType_Call*Attr*, DeeType_Find*Attr*, DeeType_Get*Attr*, DeeType_Locate*Attr*, DeeType_Query*Attribute*, DeeType_VCall*Attr*f, Dee_ATTRINFO_*, Dee_attrinfo, Dee_membercache_*, type_getset_*, type_member_*, type_method_*, type_obmemb_*, type_obmeth_*, type_obprop_* */
 #include <deemon/object.h>
-#include <deemon/types.h>
+#include <deemon/types.h>  /* DREF, DeeObject, DeeTypeObject, Dee_hash_t, ITER_DONE */
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool, false, true */

@@ -28,14 +28,15 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Freea, Dee_Malloca */
-#include <deemon/bool.h>
-#include <deemon/error.h>
-#include <deemon/float.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* DeeBool_IsTrue, DeeBool_Type */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/float.h>           /* DeeFloat_Type, DeeFloat_VALUE */
+#include <deemon/format.h>          /* PRFuSIZ */
+#include <deemon/int.h>             /* DeeInt_* */
+#include <deemon/none.h>            /* DeeNone_Type, Dee_None */
 #include <deemon/object.h>
-#include <deemon/system-features.h>
+#include <deemon/string.h>          /* DeeString_STR, DeeString_Type */
+#include <deemon/system-features.h> /* memcpy, mempcpyc */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_INT__ */
 

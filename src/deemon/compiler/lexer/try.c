@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_CollectMemoryc, Dee_Free, Dee_Mallocc, Dee_TryReallocc */
-#include <deemon/code.h>
+#include <deemon/code.h>            /* Dee_EXCEPTION_HANDLER_F* */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>

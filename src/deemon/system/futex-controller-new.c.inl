@@ -25,9 +25,10 @@
 
 #include <deemon/api.h>
 
-#include <deemon/system.h>      /* DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
-#include <deemon/types.h>
-#include <deemon/util/atomic.h> /* atomic_read */
+#include <deemon/system-features.h> /* DeeSystem_GetErrno, cnd_init, mtx_destroy, mtx_init, pthread_cond_init, pthread_mutex_destroy, pthread_mutex_init, sem_init */
+#include <deemon/system.h>          /* DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
+#include <deemon/types.h>           /* DREF */
+#include <deemon/util/atomic.h>     /* atomic_read */
 
 #include <hybrid/sequence/list.h> /* SLIST_FIRST, SLIST_REMOVE_HEAD */
 

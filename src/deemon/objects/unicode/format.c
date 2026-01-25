@@ -22,12 +22,11 @@
 
 #include <deemon/api.h>
 
-#include <deemon/error.h>
-#include <deemon/format.h>
+#include <deemon/error.h>       /* DeeError_Throwf, DeeError_ValueError */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/tuple.h>
+#include <deemon/string.h>      /* DeeUni_*, Dee_UNICODE_IS*, Dee_unicode_printer*, Dee_uniflag_t */
+#include <deemon/stringutils.h> /* Dee_unicode_readutf8_n */
+#include <deemon/tuple.h>       /* DeeTupleObject */
 
 #include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL, size_t */

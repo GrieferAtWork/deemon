@@ -22,17 +22,17 @@
 
 #include <deemon/api.h>
 
-#include <deemon/float.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
+#include <deemon/float.h>           /* DeeFloatObject, DeeFloat_New, DeeFloat_Type */
+#include <deemon/format.h>          /* DeeFormat_Printf, PRF* */
+#include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/object.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
-#include <deemon/types.h>
+#include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/string.h>          /* DeeString* */
+#include <deemon/system-features.h> /* bcmp, memcmp, memcpy, strcmp, strlen */
+#include <deemon/system.h>          /* DeeSystem_IsStaticPointer */
+#include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, Dee_SIZEOF_HASH_T, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, ITER_DONE, ITER_ISOK */
 #include <deemon/util/atomic.h>     /* atomic_write, atomic_xch */
-#include <deemon/variant.h>
+#include <deemon/variant.h>         /* Dee_variant, Dee_variant_*, _Dee_variant_* */
 
 #include <hybrid/int128.h>      /* __hybrid_int128_gr128, __hybrid_int128_lo128, __hybrid_uint128_* */
 #include <hybrid/minmax.h>      /* MIN */

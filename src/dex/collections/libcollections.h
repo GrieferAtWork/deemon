@@ -23,10 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>     /* Dee_Malloc, Dee_TryMalloc, _Dee_MallococBufsize */
-#include <deemon/dex.h>
-#include <deemon/file.h>
 #include <deemon/object.h>
-#include <deemon/string.h>
 #include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
 
 #include <stdbool.h> /* bool, true */

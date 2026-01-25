@@ -24,18 +24,18 @@
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* Dee_True, return_bool */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/map.h>
-#include <deemon/mro.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/mro.h>                /* DeeObject_IterAttr, Dee_ATTRPERM_F_NAMEOBJ, Dee_ITERATTR_DEFAULT_BUFSIZE, Dee_attrdesc, Dee_attrdesc_fini, Dee_attrdesc_nameobj, Dee_attrhint, Dee_attrhint_initall, Dee_attriter_*, _Dee_attrdesc_fini_WITHOUT_NAME */
+#include <deemon/none.h>               /* DeeNone_NewRef, Dee_None */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
+#include <deemon/seq.h>                /* DeeIterator_Type */
+#include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* memset */
-#include <deemon/types.h>
+#include <deemon/types.h>              /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_hash_t, ITER_DONE, OBJECT_HEAD_INIT */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

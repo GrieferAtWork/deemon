@@ -22,9 +22,10 @@
 
 #include <deemon/api.h>
 
+#include <deemon/computed-operators.h>
 #include <deemon/object.h>
-#include <deemon/tuple.h>
-#include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
+#include <deemon/tuple.h>              /* DeeTupleObject */
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_* */
 
 DECL_BEGIN
 

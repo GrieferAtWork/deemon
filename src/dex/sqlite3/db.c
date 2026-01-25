@@ -29,15 +29,15 @@
 
 #include <deemon/alloc.h>           /* DeeObject_FREE, Dee_CollectMemory, Dee_MallocUsableSizeNonNull, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DeeArg_Unpack1, DeeArg_Unpack1Or2 */
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
+#include <deemon/error.h>           /* DeeError_SyntaxError, DeeError_Throwf */
+#include <deemon/format.h>          /* DeeFormat_PRINT */
+#include <deemon/int.h>             /* DeeInt_NewSize, DeeInt_NewUInt64 */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/system-features.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/string.h>          /* DeeString*, Dee_string_fini_hook, Dee_string_fini_hook_decref, STRING_ERROR_FIGNORE, WSTR_LENGTH */
+#include <deemon/stringutils.h>     /* Dee_unicode_skipspaceutf8 */
+#include <deemon/system-features.h> /* CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memsetp, memcpy, memsetp */
+#include <deemon/thread.h>          /* DeeThreadObject, DeeThread_AddInterruptHook, DeeThread_DisableInterruptHooks, DeeThread_EnableInterruptHooks, DeeThread_RemoveInterruptHook, DeeThread_Self, DeeThread_WasInterrupted, Dee_thread_interrupt_hook, Dee_thread_interrupt_hook_decref */
+#include <deemon/tuple.h>           /* Dee_EmptyTuple */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init, Dee_shared_lock_* */
 

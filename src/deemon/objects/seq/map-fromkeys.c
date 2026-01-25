@@ -24,16 +24,16 @@
 
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* Dee_True */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/map.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_ErrUnknownKey */
+#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
+#include <deemon/none.h>               /* DeeNone_NewRef, Dee_None */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/set.h>
-#include <deemon/super.h>
+#include <deemon/seq.h>                /* DeeIterator_NewEmpty, DeeIterator_Type */
+#include <deemon/set.h>                /* DeeSet_NewEmpty, DeeSet_Type, Dee_EmptySet */
+#include <deemon/super.h>              /* DeeSuper_New */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"

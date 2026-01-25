@@ -27,16 +27,16 @@
 #ifdef CONFIG_HOST_WINDOWS
 
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_Free, Dee_Freea, Dee_ReleaseSystemMemory */
-#include <deemon/error.h>
-#include <deemon/error_types.h>
-#include <deemon/file.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/error_types.h>     /* DeeSystemErrorObject */
+#include <deemon/file.h>            /* DeeFile_Check, DeeFile_GetSysFD, Dee_fd_*, OPEN_F* */
+#include <deemon/int.h>             /* DeeInt_AsInt, DeeInt_Check */
+#include <deemon/none.h>            /* DeeNone_Check */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
-#include <deemon/thread.h>
+#include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_*, Dee_UNICODE_PRINTER_*, Dee_charptr, Dee_unicode_printer*, STRING_WIDTH_1BYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_DEFINE_memcasecmp, DeeSystem_DEFINE_wcslen, DeeSystem_GetErrno, DeeSystem_SetErrno, _doserrno, _dosmaperr, errno_kos2nt, errno_nt2kos, get_osfhandle, memcasecmp, memmovedownw, memmoveupc, pipe, wcslen */
+#include <deemon/system.h>          /* CONFIG_WANT_WINDOWS_STD_FILES, DeeNTSystem_*, DeeNT_DWORD, DeeSystem_MakeNormalAndAbsolute, Dee_SYSTEM_ERROR_UNKNOWN */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/util/atomic.h>     /* atomic_write */
 
 #include <hybrid/align.h>           /* CEILDIV */

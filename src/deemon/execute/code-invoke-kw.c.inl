@@ -25,7 +25,13 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h> /* DeeObject_FREE, DeeObject_Malloc, Dee_*alloc*, Dee_Alloca*, Dee_Free */
+#include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_Malloc, Dee_*alloc*, Dee_Alloca*, Dee_Free */
+#include <deemon/code.h>            /* DeeCodeObject, DeeCode_*, DeeFunctionObject, DeeYieldFunctionObject, DeeYieldFunction_Sizeof, DeeYieldFunction_Type, Dee_CODE_F*, Dee_code_frame, Dee_code_frame_kwds */
+#include <deemon/kwds.h>            /* DeeKwBlackList_Decref, DeeKw_TryGetItemNR, DeeKwds* */
+#include <deemon/object.h>
+#include <deemon/string.h>          /* DeeString* */
+#include <deemon/system-features.h> /* bzeroc */
+#include <deemon/tuple.h>           /* DeeTuple_ELEM, DeeTuple_SIZE, Dee_tuple_object */
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 

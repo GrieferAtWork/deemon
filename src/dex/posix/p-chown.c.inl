@@ -29,13 +29,15 @@
 
 #include <deemon/alloc.h>           /* Dee_Free */
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
-#include <deemon/dex.h>
-#include <deemon/error.h>
-#include <deemon/none.h>
+#include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
+#include <deemon/error.h>           /* DeeError_Catch, DeeError_NoSymlink */
+#include <deemon/int.h>             /* DeeInt_NewUInt */
+#include <deemon/none.h>            /* DeeNone_Check, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
+#include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
+#include <deemon/string.h>          /* DeeString*, Dee_wchar_t */
+#include <deemon/system-features.h> /* AT_EMPTY_PATH, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, O_NOFOLLOW, O_RDWR, chown, creat, creat64, fchown, fchownat, lchown, open, openat, openat64, open64, wchown, wcreat, wcreat64, wopen, wopenat, wopenat64, wopen64 */
+#include <deemon/system.h>          /* DeeNTSystem_GetHandle, DeeUnixSystem_GetFD */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 

@@ -25,14 +25,14 @@
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/int.h>
-#include <deemon/method-hints.h>
+#include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds */
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/int.h>                /* DeeInt_NewSize */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, DeeObject_RequireMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/tuple.h>
+#include <deemon/seq.h>                /* DeeIterator_NewEmpty, DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/tuple.h>              /* DEFINE_TUPLE, Dee_EmptyTuple */
 #include <deemon/util/atomic.h>        /* atomic_read, atomic_write */
 
 #include "../../runtime/method-hint-defaults.h"

@@ -22,9 +22,10 @@
 
 #include <deemon/api.h>
 
-#include <deemon/file.h>
+#include <deemon/file.h>            /* Dee_fd_t_IS_HANDLE, Dee_fd_t_IS_int */
 #include <deemon/object.h>
-#include <deemon/string.h>
+#include <deemon/string.h>          /* DeeStringObject, DeeString_STR */
+#include <deemon/system-features.h> /* environ, isatty, remove */
 
 #include <stdbool.h> /* bool, false, true */
 

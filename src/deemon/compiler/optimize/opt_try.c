@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/code.h>
+#include <deemon/code.h>              /* Dee_EXCEPTION_HANDLER_FFINALLY */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/object.h>

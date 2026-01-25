@@ -23,14 +23,14 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>          /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/error.h>
-#include <deemon/gc.h>
-#include <deemon/int.h>
-#include <deemon/method-hints.h>
+#include <deemon/error.h>          /* DeeError_* */
+#include <deemon/gc.h>             /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
+#include <deemon/int.h>            /* DeeInt_NewZero, _DeeInt_Zero */
+#include <deemon/method-hints.h>   /* DeeObject_InvokeMethodHint, DeeType_RequireMethodHint */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
+#include <deemon/operator-hints.h> /* DeeType_RequireNativeOperator */
+#include <deemon/seq.h>            /* DeeSeq_NewEmpty, DeeSeq_Type */
+#include <deemon/serial.h>         /* DeeSerial, DeeSerial_Addr2Mem, Dee_seraddr_t */
 #include <deemon/util/lock.h>      /* Dee_atomic_lock_init */
 
 #include "../../runtime/runtime_error.h"

@@ -27,12 +27,12 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_CollectMemory, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_TryCallocc */
-#include <deemon/callable.h>
-#include <deemon/error.h>
-#include <deemon/gc.h>
+#include <deemon/callable.h>        /* DeeCallable_Type */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/gc.h>              /* DeeGCObject_CALLOC, DeeGCObject_FREE, DeeGC_TRACK */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h> /* memcpyc(), ... */
+#include <deemon/string.h>          /* DeeStringObject, DeeString_STR, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_PRINT, Dee_ascii_printer* */
+#include <deemon/system-features.h> /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, strcmp, strlen */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

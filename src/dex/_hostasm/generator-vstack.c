@@ -27,30 +27,24 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>       /* DeeObject_*alloc*, DeeSlab_ENUMERATE, Dee_Calloca, Dee_Freea, Dee_Mallocac, _Dee_MallococBufsize */
-#include <deemon/asm.h>
-#include <deemon/bool.h>
-#include <deemon/class.h>
-#include <deemon/code.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/float.h>
-#include <deemon/format.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/list.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/alloc.h>           /* DeeObject_*alloc*, DeeSlab_ENUMERATE, Dee_Calloca, Dee_Freea, Dee_Mallocac, _Dee_MallococBufsize */
+#include <deemon/asm.h>             /* Dee_instruction_t */
+#include <deemon/bool.h>            /* DeeBool_Check, DeeBool_For, Dee_False, Dee_True */
+#include <deemon/class.h>           /* DeeClassDescriptorObject, DeeClass_*, DeeInstance_*, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endwrite, Dee_class_desc_lock_write, Dee_instance_desc */
+#include <deemon/code.h>            /* DeeCodeObject, DeeFunctionObject, Dee_CODE_FVARARGS, Dee_CODE_FVARKWDS, Dee_instruction_t, Dee_operator_t */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/file.h>            /* DeeFile_GetStd, Dee_STDOUT */
+#include <deemon/format.h>          /* PRFuSIZ */
+#include <deemon/gc.h>              /* DeeGCObject_Calloc, DeeGCObject_Malloc */
+#include <deemon/list.h>            /* DeeListObject */
+#include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_FPROPERTY, Dee_MODSYM_FREADONLY, Dee_module_* */
+#include <deemon/none.h>            /* DeeNone_Type, Dee_None */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/rodict.h>
-#include <deemon/roset.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
-#include <deemon/util/atomic.h> /* atomic_read */
+#include <deemon/super.h>           /* DeeSuperObject */
+#include <deemon/system-features.h> /* bzero, memmoveupc, memset */
+#include <deemon/thread.h>          /* DeeThreadObject, Dee_except_frame */
+#include <deemon/tuple.h>           /* DeeTupleObject, DeeTuple_NewVector, Dee_EmptyTuple */
+#include <deemon/util/atomic.h>     /* atomic_read */
 
 #include <hybrid/align.h>    /* CEILDIV */
 #include <hybrid/bitset.h>   /* BITSET_SIZEOF, bitset_* */

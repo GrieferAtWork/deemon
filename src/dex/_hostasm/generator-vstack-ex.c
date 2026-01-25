@@ -28,41 +28,40 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_*, Dee_*alloc*, Dee_Freea, _Dee_MallococBufsize */
-#include <deemon/asm.h>
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
-#include <deemon/cached-dict.h>
-#include <deemon/cell.h>
-#include <deemon/class.h>
-#include <deemon/code.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/float.h>
-#include <deemon/format.h>
-#include <deemon/hashset.h>
-#include <deemon/instancemethod.h>
-#include <deemon/int.h>
-#include <deemon/kwds.h>
-#include <deemon/list.h>
-#include <deemon/map.h>
-#include <deemon/module.h>
-#include <deemon/mro.h>
-#include <deemon/none-operator.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* DeeBool_For, DeeBool_Type, Dee_False, Dee_True */
+#include <deemon/bytes.h>           /* DeeBytes_Type */
+#include <deemon/cached-dict.h>     /* DeeCachedDict_Type */
+#include <deemon/cell.h>            /* DeeCellObject, DeeCell_Type */
+#include <deemon/class.h>           /* DeeClass_DESC, DeeInstanceMember_New, DeeInstance_*, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endread, Dee_class_desc_lock_read, Dee_instance_desc */
+#include <deemon/code.h>            /* DeeFunction_Type, Dee_operator_t */
+#include <deemon/dict.h>            /* DeeDictObject, DeeDict_*, Dee_dict_* */
+#include <deemon/error.h>           /* DeeError_*, Dee_ERROR_HANDLED_RESTORE */
+#include <deemon/float.h>           /* CONFIG_HAVE_FPU, DeeFloat_Type */
+#include <deemon/gc.h>              /* DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_Track */
+#include <deemon/hashset.h>         /* DeeHashSetObject, DeeHashSet_*, Dee_hashset_item */
+#include <deemon/instancemethod.h>  /* DeeInstanceMethodObject, DeeInstanceMethod_New, DeeInstanceMethod_Type */
+#include <deemon/int.h>             /* DeeInt_* */
+#include <deemon/kwds.h>            /* DeeKw_ForceWrap, DeeKw_Wrap, DeeKwdsObject, DeeKwds_Type, DeeType_IsKw */
+#include <deemon/list.h>            /* DeeListObject, DeeList_* */
+#include <deemon/map.h>             /* DeeMapping_Type, DeeSharedMap_*, Dee_EmptyMapping */
+#include <deemon/module.h>          /* DeeBuiltin_*, DeeModule*, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/mro.h>             /* DeeObject_TFindAttrInfo, Dee_ATTRINFO_*, Dee_attrinfo, Dee_type_member_* */
+#include <deemon/none-operator.h>   /* DeeNone_OperatorCopy, DeeNone_OperatorCtor */
+#include <deemon/none.h>            /* DeeNone_Type, Dee_None */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/operator-hints.h>
-#include <deemon/property.h>
-#include <deemon/rodict.h>
-#include <deemon/roset.h>
-#include <deemon/seq.h>
-#include <deemon/set.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
-#include <deemon/tuple.h>
+#include <deemon/objmethod.h>       /* DeeCMethod*_*, DeeCMethodObject, DeeClsMember*, DeeClsMethod*, DeeClsProperty*, DeeKwCMethod_Type, DeeKwClsMethod*, DeeKwObjMethod_GetOrigin, DeeKwObjMethod_New, DeeKwObjMethod_Type, DeeObjMethod*, Dee_clsproperty_origin, Dee_cmethod*, Dee_kwcmethod_t, Dee_objmethod_origin */
+#include <deemon/operator-hints.h>  /* DeeNO_call_kw_t, DeeNO_call_t, DeeType_RequireNativeOperator */
+#include <deemon/property.h>        /* DeePropertyObject, DeeProperty_Type */
+#include <deemon/rodict.h>          /* DeeRoDict*, Dee_rodict_builder* */
+#include <deemon/roset.h>           /* DeeRoSet*, Dee_roset_item */
+#include <deemon/seq.h>             /* DeeSeq_Type, DeeSeq_Unpack, DeeSharedVector_* */
+#include <deemon/set.h>             /* DeeSet_Type */
+#include <deemon/string.h>          /* DeeString*, DeeUni_IsSymCont, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, WSTR_LENGTH */
+#include <deemon/super.h>           /* DeeObject_T*, DeeSuper* */
+#include <deemon/system-features.h> /* CONFIG_HAVE_FPU, CONFIG_HAVE_strchrnul, bzero, memchr, strchr, strchrnul, strcmp */
+#include <deemon/tuple.h>           /* DeeTuple*, Dee_EmptyTuple */
 #include <deemon/util/objectlist.h> /* Dee_OBJECTLIST_HAVE_ELEMA */
-#include <deemon/weakref.h>
+#include <deemon/weakref.h>         /* DeeWeakRefAbleObject, DeeWeakRefAble_Type */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */

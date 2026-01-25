@@ -23,13 +23,13 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_*alloc*, DeeObject_Free */
-#include <deemon/bytes.h>
-#include <deemon/dict.h>
-#include <deemon/int.h>
+#include <deemon/bytes.h>           /* DeeBytes* */
+#include <deemon/dict.h>            /* DeeDictObject, DeeDict_*, Dee_DICT_HIDXIO_COUNT, Dee_DICT_HIDXIO_FROMALLOC, Dee_dict_* */
+#include <deemon/int.h>             /* DeeInt_Check, DeeInt_TryAsSize */
 #include <deemon/object.h>
-#include <deemon/rodict.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h> /* CONFIG_HAVE_strcmp */
+#include <deemon/rodict.h>          /* DeeRoDictObject */
+#include <deemon/string.h>          /* DeeString* */
+#include <deemon/system-features.h> /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, memcmp, memcpy, memmovedown, strcmp, strlen */
 
 #include <hybrid/bit.h>      /* CLZ */
 #include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_UMUL */

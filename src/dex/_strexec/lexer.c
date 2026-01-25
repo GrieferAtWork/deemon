@@ -26,9 +26,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/system-features.h>
+#include <deemon/string.h>          /* DeeUni_Flags, DeeUni_IsLF, Dee_UNICODE_IS*, Dee_uniflag_t */
+#include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n */
+#include <deemon/system-features.h> /* CONFIG_HAVE_FPU */
 
 #include <stdint.h> /* uint32_t */
 

@@ -24,16 +24,16 @@
 
 #include <deemon/alloc.h>             /* DeeObject_CALLOC, DeeObject_FREE, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>               /* DeeArg_Unpack1 */
-#include <deemon/class.h>
-#include <deemon/code.h>
+#include <deemon/class.h>             /* Dee_CLASS_ATTRIBUTE_FGETSET, Dee_CLASS_ATTRIBUTE_FPRIVATE */
+#include <deemon/code.h>              /* Dee_CODE_F* */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/module.h>
+#include <deemon/module.h>            /* DeeModuleObject, DeeModule_Type, Dee_MODSYM_F*, Dee_MODULE_FNORMAL, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>   /* memcpy(), bzero(), ... */
+#include <deemon/string.h>            /* DeeStringObject */
+#include <deemon/system-features.h>   /* bzero, memcpy, memset */
 #include <deemon/util/cache.h>        /* DEFINE_STRUCT_CACHE_EX */
 
 #include <hybrid/minmax.h> /* MAX_C */

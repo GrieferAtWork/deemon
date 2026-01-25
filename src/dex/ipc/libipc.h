@@ -22,9 +22,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/file.h>
+#include <deemon/file.h>   /* DeeFileTypeObject */
 #include <deemon/object.h>
-#include <deemon/string.h>
+#include <deemon/string.h> /* DeeStringObject */
 
 DECL_BEGIN
 

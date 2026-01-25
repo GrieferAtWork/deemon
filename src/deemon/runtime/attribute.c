@@ -23,9 +23,10 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Freea, Dee_Mallocac */
-#include <deemon/attribute.h>
 #include <deemon/object.h>
-#include <deemon/system-features.h> /* bzero(), ... */
+#include <deemon/super.h>           /* DeeObject_T* */
+#include <deemon/system-features.h> /* mempcpyc */
+#include <deemon/tuple.h>           /* DeeTuple* */
 
 #include <hybrid/host.h> /* __ARCH_VA_LIST_IS_STACK_POINTER */
 /**/

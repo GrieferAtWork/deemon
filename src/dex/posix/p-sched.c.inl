@@ -28,15 +28,15 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
-#include <deemon/dex.h>
-#include <deemon/error.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
+#include <deemon/error.h>           /* DeeError_SystemError */
+#include <deemon/int.h>             /* DeeInt_NewInt */
+#include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
+#include <deemon/objmethod.h>       /* DEFINE_CMETHOD0, DEFINE_KWCMETHOD */
+#include <deemon/string.h>          /* Dee_wchar_t */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, _Exit, execv, getpid, system, vfork, waitpid, wexecv, wsystem */
+#include <deemon/system.h>          /* DeeUnixSystem_ThrowErrorf */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/sched/yield.h>     /* SCHED_YIELD */

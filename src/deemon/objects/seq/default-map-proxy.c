@@ -24,12 +24,12 @@
 
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_ErrEmptySequence, DeeRT_ErrNestSequenceError */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/none.h>               /* DeeNone_Check */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/set.h>
+#include <deemon/seq.h>                /* DeeSeq_Type, DeeSeq_Unpack */
+#include <deemon/set.h>                /* DeeSet_Type */
 
 #include "../generic-proxy.h"
 #include "default-map-proxy.h"

@@ -24,17 +24,16 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* return_false, return_true */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/gc.h>
-#include <deemon/method-hints.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
+#include <deemon/method-hints.h>       /* DeeMH_seq_enumerate_index_reverse_t, DeeMH_seq_foreach_reverse_t, DeeObject_InvokeMethodHint, DeeObject_RequireMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/seq.h>                /* DeeIterator_NewEmpty, DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptyIterator */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
+#include <deemon/tuple.h>              /* DeeTupleObject, DeeTuple_FromSequence */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
 

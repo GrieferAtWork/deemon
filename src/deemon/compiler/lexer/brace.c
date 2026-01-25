@@ -27,9 +27,9 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/none.h>
+#include <deemon/none.h>            /* Dee_None */
 #include <deemon/object.h>
-#include <deemon/string.h>
+#include <deemon/string.h>          /* DeeString_NewSized */
 
 #include <stddef.h> /* NULL, size_t */
 

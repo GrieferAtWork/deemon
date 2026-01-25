@@ -27,20 +27,20 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_FDIDLOAD, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_SYMBOL_EQUALS, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_compiler_options, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/none.h>            /* Dee_None */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/system-features.h> /* memrchr(), memcpy(), ... */
-#include <deemon/thread.h>
+#include <deemon/string.h>          /* DeeString*, DeeUni_Flags, Dee_UNICODE_*, Dee_unicode_printer*, Dee_uniflag_t, STRING_ERROR_FSTRICT, WSTR_LENGTH */
+#include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n */
+#include <deemon/system-features.h> /* CONFIG_HAVE_memrend, DeeSystem_DEFINE_memrend, memcpy, memrend, strlen */
+#include <deemon/thread.h>          /* DeeThread_Self, Dee_import_frame */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* uint16_t, uint32_t */
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#include <deemon/system.h> /* DeeSystem_BaseName() */
+#include <deemon/system.h> /* DeeSystem_BaseName */
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_BEGIN

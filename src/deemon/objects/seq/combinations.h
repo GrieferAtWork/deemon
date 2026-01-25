@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/method-hints.h>
+#include <deemon/method-hints.h> /* DeeMH_seq_operator_trygetitem_index_t */
 #include <deemon/object.h>
 #include <deemon/util/atomic.h>  /* atomic_cmpxch, atomic_read */
 

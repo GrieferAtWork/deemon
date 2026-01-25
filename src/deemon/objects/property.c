@@ -24,18 +24,18 @@
 
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_UnpackKw */
-#include <deemon/bool.h>
-#include <deemon/code.h>
+#include <deemon/bool.h>               /* return_bool */
+#include <deemon/code.h>               /* DeeFunctionObject, DeeFunction_Check, DeeFunction_GetInfo, Dee_function_info, Dee_function_info_fini, Dee_operator_t */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/error.h>              /* DeeError_AttributeError, DeeError_Catch */
+#include <deemon/format.h>             /* DeeFormat_* */
+#include <deemon/module.h>             /* DeeModuleObject */
+#include <deemon/none.h>               /* DeeNone_Check, return_none */
 #include <deemon/object.h>
-#include <deemon/property.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
+#include <deemon/property.h>           /* DeePropertyObject, DeeProperty_Type */
+#include <deemon/serial.h>             /* DeeSerial, DeeSerial_XPutObject, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeStringObject, DeeString_STR */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"

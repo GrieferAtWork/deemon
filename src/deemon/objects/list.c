@@ -23,23 +23,23 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_FreeTracker, DeeObject_MALLOC, Dee_*alloc*, Dee_BadAlloc, Dee_CollectMemory*, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_XFreea */
-#include <deemon/arg.h>                /* DeeArg_Unpack0, DeeArg_UnpackStruct*, UNPuSIZ */
-#include <deemon/bool.h>
+#include <deemon/arg.h>                /* DeeArg_Unpack0, DeeArg_UnpackStruct*, UNPuSIZ, _DeeArg_AsObject */
+#include <deemon/bool.h>               /* Dee_True, return_bool, return_false, return_true */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/int.h>
-#include <deemon/list.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/error.h>              /* DeeError_Throwf, DeeError_ValueError */
+#include <deemon/format.h>             /* PRFuSIZ */
+#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, DeeGC_Track */
+#include <deemon/int.h>                /* DeeInt_Check, DeeInt_NewSize */
+#include <deemon/list.h>               /* DeeListObject, DeeList_*, _DeeList_SetAlloc */
+#include <deemon/method-hints.h>       /* DeeMA_*, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/none.h>               /* DeeNone_Check, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/tuple.h>
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_*, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, Dee_seq_range, type_nii */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString_STR */
+#include <deemon/system-features.h>    /* memcpyc, memmovec, memmovedownc, memmoveupc, mempcpyc */
+#include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 #include <deemon/util/objectlist.h>    /* Dee_OBJECTLIST_*, Dee_objectlist, Dee_objectlist_* */

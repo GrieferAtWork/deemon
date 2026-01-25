@@ -25,7 +25,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/system-features.h> /* isdigit */
+#include <deemon/float.h>           /* Dee_Strtod, Dee_Strtold */
+#include <deemon/system-features.h> /* isalnum, isdigit */
 
 #if (defined(DEFINE_Dee_Strtold) + \
      defined(DEFINE_Dee_Strtod)) != 1

@@ -22,25 +22,26 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>         /* DeeArg_UnpackStruct* */
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
-#include <deemon/callable.h>
-#include <deemon/code.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/exec.h>
-#include <deemon/file.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/arg.h>             /* DeeArg_UnpackStruct* */
+#include <deemon/bool.h>            /* return_bool, return_false, return_true */
+#include <deemon/bytes.h>           /* DeeBytes* */
+#include <deemon/callable.h>        /* DeeCallable_Check */
+#include <deemon/code.h>            /* DeeCodeObject, DeeCode_NAME, Dee_code_frame, Dee_operator_t */
+#include <deemon/error-rt.h>        /* DeeRT_ATTRIBUTE_ACCESS_BOUND, DeeRT_ErrUnknownAttr, DeeRT_ErrUnknownKey */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/exec.h>            /* DeeExec_RUNMODE_EXPR, DeeExec_RunMemory */
+#include <deemon/file.h>            /* DeeFile_ReadBytes */
+#include <deemon/format.h>          /* DeeFormat_PrintOperatorRepr, PRFu16 */
+#include <deemon/int.h>             /* DeeInt_FromCompare, DeeInt_NewHash */
+#include <deemon/module.h>          /* DeeBuiltin_*, DeeModule* */
+#include <deemon/none.h>            /* DeeNone_Check, return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/string.h>
-#include <deemon/thread.h>
-#include <deemon/util/atomic.h> /* atomic_read */
-#include <deemon/util/lock.h>   /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
+#include <deemon/objmethod.h>       /* DEFINE_*CMETHOD* */
+#include <deemon/string.h>          /* DeeString*, Dee_EmptyString, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, WSTR_LENGTH */
+#include <deemon/system-features.h> /* read */
+#include <deemon/thread.h>          /* DeeThreadObject, DeeThread_Self */
+#include <deemon/util/atomic.h>     /* atomic_read */
+#include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 
 #include "kwlist.h"
 #include "runtime_error.h"

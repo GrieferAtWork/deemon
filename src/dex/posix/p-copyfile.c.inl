@@ -27,20 +27,21 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>     /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>       /* DEFINE_KWLIST, DeeArg_UnpackStructKw, UNP* */
-#include <deemon/dex.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/filetypes.h>
-#include <deemon/int.h>
-#include <deemon/mapfile.h>
-#include <deemon/none.h>
-#include <deemon/object.h>    /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/alloc.h>           /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw, UNP* */
+#include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/file.h>            /* DeeFile_Filename, DeeFile_Open, DeeSystemFile_Check, DeeSystem_FILE_USE_nt_HANDLE, OPEN_F* */
+#include <deemon/filetypes.h>       /* DeeSystemFile_GetHandle */
+#include <deemon/int.h>             /* DeeInt_NewUInt64 */
+#include <deemon/mapfile.h>         /* DeeMapFile_F_ATSTART, DeeMapFile_F_NORMAL */
+#include <deemon/none.h>            /* DeeNone_Check, Dee_None, return_none */
+#include <deemon/object.h>          /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/system-features.h> /* AT_EMPTY_PATH, AT_SYMLINK_NOFOLLOW, RENAME_NOREPLACE, read */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
+#include <deemon/objmethod.h> /* DEFINE_KWCMETHOD */
+#include <deemon/serial.h>    /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/string.h>    /* DeeString_Check, DeeString_IsEmpty */
 
 #include "p-readlink.c.inl" /* Needed for `lcopyfile()' to check for symbolic links. */
 #include "p-remove.c.inl"   /* Needed for `lcopyfile()' to remove existing files when `RENAME_NOREPLACE' isn't given. */

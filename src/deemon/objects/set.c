@@ -24,17 +24,17 @@
 
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* return_bool */
 #include <deemon/computed-operators.h>
-#include <deemon/method-hints.h>
-#include <deemon/none-operator.h>
-#include <deemon/none.h>
+#include <deemon/method-hints.h>       /* DeeMA_*, DeeMH_set_frozen_t, DeeMH_set_operator_iter_t, DeeType_RequireMethodHint */
+#include <deemon/none-operator.h>      /* DeeNone_* */
+#include <deemon/none.h>               /* DeeNone_Type */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/roset.h>
-#include <deemon/seq.h>
-#include <deemon/set.h>
-#include <deemon/string.h>
+#include <deemon/roset.h>              /* DeeRoSet_FromSequence, DeeRoSet_Type */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type, Dee_SEQCLASS_SET */
+#include <deemon/set.h>                /* DeeSet_EmptyInstance, DeeSet_Type */
+#include <deemon/string.h>             /* DeeString_STR */
+#include <deemon/system-features.h>    /* write */
 
 #include "../runtime/method-hint-defaults.h"
 #include "../runtime/method-hints.h"

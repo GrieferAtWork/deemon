@@ -23,25 +23,25 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>                /* DeeArg_Unpack*, UNPuSIZ */
-#include <deemon/bool.h>
+#include <deemon/arg.h>                /* DeeArg_Unpack*, UNPuSIZ, _DeeArg_AsObject */
+#include <deemon/bool.h>               /* Dee_True, return_bool */
 #include <deemon/computed-operators.h>
-#include <deemon/dict.h>
-#include <deemon/error-rt.h>
-#include <deemon/format.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/map.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
+#include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_DICT_*, Dee_SIZEOF_DICT_VIDX_T, Dee_dict_*, _DeeDict_GetRealVTab */
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ, PRFxSIZ */
+#include <deemon/hashset.h>            /* DeeHashSet_Type */
+#include <deemon/int.h>                /* DeeInt_NEWU, DeeInt_NewSize */
+#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/none.h>               /* Dee_None */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/rodict.h>
-#include <deemon/roset.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/system-features.h>    /* bcmpc(), ... */
-#include <deemon/tuple.h>
+#include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
+#include <deemon/rodict.h>             /* DeeRoDict*, Dee_EmptyRoDict, Dee_empty_rodict_object, Dee_rodict_builder*, _DeeRoDict_* */
+#include <deemon/roset.h>              /* DeeRoSet_Type */
+#include <deemon/seq.h>                /* DeeIterator_Type */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/system-features.h>    /* EOF, bzero, memcpy, memmovedownc, mempcpyc, memset */
+#include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */

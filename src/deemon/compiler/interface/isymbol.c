@@ -27,11 +27,12 @@
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/interface.h>
 #include <deemon/compiler/symbol.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/none.h>
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/format.h>             /* DeeFormat_Print, DeeFormat_Printf */
+#include <deemon/none.h>               /* DeeNone_NewRef */
 #include <deemon/object.h>
-#include <deemon/string.h>
+#include <deemon/string.h>             /* DeeString*, STRING_ERROR_FIGNORE */
+#include <deemon/system-features.h>    /* access, read, write */
 
 #include "../../runtime/strings.h"
 

@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/types.h>
+#include <deemon/types.h> /* DREF, DeeObject, DeeTypeObject, OBJECT_HEAD */
 
 DECL_BEGIN
 

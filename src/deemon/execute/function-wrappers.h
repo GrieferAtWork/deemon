@@ -22,9 +22,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/code.h>
+#include <deemon/code.h>      /* DeeFunctionObject, DeeYieldFunctionObject */
 #include <deemon/object.h>
-#include <deemon/traceback.h>
+#include <deemon/traceback.h> /* DeeFrameObject */
 
 DECL_BEGIN
 

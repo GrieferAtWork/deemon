@@ -23,17 +23,17 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* _Dee_MallococBufsize */
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
+#include <deemon/bool.h>               /* Dee_True */
+#include <deemon/bytes.h>              /* Dee_EmptyBytes */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/none-operator.h>
+#include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds */
+#include <deemon/none-operator.h>      /* _DeeNone_reti1_1 */
 #include <deemon/object.h>
-#include <deemon/regex.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/regex.h>              /* DeeRegexMatch */
+#include <deemon/seq.h>                /* DeeSeq_Type */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>             /* Dee_EmptyString */
+#include <deemon/system-features.h>    /* memcpyc */
 /**/
 
 #include "regroups.h"

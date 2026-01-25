@@ -49,8 +49,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/error.h>
-#include <deemon/mro.h>
+#include <deemon/mro.h>    /* DeeObject_TGenericFind*Attr*, DeeObject_TGenericIterAttr, DeeType_Bound*Attr*, DeeType_Call*Attr*, DeeType_Del*Attr*, DeeType_Find*Attr*, DeeType_Get*Attr*, DeeType_Has*Attr*, DeeType_Set*Attr*, DeeType_VCallCachedAttrStringHashf, DeeType_VCallMethodAttrStringHashf, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrhint, Dee_attrhint_accepts_baseperm, Dee_attrinfo, Dee_attriter, Dee_attriterchain_builder, Dee_attriterchain_builder_*, Dee_attrspec, Dee_attrspec_accepts_baseperm, type_getset_iterattr, type_member_iterattr, type_method_iterattr */
 #include <deemon/object.h>
 /**/
 

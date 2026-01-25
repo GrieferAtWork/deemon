@@ -27,15 +27,16 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>    /* DeeObject_MALLOC, Dee_CollectMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
+#include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_CollectMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/error-rt.h>        /* DeeRT_ErrCannotSerialize */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf */
 #include <deemon/object.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system.h>
-#include <deemon/thread.h>
+#include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/string.h>          /* DeeStringObject, DeeString_TryNewUtf8, STRING_ERROR_FIGNORE */
+#include <deemon/system-features.h> /* CONFIG_HAVE_memcasecmp, CONFIG_HAVE_memcasemem, DeeSystem_DEFINE_memcasecmp, DeeSystem_DEFINE_memcasemem, errno, memcasecmp, memcasemem, strlen */
+#include <deemon/system.h>          /* DeeNTSystem_TranslateErrno, Dee_SYSTEM_ERROR_UNKNOWN */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 
 #include "sqlite3-external.h"
 

@@ -25,7 +25,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/objmethod.h>
+#include <deemon/objmethod.h> /* DeeCMethodObject */
 
 DECL_BEGIN
 

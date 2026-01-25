@@ -31,8 +31,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/int.h>    /* DeeInt_NewUIntptr, INT_UNSIGNED */
+#include <deemon/none.h>   /* Dee_None */
 #include <deemon/object.h>
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

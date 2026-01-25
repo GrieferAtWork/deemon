@@ -24,30 +24,29 @@
 
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_* */
-#include <deemon/code.h>
+#include <deemon/code.h>               /* DeeCodeObject, Dee_code_frame */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/error_types.h>
-#include <deemon/file.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/kwds.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/error.h>              /* DeeErrorObject, DeeError_*, Dee_ERROR_HANDLED_RESTORE, Dee_ERROR_OBJECT_HEAD */
+#include <deemon/error_types.h>        /* DeeNoMemoryErrorObject */
+#include <deemon/file.h>               /* DeeFile_GetStd, DeeFile_WriteAll, Dee_STDERR */
+#include <deemon/format.h>             /* DeeFormat_Printf, PRFuSIZ */
+#include <deemon/int.h>                /* DeeInt_NewSize, DeeInt_One */
+#include <deemon/kwds.h>               /* DeeKwArgs* */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
+#include <deemon/none.h>               /* DeeNone_Check, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/struct.h>
-#include <deemon/system-features.h>
-#include <deemon/thread.h>
-#include <deemon/traceback.h>
-#include <deemon/tuple.h>
-#include <deemon/types.h>
+#include <deemon/seq.h>                /* DeeSeq_Type */
+#include <deemon/serial.h>             /* DeeSerial, DeeSerial_XPutObject, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString*, Dee_EmptyString */
+#include <deemon/struct.h>             /* DeeStructObject_* */
+#include <deemon/system-features.h>    /* memcpy, memset, read, stderr */
+#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self, Dee_THREAD_STATE_TERMINATED, Dee_except_frame */
+#include <deemon/traceback.h>          /* DeeTracebackObject, DeeTraceback_Type */
+#include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/types.h>              /* DREF, DeeObject, DeeObject_InstanceOf, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_formatprinter_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC */
 #include <deemon/util/atomic.h>        /* atomic_read */
-#include <deemon/variant.h>
+#include <deemon/variant.h>            /* Dee_variant, Dee_variant_* */
 
 #include <hybrid/int128.h>    /* __hybrid_int128_*, __hybrid_uint128_* */
 #include <hybrid/limitcore.h> /* __UINT32_MAX__, __UINT64_MAX__ */

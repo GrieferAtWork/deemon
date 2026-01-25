@@ -34,14 +34,14 @@ function main() {
 			f"{ROOTDIR}/include/deemon/cxx",
 		})
 		.finishSetup()
-#if 1
+#if 0
 //		.dumpExports()
 		.dumpHeaders()
 #else
 		.fixPaths(include: {
 			f"{ROOTDIR}/src/deemon",
 			f"{ROOTDIR}/src/dex",
-			f"{ROOTDIR}/include/deemon",
+//			f"{ROOTDIR}/include/deemon",
 		}, exclude: {
 			f"{ROOTDIR}/include/deemon/kos-headers",
 			f"{ROOTDIR}/src/dex/ctypes/ffi",

@@ -27,11 +27,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/dex.h>
-#include <deemon/int.h>
+#include <deemon/bytes.h>           /* DeeBytes* */
+#include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
+#include <deemon/error.h>           /* DeeError_Handled, Dee_ERROR_HANDLED_RESTORE */
+#include <deemon/file.h>            /* DeeFile_OpenString, DeeFile_ReadLine, OPEN_FCLOEXEC, OPEN_FRDONLY */
+#include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/system-features.h> /* CONFIG_HAVE_* */
+#include <deemon/objmethod.h>       /* DEFINE_CMETHOD0 */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, CTL_HW, HW_AVAILCPU, HW_NCPU, MPC_GETNUMSPUS, _SC_NPROCESSORS_ONLN, _SC_NPROC_ONLN, bcmpc, get_nprocs, mpctl, sysconf, sysctl */
 
 #include <stdbool.h> /* false */
 #include <stddef.h>  /* NULL, size_t */

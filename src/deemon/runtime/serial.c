@@ -23,9 +23,9 @@
 #include <deemon/api.h>
 
 #include <deemon/object.h>
-#include <deemon/serial.h>
-#include <deemon/system-features.h>
-#include <deemon/types.h>
+#include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/system-features.h> /* memcpy */
+#include <deemon/types.h>           /* DREF, DeeObject */
 
 #include <stddef.h> /* NULL, size_t */
 

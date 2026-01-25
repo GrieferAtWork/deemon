@@ -23,19 +23,20 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeMem_ClearCaches, Dee_CollectMemoryc, Dee_Free, Dee_TryReallocc */
-#include <deemon/code.h>
-#include <deemon/dex.h>
-#include <deemon/error.h>
-#include <deemon/exec.h>
-#include <deemon/file.h>
-#include <deemon/filetypes.h>
-#include <deemon/gc.h>
-#include <deemon/module.h>
-#include <deemon/notify.h>
+#include <deemon/code.h>            /* DeeFunctionObject, DeeFunction_Call */
+#include <deemon/dex.h>             /* DeeDex_Cleanup, DeeDex_Finalize, DeeModule_ClearDexModuleCaches, DeeModule_UnloadAllDexModules */
+#include <deemon/error.h>           /* DeeError_*, Dee_ERROR_PRINT_HANDLEINTR, ERROR_PRINT_HANDLEINTR */
+#include <deemon/exec.h>            /* DeeExec_*, DeeModule_ClearLibPath, Dee_AtExit, Dee_GetArgv, Dee_Initialize, Dee_RUNATEXIT_FDONTRUN, Dee_RUNATEXIT_FRUNALL, Dee_RunAtExit, Dee_SHUTDOWN_F_FAST, Dee_SetArgv, Dee_Shutdown */
+#include <deemon/file.h>            /* DeeFile_* */
+#include <deemon/filetypes.h>       /* DeeFile_OpenRoMemory, DeeFile_ReleaseMemory */
+#include <deemon/gc.h>              /* DeeGC_Collect, DeeGC_IsEmptyWithoutDex */
+#include <deemon/module.h>          /* DeeModule*, Dee_compiler_options, Dee_module_object */
+#include <deemon/notify.h>          /* DeeNotify_Shutdown */
 #include <deemon/object.h>
-#include <deemon/system-features.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/string.h>          /* DeeString_NewUtf8, STRING_ERROR_FSTRICT */
+#include <deemon/system-features.h> /* CONFIG_HAVE_atexit, atexit */
+#include <deemon/thread.h>          /* DeeThread_ClearTls, DeeThread_InterruptAndJoinAll, DeeThread_SubSystemFini, DeeThread_SubSystemInit */
+#include <deemon/tuple.h>           /* DeeTuple*, Dee_EmptyTuple */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_* */
 

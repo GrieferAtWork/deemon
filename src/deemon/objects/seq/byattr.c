@@ -24,13 +24,13 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/computed-operators.h>
-#include <deemon/format.h>
-#include <deemon/map.h>
-#include <deemon/method-hints.h>
-#include <deemon/mro.h>
+#include <deemon/format.h>             /* DeeFormat_Printf */
+#include <deemon/map.h>                /* DeeMapping_NewEmpty */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
+#include <deemon/mro.h>                /* Dee_ATTRINFO_CUSTOM, Dee_ATTRITER_HEAD, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrhint, Dee_attriter, Dee_attriter_init, Dee_attriter_type, Dee_attrspec */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/thread.h>
+#include <deemon/string.h>             /* DeeString_Check, DeeString_STR */
+#include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
 
 #include "../generic-proxy.h"
 #include "byattr.h"

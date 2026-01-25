@@ -23,7 +23,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/string.h>
+#include <deemon/string.h>          /* DeeUni_IsSpace, Dee_UNICODE_PRINTER_ISEMPTY, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* memcpy */
 
 #include <stddef.h> /* size_t */

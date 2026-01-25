@@ -24,18 +24,18 @@
 
 #include <deemon/alloc.h>              /* Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TryCallocc, Dee_TryMallocc */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
-#include <deemon/cached-dict.h>
+#include <deemon/bool.h>               /* return_bool */
+#include <deemon/cached-dict.h>        /* DeeCachedDict*, Dee_cached_dict_item */
 #include <deemon/computed-operators.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/map.h>
+#include <deemon/dict.h>               /* DeeDict_CheckExact */
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/format.h>             /* DeeFormat_Printf */
+#include <deemon/gc.h>                 /* DeeGCObject_MALLOC, DeeGC_TRACK */
+#include <deemon/map.h>                /* DeeMapping_NewEmpty, DeeMapping_Type */
 #include <deemon/object.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>    /* bcmpc(), ... */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString* */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, memcpyc, strcmp */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */

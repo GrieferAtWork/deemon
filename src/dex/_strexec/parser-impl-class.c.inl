@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/error.h>
+#include <deemon/error.h>  /* DeeError_NOTIMPLEMENTED */
 #include <deemon/object.h>
 
 #include <stddef.h> /* NULL */

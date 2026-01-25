@@ -23,21 +23,20 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>             /* DeeArg_Unpack1, DeeArg_UnpackKw */
-#include <deemon/bool.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/float.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/kwds.h>
-#include <deemon/mro.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* DeeBool_Type, return_bool */
+#include <deemon/error-rt.h>        /* DeeRT_ATTRIBUTE_ACCESS_*, DeeRT_Err* */
+#include <deemon/error.h>           /* DeeError_Throwf, DeeError_TypeError */
+#include <deemon/float.h>           /* DeeFloat_New, DeeFloat_Type */
+#include <deemon/format.h>          /* Dee_VPPackf, Dee_VPPackf_Cleanup, Dee_VPackf, Dee_va_list_struct */
+#include <deemon/int.h>             /* DeeInt_* */
+#include <deemon/kwds.h>            /* DeeKwds_Check, DeeKwds_SIZE */
+#include <deemon/mro.h>             /* Dee_ATTRINFO_*, Dee_ATTRITER_HEAD, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attriter, Dee_attriter_init, Dee_attriter_type, Dee_attrperm_t, Dee_type_member_*, type_getset_*, type_member_get, type_member_iterattr, type_method_*, type_obmemb_*, type_obmeth_*, type_obprop_* */
+#include <deemon/none.h>            /* DeeNone_Check, DeeNone_Type, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* type_method_vcallf() -> DeeObjMethod_VCallFuncf() */
-#include <deemon/string.h>
-#include <deemon/system-features.h> /* strlen() */
+#include <deemon/string.h>          /* DeeString*, STRING_ERROR_FIGNORE */
+#include <deemon/system-features.h> /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY, strlen */
 #include <deemon/util/atomic.h>     /* atomic_* */
-#include <deemon/variant.h>
+#include <deemon/variant.h>         /* Dee_variant, Dee_variant_* */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"

@@ -34,16 +34,16 @@
 
 #include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
+#include <deemon/bool.h>            /* return_bool */
+#include <deemon/error-rt.h>        /* DeeRT_ErrDivideByZeroEx */
+#include <deemon/error.h>           /* DeeError_NOTIMPLEMENTED */
+#include <deemon/format.h>          /* PRF* */
+#include <deemon/int.h>             /* INT_SIGNED, INT_UNSIGNED, _DeeInt_NewS, _DeeInt_NewU */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/string.h>          /* DEFINE_STRING, DeeString_Newf */
+#include <deemon/system-features.h> /* memcpy */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
-#include <deemon/variant.h>
+#include <deemon/variant.h>         /* Dee_variant, Dee_variant_* */
 
 #include <hybrid/int128.h>    /* __HYBRID_INT128_INIT32N, __HYBRID_UINT128_INIT32N, __hybrid_int128_*, __hybrid_uint128_* */
 #include <hybrid/typecore.h>  /* __*_TYPE__, __SIZEOF_INT__, __SIZEOF_LONG__ */

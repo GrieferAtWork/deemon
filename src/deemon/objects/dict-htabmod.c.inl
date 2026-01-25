@@ -18,6 +18,8 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
+#include <deemon/dict.h> /* Dee_DICT_HIDXIO_*, Dee_dict_vidx_t */
+
 #include "dict.c"
 //#define DEFINE_dict_htab_decafter
 //#define DEFINE_dict_htab_incafter

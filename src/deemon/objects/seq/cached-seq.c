@@ -24,17 +24,19 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TryMallocc */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPuSIZ, UNPxSIZ */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* Dee_True */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/int.h>                /* DeeIntObject, DeeInt_*, Dee_DIGIT_BITS, Dee_digit_t */
+#include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/none.h>               /* return_none */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/system-features.h>
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/system-features.h>    /* memcpyc */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
-#include <deemon/util/objectlist.h>    /* Dee_OBJECTLIST_*, Dee_objectlist_*, _Dee_objectlist_setalloc, Dee_objectlist_fini, Dee_objectlist_init */
+#include <deemon/util/objectlist.h>    /* Dee_OBJECTLIST_*, Dee_objectlist_*, _Dee_objectlist_setalloc */
 
 #include <hybrid/align.h>    /* CEILDIV */
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */
@@ -1192,7 +1194,7 @@ PRIVATE struct type_gc tpconst cswgi_gc = {
 
 
 
-#include <deemon/error.h>
+#include <deemon/error.h> /* DeeError_NOTIMPLEMENTED */
 
 /* @return: 0 : Size has been cached
  * @return: -1: Error */

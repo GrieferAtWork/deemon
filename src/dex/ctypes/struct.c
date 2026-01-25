@@ -28,17 +28,16 @@
 
 #include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
 #include <deemon/arg.h>             /* DeeArg_Unpack* */
-#include <deemon/bool.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/int.h>
-#include <deemon/mro.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* Dee_True */
+#include <deemon/error-rt.h>        /* DeeRT_ATTRIBUTE_ACCESS_*, DeeRT_ErrUnknownAttr */
+#include <deemon/error.h>           /* DeeError_AttributeError, DeeError_Throwf */
+#include <deemon/gc.h>              /* DeeGCObject_Callocc, DeeGCObject_Free, DeeGC_TRACK */
+#include <deemon/int.h>             /* DeeInt_NewSize */
+#include <deemon/mro.h>             /* Dee_ATTRINFO_CUSTOM, Dee_ATTRITER_HEAD, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrhint, Dee_attriter, Dee_attriter_init, Dee_attriter_type */
+#include <deemon/none.h>            /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h> /* bzero(), ... */
+#include <deemon/string.h>          /* DeeString*, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_PRINT, Dee_ascii_printer* */
+#include <deemon/system-features.h> /* access, bzero, memcpy */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_cinit */
 

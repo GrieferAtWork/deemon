@@ -27,9 +27,10 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>  /* Dee_Freea, Dee_Mallocac */
-#include <deemon/error.h>
-#include <deemon/format.h>
+#include <deemon/alloc.h>           /* Dee_Freea, Dee_Mallocac */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/format.h>          /* PRFu16 */
+#include <deemon/system-features.h> /* memmovedownc, memset */
 
 #include <hybrid/sequence/list.h> /* SLIST_* */
 

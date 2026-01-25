@@ -23,13 +23,13 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeDbgObject_Mallocc, DeeDbgObject_TryMallocc, DeeObject_*, Dee_CollectMemoryc, Dee_Free, Dee_Mallococ, Dee_Try*alloc*, Dee_UntrackAlloc */
-#include <deemon/bytes.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
+#include <deemon/bytes.h>           /* Dee_bytes_printer, Dee_bytes_printer_* */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/format.h>          /* DeeFormat_*, PRFX32, PRFuSIZ */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
+#include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeDbgString_NewUtf8, DeeDbgString_TryNewUtf8, DeeString*, DeeUniTrait_AsDigit, DeeUni_*, Dee_EmptyString, Dee_STRING_*, Dee_UNICODE_*, Dee_charptr, Dee_charptr_const, Dee_string_utf*, Dee_unicode_printer*, Dee_unitraits, STRING_ERROR_FIGNORE, STRING_ERROR_FREPLAC, STRING_SIZEOF_WIDTH, STRING_WIDTH_COMMON, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH, _Dee_string_utf_utf16_t */
+#include <deemon/stringutils.h>     /* DeeString_*, Dee_UNICODE_UTF8_CURLEN, Dee_unicode_* */
+#include <deemon/system-features.h> /* CONFIG_HAVE_memsetl, CONFIG_HAVE_memsetw, DeeSystem_DEFINE_memsetl, DeeSystem_DEFINE_memsetw, bzero, memcpy*, memmove, memmoveb, memmovec, memmovedown, memmovedownc, memmovedownw, memmovel, memmovew, mempcpy*, memset, memsetb, memsetl, memsetw */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 

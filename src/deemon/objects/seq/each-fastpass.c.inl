@@ -29,16 +29,16 @@
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_Freea, Dee_Mallocac, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, _Dee_MallococBufsize */
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
 #include <deemon/computed-operators.h>
-#include <deemon/format.h>
-#include <deemon/map.h>
-#include <deemon/method-hints.h>
-#include <deemon/mro.h>
+#include <deemon/format.h>             /* DeeFormat_PrintOperatorRepr, DeeFormat_Printf */
+#include <deemon/map.h>                /* DeeMapping_NewEmpty, Dee_EmptyMapping */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT, TYPE_METHOD_HINT_END, type_method_hint */
+#include <deemon/mro.h>                /* Dee_attrdesc, Dee_attrhint, Dee_attriter, Dee_attrspec */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/system-features.h>    /* mempcpyc */
-#include <deemon/tuple.h>
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_NewEmpty */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString*, WSTR_LENGTH */
+#include <deemon/system-features.h>    /* mempcpyc, strlen */
+#include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
@@ -47,6 +47,10 @@
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* uintptr_t */
+
+/* clang-format off */
+#include <deemon/operator-hints.h> /* default__* (must be included manually) */
+/* clang-format on */
 
 #ifdef DEFINE_SeqEachGetAttr
 #define LOCAL_ssX(x)               ssa_##x

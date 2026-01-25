@@ -23,22 +23,22 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>             /* Dee_Free, Dee_Mallocc, Dee_Reallocc */
-#include <deemon/bool.h>
+#include <deemon/bool.h>              /* Dee_False, Dee_True */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/error.h>
-#include <deemon/float.h>
-#include <deemon/int.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
+#include <deemon/float.h>             /* DeeFloat_New */
+#include <deemon/int.h>               /* DeeInt_FromString, DeeInt_NewInt64, Dee_INT_STRING* */
+#include <deemon/module.h>            /* DeeModule* */
+#include <deemon/none.h>              /* Dee_None */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/system-features.h>   /* memchr() */
-#include <deemon/tuple.h>
+#include <deemon/string.h>            /* DeeString_DecodeBackslashEscaped, DeeString_NewSized, DeeUni_IsLF, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FSTRICT */
+#include <deemon/stringutils.h>       /* Dee_unicode_readutf8_n */
+#include <deemon/system-features.h>   /* CONFIG_HAVE_memrchr, DeeSystem_DEFINE_memrchr, memchr, memmoveupc, memrchr */
+#include <deemon/tuple.h>             /* Dee_EmptyTuple */
 
 #include "../../runtime/strings.h"
 

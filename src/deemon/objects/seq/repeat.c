@@ -24,16 +24,16 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>                /* DeeArg_Unpack, DeeArg_Unpack1, UNPuSIZ */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* Dee_True */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/gc.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
+#include <deemon/int.h>                /* DeeInt_NewSize */
+#include <deemon/none.h>               /* DeeNone_NewRef, Dee_None */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
+#include <deemon/operator-hints.h>     /* DeeNO_foreach_pair_t, DeeNO_foreach_t, DeeType_RequireNativeOperator */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_*, Dee_EmptySeq, Dee_seq_range */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 

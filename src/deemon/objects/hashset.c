@@ -24,24 +24,24 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_*alloc*, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* return_bool */
 #include <deemon/computed-operators.h>
-#include <deemon/dict.h>
-#include <deemon/error-rt.h>
-#include <deemon/float.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/method-hints.h>
-#include <deemon/none-operator.h>
+#include <deemon/dict.h>               /* DeeDict_Dummy */
+#include <deemon/error-rt.h>           /* DeeRT_ErrEmptySequence */
+#include <deemon/float.h>              /* DEFINE_FLOAT */
+#include <deemon/format.h>             /* DeeFormat_PRINT */
+#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_Track */
+#include <deemon/hashset.h>            /* DeeHashSetObject, DeeHashSet_*, Dee_hashset_item */
+#include <deemon/int.h>                /* DeeInt_NewSize */
+#include <deemon/method-hints.h>       /* DeeMA_*, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/none-operator.h>      /* _DeeNone_reti0_1, _DeeNone_reti0_2 */
 #include <deemon/object.h>
-#include <deemon/roset.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/set.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>    /* memcpyc(), ... */
+#include <deemon/roset.h>              /* DeeRoSet*, Dee_roset_item */
+#include <deemon/seq.h>                /* DeeIterator_Type, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/set.h>                /* DeeSet_Type */
+#include <deemon/string.h>             /* DeeString_STR, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
+#include <deemon/system-features.h>    /* memcpyc, memmovedownc, read, remove */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 

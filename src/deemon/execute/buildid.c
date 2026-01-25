@@ -22,12 +22,13 @@
 
 #include <deemon/api.h>
 
-#include <deemon/dex.h>
-#include <deemon/module.h>
+#include <deemon/dex.h>             /* DEX, Dee_module_dexdata */
+#include <deemon/exec.h>            /* DeeExec_GetTimestamp */
+#include <deemon/module.h>          /* DeeModule*, Dee_MODULE_FHASBUILDID, Dee_MODULE_FHASCTIME, Dee_module_buildid */
 #include <deemon/object.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
-#include <deemon/types.h>
+#include <deemon/system-features.h> /* DeeSystem_DlOpen_USE_LoadLibrary, memcpy, strlen */
+#include <deemon/system.h>          /* DeeSystem_DlOpen_FAILED, DeeSystem_GetLastModified */
+#include <deemon/types.h>           /* DREF, DeeObject, Dee_TYPE, ITER_ISOK */
 #include <deemon/util/atomic.h>     /* atomic_or, atomic_read */
 
 #include <hybrid/host.h>     /* __ARCH_PAGESIZE */

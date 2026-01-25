@@ -22,10 +22,10 @@
 
 #include <deemon/api.h>
 
-#include <deemon/method-hints.h>
+#include <deemon/method-hints.h>   /* DeeType_*MethodHint*, Dee_super_method_hint, Dee_tmh_id */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/super.h>
+#include <deemon/operator-hints.h> /* tdefault__*, tusrtype__*, usrtype__* */
+#include <deemon/super.h>          /* DeeSuper_SELF, DeeSuper_TYPE, Dee_super_object */
 
 #include "method-hint-defaults.h"
 #include "method-hints.h"

@@ -27,25 +27,26 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
-#include <deemon/cell.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/float.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/list.h>
-#include <deemon/map.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* DeeBool_Type, Dee_False */
+#include <deemon/bytes.h>           /* DeeBytesObject, DeeBytes_Type */
+#include <deemon/cell.h>            /* DeeCell* */
+#include <deemon/dict.h>            /* DeeDictObject, DeeDict_Type */
+#include <deemon/error.h>           /* DeeError_UnboundAttribute, DeeError_ValueError */
+#include <deemon/float.h>           /* CONFIG_HAVE_FPU, DeeFloat_Type */
+#include <deemon/hashset.h>         /* DeeHashSetObject, DeeHashSet_Type */
+#include <deemon/int.h>             /* DeeIntObject, DeeInt_Type, DeeInt_Zero */
+#include <deemon/list.h>            /* DeeListObject, DeeList_* */
+#include <deemon/map.h>             /* DeeMapping_Type */
+#include <deemon/method-hints.h>    /* DeeMH_map_setdefault_t, DeeType_RequireMethodHint */
+#include <deemon/none.h>            /* DeeNone_Type, Dee_None */
 #include <deemon/object.h>
-#include <deemon/rodict.h>
-#include <deemon/roset.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/tuple.h>
-#include <deemon/weakref.h>
+#include <deemon/rodict.h>          /* DeeRoDictObject, DeeRoDict_Type */
+#include <deemon/roset.h>           /* DeeRoSetObject, DeeRoSet_Type */
+#include <deemon/seq.h>             /* DeeSeq_* */
+#include <deemon/string.h>          /* DeeString* */
+#include <deemon/system-features.h> /* CONFIG_HAVE_FPU, strcmp */
+#include <deemon/tuple.h>           /* DeeTupleObject, DeeTuple_Type */
+#include <deemon/weakref.h>         /* DeeWeakRefObject, DeeWeakRef_Type */
 
 #include <stddef.h> /* NULL, offsetof, ptrdiff_t, size_t */
 #include <stdint.h> /* uintptr_t */

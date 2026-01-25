@@ -28,18 +28,19 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, _Dee_MallococBufsize */
-#include <deemon/bytes.h>
-#include <deemon/error-rt.h>
-#include <deemon/float.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/map.h>
-#include <deemon/none.h>
+#include <deemon/bytes.h>           /* DeeBytes_TryNewBufferData */
+#include <deemon/error-rt.h>        /* DeeRT_Err* */
+#include <deemon/error.h>           /* DeeError_Catch, DeeError_IndexError */
+#include <deemon/float.h>           /* DeeFloat_New */
+#include <deemon/format.h>          /* DeeFormat_Printf */
+#include <deemon/int.h>             /* DeeInt_NewInt64 */
+#include <deemon/map.h>             /* DeeMapping_Type */
+#include <deemon/none.h>            /* DeeNone_NewRef, return_none */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/seq.h>             /* DeeSeq_Type */
+#include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>          /* DeeString*, STRING_ERROR_FIGNORE */
+#include <deemon/system-features.h> /* read, strcmp */
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* int64_t */

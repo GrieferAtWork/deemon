@@ -47,6 +47,7 @@ DECL_BEGIN
 
 #ifdef DEE_SOURCE
 #define Dee_type_method_hint type_method_hint
+/*!export type_method_hint*/
 #endif /* DEE_SOURCE */
 
 /*

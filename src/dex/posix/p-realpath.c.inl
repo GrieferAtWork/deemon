@@ -28,15 +28,16 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
-#include <deemon/dex.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
+#include <deemon/error.h>           /* DeeError_FSError, DeeError_Throwf */
+#include <deemon/file.h>            /* DeeFile_Check, DeeFile_Filename */
+#include <deemon/int.h>             /* DeeInt_Check, DeeInt_TryAsInt */
+#include <deemon/none.h>            /* DeeNone_Check */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>          /* DeeSystem_HAVE_FS_DRIVES */
+#include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
+#include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FNORMAL, STRING_ERROR_FREPLAC */
+#include <deemon/system-features.h> /* AT_EMPTY_PATH, AT_FDCWD, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, DeeSystem_DEFINE_strnlen, DeeSystem_GetErrno, canonicalize_file_name, freadlinkat, frealpath, frealpath4, free, link, lrealpath, read, readlink, realpath, realpath3, realpathat, strlen, strnlen */
+#include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_*, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 

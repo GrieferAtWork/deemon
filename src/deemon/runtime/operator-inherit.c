@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/object.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* memcpy */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL */

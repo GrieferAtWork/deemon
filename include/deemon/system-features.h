@@ -22,8 +22,22 @@
 /*!export CONFIG_NO_**/
 /*!export -dee_**/
 /*!export _DeeSystem_DEFINE_**/
+/*!export DeeSystem_DEFINE_**/
 /*!export DeePrivateSystem_IF_HAVE_**/
+/*!export DeeSystem_DlOpen_USE_**/
 /*!export -NULL*/
+/*!fixincludes regex keep_default_groups*/
+/*!fixincludes regex group "memcpy.*"        "memcpy*"         2*/
+/*!fixincludes regex group "mempcpy.*"       "mempcpy*"        2*/
+/*!fixincludes regex group "memchr.*"        "memchr*"         2*/
+/*!fixincludes regex group "memmmove.*"      "memmmove*"       2*/
+/*!fixincludes regex group "memmmoveup.*"    "memmmoveup*"     2*/
+/*!fixincludes regex group "memmmovedown.*"  "memmmovedown*"   2*/
+/*!fixincludes regex group "mempmmove.*"     "mempmmove*"      2*/
+/*!fixincludes regex group "mempmmoveup.*"   "mempmmoveup*"    2*/
+/*!fixincludes regex group "mempmmovedown.*" "mempmmovedown*"  2*/
+/*!fixincludes regex group "bzero.*"         "bzero*"          2*/
+/*!fixincludes regex group "to(lower|upper)" "to(lower|upper)" 2*/
 #ifndef GUARD_DEEMON_SYSTEM_FEATURES_H
 #define GUARD_DEEMON_SYSTEM_FEATURES_H 1 /*!export-*/
 

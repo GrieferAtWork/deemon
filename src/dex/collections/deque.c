@@ -28,16 +28,16 @@
 
 #include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TryMallocac */
 #include <deemon/arg.h>             /* DeeArg_Unpack*, UNPuSIZ */
-#include <deemon/bool.h>
-#include <deemon/dex.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/int.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
+#include <deemon/bool.h>            /* Dee_True, return_false, return_true */
+#include <deemon/error-rt.h>        /* DeeRT_ErrEmptySequence, DeeRT_ErrIndexOutOfBounds */
+#include <deemon/error.h>           /* DeeError_Throwf, DeeError_ValueError */
+#include <deemon/int.h>             /* DeeInt_NewSize */
+#include <deemon/method-hints.h>    /* TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/none.h>            /* DeeNone_Check, DeeNone_NewRef, return_none */
+#include <deemon/object.h>
+#include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type, Dee_EmptySeq */
+#include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/system-features.h> /* bzero, floor, memcpy */
 #include <deemon/util/atomic.h>     /* atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 

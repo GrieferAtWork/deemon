@@ -26,10 +26,11 @@
 
 #include <deemon/api.h>
 
-#include <deemon/list.h>
+#include <deemon/list.h>            /* DeeList_NewVectorInherited */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/tuple.h>
+#include <deemon/seq.h>             /* DeeSeq_NewEmpty */
+#include <deemon/system-features.h> /* memcpy */
+#include <deemon/tuple.h>           /* DeeTuple* */
 
 #include <hybrid/unaligned.h> /* UNALIGNED_GET* */
 #include <hybrid/wordbits.h>  /* ENCODE_INT16, ENCODE_INT32 */

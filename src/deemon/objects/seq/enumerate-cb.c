@@ -24,14 +24,14 @@
 
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
 #include <deemon/arg.h>                /* DeeArg_Unpack1Or2 */
-#include <deemon/callable.h>
+#include <deemon/callable.h>           /* DeeCallable_Type */
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>
-#include <deemon/int.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/int.h>                /* DeeInt_NewSize */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t */
+#include <deemon/none.h>               /* DeeNone_Check, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/thread.h>
+#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self */
 #include <deemon/util/rlock.h>         /* Dee_rshared_lock_* */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */

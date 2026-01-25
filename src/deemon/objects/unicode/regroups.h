@@ -23,12 +23,12 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>  /* DeeObject_Free, DeeObject_Mallocc */
-#include <deemon/bytes.h>
+#include <deemon/bytes.h>  /* DeeBytes_NewSubView */
 #include <deemon/format.h> /* PCKuSIZ */
-#include <deemon/none.h>
+#include <deemon/none.h>   /* DeeNone_NewRef */
 #include <deemon/object.h>
-#include <deemon/regex.h>
-#include <deemon/string.h>
+#include <deemon/regex.h>  /* DeeRegexMatch */
+#include <deemon/string.h> /* DeeString_NewUtf8, Dee_STRING_ERROR_FSTRICT */
 #include <deemon/tuple.h>  /* DeeTuple_Newf */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

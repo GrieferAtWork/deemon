@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/util/md5.h> /* DeeMD5_Context, DeeMD5_Finalize, DeeMD5_Init, DeeMD5_Update */
+#include <deemon/util/md5.h> /* DeeMD5_* */
 
 #include <hybrid/byteswap.h> /* HTOLE32, LETOH32 */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SHIFT_TYPE__, __UINT32_C */

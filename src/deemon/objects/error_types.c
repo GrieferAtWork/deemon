@@ -25,19 +25,19 @@
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>
-#include <deemon/error_types.h>
-#include <deemon/exec.h>
-#include <deemon/format.h>
-#include <deemon/module.h>
-#include <deemon/none-operator.h>
-#include <deemon/none.h>
+#include <deemon/error.h>              /* DeeError_*, Dee_appexit_object, Dee_threadexit_object, ERROR_HANDLED_NORMAL */
+#include <deemon/error_types.h>        /* DeeError_*_instance, DeeNoMemoryErrorObject, DeeSignalObject, DeeSystemErrorObject */
+#include <deemon/exec.h>               /* Dee_AtExit, Dee_Exit, Dee_RUNATEXIT_FDONTRUN, Dee_RunAtExit */
+#include <deemon/format.h>             /* DeeFormat_*, Dee_snprintf */
+#include <deemon/module.h>             /* DeeModule_CallExternStringf */
+#include <deemon/none-operator.h>      /* DeeNone_* */
+#include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, return_none */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/struct.h>
-#include <deemon/system-features.h>    /* bzero(), ... */
-#include <deemon/system.h>
-#include <deemon/tuple.h>
+#include <deemon/string.h>             /* DeeString* */
+#include <deemon/struct.h>             /* DeeStructObject_* */
+#include <deemon/system-features.h>    /* CONFIG_HAVE__Exit, CONFIG_HAVE_exit, DeeSystem_GetErrno, EXIT_SUCCESS, _Exit, access, atexit, errno, exit, link, read, readlink, remove, strerror, system */
+#include <deemon/system.h>             /* DeeNTSystem_*, Dee_SYSTEM_ERROR_UNKNOWN */
+#include <deemon/tuple.h>              /* DeeTuple_Type, Dee_EmptyTuple */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"

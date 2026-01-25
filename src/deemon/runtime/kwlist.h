@@ -22,7 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h> /* Dee_keyword */
+#include <deemon/arg.h>             /* Dee_keyword */
+#include <deemon/system-features.h> /* errno, readall, writeall */
 
 #ifndef DECLARE_KWLIST
 #define DECLARE_KWLIST(name, ...) INTDEF struct Dee_keyword name[];

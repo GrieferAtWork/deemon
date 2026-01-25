@@ -27,21 +27,21 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
-#include <deemon/arg.h>             /* DeeArg_Unpack*, UNPuSIZ */
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
-#include <deemon/callable.h>
-#include <deemon/error.h>
-#include <deemon/float.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/int.h>
-#include <deemon/mro.h>
-#include <deemon/none.h>
+#include <deemon/arg.h>             /* DeeArg_Unpack*, UNPuSIZ, _DeeArg_AsObject */
+#include <deemon/bool.h>            /* DeeBool_Type, Dee_False, Dee_True, return_bool */
+#include <deemon/bytes.h>           /* DeeBytes* */
+#include <deemon/callable.h>        /* DeeCallable_Type */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/float.h>           /* DeeFloat_Type */
+#include <deemon/format.h>          /* PRFuSIZ */
+#include <deemon/gc.h>              /* DeeGCObject_CALLOC, DeeGCObject_FREE, DeeGC_TRACK */
+#include <deemon/int.h>             /* DeeInt_* */
+#include <deemon/mro.h>             /* DeeObject_TGenericIterAttr, Dee_attrhint, Dee_attriter, Dee_attriter_initempty, Dee_attriterchain_builder, Dee_attriterchain_builder_* */
+#include <deemon/none.h>            /* DeeNone_Check, DeeNone_Type, Dee_None */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h> /* bzero(), ... */
+#include <deemon/seq.h>             /* DeeRefVector_NewReadonly */
+#include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer*, STRING_ERROR_FREPLAC */
+#include <deemon/system-features.h> /* bcmp, bzero, memcmp, memcpy */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
 
 #include <hybrid/overflow.h>      /* OVERFLOW_UADD, OVERFLOW_USUB */

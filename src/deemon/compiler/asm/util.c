@@ -23,30 +23,30 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_TryCalloc, DeeObject_TryMalloc, Dee_CollectMemory */
-#include <deemon/asm.h>
-#include <deemon/bool.h>
-#include <deemon/class.h>
-#include <deemon/code.h>
+#include <deemon/asm.h>                /* ASM_* */
+#include <deemon/bool.h>               /* DeeBool* */
+#include <deemon/class.h>              /* Dee_CLASS_*, Dee_class_attribute */
+#include <deemon/code.h>               /* Dee_CODE_FTHISCALL, Dee_EXCEPTION_HANDLER_FHANDLED */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/list.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_DICT_HIDXIO_FROMALLOC, Dee_dict_*, _DeeDict_GetRealVTab, _DeeDict_GetVirtVTab */
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/hashset.h>            /* DeeHashSetObject, DeeHashSet_*, Dee_hashset_item */
+#include <deemon/int.h>                /* DeeInt_* */
+#include <deemon/list.h>               /* DeeListObject, DeeList_* */
+#include <deemon/module.h>             /* DeeModule_GetDeemon, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_module_* */
+#include <deemon/none.h>               /* DeeNoneObject, DeeNone_Check */
 #include <deemon/object.h>
-#include <deemon/rodict.h>
-#include <deemon/roset.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
-#include <deemon/system-features.h>
-#include <deemon/tuple.h>
+#include <deemon/rodict.h>             /* DeeRoDict*, _DeeRoDict_GetRealVTab */
+#include <deemon/roset.h>              /* DeeRoSet*, Dee_roset_item */
+#include <deemon/seq.h>                /* DeeSeqRange_Clamp, Dee_seq_range */
+#include <deemon/string.h>             /* DeeStringObject */
+#include <deemon/super.h>              /* DeeSuper* */
+#include <deemon/system-features.h>    /* mempcpyc */
+#include <deemon/tuple.h>              /* DeeTuple* */
 
 #include <hybrid/typecore.h> /* __SHIFT_TYPE__ */
 

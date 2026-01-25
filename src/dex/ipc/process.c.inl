@@ -28,24 +28,25 @@
 
 #include <deemon/alloc.h>           /* DeeObject_Free, DeeObject_FreeTracker, Dee_*alloc*, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_UntrackAlloc */
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack*, UNPu64 */
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
-#include <deemon/dict.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/exec.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
-#include <deemon/notify.h>
+#include <deemon/bool.h>            /* return_bool */
+#include <deemon/bytes.h>           /* DeeBytes_DATA, DeeBytes_SIZE */
+#include <deemon/dict.h>            /* DeeDictObject, DeeDict_*, Dee_DICT_INIT */
+#include <deemon/error-rt.h>        /* DeeRT_ErrTUnboundAttrCStr */
+#include <deemon/error.h>           /* DeeError_*, ERROR_HANDLED_RESTORE */
+#include <deemon/exec.h>            /* Dee_Exit, Dee_GetArgv */
+#include <deemon/file.h>            /* DeeFile_*, Dee_OPEN_FRDONLY, Dee_STD*, Dee_fd_osfhandle_GETSET, OPEN_F* */
+#include <deemon/format.h>          /* DeeFormat_*, Dee_sprintf, PRF* */
+#include <deemon/int.h>             /* DeeInt_* */
+#include <deemon/module.h>          /* DeeModule* */
+#include <deemon/none.h>            /* return_none */
+#include <deemon/notify.h>          /* DeeNotify_*, Dee_GetEnv, Dee_NOTIFICATION_CLASS_ENVIRON, Dee_NOTIFICATION_CLASS_PWD */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/seq.h>             /* DeeSeq_AsHeapVector, Dee_EmptySeq */
+#include <deemon/string.h>          /* DEFINE_STRING, DEFINE_STRING_EX, DeeString*, Dee_UNICODE_PRINTER_*, Dee_string_utf_fini, Dee_string_utf_free, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FIGNORE, STRING_ERROR_FREPLAC, STRING_WIDTH_2BYTE, WSTR_LENGTH */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_*, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_SetErrno, F_OK, O_CLOEXEC, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO, WNOHANG, X_OK, _Exit, access, bzero*, chdir, close, cwait, detach, dup, dup2, environ, errno, execv, execve, exit, fchdir, fexecve, fork, getcwd, getpid, kill, memchr, memcpyc, mempcpyc, pid_t, pipe2, posix_fspawn_np, posix_spawn, posix_spawn_file_actions_addchdir, posix_spawn_file_actions_adddup2, posix_spawn_file_actions_addfchdir, posix_spawn_file_actions_destroy, posix_spawn_file_actions_init, posix_spawnattr_destroy, posix_spawnattr_init, read, signal, spawnv, spawnve, stderr, stdin, stdout, strend, strlen, strnlen, syscall, system, time, vfork, waccess, wait, wait4, waitpid, wchdir, wcslen, wenviron, wexecv, wexecve, wgetcwd, wmemchr, write, writeall, wspawnv, wspawnve */
+#include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_*, DeeUnixSystem_* */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds, DeeThread_Sleep */
+#include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_SHARED_RWLOCK_INIT, Dee_atomic_rwlock_*, Dee_shared_rwlock_* */
 

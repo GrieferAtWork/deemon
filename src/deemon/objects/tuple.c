@@ -23,22 +23,22 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_CollectMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, _Dee_MallococBufsize */
-#include <deemon/arg.h>                /* DeeArg_Unpack*, UNPuSIZ */
-#include <deemon/bool.h>
+#include <deemon/arg.h>                /* DeeArg_Unpack*, UNPuSIZ, _DeeArg_AsObject */
+#include <deemon/bool.h>               /* Dee_True, return_false, return_true */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/list.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
+#include <deemon/int.h>                /* DeeInt_NewSize */
+#include <deemon/list.h>               /* DeeListObject, DeeList_* */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/none.h>               /* DeeNone_Check */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/tuple.h>
+#include <deemon/operator-hints.h>     /* DeeNO_foreach_t, DeeType_HasNativeOperator, DeeType_RequireNativeOperator */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, DeeSeq_Unpack, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, Dee_seq_range, type_nii */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString_Newf, DeeString_STR, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
+#include <deemon/system-features.h>    /* bzeroc, memcpy*, mempcpyc, memset */
+#include <deemon/tuple.h>              /* DeeNullableTuple*, DeeTuple*, Dee_EmptyTuple, Dee_empty_tuple_struct, Dee_nullable_tuple_builder*, Dee_tuple_builder* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 
 #include <hybrid/host.h>      /* __ARCH_VA_LIST_IS_STACK_POINTER */

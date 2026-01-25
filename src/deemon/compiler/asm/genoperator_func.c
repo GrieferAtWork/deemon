@@ -26,9 +26,9 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/module.h>
+#include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_FEXTERN, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/object.h>
-#include <deemon/string.h>
+#include <deemon/string.h>             /* DeeStringObject, DeeString_STR */
 
 #include "../../runtime/builtin.h"
 #include "../../runtime/strings.h"

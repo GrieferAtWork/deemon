@@ -23,30 +23,30 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/bool.h>
-#include <deemon/class.h>
-#include <deemon/code.h>
+#include <deemon/bool.h>               /* DeeBool_For */
+#include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClassDescriptor_Check, Dee_CLASS_*, Dee_class_attribute, Dee_class_operator */
+#include <deemon/code.h>               /* Dee_CODE_F*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_EXCEPTION_HANDLER_FINTERPT, Dee_operator_t */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/interface.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/dict.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/list.h>
-#include <deemon/map.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/dict.h>               /* DeeDict_Type */
+#include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_DEL, DeeRT_ATTRIBUTE_ACCESS_SET, DeeRT_ErrRestrictedAttrCStr, DeeRT_ErrUnboundAttrCStr */
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/format.h>             /* DeeFormat_*, PRFu16 */
+#include <deemon/hashset.h>            /* DeeHashSet_Type */
+#include <deemon/int.h>                /* DeeInt_NewUInt16 */
+#include <deemon/list.h>               /* DeeList_Type */
+#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/module.h>             /* Dee_MODULE_SYMBOL_EQUALS */
+#include <deemon/none.h>               /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/tuple.h>
+#include <deemon/seq.h>                /* DeeSeq_AsHeapVector, DeeSeq_Type */
+#include <deemon/string.h>             /* DeeString*, Dee_EmptyString, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
+#include <deemon/system-features.h>    /* bcmpc, strlen */
+#include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_read */
 
 #include "../../runtime/strings.h"

@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>     /* DeeObject_MALLOC */
 #include <deemon/object.h>
-#include <deemon/set.h>
+#include <deemon/set.h>       /* DeeSet_Type */
 #include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
 
 #include "../generic-proxy.h"

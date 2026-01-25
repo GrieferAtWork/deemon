@@ -27,14 +27,14 @@
 #include <deemon/alloc.h>             /* Dee_*alloc*, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free */
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/dec.h>
-#include <deemon/dec.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/module.h>
+#include <deemon/error.h>             /* DeeError_*, ERROR_HANDLED_NORMAL, ERROR_HANDLED_RESTORE */
+#include <deemon/file.h>              /* DeeFile_*, OPEN_F* */
+#include <deemon/format.h>            /* PRFuSIZ */
+#include <deemon/module.h>            /* DeeModuleObject */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>   /* memmem(), bzero(), ... */
-#include <deemon/system.h>            /* DeeSystem_SEP, DeeSystem_Unlink() */
+#include <deemon/string.h>            /* DeeString* */
+#include <deemon/system-features.h>   /* CONFIG_HAVE_memmem, DeeSystem_DEFINE_memmem, bzero, memcpy, memmem, mempcpyc, memset, strlen */
+#include <deemon/system.h>            /* DeeSystem_* */
 
 #include <hybrid/byteswap.h>  /* UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SETLE* */
 #include <hybrid/unaligned.h> /* UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SET32, UNALIGNED_SETLE* */

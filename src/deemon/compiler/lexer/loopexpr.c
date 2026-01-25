@@ -23,13 +23,13 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc */
-#include <deemon/code.h>
+#include <deemon/code.h>            /* Dee_CODE_FYIELDING */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>
-#include <deemon/tuple.h>
+#include <deemon/tuple.h>           /* Dee_EmptyTuple */
 
 #include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL */

@@ -27,8 +27,8 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/system-features.h>
-#include <deemon/types.h>
+#include <deemon/system-features.h> /* memmoveupc, remainder */
+#include <deemon/types.h>           /* DREF */
 
 #include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL, size_t */

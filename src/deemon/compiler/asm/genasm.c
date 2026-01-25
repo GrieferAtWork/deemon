@@ -22,27 +22,27 @@
 
 #include <deemon/api.h>
 
-#include <deemon/asm.h>
-#include <deemon/bool.h>
-#include <deemon/code.h>
+#include <deemon/asm.h>                /* ASM16_*, ASM_*, instruction_t */
+#include <deemon/bool.h>               /* DeeBool_Type */
+#include <deemon/code.h>               /* Dee_CODE_FVARARGS, Dee_CODE_FYIELDING, Dee_operator_t, instruction_t */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/list.h>
-#include <deemon/map.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/dict.h>               /* DeeDict_Type */
+#include <deemon/error.h>              /* DeeError_Handled, ERROR_HANDLED_RESTORE */
+#include <deemon/hashset.h>            /* DeeHashSet_Type */
+#include <deemon/int.h>                /* DeeInt_* */
+#include <deemon/list.h>               /* DeeList_Type */
+#include <deemon/map.h>                /* Dee_EmptyMapping */
+#include <deemon/module.h>             /* DeeModule_GetDeemon */
+#include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type, Dee_None */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/set.h>
-#include <deemon/tuple.h>
+#include <deemon/seq.h>                /* Dee_EmptySeq */
+#include <deemon/set.h>                /* Dee_EmptySet */
+#include <deemon/tuple.h>              /* DeeTuple_Type */
 
 #include "../../runtime/builtin.h"
 

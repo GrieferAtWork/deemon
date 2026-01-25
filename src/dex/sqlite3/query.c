@@ -29,14 +29,14 @@
 
 #include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryMallocc */
 #include <deemon/arg.h>             /* DeeArg_Unpack*, UNPu64 */
-#include <deemon/bytes.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/bytes.h>           /* DeeBytes_TryNewBufferData */
+#include <deemon/format.h>          /* DeeFormat_Printf */
+#include <deemon/int.h>             /* DeeInt_NewUInt64 */
+#include <deemon/none.h>            /* DeeNone_NewRef */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type */
+#include <deemon/string.h>          /* DeeString*, STRING_ERROR_FIGNORE */
+#include <deemon/system-features.h> /* read, strlen */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 

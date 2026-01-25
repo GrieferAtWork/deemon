@@ -29,14 +29,14 @@
 
 #include <deemon/alloc.h>           /* Dee_ReleaseSystemMemory */
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
-#include <deemon/dex.h>
-#include <deemon/none.h>
+#include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
+#include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
-#include <deemon/thread.h>
+#include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
+#include <deemon/string.h>          /* DeeString*, Dee_unicode_printer*, Dee_wchar_t, WSTR_LENGTH */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, fsymlinkat, memchr, symlink, symlinkat, wfsymlinkat, wsymlink, wsymlinkat */
+#include <deemon/system.h>          /* DeeNTSystem_IsBadAllocError, DeeNTSystem_IsIntr, DeeUnixSystem_GetFD */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 

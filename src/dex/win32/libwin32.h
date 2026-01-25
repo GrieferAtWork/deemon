@@ -22,9 +22,8 @@
 
 #include <deemon/api.h>
 #ifdef CONFIG_HOST_WINDOWS
-#include <deemon/dex.h>
 #include <deemon/object.h>
-#include <deemon/string.h>
+#include <deemon/string.h> /* DeeStringObject */
 
 #include <Windows.h>
 

@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/asm.h>
+#include <deemon/asm.h>                /* ASM_* */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/object.h>

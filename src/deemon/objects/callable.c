@@ -23,11 +23,11 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
-#include <deemon/callable.h>
+#include <deemon/callable.h>           /* DeeCallable_Type */
 #include <deemon/computed-operators.h>
-#include <deemon/none-operator.h>
+#include <deemon/none-operator.h>      /* DeeNone_* */
 #include <deemon/object.h>
-#include <deemon/string.h>
+#include <deemon/string.h>             /* DeeString_STR */
 
 #include "../runtime/strings.h"
 

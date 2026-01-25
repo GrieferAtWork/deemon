@@ -23,14 +23,14 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
-#include <deemon/code.h>
+#include <deemon/code.h>            /* Dee_CODE_F* */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
+#include <deemon/string.h>          /* DeeUni_IsLF, Dee_UNICODE_PRINTER_ISEMPTY, Dee_unicode_printer* */
+#include <deemon/system-features.h> /* bcmpc, bzero, memcpy, memmoveupc, truncate */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

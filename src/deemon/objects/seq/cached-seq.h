@@ -22,10 +22,11 @@
 
 #include <deemon/api.h>
 
-#include <deemon/gc.h>
+#include <deemon/gc.h>              /* DeeGCObject_MALLOC, DeeGC_TRACK */
+#include <deemon/int.h>             /* DeeIntObject */
 #include <deemon/object.h>
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_* */
-#include <deemon/util/objectlist.h> /* objectlist, Dee_objectlist_init */
+#include <deemon/util/objectlist.h> /* Dee_objectlist, Dee_objectlist_init */
 
 #include "../generic-proxy.h"
 

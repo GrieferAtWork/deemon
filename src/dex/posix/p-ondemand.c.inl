@@ -199,17 +199,18 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_*alloc*, Dee_Free, Dee_ReleaseSystemMemory */
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/filetypes.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/mapfile.h>
-#include <deemon/none.h>
+#include <deemon/error.h>           /* DeeError_*, Dee_ERROR_HANDLED_RESTORE */
+#include <deemon/file.h>            /* DeeFile_*, DeeSystemFile_Check, Dee_fd_* */
+#include <deemon/filetypes.h>       /* DeeSystemFile_GetHandle */
+#include <deemon/format.h>          /* PRF* */
+#include <deemon/int.h>             /* DeeIntObject, DeeInt_*, Dee_DIGIT_BITS */
+#include <deemon/mapfile.h>         /* DeeMapFile* */
+#include <deemon/none.h>            /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
-#include <deemon/thread.h>
+#include <deemon/string.h>          /* DeeString*, Dee_STRING_ERROR_FREPLAC, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FIGNORE, STRING_ERROR_FREPLAC, WSTR_LENGTH */
+#include <deemon/system-features.h> /* AT_FDCWD, CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E2, EOF, access, bcmp, bzero, chmod, chown, fchown, lchmod, lchown, link, memcpy, mempcpyc, read, remove, rename, sendfile, stat, strchr, strlen, symlink, system, truncate, unlink, utimbuf, utimbuf32, utimbuf64 */
+#include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_*, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/util/atomic.h>     /* atomic_and, atomic_read */
 #include <deemon/util/once.h>       /* Dee_ONCE */
 

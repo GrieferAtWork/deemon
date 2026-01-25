@@ -27,9 +27,9 @@
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/error.h>
+#include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/object.h>
-#include <deemon/system-features.h>   /* memcpy(), bzero(), ... */
+#include <deemon/system-features.h>   /* bzero, memcpy */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

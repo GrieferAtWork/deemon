@@ -28,17 +28,17 @@
 
 #include <deemon/alloc.h>           /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DeeArg_Unpack*, UNPuSIZ */
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/int.h>
-#include <deemon/mro.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* return_bool */
+#include <deemon/bytes.h>           /* DeeBytes* */
+#include <deemon/error.h>           /* DeeError_Throwf, DeeError_ValueError */
+#include <deemon/format.h>          /* PRFuSIZ */
+#include <deemon/gc.h>              /* DeeGC_Track */
+#include <deemon/int.h>             /* DeeInt_NewSize */
+#include <deemon/mro.h>             /* Dee_attrhint, Dee_attriter */
+#include <deemon/none.h>            /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h> /* memcpy() */
+#include <deemon/string.h>          /* DeeString*, STRING_ERROR_FREPLAC */
+#include <deemon/system-features.h> /* CONFIG_HAVE_wcslen, DeeSystem_DEFINE_wcslen, access, memcpy, memmove, strlen, wcslen */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
 
 #include <hybrid/overflow.h> /* OVERFLOW_USUB */

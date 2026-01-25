@@ -26,11 +26,11 @@
 
 #include <deemon/api.h>
 
-#include <deemon/error.h>
+#include <deemon/error.h>           /* DeeError_Throwf, DeeError_ValueError */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/system-features.h>
+#include <deemon/string.h>          /* DeeUniTrait_AsDigit, DeeUni_AsDigit, DeeUni_Descriptor, Dee_UNICODE_ISLF, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, Dee_unitraits */
+#include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n */
+#include <deemon/system-features.h> /* memchr */
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint8_t, uint32_t */

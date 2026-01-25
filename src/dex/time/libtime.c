@@ -29,22 +29,22 @@
 
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_*, UNP* */
-#include <deemon/bool.h>
-#include <deemon/dex.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/kwds.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
-#include <deemon/numeric.h>
+#include <deemon/bool.h>            /* return_bool */
+#include <deemon/dex.h>             /* DEX_*, Dee_DEXSYM_READONLY */
+#include <deemon/error-rt.h>        /* DeeRT_ErrDivideByZero */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/format.h>          /* DeeFormat_*, PRF* */
+#include <deemon/int.h>             /* DeeInt_NewInt, DeeInt_NewInt128, INT_SIGNED */
+#include <deemon/kwds.h>            /* DeeKwArgs* */
+#include <deemon/none.h>            /* Dee_None */
+#include <deemon/numeric.h>         /* DeeNumeric_Type */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/thread.h>
+#include <deemon/objmethod.h>       /* DEFINE_*CMETHOD* */
+#include <deemon/serial.h>          /* DeeSerial, DeeSerial_Addr2Mem, Dee_seraddr_t */
+#include <deemon/string.h>          /* DeeUni_ToLower, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
+#include <deemon/system-features.h> /* CLOCK_REALTIME, CONFIG_HAVE_*, clock_gettime, clock_gettime64, gettimeofday, gettimeofday64, memcasecmp, remainder, strlen, system, time, time64, timezone, tzset, write */
+#include <deemon/system.h>          /* DeeSystem_GetWalltime */
+#include <deemon/thread.h>          /* DeeThread_GetTimeMicroSeconds */
 #include <deemon/util/atomic.h>     /* atomic_write */
 
 #include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__ */

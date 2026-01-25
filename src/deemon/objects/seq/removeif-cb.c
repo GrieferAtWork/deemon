@@ -24,9 +24,9 @@
 
 #include <deemon/alloc.h>    /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>      /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
-#include <deemon/callable.h>
-#include <deemon/format.h>
+#include <deemon/bool.h>     /* return_bool */
+#include <deemon/callable.h> /* DeeCallable_Type */
+#include <deemon/format.h>   /* DeeFormat_Printf */
 #include <deemon/object.h>
 
 #include "../generic-proxy.h"

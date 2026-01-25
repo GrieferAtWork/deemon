@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/code.h>
+#include <deemon/code.h>   /* DeeCodeObject, Dee_ddi_state, Dee_operator_t, code_addr_t, instruction_t */
 #include <deemon/object.h>
 
 #include <stddef.h> /* size_t */

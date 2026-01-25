@@ -27,18 +27,19 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>       /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
-#include <deemon/arg.h>         /* DEFINE_KWLIST, DeeArg_Unpack0Or1, DeeArg_UnpackStructKw */
-#include <deemon/bool.h>
-#include <deemon/callable.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/none.h>
+#include <deemon/alloc.h>           /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
+#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack0Or1, DeeArg_UnpackStructKw */
+#include <deemon/bool.h>            /* return_bool */
+#include <deemon/callable.h>        /* DeeCallable_Type */
+#include <deemon/error-rt.h>        /* DeeRT_ErrTUnboundAttrCStr */
+#include <deemon/error.h>           /* DeeError_Throwf, DeeError_ValueError */
+#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf */
+#include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/tuple.h>
-#include <deemon/util/atomic.h> /* atomic_* */
-#include <deemon/util/once.h>   /* Dee_once_* */
+#include <deemon/system-features.h> /* time */
+#include <deemon/tuple.h>           /* DeeTuple_Type, Dee_EmptyTuple */
+#include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/once.h>       /* Dee_once_* */
 
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
 

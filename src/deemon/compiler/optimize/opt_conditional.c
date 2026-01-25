@@ -23,12 +23,12 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>             /* Dee_Free, Dee_Mallocc */
-#include <deemon/bool.h>
+#include <deemon/bool.h>              /* DeeBool_Check, DeeBool_IsTrue */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
-#include <deemon/none.h>
+#include <deemon/none.h>              /* DeeNone_NewRef */
 #include <deemon/object.h>
-#include <deemon/tuple.h>
+#include <deemon/tuple.h>             /* DeeTuple_Pack */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

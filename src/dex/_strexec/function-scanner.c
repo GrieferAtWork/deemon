@@ -26,11 +26,12 @@
 
 #include <deemon/api.h>
 
-#include <deemon/class.h>
-#include <deemon/module.h>
+#include <deemon/class.h>           /* DeeInstance_DESC */
+#include <deemon/module.h>          /* DeeModuleObject, DeeModule_Check, Dee_module_symbol */
 #include <deemon/object.h>
-#include <deemon/stringutils.h>
-#include <deemon/system-features.h>
+#include <deemon/string.h>          /* DeeUni_IsSpace, DeeUni_IsSymCont */
+#include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n, Dee_unicode_readutf8_rev_n */
+#include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bcmpc, memcpy */
 
 #include <hybrid/minmax.h>    /* MAX_C */
 #include <hybrid/unaligned.h> /* UNALIGNED_GET* */

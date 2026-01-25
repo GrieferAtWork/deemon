@@ -23,24 +23,24 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Freea, Dee_Mallocac */
-#include <deemon/bool.h>
-#include <deemon/class.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/filetypes.h>
-#include <deemon/float.h>
-#include <deemon/int.h>
-#include <deemon/kwds.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* DeeBool*, return_bool */
+#include <deemon/class.h>           /* DeeClass_*, DeeInstance_DESC, Dee_CLASS_OPERATOR_PRINT, Dee_CLASS_OPERATOR_PRINTREPR, Dee_class_desc, Dee_instance_desc, Dee_instance_desc_lock_endread, Dee_instance_desc_lock_read */
+#include <deemon/error-rt.h>        /* DeeRT_Err* */
+#include <deemon/error.h>           /* DeeError_*, ERROR_PRINT_DOHANDLE */
+#include <deemon/file.h>            /* DeeFile_WriteAll */
+#include <deemon/filetypes.h>       /* DeeFileWriter_GetString, DeeFile_* */
+#include <deemon/float.h>           /* DeeFloat_Type, DeeFloat_VALUE */
+#include <deemon/int.h>             /* DeeInt_*, Dee_INT_SIGNED, Dee_INT_UNSIGNED */
+#include <deemon/kwds.h>            /* DeeKwds_Check, DeeKwds_SIZE */
+#include <deemon/none.h>            /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
-#include <deemon/system-features.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/operator-hints.h>  /* tdefault__*, tusrtype__*, usrtype__* */
+#include <deemon/seq.h>             /* DeeIterator_Foreach, DeeIterator_ForeachPair, DeeSeq_Unpack */
+#include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
+#include <deemon/super.h>           /* DeeObject_T* */
+#include <deemon/system-features.h> /* memchr, memcpyc, mempcpyc, strlen */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
+#include <deemon/tuple.h>           /* DeeTuple* */
 /**/
 
 #include "runtime_error.h"

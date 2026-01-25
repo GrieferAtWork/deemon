@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* Dee_Callocc, Dee_CollectMemory, Dee_Free, Dee_TryCallocc */
-#include <deemon/asm.h>
+#include <deemon/asm.h>                /* ASM_* */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/compiler.h>
@@ -31,12 +31,13 @@
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/error.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/error.h>              /* DeeError_CompilerError, DeeError_Throwf */
+#include <deemon/int.h>                /* DeeInt_Check, DeeInt_TryAsInt64 */
+#include <deemon/module.h>             /* DeeModuleObject, DeeModule_GetShortName, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/none.h>               /* Dee_None */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/string.h>             /* DeeUni_* */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_memcasecmp, CONFIG_HAVE_strcasecmp, bcmp, bzero, calloc, memcasecmp, memchr, strcasecmp */
 
 #include <hybrid/sequence/list.h> /* SLIST_EMPTY, SLIST_FIRST */
 #include <hybrid/typecore.h>      /* __BYTE_TYPE__ */

@@ -28,14 +28,14 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
-#include <deemon/dex.h>
-#include <deemon/error.h>
+#include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
+#include <deemon/error.h>           /* DeeError_* */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/objmethod.h>       /* DEFINE_CMETHOD0, DEFINE_KWCMETHOD */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_SetErrno, FD_CLOEXEC, F_SETFD, F_SETFL, O_CLOEXEC, O_NONBLOCK, O_RDONLY, O_WRONLY, fcntl, open_osfhandle, pipe, pipe2 */
+#include <deemon/system.h>          /* DeeNTSystem_*, DeeUnixSystem_ThrowErrorf */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
+#include <deemon/tuple.h>           /* DeeTuple_Newf */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 

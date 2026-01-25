@@ -27,18 +27,18 @@
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/hashset.h>
-#include <deemon/list.h>
-#include <deemon/map.h>
-#include <deemon/none.h>
+#include <deemon/dict.h>              /* DeeDict_New */
+#include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
+#include <deemon/hashset.h>           /* DeeHashSet_Insert, DeeHashSet_New */
+#include <deemon/list.h>              /* DeeListObject, DeeList_* */
+#include <deemon/map.h>               /* DeeMapping_NewEmpty */
+#include <deemon/none.h>              /* DeeNone_NewRef */
 #include <deemon/object.h>
-#include <deemon/rodict.h>
-#include <deemon/seq.h>
-#include <deemon/set.h>
-#include <deemon/system-features.h>
-#include <deemon/tuple.h>
+#include <deemon/rodict.h>            /* Dee_rodict_builder* */
+#include <deemon/seq.h>               /* DeeSeq_* */
+#include <deemon/set.h>               /* DeeSet_NewEmpty, DeeSet_Type */
+#include <deemon/system-features.h>   /* memcpy*, memmovedownc, memmoveupc */
+#include <deemon/tuple.h>             /* DeeTuple* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

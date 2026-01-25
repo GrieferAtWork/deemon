@@ -27,12 +27,14 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>  /* Dee_BadAlloc, Dee_CollectMemory, Dee_Freea, Dee_MallocUsableSize, Dee_Mallocac */
-#include <deemon/code.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/none.h>
-#include <deemon/tuple.h>
+#include <deemon/alloc.h>           /* Dee_BadAlloc, Dee_CollectMemory, Dee_Freea, Dee_MallocUsableSize, Dee_Mallocac */
+#include <deemon/code.h>            /* DeeCodeObject, DeeFunctionObject, DeeFunction_Type, Dee_CODE_FASSEMBLY, Dee_CODE_FVARARGS, Dee_instruction_t */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/format.h>          /* PRFuSIZ, PRFx32 */
+#include <deemon/none.h>            /* DeeNone_NewRef */
+#include <deemon/system-features.h> /* bzero, memmovedown, memmovedownc, memmoveupc, mempcpy */
+#include <deemon/tuple.h>           /* DeeTuple_Type */
+#include <deemon/types.h>           /* DREF, DeeObject */
 
 #include <hybrid/bitset.h>        /* bitset_test */
 #include <hybrid/byteswap.h>      /* UNALIGNED_GETLE32 */

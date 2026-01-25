@@ -29,14 +29,14 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack, DeeArg_Unpack1, UNPuSIZ */
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
+#include <deemon/bool.h>               /* Dee_True, return_bool, return_false, return_true */
+#include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
+#include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString_AsBytes, DeeString_Check, WSTR_LENGTH */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 
 #include <hybrid/align.h>    /* CEILDIV */

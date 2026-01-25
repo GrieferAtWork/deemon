@@ -27,10 +27,13 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>       /* DeeArg_Unpack1Or2 */
-#include <deemon/dex.h>
-#include <deemon/error.h>
-#include <deemon/objmethod.h>
-#include <deemon/tuple.h>
+#include <deemon/code.h>      /* DeeFunctionObject, DeeFunction_Type */
+#include <deemon/dex.h>       /* DEX_*, Dee_DEXSYM_READONLY */
+#include <deemon/error.h>     /* DeeError_Throwf, DeeError_ValueError */
+#include <deemon/none.h>      /* Dee_None */
+#include <deemon/object.h>
+#include <deemon/objmethod.h> /* DEFINE_CMETHOD */
+#include <deemon/tuple.h>     /* DeeTuple*, Dee_EmptyTuple */
 
 #include <stddef.h> /* NULL, size_t */
 

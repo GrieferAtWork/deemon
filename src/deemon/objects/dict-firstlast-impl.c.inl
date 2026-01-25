@@ -29,8 +29,13 @@
 
 #include <deemon/api.h>
 
-#include <deemon/error-rt.h>
-#include <deemon/seq.h>
+#include <deemon/dict.h>     /* DeeDict_*, Dee_DICT_HTAB_EOF, Dee_dict_*, _DeeDict_GetRealVTab */
+#include <deemon/error-rt.h> /* DeeRT_ErrEmptySequence, DeeRT_ErrTUnboundAttrCStr */
+#include <deemon/none.h>     /* Dee_None */
+#include <deemon/object.h>
+#include <deemon/seq.h>      /* DeeSeq_Unpack */
+#include <deemon/tuple.h>    /* DeeTuple* */
+#include <deemon/types.h>    /* DREF, DeeObject, Dee_AsObject, ITER_DONE */
 
 #include <stddef.h> /* NULL */
 

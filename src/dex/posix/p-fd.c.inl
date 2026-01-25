@@ -28,16 +28,16 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
-#include <deemon/bool.h>
-#include <deemon/dex.h>
-#include <deemon/error.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* return_false, return_true */
+#include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/int.h>             /* DeeInt_NewInt */
+#include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
-#include <deemon/thread.h>
+#include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E2, DeeSystem_SetErrno, FD_CLOEXEC, F_SETFD, F_SETFL, O_CLOEXEC, O_NONBLOCK, close, dup, dup2, dup3, fcntl, get_osfhandle, isatty, umask */
+#include <deemon/system.h>          /* DeeNTSystem_IsIntr, DeeNTSystem_ThrowErrorf, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 

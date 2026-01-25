@@ -28,26 +28,24 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>   /* Dee_Calloc, Dee_Free, _Dee_MallococBufsize */
-#include <deemon/asm.h>
-#include <deemon/bool.h>
-#include <deemon/class.h>
-#include <deemon/code.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/format.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/list.h>
-#include <deemon/map.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/asm.h>     /* ASM16_*, ASM32_JMP, ASM_*, DeeAsm_*, Dee_instruction_t */
+#include <deemon/bool.h>    /* Dee_False, Dee_True */
+#include <deemon/class.h>   /* DeeClassDescriptorObject, DeeClassDescriptor_Type, DeeClass_New */
+#include <deemon/code.h>    /* DeeCodeObject, DeeCode_Type, DeeFunctionObject, DeeFunction_Type, Dee_code_addr_t, Dee_instruction_t, Dee_operator_t */
+#include <deemon/dict.h>    /* DeeDict_Type */
+#include <deemon/error.h>   /* DeeError_Handled, DeeError_Throw, Dee_ERROR_HANDLED_RESTORE */
+#include <deemon/file.h>    /* DeeFile_*, FILE_OPERATOR_PUTC, FILE_OPERATOR_WRITE, GETC_ERR */
+#include <deemon/format.h>  /* PRFx32 */
+#include <deemon/gc.h>      /* DeeGC_Track */
+#include <deemon/hashset.h> /* DeeHashSet_Type */
+#include <deemon/int.h>     /* DeeInt_* */
+#include <deemon/list.h>    /* DeeList_Type */
+#include <deemon/module.h>  /* DeeModuleObject */
+#include <deemon/none.h>    /* Dee_None */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/seq.h>     /* DeeRange_New, DeeRange_NewInt, DeeSeq_* */
+#include <deemon/string.h>  /* DeeString_AsUtf8, DeeString_Check, WSTR_LENGTH */
+#include <deemon/tuple.h>   /* DeeTuple_Type */
 
 #include <hybrid/align.h>     /* CEILDIV */
 #include <hybrid/bitset.h>    /* bitset_test */

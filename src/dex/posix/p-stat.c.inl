@@ -27,20 +27,21 @@
 
 #include <deemon/api.h>
 
-#include <deemon/abi/time.h>
+#include <deemon/abi/time.h>        /* DECLARE_DeeTime_NewFILETIME, DECLARE_DeeTime_NewUnix */
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_ReleaseSystemMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack* */
-#include <deemon/bool.h>
-#include <deemon/dex.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/int.h>
+#include <deemon/bool.h>            /* DeeBool_For, DeeBool_NewFalse, Dee_False, return_bool, return_false, return_true */
+#include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/file.h>            /* DeeFile_Filename */
+#include <deemon/format.h>          /* Dee_sprintf */
+#include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
-#include <deemon/thread.h>
+#include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
+#include <deemon/string.h>          /* DEFINE_STRING_EX, DeeString*, DeeUni_ToLower, Dee_wchar_t, WSTR_LENGTH */
+#include <deemon/system-features.h> /* AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, access, bzero, clearerr, fclose, ferror, fopen, fopen64, fseek, fseeko, fseeko64, fstat, fstatat, fstatat64, fstat64, ftell, ftello, ftello64, link, lstat, lstat64, memcasecmp, open, pipe, stat, stat64, strchr, strend, system, time, wlstat, wlstat64, wstat, wstat64 */
+#include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_GetFilenameOfFD, DeeSystem_IsSep, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_val */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

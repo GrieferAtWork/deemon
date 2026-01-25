@@ -25,10 +25,11 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
-#include <deemon/error.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
+#include <deemon/module.h>            /* DeeModule*, Dee_MODSYM_FCONSTEXPR, Dee_MODSYM_FPROPERTY, Dee_module_symbol_getindex */
+#include <deemon/none.h>              /* DeeNone_NewRef */
 #include <deemon/object.h>
+#include <deemon/system-features.h>   /* read */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL */

@@ -23,21 +23,21 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>               /* DeeArg_UnpackStruct */
-#include <deemon/bytes.h>
+#include <deemon/bytes.h>             /* DeeBytes_Check */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/hashset.h>
-#include <deemon/list.h>
-#include <deemon/module.h>
+#include <deemon/dict.h>              /* DeeDict_Type */
+#include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
+#include <deemon/hashset.h>           /* DeeHashSet_Type */
+#include <deemon/list.h>              /* DeeList_Type */
+#include <deemon/module.h>            /* DeeModule_Type */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/thread.h>
-#include <deemon/traceback.h>
-#include <deemon/tuple.h>
+#include <deemon/objmethod.h>         /* DeeClsProperty_Check, DeeClsProperty_GET, DeeKwObjMethod_Check, DeeObjMethod* */
+#include <deemon/string.h>            /* DeeString*, Dee_unicode_printer*, STRING_ERROR_FSTRICT, WSTR_LENGTH */
+#include <deemon/system-features.h>   /* memmovedownp */
+#include <deemon/thread.h>            /* DeeThread_Type */
+#include <deemon/traceback.h>         /* DeeTraceback_Type */
+#include <deemon/tuple.h>             /* DeeTuple* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

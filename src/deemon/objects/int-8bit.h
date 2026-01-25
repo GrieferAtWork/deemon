@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/int.h>
+#include <deemon/int.h> /* _Dee_int_1digit_object */
 
 /* Config option to statically pre-allocate all 8-bit integer constants (that is: [-128,255]). */
 #if (!defined(CONFIG_STRING_8BIT_STATIC) && \

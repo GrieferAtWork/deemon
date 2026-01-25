@@ -23,14 +23,14 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>             /* Dee_*alloc*, Dee_Free, Dee_Freea */
-#include <deemon/class.h>
-#include <deemon/code.h>
+#include <deemon/class.h>             /* DeeClassDescriptorObject, DeeClassDescriptor_CLSOPNEXT, DeeClassDescriptor_Check, Dee_CLASS_OPERATOR_PRINT, Dee_CLASS_OPERATOR_PRINTREPR, Dee_class_operator */
+#include <deemon/code.h>              /* Dee_CODE_FTHISCALL, Dee_CODE_FYIELDING, Dee_operator_t */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/string.h>            /* DeeString_STR */
+#include <deemon/system-features.h>   /* memcpy*, memset */
 
 #include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* NULL, size_t */

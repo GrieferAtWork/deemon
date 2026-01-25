@@ -23,13 +23,13 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
-#include <deemon/deepcopy.h>
-#include <deemon/error-rt.h>
-#include <deemon/gc.h>
+#include <deemon/deepcopy.h>        /* DeeDeepCopyContext, DeeDeepCopy_*, Dee_deepcopy_heap_*, Dee_deepcopy_mapitem */
+#include <deemon/error-rt.h>        /* DeeRT_ErrCannotSerialize */
+#include <deemon/gc.h>              /* DeeGC_*, Dee_GC_HEAD_SIZE, Dee_gc_head */
 #include <deemon/object.h>
-#include <deemon/serial.h>
-#include <deemon/system-features.h> /* memset, memcpy, ... */
-#include <deemon/types.h>
+#include <deemon/serial.h>          /* DeeSerial, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t, Dee_serial_type */
+#include <deemon/system-features.h> /* free, memmovedownc, memmoveupc, memset */
+#include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, Dee_TYPE, Dee_funptr_t, Dee_unlockinfo, OBJECT_HEAD */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

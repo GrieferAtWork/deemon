@@ -23,25 +23,26 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free, Dee_Freea, _Dee_MallococBufsize */
-#include <deemon/class.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/kwds.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/class.h>           /* DeeClassDesc_QueryInstanceAttribute, DeeClassDesc_QueryInstanceAttributeHash, DeeClassDescriptorObject, DeeClassDescriptor_CLSOPNEXT, DeeClassDescriptor_Type, DeeClass_*, DeeInstance_DESC, DeeInstance_SetBasicAttribute, Dee_CLASS_*, Dee_TP_FCLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_*, Dee_class_operator, Dee_class_optable, Dee_instance_desc, Dee_instance_desc_*, instance_* */
+#include <deemon/error-rt.h>        /* DeeRT_Err* */
+#include <deemon/error.h>           /* DeeError_*, ERROR_PRINT_DOHANDLE */
+#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf */
+#include <deemon/gc.h>              /* DeeGCObject_Calloc, DeeGCObject_Free, DeeGC_TRACK */
+#include <deemon/kwds.h>            /* DeeKwds* */
+#include <deemon/module.h>          /* DeeModule_Type, Dee_module_object */
+#include <deemon/mro.h>             /* Dee_attrhint, Dee_attriter */
+#include <deemon/none.h>            /* DeeNone_Check */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
-#include <deemon/system-features.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/operator-hints.h>  /* usrtype__* */
+#include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>          /* DeeString* */
+#include <deemon/super.h>           /* DeeObject_TAssign, DeeObject_TMoveAssign */
+#include <deemon/system-features.h> /* bzero*, memcpyc, memmoveupc */
+#include <deemon/thread.h>          /* Dee_DeepCopyAddAssoc */
+#include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_cinit, Dee_atomic_rwlock_init */
-#include <deemon/util/objectlist.h> /* Dee_objectlist_append, objectlist, objectlist_* */
+#include <deemon/util/objectlist.h> /* Dee_objectlist, Dee_objectlist_* */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

@@ -168,14 +168,17 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>             /* DeeArg_Unpack1, DeeArg_UnpackStructKw */
-#include <deemon/class.h>
-#include <deemon/error.h>           /* DeeError_Catch */
-#include <deemon/format.h>          /* Dee_VPPackf */
-#include <deemon/kwds.h>            /* DeeKwds_Check */
-#include <deemon/mro.h>
+#include <deemon/class.h>           /* DeeClass_*, DeeInstance_*, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_as_instance, Dee_instance_desc, Dee_instance_desc_lock_endread, Dee_instance_desc_lock_read */
+#include <deemon/error-rt.h>        /* DeeRT_ATTRIBUTE_ACCESS_*, DeeRT_ErrRestrictedInstanceAttrCStr, DeeRT_ErrTRestrictedAttrCStr */
+#include <deemon/error.h>           /* DeeError_Catch, DeeError_UnboundAttribute */
+#include <deemon/format.h>          /* Dee_VPPackf, Dee_VPPackf_Cleanup, Dee_VPackf, Dee_va_list_struct */
+#include <deemon/kwds.h>            /* DeeKwds_Check, DeeKwds_SIZE */
+#include <deemon/mro.h>             /* DeeType_Bound*Attr*, DeeType_Call*Attr*, DeeType_Del*Attr*, DeeType_Find*Attr*, DeeType_Get*Attr*, DeeType_Has*Attr*, DeeType_Set*Attr*, DeeType_VCall*Attr*f, Dee_ATTRINFO_*, Dee_ATTRPERM_F_*, Dee_MEMBERCACHE_*, Dee_attrdesc, Dee_attrinfo, Dee_attrspec, Dee_membercache_*, type_member_* */
 #include <deemon/object.h>
-#include <deemon/system-features.h>
-#include <deemon/tuple.h>           /* DeeTuple_SIZE, DeeTuple_ELEM */
+#include <deemon/objmethod.h>       /* DeeClsMember_New, DeeClsMethod_New, DeeClsProperty_NewEx, DeeKwClsMethod_New, DeeKwObjMethod_New, DeeKwObjMethod_VCallFuncf, DeeObjMethod_New, DeeObjMethod_VCallFuncf */
+#include <deemon/string.h>          /* DeeStringObject, DeeString_STR */
+#include <deemon/system-features.h> /* memcmp, memcpy */
+#include <deemon/tuple.h>           /* DeeTuple_ELEM, DeeTuple_SIZE */
 #include <deemon/util/atomic.h>     /* atomic_read */
 
 #include "kwlist.h"        /* kwlist__thisarg */

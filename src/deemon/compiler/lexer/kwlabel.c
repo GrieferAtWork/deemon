@@ -27,10 +27,10 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/kwds.h>
+#include <deemon/kwds.h>            /* DeeKwds_AppendStringLen, DeeKwds_NewWithHint */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/tuple.h>
+#include <deemon/string.h>          /* DeeUni_IsSymCont */
+#include <deemon/tuple.h>           /* DeeTuple_Empty, Dee_EmptyTuple */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t */

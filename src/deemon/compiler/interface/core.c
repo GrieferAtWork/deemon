@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryCallocc */
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/interface.h>
-#include <deemon/error.h>
+#include <deemon/error.h>              /* DeeError_ReferenceError, DeeError_Throwf */
 #include <deemon/object.h>
 #include <deemon/util/atomic.h>        /* atomic_read */
 

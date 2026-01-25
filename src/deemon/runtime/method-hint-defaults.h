@@ -22,11 +22,12 @@
 
 #include <deemon/api.h>
 
-#include <deemon/method-hints.h>
-#include <deemon/none-operator.h>
+#include <deemon/computed-operators.h>
+#include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, Dee_seq_enumerate_t */
+#include <deemon/none-operator.h>      /* _DeeNone_* */
 #include <deemon/object.h>
-#include <deemon/rodict.h>
-#include <deemon/roset.h>
+#include <deemon/rodict.h>             /* DeeRoDict_FromSequence */
+#include <deemon/roset.h>              /* DeeRoSet_FromSequence */
 
 #include <stddef.h> /* size_t */
 /**/

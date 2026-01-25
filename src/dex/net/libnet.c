@@ -26,12 +26,12 @@
 
 #include <deemon/api.h>
 
-#include <deemon/dex.h>
-#include <deemon/error.h>
-#include <deemon/int.h>
-#include <deemon/module.h>
+#include <deemon/dex.h>             /* DEX_*, Dee_DEXSYM_READONLY */
+#include <deemon/error.h>           /* DeeError_Throwf */
+#include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
+#include <deemon/objmethod.h>       /* DEFINE_CMETHOD1 */
+#include <deemon/system-features.h> /* CONFIG_HAVE_signal, signal, system */
 
 #include <hybrid/byteswap.h>        /* BETOH*, HTOBE* */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

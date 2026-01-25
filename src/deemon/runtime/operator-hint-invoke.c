@@ -22,10 +22,13 @@
 
 #include <deemon/api.h>
 
-#include <deemon/bool.h>
-#include <deemon/int.h>
+#include <deemon/bool.h>            /* DeeBool_Type, Dee_False, Dee_True, return_bool */
+#include <deemon/int.h>             /* DeeInt_Type */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
+#include <deemon/operator-hints.h>  /* DeeNO_*_t, _DeeType_RequireNativeOperator, maketyped__* */
+#include <deemon/super.h>           /* DeeObject_T* */
+#include <deemon/system-features.h> /* pow */
+#include <deemon/tuple.h>           /* DeeTuple* */
 
 #include <hybrid/host.h> /* __ARCH_VA_LIST_IS_STACK_POINTER */
 

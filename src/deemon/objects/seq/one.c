@@ -24,18 +24,19 @@
 
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* Dee_True, return_bool */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/method-hints.h>
-#include <deemon/none-operator.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/format.h>             /* DeeFormat_Printf */
+#include <deemon/int.h>                /* DeeInt_* */
+#include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/none-operator.h>      /* _DeeNone_reti1_1, _DeeNone_rets1_1 */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/tuple.h>
+#include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqOne*, DeeSeqRange_Clamp, DeeSeq_*, Dee_seq_range */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/system-features.h>    /* remainder */
+#include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 
 #include <hybrid/overflow.h>    /* OVERFLOW_UADD */

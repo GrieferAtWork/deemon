@@ -24,25 +24,25 @@
 
 #include <deemon/alloc.h>              /* Dee_Calloc, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* DeeBool_For, return_bool */
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/interface.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/map.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/error.h>              /* DeeError_*, Dee_ERROR_PRINT_DOHANDLE */
+#include <deemon/file.h>               /* DeeFile_Filename, DeeFile_Open, OPEN_FCLOEXEC, OPEN_FRDONLY */
+#include <deemon/format.h>             /* DeeFormat_Print, DeeFormat_Quote */
+#include <deemon/int.h>                /* DeeInt_*, Dee_INT_STRING, Dee_INT_STRING_FESCAPED */
+#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/set.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/system-features.h>    /* memcpyc(), ... */
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/set.h>                /* DeeSet_Type */
+#include <deemon/string.h>             /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FIGNORE, WSTR_LENGTH */
+#include <deemon/stringutils.h>        /* DeeString_GetChar */
+#include <deemon/system-features.h>    /* EOF, access, memcpyc, open, read, remove, strlen, system, time, write */
+#include <deemon/thread.h>             /* DeeThread_Self */
+#include <deemon/tuple.h>              /* DeeTuple_Newf */
 
 #include <hybrid/limitcore.h> /* __INT_MAX__ */
 

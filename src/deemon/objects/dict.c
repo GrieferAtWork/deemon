@@ -24,27 +24,27 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_*alloc*, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStructKw, UNPuSIZ */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* Dee_True, return_bool */
 #include <deemon/computed-operators.h>
-#include <deemon/dict.h>
-#include <deemon/error-rt.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/map.h>
-#include <deemon/method-hints.h>
-#include <deemon/none-operator.h>
-#include <deemon/none.h>
+#include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_DICT_HIDXIO_*, Dee_DICT_HTAB_EOF, Dee_SIZEOF_DICT_VIDX_T, Dee_dict_*, _DeeDict_* */
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ, PRFxSIZ */
+#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGCObject_TRYMALLOC, DeeGC_TRACK */
+#include <deemon/hashset.h>            /* DeeHashSet_Type */
+#include <deemon/int.h>                /* DeeInt_* */
+#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/none-operator.h>      /* _DeeNone_reti0_1, _DeeNone_reti0_2 */
+#include <deemon/none.h>               /* Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/rodict.h>
-#include <deemon/roset.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>    /* bcmpc(), ... */
-#include <deemon/tuple.h>
+#include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
+#include <deemon/rodict.h>             /* DeeRoDict* */
+#include <deemon/roset.h>              /* DeeRoSet_Type */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Unpack */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString_STR */
+#include <deemon/system-features.h>    /* EOF, bzero*, memcpy*, memmovedownc, memmoveupc, memset, remove, time */
+#include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/lock.h>          /* DeeLock_Acquire2, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 #include <deemon/util/objectlist.h>    /* Dee_objectlist, Dee_objectlist_* */

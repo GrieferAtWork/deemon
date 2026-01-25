@@ -18,6 +18,9 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
+#include <deemon/dict.h>            /* Dee_DICT_HIDXIO_COUNT */
+#include <deemon/system-features.h> /* memmoveb, memmovel, memmoveq, memmovew */
+
 #include "dict.c"
 #define LOCAL_HIDXIO_NBITS 16
 #endif /* __INTELLISENSE__ */

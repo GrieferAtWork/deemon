@@ -26,7 +26,6 @@
 
 #ifndef CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
 /**/
 
 #include "../objects/seq/concat.h"

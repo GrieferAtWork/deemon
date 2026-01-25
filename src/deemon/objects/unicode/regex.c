@@ -23,11 +23,11 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_CollectMemory, Dee_Free, Dee_MallocUsableSize, Dee_TryCallocc, Dee_UntrackAlloc */
-#include <deemon/error.h>
+#include <deemon/error.h>           /* DeeError_* */
 #include <deemon/object.h>
-#include <deemon/regex.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/regex.h>           /* DeeRegex*, DeeString_GetRegex, DeeString_GetRegexFlags, Dee_RE_* */
+#include <deemon/string.h>          /* DeeString*, Dee_STRING_UTF_FFINIHOOK, WSTR_LENGTH */
+#include <deemon/system-features.h> /* CONFIG_HAVE__msize, CONFIG_HAVE_malloc_usable_size, _msize, malloc_usable_size, memcpy, memset */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 
 /* Includes for libregex... */

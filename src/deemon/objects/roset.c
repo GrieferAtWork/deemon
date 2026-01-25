@@ -24,15 +24,15 @@
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, _Dee_MallococBufsize */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* return_false, return_true */
 #include <deemon/computed-operators.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
+#include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_PrintObjectRepr */
+#include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/object.h>
-#include <deemon/roset.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/set.h>
+#include <deemon/roset.h>              /* DeeRoSet*, Dee_roset_item */
+#include <deemon/seq.h>                /* DeeIterator_Type */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/system-features.h>    /* memcpy */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 

@@ -23,21 +23,23 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_Free, DeeObject_Mallocc */
-#include <deemon/arg.h>             /* DeeArg_Unpack*, UNPuSIZ, UNPxSIZ */
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/float.h>
-#include <deemon/int.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
+#include <deemon/arg.h>             /* DeeArg_Unpack*, UNPuSIZ, UNPxSIZ, _DeeArg_AsObject */
+#include <deemon/bool.h>            /* return_bool, return_bool01, return_false, return_true */
+#include <deemon/bytes.h>           /* DeeBytes* */
+#include <deemon/error-rt.h>        /* DeeRT_Err* */
+#include <deemon/error.h>           /* DeeError_Throwf, DeeError_ValueError */
+#include <deemon/float.h>           /* DeeFloat_New */
+#include <deemon/format.h>          /* PCKuSIZ */
+#include <deemon/int.h>             /* DeeInt_* */
+#include <deemon/method-hints.h>    /* TYPE_METHOD_HINTREF, TYPE_METHOD_HINTREF_DOC */
+#include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/regex.h>
-#include <deemon/seq.h>
-#include <deemon/stringutils.h>
-#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
-#include <deemon/tuple.h>
+#include <deemon/regex.h>           /* DeeRegex*, DeeString_GetRegex, Dee_RE_* */
+#include <deemon/seq.h>             /* DeeSeqSome*, DeeSeq_NewEmpty */
+#include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeCodec_Decode, DeeCodec_Encode, DeeDbgString_*, DeeString*, DeeUni_*, Dee_EmptyString, Dee_STRING_HASH_UNSET, Dee_STRING_UTF_FASCII, Dee_UNICODE_*, Dee_charptr, Dee_charptr_const, Dee_string_utf*, Dee_unicode_printer*, Dee_uniflag_t, Dee_unitraits, STRING_ERROR_FSTRICT, STRING_MUL_SIZEOF_WIDTH, STRING_WIDTH_COMMON, STRING_WIDTH_COMMON3, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
+#include <deemon/stringutils.h>     /* DeeString_Foreach, DeeString_GetChar, Dee_unicode_utf8seqlen_safe */
+#include <deemon/system-features.h> /* CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memsetp, bzero, close, isalnum, isalpha, isdigit, islower, isupper, link, memchr*, memcmp, memcmpb, memcmpl, memcmpw, memcpy*, memmeml, memmemw, memmoveb, memmovel, memmovew, mempcpy*, mempsetb, mempsetl, mempsetw, memrchrl, memrchrw, memrmeml, memrmemw, memsetb, memsetl, memsetp, memsetw, open, read, remove, strverscmp, time, write */
+#include <deemon/tuple.h>           /* DeeTuple* */
 
 #include <hybrid/byteswap.h> /* BSWAP16, BSWAP32 */
 #include <hybrid/minmax.h>   /* MIN */

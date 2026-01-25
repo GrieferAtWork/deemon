@@ -22,18 +22,18 @@
 
 #include <deemon/api.h>
 
-#include <deemon/asm.h>
-#include <deemon/code.h>
+#include <deemon/asm.h>                /* ASM_*, instruction_t */
+#include <deemon/code.h>               /* Dee_EXCEPTION_HANDLER_FHANDLED, code_addr_t, instruction_t */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/int.h>
+#include <deemon/dict.h>               /* Dee_dict_item */
+#include <deemon/error.h>              /* DeeError_NotImplemented, DeeError_TypeError */
+#include <deemon/int.h>                /* DeeInt_Check, DeeInt_TryAsUInt32 */
 #include <deemon/object.h>
-#include <deemon/rodict.h>
-#include <deemon/tuple.h>
+#include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Check, Dee_rodict_builder*, _DeeRoDict_GetRealVTab */
+#include <deemon/tuple.h>              /* DeeTuple* */
 
 #include "../../runtime/strings.h"
 

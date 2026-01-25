@@ -28,11 +28,12 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>       /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
-#include <deemon/dex.h>
-#include <deemon/error.h>
-#include <deemon/int.h>
-#include <deemon/objmethod.h>
-#include <deemon/string.h>
+#include <deemon/dex.h>       /* DEX_*, Dee_DEXSYM_READONLY */
+#include <deemon/error.h>     /* DeeError_Throwf, DeeError_ValueError */
+#include <deemon/int.h>       /* DeeInt_* */
+#include <deemon/object.h>
+#include <deemon/objmethod.h> /* DEFINE_KWCMETHOD */
+#include <deemon/string.h>    /* DeeString_AsUtf8, DeeString_Check, WSTR_LENGTH */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

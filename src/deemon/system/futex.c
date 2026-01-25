@@ -24,8 +24,8 @@
 
 #include <deemon/alloc.h>           /* DeeObject_* */
 #include <deemon/object.h>
-#include <deemon/system-features.h> /* memcpy(), ... */
-#include <deemon/thread.h>
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, bzero, cnd_broadcast, cnd_destroy, cnd_init, futex_timedwaitwhile, futex_timedwaitwhile64, futex_waitwhile, futex_wake, futex_wakeall, mtx_destroy, mtx_init, mtx_lock, mtx_unlock, pthread_cond_broadcast, pthread_cond_destroy, pthread_cond_init, pthread_mutex_destroy, pthread_mutex_init, pthread_mutex_lock, pthread_mutex_unlock, sem_destroy, sem_post, sem_post_multiple, syscall, thrd_success */
+#include <deemon/thread.h>          /* DeeThreadObject, DeeThread_Self */
 #include <deemon/util/atomic.h>     /* Dee_ATOMIC_RELAXED, Dee_ATOMIC_SEQ_CST, atomic_* */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_LOCK_INIT, Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_lock_*, Dee_atomic_rwlock_* */
 

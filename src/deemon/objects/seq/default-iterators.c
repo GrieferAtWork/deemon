@@ -25,17 +25,17 @@
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPuSIZ */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/none-operator.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_ErrIndexOverflow */
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/format.h>             /* PCKuSIZ */
+#include <deemon/int.h>                /* DeeInt_NewSize */
+#include <deemon/none-operator.h>      /* _DeeNone_retsm1_1 */
+#include <deemon/none.h>               /* DeeNone_NewRef */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/tuple.h>
+#include <deemon/operator-hints.h>     /* DeeNO_nextkey_t, DeeNO_nextpair_t, DeeType_RequireSupportedNativeOperator */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Unpack */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
 

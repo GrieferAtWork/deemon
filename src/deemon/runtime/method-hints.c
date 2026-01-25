@@ -23,15 +23,15 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>          /* Dee_Free, Dee_UntrackAlloc */
-#include <deemon/class.h>
-#include <deemon/map.h>
-#include <deemon/method-hints.h>
-#include <deemon/mro.h>
+#include <deemon/class.h>          /* Dee_CLASS_* */
+#include <deemon/map.h>            /* DeeMapping_Type */
+#include <deemon/method-hints.h>   /* DeeType_*MethodHint*, Dee_tmh_id, type_method_hint */
+#include <deemon/mro.h>            /* DeeObject_TFindPrivateAttrInfo, Dee_ATTRINFO_*, Dee_attrinfo */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/set.h>
-#include <deemon/string.h>
+#include <deemon/operator-hints.h> /* DeeType_GetNativeOperatorWithoutDefaults, Dee_tno_id */
+#include <deemon/seq.h>            /* DeeSeq_Type, DeeType_GetSeqClass, Dee_SEQCLASS_* */
+#include <deemon/set.h>            /* DeeSet_Type */
+#include <deemon/string.h>         /* DeeStringObject */
 #include <deemon/util/atomic.h>    /* atomic_* */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __UINTPTR_HALF_TYPE__ */

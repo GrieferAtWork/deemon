@@ -22,31 +22,31 @@
 
 #include <deemon/api.h>
 
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
-#include <deemon/callable.h>
-#include <deemon/cell.h>
-#include <deemon/code.h>
+#include <deemon/bool.h>              /* DeeBool_Type */
+#include <deemon/bytes.h>             /* DeeBytes_Type */
+#include <deemon/callable.h>          /* DeeCallable_Type */
+#include <deemon/cell.h>              /* DeeCell_Type */
+#include <deemon/code.h>              /* DeeFunction_Type, Dee_EXCEPTION_HANDLER_FFINALLY */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/float.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/list.h>
-#include <deemon/map.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/dict.h>              /* DeeDict_Type */
+#include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
+#include <deemon/float.h>             /* CONFIG_HAVE_FPU, DeeFloat_Type */
+#include <deemon/hashset.h>           /* DeeHashSet_Type */
+#include <deemon/int.h>               /* DeeInt_Type */
+#include <deemon/list.h>              /* DeeList_Type */
+#include <deemon/map.h>               /* DeeMapping_Type */
+#include <deemon/module.h>            /* DeeModule*, Dee_MODSYM_F* */
+#include <deemon/none.h>              /* DeeNone_Type */
 #include <deemon/object.h>
-#include <deemon/rodict.h>
-#include <deemon/roset.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
-#include <deemon/system-features.h>
-#include <deemon/tuple.h>
+#include <deemon/rodict.h>            /* DeeRoDict_Type */
+#include <deemon/roset.h>             /* DeeRoSet_Type */
+#include <deemon/seq.h>               /* DeeSeq_Type */
+#include <deemon/string.h>            /* DeeString_Type */
+#include <deemon/super.h>             /* DeeSuper_Type */
+#include <deemon/system-features.h>   /* CONFIG_HAVE_FPU */
+#include <deemon/tuple.h>             /* DeeTuple_Type */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

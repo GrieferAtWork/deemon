@@ -24,25 +24,26 @@
 
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNP* */
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
-#include <deemon/callable.h>
+#include <deemon/bool.h>               /* DeeBool_Check, DeeBool_IsTrue, return_bool */
+#include <deemon/bytes.h>              /* DeeBytes_NewView, Dee_BYTES_PRINTER_INIT, Dee_BYTES_PRINTER_SIZE, Dee_bytes_printer, Dee_bytes_printer_* */
+#include <deemon/callable.h>           /* DeeCallable_Type */
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/filetypes.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/mapfile.h>
-#include <deemon/module.h>
-#include <deemon/none-operator.h>
-#include <deemon/none.h>
+#include <deemon/error.h>              /* DeeError_*, ERROR_HANDLED_RESTORE */
+#include <deemon/file.h>               /* DeeFileBuffer_Type, DeeFileObject, DeeFileTypeObject, DeeFileType_*, DeeFile_*, DeeObject_AsFd, DeeSystemFile_*, DeeSystem_FILE_USE_nt_HANDLE, DeeSystem_FILE_USE_unix_fd, DeeType_AsFileType, Dee_FILEIO_FNORMAL, Dee_SEEK_*, Dee_STD*, Dee_fd_*, Dee_ioflag_t, FILE_OPERATOR_SEEK, FILE_OPERATOR_UNGETC, GETC_EOF, GETC_ERR, OPEN_F* */
+#include <deemon/filetypes.h>          /* DeeFileBuffer_New, DeeFileReader_Type, DeeFileWriter_Type, DeeSystemFileObject, DeeSystemFile_GetHandle, Dee_FILE_BUFFER_FREADONLY, Dee_FILE_BUFFER_MODE_AUTO */
+#include <deemon/format.h>             /* DeeFormat_VPrintf, PRFuSIZ, PRFx32 */
+#include <deemon/int.h>                /* DEFINE_UINT15, DEFINE_UINT32, DeeInt_* */
+#include <deemon/mapfile.h>            /* DeeMapFile* */
+#include <deemon/module.h>             /* DeeModule* */
+#include <deemon/none-operator.h>      /* DeeNone_OperatorCtor, DeeNone_OperatorSerialize */
+#include <deemon/none.h>               /* DeeNone_NewRef, return_none */
 #include <deemon/object.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/super.h>
-#include <deemon/system-features.h>    /* bcmpc(), ... */
+#include <deemon/seq.h>                /* DeeSeq_Type */
+#include <deemon/serial.h>             /* DeeSerial, DeeSerial_XPutFuncPtr, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString*, DeeUni_ToLower, WSTR_LENGTH */
+#include <deemon/stringutils.h>        /* Dee_UNICODE_UTF8_CURLEN, Dee_unicode_utf8seqlen, Dee_unicode_writeutf8 */
+#include <deemon/super.h>              /* DeeSuper* */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_get_osfhandle, CONFIG_HAVE_memcasecmp, EOF, access, bcmpc, close, creat, getc, memcasecmp, mmap, open, pread, putc, pwrite, read, readall, remainder, stderr, stdin, stdout, strchr, strend, sync, system, time, trunc, ungetc, write, writeall */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/lock.h>          /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 

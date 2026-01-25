@@ -25,11 +25,11 @@
 
 #include <deemon/api.h>
 
-#include <deemon/error.h>
-#include <deemon/int.h>
+#include <deemon/error.h>          /* DeeError_* */
+#include <deemon/int.h>            /* DeeInt_* */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/thread.h>
+#include <deemon/operator-hints.h> /* DeeNO_foreach_t, DeeType_RequireNativeOperator */
+#include <deemon/thread.h>         /* DeeThread_CheckInterrupt */
 
 #include "../../runtime/method-hint-defaults.h"
 #include "default-compare.h"

@@ -39,7 +39,7 @@ ClCompile.CompileAs = CompileAsC
 #pragma warning(disable: 4996) /* Prevent deprecation warnings */
 #endif /* _MSC_VER */
 
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, _msize, alloca, malloc_usable_size, strcmp */
 
 #include <hybrid/__alloca.h>  /* __hybrid_alloca, __hybrid_alloca_IS_alloca */
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__ */

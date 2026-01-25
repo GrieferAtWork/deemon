@@ -22,14 +22,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/bytes.h>
-#include <deemon/error.h>
-#include <deemon/float.h>
-#include <deemon/format.h>
-#include <deemon/none.h>
+#include <deemon/bytes.h>       /* DeeBytes* */
+#include <deemon/error.h>       /* DeeError_Throwf, DeeError_ValueError */
+#include <deemon/float.h>       /* DeeFloat_Print, Dee_FLOAT_PRINT_F* */
+#include <deemon/format.h>      /* DeeFormat_*, PRFuSIZ */
+#include <deemon/none.h>        /* DeeNone_Check */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
+#include <deemon/string.h>      /* CASE_WIDTH_nBYTE, DEFINE_STRING_EX, DeeAscii_ItoaDigits, DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_LENGTH, Dee_charptr_const, Dee_unicode_printer*, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
+#include <deemon/stringutils.h> /* DeeString_GetChar */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 /**/

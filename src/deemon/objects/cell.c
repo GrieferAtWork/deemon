@@ -24,15 +24,16 @@
 
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
-#include <deemon/bool.h>
-#include <deemon/cell.h>
+#include <deemon/bool.h>               /* DeeBool_NewFalse, return_bool, return_false, return_true */
+#include <deemon/cell.h>               /* DeeCell* */
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
+#include <deemon/gc.h>                 /* DeeGCObject_MALLOC, DeeGC_Track */
 #include <deemon/object.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
+#include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString_STR */
+#include <deemon/system-features.h>    /* access, read, write */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include "../runtime/strings.h"

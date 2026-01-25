@@ -25,15 +25,14 @@
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R */
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStruct */
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/method-hints.h>
-#include <deemon/mro.h>
+#include <deemon/error.h>              /* DeeError_*, ERROR_PRINT_DOHANDLE */
+#include <deemon/format.h>             /* DeeFormat_PrintOperatorRepr, DeeFormat_Printf, PRFuSIZ */
+#include <deemon/method-hints.h>       /* DeeMH_seq_operator_getitem_index_t, DeeMH_seq_operator_setitem_index_t, DeeObject_InvokeMethodHint, DeeObject_RequireMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/mro.h>                /* Dee_attrdesc, Dee_attrhint, Dee_attriter, Dee_attriter_initempty, Dee_attrspec */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/tuple.h>
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqSomeObject, DeeSeqSome_Type, DeeSeq_*, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
+#include <deemon/string.h>             /* DeeString* */
+#include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
 
 #include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/runtime_error.h"
@@ -44,6 +43,10 @@
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uint16_t, uintptr_t */
+
+/* clang-format off */
+#include <deemon/operator-hints.h> /* default__* (must be included manually) */
+/* clang-format on */
 
 DECL_BEGIN
 

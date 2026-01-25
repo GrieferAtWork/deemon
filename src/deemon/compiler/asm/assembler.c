@@ -23,24 +23,25 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeDbgSlab_MALLOC, DeeObject_Free, DeeObject_MALLOC, DeeSlab_FREE, DeeSlab_MALLOC, Dee_*alloc*, Dee_CollectMemory*, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/asm.h>
-#include <deemon/code.h>
+#include <deemon/asm.h>                /* ASM16_*, ASM32_JMP, ASM_*, DeeAsm_NextInstr, instruction_t */
+#include <deemon/code.h>               /* DeeCodeObject, DeeCode_*, DeeDDIObject, Dee_CODE_*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_code_metrics_init, Dee_except_handler, Dee_hostasm_code_init, code_addr_t, code_size_t, instruction_t */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/gc.h>
-#include <deemon/int.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/dict.h>               /* Dee_dict_item */
+#include <deemon/error.h>              /* DeeError_*, ERROR_HANDLED_RESTORE */
+#include <deemon/gc.h>                 /* DeeGCEnumTracked_Singleton */
+#include <deemon/int.h>                /* DeeInt_NewInt64 */
+#include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_HASHNX, Dee_MODULE_SYMBOL_EQUALS, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/none.h>               /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/rodict.h>
-#include <deemon/system-features.h>    /* memcpyc(), ... */
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/objmethod.h>          /* DeeCMethod_Check, DeeKwCMethod_Check */
+#include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Check, _DeeRoDict_GetRealVTab */
+#include <deemon/string.h>             /* DeeString*, Dee_EmptyString, STRING_ERROR_FIGNORE */
+#include <deemon/system-features.h>    /* bcmpc, bzero, link, memcpy*, memmovedownc, memmoveupc, mempcpyc, memset, trunc */
+#include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
+#include <deemon/tuple.h>              /* DeeTuple* */
 
 #include <hybrid/byteswap.h>      /* UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SETLE* */
 #include <hybrid/sequence/list.h> /* SLIST_* */

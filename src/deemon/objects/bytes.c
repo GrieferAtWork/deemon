@@ -24,23 +24,23 @@
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_CollectMemory, Dee_CollectMemoryoc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
+#include <deemon/bool.h>               /* return_bool, return_false, return_true */
+#include <deemon/bytes.h>              /* DeeBytes*, DeeObject_Bytes, DeeObject_TBytes, DeeSeq_ItemsToBytes, Dee_BYTES_PRINTER_INIT, Dee_EmptyBytes, Dee_bytes_printer, Dee_bytes_printer_* */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/format.h>             /* DeeFormat_* */
+#include <deemon/int.h>                /* DeeInt_* */
+#include <deemon/method-hints.h>       /* type_method_hint */
+#include <deemon/none.h>               /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/super.h>
-#include <deemon/system-features.h>    /* memcpy(), bzero(), ... */
-#include <deemon/tuple.h>
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_seq_range */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_AsDigit, DeeUni_IsSpace, Dee_ASCII_PRINTER_INIT, Dee_ascii_printer*, Dee_charptr_const, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
+#include <deemon/stringutils.h>        /* DeeString_GetChar */
+#include <deemon/super.h>              /* DeeObject_TGetBuf, DeeSuper* */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_*, bcmp, bzero, memcmp, memcpy, memmove, mempcpy, memset, memsetb, memsetl, memsetq, memsetw, read, write */
+#include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */

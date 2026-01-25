@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>              /* Dee_Free, Dee_Reallocc, Dee_TryReallocc */
 #include <deemon/arg.h>                /* DeeArg_UnpackStructKw */
-#include <deemon/code.h>
+#include <deemon/code.h>               /* Dee_EXCEPTION_HANDLER_F*, Dee_operator_t */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/error.h>
@@ -32,16 +32,18 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/hashset.h>
-#include <deemon/list.h>
-#include <deemon/map.h>
-#include <deemon/none.h>
+#include <deemon/dict.h>               /* DeeDict_Type */
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/hashset.h>            /* DeeHashSet_Type */
+#include <deemon/list.h>               /* DeeList_Type */
+#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/module.h>             /* DeeModuleObject, DeeModule_New */
+#include <deemon/none.h>               /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/system-features.h>    /* strend() */
-#include <deemon/tuple.h>
+#include <deemon/seq.h>                /* DeeSeq_* */
+#include <deemon/string.h>             /* DeeString*, Dee_EmptyString */
+#include <deemon/system-features.h>    /* bcmp, bcmpc, bzero, stdout, strchr, strend, write */
+#include <deemon/tuple.h>              /* DeeTuple_Type */
 #include <deemon/util/cache.h>         /* DECLARE_OBJECT_CACHE, DECLARE_STRUCT_CACHE */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_cinit */
 

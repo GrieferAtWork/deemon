@@ -27,17 +27,17 @@
 
 #include <deemon/api.h>
 
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
-#include <deemon/error.h>
-#include <deemon/float.h>
-#include <deemon/int.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* DeeBool_IsTrue, DeeBool_Type */
+#include <deemon/bytes.h>           /* DeeBytes* */
+#include <deemon/error.h>           /* DeeError_Throwf, DeeError_TypeError */
+#include <deemon/float.h>           /* CONFIG_HAVE_FPU, DeeFloat_Type, DeeFloat_VALUE */
+#include <deemon/int.h>             /* DeeInt_Type */
+#include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint */
+#include <deemon/none.h>            /* DeeNone_Type */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
-#include <deemon/system-features.h>
+#include <deemon/string.h>          /* DeeString*, WSTR_LENGTH */
+#include <deemon/super.h>           /* DeeSuper* */
+#include <deemon/system-features.h> /* CONFIG_HAVE_FPU */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_SIZE_T__ */
 

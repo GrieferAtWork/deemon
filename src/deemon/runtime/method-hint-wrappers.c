@@ -23,14 +23,14 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>          /* DeeArg_BadArgcEx, DeeArg_Unpack*, UNP* */
-#include <deemon/bool.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>         /* DeeBool_NewFalse, DeeBool_NewTrue, Dee_False, Dee_True, return_bool */
+#include <deemon/error.h>        /* DeeError_Throwf, DeeError_ValueError */
+#include <deemon/format.h>       /* PCKuSIZ, PRFuSIZ */
+#include <deemon/int.h>          /* DeeInt_* */
+#include <deemon/method-hints.h> /* DeeMA_*, DeeObject_InvokeMethodHint, DeeType_RequireMethodHint */
+#include <deemon/none.h>         /* DeeNone_Check, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/tuple.h>
+#include <deemon/tuple.h>        /* DEFINE_TUPLE, DeeNullableTuple_Type, DeeTuple* */
 /**/
 
 #include "../objects/seq/enumerate-cb.h"

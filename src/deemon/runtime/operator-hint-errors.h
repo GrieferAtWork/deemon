@@ -22,7 +22,9 @@
 
 #include <deemon/api.h>
 
+#include <deemon/computed-operators.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>     /* DeeNO_*_t */
 
 #include "method-hint-defaults.h"
 

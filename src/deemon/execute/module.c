@@ -24,25 +24,25 @@
 
 #include <deemon/alloc.h>              /* Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStructKw */
-#include <deemon/code.h>
+#include <deemon/code.h>               /* DeeCodeObject, DeeCode_Empty, DeeCode_Type, DeeFunctionObject, DeeFunction_*, Dee_code_frame, Dee_code_object, Dee_hostasm_function_init */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/exec.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/int.h>
-#include <deemon/module.h>
-#include <deemon/mro.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_DEL, DeeRT_ATTRIBUTE_ACCESS_SET, DeeRT_ErrRestrictedAttr, DeeRT_ErrUnboundAttrCStr */
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/exec.h>               /* DeeExec_GetHome, DeeModule_*, Dee_GetArgv */
+#include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
+#include <deemon/gc.h>                 /* DeeGCObject_Callocc, DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_TRACK, DeeGC_UNTRACK, Dee_gc_head_link, _Dee_GC_HEAD_UNTRACKED_INIT */
+#include <deemon/int.h>                /* DeeInt_NewUInt128 */
+#include <deemon/module.h>             /* DeeInteractiveModule_Check, DeeModule*, Dee_MODSYM_F*, Dee_MODULE_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_INIT_INITIALIZED, Dee_MODULE_INIT_UNINITIALIZED, Dee_MODULE_MODDATA_INIT_CODE, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_MODULE_STRUCT_EX, Dee_MODULE_SYMBOL_EQUALS_STR, Dee_MODULE_SYMBOL_GETDOCSTR, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_*, Dee_static_module_struct, _Dee_MODULE_* */
+#include <deemon/mro.h>                /* DeeObject_GenericFindAttrInfoStringLenHash, DeeObject_TGenericFindAttr, DeeObject_TGenericIterAttr, Dee_ATTRINFO_CUSTOM, Dee_ATTRINFO_MODSYM, Dee_ATTRITER_HEAD, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrhint, Dee_attrinfo, Dee_attriter, Dee_attriter_init, Dee_attriter_type, Dee_attriterchain_builder, Dee_attriterchain_builder_*, Dee_attrperm_t, Dee_attrspec */
+#include <deemon/none.h>               /* DeeNone_NewRef, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/seq.h>                /* DeeRefVector_NewReadonly */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString*, Dee_EmptyString, STRING_ERROR_FIGNORE, WSTR_LENGTH */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_*, DeeSystem_DEFINE_*, access, bcmpc, memcpy*, memset, open, strcasecmp, strcasecmpz, strcmp, strcmpz, strlen, system */
+#include <deemon/system.h>             /* DeeSystem_* */
+#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self */
+#include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
 #include <deemon/util/atomic.h>        /* Dee_ATOMIC_ACQUIRE, Dee_atomic_cmpxch_val, atomic_* */
 #include <deemon/util/futex.h>         /* DeeFutex_WaitPtr, DeeFutex_WakeAll */
 #include <deemon/util/lock.h>          /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_init */
@@ -58,13 +58,12 @@
 #include <stdint.h>  /* uint16_t, uintptr_t */
 
 #ifndef CONFIG_NO_DEX
-#include <deemon/dex.h>
+#include <deemon/dex.h> /* DeeDexObject, DeeDex_Check, Dee_module_dexdata, dex_initialize */
 #endif /* !CONFIG_NO_DEX */
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#include <deemon/attribute.h>
-#include <deemon/bool.h>
-#include <deemon/list.h>
+#include <deemon/bool.h> /* return_bool */
+#include <deemon/list.h> /* DeeListObject */
 
 #include <hybrid/sched/yield.h>   /* SCHED_YIELD */
 #include <hybrid/sequence/list.h> /* LIST_ENTRY_UNBOUND_INITIALIZER */

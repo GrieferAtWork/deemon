@@ -27,15 +27,15 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/bytes.h>
+#include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/computed-operators.h>
-#include <deemon/int.h>
+#include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/object.h>
-#include <deemon/regex.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>    /* memcpy() */
+#include <deemon/regex.h>              /* DeeRegex*, DeeString_GetRegex, DeeString_GetRegexFlags, Dee_RE_* */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString*, Dee_EmptyString, STRING_ERROR_FSTRICT */
+#include <deemon/system-features.h>    /* bzero, memcpy */
 #include <deemon/util/atomic.h>        /* atomic_read, atomic_write */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_* */
 

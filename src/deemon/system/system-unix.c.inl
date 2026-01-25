@@ -23,13 +23,14 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC */
-#include <deemon/error.h>
-#include <deemon/error_types.h>
-#include <deemon/format.h>
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/error_types.h>     /* DeeSystemErrorObject */
+#include <deemon/format.h>          /* Dee_sprintf */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
+#include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
+#include <deemon/system-features.h> /* AT_FDCWD, CONFIG_HAVE_*, DeeSystem_DEFINE_strnlen, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_IF_E3, frealpath, frealpath4, get_osfhandle, link, lstat, read, readlink, stat, strnlen */
+#include <deemon/system.h>          /* DeeNTSystem_PrintFilenameOfHandle, DeeNTSystem_TranslateNtError, DeeSystem_GetFilenameOfFD, DeeSystem_PrintFilenameOfFD, DeeUnixSystem_* */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 

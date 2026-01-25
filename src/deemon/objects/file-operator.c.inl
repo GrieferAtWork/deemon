@@ -19,12 +19,13 @@
  */
 #include <deemon/api.h>
 
-#include <deemon/error-rt.h>
-#include <deemon/file.h>
-#include <deemon/format.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>        /* DeeRT_ErrIntegerOverflowS */
+#include <deemon/file.h>            /* DeeFileObject, DeeFileTypeObject, DeeFileType_*, DeeFile_*, DeeType_AsFileType, Dee_FILEIO_FNORMAL, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_ioflag_t, FILE_OPERATOR_*, GETC_EOF, GETC_ERR */
+#include <deemon/format.h>          /* PCK* */
+#include <deemon/none.h>            /* DeeNone_Check, DeeNone_Type */
 #include <deemon/object.h>
-#include <deemon/super.h>
+#include <deemon/super.h>           /* DeeSuper* */
+#include <deemon/system-features.h> /* close, getc, pread, putc, pwrite, read, sync, trunc, ungetc, write */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

@@ -27,13 +27,12 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/asm.h>
-#include <deemon/bool.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/module.h>
-#include <deemon/tuple.h>
+#include <deemon/asm.h>       /* Dee_instruction_t */
+#include <deemon/bool.h>      /* DeeBoolObject, Dee_False, Dee_FalseTrue, Dee_True */
+#include <deemon/error.h>     /* DeeError_IllegalInstruction, DeeError_Throwf */
+#include <deemon/format.h>    /* PRFu16 */
+#include <deemon/module.h>    /* Dee_module_object */
+#include <deemon/types.h>     /* DREF, DeeObject, Dee_refcnt_t */
 #include <deemon/util/lock.h> /* Dee_atomic_rwlock_t */
 
 #include <hybrid/compiler.h>

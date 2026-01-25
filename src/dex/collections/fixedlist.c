@@ -28,18 +28,18 @@
 
 #include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_Freea, Dee_Mallocac, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryMallocac, _Dee_MallococBufsize */
 #include <deemon/arg.h>             /* DeeArg_Unpack, DeeArg_Unpack1Or2, UNPuSIZ */
-#include <deemon/bool.h>
-#include <deemon/dex.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/int.h>
-#include <deemon/method-hints.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/system-features.h>
-#include <deemon/thread.h>
+#include <deemon/bool.h>            /* return_false, return_true */
+#include <deemon/error-rt.h>        /* DeeRT_ErrIndexOutOfBounds, DeeRT_ErrUnboundIndex */
+#include <deemon/error.h>           /* DeeError_Throwf, DeeError_UnpackError */
+#include <deemon/format.h>          /* PRFuSIZ */
+#include <deemon/gc.h>              /* DeeGCObject_*alloc*, DeeGCObject_Free, DeeGC_TRACK, DeeGC_Track */
+#include <deemon/int.h>             /* DeeInt_Check, DeeInt_NewSize */
+#include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/object.h>
+#include <deemon/seq.h>             /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, DeeSeq_Unpack, Dee_EmptySeq, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, Dee_seq_range, type_nii */
+#include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/system-features.h> /* CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memsetp, bzeroc, memcpyc, memsetp */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_cinit, Dee_atomic_rwlock_init */
 

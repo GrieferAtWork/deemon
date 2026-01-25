@@ -29,14 +29,12 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
-#include <deemon/arg.h>             /* DeeArg_UnpackStruct1XOr2X, DeeArg_UnpackStruct2X, UNPuSIZ, UNPxSIZ */
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/none.h>
+#include <deemon/arg.h>             /* DeeArg_UnpackStruct1XOr2X, DeeArg_UnpackStruct2X, UNPuSIZ, UNPxSIZ, _DeeArg_AsObject */
+#include <deemon/error-rt.h>        /* DeeRT_ErrIntegerOverflowUMul */
+#include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/system-features.h> /* strnlen() */
+#include <deemon/objmethod.h>       /* DEFINE_CMETHOD, DEFINE_CMETHOD1 */
+#include <deemon/system-features.h> /* CONFIG_HAVE_strnlen, DeeSystem_DEFINE_strnlen, calloc, memcpyc, realloc, strnlen */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UMUL */
 

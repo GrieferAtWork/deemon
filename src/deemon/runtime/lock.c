@@ -22,12 +22,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/thread.h>
-#include <deemon/util/atomic.h> /* Dee_ATOMIC_*, atomic_* */
-#include <deemon/util/futex.h>  /* DeeFutex_* */
-#include <deemon/util/lock.h>   /* Dee_event_*, Dee_semaphore_*, Dee_shared_lock_*, Dee_shared_rwlock_*, _Dee_semaphore_waiting_end, _Dee_semaphore_waiting_start, _Dee_shared_rwlock_mark_waiting */
-#include <deemon/util/once.h>   /* Dee_once_*, _Dee_ONCE_* */
-#include <deemon/util/rlock.h>  /* Dee_ratomic_rwlock_endwrite_ex, Dee_rshared_lock_*, Dee_rshared_rwlock_*, _Dee_rshared_lock_waiting_end, _Dee_rshared_lock_waiting_start, _Dee_rshared_rwlock_mark_waiting, _Dee_rshared_rwlock_wake */
+#include <deemon/error.h>           /* DeeError_RuntimeError, DeeError_Throwf */
+#include <deemon/system-features.h> /* read, write */
+#include <deemon/thread.h>          /* DeeThread_GetTimeMicroSeconds */
+#include <deemon/util/atomic.h>     /* Dee_ATOMIC_*, atomic_* */
+#include <deemon/util/futex.h>      /* DeeFutex_* */
+#include <deemon/util/lock.h>       /* Dee_event_*, Dee_semaphore_*, Dee_shared_lock_*, Dee_shared_rwlock_*, _Dee_semaphore_waiting_end, _Dee_semaphore_waiting_start, _Dee_shared_lock_waiting_end, _Dee_shared_lock_waiting_start, _Dee_shared_rwlock_mark_waiting */
+#include <deemon/util/once.h>       /* Dee_once_*, _Dee_ONCE_* */
+#include <deemon/util/rlock.h>      /* Dee_ratomic_rwlock_endwrite_ex, Dee_rshared_lock_*, Dee_rshared_rwlock_*, _Dee_rshared_lock_waiting_end, _Dee_rshared_lock_waiting_start, _Dee_rshared_rwlock_mark_waiting, _Dee_rshared_rwlock_wake */
 
 #include <hybrid/overflow.h>       /* OVERFLOW_UADD, OVERFLOW_USUB */
 #include <hybrid/sched/__gettid.h> /* __hybrid_gettid, __hybrid_gettid_iscaller */

@@ -22,17 +22,18 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>      /* DeeArg_Unpack*, UNPdN */
-#include <deemon/bool.h>
-#include <deemon/class.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/arg.h>             /* DeeArg_Unpack*, UNPdN */
+#include <deemon/bool.h>            /* return_bool */
+#include <deemon/class.h>           /* DeeClass_CallOperator, DeeClass_CallOperatorf */
+#include <deemon/error-rt.h>        /* DeeRT_ErrIntegerOverflowS */
+#include <deemon/error.h>           /* DeeError_NOTIMPLEMENTED */
+#include <deemon/file.h>            /* DeeFileObject, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, Dee_FILEIO_FNORMAL, Dee_ioflag_t, FILE_OPERATOR_*, GETC_EOF, GETC_ERR, OPERATOR_FILE_* */
+#include <deemon/format.h>          /* PCK* */
+#include <deemon/int.h>             /* DeeInt_* */
+#include <deemon/none.h>            /* DeeNone_Check, return_none */
 #include <deemon/object.h>
-#include <deemon/super.h>
+#include <deemon/super.h>           /* DeeSuperObject, DeeSuper_Type */
+#include <deemon/system-features.h> /* close, getc, pread, putc, pwrite, read, sync, trunc, ungetc, write */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

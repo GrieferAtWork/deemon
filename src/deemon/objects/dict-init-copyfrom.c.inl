@@ -25,7 +25,10 @@
 
 #include <deemon/api.h>
 
-#include <deemon/util/lock.h> /* Dee_atomic_rwlock_init */
+#include <deemon/dict.h>            /* DeeDict_LockEndRead, Dee_DICT_HIDXIO_FROMALLOC, Dee_dict_hidxio, Dee_dict_item, _DeeDict_GetRealVTab, _DeeDict_SetRealVTab */
+#include <deemon/object.h>
+#include <deemon/system-features.h> /* memcpy* */
+#include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 
 #include <stdbool.h> /* false, true */
 #include <stddef.h>  /* size_t */

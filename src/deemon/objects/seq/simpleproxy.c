@@ -24,12 +24,12 @@
 
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_BadArgc1 */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* return_bool, return_false */
 #include <deemon/computed-operators.h>
-#include <deemon/int.h>
-#include <deemon/method-hints.h>
+#include <deemon/int.h>                /* DeeInt_NewUIntptr, DeeInt_Type */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/object.h>
-#include <deemon/seq.h>
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"

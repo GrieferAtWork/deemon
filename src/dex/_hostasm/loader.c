@@ -27,10 +27,11 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>  /* Dee_*alloc* */
-#include <deemon/asm.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
+#include <deemon/alloc.h>           /* Dee_*alloc* */
+#include <deemon/asm.h>             /* ASM32_JMP, ASM_*, DeeAsm_*, Dee_instruction_t */
+#include <deemon/code.h>            /* Dee_CODE_FYIELDING, Dee_instruction_t */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/system-features.h> /* memcpyc, memmovedownc */
 
 #include <hybrid/byteswap.h>  /* UNALIGNED_GETLE16, UNALIGNED_GETLE32 */
 #include <hybrid/unaligned.h> /* UNALIGNED_GETLE16, UNALIGNED_GETLE32 */

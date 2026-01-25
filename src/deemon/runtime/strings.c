@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/string.h>
+#include <deemon/string.h> /* DEFINE_STRING_EX */
 
 #define DEF_STRING(name, str, hash32, hash64) \
 	INTERN DEFINE_STRING_EX(name, str, hash32, hash64);

@@ -26,8 +26,8 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeDbgObject_Free, DeeDbgObject_UntrackAlloc, DeeDbgSlab_*, DeeDbg_*, DeeObject_Free, DeeSlabInfo, DeeSlab_*, Dee_*alloc*, Dee_Free, Dee_SLAB_MINSIZE */
-#include <deemon/format.h>
-#include <deemon/system-features.h>
+#include <deemon/format.h>          /* PRFuSIZ */
+#include <deemon/system-features.h> /* bzero*, memset */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_* */
 

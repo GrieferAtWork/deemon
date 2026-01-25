@@ -22,12 +22,12 @@
 
 #include <deemon/api.h>
 
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
+#include <deemon/error-rt.h> /* DeeRT_ErrIntegerOverflowUAdd, DeeRT_ErrIntegerOverflowUMul */
+#include <deemon/error.h>    /* DeeError_* */
+#include <deemon/format.h>   /* DeeFormat_RepeatUtf8 */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
+#include <deemon/string.h>   /* DeeString*, DeeUni_AsDigit, STRING_ERROR_FIGNORE, WSTR_LENGTH */
+#include <deemon/super.h>    /* DeeSuper* */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_UMUL */
 

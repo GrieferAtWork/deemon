@@ -29,9 +29,9 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/tuple.h>
+#include <deemon/string.h>           /* DeeStringObject */
+#include <deemon/system-features.h>  /* memcpyc */
+#include <deemon/tuple.h>            /* Dee_EmptyTuple */
 
 #include "../../runtime/strings.h"
 

@@ -24,27 +24,28 @@
 
 #include <deemon/accu.h>                /* Dee_accu, Dee_accu_* */
 #include <deemon/alloc.h>               /* DeeObject_FREE, DeeObject_MALLOC */
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
-#include <deemon/class.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/int.h>
-#include <deemon/map.h>
-#include <deemon/method-hints.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>                /* DeeBool*, Dee_True, return_bool, return_false, return_true */
+#include <deemon/bytes.h>               /* DeeBytes* */
+#include <deemon/class.h>               /* DeeClass_GetMember */
+#include <deemon/error-rt.h>            /* DeeRT_Err* */
+#include <deemon/error.h>               /* DeeError_*, ERROR_PRINT_DOHANDLE */
+#include <deemon/format.h>              /* PCKdSIZ, PCKuSIZ, PRFdSIZ, PRFuSIZ */
+#include <deemon/gc.h>                  /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_Track */
+#include <deemon/instancemethod.h>      /* DeeInstanceMethod_NewInherited */
+#include <deemon/int.h>                 /* DEFINE_*INT*, DeeIntObject, DeeInt_* */
+#include <deemon/map.h>                 /* Dee_EmptyMapping */
+#include <deemon/method-hints.h>        /* DeeMH_map_operator_trygetitem_t, DeeMH_seq_append_t, DeeMH_seq_enumerate_index_reverse_t, DeeMH_seq_find_t, DeeMH_seq_find_with_key_t, DeeMH_seq_insert_t, DeeMH_seq_operator_bounditem_index_t, DeeMH_seq_operator_bounditem_t, DeeMH_seq_operator_delitem_index_t, DeeMH_seq_operator_foreach_t, DeeMH_seq_operator_getitem_index_t, DeeMH_seq_operator_getitem_t, DeeMH_seq_operator_trygetitem_index_t, DeeMH_seq_operator_trygetitem_t, DeeMH_seq_pop_t, DeeMH_seq_remove_t, DeeMH_seq_remove_with_key_t, DeeObject_InvokeMethodHint, DeeType_RequireMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t */
+#include <deemon/module.h>              /* DeeModule_CallExternStringf */
+#include <deemon/none.h>                /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/set.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
-#include <deemon/system-features.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/operator-hints.h>      /* DeeNO_*_t, DeeType_RequireNativeOperator */
+#include <deemon/seq.h>                 /* DeeIterator_*, DeeSeqOne_DecrefSymbolic, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_*, Dee_EmptySeq, Dee_seq_range */
+#include <deemon/set.h>                 /* DeeSet_NewUniversal, DeeSet_Type, Dee_EmptySet */
+#include <deemon/string.h>              /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
+#include <deemon/super.h>               /* DeeSuper_New */
+#include <deemon/system-features.h>     /* bcmp, memcpyc, memmovedownc, memset, remainder, strcmp, strlen */
+#include <deemon/thread.h>              /* DeeThread_CheckInterrupt */
+#include <deemon/tuple.h>               /* DeeNullableTuple_Type, DeeTuple*, Dee_nullable_tuple_builder*, Dee_tuple_builder* */
 #include <deemon/util/lock.h>           /* Dee_atomic_lock_init */
 #include <deemon/util/simple-hashset.h> /* Dee_simple_hashset, Dee_simple_hashset_* */
 

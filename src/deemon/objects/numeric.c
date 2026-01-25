@@ -24,16 +24,16 @@
 
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStructKw */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* DeeBool_NewFalse, return_bool, return_false, return_true */
 #include <deemon/computed-operators.h>
-#include <deemon/float.h>
-#include <deemon/int.h>
-#include <deemon/none-operator.h>
-#include <deemon/numeric.h>
+#include <deemon/float.h>              /* CONFIG_HAVE_FPU, CONFIG_HAVE_IEEE754, DeeFloatObject, DeeFloat_New, DeeFloat_Type, Dee_DEFINE_FLOAT */
+#include <deemon/int.h>                /* DEFINE_INT15, DeeIntObject, DeeInt_* */
+#include <deemon/none-operator.h>      /* DeeNone_* */
+#include <deemon/numeric.h>            /* DeeNumeric_Type */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/tuple.h>
+#include <deemon/string.h>             /* DEFINE_STRING_EX, DeeString_STR */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_*, ceil, floor, isfinite, isgreater, isgreaterequal, isinf, isless, islessequal, islessgreater, isnan, isnormal, isunordered, nextafter, round, trunc */
+#include <deemon/tuple.h>              /* DeeTuple* */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/byteswap.h>  /* BSWAP* */

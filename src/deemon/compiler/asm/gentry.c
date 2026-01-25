@@ -23,14 +23,14 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* Dee_Callocc, Dee_Free */
-#include <deemon/asm.h>
-#include <deemon/code.h>
+#include <deemon/asm.h>                /* ASM_* */
+#include <deemon/code.h>               /* Dee_CODE_FFINALLY, Dee_EXCEPTION_HANDLER_F*, code_addr_t */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/object.h>
-#include <deemon/system-features.h>
-#include <deemon/tuple.h>
+#include <deemon/system-features.h>    /* bzero, memmovedownc */
+#include <deemon/tuple.h>              /* DeeTuple* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

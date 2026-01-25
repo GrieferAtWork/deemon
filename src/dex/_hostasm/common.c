@@ -27,13 +27,14 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>  /* Dee_*alloc*, Dee_Free, Dee_Freea */
-#include <deemon/asm.h>
-#include <deemon/bool.h>
-#include <deemon/class.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
+#include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free, Dee_Freea */
+#include <deemon/asm.h>             /* ASM_ISEXTENDED, ASM_ISPREFIX, Dee_instruction_t */
+#include <deemon/code.h>            /* DeeCodeObject, DeeCode_NAME, DeeCode_Type, Dee_code_addr_t, Dee_instruction_t */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/format.h>          /* PRF* */
+#include <deemon/module.h>          /* Dee_module_object */
+#include <deemon/object.h>
+#include <deemon/system-features.h> /* bzero, memcmp, memcpy*, memmovedownc, memmoveupc, memset */
 
 #include <hybrid/align.h>         /* CEILDIV */
 #include <hybrid/sequence/list.h> /* RINGQ_*, TAILQ_ISBOUND */

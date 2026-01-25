@@ -40,7 +40,7 @@
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_TryMallocc */
 #include <deemon/object.h>
-#include <deemon/system-features.h> /* memcpyc */
+#include <deemon/system-features.h> /* memcpyc, memmoveupc */
 
 #include <stddef.h> /* NULL, size_t */
 

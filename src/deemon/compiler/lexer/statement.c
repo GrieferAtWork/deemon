@@ -23,15 +23,15 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_CollectMemoryc, Dee_Free */
-#include <deemon/code.h>
+#include <deemon/code.h>            /* Dee_CODE_FYIELDING */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/none.h>
+#include <deemon/none.h>            /* Dee_None */
 #include <deemon/object.h>
-#include <deemon/system-features.h>
-#include <deemon/tuple.h>
+#include <deemon/system-features.h> /* memmoveupc */
+#include <deemon/tuple.h>           /* Dee_EmptyTuple */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

@@ -25,16 +25,16 @@
 
 #include <deemon/api.h>
 
-#include <deemon/bool.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/int.h>
-#include <deemon/kwds.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>   /* DeeBool_For, Dee_False, Dee_True */
+#include <deemon/dict.h>   /* DeeDict_New, DeeDict_SetItemStringLen */
+#include <deemon/error.h>  /* DeeError_NOTIMPLEMENTED */
+#include <deemon/int.h>    /* DeeInt_FromString, Dee_INT_STRING*, Dee_TAtoiu */
+#include <deemon/kwds.h>   /* DeeKw_ForceWrap */
+#include <deemon/none.h>   /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
-#include <deemon/tuple.h>
+#include <deemon/string.h> /* DeeString_FromBackslashEscaped, STRING_ERROR_FSTRICT */
+#include <deemon/super.h>  /* DeeSuper* */
+#include <deemon/tuple.h>  /* DeeTuple* */
 
 #include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* NULL, size_t */

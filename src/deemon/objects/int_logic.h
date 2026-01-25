@@ -32,9 +32,9 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_Free */
-#include <deemon/int.h>
+#include <deemon/int.h>             /* DeeIntObject, DeeInt_Type, Dee_DIGIT_BITS, Dee_SIZEOF_DIGIT, Dee_sdigit_t */
 #include <deemon/object.h>
-#include <deemon/system-features.h> /* memsetw/memsetl/... */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, memset, memsetl, memsetq, memsetw */
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint32_t */

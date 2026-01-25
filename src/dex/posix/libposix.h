@@ -23,15 +23,14 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_ReleaseSystemMemory, _Dee_MallococBufsize */
-#include <deemon/dex.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/int.h>
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/file.h>            /* Dee_OPEN_F* */
+#include <deemon/int.h>             /* DeeInt_FromBytes */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
-#include <deemon/thread.h>
+#include <deemon/string.h>          /* DeeStringObject */
+#include <deemon/system-features.h> /* AT_EMPTY_PATH, AT_FDCWD, AT_REMOVEDIR, AT_REMOVEREG, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_IF_E3, O_ACCMODE, O_APPEND, O_CLOEXEC, O_CREAT, O_DIRECT, O_EXCL, O_EXLOCK, O_NOATIME, O_NOFOLLOW, O_NONBLOCK, O_RDONLY, O_RDWR, O_SHLOCK, O_SYNC, O_TRUNC, O_WRONLY, RENAME_NOREPLACE, _O_APPEND, close, utimbuf, utimbuf32, utimbuf64 */
+#include <deemon/system.h>          /* DeeUnixSystem_ThrowErrorf */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 
 #include <hybrid/host.h> /* _WIN32 */
 

@@ -28,13 +28,14 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
-#include <deemon/dex.h>
-#include <deemon/none.h>
+#include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
+#include <deemon/error.h>           /* DeeError_Catch, DeeError_NoSymlink */
+#include <deemon/none.h>            /* DeeNone_Check, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
+#include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
+#include <deemon/string.h>          /* DeeString*, Dee_wchar_t */
+#include <deemon/system-features.h> /* AT_CHANGE_BTIME, AT_EMPTY_PATH, AT_FDCWD, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, O_NOFOLLOW, O_RDWR, creat, creat64, futime, futime32, futime64, futimens, futimens64, futimes, futimes64, lutime, lutime32, lutime64, lutimens, lutimens64, lutimes, lutimes64, open, openat, openat64, open64, utimbuf, utimbuf32, utimbuf64, utime, utime32, utime64, utimens, utimensat, utimensat64, utimens64, utimes, utimes64, wcreat, wcreat64, wlutime, wlutime32, wlutime64, wopen, wopenat, wopenat64, wopen64, wutime, wutime32, wutime64 */
+#include <deemon/system.h>          /* DeeNTSystem_CreateFileNoATime, DeeNTSystem_GetHandle, DeeNT_DWORD, DeeUnixSystem_GetFD */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 

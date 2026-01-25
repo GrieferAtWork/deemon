@@ -23,8 +23,8 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_CollectMemoryc, Dee_Freea, Dee_UntrackAlloc */
-#include <deemon/error.h>
-#include <deemon/system-features.h> /* bcmpc(), ... */
+#include <deemon/error.h>           /* DeeError_RuntimeError, DeeError_Throwf */
+#include <deemon/system-features.h> /* bcmpc, memchr, memmovedownc, mempcpyc, strlen */
 
 #include "cmdline.h"
 

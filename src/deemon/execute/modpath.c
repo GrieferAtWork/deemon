@@ -23,27 +23,27 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_Freea */
-#include <deemon/code.h>
-#include <deemon/dec.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/heap.h>
-#include <deemon/method-hints.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/code.h>            /* DeeCodeObject, DeeCode_Type, Dee_CODE_FVARARGS */
+#include <deemon/dec.h>             /* DFILE_LIMIT, Dec_Ehdr, DeeDecWriter, DeeDecWriter_*, DeeDec_*, DeeModule_OpenDec, Dee_DEC_TYPE_IMAGE, Dee_DEC_TYPE_RELOC */
+#include <deemon/error-rt.h>        /* DeeRT_ATTRIBUTE_ACCESS_GET, DeeRT_Err* */
+#include <deemon/error.h>           /* DeeError_*, Dee_ERROR_HANDLED_NORMAL, Dee_ERROR_HANDLED_RESTORE, ERROR_PRINT_DOHANDLE */
+#include <deemon/format.h>          /* DeeFormat_Repeat, Dee_sprintf, PRFuSIZ */
+#include <deemon/gc.h>              /* DeeGCObject_CALLOC, DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_*, Dee_gc_head, Dee_gc_head_link */
+#include <deemon/heap.h>            /* DeeDbgHeap_AddHeapRegion, DeeHeap_GetRegionOf, Dee_heapregion */
+#include <deemon/method-hints.h>    /* type_method_hint */
+#include <deemon/module.h>          /* DeeModule*, Dee_DEC_FDISABLE, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_INIT_INITIALIZED, Dee_MODULE_INIT_UNINITIALIZED, Dee_MODULE_OPENINPATH_FNORMAL, Dee_MODULE_OPENINPATH_FRELMODULE, Dee_MODULE_OPENINPATH_FTHROWERROR, Dee_MODULE_STRUCT, Dee_compiler_options, Dee_module_*, _Dee_MODULE_* */
+#include <deemon/none.h>            /* DeeNone_Check */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
-#include <deemon/types.h>
-#include <deemon/util/atomic-ref.h> /* Dee_ATOMIC_REF, Dee_ATOMIC_REF_INIT, Dee_atomic_ref* */
+#include <deemon/objmethod.h>       /* DeeCMethod*_*, DeeCMethodObject, DeeKwCMethod_Type */
+#include <deemon/serial.h>          /* DeeSerial */
+#include <deemon/string.h>          /* DEFINE_STRING, DeeString*, DeeUni_*, Dee_EmptyString, Dee_UNICODE_IS*, Dee_UNICODE_PRINTER_*, Dee_string_object, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_F*, WSTR_LENGTH */
+#include <deemon/stringutils.h>     /* DeeString_GetChar, DeeString_SetChar, Dee_unicode_* */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_*, DeeSystem_DlOpen_USE_LoadLibrary, DeeSystem_DlOpen_USE_dlopen, ENV_LOCK, ENV_UNLOCK, RTLD_GLOBAL, RTLD_LOCAL, basename, bcmp, bcmpc, bzero*, dl_iterate_phdr, dladdr, dlgethandle, dlmodulename, dlopen, environ, getenv, memcasecmp, memchr, memcmp, memcpy*, memmovedownc, memmoveupc, mempcpyc, memrchr, memset, open, remove, strcasecmp, strchr, strcmp, strcpy, strend, strlen, strrchr, to(lower|upper), wcslen, wenviron, wgetenv */
+#include <deemon/system.h>          /* DeeNTSystem_IsBufferTooSmall, DeeNTSystem_IsIntr, DeeSystem_*, DeeUnixSystem_PrintLinkString */
+#include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_Self, Dee_import_frame */
+#include <deemon/tuple.h>           /* DeeTuple*, Dee_TUPLE_BUILDER_INIT, Dee_tuple_builder* */
+#include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_TYPE, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_weakref_support_init, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, _Dee_HashSelectC */
+#include <deemon/util/atomic-ref.h> /* Dee_ATOMIC_REF, Dee_ATOMIC_REF_INIT, Dee_atomic_ref_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 #include <deemon/util/nrlock.h>     /* Dee_NRLOCK_OK, Dee_NRSHARED_LOCK_INIT, Dee_nrshared_lock_* */
@@ -91,10 +91,10 @@
 #endif /* !DLOPEN_NULL_FLAGS */
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#include <deemon/dex.h>
-#include <deemon/exec.h>
-#include <deemon/file.h>
-#include <deemon/mapfile.h>
+#include <deemon/dex.h>     /* DEX, DeeDexObject, DeeDex_New, DeeModule_ClearDexModuleCaches, DeeModule_OpenDex, DeeModule_UnloadAllDexModules, Dee_DEXSYM_PROPERTY, Dee_DEXSYM_READONLY, Dee_dex_symbol, Dee_module_dexdata, _Dee_MODULE_DEXDATA_*, dex_load_handle */
+#include <deemon/exec.h>    /* DeeExec_*, DeeModule_* */
+#include <deemon/file.h>    /* DeeFile_*, OPEN_F* */
+#include <deemon/mapfile.h> /* DeeMapFile* */
 
 #include <hybrid/sequence/rbtree.h> /* RBTREE_ROOT */
 
@@ -5030,9 +5030,9 @@ DECL_END
 #include <deemon/compiler/tpp.h>
 #include <deemon/exec.h>
 #include <deemon/file.h>
-#include <deemon/filetypes.h>
+#include <deemon/filetypes.h> /* DeeFile_OpenRoMemory, DeeFile_ReleaseMemory */
 #include <deemon/gc.h>
-#include <deemon/list.h>
+#include <deemon/list.h> /* DeeListObject, DeeList_* */
 #include <deemon/none.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>

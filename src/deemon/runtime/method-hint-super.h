@@ -22,9 +22,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/method-hints.h>
+#include <deemon/method-hints.h> /* Dee_seq_enumerate_index_t, Dee_seq_enumerate_t */
 #include <deemon/object.h>
-#include <deemon/super.h>
+#include <deemon/super.h>        /* DeeSuperObject */
 
 #include "method-hints.h"
 

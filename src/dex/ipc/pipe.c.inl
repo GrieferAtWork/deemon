@@ -28,12 +28,13 @@
 
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DeeArg_Unpack0Or1X, UNPuSIZ */
-#include <deemon/file.h>
-#include <deemon/filetypes.h>
-#include <deemon/format.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
-#include <deemon/tuple.h>
+#include <deemon/file.h>            /* DeeFileObject_Init, DeeFileTypeObject, DeeFileType_Type, DeeSystemFile_Type, DeeSystem_FILE_USE_nt_HANDLE, DeeSystem_FILE_USE_unix_fd */
+#include <deemon/filetypes.h>       /* DeeSystemFileObject, DeeSystemFile_HAVE_sf_filename */
+#include <deemon/format.h>          /* PRFu32 */
+#include <deemon/object.h>
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, FD_CLOEXEC, FIOCLEX, F_GETFD, F_SETFD, O_CLOEXEC, fcntl, ioctl, pipe, pipe2 */
+#include <deemon/system.h>          /* DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
+#include <deemon/tuple.h>           /* DeeTuple* */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/typecore.h>        /* __SIZEOF_SIZE_T__ */

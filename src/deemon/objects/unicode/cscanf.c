@@ -24,15 +24,15 @@
 
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_Unpack2 */
-#include <deemon/bytes.h>
+#include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>
-#include <deemon/int.h>
+#include <deemon/error.h>              /* DeeError_Throwf, DeeError_ValueError */
+#include <deemon/int.h>                /* DeeInt_FromString, DeeInt_NewSize, Dee_INT_STRING* */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString*, DeeUni_*, Dee_EmptyString, STRING_ERROR_FNORMAL, WSTR_LENGTH */
+#include <deemon/stringutils.h>        /* Dee_unicode_readutf8, Dee_unicode_readutf8_n */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_* */
 

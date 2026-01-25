@@ -25,6 +25,8 @@
 #include <deemon/alloc.h>             /* Dee_Free, Dee_Mallocc */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
+#include <deemon/none.h>              /* Dee_None */
+#include <deemon/types.h>             /* DREF */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

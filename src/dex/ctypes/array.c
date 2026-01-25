@@ -28,18 +28,18 @@
 
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_TryCallocc */
 #include <deemon/arg.h>             /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/int.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* return_false, return_true */
+#include <deemon/error-rt.h>        /* DeeRT_ErrIndexOutOfBounds, DeeRT_ErrIndexOverflow */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/format.h>          /* PRFuSIZ */
+#include <deemon/gc.h>              /* DeeGCObject_CALLOC, DeeGCObject_FREE, DeeGC_TRACK */
+#include <deemon/int.h>             /* DeeInt_NewSize */
+#include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint */
+#include <deemon/none.h>            /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h> /* bzero() */
+#include <deemon/seq.h>             /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeq_Type, Dee_seq_range, _DeeSeqRange_Clamp */
+#include <deemon/string.h>          /* DeeString*, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_PRINT, Dee_ascii_printer* */
+#include <deemon/system-features.h> /* bzero */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
 

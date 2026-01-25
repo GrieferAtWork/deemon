@@ -28,13 +28,14 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
-#include <deemon/dex.h>
-#include <deemon/file.h>
-#include <deemon/none.h>
+#include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
+#include <deemon/file.h>            /* DeeFile_Check, DeeFile_Trunc */
+#include <deemon/none.h>            /* DeeNone_Check, return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
+#include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
+#include <deemon/string.h>          /* DeeString*, Dee_wchar_t */
+#include <deemon/system-features.h> /* AT_EMPTY_PATH, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, O_RDWR, creat, creat64, ftruncate, ftruncate64, open, openat, openat64, open64, truncate, truncate64, wcreat, wcreat64, wopen, wopenat, wopenat64, wopen64 */
+#include <deemon/system.h>          /* DeeUnixSystem_GetFD */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/typecore.h>        /* __ULONGPTR_TYPE__ */

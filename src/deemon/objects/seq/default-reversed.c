@@ -25,14 +25,14 @@
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack, UNPuSIZ */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/method-hints.h>
+#include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds, DeeRT_ErrUnboundIndex */
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/format.h>             /* PRFuSIZ */
+#include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
+#include <deemon/operator-hints.h>     /* DeeType_RequireSupportedNativeOperator */
+#include <deemon/seq.h>                /* DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_seq_range */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 
 #include "../../runtime/runtime_error.h"
 #include "default-reversed.h"

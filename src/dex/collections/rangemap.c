@@ -28,20 +28,20 @@
 
 #include <deemon/alloc.h>         /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>           /* DeeArg_Unpack* */
-#include <deemon/bool.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/map.h>
-#include <deemon/none-operator.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>          /* Dee_True, return_false, return_true */
+#include <deemon/error-rt.h>      /* DeeRT_ATTRIBUTE_ACCESS_GET, DeeRT_ErrUnknownAttrStr, DeeRT_ErrUnknownKey */
+#include <deemon/error.h>         /* DeeError_IntegerOverflow, DeeError_Throwf */
+#include <deemon/format.h>        /* DeeFormat_PRINT, DeeFormat_Printf */
+#include <deemon/int.h>           /* _DeeInt_Zero */
+#include <deemon/map.h>           /* DeeMapping_Type */
+#include <deemon/none-operator.h> /* DeeNone_* */
+#include <deemon/none.h>          /* return_none */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/set.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/seq.h>           /* DeeIterator_NewEmpty, DeeIterator_Type, DeeSeq_Type, DeeSeq_Unpack */
+#include <deemon/serial.h>        /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/set.h>           /* DeeSet_Type */
+#include <deemon/thread.h>        /* DeeThread_CheckInterrupt */
+#include <deemon/tuple.h>         /* DeeTuple_NewVectorSymbolic, DeeTuple_PackSymbolic */
 #include <deemon/util/lock.h>     /* Dee_atomic_lock_* */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */

@@ -27,19 +27,20 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack1, DeeArg_UnpackKw */
-#include <deemon/class.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/kwds.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/class.h>           /* Dee_CLASS_OPERATOR_SUPERARGS */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/file.h>            /* FILE_OPERATOR_READ, FILE_OPERATOR_WRITE */
+#include <deemon/format.h>          /* PCKu16 */
+#include <deemon/int.h>             /* Dee_Atou16, Dee_INT_STRING, Dee_INT_STRING_FNORMAL */
+#include <deemon/kwds.h>            /* DeeKw_Wrap, DeeKw_WrapInheritedOnSuccess */
+#include <deemon/module.h>          /* DeeModule* */
+#include <deemon/none.h>            /* DeeNone_Check, DeeNone_Type */
 #include <deemon/object.h>
-#include <deemon/stringutils.h>
-#include <deemon/super.h>
-#include <deemon/system-features.h> /* memcpy(), ... */
-#include <deemon/tuple.h>
+#include <deemon/string.h>          /* DEFINE_STRING_EX, DeeString*, DeeUni_IsSymCont, Dee_unicode_printer*, STRING_ERROR_FSTRICT */
+#include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n */
+#include <deemon/super.h>           /* DeeSuper_TYPE, DeeSuper_Type */
+#include <deemon/system-features.h> /* CONFIG_HAVE_FPU */
+#include <deemon/tuple.h>           /* DeeTuple* */
 
 #include <hybrid/unaligned.h> /* UNALIGNED_GET* */
 #include <hybrid/wordbits.h>  /* ENCODE_INT16, ENCODE_INT32 */

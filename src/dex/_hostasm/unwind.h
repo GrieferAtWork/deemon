@@ -25,7 +25,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h> /* Dee_Free */
+#include <deemon/alloc.h>           /* Dee_Free */
+#include <deemon/system-features.h> /* bzero */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* ptrdiff_t, size_t */

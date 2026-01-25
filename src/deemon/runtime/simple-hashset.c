@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>               /* Dee_Callocc, Dee_CollectMemoryc, Dee_Free, Dee_TryCallocc */
 #include <deemon/object.h>
-#include <deemon/serial.h>
+#include <deemon/serial.h>              /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t, Dee_serial */
 #include <deemon/system-features.h>     /* memcpyc */
 #include <deemon/util/lock.h>           /* Dee_atomic_lock_init */
 #include <deemon/util/simple-hashset.h> /* Dee_simple_hashset, Dee_simple_hashset_* */

@@ -26,8 +26,8 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack, DeeArg_Unpack1, UNPuSIZ */
 #include <deemon/computed-operators.h>
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/thread.h>
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_*, Dee_EmptySeq */
+#include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"

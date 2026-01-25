@@ -22,19 +22,19 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeMem_ClearCaches, Dee_BadAlloc, Dee_CollectMemory, Dee_Free, Dee_ReleaseSystemMemory, Dee_TryMalloc, _Dee_MalloccBufsizeDbg, _Dee_MallococBufsizeDbg */
-#include <deemon/code.h>
+#include <deemon/alloc.h>           /* DeeMem_ClearCaches, Dee_BadAlloc, Dee_CollectMemory, Dee_Free, Dee_ReleaseSystemMemory, Dee_TryMalloc, Dee_TryReleaseSystemMemory, _Dee_MalloccBufsizeDbg, _Dee_MallococBufsizeDbg */
+#include <deemon/code.h>            /* DeeCodeObject, DeeCode_Type, DeeFunction_Type, Dee_code_frame, code_addr_t */
 #include <deemon/compiler/tpp.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/heap.h>
+#include <deemon/error.h>           /* DeeError_Handled, DeeError_UninstallKeyboardInterrupt, ERROR_HANDLED_RESTORE */
+#include <deemon/file.h>            /* DeeFile_* */
+#include <deemon/format.h>          /* DeeFormat_VPrintf, Dee_vsnprintf, PRFuSIZ, PRFxSIZ */
+#include <deemon/gc.h>              /* DeeGC_Collect */
+#include <deemon/heap.h>            /* DeeHeap_Trim */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/system-features.h> /* memcpy(), ... */
-#include <deemon/thread.h>
+#include <deemon/string.h>          /* DeeUni_ToLower */
+#include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, EXIT_FAILURE, _Exit, abort, getenv, mempcpy, strlen */
+#include <deemon/thread.h>          /* DeeThreadObject, DeeThread_Self */
 
 #include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/byteswap.h>        /* UNALIGNED_GETLE32, UNALIGNED_GETLE64 */
@@ -74,7 +74,7 @@
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #ifndef CONFIG_NO_DEC
-#include <deemon/dec.h>
+#include <deemon/dec.h> /* DecTime_ClearCache */
 #endif /* !CONFIG_NO_DEC */
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 

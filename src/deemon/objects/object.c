@@ -24,40 +24,40 @@
 
 #include <deemon/alloc.h>              /* DeeObject_FreeTracker, DeeSlab_ENUMERATE, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_TryCalloc */
 #include <deemon/arg.h>                /* DeeArg_BadArgc0, DeeArg_Unpack*, UNPuSIZ */
-#include <deemon/attribute.h>
-#include <deemon/bool.h>
-#include <deemon/callable.h>
-#include <deemon/class.h>
-#include <deemon/code.h>
+#include <deemon/attribute.h>          /* DeeEnumAttr_Type */
+#include <deemon/bool.h>               /* DeeBool_Type, Dee_return_bool01, return_bool, return_bool01, return_false, return_true */
+#include <deemon/callable.h>           /* DeeCallable_Type */
+#include <deemon/class.h>              /* DeeClassDesc_QueryInstanceAttributeStringHash, DeeClassDescriptorObject, DeeClass_DESC, DeeInstance_DESC, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endread, Dee_class_desc_lock_read, Dee_instance_desc, Dee_instance_desc_lock_endwrite, Dee_instance_desc_lock_write */
+#include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject, DeeFunction_Check, DeeFunction_Type, DeeYieldFunctionObject, DeeYieldFunction_Type, Dee_operator_t */
 #include <deemon/computed-operators.h>
-#include <deemon/dict.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/float.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/int.h>
-#include <deemon/kwds.h>
-#include <deemon/map.h>
-#include <deemon/method-hints.h>
-#include <deemon/module.h>
-#include <deemon/mro.h>
-#include <deemon/none-operator.h>
-#include <deemon/none.h>
+#include <deemon/dict.h>               /* Dee_dict_item, Dee_dict_vidx_t */
+#include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_BOUND, DeeRT_Err* */
+#include <deemon/error.h>              /* DeeError_*, ERROR_PRINT_DOHANDLE */
+#include <deemon/file.h>               /* DeeFileType_Type */
+#include <deemon/float.h>              /* DeeFloat_Type */
+#include <deemon/format.h>             /* DeeFormat_PrintStr, DeeFormat_Printf, PRFXSIZ, PRFuSIZ */
+#include <deemon/gc.h>                 /* DeeGC_Track */
+#include <deemon/int.h>                /* DeeInt_* */
+#include <deemon/kwds.h>               /* DeeKwds*, Dee_kwds_entry */
+#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
+#include <deemon/module.h>             /* DeeModule*, Dee_module_object */
+#include <deemon/mro.h>                /* DeeType_Bound*Attr*, DeeType_Call*Attr*, DeeType_Del*Attr*, DeeType_FindAttr, DeeType_FindAttrInfoStringLenHash, DeeType_Get*Attr*, DeeType_Has*Attr*, DeeType_IterAttr, DeeType_QueryAttributeHash, DeeType_QueryInstanceAttributeHash, DeeType_Set*Attr*, DeeType_VCallAttrStringHashf, DeeType_VCallAttrf, Dee_attrdesc, Dee_attrhint, Dee_attrinfo, Dee_attriter, Dee_attrspec, Dee_membercache_fini, Dee_membercache_init */
+#include <deemon/none-operator.h>      /* DeeNone_* */
+#include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/operator-hints.h>
-#include <deemon/property.h>
-#include <deemon/rodict.h>
-#include <deemon/roset.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/set.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
-#include <deemon/system-features.h>    /* bzero(), ... */
-#include <deemon/tuple.h>
+#include <deemon/objmethod.h>          /* Dee_DEFINE_CLSPROPERTY */
+#include <deemon/operator-hints.h>     /* DeeType_GetNativeOperator, DeeType_GetNativeOperatorWithoutUnsupported, Dee_tno_id */
+#include <deemon/property.h>           /* DeePropertyObject, DeeProperty_Type */
+#include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Type */
+#include <deemon/roset.h>              /* DeeRoSetObject, DeeRoSet_Type, Dee_roset_item */
+#include <deemon/seq.h>                /* DeeSeqOne_GET, DeeSeqOne_Type, DeeSeq_Type, DeeType_GetSeqClass, Dee_SEQCLASS_* */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/set.h>                /* DeeSet_Type */
+#include <deemon/string.h>             /* DEFINE_STRING, DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, WSTR_LENGTH */
+#include <deemon/super.h>              /* DeeSuper* */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memsetp, abort, access, bzero*, memcpyc, memsetp, pow, stat, strlen, time */
+#include <deemon/tuple.h>              /* DeeNullableTuple_Type, DeeTuple*, Dee_EmptyTuple */
 #include <deemon/util/atomic.h>        /* Dee_ATOMIC_ACQ_REL, atomic_* */
 #include <deemon/util/lock.h>          /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_*, Dee_atomic_rwlock_init */
 

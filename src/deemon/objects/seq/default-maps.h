@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>     /* DeeObject_MALLOC */
-#include <deemon/map.h>
+#include <deemon/map.h>       /* DeeMapping_Type */
 #include <deemon/object.h>
 #include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
 

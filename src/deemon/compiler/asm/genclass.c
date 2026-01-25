@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/class.h>
+#include <deemon/class.h>              /* DeeClassDescriptor_Check */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/symbol.h>

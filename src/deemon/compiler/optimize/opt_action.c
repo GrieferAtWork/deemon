@@ -22,20 +22,22 @@
 
 #include <deemon/api.h>
 
-#include <deemon/bool.h>
+#include <deemon/bool.h>              /* DeeBool_For */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/dec.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/none.h>
+#include <deemon/dec.h>               /* DEC_BUILTINID_UNKNOWN, Dec_BuiltinID */
+#include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
+#include <deemon/file.h>              /* DeeFile_Type */
+#include <deemon/module.h>            /* DeeModuleObject, DeeModule_OfPointer */
+#include <deemon/none.h>              /* DeeNone_Check, DeeNone_NewRef, Dee_None */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/super.h>
-#include <deemon/system-features.h>   /* memmovedownc() */
-#include <deemon/tuple.h>
+#include <deemon/seq.h>               /* DeeSeq_* */
+#include <deemon/string.h>            /* DeeString_Check, DeeString_EQUALS_ASCII */
+#include <deemon/super.h>             /* DeeSuper_New */
+#include <deemon/system-features.h>   /* memmovedownc, read, stdout */
+#include <deemon/tuple.h>             /* DeeTuple* */
 
 #include "../../runtime/builtin.h"
 

@@ -28,12 +28,13 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
-#include <deemon/dex.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/dex.h>             /* DEX, DEXSYM_READONLY, DEX_MEMBER_F, Dee_dex_symbol */
+#include <deemon/int.h>             /* DeeInt_* */
+#include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/system-features.h>
+#include <deemon/objmethod.h>       /* DEFINE_*CMETHOD* */
+#include <deemon/string.h>          /* DeeString_New, DeeString_NewUtf8, STRING_ERROR_FIGNORE */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_SetErrno, EOK, errno, isdigit, isupper, strerror, strerrordesc_np, strerrorname_np, strlen, sys_errlist, sys_nerr */
 
 #include <stddef.h> /* NULL, size_t */
 

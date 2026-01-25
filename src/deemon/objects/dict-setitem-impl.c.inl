@@ -18,6 +18,12 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
+#include <deemon/dict.h>            /* DeeDict_*, Dee_DICT_HTAB_EOF, Dee_dict_*, _DeeDict_* */
+#include <deemon/int.h>             /* DeeInt_NewSize */
+#include <deemon/object.h>
+#include <deemon/string.h>          /* DeeString_NewSizedWithHash, DeeString_NewWithHash */
+#include <deemon/system-features.h> /* memmovedownc, memmoveupc */
+
 #include "dict.c"
 //#define DEFINE_dict_setitem
 //#define DEFINE_dict_setitem_at

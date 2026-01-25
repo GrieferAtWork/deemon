@@ -34,8 +34,8 @@
 #endif /* _MSC_VER */
 #endif /* CONFIG_HOST_WINDOWS */
 
-#include <deemon/system-features.h>
-#include <deemon/system.h>
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_SetErrno, close */
+#include <deemon/system.h>          /* DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
 
 #ifndef CONFIG_HOST_WINDOWS
 #ifdef CONFIG_HOST_UNIX
@@ -106,8 +106,8 @@
 #endif /* !CONFIG_HOST_WINDOWS */
 #endif /* !CONFIG_HAVE_SYS_UN_H */
 
-#include <deemon/format.h>
-#include <deemon/types.h>
+#include <deemon/format.h>    /* PRFuSIZ */
+#include <deemon/types.h>     /* DREF, DeeObject, DeeTypeObject, Dee_ssize_t, OBJECT_HEAD */
 #include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__ */

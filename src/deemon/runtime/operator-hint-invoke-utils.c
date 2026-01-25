@@ -22,13 +22,13 @@
 
 #include <deemon/api.h>
 
-#include <deemon/error-rt.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/error-rt.h>       /* DeeRT_Err* */
+#include <deemon/int.h>            /* DeeIntObject, DeeInt_*, INT_SIGNED, INT_UNSIGNED */
+#include <deemon/none.h>           /* DeeNone_Check */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/super.h>          /* DeeObject_TCall, ... */
-#include <deemon/tuple.h>
+#include <deemon/operator-hints.h> /* DeeNO_int_t, _DeeType_RequireNativeOperator */
+#include <deemon/super.h>          /* DeeObject_T* */
+#include <deemon/tuple.h>          /* DeeTuple* */
 #include <deemon/util/lock.h>      /* Dee_atomic_lock_*, Dee_atomic_rwlock_* */
 
 #include <hybrid/int128.h>    /* __hybrid_int128_*, __hybrid_uint128_set64 */

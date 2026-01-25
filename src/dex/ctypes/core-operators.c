@@ -27,15 +27,15 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>       /* DeeArg_Unpack* */
-#include <deemon/attribute.h>
-#include <deemon/bool.h>
-#include <deemon/error.h>
-#include <deemon/float.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/attribute.h> /* DeeEnumAttr_Type */
+#include <deemon/bool.h>      /* return_bool */
+#include <deemon/error.h>     /* DeeError_IntegerOverflow, DeeError_Throwf */
+#include <deemon/float.h>     /* DeeFloat_New */
+#include <deemon/int.h>       /* DeeInt_*, Dee_INT_SIGNED, Dee_INT_UNSIGNED */
+#include <deemon/none.h>      /* return_none */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/tuple.h>
+#include <deemon/string.h>    /* DeeString_Type */
+#include <deemon/tuple.h>     /* DeeTuple* */
 
 #include <hybrid/limitcore.h> /* __*_MAX__, __INT32_MIN__, __INT64_MIN__ */
 

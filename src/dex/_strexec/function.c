@@ -27,18 +27,17 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_MALLOC, DeeObject_Mallocc, Dee_*alloc*, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/bool.h>
-#include <deemon/callable.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* return_bool */
+#include <deemon/callable.h>        /* DeeCallable_Type */
+#include <deemon/dict.h>            /* DeeDictObject, DeeDict_* */
+#include <deemon/error.h>           /* DeeError_*, ERROR_PRINT_DOHANDLE */
+#include <deemon/none.h>            /* DeeNone_NewRef, return_none */
 #include <deemon/object.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h> /* memcpy() */
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer*, STRING_ERROR_FIGNORE, STRING_ERROR_FSTRICT */
+#include <deemon/system-features.h> /* CONFIG_HAVE_FPU, EOF, bcmpc, memcmp, memcpy*, mempcpy */
+#include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_Self */
+#include <deemon/tuple.h>           /* DeeTuple*, Dee_EmptyTuple */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

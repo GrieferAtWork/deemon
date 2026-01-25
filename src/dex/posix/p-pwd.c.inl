@@ -29,16 +29,18 @@
 
 #include <deemon/alloc.h>           /* Dee_ReleaseSystemMemory */
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
-#include <deemon/dex.h>
-#include <deemon/error.h>
-#include <deemon/none.h>
-#include <deemon/notify.h>
+#include <deemon/bytes.h>           /* DeeBytes_DATA, DeeBytes_SIZE */
+#include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
+#include <deemon/error.h>           /* DeeError_FSError, DeeError_SystemError */
+#include <deemon/file.h>            /* DeeFile_OpenString, DeeFile_ReadBytes, DeeSystem_FILE_USE_STUB, OPEN_FCLOEXEC, OPEN_FRDONLY */
+#include <deemon/none.h>            /* return_none */
+#include <deemon/notify.h>          /* DeeNotify_BroadcastClass, Dee_NOTIFICATION_CLASS_PWD */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>          /* DeeSystem_HAVE_FS_DRIVES */
-#include <deemon/thread.h>
+#include <deemon/objmethod.h>       /* DEFINE_CMETHOD0, DEFINE_KWCMETHOD */
+#include <deemon/string.h>          /* DEFINE_STRING, DEFINE_STRING_EX, DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FREPLAC */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_strnlen, DeeSystem_GetErrno, chdir, fchdir, fchdirat, getcwd, gethostname, strnlen, wchdir */
+#include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_HAVE_FS_DRIVES, DeeSystem_PrintPwd, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 

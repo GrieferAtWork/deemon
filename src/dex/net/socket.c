@@ -28,19 +28,19 @@
 
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_ReleaseSystemMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack*, UNPx64 */
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
-#include <deemon/notify.h>
+#include <deemon/bool.h>            /* return_bool */
+#include <deemon/bytes.h>           /* DeeBytes*, Dee_BYTES_PRINTER_INIT, Dee_BYTES_PRINTER_SIZE, Dee_bytes_printer, Dee_bytes_printer_* */
+#include <deemon/error.h>           /* DeeError_*, Dee_ERROR_HANDLED_NORMAL */
+#include <deemon/file.h>            /* Dee_fd_osfhandle_GETSET */
+#include <deemon/format.h>          /* PRFuSIZ */
+#include <deemon/int.h>             /* DeeInt_*, Dee_Atou16, Dee_INT_STRING, Dee_INT_STRING_FNORMAL */
+#include <deemon/none.h>            /* DeeNone_NewRef, Dee_None, return_none */
+#include <deemon/notify.h>          /* Dee_GetEnv */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/string.h>          /* DEFINE_STRING, DeeString*, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_PRINT, Dee_EmptyString, Dee_ascii_printer* */
+#include <deemon/system-features.h> /* close, environ, memcpy, read, select, system, wait */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds, DeeThread_SleepNoInt */
+#include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 

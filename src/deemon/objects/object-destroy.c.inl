@@ -83,6 +83,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>       /* DeeObject_Free */
+#include <deemon/gc.h>          /* DeeGCObject_Free, DeeGC_Track, DeeGC_Untrack */
 #include <deemon/object.h>
 #include <deemon/util/atomic.h> /* atomic_fetchdec */
 

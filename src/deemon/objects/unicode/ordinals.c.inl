@@ -24,15 +24,15 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* Dee_True, return_bool, return_false */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/int.h>
+#include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds */
+#include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/seq.h>                /* DeeSeq_Type */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, Dee_charptr_const, STRING_WIDTH_1BYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
+#include <deemon/system-features.h>    /* memchr* */
 /**/
 
 #include "../generic-proxy.h"

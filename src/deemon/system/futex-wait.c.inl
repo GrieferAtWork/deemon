@@ -31,11 +31,11 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* Dee_ReleaseSystemMemory */
-#include <deemon/system-features.h> /* DeeSystem_IF_E1 */
-#include <deemon/system.h>          /* DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
-#include <deemon/thread.h>
-#include <deemon/types.h>
+#include <deemon/alloc.h>           /* Dee_ReleaseSystemMemory, Dee_TryReleaseSystemMemory */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_IF_E3, cnd_broadcast, cnd_reltimedwait64_np, cnd_reltimedwait_np, cnd_timedwait, cnd_timedwait64, cnd_wait, gettimeofday, gettimeofday64, mtx_lock, mtx_unlock, pthread_cond_broadcast, pthread_cond_reltimedwait64_np, pthread_cond_reltimedwait_np, pthread_cond_timedwait, pthread_cond_timedwait64, pthread_cond_wait, pthread_mutex_lock, pthread_mutex_unlock, sem_reltimedwait64_np, sem_reltimedwait_np, sem_timedwait, sem_timedwait64, sem_wait, thrd_error, thrd_nomem, thrd_success, thrd_timedout, wait */
+#include <deemon/system.h>          /* DeeNTSystem_*, DeeUnixSystem_ThrowErrorf */
+#include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterruptSelf, DeeThread_Self, DeeThread_WasInterrupted */
+#include <deemon/types.h>           /* DREF */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/futex.h>      /* DeeFutex_* */
 

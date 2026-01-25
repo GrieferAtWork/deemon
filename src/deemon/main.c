@@ -28,27 +28,28 @@
 /**/
 
 #include <deemon/alloc.h>              /* Dee_CollectMemoryoc, Dee_Free, Dee_Freea, Dee_Mallocac, Dee_TryMallocc */
-#include <deemon/code.h>
+#include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/error.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/error.h>
-#include <deemon/exec.h>
-#include <deemon/file.h>
-#include <deemon/filetypes.h>
-#include <deemon/format.h>
-#include <deemon/heap.h>
-#include <deemon/int.h>
-#include <deemon/module.h>
-#include <deemon/notify.h>
+#include <deemon/error.h>              /* DeeAppExit_Check, DeeAppExit_Exitcode, DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_HANDLEINTR */
+#include <deemon/error_types.h>        /* Dee_compiler_error_object */
+#include <deemon/exec.h>               /* DeeExec_CompileModuleMemory, DeeExec_RUNMODE_DEFAULT, DeeModule_AddLibPathString, DeeModule_GetPath, Dee_GetArgv, Dee_Initialize, Dee_RUNATEXIT_FRUNALL, Dee_RunAtExit, Dee_SHUTDOWN_F_FAST, Dee_SHUTDOWN_F_NORMAL, Dee_SetArgv, Dee_Shutdown */
+#include <deemon/file.h>               /* DeeFileObject, DeeFile_*, Dee_STD*, OPEN_F* */
+#include <deemon/filetypes.h>          /* DeeFileWriter_GetString, DeeFile_OpenWriter */
+#include <deemon/format.h>             /* DeeFormat_Printf, DeeFormat_Repeat */
+#include <deemon/heap.h>               /* DeeHeap_* */
+#include <deemon/int.h>                /* Dee_INT_STRING, Dee_INT_STRING_FTRY, Dee_TAtoi */
+#include <deemon/module.h>             /* DeeModule*, Dee_DEC_FDISABLE, Dee_DEC_FLOADOUTDATED, Dee_DEC_FNORMAL, Dee_DEC_FUNTRUSTED, Dee_MODULE_INTERACTIVE_MODE_FONLYBASEFILE, Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR, Dee_compiler_options */
+#include <deemon/notify.h>             /* DeeNotify_BroadcastClass, Dee_NOTIFICATION_CLASS_PWD */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>    /* strend() */
-#include <deemon/system.h>
-#include <deemon/tuple.h>
+#include <deemon/string.h>             /* DEFINE_STRING, DeeString*, DeeUni_IsSpace, STRING_ERROR_FIGNORE */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_*, DeeSystem_DEFINE_strcmp, EXIT_FAILURE, EXIT_SUCCESS, _Exit, atoi, bcmpc, bzero, chdir, memcpy, mempcpyc, stdin, strchr, strcmp, strend, strlen, system */
+#include <deemon/system.h>             /* DeeNTSystem_FixUncPath, DeeNTSystem_IsUncError, DeeSystem_IsSep, DeeSystem_SEP */
+#include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
 
 #include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__, __ORDER_PDP_ENDIAN__ */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
@@ -64,11 +65,8 @@
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #include <deemon/compiler/dec.h>
-#include <deemon/dex.h>
-#include <deemon/gc.h>
-#include <deemon/list.h>
-#include <deemon/none.h>
-#include <deemon/thread.h>
+#include <deemon/list.h>         /* DeeListObject, DeeList_Append */
+#include <deemon/none.h>         /* DeeNone_Check */
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 #ifdef CONFIG_NO_CRTDBG_H

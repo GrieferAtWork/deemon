@@ -22,39 +22,39 @@
 
 #include <deemon/api.h>
 
-#include <deemon/bool.h>
-#include <deemon/class.h>
-#include <deemon/code.h>
+#include <deemon/bool.h>               /* DeeBool_Type, Dee_False, Dee_True */
+#include <deemon/class.h>              /* DeeClassDescriptor_Type */
+#include <deemon/code.h>               /* DeeCode_Type */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/optimize.h>
-#include <deemon/dec.h>
-#include <deemon/dict.h>
-#include <deemon/float.h>
-#include <deemon/hashset.h>
-#include <deemon/int.h>
-#include <deemon/kwds.h>
-#include <deemon/list.h>
-#include <deemon/module.h>
-#include <deemon/none.h>
+#include <deemon/dec.h>                /* DEC_BUILTINID_UNKNOWN, Dec_BuiltinID */
+#include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_dict_*, _DeeDict_GetVirtVTab */
+#include <deemon/float.h>              /* DeeFloat_Type */
+#include <deemon/hashset.h>            /* DeeHashSetObject, DeeHashSet_* */
+#include <deemon/int.h>                /* DeeInt_Type */
+#include <deemon/kwds.h>               /* DeeKwds_Type */
+#include <deemon/list.h>               /* DeeListObject, DeeList_* */
+#include <deemon/module.h>             /* DeeModule_Type */
+#include <deemon/none.h>               /* DeeNone_Type */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>
-#include <deemon/rodict.h>
-#include <deemon/roset.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/objmethod.h>          /* DeeKwObjMethod_Type, DeeObjMethodObject, DeeObjMethod_Type */
+#include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Type, _DeeRoDict_GetRealVTab */
+#include <deemon/roset.h>              /* DeeRoSetObject, DeeRoSet_Type, Dee_roset_item */
+#include <deemon/string.h>             /* DeeString_Type */
+#include <deemon/super.h>              /* DeeSuper* */
+#include <deemon/thread.h>             /* DeeThread_Type */
+#include <deemon/tuple.h>              /* DeeTuple* */
 
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-#include <deemon/callable.h>
-#include <deemon/cell.h>
-#include <deemon/error.h>
-#include <deemon/map.h>
-#include <deemon/numeric.h>
-#include <deemon/seq.h>
-#include <deemon/set.h>
-#include <deemon/traceback.h>
-#include <deemon/weakref.h>
+#include <deemon/callable.h>  /* DeeCallable_Type */
+#include <deemon/cell.h>      /* DeeCell_Type */
+#include <deemon/error.h>     /* DeeError_* */
+#include <deemon/map.h>       /* DeeMapping_Type, Dee_EmptyMapping */
+#include <deemon/numeric.h>   /* DeeNumeric_Type */
+#include <deemon/seq.h>       /* DeeIterator_Type, DeeSeq_Type, Dee_EmptySeq */
+#include <deemon/set.h>       /* Dee_EmptySet */
+#include <deemon/traceback.h> /* DeeTraceback_Type */
+#include <deemon/weakref.h>   /* DeeWeakRefAble_Type, DeeWeakRef_Type */
 #endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 /**/
 

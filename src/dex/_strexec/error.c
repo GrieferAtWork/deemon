@@ -26,12 +26,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/class.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
+#include <deemon/error.h>  /* DeeError_* */
+#include <deemon/format.h> /* PRFuSIZ */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
 
 #include <stddef.h> /* size_t */
 

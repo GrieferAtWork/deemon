@@ -24,21 +24,22 @@
 
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
-#include <deemon/bool.h>
-#include <deemon/callable.h>
+#include <deemon/bool.h>               /* return_bool */
+#include <deemon/callable.h>           /* DeeCallable_Check */
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/kwds.h>
-#include <deemon/map.h>
-#include <deemon/method-hints.h>
-#include <deemon/none-operator.h>
-#include <deemon/none.h>
+#include <deemon/error.h>              /* DeeError_Throwf, DeeError_TypeError */
+#include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
+#include <deemon/kwds.h>               /* DeeKwArgs* */
+#include <deemon/map.h>                /* DeeMap_OperatorContainsAsBool, DeeMapping_EmptyInstance, DeeMapping_Type */
+#include <deemon/method-hints.h>       /* DeeMA_*, DeeMH_map_frozen_t, DeeMH_map_iterkeys_t, DeeMH_map_itervalues_t, DeeMH_map_keys_t, DeeMH_map_operator_iter_t, DeeMH_map_values_t, DeeObject_InvokeMethodHint, DeeType_HasTrait, DeeType_RequireMethodHint, DeeType_TRAIT___map_getitem_always_bound__ */
+#include <deemon/none-operator.h>      /* DeeNone_* */
+#include <deemon/none.h>               /* DeeNone_Type, Dee_None */
 #include <deemon/object.h>
-#include <deemon/rodict.h>
-#include <deemon/seq.h>
-#include <deemon/set.h>
-#include <deemon/string.h>
+#include <deemon/rodict.h>             /* DeeRoDict_FromSequence, DeeRoDict_Type */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type, Dee_SEQCLASS_MAP */
+#include <deemon/set.h>                /* DeeSet_Type */
+#include <deemon/string.h>             /* DeeString_STR */
+#include <deemon/system-features.h>    /* read */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/method-hint-defaults.h"

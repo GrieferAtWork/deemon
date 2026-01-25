@@ -23,13 +23,13 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>             /* Dee_*alloc*, Dee_CollectMemoryc, Dee_Free */
-#include <deemon/code.h>
+#include <deemon/code.h>              /* Dee_CODE_F* */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/none.h>
+#include <deemon/none.h>              /* DeeNone_NewRef */
 #include <deemon/object.h>
 
 #include <stdbool.h> /* bool, false, true */

@@ -28,16 +28,17 @@
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/exec.h>
-#include <deemon/file.h>
-#include <deemon/format.h>
+#include <deemon/exec.h>              /* DeeModule_GetLibPath, DeeModule_GetPath */
+#include <deemon/file.h>              /* DeeFileObject, DeeFile_*, Dee_FILEIO_FNONBLOCKING, Dee_STDOUT, OPEN_FCLOEXEC, OPEN_FRDONLY */
+#include <deemon/format.h>            /* DeeFormat_Printf, Dee_sprintf, Dee_vsprintf */
+#include <deemon/list.h>              /* DeeListObject, DeeList_* */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
-#include <deemon/types.h>
+#include <deemon/string.h>            /* DeeString*, Dee_string_utf_fini, Dee_string_utf_free */
+#include <deemon/system-features.h>   /* CONFIG_HAVE_memrchr, DeeSystem_DEFINE_memrchr, alloca, calloc, free, malloc, memcasecmp, memcpyc, mempcpyc, memrchr, realloc, tolower */
+#include <deemon/system.h>            /* DeeSystem_* */
+#include <deemon/thread.h>            /* DeeThread_CheckInterrupt */
+#include <deemon/tuple.h>             /* DeeTuple* */
+#include <deemon/types.h>             /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE */
 
 #include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_POINTER__ */
 
@@ -56,13 +57,14 @@
 #define TPP_USERSTREAM_FCLOSE(stream) Dee_Decref(stream)
 
 /* Includes for TPP */
+/* clang-format off */
 #include <deemon/class.h>
 #include <deemon/compiler/error.h>
-#include <deemon/error.h>
-#include <deemon/error_types.h>
-#include <deemon/module.h>
-
+#include <deemon/error.h> /* DeeError_* */
+#include <deemon/error_types.h> /* DeeCompilerErrorObject, DeeCompilerError_Print, Dee_compiler_error_loc */
+#include <deemon/module.h> /* Dee_COMPILER_ERROR_FATALITY_WARNING */
 #include <hybrid/byteswap.h> /* BSWAP* */
+/* clang-format on */
 
 DECL_BEGIN
 

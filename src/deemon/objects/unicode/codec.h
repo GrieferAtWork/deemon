@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/system-features.h> /* bcmp(), ... */
+#include <deemon/system-features.h> /* bcmp */
 
 #include <stdint.h> /* uint8_t */
 

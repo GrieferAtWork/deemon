@@ -23,14 +23,14 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>             /* DeeArg_* */
-#include <deemon/bool.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* DeeBool_For */
+#include <deemon/format.h>          /* Dee_Packf, Dee_VPPackf, Dee_VPPackf_Cleanup, Dee_VPackf, Dee_va_list_struct */
+#include <deemon/int.h>             /* DeeInt_* */
+#include <deemon/none.h>            /* Dee_None */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h> /* strnlen() */
-#include <deemon/tuple.h>
+#include <deemon/string.h>          /* DeeString_NewUtf8, STRING_ERROR_FIGNORE */
+#include <deemon/system-features.h> /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY, CONFIG_HAVE_strnlen, DeeSystem_DEFINE_strnlen, strlen, strnlen */
+#include <deemon/tuple.h>           /* DeeTuple* */
 
 #include <hybrid/__va_size.h> /* __VA_SIZE */
 #include <hybrid/int128.h>    /* __ALIGNOF_INT128__, __hybrid_uint128_iszero */

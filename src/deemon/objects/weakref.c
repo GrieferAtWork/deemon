@@ -24,15 +24,16 @@
 
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
-#include <deemon/bool.h>
+#include <deemon/bool.h>               /* return_bool */
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/none.h>
+#include <deemon/error.h>              /* DeeError_Print, ERROR_PRINT_DOHANDLE */
+#include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
+#include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef */
 #include <deemon/object.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/weakref.h>
+#include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString_STR */
+#include <deemon/system-features.h>    /* time */
+#include <deemon/weakref.h>            /* DeeWeakRef* */
 /**/
 
 #include "../runtime/kwlist.h"

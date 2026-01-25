@@ -22,21 +22,22 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>             /* DeeArg_BadArgcEx, DeeArg_Unpack*, UNPuSIZ, UNPxSIZ */
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
+#include <deemon/arg.h>             /* DeeArg_BadArgcEx, DeeArg_Unpack*, UNPuSIZ, UNPxSIZ, _DeeArg_AsObject */
+#include <deemon/bool.h>            /* return_bool, return_false */
+#include <deemon/bytes.h>           /* DeeBytes*, Dee_BYTES_PRINTER_INIT, Dee_BYTES_PRINTER_SIZE, Dee_EmptyBytes, Dee_bytes_printer, Dee_bytes_printer_* */
+#include <deemon/error-rt.h>        /* DeeRT_Err* */
+#include <deemon/error.h>           /* DeeError_Throwf, DeeError_ValueError */
+#include <deemon/format.h>          /* PCKuSIZ, PRFuSIZ */
+#include <deemon/int.h>             /* DeeInt_* */
+#include <deemon/method-hints.h>    /* TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/none.h>            /* DeeNone_NewRef, return_none */
 #include <deemon/object.h>
-#include <deemon/regex.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/system-features.h> /* memcpy(), memset(), ... */
-#include <deemon/tuple.h>
+#include <deemon/regex.h>           /* DeeRegex*, DeeString_GetRegex, Dee_RE_* */
+#include <deemon/seq.h>             /* DeeSeq_NewEmpty */
+#include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/string.h>          /* DeeAscii_ItoaLowerDigit, DeeString*, DeeUni_*, Dee_EmptyString, Dee_UNICODE_*, Dee_uniflag_t, WSTR_LENGTH */
+#include <deemon/system-features.h> /* CONFIG_HAVE_memrev, CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memrev, DeeSystem_DEFINE_memsetp, bzero, close, isalnum, isalpha, isdigit, islower, isupper, link, memcasecmp, memchr, memcmp, memcpy*, mempcpy, memrev, memset, memsetp, open, read, remainder, remove, strverscmp, to(lower|upper) */
+#include <deemon/tuple.h>           /* DEFINE_TUPLE, DeeTuple* */
 #include <deemon/util/atomic.h>     /* atomic_xch */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __UINTPTR_TYPE__ */

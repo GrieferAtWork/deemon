@@ -26,7 +26,7 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/object.h>
-#include <deemon/tuple.h>
+#include <deemon/tuple.h>              /* DeeTuple* */
 
 #include <stddef.h> /* size_t */
 

@@ -26,6 +26,7 @@
 
 #include <deemon/api.h>
 
+#include <deemon/file.h>   /* DeeFileTypeObject, DeeFileType_Type, DeeFile_Type */
 #include <deemon/object.h>
 
 #include <stddef.h> /* NULL */

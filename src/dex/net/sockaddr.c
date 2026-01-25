@@ -27,15 +27,15 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_TryMallocc, Dee_CollectMemoryoc, Dee_Mallocac, Dee_ReleaseSystemMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XFreea */
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/format.h>          /* Dee_sprintf, PRF* */
+#include <deemon/int.h>             /* DeeInt_* */
+#include <deemon/none.h>            /* DeeNone_Check */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h> /* memcasecmp(), bzero(), ... */
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/string.h>          /* DeeString*, DeeUni_*, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_LEN, Dee_ascii_printer* */
+#include <deemon/system-features.h> /* CONFIG_HAVE_memcasecmp, bcmp, bzero, errno, memcasecmp, memcpy*, mempcpyc, pipe, strchr, strend, strlen */
+#include <deemon/thread.h>          /* DeeThread_Sleep */
+#include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

@@ -26,14 +26,15 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>             /* DeeArg_Unpack*, UNPu64 */
-#include <deemon/bool.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/arg.h>             /* DeeArg_Unpack*, UNPu64, _DeeArg_AsObject */
+#include <deemon/bool.h>            /* return_bool */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/format.h>          /* PRFuSIZ */
+#include <deemon/int.h>             /* DeeInt_Check */
+#include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/system-features.h> /* memcpy, ... */
+#include <deemon/objmethod.h>       /* DEFINE_CMETHOD, DEFINE_CMETHOD1 */
+#include <deemon/system-features.h> /* memcpy */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/futex.h>      /* DeeFutex_* */
 

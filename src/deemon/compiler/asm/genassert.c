@@ -22,12 +22,12 @@
 
 #include <deemon/api.h>
 
-#include <deemon/asm.h>
+#include <deemon/asm.h>                /* ASM_*, instruction_t */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
-#include <deemon/kwds.h>
-#include <deemon/module.h>
+#include <deemon/kwds.h>               /* DeeType_IsKw */
+#include <deemon/module.h>             /* DeeModule_GetDeemon */
 #include <deemon/object.h>
 
 #include "../../runtime/builtin.h"

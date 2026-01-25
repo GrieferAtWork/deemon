@@ -27,20 +27,22 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>     /* DeeObject_Free, Dee_*alloc*, Dee_Free */
-#include <deemon/bool.h>
-#include <deemon/class.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/format.h>
-#include <deemon/gc.h>
-#include <deemon/list.h>
-#include <deemon/map.h>
+#include <deemon/alloc.h>           /* DeeObject_Free, Dee_*alloc*, Dee_Free */
+#include <deemon/bool.h>            /* DeeBoolObject, Dee_FalseTrue */
+#include <deemon/class.h>           /* DeeClass_*, DeeInstance_* */
+#include <deemon/code.h>            /* DeeCodeObject, DeeCode_*, DeeFunction_Type, Dee_DDI_ISOK, Dee_DDI_STATE_*, Dee_code_addr_t, Dee_ddi_*, Dee_instruction_t */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/file.h>            /* DeeFile_* */
+#include <deemon/format.h>          /* Dee_sprintf, PRFx16 */
+#include <deemon/gc.h>              /* DeeGCObject_*alloc*, DeeGCObject_Free, DeeGC_Track, DeeGC_Untrack */
+#include <deemon/list.h>            /* DeeList_FromSequence, DeeList_NewUninitialized */
+#include <deemon/map.h>             /* DeeSharedMap_Decref, DeeSharedMap_NewShared */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/super.h>
-#include <deemon/tuple.h>
-#include <deemon/util/lock.h> /* Dee_atomic_rwlock_t */
+#include <deemon/seq.h>             /* DeeRange_New, DeeRange_NewInt, DeeSeq_Unpack, DeeSharedVector_Decref, DeeSharedVector_NewShared */
+#include <deemon/super.h>           /* DeeSuper_New, DeeSuper_Of */
+#include <deemon/system-features.h> /* bzero, stdout */
+#include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/util/lock.h>       /* Dee_atomic_rwlock_t */
 
 #include <hybrid/align.h>         /* CEIL_ALIGN, IS_ALIGNED */
 #include <hybrid/bitset.h>        /* BITSET_LENGTHOF, bitset_* */

@@ -23,14 +23,14 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* Dee_*alloc*, Dee_Free */
-#include <deemon/asm.h>
-#include <deemon/code.h>
+#include <deemon/asm.h>                /* DDI_* */
+#include <deemon/code.h>               /* DeeCodeObject, DeeCode_*, DeeDDIObject, DeeDDI_Empty, DeeDDI_Type, Dee_DDI_*, Dee_DEFINE_DDI, Dee_code_addr_t, Dee_ddi_*, code_addr_t */
 #include <deemon/computed-operators.h>
-#include <deemon/format.h>
+#include <deemon/format.h>             /* DeeFormat_Printf */
 #include <deemon/object.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h>    /* memcpyc(), ... */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString*, Dee_EmptyString */
+#include <deemon/system-features.h>    /* bcmp, bcmpc, memcpy* */
 
 #include <hybrid/minmax.h>   /* MIN */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

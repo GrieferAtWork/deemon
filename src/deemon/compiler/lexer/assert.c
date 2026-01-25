@@ -26,7 +26,7 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/types.h>
+#include <deemon/types.h>           /* DREF */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL */

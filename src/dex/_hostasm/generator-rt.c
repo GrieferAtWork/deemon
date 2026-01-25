@@ -27,21 +27,18 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/class.h>
-#include <deemon/code.h>
-#include <deemon/dict.h>
-#include <deemon/error.h>
-#include <deemon/file.h>
-#include <deemon/float.h>
-#include <deemon/format.h>
-#include <deemon/hashset.h>
-#include <deemon/kwds.h>
-#include <deemon/module.h>
-#include <deemon/operator-hints.h>
-#include <deemon/rodict.h>
-#include <deemon/roset.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
+#include <deemon/class.h>          /* DeeClass_DESC, Dee_CLASS_ATTRIBUTE_FCLASSMEM, Dee_CLASS_ATTRIBUTE_FGETSET, Dee_class_attribute, Dee_class_desc */
+#include <deemon/code.h>           /* DeeCodeObject, DeeCode_*, Dee_DDI_ISOK, Dee_DDI_STATE_*, Dee_ddi_*, code_addr_t, instruction_t */
+#include <deemon/error.h>          /* DeeError_* */
+#include <deemon/file.h>           /* DeeFile_Type, DeeFile_WriteAll */
+#include <deemon/float.h>          /* CONFIG_HAVE_FPU, DeeFloat_New */
+#include <deemon/format.h>         /* PRF* */
+#include <deemon/kwds.h>           /* DeeKwds_Check, DeeKwds_SIZE */
+#include <deemon/module.h>         /* DeeModule* */
+#include <deemon/object.h>
+#include <deemon/operator-hints.h> /* DeeNO_shl_t, DeeType_RequireNativeOperator */
+#include <deemon/string.h>         /* DeeString* */
+#include <deemon/super.h>          /* DeeObject_TAsDouble */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint8_t, uint16_t, uint32_t */

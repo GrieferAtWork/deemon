@@ -28,15 +28,14 @@
 #include <deemon/compiler/error.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/error.h>
-#include <deemon/error_types.h>
-#include <deemon/file.h>
-#include <deemon/format.h>            /* Dee_unicode_printer_printf() -> DeeFormat_Printf() */
-#include <deemon/module.h>
+#include <deemon/error.h>             /* DeeError_*, ERROR_PRINT_DOHANDLE */
+#include <deemon/error_types.h>       /* DeeCompilerErrorObject, Dee_compiler_error_loc, Dee_compiler_error_object */
+#include <deemon/file.h>              /* DeeFile_DefaultStddbg, DeeFile_PrintObjectNl */
+#include <deemon/module.h>            /* Dee_COMPILER_ERROR_FATALITY_* */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/thread.h>
-#include <deemon/traceback.h>         /* Dee_Decref(iter->ef_trace) */
+#include <deemon/string.h>            /* Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
+#include <deemon/thread.h>            /* DeeThreadObject, DeeThread_Self, Dee_except_frame, Dee_except_frame_free, except_frame_gettb */
+#include <deemon/traceback.h>         /* DeeTracebackObject */
 
 #include <stdarg.h>  /* va_arg, va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */
@@ -44,7 +43,9 @@
 #include <stdint.h>  /* uint16_t */
 
 /* Includes for TPP */
+/* clang-format off */
 #include <deemon/class.h>
+/* clang-format on */
 
 DECL_BEGIN
 
@@ -301,8 +302,11 @@ INTERN int DCALL parser_rethrow(bool must_fail) {
 				if (!current_parser_errors.pe_master)
 					current_parser_errors.pe_master = (DeeCompilerErrorObject *)iter->ef_error;
 				*p_iter = iter->ef_prev;
-				if (ITER_ISOK(iter->ef_trace))
-					Dee_Decref(iter->ef_trace);
+				if (ITER_ISOK(iter->ef_trace)) {
+					DeeTracebackObject *trace;
+					trace = iter->ef_trace;
+					Dee_Decref(trace);
+				}
 				--caller->t_exceptsz;
 				Dee_except_frame_free(iter);
 				continue;
@@ -425,13 +429,19 @@ err_handle_all_but_last:
 		*p_iter = iter->ef_prev;
 		if (DeeObject_IsInterrupt(iter->ef_error)) {
 			/* Restore interrupts. */
-			if (ITER_ISOK(iter->ef_trace))
-				Dee_Decref(iter->ef_trace);
+			if (ITER_ISOK(iter->ef_trace)) {
+				DeeTracebackObject *trace;
+				trace = iter->ef_trace;
+				Dee_Decref(trace);
+			}
 			restore_interrupt_error(caller, iter);
 		} else {
 			DeeError_Display(NULL, iter->ef_error, Dee_AsObject(except_frame_gettb(iter)));
-			if (ITER_ISOK(iter->ef_trace))
-				Dee_Decref(iter->ef_trace);
+			if (ITER_ISOK(iter->ef_trace)) {
+				DeeTracebackObject *trace;
+				trace = iter->ef_trace;
+				Dee_Decref(trace);
+			}
 			Dee_Decref(iter->ef_error);
 			Dee_except_frame_free(iter);
 		}

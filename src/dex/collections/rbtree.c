@@ -28,19 +28,20 @@
 
 #include <deemon/alloc.h>           /* DeeObject_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>             /* DeeArg_Unpack* */
-#include <deemon/bool.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/method-hints.h>
-#include <deemon/none.h>
+#include <deemon/bool.h>            /* Dee_False, Dee_True, return_bool */
+#include <deemon/error-rt.h>        /* DeeRT_Err* */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf */
+#include <deemon/int.h>             /* DeeIntObject, DeeInt_NewSize, DeeInt_Type, Dee_DIGIT_MASK, Dee_digit_t */
+#include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/system-features.h>
-#include <deemon/thread.h>
-#include <deemon/tuple.h>
+#include <deemon/seq.h>             /* DeeIterator_Type, DeeRange_New, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
+#include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/string.h>          /* DEFINE_STRING_EX, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
+#include <deemon/system-features.h> /* CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memsetp, access, memsetp, remove */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
+#include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* DeeLock_Acquire2, Dee_atomic_rwlock_* */
 

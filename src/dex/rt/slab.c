@@ -26,13 +26,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>    /* DeeObject_*, DeeSlab*, Dee_SLAB_COUNT, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, _Dee_MalloccBufsize, _Dee_MallococBufsize */
-#include <deemon/error-rt.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
+#include <deemon/alloc.h>           /* DeeObject_*, DeeSlab*, Dee_SLAB_COUNT, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, _Dee_MalloccBufsize, _Dee_MallococBufsize */
+#include <deemon/error-rt.h>        /* DeeRT_ErrIndexOutOfBounds */
+#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
+#include <deemon/int.h>             /* DeeInt_NewSize */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
+#include <deemon/seq.h>             /* DeeSeq_Type */
+#include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/system-features.h> /* free, memcmp, memcpy, time */
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 

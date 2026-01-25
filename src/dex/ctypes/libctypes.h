@@ -23,9 +23,9 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>     /* DeeObject_Free, DeeObject_Malloc */
-#include <deemon/mro.h>
+#include <deemon/mro.h>       /* Dee_attrhint, Dee_attriter */
 #include <deemon/object.h>
-#include <deemon/string.h>
+#include <deemon/string.h>    /* Dee_string_object, Dee_wchar_t */
 #include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
 
 #include <hybrid/sequence/list.h> /* LIST_ENTRY, LIST_HEAD */

@@ -27,18 +27,19 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free, Dee_Freea */
-#include <deemon/class.h>
-#include <deemon/dict.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/instancemethod.h>
-#include <deemon/kwds.h>
-#include <deemon/module.h>
+#include <deemon/class.h>           /* DeeInstance_DESC, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_as_instance, Dee_instance_desc, Dee_instance_desc_* */
+#include <deemon/dict.h>            /* DeeDict_New */
+#include <deemon/error-rt.h>        /* DeeRT_ATTRIBUTE_ACCESS_*, DeeRT_ErrCRestrictedAttrCA, DeeRT_ErrCUnboundAttrCA */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/instancemethod.h>  /* DeeInstanceMethod_NewInherited */
+#include <deemon/kwds.h>            /* DeeKw_ForceWrap, DeeObject_IsKw */
+#include <deemon/module.h>          /* DeeModule*, Dee_module_symbol */
 #include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/system-features.h> /* memcpy() */
+#include <deemon/seq.h>             /* DeeSeq_Unpack */
+#include <deemon/string.h>          /* DeeString*, STRING_ERROR_FSTRICT, WSTR_LENGTH */
+#include <deemon/system-features.h> /* bcmpc, memcpy */
 #include <deemon/util/atomic.h>     /* atomic_read */
-#include <deemon/util/objectlist.h> /* objectlist, Dee_objectlist_alloc */
+#include <deemon/util/objectlist.h> /* Dee_objectlist, Dee_objectlist_alloc */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

@@ -32,23 +32,23 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeDbgObject_Mallocc, DeeObject_Free, DeeObject_Mallocc, Dee_Freea, Dee_Mallocac, _Dee_MallococBufsize */
-#include <deemon/arg.h>                /* DeeArg_Unpack*, UNP* */
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
+#include <deemon/arg.h>                /* DeeArg_Unpack*, UNP*, _DeeArg_AsObject */
+#include <deemon/bool.h>               /* Dee_False, Dee_True, return_bool */
+#include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/computed-operators.h>
-#include <deemon/error-rt.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
-#include <deemon/numeric.h>
+#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/format.h>             /* DeeFormat_Repeat */
+#include <deemon/int.h>                /* DEFINE_UINT32, DEFINE_UINT64, DeeIntObject, DeeInt_*, Dee_*digit*_t, Dee_ATOI_STRING_FSIGNED, Dee_Ato*, Dee_DIGIT_*, Dee_INT_PRINT*, Dee_INT_STRING*, INT_NEG_OVERFLOW, INT_POS_OVERFLOW, INT_SIGNED, INT_UNSIGNED, _Dee_int_1digit_object */
+#include <deemon/none.h>               /* DeeNone_Check, Dee_None */
+#include <deemon/numeric.h>            /* DeeNumeric_Type */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>
-#include <deemon/serial.h>
-#include <deemon/string.h>
-#include <deemon/stringutils.h>
-#include <deemon/system-features.h>
-#include <deemon/tuple.h>
+#include <deemon/operator-hints.h>     /* DeeNO_int_t, DeeType_RequireSupportedNativeOperator */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeAscii_ItoaDigits, DeeString*, DeeUni_*, Dee_ASCII_PRINTER_*, Dee_UNICODE_*, Dee_ascii_printer*, Dee_unicode_printer*, Dee_unitraits, WSTR_LENGTH */
+#include <deemon/stringutils.h>        /* Dee_unicode_readutf8_n, Dee_unicode_readutf8_rev_n */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_*, DeeSystem_DEFINE_memend, bzero*, ceil, floor, isfinite, isgreater, isgreaterequal, isinf, isless, islessequal, islessgreater, isnan, isnormal, isunordered, log, memcpy*, memend, mempcpyc, memset, nextafter, read, remainder, round, system, trunc */
+#include <deemon/tuple.h>              /* DeeTuple* */
 
 #include <hybrid/__byteswap.h> /* __hybrid_bswap* */
 #include <hybrid/align.h>      /* CEILDIV */

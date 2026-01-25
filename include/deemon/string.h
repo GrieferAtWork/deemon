@@ -64,6 +64,7 @@
 
 #ifndef __INTELLISENSE__
 #include "alloc.h"  /* DeeDbgObject_*, DeeDbg_*, DeeObject_*, Dee_*alloc*, Dee_Free, Dee_UntrackAlloc */
+#include "format.h"
 #include "object.h"
 #endif /* !__INTELLISENSE__ */
 

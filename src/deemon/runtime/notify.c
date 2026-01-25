@@ -23,12 +23,12 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_CollectMemory, Dee_Free, Dee_TryCallocc */
-#include <deemon/error.h>
-#include <deemon/module.h>
-#include <deemon/notify.h>
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/module.h>          /* DeeModule_GetExtern */
+#include <deemon/notify.h>          /* DeeNotify_*, Dee_GetEnv, Dee_NOTIFICATION_CLASS_FNOCASE, Dee_notify_t */
 #include <deemon/object.h>
-#include <deemon/string.h>
-#include <deemon/system-features.h> /* bcmpc(), ... */
+#include <deemon/string.h>          /* DeeString*, DeeUni_ToLower */
+#include <deemon/system-features.h> /* CONFIG_HAVE_memcasecmp, bcmpc, memcasecmp, strlen */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 
 #include "strings.h"

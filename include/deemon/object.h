@@ -156,7 +156,7 @@ LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) { /*!export-*/
 #define Dee_type_method      type_method
 #define Dee_type_getset      type_getset
 #define Dee_type_member      type_member
-#define Dee_type_method_hint type_method_hint
+#define Dee_type_method_hint type_method_hint /*!export-*/
 #define Dee_type_gc          type_gc
 #define Dee_type_math        type_math
 #define Dee_type_cmp         type_cmp
@@ -173,7 +173,6 @@ LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) { /*!export-*/
 /*!export type_method*/
 /*!export type_getset*/
 /*!export type_member*/
-/*!export type_method_hint*/
 /*!export type_gc*/
 /*!export type_math*/
 /*!export type_cmp*/

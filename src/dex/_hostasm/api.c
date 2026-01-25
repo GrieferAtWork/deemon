@@ -27,6 +27,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h> /* Dee_Free, Dee_Malloc */
+#include <deemon/code.h>  /* DeeCodeObject, DeeFunctionObject */
 
 #include <stddef.h> /* NULL, offsetof */
 

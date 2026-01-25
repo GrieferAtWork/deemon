@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>  /* DeeObject_MALLOC */
-#include <deemon/mro.h>    /* struct Dee_attriter */
+#include <deemon/mro.h>    /* Dee_attriter */
 #include <deemon/object.h>
 
 #include "../generic-proxy.h"
